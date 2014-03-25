@@ -1,7 +1,7 @@
 # Licensed under a 3-clause BSD style license - see LICENSE.rst
 
 """
-This is an Astropy affiliated package.
+PyFINF: Python library for reading and writing FINF files
 """
 
 # Affiliated packages may add whatever they like to this file, but
