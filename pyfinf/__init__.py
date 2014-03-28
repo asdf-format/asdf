@@ -1,4 +1,7 @@
 # Licensed under a 3-clause BSD style license - see LICENSE.rst
+# -*- coding: utf-8 -*-
+
+from __future__ import absolute_import, division, unicode_literals, print_function
 
 """
 PyFINF: Python library for reading and writing FINF files
@@ -9,3 +12,31 @@ PyFINF: Python library for reading and writing FINF files
 # ----------------------------------------------------------------------------
 from ._astropy_init import *
 # ----------------------------------------------------------------------------
+
+__all__ = ['FinfFile', 'open', 'test']
+
+from .finf import FinfFile
+
+
+def open(init, mode='rw', uri=None):
+    """
+    Open a FinfFile.
+
+    Parameters
+    ----------
+    fd : string or file-like object
+        May be a string ``file`` or ``http`` URI, or a Python
+        file-like object.
+
+    mode : string, optional
+        Must be ``"r"`` (read), ``"w"`` (write) or ``"rw"``
+        (read/write).  Default: ``"rw"``.
+
+    uri : string, optional
+        The URI of the file.  Only required if the URI can not be
+        automatically determined from `init`.
+    """
+    from . import generic_io
+
+    fd = generic_io.get_file(fd, mode=mode, uri=uri)
+    return FinfFile.read(fd)

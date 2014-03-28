@@ -1,3 +1,6 @@
 [submodule "astropy_helpers"]
 	path = astropy_helpers
 	url = https://github.com/astropy/astropy-helpers.git
+[submodule "finf-standard"]
+	path = finf-standard
+	url = git://github.com/mdboom/finf-standard.git

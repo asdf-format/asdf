@@ -113,14 +113,10 @@ install:
     - if [[ $SETUP_CMD == build_sphinx* ]]; then $PIP_WHEEL_FLEX_NUMPY sphinx>=1.2; fi
     - if [[ $SETUP_CMD == build_sphinx* ]]; then $PIP_WHEEL_FLEX_NUMPY matplotlib; fi
 
-    # coverage needs the coverage package...
-    - if [[ $SETUP_CMD == 'test --coverage' ]]; then pip install coverage; fi
-    # Uncomment line below if coveralls.io is set up for this package
-    # - if [[ $SETUP_CMD == 'test --coverage' ]]; then pip install coveralls; fi
+   - if [[ $ASTROPY_VERSION == stable ]]; then pip -q install astropy --use-mirrors; fi
+   - if [[ $ASTROPY_VERSION == development ]]; then pip -q install git+http://github.com/astropy/astropy.git#egg=astropy --use-mirrors; fi
+   - pip -q install --upgrade jsonschema
+   - pip -q install --upgrade pyyaml
 
 script:
    - python setup.py $SETUP_CMD
-
-after_success:
-    # Uncomment line below if coveralls.io is set up for this package.
-    # - if [[ $SETUP_CMD == 'test --coverage' ]]; then coveralls; fi
