@@ -1,4 +1,7 @@
 # Licensed under a 3-clause BSD style license - see LICENSE.rst
+# -*- coding: utf-8 -*-
+
+from __future__ import absolute_import, division, unicode_literals, print_function
 
 __all__ = ['__version__', '__githash__', 'test']
 
@@ -22,11 +25,13 @@ try:
 except ImportError:
     __githash__ = ''
 
+
 # set up the test command
 def _get_test_runner():
     import os
     from astropy.tests.helper import TestRunner
     return TestRunner(os.path.dirname(__file__))
+
 
 def test(package=None, test_path=None, args=None, plugins=None,
          verbose=False, pastebin=None, remote_data=False, pep8=False,
@@ -109,8 +114,8 @@ def test(package=None, test_path=None, args=None, plugins=None,
         remote_data=remote_data, pep8=pep8, pdb=pdb,
         coverage=coverage, open_files=open_files, **kwargs)
 
-if not _ASTROPY_SETUP_:
 
+if not _ASTROPY_SETUP_:
     import os
     from warnings import warn
     from astropy import config

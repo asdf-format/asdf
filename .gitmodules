@@ -1,0 +1,3 @@
+[submodule "finf-standard"]
+	path = finf-standard
+	url = git://github.com/mdboom/finf-standard.git
