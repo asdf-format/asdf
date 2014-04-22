@@ -144,7 +144,7 @@ class Context(object):
     The context class maintains useful state during the parsing or
     writing of YAML.
     """
-    def __init__(self, finffile, type_index=None):
+    def __init__(self, finffile, type_index=None, options={}):
         """
         Parameters
         ----------
@@ -162,6 +162,13 @@ class Context(object):
         if type_index is None:
             type_index = finftypes.FinfTypeIndex
         self._type_index = type_index
+        self._options = options
+
+    def __getitem__(self, attr):
+        return self._options[attr]
+
+    def get(self, attr, default=None):
+        return self._options.get(attr, default)
 
     @property
     def finffile(self):
