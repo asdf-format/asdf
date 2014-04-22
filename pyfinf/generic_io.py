@@ -14,6 +14,7 @@ from __future__ import absolute_import, division, unicode_literals, print_functi
 import io
 import re
 import os
+import sys
 
 from astropy.extern import six
 from astropy.utils.misc import InheritDocstrings
@@ -607,6 +608,9 @@ def get_file(init, mode='r', uri=None):
             return RealFile(init, mode, uri=uri)
 
     elif isinstance(init, io.IOBase):
+        if sys.version_info[:2] == (2, 6):
+            raise ValueError("io.open file objects are not supported on Python 2.6")
+
         if (('r' in mode and not init.readable()) or
             ('w' in mode and not init.writable())):
             raise ValueError(
