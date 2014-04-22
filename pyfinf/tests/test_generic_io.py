@@ -5,6 +5,7 @@ from __future__ import absolute_import, division, unicode_literals, print_functi
 
 import io
 import os
+import sys
 
 from astropy.tests.helper import pytest
 
@@ -94,6 +95,8 @@ def test_open_fail2(tmpdir):
             generic_io.get_file(fd, mode='w')
 
 
+@pytest.mark.skipif(sys.version_info[:2] == (2, 6),
+                    reason="requires python 2.7 or later")
 def test_io_open(tmpdir):
     path = os.path.join(str(tmpdir), 'test.finf')
 
