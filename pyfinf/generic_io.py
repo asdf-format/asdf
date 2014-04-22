@@ -48,6 +48,19 @@ def _check_bytes(fd, mode):
     return True
 
 
+def resolve_uri(base, uri):
+    """
+    Resolve a URI against a base URI.
+    """
+    if base is None:
+        parsed = urlparse.urlparse(uri)
+        if parsed.path.startswith('/'):
+            return uri
+        raise ValueError(
+            "Can not resolve relative URLs since the base is unknown.")
+    return urlparse.urljoin(base, uri)
+
+
 @six.add_metaclass(InheritDocstrings)
 class GenericFile(object):
     """
@@ -108,6 +121,13 @@ class GenericFile(object):
         The mode of the file.  Will be ``'r'``, ``'w'`` or ``'rw'``.
         """
         return self._mode
+
+    @property
+    def uri(self):
+        """
+        The base uri of the file.
+        """
+        return self._uri
 
     def read(self, size=-1):
         """
@@ -692,7 +712,7 @@ def make_http_connection(init, uri=None):
         # Fall back to a regular input stream, but we don't
         # need to open a new connection.
         response.close = connection.close
-        return InputStream(response, close=True)
+        return InputStream(response, uri=uri or init, close=True)
 
     # Since we'll be requesting chunks, we can't read at all with the
     # current request (because we can't abort it), so just close and

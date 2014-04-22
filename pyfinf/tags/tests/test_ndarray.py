@@ -3,6 +3,7 @@
 
 from __future__ import absolute_import, division, unicode_literals, print_function
 
+import io
 import sys
 
 from astropy.extern import six
@@ -12,6 +13,8 @@ from numpy.testing import assert_array_equal
 
 from ...tests import helpers
 from .. import ndarray
+from ... import finf
+from ... import yamlutil
 
 
 def test_sharing(tmpdir):
@@ -31,8 +34,8 @@ def test_sharing(tmpdir):
 
         assert tree['science_data'].ctypes.data == tree['skipping'].ctypes.data
 
-        assert len(finf._blocks) == 1
-        assert finf._blocks[0]._size == 80
+        assert len(finf.blocks._internal_blocks) == 1
+        assert finf.blocks._internal_blocks[0]._size == 80
 
     def check_raw_yaml(content):
         assert b'!ndarray' in content
@@ -74,3 +77,25 @@ def test_all_dtypes(tmpdir):
             tree[byteorder + dtype] = np.arange(0, 10, dtype=byteorder + dtype)
 
     helpers.assert_roundtrip_tree(tree, tmpdir)
+
+
+def test_dont_load_data():
+    x = np.arange(0, 10, dtype=np.float)
+    tree = {
+        'science_data': x,
+        'subset': x[3:-3],
+        'skipping': x[::2]
+        }
+    ff = finf.FinfFile(tree)
+
+    buff = io.BytesIO()
+    ff.write_to(buff)
+
+    buff.seek(0)
+    ff = finf.FinfFile.read(buff)
+
+    ctx = yamlutil.Context(ff)
+    ctx.run_hook(ff._tree, 'pre_write')
+
+    for block in ff.blocks._internal_blocks:
+        assert block._data is None

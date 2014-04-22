@@ -47,14 +47,13 @@ def tree(request):
     return request.param()
 
 
-def _roundtrip(tree, get_write_fd, get_read_fd):
+def _roundtrip(tree, get_write_fd, get_read_fd,
+               write_options={}, read_options={}):
     with get_write_fd() as fd:
-        finf.FinfFile(tree).write_to(fd)
+        finf.FinfFile(tree).write_to(fd, **write_options)
 
     with get_read_fd() as fd:
-        ff = finf.FinfFile.read(fd)
-
-        assert len(ff._blocks) == 2
+        ff = finf.FinfFile.read(fd, **read_options)
 
         helpers.assert_tree_match(tree, ff.tree)
 
@@ -78,8 +77,9 @@ def test_path(tree, tmpdir):
 
     ff = _roundtrip(tree, get_write_fd, get_read_fd)
 
-    ff._blocks[0].data
-    assert isinstance(ff._blocks[0]._data, np.core.memmap)
+    assert len(ff.blocks._internal_blocks) == 2
+    ff.blocks._internal_blocks[0].data
+    assert isinstance(ff.blocks._internal_blocks[0]._data, np.core.memmap)
 
 
 def test_open(tree, tmpdir):
@@ -99,7 +99,8 @@ def test_open(tree, tmpdir):
 
     ff = _roundtrip(tree, get_write_fd, get_read_fd)
 
-    assert isinstance(ff._blocks[0]._data, np.core.memmap)
+    assert len(ff.blocks._internal_blocks) == 2
+    assert isinstance(ff.blocks._internal_blocks[0]._data, np.core.memmap)
 
 
 def test_open_fail(tmpdir):
@@ -137,7 +138,8 @@ def test_io_open(tree, tmpdir):
 
     ff = _roundtrip(tree, get_write_fd, get_read_fd)
 
-    assert isinstance(ff._blocks[0]._data, np.core.memmap)
+    assert len(ff.blocks._internal_blocks) == 2
+    assert isinstance(ff.blocks._internal_blocks[0]._data, np.core.memmap)
 
 
 def test_bytes_io(tree):
@@ -156,8 +158,9 @@ def test_bytes_io(tree):
 
     ff = _roundtrip(tree, get_write_fd, get_read_fd)
 
-    assert not isinstance(ff._blocks[0]._data, np.core.memmap)
-    assert isinstance(ff._blocks[0]._data, np.ndarray)
+    assert len(ff.blocks._internal_blocks) == 2
+    assert not isinstance(ff.blocks._internal_blocks[0]._data, np.core.memmap)
+    assert isinstance(ff.blocks._internal_blocks[0]._data, np.ndarray)
 
 
 def test_streams(tree):
@@ -172,8 +175,9 @@ def test_streams(tree):
 
     ff = _roundtrip(tree, get_write_fd, get_read_fd)
 
-    assert not isinstance(ff._blocks[0]._data, np.core.memmap)
-    assert isinstance(ff._blocks[0]._data, np.ndarray)
+    assert len(ff.blocks) == 2
+    assert not isinstance(ff.blocks._internal_blocks[0]._data, np.core.memmap)
+    assert isinstance(ff.blocks._internal_blocks[0]._data, np.ndarray)
 
 
 def test_urlopen(tree, httpserver):
@@ -189,8 +193,9 @@ def test_urlopen(tree, httpserver):
 
     ff = _roundtrip(tree, get_write_fd, get_read_fd)
 
-    assert not isinstance(ff._blocks[0]._data, np.core.memmap)
-    assert isinstance(ff._blocks[0]._data, np.ndarray)
+    assert len(ff.blocks._internal_blocks) == 2
+    assert not isinstance(ff.blocks._internal_blocks[0]._data, np.core.memmap)
+    assert isinstance(ff.blocks._internal_blocks[0]._data, np.ndarray)
 
 
 def test_http_connection(tree, httpserver):
@@ -206,8 +211,9 @@ def test_http_connection(tree, httpserver):
 
     ff = _roundtrip(tree, get_write_fd, get_read_fd)
 
-    assert not isinstance(ff._blocks[0]._data, np.core.memmap)
-    assert isinstance(ff._blocks[0]._data, np.ndarray)
+    assert len(ff.blocks._internal_blocks) == 2
+    assert not isinstance(ff.blocks._internal_blocks[0]._data, np.core.memmap)
+    assert isinstance(ff.blocks._internal_blocks[0]._data, np.ndarray)
 
 
 def test_http_connection_range(tree, rhttpserver):
@@ -230,5 +236,73 @@ def test_http_connection_range(tree, rhttpserver):
     else:
         assert connection[0]._nreads == 4
 
-    assert not isinstance(ff._blocks[0]._data, np.core.memmap)
-    assert isinstance(ff._blocks[0]._data, np.ndarray)
+    assert len(ff.blocks._internal_blocks) == 2
+    assert not isinstance(ff.blocks._internal_blocks[0]._data, np.core.memmap)
+    assert isinstance(ff.blocks._internal_blocks[0]._data, np.ndarray)
+
+
+def test_exploded_filesystem(tree, tmpdir):
+    path = os.path.join(str(tmpdir), 'test.finf')
+
+    def get_write_fd():
+        return generic_io.get_file(path, mode='w')
+
+    def get_read_fd():
+        return generic_io.get_file(path, mode='r')
+
+    ff = _roundtrip(tree, get_write_fd, get_read_fd,
+                    write_options={'exploded': True})
+
+    assert len(ff.blocks._internal_blocks) == 0
+    assert len(ff.blocks._external_blocks) == 2
+
+
+def test_exploded_http(tree, httpserver):
+    path = os.path.join(httpserver.tmpdir, 'test.finf')
+
+    def get_write_fd():
+        return generic_io.get_file(path, mode='w')
+
+    def get_read_fd():
+        return generic_io.get_file(httpserver.url + "test.finf")
+
+    ff = _roundtrip(tree, get_write_fd, get_read_fd,
+                    write_options={'exploded': True})
+
+    assert len(ff.blocks._internal_blocks) == 0
+    assert len(ff.blocks._external_blocks) == 2
+
+
+def test_exploded_stream_write():
+    # Writing an exploded file to an output stream should fail, since
+    # we can't write "files" alongside it.
+
+    tree = _get_small_tree()
+
+    ff = finf.FinfFile(tree)
+
+    with pytest.raises(ValueError):
+        ff.write_to(io.BytesIO(), exploded=True)
+
+
+def test_exploded_stream_read(tmpdir):
+    # Reading from an exploded input file should fail, but only once
+    # the data block is accessed.  This behavior is important so that
+    # the tree can still be accessed even if the data is missing.
+    tree = _get_small_tree()
+
+    path = os.path.join(str(tmpdir), 'test.finf')
+
+    ff = finf.FinfFile(tree)
+
+    ff.write_to(path, exploded=True)
+
+    with open(path, 'rb') as fd:
+        # This should work, so we can get the tree content
+        x = generic_io.InputStream(fd)
+        ff = finf.FinfFile.read(x)
+
+    # It's only on trying to get at the block data that the error
+    # occurs.
+    with pytest.raises(ValueError):
+        ff.tree['science_data'][:]

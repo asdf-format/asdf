@@ -180,7 +180,7 @@ def validate(instance, schema, cls=None, *args, **kwargs):
         validators.create(
             meta_schema=load_schema('stsci.edu/yaml-schema/draft-01'),
             validators=YAML_VALIDATORS,
-            version='yaml schema draft 1')
+            version=str('yaml schema draft 1'))
         _created_validator = True
 
     if 'resolver' not in kwargs:
