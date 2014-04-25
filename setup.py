@@ -78,10 +78,7 @@ package_info = get_package_info()
 package_info['package_data'].setdefault(PACKAGENAME, []).append('data/*')
 
 # The schemas come from a git submodule, so we deal with them here
-if os.path.exists("../finf-standard/schemas"):
-    schema_root = "../finf-standard/schemas"
-else:
-    schema_root = "finf-standard/schemas"
+schema_root = "finf-standard/schemas"
 
 package_info['package_dir']['pyfinf.schemas'] = schema_root
 package_info['packages'].append('pyfinf.schemas')

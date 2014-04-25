@@ -37,6 +37,9 @@ def test_sharing(tmpdir):
         assert len(finf.blocks._internal_blocks) == 1
         assert finf.blocks._internal_blocks[0]._size == 80
 
+        tree['science_data'][0] = 42
+        assert tree['skipping'][0] == 42
+
     def check_raw_yaml(content):
         assert b'!ndarray' in content
 
@@ -45,8 +48,8 @@ def test_sharing(tmpdir):
 
 def test_byteorder(tmpdir):
     tree = {
-        'bigendian': np.arange(0, 10, dtype='>f8'),
-        'little': np.arange(0, 10, dtype='<f8'),
+        'bigendian': np.arange(0, 10, dtype=str('>f8')),
+        'little': np.arange(0, 10, dtype=str('<f8')),
         }
 
     def check_finf(finf):
@@ -74,7 +77,7 @@ def test_all_dtypes(tmpdir):
             # interface.
             if six.PY3 and dtype in ('c32', 'f16'):
                 continue
-            tree[byteorder + dtype] = np.arange(0, 10, dtype=byteorder + dtype)
+            tree[byteorder + dtype] = np.arange(0, 10, dtype=str(byteorder + dtype))
 
     helpers.assert_roundtrip_tree(tree, tmpdir)
 

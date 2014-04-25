@@ -32,9 +32,9 @@ def finf_dtype_to_numpy_dtype(dtype, byteorder):
     if dtype in _dtype_names:
         dtype = _dtype_names[dtype]
         if byteorder == 'big':
-            return '>' + dtype
+            return str('>' + dtype)
         elif byteorder == 'little':
-            return '<' + dtype
+            return str('<' + dtype)
     raise ValueError("Unknown dtype {0}".format(dtype))
 
 
@@ -123,7 +123,7 @@ class NDArrayType(FinfType):
         shape = data.shape
         dtype = data.dtype
         offset = data.ctypes.data - base.ctypes.data
-        if data.flags['C_CONTIGUOUS']:
+        if data.flags[b'C_CONTIGUOUS']:
             strides = None
         else:
             strides = data.strides

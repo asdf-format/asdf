@@ -31,6 +31,14 @@ def _check_bytes(fd, mode):
     """
     Checks whether a given file-like object is opened in binary mode.
     """
+    # On Python 3, doing fd.read(0) on an HTTPResponse object causes
+    # it to not be able to read any further, so we do this different
+    # kind of check, which, unfortunately, is not as robust.
+    if isinstance(fd, io.IOBase):
+        if isinstance(fd, io.TextIOBase):
+            return False
+        return True
+
     if mode == 'r':
         x = fd.read(0)
         if not isinstance(x, bytes):
@@ -139,6 +147,10 @@ class GenericFile(object):
 
         Only available if `readable` returns `True`.
         """
+        # On Python 3, reading 0 bytes from a socket causes it to stop
+        # working, so avoid doing that at all costs.
+        if size == 0:
+            return b''
         return self._fd.read(size)
 
     def read_block(self):
@@ -148,15 +160,26 @@ class GenericFile(object):
         """
         return self.read(self._blksize)
 
-    def write(self, content):
-        """
-        Write a string to the file. There is no return value. Due to
-        buffering, the string may not actually show up in the file
-        until the flush() or close() method is called.
+    if sys.version_info[:2] == (2, 7) and sys.version_info[2] < 4:
+        # On Python 2.7.x prior to 2.7.4, the buffer does not support the
+        # new buffer interface, and thus can't be written directly.  See
+        # issue #10221.
+        def write(self, content):
+            if isinstance(content, buffer):
+                self._fd.write(bytes(content))
+            else:
+                self._fd.write(content)
+    else:
+        def write(self, content):
+            self._fd.write(content)
 
-        Only available if `writable` returns `True`.
-        """
-        self._fd.write(content)
+    write.__doc__ = """
+    Write a string to the file. There is no return value. Due to
+    buffering, the string may not actually show up in the file
+    until the flush() or close() method is called.
+
+    Only available if `writable` returns `True`.
+    """
 
     def seek(self, offset, whence=0):
         """
@@ -413,8 +436,12 @@ class RealFile(RandomAccessFile):
         return True
 
     def memmap_array(self, offset, size):
+        if 'w' in self._mode:
+            mode = 'r+'
+        else:
+            mode = 'r'
         return np.memmap(
-            self._fd, mode=self._mode, offset=offset, shape=size)
+            self._fd, mode=mode, offset=offset, shape=size)
 
     def read_into_array(self, size):
         return np.fromfile(self._fd, np.uint8, size)
@@ -433,8 +460,13 @@ class MemoryIO(RandomAccessFile):
         fd.seek(tell, 0)
 
     def read_into_array(self, size):
-        return np.frombuffer(
+        result = np.frombuffer(
             self._fd.getvalue(), np.uint8, size, self._fd.tell())
+        # When creating an array from a buffer, it is read-only.
+        # If we need a read/write array, we have to copy it.
+        if 'w' in self._mode:
+            return result.copy()
+        return result
 
 
 class InputStream(GenericFile):
@@ -453,6 +485,11 @@ class InputStream(GenericFile):
         return self._buffer
 
     def read(self, size=-1):
+        # On Python 3, reading 0 bytes from a socket causes it to stop
+        # working, so avoid doing that at all costs.
+        if size == 0:
+            return b''
+
         len_buffer = len(self._buffer)
         if len_buffer == 0:
             return self._fd.read(size)
@@ -603,6 +640,8 @@ class HTTPConnection(RandomAccessFile):
         if size < 0 or self._pos + size > self._size:
             size = self._size - self._pos
 
+        # On Python 3, reading 0 bytes from a socket causes it to stop
+        # working, so avoid doing that at all costs.
         if size == 0:
             return b''
 
@@ -675,8 +714,12 @@ class HTTPConnection(RandomAccessFile):
         else:
             response = self._get_range(
                 self._pos, self._pos + size)
-            with os.fdopen(response.fileno()) as fd:
-                result = np.fromfile(fd, np.uint8, size)
+            if six.PY3:
+                result = np.empty((size,), dtype=np.uint8)
+                response.readinto(result)
+            else:
+                with os.fdopen(response.fileno(), 'rb') as fd:
+                    result = np.fromfile(fd, np.uint8, size)
 
         self._pos = new_pos
         return result
@@ -791,8 +834,12 @@ def get_file(init, mode='r', uri=None):
                     "HTTP connections can not be opened for writing")
             return make_http_connection(init, uri=uri)
         elif parsed.scheme in ('', 'file'):
+            if mode == 'rw':
+                realmode = 'r+b'
+            else:
+                realmode = mode + 'b'
             return RealFile(
-                open(parsed.path, mode + 'b'), mode, close=True,
+                open(parsed.path, realmode), mode, close=True,
                 uri=uri or parsed.path)
 
     elif isinstance(init, io.BytesIO):

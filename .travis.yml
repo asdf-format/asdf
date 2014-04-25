@@ -1,10 +1,10 @@
 language: python
 
 python:
-    - 2.6
-    - 2.7
-    - 3.3
-    - 3.4
+  - 2.6
+  - 2.7
+  - 3.3
+  - 3.4
 
 env:
     global:
@@ -40,44 +40,6 @@ env:
     # latest stable scipy and astropy.
     matrix:
         - NUMPY_VERSION=1.8.1
-        - SETUP_CMD="egg_info" ASTROPY_VERSION="none" ADDITIONAL_DEPENDENCIES_STRICT_NUMPY="" ADDITIONAL_DEPENDENCIES_ANY_NUMPY=""
-
-matrix:
-    # some version of numpy do not work on some versions of python
-    exclude:
-        - python: 2.6
-          env: NUMPY_VERSION=1.6.2
-        - python: 2.6
-          env: NUMPY_VERSION=1.7.1
-        - python: 3.2
-          env: NUMPY_VERSION=1.5.1
-        - python: 3.2
-          env: NUMPY_VERSION=1.7.1
-        - python: 3.2
-          env: NUMPY_VERSION=1.8.1
-        - python: 3.3
-          env: NUMPY_VERSION=1.5.1
-        - python: 3.3
-          env: NUMPY_VERSION=1.6.2
-        - python: 3.3
-          env: NUMPY_VERSION=1.7.1
-
-    include:
-        # Try latest development version of astropy with latest python 2.7 and
-        # 3.x releases
-        - python: 2.7
-          env: ASTROPY_VERSION=development NUMPY_VERSION=$LATEST_NUMPY_STABLE SETUP_CMD='test'
-        - python: 3.3
-          env: ASTROPY_VERSION=development NUMPY_VERSION=$LATEST_NUMPY_STABLE SETUP_CMD='test'
-
-        # get test coverage from a python 2.7 build
-        # for now need the development version of astropy
-        - python: 2.7
-          env: ASTROPY_VERSION=development NUMPY_VERSION=$LATEST_NUMPY_STABLE SETUP_CMD='test --coverage'
-
-        # one documentation build
-        - python: 2.7
-          env: NUMPY_VERSION=$LATEST_NUMPY_STABLE SETUP_CMD='build_sphinx -w -n'
 
 before_install:
     - pip install --upgrade setuptools
@@ -111,14 +73,12 @@ install:
     - if [[ $SETUP_CMD == build_sphinx* ]]; then $PIP_WHEEL_FLEX_NUMPY matplotlib; fi
 
 before_install:
-   # We do this to make sure we get the dependencies so pip works below
-   - sudo apt-get update -qq
    - sudo apt-get install -qq libatlas-dev liblapack-dev gfortran
 
 install:
    - export PYTHONIOENCODING=UTF8 # just in case
-   - pip -q install --upgrade numpy
-   - pip -q install --upgrade Cython
+   - pip install --upgrade numpy
+   - pip install --upgrade Cython
    - if [[ $SETUP_CMD == build_sphinx* ]]; then pip -q install sphinx==1.2 --use-mirrors; fi
 
 script:
