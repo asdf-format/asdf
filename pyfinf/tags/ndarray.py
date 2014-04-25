@@ -32,9 +32,9 @@ def finf_dtype_to_numpy_dtype(dtype, byteorder):
     if dtype in _dtype_names:
         dtype = _dtype_names[dtype]
         if byteorder == 'big':
-            return '>' + dtype
+            return str('>' + dtype)
         elif byteorder == 'little':
-            return '<' + dtype
+            return str('<' + dtype)
     raise ValueError("Unknown dtype {0}".format(dtype))
 
 
@@ -56,22 +56,19 @@ class NDArrayType(FinfType):
 
     def __init__(self, source, shape, dtype, offset, strides,
                  order, finffile):
-        self._source = source
+        self._block = finffile.blocks.get_block(source)
         self._shape = shape
         self._dtype = dtype
         self._offset = offset
         self._strides = strides
         self._order = order
-        self._buffer = None
-        if self._source >= len(finffile._blocks):
-            raise ValueError("Block {0} not found".format(self._source))
-        self._buffer = finffile._blocks[self._source]
         self._array = None
 
     def _make_array(self):
         if self._array is None:
+            data = self._block.data
             self._array = np.ndarray(
-                self._shape, self._dtype, self._buffer.data,
+                self._shape, self._dtype, data,
                 self._offset, self._strides, self._order)
         return self._array
 
@@ -107,8 +104,6 @@ class NDArrayType(FinfType):
         dtype = finf_dtype_to_numpy_dtype(
             node.get('dtype', 'uint8'), node.get('byteorder', 'big'))
         source = node['source']
-        if not isinstance(source, int):
-            raise NotImplementedError("source URIs not yet implemented")
         offset = node.get('offset', 0)
         strides = node.get('strides', None)
 
@@ -123,26 +118,19 @@ class NDArrayType(FinfType):
 
     @classmethod
     def to_tree(cls, data, ctx):
-        if isinstance(data, np.ndarray):
-            base = util.get_array_base(data)
-            block, source = ctx.finffile.blocks.find_or_create_block_for_array(base)
-            shape = data.shape
-            dtype = data.dtype
-            offset = data.ctypes.data - base.ctypes.data
-            if data.flags['C_CONTIGUOUS']:
-                strides = None
-            else:
-                strides = data.strides
-        elif isinstance(data, NDArrayType):
-            source = data._source
-            shape = data._shape
-            dtype = data._dtype
-            offset = data._offset
-            strides = data._strides
+        base = util.get_array_base(data)
+        block = ctx.finffile.blocks.find_or_create_block_for_array(data)
+        shape = data.shape
+        dtype = data.dtype
+        offset = data.ctypes.data - base.ctypes.data
+        if data.flags[b'C_CONTIGUOUS']:
+            strides = None
+        else:
+            strides = data.strides
 
         result = {}
         result['shape'] = list(shape)
-        result['source'] = source
+        result['source'] = block.source
 
         dtype, byteorder = numpy_dtype_to_finf_dtype(dtype)
         result['dtype'] = dtype

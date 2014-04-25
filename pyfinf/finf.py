@@ -25,7 +25,7 @@ class FinfFile(versioning.VersionedMixin):
             The main tree data in the FINF file.  Must conform to the
             FINF schema.
         """
-        self._blocks = block.BlockList()
+        self._blocks = block.BlockManager(self)
         if tree is None:
             tree = {}
         self.tree = tree
@@ -39,6 +39,12 @@ class FinfFile(versioning.VersionedMixin):
             # This is ok to always do because GenericFile knows
             # whether it "owns" the file and should close it.
             self._fd.close()
+
+    @property
+    def uri(self):
+        if self._fd is not None:
+            return self._fd._uri
+        return None
 
     @property
     def tree(self):
@@ -79,7 +85,7 @@ class FinfFile(versioning.VersionedMixin):
                 int(match.group("micro")))
 
     @classmethod
-    def read(cls, fd, uri=None):
+    def read(cls, fd, uri=None, mode='r'):
         """
         Read a FINF file.
 
@@ -93,12 +99,16 @@ class FinfFile(versioning.VersionedMixin):
             The URI of the file.  Only required if the URI can not be
             automatically determined from `fd`.
 
+        mode : string, optional
+            The mode to open the file in.  Must be ``r`` (default) or
+            ``rw``.
+
         Returns
         -------
         finffile : FinfFile
             The new FinfFile object.
         """
-        fd = generic_io.get_file(fd, mode='r', uri=uri)
+        fd = generic_io.get_file(fd, mode=mode, uri=uri)
 
         self = cls()
         self._fd = fd
@@ -112,12 +122,7 @@ class FinfFile(versioning.VersionedMixin):
         self.version = cls._parse_header_line(version_line)
 
         if fd.seek_until(constants.BLOCK_MAGIC, include=False):
-            while True:
-                b = block.Block.read(fd)
-                if b is not None:
-                    self._blocks.append(b)
-                else:
-                    break
+            self._blocks.read_internal_blocks(fd)
 
         ctx = yamlutil.Context(self)
         tree = yamlutil.load_tree(yaml_content, ctx)
@@ -155,7 +160,7 @@ class FinfFile(versioning.VersionedMixin):
         """
         raise NotImplementedError()
 
-    def write_to(self, fd):
+    def write_to(self, fd, exploded=False):
         """
         Write the FINF file to the given file-like object.
 
@@ -165,17 +170,21 @@ class FinfFile(versioning.VersionedMixin):
             May be a string path to a file, or a Python file-like
             object.
         """
-        ctx = yamlutil.Context(self)
+        ctx = yamlutil.Context(self, options={
+            'exploded': exploded})
 
         with generic_io.get_file(fd, mode='w') as fd:
+            if exploded and fd.uri is None:
+                raise ValueError(
+                    "Can not write an exploded file without knowing its URI.")
+
             tree = self._tree
             ctx.run_hook(tree, 'pre_write')
 
             try:
                 # This is where we'd do some more sophisticated block
                 # reorganization, if necessary
-                for i, block in enumerate(self._blocks):
-                    block.index = i
+                self._blocks.finalize(ctx)
 
                 fd.write(constants.FINF_MAGIC)
                 fd.write(self.version_string.encode('ascii'))

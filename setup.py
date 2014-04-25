@@ -110,10 +110,7 @@ except ImportError: # compatibility with Astropy 0.2 - can be removed in cases
 
 
 # The schemas come from a git submodule, so we deal with them here
-if os.path.exists("../finf-standard/schemas"):
-    schema_root = "../finf-standard/schemas"
-else:
-    schema_root = "finf-standard/schemas"
+schema_root = "finf-standard/schemas"
 
 package_info['package_dir']['pyfinf.schemas'] = schema_root
 package_info['packages'].append('pyfinf.schemas')
@@ -130,6 +127,11 @@ for root, dirs, files in os.walk(PACKAGENAME):
                 os.path.join(
                     os.path.relpath(root, PACKAGENAME), filename))
 package_info['package_data'][PACKAGENAME].extend(c_files)
+
+
+# Disable config file generation
+from astropy import setup_helpers
+setup_helpers.AstropyBuildPy.run = setup_helpers.SetuptoolsBuildPy.run
 
 
 setup(name=PACKAGENAME,

@@ -5,15 +5,11 @@ from __future__ import absolute_import, division, unicode_literals, print_functi
 
 import io
 
-import numpy as np
-from numpy.testing import assert_array_equal
-
 from astropy.extern import six
-from astropy.io import fits
 
 from ..finf import FinfFile
 from ..finftypes import FinfTypeIndex
-from ..tags import NDArrayType, FinfObject
+from ..tags import FinfObject
 
 
 def assert_tree_match(old_tree, new_tree):
@@ -49,9 +45,8 @@ def assert_roundtrip_tree(
     FinfFile(tree).write_to(buff)
     assert not buff.closed
     buff.seek(0)
-    ff = FinfFile.read(buff)
+    ff = FinfFile.read(buff, mode='rw')
     assert not buff.closed
-    print(type(ff.tree))
     assert isinstance(ff.tree, FinfObject)
     assert_tree_match(tree, ff.tree)
     if finf_check_func:
@@ -68,7 +63,7 @@ def assert_roundtrip_tree(
 
     # Then, test writing/reading to a real file
     FinfFile(tree).write_to(fname)
-    with FinfFile.read(fname) as ff:
+    with FinfFile.read(fname, mode='rw') as ff:
         assert_tree_match(tree, ff.tree)
         if finf_check_func:
             finf_check_func(ff)
