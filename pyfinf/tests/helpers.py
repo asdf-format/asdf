@@ -45,7 +45,7 @@ def assert_roundtrip_tree(
     FinfFile(tree).write_to(buff)
     assert not buff.closed
     buff.seek(0)
-    ff = FinfFile.read(buff)
+    ff = FinfFile.read(buff, mode='rw')
     assert not buff.closed
     assert isinstance(ff.tree, FinfObject)
     assert_tree_match(tree, ff.tree)
@@ -63,7 +63,7 @@ def assert_roundtrip_tree(
 
     # Then, test writing/reading to a real file
     FinfFile(tree).write_to(fname)
-    with FinfFile.read(fname) as ff:
+    with FinfFile.read(fname, mode='rw') as ff:
         assert_tree_match(tree, ff.tree)
         if finf_check_func:
             finf_check_func(ff)

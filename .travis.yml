@@ -1,33 +1,23 @@
 language: python
 
 python:
-    - 2.6
-    - 2.7
-    - 3.3
-    - 3.4
+  - 2.6
+  - 2.7
+  - 3.3
 
 env:
-    # try all python versions with the latest stable numpy and astropy
-    - ASTROPY_VERSION=development SETUP_CMD='test'
-
-matrix:
-    include:
-        - python: 2.7
-          # opdeps needed because the matplotlib sphinx extension requires them
-          env: ASTROPY_VERSION=development SETUP_CMD='build_sphinx -w -n'
+  global:
+    - SETUP_CMD=test
 
 before_install:
-   # We do this to make sure we get the dependencies so pip works below
-   - sudo apt-get update -qq
    - sudo apt-get install -qq libatlas-dev liblapack-dev gfortran
 
 install:
    - export PYTHONIOENCODING=UTF8 # just in case
-   - pip -q install --upgrade numpy
-   - pip -q install --upgrade Cython
+   - pip install --upgrade numpy
+   - pip install --upgrade Cython
    - if [[ $SETUP_CMD == build_sphinx* ]]; then pip -q install sphinx==1.2 --use-mirrors; fi
-   - if [[ $ASTROPY_VERSION == stable ]]; then pip -q install astropy --use-mirrors; fi
-   - if [[ $ASTROPY_VERSION == development ]]; then pip install git+http://github.com/astropy/astropy.git#egg=astropy; fi
+   - pip install git+http://github.com/astropy/astropy.git#egg=astropy
    - pip -q install --upgrade jsonschema
    - pip -q install --upgrade pyyaml
 

@@ -8,10 +8,7 @@ import os
 
 def get_package_data():
     schemas = []
-    if os.path.exists("../finf-standard/schemas"):
-        root = "../finf-standard/schemas"
-    else:
-        root = "finf-standard/schemas"
+    root = "finf-standard/schemas"
     for node, dirs, files in os.walk(root):
         for fname in files:
             if fname.endswith('.yaml'):

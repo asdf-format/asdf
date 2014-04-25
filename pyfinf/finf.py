@@ -85,7 +85,7 @@ class FinfFile(versioning.VersionedMixin):
                 int(match.group("micro")))
 
     @classmethod
-    def read(cls, fd, uri=None):
+    def read(cls, fd, uri=None, mode='r'):
         """
         Read a FINF file.
 
@@ -99,12 +99,16 @@ class FinfFile(versioning.VersionedMixin):
             The URI of the file.  Only required if the URI can not be
             automatically determined from `fd`.
 
+        mode : string, optional
+            The mode to open the file in.  Must be ``r`` (default) or
+            ``rw``.
+
         Returns
         -------
         finffile : FinfFile
             The new FinfFile object.
         """
-        fd = generic_io.get_file(fd, mode='r', uri=uri)
+        fd = generic_io.get_file(fd, mode=mode, uri=uri)
 
         self = cls()
         self._fd = fd

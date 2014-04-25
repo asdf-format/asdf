@@ -11,18 +11,17 @@ from astropy.tests.pytest_plugins import *
 
 import os
 import shutil
-from SimpleHTTPServer import SimpleHTTPRequestHandler
-import SocketServer
 import tempfile
 import threading
 
+from astropy.extern import six
 from astropy.tests.helper import pytest
 
 from .extern.RangeHTTPServer import RangeHTTPRequestHandler
 
 
 class HTTPServerThread(threading.Thread):
-    handler_class = SimpleHTTPRequestHandler
+    handler_class = six.moves.SimpleHTTPServer.SimpleHTTPRequestHandler
 
     def __init__(self):
         super(HTTPServerThread, self).__init__()
@@ -37,7 +36,7 @@ class HTTPServerThread(threading.Thread):
                     os.path.relpath(path, os.getcwd()))
                 return path
 
-        self._server = SocketServer.TCPServer(
+        self._server = six.moves.socketserver.TCPServer(
             ("127.0.0.1", 0), HTTPRequestHandler)
         domain, port = self._server.server_address
         self.url = "http://{0}:{1}/".format(domain, port)

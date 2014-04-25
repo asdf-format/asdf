@@ -31,20 +31,18 @@ __version__ = "0.1"
 
 __all__ = ["RangeHTTPRequestHandler"]
 
+import io
 import os
 import posixpath
-import BaseHTTPServer
 import urllib
 import cgi
 import shutil
 import mimetypes
-try:
-    from cStringIO import StringIO
-except ImportError:
-    from StringIO import StringIO
+
+from astropy.extern import six
 
 
-class RangeHTTPRequestHandler(BaseHTTPServer.BaseHTTPRequestHandler):
+class RangeHTTPRequestHandler(six.moves.BaseHTTPServer.BaseHTTPRequestHandler):
 
     """Simple HTTP request handler with GET and HEAD commands.
 
@@ -141,52 +139,13 @@ class RangeHTTPRequestHandler(BaseHTTPServer.BaseHTTPRequestHandler):
                 ei = int(e)
                 if ei < size:
                     start_range = size - ei
-        self.send_header("Content-Range", 'bytes ' + str(start_range) + '-' + str(end_range - 1) + '/' + str(size))
+        self.send_header(
+            "Content-Range",
+            'bytes ' + str(start_range) + '-' + str(end_range - 1) + '/' + str(size))
         self.send_header("Content-Length", end_range - start_range)
         self.send_header("Last-Modified", self.date_time_string(fs.st_mtime))
         self.end_headers()
         return (f, start_range, end_range)
-
-    def list_directory(self, path):
-        """Helper to produce a directory listing (absent index.html).
-
-        Return value is either a file object, or None (indicating an
-        error).  In either case, the headers are sent, making the
-        interface the same as for send_head().
-
-        """
-        try:
-            list = os.listdir(path)
-        except os.error:
-            self.send_error(404, "No permission to list directory")
-            return None
-        list.sort(key=lambda a: a.lower())
-        f = StringIO()
-        displaypath = cgi.escape(urllib.unquote(self.path))
-        f.write('<!DOCTYPE html PUBLIC "-//W3C//DTD HTML 3.2 Final//EN">')
-        f.write("<html>\n<title>Directory listing for %s</title>\n" % displaypath)
-        f.write("<body>\n<h2>Directory listing for %s</h2>\n" % displaypath)
-        f.write("<hr>\n<ul>\n")
-        for name in list:
-            fullname = os.path.join(path, name)
-            displayname = linkname = name
-            # Append / for directories or @ for symbolic links
-            if os.path.isdir(fullname):
-                displayname = name + "/"
-                linkname = name + "/"
-            if os.path.islink(fullname):
-                displayname = name + "@"
-                # Note: a link to a directory displays with @ and links with /
-            f.write('<li><a href="%s">%s</a>\n'
-                    % (urllib.quote(linkname), cgi.escape(displayname)))
-        f.write("</ul>\n<hr>\n</body>\n</html>\n")
-        length = f.tell()
-        f.seek(0)
-        self.send_response(200)
-        self.send_header("Content-type", "text/html")
-        self.send_header("Content-Length", str(length))
-        self.end_headers()
-        return (f, 0, length)
 
     def translate_path(self, path):
         """Translate a /-separated PATH to the local filename syntax.
@@ -197,16 +156,17 @@ class RangeHTTPRequestHandler(BaseHTTPServer.BaseHTTPRequestHandler):
 
         """
         # abandon query parameters
-        path = path.split('?',1)[0]
-        path = path.split('#',1)[0]
-        path = posixpath.normpath(urllib.unquote(path))
+        path = path.split('?', 1)[0]
+        path = path.split('#', 1)[0]
+        path = posixpath.normpath(six.moves.urllib.parse.unquote(path))
         words = path.split('/')
         words = filter(None, words)
         path = os.getcwd()
         for word in words:
             drive, word = os.path.splitdrive(word)
             head, word = os.path.split(word)
-            if word in (os.curdir, os.pardir): continue
+            if word in (os.curdir, os.pardir):
+                continue
             path = os.path.join(path, word)
         return path
 
@@ -250,23 +210,4 @@ class RangeHTTPRequestHandler(BaseHTTPServer.BaseHTTPRequestHandler):
         else:
             return self.extensions_map['']
 
-    if not mimetypes.inited:
-        mimetypes.init() # try to read system mime.types
-    extensions_map = mimetypes.types_map.copy()
-    extensions_map.update({
-        '': 'application/octet-stream', # Default
-        '.py': 'text/plain',
-        '.c': 'text/plain',
-        '.h': 'text/plain',
-        '.mp4': 'video/mp4',
-        '.ogg': 'video/ogg',
-        })
-
-
-def test(HandlerClass = RangeHTTPRequestHandler,
-         ServerClass = BaseHTTPServer.HTTPServer):
-    BaseHTTPServer.test(HandlerClass, ServerClass)
-
-
-if __name__ == '__main__':
-    test()
+    extensions_map = {'': 'unknown'}
