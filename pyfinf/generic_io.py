@@ -718,7 +718,12 @@ class HTTPConnection(RandomAccessFile):
                 result = np.empty((size,), dtype=np.uint8)
                 response.readinto(result)
             else:
-                with os.fdopen(response.fileno(), 'rb') as fd:
+                # Python 2.6 HTTPResponse does not have fileno()
+                if hasattr(response, 'fileno'):
+                    fileno = response.fileno()
+                else:
+                    fileno = response.fp.fileno()
+                with os.fdopen(fileno, 'rb') as fd:
                     result = np.fromfile(fd, np.uint8, size)
 
         self._pos = new_pos
