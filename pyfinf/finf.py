@@ -85,7 +85,7 @@ class FinfFile(versioning.VersionedMixin):
                 int(match.group("micro")))
 
     @classmethod
-    def read(cls, fd, uri=None, mode='r'):
+    def read(cls, fd, uri=None, mode='r', _get_yaml_content=False):
         """
         Read a FINF file.
 
@@ -113,46 +113,42 @@ class FinfFile(versioning.VersionedMixin):
         self = cls()
         self._fd = fd
 
-        # The yaml content is read now, but we parse it after finding
-        # all of the blocks, so that arrays can be resolved to their
-        # blocks immediately.
-        yaml_content = self.read_raw_tree(fd)
-        first_newline = yaml_content.index(b'\n')
-        version_line = yaml_content[:first_newline]
-        self.version = cls._parse_header_line(version_line)
+        header_line = fd.read_until(b'\r?\n', "newline", include=True)
+        self.version = cls._parse_header_line(header_line)
 
-        if fd.seek_until(constants.BLOCK_MAGIC, include=False):
-            self._blocks.read_internal_blocks(fd)
-
-        ctx = yamlutil.Context(self)
-        tree = yamlutil.load_tree(yaml_content, ctx)
-        ctx.run_hook(tree, 'post_read')
-        self._tree = tree
-
-        return self
-
-    @classmethod
-    def read_raw_tree(cls, fd):
-        """
-        Read just the tree part of the given file, and return its
-        content as a bytes string, encoded in UTF-8.
-
-        Parameters
-        ----------
-        fd : string or file-like object
-            May be a string ``file`` or ``http`` URI, or a Python
-            file-like object.
-
-        Returns
-        -------
-        content : bytes
-        """
-        with generic_io.get_file(fd, mode='r') as fd:
-            content = fd.read_until(
+        yaml_token = fd.read(4)
+        yaml_content = b''
+        has_blocks = False
+        if yaml_token == b'%YAM':
+            # The yaml content is read now, but we parse it after finding
+            # all of the blocks, so that arrays can be resolved to their
+            # blocks immediately.
+            yaml_content = yaml_token + fd.read_until(
                 constants.YAML_END_MARKER_REGEX, 'End of YAML marker',
                 include=True)
+            has_blocks = fd.seek_until(constants.BLOCK_MAGIC, include=True)
+        elif yaml_token == constants.BLOCK_MAGIC:
+            has_blocks = True
+        elif yaml_token != b'':
+            raise IOError("FINF file appears to contain garbage after header.")
 
-        return content
+        # For testing: just return the raw YAML content
+        if _get_yaml_content:
+            fd.close()
+            return yaml_content
+
+        if has_blocks:
+            self._blocks.read_internal_blocks(fd, past_magic=True)
+
+        if len(yaml_content):
+            ctx = yamlutil.Context(self)
+            tree = yamlutil.load_tree(yaml_content, ctx)
+            ctx.run_hook(tree, 'post_read')
+            self._tree = tree
+        else:
+            self._tree = {}
+
+        return self
 
     def update(self):
         """
@@ -179,7 +175,6 @@ class FinfFile(versioning.VersionedMixin):
                     "Can not write an exploded file without knowing its URI.")
 
             tree = self._tree
-            ctx.run_hook(tree, 'pre_write')
 
             try:
                 # This is where we'd do some more sophisticated block
@@ -190,11 +185,13 @@ class FinfFile(versioning.VersionedMixin):
                 fd.write(self.version_string.encode('ascii'))
                 fd.write(b'\n')
 
-                yamlutil.dump_tree(tree, fd, ctx)
+                if len(tree):
+                    ctx.run_hook(tree, 'pre_write')
+                    yamlutil.dump_tree(tree, fd, ctx)
 
-                for block in self._blocks:
-                    block.write(fd)
+                self.blocks.write_blocks(fd)
             finally:
-                ctx.run_hook(self._tree, 'post_write')
+                if len(tree):
+                    ctx.run_hook(tree, 'post_write')
 
             fd.flush()

@@ -56,7 +56,12 @@ class NDArrayType(FinfType):
 
     def __init__(self, source, shape, dtype, offset, strides,
                  order, finffile):
-        self._block = finffile.blocks.get_block(source)
+        if isinstance(source, int):
+            self._block = finffile.blocks.get_block(source)
+        else:
+            self._finffile = finffile
+            self._source = source
+            self._block = None
         self._shape = shape
         self._dtype = dtype
         self._offset = offset
@@ -66,6 +71,8 @@ class NDArrayType(FinfType):
 
     def _make_array(self):
         if self._array is None:
+            if self._block is None:
+                self._block = self._finffile.blocks.get_block(self._source)
             data = self._block.data
             self._array = np.ndarray(
                 self._shape, self._dtype, data,
@@ -130,7 +137,7 @@ class NDArrayType(FinfType):
 
         result = {}
         result['shape'] = list(shape)
-        result['source'] = block.source
+        result['source'] = ctx.finffile.blocks.get_source(block)
 
         dtype, byteorder = numpy_dtype_to_finf_dtype(dtype)
         result['dtype'] = dtype

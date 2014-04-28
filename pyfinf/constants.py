@@ -5,7 +5,7 @@ from __future__ import absolute_import, division, unicode_literals, print_functi
 
 
 FINF_MAGIC = b'%FINF '
-BLOCK_MAGIC = b'\xd3BFF\r\n \n'
+BLOCK_MAGIC = b'\xd3BLK'
 
 
 YAML_TAG_PREFIX = 'tag:yaml.org,2002:'

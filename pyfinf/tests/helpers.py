@@ -53,11 +53,11 @@ def assert_roundtrip_tree(
         finf_check_func(ff)
 
     buff.seek(0)
-    content = FinfFile.read_raw_tree(buff)
+    content = FinfFile.read(buff, _get_yaml_content=True)
     # We *never* want to get any raw python objects out
     assert b'!!python' not in content
     assert b'!finf' in content
-    assert content.startswith(b'%FINF ')
+    assert content.startswith(b'%YAML 1.1')
     if raw_yaml_check_func:
         raw_yaml_check_func(content)
 
