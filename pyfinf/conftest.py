@@ -9,10 +9,10 @@ from __future__ import absolute_import, division, unicode_literals, print_functi
 
 from astropy.tests.pytest_plugins import *
 
+import multiprocessing
 import os
 import shutil
 import tempfile
-import threading
 
 from astropy.extern import six
 from astropy.tests.helper import pytest
@@ -20,36 +20,50 @@ from astropy.tests.helper import pytest
 from .extern.RangeHTTPServer import RangeHTTPRequestHandler
 
 
-class HTTPServerThread(threading.Thread):
+def run_server(queue, tmpdir, handler_class):
+    """
+    Runs an HTTP server serving files from given tmpdir in a separate
+    process.  When it's ready, it sends a URL to the server over a
+    queue so the main process (the HTTP client) can start making
+    requests of it.
+    """
+    class HTTPRequestHandler(handler_class):
+        def translate_path(self, path):
+            path = handler_class.translate_path(self, path)
+            path = os.path.join(
+                tmpdir,
+                os.path.relpath(path, os.getcwd()))
+            return path
+
+    server = six.moves.socketserver.TCPServer(
+        ("127.0.0.1", 0), HTTPRequestHandler)
+    domain, port = server.server_address
+    url = "http://{0}:{1}/".format(domain, port)
+
+    queue.put(url)
+
+    server.serve_forever()
+
+
+class HTTPServer(object):
     handler_class = six.moves.SimpleHTTPServer.SimpleHTTPRequestHandler
 
     def __init__(self):
-        super(HTTPServerThread, self).__init__()
-        self.tmpdir = tmpdir = tempfile.mkdtemp()
-        handler_class = self.handler_class
+        self.tmpdir = tempfile.mkdtemp()
 
-        class HTTPRequestHandler(self.handler_class):
-            def translate_path(self, path):
-                path = handler_class.translate_path(self, path)
-                path = os.path.join(
-                    tmpdir,
-                    os.path.relpath(path, os.getcwd()))
-                return path
+        q = multiprocessing.Queue()
+        self.process = multiprocessing.Process(
+            target=run_server,
+            args=(q, self.tmpdir, self.handler_class))
+        self.process.start()
+        self.url = q.get()
 
-        self._server = six.moves.socketserver.TCPServer(
-            ("127.0.0.1", 0), HTTPRequestHandler)
-        domain, port = self._server.server_address
-        self.url = "http://{0}:{1}/".format(domain, port)
-
-    def run(self):
-        self._server.serve_forever()
-
-    def stop(self):
-        self._server.shutdown()
+    def finalize(self):
+        self.process.terminate()
         shutil.rmtree(self.tmpdir)
 
 
-class RangeHTTPServerThread(HTTPServerThread):
+class RangeHTTPServer(HTTPServer):
     handler_class = RangeHTTPRequestHandler
 
 
@@ -64,9 +78,8 @@ def httpserver(request):
     * ``tmpdir`` - path to the tmpdir that it's serving from (str)
     * ``url`` - the base url for the server
     """
-    server = HTTPServerThread()
-    server.start()
-    request.addfinalizer(server.stop)
+    server = HTTPServer()
+    request.addfinalizer(server.finalize)
     return server
 
 
@@ -81,7 +94,6 @@ def rhttpserver(request):
     * ``tmpdir`` - path to the tmpdir that it's serving from (str)
     * ``url`` - the base url for the server
     """
-    server = RangeHTTPServerThread()
-    server.start()
-    request.addfinalizer(server.stop)
+    server = RangeHTTPServer()
+    request.addfinalizer(server.finalize)
     return server
