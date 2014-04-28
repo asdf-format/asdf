@@ -11,6 +11,7 @@ import astropy.extern.six.moves.urllib.request as urllib_request
 from astropy.tests.helper import pytest
 
 import numpy as np
+from numpy.testing import assert_array_equal
 
 from .. import finf
 from .. import generic_io
@@ -306,3 +307,34 @@ def test_exploded_stream_read(tmpdir):
     # occurs.
     with pytest.raises(ValueError):
         ff.tree['science_data'][:]
+
+
+def test_external_fragment_reference(httpserver):
+    # Test that referencing specific blocks in another finf file
+    # works.
+    tree = _get_small_tree()
+
+    path = os.path.join(str(httpserver.tmpdir), 'test.finf')
+    ff = finf.FinfFile(tree)
+    ff.write_to(path)
+
+    tree = {
+        'science_data': {
+            'source': httpserver.url + "test.finf#0",
+            'shape': 10,
+            'dtype': 'double'
+            },
+        'not_shared': {
+            'source': httpserver.url + "test.finf#1",
+            'shape': 10,
+            'dtype': 'double'
+        }
+    }
+
+    path = os.path.join(str(httpserver.tmpdir), 'test2.finf')
+    ff2 = finf.FinfFile(tree)
+    ff2.write_to(path)
+
+    ff3 = finf.FinfFile().read(path)
+    assert_array_equal(ff3.tree['science_data'], tree['science_data'])
+    assert_array_equal(ff3.tree['not_shared'], tree['not_shared'])
