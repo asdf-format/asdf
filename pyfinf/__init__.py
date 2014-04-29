@@ -36,7 +36,4 @@ def open(init, mode='rw', uri=None):
         The URI of the file.  Only required if the URI can not be
         automatically determined from `init`.
     """
-    from . import generic_io
-
-    fd = generic_io.get_file(fd, mode=mode, uri=uri)
-    return FinfFile.read(fd)
+    return FinfFile.read(init, mode=mode, uri=uri)

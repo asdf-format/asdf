@@ -42,7 +42,7 @@ import mimetypes
 from astropy.extern import six
 
 
-class RangeHTTPRequestHandler(six.moves.BaseHTTPServer.BaseHTTPRequestHandler):
+class RangeHTTPRequestHandler(six.moves.BaseHTTPServer.BaseHTTPRequestHandler):  # pragma: no cover
 
     """Simple HTTP request handler with GET and HEAD commands.
 

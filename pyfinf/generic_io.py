@@ -44,10 +44,11 @@ def _check_bytes(fd, mode):
         if not isinstance(x, bytes):
             return False
     elif mode == 'w':
-        if six.PY2 and isinstance(fd, file):
-            if 'b' not in fd.mode:
-                return False
-        else:
+        if six.PY2:
+            if isinstance(fd, file):
+                if 'b' not in fd.mode:
+                    return False
+        elif six.PY3:
             try:
                 fd.write(b'')
             except TypeError:
@@ -103,9 +104,6 @@ class GenericFile(object):
             to resolve relative URIs when the file refers to external
             sources.
         """
-        if mode not in ('r', 'w', 'rw'):
-            raise ValueError("mode must be 'r', 'w' or 'rw'")
-
         if not _check_bytes(fd, mode):
             raise ValueError(
                 "File-like object must be opened in binary mode.")
@@ -398,13 +396,13 @@ class RandomAccessFile(GenericFile):
 
         if delimiter_name is None:
             delimiter_name = delimiter
-        raise IOError("{0} not found".format(delimiter_name))
+        raise ValueError("{0} not found".format(delimiter_name))
 
     def seek_until(self, delimiter, include=True):
         while True:
             block = self.read_block()
             if not len(block):
-                return False
+                break
             index = re.search(delimiter, block)
             if index is not None:
                 if include:
@@ -465,7 +463,7 @@ class MemoryIO(RandomAccessFile):
         # When creating an array from a buffer, it is read-only.
         # If we need a read/write array, we have to copy it.
         if 'w' in self._mode:
-            return result.copy()
+            result = result.copy()
         return result
 
 
@@ -473,8 +471,8 @@ class InputStream(GenericFile):
     """
     Handles an input stream, such as stdin.
     """
-    def __init__(self, fd, close=False, uri=None):
-        super(InputStream, self).__init__(fd, 'r', close=close, uri=uri)
+    def __init__(self, fd, mode, close=False, uri=None):
+        super(InputStream, self).__init__(fd, mode, close=close, uri=uri)
         self._fd = fd
         self._buffer = b''
 
@@ -530,13 +528,13 @@ class InputStream(GenericFile):
                 self.read(len(block))
             buff.write(block)
 
-        raise IOError("{0} not found".format(delimiter_name))
+        raise ValueError("{0} not found".format(delimiter_name))
 
     def seek_until(self, delimiter, include=True):
         while True:
             block = self._peek(self._blksize)
             if not len(block):
-                return False
+                break
             index = re.search(delimiter, block)
             if index is not None:
                 if include:
@@ -556,8 +554,20 @@ class InputStream(GenericFile):
             raise IOError("Read past end of file")
 
     def read_into_array(self, size):
-        data = self.read(size)
-        return np.frombuffer(data, np.uint8, size)
+        try:
+            # See if Numpy can handle this as a real file first...
+            return np.fromfile(self._fd, np.uint8, size)
+        except IOError:
+            # Else, fall back to reading into memory and then
+            # returning the Numpy array.
+            data = self.read(size)
+            # We need to copy the array, so it is writable
+            result = np.frombuffer(data, np.uint8, size)
+            # When creating an array from a buffer, it is read-only.
+            # If we need a read/write array, we have to copy it.
+            if 'w' in self._mode:
+                result = result.copy()
+            return result
 
 
 class OutputStream(GenericFile):
@@ -730,7 +740,7 @@ class HTTPConnection(RandomAccessFile):
         return result
 
 
-def make_http_connection(init, uri=None):
+def make_http_connection(init, mode, uri=None):
     """
     Creates a HTTPConnection instance if the HTTP server supports
     Range requests, otherwise falls back to a generic InputStream.
@@ -760,7 +770,7 @@ def make_http_connection(init, uri=None):
         # Fall back to a regular input stream, but we don't
         # need to open a new connection.
         response.close = connection.close
-        return InputStream(response, uri=uri or init, close=True)
+        return InputStream(response, mode, uri=uri or init, close=True)
 
     # Since we'll be requesting chunks, we can't read at all with the
     # current request (because we can't abort it), so just close and
@@ -834,10 +844,10 @@ def get_file(init, mode='r', uri=None):
     elif isinstance(init, six.string_types):
         parsed = urlparse.urlparse(init)
         if parsed.scheme == 'http':
-            if 'w' in mode:
+            if mode == 'w':
                 raise ValueError(
                     "HTTP connections can not be opened for writing")
-            return make_http_connection(init, uri=uri)
+            return make_http_connection(init, mode, uri=uri)
         elif parsed.scheme in ('', 'file'):
             if mode == 'rw':
                 realmode = 'r+b'
@@ -866,7 +876,7 @@ def get_file(init, mode='r', uri=None):
             if mode == 'w':
                 return OutputStream(init, uri=uri)
             elif mode == 'r':
-                return InputStream(init, uri=uri)
+                return InputStream(init, mode, uri=uri)
             else:
                 raise ValueError(
                     "File '{0}' could not be opened in 'rw' mode".format(init))
@@ -884,17 +894,20 @@ def get_file(init, mode='r', uri=None):
                     init.mode, mode))
 
         if init.seekable():
-            if isinstance(init, (io.BufferedReader, io.BufferedWriter)):
+            if isinstance(init, (io.BufferedReader,
+                                 io.BufferedWriter,
+                                 io.BufferedRandom)):
                 init = init.detach()
             if isinstance(init, io.RawIOBase):
                 return RealFile(init, mode, uri=uri)
             else:
+                print("HERE", init, type(init))
                 return MemoryIO(init, mode, uri=uri)
         else:
             if mode == 'w':
                 return OutputStream(init, uri=uri)
             elif mode == 'r':
-                return InputStream(init, uri=uri)
+                return InputStream(init, mode, uri=uri)
             else:
                 raise ValueError(
                     "File '{0}' could not be opened in 'rw' mode".format(init))
@@ -905,11 +918,11 @@ def get_file(init, mode='r', uri=None):
           hasattr(init, 'tell')):
         return MemoryIO(init, uri=uri)
 
-    elif mode == 'r' and hasattr(init, 'read'):
-        return InputStream(init, uri=uri)
-
-    elif mode == 'w' and hasattr(init, 'write'):
+    elif 'w' in mode and hasattr(init, 'write'):
         return OutputStream(init, uri=uri)
+
+    elif 'r' in mode and hasattr(init, 'read'):
+        return InputStream(init, mode, uri=uri)
 
     raise ValueError("Can't handle '{0}' as a file for mode '{1}'".format(
         init, mode))

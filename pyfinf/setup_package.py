@@ -6,7 +6,7 @@ from __future__ import absolute_import, division, unicode_literals, print_functi
 import os
 
 
-def get_package_data():
+def get_package_data():  # pragma: no cover
     schemas = []
     root = "finf-standard/schemas"
     for node, dirs, files in os.walk(root):
@@ -22,5 +22,5 @@ def get_package_data():
     }
 
 
-def requires_2to3():
+def requires_2to3():  # pragma: no cover
     return False

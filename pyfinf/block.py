@@ -81,12 +81,6 @@ class BlockManager(object):
     def __len__(self):
         return len(self._internal_blocks) + len(self._external_blocks)
 
-    def __iter__(self):
-        for x in self._internal_blocks:
-            yield x
-        for x in self._external_blocks:
-            yield x
-
     def finalize(self, ctx):
         """
         At this point, we have a complete set of blocks for the file,
@@ -353,30 +347,23 @@ class Block(object):
         Get the data for the block, as a numpy array.
         """
         if self._data is None:
-            if self._uri is not None:
-                self.read(self._uri)
-            elif self._fd is None:
-                raise ValueError(
-                    "Can not load data because source tree has no URI.")
+            if self._fd.is_closed():
+                raise IOError(
+                    "FINF file has already been closed. "
+                    "Can not get the data.")
 
-            if self._fd is not None:
-                if self._fd.is_closed():
-                    raise IOError(
-                        "FINF file has already been closed. "
-                        "Can not get the data.")
+            if self._fd.can_memmap():
+                self._data = self._fd.memmap_array(
+                    self._data_offset, self._size)
+                self._memmapped = True
 
-                if self._fd.can_memmap():
-                    self._data = self._fd.memmap_array(
-                        self._data_offset, self._size)
-                    self._memmapped = True
-
-                else:
-                    # Be nice and don't move around the file position.
-                    curpos = self._fd.tell()
-                    try:
-                        self._fd.seek(self._data_offset)
-                        self._data = self._fd.read_into_array(self._size)
-                    finally:
-                        self._fd.seek(curpos)
+            else:
+                # Be nice and don't move around the file position.
+                curpos = self._fd.tell()
+                try:
+                    self._fd.seek(self._data_offset)
+                    self._data = self._fd.read_into_array(self._size)
+                finally:
+                    self._fd.seek(curpos)
 
         return self._data

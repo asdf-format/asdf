@@ -9,7 +9,7 @@ if six.PY2:
     from UserDict import UserDict
     from UserList import UserList
     from UserString import UserString
-else:
+elif six.PY3:
     from .user_collections_py3.UserDict import UserDict
     from .user_collections_py3.UserList import UserList
     from .user_collections_py3.UserString import UserString
