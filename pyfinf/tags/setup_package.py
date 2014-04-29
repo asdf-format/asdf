@@ -4,7 +4,7 @@
 from __future__ import absolute_import, division, unicode_literals, print_function
 
 
-def get_package_data():
+def get_package_data():  # pragma: no cover
     return {
         str('pyfinf.tags.tests'): ['data/*.fits']
     }

@@ -79,7 +79,7 @@ class FinfFile(versioning.VersionedMixin):
                  b'(?P<major>[0-9]+)\.(?P<minor>[0-9]+)\.(?P<micro>[0-9]+)')
         match = re.match(regex, line)
         if match is None:
-            raise IOError("Does not appear to be a FINF file.")
+            raise ValueError("Does not appear to be a FINF file.")
         return (int(match.group("major")),
                 int(match.group("minor")),
                 int(match.group("micro")))

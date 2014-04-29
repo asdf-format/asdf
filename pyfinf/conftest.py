@@ -25,7 +25,7 @@ from astropy.tests.helper import pytest
 from .extern.RangeHTTPServer import RangeHTTPRequestHandler
 
 
-def run_server(queue, tmpdir, handler_class):
+def run_server(queue, tmpdir, handler_class):  # pragma: no cover
     """
     Runs an HTTP server serving files from given tmpdir in a separate
     process.  When it's ready, it sends a URL to the server over a
