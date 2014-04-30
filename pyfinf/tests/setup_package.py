@@ -6,4 +6,4 @@ from __future__ import absolute_import, division, unicode_literals, print_functi
 
 def get_package_data():  # pragma: no cover
     return {
-        _ASTROPY_PACKAGE_NAME_ + '.tests': ['coveragerc']}
+        str(_ASTROPY_PACKAGE_NAME_ + '.tests'): ['coveragerc']}

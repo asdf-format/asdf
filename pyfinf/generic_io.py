@@ -897,12 +897,15 @@ def get_file(init, mode='r', uri=None):
             if isinstance(init, (io.BufferedReader,
                                  io.BufferedWriter,
                                  io.BufferedRandom)):
-                init = init.detach()
-            if isinstance(init, io.RawIOBase):
-                return RealFile(init, mode, uri=uri)
+                init2 = init.raw
             else:
-                print("HERE", init, type(init))
-                return MemoryIO(init, mode, uri=uri)
+                init2 = init
+            if isinstance(init2, io.RawIOBase):
+                result = RealFile(init2, mode, uri=uri)
+            else:
+                result = MemoryIO(init2, mode, uri=uri)
+            result._secondary_fd = init
+            return result
         else:
             if mode == 'w':
                 return OutputStream(init, uri=uri)
