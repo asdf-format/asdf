@@ -8,18 +8,20 @@ python:
 env:
   global:
     - SETUP_CMD=test
+    - NUMPY_VERSION=1.8.0
+    - PIP_WHEEL_COMMAND="pip install --find-links http://wheels.astropy.org/ --find-links http://wheels2.astropy.org/ --use-wheel --use-mirrors"
 
 before_install:
    - sudo apt-get install -qq libatlas-dev liblapack-dev gfortran
 
 install:
-   - export PYTHONIOENCODING=UTF8 # just in case
-   - pip install --upgrade numpy
-   - pip install --upgrade Cython
-   - if [[ $SETUP_CMD == build_sphinx* ]]; then pip -q install sphinx==1.2 --use-mirrors; fi
-   - pip install git+http://github.com/astropy/astropy.git#egg=astropy
-   - pip -q install --upgrade jsonschema
-   - pip -q install --upgrade pyyaml
+  - export PYTHONIOENCODING=UTF8 # just in case
+  - $PIP_WHEEL_COMMAND --upgrade "numpy==$NUMPY_VERSION"
+  - $PIP_WHEEL_COMMAND "Cython==0.19.1"
+  - if [[ $SETUP_CMD == build_sphinx* ]]; then pip -q install sphinx==1.2 --use-mirrors; fi
+  - pip install git+http://github.com/astropy/astropy.git#egg=astropy
+  - pip -q install --upgrade jsonschema
+  - pip -q install --upgrade pyyaml
 
 script:
    - python setup.py $SETUP_CMD
