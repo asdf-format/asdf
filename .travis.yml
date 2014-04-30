@@ -72,14 +72,5 @@ install:
     - if [[ $SETUP_CMD == build_sphinx* ]]; then $PIP_WHEEL_FLEX_NUMPY sphinx>=1.2; fi
     - if [[ $SETUP_CMD == build_sphinx* ]]; then $PIP_WHEEL_FLEX_NUMPY matplotlib; fi
 
-before_install:
-   - sudo apt-get install -qq libatlas-dev liblapack-dev gfortran
-
-install:
-   - export PYTHONIOENCODING=UTF8 # just in case
-   - pip install --upgrade numpy
-   - pip install --upgrade Cython
-   - if [[ $SETUP_CMD == build_sphinx* ]]; then pip -q install sphinx==1.2 --use-mirrors; fi
-
 script:
    - python setup.py $SETUP_CMD
