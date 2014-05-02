@@ -27,9 +27,11 @@ def test_external_reference(tmpdir):
             ]
         }
     external_path = os.path.join(str(tmpdir), 'external.finf')
-    finf.FinfFile(exttree).write_to(external_path)
+    with finf.FinfFile(exttree) as ff:
+        ff.write_to(external_path)
     external_path = os.path.join(str(tmpdir), 'external2.finf')
-    finf.FinfFile(exttree).write_to(external_path)
+    with finf.FinfFile(exttree) as ff:
+        ff.write_to(external_path)
 
     tree = {
         # The special name "data" here must be an array.  This is
@@ -92,38 +94,38 @@ def test_external_reference(tmpdir):
 
         assert_array_equal(ff.tree['internal'], exttree['cool_stuff']['a'])
 
-    ff = finf.FinfFile(tree, uri=os.path.join(str(tmpdir), 'main.finf'))
-    do_asserts(ff)
+    with finf.FinfFile(tree, uri=os.path.join(str(tmpdir), 'main.finf')) as ff:
+        do_asserts(ff)
 
-    internal_path = os.path.join(str(tmpdir), 'main.finf')
-    ff.write_to(internal_path)
+        internal_path = os.path.join(str(tmpdir), 'main.finf')
+        ff.write_to(internal_path)
 
-    ff = finf.FinfFile.read(internal_path)
-    do_asserts(ff)
+    with finf.FinfFile.read(internal_path) as ff:
+        do_asserts(ff)
 
-    ff = finf.FinfFile.read(internal_path)
-    assert len(ff._external_finf_by_uri) == 0
-    ff.resolve_references()
-    assert len(ff._external_finf_by_uri) == 2
+    with finf.FinfFile.read(internal_path) as ff:
+        assert len(ff._external_finf_by_uri) == 0
+        ff.resolve_references()
+        assert len(ff._external_finf_by_uri) == 2
 
-    assert isinstance(ff.tree['data'], ndarray.NDArrayType)
-    assert isinstance(ff.tree['science_data'], ndarray.NDArrayType)
+        assert isinstance(ff.tree['data'], ndarray.NDArrayType)
+        assert isinstance(ff.tree['science_data'], ndarray.NDArrayType)
 
-    assert_array_equal(ff.tree['science_data'], exttree['cool_stuff']['a'])
-    assert_array_equal(ff.tree['science_data2'], exttree['cool_stuff']['a'])
+        assert_array_equal(ff.tree['science_data'], exttree['cool_stuff']['a'])
+        assert_array_equal(ff.tree['science_data2'], exttree['cool_stuff']['a'])
 
-    assert ff.tree['foobar'] == 'foobar'
-    assert ff.tree['answer'] == 42
-    assert_array_equal(ff.tree['array'], exttree['list_of_stuff'][2])
+        assert ff.tree['foobar'] == 'foobar'
+        assert ff.tree['answer'] == 42
+        assert_array_equal(ff.tree['array'], exttree['list_of_stuff'][2])
 
-    assert_tree_match(ff.tree['whole_thing'], exttree)
+        assert_tree_match(ff.tree['whole_thing'], exttree)
 
-    assert_array_equal(
-        ff.tree['whole_thing']['cool_stuff']['a'],
-        exttree['cool_stuff']['a'])
+        assert_array_equal(
+            ff.tree['whole_thing']['cool_stuff']['a'],
+            exttree['cool_stuff']['a'])
 
-    assert_array_equal(
-        ff.tree['myself']['science_data'],
-        exttree['cool_stuff']['a'])
+        assert_array_equal(
+            ff.tree['myself']['science_data'],
+            exttree['cool_stuff']['a'])
 
-    assert_array_equal(ff.tree['internal'], exttree['cool_stuff']['a'])
+        assert_array_equal(ff.tree['internal'], exttree['cool_stuff']['a'])
