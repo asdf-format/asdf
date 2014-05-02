@@ -12,7 +12,6 @@ import astropy.extern.six.moves.urllib.request as urllib_request
 from astropy.tests.helper import pytest
 
 import numpy as np
-from numpy.testing import assert_array_equal
 
 from .. import finf
 from .. import generic_io

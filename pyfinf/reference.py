@@ -83,6 +83,9 @@ class Reference(FinfType):
         else:
             return str(self._target)
 
+    def __len__(self):
+        return len(self._get_target())
+
     def __getattr__(self, attr):
         return getattr(self._get_target(), attr)
 
