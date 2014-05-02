@@ -116,9 +116,6 @@ def test_invalid_source():
     with pytest.raises(IOError):
         ff2.blocks.get_block("http://127.0.0.1/")
 
-    with pytest.raises(ValueError):
-        ff2.blocks.get_block("http://127.0.0.1/file.finf#foo")
-
     with pytest.raises(TypeError):
         ff2.blocks.get_block(42.0)
 

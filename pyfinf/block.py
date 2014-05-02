@@ -117,12 +117,6 @@ class BlockManager(object):
         elif isinstance(source, six.string_types):
             # Get the URI to the external source, without the "fragment".
             parts = urlparse.urlparse(source)
-            fragment = parts[5] or 0
-            try:
-                fragment = int(fragment)
-            except ValueError:
-                raise ValueError(
-                    "Invalid fragment '{0}' (must be an int).".format(fragment))
             without_fragment = urlparse.urlunparse(list(parts[:5]) + [''])
             full_uri = generic_io.resolve_uri(
                 self._finffile.uri, without_fragment)
@@ -133,7 +127,7 @@ class BlockManager(object):
                 self._external_finf_by_uri[full_uri] = finffile
             # Now that we have a FinfFile, we get get a specific block using
             # the fragment part of the URL.
-            block = finffile.blocks._internal_blocks[fragment]
+            block = finffile.blocks._internal_blocks[0]
             if block not in self._external_blocks:
                 self._external_blocks.append(block)
         else:
