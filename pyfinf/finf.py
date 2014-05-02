@@ -40,7 +40,6 @@ class FinfFile(versioning.VersionedMixin):
         self.tree = tree
         self._fd = None
         self._uri = uri
-        # TODO: Weak valued dictionary?
         self._external_finf_by_uri = {}
         self.find_references()
 
@@ -48,10 +47,16 @@ class FinfFile(versioning.VersionedMixin):
         return self
 
     def __exit__(self, type, value, traceback):
+        self.close()
+
+    def close(self):
         if self._fd:
             # This is ok to always do because GenericFile knows
             # whether it "owns" the file and should close it.
             self._fd.close()
+        for external in self._external_finf_by_uri.values():
+            external.close()
+        self._external_finf_by_uri.clear()
 
     @property
     def uri(self):
