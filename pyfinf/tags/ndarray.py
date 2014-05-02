@@ -85,14 +85,14 @@ class NDArrayType(FinfType):
     def __repr__(self):
         # repr alone should not force loading of the data
         if self._array is None:
-            return "<array (unloaded) '{0}' '{1}'>".format(
+            return "<array (unloaded) shape: {0} dtype: {1}>".format(
                 self._shape, self._dtype)
         return repr(self._array)
 
     def __str__(self):
         # str alone should not force loading of the data
         if self._array is None:
-            return "<array (unloaded) '{0}' '{1}'>".format(
+            return "<array (unloaded) shape: {0} dtype: {1}>".format(
                 self._shape, self._dtype)
         return str(self._array)
 

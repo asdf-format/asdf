@@ -6,7 +6,6 @@ from __future__ import absolute_import, division, unicode_literals, print_functi
 import struct
 
 from astropy.extern import six
-from astropy.extern.six.moves.urllib import parse as urlparse
 
 from . import constants
 from . import generic_io
@@ -23,7 +22,6 @@ class BlockManager(object):
 
         self._internal_blocks = []
         self._external_blocks = []
-        self._external_finf_by_uri = {}
         self._data_to_block_mapping = {}
 
     def read_internal_blocks(self, fd, past_magic=False):
@@ -115,18 +113,7 @@ class BlockManager(object):
             block = self._internal_blocks[source]
 
         elif isinstance(source, six.string_types):
-            # Get the URI to the external source, without the "fragment".
-            parts = urlparse.urlparse(source)
-            without_fragment = urlparse.urlunparse(list(parts[:5]) + [''])
-            full_uri = generic_io.resolve_uri(
-                self._finffile.uri, without_fragment)
-            finffile = self._external_finf_by_uri.get(full_uri)
-            if finffile is None:
-                from . import finf
-                finffile = finf.FinfFile.read(full_uri)
-                self._external_finf_by_uri[full_uri] = finffile
-            # Now that we have a FinfFile, we get get a specific block using
-            # the fragment part of the URL.
+            finffile = self._finffile.read_external(source)
             block = finffile.blocks._internal_blocks[0]
             if block not in self._external_blocks:
                 self._external_blocks.append(block)

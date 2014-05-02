@@ -10,6 +10,7 @@ import yaml
 
 from . constants import YAML_TAG_PREFIX
 from . import finftypes
+from . import reference
 from . import tagged
 from . import treeutil
 
@@ -324,6 +325,7 @@ def load_tree(yaml_content, ctx):
     FinfLoaderTmp.ctx = ctx
 
     tree = yaml.load(yaml_content, Loader=FinfLoaderTmp)
+    tree = reference.find_references(tree, ctx)
     validate_tagged_tree(tree, ctx)
     tree = tagged_tree_to_custom_tree(tree, ctx)
     return tree

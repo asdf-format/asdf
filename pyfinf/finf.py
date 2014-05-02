@@ -5,10 +5,13 @@ from __future__ import absolute_import, division, unicode_literals, print_functi
 
 import re
 
+from astropy.extern.six.moves.urllib import parse as urlparse
+
 from . import block
 from . import constants
 from .tags.finf import FinfObject
 from . import generic_io
+from . import reference
 from . import versioning
 from . import yamlutil
 
@@ -17,19 +20,29 @@ class FinfFile(versioning.VersionedMixin):
     """
     The main class that represents a FINF file.
     """
-    def __init__(self, tree=None):
+    def __init__(self, tree=None, uri=None):
         """
         Parameters
         ----------
         tree : dict, optional
             The main tree data in the FINF file.  Must conform to the
             FINF schema.
+
+        uri : str, optional
+            The URI for this FINF file.  Used to resolve relative
+            references against.  If not provided, will automatically
+            determined from the associated file object, if possible
+            and if created from `FinfFile.read`.
         """
         self._blocks = block.BlockManager(self)
         if tree is None:
             tree = {}
         self.tree = tree
         self._fd = None
+        self._uri = uri
+        # TODO: Weak valued dictionary?
+        self._external_finf_by_uri = {}
+        self.find_references()
 
     def __enter__(self):
         return self
@@ -42,17 +55,70 @@ class FinfFile(versioning.VersionedMixin):
 
     @property
     def uri(self):
+        if self._uri is not None:
+            return self._uri
         if self._fd is not None:
             return self._fd._uri
         return None
+
+    def resolve_uri(self, uri):
+        """
+        Resolve a (possibly relative) URI against the URI of this FINF
+        file.  May be overridden by base classes to change how URIs
+        are resolved.
+
+        Parameters
+        ----------
+        uri : str
+            An absolute or relative URI to resolve against the URI of
+            this FINF file.
+
+        Returns
+        -------
+        uri : str
+            The resolved URI.
+        """
+        return generic_io.resolve_uri(self.uri, uri)
+
+    def read_external(self, uri):
+        """
+        Load an external FINF file, from the given (possibly relative)
+        URI.  There is a cache (internal to this FINF file) that ensures
+        each external FINF file is loaded only once.
+
+        Parameters
+        ----------
+        uri : str
+            An absolute or relative URI to resolve against the URI of
+            this FINF file.
+
+        Returns
+        -------
+        finffile : FinfFile
+            The external FINF file.
+        """
+        # For a cache key, we want to ignore the "fragment" part.
+        parts = urlparse.urlparse(uri)
+        without_fragment = urlparse.urlunparse(list(parts[:5]) + [''])
+        without_fragment = self.resolve_uri(without_fragment)
+
+        # A uri like "#" should resolve back to ourself.  In that case,
+        # just return `self`.
+        if without_fragment == self.uri:
+            return self
+
+        finffile = self._external_finf_by_uri.get(without_fragment)
+        if finffile is None:
+            finffile = self.read(without_fragment)
+            self._external_finf_by_uri[without_fragment] = finffile
+        return finffile
 
     @property
     def tree(self):
         """
         Get the tree of data in the FINF file.
 
-        When setting, the tree will be validated against the FINF
-        schema.
+        When set, the tree will be validated against the FINF schema.
         """
         return self._tree
 
@@ -66,7 +132,7 @@ class FinfFile(versioning.VersionedMixin):
     def blocks(self):
         """
         Get the list of blocks in the FINF file.  This is a low-level
-        detail that is not required for most uses.
+        detail that is not required for most use cases.
         """
         return self._blocks
 
@@ -165,6 +231,9 @@ class FinfFile(versioning.VersionedMixin):
         fd : string or file-like object
             May be a string path to a file, or a Python file-like
             object.
+
+        exploded : bool, optional
+            Write each data block in a separate FINF file.
         """
         ctx = yamlutil.Context(self, options={
             'exploded': exploded})
@@ -195,3 +264,23 @@ class FinfFile(versioning.VersionedMixin):
                     ctx.run_hook(tree, 'post_write')
 
             fd.flush()
+
+    def find_references(self):
+        """
+        Finds all external "JSON References" in the tree and converts
+        them to `reference.Reference` objects.
+        """
+        ctx = yamlutil.Context(self)
+        self.tree = reference.find_references(self.tree, ctx)
+
+    def resolve_references(self):
+        """
+        Finds all external "JSON References" in the tree, loads the
+        external content, and places it directly in the tree.  Saving
+        a FINF file after this operation means it will have no
+        external references, and will be completely self-contained.
+        """
+        ctx = yamlutil.Context(self)
+        tree = reference.resolve_references(self.tree, ctx)
+        print("resolved", tree)
+        self.tree = tree
