@@ -96,6 +96,24 @@ class NDArrayType(FinfType):
                 self._shape, self._dtype)
         return str(self._array)
 
+    @property
+    def shape(self):
+        return self._shape
+
+    @property
+    def dtype(self):
+        if self._array is None:
+            return self._dtype
+        else:
+            return self._array.dtype
+
+    @property
+    def __len__(self):
+        if self._array is None:
+            return self._shape[0]
+        else:
+            return len(self._array)
+
     def __getattr__(self, attr):
         return getattr(self._make_array(), attr)
 

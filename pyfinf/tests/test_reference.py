@@ -8,6 +8,8 @@ import os
 import numpy as np
 from numpy.testing import assert_array_equal
 
+from astropy.tests.helper import pytest
+
 from .. import finf
 from ..tags import ndarray
 
@@ -129,3 +131,23 @@ def test_external_reference(tmpdir):
             exttree['cool_stuff']['a'])
 
         assert_array_equal(ff.tree['internal'], exttree['cool_stuff']['a'])
+
+
+def test_external_reference_invalid(tmpdir):
+    tree = {
+        'foo': {
+            '$ref': 'fail.finf'
+            }
+        }
+
+    ff = finf.FinfFile(tree)
+    with pytest.raises(ValueError):
+        ff.resolve_references()
+
+    ff = finf.FinfFile(tree, uri="http://nowhere.com/")
+    with pytest.raises(IOError):
+        ff.resolve_references()
+
+    ff = finf.FinfFile(tree, uri=os.path.join(str(tmpdir), 'main.finf'))
+    with pytest.raises(IOError):
+        ff.resolve_references()
