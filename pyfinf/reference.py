@@ -68,7 +68,7 @@ class Reference(FinfType):
         return self._target
 
     def __repr__(self):
-        # repr alone should not force loading of the data
+        # repr alone should not force loading of the reference
         if self._target is None:
             return "<Reference (unloaded) to '{0}'>".format(
                 self._uri)
@@ -76,7 +76,7 @@ class Reference(FinfType):
             return "<Reference to {0}>".format(repr(self._target))
 
     def __str__(self):
-        # str alone should not force loading of the data
+        # str alone should not force loading of the reference
         if self._target is None:
             return "<Reference (unloaded) to '{0}'>".format(
                 self._uri)

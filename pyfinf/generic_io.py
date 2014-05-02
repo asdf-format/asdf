@@ -740,7 +740,7 @@ class HTTPConnection(RandomAccessFile):
         return result
 
 
-def make_http_connection(init, mode, uri=None):
+def _make_http_connection(init, mode, uri=None):
     """
     Creates a HTTPConnection instance if the HTTP server supports
     Range requests, otherwise falls back to a generic InputStream.
@@ -847,7 +847,7 @@ def get_file(init, mode='r', uri=None):
             if mode == 'w':
                 raise ValueError(
                     "HTTP connections can not be opened for writing")
-            return make_http_connection(init, mode, uri=uri)
+            return _make_http_connection(init, mode, uri=uri)
         elif parsed.scheme in ('', 'file'):
             if mode == 'rw':
                 realmode = 'r+b'
