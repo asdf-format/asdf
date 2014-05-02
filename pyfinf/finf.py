@@ -184,7 +184,10 @@ class FinfFile(versioning.VersionedMixin):
         self = cls()
         self._fd = fd
 
-        header_line = fd.read_until(b'\r?\n', "newline", include=True)
+        try:
+            header_line = fd.read_until(b'\r?\n', "newline", include=True)
+        except ValueError:
+            raise ValueError("Does not appear to be a FINF file.")
         self.version = cls._parse_header_line(header_line)
 
         yaml_token = fd.read(4)

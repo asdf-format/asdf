@@ -29,8 +29,8 @@ def test_external_reference(tmpdir):
             ]
         }
     external_path = os.path.join(str(tmpdir), 'external.finf')
-    with finf.FinfFile(exttree) as ff:
-        ff.write_to(external_path)
+    ext = finf.FinfFile(exttree)
+    ext.write_to(external_path)
     external_path = os.path.join(str(tmpdir), 'external2.finf')
     with finf.FinfFile(exttree) as ff:
         ff.write_to(external_path)
@@ -69,10 +69,15 @@ def test_external_reference(tmpdir):
         }
 
     def do_asserts(ff):
+        assert 'unloaded' in repr(ff.tree['science_data'])
+        assert 'unloaded' in str(ff.tree['science_data'])
         assert len(ff._external_finf_by_uri) == 0
 
         assert_array_equal(ff.tree['science_data'], exttree['cool_stuff']['a'])
         assert len(ff._external_finf_by_uri) == 1
+        with pytest.raises(ValueError):
+            # Assignment destination is readonly
+            ff.tree['science_data'][0] = 42
 
         assert_array_equal(ff.tree['science_data2'], exttree['cool_stuff']['a'])
         assert len(ff._external_finf_by_uri) == 2
@@ -151,3 +156,36 @@ def test_external_reference_invalid(tmpdir):
     ff = finf.FinfFile(tree, uri=os.path.join(str(tmpdir), 'main.finf'))
     with pytest.raises(IOError):
         ff.resolve_references()
+
+
+def test_external_reference_invalid_fragment(tmpdir):
+    exttree = {
+        'list_of_stuff': [
+            'foobar',
+            42,
+            np.array([7, 8, 9], np.float)
+            ]
+        }
+    external_path = os.path.join(str(tmpdir), 'external.finf')
+    with finf.FinfFile(exttree) as ff:
+        ff.write_to(external_path)
+
+    tree = {
+        'foo': {
+            '$ref': 'external.finf#/list_of_stuff/a'
+            }
+        }
+
+    with finf.FinfFile(tree, uri=os.path.join(str(tmpdir), 'main.finf')) as ff:
+        with pytest.raises(ValueError):
+            ff.resolve_references()
+
+    tree = {
+        'foo': {
+            '$ref': 'external.finf#/list_of_stuff/3'
+            }
+        }
+
+    with finf.FinfFile(tree, uri=os.path.join(str(tmpdir), 'main.finf')) as ff:
+        with pytest.raises(ValueError):
+            ff.resolve_references()
