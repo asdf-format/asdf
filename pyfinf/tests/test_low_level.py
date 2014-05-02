@@ -136,6 +136,20 @@ def test_empty_file():
     assert len(ff.blocks) == 0
 
 
+def test_not_finf_file():
+    buff = io.BytesIO(b"SIMPLE")
+    buff.seek(0)
+
+    with pytest.raises(ValueError):
+        finf.FinfFile.read(buff)
+
+    buff = io.BytesIO(b"SIMPLE\n")
+    buff.seek(0)
+
+    with pytest.raises(ValueError):
+        finf.FinfFile.read(buff)
+
+
 def test_junk_file():
     buff = io.BytesIO(b"%FINF 0.1.0\nFOO")
     buff.seek(0)
