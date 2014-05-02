@@ -134,7 +134,13 @@ def walk_and_modify_with_tags(top, callback):
     tree : object
         The modified tree.
     """
+    seen = set()
+
     def recurse(tree):
+        if id(tree) in seen:
+            return tree
+        seen.add(id(tree))
+
         if isinstance(tree, dict):
             result = tree.__class__()
             for key, val in six.iteritems(tree):

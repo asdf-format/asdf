@@ -70,7 +70,7 @@ class FinfLoader(yaml.SafeLoader):
     def construct_object(self, node, deep=False):
         tag = node.tag
         if node.tag in self.yaml_constructors:
-            return yaml.SafeLoader.construct_object(self, node, deep=deep)
+            return yaml.SafeLoader.construct_object(self, node, deep=False)
         data = yaml_to_base_type(node, self)
         data = tagged.tag_object(tag, data)
         return data
