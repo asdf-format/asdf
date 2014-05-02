@@ -13,7 +13,14 @@ from ..tags import FinfObject
 
 
 def assert_tree_match(old_tree, new_tree):
+    seen = set()
+
     def recurse(old, new):
+        if id(old) in seen or id(new) in seen:
+            return
+        seen.add(id(old))
+        seen.add(id(new))
+
         old_type = FinfTypeIndex.get_finftype_from_custom_type(type(old))
         new_type = FinfTypeIndex.get_finftype_from_custom_type(type(new))
 

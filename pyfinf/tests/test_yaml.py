@@ -15,7 +15,6 @@ import yaml
 from .. import finf
 from .. import tagged
 from .. import treeutil
-from .. import yamlutil
 
 from . import helpers
 
@@ -136,3 +135,27 @@ unit: !<tag:stsci.edu:finf/0.1.0/unit> m
     ff = finf.FinfFile.read(buff)
 
     assert isinstance(ff.tree['unit'], u.UnitBase)
+
+
+def test_yaml_internal_reference(tmpdir):
+    # Test that YAML internal references (anchors and aliases) work,
+    # as well as recursive data structures.
+
+    d = {
+        'foo': '2',
+        }
+    d['bar'] = d
+
+    l = []
+    l.append(l)
+
+    tree = {
+        'first': d,
+        'second': d,
+        'list': l
+    }
+
+    def check_yaml(content):
+        assert b'list:-&id002-*id002' in ''.join(content.split())
+
+    helpers.assert_roundtrip_tree(tree, tmpdir, raw_yaml_check_func=check_yaml)
