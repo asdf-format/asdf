@@ -51,11 +51,12 @@ class FinfTypeMeta(type):
         cls = super(FinfTypeMeta, mcls).__new__(mcls, name, bases, attrs)
 
         if hasattr(cls, 'name'):
-            cls.yaml_tag = format_tag(
-                cls.organization,
-                cls.standard,
-                versioning.version_to_string(cls.version),
-                cls.name)
+            if 'yaml_tag' not in attrs:
+                cls.yaml_tag = format_tag(
+                    cls.organization,
+                    cls.standard,
+                    versioning.version_to_string(cls.version),
+                    cls.name)
 
             FinfTypeIndex._type_by_cls[cls] = cls
             FinfTypeIndex._type_by_name[cls.yaml_tag] = cls

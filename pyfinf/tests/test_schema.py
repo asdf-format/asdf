@@ -19,10 +19,13 @@ from . import helpers
 def test_violate_toplevel_schema():
     tree = {'fits': 'This does not look like a FITS file'}
 
-    buff = io.BytesIO()
-    ff = finf.FinfFile(tree)
+    with pytest.raises(ValidationError):
+        finf.FinfFile(tree)
 
-    with pytest.raises(ValidationError) as e:
+    ff = finf.FinfFile()
+    ff.tree['fits'] = 'This does not look like a FITS file'
+    with pytest.raises(ValidationError):
+        buff = io.BytesIO()
         ff.write_to(buff)
 
 
