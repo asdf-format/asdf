@@ -4,6 +4,7 @@
 from __future__ import absolute_import, division, unicode_literals, print_function
 
 import struct
+import weakref
 
 from astropy.extern import six
 
@@ -17,8 +18,7 @@ class BlockManager(object):
     Manages the `Block`s associated with a FINF file.
     """
     def __init__(self, finffile):
-        # TODO: weakref?  This is cyclical
-        self._finffile = finffile
+        self._finffile = weakref.ref(finffile)
 
         self._internal_blocks = []
         self._external_blocks = []
@@ -113,7 +113,7 @@ class BlockManager(object):
             block = self._internal_blocks[source]
 
         elif isinstance(source, six.string_types):
-            finffile = self._finffile.read_external(source)
+            finffile = self._finffile().read_external(source)
             block = finffile.blocks._internal_blocks[0]
             if block not in self._external_blocks:
                 self._external_blocks.append(block)
