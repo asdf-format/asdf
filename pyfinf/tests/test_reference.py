@@ -189,3 +189,21 @@ def test_external_reference_invalid_fragment(tmpdir):
     with finf.FinfFile(tree, uri=os.path.join(str(tmpdir), 'main.finf')) as ff:
         with pytest.raises(ValueError):
             ff.resolve_references()
+
+
+def test_make_reference(tmpdir):
+    exttree = {
+        # Include some ~ and / in the name to make sure that escaping
+        # is working correctly
+        'f~o~o/': {
+            'a': np.array([0, 1, 2], np.float),
+            'b': np.array([3, 4, 5], np.float)
+            }
+        }
+    external_path = os.path.join(str(tmpdir), 'external.finf')
+    ext = finf.FinfFile(exttree)
+    ext.write_to(external_path)
+
+    ff = finf.FinfFile()
+    ff.tree['ref'] = ext.make_reference(['f~o~o/', 'a'])
+    assert_array_equal(ff.tree['ref'], ext.tree['f~o~o/']['a'])
