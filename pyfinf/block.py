@@ -3,10 +3,12 @@
 
 from __future__ import absolute_import, division, unicode_literals, print_function
 
+import os
 import struct
 import weakref
 
 from astropy.extern import six
+from astropy.extern.six.moves.urllib import parse as urlparse
 
 from . import constants
 from . import generic_io
@@ -62,11 +64,39 @@ class BlockManager(object):
         for block in self._internal_blocks:
             block.write(fd)
 
+        if len(self._external_blocks) and fd.uri is None:
+            raise ValueError(
+                "Can't write external blocks, since URI of main file is "
+                "unknown.")
+
         for i, block in enumerate(self._external_blocks):
-            subfd = generic_io.resolve_uri(fd.uri, '{0}.finf'.format(i))
+            subfd = self.get_external_uri(fd.uri, i)
             finffile = finf.FinfFile()
             finffile.blocks._internal_blocks.append(block)
             finffile.write_to(subfd)
+
+    def get_external_filename(self, filename, index):
+        """
+        Given a main filename and an index number, return a new file
+        name for referencing an external block.
+        """
+        filename = os.path.splitext(filename)[0]
+        return filename + '{0:04d}.finf'.format(index)
+
+    def get_external_uri(self, uri, index):
+        """
+        Given a main URI and an index number, return a new URI for
+        saving an external block.
+        """
+        if uri is None:
+            uri = ''
+        parts = list(urlparse.urlparse(uri))
+        path = parts[2]
+        dirname, filename = os.path.split(path)
+        filename = self.get_external_filename(filename, index)
+        path = os.path.join(dirname, filename)
+        parts[2] = path
+        return urlparse.urlunparse(parts)
 
     def add(self, block):
         """
@@ -169,7 +199,15 @@ class BlockManager(object):
         except ValueError:
             raise ValueError("Block not associated with FinfFile.")
         else:
-            return '{0}.finf'.format(index)
+            if self._finffile().uri is None:
+                raise ValueError(
+                    "Can't write external blocks, since URI of main file is "
+                    "unknown.")
+
+            parts = list(urlparse.urlparse(self._finffile().uri))
+            path = parts[2]
+            filename = os.path.basename(path)
+            return self.get_external_filename(filename, index)
 
     def find_or_create_block_for_array(self, arr):
         """

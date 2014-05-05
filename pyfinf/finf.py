@@ -271,6 +271,8 @@ class FinfFile(versioning.VersionedMixin):
             'exploded': exploded})
 
         with generic_io.get_file(fd, mode='w') as fd:
+            self._fd = fd
+
             if exploded and fd.uri is None:
                 raise ValueError(
                     "Can not write an exploded file without knowing its URI.")
@@ -296,9 +298,6 @@ class FinfFile(versioning.VersionedMixin):
                     ctx.run_hook(tree, 'post_write')
 
             fd.flush()
-
-        if self._fd is None:
-            self._fd = fd
 
     def find_references(self):
         """
