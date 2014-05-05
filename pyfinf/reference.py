@@ -18,10 +18,11 @@ from astropy.extern.six.moves.urllib import parse as urlparse
 
 from .finftypes import FinfType
 from . import tagged
-
+from . import util
 
 __all__ = [
-    'resolve_fragment', 'Reference', 'find_references', 'resolve_references']
+    'resolve_fragment', 'Reference', 'find_references', 'resolve_references',
+    'make_reference']
 
 
 def resolve_fragment(tree, pointer):
@@ -53,11 +54,11 @@ def resolve_fragment(tree, pointer):
 class Reference(FinfType):
     yaml_tag = 'tag:yaml.org,2002:map'
 
-    def __init__(self, finffile, uri, scope):
-        self._finffile = weakref.ref(finffile)
+    def __init__(self, uri, finffile=None, target=None):
         self._uri = uri
-        self._scope = scope
-        self._target = None
+        if finffile is not None:
+            self._finffile = weakref.ref(finffile)
+        self._target = target
 
     def _get_target(self):
         if self._target is None:
@@ -117,7 +118,7 @@ def find_references(tree, ctx):
     """
     def do_find(tree):
         if isinstance(tree, dict) and '$ref' in tree:
-            return Reference(ctx.finffile, tree['$ref'], None)
+            return Reference(tree['$ref'], finffile=ctx.finffile)
         return tree
 
     return tagged.walk_and_modify_with_tags(tree, do_find)
@@ -137,3 +138,33 @@ def resolve_references(tree, ctx):
     tree = find_references(tree, ctx)
 
     return tagged.walk_and_modify_with_tags(tree, do_resolve)
+
+
+def make_reference(finffile, path):
+    """
+    Make a reference to a subtree of the given FINF file.
+
+    Parameters
+    ----------
+    finffile : FinfFile
+
+    path : list of str and int, optional
+        The parts of the path pointing to an item in this tree.
+        If omitted, points to the root of the tree.
+
+    Returns
+    -------
+    reference : reference.Reference
+        A reference object.
+    """
+    path_str = '/'.join(
+        x.replace(u"~", u"~0").replace(u"/", u"~1")
+        for x in path)
+    target = resolve_fragment(finffile.tree, path_str)
+
+    if finffile.uri is None:
+        raise ValueError(
+            "Can not make a reference to a FinfFile without an associated URI.")
+    base_uri = util.get_base_uri(finffile.uri)
+    uri = base_uri + '#' + path_str
+    return Reference(uri, target=target)

@@ -5,13 +5,12 @@ from __future__ import absolute_import, division, unicode_literals, print_functi
 
 import re
 
-from astropy.extern.six.moves.urllib import parse as urlparse
-
 from . import block
 from . import constants
 from .tags.finf import FinfObject
 from . import generic_io
 from . import reference
+from . import util
 from . import versioning
 from . import yamlutil
 
@@ -103,19 +102,18 @@ class FinfFile(versioning.VersionedMixin):
             The external FINF file.
         """
         # For a cache key, we want to ignore the "fragment" part.
-        parts = urlparse.urlparse(uri)
-        without_fragment = urlparse.urlunparse(list(parts[:5]) + [''])
-        without_fragment = self.resolve_uri(without_fragment)
+        base_uri = util.get_base_uri(uri)
+        resolved_uri = self.resolve_uri(base_uri)
 
         # A uri like "#" should resolve back to ourself.  In that case,
         # just return `self`.
-        if without_fragment == self.uri:
+        if resolved_uri == self.uri:
             return self
 
-        finffile = self._external_finf_by_uri.get(without_fragment)
+        finffile = self._external_finf_by_uri.get(resolved_uri)
         if finffile is None:
-            finffile = self.read(without_fragment)
-            self._external_finf_by_uri[without_fragment] = finffile
+            finffile = self.read(resolved_uri)
+            self._external_finf_by_uri[resolved_uri] = finffile
         return finffile
 
     @property
@@ -132,6 +130,32 @@ class FinfFile(versioning.VersionedMixin):
         yamlutil.validate(tree, self)
 
         self._tree = FinfObject(tree)
+
+    def make_reference(self, path=[]):
+        """
+        Make a new reference to a part of this file's tree, that can be
+        assigned as a reference to another tree.
+
+        Parameters
+        ----------
+        path : list of str and int, optional
+            The parts of the path pointing to an item in this tree.
+            If omitted, points to the root of the tree.
+
+        Returns
+        -------
+        reference : reference.Reference
+            A reference object.
+
+        Example
+        -------
+        For the given FinfFile ``ff``, add an external reference to the data in
+        an external file::
+
+            flat = pyfinf.open("http://stsci.edu/reference_files/flat.finf")
+            ff.tree['flat_field'] = flat.make_reference(['data'])
+        """
+        return reference.make_reference(self, path)
 
     @property
     def blocks(self):
@@ -272,6 +296,9 @@ class FinfFile(versioning.VersionedMixin):
                     ctx.run_hook(tree, 'post_write')
 
             fd.flush()
+
+        if self._fd is None:
+            self._fd = fd
 
     def find_references(self):
         """
