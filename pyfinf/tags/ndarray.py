@@ -56,7 +56,12 @@ class NDArrayType(FinfType):
 
     def __init__(self, source, shape, dtype, offset, strides,
                  order, finffile):
-        self._block = finffile.blocks.get_block(source)
+        if isinstance(source, int):
+            self._block = finffile.blocks.get_block(source)
+        else:
+            self._finffile = finffile
+            self._source = source
+            self._block = None
         self._shape = shape
         self._dtype = dtype
         self._offset = offset
@@ -66,6 +71,8 @@ class NDArrayType(FinfType):
 
     def _make_array(self):
         if self._array is None:
+            if self._block is None:
+                self._block = self._finffile.blocks.get_block(self._source)
             data = self._block.data
             self._array = np.ndarray(
                 self._shape, self._dtype, data,
@@ -78,16 +85,34 @@ class NDArrayType(FinfType):
     def __repr__(self):
         # repr alone should not force loading of the data
         if self._array is None:
-            return "<array (unloaded) '{0}' '{1}'>".format(
+            return "<array (unloaded) shape: {0} dtype: {1}>".format(
                 self._shape, self._dtype)
         return repr(self._array)
 
     def __str__(self):
         # str alone should not force loading of the data
         if self._array is None:
-            return "<array (unloaded) '{0}' '{1}'>".format(
+            return "<array (unloaded) shape: {0} dtype: {1}>".format(
                 self._shape, self._dtype)
         return str(self._array)
+
+    @property
+    def shape(self):
+        return self._shape
+
+    @property
+    def dtype(self):
+        if self._array is None:
+            return self._dtype
+        else:
+            return self._array.dtype
+
+    @property
+    def __len__(self):
+        if self._array is None:
+            return self._shape[0]
+        else:
+            return len(self._array)
 
     def __getattr__(self, attr):
         return getattr(self._make_array(), attr)
@@ -130,7 +155,7 @@ class NDArrayType(FinfType):
 
         result = {}
         result['shape'] = list(shape)
-        result['source'] = block.source
+        result['source'] = ctx.finffile.blocks.get_source(block)
 
         dtype, byteorder = numpy_dtype_to_finf_dtype(dtype)
         result['dtype'] = dtype

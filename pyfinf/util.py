@@ -4,6 +4,8 @@
 
 from __future__ import absolute_import, division, unicode_literals, print_function
 
+from astropy.extern.six.moves.urllib import parse as urlparse
+
 import numpy as np
 
 
@@ -44,3 +46,11 @@ def get_array_base(arr):
     while isinstance(base.base, np.ndarray):
         base = base.base
     return base
+
+
+def get_base_uri(uri):
+    """
+    For a given URI, return the part without any fragment.
+    """
+    parts = urlparse.urlparse(uri)
+    return urlparse.urlunparse(list(parts[:5]) + [''])

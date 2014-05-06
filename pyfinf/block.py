@@ -3,14 +3,16 @@
 
 from __future__ import absolute_import, division, unicode_literals, print_function
 
+import os
 import struct
+import weakref
 
 from astropy.extern import six
+from astropy.extern.six.moves.urllib import parse as urlparse
 
 from . import constants
 from . import generic_io
 from . import util
-from . import versioning
 
 
 class BlockManager(object):
@@ -18,52 +20,94 @@ class BlockManager(object):
     Manages the `Block`s associated with a FINF file.
     """
     def __init__(self, finffile):
-        # TODO: weakref?  This is cyclical
-        self._finffile = finffile
+        self._finffile = weakref.ref(finffile)
 
         self._internal_blocks = []
         self._external_blocks = []
-        self._external_blocks_by_uri = {}
         self._data_to_block_mapping = {}
 
-    def read_internal_blocks(self, fd):
+    def read_internal_blocks(self, fd, past_magic=False):
         """
         Read all internal blocks present in the file.
 
         Parameters
         ----------
         fd : GenericFile
-            The file position must be exactly at the beginning of the
-            first block header.
+            The file to read from.
+
+        past_magic: bool, optional
+            If `True`, the file position is immediately after the
+            block magic token.  If `False` (default), the file
+            position is exactly at the beginning of the block magic
+            token.
         """
         while True:
-            block = Block().read(fd)
+            block = Block().read(fd, past_magic=past_magic)
             if block is not None:
                 self.add(block)
             else:
                 break
+            past_magic = False
+
+    def write_blocks(self, fd):
+        """
+        Write all blocks to disk.
+
+        Parameters
+        ----------
+        fd : generic_io.GenericFile
+            The file to write internal blocks to.  The file position
+            should be after the tree.
+        """
+        from . import finf
+
+        for block in self._internal_blocks:
+            block.write(fd)
+
+        if len(self._external_blocks) and fd.uri is None:
+            raise ValueError(
+                "Can't write external blocks, since URI of main file is "
+                "unknown.")
+
+        for i, block in enumerate(self._external_blocks):
+            subfd = self.get_external_uri(fd.uri, i)
+            finffile = finf.FinfFile()
+            finffile.blocks._internal_blocks.append(block)
+            finffile.write_to(subfd)
+
+    def get_external_filename(self, filename, index):
+        """
+        Given a main filename and an index number, return a new file
+        name for referencing an external block.
+        """
+        filename = os.path.splitext(filename)[0]
+        return filename + '{0:04d}.finf'.format(index)
+
+    def get_external_uri(self, uri, index):
+        """
+        Given a main URI and an index number, return a new URI for
+        saving an external block.
+        """
+        if uri is None:
+            uri = ''
+        parts = list(urlparse.urlparse(uri))
+        path = parts[2]
+        dirname, filename = os.path.split(path)
+        filename = self.get_external_filename(filename, index)
+        path = os.path.join(dirname, filename)
+        parts[2] = path
+        return urlparse.urlunparse(parts)
 
     def add(self, block):
         """
-        Add a block to the manager.
+        Add an internal block to the manager.
         """
-        if block._external:
-            self._external_blocks.append(block)
-            self._external_blocks_by_uri[block._uri] = block
-        else:
-            block._index = len(self._internal_blocks)
-            self._internal_blocks.append(block)
+        self._internal_blocks.append(block)
         if block._data is not None:
             self._data_to_block_mapping[id(block._data)] = block
 
     def __len__(self):
         return len(self._internal_blocks) + len(self._external_blocks)
-
-    def __iter__(self):
-        for x in self._internal_blocks:
-            yield x
-        for x in self._external_blocks:
-            yield x
 
     def finalize(self, ctx):
         """
@@ -72,16 +116,12 @@ class BlockManager(object):
 
         Here, they are reindexed, and possibly reorganized.
         """
-        if ctx.get('exploded'):
-            for block in self._internal_blocks:
-                self._external_blocks.append(block)
-                block._external = True
-            self._internal_blocks = []
+        # TODO: Should this reset the state (what's external and what
+        # isn't) afterword?
 
-        for i, block in enumerate(self._internal_blocks):
-            block._index = i
-        for i, block in enumerate(self._external_blocks):
-            block._index = i
+        if ctx.get('exploded'):
+            self._external_blocks += self._internal_blocks
+            self._internal_blocks = []
 
     def get_block(self, source):
         """
@@ -103,15 +143,10 @@ class BlockManager(object):
             block = self._internal_blocks[source]
 
         elif isinstance(source, six.string_types):
-            if self._finffile.uri is not None:
-                full_uri = generic_io.resolve_uri(self._finffile.uri, source)
-            else:
-                full_uri = None
-            block = self._external_blocks_by_uri.get(full_uri)
-            if block is None:
-                block = Block(uri=full_uri)
-                self.add(block)
-
+            finffile = self._finffile().read_external(source)
+            block = finffile.blocks._internal_blocks[0]
+            if block not in self._external_blocks:
+                self._external_blocks.append(block)
         else:
             raise TypeError("Unknown source '{0}'".format(source))
 
@@ -137,6 +172,42 @@ class BlockManager(object):
         self._data_to_block_mapping[id(data)] = block
 
         return data.data
+
+    def get_source(self, block):
+        """
+        Get a source identifier for a given block.
+
+        Parameters
+        ----------
+        block : Block
+
+        Returns
+        -------
+        source_id : str
+            May be an integer for an internal block, or a URI for an
+            external block.
+        """
+        try:
+            index = self._internal_blocks.index(block)
+        except ValueError:
+            pass
+        else:
+            return index
+
+        try:
+            index = self._external_blocks.index(block)
+        except ValueError:
+            raise ValueError("Block not associated with FinfFile.")
+        else:
+            if self._finffile().uri is None:
+                raise ValueError(
+                    "Can't write external blocks, since URI of main file is "
+                    "unknown.")
+
+            parts = list(urlparse.urlparse(self._finffile().uri))
+            path = parts[2]
+            filename = os.path.basename(path)
+            return self.get_external_filename(filename, index)
 
     def find_or_create_block_for_array(self, arr):
         """
@@ -164,14 +235,14 @@ class BlockManager(object):
         return self.find_or_create_block_for_array(arr)
 
 
-class Block(versioning.VersionedMixin):
+class Block(object):
     """
     Represents a single block in a FINF file.  This is an
     implementation detail and should not be instantiated directly.
     Instead, should only be created through the `BlockManager`.
     """
 
-    _header_fmt = b'>BBBQQQ16s'
+    _header_fmt = b'>QQQ16s'
     _header_fmt_size = struct.calcsize(_header_fmt)
 
     def __init__(self, data=None, uri=None):
@@ -184,7 +255,6 @@ class Block(versioning.VersionedMixin):
         else:
             self._data = None
             self._size = None
-        self._external = uri is not None
         self._uri = uri
 
         self._fd = None
@@ -194,47 +264,45 @@ class Block(versioning.VersionedMixin):
         self._allocated = None
         self._encoding = None
         self._memmapped = False
-        self._index = None
 
     def __repr__(self):
         return '<Block alloc: {0} size: {1} encoding: {2}>'.format(
             self._allocated, self._size, self._encoding)
 
-    @property
-    def external(self):
-        return self._external
-
-    @property
-    def source(self):
-        if self._external:
-            return "{0}.bff".format(self._index)
-        else:
-            return self._index
-
-    def read(self, fd):
+    def read(self, fd, past_magic=False):
         """
-        Read a Block from the given Python file-like object.  The file
-        position should be at the beginning of the block header (at
-        the block magic token).
+        Read a Block from the given Python file-like object.
 
         If the file is seekable, the reading or memmapping of the
         actual data is postponed until an array requests it.  If the
-        file is a stream, we have to read it right now.
+        file is a stream, the data will be read into memory
+        immediately.
+
+        Parameters
+        ----------
+        fd : GenericFile
+
+        past_magic: bool, optional
+            If `True`, the file position is immediately after the
+            block magic token.  If `False` (default), the file
+            position is exactly at the beginning of the block magic
+            token.
         """
         fd = generic_io.get_file(fd)
 
         if fd.seekable():
             offset = fd.tell()
 
-        buff = fd.read(len(constants.BLOCK_MAGIC))
-        if len(buff) == 0:
-            return None
+        if not past_magic:
+            buff = fd.read(len(constants.BLOCK_MAGIC))
+            if len(buff) == 0:
+                return None
 
-        if buff != constants.BLOCK_MAGIC:
-            raise ValueError(
-                "Bad magic number in block. "
-                "This may indicate an internal inconsistency about the sizes "
-                "of the blocks in the file.")
+            if buff != constants.BLOCK_MAGIC:
+                raise ValueError(
+                    "Bad magic number in block. "
+                    "This may indicate an internal inconsistency about the "
+                    "sizes of the blocks in the file.")
 
         buff = fd.read(2)
         header_size, = struct.unpack('>H', buff)
@@ -243,10 +311,8 @@ class Block(versioning.VersionedMixin):
                 "Header size must be > {0}".format(self._header_fmt_size))
 
         buff = fd.read(header_size)
-        (major, minor, micro, allocated_size, used_size, checksum, encoding) = \
+        (allocated_size, used_size, checksum, encoding) = \
             struct.unpack_from(self._header_fmt, buff[:self._header_fmt_size])
-
-        self.version = (major, minor, micro)
 
         if fd.seekable():
             # If the file is seekable, we can delay reading the actual
@@ -277,26 +343,17 @@ class Block(versioning.VersionedMixin):
 
     def write(self, fd):
         """
-        Write a block to the given Python file-like object.
-
-        If the block is already memmapped from the given file object,
-        the file position is moved to the end of the block and nothing
-        more.
+        Write an internal block to the given Python file-like object.
         """
-        if self.external:
-            fd = generic_io.resolve_uri(fd.uri, self.source)
-
         with generic_io.get_file(fd, 'w') as fd:
             self._allocated = self._size
             self._offset = fd.tell()
             self._header_size = self._header_fmt_size
 
-            version = self.version
             fd.write(constants.BLOCK_MAGIC)
             fd.write(struct.pack(b'>H', self._header_size))
             fd.write(struct.pack(
                 self._header_fmt,
-                version[0], version[1], version[2],
                 self._allocated, self._size, 0, b''))
 
             self._data_offset = fd.tell()
@@ -306,33 +363,26 @@ class Block(versioning.VersionedMixin):
     @property
     def data(self):
         """
-        The data for the block, as a numpy array.
+        Get the data for the block, as a numpy array.
         """
         if self._data is None:
-            if self._uri is not None:
-                self.read(self._uri)
-            elif self._fd is None:
-                raise ValueError(
-                    "Can not load data because source tree has no URI.")
+            if self._fd.is_closed():
+                raise IOError(
+                    "FINF file has already been closed. "
+                    "Can not get the data.")
 
-            if self._fd is not None:
-                if self._fd.is_closed():
-                    raise IOError(
-                        "FINF file has already been closed. "
-                        "Can not get the data.")
+            if self._fd.can_memmap():
+                self._data = self._fd.memmap_array(
+                    self._data_offset, self._size)
+                self._memmapped = True
 
-                if self._fd.can_memmap():
-                    self._data = self._fd.memmap_array(
-                        self._data_offset, self._size)
-                    self._memmapped = True
-
-                else:
-                    # Be nice and don't move around the file position.
-                    curpos = self._fd.tell()
-                    try:
-                        self._fd.seek(self._data_offset)
-                        self._data = self._fd.read_into_array(self._size)
-                    finally:
-                        self._fd.seek(curpos)
+            else:
+                # Be nice and don't move around the file position.
+                curpos = self._fd.tell()
+                try:
+                    self._fd.seek(self._data_offset)
+                    self._data = self._fd.read_into_array(self._size)
+                finally:
+                    self._fd.seek(curpos)
 
         return self._data

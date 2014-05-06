@@ -13,6 +13,7 @@ from jsonschema.exceptions import ValidationError
 import yaml
 
 from . import constants
+from . import reference
 from . import tagged
 
 
@@ -91,7 +92,7 @@ def validate_tag(validator, tagname, instance, schema):
         # Try tags for known Python builtins
         instance_tag = _type_to_tag(type(instance))
 
-    if instance_tag != tagname:
+    if instance_tag is not None and instance_tag != tagname:
         yield ValidationError(
             "mismatched tags, wanted '{0}', got '{1}'".format(
                 tagname, instance_tag))
@@ -177,10 +178,26 @@ def validate(instance, schema, cls=None, *args, **kwargs):
     """
     global _created_validator
     if not _created_validator:
-        validators.create(
+        validator = validators.create(
             meta_schema=load_schema('stsci.edu/yaml-schema/draft-01'),
             validators=YAML_VALIDATORS,
             version=str('yaml schema draft 1'))
+        validator.orig_iter_errors = validator.iter_errors
+
+        # We can't validate anything that looks like an external
+        # reference, since we don't have the actual content, so we
+        # just have to defer it for now.  If the user cares about
+        # complete validation, they can call
+        # `FinfFile.resolve_references`.
+        def iter_errors(self, instance, _schema=None):
+            if ((isinstance(instance, dict) and '$ref' in instance) or
+                isinstance(instance, reference.Reference)):
+                return
+
+            for x in self.orig_iter_errors(instance, _schema=_schema):
+                yield x
+
+        validator.iter_errors = iter_errors
         _created_validator = True
 
     if 'resolver' not in kwargs:

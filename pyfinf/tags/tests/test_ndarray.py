@@ -100,5 +100,9 @@ def test_dont_load_data():
     ctx = yamlutil.Context(ff)
     ctx.run_hook(ff._tree, 'pre_write')
 
+    # repr and str shouldn't load data
+    str(ff.tree['science_data'])
+    repr(ff.tree)
+
     for block in ff.blocks._internal_blocks:
         assert block._data is None

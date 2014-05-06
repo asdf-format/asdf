@@ -7,6 +7,7 @@ import io
 import os
 import sys
 
+from astropy.extern import six
 import astropy.extern.six.moves.urllib.request as urllib_request
 from astropy.tests.helper import pytest
 
@@ -60,6 +61,27 @@ def _roundtrip(tree, get_write_fd, get_read_fd,
     return ff
 
 
+def test_mode_fail(tmpdir):
+    path = os.path.join(str(tmpdir), 'test.finf')
+
+    with pytest.raises(ValueError):
+        generic_io.get_file(path, mode="r+")
+
+
+def test_open(tmpdir):
+    from .. import open
+
+    path = os.path.join(str(tmpdir), 'test.finf')
+
+    # Simply tests the high-level "open" function
+    ff = finf.FinfFile(_get_small_tree())
+    ff.write_to(path)
+
+    ff2 = open(path)
+
+    helpers.assert_tree_match(ff2.tree, ff.tree)
+
+
 def test_path(tree, tmpdir):
     path = os.path.join(str(tmpdir), 'test.finf')
 
@@ -73,6 +95,10 @@ def test_path(tree, tmpdir):
         f = generic_io.get_file(path, mode='r')
         assert isinstance(f, generic_io.RealFile)
         assert f._uri == path
+        # This is to check for a "feature" in Python 3.x that reading zero
+        # bytes from a socket causes it to stop.  We have code in generic_io.py
+        # to workaround it.
+        f.read(0)
         return f
 
     ff = _roundtrip(tree, get_write_fd, get_read_fd)
@@ -82,7 +108,7 @@ def test_path(tree, tmpdir):
     assert isinstance(ff.blocks._internal_blocks[0]._data, np.core.memmap)
 
 
-def test_open(tree, tmpdir):
+def test_open2(tree, tmpdir):
     path = os.path.join(str(tmpdir), 'test.finf')
 
     def get_write_fd():
@@ -119,6 +145,29 @@ def test_open_fail2(tmpdir):
             generic_io.get_file(fd, mode='w')
 
 
+if six.PY3:
+    def test_open_fail3(tmpdir):
+        path = os.path.join(str(tmpdir), 'test.finf')
+
+        with open(path, 'w') as fd:
+            fd.write("\n\n\n")
+
+        with open(path, 'r') as fd:
+            with pytest.raises(ValueError):
+                generic_io.get_file(fd, mode='r')
+
+
+def test_open_fail4(tmpdir):
+    path = os.path.join(str(tmpdir), 'test.finf')
+
+    with open(path, 'w') as fd:
+        fd.write("\n\n\n")
+
+    with io.open(path, 'r') as fd:
+        with pytest.raises(ValueError):
+            generic_io.get_file(fd, mode='r')
+
+
 @pytest.mark.skipif(sys.version_info[:2] == (2, 6),
                     reason="requires python 2.7 or later")
 def test_io_open(tree, tmpdir):
@@ -131,7 +180,7 @@ def test_io_open(tree, tmpdir):
         return f
 
     def get_read_fd():
-        f = generic_io.get_file(io.open(path, 'rb'), mode='r')
+        f = generic_io.get_file(io.open(path, 'r+b'), mode='rw')
         assert isinstance(f, generic_io.RealFile)
         assert f._uri == path
         return f
@@ -140,6 +189,7 @@ def test_io_open(tree, tmpdir):
 
     assert len(ff.blocks._internal_blocks) == 2
     assert isinstance(ff.blocks._internal_blocks[0]._data, np.core.memmap)
+    ff.tree['science_data'][0] = 42
 
 
 def test_bytes_io(tree):
@@ -152,7 +202,7 @@ def test_bytes_io(tree):
 
     def get_read_fd():
         buff.seek(0)
-        f = generic_io.get_file(buff, mode='r')
+        f = generic_io.get_file(buff, mode='rw')
         assert isinstance(f, generic_io.MemoryIO)
         return f
 
@@ -161,6 +211,7 @@ def test_bytes_io(tree):
     assert len(ff.blocks._internal_blocks) == 2
     assert not isinstance(ff.blocks._internal_blocks[0]._data, np.core.memmap)
     assert isinstance(ff.blocks._internal_blocks[0]._data, np.ndarray)
+    ff.tree['science_data'][0] = 42
 
 
 def test_streams(tree):
@@ -171,13 +222,25 @@ def test_streams(tree):
 
     def get_read_fd():
         buff.seek(0)
-        return generic_io.InputStream(buff)
+        return generic_io.InputStream(buff, 'rw')
 
     ff = _roundtrip(tree, get_write_fd, get_read_fd)
 
     assert len(ff.blocks) == 2
     assert not isinstance(ff.blocks._internal_blocks[0]._data, np.core.memmap)
     assert isinstance(ff.blocks._internal_blocks[0]._data, np.ndarray)
+    ff.tree['science_data'][0] = 42
+
+
+def test_streams2():
+    buff = io.BytesIO(b'\0' * 60)
+    buff.seek(0)
+
+    fd = generic_io.InputStream(buff, 'r')
+
+    x = fd._peek(10)
+    x = fd.read()
+    assert len(x) == 60
 
 
 def test_urlopen(tree, httpserver):
@@ -207,6 +270,10 @@ def test_http_connection(tree, httpserver):
     def get_read_fd():
         fd = generic_io.get_file(httpserver.url + "test.finf")
         assert isinstance(fd, generic_io.InputStream)
+        # This is to check for a "feature" in Python 3.x that reading zero
+        # bytes from a socket causes it to stop.  We have code in generic_io.py
+        # to workaround it.
+        fd.read(0)
         return fd
 
     ff = _roundtrip(tree, get_write_fd, get_read_fd)
@@ -214,6 +281,7 @@ def test_http_connection(tree, httpserver):
     assert len(ff.blocks._internal_blocks) == 2
     assert not isinstance(ff.blocks._internal_blocks[0]._data, np.core.memmap)
     assert isinstance(ff.blocks._internal_blocks[0]._data, np.ndarray)
+    ff.tree['science_data'][0] == 42
 
 
 def test_http_connection_range(tree, rhttpserver):
@@ -239,6 +307,7 @@ def test_http_connection_range(tree, rhttpserver):
     assert len(ff.blocks._internal_blocks) == 2
     assert not isinstance(ff.blocks._internal_blocks[0]._data, np.core.memmap)
     assert isinstance(ff.blocks._internal_blocks[0]._data, np.ndarray)
+    ff.tree['science_data'][0] == 42
 
 
 def test_exploded_filesystem(tree, tmpdir):
@@ -255,6 +324,29 @@ def test_exploded_filesystem(tree, tmpdir):
 
     assert len(ff.blocks._internal_blocks) == 0
     assert len(ff.blocks._external_blocks) == 2
+
+
+def test_exploded_filesystem_fail(tree, tmpdir):
+    path = os.path.join(str(tmpdir), 'test.finf')
+
+    def get_write_fd():
+        return generic_io.get_file(path, mode='w')
+
+    def get_read_fd():
+        fd = io.BytesIO()
+        with open(path, mode='rb') as fd2:
+            fd.write(fd2.read())
+        fd.seek(0)
+        return fd
+
+    with get_write_fd() as fd:
+        finf.FinfFile(tree).write_to(fd, exploded=True)
+
+    with get_read_fd() as fd:
+        ff = finf.FinfFile.read(fd)
+
+        with pytest.raises(ValueError):
+            helpers.assert_tree_match(tree, ff.tree)
 
 
 def test_exploded_http(tree, httpserver):
@@ -299,7 +391,7 @@ def test_exploded_stream_read(tmpdir):
 
     with open(path, 'rb') as fd:
         # This should work, so we can get the tree content
-        x = generic_io.InputStream(fd)
+        x = generic_io.InputStream(fd, 'r')
         ff = finf.FinfFile.read(x)
 
     # It's only on trying to get at the block data that the error

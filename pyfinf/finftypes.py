@@ -6,6 +6,7 @@ from __future__ import absolute_import, division, unicode_literals, print_functi
 import os
 
 from astropy.extern import six
+from astropy.utils.misc import InheritDocstrings
 
 from . import versioning
 
@@ -51,11 +52,12 @@ class FinfTypeMeta(type):
         cls = super(FinfTypeMeta, mcls).__new__(mcls, name, bases, attrs)
 
         if hasattr(cls, 'name'):
-            cls.yaml_tag = format_tag(
-                cls.organization,
-                cls.standard,
-                versioning.version_to_string(cls.version),
-                cls.name)
+            if 'yaml_tag' not in attrs:
+                cls.yaml_tag = format_tag(
+                    cls.organization,
+                    cls.standard,
+                    versioning.version_to_string(cls.version),
+                    cls.name)
 
             FinfTypeIndex._type_by_cls[cls] = cls
             FinfTypeIndex._type_by_name[cls.yaml_tag] = cls
@@ -67,6 +69,7 @@ class FinfTypeMeta(type):
 
 
 @six.add_metaclass(FinfTypeMeta)
+@six.add_metaclass(InheritDocstrings)
 class FinfType(object):
     """
     The base class of all custom types in the tree.
@@ -137,3 +140,11 @@ class FinfType(object):
         Converts from basic types to a custom type.
         """
         return cls(tree)
+
+    @classmethod
+    def assert_equal(cls, old, new):
+        """
+        Assert that two objects of this type are equal.  Used for
+        testing only.
+        """
+        return

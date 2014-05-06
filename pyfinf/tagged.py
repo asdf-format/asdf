@@ -134,15 +134,20 @@ def walk_and_modify_with_tags(top, callback):
     tree : object
         The modified tree.
     """
-    def recurse(tree):
+    def recurse(tree, seen=[]):
+        if id(tree) in seen:
+            return tree
+
         if isinstance(tree, dict):
+            new_seen = seen + [id(tree)]
             result = tree.__class__()
             for key, val in six.iteritems(tree):
-                result[key] = recurse(val)
+                result[key] = recurse(val, new_seen)
             if isinstance(tree, Tagged):
                 result = tag_object(tree.tag, result)
         elif isinstance(tree, (list, tuple)):
-            result = tree.__class__([recurse(val) for val in tree])
+            new_seen = seen + [id(tree)]
+            result = tree.__class__([recurse(val, new_seen) for val in tree])
             if isinstance(tree, Tagged):
                 result = tag_object(tree.tag, result)
         else:
