@@ -5,14 +5,14 @@ from __future__ import absolute_import, division, unicode_literals, print_functi
 
 from astropy.tests.helper import pytest
 
-from ... import finf
+from .... import finf
 
-from ...tests import helpers
+from ....tests import helpers
 
 
 def test_invalid_complex():
     yaml = """
-a: !complex
+a: !core/complex
   3 + 4i
     """
 

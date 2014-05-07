@@ -11,10 +11,11 @@ from astropy.extern import six
 import numpy as np
 from numpy.testing import assert_array_equal
 
-from ...tests import helpers
+from ....tests import helpers
+from .... import finf
+from .... import yamlutil
+
 from .. import ndarray
-from ... import finf
-from ... import yamlutil
 
 
 def test_sharing(tmpdir):

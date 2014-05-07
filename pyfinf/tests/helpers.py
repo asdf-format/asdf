@@ -9,7 +9,8 @@ from astropy.extern import six
 
 from ..finf import FinfFile
 from ..finftypes import FinfTypeIndex
-from ..tags import FinfObject
+
+from ..tags.core import FinfObject
 
 
 def assert_tree_match(old_tree, new_tree):
@@ -86,7 +87,7 @@ def yaml_to_finf(yaml_content, yaml_headers=True):
         buff.write(b"""%FINF 0.1.0
 %YAML 1.1
 %TAG ! tag:stsci.edu:finf/0.1.0/
---- !finf
+--- !core/finf
 """)
     buff.write(yaml_content)
     if yaml_headers:

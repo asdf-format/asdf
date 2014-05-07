@@ -5,14 +5,16 @@ from __future__ import absolute_import, division, unicode_literals, print_functi
 
 from astropy import units as u
 
-from ... import finf
+from .... import finf
+from ....tests import helpers
 
-from ...tests import helpers
+
+# TODO: Implement defunit
 
 
 def test_invalid_unit():
     yaml = """
-unit: !unit
+unit: !unit/unit
   foo
     """
 
@@ -24,7 +26,7 @@ unit: !unit
 
 def test_unit():
     yaml = """
-unit: !unit "2.1798721  10-18kg m2 s-2"
+unit: !unit/unit "2.1798721  10-18kg m2 s-2"
     """
 
     buff = helpers.yaml_to_finf(yaml)

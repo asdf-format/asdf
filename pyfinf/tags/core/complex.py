@@ -5,11 +5,11 @@ from __future__ import absolute_import, division, unicode_literals, print_functi
 
 from astropy.extern import six
 
-from ..finftypes import FinfType
+from ...finftypes import FinfType
 
 
 class ComplexType(FinfType):
-    name = 'complex'
+    name = 'core/complex'
     types = [complex]
 
     @classmethod
