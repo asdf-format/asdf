@@ -354,7 +354,7 @@ def dump_tree(tree, fd, ctx):
     FinfDumperTmp.ctx = ctx
 
     tag = tree.yaml_tag
-    tag = tag[:tag.index('/finf') + 1]
+    tag = tag[:tag.index('/core/finf') + 1]
     tree = custom_tree_to_tagged_tree(tree, ctx)
     validate_tagged_tree(tree, ctx)
 

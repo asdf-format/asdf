@@ -42,7 +42,7 @@ def test_sharing(tmpdir):
         assert tree['skipping'][0] == 42
 
     def check_raw_yaml(content):
-        assert b'!ndarray' in content
+        assert b'!core/ndarray' in content
 
     helpers.assert_roundtrip_tree(tree, tmpdir, check_finf, check_raw_yaml)
 
