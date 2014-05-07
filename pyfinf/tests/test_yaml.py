@@ -5,6 +5,8 @@ from __future__ import absolute_import, division, unicode_literals, print_functi
 
 import io
 
+import numpy as np
+
 from astropy.extern import six
 from astropy import units as u
 from astropy.utils.compat.odict import OrderedDict
@@ -159,3 +161,20 @@ def test_yaml_internal_reference(tmpdir):
         assert b'list:--&id002-*id002' in b''.join(content.split())
 
     helpers.assert_roundtrip_tree(tree, tmpdir, raw_yaml_check_func=check_yaml)
+
+
+def test_yaml_nan_inf():
+    tree = {
+        'a': np.nan,
+        'b': np.inf,
+        'c': -np.inf
+        }
+
+    buff = io.BytesIO()
+    ff = finf.FinfFile(tree).write_to(buff)
+    buff.seek(0)
+    ff = finf.FinfFile().read(buff)
+
+    assert np.isnan(ff.tree['a'])
+    assert np.isinf(ff.tree['b'])
+    assert np.isinf(ff.tree['c'])
