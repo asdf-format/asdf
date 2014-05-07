@@ -169,38 +169,60 @@ RESOLVER = PackageLocalRefResolver(
 
 
 _created_validator = False
-def validate(instance, schema, cls=None, *args, **kwargs):
+def create_validator():
+    global _created_validator
+    if _created_validator:
+        return
+
+    validator = validators.create(
+        meta_schema=load_schema('stsci.edu/yaml-schema/draft-01'),
+        validators=YAML_VALIDATORS,
+        version=str('yaml schema draft 1'))
+    validator.orig_iter_errors = validator.iter_errors
+
+    # We can't validate anything that looks like an external
+    # reference, since we don't have the actual content, so we
+    # just have to defer it for now.  If the user cares about
+    # complete validation, they can call
+    # `FinfFile.resolve_references`.
+    def iter_errors(self, instance, _schema=None):
+        if ((isinstance(instance, dict) and '$ref' in instance) or
+            isinstance(instance, reference.Reference)):
+            return
+
+        for x in self.orig_iter_errors(instance, _schema=_schema):
+            yield x
+
+    validator.iter_errors = iter_errors
+    _created_validator = True
+
+
+def validate(instance, schema, *args, **kwargs):
     """
     Validate the given instance against the given schema using the
     YAML schema extensions to JSON schema.
 
     The arguments are the same as to `jsonschema.validate`.
     """
-    global _created_validator
-    if not _created_validator:
-        validator = validators.create(
-            meta_schema=load_schema('stsci.edu/yaml-schema/draft-01'),
-            validators=YAML_VALIDATORS,
-            version=str('yaml schema draft 1'))
-        validator.orig_iter_errors = validator.iter_errors
-
-        # We can't validate anything that looks like an external
-        # reference, since we don't have the actual content, so we
-        # just have to defer it for now.  If the user cares about
-        # complete validation, they can call
-        # `FinfFile.resolve_references`.
-        def iter_errors(self, instance, _schema=None):
-            if ((isinstance(instance, dict) and '$ref' in instance) or
-                isinstance(instance, reference.Reference)):
-                return
-
-            for x in self.orig_iter_errors(instance, _schema=_schema):
-                yield x
-
-        validator.iter_errors = iter_errors
-        _created_validator = True
+    create_validator()
 
     if 'resolver' not in kwargs:
         kwargs['resolver'] = RESOLVER
 
-    validators.validate(instance, schema, *args, **kwargs)
+    # We don't just call validators.validate() directly here, because
+    # that validates the schema itself, wasting a lot of time (at the
+    # time of this writing, it was half of the runtime of the unit
+    # test suite!!!).  Instead, we assume that the schemas are valid
+    # through the running of the unit tests, not at run time.
+    cls = validators.validator_for(schema)
+    cls(schema, *args, **kwargs).validate(instance)
+
+
+def check_schema(schema):
+    """
+    Check a given schema to make sure it is valid YAML schema.
+    """
+    create_validator()
+
+    cls = validators.validator_for(schema)
+    cls.check_schema(schema)
