@@ -15,10 +15,4 @@ def test_complex_structure(tmpdir):
             'fits': hdulist
             }
 
-        def check_finf(finf):
-            pass
-
-        def check_raw_yaml(content):
-            pass
-
-        helpers.assert_roundtrip_tree(tree, tmpdir, check_finf, check_raw_yaml)
+        helpers.assert_roundtrip_tree(tree, tmpdir)

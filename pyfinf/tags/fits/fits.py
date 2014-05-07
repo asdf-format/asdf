@@ -37,7 +37,17 @@ class FitsType(FinfType):
         for hdu in hdulist:
             header_list = []
             for card in hdu.header.cards:
-                header_list.append([card.keyword, card.value, card.comment])
+                if card.comment:
+                    new_card = [card.keyword, card.value, card.comment]
+                else:
+                    if card.value:
+                        new_card = [card.keyword, card.value]
+                    else:
+                        if card.keyword:
+                            new_card = [card.keyword]
+                        else:
+                            new_card = []
+                header_list.append(new_card)
 
             hdu_dict = {}
             hdu_dict['header'] = header_list
