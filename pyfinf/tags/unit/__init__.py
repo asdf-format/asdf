@@ -3,8 +3,4 @@
 
 from __future__ import absolute_import, division, unicode_literals, print_function
 
-from ..finftypes import FinfType
-
-
-class FinfObject(dict, FinfType):
-    name = 'finf'
+from .unit import UnitType

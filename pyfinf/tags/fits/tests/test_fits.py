@@ -6,7 +6,7 @@ from __future__ import absolute_import, division, unicode_literals, print_functi
 from astropy.io import fits
 from astropy.utils.data import get_pkg_data_filename
 
-from ...tests import helpers
+from ....tests import helpers
 
 
 def test_complex_structure(tmpdir):

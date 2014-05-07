@@ -6,11 +6,11 @@ from __future__ import absolute_import, division, unicode_literals, print_functi
 from astropy.io import fits
 import numpy as np
 
-from ..finftypes import FinfType
+from ...finftypes import FinfType
 
 
 class FitsType(FinfType):
-    name = 'fits'
+    name = 'fits/fits'
     types = [fits.HDUList]
 
     @classmethod

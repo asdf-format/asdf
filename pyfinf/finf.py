@@ -7,12 +7,13 @@ import re
 
 from . import block
 from . import constants
-from .tags.finf import FinfObject
 from . import generic_io
 from . import reference
 from . import util
 from . import versioning
 from . import yamlutil
+
+from .tags.core.finf import FinfObject
 
 
 class FinfFile(versioning.VersionedMixin):

@@ -31,7 +31,7 @@ def test_violate_toplevel_schema():
 
 def test_tagging_scalars():
     yaml = """
-unit: !unit
+unit: !unit/unit
   m
 not_unit:
   m
