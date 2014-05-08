@@ -17,6 +17,7 @@ import numpy as np
 from astropy.extern.six.moves.urllib import parse as urlparse
 
 from .finftypes import FinfType
+from . import generic_io
 from . import tagged
 from . import util
 
@@ -104,7 +105,11 @@ class Reference(FinfType):
 
     @classmethod
     def to_tree(self, data, ctx):
-        return {'$ref': data._uri}
+        if ctx.finffile.uri is not None:
+            uri = generic_io.relative_uri(ctx.finffile.uri, data._uri)
+        else:
+            uri = data._uri
+        return {'$ref': uri}
 
     @classmethod
     def validate(self, data):
