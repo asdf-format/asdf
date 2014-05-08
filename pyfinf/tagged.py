@@ -114,7 +114,7 @@ def walk_and_modify_with_tags(top, callback):
     """
     Modify a tree by walking it with a callback function.  Unlike
     `tree.walk_and_modify`, this version knows how to preserve tag
-    information.
+    information.  It also has the effect of doing a deep copy.
 
     Parameters
     ----------

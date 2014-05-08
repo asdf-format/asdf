@@ -62,12 +62,38 @@ def resolve_uri(base, uri):
     Resolve a URI against a base URI.
     """
     if base is None:
+        if uri == '':
+            return ''
         parsed = urlparse.urlparse(uri)
         if parsed.path.startswith('/'):
             return uri
         raise ValueError(
             "Can not resolve relative URLs since the base is unknown.")
     return urlparse.urljoin(base, uri)
+
+
+def relative_uri(source, target):
+    """
+    Make a relative URI from source to target.
+    """
+    su = urlparse.urlparse(source)
+    tu = urlparse.urlparse(target)
+    extra = list(tu[3:])
+    relative = None
+    if tu[0] == '' and tu[1] == '':
+        if tu[2] == su[2]:
+            relative = ''
+        elif not tu[2].startswith('/'):
+            relative = tu[2]
+    elif su[0:2] != tu[0:2]:
+        return target
+
+    if relative is None:
+        relative = os.path.relpath(tu[2], su[2])
+    if relative == '.':
+        relative = ''
+    relative = urlparse.urlunparse(["", "", relative] + extra)
+    return relative
 
 
 @six.add_metaclass(InheritDocstrings)
