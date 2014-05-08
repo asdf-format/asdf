@@ -11,9 +11,9 @@ from numpy.testing import assert_array_equal
 from astropy.tests.helper import pytest
 
 from .. import finf
-from ..tags import ndarray
-
 from .helpers import assert_tree_match
+
+from ..tags.core import ndarray
 
 
 def test_external_reference(tmpdir):

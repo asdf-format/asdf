@@ -3,8 +3,8 @@
 
 from __future__ import absolute_import, division, unicode_literals, print_function
 
+from ...finftypes import FinfType
 
-def get_package_data():  # pragma: no cover
-    return {
-        str('pyfinf.tags.tests'): ['data/*.fits']
-    }
+
+class FinfObject(dict, FinfType):
+    name = 'core/finf'

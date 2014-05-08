@@ -4,6 +4,7 @@
 from __future__ import absolute_import, division, unicode_literals, print_function
 
 import io
+import os
 
 from astropy.extern import six
 from astropy.tests.helper import pytest
@@ -11,7 +12,10 @@ from astropy import units as u
 
 from jsonschema import ValidationError
 
+import yaml
+
 from .. import finf
+from .. import schema
 
 from . import helpers
 
@@ -31,7 +35,7 @@ def test_violate_toplevel_schema():
 
 def test_tagging_scalars():
     yaml = """
-unit: !unit
+unit: !unit/unit
   m
 not_unit:
   m
@@ -48,3 +52,17 @@ not_unit:
         'unit': u.m,
         'not_unit': 'm'
         }
+
+
+def test_validate_all_schema():
+    def validate_schema(path):
+        with open(path, 'rb') as fd:
+            schema_tree = yaml.load(fd)
+        schema.check_schema(schema_tree)
+
+    src = os.path.join(os.path.dirname(__file__), '../schemas')
+    for root, dirs, files in os.walk(src):
+        for fname in files:
+            if not fname.endswith('.yaml'):
+                continue
+            yield validate_schema, os.path.join(root, fname)

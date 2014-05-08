@@ -6,8 +6,8 @@ import sys
 
 import numpy as np
 
-from ..finftypes import FinfType
-from .. import util
+from ...finftypes import FinfType
+from ... import util
 
 
 _dtype_names = {
@@ -51,7 +51,7 @@ def numpy_dtype_to_finf_dtype(dtype):
 
 
 class NDArrayType(FinfType):
-    name = 'ndarray'
+    name = 'core/ndarray'
     types = [np.ndarray]
 
     def __init__(self, source, shape, dtype, offset, strides,

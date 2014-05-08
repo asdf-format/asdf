@@ -6,7 +6,7 @@ from __future__ import absolute_import, division, unicode_literals, print_functi
 from astropy.io import fits
 from astropy.utils.data import get_pkg_data_filename
 
-from ...tests import helpers
+from ....tests import helpers
 
 
 def test_complex_structure(tmpdir):
@@ -15,10 +15,4 @@ def test_complex_structure(tmpdir):
             'fits': hdulist
             }
 
-        def check_finf(finf):
-            pass
-
-        def check_raw_yaml(content):
-            pass
-
-        helpers.assert_roundtrip_tree(tree, tmpdir, check_finf, check_raw_yaml)
+        helpers.assert_roundtrip_tree(tree, tmpdir)

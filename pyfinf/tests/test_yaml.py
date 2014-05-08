@@ -127,8 +127,8 @@ def test_explicit_tags():
 
     yaml = """%FINF 0.1.0
 %YAML 1.1
---- !<tag:stsci.edu:finf/0.1.0/finf>
-unit: !<tag:stsci.edu:finf/0.1.0/unit> m
+--- !<tag:stsci.edu:finf/0.1.0/core/finf>
+unit: !<tag:stsci.edu:finf/0.1.0/unit/unit> m
 ...
     """
     # Check that fully-qualified explicit tags work

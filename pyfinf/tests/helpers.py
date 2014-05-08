@@ -9,7 +9,8 @@ from astropy.extern import six
 
 from ..finf import FinfFile
 from ..finftypes import FinfTypeIndex
-from ..tags import FinfObject
+
+from ..tags.core import FinfObject
 
 
 def assert_tree_match(old_tree, new_tree):
@@ -63,7 +64,7 @@ def assert_roundtrip_tree(
     content = FinfFile.read(buff, _get_yaml_content=True)
     # We *never* want to get any raw python objects out
     assert b'!!python' not in content
-    assert b'!finf' in content
+    assert b'!core/finf' in content
     assert content.startswith(b'%YAML 1.1')
     if raw_yaml_check_func:
         raw_yaml_check_func(content)
@@ -86,7 +87,7 @@ def yaml_to_finf(yaml_content, yaml_headers=True):
         buff.write(b"""%FINF 0.1.0
 %YAML 1.1
 %TAG ! tag:stsci.edu:finf/0.1.0/
---- !finf
+--- !core/finf
 """)
     buff.write(yaml_content)
     if yaml_headers:
