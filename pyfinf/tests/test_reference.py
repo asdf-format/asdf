@@ -235,4 +235,4 @@ def test_internal_reference():
     ff.write_to(buff)
     buff.seek(0)
     content = finf.FinfFile().read(buff, _get_yaml_content=True)
-    assert "{$ref: ''}" in content
+    assert b"{$ref: ''}" in content
