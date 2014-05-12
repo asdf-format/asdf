@@ -3,6 +3,7 @@
 
 from __future__ import absolute_import, division, unicode_literals, print_function
 
+import io
 import os
 
 import numpy as np
@@ -10,10 +11,14 @@ from numpy.testing import assert_array_equal
 
 from astropy.tests.helper import pytest
 
+import yaml
+
 from .. import finf
-from .helpers import assert_tree_match
+from .. import reference
 
 from ..tags.core import ndarray
+
+from .helpers import assert_tree_match
 
 
 def test_external_reference(tmpdir):
@@ -207,3 +212,27 @@ def test_make_reference(tmpdir):
     ff = finf.FinfFile()
     ff.tree['ref'] = ext.make_reference(['f~o~o/', 'a'])
     assert_array_equal(ff.tree['ref'], ext.tree['f~o~o/']['a'])
+
+
+def test_internal_reference():
+    tree = {
+        'foo': 2,
+        'bar': {'$ref': '#'}
+    }
+
+    ff = finf.FinfFile(tree)
+    ff.find_references()
+    assert isinstance(ff.tree['bar'], reference.Reference)
+    ff.resolve_references()
+    assert ff.tree['bar']['foo'] == 2
+
+    tree = {
+        'foo': 2
+    }
+    ff = finf.FinfFile(tree, uri="test.finf")
+    ff.tree['bar'] = ff.make_reference([])
+    buff = io.BytesIO()
+    ff.write_to(buff)
+    buff.seek(0)
+    content = finf.FinfFile().read(buff, _get_yaml_content=True)
+    assert b"{$ref: ''}" in content

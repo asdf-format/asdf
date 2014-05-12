@@ -108,7 +108,7 @@ class FinfFile(versioning.VersionedMixin):
 
         # A uri like "#" should resolve back to ourself.  In that case,
         # just return `self`.
-        if resolved_uri == self.uri:
+        if resolved_uri == '' or resolved_uri == self.uri:
             return self
 
         finffile = self._external_finf_by_uri.get(resolved_uri)
@@ -317,5 +317,4 @@ class FinfFile(versioning.VersionedMixin):
         """
         ctx = yamlutil.Context(self)
         tree = reference.resolve_references(self.tree, ctx)
-        print("resolved", tree)
         self.tree = tree
