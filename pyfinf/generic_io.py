@@ -415,6 +415,8 @@ class RandomAccessFile(GenericFile):
         return False
 
     def fast_forward(self, size):
+        if size < 0:
+            self.seek(0, os.SEEK_END)
         self.seek(size, os.SEEK_CUR)
 
 
@@ -551,6 +553,8 @@ class InputStream(GenericFile):
 
     def fast_forward(self, size):
         if len(self.read(size)) != size:
+            if size < 0:
+                return
             raise IOError("Read past end of file")
 
     def read_into_array(self, size):
@@ -579,6 +583,8 @@ class OutputStream(GenericFile):
         self._fd = fd
 
     def fast_forward(self, size):
+        if self.size < 0:
+            return
         written = 0
         block = b' ' * self._blksize
         while written + self._blksize < size:
