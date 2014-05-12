@@ -271,34 +271,42 @@ class FinfFile(versioning.VersionedMixin):
         ctx = yamlutil.Context(self, options={
             'exploded': exploded})
 
-        with generic_io.get_file(fd, mode='w') as fd:
-            self._fd = fd
+        if self._fd:
+            self._fd.close()
+        fd = self._fd = generic_io.get_file(fd, mode='w')
 
-            if exploded and fd.uri is None:
-                raise ValueError(
-                    "Can not write an exploded file without knowing its URI.")
+        if exploded and fd.uri is None:
+            raise ValueError(
+                "Can not write an exploded file without knowing its URI.")
 
-            tree = self._tree
+        tree = self._tree
 
-            try:
-                # This is where we'd do some more sophisticated block
-                # reorganization, if necessary
-                self._blocks.finalize(ctx)
+        try:
+            # This is where we'd do some more sophisticated block
+            # reorganization, if necessary
+            self._blocks.finalize(ctx)
 
-                fd.write(constants.FINF_MAGIC)
-                fd.write(self.version_string.encode('ascii'))
-                fd.write(b'\n')
+            fd.write(constants.FINF_MAGIC)
+            fd.write(self.version_string.encode('ascii'))
+            fd.write(b'\n')
 
-                if len(tree):
-                    ctx.run_hook(tree, 'pre_write')
-                    yamlutil.dump_tree(tree, fd, ctx)
+            if len(tree):
+                ctx.run_hook(tree, 'pre_write')
+                yamlutil.dump_tree(tree, fd, ctx)
 
-                self.blocks.write_blocks(fd)
-            finally:
-                if len(tree):
-                    ctx.run_hook(tree, 'post_write')
+            self.blocks.write_blocks(fd)
+        finally:
+            if len(tree):
+                ctx.run_hook(tree, 'post_write')
 
-            fd.flush()
+        fd.flush()
+
+        return self
+
+    def write_to_stream(self, data):
+        if self.blocks._streamed_block is None:
+            raise ValueError("FinfFile has not streamed block to write to")
+        self._fd.write(data)
 
     def find_references(self):
         """

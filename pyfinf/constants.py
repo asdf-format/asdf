@@ -13,3 +13,6 @@ YAML_END_MARKER_REGEX = br'\r?\n\.\.\.\r?\n'
 
 
 STSCI_SCHEMA_URI_BASE = 'http://www.stsci.edu/schemas/'
+
+
+BLOCK_FLAG_STREAMED = 0x1
