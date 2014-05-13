@@ -6,6 +6,8 @@ import sys
 
 import numpy as np
 
+from astropy.extern import six
+
 from ...finftypes import FinfType
 from ... import util
 
@@ -28,26 +30,67 @@ _dtype_names = {
 }
 
 
+def finf_byteorder_to_numpy_byteorder(byteorder):
+    if byteorder == 'big':
+        return '>'
+    elif byteorder == 'little':
+        return '<'
+    raise ValueError("Invalid FINF byteorder '{0}'".format(byteorder))
+
+
 def finf_dtype_to_numpy_dtype(dtype, byteorder):
-    if dtype in _dtype_names:
+    if isinstance(dtype, six.text_type) and dtype in _dtype_names:
         dtype = _dtype_names[dtype]
-        if byteorder == 'big':
-            return np.dtype(str('>' + dtype))
-        elif byteorder == 'little':
-            return np.dtype(str('<' + dtype))
+        byteorder = finf_byteorder_to_numpy_byteorder(byteorder)
+        return np.dtype(str(byteorder + dtype))
+    elif isinstance(dtype, dict):
+        if not 'dtype' in dtype:
+            raise ValueError("Field entry has no dtype: '{0}'".format(dtype))
+        name = dtype.get('name', '')
+        byteorder = dtype.get('byteorder', byteorder)
+        shape = dtype.get('shape')
+        dtype = finf_dtype_to_numpy_dtype(dtype['dtype'], byteorder)
+        if shape is None:
+            return (str(name), dtype)
+        else:
+            return (str(name), dtype, tuple(shape))
+    elif isinstance(dtype, list):
+        return np.dtype(
+            [finf_dtype_to_numpy_dtype(x, byteorder) for x in dtype])
     raise ValueError("Unknown dtype {0}".format(dtype))
+
+
+def numpy_byteorder_to_finf_byteorder(byteorder):
+    if byteorder == '=':
+        return sys.byteorder
+    elif byteorder == '<':
+        return 'little'
+    else:
+        return 'big'
 
 
 def numpy_dtype_to_finf_dtype(dtype):
     dtype = np.dtype(dtype)
-    if dtype.name in _dtype_names:
-        if dtype.byteorder == '=':
-            byteorder = sys.byteorder
-        elif dtype.byteorder == '<':
-            byteorder = 'little'
-        else:
-            byteorder = 'big'
-        return dtype.name, byteorder
+    if dtype.names is not None:
+        fields = []
+        for name in dtype.names:
+            field = dtype.fields[name][0]
+            d = {}
+            d['name'] = name
+            field_dtype, byteorder = numpy_dtype_to_finf_dtype(field)
+            d['dtype'] = field_dtype
+            if byteorder != 'big':
+                d['byteorder'] = byteorder
+            if field.shape:
+                d['shape'] = list(field.shape)
+            fields.append(d)
+        return fields, numpy_byteorder_to_finf_byteorder(dtype.byteorder)
+
+    elif dtype.subdtype is not None:
+        return numpy_dtype_to_finf_dtype(dtype.subdtype[0])
+
+    elif dtype.name in _dtype_names:
+        return dtype.name, numpy_byteorder_to_finf_byteorder(dtype.byteorder)
     raise ValueError("Unknown dtype {0}".format(dtype))
 
 
@@ -205,4 +248,10 @@ class NDArrayType(FinfType):
     def assert_equal(cls, old, new):
         from numpy.testing import assert_array_equal
 
-        assert_array_equal(old, new)
+        if old.dtype.fields:
+            if not new.dtype.fields:
+                assert False, "arrays not equal"
+            for a, b in zip(old, new):
+                assert_array_equal(a, b)
+        else:
+            assert_array_equal(old, new)

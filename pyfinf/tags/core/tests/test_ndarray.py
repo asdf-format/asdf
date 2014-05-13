@@ -7,9 +7,12 @@ import io
 import sys
 
 from astropy.extern import six
+from astropy.tests.helper import pytest
 
 import numpy as np
 from numpy.testing import assert_array_equal
+
+import yaml
 
 from ....tests import helpers
 from .... import finf
@@ -107,3 +110,54 @@ def test_dont_load_data():
 
     for block in ff.blocks._internal_blocks:
         assert block._data is None
+
+
+def test_table(tmpdir):
+    table = np.array(
+        [(0, 1, (2, 3)), (4, 5, (6, 7))],
+        dtype=[(str('MINE'), np.int8),
+               (str(''), np.float64),
+               (str('arr'), '>i4', (2,))])
+
+    tree = {'table_data': table}
+
+    def check_raw_yaml(content):
+        content = b'\n'.join(content.splitlines()[4:-1])
+        tree = yaml.load(content)
+
+        assert tree == {
+            'dtype': [
+                {'dtype': 'int8', 'name': 'MINE'},
+                {'byteorder': 'little', 'dtype': 'float64', 'name': 'f1'},
+                {'dtype': 'int32', 'name': 'arr', 'shape': [2]}
+                ],
+            'shape': [2],
+            'source': 0
+            }
+
+    helpers.assert_roundtrip_tree(tree, tmpdir, None, check_raw_yaml)
+
+
+def test_table_nested_fields(tmpdir):
+    table = np.array(
+        [(0, (1, 2)), (4, (5, 6)), (7, (8, 9))],
+        dtype=[(str('A'), np.int),
+               (str('B'), [(str('C'), np.int), (str('D'), np.int)])])
+
+    tree = {'table_data': table}
+
+    def check_raw_yaml(content):
+        content = b'\n'.join(content.splitlines()[4:-1])
+        tree = yaml.load(content)
+
+        assert tree == {
+            'dtype': [
+                {'dtype': 'int64', 'name': 'A', 'byteorder': 'little'},
+                {'dtype': [
+                    {'dtype': 'int64', 'name': 'C', 'byteorder': 'little'},
+                    {'dtype': 'int64', 'name': 'D', 'byteorder': 'little'}
+                ], 'name': 'B'}],
+            'shape': [3],
+            'source': 0}
+
+    helpers.assert_roundtrip_tree(tree, tmpdir, None, check_raw_yaml)
