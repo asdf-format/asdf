@@ -151,7 +151,7 @@ class BlockManager(object):
             try:
                 if self._streamed_block is not None:
                     block = (self._internal_blocks +
-                             [self._streamed_block])[index]
+                             [self._streamed_block])[source]
                 else:
                     block = self._internal_blocks[source]
             except IndexError:
