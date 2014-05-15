@@ -129,10 +129,11 @@ class NDArrayType(FinfType):
 
     @property
     def shape(self):
-        if '*' in self._shape:
-            return tuple(self.get_actual_shape(
-                self._shape, self._strides, self._dtype, len(self.block)))
-        return tuple(self._shape)
+        if self._shape is not None:
+            if '*' in self._shape:
+                return tuple(self.get_actual_shape(
+                    self._shape, self._strides, self._dtype, len(self.block)))
+            return tuple(self._shape)
 
     @property
     def dtype(self):
@@ -163,7 +164,7 @@ class NDArrayType(FinfType):
             return cls(node, None, None, None, None, None, ctx.finffile)
 
         elif isinstance(node, dict):
-            shape = node['shape']
+            shape = node.get('shape')
             dtype = finf_dtype_to_numpy_dtype(
                 node.get('dtype', 'uint8'), node.get('byteorder', 'big'))
             source = node.get('source')
