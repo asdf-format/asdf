@@ -30,6 +30,10 @@ class Stream(ndarray.NDArrayType):
         self._shape = shape
         self._dtype, self._byteorder = ndarray.numpy_dtype_to_finf_dtype(dtype)
         self._strides = strides
+        self._array = None
+
+    def _make_array(self):
+        self._array = None
 
     @classmethod
     def pre_write(cls, data, ctx):

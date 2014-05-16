@@ -304,7 +304,7 @@ class FinfFile(versioning.VersionedMixin):
         return self
 
     def write_to_stream(self, data):
-        if self.blocks._streamed_block is None:
+        if self.blocks.streamed_block is None:
             raise ValueError("FinfFile has not streamed block to write to")
         self._fd.write(data)
 
