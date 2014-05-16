@@ -38,8 +38,8 @@ def test_sharing(tmpdir):
 
         assert tree['science_data'].ctypes.data == tree['skipping'].ctypes.data
 
-        assert len(finf.blocks._internal_blocks) == 1
-        assert finf.blocks._internal_blocks[0]._size == 80
+        assert len(list(finf.blocks.internal_blocks)) == 1
+        assert next(finf.blocks.internal_blocks)._size == 80
 
         tree['science_data'][0] = 42
         assert tree['skipping'][0] == 42
@@ -108,7 +108,7 @@ def test_dont_load_data():
     str(ff.tree['science_data'])
     repr(ff.tree)
 
-    for block in ff.blocks._internal_blocks:
+    for block in ff.blocks.internal_blocks:
         assert block._data is None
 
 
@@ -161,3 +161,36 @@ def test_table_nested_fields(tmpdir):
             'source': 0}
 
     helpers.assert_roundtrip_tree(tree, tmpdir, None, check_raw_yaml)
+
+
+def test_inline():
+    x = np.arange(0, 10, dtype=np.float)
+    tree = {
+        'science_data': x,
+        'subset': x[3:-3],
+        'skipping': x[::2]
+        }
+
+    buff = io.BytesIO()
+
+    with finf.FinfFile(tree) as ff:
+        ff.blocks[tree['science_data']].block_type = 'inline'
+        ff.write_to(buff)
+
+    buff.seek(0)
+    with finf.FinfFile.read(buff, mode='rw') as ff:
+        helpers.assert_tree_match(tree, ff.tree)
+        assert len(list(ff.blocks.internal_blocks)) == 0
+        buff = io.BytesIO()
+        ff.write_to(buff)
+
+    assert b'[0.0, 1.0, 2.0, 3.0, 4.0, 5.0, 6.0, 7.0, 8.0, 9.0]' in buff.getvalue()
+
+
+def test_inline_bare():
+    content = "arr: !core/ndarray [[1, 2, 3, 4], [5, 6, 7, 8]]"
+    buff = helpers.yaml_to_finf(content)
+
+    ff = finf.FinfFile.read(buff)
+
+    assert_array_equal(ff.tree['arr'], [[1, 2, 3, 4], [5, 6, 7, 8]])

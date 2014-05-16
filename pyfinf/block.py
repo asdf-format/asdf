@@ -3,6 +3,7 @@
 
 from __future__ import absolute_import, division, unicode_literals, print_function
 
+import copy
 import os
 import struct
 import weakref
@@ -22,19 +23,42 @@ class BlockManager(object):
     def __init__(self, finffile):
         self._finffile = weakref.ref(finffile)
 
-        self._internal_blocks = []
-        self._streamed_block = None
-        self._external_blocks = []
+        self._blocks = []
         self._data_to_block_mapping = {}
 
     def __len__(self):
         """
         Return the total number of blocks being managed.
         """
-        length = len(self._internal_blocks) + len(self._external_blocks)
-        if self._streamed_block is not None:
-            length += 1
-        return length
+        return len(self._blocks)
+
+    @property
+    def blocks(self):
+        for block in self._blocks:
+            yield block
+
+    @property
+    def internal_blocks(self):
+        for block in self._blocks:
+            if block.block_type == 'internal':
+                yield block
+
+        for block in self._blocks:
+            if block.block_type == 'streamed':
+                yield block
+                break
+
+    @property
+    def streamed_block(self):
+        for block in self._blocks:
+            if block.block_type == 'streamed':
+                return block
+
+    @property
+    def external_blocks(self):
+        for block in self._blocks:
+            if block.block_type == 'external':
+                yield block
 
     def read_internal_blocks(self, fd, past_magic=False):
         """
@@ -71,21 +95,19 @@ class BlockManager(object):
         """
         from . import finf
 
-        for block in self._internal_blocks:
+        for block in self.internal_blocks:
             block.write(fd)
 
-        if self._streamed_block is not None:
-            self._streamed_block.write(fd)
-
-        if len(self._external_blocks) and fd.uri is None:
-            raise ValueError(
-                "Can't write external blocks, since URI of main file is "
-                "unknown.")
-
-        for i, block in enumerate(self._external_blocks):
+        for i, block in enumerate(self.external_blocks):
+            if fd.uri is None:
+                raise ValueError(
+                    "Can't write external blocks, since URI of main file is "
+                    "unknown.")
             subfd = self.get_external_uri(fd.uri, i)
             finffile = finf.FinfFile()
-            finffile.blocks._internal_blocks.append(block)
+            block = copy.copy(block)
+            block.block_type = 'internal'
+            finffile.blocks.add(block)
             finffile.write_to(subfd)
 
     def get_external_filename(self, filename, index):
@@ -115,7 +137,7 @@ class BlockManager(object):
         """
         Add an internal block to the manager.
         """
-        self._internal_blocks.append(block)
+        self._blocks.append(block)
         if block._data is not None:
             self._data_to_block_mapping[id(block._data)] = block
 
@@ -130,8 +152,16 @@ class BlockManager(object):
         # isn't) afterword?
 
         if ctx.get('exploded'):
-            self._external_blocks += self._internal_blocks
-            self._internal_blocks = []
+            for block in self.internal_blocks:
+                block.block_type = 'external'
+
+        count = 0
+        for block in self._blocks:
+            if block.block_type == 'streamed':
+                count += 1
+        if count > 1:
+            raise ValueError(
+                "Found {0} streamed blocks, but there must be only one.".format(count))
 
     def get_block(self, source):
         """
@@ -148,20 +178,17 @@ class BlockManager(object):
         buffer : buffer
         """
         if isinstance(source, int):
-            try:
-                if self._streamed_block is not None:
-                    block = (self._internal_blocks +
-                             [self._streamed_block])[source]
-                else:
-                    block = self._internal_blocks[source]
-            except IndexError:
+            block = util.nth_item(self.internal_blocks, source)
+            if block is None:
                 raise ValueError("Block '{0}' not found.".format(source))
 
         elif isinstance(source, six.string_types):
             finffile = self._finffile().read_external(source)
-            block = finffile.blocks._internal_blocks[0]
-            if block not in self._external_blocks:
-                self._external_blocks.append(block)
+            block = finffile.blocks._blocks[0]
+            block.block_type = 'external'
+            if block not in self._blocks:
+                self._blocks.append(block)
+
         else:
             raise TypeError("Unknown source '{0}'".format(source))
 
@@ -202,30 +229,25 @@ class BlockManager(object):
             May be an integer for an internal block, or a URI for an
             external block.
         """
-        try:
-            index = self._internal_blocks.index(block)
-        except ValueError:
-            pass
-        else:
-            return index
+        for i, internal_block in enumerate(self.internal_blocks):
+            if block == internal_block:
+                if internal_block.block_type == 'streamed':
+                    return -1
+                return i
 
-        if block is self._streamed_block:
-            return -1
+        for i, external_block in enumerate(self.external_blocks):
+            if block == external_block:
+                if self._finffile().uri is None:
+                    raise ValueError(
+                        "Can't write external blocks, since URI of main file is "
+                        "unknown.")
 
-        try:
-            index = self._external_blocks.index(block)
-        except ValueError:
-            raise ValueError("Block not associated with FinfFile.")
-        else:
-            if self._finffile().uri is None:
-                raise ValueError(
-                    "Can't write external blocks, since URI of main file is "
-                    "unknown.")
+                parts = list(urlparse.urlparse(self._finffile().uri))
+                path = parts[2]
+                filename = os.path.basename(path)
+                return self.get_external_filename(filename, i)
 
-            parts = list(urlparse.urlparse(self._finffile().uri))
-            path = parts[2]
-            filename = os.path.basename(path)
-            return self.get_external_filename(filename, index)
+        raise ValueError("block not found.")
 
     def find_or_create_block_for_array(self, arr):
         """
@@ -241,6 +263,13 @@ class BlockManager(object):
         -------
         block : Block
         """
+        from .tags.core import ndarray
+        if isinstance(arr, ndarray.NDArrayType):
+            if arr._block is not None:
+                if arr._block not in self._blocks:
+                    self._blocks.append(arr._block)
+                return arr._block
+
         base = util.get_array_base(arr)
         block = self._data_to_block_mapping.get(id(base))
         if block is not None:
@@ -255,9 +284,19 @@ class BlockManager(object):
         streamed block, on writing, does not manage data of its own,
         but the user is expected to stream it to disk directly.
         """
-        if self._streamed_block is None:
-            self._streamed_block = Block(flags=constants.BLOCK_FLAG_STREAMED)
-        return self._streamed_block
+        block = self.streamed_block
+        if block is None:
+            block = Block(block_type='streamed')
+            self._blocks.append(block)
+        return block
+
+    def add_inline(self, array):
+        """
+        Add an inline block for ``array`` to the block set.
+        """
+        block = Block(array, block_type='inline')
+        self.add(block)
+        return block
 
     def __getitem__(self, arr):
         return self.find_or_create_block_for_array(arr)
@@ -273,7 +312,7 @@ class Block(object):
     _header_fmt = b'>IQQQ16s'
     _header_fmt_size = struct.calcsize(_header_fmt)
 
-    def __init__(self, data=None, uri=None, flags=0):
+    def __init__(self, data=None, uri=None, block_type='internal'):
         if data is not None:
             self._data = data
             if six.PY2:
@@ -284,7 +323,7 @@ class Block(object):
             self._data = None
             self._size = 0
         self._uri = uri
-        self._flags = flags
+        self._block_type = block_type
 
         self._fd = None
         self._header_size = None
@@ -295,11 +334,22 @@ class Block(object):
         self._memmapped = False
 
     def __repr__(self):
-        return '<Block alloc: {0} size: {1} encoding: {2}>'.format(
-            self._allocated, self._size, self._encoding)
+        return '<Block {0} alloc: {1} size: {2} encoding: {3}>'.format(
+            self._block_type[:3], self._allocated, self._size, self._encoding)
 
     def __len__(self):
         return self._size
+
+    @property
+    def block_type(self):
+        return self._block_type
+
+    @block_type.setter
+    def block_type(self, typename):
+        if typename not in ['internal', 'external', 'streamed', 'inline']:
+            raise ValueError(
+                "block_type must be one of 'internal', 'external', 'streamed' or 'inline'")
+        self._block_type = typename
 
     def read(self, fd, past_magic=False):
         """
@@ -347,7 +397,6 @@ class Block(object):
             struct.unpack_from(self._header_fmt, buff[:self._header_fmt_size])
 
         # Support streaming blocks
-        self._flags = flags
         if fd.seekable():
             # If the file is seekable, we can delay reading the actual
             # data until later.
@@ -358,6 +407,7 @@ class Block(object):
             self._encoding = encoding
             if flags & constants.BLOCK_FLAG_STREAMED:
                 fd.fast_forward(-1)
+                self._block_type = 'streamed'
                 self._size = self._allocated = (fd.tell() - self._data_offset) + 1
             else:
                 fd.fast_forward(allocated_size)
@@ -366,6 +416,7 @@ class Block(object):
         else:
             # If the file is a stream, we need to get the data now.
             if flags & constants.BLOCK_FLAG_STREAMED:
+                self._block_type = 'streamed'
                 self._data = fd.read_into_array(-1)
                 self._size = self._allocated = len(self._data)
             else:
@@ -392,15 +443,14 @@ class Block(object):
             self._offset = fd.tell()
             self._header_size = self._header_fmt_size
 
-            flags = self._flags
-            if flags & constants.BLOCK_FLAG_STREAMED:
-                if self._data is not None:
-                    flags &= ~constants.BLOCK_FLAG_STREAMED
+            flags = 0
+            if self._block_type == 'streamed':
+                flags |= constants.BLOCK_FLAG_STREAMED
 
             fd.write(constants.BLOCK_MAGIC)
             fd.write(struct.pack(b'>H', self._header_size))
             fd.write(struct.pack(
-                self._header_fmt, self._flags,
+                self._header_fmt, flags,
                 self._allocated, self._size, 0, b''))
 
             self._data_offset = fd.tell()
