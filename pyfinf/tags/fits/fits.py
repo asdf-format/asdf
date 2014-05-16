@@ -21,7 +21,10 @@ class FitsType(FinfType):
             header = fits.Header([fits.Card(*x) for x in hdu_entry['header']])
             data = hdu_entry.get('data')
             if data is not None:
-                data = np.asarray(data)
+                try:
+                    data = np.asarray(data)
+                except ValueError:
+                    data = None
             if first:
                 hdu = fits.PrimaryHDU(data=data, header=header)
                 first = False
