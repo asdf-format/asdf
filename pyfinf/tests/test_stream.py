@@ -6,6 +6,8 @@ from __future__ import absolute_import, division, unicode_literals, print_functi
 import io
 import os
 
+from astropy.tests.helper import pytest
+
 import numpy as np
 from numpy.testing import assert_array_equal
 
@@ -137,3 +139,39 @@ def test_stream_to_stream():
         assert ff.tree['stream'].shape == (100, 6, 2)
         for i, row in enumerate(ff.tree['stream']):
             assert np.all(row == i)
+
+
+def test_array_to_stream():
+    tree = {
+        'stream': np.array([1, 2, 3, 4], np.int64),
+    }
+
+    buff = io.BytesIO()
+
+    with finf.FinfFile(tree) as ff:
+        ff.blocks[tree['stream']].block_type = 'streamed'
+        ff.write_to(buff)
+        ff.write_to_stream(np.array([5, 6, 7, 8], np.int64).tostring())
+
+    buff.seek(0)
+
+    with finf.FinfFile().read(buff) as ff:
+        assert_array_equal(ff.tree['stream'], [1, 2, 3, 4, 5, 6, 7, 8])
+        buff.seek(0)
+        ff.write_to(buff)
+        assert b"shape: ['*']" in buff.getvalue()
+
+
+def test_too_many_streams():
+    tree = {
+        'stream1': np.array([1, 2, 3, 4], np.int64),
+        'stream2': np.array([1, 2, 3, 4], np.int64)
+    }
+
+    buff = io.BytesIO()
+
+    with finf.FinfFile(tree) as ff:
+        ff.blocks[tree['stream1']].block_type = 'streamed'
+        ff.blocks[tree['stream2']].block_type = 'streamed'
+        with pytest.raises(ValueError):
+            ff.write_to(buff)
