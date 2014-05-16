@@ -70,7 +70,8 @@ def assert_roundtrip_tree(
         raw_yaml_check_func(content)
 
     # Then, test writing/reading to a real file
-    FinfFile(tree).write_to(fname)
+    with FinfFile(tree) as ff:
+        ff.write_to(fname)
     with FinfFile.read(fname, mode='rw') as ff:
         assert_tree_match(tree, ff.tree)
         if finf_check_func:

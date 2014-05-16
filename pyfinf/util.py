@@ -4,6 +4,8 @@
 
 from __future__ import absolute_import, division, unicode_literals, print_function
 
+import itertools
+
 from astropy.extern.six.moves.urllib import parse as urlparse
 
 import numpy as np
@@ -54,3 +56,19 @@ def get_base_uri(uri):
     """
     parts = urlparse.urlparse(uri)
     return urlparse.urlunparse(list(parts[:5]) + [''])
+
+
+def nth_item(iterable, n, default=None):
+    """
+    Returns the nth item of an iterable or a default value.
+
+    Support Python-style negative indexing.
+    """
+    if n < 0:
+        l = list(iterable)
+        try:
+            return l[n]
+        except IndexError:
+            return default
+    else:
+        return next(itertools.islice(iterable, n, None), default)

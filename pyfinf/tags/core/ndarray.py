@@ -103,17 +103,20 @@ class NDArrayType(FinfType):
         self._finffile = finffile
         self._source = source
         self._block = None
+        self._array = None
         if isinstance(source, int):
             try:
                 self._block = finffile.blocks.get_block(source)
             except ValueError:
                 pass
+        elif isinstance(source, list):
+            self._array = np.array(source)
+            self._block = finffile.blocks.add_inline(self._array)
         self._shape = shape
         self._dtype = dtype
         self._offset = offset
         self._strides = strides
         self._order = order
-        self._array = None
 
     def _make_array(self):
         if self._array is None:
@@ -199,14 +202,25 @@ class NDArrayType(FinfType):
 
     @classmethod
     def from_tree(cls, node, ctx):
-        shape = node['shape']
-        dtype = finf_dtype_to_numpy_dtype(
-            node.get('dtype', 'uint8'), node.get('byteorder', 'big'))
-        source = node['source']
-        offset = node.get('offset', 0)
-        strides = node.get('strides', None)
+        if isinstance(node, list):
+            return cls(node, None, None, None, None, None, ctx.finffile)
 
-        return cls(source, shape, dtype, offset, strides, 'C', ctx.finffile)
+        elif isinstance(node, dict):
+            shape = node['shape']
+            dtype = finf_dtype_to_numpy_dtype(
+                node.get('dtype', 'uint8'), node.get('byteorder', 'big'))
+            source = node.get('source')
+            data = node.get('data')
+            if source and data:
+                raise ValueError("Both source and data my not be provided.")
+            if data:
+                source = data
+            offset = node.get('offset', 0)
+            strides = node.get('strides', None)
+
+            return cls(source, shape, dtype, offset, strides, 'C', ctx.finffile)
+
+        raise TypeError("Invalid ndarray description.")
 
     @classmethod
     def pre_write(cls, data, ctx):
@@ -229,18 +243,25 @@ class NDArrayType(FinfType):
 
         result = {}
         result['shape'] = list(shape)
-        result['source'] = ctx.finffile.blocks.get_source(block)
+        if block.block_type == 'streamed':
+            result['shape'][0] = '*'
 
         dtype, byteorder = numpy_dtype_to_finf_dtype(dtype)
-        result['dtype'] = dtype
-        if byteorder != 'big':
-            result['byteorder'] = byteorder
 
-        if offset > 0:
-            result['offset'] = offset
+        if block.block_type == 'inline':
+            result['data'] = data.tolist()
+            result['dtype'] = dtype
+        else:
+            result['source'] = ctx.finffile.blocks.get_source(block)
+            result['dtype'] = dtype
+            if byteorder != 'big':
+                result['byteorder'] = byteorder
 
-        if strides is not None:
-            result['strides'] = list(strides)
+            if offset > 0:
+                result['offset'] = offset
+
+            if strides is not None:
+                result['strides'] = list(strides)
 
         return result
 

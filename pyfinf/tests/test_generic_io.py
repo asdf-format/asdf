@@ -103,9 +103,9 @@ def test_path(tree, tmpdir):
 
     ff = _roundtrip(tree, get_write_fd, get_read_fd)
 
-    assert len(ff.blocks._internal_blocks) == 2
-    ff.blocks._internal_blocks[0].data
-    assert isinstance(ff.blocks._internal_blocks[0]._data, np.core.memmap)
+    assert len(list(ff.blocks.internal_blocks)) == 2
+    next(ff.blocks.internal_blocks).data
+    assert isinstance(next(ff.blocks.internal_blocks)._data, np.core.memmap)
 
 
 def test_open2(tree, tmpdir):
@@ -125,8 +125,8 @@ def test_open2(tree, tmpdir):
 
     ff = _roundtrip(tree, get_write_fd, get_read_fd)
 
-    assert len(ff.blocks._internal_blocks) == 2
-    assert isinstance(ff.blocks._internal_blocks[0]._data, np.core.memmap)
+    assert len(list(ff.blocks.internal_blocks)) == 2
+    assert isinstance(next(ff.blocks.internal_blocks)._data, np.core.memmap)
 
 
 def test_open_fail(tmpdir):
@@ -187,8 +187,8 @@ def test_io_open(tree, tmpdir):
 
     ff = _roundtrip(tree, get_write_fd, get_read_fd)
 
-    assert len(ff.blocks._internal_blocks) == 2
-    assert isinstance(ff.blocks._internal_blocks[0]._data, np.core.memmap)
+    assert len(list(ff.blocks.internal_blocks)) == 2
+    assert isinstance(next(ff.blocks.internal_blocks)._data, np.core.memmap)
     ff.tree['science_data'][0] = 42
 
 
@@ -208,9 +208,9 @@ def test_bytes_io(tree):
 
     ff = _roundtrip(tree, get_write_fd, get_read_fd)
 
-    assert len(ff.blocks._internal_blocks) == 2
-    assert not isinstance(ff.blocks._internal_blocks[0]._data, np.core.memmap)
-    assert isinstance(ff.blocks._internal_blocks[0]._data, np.ndarray)
+    assert len(list(ff.blocks.internal_blocks)) == 2
+    assert not isinstance(next(ff.blocks.internal_blocks)._data, np.core.memmap)
+    assert isinstance(next(ff.blocks.internal_blocks)._data, np.ndarray)
     ff.tree['science_data'][0] = 42
 
 
@@ -227,8 +227,8 @@ def test_streams(tree):
     ff = _roundtrip(tree, get_write_fd, get_read_fd)
 
     assert len(ff.blocks) == 2
-    assert not isinstance(ff.blocks._internal_blocks[0]._data, np.core.memmap)
-    assert isinstance(ff.blocks._internal_blocks[0]._data, np.ndarray)
+    assert not isinstance(next(ff.blocks.internal_blocks)._data, np.core.memmap)
+    assert isinstance(next(ff.blocks.internal_blocks)._data, np.ndarray)
     ff.tree['science_data'][0] = 42
 
 
@@ -256,9 +256,9 @@ def test_urlopen(tree, httpserver):
 
     ff = _roundtrip(tree, get_write_fd, get_read_fd)
 
-    assert len(ff.blocks._internal_blocks) == 2
-    assert not isinstance(ff.blocks._internal_blocks[0]._data, np.core.memmap)
-    assert isinstance(ff.blocks._internal_blocks[0]._data, np.ndarray)
+    assert len(list(ff.blocks.internal_blocks)) == 2
+    assert not isinstance(next(ff.blocks.internal_blocks)._data, np.core.memmap)
+    assert isinstance(next(ff.blocks.internal_blocks)._data, np.ndarray)
 
 
 def test_http_connection(tree, httpserver):
@@ -278,9 +278,9 @@ def test_http_connection(tree, httpserver):
 
     ff = _roundtrip(tree, get_write_fd, get_read_fd)
 
-    assert len(ff.blocks._internal_blocks) == 2
-    assert not isinstance(ff.blocks._internal_blocks[0]._data, np.core.memmap)
-    assert isinstance(ff.blocks._internal_blocks[0]._data, np.ndarray)
+    assert len(list(ff.blocks.internal_blocks)) == 2
+    assert not isinstance(next(ff.blocks.internal_blocks)._data, np.core.memmap)
+    assert isinstance(next(ff.blocks.internal_blocks)._data, np.ndarray)
     ff.tree['science_data'][0] == 42
 
 
@@ -304,9 +304,9 @@ def test_http_connection_range(tree, rhttpserver):
     else:
         assert connection[0]._nreads == 4
 
-    assert len(ff.blocks._internal_blocks) == 2
-    assert not isinstance(ff.blocks._internal_blocks[0]._data, np.core.memmap)
-    assert isinstance(ff.blocks._internal_blocks[0]._data, np.ndarray)
+    assert len(list(ff.blocks.internal_blocks)) == 2
+    assert not isinstance(next(ff.blocks.internal_blocks)._data, np.core.memmap)
+    assert isinstance(next(ff.blocks.internal_blocks)._data, np.ndarray)
     ff.tree['science_data'][0] == 42
 
 
@@ -322,8 +322,8 @@ def test_exploded_filesystem(tree, tmpdir):
     ff = _roundtrip(tree, get_write_fd, get_read_fd,
                     write_options={'exploded': True})
 
-    assert len(ff.blocks._internal_blocks) == 0
-    assert len(ff.blocks._external_blocks) == 2
+    assert len(list(ff.blocks.internal_blocks)) == 0
+    assert len(list(ff.blocks.external_blocks)) == 2
 
 
 def test_exploded_filesystem_fail(tree, tmpdir):
@@ -361,8 +361,8 @@ def test_exploded_http(tree, httpserver):
     ff = _roundtrip(tree, get_write_fd, get_read_fd,
                     write_options={'exploded': True})
 
-    assert len(ff.blocks._internal_blocks) == 0
-    assert len(ff.blocks._external_blocks) == 2
+    assert len(list(ff.blocks.internal_blocks)) == 0
+    assert len(list(ff.blocks.external_blocks)) == 2
 
 
 def test_exploded_stream_write():
