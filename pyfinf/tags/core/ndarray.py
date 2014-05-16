@@ -57,12 +57,14 @@ class NDArrayType(FinfType):
 
     def __init__(self, source, shape, dtype, offset, strides,
                  order, finffile):
+        self._finffile = finffile
+        self._source = source
+        self._block = None
         if isinstance(source, int):
-            self._block = finffile.blocks.get_block(source)
-        else:
-            self._finffile = finffile
-            self._source = source
-            self._block = None
+            try:
+                self._block = finffile.blocks.get_block(source)
+            except ValueError:
+                pass
         self._shape = shape
         self._dtype = dtype
         self._offset = offset
