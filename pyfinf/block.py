@@ -23,8 +23,18 @@ class BlockManager(object):
         self._finffile = weakref.ref(finffile)
 
         self._internal_blocks = []
+        self._streamed_block = None
         self._external_blocks = []
         self._data_to_block_mapping = {}
+
+    def __len__(self):
+        """
+        Return the total number of blocks being managed.
+        """
+        length = len(self._internal_blocks) + len(self._external_blocks)
+        if self._streamed_block is not None:
+            length += 1
+        return length
 
     def read_internal_blocks(self, fd, past_magic=False):
         """
@@ -63,6 +73,9 @@ class BlockManager(object):
 
         for block in self._internal_blocks:
             block.write(fd)
+
+        if self._streamed_block is not None:
+            self._streamed_block.write(fd)
 
         if len(self._external_blocks) and fd.uri is None:
             raise ValueError(
@@ -106,9 +119,6 @@ class BlockManager(object):
         if block._data is not None:
             self._data_to_block_mapping[id(block._data)] = block
 
-    def __len__(self):
-        return len(self._internal_blocks) + len(self._external_blocks)
-
     def finalize(self, ctx):
         """
         At this point, we have a complete set of blocks for the file,
@@ -138,9 +148,14 @@ class BlockManager(object):
         buffer : buffer
         """
         if isinstance(source, int):
-            if source < 0 or source >= len(self._internal_blocks):
+            try:
+                if self._streamed_block is not None:
+                    block = (self._internal_blocks +
+                             [self._streamed_block])[source]
+                else:
+                    block = self._internal_blocks[source]
+            except IndexError:
                 raise ValueError("Block '{0}' not found.".format(source))
-            block = self._internal_blocks[source]
 
         elif isinstance(source, six.string_types):
             finffile = self._finffile().read_external(source)
@@ -194,6 +209,9 @@ class BlockManager(object):
         else:
             return index
 
+        if block is self._streamed_block:
+            return -1
+
         try:
             index = self._external_blocks.index(block)
         except ValueError:
@@ -231,6 +249,16 @@ class BlockManager(object):
         self.add(block)
         return block
 
+    def get_streamed_block(self):
+        """
+        Get the streamed block, which is always the last one.  A
+        streamed block, on writing, does not manage data of its own,
+        but the user is expected to stream it to disk directly.
+        """
+        if self._streamed_block is None:
+            self._streamed_block = Block(flags=constants.BLOCK_FLAG_STREAMED)
+        return self._streamed_block
+
     def __getitem__(self, arr):
         return self.find_or_create_block_for_array(arr)
 
@@ -242,10 +270,10 @@ class Block(object):
     Instead, should only be created through the `BlockManager`.
     """
 
-    _header_fmt = b'>QQQ16s'
+    _header_fmt = b'>IQQQ16s'
     _header_fmt_size = struct.calcsize(_header_fmt)
 
-    def __init__(self, data=None, uri=None):
+    def __init__(self, data=None, uri=None, flags=0):
         if data is not None:
             self._data = data
             if six.PY2:
@@ -254,20 +282,24 @@ class Block(object):
                 self._size = data.data.nbytes
         else:
             self._data = None
-            self._size = None
+            self._size = 0
         self._uri = uri
+        self._flags = flags
 
         self._fd = None
         self._header_size = None
         self._offset = None
         self._data_offset = None
-        self._allocated = None
+        self._allocated = 0
         self._encoding = None
         self._memmapped = False
 
     def __repr__(self):
         return '<Block alloc: {0} size: {1} encoding: {2}>'.format(
             self._allocated, self._size, self._encoding)
+
+    def __len__(self):
+        return self._size
 
     def read(self, fd, past_magic=False):
         """
@@ -295,7 +327,7 @@ class Block(object):
 
         if not past_magic:
             buff = fd.read(len(constants.BLOCK_MAGIC))
-            if len(buff) == 0:
+            if len(buff) < 4:
                 return None
 
             if buff != constants.BLOCK_MAGIC:
@@ -311,9 +343,11 @@ class Block(object):
                 "Header size must be > {0}".format(self._header_fmt_size))
 
         buff = fd.read(header_size)
-        (allocated_size, used_size, checksum, encoding) = \
+        (flags, allocated_size, used_size, checksum, encoding) = \
             struct.unpack_from(self._header_fmt, buff[:self._header_fmt_size])
 
+        # Support streaming blocks
+        self._flags = flags
         if fd.seekable():
             # If the file is seekable, we can delay reading the actual
             # data until later.
@@ -321,16 +355,24 @@ class Block(object):
             self._header_size = header_size
             self._offset = offset
             self._data_offset = fd.tell()
-            self._allocated = allocated_size
-            self._size = used_size
             self._encoding = encoding
-            fd.fast_forward(allocated_size)
+            if flags & constants.BLOCK_FLAG_STREAMED:
+                fd.fast_forward(-1)
+                self._size = self._allocated = (fd.tell() - self._data_offset) + 1
+            else:
+                fd.fast_forward(allocated_size)
+                self._allocated = allocated_size
+                self._size = used_size
         else:
             # If the file is a stream, we need to get the data now.
-            self._size = used_size
-            self._allocated = allocated_size
-            self._data = fd.read_into_array(used_size)
-            fd.fast_forward(allocated_size - used_size)
+            if flags & constants.BLOCK_FLAG_STREAMED:
+                self._data = fd.read_into_array(-1)
+                self._size = self._allocated = len(self._data)
+            else:
+                self._size = used_size
+                self._allocated = allocated_size
+                self._data = fd.read_into_array(used_size)
+                fd.fast_forward(allocated_size - used_size)
             fd.close()
 
         return self
@@ -350,15 +392,21 @@ class Block(object):
             self._offset = fd.tell()
             self._header_size = self._header_fmt_size
 
+            flags = self._flags
+            if flags & constants.BLOCK_FLAG_STREAMED:
+                if self._data is not None:
+                    flags &= ~constants.BLOCK_FLAG_STREAMED
+
             fd.write(constants.BLOCK_MAGIC)
             fd.write(struct.pack(b'>H', self._header_size))
             fd.write(struct.pack(
-                self._header_fmt,
+                self._header_fmt, self._flags,
                 self._allocated, self._size, 0, b''))
 
             self._data_offset = fd.tell()
 
-            fd.write(self._data.data)
+            if self._data is not None:
+                fd.write(self._data.data)
 
     @property
     def data(self):

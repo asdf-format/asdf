@@ -16,6 +16,7 @@ from ._astropy_init import *
 __all__ = ['FinfFile', 'open', 'test']
 
 from .finf import FinfFile
+from .stream import Stream
 
 
 def open(init, mode='rw', uri=None):

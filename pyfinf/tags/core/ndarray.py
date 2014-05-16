@@ -32,13 +32,14 @@ def finf_dtype_to_numpy_dtype(dtype, byteorder):
     if dtype in _dtype_names:
         dtype = _dtype_names[dtype]
         if byteorder == 'big':
-            return str('>' + dtype)
+            return np.dtype(str('>' + dtype))
         elif byteorder == 'little':
-            return str('<' + dtype)
+            return np.dtype(str('<' + dtype))
     raise ValueError("Unknown dtype {0}".format(dtype))
 
 
 def numpy_dtype_to_finf_dtype(dtype):
+    dtype = np.dtype(dtype)
     if dtype.name in _dtype_names:
         if dtype.byteorder == '=':
             byteorder = sys.byteorder
@@ -71,11 +72,11 @@ class NDArrayType(FinfType):
 
     def _make_array(self):
         if self._array is None:
-            if self._block is None:
-                self._block = self._finffile.blocks.get_block(self._source)
-            data = self._block.data
+            block = self.block
+            shape = self.get_actual_shape(
+                self._shape, self._strides, self._dtype, len(block))
             self._array = np.ndarray(
-                self._shape, self._dtype, data,
+                shape, self._dtype, block.data,
                 self._offset, self._strides, self._order)
         return self._array
 
@@ -96,9 +97,37 @@ class NDArrayType(FinfType):
                 self._shape, self._dtype)
         return str(self._array)
 
+    def get_actual_shape(self, shape, strides, dtype, block_size):
+        """
+        Get the actual shape of an array, by computing it against the
+        block_size if it contains a ``*``.
+        """
+        num_stars = shape.count('*')
+        if num_stars == 0:
+            return shape
+        elif num_stars == 1:
+            if shape[0] != '*':
+                raise ValueError("'*' may only be in first entry of shape")
+            if strides is not None:
+                stride = strides[0]
+            else:
+                stride = np.product(shape[1:]) * dtype.itemsize
+            missing = int(block_size / stride)
+            return [missing] + shape[1:]
+        raise ValueError("Invalid shape '{0}'".format(shape))
+
+    @property
+    def block(self):
+        if self._block is None:
+            self._block = self._finffile.blocks.get_block(self._source)
+        return self._block
+
     @property
     def shape(self):
-        return self._shape
+        if '*' in self._shape:
+            return tuple(self.get_actual_shape(
+                self._shape, self._strides, self._dtype, len(self.block)))
+        return tuple(self._shape)
 
     @property
     def dtype(self):
