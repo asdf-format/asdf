@@ -238,3 +238,29 @@ def test_mask_nan():
     assert_array_equal(
         ff.tree['arr'].mask,
         [[False, False, False, True], [False, False, False, False]])
+
+
+def test_string(tmpdir):
+    tree = {
+        'ascii': np.array([b'foo', b'bar', b'baz']),
+        'unicode': np.array(['სამეცნიერო', 'данные', 'வடிவம்'])
+        }
+
+    helpers.assert_roundtrip_tree(tree, tmpdir)
+
+
+def test_string_table(tmpdir):
+    tree = {
+        'table': np.array([(b'foo', 'სამეცნიერო', 42, 53.0)])
+        }
+
+    helpers.assert_roundtrip_tree(tree, tmpdir)
+
+
+def test_inline_string():
+    content = "arr: !core/ndarray ['a', 'b', 'c']"
+    buff = helpers.yaml_to_finf(content)
+
+    ff = finf.FinfFile.read(buff)
+
+    assert_array_equal(ff.tree['arr']._make_array(), ['a', 'b', 'c'])

@@ -32,6 +32,12 @@ _dtype_names = {
 }
 
 
+_string_dtype_names = {
+    'ascii': 'S',
+    'ucs4': 'U'
+}
+
+
 def finf_byteorder_to_numpy_byteorder(byteorder):
     if byteorder == 'big':
         return '>'
@@ -45,6 +51,15 @@ def finf_dtype_to_numpy_dtype(dtype, byteorder):
         dtype = _dtype_names[dtype]
         byteorder = finf_byteorder_to_numpy_byteorder(byteorder)
         return np.dtype(str(byteorder + dtype))
+    elif (isinstance(dtype, list) and
+          len(dtype) == 2 and
+          isinstance(dtype[0], six.text_type) and
+          isinstance(dtype[1], int) and
+          dtype[0] in _string_dtype_names):
+        length = dtype[1]
+        byteorder = finf_byteorder_to_numpy_byteorder(byteorder)
+        dtype = str(byteorder) + str(_string_dtype_names[dtype[0]]) + str(length)
+        return np.dtype(dtype)
     elif isinstance(dtype, dict):
         if not 'dtype' in dtype:
             raise ValueError("Field entry has no dtype: '{0}'".format(dtype))
@@ -96,6 +111,13 @@ def numpy_dtype_to_finf_dtype(dtype):
 
     elif dtype.name == 'bool':
         return 'bool8', numpy_byteorder_to_finf_byteorder(dtype.byteorder)
+
+    elif dtype.name.startswith('string'):
+        return ['ascii', dtype.itemsize], 'big'
+
+    elif dtype.name.startswith('unicode'):
+        return (['ucs4', int(dtype.itemsize / 4)],
+                numpy_byteorder_to_finf_byteorder(dtype.byteorder))
 
     raise ValueError("Unknown dtype {0}".format(dtype))
 
@@ -211,6 +233,11 @@ class NDArrayType(FinfType):
             return len(self._array)
 
     def __getattr__(self, attr):
+        # We need to ignore __array_struct__, or unicode arrays end up
+        # getting "double casted" and upsized.  This also reduces the
+        # number of array creations in the general case.
+        if attr == '__array_struct__':
+            raise AttributeError()
         return getattr(self._make_array(), attr)
 
     def __getitem__(self, item):
