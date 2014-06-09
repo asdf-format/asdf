@@ -112,10 +112,10 @@ def numpy_dtype_to_finf_dtype(dtype):
     elif dtype.name == 'bool':
         return 'bool8', numpy_byteorder_to_finf_byteorder(dtype.byteorder)
 
-    elif dtype.name.startswith('string'):
+    elif dtype.name.startswith('string') or dtype.name.startswith('bytes'):
         return ['ascii', dtype.itemsize], 'big'
 
-    elif dtype.name.startswith('unicode'):
+    elif dtype.name.startswith('unicode') or dtype.name.startswith('str'):
         return (['ucs4', int(dtype.itemsize / 4)],
                 numpy_byteorder_to_finf_byteorder(dtype.byteorder))
 
