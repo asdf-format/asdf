@@ -6,6 +6,8 @@ from __future__ import absolute_import, division, unicode_literals, print_functi
 from astropy.extern import six
 from astropy.utils.compat.odict import OrderedDict
 
+import numpy as np
+
 import yaml
 
 from . constants import YAML_TAG_PREFIX
@@ -121,6 +123,17 @@ def represent_ordereddict(dumper, data):
 
 FinfLoader.add_constructor(YAML_OMAP_TAG, ordereddict_constructor)
 FinfDumper.add_representer(OrderedDict, represent_ordereddict)
+
+
+# ----------------------------------------------------------------------
+# Handle numpy scalars
+
+for scalar_type in (np.float32, np.float64, np.float128):
+    FinfDumper.add_representer(scalar_type, FinfDumper.represent_float)
+
+for scalar_type in (np.int8, np.int16, np.int32, np.int64,
+                    np.uint8, np.uint16, np.uint32, np.uint64):
+    FinfDumper.add_representer(scalar_type, FinfDumper.represent_int)
 
 
 # ----------------------------------------------------------------------

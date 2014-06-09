@@ -10,6 +10,7 @@ from astropy.extern import six
 from astropy.tests.helper import pytest
 
 import numpy as np
+from numpy import ma
 from numpy.testing import assert_array_equal
 
 import yaml
@@ -81,7 +82,13 @@ def test_all_dtypes(tmpdir):
             # interface.
             if six.PY3 and dtype in ('c32', 'f16'):
                 continue
-            tree[byteorder + dtype] = np.arange(0, 10, dtype=str(byteorder + dtype))
+
+            if dtype == 'b1':
+                arr = np.array([True, False])
+            else:
+                arr = np.arange(0, 10, dtype=str(byteorder + dtype))
+
+            tree[byteorder + dtype] = arr
 
     helpers.assert_roundtrip_tree(tree, tmpdir)
 
@@ -194,3 +201,40 @@ def test_inline_bare():
     ff = finf.FinfFile.read(buff)
 
     assert_array_equal(ff.tree['arr'], [[1, 2, 3, 4], [5, 6, 7, 8]])
+
+
+def test_mask_roundtrip(tmpdir):
+    x = np.arange(0, 10, dtype=np.float)
+    m = ma.array(x, mask=x > 5)
+    tree = {
+        'masked_array': m,
+        'unmasked_array': x
+        }
+
+    def check_finf(finf):
+        tree = finf.tree
+
+        m = tree['masked_array']
+        x = tree['unmasked_array']
+
+        print(m)
+        print(m.mask)
+        assert np.all(m.mask[6:])
+        assert len(finf.blocks) == 2
+
+    helpers.assert_roundtrip_tree(tree, tmpdir, check_finf)
+
+
+def test_mask_nan():
+    content = """
+    arr: !core/ndarray
+      data: [[1, 2, 3, .NaN], [5, 6, 7, 8]]
+      mask: .NaN
+    """
+
+    buff = helpers.yaml_to_finf(content)
+    ff = finf.FinfFile.read(buff)
+
+    assert_array_equal(
+        ff.tree['arr'].mask,
+        [[False, False, False, True], [False, False, False, False]])
