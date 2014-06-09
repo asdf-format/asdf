@@ -242,7 +242,7 @@ def custom_tree_to_tagged_tree(tree, ctx):
             return node
         return node
 
-    return tagged.walk_and_modify_with_tags(tree, walker)
+    return treeutil.walk_and_modify(tree, walker)
 
 
 def tagged_tree_to_custom_tree(tree, ctx):
@@ -261,7 +261,7 @@ def tagged_tree_to_custom_tree(tree, ctx):
                 return tag_type.from_tree(node.data, ctx)
         return node
 
-    return tagged.walk_and_modify_with_tags(tree, walker)
+    return treeutil.walk_and_modify(tree, walker)
 
 
 def validate_tagged_tree(tree, ctx):

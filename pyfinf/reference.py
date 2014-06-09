@@ -18,7 +18,7 @@ from astropy.extern.six.moves.urllib import parse as urlparse
 
 from .finftypes import FinfType
 from . import generic_io
-from . import tagged
+from . import treeutil
 from . import util
 
 __all__ = [
@@ -126,7 +126,7 @@ def find_references(tree, ctx):
             return Reference(tree['$ref'], finffile=ctx.finffile)
         return tree
 
-    return tagged.walk_and_modify_with_tags(tree, do_find)
+    return treeutil.walk_and_modify(tree, do_find)
 
 
 def resolve_references(tree, ctx):
@@ -142,7 +142,7 @@ def resolve_references(tree, ctx):
 
     tree = find_references(tree, ctx)
 
-    return tagged.walk_and_modify_with_tags(tree, do_resolve)
+    return treeutil.walk_and_modify(tree, do_resolve)
 
 
 def make_reference(finffile, path):

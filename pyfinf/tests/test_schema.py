@@ -59,6 +59,8 @@ not_unit:
 
 
 def test_validate_all_schema():
+    # Make sure that the schemas themselves are valid.
+
     def validate_schema(path):
         with open(path, 'rb') as fd:
             schema_tree = yaml.load(fd)
@@ -76,28 +78,36 @@ def test_all_schema_examples():
     # Make sure that the examples in the schema files (and thus the
     # FINF standard document) are valid.
 
-    def test_schema_examples(path):
+    def test_example(example):
+        buff = helpers.yaml_to_finf('example: ' + example.strip())
+        with finf.FinfFile() as ff:
+            # Add a dummy block so that the ndarray examples
+            # work
+            ff.blocks.add(block.Block(np.empty((1024))))
+            ff.read(buff)
+
+    def find_examples_in_schema(path):
         with open(path, 'rb') as fd:
             schema_tree = yaml.load(fd)
 
-        def test_example(node):
+        examples = []
+
+        def find_example(node):
             if (isinstance(node, dict) and
                 'examples' in node and
                 isinstance(node['examples'], list)):
                 for desc, example in node['examples']:
-                    buff = helpers.yaml_to_finf('example: ' + example.strip())
-                    with finf.FinfFile() as ff:
-                        # Add a dummy block so that the ndarray examples
-                        # work
-                        ff.blocks.add(block.Block(np.empty((1024))))
-                        print(len(ff.blocks))
-                        ff.read(buff)
+                    examples.append(example)
 
-        treeutil.walk(schema_tree, test_example)
+        treeutil.walk(schema_tree, find_example)
+
+        return examples
 
     src = os.path.join(os.path.dirname(__file__), '../schemas')
     for root, dirs, files in os.walk(src):
         for fname in files:
             if not fname.endswith('.yaml'):
                 continue
-            yield test_schema_examples, os.path.join(root, fname)
+            for example in find_examples_in_schema(
+                    os.path.join(root, fname)):
+                yield test_example, example

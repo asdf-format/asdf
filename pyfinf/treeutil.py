@@ -8,6 +8,8 @@ from __future__ import absolute_import, division, unicode_literals, print_functi
 
 from astropy.extern import six
 
+from .tagged import Tagged, tag_object
+
 
 def walk(top, callback):
     """
@@ -50,7 +52,8 @@ def walk(top, callback):
 
 def walk_and_modify(top, callback):
     """
-    Modify a tree by walking it with a callback function.
+    Modify a tree by walking it with a callback function.  It also has
+    the effect of doing a deep copy.
 
     Parameters
     ----------
@@ -70,21 +73,22 @@ def walk_and_modify(top, callback):
     tree : object
         The modified tree.
     """
-    seen = set()
-
     def recurse(tree, seen=[]):
         if id(tree) in seen:
             return tree
 
         if isinstance(tree, dict):
-            result = tree.__class__()
             new_seen = seen + [id(tree)]
+            result = tree.__class__()
             for key, val in six.iteritems(tree):
                 result[key] = recurse(val, new_seen)
+            if isinstance(tree, Tagged):
+                result = tag_object(tree.tag, result)
         elif isinstance(tree, (list, tuple)):
             new_seen = seen + [id(tree)]
-            result = tree.__class__(
-                [recurse(val, new_seen) for val in tree])
+            result = tree.__class__([recurse(val, new_seen) for val in tree])
+            if isinstance(tree, Tagged):
+                result = tag_object(tree.tag, result)
         else:
             result = tree
 
