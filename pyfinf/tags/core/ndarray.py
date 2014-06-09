@@ -5,6 +5,7 @@ from __future__ import absolute_import, division, unicode_literals, print_functi
 import sys
 
 import numpy as np
+from numpy import ma
 
 from astropy.extern import six
 
@@ -26,7 +27,8 @@ _dtype_names = {
     'float128': 'f16',
     'complex64': 'c8',
     'complex128': 'c16',
-    'complex256': 'c32'
+    'complex256': 'c32',
+    'bool8': 'b1'
 }
 
 
@@ -91,19 +93,24 @@ def numpy_dtype_to_finf_dtype(dtype):
 
     elif dtype.name in _dtype_names:
         return dtype.name, numpy_byteorder_to_finf_byteorder(dtype.byteorder)
+
+    elif dtype.name == 'bool':
+        return 'bool8', numpy_byteorder_to_finf_byteorder(dtype.byteorder)
+
     raise ValueError("Unknown dtype {0}".format(dtype))
 
 
 class NDArrayType(FinfType):
     name = 'core/ndarray'
-    types = [np.ndarray]
+    types = [np.ndarray, ma.MaskedArray]
 
     def __init__(self, source, shape, dtype, offset, strides,
-                 order, finffile):
+                 order, mask, finffile):
         self._finffile = finffile
         self._source = source
         self._block = None
         self._array = None
+        self._mask = mask
         if isinstance(source, int):
             try:
                 self._block = finffile.blocks.get_block(source)
@@ -111,6 +118,7 @@ class NDArrayType(FinfType):
                 pass
         elif isinstance(source, list):
             self._array = np.array(source)
+            self._array = self._apply_mask(self._array, self._mask)
             self._block = finffile.blocks.add_inline(self._array)
         self._shape = shape
         self._dtype = dtype
@@ -126,7 +134,18 @@ class NDArrayType(FinfType):
             self._array = np.ndarray(
                 shape, self._dtype, block.data,
                 self._offset, self._strides, self._order)
+            self._array = self._apply_mask(self._array, self._mask)
         return self._array
+
+    def _apply_mask(self, array, mask):
+        if isinstance(mask, (np.ndarray, NDArrayType)):
+            return ma.array(array, mask=mask)
+        elif np.isscalar(mask):
+            if np.isnan(mask):
+                return ma.array(array, mask=np.isnan(array))
+            else:
+                return ma.masked_values(array, mask)
+        return array
 
     def __array__(self):
         return self._make_array()
@@ -203,10 +222,10 @@ class NDArrayType(FinfType):
     @classmethod
     def from_tree(cls, node, ctx):
         if isinstance(node, list):
-            return cls(node, None, None, None, None, None, ctx.finffile)
+            return cls(node, None, None, None, None, None, None, ctx.finffile)
 
         elif isinstance(node, dict):
-            shape = node['shape']
+            shape = node.get('shape', None)
             dtype = finf_dtype_to_numpy_dtype(
                 node.get('dtype', 'uint8'), node.get('byteorder', 'big'))
             source = node.get('source')
@@ -217,8 +236,9 @@ class NDArrayType(FinfType):
                 source = data
             offset = node.get('offset', 0)
             strides = node.get('strides', None)
+            mask = node.get('mask', None)
 
-            return cls(source, shape, dtype, offset, strides, 'C', ctx.finffile)
+            return cls(source, shape, dtype, offset, strides, 'C', mask, ctx.finffile)
 
         raise TypeError("Invalid ndarray description.")
 
@@ -262,6 +282,10 @@ class NDArrayType(FinfType):
 
             if strides is not None:
                 result['strides'] = list(strides)
+
+        if isinstance(data, ma.MaskedArray):
+            if np.any(data.mask):
+                result['mask'] = ctx.to_tree(data.mask)
 
         return result
 
