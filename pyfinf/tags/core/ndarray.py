@@ -24,10 +24,8 @@ _dtype_names = {
     'uint64': 'u8',
     'float32': 'f4',
     'float64': 'f8',
-    'float128': 'f16',
     'complex64': 'c8',
     'complex128': 'c16',
-    'complex256': 'c32',
     'bool8': 'b1'
 }
 
