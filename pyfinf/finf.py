@@ -57,6 +57,9 @@ class FinfFile(versioning.VersionedMixin):
         self.close()
 
     def close(self):
+        """
+        Close the file handles associated with the `FinfFile`.
+        """
         if self._fd:
             # This is ok to always do because GenericFile knows
             # whether it "owns" the file and should close it.
@@ -68,6 +71,12 @@ class FinfFile(versioning.VersionedMixin):
 
     @property
     def uri(self):
+        """
+        Get the URI associated with the `FinfFile`.
+
+        In many cases, it is automatically determined from the file
+        handle used to read or write the file.
+        """
         if self._uri is not None:
             return self._uri
         if self._fd is not None:
@@ -156,21 +165,32 @@ class FinfFile(versioning.VersionedMixin):
         reference : reference.Reference
             A reference object.
 
-        Example
-        -------
+        Examples
+        --------
         For the given FinfFile ``ff``, add an external reference to the data in
         an external file::
 
-            flat = pyfinf.open("http://stsci.edu/reference_files/flat.finf")
-            ff.tree['flat_field'] = flat.make_reference(['data'])
+            >>> import pyfinf
+            >>> flat = pyfinf.open("http://stsci.edu/reference_files/flat.finf")  # doctest: +SKIP
+            >>> ff.tree['flat_field'] = flat.make_reference(['data'])  # doctest: +SKIP
         """
         return reference.make_reference(self, path)
 
     @property
     def blocks(self):
         """
-        Get the list of blocks in the FINF file.  This is a low-level
-        detail that is not required for most use cases.
+        Get the block manager associated with the `FinfFile`.  This can
+        be used to update the block type associated with a given array.
+
+        Examples
+        --------
+        ::
+
+            >>> from pyfinf import FinfFile
+            >>> import numpy as np
+            >>> arr = np.arange(0, 10)
+            >>> ff = FinfFile({'array': arr})
+            >>> ff.blocks[arr].block_type = 'inline'
         """
         return self._blocks
 
@@ -259,7 +279,7 @@ class FinfFile(versioning.VersionedMixin):
 
     def update(self):
         """
-        Update the file on disk in place.
+        Update the file on disk in place (not implemented).
         """
         raise NotImplementedError()
 
@@ -313,6 +333,12 @@ class FinfFile(versioning.VersionedMixin):
         return self
 
     def write_to_stream(self, data):
+        """
+        Append additional data to the end of the `FinfFile` for
+        stream-writing.
+
+        See `pyfinf.Stream`.
+        """
         if self.blocks.streamed_block is None:
             raise ValueError("FinfFile has not streamed block to write to")
         self._fd.write(data)
