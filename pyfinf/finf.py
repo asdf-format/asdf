@@ -24,7 +24,7 @@ class FinfFile(versioning.VersionedMixin):
         """
         Parameters
         ----------
-        tree : dict, optional
+        tree : dict or FinfFile, optional
             The main tree data in the FINF file.  Must conform to the
             FINF schema.
 
@@ -34,14 +34,21 @@ class FinfFile(versioning.VersionedMixin):
             determined from the associated file object, if possible
             and if created from `FinfFile.read`.
         """
+        self._fd = None
+        self._external_finf_by_uri = {}
         self._blocks = block.BlockManager(self)
         if tree is None:
-            tree = {}
-        self.tree = tree
-        self._fd = None
-        self._uri = uri
-        self._external_finf_by_uri = {}
-        self.find_references()
+            self.tree = {}
+            self._uri = uri
+        elif isinstance(tree, FinfFile):
+            self._uri = tree.uri
+            self.tree = tree.tree
+            self.find_references()
+            self._uri = uri
+        else:
+            self.tree = tree
+            self._uri = uri
+            self.find_references()
 
     def __enter__(self):
         return self
@@ -54,6 +61,7 @@ class FinfFile(versioning.VersionedMixin):
             # This is ok to always do because GenericFile knows
             # whether it "owns" the file and should close it.
             self._fd.close()
+            self._fd = None
         for external in self._external_finf_by_uri.values():
             external.close()
         self._external_finf_by_uri.clear()
@@ -272,7 +280,8 @@ class FinfFile(versioning.VersionedMixin):
             'exploded': exploded})
 
         if self._fd:
-            self._fd.close()
+            raise ValueError(
+                "FINF file is already open.  Use `update` to save it.")
         fd = self._fd = generic_io.get_file(fd, mode='w')
 
         if exploded and fd.uri is None:
