@@ -203,7 +203,6 @@ First, we'll create a FINF file with a couple of arrays in it:
    import numpy as np
 
    tree = {
-       # Each "row" of data will have 128 entries.
        'a': np.arange(0, 10),
        'b': np.arange(10, 20)
    }
