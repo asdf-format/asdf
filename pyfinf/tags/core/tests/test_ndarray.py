@@ -7,7 +7,6 @@ import io
 import sys
 
 from astropy.extern import six
-from astropy.tests.helper import pytest
 
 import numpy as np
 from numpy import ma
@@ -189,7 +188,8 @@ def test_inline():
         helpers.assert_tree_match(tree, ff.tree)
         assert len(list(ff.blocks.internal_blocks)) == 0
         buff = io.BytesIO()
-        ff.write_to(buff)
+        with finf.FinfFile(ff).write_to(buff):
+            pass
 
     assert b'[0.0, 1.0, 2.0, 3.0, 4.0, 5.0, 6.0, 7.0, 8.0, 9.0]' in buff.getvalue()
 

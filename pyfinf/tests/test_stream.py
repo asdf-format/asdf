@@ -158,8 +158,8 @@ def test_array_to_stream():
     with finf.FinfFile().read(buff) as ff:
         assert_array_equal(ff.tree['stream'], [1, 2, 3, 4, 5, 6, 7, 8])
         buff.seek(0)
-        ff.write_to(buff)
-        assert b"shape: ['*']" in buff.getvalue()
+        with finf.FinfFile(ff).write_to(buff):
+            assert b"shape: ['*']" in buff.getvalue()
 
 
 def test_too_many_streams():

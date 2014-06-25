@@ -151,9 +151,13 @@ class BlockManager(object):
         # TODO: Should this reset the state (what's external and what
         # isn't) afterword?
 
-        if ctx.get('exploded'):
+        exploded = ctx.get('exploded', None)
+        if exploded is True:
             for block in self.internal_blocks:
                 block.block_type = 'external'
+        elif exploded is False:
+            for block in self.external_blocks:
+                block.block_type = 'internal'
 
         count = 0
         for block in self._blocks:
@@ -334,8 +338,8 @@ class Block(object):
         self._memmapped = False
 
     def __repr__(self):
-        return '<Block {0} alloc: {1} size: {2} encoding: {3}>'.format(
-            self._block_type[:3], self._allocated, self._size, self._encoding)
+        return '<Block {0} alloc: {1} size: {2} type: {3}>'.format(
+            self._block_type[:3], self._allocated, self._size, self._block_type)
 
     def __len__(self):
         return self._size

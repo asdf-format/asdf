@@ -72,3 +72,13 @@ def nth_item(iterable, n, default=None):
             return default
     else:
         return next(itertools.islice(iterable, n, None), default)
+
+
+def iter_subclasses(cls):
+    """
+    Returns all subclasses of a class.
+    """
+    for x in cls.__subclasses__():
+        yield x
+        for y in iter_subclasses(x):
+            yield y
