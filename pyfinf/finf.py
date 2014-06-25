@@ -194,6 +194,30 @@ class FinfFile(versioning.VersionedMixin):
         """
         return self._blocks
 
+    def set_block_type(self, arr, block_type):
+        """
+        Set the block type to use for the given array data.
+
+        Parameters
+        ----------
+        arr : numpy.ndarray
+            The array to set.  If multiple views of the array are in
+            the tree, only the most recent block type setting will be
+            used, since all views share a single block.
+
+        block_type : str
+            Must be one of:
+
+            - ``internal``: The default.  The array data will be
+              stored in a binary block in the same FINF file.
+
+            - ``external``: Store the data in a binary block in a
+              separate FINF file.
+
+            - ``inline``: Store the data as YAML inline in the tree.
+        """
+        self.blocks[arr].block_type = block_type
+
     @classmethod
     def _parse_header_line(cls, line):
         """

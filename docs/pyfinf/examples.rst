@@ -122,7 +122,7 @@ can be used to set the type of block of the associated data, either
    my_array = np.random.rand(8, 8)
    tree = {'my_array': my_array}
    ff = FinfFile(tree)
-   ff.blocks[my_array].block_type = 'inline'
+   ff.set_block_type(my_array, 'inline')
    with ff.write_to("test.finf"):
        pass
 
@@ -143,7 +143,7 @@ block.
    my_array = np.random.rand(8, 8)
    tree = {'my_array': my_array}
    ff = FinfFile(tree)
-   ff.blocks[my_array].block_type = 'external'
+   ff.set_block_type(my_array, 'external')
    with ff.write_to("test.finf"):
        pass
 
