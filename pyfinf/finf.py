@@ -179,18 +179,7 @@ class FinfFile(versioning.VersionedMixin):
     @property
     def blocks(self):
         """
-        Get the block manager associated with the `FinfFile`.  This can
-        be used to update the block type associated with a given array.
-
-        Examples
-        --------
-        ::
-
-            >>> from pyfinf import FinfFile
-            >>> import numpy as np
-            >>> arr = np.arange(0, 10)
-            >>> ff = FinfFile({'array': arr})
-            >>> ff.blocks[arr].block_type = 'inline'
+        Get the block manager associated with the `FinfFile`.
         """
         return self._blocks
 
@@ -307,7 +296,7 @@ class FinfFile(versioning.VersionedMixin):
         """
         raise NotImplementedError()
 
-    def write_to(self, fd, exploded=False):
+    def write_to(self, fd, exploded=None):
         """
         Write the FINF file to the given file-like object.
 
@@ -318,7 +307,9 @@ class FinfFile(versioning.VersionedMixin):
             object.
 
         exploded : bool, optional
-            Write each data block in a separate FINF file.
+            If `True`, write each data block in a separate FINF file.
+            If `False`, write each data block in this FINF file.  If
+            not provided, leave the block types as they are.
         """
         ctx = yamlutil.Context(self, options={
             'exploded': exploded})

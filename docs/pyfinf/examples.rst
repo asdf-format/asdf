@@ -241,6 +241,7 @@ references.
 
 .. runcode::
 
+   ff = FinfFile.read('source.finf')
    ff.find_references()
    assert ff.tree['my_ref_b'].shape == (10,)
 
@@ -253,7 +254,7 @@ literal content in its place.
 
    ff = FinfFile.read('source.finf')
    ff.resolve_references()
-   with ff.write_to('resolved.finf'):
+   with FinfFile(ff).write_to('resolved.finf'):
        pass
 
 .. finf:: resolved.finf
