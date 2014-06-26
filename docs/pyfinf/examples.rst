@@ -62,22 +62,30 @@ pyfinf will complain::
 
     >>> from pyfinf import FinfFile
     >>> tree = {'data': 'Not an array'}
-    >>> FinfFile(tree)  # doctest: +SKIP
+    >>> FinfFile(tree)
+    Traceback (most recent call last):
+    ...
     ValidationError: mismatched tags, wanted
     'tag:stsci.edu:finf/0.1.0/core/ndarray', got
     'tag:yaml.org,2002:str'
+    ...
 
-This validation happens only when a `FinfFile` is instantiated, read or saved, so it's still possible to get the tree into an invalid intermediate state::
+This validation happens only when a `FinfFile` is instantiated, read
+or saved, so it's still possible to get the tree into an invalid
+intermediate state::
 
     >>> from pyfinf import FinfFile
     >>> ff = FinfFile()
     >>> ff.tree['data'] = 'Not an array'
     >>> # The FINF file is now invalid, but pyfinf will tell us when
     >>> # we write it out.
-    >>> ff.write_to('test.finf')  # doctest: +SKIP
+    >>> ff.write_to('test.finf')
+    Traceback (most recent call last):
+    ...
     ValidationError: mismatched tags, wanted
     'tag:stsci.edu:finf/0.1.0/core/ndarray', got
     'tag:yaml.org,2002:str'
+    ...
 
 Sharing of data
 ---------------
