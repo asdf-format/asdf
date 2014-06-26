@@ -118,7 +118,7 @@ Saving inline arrays
 
 For these sort of small arrays, you may not care about the efficiency
 of a binary representation and want to just save the content directly
-in the YAML tree.  The ``blocks`` member of the ``FinfFile`` instance
+in the YAML tree.  The `~pyfinf.FinfFile.set_block_type` method
 can be used to set the type of block of the associated data, either
 ``internal``, ``external`` or ``inline``.
 
@@ -139,7 +139,7 @@ can be used to set the type of block of the associated data, either
 Saving external arrays
 ----------------------
 
-For various reasons discussion in the "Exploded Form" section of the
+For various reasons discussed in the "Exploded Form" section of the
 FINF specification, you may want to save the data in an external
 block.
 
@@ -173,8 +173,9 @@ definition, it must be the last block in the file.
 
 To use streaming, rather than including a Numpy array object in the
 tree, you include a `pyfinf.Stream` object which sets up the structure
-of the streamed data, but will not write out content to the file
-automatically.
+of the streamed data, but will not write out the actual content.  The
+`~pyfinf.FinfFile.write_to_stream` method is then later used to
+manually write out the binary data.
 
 .. runcode::
 
@@ -269,7 +270,9 @@ literal content in its place.
 
 A similar feature provided by YAML, anchors and aliases, also provides
 a way to support references within the same file.  These are supported
-by pyfinf for reading, but there is no direct support for writing
-them, since the JSON Pointer approach here is more powerful: it can
-reference elements in another file by their physical location in the
-tree, not just be an arbitrary identifier.
+by pyfinf, however the JSON Pointer approach is generally favored because:
+
+   - It is possible to reference elements in another file
+
+   - Elements are referenced by location in the tree, not an
+     identifier, therefore, everything can be referenced.
