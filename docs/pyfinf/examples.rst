@@ -46,6 +46,14 @@ the array, but the actual array content is in a binary block.
    with ff.write_to("test.finf"):
        pass
 
+.. note::
+
+   In the file examples below, the first YAML part appears as it
+   appears in the file.  The ``BLOCK`` sections are stored as binary
+   data in the file, but are presented in human-readable form on this
+   page.
+
+
 .. finf:: test.finf
 
 Schema validation
