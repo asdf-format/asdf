@@ -400,6 +400,8 @@ class Block(object):
         (flags, allocated_size, used_size, checksum, encoding) = \
             struct.unpack_from(self._header_fmt, buff[:self._header_fmt_size])
 
+        self._flags = flags
+
         # Support streaming blocks
         if fd.seekable():
             # If the file is seekable, we can delay reading the actual

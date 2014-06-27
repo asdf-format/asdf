@@ -1,10 +1,15 @@
-****************
-Template package
-****************
+******
+pyfinf
+******
 
-This is the documentation for the affiliated package.
+This is the documentation for pyfinf.
+
+.. toctree::
+   :maxdepth: 2
+
+   examples.rst
 
 Reference/API
 =============
 
-.. automodapi:: packagename
+.. automodapi:: pyfinf

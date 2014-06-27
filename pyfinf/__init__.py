@@ -13,7 +13,7 @@ PyFINF: Python library for reading and writing FINF files
 from ._astropy_init import *
 # ----------------------------------------------------------------------------
 
-__all__ = ['FinfFile', 'open', 'test']
+__all__ = ['FinfFile', 'Stream', 'open', 'test']
 
 from .finf import FinfFile
 from .stream import Stream
@@ -21,7 +21,7 @@ from .stream import Stream
 
 def open(init, mode='rw', uri=None):
     """
-    Open a FinfFile.
+    Open a `FinfFile`.
 
     Parameters
     ----------
