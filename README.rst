@@ -1,24 +1,13 @@
-PyFINF
+pyasdf
 ======
 
-Python library for reading and writing FINF files.
+Python library for reading and writing ASDF files.
 
-FINF (FINF is not FITS) is a next generation interchange format for
-astronomical data.
+Advanced Scientific Data Format (ASDF) is a next generation
+interchange format for scientific data.
 
 Installation
 ------------
-This package uses a ``git submodule`` to get the schema information
-from the FINF standard itself.  Therefore, you need to run the
-following once::
-
-    git submodule init
-
-and the every time you update the repository::
-
-    git submodule update
-
-[We'll try to automate this in a future revision].
 
 To install::
 
@@ -26,6 +15,7 @@ To install::
 
 Testing
 -------
+
 To run the unit tests::
 
     python setup.py test
