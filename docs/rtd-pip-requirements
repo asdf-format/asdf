@@ -1,5 +1,5 @@
 numpy
-matplotlib
-Cython
 astropy-helpers
 astropy
+jsonschema
+pyyaml
