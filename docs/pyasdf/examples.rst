@@ -61,12 +61,12 @@ Schema validation
 
 In the current draft of the ASDF schema, there are very few elements
 defined at the top-level -- for the most part, the top-level can
-contain any ad hoc elements.  One of the few specified elements is
-``data``: it must be an array, and is used to specify the "main" data
-content (for some definition of "main") so that tools that merely want
-to view or preview the ASDF file have a standard location to find the
-most interesting data.  If you set this to anything but an array,
-pyasdf will complain::
+contain any elements.  One of the few specified elements is ``data``:
+it must be an array, and is used to specify the "main" data content
+(for some definition of "main") so that tools that merely want to view
+or preview the ASDF file have a standard location to find the most
+interesting data.  If you set this to anything but an array, ``pyasdf``
+will complain::
 
     >>> from pyasdf import AsdfFile
     >>> tree = {'data': 'Not an array'}
@@ -130,6 +130,14 @@ in the YAML tree.  The `~pyasdf.AsdfFile.set_block_type` method
 can be used to set the type of block of the associated data, either
 ``internal``, ``external`` or ``inline``.
 
+- ``internal``: The default.  The array data will be
+  stored in a binary block in the same ASDF file.
+
+- ``external``: Store the data in a binary block in a
+  separate ASDF file.
+
+- ``inline``: Store the data as YAML inline in the tree.
+
 .. runcode::
 
    from pyasdf import AsdfFile
@@ -147,9 +155,35 @@ can be used to set the type of block of the associated data, either
 Saving external arrays
 ----------------------
 
-For various reasons discussed in the "Exploded Form" section of the
-ASDF specification, you may want to save the data in an external
-block.
+ASDF files may also be saved in "exploded form", in multiple files:
+
+- An ASDF file containing only the header and tree.
+
+- *n* ASDF files, each containing a single block.
+
+Exploded form is useful in the following scenarios:
+
+- Not all text editors may handle the hybrid text and binary nature of
+  the ASDF file, and therefore either can't open a ASDF file or would
+  break a ASDF file upon saving.  In this scenario, a user may explode
+  the ASDF file, edit the YAML portion as a pure YAML file, and
+  implode the parts back together.
+
+- Over a network protocol, such as HTTP, a client may only need to
+  access some of the blocks.  While reading a subset of the file can
+  be done using HTTP ``Range`` headers, it still requires one (small)
+  request per block to "jump" through the file to determine the start
+  location of each block.  This can become time-consuming over a
+  high-latency network if there are many blocks.  Exploded form allows
+  each block to be requested directly by a specific URI.
+
+- An ASDF writer may stream a table to disk, when the size of the table
+  is not known at the outset.  Using exploded form simplifies this,
+  since a standalone file containing a single table can be iteratively
+  appended to without worrying about any blocks that may follow it.
+
+To save a block in an external file, set its block type to
+``'external'``.
 
 .. runcode::
 
@@ -173,11 +207,11 @@ Streaming array data
 In certain scenarios, you may want to stream data to disk, rather than
 writing an entire array of data at once.  For example, it may not be
 possible to fit the entire array in memory, or you may want to save
-data from a device as it comes in to prevent loss.  The ASDF standard
-allows exactly one streaming block per file where the size of the
-block isn't included in the block header, but instead is implicitly
-determined to include all of the remaining contents of the file.  By
-definition, it must be the last block in the file.
+data from a device as it comes in to prevent data loss.  The ASDF
+standard allows exactly one streaming block per file where the size of
+the block isn't included in the block header, but instead is
+implicitly determined to include all of the remaining contents of the
+file.  By definition, it must be the last block in the file.
 
 To use streaming, rather than including a Numpy array object in the
 tree, you include a `pyasdf.Stream` object which sets up the structure
@@ -197,9 +231,9 @@ manually write out the binary data.
 
    ff = AsdfFile(tree)
    with ff.write_to('test.asdf'):
-       # Write 100 rows of data, one row at a time.
-       # write_to_stream expects the raw binary bytes, not an array,
-       # so we use `tostring()`
+       # Write 100 rows of data, one row at a time.  ``write_to_stream``
+       # expects the raw binary bytes, not an array, so we use
+       # ``tostring()``.
        for i in range(100):
            ff.write_to_stream(np.array([i] * 128, np.float64).tostring())
 
@@ -209,8 +243,8 @@ References
 ----------
 
 ASDF files may reference items in the tree in other ASDF files.  The
-syntax used in the file for this is called "JSON Pointer", but the
-Python programmer can largely ignore that.
+syntax used in the file for this is called "JSON Pointer", but users
+of ``pyasdf`` can largely ignore that.
 
 First, we'll create a ASDF file with a couple of arrays in it:
 
@@ -244,7 +278,7 @@ to the target file.
    with AsdfFile.read('target.asdf') as target:
        ff.tree['my_ref_a'] = target.make_reference(['a'])
 
-   ff.tree['my_ref_b'] = {'$ref': 'target.asdf#b'}
+   ff.tree['my_ref_b'] = {'$ref': 'target.asdf#/b'}
 
    with ff.write_to('source.asdf'):
        pass
@@ -284,3 +318,19 @@ by pyasdf, however the JSON Pointer approach is generally favored because:
 
    - Elements are referenced by location in the tree, not an
      identifier, therefore, everything can be referenced.
+
+Anchors and aliases are handled automatically by ``pyasdf`` when the
+data structure is recursive.  For example here is a dictionary that is
+included twice in the same tree:
+
+.. runcode::
+
+    d = {'foo': 'bar'}
+    d['baz'] = d
+    tree = {'d': d}
+
+    ff = AsdfFile(tree)
+    with ff.write_to('anchors.asdf'):
+        pass
+
+.. asdf:: anchors.asdf

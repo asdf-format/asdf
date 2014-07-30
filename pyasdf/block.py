@@ -177,8 +177,8 @@ class BlockManager(object):
             If an integer, refers to the index of an internal block.
             If a string, is a uri to an external block.
 
-        Return
-        ------
+        Returns
+        -------
         buffer : buffer
         """
         if isinstance(source, int):
@@ -208,8 +208,8 @@ class BlockManager(object):
             If an integer, refers to the index of an internal block.
             If a string, is a uri to an external block.
 
-        Return
-        ------
+        Returns
+        -------
         buffer : buffer
         """
         block = self.get_block(source)
