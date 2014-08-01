@@ -77,7 +77,7 @@ def asdf_dtype_to_numpy_dtype(dtype, byteorder):
             if isinstance(np_dtype, tuple):
                 dtype_list.append(np_dtype)
             elif isinstance(np_dtype, np.dtype):
-                dtype_list.append((str(''.format(i)), np_dtype))
+                dtype_list.append((str(''), np_dtype))
             else:
                 raise RuntimeError("Error parsing asdf dtype")
         return np.dtype(dtype_list)
