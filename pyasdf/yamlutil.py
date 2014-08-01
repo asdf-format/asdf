@@ -11,8 +11,8 @@ import numpy as np
 import yaml
 
 from . constants import YAML_TAG_PREFIX
-from . import asdftypes
 from . import reference
+from . import schema
 from . import tagged
 from . import treeutil
 
@@ -150,92 +150,14 @@ if six.PY2:
                                AsdfLoader.construct_scalar)
 
 
-# ----------------------------------------------------------------------
-# Context
-
-class Context(object):
-    """
-    The context class maintains useful state during the parsing or
-    writing of YAML.
-    """
-    def __init__(self, asdffile, type_index=None, options={}):
-        """
-        Parameters
-        ----------
-        asdffile : AsdfFile instance
-            Required so that objects in the tree can access the blocks
-            in the asdffile.
-
-        type_index : AsdfTypeIndex or subclass, optional
-            Can be overridden to change the selection of types/tags
-            that are available when parsing the YAML.
-        """
-        self._asdffile = asdffile
-        if asdffile is not None:
-            self._versionspec = asdffile.versionspec
-        if type_index is None:
-            type_index = asdftypes.AsdfTypeIndex
-        self._type_index = type_index
-        self._options = options
-
-    def __getitem__(self, attr):
-        return self._options[attr]
-
-    def get(self, attr, default=None):
-        return self._options.get(attr, default)
-
-    @property
-    def asdffile(self):
-        return self._asdffile
-
-    @property
-    def versionspec(self):
-        return self._versionspec
-
-    def to_tree(self, tree):
-        """
-        Recursively convert the tree, possibly containing custom data
-        types, to a tree containing only tagged basic data types, and
-        return the result.
-        """
-        return custom_tree_to_tagged_tree(tree, self)
-
-    def run_hook(self, tree, hookname):
-        """
-        Run a "hook" for each custom type found in the tree.
-
-        Parameters
-        ----------
-        tree : object
-            A tree of objects, possibly containing custom data types.
-
-        hookname : str
-            The name of the hook.  If a `AsdfType` is found with a method
-            with this name, it will be called for every instance of the
-            corresponding custom type in the tree.
-        """
-        return run_hook(tree, hookname, self)
-
-    @property
-    def type_index(self):
-        """
-        Get the type index, which can be used to find type converters
-        by name or associated custom type.
-        """
-        return self._type_index
-
-
 def custom_tree_to_tagged_tree(tree, ctx):
     """
     Convert a tree, possibly containing custom data types that aren't
     directly representable in YAML, to a tree of basic data types,
     annotated with tags.
     """
-    if not isinstance(ctx, Context):
-        ctx = Context(ctx)
-
     def walker(node):
-        tag = ctx.type_index.get_asdftype_from_custom_type(type(node))
+        tag = ctx.type_index.from_custom_type(type(node))
         if tag is not None:
             node = tag.to_tree(node, ctx)
             node = tagged.tag_object(tag.yaml_tag, node)
@@ -250,18 +172,25 @@ def tagged_tree_to_custom_tree(tree, ctx):
     Convert a tree containing only basic data types, annotated with
     tags, to a tree containing custom data types.
     """
-    if not isinstance(ctx, Context):
-        ctx = Context(ctx)
-
     def walker(node):
         tag_name = tagged.get_tag(node)
         if tag_name is not None:
-            tag_type = ctx.type_index.get_asdftype_from_yaml_tag(tag_name)
+            tag_type = ctx.type_index.from_yaml_tag(tag_name)
             if tag_type is not None:
                 return tag_type.from_tree(node.data, ctx)
         return node
 
     return treeutil.walk_and_modify(tree, walker)
+
+
+def validate_for_tag(tag, tree, ctx):
+    """
+    Validates a tree for a given tag.
+    """
+    schema_path = ctx.tag_to_schema_resolver(tag)
+    if schema_path != tag:
+        s = schema.load_schema(schema_path, ctx.url_mapping)
+        schema.validate(tree, s, ctx.url_mapping)
 
 
 def validate_tagged_tree(tree, ctx):
@@ -270,15 +199,10 @@ def validate_tagged_tree(tree, ctx):
     schemas, both at the root level and anywhere a tag is found with a
     matching schema.
     """
-    if not isinstance(ctx, Context):
-        ctx = Context(ctx)
-
     def walker(node):
         tag_name = tagged.get_tag(node)
         if tag_name is not None:
-            tag = ctx.type_index.get_asdftype_from_yaml_tag(tag_name)
-            if tag is not None:
-                tag.validate(node)
+            validate_for_tag(tag_name, node, ctx)
     return treeutil.walk(tree, walker)
 
 
@@ -290,32 +214,6 @@ def validate(tree, ctx):
     """
     tagged_tree = custom_tree_to_tagged_tree(tree, ctx)
     validate_tagged_tree(tagged_tree, ctx)
-
-
-def run_hook(tree, hookname, ctx):
-    """
-    Run a "hook" for each custom type found in the tree.
-
-    Parameters
-    ----------
-    tree : object
-        A tree of objects, possibly containing custom data types.
-
-    hookname : str
-        The name of the hook.  If a `AsdfType` is found with a method
-        with this name, it will be called for every instance of the
-        corresponding custom type in the tree.
-
-    ctx : Context
-        The YAML parsing context.
-    """
-    def walker(node):
-        tag = ctx.type_index.get_asdftype_from_custom_type(type(node))
-        if tag is not None:
-            hook = getattr(tag, hookname, None)
-            if hook is not None:
-                hook(node, ctx)
-    return treeutil.walk(tree, walker)
 
 
 def load_tree(yaml_content, ctx):
@@ -330,9 +228,6 @@ def load_tree(yaml_content, ctx):
     ctx : Context
         The parsing context.
     """
-    if not isinstance(ctx, Context):
-        ctx = Context(ctx)
-
     class AsdfLoaderTmp(AsdfLoader):
         pass
     AsdfLoaderTmp.ctx = ctx
@@ -359,9 +254,6 @@ def dump_tree(tree, fd, ctx):
     ctx : Context
         The writing context.
     """
-    if not isinstance(ctx, Context):
-        ctx = Context(ctx)
-
     class AsdfDumperTmp(AsdfDumper):
         pass
     AsdfDumperTmp.ctx = ctx

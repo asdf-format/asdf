@@ -10,6 +10,7 @@ from numpy import ma
 from astropy.extern import six
 
 from ...asdftypes import AsdfType
+from ... import yamlutil
 from ... import util
 
 
@@ -70,14 +71,16 @@ def asdf_dtype_to_numpy_dtype(dtype, byteorder):
         else:
             return (str(name), dtype, tuple(shape))
     elif isinstance(dtype, list):
-        super_dtype = []
-        for x in dtype:
-            x = asdf_dtype_to_numpy_dtype(x, byteorder)
-            if isinstance(x, np.dtype):
-                super_dtype.append((str(''), x))
+        dtype_list = []
+        for i, subdtype in enumerate(dtype):
+            np_dtype = asdf_dtype_to_numpy_dtype(subdtype, byteorder)
+            if isinstance(np_dtype, tuple):
+                dtype_list.append(np_dtype)
+            elif isinstance(np_dtype, np.dtype):
+                dtype_list.append((str(''.format(i)), np_dtype))
             else:
-                super_dtype.append(x)
-        return np.dtype(super_dtype)
+                raise RuntimeError("Error parsing asdf dtype")
+        return np.dtype(dtype_list)
     raise ValueError("Unknown dtype {0}".format(dtype))
 
 
@@ -253,7 +256,7 @@ class NDArrayType(AsdfType):
     @classmethod
     def from_tree(cls, node, ctx):
         if isinstance(node, list):
-            return cls(node, None, None, None, None, None, None, ctx.asdffile)
+            return cls(node, None, None, None, None, None, None, ctx)
 
         elif isinstance(node, dict):
             shape = node.get('shape', None)
@@ -269,7 +272,7 @@ class NDArrayType(AsdfType):
             strides = node.get('strides', None)
             mask = node.get('mask', None)
 
-            return cls(source, shape, dtype, offset, strides, 'C', mask, ctx.asdffile)
+            return cls(source, shape, dtype, offset, strides, 'C', mask, ctx)
 
         raise TypeError("Invalid ndarray description.")
 
@@ -278,12 +281,12 @@ class NDArrayType(AsdfType):
         # Find all of the used data buffers so we can add or rearrange
         # them if necessary
         if isinstance(data, np.ndarray):
-            ctx.asdffile.blocks.find_or_create_block_for_array(data)
+            ctx.blocks.find_or_create_block_for_array(data)
 
     @classmethod
     def to_tree(cls, data, ctx):
         base = util.get_array_base(data)
-        block = ctx.asdffile.blocks.find_or_create_block_for_array(data)
+        block = ctx.blocks.find_or_create_block_for_array(data)
         shape = data.shape
         dtype = data.dtype
         offset = data.ctypes.data - base.ctypes.data
@@ -303,7 +306,7 @@ class NDArrayType(AsdfType):
             result['data'] = data.tolist()
             result['dtype'] = dtype
         else:
-            result['source'] = ctx.asdffile.blocks.get_source(block)
+            result['source'] = ctx.blocks.get_source(block)
             result['dtype'] = dtype
             if byteorder != 'big':
                 result['byteorder'] = byteorder
@@ -316,7 +319,8 @@ class NDArrayType(AsdfType):
 
         if isinstance(data, ma.MaskedArray):
             if np.any(data.mask):
-                result['mask'] = ctx.to_tree(data.mask)
+                result['mask'] = yamlutil.custom_tree_to_tagged_tree(
+                    data.mask, ctx)
 
         return result
 

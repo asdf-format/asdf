@@ -5,11 +5,14 @@ from __future__ import absolute_import, division, unicode_literals, print_functi
 
 import re
 
+from . import asdftypes
 from . import block
 from . import constants
 from . import generic_io
 from . import reference
+from . import resolver
 from . import util
+from . import treeutil
 from . import versioning
 from . import yamlutil
 
@@ -20,7 +23,10 @@ class AsdfFile(versioning.VersionedMixin):
     """
     The main class that represents a ASDF file.
     """
-    def __init__(self, tree=None, uri=None):
+    def __init__(self, tree=None, uri=None,
+                 tag_to_schema_resolver=None,
+                 url_mapping=None,
+                 type_index=None):
         """
         Parameters
         ----------
@@ -33,7 +39,43 @@ class AsdfFile(versioning.VersionedMixin):
             references against.  If not provided, will automatically
             determined from the associated file object, if possible
             and if created from `AsdfFile.read`.
+
+        Other Parameters
+        ----------------
+        tag_to_schema_resolver : callable, optional
+            A callback used to convert tag names into schema
+            URIs.  The callable must take a string and return a string
+            or `None`.  If not provided, the default
+            `astropy.resolvers.TagToSchemaResolver` will be used.
+
+        url_mapping : callable, optional
+            A callback function used to map URIs to other URIs.  The
+            callable must take a string and return a string or `None`.
+            This is useful, for example, when a remote resource has a
+            mirror on the local filesystem that you wish to use.
+
+        type_index : pyasdf.asdftypes.AsdfTypeIndex, optional
+            A type index object used to lookup custom ASDF types.  It
+            must have two methods:
+
+            - `from_custom_type`: Given an object, return the
+              corresponding `pyasdf.asdftypes.AsdfType` subclass.
+
+            - `from_yaml_tag`: Given a YAML tag as a string, return the
+              corresponding `pyasdf.asdftypes.AsdfType` subclass.
         """
+        if tag_to_schema_resolver is None:
+            tag_to_schema_resolver = resolver.TAG_TO_SCHEMA_RESOLVER
+        self._tag_to_schema_resolver = tag_to_schema_resolver
+
+        if url_mapping is None:
+            url_mapping = resolver.URL_MAPPING
+        self._url_mapping = url_mapping
+
+        if type_index is None:
+            type_index = asdftypes.AsdfTypeIndex()
+        self._type_index = type_index
+
         self._fd = None
         self._external_asdf_by_uri = {}
         self._blocks = block.BlockManager(self)
@@ -83,11 +125,24 @@ class AsdfFile(versioning.VersionedMixin):
             return self._fd._uri
         return None
 
+    @property
+    def tag_to_schema_resolver(self):
+        return self._tag_to_schema_resolver
+
+    @property
+    def url_mapping(self):
+        return self._url_mapping
+
+    @property
+    def type_index(self):
+        return self._type_index
+
     def resolve_uri(self, uri):
         """
         Resolve a (possibly relative) URI against the URI of this ASDF
         file.  May be overridden by base classes to change how URIs
-        are resolved.
+        are resolved.  This does not apply any `uri_mapping` that was
+        passed to the constructor.
 
         Parameters
         ----------
@@ -207,6 +262,16 @@ class AsdfFile(versioning.VersionedMixin):
         """
         self.blocks[arr].block_type = block_type
 
+    def get_block_type(self, arr):
+        """
+        Get the block type for the given array data.
+
+        Parameters
+        ----------
+        arr : numpy.ndarray
+        """
+        return self.blocks[arr].block_type
+
     @classmethod
     def _parse_header_line(cls, line):
         """
@@ -222,9 +287,13 @@ class AsdfFile(versioning.VersionedMixin):
                 int(match.group("micro")))
 
     @classmethod
-    def read(cls, fd, uri=None, mode='r', _get_yaml_content=False):
+    def read(cls, fd, uri=None, mode='r',
+             tag_to_schema_resolver=None,
+             url_mapping=None,
+             type_index=None,
+             _get_yaml_content=False):
         """
-        Read a ASDF file.
+        Open an existing ASDF file.
 
         Parameters
         ----------
@@ -240,6 +309,12 @@ class AsdfFile(versioning.VersionedMixin):
             The mode to open the file in.  Must be ``r`` (default) or
             ``rw``.
 
+        Other Parameters
+        ----------------
+        **kwargs : extra parameters
+            See `pyasdf.AsdfFile` for a description of the other
+            parameters.
+
         Returns
         -------
         asdffile : AsdfFile
@@ -247,7 +322,10 @@ class AsdfFile(versioning.VersionedMixin):
         """
         fd = generic_io.get_file(fd, mode=mode, uri=uri)
 
-        self = cls()
+        self = cls(
+            tag_to_schema_resolver=tag_to_schema_resolver,
+            url_mapping=url_mapping,
+            type_index=type_index)
         self._fd = fd
 
         try:
@@ -281,9 +359,8 @@ class AsdfFile(versioning.VersionedMixin):
             self._blocks.read_internal_blocks(fd, past_magic=True)
 
         if len(yaml_content):
-            ctx = yamlutil.Context(self)
-            tree = yamlutil.load_tree(yaml_content, ctx)
-            ctx.run_hook(tree, 'post_read')
+            tree = yamlutil.load_tree(yaml_content, self)
+            self.run_hook('post_read')
             self._tree = tree
         else:
             self._tree = {}
@@ -311,9 +388,6 @@ class AsdfFile(versioning.VersionedMixin):
             If `False`, write each data block in this ASDF file.  If
             not provided, leave the block types as they are.
         """
-        ctx = yamlutil.Context(self, options={
-            'exploded': exploded})
-
         if self._fd:
             raise ValueError(
                 "ASDF file is already open.  Use `update` to save it.")
@@ -328,20 +402,20 @@ class AsdfFile(versioning.VersionedMixin):
         try:
             # This is where we'd do some more sophisticated block
             # reorganization, if necessary
-            self._blocks.finalize(ctx)
+            self._blocks.finalize(self, exploded=exploded)
 
             fd.write(constants.ASDF_MAGIC)
             fd.write(self.version_string.encode('ascii'))
             fd.write(b'\n')
 
             if len(tree):
-                ctx.run_hook(tree, 'pre_write')
-                yamlutil.dump_tree(tree, fd, ctx)
+                self.run_hook('pre_write')
+                yamlutil.dump_tree(tree, fd, self)
 
             self.blocks.write_blocks(fd)
         finally:
             if len(tree):
-                ctx.run_hook(tree, 'post_write')
+                self.run_hook('post_write')
 
         fd.flush()
 
@@ -363,8 +437,7 @@ class AsdfFile(versioning.VersionedMixin):
         Finds all external "JSON References" in the tree and converts
         them to `reference.Reference` objects.
         """
-        ctx = yamlutil.Context(self)
-        self.tree = reference.find_references(self.tree, ctx)
+        self.tree = reference.find_references(self.tree, self)
 
     def resolve_references(self):
         """
@@ -373,6 +446,24 @@ class AsdfFile(versioning.VersionedMixin):
         a ASDF file after this operation means it will have no
         external references, and will be completely self-contained.
         """
-        ctx = yamlutil.Context(self)
-        tree = reference.resolve_references(self.tree, ctx)
+        tree = reference.resolve_references(self.tree, self)
         self.tree = tree
+
+    def run_hook(self, hookname):
+        """
+        Run a "hook" for each custom type found in the tree.
+
+        Parameters
+        ----------
+        hookname : str
+            The name of the hook.  If a `AsdfType` is found with a method
+            with this name, it will be called for every instance of the
+            corresponding custom type in the tree.
+        """
+        def walker(node):
+            tag = self.type_index.from_custom_type(type(node))
+            if tag is not None:
+                hook = getattr(tag, hookname, None)
+                if hook is not None:
+                    hook(node, self)
+        return treeutil.walk(self.tree, walker)

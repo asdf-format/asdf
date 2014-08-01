@@ -38,7 +38,7 @@ class Stream(ndarray.NDArrayType):
     @classmethod
     def pre_write(cls, data, ctx):
         if isinstance(data, Stream):
-            ctx.asdffile.blocks.get_streamed_block()
+            ctx.blocks.get_streamed_block()
 
     @classmethod
     def from_tree(cls, data, ctx):
@@ -46,7 +46,7 @@ class Stream(ndarray.NDArrayType):
 
     @classmethod
     def to_tree(cls, data, ctx):
-        ctx.asdffile.blocks.get_streamed_block()
+        ctx.blocks.get_streamed_block()
 
         result = {}
         result['source'] = -1

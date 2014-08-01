@@ -35,11 +35,11 @@ class AsdfTypeIndex(object):
     _type_by_name = {}
 
     @classmethod
-    def get_asdftype_from_custom_type(cls, custom_type):
+    def from_custom_type(cls, custom_type):
         return cls._type_by_cls.get(custom_type)
 
     @classmethod
-    def get_asdftype_from_yaml_tag(cls, tag):
+    def from_yaml_tag(cls, tag):
         return cls._type_by_name.get(tag)
 
 
@@ -105,25 +105,13 @@ class AsdfType(object):
     types = []
 
     @classmethod
-    def get_schema_path(cls):
-        return os.path.join(
-            cls.organization, cls.standard,
-            versioning.version_to_string(cls.version),
-            cls.name)
-
-    @classmethod
-    def get_schema(cls):
-        from . import schema
-        return schema.load_schema(cls.get_schema_path())
-
-    @classmethod
-    def validate(cls, tree):
+    def validate(cls, tree, ctx):
         """
         Validate the given tree of basic data types against the schema
         for this type.
         """
-        from . import schema
-        schema.validate(tree, cls.get_schema())
+        from . import yamlutil
+        yamlutil.validate_for_tag(cls.yaml_tag, tree, ctx)
 
     @classmethod
     def to_tree(cls, node, ctx):

@@ -105,8 +105,8 @@ class Reference(AsdfType):
 
     @classmethod
     def to_tree(self, data, ctx):
-        if ctx.asdffile.uri is not None:
-            uri = generic_io.relative_uri(ctx.asdffile.uri, data._uri)
+        if ctx.uri is not None:
+            uri = generic_io.relative_uri(ctx.uri, data._uri)
         else:
             uri = data._uri
         return {'$ref': uri}
@@ -123,7 +123,7 @@ def find_references(tree, ctx):
     """
     def do_find(tree):
         if isinstance(tree, dict) and '$ref' in tree:
-            return Reference(tree['$ref'], asdffile=ctx.asdffile)
+            return Reference(tree['$ref'], asdffile=ctx)
         return tree
 
     return treeutil.walk_and_modify(tree, do_find)

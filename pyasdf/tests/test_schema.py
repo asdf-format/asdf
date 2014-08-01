@@ -111,3 +111,13 @@ def test_all_schema_examples():
             for example in find_examples_in_schema(
                     os.path.join(root, fname)):
                 yield test_example, example
+
+
+def test_schema_caching():
+    # Make sure that if we request the same URL, we get the *exact
+    # same* object, to ensure the cache is working.
+    s1 = schema.load_schema(
+        'http://stsci.edu/schemas/asdf/0.1.0/core/asdf')
+    s2 = schema.load_schema(
+        'http://stsci.edu/schemas/asdf/0.1.0/core/asdf')
+    assert s1 is s2
