@@ -1,0 +1,13 @@
+%YAML 1.1
+---
+$schema: "http://stsci.edu/schemas/yaml-schema/draft-01"
+id: "http://nowhere.org/schemas/custom/1.0.0/fraction"
+title: An example custom type for handling fractions
+
+tag: "tag:nowhere.org:custom/1.0.0/fraction"
+type: array
+items:
+  type: integer
+minItems: 2
+maxItems: 2
+...

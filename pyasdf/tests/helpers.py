@@ -22,8 +22,8 @@ def assert_tree_match(old_tree, new_tree):
         seen.add(id(old))
         seen.add(id(new))
 
-        old_type = AsdfTypeIndex.get_asdftype_from_custom_type(type(old))
-        new_type = AsdfTypeIndex.get_asdftype_from_custom_type(type(new))
+        old_type = AsdfTypeIndex.from_custom_type(type(old))
+        new_type = AsdfTypeIndex.from_custom_type(type(new))
 
         if (old_type is not None and
             new_type is not None and

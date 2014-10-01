@@ -107,8 +107,7 @@ def test_dont_load_data():
     buff.seek(0)
     ff = asdf.AsdfFile.read(buff)
 
-    ctx = yamlutil.Context(ff)
-    ctx.run_hook(ff._tree, 'pre_write')
+    ff.run_hook('pre_write')
 
     # repr and str shouldn't load data
     str(ff.tree['science_data'])

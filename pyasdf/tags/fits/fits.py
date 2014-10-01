@@ -7,6 +7,7 @@ from astropy.io import fits
 import numpy as np
 
 from ...asdftypes import AsdfType
+from ... import yamlutil
 
 
 class FitsType(AsdfType):
@@ -59,7 +60,7 @@ class FitsType(AsdfType):
 
             units.append(hdu_dict)
 
-        return ctx.to_tree(units)
+        return yamlutil.custom_tree_to_tagged_tree(units, ctx)
 
     @classmethod
     def assert_equal(cls, old, new):

@@ -3,6 +3,7 @@
 
 from __future__ import absolute_import, division, unicode_literals, print_function
 
+import json
 import os
 
 from astropy.extern import six
@@ -12,8 +13,11 @@ from jsonschema import validators
 from jsonschema.exceptions import ValidationError
 import yaml
 
+from .compat import lru_cache
 from . import constants
+from . import generic_io
 from . import reference
+from . import resolver as mresolver
 from . import tagged
 
 
@@ -45,24 +49,6 @@ if six.PY2:
 # Prepend full YAML tag prefix
 for k, v in PYTHON_TYPE_TO_YAML_TAG.items():
     PYTHON_TYPE_TO_YAML_TAG[k] = constants.YAML_TAG_PREFIX + v
-
-
-_schema_cache = {}
-def load_schema(name, reload=False):
-    """
-    Load a local ASDF schema from the package.
-    """
-    if not reload and name in _schema_cache:
-        return _schema_cache[name]
-
-    _name = name.split('/')
-    path = os.path.join(SCHEMA_PATH, *_name) + '.yaml'
-
-    with open(path, 'rt') as fd:
-        schema = yaml.safe_load(fd.read())
-
-    _schema_cache[name] = schema
-    return schema
 
 
 def _type_to_tag(type_):
@@ -142,32 +128,6 @@ YAML_VALIDATORS.update({
 })
 
 
-class PackageLocalRefResolver(validators.RefResolver):
-    """
-    This is a resolver to pass to `jsonschema` that knows how to
-    resolve URIs to files in the source package.
-    """
-    def __init__(self, root_uri, organization, local_path):
-        super(PackageLocalRefResolver, self).__init__(root_uri, None)
-        # Not to be confused with self.base_uri on the parent class
-        self.root_uri = root_uri.rstrip('/') + '/'
-        self.organization = organization
-        self.local_path = os.path.normpath(local_path)
-
-    def resolve_remote(self, uri):
-        if uri.startswith(self.root_uri):
-            path = uri[len(self.root_uri):].strip('/').split('/')
-            path = os.path.join(self.organization, *path)
-            if os.path.exists(os.path.join(self.local_path, path) + '.yaml'):
-                return load_schema(path)
-
-        return super(PackageLocalRefResolver, self).resolve_remote(uri)
-
-
-RESOLVER = PackageLocalRefResolver(
-    constants.STSCI_SCHEMA_URI_BASE, 'stsci.edu', SCHEMA_PATH)
-
-
 _created_validator = False
 def create_validator():
     global _created_validator
@@ -175,7 +135,9 @@ def create_validator():
         return
 
     validator = validators.create(
-        meta_schema=load_schema('stsci.edu/yaml-schema/draft-01'),
+        meta_schema=load_schema(
+            'http://stsci.edu/schemas/yaml-schema/draft-01',
+            mresolver.UrlMapping()),
         validators=YAML_VALIDATORS,
         version=str('yaml schema draft 1'))
     validator.orig_iter_errors = validator.iter_errors
@@ -197,7 +159,43 @@ def create_validator():
     _created_validator = True
 
 
-def validate(instance, schema, *args, **kwargs):
+@lru_cache()
+def _make_schema_loader(resolver):
+    @lru_cache()
+    def load_schema(url, reload=False):
+        url = resolver(url)
+        with generic_io.get_file(url) as fd:
+            if url.endswith('json'):
+                result = json.load(fd)
+            else:
+                result = yaml.safe_load(fd)
+        return result
+
+    return load_schema
+
+
+def load_schema(url, resolver=None):
+    """
+    Load a schema from the given URL.
+
+    Parameters
+    ----------
+    url : str
+        The path to the schema
+
+    resolver : callable, optional
+        A callback function used to map URIs to other URIs.  The
+        callable must take a string and return a string or `None`.
+        This is useful, for example, when a remote resource has a
+        mirror on the local filesystem that you wish to use.
+    """
+    if resolver is None:
+        resolver = mresolver.URL_MAPPING
+    loader = _make_schema_loader(resolver)
+    return loader(url)
+
+
+def validate(instance, schema, resolver=None, *args, **kwargs):
     """
     Validate the given instance against the given schema using the
     YAML schema extensions to JSON schema.
@@ -206,8 +204,12 @@ def validate(instance, schema, *args, **kwargs):
     """
     create_validator()
 
-    if 'resolver' not in kwargs:
-        kwargs['resolver'] = RESOLVER
+    handlers = {}
+    for x in ['http', 'https', 'file']:
+        handlers[x] = _make_schema_loader(resolver)
+    kwargs['resolver'] = validators.RefResolver(
+        schema.get('id', ''), schema, cache_remote=False,
+        handlers=handlers)
 
     # We don't just call validators.validate() directly here, because
     # that validates the schema itself, wasting a lot of time (at the

@@ -30,8 +30,8 @@ def _get_small_tree():
 def test_no_yaml_end_marker(tmpdir):
     content = b"""%ASDF 0.1.0
 %YAML 1.2
-%TAG ! tag:stsci.edu,2014:asdf/0.1.0/
---- !asdf
+%TAG ! tag:stsci.edu:asdf/0.1.0/
+--- !core/asdf
 foo: bar
     """
     path = os.path.join(str(tmpdir), 'test.asdf')
@@ -73,8 +73,8 @@ def test_no_asdf_header(tmpdir):
 def test_no_asdf_blocks(tmpdir):
     content = b"""%ASDF 0.1.0
 %YAML 1.2
-%TAG ! tag:stsci.edu,2014:asdf/0.1.0/
---- !asdf
+%TAG ! tag:stsci.edu:asdf/0.1.0/
+--- !core/asdf
 foo: bar
 ...
 XXXXXXXX
@@ -196,3 +196,18 @@ if six.PY2:
 
         with pytest.raises(IOError):
             str(ff2.tree['science_data'][:])
+
+
+def test_external_block(tmpdir):
+    tmpdir = str(tmpdir)
+
+    my_array = np.random.rand(8, 8)
+    tree = {'my_array': my_array}
+    ff = asdf.AsdfFile(tree)
+    ff.set_block_type(my_array, 'external')
+    assert ff.get_block_type(my_array) == 'external'
+
+    with ff.write_to(os.path.join(tmpdir, "test.asdf")):
+        pass
+
+    assert 'test0000.asdf' in os.listdir(tmpdir)

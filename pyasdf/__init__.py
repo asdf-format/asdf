@@ -20,22 +20,4 @@ from .asdf import AsdfFile
 from .stream import Stream
 
 
-def open(init, mode='rw', uri=None):
-    """
-    Open a `AsdfFile`.
-
-    Parameters
-    ----------
-    fd : string or file-like object
-        May be a string ``file`` or ``http`` URI, or a Python
-        file-like object.
-
-    mode : string, optional
-        Must be ``"r"`` (read), ``"w"`` (write) or ``"rw"``
-        (read/write).  Default: ``"rw"``.
-
-    uri : string, optional
-        The URI of the file.  Only required if the URI can not be
-        automatically determined from `init`.
-    """
-    return AsdfFile.read(init, mode=mode, uri=uri)
+open = AsdfFile.read

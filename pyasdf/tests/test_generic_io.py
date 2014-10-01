@@ -74,10 +74,11 @@ def test_open(tmpdir):
     path = os.path.join(str(tmpdir), 'test.asdf')
 
     # Simply tests the high-level "open" function
-    ff = asdf.AsdfFile(_get_small_tree())
-    ff.write_to(path)
+    with asdf.AsdfFile(_get_small_tree()) as ff:
+        ff.write_to(path)
 
-    ff2 = open(path)
+    with open(path) as ff2:
+        pass
 
     helpers.assert_tree_match(ff2.tree, ff.tree)
 
@@ -385,9 +386,8 @@ def test_exploded_stream_read(tmpdir):
 
     path = os.path.join(str(tmpdir), 'test.asdf')
 
-    ff = asdf.AsdfFile(tree)
-
-    ff.write_to(path, exploded=True)
+    with asdf.AsdfFile(tree) as ff:
+        ff.write_to(path, exploded=True)
 
     with open(path, 'rb') as fd:
         # This should work, so we can get the tree content

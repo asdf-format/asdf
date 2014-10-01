@@ -141,7 +141,7 @@ class BlockManager(object):
         if block._data is not None:
             self._data_to_block_mapping[id(block._data)] = block
 
-    def finalize(self, ctx):
+    def finalize(self, ctx, exploded=False):
         """
         At this point, we have a complete set of blocks for the file,
         with no extras.
@@ -151,7 +151,6 @@ class BlockManager(object):
         # TODO: Should this reset the state (what's external and what
         # isn't) afterword?
 
-        exploded = ctx.get('exploded', None)
         if exploded is True:
             for block in self.internal_blocks:
                 block.block_type = 'external'

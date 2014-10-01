@@ -13,3 +13,11 @@ elif six.PY3:
     from .user_collections_py3.UserDict import UserDict
     from .user_collections_py3.UserList import UserList
     from .user_collections_py3.UserString import UserString
+
+if six.PY2:
+    from .functools_backport import lru_cache
+elif six.PY3:
+    try:
+        from functools import lru_cache
+    except ImportError:
+        from .functools_backport import lru_cache
