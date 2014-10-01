@@ -12,7 +12,7 @@ YAML_TAG_PREFIX = 'tag:yaml.org,2002:'
 YAML_END_MARKER_REGEX = br'\r?\n\.\.\.\r?\n'
 
 
-STSCI_SCHEMA_URI_BASE = 'http://www.stsci.edu/schemas/'
+STSCI_SCHEMA_URI_BASE = 'http://stsci.edu/schemas/'
 
 
 BLOCK_FLAG_STREAMED = 0x1
