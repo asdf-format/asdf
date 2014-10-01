@@ -12,18 +12,6 @@ from ....tests import helpers
 # TODO: Implement defunit
 
 
-def test_invalid_unit():
-    yaml = """
-unit: !unit/unit
-  foo
-    """
-
-    buff = helpers.yaml_to_asdf(yaml)
-    ff = asdf.AsdfFile.read(buff)
-
-    assert isinstance(ff.tree['unit'], u.UnrecognizedUnit)
-
-
 def test_unit():
     yaml = """
 unit: !unit/unit "2.1798721  10-18kg m2 s-2"

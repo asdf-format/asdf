@@ -70,8 +70,14 @@ def asdf_dtype_to_numpy_dtype(dtype, byteorder):
         else:
             return (str(name), dtype, tuple(shape))
     elif isinstance(dtype, list):
-        return np.dtype(
-            [asdf_dtype_to_numpy_dtype(x, byteorder) for x in dtype])
+        super_dtype = []
+        for x in dtype:
+            x = asdf_dtype_to_numpy_dtype(x, byteorder)
+            if isinstance(x, np.dtype):
+                super_dtype.append((str(''), x))
+            else:
+                super_dtype.append(x)
+        return np.dtype(super_dtype)
     raise ValueError("Unknown dtype {0}".format(dtype))
 
 
