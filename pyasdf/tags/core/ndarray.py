@@ -103,8 +103,7 @@ def numpy_dtype_to_asdf_dtype(dtype):
             d['name'] = name
             field_dtype, byteorder = numpy_dtype_to_asdf_dtype(field)
             d['dtype'] = field_dtype
-            if byteorder != 'big':
-                d['byteorder'] = byteorder
+            d['byteorder'] = byteorder
             if field.shape:
                 d['shape'] = list(field.shape)
             fields.append(d)
@@ -259,15 +258,19 @@ class NDArrayType(AsdfType):
             return cls(node, None, None, None, None, None, None, ctx)
 
         elif isinstance(node, dict):
-            shape = node.get('shape', None)
-            dtype = asdf_dtype_to_numpy_dtype(
-                node.get('dtype', 'uint8'), node.get('byteorder', 'big'))
             source = node.get('source')
             data = node.get('data')
             if source and data:
                 raise ValueError("Both source and data my not be provided.")
             if data:
                 source = data
+            shape = node.get('shape', None)
+            if data is not None:
+                byteorder = sys.byteorder
+            else:
+                byteorder = node['byteorder']
+            dtype = asdf_dtype_to_numpy_dtype(
+                node.get('dtype', 'uint8'), byteorder)
             offset = node.get('offset', 0)
             strides = node.get('strides', None)
             mask = node.get('mask', None)
@@ -308,8 +311,7 @@ class NDArrayType(AsdfType):
         else:
             result['source'] = ctx.blocks.get_source(block)
             result['dtype'] = dtype
-            if byteorder != 'big':
-                result['byteorder'] = byteorder
+            result['byteorder'] = byteorder
 
             if offset > 0:
                 result['offset'] = offset

@@ -68,6 +68,7 @@ def test_byteorder(tmpdir):
 
     def check_raw_yaml(content):
         assert b'byteorder: little' in content
+        assert b'byteorder: big' in content
 
     helpers.assert_roundtrip_tree(tree, tmpdir, check_asdf, check_raw_yaml)
 
@@ -132,12 +133,13 @@ def test_table(tmpdir):
 
         assert tree == {
             'dtype': [
-                {'dtype': 'int8', 'name': 'MINE'},
+                {'byteorder': 'big', 'dtype': 'int8', 'name': 'MINE'},
                 {'byteorder': 'little', 'dtype': 'float64', 'name': 'f1'},
-                {'dtype': 'int32', 'name': 'arr', 'shape': [2]}
+                {'byteorder': 'big', 'dtype': 'int32', 'name': 'arr', 'shape': [2]}
                 ],
             'shape': [2],
-            'source': 0
+            'source': 0,
+            'byteorder': 'big'
             }
 
     helpers.assert_roundtrip_tree(tree, tmpdir, None, check_raw_yaml)
@@ -161,9 +163,11 @@ def test_table_nested_fields(tmpdir):
                 {'dtype': [
                     {'dtype': 'int64', 'name': 'C', 'byteorder': 'little'},
                     {'dtype': 'int64', 'name': 'D', 'byteorder': 'little'}
-                ], 'name': 'B'}],
+                ], 'name': 'B', 'byteorder': 'big'}],
             'shape': [3],
-            'source': 0}
+            'source': 0,
+            'byteorder': 'big'
+        }
 
     helpers.assert_roundtrip_tree(tree, tmpdir, None, check_raw_yaml)
 
