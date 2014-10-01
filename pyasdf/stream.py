@@ -52,8 +52,7 @@ class Stream(ndarray.NDArrayType):
         result['source'] = -1
         result['shape'] = ['*'] + data._shape
         result['dtype'] = data._dtype
-        if data._byteorder != 'big':
-            result['byteorder'] = data._byteorder
+        result['byteorder'] = data._byteorder
         if data._strides is not None:
             result['strides'] = data._strides
         return result
