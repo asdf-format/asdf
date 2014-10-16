@@ -309,8 +309,15 @@ class NDArrayType(AsdfType):
         dtype, byteorder = numpy_dtype_to_asdf_dtype(dtype)
 
         if block.array_storage == 'inline':
+            # Convert byte string arrays to unicode string arrays,
+            # since YAML doesn't handle the former.  This just
+            # assumes they are Latin-1.
+            if data.dtype.char == 'S':
+                listdata = data.astype('U').tolist()
+            else:
+                listdata = data.tolist()
             result['data'] = yamlutil.custom_tree_to_tagged_tree(
-                data.tolist(), ctx)
+                listdata, ctx)
             result['dtype'] = dtype
         else:
             result['shape'] = list(shape)
@@ -335,13 +342,34 @@ class NDArrayType(AsdfType):
         return result
 
     @classmethod
-    def assert_equal(cls, old, new):
-        from numpy.testing import assert_array_equal
-
+    def _assert_equality(cls, old, new, func):
         if old.dtype.fields:
             if not new.dtype.fields:
                 assert False, "arrays not equal"
             for a, b in zip(old, new):
-                assert_array_equal(a, b)
+                cls._assert_equality(a, b, func)
         else:
-            assert_array_equal(old, new)
+            old = old.__array__()
+            new = new.__array__()
+            if old.dtype.char in 'SU':
+                if old.dtype.char == 'S':
+                    old = old.astype('U')
+                if new.dtype.char == 'S':
+                    new = new.astype('U')
+                old = old.tolist()
+                new = new.tolist()
+                assert old == new
+            else:
+                func(old, new)
+
+    @classmethod
+    def assert_equal(cls, old, new):
+        from numpy.testing import assert_array_equal
+
+        cls._assert_equality(old, new, assert_array_equal)
+
+    @classmethod
+    def assert_almost_equal(cls, old, new):
+        from numpy.testing import assert_array_almost_equal
+
+        cls._assert_equality(old, new, assert_array_almost_equal)

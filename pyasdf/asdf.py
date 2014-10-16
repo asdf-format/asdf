@@ -77,6 +77,7 @@ class AsdfFile(versioning.VersionedMixin):
         self._type_index = type_index
 
         self._fd = None
+        self._extra_closes = []
         self._external_asdf_by_uri = {}
         self._blocks = block.BlockManager(self)
         if tree is None:
@@ -102,6 +103,9 @@ class AsdfFile(versioning.VersionedMixin):
         """
         Close the file handles associated with the `AsdfFile`.
         """
+        while len(self._extra_closes):
+            fd = self._extra_closes.pop()
+            fd.close()
         if self._fd:
             # This is ok to always do because GenericFile knows
             # whether it "owns" the file and should close it.
@@ -388,6 +392,8 @@ class AsdfFile(versioning.VersionedMixin):
             If `False`, write each data block in this ASDF file.  If
             not provided, leave the block types as they are.
         """
+        if self._fd is not None:
+            self._extra_closes.append(self._fd)
         fd = self._fd = generic_io.get_file(fd, mode='w')
 
         if exploded and fd.uri is None:
