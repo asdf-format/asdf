@@ -83,7 +83,7 @@ schema_root = "asdf-standard/schemas"
 package_info['package_dir']['pyasdf.schemas'] = schema_root
 package_info['packages'].append('pyasdf.schemas')
 
-# The schemas come from a git submodule, so we deal with them here
+# The reference files come from a git submodule, so we deal with them here
 reference_file_root = "asdf-standard/reference_files"
 
 package_info['package_dir']['pyasdf.reference_files'] = reference_file_root
