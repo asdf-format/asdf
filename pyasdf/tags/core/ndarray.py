@@ -219,6 +219,8 @@ class NDArrayType(AsdfType):
 
     @property
     def shape(self):
+        if self._shape is None:
+            return self.__array__().shape
         if '*' in self._shape:
             return tuple(self.get_actual_shape(
                 self._shape, self._strides, self._dtype, len(self.block)))
@@ -299,6 +301,7 @@ class NDArrayType(AsdfType):
             strides = data.strides
 
         result = {}
+
         result['shape'] = list(shape)
         if block.array_storage == 'streamed':
             result['shape'][0] = '*'
@@ -306,9 +309,14 @@ class NDArrayType(AsdfType):
         dtype, byteorder = numpy_dtype_to_asdf_dtype(dtype)
 
         if block.array_storage == 'inline':
-            result['data'] = data.tolist()
+            result['data'] = yamlutil.custom_tree_to_tagged_tree(
+                data.tolist(), ctx)
             result['dtype'] = dtype
         else:
+            result['shape'] = list(shape)
+            if block.block_type == 'streamed':
+                result['shape'][0] = '*'
+
             result['source'] = ctx.blocks.get_source(block)
             result['dtype'] = dtype
             result['byteorder'] = byteorder

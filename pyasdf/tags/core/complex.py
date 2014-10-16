@@ -5,12 +5,14 @@ from __future__ import absolute_import, division, unicode_literals, print_functi
 
 from astropy.extern import six
 
+import numpy as np
+
 from ...asdftypes import AsdfType
 
 
 class ComplexType(AsdfType):
     name = 'core/complex'
-    types = [complex]
+    types = [complex, np.complex, np.complex128, np.complex256, np.complex64]
 
     @classmethod
     def to_tree(cls, node, ctx):
@@ -18,5 +20,9 @@ class ComplexType(AsdfType):
 
     @classmethod
     def from_tree(cls, tree, ctx):
-        tree = tree.replace('i', 'j').replace('I', 'J')
+        tree = tree.replace(
+            'inf', 'INF').replace(
+            'i', 'j').replace(
+            'INF', 'inf').replace(
+            'I', 'J')
         return complex(tree)

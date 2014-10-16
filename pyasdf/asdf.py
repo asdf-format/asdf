@@ -388,9 +388,6 @@ class AsdfFile(versioning.VersionedMixin):
             If `False`, write each data block in this ASDF file.  If
             not provided, leave the block types as they are.
         """
-        if self._fd:
-            raise ValueError(
-                "ASDF file is already open.  Use `update` to save it.")
         fd = self._fd = generic_io.get_file(fd, mode='w')
 
         if exploded and fd.uri is None:
@@ -467,3 +464,13 @@ class AsdfFile(versioning.VersionedMixin):
                 if hook is not None:
                     hook(node, self)
         return treeutil.walk(self.tree, walker)
+
+    def resolve_and_inline(self):
+        """
+        Resolves all external references and inlines all data.  This
+        produces something that, when saved, is a 100% valid YAML
+        file.
+        """
+        self.resolve_references()
+        for b in self.blocks.blocks:
+            b.block_type = 'inline'

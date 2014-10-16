@@ -59,6 +59,10 @@ class TaggedDict(Tagged, UserDict, dict):
         self.data = data
         self.tag = tag
 
+    def __eq__(self, other):
+        return (isinstance(other, TaggedDict) and
+                self.data == other.data and
+                self.tag == other.tag)
 
 class TaggedList(Tagged, UserList, list):
     """
@@ -70,12 +74,20 @@ class TaggedList(Tagged, UserList, list):
         self.data = data
         self.tag = tag
 
+    def __eq__(self, other):
+        return (isinstance(other, TaggedList) and
+                self.data == other.data and
+                self.tag == other.tag)
+
 
 class TaggedString(Tagged, UserString, six.text_type):
     """
     A Python list with a tag attached.
     """
-    pass
+    def __eq__(self, other):
+        return (isinstance(other, TaggedString) and
+                six.text_type.__eq__(self, other) and
+                self.tag == other.tag)
 
 
 def tag_object(tag, instance):
