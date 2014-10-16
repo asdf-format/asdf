@@ -4,7 +4,7 @@
 from __future__ import absolute_import, division, unicode_literals, print_function
 
 
-ASDF_MAGIC = b'%ASDF '
+ASDF_MAGIC = b'#ASDF '
 BLOCK_MAGIC = b'\xd3BLK'
 
 

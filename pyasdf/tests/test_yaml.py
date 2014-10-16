@@ -125,7 +125,7 @@ def test_tags_removed_after_load(tmpdir):
 
 def test_explicit_tags():
 
-    yaml = """%ASDF 0.1.0
+    yaml = """#ASDF 0.1.0
 %YAML 1.1
 --- !<tag:stsci.edu:asdf/0.1.0/core/asdf>
 unit: !<tag:stsci.edu:asdf/0.1.0/unit/unit> m
