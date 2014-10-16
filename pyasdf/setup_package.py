@@ -17,8 +17,19 @@ def get_package_data():  # pragma: no cover
                         os.path.join(node, fname),
                         root))
 
+    reference_files = []
+    root = "asdf-standard/reference_files/0.1.0"
+    for node, dirs, files in os.walk(root):
+        for fname in files:
+            if fname.endswith('.yaml') or fname.endswith('.asdf'):
+                reference_files.append(
+                    os.path.relpath(
+                        os.path.join(node, fname),
+                        root))
+
     return {
-        str('pyasdf.schemas'): schemas
+        str('pyasdf.schemas'): schemas,
+        str('pyasdf.reference_files'): reference_files
     }
 
 
