@@ -149,7 +149,7 @@ def test_array_to_stream():
     buff = io.BytesIO()
 
     with asdf.AsdfFile(tree) as ff:
-        ff.blocks[tree['stream']].block_type = 'streamed'
+        ff.blocks[tree['stream']].array_storage = 'streamed'
         ff.write_to(buff)
         ff.write_to_stream(np.array([5, 6, 7, 8], np.int64).tostring())
 
@@ -171,7 +171,7 @@ def test_too_many_streams():
     buff = io.BytesIO()
 
     with asdf.AsdfFile(tree) as ff:
-        ff.blocks[tree['stream1']].block_type = 'streamed'
-        ff.blocks[tree['stream2']].block_type = 'streamed'
+        ff.blocks[tree['stream1']].array_storage = 'streamed'
+        ff.blocks[tree['stream2']].array_storage = 'streamed'
         with pytest.raises(ValueError):
             ff.write_to(buff)

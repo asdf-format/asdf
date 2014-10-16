@@ -238,7 +238,7 @@ class AsdfFile(versioning.VersionedMixin):
         """
         return self._blocks
 
-    def set_block_type(self, arr, block_type):
+    def set_array_storage(self, arr, array_storage):
         """
         Set the block type to use for the given array data.
 
@@ -249,7 +249,7 @@ class AsdfFile(versioning.VersionedMixin):
             the tree, only the most recent block type setting will be
             used, since all views share a single block.
 
-        block_type : str
+        array_storage : str
             Must be one of:
 
             - ``internal``: The default.  The array data will be
@@ -260,9 +260,9 @@ class AsdfFile(versioning.VersionedMixin):
 
             - ``inline``: Store the data as YAML inline in the tree.
         """
-        self.blocks[arr].block_type = block_type
+        self.blocks[arr].array_storage = array_storage
 
-    def get_block_type(self, arr):
+    def get_array_storage(self, arr):
         """
         Get the block type for the given array data.
 
@@ -270,7 +270,7 @@ class AsdfFile(versioning.VersionedMixin):
         ----------
         arr : numpy.ndarray
         """
-        return self.blocks[arr].block_type
+        return self.blocks[arr].array_storage
 
     @classmethod
     def _parse_header_line(cls, line):

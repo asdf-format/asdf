@@ -126,7 +126,7 @@ Saving inline arrays
 
 For these sort of small arrays, you may not care about the efficiency
 of a binary representation and want to just save the content directly
-in the YAML tree.  The `~pyasdf.AsdfFile.set_block_type` method
+in the YAML tree.  The `~pyasdf.AsdfFile.set_array_storage` method
 can be used to set the type of block of the associated data, either
 ``internal``, ``external`` or ``inline``.
 
@@ -146,7 +146,7 @@ can be used to set the type of block of the associated data, either
    my_array = np.random.rand(8, 8)
    tree = {'my_array': my_array}
    ff = AsdfFile(tree)
-   ff.set_block_type(my_array, 'inline')
+   ff.set_array_storage(my_array, 'inline')
    with ff.write_to("test.asdf"):
        pass
 
@@ -193,7 +193,7 @@ To save a block in an external file, set its block type to
    my_array = np.random.rand(8, 8)
    tree = {'my_array': my_array}
    ff = AsdfFile(tree)
-   ff.set_block_type(my_array, 'external')
+   ff.set_array_storage(my_array, 'external')
    with ff.write_to("test.asdf"):
        pass
 

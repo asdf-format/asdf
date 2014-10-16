@@ -204,8 +204,8 @@ def test_external_block(tmpdir):
     my_array = np.random.rand(8, 8)
     tree = {'my_array': my_array}
     ff = asdf.AsdfFile(tree)
-    ff.set_block_type(my_array, 'external')
-    assert ff.get_block_type(my_array) == 'external'
+    ff.set_array_storage(my_array, 'external')
+    assert ff.get_array_storage(my_array) == 'external'
 
     with ff.write_to(os.path.join(tmpdir, "test.asdf")):
         pass
