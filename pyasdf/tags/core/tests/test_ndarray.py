@@ -267,3 +267,19 @@ def test_inline_string():
     ff = asdf.AsdfFile.read(buff)
 
     assert_array_equal(ff.tree['arr']._make_array(), ['a', 'b', 'c'])
+
+
+def test_inline_structured():
+    content = """
+    arr: !core/ndarray
+        dtype: [['ascii', 4], uint16, uint16, ['ascii', 4]]
+        data: [[M110, 110, 205, And],
+               [ M31,  31, 224, And],
+               [ M32,  32, 221, And],
+               [M103, 103, 581, Cas]]"""
+
+    buff = helpers.yaml_to_asdf(content)
+
+    ff = asdf.AsdfFile.read(buff)
+
+    assert ff.tree['arr']['f1'].dtype.char == 'H'
