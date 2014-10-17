@@ -300,12 +300,12 @@ class NDArrayType(AsdfType):
 
         result = {}
         result['shape'] = list(shape)
-        if block.block_type == 'streamed':
+        if block.array_storage == 'streamed':
             result['shape'][0] = '*'
 
         dtype, byteorder = numpy_dtype_to_asdf_dtype(dtype)
 
-        if block.block_type == 'inline':
+        if block.array_storage == 'inline':
             result['data'] = data.tolist()
             result['dtype'] = dtype
         else:

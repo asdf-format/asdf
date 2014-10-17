@@ -40,24 +40,24 @@ class BlockManager(object):
     @property
     def internal_blocks(self):
         for block in self._blocks:
-            if block.block_type == 'internal':
+            if block.array_storage == 'internal':
                 yield block
 
         for block in self._blocks:
-            if block.block_type == 'streamed':
+            if block.array_storage == 'streamed':
                 yield block
                 break
 
     @property
     def streamed_block(self):
         for block in self._blocks:
-            if block.block_type == 'streamed':
+            if block.array_storage == 'streamed':
                 return block
 
     @property
     def external_blocks(self):
         for block in self._blocks:
-            if block.block_type == 'external':
+            if block.array_storage == 'external':
                 yield block
 
     def read_internal_blocks(self, fd, past_magic=False):
@@ -106,7 +106,7 @@ class BlockManager(object):
             subfd = self.get_external_uri(fd.uri, i)
             asdffile = asdf.AsdfFile()
             block = copy.copy(block)
-            block.block_type = 'internal'
+            block.array_storage = 'internal'
             asdffile.blocks.add(block)
             asdffile.write_to(subfd)
 
@@ -153,14 +153,14 @@ class BlockManager(object):
 
         if exploded is True:
             for block in self.internal_blocks:
-                block.block_type = 'external'
+                block.array_storage = 'external'
         elif exploded is False:
             for block in self.external_blocks:
-                block.block_type = 'internal'
+                block.array_storage = 'internal'
 
         count = 0
         for block in self._blocks:
-            if block.block_type == 'streamed':
+            if block.array_storage == 'streamed':
                 count += 1
         if count > 1:
             raise ValueError(
@@ -188,7 +188,7 @@ class BlockManager(object):
         elif isinstance(source, six.string_types):
             asdffile = self._asdffile().read_external(source)
             block = asdffile.blocks._blocks[0]
-            block.block_type = 'external'
+            block.array_storage = 'external'
             if block not in self._blocks:
                 self._blocks.append(block)
 
@@ -234,7 +234,7 @@ class BlockManager(object):
         """
         for i, internal_block in enumerate(self.internal_blocks):
             if block == internal_block:
-                if internal_block.block_type == 'streamed':
+                if internal_block.array_storage == 'streamed':
                     return -1
                 return i
 
@@ -289,7 +289,7 @@ class BlockManager(object):
         """
         block = self.streamed_block
         if block is None:
-            block = Block(block_type='streamed')
+            block = Block(array_storage='streamed')
             self._blocks.append(block)
         return block
 
@@ -297,7 +297,7 @@ class BlockManager(object):
         """
         Add an inline block for ``array`` to the block set.
         """
-        block = Block(array, block_type='inline')
+        block = Block(array, array_storage='inline')
         self.add(block)
         return block
 
@@ -315,7 +315,7 @@ class Block(object):
     _header_fmt = b'>IQQQ16s'
     _header_fmt_size = struct.calcsize(_header_fmt)
 
-    def __init__(self, data=None, uri=None, block_type='internal'):
+    def __init__(self, data=None, uri=None, array_storage='internal'):
         if data is not None:
             self._data = data
             if six.PY2:
@@ -326,7 +326,7 @@ class Block(object):
             self._data = None
             self._size = 0
         self._uri = uri
-        self._block_type = block_type
+        self._array_storage = array_storage
 
         self._fd = None
         self._header_size = None
@@ -338,21 +338,21 @@ class Block(object):
 
     def __repr__(self):
         return '<Block {0} alloc: {1} size: {2} type: {3}>'.format(
-            self._block_type[:3], self._allocated, self._size, self._block_type)
+            self._array_storage[:3], self._allocated, self._size, self._array_storage)
 
     def __len__(self):
         return self._size
 
     @property
-    def block_type(self):
-        return self._block_type
+    def array_storage(self):
+        return self._array_storage
 
-    @block_type.setter
-    def block_type(self, typename):
+    @array_storage.setter
+    def array_storage(self, typename):
         if typename not in ['internal', 'external', 'streamed', 'inline']:
             raise ValueError(
-                "block_type must be one of 'internal', 'external', 'streamed' or 'inline'")
-        self._block_type = typename
+                "array_storage must be one of 'internal', 'external', 'streamed' or 'inline'")
+        self._array_storage = typename
 
     def read(self, fd, past_magic=False):
         """
@@ -412,7 +412,7 @@ class Block(object):
             self._encoding = encoding
             if flags & constants.BLOCK_FLAG_STREAMED:
                 fd.fast_forward(-1)
-                self._block_type = 'streamed'
+                self._array_storage = 'streamed'
                 self._size = self._allocated = (fd.tell() - self._data_offset) + 1
             else:
                 fd.fast_forward(allocated_size)
@@ -421,7 +421,7 @@ class Block(object):
         else:
             # If the file is a stream, we need to get the data now.
             if flags & constants.BLOCK_FLAG_STREAMED:
-                self._block_type = 'streamed'
+                self._array_storage = 'streamed'
                 self._data = fd.read_into_array(-1)
                 self._size = self._allocated = len(self._data)
             else:
@@ -449,7 +449,7 @@ class Block(object):
             self._header_size = self._header_fmt_size
 
             flags = 0
-            if self._block_type == 'streamed':
+            if self._array_storage == 'streamed':
                 flags |= constants.BLOCK_FLAG_STREAMED
 
             fd.write(constants.BLOCK_MAGIC)
