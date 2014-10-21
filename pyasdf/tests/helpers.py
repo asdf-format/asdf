@@ -13,7 +13,7 @@ from ..asdftypes import AsdfTypeIndex
 from ..tags.core import AsdfObject
 
 
-def assert_tree_match(old_tree, new_tree):
+def assert_tree_match(old_tree, new_tree, funcname='assert_equal'):
     seen = set()
 
     def recurse(old, new):
@@ -28,8 +28,8 @@ def assert_tree_match(old_tree, new_tree):
         if (old_type is not None and
             new_type is not None and
             old_type is new_type and
-            hasattr(old_type, 'assert_equal')):
-            old_type.assert_equal(old, new)
+            hasattr(old_type, funcname)):
+            getattr(old_type, funcname)(old, new)
         elif isinstance(old, dict) and isinstance(new, dict):
             assert set(old.keys()) == set(new.keys())
             for key in old.keys():

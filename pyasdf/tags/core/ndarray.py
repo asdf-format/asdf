@@ -128,6 +128,38 @@ def numpy_dtype_to_asdf_dtype(dtype):
     raise ValueError("Unknown dtype {0}".format(dtype))
 
 
+def inline_data_asarray(inline, dtype):
+    # np.asarray doesn't handle structured arrays unless the innermost
+    # elements are tuples.  To do that, we drill down the first
+    # element of each level until we find a single item that
+    # successfully converts to a scalar of the expected structured
+    # dtype.  Then we go through and convert everything at that level
+    # to a tuple.  This probably breaks for nested structured dtypes,
+    # but it's probably good enough for now.  It also won't work with
+    # object dtypes, but ASDF explicitly excludes those, so we're ok
+    # there.
+    if dtype is not None and dtype.fields is not None:
+        def find_innermost_match(l, depth=0):
+            if not isinstance(l, list) or not len(l):
+                raise ValueError("data can not be converted to table")
+            try:
+                np.asarray(tuple(l), dtype=dtype)
+            except ValueError:
+                return find_innermost_match(l[0], depth + 1)
+            else:
+                return depth
+        depth = find_innermost_match(inline)
+
+        def convert_to_tuples(l, data_depth, depth=0):
+            if data_depth == depth:
+                return tuple(l)
+            else:
+                return [convert_to_tuples(x, data_depth, depth+1) for x in l]
+        inline = convert_to_tuples(inline, depth)
+
+    return np.asarray(inline, dtype=dtype)
+
+
 class NDArrayType(AsdfType):
     name = 'core/ndarray'
     types = [np.ndarray, ma.MaskedArray]
@@ -145,9 +177,15 @@ class NDArrayType(AsdfType):
             except ValueError:
                 pass
         elif isinstance(source, list):
-            self._array = np.array(source)
+            self._array = inline_data_asarray(source, dtype)
             self._array = self._apply_mask(self._array, self._mask)
             self._block = asdffile.blocks.add_inline(self._array)
+            if shape is not None:
+                if ((shape[0] == '*' and
+                     self._array.shape[1:] != tuple(shape[1:])) or
+                    (self._array.shape != tuple(shape))):
+                    raise ValueError(
+                        "inline data doesn't match the given shape")
         self._shape = shape
         self._dtype = dtype
         self._offset = offset
@@ -219,6 +257,8 @@ class NDArrayType(AsdfType):
 
     @property
     def shape(self):
+        if self._shape is None:
+            return self.__array__().shape
         if '*' in self._shape:
             return tuple(self.get_actual_shape(
                 self._shape, self._strides, self._dtype, len(self.block)))
@@ -269,8 +309,11 @@ class NDArrayType(AsdfType):
                 byteorder = sys.byteorder
             else:
                 byteorder = node['byteorder']
-            dtype = asdf_dtype_to_numpy_dtype(
-                node.get('dtype', 'uint8'), byteorder)
+            if 'dtype' in node:
+                dtype = asdf_dtype_to_numpy_dtype(
+                    node['dtype'], byteorder)
+            else:
+                dtype = None
             offset = node.get('offset', 0)
             strides = node.get('strides', None)
             mask = node.get('mask', None)
@@ -299,6 +342,7 @@ class NDArrayType(AsdfType):
             strides = data.strides
 
         result = {}
+
         result['shape'] = list(shape)
         if block.array_storage == 'streamed':
             result['shape'][0] = '*'
@@ -306,9 +350,21 @@ class NDArrayType(AsdfType):
         dtype, byteorder = numpy_dtype_to_asdf_dtype(dtype)
 
         if block.array_storage == 'inline':
-            result['data'] = data.tolist()
+            # Convert byte string arrays to unicode string arrays,
+            # since YAML doesn't handle the former.  This just
+            # assumes they are Latin-1.
+            if data.dtype.char == 'S':
+                listdata = data.astype('U').tolist()
+            else:
+                listdata = data.tolist()
+            result['data'] = yamlutil.custom_tree_to_tagged_tree(
+                listdata, ctx)
             result['dtype'] = dtype
         else:
+            result['shape'] = list(shape)
+            if block.array_storage == 'streamed':
+                result['shape'][0] = '*'
+
             result['source'] = ctx.blocks.get_source(block)
             result['dtype'] = dtype
             result['byteorder'] = byteorder
@@ -327,13 +383,38 @@ class NDArrayType(AsdfType):
         return result
 
     @classmethod
-    def assert_equal(cls, old, new):
-        from numpy.testing import assert_array_equal
-
+    def _assert_equality(cls, old, new, func):
         if old.dtype.fields:
             if not new.dtype.fields:
                 assert False, "arrays not equal"
             for a, b in zip(old, new):
-                assert_array_equal(a, b)
+                cls._assert_equality(a, b, func)
         else:
-            assert_array_equal(old, new)
+            old = old.__array__()
+            new = new.__array__()
+            if old.dtype.char in 'SU':
+                if old.dtype.char == 'S':
+                    old = old.astype('U')
+                if new.dtype.char == 'S':
+                    new = new.astype('U')
+                old = old.tolist()
+                new = new.tolist()
+                assert old == new
+            else:
+                func(old, new)
+
+    @classmethod
+    def assert_equal(cls, old, new):
+        from numpy.testing import assert_array_equal
+
+        cls._assert_equality(old, new, assert_array_equal)
+
+    @classmethod
+    def assert_allclose(cls, old, new):
+        from numpy.testing import assert_allclose, assert_array_equal
+
+        if (old.dtype.kind in 'iu' and
+            new.dtype.kind in 'iu'):
+            cls._assert_equality(old, new, assert_array_equal)
+        else:
+            cls._assert_equality(old, new, assert_allclose)

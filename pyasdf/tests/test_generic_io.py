@@ -76,11 +76,8 @@ def test_open(tmpdir):
     # Simply tests the high-level "open" function
     with asdf.AsdfFile(_get_small_tree()) as ff:
         ff.write_to(path)
-
-    with open(path) as ff2:
-        pass
-
-    helpers.assert_tree_match(ff2.tree, ff.tree)
+        with open(path) as ff2:
+            helpers.assert_tree_match(ff2.tree, ff.tree)
 
 
 def test_path(tree, tmpdir):

@@ -128,11 +128,3 @@ class AsdfType(object):
         Converts from basic types to a custom type.
         """
         return cls(tree)
-
-    @classmethod
-    def assert_equal(cls, old, new):
-        """
-        Assert that two objects of this type are equal.  Used for
-        testing only.
-        """
-        return
