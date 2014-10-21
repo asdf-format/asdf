@@ -401,13 +401,7 @@ class NDArrayType(AsdfType):
                 new = new.tolist()
                 assert old == new
             else:
-                try:
-                    func(old, new)
-                except AssertionError:
-                    for i, (x, y) in enumerate(zip(old, new)):
-                        if not np.isnan(x) and np.allclose(x, y):
-                            print(i, x, y)
-                    raise
+                func(old, new)
 
     @classmethod
     def assert_equal(cls, old, new):
