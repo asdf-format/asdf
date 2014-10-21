@@ -51,6 +51,9 @@ RELEASE = 'dev' not in VERSION
 if not RELEASE:
     VERSION += get_git_devstr(False)
 
+# Get root of asdf-standard documents
+ASDF_STANDARD_ROOT = os.environ.get('ASDF_STANDARD_ROOT', 'asdf-standard')
+
 # Populate the dict of setup command overrides; this should be done before
 # invoking any other functionality from distutils since it can potentially
 # modify distutils' behavior.
@@ -78,13 +81,14 @@ package_info = get_package_info()
 package_info['package_data'].setdefault(PACKAGENAME, []).append('data/*')
 
 # The schemas come from a git submodule, so we deal with them here
-schema_root = "asdf-standard/schemas"
+schema_root = os.path.join(ASDF_STANDARD_ROOT, "schemas")
 
 package_info['package_dir']['pyasdf.schemas'] = schema_root
 package_info['packages'].append('pyasdf.schemas')
 
 # The reference files come from a git submodule, so we deal with them here
-reference_file_root = "asdf-standard/reference_files/0.1.0"
+reference_file_root = os.path.join(
+    ASDF_STANDARD_ROOT, "reference_files", "0.1.0")
 
 package_info['package_dir']['pyasdf.reference_files'] = reference_file_root
 package_info['packages'].append('pyasdf.reference_files')
