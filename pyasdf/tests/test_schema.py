@@ -78,13 +78,18 @@ def test_all_schema_examples():
     # Make sure that the examples in the schema files (and thus the
     # ASDF standard document) are valid.
 
-    def test_example(example):
+    def test_example(args):
+        fname, example = args
         buff = helpers.yaml_to_asdf('example: ' + example.strip())
         with asdf.AsdfFile() as ff:
             # Add a dummy block so that the ndarray examples
             # work
             ff.blocks.add(block.Block(np.empty((1024))))
-            ff.read(buff)
+            try:
+                ff.read(buff)
+            except:
+                print("From file:", fname)
+                raise
 
     def find_examples_in_schema(path):
         with open(path, 'rb') as fd:
@@ -110,7 +115,7 @@ def test_all_schema_examples():
                 continue
             for example in find_examples_in_schema(
                     os.path.join(root, fname)):
-                yield test_example, example
+                yield test_example, (fname, example)
 
 
 def test_schema_caching():

@@ -7,8 +7,10 @@ import os
 
 
 def get_package_data():  # pragma: no cover
+    ASDF_STANDARD_ROOT = os.environ.get("ASDF_STANDARD_ROOT", "asdf-standard")
+
     schemas = []
-    root = "asdf-standard/schemas"
+    root = os.path.join(ASDF_STANDARD_ROOT, "schemas")
     for node, dirs, files in os.walk(root):
         for fname in files:
             if fname.endswith('.yaml'):
@@ -18,7 +20,7 @@ def get_package_data():  # pragma: no cover
                         root))
 
     reference_files = []
-    root = "asdf-standard/reference_files/0.1.0"
+    root = os.path.join(ASDF_STANDARD_ROOT, "reference_files", "0.1.0")
     for node, dirs, files in os.walk(root):
         for fname in files:
             if fname.endswith('.yaml') or fname.endswith('.asdf'):
