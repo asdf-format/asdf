@@ -417,6 +417,10 @@ class NDArrayType(AsdfType):
 
     @classmethod
     def assert_allclose(cls, old, new):
-        from numpy.testing import assert_allclose
+        from numpy.testing import assert_allclose, assert_array_equal
 
-        cls._assert_equality(old, new, assert_allclose)
+        if (old.dtype.char in 'IU' and
+            new.dtype.char in 'IU'):
+            cls._assert_equality(old, new, assert_array_equal)
+        else:
+            cls._assert_equality(old, new, assert_allclose)
