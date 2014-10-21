@@ -181,7 +181,9 @@ class NDArrayType(AsdfType):
             self._array = self._apply_mask(self._array, self._mask)
             self._block = asdffile.blocks.add_inline(self._array)
             if shape is not None:
-                if self._array.shape != shape:
+                if ((shape[0] == '*' and
+                     self._array.shape[1:] != tuple(shape[1:])) or
+                    (self._array.shape != tuple(shape))):
                     raise ValueError(
                         "inline data doesn't match the given shape")
         self._shape = shape
@@ -360,7 +362,7 @@ class NDArrayType(AsdfType):
             result['dtype'] = dtype
         else:
             result['shape'] = list(shape)
-            if block.block_type == 'streamed':
+            if block.array_storage == 'streamed':
                 result['shape'][0] = '*'
 
             result['source'] = ctx.blocks.get_source(block)

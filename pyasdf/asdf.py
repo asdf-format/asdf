@@ -479,4 +479,4 @@ class AsdfFile(versioning.VersionedMixin):
         """
         self.resolve_references()
         for b in self.blocks.blocks:
-            b.block_type = 'inline'
+            b.array_storage = 'inline'
