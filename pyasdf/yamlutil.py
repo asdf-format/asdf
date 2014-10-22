@@ -56,13 +56,69 @@ class AsdfDumper(yaml.SafeDumper):
     data types" as implemented in the `tagged` module.
     """
     def represent_data(self, data):
+        node = super(AsdfDumper, self).represent_data(data)
+
         tag_name = tagged.get_tag(data)
         if tag_name is not None:
-            node = yaml.SafeDumper.represent_data(self, data.data)
             node.tag = tag_name
-        else:
-            node = yaml.SafeDumper.represent_data(self, data)
+
         return node
+
+
+_flow_style_map = {
+    'flow': True,
+    'block': False
+}
+
+
+def represent_sequence(dumper, sequence):
+    flow_style = _flow_style_map.get(sequence.flow_style, None)
+    sequence = sequence.data
+    return super(AsdfDumper, dumper).represent_sequence(
+        None, sequence, flow_style)
+
+
+def represent_mapping(dumper, mapping):
+    flow_style = _flow_style_map.get(mapping.flow_style, None)
+    node = super(AsdfDumper, dumper).represent_mapping(
+        None, mapping.data, flow_style)
+
+    if mapping.property_order:
+        values = node.value
+        new_mapping = {}
+        for key, val in values:
+            new_mapping[key.value] = (key, val)
+
+        new_values = []
+        for key in mapping.property_order:
+            if key in mapping:
+                new_values.append(new_mapping[key])
+
+        for key, val in values:
+            if key.value not in mapping.property_order:
+                new_values.append((key, val))
+
+        node.value = new_values
+
+    return node
+
+
+_style_map = {
+    'inline': '"',
+    'folded': '>',
+    'literal': '|'
+}
+
+
+def represent_scalar(dumper, value):
+    style = _style_map.get(value.style, None)
+    return super(AsdfDumper, dumper).represent_scalar(
+        None, value.data, style)
+
+
+AsdfDumper.add_representer(tagged.TaggedList, represent_sequence)
+AsdfDumper.add_representer(tagged.TaggedDict, represent_mapping)
+AsdfDumper.add_representer(tagged.TaggedString, represent_scalar)
 
 
 class AsdfLoader(yaml.SafeLoader):
@@ -73,7 +129,7 @@ class AsdfLoader(yaml.SafeLoader):
     def construct_object(self, node, deep=False):
         tag = node.tag
         if node.tag in self.yaml_constructors:
-            return yaml.SafeLoader.construct_object(self, node, deep=False)
+            return super(AsdfLoader, self).construct_object(node, deep=False)
         data = yaml_to_base_type(node, self)
         data = tagged.tag_object(tag, data)
         return data
@@ -258,8 +314,13 @@ def dump_tree(tree, fd, ctx):
         pass
     AsdfDumperTmp.ctx = ctx
 
-    tag = tree.yaml_tag
-    tag = tag[:tag.index('/core/asdf') + 1]
+    if hasattr(tree, 'yaml_tag'):
+        tag = tree.yaml_tag
+        tag = tag[:tag.index('/core/asdf') + 1]
+        tags = {'!': tag}
+    else:
+        tags = None
+
     tree = custom_tree_to_tagged_tree(tree, ctx)
     validate_tagged_tree(tree, ctx)
 
@@ -269,4 +330,4 @@ def dump_tree(tree, fd, ctx):
         version=ctx.versionspec.yaml_version,
         allow_unicode=True,
         encoding='utf-8',
-        tags={'!': tag})
+        tags=tags)

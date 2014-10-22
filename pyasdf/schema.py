@@ -85,23 +85,13 @@ def validate_tag(validator, tagname, instance, schema):
 
 
 def validate_propertyOrder(validator, order, instance, schema):
-    """Validates the propertyOrder attribute in YAML Schemas.
-
-    The propertyOrder attribute requires an object to be represented as an
-    ordered mapping (such as an OrderedDict) so that the keys are stored in
-    the required order.
-
-    Not all properties listed in propertyOrder are required to be present in
-    object (unless specified by the "required" attribute), but must be in the
-    correct relative position defined by this attribute. Properties not list in
-    propertyOrder must come after the last property listed in propertyOrder,
-    but may be in any order after that point.
-
-    The object need not be an OrderedDict either, and this may validate by
-    chance even on unordered dicts.  But to guarantee that it validates use an
-    ordered mapping of some sort.
     """
-
+    Stores a value on the `tagged.TaggedDict` instance so that
+    properties can be written out in the preferred order.  In that
+    sense this isn't really a "validator", but using the `jsonschema`
+    library's extensible validation system is the easiest way to get
+    this property assigned.
+    """
     if not validator.is_type(instance, 'object'):
         return
 
@@ -109,22 +99,44 @@ def validate_propertyOrder(validator, order, instance, schema):
         # propertyOrder may be an empty list
         return
 
-    property_orders = dict((key, idx) for idx, key in enumerate(order))
-    inst_keys = instance.keys()
+    instance.property_order = order
 
-    sort_key = lambda k: property_orders.get(k, len(property_orders))
 
-    if inst_keys != sorted(inst_keys, key=sort_key):
-        yield ValidationError(
-            "Properties are not in the correct order according to the "
-            "propertyOrder attribute.  Required {0!r}; got {1!r}.".format(
-                order, inst_keys))
+def validate_flowStyle(validator, flow_style, instance, schema):
+    """
+    Sets a flag on the `tagged.TaggedList` or `tagged.TaggedDict`
+    object so that the YAML generator knows which style to use to
+    write the element.  In that sense this isn't really a "validator",
+    but using the `jsonschema` library's extensible validation system
+    is the easiest way to get this property assigned.
+    """
+    if not (validator.is_type(instance, 'object') or
+            validator.is_type(instance, 'array')):
+        return
+
+    instance.flow_style = flow_style
+
+
+def validate_style(validator, style, instance, schema):
+    """
+    Sets a flag on the `tagged.TaggedString` object so that the YAML
+    generator knows which style to use to write the string.  In that
+    sense this isn't really a "validator", but using the `jsonschema`
+    library's extensible validation system is the easiest way to get
+    this property assigned.
+    """
+    if not validator.is_type(instance, 'string'):
+        return
+
+    instance.style = style
 
 
 YAML_VALIDATORS = validators.Draft4Validator.VALIDATORS.copy()
 YAML_VALIDATORS.update({
     'tag': validate_tag,
-    'propertyOrder': validate_propertyOrder
+    'propertyOrder': validate_propertyOrder,
+    'flowStyle': validate_flowStyle,
+    'style': validate_style
 })
 
 

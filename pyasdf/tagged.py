@@ -53,6 +53,9 @@ class TaggedDict(Tagged, UserDict, dict):
     """
     A Python dict with a tag attached.
     """
+    flow_style = None
+    property_order = None
+
     def __init__(self, data=None, tag=None):
         if data is None:
             data = {}
@@ -64,10 +67,13 @@ class TaggedDict(Tagged, UserDict, dict):
                 self.data == other.data and
                 self.tag == other.tag)
 
+
 class TaggedList(Tagged, UserList, list):
     """
     A Python list with a tag attached.
     """
+    flow_style = None
+
     def __init__(self, data=None, tag=None):
         if data is None:
             data = []
@@ -84,6 +90,8 @@ class TaggedString(Tagged, UserString, six.text_type):
     """
     A Python list with a tag attached.
     """
+    style = None
+
     def __eq__(self, other):
         return (isinstance(other, TaggedString) and
                 six.text_type.__eq__(self, other) and
