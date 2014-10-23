@@ -3,11 +3,10 @@
 
 from __future__ import absolute_import, division, unicode_literals, print_function
 
-import os
-
 from astropy.extern import six
 from astropy.utils.misc import InheritDocstrings
 
+from . import tagged
 from . import versioning
 
 
@@ -52,18 +51,20 @@ class AsdfTypeMeta(type):
         cls = super(AsdfTypeMeta, mcls).__new__(mcls, name, bases, attrs)
 
         if hasattr(cls, 'name'):
-            if 'yaml_tag' not in attrs:
-                cls.yaml_tag = format_tag(
-                    cls.organization,
-                    cls.standard,
-                    versioning.version_to_string(cls.version),
-                    cls.name)
+            if isinstance(cls.name, six.string_types):
+                if 'yaml_tag' not in attrs:
+                    cls.yaml_tag = cls.make_yaml_tag(cls.name)
 
-            AsdfTypeIndex._type_by_cls[cls] = cls
-            AsdfTypeIndex._type_by_name[cls.yaml_tag] = cls
+                AsdfTypeIndex._type_by_name[cls.yaml_tag] = cls
+            elif isinstance(cls.name, list):
+                for name in cls.name:
+                    AsdfTypeIndex._type_by_name[cls.make_yaml_tag(name)] = cls
+            elif cls.name is not None:
+                raise TypeError("name must be string or list")
 
-            for typ in cls.types:
-                AsdfTypeIndex._type_by_cls[typ] = cls
+        AsdfTypeIndex._type_by_cls[cls] = cls
+        for typ in cls.types:
+            AsdfTypeIndex._type_by_cls[typ] = cls
 
         return cls
 
@@ -105,6 +106,14 @@ class AsdfType(object):
     types = []
 
     @classmethod
+    def make_yaml_tag(cls, name):
+        return format_tag(
+            cls.organization,
+            cls.standard,
+            versioning.version_to_string(cls.version),
+            name)
+
+    @classmethod
     def validate(cls, tree, ctx):
         """
         Validate the given tree of basic data types against the schema
@@ -123,8 +132,28 @@ class AsdfType(object):
         return node.__class__.__bases__[0](node)
 
     @classmethod
+    def to_tree_tagged(cls, node, ctx):
+        """
+        Converts from a custom type to any of the basic types (dict,
+        list, str, number) supported by YAML.  The result should be a
+        tagged object.  Overriding this, rather than the more common
+        `to_tree`, allows types to customize how the result is tagged.
+        """
+        obj = cls.to_tree(node, ctx)
+        return tagged.tag_object(cls.yaml_tag, obj)
+
+    @classmethod
     def from_tree(cls, tree, ctx):
         """
         Converts from basic types to a custom type.
         """
         return cls(tree)
+
+    @classmethod
+    def from_tree_tagged(cls, tree, ctx):
+        """
+        Converts from basic types to a custom type.  Overriding this,
+        rather than the more common `from_tree`, allows types to deal
+        with the tag directly.
+        """
+        return cls.from_tree(tree.data, ctx)
