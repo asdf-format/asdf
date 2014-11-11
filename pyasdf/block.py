@@ -390,7 +390,7 @@ class Block(object):
                     "sizes of the blocks in the file.")
 
         buff = fd.read(2)
-        header_size, = struct.unpack('>H', buff)
+        header_size, = struct.unpack(b'>H', buff)
         if header_size < self._header_fmt_size:
             raise ValueError(
                 "Header size must be > {0}".format(self._header_fmt_size))
