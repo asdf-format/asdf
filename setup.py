@@ -107,7 +107,7 @@ package_info['package_data'][PACKAGENAME].extend(c_files)
 
 
 # Disable config file generation
-from astropy import setup_helpers
+from astropy_helpers import setup_helpers
 setup_helpers.AstropyBuildPy.run = setup_helpers.SetuptoolsBuildPy.run
 
 
