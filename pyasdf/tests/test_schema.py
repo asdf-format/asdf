@@ -16,12 +16,17 @@ from jsonschema import ValidationError
 
 import yaml
 
-from .. import block
 from .. import asdf
+from .. import asdftypes
+from .. import block
+from .. import resolver
 from .. import schema
 from .. import treeutil
 
 from . import helpers
+
+
+TEST_DATA_PATH = os.path.join(os.path.dirname(__file__), 'data')
 
 
 def test_violate_toplevel_schema():
@@ -126,3 +131,79 @@ def test_schema_caching():
     s2 = schema.load_schema(
         'http://stsci.edu/schemas/asdf/0.1.0/core/asdf')
     assert s1 is s2
+
+
+def test_flow_style():
+    class CustomFlowStyleType(dict, asdftypes.AsdfType):
+        name = 'custom_flow'
+        organization = 'nowhere.org'
+        version = (1, 0, 0)
+        standard = 'custom'
+
+    tag_mapping = resolver.TagToSchemaResolver(
+        [('tag:nowhere.org:custom', 'http://nowhere.org/schemas/custom{0}')])
+
+    url_mapping = resolver.UrlMapping(
+        [('http://nowhere.org/schemas/custom/1.0.0/',
+          'file://' + TEST_DATA_PATH + '/{0}.yaml')])
+
+    tree = {
+        'custom_flow': CustomFlowStyleType({'a': 42, 'b': 43})
+    }
+
+    buff = io.BytesIO()
+    ff = asdf.AsdfFile(tree,
+                       tag_to_schema_resolver=tag_mapping,
+                       url_mapping=url_mapping)
+    with ff.write_to(buff):
+        pass
+
+    assert b'  a: 42\n  b: 43' in buff.getvalue()
+
+
+def test_style():
+    class CustomStyleType(str, asdftypes.AsdfType):
+        name = 'custom_style'
+        organization = 'nowhere.org'
+        version = (1, 0, 0)
+        standard = 'custom'
+
+    tag_mapping = resolver.TagToSchemaResolver(
+        [('tag:nowhere.org:custom', 'http://nowhere.org/schemas/custom{0}')])
+
+    url_mapping = resolver.UrlMapping(
+        [('http://nowhere.org/schemas/custom/1.0.0/',
+          'file://' + TEST_DATA_PATH + '/{0}.yaml')])
+
+    tree = {
+        'custom_style': CustomStyleType("short")
+    }
+
+    buff = io.BytesIO()
+    ff = asdf.AsdfFile(tree,
+                       tag_to_schema_resolver=tag_mapping,
+                       url_mapping=url_mapping)
+    with ff.write_to(buff):
+        pass
+
+    assert b'|-\n  short\n' in buff.getvalue()
+
+
+def test_property_order():
+    tree = {'foo': np.ndarray([1, 2, 3])}
+
+    buff = io.BytesIO()
+    ff = asdf.AsdfFile(tree)
+    with ff.write_to(buff):
+        pass
+
+    ndarray_schema = schema.load_schema(
+        'http://stsci.edu/schemas/asdf/0.1.0/core/ndarray')
+    property_order = ndarray_schema['anyOf'][1]['propertyOrder']
+
+    last_index = 0
+    for prop in property_order:
+        index = buff.getvalue().find(prop.encode('utf-8'))
+        if index != -1:
+            assert index > last_index
+            last_index = index
