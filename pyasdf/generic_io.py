@@ -11,20 +11,23 @@ instead, one should use the factory function `get_file`.
 
 from __future__ import absolute_import, division, unicode_literals, print_function
 
+from distutils.version import LooseVersion
 import io
 import math
 import os
+import platform
 import re
 import sys
 
 from astropy.extern import six
+from astropy.extern.six.moves import xrange
 from astropy.extern.six.moves.urllib import parse as urlparse
 from astropy.utils.misc import InheritDocstrings
 
 import numpy as np
 
 
-__all__ = ['get_file']
+__all__ = ['get_file', 'resolve_uri', 'relative_uri']
 
 
 def _check_bytes(fd, mode):
@@ -55,6 +58,77 @@ def _check_bytes(fd, mode):
                 return False
 
     return True
+
+
+if (sys.platform == 'darwin' and
+    LooseVersion(platform.mac_ver()[0]) < LooseVersion('10.9')):
+    def _array_fromfile(fd, size):
+        chunk_size = 1024 ** 3
+        if size < chunk_size:
+            return np.fromfile(fd, dtype=np.uint8, count=size)
+        else:
+            array = np.empty(size, dtype=np.uint8)
+            for beg in xrange(0, size, chunk_size):
+                end = min(size, beg + chunk_size)
+                array[beg:end] = np.fromfile(fd, dtype=np.uint8, count=end - beg)
+            return array
+else:
+    def _array_fromfile(fd, size):
+        return np.fromfile(fd, dtype=np.uint8, count=size)
+
+
+_array_fromfile.__doc__ = """
+Load a binary array from a real file object.
+
+Parameters
+----------
+fd : real file object
+
+size : integer
+    Number of bytes to read.
+"""
+
+
+def _array_tofile_chunked(write, array, chunksize):
+    array = array.view(np.uint8).flatten()
+    for i in xrange(0, array.nbytes, chunksize):
+        write(array[i:i + chunksize].data)
+
+
+def _array_tofile_simple(fd, write, array):
+    return write(array.data)
+
+
+if sys.platform == 'darwin':
+    def _array_tofile(fd, write, array):
+        OSX_WRITE_LIMIT = 2 ** 32
+        if fd is None or arr.nbytes >= OSX_WRITE_LIMIT and arr.nbytes % 4096 == 0:
+            return _array_tofile_chunked(write, array, OSX_WRITE_LIMIT)
+        return _array_tofile_simple(fd, array)
+elif sys.platform.startswith('win'):
+    def _array_tofile(fd, write, array):
+        WIN_WRITE_LIMIT = 2 ** 31
+        return _array_tofile_chunked(write, array, WIN_WRITE_LIMIT)
+else:
+    _array_tofile = _array_tofile_simple
+
+
+_array_tofile.__doc__ = """
+Write an array to a file.
+
+Parameters
+----------
+fd : real file object
+   If fd is provided, must be a real system file as supported by
+   numpy.tofile.  May be None, in which case all writing will be done
+   through the `write` method.
+
+write : callable
+   A callable that writes bytes to the file.
+
+array : Numpy array
+   Must be an underlying data array, not a view.
+"""
 
 
 def resolve_uri(base, uri):
@@ -204,6 +278,9 @@ class GenericFile(object):
 
     Only available if `writable` returns `True`.
     """
+
+    def write_array(self, array):
+        _array_tofile(None, self.write, array)
 
     def seek(self, offset, whence=0):
         """
@@ -464,11 +541,15 @@ class RealFile(RandomAccessFile):
             mode = 'r+'
         else:
             mode = 'r'
+        # TODO: Can we memmap really large things on all platforms?
         return np.memmap(
             self._fd, mode=mode, offset=offset, shape=size)
 
     def read_into_array(self, size):
-        return np.fromfile(self._fd, np.uint8, size)
+        return _array_fromfile(self._fd, size)
+
+    def write_array(self, array):
+        return _array_tofile(self._fd, self.write, array)
 
 
 class MemoryIO(RandomAccessFile):
