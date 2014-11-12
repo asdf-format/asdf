@@ -9,7 +9,7 @@ BLOCK_MAGIC = b'\xd3BLK'
 
 
 YAML_TAG_PREFIX = 'tag:yaml.org,2002:'
-YAML_END_MARKER_REGEX = br'\r?\n\.\.\.\r?\n'
+YAML_END_MARKER_REGEX = br'\r?\n\.\.\.((\r?\n)|$)'
 
 
 STSCI_SCHEMA_URI_BASE = 'http://stsci.edu/schemas/'
