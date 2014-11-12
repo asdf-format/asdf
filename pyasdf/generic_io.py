@@ -945,11 +945,17 @@ def get_file(init, mode='r', uri=None):
                 raise ValueError(
                     "File '{0}' could not be opened in 'rw' mode".format(init))
 
-    elif (hasattr(init, 'read') and
+    elif 'w' in mode and (
           hasattr(init, 'write') and
           hasattr(init, 'seek') and
           hasattr(init, 'tell')):
-        return MemoryIO(init, uri=uri)
+        return MemoryIO(init, mode, uri=uri)
+
+    elif 'r' in mode and (
+          hasattr(init, 'read') and
+          hasattr(init, 'seek') and
+          hasattr(init, 'tell')):
+        return MemoryIO(init, mode, uri=uri)
 
     elif 'w' in mode and hasattr(init, 'write'):
         return OutputStream(init, uri=uri)

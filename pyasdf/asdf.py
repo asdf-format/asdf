@@ -432,7 +432,7 @@ class AsdfFile(versioning.VersionedMixin):
         See `pyasdf.Stream`.
         """
         if self.blocks.streamed_block is None:
-            raise ValueError("AsdfFile has not streamed block to write to")
+            raise ValueError("AsdfFile has no streamed block to write to")
         self._fd.write(data)
 
     def find_references(self):

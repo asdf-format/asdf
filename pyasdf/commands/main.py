@@ -72,17 +72,14 @@ def main_from_args(args):
 
     args = parser.parse_args(args)
 
-    if not hasattr(args, 'func'):
-        parser.print_help()
-        return 1
-
     try:
         result = args.func(args)
     except RuntimeError as e:
         log.error(six.text_type(e))
         return 1
-
-    sys.stdout.write('\n')
+    except IOError as e:
+        log.error(six.text_type(e))
+        return e.errno
 
     if result is None:
         result = 0
