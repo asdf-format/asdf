@@ -32,7 +32,8 @@ def test_no_yaml_end_marker(tmpdir):
 %YAML 1.2
 %TAG ! tag:stsci.edu:asdf/0.1.0/
 --- !core/asdf
-foo: bar
+foo: bar...baz
+baz: 42
     """
     path = os.path.join(str(tmpdir), 'test.asdf')
 
@@ -51,6 +52,33 @@ foo: bar
     with open(path, 'rb') as fd:
         with pytest.raises(ValueError):
             asdf.AsdfFile.read(fd)
+
+
+def test_no_final_newline(tmpdir):
+    content = b"""#ASDF 0.1.0
+%YAML 1.2
+%TAG ! tag:stsci.edu:asdf/0.1.0/
+--- !core/asdf
+foo: ...bar...
+baz: 42
+..."""
+    path = os.path.join(str(tmpdir), 'test.asdf')
+
+    buff = io.BytesIO(content)
+    with asdf.AsdfFile.read(buff) as ff:
+        assert len(ff.tree) == 2
+
+    buff.seek(0)
+    fd = generic_io.InputStream(buff, 'r')
+    with asdf.AsdfFile.read(fd) as ff:
+        assert len(ff.tree) == 2
+
+    with open(path, 'wb') as fd:
+        fd.write(content)
+
+    with open(path, 'rb') as fd:
+        with asdf.AsdfFile.read(fd) as ff:
+            assert len(ff.tree) == 2
 
 
 def test_no_asdf_header(tmpdir):

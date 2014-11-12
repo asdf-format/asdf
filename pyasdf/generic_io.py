@@ -222,7 +222,7 @@ class GenericFile(object):
             position) and os.SEEK_END or 2 (seek relative to the
             file’s end).
         """
-        self._fd.seek(offset, whence)
+        return self._fd.seek(offset, whence)
 
     def tell(self):
         """
@@ -408,17 +408,15 @@ class RandomAccessFile(GenericFile):
             block = self.read_block()
             if len(block) == 0:
                 break
-            index = re.search(delimiter, block)
+            buff.write(block)
+            index = re.search(delimiter, buff.getvalue())
             if index is not None:
                 if include:
                     index = index.end()
                 else:
                     index = index.start()
-                block = block[:index]
-                buff.write(block)
-                self.seek(cursor + buff.tell(), os.SEEK_SET)
-                return buff.getvalue()
-            buff.write(block)
+                self.seek(cursor + index, os.SEEK_SET)
+                return buff.getvalue()[:index]
 
         if delimiter_name is None:
             delimiter_name = delimiter
@@ -537,24 +535,24 @@ class InputStream(GenericFile):
 
     def read_until(self, delimiter, delimiter_name, include=True):
         buff = io.BytesIO()
+        bytes_read = 0
         while True:
             block = self._peek(self._blksize)
             if len(block) == 0:
                 break
-            index = re.search(delimiter, block)
+            buff.write(block)
+            index = re.search(delimiter, buff.getvalue())
             if index is not None:
                 if include:
                     index = index.end()
                 else:
                     index = index.start()
-                if index != 0:
-                    self.read(index)
-                block = block[:index]
-                buff.write(block)
-                return buff.getvalue()
+                if index != bytes_read:
+                    self.read(index - bytes_read)
+                return buff.getvalue()[:index]
             else:
+                bytes_read += len(block)
                 self.read(len(block))
-            buff.write(block)
 
         raise ValueError("{0} not found".format(delimiter_name))
 
