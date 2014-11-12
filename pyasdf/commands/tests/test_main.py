@@ -15,9 +15,12 @@ def test_help():
 
 def test_invalid_command():
     with pytest.raises(SystemExit) as e:
-        main.main_from_args([])
+        main.main([])
     assert e.value.code == 2
 
     with pytest.raises(SystemExit) as e:
-        main.main_from_args(['foo'])
-    assert e.value.code == 2
+        main.main(['foo'])
+    if isinstance(e.value, int):
+        assert e.value == 2
+    else:
+        assert e.value.code == 2

@@ -453,5 +453,8 @@ def test_invalid_obj(tmpdir):
         with pytest.raises(ValueError):
             fd2 = generic_io.get_file(fd, 'w')
 
-    with generic_io.get_file(sys.stdout, 'w'):
-        pass
+    # This should be possible in Python 3, but it isn't possible
+    # within py.test
+    if six.PY2:
+        with generic_io.get_file(sys.stdout, 'w'):
+            pass
