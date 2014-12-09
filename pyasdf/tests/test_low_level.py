@@ -191,7 +191,7 @@ def test_block_mismatch():
     # that has an invalid block magic number.
 
     buff = io.BytesIO(
-        b'#ASDF 0.1.0\n\xd3BLK\x00\x28\0\0\0\0\0\0\0\x01\0\0\0\0\0\0\0\x01\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0FOO')
+        b'#ASDF 0.1.0\n\xd3BLK\x00\x28\0\0\0\0\0\0\0\x01\0\0\0\0\0\0\0\x01\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0FOOBAR')
 
     buff.seek(0)
     with pytest.raises(ValueError):
@@ -239,3 +239,24 @@ def test_external_block(tmpdir):
         pass
 
     assert 'test0000.asdf' in os.listdir(tmpdir)
+
+
+def test_external_block_non_url():
+    my_array = np.random.rand(8, 8)
+    tree = {'my_array': my_array}
+    ff = asdf.AsdfFile(tree)
+    ff.set_array_storage(my_array, 'external')
+    assert ff.get_array_storage(my_array) == 'external'
+
+    buff = io.BytesIO()
+    with pytest.raises(ValueError):
+        with ff.write_to(buff):
+            pass
+
+
+def test_invalid_array_storage():
+    my_array = np.random.rand(8, 8)
+    tree = {'my_array': my_array}
+    ff = asdf.AsdfFile(tree)
+    with pytest.raises(ValueError):
+        ff.set_array_storage(my_array, 'foo')

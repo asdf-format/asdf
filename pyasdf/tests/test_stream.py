@@ -175,3 +175,15 @@ def test_too_many_streams():
         ff.blocks[tree['stream2']].array_storage = 'streamed'
         with pytest.raises(ValueError):
             ff.write_to(buff)
+
+
+def test_no_stream():
+    buff = io.BytesIO()
+
+    tree = {
+        'foo': 'bar'
+    }
+
+    with asdf.AsdfFile(tree).write_to(buff) as ff:
+        with pytest.raises(ValueError):
+            ff.write_to_stream(np.array([0] * 12, np.float64).tostring())

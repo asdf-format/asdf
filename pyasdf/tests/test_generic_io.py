@@ -395,3 +395,66 @@ def test_exploded_stream_read(tmpdir):
     # occurs.
     with pytest.raises(ValueError):
         ff.tree['science_data'][:]
+
+
+def test_nested_open(tmpdir):
+    tree = _get_small_tree()
+
+    path = os.path.join(str(tmpdir), 'test.asdf')
+    path2 = os.path.join(str(tmpdir), 'test2.asdf')
+
+    ff = asdf.AsdfFile(tree)
+    fd = open(path, 'wb')
+    ff.write_to(fd)
+
+    fd2 = open(path2, 'wb')
+    ff.write_to(fd2)
+
+    ff.close()
+
+    assert fd.closed
+    assert fd2.closed
+
+
+def test_unicode_open(tmpdir):
+    path = os.path.join(str(tmpdir), 'test.asdf')
+
+    tree = _get_small_tree()
+    ff = asdf.AsdfFile(tree)
+
+    with ff.write_to(path):
+        pass
+
+    with io.open(path, 'rt', encoding="utf-8") as fd:
+        with pytest.raises(ValueError):
+            ff2 = asdf.AsdfFile.read(fd)
+
+
+def test_invalid_obj(tmpdir):
+    with pytest.raises(ValueError):
+        generic_io.get_file(42)
+
+    path = os.path.join(str(tmpdir), 'test.asdf')
+    with generic_io.get_file(path, 'w') as fd:
+        with pytest.raises(ValueError):
+            fd2 = generic_io.get_file(fd, 'r')
+
+    with pytest.raises(ValueError):
+        fd2 = generic_io.get_file("http://www.google.com", "w")
+
+    with pytest.raises(TypeError):
+        fd2 = generic_io.get_file(io.StringIO())
+
+    with open(path, 'rb') as fd:
+        with pytest.raises(ValueError):
+            fd2 = generic_io.get_file(fd, 'w')
+
+    with io.open(path, 'rb') as fd:
+        with pytest.raises(ValueError):
+            fd2 = generic_io.get_file(fd, 'w')
+
+    # This should be possible in Python 3, but it isn't possible
+    # within py.test
+    if six.PY2:
+        with generic_io.get_file(sys.stdout, 'w'):
+            pass

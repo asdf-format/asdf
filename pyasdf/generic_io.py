@@ -453,7 +453,9 @@ class RealFile(RandomAccessFile):
         stat = os.fstat(fd.fileno())
         self._blksize = stat.st_blksize
         self._size = stat.st_size
-        if uri is None and os.path.exists(fd.name):
+        if (uri is None and
+            isinstance(fd.name, six.string_types) and
+            os.path.exists(fd.name)):
             self._uri = os.path.abspath(fd.name)
 
     def can_memmap(self):
@@ -864,6 +866,11 @@ def get_file(init, mode='r', uri=None):
     if mode not in ('r', 'w', 'rw'):
         raise ValueError("mode must be 'r', 'w' or 'rw'")
 
+    # Special case for sys.stdout on Python 3, since it takes unicode
+    # by default, but we need to write to it with bytes
+    if six.PY3 and init in (sys.stdout, sys.stdin, sys.stderr):
+        init = init.buffer
+
     if isinstance(init, (GenericFile, GenericWrapper)):
         if mode not in init.mode:
             raise ValueError(
@@ -945,11 +952,17 @@ def get_file(init, mode='r', uri=None):
                 raise ValueError(
                     "File '{0}' could not be opened in 'rw' mode".format(init))
 
-    elif (hasattr(init, 'read') and
+    elif 'w' in mode and (
           hasattr(init, 'write') and
           hasattr(init, 'seek') and
           hasattr(init, 'tell')):
-        return MemoryIO(init, uri=uri)
+        return MemoryIO(init, mode, uri=uri)
+
+    elif 'r' in mode and (
+          hasattr(init, 'read') and
+          hasattr(init, 'seek') and
+          hasattr(init, 'tell')):
+        return MemoryIO(init, mode, uri=uri)
 
     elif 'w' in mode and hasattr(init, 'write'):
         return OutputStream(init, uri=uri)

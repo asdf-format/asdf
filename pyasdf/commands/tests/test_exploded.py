@@ -7,6 +7,8 @@ import os
 
 import numpy as np
 
+from astropy.tests.helper import pytest
+
 from ... import AsdfFile
 from .. import main
 
@@ -56,3 +58,8 @@ def test_explode_then_implode(tmpdir):
 
     assert 'original_exploded_all.asdf' in files
     assert files['original_exploded_all.asdf'] == files['original.asdf']
+
+
+def test_file_not_found(tmpdir):
+    path = os.path.join(str(tmpdir), 'original.asdf')
+    assert main.main_from_args(['explode', path]) == 2
