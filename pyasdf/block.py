@@ -461,7 +461,7 @@ class Block(object):
             self._data_offset = fd.tell()
 
             if self._data is not None:
-                fd.write(self._data.data)
+                fd.write_array(self._data)
 
     @property
     def data(self):
