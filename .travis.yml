@@ -41,6 +41,7 @@ before_install:
     - conda update --yes conda
 
     # DOCUMENTATION DEPENDENCIES
+    - if [[ $SETUP_CMD == build_sphinx* ]]; then sudo apt-get update; fi
     - if [[ $SETUP_CMD == build_sphinx* ]]; then sudo apt-get install graphviz texlive-latex-extra dvipng; fi
 
 install:
