@@ -1,6 +1,10 @@
 Astropy affiliated package template
 ===================================
 
+.. image:: http://img.shields.io/badge/powered%20by-AstroPy-orange.svg?style=flat
+    :target: http://www.astropy.org
+    :alt: Powered by Astropy Badge
+
 This is the template for affiliated packages of the Astropy project.
 
 Astropy affiliated packages are astronomy-related Python packages that
