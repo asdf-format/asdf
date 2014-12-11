@@ -418,3 +418,12 @@ class NDArrayType(AsdfType):
             cls._assert_equality(old, new, assert_array_equal)
         else:
             cls._assert_equality(old, new, assert_allclose)
+
+    @classmethod
+    def copy_to_new_asdf(cls, node, asdffile):
+        if isinstance(node, NDArrayType):
+            array = node._make_array()
+            asdffile.blocks[array].array_storage = \
+                node.block.array_storage
+            return node._make_array()
+        return node
