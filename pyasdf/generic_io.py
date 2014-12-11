@@ -222,6 +222,10 @@ class GenericFile(object):
         self.close()
 
     @property
+    def block_size(self):
+        return self._blksize
+
+    @property
     def mode(self):
         """
         The mode of the file.  Will be ``'r'``, ``'w'`` or ``'rw'``.
@@ -299,7 +303,9 @@ class GenericFile(object):
             position) and os.SEEK_END or 2 (seek relative to the
             file’s end).
         """
-        return self._fd.seek(offset, whence)
+        result = self._fd.seek(offset, whence)
+        self.tell()
+        return result
 
     def tell(self):
         """
@@ -321,6 +327,12 @@ class GenericFile(object):
         """
         if self._close:
             self._fd.close()
+
+    def truncate(self, nbytes):
+        """
+        Truncate the file to the given size.
+        """
+        pass
 
     def writable(self):
         """
@@ -413,6 +425,15 @@ class GenericFile(object):
         Move the file position forward by `size`.
         """
         raise NotImplementedError()
+
+    def clear(self, nbytes):
+        """
+        Write nbytes of zeros.
+        """
+        blank_data = b'\0' * self.block_size
+        for i in xrange(0, nbytes, self.block_size):
+            length = min(nbytes - i, self.block_size)
+            self.write(blank_data[:length])
 
     def memmap_array(self, offset, size):
         """
@@ -520,6 +541,9 @@ class RandomAccessFile(GenericFile):
             self.seek(0, os.SEEK_END)
         self.seek(size, os.SEEK_CUR)
 
+    def truncate(self, size):
+        self._fd.truncate(size)
+
 
 class RealFile(RandomAccessFile):
     """
@@ -535,6 +559,13 @@ class RealFile(RandomAccessFile):
             os.path.exists(fd.name)):
             self._uri = os.path.abspath(fd.name)
 
+    def write_array(self, arr):
+        if isinstance(arr, np.memmap) and getattr(arr, 'fd', None) is self:
+            arr.flush()
+            self.fast_forward(len(arr.data))
+        else:
+            _array_tofile(self._fd, self._fd.write, arr)
+
     def can_memmap(self):
         return True
 
@@ -543,15 +574,13 @@ class RealFile(RandomAccessFile):
             mode = 'r+'
         else:
             mode = 'r'
-        # TODO: Can we memmap really large things on all platforms?
-        return np.memmap(
+        mmap = np.memmap(
             self._fd, mode=mode, offset=offset, shape=size)
+        mmap.fd = self
+        return mmap
 
     def read_into_array(self, size):
         return _array_fromfile(self._fd, size)
-
-    def write_array(self, array):
-        return _array_tofile(self._fd, self.write, array)
 
 
 class MemoryIO(RandomAccessFile):
@@ -690,14 +719,9 @@ class OutputStream(GenericFile):
         self._fd = fd
 
     def fast_forward(self, size):
-        if self.size < 0:
+        if size < 0:
             return
-        written = 0
-        block = b' ' * self._blksize
-        while written + self._blksize < size:
-            self._fd.write(block)
-            written += self._blksize
-        self._fd.write(block[:size - written])
+        self.clear(size)
 
 
 class HTTPConnection(RandomAccessFile):

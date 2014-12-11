@@ -5,6 +5,7 @@
 from __future__ import absolute_import, division, unicode_literals, print_function
 
 import itertools
+import math
 
 from astropy.extern.six.moves.urllib import parse as urlparse
 
@@ -82,3 +83,38 @@ def iter_subclasses(cls):
         yield x
         for y in iter_subclasses(x):
             yield y
+
+
+def calculate_padding(content_size, pad_blocks, block_size):
+    """
+    Calculates the amount of extra space to add to a block given the
+    user's request for the amount of extra space.  Care is given so
+    that the total of size of the block with padding is evenly
+    divisible by block size.
+
+    Parameters
+    ----------
+    content_size : int
+        The size of the actual content
+
+    pad_blocks : float or bool
+        If `False`, add no padding (always return 0).  If `True`, add
+        a default amount of padding of 10% If a float, it is a factor
+        to multiple content_size by to get the new total size.
+
+    block_size : int
+        The filesystem block size to use.
+
+    Returns
+    -------
+    nbytes : int
+        The number of extra bytes to add for padding.
+    """
+    if not pad_blocks:
+        return 0
+    if pad_blocks is True:
+        pad_blocks = 1.1
+    new_size = content_size * pad_blocks
+    new_size = int((math.ceil(
+        float(new_size) / block_size) + 1) * block_size)
+    return max(new_size - content_size, 0)

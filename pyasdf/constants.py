@@ -3,10 +3,16 @@
 
 from __future__ import absolute_import, division, unicode_literals, print_function
 
+import numpy as np
+
 
 ASDF_MAGIC = b'#ASDF '
 BLOCK_MAGIC = b'\xd3BLK'
+BLOCK_HEADER_BOILERPLATE_SIZE = 6
 
+# The maximum number of blocks supported
+MAX_BLOCKS = 2 ** 16
+MAX_BLOCKS_DIGITS = int(np.ceil(np.log10(MAX_BLOCKS) + 1))
 
 YAML_TAG_PREFIX = 'tag:yaml.org,2002:'
 YAML_END_MARKER_REGEX = br'\r?\n\.\.\.((\r?\n)|$)'

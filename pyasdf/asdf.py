@@ -3,7 +3,10 @@
 
 from __future__ import absolute_import, division, unicode_literals, print_function
 
+import io
 import re
+
+import numpy as np
 
 from . import asdftypes
 from . import block
@@ -77,7 +80,6 @@ class AsdfFile(versioning.VersionedMixin):
         self._type_index = type_index
 
         self._fd = None
-        self._extra_closes = []
         self._external_asdf_by_uri = {}
         self._blocks = block.BlockManager(self)
         if tree is None:
@@ -85,7 +87,8 @@ class AsdfFile(versioning.VersionedMixin):
             self._uri = uri
         elif isinstance(tree, AsdfFile):
             self._uri = tree.uri
-            self.tree = tree.tree
+            self._tree = tree.tree
+            self.run_modifying_hook('copy_to_new_asdf')
             self.find_references()
             self._uri = uri
         else:
@@ -103,9 +106,6 @@ class AsdfFile(versioning.VersionedMixin):
         """
         Close the file handles associated with the `AsdfFile`.
         """
-        while len(self._extra_closes):
-            fd = self._extra_closes.pop()
-            fd.close()
         if self._fd:
             # This is ok to always do because GenericFile knows
             # whether it "owns" the file and should close it.
@@ -371,13 +371,132 @@ class AsdfFile(versioning.VersionedMixin):
 
         return self
 
-    def update(self):
-        """
-        Update the file on disk in place (not implemented).
-        """
-        raise NotImplementedError()
+    def _write_tree(self, tree, fd, pad_blocks):
+        fd.write(constants.ASDF_MAGIC)
+        fd.write(self.version_string.encode('ascii'))
+        fd.write(b'\n')
 
-    def write_to(self, fd, exploded=None):
+        if len(tree):
+            yamlutil.dump_tree(tree, fd, self)
+
+        if pad_blocks:
+            padding = util.calculate_padding(
+                fd.tell(), pad_blocks, fd.block_size)
+            fd.fast_forward(padding)
+
+    def _pre_write(self, fd, exploded):
+        if exploded and fd.uri is None:
+            raise ValueError(
+                "Can not write an exploded file without knowing its URI.")
+
+        if len(self._tree):
+            self.run_hook('pre_write')
+
+        # This is where we'd do some more sophisticated block
+        # reorganization, if necessary
+        self._blocks.finalize(self, exploded=exploded)
+
+    def _serial_write(self, fd, pad_blocks):
+        try:
+            self._write_tree(self._tree, fd, pad_blocks)
+            self.blocks.write_internal_blocks_serial(fd, pad_blocks)
+            self.blocks.write_external_blocks(fd.uri, pad_blocks)
+        finally:
+            self._post_write(fd)
+
+    def _random_write(self, fd, pad_blocks):
+        try:
+            self._write_tree(self._tree, fd, False)
+            self.blocks.write_internal_blocks_random_access(fd)
+            self.blocks.write_external_blocks(fd.uri, pad_blocks)
+        finally:
+            self._post_write(fd)
+
+    def _post_write(self, fd):
+        if len(self._tree):
+            self.run_hook('post_write')
+
+    def update(self, exploded=None, pad_blocks=False):
+        """
+        Update the file on disk in place.
+
+        Parameters
+        ----------
+        exploded : bool, optional
+            If `True`, write each data block in a separate ASDF file.
+            If `False`, write each data block in this ASDF file.  If
+            not provided, leave the block types as they are.
+
+        pad_blocks : float or bool, optional
+            Add extra space between blocks to allow for updating of
+            the file.  If `False` (default), add no padding (always
+            return 0).  If `True`, add a default amount of padding of
+            10% If a float, it is a factor to multiple content_size by
+            to get the new total size.
+        """
+        fd = self._fd
+
+        if fd is None:
+            raise ValueError(
+                "Can not update, since there is no associated file")
+        if not fd.writable():
+            raise IOError(
+                "Can not update, since associated file is read-only")
+        if exploded:
+            # If the file is fully exploded, there's no benefit to
+            # update, so just use write_to()
+            self.write_to(fd, exploded=exploded)
+            fd.truncate(fd.tell())
+            return
+        if not fd.seekable():
+            raise IOError(
+                "Can not update, since associated file is not seekable")
+
+        self._pre_write(fd, exploded)
+
+        fd.seek(0)
+
+        if not self.blocks.has_blocks_with_offset():
+            # If we don't have any blocks that are being reused, just
+            # write out in a serial fashion.
+            self._serial_write(fd, pad_blocks)
+            fd.truncate(fd.tell())
+            return
+
+        # Estimate how big the tree will be on disk by writing the
+        # YAML out in memory.  Since the block indices aren't yet
+        # known, we have to count the number of block references and
+        # add enough space to accommodate the largest block number
+        # possible there.
+        tree_serialized = io.BytesIO()
+        self._write_tree(self._tree, tree_serialized, pad_blocks=False)
+        array_ref_count = [0]
+        from .tags.core.ndarray import NDArrayType
+
+        def count_external_array_references(node):
+            if (isinstance(node, (np.ndarray, NDArrayType)) and
+                self.blocks[node].array_storage == 'internal'):
+                array_ref_count[0] += 1
+        treeutil.walk(self._tree, count_external_array_references)
+
+        serialized_tree_size = (
+            tree_serialized.tell() +
+            constants.MAX_BLOCKS_DIGITS * array_ref_count[0])
+
+        if not block.calculate_updated_layout(
+                self.blocks, serialized_tree_size,
+                pad_blocks, fd.block_size):
+            # If we don't have any blocks that are being reused, just
+            # write out in a serial fashion.
+            self._serial_write(fd, pad_blocks)
+            fd.truncate(fd.tell())
+            return
+
+        fd.seek(0)
+        self._random_write(fd, pad_blocks)
+        fd.flush()
+
+    def write_to(self, fd, exploded=None, pad_blocks=False):
         """
         Write the ASDF file to the given file-like object.
 
@@ -391,36 +510,25 @@ class AsdfFile(versioning.VersionedMixin):
             If `True`, write each data block in a separate ASDF file.
             If `False`, write each data block in this ASDF file.  If
             not provided, leave the block types as they are.
+
+        pad_blocks : float or bool, optional
+            Add extra space between blocks to allow for updating of
+            the file.  If `False` (default), add no padding (always
+            return 0).  If `True`, add a default amount of padding of
+            10% If a float, it is a factor to multiple content_size by
+            to get the new total size.
         """
-        if self._fd is not None:
-            self._extra_closes.append(self._fd)
-        fd = self._fd = generic_io.get_file(fd, mode='w')
+        original_fd = self._fd
 
-        if exploded and fd.uri is None:
-            raise ValueError(
-                "Can not write an exploded file without knowing its URI.")
+        self._fd = fd = generic_io.get_file(fd, mode='w')
 
-        tree = self._tree
+        self._pre_write(fd, exploded)
 
-        try:
-            # This is where we'd do some more sophisticated block
-            # reorganization, if necessary
-            self._blocks.finalize(self, exploded=exploded)
-
-            fd.write(constants.ASDF_MAGIC)
-            fd.write(self.version_string.encode('ascii'))
-            fd.write(b'\n')
-
-            if len(tree):
-                self.run_hook('pre_write')
-                yamlutil.dump_tree(tree, fd, self)
-
-            self.blocks.write_blocks(fd)
-        finally:
-            if len(tree):
-                self.run_hook('post_write')
-
+        self._serial_write(fd, pad_blocks)
         fd.flush()
+
+        if original_fd is not None:
+            original_fd.close()
 
         return self
 
@@ -470,6 +578,29 @@ class AsdfFile(versioning.VersionedMixin):
                 if hook is not None:
                     hook(node, self)
         return treeutil.walk(self.tree, walker)
+
+    def run_modifying_hook(self, hookname):
+        """
+        Run a "hook" for each custom type found in the tree.  The hook
+        is free to return a different object in order to modify the
+        tree.
+
+        Parameters
+        ----------
+        hookname : str
+            The name of the hook.  If a `AsdfType` is found with a method
+            with this name, it will be called for every instance of the
+            corresponding custom type in the tree.
+        """
+        def walker(node):
+            tag = self.type_index.from_custom_type(type(node))
+            if tag is not None:
+                hook = getattr(tag, hookname, None)
+                if hook is not None:
+                    return hook(node, self)
+            return node
+        self.tree = treeutil.walk_and_modify(self.tree, walker)
+        return self.tree
 
     def resolve_and_inline(self):
         """

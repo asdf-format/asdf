@@ -3,16 +3,22 @@
 
 from __future__ import absolute_import, division, unicode_literals, print_function
 
+from collections import namedtuple
 import copy
 import os
 import struct
+import sys
 import weakref
+
+import numpy as np
 
 from astropy.extern import six
 from astropy.extern.six.moves.urllib import parse as urlparse
 
 from . import constants
 from . import generic_io
+from . import stream
+from . import treeutil
 from . import util
 
 
@@ -60,6 +66,25 @@ class BlockManager(object):
             if block.array_storage == 'external':
                 yield block
 
+    def has_blocks_with_offset(self):
+        """
+        Returns `True` if any of the internal blocks currently have an
+        offset assigned.
+        """
+        for block in self.internal_blocks:
+            if block.offset is not None:
+                return True
+        return False
+
+    def _sort_blocks_by_offset(self):
+        def sorter(x):
+            if x.offset is None:
+                # 64 bits
+                return 0xffffffffffffffff
+            else:
+                return x.offset
+        self._blocks.sort(key=sorter)
+
     def read_internal_blocks(self, fd, past_magic=False):
         """
         Read all internal blocks present in the file.
@@ -83,9 +108,9 @@ class BlockManager(object):
                 break
             past_magic = False
 
-    def write_blocks(self, fd):
+    def write_internal_blocks_serial(self, fd, pad_blocks=False):
         """
-        Write all blocks to disk.
+        Write all blocks to disk serially.
 
         Parameters
         ----------
@@ -93,22 +118,75 @@ class BlockManager(object):
             The file to write internal blocks to.  The file position
             should be after the tree.
         """
+        for block in self.internal_blocks:
+            padding = util.calculate_padding(
+                block.size, pad_blocks, fd.block_size)
+            block.allocated = block._size + padding
+            block.offset = fd.tell()
+            block.write(fd)
+            fd.fast_forward(padding)
+
+    def write_internal_blocks_random_access(self, fd):
+        """
+        Write all blocks to disk at their specified offsets.  All
+        internal blocks must have an offset assigned at this point.
+
+        Parameters
+        ----------
+        fd : generic_io.GenericFile
+            The file to write internal blocks to.  The file position
+            should be after the tree.
+        """
+        self._sort_blocks_by_offset()
+
+        iter = self.internal_blocks
+        last_block = next(iter)
+        # We need to explicitly clear anything between the tree
+        # and the first block, otherwise there may be other block
+        # markers left over which will throw off block indexing.
+        # We don't need to do this between each block.
+        fd.clear(last_block.offset - fd.tell())
+
+        for block in iter:
+            last_block.allocated = ((block.offset - last_block.offset) -
+                                    last_block.header_size)
+            fd.seek(last_block.offset)
+            last_block.write(fd)
+            last_block = block
+
+        # The last block must be "allocated" all the way to the
+        # end of the file, which isn't truncated when updating.
+        fd.seek(0, 2)
+        last_end = fd.tell()
+        last_block.allocated = max(
+            last_end - last_block.offset,
+            last_block.size) - last_block.header_size
+        fd.seek(last_block.offset)
+        last_block.write(fd)
+
+    def write_external_blocks(self, uri, pad_blocks=False):
+        """
+        Write all blocks to disk serially.
+
+        Parameters
+        ----------
+        uri : str
+            The base uri of the external blocks
+        """
         from . import asdf
 
-        for block in self.internal_blocks:
-            block.write(fd)
-
         for i, block in enumerate(self.external_blocks):
-            if fd.uri is None:
+            if uri is None:
                 raise ValueError(
                     "Can't write external blocks, since URI of main file is "
                     "unknown.")
-            subfd = self.get_external_uri(fd.uri, i)
-            asdffile = asdf.AsdfFile()
-            block = copy.copy(block)
-            block.array_storage = 'internal'
-            asdffile.blocks.add(block)
-            asdffile.write_to(subfd)
+            subfd = self.get_external_uri(uri, i)
+            with asdf.AsdfFile() as asdffile:
+                block = copy.copy(block)
+                block.array_storage = 'internal'
+                asdffile.blocks.add(block)
+                block._used = True
+                asdffile.write_to(subfd, pad_blocks=pad_blocks)
 
     def get_external_filename(self, filename, index):
         """
@@ -141,6 +219,33 @@ class BlockManager(object):
         if block._data is not None:
             self._data_to_block_mapping[id(block._data)] = block
 
+    def remove(self, block):
+        """
+        Remove a block from the manager.
+        """
+        self._blocks.remove(block)
+        if block._data is not None:
+            del self._data_to_block_mapping[id(block._data)]
+
+    def _find_used_blocks(self, tree):
+        from .tags.core import ndarray
+
+        def visit_array(node):
+            if isinstance(node, np.ndarray):
+                block = self.find_or_create_block_for_array(node)
+                block._used = True
+            elif (isinstance(node, ndarray.NDArrayType) and
+                not isinstance(node, stream.Stream)):
+                node.block._used = True
+
+        treeutil.walk(tree, visit_array)
+
+        for block in self._blocks[:]:
+            if not hasattr(block, '_used'):
+                self.remove(block)
+            else:
+                del block._used
+
     def finalize(self, ctx, exploded=False):
         """
         At this point, we have a complete set of blocks for the file,
@@ -150,6 +255,8 @@ class BlockManager(object):
         """
         # TODO: Should this reset the state (what's external and what
         # isn't) afterword?
+
+        self._find_used_blocks(ctx.tree)
 
         if exploded is True:
             for block in self.internal_blocks:
@@ -267,11 +374,12 @@ class BlockManager(object):
         block : Block
         """
         from .tags.core import ndarray
-        if isinstance(arr, ndarray.NDArrayType):
-            if arr._block is not None:
-                if arr._block not in self._blocks:
-                    self._blocks.append(arr._block)
+        if (isinstance(arr, ndarray.NDArrayType) and
+            arr._block is not None):
+            if arr._block in self._blocks:
                 return arr._block
+            else:
+                arr._block = None
 
         base = util.get_array_base(arr)
         block = self._data_to_block_mapping.get(id(base))
@@ -329,10 +437,9 @@ class Block(object):
         self._array_storage = array_storage
 
         self._fd = None
-        self._header_size = None
+        self._header_size = self._header_fmt_size
         self._offset = None
-        self._data_offset = None
-        self._allocated = 0
+        self._allocated = self._size
         self._encoding = None
         self._memmapped = False
 
@@ -344,6 +451,32 @@ class Block(object):
         return self._size
 
     @property
+    def offset(self):
+        return self._offset
+    @offset.setter
+    def offset(self, offset):
+        self._offset = offset
+
+    @property
+    def allocated(self):
+        return self._allocated
+    @allocated.setter
+    def allocated(self, allocated):
+        self._allocated = allocated
+
+    @property
+    def header_size(self):
+        return self._header_size + constants.BLOCK_HEADER_BOILERPLATE_SIZE
+
+    @property
+    def data_offset(self):
+        return self._offset + self.header_size
+
+    @property
+    def size(self):
+        return self._size + self.header_size
+
+    @property
     def array_storage(self):
         return self._array_storage
 
@@ -351,7 +484,8 @@ class Block(object):
     def array_storage(self, typename):
         if typename not in ['internal', 'external', 'streamed', 'inline']:
             raise ValueError(
-                "array_storage must be one of 'internal', 'external', 'streamed' or 'inline'")
+                "array_storage must be one of 'internal', 'external', "
+                "'streamed' or 'inline'")
         self._array_storage = typename
 
     def read(self, fd, past_magic=False):
@@ -375,6 +509,7 @@ class Block(object):
         """
         fd = generic_io.get_file(fd)
 
+        offset = None
         if fd.seekable():
             offset = fd.tell()
 
@@ -388,6 +523,8 @@ class Block(object):
                     "Bad magic number in block. "
                     "This may indicate an internal inconsistency about the "
                     "sizes of the blocks in the file.")
+        elif offset is not None:
+            offset -= 4
 
         buff = fd.read(2)
         header_size, = struct.unpack(b'>H', buff)
@@ -408,12 +545,11 @@ class Block(object):
             self._fd = fd
             self._header_size = header_size
             self._offset = offset
-            self._data_offset = fd.tell()
             self._encoding = encoding
             if flags & constants.BLOCK_FLAG_STREAMED:
                 fd.fast_forward(-1)
                 self._array_storage = 'streamed'
-                self._size = self._allocated = (fd.tell() - self._data_offset) + 1
+                self._size = self._allocated = (fd.tell() - self.data_offset) + 1
             else:
                 fd.fast_forward(allocated_size)
                 self._allocated = allocated_size
@@ -433,19 +569,11 @@ class Block(object):
 
         return self
 
-    def update(self):
-        """
-        Update a block in-place on disk.
-        """
-        raise NotImplementedError()
-
     def write(self, fd):
         """
         Write an internal block to the given Python file-like object.
         """
         with generic_io.get_file(fd, 'w') as fd:
-            self._allocated = self._size
-            self._offset = fd.tell()
             self._header_size = self._header_fmt_size
 
             flags = 0
@@ -456,9 +584,7 @@ class Block(object):
             fd.write(struct.pack(b'>H', self._header_size))
             fd.write(struct.pack(
                 self._header_fmt, flags,
-                self._allocated, self._size, 0, b''))
-
-            self._data_offset = fd.tell()
+                self.allocated, self._size, 0, b''))
 
             if self._data is not None:
                 fd.write_array(self._data)
@@ -476,16 +602,100 @@ class Block(object):
 
             if self._fd.can_memmap():
                 self._data = self._fd.memmap_array(
-                    self._data_offset, self._size)
+                    self.data_offset, self._size)
                 self._memmapped = True
 
             else:
-                # Be nice and don't move around the file position.
+                # Be nice and reset the file position after we're done
                 curpos = self._fd.tell()
                 try:
-                    self._fd.seek(self._data_offset)
+                    self._fd.seek(self.data_offset)
                     self._data = self._fd.read_into_array(self._size)
                 finally:
                     self._fd.seek(curpos)
 
         return self._data
+
+
+def calculate_updated_layout(blocks, tree_size, pad_blocks, block_size):
+    """
+    Calculates a block layout that will try to use as many blocks as
+    possible in their original locations, though at this point the
+    algorithm is fairly naive.  The result will be stored in the
+    offsets of the blocks.
+
+    Parameters
+    ----------
+    blocks : Blocks instance
+
+    tree_size : int
+        The amount of space to reserve for the tree at the beginning.
+
+    Returns
+    -------
+    Returns `False` if no good layout can be found and one is best off
+    rewriting the file serially, otherwise, returns `True`.
+    """
+    def unfix_block(i):
+        # We can't really move memory-mapped blocks around, so at this
+        # point, we just return False.  If this algorithm gets more
+        # sophisticated we could carefully move memmapped blocks
+        # around without clobbering other ones.
+        return False
+
+    def fix_block(block, offset):
+        block.offset = offset
+        fixed.append(Entry(block.offset, block.offset + block.size, block))
+        fixed.sort()
+
+    Entry = namedtuple("Entry", ['start', 'end', 'block'])
+
+    fixed = []
+    free = []
+    for block in blocks._blocks:
+        if block.array_storage == 'internal':
+            if block.offset is not None:
+                fixed.append(
+                    Entry(block.offset, block.offset + block.size, block))
+            else:
+                free.append(block)
+
+    if not len(fixed):
+        return False
+
+    fixed.sort()
+
+    # Make enough room at the beginning for the tree, by popping off
+    # blocks at the beginning
+    while len(fixed) and fixed[0].start < tree_size:
+        if not unfix_block(0):
+            return False
+
+    if not len(fixed):
+        return False
+
+    # This algorithm is pretty basic at this point -- it just looks
+    # for the first open spot big enough for the free block to fit.
+    while len(free):
+        print(free)
+        print(fixed)
+        block = free.pop()
+        last_end = tree_size
+        for entry in fixed:
+            if entry.start - last_end >= block.size:
+                fix_block(block, last_end)
+                break
+            last_end = entry.end
+        else:
+            padding = util.calculate_padding(
+                entry.block.size, pad_blocks, block_size)
+            fix_block(block, last_end + padding)
+
+    if blocks.streamed_block is not None:
+        padding = util.calculate_padding(
+            fixed[-1].block.size, pad_blocks, block_size)
+        blocks.streamed_block.offset = fixed[-1].end + padding
+
+    blocks._sort_blocks_by_offset()
+
+    return True

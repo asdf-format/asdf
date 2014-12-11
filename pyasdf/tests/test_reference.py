@@ -34,8 +34,8 @@ def test_external_reference(tmpdir):
             ]
         }
     external_path = os.path.join(str(tmpdir), 'external.asdf')
-    ext = asdf.AsdfFile(exttree)
-    ext.write_to(external_path)
+    with asdf.AsdfFile(exttree) as ext:
+        ext.write_to(external_path)
     external_path = os.path.join(str(tmpdir), 'external2.asdf')
     with asdf.AsdfFile(exttree) as ff:
         ff.write_to(external_path)
@@ -206,12 +206,12 @@ def test_make_reference(tmpdir):
             }
         }
     external_path = os.path.join(str(tmpdir), 'external.asdf')
-    ext = asdf.AsdfFile(exttree)
-    ext.write_to(external_path)
+    with asdf.AsdfFile(exttree) as ext:
+        ext.write_to(external_path)
 
-    ff = asdf.AsdfFile()
-    ff.tree['ref'] = ext.make_reference(['f~o~o/', 'a'])
-    assert_array_equal(ff.tree['ref'], ext.tree['f~o~o/']['a'])
+        ff = asdf.AsdfFile()
+        ff.tree['ref'] = ext.make_reference(['f~o~o/', 'a'])
+        assert_array_equal(ff.tree['ref'], ext.tree['f~o~o/']['a'])
 
 
 def test_internal_reference():
