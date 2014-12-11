@@ -8,6 +8,7 @@ from astropy.modeling.core import _CompoundModel, _CompoundModelMeta
 
 from ... import tagged
 from ... import yamlutil
+from ...tests.helpers import assert_tree_match
 
 from .basic import TransformType
 
@@ -31,13 +32,7 @@ _tag_to_operator_mapping = dict(
 
 
 class CompoundType(TransformType):
-    name = ['transform/add',
-            'transform/subtract',
-            'transform/multiply',
-            'transform/divide',
-            'transform/power',
-            'transform/concatenate',
-            'transform/join']
+    name = ['transform/' + x for x in _tag_to_operator_mapping.keys()]
     types = [_CompoundModel]
 
     @classmethod
@@ -61,20 +56,40 @@ class CompoundType(TransformType):
         return model
 
     @classmethod
-    def to_tree_tagged(cls, model, ctx):
+    def _to_tree_from_model_tree(cls, tree, ctx):
+        if tree.left.isleaf:
+            left = yamlutil.custom_tree_to_tagged_tree(
+                tree.left.value, ctx)
+        else:
+            left = cls._to_tree_from_model_tree(tree.left, ctx)
+
+        if tree.right.isleaf:
+            right = yamlutil.custom_tree_to_tagged_tree(
+                tree.right.value, ctx)
+        else:
+            right = cls._to_tree_from_model_tree(tree.right, ctx)
+
         node = {
-            'forward': [
-                yamlutil.custom_tree_to_tagged_tree(model._tree.left),
-                yamlutil.custom_tree_to_tagged_tree(model._tree.right)
-                ]
-            }
+            'forward': [left, right]
+        }
 
         try:
-            tag_name = _operator_to_tag_mapping[model._tree.value]
+            tag_name = 'transform/' + _operator_to_tag_mapping[tree.value]
         except KeyError:
-            raise ValueError("Unknown operator '{0}'".format(model._tree.value))
+            raise ValueError("Unknown operator '{0}'".format(tree.value))
 
-        cls._get_inverse(model, node, ctx)
+        # TODO: Correctly handle inverse transforms
 
-        node = tagged.tag_object(node, cls.make_yaml_tag(tag_name))
+        node = tagged.tag_object(cls.make_yaml_tag(tag_name), node)
         return node
+
+    @classmethod
+    def to_tree_tagged(cls, model, ctx):
+        return cls._to_tree_from_model_tree(model._tree, ctx)
+
+    @classmethod
+    def assert_equal(cls, a, b):
+        # TODO: If models become comparable themselves, remove this.
+        assert_tree_match(a._tree.left.value, b._tree.left.value)
+        assert_tree_match(a._tree.right.value, b._tree.right.value)
+        assert a._tree.value == b._tree.value

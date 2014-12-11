@@ -14,10 +14,16 @@ def test_transforms(tmpdir):
         'identity': modeling.Identity(2)
     }
 
-    def check_asdf(asdf):
-        pass
+    helpers.assert_roundtrip_tree(tree, tmpdir)
 
-    def check_raw_yaml(content):
-        pass
 
-    helpers.assert_roundtrip_tree(tree, tmpdir, check_asdf, check_raw_yaml)
+def test_transforms_compound(tmpdir):
+    tree = {
+        'compound':
+            modeling.projections.Sky2Pix_TAN() |
+            modeling.rotations.Rotation2D() |
+            modeling.projections.AffineTransformation2D([[2, 0], [0, 2]], [42, 32]) +
+            modeling.rotations.Rotation2D(32)
+    }
+
+    helpers.assert_roundtrip_tree(tree, tmpdir)

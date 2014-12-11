@@ -4,6 +4,7 @@
 from __future__ import absolute_import, division, unicode_literals, print_function
 
 import numpy as np
+from numpy.testing import assert_array_equal
 
 from astropy import modeling
 
@@ -39,6 +40,14 @@ class AffineType(TransformType):
         node = {'matrix': matrix}
         return yamlutil.custom_tree_to_tagged_tree(node, ctx)
 
+    @classmethod
+    def assert_equal(cls, a, b):
+        # TODO: If models become comparable themselves, remove this.
+        assert (isinstance(a, modeling.projections.AffineTransformation2D),
+                isinstance(b, modeling.projections.AffineTransformation2D))
+        assert_array_equal(a.matrix, b.matrix)
+        assert_array_equal(a.translation, b.translation)
+
 
 class Rotate2DType(TransformType):
     name = "transform/rotate2d"
@@ -50,7 +59,14 @@ class Rotate2DType(TransformType):
 
     @classmethod
     def to_tree_transform(cls, model, ctx):
-        return {'angle': model.angle}
+        return {'angle': model.angle.value}
+
+    @classmethod
+    def assert_equal(cls, a, b):
+        # TODO: If models become comparable themselves, remove this.
+        assert (isinstance(a, modeling.rotations.Rotation2D),
+                isinstance(b, modeling.rotations.Rotation2D))
+        assert_array_equal(a.angle, b.angle)
 
 
 class TangentType(TransformType):
@@ -66,7 +82,12 @@ class TangentType(TransformType):
 
     @classmethod
     def to_tree_transform(cls, model, ctx):
-        if isinstance(model, modeling.Pix2Sky_TAN):
+        if isinstance(model, modeling.projections.Pix2Sky_TAN):
             return {'direction': 'forward'}
         else:
             return {'direction': 'backward'}
+
+    @classmethod
+    def assert_equal(cls, a, b):
+        # TODO: If models become comparable themselves, remove this.
+        assert a.__class__ == b.__class__

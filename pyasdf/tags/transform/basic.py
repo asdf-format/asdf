@@ -61,6 +61,13 @@ class IdentityType(TransformType):
             node['n_dims'] = data.n_inputs
         return node
 
+    @classmethod
+    def assert_equal(cls, a, b):
+        # TODO: If models become comparable themselves, remove this.
+        assert (isinstance(a, modeling.Identity) and
+                isinstance(b, modeling.Identity) and
+                a.n_inputs == b.n_inputs)
+
 
 # TODO: This is just here for bootstrapping and will go away eventually
 class GenericModel(modeling.Mapping):

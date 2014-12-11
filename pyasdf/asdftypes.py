@@ -35,7 +35,13 @@ class AsdfTypeIndex(object):
 
     @classmethod
     def from_custom_type(cls, custom_type):
-        return cls._type_by_cls.get(custom_type)
+        try:
+            return cls._type_by_cls[custom_type]
+        except KeyError:
+            for key, val in six.iteritems(cls._type_by_cls):
+                if issubclass(custom_type, key):
+                    return val
+        return None
 
     @classmethod
     def from_yaml_tag(cls, tag):
