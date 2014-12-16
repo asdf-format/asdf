@@ -43,7 +43,7 @@ class AffineType(TransformType):
     @classmethod
     def assert_equal(cls, a, b):
         # TODO: If models become comparable themselves, remove this.
-        assert (isinstance(a, modeling.projections.AffineTransformation2D),
+        assert (isinstance(a, modeling.projections.AffineTransformation2D) and
                 isinstance(b, modeling.projections.AffineTransformation2D))
         assert_array_equal(a.matrix, b.matrix)
         assert_array_equal(a.translation, b.translation)
@@ -64,7 +64,7 @@ class Rotate2DType(TransformType):
     @classmethod
     def assert_equal(cls, a, b):
         # TODO: If models become comparable themselves, remove this.
-        assert (isinstance(a, modeling.rotations.Rotation2D),
+        assert (isinstance(a, modeling.rotations.Rotation2D) and
                 isinstance(b, modeling.rotations.Rotation2D))
         assert_array_equal(a.angle, b.angle)
 
