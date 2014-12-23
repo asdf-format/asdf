@@ -45,12 +45,13 @@ def assert_tree_match(old_tree, new_tree, funcname='assert_equal'):
 
 
 def assert_roundtrip_tree(
-        tree, tmpdir, asdf_check_func=None, raw_yaml_check_func=None):
+        tree, tmpdir, asdf_check_func=None, raw_yaml_check_func=None,
+        write_options={}):
     fname = str(tmpdir.join('test.asdf'))
 
     # First, test writing/reading a BytesIO buffer
     buff = io.BytesIO()
-    AsdfFile(tree).write_to(buff)
+    AsdfFile(tree).write_to(buff, **write_options)
     assert not buff.closed
     buff.seek(0)
     ff = AsdfFile.read(buff, mode='rw')
@@ -71,7 +72,7 @@ def assert_roundtrip_tree(
 
     # Then, test writing/reading to a real file
     with AsdfFile(tree) as ff:
-        ff.write_to(fname)
+        ff.write_to(fname, **write_options)
     with AsdfFile.read(fname, mode='rw') as ff:
         assert_tree_match(tree, ff.tree)
         if asdf_check_func:

@@ -10,8 +10,9 @@ from numpy import ma
 from astropy.extern import six
 
 from ...asdftypes import AsdfType
-from ... import yamlutil
+from ... import treeutil
 from ... import util
+from ... import yamlutil
 
 
 _datatype_names = {
@@ -35,6 +36,16 @@ _string_datatype_names = {
     'ascii': 'S',
     'ucs4': 'U'
 }
+
+
+def recursive_tolist(array):
+    def converter(node):
+        if isinstance(node, np.ndarray):
+            return recursive_tolist(node.tolist())
+        elif isinstance(node, tuple):
+            return list(node)
+        return node
+    return treeutil.walk_and_modify(array, converter)
 
 
 def asdf_byteorder_to_numpy_byteorder(byteorder):
@@ -161,21 +172,22 @@ def inline_data_asarray(inline, dtype):
     return np.asarray(inline, dtype=dtype)
 
 
-def _numpy_array_to_list(array):
+def numpy_array_to_list(array):
     # Convert byte string arrays to unicode string arrays, since YAML
     # doesn't handle the former.  This just assumes they are Latin-1.
-    if array.dtype.char == 'S':
-        l = array.astype('U').tolist()
-    else:
-        l = array.tolist()
-
     def tolist(x):
+        if isinstance(x, np.ndarray):
+            if x.dtype.char == 'S':
+                x = x.astype('U').tolist()
+            else:
+                x = x.tolist()
+
         if isinstance(x, (list, tuple)):
             return [tolist(y) for y in x]
         else:
             return x
 
-    return tolist(l)
+    return tolist(array)
 
 
 class NDArrayType(AsdfType):
@@ -369,7 +381,7 @@ class NDArrayType(AsdfType):
             dtype, include_byteorder=(block.array_storage != 'inline'))
 
         if block.array_storage == 'inline':
-            listdata = _numpy_array_to_list(data)
+            listdata = numpy_array_to_list(data)
             result['data'] = yamlutil.custom_tree_to_tagged_tree(
                 listdata, ctx)
             result['datatype'] = dtype
