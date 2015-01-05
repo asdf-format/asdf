@@ -349,7 +349,7 @@ class NDArrayType(AsdfType):
 
     @classmethod
     def to_tree(cls, data, ctx):
-        base = util.get_array_base(data)
+        base, last_base = util.get_array_base(data)
         block = ctx.blocks.find_or_create_block_for_array(data)
         shape = data.shape
         dtype = data.dtype

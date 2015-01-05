@@ -45,10 +45,11 @@ def get_array_base(arr):
     For a given Numpy array, finds the base array that "owns" the
     actual data.
     """
-    base = arr
+    last_base = base = arr
     while isinstance(base.base, np.ndarray):
+        last_base = base
         base = base.base
-    return base
+    return base, last_base
 
 
 def get_base_uri(uri):

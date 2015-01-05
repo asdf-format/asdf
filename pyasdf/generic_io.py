@@ -609,7 +609,7 @@ class InputStream(GenericFile):
     """
     Handles an input stream, such as stdin.
     """
-    def __init__(self, fd, mode, close=False, uri=None):
+    def __init__(self, fd, mode='r', close=False, uri=None):
         super(InputStream, self).__init__(fd, mode, close=close, uri=uri)
         self._fd = fd
         self._buffer = b''

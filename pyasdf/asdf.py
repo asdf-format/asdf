@@ -276,6 +276,34 @@ class AsdfFile(versioning.VersionedMixin):
         """
         return self.blocks[arr].array_storage
 
+    def set_array_encoding(self, arr, encoding):
+        """
+        Set the encoding for the block that stores the given array
+        data.  Has no effect on inline blocks.
+
+        Parameters
+        ----------
+        arr : numpy.ndarray
+            The array to set.  If multiple views of the array are in
+            the tree, only the most recent block type setting will be
+            used, since all views share a single block.
+
+        encoding : str, list of str
+            A list of supported encoding names, or [] for
+            no encoding.
+        """
+        self.blocks[arr].encoding = encoding
+
+    def get_array_encoding(self, arr):
+        """
+        Get the list of encodings for the given array data.
+
+        Parameters
+        ----------
+        arr : numpy.ndarray
+        """
+        return self.blocks[arr].encoding
+
     @classmethod
     def _parse_header_line(cls, line):
         """
