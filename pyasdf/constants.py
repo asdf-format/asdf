@@ -22,3 +22,4 @@ STSCI_SCHEMA_URI_BASE = 'http://stsci.edu/schemas/'
 
 
 BLOCK_FLAG_STREAMED = 0x1
+BLOCK_FLAG_ENCODED = 0x2

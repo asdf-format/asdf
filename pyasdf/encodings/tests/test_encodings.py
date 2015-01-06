@@ -3,6 +3,7 @@
 
 from __future__ import absolute_import, division, unicode_literals, print_function
 
+import copy
 import io
 import os
 
@@ -26,9 +27,11 @@ def _get_large_tree():
 
 
 def _get_sparse_tree():
+    np.random.seed(0)
     arr = np.zeros((128, 128))
     for x, y, z in np.random.rand(64, 3):
         arr[int(x*127), int(y*127)] = z
+    arr[0, 0] = 5.0
     tree = {'science_data': arr}
     return tree
 
@@ -77,9 +80,6 @@ def test_invalid_encoding():
         ff.set_array_encoding(tree['science_data'], ['foo'])
 
     with pytest.raises(ValueError):
-        ff.set_array_encoding(tree['science_data'], ['zlib'] * 17)
-
-    with pytest.raises(ValueError):
         ff.set_array_encoding(tree['science_data'], ['zlib', 'sparse'])
 
     ff.set_array_storage(tree['science_data'], 'streamed')
@@ -105,34 +105,30 @@ def test_triple_zlib(tmpdir):
     _roundtrip(tmpdir, tree, ['zlib', 'zlib', 'zlib'])
 
 
-def test_sparse(tmpdir):
-    tree = _get_sparse_tree()
-
-    _roundtrip(tmpdir, tree, ['sparse'])
-
-
-def test_sparse_zlib(tmpdir):
-    tree = _get_sparse_tree()
-
-    _roundtrip(tmpdir, tree, ['sparse', 'zlib'])
-
-
 def test_update_zlib(tmpdir):
     tree = _get_sparse_tree()
+    tree['science_data2'] = copy.copy(tree['science_data'])
 
     tmpfile = os.path.join(str(tmpdir), 'test.asdf')
 
     with asdf.AsdfFile(tree) as ff:
         ff.set_array_encoding(tree['science_data'], ['zlib'])
         ff.write_to(tmpfile)
-        ff.tree['science_data'] *= 2
+        ff.tree['science_data'] += 2
         ff.update()
 
     with asdf.AsdfFile().read(tmpfile) as ff:
         assert_array_equal(tree['science_data'], ff.tree['science_data'])
+        assert_array_equal(tree['science_data2'], ff.tree['science_data2'])
 
 
-def test_sparse_double_zlib(tmpdir):
+def test_tiling(tmpdir):
     tree = _get_sparse_tree()
 
-    _roundtrip(tmpdir, tree, ['sparse', 'zlib', 'zlib'])
+    _roundtrip(tmpdir, tree, [('tile', {'shape': (2, 2)})])
+
+
+def test_tiling_zlib(tmpdir):
+    tree = _get_sparse_tree()
+
+    _roundtrip(tmpdir, tree, [('tile', {'shape': (8, 8)}), 'zlib'])

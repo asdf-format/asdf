@@ -51,6 +51,10 @@ def yaml_to_base_type(node, loader):
             type(node)))
 
 
+class BasicDumper(yaml.SafeDumper):
+    pass
+
+
 class AsdfDumper(yaml.SafeDumper):
     """
     A specialized YAML dumper that understands "tagged basic Python
@@ -120,6 +124,10 @@ def represent_scalar(dumper, value):
 AsdfDumper.add_representer(tagged.TaggedList, represent_sequence)
 AsdfDumper.add_representer(tagged.TaggedDict, represent_mapping)
 AsdfDumper.add_representer(tagged.TaggedString, represent_scalar)
+
+
+class BasicLoader(yaml.SafeLoader):
+    pass
 
 
 class AsdfLoader(yaml.SafeLoader):
@@ -200,8 +208,12 @@ if six.PY2:
     # than !!python/unicode. See http://pyyaml.org/ticket/11
     def _unicode_representer(dumper, value):
         return dumper.represent_scalar("tag:yaml.org,2002:str", value)
-    AsdfDumper.add_representer(unicode, _unicode_representer)
 
+    BasicDumper.add_representer(unicode, _unicode_representer)
+    BasicLoader.add_constructor('tag:yaml.org,2002:str',
+                                BasicLoader.construct_scalar)
+
+    AsdfDumper.add_representer(unicode, _unicode_representer)
     AsdfLoader.add_constructor('tag:yaml.org,2002:str',
                                AsdfLoader.construct_scalar)
 
@@ -329,3 +341,35 @@ def dump_tree(tree, fd, ctx):
         allow_unicode=True,
         encoding='utf-8',
         tags=tags)
+
+
+def load(yaml_content):
+    """
+    Load YAML, returning a tree of objects.  This is a fairly thin
+    wrapper around pyyaml just to by cross-Python-version consistent.
+
+    Parameters
+    ----------
+    yaml_content : bytes
+        The raw serialized YAML content.
+    """
+    return yaml.load(yaml_content, Loader=BasicLoader)
+
+
+def dump(tree, fd):
+    """
+    Dump a tree of objects to YAML.
+
+    Parameters
+    ----------
+    tree : object
+        Tree of objects, possibly containing custom data types.
+
+    fd : pyasdf.generic_io.GenericFile
+        A file object to dump the serialized YAML to.
+    """
+    yaml.dump_all(
+        [tree], stream=fd, Dumper=BasicDumper,
+        explicit_start=True, explicit_end=True,
+        allow_unicode=True,
+        encoding='utf-8')

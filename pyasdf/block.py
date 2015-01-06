@@ -5,6 +5,7 @@ from __future__ import absolute_import, division, unicode_literals, print_functi
 
 from collections import namedtuple
 import copy
+import io
 import os
 import struct
 import weakref
@@ -426,7 +427,7 @@ class Block(object):
     Instead, should only be created through the `BlockManager`.
     """
 
-    _header_fmt = b'>IQQQ16s'
+    _header_fmt = b'>IQQQQ'
     _header_fmt_size = struct.calcsize(_header_fmt)
 
     def __init__(self, data=None, uri=None, array_storage='internal',
@@ -441,7 +442,8 @@ class Block(object):
         self._fd = None
         self._header_size = self._header_fmt_size
         self._offset = None
-        self._encoding = b''
+        self._has_encoding = False
+        self._encoding = []
         self._memmapped = False
 
         self.update_size()
@@ -492,29 +494,30 @@ class Block(object):
                 "'streamed' or 'inline'")
         self._array_storage = typename
         if typename == 'streamed':
-            del self.encoding
+            self.encoding = []
 
     @property
     def encoding(self):
-        return encodings.codes_to_names(self._encoding)
+        return self._encoding
 
     @encoding.setter
     def encoding(self, encoding):
         if encoding is None:
-            encoding = b''
-        else:
-            encoding = encodings.validate_encoding(encoding)
-            encoding = encodings.names_to_codes(encoding)
+            encoding = []
+        encoding = encodings.validate_encoding(encoding)
         if len(encoding) and self.array_storage == 'streamed':
             raise ValueError("Can not assign encoding to streamed block")
         self._encoding = encoding
+        if len(self._encoding):
+            self._has_encoding = True
 
     @encoding.deleter
     def encoding(self):
-        self._encoding = b''
+        self._encoding = []
+        self._has_encoding = False
 
     def has_encoding(self):
-        return self._encoding != b''
+        return self._has_encoding
 
     def _get_encodable_array(self):
         # In order to support encodings that are aware of the shape of
@@ -526,8 +529,7 @@ class Block(object):
             if (primary_array is not None and
                 primary_array.nbytes == self._data.nbytes):
                 return primary_array
-        else:
-            return self._data
+        return self._data
 
     def update_size(self):
         """
@@ -536,16 +538,17 @@ class Block(object):
         the file, otherwise the work is redundant.
         """
         if self._data is not None:
+            if six.PY2:
+                self._mem_size = len(self._data.data)
+            elif six.PY3:
+                self._mem_size = self._data.data.nbytes
             if not self.has_encoding():
-                if six.PY2:
-                    self._size = len(self._data.data)
-                elif six.PY3:
-                    self._size = self._data.data.nbytes
+                self._size = self._mem_size
             else:
-                self._size = encodings.encoded_length(
+                self._size = encodings.encoded_block_length(
                     self._get_encodable_array(), self.encoding)
         else:
-            self._size = 0
+            self._mem_size = self._size = 0
 
     def read(self, fd, past_magic=False):
         """
@@ -589,17 +592,24 @@ class Block(object):
         header_size, = struct.unpack(b'>H', buff)
         if header_size < self._header_fmt_size:
             raise ValueError(
-                "Header size must be > {0}".format(self._header_fmt_size))
+                "Header size must be >= {0}".format(self._header_fmt_size))
 
         buff = fd.read(header_size)
-        (flags, allocated_size, used_size, checksum, encoding) = \
+        (flags, allocated_size, used_size, mem_size, checksum) = \
             struct.unpack_from(self._header_fmt, buff[:self._header_fmt_size])
 
-        self._flags = flags
-        self._encoding = encoding.rstrip(b'\0')
+        if (not flags & (
+                constants.BLOCK_FLAG_STREAMED | constants.BLOCK_FLAG_ENCODED)
+            and used_size != mem_size):
+            raise ValueError(
+                "Used size and memory size must be equal when no encoding is "
+                "specified.")
 
-        if flags & constants.BLOCK_FLAG_STREAMED and self.has_encoding():
+        if ((flags & constants.BLOCK_FLAG_STREAMED) and
+            (flags & constants.BLOCK_FLAG_ENCODED)):
             raise ValueError("Encoding set on streamed block")
+
+        self._has_encoding = (flags & constants.BLOCK_FLAG_ENCODED) != 0
 
         if fd.seekable():
             # If the file is seekable, we can delay reading the actual
@@ -611,34 +621,36 @@ class Block(object):
                 # Support streaming blocks
                 fd.fast_forward(-1)
                 self._array_storage = 'streamed'
-                self._size = self._allocated = (fd.tell() - self.data_offset) + 1
+                self._mem_size = self._size = self._allocated = (
+                    fd.tell() - self.data_offset) + 1
             else:
                 fd.fast_forward(allocated_size)
                 self._allocated = allocated_size
                 self._size = used_size
+                self._mem_size = mem_size
         else:
             # If the file is a stream, we need to get the data now.
             if flags & constants.BLOCK_FLAG_STREAMED:
                 # Support streaming blocks
                 self._array_storage = 'streamed'
                 self._data = fd.read_into_array(-1)
-                self._size = self._allocated = len(self._data)
+                self._mem_size = self._size = self._allocated = len(self._data)
             else:
+                self._mem_size = mem_size
                 self._size = used_size
                 self._allocated = allocated_size
-                self._data = self._read_data(fd, used_size, self._encoding)
+                self._data, self.encoding = self._read_data(
+                    fd, used_size, mem_size, self.has_encoding())
                 fd.fast_forward(allocated_size - used_size)
             fd.close()
 
         return self
 
-    def _read_data(self, fd, size, encoding):
-        if encoding == b'':
-            return fd.read_into_array(size)
+    def _read_data(self, fd, used_size, mem_size, has_encoding):
+        if not has_encoding:
+            return fd.read_into_array(used_size), []
         else:
-            encoding = encodings.codes_to_names(encoding)
-            encoding = encodings.validate_encoding(encoding)
-            return encodings.decode(fd, size, encoding)
+            return encodings.decode_block(fd, used_size, mem_size)
 
     def write(self, fd):
         """
@@ -648,30 +660,35 @@ class Block(object):
             self._header_size = self._header_fmt_size
 
             flags = 0
+            if self.has_encoding():
+                flags |= constants.BLOCK_FLAG_ENCODED
             if self._array_storage == 'streamed':
                 flags |= constants.BLOCK_FLAG_STREAMED
+                mem_size = 0
             elif self._data is not None:
                 if not fd.seekable() and self.has_encoding():
-                    buff = encodings.encode_to_string(
-                        self._get_encodable_array(), self.encoding)
-                    self.allocated = self._size = len(buff)
+                    buff = io.BytesIO()
+                    encodings.encode_block(
+                        buff, self._get_encodable_array(), self.encoding)
+                    self.allocated = self._size = buff.tell()
+                mem_size = self._get_encodable_array().nbytes
 
             fd.write(constants.BLOCK_MAGIC)
             fd.write(struct.pack(b'>H', self._header_size))
             fd.write(struct.pack(
                 self._header_fmt, flags,
-                self.allocated, self._size, 0, self._encoding))
+                self.allocated, self._size, mem_size, 0))
 
             if self._data is not None:
                 if self.has_encoding():
                     if not fd.seekable():
-                        fd.write(buff)
+                        fd.write(buff.getvalue())
                     else:
                         # If we can seek in the file, write directly
                         # to it, then go back and write the resulting
                         # size in the block header.
                         start = fd.tell()
-                        encodings.encode(
+                        encodings.encode_block(
                             fd, self._get_encodable_array(), self.encoding)
                         end = fd.tell()
                         self.allocated = self._size = end - start
@@ -703,8 +720,9 @@ class Block(object):
                 curpos = self._fd.tell()
                 try:
                     self._fd.seek(self.data_offset)
-                    self._data = self._read_data(
-                        self._fd, self._size, self._encoding)
+                    self._data, self.encoding = self._read_data(
+                        self._fd, self._size, self._mem_size,
+                        self.has_encoding())
                 finally:
                     self._fd.seek(curpos)
 

@@ -10,35 +10,37 @@ import zlib
 from . import core
 
 
-class ZlibEncoding(core.BinaryEncoding):
+class ZlibEncoding(core.BinaryBinaryEncoding):
     name = 'zlib'
-    code = b'z'
 
     @classmethod
-    def get_encoder(cls):
+    def get_encoder(cls, next_encoder, args):
         class ZlibEncoder(object):
-            def __init__(self):
+            def __init__(self, next_enc):
                 self.compresser = zlib.compressobj()
+                self.next_enc = next_enc
 
             def encode(self, x):
-                return self.compresser.compress(x)
+                self.next_enc.encode(self.compresser.compress(x))
 
             def flush(self):
-                return self.compresser.flush()
+                self.next_enc.encode(self.compresser.flush())
+                self.next_enc.flush()
 
-        return ZlibEncoder()
+        return ZlibEncoder(next_encoder)
 
     @classmethod
-    def get_decoder(cls):
+    def get_decoder(cls, next_decoder, args):
         class ZlibDecoder(object):
-            def __init__(self):
+            def __init__(self, next_dec):
                 self.decompresser = zlib.decompressobj()
-                self._flushed = False
+                self.next_dec = next_dec
 
             def decode(self, x):
-                return self.decompresser.decompress(x)
+                self.next_dec.decode(self.decompresser.decompress(x))
 
             def flush(self):
-                return self.decompresser.flush()
+                self.next_dec.decode(self.decompresser.flush())
+                return self.next_dec.flush()
 
-        return ZlibDecoder()
+        return ZlibDecoder(next_decoder)
