@@ -160,16 +160,17 @@ class Encoding(object):
         encoder : encoder
             An object with the following methods:
 
-            - ``encode(x)``: For array-to-array encodings, ``x`` is an
-              array, and a new encoded array must be passed to
-              ``next_encoder.encode()``.  For array-to-binary
-              encodings, ``x`` is an array and a `bytes` object
-              containing the encoding of that array must be passed to
-              ``next_encoder.encode()``.  For binary-to-binary
-              encodings, ``x`` is a `bytes` object and an encoded
-              `bytes` object must be passed to
-              ``next_encoder.encode()``.  When passing along `bytes`
-              object, the stream may be passed in chunks.
+            - ``encode(x)``:
+              - For array-to-array encodings, ``x`` is an array, and a
+                new encoded array must be passed to
+                ``next_encoder.encode()``.
+              - For array-to-binary encodings, ``x`` is an array and a
+                `bytes` object containing the encoding of that array
+                must be passed to ``next_encoder.encode()``.
+              - For binary-to-binary encodings, ``x`` is a `bytes`
+                object and an encoded `bytes` object must be passed to
+                ``next_encoder.encode()``.  When passing along `bytes`
+                object, the stream may be passed in chunks.
 
             - ``flush()``: Called when encoding is completed.  May
               pass along additional binary data to
@@ -196,16 +197,18 @@ class Encoding(object):
         decoder : decoder
             An object with the following methods:
 
-            - ``decode(x)``: For array-to-array encodings, ``x`` is an
-              array, and a new encoded array must be passed to
-              ``next_encoder.decode()``.  For array-to-binary
-              encodings, ``x`` is a `bytes` object, that may represent
-              part of the array.  The array should be built from these
-              parts in ``decode(x)`` and then returned from
-              ``flush()``.  For binary-to-binary encodings, ``x`` is a
-              `bytes` object and an decoded `bytes` object must be
-              passed to ``next_encoder.decode()``.  When passing along
-              `bytes` object, the stream may be passed in chunks.
+            - ``decode(x)``:
+              - For array-to-array encodings, ``x`` is an array, and a
+                new encoded array must be passed to
+                ``next_encoder.decode()``.
+              - For array-to-binary encodings, ``x`` is a `bytes`
+                object, that may represent part of the array.  The
+                array should be built from these parts in
+                ``decode(x)`` and then returned from ``flush()``.
+              - For binary-to-binary encodings, ``x`` is a `bytes`
+                object and an decoded `bytes` object must be passed to
+                ``next_encoder.decode()``.  When passing along `bytes`
+                object, the stream may be passed in chunks.
 
             - ``flush()``: Called when decoding is completed, and must
               return a completed array, usually as the result of
