@@ -70,12 +70,15 @@ class TilingEncoding(core.ArrayArrayEncoding):
             def __init__(self, next_enc):
                 self.next_enc = next_enc
 
-                self.tile = args.get('shape', ())
+                self.tile_size = args.get('shape', ())
 
             def encode(self, x):
-                ntiles = _get_n_tiles(x, self.tile)
-                tiled = np.empty([ntiles] + list(self.tile), x.dtype)
-                for i, subarray in enumerate(_iter_tiles(x, self.tile)):
+                ntiles = _get_n_tiles(x, self.tile_size)
+                tiled = np.empty([ntiles] + list(self.tile_size), x.dtype)
+                for i, subarray in enumerate(_iter_tiles(x, self.tile_size)):
+                    if subarray.shape != self.tile_size:
+                        subarray = subarray.copy()
+                        subarray.resize(self.tile_size)
                     tiled[i][...] = subarray
                 self.next_enc.encode(tiled)
 
@@ -90,17 +93,25 @@ class TilingEncoding(core.ArrayArrayEncoding):
             def __init__(self, next_dec):
                 self.next_dec = next_dec
 
-                self.tile = tuple(args.get('shape', ()))
                 self.item_size = args['item_size']
+                self.tile_shape = tuple(args.get('shape', []))
                 self.original_shape = tuple(
                     args['original_shape'] + [self.item_size])
 
             def decode(self, x):
                 untiled = np.empty(self.original_shape, np.uint8)
-                tile_size = np.prod(self.tile) * self.item_size
+                tile_size = np.prod(self.tile_shape) * self.item_size
+                full_tile_shape = tuple(list(self.tile_shape) + [self.item_size])
+
                 index = 0
-                for subarray in _iter_tiles(untiled, self.tile):
-                    subarray.flat[...] = x[index:index+tile_size]
+                for subarray in _iter_tiles(untiled, self.tile_shape):
+                    if subarray.shape != full_tile_shape:
+                        tmp = np.empty(full_tile_shape, np.uint8)
+                        tmp.flat[...] = x[index:index+tile_size]
+                        s = tuple(slice(0, x) for x in subarray.shape)
+                        subarray.flat[...] = tmp[s].flat
+                    else:
+                        subarray.flat[...] = x[index:index+tile_size]
                     index += tile_size
                 self.next_dec.decode(untiled)
 

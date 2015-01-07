@@ -128,6 +128,12 @@ def test_tiling(tmpdir):
     _roundtrip(tmpdir, tree, [('tile', {'shape': (2, 2)})])
 
 
+def test_tiling_non_multiple(tmpdir):
+    tree = _get_sparse_tree()
+
+    _roundtrip(tmpdir, tree, [('tile', {'shape': (5, 5)})])
+
+
 def test_tiling_zlib(tmpdir):
     tree = _get_sparse_tree()
 
