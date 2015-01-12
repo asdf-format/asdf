@@ -5,13 +5,14 @@ from __future__ import absolute_import, division, unicode_literals, print_functi
 
 
 from astropy import modeling
+from astropy.modeling import mappings
 
 from ....tests import helpers
 
 
 def test_transforms(tmpdir):
     tree = {
-        'identity': modeling.Identity(2)
+        'identity': mappings.Identity(2)
     }
 
     helpers.assert_roundtrip_tree(tree, tmpdir)

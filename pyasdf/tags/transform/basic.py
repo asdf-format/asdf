@@ -4,6 +4,7 @@
 from __future__ import absolute_import, division, unicode_literals, print_function
 
 from astropy import modeling
+from astropy.modeling import mappings
 
 from ...asdftypes import AsdfType
 from ... import yamlutil
@@ -48,11 +49,11 @@ class TransformType(AsdfType):
 
 class IdentityType(TransformType):
     name = "transform/identity"
-    types = [modeling.Identity]
+    types = [mappings.Identity]
 
     @classmethod
     def from_tree_transform(cls, node, ctx):
-        return modeling.Identity(node.get('n_dims', 1))
+        return mappings.Identity(node.get('n_dims', 1))
 
     @classmethod
     def to_tree_transform(cls, data, ctx):
@@ -64,13 +65,13 @@ class IdentityType(TransformType):
     @classmethod
     def assert_equal(cls, a, b):
         # TODO: If models become comparable themselves, remove this.
-        assert (isinstance(a, modeling.Identity) and
-                isinstance(b, modeling.Identity) and
+        assert (isinstance(a, mappings.Identity) and
+                isinstance(b, mappings.Identity) and
                 a.n_inputs == b.n_inputs)
 
 
 # TODO: This is just here for bootstrapping and will go away eventually
-class GenericModel(modeling.Mapping):
+class GenericModel(mappings.Mapping):
     def __init__(self, n_inputs, n_outputs):
         mapping = tuple(range(n_inputs))
         super(GenericModel, self).__init__(mapping)
