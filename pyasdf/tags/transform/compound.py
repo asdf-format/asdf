@@ -31,7 +31,7 @@ _tag_to_method_mapping = {
     'add'         : '__add__',
     'subtract'    : '__sub__',
     'multiply'    : '__mul__',
-    'divide'      : '__div__',
+    'divide'      : '__truediv__',
     'power'       : '__pow__',
     'concatenate' : '__or__',
     'join'        : '__and__'
