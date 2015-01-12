@@ -17,29 +17,36 @@ __all__ = ['CompoundType']
 
 
 _operator_to_tag_mapping = {
-    '+': 'add',
-    '-': 'subtract',
-    '*': 'multiply',
-    '/': 'divide',
-    '**': 'power',
-    '|': 'concatenate',
-    '&': 'join'
+    '+'  : 'add',
+    '-'  : 'subtract',
+    '*'  : 'multiply',
+    '/'  : 'divide',
+    '**' : 'power',
+    '|'  : 'concatenate',
+    '&'  : 'join'
 }
 
 
-_tag_to_operator_mapping = dict(
-    (v, k) for (k, v) in _operator_to_tag_mapping.items())
+_tag_to_method_mapping = {
+    'add'         : '__add__',
+    'subtract'    : '__sub__',
+    'multiply'    : '__mul__',
+    'divide'      : '__div__',
+    'power'       : '__pow__',
+    'concatenate' : '__or__',
+    'join'        : '__and__'
+}
 
 
 class CompoundType(TransformType):
-    name = ['transform/' + x for x in _tag_to_operator_mapping.keys()]
+    name = ['transform/' + x for x in _tag_to_method_mapping.keys()]
     types = [_CompoundModel]
 
     @classmethod
     def from_tree_tagged(cls, node, ctx):
         tag = node.tag[node.tag.rfind('/')+1:]
 
-        oper = _tag_to_operator_mapping[tag]
+        oper = _tag_to_method_mapping[tag]
         left = yamlutil.tagged_tree_to_custom_tree(
             node['forward'][0], ctx)
         if not isinstance(left, modeling.Model):
@@ -50,7 +57,7 @@ class CompoundType(TransformType):
         if not isinstance(right, modeling.Model):
             raise TypeError("Unknown model type '{0}'".format(
                 node['forward'][1].tag))
-        model = _CompoundModelMeta._from_operator(oper, left, right)
+        model = getattr(left, oper)(right)
 
         cls._assign_inverse(model, node, ctx)
         return model
