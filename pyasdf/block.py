@@ -253,7 +253,7 @@ class BlockManager(object):
             else:
                 del block._used
 
-    def finalize(self, ctx, exploded=False):
+    def finalize(self, ctx, all_array_storage, all_array_encoding):
         """
         At this point, we have a complete set of blocks for the file,
         with no extras.
@@ -265,12 +265,13 @@ class BlockManager(object):
 
         self._find_used_blocks(ctx.tree)
 
-        if exploded is True:
-            for block in self.internal_blocks:
-                block.array_storage = 'external'
-        elif exploded is False:
-            for block in self.external_blocks:
-                block.array_storage = 'internal'
+        if all_array_storage is not None:
+            for block in self.blocks:
+                block.array_storage = all_array_storage
+
+        if all_array_encoding is not None:
+            for block in self.blocks:
+                block.encoding = all_array_encoding
 
         count = 0
         for block in self._blocks:
@@ -597,6 +598,9 @@ class Block(object):
         buff = fd.read(header_size)
         (flags, allocated_size, used_size, mem_size, checksum) = \
             struct.unpack_from(self._header_fmt, buff[:self._header_fmt_size])
+
+        # This is used by the documentation system, but nowhere else.
+        self._flags = flags
 
         if (not flags & (
                 constants.BLOCK_FLAG_STREAMED | constants.BLOCK_FLAG_ENCODED)

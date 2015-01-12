@@ -289,8 +289,7 @@ class AsdfFile(versioning.VersionedMixin):
             used, since all views share a single block.
 
         encoding : str, list of str
-            A list of supported encoding names, or [] for
-            no encoding.
+            An ASDF encoding chain specifier.
         """
         self.blocks[arr].encoding = encoding
 
@@ -412,17 +411,13 @@ class AsdfFile(versioning.VersionedMixin):
                 fd.tell(), pad_blocks, fd.block_size)
             fd.fast_forward(padding)
 
-    def _pre_write(self, fd, exploded):
-        if exploded and fd.uri is None:
-            raise ValueError(
-                "Can not write an exploded file without knowing its URI.")
-
+    def _pre_write(self, fd, all_array_storage, all_array_encoding):
         if len(self._tree):
             self.run_hook('pre_write')
 
         # This is where we'd do some more sophisticated block
         # reorganization, if necessary
-        self._blocks.finalize(self, exploded=exploded)
+        self._blocks.finalize(self, all_array_storage, all_array_encoding)
 
     def _serial_write(self, fd, pad_blocks):
         try:
@@ -444,16 +439,32 @@ class AsdfFile(versioning.VersionedMixin):
         if len(self._tree):
             self.run_hook('post_write')
 
-    def update(self, exploded=None, pad_blocks=False):
+    def update(self, all_array_storage=None, all_array_encoding=None,
+               pad_blocks=False):
         """
         Update the file on disk in place.
 
         Parameters
         ----------
-        exploded : bool, optional
+        all_array_storage : string, optional
+            If provided, override the array storage type of all blocks
+            in the file immediately before writing.  Must be one of:
+
+            - ``internal``: The default.  The array data will be
+              stored in a binary block in the same ASDF file.
+
+            - ``external``: Store the data in a binary block in a
+              separate ASDF file.
+
+            - ``inline``: Store the data as YAML inline in the tree.
+
             If `True`, write each data block in a separate ASDF file.
             If `False`, write each data block in this ASDF file.  If
             not provided, leave the block types as they are.
+
+        all_array_encoding : list, optional
+            If provided, must be an ASDF encoding chain specifier that
+            will be applied to all blocks immediately before writing.
 
         pad_blocks : float or bool, optional
             Add extra space between blocks to allow for updating of
@@ -470,17 +481,19 @@ class AsdfFile(versioning.VersionedMixin):
         if not fd.writable():
             raise IOError(
                 "Can not update, since associated file is read-only")
-        if exploded:
+        if all_array_storage == 'external':
             # If the file is fully exploded, there's no benefit to
             # update, so just use write_to()
-            self.write_to(fd, exploded=exploded)
+            self.write_to(fd,
+                          all_array_storage=all_array_storage,
+                          all_array_encoding=all_array_encoding)
             fd.truncate(fd.tell())
             return
         if not fd.seekable():
             raise IOError(
                 "Can not update, since associated file is not seekable")
 
-        self._pre_write(fd, exploded)
+        self._pre_write(fd, all_array_storage, all_array_encoding)
 
         fd.seek(0)
 
@@ -524,7 +537,8 @@ class AsdfFile(versioning.VersionedMixin):
         self._random_write(fd, pad_blocks)
         fd.flush()
 
-    def write_to(self, fd, exploded=None, pad_blocks=False):
+    def write_to(self, fd, all_array_storage=None, all_array_encoding=None,
+                 pad_blocks=False):
         """
         Write the ASDF file to the given file-like object.
 
@@ -534,10 +548,25 @@ class AsdfFile(versioning.VersionedMixin):
             May be a string path to a file, or a Python file-like
             object.
 
-        exploded : bool, optional
+        all_array_storage : string, optional
+            If provided, override the array storage type of all blocks
+            in the file immediately before writing.  Must be one of:
+
+            - ``internal``: The default.  The array data will be
+              stored in a binary block in the same ASDF file.
+
+            - ``external``: Store the data in a binary block in a
+              separate ASDF file.
+
+            - ``inline``: Store the data as YAML inline in the tree.
+
             If `True`, write each data block in a separate ASDF file.
             If `False`, write each data block in this ASDF file.  If
             not provided, leave the block types as they are.
+
+        all_array_encoding : list, optional
+            If provided, must be an ASDF encoding chain specifier that
+            will be applied to all blocks immediately before writing.
 
         pad_blocks : float or bool, optional
             Add extra space between blocks to allow for updating of
@@ -550,7 +579,7 @@ class AsdfFile(versioning.VersionedMixin):
 
         self._fd = fd = generic_io.get_file(fd, mode='w')
 
-        self._pre_write(fd, exploded)
+        self._pre_write(fd, all_array_storage, all_array_encoding)
 
         self._serial_write(fd, pad_blocks)
         fd.flush()
