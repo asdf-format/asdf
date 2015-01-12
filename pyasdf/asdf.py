@@ -458,10 +458,6 @@ class AsdfFile(versioning.VersionedMixin):
 
             - ``inline``: Store the data as YAML inline in the tree.
 
-            If `True`, write each data block in a separate ASDF file.
-            If `False`, write each data block in this ASDF file.  If
-            not provided, leave the block types as they are.
-
         all_array_encoding : list, optional
             If provided, must be an ASDF encoding chain specifier that
             will be applied to all blocks immediately before writing.
@@ -559,10 +555,6 @@ class AsdfFile(versioning.VersionedMixin):
               separate ASDF file.
 
             - ``inline``: Store the data as YAML inline in the tree.
-
-            If `True`, write each data block in a separate ASDF file.
-            If `False`, write each data block in this ASDF file.  If
-            not provided, leave the block types as they are.
 
         all_array_encoding : list, optional
             If provided, must be an ASDF encoding chain specifier that
