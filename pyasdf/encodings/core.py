@@ -394,7 +394,7 @@ def encoded_block_length(array, encoding):
     """
     class SizingWriter(generic_io.OutputStream):
         def __init__(self):
-            super(SizingWriter, self).__init__(None)
+            super(SizingWriter, self).__init__(io.BytesIO())
             self.count = 0
 
         def write(self, b):
