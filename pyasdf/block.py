@@ -428,8 +428,13 @@ class Block(object):
     Instead, should only be created through the `BlockManager`.
     """
 
-    _header_fmt = b'>IQQQQ'
-    _header_fmt_size = struct.calcsize(_header_fmt)
+    _header = util.BinaryStruct([
+        ('flags', 'I'),
+        ('allocated_size', 'Q'),
+        ('used_size', 'Q'),
+        ('memory_size', 'Q'),
+        ('checksum', 'Q')
+    ])
 
     def __init__(self, data=None, uri=None, array_storage='internal',
                  primary_array=None):
@@ -441,7 +446,6 @@ class Block(object):
         self._array_storage = array_storage
 
         self._fd = None
-        self._header_size = self._header_fmt_size
         self._offset = None
         self._has_encoding = False
         self._encoding = []
@@ -473,7 +477,7 @@ class Block(object):
 
     @property
     def header_size(self):
-        return self._header_size + constants.BLOCK_HEADER_BOILERPLATE_SIZE
+        return self._header.size + constants.BLOCK_HEADER_BOILERPLATE_SIZE
 
     @property
     def data_offset(self):
@@ -591,29 +595,28 @@ class Block(object):
 
         buff = fd.read(2)
         header_size, = struct.unpack(b'>H', buff)
-        if header_size < self._header_fmt_size:
+        if header_size < self._header.size:
             raise ValueError(
-                "Header size must be >= {0}".format(self._header_fmt_size))
+                "Header size must be >= {0}".format(self._header.size))
 
         buff = fd.read(header_size)
-        (flags, allocated_size, used_size, mem_size, checksum) = \
-            struct.unpack_from(self._header_fmt, buff[:self._header_fmt_size])
+        header = self._header.unpack(buff)
 
         # This is used by the documentation system, but nowhere else.
-        self._flags = flags
+        self._flags = header['flags']
 
-        if (not flags & (
+        if (not header['flags'] & (
                 constants.BLOCK_FLAG_STREAMED | constants.BLOCK_FLAG_ENCODED)
-            and used_size != mem_size):
+            and header['used_size'] != header['memory_size']):
             raise ValueError(
                 "Used size and memory size must be equal when no encoding is "
                 "specified.")
 
-        if ((flags & constants.BLOCK_FLAG_STREAMED) and
-            (flags & constants.BLOCK_FLAG_ENCODED)):
+        if ((header['flags'] & constants.BLOCK_FLAG_STREAMED) and
+            (header['flags'] & constants.BLOCK_FLAG_ENCODED)):
             raise ValueError("Encoding set on streamed block")
 
-        self._has_encoding = (flags & constants.BLOCK_FLAG_ENCODED) != 0
+        self._has_encoding = (header['flags'] & constants.BLOCK_FLAG_ENCODED) != 0
 
         if fd.seekable():
             # If the file is seekable, we can delay reading the actual
@@ -621,31 +624,31 @@ class Block(object):
             self._fd = fd
             self._header_size = header_size
             self._offset = offset
-            if flags & constants.BLOCK_FLAG_STREAMED:
+            if header['flags'] & constants.BLOCK_FLAG_STREAMED:
                 # Support streaming blocks
                 fd.fast_forward(-1)
                 self._array_storage = 'streamed'
                 self._mem_size = self._size = self._allocated = (
                     fd.tell() - self.data_offset) + 1
             else:
-                fd.fast_forward(allocated_size)
-                self._allocated = allocated_size
-                self._size = used_size
-                self._mem_size = mem_size
+                fd.fast_forward(header['allocated_size'])
+                self._allocated = header['allocated_size']
+                self._size = header['used_size']
+                self._mem_size = header['memory_size']
         else:
             # If the file is a stream, we need to get the data now.
-            if flags & constants.BLOCK_FLAG_STREAMED:
+            if header['flags'] & constants.BLOCK_FLAG_STREAMED:
                 # Support streaming blocks
                 self._array_storage = 'streamed'
                 self._data = fd.read_into_array(-1)
                 self._mem_size = self._size = self._allocated = len(self._data)
             else:
-                self._mem_size = mem_size
-                self._size = used_size
-                self._allocated = allocated_size
+                self._mem_size = header['memory_size']
+                self._size = header['used_size']
+                self._allocated = header['allocated_size']
                 self._data, self.encoding = self._read_data(
-                    fd, used_size, mem_size, self.has_encoding())
-                fd.fast_forward(allocated_size - used_size)
+                    fd, self._size, self._mem_size, self.has_encoding())
+                fd.fast_forward(self._allocated - self._size)
             fd.close()
 
         return self
@@ -661,7 +664,7 @@ class Block(object):
         Write an internal block to the given Python file-like object.
         """
         with generic_io.get_file(fd, 'w') as fd:
-            self._header_size = self._header_fmt_size
+            self._header_size = self._header.size
 
             flags = 0
             if self.has_encoding():
@@ -679,9 +682,10 @@ class Block(object):
 
             fd.write(constants.BLOCK_MAGIC)
             fd.write(struct.pack(b'>H', self._header_size))
-            fd.write(struct.pack(
-                self._header_fmt, flags,
-                self.allocated, self._size, mem_size, 0))
+            fd.write(self._header.pack(
+                flags=flags, allocated_size=self.allocated,
+                used_size=self._size, memory_size=mem_size,
+                checksum=0))
 
             if self._data is not None:
                 if self.has_encoding():
@@ -696,9 +700,11 @@ class Block(object):
                             fd, self._get_encodable_array(), self.encoding)
                         end = fd.tell()
                         self.allocated = self._size = end - start
-                        fd.seek(self.offset + 10)
-                        fd.write(struct.pack(
-                            b'>QQ', self.allocated, self._size))
+                        fd.seek(self.offset + 6)
+                        self._header.update(
+                            fd,
+                            allocated_size=self.allocated,
+                            used_size=self._size)
                         fd.seek(end)
                 else:
                     fd.write_array(self._data)
