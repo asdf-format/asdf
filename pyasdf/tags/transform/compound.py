@@ -4,7 +4,7 @@
 from __future__ import absolute_import, division, unicode_literals, print_function
 
 from astropy import modeling
-from astropy.modeling.core import _CompoundModel, _CompoundModelMeta
+from astropy.modeling.core import _CompoundModel
 
 from ... import tagged
 from ... import yamlutil
@@ -22,8 +22,8 @@ _operator_to_tag_mapping = {
     '*'  : 'multiply',
     '/'  : 'divide',
     '**' : 'power',
-    '|'  : 'concatenate',
-    '&'  : 'join'
+    '|'  : 'compose',
+    '&'  : 'concatenate'
 }
 
 
@@ -33,8 +33,8 @@ _tag_to_method_mapping = {
     'multiply'    : '__mul__',
     'divide'      : '__truediv__',
     'power'       : '__pow__',
-    'concatenate' : '__or__',
-    'join'        : '__and__'
+    'compose'     : '__or__',
+    'concatenate' : '__and__'
 }
 
 
