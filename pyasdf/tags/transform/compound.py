@@ -5,15 +5,16 @@ from __future__ import absolute_import, division, unicode_literals, print_functi
 
 from astropy import modeling
 from astropy.modeling.core import _CompoundModel
+from astropy.modeling.models import Mapping, Identity
 
 from ... import tagged
 from ... import yamlutil
 from ...tests.helpers import assert_tree_match
 
-from .basic import TransformType
+from .basic import TransformType, ConstantType
 
 
-__all__ = ['CompoundType']
+__all__ = ['CompoundType', 'RemapAxesType']
 
 
 _operator_to_tag_mapping = {
@@ -100,3 +101,35 @@ class CompoundType(TransformType):
         assert_tree_match(a._tree.left.value, b._tree.left.value)
         assert_tree_match(a._tree.right.value, b._tree.right.value)
         assert a._tree.value == b._tree.value
+
+
+class RemapAxesType(TransformType):
+    name = 'transform/remap_axes'
+    types = [Mapping]
+
+    @classmethod
+    def from_tree_transform(cls, node, ctx):
+        mapping = node['mapping']
+        n_inputs = node.get('n_inputs')
+        if all([isinstance(x, int) for x in mapping]):
+            return Mapping(mapping, n_inputs)
+
+        if n_inputs is None:
+            n_inputs = max([x for x in mapping if isinstance(x, int)]) + 1
+
+        transform = Identity(n_inputs)
+        new_mapping = []
+        i = n_inputs
+        for entry in mapping:
+            if isinstance(entry, int):
+                new_mapping.append(entry)
+            else:
+                new_mapping.append(i)
+                transform = transform & ConstantType.from_tree(
+                    {'value': entry.value}, ctx)
+                i += 1
+        return transform | Mapping(new_mapping)
+
+    @classmethod
+    def to_tree_transform(cls, model, ctx):
+        return {'mapping': model.mapping}
