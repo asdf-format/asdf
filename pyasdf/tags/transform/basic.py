@@ -5,11 +5,13 @@ from __future__ import absolute_import, division, unicode_literals, print_functi
 
 from astropy import modeling
 from astropy.modeling import mappings
+from astropy.modeling import functional_models
 
 from ...asdftypes import AsdfType
 from ... import yamlutil
 
-__all__ = ['TransformType', 'IdentityType', 'GenericModel', 'GenericType']
+__all__ = ['TransformType', 'IdentityType', 'ConstantType',
+           'GenericModel', 'GenericType']
 
 
 class TransformType(AsdfType):
@@ -68,6 +70,21 @@ class IdentityType(TransformType):
         assert (isinstance(a, mappings.Identity) and
                 isinstance(b, mappings.Identity) and
                 a.n_inputs == b.n_inputs)
+
+
+class ConstantType(TransformType):
+    name = "transform/constant"
+    types = [functional_models.Const1D]
+
+    @classmethod
+    def from_tree_transform(cls, node, ctx):
+        return functional_models.Const1D(node['value'])
+
+    @classmethod
+    def to_tree_transform(cls, data, ctx):
+        return {
+            'value': data.amplitude
+        }
 
 
 # TODO: This is just here for bootstrapping and will go away eventually
