@@ -28,7 +28,7 @@ class Stream(ndarray.NDArrayType):
 
     def __init__(self, shape, dtype, strides=None):
         self._shape = shape
-        self._dtype, self._byteorder = ndarray.numpy_dtype_to_asdf_dtype(dtype)
+        self._datatype, self._byteorder = ndarray.numpy_dtype_to_asdf_datatype(dtype)
         self._strides = strides
         self._array = None
 
@@ -51,7 +51,7 @@ class Stream(ndarray.NDArrayType):
         result = {}
         result['source'] = -1
         result['shape'] = ['*'] + data._shape
-        result['dtype'] = data._dtype
+        result['datatype'] = data._datatype
         result['byteorder'] = data._byteorder
         if data._strides is not None:
             result['strides'] = data._strides

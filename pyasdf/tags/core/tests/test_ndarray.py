@@ -76,7 +76,7 @@ def test_byteorder(tmpdir):
 def test_all_dtypes(tmpdir):
     tree = {}
     for byteorder in ('>', '<'):
-        for dtype in ndarray._dtype_names.values():
+        for dtype in ndarray._datatype_names.values():
             # Python 3 can't expose these dtypes in non-native byte
             # order, because it's using the new Python buffer
             # interface.
@@ -132,10 +132,10 @@ def test_table(tmpdir):
         tree = yaml.load(content)
 
         assert tree == {
-            'dtype': [
-                {'byteorder': 'big', 'dtype': 'int8', 'name': 'MINE'},
-                {'byteorder': 'little', 'dtype': 'float64', 'name': 'f1'},
-                {'byteorder': 'big', 'dtype': 'int32', 'name': 'arr', 'shape': [2]}
+            'datatype': [
+                {'byteorder': 'big', 'datatype': 'int8', 'name': 'MINE'},
+                {'byteorder': 'little', 'datatype': 'float64', 'name': 'f1'},
+                {'byteorder': 'big', 'datatype': 'int32', 'name': 'arr', 'shape': [2]}
                 ],
             'shape': [2],
             'source': 0,
@@ -158,11 +158,11 @@ def test_table_nested_fields(tmpdir):
         tree = yaml.load(content)
 
         assert tree == {
-            'dtype': [
-                {'dtype': 'int64', 'name': 'A', 'byteorder': 'little'},
-                {'dtype': [
-                    {'dtype': 'int64', 'name': 'C', 'byteorder': 'little'},
-                    {'dtype': 'int64', 'name': 'D', 'byteorder': 'little'}
+            'datatype': [
+                {'datatype': 'int64', 'name': 'A', 'byteorder': 'little'},
+                {'datatype': [
+                    {'datatype': 'int64', 'name': 'C', 'byteorder': 'little'},
+                    {'datatype': 'int64', 'name': 'D', 'byteorder': 'little'}
                 ], 'name': 'B', 'byteorder': 'big'}],
             'shape': [3],
             'source': 0,
@@ -272,7 +272,7 @@ def test_inline_string():
 def test_inline_structured():
     content = """
     arr: !core/ndarray
-        dtype: [['ascii', 4], uint16, uint16, ['ascii', 4]]
+        datatype: [['ascii', 4], uint16, uint16, ['ascii', 4]]
         data: [[M110, 110, 205, And],
                [ M31,  31, 224, And],
                [ M32,  32, 221, And],

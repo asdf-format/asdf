@@ -203,7 +203,7 @@ def test_property_order():
 
     last_index = 0
     for prop in property_order:
-        index = buff.getvalue().find(prop.encode('utf-8'))
+        index = buff.getvalue().find(prop.encode('utf-8') + b':')
         if index != -1:
             assert index > last_index
             last_index = index

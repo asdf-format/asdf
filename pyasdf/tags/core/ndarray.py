@@ -14,7 +14,7 @@ from ... import yamlutil
 from ... import util
 
 
-_dtype_names = {
+_datatype_names = {
     'int8': 'i1',
     'int16': 'i2',
     'int32': 'i4',
@@ -31,7 +31,7 @@ _dtype_names = {
 }
 
 
-_string_dtype_names = {
+_string_datatype_names = {
     'ascii': 'S',
     'ucs4': 'U'
 }
@@ -45,43 +45,43 @@ def asdf_byteorder_to_numpy_byteorder(byteorder):
     raise ValueError("Invalid ASDF byteorder '{0}'".format(byteorder))
 
 
-def asdf_dtype_to_numpy_dtype(dtype, byteorder):
-    if isinstance(dtype, six.text_type) and dtype in _dtype_names:
-        dtype = _dtype_names[dtype]
+def asdf_datatype_to_numpy_dtype(datatype, byteorder):
+    if isinstance(datatype, six.text_type) and datatype in _datatype_names:
+        datatype = _datatype_names[datatype]
         byteorder = asdf_byteorder_to_numpy_byteorder(byteorder)
-        return np.dtype(str(byteorder + dtype))
-    elif (isinstance(dtype, list) and
-          len(dtype) == 2 and
-          isinstance(dtype[0], six.text_type) and
-          isinstance(dtype[1], int) and
-          dtype[0] in _string_dtype_names):
-        length = dtype[1]
+        return np.dtype(str(byteorder + datatype))
+    elif (isinstance(datatype, list) and
+          len(datatype) == 2 and
+          isinstance(datatype[0], six.text_type) and
+          isinstance(datatype[1], int) and
+          datatype[0] in _string_datatype_names):
+        length = datatype[1]
         byteorder = asdf_byteorder_to_numpy_byteorder(byteorder)
-        dtype = str(byteorder) + str(_string_dtype_names[dtype[0]]) + str(length)
-        return np.dtype(dtype)
-    elif isinstance(dtype, dict):
-        if not 'dtype' in dtype:
-            raise ValueError("Field entry has no dtype: '{0}'".format(dtype))
-        name = dtype.get('name', '')
-        byteorder = dtype.get('byteorder', byteorder)
-        shape = dtype.get('shape')
-        dtype = asdf_dtype_to_numpy_dtype(dtype['dtype'], byteorder)
+        datatype = str(byteorder) + str(_string_datatype_names[datatype[0]]) + str(length)
+        return np.dtype(datatype)
+    elif isinstance(datatype, dict):
+        if 'datatype' not in datatype:
+            raise ValueError("Field entry has no datatype: '{0}'".format(datatype))
+        name = datatype.get('name', '')
+        byteorder = datatype.get('byteorder', byteorder)
+        shape = datatype.get('shape')
+        datatype = asdf_datatype_to_numpy_dtype(datatype['datatype'], byteorder)
         if shape is None:
-            return (str(name), dtype)
+            return (str(name), datatype)
         else:
-            return (str(name), dtype, tuple(shape))
-    elif isinstance(dtype, list):
-        dtype_list = []
-        for i, subdtype in enumerate(dtype):
-            np_dtype = asdf_dtype_to_numpy_dtype(subdtype, byteorder)
+            return (str(name), datatype, tuple(shape))
+    elif isinstance(datatype, list):
+        datatype_list = []
+        for i, subdatatype in enumerate(datatype):
+            np_dtype = asdf_datatype_to_numpy_dtype(subdatatype, byteorder)
             if isinstance(np_dtype, tuple):
-                dtype_list.append(np_dtype)
+                datatype_list.append(np_dtype)
             elif isinstance(np_dtype, np.dtype):
-                dtype_list.append((str(''), np_dtype))
+                datatype_list.append((str(''), np_dtype))
             else:
-                raise RuntimeError("Error parsing asdf dtype")
-        return np.dtype(dtype_list)
-    raise ValueError("Unknown dtype {0}".format(dtype))
+                raise RuntimeError("Error parsing asdf datatype")
+        return np.dtype(datatype_list)
+    raise ValueError("Unknown datatype {0}".format(datatype))
 
 
 def numpy_byteorder_to_asdf_byteorder(byteorder):
@@ -93,7 +93,7 @@ def numpy_byteorder_to_asdf_byteorder(byteorder):
         return 'big'
 
 
-def numpy_dtype_to_asdf_dtype(dtype):
+def numpy_dtype_to_asdf_datatype(dtype):
     dtype = np.dtype(dtype)
     if dtype.names is not None:
         fields = []
@@ -101,8 +101,8 @@ def numpy_dtype_to_asdf_dtype(dtype):
             field = dtype.fields[name][0]
             d = {}
             d['name'] = name
-            field_dtype, byteorder = numpy_dtype_to_asdf_dtype(field)
-            d['dtype'] = field_dtype
+            field_dtype, byteorder = numpy_dtype_to_asdf_datatype(field)
+            d['datatype'] = field_dtype
             d['byteorder'] = byteorder
             if field.shape:
                 d['shape'] = list(field.shape)
@@ -110,9 +110,9 @@ def numpy_dtype_to_asdf_dtype(dtype):
         return fields, numpy_byteorder_to_asdf_byteorder(dtype.byteorder)
 
     elif dtype.subdtype is not None:
-        return numpy_dtype_to_asdf_dtype(dtype.subdtype[0])
+        return numpy_dtype_to_asdf_datatype(dtype.subdtype[0])
 
-    elif dtype.name in _dtype_names:
+    elif dtype.name in _datatype_names:
         return dtype.name, numpy_byteorder_to_asdf_byteorder(dtype.byteorder)
 
     elif dtype.name == 'bool':
@@ -309,9 +309,9 @@ class NDArrayType(AsdfType):
                 byteorder = sys.byteorder
             else:
                 byteorder = node['byteorder']
-            if 'dtype' in node:
-                dtype = asdf_dtype_to_numpy_dtype(
-                    node['dtype'], byteorder)
+            if 'datatype' in node:
+                dtype = asdf_datatype_to_numpy_dtype(
+                    node['datatype'], byteorder)
             else:
                 dtype = None
             offset = node.get('offset', 0)
@@ -347,7 +347,7 @@ class NDArrayType(AsdfType):
         if block.array_storage == 'streamed':
             result['shape'][0] = '*'
 
-        dtype, byteorder = numpy_dtype_to_asdf_dtype(dtype)
+        dtype, byteorder = numpy_dtype_to_asdf_datatype(dtype)
 
         if block.array_storage == 'inline':
             # Convert byte string arrays to unicode string arrays,
@@ -359,14 +359,14 @@ class NDArrayType(AsdfType):
                 listdata = data.tolist()
             result['data'] = yamlutil.custom_tree_to_tagged_tree(
                 listdata, ctx)
-            result['dtype'] = dtype
+            result['datatype'] = dtype
         else:
             result['shape'] = list(shape)
             if block.array_storage == 'streamed':
                 result['shape'][0] = '*'
 
             result['source'] = ctx.blocks.get_source(block)
-            result['dtype'] = dtype
+            result['datatype'] = dtype
             result['byteorder'] = byteorder
 
             if offset > 0:
