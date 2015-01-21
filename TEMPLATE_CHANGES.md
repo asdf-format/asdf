@@ -5,7 +5,7 @@ be removed in affiliated packages.
 0.4.2 (untagged)
 ----------------
 
-- No changes yet
+- Use setuptools entry_points for command line scripts
 
 0.4.1 (2014-10-22)
 ------------------
