@@ -5,7 +5,13 @@ be removed in affiliated packages.
 0.4.2 (untagged)
 ----------------
 
-- No changes yet
+- Use setuptools entry_points for command line scripts
+
+- Included CHANGES.rst in MANIFEST.in.
+
+- Recursive include *.pyx, *.c, and *.pxd files in MANIFEST.in.
+
+- Global exclude *.pyc and *.o files in MANIFEST.in.
 
 0.4.1 (2014-10-22)
 ------------------
