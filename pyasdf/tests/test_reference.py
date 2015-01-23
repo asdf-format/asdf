@@ -80,7 +80,7 @@ def test_external_reference(tmpdir):
 
         assert_array_equal(ff.tree['science_data'], exttree['cool_stuff']['a'])
         assert len(ff._external_asdf_by_uri) == 1
-        with pytest.raises(ValueError):
+        with pytest.raises((ValueError, RuntimeError)):
             # Assignment destination is readonly
             ff.tree['science_data'][0] = 42
 
