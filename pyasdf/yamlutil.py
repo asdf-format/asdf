@@ -184,7 +184,7 @@ AsdfDumper.add_representer(OrderedDict, represent_ordereddict)
 # ----------------------------------------------------------------------
 # Handle numpy scalars
 
-for scalar_type in (np.float32, np.float64, np.float128):
+for scalar_type in (np.float32, np.float64, np.longdouble):
     AsdfDumper.add_representer(scalar_type, AsdfDumper.represent_float)
 
 for scalar_type in (np.int8, np.int16, np.int32, np.int64,
