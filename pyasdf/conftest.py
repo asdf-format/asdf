@@ -13,6 +13,15 @@ from astropy.tests.pytest_plugins import *
 ## exceptions
 enable_deprecations_as_exceptions()
 
+try:
+    PYTEST_HEADER_MODULES['jsonschema'] = 'jsonschema'
+    PYTEST_HEADER_MODULES['pyyaml'] = 'yaml'
+    del PYTEST_HEADER_MODULES['h5py']
+    del PYTEST_HEADER_MODULES['Matplotlib']
+    del PYTEST_HEADER_MODULES['Scipy']
+except NameError:  # needed to support Astropy < 1.0
+    pass
+
 
 import multiprocessing
 import os
