@@ -12,7 +12,7 @@ from ...asdftypes import AsdfType
 
 class ComplexType(AsdfType):
     name = 'core/complex'
-    types = [complex, np.complex, np.complex128, np.longcomplex, np.complex64]
+    types = [complex, np.complex, np.cfloat, np.cdouble, np.clongdouble]
 
     @classmethod
     def to_tree(cls, node, ctx):
