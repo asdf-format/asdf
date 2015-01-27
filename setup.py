@@ -117,6 +117,7 @@ setup(name=PACKAGENAME,
       scripts=scripts,
       requires=['astropy'],
       install_requires=[
+          'numpy>=1.5.1',
           'astropy>=0.3',
           'pyyaml>=3.10',
           'jsonschema>=2.3.0'],
