@@ -9,7 +9,6 @@ from astropy.modeling.models import Mapping, Identity
 
 from ... import tagged
 from ... import yamlutil
-from ...tests.helpers import assert_tree_match
 
 from .basic import TransformType, ConstantType
 
@@ -98,6 +97,7 @@ class CompoundType(TransformType):
     @classmethod
     def assert_equal(cls, a, b):
         # TODO: If models become comparable themselves, remove this.
+        from ...tests.helpers import assert_tree_match
         assert_tree_match(a._tree.left.value, b._tree.left.value)
         assert_tree_match(a._tree.right.value, b._tree.right.value)
         assert a._tree.value == b._tree.value
