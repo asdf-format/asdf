@@ -16,7 +16,6 @@ import yaml
 
 from ....tests import helpers
 from .... import asdf
-from .... import yamlutil
 
 from .. import ndarray
 

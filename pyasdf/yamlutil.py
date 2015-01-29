@@ -215,9 +215,7 @@ def custom_tree_to_tagged_tree(tree, ctx):
     def walker(node):
         tag = ctx.type_index.from_custom_type(type(node))
         if tag is not None:
-            node = tag.to_tree(node, ctx)
-            node = tagged.tag_object(tag.yaml_tag, node)
-            return node
+            return tag.to_tree_tagged(node, ctx)
         return node
 
     return treeutil.walk_and_modify(tree, walker)
@@ -233,7 +231,7 @@ def tagged_tree_to_custom_tree(tree, ctx):
         if tag_name is not None:
             tag_type = ctx.type_index.from_yaml_tag(tag_name)
             if tag_type is not None:
-                return tag_type.from_tree(node.data, ctx)
+                return tag_type.from_tree_tagged(node, ctx)
         return node
 
     return treeutil.walk_and_modify(tree, walker)

@@ -96,6 +96,12 @@ def test_all_schema_examples():
                 print("From file:", fname)
                 raise
 
+            # Just test we can write it out.  A roundtrip test
+            # wouldn't always yield the correct result, so those have
+            # to be covered by "real" unit tests.
+            buff = io.BytesIO()
+            ff.write_to(buff)
+
     def find_examples_in_schema(path):
         with open(path, 'rb') as fd:
             schema_tree = yaml.load(fd)
