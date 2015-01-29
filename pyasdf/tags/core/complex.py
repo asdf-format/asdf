@@ -8,11 +8,12 @@ from astropy.extern import six
 import numpy as np
 
 from ...asdftypes import AsdfType
+from ... import util
 
 
 class ComplexType(AsdfType):
     name = 'core/complex'
-    types = [complex, np.complex, np.cfloat, np.cdouble, np.clongdouble]
+    types = list(util.iter_subclasses(np.complexfloating))
 
     @classmethod
     def to_tree(cls, node, ctx):
