@@ -93,7 +93,7 @@ reference_file_root = os.path.join(
 package_info['package_dir']['pyasdf.reference_files'] = reference_file_root
 package_info['packages'].append('pyasdf.reference_files')
 
-# Define entry points for command-line scripts
+#Define entry points for command-line scripts
 entry_points = {}
 entry_points['console_scripts'] = [
     'asdftool = pyasdf.main:main',
@@ -110,11 +110,6 @@ for root, dirs, files in os.walk(PACKAGENAME):
                 os.path.join(
                     os.path.relpath(root, PACKAGENAME), filename))
 package_info['package_data'][PACKAGENAME].extend(c_files)
-
-
-# Disable config file generation
-from astropy_helpers import setup_helpers
-setup_helpers.AstropyBuildPy.run = setup_helpers.SetuptoolsBuildPy.run
 
 
 setup(name=PACKAGENAME,
