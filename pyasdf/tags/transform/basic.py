@@ -20,12 +20,13 @@ class TransformType(AsdfType):
     @classmethod
     def _get_inverse(cls, model, node, ctx):
         if getattr(model, '_custom_inverse', None) is not None:
-            node['inverse'] = model._custom_inverse
+            node['inverse'] = yamlutil.custom_tree_to_tagged_tree(
+                model._custom_inverse, ctx)
 
     @classmethod
     def _assign_inverse(cls, model, node, ctx):
         if 'inverse' in node:
-            model.inverse = yamlutil.custom_tree_to_tagged_tree(
+            model.inverse = yamlutil.tagged_tree_to_custom_tree(
                 node['inverse'], ctx)
 
     @classmethod
