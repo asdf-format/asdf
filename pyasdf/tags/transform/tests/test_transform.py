@@ -28,3 +28,20 @@ def test_transforms_compound(tmpdir):
     }
 
     helpers.assert_roundtrip_tree(tree, tmpdir)
+
+
+def test_inverse_transforms(tmpdir):
+    rotation = modeling.rotations.Rotation2D(32)
+    rotation.inverse = modeling.rotations.Rotation2D(45)
+
+    real_rotation = modeling.rotations.Rotation2D(32)
+
+    tree = {
+        'rotation': rotation,
+        'real_rotation': real_rotation
+        }
+
+    def check(ff):
+        assert ff.tree['rotation'].inverse.angle == 45
+
+    helpers.assert_roundtrip_tree(tree, tmpdir, check)
