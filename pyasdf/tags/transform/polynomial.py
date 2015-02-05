@@ -79,10 +79,10 @@ class PolynomialType(TransformType):
 
         if n_dim == 1:
             model = modeling.models.Polynomial1D(coefficients.size - 1)
-            model.parameters[:] = coefficients
+            model.parameters = coefficients
         elif n_dim == 2:
             shape = coefficients.shape
-            degree = shape[0]
+            degree = shape[0] - 1
             if shape[0] != shape[1]:
                 raise TypeError("Coefficients must be an (n+1, n+1) matrix")
 
@@ -92,7 +92,7 @@ class PolynomialType(TransformType):
                     if i + j < degree + 1:
                         name = 'c' + str(i) + '_' +str(j)
                         coeffs[name] = coefficients[i, j]
-            model = modeling.models.Polynomial2D(shape[0], **coeffs)
+            model = modeling.models.Polynomial2D(degree, **coeffs)
         else:
             raise NotImplementedError(
                 "Pyasdf currently only supports 1D or 2D polynomial transform.")
@@ -116,6 +116,6 @@ class PolynomialType(TransformType):
     @classmethod
     def assert_equal(cls, a, b):
         # TODO: If models become comparable themselves, remove this.
-        assert (isinstance(a, (modeling.models.Polynomial1D, models.Polynomial2D)) and
-                isinstance(b, (modeling.models.Polynomial1D, models.Polynomial2D)))
-        assert_array_equal(a.coefficients, b.coefficients)
+        assert (isinstance(a, (modeling.models.Polynomial1D, modeling.models.Polynomial2D)) and
+                isinstance(b, (modeling.models.Polynomial1D, modeling.models.Polynomial2D)))
+        assert_array_equal(a.parameters, b.parameters)
