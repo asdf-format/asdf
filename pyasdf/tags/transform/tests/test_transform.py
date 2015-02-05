@@ -3,38 +3,35 @@
 
 from __future__ import absolute_import, division, unicode_literals, print_function
 
-
-from astropy import modeling
-from astropy.modeling import mappings
+from astropy.modeling import models as astmodels
+from astropy.tests.helper import pytest
 
 from ....tests import helpers
 
 
-def test_transforms(tmpdir):
-    tree = {
-        'identity': mappings.Identity(2)
-    }
-
-    helpers.assert_roundtrip_tree(tree, tmpdir)
+test_models = [astmodels.Identity(2), astmodels.Polynomial1D(2, c0=1, c1=2, c2=3),
+               astmodels.Polynomial2D(1, c0_0=1, c0_1=2, c1_0=3), astmodels.Shift(2.),
+               astmodels.Scale(3.4)]
 
 
 def test_transforms_compound(tmpdir):
     tree = {
         'compound':
-            modeling.projections.Sky2Pix_TAN() |
-            modeling.rotations.Rotation2D() |
-            modeling.projections.AffineTransformation2D([[2, 0], [0, 2]], [42, 32]) +
-            modeling.rotations.Rotation2D(32)
+            astmodels.Shift(1) & astmodels.Shift(2) |
+            astmodels.Sky2Pix_TAN() |
+            astmodels.Rotation2D() |
+            astmodels.AffineTransformation2D([[2, 0], [0, 2]], [42, 32]) +
+            astmodels.Rotation2D(32)
     }
 
     helpers.assert_roundtrip_tree(tree, tmpdir)
 
 
 def test_inverse_transforms(tmpdir):
-    rotation = modeling.rotations.Rotation2D(32)
-    rotation.inverse = modeling.rotations.Rotation2D(45)
+    rotation = astmodels.Rotation2D(32)
+    rotation.inverse = astmodels.Rotation2D(45)
 
-    real_rotation = modeling.rotations.Rotation2D(32)
+    real_rotation = astmodels.Rotation2D(32)
 
     tree = {
         'rotation': rotation,
@@ -45,3 +42,9 @@ def test_inverse_transforms(tmpdir):
         assert ff.tree['rotation'].inverse.angle == 45
 
     helpers.assert_roundtrip_tree(tree, tmpdir, check)
+
+
+@pytest.mark.parametrize(('model'), test_models)
+def test_single_model(tmpdir, model):
+    tree = {'single_model': model}
+    helpers.assert_roundtrip_tree(tree, tmpdir)
