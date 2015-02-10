@@ -9,13 +9,13 @@ Installation
 
 ``pyasdf`` requires:
 
-- `numpy <http://www.numpy.org/>` 1.8 or later
+- `numpy <http://www.numpy.org/>`__ 1.8 or later
 
-- `astropy <http://www.astropy.org/>` 1.0 or later
+- `astropy <http://www.astropy.org/>`__ 1.0 or later
 
-- `jsonschema <http://python-jsonschema.readthedocs.org/>` 2.3.0 or later
+- `jsonschema <http://python-jsonschema.readthedocs.org/>`__ 2.3.0 or later
 
-- `pyyaml <http://pyyaml.org>` 3.10 or later
+- `pyyaml <http://pyyaml.org>`__ 3.10 or later
 
 Getting Started
 ---------------
