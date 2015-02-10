@@ -1,5 +1,4 @@
 numpy
-astropy-helpers
-astropy
+git+http://github.com/astropy/astropy.git#egg=astropy
 jsonschema
 pyyaml
