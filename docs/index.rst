@@ -11,7 +11,7 @@ Installation
 
 - `numpy <http://www.numpy.org/>` 1.8 or later
 
-- `astropy <http://www.astropy.org/>` 0.4 or later
+- `astropy <http://www.astropy.org/>` 1.0 or later
 
 - `jsonschema <http://python-jsonschema.readthedocs.org/>` 2.3.0 or later
 
