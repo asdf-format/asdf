@@ -48,3 +48,11 @@ def test_inverse_transforms(tmpdir):
 def test_single_model(tmpdir, model):
     tree = {'single_model': model}
     helpers.assert_roundtrip_tree(tree, tmpdir)
+
+
+def test_name(tmpdir):
+    def check(ff):
+        assert ff.tree['rot'].name == 'foo'
+
+    tree = {'rot': astmodels.Rotation2D(23, name='foo')}
+    helpers.assert_roundtrip_tree(tree, tmpdir, check)

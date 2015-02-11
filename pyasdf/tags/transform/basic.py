@@ -37,6 +37,8 @@ class TransformType(AsdfType):
     def from_tree(cls, node, ctx):
         model = cls.from_tree_transform(node, ctx)
         cls._assign_inverse(model, node, ctx)
+        if 'name' in node:
+            model._name = node['name']
         return model
 
     @classmethod
@@ -47,6 +49,8 @@ class TransformType(AsdfType):
     def to_tree(cls, model, ctx):
         node = cls.to_tree_transform(model, ctx)
         TransformType._get_inverse(model, node, ctx)
+        if model.name is not None:
+            node['name'] = model.name
         return node
 
 
