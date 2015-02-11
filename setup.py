@@ -13,7 +13,7 @@ if sys.version_info[0] >= 3:
     import builtins
 else:
     import __builtin__ as builtins
-# builtins._ASTROPY_SETUP_ = True
+builtins._ASTROPY_SETUP_ = True
 
 from astropy_helpers.setup_helpers import (
     register_commands, adjust_compiler, get_debug_option, get_package_info)
