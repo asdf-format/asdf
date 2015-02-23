@@ -147,8 +147,8 @@ def test_table(tmpdir):
 def test_table_nested_fields(tmpdir):
     table = np.array(
         [(0, (1, 2)), (4, (5, 6)), (7, (8, 9))],
-        dtype=[(str('A'), np.int),
-               (str('B'), [(str('C'), np.int), (str('D'), np.int)])])
+        dtype=[(str('A'), np.int64),
+               (str('B'), [(str('C'), np.int64), (str('D'), np.int64)])])
 
     tree = {'table_data': table}
 

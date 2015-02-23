@@ -15,6 +15,7 @@ from . import reference
 from . import schema
 from . import tagged
 from . import treeutil
+from . import util
 
 
 # ----------------------------------------------------------------------
@@ -184,11 +185,10 @@ AsdfDumper.add_representer(OrderedDict, represent_ordereddict)
 # ----------------------------------------------------------------------
 # Handle numpy scalars
 
-for scalar_type in (np.float32, np.float64, np.float128):
+for scalar_type in util.iter_subclasses(np.floating):
     AsdfDumper.add_representer(scalar_type, AsdfDumper.represent_float)
 
-for scalar_type in (np.int8, np.int16, np.int32, np.int64,
-                    np.uint8, np.uint16, np.uint32, np.uint64):
+for scalar_type in util.iter_subclasses(np.integer):
     AsdfDumper.add_representer(scalar_type, AsdfDumper.represent_int)
 
 
