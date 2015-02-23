@@ -93,7 +93,7 @@ def numpy_byteorder_to_asdf_byteorder(byteorder):
         return 'big'
 
 
-def numpy_dtype_to_asdf_datatype(dtype):
+def numpy_dtype_to_asdf_datatype(dtype, include_byteorder=True):
     dtype = np.dtype(dtype)
     if dtype.names is not None:
         fields = []
@@ -103,7 +103,8 @@ def numpy_dtype_to_asdf_datatype(dtype):
             d['name'] = name
             field_dtype, byteorder = numpy_dtype_to_asdf_datatype(field)
             d['datatype'] = field_dtype
-            d['byteorder'] = byteorder
+            if include_byteorder:
+                d['byteorder'] = byteorder
             if field.shape:
                 d['shape'] = list(field.shape)
             fields.append(d)
@@ -158,6 +159,23 @@ def inline_data_asarray(inline, dtype):
         inline = convert_to_tuples(inline, depth)
 
     return np.asarray(inline, dtype=dtype)
+
+
+def _numpy_array_to_list(array):
+    # Convert byte string arrays to unicode string arrays, since YAML
+    # doesn't handle the former.  This just assumes they are Latin-1.
+    if array.dtype.char == 'S':
+        l = array.astype('U').tolist()
+    else:
+        l = array.tolist()
+
+    def tolist(x):
+        if isinstance(x, (list, tuple)):
+            return [tolist(y) for y in x]
+        else:
+            return x
+
+    return tolist(l)
 
 
 class NDArrayType(AsdfType):
@@ -347,16 +365,11 @@ class NDArrayType(AsdfType):
         if block.array_storage == 'streamed':
             result['shape'][0] = '*'
 
-        dtype, byteorder = numpy_dtype_to_asdf_datatype(dtype)
+        dtype, byteorder = numpy_dtype_to_asdf_datatype(
+            dtype, include_byteorder=(block.array_storage != 'inline'))
 
         if block.array_storage == 'inline':
-            # Convert byte string arrays to unicode string arrays,
-            # since YAML doesn't handle the former.  This just
-            # assumes they are Latin-1.
-            if data.dtype.char == 'S':
-                listdata = data.astype('U').tolist()
-            else:
-                listdata = data.tolist()
+            listdata = _numpy_array_to_list(data)
             result['data'] = yamlutil.custom_tree_to_tagged_tree(
                 listdata, ctx)
             result['datatype'] = dtype
