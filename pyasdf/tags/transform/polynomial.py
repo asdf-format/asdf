@@ -74,7 +74,7 @@ class PolynomialType(TransformType):
 
     @classmethod
     def from_tree_transform(cls, node, ctx):
-        coefficients = node['coefficients']
+        coefficients = np.asarray(node['coefficients'])
         n_dim = coefficients.ndim
 
         if n_dim == 1:
