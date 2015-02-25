@@ -385,10 +385,6 @@ class AsdfFile(versioning.VersionedMixin):
             fd.fast_forward(padding)
 
     def _pre_write(self, fd, all_array_storage, auto_inline):
-        if exploded and fd.uri is None:
-            raise ValueError(
-                "Can not write an exploded file without knowing its URI.")
-
         if len(self._tree):
             self.run_hook('pre_write')
 
