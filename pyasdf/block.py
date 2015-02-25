@@ -7,7 +7,6 @@ from collections import namedtuple
 import copy
 import os
 import struct
-import sys
 import weakref
 
 import numpy as np
@@ -246,7 +245,7 @@ class BlockManager(object):
             else:
                 del block._used
 
-    def finalize(self, ctx, exploded=False):
+    def finalize(self, ctx, all_array_storage):
         """
         At this point, we have a complete set of blocks for the file,
         with no extras.
@@ -258,12 +257,9 @@ class BlockManager(object):
 
         self._find_used_blocks(ctx.tree)
 
-        if exploded is True:
-            for block in self.internal_blocks:
-                block.array_storage = 'external'
-        elif exploded is False:
-            for block in self.external_blocks:
-                block.array_storage = 'internal'
+        if all_array_storage is not None:
+            for block in self.blocks:
+                block.array_storage = all_array_storage
 
         count = 0
         for block in self._blocks:
@@ -677,8 +673,6 @@ def calculate_updated_layout(blocks, tree_size, pad_blocks, block_size):
     # This algorithm is pretty basic at this point -- it just looks
     # for the first open spot big enough for the free block to fit.
     while len(free):
-        print(free)
-        print(fixed)
         block = free.pop()
         last_end = tree_size
         for entry in fixed:

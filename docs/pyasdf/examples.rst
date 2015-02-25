@@ -193,8 +193,14 @@ To save a block in an external file, set its block type to
    my_array = np.random.rand(8, 8)
    tree = {'my_array': my_array}
    ff = AsdfFile(tree)
+
+   # On an individual block basis:
    ff.set_array_storage(my_array, 'external')
    with ff.write_to("test.asdf"):
+       pass
+
+   # Or for every block:
+   with ff.write_to("test.asdf", all_array_storage='external'):
        pass
 
 .. asdf:: test.asdf

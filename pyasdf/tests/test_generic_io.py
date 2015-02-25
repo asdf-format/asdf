@@ -318,7 +318,7 @@ def test_exploded_filesystem(tree, tmpdir):
         return generic_io.get_file(path, mode='r')
 
     ff = _roundtrip(tree, get_write_fd, get_read_fd,
-                    write_options={'exploded': True})
+                    write_options={'all_array_storage': 'external'})
 
     assert len(list(ff.blocks.internal_blocks)) == 0
     assert len(list(ff.blocks.external_blocks)) == 2
@@ -338,7 +338,7 @@ def test_exploded_filesystem_fail(tree, tmpdir):
         return fd
 
     with get_write_fd() as fd:
-        asdf.AsdfFile(tree).write_to(fd, exploded=True)
+        asdf.AsdfFile(tree).write_to(fd, all_array_storage='external')
 
     with get_read_fd() as fd:
         ff = asdf.AsdfFile.read(fd)
@@ -357,7 +357,7 @@ def test_exploded_http(tree, httpserver):
         return generic_io.get_file(httpserver.url + "test.asdf")
 
     ff = _roundtrip(tree, get_write_fd, get_read_fd,
-                    write_options={'exploded': True})
+                    write_options={'all_array_storage': 'external'})
 
     assert len(list(ff.blocks.internal_blocks)) == 0
     assert len(list(ff.blocks.external_blocks)) == 2
@@ -372,7 +372,7 @@ def test_exploded_stream_write():
     ff = asdf.AsdfFile(tree)
 
     with pytest.raises(ValueError):
-        ff.write_to(io.BytesIO(), exploded=True)
+        ff.write_to(io.BytesIO(), all_array_storage='external')
 
 
 def test_exploded_stream_read(tmpdir):
@@ -384,7 +384,7 @@ def test_exploded_stream_read(tmpdir):
     path = os.path.join(str(tmpdir), 'test.asdf')
 
     with asdf.AsdfFile(tree) as ff:
-        ff.write_to(path, exploded=True)
+        ff.write_to(path, all_array_storage='external')
 
     with open(path, 'rb') as fd:
         # This should work, so we can get the tree content

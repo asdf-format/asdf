@@ -60,7 +60,7 @@ def implode(input, output=None):
         base, ext = os.path.splitext(input)
         output = base + '_all' + '.asdf'
     with AsdfFile.read(input) as ff:
-        with AsdfFile(ff).write_to(output, exploded=False):
+        with AsdfFile(ff).write_to(output, all_array_storage='internal'):
             pass
 
 
@@ -108,5 +108,5 @@ def explode(input, output=None):
         base, ext = os.path.splitext(input)
         output = base + '_exploded' + '.asdf'
     with AsdfFile.read(input) as ff:
-        with AsdfFile(ff).write_to(output, exploded=True):
+        with AsdfFile(ff).write_to(output, all_array_storage='external'):
             pass
