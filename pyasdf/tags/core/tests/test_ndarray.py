@@ -117,6 +117,35 @@ def test_dont_load_data():
         assert block._data is None
 
 
+def test_table_inline(tmpdir):
+    table = np.array(
+        [(0, 1, (2, 3)), (4, 5, (6, 7))],
+        dtype=[(str('MINE'), np.int8),
+               (str(''), np.float64),
+               (str('arr'), '>i4', (2,))])
+
+    tree = {'table_data': table}
+
+    def check_raw_yaml(content):
+        content = b'\n'.join(content.splitlines()[4:-1])
+        tree = yaml.load(content)
+
+        print(tree)
+
+        assert tree == {
+            'datatype': [
+                {'datatype': 'int8', 'name': 'MINE'},
+                {'datatype': 'float64', 'name': 'f1'},
+                {'datatype': 'int32', 'name': 'arr', 'shape': [2]}
+                ],
+            'data': [[0, 1.0, [2, 3]], [4, 5.0, [6, 7]]],
+            'shape': [2]
+            }
+
+    helpers.assert_roundtrip_tree(
+        tree, tmpdir, None, check_raw_yaml, {'auto_inline': 64})
+
+
 def test_table(tmpdir):
     table = np.array(
         [(0, 1, (2, 3)), (4, 5, (6, 7))],

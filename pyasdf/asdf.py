@@ -384,13 +384,13 @@ class AsdfFile(versioning.VersionedMixin):
                 fd.tell(), pad_blocks, fd.block_size)
             fd.fast_forward(padding)
 
-    def _pre_write(self, fd, all_array_storage):
+    def _pre_write(self, fd, all_array_storage, auto_inline):
         if len(self._tree):
             self.run_hook('pre_write')
 
         # This is where we'd do some more sophisticated block
         # reorganization, if necessary
-        self._blocks.finalize(self, all_array_storage)
+        self._blocks.finalize(self, all_array_storage, auto_inline=auto_inline)
 
     def _serial_write(self, fd, pad_blocks):
         try:
@@ -412,7 +412,8 @@ class AsdfFile(versioning.VersionedMixin):
         if len(self._tree):
             self.run_hook('post_write')
 
-    def update(self, all_array_storage=None, pad_blocks=False):
+    def update(self, all_array_storage=None, pad_blocks=False,
+               auto_inline=None):
         """
         Update the file on disk in place.
 
@@ -436,6 +437,12 @@ class AsdfFile(versioning.VersionedMixin):
             return 0).  If `True`, add a default amount of padding of
             10% If a float, it is a factor to multiple content_size by
             to get the new total size.
+
+        auto_inline : int, optional
+            When the number of elements in an array is less than this
+            threshold, store the array as inline YAML, rather than a
+            binary block.  This only works on arrays that do not share
+            data with other arrays.  Default is 0.
         """
         fd = self._fd
 
@@ -455,7 +462,7 @@ class AsdfFile(versioning.VersionedMixin):
             raise IOError(
                 "Can not update, since associated file is not seekable")
 
-        self._pre_write(fd, all_array_storage)
+        self._pre_write(fd, all_array_storage, auto_inline)
 
         fd.seek(0)
 
@@ -499,7 +506,8 @@ class AsdfFile(versioning.VersionedMixin):
         self._random_write(fd, pad_blocks)
         fd.flush()
 
-    def write_to(self, fd, all_array_storage=None, pad_blocks=False):
+    def write_to(self, fd, all_array_storage=None, pad_blocks=False,
+                 auto_inline=None):
         """
         Write the ASDF file to the given file-like object.
 
@@ -527,12 +535,18 @@ class AsdfFile(versioning.VersionedMixin):
             return 0).  If `True`, add a default amount of padding of
             10% If a float, it is a factor to multiple content_size by
             to get the new total size.
+
+        auto_inline : int, optional
+            When the number of elements in an array is less than this
+            threshold, store the array as inline YAML, rather than a
+            binary block.  This only works on arrays that do not share
+            data with other arrays.  Default is 0.
         """
         original_fd = self._fd
 
         self._fd = fd = generic_io.get_file(fd, mode='w')
 
-        self._pre_write(fd, all_array_storage)
+        self._pre_write(fd, all_array_storage, auto_inline)
 
         self._serial_write(fd, pad_blocks)
         fd.flush()

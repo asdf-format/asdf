@@ -226,26 +226,36 @@ class BlockManager(object):
         if block._data is not None:
             del self._data_to_block_mapping[id(block._data)]
 
-    def _find_used_blocks(self, tree):
+    def _find_used_blocks(self, tree, auto_inline):
         from .tags.core import ndarray
 
+        if auto_inline is None:
+            auto_inline = 0
+
+        block_to_array_mapping = {}
+
         def visit_array(node):
+            block = None
             if isinstance(node, np.ndarray):
                 block = self.find_or_create_block_for_array(node)
-                block._used = True
             elif (isinstance(node, ndarray.NDArrayType) and
                 not isinstance(node, stream.Stream)):
-                node.block._used = True
+                block = node.block
+            if block is not None:
+                block_to_array_mapping.setdefault(block, [])
+                block_to_array_mapping[block].append(node)
 
         treeutil.walk(tree, visit_array)
 
         for block in self._blocks[:]:
-            if not hasattr(block, '_used'):
+            arrays = block_to_array_mapping.get(block, [])
+            if getattr(block, '_used', 0) == 0 and len(arrays) == 0:
                 self.remove(block)
-            else:
-                del block._used
+            elif len(arrays) == 1:
+                if np.product(block.data.shape) < auto_inline:
+                    block.array_storage = 'inline'
 
-    def finalize(self, ctx, all_array_storage):
+    def finalize(self, ctx, all_array_storage, auto_inline=None):
         """
         At this point, we have a complete set of blocks for the file,
         with no extras.
@@ -255,7 +265,7 @@ class BlockManager(object):
         # TODO: Should this reset the state (what's external and what
         # isn't) afterword?
 
-        self._find_used_blocks(ctx.tree)
+        self._find_used_blocks(ctx.tree, auto_inline)
 
         if all_array_storage is not None:
             for block in self.blocks:
