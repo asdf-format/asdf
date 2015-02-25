@@ -5,9 +5,9 @@ from __future__ import absolute_import, division, unicode_literals, print_functi
 
 from collections import namedtuple
 import copy
+import io
 import os
 import struct
-import sys
 import weakref
 
 import numpy as np
@@ -16,6 +16,7 @@ from astropy.extern import six
 from astropy.extern.six.moves.urllib import parse as urlparse
 
 from . import constants
+from . import encodings
 from . import generic_io
 from . import stream
 from . import treeutil
@@ -119,12 +120,18 @@ class BlockManager(object):
             should be after the tree.
         """
         for block in self.internal_blocks:
-            padding = util.calculate_padding(
-                block.size, pad_blocks, fd.block_size)
-            block.allocated = block._size + padding
-            block.offset = fd.tell()
-            block.write(fd)
-            fd.fast_forward(padding)
+            if block.has_encoding():
+                # If it's a compressed block, assume we care about
+                # disk space and don't add any padding.
+                block.offset = fd.tell()
+                block.write(fd)
+            else:
+                padding = util.calculate_padding(
+                    block.size, pad_blocks, fd.block_size)
+                block.allocated = block._size + padding
+                block.offset = fd.tell()
+                block.write(fd)
+                fd.fast_forward(block.allocated - block._size)
 
     def write_internal_blocks_random_access(self, fd):
         """
@@ -246,7 +253,7 @@ class BlockManager(object):
             else:
                 del block._used
 
-    def finalize(self, ctx, exploded=False):
+    def finalize(self, ctx, all_array_storage, all_array_encoding):
         """
         At this point, we have a complete set of blocks for the file,
         with no extras.
@@ -258,12 +265,13 @@ class BlockManager(object):
 
         self._find_used_blocks(ctx.tree)
 
-        if exploded is True:
-            for block in self.internal_blocks:
-                block.array_storage = 'external'
-        elif exploded is False:
-            for block in self.external_blocks:
-                block.array_storage = 'internal'
+        if all_array_storage is not None:
+            for block in self.blocks:
+                block.array_storage = all_array_storage
+
+        if all_array_encoding is not None:
+            for block in self.blocks:
+                block.encoding = all_array_encoding
 
         count = 0
         for block in self._blocks:
@@ -381,11 +389,11 @@ class BlockManager(object):
             else:
                 arr._block = None
 
-        base = util.get_array_base(arr)
+        base, last_base = util.get_array_base(arr)
         block = self._data_to_block_mapping.get(id(base))
         if block is not None:
             return block
-        block = Block(base)
+        block = Block(base, primary_array=last_base)
         self.add(block)
         return block
 
@@ -420,28 +428,31 @@ class Block(object):
     Instead, should only be created through the `BlockManager`.
     """
 
-    _header_fmt = b'>IQQQ16s'
-    _header_fmt_size = struct.calcsize(_header_fmt)
+    _header = util.BinaryStruct([
+        ('flags', 'I'),
+        ('allocated_size', 'Q'),
+        ('used_size', 'Q'),
+        ('memory_size', 'Q'),
+        ('checksum', 'Q')
+    ])
 
-    def __init__(self, data=None, uri=None, array_storage='internal'):
-        if data is not None:
-            self._data = data
-            if six.PY2:
-                self._size = len(data.data)
-            elif six.PY3:
-                self._size = data.data.nbytes
-        else:
-            self._data = None
-            self._size = 0
+    def __init__(self, data=None, uri=None, array_storage='internal',
+                 primary_array=None):
+        self._data = data
+        if primary_array is not None:
+            primary_array = weakref.ref(primary_array)
+        self._primary_array = primary_array
         self._uri = uri
         self._array_storage = array_storage
 
         self._fd = None
-        self._header_size = self._header_fmt_size
         self._offset = None
-        self._allocated = self._size
-        self._encoding = None
+        self._has_encoding = False
+        self._encoding = []
         self._memmapped = False
+
+        self.update_size()
+        self._allocated = self._size
 
     def __repr__(self):
         return '<Block {0} alloc: {1} size: {2} type: {3}>'.format(
@@ -466,7 +477,7 @@ class Block(object):
 
     @property
     def header_size(self):
-        return self._header_size + constants.BLOCK_HEADER_BOILERPLATE_SIZE
+        return self._header.size + constants.BLOCK_HEADER_BOILERPLATE_SIZE
 
     @property
     def data_offset(self):
@@ -487,6 +498,62 @@ class Block(object):
                 "array_storage must be one of 'internal', 'external', "
                 "'streamed' or 'inline'")
         self._array_storage = typename
+        if typename == 'streamed':
+            self.encoding = []
+
+    @property
+    def encoding(self):
+        return self._encoding
+
+    @encoding.setter
+    def encoding(self, encoding):
+        if encoding is None:
+            encoding = []
+        encoding = encodings.validate_encoding(encoding)
+        if len(encoding) and self.array_storage == 'streamed':
+            raise ValueError("Can not assign encoding to streamed block")
+        self._encoding = encoding
+        if len(self._encoding):
+            self._has_encoding = True
+
+    @encoding.deleter
+    def encoding(self):
+        self._encoding = []
+        self._has_encoding = False
+
+    def has_encoding(self):
+        return self._has_encoding
+
+    def _get_encodable_array(self):
+        # In order to support encodings that are aware of the shape of
+        # the array, we need to find the root array from which all
+        # other views are derived.  This is distinct from the
+        # underlying data array which often is just a buffer of uint8.
+        if self._primary_array is not None:
+            primary_array = self._primary_array()
+            if (primary_array is not None and
+                primary_array.nbytes == self._data.nbytes):
+                return primary_array
+        return self._data
+
+    def update_size(self):
+        """
+        Recalculate the on-disk size of the block.  This causes any
+        encoding steps to run.  It should only be called when updating
+        the file, otherwise the work is redundant.
+        """
+        if self._data is not None:
+            if six.PY2:
+                self._mem_size = len(self._data.data)
+            elif six.PY3:
+                self._mem_size = self._data.data.nbytes
+            if not self.has_encoding():
+                self._size = self._mem_size
+            else:
+                self._size = encodings.encoded_block_length(
+                    self._get_encodable_array(), self.encoding)
+        else:
+            self._mem_size = self._size = 0
 
     def read(self, fd, past_magic=False):
         """
@@ -528,66 +595,119 @@ class Block(object):
 
         buff = fd.read(2)
         header_size, = struct.unpack(b'>H', buff)
-        if header_size < self._header_fmt_size:
+        if header_size < self._header.size:
             raise ValueError(
-                "Header size must be > {0}".format(self._header_fmt_size))
+                "Header size must be >= {0}".format(self._header.size))
 
         buff = fd.read(header_size)
-        (flags, allocated_size, used_size, checksum, encoding) = \
-            struct.unpack_from(self._header_fmt, buff[:self._header_fmt_size])
+        header = self._header.unpack(buff)
 
-        self._flags = flags
+        # This is used by the documentation system, but nowhere else.
+        self._flags = header['flags']
 
-        # Support streaming blocks
+        if (not header['flags'] & (
+                constants.BLOCK_FLAG_STREAMED | constants.BLOCK_FLAG_ENCODED)
+            and header['used_size'] != header['memory_size']):
+            raise ValueError(
+                "Used size and memory size must be equal when no encoding is "
+                "specified.")
+
+        if ((header['flags'] & constants.BLOCK_FLAG_STREAMED) and
+            (header['flags'] & constants.BLOCK_FLAG_ENCODED)):
+            raise ValueError("Encoding set on streamed block")
+
+        self._has_encoding = (header['flags'] & constants.BLOCK_FLAG_ENCODED) != 0
+
         if fd.seekable():
             # If the file is seekable, we can delay reading the actual
             # data until later.
             self._fd = fd
             self._header_size = header_size
             self._offset = offset
-            self._encoding = encoding
-            if flags & constants.BLOCK_FLAG_STREAMED:
+            if header['flags'] & constants.BLOCK_FLAG_STREAMED:
+                # Support streaming blocks
                 fd.fast_forward(-1)
                 self._array_storage = 'streamed'
-                self._size = self._allocated = (fd.tell() - self.data_offset) + 1
+                self._mem_size = self._size = self._allocated = (
+                    fd.tell() - self.data_offset) + 1
             else:
-                fd.fast_forward(allocated_size)
-                self._allocated = allocated_size
-                self._size = used_size
+                fd.fast_forward(header['allocated_size'])
+                self._allocated = header['allocated_size']
+                self._size = header['used_size']
+                self._mem_size = header['memory_size']
         else:
             # If the file is a stream, we need to get the data now.
-            if flags & constants.BLOCK_FLAG_STREAMED:
+            if header['flags'] & constants.BLOCK_FLAG_STREAMED:
+                # Support streaming blocks
                 self._array_storage = 'streamed'
                 self._data = fd.read_into_array(-1)
-                self._size = self._allocated = len(self._data)
+                self._mem_size = self._size = self._allocated = len(self._data)
             else:
-                self._size = used_size
-                self._allocated = allocated_size
-                self._data = fd.read_into_array(used_size)
-                fd.fast_forward(allocated_size - used_size)
+                self._mem_size = header['memory_size']
+                self._size = header['used_size']
+                self._allocated = header['allocated_size']
+                self._data, self.encoding = self._read_data(
+                    fd, self._size, self._mem_size, self.has_encoding())
+                fd.fast_forward(self._allocated - self._size)
             fd.close()
 
         return self
+
+    def _read_data(self, fd, used_size, mem_size, has_encoding):
+        if not has_encoding:
+            return fd.read_into_array(used_size), []
+        else:
+            return encodings.decode_block(fd, used_size, mem_size)
 
     def write(self, fd):
         """
         Write an internal block to the given Python file-like object.
         """
         with generic_io.get_file(fd, 'w') as fd:
-            self._header_size = self._header_fmt_size
+            self._header_size = self._header.size
 
             flags = 0
+            if self.has_encoding():
+                flags |= constants.BLOCK_FLAG_ENCODED
             if self._array_storage == 'streamed':
                 flags |= constants.BLOCK_FLAG_STREAMED
+                mem_size = 0
+            elif self._data is not None:
+                if not fd.seekable() and self.has_encoding():
+                    buff = io.BytesIO()
+                    encodings.encode_block(
+                        buff, self._get_encodable_array(), self.encoding)
+                    self.allocated = self._size = buff.tell()
+                mem_size = self._get_encodable_array().nbytes
 
             fd.write(constants.BLOCK_MAGIC)
             fd.write(struct.pack(b'>H', self._header_size))
-            fd.write(struct.pack(
-                self._header_fmt, flags,
-                self.allocated, self._size, 0, b''))
+            fd.write(self._header.pack(
+                flags=flags, allocated_size=self.allocated,
+                used_size=self._size, memory_size=mem_size,
+                checksum=0))
 
             if self._data is not None:
-                fd.write_array(self._data)
+                if self.has_encoding():
+                    if not fd.seekable():
+                        fd.write(buff.getvalue())
+                    else:
+                        # If we can seek in the file, write directly
+                        # to it, then go back and write the resulting
+                        # size in the block header.
+                        start = fd.tell()
+                        encodings.encode_block(
+                            fd, self._get_encodable_array(), self.encoding)
+                        end = fd.tell()
+                        self.allocated = self._size = end - start
+                        fd.seek(self.offset + 6)
+                        self._header.update(
+                            fd,
+                            allocated_size=self.allocated,
+                            used_size=self._size)
+                        fd.seek(end)
+                else:
+                    fd.write_array(self._data)
 
     @property
     def data(self):
@@ -600,7 +720,7 @@ class Block(object):
                     "ASDF file has already been closed. "
                     "Can not get the data.")
 
-            if self._fd.can_memmap():
+            if not self.has_encoding() and self._fd.can_memmap():
                 self._data = self._fd.memmap_array(
                     self.data_offset, self._size)
                 self._memmapped = True
@@ -610,7 +730,9 @@ class Block(object):
                 curpos = self._fd.tell()
                 try:
                     self._fd.seek(self.data_offset)
-                    self._data = self._fd.read_into_array(self._size)
+                    self._data, self.encoding = self._read_data(
+                        self._fd, self._size, self._mem_size,
+                        self.has_encoding())
                 finally:
                     self._fd.seek(curpos)
 
@@ -655,6 +777,7 @@ def calculate_updated_layout(blocks, tree_size, pad_blocks, block_size):
     for block in blocks._blocks:
         if block.array_storage == 'internal':
             if block.offset is not None:
+                block.update_size()
                 fixed.append(
                     Entry(block.offset, block.offset + block.size, block))
             else:
@@ -677,8 +800,6 @@ def calculate_updated_layout(blocks, tree_size, pad_blocks, block_size):
     # This algorithm is pretty basic at this point -- it just looks
     # for the first open spot big enough for the free block to fit.
     while len(free):
-        print(free)
-        print(fixed)
         block = free.pop()
         last_end = tree_size
         for entry in fixed:

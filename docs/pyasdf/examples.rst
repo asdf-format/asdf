@@ -193,8 +193,14 @@ To save a block in an external file, set its block type to
    my_array = np.random.rand(8, 8)
    tree = {'my_array': my_array}
    ff = AsdfFile(tree)
+
+   # On an individual block basis:
    ff.set_array_storage(my_array, 'external')
    with ff.write_to("test.asdf"):
+       pass
+
+   # Or for every block:
+   with ff.write_to("test.asdf", all_array_storage='external'):
        pass
 
 .. asdf:: test.asdf
@@ -334,3 +340,27 @@ included twice in the same tree:
         pass
 
 .. asdf:: anchors.asdf
+
+Compression and encoding
+------------------------
+
+Individual blocks in ASDF files may be compressed, or encoded in a
+different encoding.
+
+You can easily `zlib <http://www.zlib.net/>`__ compress all blocks:
+
+.. runcode::
+
+   from pyasdf import AsdfFile
+   import numpy as np
+
+   tree = {
+       'a': np.random.rand(256, 256),
+       'b': np.random.rand(512, 512)
+   }
+
+   target = AsdfFile(tree)
+   with target.write_to('target.asdf', all_array_encoding='zlib'):
+       pass
+
+.. asdf:: target.asdf

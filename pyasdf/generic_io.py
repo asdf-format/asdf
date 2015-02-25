@@ -262,6 +262,18 @@ class GenericFile(object):
         """
         return self.read(self._blksize)
 
+    def read_blocks(self, size):
+        """
+        Read ``size`` bytes of data from the file, one block at a
+        time.  The result is a generator where each value is a bytes
+        object.
+        """
+        i = 0
+        for i in xrange(0, size - self._blksize, self._blksize):
+            yield self.read(self._blksize)
+        if i < size:
+            yield self.read(size - i)
+
     if sys.version_info[:2] == (2, 7) and sys.version_info[2] < 4:
         # On Python 2.7.x prior to 2.7.4, the buffer does not support the
         # new buffer interface, and thus can't be written directly.  See
@@ -455,21 +467,19 @@ class GenericFile(object):
 
     def read_into_array(self, size):
         """
-        Memmap a chunk of the file into a `np.core.memmap` object.
+        Read a chunk of the file into a uint8 array.
 
         Parameters
         ----------
-        offset : integer
-            The offset, in bytes, in the file.
-
         size : integer
-            The size of the data to memmap.
+            The size of the data.
 
         Returns
         -------
         array : np.core.memmap
         """
-        raise NotImplementedError()
+        buff = self.read(size)
+        return np.frombuffer(buff, np.uint8, size, 0)
 
 
 class GenericWrapper(object):
@@ -602,6 +612,7 @@ class MemoryIO(RandomAccessFile):
         # If we need a read/write array, we have to copy it.
         if 'w' in self._mode:
             result = result.copy()
+        self.seek(size, os.SEEK_CUR)
         return result
 
 
@@ -609,7 +620,7 @@ class InputStream(GenericFile):
     """
     Handles an input stream, such as stdin.
     """
-    def __init__(self, fd, mode, close=False, uri=None):
+    def __init__(self, fd, mode='r', close=False, uri=None):
         super(InputStream, self).__init__(fd, mode, close=close, uri=uri)
         self._fd = fd
         self._buffer = b''

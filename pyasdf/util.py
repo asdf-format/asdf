@@ -6,8 +6,11 @@ from __future__ import absolute_import, division, unicode_literals, print_functi
 
 import itertools
 import math
+import struct
 
+from astropy.extern import six
 from astropy.extern.six.moves.urllib import parse as urlparse
+from astropy.extern.six.moves import zip as izip
 
 import numpy as np
 
@@ -45,10 +48,11 @@ def get_array_base(arr):
     For a given Numpy array, finds the base array that "owns" the
     actual data.
     """
-    base = arr
+    last_base = base = arr
     while isinstance(base.base, np.ndarray):
+        last_base = base
         base = base.base
-    return base
+    return base, last_base
 
 
 def get_base_uri(uri):
@@ -118,3 +122,85 @@ def calculate_padding(content_size, pad_blocks, block_size):
     new_size = int((math.ceil(
         float(new_size) / block_size) + 1) * block_size)
     return max(new_size - content_size, 0)
+
+
+class BinaryStruct(object):
+    """
+    A wrapper around the Python stdlib struct module to define a
+    binary struct more like a dictionary than a tuple.
+    """
+    def __init__(self, descr, endian='>'):
+        """
+        Parameters
+        ----------
+        descr : list of tuple
+            Each entry is a pair ``(name, format)``, where ``format``
+            is one of the format types understood by `struct`.
+
+        endian : str, optional
+            The endianness of the struct.  Must be ``>`` or ``<``.
+        """
+        self._fmt = [endian]
+        self._offsets = {}
+        self._names = []
+        i = 0
+        for name, fmt in descr:
+            self._fmt.append(fmt)
+            self._offsets[name] = (i, ('>' + fmt).encode('ascii'))
+            self._names.append(name)
+            i += struct.calcsize(fmt.encode('ascii'))
+        self._fmt = ''.join(self._fmt).encode('ascii')
+        self._size = struct.calcsize(self._fmt)
+
+    @property
+    def size(self):
+        """
+        Return the size of the struct.
+        """
+        return self._size
+
+    def pack(self, **kwargs):
+        """
+        Pack the given arguments, which are given as kwargs, and
+        return the binary struct.
+        """
+        fields = [0] * len(self._names)
+        for key, val in six.iteritems(kwargs):
+            if key not in self._offsets:
+                raise KeyError("No header field '{0}'".format(key))
+            i = self._names.index(key)
+            fields[i] = val
+        return struct.pack(self._fmt, *fields)
+
+    def unpack(self, buff):
+        """
+        Unpack the given binary buffer into the fields.  The result
+        is a dictionary mapping field names to values.
+        """
+        args = struct.unpack_from(self._fmt, buff[:self._size])
+        return dict(izip(self._names, args))
+
+    def update(self, fd, **kwargs):
+        """
+        Update part of the struct in-place.
+
+        Parameters
+        ----------
+        fd : generic_io.GenericIO instance
+            A writable, seekable file descriptor, currently seeked
+            to the beginning of the struct.
+
+        **kwargs : values
+            The values to update on the struct.
+        """
+        updates = []
+        for key, val in six.iteritems(kwargs):
+            if key not in self._offsets:
+                raise KeyError("No header field '{0}'".format(key))
+            updates.append((self._offsets[key], val))
+        updates.sort()
+
+        start = fd.tell()
+        for ((offset, datatype), val) in updates:
+            fd.seek(start + offset)
+            fd.write(struct.pack(datatype, val))
