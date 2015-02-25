@@ -4,6 +4,7 @@
 from __future__ import absolute_import, division, unicode_literals, print_function
 
 import io
+import os
 
 from astropy.extern import six
 
@@ -14,6 +15,20 @@ from ..tags.core import AsdfObject
 
 
 def assert_tree_match(old_tree, new_tree, funcname='assert_equal'):
+    """
+    Assert that two ASDF trees match.
+
+    Parameters
+    ----------
+    old_tree : ASDF tree
+
+    new_tree : ASDF tree
+
+    funcname : string
+        The name of a method on members of old_tree and new_tree that
+        will be used to compare custom objects.  The default of
+        `assert_equal` handles Numpy arrays.
+    """
     seen = set()
 
     def recurse(old, new):
@@ -47,6 +62,23 @@ def assert_tree_match(old_tree, new_tree, funcname='assert_equal'):
 def assert_roundtrip_tree(
         tree, tmpdir, asdf_check_func=None, raw_yaml_check_func=None,
         write_options={}):
+    """
+    Assert that a given tree saves to ASDF and, when loaded back,
+    the tree matches the original tree.
+
+    tree : ASDF tree
+
+    tmpdir : str
+        Path to temporary directory to save file
+
+    asdf_check_func : callable, optional
+        Will be called with the reloaded ASDF file to perform any
+        additional checks.
+
+    raw_yaml_check_func : callable, optional
+        Will be called with the raw YAML content as a string to
+        perform any additional checks.
+    """
     fname = str(tmpdir.join('test.asdf'))
 
     # First, test writing/reading a BytesIO buffer
@@ -80,6 +112,22 @@ def assert_roundtrip_tree(
 
 
 def yaml_to_asdf(yaml_content, yaml_headers=True):
+    """
+    Given a string of YAML content, adds the extra pre-
+    and post-amble to make it an ASDF file.
+
+    Parameters
+    ----------
+    yaml_content : string
+
+    yaml_headers : bool, optional
+        When True (default) add the standard ASDF YAML headers.
+
+    Returns
+    -------
+    buff : io.BytesIO()
+        A file-like object containing the ASDF-like content.
+    """
     if isinstance(yaml_content, six.text_type):
         yaml_content = yaml_content.encode('utf-8')
 
@@ -97,3 +145,25 @@ def yaml_to_asdf(yaml_content, yaml_headers=True):
 
     buff.seek(0)
     return buff
+
+
+def get_file_sizes(dirname):
+    """
+    Get the file sizes in a directory.
+
+    Parameters
+    ----------
+    dirname : string
+        Path to a directory
+
+    Returns
+    -------
+    sizes : dict
+        Dictionary of (file, size) pairs.
+    """
+    files = {}
+    for filename in os.listdir(dirname):
+        path = os.path.join(dirname, filename)
+        if os.path.isfile(path):
+            files[filename] = os.stat(path).st_size
+    return files
