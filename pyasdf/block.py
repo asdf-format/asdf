@@ -416,8 +416,13 @@ class Block(object):
     Instead, should only be created through the `BlockManager`.
     """
 
-    _header_fmt = b'>IQQQ16s'
-    _header_fmt_size = struct.calcsize(_header_fmt)
+    _header = util.BinaryStruct([
+        ('flags', 'I'),
+        ('allocated_size', 'Q'),
+        ('used_size', 'Q'),
+        ('checksum', 'Q'),
+        ('encoding', '16s'),
+    ])
 
     def __init__(self, data=None, uri=None, array_storage='internal'):
         if data is not None:
@@ -433,7 +438,6 @@ class Block(object):
         self._array_storage = array_storage
 
         self._fd = None
-        self._header_size = self._header_fmt_size
         self._offset = None
         self._allocated = self._size
         self._encoding = None
@@ -462,7 +466,7 @@ class Block(object):
 
     @property
     def header_size(self):
-        return self._header_size + constants.BLOCK_HEADER_BOILERPLATE_SIZE
+        return self._header.size + constants.BLOCK_HEADER_BOILERPLATE_SIZE
 
     @property
     def data_offset(self):
@@ -524,43 +528,43 @@ class Block(object):
 
         buff = fd.read(2)
         header_size, = struct.unpack(b'>H', buff)
-        if header_size < self._header_fmt_size:
+        if header_size < self._header.size:
             raise ValueError(
-                "Header size must be > {0}".format(self._header_fmt_size))
+                "Header size must be >= {0}".format(self._header.size))
 
         buff = fd.read(header_size)
-        (flags, allocated_size, used_size, checksum, encoding) = \
-            struct.unpack_from(self._header_fmt, buff[:self._header_fmt_size])
+        header = self._header.unpack(buff)
 
-        self._flags = flags
+        # This is used by the documentation system, but nowhere else.
+        self._flags = header['flags']
 
-        # Support streaming blocks
         if fd.seekable():
             # If the file is seekable, we can delay reading the actual
             # data until later.
             self._fd = fd
             self._header_size = header_size
             self._offset = offset
-            self._encoding = encoding
-            if flags & constants.BLOCK_FLAG_STREAMED:
+            if header['flags'] & constants.BLOCK_FLAG_STREAMED:
+                # Support streaming blocks
                 fd.fast_forward(-1)
                 self._array_storage = 'streamed'
                 self._size = self._allocated = (fd.tell() - self.data_offset) + 1
             else:
-                fd.fast_forward(allocated_size)
-                self._allocated = allocated_size
-                self._size = used_size
+                fd.fast_forward(header['allocated_size'])
+                self._allocated = header['allocated_size']
+                self._size = header['used_size']
         else:
             # If the file is a stream, we need to get the data now.
-            if flags & constants.BLOCK_FLAG_STREAMED:
+            if header['flags'] & constants.BLOCK_FLAG_STREAMED:
+                # Support streaming blocks
                 self._array_storage = 'streamed'
                 self._data = fd.read_into_array(-1)
                 self._size = self._allocated = len(self._data)
             else:
-                self._size = used_size
-                self._allocated = allocated_size
-                self._data = fd.read_into_array(used_size)
-                fd.fast_forward(allocated_size - used_size)
+                self._size = header['used_size']
+                self._allocated = header['allocated_size']
+                self._data = fd.read_into_array(self._size)
+                fd.fast_forward(self._allocated - self._size)
             fd.close()
 
         return self
@@ -570,7 +574,7 @@ class Block(object):
         Write an internal block to the given Python file-like object.
         """
         with generic_io.get_file(fd, 'w') as fd:
-            self._header_size = self._header_fmt_size
+            self._header_size = self._header.size
 
             flags = 0
             if self._array_storage == 'streamed':
@@ -578,9 +582,9 @@ class Block(object):
 
             fd.write(constants.BLOCK_MAGIC)
             fd.write(struct.pack(b'>H', self._header_size))
-            fd.write(struct.pack(
-                self._header_fmt, flags,
-                self.allocated, self._size, 0, b''))
+            fd.write(self._header.pack(
+                flags=flags, allocated_size=self.allocated,
+                used_size=self._size, checksum=0, encoding=b''))
 
             if self._data is not None:
                 fd.write_array(self._data)
