@@ -38,16 +38,6 @@ _string_datatype_names = {
 }
 
 
-def recursive_tolist(array):
-    def converter(node):
-        if isinstance(node, np.ndarray):
-            return recursive_tolist(node.tolist())
-        elif isinstance(node, tuple):
-            return list(node)
-        return node
-    return treeutil.walk_and_modify(array, converter)
-
-
 def asdf_byteorder_to_numpy_byteorder(byteorder):
     if byteorder == 'big':
         return '>'
