@@ -56,3 +56,14 @@ def test_name(tmpdir):
 
     tree = {'rot': astmodels.Rotation2D(23, name='foo')}
     helpers.assert_roundtrip_tree(tree, tmpdir, check)
+
+
+def test_domain(tmpdir):
+    def check(ff):
+        assert ff.tree['rot'].meta['domain'] == {
+            'lower': 0, 'upper': 1, 'includes_lower': True}
+
+    model = astmodels.Rotation2D(23)
+    model.meta['domain'] = {'lower': 0, 'upper': 1, 'includes_lower': True}
+    tree = {'rot': model}
+    helpers.assert_roundtrip_tree(tree, tmpdir, check)

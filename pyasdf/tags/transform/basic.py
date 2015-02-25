@@ -3,15 +3,15 @@
 
 from __future__ import absolute_import, division, unicode_literals, print_function
 
-from astropy import modeling
 from astropy.modeling import mappings
 from astropy.modeling import functional_models
 
 from ...asdftypes import AsdfType
+from ... import tagged
 from ... import yamlutil
 
 __all__ = ['TransformType', 'IdentityType', 'ConstantType',
-           'GenericModel', 'GenericType']
+           'DomainType', 'GenericModel', 'GenericType']
 
 
 class TransformType(AsdfType):
@@ -37,8 +37,15 @@ class TransformType(AsdfType):
     def from_tree(cls, node, ctx):
         model = cls.from_tree_transform(node, ctx)
         cls._assign_inverse(model, node, ctx)
+
         if 'name' in node:
             model = model.rename(node['name'])
+
+        # TODO: When astropy.modeling has built-in support for
+        # domains, save this somewhere else.
+        if 'domain' in node:
+            model.meta['domain'] = node['domain']
+
         return model
 
     @classmethod
@@ -49,8 +56,17 @@ class TransformType(AsdfType):
     def to_tree(cls, model, ctx):
         node = cls.to_tree_transform(model, ctx)
         TransformType._get_inverse(model, node, ctx)
+
         if model.name is not None:
             node['name'] = model.name
+
+        # TODO: When astropy.modeling has built-in support for
+        # domains, get this from somewhere else.
+        domain = model.meta.get('domain')
+        if domain:
+            domain = tagged.tag_object(DomainType.yaml_tag, domain)
+            node['domain'] = domain
+
         return node
 
 
@@ -90,6 +106,18 @@ class ConstantType(TransformType):
         return {
             'value': data.amplitude
         }
+
+
+class DomainType(AsdfType):
+    name = "transform/domain"
+
+    @classmethod
+    def from_tree(cls, node, ctx):
+        return node
+
+    @classmethod
+    def to_tree(cls, data, ctx):
+        return data
 
 
 # TODO: This is just here for bootstrapping and will go away eventually
