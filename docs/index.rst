@@ -9,7 +9,7 @@ Installation
 
 ``pyasdf`` requires:
 
-- `numpy <http://www.numpy.org/>`__ 1.8 or later
+- `numpy <http://www.numpy.org/>`__ 1.6 or later
 
 - `astropy <http://www.astropy.org/>`__ 1.0 or later
 
