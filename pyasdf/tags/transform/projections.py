@@ -69,35 +69,34 @@ class Rotate2DType(TransformType):
         assert_array_equal(a.angle, b.angle)
 
 
-class Rotate3DType(TransformType):
+class RotateSky(TransformType):
     name = "transform/rotate3d"
+    types = [modeling.rotations.RotateNative2Celestial,
+             modeling.rotations.RotateCelestial2Native]
 
     @classmethod
     def from_tree_transform(cls, node, ctx):
-        raise NotImplementedError
+        if node['direction'] == 'native2celestial':
+            return modeling.rotations.RotateNative2Celestial(node["phi"],
+                                                             node["theta"],
+                                                             node["psi"])
+        else:
+            return modeling.rotations.RotateCelestial2Native(node["phi"],
+                                                             node["theta"],
+                                                             node["psi"])
+
 
     @classmethod
     def to_tree_transform(cls, model, ctx):
-        raise NotImplementedError
+        if isinstance(model, modeling.rotations.RotateNative2Celestial):
+            direction = "native2celestial"
+        else:
+            direction = "celestial2native"
 
-    @classmethod
-    def assert_equal(cls, a, b):
-        raise NotImplementedError
-
-
-class RotateNative2Celestial(TransformType):
-    name = "transform/rotate3d"
-    types = [modeling.rotations.RotateNative2Celestial]
-
-    @classmethod
-    def from_tree_transform(cls, node, ctx):
-        return modeling.rotations.RotateNative2Celestial(node['phi'], node['theta'], node['psi'])
-
-    @classmethod
-    def to_tree_transform(cls, model, ctx):
-        return {'phi': model.phi.value,
-                'theta': model.theta.value,
-                'psi': model.psi.value
+        return {"phi": model.phi.value,
+                "theta": model.theta.value,
+                "psi": model.psi.value,
+                "direction": direction
                 }
 
     @classmethod
@@ -105,33 +104,6 @@ class RotateNative2Celestial(TransformType):
         # TODO: If models become comparable themselves, remove this.
         assert (isinstance(a, modeling.rotations.RotateNative2Celestial) and
                 isinstance(b, modeling.rotations.RotateNative2Celestial))
-        assert_array_equal(a.phi, b.phi)
-        assert_array_equal(a.psi, b.psi)
-        assert_array_equal(a.theta, b.theta)
-
-
-class RotateCelestial2Native(TransformType):
-    name = "transform/rotate3d"
-    types = [modeling.rotations.RotateCelestial2Native]
-
-    @classmethod
-    def from_tree_transform(cls, node, ctx):
-        return modeling.rotations.RotateCelestial2Native(node['phi'],
-                                                         node['theta'],
-                                                         node['psi'])
-
-    @classmethod
-    def to_tree_transform(cls, model, ctx):
-        return {'phi': model.phi.value,
-                'theta': model.theta.value,
-                'psi': model.psi.value
-                }
-
-    @classmethod
-    def assert_equal(cls, a, b):
-        # TODO: If models become comparable themselves, remove this.
-        assert (isinstance(a, modeling.rotations.RotateCelestial2Native) and
-                isinstance(b, modeling.rotations.RotateCelestial2Native))
         assert_array_equal(a.phi, b.phi)
         assert_array_equal(a.psi, b.psi)
         assert_array_equal(a.theta, b.theta)
