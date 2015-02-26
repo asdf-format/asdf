@@ -130,8 +130,6 @@ def test_table_inline(tmpdir):
         content = b'\n'.join(content.splitlines()[4:-1])
         tree = yaml.load(content)
 
-        print(tree)
-
         assert tree == {
             'datatype': [
                 {'datatype': 'int8', 'name': 'MINE'},
@@ -144,6 +142,18 @@ def test_table_inline(tmpdir):
 
     helpers.assert_roundtrip_tree(
         tree, tmpdir, None, check_raw_yaml, {'auto_inline': 64})
+
+
+def test_auto_inline_recursive(tmpdir):
+    from astropy.modeling import models
+    aff = models.AffineTransformation2D(matrix=[[1, 2], [3, 4]])
+    tree = {'test': aff}
+
+    def check_asdf(asdf):
+        assert len(list(asdf.blocks.internal_blocks)) == 0
+
+    helpers.assert_roundtrip_tree(
+        tree, tmpdir, check_asdf, None, {'auto_inline': 64})
 
 
 def test_table(tmpdir):
