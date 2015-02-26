@@ -102,8 +102,10 @@ class RotateSky(TransformType):
     @classmethod
     def assert_equal(cls, a, b):
         # TODO: If models become comparable themselves, remove this.
-        assert (isinstance(a, modeling.rotations.RotateNative2Celestial) and
-                isinstance(b, modeling.rotations.RotateNative2Celestial))
+        if isinstance(a, modeling.rotations.RotateNative2Celestial):
+            assert isinstance(b, modeling.rotations.RotateNative2Celestial)
+         if isinstance(a, modeling.rotations.RotateCelestial2Native):
+            assert isinstance(b, modeling.rotations.RotateCelestial2Native)
         assert_array_equal(a.phi, b.phi)
         assert_array_equal(a.psi, b.psi)
         assert_array_equal(a.theta, b.theta)
