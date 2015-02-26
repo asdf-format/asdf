@@ -556,11 +556,11 @@ class AsdfFile(versioning.VersionedMixin):
         try:
             self._serial_write(fd, pad_blocks)
             fd.flush()
-
-            if original_fd is not None:
-                original_fd.close()
         finally:
             self._post_write(fd)
+
+        if original_fd is not None:
+            original_fd.close()
 
         return self
 
