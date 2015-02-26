@@ -33,6 +33,10 @@ class Implode(Command):
             help="""The name of the output file.  If not provided, it
             will be the name of the input file with "_all"
             appended.""")
+        parser.add_argument(
+            "--resolve-references", "-r", action="store_true",
+            help="""Resolve all references and store them directly in
+            the output file.""")
 
         parser.set_defaults(func=cls.run)
 
@@ -40,10 +44,10 @@ class Implode(Command):
 
     @classmethod
     def run(cls, args):
-        return implode(args.filename[0], args.output)
+        return implode(args.filename[0], args.output, args.resolve_references)
 
 
-def implode(input, output=None):
+def implode(input, output=None, resolve_references=False):
     """
     Implode a given ASDF file, which may reference external data, back
     into a single ASDF file.
@@ -55,12 +59,18 @@ def implode(input, output=None):
 
     output : str of file-like object
         The output file.
+
+    resolve_references : bool, optional
+        If `True` resolve all external references before saving.
     """
     if output is None:
         base, ext = os.path.splitext(input)
         output = base + '_all' + '.asdf'
     with AsdfFile.read(input) as ff:
-        with AsdfFile(ff).write_to(output, all_array_storage='internal'):
+        ff2 = AsdfFile(ff)
+        if resolve_references:
+            ff2.resolve_references()
+        with ff2.write_to(output, all_array_storage='internal'):
             pass
 
 

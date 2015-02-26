@@ -7,19 +7,9 @@ import os
 
 import numpy as np
 
-from astropy.tests.helper import pytest
-
 from ... import AsdfFile
 from .. import main
-
-
-def get_file_sizes(dirname):
-    files = {}
-    for filename in os.listdir(dirname):
-        path = os.path.join(dirname, filename)
-        if os.path.isfile(path):
-            files[filename] = os.stat(path).st_size
-    return files
+from ...tests.helpers import get_file_sizes
 
 
 def test_explode_then_implode(tmpdir):

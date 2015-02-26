@@ -62,6 +62,9 @@ number of basic operations:
   - ``implode``: Convert an ASDF file in exploded form into a
     self-contained file.
 
+  - ``to_yaml``: Inline all of the data in an ASDF file so that it is
+    pure YAML.
+
 Run ``asdftool --help`` for more information.
 
 See also
