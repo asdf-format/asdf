@@ -69,6 +69,48 @@ class Rotate2DType(TransformType):
         assert_array_equal(a.angle, b.angle)
 
 
+class RotateSky(TransformType):
+    name = "transform/rotate3d"
+    types = [modeling.rotations.RotateNative2Celestial,
+             modeling.rotations.RotateCelestial2Native]
+
+    @classmethod
+    def from_tree_transform(cls, node, ctx):
+        if node['direction'] == 'native2celestial':
+            return modeling.rotations.RotateNative2Celestial(node["phi"],
+                                                             node["theta"],
+                                                             node["psi"])
+        else:
+            return modeling.rotations.RotateCelestial2Native(node["phi"],
+                                                             node["theta"],
+                                                             node["psi"])
+
+
+    @classmethod
+    def to_tree_transform(cls, model, ctx):
+        if isinstance(model, modeling.rotations.RotateNative2Celestial):
+            direction = "native2celestial"
+        else:
+            direction = "celestial2native"
+
+        return {"phi": model.phi.value,
+                "theta": model.theta.value,
+                "psi": model.psi.value,
+                "direction": direction
+                }
+
+    @classmethod
+    def assert_equal(cls, a, b):
+        # TODO: If models become comparable themselves, remove this.
+        if isinstance(a, modeling.rotations.RotateNative2Celestial):
+            assert isinstance(b, modeling.rotations.RotateNative2Celestial)
+         if isinstance(a, modeling.rotations.RotateCelestial2Native):
+            assert isinstance(b, modeling.rotations.RotateCelestial2Native)
+        assert_array_equal(a.phi, b.phi)
+        assert_array_equal(a.psi, b.psi)
+        assert_array_equal(a.theta, b.theta)
+
+
 class TangentType(TransformType):
     name = "transform/tangent"
     types = [modeling.projections.Pix2Sky_TAN, modeling.projections.Sky2Pix_TAN]
