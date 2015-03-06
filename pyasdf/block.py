@@ -260,7 +260,7 @@ class BlockManager(object):
         if all_array_storage:
             block.array_storage = all_array_storage
 
-        all_array_compression = getattr(ctx, '_all_array_compression', None):
+        all_array_compression = getattr(ctx, '_all_array_compression', None)
         if all_array_compression:
             block.compression = all_array_compression
 
