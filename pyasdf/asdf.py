@@ -385,32 +385,34 @@ class AsdfFile(versioning.VersionedMixin):
             fd.fast_forward(padding)
 
     def _pre_write(self, fd, all_array_storage, auto_inline):
+        self._all_array_storage = all_array_storage
+        self._auto_inline = auto_inline
+
         if len(self._tree):
             self.run_hook('pre_write')
 
         # This is where we'd do some more sophisticated block
         # reorganization, if necessary
-        self._blocks.finalize(self, all_array_storage, auto_inline=auto_inline)
+        self._blocks.finalize(self)
 
     def _serial_write(self, fd, pad_blocks):
-        try:
-            self._write_tree(self._tree, fd, pad_blocks)
-            self.blocks.write_internal_blocks_serial(fd, pad_blocks)
-            self.blocks.write_external_blocks(fd.uri, pad_blocks)
-        finally:
-            self._post_write(fd)
+        self._write_tree(self._tree, fd, pad_blocks)
+        self.blocks.write_internal_blocks_serial(fd, pad_blocks)
+        self.blocks.write_external_blocks(fd.uri, pad_blocks)
 
     def _random_write(self, fd, pad_blocks):
-        try:
-            self._write_tree(self._tree, fd, False)
-            self.blocks.write_internal_blocks_random_access(fd)
-            self.blocks.write_external_blocks(fd.uri, pad_blocks)
-        finally:
-            self._post_write(fd)
+        self._write_tree(self._tree, fd, False)
+        self.blocks.write_internal_blocks_random_access(fd)
+        self.blocks.write_external_blocks(fd.uri, pad_blocks)
 
     def _post_write(self, fd):
         if len(self._tree):
             self.run_hook('post_write')
+
+        if hasattr(self, '_all_array_storage'):
+            del self._all_array_storage
+        if hasattr(self, '_auto_inline'):
+            del self._auto_inline
 
     def update(self, all_array_storage=None, pad_blocks=False,
                auto_inline=None):
@@ -464,47 +466,50 @@ class AsdfFile(versioning.VersionedMixin):
 
         self._pre_write(fd, all_array_storage, auto_inline)
 
-        fd.seek(0)
+        try:
+            fd.seek(0)
 
-        if not self.blocks.has_blocks_with_offset():
-            # If we don't have any blocks that are being reused, just
-            # write out in a serial fashion.
-            self._serial_write(fd, pad_blocks)
-            fd.truncate(fd.tell())
-            return
+            if not self.blocks.has_blocks_with_offset():
+                # If we don't have any blocks that are being reused, just
+                # write out in a serial fashion.
+                self._serial_write(fd, pad_blocks)
+                fd.truncate(fd.tell())
+                return
 
-        # Estimate how big the tree will be on disk by writing the
-        # YAML out in memory.  Since the block indices aren't yet
-        # known, we have to count the number of block references and
-        # add enough space to accommodate the largest block number
-        # possible there.
-        tree_serialized = io.BytesIO()
-        self._write_tree(self._tree, tree_serialized, pad_blocks=False)
-        array_ref_count = [0]
-        from .tags.core.ndarray import NDArrayType
+            # Estimate how big the tree will be on disk by writing the
+            # YAML out in memory.  Since the block indices aren't yet
+            # known, we have to count the number of block references and
+            # add enough space to accommodate the largest block number
+            # possible there.
+            tree_serialized = io.BytesIO()
+            self._write_tree(self._tree, tree_serialized, pad_blocks=False)
+            array_ref_count = [0]
+            from .tags.core.ndarray import NDArrayType
 
-        def count_external_array_references(node):
-            if (isinstance(node, (np.ndarray, NDArrayType)) and
-                self.blocks[node].array_storage == 'internal'):
-                array_ref_count[0] += 1
-        treeutil.walk(self._tree, count_external_array_references)
+            def count_external_array_references(node):
+                if (isinstance(node, (np.ndarray, NDArrayType)) and
+                    self.blocks[node].array_storage == 'internal'):
+                    array_ref_count[0] += 1
+            treeutil.walk(self._tree, count_external_array_references)
 
-        serialized_tree_size = (
-            tree_serialized.tell() +
-            constants.MAX_BLOCKS_DIGITS * array_ref_count[0])
+            serialized_tree_size = (
+                tree_serialized.tell() +
+                constants.MAX_BLOCKS_DIGITS * array_ref_count[0])
 
-        if not block.calculate_updated_layout(
-                self.blocks, serialized_tree_size,
-                pad_blocks, fd.block_size):
-            # If we don't have any blocks that are being reused, just
-            # write out in a serial fashion.
-            self._serial_write(fd, pad_blocks)
-            fd.truncate(fd.tell())
-            return
+            if not block.calculate_updated_layout(
+                    self.blocks, serialized_tree_size,
+                    pad_blocks, fd.block_size):
+                # If we don't have any blocks that are being reused, just
+                # write out in a serial fashion.
+                self._serial_write(fd, pad_blocks)
+                fd.truncate(fd.tell())
+                return
 
-        fd.seek(0)
-        self._random_write(fd, pad_blocks)
-        fd.flush()
+            fd.seek(0)
+            self._random_write(fd, pad_blocks)
+            fd.flush()
+        finally:
+            self._post_write(fd)
 
     def write_to(self, fd, all_array_storage=None, pad_blocks=False,
                  auto_inline=None):
@@ -548,8 +553,11 @@ class AsdfFile(versioning.VersionedMixin):
 
         self._pre_write(fd, all_array_storage, auto_inline)
 
-        self._serial_write(fd, pad_blocks)
-        fd.flush()
+        try:
+            self._serial_write(fd, pad_blocks)
+            fd.flush()
+        finally:
+            self._post_write(fd)
 
         if original_fd is not None:
             original_fd.close()

@@ -226,18 +226,15 @@ class BlockManager(object):
         if block._data is not None:
             del self._data_to_block_mapping[id(block._data)]
 
-    def _find_used_blocks(self, tree, auto_inline):
+    def _find_used_blocks(self, tree, ctx):
         from .tags.core import ndarray
-
-        if auto_inline is None:
-            auto_inline = 0
 
         block_to_array_mapping = {}
 
         def visit_array(node):
             block = None
             if isinstance(node, np.ndarray):
-                block = self.find_or_create_block_for_array(node)
+                block = self.find_or_create_block_for_array(node, ctx)
             elif (isinstance(node, ndarray.NDArrayType) and
                 not isinstance(node, stream.Stream)):
                 block = node.block
@@ -251,11 +248,18 @@ class BlockManager(object):
             arrays = block_to_array_mapping.get(block, [])
             if getattr(block, '_used', 0) == 0 and len(arrays) == 0:
                 self.remove(block)
-            elif len(arrays) == 1:
-                if np.product(block.data.shape) < auto_inline:
-                    block.array_storage = 'inline'
 
-    def finalize(self, ctx, all_array_storage, auto_inline=None):
+    def _handle_global_block_settings(self, ctx, block):
+        all_array_storage = getattr(ctx, '_all_array_storage', None)
+        if all_array_storage:
+            block.array_storage = all_array_storage
+
+        auto_inline = getattr(ctx, '_auto_inline', None)
+        if auto_inline:
+            if np.product(block.data.shape) < auto_inline:
+                block.array_storage = 'inline'
+
+    def finalize(self, ctx):
         """
         At this point, we have a complete set of blocks for the file,
         with no extras.
@@ -265,11 +269,10 @@ class BlockManager(object):
         # TODO: Should this reset the state (what's external and what
         # isn't) afterword?
 
-        self._find_used_blocks(ctx.tree, auto_inline)
+        self._find_used_blocks(ctx.tree, ctx)
 
-        if all_array_storage is not None:
-            for block in self.blocks:
-                block.array_storage = all_array_storage
+        for block in self.blocks:
+            self._handle_global_block_settings(ctx, block)
 
         count = 0
         for block in self._blocks:
@@ -365,7 +368,7 @@ class BlockManager(object):
 
         raise ValueError("block not found.")
 
-    def find_or_create_block_for_array(self, arr):
+    def find_or_create_block_for_array(self, arr, ctx):
         """
         For a given array, looks for an existing block containing its
         underlying data.  If not found, adds a new block to the block
@@ -393,6 +396,7 @@ class BlockManager(object):
             return block
         block = Block(base)
         self.add(block)
+        self._handle_global_block_settings(ctx, block)
         return block
 
     def get_streamed_block(self):
@@ -416,7 +420,7 @@ class BlockManager(object):
         return block
 
     def __getitem__(self, arr):
-        return self.find_or_create_block_for_array(arr)
+        return self.find_or_create_block_for_array(arr, object())
 
 
 class Block(object):

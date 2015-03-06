@@ -347,12 +347,12 @@ class NDArrayType(AsdfType):
         # Find all of the used data buffers so we can add or rearrange
         # them if necessary
         if isinstance(data, np.ndarray):
-            ctx.blocks.find_or_create_block_for_array(data)
+            ctx.blocks.find_or_create_block_for_array(data, ctx)
 
     @classmethod
     def to_tree(cls, data, ctx):
         base = util.get_array_base(data)
-        block = ctx.blocks.find_or_create_block_for_array(data)
+        block = ctx.blocks.find_or_create_block_for_array(data, ctx)
         shape = data.shape
         dtype = data.dtype
         offset = data.ctypes.data - base.ctypes.data
