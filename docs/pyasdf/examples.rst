@@ -340,3 +340,26 @@ included twice in the same tree:
         pass
 
 .. asdf:: anchors.asdf
+
+Compression
+-----------
+
+Individual blocks in an ASDF file may be zlib-compressed.
+
+You can easily `zlib <http://www.zlib.net/>`__ compress all blocks:
+
+.. runcode::
+
+   from pyasdf import AsdfFile
+   import numpy as np
+
+   tree = {
+       'a': np.random.rand(256, 256),
+       'b': np.random.rand(512, 512)
+   }
+
+   target = AsdfFile(tree)
+   with target.write_to('target.asdf', all_array_compression='zlib'):
+       pass
+
+.. asdf:: target.asdf

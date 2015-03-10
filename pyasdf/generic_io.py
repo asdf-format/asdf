@@ -262,6 +262,18 @@ class GenericFile(object):
         """
         return self.read(self._blksize)
 
+    def read_blocks(self, size):
+        """
+        Read ``size`` bytes of data from the file, one block at a
+        time.  The result is a generator where each value is a bytes
+        object.
+        """
+        i = 0
+        for i in xrange(0, size - self._blksize, self._blksize):
+            yield self.read(self._blksize)
+        if i < size:
+            yield self.read(size - i)
+
     if sys.version_info[:2] == (2, 7) and sys.version_info[2] < 4:
         # On Python 2.7.x prior to 2.7.4, the buffer does not support the
         # new buffer interface, and thus can't be written directly.  See

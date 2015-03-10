@@ -276,6 +276,40 @@ class AsdfFile(versioning.VersionedMixin):
         """
         return self.blocks[arr].array_storage
 
+    def set_array_compression(self, arr, compression):
+        """
+        Set the compression to use for the given array data.
+
+        Parameters
+        ----------
+        arr : numpy.ndarray
+            The array to set.  If multiple views of the array are in
+            the tree, only the most recent compression setting will be
+            used, since all views share a single block.
+
+        array_compression : str or None
+            Must be one of:
+
+            - ``zlib``: Use zlib compression
+
+            - ``''`` or `None`: no compression
+        """
+        self.blocks[arr].compression = compression
+
+    def get_array_compression(self, arr):
+        """
+        Get the compression type for the given array data.
+
+        Parameters
+        ----------
+        arr : numpy.ndarray
+
+        Returns
+        -------
+        compression : str or None
+        """
+        return self.blocks[arr].compression
+
     @classmethod
     def _parse_header_line(cls, line):
         """
@@ -384,8 +418,10 @@ class AsdfFile(versioning.VersionedMixin):
                 fd.tell(), pad_blocks, fd.block_size)
             fd.fast_forward(padding)
 
-    def _pre_write(self, fd, all_array_storage, auto_inline):
+    def _pre_write(self, fd, all_array_storage, all_array_compression,
+                   auto_inline):
         self._all_array_storage = all_array_storage
+        self._all_array_compression = all_array_compression
         self._auto_inline = auto_inline
 
         if len(self._tree):
@@ -411,11 +447,13 @@ class AsdfFile(versioning.VersionedMixin):
 
         if hasattr(self, '_all_array_storage'):
             del self._all_array_storage
+        if hasattr(self, '_all_array_compression'):
+            del self._all_array_compression
         if hasattr(self, '_auto_inline'):
             del self._auto_inline
 
-    def update(self, all_array_storage=None, pad_blocks=False,
-               auto_inline=None):
+    def update(self, all_array_storage=None, all_array_compression=None,
+               auto_inline=None, pad_blocks=False):
         """
         Update the file on disk in place.
 
@@ -433,18 +471,26 @@ class AsdfFile(versioning.VersionedMixin):
 
             - ``inline``: Store the data as YAML inline in the tree.
 
-        pad_blocks : float or bool, optional
-            Add extra space between blocks to allow for updating of
-            the file.  If `False` (default), add no padding (always
-            return 0).  If `True`, add a default amount of padding of
-            10% If a float, it is a factor to multiple content_size by
-            to get the new total size.
+        all_array_compression : string, optional
+            If provided, set the compression type on all binary blocks
+            in the file.  Must be one of:
+
+            - ``''``: No compression.
+
+            - ``zlib``: Use zlib compression.
 
         auto_inline : int, optional
             When the number of elements in an array is less than this
             threshold, store the array as inline YAML, rather than a
             binary block.  This only works on arrays that do not share
             data with other arrays.  Default is 0.
+
+        pad_blocks : float or bool, optional
+            Add extra space between blocks to allow for updating of
+            the file.  If `False` (default), add no padding (always
+            return 0).  If `True`, add a default amount of padding of
+            10% If a float, it is a factor to multiple content_size by
+            to get the new total size.
         """
         fd = self._fd
 
@@ -464,7 +510,8 @@ class AsdfFile(versioning.VersionedMixin):
             raise IOError(
                 "Can not update, since associated file is not seekable")
 
-        self._pre_write(fd, all_array_storage, auto_inline)
+        self._pre_write(fd, all_array_storage, all_array_compression,
+                        auto_inline)
 
         try:
             fd.seek(0)
@@ -511,8 +558,8 @@ class AsdfFile(versioning.VersionedMixin):
         finally:
             self._post_write(fd)
 
-    def write_to(self, fd, all_array_storage=None, pad_blocks=False,
-                 auto_inline=None):
+    def write_to(self, fd, all_array_storage=None, all_array_compression=None,
+                 auto_inline=None, pad_blocks=False):
         """
         Write the ASDF file to the given file-like object.
 
@@ -534,24 +581,33 @@ class AsdfFile(versioning.VersionedMixin):
 
             - ``inline``: Store the data as YAML inline in the tree.
 
-        pad_blocks : float or bool, optional
-            Add extra space between blocks to allow for updating of
-            the file.  If `False` (default), add no padding (always
-            return 0).  If `True`, add a default amount of padding of
-            10% If a float, it is a factor to multiple content_size by
-            to get the new total size.
+        all_array_compression : string, optional
+            If provided, set the compression type on all binary blocks
+            in the file.  Must be one of:
+
+            - ``''``: No compression.
+
+            - ``zlib``: Use zlib compression.
 
         auto_inline : int, optional
             When the number of elements in an array is less than this
             threshold, store the array as inline YAML, rather than a
             binary block.  This only works on arrays that do not share
             data with other arrays.  Default is 0.
+
+        pad_blocks : float or bool, optional
+            Add extra space between blocks to allow for updating of
+            the file.  If `False` (default), add no padding (always
+            return 0).  If `True`, add a default amount of padding of
+            10% If a float, it is a factor to multiple content_size by
+            to get the new total size.
         """
         original_fd = self._fd
 
         self._fd = fd = generic_io.get_file(fd, mode='w')
 
-        self._pre_write(fd, all_array_storage, auto_inline)
+        self._pre_write(fd, all_array_storage, all_array_compression,
+                        auto_inline)
 
         try:
             self._serial_write(fd, pad_blocks)

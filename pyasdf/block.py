@@ -5,6 +5,7 @@ from __future__ import absolute_import, division, unicode_literals, print_functi
 
 from collections import namedtuple
 import copy
+import io
 import os
 import struct
 import weakref
@@ -14,6 +15,7 @@ import numpy as np
 from astropy.extern import six
 from astropy.extern.six.moves.urllib import parse as urlparse
 
+from . import compression as mcompression
 from . import constants
 from . import generic_io
 from . import stream
@@ -118,12 +120,16 @@ class BlockManager(object):
             should be after the tree.
         """
         for block in self.internal_blocks:
-            padding = util.calculate_padding(
-                block.size, pad_blocks, fd.block_size)
-            block.allocated = block._size + padding
-            block.offset = fd.tell()
-            block.write(fd)
-            fd.fast_forward(padding)
+            if block.is_compressed:
+                block.offset = fd.tell()
+                block.write(fd)
+            else:
+                padding = util.calculate_padding(
+                    block.size, pad_blocks, fd.block_size)
+                block.allocated = block._size + padding
+                block.offset = fd.tell()
+                block.write(fd)
+                fd.fast_forward(block.allocated - block._size)
 
     def write_internal_blocks_random_access(self, fd):
         """
@@ -253,6 +259,10 @@ class BlockManager(object):
         all_array_storage = getattr(ctx, '_all_array_storage', None)
         if all_array_storage:
             block.array_storage = all_array_storage
+
+        all_array_compression = getattr(ctx, '_all_array_compression', None)
+        if all_array_compression:
+            block.compression = all_array_compression
 
         auto_inline = getattr(ctx, '_auto_inline', None)
         if auto_inline:
@@ -432,30 +442,25 @@ class Block(object):
 
     _header = util.BinaryStruct([
         ('flags', 'I'),
+        ('compression', '4s'),
         ('allocated_size', 'Q'),
         ('used_size', 'Q'),
-        ('checksum', 'Q'),
-        ('encoding', '16s'),
+        ('data_size', 'Q'),
+        ('checksum', 'Q')
     ])
 
     def __init__(self, data=None, uri=None, array_storage='internal'):
-        if data is not None:
-            self._data = data
-            if six.PY2:
-                self._size = len(data.data)
-            elif six.PY3:
-                self._size = data.data.nbytes
-        else:
-            self._data = None
-            self._size = 0
+        self._data = data
         self._uri = uri
         self._array_storage = array_storage
 
         self._fd = None
         self._offset = None
-        self._allocated = self._size
-        self._encoding = None
+        self._compression = None
         self._memmapped = False
+
+        self.update_size()
+        self._allocated = self._size
 
     def __repr__(self):
         return '<Block {0} alloc: {1} size: {2} type: {3}>'.format(
@@ -501,6 +506,39 @@ class Block(object):
                 "array_storage must be one of 'internal', 'external', "
                 "'streamed' or 'inline'")
         self._array_storage = typename
+        if typename == 'streamed':
+            self.compression = None
+
+    @property
+    def compression(self):
+        return self._compression
+
+    @compression.setter
+    def compression(self, compression):
+        self._compression = mcompression.validate(compression)
+
+    @property
+    def is_compressed(self):
+        return self._compression is not None
+
+    def update_size(self):
+        """
+        Recalculate the on-disk size of the block.  This causes any
+        compression steps to run.  It should only be called when
+        updating the file in-place, otherwise the work is redundant.
+        """
+        if self._data is not None:
+            if six.PY2:
+                self._data_size = len(self._data.data)
+            else:
+                self._data_size = self._data.data.nbytes
+            if not self.is_compressed:
+                self._size = self._data_size
+            else:
+                self._size = mcompression.get_compressed_size(
+                    self._data, self.compression)
+        else:
+            self._data_size = self._size = 0
 
     def read(self, fd, past_magic=False):
         """
@@ -551,6 +589,17 @@ class Block(object):
 
         # This is used by the documentation system, but nowhere else.
         self._flags = header['flags']
+        self.compression = header['compression']
+
+        if (self.compression is None and
+            header['used_size'] != header['data_size']):
+            raise ValueError(
+                "used_size and data_size must be equal when no compression is used.")
+
+        if (header['flags'] & constants.BLOCK_FLAG_STREAMED and
+            self.compression is not None):
+            raise ValueError(
+                "Compression set on a streamed block.")
 
         if fd.seekable():
             # If the file is seekable, we can delay reading the actual
@@ -562,26 +611,37 @@ class Block(object):
                 # Support streaming blocks
                 fd.fast_forward(-1)
                 self._array_storage = 'streamed'
-                self._size = self._allocated = (fd.tell() - self.data_offset) + 1
+                self._data_size = self._size = self._allocated = \
+                                  (fd.tell() - self.data_offset) + 1
             else:
                 fd.fast_forward(header['allocated_size'])
                 self._allocated = header['allocated_size']
                 self._size = header['used_size']
+                self._data_size = header['data_size']
         else:
             # If the file is a stream, we need to get the data now.
             if header['flags'] & constants.BLOCK_FLAG_STREAMED:
                 # Support streaming blocks
                 self._array_storage = 'streamed'
                 self._data = fd.read_into_array(-1)
-                self._size = self._allocated = len(self._data)
+                self._data_size = self._size = self._allocated = len(self._data)
             else:
+                self._data_size = header['data_size']
                 self._size = header['used_size']
                 self._allocated = header['allocated_size']
-                self._data = fd.read_into_array(self._size)
+                self._data = self._read_data(
+                    fd, self._size, self._data_size, self.compression)
                 fd.fast_forward(self._allocated - self._size)
             fd.close()
 
         return self
+
+    def _read_data(self, fd, used_size, data_size, compression):
+        if not compression:
+            return fd.read_into_array(used_size)
+        else:
+            return mcompression.decompress(
+                fd, used_size, data_size, compression)
 
     def write(self, fd):
         """
@@ -591,17 +651,49 @@ class Block(object):
             self._header_size = self._header.size
 
             flags = 0
+            data_size = used_size = allocated_size = 0
             if self._array_storage == 'streamed':
                 flags |= constants.BLOCK_FLAG_STREAMED
+            elif self._data is not None:
+                if not fd.seekable() and self.is_compressed:
+                    buff = io.BytesIO()
+                    mcompression.compress(buff, self._data, self.compression)
+                    self.allocated = self._size = buff.tell()
+                data_size = self._data.nbytes
+                allocated_size = self.allocated
+                used_size = self._size
 
             fd.write(constants.BLOCK_MAGIC)
             fd.write(struct.pack(b'>H', self._header_size))
             fd.write(self._header.pack(
-                flags=flags, allocated_size=self.allocated,
-                used_size=self._size, checksum=0, encoding=b''))
+                flags=flags,
+                compression=mcompression.to_compression_header(
+                    self.compression),
+                allocated_size=allocated_size,
+                used_size=used_size, data_size=data_size,
+                checksum=0))
 
             if self._data is not None:
-                fd.write_array(self._data)
+                if self.is_compressed:
+                    if not fd.seekable():
+                        fd.write(buff.getvalue())
+                    else:
+                        # If the file is seekable, we write the
+                        # compressed data directly to it, then go back
+                        # and write the resulting size in the block
+                        # header.
+                        start = fd.tell()
+                        mcompression.compress(fd, self._data, self.compression)
+                        end = fd.tell()
+                        self.allocated = self._size = end - start
+                        fd.seek(self.offset + 6)
+                        self._header.update(
+                            fd,
+                            allocated_size=self.allocated,
+                            used_size=self._size)
+                        fd.seek(end)
+                else:
+                    fd.write_array(self._data)
 
     @property
     def data(self):
@@ -614,7 +706,7 @@ class Block(object):
                     "ASDF file has already been closed. "
                     "Can not get the data.")
 
-            if self._fd.can_memmap():
+            if not self.is_compressed and self._fd.can_memmap():
                 self._data = self._fd.memmap_array(
                     self.data_offset, self._size)
                 self._memmapped = True
@@ -624,7 +716,8 @@ class Block(object):
                 curpos = self._fd.tell()
                 try:
                     self._fd.seek(self.data_offset)
-                    self._data = self._fd.read_into_array(self._size)
+                    self._data = self._read_data(
+                        self._fd, self._size, self._data_size, self.compression)
                 finally:
                     self._fd.seek(curpos)
 
@@ -669,6 +762,7 @@ def calculate_updated_layout(blocks, tree_size, pad_blocks, block_size):
     for block in blocks._blocks:
         if block.array_storage == 'internal':
             if block.offset is not None:
+                block.update_size()
                 fixed.append(
                     Entry(block.offset, block.offset + block.size, block))
             else:
