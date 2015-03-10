@@ -67,3 +67,11 @@ def test_domain(tmpdir):
     model.meta['domain'] = {'lower': 0, 'upper': 1, 'includes_lower': True}
     tree = {'rot': model}
     helpers.assert_roundtrip_tree(tree, tmpdir, check)
+
+
+def test_zenithal_with_arguments(tmpdir):
+    tree = {
+        'azp': astmodels.Sky2Pix_AZP(0.5, 0.3)
+    }
+
+    helpers.assert_roundtrip_tree(tree, tmpdir)
