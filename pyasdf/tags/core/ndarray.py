@@ -166,7 +166,7 @@ def numpy_array_to_list(array):
     # Convert byte string arrays to unicode string arrays, since YAML
     # doesn't handle the former.  This just assumes they are Latin-1.
     def tolist(x):
-        if isinstance(x, np.ndarray):
+        if isinstance(x, (np.ndarray, NDArrayType)):
             if x.dtype.char == 'S':
                 x = x.astype('U').tolist()
             else:
