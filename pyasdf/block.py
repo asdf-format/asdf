@@ -556,8 +556,6 @@ class Block(object):
         """
         if self._checksum:
             checksum = self._calculate_checksum(self.data)
-            print(repr(checksum))
-            print(repr(self._checksum))
             if checksum != self._checksum:
                 return False
         return True
