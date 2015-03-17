@@ -691,3 +691,36 @@ foo : bar
     fd = generic_io.InputStream(buff, 'r')
     ff = asdf.AsdfFile.read(fd)
     assert len(ff.blocks) == 1
+
+
+def test_checksum(tmpdir):
+    tmpdir = str(tmpdir)
+    path = os.path.join(tmpdir, 'test.asdf')
+
+    my_array = np.random.rand(8, 8)
+    tree = {'my_array': my_array}
+    with asdf.AsdfFile(tree) as ff:
+        ff.write_to(path)
+
+    with asdf.AsdfFile.read(path, validate_checksums=True) as ff:
+        assert type(ff.blocks._blocks[0].checksum) == bytes
+        assert ff.blocks._blocks[0].checksum == \
+            b'\xc7\xa1\xa0\\\x0e=\xbb\x93\x11\x94\x8amU+\xe1i'
+
+
+def test_checksum_update(tmpdir):
+    tmpdir = str(tmpdir)
+    path = os.path.join(tmpdir, 'test.asdf')
+
+    my_array = np.random.rand(8, 8)
+    tree = {'my_array': my_array}
+    with asdf.AsdfFile(tree) as ff:
+        ff.write_to(path)
+        my_array[0, 0] = 0.0
+        # update() should update the checksum, even if the data itself
+        # is memmapped and isn't expressly re-written.
+        ff.update()
+
+    with asdf.AsdfFile.read(path, validate_checksums=True) as ff:
+        assert ff.blocks._blocks[0].checksum == \
+            b'-d1\xcf\n.M\xbb\xf3\xe7\x91\xe8\x88e\t\xe6'

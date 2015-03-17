@@ -5,6 +5,7 @@ from __future__ import absolute_import, division, unicode_literals, print_functi
 
 from collections import namedtuple
 import copy
+import hashlib
 import io
 import os
 import struct
@@ -86,7 +87,8 @@ class BlockManager(object):
                 return x.offset
         self._blocks.sort(key=sorter)
 
-    def read_internal_blocks(self, fd, past_magic=False):
+    def read_internal_blocks(self, fd, past_magic=False,
+                             validate_checksums=False):
         """
         Read all internal blocks present in the file.
 
@@ -95,14 +97,18 @@ class BlockManager(object):
         fd : GenericFile
             The file to read from.
 
-        past_magic: bool, optional
+        past_magic : bool, optional
             If `True`, the file position is immediately after the
             block magic token.  If `False` (default), the file
             position is exactly at the beginning of the block magic
             token.
+
+        validate_checksums : bool, optional
+            If `True`, validate the blocks against their checksums.
         """
         while True:
-            block = Block().read(fd, past_magic=past_magic)
+            block = Block().read(fd, past_magic=past_magic,
+                                 validate_checksum=validate_checksums)
             if block is not None:
                 self.add(block)
             else:
@@ -446,7 +452,7 @@ class Block(object):
         ('allocated_size', 'Q'),
         ('used_size', 'Q'),
         ('data_size', 'Q'),
-        ('checksum', 'Q')
+        ('checksum', '16s')
     ])
 
     def __init__(self, data=None, uri=None, array_storage='internal'):
@@ -457,6 +463,7 @@ class Block(object):
         self._fd = None
         self._offset = None
         self._compression = None
+        self._checksum = None
         self._memmapped = False
 
         self.update_size()
@@ -521,6 +528,46 @@ class Block(object):
     def is_compressed(self):
         return self._compression is not None
 
+    @property
+    def checksum(self):
+        return self._checksum
+
+    def _set_checksum(self, checksum):
+        if checksum == b'\0' * 16:
+            self._checksum = None
+        else:
+            self._checksum = checksum
+
+    def _calculate_checksum(self, data):
+        m = hashlib.new('md5')
+        m.update(self.data)
+        return m.digest()
+
+    def validate_checksum(self):
+        """
+        Validate the content of the block against the current checksum.
+
+        Returns
+        -------
+        valid : bool
+            `True` if the content is valid against the current
+            checksum or there is no current checksum.  Otherwise,
+            `False`.
+        """
+        if self._checksum:
+            checksum = self._calculate_checksum(self.data)
+            print(repr(checksum))
+            print(repr(self._checksum))
+            if checksum != self._checksum:
+                return False
+        return True
+
+    def update_checksum(self):
+        """
+        Update the checksum based on the current data contents.
+        """
+        self._checksum = self._calculate_checksum(self.data)
+
     def update_size(self):
         """
         Recalculate the on-disk size of the block.  This causes any
@@ -540,7 +587,7 @@ class Block(object):
         else:
             self._data_size = self._size = 0
 
-    def read(self, fd, past_magic=False):
+    def read(self, fd, past_magic=False, validate_checksum=False):
         """
         Read a Block from the given Python file-like object.
 
@@ -553,11 +600,15 @@ class Block(object):
         ----------
         fd : GenericFile
 
-        past_magic: bool, optional
+        past_magic : bool, optional
             If `True`, the file position is immediately after the
             block magic token.  If `False` (default), the file
             position is exactly at the beginning of the block magic
             token.
+
+        validate_checksum : bool, optional
+            If `True`, validate the data against the checksum, and
+            raise a `ValueError` if the data doesn't match.
         """
         fd = generic_io.get_file(fd)
 
@@ -590,6 +641,7 @@ class Block(object):
         # This is used by the documentation system, but nowhere else.
         self._flags = header['flags']
         self.compression = header['compression']
+        self._set_checksum(header['checksum'])
 
         if (self.compression is None and
             header['used_size'] != header['data_size']):
@@ -634,6 +686,11 @@ class Block(object):
                 fd.fast_forward(self._allocated - self._size)
             fd.close()
 
+        if validate_checksum and not self.validate_checksum():
+            raise ValueError(
+                "Block at {0} does not match given checksum".format(
+                self._offset))
+
         return self
 
     def _read_data(self, fd, used_size, data_size, compression):
@@ -655,6 +712,7 @@ class Block(object):
             if self._array_storage == 'streamed':
                 flags |= constants.BLOCK_FLAG_STREAMED
             elif self._data is not None:
+                self.update_checksum()
                 if not fd.seekable() and self.is_compressed:
                     buff = io.BytesIO()
                     mcompression.compress(buff, self._data, self.compression)
@@ -662,6 +720,11 @@ class Block(object):
                 data_size = self._data.nbytes
                 allocated_size = self.allocated
                 used_size = self._size
+
+            if self.checksum is not None:
+                checksum = self.checksum
+            else:
+                checksum = b'\0' * 16
 
             fd.write(constants.BLOCK_MAGIC)
             fd.write(struct.pack(b'>H', self._header_size))
@@ -671,7 +734,7 @@ class Block(object):
                     self.compression),
                 allocated_size=allocated_size,
                 used_size=used_size, data_size=data_size,
-                checksum=0))
+                checksum=checksum))
 
             if self._data is not None:
                 if self.is_compressed:
