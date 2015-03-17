@@ -344,3 +344,21 @@ def test_simple_table():
     ff = asdf.AsdfFile(tree)
     ff.set_array_storage(table, 'inline')
     ff.write_to(io.BytesIO())
+
+
+def test_unicode_to_list(tmpdir):
+    arr = np.array(['', '𐀠'], dtype='<U')
+    tree = {
+        'unicode': arr
+    }
+
+    fd = io.BytesIO()
+    ff = asdf.AsdfFile(tree)
+    ff.set_array_storage(arr, 'inline')
+    ff.write_to(fd)
+    fd.seek(0)
+
+    with asdf.AsdfFile.read(fd) as ff:
+        ff.resolve_and_inline()
+        with ff.write_to(io.BytesIO()):
+            pass
