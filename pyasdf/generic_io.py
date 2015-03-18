@@ -531,18 +531,22 @@ class RandomAccessFile(GenericFile):
         raise ValueError("{0} not found".format(delimiter_name))
 
     def seek_until(self, delimiter, include=True):
+        last_block = b''
         while True:
             block = self.read_block()
             if not len(block):
                 break
-            index = re.search(delimiter, block)
+            blocks = last_block + block
+            index = re.search(delimiter, blocks)
             if index is not None:
                 if include:
                     index = index.end()
                 else:
                     index = index.start()
-                self.seek(-(len(block) - index), os.SEEK_CUR)
+                self.seek(-(len(blocks) - index), os.SEEK_CUR)
                 return True
+
+            last_block = block
 
         return False
 
@@ -680,21 +684,23 @@ class InputStream(GenericFile):
         raise ValueError("{0} not found".format(delimiter_name))
 
     def seek_until(self, delimiter, include=True):
+        last_block = b''
         while True:
             block = self._peek(self._blksize)
             if not len(block):
                 break
-            index = re.search(delimiter, block)
+            blocks = last_block + block
+            index = re.search(delimiter, blocks)
             if index is not None:
                 if include:
                     index = index.end()
                 else:
                     index = index.start()
                 if index != 0:
-                    self.read(index)
+                    self.read(index - len(last_block))
                 return True
             else:
-                self.read(len(block))
+                last_block = self.read(len(block))
 
         return False
 
