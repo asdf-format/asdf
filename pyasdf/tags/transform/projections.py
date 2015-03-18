@@ -13,7 +13,7 @@ from ... import yamlutil
 from .basic import TransformType
 
 
-__all__ = ['AffineType', 'Rotate2DType', 'TangentType']
+__all__ = ['AffineType', 'Rotate2DType', 'Rotate3D', 'TangentType']
 
 
 class AffineType(TransformType):
@@ -69,10 +69,11 @@ class Rotate2DType(TransformType):
         assert_array_equal(a.angle, b.angle)
 
 
-class RotateSky(TransformType):
+class Rotate3D(TransformType):
     name = "transform/rotate3d"
     types = [modeling.rotations.RotateNative2Celestial,
-             modeling.rotations.RotateCelestial2Native]
+             modeling.rotations.RotateCelestial2Native,
+             modeling.rotations.EulerAngleRotation]
 
     @classmethod
     def from_tree_transform(cls, node, ctx):
@@ -80,18 +81,25 @@ class RotateSky(TransformType):
             return modeling.rotations.RotateNative2Celestial(node["phi"],
                                                              node["theta"],
                                                              node["psi"])
-        else:
+        elif node['direction'] == 'celestial2native':
             return modeling.rotations.RotateCelestial2Native(node["phi"],
                                                              node["theta"],
                                                              node["psi"])
+        else:
+            return modeling.rotations.EulerAngleRotation(node["phi"],
+                                                         node["theta"],
+                                                         node["psi"],
+                                                         axes_order=node["direction"])
 
 
     @classmethod
     def to_tree_transform(cls, model, ctx):
         if isinstance(model, modeling.rotations.RotateNative2Celestial):
             direction = "native2celestial"
-        else:
+        elif isinstance(model, modeling.rotations.RotateCelestial2Native):
             direction = "celestial2native"
+        else:
+            direction = model.axes_order
 
         return {"phi": model.phi.value,
                 "theta": model.theta.value,
@@ -104,8 +112,10 @@ class RotateSky(TransformType):
         # TODO: If models become comparable themselves, remove this.
         if isinstance(a, modeling.rotations.RotateNative2Celestial):
             assert isinstance(b, modeling.rotations.RotateNative2Celestial)
-         if isinstance(a, modeling.rotations.RotateCelestial2Native):
+        if isinstance(a, modeling.rotations.RotateCelestial2Native):
             assert isinstance(b, modeling.rotations.RotateCelestial2Native)
+        if isinstance(a, modeling.rotations.EulerAngleRotation):
+            assert isinstance(b, modeling.rotations.EulerAngleRotation)
         assert_array_equal(a.phi, b.phi)
         assert_array_equal(a.psi, b.psi)
         assert_array_equal(a.theta, b.theta)
