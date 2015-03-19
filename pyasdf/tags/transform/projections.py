@@ -13,9 +13,9 @@ from ... import yamlutil
 from .basic import TransformType
 
 
-__all__ = ['AffineType', 'Rotate2DType', 'Rotate3DType', 
-           'ZenithalPerspectiveType', 'GnomonicType', 'StereographicType', 
-           'SlantOrthographicType', 'CylindricalPerspectiveType', 
+__all__ = ['AffineType', 'Rotate2DType', 'Rotate3DType',
+           'ZenithalPerspectiveType', 'GnomonicType', 'StereographicType',
+           'SlantOrthographicType', 'CylindricalPerspectiveType',
            'CylindricalEqualAreaType', 'PlateCarreeType', 'MercatorType']
 
 
@@ -112,7 +112,7 @@ tion"])
     @classmethod
     def assert_equal(cls, a, b):
         # TODO: If models become comparable themselves, remove this.
-        asssert a.__class__ == b.__class__
+        asssert(a.__class__ == b.__class__)
 
         assert_array_equal(a.phi, b.phi)
         assert_array_equal(a.psi, b.psi)
