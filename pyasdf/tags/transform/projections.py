@@ -108,6 +108,7 @@ class Rotate3DType(TransformType):
                 "psi": model.psi.value,
                 "direction": direction
                 }
+
     @classmethod
     def assert_equal(cls, a, b):
         # TODO: If models become comparable themselves, remove this.
