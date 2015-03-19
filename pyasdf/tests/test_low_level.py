@@ -13,6 +13,7 @@ import numpy as np
 from numpy.testing import assert_array_equal
 
 from .. import asdf
+from .. import constants
 from .. import generic_io
 
 
@@ -666,3 +667,27 @@ def test_get_data_from_closed_file(tmpdir):
 
     with pytest.raises(IOError):
         assert_array_equal(my_array, ff.tree['my_array'])
+
+
+def test_seek_until_on_block_boundary():
+    # Create content where the first block begins on a
+    # file-reading-block boundary.
+
+    content = b"""#ASDF 0.1.0
+%YAML 1.2
+%TAG ! tag:stsci.edu:asdf/0.1.0/
+--- !core/asdf
+foo : bar
+...
+"""
+    content += (b'\0' * (io.DEFAULT_BUFFER_SIZE - 2) +
+                constants.BLOCK_MAGIC + b'\0\x30' + b'\0' * 50)
+
+    buff = io.BytesIO(content)
+    ff = asdf.AsdfFile.read(buff)
+    assert len(ff.blocks) == 1
+
+    buff.seek(0)
+    fd = generic_io.InputStream(buff, 'r')
+    ff = asdf.AsdfFile.read(fd)
+    assert len(ff.blocks) == 1
