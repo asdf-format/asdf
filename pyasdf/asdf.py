@@ -326,6 +326,7 @@ class AsdfFile(versioning.VersionedMixin):
 
     @classmethod
     def read(cls, fd, uri=None, mode='r',
+             validate_checksums=False,
              tag_to_schema_resolver=None,
              url_mapping=None,
              type_index=None,
@@ -346,6 +347,10 @@ class AsdfFile(versioning.VersionedMixin):
         mode : string, optional
             The mode to open the file in.  Must be ``r`` (default) or
             ``rw``.
+
+        validate_checksums : bool, optional
+            If `True`, validate the blocks against their checksums.
+            Requires reading the entire file, so disabled by default.
 
         Other Parameters
         ----------------
@@ -394,7 +399,8 @@ class AsdfFile(versioning.VersionedMixin):
             return yaml_content
 
         if has_blocks:
-            self._blocks.read_internal_blocks(fd, past_magic=True)
+            self._blocks.read_internal_blocks(
+                fd, past_magic=True, validate_checksums=validate_checksums)
 
         if len(yaml_content):
             tree = yamlutil.load_tree(yaml_content, self)
