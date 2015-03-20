@@ -14,10 +14,11 @@ Data Format (ASDF) files
 from ._astropy_init import *
 # ----------------------------------------------------------------------------
 
-__all__ = ['AsdfFile', 'Stream', 'open', 'test']
+__all__ = ['AsdfFile', 'Stream', 'open', 'test', 'commands']
 
 from .asdf import AsdfFile
 from .stream import Stream
+from . import commands
 
 
 open = AsdfFile.read
