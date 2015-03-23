@@ -292,6 +292,8 @@ class AsdfFile(versioning.VersionedMixin):
 
             - ``zlib``: Use zlib compression
 
+            - ``bzp2``: Use bzip2 compression
+
             - ``''`` or `None`: no compression
         """
         self.blocks[arr].compression = compression
@@ -485,6 +487,8 @@ class AsdfFile(versioning.VersionedMixin):
 
             - ``zlib``: Use zlib compression.
 
+            - ``bzp2``: Use bzip2 compression.
+
         auto_inline : int, optional
             When the number of elements in an array is less than this
             threshold, store the array as inline YAML, rather than a
@@ -594,6 +598,8 @@ class AsdfFile(versioning.VersionedMixin):
             - ``''``: No compression.
 
             - ``zlib``: Use zlib compression.
+
+            - ``bzp2``: Use bzip2 compression.
 
         auto_inline : int, optional
             When the number of elements in an array is less than this

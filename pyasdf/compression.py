@@ -3,12 +3,9 @@
 
 from __future__ import absolute_import, division, unicode_literals, print_function
 
-import zlib
-
 import numpy as np
 
 from astropy.extern import six
-from astropy.extern.six.moves import xrange
 
 
 def validate(compression):
@@ -37,10 +34,59 @@ def validate(compression):
     if isinstance(compression, bytes):
         compression = compression.decode('ascii')
 
-    if compression != 'zlib':
-        raise ValueError("Supported compression types are: 'zlib'")
+    if compression not in ('zlib', 'bzp2'):
+        raise ValueError(
+            "Supported compression types are: 'zlib' and 'bzp2'")
 
     return compression
+
+
+def _get_decoder(compression):
+    if compression == 'zlib':
+        try:
+            import zlib
+        except ImportError:
+            raise ImportError(
+                "Your Python does not have the zlib library, "
+                "therefore the compressed block in this ASDF file "
+                "can not be decompressed.")
+        return zlib.decompressobj()
+    elif compression == 'bzp2':
+        try:
+            import bz2
+        except ImportError:
+            raise ImportError(
+                "Your Python does not have the bz2 library, "
+                "therefore the compressed block in this ASDF file "
+                "can not be decompressed.")
+        return bz2.BZ2Decompressor()
+    else:
+        raise ValueError(
+            "Unknown compression type: '{0}'".format(compression))
+
+
+def _get_encoder(compression):
+    if compression == 'zlib':
+        try:
+            import zlib
+        except ImportError:
+            raise ImportError(
+                "Your Python does not have the zlib library, "
+                "therefore the compressed block in this ASDF file "
+                "can not be decompressed.")
+        return zlib.compressobj()
+    elif compression == 'bzp2':
+        try:
+            import bz2
+        except ImportError:
+            raise ImportError(
+                "Your Python does not have the bz2 library, "
+                "therefore the compressed block in this ASDF file "
+                "can not be decompressed.")
+        return bz2.BZ2Compressor()
+    else:
+        raise ValueError(
+            "Unknown compression type: '{0}'".format(compression))
 
 
 def to_compression_header(compression):
@@ -73,8 +119,7 @@ def decompress(fd, used_size, data_size, compression):
          The size of the uncompressed data
 
     compression : str
-         The compression type used.  Currently, only ``zlib`` is
-         supported.
+         The compression type used.
 
     Returns
     -------
@@ -84,8 +129,7 @@ def decompress(fd, used_size, data_size, compression):
     buffer = np.empty((data_size,), np.uint8)
 
     compression = validate(compression)
-
-    decoder = zlib.decompressobj()
+    decoder = _get_decoder(compression)
 
     i = 0
     for block in fd.read_blocks(used_size):
@@ -95,12 +139,13 @@ def decompress(fd, used_size, data_size, compression):
         buffer.data[i:i+len(decoded)] = decoded
         i += len(decoded)
 
-    decoded = decoder.flush()
-    if i + len(decoded) > data_size:
-        raise ValueError("Decompressed data too long")
-    elif i + len(decoded) < data_size:
-        raise ValueError("Decompressed data too short")
-    buffer[i:i+len(decoded)] = decoded
+    if hasattr(decoder, 'flush'):
+        decoded = decoder.flush()
+        if i + len(decoded) > data_size:
+            raise ValueError("Decompressed data too long")
+        elif i + len(decoded) < data_size:
+            raise ValueError("Decompressed data too short")
+        buffer[i:i+len(decoded)] = decoded
 
     return buffer
 
@@ -118,15 +163,13 @@ def compress(fd, data, compression, block_size=1 << 16):
         The buffer of uncompressed data
 
     compression : str
-        The type of compression to use.  Currently, only ``zlib`` is
-        supported.
+        The type of compression to use.
 
     block_size : int, optional
         The size of blocks (in raw data) to process at a time.
     """
     compression = validate(compression)
-
-    encoder = zlib.compressobj()
+    encoder = _get_encoder(compression)
 
     for i in range(0, len(data), block_size):
         fd.write(encoder.compress(data[i:i+block_size]))
@@ -143,16 +186,14 @@ def get_compressed_size(data, compression, block_size=1 << 16):
     data : buffer
 
     compression : str
-        The type of compression to use.  Currently, only ``zlib`` is
-        supported.
+        The type of compression to use.
 
     Returns
     -------
     bytes : int
     """
     compression = validate(compression)
-
-    encoder = zlib.compressobj()
+    encoder = _get_encoder(compression)
 
     l = 0
     for i in range(0, len(data), block_size):
