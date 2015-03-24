@@ -26,28 +26,27 @@ class AffineType(TransformType):
     @classmethod
     def from_tree_transform(cls, node, ctx):
         matrix = node['matrix']
-        if matrix.shape != (3, 3):
+        translation  = node['translation']
+        if matrix.shape != (2, 2):
             raise NotImplementedError(
-                "pyasdf currently only supports 3x3 (2D) affine transformation "
+                "pyasdf currently only supports 2x2 (2D) rotation transformation "
                 "matrices")
+        if translation.shape != (2,):
+            raise NotImplementedError(
+                "pyasdf currently only supports 2D translation transformations.")
 
         return modeling.projections.AffineTransformation2D(
-            matrix[:2, :2], matrix[2, :2])
+            matrix=matrix, translation=translation)
 
     @classmethod
     def to_tree_transform(cls, model, ctx):
-        matrix = np.zeros((3, 3))
-        matrix[:2, :2] = model.matrix
-        matrix[2, :2] = model.translation
-
-        node = {'matrix': matrix}
+        node = {'matrix': model.matrix.value, 'translation': model.translation.value}
         return yamlutil.custom_tree_to_tagged_tree(node, ctx)
 
     @classmethod
     def assert_equal(cls, a, b):
         # TODO: If models become comparable themselves, remove this.
-        assert (isinstance(a, modeling.projections.AffineTransformation2D) and
-                isinstance(b, modeling.projections.AffineTransformation2D))
+        assert (a.__class__ == b.__class__)
         assert_array_equal(a.matrix, b.matrix)
         assert_array_equal(a.translation, b.translation)
 
