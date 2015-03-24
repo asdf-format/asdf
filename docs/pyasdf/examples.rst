@@ -347,7 +347,7 @@ Compression
 Individual blocks in an ASDF file may be compressed.
 
 You can easily `zlib <http://www.zlib.net/>`__ or `bzip2
-<http://www.bzip2.org>` compress all blocks:
+<http://www.bzip.org>` compress all blocks:
 
 .. runcode::
 
