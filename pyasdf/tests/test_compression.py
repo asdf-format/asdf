@@ -58,7 +58,6 @@ def _roundtrip(tmpdir, tree, compression=None,
         helpers.assert_tree_match(tree, ff.tree)
 
     # Test saving to a non-seekable buffer
-
     buff = io.BytesIO()
 
     with asdf.AsdfFile(tree) as ff:
@@ -83,3 +82,9 @@ def test_zlib(tmpdir):
     tree = _get_large_tree()
 
     _roundtrip(tmpdir, tree, 'zlib')
+
+
+def test_bzp2(tmpdir):
+    tree = _get_large_tree()
+
+    _roundtrip(tmpdir, tree, 'bzp2')

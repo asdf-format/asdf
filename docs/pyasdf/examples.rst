@@ -344,9 +344,10 @@ included twice in the same tree:
 Compression
 -----------
 
-Individual blocks in an ASDF file may be zlib-compressed.
+Individual blocks in an ASDF file may be compressed.
 
-You can easily `zlib <http://www.zlib.net/>`__ compress all blocks:
+You can easily `zlib <http://www.zlib.net/>`__ or `bzip2
+<http://www.bzip.org>` compress all blocks:
 
 .. runcode::
 
@@ -360,6 +361,9 @@ You can easily `zlib <http://www.zlib.net/>`__ compress all blocks:
 
    target = AsdfFile(tree)
    with target.write_to('target.asdf', all_array_compression='zlib'):
+       pass
+
+   with target.write_to('target.asdf', all_array_compression='bzp2'):
        pass
 
 .. asdf:: target.asdf
