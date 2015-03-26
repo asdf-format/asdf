@@ -13,7 +13,7 @@ from ... import yamlutil
 from .basic import TransformType
 
 
-__all__ = ['AffineType', 'Rotate2DType', 'ZenithalPerspectiveType',
+__all__ = ['AffineType', 'Rotate2DType', 'Rotate3DType', 'ZenithalPerspectiveType',
            'GnomonicType', 'StereographicType', 'SlantOrthographicType',
            'CylindricalPerspectiveType', 'CylindricalEqualAreaType',
            'PlateCarreeType', 'MercatorType']
@@ -69,6 +69,53 @@ class Rotate2DType(TransformType):
         assert (isinstance(a, modeling.rotations.Rotation2D) and
                 isinstance(b, modeling.rotations.Rotation2D))
         assert_array_equal(a.angle, b.angle)
+
+
+class Rotate3DType(TransformType):
+    name = "transform/rotate3d"
+    types = [modeling.rotations.RotateNative2Celestial,
+             modeling.rotations.RotateCelestial2Native,
+             modeling.rotations.EulerAngleRotation]
+
+    @classmethod
+    def from_tree_transform(cls, node, ctx):
+        if node['direction'] == 'native2celestial':
+            return modeling.rotations.RotateNative2Celestial(node["phi"],
+                                                             node["theta"],
+                                                             node["psi"])
+        elif node['direction'] == 'celestial2native':
+            return modeling.rotations.RotateCelestial2Native(node["phi"],
+                                                             node["theta"],
+                                                             node["psi"])
+        else:
+            return modeling.rotations.EulerAngleRotation(node["phi"],
+                                                         node["theta"],
+                                                         node["psi"],
+                                                         axes_order=node["direction"])
+
+
+    @classmethod
+    def to_tree_transform(cls, model, ctx):
+        if isinstance(model, modeling.rotations.RotateNative2Celestial):
+            direction = "native2celestial"
+        elif isinstance(model, modeling.rotations.RotateCelestial2Native):
+            direction = "celestial2native"
+        else:
+            direction = model.axes_order
+        return {"phi": model.phi.value,
+                "theta": model.theta.value,
+                "psi": model.psi.value,
+                "direction": direction
+                }
+
+    @classmethod
+    def assert_equal(cls, a, b):
+        # TODO: If models become comparable themselves, remove this.
+        asssert(a.__class__ == b.__class__)
+
+        assert_array_equal(a.phi, b.phi)
+        assert_array_equal(a.psi, b.psi)
+        assert_array_equal(a.theta, b.theta)
 
 
 class ZenithalType(TransformType):
