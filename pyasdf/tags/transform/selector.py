@@ -16,9 +16,10 @@ from .basic import TransformType
 
 __all__ = ['SelectorMaskType', 'RegionsSelectorType']
 
+
 class SelectorMaskType(TransformType):
     name = "transform/selector_mask"
-    types = [gwcs.selector.SelectorMask]
+    types = [selector.SelectorMask]
 
     @classmethod
     def from_tree_transform(cls, node, ctx):
@@ -31,7 +32,7 @@ class SelectorMaskType(TransformType):
 
     @classmethod
     def to_tree_transform(cls, model, ctx):
-        node = {'mask': model.mask.value}
+        node = {'mask': model.mask}
         return yamlutil.custom_tree_to_tagged_tree(node, ctx)
 
     @classmethod
@@ -43,7 +44,7 @@ class SelectorMaskType(TransformType):
 
 class RegionsSelectorType(TransformType):
     name = "transform/selector_mask"
-    types = [gwcs.selector.RegionsSelector]
+    types = [selector.RegionsSelector]
 
     @classmethod
     def from_tree_transform(cls, node, ctx):
@@ -71,7 +72,3 @@ class RegionsSelectorType(TransformType):
         assert_array_equal(a.outputs, b.outputs)
         assert_array_equal(a.selector, b.selector)
         assert_array_equal(a.undefined_transform_value, b.undefined_transform_value)
-
-
-
-
