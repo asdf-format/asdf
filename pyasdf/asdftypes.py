@@ -29,23 +29,52 @@ class AsdfTypeIndex(object):
     """
     An index of the known `AsdfType`s.
     """
+    def __init__(self):
+        self._type_by_cls = {}
+        self._type_by_name = {}
+        self._all_types = set()
 
-    _type_by_cls = {}
-    _type_by_name = {}
+    def add_type(self, asdftype):
+        """
+        Add a type to the index.
+        """
+        self._all_types.add(asdftype)
 
-    @classmethod
-    def from_custom_type(cls, custom_type):
+        if hasattr(asdftype, 'name'):
+            if isinstance(asdftype.name, six.string_types):
+                self._type_by_name[asdftype.yaml_tag] = asdftype
+            elif isinstance(asdftype.name, list):
+                for name in asdftype.name:
+                    self._type_by_name[asdftype.make_yaml_tag(name)] = asdftype
+            elif asdftype.name is not None:
+                raise TypeError("name must be string or list")
+
+        self._type_by_cls[asdftype] = asdftype
+        for typ in asdftype.types:
+            self._type_by_cls[typ] = asdftype
+
+    def from_custom_type(self, custom_type):
+        """
+        Given a custom type, return the corresponding AsdfType
+        definition.
+        """
         try:
-            return cls._type_by_cls[custom_type]
+            return self._type_by_cls[custom_type]
         except KeyError:
-            for key, val in six.iteritems(cls._type_by_cls):
+            for key, val in six.iteritems(self._type_by_cls):
                 if issubclass(custom_type, key):
                     return val
         return None
 
-    @classmethod
-    def from_yaml_tag(cls, tag):
-        return cls._type_by_name.get(tag)
+    def from_yaml_tag(self, tag):
+        """
+        From a given YAML tag string, return the corresponding
+        AsdfType definition.
+        """
+        return self._type_by_name.get(tag)
+
+
+_all_asdftypes = AsdfTypeIndex()
 
 
 class AsdfTypeMeta(type):
@@ -60,17 +89,12 @@ class AsdfTypeMeta(type):
             if isinstance(cls.name, six.string_types):
                 if 'yaml_tag' not in attrs:
                     cls.yaml_tag = cls.make_yaml_tag(cls.name)
-
-                AsdfTypeIndex._type_by_name[cls.yaml_tag] = cls
             elif isinstance(cls.name, list):
-                for name in cls.name:
-                    AsdfTypeIndex._type_by_name[cls.make_yaml_tag(name)] = cls
+                pass
             elif cls.name is not None:
                 raise TypeError("name must be string or list")
 
-        AsdfTypeIndex._type_by_cls[cls] = cls
-        for typ in cls.types:
-            AsdfTypeIndex._type_by_cls[typ] = cls
+        _all_asdftypes.add_type(cls)
 
         return cls
 

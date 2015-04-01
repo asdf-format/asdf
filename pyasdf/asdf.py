@@ -8,12 +8,11 @@ import re
 
 import numpy as np
 
-from . import asdftypes
 from . import block
 from . import constants
+from . import extension
 from . import generic_io
 from . import reference
-from . import resolver
 from . import util
 from . import treeutil
 from . import versioning
@@ -26,10 +25,7 @@ class AsdfFile(versioning.VersionedMixin):
     """
     The main class that represents a ASDF file.
     """
-    def __init__(self, tree=None, uri=None,
-                 tag_to_schema_resolver=None,
-                 url_mapping=None,
-                 type_index=None):
+    def __init__(self, tree=None, uri=None, extensions=None):
         """
         Parameters
         ----------
@@ -43,41 +39,18 @@ class AsdfFile(versioning.VersionedMixin):
             determined from the associated file object, if possible
             and if created from `AsdfFile.read`.
 
-        Other Parameters
-        ----------------
-        tag_to_schema_resolver : callable, optional
-            A callback used to convert tag names into schema
-            URIs.  The callable must take a string and return a string
-            or `None`.  If not provided, the default
-            `astropy.resolvers.TagToSchemaResolver` will be used.
-
-        url_mapping : callable, optional
-            A callback function used to map URIs to other URIs.  The
-            callable must take a string and return a string or `None`.
-            This is useful, for example, when a remote resource has a
-            mirror on the local filesystem that you wish to use.
-
-        type_index : pyasdf.asdftypes.AsdfTypeIndex, optional
-            A type index object used to lookup custom ASDF types.  It
-            must have two methods:
-
-            - `from_custom_type`: Given an object, return the
-              corresponding `pyasdf.asdftypes.AsdfType` subclass.
-
-            - `from_yaml_tag`: Given a YAML tag as a string, return the
-              corresponding `pyasdf.asdftypes.AsdfType` subclass.
+        extensions : list of AsdfExtension
+            A list of extensions to the ASDF to support when reading
+            and writing ASDF files.  See `asdftypes.AsdfExtension` for
+            more information.
         """
-        if tag_to_schema_resolver is None:
-            tag_to_schema_resolver = resolver.TAG_TO_SCHEMA_RESOLVER
-        self._tag_to_schema_resolver = tag_to_schema_resolver
-
-        if url_mapping is None:
-            url_mapping = resolver.URL_MAPPING
-        self._url_mapping = url_mapping
-
-        if type_index is None:
-            type_index = asdftypes.AsdfTypeIndex()
-        self._type_index = type_index
+        if extensions is None or extensions == []:
+            self._extensions = extension._builtin_extension_list
+        else:
+            if not isinstance(extensions, list):
+                extensions = [extensions]
+            extensions.insert(0, extension.BuiltinExtension())
+            self._extensions = extension.AsdfExtensionList(extensions)
 
         self._fd = None
         self._external_asdf_by_uri = {}
@@ -131,15 +104,15 @@ class AsdfFile(versioning.VersionedMixin):
 
     @property
     def tag_to_schema_resolver(self):
-        return self._tag_to_schema_resolver
+        return self._extensions.tag_to_schema_resolver
 
     @property
     def url_mapping(self):
-        return self._url_mapping
+        return self._extensions.url_mapping
 
     @property
     def type_index(self):
-        return self._type_index
+        return self._extensions.type_index
 
     def resolve_uri(self, uri):
         """
@@ -329,9 +302,7 @@ class AsdfFile(versioning.VersionedMixin):
     @classmethod
     def read(cls, fd, uri=None, mode='r',
              validate_checksums=False,
-             tag_to_schema_resolver=None,
-             url_mapping=None,
-             type_index=None,
+             extensions=None,
              _get_yaml_content=False):
         """
         Open an existing ASDF file.
@@ -354,11 +325,10 @@ class AsdfFile(versioning.VersionedMixin):
             If `True`, validate the blocks against their checksums.
             Requires reading the entire file, so disabled by default.
 
-        Other Parameters
-        ----------------
-        **kwargs : extra parameters
-            See `pyasdf.AsdfFile` for a description of the other
-            parameters.
+        extensions : list of AsdfExtension
+            A list of extensions to the ASDF to support when reading
+            and writing ASDF files.  See `asdftypes.AsdfExtension` for
+            more information.
 
         Returns
         -------
@@ -367,10 +337,7 @@ class AsdfFile(versioning.VersionedMixin):
         """
         fd = generic_io.get_file(fd, mode=mode, uri=uri)
 
-        self = cls(
-            tag_to_schema_resolver=tag_to_schema_resolver,
-            url_mapping=url_mapping,
-            type_index=type_index)
+        self = cls(extensions=extensions)
         self._fd = fd
 
         try:

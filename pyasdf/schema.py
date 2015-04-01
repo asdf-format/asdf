@@ -149,7 +149,7 @@ def create_validator():
     validator = validators.create(
         meta_schema=load_schema(
             'http://stsci.edu/schemas/yaml-schema/draft-01',
-            mresolver.UrlMapping()),
+            mresolver.default_url_mapping),
         validators=YAML_VALIDATORS,
         version=str('yaml schema draft 1'))
     validator.orig_iter_errors = validator.iter_errors
@@ -177,7 +177,7 @@ def _make_schema_loader(resolver):
     def load_schema(url, reload=False):
         url = resolver(url)
         with generic_io.get_file(url) as fd:
-            if url.endswith('json'):
+            if isinstance(url, six.text_type) and url.endswith('json'):
                 result = json.load(fd)
             else:
                 result = yaml.safe_load(fd)
@@ -202,7 +202,7 @@ def load_schema(url, resolver=None):
         mirror on the local filesystem that you wish to use.
     """
     if resolver is None:
-        resolver = mresolver.URL_MAPPING
+        resolver = mresolver.default_url_mapping
     loader = _make_schema_loader(resolver)
     return loader(url)
 

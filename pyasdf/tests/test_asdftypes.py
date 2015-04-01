@@ -3,6 +3,7 @@
 
 from __future__ import absolute_import, division, unicode_literals, print_function
 
+import io
 import os
 
 from .. import asdf
@@ -32,21 +33,49 @@ def test_custom_tag():
         def from_tree(cls, tree, ctx):
             return fractions.Fraction(tree[0], tree[1])
 
-    tag_mapping = resolver.TagToSchemaResolver(
-        [('tag:nowhere.org:custom', 'http://nowhere.org/schemas/custom{0}')])
+    class FractionExtension(object):
+        @property
+        def types(self):
+            return [FractionType]
 
-    url_mapping = resolver.UrlMapping(
-        [('http://nowhere.org/schemas/custom/1.0.0/',
-          'file://' + TEST_DATA_PATH + '/{0}.yaml')])
+        @property
+        def tag_mapping(self):
+            return [('tag:nowhere.org:custom',
+                     'http://nowhere.org/schemas/custom{tag_suffix}')]
+
+        @property
+        def url_mapping(self):
+            return [('http://nowhere.org/schemas/custom/1.0.0/',
+                     'file://' + TEST_DATA_PATH + '/{url_suffix}.yaml')]
+
+    class FractionCallable(FractionExtension):
+        @property
+        def tag_mapping(self):
+            def check(tag):
+                prefix = 'tag:nowhere.org:custom'
+                if tag.startswith(prefix):
+                    return 'http://nowhere.org/schemas/custom' + tag[len(prefix):]
+            return [check]
 
     yaml = """
 a: !<tag:nowhere.org:custom/1.0.0/fraction>
   [2, 3]
+b: !core/complex
+  0j
     """
 
     buff = helpers.yaml_to_asdf(yaml)
     ff = asdf.AsdfFile.read(
-        buff,
-        tag_to_schema_resolver=tag_mapping,
-        url_mapping=url_mapping)
+        buff, extensions=FractionExtension())
     assert ff.tree['a'] == fractions.Fraction(2, 3)
+
+    buff = io.BytesIO()
+    ff.write_to(buff)
+
+    buff = helpers.yaml_to_asdf(yaml)
+    ff = asdf.AsdfFile.read(
+        buff, extensions=FractionCallable())
+    assert ff.tree['a'] == fractions.Fraction(2, 3)
+
+    buff = io.BytesIO()
+    ff.write_to(buff)
