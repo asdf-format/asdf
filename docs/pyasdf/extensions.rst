@@ -35,6 +35,8 @@ First, the YAML Schema, defining the type as a pair of integers:
 Then, the Python implementation.  See the `pyasdf.AsdfType` and
 `pyasdf.AsdfExtension` documentation for more information::
 
+    import os
+
     import pyasdf
 
     import fractions
@@ -67,4 +69,4 @@ Then, the Python implementation.  See the `pyasdf.AsdfType` and
         @property
         def url_mapping(self):
             return [('http://nowhere.org/schemas/custom/1.0.0/',
-                     'file://' + TEST_DATA_PATH + '/{url_suffix}.yaml')]
+                     'file://' + os.path.dirname(__file__) + '/{url_suffix}.yaml')]
