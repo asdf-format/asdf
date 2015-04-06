@@ -50,6 +50,7 @@ Other examples are provided below.
   :maxdepth: 2
 
   pyasdf/examples.rst
+  pyasdf/extensions.rst
 
 Commandline tool
 ----------------
