@@ -97,25 +97,36 @@ class Rotate3DType(TransformType):
     @classmethod
     def to_tree_transform(cls, model, ctx):
         if isinstance(model, modeling.rotations.RotateNative2Celestial):
-            direction = "native2celestial"
+            return {"phi": model.lon.value,
+                    "theta": model.lat.value,
+                    "psi": model.lon_pole.value,
+                    "direction": "native2celestial"
+                    }
         elif isinstance(model, modeling.rotations.RotateCelestial2Native):
-            direction = "celestial2native"
+            return {"phi": model.lon.value,
+                    "theta": model.lat.value,
+                    "psi": model.lon_pole.value,
+                    "direction": "celestial2native"
+                    }
         else:
-            direction = model.axes_order
-        return {"phi": model.phi.value,
-                "theta": model.theta.value,
-                "psi": model.psi.value,
-                "direction": direction
-                }
+            return {"phi": model.phi.value,
+                    "theta": model.theta.value,
+                    "psi": model.psi.value,
+                    "direction": model.axes_order
+                    }
 
     @classmethod
     def assert_equal(cls, a, b):
         # TODO: If models become comparable themselves, remove this.
-        asssert(a.__class__ == b.__class__)
-
-        assert_array_equal(a.phi, b.phi)
-        assert_array_equal(a.psi, b.psi)
-        assert_array_equal(a.theta, b.theta)
+        assert(a.__class__ == b.__class__)
+        if a.__class__.__name__ == "EulerAngleRotation":
+            assert_array_equal(a.phi, b.phi)
+            assert_array_equal(a.psi, b.psi)
+            assert_array_equal(a.theta, b.theta)
+        else:
+            assert_array_equal(a.lon, b.lon)
+            assert_array_equal(a.lat, b.lat)
+            assert_array_equal(a.lon_pole, b.lon_pole)
 
 
 class ZenithalType(TransformType):
