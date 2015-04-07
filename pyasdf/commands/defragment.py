@@ -2,7 +2,7 @@
 # -*- coding: utf-8 -*-
 
 """
-Garbage collection command.
+Defragment command.
 """
 
 from __future__ import absolute_import, division, unicode_literals, print_function
@@ -13,15 +13,15 @@ from .main import Command
 from .. import AsdfFile
 
 
-__all__ = ['gc']
+__all__ = ['defragment']
 
 
-class Gc(Command):
+class Defragment(Command):
     @classmethod
     def setup_arguments(cls, subparsers):
         parser = subparsers.add_parser(
-            str("gc"), help="Garbage collect an ASDF file.",
-            description="""Remove any unused blocks.""")
+            str("defragment"), help="Defragment an ASDF file..",
+            description="""Removes any unused blocks and unused space.""")
 
         parser.add_argument(
             'filename', nargs=1,
@@ -44,14 +44,13 @@ class Gc(Command):
 
     @classmethod
     def run(cls, args):
-        return gc(args.filename[0], args.output, args.resolve_references,
-                  args.compress)
+        return defragment(args.filename[0], args.output,
+                          args.resolve_references, args.compress)
 
 
-def gc(input, output=None, resolve_references=False, compress=None):
+def defragment(input, output=None, resolve_references=False, compress=None):
     """
-    Implode a given ASDF file, which may reference external data, back
-    into a single ASDF file.
+    Defragment a given ASDF file.
 
     Parameters
     ----------

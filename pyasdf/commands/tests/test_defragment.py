@@ -23,23 +23,23 @@ def test_to_yaml(tmpdir):
         }
 
     path = os.path.join(str(tmpdir), 'original.asdf')
-    out_path = os.path.join(str(tmpdir), 'original.gc.asdf')
+    out_path = os.path.join(str(tmpdir), 'original.defragment.asdf')
     with AsdfFile(tree) as ff:
         ff.write_to(path)
         assert len(ff.blocks) == 2
 
     result = main.main_from_args(
-        ['gc', path, '-o', out_path, '-c', 'zlib'])
+        ['defragment', path, '-o', out_path, '-c', 'zlib'])
 
     assert result == 0
 
     files = get_file_sizes(str(tmpdir))
 
     assert 'original.asdf' in files
-    assert 'original.gc.asdf' in files
+    assert 'original.defragment.asdf' in files
 
-    assert files['original.gc.asdf'] < files['original.asdf']
+    assert files['original.defragment.asdf'] < files['original.asdf']
 
-    ff = AsdfFile.read(os.path.join(str(tmpdir), 'original.gc.asdf'))
+    ff = AsdfFile.read(os.path.join(str(tmpdir), 'original.defragment.asdf'))
     assert_tree_match(ff.tree, tree)
     assert len(list(ff.blocks.internal_blocks)) == 2

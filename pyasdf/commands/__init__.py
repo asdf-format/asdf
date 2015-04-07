@@ -5,4 +5,4 @@ from __future__ import absolute_import, division, unicode_literals, print_functi
 
 from .exploded import *
 from .to_yaml import *
-from .gc import *
+from .defragment import *
