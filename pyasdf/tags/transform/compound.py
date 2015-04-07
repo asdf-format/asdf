@@ -59,7 +59,7 @@ class CompoundType(TransformType):
                 node['forward'][1].tag))
         model = getattr(left, oper)(right)
 
-        cls._assign_inverse(model, node, ctx)
+        model = cls._from_tree_base_transform_members(model, node, ctx)
         return model
 
     @classmethod
@@ -85,14 +85,14 @@ class CompoundType(TransformType):
         except KeyError:
             raise ValueError("Unknown operator '{0}'".format(tree.value))
 
-        # TODO: Correctly handle inverse transforms
-
         node = tagged.tag_object(cls.make_yaml_tag(tag_name), node)
         return node
 
     @classmethod
     def to_tree_tagged(cls, model, ctx):
-        return cls._to_tree_from_model_tree(model._tree, ctx)
+        node = cls._to_tree_from_model_tree(model._tree, ctx)
+        cls._to_tree_base_transform_members(model, node, ctx)
+        return node
 
     @classmethod
     def assert_equal(cls, a, b):
