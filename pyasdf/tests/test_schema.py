@@ -146,21 +146,27 @@ def test_flow_style():
         version = (1, 0, 0)
         standard = 'custom'
 
-    tag_mapping = resolver.TagToSchemaResolver(
-        [('tag:nowhere.org:custom', 'http://nowhere.org/schemas/custom{0}')])
+    class CustomFlowStyleExtension:
+        @property
+        def types(self):
+            return [CustomFlowStyleType]
 
-    url_mapping = resolver.UrlMapping(
-        [('http://nowhere.org/schemas/custom/1.0.0/',
-          'file://' + TEST_DATA_PATH + '/{0}.yaml')])
+        @property
+        def tag_mapping(self):
+            return [('tag:nowhere.org:custom',
+                     'http://nowhere.org/schemas/custom{tag_suffix}')]
+
+        @property
+        def url_mapping(self):
+            return [('http://nowhere.org/schemas/custom/1.0.0/',
+                     'file://' + TEST_DATA_PATH + '/{url_suffix}.yaml')]
 
     tree = {
         'custom_flow': CustomFlowStyleType({'a': 42, 'b': 43})
     }
 
     buff = io.BytesIO()
-    ff = asdf.AsdfFile(tree,
-                       tag_to_schema_resolver=tag_mapping,
-                       url_mapping=url_mapping)
+    ff = asdf.AsdfFile(tree, extensions=CustomFlowStyleExtension())
     with ff.write_to(buff):
         pass
 
@@ -174,21 +180,27 @@ def test_style():
         version = (1, 0, 0)
         standard = 'custom'
 
-    tag_mapping = resolver.TagToSchemaResolver(
-        [('tag:nowhere.org:custom', 'http://nowhere.org/schemas/custom{0}')])
+    class CustomStyleExtension:
+        @property
+        def types(self):
+            return [CustomStyleType]
 
-    url_mapping = resolver.UrlMapping(
-        [('http://nowhere.org/schemas/custom/1.0.0/',
-          'file://' + TEST_DATA_PATH + '/{0}.yaml')])
+        @property
+        def tag_mapping(self):
+            return [('tag:nowhere.org:custom',
+                     'http://nowhere.org/schemas/custom{tag_suffix}')]
+
+        @property
+        def url_mapping(self):
+            return [('http://nowhere.org/schemas/custom/1.0.0/',
+                     'file://' + TEST_DATA_PATH + '/{url_suffix}.yaml')]
 
     tree = {
         'custom_style': CustomStyleType("short")
     }
 
     buff = io.BytesIO()
-    ff = asdf.AsdfFile(tree,
-                       tag_to_schema_resolver=tag_mapping,
-                       url_mapping=url_mapping)
+    ff = asdf.AsdfFile(tree, extensions=CustomStyleExtension())
     with ff.write_to(buff):
         pass
 

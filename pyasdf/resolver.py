@@ -20,15 +20,12 @@ class Resolver(object):
     A class that can be used to map strings with a particular prefix
     to another.
     """
-    builtin = []
-
-    def __init__(self, mapping=[]):
+    def __init__(self, mapping=[], prefix=''):
         """
         Parameters
         ----------
         mapping : list of tuple or callable, optional
-            A list of mappings to try, in order.  The builtin mappings
-            for ASDF will prepended to the provided mappings.
+            A list of mappings to try, in order.
             For each entry:
 
             - If a callable, must take a string and return a remapped
@@ -37,30 +34,46 @@ class Resolver(object):
 
             - If a tuple, the first item is a string prefix to match.
               The second item specifies how to create the new result
-              in Python string formatting syntax.  `{}` will be
-              replaced with the matched string without the prefix.
+              in Python string formatting syntax.  The following
+              formatting tokens are available, where ``X`` relates to
+              the ``prefix`` argument:
+
+              - ``{X}``: The entire string passed in.
+              - ``{X_prefix}``: The prefix of the string that was
+                matched.
+              - ``{X_suffix}``: The part of the string following the
+                prefix.
+
+        prefix : str, optional
+            The prefix to use for the Python formatting token names.
         """
-        self._mapping = self._validate_mapping(
-            self.builtin + mapping)
+        self._mapping = self._validate_mapping(mapping)
+        self._prefix = prefix
 
     def _validate_mapping(self, mappings):
         normalized = []
         for mapping in mappings:
             if six.callable(mapping):
                 func = mapping
-                pass
             elif (isinstance(mapping, (list, tuple)) and
                   len(mapping) == 2 and
                   isinstance(mapping[0], six.string_types) and
                   isinstance(mapping[1], six.string_types)):
 
-                def _map_func(uri):
-                    if uri.startswith(mapping[0]):
-                        rest = uri[len(mapping[0]):]
-                        return mapping[1].format(rest)
-                    return None
+                def _make_map_func(mapping):
+                    def _map_func(uri):
+                        if uri.startswith(mapping[0]):
+                            format_tokens = {
+                                self._prefix: uri,
+                                self._prefix + "_prefix": mapping[0],
+                                self._prefix + "_suffix": uri[len(mapping[0]):]
+                            }
 
-                func = _map_func
+                            return mapping[1].format(**format_tokens)
+                        return None
+                    return _map_func
+
+                func = _make_map_func(mapping)
             else:
                 raise ValueError("Invalid mapping '{0}'".format(mapping))
 
@@ -79,25 +92,10 @@ class Resolver(object):
         return hash(self._mapping)
 
 
-class TagToSchemaResolver(Resolver):
-    """
-    The default mapping from YAML tags to schema URLs.
-    """
-    builtin = [
-        ('tag:stsci.edu:asdf', 'http://stsci.edu/schemas/asdf{0}')
-    ]
+DEFAULT_URL_MAPPING = [
+    (constants.STSCI_SCHEMA_URI_BASE,
+     'file://' + SCHEMA_PATH + '/stsci.edu/{url_suffix}.yaml')
+]
 
-# The singleton
-TAG_TO_SCHEMA_RESOLVER = TagToSchemaResolver()
 
-class UrlMapping(Resolver):
-    """
-    The default mapping from remote schema URLs to the schemas that
-    ship with pyasdf.
-    """
-    builtin = [
-        (constants.STSCI_SCHEMA_URI_BASE,
-         'file://' + SCHEMA_PATH + '/stsci.edu/{0}.yaml')]
-
-# The singleton
-URL_MAPPING = UrlMapping()
+default_url_mapping = Resolver(DEFAULT_URL_MAPPING, 'url')
