@@ -77,3 +77,17 @@ def test_zenithal_with_arguments(tmpdir):
     }
 
     helpers.assert_roundtrip_tree(tree, tmpdir)
+
+
+def test_naming_of_compound_model(tmpdir):
+    """Issue #87"""
+    def asdf_check(ff):
+        assert ff.tree['model'].name == 'compound_model'
+
+    offx = astmodels.Shift(1)
+    scl = astmodels.Scale(2)
+    model = (offx | scl).rename('compound_model')
+    tree = {
+        'model': model
+    }
+    helpers.assert_roundtrip_tree(tree, tmpdir, asdf_check)

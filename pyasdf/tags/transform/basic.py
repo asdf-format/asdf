@@ -18,25 +18,10 @@ class TransformType(AsdfType):
     name = "transform/transform"
 
     @classmethod
-    def _get_inverse(cls, model, node, ctx):
-        if getattr(model, '_custom_inverse', None) is not None:
-            node['inverse'] = yamlutil.custom_tree_to_tagged_tree(
-                model._custom_inverse, ctx)
-
-    @classmethod
-    def _assign_inverse(cls, model, node, ctx):
+    def _from_tree_base_transform_members(cls, model, node, ctx):
         if 'inverse' in node:
             model.inverse = yamlutil.tagged_tree_to_custom_tree(
                 node['inverse'], ctx)
-
-    @classmethod
-    def from_tree_transform(cls, node, ctx):
-        raise NotImplementedError("Must be implemented in TransformType subclasses")
-
-    @classmethod
-    def from_tree(cls, node, ctx):
-        model = cls.from_tree_transform(node, ctx)
-        cls._assign_inverse(model, node, ctx)
 
         if 'name' in node:
             model = model.rename(node['name'])
@@ -49,13 +34,20 @@ class TransformType(AsdfType):
         return model
 
     @classmethod
-    def to_tree_transform(cls, model, ctx):
+    def from_tree_transform(cls, node, ctx):
         raise NotImplementedError("Must be implemented in TransformType subclasses")
 
     @classmethod
-    def to_tree(cls, model, ctx):
-        node = cls.to_tree_transform(model, ctx)
-        TransformType._get_inverse(model, node, ctx)
+    def from_tree(cls, node, ctx):
+        model = cls.from_tree_transform(node, ctx)
+        model = cls._from_tree_base_transform_members(model, node, ctx)
+        return model
+
+    @classmethod
+    def _to_tree_base_transform_members(cls, model, node, ctx):
+        if getattr(model, '_custom_inverse', None) is not None:
+            node['inverse'] = yamlutil.custom_tree_to_tagged_tree(
+                model._custom_inverse, ctx)
 
         if model.name is not None:
             node['name'] = model.name
@@ -67,7 +59,22 @@ class TransformType(AsdfType):
             domain = tagged.tag_object(DomainType.yaml_tag, domain)
             node['domain'] = domain
 
+    @classmethod
+    def to_tree_transform(cls, model, ctx):
+        raise NotImplementedError("Must be implemented in TransformType subclasses")
+
+    @classmethod
+    def to_tree(cls, model, ctx):
+        node = cls.to_tree_transform(model, ctx)
+        cls._to_tree_base_transform_members(model, node, ctx)
         return node
+
+    @classmethod
+    def assert_equal(cls, a, b):
+        # TODO: If models become comparable themselves, remove this.
+        from ...tests.helpers import assert_tree_match
+        assert a.name == b.name
+        # TODO: Assert inverses are the same
 
 
 class IdentityType(TransformType):
@@ -88,6 +95,7 @@ class IdentityType(TransformType):
     @classmethod
     def assert_equal(cls, a, b):
         # TODO: If models become comparable themselves, remove this.
+        TransformType.assert_equal(a, b)
         assert (isinstance(a, mappings.Identity) and
                 isinstance(b, mappings.Identity) and
                 a.n_inputs == b.n_inputs)

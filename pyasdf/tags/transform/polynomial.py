@@ -37,6 +37,7 @@ class ShiftType(TransformType):
     @classmethod
     def assert_equal(cls, a, b):
         # TODO: If models become comparable themselves, remove this.
+        TransformType.assert_equal(a, b)
         assert (isinstance(a, modeling.models.Shift) and
                 isinstance(b, modeling.models.Shift))
         assert_array_equal(a.offset.value, b.offset.value)
@@ -63,6 +64,7 @@ class ScaleType(TransformType):
     @classmethod
     def assert_equal(cls, a, b):
         # TODO: If models become comparable themselves, remove this.
+        TransformType.assert_equal(a, b)
         assert (isinstance(a, modeling.models.Scale) and
                 isinstance(b, modeling.models.Scale))
         assert_array_equal(a.factor, b.factor)
@@ -116,6 +118,7 @@ class PolynomialType(TransformType):
     @classmethod
     def assert_equal(cls, a, b):
         # TODO: If models become comparable themselves, remove this.
+        TransformType.assert_equal(a, b)
         assert (isinstance(a, (modeling.models.Polynomial1D, modeling.models.Polynomial2D)) and
                 isinstance(b, (modeling.models.Polynomial1D, modeling.models.Polynomial2D)))
         assert_array_equal(a.parameters, b.parameters)

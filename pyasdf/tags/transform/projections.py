@@ -46,6 +46,7 @@ class AffineType(TransformType):
     @classmethod
     def assert_equal(cls, a, b):
         # TODO: If models become comparable themselves, remove this.
+        TransformType.assert_equal(a, b)
         assert (a.__class__ == b.__class__)
         assert_array_equal(a.matrix, b.matrix)
         assert_array_equal(a.translation, b.translation)
@@ -66,6 +67,7 @@ class Rotate2DType(TransformType):
     @classmethod
     def assert_equal(cls, a, b):
         # TODO: If models become comparable themselves, remove this.
+        TransformType.assert_equal(a, b)
         assert (isinstance(a, modeling.rotations.Rotation2D) and
                 isinstance(b, modeling.rotations.Rotation2D))
         assert_array_equal(a.angle, b.angle)
@@ -118,7 +120,8 @@ class Rotate3DType(TransformType):
     @classmethod
     def assert_equal(cls, a, b):
         # TODO: If models become comparable themselves, remove this.
-        assert(a.__class__ == b.__class__)
+        TransformType.assert_equal(a, b)
+        assert a.__class__ == b.__class__
         if a.__class__.__name__ == "EulerAngleRotation":
             assert_array_equal(a.phi, b.phi)
             assert_array_equal(a.psi, b.psi)
@@ -147,6 +150,7 @@ class ZenithalType(TransformType):
     @classmethod
     def assert_equal(cls, a, b):
         # TODO: If models become comparable themselves, remove this.
+        TransformType.assert_equal(a, b)
         assert a.__class__ == b.__class__
 
 
@@ -179,6 +183,7 @@ class ZenithalPerspectiveType(ZenithalType):
     @classmethod
     def assert_equal(cls, a, b):
         # TODO: If models become comparable themselves, remove this.
+        TransformType.assert_equal(a, b)
         assert a.__class__ == b.__class__
         assert a.mu.value == b.mu.value
         assert a.gamma.value == b.gamma.value
@@ -217,6 +222,7 @@ class CylindricalType(TransformType):
     @classmethod
     def assert_equal(cls, a, b):
         # TODO: If models become comparable themselves, remove this.
+        TransformType.assert_equal(a, b)
         assert a.__class__ == b.__class__
 
 
@@ -249,6 +255,7 @@ class CylindricalPerspectiveType(CylindricalType):
     @classmethod
     def assert_equal(cls, a, b):
         # TODO: If models become comparable themselves, remove this.
+        TransformType.assert_equal(a, b)
         assert a.__class__ == b.__class__
         assert a.mu.value == b.mu.value
         assert a.lam.value == b.lam.value
@@ -280,6 +287,7 @@ class CylindricalEqualAreaType(CylindricalType):
     @classmethod
     def assert_equal(cls, a, b):
         # TODO: If models become comparable themselves, remove this.
+        TransformType.assert_equal(a, b)
         assert a.__class__ == b.__class__
         assert a.lam.value == b.lam.value
 
