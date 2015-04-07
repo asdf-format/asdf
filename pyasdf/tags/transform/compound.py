@@ -97,6 +97,7 @@ class CompoundType(TransformType):
     @classmethod
     def assert_equal(cls, a, b):
         # TODO: If models become comparable themselves, remove this.
+        TransformType.assert_equal(a, b)
         from ...tests.helpers import assert_tree_match
         assert_tree_match(a._tree.left.value, b._tree.left.value)
         assert_tree_match(a._tree.right.value, b._tree.right.value)
@@ -133,3 +134,8 @@ class RemapAxesType(TransformType):
     @classmethod
     def to_tree_transform(cls, model, ctx):
         return {'mapping': model.mapping}
+
+    @classmethod
+    def assert_equal(cls, a, b):
+        TransformType.assert_equal(a, b)
+        assert a.mapping == b.mapping

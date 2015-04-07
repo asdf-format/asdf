@@ -69,6 +69,13 @@ class TransformType(AsdfType):
         cls._to_tree_base_transform_members(model, node, ctx)
         return node
 
+    @classmethod
+    def assert_equal(cls, a, b):
+        # TODO: If models become comparable themselves, remove this.
+        from ...tests.helpers import assert_tree_match
+        assert a.name == b.name
+        # TODO: Assert inverses are the same
+
 
 class IdentityType(TransformType):
     name = "transform/identity"
@@ -88,6 +95,7 @@ class IdentityType(TransformType):
     @classmethod
     def assert_equal(cls, a, b):
         # TODO: If models become comparable themselves, remove this.
+        TransformType.assert_equal(a, b)
         assert (isinstance(a, mappings.Identity) and
                 isinstance(b, mappings.Identity) and
                 a.n_inputs == b.n_inputs)
