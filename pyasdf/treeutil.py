@@ -32,18 +32,18 @@ def walk(top, callback):
     tree : object
         The modified tree.
     """
-    def recurse(tree, seen=[]):
+    def recurse(tree, seen=set()):
         if id(tree) in seen:
             return
 
         if isinstance(tree, dict):
-            new_seen = seen + [id(tree)]
+            new_seen = seen | set([id(tree)])
             for val in six.itervalues(tree):
-                recurse(val, seen + new_seen)
+                recurse(val, new_seen)
         elif isinstance(tree, (list, tuple)):
-            new_seen = seen + [id(tree)]
+            new_seen = seen | set([id(tree)])
             for val in tree:
-                recurse(val, seen + new_seen)
+                recurse(val, new_seen)
 
         callback(tree)
 
@@ -73,19 +73,19 @@ def walk_and_modify(top, callback):
     tree : object
         The modified tree.
     """
-    def recurse(tree, seen=[]):
+    def recurse(tree, seen=set()):
         if id(tree) in seen:
             return tree
 
         if isinstance(tree, dict):
-            new_seen = seen + [id(tree)]
+            new_seen = seen | set([id(tree)])
             result = tree.__class__()
             for key, val in six.iteritems(tree):
                 result[key] = recurse(val, new_seen)
             if isinstance(tree, Tagged):
                 result = tag_object(tree.tag, result)
         elif isinstance(tree, (list, tuple)):
-            new_seen = seen + [id(tree)]
+            new_seen = seen | set([id(tree)])
             result = tree.__class__([recurse(val, new_seen) for val in tree])
             if isinstance(tree, Tagged):
                 result = tag_object(tree.tag, result)
