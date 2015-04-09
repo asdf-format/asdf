@@ -18,6 +18,14 @@ from . import treeutil
 from . import util
 
 
+if getattr(yaml, '__with_libyaml__', None):
+    _yaml_base_dumper = yaml.CSafeDumper
+    _yaml_base_loader = yaml.CSafeLoader
+else:
+    _yaml_base_dumper = yaml.SafeDumper
+    _yaml_base_loader = yaml.SafeLoader
+
+
 # ----------------------------------------------------------------------
 # Custom loader/dumpers
 
@@ -51,7 +59,7 @@ def yaml_to_base_type(node, loader):
             type(node)))
 
 
-class AsdfDumper(yaml.CSafeDumper):
+class AsdfDumper(_yaml_base_dumper):
     """
     A specialized YAML dumper that understands "tagged basic Python
     data types" as implemented in the `tagged` module.
@@ -122,7 +130,7 @@ AsdfDumper.add_representer(tagged.TaggedDict, represent_mapping)
 AsdfDumper.add_representer(tagged.TaggedString, represent_scalar)
 
 
-class AsdfLoader(yaml.CSafeLoader):
+class AsdfLoader(_yaml_base_loader):
     """
     A specialized YAML loader that can construct "tagged basic Python
     data types" as implemented in the `tagged` module.
