@@ -51,7 +51,7 @@ def yaml_to_base_type(node, loader):
             type(node)))
 
 
-class AsdfDumper(yaml.SafeDumper):
+class AsdfDumper(yaml.CSafeDumper):
     """
     A specialized YAML dumper that understands "tagged basic Python
     data types" as implemented in the `tagged` module.
@@ -122,7 +122,7 @@ AsdfDumper.add_representer(tagged.TaggedDict, represent_mapping)
 AsdfDumper.add_representer(tagged.TaggedString, represent_scalar)
 
 
-class AsdfLoader(yaml.SafeLoader):
+class AsdfLoader(yaml.CSafeLoader):
     """
     A specialized YAML loader that can construct "tagged basic Python
     data types" as implemented in the `tagged` module.

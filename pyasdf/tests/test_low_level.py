@@ -30,7 +30,7 @@ def _get_small_tree():
 
 def test_no_yaml_end_marker(tmpdir):
     content = b"""#ASDF 0.1.0
-%YAML 1.2
+%YAML 1.1
 %TAG ! tag:stsci.edu:asdf/0.1.0/
 --- !core/asdf
 foo: bar...baz
@@ -57,7 +57,7 @@ baz: 42
 
 def test_no_final_newline(tmpdir):
     content = b"""#ASDF 0.1.0
-%YAML 1.2
+%YAML 1.1
 %TAG ! tag:stsci.edu:asdf/0.1.0/
 --- !core/asdf
 foo: ...bar...
@@ -101,7 +101,7 @@ def test_no_asdf_header(tmpdir):
 
 def test_no_asdf_blocks(tmpdir):
     content = b"""#ASDF 0.1.0
-%YAML 1.2
+%YAML 1.1
 %TAG ! tag:stsci.edu:asdf/0.1.0/
 --- !core/asdf
 foo: bar
@@ -675,7 +675,7 @@ def test_seek_until_on_block_boundary():
     # file-reading-block boundary.
 
     content = b"""#ASDF 0.1.0
-%YAML 1.2
+%YAML 1.1
 %TAG ! tag:stsci.edu:asdf/0.1.0/
 --- !core/asdf
 foo : bar
