@@ -210,17 +210,20 @@ def _create_validator():
 
 
 @lru_cache()
+def _load_schema(url):
+    with generic_io.get_file(url) as fd:
+        if isinstance(url, six.text_type) and url.endswith('json'):
+            result = json.load(fd)
+        else:
+            result = yaml.load(fd, Loader=_yaml_base_loader)
+    return result
+
+
+@lru_cache()
 def _make_schema_loader(resolver):
-    @lru_cache()
     def load_schema(url):
         url = resolver(url)
-        with generic_io.get_file(url) as fd:
-            if isinstance(url, six.text_type) and url.endswith('json'):
-                result = json.load(fd)
-            else:
-                result = yaml.load(fd, Loader=_yaml_base_loader)
-        return result
-
+        return _load_schema(url)
     return load_schema
 
 
