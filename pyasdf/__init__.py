@@ -27,5 +27,7 @@ from . import commands
 
 from jsonschema import ValidationError
 
+class ValidationError(ValidationError):
+    pass
 
 open = AsdfFile.read
