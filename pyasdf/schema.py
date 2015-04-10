@@ -219,7 +219,6 @@ def _load_schema(url):
     return result
 
 
-@lru_cache()
 def _make_schema_loader(resolver):
     def load_schema(url):
         url = resolver(url)
