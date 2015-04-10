@@ -698,7 +698,7 @@ def test_checksum(tmpdir):
     tmpdir = str(tmpdir)
     path = os.path.join(tmpdir, 'test.asdf')
 
-    my_array = np.arange(0, 64).reshape((8, 8))
+    my_array = np.arange(0, 64, dtype=np.int64).reshape((8, 8))
     tree = {'my_array': my_array}
     with asdf.AsdfFile(tree) as ff:
         ff.write_to(path)
@@ -713,7 +713,7 @@ def test_checksum_update(tmpdir):
     tmpdir = str(tmpdir)
     path = os.path.join(tmpdir, 'test.asdf')
 
-    my_array = np.arange(0, 64).reshape((8, 8))
+    my_array = np.arange(0, 64, dtype=np.int64).reshape((8, 8))
 
     tree = {'my_array': my_array}
     with asdf.AsdfFile(tree) as ff:
