@@ -21,6 +21,12 @@ from . import resolver as mresolver
 from . import tagged
 
 
+if getattr(yaml, '__with_libyaml__', None):
+    _yaml_base_loader = yaml.CSafeLoader
+else:
+    _yaml_base_loader = yaml.SafeLoader
+
+
 __all__ = ['validate']
 
 
@@ -174,13 +180,13 @@ def create_validator():
 @lru_cache()
 def _make_schema_loader(resolver):
     @lru_cache()
-    def load_schema(url, reload=False):
+    def load_schema(url):
         url = resolver(url)
         with generic_io.get_file(url) as fd:
             if isinstance(url, six.text_type) and url.endswith('json'):
                 result = json.load(fd)
             else:
-                result = yaml.safe_load(fd)
+                result = yaml.load(fd, Loader=_yaml_base_loader)
         return result
 
     return load_schema
@@ -217,8 +223,14 @@ def validate(instance, schema, resolver=None, *args, **kwargs):
     create_validator()
 
     handlers = {}
+    schema_loader = _make_schema_loader(resolver)
     for x in ['http', 'https', 'file']:
-        handlers[x] = _make_schema_loader(resolver)
+        handlers[x] = schema_loader
+
+    # We set cache_remote=False here because we do the caching of
+    # remote schemas here in `load_schema`, so we don't need
+    # jsonschema to do it on our behalf.  Setting it to `True`
+    # counterintuitively makes things slower.
     kwargs['resolver'] = validators.RefResolver(
         schema.get('id', ''), schema, cache_remote=False,
         handlers=handlers)
