@@ -13,8 +13,9 @@ from . import constants
 from . import extension
 from . import generic_io
 from . import reference
-from . import util
+from . import schema
 from . import treeutil
+from . import util
 from . import versioning
 from . import yamlutil
 
@@ -177,8 +178,9 @@ class AsdfFile(versioning.VersionedMixin):
 
     @tree.setter
     def tree(self, tree):
-        yamlutil.validate(tree, self)
-
+        tagged_tree = yamlutil.custom_tree_to_tagged_tree(
+            AsdfObject(tree), self)
+        schema.validate(tagged_tree, self)
         self._tree = AsdfObject(tree)
 
     def make_reference(self, path=[]):

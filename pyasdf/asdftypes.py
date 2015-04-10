@@ -144,15 +144,6 @@ class AsdfType(object):
             name)
 
     @classmethod
-    def validate(cls, tree, ctx):
-        """
-        Validate the given tree of basic data types against the schema
-        for this type.
-        """
-        from . import yamlutil
-        yamlutil.validate_for_tag(cls.yaml_tag, tree, ctx)
-
-    @classmethod
     def to_tree(cls, node, ctx):
         """
         Converts from a custom type to any of the basic types (dict,

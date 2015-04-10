@@ -146,18 +146,17 @@ YAML_VALIDATORS.update({
 })
 
 
-_created_validator = False
-def create_validator():
-    global _created_validator
-    if _created_validator:
-        return
+_validator = None
+def _create_validator():
+    global _validator
+    if _validator is not None:
+        return _validator
 
     validator = validators.create(
         meta_schema=load_schema(
             'http://stsci.edu/schemas/yaml-schema/draft-01',
             mresolver.default_url_mapping),
-        validators=YAML_VALIDATORS,
-        version=str('yaml schema draft 1'))
+        validators=YAML_VALIDATORS)
     validator.orig_iter_errors = validator.iter_errors
 
     # We can't validate anything that looks like an external
@@ -165,16 +164,49 @@ def create_validator():
     # just have to defer it for now.  If the user cares about
     # complete validation, they can call
     # `AsdfFile.resolve_references`.
-    def iter_errors(self, instance, _schema=None):
+    def iter_errors(self, instance, _schema=None, _seen=set()):
+        if id(instance) in _seen:
+            return
+
+        if _schema is None:
+            schema = self.schema
+        else:
+            schema = _schema
+
         if ((isinstance(instance, dict) and '$ref' in instance) or
             isinstance(instance, reference.Reference)):
             return
 
-        for x in self.orig_iter_errors(instance, _schema=_schema):
-            yield x
+        if _schema is None:
+            tag = tagged.get_tag(instance)
+            if tag is not None:
+                schema_path = self.ctx.tag_to_schema_resolver(tag)
+                if schema_path != tag:
+                    s = load_schema(schema_path, self.ctx.url_mapping)
+                    if s:
+                        with self.resolver.in_scope(schema_path):
+                            for x in self.orig_iter_errors(instance, s):
+                                yield x
+
+            if isinstance(instance, dict):
+                new_seen = _seen | set([id(instance)])
+                for val in six.itervalues(instance):
+                    for x in self.iter_errors(val, _seen=new_seen):
+                        yield x
+
+            elif isinstance(instance, list):
+                new_seen = _seen | set([id(instance)])
+                for val in instance:
+                    for x in self.iter_errors(val, _seen=new_seen):
+                        yield x
+        else:
+            for x in self.orig_iter_errors(instance, _schema=schema):
+                yield x
 
     validator.iter_errors = iter_errors
-    _created_validator = True
+
+    _validator = validator
+    return validator
 
 
 @lru_cache()
@@ -213,17 +245,24 @@ def load_schema(url, resolver=None):
     return loader(url)
 
 
-def validate(instance, schema, resolver=None, *args, **kwargs):
+def validate(instance, ctx, *args, **kwargs):
     """
-    Validate the given instance against the given schema using the
-    YAML schema extensions to JSON schema.
+    Validate the given instance (which must be a tagged tree) against
+    the appropriate schema.  The schema itself is located using the
+    tag on the instance.
 
-    The arguments are the same as to `jsonschema.validate`.
+    The additional *args and **kwargs are passed along to
+    `jsonschema.validate`.
+
+    Parameters
+    ----------
+    instance : tagged tree
+
+    ctx : AsdfFile context
+        Used to resolve tags and urls
     """
-    create_validator()
-
     handlers = {}
-    schema_loader = _make_schema_loader(resolver)
+    schema_loader = _make_schema_loader(ctx.url_mapping)
     for x in ['http', 'https', 'file']:
         handlers[x] = schema_loader
 
@@ -232,23 +271,23 @@ def validate(instance, schema, resolver=None, *args, **kwargs):
     # jsonschema to do it on our behalf.  Setting it to `True`
     # counterintuitively makes things slower.
     kwargs['resolver'] = validators.RefResolver(
-        schema.get('id', ''), schema, cache_remote=False,
-        handlers=handlers)
+        '', {}, cache_remote=False, handlers=handlers)
 
     # We don't just call validators.validate() directly here, because
     # that validates the schema itself, wasting a lot of time (at the
     # time of this writing, it was half of the runtime of the unit
     # test suite!!!).  Instead, we assume that the schemas are valid
     # through the running of the unit tests, not at run time.
-    cls = validators.validator_for(schema)
-    cls(schema, *args, **kwargs).validate(instance)
+    cls = _create_validator()
+    validator = cls({}, *args, **kwargs)
+    validator.ctx = ctx
+    validator.validate(instance)
 
 
 def check_schema(schema):
     """
     Check a given schema to make sure it is valid YAML schema.
     """
-    create_validator()
-
-    cls = validators.validator_for(schema)
-    cls.check_schema(schema)
+    validators.validate(schema, load_schema(
+        'http://stsci.edu/schemas/yaml-schema/draft-01',
+        mresolver.default_url_mapping))

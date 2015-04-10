@@ -38,7 +38,7 @@ from astropy.extern import six
 from .compat import UserDict, UserList, UserString
 
 
-__all__ = ['tag_object', 'get_tag', 'walk_and_modify_with_tags']
+__all__ = ['tag_object', 'get_tag']
 
 
 class Tagged(object):
