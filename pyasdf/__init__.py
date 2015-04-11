@@ -15,7 +15,9 @@ from ._astropy_init import *
 # ----------------------------------------------------------------------------
 
 __all__ = ['AsdfFile', 'AsdfType', 'AsdfExtension',
-           'Stream', 'open', 'test', 'commands']
+           'Stream', 'open', 'test', 'commands',
+           'ValidationError']
+
 
 from .asdf import AsdfFile
 from .asdftypes import AsdfType
@@ -23,5 +25,9 @@ from .extension import AsdfExtension
 from .stream import Stream
 from . import commands
 
+from jsonschema import ValidationError
+
+class ValidationError(ValidationError):
+    pass
 
 open = AsdfFile.read

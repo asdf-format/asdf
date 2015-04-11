@@ -32,7 +32,7 @@ def walk(top, callback):
     tree : object
         The modified tree.
     """
-    def recurse(tree, seen=set()):
+    def recurse(tree, seen):
         if id(tree) in seen:
             return
 
@@ -47,7 +47,7 @@ def walk(top, callback):
 
         callback(tree)
 
-    return recurse(top)
+    return recurse(top, set())
 
 
 def walk_and_modify(top, callback):
@@ -73,7 +73,7 @@ def walk_and_modify(top, callback):
     tree : object
         The modified tree.
     """
-    def recurse(tree, seen=set()):
+    def recurse(tree, seen):
         if id(tree) in seen:
             return tree
 
@@ -96,4 +96,4 @@ def walk_and_modify(top, callback):
 
         return result
 
-    return recurse(top)
+    return recurse(top, set())

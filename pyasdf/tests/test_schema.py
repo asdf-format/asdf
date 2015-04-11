@@ -19,7 +19,6 @@ import yaml
 from .. import asdf
 from .. import asdftypes
 from .. import block
-from .. import resolver
 from .. import schema
 from .. import treeutil
 
@@ -225,3 +224,58 @@ def test_property_order():
         if index != -1:
             assert index > last_index
             last_index = index
+
+
+def test_invalid_nested():
+    class CustomType(str, asdftypes.AsdfType):
+        name = 'custom_type'
+        organization = 'nowhere.org'
+        version = (1, 0, 0)
+        standard = 'custom'
+
+    class CustomExtension:
+        @property
+        def types(self):
+            return [CustomType]
+
+        @property
+        def tag_mapping(self):
+            return [('tag:nowhere.org:custom',
+                     'http://nowhere.org/schemas/custom{tag_suffix}')]
+
+        @property
+        def url_mapping(self):
+            return [('http://nowhere.org/schemas/custom/1.0.0/',
+                     'file://' + TEST_DATA_PATH + '/{url_suffix}.yaml')]
+
+    yaml = """
+custom: !<tag:nowhere.org:custom/1.0.0/custom>
+  foo
+    """
+    buff = helpers.yaml_to_asdf(yaml)
+    ff = asdf.AsdfFile.read(buff)
+
+    buff.seek(0)
+    with pytest.raises(ValidationError):
+        ff = asdf.AsdfFile.read(buff, extensions=[CustomExtension()])
+
+    # Make sure tags get validated inside of other tags that know
+    # nothing about them.
+    yaml = """
+array: !core/ndarray
+  data: [0, 1, 2]
+  custom: !<tag:nowhere.org:custom/1.0.0/custom>
+    foo
+    """
+    buff = helpers.yaml_to_asdf(yaml)
+    with pytest.raises(ValidationError):
+        ff = asdf.AsdfFile.read(buff, extensions=[CustomExtension()])
+
+
+def test_invalid_schema():
+    s = {'type': 'integer'}
+    schema.check_schema(s)
+
+    s = {'type': 'foobar'}
+    with pytest.raises(ValidationError):
+        schema.check_schema(s)

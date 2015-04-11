@@ -245,39 +245,6 @@ def tagged_tree_to_custom_tree(tree, ctx):
     return treeutil.walk_and_modify(tree, walker)
 
 
-def validate_for_tag(tag, tree, ctx):
-    """
-    Validates a tree for a given tag.
-    """
-    schema_path = ctx.tag_to_schema_resolver(tag)
-    if schema_path != tag:
-        s = schema.load_schema(schema_path, ctx.url_mapping)
-        schema.validate(tree, s, ctx.url_mapping)
-
-
-def validate_tagged_tree(tree, ctx):
-    """
-    Validate a tree of tagged basic data types against any relevant
-    schemas, both at the root level and anywhere a tag is found with a
-    matching schema.
-    """
-    def walker(node):
-        tag_name = tagged.get_tag(node)
-        if tag_name is not None:
-            validate_for_tag(tag_name, node, ctx)
-    return treeutil.walk(tree, walker)
-
-
-def validate(tree, ctx):
-    """
-    Validate a tree, possibly containing custom data types, against
-    any relevant schemas, both at the root level and anywhere else a
-    tag is found with a matching schema.
-    """
-    tagged_tree = custom_tree_to_tagged_tree(tree, ctx)
-    validate_tagged_tree(tagged_tree, ctx)
-
-
 def load_tree(yaml_content, ctx):
     """
     Load YAML, returning a tree of objects and custom types.
@@ -296,7 +263,7 @@ def load_tree(yaml_content, ctx):
 
     tree = yaml.load(yaml_content, Loader=AsdfLoaderTmp)
     tree = reference.find_references(tree, ctx)
-    validate_tagged_tree(tree, ctx)
+    schema.validate(tree, ctx)
     tree = tagged_tree_to_custom_tree(tree, ctx)
     return tree
 
@@ -328,7 +295,7 @@ def dump_tree(tree, fd, ctx):
         tags = None
 
     tree = custom_tree_to_tagged_tree(tree, ctx)
-    validate_tagged_tree(tree, ctx)
+    schema.validate(tree, ctx)
 
     yaml.dump_all(
         [tree], stream=fd, Dumper=AsdfDumperTmp,
