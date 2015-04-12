@@ -9,6 +9,7 @@ import os
 import shutil
 import tempfile
 import textwrap
+import codecs
 
 from docutils.parsers.rst import Directive
 from docutils import nodes
@@ -74,7 +75,7 @@ class AsdfDirective(Directive):
         parts = []
         try:
             code = AsdfFile.read(filename, _get_yaml_content=True)
-            code = '{0}{1}\n'.format(ASDF_MAGIC, version_string) + code.strip()
+            code = '{0}{1}\n'.format(ASDF_MAGIC, version_string) + code.strip().decode('utf-8')
             literal = nodes.literal_block(code, code)
             literal['language'] = 'yaml'
             set_source_info(self, literal)
@@ -82,9 +83,9 @@ class AsdfDirective(Directive):
 
             ff = AsdfFile.read(filename)
             for i, block in enumerate(ff.blocks.internal_blocks):
-                data = block.data.tostring().encode('hex')
+                data = codecs.encode(block.data.tostring(), 'hex')
                 if len(data) > 40:
-                    data = data[:40] + '...'
+                    data = data[:40] + '...'.encode()
                 allocated = block._allocated
                 size = block._size
                 data_size = block._data_size
