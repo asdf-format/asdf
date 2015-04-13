@@ -11,7 +11,7 @@ from astropy.extern import six
 import astropy.extern.six.moves.urllib.request as urllib_request
 from astropy.extern.six.moves.urllib.parse import urljoin
 from astropy.extern.six.moves.urllib.request import pathname2url
-from astropy.tests.helper import pytest
+from astropy.tests.helper import pytest, remote_data
 
 import numpy as np
 
@@ -243,6 +243,7 @@ def test_streams2():
     assert len(x) == 60
 
 
+@remote_data
 def test_urlopen(tree, httpserver):
     path = os.path.join(httpserver.tmpdir, 'test.asdf')
 
@@ -261,6 +262,7 @@ def test_urlopen(tree, httpserver):
     assert isinstance(next(ff.blocks.internal_blocks)._data, np.ndarray)
 
 
+@remote_data
 def test_http_connection(tree, httpserver):
     path = os.path.join(httpserver.tmpdir, 'test.asdf')
 
@@ -284,6 +286,7 @@ def test_http_connection(tree, httpserver):
     ff.tree['science_data'][0] == 42
 
 
+@remote_data
 def test_http_connection_range(tree, rhttpserver):
     path = os.path.join(rhttpserver.tmpdir, 'test.asdf')
     connection = [None]
@@ -349,6 +352,7 @@ def test_exploded_filesystem_fail(tree, tmpdir):
             helpers.assert_tree_match(tree, ff.tree)
 
 
+@remote_data
 def test_exploded_http(tree, httpserver):
     path = os.path.join(httpserver.tmpdir, 'test.asdf')
 
