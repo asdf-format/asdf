@@ -170,7 +170,7 @@ def relative_uri(source, target):
         return target
 
     if relative is None:
-        relative = os.path.relpath(tu[2], su[2])
+        relative = os.path.relpath(tu[2], os.path.dirname(su[2]))
     if relative == '.':
         relative = ''
     relative = urlparse.urlunparse(["", "", relative] + extra)

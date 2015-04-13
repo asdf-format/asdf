@@ -218,6 +218,11 @@ def test_make_reference(tmpdir):
         ff.tree['ref'] = ext.make_reference(['f~o~o/', 'a'])
         assert_array_equal(ff.tree['ref'], ext.tree['f~o~o/']['a'])
 
+        ff.write_to(os.path.join(str(tmpdir), 'source.asdf'))
+
+    with asdf.AsdfFile.read(os.path.join(str(tmpdir), 'source.asdf')) as ff:
+        assert ff.tree['ref']._uri == 'external.asdf#f~0o~0o~1/a'
+
 
 def test_internal_reference():
     tree = {
