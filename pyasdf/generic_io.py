@@ -22,12 +22,19 @@ import sys
 from astropy.extern import six
 from astropy.extern.six.moves import xrange
 from astropy.extern.six.moves.urllib import parse as urlparse
+from astropy.extern.six.moves.urllib.request import url2pathname, pathname2url
 from astropy.utils.misc import InheritDocstrings
 
 import numpy as np
 
 
 __all__ = ['get_file', 'resolve_uri', 'relative_uri']
+
+
+_local_file_schemes = ['', 'file']
+if sys.platform.startswith('win'):
+    import string
+    _local_file_schemes.extend(string.ascii_letters)
 
 
 def _check_bytes(fd, mode):
@@ -107,7 +114,7 @@ if sys.platform == 'darwin':
         return _array_tofile_simple(fd, array)
 elif sys.platform.startswith('win'):
     def _array_tofile(fd, write, array):
-        WIN_WRITE_LIMIT = 2 ** 31
+        WIN_WRITE_LIMIT = 2 ** 30
         return _array_tofile_chunked(write, array, WIN_WRITE_LIMIT)
 else:
     _array_tofile = _array_tofile_simple
@@ -566,12 +573,18 @@ class RealFile(RandomAccessFile):
     def __init__(self, fd, mode, close=True, uri=None):
         super(RealFile, self).__init__(fd, mode, close=close, uri=uri)
         stat = os.fstat(fd.fileno())
-        self._blksize = stat.st_blksize
+        if sys.platform.startswith('win'):
+            # There appears to be reliable way to get block size on Windows,
+            # so just choose a reasonable default
+            self._blksize = io.DEFAULT_BUFFER_SIZE
+        else:
+            self._blksize = stat.st_blksize
         self._size = stat.st_size
         if (uri is None and
             isinstance(fd.name, six.string_types) and
             os.path.exists(fd.name)):
-            self._uri = os.path.abspath(fd.name)
+            self._uri = urlparse.urljoin(
+                'file:', pathname2url(os.path.abspath(fd.name)))
 
     def write_array(self, arr):
         if isinstance(arr, np.memmap) and getattr(arr, 'fd', None) is self:
@@ -878,17 +891,22 @@ class HTTPConnection(RandomAccessFile):
         else:
             response = self._get_range(
                 self._pos, self._pos + size)
-            if six.PY3:
-                result = np.empty((size,), dtype=np.uint8)
-                response.readinto(result)
+            if sys.platform.startswith('win'):
+                data = response.read(size)
+                result = np.frombuffer(data, np.uint8)
             else:
-                # Python 2.6 HTTPResponse does not have fileno()
-                if hasattr(response, 'fileno'):
-                    fileno = response.fileno()
+                if six.PY3:
+                    result = np.empty((size,), dtype=np.uint8)
+                    response.readinto(result)
                 else:
-                    fileno = response.fp.fileno()
-                with os.fdopen(fileno, 'rb') as fd:
-                    result = np.fromfile(fd, np.uint8, size)
+                    # Python 2.6 HTTPResponse does not have fileno()
+                    if hasattr(response, 'fileno'):
+                        fileno = response.fileno()
+                    else:
+                        fileno = response.fp.fileno()
+
+                    with os.fdopen(fileno, 'rb') as fd:
+                        result = np.fromfile(fd, np.uint8, size)
 
         self._pos = new_pos
         return result
@@ -1007,14 +1025,15 @@ def get_file(init, mode='r', uri=None):
                 raise ValueError(
                     "HTTP connections can not be opened for writing")
             return _make_http_connection(init, mode, uri=uri)
-        elif parsed.scheme in ('', 'file'):
+        elif parsed.scheme in _local_file_schemes:
             if mode == 'rw':
                 realmode = 'r+b'
             else:
                 realmode = mode + 'b'
+            realpath = url2pathname(parsed.path)
             return RealFile(
-                open(parsed.path, realmode), mode, close=True,
-                uri=uri or parsed.path)
+                open(realpath, realmode), mode, close=True,
+                uri=uri)
 
     elif isinstance(init, io.BytesIO):
         return MemoryIO(init, mode, uri=uri)

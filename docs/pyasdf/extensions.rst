@@ -41,6 +41,9 @@ Then, the Python implementation.  See the `pyasdf.AsdfType` and
 
     import fractions
 
+    from six.moves.urllib.parse import urljoin
+    from six.moves.urllib.request import pathname2url
+
     class FractionType(pyasdf.AsdfType):
         name = 'fraction'
         organization = 'nowhere.org'
@@ -69,4 +72,6 @@ Then, the Python implementation.  See the `pyasdf.AsdfType` and
         @property
         def url_mapping(self):
             return [('http://nowhere.org/schemas/custom/1.0.0/',
-                     'file://' + os.path.dirname(__file__) + '/{url_suffix}.yaml')]
+                     urljoin('file:', pathname2url(os.path.join(
+                         os.path.dirname(__file__))) +
+                         '/{url_suffix}.yaml')]

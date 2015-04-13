@@ -23,6 +23,9 @@ def test_reference_files():
         elif sys.version_info[:2] == (2, 7):
             known_fail = (basename in ('complex.asdf'))
 
+        if sys.maxunicode <= 65535:
+            known_fail = known_fail | (basename in ('unicode_spp.asdf'))
+
         try:
             with open(filename) as asdf:
                 asdf.resolve_and_inline()
@@ -35,7 +38,8 @@ def test_reference_files():
             else:
                 raise
 
-    root = os.path.join(os.path.dirname(__file__), "../reference_files")
+    root = os.path.join(
+        os.path.dirname(__file__), '..', "reference_files")
     for filename in os.listdir(root):
         if filename.endswith(".asdf"):
             filepath = os.path.join(root, filename)

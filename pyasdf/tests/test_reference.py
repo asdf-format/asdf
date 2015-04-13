@@ -10,6 +10,7 @@ import numpy as np
 from numpy.testing import assert_array_equal
 
 from astropy.tests.helper import pytest
+from astropy.extern.six.moves.urllib.request import pathname2url
 
 import yaml
 
@@ -106,7 +107,8 @@ def test_external_reference(tmpdir):
 
         assert_array_equal(ff.tree['internal'], exttree['cool_stuff']['a'])
 
-    with asdf.AsdfFile(tree, uri=os.path.join(str(tmpdir), 'main.asdf')) as ff:
+    with asdf.AsdfFile(tree, uri=pathname2url(
+            os.path.join(str(tmpdir), 'main.asdf'))) as ff:
         do_asserts(ff)
 
         internal_path = os.path.join(str(tmpdir), 'main.asdf')
@@ -158,7 +160,8 @@ def test_external_reference_invalid(tmpdir):
     with pytest.raises(IOError):
         ff.resolve_references()
 
-    ff = asdf.AsdfFile(tree, uri=os.path.join(str(tmpdir), 'main.asdf'))
+    ff = asdf.AsdfFile(tree, uri=pathname2url(
+        os.path.join(str(tmpdir), 'main.asdf')))
     with pytest.raises(IOError):
         ff.resolve_references()
 
@@ -181,7 +184,8 @@ def test_external_reference_invalid_fragment(tmpdir):
             }
         }
 
-    with asdf.AsdfFile(tree, uri=os.path.join(str(tmpdir), 'main.asdf')) as ff:
+    with asdf.AsdfFile(tree, uri=pathname2url(
+            os.path.join(str(tmpdir), 'main.asdf'))) as ff:
         with pytest.raises(ValueError):
             ff.resolve_references()
 
@@ -191,7 +195,8 @@ def test_external_reference_invalid_fragment(tmpdir):
             }
         }
 
-    with asdf.AsdfFile(tree, uri=os.path.join(str(tmpdir), 'main.asdf')) as ff:
+    with asdf.AsdfFile(tree, uri=pathname2url(
+            os.path.join(str(tmpdir), 'main.asdf'))) as ff:
         with pytest.raises(ValueError):
             ff.resolve_references()
 
@@ -229,7 +234,7 @@ def test_internal_reference():
     tree = {
         'foo': 2
     }
-    ff = asdf.AsdfFile(tree, uri="test.asdf")
+    ff = asdf.AsdfFile(tree, uri=pathname2url(os.path.abspath("test.asdf")))
     ff.tree['bar'] = ff.make_reference([])
     buff = io.BytesIO()
     ff.write_to(buff)
