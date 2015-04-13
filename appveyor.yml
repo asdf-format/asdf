@@ -25,7 +25,7 @@ environment:
         PYTHON_ARCH: "64"
 
 install:
-    - "git submodule update"
+    - "git submodule update --init"
 
     # Install miniconda using a powershell script.
     - "powershell .continuous-integration/appveyor/install-miniconda.ps1"
