@@ -44,7 +44,7 @@ install:
     - "conda install -q --yes numpy=%NUMPY_VERSION% pytest Cython jinja2 pyyaml jsonschema"
 
     # Install the development version of astropy
-    - "pip install git+http://github.com/astropy/astropy.git#egg=astropy"
+    - "%CMD_IN_ENV% pip install git+http://github.com/astropy/astropy.git#egg=astropy"
 
 # Not a .NET project
 build: false
