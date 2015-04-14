@@ -767,20 +767,20 @@ class Block(object):
                     "ASDF file has already been closed. "
                     "Can not get the data.")
 
-            if not self.is_compressed and self._fd.can_memmap():
-                self._data = self._fd.memmap_array(
-                    self.data_offset, self._size)
-                self._memmapped = True
-
-            else:
-                # Be nice and reset the file position after we're done
-                curpos = self._fd.tell()
-                try:
+            # Be nice and reset the file position after we're done
+            curpos = self._fd.tell()
+            try:
+                if not self.is_compressed and self._fd.can_memmap():
+                    self._data = self._fd.memmap_array(
+                        self.data_offset, self._size)
+                    self._memmapped = True
+                else:
                     self._fd.seek(self.data_offset)
                     self._data = self._read_data(
-                        self._fd, self._size, self._data_size, self.compression)
-                finally:
-                    self._fd.seek(curpos)
+                        self._fd, self._size, self._data_size,
+                        self.compression)
+            finally:
+                self._fd.seek(curpos)
 
         return self._data
 

@@ -15,7 +15,7 @@ env:
         - ASTROPY_VERSION=development
         - CONDA_INSTALL='conda install -c astropy-ci-extras --yes'
         - PIP_INSTALL='pip install'
-        - SETUP_CMD='test'
+        - SETUP_CMD='test --remote-data'
 
 matrix:
     include:

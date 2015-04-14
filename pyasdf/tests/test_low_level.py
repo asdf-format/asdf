@@ -332,39 +332,40 @@ def test_update_expand_tree(tmpdir):
     my_array = np.arange(64) * 1
     my_array2 = np.arange(64) * 2
     tree = {
-        'my_array': my_array,
-        'my_array2': my_array2,
-        'my_array3': np.arange(3)
+        'arrays': [
+            my_array,
+            my_array2,
+            np.arange(3)
+        ]
     }
 
     with asdf.AsdfFile(tree) as ff:
-        ff.blocks[tree['my_array3']].array_storage = 'inline'
+        ff.blocks[tree['arrays'][2]].array_storage = 'inline'
         ff.write_to(os.path.join(tmpdir, "test.asdf"), pad_blocks=True)
-        orig_offset = ff.blocks[ff.tree['my_array']].offset
-        orig_offset2 = ff.blocks[ff.tree['my_array2']].offset
+        orig_offset = ff.blocks[ff.tree['arrays'][0]].offset
+        orig_offset2 = ff.blocks[ff.tree['arrays'][1]].offset
         ff.tree['extra'] = [0] * 6000
         ff.update()
 
     with asdf.AsdfFile.read(os.path.join(tmpdir, "test.asdf")) as ff:
-        assert orig_offset != ff.blocks[ff.tree['my_array']].offset
-        assert orig_offset2 != ff.blocks[ff.tree['my_array2']].offset
-        assert ff.blocks[ff.tree['my_array3']].array_storage == 'inline'
-        assert_array_equal(ff.tree['my_array'], my_array)
-        assert_array_equal(ff.tree['my_array2'], my_array2)
+        assert orig_offset <= ff.blocks[ff.tree['arrays'][0]].offset
+        assert ff.blocks[ff.tree['arrays'][2]].array_storage == 'inline'
+        assert_array_equal(ff.tree['arrays'][0], my_array)
+        assert_array_equal(ff.tree['arrays'][1], my_array2)
 
     # Now, we expand the header only by a little bit
     with asdf.AsdfFile(tree) as ff:
-        ff.blocks[tree['my_array3']].array_storage = 'inline'
-        ff.write_to(os.path.join(tmpdir, "test.asdf"), pad_blocks=True)
-        orig_offset = ff.blocks[ff.tree['my_array']].offset
+        ff.blocks[tree['arrays'][2]].array_storage = 'inline'
+        ff.write_to(os.path.join(tmpdir, "test2.asdf"), pad_blocks=True)
+        orig_offset = ff.blocks[ff.tree['arrays'][0]].offset
         ff.tree['extra'] = [0] * 2
         ff.update()
 
-    with asdf.AsdfFile.read(os.path.join(tmpdir, "test.asdf")) as ff:
-        assert orig_offset == ff.blocks[ff.tree['my_array']].offset
-        assert ff.blocks[ff.tree['my_array3']].array_storage == 'inline'
-        assert_array_equal(ff.tree['my_array'], my_array)
-        assert_array_equal(ff.tree['my_array2'], my_array2)
+    with asdf.AsdfFile.read(os.path.join(tmpdir, "test2.asdf")) as ff:
+        assert orig_offset == ff.blocks[ff.tree['arrays'][0]].offset
+        assert ff.blocks[ff.tree['arrays'][2]].array_storage == 'inline'
+        assert_array_equal(ff.tree['arrays'][0], my_array)
+        assert_array_equal(ff.tree['arrays'][1], my_array2)
 
 
 def _get_update_tree():
@@ -559,7 +560,7 @@ def test_update_add_array_at_end(tmpdir):
         ff.tree['arrays'].append(np.arange(2048))
         ff.update()
 
-    assert os.stat(path).st_size > original_size
+    assert os.stat(path).st_size >= original_size
 
     with asdf.AsdfFile.read(os.path.join(tmpdir, "test.asdf")) as ff:
         assert_array_equal(ff.tree['arrays'][0], tree['arrays'][0])

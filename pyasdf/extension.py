@@ -93,8 +93,11 @@ class AsdfExtension(object):
         alongside as data alongside Python module::
 
             return [('http://nowhere.org/schemas/custom/1.0.0/',
-                     'file://' + os.path.dirname(__file__) + "/{url_suffix}.yaml')]
-
+                    urljoin('file:',
+                      pathname2url(
+                        os.path.join(
+                          SCHEMA_PATH, 'stsci.edu')))
+                    + '/{url_suffix}.yaml')]
         """
         pass
 

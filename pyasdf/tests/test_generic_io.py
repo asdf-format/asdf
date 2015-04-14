@@ -9,7 +9,9 @@ import sys
 
 from astropy.extern import six
 import astropy.extern.six.moves.urllib.request as urllib_request
-from astropy.tests.helper import pytest
+from astropy.extern.six.moves.urllib.parse import urljoin
+from astropy.extern.six.moves.urllib.request import pathname2url
+from astropy.tests.helper import pytest, remote_data
 
 import numpy as np
 
@@ -86,13 +88,13 @@ def test_path(tree, tmpdir):
     def get_write_fd():
         f = generic_io.get_file(path, mode='w')
         assert isinstance(f, generic_io.RealFile)
-        assert f._uri == path
+        assert f._uri == urljoin('file:', pathname2url(path))
         return f
 
     def get_read_fd():
         f = generic_io.get_file(path, mode='r')
         assert isinstance(f, generic_io.RealFile)
-        assert f._uri == path
+        assert f._uri == urljoin('file:', pathname2url(path))
         # This is to check for a "feature" in Python 3.x that reading zero
         # bytes from a socket causes it to stop.  We have code in generic_io.py
         # to workaround it.
@@ -112,13 +114,13 @@ def test_open2(tree, tmpdir):
     def get_write_fd():
         f = generic_io.get_file(open(path, 'wb'), mode='w')
         assert isinstance(f, generic_io.RealFile)
-        assert f._uri == path
+        assert f._uri == urljoin('file:', pathname2url(path))
         return f
 
     def get_read_fd():
         f = generic_io.get_file(open(path, 'rb'), mode='r')
         assert isinstance(f, generic_io.RealFile)
-        assert f._uri == path
+        assert f._uri == urljoin('file:', pathname2url(path))
         return f
 
     ff = _roundtrip(tree, get_write_fd, get_read_fd)
@@ -174,13 +176,13 @@ def test_io_open(tree, tmpdir):
     def get_write_fd():
         f = generic_io.get_file(io.open(path, 'wb'), mode='w')
         assert isinstance(f, generic_io.RealFile)
-        assert f._uri == path
+        assert f._uri == urljoin('file:', pathname2url(path))
         return f
 
     def get_read_fd():
         f = generic_io.get_file(io.open(path, 'r+b'), mode='rw')
         assert isinstance(f, generic_io.RealFile)
-        assert f._uri == path
+        assert f._uri == urljoin('file:', pathname2url(path))
         return f
 
     ff = _roundtrip(tree, get_write_fd, get_read_fd)
@@ -241,6 +243,7 @@ def test_streams2():
     assert len(x) == 60
 
 
+@remote_data
 def test_urlopen(tree, httpserver):
     path = os.path.join(httpserver.tmpdir, 'test.asdf')
 
@@ -259,6 +262,7 @@ def test_urlopen(tree, httpserver):
     assert isinstance(next(ff.blocks.internal_blocks)._data, np.ndarray)
 
 
+@remote_data
 def test_http_connection(tree, httpserver):
     path = os.path.join(httpserver.tmpdir, 'test.asdf')
 
@@ -282,6 +286,7 @@ def test_http_connection(tree, httpserver):
     ff.tree['science_data'][0] == 42
 
 
+@remote_data
 def test_http_connection_range(tree, rhttpserver):
     path = os.path.join(rhttpserver.tmpdir, 'test.asdf')
     connection = [None]
@@ -347,6 +352,7 @@ def test_exploded_filesystem_fail(tree, tmpdir):
             helpers.assert_tree_match(tree, ff.tree)
 
 
+@remote_data
 def test_exploded_http(tree, httpserver):
     path = os.path.join(httpserver.tmpdir, 'test.asdf')
 
