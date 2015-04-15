@@ -316,53 +316,12 @@ class AsdfFile(versioning.VersionedMixin):
                 int(match.group("micro")))
 
     @classmethod
-    def open(cls, fd, uri=None, mode='r',
-             validate_checksums=False,
-             extensions=None,
-             do_not_fill_defaults=False,
-             _get_yaml_content=False):
-        """
-        Open an existing ASDF file.
-
-        By default, any missing values which have a default value
-        specified in the schema will be added to the tree after
-        loading.  To disable this, set ``do_not_fill_defaults`` to
-        `True`.
-
-        Parameters
-        ----------
-        fd : string or file-like object
-            May be a string ``file`` or ``http`` URI, or a Python
-            file-like object.
-
-        uri : string, optional
-            The URI of the file.  Only required if the URI can not be
-            automatically determined from `fd`.
-
-        mode : string, optional
-            The mode to open the file in.  Must be ``r`` (default) or
-            ``rw``.
-
-        validate_checksums : bool, optional
-            If `True`, validate the blocks against their checksums.
-            Requires reading the entire file, so disabled by default.
-
-        extensions : list of AsdfExtension, optional
-            A list of extensions to the ASDF to support when reading
-            and writing ASDF files.  See `asdftypes.AsdfExtension` for
-            more information.
-
-        do_not_fill_defaults : bool, optional
-            When `True`, don't fill in default values in the tree.
-
-        Returns
-        -------
-        asdffile : AsdfFile
-            The new AsdfFile object.
-        """
+    def _open_impl(cls, self, fd, uri=None, mode='r',
+                   validate_checksums=False,
+                   do_not_fill_defaults=False,
+                   _get_yaml_content=False):
         fd = generic_io.get_file(fd, mode=mode, uri=uri)
 
-        self = cls(extensions=extensions)
         self._fd = fd
 
         try:
@@ -405,6 +364,53 @@ class AsdfFile(versioning.VersionedMixin):
             self._tree = {}
 
         return self
+
+    @classmethod
+    def open(cls, fd, uri=None, mode='r',
+             validate_checksums=False,
+             extensions=None,
+             do_not_fill_defaults=False,
+             _get_yaml_content=False):
+        """
+        Open an existing ASDF file.
+
+        Parameters
+        ----------
+        fd : string or file-like object
+            May be a string ``file`` or ``http`` URI, or a Python
+            file-like object.
+
+        uri : string, optional
+            The URI of the file.  Only required if the URI can not be
+            automatically determined from `fd`.
+
+        mode : string, optional
+            The mode to open the file in.  Must be ``r`` (default) or
+            ``rw``.
+
+        validate_checksums : bool, optional
+            If `True`, validate the blocks against their checksums.
+            Requires reading the entire file, so disabled by default.
+
+        extensions : list of AsdfExtension
+            A list of extensions to the ASDF to support when reading
+            and writing ASDF files.  See `asdftypes.AsdfExtension` for
+            more information.
+
+        do_not_fill_defaults : bool, optional
+            When `True`, do not fill in missing default values.
+
+        Returns
+        -------
+        asdffile : AsdfFile
+            The new AsdfFile object.
+        """
+        self = cls(extensions=extensions)
+
+        return cls._open_impl(
+            self, fd, uri=uri, mode=mode,
+            validate_checksums=validate_checksums,
+            _get_yaml_content=_get_yaml_content)
 
     def _write_tree(self, tree, fd, pad_blocks):
         fd.write(constants.ASDF_MAGIC)
