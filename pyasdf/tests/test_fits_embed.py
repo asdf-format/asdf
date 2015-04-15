@@ -44,8 +44,8 @@ def test_embed_asdf_in_fits_file(tmpdir):
 
         assert_tree_match(tree, ff2.tree)
 
-    with asdf.AsdfFile(tree) as ff:
-        ff.write_to('test.asdf')
+        with asdf.AsdfFile(ff2.tree) as ff:
+            ff.write_to('test.asdf')
 
-    with asdf.AsdfFile.read('test.asdf') as ff:
-        assert_tree_match(tree, ff.tree)
+        with asdf.AsdfFile.read('test.asdf') as ff:
+            assert_tree_match(tree, ff.tree)
