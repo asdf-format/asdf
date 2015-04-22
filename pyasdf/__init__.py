@@ -14,9 +14,7 @@ Data Format (ASDF) files
 from ._astropy_init import *
 # ----------------------------------------------------------------------------
 
-try:
-    _ASTROPY_SETUP_
-except NameError:
+if _ASTROPY_SETUP_ is False:
     __all__ = ['AsdfFile', 'AsdfType', 'AsdfExtension',
                'Stream', 'open', 'test', 'commands',
                'ValidationError']
