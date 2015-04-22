@@ -14,20 +14,42 @@ Data Format (ASDF) files
 from ._astropy_init import *
 # ----------------------------------------------------------------------------
 
-__all__ = ['AsdfFile', 'AsdfType', 'AsdfExtension',
-           'Stream', 'open', 'test', 'commands',
-           'ValidationError']
+try:
+    _ASTROPY_SETUP_
+except NameError:
+    __all__ = ['AsdfFile', 'AsdfType', 'AsdfExtension',
+               'Stream', 'open', 'test', 'commands',
+               'ValidationError']
 
+    try:
+        import yaml as _
+    except ImportError:
+        raise ImportError("pyasdf requires pyyaml")
 
-from .asdf import AsdfFile
-from .asdftypes import AsdfType
-from .extension import AsdfExtension
-from .stream import Stream
-from . import commands
+    try:
+        import jsonschema as _
+    except ImportError:
+        raise ImportError("pyasdf requires jsonschema")
 
-from jsonschema import ValidationError
+    try:
+        import numpy as _
+    except ImportError:
+        raise ImportError("pyasdf requires numpy")
 
-class ValidationError(ValidationError):
-    pass
+    try:
+        import astropy as _
+    except ImportError:
+        raise ImportError("pyasdf requires astropy")
 
-open = AsdfFile.read
+    from .asdf import AsdfFile
+    from .asdftypes import AsdfType
+    from .extension import AsdfExtension
+    from .stream import Stream
+    from . import commands
+
+    from jsonschema import ValidationError
+
+    class ValidationError(ValidationError):
+        pass
+
+    open = AsdfFile.read
