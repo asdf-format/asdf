@@ -31,6 +31,24 @@ from . import helpers
 TEST_DATA_PATH = os.path.join(os.path.dirname(__file__), 'data')
 
 
+class CustomExtension:
+    @property
+    def types(self):
+        return []
+
+    @property
+    def tag_mapping(self):
+        return [('tag:nowhere.org:custom',
+                 'http://nowhere.org/schemas/custom{tag_suffix}')]
+
+    @property
+    def url_mapping(self):
+        return [('http://nowhere.org/schemas/custom/1.0.0/',
+                 urljoin('file:', pathname2url(os.path.join(
+                     TEST_DATA_PATH))) + '/{url_suffix}.yaml')]
+
+
+
 def test_violate_toplevel_schema():
     tree = {'fits': 'This does not look like a FITS file'}
 
@@ -149,21 +167,10 @@ def test_flow_style():
         version = (1, 0, 0)
         standard = 'custom'
 
-    class CustomFlowStyleExtension:
+    class CustomFlowStyleExtension(CustomExtension):
         @property
         def types(self):
             return [CustomFlowStyleType]
-
-        @property
-        def tag_mapping(self):
-            return [('tag:nowhere.org:custom',
-                     'http://nowhere.org/schemas/custom{tag_suffix}')]
-
-        @property
-        def url_mapping(self):
-            return [('http://nowhere.org/schemas/custom/1.0.0/',
-                     urljoin('file:', pathname2url(os.path.join(
-                         TEST_DATA_PATH))) + '/{url_suffix}.yaml')]
 
     tree = {
         'custom_flow': CustomFlowStyleType({'a': 42, 'b': 43})
@@ -184,21 +191,10 @@ def test_style():
         version = (1, 0, 0)
         standard = 'custom'
 
-    class CustomStyleExtension:
+    class CustomStyleExtension(CustomExtension):
         @property
         def types(self):
             return [CustomStyleType]
-
-        @property
-        def tag_mapping(self):
-            return [('tag:nowhere.org:custom',
-                     'http://nowhere.org/schemas/custom{tag_suffix}')]
-
-        @property
-        def url_mapping(self):
-            return [('http://nowhere.org/schemas/custom/1.0.0/',
-                     urljoin('file:', pathname2url(os.path.join(
-                         TEST_DATA_PATH))) + '/{url_suffix}.yaml')]
 
     tree = {
         'custom_style': CustomStyleType("short")
@@ -239,21 +235,10 @@ def test_invalid_nested():
         version = (1, 0, 0)
         standard = 'custom'
 
-    class CustomExtension:
+    class CustomTypeExtension(CustomExtension):
         @property
         def types(self):
             return [CustomType]
-
-        @property
-        def tag_mapping(self):
-            return [('tag:nowhere.org:custom',
-                     'http://nowhere.org/schemas/custom{tag_suffix}')]
-
-        @property
-        def url_mapping(self):
-            return [('http://nowhere.org/schemas/custom/1.0.0/',
-                     urljoin('file:', pathname2url(os.path.join(
-                         TEST_DATA_PATH))) + '/{url_suffix}.yaml')]
 
     yaml = """
 custom: !<tag:nowhere.org:custom/1.0.0/custom>
@@ -264,7 +249,7 @@ custom: !<tag:nowhere.org:custom/1.0.0/custom>
 
     buff.seek(0)
     with pytest.raises(ValidationError):
-        ff = asdf.AsdfFile.read(buff, extensions=[CustomExtension()])
+        ff = asdf.AsdfFile.read(buff, extensions=[CustomTypeExtension()])
 
     # Make sure tags get validated inside of other tags that know
     # nothing about them.
@@ -276,7 +261,7 @@ array: !core/ndarray
     """
     buff = helpers.yaml_to_asdf(yaml)
     with pytest.raises(ValidationError):
-        ff = asdf.AsdfFile.read(buff, extensions=[CustomExtension()])
+        ff = asdf.AsdfFile.read(buff, extensions=[CustomTypeExtension()])
 
 
 def test_invalid_schema():
@@ -336,21 +321,10 @@ def test_fill_and_remove_defaults():
         version = (1, 0, 0)
         standard = 'custom'
 
-    class CustomExtension:
+    class CustomTypeExtension(CustomExtension):
         @property
         def types(self):
             return [CustomType]
-
-        @property
-        def tag_mapping(self):
-            return [('tag:nowhere.org:custom',
-                     'http://nowhere.org/schemas/custom{tag_suffix}')]
-
-        @property
-        def url_mapping(self):
-            return [('http://nowhere.org/schemas/custom/1.0.0/',
-                     urljoin('file:', pathname2url(os.path.join(
-                         TEST_DATA_PATH))) + '/{url_suffix}.yaml')]
 
     yaml = """
 custom: !<tag:nowhere.org:custom/1.0.0/custom>
@@ -358,13 +332,13 @@ custom: !<tag:nowhere.org:custom/1.0.0/custom>
     """
     buff = helpers.yaml_to_asdf(yaml)
     with pytest.raises(ValidationError):
-        ff = asdf.AsdfFile.read(buff, extensions=[CustomExtension()])
+        ff = asdf.AsdfFile.read(buff, extensions=[CustomTypeExtension()])
         assert 'a' in ff.tree['custom']
         assert ff.tree['custom']['a'] == 42
 
     buff.seek(0)
     with pytest.raises(ValidationError):
-        ff = asdf.AsdfFile.read(buff, extensions=[CustomExtension()],
+        ff = asdf.AsdfFile.read(buff, extensions=[CustomTypeExtension()],
                                 do_not_fill_defaults=True)
         assert 'a' not in ff.tree['custom']
         ff.fill_defaults()
