@@ -22,7 +22,7 @@ Getting Started
 
 The fundamental data model in ASDF is the ``tree``, which is a nested
 combination of basic data structures: dictionaries, lists, strings and
-numbers.  In additional ASDF understands how to handle other types,
+numbers.  In addition, ASDF understands how to handle other types,
 such as Numpy arrays.
 
 In the simplest example, you create a tree, and write it to a ASDF
@@ -44,7 +44,7 @@ transparently:
 
 .. asdf:: example.asdf
 
-Other examples are provided below.
+Other `examples`_ are provided below.
 
 .. toctree::
   :maxdepth: 2
@@ -65,6 +65,8 @@ number of basic operations:
 
   - ``to_yaml``: Inline all of the data in an ASDF file so that it is
     pure YAML.
+
+  - ``defragment``: Remove unused blocks and extra space.
 
 Run ``asdftool --help`` for more information.
 
