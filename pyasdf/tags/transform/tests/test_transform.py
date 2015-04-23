@@ -63,7 +63,8 @@ def test_name(tmpdir):
 def test_domain(tmpdir):
     def check(ff):
         assert ff.tree['rot'].meta['domain'] == {
-            'lower': 0, 'upper': 1, 'includes_lower': True}
+            'lower': 0, 'upper': 1, 'includes_lower': True,
+            'includes_upper': False}
 
     model = astmodels.Rotation2D(23)
     model.meta['domain'] = {'lower': 0, 'upper': 1, 'includes_lower': True}
