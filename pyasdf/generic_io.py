@@ -229,7 +229,10 @@ class GenericFile(object):
 
     def __exit__(self, type, value, traceback):
         if self._close:
-            self._fd.__exit__(type, value, traceback)
+            if hasattr(self._fd, '__exit__'):
+                self._fd.__exit__(type, value, traceback)
+            else:
+                self._fd.close()
 
     @property
     def block_size(self):
@@ -797,7 +800,10 @@ class HTTPConnection(RandomAccessFile):
 
     def __exit__(self, type, value, traceback):
         if not self._closed:
-            self._fd.__exit__(type, value, traceback)
+            if hasattr(self._fd, '__exit__'):
+                self._fd.__exit__(type, value, traceback)
+            else:
+                self._fd.close()
             self._closed = True
 
     def close(self):
