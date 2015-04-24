@@ -44,7 +44,7 @@ transparently:
 
 .. asdf:: example.asdf
 
-Other `examples`_ are provided below.
+Other :ref:`examples` are provided below.
 
 .. toctree::
   :maxdepth: 2
