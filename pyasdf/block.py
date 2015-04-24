@@ -318,7 +318,8 @@ class BlockManager(object):
                 raise ValueError("Block '{0}' not found.".format(source))
 
         elif isinstance(source, six.string_types):
-            asdffile = self._asdffile().read_external(source)
+            asdffile = self._asdffile().read_external(
+                source, do_not_fill_defaults=True)
             block = asdffile.blocks._blocks[0]
             block.array_storage = 'external'
             if block not in self._blocks:

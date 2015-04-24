@@ -203,3 +203,14 @@ class BinaryStruct(object):
         for ((offset, datatype), val) in updates:
             fd.seek(start + offset)
             fd.write(struct.pack(datatype, val))
+
+
+class HashableDict(dict):
+    """
+    A simple wrapper around dict to make it hashable.
+
+    This is sure to be slow, but for small dictionaries it shouldn't
+    matter.
+    """
+    def __hash__(self):
+        return hash(frozenset(self.items()))

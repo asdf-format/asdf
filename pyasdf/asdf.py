@@ -135,7 +135,7 @@ class AsdfFile(versioning.VersionedMixin):
         """
         return generic_io.resolve_uri(self.uri, uri)
 
-    def read_external(self, uri):
+    def read_external(self, uri, do_not_fill_defaults=False):
         """
         Load an external ASDF file, from the given (possibly relative)
         URI.  There is a cache (internal to this ASDF file) that ensures
@@ -146,6 +146,9 @@ class AsdfFile(versioning.VersionedMixin):
         uri : str
             An absolute or relative URI to resolve against the URI of
             this ASDF file.
+
+        do_not_fill_defaults : bool, optional
+            When `True`, do not fill in missing default values.
 
         Returns
         -------
@@ -163,7 +166,9 @@ class AsdfFile(versioning.VersionedMixin):
 
         asdffile = self._external_asdf_by_uri.get(resolved_uri)
         if asdffile is None:
-            asdffile = self.read(resolved_uri)
+            asdffile = self.read(
+                resolved_uri,
+                do_not_fill_defaults=do_not_fill_defaults)
             self._external_asdf_by_uri[resolved_uri] = asdffile
         return asdffile
 
@@ -305,9 +310,15 @@ class AsdfFile(versioning.VersionedMixin):
     def read(cls, fd, uri=None, mode='r',
              validate_checksums=False,
              extensions=None,
+             do_not_fill_defaults=False,
              _get_yaml_content=False):
         """
         Open an existing ASDF file.
+
+        By default, any missing values which have a default value
+        specified in the schema will be added to the tree after
+        loading.  To disable this, set ``do_not_fill_defaults`` to
+        `True`.
 
         Parameters
         ----------
@@ -327,10 +338,13 @@ class AsdfFile(versioning.VersionedMixin):
             If `True`, validate the blocks against their checksums.
             Requires reading the entire file, so disabled by default.
 
-        extensions : list of AsdfExtension
+        extensions : list of AsdfExtension, optional
             A list of extensions to the ASDF to support when reading
             and writing ASDF files.  See `asdftypes.AsdfExtension` for
             more information.
+
+        do_not_fill_defaults : bool, optional
+            When `True`, don't fill in default values in the tree.
 
         Returns
         -------
@@ -374,7 +388,8 @@ class AsdfFile(versioning.VersionedMixin):
                 fd, past_magic=True, validate_checksums=validate_checksums)
 
         if len(yaml_content):
-            tree = yamlutil.load_tree(yaml_content, self)
+            tree = yamlutil.load_tree(
+                yaml_content, self, do_not_fill_defaults=do_not_fill_defaults)
             self.run_hook('post_read')
             self._tree = tree
         else:
@@ -619,7 +634,7 @@ class AsdfFile(versioning.VersionedMixin):
         """
         self.tree = reference.find_references(self.tree, self)
 
-    def resolve_references(self):
+    def resolve_references(self, do_not_fill_defaults=False):
         """
         Finds all external "JSON References" in the tree, loads the
         external content, and places it directly in the tree.  Saving
@@ -680,3 +695,21 @@ class AsdfFile(versioning.VersionedMixin):
         self.resolve_references()
         for b in self.blocks.blocks:
             b.array_storage = 'inline'
+
+    def fill_defaults(self):
+        """
+        Fill in any values that are missing in the tree using default
+        values from the schema.
+        """
+        tree = yamlutil.custom_tree_to_tagged_tree(self._tree, self)
+        schema.fill_defaults(tree, self)
+        self._tree = yamlutil.tagged_tree_to_custom_tree(tree, self)
+
+    def remove_defaults(self):
+        """
+        Remove any values in the tree that are the same as the default
+        values in the schema
+        """
+        tree = yamlutil.custom_tree_to_tagged_tree(self._tree, self)
+        schema.remove_defaults(tree, self)
+        self._tree = yamlutil.tagged_tree_to_custom_tree(tree, self)

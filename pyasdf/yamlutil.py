@@ -245,7 +245,7 @@ def tagged_tree_to_custom_tree(tree, ctx):
     return treeutil.walk_and_modify(tree, walker)
 
 
-def load_tree(yaml_content, ctx):
+def load_tree(yaml_content, ctx, do_not_fill_defaults=False):
     """
     Load YAML, returning a tree of objects and custom types.
 
@@ -264,6 +264,8 @@ def load_tree(yaml_content, ctx):
     tree = yaml.load(yaml_content, Loader=AsdfLoaderTmp)
     tree = reference.find_references(tree, ctx)
     schema.validate(tree, ctx)
+    if not do_not_fill_defaults:
+        schema.fill_defaults(tree, ctx)
     tree = tagged_tree_to_custom_tree(tree, ctx)
     return tree
 
@@ -296,6 +298,7 @@ def dump_tree(tree, fd, ctx):
 
     tree = custom_tree_to_tagged_tree(tree, ctx)
     schema.validate(tree, ctx)
+    schema.remove_defaults(tree, ctx)
 
     yaml.dump_all(
         [tree], stream=fd, Dumper=AsdfDumperTmp,
