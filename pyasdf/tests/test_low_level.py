@@ -727,3 +727,15 @@ def test_checksum_update(tmpdir):
     with asdf.AsdfFile.read(path, validate_checksums=True) as ff:
         assert ff.blocks._blocks[0].checksum == \
             b'T\xaf~[\x90\x8a\x88^\xc2B\x96D,N\xadL'
+
+
+def test_atomic_write(tmpdir):
+    tmpfile = os.path.join(str(tmpdir), 'test.asdf')
+
+    tree = _get_small_tree()
+
+    with asdf.AsdfFile(tree).write_to(tmpfile) as ff:
+        pass
+
+    with asdf.AsdfFile.read(tmpfile) as ff:
+        ff.write_to(tmpfile)
