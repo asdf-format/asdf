@@ -13,6 +13,8 @@ be removed in affiliated packages.
 
 - Global exclude *.pyc and *.o files in MANIFEST.in.
 
+- Updated astropy-helpers to v1.0.2
+
 0.4.1 (2014-10-22)
 ------------------
 
