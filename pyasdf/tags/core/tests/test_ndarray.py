@@ -362,3 +362,19 @@ def test_unicode_to_list(tmpdir):
         ff.resolve_and_inline()
         with ff.write_to(io.BytesIO()):
             pass
+
+
+def test_inline_masked_array(tmpdir):
+    tree = {'test': ma.array([1, 2, 3], mask=[0, 1, 0])}
+
+    f = asdf.AsdfFile(tree)
+    f.set_array_storage(tree['test'], 'inline')
+    with f.write_to('masked.asdf'):
+        pass
+
+    with asdf.AsdfFile.read('masked.asdf') as f2:
+        assert len(list(f2.blocks.internal_blocks)) == 0
+        assert_array_equal(f.tree['test'], f2.tree['test'])
+
+    with open('masked.asdf') as fd:
+        assert 'null' in fd.read()
