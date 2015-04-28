@@ -111,7 +111,7 @@ if sys.platform == 'darwin':
         OSX_WRITE_LIMIT = 2 ** 32
         if fd is None or array.nbytes >= OSX_WRITE_LIMIT and array.nbytes % 4096 == 0:
             return _array_tofile_chunked(write, array, OSX_WRITE_LIMIT)
-        return _array_tofile_simple(fd, array)
+        return _array_tofile_simple(fd, write, array)
 elif sys.platform.startswith('win'):
     def _array_tofile(fd, write, array):
         WIN_WRITE_LIMIT = 2 ** 30
