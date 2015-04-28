@@ -50,6 +50,7 @@ Other :ref:`examples` are provided below.
   :maxdepth: 2
 
   pyasdf/examples.rst
+  pyasdf/context_managers.rst
   pyasdf/extensions.rst
 
 Commandline tool
