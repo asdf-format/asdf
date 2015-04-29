@@ -23,7 +23,8 @@ from astropy.tests.pytest_plugins import *
 ## running the tests.
 # import os
 #
-## This is to figure out the astroquery version, rather than using Astropy's
+## This is to figure out the affiliated package version, rather than
+## using Astropy's
 # from . import version
 #
 # try:
