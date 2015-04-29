@@ -381,11 +381,10 @@ def test_masked_array_stay_open_bug(tmpdir):
     }
 
     f = asdf.AsdfFile(tree)
-    with f.write_to(tmppath):
-        pass
+    f.write_to(tmppath)
 
     for i in range(1000):
-        with asdf.AsdfFile.read(tmppath) as f2:
+        with asdf.AsdfFile.open(tmppath) as f2:
             np.sum(f2.tree['test'])
 
     # fails with "too many open files" if the masked arrays
