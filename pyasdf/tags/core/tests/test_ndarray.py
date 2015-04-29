@@ -399,8 +399,7 @@ def test_masked_array_repr(tmpdir):
         'masked': np.ma.array([1, 2, 3], mask=[False, True, False])
     }
 
-    with asdf.AsdfFile(tree).write_to(tmppath):
-        pass
+    asdf.AsdfFile(tree).write_to(tmppath)
 
-    with asdf.AsdfFile.read(tmppath) as ff:
+    with asdf.AsdfFile.open(tmppath) as ff:
         assert 'masked array' in repr(ff.tree['masked'])
