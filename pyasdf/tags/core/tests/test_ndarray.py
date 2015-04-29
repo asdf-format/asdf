@@ -398,3 +398,18 @@ def test_masked_array_stay_open_bug(tmpdir):
 
     # fails with "too many open files" if the masked arrays
     # aren't created correctly.
+
+
+def test_masked_array_repr(tmpdir):
+    tmppath = os.path.join(str(tmpdir), 'masked.asdf')
+
+    tree = {
+        'array': np.arange(10),
+        'masked': np.ma.array([1, 2, 3], mask=[False, True, False])
+    }
+
+    with asdf.AsdfFile(tree).write_to(tmppath):
+        pass
+
+    with asdf.AsdfFile.read(tmppath) as ff:
+        assert 'masked array' in repr(ff.tree['masked'])
