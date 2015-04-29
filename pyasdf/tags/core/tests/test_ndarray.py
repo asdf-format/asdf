@@ -4,6 +4,7 @@
 from __future__ import absolute_import, division, unicode_literals, print_function
 
 import io
+import os
 import sys
 
 from astropy.extern import six
@@ -378,3 +379,22 @@ def test_inline_masked_array(tmpdir):
 
     with open('masked.asdf') as fd:
         assert 'null' in fd.read()
+
+
+def test_masked_array_stay_open_bug(tmpdir):
+    tmppath = os.path.join(str(tmpdir), 'masked.asdf')
+
+    tree = {
+        'test': np.ma.array([1, 2, 3], mask=[False, True, False])
+    }
+
+    f = asdf.AsdfFile(tree)
+    with f.write_to(tmppath):
+        pass
+
+    for i in range(1000):
+        with asdf.AsdfFile.read(tmppath) as f2:
+            np.sum(f2.tree['test'])
+
+    # fails with "too many open files" if the masked arrays
+    # aren't created correctly.

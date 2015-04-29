@@ -243,7 +243,12 @@ class NDArrayType(AsdfType):
 
     def _apply_mask(self, array, mask):
         if isinstance(mask, (np.ndarray, NDArrayType)):
-            return ma.array(array, mask=mask)
+            # Use "mask.view()" here so the underlying possibly
+            # memmapped mask array is freed properly when the masked
+            # array goes away.
+            array = ma.array(array, mask=mask.view())
+            # assert util.get_array_base(array.mask) is util.get_array_base(mask)
+            return array
         elif np.isscalar(mask):
             if np.isnan(mask):
                 return ma.array(array, mask=np.isnan(array))
