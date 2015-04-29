@@ -74,7 +74,14 @@ class AsdfFile(versioning.VersionedMixin):
         return self
 
     def __exit__(self, type, value, traceback):
-        self.close()
+        if self._fd:
+            # This is ok to always do because GenericFile knows
+            # whether it "owns" the file and should close it.
+            self._fd.__exit__(type, value, traceback)
+            self._fd = None
+        for external in self._external_asdf_by_uri.values():
+            external.__exit__(type, value, traceback)
+        self._external_asdf_by_uri.clear()
 
     def close(self):
         """
@@ -613,6 +620,8 @@ class AsdfFile(versioning.VersionedMixin):
 
         if original_fd is not None:
             original_fd.close()
+
+        self._fd = self._fd.finalize()
 
         return self
 

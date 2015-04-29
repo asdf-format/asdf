@@ -27,6 +27,8 @@ from astropy.utils.misc import InheritDocstrings
 
 import numpy as np
 
+from .extern import atomicfile
+
 
 __all__ = ['get_file', 'resolve_uri', 'relative_uri']
 
@@ -226,7 +228,11 @@ class GenericFile(object):
         return self
 
     def __exit__(self, type, value, traceback):
-        self.close()
+        if self._close:
+            if hasattr(self._fd, '__exit__'):
+                self._fd.__exit__(type, value, traceback)
+            else:
+                self._fd.close()
 
     @property
     def block_size(self):
@@ -488,6 +494,9 @@ class GenericFile(object):
         buff = self.read(size)
         return np.frombuffer(buff, np.uint8, size, 0)
 
+    def finalize(self):
+        return self
+
 
 class GenericWrapper(object):
     """
@@ -581,8 +590,7 @@ class RealFile(RandomAccessFile):
             self._blksize = stat.st_blksize
         self._size = stat.st_size
         if (uri is None and
-            isinstance(fd.name, six.string_types) and
-            os.path.exists(fd.name)):
+            isinstance(fd.name, six.string_types)):
             self._uri = urlparse.urljoin(
                 'file:', pathname2url(os.path.abspath(fd.name)))
 
@@ -608,6 +616,15 @@ class RealFile(RandomAccessFile):
 
     def read_into_array(self, size):
         return _array_fromfile(self._fd, size)
+
+    def finalize(self):
+        if isinstance(self._fd, atomicfile._AtomicWFile):
+            tell = self._fd.tell()
+            self._fd.close()
+            new_fd = get_file(self._fd.name, 'rw')
+            new_fd.seek(tell)
+            return new_fd
+        return self
 
 
 class MemoryIO(RandomAccessFile):
@@ -780,6 +797,14 @@ class HTTPConnection(RandomAccessFile):
         # The size of the entire file
         self._size = size
         self._nreads = 0
+
+    def __exit__(self, type, value, traceback):
+        if not self._closed:
+            if hasattr(self._fd, '__exit__'):
+                self._fd.__exit__(type, value, traceback)
+            else:
+                self._fd.close()
+            self._closed = True
 
     def close(self):
         if not self._closed:
@@ -1031,9 +1056,12 @@ def get_file(init, mode='r', uri=None):
             else:
                 realmode = mode + 'b'
             realpath = url2pathname(parsed.path)
-            return RealFile(
-                open(realpath, realmode), mode, close=True,
-                uri=uri)
+            if mode == 'w':
+                fd = atomicfile.atomic_open(realpath, realmode)
+            else:
+                fd = open(realpath, realmode)
+            fd = fd.__enter__()
+            return RealFile(fd, mode, close=True, uri=uri)
 
     elif isinstance(init, io.BytesIO):
         return MemoryIO(init, mode, uri=uri)
@@ -1043,7 +1071,7 @@ def get_file(init, mode='r', uri=None):
             "io.StringIO objects are not supported.  Use io.BytesIO instead.")
 
     elif six.PY2 and isinstance(init, file):
-        if not mode in init.mode:
+        if mode not in init.mode:
             raise ValueError(
                 "File is opened as '{0}', but '{1}' was requested".format(
                     init.mode, mode))
@@ -1063,7 +1091,8 @@ def get_file(init, mode='r', uri=None):
 
     elif isinstance(init, io.IOBase):
         if sys.version_info[:2] == (2, 6):
-            raise ValueError("io.open file objects are not supported on Python 2.6")
+            raise ValueError(
+                "io.open file objects are not supported on Python 2.6")
 
         if (('r' in mode and not init.readable()) or
             ('w' in mode and not init.writable())):
