@@ -19,13 +19,14 @@ For example, basic writing and reading of a file::
 
   >>> with pyasdf.AsdfFile.read('test.asdf') as ff:
   ...     print(ff.tree['key'])
+  value
 
 The reason that `~pyasdf.AsdfFile.write_to` and
 `~pyasdf.AsdfFile.read` functions do not automatically close the file
 (unless used with ``with`` statements), is to allow for updating the
 file in-place later on.  For example::
 
-  >>> with pyasdf.AsdfFile.read('test.asdf', 'rw') as ff:
+  >>> with pyasdf.AsdfFile.read('test.asdf', mode='rw') as ff:
   ...     ff.tree['key'] = 'new value'
   ...     ff.update()
 
