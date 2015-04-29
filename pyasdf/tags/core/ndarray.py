@@ -159,7 +159,25 @@ def inline_data_asarray(inline, dtype):
                 return [convert_to_tuples(x, data_depth, depth+1) for x in l]
         inline = convert_to_tuples(inline, depth)
 
-    return np.asarray(inline, dtype=dtype)
+        return np.asarray(inline, dtype=dtype)
+    else:
+        def handle_mask(inline):
+            if isinstance(inline, list):
+                if None in inline:
+                    inline_array = np.asarray(inline)
+                    nones = np.equal(inline_array, None)
+                    return np.ma.array(np.where(nones, 0, inline),
+                                       mask=nones)
+                else:
+                    return [handle_mask(x) for x in inline]
+            return inline
+        inline = handle_mask(inline)
+
+        inline = np.ma.asarray(inline, dtype=dtype)
+        if not ma.is_masked(inline):
+            return inline.data
+        else:
+            return inline
 
 
 def numpy_array_to_list(array):
@@ -394,6 +412,8 @@ class NDArrayType(AsdfType):
 
         if isinstance(data, ma.MaskedArray):
             if np.any(data.mask):
+                if block.array_storage == 'inline':
+                    ctx.blocks[data.mask].array_storage = 'inline'
                 result['mask'] = yamlutil.custom_tree_to_tagged_tree(
                     data.mask, ctx)
 
