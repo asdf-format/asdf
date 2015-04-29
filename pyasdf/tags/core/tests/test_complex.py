@@ -18,7 +18,8 @@ a: !core/complex
 
     buff = helpers.yaml_to_asdf(yaml)
     with pytest.raises(ValueError):
-        asdf.AsdfFile.read(buff)
+        with asdf.AsdfFile.open(buff):
+            pass
 
 
 def test_roundtrip(tmpdir):

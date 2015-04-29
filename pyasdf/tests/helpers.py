@@ -86,15 +86,16 @@ def assert_roundtrip_tree(
     AsdfFile(tree).write_to(buff, **write_options)
     assert not buff.closed
     buff.seek(0)
-    ff = AsdfFile.read(buff, mode='rw')
-    assert not buff.closed
-    assert isinstance(ff.tree, AsdfObject)
-    assert_tree_match(tree, ff.tree)
-    if asdf_check_func:
-        asdf_check_func(ff)
+    with AsdfFile.open(buff, mode='rw') as ff:
+        assert not buff.closed
+        assert isinstance(ff.tree, AsdfObject)
+        assert_tree_match(tree, ff.tree)
+        if asdf_check_func:
+            asdf_check_func(ff)
 
     buff.seek(0)
-    content = AsdfFile.read(buff, _get_yaml_content=True)
+    content = AsdfFile.open(buff, _get_yaml_content=True)
+    buff.close()
     # We *never* want to get any raw python objects out
     assert b'!!python' not in content
     assert b'!core/asdf' in content
@@ -103,9 +104,9 @@ def assert_roundtrip_tree(
         raw_yaml_check_func(content)
 
     # Then, test writing/reading to a real file
-    with AsdfFile(tree) as ff:
-        ff.write_to(fname, **write_options)
-    with AsdfFile.read(fname, mode='rw') as ff:
+    ff = AsdfFile(tree)
+    ff.write_to(fname, **write_options)
+    with AsdfFile.open(fname, mode='rw') as ff:
         assert_tree_match(tree, ff.tree)
         if asdf_check_func:
             asdf_check_func(ff)

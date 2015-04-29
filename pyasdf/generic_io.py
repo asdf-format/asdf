@@ -494,9 +494,6 @@ class GenericFile(object):
         buff = self.read(size)
         return np.frombuffer(buff, np.uint8, size, 0)
 
-    def finalize(self):
-        return self
-
 
 class GenericWrapper(object):
     """
@@ -579,7 +576,7 @@ class RealFile(RandomAccessFile):
     """
     Handles "real" files on a filesystem.
     """
-    def __init__(self, fd, mode, close=True, uri=None):
+    def __init__(self, fd, mode, close=False, uri=None):
         super(RealFile, self).__init__(fd, mode, close=close, uri=uri)
         stat = os.fstat(fd.fileno())
         if sys.platform.startswith('win'):
@@ -616,15 +613,6 @@ class RealFile(RandomAccessFile):
 
     def read_into_array(self, size):
         return _array_fromfile(self._fd, size)
-
-    def finalize(self):
-        if isinstance(self._fd, atomicfile._AtomicWFile):
-            tell = self._fd.tell()
-            self._fd.close()
-            new_fd = get_file(self._fd.name, 'rw')
-            new_fd.seek(tell)
-            return new_fd
-        return self
 
 
 class MemoryIO(RandomAccessFile):

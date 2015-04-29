@@ -39,8 +39,7 @@ transparently:
      'my_array': np.random.rand(8, 8)
    }
    ff = AsdfFile(tree)
-   with ff.write_to("example.asdf"):
-       pass
+   ff.write_to("example.asdf")
 
 .. asdf:: example.asdf
 

@@ -63,7 +63,7 @@ class Reference(AsdfType):
 
     def _get_target(self, do_not_fill_defaults=False):
         if self._target is None:
-            asdffile = self._asdffile().read_external(
+            asdffile = self._asdffile().open_external(
                 self._uri, do_not_fill_defaults=do_not_fill_defaults)
             parts = urlparse.urlparse(self._uri)
             fragment = parts.fragment

@@ -56,7 +56,7 @@ def _roundtrip(tree, get_write_fd, get_read_fd,
         asdf.AsdfFile(tree).write_to(fd, **write_options)
 
     with get_read_fd() as fd:
-        ff = asdf.AsdfFile.read(fd, **read_options)
+        ff = asdf.AsdfFile.open(fd, **read_options)
 
         helpers.assert_tree_match(tree, ff.tree)
 
@@ -76,10 +76,10 @@ def test_open(tmpdir):
     path = os.path.join(str(tmpdir), 'test.asdf')
 
     # Simply tests the high-level "open" function
-    with asdf.AsdfFile(_get_small_tree()) as ff:
-        ff.write_to(path)
-        with open(path) as ff2:
-            helpers.assert_tree_match(ff2.tree, ff.tree)
+    ff = asdf.AsdfFile(_get_small_tree())
+    ff.write_to(path)
+    with open(path) as ff2:
+        helpers.assert_tree_match(ff2.tree, ff.tree)
 
 
 def test_path(tree, tmpdir):
@@ -346,10 +346,9 @@ def test_exploded_filesystem_fail(tree, tmpdir):
         asdf.AsdfFile(tree).write_to(fd, all_array_storage='external')
 
     with get_read_fd() as fd:
-        ff = asdf.AsdfFile.read(fd)
-
-        with pytest.raises(ValueError):
-            helpers.assert_tree_match(tree, ff.tree)
+        with asdf.AsdfFile.open(fd) as ff:
+            with pytest.raises(ValueError):
+                helpers.assert_tree_match(tree, ff.tree)
 
 
 @remote_data
@@ -389,37 +388,19 @@ def test_exploded_stream_read(tmpdir):
 
     path = os.path.join(str(tmpdir), 'test.asdf')
 
-    with asdf.AsdfFile(tree) as ff:
-        ff.write_to(path, all_array_storage='external')
+    ff = asdf.AsdfFile(tree)
+    ff.write_to(path, all_array_storage='external')
 
     with open(path, 'rb') as fd:
         # This should work, so we can get the tree content
         x = generic_io.InputStream(fd, 'r')
-        ff = asdf.AsdfFile.read(x)
+        with asdf.AsdfFile.open(x) as ff:
+            pass
 
     # It's only on trying to get at the block data that the error
     # occurs.
     with pytest.raises(ValueError):
         ff.tree['science_data'][:]
-
-
-def test_nested_open(tmpdir):
-    tree = _get_small_tree()
-
-    path = os.path.join(str(tmpdir), 'test.asdf')
-    path2 = os.path.join(str(tmpdir), 'test2.asdf')
-
-    ff = asdf.AsdfFile(tree)
-    fd = open(path, 'wb')
-    ff.write_to(fd)
-
-    fd2 = open(path2, 'wb')
-    ff.write_to(fd2)
-
-    ff.close()
-
-    assert fd.closed
-    assert fd2.closed
 
 
 def test_unicode_open(tmpdir):
@@ -428,12 +409,12 @@ def test_unicode_open(tmpdir):
     tree = _get_small_tree()
     ff = asdf.AsdfFile(tree)
 
-    with ff.write_to(path):
-        pass
+    ff.write_to(path)
 
     with io.open(path, 'rt', encoding="utf-8") as fd:
         with pytest.raises(ValueError):
-            ff2 = asdf.AsdfFile.read(fd)
+            with asdf.AsdfFile.open(fd):
+                pass
 
 
 def test_invalid_obj(tmpdir):

@@ -17,14 +17,12 @@ to YAML.  Here we save a dictionary with the key/value pair ``'hello':
    # Make the tree structure, and create a AsdfFile from it.
    tree = {'hello': 'world'}
    ff = AsdfFile(tree)
+   ff.write_to("test.asdf")
 
    # You can also make the AsdfFile first, and modify its tree directly:
    ff = AsdfFile()
    ff.tree['hello'] = 'world'
-
-   # Use the `with` construct so the file is automatically closed
-   with ff.write_to("test.asdf"):
-       pass
+   ff.write_to("test.asdf")
 
 .. asdf:: test.asdf
 
@@ -45,8 +43,7 @@ the array, but the actual array content is in a binary block.
 
    tree = {'my_array': np.random.rand(8, 8)}
    ff = AsdfFile(tree)
-   with ff.write_to("test.asdf"):
-       pass
+   ff.write_to("test.asdf")
 
 .. note::
 
@@ -117,8 +114,7 @@ data being saved.
        'subset':   subset
    }
    ff = AsdfFile(tree)
-   with ff.write_to("test.asdf"):
-       pass
+   ff.write_to("test.asdf")
 
 .. asdf:: test.asdf
 
@@ -149,8 +145,7 @@ can be used to set the type of block of the associated data, either
    tree = {'my_array': my_array}
    ff = AsdfFile(tree)
    ff.set_array_storage(my_array, 'inline')
-   with ff.write_to("test.asdf"):
-       pass
+   ff.write_to("test.asdf")
 
 .. asdf:: test.asdf
 
@@ -198,12 +193,10 @@ To save a block in an external file, set its block type to
 
    # On an individual block basis:
    ff.set_array_storage(my_array, 'external')
-   with ff.write_to("test.asdf"):
-       pass
+   ff.write_to("test.asdf")
 
    # Or for every block:
-   with ff.write_to("test.asdf", all_array_storage='external'):
-       pass
+   ff.write_to("test.asdf", all_array_storage='external')
 
 .. asdf:: test.asdf
 
@@ -224,8 +217,8 @@ file.  By definition, it must be the last block in the file.
 To use streaming, rather than including a Numpy array object in the
 tree, you include a `pyasdf.Stream` object which sets up the structure
 of the streamed data, but will not write out the actual content.  The
-`~pyasdf.AsdfFile.write_to_stream` method is then later used to
-manually write out the binary data.
+file handle's `write` method is then used to manually write out the
+binary data.
 
 .. runcode::
 
@@ -238,12 +231,13 @@ manually write out the binary data.
    }
 
    ff = AsdfFile(tree)
-   with ff.write_to('test.asdf'):
+   with open('test.asdf', 'wb') as fd:
+       ff.write_to(fd)
        # Write 100 rows of data, one row at a time.  ``write_to_stream``
        # expects the raw binary bytes, not an array, so we use
        # ``tostring()``.
        for i in range(100):
-           ff.write_to_stream(np.array([i] * 128, np.float64).tostring())
+           fd.write(np.array([i] * 128, np.float64).tostring())
 
 .. asdf:: test.asdf
 
@@ -267,8 +261,7 @@ First, we'll create a ASDF file with a couple of arrays in it:
    }
 
    target = AsdfFile(tree)
-   with target.write_to('target.asdf'):
-       pass
+   target.write_to('target.asdf')
 
 .. asdf:: target.asdf
 
@@ -283,13 +276,12 @@ to the target file.
 
    ff = AsdfFile()
 
-   with AsdfFile.read('target.asdf') as target:
+   with AsdfFile.open('target.asdf') as target:
        ff.tree['my_ref_a'] = target.make_reference(['a'])
 
    ff.tree['my_ref_b'] = {'$ref': 'target.asdf#/b'}
 
-   with ff.write_to('source.asdf'):
-       pass
+   ff.write_to('source.asdf')
 
 .. asdf:: source.asdf
 
@@ -300,9 +292,9 @@ references.
 
 .. runcode::
 
-   ff = AsdfFile.read('source.asdf')
-   ff.find_references()
-   assert ff.tree['my_ref_b'].shape == (10,)
+   with AsdfFile.open('source.asdf') as ff:
+       ff.find_references()
+       assert ff.tree['my_ref_b'].shape == (10,)
 
 On the other hand, calling `~pyasdf.AsdfFile.resolve_references`
 places all of the referenced content directly in the tree, so when we
@@ -311,10 +303,9 @@ literal content in its place.
 
 .. runcode::
 
-   ff = AsdfFile.read('source.asdf')
-   ff.resolve_references()
-   with AsdfFile(ff).write_to('resolved.asdf'):
-       pass
+   with AsdfFile.open('source.asdf') as ff:
+       ff.resolve_references()
+       ff.write_to('resolved.asdf')
 
 .. asdf:: resolved.asdf
 
@@ -338,8 +329,7 @@ included twice in the same tree:
     tree = {'d': d}
 
     ff = AsdfFile(tree)
-    with ff.write_to('anchors.asdf'):
-        pass
+    ff.write_to('anchors.asdf')
 
 .. asdf:: anchors.asdf
 
@@ -362,10 +352,7 @@ You can easily `zlib <http://www.zlib.net/>`__ or `bzip2
    }
 
    target = AsdfFile(tree)
-   with target.write_to('target.asdf', all_array_compression='zlib'):
-       pass
-
-   with target.write_to('target.asdf', all_array_compression='bzp2'):
-       pass
+   target.write_to('target.asdf', all_array_compression='zlib')
+   target.write_to('target.asdf', all_array_compression='bzp2')
 
 .. asdf:: target.asdf

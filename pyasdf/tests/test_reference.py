@@ -35,11 +35,11 @@ def test_external_reference(tmpdir):
             ]
         }
     external_path = os.path.join(str(tmpdir), 'external.asdf')
-    with asdf.AsdfFile(exttree) as ext:
-        ext.write_to(external_path)
+    ext = asdf.AsdfFile(exttree)
+    ext.write_to(external_path)
     external_path = os.path.join(str(tmpdir), 'external2.asdf')
-    with asdf.AsdfFile(exttree) as ff:
-        ff.write_to(external_path)
+    ff = asdf.AsdfFile(exttree)
+    ff.write_to(external_path)
 
     tree = {
         # The special name "data" here must be an array.  This is
@@ -107,17 +107,17 @@ def test_external_reference(tmpdir):
 
         assert_array_equal(ff.tree['internal'], exttree['cool_stuff']['a'])
 
-    with asdf.AsdfFile(tree, uri=pathname2url(
-            os.path.join(str(tmpdir), 'main.asdf'))) as ff:
+    ff = asdf.AsdfFile(tree, uri=pathname2url(
+        os.path.join(str(tmpdir), 'main.asdf')))
+    do_asserts(ff)
+
+    internal_path = os.path.join(str(tmpdir), 'main.asdf')
+    ff.write_to(internal_path)
+
+    with asdf.AsdfFile.open(internal_path) as ff:
         do_asserts(ff)
 
-        internal_path = os.path.join(str(tmpdir), 'main.asdf')
-        ff.write_to(internal_path)
-
-    with asdf.AsdfFile.read(internal_path) as ff:
-        do_asserts(ff)
-
-    with asdf.AsdfFile.read(internal_path) as ff:
+    with asdf.AsdfFile.open(internal_path) as ff:
         assert len(ff._external_asdf_by_uri) == 0
         ff.resolve_references()
         assert len(ff._external_asdf_by_uri) == 2
@@ -175,8 +175,8 @@ def test_external_reference_invalid_fragment(tmpdir):
             ]
         }
     external_path = os.path.join(str(tmpdir), 'external.asdf')
-    with asdf.AsdfFile(exttree) as ff:
-        ff.write_to(external_path)
+    ff = asdf.AsdfFile(exttree)
+    ff.write_to(external_path)
 
     tree = {
         'foo': {
@@ -184,10 +184,10 @@ def test_external_reference_invalid_fragment(tmpdir):
             }
         }
 
-    with asdf.AsdfFile(tree, uri=pathname2url(
-            os.path.join(str(tmpdir), 'main.asdf'))) as ff:
-        with pytest.raises(ValueError):
-            ff.resolve_references()
+    ff = asdf.AsdfFile(tree, uri=pathname2url(
+        os.path.join(str(tmpdir), 'main.asdf')))
+    with pytest.raises(ValueError):
+        ff.resolve_references()
 
     tree = {
         'foo': {
@@ -195,10 +195,10 @@ def test_external_reference_invalid_fragment(tmpdir):
             }
         }
 
-    with asdf.AsdfFile(tree, uri=pathname2url(
-            os.path.join(str(tmpdir), 'main.asdf'))) as ff:
-        with pytest.raises(ValueError):
-            ff.resolve_references()
+    ff = asdf.AsdfFile(tree, uri=pathname2url(
+        os.path.join(str(tmpdir), 'main.asdf')))
+    with pytest.raises(ValueError):
+        ff.resolve_references()
 
 
 def test_make_reference(tmpdir):
@@ -211,16 +211,17 @@ def test_make_reference(tmpdir):
             }
         }
     external_path = os.path.join(str(tmpdir), 'external.asdf')
-    with asdf.AsdfFile(exttree) as ext:
-        ext.write_to(external_path)
+    ext = asdf.AsdfFile(exttree)
+    ext.write_to(external_path)
 
+    with asdf.AsdfFile.open(external_path) as ext:
         ff = asdf.AsdfFile()
         ff.tree['ref'] = ext.make_reference(['f~o~o/', 'a'])
         assert_array_equal(ff.tree['ref'], ext.tree['f~o~o/']['a'])
 
         ff.write_to(os.path.join(str(tmpdir), 'source.asdf'))
 
-    with asdf.AsdfFile.read(os.path.join(str(tmpdir), 'source.asdf')) as ff:
+    with asdf.AsdfFile.open(os.path.join(str(tmpdir), 'source.asdf')) as ff:
         assert ff.tree['ref']._uri == 'external.asdf#f~0o~0o~1/a'
 
 
@@ -244,5 +245,5 @@ def test_internal_reference():
     buff = io.BytesIO()
     ff.write_to(buff)
     buff.seek(0)
-    content = asdf.AsdfFile().read(buff, _get_yaml_content=True)
+    content = asdf.AsdfFile().open(buff, _get_yaml_content=True)
     assert b"{$ref: ''}" in content

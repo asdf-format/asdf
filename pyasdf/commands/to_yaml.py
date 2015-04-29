@@ -64,9 +64,8 @@ def to_yaml(input, output=None, resolve_references=False):
     if output is None:
         base, ext = os.path.splitext(input)
         output = base + '.yaml'
-    with AsdfFile.read(input) as ff:
+    with AsdfFile.open(input) as ff:
         ff2 = AsdfFile(ff)
         if resolve_references:
             ff2.resolve_references()
-        with ff2.write_to(output, all_array_storage='inline'):
-            pass
+        ff2.write_to(output, all_array_storage='inline')

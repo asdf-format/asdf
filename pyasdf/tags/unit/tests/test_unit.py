@@ -18,6 +18,5 @@ unit: !unit/unit "2.1798721  10-18kg m2 s-2"
     """
 
     buff = helpers.yaml_to_asdf(yaml)
-    ff = asdf.AsdfFile.read(buff)
-
-    assert ff.tree['unit'].is_equivalent(u.Ry)
+    with asdf.AsdfFile.open(buff) as ff:
+        assert ff.tree['unit'].is_equivalent(u.Ry)

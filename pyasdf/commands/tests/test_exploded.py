@@ -23,9 +23,9 @@ def test_explode_then_implode(tmpdir):
         }
 
     path = os.path.join(str(tmpdir), 'original.asdf')
-    with AsdfFile(tree) as ff:
-        ff.write_to(path)
-        assert len(ff.blocks) == 2
+    ff = AsdfFile(tree)
+    ff.write_to(path)
+    assert len(ff.blocks) == 2
 
     result = main.main_from_args(['explode', path])
 

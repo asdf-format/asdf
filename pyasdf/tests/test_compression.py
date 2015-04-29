@@ -38,34 +38,36 @@ def _roundtrip(tmpdir, tree, compression=None,
                write_options={}, read_options={}):
     tmpfile = os.path.join(str(tmpdir), 'test.asdf')
 
-    with asdf.AsdfFile(tree) as ff:
-        ff.set_array_compression(tree['science_data'], compression)
-        ff.write_to(tmpfile, **write_options)
+    ff = asdf.AsdfFile(tree)
+    ff.set_array_compression(tree['science_data'], compression)
+    ff.write_to(tmpfile, **write_options)
+
+    with asdf.AsdfFile.open(tmpfile, mode="rw") as ff:
         ff.update(**write_options)
 
-    with asdf.AsdfFile().read(tmpfile, **read_options) as ff:
+    with asdf.AsdfFile.open(tmpfile, **read_options) as ff:
         helpers.assert_tree_match(tree, ff.tree)
 
     # Also test saving to a buffer
     buff = io.BytesIO()
 
-    with asdf.AsdfFile(tree) as ff:
-        ff.set_array_compression(tree['science_data'], compression)
-        ff.write_to(buff, **write_options)
+    ff = asdf.AsdfFile(tree)
+    ff.set_array_compression(tree['science_data'], compression)
+    ff.write_to(buff, **write_options)
 
     buff.seek(0)
-    with asdf.AsdfFile().read(buff, **read_options) as ff:
+    with asdf.AsdfFile.open(buff, **read_options) as ff:
         helpers.assert_tree_match(tree, ff.tree)
 
     # Test saving to a non-seekable buffer
     buff = io.BytesIO()
 
-    with asdf.AsdfFile(tree) as ff:
-        ff.set_array_compression(tree['science_data'], compression)
-        ff.write_to(generic_io.OutputStream(buff), **write_options)
+    ff = asdf.AsdfFile(tree)
+    ff.set_array_compression(tree['science_data'], compression)
+    ff.write_to(generic_io.OutputStream(buff), **write_options)
 
     buff.seek(0)
-    with asdf.AsdfFile().read(generic_io.InputStream(buff), **read_options) as ff:
+    with asdf.AsdfFile.open(generic_io.InputStream(buff), **read_options) as ff:
         helpers.assert_tree_match(tree, ff.tree)
 
     return ff

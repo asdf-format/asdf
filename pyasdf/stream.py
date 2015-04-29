@@ -19,9 +19,10 @@ class Stream(ndarray.NDArrayType):
          >>> import numpy as np
          >>> ff = AsdfFile()
          >>> ff.tree['streamed'] = Stream([1024], np.float64)
-         >>> with ff.write_to('test.asdf') as ff:
+         >>> with open('test.asdf', 'wb') as fd:
+         ...     ff.write_to(fd)
          ...     for i in range(200):
-         ...         ff.write_to_stream(np.array([i] * 1024, np.float64).tostring())
+         ...         fd.write(np.array([i] * 1024, np.float64).tostring())
     """
 
     types = []

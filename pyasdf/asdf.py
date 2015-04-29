@@ -38,7 +38,7 @@ class AsdfFile(versioning.VersionedMixin):
             The URI for this ASDF file.  Used to resolve relative
             references against.  If not provided, will automatically
             determined from the associated file object, if possible
-            and if created from `AsdfFile.read`.
+            and if created from `AsdfFile.open`.
 
         extensions : list of AsdfExtension
             A list of extensions to the ASDF to support when reading
@@ -142,9 +142,9 @@ class AsdfFile(versioning.VersionedMixin):
         """
         return generic_io.resolve_uri(self.uri, uri)
 
-    def read_external(self, uri, do_not_fill_defaults=False):
+    def open_external(self, uri, do_not_fill_defaults=False):
         """
-        Load an external ASDF file, from the given (possibly relative)
+        Open an external ASDF file, from the given (possibly relative)
         URI.  There is a cache (internal to this ASDF file) that ensures
         each external ASDF file is loaded only once.
 
@@ -173,7 +173,7 @@ class AsdfFile(versioning.VersionedMixin):
 
         asdffile = self._external_asdf_by_uri.get(resolved_uri)
         if asdffile is None:
-            asdffile = self.read(
+            asdffile = self.open(
                 resolved_uri,
                 do_not_fill_defaults=do_not_fill_defaults)
             self._external_asdf_by_uri[resolved_uri] = asdffile
@@ -314,7 +314,7 @@ class AsdfFile(versioning.VersionedMixin):
                 int(match.group("micro")))
 
     @classmethod
-    def read(cls, fd, uri=None, mode='r',
+    def open(cls, fd, uri=None, mode='r',
              validate_checksums=False,
              extensions=None,
              do_not_fill_defaults=False,
@@ -498,15 +498,18 @@ class AsdfFile(versioning.VersionedMixin):
         if fd is None:
             raise ValueError(
                 "Can not update, since there is no associated file")
+
         if not fd.writable():
             raise IOError(
                 "Can not update, since associated file is read-only")
+
         if all_array_storage == 'external':
             # If the file is fully exploded, there's no benefit to
             # update, so just use write_to()
             self.write_to(fd, all_array_storage=all_array_storage)
             fd.truncate(fd.tell())
             return
+
         if not fd.seekable():
             raise IOError(
                 "Can not update, since associated file is not seekable")
@@ -564,11 +567,16 @@ class AsdfFile(versioning.VersionedMixin):
         """
         Write the ASDF file to the given file-like object.
 
+        `write_to` does not change the underlying file descriptor in
+        the `AsdfFile` object, but merely copies the content to a new
+        file.
+
         Parameters
         ----------
         fd : string or file-like object
             May be a string path to a file, or a Python file-like
-            object.
+            object.  If a string path, the file is automatically
+            closed after writing.  If not a string path,
 
         all_array_storage : string, optional
             If provided, override the array storage type of all blocks
@@ -607,34 +615,19 @@ class AsdfFile(versioning.VersionedMixin):
         """
         original_fd = self._fd
 
-        self._fd = fd = generic_io.get_file(fd, mode='w')
-
-        self._pre_write(fd, all_array_storage, all_array_compression,
-                        auto_inline)
-
         try:
-            self._serial_write(fd, pad_blocks)
-            fd.flush()
+            with generic_io.get_file(fd, mode='w') as fd:
+                self._fd = fd
+                self._pre_write(fd, all_array_storage, all_array_compression,
+                               auto_inline)
+
+                try:
+                    self._serial_write(fd, pad_blocks)
+                    fd.flush()
+                finally:
+                    self._post_write(fd)
         finally:
-            self._post_write(fd)
-
-        if original_fd is not None:
-            original_fd.close()
-
-        self._fd = self._fd.finalize()
-
-        return self
-
-    def write_to_stream(self, data):
-        """
-        Append additional data to the end of the `AsdfFile` for
-        stream-writing.
-
-        See `pyasdf.Stream`.
-        """
-        if self.blocks.streamed_block is None:
-            raise ValueError("AsdfFile has no streamed block to write to")
-        self._fd.write(data)
+            self._fd = original_fd
 
     def find_references(self):
         """

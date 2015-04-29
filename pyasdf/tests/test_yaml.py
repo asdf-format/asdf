@@ -134,7 +134,7 @@ unit: !<tag:stsci.edu:asdf/0.1.0/unit/unit> m
     # Check that fully-qualified explicit tags work
 
     buff = helpers.yaml_to_asdf(yaml, yaml_headers=False)
-    ff = asdf.AsdfFile.read(buff)
+    ff = asdf.AsdfFile.open(buff)
 
     assert isinstance(ff.tree['unit'], u.UnitBase)
 
@@ -171,10 +171,10 @@ def test_yaml_nan_inf():
         }
 
     buff = io.BytesIO()
-    ff = asdf.AsdfFile(tree).write_to(buff)
+    ff = asdf.AsdfFile(tree)
+    ff.write_to(buff)
     buff.seek(0)
-    ff = asdf.AsdfFile().read(buff)
-
-    assert np.isnan(ff.tree['a'])
-    assert np.isinf(ff.tree['b'])
-    assert np.isinf(ff.tree['c'])
+    with asdf.AsdfFile.open(buff) as ff:
+        assert np.isnan(ff.tree['a'])
+        assert np.isinf(ff.tree['b'])
+        assert np.isinf(ff.tree['c'])
