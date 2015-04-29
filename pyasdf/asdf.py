@@ -44,6 +44,10 @@ class AsdfFile(versioning.VersionedMixin):
             A list of extensions to the ASDF to support when reading
             and writing ASDF files.  See `asdftypes.AsdfExtension` for
             more information.
+
+        Notes
+        -----
+        `AsdfFile` objects may be used as :ref:`context-managers`.
         """
         if extensions is None or extensions == []:
             self._extensions = extension._builtin_extension_list
@@ -558,6 +562,8 @@ class AsdfFile(versioning.VersionedMixin):
             fd.flush()
         finally:
             self._post_write(fd)
+
+        self._fd.finalize()
 
     def write_to(self, fd, all_array_storage=None, all_array_compression=None,
                  auto_inline=None, pad_blocks=False):

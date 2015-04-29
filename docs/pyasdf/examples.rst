@@ -28,6 +28,11 @@ to YAML.  Here we save a dictionary with the key/value pair ``'hello':
 
 .. asdf:: test.asdf
 
+.. note::
+
+   The use of the ``with`` statement with `~pyasdf.AsdfFile` objects
+   is described in detail in :ref:`context-managers`.
+
 Saving arrays
 -------------
 
@@ -89,7 +94,8 @@ intermediate state::
     >>> ff.tree['data'] = 'Not an array'
     >>> # The ASDF file is now invalid, but pyasdf will tell us when
     >>> # we write it out.
-    >>> ff.write_to('test.asdf')
+    >>> with ff.write_to('test.asdf'):
+    ...     pass
     Traceback (most recent call last):
     ...
     ValidationError: mismatched tags, wanted
