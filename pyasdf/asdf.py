@@ -82,6 +82,7 @@ class AsdfFile(versioning.VersionedMixin):
         for external in self._external_asdf_by_uri.values():
             external.__exit__(type, value, traceback)
         self._external_asdf_by_uri.clear()
+        self._blocks.close()
 
     def close(self):
         """
@@ -95,6 +96,7 @@ class AsdfFile(versioning.VersionedMixin):
         for external in self._external_asdf_by_uri.values():
             external.close()
         self._external_asdf_by_uri.clear()
+        self._blocks.close()
 
     @property
     def uri(self):

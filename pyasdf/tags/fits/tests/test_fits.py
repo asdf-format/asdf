@@ -10,7 +10,7 @@ from ....tests import helpers
 
 
 def test_complex_structure(tmpdir):
-    with fits.open(get_pkg_data_filename('data/complex.fits')) as hdulist:
+    with fits.open(get_pkg_data_filename('data/complex.fits'), memmap=False) as hdulist:
         tree = {
             'fits': hdulist
             }

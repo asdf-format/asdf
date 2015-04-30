@@ -439,6 +439,10 @@ class BlockManager(object):
     def __getitem__(self, arr):
         return self.find_or_create_block_for_array(arr, object())
 
+    def close(self):
+        for block in self._blocks:
+            block.close()
+
 
 class Block(object):
     """
@@ -785,6 +789,14 @@ class Block(object):
 
         return self._data
 
+    def close(self):
+        if self._memmapped and self._data is not None:
+            self._data.flush()
+            if self._data._mmap is not None:
+                self._data._mmap.close()
+            self._data = None
+
+
 
 def calculate_updated_layout(blocks, tree_size, pad_blocks, block_size):
     """
@@ -810,8 +822,12 @@ def calculate_updated_layout(blocks, tree_size, pad_blocks, block_size):
         # point, we just return False.  If this algorithm gets more
         # sophisticated we could carefully move memmapped blocks
         # around without clobbering other ones.
+
+        # TODO: Copy to a tmpfile on disk and memmap it from there.
         entry = fixed[i]
-        entry.block._data = entry.block.data.copy()
+        copy = entry.block.data.copy()
+        entry.block.close()
+        entry.block._data = copy
         del fixed[i]
         free.append(entry.block)
 
