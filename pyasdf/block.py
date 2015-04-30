@@ -15,6 +15,7 @@ import numpy as np
 
 from astropy.extern import six
 from astropy.extern.six.moves.urllib import parse as urlparse
+from astropy.utils.compat import NUMPY_LT_1_7
 
 from . import compression as mcompression
 from . import constants
@@ -791,7 +792,13 @@ class Block(object):
 
     def close(self):
         if self._memmapped and self._data is not None:
-            self._data.flush()
+            if NUMPY_LT_1_7:
+                try:
+                    self._data.flush()
+                except ValueError:
+                    pass
+            else:
+                self._data.flush()
             if self._data._mmap is not None:
                 self._data._mmap.close()
             self._data = None
