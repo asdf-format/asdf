@@ -21,6 +21,8 @@ from . import util
 
 ASDF_EXTENSION_NAME = 'ASDF'
 
+FITS_SOURCE_PREFIX = 'fits:'
+
 
 class _FitsBlock(object):
     def __init__(self, hdu):
@@ -48,25 +50,33 @@ class _EmbeddedBlockManager(block.BlockManager):
         super(_EmbeddedBlockManager, self).__init__(asdffile)
 
     def get_block(self, source):
-        if isinstance(source, six.string_types) and source.startswith('fits:'):
+        if (isinstance(source, six.string_types) and
+            source.startswith(FITS_SOURCE_PREFIX)):
             parts = re.match(
-                '(?P<name>[A-Z0-9]+)(,(?P<ver>[0-9]+))?', source[5:])
+                '((?P<name>[A-Z0-9]+),)?(?P<ver>[0-9]+)',
+                source[len(FITS_SOURCE_PREFIX):])
             if parts is not None:
-                name = parts.group('name')
-                if parts.group('ver'):
-                    ver = int(parts.group('ver'))
-                    pair = name, ver
+                ver = int(parts.group('ver'))
+                if parts.group('name'):
+                    pair = (parts.group('name'), ver)
                 else:
-                    pair = name
+                    pair = ver
                 return _FitsBlock(self._hdulist[pair])
+            else:
+                raise ValueError("Can not parse source '{0}'".format(source))
 
         return super(_EmbeddedBlockManager, self).get_block(source)
 
     def get_source(self, block):
         if isinstance(block, _FitsBlock):
-            for hdu in self._hdulist:
+            for i, hdu in enumerate(self._hdulist):
                 if hdu is block._hdu:
-                    return 'fits:{0},{1}'.format(hdu.name, hdu.ver)
+                    if hdu.name == '':
+                        return '{0}{1}'.format(
+                            FITS_SOURCE_PREFIX, i)
+                    else:
+                        return '{0}{1},{2}'.format(
+                            FITS_SOURCE_PREFIX, hdu.name, hdu.ver)
             raise ValueError("FITS block seems to have been removed")
 
         return super(_EmbeddedBlockManager, self).get_source(block)
@@ -80,15 +90,16 @@ class _EmbeddedBlockManager(block.BlockManager):
                 if base is hdu.data:
                     return _FitsBlock(hdu)
 
-        return super(_EmbeddedBlockManager, self).find_or_create_block_for_array(
-            arr, ctx)
+        return super(
+            _EmbeddedBlockManager, self).find_or_create_block_for_array(arr, ctx)
 
 
 class AsdfInFits(asdf.AsdfFile):
     def __init__(self, hdulist=None, tree=None, uri=None, extensions=None):
         if hdulist is None:
             hdulist = fits.HDUList()
-        super(AsdfInFits, self).__init__(tree=tree, uri=uri, extensions=extensions)
+        super(AsdfInFits, self).__init__(
+            tree=tree, uri=uri, extensions=extensions)
         self._blocks = _EmbeddedBlockManager(hdulist, self)
         self._hdulist = hdulist
 
@@ -109,6 +120,10 @@ class AsdfInFits(asdf.AsdfFile):
     def _update_asdf_extension(self, all_array_storage=None,
                                all_array_compression=None,
                                auto_inline=None, pad_blocks=False):
+        if self.blocks.streamed_block is not None:
+            raise ValueError(
+                "Can not save streamed data to ASDF-in-FITS file.")
+
         buff = io.BytesIO()
         super(AsdfInFits, self).write_to(
             buff, all_array_storage=all_array_storage,
@@ -139,7 +154,3 @@ class AsdfInFits(asdf.AsdfFile):
             all_array_storage=all_array_storage,
             all_array_compression=all_array_compression,
             auto_inline=auto_inline, pad_blocks=pad_blocks)
-
-    def write_to_stream(self, data):
-        raise NotImplementedError(
-            "Can not stream data to an ASDF file embedded in a FITS file")

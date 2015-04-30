@@ -41,6 +41,7 @@ FLAGS = {
 
 class RunCodeDirective(Directive):
     has_content = True
+    optional_arguments = 1
 
     def run(self):
         code = textwrap.dedent('\n'.join(self.content))
@@ -60,7 +61,11 @@ class RunCodeDirective(Directive):
             set_source_info(self, literal)
         finally:
             os.chdir(cwd)
-        return [literal]
+
+        if 'hidden' not in self.arguments:
+            return [literal]
+        else:
+            return []
 
 
 class AsdfDirective(Directive):
