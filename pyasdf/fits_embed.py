@@ -93,7 +93,7 @@ class AsdfInFits(asdf.AsdfFile):
         self._hdulist = hdulist
 
     @classmethod
-    def read(cls, hdulist, uri=None, validate_checksums=False, extensions=None):
+    def open(cls, hdulist, uri=None, validate_checksums=False, extensions=None):
         try:
             asdf_extension = hdulist[ASDF_EXTENSION_NAME]
         except (KeyError, IndexError, AttributeError):
@@ -103,7 +103,7 @@ class AsdfInFits(asdf.AsdfFile):
 
         buff = io.BytesIO(asdf_extension.data)
 
-        return cls._read_impl(self, buff, uri=uri, mode='r',
+        return cls._open_impl(self, buff, uri=uri, mode='r',
                               validate_checksums=validate_checksums)
 
     def _update_asdf_extension(self, all_array_storage=None,

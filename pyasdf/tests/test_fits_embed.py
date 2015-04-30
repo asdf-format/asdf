@@ -40,12 +40,11 @@ def test_embed_asdf_in_fits_file(tmpdir):
         assert len(hdulist2) == 3
         assert [x.name for x in hdulist2] == ['SCI', 'DQ', 'ASDF']
 
-        ff2 = fits_embed.AsdfInFits.read(hdulist)
+        with fits_embed.AsdfInFits.open(hdulist) as ff2:
+            assert_tree_match(tree, ff2.tree)
 
-        assert_tree_match(tree, ff2.tree)
-
-        with asdf.AsdfFile(ff2.tree) as ff:
+            ff = asdf.AsdfFile(ff2.tree)
             ff.write_to('test.asdf')
 
-        with asdf.AsdfFile.read('test.asdf') as ff:
-            assert_tree_match(tree, ff.tree)
+            with asdf.AsdfFile.open('test.asdf') as ff:
+                assert_tree_match(tree, ff.tree)
