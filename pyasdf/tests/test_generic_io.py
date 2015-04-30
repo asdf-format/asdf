@@ -438,3 +438,60 @@ def test_invalid_obj(tmpdir):
     if six.PY2:
         with generic_io.get_file(sys.stdout, 'w'):
             pass
+
+
+def test_relative_uri():
+    assert generic_io.relative_uri(
+        'http://www.google.com', 'file://local') == 'file://local'
+
+
+def test_arbitrary_file_object():
+    class Wrapper(object):
+        def __init__(self, init):
+            self._fd = init
+
+    class Random(object):
+        def seek(self, *args):
+            return self._fd.seek(*args)
+
+        def tell(self, *args):
+            return self._fd.tell(*args)
+
+    class Reader(Wrapper):
+        def read(self, *args):
+            return self._fd.read(*args)
+
+    class RandomReader(Reader, Random):
+        pass
+
+    class Writer(Wrapper):
+        def write(self, *args):
+            return self._fd.write(*args)
+
+    class RandomWriter(Writer, Random):
+        pass
+
+    class All(Reader, Writer, Random):
+        pass
+
+    buff = io.BytesIO()
+    assert isinstance(
+        generic_io.get_file(Reader(buff), 'r'), generic_io.InputStream)
+    assert isinstance(
+        generic_io.get_file(Writer(buff), 'w'), generic_io.OutputStream)
+    assert isinstance(
+        generic_io.get_file(RandomReader(buff), 'r'), generic_io.MemoryIO)
+    assert isinstance(
+        generic_io.get_file(RandomWriter(buff), 'w'), generic_io.MemoryIO)
+    assert isinstance(
+        generic_io.get_file(All(buff), 'rw'), generic_io.MemoryIO)
+    assert isinstance(
+        generic_io.get_file(All(buff), 'r'), generic_io.MemoryIO)
+    assert isinstance(
+        generic_io.get_file(All(buff), 'w'), generic_io.MemoryIO)
+
+    with pytest.raises(ValueError):
+        generic_io.get_file(Reader(buff), 'w')
+
+    with pytest.raises(ValueError):
+        generic_io.get_file(Writer(buff), 'r')

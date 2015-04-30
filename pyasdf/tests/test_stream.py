@@ -148,26 +148,36 @@ def test_stream_to_stream():
             assert np.all(row == i)
 
 
-def test_array_to_stream():
+def test_array_to_stream(tmpdir):
     tree = {
         'stream': np.array([1, 2, 3, 4], np.int64),
     }
 
     buff = io.BytesIO()
-
     ff = asdf.AsdfFile(tree)
     ff.blocks[tree['stream']].array_storage = 'streamed'
     ff.write_to(buff)
     buff.write(np.array([5, 6, 7, 8], np.int64).tostring())
 
     buff.seek(0)
-
-    ff = asdf.AsdfFile().open(buff)
+    ff = asdf.AsdfFile().open(generic_io.InputStream(buff))
     assert_array_equal(ff.tree['stream'], [1, 2, 3, 4, 5, 6, 7, 8])
     buff.seek(0)
     ff2 = asdf.AsdfFile(ff)
     ff2.write_to(buff)
     assert b"shape: ['*']" in buff.getvalue()
+
+    with open(os.path.join(str(tmpdir), 'test.asdf'), 'wb') as fd:
+        ff = asdf.AsdfFile(tree)
+        ff.blocks[tree['stream']].array_storage = 'streamed'
+        ff.write_to(fd)
+        fd.write(np.array([5, 6, 7, 8], np.int64).tostring())
+
+    with asdf.AsdfFile().open(os.path.join(str(tmpdir), 'test.asdf')) as ff:
+        assert_array_equal(ff.tree['stream'], [1, 2, 3, 4, 5, 6, 7, 8])
+        ff2 = asdf.AsdfFile(ff)
+        ff2.write_to(buff)
+        assert b"shape: ['*']" in buff.getvalue()
 
 
 def test_too_many_streams():

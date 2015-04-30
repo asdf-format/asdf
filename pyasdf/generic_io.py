@@ -34,7 +34,7 @@ __all__ = ['get_file', 'resolve_uri', 'relative_uri']
 
 
 _local_file_schemes = ['', 'file']
-if sys.platform.startswith('win'):
+if sys.platform.startswith('win'):  # pragma: no cover
     import string
     _local_file_schemes.extend(string.ascii_letters)
 
@@ -70,7 +70,7 @@ def _check_bytes(fd, mode):
 
 
 if (sys.platform == 'darwin' and
-    LooseVersion(platform.mac_ver()[0]) < LooseVersion('10.9')):
+    LooseVersion(platform.mac_ver()[0]) < LooseVersion('10.9')):  # pragma: no cover
     def _array_fromfile(fd, size):
         chunk_size = 1024 ** 3
         if size < chunk_size:
@@ -98,7 +98,7 @@ size : integer
 """
 
 
-def _array_tofile_chunked(write, array, chunksize):
+def _array_tofile_chunked(write, array, chunksize):  # pragma: no cover
     array = array.view(np.uint8).flatten()
     for i in xrange(0, array.nbytes, chunksize):
         write(array[i:i + chunksize].data)
@@ -108,13 +108,13 @@ def _array_tofile_simple(fd, write, array):
     return write(array.data)
 
 
-if sys.platform == 'darwin':
+if sys.platform == 'darwin':  # pragma: no cover
     def _array_tofile(fd, write, array):
         OSX_WRITE_LIMIT = 2 ** 32
         if fd is None or array.nbytes >= OSX_WRITE_LIMIT and array.nbytes % 4096 == 0:
             return _array_tofile_chunked(write, array, OSX_WRITE_LIMIT)
         return _array_tofile_simple(fd, write, array)
-elif sys.platform.startswith('win'):
+elif sys.platform.startswith('win'):  # pragma: no cover
     def _array_tofile(fd, write, array):
         WIN_WRITE_LIMIT = 2 ** 30
         return _array_tofile_chunked(write, array, WIN_WRITE_LIMIT)
@@ -287,7 +287,7 @@ class GenericFile(object):
         if i < size:
             yield self.read(size - i)
 
-    if sys.version_info[:2] == (2, 7) and sys.version_info[2] < 4:
+    if sys.version_info[:2] == (2, 7) and sys.version_info[2] < 4:  # pragma: no cover
         # On Python 2.7.x prior to 2.7.4, the buffer does not support the
         # new buffer interface, and thus can't be written directly.  See
         # issue #10221.
@@ -500,10 +500,8 @@ class GenericWrapper(object):
     A wrapper around a `GenericFile` object so that closing only
     happens in the very outer layer.
     """
-    def __init__(self, fd, uri=None):
+    def __init__(self, fd):
         self._fd = fd
-        if uri is not None:
-            self._uri = uri
 
     def __enter__(self):
         return self
@@ -579,7 +577,7 @@ class RealFile(RandomAccessFile):
     def __init__(self, fd, mode, close=False, uri=None):
         super(RealFile, self).__init__(fd, mode, close=close, uri=uri)
         stat = os.fstat(fd.fileno())
-        if sys.platform.startswith('win'):
+        if sys.platform.startswith('win'):  # pragma: no cover
             # There appears to be reliable way to get block size on Windows,
             # so just choose a reasonable default
             self._blksize = io.DEFAULT_BUFFER_SIZE
@@ -904,14 +902,14 @@ class HTTPConnection(RandomAccessFile):
         else:
             response = self._get_range(
                 self._pos, self._pos + size)
-            if sys.platform.startswith('win'):
+            if sys.platform.startswith('win'):  # pragma: no cover
                 data = response.read(size)
                 result = np.frombuffer(data, np.uint8)
             else:
                 if six.PY3:
                     result = np.empty((size,), dtype=np.uint8)
                     response.readinto(result)
-                else:
+                elif six.PY2:
                     # Python 2.6 HTTPResponse does not have fileno()
                     if hasattr(response, 'fileno'):
                         fileno = response.fileno()
@@ -1029,7 +1027,7 @@ def get_file(init, mode='r', uri=None):
             raise ValueError(
                 "File is opened as '{0}', but '{1}' was requested".format(
                     init.mode, mode))
-        return GenericWrapper(init, uri=uri)
+        return GenericWrapper(init)
 
     elif isinstance(init, six.string_types):
         parsed = urlparse.urlparse(init)
@@ -1078,7 +1076,7 @@ def get_file(init, mode='r', uri=None):
             return RealFile(init, mode, uri=uri)
 
     elif isinstance(init, io.IOBase):
-        if sys.version_info[:2] == (2, 6):
+        if sys.version_info[:2] == (2, 6):  # pragma: no cover
             raise ValueError(
                 "io.open file objects are not supported on Python 2.6")
 
@@ -1110,22 +1108,29 @@ def get_file(init, mode='r', uri=None):
                 raise ValueError(
                     "File '{0}' could not be opened in 'rw' mode".format(init))
 
-    elif 'w' in mode and (
+    elif mode == 'w' and (
           hasattr(init, 'write') and
           hasattr(init, 'seek') and
           hasattr(init, 'tell')):
         return MemoryIO(init, mode, uri=uri)
 
-    elif 'r' in mode and (
+    elif mode == 'r' and (
           hasattr(init, 'read') and
           hasattr(init, 'seek') and
           hasattr(init, 'tell')):
         return MemoryIO(init, mode, uri=uri)
 
-    elif 'w' in mode and hasattr(init, 'write'):
+    elif mode == 'rw' and (
+          hasattr(init, 'read') and
+          hasattr(init, 'write') and
+          hasattr(init, 'seek') and
+          hasattr(init, 'tell')):
+        return MemoryIO(init, mode, uri=uri)
+
+    elif mode == 'w' and hasattr(init, 'write'):
         return OutputStream(init, uri=uri)
 
-    elif 'r' in mode and hasattr(init, 'read'):
+    elif mode == 'r' and hasattr(init, 'read'):
         return InputStream(init, mode, uri=uri)
 
     raise ValueError("Can't handle '{0}' as a file for mode '{1}'".format(

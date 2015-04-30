@@ -346,7 +346,9 @@ class NDArrayType(AsdfType):
             source = node.get('source')
             data = node.get('data')
             if source and data:
-                raise ValueError("Both source and data my not be provided.")
+                raise ValueError(
+                    "Both source and data may not be provided "
+                    "at the same time")
             if data:
                 source = data
             shape = node.get('shape', None)

@@ -314,34 +314,32 @@ def test_default_check_in_schema():
 
 
 def test_fill_and_remove_defaults():
-    class CustomType(str, asdftypes.AsdfType):
-        name = 'custom_type'
+    class DefaultType(dict, asdftypes.AsdfType):
+        name = 'default'
         organization = 'nowhere.org'
         version = (1, 0, 0)
         standard = 'custom'
 
-    class CustomTypeExtension(CustomExtension):
+    class DefaultTypeExtension(CustomExtension):
         @property
         def types(self):
-            return [CustomType]
+            return [DefaultType]
 
     yaml = """
-custom: !<tag:nowhere.org:custom/1.0.0/custom>
+custom: !<tag:nowhere.org:custom/1.0.0/default>
   b: 10
     """
     buff = helpers.yaml_to_asdf(yaml)
-    with pytest.raises(ValidationError):
-        with asdf.AsdfFile.open(buff, extensions=[CustomTypeExtension()]) as ff:
-            assert 'a' in ff.tree['custom']
-            assert ff.tree['custom']['a'] == 42
+    with asdf.AsdfFile.open(buff, extensions=[DefaultTypeExtension()]) as ff:
+        assert 'a' in ff.tree['custom']
+        assert ff.tree['custom']['a'] == 42
 
     buff.seek(0)
-    with pytest.raises(ValidationError):
-        with asdf.AsdfFile.open(buff, extensions=[CustomTypeExtension()],
-                                do_not_fill_defaults=True):
-            assert 'a' not in ff.tree['custom']
-            ff.fill_defaults()
-            assert 'a' in ff.tree['custom']
-            assert ff.tree['custom']['a'] == 42
-            ff.remove_defaults()
-            assert 'a' not in ff.tree['custom']
+    with asdf.AsdfFile.open(buff, extensions=[DefaultTypeExtension()],
+                            do_not_fill_defaults=True) as ff:
+        assert 'a' not in ff.tree['custom']
+        ff.fill_defaults()
+        assert 'a' in ff.tree['custom']
+        assert ff.tree['custom']['a'] == 42
+        ff.remove_defaults()
+        assert 'a' not in ff.tree['custom']
