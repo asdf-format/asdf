@@ -37,6 +37,7 @@ def test_external_reference(tmpdir):
     external_path = os.path.join(str(tmpdir), 'external.asdf')
     ext = asdf.AsdfFile(exttree)
     ext.write_to(external_path)
+
     external_path = os.path.join(str(tmpdir), 'external2.asdf')
     ff = asdf.AsdfFile(exttree)
     ff.write_to(external_path)
@@ -107,12 +108,12 @@ def test_external_reference(tmpdir):
 
         assert_array_equal(ff.tree['internal'], exttree['cool_stuff']['a'])
 
-    ff = asdf.AsdfFile(tree, uri=pathname2url(
-        os.path.join(str(tmpdir), 'main.asdf')))
-    do_asserts(ff)
+    with asdf.AsdfFile(tree, uri=pathname2url(
+            os.path.join(str(tmpdir), 'main.asdf'))) as ff:
+        do_asserts(ff)
 
-    internal_path = os.path.join(str(tmpdir), 'main.asdf')
-    ff.write_to(internal_path)
+        internal_path = os.path.join(str(tmpdir), 'main.asdf')
+        ff.write_to(internal_path)
 
     with asdf.AsdfFile.open(internal_path) as ff:
         do_asserts(ff)
@@ -184,10 +185,10 @@ def test_external_reference_invalid_fragment(tmpdir):
             }
         }
 
-    ff = asdf.AsdfFile(tree, uri=pathname2url(
-        os.path.join(str(tmpdir), 'main.asdf')))
-    with pytest.raises(ValueError):
-        ff.resolve_references()
+    with asdf.AsdfFile(tree, uri=pathname2url(
+            os.path.join(str(tmpdir), 'main.asdf'))) as ff:
+        with pytest.raises(ValueError):
+            ff.resolve_references()
 
     tree = {
         'foo': {
@@ -195,10 +196,10 @@ def test_external_reference_invalid_fragment(tmpdir):
             }
         }
 
-    ff = asdf.AsdfFile(tree, uri=pathname2url(
-        os.path.join(str(tmpdir), 'main.asdf')))
-    with pytest.raises(ValueError):
-        ff.resolve_references()
+    with asdf.AsdfFile(tree, uri=pathname2url(
+            os.path.join(str(tmpdir), 'main.asdf'))) as ff:
+        with pytest.raises(ValueError):
+            ff.resolve_references()
 
 
 def test_make_reference(tmpdir):

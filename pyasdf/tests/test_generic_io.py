@@ -57,7 +57,6 @@ def _roundtrip(tree, get_write_fd, get_read_fd,
 
     with get_read_fd() as fd:
         ff = asdf.AsdfFile.open(fd, **read_options)
-
         helpers.assert_tree_match(tree, ff.tree)
 
     return ff
@@ -101,11 +100,10 @@ def test_path(tree, tmpdir):
         f.read(0)
         return f
 
-    ff = _roundtrip(tree, get_write_fd, get_read_fd)
-
-    assert len(list(ff.blocks.internal_blocks)) == 2
-    next(ff.blocks.internal_blocks).data
-    assert isinstance(next(ff.blocks.internal_blocks)._data, np.core.memmap)
+    with _roundtrip(tree, get_write_fd, get_read_fd) as ff:
+        assert len(list(ff.blocks.internal_blocks)) == 2
+        next(ff.blocks.internal_blocks).data
+        assert isinstance(next(ff.blocks.internal_blocks)._data, np.core.memmap)
 
 
 def test_open2(tree, tmpdir):
@@ -115,18 +113,19 @@ def test_open2(tree, tmpdir):
         f = generic_io.get_file(open(path, 'wb'), mode='w')
         assert isinstance(f, generic_io.RealFile)
         assert f._uri == urljoin('file:', pathname2url(path))
+        f._close = True
         return f
 
     def get_read_fd():
         f = generic_io.get_file(open(path, 'rb'), mode='r')
         assert isinstance(f, generic_io.RealFile)
         assert f._uri == urljoin('file:', pathname2url(path))
+        f._close = True
         return f
 
-    ff = _roundtrip(tree, get_write_fd, get_read_fd)
-
-    assert len(list(ff.blocks.internal_blocks)) == 2
-    assert isinstance(next(ff.blocks.internal_blocks)._data, np.core.memmap)
+    with _roundtrip(tree, get_write_fd, get_read_fd) as ff:
+        assert len(list(ff.blocks.internal_blocks)) == 2
+        assert isinstance(next(ff.blocks.internal_blocks)._data, np.core.memmap)
 
 
 def test_open_fail(tmpdir):
@@ -177,19 +176,20 @@ def test_io_open(tree, tmpdir):
         f = generic_io.get_file(io.open(path, 'wb'), mode='w')
         assert isinstance(f, generic_io.RealFile)
         assert f._uri == urljoin('file:', pathname2url(path))
+        f._close = True
         return f
 
     def get_read_fd():
         f = generic_io.get_file(io.open(path, 'r+b'), mode='rw')
         assert isinstance(f, generic_io.RealFile)
         assert f._uri == urljoin('file:', pathname2url(path))
+        f._close = True
         return f
 
-    ff = _roundtrip(tree, get_write_fd, get_read_fd)
-
-    assert len(list(ff.blocks.internal_blocks)) == 2
-    assert isinstance(next(ff.blocks.internal_blocks)._data, np.core.memmap)
-    ff.tree['science_data'][0] = 42
+    with _roundtrip(tree, get_write_fd, get_read_fd) as ff:
+        assert len(list(ff.blocks.internal_blocks)) == 2
+        assert isinstance(next(ff.blocks.internal_blocks)._data, np.core.memmap)
+        ff.tree['science_data'][0] = 42
 
 
 def test_bytes_io(tree):
@@ -206,12 +206,11 @@ def test_bytes_io(tree):
         assert isinstance(f, generic_io.MemoryIO)
         return f
 
-    ff = _roundtrip(tree, get_write_fd, get_read_fd)
-
-    assert len(list(ff.blocks.internal_blocks)) == 2
-    assert not isinstance(next(ff.blocks.internal_blocks)._data, np.core.memmap)
-    assert isinstance(next(ff.blocks.internal_blocks)._data, np.ndarray)
-    ff.tree['science_data'][0] = 42
+    with _roundtrip(tree, get_write_fd, get_read_fd) as ff:
+        assert len(list(ff.blocks.internal_blocks)) == 2
+        assert not isinstance(next(ff.blocks.internal_blocks)._data, np.core.memmap)
+        assert isinstance(next(ff.blocks.internal_blocks)._data, np.ndarray)
+        ff.tree['science_data'][0] = 42
 
 
 def test_streams(tree):
@@ -224,12 +223,11 @@ def test_streams(tree):
         buff.seek(0)
         return generic_io.InputStream(buff, 'rw')
 
-    ff = _roundtrip(tree, get_write_fd, get_read_fd)
-
-    assert len(ff.blocks) == 2
-    assert not isinstance(next(ff.blocks.internal_blocks)._data, np.core.memmap)
-    assert isinstance(next(ff.blocks.internal_blocks)._data, np.ndarray)
-    ff.tree['science_data'][0] = 42
+    with _roundtrip(tree, get_write_fd, get_read_fd) as ff:
+        assert len(ff.blocks) == 2
+        assert not isinstance(next(ff.blocks.internal_blocks)._data, np.core.memmap)
+        assert isinstance(next(ff.blocks.internal_blocks)._data, np.ndarray)
+        ff.tree['science_data'][0] = 42
 
 
 def test_streams2():
@@ -255,11 +253,10 @@ def test_urlopen(tree, httpserver):
             urllib_request.urlopen(
                 httpserver.url + "test.asdf"))
 
-    ff = _roundtrip(tree, get_write_fd, get_read_fd)
-
-    assert len(list(ff.blocks.internal_blocks)) == 2
-    assert not isinstance(next(ff.blocks.internal_blocks)._data, np.core.memmap)
-    assert isinstance(next(ff.blocks.internal_blocks)._data, np.ndarray)
+    with _roundtrip(tree, get_write_fd, get_read_fd) as ff:
+        assert len(list(ff.blocks.internal_blocks)) == 2
+        assert not isinstance(next(ff.blocks.internal_blocks)._data, np.core.memmap)
+        assert isinstance(next(ff.blocks.internal_blocks)._data, np.ndarray)
 
 
 @remote_data
@@ -278,12 +275,11 @@ def test_http_connection(tree, httpserver):
         fd.read(0)
         return fd
 
-    ff = _roundtrip(tree, get_write_fd, get_read_fd)
-
-    assert len(list(ff.blocks.internal_blocks)) == 2
-    assert not isinstance(next(ff.blocks.internal_blocks)._data, np.core.memmap)
-    assert isinstance(next(ff.blocks.internal_blocks)._data, np.ndarray)
-    ff.tree['science_data'][0] == 42
+    with _roundtrip(tree, get_write_fd, get_read_fd) as ff:
+        assert len(list(ff.blocks.internal_blocks)) == 2
+        assert not isinstance(next(ff.blocks.internal_blocks)._data, np.core.memmap)
+        assert isinstance(next(ff.blocks.internal_blocks)._data, np.ndarray)
+        ff.tree['science_data'][0] == 42
 
 
 @remote_data
@@ -300,17 +296,16 @@ def test_http_connection_range(tree, rhttpserver):
         connection[0] = fd
         return fd
 
-    ff = _roundtrip(tree, get_write_fd, get_read_fd)
+    with _roundtrip(tree, get_write_fd, get_read_fd) as ff:
+        if len(tree) == 4:
+            assert connection[0]._nreads == 1
+        else:
+            assert connection[0]._nreads == 4
 
-    if len(tree) == 4:
-        assert connection[0]._nreads == 1
-    else:
-        assert connection[0]._nreads == 4
-
-    assert len(list(ff.blocks.internal_blocks)) == 2
-    assert not isinstance(next(ff.blocks.internal_blocks)._data, np.core.memmap)
-    assert isinstance(next(ff.blocks.internal_blocks)._data, np.ndarray)
-    ff.tree['science_data'][0] == 42
+        assert len(list(ff.blocks.internal_blocks)) == 2
+        assert not isinstance(next(ff.blocks.internal_blocks)._data, np.core.memmap)
+        assert isinstance(next(ff.blocks.internal_blocks)._data, np.ndarray)
+        ff.tree['science_data'][0] == 42
 
 
 def test_exploded_filesystem(tree, tmpdir):
@@ -322,11 +317,10 @@ def test_exploded_filesystem(tree, tmpdir):
     def get_read_fd():
         return generic_io.get_file(path, mode='r')
 
-    ff = _roundtrip(tree, get_write_fd, get_read_fd,
-                    write_options={'all_array_storage': 'external'})
-
-    assert len(list(ff.blocks.internal_blocks)) == 0
-    assert len(list(ff.blocks.external_blocks)) == 2
+    with _roundtrip(tree, get_write_fd, get_read_fd,
+                    write_options={'all_array_storage': 'external'}) as ff:
+        assert len(list(ff.blocks.internal_blocks)) == 0
+        assert len(list(ff.blocks.external_blocks)) == 2
 
 
 def test_exploded_filesystem_fail(tree, tmpdir):
@@ -361,11 +355,10 @@ def test_exploded_http(tree, httpserver):
     def get_read_fd():
         return generic_io.get_file(httpserver.url + "test.asdf")
 
-    ff = _roundtrip(tree, get_write_fd, get_read_fd,
-                    write_options={'all_array_storage': 'external'})
-
-    assert len(list(ff.blocks.internal_blocks)) == 0
-    assert len(list(ff.blocks.external_blocks)) == 2
+    with _roundtrip(tree, get_write_fd, get_read_fd,
+                    write_options={'all_array_storage': 'external'}) as ff:
+        assert len(list(ff.blocks.internal_blocks)) == 0
+        assert len(list(ff.blocks.external_blocks)) == 2
 
 
 def test_exploded_stream_write():
@@ -445,3 +438,60 @@ def test_invalid_obj(tmpdir):
     if six.PY2:
         with generic_io.get_file(sys.stdout, 'w'):
             pass
+
+
+def test_relative_uri():
+    assert generic_io.relative_uri(
+        'http://www.google.com', 'file://local') == 'file://local'
+
+
+def test_arbitrary_file_object():
+    class Wrapper(object):
+        def __init__(self, init):
+            self._fd = init
+
+    class Random(object):
+        def seek(self, *args):
+            return self._fd.seek(*args)
+
+        def tell(self, *args):
+            return self._fd.tell(*args)
+
+    class Reader(Wrapper):
+        def read(self, *args):
+            return self._fd.read(*args)
+
+    class RandomReader(Reader, Random):
+        pass
+
+    class Writer(Wrapper):
+        def write(self, *args):
+            return self._fd.write(*args)
+
+    class RandomWriter(Writer, Random):
+        pass
+
+    class All(Reader, Writer, Random):
+        pass
+
+    buff = io.BytesIO()
+    assert isinstance(
+        generic_io.get_file(Reader(buff), 'r'), generic_io.InputStream)
+    assert isinstance(
+        generic_io.get_file(Writer(buff), 'w'), generic_io.OutputStream)
+    assert isinstance(
+        generic_io.get_file(RandomReader(buff), 'r'), generic_io.MemoryIO)
+    assert isinstance(
+        generic_io.get_file(RandomWriter(buff), 'w'), generic_io.MemoryIO)
+    assert isinstance(
+        generic_io.get_file(All(buff), 'rw'), generic_io.MemoryIO)
+    assert isinstance(
+        generic_io.get_file(All(buff), 'r'), generic_io.MemoryIO)
+    assert isinstance(
+        generic_io.get_file(All(buff), 'w'), generic_io.MemoryIO)
+
+    with pytest.raises(ValueError):
+        generic_io.get_file(Reader(buff), 'w')
+
+    with pytest.raises(ValueError):
+        generic_io.get_file(Writer(buff), 'r')

@@ -18,10 +18,10 @@ from . import treeutil
 from . import util
 
 
-if getattr(yaml, '__with_libyaml__', None):
+if getattr(yaml, '__with_libyaml__', None):  # pragma: no cover
     _yaml_base_dumper = yaml.CSafeDumper
     _yaml_base_loader = yaml.CSafeLoader
-else:
+else:  # pragma: no cover
     _yaml_base_dumper = yaml.SafeDumper
     _yaml_base_loader = yaml.SafeLoader
 
@@ -103,8 +103,9 @@ def represent_mapping(dumper, mapping):
             if key in mapping:
                 new_values.append(new_mapping[key])
 
+        property_order = set(mapping.property_order)
         for key, val in values:
-            if key.value not in mapping.property_order:
+            if key.value not in property_order:
                 new_values.append((key, val))
 
         node.value = new_values

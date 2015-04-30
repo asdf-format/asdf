@@ -12,7 +12,7 @@ from .. import main
 from ...tests.helpers import get_file_sizes, assert_tree_match
 
 
-def test_to_yaml(tmpdir):
+def test_defragment(tmpdir):
     x = np.arange(0, 10, dtype=np.float)
 
     tree = {

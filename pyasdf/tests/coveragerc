@@ -11,6 +11,8 @@ omit =
    {packagename}/*/tests/*
    {packagename}/*/*/tests/*
    {packagename}/version*
+   {packagename}/compat*
+   {packagename}/extern*
 
 [report]
 exclude_lines =

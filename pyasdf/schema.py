@@ -22,9 +22,9 @@ from . import tagged
 from . import util
 
 
-if getattr(yaml, '__with_libyaml__', None):
+if getattr(yaml, '__with_libyaml__', None):  # pragma: no cover
     _yaml_base_loader = yaml.CSafeLoader
-else:
+else:  # pragma: no cover
     _yaml_base_loader = yaml.SafeLoader
 
 
@@ -69,15 +69,6 @@ def validate_tag(validator, tagname, instance, schema):
     # should have a yaml_tag attribute attached; otherwise we have to use a
     # hack of reserializing the object and seeing what tags get attached to it
     # (though there may be a better way than this).
-
-    # We can't validate tags at the top level of the schema, because
-    # the tag information is lost.  This is, however, enforced by how
-    # the rest of the system works, so it shouldn't matter.
-    if schema == validator.schema:
-        return
-
-    if isinstance(tagname, bytes):
-        tagname = tagname.decode('ascii')
 
     if isinstance(instance, tagged.Tagged):
         instance_tag = instance.tag
