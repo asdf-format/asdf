@@ -106,16 +106,15 @@ def test_dont_load_data():
     ff.write_to(buff)
 
     buff.seek(0)
-    ff = asdf.AsdfFile.read(buff)
+    with asdf.AsdfFile.open(buff) as ff:
+        ff.run_hook('pre_write')
 
-    ff.run_hook('pre_write')
+        # repr and str shouldn't load data
+        str(ff.tree['science_data'])
+        repr(ff.tree)
 
-    # repr and str shouldn't load data
-    str(ff.tree['science_data'])
-    repr(ff.tree)
-
-    for block in ff.blocks.internal_blocks:
-        assert block._data is None
+        for block in ff.blocks.internal_blocks:
+            assert block._data is None
 
 
 def test_table_inline(tmpdir):
@@ -221,17 +220,16 @@ def test_inline():
 
     buff = io.BytesIO()
 
-    with asdf.AsdfFile(tree) as ff:
-        ff.blocks[tree['science_data']].array_storage = 'inline'
-        ff.write_to(buff)
+    ff = asdf.AsdfFile(tree)
+    ff.blocks[tree['science_data']].array_storage = 'inline'
+    ff.write_to(buff)
 
     buff.seek(0)
-    with asdf.AsdfFile.read(buff, mode='rw') as ff:
+    with asdf.AsdfFile.open(buff, mode='rw') as ff:
         helpers.assert_tree_match(tree, ff.tree)
         assert len(list(ff.blocks.internal_blocks)) == 0
         buff = io.BytesIO()
-        with asdf.AsdfFile(ff).write_to(buff):
-            pass
+        ff.write_to(buff)
 
     assert b'[0.0, 1.0, 2.0, 3.0, 4.0, 5.0, 6.0, 7.0, 8.0, 9.0]' in buff.getvalue()
 
@@ -240,9 +238,8 @@ def test_inline_bare():
     content = "arr: !core/ndarray [[1, 2, 3, 4], [5, 6, 7, 8]]"
     buff = helpers.yaml_to_asdf(content)
 
-    ff = asdf.AsdfFile.read(buff)
-
-    assert_array_equal(ff.tree['arr'], [[1, 2, 3, 4], [5, 6, 7, 8]])
+    with asdf.AsdfFile.open(buff) as ff:
+        assert_array_equal(ff.tree['arr'], [[1, 2, 3, 4], [5, 6, 7, 8]])
 
 
 def test_mask_roundtrip(tmpdir):
@@ -275,11 +272,10 @@ def test_mask_nan():
     """
 
     buff = helpers.yaml_to_asdf(content)
-    ff = asdf.AsdfFile.read(buff)
-
-    assert_array_equal(
-        ff.tree['arr'].mask,
-        [[False, False, False, True], [False, False, False, False]])
+    with asdf.AsdfFile.open(buff) as ff:
+        assert_array_equal(
+            ff.tree['arr'].mask,
+            [[False, False, False, True], [False, False, False, False]])
 
 
 def test_string(tmpdir):
@@ -303,9 +299,8 @@ def test_inline_string():
     content = "arr: !core/ndarray ['a', 'b', 'c']"
     buff = helpers.yaml_to_asdf(content)
 
-    ff = asdf.AsdfFile.read(buff)
-
-    assert_array_equal(ff.tree['arr']._make_array(), ['a', 'b', 'c'])
+    with asdf.AsdfFile.open(buff) as ff:
+        assert_array_equal(ff.tree['arr']._make_array(), ['a', 'b', 'c'])
 
 
 def test_inline_structured():
@@ -319,9 +314,8 @@ def test_inline_structured():
 
     buff = helpers.yaml_to_asdf(content)
 
-    ff = asdf.AsdfFile.read(buff)
-
-    assert ff.tree['arr']['f1'].dtype.char == 'H'
+    with asdf.AsdfFile.open(buff) as ff:
+        assert ff.tree['arr']['f1'].dtype.char == 'H'
 
 
 def test_simple_table():
@@ -359,10 +353,9 @@ def test_unicode_to_list(tmpdir):
     ff.write_to(fd)
     fd.seek(0)
 
-    with asdf.AsdfFile.read(fd) as ff:
+    with asdf.AsdfFile.open(fd) as ff:
         ff.resolve_and_inline()
-        with ff.write_to(io.BytesIO()):
-            pass
+        ff.write_to(io.BytesIO())
 
 
 def test_inline_masked_array(tmpdir):
@@ -370,10 +363,9 @@ def test_inline_masked_array(tmpdir):
 
     f = asdf.AsdfFile(tree)
     f.set_array_storage(tree['test'], 'inline')
-    with f.write_to('masked.asdf'):
-        pass
+    f.write_to('masked.asdf')
 
-    with asdf.AsdfFile.read('masked.asdf') as f2:
+    with asdf.AsdfFile.open('masked.asdf') as f2:
         assert len(list(f2.blocks.internal_blocks)) == 0
         assert_array_equal(f.tree['test'], f2.tree['test'])
 
@@ -389,11 +381,10 @@ def test_masked_array_stay_open_bug(tmpdir):
     }
 
     f = asdf.AsdfFile(tree)
-    with f.write_to(tmppath):
-        pass
+    f.write_to(tmppath)
 
     for i in range(1000):
-        with asdf.AsdfFile.read(tmppath) as f2:
+        with asdf.AsdfFile.open(tmppath) as f2:
             np.sum(f2.tree['test'])
 
     # fails with "too many open files" if the masked arrays
@@ -408,8 +399,7 @@ def test_masked_array_repr(tmpdir):
         'masked': np.ma.array([1, 2, 3], mask=[False, True, False])
     }
 
-    with asdf.AsdfFile(tree).write_to(tmppath):
-        pass
+    asdf.AsdfFile(tree).write_to(tmppath)
 
-    with asdf.AsdfFile.read(tmppath) as ff:
+    with asdf.AsdfFile.open(tmppath) as ff:
         assert 'masked array' in repr(ff.tree['masked'])

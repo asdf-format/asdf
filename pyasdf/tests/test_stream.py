@@ -23,13 +23,14 @@ def test_stream():
         'stream': stream.Stream([6, 2], np.float64)
     }
 
-    with asdf.AsdfFile(tree).write_to(buff) as ff:
-        for i in range(100):
-            ff.write_to_stream(np.array([i] * 12, np.float64).tostring())
+    ff = asdf.AsdfFile(tree)
+    ff.write_to(buff)
+    for i in range(100):
+        buff.write(np.array([i] * 12, np.float64).tostring())
 
     buff.seek(0)
 
-    with asdf.AsdfFile().read(buff) as ff:
+    with asdf.AsdfFile.open(buff) as ff:
         assert len(ff.blocks) == 1
         assert ff.tree['stream'].shape == (100, 6, 2)
         for i, row in enumerate(ff.tree['stream']):
@@ -45,12 +46,12 @@ def test_stream_write_nothing():
         'stream': stream.Stream([6, 2], np.float64)
     }
 
-    with asdf.AsdfFile(tree).write_to(buff) as ff:
-        pass
+    ff = asdf.AsdfFile(tree)
+    ff.write_to(buff)
 
     buff.seek(0)
 
-    with asdf.AsdfFile().read(buff) as ff:
+    with asdf.AsdfFile().open(buff) as ff:
         assert len(ff.blocks) == 1
         assert ff.tree['stream'].shape == (0, 6, 2)
 
@@ -65,16 +66,17 @@ def test_stream_twice():
         'stream2': stream.Stream([12, 2], np.uint8)
     }
 
-    with asdf.AsdfFile(tree).write_to(buff) as ff:
-        for i in range(100):
-            ff.write_to_stream(np.array([i] * 12, np.uint8).tostring())
+    ff = asdf.AsdfFile(tree)
+    ff.write_to(buff)
+    for i in range(100):
+        buff.write(np.array([i] * 12, np.uint8).tostring())
 
     buff.seek(0)
 
-    with asdf.AsdfFile().read(buff) as ff:
-        assert len(ff.blocks) == 1
-        assert ff.tree['stream'].shape == (100, 6, 2)
-        assert ff.tree['stream2'].shape == (50, 12, 2)
+    ff = asdf.AsdfFile().open(buff)
+    assert len(ff.blocks) == 1
+    assert ff.tree['stream'].shape == (100, 6, 2)
+    assert ff.tree['stream2'].shape == (50, 12, 2)
 
 
 def test_stream_with_nonstream():
@@ -85,13 +87,14 @@ def test_stream_with_nonstream():
         'stream': stream.Stream([6, 2], np.float64)
     }
 
-    with asdf.AsdfFile(tree).write_to(buff) as ff:
-        for i in range(100):
-            ff.write_to_stream(np.array([i] * 12, np.float64).tostring())
+    ff = asdf.AsdfFile(tree)
+    ff.write_to(buff)
+    for i in range(100):
+        buff.write(np.array([i] * 12, np.float64).tostring())
 
     buff.seek(0)
 
-    with asdf.AsdfFile().read(buff) as ff:
+    with asdf.AsdfFile().open(buff) as ff:
         assert len(ff.blocks) == 2
         assert_array_equal(ff.tree['nonstream'], np.array([1, 2, 3, 4], np.int64))
         assert ff.tree['stream'].shape == (100, 6, 2)
@@ -107,11 +110,13 @@ def test_stream_real_file(tmpdir):
         'stream': stream.Stream([6, 2], np.float64)
     }
 
-    with asdf.AsdfFile(tree).write_to(path) as ff:
+    with open(path, 'wb') as fd:
+        ff = asdf.AsdfFile(tree)
+        ff.write_to(fd)
         for i in range(100):
-            ff.write_to_stream(np.array([i] * 12, np.float64).tostring())
+            fd.write(np.array([i] * 12, np.float64).tostring())
 
-    with asdf.AsdfFile().read(path) as ff:
+    with asdf.AsdfFile().open(path) as ff:
         assert len(ff.blocks) == 2
         assert_array_equal(ff.tree['nonstream'], np.array([1, 2, 3, 4], np.int64))
         assert ff.tree['stream'].shape == (100, 6, 2)
@@ -126,14 +131,16 @@ def test_stream_to_stream():
     }
 
     buff = io.BytesIO()
+    fd = generic_io.OutputStream(buff)
 
-    with asdf.AsdfFile(tree).write_to(generic_io.OutputStream(buff)) as ff:
-        for i in range(100):
-            ff.write_to_stream(np.array([i] * 12, np.float64).tostring())
+    ff = asdf.AsdfFile(tree)
+    ff.write_to(fd)
+    for i in range(100):
+        fd.write(np.array([i] * 12, np.float64).tostring())
 
     buff.seek(0)
 
-    with asdf.AsdfFile().read(generic_io.InputStream(buff, 'r')) as ff:
+    with asdf.AsdfFile().open(generic_io.InputStream(buff, 'r')) as ff:
         assert len(ff.blocks) == 2
         assert_array_equal(ff.tree['nonstream'], np.array([1, 2, 3, 4], np.int64))
         assert ff.tree['stream'].shape == (100, 6, 2)
@@ -148,18 +155,19 @@ def test_array_to_stream():
 
     buff = io.BytesIO()
 
-    with asdf.AsdfFile(tree) as ff:
-        ff.blocks[tree['stream']].array_storage = 'streamed'
-        ff.write_to(buff)
-        ff.write_to_stream(np.array([5, 6, 7, 8], np.int64).tostring())
+    ff = asdf.AsdfFile(tree)
+    ff.blocks[tree['stream']].array_storage = 'streamed'
+    ff.write_to(buff)
+    buff.write(np.array([5, 6, 7, 8], np.int64).tostring())
 
     buff.seek(0)
 
-    with asdf.AsdfFile().read(buff) as ff:
-        assert_array_equal(ff.tree['stream'], [1, 2, 3, 4, 5, 6, 7, 8])
-        buff.seek(0)
-        with asdf.AsdfFile(ff).write_to(buff):
-            assert b"shape: ['*']" in buff.getvalue()
+    ff = asdf.AsdfFile().open(buff)
+    assert_array_equal(ff.tree['stream'], [1, 2, 3, 4, 5, 6, 7, 8])
+    buff.seek(0)
+    ff2 = asdf.AsdfFile(ff)
+    ff2.write_to(buff)
+    assert b"shape: ['*']" in buff.getvalue()
 
 
 def test_too_many_streams():
@@ -170,20 +178,8 @@ def test_too_many_streams():
 
     buff = io.BytesIO()
 
-    with asdf.AsdfFile(tree) as ff:
-        ff.blocks[tree['stream1']].array_storage = 'streamed'
-        ff.blocks[tree['stream2']].array_storage = 'streamed'
-        with pytest.raises(ValueError):
-            ff.write_to(buff)
-
-
-def test_no_stream():
-    buff = io.BytesIO()
-
-    tree = {
-        'foo': 'bar'
-    }
-
-    with asdf.AsdfFile(tree).write_to(buff) as ff:
-        with pytest.raises(ValueError):
-            ff.write_to_stream(np.array([0] * 12, np.float64).tostring())
+    ff = asdf.AsdfFile(tree)
+    ff.blocks[tree['stream1']].array_storage = 'streamed'
+    ff.blocks[tree['stream2']].array_storage = 'streamed'
+    with pytest.raises(ValueError):
+        ff.write_to(buff)

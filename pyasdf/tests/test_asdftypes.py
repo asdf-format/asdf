@@ -67,17 +67,18 @@ b: !core/complex
     """
 
     buff = helpers.yaml_to_asdf(yaml)
-    ff = asdf.AsdfFile.read(
-        buff, extensions=FractionExtension())
-    assert ff.tree['a'] == fractions.Fraction(2, 3)
+    with asdf.AsdfFile.open(
+        buff, extensions=FractionExtension()) as ff:
+        assert ff.tree['a'] == fractions.Fraction(2, 3)
 
-    buff = io.BytesIO()
-    ff.write_to(buff)
+        buff = io.BytesIO()
+        ff.write_to(buff)
 
     buff = helpers.yaml_to_asdf(yaml)
-    ff = asdf.AsdfFile.read(
-        buff, extensions=FractionCallable())
-    assert ff.tree['a'] == fractions.Fraction(2, 3)
+    with asdf.AsdfFile.open(
+            buff, extensions=FractionCallable()) as ff:
+        assert ff.tree['a'] == fractions.Fraction(2, 3)
 
     buff = io.BytesIO()
     ff.write_to(buff)
+    buff.close()

@@ -50,4 +50,4 @@ if _ASTROPY_SETUP_ is False:
     class ValidationError(ValidationError):
         pass
 
-    open = AsdfFile.read
+    open = AsdfFile.open

@@ -66,11 +66,11 @@ def defragment(input, output=None, resolve_references=False, compress=None):
     compress : str, optional
         Compression to use.
     """
-    with AsdfFile.read(input) as ff:
+    with AsdfFile.open(input) as ff:
         ff2 = AsdfFile(ff)
         if resolve_references:
             ff2.resolve_references()
-        with ff2.write_to(output,
-                          all_array_storage='internal',
-                          all_array_compression=compress):
-            pass
+        ff2.write_to(
+            output,
+            all_array_storage='internal',
+            all_array_compression=compress)

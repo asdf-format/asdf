@@ -71,16 +71,15 @@ not_unit:
     """
 
     buff = helpers.yaml_to_asdf(yaml)
-    ff = asdf.AsdfFile.read(buff)
+    with asdf.AsdfFile.open(buff) as ff:
+        assert isinstance(ff.tree['unit'], u.UnitBase)
+        assert not isinstance(ff.tree['not_unit'], u.UnitBase)
+        assert isinstance(ff.tree['not_unit'], six.text_type)
 
-    assert isinstance(ff.tree['unit'], u.UnitBase)
-    assert not isinstance(ff.tree['not_unit'], u.UnitBase)
-    assert isinstance(ff.tree['not_unit'], six.text_type)
-
-    assert ff.tree == {
-        'unit': u.m,
-        'not_unit': 'm'
-        }
+        assert ff.tree == {
+            'unit': u.m,
+            'not_unit': 'm'
+            }
 
 
 def test_validate_all_schema():
@@ -107,21 +106,21 @@ def test_all_schema_examples():
     def test_example(args):
         fname, example = args
         buff = helpers.yaml_to_asdf('example: ' + example.strip())
-        with asdf.AsdfFile() as ff:
-            # Add a dummy block so that the ndarray examples
-            # work
-            ff.blocks.add(block.Block(np.empty((1024))))
-            try:
-                ff.read(buff)
-            except:
-                print("From file:", fname)
-                raise
+        ff = asdf.AsdfFile()
+        # Add a dummy block so that the ndarray examples
+        # work
+        ff.blocks.add(block.Block(np.empty((1024))))
+        try:
+            ff.open(buff)
+        except:
+            print("From file:", fname)
+            raise
 
-            # Just test we can write it out.  A roundtrip test
-            # wouldn't always yield the correct result, so those have
-            # to be covered by "real" unit tests.
-            buff = io.BytesIO()
-            ff.write_to(buff)
+        # Just test we can write it out.  A roundtrip test
+        # wouldn't always yield the correct result, so those have
+        # to be covered by "real" unit tests.
+        buff = io.BytesIO()
+        ff.write_to(buff)
 
     def find_examples_in_schema(path):
         with open(path, 'rb') as fd:
@@ -178,8 +177,7 @@ def test_flow_style():
 
     buff = io.BytesIO()
     ff = asdf.AsdfFile(tree, extensions=CustomFlowStyleExtension())
-    with ff.write_to(buff):
-        pass
+    ff.write_to(buff)
 
     assert b'  a: 42\n  b: 43' in buff.getvalue()
 
@@ -202,8 +200,7 @@ def test_style():
 
     buff = io.BytesIO()
     ff = asdf.AsdfFile(tree, extensions=CustomStyleExtension())
-    with ff.write_to(buff):
-        pass
+    ff.write_to(buff)
 
     assert b'|-\n  short\n' in buff.getvalue()
 
@@ -213,8 +210,7 @@ def test_property_order():
 
     buff = io.BytesIO()
     ff = asdf.AsdfFile(tree)
-    with ff.write_to(buff):
-        pass
+    ff.write_to(buff)
 
     ndarray_schema = schema.load_schema(
         'http://stsci.edu/schemas/asdf/0.1.0/core/ndarray')
@@ -245,11 +241,13 @@ custom: !<tag:nowhere.org:custom/1.0.0/custom>
   foo
     """
     buff = helpers.yaml_to_asdf(yaml)
-    ff = asdf.AsdfFile.read(buff)
+    with asdf.AsdfFile.open(buff):
+        pass
 
     buff.seek(0)
     with pytest.raises(ValidationError):
-        ff = asdf.AsdfFile.read(buff, extensions=[CustomTypeExtension()])
+        with asdf.AsdfFile.open(buff, extensions=[CustomTypeExtension()]):
+            pass
 
     # Make sure tags get validated inside of other tags that know
     # nothing about them.
@@ -261,7 +259,8 @@ array: !core/ndarray
     """
     buff = helpers.yaml_to_asdf(yaml)
     with pytest.raises(ValidationError):
-        ff = asdf.AsdfFile.read(buff, extensions=[CustomTypeExtension()])
+        with asdf.AsdfFile.open(buff, extensions=[CustomTypeExtension()]):
+            pass
 
 
 def test_invalid_schema():
@@ -332,17 +331,17 @@ custom: !<tag:nowhere.org:custom/1.0.0/custom>
     """
     buff = helpers.yaml_to_asdf(yaml)
     with pytest.raises(ValidationError):
-        ff = asdf.AsdfFile.read(buff, extensions=[CustomTypeExtension()])
-        assert 'a' in ff.tree['custom']
-        assert ff.tree['custom']['a'] == 42
+        with asdf.AsdfFile.open(buff, extensions=[CustomTypeExtension()]) as ff:
+            assert 'a' in ff.tree['custom']
+            assert ff.tree['custom']['a'] == 42
 
     buff.seek(0)
     with pytest.raises(ValidationError):
-        ff = asdf.AsdfFile.read(buff, extensions=[CustomTypeExtension()],
-                                do_not_fill_defaults=True)
-        assert 'a' not in ff.tree['custom']
-        ff.fill_defaults()
-        assert 'a' in ff.tree['custom']
-        assert ff.tree['custom']['a'] == 42
-        ff.remove_defaults()
-        assert 'a' not in ff.tree['custom']
+        with asdf.AsdfFile.open(buff, extensions=[CustomTypeExtension()],
+                                do_not_fill_defaults=True):
+            assert 'a' not in ff.tree['custom']
+            ff.fill_defaults()
+            assert 'a' in ff.tree['custom']
+            assert ff.tree['custom']['a'] == 42
+            ff.remove_defaults()
+            assert 'a' not in ff.tree['custom']

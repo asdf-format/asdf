@@ -24,9 +24,9 @@ def test_to_yaml(tmpdir):
 
     path = os.path.join(str(tmpdir), 'original.asdf')
     out_path = os.path.join(str(tmpdir), 'original.defragment.asdf')
-    with AsdfFile(tree) as ff:
-        ff.write_to(path)
-        assert len(ff.blocks) == 2
+    ff = AsdfFile(tree)
+    ff.write_to(path)
+    assert len(ff.blocks) == 2
 
     result = main.main_from_args(
         ['defragment', path, '-o', out_path, '-c', 'zlib'])
@@ -40,6 +40,6 @@ def test_to_yaml(tmpdir):
 
     assert files['original.defragment.asdf'] < files['original.asdf']
 
-    ff = AsdfFile.read(os.path.join(str(tmpdir), 'original.defragment.asdf'))
-    assert_tree_match(ff.tree, tree)
-    assert len(list(ff.blocks.internal_blocks)) == 2
+    with AsdfFile.open(os.path.join(str(tmpdir), 'original.defragment.asdf')) as ff:
+        assert_tree_match(ff.tree, tree)
+        assert len(list(ff.blocks.internal_blocks)) == 2

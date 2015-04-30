@@ -66,12 +66,11 @@ def implode(input, output=None, resolve_references=False):
     if output is None:
         base, ext = os.path.splitext(input)
         output = base + '_all' + '.asdf'
-    with AsdfFile.read(input) as ff:
+    with AsdfFile.open(input) as ff:
         ff2 = AsdfFile(ff)
         if resolve_references:
             ff2.resolve_references()
-        with ff2.write_to(output, all_array_storage='internal'):
-            pass
+        ff2.write_to(output, all_array_storage='internal')
 
 
 class Explode(Command):
@@ -117,6 +116,5 @@ def explode(input, output=None):
     if output is None:
         base, ext = os.path.splitext(input)
         output = base + '_exploded' + '.asdf'
-    with AsdfFile.read(input) as ff:
-        with AsdfFile(ff).write_to(output, all_array_storage='external'):
-            pass
+    with AsdfFile.open(input) as ff:
+        ff.write_to(output, all_array_storage='external')

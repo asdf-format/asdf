@@ -192,12 +192,12 @@ class BlockManager(object):
                     "Can't write external blocks, since URI of main file is "
                     "unknown.")
             subfd = self.get_external_uri(uri, i)
-            with asdf.AsdfFile() as asdffile:
-                block = copy.copy(block)
-                block.array_storage = 'internal'
-                asdffile.blocks.add(block)
-                block._used = True
-                asdffile.write_to(subfd, pad_blocks=pad_blocks)
+            asdffile = asdf.AsdfFile()
+            block = copy.copy(block)
+            block.array_storage = 'internal'
+            asdffile.blocks.add(block)
+            block._used = True
+            asdffile.write_to(subfd, pad_blocks=pad_blocks)
 
     def get_external_filename(self, filename, index):
         """
@@ -318,7 +318,7 @@ class BlockManager(object):
                 raise ValueError("Block '{0}' not found.".format(source))
 
         elif isinstance(source, six.string_types):
-            asdffile = self._asdffile().read_external(
+            asdffile = self._asdffile().open_external(
                 source, do_not_fill_defaults=True)
             block = asdffile.blocks._blocks[0]
             block.array_storage = 'external'
@@ -810,7 +810,10 @@ def calculate_updated_layout(blocks, tree_size, pad_blocks, block_size):
         # point, we just return False.  If this algorithm gets more
         # sophisticated we could carefully move memmapped blocks
         # around without clobbering other ones.
-        return False
+        entry = fixed[i]
+        entry.block._data = entry.block.data.copy()
+        del fixed[i]
+        free.append(entry.block)
 
     def fix_block(block, offset):
         block.offset = offset
@@ -838,8 +841,7 @@ def calculate_updated_layout(blocks, tree_size, pad_blocks, block_size):
     # Make enough room at the beginning for the tree, by popping off
     # blocks at the beginning
     while len(fixed) and fixed[0].start < tree_size:
-        if not unfix_block(0):
-            return False
+        unfix_block(0)
 
     if not len(fixed):
         return False
