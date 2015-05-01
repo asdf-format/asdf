@@ -279,7 +279,7 @@ to the target file.
    with AsdfFile.open('target.asdf') as target:
        ff.tree['my_ref_a'] = target.make_reference(['a'])
 
-   ff.tree['my_ref_b'] = {'$ref': 'target.asdf#/b'}
+   ff.tree['my_ref_b'] = {'$ref': 'target.asdf#b'}
 
    ff.write_to('source.asdf')
 
