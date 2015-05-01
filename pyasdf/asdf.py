@@ -410,6 +410,7 @@ class AsdfFile(versioning.VersionedMixin):
         return cls._open_impl(
             self, fd, uri=uri, mode=mode,
             validate_checksums=validate_checksums,
+            do_not_fill_defaults=do_not_fill_defaults,
             _get_yaml_content=_get_yaml_content)
 
     def _write_tree(self, tree, fd, pad_blocks):
