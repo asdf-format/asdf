@@ -233,7 +233,7 @@ binary data.
    ff = AsdfFile(tree)
    with open('test.asdf', 'wb') as fd:
        ff.write_to(fd)
-       # Write 100 rows of data, one row at a time.  ``write_to_stream``
+       # Write 100 rows of data, one row at a time.  ``write``
        # expects the raw binary bytes, not an array, so we use
        # ``tostring()``.
        for i in range(100):
