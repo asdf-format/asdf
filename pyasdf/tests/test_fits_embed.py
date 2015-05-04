@@ -42,7 +42,7 @@ def test_embed_asdf_in_fits_file(tmpdir):
     with fits.open(os.path.join(str(tmpdir), 'test.fits')) as hdulist2:
         assert len(hdulist2) == 3
         assert [x.name for x in hdulist2] == ['SCI', 'DQ', 'ASDF']
-        assert hdulist2['ASDF'].data.tostring().strip().endswith("...")
+        assert hdulist2['ASDF'].data.tostring().strip().endswith(b"...")
 
         with fits_embed.AsdfInFits.open(hdulist) as ff2:
             assert_tree_match(tree, ff2.tree)
@@ -86,7 +86,7 @@ def test_embed_asdf_in_fits_file_anonymous_extensions(tmpdir):
     with fits.open(os.path.join(str(tmpdir), 'test.fits')) as hdulist2:
         assert len(hdulist2) == 4
         assert [x.name for x in hdulist2] == ['PRIMARY', '', '', 'ASDF']
-        assert hdulist2['ASDF'].data.tostring().strip().endswith("...")
+        assert hdulist2['ASDF'].data.tostring().strip().endswith(b"...")
 
         with fits_embed.AsdfInFits.open(hdulist) as ff2:
             assert_tree_match(tree, ff2.tree)
