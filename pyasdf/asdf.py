@@ -369,8 +369,7 @@ class AsdfFile(versioning.VersionedMixin):
     def open(cls, fd, uri=None, mode='r',
              validate_checksums=False,
              extensions=None,
-             do_not_fill_defaults=False,
-             _get_yaml_content=False):
+             do_not_fill_defaults=False):
         """
         Open an existing ASDF file.
 
@@ -410,8 +409,7 @@ class AsdfFile(versioning.VersionedMixin):
         return cls._open_impl(
             self, fd, uri=uri, mode=mode,
             validate_checksums=validate_checksums,
-            do_not_fill_defaults=do_not_fill_defaults,
-            _get_yaml_content=_get_yaml_content)
+            do_not_fill_defaults=do_not_fill_defaults)
 
     def _write_tree(self, tree, fd, pad_blocks):
         fd.write(constants.ASDF_MAGIC)

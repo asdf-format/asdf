@@ -246,5 +246,6 @@ def test_internal_reference():
     buff = io.BytesIO()
     ff.write_to(buff)
     buff.seek(0)
-    content = asdf.AsdfFile().open(buff, _get_yaml_content=True)
+    ff = asdf.AsdfFile()
+    content = asdf.AsdfFile()._open_impl(ff, buff, _get_yaml_content=True)
     assert b"{$ref: ''}" in content
