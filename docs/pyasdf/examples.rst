@@ -421,3 +421,13 @@ following.  Note that the data source of the arrays uses the ``fits:``
 prefix to indicate that the data comes from a FITS extension.
 
 .. asdf:: content.asdf
+
+To load an ASDF-in-FITS file, first open it with ``astropy.io.fits``, and then
+pass that HDU list to `~pyasdf.fits_embed.AsdfInFits`:
+
+
+.. runcode::
+
+    with fits.open('embedded_asdf.fits') as hdulist:
+        with fits_embed.AsdfInFits.open(hdulist) as asdf:
+            science = asdf.tree['model']['sci']
