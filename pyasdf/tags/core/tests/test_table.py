@@ -29,6 +29,40 @@ def test_table(tmpdir):
     helpers.assert_roundtrip_tree({'table': t}, tmpdir, asdf_check)
 
 
+def test_array_columns(tmpdir):
+    a = np.array([([[1, 2], [3, 4]], 2.0, 'x'),
+                 ([[5, 6], [7, 8]], 5.0, 'y'),
+                  ([[9, 10], [11, 12]], 8.2, 'z')],
+                 dtype=[(str('a'), str('<i4'), (2, 2)),
+                        (str('b'), str('<f8')),
+                        (str('c'), str('|S1'))])
+
+    t = table.Table(a, copy=False)
+    assert t.columns['a'].shape == (3, 2, 2)
+
+    def asdf_check(ff):
+        assert len(ff.blocks) == 1
+
+    helpers.assert_roundtrip_tree({'table': t}, tmpdir, asdf_check)
+
+
+def test_structured_array_columns(tmpdir):
+    a = np.array([((1, 'a'), 2.0, 'x'),
+                  ((4, 'b'), 5.0, 'y'),
+                  ((5, 'c'), 8.2, 'z')],
+                 dtype=[(str('a'), [(str('a0'), str('<i4')),
+                                    (str('a1'), str('|S1'))]),
+                        (str('b'), str('<f8')),
+                        (str('c'), str('|S1'))])
+
+    t = table.Table(a, copy=False)
+
+    def asdf_check(ff):
+        assert len(ff.blocks) == 1
+
+    helpers.assert_roundtrip_tree({'table': t}, tmpdir, asdf_check)
+
+
 def test_table_row_order(tmpdir):
     a = np.array([(1, 2.0, 'x'),
                   (4, 5.0, 'y'),

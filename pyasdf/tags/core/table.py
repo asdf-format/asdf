@@ -60,8 +60,8 @@ class ColumnType(AsdfType):
         meta = node.get('meta', None)
 
         return table.Column(
-            data=data, name=name, description=description, unit=unit,
-            meta=meta)
+            data=data._make_array(), name=name, description=description,
+            unit=unit, meta=meta)
 
     @classmethod
     def to_tree(cls, data, ctx):
