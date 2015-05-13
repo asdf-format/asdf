@@ -79,3 +79,5 @@ Reference/API
 -------------
 
 .. automodapi:: pyasdf
+
+.. automodapi:: pyasdf.fits_embed

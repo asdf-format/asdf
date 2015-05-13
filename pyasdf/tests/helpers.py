@@ -94,7 +94,8 @@ def assert_roundtrip_tree(
             asdf_check_func(ff)
 
     buff.seek(0)
-    content = AsdfFile.open(buff, _get_yaml_content=True)
+    ff = AsdfFile()
+    content = AsdfFile._open_impl(ff, buff, _get_yaml_content=True)
     buff.close()
     # We *never* want to get any raw python objects out
     assert b'!!python' not in content

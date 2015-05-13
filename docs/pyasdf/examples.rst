@@ -279,7 +279,7 @@ to the target file.
    with AsdfFile.open('target.asdf') as target:
        ff.tree['my_ref_a'] = target.make_reference(['a'])
 
-   ff.tree['my_ref_b'] = {'$ref': 'target.asdf#/b'}
+   ff.tree['my_ref_b'] = {'$ref': 'target.asdf#b'}
 
    ff.write_to('source.asdf')
 
@@ -356,3 +356,78 @@ You can easily `zlib <http://www.zlib.net/>`__ or `bzip2
    target.write_to('target.asdf', all_array_compression='bzp2')
 
 .. asdf:: target.asdf
+
+Saving ASDF in FITS
+-------------------
+
+Sometimes you may need to store the structured data supported by ASDF
+inside of a FITS file in order to be compatible with legacy tools that
+support only FITS.  This can be achieved by including a special
+extension with the name ``ASDF`` to the FITS file, containing the YAML
+tree from an ASDF file.  The array tags within the ASDF tree point
+directly to other binary extensions in the FITS file.
+
+First, make a FITS file in the usual way with astropy.io.fits.  Here,
+we are building a FITS file from scratch, but it could also have been
+loaded from a file.
+
+This FITS file has two image extensions, SCI and DQ respectively.
+
+.. runcode::
+
+    from astropy.io import fits
+
+    hdulist = fits.HDUList()
+    hdulist.append(fits.ImageHDU(np.arange(512, dtype=np.float), name='SCI'))
+    hdulist.append(fits.ImageHDU(np.arange(512, dtype=np.float), name='DQ'))
+
+Next we make a tree structure out of the data in the FITS file.
+Importantly, we use the *same* arrays in the FITS HDUList and store
+them in the tree.  By doing this, pyasdf will be smart enough to point
+to the data in the regular FITS extensions.
+
+.. runcode::
+
+    tree = {
+        'model': {
+            'sci': {
+                'data': hdulist['SCI'].data,
+            },
+            'dq': {
+                'data': hdulist['DQ'].data,
+            }
+        }
+    }
+
+Now we take both the FITS HDUList and the ASDF tree and create a
+`~pyasdf.fits_embed.AsdfInFits` object.  It behaves identically to the
+`~pyasdf.AsdfFile` object, but reads and writes this special
+ASDF-in-FITS format.
+
+.. runcode::
+
+    from pyasdf import fits_embed
+
+    ff = fits_embed.AsdfInFits(hdulist, tree)
+    ff.write_to('embedded_asdf.fits')
+
+.. runcode:: hidden
+
+    with open('content.asdf', 'wb') as fd:
+        fd.write(hdulist['ASDF'].data.tostring())
+
+The special ASDF extension in the resulting FITS file looks like the
+following.  Note that the data source of the arrays uses the ``fits:``
+prefix to indicate that the data comes from a FITS extension.
+
+.. asdf:: content.asdf
+
+To load an ASDF-in-FITS file, first open it with ``astropy.io.fits``, and then
+pass that HDU list to `~pyasdf.fits_embed.AsdfInFits`:
+
+
+.. runcode::
+
+    with fits.open('embedded_asdf.fits') as hdulist:
+        with fits_embed.AsdfInFits.open(hdulist) as asdf:
+            science = asdf.tree['model']['sci']

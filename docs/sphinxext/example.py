@@ -41,6 +41,7 @@ FLAGS = {
 
 class RunCodeDirective(Directive):
     has_content = True
+    optional_arguments = 1
 
     def run(self):
         code = textwrap.dedent('\n'.join(self.content))
@@ -60,7 +61,11 @@ class RunCodeDirective(Directive):
             set_source_info(self, literal)
         finally:
             os.chdir(cwd)
-        return [literal]
+
+        if 'hidden' not in self.arguments:
+            return [literal]
+        else:
+            return []
 
 
 class AsdfDirective(Directive):
@@ -74,7 +79,8 @@ class AsdfDirective(Directive):
 
         parts = []
         try:
-            code = AsdfFile.open(filename, _get_yaml_content=True)
+            ff = AsdfFile()
+            code = AsdfFile._open_impl(ff, filename, _get_yaml_content=True)
             code = '{0}{1}\n'.format(ASDF_MAGIC, version_string) + code.strip().decode('utf-8')
             literal = nodes.literal_block(code, code)
             literal['language'] = 'yaml'
