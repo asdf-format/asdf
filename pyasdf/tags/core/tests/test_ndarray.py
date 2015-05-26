@@ -403,3 +403,27 @@ def test_masked_array_repr(tmpdir):
 
     with asdf.AsdfFile.open(tmppath) as ff:
         assert 'masked array' in repr(ff.tree['masked'])
+
+
+def test_operations_on_ndarray_proxies(tmpdir):
+    tmppath = os.path.join(str(tmpdir), 'test.asdf')
+
+    tree = {
+        'array': np.arange(10)
+    }
+
+    asdf.AsdfFile(tree).write_to(tmppath)
+
+    with asdf.AsdfFile.open(tmppath) as ff:
+        x = ff.tree['array'] * 2
+        assert_array_equal(x, np.arange(10) * 2)
+
+    with asdf.AsdfFile.open(tmppath) as ff:
+        x = -ff.tree['array']
+        assert_array_equal(x, -np.arange(10))
+
+    with asdf.AsdfFile.open(tmppath, mode='rw') as ff:
+        ff.tree['array'][2] = 4
+        x = np.arange(10)
+        x[2] = 4
+        assert_array_equal(ff.tree['array'], x)
