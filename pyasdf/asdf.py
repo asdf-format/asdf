@@ -3,6 +3,7 @@
 
 from __future__ import absolute_import, division, unicode_literals, print_function
 
+import copy
 import io
 import re
 
@@ -48,10 +49,13 @@ class AsdfFile(versioning.VersionedMixin):
         if extensions is None or extensions == []:
             self._extensions = extension._builtin_extension_list
         else:
-            if not isinstance(extensions, list):
-                extensions = [extensions]
-            extensions.insert(0, extension.BuiltinExtension())
-            self._extensions = extension.AsdfExtensionList(extensions)
+            if isinstance(extensions, extension.AsdfExtensionList):
+                self._extensions = extensions
+            else:
+                if not isinstance(extensions, list):
+                    extensions = [extensions]
+                extensions.insert(0, extension.BuiltinExtension())
+                self._extensions = extension.AsdfExtensionList(extensions)
 
         self._fd = None
         self._external_asdf_by_uri = {}
@@ -97,6 +101,15 @@ class AsdfFile(versioning.VersionedMixin):
             external.close()
         self._external_asdf_by_uri.clear()
         self._blocks.close()
+
+    def copy(self):
+        return self.__class__(
+            copy.deepcopy(self.tree),
+            self._uri,
+            self._extensions
+        )
+
+    __copy__ = __deepcopy__ = copy
 
     @property
     def uri(self):
