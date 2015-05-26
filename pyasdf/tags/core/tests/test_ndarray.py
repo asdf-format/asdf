@@ -290,6 +290,20 @@ def test_mask_roundtrip(tmpdir):
     helpers.assert_roundtrip_tree(tree, tmpdir, check_asdf)
 
 
+def test_mask_arbitrary():
+    content = """
+    arr: !core/ndarray
+      data: [[1, 2, 3, 1234], [5, 6, 7, 8]]
+      mask: 1234
+    """
+
+    buff = helpers.yaml_to_asdf(content)
+    with asdf.AsdfFile.open(buff) as ff:
+        assert_array_equal(
+            ff.tree['arr'].mask,
+            [[False, False, False, True], [False, False, False, False]])
+
+
 def test_mask_nan():
     content = """
     arr: !core/ndarray
@@ -508,6 +522,17 @@ def test_ndim_validation(tmpdir):
 
     content = """
     obj: !<tag:nowhere.org:custom/1.0.0/ndim>
+        a: !core/ndarray
+           shape: [1, 3]
+           data: [[1, 2, 3]]
+    """
+    buff = helpers.yaml_to_asdf(content)
+
+    with asdf.AsdfFile.open(buff, extensions=CustomExtension()) as ff:
+        pass
+
+    content = """
+    obj: !<tag:nowhere.org:custom/1.0.0/ndim>
         b: !core/ndarray
            data: [1, 2, 3]
     """
@@ -587,6 +612,24 @@ def test_datatype_validation(tmpdir):
 
     content = """
     obj: !<tag:nowhere.org:custom/1.0.0/datatype>
+        a: !core/ndarray
+           data: [[1, 'a'], [2, 'b'], [3, 'c']]
+           datatype:
+             - name: a
+               datatype: int8
+             - name: b
+               datatype: ['ascii', 8]
+    """
+    buff = helpers.yaml_to_asdf(content)
+
+    with pytest.raises(jsonschema.ValidationError):
+        with asdf.AsdfFile.open(buff, extensions=CustomExtension()) as ff:
+            pass
+
+
+def test_structured_datatype_validation(tmpdir):
+    content = """
+    obj: !<tag:nowhere.org:custom/1.0.0/datatype>
         c: !core/ndarray
            data: [[1, 'a'], [2, 'b'], [3, 'c']]
            datatype:
@@ -599,6 +642,51 @@ def test_datatype_validation(tmpdir):
 
     with asdf.AsdfFile.open(buff, extensions=CustomExtension()) as ff:
         pass
+
+    content = """
+    obj: !<tag:nowhere.org:custom/1.0.0/datatype>
+        c: !core/ndarray
+           data: [[1, 'a'], [2, 'b'], [3, 'c']]
+           datatype:
+             - name: a
+               datatype: int64
+             - name: b
+               datatype: ['ascii', 8]
+    """
+    buff = helpers.yaml_to_asdf(content)
+
+    with pytest.raises(jsonschema.ValidationError):
+        with asdf.AsdfFile.open(buff, extensions=CustomExtension()) as ff:
+            pass
+
+    content = """
+    obj: !<tag:nowhere.org:custom/1.0.0/datatype>
+        c: !core/ndarray
+           data: [[1, 'a', 0], [2, 'b', 1], [3, 'c', 2]]
+           datatype:
+             - name: a
+               datatype: int8
+             - name: b
+               datatype: ['ascii', 8]
+             - name: c
+               datatype: float64
+    """
+    buff = helpers.yaml_to_asdf(content)
+
+    with pytest.raises(jsonschema.ValidationError):
+        with asdf.AsdfFile.open(buff, extensions=CustomExtension()) as ff:
+            pass
+
+    content = """
+    obj: !<tag:nowhere.org:custom/1.0.0/datatype>
+        c: !core/ndarray
+           data: [1, 2, 3]
+    """
+    buff = helpers.yaml_to_asdf(content)
+
+    with pytest.raises(jsonschema.ValidationError):
+        with asdf.AsdfFile.open(buff, extensions=CustomExtension()) as ff:
+            pass
 
     content = """
     obj: !<tag:nowhere.org:custom/1.0.0/datatype>
@@ -630,3 +718,24 @@ def test_datatype_validation(tmpdir):
 
     with asdf.AsdfFile.open(buff, extensions=CustomExtension()) as ff:
         pass
+
+
+def test_string_inline():
+    x = np.array([b'a', b'b', b'c'])
+    l = ndarray.numpy_array_to_list(x)
+
+    for entry in l:
+        assert isinstance(entry, six.text_type)
+
+
+def test_inline_shape_mismatch():
+    content = """
+    arr: !core/ndarray
+      data: [1, 2, 3]
+      shape: [2]
+    """
+
+    buff = helpers.yaml_to_asdf(content)
+    with pytest.raises(ValueError):
+        with asdf.AsdfFile.open(buff) as ff:
+            pass

@@ -146,7 +146,8 @@ def inline_data_asarray(inline, dtype=None):
     if dtype is not None and dtype.fields is not None:
         def find_innermost_match(l, depth=0):
             if not isinstance(l, list) or not len(l):
-                raise ValueError("data can not be converted to table")
+                raise ValueError(
+                    "data can not be converted to structured array")
             try:
                 np.asarray(tuple(l), dtype=dtype)
             except ValueError:
@@ -501,11 +502,11 @@ def _get_ndim(instance):
         array = inline_data_asarray(instance)
         return array.ndim
     elif isinstance(instance, dict):
-        if 'data' in instance:
+        if 'shape' in instance:
+            return len(instance['shape'])
+        elif 'data' in instance:
             array = inline_data_asarray(instance['data'])
             return array.ndim
-        else:
-            return len(instance['shape'])
     elif isinstance(instance, (np.ndarray, NDArrayType)):
         return len(instance.shape)
 
