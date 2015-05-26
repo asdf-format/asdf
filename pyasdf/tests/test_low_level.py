@@ -15,6 +15,7 @@ from numpy.testing import assert_array_equal
 from .. import asdf
 from .. import constants
 from .. import generic_io
+from .. import treeutil
 
 from . import helpers
 
@@ -752,3 +753,20 @@ def test_atomic_write(tmpdir):
 
     with asdf.AsdfFile.open(tmpfile) as ff:
         ff.write_to(tmpfile)
+
+
+def test_walk_and_modify_remove_keys():
+    tree = {
+        'foo': 42,
+        'bar': 43
+    }
+
+    def func(x):
+        if x == 42:
+            return None
+        return x
+
+    tree2 = treeutil.walk_and_modify(tree, func)
+
+    assert 'foo' not in tree2
+    assert 'bar' in tree2
