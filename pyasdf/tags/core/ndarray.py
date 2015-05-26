@@ -10,31 +10,30 @@ from numpy import ma
 from astropy.extern import six
 
 from ...asdftypes import AsdfType
-from ... import treeutil
 from ... import util
 from ... import yamlutil
 
 
 _datatype_names = {
-    'int8': 'i1',
-    'int16': 'i2',
-    'int32': 'i4',
-    'int64': 'i8',
-    'uint8': 'u1',
-    'uint16': 'u2',
-    'uint32': 'u4',
-    'uint64': 'u8',
-    'float32': 'f4',
-    'float64': 'f8',
-    'complex64': 'c8',
-    'complex128': 'c16',
-    'bool8': 'b1'
+    'int8'       : 'i1',
+    'int16'      : 'i2',
+    'int32'      : 'i4',
+    'int64'      : 'i8',
+    'uint8'      : 'u1',
+    'uint16'     : 'u2',
+    'uint32'     : 'u4',
+    'uint64'     : 'u8',
+    'float32'    : 'f4',
+    'float64'    : 'f8',
+    'complex64'  : 'c8',
+    'complex128' : 'c16',
+    'bool8'      : 'b1'
 }
 
 
 _string_datatype_names = {
-    'ascii': 'S',
-    'ucs4': 'U'
+    'ascii' : 'S',
+    'ucs4'  : 'U'
 }
 
 
@@ -331,12 +330,6 @@ class NDArrayType(AsdfType):
             raise AttributeError()
         return getattr(self._make_array(), attr)
 
-    def __getitem__(self, item):
-        return self._make_array()[item]
-
-    def __setitem__(self, item, val):
-        self._make_array()[item] = val
-
     @classmethod
     def from_tree(cls, node, ctx):
         if isinstance(node, list):
@@ -471,3 +464,29 @@ class NDArrayType(AsdfType):
                 node.block.array_storage
             return node._make_array()
         return node
+
+
+def _make_operation(name):
+    def __operation__(self, *args):
+        return getattr(self._make_array(), name)(*args)
+    return __operation__
+
+
+for op in [
+        '__neg__', '__pos__', '__abs__', '__invert__', '__complex__',
+        '__int__', '__long__', '__float__', '__oct__', '__hex__',
+        '__lt__', '__le__', '__eq__', '__ne__', '__gt__', '__ge__',
+        '__cmp__', '__rcmp__', '__add__', '__sub__', '__mul__',
+        '__floordiv__', '__mod__', '__divmod__', '__pow__',
+        '__lshift__', '__rshift__', '__and__', '__xor__', '__or__',
+        '__div__', '__truediv__', '__radd__', '__rsub__', '__rmul__',
+        '__rdiv__', '__rtruediv__', '__rfloordiv__', '__rmod__',
+        '__rdivmod__', '__rpow__', '__rlshift__', '__rrshift__',
+        '__rand__', '__rxor__', '__ror__', '__iadd__', '__isub__',
+        '__imul__', '__idiv__', '__itruediv__', '__ifloordiv__',
+        '__imod__', '__ipow__', '__ilshift__', '__irshift__',
+        '__iand__', '__ixor__', '__ior__', '__getitem__',
+        '__delitem__', '__contains__', '__setitem__']:
+    setattr(NDArrayType, op, _make_operation(op))
+
+
