@@ -327,19 +327,25 @@ def test_fill_and_remove_defaults():
 
     yaml = """
 custom: !<tag:nowhere.org:custom/1.0.0/default>
-  b: 10
+  b: {}
     """
     buff = helpers.yaml_to_asdf(yaml)
     with asdf.AsdfFile.open(buff, extensions=[DefaultTypeExtension()]) as ff:
         assert 'a' in ff.tree['custom']
         assert ff.tree['custom']['a'] == 42
+        assert ff.tree['custom']['b']['c'] == 82
 
     buff.seek(0)
     with asdf.AsdfFile.open(buff, extensions=[DefaultTypeExtension()],
                             do_not_fill_defaults=True) as ff:
         assert 'a' not in ff.tree['custom']
+        assert 'c' not in ff.tree['custom']['b']
         ff.fill_defaults()
         assert 'a' in ff.tree['custom']
         assert ff.tree['custom']['a'] == 42
+        assert 'c' in ff.tree['custom']['b']
+        assert ff.tree['custom']['b']['c'] == 82
         ff.remove_defaults()
         assert 'a' not in ff.tree['custom']
+        assert 'c' not in ff.tree['custom']['b']
+

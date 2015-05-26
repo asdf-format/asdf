@@ -7,3 +7,9 @@ properties:
   a:
     type: integer
     default: 42
+  b:
+    type: object
+    properties:
+      c:
+        type: integer
+        default: 82

@@ -264,9 +264,9 @@ def load_tree(yaml_content, ctx, do_not_fill_defaults=False):
 
     tree = yaml.load(yaml_content, Loader=AsdfLoaderTmp)
     tree = reference.find_references(tree, ctx)
-    schema.validate(tree, ctx)
     if not do_not_fill_defaults:
         schema.fill_defaults(tree, ctx)
+    schema.validate(tree, ctx)
     tree = tagged_tree_to_custom_tree(tree, ctx)
     return tree
 
