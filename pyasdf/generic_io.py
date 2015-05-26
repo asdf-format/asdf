@@ -648,7 +648,7 @@ class RandomAccessFile(GenericFile):
     def seekable(self):
         return True
 
-    def _peek(self, size=None):
+    def _peek(self, size=-1):
         cursor = self.tell()
         content = self.read(size)
         self.seek(cursor, os.SEEK_SET)
@@ -744,8 +744,8 @@ class InputStream(GenericFile):
         self._fd = fd
         self._buffer = b''
 
-    def _peek(self, size=None):
-        if size is None:
+    def _peek(self, size=-1):
+        if size < 0:
             self._buffer += self._fd.read()
         else:
             len_buffer = len(self._buffer)
