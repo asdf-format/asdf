@@ -179,6 +179,54 @@ def relative_uri(source, target):
     return relative
 
 
+class _TruncatedReader(object):
+    """
+    Reads until a given delimiter is found.  Only works with
+    RandomAccessFile and InputStream, though as this is a private
+    class, this is not explicitly enforced.
+    """
+    def __init__(self, fd, delimiter, readahead_bytes, delimiter_name=None,
+                 include=False, initial_content=b''):
+        self._fd = fd
+        self._delimiter = delimiter
+        self._readahead_bytes = readahead_bytes
+        if delimiter_name is None:
+            delimiter_name = delimiter
+        self._delimiter_name = delimiter_name
+        self._include = include
+        self._initial_content = initial_content
+        self._past_end = False
+
+    def read(self, nbytes=None):
+        if self._past_end:
+            return b''
+
+        if nbytes is None:
+            content = self._fd._peek()
+        else:
+            content = self._fd._peek(nbytes + self._readahead_bytes)
+        if content == b'':
+            raise ValueError("{0} not found".format(self._delimiter_name))
+
+        index = re.search(self._delimiter, content)
+        if index is not None:
+            if self._include:
+                index = index.end()
+            else:
+                index = index.start()
+            content = content[:index]
+            self._past_end = True
+
+        content = content[:nbytes]
+        self._fd.fast_forward(len(content))
+
+        if self._initial_content:
+            content = self._initial_content + content
+            self._initial_content = b''
+
+        return content
+
+
 @six.add_metaclass(InheritDocstrings)
 class GenericFile(object):
     """
@@ -390,7 +438,8 @@ class GenericFile(object):
         """
         return self._fd.closed
 
-    def read_until(self, delimiter, delimiter_name=None, include=True):
+    def read_until(self, delimiter, readahead_bytes, delimiter_name=None,
+                   include=True, initial_content=b''):
         """
         Reads until a match for a given regular expression is found.
 
@@ -399,6 +448,10 @@ class GenericFile(object):
         delimiter : str
             A regular expression.
 
+        readahead_bytes : int
+            The number of bytes to read ahead to make sure the
+            delimiter isn't on a block boundary.
+
         delimiter_name : str, optional
             The name of the delimiter.  Used in error messages if the
             delimiter is not found.  If not provided, the raw content
@@ -406,6 +459,10 @@ class GenericFile(object):
 
         include : bool, optional
             When ``True``, include the delimiter in the result.
+
+        initial_content : bytes, optional
+            Additional content to include at the beginning of the
+            first read.
 
         Returns
         -------
@@ -416,12 +473,57 @@ class GenericFile(object):
 
         Raises
         ------
-        IOError :
+        ValueError :
+            If the delimiter is not found before the end of the file.
+        """
+        buff = io.BytesIO()
+        reader = self.reader_until(
+            delimiter, readahead_bytes, delimiter_name=delimiter_name,
+            include=include, initial_content=initial_content)
+        while True:
+            content = reader.read(self.block_size)
+            buff.write(content)
+            if len(content) < self.block_size:
+                break
+        return buff.getvalue()
+
+    def reader_until(self, delimiter, readahead_bytes,
+                     delimiter_name=None, include=True,
+                     initial_content=b''):
+        """
+        Returns a readable file-like object that treats the given
+        delimiter as the end-of-file.
+
+        Parameters
+        ----------
+        delimiter : str
+            A regular expression.
+
+        readahead_bytes : int
+            The number of bytes to read ahead to make sure the
+            delimiter isn't on a block boundary.
+
+        delimiter_name : str, optional
+            The name of the delimiter.  Used in error messages if the
+            delimiter is not found.  If not provided, the raw content
+            of `delimiter` will be used.
+
+        include : bool, optional
+            When ``True``, include the delimiter in the result.
+
+        initial_content : bytes, optional
+            Additional content to include at the beginning of the
+            first read.
+
+        Raises
+        ------
+        ValueError :
             If the delimiter is not found before the end of the file.
         """
         raise NotImplementedError()
 
-    def seek_until(self, delimiter, include=True):
+    def seek_until(self, delimiter, readahead_bytes, delimiter_name=None,
+                   include=True, initial_content=b''):
         """
         Seeks in the file until a match for a given regular expression
         is found.  This is similar to ``read_until``, except the
@@ -432,18 +534,44 @@ class GenericFile(object):
         delimiter : str
             A regular expression.
 
+        readahead_bytes : int
+            The number of bytes to read ahead to make sure the
+            delimiter isn't on a block boundary.
+
+        delimiter_name : str, optional
+            The name of the delimiter.  Used in error messages if the
+            delimiter is not found.  If not provided, the raw content
+            of `delimiter` will be used.
+
         include : bool, optional
-            When ``True``, advance past the delimiter.  When
-            ``False``, the resulting file position will be at the
-            beginning of the delimiter.
+            When ``True``, include the delimiter in the result.
+
+        initial_content : bytes, optional
+            Additional content to include at the beginning of the
+            first read.
 
         Returns
         -------
-        found : bool
-            Returns ``True`` if the delimiter was found, else
-            ``False``.
+        content : bytes
+            The content from the current position in the file, up to
+            the delimiter.  Includes the delimiter if `include` is
+            ``True``.
+
+        Raises
+        ------
+        ValueError :
+            If the delimiter is not found before the end of the file.
         """
-        raise NotImplementedError()
+        reader = self.reader_until(
+            delimiter, readahead_bytes, delimiter_name=delimiter_name,
+            include=include, initial_content=initial_content)
+        while True:
+            try:
+                content = reader.read(self.block_size)
+            except ValueError:
+                return False
+            if content == '':
+                return True
 
     def fast_forward(self, size):
         """
@@ -520,46 +648,17 @@ class RandomAccessFile(GenericFile):
     def seekable(self):
         return True
 
-    def read_until(self, delimiter, delimiter_name=None, include=True):
+    def _peek(self, size=None):
         cursor = self.tell()
-        buff = io.BytesIO()
-        while True:
-            block = self.read_block()
-            if len(block) == 0:
-                break
-            buff.write(block)
-            index = re.search(delimiter, buff.getvalue())
-            if index is not None:
-                if include:
-                    index = index.end()
-                else:
-                    index = index.start()
-                self.seek(cursor + index, os.SEEK_SET)
-                return buff.getvalue()[:index]
+        content = self.read(size)
+        self.seek(cursor, os.SEEK_SET)
+        return content
 
-        if delimiter_name is None:
-            delimiter_name = delimiter
-        raise ValueError("{0} not found".format(delimiter_name))
-
-    def seek_until(self, delimiter, include=True):
-        last_block = b''
-        while True:
-            block = self.read_block()
-            if not len(block):
-                break
-            blocks = last_block + block
-            index = re.search(delimiter, blocks)
-            if index is not None:
-                if include:
-                    index = index.end()
-                else:
-                    index = index.start()
-                self.seek(-(len(blocks) - index), os.SEEK_CUR)
-                return True
-
-            last_block = block
-
-        return False
+    def reader_until(self, delimiter, readahead_bytes, delimiter_name=None,
+                     include=True, initial_content=b''):
+        return _TruncatedReader(
+            self, delimiter, readahead_bytes, delimiter_name=delimiter_name,
+            include=include, initial_content=initial_content)
 
     def fast_forward(self, size):
         if size < 0:
@@ -645,10 +744,13 @@ class InputStream(GenericFile):
         self._fd = fd
         self._buffer = b''
 
-    def _peek(self, size):
-        len_buffer = len(self._buffer)
-        if len_buffer < size:
-            self._buffer += self._fd.read(size - len_buffer)
+    def _peek(self, size=None):
+        if size is None:
+            self._buffer += self._fd.read()
+        else:
+            len_buffer = len(self._buffer)
+            if len_buffer < size:
+                self._buffer += self._fd.read(size - len_buffer)
         return self._buffer
 
     def read(self, size=-1):
@@ -676,49 +778,11 @@ class InputStream(GenericFile):
             self._buffer = self._buffer[size:]
             return buffer
 
-    def read_until(self, delimiter, delimiter_name, include=True):
-        buff = io.BytesIO()
-        bytes_read = 0
-        while True:
-            block = self._peek(self._blksize)
-            if len(block) == 0:
-                break
-            buff.write(block)
-            index = re.search(delimiter, buff.getvalue())
-            if index is not None:
-                if include:
-                    index = index.end()
-                else:
-                    index = index.start()
-                if index != bytes_read:
-                    self.read(index - bytes_read)
-                return buff.getvalue()[:index]
-            else:
-                bytes_read += len(block)
-                self.read(len(block))
-
-        raise ValueError("{0} not found".format(delimiter_name))
-
-    def seek_until(self, delimiter, include=True):
-        last_block = b''
-        while True:
-            block = self._peek(self._blksize)
-            if not len(block):
-                break
-            blocks = last_block + block
-            index = re.search(delimiter, blocks)
-            if index is not None:
-                if include:
-                    index = index.end()
-                else:
-                    index = index.start()
-                if index != 0:
-                    self.read(index - len(last_block))
-                return True
-            else:
-                last_block = self.read(len(block))
-
-        return False
+    def reader_until(self, delimiter, readahead_bytes, delimiter_name=None,
+                     include=True, initial_content=b''):
+        return _TruncatedReader(
+            self, delimiter, readahead_bytes, delimiter_name=delimiter_name,
+            include=include, initial_content=initial_content)
 
     def fast_forward(self, size):
         if len(self.read(size)) != size:
