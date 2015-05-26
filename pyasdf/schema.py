@@ -8,9 +8,10 @@ import os
 
 from astropy.extern import six
 from astropy.utils.compat.odict import OrderedDict
+from astropy.extern.six.moves.urllib import parse as urlparse
 
 from jsonschema import validators
-from jsonschema.exceptions import ValidationError, SchemaError
+from jsonschema.exceptions import ValidationError
 import yaml
 
 from .compat import lru_cache
@@ -19,6 +20,7 @@ from . import generic_io
 from . import reference
 from . import resolver as mresolver
 from . import tagged
+from . import treeutil
 from . import util
 
 
@@ -266,7 +268,8 @@ def _make_resolver(url_mapping):
         '', {}, cache_remote=False, handlers=handlers)
 
 
-def load_schema(url, resolver=None):
+@lru_cache()
+def load_schema(url, resolver=None, resolve_references=False):
     """
     Load a schema from the given URL.
 
@@ -280,11 +283,33 @@ def load_schema(url, resolver=None):
         callable must take a string and return a string or `None`.
         This is useful, for example, when a remote resource has a
         mirror on the local filesystem that you wish to use.
+
+    resolve_references : bool, optional
+        If `True`, resolve all `$ref` references.
     """
     if resolver is None:
         resolver = mresolver.default_url_mapping
     loader = _make_schema_loader(resolver)
-    return loader(url)
+    schema = loader(url)
+
+    if resolve_references:
+        def resolve_refs(node):
+            if isinstance(node, dict) and '$ref' in node:
+                suburl = generic_io.resolve_uri(url, node['$ref'])
+                suburl = resolver(suburl)
+                if suburl == url:
+                    subschema = schema
+                else:
+                    subschema = load_schema(suburl, resolver, True)
+                parts = urlparse.urlparse(suburl)
+                fragment = parts.fragment
+                subschema_fragment = reference.resolve_fragment(
+                    subschema, fragment)
+                return subschema_fragment
+            return node
+        schema = treeutil.walk_and_modify(schema, resolve_refs)
+
+    return schema
 
 
 def validate(instance, ctx, _validators=YAML_VALIDATORS, *args, **kwargs):
