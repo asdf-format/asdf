@@ -42,6 +42,9 @@ class _FitsBlock(object):
     def array_storage(self):
         return 'fits'
 
+    def override_byteorder(self, byteorder):
+        return 'big'
+
 
 class _EmbeddedBlockManager(block.BlockManager):
     def __init__(self, hdulist, asdffile):
@@ -140,13 +143,13 @@ class AsdfInFits(asdf.AsdfFile):
 
     def write_to(self, filename, all_array_storage=None,
                  all_array_compression=None, auto_inline=None,
-                 pad_blocks=False):
+                 pad_blocks=False, *args, **kwargs):
         self._update_asdf_extension(
             all_array_storage=all_array_storage,
             all_array_compression=all_array_compression,
             auto_inline=auto_inline, pad_blocks=pad_blocks)
 
-        self._hdulist.writeto(filename)
+        self._hdulist.writeto(filename, *args, **kwargs)
 
     def update(self, all_array_storage=None, all_array_compression=None,
                auto_inline=None, pad_blocks=False):
