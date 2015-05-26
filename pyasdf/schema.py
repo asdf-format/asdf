@@ -147,10 +147,15 @@ def validate_fill_default(validator, properties, instance, schema):
         if "default" in subschema:
             instance.setdefault(property, subschema["default"])
 
+    for err in validators.Draft4Validator.VALIDATORS['properties'](
+        validator, properties, instance, schema):
+        yield err
 
-FILL_DEFAULTS = util.HashableDict({
-    'properties': validate_fill_default,
-})
+
+FILL_DEFAULTS = util.HashableDict()
+for key in ('allOf', 'anyOf', 'oneOf', 'items'):
+    FILL_DEFAULTS[key] = validators.Draft4Validator.VALIDATORS[key]
+FILL_DEFAULTS['properties'] = validate_fill_default
 
 
 def validate_remove_default(validator, properties, instance, schema):
@@ -158,14 +163,19 @@ def validate_remove_default(validator, properties, instance, schema):
         return
 
     for property, subschema in six.iteritems(properties):
-        if "default" in subschema:
+        if subschema.get("default", None) is not None:
             if instance.get(property, None) == subschema["default"]:
                 del instance[property]
 
+    for err in validators.Draft4Validator.VALIDATORS['properties'](
+        validator, properties, instance, schema):
+        yield err
 
-REMOVE_DEFAULTS = util.HashableDict({
-    'properties': validate_remove_default
-})
+
+REMOVE_DEFAULTS = util.HashableDict()
+for key in ('allOf', 'anyOf', 'oneOf', 'items'):
+    REMOVE_DEFAULTS[key] = validators.Draft4Validator.VALIDATORS[key]
+REMOVE_DEFAULTS['properties'] = validate_remove_default
 
 
 @lru_cache()
