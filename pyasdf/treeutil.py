@@ -81,7 +81,9 @@ def walk_and_modify(top, callback):
             new_seen = seen | set([id(tree)])
             result = tree.__class__()
             for key, val in six.iteritems(tree):
-                result[key] = recurse(val, new_seen)
+                val = recurse(val, new_seen)
+                if val is not None:
+                    result[key] = val
             if isinstance(tree, Tagged):
                 result = tag_object(tree.tag, result)
         elif isinstance(tree, (list, tuple)):
