@@ -7,6 +7,8 @@ import sys
 import numpy as np
 from numpy import ma
 
+from jsonschema import ValidationError
+
 from astropy.extern import six
 
 from ...asdftypes import AsdfType
