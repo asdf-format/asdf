@@ -8,10 +8,15 @@ import os
 import sys
 
 from astropy.extern import six
+from astropy.extern.six.moves.urllib.parse import urljoin
+from astropy.extern.six.moves.urllib.request import pathname2url
+from astropy.tests.helper import pytest
 
 import numpy as np
 from numpy import ma
 from numpy.testing import assert_array_equal
+
+import jsonschema
 
 import yaml
 
@@ -19,6 +24,27 @@ from ....tests import helpers
 from .... import asdf
 
 from .. import ndarray
+
+
+TEST_DATA_PATH = os.path.join(os.path.dirname(__file__), 'data')
+
+
+class CustomExtension:
+    @property
+    def types(self):
+        return []
+
+    @property
+    def tag_mapping(self):
+        return [('tag:nowhere.org:custom',
+                 'http://nowhere.org/schemas/custom{tag_suffix}')]
+
+    @property
+    def url_mapping(self):
+        return [('http://nowhere.org/schemas/custom/1.0.0/',
+                 urljoin('file:', pathname2url(os.path.join(
+                     TEST_DATA_PATH))) + '/{url_suffix}.yaml')]
+
 
 
 def test_sharing(tmpdir):
@@ -427,3 +453,180 @@ def test_operations_on_ndarray_proxies(tmpdir):
         x = np.arange(10)
         x[2] = 4
         assert_array_equal(ff.tree['array'], x)
+
+
+def test_mask_datatype(tmpdir):
+    content = """
+        arr: !core/ndarray
+            data: [1, 2, 3]
+            dtype: int32
+            mask: !core/ndarray
+                data: [true, true, false]
+    """
+    buff = helpers.yaml_to_asdf(content)
+
+    with asdf.AsdfFile.open(buff) as ff:
+        pass
+
+
+def test_invalid_mask_datatype(tmpdir):
+    content = """
+        arr: !core/ndarray
+            data: [1, 2, 3]
+            dtype: int32
+            mask: !core/ndarray
+                data: ['a', 'b', 'c']
+    """
+    buff = helpers.yaml_to_asdf(content)
+
+    with pytest.raises(jsonschema.ValidationError):
+        with asdf.AsdfFile.open(buff) as ff:
+            pass
+
+
+def test_ndim_validation(tmpdir):
+    content = """
+    obj: !<tag:nowhere.org:custom/1.0.0/ndim>
+        a: !core/ndarray
+           data: [1, 2, 3]
+    """
+    buff = helpers.yaml_to_asdf(content)
+
+    with pytest.raises(jsonschema.ValidationError):
+        with asdf.AsdfFile.open(buff, extensions=CustomExtension()) as ff:
+            pass
+
+    content = """
+    obj: !<tag:nowhere.org:custom/1.0.0/ndim>
+        a: !core/ndarray
+           data: [[1, 2, 3]]
+    """
+    buff = helpers.yaml_to_asdf(content)
+
+    with asdf.AsdfFile.open(buff, extensions=CustomExtension()) as ff:
+        pass
+
+    content = """
+    obj: !<tag:nowhere.org:custom/1.0.0/ndim>
+        b: !core/ndarray
+           data: [1, 2, 3]
+    """
+    buff = helpers.yaml_to_asdf(content)
+
+    with asdf.AsdfFile.open(buff, extensions=CustomExtension()) as ff:
+        pass
+
+    content = """
+    obj: !<tag:nowhere.org:custom/1.0.0/ndim>
+        b: !core/ndarray
+           data: [[1, 2, 3]]
+    """
+    buff = helpers.yaml_to_asdf(content)
+
+    with asdf.AsdfFile.open(buff, extensions=CustomExtension()) as ff:
+        pass
+
+    content = """
+    obj: !<tag:nowhere.org:custom/1.0.0/ndim>
+        b: !core/ndarray
+           data: [[[1, 2, 3]]]
+    """
+    buff = helpers.yaml_to_asdf(content)
+
+    with pytest.raises(jsonschema.ValidationError):
+        with asdf.AsdfFile.open(buff, extensions=CustomExtension()) as ff:
+            pass
+
+
+def test_datatype_validation(tmpdir):
+    content = """
+    obj: !<tag:nowhere.org:custom/1.0.0/datatype>
+        a: !core/ndarray
+           data: [1, 2, 3]
+           datatype: float32
+    """
+    buff = helpers.yaml_to_asdf(content)
+
+    with asdf.AsdfFile.open(buff, extensions=CustomExtension()) as ff:
+        pass
+
+    content = """
+    obj: !<tag:nowhere.org:custom/1.0.0/datatype>
+        a: !core/ndarray
+           data: [1, 2, 3]
+           datatype: float64
+    """
+    buff = helpers.yaml_to_asdf(content)
+
+    with pytest.raises(jsonschema.ValidationError):
+        with asdf.AsdfFile.open(buff, extensions=CustomExtension()) as ff:
+            pass
+
+    content = """
+    obj: !<tag:nowhere.org:custom/1.0.0/datatype>
+        a: !core/ndarray
+           data: [1, 2, 3]
+           datatype: int16
+    """
+    buff = helpers.yaml_to_asdf(content)
+
+    with asdf.AsdfFile.open(buff, extensions=CustomExtension()) as ff:
+        pass
+
+    content = """
+    obj: !<tag:nowhere.org:custom/1.0.0/datatype>
+        b: !core/ndarray
+           data: [1, 2, 3]
+           datatype: int16
+    """
+    buff = helpers.yaml_to_asdf(content)
+
+    with pytest.raises(jsonschema.ValidationError):
+        with asdf.AsdfFile.open(buff, extensions=CustomExtension()) as ff:
+            pass
+
+    content = """
+    obj: !<tag:nowhere.org:custom/1.0.0/datatype>
+        c: !core/ndarray
+           data: [[1, 'a'], [2, 'b'], [3, 'c']]
+           datatype:
+             - name: a
+               datatype: int8
+             - name: b
+               datatype: ['ascii', 8]
+    """
+    buff = helpers.yaml_to_asdf(content)
+
+    with asdf.AsdfFile.open(buff, extensions=CustomExtension()) as ff:
+        pass
+
+    content = """
+    obj: !<tag:nowhere.org:custom/1.0.0/datatype>
+        d: !core/ndarray
+           data: [[1, 'a'], [2, 'b'], [3, 'c']]
+           datatype:
+             - name: a
+               datatype: int8
+             - name: b
+               datatype: ['ascii', 8]
+    """
+    buff = helpers.yaml_to_asdf(content)
+
+    with pytest.raises(jsonschema.ValidationError):
+        with asdf.AsdfFile.open(buff, extensions=CustomExtension()) as ff:
+            pass
+
+    content = """
+    obj: !<tag:nowhere.org:custom/1.0.0/datatype>
+        d: !core/ndarray
+           data: [[1, 'a'], [2, 'b'], [3, 'c']]
+           datatype:
+             - name: a
+               datatype: int16
+             - name: b
+               datatype: ['ascii', 16]
+    """
+    buff = helpers.yaml_to_asdf(content)
+
+    with asdf.AsdfFile.open(buff, extensions=CustomExtension()) as ff:
+        pass

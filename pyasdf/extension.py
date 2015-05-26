@@ -109,6 +109,7 @@ class AsdfExtensionList(object):
     def __init__(self, extensions):
         tag_mapping = []
         url_mapping = []
+        validators = {}
         self._type_index = asdftypes.AsdfTypeIndex()
         for extension in extensions:
             if not isinstance(extension, AsdfExtension):
@@ -119,8 +120,10 @@ class AsdfExtensionList(object):
             url_mapping.extend(extension.url_mapping)
             for typ in extension.types:
                 self._type_index.add_type(typ)
+                validators.update(typ.validators)
         self._tag_mapping = resolver.Resolver(tag_mapping, 'tag')
         self._url_mapping = resolver.Resolver(url_mapping, 'url')
+        self._validators = validators
 
     @property
     def tag_to_schema_resolver(self):
@@ -134,6 +137,9 @@ class AsdfExtensionList(object):
     def type_index(self):
         return self._type_index
 
+    @property
+    def validators(self):
+        return self._validators
 
 class BuiltinExtension(object):
     """
