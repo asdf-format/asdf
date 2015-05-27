@@ -390,6 +390,8 @@ class NDArrayType(AsdfType):
         dtype, byteorder = numpy_dtype_to_asdf_datatype(
             dtype, include_byteorder=(block.array_storage != 'inline'))
 
+        byteorder = block.override_byteorder(byteorder)
+
         if block.array_storage == 'inline':
             listdata = numpy_array_to_list(data)
             result['data'] = yamlutil.custom_tree_to_tagged_tree(

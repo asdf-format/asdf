@@ -508,6 +508,9 @@ class Block(object):
     def size(self):
         return self._size + self.header_size
 
+    def override_byteorder(self, byteorder):
+        return byteorder
+
     @property
     def array_storage(self):
         return self._array_storage

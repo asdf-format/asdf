@@ -6,6 +6,7 @@ from __future__ import absolute_import, division, unicode_literals, print_functi
 import os
 
 import numpy as np
+from numpy.testing import assert_array_equal
 
 from astropy.io import fits
 
@@ -42,9 +43,10 @@ def test_embed_asdf_in_fits_file(tmpdir):
     with fits.open(os.path.join(str(tmpdir), 'test.fits')) as hdulist2:
         assert len(hdulist2) == 3
         assert [x.name for x in hdulist2] == ['SCI', 'DQ', 'ASDF']
+        assert_array_equal(hdulist2[0].data, np.arange(512, dtype=np.float))
         assert hdulist2['ASDF'].data.tostring().strip().endswith(b"...")
 
-        with fits_embed.AsdfInFits.open(hdulist) as ff2:
+        with fits_embed.AsdfInFits.open(hdulist2) as ff2:
             assert_tree_match(tree, ff2.tree)
 
             ff = asdf.AsdfFile(ff2.tree)
@@ -88,7 +90,7 @@ def test_embed_asdf_in_fits_file_anonymous_extensions(tmpdir):
         assert [x.name for x in hdulist2] == ['PRIMARY', '', '', 'ASDF']
         assert hdulist2['ASDF'].data.tostring().strip().endswith(b"...")
 
-        with fits_embed.AsdfInFits.open(hdulist) as ff2:
+        with fits_embed.AsdfInFits.open(hdulist2) as ff2:
             assert_tree_match(tree, ff2.tree)
 
             ff = asdf.AsdfFile(ff2.tree)
@@ -96,3 +98,42 @@ def test_embed_asdf_in_fits_file_anonymous_extensions(tmpdir):
 
             with asdf.AsdfFile.open('test.asdf') as ff:
                 assert_tree_match(tree, ff.tree)
+
+
+def test_create_in_tree_first(tmpdir):
+    tree = {
+        'model': {
+            'sci': {
+                'data': np.arange(512, dtype=np.float),
+                'wcs': 'WCS info'
+            },
+            'dq': {
+                'data': np.arange(512, dtype=np.float),
+                'wcs': 'WCS info'
+            },
+            'err': {
+                'data': np.arange(512, dtype=np.float),
+                'wcs': 'WCS info'
+            }
+        }
+    }
+
+    hdulist = fits.HDUList()
+    hdulist.append(fits.ImageHDU(tree['model']['sci']['data']))
+    hdulist.append(fits.ImageHDU(tree['model']['dq']['data']))
+    hdulist.append(fits.ImageHDU(tree['model']['err']['data']))
+
+    ff = fits_embed.AsdfInFits(hdulist, tree)
+    ff.write_to(os.path.join(str(tmpdir), 'test.fits'))
+
+    ff2 = asdf.AsdfFile(tree)
+    ff2.write_to(os.path.join(str(tmpdir), 'plain.asdf'))
+
+    with asdf.AsdfFile.open(os.path.join(str(tmpdir), 'plain.asdf')) as ff3:
+        assert_array_equal(ff3.tree['model']['sci']['data'],
+                           np.arange(512, dtype=np.float))
+
+    with fits.open(os.path.join(str(tmpdir), 'test.fits')) as hdulist:
+        with fits_embed.AsdfInFits.open(hdulist) as ff4:
+            assert_array_equal(ff4.tree['model']['sci']['data'],
+                               np.arange(512, dtype=np.float))
