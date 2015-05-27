@@ -11,7 +11,6 @@ import numpy as np
 import yaml
 
 from . constants import YAML_TAG_PREFIX
-from . import reference
 from . import schema
 from . import tagged
 from . import treeutil

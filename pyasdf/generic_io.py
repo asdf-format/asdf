@@ -29,6 +29,10 @@ import numpy as np
 
 from .extern import atomicfile
 
+import yaml
+
+_CYAML_ON_PY3 = six.PY3 and getattr(yaml, '__with_libyaml__', False)
+
 
 __all__ = ['get_file', 'resolve_uri', 'relative_uri']
 
@@ -199,7 +203,7 @@ class _TruncatedReader(object):
 
     def read(self, nbytes=None):
         if self._past_end:
-            if six.PY3:
+            if _CYAML_ON_PY3:
                 # This a workaround for what is probably a bug in
                 # PyYAML: It expects the end marker to be a unicode
                 # string even though the file is open in binary mode.
