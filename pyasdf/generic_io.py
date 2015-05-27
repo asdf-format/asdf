@@ -199,7 +199,13 @@ class _TruncatedReader(object):
 
     def read(self, nbytes=None):
         if self._past_end:
-            return b''
+            if six.PY3:
+                # This a workaround for what is probably a bug in
+                # PyYAML: It expects the end marker to be a unicode
+                # string even though the file is open in binary mode.
+                return ''
+            else:
+                return b''
 
         if nbytes is None:
             content = self._fd._peek()
