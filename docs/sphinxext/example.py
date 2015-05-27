@@ -4,7 +4,6 @@
 from __future__ import absolute_import, division, unicode_literals, print_function
 
 import atexit
-import io
 import os
 import shutil
 import tempfile
@@ -19,12 +18,12 @@ from sphinx.util.nodes import set_source_info
 from pyasdf import AsdfFile
 from pyasdf.constants import ASDF_MAGIC, BLOCK_FLAG_STREAMED
 from pyasdf import versioning
-from pyasdf import yamlutil
 
 version_string = versioning.version_to_string(versioning.default_version)
 
 
 TMPDIR = tempfile.mkdtemp()
+
 
 def delete_tmpdir():
     shutil.rmtree(TMPDIR)
@@ -130,7 +129,7 @@ class AsdfDirective(Directive):
         textnodes, messages = self.state.inline_text(filename, self.lineno)
         title = nodes.title(filename, '', *textnodes)
         result += title
-        result.children.extend(parts)
+        result += parts
         return [result]
 
 
