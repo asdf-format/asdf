@@ -50,6 +50,8 @@ be copied over manually if desired.
 
 - Updated ``astropy-helpers`` and ``ah_bootstrap.py`` to v1.0.2.
 
+- Remove requires and provides from setup.py. [#128]
+
 0.4.1 (2014-10-22)
 ------------------
 
