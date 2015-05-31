@@ -5,13 +5,6 @@ be removed in affiliated packages.
 The changes below indicate what file the change was made in so that these can
 be copied over manually if desired.
 
-1.0.1 (untagged)
-----------------
-
-- No longer constrain Sphinx version to 1.2 in .travis.yml
-
-- Fixed a reference to the psutil package that caused sphinx builds to fail
-
 1.0 (2015-05-31)
 ----------------
 
@@ -30,8 +23,6 @@ be copied over manually if desired.
   - Drop Python 3.2 testing [#114]
 
   - Drop Numpy 1.5 testing, and use Numpy 1.9 as a baseline [#114]
-
-  - Explicitly use Sphinx 1.2
 
 - Updated ``MANIFEST.in`` to:
 
