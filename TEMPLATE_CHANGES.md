@@ -8,7 +8,9 @@ be copied over manually if desired.
 1.0.1 (untagged)
 ----------------
 
-- No changes yet.
+- No longer constrain Sphinx version to 1.2 in .travis.yml
+
+- Fixed a reference to the psutil package that caused sphinx builds to fail
 
 1.0 (2015-05-31)
 ----------------
@@ -33,11 +35,11 @@ be copied over manually if desired.
 
 - Updated ``MANIFEST.in`` to:
 
-  - Recursive include *.pyx, *.c, and *.pxd files
+  - Recursively include *.pyx, *.c, and *.pxd files
 
-  - Global exclude *.pyc and *.o files
+  - Globally exclude *.pyc and *.o files
   
-  - Included ``CHANGES.rst``
+  - Include ``CHANGES.rst``
   
 - Update ``docs/conf.py`` to import Sphinx extensions from
   ``astropy_helpers`` instead of ``astropy``. [#119]
