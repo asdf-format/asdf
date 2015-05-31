@@ -5,8 +5,13 @@ be removed in affiliated packages.
 The changes below indicate what file the change was made in so that these can
 be copied over manually if desired.
 
-1.0 (untagged)
---------------
+1.0.1 (untagged)
+----------------
+
+- No changes yet.
+
+1.0 (2015-05-31)
+----------------
 
 - The instructions for the documentation have now been clarified to indicate
   that packages do not *have* to include the documentation in a sub-folder of
