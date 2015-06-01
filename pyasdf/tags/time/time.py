@@ -8,6 +8,7 @@ import numpy as np
 
 from astropy.extern import six
 from astropy import time
+from astropy import units as u
 
 from ...asdftypes import AsdfType
 from ... import yamlutil
@@ -85,12 +86,15 @@ class TimeType(AsdfType):
         scale = node.get('scale')
         location = node.get('location')
         if location is not None:
+            unit = location.get('unit', u.m)
             if 'x' in location:
-                location = (location['x'], location['y'], location['z'])
+                location = (location['x'] * unit,
+                            location['y'] * unit,
+                            location['z'] * unit)
             else:
                 location = ('{0}d'.format(location['longitude']),
                             '{0}d'.format(location['latitude']),
-                            location.get('height', 0.0))
+                            location.get('height', 0.0) * unit)
 
         return time.Time(value, format=format, scale=scale, location=location)
 
