@@ -10,7 +10,7 @@ from astropy.extern import six
 from astropy.utils.compat.odict import OrderedDict
 
 from jsonschema import validators
-from jsonschema.exceptions import ValidationError, SchemaError
+from jsonschema.exceptions import ValidationError
 import yaml
 
 from .compat import lru_cache
