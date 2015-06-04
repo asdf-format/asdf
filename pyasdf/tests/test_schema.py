@@ -128,14 +128,12 @@ def test_all_schema_examples():
 
         examples = []
 
-        def find_example(node):
+        for node in treeutil.iter_tree(schema_tree):
             if (isinstance(node, dict) and
                 'examples' in node and
                 isinstance(node['examples'], list)):
                 for desc, example in node['examples']:
                     examples.append(example)
-
-        treeutil.walk(schema_tree, find_example)
 
         return examples
 

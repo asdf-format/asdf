@@ -35,10 +35,12 @@ def walk(top, callback):
     seen = set()
 
     def recurse(tree):
-        if id(tree) in seen:
+        tree_id = id(tree)
+
+        if tree_id in seen:
             return
 
-        seen.add(id(tree))
+        seen.add(tree_id)
 
         if isinstance(tree, dict):
             for val in six.itervalues(tree):
@@ -48,6 +50,50 @@ def walk(top, callback):
                 recurse(val)
 
         callback(tree)
+
+    return recurse(top)
+
+
+def iter_tree(top):
+    """
+    Iterate over all nodes in a tree, in depth-first order.
+
+    Parameters
+    ----------
+    top : object
+        The root of the tree.  May be a dict, list or other Python object.
+
+    callback : callable
+        A function to call at each node in the tree.
+
+        The callback is called on an instance after all of its
+        children have been visited (depth-first order).
+
+    Returns
+    -------
+    tree : object
+        The modified tree.
+    """
+    seen = set()
+
+    def recurse(tree):
+        tree_id = id(tree)
+
+        if tree_id in seen:
+            return
+
+        seen.add(tree_id)
+
+        if isinstance(tree, dict):
+            for val in six.itervalues(tree):
+                for sub in recurse(val):
+                    yield sub
+        elif isinstance(tree, (list, tuple)):
+            for val in tree:
+                for sub in recurse(val):
+                    yield sub
+
+        yield tree
 
     return recurse(top)
 

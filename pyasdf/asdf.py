@@ -564,11 +564,10 @@ class AsdfFile(versioning.VersionedMixin):
             array_ref_count = [0]
             from .tags.core.ndarray import NDArrayType
 
-            def count_external_array_references(node):
+            for node in treeutil.iter_tree(self._tree):
                 if (isinstance(node, (np.ndarray, NDArrayType)) and
                     self.blocks[node].array_storage == 'internal'):
                     array_ref_count[0] += 1
-            treeutil.walk(self._tree, count_external_array_references)
 
             serialized_tree_size = (
                 tree_serialized.tell() +
@@ -684,13 +683,12 @@ class AsdfFile(versioning.VersionedMixin):
             with this name, it will be called for every instance of the
             corresponding custom type in the tree.
         """
-        def walker(node):
+        for node in treeutil.iter_tree(self.tree):
             tag = self.type_index.from_custom_type(type(node))
             if tag is not None:
                 hook = getattr(tag, hookname, None)
                 if hook is not None:
                     hook(node, self)
-        return treeutil.walk(self.tree, walker)
 
     def run_modifying_hook(self, hookname):
         """
