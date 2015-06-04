@@ -244,7 +244,7 @@ def _load_schema(url):
             result = json.load(fd)
         else:
             result = yaml.load(fd, Loader=_yaml_base_loader)
-    return result
+    return result, fd.uri
 
 
 def _make_schema_loader(resolver):
@@ -257,8 +257,12 @@ def _make_schema_loader(resolver):
 def _make_resolver(url_mapping):
     handlers = {}
     schema_loader = _make_schema_loader(url_mapping)
+
+    def get_schema(url):
+        return schema_loader(url)[0]
+
     for x in ['http', 'https', 'file']:
-        handlers[x] = schema_loader
+        handlers[x] = get_schema
 
     # We set cache_remote=False here because we do the caching of
     # remote schemas here in `load_schema`, so we don't need
@@ -290,19 +294,20 @@ def load_schema(url, resolver=None, resolve_references=False):
     if resolver is None:
         resolver = mresolver.default_url_mapping
     loader = _make_schema_loader(resolver)
-    schema = loader(url)
+    schema, url = loader(url)
 
     if resolve_references:
         def resolve_refs(node):
             if isinstance(node, dict) and '$ref' in node:
                 suburl = generic_io.resolve_uri(url, node['$ref'])
                 suburl = resolver(suburl)
-                if suburl == url:
-                    subschema = schema
-                else:
-                    subschema = load_schema(suburl, resolver, True)
                 parts = urlparse.urlparse(suburl)
                 fragment = parts.fragment
+                suburl_path = suburl[:-(len(fragment) + 1)]
+                if suburl_path == url:
+                    subschema = schema
+                else:
+                    subschema = load_schema(suburl_path, resolver, True)
                 subschema_fragment = reference.resolve_fragment(
                     subschema, fragment)
                 return subschema_fragment
