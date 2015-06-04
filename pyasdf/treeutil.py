@@ -32,22 +32,24 @@ def walk(top, callback):
     tree : object
         The modified tree.
     """
-    def recurse(tree, seen):
+    seen = set()
+
+    def recurse(tree):
         if id(tree) in seen:
             return
 
+        seen.add(id(tree))
+
         if isinstance(tree, dict):
-            new_seen = seen | set([id(tree)])
             for val in six.itervalues(tree):
-                recurse(val, new_seen)
+                recurse(val)
         elif isinstance(tree, (list, tuple)):
-            new_seen = seen | set([id(tree)])
             for val in tree:
-                recurse(val, new_seen)
+                recurse(val)
 
         callback(tree)
 
-    return recurse(top, set())
+    return recurse(top)
 
 
 def walk_and_modify(top, callback):

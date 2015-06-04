@@ -41,6 +41,7 @@ _tag_to_method_mapping = {
 class CompoundType(TransformType):
     name = ['transform/' + x for x in _tag_to_method_mapping.keys()]
     types = [_CompoundModel]
+    handle_dynamic_subclasses = True
 
     @classmethod
     def from_tree_tagged(cls, node, ctx):
