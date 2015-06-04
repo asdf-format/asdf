@@ -8,6 +8,7 @@ import os
 
 from astropy.extern import six
 from astropy.utils.compat.odict import OrderedDict
+from astropy.extern.six.moves.urllib import parse as urlparse
 
 from jsonschema import validators
 from jsonschema.exceptions import ValidationError
@@ -19,6 +20,7 @@ from . import generic_io
 from . import reference
 from . import resolver as mresolver
 from . import tagged
+from . import treeutil
 from . import util
 
 
@@ -242,7 +244,7 @@ def _load_schema(url):
             result = json.load(fd)
         else:
             result = yaml.load(fd, Loader=_yaml_base_loader)
-    return result
+    return result, fd.uri
 
 
 def _make_schema_loader(resolver):
@@ -255,8 +257,12 @@ def _make_schema_loader(resolver):
 def _make_resolver(url_mapping):
     handlers = {}
     schema_loader = _make_schema_loader(url_mapping)
+
+    def get_schema(url):
+        return schema_loader(url)[0]
+
     for x in ['http', 'https', 'file']:
-        handlers[x] = schema_loader
+        handlers[x] = get_schema
 
     # We set cache_remote=False here because we do the caching of
     # remote schemas here in `load_schema`, so we don't need
@@ -266,7 +272,8 @@ def _make_resolver(url_mapping):
         '', {}, cache_remote=False, handlers=handlers)
 
 
-def load_schema(url, resolver=None):
+@lru_cache()
+def load_schema(url, resolver=None, resolve_references=False):
     """
     Load a schema from the given URL.
 
@@ -280,11 +287,34 @@ def load_schema(url, resolver=None):
         callable must take a string and return a string or `None`.
         This is useful, for example, when a remote resource has a
         mirror on the local filesystem that you wish to use.
+
+    resolve_references : bool, optional
+        If `True`, resolve all `$ref` references.
     """
     if resolver is None:
         resolver = mresolver.default_url_mapping
     loader = _make_schema_loader(resolver)
-    return loader(url)
+    schema, url = loader(url)
+
+    if resolve_references:
+        def resolve_refs(node):
+            if isinstance(node, dict) and '$ref' in node:
+                suburl = generic_io.resolve_uri(url, node['$ref'])
+                suburl = resolver(suburl)
+                parts = urlparse.urlparse(suburl)
+                fragment = parts.fragment
+                suburl_path = suburl[:-(len(fragment) + 1)]
+                if suburl_path == url:
+                    subschema = schema
+                else:
+                    subschema = load_schema(suburl_path, resolver, True)
+                subschema_fragment = reference.resolve_fragment(
+                    subschema, fragment)
+                return subschema_fragment
+            return node
+        schema = treeutil.walk_and_modify(schema, resolve_refs)
+
+    return schema
 
 
 def validate(instance, ctx, _validators=YAML_VALIDATORS, *args, **kwargs):

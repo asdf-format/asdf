@@ -30,7 +30,6 @@ def resolve_fragment(tree, pointer):
     """
     Resolve a JSON Pointer within the tree.
     """
-
     pointer = pointer.lstrip(u"/")
     parts = urlparse.unquote(pointer).split(u"/") if pointer else []
 
@@ -104,6 +103,9 @@ class Reference(AsdfType):
     def __call__(self, do_not_fill_defaults=False):
         return self._get_target(do_not_fill_defaults=do_not_fill_defaults)
 
+    def __contains__(self, item):
+        return item in self._get_target()
+
     @classmethod
     def to_tree(self, data, ctx):
         if ctx.uri is not None:
@@ -138,7 +140,6 @@ def resolve_references(tree, ctx, do_not_fill_defaults=False):
     def do_resolve(tree):
         if isinstance(tree, Reference):
             return tree(do_not_fill_defaults=do_not_fill_defaults)
-
         return tree
 
     tree = find_references(tree, ctx)

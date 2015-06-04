@@ -1,0 +1,8 @@
+%YAML 1.1
+---
+$schema: "http://stsci.edu/schemas/yaml-schema/draft-01"
+id: "http://nowhere.org/schemas/custom/1.0.0/self_referencing"
+anyOf:
+  - type: object
+  - $ref: "#/anyOf/0"
+...

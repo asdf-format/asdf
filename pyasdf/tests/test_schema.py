@@ -349,3 +349,9 @@ custom: !<tag:nowhere.org:custom/1.0.0/default>
         assert 'a' not in ff.tree['custom']
         assert 'c' not in ff.tree['custom']['b']
 
+
+def test_references_in_schema():
+    s = schema.load_schema(os.path.join(TEST_DATA_PATH, 'self_referencing.yaml'),
+                           resolve_references=True)
+    assert '$ref' not in repr(s)
+    assert s['anyOf'][1] == s['anyOf'][0]
