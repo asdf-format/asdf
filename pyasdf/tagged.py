@@ -60,12 +60,12 @@ class TaggedDict(Tagged, UserDict, dict):
         if data is None:
             data = {}
         self.data = data
-        self.tag = tag
+        self._tag = tag
 
     def __eq__(self, other):
         return (isinstance(other, TaggedDict) and
                 self.data == other.data and
-                self.tag == other.tag)
+                self._tag == other._tag)
 
 
 class TaggedList(Tagged, UserList, list):
@@ -78,12 +78,12 @@ class TaggedList(Tagged, UserList, list):
         if data is None:
             data = []
         self.data = data
-        self.tag = tag
+        self._tag = tag
 
     def __eq__(self, other):
         return (isinstance(other, TaggedList) and
                 self.data == other.data and
-                self.tag == other.tag)
+                self._tag == other._tag)
 
 
 class TaggedString(Tagged, UserString, six.text_type):
@@ -95,7 +95,7 @@ class TaggedString(Tagged, UserString, six.text_type):
     def __eq__(self, other):
         return (isinstance(other, TaggedString) and
                 six.text_type.__eq__(self, other) and
-                self.tag == other.tag)
+                self._tag == other._tag)
 
 
 def tag_object(tag, instance):
@@ -106,7 +106,7 @@ def tag_object(tag, instance):
         return instance
 
     if isinstance(instance, Tagged):
-        instance.tag = tag
+        instance._tag = tag
         return instance
     elif isinstance(instance, dict):
         return TaggedDict(instance, tag)
@@ -114,7 +114,7 @@ def tag_object(tag, instance):
         return TaggedList(instance, tag)
     elif isinstance(instance, six.string_types):
         instance = TaggedString(instance)
-        instance.tag = tag
+        instance._tag = tag
         return instance
     else:
         raise TypeError(
@@ -125,6 +125,4 @@ def get_tag(instance):
     """
     Get the tag associated with the instance, if there is one.
     """
-    if isinstance(instance, Tagged):
-        return instance.tag
-    return None
+    return getattr(instance, '_tag', None)

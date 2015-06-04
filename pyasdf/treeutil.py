@@ -132,13 +132,13 @@ def walk_and_modify(top, callback):
                 val = recurse(val, new_seen)
                 if val is not None:
                     result[key] = val
-            if isinstance(tree, Tagged):
-                result = tag_object(tree.tag, result)
+            if hasattr(tree, '_tag'):
+                result = tag_object(tree._tag, result)
         elif isinstance(tree, (list, tuple)):
             new_seen = seen | set([id(tree)])
             result = tree.__class__([recurse(val, new_seen) for val in tree])
-            if isinstance(tree, Tagged):
-                result = tag_object(tree.tag, result)
+            if hasattr(tree, '_tag'):
+                result = tag_object(tree._tag, result)
         else:
             result = tree
 
