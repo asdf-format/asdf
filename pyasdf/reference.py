@@ -89,7 +89,12 @@ class Reference(AsdfType):
         return len(self._get_target())
 
     def __getattr__(self, attr):
-        return getattr(self._get_target(), attr)
+        if attr == '_tag':
+            return None
+        try:
+            return getattr(self._get_target(), attr)
+        except:
+            raise AttributeError("No attribute '{0}'".format(attr))
 
     def __getitem__(self, item):
         return self._get_target()[item]

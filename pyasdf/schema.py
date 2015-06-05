@@ -72,8 +72,8 @@ def validate_tag(validator, tagname, instance, schema):
     # hack of reserializing the object and seeing what tags get attached to it
     # (though there may be a better way than this).
 
-    if isinstance(instance, tagged.Tagged):
-        instance_tag = instance.tag
+    if hasattr(instance, '_tag'):
+        instance_tag = instance._tag
     else:
         # Try tags for known Python builtins
         instance_tag = _type_to_tag(type(instance))
@@ -208,7 +208,7 @@ def _create_validator(_validators=YAML_VALIDATORS):
             return
 
         if _schema is None:
-            tag = tagged.get_tag(instance)
+            tag = getattr(instance, '_tag', None)
             if tag is not None:
                 schema_path = self.ctx.tag_to_schema_resolver(tag)
                 if schema_path != tag:

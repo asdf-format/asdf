@@ -244,7 +244,7 @@ class BlockManager(object):
 
         block_to_array_mapping = {}
 
-        def visit_array(node):
+        for node in treeutil.iter_tree(tree):
             block = None
             if isinstance(node, np.ndarray):
                 block = self.find_or_create_block_for_array(node, ctx)
@@ -254,8 +254,6 @@ class BlockManager(object):
             if block is not None:
                 block_to_array_mapping.setdefault(block, [])
                 block_to_array_mapping[block].append(node)
-
-        treeutil.walk(tree, visit_array)
 
         for block in self._blocks[:]:
             arrays = block_to_array_mapping.get(block, [])

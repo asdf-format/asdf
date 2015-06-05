@@ -6,11 +6,18 @@ from __future__ import absolute_import, division, unicode_literals, print_functi
 from astropy.extern import six
 from astropy.utils.misc import InheritDocstrings
 
+from .compat import lru_cache
 from . import tagged
+from . import util
 from . import versioning
 
 
 __all__ = ['format_tag', 'AsdfTypeIndex', 'AsdfType']
+
+
+_BASIC_PYTHON_TYPES = set(list(six.string_types) +
+                          list(six.integer_types) +
+                          [float, list, dict, tuple])
 
 
 def format_tag(organization, standard, version, tag_name=None):
@@ -31,7 +38,9 @@ class AsdfTypeIndex(object):
     """
     def __init__(self):
         self._type_by_cls = {}
+        self._type_by_subclasses = {}
         self._type_by_name = {}
+        self._types_with_dynamic_subclasses = {}
         self._all_types = set()
 
     def add_type(self, asdftype):
@@ -52,18 +61,42 @@ class AsdfTypeIndex(object):
         self._type_by_cls[asdftype] = asdftype
         for typ in asdftype.types:
             self._type_by_cls[typ] = asdftype
+            for typ2 in util.iter_subclasses(typ):
+                self._type_by_subclasses[typ2] = asdftype
+
+        if asdftype.handle_dynamic_subclasses:
+            for typ in asdftype.types:
+                self._types_with_dynamic_subclasses[typ] = asdftype
 
     def from_custom_type(self, custom_type):
         """
         Given a custom type, return the corresponding AsdfType
         definition.
         """
+        # Basic Python types should not ever have an AsdfType
+        # associated with them.
+        if custom_type in _BASIC_PYTHON_TYPES:
+            return None
+
+        # Try to find an exact class match first...
         try:
             return self._type_by_cls[custom_type]
         except KeyError:
-            for key, val in six.iteritems(self._type_by_cls):
-                if issubclass(custom_type, key):
-                    return val
+            # ...failing that, match any subclasses
+            try:
+                return self._type_by_subclasses[custom_type]
+            except KeyError:
+                # ...failing that, try any subclasses that we couldn't
+                # cache in _type_by_subclasses.  This generally only
+                # includes classes that are created dynamically post
+                # Python-import, e.g. astropy.modeling._CompoundModel
+                # subclasses.
+                for key, val in six.iteritems(
+                        self._types_with_dynamic_subclasses):
+                    if issubclass(custom_type, key):
+                        self._type_by_cls[custom_type] = val
+                        return val
+
         return None
 
     def from_yaml_tag(self, tag):
@@ -72,6 +105,13 @@ class AsdfTypeIndex(object):
         AsdfType definition.
         """
         return self._type_by_name.get(tag)
+
+    @lru_cache(5)
+    def has_hook(self, hook_name):
+        for cls in self._all_types:
+            if hasattr(cls, hook_name):
+                return True
+        return False
 
 
 _all_asdftypes = AsdfTypeIndex()
@@ -134,6 +174,7 @@ class AsdfType(object):
     standard = 'asdf'
     version = (0, 1, 0)
     types = []
+    handle_dynamic_subclasses = False
 
     @classmethod
     def make_yaml_tag(cls, name):

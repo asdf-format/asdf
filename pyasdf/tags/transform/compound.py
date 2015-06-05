@@ -41,22 +41,23 @@ _tag_to_method_mapping = {
 class CompoundType(TransformType):
     name = ['transform/' + x for x in _tag_to_method_mapping.keys()]
     types = [_CompoundModel]
+    handle_dynamic_subclasses = True
 
     @classmethod
     def from_tree_tagged(cls, node, ctx):
-        tag = node.tag[node.tag.rfind('/')+1:]
+        tag = node._tag[node._tag.rfind('/')+1:]
 
         oper = _tag_to_method_mapping[tag]
         left = yamlutil.tagged_tree_to_custom_tree(
             node['forward'][0], ctx)
         if not isinstance(left, modeling.Model):
             raise TypeError("Unknown model type '{0}'".format(
-                node['forward'][0].tag))
+                node['forward'][0]._tag))
         right = yamlutil.tagged_tree_to_custom_tree(
             node['forward'][1], ctx)
         if not isinstance(right, modeling.Model):
             raise TypeError("Unknown model type '{0}'".format(
-                node['forward'][1].tag))
+                node['forward'][1]._tag))
         model = getattr(left, oper)(right)
 
         model = cls._from_tree_base_transform_members(model, node, ctx)

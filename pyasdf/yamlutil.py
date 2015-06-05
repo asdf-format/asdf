@@ -66,7 +66,7 @@ class AsdfDumper(_yaml_base_dumper):
     def represent_data(self, data):
         node = super(AsdfDumper, self).represent_data(data)
 
-        tag_name = tagged.get_tag(data)
+        tag_name = getattr(data, '_tag', None)
         if tag_name is not None:
             node.tag = tag_name
 
@@ -235,7 +235,7 @@ def tagged_tree_to_custom_tree(tree, ctx):
     tags, to a tree containing custom data types.
     """
     def walker(node):
-        tag_name = tagged.get_tag(node)
+        tag_name = getattr(node, '_tag', None)
         if tag_name is not None:
             tag_type = ctx.type_index.from_yaml_tag(tag_name)
             if tag_type is not None:

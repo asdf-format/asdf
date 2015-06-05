@@ -114,11 +114,9 @@ def test_tags_removed_after_load(tmpdir):
         }
 
     def check_asdf(asdf):
-        def assert_untagged(node):
+        for node in treeutil.iter_tree(asdf.tree):
             if node != asdf.tree:
                 assert not isinstance(node, tagged.Tagged)
-
-        treeutil.walk(asdf.tree, assert_untagged)
 
     helpers.assert_roundtrip_tree(tree, tmpdir, check_asdf)
 
