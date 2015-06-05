@@ -683,6 +683,9 @@ class AsdfFile(versioning.VersionedMixin):
             with this name, it will be called for every instance of the
             corresponding custom type in the tree.
         """
+        if not self.type_index.has_hook(hookname):
+            return
+
         for node in treeutil.iter_tree(self.tree):
             tag = self.type_index.from_custom_type(type(node))
             if tag is not None:

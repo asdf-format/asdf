@@ -6,6 +6,7 @@ from __future__ import absolute_import, division, unicode_literals, print_functi
 from astropy.extern import six
 from astropy.utils.misc import InheritDocstrings
 
+from .compat import lru_cache
 from . import tagged
 from . import util
 from . import versioning
@@ -104,6 +105,13 @@ class AsdfTypeIndex(object):
         AsdfType definition.
         """
         return self._type_by_name.get(tag)
+
+    @lru_cache(5)
+    def has_hook(self, hook_name):
+        for cls in self._all_types:
+            if hasattr(cls, hook_name):
+                return True
+        return False
 
 
 _all_asdftypes = AsdfTypeIndex()

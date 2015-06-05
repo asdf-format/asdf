@@ -84,12 +84,12 @@ def iter_tree(top):
 
         seen.add(tree_id)
 
-        if isinstance(tree, dict):
-            for val in six.itervalues(tree):
+        if isinstance(tree, (list, tuple)):
+            for val in tree:
                 for sub in recurse(val):
                     yield sub
-        elif isinstance(tree, (list, tuple)):
-            for val in tree:
+        elif isinstance(tree, dict):
+            for val in six.itervalues(tree):
                 for sub in recurse(val):
                     yield sub
 
