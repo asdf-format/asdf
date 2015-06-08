@@ -326,7 +326,10 @@ def load_schema(url, resolver=None, resolve_references=False):
                 suburl = resolver(suburl)
                 parts = urlparse.urlparse(suburl)
                 fragment = parts.fragment
-                suburl_path = suburl[:-(len(fragment) + 1)]
+                if len(fragment):
+                    suburl_path = suburl[:-(len(fragment) + 1)]
+                else:
+                    suburl_path = suburl
                 if suburl_path == url:
                     subschema = schema
                 else:
