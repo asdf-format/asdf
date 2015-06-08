@@ -61,7 +61,7 @@ class TimeType(AsdfType):
             d['format'] = format
 
         if node.scale != 'utc':
-            d['scale'] = scale
+            d['scale'] = node.scale
 
         if node.location is not None:
             d['location'] = {

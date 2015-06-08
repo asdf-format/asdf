@@ -112,7 +112,7 @@ class ConstantType(TransformType):
     @classmethod
     def to_tree_transform(cls, data, ctx):
         return {
-            'value': data.amplitude
+            'value': data.amplitude.value
         }
 
 

@@ -106,12 +106,21 @@ def test_all_schema_examples():
     def test_example(args):
         fname, example = args
         buff = helpers.yaml_to_asdf('example: ' + example.strip())
-        ff = asdf.AsdfFile()
-        # Add a dummy block so that the ndarray examples
-        # work
-        ff.blocks.add(block.Block(np.empty((1024))))
+        ff = asdf.AsdfFile(uri=pathname2url(os.path.abspath(fname)))
+
+        # Fake an external file
+        ff2 = asdf.AsdfFile({'data': np.empty((1024*1024*8), dtype=np.uint8)})
+        ff._external_asdf_by_uri[
+            pathname2url(
+                os.path.abspath(
+                    os.path.join(os.path.dirname(fname), 'external.asdf')))] = ff2
+
+        # Add some dummy blocks so that the ndarray examples work
+        for i in range(2):
+            ff.blocks.add(block.Block(np.empty((1024*1024*8), dtype=np.uint8)))
+
         try:
-            ff.open(buff)
+            ff._open_impl(ff, buff)
         except:
             print("From file:", fname)
             raise
@@ -119,8 +128,9 @@ def test_all_schema_examples():
         # Just test we can write it out.  A roundtrip test
         # wouldn't always yield the correct result, so those have
         # to be covered by "real" unit tests.
-        buff = io.BytesIO()
-        ff.write_to(buff)
+        if 'external.asdf' not in buff.getvalue():
+            buff = io.BytesIO()
+            ff.write_to(buff)
 
     def find_examples_in_schema(path):
         with open(path, 'rb') as fd:
@@ -137,14 +147,19 @@ def test_all_schema_examples():
 
         return examples
 
+    tree = {
+        'data': np.empty((1024*1024*8), dtype=np.uint8)
+    }
+    external = asdf.AsdfFile(tree)
+
     src = os.path.join(os.path.dirname(__file__), '../schemas')
     for root, dirs, files in os.walk(src):
         for fname in files:
             if not fname.endswith('.yaml'):
                 continue
-            for example in find_examples_in_schema(
-                    os.path.join(root, fname)):
-                yield test_example, (fname, example)
+            path = os.path.join(root, fname)
+            for example in find_examples_in_schema(path):
+                yield test_example, (path, example)
 
 
 def test_schema_caching():
