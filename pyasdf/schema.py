@@ -20,7 +20,6 @@ from . import constants
 from . import generic_io
 from . import reference
 from . import resolver as mresolver
-from . import tagged
 from . import treeutil
 from . import util
 

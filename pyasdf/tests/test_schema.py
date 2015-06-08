@@ -128,7 +128,7 @@ def test_all_schema_examples():
         # Just test we can write it out.  A roundtrip test
         # wouldn't always yield the correct result, so those have
         # to be covered by "real" unit tests.
-        if 'external.asdf' not in buff.getvalue():
+        if b'external.asdf' not in buff.getvalue():
             buff = io.BytesIO()
             ff.write_to(buff)
 

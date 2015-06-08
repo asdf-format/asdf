@@ -92,9 +92,9 @@ class TimeType(AsdfType):
                             location['y'] * unit,
                             location['z'] * unit)
             else:
-                location = ('{0}d'.format(location['longitude']),
-                            '{0}d'.format(location['latitude']),
-                            location.get('height', 0.0) * unit)
+                location = ('{0}d'.format(location['long']),
+                            '{0}d'.format(location['lat']),
+                            location.get('h', 0.0) * unit)
 
         return time.Time(value, format=format, scale=scale, location=location)
 
