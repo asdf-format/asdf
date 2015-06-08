@@ -12,7 +12,8 @@ Supporting new types in pyasdf is easy.  There are three pieces needed:
    related types.  This class must implement the
    `pyasdf.AsdfExtension` abstract base class.
 
-For an example, we will make a type to handle rational numbers called ``fraction``.
+For an example, we will make a type to handle rational numbers called
+``fraction``.
 
 First, the YAML Schema, defining the type as a pair of integers:
 
@@ -75,3 +76,48 @@ Then, the Python implementation.  See the `pyasdf.AsdfType` and
                      urljoin('file:', pathname2url(os.path.join(
                          os.path.dirname(__file__))) +
                          '/{url_suffix}.yaml')]
+
+Adding custom validators
+------------------------
+
+A new type may also add new validation keywords to the schema
+language. This can be used to impose type-specific restrictions on the
+values in an ASDF file.  This feature is used internally so a schema
+can specify the required datatype of an array.
+
+To support custom validation keywords, set the ``validators`` member
+of an ``AsdfType`` subclass to a dictionary where the keys are the
+validation keyword name and the values are validation functions.  The
+validation functions are of the same form as the validation functions
+in the underlying ``jsonschema`` library, and are passed the following
+arguments:
+
+  - ``validator``: A `jsonschema.Validator` instance.
+
+  - ``value``: The value of the schema keyword.
+
+  - ``instance``: The instance to validate.  This will be made up of
+    basic datatypes as represented in the YAML file (list, dict,
+    number, strings), and not include any object types.
+
+  - ``schema``: The entire schema that applies to instance.  Useful to
+    get other related schema keywords.
+
+The validation function should either return ``None`` if the instance
+is valid or ``yield`` one or more `pyasdf.ValidationError` objects if
+the instance is invalid.
+
+To continue the example from above, for the ``FractionType`` say we
+want to add a validation keyword "``simplified``" that, when ``true``,
+asserts that the corresponding fraction is in simplified form::
+
+    from pyasdf import ValidationError
+
+    def validate_simplified(validator, simplified, instance, schema):
+        if simplified:
+            reduced = fraction.Fraction(instance[0], instance[1])
+            if (reduced.numerator != instance[0] or
+                reduced.denominator != instance[1]):
+                yield ValidationError("Fraction is not in simplified form.")
+
+    FractionType.validators = {'simplified': validate_simplified}

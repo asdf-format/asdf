@@ -1,0 +1,11 @@
+%YAML 1.1
+---
+$schema: "http://stsci.edu/schemas/asdf/0.1.0/asdf-schema"
+id: "http://nowhere.org/schemas/custom/1.0.0/ndim"
+type: object
+properties:
+  a:
+    ndim: 2
+
+  b:
+    max_ndim: 2

@@ -168,6 +168,11 @@ class AsdfType(object):
     types : list of Python types
         Custom Python types that, when found in the tree, will be
         converted into basic types for YAML output.
+
+    validators : dict
+        Mapping JSON Schema keywords to validation functions for
+        jsonschema.  Useful if the type defines extra types of
+        validation that can be performed.
     """
     name = None
     organization = 'stsci.edu'
@@ -175,6 +180,7 @@ class AsdfType(object):
     version = (0, 1, 0)
     types = []
     handle_dynamic_subclasses = False
+    validators = {}
 
     @classmethod
     def make_yaml_tag(cls, name):

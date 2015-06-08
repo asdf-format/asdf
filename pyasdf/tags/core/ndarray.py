@@ -7,6 +7,8 @@ import sys
 import numpy as np
 from numpy import ma
 
+from jsonschema import ValidationError
+
 from astropy.extern import six
 
 from ...asdftypes import AsdfType
@@ -45,8 +47,10 @@ def asdf_byteorder_to_numpy_byteorder(byteorder):
     raise ValueError("Invalid ASDF byteorder '{0}'".format(byteorder))
 
 
-def asdf_datatype_to_numpy_dtype(datatype, byteorder):
-    if isinstance(datatype, six.text_type) and datatype in _datatype_names:
+def asdf_datatype_to_numpy_dtype(datatype, byteorder=None):
+    if byteorder is None:
+        byteorder = sys.byteorder
+    if isinstance(datatype, six.string_types) and datatype in _datatype_names:
         datatype = _datatype_names[datatype]
         byteorder = asdf_byteorder_to_numpy_byteorder(byteorder)
         return np.dtype(str(byteorder + datatype))
@@ -129,7 +133,7 @@ def numpy_dtype_to_asdf_datatype(dtype, include_byteorder=True):
     raise ValueError("Unknown dtype {0}".format(dtype))
 
 
-def inline_data_asarray(inline, dtype):
+def inline_data_asarray(inline, dtype=None):
     # np.asarray doesn't handle structured arrays unless the innermost
     # elements are tuples.  To do that, we drill down the first
     # element of each level until we find a single item that
@@ -142,7 +146,8 @@ def inline_data_asarray(inline, dtype):
     if dtype is not None and dtype.fields is not None:
         def find_innermost_match(l, depth=0):
             if not isinstance(l, list) or not len(l):
-                raise ValueError("data can not be converted to table")
+                raise ValueError(
+                    "data can not be converted to structured array")
             try:
                 np.asarray(tuple(l), dtype=dtype)
             except ValueError:
@@ -492,3 +497,102 @@ for op in [
     setattr(NDArrayType, op, _make_operation(op))
 
 
+def _get_ndim(instance):
+    if isinstance(instance, list):
+        array = inline_data_asarray(instance)
+        return array.ndim
+    elif isinstance(instance, dict):
+        if 'shape' in instance:
+            return len(instance['shape'])
+        elif 'data' in instance:
+            array = inline_data_asarray(instance['data'])
+            return array.ndim
+    elif isinstance(instance, (np.ndarray, NDArrayType)):
+        return len(instance.shape)
+
+
+def validate_ndim(validator, ndim, instance, schema):
+    in_ndim = _get_ndim(instance)
+
+    if in_ndim != ndim:
+        yield ValidationError(
+            "Wrong number of dimensions: Expected {0}, got {1}".format(
+                ndim, in_ndim), instance=repr(instance))
+
+
+def validate_max_ndim(validator, max_ndim, instance, schema):
+    in_ndim = _get_ndim(instance)
+
+    if in_ndim > max_ndim:
+        yield ValidationError(
+            "Wrong number of dimensions: Expected max of {0}, got {1}".format(
+                max_ndim, in_ndim), instance=repr(instance))
+
+
+def validate_datatype(validator, datatype, instance, schema):
+    if isinstance(instance, list):
+        array = inline_data_asarray(instance)
+        in_datatype, _ = numpy_dtype_to_asdf_datatype(array.dtype)
+    elif isinstance(instance, dict):
+        if 'datatype' in instance:
+            in_datatype = instance['datatype']
+        elif 'data' in instance:
+            array = inline_data_asarray(instance['data'])
+            in_datatype, _ = numpy_dtype_to_asdf_datatype(array.dtype)
+        else:
+            raise ValidationError("Not an array")
+    elif isinstance(instance, (np.ndarray, NDArrayType)):
+        in_datatype, _ = numpy_dtype_to_asdf_datatype(instance.dtype)
+    else:
+        raise ValidationError("Not an array")
+
+    if datatype == in_datatype:
+        return
+
+    if schema.get('exact_datatype', False):
+        yield ValidationError(
+            "Expected datatype '{0}', got '{1}'".format(
+                datatype, in_datatype))
+
+    np_datatype = asdf_datatype_to_numpy_dtype(datatype)
+    np_in_datatype = asdf_datatype_to_numpy_dtype(in_datatype)
+
+    if not np_datatype.fields:
+        if np_in_datatype.fields:
+            yield ValidationError(
+                "Expected scalar datatype '{0}', got '{1}'".format(
+                    datatype, in_datatype))
+
+        if not np.can_cast(np_in_datatype, np_datatype, 'safe'):
+            yield ValidationError(
+                "Can not safely cast from '{0}' to '{1}' ".format(
+                    in_datatype, datatype))
+
+    else:
+        if not np_in_datatype.fields:
+            yield ValidationError(
+                "Expected structured datatype '{0}', got '{1}'".format(
+                    datatype, in_datatype))
+
+        if len(np_in_datatype.fields) != len(np_datatype.fields):
+            yield ValidationError(
+                "Mismatch in number of columns: "
+                "Expected {0}, got {1}".format(
+                    len(datatype), len(in_datatype)))
+
+        for i in range(len(np_datatype.fields)):
+            in_type = np_in_datatype[i]
+            out_type = np_datatype[i]
+            if not np.can_cast(in_type, out_type, 'safe'):
+                yield ValidationError(
+                    "Can not safely cast to expected datatype: "
+                    "Expected {0}, got {1}".format(
+                        numpy_dtype_to_asdf_datatype(out_type)[0],
+                        numpy_dtype_to_asdf_datatype(in_type)[0]))
+
+
+NDArrayType.validators = {
+    'ndim': validate_ndim,
+    'max_ndim': validate_max_ndim,
+    'datatype': validate_datatype
+}
