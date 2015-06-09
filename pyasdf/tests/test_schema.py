@@ -22,6 +22,7 @@ import yaml
 from .. import asdf
 from .. import asdftypes
 from .. import block
+from .. import resolver
 from .. import schema
 from .. import treeutil
 
@@ -86,8 +87,7 @@ def test_validate_all_schema():
     # Make sure that the schemas themselves are valid.
 
     def validate_schema(path):
-        with open(path, 'rb') as fd:
-            schema_tree = yaml.load(fd)
+        schema_tree = schema.load_schema(path, resolve_references=True)
 
         schema.check_schema(schema_tree)
 
@@ -95,6 +95,8 @@ def test_validate_all_schema():
     for root, dirs, files in os.walk(src):
         for fname in files:
             if not fname.endswith('.yaml'):
+                continue
+            if fname in ('draft-01.yaml', 'asdf-schema.yaml'):
                 continue
             yield validate_schema, os.path.join(root, fname)
 
@@ -364,7 +366,9 @@ custom: !<tag:nowhere.org:custom/1.0.0/default>
 
 
 def test_references_in_schema():
+    r = resolver.Resolver(CustomExtension().url_mapping, 'url')
     s = schema.load_schema(os.path.join(TEST_DATA_PATH, 'self_referencing.yaml'),
+                           resolver=r,
                            resolve_references=True)
     assert '$ref' not in repr(s)
     assert s['anyOf'][1] == s['anyOf'][0]

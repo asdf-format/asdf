@@ -145,14 +145,13 @@ def resolve_uri(base, uri):
     Resolve a URI against a base URI.
     """
     if base is None:
-        if uri == '':
-            return ''
-        parsed = urlparse.urlparse(uri)
-        if parsed.path.startswith('/'):
-            return uri
+        base = ''
+    resolved = urlparse.urljoin(base, uri)
+    parsed = urlparse.urlparse(resolved)
+    if parsed.path != '' and not parsed.path.startswith('/'):
         raise ValueError(
-            "Can not resolve relative URLs since the base is unknown.")
-    return urlparse.urljoin(base, uri)
+            "Resolved to relative URL")
+    return resolved
 
 
 def relative_uri(source, target):

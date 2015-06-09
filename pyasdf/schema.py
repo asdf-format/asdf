@@ -294,6 +294,18 @@ def _make_resolver(url_mapping):
         '', {}, cache_remote=False, handlers=handlers)
 
 
+def _load_draft4_metaschema():
+    from jsonschema import _utils
+    return _utils.load_schema('draft4')
+
+
+# This is a list of schema that we have locally on disk but require
+# special methods to obtain
+HARDCODED_SCHEMA = {
+    'http://json-schema.org/draft-04/schema': _load_draft4_metaschema
+}
+
+
 @lru_cache()
 def load_schema(url, resolver=None, resolve_references=False):
     """
@@ -316,10 +328,15 @@ def load_schema(url, resolver=None, resolve_references=False):
     if resolver is None:
         resolver = mresolver.default_url_mapping
     loader = _make_schema_loader(resolver)
-    schema, url = loader(url)
+    if url in HARDCODED_SCHEMA:
+        schema = HARDCODED_SCHEMA[url]()
+    else:
+        schema, url = loader(url)
 
     if resolve_references:
-        def resolve_refs(node):
+        def resolve_refs(node, json_id):
+            if json_id is None:
+                json_id = url
             if isinstance(node, dict) and '$ref' in node:
                 suburl = generic_io.resolve_uri(url, node['$ref'])
                 parts = urlparse.urlparse(suburl)
@@ -329,8 +346,6 @@ def load_schema(url, resolver=None, resolve_references=False):
                 else:
                     suburl_path = suburl
                 suburl_path = resolver(suburl_path)
-                if not suburl_path.endswith('.yaml'):
-                    suburl_path = suburl_path + '.yaml'
                 if suburl_path == url:
                     subschema = schema
                 else:

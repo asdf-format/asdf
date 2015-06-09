@@ -110,8 +110,11 @@ def walk_and_modify(top, callback):
 
     callback : callable
         A function to call at each node in the tree.  It takes and
-        instance and may return a different instance in order to
-        modify the tree.
+        instance and a json id and may return a different instance in
+        order to modify the tree.
+
+        The json id is the context under which any relative URLs
+        should be resolved.  It may be `None` if no ids are in the file
 
         The callback is called on an instance after all of its
         children have been visited (depth-first order).
@@ -120,30 +123,34 @@ def walk_and_modify(top, callback):
     -------
     tree : object
         The modified tree.
+
     """
-    def recurse(tree, seen):
+    def recurse(tree, seen, json_id):
         if id(tree) in seen:
             return tree
 
         if isinstance(tree, dict):
+            if 'id' in tree:
+                json_id = tree['id']
             new_seen = seen | set([id(tree)])
             result = tree.__class__()
             for key, val in six.iteritems(tree):
-                val = recurse(val, new_seen)
+                val = recurse(val, new_seen, json_id)
                 if val is not None:
                     result[key] = val
             if hasattr(tree, '_tag'):
                 result = tag_object(tree._tag, result)
         elif isinstance(tree, (list, tuple)):
             new_seen = seen | set([id(tree)])
-            result = tree.__class__([recurse(val, new_seen) for val in tree])
+            result = tree.__class__(
+                [recurse(val, new_seen, json_id) for val in tree])
             if hasattr(tree, '_tag'):
                 result = tag_object(tree._tag, result)
         else:
             result = tree
 
-        result = callback(result)
+        result = callback(result, json_id)
 
         return result
 
-    return recurse(top, set())
+    return recurse(top, set(), None)
