@@ -13,7 +13,7 @@ from astropy.io import fits
 from .. import asdf
 from .. import fits_embed
 
-from .helpers import assert_tree_match
+from .helpers import assert_tree_match, close_fits
 
 
 def test_embed_asdf_in_fits_file(tmpdir):
@@ -54,6 +54,8 @@ def test_embed_asdf_in_fits_file(tmpdir):
 
             with asdf.AsdfFile.open('test.asdf') as ff:
                 assert_tree_match(tree, ff.tree)
+
+        close_fits(hdulist2)
 
 
 def test_embed_asdf_in_fits_file_anonymous_extensions(tmpdir):
@@ -99,6 +101,8 @@ def test_embed_asdf_in_fits_file_anonymous_extensions(tmpdir):
             with asdf.AsdfFile.open('test.asdf') as ff:
                 assert_tree_match(tree, ff.tree)
 
+        close_fits(hdulist2)
+
 
 def test_create_in_tree_first(tmpdir):
     tree = {
@@ -137,3 +141,5 @@ def test_create_in_tree_first(tmpdir):
         with fits_embed.AsdfInFits.open(hdulist) as ff4:
             assert_array_equal(ff4.tree['model']['sci']['data'],
                                np.arange(512, dtype=np.float))
+
+        close_fits(hdulist)

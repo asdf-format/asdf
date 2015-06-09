@@ -106,36 +106,14 @@ class AsdfInFits(asdf.AsdfFile):
         self._blocks = _EmbeddedBlockManager(hdulist, self)
         self._hdulist = hdulist
 
-    def __exit__(self, typ, value, traceback):
-        for hdu in self._hdulist:
-            if hdu.data is not None:
-                base = util.get_array_base(hdu.data)
-                if hasattr(base, 'flush'):
-                    base.flush()
-                    base._mmap.close()
-        self._hdulist.close()
-
-        asdf.AsdfFile.__exit__(self, type, value, traceback)
-
-    def close(self):
-        for hdu in self._hdulist:
-            if hdu.data is not None:
-                base = util.get_array_base(hdu.data)
-                if hasattr(base, 'flush'):
-                    base.flush()
-                    base._mmap.close()
-        self._hdulist.close()
-
-        asdf.AsdfFile.close(self)
-
     @classmethod
     def open(cls, hdulist, uri=None, validate_checksums=False, extensions=None):
+        self = cls(hdulist, uri=uri, extensions=extensions)
+
         try:
             asdf_extension = hdulist[ASDF_EXTENSION_NAME]
         except (KeyError, IndexError, AttributeError):
-            return cls(hdulist, uri=uri, extensions=extensions)
-
-        self = cls(hdulist, extensions=extensions)
+            return self
 
         buff = io.BytesIO(asdf_extension.data)
 
