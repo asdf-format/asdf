@@ -108,7 +108,7 @@ def test_external_reference(tmpdir):
 
         assert_array_equal(ff.tree['internal'], exttree['cool_stuff']['a'])
 
-    with asdf.AsdfFile(tree, uri=pathname2url(
+    with asdf.AsdfFile(tree, uri='file:' + pathname2url(
             os.path.join(str(tmpdir), 'main.asdf'))) as ff:
         do_asserts(ff)
 
