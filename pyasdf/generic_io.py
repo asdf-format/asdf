@@ -22,12 +22,14 @@ import sys
 from astropy.extern import six
 from astropy.extern.six.moves import xrange
 from astropy.extern.six.moves.urllib import parse as urlparse
-from astropy.extern.six.moves.urllib.request import url2pathname, pathname2url
+from astropy.extern.six.moves.urllib.request import url2pathname
 from astropy.utils.misc import InheritDocstrings
 
 import numpy as np
 
 from .extern import atomicfile
+
+from . import util
 
 
 __all__ = ['get_file', 'resolve_uri', 'relative_uri']
@@ -171,7 +173,10 @@ def relative_uri(source, target):
         return target
 
     if relative is None:
-        relative = os.path.relpath(tu[2], os.path.dirname(su[2]))
+        if tu[2] == su[2]:
+            relative = ''
+        else:
+            relative = os.path.relpath(tu[2], os.path.dirname(su[2]))
     if relative == '.':
         relative = ''
     relative = urlparse.urlunparse(["", "", relative] + extra)
@@ -684,8 +689,7 @@ class RealFile(RandomAccessFile):
         self._size = stat.st_size
         if (uri is None and
             isinstance(fd.name, six.string_types)):
-            self._uri = urlparse.urljoin(
-                'file:', pathname2url(os.path.abspath(fd.name)))
+            self._uri = util.filepath_to_url(os.path.abspath(fd.name))
 
     def write_array(self, arr):
         if isinstance(arr, np.memmap) and getattr(arr, 'fd', None) is self:

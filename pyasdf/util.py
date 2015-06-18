@@ -9,6 +9,8 @@ import math
 import struct
 
 from astropy.extern import six
+from astropy.extern.six.moves.urllib.parse import urljoin
+from astropy.extern.six.moves.urllib.request import pathname2url
 from astropy.extern.six.moves.urllib import parse as urlparse
 from astropy.extern.six.moves import zip as izip
 
@@ -60,6 +62,13 @@ def get_base_uri(uri):
     """
     parts = urlparse.urlparse(uri)
     return urlparse.urlunparse(list(parts[:5]) + [''])
+
+
+def filepath_to_url(path):
+    """
+    For a given local file path, return a file:// url.
+    """
+    return urljoin('file:', pathname2url(path))
 
 
 def nth_item(iterable, n, default=None):

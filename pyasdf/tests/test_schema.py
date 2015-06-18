@@ -12,9 +12,6 @@ from astropy.extern import six
 from astropy.tests.helper import pytest
 from astropy import units as u
 
-from astropy.extern.six.moves.urllib.parse import urljoin
-from astropy.extern.six.moves.urllib.request import pathname2url
-
 from jsonschema import ValidationError
 
 import yaml
@@ -25,6 +22,7 @@ from .. import block
 from .. import resolver
 from .. import schema
 from .. import treeutil
+from .. import util
 
 from . import helpers
 
@@ -45,9 +43,8 @@ class CustomExtension:
     @property
     def url_mapping(self):
         return [('http://nowhere.org/schemas/custom/1.0.0/',
-                 urljoin('file:', pathname2url(os.path.join(
-                     TEST_DATA_PATH))) + '/{url_suffix}.yaml')]
-
+                 util.filepath_to_url(TEST_DATA_PATH) +
+                 '/{url_suffix}.yaml')]
 
 
 def test_violate_toplevel_schema():
@@ -108,12 +105,12 @@ def test_all_schema_examples():
     def test_example(args):
         fname, example = args
         buff = helpers.yaml_to_asdf('example: ' + example.strip())
-        ff = asdf.AsdfFile(uri=pathname2url(os.path.abspath(fname)))
+        ff = asdf.AsdfFile(uri=util.filepath_to_url(os.path.abspath(fname)))
 
         # Fake an external file
         ff2 = asdf.AsdfFile({'data': np.empty((1024*1024*8), dtype=np.uint8)})
         ff._external_asdf_by_uri[
-            pathname2url(
+            util.filepath_to_url(
                 os.path.abspath(
                     os.path.join(os.path.dirname(fname), 'external.asdf')))] = ff2
 

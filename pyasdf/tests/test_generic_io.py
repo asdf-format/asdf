@@ -9,14 +9,13 @@ import sys
 
 from astropy.extern import six
 import astropy.extern.six.moves.urllib.request as urllib_request
-from astropy.extern.six.moves.urllib.parse import urljoin
-from astropy.extern.six.moves.urllib.request import pathname2url
 from astropy.tests.helper import pytest, remote_data
 
 import numpy as np
 
 from .. import asdf
 from .. import generic_io
+from .. import util
 
 from . import helpers
 
@@ -87,13 +86,13 @@ def test_path(tree, tmpdir):
     def get_write_fd():
         f = generic_io.get_file(path, mode='w')
         assert isinstance(f, generic_io.RealFile)
-        assert f._uri == urljoin('file:', pathname2url(path))
+        assert f._uri == util.filepath_to_url(path)
         return f
 
     def get_read_fd():
         f = generic_io.get_file(path, mode='r')
         assert isinstance(f, generic_io.RealFile)
-        assert f._uri == urljoin('file:', pathname2url(path))
+        assert f._uri == util.filepath_to_url(path)
         # This is to check for a "feature" in Python 3.x that reading zero
         # bytes from a socket causes it to stop.  We have code in generic_io.py
         # to workaround it.
@@ -112,14 +111,14 @@ def test_open2(tree, tmpdir):
     def get_write_fd():
         f = generic_io.get_file(open(path, 'wb'), mode='w')
         assert isinstance(f, generic_io.RealFile)
-        assert f._uri == urljoin('file:', pathname2url(path))
+        assert f._uri == util.filepath_to_url(path)
         f._close = True
         return f
 
     def get_read_fd():
         f = generic_io.get_file(open(path, 'rb'), mode='r')
         assert isinstance(f, generic_io.RealFile)
-        assert f._uri == urljoin('file:', pathname2url(path))
+        assert f._uri == util.filepath_to_url(path)
         f._close = True
         return f
 
@@ -175,14 +174,14 @@ def test_io_open(tree, tmpdir):
     def get_write_fd():
         f = generic_io.get_file(io.open(path, 'wb'), mode='w')
         assert isinstance(f, generic_io.RealFile)
-        assert f._uri == urljoin('file:', pathname2url(path))
+        assert f._uri == util.filepath_to_url(path)
         f._close = True
         return f
 
     def get_read_fd():
         f = generic_io.get_file(io.open(path, 'r+b'), mode='rw')
         assert isinstance(f, generic_io.RealFile)
-        assert f._uri == urljoin('file:', pathname2url(path))
+        assert f._uri == util.filepath_to_url(path)
         f._close = True
         return f
 

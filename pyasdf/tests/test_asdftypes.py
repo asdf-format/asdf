@@ -8,10 +8,9 @@ import os
 
 from .. import asdf
 from .. import asdftypes
-from . import helpers
+from .. import util
 
-from astropy.extern.six.moves.urllib.parse import urljoin
-from astropy.extern.six.moves.urllib.request import pathname2url
+from . import helpers
 
 TEST_DATA_PATH = os.path.join(os.path.dirname(__file__), 'data')
 
@@ -47,8 +46,8 @@ def test_custom_tag():
         @property
         def url_mapping(self):
             return [('http://nowhere.org/schemas/custom/1.0.0/',
-                     urljoin('file:', pathname2url(os.path.join(
-                         TEST_DATA_PATH))) + '/{url_suffix}.yaml')]
+                     util.filepath_to_url(TEST_DATA_PATH) +
+                     '/{url_suffix}.yaml')]
 
     class FractionCallable(FractionExtension):
         @property
