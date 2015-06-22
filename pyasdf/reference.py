@@ -54,16 +54,21 @@ def resolve_fragment(tree, pointer):
 class Reference(AsdfType):
     yaml_tag = 'tag:yaml.org,2002:map'
 
-    def __init__(self, uri, asdffile=None, target=None):
+    def __init__(self, uri, base_uri=None, asdffile=None, target=None):
         self._uri = uri
         if asdffile is not None:
             self._asdffile = weakref.ref(asdffile)
+        self._base_uri = base_uri
         self._target = target
 
     def _get_target(self, do_not_fill_defaults=False):
         if self._target is None:
+            base_uri = self._base_uri
+            if base_uri is None:
+                base_uri = self._asdffile().uri
+            uri = generic_io.resolve_uri(base_uri, self._uri)
             asdffile = self._asdffile().open_external(
-                self._uri, do_not_fill_defaults=do_not_fill_defaults)
+                uri, do_not_fill_defaults=do_not_fill_defaults)
             parts = urlparse.urlparse(self._uri)
             fragment = parts.fragment
             self._target = resolve_fragment(asdffile.tree, fragment)
@@ -129,9 +134,9 @@ def find_references(tree, ctx):
     Find all of the JSON references in the tree, and convert them into
     `Reference` objects.
     """
-    def do_find(tree):
+    def do_find(tree, json_id):
         if isinstance(tree, dict) and '$ref' in tree:
-            return Reference(tree['$ref'], asdffile=ctx)
+            return Reference(tree['$ref'], json_id, asdffile=ctx)
         return tree
 
     return treeutil.walk_and_modify(tree, do_find)
@@ -142,7 +147,7 @@ def resolve_references(tree, ctx, do_not_fill_defaults=False):
     Resolve all of the references in the tree, by loading the external
     data and inserting it directly into the tree.
     """
-    def do_resolve(tree):
+    def do_resolve(tree, json_id):
         if isinstance(tree, Reference):
             return tree(do_not_fill_defaults=do_not_fill_defaults)
         return tree

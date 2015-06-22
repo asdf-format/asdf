@@ -7,10 +7,9 @@ from __future__ import absolute_import, division, unicode_literals, print_functi
 import os.path
 
 from astropy.extern import six
-from astropy.extern.six.moves.urllib.parse import urljoin
-from astropy.extern.six.moves.urllib.request import pathname2url
 
 from . import constants
+from . import util
 
 
 SCHEMA_PATH = os.path.abspath(
@@ -96,9 +95,9 @@ class Resolver(object):
 
 DEFAULT_URL_MAPPING = [
     (constants.STSCI_SCHEMA_URI_BASE,
-     urljoin('file:', pathname2url(os.path.join(
-         SCHEMA_PATH, 'stsci.edu'))) + '/{url_suffix}.yaml')
-]
+     util.filepath_to_url(
+         os.path.join(SCHEMA_PATH, 'stsci.edu')) +
+         '/{url_suffix}.yaml')]
 
 
 default_url_mapping = Resolver(DEFAULT_URL_MAPPING, 'url')

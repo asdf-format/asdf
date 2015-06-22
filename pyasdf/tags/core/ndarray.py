@@ -185,8 +185,6 @@ def inline_data_asarray(inline, dtype=None):
 
 
 def numpy_array_to_list(array):
-    # Convert byte string arrays to unicode string arrays, since YAML
-    # doesn't handle the former.  This just assumes they are Latin-1.
     def tolist(x):
         if isinstance(x, (np.ndarray, NDArrayType)):
             if x.dtype.char == 'S':
@@ -199,7 +197,17 @@ def numpy_array_to_list(array):
         else:
             return x
 
-    return tolist(array)
+    def ascii_to_unicode(x):
+        # Convert byte string arrays to unicode string arrays, since YAML
+        # doesn't handle the former.
+        if isinstance(x, list):
+            return [ascii_to_unicode(y) for y in x]
+        elif isinstance(x, bytes):
+            return x.decode('ascii')
+        else:
+            return x
+
+    return ascii_to_unicode(tolist(array))
 
 
 class NDArrayType(AsdfType):

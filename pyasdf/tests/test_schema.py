@@ -12,9 +12,6 @@ from astropy.extern import six
 from astropy.tests.helper import pytest
 from astropy import units as u
 
-from astropy.extern.six.moves.urllib.parse import urljoin
-from astropy.extern.six.moves.urllib.request import pathname2url
-
 from jsonschema import ValidationError
 
 import yaml
@@ -22,8 +19,10 @@ import yaml
 from .. import asdf
 from .. import asdftypes
 from .. import block
+from .. import resolver
 from .. import schema
 from .. import treeutil
+from .. import util
 
 from . import helpers
 
@@ -44,9 +43,8 @@ class CustomExtension:
     @property
     def url_mapping(self):
         return [('http://nowhere.org/schemas/custom/1.0.0/',
-                 urljoin('file:', pathname2url(os.path.join(
-                     TEST_DATA_PATH))) + '/{url_suffix}.yaml')]
-
+                 util.filepath_to_url(TEST_DATA_PATH) +
+                 '/{url_suffix}.yaml')]
 
 
 def test_violate_toplevel_schema():
@@ -86,8 +84,7 @@ def test_validate_all_schema():
     # Make sure that the schemas themselves are valid.
 
     def validate_schema(path):
-        with open(path, 'rb') as fd:
-            schema_tree = yaml.load(fd)
+        schema_tree = schema.load_schema(path, resolve_references=True)
 
         schema.check_schema(schema_tree)
 
@@ -95,6 +92,8 @@ def test_validate_all_schema():
     for root, dirs, files in os.walk(src):
         for fname in files:
             if not fname.endswith('.yaml'):
+                continue
+            if fname in ('draft-01.yaml', 'asdf-schema.yaml'):
                 continue
             yield validate_schema, os.path.join(root, fname)
 
@@ -106,12 +105,21 @@ def test_all_schema_examples():
     def test_example(args):
         fname, example = args
         buff = helpers.yaml_to_asdf('example: ' + example.strip())
-        ff = asdf.AsdfFile()
-        # Add a dummy block so that the ndarray examples
-        # work
-        ff.blocks.add(block.Block(np.empty((1024))))
+        ff = asdf.AsdfFile(uri=util.filepath_to_url(os.path.abspath(fname)))
+
+        # Fake an external file
+        ff2 = asdf.AsdfFile({'data': np.empty((1024*1024*8), dtype=np.uint8)})
+        ff._external_asdf_by_uri[
+            util.filepath_to_url(
+                os.path.abspath(
+                    os.path.join(os.path.dirname(fname), 'external.asdf')))] = ff2
+
+        # Add some dummy blocks so that the ndarray examples work
+        for i in range(2):
+            ff.blocks.add(block.Block(np.empty((1024*1024*8), dtype=np.uint8)))
+
         try:
-            ff.open(buff)
+            ff._open_impl(ff, buff)
         except:
             print("From file:", fname)
             raise
@@ -119,8 +127,9 @@ def test_all_schema_examples():
         # Just test we can write it out.  A roundtrip test
         # wouldn't always yield the correct result, so those have
         # to be covered by "real" unit tests.
-        buff = io.BytesIO()
-        ff.write_to(buff)
+        if b'external.asdf' not in buff.getvalue():
+            buff = io.BytesIO()
+            ff.write_to(buff)
 
     def find_examples_in_schema(path):
         with open(path, 'rb') as fd:
@@ -137,14 +146,19 @@ def test_all_schema_examples():
 
         return examples
 
+    tree = {
+        'data': np.empty((1024*1024*8), dtype=np.uint8)
+    }
+    external = asdf.AsdfFile(tree)
+
     src = os.path.join(os.path.dirname(__file__), '../schemas')
     for root, dirs, files in os.walk(src):
         for fname in files:
             if not fname.endswith('.yaml'):
                 continue
-            for example in find_examples_in_schema(
-                    os.path.join(root, fname)):
-                yield test_example, (fname, example)
+            path = os.path.join(root, fname)
+            for example in find_examples_in_schema(path):
+                yield test_example, (path, example)
 
 
 def test_schema_caching():
@@ -349,7 +363,9 @@ custom: !<tag:nowhere.org:custom/1.0.0/default>
 
 
 def test_references_in_schema():
+    r = resolver.Resolver(CustomExtension().url_mapping, 'url')
     s = schema.load_schema(os.path.join(TEST_DATA_PATH, 'self_referencing.yaml'),
+                           resolver=r,
                            resolve_references=True)
     assert '$ref' not in repr(s)
     assert s['anyOf'][1] == s['anyOf'][0]

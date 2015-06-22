@@ -8,8 +8,6 @@ import os
 import sys
 
 from astropy.extern import six
-from astropy.extern.six.moves.urllib.parse import urljoin
-from astropy.extern.six.moves.urllib.request import pathname2url
 from astropy.tests.helper import pytest
 
 import numpy as np
@@ -22,6 +20,7 @@ import yaml
 
 from ....tests import helpers
 from .... import asdf
+from .... import util
 
 from .. import ndarray
 
@@ -41,10 +40,9 @@ class CustomExtension:
 
     @property
     def url_mapping(self):
-        return [('http://nowhere.org/schemas/custom/1.0.0/',
-                 urljoin('file:', pathname2url(os.path.join(
-                     TEST_DATA_PATH))) + '/{url_suffix}.yaml')]
-
+        return [(
+            'http://nowhere.org/schemas/custom/1.0.0/',
+            util.filepath_to_url(TEST_DATA_PATH) + '/{url_suffix}.yaml')]
 
 
 def test_sharing(tmpdir):

@@ -60,19 +60,19 @@ class AsdfFile(versioning.VersionedMixin):
         self._fd = None
         self._external_asdf_by_uri = {}
         self._blocks = block.BlockManager(self)
+        self._uri = None
         if tree is None:
             self.tree = {}
-            self._uri = uri
         elif isinstance(tree, AsdfFile):
             self._uri = tree.uri
             self._tree = tree.tree
             self.run_modifying_hook('copy_to_new_asdf')
             self.find_references()
-            self._uri = uri
         else:
             self.tree = tree
-            self._uri = uri
             self.find_references()
+        if uri is not None:
+            self._uri = uri
 
     def __enter__(self):
         return self
@@ -706,7 +706,7 @@ class AsdfFile(versioning.VersionedMixin):
             with this name, it will be called for every instance of the
             corresponding custom type in the tree.
         """
-        def walker(node):
+        def walker(node, json_id):
             tag = self.type_index.from_custom_type(type(node))
             if tag is not None:
                 hook = getattr(tag, hookname, None)
