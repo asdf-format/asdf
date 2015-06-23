@@ -8,7 +8,7 @@ from __future__ import absolute_import, division, unicode_literals, print_functi
 
 from astropy.extern import six
 
-from .tagged import Tagged, tag_object
+from .tagged import tag_object
 
 
 def walk(top, callback):
@@ -32,26 +32,8 @@ def walk(top, callback):
     tree : object
         The modified tree.
     """
-    seen = set()
-
-    def recurse(tree):
-        tree_id = id(tree)
-
-        if tree_id in seen:
-            return
-
-        seen.add(tree_id)
-
-        if isinstance(tree, dict):
-            for val in six.itervalues(tree):
-                recurse(val)
-        elif isinstance(tree, (list, tuple)):
-            for val in tree:
-                recurse(val)
-
-        callback(tree)
-
-    return recurse(top)
+    for x in iter_tree(top):
+        callback(x)
 
 
 def iter_tree(top):
