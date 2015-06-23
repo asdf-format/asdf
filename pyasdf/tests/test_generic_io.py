@@ -240,7 +240,6 @@ def test_streams2():
     assert len(x) == 60
 
 
-@remote_data
 def test_urlopen(tree, httpserver):
     path = os.path.join(httpserver.tmpdir, 'test.asdf')
 
@@ -258,7 +257,6 @@ def test_urlopen(tree, httpserver):
         assert isinstance(next(ff.blocks.internal_blocks)._data, np.ndarray)
 
 
-@remote_data
 def test_http_connection(tree, httpserver):
     path = os.path.join(httpserver.tmpdir, 'test.asdf')
 
@@ -281,7 +279,6 @@ def test_http_connection(tree, httpserver):
         ff.tree['science_data'][0] == 42
 
 
-@remote_data
 def test_http_connection_range(tree, rhttpserver):
     path = os.path.join(rhttpserver.tmpdir, 'test.asdf')
     connection = [None]
