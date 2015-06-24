@@ -202,7 +202,7 @@ class AsdfFile(versioning.VersionedMixin):
     @property
     def tree(self):
         """
-        Get the tree of data in the ASDF file.
+        Get/set the tree of data in the ASDF file.
 
         When set, the tree will be validated against the ASDF schema.
         """
@@ -210,10 +210,19 @@ class AsdfFile(versioning.VersionedMixin):
 
     @tree.setter
     def tree(self, tree):
+        asdf_object = AsdfObject(tree)
         tagged_tree = yamlutil.custom_tree_to_tagged_tree(
-            AsdfObject(tree), self)
+            asdf_object, self)
         schema.validate(tagged_tree, self)
-        self._tree = AsdfObject(tree)
+        self._tree = asdf_object
+
+    def validate(self):
+        """
+        Validate the current state of the tree against the ASDF schema.
+        """
+        tagged_tree = yamlutil.custom_tree_to_tagged_tree(
+            self._tree, self)
+        schema.validate(tagged_tree, self)
 
     def make_reference(self, path=[]):
         """
