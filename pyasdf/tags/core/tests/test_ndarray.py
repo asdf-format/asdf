@@ -7,7 +7,12 @@ import io
 import os
 import sys
 
-import psutil
+try:
+    import psutil
+except ImportError:
+    HAS_PSUTIL = False
+else:
+    HAS_PSUTIL = True
 
 from astropy.extern import six
 from astropy.tests.helper import pytest
@@ -413,6 +418,7 @@ def test_inline_masked_array(tmpdir):
         assert 'null' in fd.read()
 
 
+@pytest.mark.skipif(not HAS_PSUTIL, reason="psutil not installed")
 def test_masked_array_stay_open_bug(tmpdir):
     tmppath = os.path.join(str(tmpdir), 'masked.asdf')
 
