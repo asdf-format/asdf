@@ -240,6 +240,8 @@ def test_streams2():
     assert len(x) == 60
 
 
+@pytest.mark.skipif(sys.platform.startswith('win'),
+                    reason="Windows firewall prevents test")
 def test_urlopen(tree, httpserver):
     path = os.path.join(httpserver.tmpdir, 'test.asdf')
 
@@ -257,6 +259,8 @@ def test_urlopen(tree, httpserver):
         assert isinstance(next(ff.blocks.internal_blocks)._data, np.ndarray)
 
 
+@pytest.mark.skipif(sys.platform.startswith('win'),
+                    reason="Windows firewall prevents test")
 def test_http_connection(tree, httpserver):
     path = os.path.join(httpserver.tmpdir, 'test.asdf')
 
@@ -279,6 +283,8 @@ def test_http_connection(tree, httpserver):
         ff.tree['science_data'][0] == 42
 
 
+@pytest.mark.skipif(sys.platform.startswith('win'),
+                    reason="Windows firewall prevents test")
 def test_http_connection_range(tree, rhttpserver):
     path = os.path.join(rhttpserver.tmpdir, 'test.asdf')
     connection = [None]
@@ -341,7 +347,8 @@ def test_exploded_filesystem_fail(tree, tmpdir):
                 helpers.assert_tree_match(tree, ff.tree)
 
 
-@remote_data
+@pytest.mark.skipif(sys.platform.startswith('win'),
+                    reason="Windows firewall prevents test")
 def test_exploded_http(tree, httpserver):
     path = os.path.join(httpserver.tmpdir, 'test.asdf')
 
