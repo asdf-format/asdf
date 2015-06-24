@@ -41,7 +41,7 @@ install:
     - "python --version"
 
     # Install specified version of numpy and dependencies
-    - "conda install -q --yes numpy=%NUMPY_VERSION% pytest Cython jinja2 pyyaml jsonschema"
+    - "conda install -q --yes numpy=%NUMPY_VERSION% pytest Cython jinja2 pyyaml jsonschema psutil"
 
     # Install the development version of astropy
     - "%CMD_IN_ENV% pip install git+http://github.com/astropy/astropy.git#egg=astropy"

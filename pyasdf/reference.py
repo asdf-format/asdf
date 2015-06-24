@@ -147,7 +147,7 @@ def resolve_references(tree, ctx, do_not_fill_defaults=False):
     Resolve all of the references in the tree, by loading the external
     data and inserting it directly into the tree.
     """
-    def do_resolve(tree, json_id):
+    def do_resolve(tree):
         if isinstance(tree, Reference):
             return tree(do_not_fill_defaults=do_not_fill_defaults)
         return tree

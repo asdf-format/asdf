@@ -64,9 +64,14 @@ class AsdfFile(versioning.VersionedMixin):
         if tree is None:
             self.tree = {}
         elif isinstance(tree, AsdfFile):
+            if self._extensions != tree._extensions:
+                raise ValueError(
+                    "Can not copy AsdfFile and change active extensions")
             self._uri = tree.uri
+            # Set directly to self._tree (bypassing property), since
+            # we can assume the other AsdfFile is already valid.
             self._tree = tree.tree
-            self.run_modifying_hook('copy_to_new_asdf')
+            self.run_modifying_hook('copy_to_new_asdf', validate=False)
             self.find_references()
         else:
             self.tree = tree
@@ -104,7 +109,7 @@ class AsdfFile(versioning.VersionedMixin):
 
     def copy(self):
         return self.__class__(
-            copy.deepcopy(self.tree),
+            copy.deepcopy(self._tree),
             self._uri,
             self._extensions
         )
@@ -660,7 +665,9 @@ class AsdfFile(versioning.VersionedMixin):
         Finds all external "JSON References" in the tree and converts
         them to `reference.Reference` objects.
         """
-        self.tree = reference.find_references(self.tree, self)
+        # Set directly to self._tree, since it doesn't need to be
+        # re-validated.
+        self._tree = reference.find_references(self._tree, self)
 
     def resolve_references(self, do_not_fill_defaults=False):
         """
@@ -669,8 +676,9 @@ class AsdfFile(versioning.VersionedMixin):
         a ASDF file after this operation means it will have no
         external references, and will be completely self-contained.
         """
-        tree = reference.resolve_references(self.tree, self)
-        self.tree = tree
+        # Set to the property self.tree so the resulting "complete"
+        # tree will be validated.
+        self.tree = reference.resolve_references(self._tree, self)
 
     def run_hook(self, hookname):
         """
@@ -686,14 +694,14 @@ class AsdfFile(versioning.VersionedMixin):
         if not self.type_index.has_hook(hookname):
             return
 
-        for node in treeutil.iter_tree(self.tree):
+        for node in treeutil.iter_tree(self._tree):
             tag = self.type_index.from_custom_type(type(node))
             if tag is not None:
                 hook = getattr(tag, hookname, None)
                 if hook is not None:
                     hook(node, self)
 
-    def run_modifying_hook(self, hookname):
+    def run_modifying_hook(self, hookname, validate=True):
         """
         Run a "hook" for each custom type found in the tree.  The hook
         is free to return a different object in order to modify the
@@ -705,16 +713,23 @@ class AsdfFile(versioning.VersionedMixin):
             The name of the hook.  If a `AsdfType` is found with a method
             with this name, it will be called for every instance of the
             corresponding custom type in the tree.
+
+        validate : bool
+            When `True` (default) validate the resulting tree.
         """
-        def walker(node, json_id):
+        def walker(node):
             tag = self.type_index.from_custom_type(type(node))
             if tag is not None:
                 hook = getattr(tag, hookname, None)
                 if hook is not None:
                     return hook(node, self)
             return node
-        self.tree = treeutil.walk_and_modify(self.tree, walker)
-        return self.tree
+        tree = treeutil.walk_and_modify(self.tree, walker)
+        if validate:
+            self.tree = tree
+        else:
+            self._tree = tree
+        return self._tree
 
     def resolve_and_inline(self):
         """

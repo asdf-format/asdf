@@ -6,9 +6,11 @@ Utility functions for managing tree-like data structures.
 
 from __future__ import absolute_import, division, unicode_literals, print_function
 
+import inspect
+
 from astropy.extern import six
 
-from .tagged import Tagged, tag_object
+from .tagged import tag_object
 
 
 def walk(top, callback):
@@ -32,26 +34,8 @@ def walk(top, callback):
     tree : object
         The modified tree.
     """
-    seen = set()
-
-    def recurse(tree):
-        tree_id = id(tree)
-
-        if tree_id in seen:
-            return
-
-        seen.add(tree_id)
-
-        if isinstance(tree, dict):
-            for val in six.itervalues(tree):
-                recurse(val)
-        elif isinstance(tree, (list, tuple)):
-            for val in tree:
-                recurse(val)
-
-        callback(tree)
-
-    return recurse(top)
+    for x in iter_tree(top):
+        callback(x)
 
 
 def iter_tree(top):
@@ -82,16 +66,18 @@ def iter_tree(top):
         if tree_id in seen:
             return
 
-        seen.add(tree_id)
-
         if isinstance(tree, (list, tuple)):
+            seen.add(tree_id)
             for val in tree:
                 for sub in recurse(val):
                     yield sub
+            seen.remove(tree_id)
         elif isinstance(tree, dict):
+            seen.add(tree_id)
             for val in six.itervalues(tree):
                 for sub in recurse(val):
                     yield sub
+            seen.remove(tree_id)
 
         yield tree
 
@@ -99,8 +85,7 @@ def iter_tree(top):
 
 
 def walk_and_modify(top, callback):
-    """
-    Modify a tree by walking it with a callback function.  It also has
+    """Modify a tree by walking it with a callback function.  It also has
     the effect of doing a deep copy.
 
     Parameters
@@ -109,9 +94,14 @@ def walk_and_modify(top, callback):
         The root of the tree.  May be a dict, list or other Python object.
 
     callback : callable
-        A function to call at each node in the tree.  It takes and
-        instance and a json id and may return a different instance in
-        order to modify the tree.
+        A function to call at each node in the tree.  It takes either
+        one or two arguments:
+
+        - an instance from the tere
+        - a json id (optional)
+
+        It may return a different instance in order to modify the
+        tree.
 
         The json id is the context under which any relative URLs
         should be resolved.  It may be `None` if no ids are in the file
@@ -125,25 +115,64 @@ def walk_and_modify(top, callback):
         The modified tree.
 
     """
-    def recurse(tree, seen, json_id):
-        if id(tree) in seen:
+    # For speed reasons, there are two different versions of the inner
+    # function
+
+    seen = set()
+
+    def recurse(tree):
+        id_tree = id(tree)
+
+        if id_tree in seen:
+            return tree
+
+        if isinstance(tree, dict):
+            result = tree.__class__()
+            seen.add(id_tree)
+            for key, val in six.iteritems(tree):
+                val = recurse(val)
+                if val is not None:
+                    result[key] = val
+            seen.remove(id_tree)
+            if hasattr(tree, '_tag'):
+                result = tag_object(tree._tag, result)
+        elif isinstance(tree, (list, tuple)):
+            seen.add(id_tree)
+            result = tree.__class__(
+                [recurse(val) for val in tree])
+            seen.remove(id_tree)
+            if hasattr(tree, '_tag'):
+                result = tag_object(tree._tag, result)
+        else:
+            result = tree
+
+        result = callback(result)
+
+        return result
+
+    def recurse_with_json_ids(tree, json_id):
+        id_tree = id(tree)
+
+        if id_tree in seen:
             return tree
 
         if isinstance(tree, dict):
             if 'id' in tree:
                 json_id = tree['id']
-            new_seen = seen | set([id(tree)])
             result = tree.__class__()
+            seen.add(id_tree)
             for key, val in six.iteritems(tree):
-                val = recurse(val, new_seen, json_id)
+                val = recurse_with_json_ids(val, json_id)
                 if val is not None:
                     result[key] = val
+            seen.remove(id_tree)
             if hasattr(tree, '_tag'):
                 result = tag_object(tree._tag, result)
         elif isinstance(tree, (list, tuple)):
-            new_seen = seen | set([id(tree)])
+            seen.add(id_tree)
             result = tree.__class__(
-                [recurse(val, new_seen, json_id) for val in tree])
+                [recurse_with_json_ids(val, json_id) for val in tree])
+            seen.remove(id_tree)
             if hasattr(tree, '_tag'):
                 result = tag_object(tree._tag, result)
         else:
@@ -153,4 +182,7 @@ def walk_and_modify(top, callback):
 
         return result
 
-    return recurse(top, set(), None)
+    if len(inspect.getargspec(callback)[0]) == 2:
+        return recurse_with_json_ids(top, None)
+    else:
+        return recurse(top)

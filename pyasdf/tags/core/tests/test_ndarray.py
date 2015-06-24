@@ -7,6 +7,13 @@ import io
 import os
 import sys
 
+try:
+    import psutil
+except ImportError:
+    HAS_PSUTIL = False
+else:
+    HAS_PSUTIL = True
+
 from astropy.extern import six
 from astropy.tests.helper import pytest
 
@@ -411,6 +418,7 @@ def test_inline_masked_array(tmpdir):
         assert 'null' in fd.read()
 
 
+@pytest.mark.skipif(not HAS_PSUTIL, reason="psutil not installed")
 def test_masked_array_stay_open_bug(tmpdir):
     tmppath = os.path.join(str(tmpdir), 'masked.asdf')
 
@@ -421,12 +429,14 @@ def test_masked_array_stay_open_bug(tmpdir):
     f = asdf.AsdfFile(tree)
     f.write_to(tmppath)
 
-    for i in range(1000):
+    p = psutil.Process()
+    orig_open = p.open_files()
+
+    for i in range(3):
         with asdf.AsdfFile.open(tmppath) as f2:
             np.sum(f2.tree['test'])
 
-    # fails with "too many open files" if the masked arrays
-    # aren't created correctly.
+    assert len(p.open_files()) == len(orig_open)
 
 
 def test_masked_array_repr(tmpdir):
