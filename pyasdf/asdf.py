@@ -706,7 +706,7 @@ class AsdfFile(versioning.VersionedMixin):
             with this name, it will be called for every instance of the
             corresponding custom type in the tree.
         """
-        def walker(node, json_id):
+        def walker(node):
             tag = self.type_index.from_custom_type(type(node))
             if tag is not None:
                 hook = getattr(tag, hookname, None)

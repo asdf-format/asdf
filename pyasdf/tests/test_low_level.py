@@ -761,7 +761,7 @@ def test_walk_and_modify_remove_keys():
         'bar': 43
     }
 
-    def func(x, json_id):
+    def func(x):
         if x == 42:
             return None
         return x

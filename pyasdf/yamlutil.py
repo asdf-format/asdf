@@ -220,7 +220,7 @@ def custom_tree_to_tagged_tree(tree, ctx):
     directly representable in YAML, to a tree of basic data types,
     annotated with tags.
     """
-    def walker(node, json_id):
+    def walker(node):
         tag = ctx.type_index.from_custom_type(type(node))
         if tag is not None:
             return tag.to_tree_tagged(node, ctx)
@@ -234,7 +234,7 @@ def tagged_tree_to_custom_tree(tree, ctx):
     Convert a tree containing only basic data types, annotated with
     tags, to a tree containing custom data types.
     """
-    def walker(node, json_id):
+    def walker(node):
         tag_name = getattr(node, '_tag', None)
         if tag_name is not None:
             tag_type = ctx.type_index.from_yaml_tag(tag_name)
