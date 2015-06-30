@@ -108,6 +108,10 @@ class AsdfTypeIndex(object):
 
     @lru_cache(5)
     def has_hook(self, hook_name):
+        """
+        Returns `True` if the given hook name exists on any of the managed
+        types.
+        """
         for cls in self._all_types:
             if hasattr(cls, hook_name):
                 return True

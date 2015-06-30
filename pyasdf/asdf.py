@@ -37,9 +37,9 @@ class AsdfFile(versioning.VersionedMixin):
 
         uri : str, optional
             The URI for this ASDF file.  Used to resolve relative
-            references against.  If not provided, will automatically
-            determined from the associated file object, if possible
-            and if created from `AsdfFile.open`.
+            references against.  If not provided, will be
+            automatically determined from the associated file object,
+            if possible and if created from `AsdfFile.open`.
 
         extensions : list of AsdfExtension
             A list of extensions to the ASDF to support when reading
