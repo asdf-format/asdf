@@ -41,6 +41,7 @@ class AsdfTypeIndex(object):
         self._type_by_subclasses = {}
         self._type_by_name = {}
         self._types_with_dynamic_subclasses = {}
+        self._hooks_by_type = {}
         self._all_types = set()
 
     def add_type(self, asdftype):
@@ -117,8 +118,28 @@ class AsdfTypeIndex(object):
                 return True
         return False
 
+    def get_hook_for_type(self, hookname, typ):
+        """
+        Get the hook function for the given type, if it exists,
+        else return None.
+        """
+        hooks = self._hooks_by_type.setdefault(hookname, {})
+        hook = hooks.get(typ, None)
+        if hook is not None:
+            return hook
 
-_all_asdftypes = AsdfTypeIndex()
+        tag = self.from_custom_type(typ)
+        if tag is not None:
+            hook = getattr(tag, hookname, None)
+            if hook is not None:
+                hooks[typ] = hook
+                return hook
+
+        hooks[typ] = None
+        return None
+
+
+_all_asdftypes = set()
 
 
 class AsdfTypeMeta(type):
@@ -138,7 +159,7 @@ class AsdfTypeMeta(type):
             elif cls.name is not None:
                 raise TypeError("name must be string or list")
 
-        _all_asdftypes.add_type(cls)
+        _all_asdftypes.add(cls)
 
         return cls
 

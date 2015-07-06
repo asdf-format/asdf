@@ -701,15 +701,15 @@ class AsdfFile(versioning.VersionedMixin):
             with this name, it will be called for every instance of the
             corresponding custom type in the tree.
         """
-        if not self.type_index.has_hook(hookname):
+        type_index = self.type_index
+
+        if not type_index.has_hook(hookname):
             return
 
         for node in treeutil.iter_tree(self._tree):
-            tag = self.type_index.from_custom_type(type(node))
-            if tag is not None:
-                hook = getattr(tag, hookname, None)
-                if hook is not None:
-                    hook(node, self)
+            hook = type_index.get_hook_for_type(hookname, type(node))
+            if hook is not None:
+                hook(node, self)
 
     def run_modifying_hook(self, hookname, validate=True):
         """
@@ -727,12 +727,15 @@ class AsdfFile(versioning.VersionedMixin):
         validate : bool
             When `True` (default) validate the resulting tree.
         """
+        type_index = self.type_index
+
+        if not type_index.has_hook(hookname):
+            return
+
         def walker(node):
-            tag = self.type_index.from_custom_type(type(node))
-            if tag is not None:
-                hook = getattr(tag, hookname, None)
-                if hook is not None:
-                    return hook(node, self)
+            hook = type_index.get_hook_for_type(hookname, type(node))
+            if hook is not None:
+                return hook(node, self)
             return node
         tree = treeutil.walk_and_modify(self.tree, walker)
 
