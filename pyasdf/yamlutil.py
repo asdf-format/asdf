@@ -28,7 +28,18 @@ else:  # pragma: no cover
 # ----------------------------------------------------------------------
 # Custom loader/dumpers
 
-def yaml_to_base_type(node, loader):
+
+_yaml_base_type_map = {
+    yaml.MappingNode:
+        lambda node, loader: loader.construct_mapping(node, deep=True),
+    yaml.SequenceNode:
+        lambda node, loader: loader.construct_sequence(node, deep=True),
+    yaml.ScalarNode:
+        lambda node, loader: loader.construct_scalar(node)
+}
+
+
+def _yaml_to_base_type(node, loader):
     """
     Converts a PyYAML node type to a basic Python data type.
 
@@ -47,15 +58,12 @@ def yaml_to_base_type(node, loader):
     basic : object
         Basic Python data type.
     """
-    if isinstance(node, yaml.MappingNode):
-        return loader.construct_mapping(node, deep=True)
-    elif isinstance(node, yaml.SequenceNode):
-        return loader.construct_sequence(node, deep=True)
-    elif isinstance(node, yaml.ScalarNode):
-        return loader.construct_scalar(node)
-    else:
+    def unknown_type_exception(node, loader):
         raise TypeError("Don't know how to implicitly construct '{0}'".format(
             type(node)))
+
+    return _yaml_base_type_map.get(
+        type(node), unknown_type_exception)(node, loader)
 
 
 class AsdfDumper(_yaml_base_dumper):
@@ -139,7 +147,7 @@ class AsdfLoader(_yaml_base_loader):
         tag = node.tag
         if node.tag in self.yaml_constructors:
             return super(AsdfLoader, self).construct_object(node, deep=False)
-        data = yaml_to_base_type(node, self)
+        data = _yaml_to_base_type(node, self)
         data = tagged.tag_object(tag, data)
         return data
 
@@ -276,12 +284,12 @@ def dump_tree(tree, fd, ctx):
         pass
     AsdfDumperTmp.ctx = ctx
 
+    tags = None
     if hasattr(tree, 'yaml_tag'):
         tag = tree.yaml_tag
         tag = tag[:tag.index('/core/asdf') + 1]
-        tags = {'!': tag}
-    else:
-        tags = None
+        if tag.strip():
+            tags = {'!': tag}
 
     tree = custom_tree_to_tagged_tree(tree, ctx)
     schema.validate(tree, ctx)
@@ -291,6 +299,5 @@ def dump_tree(tree, fd, ctx):
         [tree], stream=fd, Dumper=AsdfDumperTmp,
         explicit_start=True, explicit_end=True,
         version=ctx.versionspec.yaml_version,
-        allow_unicode=True,
-        encoding='utf-8',
+        allow_unicode=True, encoding='utf-8',
         tags=tags)
