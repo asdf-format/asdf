@@ -211,18 +211,19 @@ class AsdfFile(versioning.VersionedMixin):
     @tree.setter
     def tree(self, tree):
         asdf_object = AsdfObject(tree)
-        tagged_tree = yamlutil.custom_tree_to_tagged_tree(
-            asdf_object, self)
-        schema.validate(tagged_tree, self)
+        self._validate(asdf_object)
         self._tree = asdf_object
+
+    def _validate(self, tree):
+        tagged_tree = yamlutil.custom_tree_to_tagged_tree(
+            tree, self)
+        schema.validate(tagged_tree, self)
 
     def validate(self):
         """
         Validate the current state of the tree against the ASDF schema.
         """
-        tagged_tree = yamlutil.custom_tree_to_tagged_tree(
-            self._tree, self)
-        schema.validate(tagged_tree, self)
+        self._validate(self._tree)
 
     def make_reference(self, path=[]):
         """
@@ -391,7 +392,7 @@ class AsdfFile(versioning.VersionedMixin):
         tree = reference.find_references(tree, self)
         if not do_not_fill_defaults:
             schema.fill_defaults(tree, self)
-        schema.validate(tree, self)
+        self._validate(tree)
         tree = yamlutil.tagged_tree_to_custom_tree(tree, self)
 
         self._tree = tree
@@ -734,10 +735,10 @@ class AsdfFile(versioning.VersionedMixin):
                     return hook(node, self)
             return node
         tree = treeutil.walk_and_modify(self.tree, walker)
+
         if validate:
-            self.tree = tree
-        else:
-            self._tree = tree
+            self._validate(tree)
+        self._tree = tree
         return self._tree
 
     def resolve_and_inline(self):
