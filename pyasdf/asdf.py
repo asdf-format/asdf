@@ -37,9 +37,9 @@ class AsdfFile(versioning.VersionedMixin):
 
         uri : str, optional
             The URI for this ASDF file.  Used to resolve relative
-            references against.  If not provided, will automatically
-            determined from the associated file object, if possible
-            and if created from `AsdfFile.open`.
+            references against.  If not provided, will be
+            automatically determined from the associated file object,
+            if possible and if created from `AsdfFile.open`.
 
         extensions : list of AsdfExtension
             A list of extensions to the ASDF to support when reading
@@ -211,18 +211,19 @@ class AsdfFile(versioning.VersionedMixin):
     @tree.setter
     def tree(self, tree):
         asdf_object = AsdfObject(tree)
-        tagged_tree = yamlutil.custom_tree_to_tagged_tree(
-            asdf_object, self)
-        schema.validate(tagged_tree, self)
+        self._validate(asdf_object)
         self._tree = asdf_object
+
+    def _validate(self, tree):
+        tagged_tree = yamlutil.custom_tree_to_tagged_tree(
+            tree, self)
+        schema.validate(tagged_tree, self)
 
     def validate(self):
         """
         Validate the current state of the tree against the ASDF schema.
         """
-        tagged_tree = yamlutil.custom_tree_to_tagged_tree(
-            self._tree, self)
-        schema.validate(tagged_tree, self)
+        self._validate(self._tree)
 
     def make_reference(self, path=[]):
         """
@@ -391,7 +392,7 @@ class AsdfFile(versioning.VersionedMixin):
         tree = reference.find_references(tree, self)
         if not do_not_fill_defaults:
             schema.fill_defaults(tree, self)
-        schema.validate(tree, self)
+        self._validate(tree)
         tree = yamlutil.tagged_tree_to_custom_tree(tree, self)
 
         self._tree = tree
@@ -700,15 +701,15 @@ class AsdfFile(versioning.VersionedMixin):
             with this name, it will be called for every instance of the
             corresponding custom type in the tree.
         """
-        if not self.type_index.has_hook(hookname):
+        type_index = self.type_index
+
+        if not type_index.has_hook(hookname):
             return
 
         for node in treeutil.iter_tree(self._tree):
-            tag = self.type_index.from_custom_type(type(node))
-            if tag is not None:
-                hook = getattr(tag, hookname, None)
-                if hook is not None:
-                    hook(node, self)
+            hook = type_index.get_hook_for_type(hookname, type(node))
+            if hook is not None:
+                hook(node, self)
 
     def run_modifying_hook(self, hookname, validate=True):
         """
@@ -726,18 +727,21 @@ class AsdfFile(versioning.VersionedMixin):
         validate : bool
             When `True` (default) validate the resulting tree.
         """
+        type_index = self.type_index
+
+        if not type_index.has_hook(hookname):
+            return
+
         def walker(node):
-            tag = self.type_index.from_custom_type(type(node))
-            if tag is not None:
-                hook = getattr(tag, hookname, None)
-                if hook is not None:
-                    return hook(node, self)
+            hook = type_index.get_hook_for_type(hookname, type(node))
+            if hook is not None:
+                return hook(node, self)
             return node
         tree = treeutil.walk_and_modify(self.tree, walker)
+
         if validate:
-            self.tree = tree
-        else:
-            self._tree = tree
+            self._validate(tree)
+        self._tree = tree
         return self._tree
 
     def resolve_and_inline(self):

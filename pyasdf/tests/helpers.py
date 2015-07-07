@@ -9,7 +9,7 @@ import os
 from astropy.extern import six
 
 from ..asdf import AsdfFile
-from ..asdftypes import _all_asdftypes
+from ..extension import _builtin_extension_list
 from .. import util
 
 from ..tags.core import AsdfObject
@@ -38,8 +38,8 @@ def assert_tree_match(old_tree, new_tree, funcname='assert_equal'):
         seen.add(id(old))
         seen.add(id(new))
 
-        old_type = _all_asdftypes.from_custom_type(type(old))
-        new_type = _all_asdftypes.from_custom_type(type(new))
+        old_type = _builtin_extension_list.type_index.from_custom_type(type(old))
+        new_type = _builtin_extension_list.type_index.from_custom_type(type(new))
 
         if (old_type is not None and
             new_type is not None and

@@ -140,6 +140,7 @@ class AsdfExtensionList(object):
     def validators(self):
         return self._validators
 
+
 class BuiltinExtension(object):
     """
     This is the "extension" to ASDF that includes all the built-in
@@ -148,7 +149,7 @@ class BuiltinExtension(object):
     """
     @property
     def types(self):
-        return asdftypes._all_asdftypes._all_types
+        return asdftypes._all_asdftypes
 
     @property
     def tag_mapping(self):
