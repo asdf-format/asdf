@@ -388,9 +388,10 @@ class BlockManager(object):
                 streamed_block = self.streamed_block
                 if streamed_block is not None:
                     return streamed_block
-                # If we don't have a streamed block, fall through
-                # so we can read all of the blocks, ultimately arriving
-                # at the last one, which, if all goes well
+                # If we don't have a streamed block, fall through so
+                # we can read all of the blocks, ultimately arriving
+                # at the last one, which, if all goes well is a
+                # streamed block.
 
             # First, iterate through the blocks we've already read
             # to look for the block
@@ -414,7 +415,8 @@ class BlockManager(object):
                 last_block._fd is not None and
                 last_block._fd.seekable()):
                 last_block._fd.seek(
-                    last_block.offset + last_block.header_size + last_block.allocated)
+                    last_block.offset + last_block.header_size +
+                    last_block.allocated)
                 while True:
                     next_block = self._read_next_internal_block(
                         last_block._fd, False)
