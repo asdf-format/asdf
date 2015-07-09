@@ -1069,6 +1069,10 @@ class UnloadedBlock(object):
         pass
 
     @property
+    def array_storage(self):
+        return 'inline'
+
+    @property
     def offset(self):
         return self._offset
 
@@ -1077,6 +1081,11 @@ class UnloadedBlock(object):
         return getattr(self, attr)
 
     def load(self):
+        self._fd.seek(0, generic_io.SEEK_END)
+        file_size = self._fd.tell()
+        if self._offset > file_size:
+            # TODO: In this case, we need to fall back to skipping
+            raise ValueError("Broken index")
         self._fd.seek(self._offset, generic_io.SEEK_SET)
         block = Block().read(self._fd)
         self.__dict__.update(block.__dict__)
