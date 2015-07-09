@@ -800,6 +800,7 @@ def test_deferred_block_loading():
     buff.seek(0)
     with asdf.AsdfFile.open(buff) as ff2:
         assert len([x for x in ff2.blocks.blocks if isinstance(x, block.Block)]) == 1
+        x = ff2.tree['science_data'] * 2
         x = ff2.tree['not_shared'] * 2
         assert len([x for x in ff2.blocks.blocks if isinstance(x, block.Block)]) == 2
 
