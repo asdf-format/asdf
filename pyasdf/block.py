@@ -191,11 +191,7 @@ class BlockManager(object):
             if block.array_storage in 'internal':
                 last_block = block
 
-        # If the desired block hasn't already been read, and the
-        # file is seekable, and we have at least one internal
-        # block, then we can move the file pointer to the end of
-        # the last known internal block, and start looking for
-        # more internal blocks.  This is "deferred block loading".
+        # Read all of the remaining blocks in the file, if any
         if (last_block is not None and
             last_block._fd is not None and
             last_block._fd.seekable()):
