@@ -414,8 +414,8 @@ def test_inline_masked_array(tmpdir):
         assert len(list(f2.blocks.internal_blocks)) == 0
         assert_array_equal(f.tree['test'], f2.tree['test'])
 
-    with open('masked.asdf') as fd:
-        assert 'null' in fd.read()
+    with open('masked.asdf', 'rb') as fd:
+        assert b'null' in fd.read()
 
 
 @pytest.mark.skipif(not HAS_PSUTIL, reason="psutil not installed")

@@ -19,6 +19,8 @@ import platform
 import re
 import sys
 
+from os import SEEK_SET, SEEK_CUR, SEEK_END
+
 from astropy.extern import six
 from astropy.extern.six.moves import xrange
 from astropy.extern.six.moves.urllib import parse as urlparse
@@ -375,9 +377,9 @@ class GenericFile(object):
 
         whence : integer, optional
             The `whence` argument is optional and defaults to
-            os.SEEK_SET or 0 (absolute file positioning); other values
-            are os.SEEK_CUR or 1 (seek relative to the current
-            position) and os.SEEK_END or 2 (seek relative to the
+            SEEK_SET or 0 (absolute file positioning); other values
+            are SEEK_CUR or 1 (seek relative to the current
+            position) and SEEK_END or 2 (seek relative to the
             file’s end).
         """
         result = self._fd.seek(offset, whence)
@@ -655,7 +657,7 @@ class RandomAccessFile(GenericFile):
     def _peek(self, size=-1):
         cursor = self.tell()
         content = self.read(size)
-        self.seek(cursor, os.SEEK_SET)
+        self.seek(cursor, SEEK_SET)
         return content
 
     def reader_until(self, delimiter, readahead_bytes, delimiter_name=None,
@@ -666,8 +668,8 @@ class RandomAccessFile(GenericFile):
 
     def fast_forward(self, size):
         if size < 0:
-            self.seek(0, os.SEEK_END)
-        self.seek(size, os.SEEK_CUR)
+            self.seek(0, SEEK_END)
+        self.seek(size, SEEK_CUR)
 
     def truncate(self, size):
         self._fd.truncate(size)
@@ -734,7 +736,7 @@ class MemoryIO(RandomAccessFile):
         # If we need a read/write array, we have to copy it.
         if 'w' in self._mode:
             result = result.copy()
-        self.seek(size, os.SEEK_CUR)
+        self.seek(size, SEEK_CUR)
         return result
 
 
@@ -940,11 +942,11 @@ class HTTPConnection(RandomAccessFile):
             return new_content[:size]
 
     def seek(self, offset, whence=0):
-        if whence == os.SEEK_SET:
+        if whence == SEEK_SET:
             self._pos = offset
-        elif whence == os.SEEK_CUR:
+        elif whence == SEEK_CUR:
             self._pos += offset
-        elif whence == os.SEEK_END:
+        elif whence == SEEK_END:
             self._pos = self._size - offset
 
     def tell(self):

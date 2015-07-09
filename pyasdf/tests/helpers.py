@@ -113,6 +113,19 @@ def assert_roundtrip_tree(
         if asdf_check_func:
             asdf_check_func(ff)
 
+    # Make sure everything works without a block index
+    write_options['include_block_index'] = False
+    buff = io.BytesIO()
+    AsdfFile(tree).write_to(buff, **write_options)
+    assert not buff.closed
+    buff.seek(0)
+    with AsdfFile.open(buff, mode='rw') as ff:
+        assert not buff.closed
+        assert isinstance(ff.tree, AsdfObject)
+        assert_tree_match(tree, ff.tree)
+        if asdf_check_func:
+            asdf_check_func(ff)
+
 
 def yaml_to_asdf(yaml_content, yaml_headers=True):
     """

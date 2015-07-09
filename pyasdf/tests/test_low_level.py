@@ -13,6 +13,7 @@ import numpy as np
 from numpy.testing import assert_array_equal
 
 from .. import asdf
+from .. import block
 from .. import constants
 from .. import generic_io
 from .. import treeutil
@@ -396,7 +397,7 @@ def test_update_delete_first_array(tmpdir):
         del ff.tree['arrays'][0]
         ff.update()
 
-    assert os.stat(path).st_size == original_size
+    assert os.stat(path).st_size <= original_size
 
     with asdf.AsdfFile.open(os.path.join(tmpdir, "test.asdf")) as ff:
         assert_array_equal(ff.tree['arrays'][0], tree['arrays'][1])
@@ -419,7 +420,7 @@ def test_update_delete_last_array(tmpdir):
         del ff.tree['arrays'][-1]
         ff.update()
 
-    assert os.stat(path).st_size == original_size
+    assert os.stat(path).st_size <= original_size
 
     with asdf.AsdfFile.open(os.path.join(tmpdir, "test.asdf")) as ff:
         assert_array_equal(ff.tree['arrays'][0], tree['arrays'][0])
@@ -442,7 +443,7 @@ def test_update_delete_middle_array(tmpdir):
         del ff.tree['arrays'][1]
         ff.update()
 
-    assert os.stat(path).st_size == original_size
+    assert os.stat(path).st_size <= original_size
 
     with asdf.AsdfFile.open(os.path.join(tmpdir, "test.asdf")) as ff:
         assert_array_equal(ff.tree['arrays'][0], tree['arrays'][0])
@@ -465,7 +466,7 @@ def test_update_replace_first_array(tmpdir):
         ff.tree['arrays'][0] = np.arange(32)
         ff.update()
 
-    assert os.stat(path).st_size == original_size
+    assert os.stat(path).st_size <= original_size
 
     with asdf.AsdfFile.open(os.path.join(tmpdir, "test.asdf")) as ff:
         assert_array_equal(ff.tree['arrays'][0], np.arange(32))
@@ -489,7 +490,7 @@ def test_update_replace_last_array(tmpdir):
         ff.tree['arrays'][2] = np.arange(32)
         ff.update()
 
-    assert os.stat(path).st_size == original_size
+    assert os.stat(path).st_size <= original_size
 
     with asdf.AsdfFile.open(os.path.join(tmpdir, "test.asdf")) as ff:
         assert_array_equal(ff.tree['arrays'][0], tree['arrays'][0])
@@ -513,7 +514,7 @@ def test_update_replace_middle_array(tmpdir):
         ff.tree['arrays'][1] = np.arange(32)
         ff.update()
 
-    assert os.stat(path).st_size == original_size
+    assert os.stat(path).st_size <= original_size
 
     with asdf.AsdfFile.open(os.path.join(tmpdir, "test.asdf")) as ff:
         assert_array_equal(ff.tree['arrays'][0], tree['arrays'][0])
@@ -537,8 +538,6 @@ def test_update_add_array(tmpdir):
         ff.tree['arrays'].append(np.arange(32))
         ff.update()
 
-    assert os.stat(path).st_size == original_size
-
     with asdf.AsdfFile.open(os.path.join(tmpdir, "test.asdf")) as ff:
         assert_array_equal(ff.tree['arrays'][0], tree['arrays'][0])
         assert_array_equal(ff.tree['arrays'][1], tree['arrays'][1])
@@ -561,6 +560,7 @@ def test_update_add_array_at_end(tmpdir):
     with asdf.AsdfFile.open(os.path.join(tmpdir, "test.asdf"), mode="rw") as ff:
         ff.tree['arrays'].append(np.arange(2048))
         ff.update()
+        assert len(ff.blocks) == 4
 
     assert os.stat(path).st_size >= original_size
 
@@ -799,10 +799,39 @@ def test_deferred_block_loading():
 
     buff.seek(0)
     with asdf.AsdfFile.open(buff) as ff2:
-        assert len(ff2.blocks) == 1
-        ff2.blocks.get_block(1)
-
-        assert len(ff2.blocks) == 2
+        assert len([x for x in ff2.blocks.blocks if isinstance(x, block.Block)]) == 1
+        x = ff2.tree['not_shared'] * 2
+        assert len([x for x in ff2.blocks.blocks if isinstance(x, block.Block)]) == 2
 
         with pytest.raises(ValueError):
             ff2.blocks.get_block(2)
+
+
+def test_block_index():
+    buff = io.BytesIO()
+
+    arrays = []
+    for i in range(100):
+        arrays.append(np.ones((8, 8)) * i)
+
+    tree = {
+        'arrays': arrays
+    }
+
+    ff = asdf.AsdfFile(tree)
+    ff.write_to(buff)
+
+    buff.seek(0)
+    with asdf.AsdfFile.open(buff) as ff2:
+        assert isinstance(ff2.blocks._internal_blocks[0], block.Block)
+        assert len(ff2.blocks._internal_blocks) == 100
+        for i in range(2, 100):
+            assert isinstance(ff2.blocks._internal_blocks[i], block.UnloadedBlock)
+
+        # Force the loading of one array
+        x = ff2.tree['arrays'][50] * 2
+        for i in range(2, 100):
+            if i == 50:
+                assert isinstance(ff2.blocks._internal_blocks[i], block.Block)
+            else:
+                assert isinstance(ff2.blocks._internal_blocks[i], block.UnloadedBlock)

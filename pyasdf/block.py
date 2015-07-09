@@ -8,6 +8,7 @@ import copy
 import hashlib
 import io
 import os
+import re
 import struct
 import weakref
 
@@ -254,6 +255,10 @@ class BlockManager(object):
         knowledge of all internal blocks in the file.
         """
         if len(self._internal_blocks):
+            for i, block in enumerate(self._internal_blocks):
+                if isinstance(block, UnloadedBlock):
+                    block.load()
+
             last_block = self._internal_blocks[-1]
 
             # Read all of the remaining blocks in the file, if any
@@ -317,15 +322,13 @@ class BlockManager(object):
             last_block.write(fd)
             last_block = block
 
-        # The last block must be "allocated" all the way to the
-        # end of the file, which isn't truncated when updating.
-        fd.seek(0, 2)
-        last_end = fd.tell()
-        last_block.allocated = max(
-            last_end - last_block.offset,
-            last_block.size) - last_block.header_size
+        last_block.allocated = last_block.size
         fd.seek(last_block.offset)
         last_block.write(fd)
+
+        fd.truncate(last_block.offset + last_block.header_size +
+                    last_block.allocated)
+        fd.seek(0, generic_io.SEEK_END)
 
     def write_external_blocks(self, uri, pad_blocks=False):
         """
@@ -350,6 +353,84 @@ class BlockManager(object):
             asdffile.blocks.add(block)
             block._used = True
             asdffile.write_to(subfd, pad_blocks=pad_blocks)
+
+    def write_block_index(self, fd):
+        """
+        Write the block index.
+
+        Parameters
+        ----------
+        fd : GenericFile
+            The file to write to.  The file pointer should be at the
+            end of the file.
+        """
+        if len(self._internal_blocks) and not len(self._streamed_blocks):
+            fd.write(constants.INDEX_HEADER)
+            fd.write(b'\n')
+            for block in self.internal_blocks:
+                fd.write('{0:d}\n'.format(block.offset).encode('ascii'))
+
+    _re_index_content = re.compile(b'^([0-9]+\r?\n)+$')
+    _re_index_misc = re.compile(b'^' + constants.INDEX_HEADER + b'\r?\n[0-9\r\n]+$')
+
+    def read_block_index(self, fd):
+        """
+        Read the block index.
+
+        Parameters
+        ----------
+        fd : GenericFile
+            The file to read from.  It must be seekable.
+        """
+        # This reads the block index by reading backward from the end
+        # of the file.  This tries to be as conservative as possible,
+        # since not reading an index isn't a deal breaker -- everything
+        # can still be read from the file, only slower.
+
+        if not fd.seekable():
+            return
+
+        fd.seek(0, generic_io.SEEK_END)
+        block_end = fd.tell()
+
+        suffix = b''
+
+        # Read blocks in reverse order from the end of the file
+        while True:
+            block_start = max(block_end - fd.block_size, 0)
+            fd.seek(block_start, generic_io.SEEK_SET)
+            buff_size = block_end - fd.tell()
+            buff = fd.read(buff_size)
+
+            # Look for the index header
+            idx = buff.rfind(constants.INDEX_HEADER)
+            if idx == -1:
+                # If we didn't find the index header, but everything
+                # looks plausibly like index content, store the
+                # content as suffix, and keep reading backward.
+                # Otherwise, just bail.
+                if not self._re_index_misc.match(buff):
+                    return
+                else:
+                    suffix = buff + suffix
+            else:
+                # If we found the header, and everything after it looks
+                # like index content, it's probably an index.
+                content = buff[idx:] + suffix
+                if not self._re_index_misc.match(content):
+                    return
+                else:
+                    break
+
+            block_end = block_start
+
+        lines = content.splitlines()
+        # The first line is a header.  The second is the index of the
+        # first block, which is always loaded by pyasdf.  So we only
+        # need to deal with the rest.
+        for line in lines[2:]:
+            offset = int(line.strip())
+            self._internal_blocks.append(UnloadedBlock(fd, offset))
 
     def get_external_filename(self, filename, index):
         """
@@ -452,7 +533,6 @@ class BlockManager(object):
             elif source >= 0:
                 if source < len(self._internal_blocks):
                     return self._internal_blocks[source]
-
             else:
                 raise ValueError("Invalid source id {0}".format(source))
 
@@ -468,6 +548,7 @@ class BlockManager(object):
             # the last known internal block, and start looking for
             # more internal blocks.  This is "deferred block loading".
             last_block = self._internal_blocks[-1]
+
             if (last_block._fd is not None and
                 last_block._fd.seekable()):
                 last_block._fd.seek(
@@ -786,11 +867,15 @@ class Block(object):
             if len(buff) < 4:
                 return None
 
-            if buff != constants.BLOCK_MAGIC:
+            if buff not in (constants.BLOCK_MAGIC, constants.INDEX_MAGIC):
                 raise ValueError(
                     "Bad magic number in block. "
                     "This may indicate an internal inconsistency about the "
                     "sizes of the blocks in the file.")
+
+            if buff == constants.INDEX_MAGIC:
+                return None
+
         elif offset is not None:
             offset -= 4
 
@@ -964,6 +1049,38 @@ class Block(object):
                 self._data._mmap.close()
             self._data = None
 
+
+class UnloadedBlock(object):
+    """
+    Represents an indexed, but not yet loaded, internal block.  All
+    that is known about it is its offset.  It converts itself to a
+    full-fledged block whenever the underlying data or more detail is
+    requested.
+    """
+    def __init__(self, fd, offset):
+        self._fd = fd
+        self._offset = offset
+
+    def __len__(self):
+        self.load()
+        return len(self)
+
+    def close(self):
+        pass
+
+    @property
+    def offset(self):
+        return self._offset
+
+    def __getattr__(self, attr):
+        self.load()
+        return getattr(self, attr)
+
+    def load(self):
+        self._fd.seek(self._offset, generic_io.SEEK_SET)
+        block = Block().read(self._fd)
+        self.__dict__.update(block.__dict__)
+        self.__class__ = Block
 
 
 def calculate_updated_layout(blocks, tree_size, pad_blocks, block_size):
