@@ -95,9 +95,10 @@ def test_stream_with_nonstream():
     buff.seek(0)
 
     with asdf.AsdfFile().open(buff) as ff:
-        assert len(ff.blocks) == 2
+        assert len(ff.blocks) == 1
         assert_array_equal(ff.tree['nonstream'], np.array([1, 2, 3, 4], np.int64))
         assert ff.tree['stream'].shape == (100, 6, 2)
+        assert len(ff.blocks) == 2
         for i, row in enumerate(ff.tree['stream']):
             assert np.all(row == i)
 
@@ -117,9 +118,10 @@ def test_stream_real_file(tmpdir):
             fd.write(np.array([i] * 12, np.float64).tostring())
 
     with asdf.AsdfFile().open(path) as ff:
-        assert len(ff.blocks) == 2
+        assert len(ff.blocks) == 1
         assert_array_equal(ff.tree['nonstream'], np.array([1, 2, 3, 4], np.int64))
         assert ff.tree['stream'].shape == (100, 6, 2)
+        assert len(ff.blocks) == 2
         for i, row in enumerate(ff.tree['stream']):
             assert np.all(row == i)
 
@@ -155,7 +157,7 @@ def test_array_to_stream(tmpdir):
 
     buff = io.BytesIO()
     ff = asdf.AsdfFile(tree)
-    ff.blocks[tree['stream']].array_storage = 'streamed'
+    ff.set_array_storage(tree['stream'], 'streamed')
     ff.write_to(buff)
     buff.write(np.array([5, 6, 7, 8], np.int64).tostring())
 
@@ -169,7 +171,7 @@ def test_array_to_stream(tmpdir):
 
     with open(os.path.join(str(tmpdir), 'test.asdf'), 'wb') as fd:
         ff = asdf.AsdfFile(tree)
-        ff.blocks[tree['stream']].array_storage = 'streamed'
+        ff.set_array_storage(tree['stream'], 'streamed')
         ff.write_to(fd)
         fd.write(np.array([5, 6, 7, 8], np.int64).tostring())
 
@@ -186,10 +188,7 @@ def test_too_many_streams():
         'stream2': np.array([1, 2, 3, 4], np.int64)
     }
 
-    buff = io.BytesIO()
-
     ff = asdf.AsdfFile(tree)
-    ff.blocks[tree['stream1']].array_storage = 'streamed'
-    ff.blocks[tree['stream2']].array_storage = 'streamed'
+    ff.set_array_storage(tree['stream1'], 'streamed')
     with pytest.raises(ValueError):
-        ff.write_to(buff)
+        ff.set_array_storage(tree['stream2'], 'streamed')

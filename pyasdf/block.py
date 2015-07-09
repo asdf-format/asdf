@@ -32,42 +32,154 @@ class BlockManager(object):
     def __init__(self, asdffile):
         self._asdffile = weakref.ref(asdffile)
 
-        self._blocks = []
+        self._internal_blocks = []
+        self._external_blocks = []
+        self._inline_blocks = []
+        self._streamed_blocks = []
+
+        self._block_type_mapping = {
+            'internal': self._internal_blocks,
+            'external': self._external_blocks,
+            'inline': self._inline_blocks,
+            'streamed': self._streamed_blocks
+        }
+
         self._data_to_block_mapping = {}
+        self._validate_checksums = False
 
     def __len__(self):
         """
         Return the total number of blocks being managed.
+
+        This may not include all of the blocks in an open file, since
+        their reading may have been deferred.  Call
+        `finish_reading_internal_blocks` to find the positions and
+        header information of all blocks in the file.
         """
-        return len(self._blocks)
+        return sum(len(x) for x in self._block_type_mapping.values())
+
+    def add(self, block):
+        """
+        Add an internal block to the manager.
+        """
+        block_set = self._block_type_mapping.get(block.array_storage, None)
+        if block_set is not None:
+            if block not in block_set:
+                block_set.append(block)
+        else:
+            raise ValueError(
+                "Unknown array storage type {0}".format(block.array_storage))
+
+        if block.array_storage == 'streamed' and len(self._streamed_blocks) > 1:
+            raise ValueError("Can not add second streaming block")
+
+        if block._data is not None:
+            self._data_to_block_mapping[id(block._data)] = block
+
+    def remove(self, block):
+        """
+        Remove a block from the manager.
+        """
+        block_set = self._block_type_mapping.get(block.array_storage, None)
+        if block_set is not None:
+            if block in block_set:
+                block_set.remove(block)
+                if block._data is not None:
+                    if id(block._data) in self._data_to_block_mapping:
+                        del self._data_to_block_mapping[id(block._data)]
+        else:
+            raise ValueError(
+                "Unknown array storage type {0}".format(block.array_storage))
+
+    def set_array_storage(self, block, array_storage):
+        """
+        Set the array storage type of the given block.
+
+        Parameters
+        ----------
+        block : Block instance
+
+        array_storage : str
+            Must be one of:
+
+            - ``internal``: The default.  The array data will be
+              stored in a binary block in the same ASDF file.
+
+            - ``external``: Store the data in a binary block in a
+              separate ASDF file.
+
+            - ``inline``: Store the data as YAML inline in the tree.
+
+            - ``streamed``: The special streamed inline block that
+              appears at the end of the file.
+        """
+        if array_storage not in ['internal', 'external', 'streamed', 'inline']:
+            raise ValueError(
+                "array_storage must be one of 'internal', 'external', "
+                "'streamed' or 'inline'")
+
+        if block.array_storage != array_storage:
+            if block in self.blocks:
+                self.remove(block)
+            block._array_storage = array_storage
+            self.add(block)
+            if array_storage == 'streamed':
+                block.compression = None
 
     @property
     def blocks(self):
-        for block in self._blocks:
-            yield block
+        """
+        An iterator over all blocks being managed.
+
+        This may not include all of the blocks in an open file,
+        since their reading may have been deferred.  Call
+        `finish_reading_internal_blocks` to find the positions and
+        header information of all blocks in the file.
+        """
+        for block_set in self._block_type_mapping.values():
+            for block in block_set:
+                yield block
 
     @property
     def internal_blocks(self):
-        for block in self._blocks:
-            if block.array_storage == 'internal':
-                yield block
+        """
+        An iterator over all internal blocks being managed.
 
-        for block in self._blocks:
-            if block.array_storage == 'streamed':
+        This may not include all of the blocks in an open file,
+        since their reading may have been deferred.  Call
+        `finish_reading_internal_blocks` to find the positions and
+        header information of all blocks in the file.
+        """
+        for block_set in (self._internal_blocks, self._streamed_blocks):
+            for block in block_set:
                 yield block
-                break
 
     @property
     def streamed_block(self):
-        for block in self._blocks:
-            if block.array_storage == 'streamed':
-                return block
+        """
+        The streamed block (always the last internal block in a file),
+        or `None` if a streamed block is not present.
+        """
+        self.finish_reading_internal_blocks()
+
+        if len(self._streamed_blocks):
+            return self._streamed_blocks[0]
 
     @property
     def external_blocks(self):
-        for block in self._blocks:
-            if block.array_storage == 'external':
-                yield block
+        """
+        An iterator over all external blocks being managed.
+        """
+        for block in self._external_blocks:
+            yield block
+
+    @property
+    def inline_blocks(self):
+        """
+        An iterator over all inline blocks being managed.
+        """
+        for block in self._inline_blocks:
+            yield blocks
 
     def has_blocks_with_offset(self):
         """
@@ -86,12 +198,26 @@ class BlockManager(object):
                 return 0xffffffffffffffff
             else:
                 return x.offset
-        self._blocks.sort(key=sorter)
+        self._internal_blocks.sort(key=sorter)
+
+    def _read_next_internal_block(self, fd, past_magic=False):
+        # This assumes the file pointer is at the beginning of the
+        # block, (or beginning + 4 if past_magic is True)
+        block = Block().read(
+            fd, past_magic=past_magic,
+            validate_checksum=self._validate_checksums)
+        if block is not None:
+            self.add(block)
+
+        return block
 
     def read_internal_blocks(self, fd, past_magic=False,
                              validate_checksums=False):
         """
-        Read all internal blocks present in the file.
+        Read internal blocks present in the file.  If the file is
+        seekable, only the first block will be read, and the reading
+        of all others will be lazily deferred until an the loading of
+        an array requests it.
 
         Parameters
         ----------
@@ -106,15 +232,40 @@ class BlockManager(object):
 
         validate_checksums : bool, optional
             If `True`, validate the blocks against their checksums.
+
         """
+        self._validate_checksums = validate_checksums
+
         while True:
-            block = Block().read(fd, past_magic=past_magic,
-                                 validate_checksum=validate_checksums)
-            if block is not None:
-                self.add(block)
-            else:
+            block = self._read_next_internal_block(fd, past_magic=past_magic)
+            if block is None:
                 break
             past_magic = False
+
+            # If the file handle is seekable, we only read the first
+            # block and defer reading the rest until later.
+            if fd.seekable():
+                break
+
+    def finish_reading_internal_blocks(self):
+        """
+        Read all remaining internal blocks present in the file, if any.
+        This is called before updating a file, since updating requires
+        knowledge of all internal blocks in the file.
+        """
+        if len(self._internal_blocks):
+            last_block = self._internal_blocks[-1]
+
+            # Read all of the remaining blocks in the file, if any
+            if (last_block._fd is not None and
+                last_block._fd.seekable()):
+                last_block._fd.seek(
+                    last_block.offset + last_block.header_size + last_block.allocated)
+                while True:
+                    last_block = self._read_next_internal_block(
+                        last_block._fd, False)
+                    if last_block is None:
+                        break
 
     def write_internal_blocks_serial(self, fd, pad_blocks=False):
         """
@@ -195,7 +346,7 @@ class BlockManager(object):
             subfd = self.get_external_uri(uri, i)
             asdffile = asdf.AsdfFile()
             block = copy.copy(block)
-            block.array_storage = 'internal'
+            block._array_storage = 'internal'
             asdffile.blocks.add(block)
             block._used = True
             asdffile.write_to(subfd, pad_blocks=pad_blocks)
@@ -223,22 +374,6 @@ class BlockManager(object):
         parts[2] = path
         return urlparse.urlunparse(parts)
 
-    def add(self, block):
-        """
-        Add an internal block to the manager.
-        """
-        self._blocks.append(block)
-        if block._data is not None:
-            self._data_to_block_mapping[id(block._data)] = block
-
-    def remove(self, block):
-        """
-        Remove a block from the manager.
-        """
-        self._blocks.remove(block)
-        if block._data is not None:
-            del self._data_to_block_mapping[id(block._data)]
-
     def _find_used_blocks(self, tree, ctx):
         from .tags.core import ndarray
 
@@ -255,7 +390,7 @@ class BlockManager(object):
                 block_to_array_mapping.setdefault(block, [])
                 block_to_array_mapping[block].append(node)
 
-        for block in self._blocks[:]:
+        for block in list(self.blocks):
             arrays = block_to_array_mapping.get(block, [])
             if getattr(block, '_used', 0) == 0 and len(arrays) == 0:
                 self.remove(block)
@@ -263,7 +398,7 @@ class BlockManager(object):
     def _handle_global_block_settings(self, ctx, block):
         all_array_storage = getattr(ctx, '_all_array_storage', None)
         if all_array_storage:
-            block.array_storage = all_array_storage
+            self.set_array_storage(block, all_array_storage)
 
         all_array_compression = getattr(ctx, '_all_array_compression', None)
         if all_array_compression:
@@ -272,7 +407,7 @@ class BlockManager(object):
         auto_inline = getattr(ctx, '_auto_inline', None)
         if auto_inline:
             if np.product(block.data.shape) < auto_inline:
-                block.array_storage = 'inline'
+                self.set_array_storage(block, 'inline')
 
     def finalize(self, ctx):
         """
@@ -286,16 +421,8 @@ class BlockManager(object):
 
         self._find_used_blocks(ctx.tree, ctx)
 
-        for block in self.blocks:
+        for block in list(self.blocks):
             self._handle_global_block_settings(ctx, block)
-
-        count = 0
-        for block in self._blocks:
-            if block.array_storage == 'streamed':
-                count += 1
-        if count > 1:
-            raise ValueError(
-                "Found {0} streamed blocks, but there must be only one.".format(count))
 
     def get_block(self, source):
         """
@@ -311,18 +438,61 @@ class BlockManager(object):
         -------
         buffer : buffer
         """
+        # If an "int", it is the index of an internal block
         if isinstance(source, int):
-            block = util.nth_item(self.internal_blocks, source)
-            if block is None:
+            if source == -1:
+                if len(self._streamed_blocks):
+                    return self._streamed_blocks[0]
+                # If we don't have a streamed block, fall through so
+                # we can read all of the blocks, ultimately arriving
+                # at the last one, which, if all goes well is a
+                # streamed block.
+
+            # First, look in the blocks we've already read
+            elif source >= 0:
+                if source < len(self._internal_blocks):
+                    return self._internal_blocks[source]
+
+            else:
+                raise ValueError("Invalid source id {0}".format(source))
+
+            # If we have a streamed block or we already know we have
+            # no blocks, reading any further isn't going to yield any
+            # new blocks.
+            if len(self._streamed_blocks) or len(self._internal_blocks) == 0:
                 raise ValueError("Block '{0}' not found.".format(source))
+
+            # If the desired block hasn't already been read, and the
+            # file is seekable, and we have at least one internal
+            # block, then we can move the file pointer to the end of
+            # the last known internal block, and start looking for
+            # more internal blocks.  This is "deferred block loading".
+            last_block = self._internal_blocks[-1]
+            if (last_block._fd is not None and
+                last_block._fd.seekable()):
+                last_block._fd.seek(
+                    last_block.offset + last_block.header_size +
+                    last_block.allocated)
+                while True:
+                    next_block = self._read_next_internal_block(
+                        last_block._fd, False)
+                    if next_block is None:
+                        break
+                    if len(self._internal_blocks) - 1 == source:
+                        return next_block
+                    last_block = next_block
+
+            if (source == -1 and
+                last_block.array_storage == 'streamed'):
+                return last_block
+
+            raise ValueError("Block '{0}' not found.".format(source))
 
         elif isinstance(source, six.string_types):
             asdffile = self._asdffile().open_external(
                 source, do_not_fill_defaults=True)
-            block = asdffile.blocks._blocks[0]
-            block.array_storage = 'external'
-            if block not in self._blocks:
-                self._blocks.append(block)
+            block = asdffile.blocks._internal_blocks[0]
+            self.set_array_storage(block, 'external')
 
         else:
             raise TypeError("Unknown source '{0}'".format(source))
@@ -400,9 +570,9 @@ class BlockManager(object):
         """
         from .tags.core import ndarray
         if (isinstance(arr, ndarray.NDArrayType) and
-            arr._block is not None):
-            if arr._block in self._blocks:
-                return arr._block
+            arr.block is not None):
+            if arr.block in self.blocks:
+                return arr.block
             else:
                 arr._block = None
 
@@ -424,7 +594,7 @@ class BlockManager(object):
         block = self.streamed_block
         if block is None:
             block = Block(array_storage='streamed')
-            self._blocks.append(block)
+            self.add(block)
         return block
 
     def add_inline(self, array):
@@ -439,7 +609,7 @@ class BlockManager(object):
         return self.find_or_create_block_for_array(arr, object())
 
     def close(self):
-        for block in self._blocks:
+        for block in self.blocks:
             block.close()
 
 
@@ -512,16 +682,6 @@ class Block(object):
     @property
     def array_storage(self):
         return self._array_storage
-
-    @array_storage.setter
-    def array_storage(self, typename):
-        if typename not in ['internal', 'external', 'streamed', 'inline']:
-            raise ValueError(
-                "array_storage must be one of 'internal', 'external', "
-                "'streamed' or 'inline'")
-        self._array_storage = typename
-        if typename == 'streamed':
-            self.compression = None
 
     @property
     def compression(self):
@@ -848,14 +1008,13 @@ def calculate_updated_layout(blocks, tree_size, pad_blocks, block_size):
 
     fixed = []
     free = []
-    for block in blocks._blocks:
-        if block.array_storage == 'internal':
-            if block.offset is not None:
-                block.update_size()
-                fixed.append(
-                    Entry(block.offset, block.offset + block.size, block))
-            else:
-                free.append(block)
+    for block in blocks._internal_blocks:
+        if block.offset is not None:
+            block.update_size()
+            fixed.append(
+                Entry(block.offset, block.offset + block.size, block))
+        else:
+            free.append(block)
 
     if not len(fixed):
         return False

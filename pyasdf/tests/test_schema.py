@@ -115,8 +115,11 @@ def test_all_schema_examples():
                     os.path.join(os.path.dirname(fname), 'external.asdf')))] = ff2
 
         # Add some dummy blocks so that the ndarray examples work
-        for i in range(2):
-            ff.blocks.add(block.Block(np.empty((1024*1024*8), dtype=np.uint8)))
+        for i in range(3):
+            b = block.Block(np.empty((1024*1024*8), dtype=np.uint8))
+            b._used = True
+            ff.blocks.add(b)
+        b._array_storage = "streamed"
 
         try:
             ff._open_impl(ff, buff)

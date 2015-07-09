@@ -340,7 +340,7 @@ def test_update_expand_tree(tmpdir):
     }
 
     ff = asdf.AsdfFile(tree)
-    ff.blocks[tree['arrays'][2]].array_storage = 'inline'
+    ff.set_array_storage(tree['arrays'][2], 'inline')
     ff.write_to(testpath, pad_blocks=True)
     with asdf.AsdfFile.open(testpath, mode='rw') as ff:
         assert_array_equal(ff.tree['arrays'][0], my_array)
@@ -356,7 +356,7 @@ def test_update_expand_tree(tmpdir):
 
     # Now, we expand the header only by a little bit
     ff = asdf.AsdfFile(tree)
-    ff.blocks[tree['arrays'][2]].array_storage = 'inline'
+    ff.set_array_storage(tree['arrays'][2], 'inline')
     ff.write_to(os.path.join(tmpdir, "test2.asdf"), pad_blocks=True)
     with asdf.AsdfFile.open(os.path.join(tmpdir, "test2.asdf"), mode='rw') as ff:
         orig_offset = ff.blocks[ff.tree['arrays'][0]].offset
@@ -569,7 +569,6 @@ def test_update_add_array_at_end(tmpdir):
         assert_array_equal(ff.tree['arrays'][1], tree['arrays'][1])
         assert_array_equal(ff.tree['arrays'][2], tree['arrays'][2])
         assert_array_equal(ff.tree['arrays'][3], np.arange(2048))
-        print([x.offset for x in ff.blocks._blocks])
 
 
 def test_update_replace_all_arrays(tmpdir):
@@ -717,8 +716,8 @@ def test_checksum(tmpdir):
     ff.write_to(path)
 
     with asdf.AsdfFile.open(path, validate_checksums=True) as ff:
-        assert type(ff.blocks._blocks[0].checksum) == bytes
-        assert ff.blocks._blocks[0].checksum == \
+        assert type(ff.blocks._internal_blocks[0].checksum) == bytes
+        assert ff.blocks._internal_blocks[0].checksum == \
             b'\xcaM\\\xb8t_L|\x00\n+\x01\xf1\xcfP1'
 
 
@@ -739,7 +738,7 @@ def test_checksum_update(tmpdir):
         ff.update()
 
     with asdf.AsdfFile.open(path, validate_checksums=True) as ff:
-        assert ff.blocks._blocks[0].checksum == \
+        assert ff.blocks._internal_blocks[0].checksum == \
             b'T\xaf~[\x90\x8a\x88^\xc2B\x96D,N\xadL'
 
 
@@ -790,3 +789,20 @@ def test_copy(tmpdir):
         assert ff.tree['foo']['bar'] == 'baz'
 
     assert_array_equal(ff2.tree['my_array'], ff2.tree['my_array'])
+
+
+def test_deferred_block_loading():
+    buff = io.BytesIO()
+
+    ff = asdf.AsdfFile(_get_small_tree())
+    ff.write_to(buff)
+
+    buff.seek(0)
+    with asdf.AsdfFile.open(buff) as ff2:
+        assert len(ff2.blocks) == 1
+        ff2.blocks.get_block(1)
+
+        assert len(ff2.blocks) == 2
+
+        with pytest.raises(ValueError):
+            ff2.blocks.get_block(2)

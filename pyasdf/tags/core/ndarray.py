@@ -221,12 +221,8 @@ class NDArrayType(AsdfType):
         self._block = None
         self._array = None
         self._mask = mask
-        if isinstance(source, int):
-            try:
-                self._block = asdffile.blocks.get_block(source)
-            except ValueError:
-                pass
-        elif isinstance(source, list):
+
+        if isinstance(source, list):
             self._array = inline_data_asarray(source, dtype)
             self._array = self._apply_mask(self._array, self._mask)
             self._block = asdffile.blocks.add_inline(self._array)
@@ -236,6 +232,7 @@ class NDArrayType(AsdfType):
                     (self._array.shape != tuple(shape))):
                     raise ValueError(
                         "inline data doesn't match the given shape")
+
         self._shape = shape
         self._dtype = dtype
         self._offset = offset
@@ -428,7 +425,7 @@ class NDArrayType(AsdfType):
         if isinstance(data, ma.MaskedArray):
             if np.any(data.mask):
                 if block.array_storage == 'inline':
-                    ctx.blocks[data.mask].array_storage = 'inline'
+                    ctx.blocks.set_array_storage(ctx.blocks[data.mask], 'inline')
                 result['mask'] = yamlutil.custom_tree_to_tagged_tree(
                     data.mask, ctx)
 
@@ -475,8 +472,8 @@ class NDArrayType(AsdfType):
     def copy_to_new_asdf(cls, node, asdffile):
         if isinstance(node, NDArrayType):
             array = node._make_array()
-            asdffile.blocks[array].array_storage = \
-                node.block.array_storage
+            asdffile.blocks.set_array_storage(asdffile.blocks[array],
+                                              node.block.array_storage)
             return node._make_array()
         return node
 
