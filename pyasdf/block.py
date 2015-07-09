@@ -422,6 +422,8 @@ class BlockManager(object):
                 else:
                     break
 
+            if buff_size < fd.block_size:
+                return
             block_end = block_start
 
         lines = content.splitlines()
