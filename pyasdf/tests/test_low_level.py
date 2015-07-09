@@ -790,3 +790,20 @@ def test_copy(tmpdir):
         assert ff.tree['foo']['bar'] == 'baz'
 
     assert_array_equal(ff2.tree['my_array'], ff2.tree['my_array'])
+
+
+def test_deferred_block_loading():
+    buff = io.BytesIO()
+
+    ff = asdf.AsdfFile(_get_small_tree())
+    ff.write_to(buff)
+
+    buff.seek(0)
+    with asdf.AsdfFile.open(buff) as ff2:
+        assert len(ff2.blocks) == 1
+        ff2.blocks.get_block(1)
+
+        assert len(ff2.blocks) == 2
+
+        with pytest.raises(ValueError):
+            ff2.blocks.get_block(2)

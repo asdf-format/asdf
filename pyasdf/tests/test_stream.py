@@ -95,9 +95,10 @@ def test_stream_with_nonstream():
     buff.seek(0)
 
     with asdf.AsdfFile().open(buff) as ff:
-        assert len(ff.blocks) == 2
+        assert len(ff.blocks) == 1
         assert_array_equal(ff.tree['nonstream'], np.array([1, 2, 3, 4], np.int64))
         assert ff.tree['stream'].shape == (100, 6, 2)
+        assert len(ff.blocks) == 2
         for i, row in enumerate(ff.tree['stream']):
             assert np.all(row == i)
 
@@ -117,9 +118,10 @@ def test_stream_real_file(tmpdir):
             fd.write(np.array([i] * 12, np.float64).tostring())
 
     with asdf.AsdfFile().open(path) as ff:
-        assert len(ff.blocks) == 2
+        assert len(ff.blocks) == 1
         assert_array_equal(ff.tree['nonstream'], np.array([1, 2, 3, 4], np.int64))
         assert ff.tree['stream'].shape == (100, 6, 2)
+        assert len(ff.blocks) == 2
         for i, row in enumerate(ff.tree['stream']):
             assert np.all(row == i)
 

@@ -34,37 +34,80 @@ class BlockManager(object):
 
         self._blocks = []
         self._data_to_block_mapping = {}
+        self._validate_checksums = False
 
     def __len__(self):
         """
         Return the total number of blocks being managed.
+
+        This may not be include all of the blocks in an open file,
+        since their reading may have been deferred.  Call
+        `finish_reading_internal_blocks` to find the positions and
+        header information of all blocks in the file.
         """
         return len(self._blocks)
 
+    def add(self, block):
+        """
+        Add an internal block to the manager.
+        """
+        self._blocks.append(block)
+        if block._data is not None:
+            self._data_to_block_mapping[id(block._data)] = block
+
+    def remove(self, block):
+        """
+        Remove a block from the manager.
+        """
+        self._blocks.remove(block)
+        if block._data is not None:
+            del self._data_to_block_mapping[id(block._data)]
+
     @property
     def blocks(self):
+        """
+        An iterator over all blocks being managed.
+
+        This may not be include all of the blocks in an open file,
+        since their reading may have been deferred.  Call
+        `finish_reading_internal_blocks` to find the positions and
+        header information of all blocks in the file.
+        """
         for block in self._blocks:
             yield block
 
     @property
     def internal_blocks(self):
-        for block in self._blocks:
-            if block.array_storage == 'internal':
-                yield block
+        """
+        An iterator over all internal blocks being managed.
 
+        This may not be include all of the blocks in an open file,
+        since their reading may have been deferred.  Call
+        `finish_reading_internal_blocks` to find the positions and
+        header information of all blocks in the file.
+        """
+        block = None
         for block in self._blocks:
-            if block.array_storage == 'streamed':
+            if block.array_storage in ('internal', 'streamed'):
                 yield block
-                break
 
     @property
     def streamed_block(self):
+        """
+        The streamed block (always the last internal block in a file),
+        or `None` if a streamed block is not present.
+        """
+        self.finish_reading_internal_blocks()
+
         for block in self._blocks:
             if block.array_storage == 'streamed':
                 return block
 
     @property
     def external_blocks(self):
+        """
+        An iterator over all external blocks being managed.
+        """
         for block in self._blocks:
             if block.array_storage == 'external':
                 yield block
@@ -88,10 +131,24 @@ class BlockManager(object):
                 return x.offset
         self._blocks.sort(key=sorter)
 
+    def _read_next_internal_block(self, fd, past_magic=False):
+        # This assumes the file pointer is at the beginning of the
+        # block, (or beginning + 4 if past_magic is True)
+        block = Block().read(
+            fd, past_magic=past_magic,
+            validate_checksum=self._validate_checksums)
+        if block is not None:
+            self.add(block)
+
+        return block
+
     def read_internal_blocks(self, fd, past_magic=False,
                              validate_checksums=False):
         """
-        Read all internal blocks present in the file.
+        Read internal blocks present in the file.  If the file is
+        seekable, only the first block will be read, and the reading
+        of all others will be lazily deferred until an the loading of
+        an array requests it.
 
         Parameters
         ----------
@@ -106,15 +163,49 @@ class BlockManager(object):
 
         validate_checksums : bool, optional
             If `True`, validate the blocks against their checksums.
+
         """
+        self._validate_checksums = validate_checksums
+
         while True:
-            block = Block().read(fd, past_magic=past_magic,
-                                 validate_checksum=validate_checksums)
-            if block is not None:
-                self.add(block)
-            else:
+            block = self._read_next_internal_block(fd, past_magic=past_magic)
+            if block is None:
                 break
             past_magic = False
+
+            # If the file handle is seekable, we only read the first
+            # block and defer reading the rest until later.
+            if fd.seekable():
+                break
+
+    def finish_reading_internal_blocks(self):
+        """
+        Read all remaining internal blocks present in the file, if any.
+        This is called before updating a file, since updating requires
+        knowledge of all internal blocks in the file.
+        """
+        # First, iterate through the blocks we've already read
+        # to find the last internal block
+        last_block = None
+        for block in self._blocks:
+            if block.array_storage in 'internal':
+                last_block = block
+
+        # If the desired block hasn't already been read, and the
+        # file is seekable, and we have at least one internal
+        # block, then we can move the file pointer to the end of
+        # the last known internal block, and start looking for
+        # more internal blocks.  This is "deferred block loading".
+        if (last_block is not None and
+            last_block._fd is not None and
+            last_block._fd.seekable()):
+            last_block._fd.seek(
+                last_block.offset + last_block.header_size + last_block.allocated)
+            while True:
+                last_block = self._read_next_internal_block(
+                    last_block._fd, False)
+                if last_block is None:
+                    break
 
     def write_internal_blocks_serial(self, fd, pad_blocks=False):
         """
@@ -223,22 +314,6 @@ class BlockManager(object):
         parts[2] = path
         return urlparse.urlunparse(parts)
 
-    def add(self, block):
-        """
-        Add an internal block to the manager.
-        """
-        self._blocks.append(block)
-        if block._data is not None:
-            self._data_to_block_mapping[id(block._data)] = block
-
-    def remove(self, block):
-        """
-        Remove a block from the manager.
-        """
-        self._blocks.remove(block)
-        if block._data is not None:
-            del self._data_to_block_mapping[id(block._data)]
-
     def _find_used_blocks(self, tree, ctx):
         from .tags.core import ndarray
 
@@ -311,10 +386,56 @@ class BlockManager(object):
         -------
         buffer : buffer
         """
+        # If an "int", it is the index of an internal block
         if isinstance(source, int):
-            block = util.nth_item(self.internal_blocks, source)
-            if block is None:
-                raise ValueError("Block '{0}' not found.".format(source))
+            if source == -1:
+                streamed_block = self.streamed_block
+                if streamed_block is not None:
+                    return streamed_block
+                # If we don't have a streamed block, fall through
+                # so we can read all of the blocks, ultimately arriving
+                # at the last one, which, if all goes well
+
+            # First, iterate through the blocks we've already read
+            # to look for the block
+            i = 0
+            last_block = None
+            for block in self._blocks:
+                if block.array_storage in ('internal', 'streamed'):
+                    if i == source:
+                        return block
+                    else:
+                        last_block = block
+                        i += 1
+
+            # If the desired block hasn't already been read, and the
+            # file is seekable, and we have at least one internal
+            # block, then we can move the file pointer to the end of
+            # the last known internal block, and start looking for
+            # more internal blocks.  This is "deferred block loading".
+            if (last_block is not None and
+                last_block.array_storage != 'streamed' and
+                last_block._fd is not None and
+                last_block._fd.seekable()):
+                last_block._fd.seek(
+                    last_block.offset + last_block.header_size + last_block.allocated)
+                while True:
+                    next_block = self._read_next_internal_block(
+                        last_block._fd, False)
+                    if next_block is None:
+                        break
+                    if i == source:
+                        return next_block
+                    else:
+                        i += 1
+                    last_block = next_block
+
+            if (source == -1 and
+                last_block is not None and
+                last_block.array_storage == 'streamed'):
+                return last_block
+
+            raise ValueError("Block '{0}' not found.".format(source))
 
         elif isinstance(source, six.string_types):
             asdffile = self._asdffile().open_external(
@@ -400,9 +521,9 @@ class BlockManager(object):
         """
         from .tags.core import ndarray
         if (isinstance(arr, ndarray.NDArrayType) and
-            arr._block is not None):
-            if arr._block in self._blocks:
-                return arr._block
+            arr.block is not None):
+            if arr.block in self._blocks:
+                return arr.block
             else:
                 arr._block = None
 

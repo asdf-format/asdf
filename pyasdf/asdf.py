@@ -555,6 +555,8 @@ class AsdfFile(versioning.VersionedMixin):
             raise IOError(
                 "Can not update, since associated file is not seekable")
 
+        self.blocks.finish_reading_internal_blocks()
+
         self._pre_write(fd, all_array_storage, all_array_compression,
                         auto_inline)
 

@@ -221,12 +221,8 @@ class NDArrayType(AsdfType):
         self._block = None
         self._array = None
         self._mask = mask
-        if isinstance(source, int):
-            try:
-                self._block = asdffile.blocks.get_block(source)
-            except ValueError:
-                pass
-        elif isinstance(source, list):
+
+        if isinstance(source, list):
             self._array = inline_data_asarray(source, dtype)
             self._array = self._apply_mask(self._array, self._mask)
             self._block = asdffile.blocks.add_inline(self._array)
@@ -236,6 +232,7 @@ class NDArrayType(AsdfType):
                     (self._array.shape != tuple(shape))):
                     raise ValueError(
                         "inline data doesn't match the given shape")
+
         self._shape = shape
         self._dtype = dtype
         self._offset = offset
