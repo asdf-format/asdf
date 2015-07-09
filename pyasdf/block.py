@@ -370,8 +370,8 @@ class BlockManager(object):
             for block in self.internal_blocks:
                 fd.write('{0:d}\n'.format(block.offset).encode('ascii'))
 
-    _re_index_content = re.compile(b'^([0-9]+\r?\n)+$')
-    _re_index_misc = re.compile(b'^' + constants.INDEX_HEADER + b'\r?\n[0-9\r\n]+$')
+    _re_index_content = re.compile(b'^' + constants.INDEX_HEADER + b'\r?\n([0-9]+\r?\n)+$')
+    _re_index_misc = re.compile(b'^[0-9\r\n]+$')
 
     def read_block_index(self, fd):
         """
@@ -417,7 +417,7 @@ class BlockManager(object):
                 # If we found the header, and everything after it looks
                 # like index content, it's probably an index.
                 content = buff[idx:] + suffix
-                if not self._re_index_misc.match(content):
+                if not self._re_index_content.match(content):
                     return
                 else:
                     break

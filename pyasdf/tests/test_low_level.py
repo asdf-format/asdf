@@ -795,7 +795,7 @@ def test_deferred_block_loading():
     buff = io.BytesIO()
 
     ff = asdf.AsdfFile(_get_small_tree())
-    ff.write_to(buff)
+    ff.write_to(buff, include_block_index=False)
 
     buff.seek(0)
     with asdf.AsdfFile.open(buff) as ff2:
