@@ -391,7 +391,7 @@ class BlockManager(object):
             return
 
         fd.seek(0, generic_io.SEEK_END)
-        block_end = fd.tell()
+        file_size = block_end = fd.tell()
 
         suffix = b''
 
@@ -430,8 +430,17 @@ class BlockManager(object):
         # The first line is a header.  The second is the index of the
         # first block, which is always loaded by pyasdf.  So we only
         # need to deal with the rest.
+        offsets = []
         for line in lines[2:]:
             offset = int(line.strip())
+            if offset > file_size:
+                # One of the offsets is out of range for the file.
+                # Just bail, which results in falling back to the
+                # "skipping" method for finding blocks
+                return
+            offsets.append(offset)
+
+        for offset in offsets:
             self._internal_blocks.append(UnloadedBlock(fd, offset))
 
     def get_external_filename(self, filename, index):
@@ -1083,11 +1092,6 @@ class UnloadedBlock(object):
         return getattr(self, attr)
 
     def load(self):
-        self._fd.seek(0, generic_io.SEEK_END)
-        file_size = self._fd.tell()
-        if self._offset > file_size:
-            # TODO: In this case, we need to fall back to skipping
-            raise ValueError("Broken index")
         self._fd.seek(self._offset, generic_io.SEEK_SET)
         block = Block().read(self._fd)
         self.__dict__.update(block.__dict__)
