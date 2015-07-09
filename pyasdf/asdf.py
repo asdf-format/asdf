@@ -280,7 +280,8 @@ class AsdfFile(versioning.VersionedMixin):
 
             - ``inline``: Store the data as YAML inline in the tree.
         """
-        self.blocks[arr].array_storage = array_storage
+        block = self.blocks[arr]
+        self.blocks.set_array_storage(block, array_storage)
 
     def get_array_storage(self, arr):
         """
@@ -748,9 +749,10 @@ class AsdfFile(versioning.VersionedMixin):
         produces something that, when saved, is a 100% valid YAML
         file.
         """
+        self.blocks.finish_reading_internal_blocks()
         self.resolve_references()
-        for b in self.blocks.blocks:
-            b.array_storage = 'inline'
+        for b in list(self.blocks.blocks):
+            self.blocks.set_array_storage(b, 'inline')
 
     def fill_defaults(self):
         """

@@ -425,7 +425,7 @@ class NDArrayType(AsdfType):
         if isinstance(data, ma.MaskedArray):
             if np.any(data.mask):
                 if block.array_storage == 'inline':
-                    ctx.blocks[data.mask].array_storage = 'inline'
+                    ctx.blocks.set_array_storage(ctx.blocks[data.mask], 'inline')
                 result['mask'] = yamlutil.custom_tree_to_tagged_tree(
                     data.mask, ctx)
 
@@ -472,8 +472,8 @@ class NDArrayType(AsdfType):
     def copy_to_new_asdf(cls, node, asdffile):
         if isinstance(node, NDArrayType):
             array = node._make_array()
-            asdffile.blocks[array].array_storage = \
-                node.block.array_storage
+            asdffile.blocks.set_array_storage(asdffile.blocks[array],
+                                              node.block.array_storage)
             return node._make_array()
         return node
 

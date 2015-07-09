@@ -252,7 +252,7 @@ def test_inline():
     buff = io.BytesIO()
 
     ff = asdf.AsdfFile(tree)
-    ff.blocks[tree['science_data']].array_storage = 'inline'
+    ff.blocks.set_array_storage(ff.blocks[tree['science_data']], 'inline')
     ff.write_to(buff)
 
     buff.seek(0)
