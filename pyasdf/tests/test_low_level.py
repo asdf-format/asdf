@@ -18,8 +18,6 @@ from .. import constants
 from .. import generic_io
 from .. import treeutil
 
-from . import helpers
-
 
 def _get_small_tree():
     x = np.arange(0, 10, dtype=np.float)
@@ -837,3 +835,20 @@ def test_block_index():
                 assert isinstance(ff2.blocks._internal_blocks[i], block.Block)
             else:
                 assert isinstance(ff2.blocks._internal_blocks[i], block.UnloadedBlock)
+
+
+def test_no_block_index():
+    buff = io.BytesIO()
+
+    arrays = []
+    for i in range(10):
+        arrays.append(np.ones((8, 8)) * i)
+
+    tree = {
+        'arrays': arrays
+    }
+
+    ff = asdf.AsdfFile(tree)
+    ff.write_to(buff, include_block_index=False)
+
+    assert constants.INDEX_MAGIC not in buff.getvalue()
