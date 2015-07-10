@@ -1140,10 +1140,8 @@ def calculate_updated_layout(blocks, tree_size, pad_blocks, block_size):
     rewriting the file serially, otherwise, returns `True`.
     """
     def unfix_block(i):
-        # We can't really move memory-mapped blocks around, so at this
-        # point, we just return False.  If this algorithm gets more
-        # sophisticated we could carefully move memmapped blocks
-        # around without clobbering other ones.
+        # If this algorithm gets more sophisticated we could carefully
+        # move memmapped blocks around without clobbering other ones.
 
         # TODO: Copy to a tmpfile on disk and memmap it from there.
         entry = fixed[i]
