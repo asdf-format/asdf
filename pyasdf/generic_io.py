@@ -671,8 +671,15 @@ class RandomAccessFile(GenericFile):
             self.seek(0, SEEK_END)
         self.seek(size, SEEK_CUR)
 
-    def truncate(self, size):
-        self._fd.truncate(size)
+    if sys.platform.startswith('win'):
+        def truncate(self, size):
+            cursor = self.tell()
+            file_size = self.seek(0, SEEK_END)
+            if size < file_size:
+                self._fd.truncate(size)
+    else:
+        def truncate(self, size):
+            self._fd.truncate(size)
 
 
 class RealFile(RandomAccessFile):
