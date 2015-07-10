@@ -1124,7 +1124,7 @@ def get_file(init, mode='r', uri=None):
     elif isinstance(init, six.string_types):
         parsed = urlparse.urlparse(init)
         if parsed.scheme == 'http':
-            if mode == 'w':
+            if 'w' in mode:
                 raise ValueError(
                     "HTTP connections can not be opened for writing")
             return _make_http_connection(init, mode, uri=uri)
