@@ -326,9 +326,11 @@ class BlockManager(object):
         fd.seek(last_block.offset)
         last_block.write(fd)
 
-        fd.truncate(last_block.offset + last_block.header_size +
-                    last_block.allocated)
-        fd.seek(0, generic_io.SEEK_END)
+        end_of_blocks = (last_block.offset + last_block.header_size +
+                         last_block.allocated)
+
+        fd.truncate(end_of_blocks)
+        fd.seek(end_of_blocks, generic_io.SEEK_SET)
 
     def write_external_blocks(self, uri, pad_blocks=False):
         """
