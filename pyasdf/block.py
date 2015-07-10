@@ -195,8 +195,7 @@ class BlockManager(object):
     def _sort_blocks_by_offset(self):
         def sorter(x):
             if x.offset is None:
-                # 64 bits
-                return 0xffffffffffffffff
+                raise ValueError('Block is missing offset')
             else:
                 return x.offset
         self._internal_blocks.sort(key=sorter)
@@ -425,14 +424,21 @@ class BlockManager(object):
                     index_start = block_start + idx
                     break
 
-            if buff_size < fd.block_size:
+            if buff_size < fd.block_size or block_start == 0:
                 return
             block_end = block_start
 
         lines = content.splitlines()
         # The first line is a header.  The second is the index of the
-        # first block, which is always loaded by pyasdf.  So we only
-        # need to deal with the rest.
+        # first block, which is always loaded by pyasdf.  We verify
+        # that the index of the first block matches the first block
+        # we've already read, and then only need to deal with creating
+        # UnloadedBlocks for the rest.
+
+        first_offset = int(lines[1].strip())
+        if first_offset != self._internal_blocks[0].offset:
+            return
+
         offsets = []
         for line in lines[2:]:
             offset = int(line.strip())
@@ -612,27 +618,6 @@ class BlockManager(object):
             raise TypeError("Unknown source '{0}'".format(source))
 
         return block
-
-    def get_data(self, source):
-        """
-        Given a "source identifier", return a buffer containing data.
-
-        Parameters
-        ----------
-        source : any
-            If an integer, refers to the index of an internal block.
-            If a string, is a uri to an external block.
-
-        Returns
-        -------
-        buffer : buffer
-        """
-        block = self.get_block(source)
-
-        data = block.data
-        self._data_to_block_mapping[id(data)] = block
-
-        return data.data
 
     def get_source(self, block):
         """
@@ -1071,7 +1056,7 @@ class Block(object):
 
     def close(self):
         if self._memmapped and self._data is not None:
-            if NUMPY_LT_1_7:
+            if NUMPY_LT_1_7:  # pragma: no cover
                 try:
                     self._data.flush()
                 except ValueError:

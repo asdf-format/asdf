@@ -436,11 +436,36 @@ def test_invalid_obj(tmpdir):
         with pytest.raises(ValueError):
             fd2 = generic_io.get_file(fd, 'w')
 
-    # This should be possible in Python 3, but it isn't possible
-    # within py.test
+    with generic_io.get_file(sys.__stdout__, 'w'):
+        pass
+
+
+def test_nonseekable_file(tmpdir):
     if six.PY2:
-        with generic_io.get_file(sys.stdout, 'w'):
-            pass
+        base = file
+    else:
+        base = io.IOBase
+
+    class FileWrapper(base):
+        def tell(self):
+            raise IOError()
+
+        def seekable(self):
+            return False
+
+        def readable(self):
+            return True
+
+        def writable(self):
+            return True
+
+    with FileWrapper(os.path.join(str(tmpdir), 'test.asdf'), 'wb') as fd:
+        assert isinstance(generic_io.get_file(fd, 'w'), generic_io.OutputStream)
+        with pytest.raises(ValueError):
+            generic_io.get_file(fd, 'rw')
+
+    with FileWrapper(os.path.join(str(tmpdir), 'test.asdf'), 'rb') as fd:
+        assert isinstance(generic_io.get_file(fd, 'r'), generic_io.InputStream)
 
 
 def test_relative_uri():
@@ -498,3 +523,15 @@ def test_arbitrary_file_object():
 
     with pytest.raises(ValueError):
         generic_io.get_file(Writer(buff), 'r')
+
+
+def test_check_bytes(tmpdir):
+    with io.open(os.path.join(str(tmpdir), 'test.asdf'), 'w', encoding='utf-8') as fd:
+        assert generic_io._check_bytes(fd, 'r') is False
+        assert generic_io._check_bytes(fd, 'rw') is False
+        assert generic_io._check_bytes(fd, 'w') is False
+
+    with io.open(os.path.join(str(tmpdir), 'test.asdf'), 'wb') as fd:
+        assert generic_io._check_bytes(fd, 'r') is True
+        assert generic_io._check_bytes(fd, 'rw') is True
+        assert generic_io._check_bytes(fd, 'w') is True

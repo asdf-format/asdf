@@ -71,22 +71,6 @@ def filepath_to_url(path):
     return urljoin('file:', pathname2url(path))
 
 
-def nth_item(iterable, n, default=None):
-    """
-    Returns the nth item of an iterable or a default value.
-
-    Support Python-style negative indexing.
-    """
-    if n < 0:
-        l = list(iterable)
-        try:
-            return l[n]
-        except IndexError:
-            return default
-    else:
-        return next(itertools.islice(iterable, n, None), default)
-
-
 def iter_subclasses(cls):
     """
     Returns all subclasses of a class.
@@ -154,7 +138,7 @@ class BinaryStruct(object):
         i = 0
         for name, fmt in descr:
             self._fmt.append(fmt)
-            self._offsets[name] = (i, ('>' + fmt).encode('ascii'))
+            self._offsets[name] = (i, (endian + fmt).encode('ascii'))
             self._names.append(name)
             i += struct.calcsize(fmt.encode('ascii'))
         self._fmt = ''.join(self._fmt).encode('ascii')

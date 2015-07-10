@@ -267,6 +267,15 @@ def test_invalid_array_storage():
     with pytest.raises(ValueError):
         ff.set_array_storage(my_array, 'foo')
 
+    b = block.Block()
+    b._array_storage = 'foo'
+
+    with pytest.raises(ValueError):
+        ff.blocks.add(b)
+
+    with pytest.raises(ValueError):
+        ff.blocks.remove(b)
+
 
 def test_transfer_array_sources(tmpdir):
     tmpdir = str(tmpdir)
@@ -340,6 +349,7 @@ def test_update_expand_tree(tmpdir):
 
     ff = asdf.AsdfFile(tree)
     ff.set_array_storage(tree['arrays'][2], 'inline')
+    assert len(list(ff.blocks.inline_blocks)) == 1
     ff.write_to(testpath, pad_blocks=True)
     with asdf.AsdfFile.open(testpath, mode='rw') as ff:
         assert_array_equal(ff.tree['arrays'][0], my_array)
@@ -837,6 +847,37 @@ def test_block_index():
                 assert isinstance(ff2.blocks._internal_blocks[i], block.UnloadedBlock)
 
 
+def test_large_block_index():
+    # This test is designed to test reading of a block index that is
+    # larger than a single file system block, which is why we create
+    # io.DEFAULT_BUFFER_SIZE / 4 arrays, and assuming each entry has more
+    # than one digit in its address, we're guaranteed to have an index
+    # larger than a filesystem block.
+
+    # TODO: It would be nice to find a way to make this test faster.  The
+    # real bottleneck here is the enormous YAML section.
+
+    buff = io.BytesIO()
+
+    narrays = int(io.DEFAULT_BUFFER_SIZE / 4)
+
+    arrays = []
+    for i in range(narrays):
+        arrays.append(np.array([i], np.uint16))
+
+    tree = {
+        'arrays': arrays
+    }
+
+    ff = asdf.AsdfFile(tree)
+    ff.write_to(buff)
+
+    buff.seek(0)
+    with asdf.AsdfFile.open(buff) as ff2:
+        assert isinstance(ff2.blocks._internal_blocks[0], block.Block)
+        assert len(ff2.blocks._internal_blocks) == narrays
+
+
 def test_no_block_index():
     buff = io.BytesIO()
 
@@ -852,3 +893,130 @@ def test_no_block_index():
     ff.write_to(buff, include_block_index=False)
 
     assert constants.INDEX_MAGIC not in buff.getvalue()
+
+
+def test_junk_after_index():
+    buff = io.BytesIO()
+
+    arrays = []
+    for i in range(10):
+        arrays.append(np.ones((8, 8)) * i)
+
+    tree = {
+        'arrays': arrays
+    }
+
+    ff = asdf.AsdfFile(tree)
+    ff.write_to(buff)
+
+    buff.write(b"JUNK")
+
+    buff.seek(0)
+
+    # This has junk after the block index, so it
+    # should fall back to the skip method, which
+    # only loads the first block.
+    with asdf.AsdfFile.open(buff) as ff:
+        assert len(ff.blocks) == 1
+
+
+def test_short_file_find_block_index():
+    # This tests searching for a block index in a file that looks like
+    # it might have an index, in the last filesystem block or so, but
+    # ultimately proves to not have an index.
+
+    buff = io.BytesIO()
+
+    ff = asdf.AsdfFile({'arr': np.ndarray([1]), 'arr2': np.ndarray([2])})
+    ff.write_to(buff, include_block_index=False)
+
+    buff.write(constants.INDEX_MAGIC)
+    buff.write(b'0' * (io.DEFAULT_BUFFER_SIZE * 4))
+
+    buff.seek(0)
+    with asdf.AsdfFile.open(buff) as ff:
+        assert len(ff.blocks) == 1
+
+
+def test_invalid_block_index_values():
+    # This adds a value in the block index that points to something
+    # past the end of the file.  In that case, we should just reject
+    # the index altogether.
+
+    buff = io.BytesIO()
+
+    arrays = []
+    for i in range(10):
+        arrays.append(np.ones((8, 8)) * i)
+
+    tree = {
+        'arrays': arrays
+    }
+
+    ff = asdf.AsdfFile(tree)
+    ff.write_to(buff)
+    buff.write(b"1234567890\n")
+
+    buff.seek(0)
+    with asdf.AsdfFile.open(buff) as ff:
+        assert len(ff.blocks) == 1
+
+
+def test_invalid_block_index_first_block_value():
+    # This creates a bogus block index where the offset of the first
+    # block doesn't match what we already know it to be.  In this
+    # case, we should reject the whole block index.
+    buff = io.BytesIO()
+
+    arrays = []
+    for i in range(10):
+        arrays.append(np.ones((8, 8)) * i)
+
+    tree = {
+        'arrays': arrays
+    }
+
+    ff = asdf.AsdfFile(tree)
+    ff.write_to(buff, include_block_index=False)
+    buff.write(constants.INDEX_HEADER)
+    buff.write(b'\n')
+    for i in range(10):
+        buff.write(b'0\n')
+
+    buff.seek(0)
+    with asdf.AsdfFile.open(buff) as ff:
+        assert len(ff.blocks) == 1
+
+
+def test_invalid_block_index_last_block_value():
+    # This creates a bogus block index where the offset of the first
+    # block doesn't match what we already know it to be.  In this
+    # case, we should reject the whole block index.
+    buff = io.BytesIO()
+
+    arrays = []
+    for i in range(10):
+        arrays.append(np.ones((8, 8)) * i)
+
+    tree = {
+        'arrays': arrays
+    }
+
+    ff = asdf.AsdfFile(tree)
+    ff.write_to(buff)
+
+    print(repr(buff.getvalue()[-16:]))
+
+    buff.seek(-2, generic_io.SEEK_END)
+    buff.write(b'\n')
+    buff.truncate()
+
+    buff.seek(0)
+    with asdf.AsdfFile.open(buff) as ff:
+        assert len(ff.blocks) == 1
+
+
+def test_invalid_block_id():
+    ff = asdf.AsdfFile()
+    with pytest.raises(ValueError):
+        ff.blocks.get_block(-2)

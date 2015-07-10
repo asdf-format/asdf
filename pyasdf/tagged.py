@@ -102,9 +102,6 @@ def tag_object(tag, instance):
     """
     Tag an object by wrapping it in a ``Tagged`` instance.
     """
-    if tag is None:
-        return instance
-
     if isinstance(instance, Tagged):
         instance._tag = tag
         return instance

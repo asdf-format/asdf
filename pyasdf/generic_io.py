@@ -55,11 +55,11 @@ def _check_bytes(fd, mode):
             return False
         return True
 
-    if mode == 'r':
+    if 'r' in mode:
         x = fd.read(0)
         if not isinstance(x, bytes):
             return False
-    elif mode == 'w':
+    elif 'w' in mode:
         if six.PY2:
             if isinstance(fd, file):
                 if 'b' not in fd.mode:
@@ -411,7 +411,7 @@ class GenericFile(object):
         """
         Truncate the file to the given size.
         """
-        pass
+        raise NotImplementedError()
 
     def writable(self):
         """
@@ -671,7 +671,7 @@ class RandomAccessFile(GenericFile):
             self.seek(0, SEEK_END)
         self.seek(size, SEEK_CUR)
 
-    if sys.platform.startswith('win'):
+    if sys.platform.startswith('win'):  # pragma: no cover
         def truncate(self, size):
             # ftruncate doesn't work on an open file in Windows.  The
             # best we can do is clear the extra bytes or add extra
@@ -813,9 +813,7 @@ class InputStream(GenericFile):
             include=include, initial_content=initial_content)
 
     def fast_forward(self, size):
-        if len(self.read(size)) != size:
-            if size < 0:
-                return
+        if size >= 0 and len(self.read(size)) != size:
             raise IOError("Read past end of file")
 
     def read_into_array(self, size):
@@ -1109,10 +1107,11 @@ def get_file(init, mode='r', uri=None):
     if mode not in ('r', 'w', 'rw'):
         raise ValueError("mode must be 'r', 'w' or 'rw'")
 
-    # Special case for sys.stdout on Python 3, since it takes unicode
-    # by default, but we need to write to it with bytes
-    if six.PY3 and init in (sys.stdout, sys.stdin, sys.stderr):
-        init = init.buffer
+    if init in (sys.__stdout__, sys.__stdin__, sys.__stderr__):
+        if six.PY3:
+            init = init.buffer
+        else:
+            init = os.fdopen(init.fileno(), init.mode + 'b')
 
     if isinstance(init, (GenericFile, GenericWrapper)):
         if mode not in init.mode:
@@ -1149,7 +1148,7 @@ def get_file(init, mode='r', uri=None):
             "io.StringIO objects are not supported.  Use io.BytesIO instead.")
 
     elif six.PY2 and isinstance(init, file):
-        if mode not in init.mode:
+        if init.mode[0] not in mode:
             raise ValueError(
                 "File is opened as '{0}', but '{1}' was requested".format(
                     init.mode, mode))
