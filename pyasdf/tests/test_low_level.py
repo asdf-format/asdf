@@ -826,12 +826,13 @@ def test_block_index():
     with asdf.AsdfFile.open(buff) as ff2:
         assert isinstance(ff2.blocks._internal_blocks[0], block.Block)
         assert len(ff2.blocks._internal_blocks) == 100
-        for i in range(2, 100):
+        for i in range(2, 99):
             assert isinstance(ff2.blocks._internal_blocks[i], block.UnloadedBlock)
+        assert isinstance(ff2.blocks._internal_blocks[99], block.Block)
 
         # Force the loading of one array
         x = ff2.tree['arrays'][50] * 2
-        for i in range(2, 100):
+        for i in range(2, 99):
             if i == 50:
                 assert isinstance(ff2.blocks._internal_blocks[i], block.Block)
             else:

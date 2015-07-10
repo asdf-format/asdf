@@ -384,8 +384,8 @@ class BlockManager(object):
         """
         # This reads the block index by reading backward from the end
         # of the file.  This tries to be as conservative as possible,
-        # since not reading an index isn't a deal breaker -- everything
-        # can still be read from the file, only slower.
+        # since not reading an index isn't a deal breaker --
+        # everything can still be read from the file, only slower.
 
         if not fd.seekable():
             return
@@ -420,6 +420,7 @@ class BlockManager(object):
                 if not self._re_index_content.match(content):
                     return
                 else:
+                    index_start = block_start + idx
                     break
 
             if buff_size < fd.block_size:
@@ -440,8 +441,27 @@ class BlockManager(object):
                 return
             offsets.append(offset)
 
-        for offset in offsets:
+        if len(offsets) == 0:
+            return
+
+        # One last sanity check: Read the last block in the index and
+        # make sure it makes sense.
+        fd.seek(offsets[-1], generic_io.SEEK_SET)
+        try:
+            block = Block().read(fd)
+        except (ValueError, IOError):
+            return
+
+        # Now see if the end of the last block leads right into the index
+        if (block.offset + block.header_size + block.allocated != index_start):
+            return
+
+        # It seems we're good to go, so instantiate the UnloadedBlock
+        # objects
+        for offset in offsets[:-1]:
             self._internal_blocks.append(UnloadedBlock(fd, offset))
+
+        self._internal_blocks.append(block)
 
     def get_external_filename(self, filename, index):
         """

@@ -474,17 +474,19 @@ class AsdfFile(versioning.VersionedMixin):
         # reorganization, if necessary
         self._blocks.finalize(self)
 
-    def _serial_write(self, fd, pad_blocks):
+    def _serial_write(self, fd, pad_blocks, include_block_index):
         self._write_tree(self._tree, fd, pad_blocks)
         self.blocks.write_internal_blocks_serial(fd, pad_blocks)
         self.blocks.write_external_blocks(fd.uri, pad_blocks)
-        self.blocks.write_block_index(fd)
+        if include_block_index:
+            self.blocks.write_block_index(fd)
 
-    def _random_write(self, fd, pad_blocks):
+    def _random_write(self, fd, pad_blocks, include_block_index):
         self._write_tree(self._tree, fd, False)
         self.blocks.write_internal_blocks_random_access(fd)
         self.blocks.write_external_blocks(fd.uri, pad_blocks)
-        self.blocks.write_block_index(fd)
+        if include_block_index:
+            self.blocks.write_block_index(fd)
 
     def _post_write(self, fd):
         if len(self._tree):
@@ -498,7 +500,7 @@ class AsdfFile(versioning.VersionedMixin):
             del self._auto_inline
 
     def update(self, all_array_storage=None, all_array_compression=None,
-               auto_inline=None, pad_blocks=False):
+               auto_inline=None, pad_blocks=False, include_block_index=True):
         """
         Update the file on disk in place.
 
@@ -538,6 +540,11 @@ class AsdfFile(versioning.VersionedMixin):
             return 0).  If `True`, add a default amount of padding of
             10% If a float, it is a factor to multiple content_size by
             to get the new total size.
+
+        include_block_index : bool, optional
+            If `False`, don't include a block index at the end of the
+            file.  (Default: `True`)  A block index is never written
+            if the file has a streamed block.
         """
         fd = self._fd
 
@@ -571,7 +578,7 @@ class AsdfFile(versioning.VersionedMixin):
             if not self.blocks.has_blocks_with_offset():
                 # If we don't have any blocks that are being reused, just
                 # write out in a serial fashion.
-                self._serial_write(fd, pad_blocks)
+                self._serial_write(fd, pad_blocks, include_block_index)
                 fd.truncate(fd.tell())
                 return
 
@@ -599,12 +606,12 @@ class AsdfFile(versioning.VersionedMixin):
                     pad_blocks, fd.block_size):
                 # If we don't have any blocks that are being reused, just
                 # write out in a serial fashion.
-                self._serial_write(fd, pad_blocks)
+                self._serial_write(fd, pad_blocks, include_block_index)
                 fd.truncate(fd.tell())
                 return
 
             fd.seek(0)
-            self._random_write(fd, pad_blocks)
+            self._random_write(fd, pad_blocks, include_block_index)
             fd.flush()
         finally:
             self._post_write(fd)
@@ -674,7 +681,7 @@ class AsdfFile(versioning.VersionedMixin):
                                 auto_inline)
 
                 try:
-                    self._serial_write(fd, pad_blocks)
+                    self._serial_write(fd, pad_blocks, include_block_index)
                     fd.flush()
                 finally:
                     self._post_write(fd)
