@@ -687,7 +687,7 @@ class RandomAccessFile(GenericFile):
             else:
                 nbytes = 0
 
-            block = '\0' * self.block_size
+            block = b'\0' * self.block_size
             while nbytes > 0:
                 self.write(block[:min(nbytes, self.block_size)])
                 nbytes -= self.block_size
