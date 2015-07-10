@@ -373,7 +373,7 @@ class BlockManager(object):
                 fd.write('{0:d}\n'.format(block.offset).encode('ascii'))
 
     _re_index_content = re.compile(b'^' + constants.INDEX_HEADER + b'\r?\n([0-9]+\r?\n)+$')
-    _re_index_misc = re.compile(b'^[0-9\r\n]+$')
+    _re_index_misc = re.compile(b'^[0-9\r\n\0]+$')
 
     def read_block_index(self, fd):
         """

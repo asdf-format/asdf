@@ -673,10 +673,26 @@ class RandomAccessFile(GenericFile):
 
     if sys.platform.startswith('win'):
         def truncate(self, size):
-            cursor = self.tell()
-            file_size = self.seek(0, SEEK_END)
+            # ftruncate doesn't work on an open file in Windows.  The
+            # best we can do is clear the extra bytes or add extra
+            # bytes to the end.
+
+            self.seek(0, SEEK_END)
+            file_size = self.tell()
             if size < file_size:
-                self._fd.truncate(size)
+                self.seek(size, SEEK_SET)
+                nbytes = file_size - size
+            elif size > file_size:
+                nbytes = size - file_size
+            else:
+                nbytes = 0
+
+            block = '\0' * self.block_size
+            while nbytes > 0:
+                self.write(block[:min(nbytes, self.block_size)])
+                nbytes -= self.block_size
+
+            self.seek(size, SEEK_SET)
     else:
         def truncate(self, size):
             self._fd.truncate(size)
