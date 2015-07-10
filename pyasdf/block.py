@@ -180,7 +180,7 @@ class BlockManager(object):
         An iterator over all inline blocks being managed.
         """
         for block in self._inline_blocks:
-            yield blocks
+            yield block
 
     def has_blocks_with_offset(self):
         """
