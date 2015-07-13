@@ -1078,6 +1078,12 @@ class UnloadedBlock(object):
     def __init__(self, fd, offset):
         self._fd = fd
         self._offset = offset
+        self._data = None
+        self._uri = None
+        self._array_storage = 'inline'
+        self._compression = None
+        self._checksum = None
+        self._memmapped = False
 
     def __len__(self):
         self.load()
@@ -1100,9 +1106,8 @@ class UnloadedBlock(object):
 
     def load(self):
         self._fd.seek(self._offset, generic_io.SEEK_SET)
-        block = Block().read(self._fd)
-        self.__dict__.update(block.__dict__)
         self.__class__ = Block
+        self.read(self._fd)
 
 
 def calculate_updated_layout(blocks, tree_size, pad_blocks, block_size):
