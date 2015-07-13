@@ -398,9 +398,9 @@ class BlockManager(object):
         suffix = b''
 
         # Read blocks in reverse order from the end of the file
-        while True:
+        while block_start >= 0 and block_end > 0:
             fd.seek(block_start, generic_io.SEEK_SET)
-            buff_size = block_end - fd.tell()
+            buff_size = block_end - block_start
             buff = fd.read(buff_size)
 
             # Look for the index header
@@ -424,18 +424,16 @@ class BlockManager(object):
                     index_start = block_start + idx
                     break
 
-            if block_start == 0:
-                return
             block_end = block_start
             block_start = max(block_end - fd.block_size, 0)
 
         lines = content.splitlines()
+
         # The first line is a header.  The second is the index of the
         # first block, which is always loaded by pyasdf.  We verify
         # that the index of the first block matches the first block
         # we've already read, and then only need to deal with creating
         # UnloadedBlocks for the rest.
-
         first_offset = int(lines[1].strip())
         if first_offset != self._internal_blocks[0].offset:
             return
