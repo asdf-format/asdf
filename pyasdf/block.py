@@ -387,6 +387,9 @@ class BlockManager(object):
         # of the file.  This tries to be as conservative as possible,
         # since not reading an index isn't a deal breaker --
         # everything can still be read from the file, only slower.
+        # Importantly, it must remain "transactionally clean", and not
+        # create any blocks until we're sure the block index makes
+        # sense.
 
         if not fd.seekable():
             return
