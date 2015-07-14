@@ -23,3 +23,9 @@ Testing
 To run the unit tests::
 
     python setup.py test
+
+Coverage
+--------
+
+.. image:: https://coveralls.io/repos/spacetelescope/pyasdf/badge.svg?branch=master&service=github
+  :target: https://coveralls.io/github/spacetelescope/pyasdf?branch=master
