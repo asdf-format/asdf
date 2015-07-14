@@ -122,6 +122,15 @@ class AsdfDirective(Directive):
                     set_source_info(self, literal)
                     parts.append(literal)
 
+                internal_blocks = list(ff.blocks.internal_blocks)
+                if (len(internal_blocks) and
+                    internal_blocks[-1].array_storage != 'streamed'):
+                    block_index = "BLOCK INDEX:\n{0}".format('\n'.join(
+                        str(x.offset) for x in internal_blocks))
+                    literal = nodes.literal_block(block_index, block_index)
+                    set_source_info(self, literal)
+                    parts.append(literal)
+
         finally:
             os.chdir(cwd)
 
