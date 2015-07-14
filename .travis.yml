@@ -1,5 +1,15 @@
 language: python
 
+# Use Travis' container-based architecture
+sudo: false
+
+addons:
+  apt:
+    packages:
+    - graphviz
+    - texlive-extras
+    - dvipng
+
 python:
   - 2.6
   - 2.7
@@ -48,10 +58,6 @@ before_install:
     - export PATH=/home/travis/miniconda/bin:$PATH
     - conda update --yes conda
 
-    # DOCUMENTATION DEPENDENCIES
-    - if [[ $SETUP_CMD == build_sphinx* ]]; then sudo apt-get update; fi
-    - if [[ $SETUP_CMD == build_sphinx* ]]; then sudo apt-get install graphviz texlive-latex-extra dvipng; fi
-
 install:
 
     # CONDA
@@ -91,4 +97,4 @@ after_success:
     # If coveralls.io is set up for this package, uncomment the line
     # below and replace "packagename" with the name of your package.
     # The coveragerc file may be customized as needed for your package.
-    # - if [[ $SETUP_CMD == 'test --coverage' ]]; then coveralls --rcfile='packagename/tests/coveragerc'; fi
+    - if [[ $SETUP_CMD == 'test --coverage' ]]; then coveralls --rcfile='pyasdf/tests/coveragerc'; fi
