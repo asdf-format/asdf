@@ -389,7 +389,7 @@ class AsdfFile(versioning.VersionedMixin):
         if has_blocks:
             self._blocks.read_internal_blocks(
                 fd, past_magic=True, validate_checksums=validate_checksums)
-            self._blocks.read_block_index(fd)
+            self._blocks.read_block_index(fd, self)
 
         tree = reference.find_references(tree, self)
         if not do_not_fill_defaults:
@@ -479,14 +479,14 @@ class AsdfFile(versioning.VersionedMixin):
         self.blocks.write_internal_blocks_serial(fd, pad_blocks)
         self.blocks.write_external_blocks(fd.uri, pad_blocks)
         if include_block_index:
-            self.blocks.write_block_index(fd)
+            self.blocks.write_block_index(fd, self)
 
     def _random_write(self, fd, pad_blocks, include_block_index):
         self._write_tree(self._tree, fd, False)
         self.blocks.write_internal_blocks_random_access(fd)
         self.blocks.write_external_blocks(fd.uri, pad_blocks)
         if include_block_index:
-            self.blocks.write_block_index(fd)
+            self.blocks.write_block_index(fd, self)
 
     def _post_write(self, fd):
         if len(self._tree):

@@ -18,12 +18,15 @@ from astropy.extern import six
 from astropy.extern.six.moves.urllib import parse as urlparse
 from astropy.utils.compat import NUMPY_LT_1_7
 
+import yaml
+
 from . import compression as mcompression
 from . import constants
 from . import generic_io
 from . import stream
 from . import treeutil
 from . import util
+from . import yamlutil
 
 
 class BlockManager(object):
@@ -355,7 +358,7 @@ class BlockManager(object):
             block._used = True
             asdffile.write_to(subfd, pad_blocks=pad_blocks)
 
-    def write_block_index(self, fd):
+    def write_block_index(self, fd, ctx):
         """
         Write the block index.
 
@@ -368,13 +371,18 @@ class BlockManager(object):
         if len(self._internal_blocks) and not len(self._streamed_blocks):
             fd.write(constants.INDEX_HEADER)
             fd.write(b'\n')
-            for block in self.internal_blocks:
-                fd.write('{0:d}\n'.format(block.offset).encode('ascii'))
+            offsets = [x.offset for x in self.internal_blocks]
+            yaml.dump(
+                offsets, Dumper=yamlutil._yaml_base_dumper, stream=fd,
+                explicit_start=True, explicit_end=True,
+                version=ctx.versionspec.yaml_version,
+                allow_unicode=True, encoding='utf-8')
 
-    _re_index_content = re.compile(b'^' + constants.INDEX_HEADER + b'\r?\n([0-9]+\r?\n)+$')
-    _re_index_misc = re.compile(b'^[0-9\r\n\0]+$')
+    _re_index_content = re.compile(
+        b'^' + constants.INDEX_HEADER + b'\r?\n%YAML.*\.\.\.\r?\n?$')
+    _re_index_misc = re.compile(b'^[\n\r\x20-\x7f]+$')
 
-    def read_block_index(self, fd):
+    def read_block_index(self, fd, ctx):
         """
         Read the block index.
 
@@ -394,64 +402,81 @@ class BlockManager(object):
         if not fd.seekable():
             return
 
+        if not len(self._internal_blocks):
+            return
+
+        first_block = self._internal_blocks[0]
+        first_block_end = (first_block.offset +
+                           first_block.header_size +
+                           first_block.allocated)
+
         fd.seek(0, generic_io.SEEK_END)
         file_size = block_end = fd.tell()
         block_start = (block_end // fd.block_size) * fd.block_size
+        buff_size = block_end - block_start
+        if buff_size < 5:
+            block_start = max(block_start - fd.block_size, first_block_end)
 
-        suffix = b''
+        content = b''
+
+        fd.seek(block_start, generic_io.SEEK_SET)
+        buff = content = fd.read(buff_size)
+
+        # We need an explicit YAML end marker, or there's no
+        # block index
+        for ending in (b'...', b'...\r\n', b'...\n'):
+            if content.endswith(ending):
+                break
+        else:
+            return
 
         # Read blocks in reverse order from the end of the file
-        while block_start >= 0 and block_end > 0:
+        while True:
+            # Look for the index header
+            idx = content.find(constants.INDEX_HEADER)
+            if idx != -1:
+                content = content[idx:]
+                index_start = block_start + idx
+                break
+            else:
+                # If the rest of it starts to look like binary
+                # values, bail...
+                if not self._re_index_misc.match(buff):
+                    return
+
+            if block_start <= first_block_end:
+                return
+
+            block_end = block_start
+            block_start = max(block_end - fd.block_size, first_block_end)
+
             fd.seek(block_start, generic_io.SEEK_SET)
             buff_size = block_end - block_start
             buff = fd.read(buff_size)
+            content = buff + content
 
-            # Look for the index header
-            idx = buff.rfind(constants.INDEX_HEADER)
-            if idx == -1:
-                # If we didn't find the index header, but everything
-                # looks plausibly like index content, store the
-                # content as suffix, and keep reading backward.
-                # Otherwise, just bail.
-                if not self._re_index_misc.match(buff):
-                    return
-                else:
-                    suffix = buff + suffix
-            else:
-                # If we found the header, and everything after it looks
-                # like index content, it's probably an index.
-                content = buff[idx:] + suffix
-                if not self._re_index_content.match(content):
-                    return
-                else:
-                    index_start = block_start + idx
-                    break
+        yaml_content = content[content.find(b'\n') + 1:]
 
-            block_end = block_start
-            block_start = max(block_end - fd.block_size, 0)
+        offsets = yaml.load(yaml_content,
+                            Loader=yamlutil._yaml_base_loader)
 
-        lines = content.splitlines()
-
-        # The first line is a header.  The second is the index of the
-        # first block, which is always loaded by pyasdf.  We verify
-        # that the index of the first block matches the first block
-        # we've already read, and then only need to deal with creating
-        # UnloadedBlocks for the rest.
-        first_offset = int(lines[1].strip())
-        if first_offset != self._internal_blocks[0].offset:
+        # Make sure the indices look sane
+        if not isinstance(offsets, list) or len(offsets) == 0:
             return
 
-        offsets = []
-        for line in lines[2:]:
-            offset = int(line.strip())
-            if offset > file_size:
-                # One of the offsets is out of range for the file.
-                # Just bail, which results in falling back to the
-                # "skipping" method for finding blocks
+        for x in offsets:
+            if not isinstance(x, int) or x > file_size or x < 0:
                 return
-            offsets.append(offset)
 
-        if len(offsets) == 0:
+        # We always read the first block, so we can confirm that the
+        # first entry in the block index matches the first block
+        if offsets[0] != first_block.offset:
+            return
+
+        if len(offsets) == 1:
+            # If there's only one block in the index, we've already
+            # loaded the first block, so just return: we have nothing
+            # left to do
             return
 
         # One last sanity check: Read the last block in the index and
@@ -468,9 +493,10 @@ class BlockManager(object):
 
         # It seems we're good to go, so instantiate the UnloadedBlock
         # objects
-        for offset in offsets[:-1]:
+        for offset in offsets[1:-1]:
             self._internal_blocks.append(UnloadedBlock(fd, offset))
 
+        # We already read the last block in the file -- no need to read it again
         self._internal_blocks.append(block)
 
     def get_external_filename(self, filename, index):
@@ -887,13 +913,14 @@ class Block(object):
             if len(buff) < 4:
                 return None
 
-            if buff not in (constants.BLOCK_MAGIC, constants.INDEX_MAGIC):
+            if buff not in (constants.BLOCK_MAGIC,
+                            constants.INDEX_HEADER[:len(buff)]):
                 raise ValueError(
                     "Bad magic number in block. "
                     "This may indicate an internal inconsistency about the "
                     "sizes of the blocks in the file.")
 
-            if buff == constants.INDEX_MAGIC:
+            if buff == constants.INDEX_HEADER[:len(buff)]:
                 return None
 
         elif offset is not None:

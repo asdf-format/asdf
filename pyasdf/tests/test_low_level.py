@@ -892,7 +892,7 @@ def test_no_block_index():
     ff = asdf.AsdfFile(tree)
     ff.write_to(buff, include_block_index=False)
 
-    assert constants.INDEX_MAGIC not in buff.getvalue()
+    assert constants.INDEX_HEADER not in buff.getvalue()
 
 
 def test_junk_after_index():
@@ -930,7 +930,7 @@ def test_short_file_find_block_index():
     ff = asdf.AsdfFile({'arr': np.ndarray([1]), 'arr2': np.ndarray([2])})
     ff.write_to(buff, include_block_index=False)
 
-    buff.write(constants.INDEX_MAGIC)
+    buff.write(b'#ASDF BLOCK INDEX\n')
     buff.write(b'0' * (io.DEFAULT_BUFFER_SIZE * 4))
 
     buff.seek(0)
@@ -954,8 +954,9 @@ def test_invalid_block_index_values():
     }
 
     ff = asdf.AsdfFile(tree)
-    ff.write_to(buff)
-    buff.write(b"1234567890\n")
+    ff.write_to(buff, include_block_index=False)
+    ff.blocks._internal_blocks.append(block.UnloadedBlock(buff, 123456789))
+    ff.blocks.write_block_index(buff, ff)
 
     buff.seek(0)
     with asdf.AsdfFile.open(buff) as ff:
@@ -980,36 +981,9 @@ def test_invalid_block_index_first_block_value():
     ff.write_to(buff, include_block_index=False)
     buff.write(constants.INDEX_HEADER)
     buff.write(b'\n')
-    for i in range(10):
-        buff.write(b'0\n')
-
-    buff.seek(0)
-    with asdf.AsdfFile.open(buff) as ff:
-        assert len(ff.blocks) == 1
-
-
-def test_invalid_block_index_last_block_value():
-    # This creates a bogus block index where the offset of the first
-    # block doesn't match what we already know it to be.  In this
-    # case, we should reject the whole block index.
-    buff = io.BytesIO()
-
-    arrays = []
-    for i in range(10):
-        arrays.append(np.ones((8, 8)) * i)
-
-    tree = {
-        'arrays': arrays
-    }
-
-    ff = asdf.AsdfFile(tree)
-    ff.write_to(buff)
-
-    print(repr(buff.getvalue()[-16:]))
-
-    buff.seek(-2, generic_io.SEEK_END)
-    buff.write(b'\n')
-    buff.truncate()
+    buff.write(b'%YAML 1.1\n')
+    buff.write(b'---\n')
+    buff.write(b'[0, 0, 0, 0, 0, 0, 0, 0, 0, 0]\n...\n')
 
     buff.seek(0)
     with asdf.AsdfFile.open(buff) as ff:
@@ -1020,3 +994,44 @@ def test_invalid_block_id():
     ff = asdf.AsdfFile()
     with pytest.raises(ValueError):
         ff.blocks.get_block(-2)
+
+
+def test_dots_but_no_block_index():
+    # This creates a bogus block index where the offset of the first
+    # block doesn't match what we already know it to be.  In this
+    # case, we should reject the whole block index.
+    buff = io.BytesIO()
+
+    tree = {
+        'array': [np.ones((1024, 1024)) for x in range(2)]
+    }
+
+    ff = asdf.AsdfFile(tree)
+    ff.write_to(buff, include_block_index=False)
+
+    buff.write(b'...\n')
+
+    buff.seek(0)
+    with asdf.AsdfFile.open(buff) as ff:
+        assert len(ff.blocks) == 1
+
+
+def test_dots_but_no_block_index():
+    # This creates a bogus block index where the offset of the first
+    # block doesn't match what we already know it to be.  In this
+    # case, we should reject the whole block index.
+    buff = io.BytesIO()
+
+    tree = {
+        'array': np.ones((8, 8))
+    }
+
+    ff = asdf.AsdfFile(tree)
+    ff.write_to(buff, include_block_index=False)
+
+    buff.write(b'A' * 64000)
+    buff.write(b'...\n')
+
+    buff.seek(0)
+    with asdf.AsdfFile.open(buff) as ff:
+        assert len(ff.blocks) == 1
