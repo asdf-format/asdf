@@ -405,10 +405,11 @@ class BlockManager(object):
 
         fd.seek(0, generic_io.SEEK_END)
         file_size = block_end = fd.tell()
-        block_start = (block_end // fd.block_size) * fd.block_size
+        # We want to read on filesystem block boundaries.  We use
+        # "block_end - 5" here because we need to read at least 5
+        # bytes in the first block.
+        block_start = ((block_end - 5) // fd.block_size) * fd.block_size
         buff_size = block_end - block_start
-        if buff_size < 5:
-            block_start = max(block_start - fd.block_size, first_block_end)
 
         content = b''
 
