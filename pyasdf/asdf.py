@@ -487,6 +487,7 @@ class AsdfFile(versioning.VersionedMixin):
         self.blocks.write_external_blocks(fd.uri, pad_blocks)
         if include_block_index:
             self.blocks.write_block_index(fd, self)
+        fd.truncate()
 
     def _post_write(self, fd):
         if len(self._tree):
@@ -560,7 +561,7 @@ class AsdfFile(versioning.VersionedMixin):
             # If the file is fully exploded, there's no benefit to
             # update, so just use write_to()
             self.write_to(fd, all_array_storage=all_array_storage)
-            fd.truncate(fd.tell())
+            fd.truncate()
             return
 
         if not fd.seekable():
@@ -579,7 +580,7 @@ class AsdfFile(versioning.VersionedMixin):
                 # If we don't have any blocks that are being reused, just
                 # write out in a serial fashion.
                 self._serial_write(fd, pad_blocks, include_block_index)
-                fd.truncate(fd.tell())
+                fd.truncate()
                 return
 
             # Estimate how big the tree will be on disk by writing the
@@ -607,7 +608,7 @@ class AsdfFile(versioning.VersionedMixin):
                 # If we don't have any blocks that are being reused, just
                 # write out in a serial fashion.
                 self._serial_write(fd, pad_blocks, include_block_index)
-                fd.truncate(fd.tell())
+                fd.truncate()
                 return
 
             fd.seek(0)

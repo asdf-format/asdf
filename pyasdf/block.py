@@ -331,7 +331,6 @@ class BlockManager(object):
         end_of_blocks = (last_block.offset + last_block.header_size +
                          last_block.allocated)
 
-        fd.truncate(end_of_blocks)
         fd.seek(end_of_blocks, generic_io.SEEK_SET)
 
     def write_external_blocks(self, uri, pad_blocks=False):
@@ -420,7 +419,12 @@ class BlockManager(object):
         content = b''
 
         fd.seek(block_start, generic_io.SEEK_SET)
-        buff = content = fd.read(buff_size)
+        buff = fd.read(buff_size)
+
+        # Extra '\0' bytes are allowed after the ..., mainly to
+        # workaround poor truncation support on Windows
+        buff = buff.rstrip(b'\0')
+        content = buff
 
         # We need an explicit YAML end marker, or there's no
         # block index
@@ -776,8 +780,9 @@ class Block(object):
         self._allocated = self._size
 
     def __repr__(self):
-        return '<Block {0} alloc: {1} size: {2} type: {3}>'.format(
-            self._array_storage[:3], self._allocated, self._size, self._array_storage)
+        return '<Block {0} off: {1} alc: {2} siz: {3}>'.format(
+            self._array_storage[:3], self._offset, self._allocated,
+            self._size)
 
     def __len__(self):
         return self._size
@@ -1114,7 +1119,7 @@ class UnloadedBlock(object):
         self._offset = offset
         self._data = None
         self._uri = None
-        self._array_storage = 'inline'
+        self._array_storage = 'internal'
         self._compression = None
         self._checksum = None
         self._memmapped = False
@@ -1128,7 +1133,7 @@ class UnloadedBlock(object):
 
     @property
     def array_storage(self):
-        return 'inline'
+        return 'internal'
 
     @property
     def offset(self):

@@ -450,10 +450,14 @@ def test_update_delete_middle_array(tmpdir):
     with asdf.AsdfFile.open(os.path.join(tmpdir, "test.asdf"), mode="rw") as ff:
         del ff.tree['arrays'][1]
         ff.update()
+        assert len(ff.blocks._internal_blocks) == 2
 
     assert os.stat(path).st_size <= original_size
 
     with asdf.AsdfFile.open(os.path.join(tmpdir, "test.asdf")) as ff:
+        assert len(ff.tree['arrays']) == 2
+        assert ff.tree['arrays'][0]._source == 0
+        assert ff.tree['arrays'][1]._source == 1
         assert_array_equal(ff.tree['arrays'][0], tree['arrays'][0])
         assert_array_equal(ff.tree['arrays'][1], tree['arrays'][2])
 

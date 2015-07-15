@@ -407,7 +407,7 @@ class GenericFile(object):
         if self._close:
             self._fd.close()
 
-    def truncate(self, nbytes):
+    def truncate(self, size=None):
         """
         Truncate the file to the given size.
         """
@@ -672,10 +672,12 @@ class RandomAccessFile(GenericFile):
         self.seek(size, SEEK_CUR)
 
     if sys.platform.startswith('win'):  # pragma: no cover
-        def truncate(self, size):
+        def truncate(self, size=None):
             # ftruncate doesn't work on an open file in Windows.  The
             # best we can do is clear the extra bytes or add extra
             # bytes to the end.
+            if size is None:
+                size = self.tell()
 
             self.seek(0, SEEK_END)
             file_size = self.tell()
@@ -694,8 +696,11 @@ class RandomAccessFile(GenericFile):
 
             self.seek(size, SEEK_SET)
     else:
-        def truncate(self, size):
-            self._fd.truncate(size)
+        def truncate(self, size=None):
+            if size is None:
+                self._fd.truncate()
+            else:
+                self._fd.truncate(size)
 
 
 class RealFile(RandomAccessFile):
