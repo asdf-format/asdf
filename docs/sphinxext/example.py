@@ -4,6 +4,7 @@
 from __future__ import absolute_import, division, unicode_literals, print_function
 
 import atexit
+import io
 import os
 import shutil
 import tempfile
@@ -125,9 +126,11 @@ class AsdfDirective(Directive):
                 internal_blocks = list(ff.blocks.internal_blocks)
                 if (len(internal_blocks) and
                     internal_blocks[-1].array_storage != 'streamed'):
-                    block_index = "BLOCK INDEX:\n{0}".format('\n'.join(
-                        str(x.offset) for x in internal_blocks))
+                    buff = io.BytesIO()
+                    ff.blocks.write_block_index(buff, ff)
+                    block_index = buff.getvalue()
                     literal = nodes.literal_block(block_index, block_index)
+                    literal['language'] = 'yaml'
                     set_source_info(self, literal)
                     parts.append(literal)
 
