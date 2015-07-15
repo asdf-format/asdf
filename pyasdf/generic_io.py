@@ -701,6 +701,7 @@ class RandomAccessFile(GenericFile):
                 self._fd.truncate()
             else:
                 self._fd.truncate(size)
+                self.seek(size, SEEK_SET)
 
 
 class RealFile(RandomAccessFile):

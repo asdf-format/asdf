@@ -266,8 +266,7 @@ class BlockManager(object):
             # Read all of the remaining blocks in the file, if any
             if (last_block._fd is not None and
                 last_block._fd.seekable()):
-                last_block._fd.seek(
-                    last_block.offset + last_block.header_size + last_block.allocated)
+                last_block._fd.seek(last_block.end_offset)
                 while True:
                     last_block = self._read_next_internal_block(
                         last_block._fd, False)
@@ -328,10 +327,7 @@ class BlockManager(object):
         fd.seek(last_block.offset)
         last_block.write(fd)
 
-        end_of_blocks = (last_block.offset + last_block.header_size +
-                         last_block.allocated)
-
-        fd.seek(end_of_blocks, generic_io.SEEK_SET)
+        fd.truncate(last_block.end_offset)
 
     def write_external_blocks(self, uri, pad_blocks=False):
         """
@@ -405,9 +401,7 @@ class BlockManager(object):
             return
 
         first_block = self._internal_blocks[0]
-        first_block_end = (first_block.offset +
-                           first_block.header_size +
-                           first_block.allocated)
+        first_block_end = first_block.end_offset
 
         fd.seek(0, generic_io.SEEK_END)
         file_size = block_end = fd.tell()
@@ -497,7 +491,7 @@ class BlockManager(object):
             return
 
         # Now see if the end of the last block leads right into the index
-        if (block.offset + block.header_size + block.allocated != index_start):
+        if (block.end_offset != index_start):
             return
 
         # It seems we're good to go, so instantiate the UnloadedBlock
@@ -627,9 +621,7 @@ class BlockManager(object):
 
             if (last_block._fd is not None and
                 last_block._fd.seekable()):
-                last_block._fd.seek(
-                    last_block.offset + last_block.header_size +
-                    last_block.allocated)
+                last_block._fd.seek(last_block.end_offset)
                 while True:
                     next_block = self._read_next_internal_block(
                         last_block._fd, False)
@@ -812,6 +804,14 @@ class Block(object):
     @property
     def size(self):
         return self._size + self.header_size
+
+    @property
+    def end_offset(self):
+        """
+        The offset of the end of the allocated space for the block,
+        and where the next block should begin.
+        """
+        return self.offset + self.header_size + self.allocated
 
     def override_byteorder(self, byteorder):
         return byteorder
