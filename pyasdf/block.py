@@ -464,9 +464,14 @@ class BlockManager(object):
         if not isinstance(offsets, list) or len(offsets) == 0:
             return
 
+        last_offset = 0
         for x in offsets:
-            if not isinstance(x, int) or x > file_size or x < 0:
+            if (not isinstance(x, int) or
+                x > file_size or
+                x < 0 or
+                x <= last_offset + Block._header.size):
                 return
+            last_offset = x
 
         # We always read the first block, so we can confirm that the
         # first entry in the block index matches the first block

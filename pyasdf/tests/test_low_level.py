@@ -963,6 +963,53 @@ def test_invalid_block_index_values():
         assert len(ff.blocks) == 1
 
 
+def test_invalid_last_block_index():
+    # This adds a value in the block index that points to something
+    # that isn't a block
+
+    buff = io.BytesIO()
+
+    arrays = []
+    for i in range(10):
+        arrays.append(np.ones((8, 8)) * i)
+
+    tree = {
+        'arrays': arrays
+    }
+
+    ff = asdf.AsdfFile(tree)
+    ff.write_to(buff, include_block_index=False)
+    ff.blocks._internal_blocks[-1]._offset -= 4
+    ff.blocks.write_block_index(buff, ff)
+
+    buff.seek(0)
+    with asdf.AsdfFile.open(buff) as ff:
+        assert len(ff.blocks) == 1
+
+
+def test_unordered_block_index():
+    # This creates a block index that isn't in increasing order
+
+    buff = io.BytesIO()
+
+    arrays = []
+    for i in range(10):
+        arrays.append(np.ones((8, 8)) * i)
+
+    tree = {
+        'arrays': arrays
+    }
+
+    ff = asdf.AsdfFile(tree)
+    ff.write_to(buff, include_block_index=False)
+    ff.blocks._internal_blocks = ff.blocks._internal_blocks[::-1]
+    ff.blocks.write_block_index(buff, ff)
+
+    buff.seek(0)
+    with asdf.AsdfFile.open(buff) as ff:
+        assert len(ff.blocks) == 1
+
+
 def test_invalid_block_index_first_block_value():
     # This creates a bogus block index where the offset of the first
     # block doesn't match what we already know it to be.  In this
@@ -979,11 +1026,8 @@ def test_invalid_block_index_first_block_value():
 
     ff = asdf.AsdfFile(tree)
     ff.write_to(buff, include_block_index=False)
-    buff.write(constants.INDEX_HEADER)
-    buff.write(b'\n')
-    buff.write(b'%YAML 1.1\n')
-    buff.write(b'---\n')
-    buff.write(b'[0, 0, 0, 0, 0, 0, 0, 0, 0, 0]\n...\n')
+    ff.blocks._internal_blocks[0]._offset -= 4
+    ff.blocks.write_block_index(buff, ff)
 
     buff.seek(0)
     with asdf.AsdfFile.open(buff) as ff:
@@ -997,29 +1041,9 @@ def test_invalid_block_id():
 
 
 def test_dots_but_no_block_index():
-    # This creates a bogus block index where the offset of the first
-    # block doesn't match what we already know it to be.  In this
-    # case, we should reject the whole block index.
-    buff = io.BytesIO()
-
-    tree = {
-        'array': [np.ones((1024, 1024)) for x in range(2)]
-    }
-
-    ff = asdf.AsdfFile(tree)
-    ff.write_to(buff, include_block_index=False)
-
-    buff.write(b'...\n')
-
-    buff.seek(0)
-    with asdf.AsdfFile.open(buff) as ff:
-        assert len(ff.blocks) == 1
-
-
-def test_dots_but_no_block_index():
-    # This creates a bogus block index where the offset of the first
-    # block doesn't match what we already know it to be.  In this
-    # case, we should reject the whole block index.
+    # This puts `...` at the end of the file, so we sort of think
+    # we might have a block index, but as it turns out, we don't
+    # after reading a few chunks from the end of the file.
     buff = io.BytesIO()
 
     tree = {
