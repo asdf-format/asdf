@@ -5,10 +5,12 @@ from __future__ import absolute_import, division, unicode_literals, print_functi
 
 import io
 import os
+import sys
 
 from astropy.extern import six
 
 from ..asdf import AsdfFile
+from ..conftest import RangeHTTPServer
 from ..extension import _builtin_extension_list
 from .. import util
 
@@ -125,6 +127,19 @@ def assert_roundtrip_tree(
         assert_tree_match(tree, ff.tree)
         if asdf_check_func:
             asdf_check_func(ff)
+
+    # Now try everything on an HTTP range server
+    if not sys.platform.startswith('win'):
+        server = RangeHTTPServer()
+        try:
+            ff = AsdfFile(tree)
+            ff.write_to(os.path.join(server.tmpdir, 'test.asdf'), **write_options)
+            with AsdfFile.open(server.url + 'test.asdf', mode='r') as ff:
+                assert_tree_match(tree, ff.tree)
+                if asdf_check_func:
+                    asdf_check_func(ff)
+        finally:
+            server.finalize()
 
 
 def yaml_to_asdf(yaml_content, yaml_headers=True):

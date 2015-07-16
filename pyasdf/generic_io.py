@@ -18,6 +18,7 @@ import os
 import platform
 import re
 import sys
+import tempfile
 
 from os import SEEK_SET, SEEK_CUR, SEEK_END
 
@@ -858,6 +859,10 @@ class HTTPConnection(RandomAccessFile):
     Uses a persistent HTTP connection to request specific ranges of
     the file and obtain its structure without transferring it in its
     entirety.
+
+    It creates a temporary file on the local filesystem and copies
+    blocks into it as needed.  The `_blocks` array is a bitfield that
+    keeps track of which blocks we have.
     """
     # TODO: Handle HTTPS connection
 
@@ -871,17 +876,25 @@ class HTTPConnection(RandomAccessFile):
         self._path = path
         self._uri = uri
         # The logical position in the file
-        self._pos = 0
-        # The start and end bytes of the buffer
-        self._buffer_start = 0
-        self._buffer_end = 0
-        self._buffer = b''
+        local_file = tempfile.NamedTemporaryFile(delete=True)
+        self._local = RealFile(local_file, 'rw', close=True)
+        self._local.truncate(size)
+        self._local.seek(0)
         # The size of the entire file
         self._size = size
         self._nreads = 0
+        # A bitmap of the blocks that we've already read and cached
+        # locally
+        self._blocks = np.zeros(
+            int(math.ceil(size / self._blksize / 8)), np.uint8)
+
+        # Some methods just short-circuit to the local copy
+        self.seek = self._local.seek
+        self.tell = self._local.tell
 
     def __exit__(self, type, value, traceback):
         if not self._closed:
+            self._local.close()
             if hasattr(self._fd, '__exit__'):
                 self._fd.__exit__(type, value, traceback)
             else:
@@ -890,6 +903,7 @@ class HTTPConnection(RandomAccessFile):
 
     def close(self):
         if not self._closed:
+            self._local.close()
             self._fd.close()
             self._closed = True
 
@@ -898,125 +912,86 @@ class HTTPConnection(RandomAccessFile):
 
     def _get_range(self, start, end):
         """
-        Get a range of bytes from the server.
+        Ensure the range of bytes has been copied to the local cache.
         """
-        headers = {
-            'Range': 'bytes={0}-{1}'.format(start, end - 1)}
-        self._fd.request('GET', self._path, headers=headers)
-        response = self._fd.getresponse()
-        if response.status != 206:
-            raise IOError("HTTP failed: {0} {1}".format(
-                response.status, response.reason))
-        self._nreads += 1
-        return response
+        blocks = self._blocks
+        block_size = self.block_size
 
-    def _round_up_bytes(self, size):
-        """
-        When requesting a certain number of bytes, we want to round up
-        to the nearest block boundary to always fetch a little more
-        to make subsequent reads faster.
-        """
-        return int((math.ceil(
-            float(size) / self._blksize) + 1) * self._blksize)
+        def has_block(x):
+            return blocks[x >> 3] & (1 << (x & 0x7))
+
+        def mark_block(x):
+            blocks[x >> 3] |= (1 << (x & 0x7))
+
+        block_start = start // block_size
+        block_end = end // block_size + 1
+
+        pos = self._local.tell()
+
+        # TODO: There's probably some optimizations that could be done
+        # here to skip over whole sets of blocks that have already
+        # been loaded.
+
+        try:
+            # Between block_start and block_end, some blocks may be
+            # already loaded.  We want to load all of the missing
+            # blocks in as few requests as possible.
+            a = block_start
+            while a < block_end:
+                while a < block_end and has_block(a):
+                    a += 1
+                if a == block_end:
+                    break
+
+                b = a + 1
+                while b < block_end and not has_block(b):
+                    b += 1
+
+                headers = {
+                    'Range': 'bytes={0}-{1}'.format(
+                        a * block_size, b * block_size)}
+                self._fd.request('GET', self._path, headers=headers)
+                response = self._fd.getresponse()
+                if response.status != 206:
+                    raise IOError("HTTP failed: {0} {1}".format(
+                        response.status, response.reason))
+
+                # Now copy over to the temporary file, block-by-block
+                self._local.seek(a * block_size, os.SEEK_SET)
+                for i in xrange(a, b):
+                    self._local.write(response.read(block_size))
+                    mark_block(i)
+                response.close()
+
+                self._nreads += 1
+
+                a = b
+        finally:
+            self._local.seek(pos, os.SEEK_SET)
 
     def read(self, size=-1):
+        pos = self._local.tell()
+
         # Adjust size so it doesn't go beyond the end of the file
-        if size < 0 or self._pos + size > self._size:
-            size = self._size - self._pos
+        if size < 0 or pos + size > self._size:
+            size = self._size - pos
 
         # On Python 3, reading 0 bytes from a socket causes it to stop
         # working, so avoid doing that at all costs.
         if size == 0:
             return b''
 
-        new_pos = self._pos + size
-
-        if (self._pos >= self._buffer_start and
-            new_pos <= self._buffer_end):
-            # The request can be met entirely with the existing buffer
-            result = self._buffer[
-                self._pos - self._buffer_start:
-                new_pos - self._buffer_start]
-            self._pos = new_pos
-            return result
-        elif (self._pos >= self._buffer_start and
-              self._pos < self._buffer_end):
-            # The request contains the buffer, and some new content
-            # immediately following
-            nbytes = new_pos - self._buffer_end
-            nbytes = self._round_up_bytes(nbytes)
-            end = min(self._buffer_end + nbytes, self._size)
-            new_content = self._get_range(self._buffer_end, end).read()
-            result = (self._buffer[self._pos - self._buffer_start:] +
-                      new_content[:new_pos - self._buffer_end])
-            self._buffer = new_content
-            self._buffer_start = self._buffer_end
-            self._buffer_end = self._buffer_start + len(new_content)
-            self._pos = new_pos
-            return result
-        else:
-            # The request doesn't contain the buffer.  We don't deal
-            # with the case where the request includes content before
-            # the buffer and the buffer itself because such small
-            # rewinds are not really done in pyasdf.
-            nbytes = self._round_up_bytes(size)
-            end = min(self._pos + nbytes, self._size)
-            new_content = self._get_range(self._pos, end).read()
-            self._buffer = new_content
-            self._buffer_start = self._pos
-            self._buffer_end = end
-            self._pos = new_pos
-            return new_content[:size]
-
-    def seek(self, offset, whence=0):
-        if whence == SEEK_SET:
-            self._pos = offset
-        elif whence == SEEK_CUR:
-            self._pos += offset
-        elif whence == SEEK_END:
-            self._pos = self._size - offset
-
-    def tell(self):
-        return self._pos
+        self._get_range(pos, pos + size)
+        return self._local.read(size)
 
     def read_into_array(self, size):
-        if self._pos + size > self._size:
+        pos = self._local.tell()
+
+        if pos + size > self._size:
             raise IOError("Read past end of file.")
 
-        new_pos = self._pos + size
-
-        # If we already have the whole thing in the buffer, use that,
-        # otherwise, it's most memory efficient to bypass self.read
-        # (which would make a temporary memory buffer), and instead
-        # just make a new request and read directly from the file
-        # object into the array.
-        if (self._pos >= self._buffer_start and
-            self._pos + size <= self._buffer_end):
-            result = np.frombuffer(self._buffer[
-                self._pos - self._buffer_start:
-                self._pos + size - self._buffer_start], np.uint8, size)
-        else:
-            response = self._get_range(
-                self._pos, self._pos + size)
-            if sys.platform.startswith('win'):  # pragma: no cover
-                data = response.read(size)
-                result = np.frombuffer(data, np.uint8)
-            else:
-                if six.PY3:
-                    result = np.empty((size,), dtype=np.uint8)
-                    response.readinto(result)
-                elif six.PY2:
-                    # Python 2.6 HTTPResponse does not have fileno()
-                    if hasattr(response, 'fileno'):
-                        fileno = response.fileno()
-                    else:
-                        fileno = response.fp.fileno()
-
-                    with os.fdopen(fileno, 'rb') as fd:
-                        result = np.fromfile(fd, np.uint8, size)
-
-        self._pos = new_pos
-        return result
+        self._get_range(pos, pos + size)
+        return self._local.memmap_array(pos, size)
 
 
 def _make_http_connection(init, mode, uri=None):
