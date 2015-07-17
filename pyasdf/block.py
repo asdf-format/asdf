@@ -913,8 +913,6 @@ class Block(object):
             If `True`, validate the data against the checksum, and
             raise a `ValueError` if the data doesn't match.
         """
-        fd = generic_io.get_file(fd)
-
         offset = None
         if fd.seekable():
             offset = fd.tell()
@@ -1012,59 +1010,58 @@ class Block(object):
         """
         Write an internal block to the given Python file-like object.
         """
-        with generic_io.get_file(fd, 'w') as fd:
-            self._header_size = self._header.size
+        self._header_size = self._header.size
 
-            flags = 0
-            data_size = used_size = allocated_size = 0
-            if self._array_storage == 'streamed':
-                flags |= constants.BLOCK_FLAG_STREAMED
-            elif self._data is not None:
-                self.update_checksum()
-                if not fd.seekable() and self.is_compressed:
-                    buff = io.BytesIO()
-                    mcompression.compress(buff, self._data, self.compression)
-                    self.allocated = self._size = buff.tell()
-                data_size = self._data.nbytes
-                allocated_size = self.allocated
-                used_size = self._size
+        flags = 0
+        data_size = used_size = allocated_size = 0
+        if self._array_storage == 'streamed':
+            flags |= constants.BLOCK_FLAG_STREAMED
+        elif self._data is not None:
+            self.update_checksum()
+            if not fd.seekable() and self.is_compressed:
+                buff = io.BytesIO()
+                mcompression.compress(buff, self._data, self.compression)
+                self.allocated = self._size = buff.tell()
+            data_size = self._data.nbytes
+            allocated_size = self.allocated
+            used_size = self._size
 
-            if self.checksum is not None:
-                checksum = self.checksum
-            else:
-                checksum = b'\0' * 16
+        if self.checksum is not None:
+            checksum = self.checksum
+        else:
+            checksum = b'\0' * 16
 
-            fd.write(constants.BLOCK_MAGIC)
-            fd.write(struct.pack(b'>H', self._header_size))
-            fd.write(self._header.pack(
-                flags=flags,
-                compression=mcompression.to_compression_header(
-                    self.compression),
-                allocated_size=allocated_size,
-                used_size=used_size, data_size=data_size,
-                checksum=checksum))
+        fd.write(constants.BLOCK_MAGIC)
+        fd.write(struct.pack(b'>H', self._header_size))
+        fd.write(self._header.pack(
+            flags=flags,
+            compression=mcompression.to_compression_header(
+                self.compression),
+            allocated_size=allocated_size,
+            used_size=used_size, data_size=data_size,
+            checksum=checksum))
 
-            if self._data is not None:
-                if self.is_compressed:
-                    if not fd.seekable():
-                        fd.write(buff.getvalue())
-                    else:
-                        # If the file is seekable, we write the
-                        # compressed data directly to it, then go back
-                        # and write the resulting size in the block
-                        # header.
-                        start = fd.tell()
-                        mcompression.compress(fd, self._data, self.compression)
-                        end = fd.tell()
-                        self.allocated = self._size = end - start
-                        fd.seek(self.offset + 6)
-                        self._header.update(
-                            fd,
-                            allocated_size=self.allocated,
-                            used_size=self._size)
-                        fd.seek(end)
+        if self._data is not None:
+            if self.is_compressed:
+                if not fd.seekable():
+                    fd.write(buff.getvalue())
                 else:
-                    fd.write_array(self._data)
+                    # If the file is seekable, we write the
+                    # compressed data directly to it, then go back
+                    # and write the resulting size in the block
+                    # header.
+                    start = fd.tell()
+                    mcompression.compress(fd, self._data, self.compression)
+                    end = fd.tell()
+                    self.allocated = self._size = end - start
+                    fd.seek(self.offset + 6)
+                    self._header.update(
+                        fd,
+                        allocated_size=self.allocated,
+                        used_size=self._size)
+                    fd.seek(end)
+            else:
+                fd.write_array(self._data)
 
     @property
     def data(self):
