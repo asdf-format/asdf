@@ -131,7 +131,8 @@ class AsdfInFits(asdf.AsdfFile):
         super(AsdfInFits, self).write_to(
             buff, all_array_storage=all_array_storage,
             all_array_compression=all_array_compression,
-            auto_inline=auto_inline, pad_blocks=pad_blocks)
+            auto_inline=auto_inline, pad_blocks=pad_blocks,
+            include_block_index=False)
         array = np.frombuffer(buff.getvalue(), np.uint8)
 
         try:

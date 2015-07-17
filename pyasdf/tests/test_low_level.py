@@ -13,11 +13,10 @@ import numpy as np
 from numpy.testing import assert_array_equal
 
 from .. import asdf
+from .. import block
 from .. import constants
 from .. import generic_io
 from .. import treeutil
-
-from . import helpers
 
 
 def _get_small_tree():
@@ -268,6 +267,15 @@ def test_invalid_array_storage():
     with pytest.raises(ValueError):
         ff.set_array_storage(my_array, 'foo')
 
+    b = block.Block()
+    b._array_storage = 'foo'
+
+    with pytest.raises(ValueError):
+        ff.blocks.add(b)
+
+    with pytest.raises(ValueError):
+        ff.blocks.remove(b)
+
 
 def test_transfer_array_sources(tmpdir):
     tmpdir = str(tmpdir)
@@ -341,6 +349,7 @@ def test_update_expand_tree(tmpdir):
 
     ff = asdf.AsdfFile(tree)
     ff.set_array_storage(tree['arrays'][2], 'inline')
+    assert len(list(ff.blocks.inline_blocks)) == 1
     ff.write_to(testpath, pad_blocks=True)
     with asdf.AsdfFile.open(testpath, mode='rw') as ff:
         assert_array_equal(ff.tree['arrays'][0], my_array)
@@ -396,7 +405,7 @@ def test_update_delete_first_array(tmpdir):
         del ff.tree['arrays'][0]
         ff.update()
 
-    assert os.stat(path).st_size == original_size
+    assert os.stat(path).st_size <= original_size
 
     with asdf.AsdfFile.open(os.path.join(tmpdir, "test.asdf")) as ff:
         assert_array_equal(ff.tree['arrays'][0], tree['arrays'][1])
@@ -419,7 +428,7 @@ def test_update_delete_last_array(tmpdir):
         del ff.tree['arrays'][-1]
         ff.update()
 
-    assert os.stat(path).st_size == original_size
+    assert os.stat(path).st_size <= original_size
 
     with asdf.AsdfFile.open(os.path.join(tmpdir, "test.asdf")) as ff:
         assert_array_equal(ff.tree['arrays'][0], tree['arrays'][0])
@@ -441,10 +450,14 @@ def test_update_delete_middle_array(tmpdir):
     with asdf.AsdfFile.open(os.path.join(tmpdir, "test.asdf"), mode="rw") as ff:
         del ff.tree['arrays'][1]
         ff.update()
+        assert len(ff.blocks._internal_blocks) == 2
 
-    assert os.stat(path).st_size == original_size
+    assert os.stat(path).st_size <= original_size
 
     with asdf.AsdfFile.open(os.path.join(tmpdir, "test.asdf")) as ff:
+        assert len(ff.tree['arrays']) == 2
+        assert ff.tree['arrays'][0]._source == 0
+        assert ff.tree['arrays'][1]._source == 1
         assert_array_equal(ff.tree['arrays'][0], tree['arrays'][0])
         assert_array_equal(ff.tree['arrays'][1], tree['arrays'][2])
 
@@ -465,7 +478,7 @@ def test_update_replace_first_array(tmpdir):
         ff.tree['arrays'][0] = np.arange(32)
         ff.update()
 
-    assert os.stat(path).st_size == original_size
+    assert os.stat(path).st_size <= original_size
 
     with asdf.AsdfFile.open(os.path.join(tmpdir, "test.asdf")) as ff:
         assert_array_equal(ff.tree['arrays'][0], np.arange(32))
@@ -489,7 +502,7 @@ def test_update_replace_last_array(tmpdir):
         ff.tree['arrays'][2] = np.arange(32)
         ff.update()
 
-    assert os.stat(path).st_size == original_size
+    assert os.stat(path).st_size <= original_size
 
     with asdf.AsdfFile.open(os.path.join(tmpdir, "test.asdf")) as ff:
         assert_array_equal(ff.tree['arrays'][0], tree['arrays'][0])
@@ -513,7 +526,7 @@ def test_update_replace_middle_array(tmpdir):
         ff.tree['arrays'][1] = np.arange(32)
         ff.update()
 
-    assert os.stat(path).st_size == original_size
+    assert os.stat(path).st_size <= original_size
 
     with asdf.AsdfFile.open(os.path.join(tmpdir, "test.asdf")) as ff:
         assert_array_equal(ff.tree['arrays'][0], tree['arrays'][0])
@@ -537,8 +550,6 @@ def test_update_add_array(tmpdir):
         ff.tree['arrays'].append(np.arange(32))
         ff.update()
 
-    assert os.stat(path).st_size == original_size
-
     with asdf.AsdfFile.open(os.path.join(tmpdir, "test.asdf")) as ff:
         assert_array_equal(ff.tree['arrays'][0], tree['arrays'][0])
         assert_array_equal(ff.tree['arrays'][1], tree['arrays'][1])
@@ -561,6 +572,7 @@ def test_update_add_array_at_end(tmpdir):
     with asdf.AsdfFile.open(os.path.join(tmpdir, "test.asdf"), mode="rw") as ff:
         ff.tree['arrays'].append(np.arange(2048))
         ff.update()
+        assert len(ff.blocks) == 4
 
     assert os.stat(path).st_size >= original_size
 
@@ -795,14 +807,259 @@ def test_deferred_block_loading():
     buff = io.BytesIO()
 
     ff = asdf.AsdfFile(_get_small_tree())
+    ff.write_to(buff, include_block_index=False)
+
+    buff.seek(0)
+    with asdf.AsdfFile.open(buff) as ff2:
+        assert len([x for x in ff2.blocks.blocks if isinstance(x, block.Block)]) == 1
+        x = ff2.tree['science_data'] * 2
+        x = ff2.tree['not_shared'] * 2
+        assert len([x for x in ff2.blocks.blocks if isinstance(x, block.Block)]) == 2
+
+        with pytest.raises(ValueError):
+            ff2.blocks.get_block(2)
+
+
+def test_block_index():
+    buff = io.BytesIO()
+
+    arrays = []
+    for i in range(100):
+        arrays.append(np.ones((8, 8)) * i)
+
+    tree = {
+        'arrays': arrays
+    }
+
+    ff = asdf.AsdfFile(tree)
     ff.write_to(buff)
 
     buff.seek(0)
     with asdf.AsdfFile.open(buff) as ff2:
-        assert len(ff2.blocks) == 1
-        ff2.blocks.get_block(1)
+        assert isinstance(ff2.blocks._internal_blocks[0], block.Block)
+        assert len(ff2.blocks._internal_blocks) == 100
+        for i in range(2, 99):
+            assert isinstance(ff2.blocks._internal_blocks[i], block.UnloadedBlock)
+        assert isinstance(ff2.blocks._internal_blocks[99], block.Block)
 
-        assert len(ff2.blocks) == 2
+        # Force the loading of one array
+        x = ff2.tree['arrays'][50] * 2
+        for i in range(2, 99):
+            if i == 50:
+                assert isinstance(ff2.blocks._internal_blocks[i], block.Block)
+            else:
+                assert isinstance(ff2.blocks._internal_blocks[i], block.UnloadedBlock)
 
-        with pytest.raises(ValueError):
-            ff2.blocks.get_block(2)
+
+def test_large_block_index():
+    # This test is designed to test reading of a block index that is
+    # larger than a single file system block, which is why we create
+    # io.DEFAULT_BUFFER_SIZE / 4 arrays, and assuming each entry has more
+    # than one digit in its address, we're guaranteed to have an index
+    # larger than a filesystem block.
+
+    # TODO: It would be nice to find a way to make this test faster.  The
+    # real bottleneck here is the enormous YAML section.
+
+    buff = io.BytesIO()
+
+    narrays = int(io.DEFAULT_BUFFER_SIZE / 4)
+
+    arrays = []
+    for i in range(narrays):
+        arrays.append(np.array([i], np.uint16))
+
+    tree = {
+        'arrays': arrays
+    }
+
+    ff = asdf.AsdfFile(tree)
+    ff.write_to(buff)
+
+    buff.seek(0)
+    with asdf.AsdfFile.open(buff) as ff2:
+        assert isinstance(ff2.blocks._internal_blocks[0], block.Block)
+        assert len(ff2.blocks._internal_blocks) == narrays
+
+
+def test_no_block_index():
+    buff = io.BytesIO()
+
+    arrays = []
+    for i in range(10):
+        arrays.append(np.ones((8, 8)) * i)
+
+    tree = {
+        'arrays': arrays
+    }
+
+    ff = asdf.AsdfFile(tree)
+    ff.write_to(buff, include_block_index=False)
+
+    assert constants.INDEX_HEADER not in buff.getvalue()
+
+
+def test_junk_after_index():
+    buff = io.BytesIO()
+
+    arrays = []
+    for i in range(10):
+        arrays.append(np.ones((8, 8)) * i)
+
+    tree = {
+        'arrays': arrays
+    }
+
+    ff = asdf.AsdfFile(tree)
+    ff.write_to(buff)
+
+    buff.write(b"JUNK")
+
+    buff.seek(0)
+
+    # This has junk after the block index, so it
+    # should fall back to the skip method, which
+    # only loads the first block.
+    with asdf.AsdfFile.open(buff) as ff:
+        assert len(ff.blocks) == 1
+
+
+def test_short_file_find_block_index():
+    # This tests searching for a block index in a file that looks like
+    # it might have an index, in the last filesystem block or so, but
+    # ultimately proves to not have an index.
+
+    buff = io.BytesIO()
+
+    ff = asdf.AsdfFile({'arr': np.ndarray([1]), 'arr2': np.ndarray([2])})
+    ff.write_to(buff, include_block_index=False)
+
+    buff.write(b'#ASDF BLOCK INDEX\n')
+    buff.write(b'0' * (io.DEFAULT_BUFFER_SIZE * 4))
+
+    buff.seek(0)
+    with asdf.AsdfFile.open(buff) as ff:
+        assert len(ff.blocks) == 1
+
+
+def test_invalid_block_index_values():
+    # This adds a value in the block index that points to something
+    # past the end of the file.  In that case, we should just reject
+    # the index altogether.
+
+    buff = io.BytesIO()
+
+    arrays = []
+    for i in range(10):
+        arrays.append(np.ones((8, 8)) * i)
+
+    tree = {
+        'arrays': arrays
+    }
+
+    ff = asdf.AsdfFile(tree)
+    ff.write_to(buff, include_block_index=False)
+    ff.blocks._internal_blocks.append(block.UnloadedBlock(buff, 123456789))
+    ff.blocks.write_block_index(buff, ff)
+
+    buff.seek(0)
+    with asdf.AsdfFile.open(buff) as ff:
+        assert len(ff.blocks) == 1
+
+
+def test_invalid_last_block_index():
+    # This adds a value in the block index that points to something
+    # that isn't a block
+
+    buff = io.BytesIO()
+
+    arrays = []
+    for i in range(10):
+        arrays.append(np.ones((8, 8)) * i)
+
+    tree = {
+        'arrays': arrays
+    }
+
+    ff = asdf.AsdfFile(tree)
+    ff.write_to(buff, include_block_index=False)
+    ff.blocks._internal_blocks[-1]._offset -= 4
+    ff.blocks.write_block_index(buff, ff)
+
+    buff.seek(0)
+    with asdf.AsdfFile.open(buff) as ff:
+        assert len(ff.blocks) == 1
+
+
+def test_unordered_block_index():
+    # This creates a block index that isn't in increasing order
+
+    buff = io.BytesIO()
+
+    arrays = []
+    for i in range(10):
+        arrays.append(np.ones((8, 8)) * i)
+
+    tree = {
+        'arrays': arrays
+    }
+
+    ff = asdf.AsdfFile(tree)
+    ff.write_to(buff, include_block_index=False)
+    ff.blocks._internal_blocks = ff.blocks._internal_blocks[::-1]
+    ff.blocks.write_block_index(buff, ff)
+
+    buff.seek(0)
+    with asdf.AsdfFile.open(buff) as ff:
+        assert len(ff.blocks) == 1
+
+
+def test_invalid_block_index_first_block_value():
+    # This creates a bogus block index where the offset of the first
+    # block doesn't match what we already know it to be.  In this
+    # case, we should reject the whole block index.
+    buff = io.BytesIO()
+
+    arrays = []
+    for i in range(10):
+        arrays.append(np.ones((8, 8)) * i)
+
+    tree = {
+        'arrays': arrays
+    }
+
+    ff = asdf.AsdfFile(tree)
+    ff.write_to(buff, include_block_index=False)
+    ff.blocks._internal_blocks[0]._offset -= 4
+    ff.blocks.write_block_index(buff, ff)
+
+    buff.seek(0)
+    with asdf.AsdfFile.open(buff) as ff:
+        assert len(ff.blocks) == 1
+
+
+def test_invalid_block_id():
+    ff = asdf.AsdfFile()
+    with pytest.raises(ValueError):
+        ff.blocks.get_block(-2)
+
+
+def test_dots_but_no_block_index():
+    # This puts `...` at the end of the file, so we sort of think
+    # we might have a block index, but as it turns out, we don't
+    # after reading a few chunks from the end of the file.
+    buff = io.BytesIO()
+
+    tree = {
+        'array': np.ones((8, 8))
+    }
+
+    ff = asdf.AsdfFile(tree)
+    ff.write_to(buff, include_block_index=False)
+
+    buff.write(b'A' * 64000)
+    buff.write(b'...\n')
+
+    buff.seek(0)
+    with asdf.AsdfFile.open(buff) as ff:
+        assert len(ff.blocks) == 1

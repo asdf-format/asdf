@@ -10,6 +10,8 @@ ASDF_MAGIC = b'#ASDF '
 BLOCK_MAGIC = b'\xd3BLK'
 BLOCK_HEADER_BOILERPLATE_SIZE = 6
 
+INDEX_HEADER = b'#ASDF BLOCK INDEX'
+
 # The maximum number of blocks supported
 MAX_BLOCKS = 2 ** 16
 MAX_BLOCKS_DIGITS = int(np.ceil(np.log10(MAX_BLOCKS) + 1))

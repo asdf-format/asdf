@@ -389,6 +389,7 @@ class AsdfFile(versioning.VersionedMixin):
         if has_blocks:
             self._blocks.read_internal_blocks(
                 fd, past_magic=True, validate_checksums=validate_checksums)
+            self._blocks.read_block_index(fd, self)
 
         tree = reference.find_references(tree, self)
         if not do_not_fill_defaults:
@@ -473,15 +474,20 @@ class AsdfFile(versioning.VersionedMixin):
         # reorganization, if necessary
         self._blocks.finalize(self)
 
-    def _serial_write(self, fd, pad_blocks):
+    def _serial_write(self, fd, pad_blocks, include_block_index):
         self._write_tree(self._tree, fd, pad_blocks)
         self.blocks.write_internal_blocks_serial(fd, pad_blocks)
         self.blocks.write_external_blocks(fd.uri, pad_blocks)
+        if include_block_index:
+            self.blocks.write_block_index(fd, self)
 
-    def _random_write(self, fd, pad_blocks):
+    def _random_write(self, fd, pad_blocks, include_block_index):
         self._write_tree(self._tree, fd, False)
         self.blocks.write_internal_blocks_random_access(fd)
         self.blocks.write_external_blocks(fd.uri, pad_blocks)
+        if include_block_index:
+            self.blocks.write_block_index(fd, self)
+        fd.truncate()
 
     def _post_write(self, fd):
         if len(self._tree):
@@ -495,7 +501,7 @@ class AsdfFile(versioning.VersionedMixin):
             del self._auto_inline
 
     def update(self, all_array_storage=None, all_array_compression=None,
-               auto_inline=None, pad_blocks=False):
+               auto_inline=None, pad_blocks=False, include_block_index=True):
         """
         Update the file on disk in place.
 
@@ -535,6 +541,11 @@ class AsdfFile(versioning.VersionedMixin):
             return 0).  If `True`, add a default amount of padding of
             10% If a float, it is a factor to multiple content_size by
             to get the new total size.
+
+        include_block_index : bool, optional
+            If `False`, don't include a block index at the end of the
+            file.  (Default: `True`)  A block index is never written
+            if the file has a streamed block.
         """
         fd = self._fd
 
@@ -550,7 +561,7 @@ class AsdfFile(versioning.VersionedMixin):
             # If the file is fully exploded, there's no benefit to
             # update, so just use write_to()
             self.write_to(fd, all_array_storage=all_array_storage)
-            fd.truncate(fd.tell())
+            fd.truncate()
             return
 
         if not fd.seekable():
@@ -568,8 +579,8 @@ class AsdfFile(versioning.VersionedMixin):
             if not self.blocks.has_blocks_with_offset():
                 # If we don't have any blocks that are being reused, just
                 # write out in a serial fashion.
-                self._serial_write(fd, pad_blocks)
-                fd.truncate(fd.tell())
+                self._serial_write(fd, pad_blocks, include_block_index)
+                fd.truncate()
                 return
 
             # Estimate how big the tree will be on disk by writing the
@@ -596,18 +607,18 @@ class AsdfFile(versioning.VersionedMixin):
                     pad_blocks, fd.block_size):
                 # If we don't have any blocks that are being reused, just
                 # write out in a serial fashion.
-                self._serial_write(fd, pad_blocks)
-                fd.truncate(fd.tell())
+                self._serial_write(fd, pad_blocks, include_block_index)
+                fd.truncate()
                 return
 
             fd.seek(0)
-            self._random_write(fd, pad_blocks)
+            self._random_write(fd, pad_blocks, include_block_index)
             fd.flush()
         finally:
             self._post_write(fd)
 
     def write_to(self, fd, all_array_storage=None, all_array_compression=None,
-                 auto_inline=None, pad_blocks=False):
+                 auto_inline=None, pad_blocks=False, include_block_index=True):
         """
         Write the ASDF file to the given file-like object.
 
@@ -656,6 +667,11 @@ class AsdfFile(versioning.VersionedMixin):
             return 0).  If `True`, add a default amount of padding of
             10% If a float, it is a factor to multiple content_size by
             to get the new total size.
+
+        include_block_index : bool, optional
+            If `False`, don't include a block index at the end of the
+            file.  (Default: `True`)  A block index is never written
+            if the file has a streamed block.
         """
         original_fd = self._fd
 
@@ -666,7 +682,7 @@ class AsdfFile(versioning.VersionedMixin):
                                 auto_inline)
 
                 try:
-                    self._serial_write(fd, pad_blocks)
+                    self._serial_write(fd, pad_blocks, include_block_index)
                     fd.flush()
                 finally:
                     self._post_write(fd)

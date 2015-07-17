@@ -19,6 +19,8 @@ import platform
 import re
 import sys
 
+from os import SEEK_SET, SEEK_CUR, SEEK_END
+
 from astropy.extern import six
 from astropy.extern.six.moves import xrange
 from astropy.extern.six.moves.urllib import parse as urlparse
@@ -53,11 +55,11 @@ def _check_bytes(fd, mode):
             return False
         return True
 
-    if mode == 'r':
+    if 'r' in mode:
         x = fd.read(0)
         if not isinstance(x, bytes):
             return False
-    elif mode == 'w':
+    elif 'w' in mode:
         if six.PY2:
             if isinstance(fd, file):
                 if 'b' not in fd.mode:
@@ -375,9 +377,9 @@ class GenericFile(object):
 
         whence : integer, optional
             The `whence` argument is optional and defaults to
-            os.SEEK_SET or 0 (absolute file positioning); other values
-            are os.SEEK_CUR or 1 (seek relative to the current
-            position) and os.SEEK_END or 2 (seek relative to the
+            SEEK_SET or 0 (absolute file positioning); other values
+            are SEEK_CUR or 1 (seek relative to the current
+            position) and SEEK_END or 2 (seek relative to the
             file’s end).
         """
         result = self._fd.seek(offset, whence)
@@ -405,11 +407,11 @@ class GenericFile(object):
         if self._close:
             self._fd.close()
 
-    def truncate(self, nbytes):
+    def truncate(self, size=None):
         """
         Truncate the file to the given size.
         """
-        pass
+        raise NotImplementedError()
 
     def writable(self):
         """
@@ -655,7 +657,7 @@ class RandomAccessFile(GenericFile):
     def _peek(self, size=-1):
         cursor = self.tell()
         content = self.read(size)
-        self.seek(cursor, os.SEEK_SET)
+        self.seek(cursor, SEEK_SET)
         return content
 
     def reader_until(self, delimiter, readahead_bytes, delimiter_name=None,
@@ -666,11 +668,40 @@ class RandomAccessFile(GenericFile):
 
     def fast_forward(self, size):
         if size < 0:
-            self.seek(0, os.SEEK_END)
-        self.seek(size, os.SEEK_CUR)
+            self.seek(0, SEEK_END)
+        self.seek(size, SEEK_CUR)
 
-    def truncate(self, size):
-        self._fd.truncate(size)
+    if sys.platform.startswith('win'):  # pragma: no cover
+        def truncate(self, size=None):
+            # ftruncate doesn't work on an open file in Windows.  The
+            # best we can do is clear the extra bytes or add extra
+            # bytes to the end.
+            if size is None:
+                size = self.tell()
+
+            self.seek(0, SEEK_END)
+            file_size = self.tell()
+            if size < file_size:
+                self.seek(size, SEEK_SET)
+                nbytes = file_size - size
+            elif size > file_size:
+                nbytes = size - file_size
+            else:
+                nbytes = 0
+
+            block = b'\0' * self.block_size
+            while nbytes > 0:
+                self.write(block[:min(nbytes, self.block_size)])
+                nbytes -= self.block_size
+
+            self.seek(size, SEEK_SET)
+    else:
+        def truncate(self, size=None):
+            if size is None:
+                self._fd.truncate()
+            else:
+                self._fd.truncate(size)
+                self.seek(size, SEEK_SET)
 
 
 class RealFile(RandomAccessFile):
@@ -734,7 +765,7 @@ class MemoryIO(RandomAccessFile):
         # If we need a read/write array, we have to copy it.
         if 'w' in self._mode:
             result = result.copy()
-        self.seek(size, os.SEEK_CUR)
+        self.seek(size, SEEK_CUR)
         return result
 
 
@@ -788,9 +819,7 @@ class InputStream(GenericFile):
             include=include, initial_content=initial_content)
 
     def fast_forward(self, size):
-        if len(self.read(size)) != size:
-            if size < 0:
-                return
+        if size >= 0 and len(self.read(size)) != size:
             raise IOError("Read past end of file")
 
     def read_into_array(self, size):
@@ -940,11 +969,11 @@ class HTTPConnection(RandomAccessFile):
             return new_content[:size]
 
     def seek(self, offset, whence=0):
-        if whence == os.SEEK_SET:
+        if whence == SEEK_SET:
             self._pos = offset
-        elif whence == os.SEEK_CUR:
+        elif whence == SEEK_CUR:
             self._pos += offset
-        elif whence == os.SEEK_END:
+        elif whence == SEEK_END:
             self._pos = self._size - offset
 
     def tell(self):
@@ -1084,10 +1113,11 @@ def get_file(init, mode='r', uri=None):
     if mode not in ('r', 'w', 'rw'):
         raise ValueError("mode must be 'r', 'w' or 'rw'")
 
-    # Special case for sys.stdout on Python 3, since it takes unicode
-    # by default, but we need to write to it with bytes
-    if six.PY3 and init in (sys.stdout, sys.stdin, sys.stderr):
-        init = init.buffer
+    if init in (sys.__stdout__, sys.__stdin__, sys.__stderr__):
+        if six.PY3:
+            init = init.buffer
+        else:
+            init = os.fdopen(init.fileno(), init.mode + 'b')
 
     if isinstance(init, (GenericFile, GenericWrapper)):
         if mode not in init.mode:
@@ -1099,7 +1129,7 @@ def get_file(init, mode='r', uri=None):
     elif isinstance(init, six.string_types):
         parsed = urlparse.urlparse(init)
         if parsed.scheme == 'http':
-            if mode == 'w':
+            if 'w' in mode:
                 raise ValueError(
                     "HTTP connections can not be opened for writing")
             return _make_http_connection(init, mode, uri=uri)
@@ -1124,7 +1154,7 @@ def get_file(init, mode='r', uri=None):
             "io.StringIO objects are not supported.  Use io.BytesIO instead.")
 
     elif six.PY2 and isinstance(init, file):
-        if mode not in init.mode:
+        if init.mode[0] not in mode:
             raise ValueError(
                 "File is opened as '{0}', but '{1}' was requested".format(
                     init.mode, mode))

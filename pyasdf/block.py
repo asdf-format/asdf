@@ -8,6 +8,7 @@ import copy
 import hashlib
 import io
 import os
+import re
 import struct
 import weakref
 
@@ -17,12 +18,15 @@ from astropy.extern import six
 from astropy.extern.six.moves.urllib import parse as urlparse
 from astropy.utils.compat import NUMPY_LT_1_7
 
+import yaml
+
 from . import compression as mcompression
 from . import constants
 from . import generic_io
 from . import stream
 from . import treeutil
 from . import util
+from . import yamlutil
 
 
 class BlockManager(object):
@@ -179,7 +183,7 @@ class BlockManager(object):
         An iterator over all inline blocks being managed.
         """
         for block in self._inline_blocks:
-            yield blocks
+            yield block
 
     def has_blocks_with_offset(self):
         """
@@ -194,8 +198,7 @@ class BlockManager(object):
     def _sort_blocks_by_offset(self):
         def sorter(x):
             if x.offset is None:
-                # 64 bits
-                return 0xffffffffffffffff
+                raise ValueError('Block is missing offset')
             else:
                 return x.offset
         self._internal_blocks.sort(key=sorter)
@@ -254,13 +257,16 @@ class BlockManager(object):
         knowledge of all internal blocks in the file.
         """
         if len(self._internal_blocks):
+            for i, block in enumerate(self._internal_blocks):
+                if isinstance(block, UnloadedBlock):
+                    block.load()
+
             last_block = self._internal_blocks[-1]
 
             # Read all of the remaining blocks in the file, if any
             if (last_block._fd is not None and
                 last_block._fd.seekable()):
-                last_block._fd.seek(
-                    last_block.offset + last_block.header_size + last_block.allocated)
+                last_block._fd.seek(last_block.end_offset)
                 while True:
                     last_block = self._read_next_internal_block(
                         last_block._fd, False)
@@ -317,15 +323,11 @@ class BlockManager(object):
             last_block.write(fd)
             last_block = block
 
-        # The last block must be "allocated" all the way to the
-        # end of the file, which isn't truncated when updating.
-        fd.seek(0, 2)
-        last_end = fd.tell()
-        last_block.allocated = max(
-            last_end - last_block.offset,
-            last_block.size) - last_block.header_size
+        last_block.allocated = last_block.size
         fd.seek(last_block.offset)
         last_block.write(fd)
+
+        fd.truncate(last_block.end_offset)
 
     def write_external_blocks(self, uri, pad_blocks=False):
         """
@@ -350,6 +352,156 @@ class BlockManager(object):
             asdffile.blocks.add(block)
             block._used = True
             asdffile.write_to(subfd, pad_blocks=pad_blocks)
+
+    def write_block_index(self, fd, ctx):
+        """
+        Write the block index.
+
+        Parameters
+        ----------
+        fd : GenericFile
+            The file to write to.  The file pointer should be at the
+            end of the file.
+        """
+        if len(self._internal_blocks) and not len(self._streamed_blocks):
+            fd.write(constants.INDEX_HEADER)
+            fd.write(b'\n')
+            offsets = [x.offset for x in self.internal_blocks]
+            yaml.dump(
+                offsets, Dumper=yamlutil._yaml_base_dumper, stream=fd,
+                explicit_start=True, explicit_end=True,
+                version=ctx.versionspec.yaml_version,
+                allow_unicode=True, encoding='utf-8')
+
+    _re_index_content = re.compile(
+        b'^' + constants.INDEX_HEADER + b'\r?\n%YAML.*\.\.\.\r?\n?$')
+    _re_index_misc = re.compile(b'^[\n\r\x20-\x7f]+$')
+
+    def read_block_index(self, fd, ctx):
+        """
+        Read the block index.
+
+        Parameters
+        ----------
+        fd : GenericFile
+            The file to read from.  It must be seekable.
+        """
+        # This reads the block index by reading backward from the end
+        # of the file.  This tries to be as conservative as possible,
+        # since not reading an index isn't a deal breaker --
+        # everything can still be read from the file, only slower.
+        # Importantly, it must remain "transactionally clean", and not
+        # create any blocks until we're sure the block index makes
+        # sense.
+
+        if not fd.seekable():
+            return
+
+        if not len(self._internal_blocks):
+            return
+
+        first_block = self._internal_blocks[0]
+        first_block_end = first_block.end_offset
+
+        fd.seek(0, generic_io.SEEK_END)
+        file_size = block_end = fd.tell()
+        # We want to read on filesystem block boundaries.  We use
+        # "block_end - 5" here because we need to read at least 5
+        # bytes in the first block.
+        block_start = ((block_end - 5) // fd.block_size) * fd.block_size
+        buff_size = block_end - block_start
+
+        content = b''
+
+        fd.seek(block_start, generic_io.SEEK_SET)
+        buff = fd.read(buff_size)
+
+        # Extra '\0' bytes are allowed after the ..., mainly to
+        # workaround poor truncation support on Windows
+        buff = buff.rstrip(b'\0')
+        content = buff
+
+        # We need an explicit YAML end marker, or there's no
+        # block index
+        for ending in (b'...', b'...\r\n', b'...\n'):
+            if content.endswith(ending):
+                break
+        else:
+            return
+
+        # Read blocks in reverse order from the end of the file
+        while True:
+            # Look for the index header
+            idx = content.find(constants.INDEX_HEADER)
+            if idx != -1:
+                content = content[idx:]
+                index_start = block_start + idx
+                break
+            else:
+                # If the rest of it starts to look like binary
+                # values, bail...
+                if not self._re_index_misc.match(buff):
+                    return
+
+            if block_start <= first_block_end:
+                return
+
+            block_end = block_start
+            block_start = max(block_end - fd.block_size, first_block_end)
+
+            fd.seek(block_start, generic_io.SEEK_SET)
+            buff_size = block_end - block_start
+            buff = fd.read(buff_size)
+            content = buff + content
+
+        yaml_content = content[content.find(b'\n') + 1:]
+
+        offsets = yaml.load(yaml_content,
+                            Loader=yamlutil._yaml_base_loader)
+
+        # Make sure the indices look sane
+        if not isinstance(offsets, list) or len(offsets) == 0:
+            return
+
+        last_offset = 0
+        for x in offsets:
+            if (not isinstance(x, int) or
+                x > file_size or
+                x < 0 or
+                x <= last_offset + Block._header.size):
+                return
+            last_offset = x
+
+        # We always read the first block, so we can confirm that the
+        # first entry in the block index matches the first block
+        if offsets[0] != first_block.offset:
+            return
+
+        if len(offsets) == 1:
+            # If there's only one block in the index, we've already
+            # loaded the first block, so just return: we have nothing
+            # left to do
+            return
+
+        # One last sanity check: Read the last block in the index and
+        # make sure it makes sense.
+        fd.seek(offsets[-1], generic_io.SEEK_SET)
+        try:
+            block = Block().read(fd)
+        except (ValueError, IOError):
+            return
+
+        # Now see if the end of the last block leads right into the index
+        if (block.end_offset != index_start):
+            return
+
+        # It seems we're good to go, so instantiate the UnloadedBlock
+        # objects
+        for offset in offsets[1:-1]:
+            self._internal_blocks.append(UnloadedBlock(fd, offset))
+
+        # We already read the last block in the file -- no need to read it again
+        self._internal_blocks.append(block)
 
     def get_external_filename(self, filename, index):
         """
@@ -452,7 +604,6 @@ class BlockManager(object):
             elif source >= 0:
                 if source < len(self._internal_blocks):
                     return self._internal_blocks[source]
-
             else:
                 raise ValueError("Invalid source id {0}".format(source))
 
@@ -468,11 +619,10 @@ class BlockManager(object):
             # the last known internal block, and start looking for
             # more internal blocks.  This is "deferred block loading".
             last_block = self._internal_blocks[-1]
+
             if (last_block._fd is not None and
                 last_block._fd.seekable()):
-                last_block._fd.seek(
-                    last_block.offset + last_block.header_size +
-                    last_block.allocated)
+                last_block._fd.seek(last_block.end_offset)
                 while True:
                     next_block = self._read_next_internal_block(
                         last_block._fd, False)
@@ -498,27 +648,6 @@ class BlockManager(object):
             raise TypeError("Unknown source '{0}'".format(source))
 
         return block
-
-    def get_data(self, source):
-        """
-        Given a "source identifier", return a buffer containing data.
-
-        Parameters
-        ----------
-        source : any
-            If an integer, refers to the index of an internal block.
-            If a string, is a uri to an external block.
-
-        Returns
-        -------
-        buffer : buffer
-        """
-        block = self.get_block(source)
-
-        data = block.data
-        self._data_to_block_mapping[id(data)] = block
-
-        return data.data
 
     def get_source(self, block):
         """
@@ -644,8 +773,9 @@ class Block(object):
         self._allocated = self._size
 
     def __repr__(self):
-        return '<Block {0} alloc: {1} size: {2} type: {3}>'.format(
-            self._array_storage[:3], self._allocated, self._size, self._array_storage)
+        return '<Block {0} off: {1} alc: {2} siz: {3}>'.format(
+            self._array_storage[:3], self._offset, self._allocated,
+            self._size)
 
     def __len__(self):
         return self._size
@@ -675,6 +805,14 @@ class Block(object):
     @property
     def size(self):
         return self._size + self.header_size
+
+    @property
+    def end_offset(self):
+        """
+        The offset of the end of the allocated space for the block,
+        and where the next block should begin.
+        """
+        return self.offset + self.header_size + self.allocated
 
     def override_byteorder(self, byteorder):
         return byteorder
@@ -786,11 +924,16 @@ class Block(object):
             if len(buff) < 4:
                 return None
 
-            if buff != constants.BLOCK_MAGIC:
+            if buff not in (constants.BLOCK_MAGIC,
+                            constants.INDEX_HEADER[:len(buff)]):
                 raise ValueError(
                     "Bad magic number in block. "
                     "This may indicate an internal inconsistency about the "
                     "sizes of the blocks in the file.")
+
+            if buff == constants.INDEX_HEADER[:len(buff)]:
+                return None
+
         elif offset is not None:
             offset -= 4
 
@@ -953,7 +1096,7 @@ class Block(object):
 
     def close(self):
         if self._memmapped and self._data is not None:
-            if NUMPY_LT_1_7:
+            if NUMPY_LT_1_7:  # pragma: no cover
                 try:
                     self._data.flush()
                 except ValueError:
@@ -964,6 +1107,47 @@ class Block(object):
                 self._data._mmap.close()
             self._data = None
 
+
+class UnloadedBlock(object):
+    """
+    Represents an indexed, but not yet loaded, internal block.  All
+    that is known about it is its offset.  It converts itself to a
+    full-fledged block whenever the underlying data or more detail is
+    requested.
+    """
+    def __init__(self, fd, offset):
+        self._fd = fd
+        self._offset = offset
+        self._data = None
+        self._uri = None
+        self._array_storage = 'internal'
+        self._compression = None
+        self._checksum = None
+        self._memmapped = False
+
+    def __len__(self):
+        self.load()
+        return len(self)
+
+    def close(self):
+        pass
+
+    @property
+    def array_storage(self):
+        return 'internal'
+
+    @property
+    def offset(self):
+        return self._offset
+
+    def __getattr__(self, attr):
+        self.load()
+        return getattr(self, attr)
+
+    def load(self):
+        self._fd.seek(self._offset, generic_io.SEEK_SET)
+        self.__class__ = Block
+        self.read(self._fd)
 
 
 def calculate_updated_layout(blocks, tree_size, pad_blocks, block_size):
@@ -986,10 +1170,8 @@ def calculate_updated_layout(blocks, tree_size, pad_blocks, block_size):
     rewriting the file serially, otherwise, returns `True`.
     """
     def unfix_block(i):
-        # We can't really move memory-mapped blocks around, so at this
-        # point, we just return False.  If this algorithm gets more
-        # sophisticated we could carefully move memmapped blocks
-        # around without clobbering other ones.
+        # If this algorithm gets more sophisticated we could carefully
+        # move memmapped blocks around without clobbering other ones.
 
         # TODO: Copy to a tmpfile on disk and memmap it from there.
         entry = fixed[i]
