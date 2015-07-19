@@ -984,6 +984,9 @@ class HTTPConnection(RandomAccessFile):
             self._local.seek(pos, os.SEEK_SET)
 
     def read(self, size=-1):
+        if self._closed:
+            raise IOError("read from closed connection")
+
         pos = self._local.tell()
 
         # Adjust size so it doesn't go beyond the end of the file
@@ -999,6 +1002,9 @@ class HTTPConnection(RandomAccessFile):
         return self._local.read(size)
 
     def read_into_array(self, size):
+        if self._closed:
+            raise IOError("read from closed connection")
+
         pos = self._local.tell()
 
         if pos + size > self._size:
