@@ -866,7 +866,7 @@ class HTTPConnection(RandomAccessFile):
     """
     # TODO: Handle HTTPS connection
 
-    def __init__(self, connection, size, path, uri):
+    def __init__(self, connection, size, path, uri, first_chunk):
         self._mode = 'r'
         self._blksize = io.DEFAULT_BUFFER_SIZE
         # The underlying HTTPConnection object doesn't track closed
@@ -875,18 +875,23 @@ class HTTPConnection(RandomAccessFile):
         self._fd = connection
         self._path = path
         self._uri = uri
-        # The logical position in the file
-        local_file = tempfile.NamedTemporaryFile(delete=True)
-        self._local = RealFile(local_file, 'rw', close=True)
-        self._local.truncate(size)
-        self._local.seek(0)
-        # The size of the entire file
-        self._size = size
-        self._nreads = 0
+
         # A bitmap of the blocks that we've already read and cached
         # locally
         self._blocks = np.zeros(
             int(math.ceil(size / self._blksize / 8)), np.uint8)
+
+        local_file = tempfile.TemporaryFile()
+        self._local = RealFile(local_file, 'rw', close=True)
+        self._local.truncate(size)
+        self._local.seek(0)
+        self._local.write(first_chunk)
+        self._local.seek(0)
+        self._blocks[0] = 1
+
+        # The size of the entire file
+        self._size = size
+        self._nreads = 0
 
         # Some methods just short-circuit to the local copy
         self.seek = self._local.seek
@@ -914,6 +919,11 @@ class HTTPConnection(RandomAccessFile):
         """
         Ensure the range of bytes has been copied to the local cache.
         """
+        if start >= self._size:
+            return
+
+        end = min(end, self._size)
+
         blocks = self._blocks
         block_size = self.block_size
 
@@ -947,9 +957,12 @@ class HTTPConnection(RandomAccessFile):
                 while b < block_end and not has_block(b):
                     b += 1
 
+                if a * block_size >= self._size:
+                    return
+
                 headers = {
                     'Range': 'bytes={0}-{1}'.format(
-                        a * block_size, b * block_size)}
+                        a * block_size, (b * block_size) - 1)}
                 self._fd.request('GET', self._path, headers=headers)
                 response = self._fd.getresponse()
                 if response.status != 206:
@@ -959,7 +972,8 @@ class HTTPConnection(RandomAccessFile):
                 # Now copy over to the temporary file, block-by-block
                 self._local.seek(a * block_size, os.SEEK_SET)
                 for i in xrange(a, b):
-                    self._local.write(response.read(block_size))
+                    chunk = response.read(block_size)
+                    self._local.write(chunk)
                     mark_block(i)
                 response.close()
 
@@ -1005,8 +1019,11 @@ def _make_http_connection(init, mode, uri=None):
     connection = http_client.HTTPConnection(parsed.netloc)
     connection.connect()
 
-    # We request a range of everything ("0-") just to check if the
-    # server understands that header entry.
+    block_size = io.DEFAULT_BUFFER_SIZE
+
+    # We request a range of the whole file ("0-") to check if the
+    # server understands that header entry, and also to get the
+    # size of the entire file
     headers = {'Range': 'bytes=0-'}
     connection.request('GET', parsed.path, headers=headers)
     response = connection.getresponse()
@@ -1030,9 +1047,10 @@ def _make_http_connection(init, mode, uri=None):
     # current request (because we can't abort it), so just close and
     # start over
     size = int(response.getheader('content-length'))
-    connection.close()
-    connection.connect()
-    return HTTPConnection(connection, size, parsed.path, uri or init)
+    first_chunk = response.read(block_size)
+    response.close()
+    return HTTPConnection(connection, size, parsed.path, uri or init,
+                          first_chunk)
 
 
 def get_file(init, mode='r', uri=None):

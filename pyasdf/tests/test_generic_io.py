@@ -300,7 +300,7 @@ def test_http_connection_range(tree, rhttpserver):
 
     with _roundtrip(tree, get_write_fd, get_read_fd) as ff:
         if len(tree) == 4:
-            assert connection[0]._nreads == 1
+            assert connection[0]._nreads == 0
         else:
             assert connection[0]._nreads == 6
 
