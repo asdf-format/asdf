@@ -938,24 +938,28 @@ class HTTPConnection(RandomAccessFile):
 
         pos = self._local.tell()
 
-        # TODO: There's probably some optimizations that could be done
-        # here to skip over whole sets of blocks that have already
-        # been loaded.
-
         try:
             # Between block_start and block_end, some blocks may be
             # already loaded.  We want to load all of the missing
             # blocks in as few requests as possible.
             a = block_start
             while a < block_end:
+                # Skip over whole groups of blocks at a time
+                while a < block_end and blocks[a >> 3] == 0xff:
+                    a = ((a >> 3) + 1) << 3
                 while a < block_end and has_block(a):
                     a += 1
-                if a == block_end:
+                if a >= block_end:
                     break
 
                 b = a + 1
+                # Skip over whole groups of blocks at a time
+                while b < block_end and blocks[b >> 3] == 0x0:
+                    b = ((b >> 3) + 1) << 3
                 while b < block_end and not has_block(b):
                     b += 1
+                if b > block_end:
+                    b = block_end
 
                 if a * block_size >= self._size:
                     return
