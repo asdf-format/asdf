@@ -300,12 +300,12 @@ def test_http_connection_range(tree, rhttpserver):
 
     with _roundtrip(tree, get_write_fd, get_read_fd) as ff:
         if len(tree) == 4:
-            assert connection[0]._nreads == 1
+            assert connection[0]._nreads == 0
         else:
-            assert connection[0]._nreads == 5
+            assert connection[0]._nreads == 6
 
         assert len(list(ff.blocks.internal_blocks)) == 2
-        assert not isinstance(next(ff.blocks.internal_blocks)._data, np.core.memmap)
+        assert isinstance(next(ff.blocks.internal_blocks)._data, np.core.memmap)
         assert isinstance(next(ff.blocks.internal_blocks)._data, np.ndarray)
         ff.tree['science_data'][0] == 42
 
