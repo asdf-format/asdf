@@ -416,9 +416,9 @@ if six.PY2:
         # We can count on 52 bits of precision
         for instance in treeutil.iter_tree(instance):
             if (isinstance(instance, long) or
-                isinstance(instance, int) and (
-                    instance > ((1 << 51) - 1) or
-                    instance < -((1 << 51) - 2))):
+                (isinstance(instance, int) and
+                 instance > ((1 << 51) - 1) or
+                 instance < -((1 << 51) - 2))):
                 raise ValidationError(
                     "Integer value {0} is too large to safely represent as a "
                     "literal in ASDF".format(instance))
