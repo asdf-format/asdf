@@ -408,6 +408,35 @@ def get_validator(schema={}, ctx=None, validators=None, url_mapping=None,
     return validator
 
 
+if six.PY2:
+    def validate_large_literals(instance):
+        """
+        Validate that the tree has no large numeric literals.
+        """
+        # We can count on 52 bits of precision
+        for instance in treeutil.iter_tree(instance):
+            if (isinstance(instance, long) or
+                isinstance(instance, int) and (
+                    instance > ((1 << 51) - 1) or
+                    instance < -((1 << 51) - 2))):
+                raise ValidationError(
+                    "Integer value {0} is too large to safely represent as a "
+                    "literal in ASDF".format(instance))
+else:
+    def validate_large_literals(instance):
+        """
+        Validate that the tree has no large numeric literals.
+        """
+        # We can count on 52 bits of precision
+        for instance in treeutil.iter_tree(instance):
+            if (isinstance(instance, int) and (
+                instance > ((1 << 51) - 1) or
+                instance < -((1 << 51) - 2))):
+                raise ValidationError(
+                    "Integer value {0} is too large to safely represent as a "
+                    "literal in ASDF".format(instance))
+
+
 def validate(instance, ctx=None, schema={},
              validators=None,
              *args, **kwargs):
@@ -441,6 +470,8 @@ def validate(instance, ctx=None, schema={},
     validator = get_validator(schema, ctx, validators, ctx.url_mapping,
                               *args, **kwargs)
     validator.validate(instance, _schema=(schema or None))
+
+    validate_large_literals(instance)
 
 
 def fill_defaults(instance, ctx):

@@ -372,3 +372,26 @@ def test_references_in_schema():
                            resolve_references=True)
     assert '$ref' not in repr(s)
     assert s['anyOf'][1] == s['anyOf'][0]
+
+
+def test_large_literals():
+    tree = {
+        'large_int': (1 << 53),
+    }
+
+    with pytest.raises(ValidationError):
+        asdf.AsdfFile(tree)
+
+    tree = {
+        'large_array': np.array([(1 << 53)], np.uint64)
+    }
+
+    ff = asdf.AsdfFile(tree)
+    buff = io.BytesIO()
+    ff.write_to(buff)
+
+    ff.set_array_storage(ff.tree['large_array'], 'inline')
+    buff = io.BytesIO()
+    with pytest.raises(ValidationError):
+        ff.write_to(buff)
+        print(buff.getvalue())
