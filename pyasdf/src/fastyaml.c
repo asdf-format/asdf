@@ -185,8 +185,12 @@ _make_scalar(yaml_event_t *event)
         }
 
         end = expected_end;
+        #if PY_MAJOR_VERSION == 2 && PY_MINOR_VERSION < 7
+        d = PyOS_ascii_strtod(value, (char **)&end);
+        #else
         d = PyOS_string_to_double(
             value, (char **)&end, PyExc_OverflowError);
+        #endif
         if (end == expected_end) {
             return PyFloat_FromDouble(d);
         } else if (PyErr_Occurred()) {
