@@ -9,7 +9,7 @@ import sys
 
 from astropy.extern import six
 
-from ..asdf import AsdfFile
+from ..asdf import AsdfFile, get_asdf_library_info
 from ..conftest import RangeHTTPServer
 from ..extension import _builtin_extension_list
 from .. import util
@@ -17,7 +17,8 @@ from .. import util
 from ..tags.core import AsdfObject
 
 
-def assert_tree_match(old_tree, new_tree, funcname='assert_equal'):
+def assert_tree_match(old_tree, new_tree, funcname='assert_equal',
+                      ignore_keys=None):
     """
     Assert that two ASDF trees match.
 
@@ -31,8 +32,15 @@ def assert_tree_match(old_tree, new_tree, funcname='assert_equal'):
         The name of a method on members of old_tree and new_tree that
         will be used to compare custom objects.  The default of
         `assert_equal` handles Numpy arrays.
+
+    ignore_keys : list of str
+        List of keys to ignore
     """
     seen = set()
+
+    if ignore_keys is None:
+        ignore_keys = ['asdf_library', 'history']
+    ignore_keys = set(ignore_keys)
 
     def recurse(old, new):
         if id(old) in seen or id(new) in seen:
@@ -49,9 +57,11 @@ def assert_tree_match(old_tree, new_tree, funcname='assert_equal'):
             hasattr(old_type, funcname)):
             getattr(old_type, funcname)(old, new)
         elif isinstance(old, dict) and isinstance(new, dict):
-            assert set(old.keys()) == set(new.keys())
+            assert (set(x for x in old.keys() if x not in ignore_keys) ==
+                    set(x for x in new.keys() if x not in ignore_keys))
             for key in old.keys():
-                recurse(old[key], new[key])
+                if key not in ignore_keys:
+                    recurse(old[key], new[key])
         elif isinstance(old, (list, tuple)) and isinstance(new, (list, tuple)):
             assert len(old) == len(new)
             for a, b in zip(old, new):
@@ -92,6 +102,8 @@ def assert_roundtrip_tree(
     with AsdfFile.open(buff, mode='rw') as ff:
         assert not buff.closed
         assert isinstance(ff.tree, AsdfObject)
+        assert 'asdf_library' in ff.tree
+        assert ff.tree['asdf_library'] == get_asdf_library_info()
         assert_tree_match(tree, ff.tree)
         if asdf_check_func:
             asdf_check_func(ff)
