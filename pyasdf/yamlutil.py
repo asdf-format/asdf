@@ -11,6 +11,7 @@ import numpy as np
 import yaml
 
 from . constants import YAML_TAG_PREFIX
+from . import fastyaml
 from . import schema
 from . import tagged
 from . import treeutil
@@ -262,7 +263,7 @@ def load_tree(stream):
     stream : readable file-like object
         Stream containing the raw YAML content.
     """
-    return yaml.load(stream, Loader=AsdfLoader)
+    return fastyaml.parse_yaml(stream)
 
 
 def dump_tree(tree, fd, ctx):

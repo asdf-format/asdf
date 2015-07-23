@@ -3,6 +3,9 @@
 
 from __future__ import absolute_import, division, unicode_literals, print_function
 
+
+from distutils.core import Extension
+
 import os
 
 
@@ -33,6 +36,16 @@ def get_package_data():  # pragma: no cover
         str('pyasdf.schemas'): schemas,
         str('pyasdf.reference_files'): reference_files
     }
+
+
+def get_extensions():
+    root = os.path.dirname(__file__)
+
+    return [
+        Extension(str('pyasdf.fastyaml'),
+                  [os.path.join(root, str('src'), str('fastyaml.c'))],
+                  libraries=[str('yaml')])
+    ]
 
 
 def requires_2to3():  # pragma: no cover

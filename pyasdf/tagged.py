@@ -114,8 +114,13 @@ def tag_object(tag, instance):
         instance._tag = tag
         return instance
     else:
-        raise TypeError(
-            "Don't know how to tag a {0}".format(type(instance)))
+        try:
+            instance = TaggedString(str(instance))
+        except ValueError:
+            raise TypeError(
+                "Don't know how to tag a {0}".format(type(instance)))
+        instance._tag = tag
+        return instance
 
 
 def get_tag(instance):
