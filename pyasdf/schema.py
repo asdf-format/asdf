@@ -414,11 +414,12 @@ if six.PY2:
         Validate that the tree has no large numeric literals.
         """
         # We can count on 52 bits of precision
+        upper = ((long(1) << 51) - 1)
+        lower = ((long(1) << 51) - 2)
+
         for instance in treeutil.iter_tree(instance):
-            if (isinstance(instance, long) or
-                (isinstance(instance, int) and
-                 (instance > ((1L << 51) - 1) or
-                  instance < -((1L << 51) - 2)))):
+            if (isinstance(instance, six.integer_types) and
+                (instance > upper or instance < -lower)):
                 raise ValidationError(
                     "Integer value {0} is too large to safely represent as a "
                     "literal in ASDF".format(instance))
