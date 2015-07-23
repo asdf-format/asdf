@@ -3,6 +3,7 @@
 
 from __future__ import absolute_import, division, unicode_literals, print_function
 
+from astropy.extern import six
 from astropy import modeling
 from astropy.modeling.core import _CompoundModel
 from astropy.modeling.models import Mapping, Identity
@@ -113,17 +114,18 @@ class RemapAxesType(TransformType):
     def from_tree_transform(cls, node, ctx):
         mapping = node['mapping']
         n_inputs = node.get('n_inputs')
-        if all([isinstance(x, int) for x in mapping]):
+        if all([isinstance(x, six.integer_types) for x in mapping]):
             return Mapping(mapping, n_inputs)
 
         if n_inputs is None:
-            n_inputs = max([x for x in mapping if isinstance(x, int)]) + 1
+            n_inputs = max([x for x in mapping
+                            if isinstance(x, six.integer_types)]) + 1
 
         transform = Identity(n_inputs)
         new_mapping = []
         i = n_inputs
         for entry in mapping:
-            if isinstance(entry, int):
+            if isinstance(entry, six.integer_types):
                 new_mapping.append(entry)
             else:
                 new_mapping.append(i)
