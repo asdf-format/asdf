@@ -12,6 +12,7 @@ from jsonschema import ValidationError
 from astropy.extern import six
 
 from ...asdftypes import AsdfType
+from ... import schema
 from ... import util
 from ... import yamlutil
 
@@ -207,7 +208,11 @@ def numpy_array_to_list(array):
         else:
             return x
 
-    return ascii_to_unicode(tolist(array))
+    result = ascii_to_unicode(tolist(array))
+
+    schema.validate_large_literals(result)
+
+    return result
 
 
 class NDArrayType(AsdfType):
