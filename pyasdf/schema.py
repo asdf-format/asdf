@@ -415,11 +415,11 @@ if six.PY2:
         """
         # We can count on 52 bits of precision
         upper = ((long(1) << 51) - 1)
-        lower = ((long(1) << 51) - 2)
+        lower = -((long(1) << 51) - 2)
 
         for instance in treeutil.iter_tree(instance):
             if (isinstance(instance, six.integer_types) and
-                (instance > upper or instance < -lower)):
+                (instance > upper or instance < lower)):
                 raise ValidationError(
                     "Integer value {0} is too large to safely represent as a "
                     "literal in ASDF".format(instance))
