@@ -3,6 +3,14 @@
 #include <Python.h>
 
 
+#if PY_MAJOR_VERSION >= 3
+#define IS_PY3K 1
+
+#define PyInt_FromString PyLong_FromString
+#define PyInt_FromLong PyLong_FromLong
+#endif
+
+
 static PyObject *tag_object_method;
 static PyObject *ordered_dict;
 
@@ -100,10 +108,10 @@ _make_scalar(yaml_event_t *event)
             // Hexadecimal
             end = expected_end;
             result = PyInt_FromString(value + 2, &end, 16);
-            if (end != expected_end) {
-                Py_DECREF(result);
-            } else if (result == NULL) {
+            if (result == NULL) {
                 PyErr_Clear();
+            } else if (end != expected_end) {
+                Py_DECREF(result);
             } else {
                 return result;
             }
@@ -111,10 +119,10 @@ _make_scalar(yaml_event_t *event)
             // Octal
             end = expected_end;
             result = PyInt_FromString(value + 1, &end, 8);
-            if (end != expected_end) {
-                Py_DECREF(result);
-            } else if (result == NULL) {
+            if (result == NULL) {
                 PyErr_Clear();
+            } else if (end != expected_end) {
+                Py_DECREF(result);
             } else {
                 return result;
             }
@@ -168,10 +176,10 @@ _make_scalar(yaml_event_t *event)
     if (IS_DIGIT(c) || c == '.') {
         end = expected_end;
         result = PyInt_FromString(value, &end, 10);
-        if (end != expected_end) {
-            Py_DECREF(result);
-        } else if (result == NULL) {
+        if (result == NULL) {
             PyErr_Clear();
+        } else if (end != expected_end) {
+            Py_DECREF(result);
         } else {
             return result;
         }
@@ -587,6 +595,7 @@ static PyMethodDef module_methods[] =
 struct module_state {
     void* none;
 };
+
 
 #ifdef IS_PY3K
 static int module_traverse(PyObject* m, visitproc visit, void* arg)
