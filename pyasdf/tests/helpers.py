@@ -7,7 +7,7 @@ import io
 import os
 import sys
 
-from astropy.extern import six
+import six
 
 from ..asdf import AsdfFile, get_asdf_library_info
 from ..conftest import RangeHTTPServer

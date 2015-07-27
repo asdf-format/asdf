@@ -5,7 +5,15 @@ from __future__ import absolute_import, division, unicode_literals, print_functi
 
 import io
 
-from astropy import units as u
+try:
+    import astropy
+except ImportError:
+    HAS_ASTROPY = False
+else:
+    HAS_ASTROPY = True
+    from astropy import units as u
+
+import pytest
 
 from .... import asdf
 from ....tests import helpers
@@ -14,6 +22,7 @@ from ....tests import helpers
 # TODO: Implement defunit
 
 
+@pytest.mark.skipif('not HAS_ASTROPY')
 def test_unit():
     yaml = """
 unit: !unit/unit "2.1798721  10-18kg m2 s-2"

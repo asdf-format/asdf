@@ -3,19 +3,25 @@
 
 from __future__ import absolute_import, division, unicode_literals, print_function
 
-from astropy.modeling import mappings
-from astropy.modeling import functional_models
+try:
+    import astropy
+except ImportError:
+    HAS_ASTROPY = False
+else:
+    HAS_ASTROPY = True
+    from astropy.modeling import mappings
 
 from ...asdftypes import AsdfType
 from ... import tagged
 from ... import yamlutil
 
 __all__ = ['TransformType', 'IdentityType', 'ConstantType',
-           'DomainType', 'GenericModel', 'GenericType']
+           'DomainType']
 
 
 class TransformType(AsdfType):
     name = "transform/transform"
+    requires = ['astropy']
 
     @classmethod
     def _from_tree_base_transform_members(cls, model, node, ctx):
@@ -35,7 +41,8 @@ class TransformType(AsdfType):
 
     @classmethod
     def from_tree_transform(cls, node, ctx):
-        raise NotImplementedError("Must be implemented in TransformType subclasses")
+        raise NotImplementedError(
+            "Must be implemented in TransformType subclasses")
 
     @classmethod
     def from_tree(cls, node, ctx):
@@ -79,7 +86,7 @@ class TransformType(AsdfType):
 
 class IdentityType(TransformType):
     name = "transform/identity"
-    types = [mappings.Identity]
+    types = ['astropy.modeling.mappings.Identity']
 
     @classmethod
     def from_tree_transform(cls, node, ctx):
@@ -94,6 +101,7 @@ class IdentityType(TransformType):
 
     @classmethod
     def assert_equal(cls, a, b):
+        from astropy.modeling import mappings
         # TODO: If models become comparable themselves, remove this.
         TransformType.assert_equal(a, b)
         assert (isinstance(a, mappings.Identity) and
@@ -103,7 +111,7 @@ class IdentityType(TransformType):
 
 class ConstantType(TransformType):
     name = "transform/constant"
-    types = [functional_models.Const1D]
+    types = ['functional_models.Const1D']
 
     @classmethod
     def from_tree_transform(cls, node, ctx):
@@ -129,16 +137,18 @@ class DomainType(AsdfType):
 
 
 # TODO: This is just here for bootstrapping and will go away eventually
-class GenericModel(mappings.Mapping):
-    def __init__(self, n_inputs, n_outputs):
-        mapping = tuple(range(n_inputs))
-        super(GenericModel, self).__init__(mapping)
-        self._outputs = tuple('x' + str(idx) for idx in range(self.n_outputs + 1))
+if HAS_ASTROPY:
+    class GenericModel(mappings.Mapping):
+        def __init__(self, n_inputs, n_outputs):
+            mapping = tuple(range(n_inputs))
+            super(GenericModel, self).__init__(mapping)
+            self._outputs = tuple('x' + str(idx) for idx in range(self.n_outputs + 1))
 
 
 class GenericType(TransformType):
     name = "transform/generic"
-    types = [GenericModel]
+    if HAS_ASTROPY:
+        types = [GenericModel]
 
     @classmethod
     def from_tree_transform(cls, node, ctx):

@@ -39,6 +39,14 @@ matrix:
         - python: 2.7
           env: SETUP_CMD='build_sphinx -w'
 
+        # Add a couple of configurations without Astropy, since it's a
+        # soft dependency.
+        - python: 2.7
+          env: ASTROPY_VERSION=
+
+        - python: 3.4
+          env: ASTROPY_VERSION=
+
         # Try older numpy versions
         - python: 2.7
           env: NUMPY_VERSION=1.8 SETUP_CMD='test'

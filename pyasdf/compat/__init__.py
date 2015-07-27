@@ -3,7 +3,7 @@
 
 from __future__ import absolute_import, division, unicode_literals, print_function
 
-from astropy.extern import six
+import six
 
 if six.PY2:
     from UserDict import UserDict

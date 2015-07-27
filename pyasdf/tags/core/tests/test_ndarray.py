@@ -15,8 +15,15 @@ except ImportError:
 else:
     HAS_PSUTIL = True
 
-from astropy.extern import six
-from astropy.tests.helper import pytest
+import six
+import pytest
+
+try:
+    import astropy
+except ImportError:
+    HAS_ASTROPY = False
+else:
+    HAS_ASTROPY = True
 
 import numpy as np
 from numpy import ma
@@ -176,6 +183,7 @@ def test_table_inline(tmpdir):
         tree, tmpdir, None, check_raw_yaml, {'auto_inline': 64})
 
 
+@pytest.mark.skipif('not HAS_ASTROPY')
 def test_auto_inline_recursive(tmpdir):
     from astropy.modeling import models
     aff = models.AffineTransformation2D(matrix=[[1, 2], [3, 4]])

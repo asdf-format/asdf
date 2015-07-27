@@ -14,13 +14,13 @@ import weakref
 
 import numpy as np
 
-from astropy.extern import six
-from astropy.extern.six.moves.urllib import parse as urlparse
-from astropy.utils.compat import NUMPY_LT_1_7
+import six
+from six.moves.urllib import parse as urlparse
 
 import yaml
 
 from . import compression as mcompression
+from .compat.numpycompat import NUMPY_LT_1_7
 from . import constants
 from . import generic_io
 from . import stream
