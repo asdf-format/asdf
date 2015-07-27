@@ -67,6 +67,8 @@ class Rotate2DType(TransformType):
 
     @classmethod
     def assert_equal(cls, a, b):
+        from astropy import modeling
+
         # TODO: If models become comparable themselves, remove this.
         TransformType.assert_equal(a, b)
         assert (isinstance(a, modeling.rotations.Rotation2D) and

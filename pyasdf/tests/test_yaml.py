@@ -137,6 +137,8 @@ def test_explicit_tags():
 unit: !<tag:stsci.edu:asdf/0.1.0/unit/unit> m
 ...
     """
+    from astropy import units as u
+
     # Check that fully-qualified explicit tags work
 
     buff = helpers.yaml_to_asdf(yaml, yaml_headers=False)

@@ -76,6 +76,7 @@ unit: !unit/unit
 not_unit:
   m
     """
+    from astropy import units as u
 
     buff = helpers.yaml_to_asdf(yaml)
     with asdf.AsdfFile.open(buff) as ff:

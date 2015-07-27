@@ -111,10 +111,12 @@ class IdentityType(TransformType):
 
 class ConstantType(TransformType):
     name = "transform/constant"
-    types = ['functional_models.Const1D']
+    types = ['astropy.modeling.functional_models.Const1D']
 
     @classmethod
     def from_tree_transform(cls, node, ctx):
+        from astropy.modeling import functional_models
+
         return functional_models.Const1D(node['value'])
 
     @classmethod
