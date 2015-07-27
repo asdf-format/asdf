@@ -42,10 +42,10 @@ matrix:
         # Add a couple of configurations without Astropy, since it's a
         # soft dependency.
         - python: 2.7
-          env: ASTROPY_VERSION=
+          env: ASTROPY_VERSION=none
 
         - python: 3.4
-          env: ASTROPY_VERSION=
+          env: ASTROPY_VERSION=none
 
         # Try older numpy versions
         - python: 2.7
