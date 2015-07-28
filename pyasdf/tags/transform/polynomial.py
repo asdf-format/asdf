@@ -6,8 +6,6 @@ from __future__ import absolute_import, division, unicode_literals, print_functi
 import numpy as np
 from numpy.testing import assert_array_equal
 
-from astropy import modeling
-
 from ... import yamlutil
 
 from .basic import TransformType
@@ -18,10 +16,12 @@ __all__ = ['ShiftType', 'ScaleType', 'PolynomialType']
 
 class ShiftType(TransformType):
     name = "transform/shift"
-    types = [modeling.models.Shift]
+    types = ['astropy.modeling.models.Shift']
 
     @classmethod
     def from_tree_transform(cls, node, ctx):
+        from astropy import modeling
+
         offset = node['offset']
         if not np.isscalar(offset):
             raise NotImplementedError(
@@ -36,6 +36,8 @@ class ShiftType(TransformType):
 
     @classmethod
     def assert_equal(cls, a, b):
+        from astropy import modeling
+
         # TODO: If models become comparable themselves, remove this.
         TransformType.assert_equal(a, b)
         assert (isinstance(a, modeling.models.Shift) and
@@ -45,10 +47,12 @@ class ShiftType(TransformType):
 
 class ScaleType(TransformType):
     name = "transform/scale"
-    types = [modeling.models.Scale]
+    types = ['astropy.modeling.models.Scale']
 
     @classmethod
     def from_tree_transform(cls, node, ctx):
+        from astropy import modeling
+
         factor = node['factor']
         if not np.isscalar(factor):
             raise NotImplementedError(
@@ -63,6 +67,8 @@ class ScaleType(TransformType):
 
     @classmethod
     def assert_equal(cls, a, b):
+        from astropy import modeling
+
         # TODO: If models become comparable themselves, remove this.
         TransformType.assert_equal(a, b)
         assert (isinstance(a, modeling.models.Scale) and
@@ -72,10 +78,13 @@ class ScaleType(TransformType):
 
 class PolynomialType(TransformType):
     name = "transform/polynomial"
-    types = [modeling.models.Polynomial1D, modeling.models.Polynomial2D]
+    types = ['astropy.modeling.models.Polynomial1D',
+             'astropy.modeling.models.Polynomial2D']
 
     @classmethod
     def from_tree_transform(cls, node, ctx):
+        from astropy import modeling
+
         coefficients = np.asarray(node['coefficients'])
         n_dim = coefficients.ndim
 
@@ -102,6 +111,8 @@ class PolynomialType(TransformType):
 
     @classmethod
     def to_tree_transform(cls, model, ctx):
+        from astropy import modeling
+
         if isinstance(model, modeling.models.Polynomial1D):
             coefficients = np.array(model.parameters)
         elif isinstance(model, modeling.models.Polynomial2D):
@@ -117,6 +128,8 @@ class PolynomialType(TransformType):
 
     @classmethod
     def assert_equal(cls, a, b):
+        from astropy import modeling
+
         # TODO: If models become comparable themselves, remove this.
         TransformType.assert_equal(a, b)
         assert (isinstance(a, (modeling.models.Polynomial1D, modeling.models.Polynomial2D)) and

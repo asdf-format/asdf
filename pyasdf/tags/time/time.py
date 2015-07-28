@@ -7,9 +7,7 @@ import datetime
 
 import numpy as np
 
-from astropy.extern import six
-from astropy import time
-from astropy import units as u
+import six
 
 from ...asdftypes import AsdfType
 from ... import yamlutil
@@ -25,13 +23,15 @@ _astropy_format_to_asdf_format = {
 }
 
 
-
 class TimeType(AsdfType):
     name = 'time/time'
-    types = [time.core.Time, datetime.datetime]
+    types = ['astropy.time.core.Time', datetime.datetime]
+    requires = ['astropy']
 
     @classmethod
     def to_tree(cls, node, ctx):
+        from astropy import time
+
         if isinstance(node, datetime.datetime):
             node = time.Time(node)
 
@@ -78,6 +78,9 @@ class TimeType(AsdfType):
 
     @classmethod
     def from_tree(cls, node, ctx):
+        from astropy import time
+        from astropy import units as u
+
         if isinstance(node, (six.string_types, list, np.ndarray)):
             t = time.Time(node)
             format = _astropy_format_to_asdf_format.get(t.format, t.format)

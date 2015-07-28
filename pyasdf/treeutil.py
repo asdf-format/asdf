@@ -8,7 +8,7 @@ from __future__ import absolute_import, division, unicode_literals, print_functi
 
 import inspect
 
-from astropy.extern import six
+import six
 
 from .tagged import tag_object
 

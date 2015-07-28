@@ -3,7 +3,7 @@
 
 from __future__ import absolute_import, division, unicode_literals, print_function
 
-from astropy.tests.helper import pytest
+import pytest
 
 from jsonschema import ValidationError
 

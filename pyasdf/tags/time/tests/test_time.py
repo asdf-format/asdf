@@ -3,16 +3,26 @@
 
 from __future__ import absolute_import, division, unicode_literals, print_function
 
-from astropy.extern import six
-from astropy import time
+import six
+
+try:
+    import astropy
+except ImportError:
+    HAS_ASTROPY = False
+else:
+    HAS_ASTROPY = True
+    from astropy import time
 
 import numpy as np
+
+import pytest
 
 from .... import asdf
 from .... import yamlutil
 from ....tests import helpers
 
 
+@pytest.mark.skipif('not HAS_ASTROPY')
 def test_time(tmpdir):
     time_array = time.Time(
         np.arange(100), format="unix")
@@ -24,6 +34,7 @@ def test_time(tmpdir):
     helpers.assert_roundtrip_tree(tree, tmpdir)
 
 
+@pytest.mark.skipif('not HAS_ASTROPY')
 def test_isot(tmpdir):
     tree = {
         'time': time.Time('2000-01-01T00:00:00.000')

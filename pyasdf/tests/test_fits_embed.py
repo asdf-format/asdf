@@ -5,17 +5,26 @@ from __future__ import absolute_import, division, unicode_literals, print_functi
 
 import os
 
+try:
+    import astropy
+except ImportError:
+    HAS_ASTROPY = False
+else:
+    HAS_ASTROPY = True
+    from astropy.io import fits
+    from .. import fits_embed
+
 import numpy as np
 from numpy.testing import assert_array_equal
 
-from astropy.io import fits
+import pytest
 
 from .. import asdf
-from .. import fits_embed
 
 from .helpers import assert_tree_match, close_fits
 
 
+@pytest.mark.skipif('not HAS_ASTROPY')
 def test_embed_asdf_in_fits_file(tmpdir):
     hdulist = fits.HDUList()
     hdulist.append(fits.ImageHDU(np.arange(512, dtype=np.float), name='SCI'))
@@ -58,6 +67,7 @@ def test_embed_asdf_in_fits_file(tmpdir):
         close_fits(hdulist2)
 
 
+@pytest.mark.skipif('not HAS_ASTROPY')
 def test_embed_asdf_in_fits_file_anonymous_extensions(tmpdir):
     hdulist = fits.HDUList()
     hdulist.append(fits.ImageHDU(np.arange(512, dtype=np.float)))
@@ -104,6 +114,7 @@ def test_embed_asdf_in_fits_file_anonymous_extensions(tmpdir):
         close_fits(hdulist2)
 
 
+@pytest.mark.skipif('not HAS_ASTROPY')
 def test_create_in_tree_first(tmpdir):
     tree = {
         'model': {

@@ -22,11 +22,10 @@ import tempfile
 
 from os import SEEK_SET, SEEK_CUR, SEEK_END
 
-from astropy.extern import six
-from astropy.extern.six.moves import xrange
-from astropy.extern.six.moves.urllib import parse as urlparse
-from astropy.extern.six.moves.urllib.request import url2pathname
-from astropy.utils.misc import InheritDocstrings
+import six
+from six.moves import xrange
+from six.moves.urllib import parse as urlparse
+from six.moves.urllib.request import url2pathname
 
 import numpy as np
 
@@ -234,7 +233,7 @@ class _TruncatedReader(object):
         return content
 
 
-@six.add_metaclass(InheritDocstrings)
+@six.add_metaclass(util.InheritDocstrings)
 class GenericFile(object):
     """
     Base class for an abstraction layer around a number of different
@@ -1023,7 +1022,7 @@ def _make_http_connection(init, mode, uri=None):
     Creates a HTTPConnection instance if the HTTP server supports
     Range requests, otherwise falls back to a generic InputStream.
     """
-    from astropy.extern.six.moves import http_client
+    from six.moves import http_client
 
     parsed = urlparse.urlparse(init)
     connection = http_client.HTTPConnection(parsed.netloc)

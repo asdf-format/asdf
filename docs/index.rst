@@ -11,11 +11,17 @@ Installation
 
 - `numpy <http://www.numpy.org/>`__ 1.6 or later
 
-- `astropy <http://www.astropy.org/>`__ 1.0 or later
-
 - `jsonschema <http://python-jsonschema.readthedocs.org/>`__ 2.3.0 or later
 
 - `pyyaml <http://pyyaml.org>`__ 3.10 or later
+
+- `six <https://pypi.python.org/pypi/six>`__ 1.9.0 or later
+
+For support for units, time, transform or wcs, ``pyasdf`` also
+requires:
+
+- `astropy <http://www.astropy.org/>`__ 1.0 or later
+
 
 Getting Started
 ---------------

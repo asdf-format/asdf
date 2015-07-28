@@ -6,7 +6,7 @@ from __future__ import absolute_import, division, unicode_literals, print_functi
 
 import os.path
 
-from astropy.extern import six
+import six
 
 from . import constants
 from . import util

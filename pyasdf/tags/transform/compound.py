@@ -3,10 +3,7 @@
 
 from __future__ import absolute_import, division, unicode_literals, print_function
 
-from astropy.extern import six
-from astropy import modeling
-from astropy.modeling.core import _CompoundModel
-from astropy.modeling.models import Mapping, Identity
+import six
 
 from ... import tagged
 from ... import yamlutil
@@ -41,11 +38,13 @@ _tag_to_method_mapping = {
 
 class CompoundType(TransformType):
     name = ['transform/' + x for x in _tag_to_method_mapping.keys()]
-    types = [_CompoundModel]
+    types = ['astropy.modeling.core._CompoundModel']
     handle_dynamic_subclasses = True
 
     @classmethod
     def from_tree_tagged(cls, node, ctx):
+        from astropy import modeling
+
         tag = node._tag[node._tag.rfind('/')+1:]
 
         oper = _tag_to_method_mapping[tag]
@@ -108,10 +107,12 @@ class CompoundType(TransformType):
 
 class RemapAxesType(TransformType):
     name = 'transform/remap_axes'
-    types = [Mapping]
+    types = ['astropy.modeling.models.Mapping']
 
     @classmethod
     def from_tree_transform(cls, node, ctx):
+        from astropy.modeling.models import Identity, Mapping
+
         mapping = node['mapping']
         n_inputs = node.get('n_inputs')
         if all([isinstance(x, six.integer_types) for x in mapping]):

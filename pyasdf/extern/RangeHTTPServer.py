@@ -31,15 +31,11 @@ __version__ = "0.1"
 
 __all__ = ["RangeHTTPRequestHandler"]
 
-import io
 import os
 import posixpath
-import urllib
-import cgi
 import shutil
-import mimetypes
 
-from astropy.extern import six
+import six
 
 
 class RangeHTTPRequestHandler(six.moves.BaseHTTPServer.BaseHTTPRequestHandler):  # pragma: no cover

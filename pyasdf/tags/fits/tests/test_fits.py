@@ -3,14 +3,26 @@
 
 from __future__ import absolute_import, division, unicode_literals, print_function
 
-from astropy.io import fits
-from astropy.utils.data import get_pkg_data_filename
+try:
+    import astropy
+except ImportError:
+    HAS_ASTROPY = False
+else:
+    HAS_ASTROPY = True
+
+import pytest
+
+import os
 
 from ....tests import helpers
 
 
+@pytest.mark.skipif('not HAS_ASTROPY')
 def test_complex_structure(tmpdir):
-    with fits.open(get_pkg_data_filename('data/complex.fits'), memmap=False) as hdulist:
+    from astropy.io import fits
+
+    with fits.open(os.path.join(
+            os.path.dirname(__file__), 'data', 'complex.fits'), memmap=False) as hdulist:
         tree = {
             'fits': hdulist
             }

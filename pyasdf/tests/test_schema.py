@@ -6,13 +6,20 @@ from __future__ import absolute_import, division, unicode_literals, print_functi
 import io
 import os
 
-import numpy as np
-
-from astropy.extern import six
-from astropy.tests.helper import pytest
-from astropy import units as u
+try:
+    import astropy
+except ImportError:
+    HAS_ASTROPY = False
+else:
+    HAS_ASTROPY = True
 
 from jsonschema import ValidationError
+
+import numpy as np
+
+import pytest
+
+import six
 
 import yaml
 
@@ -24,6 +31,7 @@ from .. import schema
 from .. import treeutil
 from .. import util
 
+from .extern.astropy_helper import catch_warnings
 from . import helpers
 
 
@@ -60,6 +68,7 @@ def test_violate_toplevel_schema():
         ff.write_to(buff)
 
 
+@pytest.mark.skipif('not HAS_ASTROPY')
 def test_tagging_scalars():
     yaml = """
 unit: !unit/unit
@@ -67,6 +76,7 @@ unit: !unit/unit
 not_unit:
   m
     """
+    from astropy import units as u
 
     buff = helpers.yaml_to_asdf(yaml)
     with asdf.AsdfFile.open(buff) as ff:
@@ -395,3 +405,29 @@ def test_large_literals():
     with pytest.raises(ValidationError):
         ff.write_to(buff)
         print(buff.getvalue())
+
+
+def test_type_missing_dependencies():
+    class MissingType(asdftypes.AsdfType):
+        name = 'missing'
+        organization = 'nowhere.org'
+        version = (1, 0, 0)
+        standard = 'custom'
+        types = ['asdfghjkl12345.foo']
+        requires = ["ASDFGHJKL12345"]
+
+    class DefaultTypeExtension(CustomExtension):
+        @property
+        def types(self):
+            return [MissingType]
+
+    yaml = """
+custom: !<tag:nowhere.org:custom/1.0.0/missing>
+  b: {foo: 42}
+    """
+    buff = helpers.yaml_to_asdf(yaml)
+    with catch_warnings() as w:
+        with asdf.AsdfFile.open(buff, extensions=[DefaultTypeExtension()]) as ff:
+            assert ff.tree['custom']['b']['foo'] == 42
+
+    assert len(w) == 1

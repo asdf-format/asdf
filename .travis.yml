@@ -39,6 +39,14 @@ matrix:
         - python: 2.7
           env: SETUP_CMD='build_sphinx -w'
 
+        # Add a couple of configurations without Astropy, since it's a
+        # soft dependency.
+        - python: 2.7
+          env: ASTROPY_VERSION=none
+
+        - python: 3.4
+          env: ASTROPY_VERSION=none
+
         # Try older numpy versions
         - python: 2.7
           env: NUMPY_VERSION=1.8 SETUP_CMD='test'
@@ -79,7 +87,7 @@ install:
     # install since this ensures Numpy does not get automatically upgraded.
     # - if [[ $SETUP_CMD != egg_info ]]; then $CONDA_INSTALL numpy=$NUMPY_VERSION ... ; fi
     # - if [[ $SETUP_CMD != egg_info ]]; then $PIP_INSTALL ...; fi
-    - if [[ $SETUP_CMD != egg_info ]]; then $PIP_INSTALL jsonschema pyyaml; fi
+    - if [[ $SETUP_CMD != egg_info ]]; then $PIP_INSTALL jsonschema pyyaml six; fi
 
     # DOCUMENTATION DEPENDENCIES
     # build_sphinx needs sphinx and matplotlib (for plot_directive). Note that

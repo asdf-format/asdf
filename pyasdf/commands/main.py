@@ -5,10 +5,10 @@ from __future__ import (absolute_import, division, print_function,
                         unicode_literals)
 
 import argparse
+import logging
 import sys
 
-from astropy.extern import six
-from astropy.logger import log
+import six
 
 from .. import util
 
@@ -80,10 +80,10 @@ def main_from_args(args):
     try:
         result = args.func(args)
     except RuntimeError as e:
-        log.error(six.text_type(e))
+        logging.error(six.text_type(e))
         return 1
     except IOError as e:
-        log.error(six.text_type(e))
+        logging.error(six.text_type(e))
         return e.errno
 
     if result is None:

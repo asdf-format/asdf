@@ -3,13 +3,13 @@
 
 from __future__ import absolute_import, division, unicode_literals, print_function
 
-from astropy.extern import six
-from astropy.utils.compat.odict import OrderedDict
-
 import numpy as np
+
+import six
 
 import yaml
 
+from . compat.odict import OrderedDict
 from . constants import YAML_TAG_PREFIX
 from . import schema
 from . import tagged
