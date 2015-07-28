@@ -5,6 +5,7 @@ from __future__ import absolute_import, division, unicode_literals, print_functi
 
 import io
 import os
+import re
 import sys
 
 try:
@@ -158,10 +159,10 @@ def test_table_inline(tmpdir):
     tree = {'table_data': table}
 
     def check_raw_yaml(content):
-        content = b'\n'.join(content.splitlines()[4:-1])
-        tree = yaml.load(content)
+        tree = yaml.load(
+            re.sub(b'!core/[a-z]+', b'', content))
 
-        assert tree == {
+        assert tree['table_data'] == {
             'datatype': [
                 {'datatype': 'int8', 'name': 'MINE'},
                 {'datatype': 'float64', 'name': 'f1'},
@@ -197,10 +198,10 @@ def test_table(tmpdir):
     tree = {'table_data': table}
 
     def check_raw_yaml(content):
-        content = b'\n'.join(content.splitlines()[4:-1])
-        tree = yaml.load(content)
+        tree = yaml.load(
+            re.sub(b'!core/[a-z]+', b'', content))
 
-        assert tree == {
+        assert tree['table_data'] == {
             'datatype': [
                 {'byteorder': 'big', 'datatype': 'int8', 'name': 'MINE'},
                 {'byteorder': 'little', 'datatype': 'float64', 'name': 'f1'},
@@ -223,10 +224,10 @@ def test_table_nested_fields(tmpdir):
     tree = {'table_data': table}
 
     def check_raw_yaml(content):
-        content = b'\n'.join(content.splitlines()[4:-1])
-        tree = yaml.load(content)
+        tree = yaml.load(
+            re.sub(b'!core/[a-z]+', b'', content))
 
-        assert tree == {
+        assert tree['table_data'] == {
             'datatype': [
                 {'datatype': 'int64', 'name': 'A', 'byteorder': 'little'},
                 {'datatype': [

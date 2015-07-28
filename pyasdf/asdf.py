@@ -3,6 +3,7 @@
 
 from __future__ import absolute_import, division, unicode_literals, print_function
 
+import datetime
 import copy
 import io
 import re
@@ -17,10 +18,24 @@ from . import reference
 from . import schema
 from . import treeutil
 from . import util
+from . import version
 from . import versioning
 from . import yamlutil
 
-from .tags.core.asdf import AsdfObject
+from .tags.core import AsdfObject, Software, HistoryEntry
+
+
+def get_asdf_library_info():
+    """
+    Get information about pyasdf to include in the asdf_library entry
+    in the Tree.
+    """
+    return Software({
+        'name': 'pyasdf',
+        'version': version.version,
+        'homepage': 'http://github.com/spacetelescope/pyasdf',
+        'author': 'Space Telescope Science Institute'
+    })
 
 
 class AsdfFile(versioning.VersionedMixin):
@@ -474,6 +489,8 @@ class AsdfFile(versioning.VersionedMixin):
         # reorganization, if necessary
         self._blocks.finalize(self)
 
+        self._tree['asdf_library'] = get_asdf_library_info()
+
     def _serial_write(self, fd, pad_blocks, include_block_index):
         self._write_tree(self._tree, fd, pad_blocks)
         self.blocks.write_internal_blocks_serial(fd, pad_blocks)
@@ -791,3 +808,48 @@ class AsdfFile(versioning.VersionedMixin):
         tree = yamlutil.custom_tree_to_tagged_tree(self._tree, self)
         schema.remove_defaults(tree, self)
         self._tree = yamlutil.tagged_tree_to_custom_tree(tree, self)
+
+    def add_history_entry(self, description, software=None):
+        """
+        Add an entry to the history list.
+
+        Parameters
+        ----------
+        description : str
+            A description of the change.
+
+        software : dict or list of dict
+            A description of the software used.  It should not include
+            pyasdf itself, as that is automatically notated in the
+            `asdf_library` entry.
+
+            Each dict must have the following keys:
+
+            - ``name``: The name of the software
+            - ``author``: The author or institution that produced the software
+            - ``homepage``: A URI to the homepage of the software
+            - ``version``: The version of the software
+        """
+        if isinstance(software, list):
+            software = [Software(x) for x in software]
+        elif software is not None:
+            software = Software(software)
+
+        entry = HistoryEntry({
+            'description': description,
+            'time': datetime.datetime.utcnow()
+        })
+
+        if software is not None:
+            entry['software'] = software
+
+        if 'history' not in self.tree:
+            self.tree['history'] = []
+
+        self.tree['history'].append(entry)
+
+        try:
+            self.validate()
+        except:
+            self.tree['history'].pop()
+            raise
