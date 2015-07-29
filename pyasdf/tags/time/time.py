@@ -3,8 +3,6 @@
 
 from __future__ import absolute_import, division, unicode_literals, print_function
 
-import datetime
-
 import numpy as np
 
 from astropy.extern import six
@@ -28,13 +26,10 @@ _astropy_format_to_asdf_format = {
 
 class TimeType(AsdfType):
     name = 'time/time'
-    types = [time.core.Time, datetime.datetime]
+    types = [time.core.Time]
 
     @classmethod
     def to_tree(cls, node, ctx):
-        if isinstance(node, datetime.datetime):
-            node = time.Time(node)
-
         format = node.format
 
         if format == 'byear':

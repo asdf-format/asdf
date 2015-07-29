@@ -3,6 +3,8 @@
 
 from __future__ import absolute_import, division, unicode_literals, print_function
 
+import datetime
+
 from astropy.tests.helper import pytest
 
 from jsonschema import ValidationError
@@ -29,3 +31,5 @@ def test_history():
 
     ff.add_history_entry('This other thing happened')
     assert len(ff.tree['history']) == 2
+
+    assert isinstance(ff.tree['history'][0]['time'], datetime.datetime)
