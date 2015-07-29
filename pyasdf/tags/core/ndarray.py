@@ -9,7 +9,7 @@ from numpy import ma
 
 from jsonschema import ValidationError
 
-from astropy.extern import six
+import six
 
 from ...asdftypes import AsdfType
 from ... import schema

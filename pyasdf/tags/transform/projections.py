@@ -3,10 +3,7 @@
 
 from __future__ import absolute_import, division, unicode_literals, print_function
 
-import numpy as np
 from numpy.testing import assert_array_equal
-
-from astropy import modeling
 
 from ... import yamlutil
 
@@ -21,12 +18,14 @@ __all__ = ['AffineType', 'Rotate2DType', 'Rotate3DType', 'ZenithalPerspectiveTyp
 
 class AffineType(TransformType):
     name = "transform/affine"
-    types = [modeling.projections.AffineTransformation2D]
+    types = ['astropy.modeling.projections.AffineTransformation2D']
 
     @classmethod
     def from_tree_transform(cls, node, ctx):
+        from astropy import modeling
+
         matrix = node['matrix']
-        translation  = node['translation']
+        translation = node['translation']
         if matrix.shape != (2, 2):
             raise NotImplementedError(
                 "pyasdf currently only supports 2x2 (2D) rotation transformation "
@@ -54,10 +53,12 @@ class AffineType(TransformType):
 
 class Rotate2DType(TransformType):
     name = "transform/rotate2d"
-    types = [modeling.rotations.Rotation2D]
+    types = ['astropy.modeling.rotations.Rotation2D']
 
     @classmethod
     def from_tree_transform(cls, node, ctx):
+        from astropy import modeling
+
         return modeling.rotations.Rotation2D(node['angle'])
 
     @classmethod
@@ -66,6 +67,8 @@ class Rotate2DType(TransformType):
 
     @classmethod
     def assert_equal(cls, a, b):
+        from astropy import modeling
+
         # TODO: If models become comparable themselves, remove this.
         TransformType.assert_equal(a, b)
         assert (isinstance(a, modeling.rotations.Rotation2D) and
@@ -75,12 +78,14 @@ class Rotate2DType(TransformType):
 
 class Rotate3DType(TransformType):
     name = "transform/rotate3d"
-    types = [modeling.rotations.RotateNative2Celestial,
-             modeling.rotations.RotateCelestial2Native,
-             modeling.rotations.EulerAngleRotation]
+    types = ['astropy.modeling.rotations.RotateNative2Celestial',
+             'astropy.modeling.rotations.RotateCelestial2Native',
+             'astropy.modeling.rotations.EulerAngleRotation']
 
     @classmethod
     def from_tree_transform(cls, node, ctx):
+        from astropy import modeling
+
         if node['direction'] == 'native2celestial':
             return modeling.rotations.RotateNative2Celestial(node["phi"],
                                                              node["theta"],
@@ -98,6 +103,8 @@ class Rotate3DType(TransformType):
 
     @classmethod
     def to_tree_transform(cls, model, ctx):
+        from astropy import modeling
+
         if isinstance(model, modeling.rotations.RotateNative2Celestial):
             return {"phi": model.lon.value,
                     "theta": model.lat.value,
@@ -156,7 +163,8 @@ class ZenithalType(TransformType):
 
 class ZenithalPerspectiveType(ZenithalType):
     name = "transform/zenithal_perspective"
-    types = [modeling.projections.Pix2Sky_AZP, modeling.projections.Sky2Pix_AZP]
+    types = ['astropy.modeling.projections.Pix2Sky_AZP',
+             'astropy.modeling.projections.Sky2Pix_AZP']
 
     @classmethod
     def from_tree_transform(cls, node, ctx):
@@ -191,17 +199,20 @@ class ZenithalPerspectiveType(ZenithalType):
 
 class GnomonicType(ZenithalType):
     name = "transform/gnomonic"
-    types = [modeling.projections.Pix2Sky_TAN, modeling.projections.Sky2Pix_TAN]
+    types = ['astropy.modeling.projections.Pix2Sky_TAN',
+             'astropy.modeling.projections.Sky2Pix_TAN']
 
 
 class StereographicType(ZenithalType):
     name = "transform/stereographic"
-    types = [modeling.projections.Pix2Sky_STG, modeling.projections.Sky2Pix_STG]
+    types = ['astropy.modeling.projections.Pix2Sky_STG',
+             'astropy.modeling.projections.Sky2Pix_STG']
 
 
 class SlantOrthographicType(ZenithalType):
     name = "transform/slant_orthographic"
-    types = [modeling.projections.Pix2Sky_SIN, modeling.projections.Sky2Pix_SIN]
+    types = ['astropy.modeling.projections.Pix2Sky_SIN',
+             'astropy.modeling.projections.Sky2Pix_SIN']
 
 
 class CylindricalType(TransformType):
@@ -228,7 +239,8 @@ class CylindricalType(TransformType):
 
 class CylindricalPerspectiveType(CylindricalType):
     name = "transform/cylindrical_perspective"
-    types = [modeling.projections.Pix2Sky_CYP, modeling.projections.Sky2Pix_CYP]
+    types = ['astropy.modeling.projections.Pix2Sky_CYP',
+             'astropy.modeling.projections.Sky2Pix_CYP']
 
     @classmethod
     def from_tree_transform(cls, node, ctx):
@@ -263,7 +275,8 @@ class CylindricalPerspectiveType(CylindricalType):
 
 class CylindricalEqualAreaType(CylindricalType):
     name = "transform/cylindrical_equal_area"
-    types = [modeling.projections.Pix2Sky_CEA, modeling.projections.Sky2Pix_CEA]
+    types = ['astropy.modeling.projections.Pix2Sky_CEA',
+             'astropy.modeling.projections.Sky2Pix_CEA']
 
     @classmethod
     def from_tree_transform(cls, node, ctx):
@@ -294,9 +307,11 @@ class CylindricalEqualAreaType(CylindricalType):
 
 class PlateCarreeType(CylindricalType):
     name = "transforms/plate_carree"
-    types = [modeling.projections.Pix2Sky_CAR, modeling.projections.Sky2Pix_CAR]
+    types = ['astropy.modeling.projections.Pix2Sky_CAR',
+             'astropy.modeling.projections.Sky2Pix_CAR']
 
 
 class MercatorType(CylindricalType):
     name = "transforms/mercator"
-    types = [modeling.projections.Pix2Sky_MER, modeling.projections.Sky2Pix_MER]
+    types = ['astropy.modeling.projections.Pix2Sky_MER',
+             'astropy.modeling.projections.Sky2Pix_MER']

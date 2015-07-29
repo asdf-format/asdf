@@ -11,10 +11,10 @@ Data Format (ASDF) files
 # Affiliated packages may add whatever they like to this file, but
 # should keep this content at the top.
 # ----------------------------------------------------------------------------
-from ._astropy_init import *
+from ._internal_init import *
 # ----------------------------------------------------------------------------
 
-if _ASTROPY_SETUP_ is False:
+if _PYASDF_SETUP_ is False:
     __all__ = ['AsdfFile', 'AsdfType', 'AsdfExtension',
                'Stream', 'open', 'test', 'commands',
                'ValidationError']
@@ -33,11 +33,6 @@ if _ASTROPY_SETUP_ is False:
         import numpy as _
     except ImportError:
         raise ImportError("pyasdf requires numpy")
-
-    try:
-        import astropy as _
-    except ImportError:
-        raise ImportError("pyasdf requires astropy")
 
     from .asdf import AsdfFile
     from .asdftypes import AsdfType

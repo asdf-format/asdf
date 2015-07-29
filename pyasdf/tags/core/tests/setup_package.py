@@ -6,4 +6,4 @@ from __future__ import absolute_import, division, unicode_literals, print_functi
 
 def get_package_data():  # pragma: no cover
     return {
-        str(_ASTROPY_PACKAGE_NAME_ + '.tags.core.tests'): ['data/*.yaml']}
+        str(_PACKAGE_NAME_ + '.tags.core.tests'): ['data/*.yaml']}

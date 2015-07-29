@@ -3,19 +3,26 @@
 
 from __future__ import absolute_import, division, unicode_literals, print_function
 
-from astropy.modeling import models as astmodels
-from astropy.tests.helper import pytest
+try:
+    import astropy
+except ImportError:
+    HAS_ASTROPY = False
+    test_models = []
+else:
+    HAS_ASTROPY = True
+    from astropy.modeling import models as astmodels
 
+    test_models = [astmodels.Identity(2), astmodels.Polynomial1D(2, c0=1, c1=2, c2=3),
+                   astmodels.Polynomial2D(1, c0_0=1, c0_1=2, c1_0=3), astmodels.Shift(2.),
+                   astmodels.Scale(3.4), astmodels.RotateNative2Celestial(5.63, -72.5, 180),
+                   astmodels.RotateCelestial2Native(5.63, -72.5, 180),
+                   astmodels.EulerAngleRotation(23, 14, 2.3, axes_order='xzx')]
+
+import pytest
 from ....tests import helpers
 
 
-test_models = [astmodels.Identity(2), astmodels.Polynomial1D(2, c0=1, c1=2, c2=3),
-               astmodels.Polynomial2D(1, c0_0=1, c0_1=2, c1_0=3), astmodels.Shift(2.),
-               astmodels.Scale(3.4), astmodels.RotateNative2Celestial(5.63, -72.5, 180),
-               astmodels.RotateCelestial2Native(5.63, -72.5, 180),
-               astmodels.EulerAngleRotation(23, 14, 2.3, axes_order='xzx')]
-
-
+@pytest.mark.skipif('not HAS_ASTROPY')
 def test_transforms_compound(tmpdir):
     tree = {
         'compound':
@@ -29,6 +36,7 @@ def test_transforms_compound(tmpdir):
     helpers.assert_roundtrip_tree(tree, tmpdir)
 
 
+@pytest.mark.skipif('not HAS_ASTROPY')
 def test_inverse_transforms(tmpdir):
     rotation = astmodels.Rotation2D(32)
     rotation.inverse = astmodels.Rotation2D(45)
@@ -46,12 +54,14 @@ def test_inverse_transforms(tmpdir):
     helpers.assert_roundtrip_tree(tree, tmpdir, check)
 
 
+@pytest.mark.skipif('not HAS_ASTROPY')
 @pytest.mark.parametrize(('model'), test_models)
 def test_single_model(tmpdir, model):
     tree = {'single_model': model}
     helpers.assert_roundtrip_tree(tree, tmpdir)
 
 
+@pytest.mark.skipif('not HAS_ASTROPY')
 def test_name(tmpdir):
     def check(ff):
         assert ff.tree['rot'].name == 'foo'
@@ -60,6 +70,7 @@ def test_name(tmpdir):
     helpers.assert_roundtrip_tree(tree, tmpdir, check)
 
 
+@pytest.mark.skipif('not HAS_ASTROPY')
 def test_domain(tmpdir):
     def check(ff):
         assert ff.tree['rot'].meta['domain'] == {
@@ -72,6 +83,7 @@ def test_domain(tmpdir):
     helpers.assert_roundtrip_tree(tree, tmpdir, check)
 
 
+@pytest.mark.skipif('not HAS_ASTROPY')
 def test_zenithal_with_arguments(tmpdir):
     tree = {
         'azp': astmodels.Sky2Pix_AZP(0.5, 0.3)
@@ -80,6 +92,7 @@ def test_zenithal_with_arguments(tmpdir):
     helpers.assert_roundtrip_tree(tree, tmpdir)
 
 
+@pytest.mark.skipif('not HAS_ASTROPY')
 def test_naming_of_compound_model(tmpdir):
     """Issue #87"""
     def asdf_check(ff):

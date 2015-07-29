@@ -5,7 +5,7 @@ from __future__ import absolute_import, division, unicode_literals, print_functi
 
 import datetime
 
-from astropy.tests.helper import pytest
+import pytest
 
 from jsonschema import ValidationError
 

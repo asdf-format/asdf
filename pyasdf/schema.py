@@ -7,9 +7,8 @@ import datetime
 import json
 import os
 
-from astropy.extern import six
-from astropy.utils.compat.odict import OrderedDict
-from astropy.extern.six.moves.urllib import parse as urlparse
+import six
+from six.moves.urllib import parse as urlparse
 
 from jsonschema import validators as mvalidators
 from jsonschema.exceptions import ValidationError
@@ -17,6 +16,7 @@ from jsonschema.exceptions import ValidationError
 import yaml
 
 from .compat import lru_cache
+from .compat.odict import OrderedDict
 from . import constants
 from . import generic_io
 from . import reference

@@ -3,7 +3,6 @@
 
 from __future__ import absolute_import, division, unicode_literals, print_function
 
-from astropy.io import fits
 import numpy as np
 
 from ...asdftypes import AsdfType
@@ -12,10 +11,13 @@ from ... import yamlutil
 
 class FitsType(AsdfType):
     name = 'fits/fits'
-    types = [fits.HDUList]
+    types = ['astropy.io.fits.HDUList']
+    requires = ['astropy']
 
     @classmethod
     def from_tree(cls, data, ctx):
+        from astropy.io import fits
+
         hdus = []
         first = True
         for hdu_entry in data:

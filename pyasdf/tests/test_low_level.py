@@ -6,11 +6,12 @@ from __future__ import absolute_import, division, unicode_literals, print_functi
 import io
 import os
 
-from astropy.extern import six
-from astropy.tests.helper import pytest
-
 import numpy as np
 from numpy.testing import assert_array_equal
+
+import pytest
+
+import six
 
 from .. import asdf
 from .. import block

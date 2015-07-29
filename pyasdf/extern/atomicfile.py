@@ -1,4 +1,4 @@
-from astropy.extern import six
+import six
 
 import os
 import tempfile

@@ -4,18 +4,20 @@
 from __future__ import absolute_import, division, unicode_literals, print_function
 
 
-from astropy.extern import six
-from astropy import units as u
+import six
 
 from ...asdftypes import AsdfType
 
 
 class UnitType(AsdfType):
     name = 'unit/unit'
-    types = [u.UnitBase]
+    types = ['astropy.units.UnitBase']
+    requires = ['astropy']
 
     @classmethod
     def to_tree(cls, node, ctx):
+        from astropy import units as u
+
         if isinstance(node, six.string_types):
             node = u.Unit(node, format='vounit', parse_strict='warn')
         if isinstance(node, u.UnitBase):
@@ -24,4 +26,6 @@ class UnitType(AsdfType):
 
     @classmethod
     def from_tree(cls, node, ctx):
+        from astropy import units as u
+
         return u.Unit(node, format='vounit', parse_strict='silent')

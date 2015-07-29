@@ -5,9 +5,7 @@ from __future__ import absolute_import, division, unicode_literals, print_functi
 
 import numpy as np
 
-from astropy.extern import six
-from astropy import time
-from astropy import units as u
+import six
 
 from ...asdftypes import AsdfType
 from ... import yamlutil
@@ -23,13 +21,15 @@ _astropy_format_to_asdf_format = {
 }
 
 
-
 class TimeType(AsdfType):
     name = 'time/time'
-    types = [time.core.Time]
+    types = ['astropy.time.core.Time']
+    requires = ['astropy']
 
     @classmethod
     def to_tree(cls, node, ctx):
+        from astropy import time
+
         format = node.format
 
         if format == 'byear':
@@ -73,6 +73,9 @@ class TimeType(AsdfType):
 
     @classmethod
     def from_tree(cls, node, ctx):
+        from astropy import time
+        from astropy import units as u
+
         if isinstance(node, (six.string_types, list, np.ndarray)):
             t = time.Time(node)
             format = _astropy_format_to_asdf_format.get(t.format, t.format)
