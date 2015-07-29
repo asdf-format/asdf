@@ -3,6 +3,7 @@
 
 from __future__ import absolute_import, division, unicode_literals, print_function
 
+import datetime
 import json
 import os
 
@@ -131,13 +132,30 @@ def validate_style(validator, style, instance, schema):
     instance.style = style
 
 
+def validate_type(validator, types, instance, schema):
+    """
+    PyYAML returns strings that look like dates as datetime objects.
+    However, as far as JSON is concerned, this is type==string and
+    format==date-time.  That detects for that case and doesn't raise
+    an error, otherwise falling back to the default type checker.
+    """
+    if (isinstance(instance, datetime.datetime) and
+        schema.get('format') == 'date-time' and
+        'string' in types):
+        return
+
+    return mvalidators.Draft4Validator.VALIDATORS['type'](
+        validator, types, instance, schema)
+
+
 YAML_VALIDATORS = util.HashableDict(
     mvalidators.Draft4Validator.VALIDATORS.copy())
 YAML_VALIDATORS.update({
     'tag': validate_tag,
     'propertyOrder': validate_propertyOrder,
     'flowStyle': validate_flowStyle,
-    'style': validate_style
+    'style': validate_style,
+    'type': validate_type
 })
 
 
