@@ -11,12 +11,16 @@ import re
 
 import numpy as np
 
-from astropy.extern import six
-from astropy.io import fits
+import six
 
 from . import asdf
 from . import block
 from . import util
+
+try:
+    from astropy.io import fits
+except ImportError:
+    raise ImportError("AsdfInFits requires astropy")
 
 
 ASDF_EXTENSION_NAME = 'ASDF'

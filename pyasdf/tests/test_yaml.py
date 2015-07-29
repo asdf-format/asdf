@@ -5,16 +5,23 @@ from __future__ import absolute_import, division, unicode_literals, print_functi
 
 import io
 
+try:
+    import astropy
+except ImportError:
+    HAS_ASTROPY = False
+else:
+    HAS_ASTROPY = True
+
 import numpy as np
 
-from astropy.extern import six
-from astropy import units as u
-from astropy.utils.compat.odict import OrderedDict
-from astropy.tests.helper import pytest
+import pytest
+
+import six
 
 import yaml
 
 from .. import asdf
+from ..compat.odict import OrderedDict
 from .. import tagged
 from .. import treeutil
 
@@ -121,6 +128,7 @@ def test_tags_removed_after_load(tmpdir):
     helpers.assert_roundtrip_tree(tree, tmpdir, check_asdf)
 
 
+@pytest.mark.skipif('not HAS_ASTROPY')
 def test_explicit_tags():
 
     yaml = """#ASDF 0.1.0
@@ -129,6 +137,8 @@ def test_explicit_tags():
 unit: !<tag:stsci.edu:asdf/0.1.0/unit/unit> m
 ...
     """
+    from astropy import units as u
+
     # Check that fully-qualified explicit tags work
 
     buff = helpers.yaml_to_asdf(yaml, yaml_headers=False)

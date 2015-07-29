@@ -5,7 +5,7 @@ from __future__ import absolute_import, division, unicode_literals, print_functi
 
 import numpy as np
 
-from astropy.extern import six
+import six
 
 
 def validate(compression):

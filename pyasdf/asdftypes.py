@@ -3,8 +3,10 @@
 
 from __future__ import absolute_import, division, unicode_literals, print_function
 
-from astropy.extern import six
-from astropy.utils.misc import InheritDocstrings
+import imp
+import warnings
+
+import six
 
 from .compat import lru_cache
 from . import tagged
@@ -142,12 +144,64 @@ class AsdfTypeIndex(object):
 _all_asdftypes = set()
 
 
+def _from_tree_tagged_missing_requirements(cls, tree, ctx):
+    # A special version of AsdfType.from_tree_tagged for when the
+    # required dependencies for an AsdfType are missing.  Shows a
+    # warning, and then returns the raw dictionary.
+    plural = 's' if len(cls.requires) else ''
+    warnings.warn("{0} package{1} is required to instantiate '{2}'".format(
+        util.human_list(cls.requires), plural, tree._tag))
+    return tree
+
+
 class AsdfTypeMeta(type):
     """
     Keeps track of `AsdfType` subclasses that are created, and stores
     them in `AsdfTypeIndex`.
     """
+    _import_cache = {}
+
+    @classmethod
+    def _has_required_modules(cls, requires):
+        for mod in requires:
+            if mod in cls._import_cache:
+                if not cls._import_cache[mod]:
+                    return False
+            try:
+                imp.find_module(mod)
+            except ImportError:
+                cls._import_cache[mod] = False
+                return False
+            else:
+                cls._import_cache[mod] = True
+        return True
+
+    @classmethod
+    def _find_in_bases(cls, attrs, bases, name, default=None):
+        if name in attrs:
+            return attrs[name]
+        for base in bases:
+            if hasattr(base, name):
+                return getattr(base, name)
+        return default
+
     def __new__(mcls, name, bases, attrs):
+        requires = mcls._find_in_bases(attrs, bases, 'requires', [])
+        if not mcls._has_required_modules(requires):
+            attrs['from_tree_tagged'] = classmethod(
+                _from_tree_tagged_missing_requirements)
+            attrs['types'] = []
+            attrs['has_required_modules'] = False
+        else:
+            attrs['has_required_modules'] = True
+            types = attrs.get('types', [])
+            new_types = []
+            for typ in types:
+                if isinstance(typ, six.string_types):
+                    typ = util.resolve_name(typ)
+                new_types.append(typ)
+            attrs['types'] = new_types
+
         cls = super(AsdfTypeMeta, mcls).__new__(mcls, name, bases, attrs)
 
         if hasattr(cls, 'name'):
@@ -165,7 +219,7 @@ class AsdfTypeMeta(type):
 
 
 @six.add_metaclass(AsdfTypeMeta)
-@six.add_metaclass(InheritDocstrings)
+@six.add_metaclass(util.InheritDocstrings)
 class AsdfType(object):
     """
     The base class of all custom types in the tree.
@@ -198,6 +252,10 @@ class AsdfType(object):
         Mapping JSON Schema keywords to validation functions for
         jsonschema.  Useful if the type defines extra types of
         validation that can be performed.
+
+    requires : list of str
+        A list of Python packages that are required to instantiate the
+        object.
     """
     name = None
     organization = 'stsci.edu'
@@ -206,6 +264,7 @@ class AsdfType(object):
     types = []
     handle_dynamic_subclasses = False
     validators = {}
+    requires = []
 
     @classmethod
     def make_yaml_tag(cls, name):

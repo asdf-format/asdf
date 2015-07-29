@@ -7,9 +7,10 @@ import io
 import os
 import sys
 
-from astropy.extern import six
-import astropy.extern.six.moves.urllib.request as urllib_request
-from astropy.tests.helper import pytest, remote_data
+import pytest
+
+import six
+import six.moves.urllib.request as urllib_request
 
 import numpy as np
 

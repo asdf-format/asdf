@@ -9,7 +9,7 @@ import os
 import numpy as np
 from numpy.testing import assert_array_equal
 
-from astropy.tests.helper import pytest
+import pytest
 
 from .. import asdf
 from .. import reference

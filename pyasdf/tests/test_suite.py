@@ -10,7 +10,7 @@ from .. import open
 
 from .helpers import assert_tree_match
 
-from astropy.tests.helper import pytest
+import pytest
 
 
 def test_reference_files():

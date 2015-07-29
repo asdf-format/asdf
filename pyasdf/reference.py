@@ -14,7 +14,7 @@ import weakref
 
 import numpy as np
 
-from astropy.extern.six.moves.urllib import parse as urlparse
+from six.moves.urllib import parse as urlparse
 
 from .asdftypes import AsdfType
 from . import generic_io
