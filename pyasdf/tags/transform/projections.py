@@ -9,11 +9,7 @@ from ... import yamlutil
 
 from .basic import TransformType
 
-
-__all__ = ['AffineType', 'Rotate2DType', 'Rotate3DType', 'ZenithalPerspectiveType',
-           'GnomonicType', 'StereographicType', 'SlantOrthographicType',
-           'CylindricalPerspectiveType', 'CylindricalEqualAreaType',
-           'PlateCarreeType', 'MercatorType']
+__all__ = ['AffineType', 'Rotate2DType', 'Rotate3DType']
 
 
 class AffineType(TransformType):
@@ -171,28 +167,6 @@ class GenericProjectionType(TransformType):
         assert a.__class__ == b.__class__
 
 
-class ZenithalType(TransformType):
-    @classmethod
-    def from_tree_transform(cls, node, ctx, *args):
-        if node['direction'] == 'pix2sky':
-            return cls.types[0](*args)
-        else:
-            return cls.types[1](*args)
-
-    @classmethod
-    def to_tree_transform(cls, model, ctx):
-        if isinstance(model, cls.types[0]):
-            return {'direction': 'pix2sky'}
-        else:
-            return {'direction': 'sky2pix'}
-
-    @classmethod
-    def assert_equal(cls, a, b):
-        # TODO: If models become comparable themselves, remove this.
-        TransformType.assert_equal(a, b)
-        assert a.__class__ == b.__class__
-
-
 _generic_projections = {
     'zenithal_perspective': ('ZenithalPerspective', (('mu', 0.0), ('gamma', 0.0))),
     'gnomonic': ('Gnomonic', ()),
@@ -235,5 +209,7 @@ def make_projection_types():
             {'name': 'transform/{0}'.format(tag_name),
              'types': types,
              'params': params})
+
+        __all__.append(class_name)
 
 make_projection_types()
