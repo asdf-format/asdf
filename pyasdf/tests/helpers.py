@@ -74,7 +74,7 @@ def assert_tree_match(old_tree, new_tree, funcname='assert_equal',
 
 def assert_roundtrip_tree(
         tree, tmpdir, asdf_check_func=None, raw_yaml_check_func=None,
-        write_options={}):
+        write_options={}, extensions=None):
     """
     Assert that a given tree saves to ASDF and, when loaded back,
     the tree matches the original tree.
@@ -96,10 +96,10 @@ def assert_roundtrip_tree(
 
     # First, test writing/reading a BytesIO buffer
     buff = io.BytesIO()
-    AsdfFile(tree).write_to(buff, **write_options)
+    AsdfFile(tree, extensions=extensions).write_to(buff, **write_options)
     assert not buff.closed
     buff.seek(0)
-    with AsdfFile.open(buff, mode='rw') as ff:
+    with AsdfFile.open(buff, mode='rw', extensions=extensions) as ff:
         assert not buff.closed
         assert isinstance(ff.tree, AsdfObject)
         assert 'asdf_library' in ff.tree
@@ -109,7 +109,7 @@ def assert_roundtrip_tree(
             asdf_check_func(ff)
 
     buff.seek(0)
-    ff = AsdfFile()
+    ff = AsdfFile(extensions=extensions)
     content = AsdfFile._open_impl(ff, buff, _get_yaml_content=True)
     buff.close()
     # We *never* want to get any raw python objects out
@@ -120,9 +120,9 @@ def assert_roundtrip_tree(
         raw_yaml_check_func(content)
 
     # Then, test writing/reading to a real file
-    ff = AsdfFile(tree)
+    ff = AsdfFile(tree, extensions=extensions)
     ff.write_to(fname, **write_options)
-    with AsdfFile.open(fname, mode='rw') as ff:
+    with AsdfFile.open(fname, mode='rw', extensions=extensions) as ff:
         assert_tree_match(tree, ff.tree)
         if asdf_check_func:
             asdf_check_func(ff)
@@ -130,10 +130,10 @@ def assert_roundtrip_tree(
     # Make sure everything works without a block index
     write_options['include_block_index'] = False
     buff = io.BytesIO()
-    AsdfFile(tree).write_to(buff, **write_options)
+    AsdfFile(tree, extensions=extensions).write_to(buff, **write_options)
     assert not buff.closed
     buff.seek(0)
-    with AsdfFile.open(buff, mode='rw') as ff:
+    with AsdfFile.open(buff, mode='rw', extensions=extensions) as ff:
         assert not buff.closed
         assert isinstance(ff.tree, AsdfObject)
         assert_tree_match(tree, ff.tree)
@@ -144,9 +144,10 @@ def assert_roundtrip_tree(
     if not sys.platform.startswith('win'):
         server = RangeHTTPServer()
         try:
-            ff = AsdfFile(tree)
+            ff = AsdfFile(tree, extensions=extensions)
             ff.write_to(os.path.join(server.tmpdir, 'test.asdf'), **write_options)
-            with AsdfFile.open(server.url + 'test.asdf', mode='r') as ff:
+            with AsdfFile.open(server.url + 'test.asdf', mode='r',
+                               extensions=extensions) as ff:
                 assert_tree_match(tree, ff.tree)
                 if asdf_check_func:
                     asdf_check_func(ff)

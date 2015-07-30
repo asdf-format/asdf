@@ -433,3 +433,28 @@ custom: !<tag:nowhere.org:custom/1.0.0/missing>
             assert ff.tree['custom']['b']['foo'] == 42
 
     assert len(w) == 1
+
+
+def test_assert_roundtrip_with_extension(tmpdir):
+    class CustomType(dict, asdftypes.AsdfType):
+        name = 'custom_flow'
+        organization = 'nowhere.org'
+        version = (1, 0, 0)
+        standard = 'custom'
+
+        @classmethod
+        def assert_equal(cls, old, new):
+            assert isinstance(old, cls)
+            assert isinstance(new, cls)
+            assert old == new
+
+    class CustomFlowStyleExtension(CustomExtension):
+        @property
+        def types(self):
+            return [CustomType]
+
+    tree = {
+        'custom_flow': CustomType({'a': 42, 'b': 43})
+    }
+
+    helpers.assert_roundtrip_tree(tree, tmpdir, extensions=[CustomExtension()])
