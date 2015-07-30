@@ -31,7 +31,8 @@ def test_reference_files():
                 asdf.resolve_and_inline()
 
                 with open(filename[:-4] + "yaml") as ref:
-                    assert_tree_match(asdf.tree, ref.tree, 'assert_allclose')
+                    assert_tree_match(asdf.tree, ref.tree,
+                                      funcname='assert_allclose')
         except:
             if known_fail:
                 pytest.xfail()
