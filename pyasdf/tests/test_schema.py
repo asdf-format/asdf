@@ -448,13 +448,16 @@ def test_assert_roundtrip_with_extension(tmpdir):
             assert isinstance(new, cls)
             assert old == new
 
-    class CustomFlowStyleExtension(CustomExtension):
+    class CustomTypeExtension(CustomExtension):
         @property
         def types(self):
             return [CustomType]
 
     tree = {
-        'custom_flow': CustomType({'a': 42, 'b': 43})
+        'custom': CustomType({'a': 42, 'b': 43})
     }
 
-    helpers.assert_roundtrip_tree(tree, tmpdir, extensions=[CustomExtension()])
+    def check(ff):
+        assert isinstance(ff.tree['custom'], CustomType)
+
+    helpers.assert_roundtrip_tree(tree, tmpdir, extensions=[CustomTypeExtension()])
