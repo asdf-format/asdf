@@ -72,6 +72,10 @@ install:
     - if [[ $SETUP_CMD != egg_info ]] && [[ $ASTROPY_VERSION == development ]]; then $PIP_INSTALL git+http://github.com/astropy/astropy.git#egg=astropy; fi
     - if [[ $SETUP_CMD != egg_info ]] && [[ $ASTROPY_VERSION == stable ]]; then $CONDA_INSTALL numpy=$NUMPY_VERSION astropy; fi
 
+    # GWCS
+    - if [[ $SETUP_CMD != egg_info ]]; then $PIP_INSTALL git+http://github.com/spacetelescope/gwcs.git#egg=gwcs; fi
+
+
     # OPTIONAL DEPENDENCIES
     # Here you can add any dependencies your package may have. You can use
     # conda for packages available through conda, or pip for any other
