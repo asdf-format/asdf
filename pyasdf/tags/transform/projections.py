@@ -139,6 +139,38 @@ class Rotate3DType(TransformType):
             assert_array_equal(a.lon_pole, b.lon_pole)
 
 
+class GenericProjectionType(TransformType):
+    @classmethod
+    def from_tree_transform(cls, node, ctx):
+        args = []
+        for param_name, default in cls.params:
+            args.append(node.get(param_name, default))
+
+        if node['direction'] == 'pix2sky':
+            return cls.types[0](*args)
+        else:
+            return cls.types[1](*args)
+
+    @classmethod
+    def to_tree_transform(cls, model, ctx):
+        node = {}
+        if isinstance(model, cls.types[0]):
+            node['direction'] = 'pix2sky'
+        else:
+            node['direction'] = 'sky2pix'
+        for param_name, default in cls.params:
+            val = getattr(model, param_name).value
+            if val != default:
+                node[param_name] = val
+        return node
+
+    @classmethod
+    def assert_equal(cls, a, b):
+        # TODO: If models become comparable themselves, remove this.
+        TransformType.assert_equal(a, b)
+        assert a.__class__ == b.__class__
+
+
 class ZenithalType(TransformType):
     @classmethod
     def from_tree_transform(cls, node, ctx, *args):
@@ -161,157 +193,47 @@ class ZenithalType(TransformType):
         assert a.__class__ == b.__class__
 
 
-class ZenithalPerspectiveType(ZenithalType):
-    name = "transform/zenithal_perspective"
-    types = ['astropy.modeling.projections.Pix2Sky_AZP',
-             'astropy.modeling.projections.Sky2Pix_AZP']
-
-    @classmethod
-    def from_tree_transform(cls, node, ctx):
-        mu = node.get('mu', 0.0)
-        gamma = node.get('gamma', 0.0)
-        if node['direction'] == 'pix2sky':
-            return cls.types[0](mu, gamma)
-        else:
-            return cls.types[1](mu, gamma)
-
-    @classmethod
-    def to_tree_transform(cls, model, ctx):
-        node = {}
-        if isinstance(model, cls.types[0]):
-            node['direction'] = 'pix2sky'
-        else:
-            node['direction'] = 'sky2pix'
-        if model.mu != 0.0:
-            node['mu'] = model.mu.value
-        if model.gamma != 0.0:
-            node['gamma'] = model.gamma.value
-        return node
-
-    @classmethod
-    def assert_equal(cls, a, b):
-        # TODO: If models become comparable themselves, remove this.
-        TransformType.assert_equal(a, b)
-        assert a.__class__ == b.__class__
-        assert a.mu.value == b.mu.value
-        assert a.gamma.value == b.gamma.value
+_generic_projections = {
+    'zenithal_perspective': ('ZenithalPerspective', (('mu', 0.0), ('gamma', 0.0))),
+    'gnomonic': ('Gnomonic', ()),
+    'stereographic': ('Stereographic', ()),
+    'slant_orthographic': ('SlantOrthographic', (('xi', 0.0), ('eta', 0.0))),
+    'zenithal_equidistant': ('ZenithalEquidistant', ()),
+    'zenithal_equal_area': ('ZenithalEqualArea', ()),
+    'airy': ('Airy', (('theta_b', 90.0),)),
+    'cylindrical_perspective': ('CylindricalPerspective', (('mu', 0.0), ('lam', 0.0))),
+    'cylindrical_equal_area': ('CylindricalEqualArea', (('lam', 0.0),)),
+    'plate_carree': ('PlateCarree', ()),
+    'mercator': ('Mercator', ()),
+    'sanson_flamsteed': ('SansonFlamsteed', ()),
+    'parabolic': ('Parabolic', ()),
+    'molleweide': ('Molleweide', ()),
+    'hammer_aitoff': ('HammerAitoff', ()),
+    'conic_perspective': ('ConicPerspective', (('sigma', 0.0), ('delta', 0.0))),
+    'conic_equal_area': ('ConicEqualArea', (('sigma', 0.0), ('delta', 0.0))),
+    'conic_equidistant': ('ConicEquidistant', (('sigma', 0.0), ('delta', 0.0))),
+    'conic_orthomorphic': ('ConicOrthomorphic', (('sigma', 0.0), ('delta', 0.0))),
+    'bonne_equal_area': ('BonneEqualArea', (('theta1', 0.0),)),
+    'polyconic': ('Polyconic', ()),
+    'tangential_spherical_cube': ('TangentialSphericalCube', ()),
+    'cobe_quad_spherical_cube': ('COBEQuadSphericalCube', ()),
+    'quad_spherical_cube': ('QuadSphericalCube', ()),
+    'healpix': ('HEALPix', (('H', 4.0), ('X', 3.0))),
+    'healpix_polar': ('HEALPixPolar', ())
+}
 
 
-class GnomonicType(ZenithalType):
-    name = "transform/gnomonic"
-    types = ['astropy.modeling.projections.Pix2Sky_TAN',
-             'astropy.modeling.projections.Sky2Pix_TAN']
+def make_projection_types():
+    for tag_name, (name, params) in _generic_projections.items():
+        class_name = '{0}Type'.format(name)
+        types = ['astropy.modeling.projections.Pix2Sky_{0}'.format(name),
+                 'astropy.modeling.projections.Sky2Pix_{0}'.format(name)]
 
+        globals()[class_name] = type(
+            str(class_name),
+            (GenericProjectionType,),
+            {'name': 'transform/{0}'.format(tag_name),
+             'types': types,
+             'params': params})
 
-class StereographicType(ZenithalType):
-    name = "transform/stereographic"
-    types = ['astropy.modeling.projections.Pix2Sky_STG',
-             'astropy.modeling.projections.Sky2Pix_STG']
-
-
-class SlantOrthographicType(ZenithalType):
-    name = "transform/slant_orthographic"
-    types = ['astropy.modeling.projections.Pix2Sky_SIN',
-             'astropy.modeling.projections.Sky2Pix_SIN']
-
-
-class CylindricalType(TransformType):
-    @classmethod
-    def from_tree_transform(cls, node, ctx, *args):
-        if node['direction'] == 'pix2sky':
-            return cls.types[0](*args)
-        else:
-            return cls.types[1](*args)
-
-    @classmethod
-    def to_tree_transform(cls, model, ctx):
-        if isinstance(model, cls.types[0]):
-            return {'direction': 'pix2sky'}
-        else:
-            return {'direction': 'sky2pix'}
-
-    @classmethod
-    def assert_equal(cls, a, b):
-        # TODO: If models become comparable themselves, remove this.
-        TransformType.assert_equal(a, b)
-        assert a.__class__ == b.__class__
-
-
-class CylindricalPerspectiveType(CylindricalType):
-    name = "transform/cylindrical_perspective"
-    types = ['astropy.modeling.projections.Pix2Sky_CYP',
-             'astropy.modeling.projections.Sky2Pix_CYP']
-
-    @classmethod
-    def from_tree_transform(cls, node, ctx):
-        mu = node.get('mu', 0.0)
-        lam = node.get('lambda', 0.0)
-        if node['direction'] == 'pix2sky':
-            return cls.types[0](mu, lam)
-        else:
-            return cls.types[1](mu, lam)
-
-    @classmethod
-    def to_tree_transform(cls, model, ctx):
-        node = {}
-        if isinstance(model, cls.types[0]):
-            node['direction'] = 'pix2sky'
-        else:
-            node['direction'] = 'sky2pix'
-        if model.mu != 0.0:
-            node['mu'] = model.mu.value
-        if model.lam != 0.0:
-            node['lambda'] = model.lam.value
-        return node
-
-    @classmethod
-    def assert_equal(cls, a, b):
-        # TODO: If models become comparable themselves, remove this.
-        TransformType.assert_equal(a, b)
-        assert a.__class__ == b.__class__
-        assert a.mu.value == b.mu.value
-        assert a.lam.value == b.lam.value
-
-
-class CylindricalEqualAreaType(CylindricalType):
-    name = "transform/cylindrical_equal_area"
-    types = ['astropy.modeling.projections.Pix2Sky_CEA',
-             'astropy.modeling.projections.Sky2Pix_CEA']
-
-    @classmethod
-    def from_tree_transform(cls, node, ctx):
-        lam = node.get('lambda', 0.0)
-        if node['direction'] == 'pix2sky':
-            return cls.types[0](lam)
-        else:
-            return cls.types[1](lam)
-
-    @classmethod
-    def to_tree_transform(cls, model, ctx):
-        node = {}
-        if isinstance(model, cls.types[0]):
-            node['direction'] = 'pix2sky'
-        else:
-            node['direction'] = 'sky2pix'
-        if model.lam != 0.0:
-            node['lambda'] = model.lam.value
-        return node
-
-    @classmethod
-    def assert_equal(cls, a, b):
-        # TODO: If models become comparable themselves, remove this.
-        TransformType.assert_equal(a, b)
-        assert a.__class__ == b.__class__
-        assert a.lam.value == b.lam.value
-
-
-class PlateCarreeType(CylindricalType):
-    name = "transforms/plate_carree"
-    types = ['astropy.modeling.projections.Pix2Sky_CAR',
-             'astropy.modeling.projections.Sky2Pix_CAR']
-
-
-class MercatorType(CylindricalType):
-    name = "transforms/mercator"
-    types = ['astropy.modeling.projections.Pix2Sky_MER',
-             'astropy.modeling.projections.Sky2Pix_MER']
+make_projection_types()

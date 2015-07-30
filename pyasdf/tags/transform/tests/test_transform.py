@@ -19,7 +19,9 @@ else:
                    astmodels.EulerAngleRotation(23, 14, 2.3, axes_order='xzx')]
 
 import pytest
+
 from ....tests import helpers
+from .... import util
 
 
 @pytest.mark.skipif('not HAS_ASTROPY')
@@ -105,3 +107,18 @@ def test_naming_of_compound_model(tmpdir):
         'model': model
     }
     helpers.assert_roundtrip_tree(tree, tmpdir, asdf_check)
+
+
+@pytest.mark.skipif('not HAS_ASTROPY')
+def test_generic_projections(tmpdir):
+    from .. import projections
+
+    for tag_name, (name, params) in projections._generic_projections.items():
+        tree = {
+            'forward': util.resolve_name(
+                'astropy.modeling.projections.Sky2Pix_{0}'.format(name))(),
+            'backward': util.resolve_name(
+                'astropy.modeling.projections.Pix2Sky_{0}'.format(name))()
+        }
+
+        helpers.assert_roundtrip_tree(tree, tmpdir)
