@@ -17,8 +17,8 @@ from .. import util
 from ..tags.core import AsdfObject
 
 
-def assert_tree_match(old_tree, new_tree, funcname='assert_equal',
-                      ignore_keys=None):
+def assert_tree_match(old_tree, new_tree, ctx=None,
+                      funcname='assert_equal', ignore_keys=None):
     """
     Assert that two ASDF trees match.
 
@@ -42,14 +42,17 @@ def assert_tree_match(old_tree, new_tree, funcname='assert_equal',
         ignore_keys = ['asdf_library', 'history']
     ignore_keys = set(ignore_keys)
 
+    if ctx is None:
+        ctx = _builtin_extension_list
+
     def recurse(old, new):
         if id(old) in seen or id(new) in seen:
             return
         seen.add(id(old))
         seen.add(id(new))
 
-        old_type = _builtin_extension_list.type_index.from_custom_type(type(old))
-        new_type = _builtin_extension_list.type_index.from_custom_type(type(new))
+        old_type = ctx.type_index.from_custom_type(type(old))
+        new_type = ctx.type_index.from_custom_type(type(new))
 
         if (old_type is not None and
             new_type is not None and
@@ -104,7 +107,7 @@ def assert_roundtrip_tree(
         assert isinstance(ff.tree, AsdfObject)
         assert 'asdf_library' in ff.tree
         assert ff.tree['asdf_library'] == get_asdf_library_info()
-        assert_tree_match(tree, ff.tree)
+        assert_tree_match(tree, ff.tree, ff)
         if asdf_check_func:
             asdf_check_func(ff)
 
@@ -123,7 +126,7 @@ def assert_roundtrip_tree(
     ff = AsdfFile(tree, extensions=extensions)
     ff.write_to(fname, **write_options)
     with AsdfFile.open(fname, mode='rw', extensions=extensions) as ff:
-        assert_tree_match(tree, ff.tree)
+        assert_tree_match(tree, ff.tree, ff)
         if asdf_check_func:
             asdf_check_func(ff)
 
@@ -136,7 +139,7 @@ def assert_roundtrip_tree(
     with AsdfFile.open(buff, mode='rw', extensions=extensions) as ff:
         assert not buff.closed
         assert isinstance(ff.tree, AsdfObject)
-        assert_tree_match(tree, ff.tree)
+        assert_tree_match(tree, ff.tree, ff)
         if asdf_check_func:
             asdf_check_func(ff)
 
@@ -148,7 +151,7 @@ def assert_roundtrip_tree(
             ff.write_to(os.path.join(server.tmpdir, 'test.asdf'), **write_options)
             with AsdfFile.open(server.url + 'test.asdf', mode='r',
                                extensions=extensions) as ff:
-                assert_tree_match(tree, ff.tree)
+                assert_tree_match(tree, ff.tree, ff)
                 if asdf_check_func:
                     asdf_check_func(ff)
         finally:

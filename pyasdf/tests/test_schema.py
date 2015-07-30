@@ -436,6 +436,8 @@ custom: !<tag:nowhere.org:custom/1.0.0/missing>
 
 
 def test_assert_roundtrip_with_extension(tmpdir):
+    called_custom_assert_equal = [False]
+
     class CustomType(dict, asdftypes.AsdfType):
         name = 'custom_flow'
         organization = 'nowhere.org'
@@ -444,9 +446,7 @@ def test_assert_roundtrip_with_extension(tmpdir):
 
         @classmethod
         def assert_equal(cls, old, new):
-            assert isinstance(old, cls)
-            assert isinstance(new, cls)
-            assert old == new
+            called_custom_assert_equal[0] = True
 
     class CustomTypeExtension(CustomExtension):
         @property
@@ -461,3 +461,5 @@ def test_assert_roundtrip_with_extension(tmpdir):
         assert isinstance(ff.tree['custom'], CustomType)
 
     helpers.assert_roundtrip_tree(tree, tmpdir, extensions=[CustomTypeExtension()])
+
+    assert called_custom_assert_equal[0] is True
