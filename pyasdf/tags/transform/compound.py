@@ -46,6 +46,7 @@ class CompoundType(TransformType):
         from astropy import modeling
 
         tag = node._tag[node._tag.rfind('/')+1:]
+        tag = tag[:tag.rfind('-')]
 
         oper = _tag_to_method_mapping[tag]
         left = yamlutil.tagged_tree_to_custom_tree(

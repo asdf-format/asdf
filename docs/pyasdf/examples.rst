@@ -73,7 +73,7 @@ will complain::
     Traceback (most recent call last):
     ...
     ValidationError: mismatched tags, wanted
-    'tag:stsci.edu:asdf/0.1.0/core/ndarray', got
+    'tag:stsci.edu:asdf/core/ndarray-0.1.0', got
     'tag:yaml.org,2002:str'
     ...
 
@@ -90,7 +90,7 @@ intermediate state::
     Traceback (most recent call last):
     ...
     ValidationError: mismatched tags, wanted
-    'tag:stsci.edu:asdf/0.1.0/core/ndarray', got
+    'tag:stsci.edu:asdf/core/ndarray-0.1.0', got
     'tag:yaml.org,2002:str'
     ...
 

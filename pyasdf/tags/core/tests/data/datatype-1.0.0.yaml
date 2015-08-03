@@ -1,7 +1,7 @@
 %YAML 1.1
 ---
-$schema: "http://stsci.edu/schemas/asdf/0.1.0/asdf-schema"
-id: "http://nowhere.org/schemas/custom/1.0.0/datatype"
+$schema: "http://stsci.edu/schemas/asdf/asdf-schema-0.1.0"
+id: "http://nowhere.org/schemas/custom/datatype-1.0.0"
 type: object
 properties:
   a:

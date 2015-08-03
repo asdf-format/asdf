@@ -183,8 +183,8 @@ def yaml_to_asdf(yaml_content, yaml_headers=True):
     if yaml_headers:
         buff.write(b"""#ASDF 0.1.0
 %YAML 1.1
-%TAG ! tag:stsci.edu:asdf/0.1.0/
---- !core/asdf
+%TAG ! tag:stsci.edu:asdf/
+--- !core/asdf-0.1.0
 """)
     buff.write(yaml_content)
     if yaml_headers:

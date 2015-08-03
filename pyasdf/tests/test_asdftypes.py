@@ -45,7 +45,7 @@ def test_custom_tag():
 
         @property
         def url_mapping(self):
-            return [('http://nowhere.org/schemas/custom/1.0.0/',
+            return [('http://nowhere.org/schemas/custom/',
                      util.filepath_to_url(TEST_DATA_PATH) +
                      '/{url_suffix}.yaml')]
 
@@ -59,9 +59,9 @@ def test_custom_tag():
             return [check]
 
     yaml = """
-a: !<tag:nowhere.org:custom/1.0.0/fraction>
+a: !<tag:nowhere.org:custom/fraction-1.0.0>
   [2, 3]
-b: !core/complex
+b: !core/complex-0.1.0
   0j
     """
 

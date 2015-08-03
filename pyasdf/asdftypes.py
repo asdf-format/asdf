@@ -22,16 +22,13 @@ _BASIC_PYTHON_TYPES = set(list(six.string_types) +
                           [float, list, dict, tuple])
 
 
-def format_tag(organization, standard, version, tag_name=None):
+def format_tag(organization, standard, version, tag_name):
     """
     Format a YAML tag.
     """
 
-    result = 'tag:{0}:{1}/{2}/'.format(
-        organization, standard, version)
-    if tag_name is not None:
-        result += tag_name
-    return result
+    return 'tag:{0}:{1}/{2}-{3}'.format(
+        organization, standard, tag_name, version)
 
 
 class AsdfTypeIndex(object):
