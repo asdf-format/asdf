@@ -41,10 +41,12 @@ install:
     - "python --version"
 
     # Install specified version of numpy and dependencies
-    - "conda install -q --yes numpy=%NUMPY_VERSION% pytest Cython jinja2 pyyaml jsonschema psutil six semver"
+    - "conda install -q --yes numpy=%NUMPY_VERSION% pytest Cython jinja2 pyyaml jsonschema psutil six"
 
     # Install the development version of astropy
     - "%CMD_IN_ENV% pip install git+http://github.com/astropy/astropy.git#egg=astropy"
+
+    - "%CMD_IN_ENV% pip install semver"
 
 # Not a .NET project
 build: false
