@@ -168,6 +168,13 @@ def test_empty_file():
         assert ff.tree == {}
         assert len(ff.blocks) == 0
 
+    buff = io.BytesIO(b"#ASDF 0.1.0\n#ASDF_STANDARD 0.1.0")
+    buff.seek(0)
+
+    with asdf.AsdfFile.open(buff) as ff:
+        assert ff.tree == {}
+        assert len(ff.blocks) == 0
+
 
 def test_not_asdf_file():
     buff = io.BytesIO(b"SIMPLE")
@@ -189,7 +196,7 @@ def test_junk_file():
     buff = io.BytesIO(b"#ASDF 0.1.0\nFOO")
     buff.seek(0)
 
-    with pytest.raises(IOError):
+    with pytest.raises(ValueError):
         with asdf.AsdfFile.open(buff):
             pass
 

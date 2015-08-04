@@ -128,6 +128,7 @@ setup(name=PACKAGENAME,
           'pyyaml>=3.10',
           'jsonschema>=2.3.0',
           'six>=1.9.0',
+          'semver>=2.2.1',
           'pytest>=2.7.2'
       ],
       author=AUTHOR,

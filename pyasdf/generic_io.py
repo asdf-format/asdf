@@ -192,7 +192,7 @@ class _TruncatedReader(object):
     class, this is not explicitly enforced.
     """
     def __init__(self, fd, delimiter, readahead_bytes, delimiter_name=None,
-                 include=False, initial_content=b''):
+                 include=False, initial_content=b'', exception=True):
         self._fd = fd
         self._delimiter = delimiter
         self._readahead_bytes = readahead_bytes
@@ -201,6 +201,7 @@ class _TruncatedReader(object):
         self._delimiter_name = delimiter_name
         self._include = include
         self._initial_content = initial_content
+        self._exception = exception
         self._past_end = False
 
     def read(self, nbytes=None):
@@ -212,7 +213,10 @@ class _TruncatedReader(object):
         else:
             content = self._fd._peek(nbytes + self._readahead_bytes)
         if content == b'':
-            raise ValueError("{0} not found".format(self._delimiter_name))
+            if self._exception:
+                raise ValueError("{0} not found".format(self._delimiter_name))
+            self._past_end = True
+            return content
 
         index = re.search(self._delimiter, content)
         if index is not None:
@@ -445,7 +449,7 @@ class GenericFile(object):
         return self._fd.closed
 
     def read_until(self, delimiter, readahead_bytes, delimiter_name=None,
-                   include=True, initial_content=b''):
+                   include=True, initial_content=b'', exception=True):
         """
         Reads until a match for a given regular expression is found.
 
@@ -470,6 +474,10 @@ class GenericFile(object):
             Additional content to include at the beginning of the
             first read.
 
+        exception : bool, optional
+            If ``True`` (default), raise an exception if the end
+            marker isn't found.
+
         Returns
         -------
         content : bytes
@@ -485,7 +493,8 @@ class GenericFile(object):
         buff = io.BytesIO()
         reader = self.reader_until(
             delimiter, readahead_bytes, delimiter_name=delimiter_name,
-            include=include, initial_content=initial_content)
+            include=include, initial_content=initial_content,
+            exception=exception)
         while True:
             content = reader.read(self.block_size)
             buff.write(content)
@@ -495,7 +504,7 @@ class GenericFile(object):
 
     def reader_until(self, delimiter, readahead_bytes,
                      delimiter_name=None, include=True,
-                     initial_content=b''):
+                     initial_content=b'', exception=True):
         """
         Returns a readable file-like object that treats the given
         delimiter as the end-of-file.
@@ -521,6 +530,10 @@ class GenericFile(object):
             Additional content to include at the beginning of the
             first read.
 
+        exception : bool, optional
+            If ``True`` (default), raise an exception if the end
+            marker isn't found.
+
         Raises
         ------
         ValueError :
@@ -529,7 +542,7 @@ class GenericFile(object):
         raise NotImplementedError()
 
     def seek_until(self, delimiter, readahead_bytes, delimiter_name=None,
-                   include=True, initial_content=b''):
+                   include=True, initial_content=b'', exception=True):
         """
         Seeks in the file until a match for a given regular expression
         is found.  This is similar to ``read_until``, except the
@@ -556,6 +569,10 @@ class GenericFile(object):
             Additional content to include at the beginning of the
             first read.
 
+        exception : bool, optional
+            If ``True`` (default), raise an exception if the end
+            marker isn't found.
+
         Returns
         -------
         content : bytes
@@ -570,7 +587,8 @@ class GenericFile(object):
         """
         reader = self.reader_until(
             delimiter, readahead_bytes, delimiter_name=delimiter_name,
-            include=include, initial_content=initial_content)
+            include=include, initial_content=initial_content,
+            exception=exception)
         while True:
             try:
                 content = reader.read(self.block_size)
@@ -661,10 +679,11 @@ class RandomAccessFile(GenericFile):
         return content
 
     def reader_until(self, delimiter, readahead_bytes, delimiter_name=None,
-                     include=True, initial_content=b''):
+                     include=True, initial_content=b'', exception=True):
         return _TruncatedReader(
             self, delimiter, readahead_bytes, delimiter_name=delimiter_name,
-            include=include, initial_content=initial_content)
+            include=include, initial_content=initial_content,
+            exception=exception)
 
     def fast_forward(self, size):
         if size < 0:
@@ -813,10 +832,11 @@ class InputStream(GenericFile):
             return buffer
 
     def reader_until(self, delimiter, readahead_bytes, delimiter_name=None,
-                     include=True, initial_content=b''):
+                     include=True, initial_content=b'', exception=True):
         return _TruncatedReader(
             self, delimiter, readahead_bytes, delimiter_name=delimiter_name,
-            include=include, initial_content=initial_content)
+            include=include, initial_content=initial_content,
+            exception=exception)
 
     def fast_forward(self, size):
         if size >= 0 and len(self.read(size)) != size:

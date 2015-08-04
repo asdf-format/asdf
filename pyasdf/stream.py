@@ -25,7 +25,7 @@ class Stream(ndarray.NDArrayType):
          ...         nbytes = fd.write(
          ...                      np.array([i] * 1024, np.float64).tostring())
     """
-
+    name = None
     types = []
 
     def __init__(self, shape, dtype, strides=None):

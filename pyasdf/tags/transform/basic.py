@@ -20,7 +20,6 @@ __all__ = ['TransformType', 'IdentityType', 'ConstantType',
 
 
 class TransformType(AsdfType):
-    name = "transform/transform"
     requires = ['astropy']
 
     @classmethod

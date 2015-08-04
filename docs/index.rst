@@ -15,6 +15,8 @@ Installation
 
 - `pyyaml <http://pyyaml.org>`__ 3.10 or later
 
+- `semver <https://pypi.python.org/pypi/semver>`__ 2.2.1 or later
+
 - `six <https://pypi.python.org/pypi/six>`__ 1.9.0 or later
 
 Support for units, time, transform, wcs, or running the tests also

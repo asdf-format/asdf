@@ -10,74 +10,90 @@ from __future__ import absolute_import, division, unicode_literals, print_functi
 
 import six
 
+import semver
+
+import yaml
+
+if getattr(yaml, '__with_libyaml__', None):  # pragma: no cover
+    _yaml_base_loader = yaml.CSafeLoader
+else:  # pragma: no cover
+    _yaml_base_loader = yaml.SafeLoader
+
+from . import generic_io
+from . import resolver
 from . import util
 
 
+_version_map = {}
+def get_version_map(version):
+    version_map = _version_map.get(version)
+
+    if version_map is None:
+        version_map_path = resolver.DEFAULT_URL_MAPPING[0][1].replace(
+            '{url_suffix}', 'asdf/version_map-{0}'.format(version))
+        try:
+            with generic_io.get_file(version_map_path, 'r') as fd:
+                version_map = yaml.load(
+                    fd, Loader=_yaml_base_loader)
+        except:
+            raise ValueError(
+                "Could not load version map for version {0}".format(version_string))
+        _version_map[version] = version_map
+
+    return version_map
+
+
 def version_to_string(ver):
-    return '.'.join(str(x) for x in ver)
+    if isinstance(ver, six.string_types):
+        return ver
+    elif isinstance(ver, dict):
+        return semver.format_version(**ver)
+    elif isinstance(ver, (tuple, list)):
+        return semver.format_version(*ver)
+    else:
+        raise TypeError("Bad type for version {0}".format(ver))
 
 
-default_version = (0, 1, 0)
+default_version = semver.parse('0.1.0')
 
 
-class VersionSpec(object):
-    """
-    There is a subclass of `VersionSpec` for each version of the ASDF
-    specification.  It declares things that are different between each
-    version, such as the YAML version used.
-    """
-    yaml_version = (1, 1)
-    organization = 'stsci.edu'
-
-    @property
-    def version_string(self):
-        return version_to_string(self.version)
-
-
-class VersionSpec_0_1_0(VersionSpec):
-    version = (0, 1, 0)
-
-
-versions = {
-    (0, 1, 0): VersionSpec_0_1_0()
-    }
+supported_versions = [
+    '0.1.0'
+]
 
 
 class VersionedMixin(object):
     _version = default_version
+    _version_string = version_to_string(default_version)
 
     @property
     def version(self):
         return self._version
 
     @version.setter
-    def version(self, val):
-        if isinstance(val, bytes):
-            try:
-                val = tuple(int(x) for x in val.split('.'))
-            except:
-                pass
-
-        if (not isinstance(val, tuple) or
-            len(val) != 3 or
-            any(not isinstance(x, int) for x in val)):
-            raise TypeError("version must be a 3-tuple or byte string")
-
-        if val not in versions:
+    def version(self, version):
+        if version_to_string(version) not in supported_versions:
             human_versions = util.human_list(
-                [version_to_string(x) for x in six.iterkeys(versions)])
+                [version_to_string(x) for x in six.iterkeys(supported_versions)])
             raise ValueError(
                 "pyasdf only understands how to handle ASDF versions {0}. "
                 "Got '{1}'".format(
                     human_versions,
                     version_to_string(val)))
 
-        self._version = val
+        self._version = version
+        self._version_string = version_to_string(version)
 
     @property
     def version_string(self):
-        return version_to_string(self._version)
+        return self._version_string
 
     @property
-    def versionspec(self):
-        return versions[self._version]
+    def version_map(self):
+        try:
+            version_map = get_version_map(self.version_string)
+        except ValueError:
+            raise ValueError(
+                "Don't have information about version {0}".format(
+                    self.version_string))
+        return version_map

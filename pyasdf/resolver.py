@@ -48,7 +48,7 @@ class Resolver(object):
         prefix : str, optional
             The prefix to use for the Python formatting token names.
         """
-        self._mapping = self._validate_mapping(mapping)
+        self._mapping = self._validate_mapping(mapping)[::-1]
         self._prefix = prefix
 
     def _validate_mapping(self, mappings):
