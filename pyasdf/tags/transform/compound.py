@@ -116,7 +116,7 @@ class RemapAxesType(TransformType):
         mapping = node['mapping']
         n_inputs = node.get('n_inputs')
         if all([isinstance(x, six.integer_types) for x in mapping]):
-            return Mapping(mapping, n_inputs)
+            return Mapping(tuple(mapping), n_inputs)
 
         if n_inputs is None:
             n_inputs = max([x for x in mapping
@@ -137,9 +137,13 @@ class RemapAxesType(TransformType):
 
     @classmethod
     def to_tree_transform(cls, model, ctx):
-        return {'mapping': model.mapping}
+        node = {'mapping': list(model.mapping)}
+        if model.n_inputs > max(model.mapping) + 1:
+            node['n_inputs'] = model.n_inputs
+        return node
 
     @classmethod
     def assert_equal(cls, a, b):
         TransformType.assert_equal(a, b)
         assert a.mapping == b.mapping
+        assert(a.n_inputs == b.n_inputs)

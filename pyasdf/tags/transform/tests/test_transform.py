@@ -16,7 +16,8 @@ else:
                    astmodels.Polynomial2D(1, c0_0=1, c0_1=2, c1_0=3), astmodels.Shift(2.),
                    astmodels.Scale(3.4), astmodels.RotateNative2Celestial(5.63, -72.5, 180),
                    astmodels.RotateCelestial2Native(5.63, -72.5, 180),
-                   astmodels.EulerAngleRotation(23, 14, 2.3, axes_order='xzx')]
+                   astmodels.EulerAngleRotation(23, 14, 2.3, axes_order='xzx'),
+                   astmodels.Mapping((0, 1), n_inputs=3)]
 
 import pytest
 
