@@ -252,7 +252,7 @@ def _create_validator(validators=YAML_VALIDATORS):
                 for x in super(ASDFValidator, self).iter_errors(instance, _schema=schema):
                     yield x
 
-    return validator
+    return ASDFValidator
 
 
 # We want to load mappings in schema as ordered dicts
