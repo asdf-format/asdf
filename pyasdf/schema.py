@@ -25,6 +25,9 @@ from . import treeutil
 from . import util
 
 
+YAML_SCHEMA_METASCHEMA_ID = 'http://stsci.edu/schemas/yaml-schema/draft-01'
+
+
 if getattr(yaml, '__with_libyaml__', None):  # pragma: no cover
     _yaml_base_loader = yaml.CSafeLoader
 else:  # pragma: no cover
@@ -198,61 +201,57 @@ for key in ('allOf', 'anyOf', 'oneOf', 'items'):
 REMOVE_DEFAULTS['properties'] = validate_remove_default
 
 
+
 @lru_cache()
 def _create_validator(validators=YAML_VALIDATORS):
-    validator = mvalidators.create(
-        meta_schema=load_schema(
-            'http://stsci.edu/schemas/yaml-schema/draft-01',
-            mresolver.default_url_mapping),
-        validators=validators)
+    meta_schema = load_schema(YAML_SCHEMA_METASCHEMA_ID,
+                              mresolver.default_url_mapping)
 
-    validator.orig_iter_errors = validator.iter_errors
+    class ASDFValidator(mvalidators.create(meta_schema=meta_schema,
+                                           validators=validators)):
+        def iter_errors(self, instance, _schema=None, _seen=set()):
+            # We can't validate anything that looks like an external reference,
+            # since we don't have the actual content, so we just have to defer
+            # it for now.  If the user cares about complete validation, they
+            # can call `AsdfFile.resolve_references`.
+            if id(instance) in _seen:
+                return
 
-    # We can't validate anything that looks like an external
-    # reference, since we don't have the actual content, so we
-    # just have to defer it for now.  If the user cares about
-    # complete validation, they can call
-    # `AsdfFile.resolve_references`.
-    def iter_errors(self, instance, _schema=None, _seen=set()):
-        if id(instance) in _seen:
-            return
+            if _schema is None:
+                schema = self.schema
+            else:
+                schema = _schema
 
-        if _schema is None:
-            schema = self.schema
-        else:
-            schema = _schema
+            if ((isinstance(instance, dict) and '$ref' in instance) or
+                    isinstance(instance, reference.Reference)):
+                return
 
-        if ((isinstance(instance, dict) and '$ref' in instance) or
-            isinstance(instance, reference.Reference)):
-            return
+            if _schema is None:
+                tag = getattr(instance, '_tag', None)
+                if tag is not None:
+                    schema_path = self.ctx.tag_to_schema_resolver(tag)
+                    if schema_path != tag:
+                        s = load_schema(schema_path, self.ctx.url_mapping)
+                        if s:
+                            with self.resolver.in_scope(schema_path):
+                                for x in super(ASDFValidator, self).iter_errors(instance, s):
+                                    yield x
 
-        if _schema is None:
-            tag = getattr(instance, '_tag', None)
-            if tag is not None:
-                schema_path = self.ctx.tag_to_schema_resolver(tag)
-                if schema_path != tag:
-                    s = load_schema(schema_path, self.ctx.url_mapping)
-                    if s:
-                        with self.resolver.in_scope(schema_path):
-                            for x in self.orig_iter_errors(instance, s):
-                                yield x
+                if isinstance(instance, dict):
+                    new_seen = _seen | set([id(instance)])
+                    for val in six.itervalues(instance):
+                        for x in self.iter_errors(val, _seen=new_seen):
+                            yield x
 
-            if isinstance(instance, dict):
-                new_seen = _seen | set([id(instance)])
-                for val in six.itervalues(instance):
-                    for x in self.iter_errors(val, _seen=new_seen):
-                        yield x
+                elif isinstance(instance, list):
+                    new_seen = _seen | set([id(instance)])
+                    for val in instance:
+                        for x in self.iter_errors(val, _seen=new_seen):
+                            yield x
+            else:
+                for x in super(ASDFValidator, self).iter_errors(instance, _schema=schema):
+                    yield x
 
-            elif isinstance(instance, list):
-                new_seen = _seen | set([id(instance)])
-                for val in instance:
-                    for x in self.iter_errors(val, _seen=new_seen):
-                        yield x
-        else:
-            for x in self.orig_iter_errors(instance, _schema=schema):
-                yield x
-
-    validator.iter_errors = iter_errors
     return validator
 
 
@@ -547,9 +546,8 @@ def check_schema(schema):
         'default': validate_default
     })
 
-    meta_schema = load_schema(
-        'http://stsci.edu/schemas/yaml-schema/draft-01',
-        mresolver.default_url_mapping)
+    meta_schema = load_schema(YAML_SCHEMA_METASCHEMA_ID,
+                              mresolver.default_url_mapping)
 
     resolver = _make_resolver(mresolver.default_url_mapping)
 
