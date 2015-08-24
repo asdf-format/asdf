@@ -79,7 +79,7 @@ install:
     # install since this ensures Numpy does not get automatically upgraded.
     # - if [[ $SETUP_CMD != egg_info ]]; then $CONDA_INSTALL numpy=$NUMPY_VERSION ... ; fi
     # - if [[ $SETUP_CMD != egg_info ]]; then $PIP_INSTALL ...; fi
-    - if [[ $SETUP_CMD != egg_info ]]; then $PIP_INSTALL jsonschema pyyaml six semver; fi
+    - if [[ $SETUP_CMD != egg_info ]]; then $PIP_INSTALL jsonschema pyyaml six; fi
 
     # DOCUMENTATION DEPENDENCIES
     # build_sphinx needs sphinx and matplotlib (for plot_directive). Note that

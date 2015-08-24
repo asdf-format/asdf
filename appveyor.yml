@@ -46,8 +46,6 @@ install:
     # Install the development version of astropy
     - "%CMD_IN_ENV% pip install git+http://github.com/astropy/astropy.git#egg=astropy"
 
-    - "%CMD_IN_ENV% pip install semver"
-
 # Not a .NET project
 build: false
 

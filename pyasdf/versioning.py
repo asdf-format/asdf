@@ -10,14 +10,14 @@ from __future__ import absolute_import, division, unicode_literals, print_functi
 
 import six
 
-import semver
-
 import yaml
 
 if getattr(yaml, '__with_libyaml__', None):  # pragma: no cover
     _yaml_base_loader = yaml.CSafeLoader
 else:  # pragma: no cover
     _yaml_base_loader = yaml.SafeLoader
+
+from .extern import semver
 
 from . import generic_io
 from . import resolver

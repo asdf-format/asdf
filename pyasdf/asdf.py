@@ -10,7 +10,7 @@ import re
 
 import numpy as np
 
-import semver
+from .extern import semver
 
 from . import block
 from . import constants
@@ -385,6 +385,8 @@ class AsdfFile(versioning.VersionedMixin):
         except ValueError:
             raise ValueError(
                 "Unparseable version in ASDF file: {0}".format(parts[1]))
+
+        return version
 
     @classmethod
     def _parse_comment_section(cls, content):

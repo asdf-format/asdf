@@ -9,9 +9,9 @@ import warnings
 
 import six
 
-import semver
 
 from .compat import lru_cache
+from .extern import semver
 
 from . import tagged
 from . import util
