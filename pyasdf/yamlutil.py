@@ -148,6 +148,7 @@ class AsdfLoader(_yaml_base_loader):
         if node.tag in self.yaml_constructors:
             return super(AsdfLoader, self).construct_object(node, deep=False)
         data = _yaml_to_base_type(node, self)
+        tag = self.ctx.type_index.fix_yaml_tag(tag)
         data = tagged.tag_object(tag, data)
         return data
 
@@ -229,7 +230,7 @@ def custom_tree_to_tagged_tree(tree, ctx):
     annotated with tags.
     """
     def walker(node):
-        tag = ctx.type_index.from_custom_type(type(node))
+        tag = ctx.type_index.from_custom_type(type(node), ctx.version_string)
         if tag is not None:
             return tag.to_tree_tagged(node, ctx)
         return node
@@ -253,7 +254,7 @@ def tagged_tree_to_custom_tree(tree, ctx):
     return treeutil.walk_and_modify(tree, walker)
 
 
-def load_tree(stream):
+def load_tree(stream, ctx):
     """
     Load YAML, returning a tree of objects.
 
@@ -262,7 +263,11 @@ def load_tree(stream):
     stream : readable file-like object
         Stream containing the raw YAML content.
     """
-    return yaml.load(stream, Loader=AsdfLoader)
+    class AsdfLoaderTmp(AsdfLoader):
+        pass
+    AsdfLoaderTmp.ctx = ctx
+
+    return yaml.load(stream, Loader=AsdfLoaderTmp)
 
 
 def dump_tree(tree, fd, ctx):
@@ -295,9 +300,12 @@ def dump_tree(tree, fd, ctx):
     schema.validate(tree, ctx)
     schema.remove_defaults(tree, ctx)
 
+    yaml_version = tuple(
+        int(x) for x in ctx.version_map['YAML_VERSION'].split('.'))
+
     yaml.dump_all(
         [tree], stream=fd, Dumper=AsdfDumperTmp,
         explicit_start=True, explicit_end=True,
-        version=ctx.versionspec.yaml_version,
+        version=yaml_version,
         allow_unicode=True, encoding='utf-8',
         tags=tags)

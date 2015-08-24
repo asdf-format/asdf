@@ -34,8 +34,8 @@ def _get_small_tree():
 def test_no_yaml_end_marker(tmpdir):
     content = b"""#ASDF 0.1.0
 %YAML 1.1
-%TAG ! tag:stsci.edu:asdf/0.1.0/
---- !core/asdf
+%TAG ! tag:stsci.edu:asdf/
+--- !core/asdf-0.1.0
 foo: bar...baz
 baz: 42
     """
@@ -64,8 +64,8 @@ baz: 42
 def test_no_final_newline(tmpdir):
     content = b"""#ASDF 0.1.0
 %YAML 1.1
-%TAG ! tag:stsci.edu:asdf/0.1.0/
---- !core/asdf
+%TAG ! tag:stsci.edu:asdf/
+--- !core/asdf-0.1.0
 foo: ...bar...
 baz: 42
 ..."""
@@ -108,8 +108,8 @@ def test_no_asdf_header(tmpdir):
 def test_no_asdf_blocks(tmpdir):
     content = b"""#ASDF 0.1.0
 %YAML 1.1
-%TAG ! tag:stsci.edu:asdf/0.1.0/
---- !core/asdf
+%TAG ! tag:stsci.edu:asdf/
+--- !core/asdf-0.1.0
 foo: bar
 ...
 XXXXXXXX
@@ -168,6 +168,13 @@ def test_empty_file():
         assert ff.tree == {}
         assert len(ff.blocks) == 0
 
+    buff = io.BytesIO(b"#ASDF 0.1.0\n#ASDF_STANDARD 0.1.0")
+    buff.seek(0)
+
+    with asdf.AsdfFile.open(buff) as ff:
+        assert ff.tree == {}
+        assert len(ff.blocks) == 0
+
 
 def test_not_asdf_file():
     buff = io.BytesIO(b"SIMPLE")
@@ -189,7 +196,7 @@ def test_junk_file():
     buff = io.BytesIO(b"#ASDF 0.1.0\nFOO")
     buff.seek(0)
 
-    with pytest.raises(IOError):
+    with pytest.raises(ValueError):
         with asdf.AsdfFile.open(buff):
             pass
 
@@ -701,8 +708,8 @@ def test_seek_until_on_block_boundary():
 
     content = b"""#ASDF 0.1.0
 %YAML 1.1
-%TAG ! tag:stsci.edu:asdf/0.1.0/
---- !core/asdf
+%TAG ! tag:stsci.edu:asdf/
+--- !core/asdf-0.1.0
 foo : bar
 ...
 """

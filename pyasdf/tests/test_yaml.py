@@ -133,8 +133,8 @@ def test_explicit_tags():
 
     yaml = """#ASDF 0.1.0
 %YAML 1.1
---- !<tag:stsci.edu:asdf/0.1.0/core/asdf>
-unit: !<tag:stsci.edu:asdf/0.1.0/unit/unit> m
+--- !<tag:stsci.edu:asdf/core/asdf-0.1.0>
+unit: !<tag:stsci.edu:asdf/unit/unit-0.1.0> m
 ...
     """
     from astropy import units as u

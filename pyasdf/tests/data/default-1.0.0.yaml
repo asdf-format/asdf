@@ -1,7 +1,7 @@
 %YAML 1.1
 ---
 $schema: "http://stsci.edu/schemas/yaml-schema/draft-01"
-id: "http://nowhere.org/schemas/custom/1.0.0/default"
+id: "http://nowhere.org/schemas/custom/default-1.0.0"
 type: object
 properties:
   a:

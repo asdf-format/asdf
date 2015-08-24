@@ -13,6 +13,7 @@ from ..asdf import AsdfFile, get_asdf_library_info
 from ..conftest import RangeHTTPServer
 from ..extension import _builtin_extension_list
 from .. import util
+from .. import versioning
 
 from ..tags.core import AsdfObject
 
@@ -27,6 +28,9 @@ def assert_tree_match(old_tree, new_tree, ctx=None,
     old_tree : ASDF tree
 
     new_tree : ASDF tree
+
+    ctx : ASDF file context
+        Used to look up the set of types in effect.
 
     funcname : string
         The name of a method on members of old_tree and new_tree that
@@ -43,7 +47,11 @@ def assert_tree_match(old_tree, new_tree, ctx=None,
     ignore_keys = set(ignore_keys)
 
     if ctx is None:
+        version_string = versioning.version_to_string(
+            versioning.default_version)
         ctx = _builtin_extension_list
+    else:
+        version_string = ctx.version_string
 
     def recurse(old, new):
         if id(old) in seen or id(new) in seen:
@@ -51,8 +59,8 @@ def assert_tree_match(old_tree, new_tree, ctx=None,
         seen.add(id(old))
         seen.add(id(new))
 
-        old_type = ctx.type_index.from_custom_type(type(old))
-        new_type = ctx.type_index.from_custom_type(type(new))
+        old_type = ctx.type_index.from_custom_type(type(old), version_string)
+        new_type = ctx.type_index.from_custom_type(type(new), version_string)
 
         if (old_type is not None and
             new_type is not None and
@@ -183,8 +191,8 @@ def yaml_to_asdf(yaml_content, yaml_headers=True):
     if yaml_headers:
         buff.write(b"""#ASDF 0.1.0
 %YAML 1.1
-%TAG ! tag:stsci.edu:asdf/0.1.0/
---- !core/asdf
+%TAG ! tag:stsci.edu:asdf/
+--- !core/asdf-0.1.0
 """)
     buff.write(yaml_content)
     if yaml_headers:

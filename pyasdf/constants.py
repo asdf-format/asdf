@@ -6,9 +6,11 @@ from __future__ import absolute_import, division, unicode_literals, print_functi
 import numpy as np
 
 
-ASDF_MAGIC = b'#ASDF '
+ASDF_MAGIC = b'#ASDF'
 BLOCK_MAGIC = b'\xd3BLK'
 BLOCK_HEADER_BOILERPLATE_SIZE = 6
+
+ASDF_STANDARD_COMMENT = b'ASDF_STANDARD'
 
 INDEX_HEADER = b'#ASDF BLOCK INDEX'
 

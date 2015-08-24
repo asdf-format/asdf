@@ -1,6 +1,6 @@
 %YAML 1.1
 ---
 $schema: "http://stsci.edu/schemas/yaml-schema/draft-01"
-id: "http://nowhere.org/schemas/custom/1.0.0/custom_style"
+id: "http://nowhere.org/schemas/custom/custom_style-1.0.0"
 type: string
 style: literal

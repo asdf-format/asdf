@@ -49,7 +49,7 @@ class CustomExtension:
 
     @property
     def url_mapping(self):
-        return [('http://nowhere.org/schemas/custom/1.0.0/',
+        return [('http://nowhere.org/schemas/custom/',
                  util.filepath_to_url(TEST_DATA_PATH) +
                  '/{url_suffix}.yaml')]
 
@@ -70,7 +70,7 @@ def test_violate_toplevel_schema():
 @pytest.mark.skipif('not HAS_ASTROPY')
 def test_tagging_scalars():
     yaml = """
-unit: !unit/unit
+unit: !unit/unit-0.1.0
   m
 not_unit:
   m
@@ -102,7 +102,8 @@ def test_validate_all_schema():
         for fname in files:
             if not fname.endswith('.yaml'):
                 continue
-            if fname in ('draft-01.yaml', 'asdf-schema.yaml'):
+            if os.path.splitext(fname)[0] in (
+                    'draft-01', 'asdf-schema-0.1.0'):
                 continue
             yield validate_schema, os.path.join(root, fname)
 
@@ -177,9 +178,9 @@ def test_schema_caching():
     # Make sure that if we request the same URL, we get the *exact
     # same* object, to ensure the cache is working.
     s1 = schema.load_schema(
-        'http://stsci.edu/schemas/asdf/0.1.0/core/asdf')
+        'http://stsci.edu/schemas/asdf/core/asdf-0.1.0')
     s2 = schema.load_schema(
-        'http://stsci.edu/schemas/asdf/0.1.0/core/asdf')
+        'http://stsci.edu/schemas/asdf/core/asdf-0.1.0')
     assert s1 is s2
 
 
@@ -237,7 +238,7 @@ def test_property_order():
     ff.write_to(buff)
 
     ndarray_schema = schema.load_schema(
-        'http://stsci.edu/schemas/asdf/0.1.0/core/ndarray')
+        'http://stsci.edu/schemas/asdf/core/ndarray-0.1.0')
     property_order = ndarray_schema['anyOf'][1]['propertyOrder']
 
     last_index = 0
@@ -261,7 +262,7 @@ def test_invalid_nested():
             return [CustomType]
 
     yaml = """
-custom: !<tag:nowhere.org:custom/1.0.0/custom>
+custom: !<tag:nowhere.org:custom/custom-1.0.0>
   foo
     """
     buff = helpers.yaml_to_asdf(yaml)
@@ -276,9 +277,9 @@ custom: !<tag:nowhere.org:custom/1.0.0/custom>
     # Make sure tags get validated inside of other tags that know
     # nothing about them.
     yaml = """
-array: !core/ndarray
+array: !core/ndarray-0.1.0
   data: [0, 1, 2]
-  custom: !<tag:nowhere.org:custom/1.0.0/custom>
+  custom: !<tag:nowhere.org:custom/custom-1.0.0>
     foo
     """
     buff = helpers.yaml_to_asdf(yaml)
@@ -350,7 +351,7 @@ def test_fill_and_remove_defaults():
             return [DefaultType]
 
     yaml = """
-custom: !<tag:nowhere.org:custom/1.0.0/default>
+custom: !<tag:nowhere.org:custom/default-1.0.0>
   b: {}
     """
     buff = helpers.yaml_to_asdf(yaml)
@@ -376,9 +377,10 @@ custom: !<tag:nowhere.org:custom/1.0.0/default>
 
 def test_references_in_schema():
     r = resolver.Resolver(CustomExtension().url_mapping, 'url')
-    s = schema.load_schema(os.path.join(TEST_DATA_PATH, 'self_referencing.yaml'),
-                           resolver=r,
-                           resolve_references=True)
+    s = schema.load_schema(
+        os.path.join(TEST_DATA_PATH, 'self_referencing-1.0.0.yaml'),
+        resolver=r,
+        resolve_references=True)
     assert '$ref' not in repr(s)
     assert s['anyOf'][1] == s['anyOf'][0]
 
@@ -424,7 +426,7 @@ def test_type_missing_dependencies():
             return [MissingType]
 
     yaml = """
-custom: !<tag:nowhere.org:custom/1.0.0/missing>
+custom: !<tag:nowhere.org:custom/missing-1.0.0>
   b: {foo: 42}
     """
     buff = helpers.yaml_to_asdf(yaml)

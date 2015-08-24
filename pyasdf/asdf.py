@@ -10,6 +10,8 @@ import re
 
 import numpy as np
 
+from .extern import semver
+
 from . import block
 from . import constants
 from . import extension
@@ -42,7 +44,7 @@ class AsdfFile(versioning.VersionedMixin):
     """
     The main class that represents a ASDF file.
     """
-    def __init__(self, tree=None, uri=None, extensions=None):
+    def __init__(self, tree=None, uri=None, extensions=None, version=None):
         """
         Parameters
         ----------
@@ -60,6 +62,11 @@ class AsdfFile(versioning.VersionedMixin):
             A list of extensions to the ASDF to support when reading
             and writing ASDF files.  See `asdftypes.AsdfExtension` for
             more information.
+
+        version : str, optional
+            The ASDF version to use when writing out.  If not
+            provided, it will write out in the latest version
+            supported by pyasdf.
         """
         if extensions is None or extensions == []:
             self._extensions = extension._builtin_extension_list
@@ -94,6 +101,11 @@ class AsdfFile(versioning.VersionedMixin):
         if uri is not None:
             self._uri = uri
 
+        self._comments = []
+
+        if version is not None:
+            self.version = version
+
     def __enter__(self):
         return self
 
@@ -107,6 +119,13 @@ class AsdfFile(versioning.VersionedMixin):
             external.__exit__(type, value, traceback)
         self._external_asdf_by_uri.clear()
         self._blocks.close()
+
+    @property
+    def file_format_version(self):
+        if self._file_format_version is None:
+            return semver.parse(self.versionspec['FILE_FORMAT'])
+        else:
+            return self._file_format_version
 
     def close(self):
         """
@@ -229,6 +248,13 @@ class AsdfFile(versioning.VersionedMixin):
         self._validate(asdf_object)
         self._tree = asdf_object
 
+    @property
+    def comments(self):
+        """
+        Get the comments after the header, before the tree.
+        """
+        return self._comments
+
     def _validate(self, tree):
         tagged_tree = yamlutil.custom_tree_to_tagged_tree(
             tree, self)
@@ -350,14 +376,47 @@ class AsdfFile(versioning.VersionedMixin):
         """
         Parses the header line in a ASDF file to obtain the ASDF version.
         """
-        regex = (constants.ASDF_MAGIC +
-                 b'(?P<major>[0-9]+)\.(?P<minor>[0-9]+)\.(?P<micro>[0-9]+)')
-        match = re.match(regex, line)
-        if match is None:
+        parts = line.split()
+        if len(parts) != 2 or parts[0] != constants.ASDF_MAGIC:
             raise ValueError("Does not appear to be a ASDF file.")
-        return (int(match.group("major")),
-                int(match.group("minor")),
-                int(match.group("micro")))
+
+        try:
+            version = semver.parse(parts[1].decode('ascii'))
+        except ValueError:
+            raise ValueError(
+                "Unparseable version in ASDF file: {0}".format(parts[1]))
+
+        return version
+
+    @classmethod
+    def _parse_comment_section(cls, content):
+        """
+        Parses the comment section, between the header line and the
+        Tree or first block.
+        """
+        comments = []
+
+        lines = content.splitlines()
+        for line in lines:
+            if not line.startswith(b'#'):
+                raise ValueError("Invalid content between header and tree")
+            comments.append(line[1:].strip())
+
+        return comments
+
+    @classmethod
+    def _find_asdf_version_in_comments(cls, comments):
+        for comment in comments:
+            parts = comment.split()
+            if len(parts) == 2 and parts[0] == constants.ASDF_STANDARD_COMMENT:
+                try:
+                    version = semver.parse(parts[1].decode('ascii'))
+                except ValueError:
+                    pass
+                else:
+                    return version
+
+        return None
 
     @classmethod
     def _open_impl(cls, self, fd, uri=None, mode='r',
@@ -372,7 +431,16 @@ class AsdfFile(versioning.VersionedMixin):
             header_line = fd.read_until(b'\r?\n', 2, "newline", include=True)
         except ValueError:
             raise ValueError("Does not appear to be a ASDF file.")
-        self.version = cls._parse_header_line(header_line)
+        self._file_format_version = cls._parse_header_line(header_line)
+
+        comment_section = fd.read_until(
+            b'(%YAML)|(' + constants.BLOCK_MAGIC + b')', 5,
+            "start of content", include=False, exception=False)
+        self._comments = cls._parse_comment_section(comment_section)
+
+        version = cls._find_asdf_version_in_comments(self._comments)
+        if version is not None:
+            self.version = version
 
         yaml_token = fd.read(4)
         yaml_content = b''
@@ -389,7 +457,7 @@ class AsdfFile(versioning.VersionedMixin):
                 # We parse the YAML content into basic data structures
                 # now, but we don't do anything special with it until
                 # after the blocks have been read
-                tree = yamlutil.load_tree(reader)
+                tree = yamlutil.load_tree(reader, self)
             has_blocks = fd.seek_until(constants.BLOCK_MAGIC, 4, include=True)
         elif yaml_token == constants.BLOCK_MAGIC:
             has_blocks = True
@@ -465,6 +533,13 @@ class AsdfFile(versioning.VersionedMixin):
 
     def _write_tree(self, tree, fd, pad_blocks):
         fd.write(constants.ASDF_MAGIC)
+        fd.write(b' ')
+        fd.write(self.version_map['FILE_FORMAT'].encode('ascii'))
+        fd.write(b'\n')
+
+        fd.write(b'#')
+        fd.write(constants.ASDF_STANDARD_COMMENT)
+        fd.write(b' ')
         fd.write(self.version_string.encode('ascii'))
         fd.write(b'\n')
 
@@ -518,7 +593,8 @@ class AsdfFile(versioning.VersionedMixin):
             del self._auto_inline
 
     def update(self, all_array_storage=None, all_array_compression=None,
-               auto_inline=None, pad_blocks=False, include_block_index=True):
+               auto_inline=None, pad_blocks=False, include_block_index=True,
+               version=None):
         """
         Update the file on disk in place.
 
@@ -563,6 +639,10 @@ class AsdfFile(versioning.VersionedMixin):
             If `False`, don't include a block index at the end of the
             file.  (Default: `True`)  A block index is never written
             if the file has a streamed block.
+
+        version : str, optional
+            The ASDF version to write out.  If not provided, it will
+            write out in the latest version supported by pyasdf.
         """
         fd = self._fd
 
@@ -573,6 +653,9 @@ class AsdfFile(versioning.VersionedMixin):
         if not fd.writable():
             raise IOError(
                 "Can not update, since associated file is read-only")
+
+        if version is not None:
+            self.version = version
 
         if all_array_storage == 'external':
             # If the file is fully exploded, there's no benefit to
@@ -635,7 +718,8 @@ class AsdfFile(versioning.VersionedMixin):
             self._post_write(fd)
 
     def write_to(self, fd, all_array_storage=None, all_array_compression=None,
-                 auto_inline=None, pad_blocks=False, include_block_index=True):
+                 auto_inline=None, pad_blocks=False, include_block_index=True,
+                 version=None):
         """
         Write the ASDF file to the given file-like object.
 
@@ -689,8 +773,15 @@ class AsdfFile(versioning.VersionedMixin):
             If `False`, don't include a block index at the end of the
             file.  (Default: `True`)  A block index is never written
             if the file has a streamed block.
+
+        version : str, optional
+            The ASDF version to write out.  If not provided, it will
+            write out in the latest version supported by pyasdf.
         """
         original_fd = self._fd
+
+        if version is not None:
+            self.version = version
 
         try:
             with generic_io.get_file(fd, mode='w') as fd:
@@ -743,7 +834,8 @@ class AsdfFile(versioning.VersionedMixin):
             return
 
         for node in treeutil.iter_tree(self._tree):
-            hook = type_index.get_hook_for_type(hookname, type(node))
+            hook = type_index.get_hook_for_type(hookname, type(node),
+                                                self.version_string)
             if hook is not None:
                 hook(node, self)
 
@@ -769,7 +861,8 @@ class AsdfFile(versioning.VersionedMixin):
             return
 
         def walker(node):
-            hook = type_index.get_hook_for_type(hookname, type(node))
+            hook = type_index.get_hook_for_type(hookname, type(node),
+                                                self.version_string)
             if hook is not None:
                 return hook(node, self)
             return node

@@ -367,10 +367,14 @@ class BlockManager(object):
             fd.write(constants.INDEX_HEADER)
             fd.write(b'\n')
             offsets = [x.offset for x in self.internal_blocks]
+
+            yaml_version = tuple(
+                int(x) for x in ctx.version_map['YAML_VERSION'].split('.'))
+
             yaml.dump(
                 offsets, Dumper=yamlutil._yaml_base_dumper, stream=fd,
                 explicit_start=True, explicit_end=True,
-                version=ctx.versionspec.yaml_version,
+                version=yaml_version,
                 allow_unicode=True, encoding='utf-8')
 
     _re_index_content = re.compile(
