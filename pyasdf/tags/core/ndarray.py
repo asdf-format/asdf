@@ -379,11 +379,13 @@ class NDArrayType(AsdfType):
         raise TypeError("Invalid ndarray description.")
 
     @classmethod
-    def pre_write(cls, data, ctx):
+    def reserve_blocks(cls, data, ctx):
         # Find all of the used data buffers so we can add or rearrange
         # them if necessary
         if isinstance(data, np.ndarray):
-            ctx.blocks.find_or_create_block_for_array(data, ctx)
+            yield ctx.blocks.find_or_create_block_for_array(data, ctx)
+        elif isinstance(data, NDArrayType):
+            yield data.block
 
     @classmethod
     def to_tree(cls, data, ctx):

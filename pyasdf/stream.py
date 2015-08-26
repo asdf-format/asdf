@@ -38,9 +38,9 @@ class Stream(ndarray.NDArrayType):
         self._array = None
 
     @classmethod
-    def pre_write(cls, data, ctx):
+    def reserve_blocks(cls, data, ctx):
         if isinstance(data, Stream):
-            ctx.blocks.get_streamed_block()
+            yield ctx.blocks.get_streamed_block()
 
     @classmethod
     def from_tree(cls, data, ctx):

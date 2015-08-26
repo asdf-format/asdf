@@ -14,6 +14,8 @@ import pytest
 
 import os
 
+import numpy as np
+
 from ....tests import helpers
 
 
@@ -28,3 +30,22 @@ def test_complex_structure(tmpdir):
             }
 
         helpers.assert_roundtrip_tree(tree, tmpdir)
+
+
+@pytest.mark.skipif('not HAS_ASTROPY')
+def test_fits_table(tmpdir):
+    from astropy.io import fits
+
+    a = np.array(
+        [(0, 1), (2, 3)],
+        dtype=[(str('A'), int), (str('B'), int)])
+    print(a.dtype)
+
+    h = fits.HDUList()
+    h.append(fits.BinTableHDU.from_columns(a))
+    tree = {'fits': h}
+
+    def check_yaml(content):
+        assert b'!core/table' in content
+
+    helpers.assert_roundtrip_tree(tree, tmpdir, raw_yaml_check_func=check_yaml)

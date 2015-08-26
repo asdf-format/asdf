@@ -25,12 +25,14 @@ class FitsType(AsdfType):
             data = hdu_entry.get('data')
             if data is not None:
                 try:
-                    data = np.asarray(data)
+                    data = data.__array__()
                 except ValueError:
                     data = None
             if first:
                 hdu = fits.PrimaryHDU(data=data, header=header)
                 first = False
+            elif data.dtype.names is not None:
+                hdu = fits.BinTableHDU(data=data, header=header)
             else:
                 hdu = fits.ImageHDU(data=data, header=header)
             hdus.append(hdu)
@@ -39,6 +41,8 @@ class FitsType(AsdfType):
 
     @classmethod
     def to_tree(cls, hdulist, ctx):
+        from astropy import table
+
         units = []
         for hdu in hdulist:
             header_list = []
@@ -58,11 +62,21 @@ class FitsType(AsdfType):
             hdu_dict = {}
             hdu_dict['header'] = header_list
             if hdu.data is not None:
-                hdu_dict['data'] = hdu.data
+                if hdu.data.dtype.names is not None:
+                    data = table.Table(hdu.data)
+                else:
+                    data = hdu.data
+                hdu_dict['data'] = yamlutil.custom_tree_to_tagged_tree(data, ctx)
 
             units.append(hdu_dict)
 
-        return yamlutil.custom_tree_to_tagged_tree(units, ctx)
+        return units
+
+    @classmethod
+    def reserve_blocks(cls, data, ctx):
+        for hdu in data:
+            if hdu.data is not None:
+                yield ctx.blocks.find_or_create_block_for_array(hdu.data, ctx)
 
     @classmethod
     def assert_equal(cls, old, new):

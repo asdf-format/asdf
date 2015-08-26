@@ -146,7 +146,7 @@ def test_dont_load_data():
 
     buff.seek(0)
     with asdf.AsdfFile.open(buff) as ff:
-        ff.run_hook('pre_write')
+        ff.run_hook('reserve_blocks')
 
         # repr and str shouldn't load data
         str(ff.tree['science_data'])

@@ -531,24 +531,18 @@ class BlockManager(object):
         return urlparse.urlunparse(parts)
 
     def _find_used_blocks(self, tree, ctx):
-        from .tags.core import ndarray
-
-        block_to_array_mapping = {}
+        reserved_blocks = set()
 
         for node in treeutil.iter_tree(tree):
-            block = None
-            if isinstance(node, np.ndarray):
-                block = self.find_or_create_block_for_array(node, ctx)
-            elif (isinstance(node, ndarray.NDArrayType) and
-                not isinstance(node, stream.Stream)):
-                block = node.block
-            if block is not None:
-                block_to_array_mapping.setdefault(block, [])
-                block_to_array_mapping[block].append(node)
+            hook = ctx.type_index.get_hook_for_type(
+                'reserve_blocks', type(node), ctx.version_string)
+            if hook is not None:
+                for block in hook(node, ctx):
+                    reserved_blocks.add(block)
 
         for block in list(self.blocks):
-            arrays = block_to_array_mapping.get(block, [])
-            if getattr(block, '_used', 0) == 0 and len(arrays) == 0:
+            if (getattr(block, '_used', 0) == 0 and
+                block not in reserved_blocks):
                 self.remove(block)
 
     def _handle_global_block_settings(self, ctx, block):
