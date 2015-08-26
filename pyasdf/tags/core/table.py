@@ -5,18 +5,19 @@ from __future__ import absolute_import, division, unicode_literals, print_functi
 
 import numpy as np
 
-from astropy import table
-
 from ...asdftypes import AsdfType
 from ... import yamlutil
 
 
 class TableType(AsdfType):
     name = 'core/table'
-    types = [table.Table]
+    types = ['astropy.table.Table']
+    requires = ['astropy']
 
     @classmethod
     def from_tree(cls, node, ctx):
+        from astropy import table
+
         columns = [
             yamlutil.tagged_tree_to_custom_tree(c, ctx)
             for c in node['columns']
@@ -48,10 +49,14 @@ class TableType(AsdfType):
 
 class ColumnType(AsdfType):
     name = 'core/column'
-    types = [table.Column, table.MaskedColumn]
+    types = ['astropy.table.Column', 'astropy.table.MaskedColumn']
+    requires = ['astropy']
+    handle_dynamic_subclasses = True
 
     @classmethod
     def from_tree(cls, node, ctx):
+        from astropy import table
+
         data = yamlutil.tagged_tree_to_custom_tree(
             node['data'], ctx)
         name = node['name']

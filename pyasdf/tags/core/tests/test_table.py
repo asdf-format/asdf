@@ -5,14 +5,23 @@ from __future__ import absolute_import, division, unicode_literals, print_functi
 
 import numpy as np
 
-from astropy.tests.helper import pytest
-from astropy import table
+try:
+    import astropy
+except ImportError:
+    HAS_ASTROPY = False
+else:
+    HAS_ASTROPY = True
+
+import pytest
 
 from .... import asdf
 from ....tests import helpers
 
 
+@pytest.mark.skipif('not HAS_ASTROPY')
 def test_table(tmpdir):
+    from astropy import table
+
     data_rows = [(1, 2.0, 'x'),
                  (4, 5.0, 'y'),
                  (5, 8.2, 'z')]
@@ -29,7 +38,10 @@ def test_table(tmpdir):
     helpers.assert_roundtrip_tree({'table': t}, tmpdir, asdf_check)
 
 
+@pytest.mark.skipif('not HAS_ASTROPY')
 def test_array_columns(tmpdir):
+    from astropy import table
+
     a = np.array([([[1, 2], [3, 4]], 2.0, 'x'),
                  ([[5, 6], [7, 8]], 5.0, 'y'),
                   ([[9, 10], [11, 12]], 8.2, 'z')],
@@ -46,7 +58,10 @@ def test_array_columns(tmpdir):
     helpers.assert_roundtrip_tree({'table': t}, tmpdir, asdf_check)
 
 
+@pytest.mark.skipif('not HAS_ASTROPY')
 def test_structured_array_columns(tmpdir):
+    from astropy import table
+
     a = np.array([((1, 'a'), 2.0, 'x'),
                   ((4, 'b'), 5.0, 'y'),
                   ((5, 'c'), 8.2, 'z')],
@@ -63,7 +78,10 @@ def test_structured_array_columns(tmpdir):
     helpers.assert_roundtrip_tree({'table': t}, tmpdir, asdf_check)
 
 
+@pytest.mark.skipif('not HAS_ASTROPY')
 def test_table_row_order(tmpdir):
+    from astropy import table
+
     a = np.array([(1, 2.0, 'x'),
                   (4, 5.0, 'y'),
                   (5, 8.2, 'z')],
@@ -83,7 +101,10 @@ def test_table_row_order(tmpdir):
     helpers.assert_roundtrip_tree({'table': t}, tmpdir, asdf_check)
 
 
+@pytest.mark.skipif('not HAS_ASTROPY')
 def test_table_inline(tmpdir):
+    from astropy import table
+
     data_rows = [(1, 2.0, 'x'),
                  (4, 5.0, 'y'),
                  (5, 8.2, 'z')]
@@ -101,7 +122,10 @@ def test_table_inline(tmpdir):
                                   write_options={'auto_inline': 64})
 
 
+@pytest.mark.skipif('not HAS_ASTROPY')
 def test_mismatched_columns():
+    from astropy import table
+
     yaml = """
 table: !core/table
   columns:
@@ -122,7 +146,10 @@ table: !core/table
             pass
 
 
+@pytest.mark.skipif('not HAS_ASTROPY')
 def test_masked_table(tmpdir):
+    from astropy import table
+
     data_rows = [(1, 2.0, 'x'),
                  (4, 5.0, 'y'),
                  (5, 8.2, 'z')]
