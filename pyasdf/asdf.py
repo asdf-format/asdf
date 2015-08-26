@@ -553,9 +553,25 @@ class AsdfFile(versioning.VersionedMixin):
 
     def _pre_write(self, fd, all_array_storage, all_array_compression,
                    auto_inline):
+        if all_array_storage not in (None, 'internal', 'external', 'inline'):
+            raise ValueError(
+                "Invalid value for all_array_storage: '{0}'".format(
+                    all_array_storage))
         self._all_array_storage = all_array_storage
+
         self._all_array_compression = all_array_compression
-        self._auto_inline = auto_inline
+
+        if auto_inline in (True, False):
+            raise ValueError(
+                "Invalid value for auto_inline: '{0}'".format(auto_inline))
+        if auto_inline is not None:
+            try:
+                self._auto_inline = int(auto_inline)
+            except ValueError:
+                raise ValueError(
+                    "Invalid value for auto_inline: '{0}'".format(auto_inline))
+        else:
+            self._auto_inline = None
 
         if len(self._tree):
             self.run_hook('pre_write')
