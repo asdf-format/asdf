@@ -31,12 +31,22 @@ class WCSType(AsdfType):
 
     @classmethod
     def to_tree(cls, gwcs, ctx):
+        def get_frame(frame_name):
+            frame = getattr(gwcs, frame_name)
+            if frame is None:
+                return frame_name
+            return frame
+
         frames = gwcs.available_frames
         steps = []
         for i in range(len(frames) - 1):
+            frame_name = frames[i]
+            frame = get_frame(frame_name)
             transform = gwcs.get_transform(frames[i], frames[i + 1])
-            steps.append(StepType({'frame': frames[i], 'transform': transform}))
-        steps.append(StepType({'frame': frames[-1]}))
+            steps.append(StepType({'frame': frame, 'transform': transform}))
+        frame_name = frames[-1]
+        frame = get_frame(frame_name)
+        steps.append(StepType({'frame': frame}))
 
         return {'name': gwcs.name,
                 'steps': yamlutil.custom_tree_to_tagged_tree(steps, ctx)}
@@ -61,6 +71,7 @@ class StepType(dict, AsdfType):
 class FrameType(AsdfType):
     name = "wcs/frame"
     requires = _REQUIRES
+    types = ['gwcs.Frame2D']
 
     @classmethod
     def _get_reference_frame_mapping(cls):
@@ -192,6 +203,18 @@ class FrameType(AsdfType):
     @classmethod
     def assert_equal(cls, old, new):
         cls._assert_equal(old, new)
+
+    @classmethod
+    def from_tree(cls, node, ctx):
+        import gwcs
+
+        node = cls._from_tree(node, ctx)
+
+        return gwcs.Frame2D(**node)
+
+    @classmethod
+    def to_tree(cls, frame, ctx):
+        return cls._to_tree(frame, ctx)
 
 
 class CelestialFrameType(FrameType):
