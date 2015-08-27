@@ -87,14 +87,14 @@ def test_frames(tmpdir):
                 obstime=time.Time('2015-01-01'))
             ),
 
-        # cf.CelestialFrame(
-        #     reference_frame=coord.FK4NoETerms(
-        #         equinox=time.Time('2010-01-01'),
-        #         obstime=time.Time('2015-01-01'))
-        #     ),
+        cf.CelestialFrame(
+            reference_frame=coord.FK4NoETerms(
+                equinox=time.Time('2010-01-01'),
+                obstime=time.Time('2015-01-01'))
+            ),
 
-        # cf.CelestialFrame(
-        #     reference_frame=coord.Galactic()),
+        cf.CelestialFrame(
+            reference_frame=coord.Galactic()),
 
         # cf.CelestialFrame(
         #     reference_frame=coord.Galactocentric(
@@ -103,7 +103,7 @@ def test_frames(tmpdir):
         #         galcen_dec=1*u.rad,
         #         z_sun=3*u.pc,
         #         roll=3*u.deg)
-        #     )
+        #     ),
 
         cf.CelestialFrame(
             reference_frame=coord.GCRS(
@@ -119,11 +119,11 @@ def test_frames(tmpdir):
         #     reference_frame=coord.ITRS(
         #         obstime=time.Time('2022-01-03'))),
 
-        # cf.CelestialFrame(
-        #     reference_frame=coord.PrecessedGeocentric(
-        #         obstime=time.Time('2010-01-01'),
-        #         obsgeoloc=[1, 3, 2000] * u.pc,
-        #         obsgeovel=[2, 1, 8] * (u.m/u.s)))
+        cf.CelestialFrame(
+            reference_frame=coord.PrecessedGeocentric(
+                obstime=time.Time('2010-01-01'),
+                obsgeoloc=[1, 3, 2000] * u.pc,
+                obsgeovel=[2, 1, 8] * (u.m/u.s)))
     ]
 
     tree = {
