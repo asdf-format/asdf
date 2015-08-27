@@ -58,7 +58,7 @@ class WCSType(AsdfType):
         assert old.name == new.name
         assert len(old.available_frames) == len(new.available_frames)
         for (old_frame, old_transform), (new_frame, new_transform) in zip(
-                old._pipeline, new._pipeline):
+                old.pipeline, new.pipeline):
             helpers.assert_tree_match(old_frame, new_frame)
             helpers.assert_tree_match(old_transform, new_transform)
 
