@@ -14,6 +14,7 @@ else:
     from astropy.modeling import models
     from astropy import coordinates as coord
     from astropy import units as u
+    from astropy import time
 
 try:
     import gwcs
@@ -67,6 +68,66 @@ def test_composite_frame(tmpdir):
         'comp1': comp1,
         'comp2': comp2,
         'comp': comp
+    }
+
+    helpers.assert_roundtrip_tree(tree, tmpdir)
+
+
+@pytest.mark.skipif('not HAS_GWCS')
+def test_frames(tmpdir):
+    frames = [
+        cf.CelestialFrame(reference_frame=coord.ICRS()),
+
+        cf.CelestialFrame(
+            reference_frame=coord.FK5(equinox=time.Time('2010-01-01'))),
+
+        cf.CelestialFrame(
+            reference_frame=coord.FK4(
+                equinox=time.Time('2010-01-01'),
+                obstime=time.Time('2015-01-01'))
+            ),
+
+        # cf.CelestialFrame(
+        #     reference_frame=coord.FK4NoETerms(
+        #         equinox=time.Time('2010-01-01'),
+        #         obstime=time.Time('2015-01-01'))
+        #     ),
+
+        # cf.CelestialFrame(
+        #     reference_frame=coord.Galactic()),
+
+        # cf.CelestialFrame(
+        #     reference_frame=coord.Galactocentric(
+        #         galcen_distance=5.0*u.m,
+        #         galcen_ra=45*u.deg,
+        #         galcen_dec=1*u.rad,
+        #         z_sun=3*u.pc,
+        #         roll=3*u.deg)
+        #     )
+
+        cf.CelestialFrame(
+            reference_frame=coord.GCRS(
+                obstime=time.Time('2010-01-01'),
+                obsgeoloc=[1, 3, 2000] * u.pc,
+                obsgeovel=[2, 1, 8] * (u.m/u.s))),
+
+        cf.CelestialFrame(
+            reference_frame=coord.CIRS(
+                obstime=time.Time('2010-01-01'))),
+
+        # cf.CelestialFrame(
+        #     reference_frame=coord.ITRS(
+        #         obstime=time.Time('2022-01-03'))),
+
+        # cf.CelestialFrame(
+        #     reference_frame=coord.PrecessedGeocentric(
+        #         obstime=time.Time('2010-01-01'),
+        #         obsgeoloc=[1, 3, 2000] * u.pc,
+        #         obsgeovel=[2, 1, 8] * (u.m/u.s)))
+    ]
+
+    tree = {
+        'frames': frames
     }
 
     helpers.assert_roundtrip_tree(tree, tmpdir)
