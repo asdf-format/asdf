@@ -210,7 +210,7 @@ def _create_validator(validators=YAML_VALIDATORS):
                                   validators=validators)
 
     class ASDFValidator(base_cls):
-        DEFAULT_TYPES = base_cls.DEFAULT_TYPES
+        DEFAULT_TYPES = base_cls.DEFAULT_TYPES.copy()
         DEFAULT_TYPES['array'] = (list, tuple)
 
         def iter_errors(self, instance, _schema=None, _seen=set()):
