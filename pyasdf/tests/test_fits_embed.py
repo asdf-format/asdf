@@ -3,6 +3,7 @@
 
 from __future__ import absolute_import, division, unicode_literals, print_function
 
+import copy
 import os
 
 try:
@@ -21,7 +22,7 @@ import pytest
 
 from .. import asdf
 
-from .helpers import assert_tree_match, close_fits
+from .helpers import assert_tree_match
 
 
 @pytest.mark.skipif('not HAS_ASTROPY')
@@ -58,13 +59,11 @@ def test_embed_asdf_in_fits_file(tmpdir):
         with fits_embed.AsdfInFits.open(hdulist2) as ff2:
             assert_tree_match(tree, ff2.tree)
 
-            ff = asdf.AsdfFile(ff2.tree)
+            ff = asdf.AsdfFile(copy.deepcopy(ff2.tree))
             ff.write_to('test.asdf')
 
-            with asdf.AsdfFile.open('test.asdf') as ff:
-                assert_tree_match(tree, ff.tree)
-
-        close_fits(hdulist2)
+    with asdf.AsdfFile.open('test.asdf') as ff:
+        assert_tree_match(tree, ff.tree)
 
 
 @pytest.mark.skipif('not HAS_ASTROPY')
@@ -105,13 +104,11 @@ def test_embed_asdf_in_fits_file_anonymous_extensions(tmpdir):
         with fits_embed.AsdfInFits.open(hdulist2) as ff2:
             assert_tree_match(tree, ff2.tree)
 
-            ff = asdf.AsdfFile(ff2.tree)
+            ff = asdf.AsdfFile(copy.deepcopy(ff2.tree))
             ff.write_to('test.asdf')
 
-            with asdf.AsdfFile.open('test.asdf') as ff:
-                assert_tree_match(tree, ff.tree)
-
-        close_fits(hdulist2)
+    with asdf.AsdfFile.open('test.asdf') as ff:
+        assert_tree_match(tree, ff.tree)
 
 
 @pytest.mark.skipif('not HAS_ASTROPY')
@@ -152,5 +149,3 @@ def test_create_in_tree_first(tmpdir):
         with fits_embed.AsdfInFits.open(hdulist) as ff4:
             assert_array_equal(ff4.tree['model']['sci']['data'],
                                np.arange(512, dtype=np.float))
-
-        close_fits(hdulist)
