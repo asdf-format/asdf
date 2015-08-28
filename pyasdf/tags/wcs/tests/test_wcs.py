@@ -96,14 +96,14 @@ def test_frames(tmpdir):
         cf.CelestialFrame(
             reference_frame=coord.Galactic()),
 
-        # cf.CelestialFrame(
-        #     reference_frame=coord.Galactocentric(
-        #         galcen_distance=5.0*u.m,
-        #         galcen_ra=45*u.deg,
-        #         galcen_dec=1*u.rad,
-        #         z_sun=3*u.pc,
-        #         roll=3*u.deg)
-        #     ),
+        cf.CelestialFrame(
+            reference_frame=coord.Galactocentric(
+                galcen_distance=5.0*u.m,
+                galcen_ra=45*u.deg,
+                galcen_dec=1*u.rad,
+                z_sun=3*u.pc,
+                roll=3*u.deg)
+            ),
 
         cf.CelestialFrame(
             reference_frame=coord.GCRS(
@@ -115,9 +115,9 @@ def test_frames(tmpdir):
             reference_frame=coord.CIRS(
                 obstime=time.Time('2010-01-01'))),
 
-        # cf.CelestialFrame(
-        #     reference_frame=coord.ITRS(
-        #         obstime=time.Time('2022-01-03'))),
+        cf.CelestialFrame(
+            reference_frame=coord.ITRS(
+                obstime=time.Time('2022-01-03'))),
 
         cf.CelestialFrame(
             reference_frame=coord.PrecessedGeocentric(
