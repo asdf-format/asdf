@@ -110,6 +110,14 @@ class AsdfInFits(asdf.AsdfFile):
         self._blocks = _EmbeddedBlockManager(hdulist, self)
         self._hdulist = hdulist
 
+    def __exit__(self, type, value, traceback):
+        super(AsdfInFits, self).__exit__(type, value, traceback)
+        self._tree = {}
+
+    def close(self):
+        super(AsdfInFits, self).close()
+        self._tree = {}
+
     @classmethod
     def open(cls, hdulist, uri=None, validate_checksums=False, extensions=None):
         self = cls(hdulist, uri=uri, extensions=extensions)

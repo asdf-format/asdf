@@ -222,15 +222,3 @@ def get_file_sizes(dirname):
         if os.path.isfile(path):
             files[filename] = os.stat(path).st_size
     return files
-
-
-def close_fits(hdulist):
-    """
-    Forcibly close all of the mmap'd HDUs in a FITS file.
-    """
-    for hdu in hdulist:
-        if hdu.data is not None:
-            base = util.get_array_base(hdu.data)
-            if hasattr(base, 'flush'):
-                base.flush()
-                base._mmap.close()
