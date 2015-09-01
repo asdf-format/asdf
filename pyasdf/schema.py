@@ -206,9 +206,13 @@ REMOVE_DEFAULTS['properties'] = validate_remove_default
 def _create_validator(validators=YAML_VALIDATORS):
     meta_schema = load_schema(YAML_SCHEMA_METASCHEMA_ID,
                               mresolver.default_url_mapping)
+    base_cls = mvalidators.create(meta_schema=meta_schema,
+                                  validators=validators)
 
-    class ASDFValidator(mvalidators.create(meta_schema=meta_schema,
-                                           validators=validators)):
+    class ASDFValidator(base_cls):
+        DEFAULT_TYPES = base_cls.DEFAULT_TYPES.copy()
+        DEFAULT_TYPES['array'] = (list, tuple)
+
         def iter_errors(self, instance, _schema=None, _seen=set()):
             # We can't validate anything that looks like an external reference,
             # since we don't have the actual content, so we just have to defer
