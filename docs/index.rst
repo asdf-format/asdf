@@ -20,7 +20,7 @@ Installation
 Support for units, time, transform, wcs, or running the tests also
 requires:
 
-- `astropy <http://www.astropy.org/>`__ 1.0 or later
+- `astropy <http://www.astropy.org/>`__ 1.1 or later
 
 
 Getting Started

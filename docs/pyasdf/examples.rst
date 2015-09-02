@@ -357,6 +357,37 @@ You can easily `zlib <http://www.zlib.net/>`__ or `bzip2
 
 .. asdf:: target.asdf
 
+Saving history entries
+----------------------
+
+``pyasdf`` has a convenience method for notating the history of
+transformations that have been performed on a file.
+
+Given a `~pyasdf.AsdfFile` object, call
+`~pyasdf.AsdfFile.add_history_entry`, given a description of the
+change and optionally a description of the software (i.e. your
+software, not ``pyasdf``) that performed the operation.
+
+.. runcode::
+
+   from pyasdf import AsdfFile
+   import numpy as np
+
+   tree = {
+       'a': np.random.rand(256, 256)
+   }
+
+   ff = AsdfFile(tree)
+   ff.add_history_entry(
+       u"Initial random numbers",
+       {u'name': u'pyasdf examples',
+        u'author': u'John Q. Public',
+        u'homepage': u'http://github.com/spacetelescope/pyasdf',
+        u'version': u'0.1'})
+   ff.write_to('example.asdf')
+
+.. asdf:: example.asdf
+
 Saving ASDF in FITS
 -------------------
 

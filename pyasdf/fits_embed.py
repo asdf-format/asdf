@@ -102,6 +102,43 @@ class _EmbeddedBlockManager(block.BlockManager):
 
 
 class AsdfInFits(asdf.AsdfFile):
+    """
+    Embed ASDF tree content in a FITS file.
+
+    The YAML rendering of the tree is stored in a special FITS
+    extension with the EXTNAME of ``ASDF``.  Arrays in the ASDF tree
+    may refer to binary data in other FITS extensions by setting
+    source to a string with the prefix ``fits:`` followed by an
+    ``EXTNAME``, ``EXTVER`` pair, e.g. ``fits:SCI,0``.
+
+    Examples
+    --------
+    Create a FITS file with ASDF structure, based on an existing FITS
+    file::
+
+        from astropy.io import fits
+
+        hdulist = fits.HDUList()
+        hdulist.append(fits.ImageHDU(np.arange(512, dtype=np.float), name='SCI'))
+        hdulist.append(fits.ImageHDU(np.arange(512, dtype=np.float), name='DQ'))
+
+        tree = {
+            'model': {
+                'sci': {
+                    'data': hdulist['SCI'].data,
+                    'wcs': 'WCS info'
+                },
+                'dq': {
+                    'data': hdulist['DQ'].data,
+                    'wcs': 'WCS info'
+                }
+            }
+        }
+
+        ff = fits_embed.AsdfInFits(hdulist, tree)
+        ff.write_to('test.fits')  # doctest: +SKIP
+    """
+
     def __init__(self, hdulist=None, tree=None, uri=None, extensions=None):
         if hdulist is None:
             hdulist = fits.HDUList()
