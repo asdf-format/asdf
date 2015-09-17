@@ -182,7 +182,7 @@ def walk_and_modify(top, callback):
 
         return result
 
-    if len(inspect.getargspec(callback)[0]) == 2:
+    if callback.__code__.co_argcount == 2:
         return recurse_with_json_ids(top, None)
     else:
         return recurse(top)
