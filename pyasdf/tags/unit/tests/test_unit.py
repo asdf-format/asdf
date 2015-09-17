@@ -25,7 +25,7 @@ from ....tests import helpers
 @pytest.mark.skipif('not HAS_ASTROPY')
 def test_unit():
     yaml = """
-unit: !unit/unit-0.1.0 "2.1798721  10-18kg m2 s-2"
+unit: !unit/unit-1.0.0 "2.1798721  10-18kg m2 s-2"
     """
 
     buff = helpers.yaml_to_asdf(yaml)

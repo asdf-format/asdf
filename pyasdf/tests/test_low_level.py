@@ -32,10 +32,10 @@ def _get_small_tree():
 
 
 def test_no_yaml_end_marker(tmpdir):
-    content = b"""#ASDF 0.1.0
+    content = b"""#ASDF 1.0.0
 %YAML 1.1
 %TAG ! tag:stsci.edu:asdf/
---- !core/asdf-0.1.0
+--- !core/asdf-1.0.0
 foo: bar...baz
 baz: 42
     """
@@ -62,10 +62,10 @@ baz: 42
 
 
 def test_no_final_newline(tmpdir):
-    content = b"""#ASDF 0.1.0
+    content = b"""#ASDF 1.0.0
 %YAML 1.1
 %TAG ! tag:stsci.edu:asdf/
---- !core/asdf-0.1.0
+--- !core/asdf-1.0.0
 foo: ...bar...
 baz: 42
 ..."""
@@ -106,10 +106,10 @@ def test_no_asdf_header(tmpdir):
 
 
 def test_no_asdf_blocks(tmpdir):
-    content = b"""#ASDF 0.1.0
+    content = b"""#ASDF 1.0.0
 %YAML 1.1
 %TAG ! tag:stsci.edu:asdf/
---- !core/asdf-0.1.0
+--- !core/asdf-1.0.0
 foo: bar
 ...
 XXXXXXXX
@@ -161,14 +161,14 @@ def test_invalid_source():
 
 
 def test_empty_file():
-    buff = io.BytesIO(b"#ASDF 0.1.0\n")
+    buff = io.BytesIO(b"#ASDF 1.0.0\n")
     buff.seek(0)
 
     with asdf.AsdfFile.open(buff) as ff:
         assert ff.tree == {}
         assert len(ff.blocks) == 0
 
-    buff = io.BytesIO(b"#ASDF 0.1.0\n#ASDF_STANDARD 0.1.0")
+    buff = io.BytesIO(b"#ASDF 1.0.0\n#ASDF_STANDARD 1.0.0")
     buff.seek(0)
 
     with asdf.AsdfFile.open(buff) as ff:
@@ -193,7 +193,7 @@ def test_not_asdf_file():
 
 
 def test_junk_file():
-    buff = io.BytesIO(b"#ASDF 0.1.0\nFOO")
+    buff = io.BytesIO(b"#ASDF 1.0.0\nFOO")
     buff.seek(0)
 
     with pytest.raises(ValueError):
@@ -206,7 +206,7 @@ def test_block_mismatch():
     # that has an invalid block magic number.
 
     buff = io.BytesIO(
-        b'#ASDF 0.1.0\n\xd3BLK\x00\x28\0\0\0\0\0\0\0\x01\0\0\0\0\0\0\0\x01\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0FOOBAR')
+        b'#ASDF 1.0.0\n\xd3BLK\x00\x28\0\0\0\0\0\0\0\x01\0\0\0\0\0\0\0\x01\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0FOOBAR')
 
     buff.seek(0)
     with pytest.raises(ValueError):
@@ -218,7 +218,7 @@ def test_block_header_too_small():
     # The block header size must be at least 40
 
     buff = io.BytesIO(
-        b'#ASDF 0.1.0\n\xd3BLK\0\0')
+        b'#ASDF 1.0.0\n\xd3BLK\0\0')
 
     buff.seek(0)
     with pytest.raises(ValueError):
@@ -706,10 +706,10 @@ def test_seek_until_on_block_boundary():
     # Create content where the first block begins on a
     # file-reading-block boundary.
 
-    content = b"""#ASDF 0.1.0
+    content = b"""#ASDF 1.0.0
 %YAML 1.1
 %TAG ! tag:stsci.edu:asdf/
---- !core/asdf-0.1.0
+--- !core/asdf-1.0.0
 foo : bar
 ...
 """
