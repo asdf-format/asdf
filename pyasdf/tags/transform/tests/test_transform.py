@@ -24,6 +24,8 @@ import pytest
 from ....tests import helpers
 from .... import util
 
+from ..basic import DomainType
+
 
 @pytest.mark.skipif('not HAS_ASTROPY')
 def test_transforms_compound(tmpdir):
@@ -76,12 +78,13 @@ def test_name(tmpdir):
 @pytest.mark.skipif('not HAS_ASTROPY')
 def test_domain(tmpdir):
     def check(ff):
-        assert ff.tree['rot'].meta['domain'] == {
+        assert ff.tree['rot'].meta['domain'][0] == {
             'lower': 0, 'upper': 1, 'includes_lower': True,
             'includes_upper': False}
 
     model = astmodels.Rotation2D(23)
-    model.meta['domain'] = {'lower': 0, 'upper': 1, 'includes_lower': True}
+    model.meta['domain'] = [
+        {'lower': 0, 'upper': 1, 'includes_lower': True}]
     tree = {'rot': model}
     helpers.assert_roundtrip_tree(tree, tmpdir, check)
 
