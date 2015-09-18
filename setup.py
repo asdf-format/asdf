@@ -39,13 +39,13 @@ LICENSE = metadata.get('license', 'unknown')
 URL = metadata.get('url', '')
 
 # Get the long description from the package's docstring
-__import__(PACKAGENAME)
-package = sys.modules[PACKAGENAME]
+__import__('pyasdf')
+package = sys.modules['pyasdf']
 LONG_DESCRIPTION = package.__doc__
 
 # Store the package name in a built-in variable so it's easy
 # to get from other parts of the setup infrastructure
-builtins._PACKAGE_NAME_ = PACKAGENAME
+builtins._PACKAGE_NAME_ = 'pyasdf'
 
 # VERSION should be PEP386 compatible (http://www.python.org/dev/peps/pep-0386)
 VERSION = '1.0.0'
@@ -62,15 +62,15 @@ ASDF_STANDARD_ROOT = os.environ.get('ASDF_STANDARD_ROOT', 'asdf-standard')
 # Populate the dict of setup command overrides; this should be done before
 # invoking any other functionality from distutils since it can potentially
 # modify distutils' behavior.
-cmdclassd = register_commands(PACKAGENAME, VERSION, RELEASE)
+cmdclassd = register_commands('pyasdf', VERSION, RELEASE)
 
 # Adjust the compiler in case the default on this platform is to use a
 # broken one.
-adjust_compiler(PACKAGENAME)
+adjust_compiler('pyasdf')
 
 # Freeze build information in version.py
-generate_version_py(PACKAGENAME, VERSION, RELEASE,
-                    get_debug_option(PACKAGENAME))
+generate_version_py('pyasdf', VERSION, RELEASE,
+                    get_debug_option('pyasdf'))
 
 # Treat everything in scripts except README.rst as a script to be installed
 scripts = [fname for fname in glob.glob(os.path.join('scripts', '*'))
@@ -83,7 +83,7 @@ scripts = [fname for fname in glob.glob(os.path.join('scripts', '*'))
 package_info = get_package_info()
 
 # Add the project-global data
-package_info['package_data'].setdefault(PACKAGENAME, []).append('data/*')
+package_info['package_data'].setdefault('pyasdf', []).append('data/*')
 
 # The schemas come from a git submodule, so we deal with them here
 schema_root = os.path.join(ASDF_STANDARD_ROOT, "schemas")
@@ -110,13 +110,13 @@ entry_points['console_scripts'] = [
 # Cython, since we can not do this in MANIFEST.in with a "dynamic"
 # directory name.
 c_files = []
-for root, dirs, files in os.walk(PACKAGENAME):
+for root, dirs, files in os.walk('pyasdf'):
     for filename in files:
         if filename.endswith('.c'):
             c_files.append(
                 os.path.join(
-                    os.path.relpath(root, PACKAGENAME), filename))
-package_info['package_data'][PACKAGENAME].extend(c_files)
+                    os.path.relpath(root, 'pyasdf'), filename))
+package_info['package_data']['pyasdf'].extend(c_files)
 
 # Note that requires and provides should not be included in the call to
 # ``setup``, since these are now deprecated. See this link for more details:
