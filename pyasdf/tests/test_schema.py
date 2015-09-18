@@ -70,7 +70,7 @@ def test_violate_toplevel_schema():
 @pytest.mark.skipif('not HAS_ASTROPY')
 def test_tagging_scalars():
     yaml = """
-unit: !unit/unit-0.1.0
+unit: !unit/unit-1.0.0
   m
 not_unit:
   m
@@ -103,7 +103,7 @@ def test_validate_all_schema():
             if not fname.endswith('.yaml'):
                 continue
             if os.path.splitext(fname)[0] in (
-                    'draft-01', 'asdf-schema-0.1.0'):
+                    'draft-01', 'asdf-schema-1.0.0'):
                 continue
             yield validate_schema, os.path.join(root, fname)
 
@@ -178,9 +178,9 @@ def test_schema_caching():
     # Make sure that if we request the same URL, we get the *exact
     # same* object, to ensure the cache is working.
     s1 = schema.load_schema(
-        'http://stsci.edu/schemas/asdf/core/asdf-0.1.0')
+        'http://stsci.edu/schemas/asdf/core/asdf-1.0.0')
     s2 = schema.load_schema(
-        'http://stsci.edu/schemas/asdf/core/asdf-0.1.0')
+        'http://stsci.edu/schemas/asdf/core/asdf-1.0.0')
     assert s1 is s2
 
 
@@ -238,7 +238,7 @@ def test_property_order():
     ff.write_to(buff)
 
     ndarray_schema = schema.load_schema(
-        'http://stsci.edu/schemas/asdf/core/ndarray-0.1.0')
+        'http://stsci.edu/schemas/asdf/core/ndarray-1.0.0')
     property_order = ndarray_schema['anyOf'][1]['propertyOrder']
 
     last_index = 0
@@ -277,7 +277,7 @@ custom: !<tag:nowhere.org:custom/custom-1.0.0>
     # Make sure tags get validated inside of other tags that know
     # nothing about them.
     yaml = """
-array: !core/ndarray-0.1.0
+array: !core/ndarray-1.0.0
   data: [0, 1, 2]
   custom: !<tag:nowhere.org:custom/custom-1.0.0>
     foo

@@ -20,7 +20,7 @@ def get_package_data():  # pragma: no cover
                         root))
 
     reference_files = []
-    root = os.path.join(ASDF_STANDARD_ROOT, "reference_files", "0.1.0")
+    root = os.path.join(ASDF_STANDARD_ROOT, "reference_files")
     for node, dirs, files in os.walk(root):
         for fname in files:
             if fname.endswith('.yaml') or fname.endswith('.asdf'):

@@ -189,11 +189,12 @@ def yaml_to_asdf(yaml_content, yaml_headers=True):
     buff = io.BytesIO()
 
     if yaml_headers:
-        buff.write(b"""#ASDF 0.1.0
+        buff.write("""#ASDF {0}
 %YAML 1.1
 %TAG ! tag:stsci.edu:asdf/
---- !core/asdf-0.1.0
-""")
+--- !core/asdf-{0}
+""".format(
+    versioning.version_to_string(versioning.default_version)).encode('ascii'))
     buff.write(yaml_content)
     if yaml_headers:
         buff.write(b"\n...\n")

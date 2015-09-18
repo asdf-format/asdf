@@ -131,10 +131,10 @@ def test_tags_removed_after_load(tmpdir):
 @pytest.mark.skipif('not HAS_ASTROPY')
 def test_explicit_tags():
 
-    yaml = """#ASDF 0.1.0
+    yaml = """#ASDF 1.0.0
 %YAML 1.1
---- !<tag:stsci.edu:asdf/core/asdf-0.1.0>
-unit: !<tag:stsci.edu:asdf/unit/unit-0.1.0> m
+--- !<tag:stsci.edu:asdf/core/asdf-1.0.0>
+unit: !<tag:stsci.edu:asdf/unit/unit-1.0.0> m
 ...
     """
     from astropy import units as u

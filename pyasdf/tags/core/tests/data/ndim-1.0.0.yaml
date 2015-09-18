@@ -1,6 +1,6 @@
 %YAML 1.1
 ---
-$schema: "http://stsci.edu/schemas/asdf/asdf-schema-0.1.0"
+$schema: "http://stsci.edu/schemas/asdf/asdf-schema-1.0.0"
 id: "http://nowhere.org/schemas/custom/ndim-1.0.0"
 type: object
 properties:

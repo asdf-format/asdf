@@ -71,7 +71,7 @@ def test_custom_tag():
     yaml = """
 a: !<tag:nowhere.org:custom/fraction-1.0.0>
   [2, 3]
-b: !core/complex-0.1.0
+b: !core/complex-1.0.0
   0j
     """
 
@@ -109,7 +109,7 @@ a: !core/complex-42.0.0
     assert len(w) == 1
     assert str(w[0].message) == (
         "'tag:stsci.edu:asdf/core/complex' with version 42.0.0 found in file, "
-        "but pyasdf only understands version 0.1.0.")
+        "but pyasdf only understands version 1.0.0.")
 
     # Make sure warning is repeatable
     buff.seek(0)
@@ -120,11 +120,11 @@ a: !core/complex-42.0.0
     assert len(w) == 1
     assert str(w[0].message) == (
         "'tag:stsci.edu:asdf/core/complex' with version 42.0.0 found in file, "
-        "but pyasdf only understands version 0.1.0.")
+        "but pyasdf only understands version 1.0.0.")
 
     # If the major and minor match, there should be no warning.
     yaml = """
-a: !core/complex-0.1.1
+a: !core/complex-1.0.1
   0j
     """
 
@@ -145,7 +145,7 @@ def test_versioned_writing():
         'YAML_VERSION': '1.1',
         'tags': {
             'tag:stsci.edu:asdf/core/complex': '42.0.0',
-            'tag:stscu.edu:asdf/core/asdf': '0.1.0'
+            'tag:stscu.edu:asdf/core/asdf': '1.0.0'
         }
     }
 

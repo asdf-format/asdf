@@ -12,7 +12,7 @@ from ....tests import helpers
 
 def test_invalid_complex():
     yaml = """
-a: !core/complex-0.1.0
+a: !core/complex-1.0.0
   3 + 4i
     """
 

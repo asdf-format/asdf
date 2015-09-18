@@ -48,7 +48,7 @@ LONG_DESCRIPTION = package.__doc__
 builtins._PACKAGE_NAME_ = PACKAGENAME
 
 # VERSION should be PEP386 compatible (http://www.python.org/dev/peps/pep-0386)
-VERSION = '0.0.dev'
+VERSION = '1.0.0'
 
 # Indicates if this version is a release version
 RELEASE = 'dev' not in VERSION
@@ -93,9 +93,11 @@ package_info['packages'].append('pyasdf.schemas')
 
 # The reference files come from a git submodule, so we deal with them here
 reference_file_root = os.path.join(
-    ASDF_STANDARD_ROOT, "reference_files", "0.1.0")
-
+    ASDF_STANDARD_ROOT, "reference_files")
 package_info['package_dir']['pyasdf.reference_files'] = reference_file_root
+for dirname in os.listdir(reference_file_root):
+    package_info['package_dir']['pyasdf.reference_files.' + dirname] = os.path.join(
+        reference_file_root, dirname)
 package_info['packages'].append('pyasdf.reference_files')
 
 #Define entry points for command-line scripts
