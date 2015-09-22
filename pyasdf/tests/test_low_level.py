@@ -1071,3 +1071,16 @@ def test_dots_but_no_block_index():
     buff.seek(0)
     with asdf.AsdfFile.open(buff) as ff:
         assert len(ff.blocks) == 1
+
+
+def test_invalid_version(tmpdir):
+    content = b"""#ASDF 0.1.0
+%YAML 1.1
+%TAG ! tag:stsci.edu:asdf/
+--- !core/asdf-0.1.0
+foo : bar
+..."""
+    buff = io.BytesIO(content)
+    with pytest.raises(ValueError):
+        with asdf.AsdfFile.open(buff) as ff:
+            pass

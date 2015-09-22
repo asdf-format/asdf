@@ -432,6 +432,7 @@ class AsdfFile(versioning.VersionedMixin):
         except ValueError:
             raise ValueError("Does not appear to be a ASDF file.")
         self._file_format_version = cls._parse_header_line(header_line)
+        self.version = self._file_format_version
 
         comment_section = fd.read_until(
             b'(%YAML)|(' + constants.BLOCK_MAGIC + b')', 5,
