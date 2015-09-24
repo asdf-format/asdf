@@ -17,6 +17,7 @@ import pytest
 
 from .. import asdf
 from .. import asdftypes
+from .. import extension
 from .. import util
 from .. import versioning
 
@@ -180,3 +181,27 @@ def test_versioned_writing():
 
     del versioning._version_map['42.0.0']
     versioning.supported_versions.pop()
+
+
+def test_longest_match():
+    class FancyComplexExtension(object):
+        @property
+        def types(self):
+            return []
+
+        @property
+        def tag_mapping(self):
+            return []
+
+        @property
+        def url_mapping(self):
+            return [('http://stsci.edu/schemas/asdf/core/',
+                     'FOOBAR/{url_suffix}')]
+
+    l = extension.AsdfExtensionList(
+        [extension.BuiltinExtension(), FancyComplexExtension()])
+
+    assert l.url_mapping(
+        'http://stsci.edu/schemas/asdf/core/asdf-1.0.0') == 'FOOBAR/asdf-1.0.0'
+    assert l.url_mapping(
+        'http://stsci.edu/schemas/asdf/transform/transform-1.0.0') != 'FOOBAR/transform-1.0.0'

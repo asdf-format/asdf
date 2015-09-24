@@ -5,6 +5,7 @@ from __future__ import absolute_import, division, unicode_literals, print_functi
 
 
 import os.path
+import sys
 
 import six
 
@@ -70,7 +71,7 @@ class Resolver(object):
                                 self._prefix + "_suffix": uri[len(mapping[0]):]
                             }
 
-                            return mapping[1].format(**format_tokens)
+                            return len(mapping[0]), mapping[1].format(**format_tokens)
                         return None
                     return _map_func
 
@@ -83,11 +84,18 @@ class Resolver(object):
         return tuple(normalized)
 
     def __call__(self, input):
+        candidates = []
         for mapper in self._mapping:
             output = mapper(input)
-            if output is not None:
-                return output
-        return input
+            if isinstance(output, tuple):
+                candidates.append(output)
+            elif output is not None:
+                candidates.append((sys.maxint, output))
+        if len(candidates):
+            candidates.sort()
+            return candidates[-1][1]
+        else:
+            return input
 
     def __hash__(self):
         return hash(self._mapping)
