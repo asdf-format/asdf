@@ -5,7 +5,6 @@ from __future__ import absolute_import, division, unicode_literals, print_functi
 
 
 import os.path
-import sys
 
 import six
 
@@ -90,7 +89,7 @@ class Resolver(object):
             if isinstance(output, tuple):
                 candidates.append(output)
             elif output is not None:
-                candidates.append((sys.maxint, output))
+                candidates.append((six.MAXSIZE, output))
         if len(candidates):
             candidates.sort()
             return candidates[-1][1]
