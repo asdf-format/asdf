@@ -74,12 +74,12 @@ class VersionedMixin(object):
     def version(self, version):
         if version_to_string(version) not in supported_versions:
             human_versions = util.human_list(
-                [version_to_string(x) for x in six.iterkeys(supported_versions)])
+                [version_to_string(x) for x in supported_versions])
             raise ValueError(
                 "pyasdf only understands how to handle ASDF versions {0}. "
                 "Got '{1}'".format(
                     human_versions,
-                    version_to_string(val)))
+                    version_to_string(version)))
 
         self._version = version
         self._version_string = version_to_string(version)
