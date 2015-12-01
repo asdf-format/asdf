@@ -20,7 +20,7 @@ try:
     del PYTEST_HEADER_MODULES['h5py']
     del PYTEST_HEADER_MODULES['Matplotlib']
     del PYTEST_HEADER_MODULES['Scipy']
-except NameError:
+except (NameError, KeyError):
     pass
 
 
