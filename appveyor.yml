@@ -32,6 +32,7 @@ install:
     - "powershell ci-helpers/appveyor/install-miniconda.ps1"
     - "SET PATH=%PYTHON%;%PYTHON%\\Scripts;%PATH%"
     - "activate test"
+    - "git submodule init asdf-standard"
 
 # Not a .NET project
 build: false
