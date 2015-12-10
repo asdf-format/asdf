@@ -5,8 +5,11 @@ environment:
 
   global:
       PYTHON: "C:\\conda"
-      MINICONDA_VERSION: "3.5.5"
-      CMD_IN_ENV: "cmd /E:ON /V:ON /C .\\.continuous-integration\\appveyor\\windows_sdk.cmd"
+      MINICONDA_VERSION: "latest"
+      CMD_IN_ENV: "cmd /E:ON /V:ON /C .\\ci-helpers\\appveyor\\windows_sdk.cmd"
+      ASTROPY_VERSION: "development"
+      CONDA_DEPENDENCIES: "jsonschema pyyaml six"
+      PIP_DEPENDENCIES: "git+http://github.com/spacetelescope/gwcs.git#egg=gwcs"
 
   matrix:
       - PYTHON_VERSION: "2.7"
@@ -25,26 +28,11 @@ environment:
         PYTHON_ARCH: "64"
 
 install:
-    - "git submodule update --init"
-
-    # Install miniconda using a powershell script.
-    - "powershell .continuous-integration/appveyor/install-miniconda.ps1"
+    - "git clone git://github.com/astropy/ci-helpers.git"
+    - "powershell ci-helpers/appveyor/install-miniconda.ps1"
     - "SET PATH=%PYTHON%;%PYTHON%\\Scripts;%PATH%"
-
-    # Install the build and runtime dependencies of the project.
-    - "conda update --yes conda"
-    # Create a conda environment using the astropy bonus packages
-    - "conda create -q --yes -n test -c astropy-ci-extras python=%PYTHON_VERSION%"
     - "activate test"
-
-    # Check that we have the expected version of Python
-    - "python --version"
-
-    # Install specified version of numpy and dependencies
-    - "conda install -q --yes numpy=%NUMPY_VERSION% pytest Cython jinja2 pyyaml jsonschema psutil six"
-
-    # Install the development version of astropy
-    - "%CMD_IN_ENV% pip install git+http://github.com/astropy/astropy.git#egg=astropy"
+    - "git submodule init asdf-standard"
 
 # Not a .NET project
 build: false
