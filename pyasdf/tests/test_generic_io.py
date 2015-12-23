@@ -622,7 +622,7 @@ def test_truncated_reader():
     fd.seek(0)
     tr = generic_io._TruncatedReader(fd, b'b', 1, include=True)
     assert tr.read(100) == content[:100]
-    assert tr.read(1) == content[100]
+    assert tr.read(1) == content[100:101]
     assert tr.read() == b''
 
 
