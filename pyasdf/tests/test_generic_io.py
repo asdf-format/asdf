@@ -536,3 +536,245 @@ def test_check_bytes(tmpdir):
         assert generic_io._check_bytes(fd, 'r') is True
         assert generic_io._check_bytes(fd, 'rw') is True
         assert generic_io._check_bytes(fd, 'w') is True
+
+
+def test_truncated_reader():
+    """
+    Tests several edge cases for _TruncatedReader.read()
+
+    Includes regression test for
+    https://github.com/spacetelescope/pyasdf/pull/181
+    """
+
+    # TODO: Should probably break this up into multiple test cases
+
+    fd = generic_io.RandomAccessFile(io.BytesIO(), 'rw')
+    content = b'a' * 100 + b'b'
+    fd.write(content)
+    fd.seek(0)
+
+    # Simple cases where the delimiter is not found at all
+    tr = generic_io._TruncatedReader(fd, b'x', 1)
+    with pytest.raises(ValueError):
+        tr.read()
+
+    fd.seek(0)
+    tr = generic_io._TruncatedReader(fd, b'x', 1)
+    assert tr.read(100) == content[:100]
+    assert tr.read(1) == content[100:]
+    with pytest.raises(ValueError):
+        tr.read()
+
+    fd.seek(0)
+    tr = generic_io._TruncatedReader(fd, b'x', 1, exception=False)
+    assert tr.read() == content
+
+    # No delimiter but with 'initial_content'
+    init = b'abcd'
+    fd.seek(0)
+    tr = generic_io._TruncatedReader(fd, b'x', 1, initial_content=init,
+                                     exception=False)
+    assert tr.read(100) == (init + content)[:100]
+    assert tr.read() == (init + content)[100:]
+
+    fd.seek(0)
+    tr = generic_io._TruncatedReader(fd, b'x', 1, initial_content=init,
+                                     exception=False)
+    assert tr.read() == init + content
+
+    fd.seek(0)
+    tr = generic_io._TruncatedReader(fd, b'x', 1, initial_content=init,
+                                     exception=False)
+    assert tr.read(2) == init[:2]
+    assert tr.read() == init[2:] + content
+
+    # Some tests of a single character delimiter
+    # Add some trailing data after the delimiter
+    fd.seek(0, 2)
+    fd.write(b'ffff')
+
+    # Delimiter not included in read
+    fd.seek(0)
+    tr = generic_io._TruncatedReader(fd, b'b', 1)
+    assert tr.read(100) == content[:100]
+    assert tr.read() == b''
+
+    fd.seek(0)
+    tr = generic_io._TruncatedReader(fd, b'b', 1)
+    assert tr.read() == content[:100]
+
+    # Delimiter included
+    fd.seek(0)
+    tr = generic_io._TruncatedReader(fd, b'b', 1, include=True)
+    assert tr.read() == content[:101]
+    assert tr.read() == b''
+
+    fd.seek(0)
+    tr = generic_io._TruncatedReader(fd, b'b', 1, include=True)
+    assert tr.read(101) == content[:101]
+    assert tr.read() == b''
+
+    fd.seek(0)
+    tr = generic_io._TruncatedReader(fd, b'b', 1, include=True)
+    assert tr.read(102) == content[:101]
+    assert tr.read() == b''
+
+    fd.seek(0)
+    tr = generic_io._TruncatedReader(fd, b'b', 1, include=True)
+    assert tr.read(100) == content[:100]
+    assert tr.read(1) == content[100:101]
+    assert tr.read() == b''
+
+
+    # Longer delimiter with variable length
+    content = b'a' * 100 + b'\n...\n' + b'ffffff'
+    delimiter = br'\r?\n\.\.\.((\r?\n)|$)'
+    readahead = 7
+
+    fd = generic_io.RandomAccessFile(io.BytesIO(), 'rw')
+    fd.write(content)
+
+    # Delimiter not included in read
+    fd.seek(0)
+    tr = generic_io._TruncatedReader(fd, delimiter, readahead)
+    assert tr.read() == content[:100]
+    assert tr.read() == b''
+
+    fd.seek(0)
+    tr = generic_io._TruncatedReader(fd, delimiter, readahead)
+    assert tr.read(100) == content[:100]
+    assert tr.read() == b''
+
+    # (read just up to the delimiter)
+    fd.seek(0)
+    tr = generic_io._TruncatedReader(fd, delimiter, readahead)
+    assert tr.read(99) == content[:99]
+    assert tr.read() == content[99:100]
+    assert tr.read() == b''
+
+    # (read partway into the delimiter)
+    fd.seek(0)
+    tr = generic_io._TruncatedReader(fd, delimiter, readahead)
+    assert tr.read(99) == content[:99]
+    assert tr.read(2) == content[99:100]
+    assert tr.read() == b''
+
+    # (read well past the delimiter)
+    fd.seek(0)
+    tr = generic_io._TruncatedReader(fd, delimiter, readahead)
+    assert tr.read(99) == content[:99]
+    assert tr.read(50) == content[99:100]
+    assert tr.read() == b''
+
+    # Same as the previous set of tests, but including the delimiter
+    fd.seek(0)
+    tr = generic_io._TruncatedReader(fd, delimiter, readahead, include=True)
+    assert tr.read() == content[:105]
+    assert tr.read() == b''
+
+    fd.seek(0)
+    tr = generic_io._TruncatedReader(fd, delimiter, readahead, include=True)
+    assert tr.read(105) == content[:105]
+    assert tr.read() == b''
+
+    # (read just up to the delimiter)
+    fd.seek(0)
+    tr = generic_io._TruncatedReader(fd, delimiter, readahead, include=True)
+    assert tr.read(99) == content[:99]
+    assert tr.read() == content[99:105]
+    assert tr.read() == b''
+
+    # (read partway into the delimiter)
+    fd.seek(0)
+    tr = generic_io._TruncatedReader(fd, delimiter, readahead, include=True)
+    assert tr.read(99) == content[:99]
+    assert tr.read(2) == content[99:101]
+    assert tr.read() == content[101:105]
+    assert tr.read() == b''
+
+    # (read well past the delimiter)
+    fd.seek(0)
+    tr = generic_io._TruncatedReader(fd, delimiter, readahead, include=True)
+    assert tr.read(99) == content[:99]
+    assert tr.read(50) == content[99:105]
+    assert tr.read() == b''
+
+    # Same sequence of tests but with some 'initial_content'
+    init = b'abcd'
+
+    # Delimiter not included in read
+    fd.seek(0)
+    tr = generic_io._TruncatedReader(fd, delimiter, readahead,
+                                     initial_content=init)
+    assert tr.read() == (init + content[:100])
+    assert tr.read() == b''
+
+    fd.seek(0)
+    tr = generic_io._TruncatedReader(fd, delimiter, readahead,
+                                     initial_content=init)
+    assert tr.read(100) == (init + content[:96])
+    assert tr.read() == content[96:100]
+    assert tr.read() == b''
+
+    # (read just up to the delimiter)
+    fd.seek(0)
+    tr = generic_io._TruncatedReader(fd, delimiter, readahead,
+                                     initial_content=init)
+    assert tr.read(99) == (init + content[:95])
+    assert tr.read() == content[95:100]
+    assert tr.read() == b''
+
+    # (read partway into the delimiter)
+    fd.seek(0)
+    tr = generic_io._TruncatedReader(fd, delimiter, readahead,
+                                     initial_content=init)
+    assert tr.read(99) == (init + content[:95])
+    assert tr.read(6) == content[95:100]
+    assert tr.read() == b''
+
+    # (read well past the delimiter)
+    fd.seek(0)
+    tr = generic_io._TruncatedReader(fd, delimiter, readahead,
+                                     initial_content=init)
+    assert tr.read(99) == (init + content[:95])
+    assert tr.read(50) == content[95:100]
+    assert tr.read() == b''
+
+    # Same as the previous set of tests, but including the delimiter
+    fd.seek(0)
+    tr = generic_io._TruncatedReader(fd, delimiter, readahead, include=True,
+                                     initial_content=init)
+    assert tr.read() == (init + content[:105])
+    assert tr.read() == b''
+
+    fd.seek(0)
+    tr = generic_io._TruncatedReader(fd, delimiter, readahead, include=True,
+                                     initial_content=init)
+    assert tr.read(105) == (init + content[:101])
+    assert tr.read() == content[101:105]
+    assert tr.read() == b''
+
+    # (read just up to the delimiter)
+    fd.seek(0)
+    tr = generic_io._TruncatedReader(fd, delimiter, readahead, include=True,
+                                     initial_content=init)
+    assert tr.read(103) == (init + content[:99])
+    assert tr.read() == content[99:105]
+    assert tr.read() == b''
+
+    # (read partway into the delimiter)
+    fd.seek(0)
+    tr = generic_io._TruncatedReader(fd, delimiter, readahead, include=True,
+                                     initial_content=init)
+    assert tr.read(99) == (init + content[:95])
+    assert tr.read(6) == content[95:101]
+    assert tr.read() == content[101:105]
+    assert tr.read() == b''
+
+    # (read well past the delimiter)
+    fd.seek(0)
+    tr = generic_io._TruncatedReader(fd, delimiter, readahead, include=True,
+                                     initial_content=init)
+    assert tr.read(99) == (init + content[:95])
+    assert tr.read(50) == content[95:105]
+    assert tr.read() == b''
