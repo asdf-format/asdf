@@ -201,17 +201,30 @@ class _TruncatedReader(object):
         self._delimiter_name = delimiter_name
         self._include = include
         self._initial_content = initial_content
+        self._trailing_content = b''
         self._exception = exception
         self._past_end = False
 
     def read(self, nbytes=None):
         if self._past_end:
-            return b''
+            content = self._trailing_content[:nbytes]
+            if nbytes is None:
+                self._trailing_content = b''
+            else:
+                self._trailing_content = self._trailing_content[nbytes:]
+
+            return content
 
         if nbytes is None:
             content = self._fd._peek()
+        elif nbytes <= len(self._initial_content):
+            content = self._initial_content[:nbytes]
+            self._initial_content = self._initial_content[nbytes:]
+            return content
         else:
-            content = self._fd._peek(nbytes + self._readahead_bytes)
+            content = self._fd._peek(nbytes - len(self._initial_content) +
+                                     self._readahead_bytes)
+
         if content == b'':
             if self._exception:
                 raise ValueError("{0} not found".format(self._delimiter_name))
@@ -226,13 +239,22 @@ class _TruncatedReader(object):
                 index = index.start()
             content = content[:index]
             self._past_end = True
+        elif nbytes is None and self._exception:
+            # Read the whole file and didn't find the delimiter
+            raise ValueError("{0} not found".format(self._delimiter_name))
+        else:
+            if nbytes:
+                content = content[:nbytes - len(self._initial_content)]
 
-        content = content[:nbytes]
         self._fd.fast_forward(len(content))
 
         if self._initial_content:
             content = self._initial_content + content
             self._initial_content = b''
+
+        if self._past_end and nbytes:
+            self._trailing_content = content[nbytes:]
+            content = content[:nbytes]
 
         return content
 
