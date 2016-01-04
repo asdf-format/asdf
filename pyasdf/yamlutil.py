@@ -308,4 +308,4 @@ def dump_tree(tree, fd, ctx):
         explicit_start=True, explicit_end=True,
         version=yaml_version,
         allow_unicode=True, encoding='utf-8',
-        tags=tags)
+        tags=tags, width=10000)
