@@ -1,6 +1,8 @@
 1.0.1 (unreleased)
 ------------------
 
+- Fixed installation from the source tarball on Python 3. [#187]
+
 - Fixed error handling when opening ASDF files not supported by the current
   version of pyasdf. [#178]
 
