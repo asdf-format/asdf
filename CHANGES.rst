@@ -1,4 +1,10 @@
-1.0.1 (unreleased)
+1.0.2 (unreleased)
+------------------
+
+- Nothing changed yet.
+
+
+1.0.1 (2016-01-08)
 ------------------
 
 - Fixed installation from the source tarball on Python 3. [#187]
