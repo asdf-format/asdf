@@ -119,7 +119,8 @@ setup(name=PACKAGENAME,
           'pyyaml>=3.10',
           'jsonschema>=2.3.0',
           'six>=1.9.0',
-          'pytest>=2.7.2'
+          'pytest>=2.7.2',
+          'numpy>=1.8'
       ],
       author=AUTHOR,
       author_email=AUTHOR_EMAIL,
