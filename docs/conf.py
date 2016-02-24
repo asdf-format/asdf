@@ -46,7 +46,7 @@ from distutils import config
 conf = config.ConfigParser()
 conf.read([os.path.join(os.path.dirname(__file__), '..', 'setup.cfg')])
 setup_cfg = dict(conf.items('metadata'))
-setup_cfg['package_name'] = 'pyasdf'
+setup_cfg['package_name'] = 'asdf'
 
 # -- General configuration ----------------------------------------------------
 

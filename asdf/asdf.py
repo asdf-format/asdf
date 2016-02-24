@@ -29,11 +29,11 @@ from .tags.core import AsdfObject, Software, HistoryEntry
 
 def get_asdf_library_info():
     """
-    Get information about pyasdf to include in the asdf_library entry
+    Get information about asdf to include in the asdf_library entry
     in the Tree.
     """
     return Software({
-        'name': 'pyasdf',
+        'name': 'asdf',
         'version': version.version,
         'homepage': 'http://github.com/spacetelescope/pyasdf',
         'author': 'Space Telescope Science Institute'
@@ -66,7 +66,7 @@ class AsdfFile(versioning.VersionedMixin):
         version : str, optional
             The ASDF version to use when writing out.  If not
             provided, it will write out in the latest version
-            supported by pyasdf.
+            supported by asdf.
         """
         if extensions is None or extensions == []:
             self._extensions = extension._builtin_extension_list
@@ -287,8 +287,8 @@ class AsdfFile(versioning.VersionedMixin):
         For the given AsdfFile ``ff``, add an external reference to the data in
         an external file::
 
-            >>> import pyasdf
-            >>> flat = pyasdf.open("http://stsci.edu/reference_files/flat.asdf")  # doctest: +SKIP
+            >>> import asdf
+            >>> flat = asdf.open("http://stsci.edu/reference_files/flat.asdf")  # doctest: +SKIP
             >>> ff.tree['flat_field'] = flat.make_reference(['data'])  # doctest: +SKIP
         """
         return reference.make_reference(self, path)
@@ -659,7 +659,7 @@ class AsdfFile(versioning.VersionedMixin):
 
         version : str, optional
             The ASDF version to write out.  If not provided, it will
-            write out in the latest version supported by pyasdf.
+            write out in the latest version supported by asdf.
         """
         fd = self._fd
 
@@ -793,7 +793,7 @@ class AsdfFile(versioning.VersionedMixin):
 
         version : str, optional
             The ASDF version to write out.  If not provided, it will
-            write out in the latest version supported by pyasdf.
+            write out in the latest version supported by asdf.
         """
         original_fd = self._fd
 
@@ -930,7 +930,7 @@ class AsdfFile(versioning.VersionedMixin):
 
         software : dict or list of dict
             A description of the software used.  It should not include
-            pyasdf itself, as that is automatically notated in the
+            asdf itself, as that is automatically notated in the
             `asdf_library` entry.
 
             Each dict must have the following keys:

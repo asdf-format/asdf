@@ -1,16 +1,16 @@
 Writing ASDF extensions
 =======================
 
-Supporting new types in pyasdf is easy.  There are three pieces needed:
+Supporting new types in asdf is easy.  There are three pieces needed:
 
 1. A YAML Schema file for each new type.
 
-2. A Python class (inheriting from `pyasdf.AsdfType`) for each new
+2. A Python class (inheriting from `asdf.AsdfType`) for each new
    type.
 
 3. A Python class to define an "extension" to ASDF, which is a set of
    related types.  This class must implement the
-   `pyasdf.AsdfExtension` abstract base class.
+   `asdf.AsdfExtension` abstract base class.
 
 For an example, we will make a type to handle rational numbers called
 ``fraction``.
@@ -33,17 +33,17 @@ First, the YAML Schema, defining the type as a pair of integers:
    maxItems: 2
    ...
 
-Then, the Python implementation.  See the `pyasdf.AsdfType` and
-`pyasdf.AsdfExtension` documentation for more information::
+Then, the Python implementation.  See the `asdf.AsdfType` and
+`asdf.AsdfExtension` documentation for more information::
 
     import os
 
-    import pyasdf
-    from pyasdf import util
+    import asdf
+    from asdf import util
 
     import fractions
 
-    class FractionType(pyasdf.AsdfType):
+    class FractionType(asdf.AsdfType):
         name = 'fraction'
         organization = 'nowhere.org'
         version = (1, 0, 0)
@@ -101,14 +101,14 @@ arguments:
     get other related schema keywords.
 
 The validation function should either return ``None`` if the instance
-is valid or ``yield`` one or more `pyasdf.ValidationError` objects if
+is valid or ``yield`` one or more `asdf.ValidationError` objects if
 the instance is invalid.
 
 To continue the example from above, for the ``FractionType`` say we
 want to add a validation keyword "``simplified``" that, when ``true``,
 asserts that the corresponding fraction is in simplified form::
 
-    from pyasdf import ValidationError
+    from asdf import ValidationError
 
     def validate_simplified(validator, simplified, instance, schema):
         if simplified:

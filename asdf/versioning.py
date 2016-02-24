@@ -76,7 +76,7 @@ class VersionedMixin(object):
             human_versions = util.human_list(
                 [version_to_string(x) for x in supported_versions])
             raise ValueError(
-                "pyasdf only understands how to handle ASDF versions {0}. "
+                "asdf only understands how to handle ASDF versions {0}. "
                 "Got '{1}'".format(
                     human_versions,
                     version_to_string(version)))

@@ -4,7 +4,7 @@
 from __future__ import absolute_import, division, unicode_literals, print_function
 
 """
-pyasdf: Python library for reading and writing Advanced Scientific
+asdf: Python library for reading and writing Advanced Scientific
 Data Format (ASDF) files
 """
 
@@ -22,17 +22,17 @@ if _PYASDF_SETUP_ is False:
     try:
         import yaml as _
     except ImportError:
-        raise ImportError("pyasdf requires pyyaml")
+        raise ImportError("asdf requires pyyaml")
 
     try:
         import jsonschema as _
     except ImportError:
-        raise ImportError("pyasdf requires jsonschema")
+        raise ImportError("asdf requires jsonschema")
 
     try:
         import numpy as _
     except ImportError:
-        raise ImportError("pyasdf requires numpy")
+        raise ImportError("asdf requires numpy")
 
     from .asdf import AsdfFile
     from .asdftypes import AsdfType

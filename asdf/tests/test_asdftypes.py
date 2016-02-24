@@ -110,7 +110,7 @@ a: !core/complex-42.0.0
     assert len(w) == 1
     assert str(w[0].message) == (
         "'tag:stsci.edu:asdf/core/complex' with version 42.0.0 found in file, "
-        "but pyasdf only understands version 1.0.0.")
+        "but asdf only understands version 1.0.0.")
 
     # Make sure warning is repeatable
     buff.seek(0)
@@ -121,7 +121,7 @@ a: !core/complex-42.0.0
     assert len(w) == 1
     assert str(w[0].message) == (
         "'tag:stsci.edu:asdf/core/complex' with version 42.0.0 found in file, "
-        "but pyasdf only understands version 1.0.0.")
+        "but asdf only understands version 1.0.0.")
 
     # If the major and minor match, there should be no warning.
     yaml = """

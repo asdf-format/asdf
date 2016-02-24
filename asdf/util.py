@@ -229,7 +229,7 @@ def resolve_name(name):
     Examples
     --------
 
-    >>> resolve_name('pyasdf.util.resolve_name')
+    >>> resolve_name('asdf.util.resolve_name')
     <function resolve_name at 0x...>
 
     Raises
@@ -346,7 +346,7 @@ class InheritDocstrings(type):
 
     For example::
 
-        >>> from pyasdf.util import InheritDocstrings
+        >>> from asdf.util import InheritDocstrings
         >>> import six
         >>> @six.add_metaclass(InheritDocstrings)
         ... class A(object):

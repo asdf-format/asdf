@@ -1,5 +1,5 @@
-pyasdf
-======
+asdf
+====
 
 Python library for reading and writing ASDF files.
 
