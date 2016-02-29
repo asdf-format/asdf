@@ -1,7 +1,9 @@
-1.0.2 (unreleased)
+1.0.2 (2016-02-29)
 ------------------
 
-- Nothing changed yet.
+- Renamed package to ASDF. [#190]
+
+- Stopped support for Python 2.6 [#191]
 
 
 1.0.1 (2016-01-08)
