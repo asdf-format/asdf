@@ -16,9 +16,9 @@ from docutils import nodes
 
 from sphinx.util.nodes import set_source_info
 
-from pyasdf import AsdfFile
-from pyasdf.constants import ASDF_MAGIC, BLOCK_FLAG_STREAMED
-from pyasdf import versioning
+from asdf import AsdfFile
+from asdf.constants import ASDF_MAGIC, BLOCK_FLAG_STREAMED
+from asdf import versioning
 
 version_string = versioning.version_to_string(versioning.default_version)
 

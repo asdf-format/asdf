@@ -279,7 +279,7 @@ def dump_tree(tree, fd, ctx):
     tree : object
         Tree of objects, possibly containing custom data types.
 
-    fd : pyasdf.generic_io.GenericFile
+    fd : asdf.generic_io.GenericFile
         A file object to dump the serialized YAML to.
 
     ctx : Context

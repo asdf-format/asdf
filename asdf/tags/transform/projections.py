@@ -24,11 +24,11 @@ class AffineType(TransformType):
         translation = node['translation']
         if matrix.shape != (2, 2):
             raise NotImplementedError(
-                "pyasdf currently only supports 2x2 (2D) rotation transformation "
+                "asdf currently only supports 2x2 (2D) rotation transformation "
                 "matrices")
         if translation.shape != (2,):
             raise NotImplementedError(
-                "pyasdf currently only supports 2D translation transformations.")
+                "asdf currently only supports 2D translation transformations.")
 
         return modeling.projections.AffineTransformation2D(
             matrix=matrix, translation=translation)

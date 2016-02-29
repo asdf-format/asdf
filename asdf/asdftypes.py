@@ -250,7 +250,7 @@ class AsdfTypeIndex(object):
             warning_string = None
         else:
             warning_string = (
-                "'{0}' with version {1} found in file, but pyasdf only "
+                "'{0}' with version {1} found in file, but asdf only "
                 "understands version {2}.".format(
                     name,
                     semver.format_version(*version),

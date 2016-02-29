@@ -12,7 +12,7 @@ to YAML.  Here we save a dictionary with the key/value pair ``'hello':
 
 .. runcode::
 
-   from pyasdf import AsdfFile
+   from asdf import AsdfFile
 
    # Make the tree structure, and create a AsdfFile from it.
    tree = {'hello': 'world'}
@@ -38,7 +38,7 @@ the array, but the actual array content is in a binary block.
 
 .. runcode::
 
-   from pyasdf import AsdfFile
+   from asdf import AsdfFile
    import numpy as np
 
    tree = {'my_array': np.random.rand(8, 8)}
@@ -64,10 +64,10 @@ contain any elements.  One of the few specified elements is ``data``:
 it must be an array, and is used to specify the "main" data content
 (for some definition of "main") so that tools that merely want to view
 or preview the ASDF file have a standard location to find the most
-interesting data.  If you set this to anything but an array, ``pyasdf``
+interesting data.  If you set this to anything but an array, ``asdf``
 will complain::
 
-    >>> from pyasdf import AsdfFile
+    >>> from asdf import AsdfFile
     >>> tree = {'data': 'Not an array'}
     >>> AsdfFile(tree)
     Traceback (most recent call last):
@@ -81,10 +81,10 @@ This validation happens only when a `AsdfFile` is instantiated, read
 or saved, so it's still possible to get the tree into an invalid
 intermediate state::
 
-    >>> from pyasdf import AsdfFile
+    >>> from asdf import AsdfFile
     >>> ff = AsdfFile()
     >>> ff.tree['data'] = 'Not an array'
-    >>> # The ASDF file is now invalid, but pyasdf will tell us when
+    >>> # The ASDF file is now invalid, but asdf will tell us when
     >>> # we write it out.
     >>> ff.write_to('test.asdf')
     Traceback (most recent call last):
@@ -104,7 +104,7 @@ data being saved.
 
 .. runcode::
 
-   from pyasdf import AsdfFile
+   from asdf import AsdfFile
    import numpy as np
 
    my_array = np.random.rand(8, 8)
@@ -124,7 +124,7 @@ Saving inline arrays
 
 For these sort of small arrays, you may not care about the efficiency
 of a binary representation and want to just save the content directly
-in the YAML tree.  The `~pyasdf.AsdfFile.set_array_storage` method
+in the YAML tree.  The `~asdf.AsdfFile.set_array_storage` method
 can be used to set the type of block of the associated data, either
 ``internal``, ``external`` or ``inline``.
 
@@ -138,7 +138,7 @@ can be used to set the type of block of the associated data, either
 
 .. runcode::
 
-   from pyasdf import AsdfFile
+   from asdf import AsdfFile
    import numpy as np
 
    my_array = np.random.rand(8, 8)
@@ -184,7 +184,7 @@ To save a block in an external file, set its block type to
 
 .. runcode::
 
-   from pyasdf import AsdfFile
+   from asdf import AsdfFile
    import numpy as np
 
    my_array = np.random.rand(8, 8)
@@ -215,14 +215,14 @@ implicitly determined to include all of the remaining contents of the
 file.  By definition, it must be the last block in the file.
 
 To use streaming, rather than including a Numpy array object in the
-tree, you include a `pyasdf.Stream` object which sets up the structure
+tree, you include a `asdf.Stream` object which sets up the structure
 of the streamed data, but will not write out the actual content.  The
 file handle's `write` method is then used to manually write out the
 binary data.
 
 .. runcode::
 
-   from pyasdf import AsdfFile, Stream
+   from asdf import AsdfFile, Stream
    import numpy as np
 
    tree = {
@@ -246,13 +246,13 @@ References
 
 ASDF files may reference items in the tree in other ASDF files.  The
 syntax used in the file for this is called "JSON Pointer", but users
-of ``pyasdf`` can largely ignore that.
+of ``asdf`` can largely ignore that.
 
 First, we'll create a ASDF file with a couple of arrays in it:
 
 .. runcode::
 
-   from pyasdf import AsdfFile
+   from asdf import AsdfFile
    import numpy as np
 
    tree = {
@@ -285,7 +285,7 @@ to the target file.
 
 .. asdf:: source.asdf
 
-Calling `~pyasdf.AsdfFile.find_references` will look up all of the
+Calling `~asdf.AsdfFile.find_references` will look up all of the
 references so they can be used as if they were local to the tree.  It
 doesn't actually move any of the data, and keeps the references as
 references.
@@ -296,7 +296,7 @@ references.
        ff.find_references()
        assert ff.tree['my_ref_b'].shape == (10,)
 
-On the other hand, calling `~pyasdf.AsdfFile.resolve_references`
+On the other hand, calling `~asdf.AsdfFile.resolve_references`
 places all of the referenced content directly in the tree, so when we
 write it out again, all of the external references are gone, with the
 literal content in its place.
@@ -311,14 +311,14 @@ literal content in its place.
 
 A similar feature provided by YAML, anchors and aliases, also provides
 a way to support references within the same file.  These are supported
-by pyasdf, however the JSON Pointer approach is generally favored because:
+by asdf, however the JSON Pointer approach is generally favored because:
 
    - It is possible to reference elements in another file
 
    - Elements are referenced by location in the tree, not an
      identifier, therefore, everything can be referenced.
 
-Anchors and aliases are handled automatically by ``pyasdf`` when the
+Anchors and aliases are handled automatically by ``asdf`` when the
 data structure is recursive.  For example here is a dictionary that is
 included twice in the same tree:
 
@@ -343,7 +343,7 @@ You can easily `zlib <http://www.zlib.net/>`__ or `bzip2
 
 .. runcode::
 
-   from pyasdf import AsdfFile
+   from asdf import AsdfFile
    import numpy as np
 
    tree = {
@@ -360,17 +360,17 @@ You can easily `zlib <http://www.zlib.net/>`__ or `bzip2
 Saving history entries
 ----------------------
 
-``pyasdf`` has a convenience method for notating the history of
+``asdf`` has a convenience method for notating the history of
 transformations that have been performed on a file.
 
-Given a `~pyasdf.AsdfFile` object, call
-`~pyasdf.AsdfFile.add_history_entry`, given a description of the
+Given a `~asdf.AsdfFile` object, call
+`~asdf.AsdfFile.add_history_entry`, given a description of the
 change and optionally a description of the software (i.e. your
-software, not ``pyasdf``) that performed the operation.
+software, not ``asdf``) that performed the operation.
 
 .. runcode::
 
-   from pyasdf import AsdfFile
+   from asdf import AsdfFile
    import numpy as np
 
    tree = {
@@ -380,7 +380,7 @@ software, not ``pyasdf``) that performed the operation.
    ff = AsdfFile(tree)
    ff.add_history_entry(
        u"Initial random numbers",
-       {u'name': u'pyasdf examples',
+       {u'name': u'asdf examples',
         u'author': u'John Q. Public',
         u'homepage': u'http://github.com/spacetelescope/pyasdf',
         u'version': u'0.1'})
@@ -414,7 +414,7 @@ This FITS file has two image extensions, SCI and DQ respectively.
 
 Next we make a tree structure out of the data in the FITS file.
 Importantly, we use the *same* arrays in the FITS HDUList and store
-them in the tree.  By doing this, pyasdf will be smart enough to point
+them in the tree.  By doing this, asdf will be smart enough to point
 to the data in the regular FITS extensions.
 
 .. runcode::
@@ -431,13 +431,13 @@ to the data in the regular FITS extensions.
     }
 
 Now we take both the FITS HDUList and the ASDF tree and create a
-`~pyasdf.fits_embed.AsdfInFits` object.  It behaves identically to the
-`~pyasdf.AsdfFile` object, but reads and writes this special
+`~asdf.fits_embed.AsdfInFits` object.  It behaves identically to the
+`~asdf.AsdfFile` object, but reads and writes this special
 ASDF-in-FITS format.
 
 .. runcode::
 
-    from pyasdf import fits_embed
+    from asdf import fits_embed
 
     ff = fits_embed.AsdfInFits(hdulist, tree)
     ff.write_to('embedded_asdf.fits')
@@ -454,7 +454,7 @@ prefix to indicate that the data comes from a FITS extension.
 .. asdf:: content.asdf
 
 To load an ASDF-in-FITS file, first open it with ``astropy.io.fits``, and then
-pass that HDU list to `~pyasdf.fits_embed.AsdfInFits`:
+pass that HDU list to `~asdf.fits_embed.AsdfInFits`:
 
 
 .. runcode::

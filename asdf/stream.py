@@ -15,7 +15,7 @@ class Stream(ndarray.NDArrayType):
     Save a double-precision array with 1024 columns, one row at a
     time::
 
-         >>> from pyasdf import AsdfFile, Stream
+         >>> from asdf import AsdfFile, Stream
          >>> import numpy as np
          >>> ff = AsdfFile()
          >>> ff.tree['streamed'] = Stream([1024], np.float64)

@@ -30,8 +30,8 @@ def get_package_data():  # pragma: no cover
                         root))
 
     return {
-        str('pyasdf.schemas'): schemas,
-        str('pyasdf.reference_files'): reference_files
+        str('asdf.schemas'): schemas,
+        str('asdf.reference_files'): reference_files
     }
 
 

@@ -1,13 +1,13 @@
-pyasdf Documentation
+asdf Documentation
 ====================
 
-``pyasdf`` is a tool for reading and writing Advanced Scientific Data
+``asdf`` is a tool for reading and writing Advanced Scientific Data
 Format (ASDF) files.
 
 Installation
 ------------
 
-``pyasdf`` requires:
+``asdf`` requires:
 
 - `python <http://www.python.org/>`__ 2.6, 2.7, 3.3, 3.4 or 3.5.
 
@@ -34,12 +34,12 @@ numbers.  In addition, ASDF understands how to handle other types,
 such as Numpy arrays.
 
 In the simplest example, you create a tree, and write it to a ASDF
-file.  ``pyasdf`` handles saving the Numpy array as a binary block
+file.  ``asdf`` handles saving the Numpy array as a binary block
 transparently:
 
 .. runcode::
 
-   from pyasdf import AsdfFile
+   from asdf import AsdfFile
    import numpy as np
 
    tree = {
@@ -56,13 +56,13 @@ Other :ref:`examples` are provided below.
 .. toctree::
   :maxdepth: 2
 
-  pyasdf/examples.rst
-  pyasdf/extensions.rst
+  asdf/examples.rst
+  asdf/extensions.rst
 
 Commandline tool
 ----------------
 
-``pyasdf`` includes a command-line tool, ``asdftool`` that performs a
+``asdf`` includes a command-line tool, ``asdftool`` that performs a
 number of basic operations:
 
   - ``explode``: Convert a self-contained ASDF file into exploded form.
@@ -86,6 +86,6 @@ See also
 Reference/API
 -------------
 
-.. automodapi:: pyasdf
+.. automodapi:: asdf
 
-.. automodapi:: pyasdf.fits_embed
+.. automodapi:: asdf.fits_embed

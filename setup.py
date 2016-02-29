@@ -39,13 +39,13 @@ LICENSE = metadata.get('license', 'unknown')
 URL = metadata.get('url', '')
 
 # Get the long description from the package's docstring
-__import__('pyasdf')
-package = sys.modules['pyasdf']
+__import__('asdf')
+package = sys.modules['asdf']
 LONG_DESCRIPTION = package.__doc__
 
 # Store the package name in a built-in variable so it's easy
 # to get from other parts of the setup infrastructure
-builtins._PACKAGE_NAME_ = 'pyasdf'
+builtins._PACKAGE_NAME_ = 'asdf'
 
 # VERSION should be PEP386 compatible (http://www.python.org/dev/peps/pep-0386)
 VERSION = '1.1.0.dev'
@@ -62,15 +62,15 @@ ASDF_STANDARD_ROOT = os.environ.get('ASDF_STANDARD_ROOT', 'asdf-standard')
 # Populate the dict of setup command overrides; this should be done before
 # invoking any other functionality from distutils since it can potentially
 # modify distutils' behavior.
-cmdclassd = register_commands('pyasdf', VERSION, RELEASE)
+cmdclassd = register_commands('asdf', VERSION, RELEASE)
 
 # Adjust the compiler in case the default on this platform is to use a
 # broken one.
-adjust_compiler('pyasdf')
+adjust_compiler('asdf')
 
 # Freeze build information in version.py
-generate_version_py('pyasdf', VERSION, RELEASE,
-                    get_debug_option('pyasdf'))
+generate_version_py('asdf', VERSION, RELEASE,
+                    get_debug_option('asdf'))
 
 # Treat everything in scripts except README.rst as a script to be installed
 scripts = [fname for fname in glob.glob(os.path.join('scripts', '*'))
@@ -83,27 +83,27 @@ scripts = [fname for fname in glob.glob(os.path.join('scripts', '*'))
 package_info = get_package_info()
 
 # Add the project-global data
-package_info['package_data'].setdefault('pyasdf', []).append('data/*')
+package_info['package_data'].setdefault('asdf', []).append('data/*')
 
 # The schemas come from a git submodule, so we deal with them here
 schema_root = os.path.join(ASDF_STANDARD_ROOT, "schemas")
 
-package_info['package_dir']['pyasdf.schemas'] = schema_root
-package_info['packages'].append('pyasdf.schemas')
+package_info['package_dir']['asdf.schemas'] = schema_root
+package_info['packages'].append('asdf.schemas')
 
 # The reference files come from a git submodule, so we deal with them here
 reference_file_root = os.path.join(
     ASDF_STANDARD_ROOT, "reference_files")
-package_info['package_dir']['pyasdf.reference_files'] = reference_file_root
+package_info['package_dir']['asdf.reference_files'] = reference_file_root
 for dirname in os.listdir(reference_file_root):
-    package_info['package_dir']['pyasdf.reference_files.' + dirname] = os.path.join(
+    package_info['package_dir']['asdf.reference_files.' + dirname] = os.path.join(
         reference_file_root, dirname)
-package_info['packages'].append('pyasdf.reference_files')
+package_info['packages'].append('asdf.reference_files')
 
 #Define entry points for command-line scripts
 entry_points = {}
 entry_points['console_scripts'] = [
-    'asdftool = pyasdf.commands.main:main',
+    'asdftool = asdf.commands.main:main',
 ]
 
 

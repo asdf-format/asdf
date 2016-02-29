@@ -13,7 +13,7 @@ recursive-include scripts *
 
 # Python version specific compatibility packages, normally excluded by default
 # depending on the Python version doing the building
-recursive-include pyasdf/compat *.py
+recursive-include asdf/compat *.py
 
 prune build
 prune docs/_build
