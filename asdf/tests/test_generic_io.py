@@ -543,7 +543,7 @@ def test_truncated_reader():
     Tests several edge cases for _TruncatedReader.read()
 
     Includes regression test for
-    https://github.com/spacetelescope/pyasdf/pull/181
+    https://github.com/spacetelescope/asdf/pull/181
     """
 
     # TODO: Should probably break this up into multiple test cases

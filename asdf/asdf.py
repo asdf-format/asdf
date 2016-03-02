@@ -35,7 +35,7 @@ def get_asdf_library_info():
     return Software({
         'name': 'asdf',
         'version': version.version,
-        'homepage': 'http://github.com/spacetelescope/pyasdf',
+        'homepage': 'http://github.com/spacetelescope/asdf',
         'author': 'Space Telescope Science Institute'
     })
 

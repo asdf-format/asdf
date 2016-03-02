@@ -27,5 +27,5 @@ To run the unit tests::
 Coverage
 --------
 
-.. image:: https://coveralls.io/repos/spacetelescope/pyasdf/badge.svg?branch=master&service=github
-  :target: https://coveralls.io/github/spacetelescope/pyasdf?branch=master
+.. image:: https://coveralls.io/repos/spacetelescope/asdf/badge.svg?branch=master&service=github
+  :target: https://coveralls.io/github/spacetelescope/asdf?branch=master

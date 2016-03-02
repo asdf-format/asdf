@@ -382,7 +382,7 @@ software, not ``asdf``) that performed the operation.
        u"Initial random numbers",
        {u'name': u'asdf examples',
         u'author': u'John Q. Public',
-        u'homepage': u'http://github.com/spacetelescope/pyasdf',
+        u'homepage': u'http://github.com/spacetelescope/asdf',
         u'version': u'0.1'})
    ff.write_to('example.asdf')
 
