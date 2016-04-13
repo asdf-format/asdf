@@ -69,7 +69,7 @@ will complain::
 
     >>> from asdf import AsdfFile
     >>> tree = {'data': 'Not an array'}
-    >>> AsdfFile(tree)
+    >>> AsdfFile(tree)  # doctest: +IGNORE_EXCEPTION_DETAIL
     Traceback (most recent call last):
     ...
     ValidationError: mismatched tags, wanted
@@ -86,7 +86,7 @@ intermediate state::
     >>> ff.tree['data'] = 'Not an array'
     >>> # The ASDF file is now invalid, but asdf will tell us when
     >>> # we write it out.
-    >>> ff.write_to('test.asdf')
+    >>> ff.write_to('test.asdf')  # doctest: +IGNORE_EXCEPTION_DETAIL
     Traceback (most recent call last):
     ...
     ValidationError: mismatched tags, wanted
