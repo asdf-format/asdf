@@ -16,7 +16,7 @@ else:
 builtins._ASDF_SETUP_ = True
 
 from astropy_helpers.setup_helpers import (
-    register_commands, adjust_compiler, get_debug_option, get_package_info)
+    register_commands, get_debug_option, get_package_info)
 from astropy_helpers.git_helpers import get_git_devstr
 from astropy_helpers.version_helpers import generate_version_py
 
@@ -63,10 +63,6 @@ ASDF_STANDARD_ROOT = os.environ.get('ASDF_STANDARD_ROOT', 'asdf-standard')
 # invoking any other functionality from distutils since it can potentially
 # modify distutils' behavior.
 cmdclassd = register_commands('asdf', VERSION, RELEASE)
-
-# Adjust the compiler in case the default on this platform is to use a
-# broken one.
-adjust_compiler('asdf')
 
 # Freeze build information in version.py
 generate_version_py('asdf', VERSION, RELEASE,
