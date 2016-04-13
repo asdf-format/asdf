@@ -25,7 +25,7 @@ class ShiftType(TransformType):
         offset = node['offset']
         if not np.isscalar(offset):
             raise NotImplementedError(
-                "Pyasdf currently only supports scalar inputs to Shift transform.")
+                "Asdf currently only supports scalar inputs to Shift transform.")
 
         return modeling.models.Shift(offset)
 
@@ -56,7 +56,7 @@ class ScaleType(TransformType):
         factor = node['factor']
         if not np.isscalar(factor):
             raise NotImplementedError(
-                "Pyasdf currently only supports scalar inputs to Scale transform.")
+                "Asdf currently only supports scalar inputs to Scale transform.")
 
         return modeling.models.Scale(factor)
 
@@ -106,7 +106,7 @@ class PolynomialType(TransformType):
             model = modeling.models.Polynomial2D(degree, **coeffs)
         else:
             raise NotImplementedError(
-                "Pyasdf currently only supports 1D or 2D polynomial transform.")
+                "Asdf currently only supports 1D or 2D polynomial transform.")
         return model
 
     @classmethod

@@ -14,7 +14,7 @@ Data Format (ASDF) files
 from ._internal_init import *
 # ----------------------------------------------------------------------------
 
-if _PYASDF_SETUP_ is False:
+if _ASDF_SETUP_ is False:
     __all__ = ['AsdfFile', 'AsdfType', 'AsdfExtension',
                'Stream', 'open', 'test', 'commands',
                'ValidationError']
