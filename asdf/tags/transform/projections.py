@@ -102,17 +102,31 @@ class Rotate3DType(TransformType):
         from astropy import modeling
 
         if isinstance(model, modeling.rotations.RotateNative2Celestial):
-            return {"phi": model.lon.value,
-                    "theta": model.lat.value,
-                    "psi": model.lon_pole.value,
-                    "direction": "native2celestial"
-                    }
+            try:
+                return {"phi": model.lon.value,
+                        "theta": model.lat.value,
+                        "psi": model.lon_pole.value,
+                        "direction": "native2celestial"
+                        }
+            except AttributeError:
+                return {"phi": model.lon,
+                        "theta": model.lat,
+                        "psi": model.lon_pole,
+                        "direction": "native2celestial"
+                        }
         elif isinstance(model, modeling.rotations.RotateCelestial2Native):
-            return {"phi": model.lon.value,
-                    "theta": model.lat.value,
-                    "psi": model.lon_pole.value,
-                    "direction": "celestial2native"
-                    }
+            try:
+                return {"phi": model.lon.value,
+                        "theta": model.lat.value,
+                        "psi": model.lon_pole.value,
+                        "direction": "celestial2native"
+                        }
+            except AttributeError:
+                return {"phi": model.lon,
+                        "theta": model.lat,
+                        "psi": model.lon_pole,
+                        "direction": "celestial2native"
+                        }
         else:
             return {"phi": model.phi.value,
                     "theta": model.theta.value,
