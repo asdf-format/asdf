@@ -35,8 +35,8 @@ from __future__ import absolute_import, division, unicode_literals, print_functi
 
 import six
 
+from astropy import time
 from .compat import UserDict, UserList, UserString
-
 
 __all__ = ['tag_object', 'get_tag']
 
@@ -98,6 +98,15 @@ class TaggedString(Tagged, UserString, six.text_type):
                 self._tag == other._tag)
 
 
+class TaggedTime(Tagged, time.Time):
+    """
+    An Astropy time object with a tag attached.
+    """
+    def __new__(cls, instance, tag):
+        self = time.Time.__new__(type(instance), instance)
+        self._tag = tag
+        return self
+
 def tag_object(tag, instance):
     """
     Tag an object by wrapping it in a ``Tagged`` instance.
@@ -109,6 +118,8 @@ def tag_object(tag, instance):
         return TaggedDict(instance, tag)
     elif isinstance(instance, list):
         return TaggedList(instance, tag)
+    elif isinstance(instance, time.Time):
+        return TaggedTime(instance, tag)
     elif isinstance(instance, six.string_types):
         instance = TaggedString(instance)
         instance._tag = tag
