@@ -3,6 +3,12 @@
 
 - No changes yet.
 
+1.0.4 (2016-05-25)
+------------------
+
+- Added wrapper class for astropy.core.Time, TaggedTime. [#198]
+
+
 1.0.2 (2016-02-29)
 ------------------
 
