@@ -19,7 +19,6 @@ import platform
 import re
 import sys
 import tempfile
-import array as array_class
 
 from os import SEEK_SET, SEEK_CUR, SEEK_END
 
@@ -803,10 +802,9 @@ class MemoryIO(RandomAccessFile):
     def read_into_array(self, size):
         buf = self._fd.getvalue()
         offset = self._fd.tell()
-        if size == -1:
-            result = array_class.array(str("B"), buf[offset:])
-        else:
-            result = array_class.array(str("B"), buf[offset:offset+size])
+        result = np.frombuffer(buf, np.uint8, size, offset)
+        # Copy the buffer so the original memory can be released.
+        result = result.copy()
         self.seek(size, SEEK_CUR)
         return result
 
