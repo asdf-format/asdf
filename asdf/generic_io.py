@@ -800,12 +800,11 @@ class MemoryIO(RandomAccessFile):
         fd.seek(tell, 0)
 
     def read_into_array(self, size):
-        result = np.frombuffer(
-            self._fd.getvalue(), np.uint8, size, self._fd.tell())
-        # When creating an array from a buffer, it is read-only.
-        # If we need a read/write array, we have to copy it.
-        if 'w' in self._mode:
-            result = result.copy()
+        buf = self._fd.getvalue()
+        offset = self._fd.tell()
+        result = np.frombuffer(buf, np.uint8, size, offset)
+        # Copy the buffer so the original memory can be released.
+        result = result.copy()
         self.seek(size, SEEK_CUR)
         return result
 
