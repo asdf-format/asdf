@@ -1,4 +1,4 @@
-1.0.5 (Unreleased)
+1.0.5 (2016-06-28)
 ------------------
 
 - Fixed a memory leak when reading wcs that grew memory to over 10 Gb
