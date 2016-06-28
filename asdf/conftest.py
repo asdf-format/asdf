@@ -9,21 +9,6 @@ from __future__ import absolute_import, division, unicode_literals, print_functi
 
 from astropy.tests.pytest_plugins import *
 
-## Uncomment the following line to treat all DeprecationWarnings as
-## exceptions
-enable_deprecations_as_exceptions()
-
-try:
-    PYTEST_HEADER_MODULES['jsonschema'] = 'jsonschema'
-    PYTEST_HEADER_MODULES['pyyaml'] = 'yaml'
-    PYTEST_HEADER_MODULES['six'] = 'six'
-    del PYTEST_HEADER_MODULES['h5py']
-    del PYTEST_HEADER_MODULES['Matplotlib']
-    del PYTEST_HEADER_MODULES['Scipy']
-except (NameError, KeyError):
-    pass
-
-
 import multiprocessing
 import os
 import shutil
@@ -34,6 +19,31 @@ import pytest
 import six
 
 from .extern.RangeHTTPServer import RangeHTTPRequestHandler
+
+# This is to figure out the affiliated package version, rather than
+# using Astropy's
+from . import version
+
+packagename = os.path.basename(os.path.dirname(__file__))
+TESTED_VERSIONS[packagename] = version.version
+
+
+# Uncomment the following line to treat all DeprecationWarnings as
+# exceptions
+enable_deprecations_as_exceptions()
+
+try:
+    PYTEST_HEADER_MODULES['Astropy'] = 'astropy'
+    PYTEST_HEADER_MODULES['jsonschema'] = 'jsonschema'
+    PYTEST_HEADER_MODULES['pyyaml'] = 'yaml'
+    PYTEST_HEADER_MODULES['six'] = 'six'
+    del PYTEST_HEADER_MODULES['h5py']
+    del PYTEST_HEADER_MODULES['Matplotlib']
+    del PYTEST_HEADER_MODULES['Scipy']
+except (NameError, KeyError):
+    pass
+
+
 
 
 def run_server(queue, tmpdir, handler_class):  # pragma: no cover
