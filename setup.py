@@ -26,8 +26,11 @@ def _null_validate(self):
 test_helpers.AstropyTest._validate_required_deps = _null_validate
 
 # Get some values from the setup.cfg
-from distutils import config
-conf = config.ConfigParser()
+try:
+    from ConfigParser import ConfigParser
+except ImportError:
+    from configparser import ConfigParser
+conf = ConfigParser()
 conf.read(['setup.cfg'])
 metadata = dict(conf.items('metadata'))
 
@@ -48,7 +51,7 @@ LONG_DESCRIPTION = package.__doc__
 builtins._PACKAGE_NAME_ = 'asdf'
 
 # VERSION should be PEP386 compatible (http://www.python.org/dev/peps/pep-0386)
-VERSION = '1.0.4'
+VERSION = '1.0.6'
 
 # Indicates if this version is a release version
 RELEASE = 'dev' not in VERSION
