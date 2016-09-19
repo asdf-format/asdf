@@ -7,3 +7,4 @@ from .basic import *
 from .compound import *
 from .projections import *
 from .polynomial import *
+from .tabular import *
