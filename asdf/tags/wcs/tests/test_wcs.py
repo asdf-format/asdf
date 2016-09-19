@@ -105,11 +105,11 @@ def test_frames(tmpdir):
                 roll=3*u.deg)
             ),
 
-        cf.CelestialFrame(
-            reference_frame=coord.GCRS(
-                obstime=time.Time('2010-01-01'),
-                obsgeoloc=[1, 3, 2000] * u.pc,
-                obsgeovel=[2, 1, 8] * (u.m/u.s))),
+        #cf.CelestialFrame(
+        #    reference_frame=coord.GCRS(
+        #        obstime=time.Time('2010-01-01'),
+        #        obsgeoloc=[1, 3, 2000] * u.pc,
+        #        obsgeovel=[2, 1, 8] * (u.m/u.s))),
 
         cf.CelestialFrame(
             reference_frame=coord.CIRS(
@@ -119,11 +119,11 @@ def test_frames(tmpdir):
             reference_frame=coord.ITRS(
                 obstime=time.Time('2022-01-03'))),
 
-        cf.CelestialFrame(
-            reference_frame=coord.PrecessedGeocentric(
-                obstime=time.Time('2010-01-01'),
-                obsgeoloc=[1, 3, 2000] * u.pc,
-                obsgeovel=[2, 1, 8] * (u.m/u.s)))
+        #cf.CelestialFrame(
+        #    reference_frame=coord.PrecessedGeocentric(
+        #        obstime=time.Time('2010-01-01'),
+        #        obsgeoloc=[1, 3, 2000] * u.pc,
+        #        obsgeovel=[2, 1, 8] * (u.m/u.s)))
     ]
 
     tree = {
