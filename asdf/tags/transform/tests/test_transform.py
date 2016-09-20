@@ -3,6 +3,8 @@
 
 from __future__ import absolute_import, division, unicode_literals, print_function
 
+import numpy as np
+
 try:
     import astropy
 except ImportError:
@@ -126,3 +128,20 @@ def test_generic_projections(tmpdir):
         }
 
         helpers.assert_roundtrip_tree(tree, tmpdir)
+
+
+@pytest.mark.skipif('not HAS_ASTROPY')
+def test_tabular_model(tmpdir):
+    points = np.arange(0, 5)
+    values = [1., 10, 2, 45, -3]
+    model = astmodels.Tabular1D(points=points, lookup_table=values)
+    tree = {'model': model}
+    helpers.assert_roundtrip_tree(tree, tmpdir)
+    table = np.array([[ 3.,  0.,  0.],
+                      [ 0.,  2.,  0.],
+                      [ 0.,  0.,  0.]])
+    points = ([1, 2, 3], [1, 2, 3])
+    model2 = astmodels.Tabular2D(points, lookup_table=table, bounds_error=False,
+                                 fill_value=None, method='nearest')
+    tree = {'model': model2}
+    helpers.assert_roundtrip_tree(tree, tmpdir)
