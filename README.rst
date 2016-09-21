@@ -13,9 +13,17 @@ interchange format for scientific data.
 Installation
 ------------
 
+To clone the project from github and initialize the asdf-standard submodule::
+
+    git clone https://github.com/spacetelescope/asdf.git
+    cd asdf/asdf_standard
+    git submodule init
+    git submodule update
+
 To install::
 
     python setup.py install
+
 
 Testing
 -------
