@@ -1,7 +1,12 @@
+1.1.1(Unreleased)
+-----------------
+
+- Added Tabular model. [#214]
+
 1.0.5 (2016-06-28)
 ------------------
 
-- Fixed a memory leak when reading wcs that grew memory to over 10 Gb
+- Fixed a memory leak when reading wcs that grew memory to over 10 Gb. [#200]
 
 1.0.4 (2016-05-25)
 ------------------
