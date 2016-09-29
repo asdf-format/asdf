@@ -1,5 +1,8 @@
+asdf
 numpy
 Cython
-git+http://github.com/astropy/astropy.git#egg=astropy
+astropy
+astropy-helpers
 jsonschema
 pyyaml
+sphinx>=1.4.2
