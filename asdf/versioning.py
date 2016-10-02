@@ -36,6 +36,7 @@ def get_version_map(version):
                 version_map = yaml.load(
                     fd, Loader=_yaml_base_loader)
         except:
+            version_string = version_to_string(version)
             raise ValueError(
                 "Could not load version map for version {0}".format(version_string))
         _version_map[version] = version_map
