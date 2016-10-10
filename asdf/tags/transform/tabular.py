@@ -26,18 +26,21 @@ class TabularType(TransformType):
         dim = lookup_table.ndim
         name = node.get('name', None)
         fill_value = node.pop("fill_value", None)
-        points = np.asarray(node['points'])
         if dim == 1:
+            # The copy is necessary because the array is memory mapped.
+            points = node['points'][0].copy()
             model = modeling.models.Tabular1D(points=points, lookup_table=lookup_table,
                                               method=node['method'], bounds_error=node['bounds_error'],
                                               fill_value=fill_value, name=name)
         elif dim == 2:
+            points = tuple([p.copy() for p in node['points']])
             model = modeling.models.Tabular2D(points=points, lookup_table=lookup_table,
                                               method=node['method'], bounds_error=node['bounds_error'],
                                               fill_value=fill_value, name=name)
+
         else:
             tabular_class = modeling.models.tabular_model(dim, name)
-
+            points = tuple([p.copy() for p in node['points']])
             model = tabular_class(points=points, lookup_table=lookup_table,
                                   method=node['method'], bounds_error=node['bounds_error'],
                                   fill_value=fill_value, name=name)
@@ -49,7 +52,10 @@ class TabularType(TransformType):
         node = {}
         node["fill_value"] = model.fill_value
         node["lookup_table"] = model.lookup_table
-        node["points"] = model.points
+        if model.lookup_table.ndim == 1:
+            node["points"] = (model.points,)
+        else:
+            node["points"] = [p for p in model.points]
         node["method"] = str(model.method)
         node["bounds_error"] = model.bounds_error
         node["name"] = model.name
