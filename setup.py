@@ -28,7 +28,7 @@ test_helpers.AstropyTest._validate_required_deps = _null_validate
 # Get some values from the setup.cfg
 try:
     from ConfigParser import ConfigParser
-except ImportError:
+except ImportError or AttributeError:
     from configparser import ConfigParser
 conf = ConfigParser()
 conf.read(['setup.cfg'])
