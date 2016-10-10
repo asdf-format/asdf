@@ -13,7 +13,7 @@ Installation
 
 - `numpy <http://www.numpy.org/>`__ 1.6 or later
 
-- `jsonschema <http://python-jsonschema.readthedocs.org/>`__ 2.3.0 or later
+- `jsonschema <https://python-jsonschema.readthedocs.io/>`__ 2.3.0 or later
 
 - `pyyaml <http://pyyaml.org>`__ 3.10 or later
 
@@ -81,7 +81,7 @@ See also
 --------
 
 - The `Advanced Scientific Data Format (ASDF) standard
-  <http://asdf-standard.readthedocs.org/>`__
+  <https://asdf-standard.readthedocs.io/>`__
 
 Reference/API
 -------------
