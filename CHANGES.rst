@@ -1,7 +1,7 @@
 1.1.0 (Unreleased)
 ------------------
 
-- No changes yet.
+- Replaced wrapper class for Time with call to custom_tree_to_tagged_tree. [#223]
 
 1.0.4 (2016-05-25)
 ------------------
