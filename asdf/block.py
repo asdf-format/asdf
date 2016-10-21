@@ -757,7 +757,10 @@ class Block(object):
     ])
 
     def __init__(self, data=None, uri=None, array_storage='internal'):
-        self._data = data
+        if isinstance(data, np.ndarray) and not data.flags.c_contiguous:
+            self._data = np.ascontiguousarray(data)
+        else:
+            self._data = data
         self._uri = uri
         self._array_storage = array_storage
 
@@ -791,7 +794,7 @@ class Block(object):
     @allocated.setter
     def allocated(self, allocated):
         self._allocated = allocated
-
+        
     @property
     def header_size(self):
         return self._header.size + constants.BLOCK_HEADER_BOILERPLATE_SIZE
