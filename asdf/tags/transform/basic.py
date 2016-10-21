@@ -62,7 +62,8 @@ class TransformType(AsdfType):
         # domains, get this from somewhere else.
         domain = model.meta.get('domain')
         if domain:
-            domain = [tagged.tag_object(DomainType.yaml_tag, x) for x in domain]
+            domain = [tagged.tag_object(DomainType.yaml_tag, x, ctx=ctx)
+                      for x in domain]
             node['domain'] = domain
 
     @classmethod
