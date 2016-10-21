@@ -757,12 +757,10 @@ class Block(object):
     ])
 
     def __init__(self, data=None, uri=None, array_storage='internal'):
-        if data is None:
-            self._data = data
-        elif data.flags.c_contiguous:
-            self._data = data
-        else:
+        if isinstance(data, np.ndarray) and not data.flags.c_contiguous:
             self._data = np.ascontiguousarray(data)
+        else:
+            self._data = data
         self._uri = uri
         self._array_storage = array_storage
 
