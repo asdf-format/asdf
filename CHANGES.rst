@@ -1,7 +1,14 @@
-1.1.0 (Unreleased)
+1.1.1(Unreleased)
+-----------------
+
+- Added Tabular model. [#214]
+
+- Rewrite code which tags complex objects [#223]
+
+1.0.5 (2016-06-28)
 ------------------
 
-- Replaced wrapper class for Time with call to custom_tree_to_tagged_tree. [#223]
+- Fixed a memory leak when reading wcs that grew memory to over 10 Gb. [#200]
 
 1.0.4 (2016-05-25)
 ------------------
