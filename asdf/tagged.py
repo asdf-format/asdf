@@ -35,7 +35,6 @@ from __future__ import absolute_import, division, unicode_literals, print_functi
 
 import six
 
-from astropy import time
 from .compat import UserDict, UserList, UserString
 
 __all__ = ['tag_object', 'get_tag']
@@ -98,35 +97,29 @@ class TaggedString(Tagged, UserString, six.text_type):
                 self._tag == other._tag)
 
 
-class TaggedTime(Tagged, time.Time):
-    """
-    An Astropy time object with a tag attached.
-    """
-    def __new__(cls, instance, tag):
-        self = time.Time.__new__(type(instance), instance)
-        self._tag = tag
-        return self
-
-def tag_object(tag, instance):
+def tag_object(tag, instance, ctx=None):
     """
     Tag an object by wrapping it in a ``Tagged`` instance.
     """
     if isinstance(instance, Tagged):
         instance._tag = tag
-        return instance
     elif isinstance(instance, dict):
-        return TaggedDict(instance, tag)
+        instance = TaggedDict(instance, tag)
     elif isinstance(instance, list):
-        return TaggedList(instance, tag)
-    elif isinstance(instance, time.Time):
-        return TaggedTime(instance, tag)
+        instance = TaggedList(instance, tag)
     elif isinstance(instance, six.string_types):
         instance = TaggedString(instance)
         instance._tag = tag
-        return instance
     else:
-        raise TypeError(
-            "Don't know how to tag a {0}".format(type(instance)))
+        from . import AsdfFile, yamlutil
+        if ctx is None:
+            ctx = AsdfFile()
+        try:
+            instance = yamlutil.custom_tree_to_tagged_tree(instance, ctx)
+        except TypeError:
+            raise TypeError("Don't know how to tag a {0}".format(type(instance))) 
+        instance._tag = tag
+    return instance
 
 
 def get_tag(instance):

@@ -460,7 +460,7 @@ class AsdfType(object):
         `to_tree`, allows types to customize how the result is tagged.
         """
         obj = cls.to_tree(node, ctx)
-        return tagged.tag_object(cls.yaml_tag, obj)
+        return tagged.tag_object(cls.yaml_tag, obj, ctx=ctx)
 
     @classmethod
     def from_tree(cls, tree, ctx):
