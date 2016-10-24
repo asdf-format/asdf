@@ -3,8 +3,6 @@
 
 - Added Tabular model. [#214]
 
-- Rewrite code which tags complex objects [#223]
-
 1.0.5 (2016-06-28)
 ------------------
 
