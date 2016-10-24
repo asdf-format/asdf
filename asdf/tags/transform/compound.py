@@ -87,7 +87,7 @@ class CompoundType(TransformType):
         except KeyError:
             raise ValueError("Unknown operator '{0}'".format(tree.value))
 
-        node = tagged.tag_object(cls.make_yaml_tag(tag_name), node)
+        node = tagged.tag_object(cls.make_yaml_tag(tag_name), node, ctx=ctx)
         return node
 
     @classmethod
