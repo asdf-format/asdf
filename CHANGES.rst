@@ -3,6 +3,8 @@
 
 - Added Tabular model. [#214]
 
+- Replaced wrapper class for Time with call to custom_tree_to_tagged_tree. [#223]
+
 1.0.5 (2016-06-28)
 ------------------
 
