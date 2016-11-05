@@ -12,6 +12,8 @@ except ImportError:
     test_models = []
 else:
     HAS_ASTROPY = True
+    from astropy.utils import minversion
+    ASTROPY_13 = minversion(astropy, "1.3")
     from astropy.modeling import models as astmodels
 
     test_models = [astmodels.Identity(2), astmodels.Polynomial1D(2, c0=1, c1=2, c2=3),
@@ -131,6 +133,7 @@ def test_generic_projections(tmpdir):
 
 
 @pytest.mark.skipif('not HAS_ASTROPY')
+@pytest.mark.skipif('not ASTROPY_13')
 def test_tabular_model(tmpdir):
     points = np.arange(0, 5)
     values = [1., 10, 2, 45, -3]
