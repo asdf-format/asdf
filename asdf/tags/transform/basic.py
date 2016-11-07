@@ -10,6 +10,8 @@ except ImportError:
 else:
     HAS_ASTROPY = True
     from astropy.modeling import mappings
+    from astropy.utils import minversion
+    ASTROPY_12 = minversion(astropy, "1.2")
 
 from ...asdftypes import AsdfType
 from ... import tagged
@@ -51,9 +53,14 @@ class TransformType(AsdfType):
 
     @classmethod
     def _to_tree_base_transform_members(cls, model, node, ctx):
-        if getattr(model, '_user_inverse', None) is not None:
-            node['inverse'] = yamlutil.custom_tree_to_tagged_tree(
+        if ASTROPY_12:
+            if getattr(model, '_user_inverse', None) is not None:
+                node['inverse'] = yamlutil.custom_tree_to_tagged_tree(
                 model._user_inverse, ctx)
+        else:
+            if getattr(model, '_custom_inverse', None) is not None:
+                node['inverse'] = yamlutil.custom_tree_to_tagged_tree(
+                model._custom_inverse, ctx)
 
         if model.name is not None:
             node['name'] = model.name

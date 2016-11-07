@@ -6,18 +6,31 @@ from __future__ import absolute_import, division, unicode_literals, print_functi
 import numpy as np
 from numpy.testing import assert_array_equal
 from ... import yamlutil
-
 from .basic import TransformType
 
-__all__ = ['TabularType']
+try:
+    import astropy
+except ImportError:
+    HAS_ASTROPY = False
+else:
+    HAS_ASTROPY = True
+    from astropy.utils import minversion
+    ASTROPY_13 = minversion(astropy, "1.3")
+
+if HAS_ASTROPY and ASTROPY_13:
+    __all__ = ['TabularType']
+else:
+    __all__ = []
 
 
 class TabularType(TransformType):
-    import astropy
     name = "transform/tabular"
-    types = [astropy.modeling.models.Tabular2D,
-             astropy.modeling.models.Tabular1D
-             ]
+    if HAS_ASTROPY and ASTROPY_13:
+        types = [astropy.modeling.models.Tabular2D,
+                 astropy.modeling.models.Tabular1D
+                ]
+    else:
+        types = []
 
     @classmethod
     def from_tree_transform(cls, node, ctx):
