@@ -1,5 +1,8 @@
-1.2.1(Unreleased)
+1.2.1(2016-11-07)
 -----------------
+
+- Make asdf conditionally dependent on the version of astropy to allow
+  running it with older versions of astropy. [#228]
 
 1.2.0(2016-10-04)
 -----------------
