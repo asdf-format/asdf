@@ -1,11 +1,11 @@
 asdf
 ====
-.. image:: https://readthedocs.org/projects/pyasdf/badge/?version=latest
-    :target: http://pyasdf.readthedocs.io/en/latest/?badge=latest
+.. image:: https://readthedocs.org/projects/asdf/badge/?version=latest
+    :target: http://asdf.readthedocs.io/en/latest/?badge=latest
     :alt: Documentation Status
 
 .. image:: https://coveralls.io/repos/spacetelescope/asdf/badge.svg?branch=master&service=github
-  :target: https://coveralls.io/github/spacetelescope/asdf?branch=master
+    :target: https://coveralls.io/github/spacetelescope/asdf?branch=master
 
 .. image:: https://travis-ci.org/spacetelescope/asdf.svg?branch=master
     :target: https://travis-ci.org/spacetelescope/asdf
