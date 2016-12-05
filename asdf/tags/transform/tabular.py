@@ -15,7 +15,7 @@ except ImportError:
 else:
     HAS_ASTROPY = True
     from astropy.utils import minversion
-    ASTROPY_13 = minversion(astropy, "1.3")
+    ASTROPY_13 = minversion(astropy, "1.3.dev16506")
 
 if HAS_ASTROPY and ASTROPY_13:
     __all__ = ['TabularType']
