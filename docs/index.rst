@@ -4,6 +4,14 @@ asdf Documentation
 ``asdf`` is a tool for reading and writing Advanced Scientific Data
 Format (ASDF) files.
 
+.. note::
+
+    This is the **A**\ dvanced **S**\ cientific **D**\ ata **F**\ ormat - if
+    you are looking for the
+    **A**\ daptable **S**\ eismic **D**\ ata **F**\ ormat,
+    go here: http://seismic-data.org/
+
+
 Installation
 ------------
 
