@@ -867,7 +867,7 @@ class InputStream(GenericFile):
         try:
             # See if Numpy can handle this as a real file first...
             return np.fromfile(self._fd, np.uint8, size)
-        except IOError:
+        except (IOError, AttributeError):
             # Else, fall back to reading into memory and then
             # returning the Numpy array.
             data = self.read(size)
