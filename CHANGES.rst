@@ -1,6 +1,8 @@
 1.2.2 (Unreleased)
 ------------------
 
+- Fixed a bug in reading data from an "http:" url. [#231]
+
 1.2.1(2016-11-07)
 -----------------
 
