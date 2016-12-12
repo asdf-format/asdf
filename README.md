@@ -9,7 +9,7 @@ Python library for reading and writing ASDF files.
 Advanced Scientific Data Format (ASDF) is a next generation
 interchange format for scientific data.
 
-    > This is the **A**dvanced **S**cientific **D**ata **F**ormat - if you are looking for the **A**daptable **S**eismic **D**ata **F**ormat, go here: http://seismic-data.org/
+> This is the **A**dvanced **S**cientific **D**ata **F**ormat - if you are looking for the **A**daptable **S**eismic **D**ata **F**ormat, go here: http://seismic-data.org/
 
 
 Installation
