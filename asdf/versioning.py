@@ -55,11 +55,12 @@ def version_to_string(ver):
         raise TypeError("Bad type for version {0}".format(ver))
 
 
-default_version = semver.parse('1.0.0')
+default_version = semver.parse('1.1.0')
 
 
 supported_versions = [
-    '1.0.0'
+    '1.0.0',
+    '1.1.0'
 ]
 
 

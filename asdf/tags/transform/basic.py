@@ -33,12 +33,21 @@ class TransformType(AsdfType):
         if 'name' in node:
             model = model.rename(node['name'])
 
-        # TODO: When astropy.modeling has built-in support for
-        # domains, save this somewhere else.
+        ## TODO: When astropy.modeling has built-in support for
+        ## domains, save this somewhere else.
         if 'domain' in node:
-            model.meta['domain'] = node['domain']
+            model.bounding_box = cls._domain_to_bounding_box(node['domain'])
+        elif 'bounding_box' in node:
+            model.bounding_box = node['bounding_box']
 
         return model
+
+    @classmethod
+    def _domain_to_bounding_box(cls, domain):
+        bb = tuple([(item['lower'], item['upper']) for item in domain])
+        if len(bb) == 1:
+            bb = bb[0]
+        return bb
 
     @classmethod
     def from_tree_transform(cls, node, ctx):
@@ -65,13 +74,18 @@ class TransformType(AsdfType):
         if model.name is not None:
             node['name'] = model.name
 
-        # TODO: When astropy.modeling has built-in support for
-        # domains, get this from somewhere else.
-        domain = model.meta.get('domain')
-        if domain:
-            domain = [tagged.tag_object(DomainType.yaml_tag, x, ctx=ctx)
-                      for x in domain]
-            node['domain'] = domain
+        try:
+            bb = model.bounding_box
+        except NotImplementedError:
+            bb = None
+
+        if bb is not None:
+            if model.n_inputs == 1:
+                bb = list(bb)
+            else:
+                bb = [list(item) for item in model.bounding_box]
+            node['bounding_box'] = bb
+
 
     @classmethod
     def to_tree_transform(cls, model, ctx):

@@ -80,20 +80,6 @@ def test_name(tmpdir):
 
 
 @pytest.mark.skipif('not HAS_ASTROPY')
-def test_domain(tmpdir):
-    def check(ff):
-        assert ff.tree['rot'].meta['domain'][0] == {
-            'lower': 0, 'upper': 1, 'includes_lower': True,
-            'includes_upper': False}
-
-    model = astmodels.Rotation2D(23)
-    model.meta['domain'] = [
-        {'lower': 0, 'upper': 1, 'includes_lower': True}]
-    tree = {'rot': model}
-    helpers.assert_roundtrip_tree(tree, tmpdir, check)
-
-
-@pytest.mark.skipif('not HAS_ASTROPY')
 def test_zenithal_with_arguments(tmpdir):
     tree = {
         'azp': astmodels.Sky2Pix_AZP(0.5, 0.3)
