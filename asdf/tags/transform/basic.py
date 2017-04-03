@@ -33,8 +33,7 @@ class TransformType(AsdfType):
         if 'name' in node:
             model = model.rename(node['name'])
 
-        ## TODO: When astropy.modeling has built-in support for
-        ## domains, save this somewhere else.
+        # TODO: Remove domain in a later version.
         if 'domain' in node:
             model.bounding_box = cls._domain_to_bounding_box(node['domain'])
         elif 'bounding_box' in node:
