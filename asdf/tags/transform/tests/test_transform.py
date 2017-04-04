@@ -134,3 +134,11 @@ def test_tabular_model(tmpdir):
                                  fill_value=None, method='nearest')
     tree = {'model': model2}
     helpers.assert_roundtrip_tree(tree, tmpdir)
+
+
+@pytest.mark.skipif('not HAS_ASTROPY')
+def test_bounding_box(tmpdir):
+    model = astmodels.Shift(1) & astmodels.Shift(2)
+    model.bounding_box = ((1, 3), (2, 4))
+    tree = {'model': model}
+    helpers.assert_roundtrip_tree(tree, tmpdir)
