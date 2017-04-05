@@ -415,7 +415,7 @@ def test_type_missing_dependencies():
     class MissingType(asdftypes.AsdfType):
         name = 'missing'
         organization = 'nowhere.org'
-        version = (1, 0, 0)
+        version = (1, 1, 0)
         standard = 'custom'
         types = ['asdfghjkl12345.foo']
         requires = ["ASDFGHJKL12345"]
@@ -426,7 +426,7 @@ def test_type_missing_dependencies():
             return [MissingType]
 
     yaml = """
-custom: !<tag:nowhere.org:custom/missing-1.0.0>
+custom: !<tag:nowhere.org:custom/missing-1.1.0>
   b: {foo: 42}
     """
     buff = helpers.yaml_to_asdf(yaml)

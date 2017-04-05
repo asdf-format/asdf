@@ -3,6 +3,9 @@
 
 - Fixed a bug in reading data from an "http:" url. [#231]
 
+- Implements v 1.1.0 of the asdf schemas. [#233]
+
+
 1.2.1(2016-11-07)
 -----------------
 
