@@ -423,7 +423,7 @@ class AsdfFile(versioning.VersionedMixin):
                    validate_checksums=False,
                    do_not_fill_defaults=False,
                    _get_yaml_content=False):
-        if not generic_io.is_asdf_file(fd):
+        if not is_asdf_file(fd):
             raise ValueError("Does not appear to be a ASDF file.")
 
         fd = generic_io.get_file(fd, mode=mode, uri=uri)
@@ -961,3 +961,42 @@ class AsdfFile(versioning.VersionedMixin):
         except:
             self.tree['history'].pop()
             raise
+
+
+def is_asdf_file(fd):
+    """
+    Determine if fd is an ASDF file.
+
+    Reads the first five bytes and looks for the ``#ASDF`` string.
+
+    Parameters
+    ----------
+    fd : str, `~asdf.generic_io.GenericFile`
+
+    """
+    if isinstance(fd, generic_io.InputStream):
+        # If it's an InputStream let ASDF deal with it.
+        return True
+
+    to_close = False
+    if isinstance(fd, AsdfFile):
+        return True
+    elif isinstance(fd, generic_io.GenericFile):
+        pass
+    elif isinstance(fd, io.IOBase):
+        try:
+            fd = generic_io.get_file(fd, mode='r', uri=None)
+        except ValueError:
+            return False
+    else:
+        to_close = True
+        fd = generic_io.get_file(fd, mode='r', uri=None)
+    asdf_magic = fd.read(5)
+    if fd.seekable():
+        fd.seek(0)
+    if to_close:
+        fd.close()
+    if asdf_magic == constants.ASDF_MAGIC:
+        return True
+    else:
+        return False

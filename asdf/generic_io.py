@@ -32,7 +32,7 @@ import numpy as np
 from .extern import atomicfile
 
 from . import util
-from .constants import ASDF_MAGIC
+
 
 __all__ = ['get_file', 'resolve_uri', 'relative_uri']
 
@@ -1281,33 +1281,3 @@ def get_file(init, mode='r', uri=None):
 
     raise ValueError("Can't handle '{0}' as a file for mode '{1}'".format(
         init, mode))
-
-
-def is_asdf_file(fd):
-    """
-    Determine if fd is an ASDF file.
-
-    Reads the first five bytes and looks for the ``#ASDF`` string.
-
-    Parameters
-    ----------
-    fd : str, `~asdf.generic_io.GenericFile`
-
-    """
-    if isinstance(fd, InputStream):
-        # If it's an InputStream let ASDF deal with it.
-        return True
-
-    to_close = False
-    if not isinstance(fd, GenericFile):
-        to_close = True
-        fd = get_file(fd, mode='r', uri=None)
-    asdf_magic = fd.read(5)
-    if fd.seekable():
-        fd.seek(0)
-    if to_close:
-        fd.close()
-    if asdf_magic == ASDF_MAGIC:
-        return True
-    else:
-        return False
