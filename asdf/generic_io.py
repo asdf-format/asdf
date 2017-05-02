@@ -517,10 +517,8 @@ class GenericFile(object):
             delimiter, readahead_bytes, delimiter_name=delimiter_name,
             include=include, initial_content=initial_content,
             exception=exception)
-        print('reader', reader)
         while True:
             content = reader.read(self.block_size)
-            print('content', content)
             buff.write(content)
             if len(content) < self.block_size:
                 break
@@ -880,10 +878,6 @@ class InputStream(GenericFile):
             if 'w' in self._mode:
                 result = result.copy()
             return result
-
-    #def seek(self, offset, whence=0):
-        #""" Does not support seek."""
-        #return NotImplementedError
 
 
 class OutputStream(GenericFile):
