@@ -423,14 +423,12 @@ class AsdfFile(versioning.VersionedMixin):
                    validate_checksums=False,
                    do_not_fill_defaults=False,
                    _get_yaml_content=False):
-        fd = generic_io.get_file(fd, mode=mode, uri=uri)
-
-        self._fd = fd
-
-        try:
-            header_line = fd.read_until(b'\r?\n', 2, "newline", include=True)
-        except ValueError:
+        if not generic_io.is_asdf_file(fd):
             raise ValueError("Does not appear to be a ASDF file.")
+
+        fd = generic_io.get_file(fd, mode=mode, uri=uri)
+        self._fd = fd
+        header_line = fd.read_until(b'\r?\n', 2, "newline", include=True)
         self._file_format_version = cls._parse_header_line(header_line)
         self.version = self._file_format_version
 
