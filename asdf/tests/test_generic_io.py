@@ -20,6 +20,12 @@ from .. import util
 
 from . import helpers
 
+try:
+    from astropy.io import fits
+    HAS_ASTRPOPY = True
+except ImportError:
+    HAS_ASTROPY = False
+
 
 def _get_small_tree():
     x = np.arange(0, 10, dtype=np.float)
@@ -778,3 +784,17 @@ def test_truncated_reader():
     assert tr.read(99) == (init + content[:95])
     assert tr.read(50) == content[95:105]
     assert tr.read() == b''
+
+
+@pytest.mark.skipif('not HAS_ASTROPY')
+def test_is_asdf(tmpdir):
+    # test fits
+    hdul = fits.HDUList()
+    phdu=fits.PrimaryHDU()
+    imhdu=fits.ImageHDU(data=np.arange(24).reshape((4,6)))
+    hdul.append(phdu)
+    hdul.append(imhdu)
+    path = os.path.join(str(tmpdir), 'test.fits')
+    hdul.writeto(path)
+    assert not asdf.is_asdf_file(path)
+    assert asdf.is_asdf_file(asdf.AsdfFile())
