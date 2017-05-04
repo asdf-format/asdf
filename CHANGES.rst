@@ -5,6 +5,8 @@
 
 - Implements v 1.1.0 of the asdf schemas. [#233]
 
+- Added a function ``is_asdf_file`` which inspects the input and
+  returns ``True`` or ``False``. [#239]
 
 1.2.1(2016-11-07)
 -----------------
