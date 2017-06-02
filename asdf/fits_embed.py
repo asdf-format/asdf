@@ -200,7 +200,7 @@ class AsdfInFits(asdf.AsdfFile):
             return self
 
         buff = io.BytesIO(asdf_extension.data)
-        return cls._open_impl(self, buff, uri=uri, mode='r',
+        return cls._open_asdf(self, buff, uri=uri, mode='r',
                               validate_checksums=validate_checksums)
 
     def _update_asdf_extension(self, all_array_storage=None,

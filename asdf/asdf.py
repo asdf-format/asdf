@@ -419,13 +419,11 @@ class AsdfFile(versioning.VersionedMixin):
         return None
 
     @classmethod
-    def _open_impl(cls, self, fd, uri=None, mode='r',
+    def _open_asdf(cls, self, fd, uri=None, mode='r',
                    validate_checksums=False,
                    do_not_fill_defaults=False,
                    _get_yaml_content=False):
-        if not is_asdf_file(fd):
-            raise ValueError("Does not appear to be a ASDF file.")
-
+        """Attempt to populate AsdfFile data from file-like object"""
         fd = generic_io.get_file(fd, mode=mode, uri=uri)
         self._fd = fd
         header_line = fd.read_until(b'\r?\n', 2, "newline", include=True)
@@ -483,6 +481,22 @@ class AsdfFile(versioning.VersionedMixin):
         self.run_hook('post_read')
 
         return self
+
+    @classmethod
+    def _open_impl(cls, self, fd, **kwargs):
+        """Attempt to open file-like object as either AsdfFile or AsdfInFits"""
+        if not is_asdf_file(fd):
+            try:
+                # TODO: this feels a bit circular, try to clean up. Also this
+                # introduces another dependency on astropy which may not be
+                # desireable.
+                from . import fits_embed
+                return fits_embed.AsdfInFits.open(fd, kwargs)
+            except ValueError:
+                msg = "Input object does not appear to be ASDF file or " \
+                      "FITS ASDF extension"
+                raise IOError(msg)
+        return cls._open_asdf(self, fd, kwargs)
 
     @classmethod
     def open(cls, fd, uri=None, mode='r',
