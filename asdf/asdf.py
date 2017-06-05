@@ -483,7 +483,10 @@ class AsdfFile(versioning.VersionedMixin):
         return self
 
     @classmethod
-    def _open_impl(cls, self, fd, **kwargs):
+    def _open_impl(cls, self, fd, uri=None, mode='r',
+                   validate_checksums=False,
+                   do_not_fill_defaults=False,
+                   _get_yaml_content=False):
         """Attempt to open file-like object as either AsdfFile or AsdfInFits"""
         if not is_asdf_file(fd):
             try:
@@ -491,12 +494,17 @@ class AsdfFile(versioning.VersionedMixin):
                 # introduces another dependency on astropy which may not be
                 # desireable.
                 from . import fits_embed
-                return fits_embed.AsdfInFits.open(fd, kwargs)
+                return fits_embed.AsdfInFits.open(fd, uri=uri,
+                            validate_checksums=validate_checksums,
+                            extensions=self._extensions)
             except ValueError:
                 msg = "Input object does not appear to be ASDF file or " \
                       "FITS ASDF extension"
-                raise IOError(msg)
-        return cls._open_asdf(self, fd, kwargs)
+                raise ValueError(msg)
+        return cls._open_asdf(self, fd, uri=uri, mode=mode,
+                validate_checksums=validate_checksums,
+                do_not_fill_defaults=do_not_fill_defaults,
+                _get_yaml_content=_get_yaml_content)
 
     @classmethod
     def open(cls, fd, uri=None, mode='r',
