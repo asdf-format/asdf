@@ -8,6 +8,10 @@
 - Added a function ``is_asdf_file`` which inspects the input and
   returns ``True`` or ``False``. [#239]
 
+- Updated WCS frame fields ``obsgeoloc`` and ``obsgeovel`` to reflect recent
+  updates in ``astropy`` that changed representation from ``Quantity`` to
+  ``CartesianRepresentation``. [#212]
+
 1.2.1(2016-11-07)
 -----------------
 

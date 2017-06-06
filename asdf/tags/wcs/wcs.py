@@ -110,7 +110,8 @@ class FrameType(AsdfType):
 
     @classmethod
     def _from_tree(cls, node, ctx):
-        from astropy import units as u
+        from astropy.units import Quantity
+        from astropy.coordinates import CartesianRepresentation
 
         kwargs = {}
 
@@ -130,7 +131,15 @@ class FrameType(AsdfType):
                 val = reference_frame.get(name)
                 if val is not None:
                     if isinstance(val, list):
-                        val = u.Quantity(val[0], unit=val[1])
+                        # These fields are known to be CartesianRepresentations
+                        if name in ['obsgeoloc', 'obsgeovel']:
+                            x = Quantity(val[0]['value'], unit=val[0]['unit'])
+                            y = Quantity(val[1]['value'], unit=val[1]['unit'])
+                            z = Quantity(val[2]['value'], unit=val[2]['unit'])
+                            val = CartesianRepresentation(x, y, z)
+                        # Otherwise assume that we have a simple Quantity
+                        else:
+                            val = Quantity(val[0], unit=val[1])
                     else:
                         val = yamlutil.tagged_tree_to_custom_tree(val, ctx)
                     frame_kwargs[name] = val
@@ -146,10 +155,21 @@ class FrameType(AsdfType):
 
         return kwargs
 
+    @staticmethod
+    def _convert_from_coord(coord):
+        import numpy as np
+        value = coord.value
+        if not np.isscalar(value):
+            value = list(coord.value)
+        else:
+            value = [value]
+        return { 'value' : value, 'unit' : coord.unit  }
+
     @classmethod
     def _to_tree(cls, frame, ctx):
-        from astropy import units as u
         import numpy as np
+        from astropy.units import Quantity
+        from astropy.coordinates import CartesianRepresentation
 
         node = {}
 
@@ -167,14 +187,22 @@ class FrameType(AsdfType):
                 type(frame.reference_frame)]
 
             for name in frame.reference_frame.get_frame_attr_names().keys():
-                val = getattr(frame.reference_frame, name)
-                if isinstance(val, u.Quantity):
-                    value = val.value
+                frameval = getattr(frame.reference_frame, name)
+                if isinstance(frameval, Quantity):
+                    value = frameval.value
                     if not np.isscalar(value):
-                        value = list(val.value)
-                    val = [value, val.unit]
-                val = yamlutil.custom_tree_to_tagged_tree(val, ctx)
-                reference_frame[name] = val
+                        value = list(frameval.value)
+                    frameval = [value, frameval.unit]
+                # CartesianRepresentation becomes a flat list of x,y,z
+                # coordinates with associated units
+                elif isinstance(frameval, CartesianRepresentation):
+                    value = [
+                        cls._convert_from_coord(frameval.x),
+                        cls._convert_from_coord(frameval.y),
+                        cls._convert_from_coord(frameval.z) ]
+                    frameval = value
+                yamlval = yamlutil.custom_tree_to_tagged_tree(frameval, ctx)
+                reference_frame[name] = yamlval
 
             node['reference_frame'] = reference_frame
 
