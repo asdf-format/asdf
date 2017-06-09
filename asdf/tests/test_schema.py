@@ -88,15 +88,22 @@ not_unit:
             'not_unit': 'm'
             }
 
+def test_validate_schema(schema_path):
+    """Pytest to check validity of schema file at given path
 
-def test_validate_all_schema():
-    # Make sure that the schemas themselves are valid.
+    Parameters:
+    -----------
+    schema_path : name of the schema file to be validated
 
-    def validate_schema(path):
-        schema_tree = schema.load_schema(path, resolve_references=True)
+    This function is called with a range of parameters by pytest's
+    'parametrize' utility in order to account for all schema files.
+    """
+    # Make sure that each schema itself is valid.
+    schema_tree = schema.load_schema(schema_path, resolve_references=True)
+    schema.check_schema(schema_tree)
 
-        schema.check_schema(schema_tree)
-
+def generate_schema_list():
+    """Returns a generator for all schema files"""
     src = os.path.join(os.path.dirname(__file__), '../schemas')
     for root, dirs, files in os.walk(src):
         for fname in files:
@@ -105,74 +112,116 @@ def test_validate_all_schema():
             if os.path.splitext(fname)[0] in (
                     'draft-01', 'asdf-schema-1.0.0'):
                 continue
-            yield validate_schema, os.path.join(root, fname)
+            yield os.path.join(root, fname)
 
+def test_schema_example(filename, example):
+    """Pytest to check validity of a specific example within schema file
 
-def test_all_schema_examples():
+    Parameters:
+    -----------
+    filename : name of the schema file containing example to be tested
+
+    example: string representing example
+
+    This function is called with a range of parameters by pytest's
+    'parametrize' utility in order to account for all examples in all schema
+    files.
+    """
     # Make sure that the examples in the schema files (and thus the
     # ASDF standard document) are valid.
+    buff = helpers.yaml_to_asdf('example: ' + example.strip())
+    ff = asdf.AsdfFile(uri=util.filepath_to_url(os.path.abspath(filename)))
 
-    def test_example(args):
-        fname, example = args
-        buff = helpers.yaml_to_asdf('example: ' + example.strip())
-        ff = asdf.AsdfFile(uri=util.filepath_to_url(os.path.abspath(fname)))
+    # Fake an external file
+    ff2 = asdf.AsdfFile({'data': np.empty((1024*1024*8), dtype=np.uint8)})
+    ff._external_asdf_by_uri[
+        util.filepath_to_url(
+            os.path.abspath(
+                os.path.join(
+                    os.path.dirname(filename), 'external.asdf')))] = ff2
 
-        # Fake an external file
-        ff2 = asdf.AsdfFile({'data': np.empty((1024*1024*8), dtype=np.uint8)})
-        ff._external_asdf_by_uri[
-            util.filepath_to_url(
-                os.path.abspath(
-                    os.path.join(os.path.dirname(fname), 'external.asdf')))] = ff2
+    # Add some dummy blocks so that the ndarray examples work
+    for i in range(3):
+        b = block.Block(np.empty((1024*1024*8), dtype=np.uint8))
+        b._used = True
+        ff.blocks.add(b)
+    b._array_storage = "streamed"
 
-        # Add some dummy blocks so that the ndarray examples work
-        for i in range(3):
-            b = block.Block(np.empty((1024*1024*8), dtype=np.uint8))
-            b._used = True
-            ff.blocks.add(b)
-        b._array_storage = "streamed"
+    try:
+        ff._open_impl(ff, buff)
+    except:
+        print("From file:", filename)
+        raise
 
-        try:
-            ff._open_impl(ff, buff)
-        except:
-            print("From file:", fname)
-            raise
+    # Just test we can write it out.  A roundtrip test
+    # wouldn't always yield the correct result, so those have
+    # to be covered by "real" unit tests.
+    if b'external.asdf' not in buff.getvalue():
+        buff = io.BytesIO()
+        ff.write_to(buff)
 
-        # Just test we can write it out.  A roundtrip test
-        # wouldn't always yield the correct result, so those have
-        # to be covered by "real" unit tests.
-        if b'external.asdf' not in buff.getvalue():
-            buff = io.BytesIO()
-            ff.write_to(buff)
-
+def generate_example_schemas():
+    """Returns a generator for all examples in schema files"""
     def find_examples_in_schema(path):
+        """Returns generator for all examples in schema at given path"""
         with open(path, 'rb') as fd:
             schema_tree = yaml.load(fd)
-
-        examples = []
 
         for node in treeutil.iter_tree(schema_tree):
             if (isinstance(node, dict) and
                 'examples' in node and
                 isinstance(node['examples'], list)):
                 for desc, example in node['examples']:
-                    examples.append(example)
+                    yield example
 
-        return examples
+    for schema_path in generate_schema_list():
+        for example in find_examples_in_schema(schema_path):
+            yield (schema_path, example)
 
-    tree = {
-        'data': np.empty((1024*1024*8), dtype=np.uint8)
-    }
-    external = asdf.AsdfFile(tree)
+def pytest_generate_tests(metafunc):
+    """This function is used by pytest to parametrize test function inputs
 
-    src = os.path.join(os.path.dirname(__file__), '../schemas')
-    for root, dirs, files in os.walk(src):
-        for fname in files:
-            if not fname.endswith('.yaml'):
-                continue
-            path = os.path.join(root, fname)
-            for example in find_examples_in_schema(path):
-                yield test_example, (path, example)
+    Parameters:
+    -----------
+    metafunc : object returned by pytest to enable test parametrization
 
+    This function enables parametrization of the following tests:
+        test_validate_schema
+        test_schema_example
+
+    The 'yield' functionality in pytest for parametrized tests has been
+    deprecated. The @pytest.mark.parametrize decorator is not powerful enough
+    for the kind of programmatic parametrization that we require here.
+    """
+    def get_schema_name(schema_path):
+        """Helper function to return the informative part of a schema path"""
+        print(schema_path)
+        path = os.path.normpath(schema_path)
+        return os.path.sep.join(path.split(os.path.sep)[-3:])
+
+    def create_schema_example_id(argval):
+        """Helper function to create test ID for schema example validation"""
+        if argval[0] == '/':
+            # ID for the first argument is just the schema name
+            return get_schema_name(argval)
+        else:
+            # This will cause pytest to create labels of the form:
+            #   SCHEMA_NAME-example
+            # If there are multiple examples within a single schema, the
+            # examples will be numbered automatically to distinguish them
+            return "example"
+
+    if metafunc.function is test_validate_schema:
+        metafunc.parametrize(
+            'schema_path',
+            generate_schema_list(),
+            # just use the schema name as a test ID instead of full path
+            ids=get_schema_name)
+    elif metafunc.function is test_schema_example:
+        metafunc.parametrize(
+            'filename,example',
+            generate_example_schemas(),
+            ids=create_schema_example_id)
 
 def test_schema_caching():
     # Make sure that if we request the same URL, we get the *exact
