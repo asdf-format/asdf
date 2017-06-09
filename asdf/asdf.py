@@ -1005,14 +1005,13 @@ def is_asdf_file(fd):
         return True
     elif isinstance(fd, generic_io.GenericFile):
         pass
-    elif isinstance(fd, io.IOBase):
+    else:
         try:
             fd = generic_io.get_file(fd, mode='r', uri=None)
+            if not isinstance(fd, io.IOBase):
+                to_close = True
         except ValueError:
             return False
-    else:
-        to_close = True
-        fd = generic_io.get_file(fd, mode='r', uri=None)
     asdf_magic = fd.read(5)
     if fd.seekable():
         fd.seek(0)
@@ -1020,5 +1019,4 @@ def is_asdf_file(fd):
         fd.close()
     if asdf_magic == constants.ASDF_MAGIC:
         return True
-    else:
-        return False
+    return False
