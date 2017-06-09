@@ -21,9 +21,35 @@ from numpy.testing import assert_array_equal
 import pytest
 
 from .. import asdf
-
+from .. import open as asdf_open
 from .helpers import assert_tree_match
 
+
+def create_asdf_in_fits():
+    """Test fixture to create AsdfInFits object to use for testing"""
+    hdulist = fits.HDUList()
+    hdulist.append(fits.ImageHDU(np.arange(512, dtype=np.float)))
+    hdulist.append(fits.ImageHDU(np.arange(512, dtype=np.float)))
+    hdulist.append(fits.ImageHDU(np.arange(512, dtype=np.float)))
+
+    tree = {
+        'model': {
+            'sci': {
+                'data': hdulist[0].data,
+                'wcs': 'WCS info'
+            },
+            'dq': {
+                'data': hdulist[1].data,
+                'wcs': 'WCS info'
+            },
+            'err': {
+                'data': hdulist[2].data,
+                'wcs': 'WCS info'
+            }
+        }
+    }
+
+    return fits_embed.AsdfInFits(hdulist, tree)
 
 @pytest.mark.skipif('not HAS_ASTROPY')
 def test_embed_asdf_in_fits_file(tmpdir):
@@ -68,47 +94,26 @@ def test_embed_asdf_in_fits_file(tmpdir):
 
 @pytest.mark.skipif('not HAS_ASTROPY')
 def test_embed_asdf_in_fits_file_anonymous_extensions(tmpdir):
-    hdulist = fits.HDUList()
-    hdulist.append(fits.ImageHDU(np.arange(512, dtype=np.float)))
-    hdulist.append(fits.ImageHDU(np.arange(512, dtype=np.float)))
-    hdulist.append(fits.ImageHDU(np.arange(512, dtype=np.float)))
+    # Write the AsdfInFits object out as a FITS file with ASDF extension
+    asdf_in_fits = create_asdf_in_fits()
+    asdf_in_fits.write_to(os.path.join(str(tmpdir), 'test.fits'))
 
-    tree = {
-        'model': {
-            'sci': {
-                'data': hdulist[0].data,
-                'wcs': 'WCS info'
-            },
-            'dq': {
-                'data': hdulist[1].data,
-                'wcs': 'WCS info'
-            },
-            'err': {
-                'data': hdulist[1].data,
-                'wcs': 'WCS info'
-            }
-        }
-    }
-
-    ff = fits_embed.AsdfInFits(hdulist, tree)
-    ff.write_to(os.path.join(str(tmpdir), 'test.fits'))
-
-    ff2 = asdf.AsdfFile(tree)
+    ff2 = asdf.AsdfFile(asdf_in_fits.tree)
     ff2.write_to(os.path.join(str(tmpdir), 'plain.asdf'))
 
-    with fits.open(os.path.join(str(tmpdir), 'test.fits')) as hdulist2:
-        assert len(hdulist2) == 4
-        assert [x.name for x in hdulist2] == ['PRIMARY', '', '', 'ASDF']
-        assert hdulist2['ASDF'].data.tostring().strip().endswith(b"...")
+    with fits.open(os.path.join(str(tmpdir), 'test.fits')) as hdulist:
+        assert len(hdulist) == 4
+        assert [x.name for x in hdulist] == ['PRIMARY', '', '', 'ASDF']
+        assert hdulist['ASDF'].data.tostring().strip().endswith(b"...")
 
-        with fits_embed.AsdfInFits.open(hdulist2) as ff2:
-            assert_tree_match(tree, ff2.tree)
+        with fits_embed.AsdfInFits.open(hdulist) as ff2:
+            assert_tree_match(asdf_in_fits.tree, ff2.tree)
 
             ff = asdf.AsdfFile(copy.deepcopy(ff2.tree))
             ff.write_to('test.asdf')
 
     with asdf.AsdfFile.open('test.asdf') as ff:
-        assert_tree_match(tree, ff.tree)
+        assert_tree_match(asdf_in_fits.tree, ff.tree)
 
 
 @pytest.mark.skipif('not HAS_ASTROPY')
@@ -135,17 +140,71 @@ def test_create_in_tree_first(tmpdir):
     hdulist.append(fits.ImageHDU(tree['model']['dq']['data']))
     hdulist.append(fits.ImageHDU(tree['model']['err']['data']))
 
-    ff = fits_embed.AsdfInFits(hdulist, tree)
-    ff.write_to(os.path.join(str(tmpdir), 'test.fits'))
+    with fits_embed.AsdfInFits(hdulist, tree) as ff:
+        ff.write_to(os.path.join(str(tmpdir), 'test.fits'))
 
-    ff2 = asdf.AsdfFile(tree)
-    ff2.write_to(os.path.join(str(tmpdir), 'plain.asdf'))
+    with asdf.AsdfFile(tree) as ff:
+        ff.write_to(os.path.join(str(tmpdir), 'plain.asdf'))
 
-    with asdf.AsdfFile.open(os.path.join(str(tmpdir), 'plain.asdf')) as ff3:
-        assert_array_equal(ff3.tree['model']['sci']['data'],
+    with asdf.AsdfFile.open(os.path.join(str(tmpdir), 'plain.asdf')) as ff:
+        assert_array_equal(ff.tree['model']['sci']['data'],
                            np.arange(512, dtype=np.float))
 
-    with fits.open(os.path.join(str(tmpdir), 'test.fits')) as hdulist:
-        with fits_embed.AsdfInFits.open(hdulist) as ff4:
-            assert_array_equal(ff4.tree['model']['sci']['data'],
-                               np.arange(512, dtype=np.float))
+    # This tests the changes that allow FITS files with ASDF extensions to be
+    # opened directly by the top-level AsdfFile.open API
+    with asdf_open(os.path.join(str(tmpdir), 'test.fits')) as ff:
+        assert_array_equal(ff.tree['model']['sci']['data'],
+                           np.arange(512, dtype=np.float))
+
+def compare_asdfs(asdf0, asdf1):
+    # Make sure the trees match
+    assert_tree_match(asdf0.tree, asdf1.tree)
+    # Compare the data blocks
+    for key in asdf0.tree['model'].keys():
+        assert_array_equal(
+            asdf0.tree['model'][key]['data'],
+            asdf1.tree['model'][key]['data'])
+
+@pytest.mark.skipif('not HAS_ASTROPY')
+def test_asdf_in_fits_open(tmpdir):
+    """Test the open method of AsdfInFits"""
+    tmpfile = os.path.join(str(tmpdir), 'test.fits')
+    # Write the AsdfInFits object out as a FITS file with ASDF extension
+    asdf_in_fits = create_asdf_in_fits()
+    asdf_in_fits.write_to(tmpfile)
+
+    # Test opening the file directly from the URI
+    with fits_embed.AsdfInFits.open(tmpfile) as ff:
+        compare_asdfs(asdf_in_fits, ff)
+
+    # Test reading in the file from an already-opened file handle
+    with open(tmpfile, 'rb') as handle:
+        with fits_embed.AsdfInFits.open(handle) as ff:
+            compare_asdfs(asdf_in_fits, ff)
+
+    # Test opening the file as a FITS file first and passing the HDUList
+    with fits.open(tmpfile) as hdulist:
+        with fits_embed.AsdfInFits.open(hdulist) as ff:
+            compare_asdfs(asdf_in_fits, ff)
+
+@pytest.mark.skipif('not HAS_ASTROPY')
+def test_asdf_open(tmpdir):
+    """Test the top-level open method of the asdf module"""
+    tmpfile = os.path.join(str(tmpdir), 'test.fits')
+    # Write the AsdfInFits object out as a FITS file with ASDF extension
+    asdf_in_fits = create_asdf_in_fits()
+    asdf_in_fits.write_to(tmpfile)
+
+    # Test opening the file directly from the URI
+    with asdf_open(tmpfile) as ff:
+        compare_asdfs(asdf_in_fits, ff)
+
+    # Test reading in the file from an already-opened file handle
+    with open(tmpfile, 'rb') as handle:
+        with asdf_open(handle) as ff:
+            compare_asdfs(asdf_in_fits, ff)
+
+    # Test opening the file as a FITS file first and passing the HDUList
+    with fits.open(tmpfile) as hdulist:
+        with asdf_open(hdulist) as ff:
+            compare_asdfs(asdf_in_fits, ff)
