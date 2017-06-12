@@ -22,7 +22,7 @@ from . import helpers
 
 try:
     from astropy.io import fits
-    HAS_ASTRPOPY = True
+    HAS_ASTROPY = True
 except ImportError:
     HAS_ASTROPY = False
 
