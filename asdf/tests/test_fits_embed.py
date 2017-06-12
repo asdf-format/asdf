@@ -177,6 +177,11 @@ def test_asdf_in_fits_open(tmpdir):
     with fits_embed.AsdfInFits.open(tmpfile) as ff:
         compare_asdfs(asdf_in_fits, ff)
 
+    # Test open/close without context handler
+    ff = fits_embed.AsdfInFits.open(tmpfile)
+    compare_asdfs(asdf_in_fits, ff)
+    ff.close()
+
     # Test reading in the file from an already-opened file handle
     with open(tmpfile, 'rb') as handle:
         with fits_embed.AsdfInFits.open(handle) as ff:
@@ -198,6 +203,11 @@ def test_asdf_open(tmpdir):
     # Test opening the file directly from the URI
     with asdf_open(tmpfile) as ff:
         compare_asdfs(asdf_in_fits, ff)
+
+    # Test open/close without context handler
+    ff = asdf_open(tmpfile)
+    compare_asdfs(asdf_in_fits, ff)
+    ff.close()
 
     # Test reading in the file from an already-opened file handle
     with open(tmpfile, 'rb') as handle:
