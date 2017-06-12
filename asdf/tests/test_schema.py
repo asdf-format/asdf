@@ -16,12 +16,10 @@ else:
 from jsonschema import ValidationError
 
 import numpy as np
-
 import pytest
-
 import six
-
 import yaml
+import warnings
 
 from .. import asdf
 from .. import asdftypes
@@ -30,6 +28,7 @@ from .. import resolver
 from .. import schema
 from .. import treeutil
 from .. import util
+
 
 from . import helpers
 
@@ -134,6 +133,7 @@ def test_schema_example(filename, example):
 
     # Fake an external file
     ff2 = asdf.AsdfFile({'data': np.empty((1024*1024*8), dtype=np.uint8)})
+
     ff._external_asdf_by_uri[
         util.filepath_to_url(
             os.path.abspath(
@@ -148,6 +148,11 @@ def test_schema_example(filename, example):
     b._array_storage = "streamed"
 
     try:
+        # Ignore warnings that result from examples from schemas that have
+        # versions higher than the current standard version.
+        # TODO: this should no longer be necessary once the library can
+        # actually account for higher versions
+        warnings.simplefilter('ignore', UserWarning)
         ff._open_impl(ff, buff)
     except:
         print("From file:", filename)
