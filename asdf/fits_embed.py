@@ -147,13 +147,18 @@ class AsdfInFits(asdf.AsdfFile):
             tree=tree, uri=uri, extensions=extensions)
         self._blocks = _EmbeddedBlockManager(hdulist, self)
         self._hdulist = hdulist
+        self._close_hdulist = False
 
     def __exit__(self, type, value, traceback):
         super(AsdfInFits, self).__exit__(type, value, traceback)
+        if self._close_hdulist:
+            self._hdulist.close()
         self._tree = {}
 
     def close(self):
         super(AsdfInFits, self).close()
+        if self._close_hdulist:
+            self._hdulist.close()
         self._tree = {}
 
     @classmethod
@@ -181,17 +186,22 @@ class AsdfInFits(asdf.AsdfFile):
             and writing ASDF files.  See `asdftypes.AsdfExtension` for
             more information.
         """
+        close_hdulist = False
         if isinstance(fd, fits.hdu.hdulist.HDUList):
             hdulist = fd
         else:
             file_obj = generic_io.get_file(fd)
             try:
                 hdulist = fits.open(file_obj)
+                # Since we created this HDUList object, we need to be
+                # responsible for cleaning up upon close() or __exit__
+                close_hdulist = True
             except IOError:
                 msg = "Failed to parse given file '{}'. Is it FITS?"
                 raise ValueError(msg.format(file_obj.uri))
 
         self = cls(hdulist, uri=uri, extensions=extensions)
+        self._close_hdulist = close_hdulist
 
         try:
             asdf_extension = hdulist[ASDF_EXTENSION_NAME]
