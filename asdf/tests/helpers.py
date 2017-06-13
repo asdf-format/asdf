@@ -9,6 +9,14 @@ import sys
 
 import six
 
+try:
+    import astropy
+except ImportError:
+    HAS_ASTROPY = False
+else:
+    from astropy.coordinates.representation import CartesianRepresentation
+    HAS_ASTROPY = True
+
 from ..asdf import AsdfFile, get_asdf_library_info
 from ..conftest import RangeHTTPServer
 from ..extension import _builtin_extension_list
@@ -77,6 +85,10 @@ def assert_tree_match(old_tree, new_tree, ctx=None,
             assert len(old) == len(new)
             for a, b in zip(old, new):
                 recurse(a, b)
+        elif HAS_ASTROPY and isinstance(old, CartesianRepresentation):
+            # CartesianRepresentation from astropy does not define equality in
+            # a meaningful way, but we want to be able to use it in unit tests
+            assert old.x == new.x and old.y == new.y and old.z == new.z
         else:
             assert old == new
 
