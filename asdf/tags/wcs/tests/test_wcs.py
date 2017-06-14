@@ -27,6 +27,7 @@ else:
     from gwcs import wcs
 
 import pytest
+import warnings
 
 from ....tests import helpers
 
@@ -75,6 +76,13 @@ def test_composite_frame(tmpdir):
 
 @pytest.mark.skipif('not HAS_GWCS')
 def test_frames(tmpdir):
+
+    # Suppress warnings from astropy that are caused by having 'dubious' dates
+    # that are too far in the future. It's not a concern for the purposes of
+    # unit tests. See issue #5809 on the astropy GitHub for discussion.
+    from astropy._erfa import ErfaWarning
+    warnings.simplefilter("ignore", ErfaWarning)
+
     frames = [
         cf.CelestialFrame(reference_frame=coord.ICRS()),
 

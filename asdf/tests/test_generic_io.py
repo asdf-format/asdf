@@ -22,7 +22,7 @@ from . import helpers
 
 try:
     from astropy.io import fits
-    HAS_ASTRPOPY = True
+    HAS_ASTROPY = True
 except ImportError:
     HAS_ASTROPY = False
 
@@ -60,6 +60,12 @@ def _roundtrip(tree, get_write_fd, get_read_fd,
                write_options={}, read_options={}):
     with get_write_fd() as fd:
         asdf.AsdfFile(tree).write_to(fd, **write_options)
+        # Work around the fact that generic_io's get_file doesn't have a way of
+        # determining whether or not the underlying file handle should be
+        # closed as part of the exit handler
+        if (six.PY3 and isinstance(fd._fd, io.FileIO)) or \
+                (six.PY2 and isinstance(fd._fd, file)):
+            fd._fd.close()
 
     with get_read_fd() as fd:
         ff = asdf.AsdfFile.open(fd, **read_options)
