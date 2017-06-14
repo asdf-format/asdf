@@ -419,13 +419,11 @@ class AsdfFile(versioning.VersionedMixin):
         return None
 
     @classmethod
-    def _open_impl(cls, self, fd, uri=None, mode='r',
+    def _open_asdf(cls, self, fd, uri=None, mode='r',
                    validate_checksums=False,
                    do_not_fill_defaults=False,
                    _get_yaml_content=False):
-        if not is_asdf_file(fd):
-            raise ValueError("Does not appear to be a ASDF file.")
-
+        """Attempt to populate AsdfFile data from file-like object"""
         fd = generic_io.get_file(fd, mode=mode, uri=uri)
         self._fd = fd
         header_line = fd.read_until(b'\r?\n', 2, "newline", include=True)
@@ -483,6 +481,30 @@ class AsdfFile(versioning.VersionedMixin):
         self.run_hook('post_read')
 
         return self
+
+    @classmethod
+    def _open_impl(cls, self, fd, uri=None, mode='r',
+                   validate_checksums=False,
+                   do_not_fill_defaults=False,
+                   _get_yaml_content=False):
+        """Attempt to open file-like object as either AsdfFile or AsdfInFits"""
+        if not is_asdf_file(fd):
+            try:
+                # TODO: this feels a bit circular, try to clean up. Also this
+                # introduces another dependency on astropy which may not be
+                # desireable.
+                from . import fits_embed
+                return fits_embed.AsdfInFits.open(fd, uri=uri,
+                            validate_checksums=validate_checksums,
+                            extensions=self._extensions)
+            except ValueError:
+                msg = "Input object does not appear to be ASDF file or " \
+                      "FITS ASDF extension"
+                raise ValueError(msg)
+        return cls._open_asdf(self, fd, uri=uri, mode=mode,
+                validate_checksums=validate_checksums,
+                do_not_fill_defaults=do_not_fill_defaults,
+                _get_yaml_content=_get_yaml_content)
 
     @classmethod
     def open(cls, fd, uri=None, mode='r',
@@ -983,14 +1005,13 @@ def is_asdf_file(fd):
         return True
     elif isinstance(fd, generic_io.GenericFile):
         pass
-    elif isinstance(fd, io.IOBase):
+    else:
         try:
             fd = generic_io.get_file(fd, mode='r', uri=None)
+            if not isinstance(fd, io.IOBase):
+                to_close = True
         except ValueError:
             return False
-    else:
-        to_close = True
-        fd = generic_io.get_file(fd, mode='r', uri=None)
     asdf_magic = fd.read(5)
     if fd.seekable():
         fd.seek(0)
@@ -998,5 +1019,4 @@ def is_asdf_file(fd):
         fd.close()
     if asdf_magic == constants.ASDF_MAGIC:
         return True
-    else:
-        return False
+    return False
