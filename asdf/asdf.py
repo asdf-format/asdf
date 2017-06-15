@@ -486,21 +486,23 @@ class AsdfFile(versioning.VersionedMixin):
     def _open_impl(cls, self, fd, uri=None, mode='r',
                    validate_checksums=False,
                    do_not_fill_defaults=False,
-                   _get_yaml_content=False):
+                   _get_yaml_content=False,
+                  try_asdf_in_fits=False):
         """Attempt to open file-like object as either AsdfFile or AsdfInFits"""
         if not is_asdf_file(fd):
-            try:
-                # TODO: this feels a bit circular, try to clean up. Also this
-                # introduces another dependency on astropy which may not be
-                # desireable.
-                from . import fits_embed
-                return fits_embed.AsdfInFits.open(fd, uri=uri,
-                            validate_checksums=validate_checksums,
-                            extensions=self._extensions)
-            except ValueError:
-                msg = "Input object does not appear to be ASDF file or " \
-                      "FITS ASDF extension"
-                raise ValueError(msg)
+            msg = "Input object does not appear to be ASDF file"
+            if try_asdf_in_fits:
+                try:
+                    # TODO: this feels a bit circular, try to clean up. Also
+                    # this introduces another dependency on astropy which may
+                    # not be desireable.
+                    from . import fits_embed
+                    return fits_embed.AsdfInFits.open(fd, uri=uri,
+                                validate_checksums=validate_checksums,
+                                extensions=self._extensions)
+                except ValueError:
+                    msg += " or FITS with an ASDF extension"
+            raise ValueError(msg)
         return cls._open_asdf(self, fd, uri=uri, mode=mode,
                 validate_checksums=validate_checksums,
                 do_not_fill_defaults=do_not_fill_defaults,
@@ -510,7 +512,8 @@ class AsdfFile(versioning.VersionedMixin):
     def open(cls, fd, uri=None, mode='r',
              validate_checksums=False,
              extensions=None,
-             do_not_fill_defaults=False):
+             do_not_fill_defaults=False,
+             try_asdf_in_fits=False):
         """
         Open an existing ASDF file.
 
@@ -540,6 +543,11 @@ class AsdfFile(versioning.VersionedMixin):
         do_not_fill_defaults : bool, optional
             When `True`, do not fill in missing default values.
 
+        try_asdf_in_fits : bool, optional
+            When `True`, also try to automatically handle FITS files with ASDF
+            extensions. This is set to `False` by default in order to preserve
+            backwards compatibility.
+
         Returns
         -------
         asdffile : AsdfFile
@@ -550,7 +558,8 @@ class AsdfFile(versioning.VersionedMixin):
         return cls._open_impl(
             self, fd, uri=uri, mode=mode,
             validate_checksums=validate_checksums,
-            do_not_fill_defaults=do_not_fill_defaults)
+            do_not_fill_defaults=do_not_fill_defaults,
+            try_asdf_in_fits=try_asdf_in_fits)
 
     def _write_tree(self, tree, fd, pad_blocks):
         fd.write(constants.ASDF_MAGIC)

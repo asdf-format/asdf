@@ -140,8 +140,9 @@ def test_create_in_tree_first(tmpdir):
     hdulist.append(fits.ImageHDU(tree['model']['dq']['data']))
     hdulist.append(fits.ImageHDU(tree['model']['err']['data']))
 
+    tmpfile = os.path.join(str(tmpdir), 'test.fits')
     with fits_embed.AsdfInFits(hdulist, tree) as ff:
-        ff.write_to(os.path.join(str(tmpdir), 'test.fits'))
+        ff.write_to(tmpfile)
 
     with asdf.AsdfFile(tree) as ff:
         ff.write_to(os.path.join(str(tmpdir), 'plain.asdf'))
@@ -152,7 +153,7 @@ def test_create_in_tree_first(tmpdir):
 
     # This tests the changes that allow FITS files with ASDF extensions to be
     # opened directly by the top-level AsdfFile.open API
-    with asdf_open(os.path.join(str(tmpdir), 'test.fits')) as ff:
+    with asdf_open(tmpfile, try_asdf_in_fits=True) as ff:
         assert_array_equal(ff.tree['model']['sci']['data'],
                            np.arange(512, dtype=np.float))
 
@@ -201,20 +202,20 @@ def test_asdf_open(tmpdir):
     asdf_in_fits.write_to(tmpfile)
 
     # Test opening the file directly from the URI
-    with asdf_open(tmpfile) as ff:
+    with asdf_open(tmpfile, try_asdf_in_fits=True) as ff:
         compare_asdfs(asdf_in_fits, ff)
 
     # Test open/close without context handler
-    ff = asdf_open(tmpfile)
+    ff = asdf_open(tmpfile, try_asdf_in_fits=True)
     compare_asdfs(asdf_in_fits, ff)
     ff.close()
 
     # Test reading in the file from an already-opened file handle
     with open(tmpfile, 'rb') as handle:
-        with asdf_open(handle) as ff:
+        with asdf_open(handle, try_asdf_in_fits=True) as ff:
             compare_asdfs(asdf_in_fits, ff)
 
     # Test opening the file as a FITS file first and passing the HDUList
     with fits.open(tmpfile) as hdulist:
-        with asdf_open(hdulist) as ff:
+        with asdf_open(hdulist, try_asdf_in_fits=True) as ff:
             compare_asdfs(asdf_in_fits, ff)
