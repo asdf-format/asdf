@@ -73,9 +73,8 @@ def test_composite_frame(tmpdir):
 
     helpers.assert_roundtrip_tree(tree, tmpdir)
 
-
-@pytest.mark.skipif('not HAS_GWCS')
-def test_frames(tmpdir):
+def create_test_frames():
+    """Creates an array of frames to be used for testing."""
 
     # Suppress warnings from astropy that are caused by having 'dubious' dates
     # that are too far in the future. It's not a concern for the purposes of
@@ -134,8 +133,13 @@ def test_frames(tmpdir):
                 obsgeovel=[2, 1, 8] * (u.m/u.s)))
     ]
 
+    return frames
+
+@pytest.mark.skipif('not HAS_GWCS')
+def test_frames(tmpdir):
+
     tree = {
-        'frames': frames
+        'frames': create_test_frames()
     }
 
     helpers.assert_roundtrip_tree(tree, tmpdir)
