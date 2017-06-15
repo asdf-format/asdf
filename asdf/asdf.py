@@ -487,11 +487,11 @@ class AsdfFile(versioning.VersionedMixin):
                    validate_checksums=False,
                    do_not_fill_defaults=False,
                    _get_yaml_content=False,
-                  try_asdf_in_fits=False):
+                  accept_asdf_in_fits=True):
         """Attempt to open file-like object as either AsdfFile or AsdfInFits"""
         if not is_asdf_file(fd):
             msg = "Input object does not appear to be ASDF file"
-            if try_asdf_in_fits:
+            if accept_asdf_in_fits:
                 try:
                     # TODO: this feels a bit circular, try to clean up. Also
                     # this introduces another dependency on astropy which may
@@ -513,7 +513,7 @@ class AsdfFile(versioning.VersionedMixin):
              validate_checksums=False,
              extensions=None,
              do_not_fill_defaults=False,
-             try_asdf_in_fits=False):
+             accept_asdf_in_fits=True):
         """
         Open an existing ASDF file.
 
@@ -543,10 +543,10 @@ class AsdfFile(versioning.VersionedMixin):
         do_not_fill_defaults : bool, optional
             When `True`, do not fill in missing default values.
 
-        try_asdf_in_fits : bool, optional
-            When `True`, also try to automatically handle FITS files with ASDF
-            extensions. This is set to `False` by default in order to preserve
-            backwards compatibility.
+        accept_asdf_in_fits : bool, optional
+            When `True`, try to automatically process FITS files with ASDF
+            extensions. If backwards compatibility with old behavior is
+            required, set this flag to `False`.
 
         Returns
         -------
@@ -559,7 +559,7 @@ class AsdfFile(versioning.VersionedMixin):
             self, fd, uri=uri, mode=mode,
             validate_checksums=validate_checksums,
             do_not_fill_defaults=do_not_fill_defaults,
-            try_asdf_in_fits=try_asdf_in_fits)
+            accept_asdf_in_fits=accept_asdf_in_fits)
 
     def _write_tree(self, tree, fd, pad_blocks):
         fd.write(constants.ASDF_MAGIC)
