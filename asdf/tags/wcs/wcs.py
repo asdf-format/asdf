@@ -70,6 +70,7 @@ class StepType(dict, AsdfType):
 
 class FrameType(AsdfType):
     name = "wcs/frame"
+    version = '1.1.0'
     requires = _REQUIRES
     types = ['gwcs.Frame2D']
 
