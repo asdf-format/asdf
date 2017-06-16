@@ -111,6 +111,7 @@ class FrameType(AsdfType):
 
     @classmethod
     def _from_tree(cls, node, ctx):
+        from ..unit import QuantityType
         from astropy.units import Quantity
         from astropy.coordinates import CartesianRepresentation
 
@@ -134,9 +135,9 @@ class FrameType(AsdfType):
                     if isinstance(val, list):
                         # These fields are known to be CartesianRepresentations
                         if name in ['obsgeoloc', 'obsgeovel']:
-                            x = Quantity(val[0]['value'], unit=val[0]['unit'])
-                            y = Quantity(val[1]['value'], unit=val[1]['unit'])
-                            z = Quantity(val[2]['value'], unit=val[2]['unit'])
+                            x = QuantityType.from_tree(val[0], ctx)
+                            y = QuantityType.from_tree(val[1], ctx)
+                            z = QuantityType.from_tree(val[2], ctx)
                             val = CartesianRepresentation(x, y, z)
                         # Otherwise assume that we have a simple Quantity
                         else:
@@ -156,19 +157,10 @@ class FrameType(AsdfType):
 
         return kwargs
 
-    @staticmethod
-    def _convert_from_coord(coord):
-        import numpy as np
-        value = coord.value
-        if not np.isscalar(value):
-            value = list(coord.value)
-        else:
-            value = [value]
-        return { 'value' : value, 'unit' : coord.unit  }
-
     @classmethod
     def _to_tree(cls, frame, ctx):
         import numpy as np
+        from ..unit import QuantityType
         from astropy.units import Quantity
         from astropy.coordinates import CartesianRepresentation
 
@@ -197,10 +189,7 @@ class FrameType(AsdfType):
                 # CartesianRepresentation becomes a flat list of x,y,z
                 # coordinates with associated units
                 elif isinstance(frameval, CartesianRepresentation):
-                    value = [
-                        cls._convert_from_coord(frameval.x),
-                        cls._convert_from_coord(frameval.y),
-                        cls._convert_from_coord(frameval.z) ]
+                    value = [frameval.x, frameval.y, frameval.z]
                     frameval = value
                 yamlval = yamlutil.custom_tree_to_tagged_tree(frameval, ctx)
                 reference_frame[name] = yamlval
