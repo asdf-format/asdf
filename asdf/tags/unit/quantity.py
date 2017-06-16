@@ -13,6 +13,7 @@ class QuantityType(AsdfType):
     name = 'unit/quantity'
     types = ['astropy.units.Quantity']
     requires = ['astropy']
+    version = '1.1.0'
 
     @classmethod
     def to_tree(cls, quantity, ctx):
@@ -22,7 +23,7 @@ class QuantityType(AsdfType):
         node = {}
         if isinstance(quantity, Quantity):
             value = quantity.value
-            node['value'] = [value] if isscalar(value) else value
+            node['value'] = [value] if isscalar(value) else list(value)
             node['unit'] = UnitType.to_tree(quantity.unit, ctx)
             return node
         raise TypeError("'{0}' is not a valid Quantity".format(quantity))
