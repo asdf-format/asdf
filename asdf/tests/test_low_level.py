@@ -1084,3 +1084,21 @@ foo : bar
     with pytest.raises(ValueError):
         with asdf.AsdfFile.open(buff) as ff:
             pass
+
+
+def test_fd_not_seekable():
+    data = np.ones(1024)
+    b = block.Block(data=data)
+    fd = io.BytesIO()
+    fd.seekable = lambda: False
+    fd.write_array = lambda arr: fd.write(arr.tobytes())
+    fd.read_blocks = lambda us: [fd.read(us)]
+    fd.fast_forward = lambda offset: fd.seek(offset, 1)
+    b.output_compression = 'zlib'
+    b.write(fd)
+    fd.seek(0)
+    b = block.Block()
+    b.read(fd)
+    # We lost the information about the underlying array type,
+    # but still can compare the bytes.
+    assert b.data.tobytes() == data.tobytes()

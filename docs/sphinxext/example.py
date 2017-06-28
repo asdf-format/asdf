@@ -109,8 +109,8 @@ class AsdfDirective(Directive):
                             human_flags.append(val)
                     if len(human_flags):
                         lines.append('    flags: {0}'.format(' | '.join(human_flags)))
-                    if block.compression:
-                        lines.append('    compression: {0}'.format(block.compression))
+                    if block.input_compression:
+                        lines.append('    compression: {0}'.format(block.input_compression))
                     lines.append('    allocated_size: {0}'.format(allocated))
                     lines.append('    used_size: {0}'.format(size))
                     lines.append('    data_size: {0}'.format(data_size))
