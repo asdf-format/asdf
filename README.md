@@ -38,3 +38,5 @@ To run the unit tests::
 ```python
     python setup.py test
 ```
+
+Please note that you must have [astropy](https://github.com/astropy/astropy) package installed to run the tests.
