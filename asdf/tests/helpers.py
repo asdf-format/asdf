@@ -223,3 +223,17 @@ def get_file_sizes(dirname):
         if os.path.isfile(path):
             files[filename] = os.stat(path).st_size
     return files
+
+
+def has_package(name):
+    """
+    Determine if a specific package is installed.
+
+    :param name: Name of the package.
+    :return: True if it is installed, otherwise, False.
+    """
+    try:
+        __import__(name)
+        return True
+    except ImportError:
+        return False

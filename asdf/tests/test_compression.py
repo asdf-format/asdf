@@ -90,3 +90,10 @@ def test_bzp2(tmpdir):
     tree = _get_large_tree()
 
     _roundtrip(tmpdir, tree, 'bzp2')
+
+
+@pytest.mark.skipif(not helpers.has_package('lz4'), reason='lz4 is not installed')
+def test_lz4(tmpdir):
+    tree = _get_large_tree()
+
+    _roundtrip(tmpdir, tree, 'lz4')

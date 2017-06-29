@@ -22,7 +22,7 @@ env:
         # to repeat them for all configurations.
         - NUMPY_VERSION=1.11
         - ASTROPY_VERSION=development
-        - CONDA_DEPENDENCIES='jsonschema pyyaml six'
+        - CONDA_DEPENDENCIES='jsonschema pyyaml six lz4'
         - PIP_DEPENDENCIES_FLAGS='--no-deps --force'
         - PIP_DEPENDENCIES='git+http://github.com/spacetelescope/gwcs.git#egg=gwcs'
         - SETUP_CMD='test --remote-data'
