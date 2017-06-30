@@ -105,9 +105,8 @@ def create_test_frames():
 
         cf.CelestialFrame(
             reference_frame=coord.Galactocentric(
+                # A default galcen_coord is used since none is provided here
                 galcen_distance=5.0*u.m,
-                galcen_ra=45*u.deg,
-                galcen_dec=1*u.rad,
                 z_sun=3*u.pc,
                 roll=3*u.deg)
             ),

@@ -14,6 +14,7 @@ try:
 except ImportError:
     HAS_ASTROPY = False
 else:
+    from astropy.coordinates import ICRS
     from astropy.coordinates.representation import CartesianRepresentation
     HAS_ASTROPY = True
 
@@ -89,6 +90,12 @@ def assert_tree_match(old_tree, new_tree, ctx=None,
             # CartesianRepresentation from astropy does not define equality in
             # a meaningful way, but we want to be able to use it in unit tests
             assert old.x == new.x and old.y == new.y and old.z == new.z
+        elif HAS_ASTROPY and isinstance(old, ICRS):
+            # ICRS from astropy does not define equality in a meaningful way,
+            # but we want to be able to use it in unit tests. For now we only
+            # compare RA and dec, but other fields may be important in the
+            # future
+            assert old.ra == new.ra and old.dec == new.dec
         else:
             assert old == new
 

@@ -302,3 +302,47 @@ class CompositeFrame(FrameType):
         assert old.name == new.name
         for old_frame, new_frame in zip(old.frames, new.frames):
             helpers.assert_tree_match(old_frame, new_frame)
+
+class ICRSCoord(AsdfType):
+    name = "wcs/icrs_coord"
+    types = ['astropy.coordinates.ICRS']
+    requires = ['astropy']
+    version = "1.0.0"
+
+    @classmethod
+    def from_tree(cls, node, ctx):
+        from ..unit import QuantityType
+        from astropy.coordinates import ICRS, Longitude, Latitude, Angle
+
+        angle = QuantityType.from_tree(node['ra']['wrap_angle'], ctx)
+        wrap_angle = Angle(angle.value, unit=angle.unit)
+        ra = Longitude(
+            node['ra']['value'],
+            unit=node['ra']['unit'],
+            wrap_angle=wrap_angle)
+        dec = Latitude(node['dec']['value'], unit=node['dec']['unit'])
+
+        return ICRS(ra=ra, dec=dec)
+
+    @classmethod
+    def to_tree(cls, frame, ctx):
+        from ..unit import QuantityType
+        from astropy.units import Quantity
+        from astropy.coordinates import ICRS
+
+        node = {}
+
+        wrap_angle = Quantity(
+            frame.ra.wrap_angle.value,
+            unit=frame.ra.wrap_angle.unit)
+        node['ra'] = {
+            'value': frame.ra.value,
+            'unit': frame.ra.unit.to_string(),
+            'wrap_angle': QuantityType.to_tree(wrap_angle, ctx)
+        }
+        node['dec'] = {
+            'value': frame.dec.value,
+            'unit': frame.dec.unit.to_string()
+        }
+
+        return node
