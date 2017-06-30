@@ -112,7 +112,8 @@ class FrameType(AsdfType):
     @classmethod
     def _from_tree(cls, node, ctx):
         from ..unit import QuantityType
-        from astropy.coordinates import CartesianRepresentation
+        from astropy.coordinates import (CartesianRepresentation,
+            CartesianDifferential)
 
         kwargs = {}
 
@@ -137,6 +138,11 @@ class FrameType(AsdfType):
                         y = QuantityType.from_tree(val[1], ctx)
                         z = QuantityType.from_tree(val[2], ctx)
                         val = CartesianRepresentation(x, y, z)
+                    elif name == 'galcen_v_sun':
+                        d_x = QuantityType.from_tree(val[0], ctx)
+                        d_y = QuantityType.from_tree(val[1], ctx)
+                        d_z = QuantityType.from_tree(val[2], ctx)
+                        val = CartesianDifferential(d_x, d_y, d_z)
                     else:
                         val = yamlutil.tagged_tree_to_custom_tree(val, ctx)
                     frame_kwargs[name] = val
@@ -156,7 +162,8 @@ class FrameType(AsdfType):
     def _to_tree(cls, frame, ctx):
         import numpy as np
         from ..unit import QuantityType
-        from astropy.coordinates import CartesianRepresentation
+        from astropy.coordinates import (CartesianRepresentation,
+            CartesianDifferential)
 
         node = {}
 
@@ -179,6 +186,9 @@ class FrameType(AsdfType):
                 # coordinates with associated units
                 if isinstance(frameval, CartesianRepresentation):
                     value = [frameval.x, frameval.y, frameval.z]
+                    frameval = value
+                elif isinstance(frameval, CartesianDifferential):
+                    value = [frameval.d_x, frameval.d_y, frameval.d_z]
                     frameval = value
                 yamlval = yamlutil.custom_tree_to_tagged_tree(frameval, ctx)
                 reference_frame[name] = yamlval

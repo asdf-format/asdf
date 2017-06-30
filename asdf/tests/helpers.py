@@ -15,7 +15,8 @@ except ImportError:
     HAS_ASTROPY = False
 else:
     from astropy.coordinates import ICRS
-    from astropy.coordinates.representation import CartesianRepresentation
+    from astropy.coordinates.representation import (CartesianRepresentation,
+        CartesianDifferential)
     HAS_ASTROPY = True
 
 from ..asdf import AsdfFile, get_asdf_library_info
@@ -86,15 +87,18 @@ def assert_tree_match(old_tree, new_tree, ctx=None,
             assert len(old) == len(new)
             for a, b in zip(old, new):
                 recurse(a, b)
+        # The astropy classes CartesianRepresentation, CartesianDifferential,
+        # and ICRS do not define equality in a way that is meaningful for unit
+        # tests. We explicitly compare the fields that we care about in order
+        # to enable our unit testing. It is possible that in the future it will
+        # be necessary or useful to account for fields that are not currently
+        # compared.
         elif HAS_ASTROPY and isinstance(old, CartesianRepresentation):
-            # CartesianRepresentation from astropy does not define equality in
-            # a meaningful way, but we want to be able to use it in unit tests
             assert old.x == new.x and old.y == new.y and old.z == new.z
+        elif HAS_ASTROPY and isinstance(old, CartesianDifferential):
+            assert old.d_x == new.d_x and old.d_y == new.d_y and \
+                old.d_z == new.d_z
         elif HAS_ASTROPY and isinstance(old, ICRS):
-            # ICRS from astropy does not define equality in a meaningful way,
-            # but we want to be able to use it in unit tests. For now we only
-            # compare RA and dec, but other fields may be important in the
-            # future
             assert old.ra == new.ra and old.dec == new.dec
         else:
             assert old == new
