@@ -10,14 +10,19 @@ import sys
 import six
 
 try:
-    import astropy
-except ImportError:
-    HAS_ASTROPY = False
-else:
     from astropy.coordinates import ICRS
-    from astropy.coordinates.representation import (CartesianRepresentation,
-        CartesianDifferential)
-    HAS_ASTROPY = True
+except ImportError:
+    ICRS = None
+
+try:
+    from astropy.coordinates.representation import CartesianRepresentation
+except ImportError:
+    CartesianRepresentation = None
+
+try:
+    from astropy.coordinates.representation import CartesianDifferential
+except ImportError:
+    CartesianDifferential = None
 
 from ..asdf import AsdfFile, get_asdf_library_info
 from ..conftest import RangeHTTPServer
@@ -93,12 +98,14 @@ def assert_tree_match(old_tree, new_tree, ctx=None,
         # to enable our unit testing. It is possible that in the future it will
         # be necessary or useful to account for fields that are not currently
         # compared.
-        elif HAS_ASTROPY and isinstance(old, CartesianRepresentation):
+        elif CartesianRepresentation is not None and \
+                isinstance(old, CartesianRepresentation):
             assert old.x == new.x and old.y == new.y and old.z == new.z
-        elif HAS_ASTROPY and isinstance(old, CartesianDifferential):
+        elif CartesianDifferential is not None and \
+                isinstance(old, CartesianDifferential):
             assert old.d_x == new.d_x and old.d_y == new.d_y and \
                 old.d_z == new.d_z
-        elif HAS_ASTROPY and isinstance(old, ICRS):
+        elif ICRS is not None and isinstance(old, ICRS):
             assert old.ra == new.ra and old.dec == new.dec
         else:
             assert old == new
