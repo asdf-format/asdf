@@ -71,7 +71,9 @@ class StepType(dict, AsdfType):
 class FrameType(AsdfType):
     name = "wcs/frame"
     version = '1.1.0'
-    requires = _REQUIRES
+    # We require a specific version of astropy in order to make use of
+    # CartesianDifferential
+    requires = ['gwcs', 'astropy-1.3.3']
     types = ['gwcs.Frame2D']
 
     @classmethod

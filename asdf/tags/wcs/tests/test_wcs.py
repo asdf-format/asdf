@@ -3,36 +3,23 @@
 
 from __future__ import absolute_import, division, unicode_literals, print_function
 
-
-try:
-    import astropy
-except ImportError:
-    HAS_ASTROPY = False
-else:
-    HAS_ASTROPY = True
-
-    from astropy.modeling import models
-    from astropy import coordinates as coord
-    from astropy import units as u
-    from astropy import time
-
-try:
-    import gwcs
-except ImportError:
-    HAS_GWCS = False
-else:
-    HAS_GWCS = True
-
-    from gwcs import coordinate_frames as cf
-    from gwcs import wcs
-
 import pytest
 import warnings
+
+gwcs = pytest.importorskip('gwcs')
+astropy = pytest.importorskip('astropy', minversion='1.3.3')
+
+from astropy.modeling import models
+from astropy import coordinates as coord
+from astropy import units as u
+from astropy import time
+
+from gwcs import coordinate_frames as cf
+from gwcs import wcs
 
 from ....tests import helpers
 
 
-@pytest.mark.skipif('not HAS_GWCS')
 def test_create_wcs(tmpdir):
     m1 = models.Shift(12.4) & models.Shift(-2)
     m2 = models.Scale(2) & models.Scale(-2)
@@ -51,7 +38,6 @@ def test_create_wcs(tmpdir):
     helpers.assert_roundtrip_tree(tree, tmpdir)
 
 
-@pytest.mark.skipif('not HAS_GWCS')
 def test_composite_frame(tmpdir):
     icrs = coord.ICRS()
     fk5 = coord.FK5()
@@ -134,7 +120,6 @@ def create_test_frames():
 
     return frames
 
-@pytest.mark.skipif('not HAS_GWCS')
 def test_frames(tmpdir):
 
     tree = {
