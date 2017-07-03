@@ -10,7 +10,10 @@
 
 - Updated WCS frame fields ``obsgeoloc`` and ``obsgeovel`` to reflect recent
   updates in ``astropy`` that changed representation from ``Quantity`` to
-  ``CartesianRepresentation``. [#212]
+  ``CartesianRepresentation``. Updated to reflect ``astropy`` change that
+  combines ``galcen_ra`` and ``galcen_dec`` into ``galcen_coord``. Added
+  support for new field ``galcen_v_sun``. Added support for required module
+  versions for tag classes. [#244]
 
 1.2.1(2016-11-07)
 -----------------
