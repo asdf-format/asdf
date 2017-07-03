@@ -5,14 +5,6 @@ from __future__ import absolute_import, division, unicode_literals, print_functi
 
 import io
 import os
-
-try:
-    import astropy
-except ImportError:
-    HAS_ASTROPY = False
-else:
-    HAS_ASTROPY = True
-
 import pytest
 
 from .. import asdf
@@ -95,6 +87,7 @@ b: !core/complex-1.0.0
 
 
 def test_version_mismatch():
+    astropy = pytest.importorskip('astropy')
     from astropy.tests.helper import catch_warnings
 
     yaml = """
@@ -205,3 +198,25 @@ def test_longest_match():
         'http://stsci.edu/schemas/asdf/core/asdf-1.0.0') == 'FOOBAR/asdf-1.0.0'
     assert l.url_mapping(
         'http://stsci.edu/schemas/asdf/transform/transform-1.0.0') != 'FOOBAR/transform-1.0.0'
+
+
+def test_module_versioning():
+    class NoModuleType(asdftypes.AsdfType):
+        # It seems highly unlikely that this would be a real module
+        requires = ['qkjvqdja']
+
+    class HasCorrectPytest(asdftypes.AsdfType):
+        # This means it requires 1.0.0 or greater, so it should succeed
+        requires = ['pytest-1.0.0']
+
+    class DoesntHaveCorrectPytest(asdftypes.AsdfType):
+        requires = ['pytest-91984.1.7']
+
+    nmt = NoModuleType()
+    hcp = HasCorrectPytest()
+    # perhaps an unfortunate acroynm
+    dhcp = DoesntHaveCorrectPytest()
+
+    assert nmt.has_required_modules == False
+    assert hcp.has_required_modules == True
+    assert dhcp.has_required_modules == False
