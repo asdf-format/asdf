@@ -27,7 +27,7 @@ _BASIC_PYTHON_TYPES = set(list(six.string_types) +
                           [float, list, dict, tuple])
 
 # regex used to parse module name from optional version string
-MODULE_RE = re.compile(r'([a-zA-Z]+)(-(\d.\d.\d))?')
+MODULE_RE = re.compile(r'([a-zA-Z]+)(-(\d+\.\d+\.\d+))?')
 
 
 def format_tag(organization, standard, version, tag_name):
