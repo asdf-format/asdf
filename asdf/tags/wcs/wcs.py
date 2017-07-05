@@ -319,7 +319,7 @@ class ICRSCoord(AsdfType):
     name = "wcs/icrs_coord"
     types = ['astropy.coordinates.ICRS']
     requires = ['astropy']
-    version = "1.0.0"
+    version = "1.1.0"
 
     @classmethod
     def from_tree(cls, node, ctx):
