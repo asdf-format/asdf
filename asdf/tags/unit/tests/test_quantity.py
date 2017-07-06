@@ -4,35 +4,76 @@
 from __future__ import absolute_import, division, unicode_literals, print_function
 
 import io
-
-try:
-    import astropy
-except ImportError:
-    HAS_ASTROPY = False
-else:
-    HAS_ASTROPY = True
-    from astropy import units
-
 import pytest
 
+astropy = pytest.importorskip('astropy')
+from astropy import units
+
 from .... import asdf
+from ....tests import helpers
 
 
-@pytest.mark.skipif('not HAS_ASTROPY')
-def test_quantity_roundtrip(tmpdir):
-    from ....tests import helpers
-    yaml = """
-quantity: !unit/quantity-1.1.0
-    value: [3.14159]
-    unit: kg
-"""
-    quantity = units.Quantity(3.14159, unit=units.kg)
+def roundtrip_quantity(yaml, quantity):
     buff = helpers.yaml_to_asdf(yaml)
     with asdf.AsdfFile.open(buff) as ff:
-        assert ff.tree['quantity'] == quantity
+        assert (ff.tree['quantity'] == quantity).all()
         buff2 = io.BytesIO()
         ff.write_to(buff2)
 
     buff2.seek(0)
     with asdf.AsdfFile.open(buff2) as ff:
-        assert ff.tree['quantity'] == quantity
+        assert (ff.tree['quantity'] == quantity).all()
+
+def test_value_scalar(tmpdir):
+    testval = 2.71828
+    testunit = units.kpc
+    yaml = """
+quantity: !unit/quantity-1.1.0
+    value: {}
+    unit: {}
+""".format(testval, testunit)
+
+    quantity = units.Quantity(testval, unit=testunit)
+    roundtrip_quantity(yaml, quantity)
+
+def test_value_array(tmpdir):
+    testval = [3.14159]
+    testunit = units.kg
+    yaml = """
+quantity: !unit/quantity-1.1.0
+    value: {}
+    unit: {}
+""".format(testval, testunit)
+
+    quantity = units.Quantity(testval, unit=testunit)
+    roundtrip_quantity(yaml, quantity)
+
+def test_value_multiarray(tmpdir):
+    testval = [x*2.3081 for x in range(10)]
+    testunit = units.ampere
+    yaml = """
+quantity: !unit/quantity-1.1.0
+    value: {}
+    unit: {}
+""".format(testval, testunit)
+
+    quantity = units.Quantity(testval, unit=testunit)
+    roundtrip_quantity(yaml, quantity)
+
+@pytest.mark.xfail(reason="ndarray compatibility not yet implemented")
+def test_value_ndarray(tmpdir):
+    from numpy import array, float64
+    testval = [[1,2,3],[4,5,6]]
+    testunit = units.km
+    yaml = """
+quantity: !unit/quantity-1.1.0
+    value: !core/ndarray-1.0.0
+        datatype: float64
+        data:
+            {}
+    unit: {}
+""".format(testval, testunit)
+
+    data = array(testval, float64)
+    quantity = units.Quantity(data, unit=testunit)
+    roundtrip_quantity(yaml, quantity)

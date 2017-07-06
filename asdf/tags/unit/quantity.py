@@ -23,7 +23,8 @@ class QuantityType(AsdfType):
         node = {}
         if isinstance(quantity, Quantity):
             value = quantity.value
-            node['value'] = [value] if isscalar(value) else list(value)
+            # We currently can't handle NDArrays directly, so convert to list
+            node['value'] = value if isscalar(value) else list(value)
             node['unit'] = UnitType.to_tree(quantity.unit, ctx)
             return node
         raise TypeError("'{0}' is not a valid Quantity".format(quantity))
