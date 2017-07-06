@@ -70,7 +70,10 @@ class StepType(dict, AsdfType):
 
 class FrameType(AsdfType):
     name = "wcs/frame"
-    requires = _REQUIRES
+    version = '1.1.0'
+    # We require a specific version of astropy in order to make use of
+    # CartesianDifferential
+    requires = ['gwcs', 'astropy-1.3.3']
     types = ['gwcs.Frame2D']
 
     @classmethod
@@ -110,7 +113,9 @@ class FrameType(AsdfType):
 
     @classmethod
     def _from_tree(cls, node, ctx):
-        from astropy import units as u
+        from ..unit import QuantityType
+        from astropy.coordinates import (CartesianRepresentation,
+            CartesianDifferential)
 
         kwargs = {}
 
@@ -129,8 +134,17 @@ class FrameType(AsdfType):
             for name in frame_cls.get_frame_attr_names().keys():
                 val = reference_frame.get(name)
                 if val is not None:
-                    if isinstance(val, list):
-                        val = u.Quantity(val[0], unit=val[1])
+                    # These fields are known to be CartesianRepresentations
+                    if name in ['obsgeoloc', 'obsgeovel']:
+                        x = QuantityType.from_tree(val[0], ctx)
+                        y = QuantityType.from_tree(val[1], ctx)
+                        z = QuantityType.from_tree(val[2], ctx)
+                        val = CartesianRepresentation(x, y, z)
+                    elif name == 'galcen_v_sun':
+                        d_x = QuantityType.from_tree(val[0], ctx)
+                        d_y = QuantityType.from_tree(val[1], ctx)
+                        d_z = QuantityType.from_tree(val[2], ctx)
+                        val = CartesianDifferential(d_x, d_y, d_z)
                     else:
                         val = yamlutil.tagged_tree_to_custom_tree(val, ctx)
                     frame_kwargs[name] = val
@@ -148,8 +162,10 @@ class FrameType(AsdfType):
 
     @classmethod
     def _to_tree(cls, frame, ctx):
-        from astropy import units as u
         import numpy as np
+        from ..unit import QuantityType
+        from astropy.coordinates import (CartesianRepresentation,
+            CartesianDifferential)
 
         node = {}
 
@@ -167,14 +183,17 @@ class FrameType(AsdfType):
                 type(frame.reference_frame)]
 
             for name in frame.reference_frame.get_frame_attr_names().keys():
-                val = getattr(frame.reference_frame, name)
-                if isinstance(val, u.Quantity):
-                    value = val.value
-                    if not np.isscalar(value):
-                        value = list(val.value)
-                    val = [value, val.unit]
-                val = yamlutil.custom_tree_to_tagged_tree(val, ctx)
-                reference_frame[name] = val
+                frameval = getattr(frame.reference_frame, name)
+                # CartesianRepresentation becomes a flat list of x,y,z
+                # coordinates with associated units
+                if isinstance(frameval, CartesianRepresentation):
+                    value = [frameval.x, frameval.y, frameval.z]
+                    frameval = value
+                elif isinstance(frameval, CartesianDifferential):
+                    value = [frameval.d_x, frameval.d_y, frameval.d_z]
+                    frameval = value
+                yamlval = yamlutil.custom_tree_to_tagged_tree(frameval, ctx)
+                reference_frame[name] = yamlval
 
             node['reference_frame'] = reference_frame
 
@@ -295,3 +314,47 @@ class CompositeFrame(FrameType):
         assert old.name == new.name
         for old_frame, new_frame in zip(old.frames, new.frames):
             helpers.assert_tree_match(old_frame, new_frame)
+
+class ICRSCoord(AsdfType):
+    name = "wcs/icrs_coord"
+    types = ['astropy.coordinates.ICRS']
+    requires = ['astropy']
+    version = "1.1.0"
+
+    @classmethod
+    def from_tree(cls, node, ctx):
+        from ..unit import QuantityType
+        from astropy.coordinates import ICRS, Longitude, Latitude, Angle
+
+        angle = QuantityType.from_tree(node['ra']['wrap_angle'], ctx)
+        wrap_angle = Angle(angle.value, unit=angle.unit)
+        ra = Longitude(
+            node['ra']['value'],
+            unit=node['ra']['unit'],
+            wrap_angle=wrap_angle)
+        dec = Latitude(node['dec']['value'], unit=node['dec']['unit'])
+
+        return ICRS(ra=ra, dec=dec)
+
+    @classmethod
+    def to_tree(cls, frame, ctx):
+        from ..unit import QuantityType
+        from astropy.units import Quantity
+        from astropy.coordinates import ICRS
+
+        node = {}
+
+        wrap_angle = Quantity(
+            frame.ra.wrap_angle.value,
+            unit=frame.ra.wrap_angle.unit)
+        node['ra'] = {
+            'value': frame.ra.value,
+            'unit': frame.ra.unit.to_string(),
+            'wrap_angle': QuantityType.to_tree(wrap_angle, ctx)
+        }
+        node['dec'] = {
+            'value': frame.dec.value,
+            'unit': frame.dec.unit.to_string()
+        }
+
+        return node

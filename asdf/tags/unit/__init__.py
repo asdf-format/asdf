@@ -4,3 +4,4 @@
 from __future__ import absolute_import, division, unicode_literals, print_function
 
 from .unit import UnitType
+from .quantity import QuantityType
