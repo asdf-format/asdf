@@ -16,6 +16,7 @@ import six
 from . import asdf
 from . import block
 from . import util
+from . import generic_io
 
 try:
     from astropy.io import fits
@@ -146,27 +147,70 @@ class AsdfInFits(asdf.AsdfFile):
             tree=tree, uri=uri, extensions=extensions)
         self._blocks = _EmbeddedBlockManager(hdulist, self)
         self._hdulist = hdulist
+        self._close_hdulist = False
 
     def __exit__(self, type, value, traceback):
         super(AsdfInFits, self).__exit__(type, value, traceback)
+        if self._close_hdulist:
+            self._hdulist.close()
         self._tree = {}
 
     def close(self):
         super(AsdfInFits, self).close()
+        if self._close_hdulist:
+            self._hdulist.close()
         self._tree = {}
 
     @classmethod
-    def open(cls, hdulist, uri=None, validate_checksums=False, extensions=None):
+    def open(cls, fd, uri=None, validate_checksums=False, extensions=None):
+        """Creates a new AsdfInFits object based on given input data
+
+        Parameters
+        ----------
+        fd : FITS HDUList instance, URI string, or file-like object
+            May be an already opened instance of a FITS HDUList instance,
+            string ``file`` or ``http`` URI, or a Python file-like object.
+
+        uri : str, optional
+            The URI for this ASDF file.  Used to resolve relative
+            references against.  If not provided, will be
+            automatically determined from the associated file object,
+            if possible and if created from `AsdfFile.open`.
+
+        validate_checksums : bool, optional
+            If `True`, validate the blocks against their checksums.
+            Requires reading the entire file, so disabled by default.
+
+        extensions : list of AsdfExtension, optional
+            A list of extensions to the ASDF to support when reading
+            and writing ASDF files.  See `asdftypes.AsdfExtension` for
+            more information.
+        """
+        close_hdulist = False
+        if isinstance(fd, fits.hdu.hdulist.HDUList):
+            hdulist = fd
+        else:
+            file_obj = generic_io.get_file(fd)
+            try:
+                hdulist = fits.open(file_obj)
+                # Since we created this HDUList object, we need to be
+                # responsible for cleaning up upon close() or __exit__
+                close_hdulist = True
+            except IOError:
+                msg = "Failed to parse given file '{}'. Is it FITS?"
+                raise ValueError(msg.format(file_obj.uri))
+
         self = cls(hdulist, uri=uri, extensions=extensions)
+        self._close_hdulist = close_hdulist
 
         try:
             asdf_extension = hdulist[ASDF_EXTENSION_NAME]
         except (KeyError, IndexError, AttributeError):
+            # This means there is no ASDF extension
             return self
 
         buff = io.BytesIO(asdf_extension.data)
-
-        return cls._open_impl(self, buff, uri=uri, mode='r',
+        return cls._open_asdf(self, buff, uri=uri, mode='r',
                               validate_checksums=validate_checksums)
 
     def _update_asdf_extension(self, all_array_storage=None,

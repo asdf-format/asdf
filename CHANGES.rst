@@ -7,7 +7,12 @@
 
 - Added a function ``is_asdf_file`` which inspects the input and
   returns ``True`` or ``False``. [#239]
-
+  
+- The ``open`` method of ``AsdfInFits`` now accepts URIs and open file handles
+  in addition to HDULists. The ``open`` method of ``AsdfFile`` will now try to
+  parse the given URI or file handle as ``AsdfInFits`` if it is not obviously a
+  regular ASDF file. [#241]
+  
 - Updated WCS frame fields ``obsgeoloc`` and ``obsgeovel`` to reflect recent
   updates in ``astropy`` that changed representation from ``Quantity`` to
   ``CartesianRepresentation``. Updated to reflect ``astropy`` change that
