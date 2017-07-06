@@ -25,7 +25,7 @@ class QuantityType(AsdfType):
         node = {}
         if isinstance(quantity, Quantity):
             node['value'] = custom_tree_to_tagged_tree(quantity.value, ctx)
-            node['unit'] = UnitType.to_tree(quantity.unit, ctx)
+            node['unit'] = custom_tree_to_tagged_tree(quantity.unit, ctx)
             return node
         raise TypeError("'{0}' is not a valid Quantity".format(quantity))
 
