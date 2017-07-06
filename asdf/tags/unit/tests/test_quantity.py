@@ -60,7 +60,6 @@ quantity: !unit/quantity-1.1.0
     quantity = units.Quantity(testval, unit=testunit)
     roundtrip_quantity(yaml, quantity)
 
-@pytest.mark.xfail(reason="ndarray compatibility not yet implemented")
 def test_value_ndarray(tmpdir):
     from numpy import array, float64
     testval = [[1,2,3],[4,5,6]]
