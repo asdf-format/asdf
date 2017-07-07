@@ -350,7 +350,7 @@ class ICRSCoord(AsdfType):
         node['ra'] = {
             'value': frame.ra.value,
             'unit': frame.ra.unit.to_string(),
-            'wrap_angle': QuantityType.to_tree(wrap_angle, ctx)
+            'wrap_angle': yamlutil.custom_tree_to_tagged_tree(wrap_angle, ctx)
         }
         node['dec'] = {
             'value': frame.dec.value,
