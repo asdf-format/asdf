@@ -5,22 +5,16 @@ from __future__ import absolute_import, division, unicode_literals, print_functi
 
 import copy
 import os
-
-try:
-    import astropy
-except ImportError:
-    HAS_ASTROPY = False
-else:
-    HAS_ASTROPY = True
-    from astropy.io import fits
-    from .. import fits_embed
+import pytest
 
 import numpy as np
 from numpy.testing import assert_array_equal
 
-import pytest
+astropy = pytest.importorskip('astropy')
+from astropy.io import fits
 
 from .. import asdf
+from .. import fits_embed
 from .. import open as asdf_open
 from .helpers import assert_tree_match
 
@@ -51,7 +45,6 @@ def create_asdf_in_fits():
 
     return fits_embed.AsdfInFits(hdulist, tree)
 
-@pytest.mark.skipif('not HAS_ASTROPY')
 def test_embed_asdf_in_fits_file(tmpdir):
     hdulist = fits.HDUList()
     hdulist.append(fits.ImageHDU(np.arange(512, dtype=np.float), name='SCI'))
@@ -92,7 +85,6 @@ def test_embed_asdf_in_fits_file(tmpdir):
         assert_tree_match(tree, ff.tree)
 
 
-@pytest.mark.skipif('not HAS_ASTROPY')
 def test_embed_asdf_in_fits_file_anonymous_extensions(tmpdir):
     # Write the AsdfInFits object out as a FITS file with ASDF extension
     asdf_in_fits = create_asdf_in_fits()
@@ -116,7 +108,6 @@ def test_embed_asdf_in_fits_file_anonymous_extensions(tmpdir):
         assert_tree_match(asdf_in_fits.tree, ff.tree)
 
 
-@pytest.mark.skipif('not HAS_ASTROPY')
 def test_create_in_tree_first(tmpdir):
     tree = {
         'model': {
@@ -166,7 +157,6 @@ def compare_asdfs(asdf0, asdf1):
             asdf0.tree['model'][key]['data'],
             asdf1.tree['model'][key]['data'])
 
-@pytest.mark.skipif('not HAS_ASTROPY')
 def test_asdf_in_fits_open(tmpdir):
     """Test the open method of AsdfInFits"""
     tmpfile = os.path.join(str(tmpdir), 'test.fits')
@@ -193,7 +183,6 @@ def test_asdf_in_fits_open(tmpdir):
         with fits_embed.AsdfInFits.open(hdulist) as ff:
             compare_asdfs(asdf_in_fits, ff)
 
-@pytest.mark.skipif('not HAS_ASTROPY')
 def test_asdf_open(tmpdir):
     """Test the top-level open method of the asdf module"""
     tmpfile = os.path.join(str(tmpdir), 'test.fits')
@@ -220,7 +209,6 @@ def test_asdf_open(tmpdir):
         with asdf_open(hdulist) as ff:
             compare_asdfs(asdf_in_fits, ff)
 
-@pytest.mark.skipif('not HAS_ASTROPY')
 def test_bad_input(tmpdir):
     """Make sure these functions behave properly with bad input"""
     text_file = os.path.join(str(tmpdir), 'test.txt')
