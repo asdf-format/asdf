@@ -224,26 +224,9 @@ def test_asdf_open(tmpdir):
 def test_bad_input(tmpdir):
     """Make sure these functions behave properly with bad input"""
     text_file = os.path.join(str(tmpdir), 'test.txt')
-    fits_file = os.path.join(str(tmpdir), 'test.fits')
-    asdf_in_fits = create_asdf_in_fits()
-    asdf_in_fits.write_to(fits_file)
 
     with open(text_file, 'w') as fh:
         fh.write('I <3 ASDF!!!!!')
 
     with pytest.raises(ValueError):
         asdf_open(text_file)
-
-    with pytest.raises(ValueError):
-        asdf_open(text_file, accept_asdf_in_fits=False)
-
-    with pytest.raises(ValueError):
-        asdf_open(fits_file, accept_asdf_in_fits=False)
-
-    with pytest.raises(ValueError):
-        with open(fits_file, 'rb') as handle:
-            asdf_open(handle, accept_asdf_in_fits=False)
-
-    with pytest.raises(ValueError):
-        with fits.open(fits_file) as hdulist:
-            asdf_open(hdulist, accept_asdf_in_fits=False)
