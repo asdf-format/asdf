@@ -41,7 +41,7 @@ def test_value_array(tmpdir):
     testunit = units.kg
     yaml = """
 quantity: !unit/quantity-1.1.0
-    value: {}
+    value: !core/ndarray-1.1.0 {}
     unit: {}
 """.format(testval, testunit)
 
@@ -53,7 +53,7 @@ def test_value_multiarray(tmpdir):
     testunit = units.ampere
     yaml = """
 quantity: !unit/quantity-1.1.0
-    value: {}
+    value: !core/ndarray-1.1.0 {}
     unit: {}
 """.format(testval, testunit)
 
