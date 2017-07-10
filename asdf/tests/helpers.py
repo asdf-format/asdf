@@ -9,6 +9,21 @@ import sys
 
 import six
 
+try:
+    from astropy.coordinates import ICRS
+except ImportError:
+    ICRS = None
+
+try:
+    from astropy.coordinates.representation import CartesianRepresentation
+except ImportError:
+    CartesianRepresentation = None
+
+try:
+    from astropy.coordinates.representation import CartesianDifferential
+except ImportError:
+    CartesianDifferential = None
+
 from ..asdf import AsdfFile, get_asdf_library_info
 from ..conftest import RangeHTTPServer
 from ..extension import _builtin_extension_list
@@ -77,6 +92,21 @@ def assert_tree_match(old_tree, new_tree, ctx=None,
             assert len(old) == len(new)
             for a, b in zip(old, new):
                 recurse(a, b)
+        # The astropy classes CartesianRepresentation, CartesianDifferential,
+        # and ICRS do not define equality in a way that is meaningful for unit
+        # tests. We explicitly compare the fields that we care about in order
+        # to enable our unit testing. It is possible that in the future it will
+        # be necessary or useful to account for fields that are not currently
+        # compared.
+        elif CartesianRepresentation is not None and \
+                isinstance(old, CartesianRepresentation):
+            assert old.x == new.x and old.y == new.y and old.z == new.z
+        elif CartesianDifferential is not None and \
+                isinstance(old, CartesianDifferential):
+            assert old.d_x == new.d_x and old.d_y == new.d_y and \
+                old.d_z == new.d_z
+        elif ICRS is not None and isinstance(old, ICRS):
+            assert old.ra == new.ra and old.dec == new.dec
         else:
             assert old == new
 

@@ -4,8 +4,9 @@
 from __future__ import absolute_import, division, unicode_literals, print_function
 
 import bisect
-import imp
+import importlib
 import warnings
+import re
 
 import six
 
@@ -24,6 +25,9 @@ __all__ = ['format_tag', 'AsdfTypeIndex', 'AsdfType']
 _BASIC_PYTHON_TYPES = set(list(six.string_types) +
                           list(six.integer_types) +
                           [float, list, dict, tuple])
+
+# regex used to parse module name from optional version string
+MODULE_RE = re.compile(r'([a-zA-Z]+)(-(\d+\.\d+\.\d+))?')
 
 
 def format_tag(organization, standard, version, tag_name):
@@ -325,17 +329,24 @@ class AsdfTypeMeta(type):
 
     @classmethod
     def _has_required_modules(cls, requires):
-        for mod in requires:
-            if mod in cls._import_cache:
-                if not cls._import_cache[mod]:
+        for string in requires:
+            has_module = True
+            match = MODULE_RE.match(string)
+            modname, _, version = match.groups()
+            if modname in cls._import_cache:
+                if not cls._import_cache[modname]:
                     return False
             try:
-                imp.find_module(mod)
+                module = importlib.import_module(modname)
+                if version and hasattr(module, '__version__'):
+                    if module.__version__ < version:
+                        has_module = False
             except ImportError:
-                cls._import_cache[mod] = False
-                return False
-            else:
-                cls._import_cache[mod] = True
+                has_module = False
+            finally:
+                cls._import_cache[modname] = has_module
+                if not has_module:
+                    return False
         return True
 
     @classmethod

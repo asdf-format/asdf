@@ -17,16 +17,15 @@ Installation
 
 To clone the project from github and initialize the asdf-standard submodule::
 
-```python
+```
     git clone https://github.com/spacetelescope/asdf.git
     cd asdf/asdf_standard
-    git submodule init
-    git submodule update
+    git submodule update --init
 ```
 
 To install::
 
-```python
+```
     python setup.py install
 ```
 
@@ -35,6 +34,8 @@ Testing
 
 To run the unit tests::
 
-```python
+```
     python setup.py test
 ```
+
+Please note that you must have [astropy](https://github.com/astropy/astropy) package installed to run the tests.
