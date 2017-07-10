@@ -127,3 +127,29 @@ def test_frames(tmpdir):
     }
 
     helpers.assert_roundtrip_tree(tree, tmpdir)
+
+@pytest.mark.xfail()
+def test_backwards_compatibility(tmpdir):
+    yaml = """
+wcs/celestial_frame-1.1.0
+  axes_names: [x, y, z]
+  axes_order: [0, 1, 2]
+  name: CelestialFrame
+  reference_frame:
+    galcen_dec: !unit/quantity-1.1.0
+      unit: rad
+      value: 1.0
+    galcen_distance: !unit/quantity-1.1.0
+      unit: m
+      value: 5.0
+    galcen_ra: !unit/quantity-1.1.0
+      unit: deg
+      value: 45.0
+    roll: !unit/quantity-1.1.0
+      unit: deg
+      value: 3.0
+    type: galactocentric
+    z_sun: !unit/quantity-1.1.0
+      unit: pc
+      value: 3.0
+  unit: [!unit/unit-1.0.0 deg, !unit/unit-1.0.0 deg, !unit/unit-1.0.0 deg]"""
