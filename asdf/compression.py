@@ -2,10 +2,14 @@
 # -*- coding: utf-8 -*-
 
 from __future__ import absolute_import, division, unicode_literals, print_function
+import struct
 
 import numpy as np
 
 import six
+
+
+DEFAULT_BLOCK_SIZE = 1 << 22  #: Decompressed block size in bytes, 4MiB
 
 
 def validate(compression):
@@ -14,7 +18,7 @@ def validate(compression):
 
     Parameters
     ----------
-    compression : str or None
+    compression : str, bytes or None
 
     Returns
     -------
@@ -25,20 +29,59 @@ def validate(compression):
     ------
     ValueError
     """
-    if not compression:
-        return None
-
-    if compression == b'\0\0\0\0':
+    if not compression or compression == b'\0\0\0\0':
         return None
 
     if isinstance(compression, bytes):
         compression = compression.decode('ascii')
 
-    if compression not in ('zlib', 'bzp2'):
+    compression = compression.strip('\0')
+    if compression not in ('zlib', 'bzp2', 'lz4', 'input'):
         raise ValueError(
-            "Supported compression types are: 'zlib' and 'bzp2'")
+            "Supported compression types are: 'zlib', 'bzp2', 'lz4', or 'input'")
 
     return compression
+
+
+class Lz4Compressor(object):
+    def __init__(self, block_api):
+        self._api = block_api
+
+    def compress(self, data):
+        output = self._api.compress(data, mode='high_compression')
+        header = struct.pack('!I', len(output))
+        return header + output
+
+
+class Lz4Decompressor(object):
+    def __init__(self, block_api):
+        self._api = block_api
+        self._size = 0
+        self._pos = 0
+        self._buffer = b''
+
+    def decompress(self, data):
+        if not self._size:
+            data = self._buffer + data
+            if len(data) < 4:
+                self._buffer += data
+                return b''
+            self._size = struct.unpack('!I', data[:4])[0]
+            data = data[4:]
+            self._buffer = bytearray(self._size)
+        if self._pos + len(data) < self._size:
+            self._buffer[self._pos:self._pos + len(data)] = data
+            self._pos += len(data)
+            return b''
+        else:
+            offset = self._size - self._pos
+            self._buffer[self._pos:] = data[:offset]
+            data = data[offset:]
+            self._size = 0
+            self._pos = 0
+            output = self._api.decompress(self._buffer)
+            self._buffer = b''
+            return output + self.decompress(data)
 
 
 def _get_decoder(compression):
@@ -60,6 +103,15 @@ def _get_decoder(compression):
                 "therefore the compressed block in this ASDF file "
                 "can not be decompressed.")
         return bz2.BZ2Decompressor()
+    elif compression == 'lz4':
+        try:
+            import lz4.block
+        except ImportError:
+            raise ImportError(
+                "lz4 library in not installed in your Python environment, "
+                "therefore the compressed block in this ASDF file "
+                "can not be decompressed.")
+        return Lz4Decompressor(lz4.block)
     else:
         raise ValueError(
             "Unknown compression type: '{0}'".format(compression))
@@ -72,8 +124,8 @@ def _get_encoder(compression):
         except ImportError:
             raise ImportError(
                 "Your Python does not have the zlib library, "
-                "therefore the compressed block in this ASDF file "
-                "can not be decompressed.")
+                "therefore the block in this ASDF file "
+                "can not be compressed.")
         return zlib.compressobj()
     elif compression == 'bzp2':
         try:
@@ -81,9 +133,18 @@ def _get_encoder(compression):
         except ImportError:
             raise ImportError(
                 "Your Python does not have the bz2 library, "
-                "therefore the compressed block in this ASDF file "
-                "can not be decompressed.")
+                "therefore the block in this ASDF file "
+                "can not be compressed.")
         return bz2.BZ2Compressor()
+    elif compression == 'lz4':
+        try:
+            import lz4.block
+        except ImportError:
+            raise ImportError(
+                "lz4 library in not installed in your Python environment, "
+                "therefore the block in this ASDF file "
+                "can not be compressed.")
+        return Lz4Compressor(lz4.block)
     else:
         raise ValueError(
             "Unknown compression type: '{0}'".format(compression))
@@ -150,7 +211,7 @@ def decompress(fd, used_size, data_size, compression):
     return buffer
 
 
-def compress(fd, data, compression, block_size=1 << 16):
+def compress(fd, data, compression, block_size=DEFAULT_BLOCK_SIZE):
     """
     Compress array data and write to a file.
 
@@ -160,23 +221,30 @@ def compress(fd, data, compression, block_size=1 << 16):
         The file to write to.
 
     data : buffer
-        The buffer of uncompressed data
+        The buffer of uncompressed data.
 
     compression : str
         The type of compression to use.
 
     block_size : int, optional
-        The size of blocks (in raw data) to process at a time.
+        Input data will be split into blocks of this size (in bytes) before compression.
     """
     compression = validate(compression)
     encoder = _get_encoder(compression)
 
+    # We can have numpy arrays here. While compress() will work with them,
+    # it is impossible to split them into fixed size blocks without converting
+    # them to bytes.
+    if isinstance(data, np.ndarray):
+        data = data.tobytes()
+
     for i in range(0, len(data), block_size):
         fd.write(encoder.compress(data[i:i+block_size]))
-    fd.write(encoder.flush())
+    if hasattr(encoder, "flush"):
+        fd.write(encoder.flush())
 
 
-def get_compressed_size(data, compression, block_size=1 << 16):
+def get_compressed_size(data, compression, block_size=DEFAULT_BLOCK_SIZE):
     """
     Returns the number of bytes required when the given data is
     compressed.
@@ -188,6 +256,9 @@ def get_compressed_size(data, compression, block_size=1 << 16):
     compression : str
         The type of compression to use.
 
+    block_size : int, optional
+        Input data will be split into blocks of this size (in bytes) before the compression.
+
     Returns
     -------
     bytes : int
@@ -198,6 +269,7 @@ def get_compressed_size(data, compression, block_size=1 << 16):
     l = 0
     for i in range(0, len(data), block_size):
         l += len(encoder.compress(data[i:i+block_size]))
-    l += len(encoder.flush())
+    if hasattr(encoder, "flush"):
+        l += len(encoder.flush())
 
     return l

@@ -1085,6 +1085,7 @@ foo : bar
         with asdf.AsdfFile.open(buff) as ff:
             pass
 
+
 def test_valid_version(tmpdir):
     content = b"""#ASDF 1.0.0
 %YAML 1.1
@@ -1099,3 +1100,21 @@ foo : bar
     assert version['major'] == 1
     assert version['minor'] == 0
     assert version['patch'] == 0
+
+
+def test_fd_not_seekable():
+    data = np.ones(1024)
+    b = block.Block(data=data)
+    fd = io.BytesIO()
+    fd.seekable = lambda: False
+    fd.write_array = lambda arr: fd.write(arr.tobytes())
+    fd.read_blocks = lambda us: [fd.read(us)]
+    fd.fast_forward = lambda offset: fd.seek(offset, 1)
+    b.output_compression = 'zlib'
+    b.write(fd)
+    fd.seek(0)
+    b = block.Block()
+    b.read(fd)
+    # We lost the information about the underlying array type,
+    # but still can compare the bytes.
+    assert b.data.tobytes() == data.tobytes()

@@ -105,6 +105,10 @@ entry_points['console_scripts'] = [
     'asdftool = asdf.commands.main:main',
 ]
 
+# Add the dependencies which are not strictly needed but enable otherwise skipped tests
+extra_requires = []
+if os.getenv('CI'):
+    extra_requires.extend(['lz4>=0.10'])
 
 # Note that requires and provides should not be included in the call to
 # ``setup``, since these are now deprecated. See this link for more details:
@@ -119,8 +123,8 @@ setup(name=PACKAGENAME,
           'jsonschema>=2.3.0',
           'six>=1.9.0',
           'pytest>=2.7.2',
-          'numpy>=1.8'
-      ],
+          'numpy>=1.8',
+      ] + extra_requires,
       author=AUTHOR,
       author_email=AUTHOR_EMAIL,
       license=LICENSE,
