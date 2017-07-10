@@ -10,7 +10,7 @@ import pytest
 
 from ... import AsdfFile
 from .. import main
-from ...tests.helpers import get_file_sizes, assert_tree_match, has_package
+from ...tests.helpers import get_file_sizes, assert_tree_match
 
 
 def _test_defragment(tmpdir, codec):
@@ -54,6 +54,6 @@ def test_defragment_bzp2(tmpdir):
     _test_defragment(tmpdir, 'bzp2')
 
 
-@pytest.mark.skipif(not has_package('lz4'), reason='lz4 is not installed')
 def test_defragment_lz4(tmpdir):
+    pytest.importorskip('lz4')
     _test_defragment(tmpdir, 'lz4')
