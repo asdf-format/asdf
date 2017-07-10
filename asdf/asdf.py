@@ -355,8 +355,13 @@ class AsdfFile(versioning.VersionedMixin):
 
             - ``bzp2``: Use bzip2 compression
 
+            - ``lz4``: Use lz4 compression
+
+            - ``''`` or `None`: no compression
+
             - ``input``: Use the same compression as in the file read.
               If there is no prior file, acts as None.
+
         """
         self.blocks[arr].output_compression = compression
 
@@ -671,8 +676,10 @@ class AsdfFile(versioning.VersionedMixin):
 
             - ``bzp2``: Use bzip2 compression.
 
+            - ``lz4``: Use lz4 compression.
+
             - ``input``: Use the same compression as in the file read.
-              If there is no prior file, acts as None.
+              If there is no prior file, acts as None
 
         auto_inline : int, optional
             When the number of elements in an array is less than this
@@ -807,6 +814,8 @@ class AsdfFile(versioning.VersionedMixin):
             - ``zlib``: Use zlib compression.
 
             - ``bzp2``: Use bzip2 compression.
+
+            - ``lz4``: Use lz4 compression.
 
             - ``input``: Use the same compression as in the file read.
               If there is no prior file, acts as None.

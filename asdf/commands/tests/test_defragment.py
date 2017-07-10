@@ -6,20 +6,21 @@ from __future__ import absolute_import, division, unicode_literals, print_functi
 import os
 
 import numpy as np
+import pytest
 
 from ... import AsdfFile
 from .. import main
-from ...tests.helpers import get_file_sizes, assert_tree_match
+from ...tests.helpers import get_file_sizes, assert_tree_match, has_package
 
 
-def test_defragment(tmpdir):
-    x = np.arange(0, 10, dtype=np.float)
+def _test_defragment(tmpdir, codec):
+    x = np.arange(0, 1000, dtype=np.float)
 
     tree = {
         'science_data': x,
         'subset': x[3:-3],
         'skipping': x[::2],
-        'not_shared': np.arange(10, 0, -1, dtype=np.uint8)
+        'not_shared': np.arange(100, 0, -1, dtype=np.uint8)
         }
 
     path = os.path.join(str(tmpdir), 'original.asdf')
@@ -29,7 +30,7 @@ def test_defragment(tmpdir):
     assert len(ff.blocks) == 2
 
     result = main.main_from_args(
-        ['defragment', path, '-o', out_path, '-c', 'zlib'])
+        ['defragment', path, '-o', out_path, '-c', codec])
 
     assert result == 0
 
@@ -43,3 +44,16 @@ def test_defragment(tmpdir):
     with AsdfFile.open(os.path.join(str(tmpdir), 'original.defragment.asdf')) as ff:
         assert_tree_match(ff.tree, tree)
         assert len(list(ff.blocks.internal_blocks)) == 2
+
+
+def test_defragment_zlib(tmpdir):
+    _test_defragment(tmpdir, 'zlib')
+
+
+def test_defragment_bzp2(tmpdir):
+    _test_defragment(tmpdir, 'bzp2')
+
+
+@pytest.mark.skipif(not has_package('lz4'), reason='lz4 is not installed')
+def test_defragment_lz4(tmpdir):
+    _test_defragment(tmpdir, 'lz4')

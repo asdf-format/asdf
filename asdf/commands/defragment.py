@@ -35,8 +35,8 @@ class Defragment(Command):
             the output file.""")
         parser.add_argument(
             "--compress", "-c", type=str, nargs="?",
-            choices=['zlib', 'bzp2'],
-            help="""Compress blocks using one of "zlib" or "bzp2".""")
+            choices=['zlib', 'bzp2', 'lz4'],
+            help="""Compress blocks using one of "zlib", "bzp2" or "lz4".""")
 
         parser.set_defaults(func=cls.run)
 

@@ -8,7 +8,7 @@ environment:
       MINICONDA_VERSION: "latest"
       CMD_IN_ENV: "cmd /E:ON /V:ON /C .\\ci-helpers\\appveyor\\windows_sdk.cmd"
       ASTROPY_VERSION: "development"
-      CONDA_DEPENDENCIES: "jsonschema pyyaml six"
+      CONDA_DEPENDENCIES: "jsonschema pyyaml six lz4"
       PIP_DEPENDENCIES: "git+http://github.com/spacetelescope/gwcs.git#egg=gwcs"
 
   matrix:

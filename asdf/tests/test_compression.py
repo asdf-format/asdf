@@ -114,6 +114,13 @@ def test_bzp2(tmpdir):
 
     _roundtrip(tmpdir, tree, 'bzp2')
 
+    
+def test_lz4(tmpdir):
+    pytest.importorskip('lz4')
+    tree = _get_large_tree()
+
+    _roundtrip(tmpdir, tree, 'lz4')
+
 
 def test_recompression(tmpdir):
     tree = _get_large_tree()
