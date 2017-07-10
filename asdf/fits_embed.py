@@ -197,6 +197,7 @@ class AsdfInFits(asdf.AsdfFile):
                 # responsible for cleaning up upon close() or __exit__
                 close_hdulist = True
             except IOError:
+                file_obj.close()
                 msg = "Failed to parse given file '{}'. Is it FITS?"
                 raise ValueError(msg.format(file_obj.uri))
 
