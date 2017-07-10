@@ -25,18 +25,15 @@ def validate(compression):
     ------
     ValueError
     """
-    if not compression:
-        return None
-
-    if compression == b'\0\0\0\0':
+    if not compression or compression == b'\0\0\0\0':
         return None
 
     if isinstance(compression, bytes):
         compression = compression.decode('ascii')
 
-    if compression not in ('zlib', 'bzp2'):
+    if compression not in ('zlib', 'bzp2', 'input'):
         raise ValueError(
-            "Supported compression types are: 'zlib' and 'bzp2'")
+            "Supported compression types are: 'zlib', 'bzp2' or 'input'")
 
     return compression
 
@@ -72,8 +69,8 @@ def _get_encoder(compression):
         except ImportError:
             raise ImportError(
                 "Your Python does not have the zlib library, "
-                "therefore the compressed block in this ASDF file "
-                "can not be decompressed.")
+                "therefore the block in this ASDF file "
+                "can not be compressed.")
         return zlib.compressobj()
     elif compression == 'bzp2':
         try:
@@ -81,8 +78,8 @@ def _get_encoder(compression):
         except ImportError:
             raise ImportError(
                 "Your Python does not have the bz2 library, "
-                "therefore the compressed block in this ASDF file "
-                "can not be decompressed.")
+                "therefore the block in this ASDF file "
+                "can not be compressed.")
         return bz2.BZ2Compressor()
     else:
         raise ValueError(
@@ -166,7 +163,7 @@ def compress(fd, data, compression, block_size=1 << 16):
         The type of compression to use.
 
     block_size : int, optional
-        The size of blocks (in raw data) to process at a time.
+        Input data will be split into blocks of this size (in bytes) before the compression.
     """
     compression = validate(compression)
     encoder = _get_encoder(compression)
@@ -187,6 +184,9 @@ def get_compressed_size(data, compression, block_size=1 << 16):
 
     compression : str
         The type of compression to use.
+
+    block_size : int, optional
+        Input data will be split into blocks of this size (in bytes) before the compression.
 
     Returns
     -------

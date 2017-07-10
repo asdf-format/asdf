@@ -346,16 +346,19 @@ class AsdfFile(versioning.VersionedMixin):
             the tree, only the most recent compression setting will be
             used, since all views share a single block.
 
-        array_compression : str or None
+        compression : str or None
             Must be one of:
+
+            - ``''`` or `None`: no compression
 
             - ``zlib``: Use zlib compression
 
             - ``bzp2``: Use bzip2 compression
 
-            - ``''`` or `None`: no compression
+            - ``input``: Use the same compression as in the file read.
+              If there is no prior file, acts as None.
         """
-        self.blocks[arr].compression = compression
+        self.blocks[arr].output_compression = compression
 
     def get_array_compression(self, arr):
         """
@@ -369,7 +372,7 @@ class AsdfFile(versioning.VersionedMixin):
         -------
         compression : str or None
         """
-        return self.blocks[arr].compression
+        return self.blocks[arr].output_compression
 
     @classmethod
     def _parse_header_line(cls, line):
@@ -638,7 +641,7 @@ class AsdfFile(versioning.VersionedMixin):
         if hasattr(self, '_auto_inline'):
             del self._auto_inline
 
-    def update(self, all_array_storage=None, all_array_compression=None,
+    def update(self, all_array_storage=None, all_array_compression='input',
                auto_inline=None, pad_blocks=False, include_block_index=True,
                version=None):
         """
@@ -662,11 +665,14 @@ class AsdfFile(versioning.VersionedMixin):
             If provided, set the compression type on all binary blocks
             in the file.  Must be one of:
 
-            - ``''``: No compression.
+            - ``''`` or `None`: No compression.
 
             - ``zlib``: Use zlib compression.
 
             - ``bzp2``: Use bzip2 compression.
+
+            - ``input``: Use the same compression as in the file read.
+              If there is no prior file, acts as None.
 
         auto_inline : int, optional
             When the number of elements in an array is less than this
@@ -763,7 +769,7 @@ class AsdfFile(versioning.VersionedMixin):
         finally:
             self._post_write(fd)
 
-    def write_to(self, fd, all_array_storage=None, all_array_compression=None,
+    def write_to(self, fd, all_array_storage=None, all_array_compression='input',
                  auto_inline=None, pad_blocks=False, include_block_index=True,
                  version=None):
         """
@@ -796,11 +802,14 @@ class AsdfFile(versioning.VersionedMixin):
             If provided, set the compression type on all binary blocks
             in the file.  Must be one of:
 
-            - ``''``: No compression.
+            - ``''`` or `None`: No compression.
 
             - ``zlib``: Use zlib compression.
 
             - ``bzp2``: Use bzip2 compression.
+
+            - ``input``: Use the same compression as in the file read.
+              If there is no prior file, acts as None.
 
         auto_inline : int, optional
             When the number of elements in an array is less than this

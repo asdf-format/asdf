@@ -128,7 +128,7 @@ class BlockManager(object):
             block._array_storage = array_storage
             self.add(block)
             if array_storage == 'streamed':
-                block.compression = None
+                block.output_compression = None
 
     @property
     def blocks(self):
@@ -284,10 +284,12 @@ class BlockManager(object):
             should be after the tree.
         """
         for block in self.internal_blocks:
-            if block.is_compressed:
+            if block.output_compression:
                 block.offset = fd.tell()
                 block.write(fd)
             else:
+                if block.input_compression:
+                    block.update_size()
                 padding = util.calculate_padding(
                     block.size, pad_blocks, fd.block_size)
                 block.allocated = block._size + padding
@@ -550,9 +552,8 @@ class BlockManager(object):
         if all_array_storage:
             self.set_array_storage(block, all_array_storage)
 
-        all_array_compression = getattr(ctx, '_all_array_compression', None)
-        if all_array_compression:
-            block.compression = all_array_compression
+        all_array_compression = getattr(ctx, '_all_array_compression', 'input')
+        block.output_compression = all_array_compression
 
         auto_inline = getattr(ctx, '_auto_inline', None)
         if auto_inline:
@@ -766,7 +767,8 @@ class Block(object):
 
         self._fd = None
         self._offset = None
-        self._compression = None
+        self._input_compression = None
+        self._output_compression = 'input'
         self._checksum = None
         self._memmapped = False
 
@@ -823,16 +825,29 @@ class Block(object):
         return self._array_storage
 
     @property
-    def compression(self):
-        return self._compression
+    def input_compression(self):
+        """
+        The compression codec used to read the block.
+        """
+        return self._input_compression
 
-    @compression.setter
-    def compression(self, compression):
-        self._compression = mcompression.validate(compression)
+    @input_compression.setter
+    def input_compression(self, compression):
+        self._input_compression = mcompression.validate(compression)
 
     @property
-    def is_compressed(self):
-        return self._compression is not None
+    def output_compression(self):
+        """
+        The compression codec used to write the block.
+        :return:
+        """
+        if self._output_compression == 'input':
+            return self._input_compression
+        return self._output_compression
+
+    @output_compression.setter
+    def output_compression(self, compression):
+        self._output_compression = mcompression.validate(compression)
 
     @property
     def checksum(self):
@@ -883,11 +898,11 @@ class Block(object):
                 self._data_size = len(self._data.data)
             else:
                 self._data_size = self._data.data.nbytes
-            if not self.is_compressed:
+            if not self.output_compression:
                 self._size = self._data_size
             else:
                 self._size = mcompression.get_compressed_size(
-                    self._data, self.compression)
+                    self._data, self.output_compression)
         else:
             self._data_size = self._size = 0
 
@@ -947,16 +962,16 @@ class Block(object):
 
         # This is used by the documentation system, but nowhere else.
         self._flags = header['flags']
-        self.compression = header['compression']
+        self.input_compression = header['compression']
         self._set_checksum(header['checksum'])
 
-        if (self.compression is None and
-            header['used_size'] != header['data_size']):
+        if (self.input_compression is None and
+                header['used_size'] != header['data_size']):
             raise ValueError(
                 "used_size and data_size must be equal when no compression is used.")
 
         if (header['flags'] & constants.BLOCK_FLAG_STREAMED and
-            self.compression is not None):
+                self.input_compression is not None):
             raise ValueError(
                 "Compression set on a streamed block.")
 
@@ -971,7 +986,7 @@ class Block(object):
                 fd.fast_forward(-1)
                 self._array_storage = 'streamed'
                 self._data_size = self._size = self._allocated = \
-                                  (fd.tell() - self.data_offset) + 1
+                    (fd.tell() - self.data_offset) + 1
             else:
                 fd.fast_forward(header['allocated_size'])
                 self._allocated = header['allocated_size']
@@ -988,8 +1003,7 @@ class Block(object):
                 self._data_size = header['data_size']
                 self._size = header['used_size']
                 self._allocated = header['allocated_size']
-                self._data = self._read_data(
-                    fd, self._size, self._data_size, self.compression)
+                self._data = self._read_data(fd, self._size, self._data_size)
                 fd.fast_forward(self._allocated - self._size)
             fd.close()
 
@@ -1000,12 +1014,12 @@ class Block(object):
 
         return self
 
-    def _read_data(self, fd, used_size, data_size, compression):
-        if not compression:
+    def _read_data(self, fd, used_size, data_size):
+        if not self.input_compression:
             return fd.read_into_array(used_size)
         else:
             return mcompression.decompress(
-                fd, used_size, data_size, compression)
+                fd, used_size, data_size, self.input_compression)
 
     def write(self, fd):
         """
@@ -1019,13 +1033,16 @@ class Block(object):
             flags |= constants.BLOCK_FLAG_STREAMED
         elif self._data is not None:
             self.update_checksum()
-            if not fd.seekable() and self.is_compressed:
-                buff = io.BytesIO()
-                mcompression.compress(buff, self._data, self.compression)
-                self.allocated = self._size = buff.tell()
             data_size = self._data.nbytes
+            if not fd.seekable() and self.output_compression:
+                buff = io.BytesIO()
+                mcompression.compress(buff, self._data,
+                                      self.output_compression)
+                self.allocated = self._size = buff.tell()
             allocated_size = self.allocated
             used_size = self._size
+        self.input_compression = self.output_compression
+        assert allocated_size >= used_size
 
         if self.checksum is not None:
             checksum = self.checksum
@@ -1037,13 +1054,13 @@ class Block(object):
         fd.write(self._header.pack(
             flags=flags,
             compression=mcompression.to_compression_header(
-                self.compression),
+                self.output_compression),
             allocated_size=allocated_size,
             used_size=used_size, data_size=data_size,
             checksum=checksum))
 
         if self._data is not None:
-            if self.is_compressed:
+            if self.output_compression:
                 if not fd.seekable():
                     fd.write(buff.getvalue())
                 else:
@@ -1052,7 +1069,8 @@ class Block(object):
                     # and write the resulting size in the block
                     # header.
                     start = fd.tell()
-                    mcompression.compress(fd, self._data, self.compression)
+                    mcompression.compress(
+                        fd, self._data, self.output_compression)
                     end = fd.tell()
                     self.allocated = self._size = end - start
                     fd.seek(self.offset + 6)
@@ -1062,6 +1080,7 @@ class Block(object):
                         used_size=self._size)
                     fd.seek(end)
             else:
+                assert used_size == data_size
                 fd.write_array(self._data)
 
     @property
@@ -1078,15 +1097,14 @@ class Block(object):
             # Be nice and reset the file position after we're done
             curpos = self._fd.tell()
             try:
-                if not self.is_compressed and self._fd.can_memmap():
+                if not self.input_compression and self._fd.can_memmap():
                     self._data = self._fd.memmap_array(
                         self.data_offset, self._size)
                     self._memmapped = True
                 else:
                     self._fd.seek(self.data_offset)
                     self._data = self._read_data(
-                        self._fd, self._size, self._data_size,
-                        self.compression)
+                        self._fd, self._size, self._data_size)
             finally:
                 self._fd.seek(curpos)
 
@@ -1119,7 +1137,8 @@ class UnloadedBlock(object):
         self._data = None
         self._uri = None
         self._array_storage = 'internal'
-        self._compression = None
+        self._input_compression = None
+        self._output_compression = 'input'
         self._checksum = None
         self._memmapped = False
 
