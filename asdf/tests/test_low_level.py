@@ -1086,6 +1086,22 @@ foo : bar
             pass
 
 
+def test_valid_version(tmpdir):
+    content = b"""#ASDF 1.0.0
+%YAML 1.1
+%TAG ! tag:stsci.edu:asdf/
+--- !core/asdf-0.1.0
+foo : bar
+..."""
+    buff = io.BytesIO(content)
+    with asdf.AsdfFile.open(buff) as ff:
+        version = ff.file_format_version
+
+    assert version['major'] == 1
+    assert version['minor'] == 0
+    assert version['patch'] == 0
+
+
 def test_fd_not_seekable():
     data = np.ones(1024)
     b = block.Block(data=data)
