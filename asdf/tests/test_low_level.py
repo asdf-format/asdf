@@ -1090,7 +1090,7 @@ def test_valid_version(tmpdir):
     content = b"""#ASDF 1.0.0
 %YAML 1.1
 %TAG ! tag:stsci.edu:asdf/
---- !core/asdf-0.1.0
+--- !core/asdf-1.0.0
 foo : bar
 ..."""
     buff = io.BytesIO(content)
