@@ -225,6 +225,8 @@ class AsdfTypeIndex(object):
         Raises a warning if it could not find a match where the major
         and minor numbers are the same.
         """
+        warning_string = None
+
         if tag in self._type_by_tag:
             return tag
 
@@ -248,20 +250,17 @@ class AsdfTypeIndex(object):
         i = max(0, i - 1)
 
         best_version = versions[i]
-        if best_version[:2] == version[:2]:
-            # Major and minor match, so only patch and devel differs
-            # -- no need for alarm
-            warning_string = None
-        else:
-            warning_string = (
-                "'{0}' with version {1} found in file, but asdf only "
-                "understands version {2}.".format(
+        if best_version[:2] != version[:2]:
+            warning_string = \
+                "'{}' with version {} found in file, but asdf only supports " \
+                "version {}".format(
                     name,
                     semver.format_version(*version),
-                    semver.format_version(*best_version)))
-
-        if warning_string:
-            warnings.warn(warning_string)
+                    semver.format_version(*best_version))
+            if version[:2] < best_version[:2]:
+                raise ValueError(warning_string)
+            else:
+                warnings.warn(warning_string)
 
         best_tag = join_tag_version(name, best_version)
         self._best_matches[tag] = best_tag, warning_string
