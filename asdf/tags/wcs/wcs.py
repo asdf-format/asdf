@@ -9,6 +9,7 @@ import six
 
 from ...asdftypes import AsdfType
 from ... import yamlutil
+from ...versioning import version_to_string
 
 
 
@@ -112,44 +113,69 @@ class FrameType(AsdfType):
         return cls._inverse_reference_frame_mapping
 
     @classmethod
-    def _from_tree(cls, node, ctx):
+    def _reference_frame_from_tree(cls, node, ctx):
         from ..unit import QuantityType
-        from astropy.coordinates import (CartesianRepresentation,
+        from astropy.units import Quantity
+        from astropy.coordinates import (ICRS, CartesianRepresentation,
             CartesianDifferential)
 
-        kwargs = {}
+        version = version_to_string(cls.version)
+        reference_frame = node['reference_frame']
+        reference_frame_name = reference_frame['type']
 
-        kwargs['name'] = node['name']
+        frame_cls = cls._get_reference_frame_mapping()[reference_frame_name]
+
+        frame_kwargs = {}
+        for name in frame_cls.get_frame_attr_names().keys():
+            val = reference_frame.get(name)
+            if val is not None:
+                # These are deprecated fields that must be handled as a special
+                # case for older versions of the schema
+                if name in ['galcen_ra', 'galcen_dec']:
+                    continue
+                # There was no schema for quantities in v1.0.0
+                if name in ['galcen_distance', 'roll', 'z_sun'] and version == '1.0.0':
+                    val = Quantity(val[0], unit=val[1])
+                # These fields are known to be CartesianRepresentations
+                if name in ['obsgeoloc', 'obsgeovel']:
+                    if version == '1.0.0':
+                        x = Quantity(val[0][0], unit=val[0][1])
+                        y = Quantity(val[1][0], unit=val[1][1])
+                        z = Quantity(val[2][0], unit=val[2][1])
+                    else:
+                        x = QuantityType.from_tree(val[0], ctx)
+                        y = QuantityType.from_tree(val[1], ctx)
+                        z = QuantityType.from_tree(val[2], ctx)
+                    val = CartesianRepresentation(x, y, z)
+                elif name == 'galcen_v_sun':
+                    d_x = QuantityType.from_tree(val[0], ctx)
+                    d_y = QuantityType.from_tree(val[1], ctx)
+                    d_z = QuantityType.from_tree(val[2], ctx)
+                    val = CartesianDifferential(d_x, d_y, d_z)
+                else:
+                    val = yamlutil.tagged_tree_to_custom_tree(val, ctx)
+                frame_kwargs[name] = val
+        has_ra_and_dec = reference_frame.get('galcen_dec') and \
+            reference_frame.get('galcen_ra')
+        if version == '1.0.0' and has_ra_and_dec:
+            # Convert deprecated ra and dec fields into galcen_coord
+            galcen_dec = reference_frame['galcen_dec']
+            galcen_ra = reference_frame['galcen_ra']
+            dec = Quantity(galcen_dec[0], unit=galcen_dec[1])
+            ra = Quantity(galcen_ra[0], unit=galcen_ra[1])
+            frame_kwargs['galcen_coord'] = ICRS(dec=dec, ra=ra)
+        return frame_cls(**frame_kwargs)
+
+    @classmethod
+    def _from_tree(cls, node, ctx):
+        kwargs = {'name': node['name']}
 
         if 'axes_names' in node:
             kwargs['axes_names'] = node['axes_names']
 
         if 'reference_frame' in node:
-            reference_frame = node['reference_frame']
-            reference_frame_name = reference_frame['type']
-
-            frame_cls = cls._get_reference_frame_mapping()[reference_frame_name]
-
-            frame_kwargs = {}
-            for name in frame_cls.get_frame_attr_names().keys():
-                val = reference_frame.get(name)
-                if val is not None:
-                    # These fields are known to be CartesianRepresentations
-                    if name in ['obsgeoloc', 'obsgeovel']:
-                        x = QuantityType.from_tree(val[0], ctx)
-                        y = QuantityType.from_tree(val[1], ctx)
-                        z = QuantityType.from_tree(val[2], ctx)
-                        val = CartesianRepresentation(x, y, z)
-                    elif name == 'galcen_v_sun':
-                        d_x = QuantityType.from_tree(val[0], ctx)
-                        d_y = QuantityType.from_tree(val[1], ctx)
-                        d_z = QuantityType.from_tree(val[2], ctx)
-                        val = CartesianDifferential(d_x, d_y, d_z)
-                    else:
-                        val = yamlutil.tagged_tree_to_custom_tree(val, ctx)
-                    frame_kwargs[name] = val
-
-            kwargs['reference_frame'] = frame_cls(**frame_kwargs)
+            kwargs['reference_frame'] = \
+                cls._reference_frame_from_tree(node, ctx)
 
         if 'axes_order' in node:
             kwargs['axes_order'] = tuple(node['axes_order'])
@@ -235,6 +261,20 @@ class FrameType(AsdfType):
     def to_tree(cls, frame, ctx):
         return cls._to_tree(frame, ctx)
 
+class OldCelestialFrameType(FrameType):
+    version = (1, 0, 0)
+    name = "wcs/celestial_frame"
+    types = ['gwcs.CelestialFrame']
+
+    @classmethod
+    def from_tree(cls, node, ctx):
+        import gwcs
+        node = cls._from_tree(node, ctx)
+        return gwcs.CelestialFrame(**node)
+
+    @classmethod
+    def to_tree(cls, frame, ctx):
+        return cls._to_tree(frame, ctx)
 
 class CelestialFrameType(FrameType):
     name = "wcs/celestial_frame"
