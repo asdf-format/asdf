@@ -17,6 +17,7 @@ from astropy import time
 from gwcs import coordinate_frames as cf
 from gwcs import wcs
 
+from .... import AsdfFile
 from ....tests import helpers
 
 
@@ -120,6 +121,7 @@ def create_test_frames():
 
     return frames
 
+
 def test_frames(tmpdir):
 
     tree = {
@@ -128,28 +130,80 @@ def test_frames(tmpdir):
 
     helpers.assert_roundtrip_tree(tree, tmpdir)
 
-@pytest.mark.xfail()
 def test_backwards_compatibility(tmpdir):
-    yaml = """
-wcs/celestial_frame-1.1.0
-  axes_names: [x, y, z]
-  axes_order: [0, 1, 2]
-  name: CelestialFrame
-  reference_frame:
-    galcen_dec: !unit/quantity-1.1.0
-      unit: rad
-      value: 1.0
-    galcen_distance: !unit/quantity-1.1.0
-      unit: m
-      value: 5.0
-    galcen_ra: !unit/quantity-1.1.0
-      unit: deg
-      value: 45.0
-    roll: !unit/quantity-1.1.0
-      unit: deg
-      value: 3.0
-    type: galactocentric
-    z_sun: !unit/quantity-1.1.0
-      unit: pc
-      value: 3.0
-  unit: [!unit/unit-1.0.0 deg, !unit/unit-1.0.0 deg, !unit/unit-1.0.0 deg]"""
+    # Hold these fields constant so that we can compare them
+    declination = 1.0208        # in degrees
+    right_ascension = 45.729    # in degrees
+    galcen_distance = 3.14
+    roll = 4.0
+    z_sun = 0.2084
+    old_frame_yaml =  """
+frames:
+  - !wcs/celestial_frame-1.0.0
+    axes_names: [x, y, z]
+    axes_order: [0, 1, 2]
+    name: CelestialFrame
+    reference_frame:
+      galcen_dec:
+        - %f
+        - deg
+      galcen_ra:
+        - %f
+        - deg
+      galcen_distance:
+        - %f
+        - m
+      roll:
+        - %f
+        - deg
+      type: galactocentric
+      z_sun:
+        - %f
+        - pc
+    unit: [!unit/unit-1.0.0 deg, !unit/unit-1.0.0 deg, !unit/unit-1.0.0 deg]
+""" % (declination, right_ascension, galcen_distance, roll, z_sun)
+
+    new_frame_yaml = """
+frames:
+  - !wcs/celestial_frame-1.1.0
+    axes_names: [x, y, z]
+    axes_order: [0, 1, 2]
+    name: CelestialFrame
+    reference_frame:
+      galcen_coord: !wcs/icrs_coord-1.1.0
+        dec: {value: %f}
+        ra:
+          value: %f
+          wrap_angle:
+            !unit/quantity-1.1.0 {unit: !unit/unit-1.0.0 deg, value: 360.0}
+      galcen_distance:
+        !unit/quantity-1.1.0 {unit: !unit/unit-1.0.0 m, value: %f}
+      galcen_v_sun:
+      - !unit/quantity-1.1.0 {unit: !unit/unit-1.0.0 km s-1, value: 11.1}
+      - !unit/quantity-1.1.0 {unit: !unit/unit-1.0.0 km s-1, value: 232.24}
+      - !unit/quantity-1.1.0 {unit: !unit/unit-1.0.0 km s-1, value: 7.25}
+      roll: !unit/quantity-1.1.0 {unit: !unit/unit-1.0.0 deg, value: %f}
+      type: galactocentric
+      z_sun: !unit/quantity-1.1.0 {unit: !unit/unit-1.0.0 pc, value: %f}
+    unit: [!unit/unit-1.0.0 deg, !unit/unit-1.0.0 deg, !unit/unit-1.0.0 deg]
+""" % (declination, right_ascension, galcen_distance, roll, z_sun)
+
+    old_buff = helpers.yaml_to_asdf(old_frame_yaml)
+    old_asdf = AsdfFile.open(old_buff)
+    old_frame = old_asdf.tree['frames'][0]
+    new_buff = helpers.yaml_to_asdf(new_frame_yaml)
+    new_asdf = AsdfFile.open(new_buff)
+    new_frame = new_asdf.tree['frames'][0]
+
+    # Poor man's frame comparison since it's not implemented by astropy
+    assert old_frame.axes_names == new_frame.axes_names
+    assert old_frame.axes_order == new_frame.axes_order
+    assert old_frame.unit == new_frame.unit
+
+    old_refframe = old_frame.reference_frame
+    new_refframe = new_frame.reference_frame
+
+    # v1.0.0 frames have no representation of galcen_v_center, so do not compare
+    assert old_refframe.galcen_distance == new_refframe.galcen_distance
+    assert old_refframe.galcen_coord.dec == new_refframe.galcen_coord.dec
+    assert old_refframe.galcen_coord.ra == new_refframe.galcen_coord.ra
