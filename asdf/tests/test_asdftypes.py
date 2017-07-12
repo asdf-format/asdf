@@ -223,6 +223,9 @@ def test_module_versioning():
 
 
 def test_undefined_tag():
+    # This tests makes sure that ASDF still returns meaningful structured data
+    # even when it encounters a schema tag that it does not specifically
+    # implement as an extension
     from numpy import array
 
     yaml = """
@@ -245,3 +248,72 @@ undefined_data:
     assert (missing[2] == array([[1, 2, 3], [4, 5, 6]])).all()
     assert (missing[3][0] == array([[7],[8],[9],[10]])).all()
     assert missing[3][1] == 3.14j
+
+
+@pytest.mark.xfail(reason="Requires implementation of schema version handling")
+def test_newer_tag():
+    # This test simulates a scenario where newer versions of CustomFlow
+    # provides different keyword parameters that the older schema and tag class
+    # do not account for. We want to test whether ASDF can handle this problem
+    # gracefully and still provide meaningful data as output. The test case is
+    # fairly contrived but we want to test whether ASDF can handle backwards
+    # compatibility even when an explicit tag class for different versions of a
+    # schema is not available.
+    class CustomFlow(object):
+        def __init__(self, c=None, d=None):
+            self.c = c
+            self.d = d
+
+    class CustomFlowType(asdftypes.AsdfType):
+        version = '1.1.0'
+        name = 'custom_flow'
+        organization = 'nowhere.org'
+        standard = 'custom'
+        types = [CustomFlow]
+
+        @classmethod
+        def from_tree(cls, tree, ctx):
+            kwargs = {}
+            for name in tree:
+                kwargs[name] = tree[name]
+            return CustomFlow(**kwargs)
+
+        @classmethod
+        def to_tree(cls, data, ctx):
+            tree = {'c': data.c, 'd': data.d}
+
+    class CustomFlowExtension(object):
+        @property
+        def types(self):
+            return [CustomFlowType]
+
+        @property
+        def tag_mapping(self):
+            return [('tag:nowhere.org:custom',
+                     'http://nowhere.org/schemas/custom{tag_suffix}')]
+
+        @property
+        def url_mapping(self):
+            return [('http://nowhere.org/schemas/custom/',
+                     util.filepath_to_url(TEST_DATA_PATH) +
+                     '/{url_suffix}.yaml')]
+
+    v1_1_0_yaml = """
+flow_thing:
+  !<tag:nowhere.org:custom/custom_flow-1.1.0>
+    c: 100
+    d: 3.14
+"""
+    v1_1_0_buff = helpers.yaml_to_asdf(v1_1_0_yaml)
+    v1_1_0_data = asdf.AsdfFile.open(v1_1_0_buff,
+                                     extensions=CustomFlowExtension())
+    assert type(v1_1_0_data.tree['flow_thing']) == CustomFlow
+
+    v1_0_0_yaml = """
+flow_thing:
+  !<tag:nowhere.org:custom/custom_flow-1.0.0>
+    a: 100
+    b: 3.14
+"""
+    v1_0_0_buff = helpers.yaml_to_asdf(v1_0_0_yaml)
+    asdf.AsdfFile.open(v1_0_0_buff, extensions=CustomFlowExtension())
