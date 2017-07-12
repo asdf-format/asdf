@@ -139,15 +139,17 @@ class FrameType(AsdfType):
                 # These fields are known to be CartesianRepresentations
                 if name in ['obsgeoloc', 'obsgeovel']:
                     if version == '1.0.0':
-                        x = Quantity(val[0][0], unit=val[0][1])
-                        y = Quantity(val[1][0], unit=val[1][1])
-                        z = Quantity(val[2][0], unit=val[2][1])
+                        unit = val[1]
+                        x = Quantity(val[0][0], unit=unit)
+                        y = Quantity(val[0][1], unit=unit)
+                        z = Quantity(val[0][2], unit=unit)
                     else:
                         x = QuantityType.from_tree(val[0], ctx)
                         y = QuantityType.from_tree(val[1], ctx)
                         z = QuantityType.from_tree(val[2], ctx)
                     val = CartesianRepresentation(x, y, z)
                 elif name == 'galcen_v_sun':
+                    # This field only exists since v1.1.0
                     d_x = QuantityType.from_tree(val[0], ctx)
                     d_y = QuantityType.from_tree(val[1], ctx)
                     d_z = QuantityType.from_tree(val[2], ctx)
