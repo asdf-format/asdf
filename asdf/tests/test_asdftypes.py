@@ -220,3 +220,28 @@ def test_module_versioning():
     assert nmt.has_required_modules == False
     assert hcp.has_required_modules == True
     assert dhcp.has_required_modules == False
+
+
+def test_undefined_tag():
+    from numpy import array
+
+    yaml = """
+undefined_data:
+  !<tag:nowhere.org:custom/undefined_tag-1.0.0>
+    - 5
+    - {'message': 'there is no tag'}
+    - !core/ndarray-1.0.0
+      [[1, 2, 3], [4, 5, 6]]
+    - !<tag:nowhere.org:custom/also_undefined-1.3.0>
+        - !core/ndarray-1.0.0 [[7],[8],[9],[10]]
+        - !core/complex-1.0.0 3.14j
+"""
+    buff = helpers.yaml_to_asdf(yaml)
+    afile = asdf.AsdfFile.open(buff)
+    missing = afile.tree['undefined_data']
+
+    assert missing[0] == 5
+    assert missing[1] == {'message': 'there is no tag'}
+    assert (missing[2] == array([[1, 2, 3], [4, 5, 6]])).all()
+    assert (missing[3][0] == array([[7],[8],[9],[10]])).all()
+    assert missing[3][1] == 3.14j
