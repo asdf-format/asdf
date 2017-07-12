@@ -257,10 +257,7 @@ class AsdfTypeIndex(object):
                     name,
                     semver.format_version(*version),
                     semver.format_version(*best_version))
-            if version[:2] < best_version[:2]:
-                raise ValueError(warning_string)
-            else:
-                warnings.warn(warning_string)
+            warnings.warn(warning_string)
 
         best_tag = join_tag_version(name, best_version)
         self._best_matches[tag] = best_tag, warning_string
