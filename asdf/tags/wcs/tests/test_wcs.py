@@ -130,7 +130,8 @@ def test_frames(tmpdir):
 
     helpers.assert_roundtrip_tree(tree, tmpdir)
 
-def test_backwards_compatibility(tmpdir):
+
+def test_backwards_compat_galcen():
     # Hold these fields constant so that we can compare them
     declination = 1.0208        # in degrees
     right_ascension = 45.729    # in degrees
@@ -144,6 +145,7 @@ frames:
     axes_order: [0, 1, 2]
     name: CelestialFrame
     reference_frame:
+      type: galactocentric
       galcen_dec:
         - %f
         - deg
@@ -156,7 +158,6 @@ frames:
       roll:
         - %f
         - deg
-      type: galactocentric
       z_sun:
         - %f
         - pc
@@ -170,6 +171,7 @@ frames:
     axes_order: [0, 1, 2]
     name: CelestialFrame
     reference_frame:
+      type: galactocentric
       galcen_coord: !wcs/icrs_coord-1.1.0
         dec: {value: %f}
         ra:
@@ -183,7 +185,6 @@ frames:
       - !unit/quantity-1.1.0 {unit: !unit/unit-1.0.0 km s-1, value: 232.24}
       - !unit/quantity-1.1.0 {unit: !unit/unit-1.0.0 km s-1, value: 7.25}
       roll: !unit/quantity-1.1.0 {unit: !unit/unit-1.0.0 deg, value: %f}
-      type: galactocentric
       z_sun: !unit/quantity-1.1.0 {unit: !unit/unit-1.0.0 pc, value: %f}
     unit: [!unit/unit-1.0.0 deg, !unit/unit-1.0.0 deg, !unit/unit-1.0.0 deg]
 """ % (declination, right_ascension, galcen_distance, roll, z_sun)
@@ -207,3 +208,64 @@ frames:
     assert old_refframe.galcen_distance == new_refframe.galcen_distance
     assert old_refframe.galcen_coord.dec == new_refframe.galcen_coord.dec
     assert old_refframe.galcen_coord.ra == new_refframe.galcen_coord.ra
+
+def test_backwards_compat_gcrs():
+    obsgeoloc = (
+        3.0856775814671916e+16,
+        9.257032744401574e+16,
+        6.1713551629343834e+19
+    )
+    obsgeovel = (2.0, 1.0, 8.0)
+
+    old_frame_yaml =  """
+frames:
+  - !wcs/celestial_frame-1.0.0
+    axes_names: [lon, lat]
+    name: CelestialFrame
+    reference_frame:
+      type: GCRS
+      obsgeoloc:
+        - [%f, %f, %f]
+        - !unit/unit-1.0.0 m
+      obsgeovel:
+        - [%f, %f, %f]
+        - !unit/unit-1.0.0 m s-1
+      obstime: !time/time-1.0.0 2010-01-01 00:00:00.000
+    unit: [!unit/unit-1.0.0 deg, !unit/unit-1.0.0 deg]
+""" % (obsgeovel + obsgeoloc)
+
+    new_frame_yaml = """
+frames:
+  - !wcs/celestial_frame-1.1.0
+    axes_names: [lon, lat]
+    name: CelestialFrame
+    reference_frame:
+      type: GCRS
+      obsgeoloc:
+      - !unit/quantity-1.1.0 {unit: !unit/unit-1.0.0 m, value: %f}
+      - !unit/quantity-1.1.0 {unit: !unit/unit-1.0.0 m, value: %f}
+      - !unit/quantity-1.1.0 {unit: !unit/unit-1.0.0 m, value: %f}
+      obsgeovel:
+      - !unit/quantity-1.1.0 {unit: !unit/unit-1.0.0 m s-1, value: %f}
+      - !unit/quantity-1.1.0 {unit: !unit/unit-1.0.0 m s-1, value: %f}
+      - !unit/quantity-1.1.0 {unit: !unit/unit-1.0.0 m s-1, value: %f}
+      obstime: !time/time-1.0.0 2010-01-01 00:00:00.000
+    unit: [!unit/unit-1.0.0 deg, !unit/unit-1.0.0 deg]
+""" % (obsgeovel + obsgeoloc)
+
+    old_buff = helpers.yaml_to_asdf(old_frame_yaml)
+    old_asdf = AsdfFile.open(old_buff)
+    old_frame = old_asdf.tree['frames'][0]
+    old_loc = old_frame.reference_frame.obsgeoloc
+    old_vel = old_frame.reference_frame.obsgeovel
+
+    new_buff = helpers.yaml_to_asdf(new_frame_yaml)
+    new_asdf = AsdfFile.open(new_buff)
+    new_frame = new_asdf.tree['frames'][0]
+    new_loc = new_frame.reference_frame.obsgeoloc
+    new_vel = new_frame.reference_frame.obsgeovel
+
+    assert (old_loc.x == new_loc.x and old_loc.y == new_loc.y and
+        old_loc.z == new_loc.z)
+    assert (old_vel.x == new_vel.x and old_vel.y == new_vel.y and
+        old_vel.z == new_vel.z)
