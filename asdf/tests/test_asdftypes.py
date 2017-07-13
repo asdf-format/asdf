@@ -250,7 +250,6 @@ undefined_data:
     assert missing[3][1] == 3.14j
 
 
-@pytest.mark.xfail(reason="Requires implementation of schema version handling")
 def test_newer_tag():
     from astropy.tests.helper import catch_warnings
     # This test simulates a scenario where newer versions of CustomFlow
