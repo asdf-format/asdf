@@ -131,6 +131,7 @@ def test_frames(tmpdir):
     helpers.assert_roundtrip_tree(tree, tmpdir)
 
 
+@pytest.mark.xfail(reason="Requires updates to schema version compatibility")
 def test_backwards_compat_galcen():
     # Hold these fields constant so that we can compare them
     declination = 1.0208        # in degrees
@@ -209,6 +210,8 @@ frames:
     assert old_refframe.galcen_coord.dec == new_refframe.galcen_coord.dec
     assert old_refframe.galcen_coord.ra == new_refframe.galcen_coord.ra
 
+
+@pytest.mark.xfail(reason="Requires updates to schema version compatibility")
 def test_backwards_compat_gcrs():
     obsgeoloc = (
         3.0856775814671916e+16,

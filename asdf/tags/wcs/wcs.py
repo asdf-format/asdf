@@ -263,24 +263,10 @@ class FrameType(AsdfType):
     def to_tree(cls, frame, ctx):
         return cls._to_tree(frame, ctx)
 
-class OldCelestialFrameType(FrameType):
-    version = (1, 0, 0)
-    name = "wcs/celestial_frame"
-    types = ['gwcs.CelestialFrame']
-
-    @classmethod
-    def from_tree(cls, node, ctx):
-        import gwcs
-        node = cls._from_tree(node, ctx)
-        return gwcs.CelestialFrame(**node)
-
-    @classmethod
-    def to_tree(cls, frame, ctx):
-        return cls._to_tree(frame, ctx)
-
 class CelestialFrameType(FrameType):
     name = "wcs/celestial_frame"
     types = ['gwcs.CelestialFrame']
+    supported_versions = [(1,0,0), (1,1,0)]
 
     @classmethod
     def from_tree(cls, node, ctx):
