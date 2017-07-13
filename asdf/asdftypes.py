@@ -325,10 +325,9 @@ def _from_tree_tagged_missing_requirements(cls, tree, ctx):
     return tree
 
 
-class AsdfTypeMeta(type):
+class ExtensionTypeMeta(type):
     """
-    Keeps track of `AsdfType` subclasses that are created, and stores
-    them in `AsdfTypeIndex`.
+    Custom class constructor for extension types.
     """
     _import_cache = {}
 
@@ -380,7 +379,7 @@ class AsdfTypeMeta(type):
                 new_types.append(typ)
             attrs['types'] = new_types
 
-        cls = super(AsdfTypeMeta, mcls).__new__(mcls, name, bases, attrs)
+        cls = super(ExtensionTypeMeta, mcls).__new__(mcls, name, bases, attrs)
 
         if hasattr(cls, 'name'):
             if isinstance(cls.name, six.string_types):
@@ -391,14 +390,23 @@ class AsdfTypeMeta(type):
             elif cls.name is not None:
                 raise TypeError("name must be string or list")
 
-        _all_asdftypes.add(cls)
-
         return cls
 
 
-@six.add_metaclass(AsdfTypeMeta)
-@six.add_metaclass(util.InheritDocstrings)
-class AsdfType(object):
+class AsdfTypeMeta(ExtensionTypeMeta):
+    """
+    Keeps track of `AsdfType` subclasses that are created, and stores them in
+    `AsdfTypeIndex`.
+    """
+    def __new__(mcls, name, bases, attrs):
+        cls = super(AsdfTypeMeta, mcls).__new__(mcls, name, bases, attrs)
+        # Classes using this metaclass get added to the list of built-in
+        # extensions
+        _all_asdftypes.add(cls)
+        return cls
+
+
+class ExtensionType(object):
     """
     The base class of all custom types in the tree.
 
@@ -502,3 +510,22 @@ class AsdfType(object):
         """
         # WIP: this will be updated in the near future
         return True
+
+
+@six.add_metaclass(AsdfTypeMeta)
+@six.add_metaclass(util.InheritDocstrings)
+class AsdfType(ExtensionType):
+    """
+    Base class for all built-in ASDF types. Types that inherit this class will
+    be automatically added to the list of built-ins. This should *not* be used
+    for user-defined extensions.
+    """
+
+@six.add_metaclass(ExtensionTypeMeta)
+@six.add_metaclass(util.InheritDocstrings)
+class UserType(ExtensionType):
+    """
+    Base class for all user-defined types. Unlike classes that inherit
+    AsdfType, classes that inherit this class will *not* automatically be added
+    to the list of built-ins. This should be used for user-defined extensions.
+    """

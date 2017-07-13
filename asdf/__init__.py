@@ -35,7 +35,7 @@ if _ASDF_SETUP_ is False:
         raise ImportError("asdf requires numpy")
 
     from .asdf import AsdfFile
-    from .asdftypes import AsdfType
+    from .asdftypes import UserType
     from .extension import AsdfExtension
     from .stream import Stream
     from . import commands

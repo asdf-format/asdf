@@ -265,15 +265,12 @@ def test_newer_tag():
             self.c = c
             self.d = d
 
-    class CustomFlowType(object):
+    class CustomFlowType(asdftypes.UserType):
         version = '1.1.0'
         name = 'custom_flow'
         organization = 'nowhere.org'
         standard = 'custom'
         types = [CustomFlow]
-        yaml_tag = "tag:nowhere.org:custom/custom_flow-1.1.0"
-        handle_dynamic_subclasses = False
-        validators = {}
 
         @classmethod
         def from_tree(cls, tree, ctx):
@@ -285,15 +282,6 @@ def test_newer_tag():
         @classmethod
         def to_tree(cls, data, ctx):
             tree = {'c': data.c, 'd': data.d}
-
-        @classmethod
-        def from_tree_tagged(cls, tree, ctx):
-            """
-            Converts from basic types to a custom type.  Overriding this,
-            rather than the more common `from_tree`, allows types to deal
-            with the tag directly.
-            """
-            return cls.from_tree(tree.data, ctx)
 
         @classmethod
         def version_is_supported(cls, version):
