@@ -293,6 +293,14 @@ def test_newer_tag():
             rather than the more common `from_tree`, allows types to deal
             with the tag directly.
             """
+            real_tag = ctx.type_index.get_real_tag(tree._tag)
+            _, version = asdftypes.split_tag_version(real_tag)
+
+            cls_version = versioning.version_to_string(cls.version)
+            tag_version = versioning.version_to_string(version)
+            if tag_version != cls_version:
+                raise TypeError(
+                    "Version {} of class not supported".format(tag_version))
             return cls.from_tree(tree.data, ctx)
 
     class CustomFlowExtension(object):

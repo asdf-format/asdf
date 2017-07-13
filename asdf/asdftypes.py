@@ -160,6 +160,7 @@ class AsdfTypeIndex(object):
         self._type_by_tag = {}
         self._versions_by_type_name = {}
         self._best_matches = {}
+        self._real_tag = {}
         self._unnamed_types = set()
         self._hooks_by_type = {}
         self._all_types = set()
@@ -245,7 +246,6 @@ class AsdfTypeIndex(object):
 
         # The versions list is kept sorted, so bisect can be used to
         # quickly find the best option.
-
         i = bisect.bisect_left(versions, version)
         i = max(0, i - 1)
 
@@ -261,7 +261,16 @@ class AsdfTypeIndex(object):
 
         best_tag = join_tag_version(name, best_version)
         self._best_matches[tag] = best_tag, warning_string
+        if tag != best_tag:
+            self._real_tag[best_tag] = tag
         return best_tag
+
+    def get_real_tag(self, tag):
+        if tag in self._real_tag:
+            return self._real_tag[tag]
+        elif tag in self._type_by_tag:
+            return tag
+        return None
 
     def from_yaml_tag(self, tag):
         """
