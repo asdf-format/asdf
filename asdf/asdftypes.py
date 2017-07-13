@@ -390,6 +390,18 @@ class ExtensionTypeMeta(type):
             elif cls.name is not None:
                 raise TypeError("name must be string or list")
 
+        if hasattr(cls, 'supported_versions'):
+            if isinstance(cls.supported_versions, six.string_types):
+                cls.supported_versions = set(cls.supported_versions)
+            elif isinstance(cls.supported_versions, tuple):
+                cls.supported_versions = \
+                    set(version_to_string(cls.supported_versions))
+            elif isinstance(cls.supported_versions, (list, set)):
+                supported_versions = set()
+                for ver in cls.supported_versions:
+                    supported_versions.add(version_to_string(ver))
+                cls.supported_versions = supported_versions
+
         return cls
 
 
@@ -452,6 +464,7 @@ class ExtensionType(object):
     organization = 'stsci.edu'
     standard = 'asdf'
     version = (1, 0, 0)
+    supported_versions = set()
     types = []
     handle_dynamic_subclasses = False
     validators = {}
@@ -508,7 +521,9 @@ class ExtensionType(object):
         Indicates whether this tag class knows how to convert the given version
         of the associated schema.
         """
-        # WIP: this will be updated in the near future
+        if cls.supported_versions:
+            if version_to_string(version) not in cls.supported_versions:
+                return False
         return True
 
 

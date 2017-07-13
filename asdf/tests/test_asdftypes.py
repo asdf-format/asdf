@@ -267,6 +267,7 @@ def test_newer_tag():
 
     class CustomFlowType(asdftypes.UserType):
         version = '1.1.0'
+        supported_versions = [version]
         name = 'custom_flow'
         organization = 'nowhere.org'
         standard = 'custom'
@@ -282,11 +283,6 @@ def test_newer_tag():
         @classmethod
         def to_tree(cls, data, ctx):
             tree = {'c': data.c, 'd': data.d}
-
-        @classmethod
-        def version_is_supported(cls, version):
-            version_to_string = versioning.version_to_string
-            return version_to_string(cls.version) == version_to_string(version)
 
     class CustomFlowExtension(object):
         @property
