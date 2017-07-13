@@ -252,6 +252,7 @@ undefined_data:
 
 @pytest.mark.xfail(reason="Requires implementation of schema version handling")
 def test_newer_tag():
+    from astropy.tests.helper import catch_warnings
     # This test simulates a scenario where newer versions of CustomFlow
     # provides different keyword parameters that the older schema and tag class
     # do not account for. We want to test whether ASDF can handle this problem
@@ -310,22 +311,27 @@ def test_newer_tag():
                      util.filepath_to_url(TEST_DATA_PATH) +
                      '/{url_suffix}.yaml')]
 
-    v1_1_0_yaml = """
+    new_yaml = """
 flow_thing:
   !<tag:nowhere.org:custom/custom_flow-1.1.0>
     c: 100
     d: 3.14
 """
-    v1_1_0_buff = helpers.yaml_to_asdf(v1_1_0_yaml)
-    v1_1_0_data = asdf.AsdfFile.open(v1_1_0_buff,
-                                     extensions=CustomFlowExtension())
-    assert type(v1_1_0_data.tree['flow_thing']) == CustomFlow
+    new_buff = helpers.yaml_to_asdf(new_yaml)
+    new_data = asdf.AsdfFile.open(new_buff, extensions=CustomFlowExtension())
+    assert type(new_data.tree['flow_thing']) == CustomFlow
 
-    v1_0_0_yaml = """
+    old_yaml = """
 flow_thing:
   !<tag:nowhere.org:custom/custom_flow-1.0.0>
     a: 100
     b: 3.14
 """
-    v1_0_0_buff = helpers.yaml_to_asdf(v1_0_0_yaml)
-    asdf.AsdfFile.open(v1_0_0_buff, extensions=CustomFlowExtension())
+    old_buff = helpers.yaml_to_asdf(old_yaml)
+    with catch_warnings() as w:
+        asdf.AsdfFile.open(old_buff, extensions=CustomFlowExtension())
+
+    assert len(w) == 1
+    assert str(w[0].message) == (
+        "'tag:nowhere.org:custom/custom_flow' with version 1.0.0 found "
+        "in file, but asdf only supports version 1.1.0")
