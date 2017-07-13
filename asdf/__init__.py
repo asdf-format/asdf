@@ -15,7 +15,7 @@ from ._internal_init import *
 # ----------------------------------------------------------------------------
 
 if _ASDF_SETUP_ is False:
-    __all__ = ['AsdfFile', 'AsdfType', 'AsdfExtension',
+    __all__ = ['AsdfFile', 'UserType', 'AsdfExtension',
                'Stream', 'open', 'test', 'commands',
                'ValidationError']
 
