@@ -16,7 +16,7 @@ from .extern import semver
 
 from . import tagged
 from . import util
-from . import versioning
+from .versioning import get_version_map, version_to_string
 
 
 __all__ = ['format_tag', 'AsdfTypeIndex', 'AsdfType']
@@ -51,7 +51,7 @@ def join_tag_version(name, version):
     """
     Join the root and version of a tag back together.
     """
-    return '{0}-{1}'.format(name, versioning.version_to_string(version))
+    return '{0}-{1}'.format(name, version_to_string(version))
 
 
 class _AsdfWriteTypeIndex(object):
@@ -106,7 +106,7 @@ class _AsdfWriteTypeIndex(object):
                 add_by_tag(name, version)
         else:
             try:
-                version_map = versioning.get_version_map(version)
+                version_map = get_version_map(version)
             except ValueError:
                 raise ValueError(
                     "Don't know how to write out ASDF version {0}".format(
@@ -455,7 +455,7 @@ class AsdfType(object):
         return format_tag(
             cls.organization,
             cls.standard,
-            versioning.version_to_string(cls.version),
+            version_to_string(cls.version),
             name)
 
     @classmethod
@@ -493,3 +493,12 @@ class AsdfType(object):
         with the tag directly.
         """
         return cls.from_tree(tree.data, ctx)
+
+    @classmethod
+    def version_is_supported(cls, version):
+        """
+        Indicates whether this tag class knows how to convert the given version
+        of the associated schema.
+        """
+        # WIP: this will be updated in the near future
+        return True
