@@ -266,7 +266,6 @@ def test_newer_tag():
 
     class CustomFlowType(asdftypes.UserType):
         version = '1.1.0'
-        supported_versions = [version]
         name = 'custom_flow'
         organization = 'nowhere.org'
         standard = 'custom'
