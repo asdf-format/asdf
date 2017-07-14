@@ -448,6 +448,11 @@ class ExtensionType(object):
     version : 3-tuple of int
         The version of the standard the type is defined in.
 
+    supported_versions : set
+        If provided, indicates explicit compatibility with the given set of
+        versions. Other versions of the same schema that are not included in
+        this set will not be converted to custom types with this class.
+
     yaml_tag : str
         The YAML tag to use for the type.  If not provided, it will be
         automatically generated from name, organization, standard and
