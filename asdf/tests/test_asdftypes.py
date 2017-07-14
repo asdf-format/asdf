@@ -280,7 +280,7 @@ def test_newer_tag():
 
         @classmethod
         def to_tree(cls, data, ctx):
-            tree = {'c': data.c, 'd': data.d}
+            tree = dict(c=data.c, d=data.d)
 
     class CustomFlowExtension(object):
         @property
@@ -318,6 +318,83 @@ flow_thing:
     with catch_warnings() as w:
         asdf.AsdfFile.open(old_buff, extensions=CustomFlowExtension())
 
+    assert len(w) == 1
+    assert str(w[0].message) == (
+        "'tag:nowhere.org:custom/custom_flow' with version 1.0.0 found "
+        "in file, but asdf only supports version 1.1.0")
+
+
+@pytest.mark.xfail(reason="Needs impl. of supported_versions for UserType")
+def test_supported_versions():
+    from astropy.tests.helper import catch_warnings
+    class CustomFlow(object):
+        def __init__(self, c=None, d=None):
+            self.c = c
+            self.d = d
+
+    class CustomFlowType(asdftypes.UserType):
+        version = '1.1.0'
+        supported_versions = [(1,0,0), (1,1,0)]
+        name = 'custom_flow'
+        organization = 'nowhere.org'
+        standard = 'custom'
+        types = [CustomFlow]
+
+        @classmethod
+        def from_tree(cls, tree, ctx):
+            # Convert old schema to new CustomFlow type
+            if versioning.version_to_string(cls.version) == '1.0.0':
+                return CustomFlow(c=tree['a'], d=tree['b'])
+            else:
+                return CustomFlow(**tree)
+            return CustomFlow(**kwargs)
+
+        @classmethod
+        def to_tree(cls, data, ctx):
+            if versioning.version_to_string(cls.version) == '1.0.0':
+                tree = dict(a=data.c, b=data.d)
+            else:
+                tree = dict(c=data.c, d=data.d)
+
+    class CustomFlowExtension(object):
+        @property
+        def types(self):
+            return [CustomFlowType]
+
+        @property
+        def tag_mapping(self):
+            return [('tag:nowhere.org:custom',
+                     'http://nowhere.org/schemas/custom{tag_suffix}')]
+
+        @property
+        def url_mapping(self):
+            return [('http://nowhere.org/schemas/custom/',
+                     util.filepath_to_url(TEST_DATA_PATH) +
+                     '/{url_suffix}.yaml')]
+
+    new_yaml = """
+flow_thing:
+  !<tag:nowhere.org:custom/custom_flow-1.1.0>
+    c: 100
+    d: 3.14
+"""
+    old_yaml = """
+flow_thing:
+  !<tag:nowhere.org:custom/custom_flow-1.0.0>
+    a: 100
+    b: 3.14
+"""
+    new_buff = helpers.yaml_to_asdf(new_yaml)
+    new_data = asdf.AsdfFile.open(new_buff, extensions=CustomFlowExtension())
+    assert type(new_data.tree['flow_thing']) == CustomFlow
+
+    old_buff = helpers.yaml_to_asdf(old_yaml)
+    with catch_warnings() as w:
+        old_data = asdf.AsdfFile.open(old_buff, extensions=CustomFlowExtension())
+    # TODO: this will fail until UserType is handled properly
+    assert type(old_data.tree['flow_thing']) == CustomFlow
+
+    # TODO: should we actually expect this warning here?
     assert len(w) == 1
     assert str(w[0].message) == (
         "'tag:nowhere.org:custom/custom_flow' with version 1.0.0 found "
