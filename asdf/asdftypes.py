@@ -527,15 +527,19 @@ class ExtensionType(object):
         return cls.from_tree(tree.data, ctx)
 
     @classmethod
-    def version_is_supported(cls, version):
+    def incompatible_version(cls, version):
         """
-        Indicates whether this tag class knows how to convert the given version
-        of the associated schema.
+        If this tag class explicitly identifies compatible versions then this
+        checks whether a given version is compatible or not. Otherwise, all
+        versions are assumed to be compatible.
+
+        Child classes can override this method to affect how version
+        compatiblity for this type is determined.
         """
         if cls.supported_versions:
             if version_to_string(version) not in cls.supported_versions:
-                return False
-        return True
+                return True
+        return False
 
 
 @six.add_metaclass(AsdfTypeMeta)
