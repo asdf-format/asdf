@@ -415,6 +415,15 @@ class AsdfTypeMeta(ExtensionTypeMeta):
         # Classes using this metaclass get added to the list of built-in
         # extensions
         _all_asdftypes.add(cls)
+        if hasattr(cls, 'supported_versions'):
+            # Each supported version has a corresponding class tagged at that
+            # version added to the list of built-in ASDF types.
+            for version in cls.supported_versions:
+                if version != version_to_string(cls.version):
+                    attrs['version'] = version
+                    new_cls = super(AsdfTypeMeta, mcls).__new__(
+                        mcls, name, bases, attrs)
+                    _all_asdftypes.add(new_cls)
         return cls
 
 
