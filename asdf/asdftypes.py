@@ -391,16 +391,13 @@ class ExtensionTypeMeta(type):
                 raise TypeError("name must be string or list")
 
         if hasattr(cls, 'supported_versions'):
-            if isinstance(cls.supported_versions, six.string_types):
-                cls.supported_versions = set(cls.supported_versions)
-            elif isinstance(cls.supported_versions, tuple):
-                cls.supported_versions = \
-                    set(version_to_string(cls.supported_versions))
-            elif isinstance(cls.supported_versions, (list, set)):
-                supported_versions = set()
-                for ver in cls.supported_versions:
-                    supported_versions.add(version_to_string(ver))
-                cls.supported_versions = supported_versions
+            if not isinstance(cls.supported_versions, (list, set)):
+                raise TypeError(
+                    "supported_versions attribute must be list or set")
+            supported_versions = set()
+            for ver in cls.supported_versions:
+                supported_versions.add(version_to_string(ver))
+            cls.supported_versions = supported_versions
 
         return cls
 
