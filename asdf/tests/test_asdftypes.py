@@ -324,7 +324,6 @@ flow_thing:
         "in file, but asdf only supports version 1.1.0")
 
 
-@pytest.mark.xfail(reason="Needs impl. of supported_versions for UserType")
 def test_supported_versions():
     from astropy.tests.helper import catch_warnings
     class CustomFlow(object):
@@ -391,11 +390,4 @@ flow_thing:
     old_buff = helpers.yaml_to_asdf(old_yaml)
     with catch_warnings() as w:
         old_data = asdf.AsdfFile.open(old_buff, extensions=CustomFlowExtension())
-    # TODO: this will fail until UserType is handled properly
     assert type(old_data.tree['flow_thing']) == CustomFlow
-
-    # TODO: should we actually expect this warning here?
-    assert len(w) == 1
-    assert str(w[0].message) == (
-        "'tag:nowhere.org:custom/custom_flow' with version 1.0.0 found "
-        "in file, but asdf only supports version 1.1.0")
