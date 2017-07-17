@@ -9,6 +9,7 @@ import warnings
 import re
 
 import six
+from copy import copy
 
 
 from .compat import lru_cache
@@ -362,6 +363,10 @@ class ExtensionTypeMeta(type):
                 return getattr(base, name)
         return default
 
+    @property
+    def versioned_siblings(mcls):
+        return getattr(mcls, '__versioned_siblings') or []
+
     def __new__(mcls, name, bases, attrs):
         requires = mcls._find_in_bases(attrs, bases, 'requires', [])
         if not mcls._has_required_modules(requires):
@@ -395,9 +400,18 @@ class ExtensionTypeMeta(type):
                 raise TypeError(
                     "supported_versions attribute must be list or set")
             supported_versions = set()
-            for ver in cls.supported_versions:
-                supported_versions.add(version_to_string(ver))
+            for version in cls.supported_versions:
+                supported_versions.add(version_to_string(version))
             cls.supported_versions = supported_versions
+            siblings = list()
+            for version in cls.supported_versions:
+                if version != version_to_string(cls.version):
+                    new_attrs = copy(attrs)
+                    new_attrs['version'] = version
+                    new_attrs['supported_versions'] = set()
+                    siblings.append(
+                       ExtensionTypeMeta. __new__(mcls, name, bases, new_attrs))
+            setattr(cls, '__versioned_siblings', siblings)
 
         return cls
 
@@ -412,15 +426,7 @@ class AsdfTypeMeta(ExtensionTypeMeta):
         # Classes using this metaclass get added to the list of built-in
         # extensions
         _all_asdftypes.add(cls)
-        if hasattr(cls, 'supported_versions'):
-            # Each supported version has a corresponding class tagged at that
-            # version added to the list of built-in ASDF types.
-            for version in cls.supported_versions:
-                if version != version_to_string(cls.version):
-                    attrs['version'] = version
-                    new_cls = super(AsdfTypeMeta, mcls).__new__(
-                        mcls, name, bases, attrs)
-                    _all_asdftypes.add(new_cls)
+
         return cls
 
 
