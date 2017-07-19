@@ -92,6 +92,8 @@ class TaggedString(Tagged, UserString, six.text_type):
     style = None
 
     def __eq__(self, other):
+        if isinstance(other, six.text_type):
+            return six.text_type.__eq__(self, other)
         return (isinstance(other, TaggedString) and
                 six.text_type.__eq__(self, other) and
                 self._tag == other._tag)
