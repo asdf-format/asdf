@@ -448,7 +448,6 @@ class AsdfFile(versioning.VersionedMixin):
             self.version = version
 
         yaml_token = fd.read(4)
-        yaml_content = b''
         tree = {}
         has_blocks = False
         if yaml_token == b'%YAM':
@@ -456,8 +455,11 @@ class AsdfFile(versioning.VersionedMixin):
                 constants.YAML_END_MARKER_REGEX, 7, 'End of YAML marker',
                 include=True, initial_content=yaml_token)
 
+            # For testing: just return the raw YAML content
             if _get_yaml_content:
                 yaml_content = reader.read()
+                fd.close()
+                return yaml_content
             else:
                 # We parse the YAML content into basic data structures
                 # now, but we don't do anything special with it until
@@ -468,11 +470,6 @@ class AsdfFile(versioning.VersionedMixin):
             has_blocks = True
         elif yaml_token != b'':
             raise IOError("ASDF file appears to contain garbage after header.")
-
-        # For testing: just return the raw YAML content
-        if _get_yaml_content:
-            fd.close()
-            return yaml_content
 
         if has_blocks:
             self._blocks.read_internal_blocks(

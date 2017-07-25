@@ -103,7 +103,7 @@ a: !core/complex-42.0.0
     assert len(w) == 1
     assert str(w[0].message) == (
         "'tag:stsci.edu:asdf/core/complex' with version 42.0.0 found in file, "
-        "but asdf only understands version 1.0.0.")
+        "but asdf only supports version 1.0.0")
 
     # Make sure warning is repeatable
     buff.seek(0)
@@ -114,7 +114,7 @@ a: !core/complex-42.0.0
     assert len(w) == 1
     assert str(w[0].message) == (
         "'tag:stsci.edu:asdf/core/complex' with version 42.0.0 found in file, "
-        "but asdf only understands version 1.0.0.")
+        "but asdf only supports version 1.0.0")
 
     # If the major and minor match, there should be no warning.
     yaml = """
@@ -220,3 +220,174 @@ def test_module_versioning():
     assert nmt.has_required_modules == False
     assert hcp.has_required_modules == True
     assert dhcp.has_required_modules == False
+
+
+def test_undefined_tag():
+    # This tests makes sure that ASDF still returns meaningful structured data
+    # even when it encounters a schema tag that it does not specifically
+    # implement as an extension
+    from numpy import array
+
+    yaml = """
+undefined_data:
+  !<tag:nowhere.org:custom/undefined_tag-1.0.0>
+    - 5
+    - {'message': 'there is no tag'}
+    - !core/ndarray-1.0.0
+      [[1, 2, 3], [4, 5, 6]]
+    - !<tag:nowhere.org:custom/also_undefined-1.3.0>
+        - !core/ndarray-1.0.0 [[7],[8],[9],[10]]
+        - !core/complex-1.0.0 3.14j
+"""
+    buff = helpers.yaml_to_asdf(yaml)
+    afile = asdf.AsdfFile.open(buff)
+    missing = afile.tree['undefined_data']
+
+    assert missing[0] == 5
+    assert missing[1] == {'message': 'there is no tag'}
+    assert (missing[2] == array([[1, 2, 3], [4, 5, 6]])).all()
+    assert (missing[3][0] == array([[7],[8],[9],[10]])).all()
+    assert missing[3][1] == 3.14j
+
+
+def test_newer_tag():
+    from astropy.tests.helper import catch_warnings
+    # This test simulates a scenario where newer versions of CustomFlow
+    # provides different keyword parameters that the older schema and tag class
+    # do not account for. We want to test whether ASDF can handle this problem
+    # gracefully and still provide meaningful data as output. The test case is
+    # fairly contrived but we want to test whether ASDF can handle backwards
+    # compatibility even when an explicit tag class for different versions of a
+    # schema is not available.
+    class CustomFlow(object):
+        def __init__(self, c=None, d=None):
+            self.c = c
+            self.d = d
+
+    class CustomFlowType(asdftypes.CustomType):
+        version = '1.1.0'
+        name = 'custom_flow'
+        organization = 'nowhere.org'
+        standard = 'custom'
+        types = [CustomFlow]
+
+        @classmethod
+        def from_tree(cls, tree, ctx):
+            kwargs = {}
+            for name in tree:
+                kwargs[name] = tree[name]
+            return CustomFlow(**kwargs)
+
+        @classmethod
+        def to_tree(cls, data, ctx):
+            tree = dict(c=data.c, d=data.d)
+
+    class CustomFlowExtension(object):
+        @property
+        def types(self):
+            return [CustomFlowType]
+
+        @property
+        def tag_mapping(self):
+            return [('tag:nowhere.org:custom',
+                     'http://nowhere.org/schemas/custom{tag_suffix}')]
+
+        @property
+        def url_mapping(self):
+            return [('http://nowhere.org/schemas/custom/',
+                     util.filepath_to_url(TEST_DATA_PATH) +
+                     '/{url_suffix}.yaml')]
+
+    new_yaml = """
+flow_thing:
+  !<tag:nowhere.org:custom/custom_flow-1.1.0>
+    c: 100
+    d: 3.14
+"""
+    new_buff = helpers.yaml_to_asdf(new_yaml)
+    new_data = asdf.AsdfFile.open(new_buff, extensions=CustomFlowExtension())
+    assert type(new_data.tree['flow_thing']) == CustomFlow
+
+    old_yaml = """
+flow_thing:
+  !<tag:nowhere.org:custom/custom_flow-1.0.0>
+    a: 100
+    b: 3.14
+"""
+    old_buff = helpers.yaml_to_asdf(old_yaml)
+    with catch_warnings() as w:
+        asdf.AsdfFile.open(old_buff, extensions=CustomFlowExtension())
+
+    assert len(w) == 1
+    assert str(w[0].message) == (
+        "'tag:nowhere.org:custom/custom_flow' with version 1.0.0 found "
+        "in file, but asdf only supports version 1.1.0")
+
+
+def test_supported_versions():
+    from astropy.tests.helper import catch_warnings
+    class CustomFlow(object):
+        def __init__(self, c=None, d=None):
+            self.c = c
+            self.d = d
+
+    class CustomFlowType(asdftypes.CustomType):
+        version = '1.1.0'
+        supported_versions = [(1,0,0), (1,1,0)]
+        name = 'custom_flow'
+        organization = 'nowhere.org'
+        standard = 'custom'
+        types = [CustomFlow]
+
+        @classmethod
+        def from_tree(cls, tree, ctx):
+            # Convert old schema to new CustomFlow type
+            if versioning.version_to_string(cls.version) == '1.0.0':
+                return CustomFlow(c=tree['a'], d=tree['b'])
+            else:
+                return CustomFlow(**tree)
+            return CustomFlow(**kwargs)
+
+        @classmethod
+        def to_tree(cls, data, ctx):
+            if versioning.version_to_string(cls.version) == '1.0.0':
+                tree = dict(a=data.c, b=data.d)
+            else:
+                tree = dict(c=data.c, d=data.d)
+
+    class CustomFlowExtension(object):
+        @property
+        def types(self):
+            return [CustomFlowType]
+
+        @property
+        def tag_mapping(self):
+            return [('tag:nowhere.org:custom',
+                     'http://nowhere.org/schemas/custom{tag_suffix}')]
+
+        @property
+        def url_mapping(self):
+            return [('http://nowhere.org/schemas/custom/',
+                     util.filepath_to_url(TEST_DATA_PATH) +
+                     '/{url_suffix}.yaml')]
+
+    new_yaml = """
+flow_thing:
+  !<tag:nowhere.org:custom/custom_flow-1.1.0>
+    c: 100
+    d: 3.14
+"""
+    old_yaml = """
+flow_thing:
+  !<tag:nowhere.org:custom/custom_flow-1.0.0>
+    a: 100
+    b: 3.14
+"""
+    new_buff = helpers.yaml_to_asdf(new_yaml)
+    new_data = asdf.AsdfFile.open(new_buff, extensions=CustomFlowExtension())
+    assert type(new_data.tree['flow_thing']) == CustomFlow
+
+    old_buff = helpers.yaml_to_asdf(old_yaml)
+    with catch_warnings() as w:
+        old_data = asdf.AsdfFile.open(old_buff, extensions=CustomFlowExtension())
+    assert type(old_data.tree['flow_thing']) == CustomFlow

@@ -9,6 +9,7 @@ import warnings
 import re
 
 import six
+from copy import copy
 
 
 from .compat import lru_cache
@@ -16,7 +17,7 @@ from .extern import semver
 
 from . import tagged
 from . import util
-from . import versioning
+from .versioning import get_version_map, version_to_string
 
 
 __all__ = ['format_tag', 'AsdfTypeIndex', 'AsdfType']
@@ -51,7 +52,7 @@ def join_tag_version(name, version):
     """
     Join the root and version of a tag back together.
     """
-    return '{0}-{1}'.format(name, versioning.version_to_string(version))
+    return '{0}-{1}'.format(name, version_to_string(version))
 
 
 class _AsdfWriteTypeIndex(object):
@@ -106,7 +107,7 @@ class _AsdfWriteTypeIndex(object):
                 add_by_tag(name, version)
         else:
             try:
-                version_map = versioning.get_version_map(version)
+                version_map = get_version_map(version)
             except ValueError:
                 raise ValueError(
                     "Don't know how to write out ASDF version {0}".format(
@@ -160,6 +161,7 @@ class AsdfTypeIndex(object):
         self._type_by_tag = {}
         self._versions_by_type_name = {}
         self._best_matches = {}
+        self._real_tag = {}
         self._unnamed_types = set()
         self._hooks_by_type = {}
         self._all_types = set()
@@ -225,6 +227,8 @@ class AsdfTypeIndex(object):
         Raises a warning if it could not find a match where the major
         and minor numbers are the same.
         """
+        warning_string = None
+
         if tag in self._type_by_tag:
             return tag
 
@@ -243,29 +247,31 @@ class AsdfTypeIndex(object):
 
         # The versions list is kept sorted, so bisect can be used to
         # quickly find the best option.
-
         i = bisect.bisect_left(versions, version)
         i = max(0, i - 1)
 
         best_version = versions[i]
-        if best_version[:2] == version[:2]:
-            # Major and minor match, so only patch and devel differs
-            # -- no need for alarm
-            warning_string = None
-        else:
-            warning_string = (
-                "'{0}' with version {1} found in file, but asdf only "
-                "understands version {2}.".format(
+        if best_version[:2] != version[:2]:
+            warning_string = \
+                "'{}' with version {} found in file, but asdf only supports " \
+                "version {}".format(
                     name,
                     semver.format_version(*version),
-                    semver.format_version(*best_version)))
-
-        if warning_string:
+                    semver.format_version(*best_version))
             warnings.warn(warning_string)
 
         best_tag = join_tag_version(name, best_version)
         self._best_matches[tag] = best_tag, warning_string
+        if tag != best_tag:
+            self._real_tag[best_tag] = tag
         return best_tag
+
+    def get_real_tag(self, tag):
+        if tag in self._real_tag:
+            return self._real_tag[tag]
+        elif tag in self._type_by_tag:
+            return tag
+        return None
 
     def from_yaml_tag(self, tag):
         """
@@ -320,10 +326,9 @@ def _from_tree_tagged_missing_requirements(cls, tree, ctx):
     return tree
 
 
-class AsdfTypeMeta(type):
+class ExtensionTypeMeta(type):
     """
-    Keeps track of `AsdfType` subclasses that are created, and stores
-    them in `AsdfTypeIndex`.
+    Custom class constructor for extension types.
     """
     _import_cache = {}
 
@@ -358,6 +363,10 @@ class AsdfTypeMeta(type):
                 return getattr(base, name)
         return default
 
+    @property
+    def versioned_siblings(mcls):
+        return getattr(mcls, '__versioned_siblings') or []
+
     def __new__(mcls, name, bases, attrs):
         requires = mcls._find_in_bases(attrs, bases, 'requires', [])
         if not mcls._has_required_modules(requires):
@@ -375,7 +384,7 @@ class AsdfTypeMeta(type):
                 new_types.append(typ)
             attrs['types'] = new_types
 
-        cls = super(AsdfTypeMeta, mcls).__new__(mcls, name, bases, attrs)
+        cls = super(ExtensionTypeMeta, mcls).__new__(mcls, name, bases, attrs)
 
         if hasattr(cls, 'name'):
             if isinstance(cls.name, six.string_types):
@@ -386,14 +395,42 @@ class AsdfTypeMeta(type):
             elif cls.name is not None:
                 raise TypeError("name must be string or list")
 
+        if hasattr(cls, 'supported_versions'):
+            if not isinstance(cls.supported_versions, (list, set)):
+                raise TypeError(
+                    "supported_versions attribute must be list or set")
+            supported_versions = set()
+            for version in cls.supported_versions:
+                supported_versions.add(version_to_string(version))
+            cls.supported_versions = supported_versions
+            siblings = list()
+            for version in cls.supported_versions:
+                if version != version_to_string(cls.version):
+                    new_attrs = copy(attrs)
+                    new_attrs['version'] = version
+                    new_attrs['supported_versions'] = set()
+                    siblings.append(
+                       ExtensionTypeMeta. __new__(mcls, name, bases, new_attrs))
+            setattr(cls, '__versioned_siblings', siblings)
+
+        return cls
+
+
+class AsdfTypeMeta(ExtensionTypeMeta):
+    """
+    Keeps track of `AsdfType` subclasses that are created, and stores them in
+    `AsdfTypeIndex`.
+    """
+    def __new__(mcls, name, bases, attrs):
+        cls = super(AsdfTypeMeta, mcls).__new__(mcls, name, bases, attrs)
+        # Classes using this metaclass get added to the list of built-in
+        # extensions
         _all_asdftypes.add(cls)
 
         return cls
 
 
-@six.add_metaclass(AsdfTypeMeta)
-@six.add_metaclass(util.InheritDocstrings)
-class AsdfType(object):
+class ExtensionType(object):
     """
     The base class of all custom types in the tree.
 
@@ -417,6 +454,11 @@ class AsdfType(object):
     version : 3-tuple of int
         The version of the standard the type is defined in.
 
+    supported_versions : set
+        If provided, indicates explicit compatibility with the given set of
+        versions. Other versions of the same schema that are not included in
+        this set will not be converted to custom types with this class.
+
     yaml_tag : str
         The YAML tag to use for the type.  If not provided, it will be
         automatically generated from name, organization, standard and
@@ -439,6 +481,7 @@ class AsdfType(object):
     organization = 'stsci.edu'
     standard = 'asdf'
     version = (1, 0, 0)
+    supported_versions = set()
     types = []
     handle_dynamic_subclasses = False
     validators = {}
@@ -450,7 +493,7 @@ class AsdfType(object):
         return format_tag(
             cls.organization,
             cls.standard,
-            versioning.version_to_string(cls.version),
+            version_to_string(cls.version),
             name)
 
     @classmethod
@@ -488,3 +531,37 @@ class AsdfType(object):
         with the tag directly.
         """
         return cls.from_tree(tree.data, ctx)
+
+    @classmethod
+    def incompatible_version(cls, version):
+        """
+        If this tag class explicitly identifies compatible versions then this
+        checks whether a given version is compatible or not. Otherwise, all
+        versions are assumed to be compatible.
+
+        Child classes can override this method to affect how version
+        compatiblity for this type is determined.
+        """
+        if cls.supported_versions:
+            if version_to_string(version) not in cls.supported_versions:
+                return True
+        return False
+
+
+@six.add_metaclass(AsdfTypeMeta)
+@six.add_metaclass(util.InheritDocstrings)
+class AsdfType(ExtensionType):
+    """
+    Base class for all built-in ASDF types. Types that inherit this class will
+    be automatically added to the list of built-ins. This should *not* be used
+    for user-defined extensions.
+    """
+
+@six.add_metaclass(ExtensionTypeMeta)
+@six.add_metaclass(util.InheritDocstrings)
+class CustomType(ExtensionType):
+    """
+    Base class for all user-defined types. Unlike classes that inherit
+    AsdfType, classes that inherit this class will *not* automatically be added
+    to the list of built-ins. This should be used for user-defined extensions.
+    """

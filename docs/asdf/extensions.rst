@@ -5,8 +5,8 @@ Supporting new types in asdf is easy.  There are three pieces needed:
 
 1. A YAML Schema file for each new type.
 
-2. A Python class (inheriting from `asdf.AsdfType`) for each new
-   type.
+2. A Python class (inheriting from `asdf.CustomType`) for each new
+   user-defined type.
 
 3. A Python class to define an "extension" to ASDF, which is a set of
    related types.  This class must implement the
@@ -33,7 +33,7 @@ First, the YAML Schema, defining the type as a pair of integers:
    maxItems: 2
    ...
 
-Then, the Python implementation.  See the `asdf.AsdfType` and
+Then, the Python implementation.  See the `asdf.CustomType` and
 `asdf.AsdfExtension` documentation for more information::
 
     import os
@@ -43,7 +43,7 @@ Then, the Python implementation.  See the `asdf.AsdfType` and
 
     import fractions
 
-    class FractionType(asdf.AsdfType):
+    class FractionType(asdf.CustomType):
         name = 'fraction'
         organization = 'nowhere.org'
         version = (1, 0, 0)
@@ -83,7 +83,7 @@ values in an ASDF file.  This feature is used internally so a schema
 can specify the required datatype of an array.
 
 To support custom validation keywords, set the ``validators`` member
-of an ``AsdfType`` subclass to a dictionary where the keys are the
+of a ``CustomType`` subclass to a dictionary where the keys are the
 validation keyword name and the values are validation functions.  The
 validation functions are of the same form as the validation functions
 in the underlying ``jsonschema`` library, and are passed the following

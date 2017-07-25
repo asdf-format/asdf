@@ -1,0 +1,11 @@
+%YAML 1.1
+---
+$schema: "http://stsci.edu/schemas/yaml-schema/draft-01"
+id: "http://nowhere.org/schemas/custom/custom_flow-1.1.0"
+type: object
+properties:
+  c:
+    type: number
+  d:
+    type: number
+flowStyle: block

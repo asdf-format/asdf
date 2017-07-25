@@ -120,6 +120,9 @@ class AsdfExtensionList(object):
             for typ in extension.types:
                 self._type_index.add_type(typ)
                 validators.update(typ.validators)
+                for sibling in typ.versioned_siblings:
+                    self._type_index.add_type(sibling)
+                    validators.update(sibling.validators)
         self._tag_mapping = resolver.Resolver(tag_mapping, 'tag')
         self._url_mapping = resolver.Resolver(url_mapping, 'url')
         self._validators = validators
