@@ -559,7 +559,7 @@ class AsdfType(ExtensionType):
 
 @six.add_metaclass(ExtensionTypeMeta)
 @six.add_metaclass(util.InheritDocstrings)
-class UserType(ExtensionType):
+class CustomType(ExtensionType):
     """
     Base class for all user-defined types. Unlike classes that inherit
     AsdfType, classes that inherit this class will *not* automatically be added

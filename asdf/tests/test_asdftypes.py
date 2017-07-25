@@ -264,7 +264,7 @@ def test_newer_tag():
             self.c = c
             self.d = d
 
-    class CustomFlowType(asdftypes.UserType):
+    class CustomFlowType(asdftypes.CustomType):
         version = '1.1.0'
         name = 'custom_flow'
         organization = 'nowhere.org'
@@ -331,7 +331,7 @@ def test_supported_versions():
             self.c = c
             self.d = d
 
-    class CustomFlowType(asdftypes.UserType):
+    class CustomFlowType(asdftypes.CustomType):
         version = '1.1.0'
         supported_versions = [(1,0,0), (1,1,0)]
         name = 'custom_flow'
