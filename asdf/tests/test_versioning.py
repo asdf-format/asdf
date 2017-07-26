@@ -6,7 +6,7 @@ from __future__ import absolute_import, division, unicode_literals, print_functi
 import pytest
 from itertools import combinations
 
-from ..versioning import AsdfVersion
+from ..versioning import AsdfVersion, AsdfSpec
 
 
 def test_version_constructor():
@@ -115,3 +115,72 @@ def test_version_and_tuple_inequality():
     assert version <= (2,0,1)
     assert version <= (2,1,0)
     assert version <= (2,1,1)
+
+def test_spec_version_match():
+    spec = AsdfSpec('>=1.1.0')
+
+    assert spec.match(AsdfVersion('1.1.0'))
+    assert spec.match(AsdfVersion('1.2.0'))
+    assert not spec.match(AsdfVersion('1.0.0'))
+    assert not spec.match(AsdfVersion('1.0.9'))
+
+def test_spec_version_select():
+    spec = AsdfSpec('>=1.1.0')
+
+    versions = [AsdfVersion(x) for x in ['1.0.0', '1.0.9', '1.1.0', '1.2.0']]
+    assert spec.select(versions) == '1.2.0'
+    assert spec.select(versions[:-1]) == '1.1.0'
+    assert spec.select(versions[:-2]) == None
+
+def test_spec_version_filter():
+    spec = AsdfSpec('>=1.1.0')
+
+    versions = [AsdfVersion(x) for x in ['1.0.0', '1.0.9', '1.1.0', '1.2.0']]
+    for x,y in zip(spec.filter(versions), ['1.1.0', '1.2.0']):
+        assert x == y
+
+def test_spec_string_match():
+    spec = AsdfSpec('>=1.1.0')
+
+    assert spec.match('1.1.0')
+    assert spec.match('1.2.0')
+    assert not spec.match('1.0.0')
+    assert not spec.match('1.0.9')
+
+def test_spec_string_select():
+    spec = AsdfSpec('>=1.1.0')
+
+    versions = ['1.0.0', '1.0.9', '1.1.0', '1.2.0']
+    assert spec.select(versions) == '1.2.0'
+    assert spec.select(versions[:-1]) == '1.1.0'
+    assert spec.select(versions[:-2]) == None
+
+def test_spec_string_filter():
+    spec = AsdfSpec('>=1.1.0')
+
+    versions = ['1.0.0', '1.0.9', '1.1.0', '1.2.0']
+    for x,y in zip(spec.filter(versions), ['1.1.0', '1.2.0']):
+        assert x == y
+
+def test_spec_tuple_match():
+    spec = AsdfSpec('>=1.1.0')
+
+    assert spec.match((1,1,0))
+    assert spec.match((1,2,0))
+    assert not spec.match((1,0,0))
+    assert not spec.match((1,0,9))
+
+def test_spec_tuple_select():
+    spec = AsdfSpec('>=1.1.0')
+
+    versions = [(1,0,0), (1,0,9), (1,1,0), (1,2,0)]
+    assert spec.select(versions) == '1.2.0'
+    assert spec.select(versions[:-1]) == '1.1.0'
+    assert spec.select(versions[:-2]) == None
+
+def test_spec_tuple_filter():
+    spec = AsdfSpec('>=1.1.0')
+
+    versions = [(1,0,0), (1,0,9), (1,1,0), (1,2,0)]
+    for x,y in zip(spec.filter(versions), ['1.1.0', '1.2.0']):
+        assert x == y
