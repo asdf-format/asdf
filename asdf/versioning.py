@@ -17,7 +17,7 @@ if getattr(yaml, '__with_libyaml__', None):  # pragma: no cover
 else:  # pragma: no cover
     _yaml_base_loader = yaml.SafeLoader
 
-from semantic_version import Version
+from semantic_version import Version, Spec
 
 from . import generic_io
 from . import resolver
@@ -91,6 +91,26 @@ class AsdfVersion(AsdfVersionMixin, Version):
         if isinstance(version, (tuple, list)):
             version = '.'.join([str(x) for x in version])
         super(AsdfVersion, self).__init__(version)
+
+
+class AsdfSpec(Spec):
+
+    def match(self, version):
+        if isinstance(version, (six.string_types, tuple, list)):
+            version = AsdfVersion(version)
+        return super(AsdfSpec, self).match(version)
+
+    def __iterate_versions(self, versions):
+        for v in versions:
+            if isinstance(v, (six.string_types, tuple, list)):
+                v = AsdfVersion(v)
+            yield v
+
+    def select(self, versions):
+        return super(AsdfSpec, self).select(self.__iterate_versions(versions))
+
+    def filter(self, versions):
+        return super(AsdfSpec, self).filter(self.__iterate_versions(versions))
 
 
 default_version = AsdfVersion('1.1.0')
