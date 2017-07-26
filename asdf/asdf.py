@@ -10,8 +10,6 @@ import re
 
 import numpy as np
 
-from .extern import semver
-
 from . import block
 from . import constants
 from . import extension
@@ -123,7 +121,7 @@ class AsdfFile(versioning.VersionedMixin):
     @property
     def file_format_version(self):
         if self._file_format_version is None:
-            return semver.parse(self.versionspec['FILE_FORMAT'])
+            return versioning.AsdfVersion(self.versionspec['FILE_FORMAT'])
         else:
             return self._file_format_version
 
@@ -389,7 +387,7 @@ class AsdfFile(versioning.VersionedMixin):
             raise ValueError("Does not appear to be a ASDF file.")
 
         try:
-            version = semver.parse(parts[1].decode('ascii'))
+            version = versioning.AsdfVersion(parts[1].decode('ascii'))
         except ValueError:
             raise ValueError(
                 "Unparseable version in ASDF file: {0}".format(parts[1]))
@@ -418,7 +416,7 @@ class AsdfFile(versioning.VersionedMixin):
             parts = comment.split()
             if len(parts) == 2 and parts[0] == constants.ASDF_STANDARD_COMMENT:
                 try:
-                    version = semver.parse(parts[1].decode('ascii'))
+                    version = versioning.AsdfVersion(parts[1].decode('ascii'))
                 except ValueError:
                     pass
                 else:

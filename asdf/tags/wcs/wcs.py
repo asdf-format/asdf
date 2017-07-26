@@ -9,8 +9,6 @@ import six
 
 from ...asdftypes import AsdfType
 from ... import yamlutil
-from ...versioning import version_to_string
-
 
 
 _REQUIRES = ['gwcs', 'astropy']
@@ -119,7 +117,7 @@ class FrameType(AsdfType):
         from astropy.coordinates import (ICRS, CartesianRepresentation,
             CartesianDifferential)
 
-        version = version_to_string(cls.version)
+        version = cls.version
         reference_frame = node['reference_frame']
         reference_frame_name = reference_frame['type']
 

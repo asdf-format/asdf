@@ -11,13 +11,11 @@ import re
 import six
 from copy import copy
 
-
 from .compat import lru_cache
-from .extern import semver
 
 from . import tagged
 from . import util
-from .versioning import get_version_map, version_to_string
+from .versioning import AsdfVersion, get_version_map
 
 
 __all__ = ['format_tag', 'AsdfTypeIndex', 'AsdfType']
@@ -44,15 +42,15 @@ def split_tag_version(tag):
     Split a tag into its base and version.
     """
     name, version = tag.rsplit('-', 1)
-    version = semver.parse(version)
-    return name, (version['major'], version['minor'], version['patch'])
+    version = AsdfVersion(version)
+    return name, version
 
 
 def join_tag_version(name, version):
     """
     Join the root and version of a tag back together.
     """
-    return '{0}-{1}'.format(name, version_to_string(version))
+    return '{0}-{1}'.format(name, version)
 
 
 class _AsdfWriteTypeIndex(object):
@@ -114,7 +112,7 @@ class _AsdfWriteTypeIndex(object):
                         version))
 
             for name, version in six.iteritems(version_map['tags']):
-                add_by_tag(name, semver.parse(version))
+                add_by_tag(name, AsdfVersion(version))
 
             # Now add any extension types that aren't known to the ASDF standard
             for name, versions in six.iteritems(index._versions_by_type_name):
@@ -251,13 +249,10 @@ class AsdfTypeIndex(object):
         i = max(0, i - 1)
 
         best_version = versions[i]
-        if best_version[:2] != version[:2]:
+        if (best_version.major, best_version.minor) != (version.major, version.minor):
             warning_string = \
                 "'{}' with version {} found in file, but asdf only supports " \
-                "version {}".format(
-                    name,
-                    semver.format_version(*version),
-                    semver.format_version(*best_version))
+                "version {}".format(name, version, best_version)
             warnings.warn(warning_string)
 
         best_tag = join_tag_version(name, best_version)
@@ -386,6 +381,9 @@ class ExtensionTypeMeta(type):
 
         cls = super(ExtensionTypeMeta, mcls).__new__(mcls, name, bases, attrs)
 
+        if hasattr(cls, 'version'):
+            cls.version = AsdfVersion(cls.version)
+
         if hasattr(cls, 'name'):
             if isinstance(cls.name, six.string_types):
                 if 'yaml_tag' not in attrs:
@@ -401,11 +399,11 @@ class ExtensionTypeMeta(type):
                     "supported_versions attribute must be list or set")
             supported_versions = set()
             for version in cls.supported_versions:
-                supported_versions.add(version_to_string(version))
+                supported_versions.add(AsdfVersion(version))
             cls.supported_versions = supported_versions
             siblings = list()
             for version in cls.supported_versions:
-                if version != version_to_string(cls.version):
+                if version != cls.version:
                     new_attrs = copy(attrs)
                     new_attrs['version'] = version
                     new_attrs['supported_versions'] = set()
@@ -493,7 +491,7 @@ class ExtensionType(object):
         return format_tag(
             cls.organization,
             cls.standard,
-            version_to_string(cls.version),
+            cls.version,
             name)
 
     @classmethod
@@ -543,7 +541,7 @@ class ExtensionType(object):
         compatiblity for this type is determined.
         """
         if cls.supported_versions:
-            if version_to_string(version) not in cls.supported_versions:
+            if version not in cls.supported_versions:
                 return True
         return False
 

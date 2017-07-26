@@ -9,15 +9,15 @@ of the ASDF spec.
 from __future__ import absolute_import, division, unicode_literals, print_function
 
 import six
-
 import yaml
+from functools import total_ordering
 
 if getattr(yaml, '__with_libyaml__', None):  # pragma: no cover
     _yaml_base_loader = yaml.CSafeLoader
 else:  # pragma: no cover
     _yaml_base_loader = yaml.SafeLoader
 
-from .extern import semver
+from semantic_version import Version
 
 from . import generic_io
 from . import resolver
@@ -36,37 +36,74 @@ def get_version_map(version):
                 version_map = yaml.load(
                     fd, Loader=_yaml_base_loader)
         except:
-            version_string = version_to_string(version)
             raise ValueError(
-                "Could not load version map for version {0}".format(version_string))
+                "Could not load version map for version {0}".format(version))
         _version_map[version] = version_map
 
     return version_map
 
 
-def version_to_string(ver):
-    if isinstance(ver, six.string_types):
-        return ver
-    elif isinstance(ver, dict):
-        return semver.format_version(**ver)
-    elif isinstance(ver, (tuple, list)):
-        return semver.format_version(*ver)
-    else:
-        raise TypeError("Bad type for version {0}".format(ver))
+@total_ordering
+class AsdfVersionMixin(object):
+    """This mix-in is required in order to impose the total ordering that we
+    want for ``AsdfVersion``, rather than accepting the total ordering that is
+    already provided by ``Version`` from ``semantic_version``. Defining these
+    comparisons directly in ``AsdfVersion`` and applying ``total_ordering``
+    there will not work since ``total_ordering`` only defines comparison
+    operations if they do not exist already and the base class ``Version``
+    already defines these operations.
+    """
+
+    def __eq__(self, other):
+        if isinstance(other, (six.string_types, tuple, list)):
+            other = AsdfVersion(other)
+        return Version.__eq__(self, other)
+
+    def __ne__(self, other):
+        return not self.__eq__(other)
+
+    def __lt__(self, other):
+        if isinstance(other, (six.string_types, tuple, list)):
+            other = AsdfVersion(other)
+        return Version.__lt__(self, other)
+
+    def __hash__(self):
+        # To be honest, I'm not sure why I had to make this explicit
+        return Version.__hash__(self)
 
 
-default_version = semver.parse('1.1.0')
+class AsdfVersion(AsdfVersionMixin, Version):
+    """This class adds features to the existing ``Version`` class from the
+    ``semantic_version`` module. Namely, it allows ``Version`` objects to be
+    constructed from tuples and lists as well as strings, and it allows
+    ``Version`` objects to be compared with tuples, lists, and strings, instead
+    of just other ``Version`` objects.
+
+    If any of these features are added to the ``Version`` class itself (as
+    requested in https://github.com/rbarrois/python-semanticversion/issues/52),
+    then this class will become obsolete.
+    """
+
+    def __init__(self, version):
+        # This is a dirty hack and you know it
+        if isinstance(version, AsdfVersion):
+            version = str(version)
+        if isinstance(version, (tuple, list)):
+            version = '.'.join([str(x) for x in version])
+        super(AsdfVersion, self).__init__(version)
+
+
+default_version = AsdfVersion('1.1.0')
 
 
 supported_versions = [
-    '1.0.0',
-    '1.1.0'
+    AsdfVersion('1.0.0'),
+    AsdfVersion('1.1.0')
 ]
 
 
 class VersionedMixin(object):
     _version = default_version
-    _version_string = version_to_string(default_version)
 
     @property
     def version(self):
@@ -74,21 +111,18 @@ class VersionedMixin(object):
 
     @version.setter
     def version(self, version):
-        if version_to_string(version) not in supported_versions:
+        if version not in supported_versions:
             human_versions = util.human_list(
-                [version_to_string(x) for x in supported_versions])
+                [str(x) for x in supported_versions])
             raise ValueError(
                 "asdf only understands how to handle ASDF versions {0}. "
-                "Got '{1}'".format(
-                    human_versions,
-                    version_to_string(version)))
+                "Got '{1}'".format(human_versions, version))
 
         self._version = version
-        self._version_string = version_to_string(version)
 
     @property
     def version_string(self):
-        return self._version_string
+        return str(self._version)
 
     @property
     def version_map(self):

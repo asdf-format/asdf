@@ -119,6 +119,7 @@ setup(name=PACKAGENAME,
       description=DESCRIPTION,
       scripts=scripts,
       install_requires=[
+          'semantic_version>=2.6.0',
           'pyyaml>=3.10',
           'jsonschema>=2.3.0',
           'six>=1.9.0',

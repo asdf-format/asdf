@@ -342,7 +342,7 @@ def test_supported_versions():
         @classmethod
         def from_tree(cls, tree, ctx):
             # Convert old schema to new CustomFlow type
-            if versioning.version_to_string(cls.version) == '1.0.0':
+            if cls.version == '1.0.0':
                 return CustomFlow(c=tree['a'], d=tree['b'])
             else:
                 return CustomFlow(**tree)
@@ -350,7 +350,7 @@ def test_supported_versions():
 
         @classmethod
         def to_tree(cls, data, ctx):
-            if versioning.version_to_string(cls.version) == '1.0.0':
+            if cls.version == '1.0.0':
                 tree = dict(a=data.c, b=data.d)
             else:
                 tree = dict(c=data.c, d=data.d)

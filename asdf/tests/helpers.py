@@ -62,8 +62,7 @@ def assert_tree_match(old_tree, new_tree, ctx=None,
     ignore_keys = set(ignore_keys)
 
     if ctx is None:
-        version_string = versioning.version_to_string(
-            versioning.default_version)
+        version_string = str(versioning.default_version)
         ctx = _builtin_extension_list
     else:
         version_string = ctx.version_string
@@ -223,8 +222,7 @@ def yaml_to_asdf(yaml_content, yaml_headers=True):
 %YAML 1.1
 %TAG ! tag:stsci.edu:asdf/
 --- !core/asdf-{0}
-""".format(
-    versioning.version_to_string((1, 0, 0))).encode('ascii'))
+""".format('1.0.0').encode('ascii'))
     buff.write(yaml_content)
     if yaml_headers:
         buff.write(b"\n...\n")
