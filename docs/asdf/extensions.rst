@@ -108,7 +108,9 @@ Let's consider an imaginary custom type called ``Person`` that we want to
 serialize in ASDF. The first version of ``Person`` was constructed using a
 first and last name::
 
-    person = Person('James', 'Webb')
+    >>> person = Person('James', 'Webb')
+    >>> print(person.first, person.last)
+    James Webb
 
 Our version 1.0.0 YAML schema for ``Person`` might look like the following:
 
@@ -151,7 +153,9 @@ And our tag implementation would look something like this::
 However, a newer version of ``Person`` now requires a middle name in the
 constructor as well::
 
-    person = Person('James', 'Edwin', 'Webb')
+    >>> person = Person('James', 'Edwin', 'Webb')
+    >>> print(person.first, person.middle, person.last)
+    James Edwin Webb
 
 So we update our YAML schema to version 1.1.0 in order to support newer
 versions of Person:
