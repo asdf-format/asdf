@@ -92,6 +92,26 @@ def test_version_and_string_inequality():
     assert version <= '2.1.0'
     assert version <= '2.1.1'
 
+    assert '1.0.0' < version
+    assert '1.0.1' < version
+    assert '1.1.0' < version
+    assert '1.1.1' < version
+    assert ('2.0.0' < version) == False
+    assert ('2.0.0' > version) == False
+    assert '2.0.1' > version
+    assert '2.1.0' > version
+    assert '2.1.1' > version
+
+    assert '1.0.0' <= version
+    assert '1.0.1' <= version
+    assert '1.1.0' <= version
+    assert '1.1.1' <= version
+    assert '2.0.0' <= version
+    assert '2.0.0' >= version
+    assert '2.0.1' >= version
+    assert '2.1.0' >= version
+    assert '2.1.1' >= version
+
 
 def test_version_and_tuple_inequality():
     version = AsdfVersion('2.0.0')
@@ -115,6 +135,26 @@ def test_version_and_tuple_inequality():
     assert version <= (2,0,1)
     assert version <= (2,1,0)
     assert version <= (2,1,1)
+
+    assert (1,0,0) < version
+    assert (1,0,1) < version
+    assert (1,1,0) < version
+    assert (1,1,1) < version
+    assert ((2,0,0) < version) == False
+    assert ((2,0,0) > version) == False
+    assert (2,0,1) > version
+    assert (2,1,0) > version
+    assert (2,1,1) > version
+
+    assert (1,0,0) <= version
+    assert (1,0,1) <= version
+    assert (1,1,0) <= version
+    assert (1,1,1) <= version
+    assert (2,0,0) <= version
+    assert (2,0,0) >= version
+    assert (2,0,1) >= version
+    assert (2,1,0) >= version
+    assert (2,1,1) >= version
 
 def test_spec_version_match():
     spec = AsdfSpec('>=1.1.0')
