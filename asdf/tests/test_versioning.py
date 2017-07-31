@@ -224,3 +224,24 @@ def test_spec_tuple_filter():
     versions = [(1,0,0), (1,0,9), (1,1,0), (1,2,0)]
     for x,y in zip(spec.filter(versions), ['1.1.0', '1.2.0']):
         assert x == y
+
+def test_spec_equal():
+    """Make sure that equality means match"""
+    spec = AsdfSpec('>=1.2.0')
+    version0 = AsdfVersion('1.1.0')
+    version1 = AsdfVersion('1.3.0')
+
+    assert spec != version0
+    assert version0 != spec
+    assert spec == version1
+    assert version1 == spec
+
+    assert spec != '1.1.0'
+    assert '1.1.0' != spec
+    assert spec == '1.3.0'
+    assert '1.3.0' == spec
+
+    assert spec != (1, 1, 0)
+    assert (1, 1, 0) != spec
+    assert spec == (1, 3, 0)
+    assert (1, 3, 0) == spec

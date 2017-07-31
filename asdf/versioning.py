@@ -55,6 +55,9 @@ class AsdfVersionMixin(object):
     """
 
     def __eq__(self, other):
+        # Seems like a bit of a hack...
+        if isinstance(other, Spec):
+            return other == self
         if isinstance(other, (six.string_types, tuple, list)):
             other = AsdfVersion(other)
         return Version.__eq__(self, other)
@@ -111,6 +114,15 @@ class AsdfSpec(Spec):
 
     def filter(self, versions):
         return super(AsdfSpec, self).filter(self.__iterate_versions(versions))
+
+    def __eq__(self, other):
+        """Equality between Spec and Version, string, or tuple, means match"""
+        if isinstance(other, Spec):
+            return super(AsdfSpec, self).__eq__(other)
+        return self.match(other)
+
+    def __ne__(self, other):
+        return not self.__eq__(other)
 
 
 default_version = AsdfVersion('1.1.0')
