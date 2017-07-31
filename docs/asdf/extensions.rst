@@ -33,7 +33,6 @@ numbers. We will call our new ASDF type ``fraction``.
 First, the YAML Schema, defining the type as a pair of integers:
 
 .. code:: yaml
-
    %YAML 1.1
    ---
    $schema: "http://stsci.edu/schemas/yaml-schema/draft-01"
@@ -49,8 +48,9 @@ First, the YAML Schema, defining the type as a pair of integers:
    ...
 
 Then, the Python implementation of the tag class and extension class. See the
-`asdf.CustomType` and `asdf.AsdfExtension` documentation for more information::
+`asdf.CustomType` and `asdf.AsdfExtension` documentation for more information:
 
+.. code:: python
     import os
 
     import asdf
@@ -106,8 +106,9 @@ changes in schemas over time.
 
 Let's consider an imaginary custom type called ``Person`` that we want to
 serialize in ASDF. The first version of ``Person`` was constructed using a
-first and last name::
+first and last name:
 
+.. code:: python
     >>> person = Person('James', 'Webb')
     >>> print(person.first, person.last)
     James Webb
@@ -115,7 +116,6 @@ first and last name::
 Our version 1.0.0 YAML schema for ``Person`` might look like the following:
 
 .. code:: yaml
-
    %YAML 1.1
    ---
    $schema: "http://stsci.edu/schemas/yaml-schema/draft-01"
@@ -130,8 +130,9 @@ Our version 1.0.0 YAML schema for ``Person`` might look like the following:
    maxItems: 2
    ...
 
-And our tag implementation would look something like this::
+And our tag implementation would look something like this:
 
+.. code:: python
     import asdf
     from people import Person
 
@@ -151,8 +152,9 @@ And our tag implementation would look something like this::
             return Person(tree[0], tree[1])
 
 However, a newer version of ``Person`` now requires a middle name in the
-constructor as well::
+constructor as well:
 
+.. code:: python
     >>> person = Person('James', 'Edwin', 'Webb')
     >>> print(person.first, person.middle, person.last)
     James Edwin Webb
@@ -161,7 +163,6 @@ So we update our YAML schema to version 1.1.0 in order to support newer
 versions of Person:
 
 .. code:: yaml
-
    %YAML 1.1
    ---
    $schema: "http://stsci.edu/schemas/yaml-schema/draft-01"
@@ -187,8 +188,9 @@ Under the hood, ASDF creates multiple copies of our ``PersonType`` tag class,
 each with a different ``version`` attribute corresponding to one of the
 supported versions. This means that in our new tag class implementation, we can
 condition our ``from_tree`` implementation on the value of ``cls.version`` to
-determine which schema version should be used when reading::
+determine which schema version should be used when reading:
 
+.. code:: python
     import asdf
     from people import Person
 
@@ -251,8 +253,9 @@ the instance is invalid.
 
 To continue the example from above, for the ``FractionType`` say we
 want to add a validation keyword "``simplified``" that, when ``true``,
-asserts that the corresponding fraction is in simplified form::
+asserts that the corresponding fraction is in simplified form:
 
+.. code:: python
     from asdf import ValidationError
 
     def validate_simplified(validator, simplified, instance, schema):
