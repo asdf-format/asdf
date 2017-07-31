@@ -1,19 +1,34 @@
 Writing ASDF extensions
 =======================
 
-Supporting new types in asdf is easy.  There are three pieces needed:
+Extensions provide a way for ASDF to represent complex types that are not
+defined by the ASDF standard. Examples of types that require custom extensions
+include types from third-party libraries, user-defined types, and also complex
+types that are part of the Python standard library but are not handled in the
+ASDF standard. From ASDF's perspective, these are all considered 'custom'
+types.
+
+Supporting new types in asdf is easy. There are three pieces needed:
 
 1. A YAML Schema file for each new type.
 
-2. A Python class (inheriting from `asdf.CustomType`) for each new
-   user-defined type.
+2. A tag class (inheriting from `asdf.CustomType`) corresponding to each new
+   custom type. The class must override ``to_tree`` and ``from_tree`` from
+   `asdf.CustomType` in order to define how ASDF serializes and deserializes
+   the custom type.
 
-3. A Python class to define an "extension" to ASDF, which is a set of
-   related types.  This class must implement the
-   `asdf.AsdfExtension` abstract base class.
+3. A Python class to define an "extension" to ASDF, which is a set of related
+   types. This class must implement the `asdf.AsdfExtension` abstract base
+   class. In general, a third-party library that defines multiple custom types
+   can group them all in the same extension.
 
-For an example, we will make a type to handle rational numbers called
-``fraction``.
+
+An Example
+----------
+
+As an example, we will write an extension for ASDF that allows us to represent
+Python's standard ``fractions.Fraction`` class for representing rational
+numbers. We will call our new ASDF type ``fraction``.
 
 First, the YAML Schema, defining the type as a pair of integers:
 
@@ -33,8 +48,8 @@ First, the YAML Schema, defining the type as a pair of integers:
    maxItems: 2
    ...
 
-Then, the Python implementation.  See the `asdf.CustomType` and
-`asdf.AsdfExtension` documentation for more information::
+Then, the Python implementation of the tag class and extension class. See the
+`asdf.CustomType` and `asdf.AsdfExtension` documentation for more information::
 
     import os
 
@@ -73,6 +88,132 @@ Then, the Python implementation.  See the `asdf.CustomType` and
             return [('http://nowhere.org/schemas/custom/1.0.0/',
                      util.filepath_to_url(os.path.dirname(__file__))
                      + '/{url_suffix}.yaml')]
+
+Note that the method ``to_tree`` of the tag class ``FractionType`` defines how
+the library converts ``fractions.Fraction`` into a tree that can be stored by
+ASDF. Conversely, the method ``from_tree`` defines how the library reads a
+serialized representation of the object and converts it back into a
+``fractions.Fraction``.
+
+Explicit version support
+------------------------
+
+To some extent schemas and tag classes will be closely tied to the custom data
+types that they represent. This means that in some cases API changes or other
+changes to the representation of the underlying types will force us to modify
+our schemas and tag classes. ASDF's schema versioning allows us to handle
+changes in schemas over time.
+
+Let's consider an imaginary custom type called ``Person`` that we want to
+serialize in ASDF. The first version of ``Person`` was constructed using a
+first and last name::
+
+    person = Person('James', 'Webb')
+
+Our version 1.0.0 YAML schema for ``Person`` might look like the following:
+
+.. code:: yaml
+
+   %YAML 1.1
+   ---
+   $schema: "http://stsci.edu/schemas/yaml-schema/draft-01"
+   id: "http://nowhere.org/schemas/custom/1.0.0/person"
+   title: An example custom type for representing a Person
+
+   tag: "tag:nowhere.org:custom/1.0.0/person"
+   type: array
+   items:
+     type: string
+   minItems: 2
+   maxItems: 2
+   ...
+
+And our tag implementation would look something like this::
+
+    import asdf
+    from people import Person
+
+    class PersonType(asdf.CustomType):
+        name = 'person'
+        organization = 'nowhere.org'
+        version = (1, 0, 0)
+        standard = 'custom'
+        types = [Person]
+
+        @classmethod
+        def to_tree(cls, node, ctx):
+            return [node.first, node.last]
+
+        @classmethod
+        def from_tree(cls, tree, ctx):
+            return Person(tree[0], tree[1])
+
+However, a newer version of ``Person`` now requires a middle name in the
+constructor as well::
+
+    person = Person('James', 'Edwin', 'Webb')
+
+So we update our YAML schema to version 1.1.0 in order to support newer
+versions of Person:
+
+.. code:: yaml
+
+   %YAML 1.1
+   ---
+   $schema: "http://stsci.edu/schemas/yaml-schema/draft-01"
+   id: "http://nowhere.org/schemas/custom/1.1.0/person"
+   title: An example custom type for representing a Person
+
+   tag: "tag:nowhere.org:custom/1.1.0/person"
+   type: array
+   items:
+     type: string
+   minItems: 3
+   maxItems: 3
+   ...
+
+We need to update our tag class implementation as well. However, we need to be
+careful. We still want to be able to read version 1.0.0 of our schema and be
+able to convert it to the newer version of ``Person`` objects. To accomplish
+this, we will make use of the ``supported_versions`` attribute for our tag
+class. This will allow us to declare explicit support for the schema versions
+our tag class implements.
+
+Under the hood, ASDF creates multiple copies of our ``PersonType`` tag class,
+each with a different ``version`` attribute corresponding to one of the
+supported versions. This means that in our new tag class implementation, we can
+condition our ``from_tree`` implementation on the value of ``cls.version`` to
+determine which schema version should be used when reading::
+
+    import asdf
+    from people import Person
+
+    class PersonType(asdf.CustomType):
+        name = 'person'
+        organization = 'nowhere.org'
+        version = (1, 1, 0)
+        supported_versions = [(1, 0, 0), (1, 1, 0)]
+        standard = 'custom'
+        types = [Person]
+
+        @classmethod
+        def to_tree(cls, node, ctx):
+            return [node.first, node.middle, node.last]
+
+        @classmethod
+        def from_tree(cls, tree, ctx):
+            # Handle the older version of the person schema
+            if cls.version == (1, 0, 0):
+                # Construct a Person object with an empty middle name field
+                return Person(tree[0], '', tree[1])
+            else:
+                # The newer version of the schema stores the middle name too
+                return person(tree[0], tree[1], tree[2])
+                
+Note that the implementation of ``to_tree`` is not conditioned on
+``cls.version`` since we do not need to convert new ``Person`` objects back to
+the older version of the schema.
+
 
 Adding custom validators
 ------------------------
