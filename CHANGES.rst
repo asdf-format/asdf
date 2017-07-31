@@ -25,6 +25,16 @@
   one that was used for reading the file (e.g. to convert blocks to use a
   different compression algorithm) [#257]
 
+- Tag classes may now use an optional ``supported_versions`` attribute to
+  declare exclusive support for particular versions of the corresponding
+  schema. If this attribute is omitted (as it is for most existing tag
+  classes), the tag is assumed to be compatible with all versions of the
+  corresponding schema. If ``supported_versions`` is provided, the tag class
+  implementation can include code that is conditioned on the schema version. If
+  an incompatible schema is encountered, or if deserialization of the tagged
+  object fails with an exception, a raw Python data structure will be returned.
+  [#272]
+
 1.2.1(2016-11-07)
 -----------------
 
