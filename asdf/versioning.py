@@ -17,7 +17,7 @@ if getattr(yaml, '__with_libyaml__', None):  # pragma: no cover
 else:  # pragma: no cover
     _yaml_base_loader = yaml.SafeLoader
 
-from semantic_version import Version, Spec
+from semantic_version import Version, SpecItem, Spec
 
 from . import generic_io
 from . import resolver
@@ -56,7 +56,7 @@ class AsdfVersionMixin(object):
 
     def __eq__(self, other):
         # Seems like a bit of a hack...
-        if isinstance(other, Spec):
+        if isinstance(other, SpecItem):
             return other == self
         if isinstance(other, (six.string_types, tuple, list)):
             other = AsdfVersion(other)
@@ -96,7 +96,10 @@ class AsdfVersion(AsdfVersionMixin, Version):
         super(AsdfVersion, self).__init__(version)
 
 
-class AsdfSpec(Spec):
+class AsdfSpec(SpecItem, Spec):
+
+    def __init__(self, *args, **kwargs):
+        super(AsdfSpec, self).__init__(*args, **kwargs)
 
     def match(self, version):
         if isinstance(version, (six.string_types, tuple, list)):
@@ -117,12 +120,15 @@ class AsdfSpec(Spec):
 
     def __eq__(self, other):
         """Equality between Spec and Version, string, or tuple, means match"""
-        if isinstance(other, Spec):
+        if isinstance(other, SpecItem):
             return super(AsdfSpec, self).__eq__(other)
         return self.match(other)
 
     def __ne__(self, other):
         return not self.__eq__(other)
+
+    def __hash__(self):
+        return super(AsdfSpec, self).__hash__()
 
 
 default_version = AsdfVersion('1.1.0')

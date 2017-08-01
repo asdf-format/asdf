@@ -15,7 +15,7 @@ from .compat import lru_cache
 
 from . import tagged
 from . import util
-from .versioning import AsdfVersion, get_version_map
+from .versioning import AsdfVersion, AsdfSpec, get_version_map
 
 
 __all__ = ['format_tag', 'AsdfTypeIndex', 'AsdfType']
@@ -33,6 +33,8 @@ def format_tag(organization, standard, version, tag_name):
     """
     Format a YAML tag.
     """
+    if isinstance(version, AsdfSpec):
+        version = str(version.spec)
     return 'tag:{0}:{1}/{2}-{3}'.format(
         organization, standard, tag_name, version)
 
@@ -382,7 +384,8 @@ class ExtensionTypeMeta(type):
         cls = super(ExtensionTypeMeta, mcls).__new__(mcls, name, bases, attrs)
 
         if hasattr(cls, 'version'):
-            cls.version = AsdfVersion(cls.version)
+            if not isinstance(cls.version, (AsdfVersion, AsdfSpec)):
+                cls.version = AsdfVersion(cls.version)
 
         if hasattr(cls, 'name'):
             if isinstance(cls.name, six.string_types):
@@ -395,12 +398,16 @@ class ExtensionTypeMeta(type):
 
         if hasattr(cls, 'supported_versions'):
             if not isinstance(cls.supported_versions, (list, set)):
-                raise TypeError(
-                    "supported_versions attribute must be list or set")
+                cls.supported_versions = [cls.supported_versions]
             supported_versions = set()
             for version in cls.supported_versions:
-                supported_versions.add(AsdfVersion(version))
-            cls.supported_versions = supported_versions
+                if not isinstance(version, (AsdfVersion, AsdfSpec)):
+                    version = AsdfVersion(version)
+                # This should cause an exception for invalid input
+                supported_versions.add(version)
+            # We need to convert back to a list here so that the 'in' operator
+            # uses actual comparison instead of hash equality
+            cls.supported_versions = list(supported_versions)
             siblings = list()
             for version in cls.supported_versions:
                 if version != cls.version:

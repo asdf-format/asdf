@@ -323,6 +323,59 @@ flow_thing:
         "'tag:nowhere.org:custom/custom_flow' with version 1.0.0 found "
         "in file, but asdf only supports version 1.1.0")
 
+def test_incompatible_version_check():
+    class TestType0(asdftypes.CustomType):
+        supported_versions = versioning.AsdfSpec('>=1.2.0')
+
+    assert TestType0.incompatible_version('1.1.0') == True
+    assert TestType0.incompatible_version('1.2.0') == False
+    assert TestType0.incompatible_version('2.0.1') == False
+
+    class TestType1(asdftypes.CustomType):
+        supported_versions = versioning.AsdfVersion('1.0.0')
+
+    assert TestType1.incompatible_version('1.0.0') == False
+    assert TestType1.incompatible_version('1.1.0') == True
+
+    class TestType2(asdftypes.CustomType):
+        supported_versions = '1.0.0'
+
+    assert TestType2.incompatible_version('1.0.0') == False
+    assert TestType2.incompatible_version('1.1.0') == True
+
+    class TestType3(asdftypes.CustomType):
+        # This doesn't make much sense, but it's just for the sake of example
+        supported_versions = ['1.0.0', versioning.AsdfSpec('>=2.0.0')]
+
+    assert TestType3.incompatible_version('1.0.0') == False
+    assert TestType3.incompatible_version('1.1.0') == True
+    assert TestType3.incompatible_version('2.0.0') == False
+    assert TestType3.incompatible_version('2.0.1') == False
+
+    class TestType4(asdftypes.CustomType):
+        supported_versions = ['1.0.0', versioning.AsdfVersion('1.1.0')]
+
+    assert TestType4.incompatible_version('1.0.0') == False
+    assert TestType4.incompatible_version('1.0.1') == True
+    assert TestType4.incompatible_version('1.1.0') == False
+    assert TestType4.incompatible_version('1.1.1') == True
+
+    class TestType5(asdftypes.CustomType):
+        supported_versions = \
+            [versioning.AsdfSpec('<1.0.0'), versioning.AsdfSpec('>=2.0.0')]
+
+    assert TestType5.incompatible_version('0.9.9') == False
+    assert TestType5.incompatible_version('2.0.0') == False
+    assert TestType5.incompatible_version('2.0.1') == False
+    assert TestType5.incompatible_version('1.0.0') == True
+    assert TestType5.incompatible_version('1.1.0') == True
+
+    with pytest.raises(ValueError):
+        class TestType6(asdftypes.CustomType):
+            supported_versions = 'blue'
+    with pytest.raises(ValueError):
+        class TestType6(asdftypes.CustomType):
+            supported_versions = ['1.1.0', '2.2.0', 'blue']
 
 def test_supported_versions():
     from astropy.tests.helper import catch_warnings
@@ -333,7 +386,7 @@ def test_supported_versions():
 
     class CustomFlowType(asdftypes.CustomType):
         version = '1.1.0'
-        supported_versions = [(1,0,0), (1,1,0)]
+        supported_versions = [(1,0,0), versioning.AsdfSpec('>=1.1.0')]
         name = 'custom_flow'
         organization = 'nowhere.org'
         standard = 'custom'
