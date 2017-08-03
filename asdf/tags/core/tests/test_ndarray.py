@@ -35,6 +35,7 @@ import yaml
 
 from ....tests import helpers
 from .... import asdf
+from ....asdftypes import CustomType
 from .... import util
 
 from .. import ndarray
@@ -43,10 +44,25 @@ from .. import ndarray
 TEST_DATA_PATH = os.path.join(os.path.dirname(__file__), 'data')
 
 
-class CustomExtension:
+# These custom types and the custom extension are here purely for the purpose
+# of testing NDArray objects and making sure that they can be validated as part
+# of a nested hierarchy, and not just top-level objects.
+class CustomNdim(CustomType):
+    name = 'ndim'
+    organization = 'nowhere.org'
+    standard = 'custom'
+    version = '1.0.0'
+
+class CustomDatatype(CustomType):
+    name = 'datatype'
+    organization = 'nowhere.org'
+    standard = 'custom'
+    version = '1.0.0'
+
+class CustomExtension(object):
     @property
     def types(self):
-        return []
+        return [CustomNdim, CustomDatatype]
 
     @property
     def tag_mapping(self):

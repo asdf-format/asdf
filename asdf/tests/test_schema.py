@@ -31,6 +31,7 @@ from .. import util
 
 
 from . import helpers
+from astropy.tests.helper import catch_warnings
 
 
 TEST_DATA_PATH = os.path.join(os.path.dirname(__file__), 'data')
@@ -302,7 +303,7 @@ def test_property_order():
 
 def test_invalid_nested():
     class CustomType(str, asdftypes.AsdfType):
-        name = 'custom_type'
+        name = 'custom'
         organization = 'nowhere.org'
         version = (1, 0, 0)
         standard = 'custom'
@@ -317,8 +318,13 @@ custom: !<tag:nowhere.org:custom/custom-1.0.0>
   foo
     """
     buff = helpers.yaml_to_asdf(yaml)
-    with asdf.AsdfFile.open(buff):
-        pass
+    # This should cause a warning but not an error because without explicitly
+    # providing an extension, our custom type will not be recognized and will
+    # simply be converted to a raw type.
+    with catch_warnings() as warning:
+        with asdf.AsdfFile.open(buff):
+            pass
+    assert len(warning) == 1
 
     buff.seek(0)
     with pytest.raises(ValidationError):
@@ -461,7 +467,6 @@ def test_large_literals():
 
 @pytest.mark.skipif('not HAS_ASTROPY')
 def test_type_missing_dependencies():
-    from astropy.tests.helper import catch_warnings
 
     class MissingType(asdftypes.AsdfType):
         name = 'missing'
