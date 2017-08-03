@@ -142,7 +142,7 @@ def test_schema_example(filename, example):
 
     # Add some dummy blocks so that the ndarray examples work
     for i in range(3):
-        b = block.Block(np.empty((1024*1024*8), dtype=np.uint8))
+        b = block.Block(np.zeros((1024*1024*8), dtype=np.uint8))
         b._used = True
         ff.blocks.add(b)
     b._array_storage = "streamed"
