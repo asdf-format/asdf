@@ -35,6 +35,9 @@
   object fails with an exception, a raw Python data structure will be returned.
   [#272]
 
+- Added option to ``AsdfFile.open`` to allow suppression of warning messages
+  when mismatched schema versions are encountered. [#291]
+
 1.2.1(2016-11-07)
 -----------------
 
