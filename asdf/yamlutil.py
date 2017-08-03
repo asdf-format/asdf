@@ -145,12 +145,13 @@ class AsdfLoader(_yaml_base_loader):
     A specialized YAML loader that can construct "tagged basic Python
     data types" as implemented in the `tagged` module.
     """
+    ignore_version_mismatch = False
     def construct_object(self, node, deep=False):
         tag = node.tag
         if node.tag in self.yaml_constructors:
             return super(AsdfLoader, self).construct_object(node, deep=False)
         data = _yaml_to_base_type(node, self)
-        tag = self.ctx.type_index.fix_yaml_tag(tag)
+        tag = self.ctx.type_index.fix_yaml_tag(tag, self.ignore_version_mismatch)
         data = tagged.tag_object(tag, data)
         return data
 
@@ -269,7 +270,7 @@ def tagged_tree_to_custom_tree(tree, ctx):
     return treeutil.walk_and_modify(tree, walker)
 
 
-def load_tree(stream, ctx):
+def load_tree(stream, ctx, ignore_version_mismatch=False):
     """
     Load YAML, returning a tree of objects.
 
@@ -281,6 +282,7 @@ def load_tree(stream, ctx):
     class AsdfLoaderTmp(AsdfLoader):
         pass
     AsdfLoaderTmp.ctx = ctx
+    AsdfLoaderTmp.ignore_version_mismatch = ignore_version_mismatch
 
     return yaml.load(stream, Loader=AsdfLoaderTmp)
 

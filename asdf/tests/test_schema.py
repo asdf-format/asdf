@@ -150,10 +150,7 @@ def test_schema_example(filename, example):
     try:
         # Ignore warnings that result from examples from schemas that have
         # versions higher than the current standard version.
-        # TODO: this should no longer be necessary once the library can
-        # actually account for higher versions
-        #warnings.simplefilter('ignore', UserWarning)
-        ff._open_impl(ff, buff)
+        ff._open_impl(ff, buff, ignore_version_mismatch=True)
     except:
         print("From file:", filename)
         raise
