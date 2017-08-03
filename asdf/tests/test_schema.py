@@ -152,7 +152,7 @@ def test_schema_example(filename, example):
         # versions higher than the current standard version.
         # TODO: this should no longer be necessary once the library can
         # actually account for higher versions
-        warnings.simplefilter('ignore', UserWarning)
+        #warnings.simplefilter('ignore', UserWarning)
         ff._open_impl(ff, buff)
     except:
         print("From file:", filename)

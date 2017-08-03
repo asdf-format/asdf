@@ -103,7 +103,7 @@ a: !core/complex-42.0.0
     assert len(w) == 1
     assert str(w[0].message) == (
         "'tag:stsci.edu:asdf/core/complex' with version 42.0.0 found in file, "
-        "but asdf only supports version 1.0.0")
+        "but latest supported version is 1.0.0")
 
     # Make sure warning is repeatable
     buff.seek(0)
@@ -114,7 +114,7 @@ a: !core/complex-42.0.0
     assert len(w) == 1
     assert str(w[0].message) == (
         "'tag:stsci.edu:asdf/core/complex' with version 42.0.0 found in file, "
-        "but asdf only supports version 1.0.0")
+        "but latest supported version is 1.0.0")
 
     # If the major and minor match, there should be no warning.
     yaml = """
@@ -321,7 +321,7 @@ flow_thing:
     assert len(w) == 1
     assert str(w[0].message) == (
         "'tag:nowhere.org:custom/custom_flow' with version 1.0.0 found "
-        "in file, but asdf only supports version 1.1.0")
+        "in file, but latest supported version is 1.1.0")
 
 def test_incompatible_version_check():
     class TestType0(asdftypes.CustomType):

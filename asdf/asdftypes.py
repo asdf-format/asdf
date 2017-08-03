@@ -253,8 +253,8 @@ class AsdfTypeIndex(object):
         best_version = versions[i]
         if (best_version.major, best_version.minor) != (version.major, version.minor):
             warning_string = \
-                "'{}' with version {} found in file, but asdf only supports " \
-                "version {}".format(name, version, best_version)
+                "'{}' with version {} found in file, but latest supported " \
+                "version is {}".format(name, version, best_version)
             warnings.warn(warning_string)
 
         best_tag = join_tag_version(name, best_version)
