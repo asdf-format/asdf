@@ -22,6 +22,7 @@ __all__ = ['TransformType', 'IdentityType', 'ConstantType',
 
 
 class TransformType(AsdfType):
+    version = '1.1.0'
     requires = ['astropy']
 
     @classmethod
