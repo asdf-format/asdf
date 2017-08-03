@@ -17,6 +17,7 @@ from .. import util
 from .. import versioning
 
 from . import helpers
+from astropy.tests.helper import catch_warnings
 
 
 TEST_DATA_PATH = os.path.join(os.path.dirname(__file__), 'data')
@@ -97,23 +98,23 @@ a: !core/complex-42.0.0
     """
 
     buff = helpers.yaml_to_asdf(yaml)
-    with catch_warnings() as w:
+    with catch_warnings() as warning:
         with asdf.AsdfFile.open(buff) as ff:
             assert isinstance(ff.tree['a'], complex)
 
-    assert len(w) == 1
-    assert str(w[0].message) == (
+    assert len(warning) == 1
+    assert str(warning[0].message) == (
         "'tag:stsci.edu:asdf/core/complex' with version 42.0.0 found in file, "
         "but latest supported version is 1.0.0")
 
     # Make sure warning is repeatable
     buff.seek(0)
-    with catch_warnings() as w:
+    with catch_warnings() as warning:
         with asdf.AsdfFile.open(buff) as ff:
             assert isinstance(ff.tree['a'], complex)
 
-    assert len(w) == 1
-    assert str(w[0].message) == (
+    assert len(warning) == 1
+    assert str(warning[0].message) == (
         "'tag:stsci.edu:asdf/core/complex' with version 42.0.0 found in file, "
         "but latest supported version is 1.0.0")
 
@@ -124,11 +125,11 @@ a: !core/complex-1.0.1
     """
 
     buff = helpers.yaml_to_asdf(yaml)
-    with catch_warnings() as w:
+    with catch_warnings() as warning:
         with asdf.AsdfFile.open(buff) as ff:
             assert isinstance(ff.tree['a'], complex)
 
-    assert len(w) == 0
+    assert len(warning) == 0
 
 
 @pytest.mark.skipif(sys.platform.startswith('win'),
@@ -265,14 +266,22 @@ undefined_data:
         - !core/complex-1.0.0 3.14j
 """
     buff = helpers.yaml_to_asdf(yaml)
-    afile = asdf.AsdfFile.open(buff)
-    missing = afile.tree['undefined_data']
+    with catch_warnings() as warning:
+        afile = asdf.AsdfFile.open(buff)
+        missing = afile.tree['undefined_data']
 
     assert missing[0] == 5
     assert missing[1] == {'message': 'there is no tag'}
     assert (missing[2] == array([[1, 2, 3], [4, 5, 6]])).all()
     assert (missing[3][0] == array([[7],[8],[9],[10]])).all()
     assert missing[3][1] == 3.14j
+
+    # There are two undefined tags, so we expect two warnings
+    assert len(warning) == 2
+    for i, tag in enumerate(["also_undefined-1.3.0", "undefined_tag-1.0.0"]):
+        assert str(warning[i].message) == (
+            "tag:nowhere.org:custom/{} is not recognized, converting to raw "
+            "Python data structure".format(tag))
 
 
 def test_newer_tag():
@@ -339,11 +348,11 @@ flow_thing:
     b: 3.14
 """
     old_buff = helpers.yaml_to_asdf(old_yaml)
-    with catch_warnings() as w:
+    with catch_warnings() as warning:
         asdf.AsdfFile.open(old_buff, extensions=CustomFlowExtension())
 
-    assert len(w) == 1
-    assert str(w[0].message) == (
+    assert len(warning) == 1
+    assert str(warning[0].message) == (
         "'tag:nowhere.org:custom/custom_flow' with version 1.0.0 found "
         "in file, but latest supported version is 1.1.0")
 
@@ -464,6 +473,6 @@ flow_thing:
     assert type(new_data.tree['flow_thing']) == CustomFlow
 
     old_buff = helpers.yaml_to_asdf(old_yaml)
-    with catch_warnings() as w:
+    with catch_warnings() as warning:
         old_data = asdf.AsdfFile.open(old_buff, extensions=CustomFlowExtension())
     assert type(old_data.tree['flow_thing']) == CustomFlow

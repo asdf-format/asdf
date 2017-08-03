@@ -46,6 +46,7 @@
 - When possible, display name of ASDF file that caused version mismatch
   warning. [#306]
 
+- Issue a warning when an unrecognized tag is encountered. [#295]
 
 1.2.1(2016-11-07)
 -----------------
