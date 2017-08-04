@@ -10,7 +10,7 @@ import numpy as np
 import pytest
 
 from ... import AsdfFile
-from .. import diff
+from .. import main, diff
 
 
 TEST_DATA_PATH = os.path.join(os.path.dirname(__file__), 'data')
@@ -42,3 +42,9 @@ def test_diff_block():
     result_file = 'blocks.diff'
 
     _assert_diffs_equal(filenames, result_file, minimal=False)
+
+def test_diff_command():
+    filenames = ['frames0.asdf', 'frames1.asdf']
+    paths = ["{}/{}".format(TEST_DATA_PATH, name) for name in filenames]
+
+    assert main.main_from_args(['diff'] + paths) == 0
