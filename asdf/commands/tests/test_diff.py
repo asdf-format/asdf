@@ -43,6 +43,12 @@ def test_diff_block():
 
     _assert_diffs_equal(filenames, result_file, minimal=False)
 
+def test_file_not_found():
+    # Try to open files that exist but are not valid asdf
+    filenames = ['frames.diff', 'blocks.diff']
+    with pytest.raises(RuntimeError):
+        diff(["{}/{}".format(TEST_DATA_PATH, name) for name in filenames], False)
+
 def test_diff_command():
     filenames = ['frames0.asdf', 'frames1.asdf']
     paths = ["{}/{}".format(TEST_DATA_PATH, name) for name in filenames]

@@ -47,7 +47,7 @@ THIS_MARKER = GREEN + "> "
 THAT_MARKER = RED + "< "
 
 
-class Diff(Command):
+class Diff(Command): # pragma: no cover
     """This class is the plugin implementation for the asdftool runner."""
     @classmethod
     def setup_arguments(cls, subparsers):
@@ -105,15 +105,6 @@ class PrintTree(object):
             if not at_end:
                 current = current['children'][node]
         return print_list
-
-    def __getitem__(self, node_list):
-        assert isinstance(node_list, list)
-        current = self.__tree
-        for node in ['tree'] + node_list:
-            if not node in current['children']:
-                return False
-            current = current['children'][node]
-        return current['visited']
 
     def __setitem__(self, node_list, visit):
         assert isinstance(node_list, list)
