@@ -35,6 +35,9 @@
   object fails with an exception, a raw Python data structure will be returned.
   [#272]
 
+- Added a diff tool to ``asdftool`` to allow for visual comparison of pairs of
+  ASDF files. [#286]
+
 1.2.1(2016-11-07)
 -----------------
 

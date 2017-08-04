@@ -1,0 +1,13 @@
+tree:[0m
+  foobar:[0m
+    bizbaz:[0m
+[32m>     green[0m
+[31m<     red[0m
+    datatype:[0m
+[32m>     uint64[0m
+[31m<     float64[0m
+    shape:[0m
+      -[0m
+[32m>       9000[0m
+[31m<       10000[0m
+    [31mndarrays differ by shape, datatype and contents[0m
