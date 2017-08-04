@@ -125,9 +125,10 @@ class PrintTree(object):
 
 class DiffContext(object):
     """Class that contains context data of the diff to be computed"""
-    def __init__(self, asdf0, asdf1, minimal=False):
+    def __init__(self, asdf0, asdf1, iostream, minimal=False):
         self.asdf0 = asdf0
         self.asdf1 = asdf1
+        self.iostream = iostream
         self.minimal = minimal
         self.print_tree = PrintTree()
 
@@ -145,7 +146,7 @@ def print_tree_context(diff_ctx, node_list, other, use_marker, last_was_list):
             else:
                 line_prefix = prefix
                 line_suffix = RESET_NEWLINE
-            sys.stdout.write(line_prefix + node + line_suffix)
+            diff_ctx.iostream.write(line_prefix + node + line_suffix)
             last_was_list = node == LIST_MARKER
         prefix += "  "
     diff_ctx.print_tree[node_list] = True
@@ -174,7 +175,7 @@ def print_in_tree(diff_ctx, node_list, thing, other, use_marker=False,
         use_marker = not last_was_list or ignore_lwl
         marker = THAT_MARKER if other else THIS_MARKER
         prefix = marker + "  " * len(node_list) if use_marker else " "
-        sys.stdout.write(prefix + str(thing) + RESET_NEWLINE)
+        diff_ctx.iostream.write(prefix + str(thing) + RESET_NEWLINE)
         last_was_list = False
     return last_was_list
 
@@ -214,7 +215,7 @@ def compare_ndarrays(diff_ctx, array0, array1, keys):
     if differences:
         prefix = "  " * (len(keys) + 1)
         msg = "ndarrays differ by {}".format(human_list(differences))
-        sys.stdout.write(prefix + RED + msg + RESET_NEWLINE)
+        diff_ctx.iostream.write(prefix + RED + msg + RESET_NEWLINE)
 
 def both_are_ndarrays(tree0, tree1):
     """Returns True if both inputs correspond to ndarrays, False otherwise"""
@@ -251,12 +252,12 @@ def compare_trees(diff_ctx, tree0, tree1, keys=[]):
     else:
         compare_objects(diff_ctx, tree0, tree1, keys)
 
-def diff(filenames, minimal):
+def diff(filenames, minimal, iostream=sys.stdout):
     """Top-level implementation of diff algorithm"""
     try:
         with AsdfFile.open(filenames[0], _force_raw_types=True) as asdf0:
             with AsdfFile.open(filenames[1], _force_raw_types=True) as asdf1:
-                diff_ctx = DiffContext(asdf0, asdf1, minimal=minimal)
+                diff_ctx = DiffContext(asdf0, asdf1, iostream, minimal=minimal)
                 compare_trees(diff_ctx, asdf0.tree, asdf1.tree)
     except ValueError as error:
         raise RuntimeError(str(error))
