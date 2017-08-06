@@ -1,0 +1,13 @@
+%YAML 1.1
+---
+$schema: "http://stsci.edu/schemas/yaml-schema/draft-01"
+id: "http://stsci.edu/schemas/jwst_pipeline/test_fail-1.1.0"
+tag: "tag:stsci.edu:jwst_pipeline/test_fail-1.1.0"
+title: >
+ Test NRSZCoords
+
+type: object
+properties:
+  model: 
+    $ref: ../asdf/transform/shift-1.1.0
+required: [model]
