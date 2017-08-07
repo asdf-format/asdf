@@ -1,8 +1,8 @@
 %YAML 1.1
 ---
 $schema: "http://stsci.edu/schemas/yaml-schema/draft-01"
-id: "http://stsci.edu/schemas/jwst_pipeline/test_fail-1.1.0"
-tag: "tag:stsci.edu:jwst_pipeline/test_fail-1.1.0"
+id: "http://stsci.edu/schemas/asdf/test_fail-1.1.0"
+tag: "tag:stsci.edu:asdf/test_fail-1.1.0"
 title: >
  Test NRSZCoords
 
