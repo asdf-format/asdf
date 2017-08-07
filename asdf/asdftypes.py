@@ -215,7 +215,7 @@ class AsdfTypeIndex(object):
 
         return write_type_index.from_custom_type(custom_type)
 
-    def fix_yaml_tag(self, tag):
+    def fix_yaml_tag(self, tag, ignore_version_mismatch=False):
         """
         Given a YAML tag, adjust it to the best supported version.
 
@@ -251,11 +251,14 @@ class AsdfTypeIndex(object):
         i = max(0, i - 1)
 
         best_version = versions[i]
-        if (best_version.major, best_version.minor) != (version.major, version.minor):
-            warning_string = \
-                "'{}' with version {} found in file, but asdf only supports " \
-                "version {}".format(name, version, best_version)
-            warnings.warn(warning_string)
+        if not ignore_version_mismatch:
+            if (best_version.major, best_version.minor) != \
+                    (version.major, version.minor):
+                warning_string = \
+                    "'{}' with version {} found in file, but latest " \
+                    "supported version is {}".format(
+                        name, version, best_version)
+                warnings.warn(warning_string)
 
         best_tag = join_tag_version(name, best_version)
         self._best_matches[tag] = best_tag, warning_string
