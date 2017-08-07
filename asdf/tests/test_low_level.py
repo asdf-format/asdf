@@ -1097,9 +1097,9 @@ foo : bar
     with asdf.AsdfFile.open(buff) as ff:
         version = ff.file_format_version
 
-    assert version['major'] == 1
-    assert version['minor'] == 0
-    assert version['patch'] == 0
+    assert version.major == 1
+    assert version.minor == 0
+    assert version.patch == 0
 
 
 def test_fd_not_seekable():

@@ -20,7 +20,7 @@ from asdf import AsdfFile
 from asdf.constants import ASDF_MAGIC, BLOCK_FLAG_STREAMED
 from asdf import versioning
 
-version_string = versioning.version_to_string(versioning.default_version)
+version_string = str(versioning.default_version)
 
 
 TMPDIR = tempfile.mkdtemp()
