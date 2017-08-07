@@ -38,6 +38,10 @@
 - Added option to ``AsdfFile.open`` to allow suppression of warning messages
   when mismatched schema versions are encountered. [#294]
 
+- Added a diff tool to ``asdftool`` to allow for visual comparison of pairs of
+  ASDF files. [#286]
+
+
 1.2.1(2016-11-07)
 -----------------
 

@@ -429,7 +429,8 @@ class AsdfFile(versioning.VersionedMixin):
                    validate_checksums=False,
                    do_not_fill_defaults=False,
                    ignore_version_mismatch=False,
-                   _get_yaml_content=False):
+                   _get_yaml_content=False,
+                   _force_raw_types=False):
         """Attempt to populate AsdfFile data from file-like object"""
         fd = generic_io.get_file(fd, mode=mode, uri=uri)
         self._fd = fd
@@ -479,7 +480,7 @@ class AsdfFile(versioning.VersionedMixin):
         if not do_not_fill_defaults:
             schema.fill_defaults(tree, self)
         self._validate(tree)
-        tree = yamlutil.tagged_tree_to_custom_tree(tree, self)
+        tree = yamlutil.tagged_tree_to_custom_tree(tree, self, _force_raw_types)
 
         self._tree = tree
         self.run_hook('post_read')
@@ -491,7 +492,8 @@ class AsdfFile(versioning.VersionedMixin):
                    validate_checksums=False,
                    do_not_fill_defaults=False,
                    ignore_version_mismatch=False,
-                   _get_yaml_content=False):
+                   _get_yaml_content=False,
+                   _force_raw_types=False):
         """Attempt to open file-like object as either AsdfFile or AsdfInFits"""
         if not is_asdf_file(fd):
             try:
@@ -511,14 +513,16 @@ class AsdfFile(versioning.VersionedMixin):
                 validate_checksums=validate_checksums,
                 do_not_fill_defaults=do_not_fill_defaults,
                 ignore_version_mismatch=ignore_version_mismatch,
-                _get_yaml_content=_get_yaml_content)
+                _get_yaml_content=_get_yaml_content,
+                _force_raw_types=_force_raw_types)
 
     @classmethod
     def open(cls, fd, uri=None, mode='r',
              validate_checksums=False,
              extensions=None,
              do_not_fill_defaults=False,
-             ignore_version_mismatch=False):
+             ignore_version_mismatch=False,
+             _force_raw_types=False):
         """
         Open an existing ASDF file.
 
@@ -562,7 +566,8 @@ class AsdfFile(versioning.VersionedMixin):
             self, fd, uri=uri, mode=mode,
             validate_checksums=validate_checksums,
             do_not_fill_defaults=do_not_fill_defaults,
-            ignore_version_mismatch=ignore_version_mismatch)
+            ignore_version_mismatch=ignore_version_mismatch,
+            _force_raw_types=_force_raw_types)
 
     def _write_tree(self, tree, fd, pad_blocks):
         fd.write(constants.ASDF_MAGIC)

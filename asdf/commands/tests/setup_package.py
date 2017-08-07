@@ -3,7 +3,7 @@
 
 from __future__ import absolute_import, division, unicode_literals, print_function
 
-from .exploded import *
-from .to_yaml import *
-from .defragment import *
-from .diff import *
+
+def get_package_data():  # pragma: no cover
+    return {
+        str(_PACKAGE_NAME_ + '.commands.tests'): ['data/*.asdf', 'data/*.diff']}

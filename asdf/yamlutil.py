@@ -241,30 +241,31 @@ def custom_tree_to_tagged_tree(tree, ctx):
     return treeutil.walk_and_modify(tree, walker)
 
 
-def tagged_tree_to_custom_tree(tree, ctx):
+def tagged_tree_to_custom_tree(tree, ctx, force_raw_types=False):
     """
     Convert a tree containing only basic data types, annotated with
     tags, to a tree containing custom data types.
     """
 
     def walker(node):
-        tag_name = getattr(node, '_tag', None)
-        if tag_name is not None:
-            tag_type = ctx.type_index.from_yaml_tag(tag_name)
-            if tag_type is not None:
-                real_tag = ctx.type_index.get_real_tag(tag_name)
-                _, real_tag_version = asdftypes.split_tag_version(real_tag)
-                if not tag_type.incompatible_version(real_tag_version):
-                    # If a tag class does not explicitly list compatible
-                    # versions, then all versions of the corresponding schema
-                    # are assumed to be compatible. Therefore we need to check
-                    # to make sure whether the conversion is actually
-                    # successful, and just return a raw Python data type if it
-                    # is not.
-                    try:
-                        return tag_type.from_tree_tagged(node, ctx)
-                    except TypeError:
-                        pass
+        if not force_raw_types:
+            tag_name = getattr(node, '_tag', None)
+            if tag_name is not None:
+                tag_type = ctx.type_index.from_yaml_tag(tag_name)
+                if tag_type is not None:
+                    real_tag = ctx.type_index.get_real_tag(tag_name)
+                    _, real_tag_version = asdftypes.split_tag_version(real_tag)
+                    if not tag_type.incompatible_version(real_tag_version):
+                        # If a tag class does not explicitly list compatible
+                        # versions, then all versions of the corresponding
+                        # schema are assumed to be compatible. Therefore we
+                        # need to check to make sure whether the conversion is
+                        # actually successful, and just return a raw Python
+                        # data type if it is not.
+                        try:
+                            return tag_type.from_tree_tagged(node, ctx)
+                        except TypeError:
+                            pass
         return node
 
     return treeutil.walk_and_modify(tree, walker)
