@@ -8,6 +8,7 @@ import os
 
 import numpy as np
 from numpy.testing import assert_array_equal
+from astropy.modeling import models
 
 import pytest
 
@@ -772,6 +773,21 @@ def test_atomic_write(tmpdir):
 
     with asdf.AsdfFile.open(tmpfile) as ff:
         ff.write_to(tmpfile)
+
+
+def test_overwrite(tmpdir):
+    # This is intended to reproduce the following issue:
+    # https://github.com/spacetelescope/asdf/issues/100
+    tmpfile = os.path.join(str(tmpdir), 'test.asdf')
+    aff = models.AffineTransformation2D(matrix=[[1, 2], [3, 4]])
+    f = asdf.AsdfFile()
+    f.tree['model'] = aff
+    f.write_to(tmpfile)
+    model = f.tree['model']
+
+    ff = asdf.AsdfFile()
+    ff.tree['model'] = model
+    ff.write_to(tmpfile)
 
 
 def test_walk_and_modify_remove_keys():
