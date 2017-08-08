@@ -55,7 +55,8 @@ def test_defragment_bzp2(tmpdir):
     _test_defragment(tmpdir, 'bzp2')
 
 
-@pytest.skipif(sys.platform.startswith('win'))
+@pytest.mark.skipif(sys.platform.startswith('win'),
+    reason="This test fails on AppVeyor even though the lz4 module exists")
 def test_defragment_lz4(tmpdir):
     pytest.importorskip('lz4')
     _test_defragment(tmpdir, 'lz4')
