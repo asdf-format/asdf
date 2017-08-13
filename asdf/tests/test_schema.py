@@ -114,6 +114,16 @@ def generate_schema_list():
                 continue
             yield os.path.join(root, fname)
 
+def _display_warnings(_warnings):
+    msg = "Unexpected warnings occurred:\n"
+    for warning in _warnings:
+        msg += "{}:{}: {}: {}\n".format(
+            warning.filename,
+            warning.lineno,
+            warning.category.__name__,
+            warning.message)
+    return msg
+
 def test_schema_example(filename, example):
     """Pytest to check validity of a specific example within schema file
 
@@ -149,9 +159,10 @@ def test_schema_example(filename, example):
     b._array_storage = "streamed"
 
     try:
-        # Ignore warnings that result from examples from schemas that have
-        # versions higher than the current standard version.
-        ff._open_impl(ff, buff, ignore_version_mismatch=True)
+        with catch_warnings() as w:
+            ff._open_impl(ff, buff, ignore_version_mismatch=True)
+        # Do not tolerate any warnings that occur during schema validation
+        assert len(w) == 0, _display_warnings(w)
     except:
         print("From file:", filename)
         raise
