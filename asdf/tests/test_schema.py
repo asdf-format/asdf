@@ -23,6 +23,7 @@ import warnings
 
 from .. import asdf
 from .. import asdftypes
+from .. import extension
 from .. import block
 from .. import resolver
 from .. import schema
@@ -38,6 +39,9 @@ TEST_DATA_PATH = os.path.join(os.path.dirname(__file__), 'data')
 
 
 class CustomExtension:
+    """This is the base class that is used for extensions for custom tag
+    classes that exist only for the purposes of testing.
+    """
     @property
     def types(self):
         return []
@@ -53,6 +57,32 @@ class CustomExtension:
                  util.filepath_to_url(TEST_DATA_PATH) +
                  '/{url_suffix}.yaml')]
 
+class LabelMapperTestType(asdftypes.CustomType):
+    version = '1.0.0'
+    name = 'transform/label_mapper'
+
+class RegionsSelectorTestType(asdftypes.CustomType):
+    version = '1.0.0'
+    name = 'transform/regions_selector'
+
+class TestExtension(extension.BuiltinExtension):
+    """This class defines an extension that represents tags whose
+    implementations current reside in other repositories (such as GWCS) but
+    whose schemas are defined in ASDF. This provides a workaround for schema
+    validation testing since we want to pass without warnings, but the fact
+    that these tag classes are not defined within ASDF means that warnings
+    occur unless this extension is used. Eventually these schemas may be moved
+    out of ASDF and into other repositories, or ASDF will potentially provide
+    abstract base classes for the tag implementations.
+    """
+    @property
+    def types(self):
+        return [LabelMapperTestType, RegionsSelectorTestType]
+
+    @property
+    def tag_mapping(self):
+        return [('tag:stsci.edu:asdf',
+                 'http://stsci.edu/schemas/asdf{tag_suffix}')]
 
 def test_violate_toplevel_schema():
     tree = {'fits': 'This does not look like a FITS file'}
@@ -140,7 +170,9 @@ def test_schema_example(filename, example):
     # Make sure that the examples in the schema files (and thus the
     # ASDF standard document) are valid.
     buff = helpers.yaml_to_asdf('example: ' + example.strip())
-    ff = asdf.AsdfFile(uri=util.filepath_to_url(os.path.abspath(filename)))
+    ff = asdf.AsdfFile(
+        uri=util.filepath_to_url(os.path.abspath(filename)),
+        extensions=TestExtension())
 
     # Fake an external file
     ff2 = asdf.AsdfFile({'data': np.empty((1024*1024*8), dtype=np.uint8)})
