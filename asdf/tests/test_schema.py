@@ -145,7 +145,7 @@ def generate_schema_list():
             yield os.path.join(root, fname)
 
 def _display_warnings(_warnings):
-    msg = "Unexpected warnings occurred:\n"
+    msg = "Unexpected warning(s) occurred:\n"
     for warning in _warnings:
         msg += "{}:{}: {}: {}\n".format(
             warning.filename,
@@ -156,15 +156,13 @@ def _display_warnings(_warnings):
 
 def _assert_warnings(_warnings):
     if astropy.__version__ < '1.3.3':
-        # Make sure at least one warning occurred
-        assert len(_warnings) != 0, \
-            "Expected astropy version warning did not occur"
-        # Make sure only one warning occurred
-        assert len(_warnings) == 1, _display_warnings(_warnings)
+        # Make sure at most only one warning occurred
+        assert len(_warnings) <= 1, _display_warnings(_warnings)
         # Make sure the warning was the one we expected
-        assert _warnings[0].message.startswith(
-                "gwcs and astropy-1.3.3 is required"), \
-            _display_warnings(_warnings)
+        if len(_warnings) == 1:
+            assert _warnings[0].message.startswith(
+                    "gwcs and astropy-1.3.3 is required"), \
+                _display_warnings(_warnings)
     else:
         assert len(_warnings) == 0, _display_warnings(_warnings)
 
