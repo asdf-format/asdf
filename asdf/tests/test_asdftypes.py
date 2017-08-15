@@ -169,10 +169,26 @@ def test_versioned_writing():
         }
     }
 
-    versioning.supported_versions.append('42.0.0')
+    versioning.supported_versions.append(versioning.AsdfVersion('42.0.0'))
 
-    class FancyComplexType(ComplexType):
+    # Currently this class cannot inherit directly from ComplexType because if
+    # it does it pollutes ASDF's built-in extension and causes later tests that
+    # rely on ComplexType to fail. However, if CustomType is ever implemented
+    # as an abstract base class, then it will be possible to use it as a mix-in
+    # and also inherit from ComplexType. This means the only method/attribute
+    # that will need to be explicitly defined will be 'version'.
+    class FancyComplexType(asdftypes.CustomType):
+        name = ComplexType.name
         version = (42, 0, 0)
+        types = ComplexType.types
+
+        @classmethod
+        def to_tree(cls, node, ctx):
+            return ComplexType.to_tree(node, ctx)
+
+        @classmethod
+        def from_tree(cls, tree, ctx):
+            return ComplexType.from_tree(tree, ctx)
 
     class FancyComplexExtension(object):
         @property
