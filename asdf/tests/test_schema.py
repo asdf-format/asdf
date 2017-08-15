@@ -154,6 +154,20 @@ def _display_warnings(_warnings):
             warning.message)
     return msg
 
+def _assert_warnings(_warnings):
+    if astropy.__version__ < '1.3.3':
+        # Make sure at least one warning occurred
+        assert len(_warnings) != 0, \
+            "Expected astropy version warning did not occur"
+        # Make sure only one warning occurred
+        assert len(_warnings) == 1, _display_warnings(_warnings)
+        # Make sure the warning was the one we expected
+        assert _warnings[0].message.startswith(
+                "gwcs and astropy-1.3.3 is required"), \
+            _display_warnings(_warnings)
+    else:
+        assert len(_warnings) == 0, _display_warnings(_warnings)
+
 def test_schema_example(filename, example):
     """Pytest to check validity of a specific example within schema file
 
@@ -193,8 +207,9 @@ def test_schema_example(filename, example):
     try:
         with catch_warnings() as w:
             ff._open_impl(ff, buff, ignore_version_mismatch=True)
-        # Do not tolerate any warnings that occur during schema validation
-        assert len(w) == 0, _display_warnings(w)
+        # Do not tolerate any warnings that occur during schema validation,
+        # other than a few that we expect to occur under certain circumstances
+        _assert_warnings(w)
     except:
         print("From file:", filename)
         raise
