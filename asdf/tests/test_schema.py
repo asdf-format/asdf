@@ -160,7 +160,7 @@ def _assert_warnings(_warnings):
         assert len(_warnings) <= 1, _display_warnings(_warnings)
         # Make sure the warning was the one we expected
         if len(_warnings) == 1:
-            assert _warnings[0].message.startswith(
+            assert str(_warnings[0].message).startswith(
                     "gwcs and astropy-1.3.3 is required"), \
                 _display_warnings(_warnings)
     else:
