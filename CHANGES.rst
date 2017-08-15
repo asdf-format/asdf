@@ -41,6 +41,8 @@
 - Added a diff tool to ``asdftool`` to allow for visual comparison of pairs of
   ASDF files. [#286]
 
+- Added command to ``asdftool`` to display available tags. [#303]
+
 
 1.2.1(2016-11-07)
 -----------------
