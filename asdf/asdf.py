@@ -460,11 +460,11 @@ class AsdfFile(versioning.VersionedMixin):
                 yaml_content = reader.read()
                 fd.close()
                 return yaml_content
-            else:
-                # We parse the YAML content into basic data structures
-                # now, but we don't do anything special with it until
-                # after the blocks have been read
-                tree = yamlutil.load_tree(reader, self, ignore_version_mismatch)
+
+            # We parse the YAML content into basic data structures
+            # now, but we don't do anything special with it until
+            # after the blocks have been read
+            tree = yamlutil.load_tree(reader, self, ignore_version_mismatch)
             has_blocks = fd.seek_until(constants.BLOCK_MAGIC, 4, include=True)
         elif yaml_token == constants.BLOCK_MAGIC:
             has_blocks = True
