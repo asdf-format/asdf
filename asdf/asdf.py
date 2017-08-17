@@ -434,6 +434,8 @@ class AsdfFile(versioning.VersionedMixin):
         """Attempt to populate AsdfFile data from file-like object"""
         fd = generic_io.get_file(fd, mode=mode, uri=uri)
         self._fd = fd
+        # The filename is currently only used for tracing warning information
+        self._fname = self._fd._fd.name if hasattr(self._fd._fd, 'name') else ''
         header_line = fd.read_until(b'\r?\n', 2, "newline", include=True)
         self._file_format_version = cls._parse_header_line(header_line)
         self.version = self._file_format_version
