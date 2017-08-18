@@ -17,6 +17,7 @@ from .. import versioning
 
 from . import helpers
 
+
 TEST_DATA_PATH = os.path.join(os.path.dirname(__file__), 'data')
 
 
@@ -127,6 +128,28 @@ a: !core/complex-1.0.1
             assert isinstance(ff.tree['a'], complex)
 
     assert len(w) == 0
+
+
+def test_version_mismatch_file(tmpdir):
+    testfile = os.path.join(tmpdir, 'mismatch.asdf')
+    yaml = """
+a: !core/complex-42.0.0
+  0j
+    """
+
+    buff = helpers.yaml_to_asdf(yaml)
+    with open(testfile, 'wb') as handle:
+        handle.write(buff.read())
+
+    with catch_warnings() as w:
+        with asdf.AsdfFile.open(testfile) as ff:
+            assert ff._fname == "file://{}".format(testfile)
+            assert isinstance(ff.tree['a'], complex)
+
+    assert len(w) == 1
+    assert str(w[0].message) == (
+        "'tag:stsci.edu:asdf/core/complex' with version 42.0.0 found in file "
+        "'file://{}', but latest supported version is 1.0.0".format(testfile))
 
 
 def test_versioned_writing():
