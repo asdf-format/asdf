@@ -7,6 +7,8 @@ import io
 import os
 import pytest
 
+from astropy.tests.helper import catch_warnings
+
 from .. import asdf
 from .. import asdftypes
 from .. import extension
@@ -87,9 +89,6 @@ b: !core/complex-1.0.0
 
 
 def test_version_mismatch():
-    astropy = pytest.importorskip('astropy')
-    from astropy.tests.helper import catch_warnings
-
     yaml = """
 a: !core/complex-42.0.0
   0j
@@ -251,7 +250,6 @@ undefined_data:
 
 
 def test_newer_tag():
-    from astropy.tests.helper import catch_warnings
     # This test simulates a scenario where newer versions of CustomFlow
     # provides different keyword parameters that the older schema and tag class
     # do not account for. We want to test whether ASDF can handle this problem
@@ -378,7 +376,6 @@ def test_incompatible_version_check():
             supported_versions = ['1.1.0', '2.2.0', 'blue']
 
 def test_supported_versions():
-    from astropy.tests.helper import catch_warnings
     class CustomFlow(object):
         def __init__(self, c=None, d=None):
             self.c = c
