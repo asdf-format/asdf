@@ -232,11 +232,12 @@ class AsdfTypeIndex(object):
         if tag in self._type_by_tag:
             return tag
 
+        fname = " '{}'".format(ctx._fname) if ctx._fname else ''
         if tag in self._best_matches:
             best_tag, warning_string = self._best_matches[tag]
 
             if warning_string:
-                warnings.warn(warning_string)
+                warnings.warn(warning_string.format(fname))
 
             return best_tag
 
@@ -255,10 +256,10 @@ class AsdfTypeIndex(object):
             if (best_version.major, best_version.minor) != \
                     (version.major, version.minor):
                 warning_string = \
-                    "'{}' with version {} found in file '{}', but latest " \
+                    "'{}' with version {} found in file{{}}, but latest " \
                     "supported version is {}".format(
-                        name, version, ctx._fname, best_version)
-                warnings.warn(warning_string)
+                        name, version, best_version)
+                warnings.warn(warning_string.format(fname))
 
         best_tag = join_tag_version(name, best_version)
         self._best_matches[tag] = best_tag, warning_string
