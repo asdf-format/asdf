@@ -131,7 +131,7 @@ a: !core/complex-1.0.1
 
 
 def test_version_mismatch_file(tmpdir):
-    testfile = os.path.join(tmpdir, 'mismatch.asdf')
+    testfile = os.path.join(str(tmpdir), 'mismatch.asdf')
     yaml = """
 a: !core/complex-42.0.0
   0j
