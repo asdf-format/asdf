@@ -43,6 +43,9 @@
 
 - Added command to ``asdftool`` to display available tags. [#303]
 
+- When possible, display name of ASDF file that caused version mismatch
+  warning. [#306]
+
 
 1.2.1(2016-11-07)
 -----------------
