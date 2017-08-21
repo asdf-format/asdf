@@ -130,6 +130,7 @@ a: !core/complex-1.0.1
     assert len(w) == 0
 
 
+@pytest.mark.skipif(sys.platform.startswith('win'))
 def test_version_mismatch_file(tmpdir):
     testfile = os.path.join(str(tmpdir), 'mismatch.asdf')
     yaml = """
