@@ -5,6 +5,7 @@ from __future__ import absolute_import, division, unicode_literals, print_functi
 
 import io
 import os
+import sys
 import pytest
 
 from astropy.tests.helper import catch_warnings
@@ -130,7 +131,8 @@ a: !core/complex-1.0.1
     assert len(w) == 0
 
 
-@pytest.mark.skipif(sys.platform.startswith('win'))
+@pytest.mark.skipif(sys.platform.startswith('win'),
+    reason='Avoid path manipulation on Windows')
 def test_version_mismatch_file(tmpdir):
     testfile = os.path.join(str(tmpdir), 'mismatch.asdf')
     yaml = """
