@@ -8,8 +8,6 @@ import os
 import sys
 import pytest
 
-from astropy.tests.helper import catch_warnings
-
 from .. import asdf
 from .. import asdftypes
 from .. import extension
@@ -367,10 +365,15 @@ flow_thing:
     with catch_warnings() as warning:
         asdf.AsdfFile.open(old_buff, extensions=CustomFlowExtension())
 
-    assert len(warning) == 1
+    assert len(warning) == 2, helpers.display_warnings(warning)
     assert str(warning[0].message) == (
         "'tag:nowhere.org:custom/custom_flow' with version 1.0.0 found "
         "in file, but latest supported version is 1.1.0")
+    # We expect this warning since it will not be possible to convert version
+    # 1.0.0 of CustomFlow to a CustomType (by design, for testing purposes).
+    assert str(warning[1].message).startswith(
+        "Failed to convert "
+        "tag:nowhere.org:custom/custom_flow-1.0.0 to custom type")
 
 def test_incompatible_version_check():
     class TestType0(asdftypes.CustomType):
