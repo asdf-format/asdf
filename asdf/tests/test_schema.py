@@ -31,7 +31,7 @@ from .. import treeutil
 from .. import util
 
 
-from . import helpers
+from . import helpers, CustomTestType
 from astropy.tests.helper import catch_warnings
 
 
@@ -57,11 +57,11 @@ class CustomExtension:
                  util.filepath_to_url(TEST_DATA_PATH) +
                  '/{url_suffix}.yaml')]
 
-class LabelMapperTestType(asdftypes.CustomType):
+class LabelMapperTestType(CustomTestType):
     version = '1.0.0'
     name = 'transform/label_mapper'
 
-class RegionsSelectorTestType(asdftypes.CustomType):
+class RegionsSelectorTestType(CustomTestType):
     version = '1.0.0'
     name = 'transform/regions_selector'
 

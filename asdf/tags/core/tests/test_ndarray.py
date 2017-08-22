@@ -33,9 +33,8 @@ import jsonschema
 
 import yaml
 
-from ....tests import helpers
+from ....tests import helpers, CustomTestType
 from .... import asdf
-from ....asdftypes import CustomType
 from .... import util
 
 from .. import ndarray
@@ -47,13 +46,13 @@ TEST_DATA_PATH = os.path.join(os.path.dirname(__file__), 'data')
 # These custom types and the custom extension are here purely for the purpose
 # of testing NDArray objects and making sure that they can be validated as part
 # of a nested hierarchy, and not just top-level objects.
-class CustomNdim(CustomType):
+class CustomNdim(CustomTestType):
     name = 'ndim'
     organization = 'nowhere.org'
     standard = 'custom'
     version = '1.0.0'
 
-class CustomDatatype(CustomType):
+class CustomDatatype(CustomTestType):
     name = 'datatype'
     organization = 'nowhere.org'
     standard = 'custom'
