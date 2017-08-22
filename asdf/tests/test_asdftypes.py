@@ -495,3 +495,47 @@ flow_thing:
     with catch_warnings() as warning:
         old_data = asdf.AsdfFile.open(old_buff, extensions=CustomFlowExtension())
     assert type(old_data.tree['flow_thing']) == CustomFlow
+
+def test_unsupported_version_warning():
+    class CustomFlow(object):
+        pass
+
+    class CustomFlowType(asdftypes.CustomType):
+        version = '1.0.0'
+        supported_versions = [(1,0,0)]
+        name = 'custom_flow'
+        organization = 'nowhere.org'
+        standard = 'custom'
+        types = [CustomFlow]
+
+    class CustomFlowExtension(object):
+        @property
+        def types(self):
+            return [CustomFlowType]
+
+        @property
+        def tag_mapping(self):
+            return [('tag:nowhere.org:custom',
+                     'http://nowhere.org/schemas/custom{tag_suffix}')]
+
+        @property
+        def url_mapping(self):
+            return [('http://nowhere.org/schemas/custom/',
+                     util.filepath_to_url(TEST_DATA_PATH) +
+                     '/{url_suffix}.yaml')]
+
+    yaml = """
+flow_thing:
+  !<tag:nowhere.org:custom/custom_flow-1.1.0>
+    c: 100
+    d: 3.14
+"""
+    buff = helpers.yaml_to_asdf(yaml)
+
+    with catch_warnings() as _warnings:
+        data = asdf.AsdfFile.open(buff, extensions=CustomFlowExtension())
+
+    assert len(_warnings) == 2
+    assert str(_warnings[1].message) == (
+        "Version 1.1.0 of tag:nowhere.org:custom/custom_flow is not compatible "
+        "with any existing tag implementations")
