@@ -257,7 +257,8 @@ def tagged_tree_to_custom_tree(tree, ctx, force_raw_types=False):
             tag_type = ctx.type_index.from_yaml_tag(ctx, tag_name)
             if tag_type is not None:
                 real_tag = ctx.type_index.get_real_tag(tag_name)
-                _, real_tag_version = asdftypes.split_tag_version(real_tag)
+                real_tag_name, real_tag_version = \
+                    asdftypes.split_tag_version(real_tag)
                 if not tag_type.incompatible_version(real_tag_version):
                     # If a tag class does not explicitly list compatible
                     # versions, then all versions of the corresponding schema
@@ -272,7 +273,14 @@ def tagged_tree_to_custom_tree(tree, ctx, force_raw_types=False):
                             "Failed to convert {} to custom type (detail: {}). "
                             "Using raw Python data structure instead"
                             .format(real_tag, err))
-                # TODO: there should be a warning here too
+                # This means that there is an explicit description of versions
+                # that are compatible with the associated tag class
+                # implementation, but the version we found does not fit that
+                # description.
+                else:
+                    warnings.warn("Version {} of {} is not compatible with "
+                        "any existing tag implementations".format(
+                            real_tag_version, real_tag_name))
             # This means the tag did not correspond to any type in our type
             # index. TODO: maybe this warning should be possible to suppress?
             else:
