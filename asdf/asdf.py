@@ -434,6 +434,8 @@ class AsdfFile(versioning.VersionedMixin):
         """Attempt to populate AsdfFile data from file-like object"""
         fd = generic_io.get_file(fd, mode=mode, uri=uri)
         self._fd = fd
+        # The filename is currently only used for tracing warning information
+        self._fname = self._fd._uri if self._fd._uri else ''
         header_line = fd.read_until(b'\r?\n', 2, "newline", include=True)
         self._file_format_version = cls._parse_header_line(header_line)
         self.version = self._file_format_version
@@ -460,11 +462,11 @@ class AsdfFile(versioning.VersionedMixin):
                 yaml_content = reader.read()
                 fd.close()
                 return yaml_content
-            else:
-                # We parse the YAML content into basic data structures
-                # now, but we don't do anything special with it until
-                # after the blocks have been read
-                tree = yamlutil.load_tree(reader, self, ignore_version_mismatch)
+
+            # We parse the YAML content into basic data structures
+            # now, but we don't do anything special with it until
+            # after the blocks have been read
+            tree = yamlutil.load_tree(reader, self, ignore_version_mismatch)
             has_blocks = fd.seek_until(constants.BLOCK_MAGIC, 4, include=True)
         elif yaml_token == constants.BLOCK_MAGIC:
             has_blocks = True

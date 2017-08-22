@@ -5,7 +5,10 @@ from __future__ import absolute_import, division, unicode_literals, print_functi
 
 import io
 import os
+import sys
 import pytest
+
+from astropy.tests.helper import catch_warnings
 
 from .. import asdf
 from .. import asdftypes
@@ -14,6 +17,7 @@ from .. import util
 from .. import versioning
 
 from . import helpers
+
 
 TEST_DATA_PATH = os.path.join(os.path.dirname(__file__), 'data')
 
@@ -87,9 +91,6 @@ b: !core/complex-1.0.0
 
 
 def test_version_mismatch():
-    astropy = pytest.importorskip('astropy')
-    from astropy.tests.helper import catch_warnings
-
     yaml = """
 a: !core/complex-42.0.0
   0j
@@ -128,6 +129,30 @@ a: !core/complex-1.0.1
             assert isinstance(ff.tree['a'], complex)
 
     assert len(w) == 0
+
+
+@pytest.mark.skipif(sys.platform.startswith('win'),
+    reason='Avoid path manipulation on Windows')
+def test_version_mismatch_file(tmpdir):
+    testfile = os.path.join(str(tmpdir), 'mismatch.asdf')
+    yaml = """
+a: !core/complex-42.0.0
+  0j
+    """
+
+    buff = helpers.yaml_to_asdf(yaml)
+    with open(testfile, 'wb') as handle:
+        handle.write(buff.read())
+
+    with catch_warnings() as w:
+        with asdf.AsdfFile.open(testfile) as ff:
+            assert ff._fname == "file://{}".format(testfile)
+            assert isinstance(ff.tree['a'], complex)
+
+    assert len(w) == 1
+    assert str(w[0].message) == (
+        "'tag:stsci.edu:asdf/core/complex' with version 42.0.0 found in file "
+        "'file://{}', but latest supported version is 1.0.0".format(testfile))
 
 
 def test_versioned_writing():
@@ -251,7 +276,6 @@ undefined_data:
 
 
 def test_newer_tag():
-    from astropy.tests.helper import catch_warnings
     # This test simulates a scenario where newer versions of CustomFlow
     # provides different keyword parameters that the older schema and tag class
     # do not account for. We want to test whether ASDF can handle this problem
@@ -378,7 +402,6 @@ def test_incompatible_version_check():
             supported_versions = ['1.1.0', '2.2.0', 'blue']
 
 def test_supported_versions():
-    from astropy.tests.helper import catch_warnings
     class CustomFlow(object):
         def __init__(self, c=None, d=None):
             self.c = c

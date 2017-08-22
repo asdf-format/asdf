@@ -215,7 +215,7 @@ class AsdfTypeIndex(object):
 
         return write_type_index.from_custom_type(custom_type)
 
-    def fix_yaml_tag(self, tag, ignore_version_mismatch=False):
+    def fix_yaml_tag(self, ctx, tag, ignore_version_mismatch=False):
         """
         Given a YAML tag, adjust it to the best supported version.
 
@@ -232,11 +232,12 @@ class AsdfTypeIndex(object):
         if tag in self._type_by_tag:
             return tag
 
+        fname = " '{}'".format(ctx._fname) if ctx._fname else ''
         if tag in self._best_matches:
             best_tag, warning_string = self._best_matches[tag]
 
             if warning_string:
-                warnings.warn(warning_string)
+                warnings.warn(warning_string.format(fname))
 
             return best_tag
 
@@ -255,10 +256,10 @@ class AsdfTypeIndex(object):
             if (best_version.major, best_version.minor) != \
                     (version.major, version.minor):
                 warning_string = \
-                    "'{}' with version {} found in file, but latest " \
+                    "'{}' with version {} found in file{{}}, but latest " \
                     "supported version is {}".format(
                         name, version, best_version)
-                warnings.warn(warning_string)
+                warnings.warn(warning_string.format(fname))
 
         best_tag = join_tag_version(name, best_version)
         self._best_matches[tag] = best_tag, warning_string
@@ -273,12 +274,12 @@ class AsdfTypeIndex(object):
             return tag
         return None
 
-    def from_yaml_tag(self, tag):
+    def from_yaml_tag(self, ctx, tag):
         """
         From a given YAML tag string, return the corresponding
         AsdfType definition.
         """
-        tag = self.fix_yaml_tag(tag)
+        tag = self.fix_yaml_tag(ctx, tag)
         return self._type_by_tag.get(tag)
 
     @lru_cache(5)

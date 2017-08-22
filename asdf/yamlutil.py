@@ -151,7 +151,8 @@ class AsdfLoader(_yaml_base_loader):
         if node.tag in self.yaml_constructors:
             return super(AsdfLoader, self).construct_object(node, deep=False)
         data = _yaml_to_base_type(node, self)
-        tag = self.ctx.type_index.fix_yaml_tag(tag, self.ignore_version_mismatch)
+        tag = self.ctx.type_index.fix_yaml_tag(
+            self.ctx, tag, self.ignore_version_mismatch)
         data = tagged.tag_object(tag, data)
         return data
 
@@ -251,7 +252,7 @@ def tagged_tree_to_custom_tree(tree, ctx, force_raw_types=False):
         if not force_raw_types:
             tag_name = getattr(node, '_tag', None)
             if tag_name is not None:
-                tag_type = ctx.type_index.from_yaml_tag(tag_name)
+                tag_type = ctx.type_index.from_yaml_tag(ctx, tag_name)
                 if tag_type is not None:
                     real_tag = ctx.type_index.get_real_tag(tag_name)
                     _, real_tag_version = asdftypes.split_tag_version(real_tag)
