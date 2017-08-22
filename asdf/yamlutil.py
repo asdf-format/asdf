@@ -253,40 +253,39 @@ def tagged_tree_to_custom_tree(tree, ctx, force_raw_types=False):
             return node
 
         tag_name = getattr(node, '_tag', None)
-        if tag_name is not None:
-            tag_type = ctx.type_index.from_yaml_tag(ctx, tag_name)
-            if tag_type is not None:
-                real_tag = ctx.type_index.get_real_tag(tag_name)
-                real_tag_name, real_tag_version = \
-                    asdftypes.split_tag_version(real_tag)
-                if not tag_type.incompatible_version(real_tag_version):
-                    # If a tag class does not explicitly list compatible
-                    # versions, then all versions of the corresponding schema
-                    # are assumed to be compatible. Therefore we need to check
-                    # to make sure whether the conversion is actually
-                    # successful, and just return a raw Python data type if it
-                    # is not.
-                    try:
-                        return tag_type.from_tree_tagged(node, ctx)
-                    except TypeError as err:
-                        warnings.warn(
-                            "Failed to convert {} to custom type (detail: {}). "
-                            "Using raw Python data structure instead"
-                            .format(real_tag, err))
-                # This means that there is an explicit description of versions
-                # that are compatible with the associated tag class
-                # implementation, but the version we found does not fit that
-                # description.
-                else:
-                    warnings.warn("Version {} of {} is not compatible with "
-                        "any existing tag implementations".format(
-                            real_tag_version, real_tag_name))
-            # This means the tag did not correspond to any type in our type
-            # index. TODO: maybe this warning should be possible to suppress?
-            else:
-                warnings.warn(
-                    "{} is not recognized, converting to raw Python data "
-                    "structure".format(tag_name))
+        if tag_name is None:
+            return node
+
+        tag_type = ctx.type_index.from_yaml_tag(ctx, tag_name)
+        # This means the tag did not correspond to any type in our type index.
+        # TODO: maybe this warning should be possible to suppress?
+        if tag_type is None:
+            warnings.warn("{} is not recognized, converting to raw Python data "
+                "structure".format(tag_name))
+            return node
+
+        real_tag = ctx.type_index.get_real_tag(tag_name)
+        real_tag_name, real_tag_version = asdftypes.split_tag_version(real_tag)
+        # This means that there is an explicit description of versions that are
+        # compatible with the associated tag class implementation, but the
+        # version we found does not fit that description.
+        if tag_type.incompatible_version(real_tag_version):
+            warnings.warn("Version {} of {} is not compatible with any "
+                "existing tag implementations".format(
+                    real_tag_version, real_tag_name))
+            return node
+
+        # If a tag class does not explicitly list compatible versions, then all
+        # versions of the corresponding schema are assumed to be compatible.
+        # Therefore we need to check to make sure whether the conversion is
+        # actually successful, and just return a raw Python data type if it is
+        # not.
+        try:
+            return tag_type.from_tree_tagged(node, ctx)
+        except TypeError as err:
+            warnings.warn("Failed to convert {} to custom type (detail: {}). "
+                "Using raw Python data structure instead".format(real_tag, err))
+
         return node
 
     return treeutil.walk_and_modify(tree, walker)
