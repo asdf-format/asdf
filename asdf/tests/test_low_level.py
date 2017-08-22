@@ -6,6 +6,8 @@ from __future__ import absolute_import, division, unicode_literals, print_functi
 import io
 import os
 
+from jsonschema import ValidationError
+
 import numpy as np
 from numpy.testing import assert_array_equal
 from astropy.modeling import models
@@ -1134,3 +1136,16 @@ def test_fd_not_seekable():
     # We lost the information about the underlying array type,
     # but still can compare the bytes.
     assert b.data.tobytes() == data.tobytes()
+
+
+def test_tree_validation(tmpdir):
+    af = asdf.AsdfFile()
+
+    with pytest.raises(ValidationError):
+        af.tree = {'data': 42}
+
+    with pytest.raises(ValidationError):
+        af.tree['data'] = 42
+
+    # This should not cause an error
+    af.tree['data'] = np.array([x for x in range(10)])
