@@ -144,27 +144,17 @@ def generate_schema_list():
                 continue
             yield os.path.join(root, fname)
 
-def _display_warnings(_warnings):
-    msg = "Unexpected warning(s) occurred:\n"
-    for warning in _warnings:
-        msg += "{}:{}: {}: {}\n".format(
-            warning.filename,
-            warning.lineno,
-            warning.category.__name__,
-            warning.message)
-    return msg
-
 def _assert_warnings(_warnings):
     if astropy.__version__ < '1.3.3':
         # Make sure at most only one warning occurred
-        assert len(_warnings) <= 1, _display_warnings(_warnings)
+        assert len(_warnings) <= 1, helpers.display_warnings(_warnings)
         # Make sure the warning was the one we expected
         if len(_warnings) == 1:
             assert str(_warnings[0].message).startswith(
                     "gwcs and astropy-1.3.3 packages is required"), \
-                _display_warnings(_warnings)
+                helpers.display_warnings(_warnings)
     else:
-        assert len(_warnings) == 0, _display_warnings(_warnings)
+        assert len(_warnings) == 0, helpers.display_warnings(_warnings)
 
 def test_schema_example(filename, example):
     """Pytest to check validity of a specific example within schema file

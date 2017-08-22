@@ -251,3 +251,27 @@ def get_file_sizes(dirname):
         if os.path.isfile(path):
             files[filename] = os.stat(path).st_size
     return files
+
+
+def display_warnings(_warnings):
+    """
+    Return a string that displays a list of unexpected warnings
+
+    Parameters
+    ----------
+    _warnings : iterable
+        List of warnings to be displayed
+
+    Returns
+    -------
+    msg : str
+        String containing the warning messages to be displayed
+    """
+    msg = "Unexpected warning(s) occurred:\n"
+    for warning in _warnings:
+        msg += "{}:{}: {}: {}\n".format(
+            warning.filename,
+            warning.lineno,
+            warning.category.__name__,
+            warning.message)
+    return msg
