@@ -267,9 +267,11 @@ def tagged_tree_to_custom_tree(tree, ctx, force_raw_types=False):
                     # is not.
                     try:
                         return tag_type.from_tree_tagged(node, ctx)
-                    except TypeError:
-                        # TODO: there should definitely be a warning here
-                        pass
+                    except TypeError as err:
+                        warnings.warn(
+                            "Failed to convert {} to custom type (detail: {}). "
+                            "Using raw Python data structure instead"
+                            .format(real_tag, err))
                 # TODO: there should be a warning here too
             # This means the tag did not correspond to any type in our type
             # index. TODO: maybe this warning should be possible to suppress?
