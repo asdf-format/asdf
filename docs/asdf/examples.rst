@@ -77,16 +77,9 @@ will complain::
     'tag:yaml.org,2002:str'
     ...
 
-This validation happens only when a `AsdfFile` is instantiated, read
-or saved, so it's still possible to get the tree into an invalid
-intermediate state::
-
     >>> from asdf import AsdfFile
-    >>> ff = AsdfFile()
-    >>> ff.tree['data'] = 'Not an array'
-    >>> # The ASDF file is now invalid, but asdf will tell us when
-    >>> # we write it out.
-    >>> ff.write_to('test.asdf')  # doctest: +IGNORE_EXCEPTION_DETAIL
+    >>> af = AsdfFile()
+    >>> af.tree['data'] = 'Not an array' # doctest: +IGNORE_EXCEPTION_DETAIL
     Traceback (most recent call last):
     ...
     ValidationError: mismatched tags, wanted
