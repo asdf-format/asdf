@@ -190,7 +190,8 @@ class AsdfInFits(asdf.AsdfFile):
         if isinstance(fd, fits.hdu.hdulist.HDUList):
             hdulist = fd
         else:
-            file_obj = generic_io.get_file(fd)
+            file_obj = generic_io.get_file(fd, uri=uri)
+            uri = file_obj._uri if uri is None and file_obj._uri else ''
             try:
                 hdulist = fits.open(file_obj)
                 # Since we created this HDUList object, we need to be
