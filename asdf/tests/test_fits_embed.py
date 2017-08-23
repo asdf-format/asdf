@@ -21,6 +21,9 @@ from .. import open as asdf_open
 from .helpers import assert_tree_match, yaml_to_asdf
 
 
+TEST_DATA_PATH = os.path.join(os.path.dirname(__file__), 'data')
+
+
 def create_asdf_in_fits():
     """Test fixture to create AsdfInFits object to use for testing"""
     hdulist = fits.HDUList()
@@ -223,32 +226,22 @@ def test_bad_input(tmpdir):
 
 @pytest.mark.skipif(sys.platform.startswith('win'),
     reason='Avoid path manipulation on Windows')
-def test_version_mismatch_file(tmpdir):
-    asdffile = os.path.join(str(tmpdir), 'temp.asdf')
-    fitsfile = os.path.join(str(tmpdir), 'mismatch.fits')
-
-    yaml = """
-a: !core/complex-42.0.0
-  0j
-    """
-
-    buff = yaml_to_asdf(yaml)
-    with open(asdffile, 'wb') as handle:
-        handle.write(buff.read())
+def test_version_mismatch_file():
+    testfile = os.path.join(TEST_DATA_PATH, 'version_mismatch.fits')
 
     with catch_warnings() as w:
-        with asdf.AsdfFile.open(asdffile) as af_handle:
-            afits = fits_embed.AsdfInFits(fits.HDUList(), af_handle.tree)
-            afits.write_to(fitsfile)
-    # This is the warning that we expect from opening the ASDF file.
-    # This is not what we're testing for, but it's useful to confirm.
-    assert len(w) == 1
-
-    with catch_warnings() as w:
-        with asdf.AsdfFile.open(fitsfile) as fits_handle:
+        with asdf.AsdfFile.open(testfile) as fits_handle:
             assert fits_handle.tree['a'] == complex(0j)
     # This is the warning that we expect from opening the FITS file
     assert len(w) == 1
     assert str(w[0].message) == (
-        "'tag:stsci.edu:asdf/core/complex' with version 42.0.0 found in file "
+        "'tag:stsci.edu:asdf/core/complex' with version 7.0.0 found in file "
+        "'file://{}', but latest supported version is 1.0.0".format(testfile))
+
+    with catch_warnings() as w:
+        with fits_embed.AsdfInFits.open(testfile) as fits_handle:
+            assert fits_handle.tree['a'] == complex(0j)
+    assert len(w) == 1
+    assert str(w[0].message) == (
+        "'tag:stsci.edu:asdf/core/complex' with version 7.0.0 found in file "
         "'file://{}', but latest supported version is 1.0.0".format(testfile))
