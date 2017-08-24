@@ -162,7 +162,8 @@ class AsdfInFits(asdf.AsdfFile):
         self._tree = {}
 
     @classmethod
-    def open(cls, fd, uri=None, validate_checksums=False, extensions=None):
+    def open(cls, fd, uri=None, validate_checksums=False, extensions=None,
+             ignore_version_mismatch=True):
         """Creates a new AsdfInFits object based on given input data
 
         Parameters
@@ -185,6 +186,9 @@ class AsdfInFits(asdf.AsdfFile):
             A list of extensions to the ASDF to support when reading
             and writing ASDF files.  See `asdftypes.AsdfExtension` for
             more information.
+
+        ignore_version_mismatch : bool, optional
+            When `True`, do not raise warnings for mismatched schema versions.
         """
         close_hdulist = False
         if isinstance(fd, fits.hdu.hdulist.HDUList):
@@ -213,7 +217,8 @@ class AsdfInFits(asdf.AsdfFile):
 
         buff = io.BytesIO(asdf_extension.data)
         return cls._open_asdf(self, buff, uri=uri, mode='r',
-                              validate_checksums=validate_checksums)
+                              validate_checksums=validate_checksums,
+                              ignore_version_mismatch=ignore_version_mismatch)
 
     def _update_asdf_extension(self, all_array_storage=None,
                                all_array_compression=None,

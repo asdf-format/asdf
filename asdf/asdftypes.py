@@ -215,7 +215,7 @@ class AsdfTypeIndex(object):
 
         return write_type_index.from_custom_type(custom_type)
 
-    def fix_yaml_tag(self, ctx, tag, ignore_version_mismatch=False):
+    def fix_yaml_tag(self, ctx, tag, ignore_version_mismatch=True):
         """
         Given a YAML tag, adjust it to the best supported version.
 
@@ -224,8 +224,9 @@ class AsdfTypeIndex(object):
         the earliest understood version if none are less than the
         version in the file.
 
-        Raises a warning if it could not find a match where the major
-        and minor numbers are the same.
+        If ``ignore_version_mismatch==False``, this function raises a warning
+        if it could not find a match where the major and minor numbers are the
+        same.
         """
         warning_string = None
 
@@ -236,7 +237,7 @@ class AsdfTypeIndex(object):
         if tag in self._best_matches:
             best_tag, warning_string = self._best_matches[tag]
 
-            if warning_string:
+            if warning_string and not ignore_version_mismatch:
                 warnings.warn(warning_string.format(fname))
 
             return best_tag
