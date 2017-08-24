@@ -204,7 +204,7 @@ def test_schema_example(filename, example):
 
     try:
         with catch_warnings() as w:
-            ff._open_impl(ff, buff, ignore_version_mismatch=True)
+            ff._open_impl(ff, buff)
         # Do not tolerate any warnings that occur during schema validation,
         # other than a few that we expect to occur under certain circumstances
         _assert_warnings(w)
