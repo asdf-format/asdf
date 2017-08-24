@@ -5,6 +5,7 @@ from __future__ import absolute_import, division, unicode_literals, print_functi
 
 import copy
 import os
+import sys
 import pytest
 
 import numpy as np
@@ -12,11 +13,15 @@ from numpy.testing import assert_array_equal
 
 astropy = pytest.importorskip('astropy')
 from astropy.io import fits
+from astropy.tests.helper import catch_warnings
 
 from .. import asdf
 from .. import fits_embed
 from .. import open as asdf_open
-from .helpers import assert_tree_match
+from .helpers import assert_tree_match, yaml_to_asdf
+
+
+TEST_DATA_PATH = os.path.join(os.path.dirname(__file__), 'data')
 
 
 def create_asdf_in_fits():
@@ -218,3 +223,25 @@ def test_bad_input(tmpdir):
 
     with pytest.raises(ValueError):
         asdf_open(text_file)
+
+@pytest.mark.skipif(sys.platform.startswith('win'),
+    reason='Avoid path manipulation on Windows')
+def test_version_mismatch_file():
+    testfile = os.path.join(TEST_DATA_PATH, 'version_mismatch.fits')
+
+    with catch_warnings() as w:
+        with asdf.AsdfFile.open(testfile) as fits_handle:
+            assert fits_handle.tree['a'] == complex(0j)
+    # This is the warning that we expect from opening the FITS file
+    assert len(w) == 1
+    assert str(w[0].message) == (
+        "'tag:stsci.edu:asdf/core/complex' with version 7.0.0 found in file "
+        "'file://{}', but latest supported version is 1.0.0".format(testfile))
+
+    with catch_warnings() as w:
+        with fits_embed.AsdfInFits.open(testfile) as fits_handle:
+            assert fits_handle.tree['a'] == complex(0j)
+    assert len(w) == 1
+    assert str(w[0].message) == (
+        "'tag:stsci.edu:asdf/core/complex' with version 7.0.0 found in file "
+        "'file://{}', but latest supported version is 1.0.0".format(testfile))
