@@ -23,6 +23,7 @@ import warnings
 
 from .. import asdf
 from .. import asdftypes
+from .. import extension
 from .. import block
 from .. import resolver
 from .. import schema
@@ -30,13 +31,17 @@ from .. import treeutil
 from .. import util
 
 
-from . import helpers
+from . import helpers, CustomTestType
+from astropy.tests.helper import catch_warnings
 
 
 TEST_DATA_PATH = os.path.join(os.path.dirname(__file__), 'data')
 
 
 class CustomExtension:
+    """This is the base class that is used for extensions for custom tag
+    classes that exist only for the purposes of testing.
+    """
     @property
     def types(self):
         return []
@@ -52,6 +57,32 @@ class CustomExtension:
                  util.filepath_to_url(TEST_DATA_PATH) +
                  '/{url_suffix}.yaml')]
 
+class LabelMapperTestType(CustomTestType):
+    version = '1.0.0'
+    name = 'transform/label_mapper'
+
+class RegionsSelectorTestType(CustomTestType):
+    version = '1.0.0'
+    name = 'transform/regions_selector'
+
+class TestExtension(extension.BuiltinExtension):
+    """This class defines an extension that represents tags whose
+    implementations current reside in other repositories (such as GWCS) but
+    whose schemas are defined in ASDF. This provides a workaround for schema
+    validation testing since we want to pass without warnings, but the fact
+    that these tag classes are not defined within ASDF means that warnings
+    occur unless this extension is used. Eventually these schemas may be moved
+    out of ASDF and into other repositories, or ASDF will potentially provide
+    abstract base classes for the tag implementations.
+    """
+    @property
+    def types(self):
+        return [LabelMapperTestType, RegionsSelectorTestType]
+
+    @property
+    def tag_mapping(self):
+        return [('tag:stsci.edu:asdf',
+                 'http://stsci.edu/schemas/asdf{tag_suffix}')]
 
 def test_violate_toplevel_schema():
     tree = {'fits': 'This does not look like a FITS file'}
@@ -113,6 +144,18 @@ def generate_schema_list():
                 continue
             yield os.path.join(root, fname)
 
+def _assert_warnings(_warnings):
+    if astropy.__version__ < '1.3.3':
+        # Make sure at most only one warning occurred
+        assert len(_warnings) <= 1, helpers.display_warnings(_warnings)
+        # Make sure the warning was the one we expected
+        if len(_warnings) == 1:
+            assert str(_warnings[0].message).startswith(
+                    "gwcs and astropy-1.3.3 packages is required"), \
+                helpers.display_warnings(_warnings)
+    else:
+        assert len(_warnings) == 0, helpers.display_warnings(_warnings)
+
 def test_schema_example(filename, example):
     """Pytest to check validity of a specific example within schema file
 
@@ -129,7 +172,9 @@ def test_schema_example(filename, example):
     # Make sure that the examples in the schema files (and thus the
     # ASDF standard document) are valid.
     buff = helpers.yaml_to_asdf('example: ' + example.strip())
-    ff = asdf.AsdfFile(uri=util.filepath_to_url(os.path.abspath(filename)))
+    ff = asdf.AsdfFile(
+        uri=util.filepath_to_url(os.path.abspath(filename)),
+        extensions=TestExtension())
 
     # Fake an external file
     ff2 = asdf.AsdfFile({'data': np.empty((1024*1024*8), dtype=np.uint8)})
@@ -148,9 +193,11 @@ def test_schema_example(filename, example):
     b._array_storage = "streamed"
 
     try:
-        # Ignore warnings that result from examples from schemas that have
-        # versions higher than the current standard version.
-        ff._open_impl(ff, buff, ignore_version_mismatch=True)
+        with catch_warnings() as w:
+            ff._open_impl(ff, buff, ignore_version_mismatch=True)
+        # Do not tolerate any warnings that occur during schema validation,
+        # other than a few that we expect to occur under certain circumstances
+        _assert_warnings(w)
     except:
         print("From file:", filename)
         raise
@@ -302,7 +349,7 @@ def test_property_order():
 
 def test_invalid_nested():
     class CustomType(str, asdftypes.AsdfType):
-        name = 'custom_type'
+        name = 'custom'
         organization = 'nowhere.org'
         version = (1, 0, 0)
         standard = 'custom'
@@ -317,8 +364,13 @@ custom: !<tag:nowhere.org:custom/custom-1.0.0>
   foo
     """
     buff = helpers.yaml_to_asdf(yaml)
-    with asdf.AsdfFile.open(buff):
-        pass
+    # This should cause a warning but not an error because without explicitly
+    # providing an extension, our custom type will not be recognized and will
+    # simply be converted to a raw type.
+    with catch_warnings() as warning:
+        with asdf.AsdfFile.open(buff):
+            pass
+    assert len(warning) == 1
 
     buff.seek(0)
     with pytest.raises(ValidationError):
@@ -461,7 +513,6 @@ def test_large_literals():
 
 @pytest.mark.skipif('not HAS_ASTROPY')
 def test_type_missing_dependencies():
-    from astropy.tests.helper import catch_warnings
 
     class MissingType(asdftypes.AsdfType):
         name = 'missing'

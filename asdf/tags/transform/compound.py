@@ -132,7 +132,7 @@ class RemapAxesType(TransformType):
             else:
                 new_mapping.append(i)
                 transform = transform & ConstantType.from_tree(
-                    {'value': int(entry)}, ctx)
+                    {'value': int(entry.value)}, ctx)
                 i += 1
         return transform | Mapping(new_mapping)
 
