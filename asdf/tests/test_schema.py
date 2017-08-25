@@ -132,6 +132,16 @@ def test_validate_schema(schema_path):
     schema_tree = schema.load_schema(schema_path, resolve_references=True)
     schema.check_schema(schema_tree)
 
+def test_read_json_schema():
+    """Pytest to make sure reading JSON schemas succeeds.
+
+    This was known to fail on Python 3.5 See issue #314 at
+    https://github.com/spacetelescope/asdf/issues/314 for more details.
+    """
+    json_schema = os.path.join(TEST_DATA_PATH, 'example_schema.json')
+    schema_tree = schema.load_schema(json_schema, resolve_references=True)
+    schema.check_schema(schema_tree)
+
 def generate_schema_list():
     """Returns a generator for all schema files"""
     src = os.path.join(os.path.dirname(__file__), '../schemas')

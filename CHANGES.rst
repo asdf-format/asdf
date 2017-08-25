@@ -48,6 +48,8 @@
 
 - Issue a warning when an unrecognized tag is encountered. [#295]
 
+- Fix bug with loading JSON schemas in Python 3.5. [#317]
+
 1.2.1(2016-11-07)
 -----------------
 
