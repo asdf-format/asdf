@@ -1,0 +1,43 @@
+{
+      "date" : {
+          "title" : "[yyyy-mm-ddThh:mm:ss.ssssss] UTC date file created",
+          "type" : "string",
+          "sql_dtype" : "datetime2",
+          "fits_keyword" : "DATE",
+          "description" : "The UTC date and time when the HDU was created, in the form YYYY-MM-DDThh:mm:ss.ssssss, where YYYY shall be the four-digit calendar year number, MM the two-digit month number with January given by 01 and December by 12, and DD the two-digit day of the month. The literal T shall separate the date and time, hh shall be the two-digit hour in the day, mm the two-digit number of minutes after the hour, and ss.ssssss the number of seconds (two digits followed by a fraction accurate to microseconds) after the minute. Default values must not be given to any portion of the date/time string, and leading zeros must not be omitted.",
+          "calculation" : "Operating system time in the format of YYYY-MM-DDThh:mm:ss.ssssss",
+          "default_value" : "",
+          "example" : "2015-01-01T00:00:00.000001",
+          "units" : "",
+          "sw_source" : "calculation",
+          "source" : "Science Data Processing (SDP)",
+          "destination" : ["ScienceCommon.date","GuideStar.date"],
+          "level" : "1a",
+          "si" : "Multiple",
+          "section" : "Basic",
+          "mode" : "All",
+          "fits_hdu" : "PRIMARY",
+          "misc" : ""
+          },
+
+      "origin" : {
+          "title" : "institution responsible for creating FITS file",
+          "type" : "string",
+          "sql_dtype" : "nvarchar(20)",
+          "fits_keyword" : "ORIGIN",
+          "description" : "Identifies the organization or institution responsible for creating the FITS file.",
+          "calculation" : "",
+          "default_value" : "STSCI",
+          "example" : "STSCI",
+          "units" : "",
+          "sw_source" : "",
+          "source" : "Science Data Processing (SDP)",
+          "destination" : ["ScienceCommon.origin","GuideStar.origin"],
+          "level" : "1a",
+          "si" : "Multiple",
+          "section" : "Basic",
+          "mode" : "All",
+          "fits_hdu" : "PRIMARY",
+          "misc" : ""
+          }
+}
