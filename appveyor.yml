@@ -7,23 +7,34 @@ environment:
       PYTHON: "C:\\conda"
       MINICONDA_VERSION: "latest"
       CMD_IN_ENV: "cmd /E:ON /V:ON /C .\\ci-helpers\\appveyor\\windows_sdk.cmd"
-      ASTROPY_VERSION: "development"
+      NUMPY_VERSION: "stable"
       CONDA_DEPENDENCIES: "semantic_version jsonschema pyyaml six lz4"
       PIP_DEPENDENCIES: "git+http://github.com/spacetelescope/gwcs.git#egg=gwcs"
 
   matrix:
       - PYTHON_VERSION: "2.7"
-        NUMPY_VERSION: "1.9.1"
+        ASTROPY_VERSION: "stable"
         platform: x86
         PYTHON_ARCH: "32"
 
       - PYTHON_VERSION: "2.7"
-        NUMPY_VERSION: "1.9.1"
+        ASTROPY_VERSION: "stable"
         platform: x64
         PYTHON_ARCH: "64"
 
       - PYTHON_VERSION: "3.4"
-        NUMPY_VERSION: "1.9.1"
+        ASTROPY_VERSION: "stable"
+        platform: x64
+        PYTHON_ARCH: "64"
+
+      - PYTHON_VERSION: "3.5"
+        ASTROPY_VERSION: "1.3.2" "stable" "development"
+        platform: x64
+        PYTHON_ARCH: "64"
+
+      - PYTHON_VERSION: "3.6"
+        NUMPY_VERSION: "stable" "latest"
+        ASTROPY_VERSION: "1.3.2" "stable" "development"
         platform: x64
         PYTHON_ARCH: "64"
 
