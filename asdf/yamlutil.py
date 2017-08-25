@@ -260,8 +260,9 @@ def tagged_tree_to_custom_tree(tree, ctx, force_raw_types=False):
         # This means the tag did not correspond to any type in our type index.
         # TODO: maybe this warning should be possible to suppress?
         if tag_type is None:
-            warnings.warn("{} is not recognized, converting to raw Python data "
-                "structure".format(tag_name))
+            if not ctx._ignore_unrecognized_tag:
+                warnings.warn("{} is not recognized, converting to raw Python "
+                    "data structure".format(tag_name))
             return node
 
         real_tag = ctx.type_index.get_real_tag(tag_name)

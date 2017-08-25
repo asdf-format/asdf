@@ -42,7 +42,8 @@ class AsdfFile(versioning.VersionedMixin):
     """
     The main class that represents a ASDF file.
     """
-    def __init__(self, tree=None, uri=None, extensions=None, version=None):
+    def __init__(self, tree=None, uri=None, extensions=None, version=None,
+        ignore_version_mismatch=True, ignore_unrecognized_tag=False):
         """
         Parameters
         ----------
@@ -65,7 +66,16 @@ class AsdfFile(versioning.VersionedMixin):
             The ASDF version to use when writing out.  If not
             provided, it will write out in the latest version
             supported by asdf.
+
+        ignore_version_mismatch : bool, optional
+            When `True`, do not raise warnings for mismatched schema versions.
+            Set to `True` by default.
+
+        ignore_unrecognized_tag : bool, optional
+            When `True`, do not raise warnings for unrecognized tags. Set to
+            `False` by default.
         """
+
         if extensions is None or extensions == []:
             self._extensions = extension._builtin_extension_list
         else:
@@ -76,6 +86,9 @@ class AsdfFile(versioning.VersionedMixin):
                     extensions = [extensions]
                 extensions.insert(0, extension.BuiltinExtension())
                 self._extensions = extension.AsdfExtensionList(extensions)
+
+        self._ignore_version_mismatch = ignore_version_mismatch
+        self._ignore_unrecognized_tag = ignore_unrecognized_tag
 
         self._fd = None
         self._external_asdf_by_uri = {}
@@ -428,7 +441,6 @@ class AsdfFile(versioning.VersionedMixin):
     def _open_asdf(cls, self, fd, uri=None, mode='r',
                    validate_checksums=False,
                    do_not_fill_defaults=False,
-                   ignore_version_mismatch=True,
                    _get_yaml_content=False,
                    _force_raw_types=False):
         """Attempt to populate AsdfFile data from file-like object"""
@@ -466,7 +478,7 @@ class AsdfFile(versioning.VersionedMixin):
             # We parse the YAML content into basic data structures
             # now, but we don't do anything special with it until
             # after the blocks have been read
-            tree = yamlutil.load_tree(reader, self, ignore_version_mismatch)
+            tree = yamlutil.load_tree(reader, self, self._ignore_version_mismatch)
             has_blocks = fd.seek_until(constants.BLOCK_MAGIC, 4, include=True)
         elif yaml_token == constants.BLOCK_MAGIC:
             has_blocks = True
@@ -493,7 +505,6 @@ class AsdfFile(versioning.VersionedMixin):
     def _open_impl(cls, self, fd, uri=None, mode='r',
                    validate_checksums=False,
                    do_not_fill_defaults=False,
-                   ignore_version_mismatch=True,
                    _get_yaml_content=False,
                    _force_raw_types=False):
         """Attempt to open file-like object as either AsdfFile or AsdfInFits"""
@@ -505,7 +516,7 @@ class AsdfFile(versioning.VersionedMixin):
                 from . import fits_embed
                 return fits_embed.AsdfInFits.open(fd, uri=uri,
                             validate_checksums=validate_checksums,
-                            ignore_version_mismatch=ignore_version_mismatch,
+                            ignore_version_mismatch=self._ignore_version_mismatch,
                             extensions=self._extensions)
             except ValueError:
                 pass
@@ -515,7 +526,6 @@ class AsdfFile(versioning.VersionedMixin):
         return cls._open_asdf(self, fd, uri=uri, mode=mode,
                 validate_checksums=validate_checksums,
                 do_not_fill_defaults=do_not_fill_defaults,
-                ignore_version_mismatch=ignore_version_mismatch,
                 _get_yaml_content=_get_yaml_content,
                 _force_raw_types=_force_raw_types)
 
@@ -525,6 +535,7 @@ class AsdfFile(versioning.VersionedMixin):
              extensions=None,
              do_not_fill_defaults=False,
              ignore_version_mismatch=True,
+             ignore_unrecognized_tag=False,
              _force_raw_types=False):
         """
         Open an existing ASDF file.
@@ -557,19 +568,25 @@ class AsdfFile(versioning.VersionedMixin):
 
         ignore_version_mismatch : bool, optional
             When `True`, do not raise warnings for mismatched schema versions.
+            Set to `True` by default.
+
+        ignore_unrecognized_tag : bool, optional
+            When `True`, do not raise warnings for unrecognized tags. Set to
+            `False` by default.
 
         Returns
         -------
         asdffile : AsdfFile
             The new AsdfFile object.
         """
-        self = cls(extensions=extensions)
+        self = cls(extensions=extensions,
+                   ignore_version_mismatch=ignore_version_mismatch,
+                   ignore_unrecognized_tag=ignore_unrecognized_tag)
 
         return cls._open_impl(
             self, fd, uri=uri, mode=mode,
             validate_checksums=validate_checksums,
             do_not_fill_defaults=do_not_fill_defaults,
-            ignore_version_mismatch=ignore_version_mismatch,
             _force_raw_types=_force_raw_types)
 
     def _write_tree(self, tree, fd, pad_blocks):
