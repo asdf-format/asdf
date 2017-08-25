@@ -306,6 +306,12 @@ undefined_data:
             "tag:nowhere.org:custom/{} is not recognized, converting to raw "
             "Python data structure".format(tag))
 
+    # Make sure no warning occurs if explicitly ignored
+    buff.seek(0)
+    with catch_warnings() as warning:
+        afile = asdf.AsdfFile.open(buff, ignore_unrecognized_tag=True)
+    assert len(warning) == 0
+
 
 def test_newer_tag():
     # This test simulates a scenario where newer versions of CustomFlow
