@@ -284,7 +284,8 @@ if six.PY2:
 def _load_schema(url):
     with generic_io.get_file(url) as fd:
         if isinstance(url, six.text_type) and url.endswith('json'):
-            result = json.load(fd, object_pairs_hook=OrderedDict)
+            json_data = fd.read().decode('utf-8')
+            result = json.loads(json_data, object_pairs_hook=OrderedDict)
         else:
             result = yaml.load(fd, Loader=OrderedLoader)
     return result, fd.uri
