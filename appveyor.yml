@@ -38,7 +38,7 @@ environment:
 
       - PYTHON_VERSION: "3.6"
         ASTROPY_VERSION: "1.3.2"
-        NUMPY_VERSION: "1.11.1"
+        NUMPY_VERSION: "1.13.0"
         platform: x64
 
       - PYTHON_VERSION: "3.6"
