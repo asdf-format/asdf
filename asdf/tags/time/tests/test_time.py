@@ -115,17 +115,7 @@ def test_isot(tmpdir):
     assert isinstance(tree['time'], six.text_type)
 
 
-@pytest.mark.xfail(reason="Ill formed and possibly extranenous test")
 def test_time_tag():
-    """This test has been relocated from asdf/tests/test_tagged. The test does
-    not pass in its current form, and it's not clear whether it provides any
-    value above and beyond the two tests above.
-
-    The previous version of the test was set up to pass even when validation
-    failed, although it appears that the purpose of the test is actually to
-    make sure that validation succeeds. Instead of forcing it to pass, it has
-    now been marked with pytest.xfail"""
-
     schema = asdf_schema.load_schema(
         'http://stsci.edu/schemas/asdf/time/time-1.0.0',
         resolve_references=True)
@@ -134,13 +124,14 @@ def test_time_tag():
     date = time.Time(datetime.datetime.now())
     tree = {'date': date}
     asdf = AsdfFile(tree=tree)
-    instance = yamlutil.custom_tree_to_tagged_tree(tree, asdf)
+    instance = yamlutil.custom_tree_to_tagged_tree(tree['date'], asdf)
 
     asdf_schema.validate(instance, schema=schema)
 
     tag = 'tag:stsci.edu:asdf/time/time-1.0.0'
     date = tagged.tag_object(tag, date)
     tree = {'date': date}
-    instance = yamlutil.custom_tree_to_tagged_tree(tree, asdf)
+    asdf = AsdfFile(tree=tree)
+    instance = yamlutil.custom_tree_to_tagged_tree(tree['date'], asdf)
 
     asdf_schema.validate(instance, schema=schema)
