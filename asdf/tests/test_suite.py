@@ -46,12 +46,13 @@ def test_reference_file(reference_file):
         known_fail = known_fail | (basename in ('unicode_spp.asdf'))
 
     try:
-        with asdf_open(reference_file) as asdf:
-            asdf.resolve_and_inline()
+        with asdf_open(reference_file) as af_handle:
+            af_handle.resolve_and_inline()
 
-            with asdf_open(reference_file[:-4] + "yaml") as ref:
-                assert_tree_match(asdf.tree, ref.tree,
-                                  funcname='assert_allclose')
+            barename, _ = os.path.splitext(reference_file)
+            with asdf_open(barename + ".yaml") as ref:
+                assert_tree_match(
+                    af_handle.tree, ref.tree, funcname='assert_allclose')
     except:
         if known_fail:
             pytest.xfail()
