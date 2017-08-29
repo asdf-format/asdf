@@ -39,6 +39,9 @@ matrix:
         - python: 2.7
           env: SETUP_CMD='build_docs -w'
 
+        - python: 3.6
+          env: SETUP_CMD='build_docs -w'
+
         # Try older numpy versions
         - python: 2.7
           env: NUMPY_VERSION=1.9 SETUP_CMD='test'
