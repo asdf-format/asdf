@@ -36,10 +36,8 @@ matrix:
 
         # Check for sphinx doc build warnings - we do this first because it
         # may run for a long time
-        # Sphinx version is temporarily fix to be <1.3.5, until #192 is
-        # resolved
         - python: 2.7
-          env: SETUP_CMD='build_sphinx -w' SPHINX_VERSION='<1.3.5'
+          env: SETUP_CMD='build_docs -w'
 
         # Try older numpy versions
         - python: 2.7
