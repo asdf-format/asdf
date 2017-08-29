@@ -10,7 +10,8 @@ import pytest
 from asdf import open as asdf_open
 from asdf import versioning
 
-from .helpers import assert_tree_match
+from .helpers import assert_tree_match, display_warnings
+from astropy.tests.helper import catch_warnings
 
 
 def get_test_id(reference_file_path):
@@ -31,12 +32,39 @@ def collect_reference_files():
                     if os.path.exists(basename + ".yaml"):
                         yield filepath
 
+def _compare_trees(name_without_ext, expect_warnings=False):
+    asdf_path = name_without_ext + ".asdf"
+    yaml_path = name_without_ext + ".yaml"
+
+    with asdf_open(asdf_path) as af_handle:
+        af_handle.resolve_and_inline()
+
+        with asdf_open(yaml_path) as ref:
+
+            def _compare_func():
+                assert_tree_match(af_handle.tree, ref.tree,
+                    funcname='assert_allclose')
+
+            if expect_warnings:
+                # Make sure to only suppress warnings when they are expected.
+                # However, there's still a chance of missing warnings that we
+                # actually care about here.
+                with catch_warnings(RuntimeWarning) as w:
+                    _compare_func()
+            else:
+                _compare_func()
+
 @pytest.mark.parametrize(
     'reference_file', collect_reference_files(), ids=get_test_id)
 def test_reference_file(reference_file):
     basename = os.path.basename(reference_file)
+    name_without_ext, _ = os.path.splitext(reference_file)
 
     known_fail = False
+    # We expect warnings from numpy due to the way that complex.yaml is
+    # constructed. We want to make sure we only suppress warnings when they are
+    # expected.
+    expect_warnings = basename == 'complex.asdf'
     if sys.version_info[:2] == (2, 6):
         known_fail = (basename in ('complex.asdf', 'unicode_spp.asdf'))
     elif sys.version_info[:2] == (2, 7):
@@ -46,13 +74,7 @@ def test_reference_file(reference_file):
         known_fail = known_fail | (basename in ('unicode_spp.asdf'))
 
     try:
-        with asdf_open(reference_file) as af_handle:
-            af_handle.resolve_and_inline()
-
-            barename, _ = os.path.splitext(reference_file)
-            with asdf_open(barename + ".yaml") as ref:
-                assert_tree_match(
-                    af_handle.tree, ref.tree, funcname='assert_allclose')
+        _compare_trees(name_without_ext, expect_warnings=expect_warnings)
     except:
         if known_fail:
             pytest.xfail()
