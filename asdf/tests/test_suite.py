@@ -6,7 +6,8 @@ from __future__ import absolute_import, division, unicode_literals, print_functi
 import os
 import sys
 
-from .. import open
+from asdf import open as asdf_open
+from asdf import versioning
 
 from .helpers import assert_tree_match
 
@@ -27,10 +28,10 @@ def test_reference_files():
             known_fail = known_fail | (basename in ('unicode_spp.asdf'))
 
         try:
-            with open(filename) as asdf:
+            with asdf_open(filename) as asdf:
                 asdf.resolve_and_inline()
 
-                with open(filename[:-4] + "yaml") as ref:
+                with asdf_open(filename[:-4] + "yaml") as ref:
                     assert_tree_match(asdf.tree, ref.tree,
                                       funcname='assert_allclose')
         except:
@@ -39,10 +40,13 @@ def test_reference_files():
             else:
                 raise
 
-    root = os.path.join(
-        os.path.dirname(__file__), '..', "reference_files")
-    for filename in os.listdir(root):
-        if filename.endswith(".asdf"):
-            filepath = os.path.join(root, filename)
-            if os.path.exists(filepath[:-4] + "yaml"):
-                yield test_reference_file, filepath
+    root = os.path.join(os.path.dirname(__file__), '..', "reference_files")
+    for version in versioning.supported_versions:
+        version_dir = os.path.join(root, str(version))
+        if os.path.exists(version_dir):
+            for filename in os.listdir(version_dir):
+                if filename.endswith(".asdf"):
+                    filepath = os.path.join(version_dir, filename)
+                    basename, _ = os.path.splitext(filepath)
+                    if os.path.exists(basename + ".yaml"):
+                        yield test_reference_file, filepath
