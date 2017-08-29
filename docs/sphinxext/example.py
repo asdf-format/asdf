@@ -128,7 +128,7 @@ class AsdfDirective(Directive):
                     internal_blocks[-1].array_storage != 'streamed'):
                     buff = io.BytesIO()
                     ff.blocks.write_block_index(buff, ff)
-                    block_index = buff.getvalue()
+                    block_index = buff.getvalue().decode('utf-8')
                     literal = nodes.literal_block(block_index, block_index)
                     literal['language'] = 'yaml'
                     set_source_info(self, literal)
