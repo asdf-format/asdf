@@ -192,3 +192,11 @@ def test_too_many_streams():
     ff.set_array_storage(tree['stream1'], 'streamed')
     with pytest.raises(ValueError):
         ff.set_array_storage(tree['stream2'], 'streamed')
+
+def test_stream_repr():
+    tree = {
+        'stream': stream.Stream([16], np.int64)
+    }
+
+    ff = asdf.AsdfFile(tree)
+    repr(ff.tree)
