@@ -58,3 +58,10 @@ class Stream(ndarray.NDArrayType):
         if data._strides is not None:
             result['strides'] = data._strides
         return result
+
+    def __repr__(self):
+        return "Stream({}, {}, strides={})".format(
+            self._shape, self._datatype, self._strides)
+
+    def __str__(self):
+        return str(self.__repr__())
