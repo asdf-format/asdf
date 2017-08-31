@@ -5,44 +5,78 @@ from __future__ import absolute_import, division, unicode_literals, print_functi
 
 import os
 import sys
-
-from .. import open
-
-from .helpers import assert_tree_match
-
 import pytest
 
+from asdf import open as asdf_open
+from asdf import versioning
 
-def test_reference_files():
-    def test_reference_file(filename):
-        basename = os.path.basename(filename)
+from .helpers import assert_tree_match, display_warnings
+from astropy.tests.helper import catch_warnings
 
-        known_fail = False
-        if sys.version_info[:2] == (2, 6):
-            known_fail = (basename in ('complex.asdf', 'unicode_spp.asdf'))
-        elif sys.version_info[:2] == (2, 7):
-            known_fail = (basename in ('complex.asdf'))
 
-        if sys.maxunicode <= 65535:
-            known_fail = known_fail | (basename in ('unicode_spp.asdf'))
+def get_test_id(reference_file_path):
+    """Helper function to return the informative part of a schema path"""
+    path = os.path.normpath(reference_file_path)
+    return os.path.sep.join(path.split(os.path.sep)[-3:])
 
-        try:
-            with open(filename) as asdf:
-                asdf.resolve_and_inline()
+def collect_reference_files():
+    """Function used by pytest to collect ASDF reference files for testing."""
+    root = os.path.join(os.path.dirname(__file__), '..', "reference_files")
+    for version in versioning.supported_versions:
+        version_dir = os.path.join(root, str(version))
+        if os.path.exists(version_dir):
+            for filename in os.listdir(version_dir):
+                if filename.endswith(".asdf"):
+                    filepath = os.path.join(version_dir, filename)
+                    basename, _ = os.path.splitext(filepath)
+                    if os.path.exists(basename + ".yaml"):
+                        yield filepath
 
-                with open(filename[:-4] + "yaml") as ref:
-                    assert_tree_match(asdf.tree, ref.tree,
-                                      funcname='assert_allclose')
-        except:
-            if known_fail:
-                pytest.xfail()
+def _compare_trees(name_without_ext, expect_warnings=False):
+    asdf_path = name_without_ext + ".asdf"
+    yaml_path = name_without_ext + ".yaml"
+
+    with asdf_open(asdf_path) as af_handle:
+        af_handle.resolve_and_inline()
+
+        with asdf_open(yaml_path) as ref:
+
+            def _compare_func():
+                assert_tree_match(af_handle.tree, ref.tree,
+                    funcname='assert_allclose')
+
+            if expect_warnings:
+                # Make sure to only suppress warnings when they are expected.
+                # However, there's still a chance of missing warnings that we
+                # actually care about here.
+                with catch_warnings(RuntimeWarning) as w:
+                    _compare_func()
             else:
-                raise
+                _compare_func()
 
-    root = os.path.join(
-        os.path.dirname(__file__), '..', "reference_files")
-    for filename in os.listdir(root):
-        if filename.endswith(".asdf"):
-            filepath = os.path.join(root, filename)
-            if os.path.exists(filepath[:-4] + "yaml"):
-                yield test_reference_file, filepath
+@pytest.mark.parametrize(
+    'reference_file', collect_reference_files(), ids=get_test_id)
+def test_reference_file(reference_file):
+    basename = os.path.basename(reference_file)
+    name_without_ext, _ = os.path.splitext(reference_file)
+
+    known_fail = False
+    # We expect warnings from numpy due to the way that complex.yaml is
+    # constructed. We want to make sure we only suppress warnings when they are
+    # expected.
+    expect_warnings = basename == 'complex.asdf'
+    if sys.version_info[:2] == (2, 6):
+        known_fail = (basename in ('complex.asdf', 'unicode_spp.asdf'))
+    elif sys.version_info[:2] == (2, 7):
+        known_fail = (basename in ('complex.asdf'))
+
+    if sys.maxunicode <= 65535:
+        known_fail = known_fail | (basename in ('unicode_spp.asdf'))
+
+    try:
+        _compare_trees(name_without_ext, expect_warnings=expect_warnings)
+    except:
+        if known_fail:
+            pytest.xfail()
+        else:
+            raise

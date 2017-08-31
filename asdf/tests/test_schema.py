@@ -254,7 +254,6 @@ def pytest_generate_tests(metafunc):
     """
     def get_schema_name(schema_path):
         """Helper function to return the informative part of a schema path"""
-        print(schema_path)
         path = os.path.normpath(schema_path)
         return os.path.sep.join(path.split(os.path.sep)[-3:])
 
