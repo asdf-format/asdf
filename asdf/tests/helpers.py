@@ -15,6 +15,11 @@ except ImportError:
     ICRS = None
 
 try:
+    from astropy.tests.disable_internet import INTERNET_OFF
+except ImportError:
+    INTERNET_OFF = False
+
+try:
     from astropy.coordinates.representation import CartesianRepresentation
 except ImportError:
     CartesianRepresentation = None
@@ -181,7 +186,7 @@ def assert_roundtrip_tree(
             asdf_check_func(ff)
 
     # Now try everything on an HTTP range server
-    if not sys.platform.startswith('win'):
+    if not INTERNET_OFF and not sys.platform.startswith('win'):
         server = RangeHTTPServer()
         try:
             ff = AsdfFile(tree, extensions=extensions)
