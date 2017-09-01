@@ -241,6 +241,37 @@ binary data.
 
 .. asdf:: test.asdf
 
+A case where streaming may be useful is when converting large data sets from a
+different format into ASDF. In these cases it would be impractical to hold all
+of the data in memory as an intermediate step. Consider the following example
+that streams a large CSV file containing rows of integer data and converts it
+to numpy arrays stored in ASDF:
+
+.. doctest-skip::
+
+    import csv
+    import numpy as np
+    from asdf import AsdfFile, Stream
+
+    tree = {
+        # We happen to know in advance that each row in the CSV has 100 ints
+        'data': Stream([100], np.int64)
+    }
+
+    ff = AsdfFile(tree)
+    # open the output file handle
+    with open('new_file.asdf', 'wb') as fd:
+        ff.write_to(fd)
+        # open the CSV file to be converted
+        with open('large_file.csv', 'r') as cfd:
+            # read each line of the CSV file
+            reader = csv.reader(cfd)
+            for row in reader:
+                # convert each row to a numpy array
+                array = np.array([int(x) for x in row], np.int64)
+                # write the array to the output file handle
+                fd.write(array.tostring())
+
 References
 ----------
 
