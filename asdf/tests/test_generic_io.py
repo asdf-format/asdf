@@ -22,9 +22,11 @@ from . import helpers
 
 try:
     from astropy.io import fits
+    from astropy.tests.disable_internet import INTERNET_OFF
     HAS_ASTROPY = True
 except ImportError:
     HAS_ASTROPY = False
+    INTERNET_OFF = False
 
 
 def _get_small_tree():
@@ -253,6 +255,7 @@ def test_streams2():
     assert len(x) == 60
 
 
+@pytest.mark.skipif(INTERNET_OFF, reason="Astropy has disabled internet access")
 @pytest.mark.skipif(sys.platform.startswith('win'),
                     reason="Windows firewall prevents test")
 def test_urlopen(tree, httpserver):
@@ -272,6 +275,7 @@ def test_urlopen(tree, httpserver):
         assert isinstance(next(ff.blocks.internal_blocks)._data, np.ndarray)
 
 
+@pytest.mark.skipif(INTERNET_OFF, reason="Astropy has disabled internet access")
 @pytest.mark.skipif(sys.platform.startswith('win'),
                     reason="Windows firewall prevents test")
 def test_http_connection(tree, httpserver):
@@ -296,6 +300,7 @@ def test_http_connection(tree, httpserver):
         ff.tree['science_data'][0] == 42
 
 
+@pytest.mark.skipif(INTERNET_OFF, reason="Astropy has disabled internet access")
 @pytest.mark.skipif(sys.platform.startswith('win'),
                     reason="Windows firewall prevents test")
 def test_http_connection_range(tree, rhttpserver):
