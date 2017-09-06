@@ -118,6 +118,7 @@ setup(name=PACKAGENAME,
       version=VERSION,
       description=DESCRIPTION,
       scripts=scripts,
+      python_requires='~=2.7, >=3.3',
       install_requires=[
           'semantic_version>=2.6.0',
           'pyyaml>=3.10',
