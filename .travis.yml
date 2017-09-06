@@ -1,4 +1,10 @@
-language: python
+# We set the language to c because python isn't supported on the MacOS X nodes
+# on Travis. However, the language ends up being irrelevant anyway, since we
+# install Python ourselves using conda.
+language: c
+
+os:
+    - linux
 
 # Use Travis' container-based architecture
 sudo: false
@@ -59,6 +65,12 @@ matrix:
         # latest stable versions
         - python: 3.6
           env: NUMPY_VERSION=stable ASTROPY_VERSION=stable SETUP_CMD='test'
+
+        # Try a run on OSX
+        - os: osx
+          python: 3.6
+          env: NUMPY_VERSION=stable ASTROPY_VERSION=stable SETUP_CMD='test'
+
 install:
     - git clone git://github.com/astropy/ci-helpers.git
     - source ci-helpers/travis/setup_conda_$TRAVIS_OS_NAME.sh
