@@ -1216,10 +1216,6 @@ def get_file(init, mode='r', uri=None):
             return RealFile(init, mode, uri=uri)
 
     elif isinstance(init, io.IOBase):
-        if sys.version_info[:2] == (2, 6):  # pragma: no cover
-            raise ValueError(
-                "io.open file objects are not supported on Python 2.6")
-
         if (('r' in mode and not init.readable()) or
             ('w' in mode and not init.writable())):
             raise ValueError(
