@@ -20,8 +20,9 @@ import six
 
 import yaml
 
+from collections import OrderedDict
+
 from .. import asdf
-from ..compat.odict import OrderedDict
 from .. import tagged
 from .. import treeutil
 
