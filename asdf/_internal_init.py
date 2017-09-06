@@ -10,6 +10,8 @@ try:
     _ASDF_SETUP_
 except NameError:
     from sys import version_info
+    if version_info < (2, 7, 0):
+        raise ImportError("ASDF requires Python 2.7 or newer")
     if version_info[0] >= 3:
         import builtins
     else:
