@@ -380,8 +380,8 @@ class BlockManager(object):
                 allow_unicode=True, encoding='utf-8')
 
     _re_index_content = re.compile(
-        b'^' + constants.INDEX_HEADER + b'\r?\n%YAML.*\.\.\.\r?\n?$')
-    _re_index_misc = re.compile(b'^[\n\r\x20-\x7f]+$')
+        br'^' + constants.INDEX_HEADER + br'\r?\n%YAML.*\.\.\.\r?\n?$')
+    _re_index_misc = re.compile(br'^[\n\r\x20-\x7f]+$')
 
     def read_block_index(self, fd, ctx):
         """
