@@ -37,9 +37,8 @@ env:
 matrix:
     include:
 
-        # Do a coverage test in Python 2.
-        - env: PYTHON_VERSION=2.7
-               SETUP_CMD='test --coverage --open-files --remote-data'
+        # Do a coverage test
+        - env: SETUP_CMD='test --coverage --open-files --remote-data'
 
         # Check for sphinx doc build warnings - we do this first because it
         # may run for a long time
