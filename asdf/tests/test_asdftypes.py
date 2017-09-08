@@ -14,7 +14,7 @@ from .. import extension
 from .. import util
 from .. import versioning
 
-from . import helpers
+from . import helpers, CustomTestType
 from astropy.tests.helper import catch_warnings
 
 
@@ -161,6 +161,54 @@ a: !core/complex-42.0.0
     assert str(w[0].message) == (
         "'tag:stsci.edu:asdf/core/complex' with version 42.0.0 found in file "
         "'file://{}', but latest supported version is 1.0.0".format(testfile))
+
+
+def test_version_mismatch_with_supported_versions():
+    """Make sure that defining the supported_versions field does not affect
+    whether or not schema mismatch warnings are triggered."""
+
+    class CustomFlow(object):
+        pass
+
+    class CustomFlowType(CustomTestType):
+        version = '1.1.0'
+        supported_versions = ['1.0.0', '1.1.0']
+        name = 'custom_flow'
+        organization = 'nowhere.org'
+        standard = 'custom'
+        types = [CustomFlow]
+
+    class CustomFlowExtension(object):
+        @property
+        def types(self):
+            return [CustomFlowType]
+
+        @property
+        def tag_mapping(self):
+            return [('tag:nowhere.org:custom',
+                     'http://nowhere.org/schemas/custom{tag_suffix}')]
+
+        @property
+        def url_mapping(self):
+            return [('http://nowhere.org/schemas/custom/',
+                     util.filepath_to_url(TEST_DATA_PATH) +
+                     '/{url_suffix}.yaml')]
+
+    yaml = """
+flow_thing:
+  !<tag:nowhere.org:custom/custom_flow-1.0.0>
+    c: 100
+    d: 3.14
+"""
+    buff = helpers.yaml_to_asdf(yaml)
+    with catch_warnings() as w:
+        data = asdf.AsdfFile.open(
+            buff, ignore_version_mismatch=False,
+            extensions=CustomFlowExtension())
+    assert len(w) == 1, helpers.display_warnings(w)
+    assert str(w[0].message) == (
+        "'tag:nowhere.org:custom/custom_flow' with version 1.0.0 found in "
+        "file, but latest supported version is 1.1.0")
 
 
 def test_versioned_writing():
