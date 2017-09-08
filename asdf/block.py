@@ -894,7 +894,7 @@ class Block(object):
         updating the file in-place, otherwise the work is redundant.
         """
         if self._data is not None:
-            if six.PY2:
+            if six.PY2: # pragma: no cover
                 self._data_size = len(self._data.data)
             else:
                 self._data_size = self._data.data.nbytes

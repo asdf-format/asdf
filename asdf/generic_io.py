@@ -60,7 +60,7 @@ def _check_bytes(fd, mode):
         if not isinstance(x, bytes):
             return False
     elif 'w' in mode:
-        if six.PY2:
+        if six.PY2: # pragma: no cover
             if isinstance(fd, file):
                 if 'b' not in fd.mode:
                     return False
@@ -1196,7 +1196,7 @@ def get_file(init, mode='r', uri=None):
         raise TypeError(
             "io.StringIO objects are not supported.  Use io.BytesIO instead.")
 
-    elif six.PY2 and isinstance(init, file):
+    elif six.PY2 and isinstance(init, file): # pragma: no cover
         if init.mode[0] not in mode:
             raise ValueError(
                 "File is opened as '{0}', but '{1}' was requested".format(
