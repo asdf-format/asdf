@@ -258,7 +258,6 @@ def tagged_tree_to_custom_tree(tree, ctx, force_raw_types=False):
 
         tag_type = ctx.type_index.from_yaml_tag(ctx, tag_name)
         # This means the tag did not correspond to any type in our type index.
-        # TODO: maybe this warning should be possible to suppress?
         if tag_type is None:
             if not ctx._ignore_unrecognized_tag:
                 warnings.warn("{} is not recognized, converting to raw Python "
