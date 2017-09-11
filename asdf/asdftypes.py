@@ -165,6 +165,7 @@ class AsdfTypeIndex(object):
         self._unnamed_types = set()
         self._hooks_by_type = {}
         self._all_types = set()
+        self._has_warned = {}
 
     def add_type(self, asdftype):
         """
@@ -215,6 +216,27 @@ class AsdfTypeIndex(object):
 
         return write_type_index.from_custom_type(custom_type)
 
+    def _get_version_mismatch(self, name, version, latest_version):
+        warning_string = None
+
+        if (latest_version.major, latest_version.minor) != \
+                (version.major, version.minor):
+            warning_string = \
+                "'{}' with version {} found in file{{}}, but latest " \
+                "supported version is {}".format(
+                    name, version, latest_version)
+
+        return warning_string
+
+    def _warn_version_mismatch(self, ctx, tag, warning_string, fname):
+        if warning_string is not None:
+            # Ensure that only a single warning occurs per tag per AsdfFile
+            # TODO: If it is useful to only have a single warning per file on
+            # disk, then use `fname` in the key instead of `ctx`.
+            if not (ctx, tag) in self._has_warned:
+                warnings.warn(warning_string.format(fname))
+                self._has_warned[(ctx, tag)] = True
+
     def fix_yaml_tag(self, ctx, tag, ignore_version_mismatch=True):
         """
         Given a YAML tag, adjust it to the best supported version.
@@ -230,19 +252,31 @@ class AsdfTypeIndex(object):
         """
         warning_string = None
 
-        if tag in self._type_by_tag:
-            return tag
+        name, version = split_tag_version(tag)
 
         fname = " '{}'".format(ctx._fname) if ctx._fname else ''
+
+        if tag in self._type_by_tag:
+            asdftype = self._type_by_tag[tag]
+            # Issue warnings for the case where there exists a class for the
+            # given tag due to the 'supported_versions' attribute being
+            # defined, but this tag is not the latest version of the type.
+            # This prevents 'supported_versions' from affecting the behavior of
+            # warnings that are purely related to YAML validation.
+            if not ignore_version_mismatch and hasattr(asdftype, '_latest_version'):
+                warning_string = self._get_version_mismatch(
+                    name, version, asdftype._latest_version)
+                self._warn_version_mismatch(ctx, tag, warning_string, fname)
+            return tag
+
         if tag in self._best_matches:
             best_tag, warning_string = self._best_matches[tag]
 
-            if warning_string and not ignore_version_mismatch:
-                warnings.warn(warning_string.format(fname))
+            if not ignore_version_mismatch:
+                self._warn_version_mismatch(ctx, tag, warning_string, fname)
 
             return best_tag
 
-        name, version = split_tag_version(tag)
         versions = self._versions_by_type_name.get(name)
         if versions is None:
             return tag
@@ -252,16 +286,12 @@ class AsdfTypeIndex(object):
         i = bisect.bisect_left(versions, version)
         i = max(0, i - 1)
 
-        best_version = versions[i]
         if not ignore_version_mismatch:
-            if (best_version.major, best_version.minor) != \
-                    (version.major, version.minor):
-                warning_string = \
-                    "'{}' with version {} found in file{{}}, but latest " \
-                    "supported version is {}".format(
-                        name, version, best_version)
-                warnings.warn(warning_string.format(fname))
+            warning_string = self._get_version_mismatch(
+                name, version, versions[-1])
+            self._warn_version_mismatch(ctx, tag, warning_string, fname)
 
+        best_version = versions[i]
         best_tag = join_tag_version(name, best_version)
         self._best_matches[tag] = best_tag, warning_string
         if tag != best_tag:
@@ -419,6 +449,7 @@ class ExtensionTypeMeta(type):
                     new_attrs = copy(attrs)
                     new_attrs['version'] = version
                     new_attrs['supported_versions'] = set()
+                    new_attrs['_latest_version'] = cls.version
                     siblings.append(
                        ExtensionTypeMeta. __new__(mcls, name, bases, new_attrs))
             setattr(cls, '__versioned_siblings', siblings)
