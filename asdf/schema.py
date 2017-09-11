@@ -55,7 +55,7 @@ PYTHON_TYPE_TO_YAML_TAG = {
 }
 
 
-if six.PY2:
+if six.PY2: # pragma: no cover
     PYTHON_TYPE_TO_YAML_TAG[long] = 'int'
 
 
@@ -274,7 +274,7 @@ OrderedLoader.add_constructor(
     construct_mapping)
 
 
-if six.PY2:
+if six.PY2: # pragma: no cover
     # Load strings in as Unicode on Python 2
     OrderedLoader.add_constructor('tag:yaml.org,2002:str',
                                   OrderedLoader.construct_scalar)
@@ -430,7 +430,7 @@ def get_validator(schema={}, ctx=None, validators=None, url_mapping=None,
     return validator
 
 
-if six.PY2:
+if six.PY2: # pragma: no cover
     def validate_large_literals(instance):
         """
         Validate that the tree has no large numeric literals.

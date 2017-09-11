@@ -216,7 +216,7 @@ for scalar_type in util.iter_subclasses(np.integer):
 # ----------------------------------------------------------------------
 # Unicode fix on Python 2
 
-if six.PY2:
+if six.PY2: # pragma: no cover
     # This dumps Python unicode strings as regular YAML strings rather
     # than !!python/unicode. See http://pyyaml.org/ticket/11
     def _unicode_representer(dumper, value):

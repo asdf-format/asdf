@@ -380,8 +380,8 @@ class BlockManager(object):
                 allow_unicode=True, encoding='utf-8')
 
     _re_index_content = re.compile(
-        b'^' + constants.INDEX_HEADER + b'\r?\n%YAML.*\.\.\.\r?\n?$')
-    _re_index_misc = re.compile(b'^[\n\r\x20-\x7f]+$')
+        br'^' + constants.INDEX_HEADER + br'\r?\n%YAML.*\.\.\.\r?\n?$')
+    _re_index_misc = re.compile(br'^[\n\r\x20-\x7f]+$')
 
     def read_block_index(self, fd, ctx):
         """
@@ -894,7 +894,7 @@ class Block(object):
         updating the file in-place, otherwise the work is redundant.
         """
         if self._data is not None:
-            if six.PY2:
+            if six.PY2: # pragma: no cover
                 self._data_size = len(self._data.data)
             else:
                 self._data_size = self._data.data.nbytes
