@@ -267,6 +267,9 @@ def display_warnings(_warnings):
     msg : str
         String containing the warning messages to be displayed
     """
+    if len(_warnings) == 0:
+        return "No warnings occurred (was one expected?)"
+
     msg = "Unexpected warning(s) occurred:\n"
     for warning in _warnings:
         msg += "{}:{}: {}: {}\n".format(
