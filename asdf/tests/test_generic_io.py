@@ -181,8 +181,6 @@ def test_open_fail4(tmpdir):
             generic_io.get_file(fd, mode='r')
 
 
-@pytest.mark.skipif(sys.version_info[:2] == (2, 6),
-                    reason="requires python 2.7 or later")
 def test_io_open(tree, tmpdir):
     path = os.path.join(str(tmpdir), 'test.asdf')
 

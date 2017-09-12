@@ -9,7 +9,8 @@ import six
 import yaml
 import warnings
 
-from . compat.odict import OrderedDict
+from collections import OrderedDict
+
 from . constants import YAML_TAG_PREFIX
 from . import schema
 from . import tagged

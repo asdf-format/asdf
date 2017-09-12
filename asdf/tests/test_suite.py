@@ -65,9 +65,7 @@ def test_reference_file(reference_file):
     # constructed. We want to make sure we only suppress warnings when they are
     # expected.
     expect_warnings = basename == 'complex.asdf'
-    if sys.version_info[:2] == (2, 6):
-        known_fail = (basename in ('complex.asdf', 'unicode_spp.asdf'))
-    elif sys.version_info[:2] == (2, 7):
+    if sys.version_info[:2] == (2, 7):
         known_fail = (basename in ('complex.asdf'))
 
     if sys.maxunicode <= 65535:

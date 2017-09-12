@@ -17,7 +17,7 @@ Installation
 
 ``asdf`` requires:
 
-- `python <http://www.python.org/>`__ 2.6, 2.7, 3.3, 3.4 or 3.5.
+- `python <http://www.python.org/>`__ 2.7, 3.3, 3.4 or 3.5.
 
 - `numpy <http://www.numpy.org/>`__ 1.6 or later
 
