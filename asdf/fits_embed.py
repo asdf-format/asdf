@@ -140,11 +140,10 @@ class AsdfInFits(asdf.AsdfFile):
         ff.write_to('test.fits')  # doctest: +SKIP
     """
 
-    def __init__(self, hdulist=None, tree=None, uri=None, extensions=None):
+    def __init__(self, hdulist=None, tree=None, **kwargs):
         if hdulist is None:
             hdulist = fits.HDUList()
-        super(AsdfInFits, self).__init__(
-            tree=tree, uri=uri, extensions=extensions)
+        super(AsdfInFits, self).__init__(tree=tree, **kwargs)
         self._blocks = _EmbeddedBlockManager(hdulist, self)
         self._hdulist = hdulist
         self._close_hdulist = False
@@ -162,7 +161,8 @@ class AsdfInFits(asdf.AsdfFile):
         self._tree = {}
 
     @classmethod
-    def open(cls, fd, uri=None, validate_checksums=False, extensions=None):
+    def open(cls, fd, uri=None, validate_checksums=False, extensions=None,
+             ignore_version_mismatch=True, ignore_unrecognized_tag=False):
         """Creates a new AsdfInFits object based on given input data
 
         Parameters
@@ -185,6 +185,9 @@ class AsdfInFits(asdf.AsdfFile):
             A list of extensions to the ASDF to support when reading
             and writing ASDF files.  See `asdftypes.AsdfExtension` for
             more information.
+
+        ignore_version_mismatch : bool, optional
+            When `True`, do not raise warnings for mismatched schema versions.
         """
         close_hdulist = False
         if isinstance(fd, fits.hdu.hdulist.HDUList):
@@ -202,7 +205,9 @@ class AsdfInFits(asdf.AsdfFile):
                 msg = "Failed to parse given file '{}'. Is it FITS?"
                 raise ValueError(msg.format(file_obj.uri))
 
-        self = cls(hdulist, uri=uri, extensions=extensions)
+        self = cls(hdulist, uri=uri, extensions=extensions,
+                   ignore_version_mismatch=ignore_version_mismatch,
+                   ignore_unrecognized_tag=ignore_unrecognized_tag)
         self._close_hdulist = close_hdulist
 
         try:

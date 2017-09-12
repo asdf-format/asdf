@@ -18,7 +18,7 @@ from astropy.tests.helper import catch_warnings
 from .. import asdf
 from .. import fits_embed
 from .. import open as asdf_open
-from .helpers import assert_tree_match, yaml_to_asdf
+from .helpers import assert_tree_match, yaml_to_asdf, display_warnings
 
 
 TEST_DATA_PATH = os.path.join(os.path.dirname(__file__), 'data')
@@ -230,7 +230,8 @@ def test_version_mismatch_file():
     testfile = os.path.join(TEST_DATA_PATH, 'version_mismatch.fits')
 
     with catch_warnings() as w:
-        with asdf.AsdfFile.open(testfile) as fits_handle:
+        with asdf.AsdfFile.open(testfile,
+                ignore_version_mismatch=False) as fits_handle:
             assert fits_handle.tree['a'] == complex(0j)
     # This is the warning that we expect from opening the FITS file
     assert len(w) == 1
@@ -238,10 +239,23 @@ def test_version_mismatch_file():
         "'tag:stsci.edu:asdf/core/complex' with version 7.0.0 found in file "
         "'file://{}', but latest supported version is 1.0.0".format(testfile))
 
+    # Make sure warning does not occur when warning is ignored (default)
     with catch_warnings() as w:
-        with fits_embed.AsdfInFits.open(testfile) as fits_handle:
+        with asdf.AsdfFile.open(testfile) as fits_handle:
+            assert fits_handle.tree['a'] == complex(0j)
+    assert len(w) == 0, display_warnings(w)
+
+    with catch_warnings() as w:
+        with fits_embed.AsdfInFits.open(testfile,
+                ignore_version_mismatch=False) as fits_handle:
             assert fits_handle.tree['a'] == complex(0j)
     assert len(w) == 1
     assert str(w[0].message) == (
         "'tag:stsci.edu:asdf/core/complex' with version 7.0.0 found in file "
         "'file://{}', but latest supported version is 1.0.0".format(testfile))
+
+    # Make sure warning does not occur when warning is ignored (default)
+    with catch_warnings() as w:
+        with fits_embed.AsdfInFits.open(testfile) as fits_handle:
+            assert fits_handle.tree['a'] == complex(0j)
+    assert len(w) == 0, display_warnings(w)

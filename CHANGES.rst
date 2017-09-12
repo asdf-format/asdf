@@ -46,7 +46,10 @@
 - When possible, display name of ASDF file that caused version mismatch
   warning. [#306]
 
-- Issue a warning when an unrecognized tag is encountered. [#295]
+- Issue a warning when an unrecognized tag is encountered. [#295] This warning
+  is silenced by default, but can be enabled with a parameter to the
+  ``AsdfFile`` constructor, or to ``AsdfFile.open``. Also added an option for
+  ignoring warnings from unrecognized schema tags. [#319]
 
 - Fix bug with loading JSON schemas in Python 3.5. [#317]
 

@@ -14,7 +14,7 @@ from .. import extension
 from .. import util
 from .. import versioning
 
-from . import helpers
+from . import helpers, CustomTestType
 from astropy.tests.helper import catch_warnings
 
 
@@ -97,7 +97,7 @@ a: !core/complex-42.0.0
 
     buff = helpers.yaml_to_asdf(yaml)
     with catch_warnings() as warning:
-        with asdf.AsdfFile.open(buff) as ff:
+        with asdf.AsdfFile.open(buff, ignore_version_mismatch=False) as ff:
             assert isinstance(ff.tree['a'], complex)
 
     assert len(warning) == 1
@@ -108,13 +108,22 @@ a: !core/complex-42.0.0
     # Make sure warning is repeatable
     buff.seek(0)
     with catch_warnings() as warning:
-        with asdf.AsdfFile.open(buff) as ff:
+        with asdf.AsdfFile.open(buff, ignore_version_mismatch=False) as ff:
             assert isinstance(ff.tree['a'], complex)
 
     assert len(warning) == 1
     assert str(warning[0].message) == (
         "'tag:stsci.edu:asdf/core/complex' with version 42.0.0 found in file, "
         "but latest supported version is 1.0.0")
+
+    # Make sure the warning does not occur if it is being ignored (default)
+    buff.seek(0)
+    with catch_warnings() as warning:
+        with asdf.AsdfFile.open(buff) as ff:
+            assert isinstance(ff.tree['a'], complex)
+
+    assert len(warning) == 0, helpers.display_warnings(warning)
+
 
     # If the major and minor match, there should be no warning.
     yaml = """
@@ -124,7 +133,7 @@ a: !core/complex-1.0.1
 
     buff = helpers.yaml_to_asdf(yaml)
     with catch_warnings() as warning:
-        with asdf.AsdfFile.open(buff) as ff:
+        with asdf.AsdfFile.open(buff, ignore_version_mismatch=False) as ff:
             assert isinstance(ff.tree['a'], complex)
 
     assert len(warning) == 0
@@ -144,7 +153,7 @@ a: !core/complex-42.0.0
         handle.write(buff.read())
 
     with catch_warnings() as w:
-        with asdf.AsdfFile.open(testfile) as ff:
+        with asdf.AsdfFile.open(testfile, ignore_version_mismatch=False) as ff:
             assert ff._fname == "file://{}".format(testfile)
             assert isinstance(ff.tree['a'], complex)
 
@@ -152,6 +161,54 @@ a: !core/complex-42.0.0
     assert str(w[0].message) == (
         "'tag:stsci.edu:asdf/core/complex' with version 42.0.0 found in file "
         "'file://{}', but latest supported version is 1.0.0".format(testfile))
+
+
+def test_version_mismatch_with_supported_versions():
+    """Make sure that defining the supported_versions field does not affect
+    whether or not schema mismatch warnings are triggered."""
+
+    class CustomFlow(object):
+        pass
+
+    class CustomFlowType(CustomTestType):
+        version = '1.1.0'
+        supported_versions = ['1.0.0', '1.1.0']
+        name = 'custom_flow'
+        organization = 'nowhere.org'
+        standard = 'custom'
+        types = [CustomFlow]
+
+    class CustomFlowExtension(object):
+        @property
+        def types(self):
+            return [CustomFlowType]
+
+        @property
+        def tag_mapping(self):
+            return [('tag:nowhere.org:custom',
+                     'http://nowhere.org/schemas/custom{tag_suffix}')]
+
+        @property
+        def url_mapping(self):
+            return [('http://nowhere.org/schemas/custom/',
+                     util.filepath_to_url(TEST_DATA_PATH) +
+                     '/{url_suffix}.yaml')]
+
+    yaml = """
+flow_thing:
+  !<tag:nowhere.org:custom/custom_flow-1.0.0>
+    c: 100
+    d: 3.14
+"""
+    buff = helpers.yaml_to_asdf(yaml)
+    with catch_warnings() as w:
+        data = asdf.AsdfFile.open(
+            buff, ignore_version_mismatch=False,
+            extensions=CustomFlowExtension())
+    assert len(w) == 1, helpers.display_warnings(w)
+    assert str(w[0].message) == (
+        "'tag:nowhere.org:custom/custom_flow' with version 1.0.0 found in "
+        "file, but latest supported version is 1.1.0")
 
 
 def test_versioned_writing():
@@ -297,6 +354,12 @@ undefined_data:
             "tag:nowhere.org:custom/{} is not recognized, converting to raw "
             "Python data structure".format(tag))
 
+    # Make sure no warning occurs if explicitly ignored
+    buff.seek(0)
+    with catch_warnings() as warning:
+        afile = asdf.AsdfFile.open(buff, ignore_unrecognized_tag=True)
+    assert len(warning) == 0
+
 
 def test_newer_tag():
     # This test simulates a scenario where newer versions of CustomFlow
@@ -365,13 +428,10 @@ flow_thing:
     with catch_warnings() as warning:
         asdf.AsdfFile.open(old_buff, extensions=CustomFlowExtension())
 
-    assert len(warning) == 2, helpers.display_warnings(warning)
-    assert str(warning[0].message) == (
-        "'tag:nowhere.org:custom/custom_flow' with version 1.0.0 found "
-        "in file, but latest supported version is 1.1.0")
+    assert len(warning) == 1, helpers.display_warnings(warning)
     # We expect this warning since it will not be possible to convert version
     # 1.0.0 of CustomFlow to a CustomType (by design, for testing purposes).
-    assert str(warning[1].message).startswith(
+    assert str(warning[0].message).startswith(
         "Failed to convert "
         "tag:nowhere.org:custom/custom_flow-1.0.0 to custom type")
 
@@ -535,7 +595,7 @@ flow_thing:
     with catch_warnings() as _warnings:
         data = asdf.AsdfFile.open(buff, extensions=CustomFlowExtension())
 
-    assert len(_warnings) == 2
-    assert str(_warnings[1].message) == (
+    assert len(_warnings) == 1
+    assert str(_warnings[0].message) == (
         "Version 1.1.0 of tag:nowhere.org:custom/custom_flow is not compatible "
         "with any existing tag implementations")
