@@ -6,6 +6,5 @@ from __future__ import absolute_import, division, unicode_literals, print_functi
 
 from . import core
 from . import fits
-from . import unit
 from . import transform
 from . import wcs

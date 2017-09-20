@@ -115,8 +115,8 @@ class FrameType(AsdfType):
 
     @classmethod
     def _reference_frame_from_tree(cls, node, ctx):
-        from ..unit import QuantityType
         from astropy.units import Quantity
+        from astropy.io.asdf.tags.unit.quantity import QuantityType
         from astropy.coordinates import ICRS, CartesianRepresentation
 
         version = cls.version
@@ -193,8 +193,8 @@ class FrameType(AsdfType):
     @classmethod
     def _to_tree(cls, frame, ctx):
         import numpy as np
-        from ..unit import QuantityType
         from astropy.coordinates import CartesianRepresentation
+        from astropy.io.asdf.tags.unit.quantity import QuantityType
         if not cls._old_astropy:
             from astropy.coordinates import CartesianDifferential
 
@@ -354,7 +354,7 @@ class ICRSCoord(AsdfType):
 
     @classmethod
     def from_tree(cls, node, ctx):
-        from ..unit import QuantityType
+        from astropy.io.asdf.tags.unit.quantity import QuantityType
         from astropy.coordinates import ICRS, Longitude, Latitude, Angle
 
         angle = QuantityType.from_tree(node['ra']['wrap_angle'], ctx)
@@ -369,9 +369,9 @@ class ICRSCoord(AsdfType):
 
     @classmethod
     def to_tree(cls, frame, ctx):
-        from ..unit import QuantityType
         from astropy.units import Quantity
         from astropy.coordinates import ICRS
+        from astropy.io.asdf.tags.unit.quantity import QuantityType
 
         node = {}
 
