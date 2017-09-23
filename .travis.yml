@@ -23,7 +23,7 @@ env:
         # to repeat them for all configurations.
         - PYTHON_VERSION=3.6
         - NUMPY_VERSION=stable
-        - ASTROPY_VERSION=development
+        - ASTROPY_VERSION=stable
         - CONDA_DEPENDENCIES='semantic_version jsonschema pyyaml six lz4'
         - PIP_DEPENDENCIES_FLAGS='--no-deps --force'
         - PIP_DEPENDENCIES='git+http://github.com/spacetelescope/gwcs.git#egg=gwcs'
@@ -31,14 +31,15 @@ env:
 
     matrix:
         - PYTHON_VERSION=2.7 SETUP_CMD='test'
-        - PYTHON_VERSION=3.5 SETUP_CMD='test'
-        - PYTHON_VERSION=3.6 SETUP_CMD='test'
+        - PYTHON_VERSION=3.5 SETUP_CMD='test' ASTROPY_VERSION=development
+        - PYTHON_VERSION=3.6 SETUP_CMD='test' ASTROPY_VERSION=development
 
 matrix:
     include:
 
         # Do a coverage test
         - env: SETUP_CMD='test --coverage --open-files --remote-data'
+               ASTROPY_VERSION=development
 
         # Check for sphinx doc build warnings - we do this first because it
         # may run for a long time

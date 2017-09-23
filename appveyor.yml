@@ -21,9 +21,6 @@ environment:
       - PYTHON_VERSION: "2.7"
         platform: x64
 
-      - PYTHON_VERSION: "3.4"
-        platform: x64
-
       - PYTHON_VERSION: "3.5"
         ASTROPY_VERSION: "1.3.2"
         NUMPY_VERSION: "1.11.1"
