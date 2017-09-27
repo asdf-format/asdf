@@ -87,6 +87,7 @@ class TimeType(AsdfType):
     def from_tree(cls, node, ctx):
         from astropy import time
         from astropy import units as u
+        from astropy.units import Quantity
         from astropy.coordinates import EarthLocation
 
         if isinstance(node, (six.string_types, list, np.ndarray)):
@@ -101,6 +102,12 @@ class TimeType(AsdfType):
         scale = node.get('scale')
         location = node.get('location')
         if location is not None:
+            unit = location.get('unit', u.m)
+            # This ensures that we can read the v.1.0.0 schema and convert it
+            # to the new EarthLocation object, which expects Quantity components
+            for comp in ['x', 'y', 'z']:
+                if not isinstance(location[comp], Quantity):
+                    location[comp] = Quantity(location[comp], unit=unit)
             location = EarthLocation.from_geocentric(
                 location['x'], location['y'], location['z'])
 
