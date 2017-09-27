@@ -24,11 +24,17 @@ _astropy_format_to_asdf_format = {
 
 
 def _assert_earthlocation_equal(a, b):
+    from astropy import __version__ as version
     assert_array_equal(a.x, b.x)
     assert_array_equal(a.y, b.y)
     assert_array_equal(a.z, b.z)
-    assert_array_equal(a.lat, b.lat)
-    assert_array_equal(a.lon, b.lon)
+    # This allows us to test against earlier versions of astropy
+    if version < '2.0.0':
+        assert_array_equal(a.latitude, b.latitude)
+        assert_array_equal(a.longitude, b.longitude)
+    else:
+        assert_array_equal(a.lat, b.lat)
+        assert_array_equal(a.lon, b.lon)
 
 
 class TimeType(AsdfType):
