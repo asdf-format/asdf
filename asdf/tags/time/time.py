@@ -9,6 +9,7 @@ from numpy.testing import assert_array_equal
 import six
 
 from ...asdftypes import AsdfType
+from ...versioning import AsdfSpec
 from ... import yamlutil
 
 
@@ -32,6 +33,8 @@ def _assert_earthlocation_equal(a, b):
 
 class TimeType(AsdfType):
     name = 'time/time'
+    version = '1.1.0'
+    supported_versions = ['1.0.0', AsdfSpec('>=1.1.0')]
     types = ['astropy.time.core.Time']
     requires = ['astropy']
 
@@ -72,14 +75,21 @@ class TimeType(AsdfType):
             d['scale'] = node.scale
 
         if node.location is not None:
-            d['location'] = {
-                # It seems like EarthLocations can be represented either in
-                # terms of Cartesian coordinates or latitude and longitude, so
-                # we rather arbitrarily choose the former for our representation
-                'x': yamlutil.custom_tree_to_tagged_tree(node.location.x, ctx),
-                'y': yamlutil.custom_tree_to_tagged_tree(node.location.y, ctx),
-                'z': yamlutil.custom_tree_to_tagged_tree(node.location.z, ctx)
-            }
+            x, y, z = node.location.x, node.location.y, node.location.z
+            # Preserve backwards compatibility for writing the old schema
+            # This allows WCS to test backwards compatibility with old frames
+            if cls.version == '1.0.0':
+                unit = node.location.unit
+                d['location'] = { 'x': x, 'y': y, 'z': z, 'unit': unit }
+            else:
+                d['location'] = {
+                    # It seems like EarthLocations can be represented either in
+                    # terms of Cartesian coordinates or latitude and longitude, so
+                    # we rather arbitrarily choose the former for our representation
+                    'x': yamlutil.custom_tree_to_tagged_tree(x, ctx),
+                    'y': yamlutil.custom_tree_to_tagged_tree(y, ctx),
+                    'z': yamlutil.custom_tree_to_tagged_tree(z, ctx)
+                }
 
         return d
 
