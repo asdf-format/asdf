@@ -7,7 +7,6 @@ import six
 import pytest
 import datetime
 from collections import OrderedDict
-from jsonschema import ValidationError
 
 astropy = pytest.importorskip('astropy')
 from astropy import time
