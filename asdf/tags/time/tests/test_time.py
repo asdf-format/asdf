@@ -103,6 +103,15 @@ def test_time(tmpdir):
     helpers.assert_roundtrip_tree(tree, tmpdir)
 
 
+def test_time_with_location(tmpdir):
+    # See https://github.com/spacetelescope/asdf/issues/341
+    t = time.Time([1,2], location=[[1,2], [3,4], [5,6]], format='cxcsec')
+
+    tree = {'time': t}
+
+    helpers.assert_roundtrip_tree(tree, tmpdir)
+
+
 def test_isot(tmpdir):
     tree = {
         'time': time.Time('2000-01-01T00:00:00.000')
