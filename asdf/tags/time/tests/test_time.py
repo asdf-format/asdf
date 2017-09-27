@@ -125,7 +125,7 @@ def test_isot(tmpdir):
 
 def test_time_tag():
     schema = asdf_schema.load_schema(
-        'http://stsci.edu/schemas/asdf/time/time-1.0.0',
+        'http://stsci.edu/schemas/asdf/time/time-1.1.0',
         resolve_references=True)
     schema = _flatten_combiners(schema)
 
@@ -136,7 +136,7 @@ def test_time_tag():
 
     asdf_schema.validate(instance, schema=schema)
 
-    tag = 'tag:stsci.edu:asdf/time/time-1.0.0'
+    tag = 'tag:stsci.edu:asdf/time/time-1.1.0'
     date = tagged.tag_object(tag, date)
     tree = {'date': date}
     asdf = AsdfFile(tree=tree)
