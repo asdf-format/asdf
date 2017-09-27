@@ -4,6 +4,7 @@
 from __future__ import absolute_import, division, unicode_literals, print_function
 
 import numpy as np
+from numpy.testing import assert_array_equal
 
 import six
 
@@ -19,6 +20,14 @@ _astropy_format_to_asdf_format = {
     'byear_str': 'byear',
     'jyear_str': 'jyear'
 }
+
+
+def _assert_earthlocation_equal(a, b):
+    assert_array_equal(a.x, b.x)
+    assert_array_equal(a.y, b.y)
+    assert_array_equal(a.z, b.z)
+    assert_array_equal(a.lat, b.lat)
+    assert_array_equal(a.lon, b.lon)
 
 
 class TimeType(AsdfType):
@@ -64,9 +73,12 @@ class TimeType(AsdfType):
 
         if node.location is not None:
             d['location'] = {
-                'x': node.location.x,
-                'y': node.location.y,
-                'z': node.location.z
+                # It seems like EarthLocations can be represented either in
+                # terms of Cartesian coordinates or latitude and longitude, so
+                # we rather arbitrarily choose the former for our representation
+                'x': yamlutil.custom_tree_to_tagged_tree(node.location.x, ctx),
+                'y': yamlutil.custom_tree_to_tagged_tree(node.location.y, ctx),
+                'z': yamlutil.custom_tree_to_tagged_tree(node.location.z, ctx)
             }
 
         return d
@@ -75,6 +87,7 @@ class TimeType(AsdfType):
     def from_tree(cls, node, ctx):
         from astropy import time
         from astropy import units as u
+        from astropy.coordinates import EarthLocation
 
         if isinstance(node, (six.string_types, list, np.ndarray)):
             t = time.Time(node)
@@ -88,24 +101,21 @@ class TimeType(AsdfType):
         scale = node.get('scale')
         location = node.get('location')
         if location is not None:
-            unit = location.get('unit', u.m)
-            if 'x' in location:
-                location = (location['x'] * unit,
-                            location['y'] * unit,
-                            location['z'] * unit)
-            else:
-                location = ('{0}d'.format(location['long']),
-                            '{0}d'.format(location['lat']),
-                            location.get('h', 0.0) * unit)
+            location = EarthLocation.from_geocentric(
+                location['x'], location['y'], location['z'])
 
         return time.Time(value, format=format, scale=scale, location=location)
 
     @classmethod
     def assert_equal(cls, old, new):
-        from numpy.testing import assert_array_equal
+        from astropy.coordinates import EarthLocation
 
         assert old.format == new.format
         assert old.scale == new.scale
-        assert old.location == new.location
+        if isinstance(old.location, EarthLocation):
+            assert isinstance(new.location, EarthLocation)
+            _assert_earthlocation_equal(old.location, new.location)
+        else:
+            assert old.location == new.location
 
         assert_array_equal(old, new)
