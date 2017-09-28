@@ -70,10 +70,13 @@ class StepType(dict, AsdfType):
 class FrameType(AsdfType):
     name = "wcs/frame"
     version = '1.1.0'
-    # We require a specific version of astropy in order to make use of
-    # CartesianDifferential
     requires = ['gwcs', 'astropy-1.3.3']
     types = ['gwcs.Frame2D']
+
+    import astropy
+    _astropy_version = astropy.__version__
+    # This indicates that Cartesian Differential is not available
+    _old_astropy = astropy.__version__ <= '1.3.3'
 
     @classmethod
     def _get_reference_frame_mapping(cls):
@@ -114,8 +117,7 @@ class FrameType(AsdfType):
     def _reference_frame_from_tree(cls, node, ctx):
         from ..unit import QuantityType
         from astropy.units import Quantity
-        from astropy.coordinates import (ICRS, CartesianRepresentation,
-            CartesianDifferential)
+        from astropy.coordinates import ICRS, CartesianRepresentation
 
         version = cls.version
         reference_frame = node['reference_frame']
@@ -146,8 +148,10 @@ class FrameType(AsdfType):
                         y = QuantityType.from_tree(val[1], ctx)
                         z = QuantityType.from_tree(val[2], ctx)
                     val = CartesianRepresentation(x, y, z)
-                elif name == 'galcen_v_sun':
-                    # This field only exists since v1.1.0
+                elif not cls._old_astropy and name == 'galcen_v_sun':
+                    from astropy.coordinates import CartesianDifferential
+                    # This field only exists since v1.1.0, and it only uses
+                    # CartesianDifferential after v1.3.3
                     d_x = QuantityType.from_tree(val[0], ctx)
                     d_y = QuantityType.from_tree(val[1], ctx)
                     d_z = QuantityType.from_tree(val[2], ctx)
@@ -190,8 +194,9 @@ class FrameType(AsdfType):
     def _to_tree(cls, frame, ctx):
         import numpy as np
         from ..unit import QuantityType
-        from astropy.coordinates import (CartesianRepresentation,
-            CartesianDifferential)
+        from astropy.coordinates import CartesianRepresentation
+        if not cls._old_astropy:
+            from astropy.coordinates import CartesianDifferential
 
         node = {}
 
@@ -215,7 +220,7 @@ class FrameType(AsdfType):
                 if isinstance(frameval, CartesianRepresentation):
                     value = [frameval.x, frameval.y, frameval.z]
                     frameval = value
-                elif isinstance(frameval, CartesianDifferential):
+                elif not cls._old_astropy and isinstance(frameval, CartesianDifferential):
                     value = [frameval.d_x, frameval.d_y, frameval.d_z]
                     frameval = value
                 yamlval = yamlutil.custom_tree_to_tagged_tree(frameval, ctx)
