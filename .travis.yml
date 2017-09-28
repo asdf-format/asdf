@@ -55,9 +55,8 @@ matrix:
         # try older astropy versions
         - env: PYTHON_VERSION=3.5
                NUMPY_VERSION=1.11 ASTROPY_VERSION=1.2.1 SETUP_CMD='test'
-        - env: PYTHON_VERSION=3.5
-               NUMPY_VERSION=1.11 ASTROPY_VERSION=1.1.2 SETUP_CMD='test'
         - env: NUMPY_VERSION=1.12 ASTROPY_VERSION=1.3.2 SETUP_CMD='test'
+        - env: NUMPY_VERSION=1.12 ASTROPY_VERSION=1.3.3 SETUP_CMD='test'
 
         # latest stable versions
         - env: NUMPY_VERSION=stable ASTROPY_VERSION=stable SETUP_CMD='test'
