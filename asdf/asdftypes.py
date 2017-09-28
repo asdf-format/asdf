@@ -350,12 +350,14 @@ _all_asdftypes = set()
 
 def _from_tree_tagged_missing_requirements(cls, tree, ctx):
     # A special version of AsdfType.from_tree_tagged for when the
-    # required dependencies for an AsdfType are missing.  Shows a
-    # warning, and then returns the raw dictionary.
+    # required dependencies for an AsdfType are missing.
     plural = 's' if len(cls.requires) else ''
-    warnings.warn("{0} package{1} is required to instantiate '{2}'".format(
-        util.human_list(cls.requires), plural, tree._tag))
-    return tree
+    message = "{0} package{1} is required to instantiate '{2}'".format(
+        util.human_list(cls.requires), plural, tree._tag)
+    # This error will be handled by yamlutil.tagged_tree_to_custom_tree, which
+    # will cause a warning to be issued indicating that the tree failed to be
+    # converted.
+    raise TypeError(message)
 
 
 class ExtensionTypeMeta(type):
