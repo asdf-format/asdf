@@ -552,8 +552,7 @@ flow_thing:
     assert type(new_data.tree['flow_thing']) == CustomFlow
 
     old_buff = helpers.yaml_to_asdf(old_yaml)
-    with catch_warnings() as warning:
-        old_data = asdf.AsdfFile.open(old_buff, extensions=CustomFlowExtension())
+    old_data = asdf.AsdfFile.open(old_buff, extensions=CustomFlowExtension())
     assert type(old_data.tree['flow_thing']) == CustomFlow
 
 def test_unsupported_version_warning():
