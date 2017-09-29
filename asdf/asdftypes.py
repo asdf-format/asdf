@@ -98,7 +98,7 @@ class _AsdfWriteTypeIndex(object):
 
         def add_by_tag(name, version):
             tag = join_tag_version(name, version)
-            if tag in index._type_by_tag and name not in self._type_by_name:
+            if tag in index._type_by_tag:
                 asdftype = index._type_by_tag[tag]
                 self._type_by_name[name] = asdftype
                 add_type(asdftype)
@@ -119,7 +119,7 @@ class _AsdfWriteTypeIndex(object):
 
             # Now add any extension types that aren't known to the ASDF standard
             for name, versions in six.iteritems(index._versions_by_type_name):
-                if name not in version_map:
+                if name not in self._type_by_name:
                     add_by_tag(name, versions[-1])
 
         for asdftype in index._unnamed_types:
