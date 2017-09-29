@@ -29,6 +29,7 @@ from .. import resolver
 from .. import schema
 from .. import treeutil
 from .. import util
+from .. import versioning
 
 
 from . import helpers, CustomTestType
@@ -166,6 +167,19 @@ def _assert_warnings(_warnings):
     else:
         assert len(_warnings) == 0, helpers.display_warnings(_warnings)
 
+def _find_standard_version(filename):
+    components = filename[filename.find('schemas/'):].split(os.path.sep)
+    tag = 'tag:{}:{}'.format(components[1], os.path.sep.join(components[2:]))
+    name, version = asdftypes.split_tag_version(tag.replace('.yaml', ''))
+
+    for sv in versioning.supported_versions:
+        map_version = versioning.get_version_map(sv)['tags'].get(name)
+        if map_version is not None and version == map_version:
+            return sv
+
+    return versioning.default_version
+
+
 def test_schema_example(filename, example):
     """Pytest to check validity of a specific example within schema file
 
@@ -179,9 +193,12 @@ def test_schema_example(filename, example):
     'parametrize' utility in order to account for all examples in all schema
     files.
     """
+    standard_version = _find_standard_version(filename)
+
     # Make sure that the examples in the schema files (and thus the
     # ASDF standard document) are valid.
-    buff = helpers.yaml_to_asdf('example: ' + example.strip())
+    buff = helpers.yaml_to_asdf(
+        'example: ' + example.strip(), standard_version=standard_version)
     ff = asdf.AsdfFile(
         uri=util.filepath_to_url(os.path.abspath(filename)),
         extensions=TestExtension())

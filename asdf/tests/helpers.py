@@ -200,7 +200,7 @@ def assert_roundtrip_tree(
             server.finalize()
 
 
-def yaml_to_asdf(yaml_content, yaml_headers=True):
+def yaml_to_asdf(yaml_content, yaml_headers=True, standard_version=None):
     """
     Given a string of YAML content, adds the extra pre-
     and post-amble to make it an ASDF file.
@@ -222,12 +222,16 @@ def yaml_to_asdf(yaml_content, yaml_headers=True):
 
     buff = io.BytesIO()
 
+    if standard_version is None:
+        standard_version = versioning.default_version
+
     if yaml_headers:
         buff.write("""#ASDF {0}
+#ASDF_STANDARD {1}
 %YAML 1.1
 %TAG ! tag:stsci.edu:asdf/
 --- !core/asdf-{0}
-""".format('1.0.0').encode('ascii'))
+""".format('1.0.0', standard_version).encode('ascii'))
     buff.write(yaml_content)
     if yaml_headers:
         buff.write(b"\n...\n")
