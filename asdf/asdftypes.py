@@ -103,26 +103,24 @@ class _AsdfWriteTypeIndex(object):
                 self._type_by_name[name] = asdftype
                 add_type(asdftype)
 
-        if version == 'latest':
+        if self._version == 'latest':
             for name, versions in six.iteritems(index._versions_by_type_name):
-                version = versions[-1]
-                add_by_tag(name, version)
+                add_by_tag(name, versions[-1])
         else:
             try:
-                version_map = get_version_map(version)
+                version_map = get_version_map(self._version)
             except ValueError:
                 raise ValueError(
                     "Don't know how to write out ASDF version {0}".format(
-                        version))
+                        self._version))
 
-            for name, version in six.iteritems(version_map['tags']):
-                add_by_tag(name, AsdfVersion(version))
+            for name, _version in six.iteritems(version_map['tags']):
+                add_by_tag(name, AsdfVersion(_version))
 
             # Now add any extension types that aren't known to the ASDF standard
             for name, versions in six.iteritems(index._versions_by_type_name):
                 if name not in version_map:
-                    version = versions[-1]
-                    add_by_tag(name, version)
+                    add_by_tag(name, versions[-1])
 
         for asdftype in index._unnamed_types:
             add_type(asdftype)
