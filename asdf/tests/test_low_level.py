@@ -19,6 +19,7 @@ from .. import block
 from .. import constants
 from .. import generic_io
 from .. import treeutil
+from ..tests.helpers import assert_tree_match
 
 
 def _get_small_tree():
@@ -1162,3 +1163,13 @@ def test_fd_not_seekable():
     # We lost the information about the underlying array type,
     # but still can compare the bytes.
     assert b.data.tobytes() == data.tobytes()
+
+
+def test_top_level_tree():
+    tree = {'tree': _get_small_tree()}
+    ff = asdf.AsdfFile(tree)
+    assert_tree_match(ff.tree['tree'], ff['tree'])
+
+    ff2 = asdf.AsdfFile()
+    ff2['tree'] = _get_small_tree()
+    assert_tree_match(ff2.tree['tree'], ff2['tree'])
