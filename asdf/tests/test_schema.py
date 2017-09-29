@@ -168,8 +168,8 @@ def _assert_warnings(_warnings):
         assert len(_warnings) == 0, helpers.display_warnings(_warnings)
 
 def _find_standard_version(filename):
-    components = filename[filename.find('schemas/'):].split(os.path.sep)
-    tag = 'tag:{}:{}'.format(components[1], os.path.sep.join(components[2:]))
+    components = filename[filename.find('schemas') + 1:].split(os.path.sep)
+    tag = 'tag:{}:{}'.format(components[1], '/'.join(components[2:]))
     name, version = asdftypes.split_tag_version(tag.replace('.yaml', ''))
 
     for sv in versioning.supported_versions:
