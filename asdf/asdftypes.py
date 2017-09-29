@@ -81,6 +81,7 @@ class _AsdfWriteTypeIndex(object):
         self._version = version
 
         self._type_by_cls = {}
+        self._type_by_name = {}
         self._type_by_subclasses = {}
         self._types_with_dynamic_subclasses = {}
 
@@ -97,8 +98,9 @@ class _AsdfWriteTypeIndex(object):
 
         def add_by_tag(name, version):
             tag = join_tag_version(name, version)
-            if tag in index._type_by_tag:
+            if tag in index._type_by_tag and name not in self._type_by_name:
                 asdftype = index._type_by_tag[tag]
+                self._type_by_name[name] = asdftype
                 add_type(asdftype)
 
         if version == 'latest':
