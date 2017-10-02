@@ -29,7 +29,8 @@ def _assert_earthlocation_equal(a, b):
     assert_array_equal(a.y, b.y)
     assert_array_equal(a.z, b.z)
     # This allows us to test against earlier versions of astropy
-    if version < '2.0.0':
+    # This code path does get tested in CI, but we don't run a coverage test
+    if version < '2.0.0': # pragma: no cover
         assert_array_equal(a.latitude, b.latitude)
         assert_array_equal(a.longitude, b.longitude)
     else:
@@ -84,7 +85,8 @@ class TimeType(AsdfType):
             x, y, z = node.location.x, node.location.y, node.location.z
             # Preserve backwards compatibility for writing the old schema
             # This allows WCS to test backwards compatibility with old frames
-            if cls.version == '1.0.0':
+            # This code does get tested in CI, but we don't run a coverage test
+            if cls.version == '1.0.0': # pragma: no cover
                 unit = node.location.unit
                 d['location'] = { 'x': x, 'y': y, 'z': z, 'unit': unit }
             else:
