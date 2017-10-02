@@ -55,6 +55,11 @@
 
 - Remove all remnants of support for Python 2.6. [#333]
 
+- Fix issues with the type index used for writing out ASDF files. This ensures
+  that items in the type index are not inadvertently overwritten by later
+  versions of the same type. It also makes sure that schema example tests run
+  against the correct version of the ASDF standard. [#350]
+
 1.2.1(2016-11-07)
 -----------------
 
