@@ -104,7 +104,12 @@ def test_time(tmpdir):
 
 def test_time_with_location(tmpdir):
     # See https://github.com/spacetelescope/asdf/issues/341
-    t = time.Time([1,2], location=[[1,2], [3,4], [5,6]], format='cxcsec')
+    from astropy import units as u
+    from astropy.coordinates.earth import EarthLocation
+
+    location = EarthLocation(x=[1,2]*u.m, y=[3,4]*u.m, z=[5,6]*u.m)
+
+    t = time.Time([1,2], location=location, format='cxcsec')
 
     tree = {'time': t}
 
