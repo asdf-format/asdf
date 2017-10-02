@@ -60,6 +60,9 @@
   versions of the same type. It also makes sure that schema example tests run
   against the correct version of the ASDF standard. [#350]
 
+- Update time schema to reflect changes in astropy. This fixes an outstanding
+  bug. [#343]
+
 1.2.1(2016-11-07)
 -----------------
 
