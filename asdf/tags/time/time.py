@@ -4,10 +4,12 @@
 from __future__ import absolute_import, division, unicode_literals, print_function
 
 import numpy as np
+from numpy.testing import assert_array_equal
 
 import six
 
 from ...asdftypes import AsdfType
+from ...versioning import AsdfSpec
 from ... import yamlutil
 
 
@@ -21,8 +23,25 @@ _astropy_format_to_asdf_format = {
 }
 
 
+def _assert_earthlocation_equal(a, b):
+    from astropy import __version__ as version
+    assert_array_equal(a.x, b.x)
+    assert_array_equal(a.y, b.y)
+    assert_array_equal(a.z, b.z)
+    # This allows us to test against earlier versions of astropy
+    # This code path does get tested in CI, but we don't run a coverage test
+    if version < '2.0.0': # pragma: no cover
+        assert_array_equal(a.latitude, b.latitude)
+        assert_array_equal(a.longitude, b.longitude)
+    else:
+        assert_array_equal(a.lat, b.lat)
+        assert_array_equal(a.lon, b.lon)
+
+
 class TimeType(AsdfType):
     name = 'time/time'
+    version = '1.1.0'
+    supported_versions = ['1.0.0', AsdfSpec('>=1.1.0')]
     types = ['astropy.time.core.Time']
     requires = ['astropy']
 
@@ -63,11 +82,22 @@ class TimeType(AsdfType):
             d['scale'] = node.scale
 
         if node.location is not None:
-            d['location'] = {
-                'x': node.location.x,
-                'y': node.location.y,
-                'z': node.location.z
-            }
+            x, y, z = node.location.x, node.location.y, node.location.z
+            # Preserve backwards compatibility for writing the old schema
+            # This allows WCS to test backwards compatibility with old frames
+            # This code does get tested in CI, but we don't run a coverage test
+            if cls.version == '1.0.0': # pragma: no cover
+                unit = node.location.unit
+                d['location'] = { 'x': x, 'y': y, 'z': z, 'unit': unit }
+            else:
+                d['location'] = {
+                    # It seems like EarthLocations can be represented either in
+                    # terms of Cartesian coordinates or latitude and longitude, so
+                    # we rather arbitrarily choose the former for our representation
+                    'x': yamlutil.custom_tree_to_tagged_tree(x, ctx),
+                    'y': yamlutil.custom_tree_to_tagged_tree(y, ctx),
+                    'z': yamlutil.custom_tree_to_tagged_tree(z, ctx)
+                }
 
         return d
 
@@ -75,6 +105,8 @@ class TimeType(AsdfType):
     def from_tree(cls, node, ctx):
         from astropy import time
         from astropy import units as u
+        from astropy.units import Quantity
+        from astropy.coordinates import EarthLocation
 
         if isinstance(node, (six.string_types, list, np.ndarray)):
             t = time.Time(node)
@@ -89,23 +121,26 @@ class TimeType(AsdfType):
         location = node.get('location')
         if location is not None:
             unit = location.get('unit', u.m)
-            if 'x' in location:
-                location = (location['x'] * unit,
-                            location['y'] * unit,
-                            location['z'] * unit)
-            else:
-                location = ('{0}d'.format(location['long']),
-                            '{0}d'.format(location['lat']),
-                            location.get('h', 0.0) * unit)
+            # This ensures that we can read the v.1.0.0 schema and convert it
+            # to the new EarthLocation object, which expects Quantity components
+            for comp in ['x', 'y', 'z']:
+                if not isinstance(location[comp], Quantity):
+                    location[comp] = Quantity(location[comp], unit=unit)
+            location = EarthLocation.from_geocentric(
+                location['x'], location['y'], location['z'])
 
         return time.Time(value, format=format, scale=scale, location=location)
 
     @classmethod
     def assert_equal(cls, old, new):
-        from numpy.testing import assert_array_equal
+        from astropy.coordinates import EarthLocation
 
         assert old.format == new.format
         assert old.scale == new.scale
-        assert old.location == new.location
+        if isinstance(old.location, EarthLocation):
+            assert isinstance(new.location, EarthLocation)
+            _assert_earthlocation_equal(old.location, new.location)
+        else:
+            assert old.location == new.location
 
         assert_array_equal(old, new)

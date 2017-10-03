@@ -253,7 +253,7 @@ frames:
       - !unit/quantity-1.1.0 {unit: !unit/unit-1.0.0 m s-1, value: %f}
       - !unit/quantity-1.1.0 {unit: !unit/unit-1.0.0 m s-1, value: %f}
       - !unit/quantity-1.1.0 {unit: !unit/unit-1.0.0 m s-1, value: %f}
-      obstime: !time/time-1.0.0 2010-01-01 00:00:00.000
+      obstime: !time/time-1.1.0 2010-01-01 00:00:00.000
     unit: [!unit/unit-1.0.0 deg, !unit/unit-1.0.0 deg]
 """ % (obsgeovel + obsgeoloc)
 

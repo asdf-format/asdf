@@ -7,7 +7,6 @@ import six
 import pytest
 import datetime
 from collections import OrderedDict
-from jsonschema import ValidationError
 
 astropy = pytest.importorskip('astropy')
 from astropy import time
@@ -103,6 +102,20 @@ def test_time(tmpdir):
     helpers.assert_roundtrip_tree(tree, tmpdir)
 
 
+def test_time_with_location(tmpdir):
+    # See https://github.com/spacetelescope/asdf/issues/341
+    from astropy import units as u
+    from astropy.coordinates.earth import EarthLocation
+
+    location = EarthLocation(x=[1,2]*u.m, y=[3,4]*u.m, z=[5,6]*u.m)
+
+    t = time.Time([1,2], location=location, format='cxcsec')
+
+    tree = {'time': t}
+
+    helpers.assert_roundtrip_tree(tree, tmpdir)
+
+
 def test_isot(tmpdir):
     tree = {
         'time': time.Time('2000-01-01T00:00:00.000')
@@ -117,7 +130,7 @@ def test_isot(tmpdir):
 
 def test_time_tag():
     schema = asdf_schema.load_schema(
-        'http://stsci.edu/schemas/asdf/time/time-1.0.0',
+        'http://stsci.edu/schemas/asdf/time/time-1.1.0',
         resolve_references=True)
     schema = _flatten_combiners(schema)
 
@@ -128,7 +141,7 @@ def test_time_tag():
 
     asdf_schema.validate(instance, schema=schema)
 
-    tag = 'tag:stsci.edu:asdf/time/time-1.0.0'
+    tag = 'tag:stsci.edu:asdf/time/time-1.1.0'
     date = tagged.tag_object(tag, date)
     tree = {'date': date}
     asdf = AsdfFile(tree=tree)
