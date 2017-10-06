@@ -63,6 +63,9 @@
 - Update time schema to reflect changes in astropy. This fixes an outstanding
   bug. [#343]
 
+- Add ``copy`` option to ``asdf.open`` to control whether or not underlying
+  block data should be memory mapped, if possible. [#355]
+
 1.2.1(2016-11-07)
 -----------------
 
