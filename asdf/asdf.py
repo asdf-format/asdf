@@ -43,7 +43,8 @@ class AsdfFile(versioning.VersionedMixin):
     The main class that represents a ASDF file.
     """
     def __init__(self, tree=None, uri=None, extensions=None, version=None,
-        ignore_version_mismatch=True, ignore_unrecognized_tag=False):
+        ignore_version_mismatch=True, ignore_unrecognized_tag=False,
+        copy=False):
         """
         Parameters
         ----------
@@ -74,6 +75,10 @@ class AsdfFile(versioning.VersionedMixin):
         ignore_unrecognized_tag : bool, optional
             When `True`, do not raise warnings for unrecognized tags. Set to
             `False` by default.
+
+        copy : bool, optional
+            When `False`, when reading files, attempt to memmap underlying data
+            arrays when possible.
         """
 
         if extensions is None or extensions == []:
@@ -92,7 +97,7 @@ class AsdfFile(versioning.VersionedMixin):
 
         self._fd = None
         self._external_asdf_by_uri = {}
-        self._blocks = block.BlockManager(self)
+        self._blocks = block.BlockManager(self, copy=copy)
         self._uri = None
         if tree is None:
             self.tree = {}
@@ -536,7 +541,8 @@ class AsdfFile(versioning.VersionedMixin):
              do_not_fill_defaults=False,
              ignore_version_mismatch=True,
              ignore_unrecognized_tag=False,
-             _force_raw_types=False):
+             _force_raw_types=False,
+             copy=False):
         """
         Open an existing ASDF file.
 
@@ -581,7 +587,8 @@ class AsdfFile(versioning.VersionedMixin):
         """
         self = cls(extensions=extensions,
                    ignore_version_mismatch=ignore_version_mismatch,
-                   ignore_unrecognized_tag=ignore_unrecognized_tag)
+                   ignore_unrecognized_tag=ignore_unrecognized_tag,
+                   copy=copy)
 
         return cls._open_impl(
             self, fd, uri=uri, mode=mode,

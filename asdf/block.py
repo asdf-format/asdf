@@ -33,7 +33,7 @@ class BlockManager(object):
     """
     Manages the `Block`s associated with a ASDF file.
     """
-    def __init__(self, asdffile):
+    def __init__(self, asdffile, copy=False):
         self._asdffile = weakref.ref(asdffile)
 
         self._internal_blocks = []
@@ -50,6 +50,7 @@ class BlockManager(object):
 
         self._data_to_block_mapping = {}
         self._validate_checksums = False
+        self._memmap = not copy
 
     def __len__(self):
         """
@@ -206,7 +207,7 @@ class BlockManager(object):
     def _read_next_internal_block(self, fd, past_magic=False):
         # This assumes the file pointer is at the beginning of the
         # block, (or beginning + 4 if past_magic is True)
-        block = Block().read(
+        block = Block(memmap=self._memmap).read(
             fd, past_magic=past_magic,
             validate_checksum=self._validate_checksums)
         if block is not None:
@@ -493,7 +494,7 @@ class BlockManager(object):
         # make sure it makes sense.
         fd.seek(offsets[-1], generic_io.SEEK_SET)
         try:
-            block = Block().read(fd)
+            block = Block(memmap=self._memmap).read(fd)
         except (ValueError, IOError):
             return
 
@@ -504,7 +505,8 @@ class BlockManager(object):
         # It seems we're good to go, so instantiate the UnloadedBlock
         # objects
         for offset in offsets[1:-1]:
-            self._internal_blocks.append(UnloadedBlock(fd, offset))
+            self._internal_blocks.append(
+                UnloadedBlock(fd, offset, memmap=self._memmap))
 
         # We already read the last block in the file -- no need to read it again
         self._internal_blocks.append(block)
@@ -757,7 +759,7 @@ class Block(object):
         ('checksum', '16s')
     ])
 
-    def __init__(self, data=None, uri=None, array_storage='internal'):
+    def __init__(self, data=None, uri=None, array_storage='internal', memmap=True):
         if isinstance(data, np.ndarray) and not data.flags.c_contiguous:
             self._data = np.ascontiguousarray(data)
         else:
@@ -770,6 +772,7 @@ class Block(object):
         self._input_compression = None
         self._output_compression = 'input'
         self._checksum = None
+        self._should_memmap = memmap
         self._memmapped = False
 
         self.update_size()
@@ -796,7 +799,7 @@ class Block(object):
     @allocated.setter
     def allocated(self, allocated):
         self._allocated = allocated
-        
+
     @property
     def header_size(self):
         return self._header.size + constants.BLOCK_HEADER_BOILERPLATE_SIZE
@@ -1097,7 +1100,8 @@ class Block(object):
             # Be nice and reset the file position after we're done
             curpos = self._fd.tell()
             try:
-                if not self.input_compression and self._fd.can_memmap():
+                memmap = self._fd.can_memmap() and not self.input_compression
+                if self._should_memmap and memmap:
                     self._data = self._fd.memmap_array(
                         self.data_offset, self._size)
                     self._memmapped = True
@@ -1131,7 +1135,7 @@ class UnloadedBlock(object):
     full-fledged block whenever the underlying data or more detail is
     requested.
     """
-    def __init__(self, fd, offset):
+    def __init__(self, fd, offset, memmap=True):
         self._fd = fd
         self._offset = offset
         self._data = None
@@ -1140,6 +1144,7 @@ class UnloadedBlock(object):
         self._input_compression = None
         self._output_compression = 'input'
         self._checksum = None
+        self._should_memmap = memmap
         self._memmapped = False
 
     def __len__(self):
