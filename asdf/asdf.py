@@ -44,7 +44,7 @@ class AsdfFile(versioning.VersionedMixin):
     """
     def __init__(self, tree=None, uri=None, extensions=None, version=None,
         ignore_version_mismatch=True, ignore_unrecognized_tag=False,
-        copy=False):
+        copy_arrays=False):
         """
         Parameters
         ----------
@@ -76,7 +76,7 @@ class AsdfFile(versioning.VersionedMixin):
             When `True`, do not raise warnings for unrecognized tags. Set to
             `False` by default.
 
-        copy : bool, optional
+        copy_arrays : bool, optional
             When `False`, when reading files, attempt to memmap underlying data
             arrays when possible.
         """
@@ -97,7 +97,7 @@ class AsdfFile(versioning.VersionedMixin):
 
         self._fd = None
         self._external_asdf_by_uri = {}
-        self._blocks = block.BlockManager(self, copy=copy)
+        self._blocks = block.BlockManager(self, copy_arrays=copy_arrays)
         self._uri = None
         if tree is None:
             self.tree = {}
@@ -542,7 +542,7 @@ class AsdfFile(versioning.VersionedMixin):
              ignore_version_mismatch=True,
              ignore_unrecognized_tag=False,
              _force_raw_types=False,
-             copy=False):
+             copy_arrays=False):
         """
         Open an existing ASDF file.
 
@@ -580,6 +580,10 @@ class AsdfFile(versioning.VersionedMixin):
             When `True`, do not raise warnings for unrecognized tags. Set to
             `False` by default.
 
+        copy_arrays : bool, optional
+            When `False`, when reading files, attempt to memmap underlying data
+            arrays when possible.
+
         Returns
         -------
         asdffile : AsdfFile
@@ -588,7 +592,7 @@ class AsdfFile(versioning.VersionedMixin):
         self = cls(extensions=extensions,
                    ignore_version_mismatch=ignore_version_mismatch,
                    ignore_unrecognized_tag=ignore_unrecognized_tag,
-                   copy=copy)
+                   copy_arrays=copy_arrays)
 
         return cls._open_impl(
             self, fd, uri=uri, mode=mode,

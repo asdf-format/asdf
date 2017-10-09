@@ -1108,7 +1108,7 @@ def test_open_no_memmap(tmpdir):
         assert isinstance(array.block._data, np.memmap)
 
     # Test that if we ask for copy, we do not get memmapped arrays
-    with asdf.AsdfFile.open(tmpfile, copy=True) as af:
+    with asdf.AsdfFile.open(tmpfile, copy_arrays=True) as af:
         array = af.tree['array']
         x = array[0]
         assert array.block._memmapped == False

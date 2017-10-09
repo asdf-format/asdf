@@ -33,7 +33,7 @@ class BlockManager(object):
     """
     Manages the `Block`s associated with a ASDF file.
     """
-    def __init__(self, asdffile, copy=False):
+    def __init__(self, asdffile, copy_arrays=False):
         self._asdffile = weakref.ref(asdffile)
 
         self._internal_blocks = []
@@ -50,7 +50,7 @@ class BlockManager(object):
 
         self._data_to_block_mapping = {}
         self._validate_checksums = False
-        self._memmap = not copy
+        self._memmap = not copy_arrays
 
     def __len__(self):
         """
