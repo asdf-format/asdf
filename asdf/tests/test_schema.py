@@ -92,10 +92,11 @@ def test_violate_toplevel_schema():
         asdf.AsdfFile(tree)
 
     ff = asdf.AsdfFile()
-    ff.tree['fits'] = 'This does not look like a FITS file'
     with pytest.raises(ValidationError):
-        buff = io.BytesIO()
-        ff.write_to(buff)
+        ff.tree['fits'] = 'This does not look like a FITS file'
+
+    with pytest.raises(ValidationError):
+        asdf.AsdfFile({'fits': 'This does not look like a FITS file'})
 
 
 @pytest.mark.skipif('not HAS_ASTROPY')

@@ -260,7 +260,7 @@ class AsdfFile(versioning.VersionedMixin):
 
     @tree.setter
     def tree(self, tree):
-        asdf_object = AsdfObject(tree)
+        asdf_object = AsdfObject(tree, validator=self._validate)
         self._validate(asdf_object)
         self._tree = asdf_object
 
@@ -272,8 +272,7 @@ class AsdfFile(versioning.VersionedMixin):
         return self._comments
 
     def _validate(self, tree):
-        tagged_tree = yamlutil.custom_tree_to_tagged_tree(
-            tree, self)
+        tagged_tree = yamlutil.custom_tree_to_tagged_tree(tree, self)
         schema.validate(tagged_tree, self)
 
     def validate(self):
@@ -881,8 +880,8 @@ class AsdfFile(versioning.VersionedMixin):
         try:
             with generic_io.get_file(fd, mode='w') as fd:
                 self._fd = fd
-                self._pre_write(fd, all_array_storage, all_array_compression,
-                                auto_inline)
+                self._pre_write(
+                    fd, all_array_storage, all_array_compression, auto_inline)
 
                 try:
                     self._serial_write(fd, pad_blocks, include_block_index)
