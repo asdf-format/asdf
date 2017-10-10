@@ -1089,6 +1089,34 @@ def test_dots_but_no_block_index():
         assert len(ff.blocks) == 1
 
 
+def test_open_no_memmap(tmpdir):
+    tmpfile = os.path.join(str(tmpdir), 'random.asdf')
+
+    tree = {
+        'array': np.random.random((20, 20))
+    }
+
+    ff = asdf.AsdfFile(tree)
+    ff.write_to(tmpfile)
+
+    # Test that by default we use memmapped arrays when possible
+    with asdf.AsdfFile.open(tmpfile) as af:
+        array = af.tree['array']
+        # Make sure to access the block so that it gets loaded
+        x = array[0]
+        assert array.block._memmapped == True
+        assert isinstance(array.block._data, np.memmap)
+
+    # Test that if we ask for copy, we do not get memmapped arrays
+    with asdf.AsdfFile.open(tmpfile, copy_arrays=True) as af:
+        array = af.tree['array']
+        x = array[0]
+        assert array.block._memmapped == False
+        # We can't just check for isinstance(..., np.array) since this will
+        # be true for np.memmap as well
+        assert not isinstance(array.block._data, np.memmap)
+
+
 def test_invalid_version(tmpdir):
     content = b"""#ASDF 0.1.0
 %YAML 1.1
