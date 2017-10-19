@@ -66,6 +66,9 @@
 - Add ``copy_arrays`` option to ``asdf.open`` to control whether or not
   underlying array data should be memory mapped, if possible. [#355]
 
+- Allow the tree to be accessed using top-level ``__getitem__`` and
+  ``__setitem__``. [#352]
+
 1.2.1(2016-11-07)
 -----------------
 

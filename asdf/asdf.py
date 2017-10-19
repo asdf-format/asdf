@@ -264,6 +264,12 @@ class AsdfFile(versioning.VersionedMixin):
         self._validate(asdf_object)
         self._tree = asdf_object
 
+    def __getitem__(self, key):
+        return self._tree[key]
+
+    def __setitem__(self, key, value):
+        self._tree[key] = value
+
     @property
     def comments(self):
         """
