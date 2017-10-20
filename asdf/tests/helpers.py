@@ -36,7 +36,7 @@ except ImportError:
 
 from ..asdf import AsdfFile, get_asdf_library_info
 from ..conftest import RangeHTTPServer
-from ..extension import _builtin_extension_list
+from ..extension import default_extensions
 from .. import util
 from .. import versioning
 
@@ -73,7 +73,7 @@ def assert_tree_match(old_tree, new_tree, ctx=None,
 
     if ctx is None:
         version_string = str(versioning.default_version)
-        ctx = _builtin_extension_list
+        ctx = default_extensions.extension_list
     else:
         version_string = ctx.version_string
 
