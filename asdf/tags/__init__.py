@@ -5,5 +5,4 @@ from __future__ import absolute_import, division, unicode_literals, print_functi
 # TODO: Import entire tree automatically and make these work like "plugins"?
 
 from . import core
-from . import transform
 from . import wcs
