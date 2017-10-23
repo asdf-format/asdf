@@ -28,10 +28,6 @@ packagename = os.path.basename(os.path.dirname(__file__))
 TESTED_VERSIONS[packagename] = version.version
 
 
-# Uncomment the following line to treat all DeprecationWarnings as
-# exceptions
-enable_deprecations_as_exceptions()
-
 try:
     PYTEST_HEADER_MODULES['Astropy'] = 'astropy'
     PYTEST_HEADER_MODULES['jsonschema'] = 'jsonschema'
