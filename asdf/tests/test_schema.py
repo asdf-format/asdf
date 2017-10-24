@@ -5,13 +5,19 @@ from __future__ import absolute_import, division, unicode_literals, print_functi
 
 import io
 import os
+import re
 
 try:
     import astropy
+    HAS_ASTROPY = True
 except ImportError:
     HAS_ASTROPY = False
-else:
-    HAS_ASTROPY = True
+
+try:
+    import gwcs
+    HAS_GWCS = True
+except ImportError:
+    HAS_GWCS = False
 
 from jsonschema import ValidationError
 
@@ -196,6 +202,9 @@ def test_schema_example(filename, example):
     'parametrize' utility in order to account for all examples in all schema
     files.
     """
+    if not HAS_GWCS and re.search(r'frame-\d\.\d\.\d\.yaml', filename):
+        return pytest.skip
+
     standard_version = _find_standard_version(filename)
 
     # Make sure that the examples in the schema files (and thus the
