@@ -54,12 +54,15 @@ matrix:
         # latest stable versions
         - env: NUMPY_VERSION=stable ASTROPY_VERSION=stable SETUP_CMD='test'
 
-        # Test against development version of numpy (failure allowed)
+        # Test against development version of numpy (this job can fail)
         - env: NUMPY_VERSION=development SETUP_CMD='test'
 
         # Try a run on OSX
         - os: osx
           env: NUMPY_VERSION=stable ASTROPY_VERSION=stable SETUP_CMD='test'
+
+    allow_failures:
+        - env: NUMPY_VERSION=development SETUP_CMD='test'
 
 install:
     - git clone git://github.com/astropy/ci-helpers.git
