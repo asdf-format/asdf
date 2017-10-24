@@ -1,4 +1,7 @@
-1.2.2 (Unreleased)
+1.3.1 (Unreleased)
+------------------
+
+1.3.0 (2017-10-24)
 ------------------
 
 - Fixed a bug in reading data from an "http:" url. [#231]
