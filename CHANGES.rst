@@ -3,6 +3,8 @@
 
 - Relax requirement on ``semantic_version`` version to 2.3.1. [#361]
 
+- Fix bug when retrieving file format version from new ASDF file. [#365]
+
 1.3.0 (2017-10-24)
 ------------------
 
