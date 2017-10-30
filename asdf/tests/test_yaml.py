@@ -175,3 +175,12 @@ def test_yaml_nan_inf():
         assert np.isnan(ff.tree['a'])
         assert np.isinf(ff.tree['b'])
         assert np.isinf(ff.tree['c'])
+
+
+def test_tag_object():
+    class SomeObject(object):
+        pass
+
+    tag = 'tag:nowhere.org:none/some/thing'
+    instance = tagged.tag_object(tag, SomeObject())
+    assert instance._tag == tag
