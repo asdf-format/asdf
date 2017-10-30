@@ -181,8 +181,8 @@ class _DefaultExtensions:
         if not self._extensions:
             self._extensions = [BuiltinExtension()]
             if importlib.util.find_spec('astropy') is not None:
-                from astropy.io.asdf.extension import AstropyExtension
-                self._extensions.append(AstropyExtension())
+                from astropy.io.asdf.extension import AstropyAsdfExtension
+                self._extensions.append(AstropyAsdfExtension())
 
         return self._extensions
 
