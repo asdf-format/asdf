@@ -5,6 +5,8 @@
 
 - Fix bug when retrieving file format version from new ASDF file. [#365]
 
+- Fix bug when duplicating inline arrays. [#370]
+
 1.3.0 (2017-10-24)
 ------------------
 
