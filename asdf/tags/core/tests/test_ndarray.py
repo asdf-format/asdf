@@ -211,6 +211,21 @@ def test_auto_inline_recursive(tmpdir):
         tree, tmpdir, check_asdf, None, {'auto_inline': 64})
 
 
+def test_copy_inline():
+    yaml = """
+x0: !core/ndarray-1.0.0
+  data: [-1.0, 1.0]
+    """
+
+    buff = helpers.yaml_to_asdf(yaml)
+
+    with asdf.AsdfFile.open(buff) as infile:
+        with asdf.AsdfFile() as f:
+            f.tree['a'] = infile.tree['x0']
+            f.tree['b'] = f.tree['a']
+            f.write_to(io.BytesIO())
+
+
 def test_table(tmpdir):
     table = np.array(
         [(0, 1, (2, 3)), (4, 5, (6, 7))],
