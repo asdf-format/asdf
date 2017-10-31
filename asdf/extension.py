@@ -180,8 +180,8 @@ class _DefaultExtensions:
         # This helps avoid a circular dependency with astropy
         if not self._extensions:
             self._extensions = [BuiltinExtension()]
-            if importlib.util.find_spec('astropy') is not None:
-                from astropy.io.asdf.extension import AstropyAsdfExtension
+            if importlib.util.find_spec('astropy.io.misc.asdf') is not None:
+                from astropy.io.misc.asdf.extension import AstropyAsdfExtension
                 self._extensions.append(AstropyAsdfExtension())
 
         return self._extensions
