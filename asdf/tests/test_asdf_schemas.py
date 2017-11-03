@@ -3,6 +3,7 @@
 
 import io
 import os
+import re
 
 import yaml
 import pytest
