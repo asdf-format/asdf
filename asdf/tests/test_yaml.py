@@ -4,13 +4,7 @@
 from __future__ import absolute_import, division, unicode_literals, print_function
 
 import io
-
-try:
-    import astropy
-except ImportError:
-    HAS_ASTROPY = False
-else:
-    HAS_ASTROPY = True
+from collections import OrderedDict
 
 import numpy as np
 
@@ -19,8 +13,6 @@ import pytest
 import six
 
 import yaml
-
-from collections import OrderedDict
 
 from .. import asdf
 from .. import tagged
@@ -129,23 +121,19 @@ def test_tags_removed_after_load(tmpdir):
     helpers.assert_roundtrip_tree(tree, tmpdir, check_asdf)
 
 
-@pytest.mark.skipif('not HAS_ASTROPY')
 def test_explicit_tags():
-
-    yaml = """#ASDF 1.0.0
+    yaml = """#ASDF {}
 %YAML 1.1
 --- !<tag:stsci.edu:asdf/core/asdf-1.0.0>
-unit: !<tag:stsci.edu:asdf/unit/unit-1.0.0> m
+foo: !<tag:stsci.edu:asdf/core/ndarray-1.0.0> [1, 2, 3]
 ...
-    """
-    from astropy import units as u
+    """.format(asdf.versioning.default_version)
 
-    # Check that fully-qualified explicit tags work
-
+    # Check that fully qualified explicit tags work
     buff = helpers.yaml_to_asdf(yaml, yaml_headers=False)
-    ff = asdf.AsdfFile.open(buff)
 
-    assert isinstance(ff.tree['unit'], u.UnitBase)
+    with asdf.AsdfFile.open(buff) as ff:
+        assert all(ff.tree['foo'] == [1, 2, 3])
 
 
 def test_yaml_internal_reference(tmpdir):

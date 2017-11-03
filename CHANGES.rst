@@ -1,5 +1,14 @@
-1.3.1 (Unreleased)
+1.3.1 (2017-11-02)
 ------------------
+
+- Relax requirement on ``semantic_version`` version to 2.3.1. [#361]
+
+- Fix bug when retrieving file format version from new ASDF file. [#365]
+
+- Fix bug when duplicating inline arrays. [#370]
+
+- Allow tag references using the tag URI scheme to be resolved in schema files.
+  [#371]
 
 1.3.0 (2017-10-24)
 ------------------

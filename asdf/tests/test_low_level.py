@@ -19,6 +19,7 @@ from .. import block
 from .. import constants
 from .. import generic_io
 from .. import treeutil
+from .. import versioning
 from ..tests.helpers import assert_tree_match
 
 
@@ -1145,6 +1146,15 @@ foo : bar
     assert version.major == 1
     assert version.minor == 0
     assert version.patch == 0
+
+
+def test_default_version():
+    # See https://github.com/spacetelescope/asdf/issues/364
+
+    version_map = versioning.get_version_map(versioning.default_version)
+
+    ff = asdf.AsdfFile()
+    assert ff.file_format_version == version_map['FILE_FORMAT']
 
 
 def test_fd_not_seekable():

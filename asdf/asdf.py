@@ -95,6 +95,8 @@ class AsdfFile(versioning.VersionedMixin):
         self._ignore_version_mismatch = ignore_version_mismatch
         self._ignore_unrecognized_tag = ignore_unrecognized_tag
 
+        self._file_format_version = None
+
         self._fd = None
         self._external_asdf_by_uri = {}
         self._blocks = block.BlockManager(self, copy_arrays=copy_arrays)
@@ -139,7 +141,7 @@ class AsdfFile(versioning.VersionedMixin):
     @property
     def file_format_version(self):
         if self._file_format_version is None:
-            return versioning.AsdfVersion(self.versionspec['FILE_FORMAT'])
+            return versioning.AsdfVersion(self.version_map['FILE_FORMAT'])
         else:
             return self._file_format_version
 

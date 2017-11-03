@@ -51,7 +51,7 @@ LONG_DESCRIPTION = package.__doc__
 builtins._PACKAGE_NAME_ = 'asdf'
 
 # VERSION should be PEP386 compatible (http://www.python.org/dev/peps/pep-0386)
-VERSION = '1.3.1.dev'
+VERSION = '1.3.1'
 
 # Indicates if this version is a release version
 RELEASE = 'dev' not in VERSION
@@ -120,7 +120,7 @@ setup(name=PACKAGENAME,
       scripts=scripts,
       python_requires='>=2.7,!=3.0.*,!=3.1.*,!=3.2.*',
       install_requires=[
-          'semantic_version>=2.6.0',
+          'semantic_version>=2.3.1',
           'pyyaml>=3.10',
           'jsonschema>=2.3.0',
           'six>=1.9.0',
