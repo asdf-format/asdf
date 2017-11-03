@@ -120,7 +120,7 @@ setup(name=PACKAGENAME,
       scripts=scripts,
       python_requires='>=2.7,!=3.0.*,!=3.1.*,!=3.2.*',
       install_requires=[
-          'semantic_version>=2.6.0',
+          'semantic_version>=2.3.1',
           'pyyaml>=3.10',
           'jsonschema>=2.3.0',
           'six>=1.9.0',

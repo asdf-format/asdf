@@ -645,6 +645,10 @@ class BlockManager(object):
             block = asdffile.blocks._internal_blocks[0]
             self.set_array_storage(block, 'external')
 
+        # Handle the case of inline data
+        elif isinstance(source, list):
+            block = Block(data=np.array(source), array_storage='inline')
+
         else:
             raise TypeError("Unknown source '{0}'".format(source))
 

@@ -43,14 +43,7 @@ matrix:
 
         # Check for sphinx doc build warnings - we do this first because it
         # may run for a long time
-        - env: PYTHON_VERSION=2.7 SETUP_CMD='build_docs -w'
-
         - env: SETUP_CMD='build_docs -w'
-
-        # Try older numpy versions
-        - env: PYTHON_VERSION=2.7 NUMPY_VERSION=1.9 SETUP_CMD='test'
-
-        - env: PYTHON_VERSION=2.7 NUMPY_VERSION=1.10 SETUP_CMD='test'
 
         # try older astropy versions
         - env: PYTHON_VERSION=3.5
@@ -61,9 +54,15 @@ matrix:
         # latest stable versions
         - env: NUMPY_VERSION=stable ASTROPY_VERSION=stable SETUP_CMD='test'
 
+        # Test against development version of numpy (this job can fail)
+        - env: NUMPY_VERSION=development SETUP_CMD='test'
+
         # Try a run on OSX
         - os: osx
           env: NUMPY_VERSION=stable ASTROPY_VERSION=stable SETUP_CMD='test'
+
+    allow_failures:
+        - env: NUMPY_VERSION=development SETUP_CMD='test'
 
 install:
     - git clone git://github.com/astropy/ci-helpers.git

@@ -15,10 +15,6 @@ environment:
 
   matrix:
       - PYTHON_VERSION: "2.7"
-        platform: x86
-        PYTHON_ARCH: "32"
-
-      - PYTHON_VERSION: "2.7"
         platform: x64
 
       - PYTHON_VERSION: "3.5"
@@ -45,10 +41,15 @@ environment:
         ASTROPY_VERSION: "development"
         platform: x64
 
+      # Tests against development version of numpy may fail
       - PYTHON_VERSION: "3.6"
         ASTROPY_VERSION: "development"
         NUMPY_VERSION: "development"
         platform: x64
+
+matrix:
+  allow_failures:
+    - NUMPY_VERSION: "development"
 
 install:
     - "git clone git://github.com/astropy/ci-helpers.git"
