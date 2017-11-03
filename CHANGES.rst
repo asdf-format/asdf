@@ -1,4 +1,4 @@
-1.3.1 (Unreleased)
+1.3.1 (2017-11-02)
 ------------------
 
 - Relax requirement on ``semantic_version`` version to 2.3.1. [#361]
