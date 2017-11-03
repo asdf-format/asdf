@@ -361,7 +361,7 @@ def load_schema(url, resolver=None, resolve_references=False):
             if json_id is None:
                 json_id = url
             if isinstance(node, dict) and '$ref' in node:
-                suburl = generic_io.resolve_uri(json_id, node['$ref'])
+                suburl = generic_io.resolve_uri(json_id, resolver(node['$ref']))
                 parts = urlparse.urlparse(suburl)
                 fragment = parts.fragment
                 if len(fragment):

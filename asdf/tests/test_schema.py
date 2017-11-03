@@ -96,6 +96,76 @@ def test_read_json_schema():
     schema.check_schema(schema_tree)
 
 
+def test_load_schema(tmpdir):
+    schema_def = """
+%YAML 1.1
+---
+$schema: "http://stsci.edu/schemas/asdf/asdf-schema-1.0.0"
+id: "http://stsci.edu/schemas/asdf/nugatory/nugatory-1.0.0"
+tag: "tag:stsci.edu:asdf/nugatory/nugatory-1.0.0"
+
+type: object
+properties:
+  foobar:
+      $ref: "../core/ndarray-1.0.0"
+
+required: [foobar]
+...
+    """
+    schema_path = tmpdir.join('nugatory.yaml')
+    schema_path.write(schema_def.encode())
+
+    schema_tree = schema.load_schema(str(schema_path), resolve_references=True)
+    schema.check_schema(schema_tree)
+
+
+def test_load_schema_with_full_tag(tmpdir):
+    schema_def = """
+%YAML 1.1
+---
+$schema: "http://stsci.edu/schemas/asdf/asdf-schema-1.0.0"
+id: "http://stsci.edu/schemas/asdf/nugatory/nugatory-1.0.0"
+tag: "tag:stsci.edu:asdf/nugatory/nugatory-1.0.0"
+
+type: object
+properties:
+  foobar:
+      $ref: "tag:stsci.edu:asdf/core/ndarray-1.0.0"
+
+required: [foobar]
+...
+    """
+    schema_path = tmpdir.join('nugatory.yaml')
+    schema_path.write(schema_def.encode())
+
+    schema_tree = schema.load_schema(str(schema_path), resolve_references=True)
+    schema.check_schema(schema_tree)
+
+
+def test_load_schema_with_tag_address(tmpdir):
+    schema_def = """
+%YAML 1.1
+%TAG !asdf! tag:stsci.edu:asdf/
+---
+$schema: "http://stsci.edu/schemas/asdf/asdf-schema-1.0.0"
+id: "http://stsci.edu/schemas/asdf/nugatory/nugatory-1.0.0"
+tag: "tag:stsci.edu:asdf/nugatory/nugatory-1.0.0"
+
+type: object
+properties:
+  foobar:
+      $ref: "http://stsci.edu/schemas/asdf/core/ndarray-1.0.0"
+
+required: [foobar]
+...
+    """
+    schema_path = tmpdir.join('nugatory.yaml')
+    schema_path.write(schema_def.encode())
+
+    schema_tree = schema.load_schema(str(schema_path), resolve_references=True)
+    schema.check_schema(schema_tree)
+
+
 def test_schema_caching():
     # Make sure that if we request the same URL, we get the *exact
     # same* object, to ensure the cache is working.
