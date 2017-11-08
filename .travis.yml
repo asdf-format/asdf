@@ -26,13 +26,16 @@ env:
         - ASTROPY_VERSION=stable
         - CONDA_DEPENDENCIES='semantic_version jsonschema pyyaml six lz4'
         - PIP_DEPENDENCIES_FLAGS='--no-deps --force'
-        - PIP_DEPENDENCIES='git+http://github.com/spacetelescope/gwcs.git#egg=gwcs'
+        - GWCS_GIT='git+http://github.com/spacetelescope/gwcs.git#egg=gwcs'
+        - PIP_DEPENDENCIES="$GWCS_GIT"
         - SETUP_CMD='test --remote-data'
 
     matrix:
         - PYTHON_VERSION=2.7 SETUP_CMD='test'
         - PYTHON_VERSION=3.5 SETUP_CMD='test' ASTROPY_VERSION=development
+          PIP_DEPENDENCIES="$GWCS_GIT pytest-astropy"
         - PYTHON_VERSION=3.6 SETUP_CMD='test' ASTROPY_VERSION=development
+          PIP_DEPENDENCIES="$GWCS_GIT pytest-astropy"
 
 matrix:
     include:

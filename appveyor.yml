@@ -10,7 +10,8 @@ environment:
       NUMPY_VERSION: "stable"
       ASTROPY_VERSION: "stable"
       CONDA_DEPENDENCIES: "semantic_version jsonschema pyyaml six lz4"
-      PIP_DEPENDENCIES: "git+http://github.com/spacetelescope/gwcs.git#egg=gwcs"
+      GWCS_GIT: "git+http://github.com/spacetelescope/gwcs.git#egg=gwcs"
+      PIP_DEPENDENCIES: "%GWCS_GIT%"
       PYTHON_ARCH: "64"
 
   matrix:
@@ -22,6 +23,7 @@ environment:
 
       - PYTHON_VERSION: "3.5"
         ASTROPY_VERSION: "development"
+        PIP_DEPENDENCIES: "%GWCS_GIT% pytest-astropy"
         platform: x64
 
       - PYTHON_VERSION: "3.6"
@@ -39,12 +41,14 @@ environment:
 
       - PYTHON_VERSION: "3.6"
         ASTROPY_VERSION: "development"
+        PIP_DEPENDENCIES: "%GWCS_GIT% pytest-astropy"
         platform: x64
 
       # Tests against development version of numpy may fail
       - PYTHON_VERSION: "3.6"
         ASTROPY_VERSION: "development"
         NUMPY_VERSION: "development"
+        PIP_DEPENDENCIES: "%GWCS_GIT% pytest-astropy"
         platform: x64
 
 matrix:
