@@ -1,5 +1,4 @@
-# Licensed under a 3-clause BSD style license - see LICENSE.rst
-# -*- coding: utf-8 -*-
+# Licensed under a 3-clause BSD style license - see LICENSE.rst # -*- coding: utf-8 -*-
 
 from __future__ import absolute_import, division, unicode_literals, print_function
 
@@ -14,10 +13,16 @@ try:
 except ImportError:
     ICRS = None
 
-try:
+# Attempt to maintain backwards compatibility withearlier versions of astropy
+from astropy import __version__ as astropy_version
+if astropy_version < '3.0':
+    import astropy
     from astropy.tests.disable_internet import INTERNET_OFF
-except ImportError:
-    INTERNET_OFF = False
+    remote_data = astropy.tests.helper.remote_data
+else:
+    import pytest
+    from pytest_remotedata.disable_internet import INTERNET_OFF
+    remote_data = pytest.mark.remote_data
 
 try:
     from astropy.coordinates.representation import CartesianRepresentation
