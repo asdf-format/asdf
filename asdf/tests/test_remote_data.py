@@ -6,8 +6,7 @@ from __future__ import absolute_import, division, unicode_literals, print_functi
 import pytest
 
 astropy = pytest.importorskip('astropy')
-from astropy.tests.helper import remote_data
-from astropy.tests.disable_internet import INTERNET_OFF
+from .helpers import remote_data, INTERNET_OFF
 
 _REMOTE_DATA = False
 
