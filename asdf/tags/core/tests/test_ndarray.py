@@ -786,3 +786,26 @@ def test_inline_shape_mismatch():
     with pytest.raises(ValueError):
         with asdf.AsdfFile.open(buff) as ff:
             pass
+
+
+@pytest.mark.xfail(
+    reason="NDArrays with dtype=object are not currently supported")
+def test_simple_object_array(tmpdir):
+    dictdata = np.empty((3, 3), dtype=object)
+    for i, _ in enumerate(dictdata.flat):
+        dictdata.flat[i] = {'foo': i*42, 'bar': i**2}
+
+    helpers.assert_roundtrip_tree({'bizbaz': dictdata}, tmpdir)
+
+
+@pytest.mark.xfail(
+    reason="NDArrays with dtype=object are not currently supported")
+def test_tagged_object_array(tmpdir):
+    astropy = pytest.importorskip('astropy')
+    from astropy.units.quantity import Quantity
+
+    objdata = np.empty((3, 3), dtype=object)
+    for i, _ in enumerate(objdata.flat):
+        objdata.flat[i] = Quantity(i, 'angstrom')
+
+    helpers.assert_roundtrip_tree({'bizbaz': objdata}, tmpdir)
