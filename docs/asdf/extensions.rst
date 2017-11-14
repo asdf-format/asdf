@@ -75,7 +75,7 @@ Then, the Python implementation of the tag class and extension class. See the
         def from_tree(cls, tree, ctx):
             return fractions.Fraction(tree[0], tree[1])
 
-    class FractionExtension(object):
+    class FractionExtension(asdf.AsdfExtension):
         @property
         def types(self):
             return [FractionType]
@@ -96,6 +96,17 @@ the library converts ``fractions.Fraction`` into a tree that can be stored by
 ASDF. Conversely, the method ``from_tree`` defines how the library reads a
 serialized representation of the object and converts it back into a
 ``fractions.Fraction``.
+
+Once you have these classes defined you can save an asdf file using them:
+
+.. code-block:: python
+
+  tree = {'fraction': fractions.Fraction(10, 3)}
+
+
+  with asdf.AsdfFile(tree, extensions=[FractionExtension()]) as ff:
+      ff.write_to("test.asdf")
+
 
 Explicit version support
 ------------------------
@@ -222,7 +233,7 @@ determine which schema version should be used when reading:
             else:
                 # The newer version of the schema stores the middle name too
                 return person(tree[0], tree[1], tree[2])
-                
+
 Note that the implementation of ``to_tree`` is not conditioned on
 ``cls.version`` since we do not need to convert new ``Person`` objects back to
 the older version of the schema.
