@@ -104,6 +104,9 @@ entry_points = {}
 entry_points['console_scripts'] = [
     'asdftool = asdf.commands.main:main',
 ]
+entry_points['asdf_extensions'] = [
+    'builtin = asdf.extension:BuiltinExtension'
+]
 
 # Add the dependencies which are not strictly needed but enable otherwise skipped tests
 extra_requires = []
