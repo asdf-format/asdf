@@ -779,6 +779,8 @@ def test_inline_shape_mismatch():
 @pytest.mark.xfail(
     reason="NDArrays with dtype=object are not currently supported")
 def test_simple_object_array(tmpdir):
+    # See https://github.com/spacetelescope/asdf/issues/383 for feature
+    # request
     dictdata = np.empty((3, 3), dtype=object)
     for i, _ in enumerate(dictdata.flat):
         dictdata.flat[i] = {'foo': i*42, 'bar': i**2}
@@ -789,6 +791,8 @@ def test_simple_object_array(tmpdir):
 @pytest.mark.xfail(
     reason="NDArrays with dtype=object are not currently supported")
 def test_tagged_object_array(tmpdir):
+    # See https://github.com/spacetelescope/asdf/issues/383 for feature
+    # request
     astropy = pytest.importorskip('astropy')
     from astropy.units.quantity import Quantity
 
