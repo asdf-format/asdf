@@ -405,6 +405,13 @@ class NDArrayType(AsdfType):
         if block.array_storage == 'streamed':
             result['shape'][0] = '*'
 
+        if dtype.name == 'object':
+            listdata = numpy_array_to_list(data)
+            result['data'] = yamlutil.custom_tree_to_tagged_tree(
+                listdata, ctx)
+
+            return result
+
         dtype, byteorder = numpy_dtype_to_asdf_datatype(
             dtype, include_byteorder=(block.array_storage != 'inline'))
 
@@ -416,6 +423,7 @@ class NDArrayType(AsdfType):
                 listdata, ctx)
             result['datatype'] = dtype
         else:
+
             result['shape'] = list(shape)
             if block.array_storage == 'streamed':
                 result['shape'][0] = '*'
