@@ -3,6 +3,11 @@
 
 - Astropy-specific tags have moved to Astropy core package. [#359]
 
+1.4.0 (unreleased)
+------------------
+
+- Install and load extensions using ``setuptools`` entry points. [#384]
+
 1.3.2 (unreleased)
 ------------------
 
