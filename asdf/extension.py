@@ -4,6 +4,8 @@
 from __future__ import absolute_import, division, unicode_literals, print_function
 
 import abc
+from pkg_resources import iter_entry_points
+
 import six
 import importlib
 
@@ -166,20 +168,24 @@ class BuiltinExtension(object):
         return resolver.DEFAULT_URL_MAPPING
 
 
-__cached = False
-_default_extensions = [BuiltinExtension()]
-
-
 class _DefaultExtensions:
     def __init__(self):
         self._extensions = []
         self._extension_list = None
 
+    def _load_installed_extensions(self, group='asdf_extensions'):
+        self._extensions = []
+        for entry_point in iter_entry_points(group=group):
+            ext = entry_point.load()
+            self._extensions.append(ext())
+
     @property
     def extensions(self):
-        # This helps avoid a circular dependency with astropy
+        # This helps avoid a circular dependency with external packages
         if not self._extensions:
-            self._extensions = [BuiltinExtension()]
+            self._load_installed_extensions()
+            # This is just a temporary workaround until Astropy installs its
+            # extensions using setuptools entry points.
             if importlib.util.find_spec('astropy.io.misc.asdf') is not None:
                 from astropy.io.misc.asdf.extension import AstropyAsdfExtension
                 self._extensions.append(AstropyAsdfExtension())
