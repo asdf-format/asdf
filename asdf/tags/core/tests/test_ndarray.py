@@ -8,22 +8,8 @@ import os
 import re
 import sys
 
-try:
-    import psutil
-except ImportError:
-    HAS_PSUTIL = False
-else:
-    HAS_PSUTIL = True
-
 import six
 import pytest
-
-try:
-    import astropy
-except ImportError:
-    HAS_ASTROPY = False
-else:
-    HAS_ASTROPY = True
 
 import numpy as np
 from numpy import ma
@@ -198,9 +184,10 @@ def test_table_inline(tmpdir):
         tree, tmpdir, None, check_raw_yaml, {'auto_inline': 64})
 
 
-@pytest.mark.skipif('not HAS_ASTROPY')
 def test_auto_inline_recursive(tmpdir):
+    astropy = pytest.importorskip('astropy')
     from astropy.modeling import models
+
     aff = models.AffineTransformation2D(matrix=[[1, 2], [3, 4]])
     tree = {'test': aff}
 
@@ -457,8 +444,9 @@ def test_inline_masked_array(tmpdir):
         assert b'null' in fd.read()
 
 
-@pytest.mark.skipif(not HAS_PSUTIL, reason="psutil not installed")
 def test_masked_array_stay_open_bug(tmpdir):
+    psutil = pytest.importorskip('psutil')
+
     tmppath = os.path.join(str(tmpdir), 'masked.asdf')
 
     tree = {
