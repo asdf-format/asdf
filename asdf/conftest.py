@@ -7,7 +7,7 @@ from __future__ import absolute_import, division, unicode_literals, print_functi
 # by importing them here in conftest.py they are discoverable by py.test
 # no matter how it is invoked within the source tree.
 
-from astropy.tests.pytest_plugins import *
+from astropy.tests.plugins.display import PYTEST_HEADER_MODULES, TESTED_VERSIONS
 
 import multiprocessing
 import os
