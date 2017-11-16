@@ -23,46 +23,39 @@ env:
         # to repeat them for all configurations.
         - PYTHON_VERSION=3.6
         - NUMPY_VERSION=stable
-        - ASTROPY_VERSION=stable
         - CONDA_DEPENDENCIES='semantic_version jsonschema pyyaml six lz4'
-        - PIP_DEPENDENCIES_FLAGS='--no-deps --force'
-        - GWCS_GIT='git+http://github.com/spacetelescope/gwcs.git#egg=gwcs'
-        - PIP_DEPENDENCIES="$GWCS_GIT"
+        - GWCS_GIT='git+git://github.com/spacetelescope/gwcs.git#egg=gwcs'
+        - ASTROPY_GIT='git+git://github.com/drdavella/astropy.git@integrate-asdf#egg=astropy'
+        - PIP_DEPENDENCIES="$GWCS_GIT $ASTROPY_GIT pytest-astropy"
         - SETUP_CMD='test --remote-data'
 
     matrix:
-        - PYTHON_VERSION=2.7 SETUP_CMD='test'
-        - PYTHON_VERSION=3.5 SETUP_CMD='test' ASTROPY_VERSION=development
-          PIP_DEPENDENCIES="$GWCS_GIT pytest-astropy"
-        - PYTHON_VERSION=3.6 SETUP_CMD='test' ASTROPY_VERSION=development
-          PIP_DEPENDENCIES="$GWCS_GIT pytest-astropy"
+        - PYTHON_VERSION=3.5 SETUP_CMD='test'
+        - PYTHON_VERSION=3.6 SETUP_CMD='test'
 
 matrix:
     include:
 
         # Do a coverage test
         - env: SETUP_CMD='test --coverage --open-files --remote-data'
-               ASTROPY_VERSION=development
 
         # Check for sphinx doc build warnings - we do this first because it
         # may run for a long time
         - env: SETUP_CMD='build_docs -w'
 
-        # try older astropy versions
-        - env: PYTHON_VERSION=3.5
-               NUMPY_VERSION=1.11 ASTROPY_VERSION=1.2.1 SETUP_CMD='test'
-        - env: NUMPY_VERSION=1.12 ASTROPY_VERSION=1.3.2 SETUP_CMD='test'
-        - env: NUMPY_VERSION=1.12 ASTROPY_VERSION=1.3.3 SETUP_CMD='test'
+        # try older numpy versions
+        - env: PYTHON_VERSION=3.5 NUMPY_VERSION=1.11 SETUP_CMD='test'
+        - env: NUMPY_VERSION=1.12 SETUP_CMD='test'
 
         # latest stable versions
-        - env: NUMPY_VERSION=stable ASTROPY_VERSION=stable SETUP_CMD='test'
+        - env: NUMPY_VERSION=stable SETUP_CMD='test'
 
         # Test against development version of numpy (this job can fail)
         - env: NUMPY_VERSION=development SETUP_CMD='test'
 
         # Try a run on OSX
         - os: osx
-          env: NUMPY_VERSION=stable ASTROPY_VERSION=stable SETUP_CMD='test'
+          env: NUMPY_VERSION=stable SETUP_CMD='test'
 
     allow_failures:
         - env: NUMPY_VERSION=development SETUP_CMD='test'

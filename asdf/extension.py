@@ -4,8 +4,8 @@
 from __future__ import absolute_import, division, unicode_literals, print_function
 
 import abc
-
 import six
+import importlib
 
 from . import asdftypes
 from . import resolver
@@ -166,5 +166,32 @@ class BuiltinExtension(object):
         return resolver.DEFAULT_URL_MAPPING
 
 
-# A special singleton for the common case of when no extensions are used.
-_builtin_extension_list = AsdfExtensionList([BuiltinExtension()])
+__cached = False
+_default_extensions = [BuiltinExtension()]
+
+
+class _DefaultExtensions:
+    def __init__(self):
+        self._extensions = []
+        self._extension_list = None
+
+    @property
+    def extensions(self):
+        # This helps avoid a circular dependency with astropy
+        if not self._extensions:
+            self._extensions = [BuiltinExtension()]
+            if importlib.util.find_spec('astropy.io.misc.asdf') is not None:
+                from astropy.io.misc.asdf.extension import AstropyAsdfExtension
+                self._extensions.append(AstropyAsdfExtension())
+
+        return self._extensions
+
+    @property
+    def extension_list(self):
+        if self._extension_list is None:
+            self._extension_list = AsdfExtensionList(self.extensions)
+
+        return self._extension_list
+
+
+default_extensions = _DefaultExtensions()

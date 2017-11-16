@@ -7,12 +7,12 @@ import datetime
 import copy
 import io
 import re
+import importlib
 
 import numpy as np
 
 from . import block
 from . import constants
-from . import extension
 from . import generic_io
 from . import reference
 from . import schema
@@ -21,6 +21,7 @@ from . import util
 from . import version
 from . import versioning
 from . import yamlutil
+from .extension import AsdfExtensionList, default_extensions
 
 from .tags.core import AsdfObject, Software, HistoryEntry
 
@@ -81,17 +82,7 @@ class AsdfFile(versioning.VersionedMixin):
             arrays when possible.
         """
 
-        if extensions is None or extensions == []:
-            self._extensions = extension._builtin_extension_list
-        else:
-            if isinstance(extensions, extension.AsdfExtensionList):
-                self._extensions = extensions
-            else:
-                if not isinstance(extensions, list):
-                    extensions = [extensions]
-                extensions.insert(0, extension.BuiltinExtension())
-                self._extensions = extension.AsdfExtensionList(extensions)
-
+        self._extensions = self._process_extensions(extensions)
         self._ignore_version_mismatch = ignore_version_mismatch
         self._ignore_unrecognized_tag = ignore_unrecognized_tag
 
@@ -137,6 +128,18 @@ class AsdfFile(versioning.VersionedMixin):
             external.__exit__(type, value, traceback)
         self._external_asdf_by_uri.clear()
         self._blocks.close()
+
+    def _process_extensions(self, extensions):
+        if extensions is None or extensions == []:
+            return default_extensions.extension_list
+
+        if isinstance(extensions, AsdfExtensionList):
+            return extensions
+
+        if not isinstance(extensions, list):
+            extensions = [extensions]
+        extensions = default_extensions.extensions + extensions
+        return AsdfExtensionList(extensions)
 
     @property
     def file_format_version(self):
