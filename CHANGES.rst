@@ -1,6 +1,7 @@
 2.0.0 (unreleased)
 ------------------
 
+- Astropy-specific tags have moved to Astropy core package. [#359]
 
 1.3.2 (unreleased)
 ------------------
