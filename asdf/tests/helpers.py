@@ -13,17 +13,6 @@ try:
 except ImportError:
     ICRS = None
 
-# Attempt to maintain backwards compatibility withearlier versions of astropy
-from astropy import __version__ as astropy_version
-if astropy_version < '3.0':
-    import astropy
-    from astropy.tests.disable_internet import INTERNET_OFF
-    remote_data = astropy.tests.helper.remote_data
-else:
-    import pytest
-    from pytest_remotedata.disable_internet import INTERNET_OFF
-    remote_data = pytest.mark.remote_data
-
 try:
     from astropy.coordinates.representation import CartesianRepresentation
 except ImportError:
@@ -41,6 +30,11 @@ from .. import util
 from .. import versioning
 
 from ..tags.core import AsdfObject
+
+try:
+    from pytest_remotedata.disable_internet import INTERNET_OFF
+except ImportError:
+    INTERNET_OFF = False
 
 
 def assert_tree_match(old_tree, new_tree, ctx=None,
