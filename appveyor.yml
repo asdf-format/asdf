@@ -8,11 +8,10 @@ environment:
       MINICONDA_VERSION: "latest"
       CMD_IN_ENV: "cmd /E:ON /V:ON /C .\\ci-helpers\\appveyor\\windows_sdk.cmd"
       NUMPY_VERSION: "stable"
-      ASTROPY_VERSION: "stable"
+      ASTROPY_VERSION: "development"
       GWCS_GIT: "git+git://github.com/spacetelescope/gwcs.git#egg=gwcs"
-      ASTROPY_GIT: "git+git://github.com/drdavella/astropy.git@integrate-asdf"
       CONDA_DEPENDENCIES: "semantic_version jsonschema pyyaml six lz4"
-      PIP_DEPENDENCIES: "%GWCS_GIT% %ASTROPY_GIT% pytest-astropy"
+      PIP_DEPENDENCIES: "%GWCS_GIT% pytest-astropy"
       PYTHON_ARCH: "64"
 
   matrix:
@@ -28,7 +27,6 @@ environment:
 
       - PYTHON_VERSION: "3.6"
         NUMPY_VERSION: "development"
-        PIP_DEPENDENCIES: "%GWCS_GIT% pytest-astropy"
         platform: x64
 
 matrix:

@@ -22,11 +22,11 @@ env:
         # overidden underneath. They are defined here in order to save having
         # to repeat them for all configurations.
         - PYTHON_VERSION=3.6
+        - ASTROPY_VERSION=development
         - NUMPY_VERSION=stable
         - CONDA_DEPENDENCIES='semantic_version jsonschema pyyaml six lz4'
         - GWCS_GIT='git+git://github.com/spacetelescope/gwcs.git#egg=gwcs'
-        - ASTROPY_GIT='git+git://github.com/drdavella/astropy.git@integrate-asdf#egg=astropy'
-        - PIP_DEPENDENCIES="$GWCS_GIT $ASTROPY_GIT pytest-astropy"
+        - PIP_DEPENDENCIES="$GWCS_GIT pytest-astropy"
         - SETUP_CMD='test --remote-data'
 
     matrix:
