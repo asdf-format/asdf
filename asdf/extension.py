@@ -12,13 +12,13 @@ from . import resolver
 
 
 @six.add_metaclass(abc.ABCMeta)
-class AsdfExtension(object):
+class AsdfExtensionBase(object):
     """
     Subclass to define an extension to ASDF.
     """
     @classmethod
     def __subclasshook__(cls, C):
-        if cls is AsdfExtension:
+        if cls is AsdfExtensionBase:
             return (hasattr(C, 'types') and
                     hasattr(C, 'tag_mapping') and
                     hasattr(C, 'url_mapping'))
@@ -101,6 +101,12 @@ class AsdfExtension(object):
         pass
 
 
+class AsdfExtension(AsdfExtensionBase):
+    """
+    The base class for asdf extensions in the asdf library.
+    """
+
+
 class AsdfExtensionList(object):
     """
     Manage a set of extensions that are in effect.
@@ -111,9 +117,9 @@ class AsdfExtensionList(object):
         validators = {}
         self._type_index = asdftypes.AsdfTypeIndex()
         for extension in extensions:
-            if not isinstance(extension, AsdfExtension):
+            if not isinstance(extension, AsdfExtensionBase):
                 raise TypeError(
-                    "Extension must implement asdftypes.AsdfExtension "
+                    "Extension must implement asdftypes.AsdfExtensionBase "
                     "interface")
             tag_mapping.extend(extension.tag_mapping)
             url_mapping.extend(extension.url_mapping)
