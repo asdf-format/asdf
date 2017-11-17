@@ -14,35 +14,35 @@ Data Format (ASDF) files
 from ._internal_init import *
 # ----------------------------------------------------------------------------
 
-if _ASDF_SETUP_ is False:
-    __all__ = ['AsdfFile', 'CustomType', 'AsdfExtension',
-               'Stream', 'open', 'test', 'commands',
-               'ValidationError']
+__all__ = [
+    'AsdfFile', 'CustomType', 'AsdfExtension', 'Stream', 'open', 'test',
+    'commands', 'ValidationError'
+]
 
-    try:
-        import yaml as _
-    except ImportError:
-        raise ImportError("asdf requires pyyaml")
+try:
+    import yaml as _
+except ImportError:
+    raise ImportError("asdf requires pyyaml")
 
-    try:
-        import jsonschema as _
-    except ImportError:
-        raise ImportError("asdf requires jsonschema")
+try:
+    import jsonschema as _
+except ImportError:
+    raise ImportError("asdf requires jsonschema")
 
-    try:
-        import numpy as _
-    except ImportError:
-        raise ImportError("asdf requires numpy")
+try:
+    import numpy as _
+except ImportError:
+    raise ImportError("asdf requires numpy")
 
-    from .asdf import AsdfFile
-    from .asdftypes import CustomType
-    from .extension import AsdfExtension
-    from .stream import Stream
-    from . import commands
+from .asdf import AsdfFile
+from .asdftypes import CustomType
+from .extension import AsdfExtension
+from .stream import Stream
+from . import commands
 
-    from jsonschema import ValidationError
+from jsonschema import ValidationError
 
-    class ValidationError(ValidationError):
-        pass
+class ValidationError(ValidationError):
+    pass
 
-    open = AsdfFile.open
+open = AsdfFile.open
