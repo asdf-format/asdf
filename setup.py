@@ -42,10 +42,9 @@ AUTHOR_EMAIL = metadata.get('author_email', '')
 LICENSE = metadata.get('license', 'unknown')
 URL = metadata.get('url', '')
 
-# Get the long description from the package's docstring
-__import__('asdf')
-package = sys.modules['asdf']
-LONG_DESCRIPTION = package.__doc__
+def readme():
+    with open('README.md') as ff:
+        return ff.read()
 
 # Store the package name in a built-in variable so it's easy
 # to get from other parts of the setup infrastructure
@@ -141,7 +140,7 @@ setup(name=PACKAGENAME,
       author_email=AUTHOR_EMAIL,
       license=LICENSE,
       url=URL,
-      long_description=LONG_DESCRIPTION,
+      long_description=readme(),
       cmdclass=cmdclassd,
       zip_safe=False,
       use_2to3=True,
