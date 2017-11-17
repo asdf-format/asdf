@@ -27,10 +27,7 @@ def _null_validate(self):
 test_helpers.AstropyTest._validate_required_deps = _null_validate
 
 # Get some values from the setup.cfg
-try:
-    from ConfigParser import ConfigParser
-except ImportError:
-    from configparser import ConfigParser
+from configparser import ConfigParser
 conf = ConfigParser()
 conf.read(['setup.cfg'])
 metadata = dict(conf.items('metadata'))
