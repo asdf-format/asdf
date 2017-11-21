@@ -26,7 +26,6 @@ env:
         - NUMPY_VERSION=stable
         - CONDA_DEPENDENCIES='semantic_version jsonschema pyyaml six lz4'
         - GWCS_GIT='git+git://github.com/spacetelescope/gwcs.git#egg=gwcs'
-        - PIP_DEPENDENCIES="$GWCS_GIT pytest-astropy"
         - SETUP_CMD='test --remote-data'
 
     matrix:
@@ -63,6 +62,9 @@ matrix:
 install:
     - git clone git://github.com/astropy/ci-helpers.git
     - source ci-helpers/travis/setup_conda.sh
+    - python -m pip install --no-deps $GWCS_GIT
+    - python -m pip install pytest-astropy
+    - python setup.py install
 
 script:
    - python setup.py $SETUP_CMD
