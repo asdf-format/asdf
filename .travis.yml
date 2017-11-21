@@ -22,8 +22,7 @@ env:
         # overidden underneath. They are defined here in order to save having
         # to repeat them for all configurations.
         - PYTHON_VERSION=3.6
-        #- ASTROPY_VERSION=development
-        - ASTROPY_GIT='git+git://github.com/drdavella/astropy@asdf-entry-point#egg=astropy'
+        - ASTROPY_VERSION=development
         - NUMPY_VERSION=stable
         - CONDA_DEPENDENCIES='semantic_version jsonschema pyyaml six lz4'
         - GWCS_GIT='git+git://github.com/spacetelescope/gwcs.git#egg=gwcs'
@@ -63,7 +62,6 @@ matrix:
 install:
     - git clone git://github.com/astropy/ci-helpers.git
     - source ci-helpers/travis/setup_conda.sh
-    - python -m pip install $ASTROPY_GIT
     - python -m pip install --no-deps $GWCS_GIT
     - python -m pip install pytest-astropy
     - python setup.py install
