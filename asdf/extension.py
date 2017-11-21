@@ -184,11 +184,6 @@ class _DefaultExtensions:
         # This helps avoid a circular dependency with external packages
         if not self._extensions:
             self._load_installed_extensions()
-            # This is just a temporary workaround until Astropy installs its
-            # extensions using setuptools entry points.
-            if importlib.util.find_spec('astropy.io.misc.asdf') is not None:
-                from astropy.io.misc.asdf.extension import AstropyAsdfExtension
-                self._extensions.append(AstropyAsdfExtension())
 
         return self._extensions
 
