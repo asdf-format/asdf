@@ -8,6 +8,8 @@
 
 - Install and load extensions using ``setuptools`` entry points. [#384]
 
+- Automatically initialize ``asdf-standard`` submodule in ``setup.py``. [#398]
+
 1.3.2 (unreleased)
 ------------------
 
