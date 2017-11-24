@@ -109,13 +109,14 @@ DEFAULT_URL_MAPPING = [
      util.filepath_to_url(
          os.path.join(SCHEMA_PATH, 'stsci.edu')) +
          '/{url_suffix}.yaml')]
-DEFAULT_TAG_MAPPING = [
-    ('tag:stsci.edu:asdf/',
-     util.filepath_to_url(
-         os.path.join(SCHEMA_PATH, 'stsci.edu')) +
-         '/asdf/{tag_suffix}.yaml')]
+DEFAULT_TAG_TO_URL_MAPPING = [
+    (constants.STSCI_SCHEMA_TAG_BASE,
+     'http://stsci.edu/schemas/asdf{tag_suffix}')
+]
 
 
-default_url_mapping = Resolver()
-default_url_mapping.add_mapping(DEFAULT_URL_MAPPING, 'url')
-default_url_mapping.add_mapping(DEFAULT_TAG_MAPPING, 'tag')
+default_url_mapping = Resolver(DEFAULT_URL_MAPPING, 'url')
+default_tag_to_url_mapping = Resolver(DEFAULT_TAG_TO_URL_MAPPING, 'tag')
+
+def default_resolver(uri):
+    return default_url_mapping(default_tag_to_url_mapping(uri))

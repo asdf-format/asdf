@@ -193,6 +193,9 @@ class AsdfFile(versioning.VersionedMixin):
     def url_mapping(self):
         return self._extensions.url_mapping
 
+    def resolver(self, uri):
+        return self.url_mapping(self.tag_to_schema_resolver(uri))
+
     @property
     def type_index(self):
         return self._extensions.type_index

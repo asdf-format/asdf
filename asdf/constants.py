@@ -23,6 +23,7 @@ YAML_END_MARKER_REGEX = br'\r?\n\.\.\.((\r?\n)|$)'
 
 
 STSCI_SCHEMA_URI_BASE = 'http://stsci.edu/schemas/'
+STSCI_SCHEMA_TAG_BASE = 'tag:stsci.edu:asdf'
 
 
 BLOCK_FLAG_STREAMED = 0x1

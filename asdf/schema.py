@@ -205,10 +205,8 @@ REMOVE_DEFAULTS['properties'] = validate_remove_default
 
 @lru_cache()
 def _create_validator(validators=YAML_VALIDATORS):
-    meta_schema = load_schema(YAML_SCHEMA_METASCHEMA_ID,
-                              mresolver.default_url_mapping)
-    base_cls = mvalidators.create(meta_schema=meta_schema,
-                                  validators=validators)
+    meta_schema = load_schema(YAML_SCHEMA_METASCHEMA_ID, mresolver.default_resolver)
+    base_cls = mvalidators.create(meta_schema=meta_schema, validators=validators)
 
     class ASDFValidator(base_cls):
         DEFAULT_TYPES = base_cls.DEFAULT_TYPES.copy()
@@ -234,9 +232,9 @@ def _create_validator(validators=YAML_VALIDATORS):
             if _schema is None:
                 tag = getattr(instance, '_tag', None)
                 if tag is not None:
-                    schema_path = self.ctx.tag_to_schema_resolver(tag)
+                    schema_path = self.ctx.resolver(tag)
                     if schema_path != tag:
-                        s = load_schema(schema_path, self.ctx.url_mapping)
+                        s = load_schema(schema_path, self.ctx.resolver)
                         if s:
                             with self.resolver.in_scope(schema_path):
                                 for x in super(ASDFValidator, self).iter_errors(instance, s):
@@ -306,7 +304,7 @@ def _make_resolver(url_mapping):
     def get_schema(url):
         return schema_loader(url)[0]
 
-    for x in ['http', 'https', 'file']:
+    for x in ['http', 'https', 'file', 'tag']:
         handlers[x] = get_schema
 
     # We set cache_remote=False here because we do the caching of
@@ -349,7 +347,7 @@ def load_schema(url, resolver=None, resolve_references=False):
         If `True`, resolve all `$ref` references.
     """
     if resolver is None:
-        resolver = mresolver.default_url_mapping
+        resolver = mresolver.default_resolver
     loader = _make_schema_loader(resolver)
     if url in HARDCODED_SCHEMA:
         schema = HARDCODED_SCHEMA[url]()
@@ -491,7 +489,7 @@ def validate(instance, ctx=None, schema={},
         from .asdf import AsdfFile
         ctx = AsdfFile()
 
-    validator = get_validator(schema, ctx, validators, ctx.url_mapping,
+    validator = get_validator(schema, ctx, validators, ctx.resolver,
                               *args, **kwargs)
     validator.validate(instance, _schema=(schema or None))
 
@@ -552,10 +550,9 @@ def check_schema(schema):
         'default': validate_default
     })
 
-    meta_schema = load_schema(YAML_SCHEMA_METASCHEMA_ID,
-                              mresolver.default_url_mapping)
+    meta_schema = load_schema(YAML_SCHEMA_METASCHEMA_ID, mresolver.default_resolver)
 
-    resolver = _make_resolver(mresolver.default_url_mapping)
+    resolver = _make_resolver(mresolver.default_resolver)
 
     cls = mvalidators.create(meta_schema=meta_schema,
                              validators=VALIDATORS)
