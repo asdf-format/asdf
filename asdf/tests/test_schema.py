@@ -15,6 +15,7 @@ import yaml
 import pytest
 
 import numpy as np
+from numpy.testing import assert_array_equal
 
 import asdf
 from asdf import asdftypes
@@ -22,6 +23,7 @@ from asdf import extension
 from asdf import resolver
 from asdf import schema
 from asdf import util
+from asdf import yamlutil
 
 from asdf.tests import helpers
 from astropy.tests.helper import catch_warnings
@@ -372,7 +374,41 @@ custom: !<tag:nowhere.org:custom/default-1.0.0>
         assert 'c' not in ff.tree['custom']['b']
 
 
-def test_references_in_schema():
+def test_tag_reference_validation():
+    class ExampleType(asdftypes.CustomType):
+        name = 'tag_reference'
+        organization = 'nowhere.org'
+        version = (1, 0, 0)
+        standard = 'custom'
+
+        @classmethod
+        def from_tree(cls, tree, ctx):
+            node = {}
+            node['name'] = tree['name']
+            node['things'] = yamlutil.tagged_tree_to_custom_tree(tree['things'], ctx)
+            return node
+
+    class DefaultTypeExtension(CustomExtension):
+        @property
+        def types(self):
+            return [ExampleType]
+
+    yaml = """
+custom: !<tag:nowhere.org:custom/tag_reference-1.0.0>
+  name:
+    "Something"
+  things: !core/ndarray-1.0.0
+    data: [1, 2, 3]
+    """
+
+    buff = helpers.yaml_to_asdf(yaml)
+    with asdf.AsdfFile.open(buff, extensions=[DefaultTypeExtension()]) as ff:
+        custom = ff.tree['custom']
+        assert custom['name'] == "Something"
+        assert_array_equal(custom['things'], [1, 2, 3])
+
+
+def test_self_reference_resolution():
     r = resolver.Resolver(CustomExtension().url_mapping, 'url')
     s = schema.load_schema(
         os.path.join(TEST_DATA_PATH, 'self_referencing-1.0.0.yaml'),
