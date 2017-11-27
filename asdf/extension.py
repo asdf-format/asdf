@@ -158,10 +158,7 @@ class BuiltinExtension(object):
 
     @property
     def tag_mapping(self):
-        return [
-            ('tag:stsci.edu:asdf',
-             'http://stsci.edu/schemas/asdf{tag_suffix}')
-        ]
+        return resolver.DEFAULT_TAG_TO_URL_MAPPING
 
     @property
     def url_mapping(self):
