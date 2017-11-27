@@ -4,6 +4,7 @@
 import glob
 import os
 import sys
+import subprocess as sp
 
 import ah_bootstrap
 from setuptools import setup
@@ -91,8 +92,13 @@ package_info['package_dir']['asdf.schemas'] = schema_root
 package_info['packages'].append('asdf.schemas')
 
 # The reference files come from a git submodule, so we deal with them here
-reference_file_root = os.path.join(
-    ASDF_STANDARD_ROOT, "reference_files")
+reference_file_root = os.path.join(ASDF_STANDARD_ROOT, "reference_files")
+if not os.path.exists(reference_file_root):
+    ret = sp.call(['git', 'submodule', 'update', '--init', ASDF_STANDARD_ROOT])
+    if ret != 0 or not os.path.exists(reference_file_root):
+        sys.stderr.write("Failed to initialize 'asdf-standard' submodule\n")
+        sys.exit(ret or 1)
+
 package_info['package_dir']['asdf.reference_files'] = reference_file_root
 for dirname in os.listdir(reference_file_root):
     package_info['package_dir']['asdf.reference_files.' + dirname] = os.path.join(
