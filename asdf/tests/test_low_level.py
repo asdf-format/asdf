@@ -17,10 +17,12 @@ import six
 from .. import asdf
 from .. import block
 from .. import constants
+from .. import extension
 from .. import generic_io
 from .. import treeutil
 from .. import versioning
 from ..tests.helpers import assert_tree_match
+from ..exceptions import AsdfDeprecationWarning
 
 
 def _get_small_tree():
@@ -1183,3 +1185,13 @@ def test_top_level_tree():
     ff2 = asdf.AsdfFile()
     ff2['tree'] = _get_small_tree()
     assert_tree_match(ff2.tree['tree'], ff2['tree'])
+
+
+def test_tag_to_schema_resolver_deprecation():
+    ff = asdf.AsdfFile()
+    with pytest.warns(AsdfDeprecationWarning):
+        ff.tag_to_schema_resolver('foo')
+
+    with pytest.warns(AsdfDeprecationWarning):
+        extension_list = extension.default_extensions.extension_list
+        extension_list.tag_to_schema_resolver('foo')
