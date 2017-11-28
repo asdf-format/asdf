@@ -3,6 +3,8 @@
 
 - Astropy-specific tags have moved to Astropy core package. [#359]
 
+- ICRSCoord tag has moved to Astropy core package. [#401]
+
 1.4.0 (unreleased)
 ------------------
 
