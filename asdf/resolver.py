@@ -48,10 +48,27 @@ class Resolver(object):
         prefix : str, optional
             The prefix to use for the Python formatting token names.
         """
-        self._mapping = self._validate_mapping(mapping)[::-1]
-        self._prefix = prefix
+        self._mapping = tuple()
+        if mapping:
+            self.add_mapping(mapping, prefix)
 
-    def _validate_mapping(self, mappings):
+    def add_mapping(self, mapping, prefix=''):
+        self._mapping = self._mapping + self._validate_mapping(mapping, prefix)
+
+    def _make_map_func(self, mapping, prefix):
+        def _map_func(uri):
+            if uri.startswith(mapping[0]):
+                format_tokens = {
+                    prefix: uri,
+                    prefix + "_prefix": mapping[0],
+                    prefix + "_suffix": uri[len(mapping[0]):]
+                }
+
+                return len(mapping[0]), mapping[1].format(**format_tokens)
+            return None
+        return _map_func
+
+    def _validate_mapping(self, mappings, prefix):
         normalized = []
         for mapping in mappings:
             if six.callable(mapping):
@@ -61,20 +78,7 @@ class Resolver(object):
                   isinstance(mapping[0], six.string_types) and
                   isinstance(mapping[1], six.string_types)):
 
-                def _make_map_func(mapping):
-                    def _map_func(uri):
-                        if uri.startswith(mapping[0]):
-                            format_tokens = {
-                                self._prefix: uri,
-                                self._prefix + "_prefix": mapping[0],
-                                self._prefix + "_suffix": uri[len(mapping[0]):]
-                            }
-
-                            return len(mapping[0]), mapping[1].format(**format_tokens)
-                        return None
-                    return _map_func
-
-                func = _make_map_func(mapping)
+                func = self._make_map_func(mapping, prefix)
             else:
                 raise ValueError("Invalid mapping '{0}'".format(mapping))
 
@@ -104,11 +108,15 @@ DEFAULT_URL_MAPPING = [
     (constants.STSCI_SCHEMA_URI_BASE,
      util.filepath_to_url(
          os.path.join(SCHEMA_PATH, 'stsci.edu')) +
-         '/{url_suffix}.yaml'),
-    ('tag:stsci.edu:asdf/',
-     util.filepath_to_url(
-         os.path.join(SCHEMA_PATH, 'stsci.edu')) +
-         '/asdf/{url_suffix}.yaml')]
+         '/{url_suffix}.yaml')]
+DEFAULT_TAG_TO_URL_MAPPING = [
+    (constants.STSCI_SCHEMA_TAG_BASE,
+     'http://stsci.edu/schemas/asdf{tag_suffix}')
+]
 
 
 default_url_mapping = Resolver(DEFAULT_URL_MAPPING, 'url')
+default_tag_to_url_mapping = Resolver(DEFAULT_TAG_TO_URL_MAPPING, 'tag')
+
+def default_resolver(uri):
+    return default_url_mapping(default_tag_to_url_mapping(uri))

@@ -15,6 +15,7 @@ import yaml
 import pytest
 
 import numpy as np
+from numpy.testing import assert_array_equal
 
 import asdf
 from asdf import asdftypes
@@ -22,6 +23,7 @@ from asdf import extension
 from asdf import resolver
 from asdf import schema
 from asdf import util
+from asdf import yamlutil
 
 from asdf.tests import helpers
 from astropy.tests.helper import catch_warnings
@@ -31,7 +33,8 @@ TEST_DATA_PATH = os.path.join(os.path.dirname(__file__), 'data')
 
 
 class CustomExtension:
-    """This is the base class that is used for extensions for custom tag
+    """
+    This is the base class that is used for extensions for custom tag
     classes that exist only for the purposes of testing.
     """
     @property
@@ -48,6 +51,24 @@ class CustomExtension:
         return [('http://nowhere.org/schemas/custom/',
                  util.filepath_to_url(TEST_DATA_PATH) +
                  '/{url_suffix}.yaml')]
+
+
+class TagReferenceType(asdftypes.CustomType):
+    """
+    This class is used by several tests below for validating foreign type
+    references in schemas and ASDF files.
+    """
+    name = 'tag_reference'
+    organization = 'nowhere.org'
+    version = (1, 0, 0)
+    standard = 'custom'
+
+    @classmethod
+    def from_tree(cls, tree, ctx):
+        node = {}
+        node['name'] = tree['name']
+        node['things'] = yamlutil.tagged_tree_to_custom_tree(tree['things'], ctx)
+        return node
 
 
 def test_violate_toplevel_schema():
@@ -372,7 +393,71 @@ custom: !<tag:nowhere.org:custom/default-1.0.0>
         assert 'c' not in ff.tree['custom']['b']
 
 
-def test_references_in_schema():
+def test_tag_reference_validation():
+    class DefaultTypeExtension(CustomExtension):
+        @property
+        def types(self):
+            return [TagReferenceType]
+
+    yaml = """
+custom: !<tag:nowhere.org:custom/tag_reference-1.0.0>
+  name:
+    "Something"
+  things: !core/ndarray-1.0.0
+    data: [1, 2, 3]
+    """
+
+    buff = helpers.yaml_to_asdf(yaml)
+    with asdf.AsdfFile.open(buff, extensions=[DefaultTypeExtension()]) as ff:
+        custom = ff.tree['custom']
+        assert custom['name'] == "Something"
+        assert_array_equal(custom['things'], [1, 2, 3])
+
+
+def test_foreign_tag_reference_validation():
+    class ForeignTagReferenceType(asdftypes.CustomType):
+        name = 'foreign_tag_reference'
+        organization = 'nowhere.org'
+        version = (1, 0, 0)
+        standard = 'custom'
+
+        @classmethod
+        def from_tree(cls, tree, ctx):
+            node = {}
+            node['a'] = yamlutil.tagged_tree_to_custom_tree(tree['a'], ctx)
+            node['b'] = yamlutil.tagged_tree_to_custom_tree(tree['b'], ctx)
+            return node
+
+    class ForeignTypeExtension(CustomExtension):
+        @property
+        def types(self):
+            return [TagReferenceType, ForeignTagReferenceType]
+
+    yaml = """
+custom: !<tag:nowhere.org:custom/foreign_tag_reference-1.0.0>
+  a: !<tag:nowhere.org:custom/tag_reference-1.0.0>
+    name:
+      "Something"
+    things: !core/ndarray-1.0.0
+      data: [1, 2, 3]
+  b: !<tag:nowhere.org:custom/tag_reference-1.0.0>
+    name:
+      "Anything"
+    things: !core/ndarray-1.0.0
+      data: [4, 5, 6]
+    """
+
+    buff = helpers.yaml_to_asdf(yaml)
+    with asdf.AsdfFile.open(buff, extensions=ForeignTypeExtension()) as ff:
+        a = ff.tree['custom']['a']
+        b = ff.tree['custom']['b']
+        assert a['name'] == 'Something'
+        assert_array_equal(a['things'], [1, 2, 3])
+        assert b['name'] == 'Anything'
+        assert_array_equal(b['things'], [4, 5, 6])
+
+
+def test_self_reference_resolution():
     r = resolver.Resolver(CustomExtension().url_mapping, 'url')
     s = schema.load_schema(
         os.path.join(TEST_DATA_PATH, 'self_referencing-1.0.0.yaml'),

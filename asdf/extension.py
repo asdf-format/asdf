@@ -4,6 +4,7 @@
 from __future__ import absolute_import, division, unicode_literals, print_function
 
 import abc
+import warnings
 from pkg_resources import iter_entry_points
 
 import six
@@ -11,6 +12,7 @@ import importlib
 
 from . import asdftypes
 from . import resolver
+from .exceptions import AsdfDeprecationWarning
 
 
 @six.add_metaclass(abc.ABCMeta)
@@ -131,6 +133,14 @@ class AsdfExtensionList(object):
 
     @property
     def tag_to_schema_resolver(self):
+        warnings.warn(
+            "The 'tag_to_schema_resolver' property is deprecated. Use "
+            "'tag_mapping' instead.",
+            AsdfDeprecationWarning)
+        return self._tag_mapping
+
+    @property
+    def tag_mapping(self):
         return self._tag_mapping
 
     @property
@@ -158,10 +168,7 @@ class BuiltinExtension(object):
 
     @property
     def tag_mapping(self):
-        return [
-            ('tag:stsci.edu:asdf',
-             'http://stsci.edu/schemas/asdf{tag_suffix}')
-        ]
+        return resolver.DEFAULT_TAG_TO_URL_MAPPING
 
     @property
     def url_mapping(self):

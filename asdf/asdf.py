@@ -3,10 +3,11 @@
 
 from __future__ import absolute_import, division, unicode_literals, print_function
 
-import datetime
-import copy
 import io
 import re
+import copy
+import datetime
+import warnings
 import importlib
 
 import numpy as np
@@ -21,6 +22,7 @@ from . import util
 from . import version
 from . import versioning
 from . import yamlutil
+from .exceptions import AsdfDeprecationWarning
 from .extension import AsdfExtensionList, default_extensions
 
 from .tags.core import AsdfObject, Software, HistoryEntry
@@ -187,11 +189,22 @@ class AsdfFile(versioning.VersionedMixin):
 
     @property
     def tag_to_schema_resolver(self):
-        return self._extensions.tag_to_schema_resolver
+        warnings.warn(
+            "The 'tag_to_schema_resolver' property is deprecated. Use "
+            "'tag_mapping' instead.",
+            AsdfDeprecationWarning)
+        return self._extensions.tag_mapping
+
+    @property
+    def tag_mapping(self):
+        return self._extensions.tag_mapping
 
     @property
     def url_mapping(self):
         return self._extensions.url_mapping
+
+    def resolver(self, uri):
+        return self.url_mapping(self.tag_mapping(uri))
 
     @property
     def type_index(self):

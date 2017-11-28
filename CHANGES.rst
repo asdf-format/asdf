@@ -10,6 +10,10 @@
 
 - Automatically initialize ``asdf-standard`` submodule in ``setup.py``. [#398]
 
+- Allow foreign tags to be resolved in schemas and files. Deprecate
+  ``tag_to_schema_resolver`` property for ``AsdfFile`` and
+  ``AsdfExtensionList``. [#399]
+
 1.3.2 (unreleased)
 ------------------
 

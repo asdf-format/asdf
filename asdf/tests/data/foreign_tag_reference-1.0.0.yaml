@@ -1,0 +1,17 @@
+%YAML 1.1
+---
+$schema: "http://stsci.edu/schemas/yaml-schema/draft-01"
+id: "http://nowhere.org/schemas/custom/foreign_tag_reference-1.0.0"
+title: An example custom type for testing tag references
+
+tag: "tag:nowhere.org:custom/foreign_tag_reference-1.0.0"
+type: object
+properties:
+  a:
+    # Test foreign tag reference using tag URI
+    $ref: "tag:nowhere.org:custom/tag_reference-1.0.0"
+  b:
+    # Test foreign tag reference using tag ID
+    $ref: "http://nowhere.org/schemas/custom/tag_reference-1.0.0"
+required: [a, b]
+...
