@@ -1,5 +1,3 @@
-from __future__ import absolute_import, division, unicode_literals, print_function
-
 from .asdftypes import AsdfType
 
 
@@ -10,7 +8,7 @@ class ExternalArrayReference(AsdfType):
     Parameters
     ----------
 
-    filepath: `str`
+    fileuri: `str`
         The path to the path to be referenced. Can be relative to the file
         containing the reference.
 
@@ -25,16 +23,17 @@ class ExternalArrayReference(AsdfType):
         The shape of the array to be loaded.
     """
     name = "core/externalarray"
+    version = (1, 0, 0)
 
-    def __init__(self, filepath, target, dtype, shape):
-        self.filepath = str(filepath)
+    def __init__(self, fileuri, target, dtype, shape):
+        self.fileuri = str(fileuri)
         self.target = target
         self.dtype = dtype
         self.shape = tuple(shape)
 
     def __repr__(self):
         return "<External array reference in {0} at {1} shape: {2} dtype: {3}>".format(
-            self.filepath, self.target, self.shape, self.dtype)
+            self.fileuri, self.target, self.shape, self.dtype)
 
     def __str__(self):
         return repr(self)
@@ -42,7 +41,7 @@ class ExternalArrayReference(AsdfType):
     @classmethod
     def to_tree(self, data, ctx):
         node = {}
-        node['filepath'] = data.filepath
+        node['fileuri'] = data.fileuri
         node['target'] = data.target
         node['datatype'] = data.dtype
         node['shape'] = data.shape
@@ -51,4 +50,4 @@ class ExternalArrayReference(AsdfType):
 
     @classmethod
     def from_tree(cls, tree, ctx):
-        return cls(tree['filepath'], tree['target'], tree['datatype'], tree['shape'])
+        return cls(tree['fileuri'], tree['target'], tree['datatype'], tree['shape'])
