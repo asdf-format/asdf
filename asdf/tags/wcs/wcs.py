@@ -350,6 +350,10 @@ class CompositeFrame(FrameType):
             helpers.assert_tree_match(old_frame, new_frame)
 
 class ICRSCoord(AsdfType):
+    """The newest version of this tag and the associated schema have  moved to
+    Astropy. This implementation is retained here for the purposes of backwards
+    compatibility with older files.
+    """
     name = "wcs/icrs_coord"
     types = ['astropy.coordinates.ICRS']
     requires = ['astropy']
