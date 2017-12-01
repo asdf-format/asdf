@@ -165,8 +165,16 @@ def pytest_generate_tests(metafunc):
             generate_example_schemas(),
             ids=create_schema_example_id)
 
+@pytest.fixture(scope='module')
+def asdf_resolver():
+    """Using the resolver of an actual AsdfFile context instead of the default
+    resolver allows any extensions that were installed as entry points to be
+    used during the schema validation process.
+    """
+    ctx = asdf.AsdfFile()
+    return ctx.resolver
 
-def test_validate_schema(schema_path):
+def test_validate_schema(schema_path, asdf_resolver):
     """Pytest to check validity of schema file at given path
 
     Parameters:
@@ -177,7 +185,7 @@ def test_validate_schema(schema_path):
     'parametrize' utility in order to account for all schema files.
     """
     # Make sure that each schema itself is valid.
-    schema_tree = schema.load_schema(schema_path, resolve_references=True)
+    schema_tree = schema.load_schema(schema_path, resolver=asdf_resolver, resolve_references=True)
     schema.check_schema(schema_tree)
 
 
