@@ -375,7 +375,11 @@ class ICRSCoord(AsdfType):
         return ICRS(ra=ra, dec=dec)
 
     @classmethod
-    def to_tree(cls, frame, ctx):
+    def to_tree(cls, frame, ctx): # pragma: no cover
+        # We do not run coverage analysis since new ICRS objects will be
+        # serialized by the tag implementation in Astropy. Eventually if we
+        # have a better way to write older versions of tags, we can re-add
+        # tests for this code.
         from astropy.units import Quantity
         from astropy.coordinates import ICRS
         from astropy.io.misc.asdf.tags.unit.quantity import QuantityType
