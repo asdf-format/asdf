@@ -1,4 +1,4 @@
-from .asdftypes import AsdfType
+from ...asdftypes import AsdfType
 
 
 class ExternalArrayReference(AsdfType):
