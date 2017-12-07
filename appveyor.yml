@@ -8,9 +8,8 @@ environment:
       MINICONDA_VERSION: "latest"
       CMD_IN_ENV: "cmd /E:ON /V:ON /C .\\ci-helpers\\appveyor\\windows_sdk.cmd"
       NUMPY_VERSION: "stable"
-      #ASTROPY_VERSION: "development"
+      ASTROPY_VERSION: "development"
       GWCS_GIT: "git+git://github.com/spacetelescope/gwcs.git#egg=gwcs"
-      ASTROPY_GIT: "git+git://github.com/drdavella/astropy.git@asdf-icrs-coord#egg=astropy"
       CONDA_DEPENDENCIES: "semantic_version jsonschema pyyaml six lz4"
       PYTHON_ARCH: "64"
 
@@ -39,7 +38,6 @@ install:
     - "powershell ci-helpers/appveyor/install-miniconda.ps1"
     - "SET PATH=%PYTHON%;%PYTHON%\\Scripts;%PATH%"
     - "activate test"
-    - "%CMD_IN_ENV% python -m pip install --no-deps %ASTROPY_GIT%"
     - "%CMD_IN_ENV% python -m pip install --no-deps %GWCS_GIT%"
     - "%CMD_IN_ENV% python -m pip install pytest-astropy"
     - "%CMD_IN_ENV% python setup.py develop --no-deps"
