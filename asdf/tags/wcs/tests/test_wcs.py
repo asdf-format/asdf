@@ -131,9 +131,6 @@ def test_frames(tmpdir):
     helpers.assert_roundtrip_tree(tree, tmpdir)
 
 
-@pytest.mark.skipif(astropy.__version__ <= '1.3.3',
-    reason="It does not make sense to test backwards compatibility when using "
-           "earlier versions of astropy")
 def test_backwards_compat_galcen():
     # Hold these fields constant so that we can compare them
     declination = 1.0208        # in degrees

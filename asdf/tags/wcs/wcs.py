@@ -18,6 +18,7 @@ class WCSType(AsdfType):
     name = "wcs/wcs"
     requires = _REQUIRES
     types = ['gwcs.WCS']
+    version = '1.2.0'
 
     @classmethod
     def from_tree(cls, node, ctx):
@@ -65,13 +66,14 @@ class WCSType(AsdfType):
 class StepType(dict, AsdfType):
     name = "wcs/step"
     requires = _REQUIRES
+    version = '1.2.0'
 
 
 class FrameType(AsdfType):
     name = "wcs/frame"
-    version = '1.1.0'
     requires = ['gwcs', 'astropy-1.3.3']
     types = ['gwcs.Frame2D']
+    version = '1.2.0'
 
     import astropy
     _astropy_version = astropy.__version__
@@ -269,7 +271,7 @@ class FrameType(AsdfType):
 class CelestialFrameType(FrameType):
     name = "wcs/celestial_frame"
     types = ['gwcs.CelestialFrame']
-    supported_versions = [(1,0,0), (1,1,0)]
+    supported_versions = [(1,0,0), (1,1,0), (1,2,0)]
 
     @classmethod
     def from_tree(cls, node, ctx):
@@ -318,6 +320,7 @@ class SpectralFrame(FrameType):
 class CompositeFrame(FrameType):
     name = "wcs/composite_frame"
     types = ['gwcs.CompositeFrame']
+    version = '1.1.0'
 
     @classmethod
     def from_tree(cls, node, ctx):
@@ -347,6 +350,10 @@ class CompositeFrame(FrameType):
             helpers.assert_tree_match(old_frame, new_frame)
 
 class ICRSCoord(AsdfType):
+    """The newest version of this tag and the associated schema have  moved to
+    Astropy. This implementation is retained here for the purposes of backwards
+    compatibility with older files.
+    """
     name = "wcs/icrs_coord"
     types = ['astropy.coordinates.ICRS']
     requires = ['astropy']
@@ -368,7 +375,11 @@ class ICRSCoord(AsdfType):
         return ICRS(ra=ra, dec=dec)
 
     @classmethod
-    def to_tree(cls, frame, ctx):
+    def to_tree(cls, frame, ctx): # pragma: no cover
+        # We do not run coverage analysis since new ICRS objects will be
+        # serialized by the tag implementation in Astropy. Eventually if we
+        # have a better way to write older versions of tags, we can re-add
+        # tests for this code.
         from astropy.units import Quantity
         from astropy.coordinates import ICRS
         from astropy.io.misc.asdf.tags.unit.quantity import QuantityType
