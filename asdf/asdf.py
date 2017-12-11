@@ -91,6 +91,7 @@ class AsdfFile(versioning.VersionedMixin):
         self._file_format_version = None
 
         self._fd = None
+        self._closed = False
         self._external_asdf_by_uri = {}
         self._blocks = block.BlockManager(self, copy_arrays=copy_arrays)
         self._uri = None
@@ -121,15 +122,7 @@ class AsdfFile(versioning.VersionedMixin):
         return self
 
     def __exit__(self, type, value, traceback):
-        if self._fd:
-            # This is ok to always do because GenericFile knows
-            # whether it "owns" the file and should close it.
-            self._fd.__exit__(type, value, traceback)
-            self._fd = None
-        for external in self._external_asdf_by_uri.values():
-            external.__exit__(type, value, traceback)
-        self._external_asdf_by_uri.clear()
-        self._blocks.close()
+        self.close()
 
     def _process_extensions(self, extensions):
         if extensions is None or extensions == []:
@@ -154,11 +147,12 @@ class AsdfFile(versioning.VersionedMixin):
         """
         Close the file handles associated with the `AsdfFile`.
         """
-        if self._fd:
+        if self._fd and not self._closed:
             # This is ok to always do because GenericFile knows
             # whether it "owns" the file and should close it.
             self._fd.close()
             self._fd = None
+            self._closed = True
         for external in self._external_asdf_by_uri.values():
             external.close()
         self._external_asdf_by_uri.clear()
@@ -274,6 +268,8 @@ class AsdfFile(versioning.VersionedMixin):
 
         When set, the tree will be validated against the ASDF schema.
         """
+        if self._closed:
+            raise OSError("Cannot access data from closed ASDF file")
         return self._tree
 
     @tree.setter
