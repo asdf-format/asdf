@@ -17,7 +17,7 @@ from jsonschema.exceptions import ValidationError
 
 import yaml
 
-from .compat import lru_cache
+from functools import lru_cache
 from . import constants
 from . import generic_io
 from . import reference

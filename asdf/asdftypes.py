@@ -11,7 +11,7 @@ import re
 import six
 from copy import copy
 
-from .compat import lru_cache
+from functools import lru_cache
 
 from . import tagged
 from . import util
