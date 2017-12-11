@@ -11,6 +11,7 @@ environment:
       ASTROPY_VERSION: "development"
       GWCS_GIT: "git+git://github.com/spacetelescope/gwcs.git#egg=gwcs"
       CONDA_DEPENDENCIES: "semantic_version jsonschema pyyaml six lz4"
+      PIP_DEPENDENCIES: "pytest-astropy pytest-faulthandler"
       PYTHON_ARCH: "64"
 
   matrix:
@@ -39,7 +40,6 @@ install:
     - "SET PATH=%PYTHON%;%PYTHON%\\Scripts;%PATH%"
     - "activate test"
     - "%CMD_IN_ENV% python -m pip install --no-deps %GWCS_GIT%"
-    - "%CMD_IN_ENV% python -m pip install pytest-astropy"
     - "%CMD_IN_ENV% python setup.py develop --no-deps"
 
 # Not a .NET project
