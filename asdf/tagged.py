@@ -35,7 +35,7 @@ from __future__ import absolute_import, division, unicode_literals, print_functi
 
 import six
 
-from .compat import UserDict, UserList, UserString
+from collections import UserDict, UserList, UserString
 
 __all__ = ['tag_object', 'get_tag']
 
