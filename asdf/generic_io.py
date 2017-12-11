@@ -9,7 +9,6 @@ The classes in this module should not be instantiated directly, but
 instead, one should use the factory function `get_file`.
 """
 
-from __future__ import absolute_import, division, unicode_literals, print_function
 
 from distutils.version import LooseVersion
 import io

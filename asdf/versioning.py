@@ -6,7 +6,6 @@ This module deals with things that change between different versions
 of the ASDF spec.
 """
 
-from __future__ import absolute_import, division, unicode_literals, print_function
 
 import six
 import yaml

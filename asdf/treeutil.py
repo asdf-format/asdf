@@ -4,7 +4,6 @@
 Utility functions for managing tree-like data structures.
 """
 
-from __future__ import absolute_import, division, unicode_literals, print_function
 
 import inspect
 

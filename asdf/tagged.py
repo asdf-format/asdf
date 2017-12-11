@@ -31,7 +31,6 @@ and dumper (``yamlutil.AsdfLoader`` and ``yamlutil.AsdfDumper``) and
 is not intended to be exposed to the end user.
 """
 
-from __future__ import absolute_import, division, unicode_literals, print_function
 
 import six
 
