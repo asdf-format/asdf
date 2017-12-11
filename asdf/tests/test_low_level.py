@@ -1195,3 +1195,19 @@ def test_tag_to_schema_resolver_deprecation():
     with pytest.warns(AsdfDeprecationWarning):
         extension_list = extension.default_extensions.extension_list
         extension_list.tag_to_schema_resolver('foo')
+
+
+def test_access_tree_outside_handler(tmpdir):
+    tempname = str(tmpdir.join('test.asdf'))
+
+    tree = {'random': np.random.random(10)}
+
+    ff = asdf.AsdfFile(tree)
+    ff.write_to(str(tempname))
+
+    with asdf.AsdfFile.open(tempname) as newf:
+        pass
+
+    # Accessing array data outside of handler should fail
+    with pytest.raises(OSError):
+        newf.tree['random'][0]
