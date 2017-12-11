@@ -120,7 +120,7 @@ def test_all_dtypes(tmpdir):
             # Python 3 can't expose these dtypes in non-native byte
             # order, because it's using the new Python buffer
             # interface.
-            if six.PY3 and dtype in ('c32', 'f16'):
+            if dtype in ('c32', 'f16'):
                 continue
 
             if dtype == 'b1':

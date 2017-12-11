@@ -35,8 +35,7 @@ def _roundtrip(tree, get_write_fd, get_read_fd,
         # Work around the fact that generic_io's get_file doesn't have a way of
         # determining whether or not the underlying file handle should be
         # closed as part of the exit handler
-        if (six.PY3 and isinstance(fd._fd, io.FileIO)) or \
-                (six.PY2 and isinstance(fd._fd, file)):
+        if isinstance(fd._fd, io.FileIO):
             fd._fd.close()
 
     with get_read_fd() as fd:
@@ -128,16 +127,15 @@ def test_open_fail2(tmpdir):
             generic_io.get_file(fd, mode='w')
 
 
-if six.PY3:
-    def test_open_fail3(tmpdir):
-        path = os.path.join(str(tmpdir), 'test.asdf')
+def test_open_fail3(tmpdir):
+    path = os.path.join(str(tmpdir), 'test.asdf')
 
-        with open(path, 'w') as fd:
-            fd.write("\n\n\n")
+    with open(path, 'w') as fd:
+        fd.write("\n\n\n")
 
-        with open(path, 'r') as fd:
-            with pytest.raises(ValueError):
-                generic_io.get_file(fd, mode='r')
+    with open(path, 'r') as fd:
+        with pytest.raises(ValueError):
+            generic_io.get_file(fd, mode='r')
 
 
 def test_open_fail4(tmpdir):
@@ -421,10 +419,7 @@ def test_invalid_obj(tmpdir):
 
 
 def test_nonseekable_file(tmpdir):
-    if six.PY2:
-        base = file
-    else:
-        base = io.IOBase
+    base = io.IOBase
 
     class FileWrapper(base):
         def tell(self):

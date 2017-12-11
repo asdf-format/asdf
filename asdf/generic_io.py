@@ -60,15 +60,10 @@ def _check_bytes(fd, mode):
         if not isinstance(x, bytes):
             return False
     elif 'w' in mode:
-        if six.PY2: # pragma: no cover
-            if isinstance(fd, file):
-                if 'b' not in fd.mode:
-                    return False
-        elif six.PY3:
-            try:
-                fd.write(b'')
-            except TypeError:
-                return False
+        try:
+            fd.write(b'')
+        except TypeError:
+            return False
 
     return True
 
@@ -1157,10 +1152,7 @@ def get_file(init, mode='r', uri=None):
         raise ValueError("mode must be 'r', 'w' or 'rw'")
 
     if init in (sys.__stdout__, sys.__stdin__, sys.__stderr__):
-        if six.PY3:
-            init = init.buffer
-        else:
-            init = os.fdopen(init.fileno(), init.mode + 'b')
+        init = os.fdopen(init.fileno(), init.mode + 'b')
 
     if isinstance(init, (GenericFile, GenericWrapper)):
         if mode not in init.mode:
@@ -1195,25 +1187,6 @@ def get_file(init, mode='r', uri=None):
     elif isinstance(init, io.StringIO):
         raise TypeError(
             "io.StringIO objects are not supported.  Use io.BytesIO instead.")
-
-    elif six.PY2 and isinstance(init, file): # pragma: no cover
-        if init.mode[0] not in mode:
-            raise ValueError(
-                "File is opened as '{0}', but '{1}' was requested".format(
-                    init.mode, mode))
-
-        try:
-            init.tell()
-        except IOError:
-            if mode == 'w':
-                return OutputStream(init, uri=uri)
-            elif mode == 'r':
-                return InputStream(init, mode, uri=uri)
-            else:
-                raise ValueError(
-                    "File '{0}' could not be opened in 'rw' mode".format(init))
-        else:
-            return RealFile(init, mode, uri=uri)
 
     elif isinstance(init, io.IOBase):
         if (('r' in mode and not init.readable()) or

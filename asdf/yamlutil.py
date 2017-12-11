@@ -214,20 +214,6 @@ for scalar_type in util.iter_subclasses(np.integer):
     AsdfDumper.add_representer(scalar_type, AsdfDumper.represent_int)
 
 
-# ----------------------------------------------------------------------
-# Unicode fix on Python 2
-
-if six.PY2: # pragma: no cover
-    # This dumps Python unicode strings as regular YAML strings rather
-    # than !!python/unicode. See http://pyyaml.org/ticket/11
-    def _unicode_representer(dumper, value):
-        return dumper.represent_scalar("tag:yaml.org,2002:str", value)
-    AsdfDumper.add_representer(unicode, _unicode_representer)
-
-    AsdfLoader.add_constructor('tag:yaml.org,2002:str',
-                               AsdfLoader.construct_scalar)
-
-
 def custom_tree_to_tagged_tree(tree, ctx):
     """
     Convert a tree, possibly containing custom data types that aren't

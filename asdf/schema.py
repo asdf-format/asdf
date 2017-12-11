@@ -56,10 +56,6 @@ PYTHON_TYPE_TO_YAML_TAG = {
 }
 
 
-if six.PY2: # pragma: no cover
-    PYTHON_TYPE_TO_YAML_TAG[long] = 'int'
-
-
 # Prepend full YAML tag prefix
 for k, v in PYTHON_TYPE_TO_YAML_TAG.items():
     PYTHON_TYPE_TO_YAML_TAG[k] = constants.YAML_TAG_PREFIX + v
@@ -273,12 +269,6 @@ OrderedLoader.add_constructor(
     construct_mapping)
 
 
-if six.PY2: # pragma: no cover
-    # Load strings in as Unicode on Python 2
-    OrderedLoader.add_constructor('tag:yaml.org,2002:str',
-                                  OrderedLoader.construct_scalar)
-
-
 @lru_cache()
 def _load_schema(url):
     with generic_io.get_file(url) as fd:
@@ -429,34 +419,18 @@ def get_validator(schema={}, ctx=None, validators=None, url_mapping=None,
     return validator
 
 
-if six.PY2: # pragma: no cover
-    def validate_large_literals(instance):
-        """
-        Validate that the tree has no large numeric literals.
-        """
-        # We can count on 52 bits of precision
-        upper = ((long(1) << 51) - 1)
-        lower = -((long(1) << 51) - 2)
-
-        for instance in treeutil.iter_tree(instance):
-            if (isinstance(instance, six.integer_types) and
-                (instance > upper or instance < lower)):
-                raise ValidationError(
-                    "Integer value {0} is too large to safely represent as a "
-                    "literal in ASDF".format(instance))
-else:
-    def validate_large_literals(instance):
-        """
-        Validate that the tree has no large numeric literals.
-        """
-        # We can count on 52 bits of precision
-        for instance in treeutil.iter_tree(instance):
-            if (isinstance(instance, int) and (
-                instance > ((1 << 51) - 1) or
-                instance < -((1 << 51) - 2))):
-                raise ValidationError(
-                    "Integer value {0} is too large to safely represent as a "
-                    "literal in ASDF".format(instance))
+def validate_large_literals(instance):
+    """
+    Validate that the tree has no large numeric literals.
+    """
+    # We can count on 52 bits of precision
+    for instance in treeutil.iter_tree(instance):
+        if (isinstance(instance, int) and (
+            instance > ((1 << 51) - 1) or
+            instance < -((1 << 51) - 2))):
+            raise ValidationError(
+                "Integer value {0} is too large to safely represent as a "
+                "literal in ASDF".format(instance))
 
 
 def validate(instance, ctx=None, schema={},

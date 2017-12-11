@@ -220,21 +220,6 @@ def test_block_header_too_small():
             pass
 
 
-if six.PY2:
-    def test_file_already_closed(tmpdir, small_tree):
-        # Test that referencing specific blocks in another asdf file
-        # works.
-
-        path = os.path.join(str(tmpdir), 'test.asdf')
-        ff = asdf.AsdfFile(small_tree)
-        ff.write_to(path)
-
-        with open(path, 'rb') as fd:
-            ff2 = asdf.AsdfFile.open(fd)
-        with pytest.raises(IOError):
-            str(ff2.tree['science_data'][:])
-
-
 def test_external_block(tmpdir):
     tmpdir = str(tmpdir)
 
