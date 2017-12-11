@@ -1211,3 +1211,20 @@ def test_access_tree_outside_handler(tmpdir):
     # Accessing array data outside of handler should fail
     with pytest.raises(OSError):
         newf.tree['random'][0]
+
+
+def test_context_handler_resolve_and_inline(tmpdir):
+    # This reproduces the issue reported in
+    # https://github.com/spacetelescope/asdf/issues/406
+    tempname = str(tmpdir.join('test.asdf'))
+
+    tree = {'random': np.random.random(10)}
+
+    ff = asdf.AsdfFile(tree)
+    ff.write_to(str(tempname))
+
+    with asdf.AsdfFile.open(tempname) as newf:
+        newf.resolve_and_inline()
+
+    with pytest.raises(OSError):
+        newf.tree['random'][0]
