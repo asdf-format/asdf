@@ -400,12 +400,9 @@ def test_exploded_stream_read(tmpdir):
         # This should work, so we can get the tree content
         x = generic_io.InputStream(fd, 'r')
         with asdf.AsdfFile.open(x) as ff:
-            pass
-
-    # It's only on trying to get at the block data that the error
-    # occurs.
-    with pytest.raises(ValueError):
-        ff.tree['science_data'][:]
+            # It's only when trying to access external data that an error occurs
+            with pytest.raises(ValueError):
+                ff.tree['science_data'][:]
 
 
 def test_unicode_open(tmpdir):
