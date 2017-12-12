@@ -4,10 +4,7 @@
 Utility functions for managing tree-like data structures.
 """
 
-
 import inspect
-
-import six
 
 from .tagged import tag_object
 
@@ -73,7 +70,7 @@ def iter_tree(top):
             seen.remove(tree_id)
         elif isinstance(tree, dict):
             seen.add(tree_id)
-            for val in six.itervalues(tree):
+            for val in tree.values():
                 for sub in recurse(val):
                     yield sub
             seen.remove(tree_id)
