@@ -1,15 +1,12 @@
 # Licensed under a 3-clause BSD style license - see LICENSE.rst
 # -*- coding: utf-8 -*-
 
-
 import io
 from collections import OrderedDict
 
 import numpy as np
 
 import pytest
-
-import six
 
 import yaml
 

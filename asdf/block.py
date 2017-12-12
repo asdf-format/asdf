@@ -1,8 +1,6 @@
 # Licensed under a 3-clause BSD style license - see LICENSE.rst
 # -*- coding: utf-8 -*-
 
-
-from collections import namedtuple
 import copy
 import hashlib
 import io
@@ -10,11 +8,10 @@ import os
 import re
 import struct
 import weakref
+from collections import namedtuple
+from urllib import parse as urlparse
 
 import numpy as np
-
-import six
-from urllib import parse as urlparse
 
 import yaml
 

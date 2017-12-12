@@ -5,8 +5,6 @@ import struct
 
 import numpy as np
 
-import six
-
 
 DEFAULT_BLOCK_SIZE = 1 << 22  #: Decompressed block size in bytes, 4MiB
 

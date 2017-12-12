@@ -1,15 +1,12 @@
 # Licensed under a 3-clause BSD style license - see LICENSE.rst
 # -*- coding: utf-8 -*-
 
-
 import sys
 
 import numpy as np
 from numpy import ma
 
 from jsonschema import ValidationError
-
-import six
 
 from ...asdftypes import AsdfType
 from ... import schema

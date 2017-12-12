@@ -6,8 +6,6 @@ This module deals with things that change between different versions
 of the ASDF spec.
 """
 
-
-import six
 import yaml
 from functools import total_ordering
 

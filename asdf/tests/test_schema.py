@@ -1,7 +1,6 @@
 # Licensed under a 3-clause BSD style license - see LICENSE.rst
 # -*- coding: utf-8 -*-
 
-
 import io
 import os
 import re
@@ -9,7 +8,6 @@ import warnings
 
 from jsonschema import ValidationError
 
-import six
 import yaml
 import pytest
 

@@ -31,10 +31,8 @@ and dumper (``yamlutil.AsdfLoader`` and ``yamlutil.AsdfDumper``) and
 is not intended to be exposed to the end user.
 """
 
-
-import six
-
 from collections import UserDict, UserList, UserString
+
 
 __all__ = ['tag_object', 'get_tag']
 

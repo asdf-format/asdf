@@ -1,14 +1,12 @@
 # Licensed under a 3-clause BSD style license - see LICENSE.rst
 # -*- coding: utf-8 -*-
 
-
 import io
 import os
 import sys
 
 import pytest
 
-import six
 import urllib.request as urllib_request
 
 import numpy as np

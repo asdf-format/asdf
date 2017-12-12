@@ -9,8 +9,6 @@ The classes in this module should not be instantiated directly, but
 instead, one should use the factory function `get_file`.
 """
 
-
-from distutils.version import LooseVersion
 import io
 import math
 import os
@@ -18,6 +16,7 @@ import platform
 import re
 import sys
 import tempfile
+from distutils.version import LooseVersion
 
 from os import SEEK_SET, SEEK_CUR, SEEK_END
 

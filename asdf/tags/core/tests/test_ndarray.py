@@ -1,13 +1,11 @@
 # Licensed under a 3-clause BSD style license - see LICENSE.rst
 # -*- coding: utf-8 -*-
 
-
 import io
 import os
 import re
 import sys
 
-import six
 import pytest
 
 import numpy as np

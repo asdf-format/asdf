@@ -1,22 +1,20 @@
 # Licensed under a 3-clause BSD style license - see LICENSE.rst
 # -*- coding: utf-8 -*-
 
+import warnings
+from collections import OrderedDict
 
 import numpy as np
 
-import six
 import yaml
-import warnings
 
-from collections import OrderedDict
-
-from . constants import YAML_TAG_PREFIX
 from . import schema
 from . import tagged
 from . import treeutil
 from . import asdftypes
 from . import versioning
 from . import util
+from . constants import YAML_TAG_PREFIX
 
 
 if getattr(yaml, '__with_libyaml__', None):  # pragma: no cover

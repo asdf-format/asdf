@@ -5,8 +5,6 @@ import argparse
 import logging
 import sys
 
-import six
-
 from .. import util
 
 

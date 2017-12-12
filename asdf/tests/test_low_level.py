@@ -1,7 +1,5 @@
 # -*- coding: utf-8 -*-
 
-
-
 import io
 import os
 
@@ -10,8 +8,6 @@ from numpy.testing import assert_array_equal
 from astropy.modeling import models
 
 import pytest
-
-import six
 
 from .. import asdf
 from .. import block

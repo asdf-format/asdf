@@ -10,8 +10,6 @@ import re
 
 import numpy as np
 
-import six
-
 from . import asdf
 from . import block
 from . import util
