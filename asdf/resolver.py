@@ -1,11 +1,8 @@
 # Licensed under a 3-clause BSD style license - see LICENSE.rst
 # -*- coding: utf-8 -*-
 
-
-
+import sys
 import os.path
-
-import six
 
 from . import constants
 from . import util
@@ -70,7 +67,7 @@ class Resolver(object):
     def _validate_mapping(self, mappings, prefix):
         normalized = []
         for mapping in mappings:
-            if six.callable(mapping):
+            if callable(mapping):
                 func = mapping
             elif (isinstance(mapping, (list, tuple)) and
                   len(mapping) == 2 and
@@ -92,7 +89,7 @@ class Resolver(object):
             if isinstance(output, tuple):
                 candidates.append(output)
             elif output is not None:
-                candidates.append((six.MAXSIZE, output))
+                candidates.append((sys.maxsize, output))
         if len(candidates):
             candidates.sort()
             return candidates[-1][1]
