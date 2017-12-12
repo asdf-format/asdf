@@ -1,7 +1,13 @@
 #!/usr/bin/env python
 # Licensed under a 3-clause BSD style license - see LICENSE.rst
 
+import sys
+if sys.version_info < (3, 3):
+    sys.stderr.write("ERROR: ASDF requires Python 3.3 or later\n")
+    sys.exit(1)
+
 import os
+import glob
 import builtins
 
 from setuptools import setup
