@@ -74,8 +74,8 @@ class Resolver(object):
                 func = mapping
             elif (isinstance(mapping, (list, tuple)) and
                   len(mapping) == 2 and
-                  isinstance(mapping[0], six.string_types) and
-                  isinstance(mapping[1], six.string_types)):
+                  isinstance(mapping[0], str) and
+                  isinstance(mapping[1], str)):
 
                 func = self._make_map_func(mapping, prefix)
             else:

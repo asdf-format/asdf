@@ -57,7 +57,7 @@ class _EmbeddedBlockManager(block.BlockManager):
         super(_EmbeddedBlockManager, self).__init__(asdffile)
 
     def get_block(self, source):
-        if (isinstance(source, six.string_types) and
+        if (isinstance(source, str) and
             source.startswith(FITS_SOURCE_PREFIX)):
             parts = re.match(
                 '((?P<name>[A-Z0-9]+),)?(?P<ver>[0-9]+)',

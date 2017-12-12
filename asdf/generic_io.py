@@ -754,7 +754,7 @@ class RealFile(RandomAccessFile):
             self._blksize = stat.st_blksize
         self._size = stat.st_size
         if (uri is None and
-            isinstance(fd.name, six.string_types)):
+            isinstance(fd.name, str)):
             self._uri = util.filepath_to_url(os.path.abspath(fd.name))
 
     def write_array(self, arr):
@@ -1160,7 +1160,7 @@ def get_file(init, mode='r', uri=None):
                     init.mode, mode))
         return GenericWrapper(init)
 
-    elif isinstance(init, six.string_types):
+    elif isinstance(init, str):
         parsed = urlparse.urlparse(init)
         if parsed.scheme == 'http':
             if 'w' in mode:

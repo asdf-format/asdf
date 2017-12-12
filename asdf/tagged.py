@@ -106,7 +106,7 @@ def tag_object(tag, instance, ctx=None):
         instance = TaggedDict(instance, tag)
     elif isinstance(instance, list):
         instance = TaggedList(instance, tag)
-    elif isinstance(instance, six.string_types):
+    elif isinstance(instance, str):
         instance = TaggedString(instance)
         instance._tag = tag
     else:

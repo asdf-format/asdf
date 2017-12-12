@@ -51,7 +51,7 @@ def asdf_byteorder_to_numpy_byteorder(byteorder):
 def asdf_datatype_to_numpy_dtype(datatype, byteorder=None):
     if byteorder is None:
         byteorder = sys.byteorder
-    if isinstance(datatype, six.string_types) and datatype in _datatype_names:
+    if isinstance(datatype, str) and datatype in _datatype_names:
         datatype = _datatype_names[datatype]
         byteorder = asdf_byteorder_to_numpy_byteorder(byteorder)
         return np.dtype(str(byteorder + datatype))

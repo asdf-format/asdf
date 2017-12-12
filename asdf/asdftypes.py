@@ -20,9 +20,8 @@ from .versioning import AsdfVersion, AsdfSpec, get_version_map
 __all__ = ['format_tag', 'AsdfTypeIndex', 'AsdfType']
 
 
-_BASIC_PYTHON_TYPES = set(list(six.string_types) +
-                          list(six.integer_types) +
-                          [float, list, dict, tuple])
+_BASIC_PYTHON_TYPES = set(list(six.integer_types) +
+                          [str, float, list, dict, tuple])
 
 # regex used to parse module name from optional version string
 MODULE_RE = re.compile(r'([a-zA-Z]+)(-(\d+\.\d+\.\d+))?')
@@ -177,7 +176,7 @@ class AsdfTypeIndex(object):
 
         if isinstance(asdftype.name, list):
             yaml_tags = [asdftype.make_yaml_tag(name) for name in asdftype.name]
-        elif isinstance(asdftype.name, six.string_types):
+        elif isinstance(asdftype.name, str):
             yaml_tags = [asdftype.yaml_tag]
         elif asdftype.name is None:
             yaml_tags = []
@@ -412,7 +411,7 @@ class ExtensionTypeMeta(type):
             types = mcls._find_in_bases(attrs, bases, 'types', [])
             new_types = []
             for typ in types:
-                if isinstance(typ, six.string_types):
+                if isinstance(typ, str):
                     typ = util.resolve_name(typ)
                 new_types.append(typ)
             attrs['types'] = new_types
@@ -424,7 +423,7 @@ class ExtensionTypeMeta(type):
                 cls.version = AsdfVersion(cls.version)
 
         if hasattr(cls, 'name'):
-            if isinstance(cls.name, six.string_types):
+            if isinstance(cls.name, str):
                 if 'yaml_tag' not in attrs:
                     cls.yaml_tag = cls.make_yaml_tag(cls.name)
             elif isinstance(cls.name, list):
