@@ -5,18 +5,6 @@ from __future__ import absolute_import, division, unicode_literals, print_functi
 
 __all__ = ['__version__', '__githash__', 'test']
 
-# this indicates whether or not we are in the package's setup.py
-try:
-    _ASDF_SETUP_
-except NameError:
-    from sys import version_info
-    if version_info < (2, 7, 0): # pragma: no cover
-        raise ImportError("ASDF requires Python 2.7 or newer")
-    if version_info[0] >= 3:
-        import builtins
-    else:
-        import __builtin__ as builtins
-    builtins._ASDF_SETUP_ = False
 
 try:
     from .version import version as __version__

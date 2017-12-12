@@ -4,17 +4,12 @@
 import glob
 import os
 import sys
+import builtins
 import subprocess as sp
 
 import ah_bootstrap
 from setuptools import setup
 
-#A dirty hack to get around some early import/configurations ambiguities
-if sys.version_info[0] >= 3:
-    import builtins
-else:
-    import __builtin__ as builtins
-builtins._ASDF_SETUP_ = True
 
 from astropy_helpers.setup_helpers import (
     register_commands, get_debug_option, get_package_info)
@@ -27,10 +22,7 @@ def _null_validate(self):
 test_helpers.AstropyTest._validate_required_deps = _null_validate
 
 # Get some values from the setup.cfg
-try:
-    from ConfigParser import ConfigParser
-except ImportError:
-    from configparser import ConfigParser
+from configparser import ConfigParser
 conf = ConfigParser()
 conf.read(['setup.cfg'])
 metadata = dict(conf.items('metadata'))
@@ -42,10 +34,9 @@ AUTHOR_EMAIL = metadata.get('author_email', '')
 LICENSE = metadata.get('license', 'unknown')
 URL = metadata.get('url', '')
 
-# Get the long description from the package's docstring
-__import__('asdf')
-package = sys.modules['asdf']
-LONG_DESCRIPTION = package.__doc__
+def readme():
+    with open('README.md') as ff:
+        return ff.read()
 
 # Store the package name in a built-in variable so it's easy
 # to get from other parts of the setup infrastructure
@@ -133,15 +124,15 @@ setup(name=PACKAGENAME,
           'pyyaml>=3.10',
           'jsonschema>=2.3.0',
           'six>=1.9.0',
-          'pytest>=2.7.2',
           'numpy>=1.8',
           'astropy>=1.3',
       ] + extra_requires,
+      tests_require=['pytest-astropy'],
       author=AUTHOR,
       author_email=AUTHOR_EMAIL,
       license=LICENSE,
       url=URL,
-      long_description=LONG_DESCRIPTION,
+      long_description=readme(),
       cmdclass=cmdclassd,
       zip_safe=False,
       use_2to3=True,
