@@ -97,7 +97,7 @@ not_unit:
     with asdf.AsdfFile.open(buff) as ff:
         assert isinstance(ff.tree['unit'], u.UnitBase)
         assert not isinstance(ff.tree['not_unit'], u.UnitBase)
-        assert isinstance(ff.tree['not_unit'], six.text_type)
+        assert isinstance(ff.tree['not_unit'], str)
 
         assert ff.tree == {
             'unit': u.m,

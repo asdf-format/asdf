@@ -84,7 +84,7 @@ class TaggedList(Tagged, UserList, list):
                 self._tag == other._tag)
 
 
-class TaggedString(Tagged, UserString, six.text_type):
+class TaggedString(Tagged, UserString, str):
     """
     A Python list with a tag attached.
     """
@@ -92,7 +92,7 @@ class TaggedString(Tagged, UserString, six.text_type):
 
     def __eq__(self, other):
         return (isinstance(other, TaggedString) and
-                six.text_type.__eq__(self, other) and
+                str.__eq__(self, other) and
                 self._tag == other._tag)
 
 

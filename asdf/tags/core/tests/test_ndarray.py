@@ -759,7 +759,7 @@ def test_string_inline():
     l = ndarray.numpy_array_to_list(x)
 
     for entry in l:
-        assert isinstance(entry, six.text_type)
+        assert isinstance(entry, str)
 
 
 def test_inline_shape_mismatch():

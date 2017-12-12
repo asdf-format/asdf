@@ -62,7 +62,7 @@ def test_unicode_write(tmpdir):
 
     def check_asdf(asdf):
         assert "ɐʇɐp‾ǝpoɔıun" in asdf.tree
-        assert isinstance(asdf.tree['ascii_only'], six.text_type)
+        assert isinstance(asdf.tree['ascii_only'], str)
 
     def check_raw_yaml(content):
         # Ensure that unicode is written out as UTF-8 without escape

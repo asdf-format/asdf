@@ -77,10 +77,10 @@ def main_from_args(args):
     try:
         result = args.func(args)
     except RuntimeError as e:
-        logging.error(six.text_type(e))
+        logging.error(str(e))
         return 1
     except IOError as e:
-        logging.error(six.text_type(e))
+        logging.error(str(e))
         return e.errno
 
     if result is None:

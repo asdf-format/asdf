@@ -16,7 +16,7 @@ class ComplexType(AsdfType):
 
     @classmethod
     def to_tree(cls, node, ctx):
-        return six.text_type(node)
+        return str(node)
 
     @classmethod
     def from_tree(cls, tree, ctx):

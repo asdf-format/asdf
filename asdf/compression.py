@@ -157,7 +157,7 @@ def to_compression_header(compression):
     if not compression:
         return b''
 
-    if isinstance(compression, six.text_type):
+    if isinstance(compression, str):
         return compression.encode('ascii')
 
     return compression

@@ -43,7 +43,7 @@ SCHEMA_PATH = os.path.abspath(
 
 PYTHON_TYPE_TO_YAML_TAG = {
     None: 'null',
-    six.text_type: 'str',
+    str: 'str',
     bytes: 'str',
     bool: 'bool',
     int: 'int',
@@ -271,7 +271,7 @@ OrderedLoader.add_constructor(
 @lru_cache()
 def _load_schema(url):
     with generic_io.get_file(url) as fd:
-        if isinstance(url, six.text_type) and url.endswith('json'):
+        if isinstance(url, str) and url.endswith('json'):
             json_data = fd.read().decode('utf-8')
             result = json.loads(json_data, object_pairs_hook=OrderedDict)
         else:
