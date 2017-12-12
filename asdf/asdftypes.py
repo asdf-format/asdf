@@ -20,8 +20,7 @@ from .versioning import AsdfVersion, AsdfSpec, get_version_map
 __all__ = ['format_tag', 'AsdfTypeIndex', 'AsdfType']
 
 
-_BASIC_PYTHON_TYPES = set(list(six.integer_types) +
-                          [str, float, list, dict, tuple])
+_BASIC_PYTHON_TYPES = [str, int, float, list, dict, tuple]
 
 # regex used to parse module name from optional version string
 MODULE_RE = re.compile(r'([a-zA-Z]+)(-(\d+\.\d+\.\d+))?')

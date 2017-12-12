@@ -58,7 +58,7 @@ def asdf_datatype_to_numpy_dtype(datatype, byteorder=None):
     elif (isinstance(datatype, list) and
           len(datatype) == 2 and
           isinstance(datatype[0], str) and
-          isinstance(datatype[1], six.integer_types) and
+          isinstance(datatype[1], int) and
           datatype[0] in _string_datatype_names):
         length = datatype[1]
         byteorder = asdf_byteorder_to_numpy_byteorder(byteorder)

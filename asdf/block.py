@@ -471,7 +471,7 @@ class BlockManager(object):
 
         last_offset = 0
         for x in offsets:
-            if (not isinstance(x, six.integer_types) or
+            if (not isinstance(x, int) or
                 x > file_size or
                 x < 0 or
                 x <= last_offset + Block._header.size):
@@ -591,7 +591,7 @@ class BlockManager(object):
         buffer : buffer
         """
         # If an "int", it is the index of an internal block
-        if isinstance(source, six.integer_types):
+        if isinstance(source, int):
             if source == -1:
                 if len(self._streamed_blocks):
                     return self._streamed_blocks[0]
