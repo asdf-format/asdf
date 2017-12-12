@@ -19,33 +19,11 @@ from .. import generic_io
 from .. import util
 
 from . import helpers
+# The only reason for importing these is to use them in the fixture below
+from .conftest import small_tree, large_tree
 
 
-def _get_small_tree():
-    x = np.arange(0, 10, dtype=np.float)
-    tree = {
-        'science_data': x,
-        'subset': x[3:-3],
-        'skipping': x[::2],
-        'not_shared': np.arange(10, 0, -1, dtype=np.uint8)
-        }
-    return tree
-
-
-def _get_large_tree():
-    # These are designed to be big enough so they don't fit in a
-    # single block, but not so big that RAM/disk space for the tests
-    # is enormous.
-    x = np.random.rand(256, 256)
-    y = np.random.rand(16, 16, 16)
-    tree = {
-        'science_data': x,
-        'more': y
-        }
-    return tree
-
-
-@pytest.fixture(params=[_get_small_tree, _get_large_tree])
+@pytest.fixture(params=[small_tree, large_tree])
 def tree(request):
     return request.param()
 
@@ -75,13 +53,13 @@ def test_mode_fail(tmpdir):
         generic_io.get_file(path, mode="r+")
 
 
-def test_open(tmpdir):
+def test_open(tmpdir, small_tree):
     from .. import open
 
     path = os.path.join(str(tmpdir), 'test.asdf')
 
     # Simply tests the high-level "open" function
-    ff = asdf.AsdfFile(_get_small_tree())
+    ff = asdf.AsdfFile(small_tree)
     ff.write_to(path)
     with open(path) as ff2:
         helpers.assert_tree_match(ff2.tree, ff.tree)
@@ -373,46 +351,39 @@ def test_exploded_http(tree, httpserver):
         assert len(list(ff.blocks.external_blocks)) == 2
 
 
-def test_exploded_stream_write():
+def test_exploded_stream_write(small_tree):
     # Writing an exploded file to an output stream should fail, since
     # we can't write "files" alongside it.
 
-    tree = _get_small_tree()
-
-    ff = asdf.AsdfFile(tree)
+    ff = asdf.AsdfFile(small_tree)
 
     with pytest.raises(ValueError):
         ff.write_to(io.BytesIO(), all_array_storage='external')
 
 
-def test_exploded_stream_read(tmpdir):
+def test_exploded_stream_read(tmpdir, small_tree):
     # Reading from an exploded input file should fail, but only once
     # the data block is accessed.  This behavior is important so that
     # the tree can still be accessed even if the data is missing.
-    tree = _get_small_tree()
 
     path = os.path.join(str(tmpdir), 'test.asdf')
 
-    ff = asdf.AsdfFile(tree)
+    ff = asdf.AsdfFile(small_tree)
     ff.write_to(path, all_array_storage='external')
 
     with open(path, 'rb') as fd:
         # This should work, so we can get the tree content
         x = generic_io.InputStream(fd, 'r')
         with asdf.AsdfFile.open(x) as ff:
-            pass
-
-    # It's only on trying to get at the block data that the error
-    # occurs.
-    with pytest.raises(ValueError):
-        ff.tree['science_data'][:]
+            # It's only when trying to access external data that an error occurs
+            with pytest.raises(ValueError):
+                ff.tree['science_data'][:]
 
 
-def test_unicode_open(tmpdir):
+def test_unicode_open(tmpdir, small_tree):
     path = os.path.join(str(tmpdir), 'test.asdf')
 
-    tree = _get_small_tree()
-    ff = asdf.AsdfFile(tree)
+    ff = asdf.AsdfFile(small_tree)
 
     ff.write_to(path)
 

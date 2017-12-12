@@ -84,9 +84,9 @@ b: !core/complex-1.0.0
             buff, extensions=FractionCallable()) as ff:
         assert ff.tree['a'] == fractions.Fraction(2, 3)
 
-    buff = io.BytesIO()
-    ff.write_to(buff)
-    buff.close()
+        buff = io.BytesIO()
+        ff.write_to(buff)
+        buff.close()
 
 
 def test_version_mismatch():

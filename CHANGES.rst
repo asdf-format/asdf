@@ -8,6 +8,9 @@
 1.4.0 (unreleased)
 ------------------
 
+- Explicitly disallow access to entire tree for ASDF file objects that have
+  been closed. [#407]
+
 - Install and load extensions using ``setuptools`` entry points. [#384]
 
 - Automatically initialize ``asdf-standard`` submodule in ``setup.py``. [#398]
