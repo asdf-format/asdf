@@ -1,18 +1,14 @@
 # Licensed under a 3-clause BSD style license - see LICENSE.rst
 # -*- coding: utf-8 -*-
 
-
-
 import inspect
 import math
 import struct
 import types
 
-import six
 from urllib.parse import urljoin
 from urllib.request import pathname2url
 from urllib import parse as urlparse
-from six.moves import zip as izip
 
 import numpy as np
 
@@ -170,7 +166,7 @@ class BinaryStruct(object):
         is a dictionary mapping field names to values.
         """
         args = struct.unpack_from(self._fmt, buff[:self._size])
-        return dict(izip(self._names, args))
+        return dict(zip(self._names, args))
 
     def update(self, fd, **kwargs):
         """

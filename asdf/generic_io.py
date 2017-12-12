@@ -21,16 +21,16 @@ import tempfile
 
 from os import SEEK_SET, SEEK_CUR, SEEK_END
 
-import six
-from six.moves import xrange
+import http.client
 from urllib import parse as urlparse
 from urllib.request import url2pathname
 
+import six
+
 import numpy as np
 
-from .extern import atomicfile
-
 from . import util
+from .extern import atomicfile
 
 
 __all__ = ['get_file', 'resolve_uri', 'relative_uri']
@@ -75,7 +75,7 @@ if (sys.platform == 'darwin' and
             return np.fromfile(fd, dtype=np.uint8, count=size)
         else:
             array = np.empty(size, dtype=np.uint8)
-            for beg in xrange(0, size, chunk_size):
+            for beg in range(0, size, chunk_size):
                 end = min(size, beg + chunk_size)
                 array[beg:end] = np.fromfile(fd, dtype=np.uint8, count=end - beg)
             return array
@@ -98,7 +98,7 @@ size : integer
 
 def _array_tofile_chunked(write, array, chunksize):  # pragma: no cover
     array = array.view(np.uint8).flatten()
-    for i in xrange(0, array.nbytes, chunksize):
+    for i in range(0, array.nbytes, chunksize):
         write(array[i:i + chunksize].data)
 
 
@@ -356,7 +356,7 @@ class GenericFile(object):
         object.
         """
         i = 0
-        for i in xrange(0, size - self._blksize, self._blksize):
+        for i in range(0, size - self._blksize, self._blksize):
             yield self.read(self._blksize)
         if i < size:
             yield self.read(size - i)
@@ -624,7 +624,7 @@ class GenericFile(object):
         Write nbytes of zeros.
         """
         blank_data = b'\0' * self.block_size
-        for i in xrange(0, nbytes, self.block_size):
+        for i in range(0, nbytes, self.block_size):
             length = min(nbytes - i, self.block_size)
             self.write(blank_data[:length])
 
@@ -1009,7 +1009,7 @@ class HTTPConnection(RandomAccessFile):
 
                 # Now copy over to the temporary file, block-by-block
                 self._local.seek(a * block_size, os.SEEK_SET)
-                for i in xrange(a, b):
+                for i in range(a, b):
                     chunk = response.read(block_size)
                     self._local.write(chunk)
                     mark_block(i)
@@ -1057,10 +1057,8 @@ def _make_http_connection(init, mode, uri=None):
     Creates a HTTPConnection instance if the HTTP server supports
     Range requests, otherwise falls back to a generic InputStream.
     """
-    from six.moves import http_client
-
     parsed = urlparse.urlparse(init)
-    connection = http_client.HTTPConnection(parsed.netloc)
+    connection = http.client.HTTPConnection(parsed.netloc)
     connection.connect()
 
     block_size = io.DEFAULT_BUFFER_SIZE

@@ -34,12 +34,11 @@ __all__ = ["RangeHTTPRequestHandler"]
 import os
 import shutil
 import posixpath
+import http.server
 import urllib.parse
 
-import six
 
-
-class RangeHTTPRequestHandler(six.moves.BaseHTTPServer.BaseHTTPRequestHandler):  # pragma: no cover
+class RangeHTTPRequestHandler(http.server.BaseHTTPRequestHandler):  # pragma: no cover
 
     """Simple HTTP request handler with GET and HEAD commands.
 
