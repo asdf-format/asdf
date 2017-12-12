@@ -1,14 +1,11 @@
 # Licensed under a 3-clause BSD style license - see LICENSE.rst
 # -*- coding: utf-8 -*-
 
-
-import datetime
-import json
 import os
-
+import json
+import datetime
+from functools import lru_cache
 from collections import OrderedDict
-
-import six
 from urllib import parse as urlparse
 
 from jsonschema import validators as mvalidators
@@ -16,7 +13,6 @@ from jsonschema.exceptions import ValidationError
 
 import yaml
 
-from functools import lru_cache
 from . import constants
 from . import generic_io
 from . import reference
@@ -237,7 +233,7 @@ def _create_validator(validators=YAML_VALIDATORS):
 
                 if isinstance(instance, dict):
                     new_seen = _seen | set([id(instance)])
-                    for val in six.itervalues(instance):
+                    for val in instance.values():
                         for x in self.iter_errors(val, _seen=new_seen):
                             yield x
 
