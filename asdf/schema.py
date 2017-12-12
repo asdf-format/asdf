@@ -9,7 +9,7 @@ import os
 from collections import OrderedDict
 
 import six
-from six.moves.urllib import parse as urlparse
+from urllib import parse as urlparse
 
 from jsonschema import validators as mvalidators
 from jsonschema.exceptions import ValidationError

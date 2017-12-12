@@ -9,9 +9,9 @@ import struct
 import types
 
 import six
-from six.moves.urllib.parse import urljoin
-from six.moves.urllib.request import pathname2url
-from six.moves.urllib import parse as urlparse
+from urllib.parse import urljoin
+from urllib.request import pathname2url
+from urllib import parse as urlparse
 from six.moves import zip as izip
 
 import numpy as np

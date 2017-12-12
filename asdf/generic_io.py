@@ -23,8 +23,8 @@ from os import SEEK_SET, SEEK_CUR, SEEK_END
 
 import six
 from six.moves import xrange
-from six.moves.urllib import parse as urlparse
-from six.moves.urllib.request import url2pathname
+from urllib import parse as urlparse
+from urllib.request import url2pathname
 
 import numpy as np
 

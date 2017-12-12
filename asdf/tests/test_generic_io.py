@@ -9,7 +9,7 @@ import sys
 import pytest
 
 import six
-import six.moves.urllib.request as urllib_request
+import urllib.request as urllib_request
 
 import numpy as np
 

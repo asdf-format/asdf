@@ -32,8 +32,9 @@ __version__ = "0.1"
 __all__ = ["RangeHTTPRequestHandler"]
 
 import os
-import posixpath
 import shutil
+import posixpath
+import urllib.parse
 
 import six
 
@@ -154,7 +155,7 @@ class RangeHTTPRequestHandler(six.moves.BaseHTTPServer.BaseHTTPRequestHandler): 
         # abandon query parameters
         path = path.split('?', 1)[0]
         path = path.split('#', 1)[0]
-        path = posixpath.normpath(six.moves.urllib.parse.unquote(path))
+        path = posixpath.normpath(urllib.parse.unquote(path))
         words = path.split('/')
         words = filter(None, words)
         path = os.getcwd()

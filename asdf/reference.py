@@ -13,7 +13,7 @@ import weakref
 
 import numpy as np
 
-from six.moves.urllib import parse as urlparse
+from urllib import parse as urlparse
 
 from .asdftypes import AsdfType
 from . import generic_io

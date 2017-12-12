@@ -14,7 +14,7 @@ import weakref
 import numpy as np
 
 import six
-from six.moves.urllib import parse as urlparse
+from urllib import parse as urlparse
 
 import yaml
 
