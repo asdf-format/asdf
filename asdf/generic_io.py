@@ -360,18 +360,8 @@ class GenericFile(object):
         if i < size:
             yield self.read(size - i)
 
-    if sys.version_info[:2] == (2, 7) and sys.version_info[2] < 4:  # pragma: no cover
-        # On Python 2.7.x prior to 2.7.4, the buffer does not support the
-        # new buffer interface, and thus can't be written directly.  See
-        # issue #10221.
-        def write(self, content):
-            if isinstance(content, buffer):
-                self._fd.write(bytes(content))
-            else:
-                self._fd.write(content)
-    else:
-        def write(self, content):
-            self._fd.write(content)
+    def write(self, content):
+        self._fd.write(content)
 
     write.__doc__ = """
     Write a string to the file. There is no return value. Due to
