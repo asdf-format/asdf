@@ -78,7 +78,6 @@ setup(name=PACKAGE_NAME,
       long_description=read_readme('README.md'),
       cmdclass=cmdclassd,
       zip_safe=False,
-      use_2to3=True,
       entry_points=entry_points,
       **package_info
 )
