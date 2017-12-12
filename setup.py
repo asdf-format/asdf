@@ -61,7 +61,7 @@ if os.getenv('CI'):
 setup(name=PACKAGE_NAME,
       version=VERSION,
       description=DESCRIPTION,
-      python_requires='>=2.7,!=3.0.*,!=3.1.*,!=3.2.*',
+      python_requires='>=3.3',
       install_requires=[
           'semantic_version>=2.3.1',
           'pyyaml>=3.10',
