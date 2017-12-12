@@ -128,7 +128,7 @@ def walk_and_modify(top, callback):
         if isinstance(tree, dict):
             result = tree.__class__()
             seen.add(id_tree)
-            for key, val in six.iteritems(tree):
+            for key, val in tree.items():
                 val = recurse(val)
                 if val is not None:
                     result[key] = val
@@ -160,7 +160,7 @@ def walk_and_modify(top, callback):
                 json_id = tree['id']
             result = tree.__class__()
             seen.add(id_tree)
-            for key, val in six.iteritems(tree):
+            for key, val in tree.items():
                 val = recurse_with_json_ids(val, json_id)
                 if val is not None:
                     result[key] = val

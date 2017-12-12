@@ -109,7 +109,7 @@ class FrameType(AsdfType):
         reference_frame_mapping = cls._get_reference_frame_mapping()
 
         cls._inverse_reference_frame_mapping = {}
-        for key, val in six.iteritems(reference_frame_mapping):
+        for key, val in reference_frame_mapping.items():
             cls._inverse_reference_frame_mapping[val] = key
 
         return cls._inverse_reference_frame_mapping

@@ -58,7 +58,7 @@ def make_argparser():
         commands[str(command)].setup_arguments(subparsers)
         del commands[command]
 
-    for name, command in sorted(six.iteritems(commands)):
+    for name, command in sorted(commands.items()):
         command.setup_arguments(subparsers)
 
     return parser, subparsers

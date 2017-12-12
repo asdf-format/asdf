@@ -162,7 +162,7 @@ def validate_fill_default(validator, properties, instance, schema):
     if not validator.is_type(instance, 'object'):
         return
 
-    for property, subschema in six.iteritems(properties):
+    for property, subschema in properties.items():
         if "default" in subschema:
             instance.setdefault(property, subschema["default"])
 
@@ -181,7 +181,7 @@ def validate_remove_default(validator, properties, instance, schema):
     if not validator.is_type(instance, 'object'):
         return
 
-    for property, subschema in six.iteritems(properties):
+    for property, subschema in properties.items():
         if subschema.get("default", None) is not None:
             if instance.get(property, None) == subschema["default"]:
                 del instance[property]

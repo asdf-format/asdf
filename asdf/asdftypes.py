@@ -101,7 +101,7 @@ class _AsdfWriteTypeIndex(object):
                 add_type(asdftype)
 
         if self._version == 'latest':
-            for name, versions in six.iteritems(index._versions_by_type_name):
+            for name, versions in index._versions_by_type_name.items():
                 add_by_tag(name, versions[-1])
         else:
             try:
@@ -111,11 +111,11 @@ class _AsdfWriteTypeIndex(object):
                     "Don't know how to write out ASDF version {0}".format(
                         self._version))
 
-            for name, _version in six.iteritems(version_map['tags']):
+            for name, _version in version_map['tags'].items():
                 add_by_tag(name, AsdfVersion(_version))
 
             # Now add any extension types that aren't known to the ASDF standard
-            for name, versions in six.iteritems(index._versions_by_type_name):
+            for name, versions in index._versions_by_type_name.items():
                 if name not in self._type_by_name:
                     add_by_tag(name, versions[-1])
 
@@ -140,8 +140,7 @@ class _AsdfWriteTypeIndex(object):
                 # includes classes that are created dynamically post
                 # Python-import, e.g. astropy.modeling._CompoundModel
                 # subclasses.
-                for key, val in six.iteritems(
-                        self._types_with_dynamic_subclasses):
+                for key, val in self._types_with_dynamic_subclasses.items():
                     if issubclass(custom_type, key):
                         self._type_by_cls[custom_type] = val
                         return val
