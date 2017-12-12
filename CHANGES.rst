@@ -5,6 +5,8 @@
 
 - ICRSCoord tag has moved to Astropy core package. [#401]
 
+- Remove support for Python 2. [#409]
+
 1.4.0 (unreleased)
 ------------------
 
