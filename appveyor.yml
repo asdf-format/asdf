@@ -7,6 +7,7 @@ environment:
       PYTHON: "C:\\conda"
       MINICONDA_VERSION: "latest"
       CMD_IN_ENV: "cmd /E:ON /V:ON /C .\\ci-helpers\\appveyor\\windows_sdk.cmd"
+      SETUP_CMD: "test"
       NUMPY_VERSION: "stable"
       ASTROPY_VERSION: "development"
       GWCS_GIT: "git+git://github.com/spacetelescope/gwcs.git#egg=gwcs"
@@ -15,6 +16,11 @@ environment:
       PYTHON_ARCH: "64"
 
   matrix:
+      # Make sure that installation does not fail
+      - PYTHON_VERSION: "3.6"
+        SETUP_CMD: "install"
+        platform: x64
+
       - PYTHON_VERSION: "3.5"
         platform: x64
 
@@ -46,4 +52,4 @@ install:
 build: false
 
 test_script:
-  - "%CMD_IN_ENV% python setup.py test"
+  - "%CMD_IN_ENV% python setup.py %SETUP_CMD%"

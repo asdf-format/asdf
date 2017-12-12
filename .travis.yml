@@ -30,6 +30,8 @@ env:
         - SETUP_CMD='test --remote-data'
 
     matrix:
+        # Make sure that installation does not fail
+        - SETUP_CMD='install'
         - PYTHON_VERSION=3.5 SETUP_CMD='test'
         - PYTHON_VERSION=3.6 SETUP_CMD='test'
 
