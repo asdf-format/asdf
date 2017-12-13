@@ -19,6 +19,9 @@
   ``tag_to_schema_resolver`` property for ``AsdfFile`` and
   ``AsdfExtensionList``. [#399]
 
+- Fix bug that caused serialized FITS tables to be duplicated in embedded ASDF
+  HDU. [#411]
+
 1.3.2 (unreleased)
 ------------------
 
