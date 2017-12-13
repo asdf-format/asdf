@@ -13,6 +13,7 @@ from numpy.testing import assert_array_equal
 
 astropy = pytest.importorskip('astropy')
 from astropy.io import fits
+from astropy.table import Table
 from astropy.tests.helper import catch_warnings
 
 from .. import asdf
@@ -259,3 +260,21 @@ def test_version_mismatch_file():
         with fits_embed.AsdfInFits.open(testfile) as fits_handle:
             assert fits_handle.tree['a'] == complex(0j)
     assert len(w) == 0, display_warnings(w)
+
+def test_serialize_table(tmpdir):
+    tmpfile = str(tmpdir.join('table.fits'))
+
+    data = np.random.random((10, 10))
+    table = Table(data)
+
+    hdu = fits.BinTableHDU(table)
+    hdulist = fits.HDUList()
+    hdulist.append(hdu)
+
+    tree = {'my_table': hdulist[1].data}
+    with fits_embed.AsdfInFits(hdulist, tree) as ff:
+        ff.write_to(tmpfile)
+
+    with asdf.AsdfFile.open(tmpfile) as ff:
+        data = ff.tree['my_table']
+        assert data._source.startswith('fits:')
