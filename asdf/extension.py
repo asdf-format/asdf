@@ -118,8 +118,8 @@ class AsdfExtensionList(object):
         for extension in extensions:
             if not isinstance(extension, AsdfExtension):
                 raise TypeError(
-                    "Extension must implement the asdf.extension.AsdfExtension "
-                    "interface")
+                    "Extension '{extension!r}' must implement the asdf.extension.AsdfExtension "
+                    "interface".format(extension=extension))
             elif not issubclass(type(extension), AsdfExtension):
                 warnings.warn("Extensions not inheriting from asdf.extension.AsdfExtension"
                               " are deprecated.",
