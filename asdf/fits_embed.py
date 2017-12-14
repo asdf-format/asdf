@@ -95,7 +95,9 @@ class _EmbeddedBlockManager(block.BlockManager):
         if not isinstance(arr, ndarray.NDArrayType):
             base = util.get_array_base(arr)
             for hdu in self._hdulist:
-                if base is hdu.data:
+                if hdu.data is None:
+                    continue
+                if base is util.get_array_base(hdu.data):
                     return _FitsBlock(hdu)
 
         return super(
