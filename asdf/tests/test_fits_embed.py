@@ -79,7 +79,10 @@ def test_embed_asdf_in_fits_file(tmpdir):
         assert len(hdulist2) == 3
         assert [x.name for x in hdulist2] == ['SCI', 'DQ', 'ASDF']
         assert_array_equal(hdulist2[0].data, np.arange(512, dtype=np.float))
-        assert hdulist2['ASDF'].data.tostring().strip().endswith(b"...")
+        asdf_hdu = hdulist2['ASDF']
+        assert isinstance(asdf_hdu, fits.hdu.base.NonstandardExtHDU)
+        assert asdf_hdu.data.tostring().startswith(b'#ASDF')
+        assert len(asdf_hdu.data) % 2880 == 0
 
         with fits_embed.AsdfInFits.open(hdulist2) as ff2:
             assert_tree_match(tree, ff2.tree)
@@ -102,7 +105,10 @@ def test_embed_asdf_in_fits_file_anonymous_extensions(tmpdir):
     with fits.open(os.path.join(str(tmpdir), 'test.fits')) as hdulist:
         assert len(hdulist) == 4
         assert [x.name for x in hdulist] == ['PRIMARY', '', '', 'ASDF']
-        assert hdulist['ASDF'].data.tostring().strip().endswith(b"...")
+        asdf_hdu = hdulist['ASDF']
+        assert isinstance(asdf_hdu, fits.hdu.base.NonstandardExtHDU)
+        assert asdf_hdu.data.tostring().startswith(b'#ASDF')
+        assert len(asdf_hdu.data) % 2880 == 0
 
         with fits_embed.AsdfInFits.open(hdulist) as ff2:
             assert_tree_match(asdf_in_fits.tree, ff2.tree)
