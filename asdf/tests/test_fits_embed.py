@@ -51,7 +51,13 @@ def create_asdf_in_fits():
 
     return fits_embed.AsdfInFits(hdulist, tree)
 
-def test_embed_asdf_in_fits_file(tmpdir):
+# Testing backwards compatibility ensures that we can continue to read and
+# write files that use the old convention of ImageHDU to store the ASDF file.
+@pytest.mark.parametrize('backwards_compat', [False, True])
+def test_embed_asdf_in_fits_file(tmpdir, backwards_compat):
+    fits_testfile = str(tmpdir.join('test.fits'))
+    asdf_testfile = str(tmpdir.join('test.asdf'))
+
     hdulist = fits.HDUList()
     hdulist.append(fits.ImageHDU(np.arange(512, dtype=np.float), name='SCI'))
     hdulist.append(fits.ImageHDU(np.arange(512, dtype=np.float), name='DQ'))
@@ -70,27 +76,30 @@ def test_embed_asdf_in_fits_file(tmpdir):
     }
 
     ff = fits_embed.AsdfInFits(hdulist, tree)
-    ff.write_to(os.path.join(str(tmpdir), 'test.fits'))
+    ff.write_to(fits_testfile, use_image_hdu=backwards_compat)
 
-    ff2 = asdf.AsdfFile(tree)
-    ff2.write_to(os.path.join(str(tmpdir), 'plain.asdf'))
-
-    with fits.open(os.path.join(str(tmpdir), 'test.fits')) as hdulist2:
+    with fits.open(fits_testfile) as hdulist2:
         assert len(hdulist2) == 3
         assert [x.name for x in hdulist2] == ['SCI', 'DQ', 'ASDF']
         assert_array_equal(hdulist2[0].data, np.arange(512, dtype=np.float))
         asdf_hdu = hdulist2['ASDF']
-        assert isinstance(asdf_hdu, fits.hdu.base.NonstandardExtHDU)
         assert asdf_hdu.data.tostring().startswith(b'#ASDF')
-        assert len(asdf_hdu.data) % 2880 == 0
+        # When in backwards compatibility mode, the ASDF file will be contained
+        # in an ImageHDU
+        if backwards_compat:
+            assert isinstance(asdf_hdu, fits.ImageHDU)
+            assert asdf_hdu.data.tostring().strip().endswith(b'...')
+        else:
+            assert isinstance(asdf_hdu, fits.hdu.base.NonstandardExtHDU)
+            assert len(asdf_hdu.data) % 2880 == 0
 
         with fits_embed.AsdfInFits.open(hdulist2) as ff2:
             assert_tree_match(tree, ff2.tree)
 
             ff = asdf.AsdfFile(copy.deepcopy(ff2.tree))
-            ff.write_to('test.asdf')
+            ff.write_to(asdf_testfile)
 
-    with asdf.AsdfFile.open('test.asdf') as ff:
+    with asdf.AsdfFile.open(asdf_testfile) as ff:
         assert_tree_match(tree, ff.tree)
 
 
