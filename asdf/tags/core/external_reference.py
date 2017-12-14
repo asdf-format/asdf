@@ -5,6 +5,9 @@ class ExternalArrayReference(AsdfType):
     """
     Store a reference to an array in an external File.
 
+    This class is a simple way of referring to an array in another file. It
+    provides no way to resolve these references, that is left to the user.
+
     Parameters
     ----------
 
@@ -37,6 +40,14 @@ class ExternalArrayReference(AsdfType):
 
     def __str__(self):
         return repr(self)
+
+    def __eq__(self, other):
+        uri = self.fileuri == other.fileuri
+        target = self.target == other.target
+        dtype = self.dtype == other.dtype
+        shape = self.shape == other.shape
+
+        return all((uri, target, dtype, shape))
 
     @classmethod
     def to_tree(self, data, ctx):
