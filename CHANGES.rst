@@ -5,6 +5,8 @@
 
 - ICRSCoord tag has moved to Astropy core package. [#401]
 
+- Extension classes should now inhert from ``AsdfExtension`` [#390]
+
 1.4.0 (unreleased)
 ------------------
 
