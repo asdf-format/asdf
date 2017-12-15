@@ -90,7 +90,7 @@ def test_embed_asdf_in_fits_file(tmpdir, backwards_compat):
             assert isinstance(asdf_hdu, fits.ImageHDU)
             assert asdf_hdu.data.tostring().strip().endswith(b'...')
         else:
-            assert isinstance(asdf_hdu, fits.hdu.base.NonstandardExtHDU)
+            assert isinstance(asdf_hdu, fits_embed._AsdfHDU)
             assert len(asdf_hdu.data) % 2880 == 0
 
         with fits_embed.AsdfInFits.open(hdulist2) as ff2:
@@ -115,7 +115,7 @@ def test_embed_asdf_in_fits_file_anonymous_extensions(tmpdir):
         assert len(hdulist) == 4
         assert [x.name for x in hdulist] == ['PRIMARY', '', '', 'ASDF']
         asdf_hdu = hdulist['ASDF']
-        assert isinstance(asdf_hdu, fits.hdu.base.NonstandardExtHDU)
+        assert isinstance(asdf_hdu, fits_embed._AsdfHDU)
         assert asdf_hdu.data.tostring().startswith(b'#ASDF')
         assert len(asdf_hdu.data) % 2880 == 0
 
