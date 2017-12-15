@@ -7,6 +7,8 @@ import subprocess as sp
 import ah_bootstrap
 from astropy_helpers.setup_helpers import get_package_info as _get_package_info
 from astropy_helpers.version_helpers import _get_version_py_str
+from astropy_helpers.distutils_helpers import (
+    get_dummy_distribution, get_distutils_build_option)
 
 from configparser import ConfigParser
 
@@ -18,13 +20,28 @@ __all__ = [ 'generate_version_file', 'get_package_info', 'read_metadata',
 ASDF_STANDARD_ROOT = os.environ.get('ASDF_STANDARD_ROOT', 'asdf-standard')
 
 
+# We no longer use get_debug_option from astropy_helpers because it imports
+# the asdf module, and we no longer want to enable that kind of bad behavior
+def _get_debug_option(package_name):
+    # Only modify the debug flag if one of the build commands was explicitly
+    # run (i.e. not as a sub-command of something else)
+    dist = get_dummy_distribution()
+    if any(cmd in dist.commands for cmd in ['build', 'build_ext']):
+        if bool(get_distutils_build_option('debug')):
+            build_ext_cmd = dist.get_command_class('build_ext')
+            build_ext_cmd.force_rebuild = True
+            return True
+
+    return False
+
 # Freeze build information in version.py
 # We no longer use generate_version_py from astropy_helpers because it imports
 # the asdf module, and we no longer want to enable that kind of bad behavior
 def generate_version_file(package_dir, package_name, version, release):
     version_py = os.path.join(package_dir, package_name, 'version.py')
+    debug = _get_debug_option(package_name)
     with open(version_py, 'w') as f:
-        f.write(_get_version_py_str('asdf', version, None, release, False))
+        f.write(_get_version_py_str('asdf', version, None, release, debug))
 
 
 # Get configuration information from all of the various subpackages.
