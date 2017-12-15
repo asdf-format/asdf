@@ -16,11 +16,6 @@ from astropy_helpers.setup_helpers import (
 from astropy_helpers.git_helpers import get_git_devstr
 from astropy_helpers.version_helpers import _get_version_py_str
 
-from astropy_helpers import test_helpers
-def _null_validate(self):
-    pass
-test_helpers.AstropyTest._validate_required_deps = _null_validate
-
 # Get some values from the setup.cfg
 from configparser import ConfigParser
 conf = ConfigParser()
@@ -69,11 +64,6 @@ def generate_version_file():
 generate_version_file()
 
 
-# Treat everything in scripts except README.rst as a script to be installed
-scripts = [fname for fname in glob.glob(os.path.join('scripts', '*'))
-           if os.path.basename(fname) != 'README.rst']
-
-
 # Get configuration information from all of the various subpackages.
 # See the docstring for setup_helpers.update_package_files for more
 # details.
@@ -112,18 +102,14 @@ entry_points['asdf_extensions'] = [
 ]
 
 # Add the dependencies which are not strictly needed but enable otherwise skipped tests
-extra_requires = []
+extras_require = []
 if os.getenv('CI'):
-    extra_requires.extend(['lz4>=0.10'])
+    extras_require.extend(['lz4>=0.10'])
 
-# Note that requires and provides should not be included in the call to
-# ``setup``, since these are now deprecated. See this link for more details:
-# https://groups.google.com/forum/#!topic/astropy-dev/urYO8ckB2uM
 
 setup(name=PACKAGENAME,
       version=VERSION,
       description=DESCRIPTION,
-      scripts=scripts,
       python_requires='>=2.7,!=3.0.*,!=3.1.*,!=3.2.*',
       install_requires=[
           'semantic_version>=2.3.1',
@@ -132,7 +118,7 @@ setup(name=PACKAGENAME,
           'six>=1.9.0',
           'numpy>=1.8',
           'astropy>=1.3',
-      ] + extra_requires,
+      ] + extras_require,
       tests_require=['pytest-astropy'],
       author=AUTHOR,
       author_email=AUTHOR_EMAIL,
