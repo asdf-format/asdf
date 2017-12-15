@@ -129,6 +129,45 @@ def test_embed_asdf_in_fits_file_anonymous_extensions(tmpdir):
         assert_tree_match(asdf_in_fits.tree, ff.tree)
 
 
+@pytest.mark.xfail(
+    reason="In-place update for ASDF-in-FITS does not currently work")
+def test_update_in_place(tmpdir):
+    tempfile = str(tmpdir.join('test.fits'))
+
+    # Create a file and write it out
+    asdf_in_fits = create_asdf_in_fits()
+    asdf_in_fits.write_to(tempfile)
+
+    # Open the file and add data so it needs to be updated
+    with fits_embed.AsdfInFits.open(tempfile) as ff:
+        ff.tree['new_stuff'] = "A String"
+        ff.update()
+
+    # Open the updated file and make sure everything looks okay
+    with fits_embed.AsdfInFits.open(tempfile) as ff:
+        assert ff.tree['new_stuff'] == "A String"
+        assert_tree_match(ff.tree['model'], asdf_in_fits.tree['model'])
+
+
+def test_update_and_write_new(tmpdir):
+    tempfile = str(tmpdir.join('test.fits'))
+    newfile = str(tmpdir.join('new.fits'))
+
+    # Create a file and write it out
+    asdf_in_fits = create_asdf_in_fits()
+    asdf_in_fits.write_to(tempfile)
+
+    # Open the file and add data so it needs to be updated
+    with fits_embed.AsdfInFits.open(tempfile) as ff:
+        ff.tree['new_stuff'] = "A String"
+        ff.write_to(newfile)
+
+    # Open the updated file and make sure everything looks okay
+    with fits_embed.AsdfInFits.open(newfile) as ff:
+        assert ff.tree['new_stuff'] == "A String"
+        assert_tree_match(ff.tree['model'], asdf_in_fits.tree['model'])
+
+
 def test_create_in_tree_first(tmpdir):
     tree = {
         'model': {
