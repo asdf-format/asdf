@@ -168,6 +168,21 @@ def test_update_and_write_new(tmpdir):
         assert_tree_match(ff.tree['model'], asdf_in_fits.tree['model'])
 
 
+@pytest.mark.xfail(
+    reason="ASDF HDU implementation does not currently reseek after writing")
+def test_access_hdu_data_after_write(tmpdir):
+    # There is actually probably not a great reason to support this kind of
+    # functionality, but I am adding a test here to record the failure for
+    # posterity.
+    tempfile = str(tmpdir.join('test.fits'))
+
+    asdf_in_fits = create_asdf_in_fits()
+    asdf_in_fits.write_to(tempfile)
+    asdf_hdu = asdf_in_fits._hdulist['ASDF']
+
+    assert asdf_hdu.data.tostring().startswith('#ASDF')
+
+
 def test_create_in_tree_first(tmpdir):
     tree = {
         'model': {
