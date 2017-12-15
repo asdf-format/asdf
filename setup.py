@@ -1,9 +1,9 @@
 #!/usr/bin/env python
 # Licensed under a 3-clause BSD style license - see LICENSE.rst
 
-import glob
 import os
 import sys
+import glob
 import builtins
 import subprocess as sp
 
@@ -14,7 +14,7 @@ from setuptools import setup
 from astropy_helpers.setup_helpers import (
     register_commands, get_debug_option, get_package_info)
 from astropy_helpers.git_helpers import get_git_devstr
-from astropy_helpers.version_helpers import generate_version_py
+from astropy_helpers.version_helpers import _get_version_py_str
 
 from astropy_helpers import test_helpers
 def _null_validate(self):
@@ -60,8 +60,14 @@ ASDF_STANDARD_ROOT = os.environ.get('ASDF_STANDARD_ROOT', 'asdf-standard')
 cmdclassd = register_commands('asdf', VERSION, RELEASE)
 
 # Freeze build information in version.py
-generate_version_py('asdf', VERSION, RELEASE,
-                    get_debug_option('asdf'))
+# We no longer use generate_version_py from astropy_helpers because it imports
+# the asdf module, and we no longer want to enable that kind of bad behavior
+def generate_version_file():
+    version_py = os.path.join(os.path.curdir, 'asdf', 'version.py')
+    with open(version_py, 'w') as f:
+        f.write(_get_version_py_str('asdf', VERSION, None, RELEASE, False))
+generate_version_file()
+
 
 # Treat everything in scripts except README.rst as a script to be installed
 scripts = [fname for fname in glob.glob(os.path.join('scripts', '*'))
