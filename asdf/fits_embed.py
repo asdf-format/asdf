@@ -22,7 +22,6 @@ try:
     from astropy.io import fits
     from astropy.io.fits.file import _File
     from astropy.io.fits.header import Header, _pad_length
-    from astropy.utils import lazyproperty
 except ImportError:
     raise ImportError("AsdfInFits requires astropy")
 
@@ -31,7 +30,10 @@ ASDF_EXTENSION_NAME = 'ASDF'
 FITS_SOURCE_PREFIX = 'fits:'
 
 
-class AsdfHDU(fits.hdu.base.NonstandardExtHDU):
+__all__ = ['AsdfInFits']
+
+
+class _AsdfHDU(fits.hdu.base.NonstandardExtHDU):
     """
     A non-standard extension HDU for encapsulating an entire ASDF file within a
     single HDU of a container FITS file.  These HDUs have an extension (that is
@@ -43,7 +45,7 @@ class AsdfHDU(fits.hdu.base.NonstandardExtHDU):
     @classmethod
     def from_buff(cls, buff, compress=False, **kwargs):
         """
-        Creates a new AsdfHDU from a given AsdfFile object.
+        Creates a new _AsdfHDU from a given AsdfFile object.
 
         Parameters
         ----------
@@ -295,7 +297,7 @@ class AsdfInFits(asdf.AsdfFile):
             array = np.frombuffer(buff.getvalue(), np.uint8)
             return fits.ImageHDU(array, name=ASDF_EXTENSION_NAME)
         else:
-            return AsdfHDU.from_buff(buff)
+            return _AsdfHDU.from_buff(buff)
 
     def _update_asdf_extension(self, all_array_storage=None,
                                all_array_compression=None, auto_inline=None,

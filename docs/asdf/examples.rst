@@ -475,8 +475,11 @@ ASDF-in-FITS format.
 
 .. runcode:: hidden
 
-    with open('content.asdf', 'wb') as fd:
-        fd.write(hdulist['ASDF'].data.tostring())
+    from astropy.io import fits
+
+    with fits.open('embedded_asdf.fits') as new_hdulist:
+        with open('content.asdf', 'wb') as fd:
+            fd.write(new_hdulist['ASDF'].data.tostring())
 
 The special ASDF extension in the resulting FITS file looks like the
 following.  Note that the data source of the arrays uses the ``fits:``
