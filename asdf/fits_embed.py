@@ -98,9 +98,6 @@ class _AsdfHDU(fits.hdu.base.NonstandardExtHDU):
         return (self.name, self.ver, self.__class__.__name__, len(self._header))
 
 
-fits.register_hdu(_AsdfHDU)
-
-
 class _FitsBlock(object):
     def __init__(self, hdu):
         self._hdu = hdu
