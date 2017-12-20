@@ -1,46 +1,28 @@
 #!/usr/bin/env python
 # Licensed under a 3-clause BSD style license - see LICENSE.rst
 
-import glob
 import os
-import sys
 import builtins
-import subprocess as sp
 
-import ah_bootstrap
 from setuptools import setup
 
+from setup_helpers import (get_package_info, generate_version_file,
+                           read_metadata, read_readme)
 
-from astropy_helpers.setup_helpers import (
-    register_commands, get_debug_option, get_package_info)
+from astropy_helpers.setup_helpers import register_commands
 from astropy_helpers.git_helpers import get_git_devstr
-from astropy_helpers.version_helpers import generate_version_py
 
-from astropy_helpers import test_helpers
-def _null_validate(self):
-    pass
-test_helpers.AstropyTest._validate_required_deps = _null_validate
-
-# Get some values from the setup.cfg
-from configparser import ConfigParser
-conf = ConfigParser()
-conf.read(['setup.cfg'])
-metadata = dict(conf.items('metadata'))
-
-PACKAGENAME = metadata.get('package_name', 'packagename')
+metadata = read_metadata('setup.cfg')
+PACKAGE_NAME = metadata.get('package_name', 'asdf')
 DESCRIPTION = metadata.get('description', 'package description')
 AUTHOR = metadata.get('author', '')
 AUTHOR_EMAIL = metadata.get('author_email', '')
 LICENSE = metadata.get('license', 'unknown')
 URL = metadata.get('url', '')
 
-def readme():
-    with open('README.md') as ff:
-        return ff.read()
-
 # Store the package name in a built-in variable so it's easy
 # to get from other parts of the setup infrastructure
-builtins._PACKAGE_NAME_ = 'asdf'
+builtins._PACKAGE_NAME_ = PACKAGE_NAME
 
 # VERSION should be PEP386 compatible (http://www.python.org/dev/peps/pep-0386)
 VERSION = '1.3.2.dev'
@@ -51,50 +33,15 @@ RELEASE = 'dev' not in VERSION
 if not RELEASE:
     VERSION += get_git_devstr(False)
 
-# Get root of asdf-standard documents
-ASDF_STANDARD_ROOT = os.environ.get('ASDF_STANDARD_ROOT', 'asdf-standard')
-
 # Populate the dict of setup command overrides; this should be done before
 # invoking any other functionality from distutils since it can potentially
 # modify distutils' behavior.
-cmdclassd = register_commands('asdf', VERSION, RELEASE)
+cmdclassd = register_commands(PACKAGE_NAME, VERSION, RELEASE)
 
-# Freeze build information in version.py
-generate_version_py('asdf', VERSION, RELEASE,
-                    get_debug_option('asdf'))
+# Dynamically generate version.py file distributed with package
+generate_version_file(os.path.curdir, PACKAGE_NAME, VERSION, RELEASE)
 
-# Treat everything in scripts except README.rst as a script to be installed
-scripts = [fname for fname in glob.glob(os.path.join('scripts', '*'))
-           if os.path.basename(fname) != 'README.rst']
-
-
-# Get configuration information from all of the various subpackages.
-# See the docstring for setup_helpers.update_package_files for more
-# details.
 package_info = get_package_info()
-
-# Add the project-global data
-package_info['package_data'].setdefault('asdf', []).append('data/*')
-
-# The schemas come from a git submodule, so we deal with them here
-schema_root = os.path.join(ASDF_STANDARD_ROOT, "schemas")
-
-package_info['package_dir']['asdf.schemas'] = schema_root
-package_info['packages'].append('asdf.schemas')
-
-# The reference files come from a git submodule, so we deal with them here
-reference_file_root = os.path.join(ASDF_STANDARD_ROOT, "reference_files")
-if not os.path.exists(reference_file_root):
-    ret = sp.call(['git', 'submodule', 'update', '--init', ASDF_STANDARD_ROOT])
-    if ret != 0 or not os.path.exists(reference_file_root):
-        sys.stderr.write("Failed to initialize 'asdf-standard' submodule\n")
-        sys.exit(ret or 1)
-
-package_info['package_dir']['asdf.reference_files'] = reference_file_root
-for dirname in os.listdir(reference_file_root):
-    package_info['package_dir']['asdf.reference_files.' + dirname] = os.path.join(
-        reference_file_root, dirname)
-package_info['packages'].append('asdf.reference_files')
 
 #Define entry points for command-line scripts
 entry_points = {}
@@ -106,18 +53,14 @@ entry_points['asdf_extensions'] = [
 ]
 
 # Add the dependencies which are not strictly needed but enable otherwise skipped tests
-extra_requires = []
+extras_require = []
 if os.getenv('CI'):
-    extra_requires.extend(['lz4>=0.10'])
+    extras_require.extend(['lz4>=0.10'])
 
-# Note that requires and provides should not be included in the call to
-# ``setup``, since these are now deprecated. See this link for more details:
-# https://groups.google.com/forum/#!topic/astropy-dev/urYO8ckB2uM
 
-setup(name=PACKAGENAME,
+setup(name=PACKAGE_NAME,
       version=VERSION,
       description=DESCRIPTION,
-      scripts=scripts,
       python_requires='>=2.7,!=3.0.*,!=3.1.*,!=3.2.*',
       install_requires=[
           'semantic_version>=2.3.1',
@@ -126,13 +69,13 @@ setup(name=PACKAGENAME,
           'six>=1.9.0',
           'numpy>=1.8',
           'astropy>=1.3',
-      ] + extra_requires,
+      ] + extras_require,
       tests_require=['pytest-astropy'],
       author=AUTHOR,
       author_email=AUTHOR_EMAIL,
       license=LICENSE,
       url=URL,
-      long_description=readme(),
+      long_description=read_readme('README.md'),
       cmdclass=cmdclassd,
       zip_safe=False,
       use_2to3=True,
