@@ -8,6 +8,9 @@
 1.4.0 (unreleased)
 ------------------
 
+- Improve the way URIs are detected for ASDF-in-FITS files in order to fix bug
+  with reading gzipped ASDF-in-FITS files. [#416]
+
 - Explicitly disallow access to entire tree for ASDF file objects that have
   been closed. [#407]
 

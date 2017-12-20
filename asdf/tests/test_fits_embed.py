@@ -252,7 +252,7 @@ def test_version_mismatch_file():
     assert len(w) == 1
     assert str(w[0].message) == (
         "'tag:stsci.edu:asdf/core/complex' with version 7.0.0 found in file "
-        "'file://{}', but latest supported version is 1.0.0".format(testfile))
+        "'{}', but latest supported version is 1.0.0".format(testfile))
 
     # Make sure warning does not occur when warning is ignored (default)
     with catch_warnings() as w:
@@ -267,7 +267,7 @@ def test_version_mismatch_file():
     assert len(w) == 1
     assert str(w[0].message) == (
         "'tag:stsci.edu:asdf/core/complex' with version 7.0.0 found in file "
-        "'file://{}', but latest supported version is 1.0.0".format(testfile))
+        "'{}', but latest supported version is 1.0.0".format(testfile))
 
     # Make sure warning does not occur when warning is ignored (default)
     with catch_warnings() as w:
