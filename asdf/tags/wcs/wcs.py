@@ -12,7 +12,7 @@ class WCSType(AsdfType):
     name = "wcs/wcs"
     requires = _REQUIRES
     types = ['gwcs.WCS']
-    version = '1.2.0'
+    version = '1.1.0'
 
     @classmethod
     def from_tree(cls, node, ctx):
@@ -60,14 +60,14 @@ class WCSType(AsdfType):
 class StepType(dict, AsdfType):
     name = "wcs/step"
     requires = _REQUIRES
-    version = '1.2.0'
+    version = '1.1.0'
 
 
 class FrameType(AsdfType):
     name = "wcs/frame"
     requires = ['gwcs', 'astropy-1.3.3']
     types = ['gwcs.Frame2D']
-    version = '1.2.0'
+    version = '1.1.0'
 
     import astropy
     _astropy_version = astropy.__version__
@@ -265,7 +265,7 @@ class FrameType(AsdfType):
 class CelestialFrameType(FrameType):
     name = "wcs/celestial_frame"
     types = ['gwcs.CelestialFrame']
-    supported_versions = [(1,0,0), (1,1,0), (1,2,0)]
+    supported_versions = [(1,0,0), (1,1,0)]
 
     @classmethod
     def from_tree(cls, node, ctx):
