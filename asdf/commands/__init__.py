@@ -7,3 +7,4 @@ from .to_yaml import *
 from .defragment import *
 from .diff import *
 from .tags import *
+from .extension import *

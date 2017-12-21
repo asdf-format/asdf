@@ -9,10 +9,7 @@ from .. import util
 
 
 # This list is ordered in order of average workflow
-command_order = [
-    'Explode',
-    'Implode',
-    ]
+command_order = [ 'Explode', 'Implode' ]
 
 
 class Command(object):
