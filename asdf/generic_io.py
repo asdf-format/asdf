@@ -32,7 +32,7 @@ from . import util
 from .extern import atomicfile
 
 
-__all__ = ['get_file', 'resolve_uri', 'relative_uri']
+__all__ = ['get_file', 'get_uri', 'resolve_uri', 'relative_uri']
 
 
 _local_file_schemes = ['', 'file']
@@ -1082,6 +1082,22 @@ def _make_http_connection(init, mode, uri=None):
     response.close()
     return HTTPConnection(connection, size, parsed.path, uri or init,
                           first_chunk)
+
+def get_uri(file_obj):
+    """
+    Returns the uri of the given file object
+
+    Parameters
+    ----------
+    uri : object
+    """
+    if isinstance(file_obj, six.string_types):
+        return file_obj
+    if isinstance(file_obj, GenericFile):
+        return file_obj.uri
+
+    # A catch-all for types from Python's io module that have names
+    return getattr(file_obj, 'name', '')
 
 
 def get_file(init, mode='r', uri=None):

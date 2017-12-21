@@ -192,17 +192,15 @@ class AsdfInFits(asdf.AsdfFile):
         if isinstance(fd, fits.hdu.hdulist.HDUList):
             hdulist = fd
         else:
-            file_obj = generic_io.get_file(fd, uri=uri)
-            uri = file_obj._uri if uri is None and file_obj._uri else ''
+            uri = generic_io.get_uri(fd)
             try:
-                hdulist = fits.open(file_obj)
+                hdulist = fits.open(fd)
                 # Since we created this HDUList object, we need to be
                 # responsible for cleaning up upon close() or __exit__
                 close_hdulist = True
             except IOError:
-                file_obj.close()
                 msg = "Failed to parse given file '{}'. Is it FITS?"
-                raise ValueError(msg.format(file_obj.uri))
+                raise ValueError(msg.format(uri))
 
         self = cls(hdulist, uri=uri, extensions=extensions,
                    ignore_version_mismatch=ignore_version_mismatch,

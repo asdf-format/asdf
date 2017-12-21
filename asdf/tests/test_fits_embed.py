@@ -214,6 +214,20 @@ def test_asdf_open(tmpdir):
         with asdf_open(hdulist) as ff:
             compare_asdfs(asdf_in_fits, ff)
 
+def test_open_gzipped():
+    testfile = os.path.join(TEST_DATA_PATH, 'asdf.fits.gz')
+
+    # Opening as an HDU should work
+    with fits.open(testfile) as ff:
+        with asdf.AsdfFile.open(ff) as af:
+            assert af.tree['stuff'].shape == (20, 20)
+
+    with fits_embed.AsdfInFits.open(testfile) as af:
+        assert af.tree['stuff'].shape == (20, 20)
+
+    with asdf.AsdfFile.open(testfile) as af:
+        assert af.tree['stuff'].shape == (20, 20)
+
 def test_bad_input(tmpdir):
     """Make sure these functions behave properly with bad input"""
     text_file = os.path.join(str(tmpdir), 'test.txt')
@@ -237,7 +251,7 @@ def test_version_mismatch_file():
     assert len(w) == 1
     assert str(w[0].message) == (
         "'tag:stsci.edu:asdf/core/complex' with version 7.0.0 found in file "
-        "'file://{}', but latest supported version is 1.0.0".format(testfile))
+        "'{}', but latest supported version is 1.0.0".format(testfile))
 
     # Make sure warning does not occur when warning is ignored (default)
     with catch_warnings() as w:
@@ -252,7 +266,7 @@ def test_version_mismatch_file():
     assert len(w) == 1
     assert str(w[0].message) == (
         "'tag:stsci.edu:asdf/core/complex' with version 7.0.0 found in file "
-        "'file://{}', but latest supported version is 1.0.0".format(testfile))
+        "'{}', but latest supported version is 1.0.0".format(testfile))
 
     # Make sure warning does not occur when warning is ignored (default)
     with catch_warnings() as w:
