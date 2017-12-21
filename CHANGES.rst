@@ -27,6 +27,9 @@
 - Fix bug that caused serialized FITS tables to be duplicated in embedded ASDF
   HDU. [#411]
 
+- Install client-side git hook to automatically update ``asdf-standard`` when
+  changing branches. [#420]
+
 1.3.2 (unreleased)
 ------------------
 
