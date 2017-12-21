@@ -1,14 +1,11 @@
 # Licensed under a 3-clause BSD style license - see LICENSE.rst
 # -*- coding: utf-8 -*-
 
-from __future__ import absolute_import, division, unicode_literals, print_function
-
 import io
 import os
 import re
 import sys
 
-import six
 import pytest
 
 import numpy as np
@@ -120,7 +117,7 @@ def test_all_dtypes(tmpdir):
             # Python 3 can't expose these dtypes in non-native byte
             # order, because it's using the new Python buffer
             # interface.
-            if six.PY3 and dtype in ('c32', 'f16'):
+            if dtype in ('c32', 'f16'):
                 continue
 
             if dtype == 'b1':
@@ -760,7 +757,7 @@ def test_string_inline():
     l = ndarray.numpy_array_to_list(x)
 
     for entry in l:
-        assert isinstance(entry, six.text_type)
+        assert isinstance(entry, str)
 
 
 def test_inline_shape_mismatch():

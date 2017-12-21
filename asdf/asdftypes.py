@@ -1,7 +1,6 @@
 # Licensed under a 3-clause BSD style license - see LICENSE.rst
 # -*- coding: utf-8 -*-
 
-from __future__ import absolute_import, division, unicode_literals, print_function
 
 import bisect
 import importlib
@@ -11,7 +10,7 @@ import re
 import six
 from copy import copy
 
-from .compat import lru_cache
+from functools import lru_cache
 
 from . import tagged
 from . import util
@@ -21,9 +20,7 @@ from .versioning import AsdfVersion, AsdfSpec, get_version_map
 __all__ = ['format_tag', 'AsdfTypeIndex', 'AsdfType']
 
 
-_BASIC_PYTHON_TYPES = set(list(six.string_types) +
-                          list(six.integer_types) +
-                          [float, list, dict, tuple])
+_BASIC_PYTHON_TYPES = [str, int, float, list, dict, tuple]
 
 # regex used to parse module name from optional version string
 MODULE_RE = re.compile(r'([a-zA-Z]+)(-(\d+\.\d+\.\d+))?')
@@ -104,7 +101,7 @@ class _AsdfWriteTypeIndex(object):
                 add_type(asdftype)
 
         if self._version == 'latest':
-            for name, versions in six.iteritems(index._versions_by_type_name):
+            for name, versions in index._versions_by_type_name.items():
                 add_by_tag(name, versions[-1])
         else:
             try:
@@ -114,11 +111,11 @@ class _AsdfWriteTypeIndex(object):
                     "Don't know how to write out ASDF version {0}".format(
                         self._version))
 
-            for name, _version in six.iteritems(version_map['tags']):
+            for name, _version in version_map['tags'].items():
                 add_by_tag(name, AsdfVersion(_version))
 
             # Now add any extension types that aren't known to the ASDF standard
-            for name, versions in six.iteritems(index._versions_by_type_name):
+            for name, versions in index._versions_by_type_name.items():
                 if name not in self._type_by_name:
                     add_by_tag(name, versions[-1])
 
@@ -143,8 +140,7 @@ class _AsdfWriteTypeIndex(object):
                 # includes classes that are created dynamically post
                 # Python-import, e.g. astropy.modeling._CompoundModel
                 # subclasses.
-                for key, val in six.iteritems(
-                        self._types_with_dynamic_subclasses):
+                for key, val in self._types_with_dynamic_subclasses.items():
                     if issubclass(custom_type, key):
                         self._type_by_cls[custom_type] = val
                         return val
@@ -178,7 +174,7 @@ class AsdfTypeIndex(object):
 
         if isinstance(asdftype.name, list):
             yaml_tags = [asdftype.make_yaml_tag(name) for name in asdftype.name]
-        elif isinstance(asdftype.name, six.string_types):
+        elif isinstance(asdftype.name, str):
             yaml_tags = [asdftype.yaml_tag]
         elif asdftype.name is None:
             yaml_tags = []
@@ -413,7 +409,7 @@ class ExtensionTypeMeta(type):
             types = mcls._find_in_bases(attrs, bases, 'types', [])
             new_types = []
             for typ in types:
-                if isinstance(typ, six.string_types):
+                if isinstance(typ, str):
                     typ = util.resolve_name(typ)
                 new_types.append(typ)
             attrs['types'] = new_types
@@ -425,7 +421,7 @@ class ExtensionTypeMeta(type):
                 cls.version = AsdfVersion(cls.version)
 
         if hasattr(cls, 'name'):
-            if isinstance(cls.name, six.string_types):
+            if isinstance(cls.name, str):
                 if 'yaml_tag' not in attrs:
                     cls.yaml_tag = cls.make_yaml_tag(cls.name)
             elif isinstance(cls.name, list):

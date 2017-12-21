@@ -6,9 +6,6 @@ This module deals with things that change between different versions
 of the ASDF spec.
 """
 
-from __future__ import absolute_import, division, unicode_literals, print_function
-
-import six
 import yaml
 from functools import total_ordering
 
@@ -58,7 +55,7 @@ class AsdfVersionMixin(object):
         # Seems like a bit of a hack...
         if isinstance(other, SpecItem):
             return other == self
-        if isinstance(other, (six.string_types, tuple, list)):
+        if isinstance(other, (str, tuple, list)):
             other = AsdfVersion(other)
         return Version.__eq__(self, other)
 
@@ -66,7 +63,7 @@ class AsdfVersionMixin(object):
         return not self.__eq__(other)
 
     def __lt__(self, other):
-        if isinstance(other, (six.string_types, tuple, list)):
+        if isinstance(other, (str, tuple, list)):
             other = AsdfVersion(other)
         return Version.__lt__(self, other)
 
@@ -102,13 +99,13 @@ class AsdfSpec(SpecItem, Spec):
         super(AsdfSpec, self).__init__(*args, **kwargs)
 
     def match(self, version):
-        if isinstance(version, (six.string_types, tuple, list)):
+        if isinstance(version, (str, tuple, list)):
             version = AsdfVersion(version)
         return super(AsdfSpec, self).match(version)
 
     def __iterate_versions(self, versions):
         for v in versions:
-            if isinstance(v, (six.string_types, tuple, list)):
+            if isinstance(v, (str, tuple, list)):
                 v = AsdfVersion(v)
             yield v
 

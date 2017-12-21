@@ -1,23 +1,18 @@
 # Licensed under a 3-clause BSD style license - see LICENSE.rst
 # -*- coding: utf-8 -*-
 
-from __future__ import absolute_import, division, unicode_literals, print_function
-
-import datetime
-import json
 import os
-
+import json
+import datetime
+from functools import lru_cache
 from collections import OrderedDict
-
-import six
-from six.moves.urllib import parse as urlparse
+from urllib import parse as urlparse
 
 from jsonschema import validators as mvalidators
 from jsonschema.exceptions import ValidationError
 
 import yaml
 
-from .compat import lru_cache
 from . import constants
 from . import generic_io
 from . import reference
@@ -44,7 +39,7 @@ SCHEMA_PATH = os.path.abspath(
 
 PYTHON_TYPE_TO_YAML_TAG = {
     None: 'null',
-    six.text_type: 'str',
+    str: 'str',
     bytes: 'str',
     bool: 'bool',
     int: 'int',
@@ -54,10 +49,6 @@ PYTHON_TYPE_TO_YAML_TAG = {
     set: 'set',
     OrderedDict: 'omap'
 }
-
-
-if six.PY2: # pragma: no cover
-    PYTHON_TYPE_TO_YAML_TAG[long] = 'int'
 
 
 # Prepend full YAML tag prefix
@@ -167,7 +158,7 @@ def validate_fill_default(validator, properties, instance, schema):
     if not validator.is_type(instance, 'object'):
         return
 
-    for property, subschema in six.iteritems(properties):
+    for property, subschema in properties.items():
         if "default" in subschema:
             instance.setdefault(property, subschema["default"])
 
@@ -186,7 +177,7 @@ def validate_remove_default(validator, properties, instance, schema):
     if not validator.is_type(instance, 'object'):
         return
 
-    for property, subschema in six.iteritems(properties):
+    for property, subschema in properties.items():
         if subschema.get("default", None) is not None:
             if instance.get(property, None) == subschema["default"]:
                 del instance[property]
@@ -242,7 +233,7 @@ def _create_validator(validators=YAML_VALIDATORS):
 
                 if isinstance(instance, dict):
                     new_seen = _seen | set([id(instance)])
-                    for val in six.itervalues(instance):
+                    for val in instance.values():
                         for x in self.iter_errors(val, _seen=new_seen):
                             yield x
 
@@ -273,16 +264,10 @@ OrderedLoader.add_constructor(
     construct_mapping)
 
 
-if six.PY2: # pragma: no cover
-    # Load strings in as Unicode on Python 2
-    OrderedLoader.add_constructor('tag:yaml.org,2002:str',
-                                  OrderedLoader.construct_scalar)
-
-
 @lru_cache()
 def _load_schema(url):
     with generic_io.get_file(url) as fd:
-        if isinstance(url, six.text_type) and url.endswith('json'):
+        if isinstance(url, str) and url.endswith('json'):
             json_data = fd.read().decode('utf-8')
             result = json.loads(json_data, object_pairs_hook=OrderedDict)
         else:
@@ -429,34 +414,18 @@ def get_validator(schema={}, ctx=None, validators=None, url_mapping=None,
     return validator
 
 
-if six.PY2: # pragma: no cover
-    def validate_large_literals(instance):
-        """
-        Validate that the tree has no large numeric literals.
-        """
-        # We can count on 52 bits of precision
-        upper = ((long(1) << 51) - 1)
-        lower = -((long(1) << 51) - 2)
-
-        for instance in treeutil.iter_tree(instance):
-            if (isinstance(instance, six.integer_types) and
-                (instance > upper or instance < lower)):
-                raise ValidationError(
-                    "Integer value {0} is too large to safely represent as a "
-                    "literal in ASDF".format(instance))
-else:
-    def validate_large_literals(instance):
-        """
-        Validate that the tree has no large numeric literals.
-        """
-        # We can count on 52 bits of precision
-        for instance in treeutil.iter_tree(instance):
-            if (isinstance(instance, int) and (
-                instance > ((1 << 51) - 1) or
-                instance < -((1 << 51) - 2))):
-                raise ValidationError(
-                    "Integer value {0} is too large to safely represent as a "
-                    "literal in ASDF".format(instance))
+def validate_large_literals(instance):
+    """
+    Validate that the tree has no large numeric literals.
+    """
+    # We can count on 52 bits of precision
+    for instance in treeutil.iter_tree(instance):
+        if (isinstance(instance, int) and (
+            instance > ((1 << 51) - 1) or
+            instance < -((1 << 51) - 2))):
+            raise ValidationError(
+                "Integer value {0} is too large to safely represent as a "
+                "literal in ASDF".format(instance))
 
 
 def validate(instance, ctx=None, schema={},

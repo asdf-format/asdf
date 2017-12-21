@@ -1,7 +1,6 @@
 # Licensed under a 3-clause BSD style license - see LICENSE.rst
 # -*- coding: utf-8 -*-
 
-from __future__ import absolute_import, division, unicode_literals, print_function
 
 # this contains imports plugins that configure py.test for asdf tests.
 # by importing them here in conftest.py they are discoverable by py.test
@@ -13,10 +12,10 @@ import multiprocessing
 import os
 import shutil
 import tempfile
+import http.server
+import socketserver
 
 import pytest
-
-import six
 
 from .extern.RangeHTTPServer import RangeHTTPRequestHandler
 
@@ -57,8 +56,7 @@ def run_server(queue, tmpdir, handler_class):  # pragma: no cover
                 os.path.relpath(path, os.getcwd()))
             return path
 
-    server = six.moves.socketserver.TCPServer(
-        ("127.0.0.1", 0), HTTPRequestHandler)
+    server = socketserver.TCPServer(("127.0.0.1", 0), HTTPRequestHandler)
     domain, port = server.server_address
     url = "http://{0}:{1}/".format(domain, port)
 
@@ -68,7 +66,7 @@ def run_server(queue, tmpdir, handler_class):  # pragma: no cover
 
 
 class HTTPServer(object):
-    handler_class = six.moves.SimpleHTTPServer.SimpleHTTPRequestHandler
+    handler_class = http.server.SimpleHTTPRequestHandler
 
     def __init__(self):
         self.tmpdir = tempfile.mkdtemp()

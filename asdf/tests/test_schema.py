@@ -1,8 +1,6 @@
 # Licensed under a 3-clause BSD style license - see LICENSE.rst
 # -*- coding: utf-8 -*-
 
-from __future__ import absolute_import, division, unicode_literals, print_function
-
 import io
 import os
 import re
@@ -10,7 +8,6 @@ import warnings
 
 from jsonschema import ValidationError
 
-import six
 import yaml
 import pytest
 
@@ -98,7 +95,7 @@ not_unit:
     with asdf.AsdfFile.open(buff) as ff:
         assert isinstance(ff.tree['unit'], u.UnitBase)
         assert not isinstance(ff.tree['not_unit'], u.UnitBase)
-        assert isinstance(ff.tree['not_unit'], six.text_type)
+        assert isinstance(ff.tree['not_unit'], str)
 
         assert ff.tree == {
             'unit': u.m,

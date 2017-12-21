@@ -1,12 +1,8 @@
 # Licensed under a 3-clause BSD style license - see LICENSE.rst # -*- coding: utf-8 -*-
 
-from __future__ import absolute_import, division, unicode_literals, print_function
-
 import io
 import os
 import sys
-
-import six
 
 try:
     from astropy.coordinates import ICRS
@@ -216,7 +212,7 @@ def yaml_to_asdf(yaml_content, yaml_headers=True, standard_version=None):
     buff : io.BytesIO()
         A file-like object containing the ASDF-like content.
     """
-    if isinstance(yaml_content, six.text_type):
+    if isinstance(yaml_content, str):
         yaml_content = yaml_content.encode('utf-8')
 
     buff = io.BytesIO()

@@ -1,7 +1,6 @@
 # Licensed under a 3-clause BSD style license - see LICENSE.rst
 # -*- coding: utf-8 -*-
 
-from __future__ import absolute_import, division, unicode_literals, print_function
 
 import os
 import sys
@@ -65,11 +64,9 @@ def test_reference_file(reference_file):
     # constructed. We want to make sure we only suppress warnings when they are
     # expected.
     expect_warnings = basename == 'complex.asdf'
-    if sys.version_info[:2] == (2, 7):
-        known_fail = (basename in ('complex.asdf'))
 
     if sys.maxunicode <= 65535:
-        known_fail = known_fail | (basename in ('unicode_spp.asdf'))
+        known_fail = known_fail or (basename in ('unicode_spp.asdf'))
 
     try:
         _compare_trees(name_without_ext, expect_warnings=expect_warnings)

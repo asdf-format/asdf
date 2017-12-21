@@ -1,7 +1,6 @@
 # Licensed under a 3-clause BSD style license - see LICENSE.rst
 # -*- coding: utf-8 -*-
 
-from __future__ import absolute_import, division, unicode_literals, print_function
 
 """
 Utilities for embedded ADSF files in FITS.
@@ -10,8 +9,6 @@ import io
 import re
 
 import numpy as np
-
-import six
 
 from . import asdf
 from . import block
@@ -58,7 +55,7 @@ class _EmbeddedBlockManager(block.BlockManager):
         super(_EmbeddedBlockManager, self).__init__(asdffile)
 
     def get_block(self, source):
-        if (isinstance(source, six.string_types) and
+        if (isinstance(source, str) and
             source.startswith(FITS_SOURCE_PREFIX)):
             parts = re.match(
                 '((?P<name>[A-Z0-9]+),)?(?P<ver>[0-9]+)',

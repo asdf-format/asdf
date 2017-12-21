@@ -1,16 +1,12 @@
 # Licensed under a 3-clause BSD style license - see LICENSE.rst
 # -*- coding: utf-8 -*-
 
-from __future__ import absolute_import, division, unicode_literals, print_function
-
 import io
 from collections import OrderedDict
 
 import numpy as np
 
 import pytest
-
-import six
 
 import yaml
 
@@ -63,7 +59,7 @@ def test_unicode_write(tmpdir):
 
     def check_asdf(asdf):
         assert "ɐʇɐp‾ǝpoɔıun" in asdf.tree
-        assert isinstance(asdf.tree['ascii_only'], six.text_type)
+        assert isinstance(asdf.tree['ascii_only'], str)
 
     def check_raw_yaml(content):
         # Ensure that unicode is written out as UTF-8 without escape

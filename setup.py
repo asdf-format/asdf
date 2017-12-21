@@ -1,7 +1,13 @@
 #!/usr/bin/env python
 # Licensed under a 3-clause BSD style license - see LICENSE.rst
 
+import sys
+if sys.version_info < (3, 3):
+    sys.stderr.write("ERROR: ASDF requires Python 3.3 or later\n")
+    sys.exit(1)
+
 import os
+import glob
 import builtins
 
 from setuptools import setup
@@ -61,7 +67,7 @@ if os.getenv('CI'):
 setup(name=PACKAGE_NAME,
       version=VERSION,
       description=DESCRIPTION,
-      python_requires='>=2.7,!=3.0.*,!=3.1.*,!=3.2.*',
+      python_requires='>=3.3',
       install_requires=[
           'semantic_version>=2.3.1',
           'pyyaml>=3.10',
@@ -78,7 +84,6 @@ setup(name=PACKAGE_NAME,
       long_description=read_readme('README.md'),
       cmdclass=cmdclassd,
       zip_safe=False,
-      use_2to3=True,
       entry_points=entry_points,
       **package_info
 )

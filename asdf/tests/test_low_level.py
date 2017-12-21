@@ -1,8 +1,5 @@
 # -*- coding: utf-8 -*-
 
-from __future__ import absolute_import, division, unicode_literals, print_function
-
-
 import io
 import os
 
@@ -11,8 +8,6 @@ from numpy.testing import assert_array_equal
 from astropy.modeling import models
 
 import pytest
-
-import six
 
 from .. import asdf
 from .. import block
@@ -218,21 +213,6 @@ def test_block_header_too_small():
     with pytest.raises(ValueError):
         with asdf.AsdfFile.open(buff):
             pass
-
-
-if six.PY2:
-    def test_file_already_closed(tmpdir, small_tree):
-        # Test that referencing specific blocks in another asdf file
-        # works.
-
-        path = os.path.join(str(tmpdir), 'test.asdf')
-        ff = asdf.AsdfFile(small_tree)
-        ff.write_to(path)
-
-        with open(path, 'rb') as fd:
-            ff2 = asdf.AsdfFile.open(fd)
-        with pytest.raises(IOError):
-            str(ff2.tree['science_data'][:])
 
 
 def test_external_block(tmpdir):

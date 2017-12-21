@@ -1,19 +1,14 @@
 # Licensed under a 3-clause BSD style license - see LICENSE.rst
 # -*- coding: utf-8 -*-
 
-
-from __future__ import absolute_import, division, unicode_literals, print_function
-
 import inspect
 import math
 import struct
 import types
 
-import six
-from six.moves.urllib.parse import urljoin
-from six.moves.urllib.request import pathname2url
-from six.moves.urllib import parse as urlparse
-from six.moves import zip as izip
+from urllib.parse import urljoin
+from urllib.request import pathname2url
+from urllib import parse as urlparse
 
 import numpy as np
 
@@ -158,7 +153,7 @@ class BinaryStruct(object):
         return the binary struct.
         """
         fields = [0] * len(self._names)
-        for key, val in six.iteritems(kwargs):
+        for key, val in kwargs.items():
             if key not in self._offsets:
                 raise KeyError("No header field '{0}'".format(key))
             i = self._names.index(key)
@@ -171,7 +166,7 @@ class BinaryStruct(object):
         is a dictionary mapping field names to values.
         """
         args = struct.unpack_from(self._fmt, buff[:self._size])
-        return dict(izip(self._names, args))
+        return dict(zip(self._names, args))
 
     def update(self, fd, **kwargs):
         """
@@ -187,7 +182,7 @@ class BinaryStruct(object):
             The values to update on the struct.
         """
         updates = []
-        for key, val in six.iteritems(kwargs):
+        for key, val in kwargs.items():
             if key not in self._offsets:
                 raise KeyError("No header field '{0}'".format(key))
             updates.append((self._offsets[key], val))
@@ -305,7 +300,7 @@ def minversion(module, version, inclusive=True, version_path='__version__'):
 
     if isinstance(module, types.ModuleType):
         module_name = module.__name__
-    elif isinstance(module, six.string_types):
+    elif isinstance(module, str):
         module_name = module
         try:
             module = resolve_name(module_name)
@@ -367,7 +362,7 @@ class InheritDocstrings(type):
                  and len(key) > 4) or
                 not key.startswith('_'))
 
-        for key, val in six.iteritems(dct):
+        for key, val in dct.items():
             if (inspect.isfunction(val) and
                 is_public_member(key) and
                 val.__doc__ is None):

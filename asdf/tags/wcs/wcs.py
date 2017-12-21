@@ -1,12 +1,6 @@
 # Licensed under a 3-clause BSD style license - see LICENSE.rst
 # -*- coding: utf-8 -*-
 
-from __future__ import absolute_import, division, unicode_literals, print_function
-
-
-import six
-
-
 from ...asdftypes import AsdfType
 from ... import yamlutil
 
@@ -110,7 +104,7 @@ class FrameType(AsdfType):
         reference_frame_mapping = cls._get_reference_frame_mapping()
 
         cls._inverse_reference_frame_mapping = {}
-        for key, val in six.iteritems(reference_frame_mapping):
+        for key, val in reference_frame_mapping.items():
             cls._inverse_reference_frame_mapping[val] = key
 
         return cls._inverse_reference_frame_mapping
