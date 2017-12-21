@@ -14,7 +14,7 @@ from configparser import ConfigParser
 
 
 __all__ = [ 'generate_version_file', 'get_package_info', 'read_metadata',
-           'read_readme' ]
+           'read_readme', 'create_git_hooks' ]
 
 # Get root of asdf-standard documents
 ASDF_STANDARD_ROOT = os.environ.get('ASDF_STANDARD_ROOT', 'asdf-standard')
@@ -85,3 +85,19 @@ def read_metadata(config_filename):
 def read_readme(readme_filename):
     with open(readme_filename) as ff:
         return ff.read()
+
+
+_hook_script = """#!/bin/bash
+set -eu
+git submodule update asdf-standard
+echo "Updated asdf-standard"
+"""
+
+def create_git_hooks(root_directory):
+    hook_dir = os.path.join(root_directory, '.git', 'hooks')
+    for hook_name in ['post-checkout', 'post-merge']:
+        hook_path = os.path.join(hook_dir, hook_name)
+        if not os.path.exists(hook_path):
+            flags = os.O_CREAT | os.O_WRONLY
+            with open(os.open(hook_path, flags, 0o770), 'w') as ff:
+                ff.write(_hook_script)

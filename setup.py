@@ -13,7 +13,7 @@ import builtins
 from setuptools import setup
 
 from setup_helpers import (get_package_info, generate_version_file,
-                           read_metadata, read_readme)
+                           read_metadata, read_readme, create_git_hooks)
 
 from astropy_helpers.setup_helpers import register_commands
 from astropy_helpers.git_helpers import get_git_devstr
@@ -63,6 +63,9 @@ extras_require = []
 if os.getenv('CI'):
     extras_require.extend(['lz4>=0.10'])
 
+# This enables the asdf-standard submodule to be updated automatically
+# However, this will not currently work on Windows
+create_git_hooks(os.path.curdir)
 
 setup(name=PACKAGE_NAME,
       version=VERSION,
