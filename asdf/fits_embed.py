@@ -17,13 +17,82 @@ from . import generic_io
 
 try:
     from astropy.io import fits
+    from astropy.io.fits.file import _File
+    from astropy.io.fits.header import Header, _pad_length
 except ImportError:
     raise ImportError("AsdfInFits requires astropy")
 
 
 ASDF_EXTENSION_NAME = 'ASDF'
-
 FITS_SOURCE_PREFIX = 'fits:'
+
+
+__all__ = ['AsdfInFits']
+
+
+class _AsdfHDU(fits.hdu.base.NonstandardExtHDU):
+    """
+    A non-standard extension HDU for encapsulating an entire ASDF file within a
+    single HDU of a container FITS file.  These HDUs have an extension (that is
+    an XTENSION keyword) of ASDF.
+    """
+
+    _extension = ASDF_EXTENSION_NAME
+
+    @classmethod
+    def from_buff(cls, buff, compress=False, **kwargs):
+        """
+        Creates a new _AsdfHDU from a given AsdfFile object.
+
+        Parameters
+        ----------
+        buff : io.BytesIO
+            A buffer containing an ASDF metadata tree
+        compress : bool, optional
+            Gzip compress the contents of the ASDF HDU
+        """
+
+        if compress:
+            buff = gzip.GzipFile(fileobj=buff, mode='wb')
+
+        # A proper HDU should still be padded out to a multiple of 2880
+        # technically speaking
+        data_length = buff.tell()
+        padding = (_pad_length(data_length) * cls._padding_byte).encode('ascii')
+        buff.write(padding)
+
+        buff.seek(0)
+
+        cards = [
+            ('XTENSION', cls._extension, 'ASDF extension'),
+            ('BITPIX', 8, 'array data type'),
+            ('NAXIS', 1, 'number of array dimensions'),
+            ('NAXIS1', len(buff.getvalue()), 'Axis length'),
+            ('PCOUNT', 0, 'number of parameters'),
+            ('GCOUNT', 1, 'number of groups'),
+            ('COMPRESS', compress, 'Uses gzip compression'),
+            ('EXTNAME', cls._extension, 'Name of ASDF extension'),
+        ]
+
+        header = Header(cards)
+        return cls._readfrom_internal(_File(buff), header=header)
+
+
+    @classmethod
+    def match_header(cls, header):
+        card = header.cards[0]
+        if card.keyword != 'XTENSION':
+            return False
+        xtension = card.value
+        if isinstance(xtension, str):
+            xtension = xtension.rstrip()
+        return xtension == cls._extension
+
+    # TODO: Add header verification
+
+    def _summary(self):
+        # TODO: Perhaps make this more descriptive...
+        return (self.name, self.ver, self.__class__.__name__, len(self._header))
 
 
 class _FitsBlock(object):
@@ -217,9 +286,17 @@ class AsdfInFits(asdf.AsdfFile):
         return cls._open_asdf(self, buff, uri=uri, mode='r',
                               validate_checksums=validate_checksums)
 
+    def _create_hdu(self, buff, use_image_hdu):
+        # Allow writing to old-style ImageHDU for backwards compatibility
+        if use_image_hdu:
+            array = np.frombuffer(buff.getvalue(), np.uint8)
+            return fits.ImageHDU(array, name=ASDF_EXTENSION_NAME)
+        else:
+            return _AsdfHDU.from_buff(buff)
+
     def _update_asdf_extension(self, all_array_storage=None,
-                               all_array_compression=None,
-                               auto_inline=None, pad_blocks=False):
+                               all_array_compression=None, auto_inline=None,
+                               pad_blocks=False, use_image_hdu=False):
         if self.blocks.streamed_block is not None:
             raise ValueError(
                 "Can not save streamed data to ASDF-in-FITS file.")
@@ -230,27 +307,27 @@ class AsdfInFits(asdf.AsdfFile):
             all_array_compression=all_array_compression,
             auto_inline=auto_inline, pad_blocks=pad_blocks,
             include_block_index=False)
-        array = np.frombuffer(buff.getvalue(), np.uint8)
 
-        try:
-            asdf_extension = self._hdulist[ASDF_EXTENSION_NAME]
-        except (KeyError, IndexError, AttributeError):
-            self._hdulist.append(fits.ImageHDU(array, name=ASDF_EXTENSION_NAME))
-        else:
-            asdf_extension.data = array
+        if ASDF_EXTENSION_NAME in self._hdulist:
+            del self._hdulist[ASDF_EXTENSION_NAME]
+        self._hdulist.append(self._create_hdu(buff, use_image_hdu))
 
     def write_to(self, filename, all_array_storage=None,
                  all_array_compression=None, auto_inline=None,
-                 pad_blocks=False, *args, **kwargs):
+                 pad_blocks=False, use_image_hdu=False, *args, **kwargs):
         self._update_asdf_extension(
             all_array_storage=all_array_storage,
             all_array_compression=all_array_compression,
-            auto_inline=auto_inline, pad_blocks=pad_blocks)
+            auto_inline=auto_inline, pad_blocks=pad_blocks,
+            use_image_hdu=use_image_hdu)
 
         self._hdulist.writeto(filename, *args, **kwargs)
 
     def update(self, all_array_storage=None, all_array_compression=None,
                auto_inline=None, pad_blocks=False):
+        raise NotImplementedError(
+            "In-place update is not currently implemented for ASDF-in-FITS")
+
         self._update_asdf_extension(
             all_array_storage=all_array_storage,
             all_array_compression=all_array_compression,

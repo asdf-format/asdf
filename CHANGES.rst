@@ -27,6 +27,11 @@
 - Fix bug that caused serialized FITS tables to be duplicated in embedded ASDF
   HDU. [#411]
 
+- Create and use a new non-standard FITS extension instead of ImageHDU for
+  storing ASDF files embedded in FITS. Explicitly remove support for the
+  ``.update`` method of ``AsdfInFits``, even though it didn't appear to be
+  working previously. [#412]
+
 1.3.2 (unreleased)
 ------------------
 

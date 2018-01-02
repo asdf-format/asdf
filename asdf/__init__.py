@@ -44,4 +44,12 @@ from jsonschema import ValidationError
 class ValidationError(ValidationError):
     pass
 
+try:
+    from astropy.io import fits
+except ImportError:
+    pass
+else:
+    from .fits_embed import _AsdfHDU
+    fits.register_hdu(_AsdfHDU)
+
 open = AsdfFile.open
