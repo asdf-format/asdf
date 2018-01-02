@@ -32,6 +32,9 @@
   ``.update`` method of ``AsdfInFits``, even though it didn't appear to be
   working previously. [#412]
 
+- Allow package to be imported and used from source directory and builds in
+  development mode. [#420]
+
 1.3.2 (unreleased)
 ------------------
 

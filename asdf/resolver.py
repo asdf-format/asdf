@@ -8,8 +8,15 @@ from . import constants
 from . import util
 
 
-SCHEMA_PATH = os.path.abspath(
-    os.path.join(os.path.dirname(__file__), 'schemas'))
+def find_schema_path():
+    dirname = os.path.dirname(__file__)
+
+    # This means we are working within a development build
+    if os.path.exists(os.path.join(dirname, '..', 'asdf-standard')):
+        return os.path.join(dirname, '..', 'asdf-standard', 'schemas')
+
+    # Otherwise, we return the installed location
+    return os.path.join(dirname, 'schemas')
 
 
 class Resolver(object):
@@ -103,7 +110,7 @@ class Resolver(object):
 DEFAULT_URL_MAPPING = [
     (constants.STSCI_SCHEMA_URI_BASE,
      util.filepath_to_url(
-         os.path.join(SCHEMA_PATH, 'stsci.edu')) +
+         os.path.join(find_schema_path(), 'stsci.edu')) +
          '/{url_suffix}.yaml')]
 DEFAULT_TAG_TO_URL_MAPPING = [
     (constants.STSCI_SCHEMA_TAG_BASE,
