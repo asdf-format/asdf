@@ -12,28 +12,54 @@ ASDF - Advanced Scientific Data Format
 
 The **A**dvanced **S**cientific **D**ata **F**ormat (ASDF) is a next-generation
 interchange format for scientific data. This package contains the Python
-implementation of the ASDF Standard.
+implementation of the ASDF Standard. More information on the ASDF Standard
+itself can be found [here](https://asdf-standard.readthedocs.io).
 
 > If you are looking for the **A**daptable **S**eismic **D**ata **F**ormat,
 > information can be found [here](https://seismic-data.org/).
 
+ASDF is under active development [on
+github](https://github.com/spacetelescope/asdf). More information on
+contributing can be found [below](#contributing).
 
 Installation
 ------------
 
-To clone the project from github and initialize the asdf-standard submodule::
+Stable releases of the ASDF Python package are registered [at
+PyPi](https://pypi.python.org/pypi/asdf). The latest stable version can be
+installed using `pip`:
 
 ```
-$ git clone https://github.com/spacetelescope/asdf.git
-$ cd asdf/asdf_standard
-$ git submodule update --init
+$ pip install asdf
+```
+
+The latest development version of ASDF is available from the `master` branch on
+github. To clone the project:
+
+```
+$ git clone https://github.com/spacetelescope/asdf
 ```
 
 To install:
 
 ```
+$ cd asdf
 $ python setup.py install
 ```
+
+To install in [development mode](https://packaging.python.org/tutorials/distributing-packages/#working-in-development-mode):
+
+```
+$ python setup.py develop
+```
+
+**NOTE**: The source repository makes use of a git submodules for referencing
+the schemas provided by the ASDF standard. While this submodule is automatically
+initialized when installing the package (including in development mode), it may
+be necessary during the course of development to update the submodule manually.
+See the [documentation on git
+submodules](https://git-scm.com/docs/git-submodule) for more information.
+
 
 Testing
 -------
@@ -47,9 +73,10 @@ $ python setup.py test
 Please note that you must have [astropy](https://github.com/astropy/astropy)
 package installed to run the tests.
 
-Contributing Code, Documentation or Feedback
---------------------------------------------
-We welcome feedback and contributions to the project. Please follow the
+Contributing
+------------
+We welcome feedback and contributions to the project. Contributions of code,
+documentation, or general feedback are all appreciated. Please follow the
 [contributing guidelines](CONTRIBUTING.md) to submit an issue or a pull request.
 
 We strive to provide a welcoming community to all of our users by abiding to the
