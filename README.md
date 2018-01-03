@@ -10,9 +10,12 @@ ASDF - Advanced Scientific Data Format
 ![STScI Logo](docs/_static/stsci_logo.png)
 
 
-The **A**dvanced **S**cientific **D**ata **F**ormat (ASDF) is a next-generation interchange format for scientific data. This package contains the Python implementation of the ASDF Standard.
+The **A**dvanced **S**cientific **D**ata **F**ormat (ASDF) is a next-generation
+interchange format for scientific data. This package contains the Python
+implementation of the ASDF Standard.
 
-> If you are looking for the **A**daptable **S**eismic **D**ata **F**ormat, information can be found [here](https://seismic-data.org/).
+> If you are looking for the **A**daptable **S**eismic **D**ata **F**ormat,
+> information can be found [here](https://seismic-data.org/).
 
 
 Installation
@@ -41,4 +44,13 @@ To run the unit tests::
 $ python setup.py test
 ```
 
-Please note that you must have [astropy](https://github.com/astropy/astropy) package installed to run the tests.
+Please note that you must have [astropy](https://github.com/astropy/astropy)
+package installed to run the tests.
+
+Contributing Code, Documentation or Feedback
+--------------------------------------------
+We welcome feedback and contributions to the project. Please follow the
+[contributing guidelines](CONTRIBUTING.md) to submit an issue or a pull request.
+
+We strive to provide a welcoming community to all of our users by abiding to the
+[Code of Conduct](CODE_OF_CONDUCT.md).
