@@ -16,9 +16,9 @@ implementation of the ASDF Standard. More information on the ASDF Standard
 itself can be found [here](https://asdf-standard.readthedocs.io).
 
 The ASDF format has the following features:
-* A hierarchical, human-readable metadata format (implemented using YAML)
-* Numerical arrays are stored as binary data blocks which can be memory mapped. Numerical data blocks can optionally be compressed.
-* The structure of the data can be automatically validated using schemas
+* A hierarchical, human-readable metadata format (implemented using [YAML](http://yaml.org))
+* Numerical arrays are stored as binary data blocks which can be memory mapped. Data blocks can optionally be compressed.
+* The structure of the data can be automatically validated using schemas (implemented using [JSON Schema](http://json-schema.org))
 * Native Python data types (numerical types, strings, dicts, lists) are serialized automatically
 * ASDF can be extended to serialize custom data types
 
