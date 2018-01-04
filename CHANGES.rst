@@ -35,6 +35,8 @@
 - Allow package to be imported and used from source directory and builds in
   development mode. [#420]
 
+- Add command to ``asdftool`` for querying installed extensions. [#418]
+
 1.3.2 (unreleased)
 ------------------
 
