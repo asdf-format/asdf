@@ -26,7 +26,8 @@ env:
         - NUMPY_VERSION=stable
         - PIP_DEPENDENCIES='pytest-astropy pytest-faulthandler'
         - CONDA_DEPENDENCIES='semantic_version jsonschema pyyaml six lz4'
-        - GWCS_GIT='git+git://github.com/spacetelescope/gwcs.git#egg=gwcs'
+        #- GWCS_GIT='git+git://github.com/spacetelescope/gwcs.git#egg=gwcs'
+        - GWCS_GIT='git+git://github.com/nden/gwcs@move-schemas#egg=gwcs'
         - SETUP_CMD='test --remote-data'
 
     matrix:
