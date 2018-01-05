@@ -30,10 +30,15 @@ def format_tag(organization, standard, version, tag_name):
     """
     Format a YAML tag.
     """
+    tag = 'tag:{0}:{1}/{2}'.format(organization, standard, tag_name)
+
+    if version is None:
+        return tag
+
     if isinstance(version, AsdfSpec):
         version = str(version.spec)
-    return 'tag:{0}:{1}/{2}-{3}'.format(
-        organization, standard, tag_name, version)
+
+    return "{0}-{1}".format(tag, version)
 
 
 def split_tag_version(tag):
@@ -83,6 +88,31 @@ class _AsdfWriteTypeIndex(object):
         self._class_by_subclass = {}
         self._types_with_dynamic_subclasses = {}
 
+        try:
+            version_map = get_version_map(self._version)['tags']
+        except ValueError:
+            raise ValueError(
+                "Don't know how to write out ASDF version {0}".format(
+                    self._version))
+
+        def should_overwrite(cls):
+            existing_type = self._type_by_cls[cls]
+            for name in existing_type.names():
+                tag = existing_type.make_yaml_tag(name, versioned=False)
+                if self._type_by_cls[cls].version == version_map.get(tag):
+                    return False
+
+            return True
+
+        def add_type_to_index(index, cls, typ):
+            # Do not overwrite types that are already in the type index if the
+            # version of the existing type is an exact match with the
+            # corresponding version in the version map.
+            if cls in self._type_by_cls and not should_overwrite(cls):
+                return
+
+            self._type_by_cls[cls] = typ
+
         def add_subclasses(typ, asdftype):
             for subclass in util.iter_subclasses(typ):
                 # Do not overwrite the tag type for an existing subclass if the
@@ -94,10 +124,10 @@ class _AsdfWriteTypeIndex(object):
                 self._class_by_subclass[subclass] = typ
                 self._type_by_subclasses[subclass] = asdftype
 
-        def add_type(asdftype):
-            self._type_by_cls[asdftype] = asdftype
+        def add_all_types(asdftype):
+            add_type_to_index(self._type_by_cls, asdftype, asdftype)
             for typ in asdftype.types:
-                self._type_by_cls[typ] = asdftype
+                add_type_to_index(self._type_by_cls, typ, asdftype)
                 add_subclasses(typ, asdftype)
 
             if asdftype.handle_dynamic_subclasses:
@@ -109,20 +139,13 @@ class _AsdfWriteTypeIndex(object):
             if tag in index._type_by_tag:
                 asdftype = index._type_by_tag[tag]
                 self._type_by_name[name] = asdftype
-                add_type(asdftype)
+                add_all_types(asdftype)
 
         if self._version == 'latest':
             for name, versions in index._versions_by_type_name.items():
                 add_by_tag(name, versions[-1])
         else:
-            try:
-                version_map = get_version_map(self._version)
-            except ValueError:
-                raise ValueError(
-                    "Don't know how to write out ASDF version {0}".format(
-                        self._version))
-
-            for name, _version in version_map['tags'].items():
+            for name, _version in version_map.items():
                 add_by_tag(name, AsdfVersion(_version))
 
             # Now add any extension types that aren't known to the ASDF standard
@@ -131,7 +154,7 @@ class _AsdfWriteTypeIndex(object):
                     add_by_tag(name, versions[-1])
 
         for asdftype in index._unnamed_types:
-            add_type(asdftype)
+            add_all_types(asdftype)
 
     def from_custom_type(self, custom_type):
         """
@@ -539,11 +562,18 @@ class ExtensionType(object):
     yaml_tag = None
 
     @classmethod
-    def make_yaml_tag(cls, name):
+    def names(cls):
+        if cls.name is None:
+            return None
+
+        return cls.name if isinstance(cls.name, list) else [cls.name]
+
+    @classmethod
+    def make_yaml_tag(cls, name, versioned=True):
         return format_tag(
             cls.organization,
             cls.standard,
-            cls.version,
+            cls.version if versioned else None,
             name)
 
     @classmethod
