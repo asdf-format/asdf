@@ -20,7 +20,8 @@ from .... import AsdfFile
 from ....tests import helpers
 
 
-def test_create_wcs(tmpdir):
+@pytest.mark.parametrize('version', ['1.0.0', '1.1.0', '1.2.0'])
+def test_create_wcs(tmpdir, version):
     m1 = models.Shift(12.4) & models.Shift(-2)
     m2 = models.Scale(2) & models.Scale(-2)
     icrs = cf.CelestialFrame(name='icrs', reference_frame=coord.ICRS())
@@ -35,10 +36,12 @@ def test_create_wcs(tmpdir):
         'gw3': gw3
     }
 
-    helpers.assert_roundtrip_tree(tree, tmpdir)
+    write_options = dict(version=version)
+    helpers.assert_roundtrip_tree(tree, tmpdir, write_options=write_options)
 
 
-def test_composite_frame(tmpdir):
+@pytest.mark.parametrize('version', ['1.0.0', '1.1.0', '1.2.0'])
+def test_composite_frame(tmpdir, version):
     icrs = coord.ICRS()
     fk5 = coord.FK5()
     cel1 = cf.CelestialFrame(reference_frame=icrs)
@@ -57,7 +60,8 @@ def test_composite_frame(tmpdir):
         'comp': comp
     }
 
-    helpers.assert_roundtrip_tree(tree, tmpdir)
+    write_options = dict(version=version)
+    helpers.assert_roundtrip_tree(tree, tmpdir, write_options=write_options)
 
 def create_test_frames():
     """Creates an array of frames to be used for testing."""
