@@ -117,9 +117,9 @@ def assert_tree_match(old_tree, new_tree, ctx=None,
     recurse(old_tree, new_tree)
 
 
-def assert_roundtrip_tree(
-        tree, tmpdir, asdf_check_func=None, tree_match_func='assert_equal',
-        raw_yaml_check_func=None, write_options={}, extensions=None):
+def assert_roundtrip_tree(tree, tmpdir, asdf_check_func=None,
+                          raw_yaml_check_func=None, write_options={}, extensions=None,
+                          tree_match_func='assert_equal'):
     """
     Assert that a given tree saves to ASDF and, when loaded back,
     the tree matches the original tree.
@@ -133,13 +133,13 @@ def assert_roundtrip_tree(
         Passed to `assert_tree_match` and used to compare two objects in the
         tree.
 
-    asdf_check_func : callable, optional
-        Will be called with the reloaded ASDF file to perform any
-        additional checks.
-
     raw_yaml_check_func : callable, optional
         Will be called with the raw YAML content as a string to
         perform any additional checks.
+
+    asdf_check_func : callable, optional
+        Will be called with the reloaded ASDF file to perform any
+        additional checks.
     """
     fname = str(tmpdir.join('test.asdf'))
 
