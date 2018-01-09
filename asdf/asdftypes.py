@@ -140,7 +140,7 @@ class _AsdfWriteTypeIndex(object):
                 self._type_by_name[name] = asdftype
                 add_all_types(asdftype)
 
-        if self._version == 'latest':
+        if self._version == default_version:
             for name, versions in index._versions_by_type_name.items():
                 add_by_tag(name, versions[-1])
         else:
@@ -228,7 +228,7 @@ class AsdfTypeIndex(object):
         if not len(yaml_tags):
             self._unnamed_types.add(asdftype)
 
-    def from_custom_type(self, custom_type, version='latest'):
+    def from_custom_type(self, custom_type, version=default_version):
         """
         Given a custom type, return the corresponding AsdfType
         definition.
@@ -353,7 +353,7 @@ class AsdfTypeIndex(object):
                 return True
         return False
 
-    def get_hook_for_type(self, hookname, typ, version='latest'):
+    def get_hook_for_type(self, hookname, typ, version=default_version):
         """
         Get the hook function for the given type, if it exists,
         else return None.
