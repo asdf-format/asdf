@@ -14,7 +14,7 @@ from functools import lru_cache
 
 from . import tagged
 from . import util
-from .versioning import AsdfVersion, AsdfSpec, get_version_map
+from .versioning import AsdfVersion, AsdfSpec, get_version_map, default_version
 
 
 __all__ = ['format_tag', 'AsdfTypeIndex', 'AsdfType']
@@ -95,20 +95,19 @@ class _AsdfWriteTypeIndex(object):
                 "Don't know how to write out ASDF version {0}".format(
                     self._version))
 
-        def should_overwrite(cls):
+        def should_overwrite(cls, new_type):
             existing_type = self._type_by_cls[cls]
-            for name in existing_type.names():
-                tag = existing_type.make_yaml_tag(name, versioned=False)
-                if self._type_by_cls[cls].version == version_map.get(tag):
-                    return False
+
+            # Types that are provided by extensions from other packages should
+            # only override the type index corresponding to the latest version
+            # of ASDF.
+            if existing_type.tag_base() != new_type.tag_base():
+                return self._version == default_version
 
             return True
 
         def add_type_to_index(index, cls, typ):
-            # Do not overwrite types that are already in the type index if the
-            # version of the existing type is an exact match with the
-            # corresponding version in the version map.
-            if cls in self._type_by_cls and not should_overwrite(cls):
+            if cls in self._type_by_cls and not should_overwrite(cls, typ):
                 return
 
             self._type_by_cls[cls] = typ
@@ -575,6 +574,10 @@ class ExtensionType(object):
             cls.standard,
             cls.version if versioned else None,
             name)
+
+    @classmethod
+    def tag_base(cls):
+        return cls.make_yaml_tag('', versioned=False)
 
     @classmethod
     def to_tree(cls, node, ctx):
