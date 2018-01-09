@@ -73,6 +73,8 @@ def create_test_frames():
     warnings.simplefilter("ignore", ErfaWarning)
 
     frames = [
+        cf.Frame2D(name='detector', axes_order=(0,1)),
+
         cf.CelestialFrame(reference_frame=coord.ICRS()),
 
         cf.CelestialFrame(
