@@ -158,7 +158,13 @@ class AsdfSchemaExampleItem(pytest.Item):
 
 
 def pytest_collect_file(path, parent):
-    if path.ext == '.yaml':
+    schema_root = parent.config.getini('asdf_schema_root')
+    if not schema_root:
+        return
+
+    schema_root = str(os.path.join(str(parent.config.rootdir), schema_root))
+
+    if path.ext == '.yaml' and str(path).startswith(schema_root):
         if path.purebasename in ['asdf-schema-1.0.0', 'draft-01']:
             return None
 
