@@ -7,6 +7,8 @@
 
 - Remove support for Python 2. [#409]
 
+- Create ``pytest`` plugin to be used for testing schema files. [#425]
+
 1.4.0 (unreleased)
 ------------------
 
