@@ -60,6 +60,8 @@ class TestExtension(extension.BuiltinExtension):
 def pytest_addoption(parser):
     parser.addini(
         "asdf_schema_root", "Root path indicating where schemas are stored")
+    parser.addini(
+        "asdf_schema_skip_names", "Base names of files to skip in schema tests")
 
 
 class AsdfSchemaFile(pytest.File):
@@ -162,10 +164,12 @@ def pytest_collect_file(path, parent):
     if not schema_root:
         return
 
+    skip_names = parent.config.getini('asdf_schema_skip_names')
+
     schema_root = str(os.path.join(str(parent.config.rootdir), schema_root))
 
     if path.ext == '.yaml' and str(path).startswith(schema_root):
-        if path.purebasename in ['asdf-schema-1.0.0', 'draft-01']:
+        if path.purebasename in skip_names:
             return None
 
         return AsdfSchemaFile(path, parent)
