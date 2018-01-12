@@ -32,7 +32,7 @@ class ExternalArrayReference(AsdfType):
     --------
 
     >>> import asdf
-    >>> ref = asdf.ExternalArrayReference("myfitsfile.fits, 1, "float64", (100, 100))
+    >>> ref = asdf.ExternalArrayReference("myfitsfile.fits", 1, "float64", (100, 100))
     >>> tree = {'reference': ref}
     >>> with asdf.AsdfFile(tree) as ff:
     ...     ff.write_to("test.asdf")
