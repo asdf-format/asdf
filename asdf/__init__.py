@@ -15,7 +15,7 @@ from ._internal_init import *
 
 __all__ = [
     'AsdfFile', 'CustomType', 'AsdfExtension', 'Stream', 'open', 'test',
-    'commands', 'ValidationError'
+    'commands', 'ValidationError', 'ExternalArrayReference'
 ]
 
 try:
@@ -38,6 +38,7 @@ from .asdftypes import CustomType
 from .extension import AsdfExtension
 from .stream import Stream
 from . import commands
+from .tags.core.external_reference import ExternalArrayReference
 
 from jsonschema import ValidationError
 
