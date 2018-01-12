@@ -6,7 +6,9 @@ class ExternalArrayReference(AsdfType):
     Store a reference to an array in an external File.
 
     This class is a simple way of referring to an array in another file. It
-    provides no way to resolve these references, that is left to the user.
+    provides no way to resolve these references, that is left to the user. It
+    also performs no checking to see if any of the arguments are correct. e.g.
+    if the file exits.
 
     Parameters
     ----------
@@ -24,6 +26,17 @@ class ExternalArrayReference(AsdfType):
 
     shape: `tuple`
         The shape of the array to be loaded.
+
+
+    Examples
+    --------
+
+    >>> import asdf
+    >>> ref = asdf.ExternalArrayReference("myfitsfile.fits, 1, "float64", (100, 100))
+    >>> tree = {'reference': ref}
+    >>> with asdf.AsdfFile(tree) as ff:
+    ...     ff.write_to("test.asdf")
+
     """
     name = "core/externalarray"
     version = (1, 0, 0)
