@@ -105,6 +105,7 @@ class AsdfSchemaExampleItem(pytest.Item):
     def _find_standard_version(self):
         filename = self.filename
         components = filename[filename.find('schemas') + 1:].split(os.path.sep)
+        tag = "tag:" + ":".join(["{}" for i in range(len(components[1:]))])
         tag = 'tag:{}:{}'.format(components[1], '/'.join(components[2:]))
         name, version = asdftypes.split_tag_version(tag.replace('.yaml', ''))
 
