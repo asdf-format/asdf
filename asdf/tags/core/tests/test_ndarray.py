@@ -35,11 +35,13 @@ class CustomNdim(CustomTestType):
     standard = 'custom'
     version = '1.0.0'
 
+
 class CustomDatatype(CustomTestType):
     name = 'datatype'
     organization = 'nowhere.org'
     standard = 'custom'
     version = '1.0.0'
+
 
 class CustomExtension(object):
     @property
@@ -84,7 +86,8 @@ def test_sharing(tmpdir):
     def check_raw_yaml(content):
         assert b'!core/ndarray' in content
 
-    helpers.assert_roundtrip_tree(tree, tmpdir, check_asdf, check_raw_yaml)
+    helpers.assert_roundtrip_tree(tree, tmpdir, asdf_check_func=check_asdf,
+                                  raw_yaml_check_func=check_raw_yaml)
 
 
 def test_byteorder(tmpdir):
@@ -107,7 +110,8 @@ def test_byteorder(tmpdir):
         assert b'byteorder: little' in content
         assert b'byteorder: big' in content
 
-    helpers.assert_roundtrip_tree(tree, tmpdir, check_asdf, check_raw_yaml)
+    helpers.assert_roundtrip_tree(tree, tmpdir, asdf_check_func=check_asdf,
+                                  raw_yaml_check_func=check_raw_yaml)
 
 
 def test_all_dtypes(tmpdir):
@@ -177,8 +181,8 @@ def test_table_inline(tmpdir):
             'shape': [2]
             }
 
-    helpers.assert_roundtrip_tree(
-        tree, tmpdir, None, check_raw_yaml, {'auto_inline': 64})
+    helpers.assert_roundtrip_tree(tree, tmpdir, raw_yaml_check_func=check_raw_yaml,
+                                  write_options={'auto_inline': 64})
 
 
 def test_auto_inline_recursive(tmpdir):
@@ -191,8 +195,8 @@ def test_auto_inline_recursive(tmpdir):
     def check_asdf(asdf):
         assert len(list(asdf.blocks.internal_blocks)) == 0
 
-    helpers.assert_roundtrip_tree(
-        tree, tmpdir, check_asdf, None, {'auto_inline': 64})
+    helpers.assert_roundtrip_tree(tree, tmpdir, asdf_check_func=check_asdf,
+                                  write_options={'auto_inline': 64})
 
 
 def test_copy_inline():
@@ -234,7 +238,7 @@ def test_table(tmpdir):
             'byteorder': 'big'
             }
 
-    helpers.assert_roundtrip_tree(tree, tmpdir, None, check_raw_yaml)
+    helpers.assert_roundtrip_tree(tree, tmpdir, raw_yaml_check_func=check_raw_yaml)
 
 
 def test_table_nested_fields(tmpdir):
@@ -261,7 +265,7 @@ def test_table_nested_fields(tmpdir):
             'byteorder': 'big'
         }
 
-    helpers.assert_roundtrip_tree(tree, tmpdir, None, check_raw_yaml)
+    helpers.assert_roundtrip_tree(tree, tmpdir, raw_yaml_check_func=check_raw_yaml)
 
 
 def test_inline():
@@ -315,7 +319,7 @@ def test_mask_roundtrip(tmpdir):
         assert np.all(m.mask[6:])
         assert len(asdf.blocks) == 2
 
-    helpers.assert_roundtrip_tree(tree, tmpdir, check_asdf)
+    helpers.assert_roundtrip_tree(tree, tmpdir, asdf_check_func=check_asdf)
 
 
 def test_mask_arbitrary():

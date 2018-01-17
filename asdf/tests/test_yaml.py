@@ -45,7 +45,8 @@ def test_ordered_dict(tmpdir):
     def check_raw_yaml(content):
         assert b'OrderedDict' not in content
 
-    helpers.assert_roundtrip_tree(tree, tmpdir, check_asdf, check_raw_yaml)
+    helpers.assert_roundtrip_tree(tree, tmpdir, asdf_check_func=check_asdf,
+                                  raw_yaml_check_func=check_raw_yaml)
 
 
 def test_unicode_write(tmpdir):
@@ -68,7 +69,8 @@ def test_unicode_write(tmpdir):
         # Ensure that the unicode "tag" is not used
         assert b"unicode" not in content
 
-    helpers.assert_roundtrip_tree(tree, tmpdir, check_asdf, check_raw_yaml)
+    helpers.assert_roundtrip_tree(tree, tmpdir, asdf_check_func=check_asdf,
+                                  raw_yaml_check_func=check_raw_yaml)
 
 
 def test_arbitrary_python_object():
@@ -101,7 +103,8 @@ def test_python_tuple(tmpdir):
     def check_raw_yaml(content):
         assert b'tuple' not in content
 
-    helpers.assert_roundtrip_tree(tree, tmpdir, check_asdf, check_raw_yaml)
+    helpers.assert_roundtrip_tree(tree, tmpdir, asdf_check_func=check_asdf,
+                                  raw_yaml_check_func=check_raw_yaml)
 
 
 def test_tags_removed_after_load(tmpdir):
@@ -114,7 +117,7 @@ def test_tags_removed_after_load(tmpdir):
             if node != asdf.tree:
                 assert not isinstance(node, tagged.Tagged)
 
-    helpers.assert_roundtrip_tree(tree, tmpdir, check_asdf)
+    helpers.assert_roundtrip_tree(tree, tmpdir, asdf_check_func=check_asdf)
 
 
 def test_explicit_tags():

@@ -47,7 +47,7 @@ def assert_tree_match(old_tree, new_tree, ctx=None,
     ctx : ASDF file context
         Used to look up the set of types in effect.
 
-    funcname : string
+    funcname : `str` or `callable`
         The name of a method on members of old_tree and new_tree that
         will be used to compare custom objects.  The default of
         `assert_equal` handles Numpy arrays.
@@ -79,8 +79,13 @@ def assert_tree_match(old_tree, new_tree, ctx=None,
         if (old_type is not None and
             new_type is not None and
             old_type is new_type and
-            hasattr(old_type, funcname)):
-            getattr(old_type, funcname)(old, new)
+            (callable(funcname) or hasattr(old_type, funcname))):
+
+            if callable(funcname):
+                funcname(old, new)
+            else:
+                getattr(old_type, funcname)(old, new)
+
         elif isinstance(old, dict) and isinstance(new, dict):
             assert (set(x for x in old.keys() if x not in ignore_keys) ==
                     set(x for x in new.keys() if x not in ignore_keys))
@@ -112,9 +117,9 @@ def assert_tree_match(old_tree, new_tree, ctx=None,
     recurse(old_tree, new_tree)
 
 
-def assert_roundtrip_tree(
-        tree, tmpdir, asdf_check_func=None, raw_yaml_check_func=None,
-        write_options={}, extensions=None):
+def assert_roundtrip_tree(tree, tmpdir, *, asdf_check_func=None,
+                          raw_yaml_check_func=None, write_options={}, extensions=None,
+                          tree_match_func='assert_equal'):
     """
     Assert that a given tree saves to ASDF and, when loaded back,
     the tree matches the original tree.
@@ -124,13 +129,17 @@ def assert_roundtrip_tree(
     tmpdir : str
         Path to temporary directory to save file
 
-    asdf_check_func : callable, optional
-        Will be called with the reloaded ASDF file to perform any
-        additional checks.
+    tree_match_func : `str` or `callable`
+        Passed to `assert_tree_match` and used to compare two objects in the
+        tree.
 
     raw_yaml_check_func : callable, optional
         Will be called with the raw YAML content as a string to
         perform any additional checks.
+
+    asdf_check_func : callable, optional
+        Will be called with the reloaded ASDF file to perform any
+        additional checks.
     """
     fname = str(tmpdir.join('test.asdf'))
 
@@ -144,7 +153,7 @@ def assert_roundtrip_tree(
         assert isinstance(ff.tree, AsdfObject)
         assert 'asdf_library' in ff.tree
         assert ff.tree['asdf_library'] == get_asdf_library_info()
-        assert_tree_match(tree, ff.tree, ff)
+        assert_tree_match(tree, ff.tree, ff, funcname=tree_match_func)
         if asdf_check_func:
             asdf_check_func(ff)
 
@@ -163,7 +172,7 @@ def assert_roundtrip_tree(
     ff = AsdfFile(tree, extensions=extensions)
     ff.write_to(fname, **write_options)
     with AsdfFile.open(fname, mode='rw', extensions=extensions) as ff:
-        assert_tree_match(tree, ff.tree, ff)
+        assert_tree_match(tree, ff.tree, ff, funcname=tree_match_func)
         if asdf_check_func:
             asdf_check_func(ff)
 
@@ -176,7 +185,7 @@ def assert_roundtrip_tree(
     with AsdfFile.open(buff, mode='rw', extensions=extensions) as ff:
         assert not buff.closed
         assert isinstance(ff.tree, AsdfObject)
-        assert_tree_match(tree, ff.tree, ff)
+        assert_tree_match(tree, ff.tree, ff, funcname=tree_match_func)
         if asdf_check_func:
             asdf_check_func(ff)
 
@@ -188,7 +197,7 @@ def assert_roundtrip_tree(
             ff.write_to(os.path.join(server.tmpdir, 'test.asdf'), **write_options)
             with AsdfFile.open(server.url + 'test.asdf', mode='r',
                                extensions=extensions) as ff:
-                assert_tree_match(tree, ff.tree, ff)
+                assert_tree_match(tree, ff.tree, ff, funcname=tree_match_func)
                 if asdf_check_func:
                     asdf_check_func(ff)
         finally:
