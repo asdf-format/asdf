@@ -20,3 +20,4 @@ class HistoryEntry(dict, AsdfType):
 from .constant import ConstantType
 from .ndarray import NDArrayType
 from .complex import ComplexType
+from .external_reference import ExternalArrayReference

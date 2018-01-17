@@ -11,6 +11,7 @@
 
 1.4.0 (unreleased)
 ------------------
+- Add and ``ExternalArrayReference`` type for referencing arrays in external files. [#400]
 
 - Improve the way URIs are detected for ASDF-in-FITS files in order to fix bug
   with reading gzipped ASDF-in-FITS files. [#416]
