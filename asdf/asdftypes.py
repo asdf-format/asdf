@@ -111,7 +111,7 @@ class _AsdfWriteTypeIndex(object):
                     "Don't know how to write out ASDF version {0}".format(
                         self._version))
 
-            for name, _version in version_map['tags'].items():
+            for name, _version in sorted(version_map['tags'].items()):
                 add_by_tag(name, AsdfVersion(_version))
 
             # Now add any extension types that aren't known to the ASDF standard
