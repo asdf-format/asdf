@@ -80,14 +80,25 @@ class _AsdfWriteTypeIndex(object):
         self._type_by_cls = {}
         self._type_by_name = {}
         self._type_by_subclasses = {}
+        self._class_by_subclass = {}
         self._types_with_dynamic_subclasses = {}
+
+        def add_subclasses(typ, asdftype):
+            for subclass in util.iter_subclasses(typ):
+                # Do not overwrite the tag type for an existing subclass if the
+                # new tag serializes a class that is higher in the type
+                # hierarchy than the existing subclass.
+                if subclass in self._class_by_subclass:
+                    if issubclass(self._class_by_subclass[subclass], typ):
+                        continue
+                self._class_by_subclass[subclass] = typ
+                self._type_by_subclasses[subclass] = asdftype
 
         def add_type(asdftype):
             self._type_by_cls[asdftype] = asdftype
             for typ in asdftype.types:
                 self._type_by_cls[typ] = asdftype
-                for typ2 in util.iter_subclasses(typ):
-                    self._type_by_subclasses[typ2] = asdftype
+                add_subclasses(typ, asdftype)
 
             if asdftype.handle_dynamic_subclasses:
                 for typ in asdftype.types:
