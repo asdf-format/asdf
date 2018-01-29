@@ -8,10 +8,11 @@
 
 from astropy.tests.plugins.display import PYTEST_HEADER_MODULES, TESTED_VERSIONS
 
-import multiprocessing
 import os
+import queue
 import shutil
 import tempfile
+import threading
 import http.server
 import socketserver
 
@@ -46,7 +47,7 @@ except (NameError, KeyError):
 
 
 
-def run_server(queue, tmpdir, handler_class):  # pragma: no cover
+def run_server(tmpdir, handler_class, stop_event, queue):  # pragma: no cover
     """
     Runs an HTTP server serving files from given tmpdir in a separate
     process.  When it's ready, it sends a URL to the server over a
@@ -65,9 +66,19 @@ def run_server(queue, tmpdir, handler_class):  # pragma: no cover
     domain, port = server.server_address
     url = "http://{0}:{1}/".format(domain, port)
 
+    # Set a reasonable timeout so that invalid requests (which may occur during
+    # testing) do not cause the entire test suite to hang indefinitely
+    server.timeout = 0.1
+
     queue.put(url)
 
-    server.serve_forever()
+    # Using server.serve_forever does not work here since it ignores the
+    # timeout value set above. Having an explicit loop also allows us to kill
+    # the server from the parent thread.
+    while not stop_event.isSet():
+        server.handle_request()
+
+    server.close()
 
 
 class HTTPServer(object):
@@ -76,15 +87,18 @@ class HTTPServer(object):
     def __init__(self):
         self.tmpdir = tempfile.mkdtemp()
 
-        q = multiprocessing.Queue()
-        self.process = multiprocessing.Process(
-            target=run_server,
-            args=(q, self.tmpdir, self.handler_class))
-        self.process.start()
+        q = queue.Queue()
+        self.stop_event = threading.Event()
+
+        args = (self.tmpdir, self.handler_class, self.stop_event, q)
+        self.thread = threading.Thread(target=run_server, args=args)
+        self.thread.start()
+
         self.url = q.get()
 
     def finalize(self):
-        self.process.terminate()
+        self.stop_event.set()
+        self.thread.join()
         shutil.rmtree(self.tmpdir)
 
 
