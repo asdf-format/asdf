@@ -78,7 +78,7 @@ def run_server(tmpdir, handler_class, stop_event, queue):  # pragma: no cover
     while not stop_event.isSet():
         server.handle_request()
 
-    server.close()
+    server.server_close()
 
 
 class HTTPServer(object):
