@@ -16,11 +16,10 @@ import jsonschema
 
 import yaml
 
-from ....tests import helpers, CustomTestType
-from .... import asdf
-from .... import util
-
-from .. import ndarray
+import asdf
+from asdf import util
+from asdf.tests import helpers, CustomTestType
+from asdf.tags.core import ndarray
 
 
 TEST_DATA_PATH = os.path.join(os.path.dirname(__file__), 'data')

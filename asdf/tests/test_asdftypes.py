@@ -7,11 +7,11 @@ import os
 import sys
 import pytest
 
-from .. import asdf
-from .. import asdftypes
-from .. import extension
-from .. import util
-from .. import versioning
+import asdf
+from asdf import asdftypes
+from asdf import extension
+from asdf import util
+from asdf import versioning
 
 from . import helpers, CustomTestType
 

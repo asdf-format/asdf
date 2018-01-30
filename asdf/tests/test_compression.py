@@ -9,8 +9,10 @@ import numpy as np
 
 import pytest
 
-from .. import asdf, compression
-from .. import generic_io
+import asdf
+from asdf import compression
+from asdf import generic_io
+
 from ..tests import helpers
 
 

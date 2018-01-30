@@ -10,11 +10,10 @@ from numpy.testing import assert_array_equal
 
 import pytest
 
-from .. import asdf
-from .. import reference
-from .. import util
-
-from ..tags.core import ndarray
+import asdf
+from asdf import reference
+from asdf import util
+from asdf.tags.core import ndarray
 
 from .helpers import assert_tree_match
 

@@ -9,15 +9,16 @@ from astropy.modeling import models
 
 import pytest
 
-from .. import asdf
-from .. import block
-from .. import constants
-from .. import extension
-from .. import generic_io
-from .. import treeutil
-from .. import versioning
+import asdf
+from asdf import block
+from asdf import constants
+from asdf import extension
+from asdf import generic_io
+from asdf import treeutil
+from asdf import versioning
+from asdf.exceptions import AsdfDeprecationWarning
+
 from ..tests.helpers import assert_tree_match
-from ..exceptions import AsdfDeprecationWarning
 
 
 def test_no_yaml_end_marker(tmpdir):

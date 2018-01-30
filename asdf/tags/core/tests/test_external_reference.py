@@ -1,5 +1,8 @@
-from ..external_reference import ExternalArrayReference
-from ....tests import helpers
+# Licensed under a 3-clause BSD style license - see LICENSE.rst
+# -*- coding: utf-8 -*-
+
+from asdf.tags.core.external_reference import ExternalArrayReference
+from asdf.tests import helpers
 
 
 def test_roundtrip_external_array(tmpdir):

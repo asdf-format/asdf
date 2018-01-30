@@ -14,9 +14,10 @@ astropy = pytest.importorskip('astropy')
 from astropy.io import fits
 from astropy.table import Table
 
-from .. import asdf
-from .. import fits_embed
-from .. import open as asdf_open
+import asdf
+from asdf import fits_embed
+from asdf import open as asdf_open
+
 from .helpers import assert_tree_match, yaml_to_asdf, display_warnings
 
 

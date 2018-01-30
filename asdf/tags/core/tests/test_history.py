@@ -8,7 +8,7 @@ import pytest
 
 from jsonschema import ValidationError
 
-from .... import asdf
+import asdf
 
 
 def test_history():

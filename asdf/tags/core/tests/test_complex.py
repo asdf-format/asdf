@@ -1,12 +1,10 @@
 # Licensed under a 3-clause BSD style license - see LICENSE.rst
 # -*- coding: utf-8 -*-
 
-
 import pytest
 
-from .... import asdf
-
-from ....tests import helpers
+import asdf
+from asdf.tests import helpers
 
 
 def test_invalid_complex():

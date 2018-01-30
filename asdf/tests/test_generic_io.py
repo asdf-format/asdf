@@ -11,9 +11,10 @@ import urllib.request as urllib_request
 
 import numpy as np
 
-from .. import asdf
-from .. import generic_io
-from .. import util
+import asdf
+from asdf import util
+from asdf import generic_io
+from asdf.asdf import is_asdf_file
 
 from . import helpers
 # The only reason for importing these is to use them in the fixture below
@@ -763,5 +764,5 @@ def test_is_asdf(tmpdir):
     hdul.append(imhdu)
     path = os.path.join(str(tmpdir), 'test.fits')
     hdul.writeto(path)
-    assert not asdf.is_asdf_file(path)
-    assert asdf.is_asdf_file(asdf.AsdfFile())
+    assert not is_asdf_file(path)
+    assert is_asdf_file(asdf.AsdfFile())
