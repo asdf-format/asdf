@@ -10,7 +10,6 @@ from asdf import open as asdf_open
 from asdf import versioning
 
 from .helpers import assert_tree_match, display_warnings
-from astropy.tests.helper import catch_warnings
 
 
 def get_test_id(reference_file_path):
@@ -48,7 +47,7 @@ def _compare_trees(name_without_ext, expect_warnings=False):
                 # Make sure to only suppress warnings when they are expected.
                 # However, there's still a chance of missing warnings that we
                 # actually care about here.
-                with catch_warnings(RuntimeWarning) as w:
+                with pytest.warns(RuntimeWarning) as w:
                     _compare_func()
             else:
                 _compare_func()

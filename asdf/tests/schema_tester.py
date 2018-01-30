@@ -8,8 +8,6 @@ import pytest
 
 import numpy as np
 
-from astropy.tests.helper import catch_warnings
-
 import asdf
 from asdf import AsdfFile
 from asdf import asdftypes
@@ -143,7 +141,8 @@ class AsdfSchemaExampleItem(pytest.Item):
         b._array_storage = "streamed"
 
         try:
-            with catch_warnings() as w:
+            with pytest.warns(None) as w:
+                import warnings
                 ff._open_impl(ff, buff)
             # Do not tolerate any warnings that occur during schema validation
             assert len(w) == 0, helpers.display_warnings(w)
