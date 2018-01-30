@@ -2,10 +2,11 @@
 # -*- coding: utf-8 -*-
 
 
-import bisect
-import importlib
-import warnings
 import re
+import bisect
+import warnings
+import importlib
+from collections import OrderedDict
 
 import six
 from copy import copy
@@ -141,6 +142,12 @@ class _AsdfWriteTypeIndex(object):
                 add_all_types(asdftype)
 
         if self._version == default_version:
+            # This expects that all types defined by ASDF will be encountered
+            # before any types that are defined by external packages. This
+            # allows external packages to override types that are also defined
+            # by ASDF. The ordering is guaranteed due to the use of OrderedDict
+            # for _versions_by_type_name, and due to the fact that the built-in
+            # extension will always be processed first.
             for name, versions in index._versions_by_type_name.items():
                 add_by_tag(name, versions[-1])
         else:
@@ -188,7 +195,13 @@ class AsdfTypeIndex(object):
     def __init__(self):
         self._write_type_indices = {}
         self._type_by_tag = {}
-        self._versions_by_type_name = {}
+        # Use OrderedDict here to preserve the order in which types are added
+        # to the type index. Since the ASDF built-in extension is always
+        # processed first, this ensures that types defined by external packages
+        # will always override corresponding types that are defined by ASDF
+        # itself. However, if two different external packages define tags for
+        # the same type, the result is currently undefined.
+        self._versions_by_type_name = OrderedDict()
         self._best_matches = {}
         self._real_tag = {}
         self._unnamed_types = set()
