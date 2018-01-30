@@ -2,10 +2,11 @@
 # -*- coding: utf-8 -*-
 
 
-import bisect
-import importlib
-import warnings
 import re
+import bisect
+import warnings
+import importlib
+from collections import OrderedDict
 
 import six
 from copy import copy
@@ -14,7 +15,7 @@ from functools import lru_cache
 
 from . import tagged
 from . import util
-from .versioning import AsdfVersion, AsdfSpec, get_version_map
+from .versioning import AsdfVersion, AsdfSpec, get_version_map, default_version
 
 
 __all__ = ['format_tag', 'AsdfTypeIndex', 'AsdfType']
@@ -30,10 +31,15 @@ def format_tag(organization, standard, version, tag_name):
     """
     Format a YAML tag.
     """
+    tag = 'tag:{0}:{1}/{2}'.format(organization, standard, tag_name)
+
+    if version is None:
+        return tag
+
     if isinstance(version, AsdfSpec):
         version = str(version.spec)
-    return 'tag:{0}:{1}/{2}-{3}'.format(
-        organization, standard, tag_name, version)
+
+    return "{0}-{1}".format(tag, version)
 
 
 def split_tag_version(tag):
@@ -83,6 +89,30 @@ class _AsdfWriteTypeIndex(object):
         self._class_by_subclass = {}
         self._types_with_dynamic_subclasses = {}
 
+        try:
+            version_map = get_version_map(self._version)['tags']
+        except ValueError:
+            raise ValueError(
+                "Don't know how to write out ASDF version {0}".format(
+                    self._version))
+
+        def should_overwrite(cls, new_type):
+            existing_type = self._type_by_cls[cls]
+
+            # Types that are provided by extensions from other packages should
+            # only override the type index corresponding to the latest version
+            # of ASDF.
+            if existing_type.tag_base() != new_type.tag_base():
+                return self._version == default_version
+
+            return True
+
+        def add_type_to_index(index, cls, typ):
+            if cls in self._type_by_cls and not should_overwrite(cls, typ):
+                return
+
+            self._type_by_cls[cls] = typ
+
         def add_subclasses(typ, asdftype):
             for subclass in util.iter_subclasses(typ):
                 # Do not overwrite the tag type for an existing subclass if the
@@ -94,10 +124,10 @@ class _AsdfWriteTypeIndex(object):
                 self._class_by_subclass[subclass] = typ
                 self._type_by_subclasses[subclass] = asdftype
 
-        def add_type(asdftype):
-            self._type_by_cls[asdftype] = asdftype
+        def add_all_types(asdftype):
+            add_type_to_index(self._type_by_cls, asdftype, asdftype)
             for typ in asdftype.types:
-                self._type_by_cls[typ] = asdftype
+                add_type_to_index(self._type_by_cls, typ, asdftype)
                 add_subclasses(typ, asdftype)
 
             if asdftype.handle_dynamic_subclasses:
@@ -109,20 +139,19 @@ class _AsdfWriteTypeIndex(object):
             if tag in index._type_by_tag:
                 asdftype = index._type_by_tag[tag]
                 self._type_by_name[name] = asdftype
-                add_type(asdftype)
+                add_all_types(asdftype)
 
-        if self._version == 'latest':
+        if self._version == default_version:
+            # This expects that all types defined by ASDF will be encountered
+            # before any types that are defined by external packages. This
+            # allows external packages to override types that are also defined
+            # by ASDF. The ordering is guaranteed due to the use of OrderedDict
+            # for _versions_by_type_name, and due to the fact that the built-in
+            # extension will always be processed first.
             for name, versions in index._versions_by_type_name.items():
                 add_by_tag(name, versions[-1])
         else:
-            try:
-                version_map = get_version_map(self._version)
-            except ValueError:
-                raise ValueError(
-                    "Don't know how to write out ASDF version {0}".format(
-                        self._version))
-
-            for name, _version in version_map['tags'].items():
+            for name, _version in version_map.items():
                 add_by_tag(name, AsdfVersion(_version))
 
             # Now add any extension types that aren't known to the ASDF standard
@@ -131,7 +160,7 @@ class _AsdfWriteTypeIndex(object):
                     add_by_tag(name, versions[-1])
 
         for asdftype in index._unnamed_types:
-            add_type(asdftype)
+            add_all_types(asdftype)
 
     def from_custom_type(self, custom_type):
         """
@@ -166,7 +195,13 @@ class AsdfTypeIndex(object):
     def __init__(self):
         self._write_type_indices = {}
         self._type_by_tag = {}
-        self._versions_by_type_name = {}
+        # Use OrderedDict here to preserve the order in which types are added
+        # to the type index. Since the ASDF built-in extension is always
+        # processed first, this ensures that types defined by external packages
+        # will always override corresponding types that are defined by ASDF
+        # itself. However, if two different external packages define tags for
+        # the same type, the result is currently undefined.
+        self._versions_by_type_name = OrderedDict()
         self._best_matches = {}
         self._real_tag = {}
         self._unnamed_types = set()
@@ -206,7 +241,7 @@ class AsdfTypeIndex(object):
         if not len(yaml_tags):
             self._unnamed_types.add(asdftype)
 
-    def from_custom_type(self, custom_type, version='latest'):
+    def from_custom_type(self, custom_type, version=default_version):
         """
         Given a custom type, return the corresponding AsdfType
         definition.
@@ -331,7 +366,7 @@ class AsdfTypeIndex(object):
                 return True
         return False
 
-    def get_hook_for_type(self, hookname, typ, version='latest'):
+    def get_hook_for_type(self, hookname, typ, version=default_version):
         """
         Get the hook function for the given type, if it exists,
         else return None.
@@ -539,12 +574,23 @@ class ExtensionType(object):
     yaml_tag = None
 
     @classmethod
-    def make_yaml_tag(cls, name):
+    def names(cls):
+        if cls.name is None:
+            return None
+
+        return cls.name if isinstance(cls.name, list) else [cls.name]
+
+    @classmethod
+    def make_yaml_tag(cls, name, versioned=True):
         return format_tag(
             cls.organization,
             cls.standard,
-            cls.version,
+            cls.version if versioned else None,
             name)
+
+    @classmethod
+    def tag_base(cls):
+        return cls.make_yaml_tag('', versioned=False)
 
     @classmethod
     def to_tree(cls, node, ctx):
