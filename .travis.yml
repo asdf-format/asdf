@@ -27,6 +27,7 @@ env:
         - PIP_DEPENDENCIES='pytest-astropy pytest-faulthandler'
         - CONDA_DEPENDENCIES='semantic_version jsonschema pyyaml six lz4'
         - GWCS_GIT='git+git://github.com/spacetelescope/gwcs.git#egg=gwcs'
+        - MAIN_CMD='python setup.py'
         - SETUP_CMD='test --remote-data'
 
     matrix:
@@ -49,6 +50,9 @@ matrix:
         - env: PYTHON_VERSION=3.5 NUMPY_VERSION=1.11 SETUP_CMD='test'
         - env: NUMPY_VERSION=1.12 SETUP_CMD='test'
 
+        # run a test using native pytest
+        - env: MAIN_CMD='pytest' SETUP_CMD=''
+
         # latest stable versions
         - env: NUMPY_VERSION=stable SETUP_CMD='test'
 
@@ -69,7 +73,7 @@ install:
     - python setup.py install
 
 script:
-   - python setup.py $SETUP_CMD
+   - $MAIN_CMD $SETUP_CMD
 
 after_success:
     # If coveralls.io is set up for this package, uncomment the line
