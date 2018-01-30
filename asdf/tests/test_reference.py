@@ -223,7 +223,9 @@ def test_make_reference(tmpdir):
         assert ff.tree['ref']._uri == 'external.asdf#f~0o~0o~1/a'
 
 
-def test_internal_reference():
+def test_internal_reference(tmpdir):
+    testfile = os.path.join(str(tmpdir), 'test.asdf')
+
     tree = {
         'foo': 2,
         'bar': {'$ref': '#'}
@@ -239,7 +241,7 @@ def test_internal_reference():
         'foo': 2
     }
     ff = asdf.AsdfFile(
-        tree, uri=util.filepath_to_url(os.path.abspath("test.asdf")))
+        tree, uri=util.filepath_to_url(os.path.abspath(testfile)))
     ff.tree['bar'] = ff.make_reference([])
     buff = io.BytesIO()
     ff.write_to(buff)

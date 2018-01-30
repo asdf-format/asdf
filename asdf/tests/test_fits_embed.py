@@ -122,9 +122,9 @@ def test_embed_asdf_in_fits_file_anonymous_extensions(tmpdir):
             assert_tree_match(asdf_in_fits.tree, ff2.tree)
 
             ff = asdf.AsdfFile(copy.deepcopy(ff2.tree))
-            ff.write_to('test.asdf')
+            ff.write_to(os.path.join(str(tmpdir), 'test.asdf'))
 
-    with asdf.AsdfFile.open('test.asdf') as ff:
+    with asdf.AsdfFile.open(os.path.join(str(tmpdir), 'test.asdf')) as ff:
         assert_tree_match(asdf_in_fits.tree, ff.tree)
 
 
