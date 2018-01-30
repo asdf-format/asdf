@@ -127,13 +127,19 @@ def create_test_frames():
     return frames
 
 
-def test_frames(tmpdir):
+@pytest.mark.parametrize('version', ['1.0.0', '1.1.0', '1.2.0'])
+def test_frames(tmpdir, version):
+    # Version 1.0.0 test currently fails. It may be the case that some of the
+    # frame types simply weren't supported in version 1.0.0.
+    if version == '1.0.0':
+        pytest.xfail()
 
     tree = {
         'frames': create_test_frames()
     }
 
-    helpers.assert_roundtrip_tree(tree, tmpdir)
+    write_options = dict(version=version)
+    helpers.assert_roundtrip_tree(tree, tmpdir, write_options=write_options)
 
 
 def test_backwards_compat_galcen():
