@@ -141,23 +141,20 @@ class _AsdfWriteTypeIndex(object):
                 self._type_by_name[name] = asdftype
                 add_all_types(asdftype)
 
-        if self._version == default_version:
-            # This expects that all types defined by ASDF will be encountered
-            # before any types that are defined by external packages. This
-            # allows external packages to override types that are also defined
-            # by ASDF. The ordering is guaranteed due to the use of OrderedDict
-            # for _versions_by_type_name, and due to the fact that the built-in
-            # extension will always be processed first.
-            for name, versions in index._versions_by_type_name.items():
-                add_by_tag(name, versions[-1])
-        else:
-            for name, _version in version_map.items():
-                add_by_tag(name, AsdfVersion(_version))
+        # Process all types defined in the ASDF version map 
+        for name, _version in version_map.items():
+            add_by_tag(name, AsdfVersion(_version))
 
-            # Now add any extension types that aren't known to the ASDF standard
-            for name, versions in index._versions_by_type_name.items():
-                if name not in self._type_by_name:
-                    add_by_tag(name, versions[-1])
+        # Now add any extension types that aren't known to the ASDF standard.
+        # This expects that all types defined by ASDF will be encountered
+        # before any types that are defined by external packages. This
+        # allows external packages to override types that are also defined
+        # by ASDF. The ordering is guaranteed due to the use of OrderedDict
+        # for _versions_by_type_name, and due to the fact that the built-in
+        # extension will always be processed first.
+        for name, versions in index._versions_by_type_name.items():
+            if name not in self._type_by_name:
+                add_by_tag(name, versions[-1])
 
         for asdftype in index._unnamed_types:
             add_all_types(asdftype)
