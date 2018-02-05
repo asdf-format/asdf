@@ -235,7 +235,7 @@ def yaml_to_asdf(yaml_content, yaml_headers=True, standard_version=None):
 %YAML 1.1
 %TAG ! tag:stsci.edu:asdf/
 --- !core/asdf-{0}
-""".format('1.0.0', standard_version).encode('ascii'))
+""".format(AsdfObject.version, standard_version).encode('ascii'))
     buff.write(yaml_content)
     if yaml_headers:
         buff.write(b"\n...\n")
