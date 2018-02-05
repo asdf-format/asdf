@@ -542,3 +542,46 @@ def test_assert_roundtrip_with_extension(tmpdir):
     helpers.assert_roundtrip_tree(tree, tmpdir, extensions=[CustomTypeExtension()])
 
     assert called_custom_assert_equal[0] is True
+
+
+def test_custom_validation_bad(tmpdir):
+    custom_schema_path = os.path.join(TEST_DATA_PATH, 'custom_schema.yaml')
+    asdf_file = os.path.join(str(tmpdir), 'out.asdf')
+
+    # This tree does not conform to the custom schema
+    tree = {'stuff': 42, 'other_stuff': 'hello'}
+
+    # Creating file without custom schema should pass
+    with asdf.AsdfFile(tree) as ff:
+        ff.write_to(asdf_file)
+
+    # Creating file using custom schema should fail
+    with pytest.raises(ValidationError):
+        with asdf.AsdfFile(tree, custom_schema=custom_schema_path) as ff:
+            pass
+
+    # Opening file without custom schema should pass
+    with asdf.open(asdf_file) as ff:
+        pass
+
+    # Opening file with custom schema should fail
+    with pytest.raises(ValidationError):
+        with asdf.open(asdf_file, custom_schema=custom_schema_path) as ff:
+            pass
+
+
+def test_custom_validation_good(tmpdir):
+    custom_schema_path = os.path.join(TEST_DATA_PATH, 'custom_schema.yaml')
+    asdf_file = os.path.join(str(tmpdir), 'out.asdf')
+
+    # This tree conforms to the custom schema
+    tree = {
+        'foo': {'x': 42, 'y': 10},
+        'bar': {'a': 'hello', 'b': 'banjo'}
+    }
+
+    with asdf.AsdfFile(tree, custom_schema=custom_schema_path) as ff:
+        ff.write_to(asdf_file)
+
+    with asdf.open(asdf_file, custom_schema=custom_schema_path) as ff:
+        pass
