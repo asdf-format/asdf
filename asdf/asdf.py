@@ -10,6 +10,7 @@ import warnings
 import importlib
 
 import numpy as np
+from jsonschema import ValidationError
 
 from . import block
 from . import constants
@@ -533,7 +534,13 @@ class AsdfFile(versioning.VersionedMixin):
         tree = reference.find_references(tree, self)
         if not do_not_fill_defaults:
             schema.fill_defaults(tree, self)
-        self._validate(tree)
+
+        try:
+            self._validate(tree)
+        except ValidationError:
+            self.close()
+            raise
+
         tree = yamlutil.tagged_tree_to_custom_tree(tree, self, _force_raw_types)
 
         self._tree = tree
