@@ -67,19 +67,6 @@ class TagReferenceType(asdftypes.CustomType):
         return node
 
 
-def test_violate_toplevel_schema():
-    tree = {'fits': 'This does not look like a FITS file'}
-
-    with pytest.raises(ValidationError):
-        asdf.AsdfFile(tree)
-
-    ff = asdf.AsdfFile()
-    ff.tree['fits'] = 'This does not look like a FITS file'
-    with pytest.raises(ValidationError):
-        buff = io.BytesIO()
-        ff.write_to(buff)
-
-
 @pytest.mark.importorskip('astropy')
 def test_tagging_scalars():
     yaml = """
