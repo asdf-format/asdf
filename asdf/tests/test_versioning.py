@@ -5,7 +5,7 @@
 import pytest
 from itertools import combinations
 
-from ..versioning import AsdfVersion, AsdfSpec
+from asdf.versioning import AsdfVersion, AsdfSpec
 
 
 def test_version_constructor():

@@ -7,14 +7,13 @@ import os
 import sys
 import pytest
 
-from .. import asdf
-from .. import asdftypes
-from .. import extension
-from .. import util
-from .. import versioning
+import asdf
+from asdf import asdftypes
+from asdf import extension
+from asdf import util
+from asdf import versioning
 
 from . import helpers, CustomTestType
-from astropy.tests.helper import catch_warnings
 
 
 TEST_DATA_PATH = os.path.join(os.path.dirname(__file__), 'data')
@@ -95,7 +94,7 @@ a: !core/complex-42.0.0
     """
 
     buff = helpers.yaml_to_asdf(yaml)
-    with catch_warnings() as warning:
+    with pytest.warns(None) as warning:
         with asdf.AsdfFile.open(buff, ignore_version_mismatch=False) as ff:
             assert isinstance(ff.tree['a'], complex)
 
@@ -106,7 +105,7 @@ a: !core/complex-42.0.0
 
     # Make sure warning is repeatable
     buff.seek(0)
-    with catch_warnings() as warning:
+    with pytest.warns(None) as warning:
         with asdf.AsdfFile.open(buff, ignore_version_mismatch=False) as ff:
             assert isinstance(ff.tree['a'], complex)
 
@@ -117,7 +116,7 @@ a: !core/complex-42.0.0
 
     # Make sure the warning does not occur if it is being ignored (default)
     buff.seek(0)
-    with catch_warnings() as warning:
+    with pytest.warns(None) as warning:
         with asdf.AsdfFile.open(buff) as ff:
             assert isinstance(ff.tree['a'], complex)
 
@@ -131,7 +130,7 @@ a: !core/complex-1.0.1
     """
 
     buff = helpers.yaml_to_asdf(yaml)
-    with catch_warnings() as warning:
+    with pytest.warns(None) as warning:
         with asdf.AsdfFile.open(buff, ignore_version_mismatch=False) as ff:
             assert isinstance(ff.tree['a'], complex)
 
@@ -151,7 +150,7 @@ a: !core/complex-42.0.0
     with open(testfile, 'wb') as handle:
         handle.write(buff.read())
 
-    with catch_warnings() as w:
+    with pytest.warns(None) as w:
         with asdf.AsdfFile.open(testfile, ignore_version_mismatch=False) as ff:
             assert ff._fname == "file://{}".format(testfile)
             assert isinstance(ff.tree['a'], complex)
@@ -200,7 +199,7 @@ flow_thing:
     d: 3.14
 """
     buff = helpers.yaml_to_asdf(yaml)
-    with catch_warnings() as w:
+    with pytest.warns(None) as w:
         data = asdf.AsdfFile.open(
             buff, ignore_version_mismatch=False,
             extensions=CustomFlowExtension())
@@ -336,7 +335,7 @@ undefined_data:
         - !core/complex-1.0.0 3.14j
 """
     buff = helpers.yaml_to_asdf(yaml)
-    with catch_warnings() as warning:
+    with pytest.warns(None) as warning:
         afile = asdf.AsdfFile.open(buff)
         missing = afile.tree['undefined_data']
 
@@ -355,7 +354,7 @@ undefined_data:
 
     # Make sure no warning occurs if explicitly ignored
     buff.seek(0)
-    with catch_warnings() as warning:
+    with pytest.warns(None) as warning:
         afile = asdf.AsdfFile.open(buff, ignore_unrecognized_tag=True)
     assert len(warning) == 0
 
@@ -424,7 +423,7 @@ flow_thing:
     b: 3.14
 """
     old_buff = helpers.yaml_to_asdf(old_yaml)
-    with catch_warnings() as warning:
+    with pytest.warns(None) as warning:
         asdf.AsdfFile.open(old_buff, extensions=CustomFlowExtension())
 
     assert len(warning) == 1, helpers.display_warnings(warning)
@@ -590,7 +589,7 @@ flow_thing:
 """
     buff = helpers.yaml_to_asdf(yaml)
 
-    with catch_warnings() as _warnings:
+    with pytest.warns(None) as _warnings:
         data = asdf.AsdfFile.open(buff, extensions=CustomFlowExtension())
 
     assert len(_warnings) == 1

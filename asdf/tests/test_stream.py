@@ -10,9 +10,9 @@ from numpy.testing import assert_array_equal
 
 import pytest
 
-from .. import asdf
-from .. import generic_io
-from .. import stream
+import asdf
+from asdf import generic_io
+from asdf import stream
 
 
 def test_stream():

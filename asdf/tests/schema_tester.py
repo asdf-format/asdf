@@ -8,8 +8,6 @@ import pytest
 
 import numpy as np
 
-from astropy.tests.helper import catch_warnings
-
 import asdf
 from asdf import AsdfFile
 from asdf import asdftypes
@@ -143,7 +141,8 @@ class AsdfSchemaExampleItem(pytest.Item):
         b._array_storage = "streamed"
 
         try:
-            with catch_warnings() as w:
+            with pytest.warns(None) as w:
+                import warnings
                 ff._open_impl(ff, buff)
             # Do not tolerate any warnings that occur during schema validation
             assert len(w) == 0, helpers.display_warnings(w)
@@ -160,16 +159,20 @@ class AsdfSchemaExampleItem(pytest.Item):
 
 
 def pytest_collect_file(path, parent):
-    schema_root = parent.config.getini('asdf_schema_root')
-    if not schema_root:
+    schema_roots = parent.config.getini('asdf_schema_root').split()
+    if not schema_roots:
         return
 
     skip_names = parent.config.getini('asdf_schema_skip_names')
 
-    schema_root = str(os.path.join(str(parent.config.rootdir), schema_root))
+    schema_roots = [os.path.join(str(parent.config.rootdir), root)
+                        for root in schema_roots]
 
-    if path.ext == '.yaml' and str(path).startswith(schema_root):
-        if path.purebasename in skip_names:
-            return None
+    if path.ext != '.yaml':
+        return None
 
-        return AsdfSchemaFile(path, parent)
+    for root in schema_roots:
+        if str(path).startswith(root) and path.purebasename not in skip_names:
+            return AsdfSchemaFile(path, parent)
+
+    return None

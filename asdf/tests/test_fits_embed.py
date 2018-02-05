@@ -13,11 +13,11 @@ from numpy.testing import assert_array_equal
 astropy = pytest.importorskip('astropy')
 from astropy.io import fits
 from astropy.table import Table
-from astropy.tests.helper import catch_warnings
 
-from .. import asdf
-from .. import fits_embed
-from .. import open as asdf_open
+import asdf
+from asdf import fits_embed
+from asdf import open as asdf_open
+
 from .helpers import assert_tree_match, yaml_to_asdf, display_warnings
 
 
@@ -122,9 +122,9 @@ def test_embed_asdf_in_fits_file_anonymous_extensions(tmpdir):
             assert_tree_match(asdf_in_fits.tree, ff2.tree)
 
             ff = asdf.AsdfFile(copy.deepcopy(ff2.tree))
-            ff.write_to('test.asdf')
+            ff.write_to(os.path.join(str(tmpdir), 'test.asdf'))
 
-    with asdf.AsdfFile.open('test.asdf') as ff:
+    with asdf.AsdfFile.open(os.path.join(str(tmpdir), 'test.asdf')) as ff:
         assert_tree_match(asdf_in_fits.tree, ff.tree)
 
 
@@ -312,7 +312,7 @@ def test_bad_input(tmpdir):
 def test_version_mismatch_file():
     testfile = os.path.join(TEST_DATA_PATH, 'version_mismatch.fits')
 
-    with catch_warnings() as w:
+    with pytest.warns(None) as w:
         with asdf.AsdfFile.open(testfile,
                 ignore_version_mismatch=False) as fits_handle:
             assert fits_handle.tree['a'] == complex(0j)
@@ -323,12 +323,12 @@ def test_version_mismatch_file():
         "'{}', but latest supported version is 1.0.0".format(testfile))
 
     # Make sure warning does not occur when warning is ignored (default)
-    with catch_warnings() as w:
+    with pytest.warns(None) as w:
         with asdf.AsdfFile.open(testfile) as fits_handle:
             assert fits_handle.tree['a'] == complex(0j)
     assert len(w) == 0, display_warnings(w)
 
-    with catch_warnings() as w:
+    with pytest.warns(None) as w:
         with fits_embed.AsdfInFits.open(testfile,
                 ignore_version_mismatch=False) as fits_handle:
             assert fits_handle.tree['a'] == complex(0j)
@@ -338,7 +338,7 @@ def test_version_mismatch_file():
         "'{}', but latest supported version is 1.0.0".format(testfile))
 
     # Make sure warning does not occur when warning is ignored (default)
-    with catch_warnings() as w:
+    with pytest.warns(None) as w:
         with fits_embed.AsdfInFits.open(testfile) as fits_handle:
             assert fits_handle.tree['a'] == complex(0j)
     assert len(w) == 0, display_warnings(w)

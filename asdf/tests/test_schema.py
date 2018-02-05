@@ -23,7 +23,6 @@ from asdf import util
 from asdf import yamlutil
 
 from asdf.tests import helpers
-from astropy.tests.helper import catch_warnings
 
 
 TEST_DATA_PATH = os.path.join(os.path.dirname(__file__), 'data')
@@ -279,7 +278,7 @@ custom: !<tag:nowhere.org:custom/custom-1.0.0>
     # This should cause a warning but not an error because without explicitly
     # providing an extension, our custom type will not be recognized and will
     # simply be converted to a raw type.
-    with catch_warnings() as warning:
+    with pytest.warns(None) as warning:
         with asdf.AsdfFile.open(buff):
             pass
     assert len(warning) == 1
@@ -508,7 +507,7 @@ custom: !<tag:nowhere.org:custom/missing-1.1.0>
   b: {foo: 42}
     """
     buff = helpers.yaml_to_asdf(yaml)
-    with catch_warnings() as w:
+    with pytest.warns(None) as w:
         with asdf.AsdfFile.open(buff, extensions=[DefaultTypeExtension()]) as ff:
             assert ff.tree['custom']['b']['foo'] == 42
 

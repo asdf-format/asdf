@@ -1,7 +1,6 @@
 # Licensed under a 3-clause BSD style license - see LICENSE.rst
 # -*- coding: utf-8 -*-
 
-
 import pytest
 import warnings
 
@@ -16,8 +15,8 @@ from astropy import time
 from gwcs import coordinate_frames as cf
 from gwcs import wcs
 
-from .... import AsdfFile
-from ....tests import helpers
+from asdf import AsdfFile
+from asdf.tests import helpers
 
 
 @pytest.mark.parametrize('version', ['1.0.0', '1.1.0', '1.2.0'])

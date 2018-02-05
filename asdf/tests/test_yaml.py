@@ -10,9 +10,9 @@ import pytest
 
 import yaml
 
-from .. import asdf
-from .. import tagged
-from .. import treeutil
+import asdf
+from asdf import tagged
+from asdf import treeutil
 
 from . import helpers
 

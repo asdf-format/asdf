@@ -16,11 +16,10 @@ import jsonschema
 
 import yaml
 
-from ....tests import helpers, CustomTestType
-from .... import asdf
-from .... import util
-
-from .. import ndarray
+import asdf
+from asdf import util
+from asdf.tests import helpers, CustomTestType
+from asdf.tags.core import ndarray
 
 
 TEST_DATA_PATH = os.path.join(os.path.dirname(__file__), 'data')
@@ -431,17 +430,19 @@ def test_unicode_to_list(tmpdir):
 
 
 def test_inline_masked_array(tmpdir):
+    testfile = os.path.join(str(tmpdir), 'masked.asdf')
+
     tree = {'test': ma.array([1, 2, 3], mask=[0, 1, 0])}
 
     f = asdf.AsdfFile(tree)
     f.set_array_storage(tree['test'], 'inline')
-    f.write_to('masked.asdf')
+    f.write_to(testfile)
 
-    with asdf.AsdfFile.open('masked.asdf') as f2:
+    with asdf.AsdfFile.open(testfile) as f2:
         assert len(list(f2.blocks.internal_blocks)) == 0
         assert_array_equal(f.tree['test'], f2.tree['test'])
 
-    with open('masked.asdf', 'rb') as fd:
+    with open(testfile, 'rb') as fd:
         assert b'null' in fd.read()
 
 
