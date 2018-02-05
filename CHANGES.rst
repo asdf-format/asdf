@@ -46,6 +46,9 @@
   used to ensure that particular ASDF files follow custom conventions beyond
   those enforced by the standard. [#442]
 
+- Remove restrictions affecting top-level attributes ``data``, ``wcs``, and
+  ``fits``. Bump top-level ASDF schema version to v1.1.0. [#444]
+
 1.3.2 (2018-02-22)
 ------------------
 
