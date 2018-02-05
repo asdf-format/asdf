@@ -58,41 +58,7 @@ the array, but the actual array content is in a binary block.
 Schema validation
 -----------------
 
-In the current draft of the ASDF schema, there are very few elements
-defined at the top-level -- for the most part, the top-level can
-contain any elements.  One of the few specified elements is ``data``:
-it must be an array, and is used to specify the "main" data content
-(for some definition of "main") so that tools that merely want to view
-or preview the ASDF file have a standard location to find the most
-interesting data.  If you set this to anything but an array, ``asdf``
-will complain::
-
-    >>> from asdf import AsdfFile
-    >>> tree = {'data': 'Not an array'}
-    >>> AsdfFile(tree)  # doctest: +IGNORE_EXCEPTION_DETAIL
-    Traceback (most recent call last):
-    ...
-    ValidationError: mismatched tags, wanted
-    'tag:stsci.edu:asdf/core/ndarray-1.0.0', got
-    'tag:yaml.org,2002:str'
-    ...
-
-This validation happens only when a `AsdfFile` is instantiated, read
-or saved, so it's still possible to get the tree into an invalid
-intermediate state::
-
-    >>> from asdf import AsdfFile
-    >>> ff = AsdfFile()
-    >>> ff.tree['data'] = 'Not an array'
-    >>> # The ASDF file is now invalid, but asdf will tell us when
-    >>> # we write it out.
-    >>> ff.write_to('test.asdf')  # doctest: +IGNORE_EXCEPTION_DETAIL
-    Traceback (most recent call last):
-    ...
-    ValidationError: mismatched tags, wanted
-    'tag:stsci.edu:asdf/core/ndarray-1.0.0', got
-    'tag:yaml.org,2002:str'
-    ...
+This section needs to be updated later.
 
 Sharing of data
 ---------------
