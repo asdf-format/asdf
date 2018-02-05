@@ -286,7 +286,8 @@ class AsdfFile(versioning.VersionedMixin):
     @tree.setter
     def tree(self, tree):
         asdf_object = AsdfObject(tree)
-        self._validate(asdf_object)
+        # Only perform custom validation if the tree is not empty
+        self._validate(asdf_object, custom=bool(tree))
         self._tree = asdf_object
 
     def __getitem__(self, key):
@@ -302,12 +303,12 @@ class AsdfFile(versioning.VersionedMixin):
         """
         return self._comments
 
-    def _validate(self, tree):
+    def _validate(self, tree, custom=True):
         tagged_tree = yamlutil.custom_tree_to_tagged_tree(
             tree, self)
         schema.validate(tagged_tree, self)
         # Perform secondary validation pass if requested
-        if self._custom_schema:
+        if custom and self._custom_schema:
             schema.validate(tagged_tree, self, self._custom_schema)
 
     def validate(self):
