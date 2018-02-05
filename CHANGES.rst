@@ -40,6 +40,9 @@
 
 - Add command to ``asdftool`` for querying installed extensions. [#418]
 
+- Remove restrictions affecting top-level attributes ``data``, ``wcs``, and
+  ``fits``. Bump top-level ASDF schema version to v1.1.0. [#443]
+
 1.3.2 (unreleased)
 ------------------
 
