@@ -10,6 +10,7 @@ import warnings
 import importlib
 
 import numpy as np
+from jsonschema import ValidationError
 
 from . import block
 from . import constants
@@ -46,7 +47,7 @@ class AsdfFile(versioning.VersionedMixin):
     """
     def __init__(self, tree=None, uri=None, extensions=None, version=None,
         ignore_version_mismatch=True, ignore_unrecognized_tag=False,
-        copy_arrays=False):
+        copy_arrays=False, custom_schema=None):
         """
         Parameters
         ----------
@@ -81,7 +82,19 @@ class AsdfFile(versioning.VersionedMixin):
         copy_arrays : bool, optional
             When `False`, when reading files, attempt to memmap underlying data
             arrays when possible.
+
+        custom_schema : str, optional
+            Path to a custom schema file that will be used for a secondary
+            validation pass. This can be used to ensure that particular ASDF
+            files follow custom conventions beyond those enforced by the
+            standard.
         """
+
+        if custom_schema is not None:
+            self._custom_schema = schema.load_schema(custom_schema)
+            schema.check_schema(self._custom_schema)
+        else:
+            self._custom_schema = None
 
         self._extensions = self._process_extensions(extensions)
         self._ignore_version_mismatch = ignore_version_mismatch
@@ -274,7 +287,8 @@ class AsdfFile(versioning.VersionedMixin):
     @tree.setter
     def tree(self, tree):
         asdf_object = AsdfObject(tree)
-        self._validate(asdf_object)
+        # Only perform custom validation if the tree is not empty
+        self._validate(asdf_object, custom=bool(tree))
         self._tree = asdf_object
 
     def __getitem__(self, key):
@@ -290,10 +304,13 @@ class AsdfFile(versioning.VersionedMixin):
         """
         return self._comments
 
-    def _validate(self, tree):
+    def _validate(self, tree, custom=True):
         tagged_tree = yamlutil.custom_tree_to_tagged_tree(
             tree, self)
         schema.validate(tagged_tree, self)
+        # Perform secondary validation pass if requested
+        if custom and self._custom_schema:
+            schema.validate(tagged_tree, self, self._custom_schema)
 
     def validate(self):
         """
@@ -517,7 +534,13 @@ class AsdfFile(versioning.VersionedMixin):
         tree = reference.find_references(tree, self)
         if not do_not_fill_defaults:
             schema.fill_defaults(tree, self)
-        self._validate(tree)
+
+        try:
+            self._validate(tree)
+        except ValidationError:
+            self.close()
+            raise
+
         tree = yamlutil.tagged_tree_to_custom_tree(tree, self, _force_raw_types)
 
         self._tree = tree
@@ -561,7 +584,8 @@ class AsdfFile(versioning.VersionedMixin):
              ignore_version_mismatch=True,
              ignore_unrecognized_tag=False,
              _force_raw_types=False,
-             copy_arrays=False):
+             copy_arrays=False,
+             custom_schema=None):
         """
         Open an existing ASDF file.
 
@@ -603,6 +627,12 @@ class AsdfFile(versioning.VersionedMixin):
             When `False`, when reading files, attempt to memmap underlying data
             arrays when possible.
 
+        custom_schema : str, optional
+            Path to a custom schema file that will be used for a secondary
+            validation pass. This can be used to ensure that particular ASDF
+            files follow custom conventions beyond those enforced by the
+            standard.
+
         Returns
         -------
         asdffile : AsdfFile
@@ -611,7 +641,7 @@ class AsdfFile(versioning.VersionedMixin):
         self = cls(extensions=extensions,
                    ignore_version_mismatch=ignore_version_mismatch,
                    ignore_unrecognized_tag=ignore_unrecognized_tag,
-                   copy_arrays=copy_arrays)
+                   copy_arrays=copy_arrays, custom_schema=custom_schema)
 
         return cls._open_impl(
             self, fd, uri=uri, mode=mode,

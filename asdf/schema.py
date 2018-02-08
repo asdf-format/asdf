@@ -33,10 +33,6 @@ else:  # pragma: no cover
 __all__ = ['validate', 'fill_defaults', 'remove_defaults', 'check_schema']
 
 
-SCHEMA_PATH = os.path.abspath(
-    os.path.join(os.path.dirname(__file__), 'schemas'))
-
-
 PYTHON_TYPE_TO_YAML_TAG = {
     None: 'null',
     str: 'str',
@@ -60,14 +56,10 @@ def _type_to_tag(type_):
     for base in type_.mro():
         if base in PYTHON_TYPE_TO_YAML_TAG:
             return PYTHON_TYPE_TO_YAML_TAG[base]
+    return None
 
 
 def validate_tag(validator, tagname, instance, schema):
-    # Shortcut: If the instance is a subclass of YAMLObject then we know it
-    # should have a yaml_tag attribute attached; otherwise we have to use a
-    # hack of reserializing the object and seeing what tags get attached to it
-    # (though there may be a better way than this).
-
     if hasattr(instance, '_tag'):
         instance_tag = instance._tag
     else:

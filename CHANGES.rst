@@ -11,7 +11,8 @@
 
 1.4.0 (unreleased)
 ------------------
-- Add and ``ExternalArrayReference`` type for referencing arrays in external files. [#400]
+
+- Add an ``ExternalArrayReference`` type for referencing arrays in external files. [#400]
 
 - Improve the way URIs are detected for ASDF-in-FITS files in order to fix bug
   with reading gzipped ASDF-in-FITS files. [#416]
@@ -39,6 +40,10 @@
   development mode. [#420]
 
 - Add command to ``asdftool`` for querying installed extensions. [#418]
+
+- Implement optional top-level validation pass using custom schema. This can be
+  used to ensure that particular ASDF files follow custom conventions beyond
+  those enforced by the standard. [#442]
 
 1.3.2 (unreleased)
 ------------------
