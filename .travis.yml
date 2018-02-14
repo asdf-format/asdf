@@ -30,7 +30,8 @@ env:
         - SETUP_CMD='test --remote-data'
 
     matrix:
-        - PYTHON_VERSION=2.7 SETUP_CMD='test'
+          # Make sure we grab a Py2-compatible version of gwcs
+        - PYTHON_VERSION=2.7 SETUP_CMD='test' PIP_DEPENDENCIES='gwcs==0.8'
         - PYTHON_VERSION=3.5 SETUP_CMD='test' ASTROPY_VERSION=development
         - PYTHON_VERSION=3.6 SETUP_CMD='test' ASTROPY_VERSION=development
 
