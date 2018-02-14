@@ -7,6 +7,7 @@ from __future__ import absolute_import, division, unicode_literals, print_functi
 # by importing them here in conftest.py they are discoverable by py.test
 # no matter how it is invoked within the source tree.
 
+from astropy import __version__ as astropy_version
 from astropy.tests.pytest_plugins import *
 
 import multiprocessing
@@ -28,9 +29,12 @@ packagename = os.path.basename(os.path.dirname(__file__))
 TESTED_VERSIONS[packagename] = version.version
 
 
-# Uncomment the following line to treat all DeprecationWarnings as
-# exceptions
-enable_deprecations_as_exceptions()
+# Uncomment the following line to treat all DeprecationWarnings as exceptions
+kwargs = {}
+if astropy_version >= '3.0':
+    kwargs['modules_to_ignore_on_import'] = ['astropy.tests.disable_internet']
+
+enable_deprecations_as_exceptions(**kwargs)
 
 try:
     PYTEST_HEADER_MODULES['Astropy'] = 'astropy'
