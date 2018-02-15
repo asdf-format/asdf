@@ -67,7 +67,7 @@ class _AsdfHDU(fits.hdu.base.NonstandardExtHDU):
             ('XTENSION', cls._extension, 'ASDF extension'),
             ('BITPIX', 8, 'array data type'),
             ('NAXIS', 1, 'number of array dimensions'),
-            ('NAXIS1', len(buff.getvalue()), 'Axis length'),
+            ('NAXIS1', data_length, 'Axis length'),
             ('PCOUNT', 0, 'number of parameters'),
             ('GCOUNT', 1, 'number of groups'),
             ('COMPRESS', compress, 'Uses gzip compression'),
