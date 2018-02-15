@@ -92,7 +92,8 @@ class _AsdfHDU(fits.hdu.base.NonstandardExtHDU):
 
     def _summary(self):
         # TODO: Perhaps make this more descriptive...
-        return (self.name, self.ver, self.__class__.__name__, len(self._header))
+        axes = tuple(self.data.shape)
+        return (self.name, self.ver, 'AsdfHDU', len(self._header), axes)
 
 
 class _FitsBlock(object):
