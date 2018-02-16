@@ -22,7 +22,7 @@ env:
         # overidden underneath. They are defined here in order to save having
         # to repeat them for all configurations.
         - PYTHON_VERSION=3.6
-        - ASTROPY_VERSION=development
+        - ASTROPY_VERSION=stable
         - NUMPY_VERSION=stable
         - PIP_DEPENDENCIES='pytest-astropy pytest-faulthandler'
         - CONDA_DEPENDENCIES='semantic_version jsonschema pyyaml six lz4'
@@ -51,7 +51,8 @@ matrix:
         - env: NUMPY_VERSION=1.12 SETUP_CMD='test'
 
         # run a test using native pytest
-        - env: MAIN_CMD='pytest' SETUP_CMD=''
+        # also test against development version of Astropy
+        - env: MAIN_CMD='pytest' SETUP_CMD='' ASTROPY_VERSION=development
 
         # latest stable versions
         - env: NUMPY_VERSION=stable SETUP_CMD='test'

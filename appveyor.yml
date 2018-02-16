@@ -9,7 +9,7 @@ environment:
       CMD_IN_ENV: "cmd /E:ON /V:ON /C .\\ci-helpers\\appveyor\\windows_sdk.cmd"
       SETUP_CMD: "test"
       NUMPY_VERSION: "stable"
-      ASTROPY_VERSION: "development"
+      ASTROPY_VERSION: "stable"
       GWCS_GIT: "git+git://github.com/spacetelescope/gwcs.git#egg=gwcs"
       CONDA_DEPENDENCIES: "semantic_version jsonschema pyyaml six lz4"
       PIP_DEPENDENCIES: "pytest-astropy pytest-faulthandler"
@@ -29,6 +29,10 @@ environment:
         platform: x64
 
       - PYTHON_VERSION: "3.6"
+        platform: x64
+
+      - PYTHON_VERSION: "3.6"
+        ASTROPY_VERSION: "stable"
         platform: x64
 
       # Tests against development version of numpy may fail
