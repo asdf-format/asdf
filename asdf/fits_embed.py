@@ -67,7 +67,7 @@ class _AsdfHDU(fits.hdu.base.NonstandardExtHDU):
             ('XTENSION', cls._extension, 'ASDF extension'),
             ('BITPIX', 8, 'array data type'),
             ('NAXIS', 1, 'number of array dimensions'),
-            ('NAXIS1', len(buff.getvalue()), 'Axis length'),
+            ('NAXIS1', data_length, 'Axis length'),
             ('PCOUNT', 0, 'number of parameters'),
             ('GCOUNT', 1, 'number of groups'),
             ('COMPRESS', compress, 'Uses gzip compression'),
@@ -92,7 +92,8 @@ class _AsdfHDU(fits.hdu.base.NonstandardExtHDU):
 
     def _summary(self):
         # TODO: Perhaps make this more descriptive...
-        return (self.name, self.ver, self.__class__.__name__, len(self._header))
+        axes = tuple(self.data.shape)
+        return (self.name, self.ver, 'AsdfHDU', len(self._header), axes)
 
 
 class _FitsBlock(object):
