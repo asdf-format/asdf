@@ -20,11 +20,6 @@ from astropy_helpers.setup_helpers import (
 from astropy_helpers.git_helpers import get_git_devstr
 from astropy_helpers.version_helpers import generate_version_py
 
-from astropy_helpers import test_helpers
-def _null_validate(self):
-    pass
-test_helpers.AstropyTest._validate_required_deps = _null_validate
-
 # Get some values from the setup.cfg
 try:
     from ConfigParser import ConfigParser
