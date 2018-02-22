@@ -1,3 +1,12 @@
+1.3.2 (2018-02-22)
+------------------
+
+- Updates to allow this version of ASDF to be compatible with Astropy v3.0.
+  [#450]
+
+- Remove tests that are no longer relevant due to latest updates to Astropy's
+  testing infrastructure. [#458]
+
 1.3.1 (2017-11-02)
 ------------------
 

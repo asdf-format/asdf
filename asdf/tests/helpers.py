@@ -30,7 +30,7 @@ except ImportError:
     CartesianDifferential = None
 
 from ..asdf import AsdfFile, get_asdf_library_info
-from ..conftest import RangeHTTPServer
+from .httpserver import RangeHTTPServer
 from ..extension import _builtin_extension_list
 from .. import util
 from .. import versioning

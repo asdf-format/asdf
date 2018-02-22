@@ -20,11 +20,6 @@ from astropy_helpers.setup_helpers import (
 from astropy_helpers.git_helpers import get_git_devstr
 from astropy_helpers.version_helpers import generate_version_py
 
-from astropy_helpers import test_helpers
-def _null_validate(self):
-    pass
-test_helpers.AstropyTest._validate_required_deps = _null_validate
-
 # Get some values from the setup.cfg
 try:
     from ConfigParser import ConfigParser
@@ -51,7 +46,7 @@ LONG_DESCRIPTION = package.__doc__
 builtins._PACKAGE_NAME_ = 'asdf'
 
 # VERSION should be PEP386 compatible (http://www.python.org/dev/peps/pep-0386)
-VERSION = '1.3.1'
+VERSION = '1.3.2'
 
 # Indicates if this version is a release version
 RELEASE = 'dev' not in VERSION
