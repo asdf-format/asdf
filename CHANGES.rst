@@ -12,7 +12,8 @@
 1.4.0 (unreleased)
 ------------------
 
-- Add an ``ExternalArrayReference`` type for referencing arrays in external files. [#400]
+- Add an ``ExternalArrayReference`` type for referencing arrays in external
+  files. [#400]
 
 - Improve the way URIs are detected for ASDF-in-FITS files in order to fix bug
   with reading gzipped ASDF-in-FITS files. [#416]
@@ -45,9 +46,14 @@
   used to ensure that particular ASDF files follow custom conventions beyond
   those enforced by the standard. [#442]
 
-1.3.2 (unreleased)
+1.3.2 (2018-02-22)
 ------------------
 
+- Updates to allow this version of ASDF to be compatible with Astropy v3.0.
+  [#450]
+
+- Remove tests that are no longer relevant due to latest updates to Astropy's
+  testing infrastructure. [#458]
 
 1.3.1 (2017-11-02)
 ------------------
