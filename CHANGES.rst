@@ -1,3 +1,8 @@
+1.3.3 (unreleased)
+------------------
+
+- Update test infrastructure to rely on new Astropy v3.0 plugins. [#461]
+
 1.3.2 (2018-02-22)
 ------------------
 

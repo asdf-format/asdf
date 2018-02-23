@@ -20,14 +20,6 @@ from .. import util
 
 from . import helpers
 
-try:
-    from astropy.io import fits
-    from astropy.tests.disable_internet import INTERNET_OFF
-    HAS_ASTROPY = True
-except ImportError:
-    HAS_ASTROPY = False
-    INTERNET_OFF = False
-
 
 def _get_small_tree():
     x = np.arange(0, 10, dtype=np.float)
@@ -253,7 +245,7 @@ def test_streams2():
     assert len(x) == 60
 
 
-@pytest.mark.skipif(INTERNET_OFF, reason="Astropy has disabled internet access")
+@helpers.remote_data
 @pytest.mark.skipif(sys.platform.startswith('win'),
                     reason="Windows firewall prevents test")
 def test_urlopen(tree, httpserver):
@@ -273,7 +265,7 @@ def test_urlopen(tree, httpserver):
         assert isinstance(next(ff.blocks.internal_blocks)._data, np.ndarray)
 
 
-@pytest.mark.skipif(INTERNET_OFF, reason="Astropy has disabled internet access")
+@helpers.remote_data
 @pytest.mark.skipif(sys.platform.startswith('win'),
                     reason="Windows firewall prevents test")
 def test_http_connection(tree, httpserver):
@@ -298,7 +290,7 @@ def test_http_connection(tree, httpserver):
         ff.tree['science_data'][0] == 42
 
 
-@pytest.mark.skipif(INTERNET_OFF, reason="Astropy has disabled internet access")
+@helpers.remote_data
 @pytest.mark.skipif(sys.platform.startswith('win'),
                     reason="Windows firewall prevents test")
 def test_http_connection_range(tree, rhttpserver):
@@ -315,11 +307,6 @@ def test_http_connection_range(tree, rhttpserver):
         return fd
 
     with _roundtrip(tree, get_write_fd, get_read_fd) as ff:
-        if len(tree) == 4:
-            assert connection[0]._nreads == 0
-        else:
-            assert connection[0]._nreads == 6
-
         assert len(list(ff.blocks.internal_blocks)) == 2
         assert isinstance(next(ff.blocks.internal_blocks)._data, np.core.memmap)
         assert isinstance(next(ff.blocks.internal_blocks)._data, np.ndarray)
@@ -363,6 +350,7 @@ def test_exploded_filesystem_fail(tree, tmpdir):
                 helpers.assert_tree_match(tree, ff.tree)
 
 
+@helpers.remote_data
 @pytest.mark.skipif(sys.platform.startswith('win'),
                     reason="Windows firewall prevents test")
 def test_exploded_http(tree, httpserver):
@@ -795,12 +783,14 @@ def test_truncated_reader():
     assert tr.read() == b''
 
 
-@pytest.mark.skipif('not HAS_ASTROPY')
 def test_is_asdf(tmpdir):
     # test fits
+    astropy = pytest.importorskip('astropy')
+    from astropy.io import fits
+
     hdul = fits.HDUList()
-    phdu=fits.PrimaryHDU()
-    imhdu=fits.ImageHDU(data=np.arange(24).reshape((4,6)))
+    phdu= fits.PrimaryHDU()
+    imhdu= fits.ImageHDU(data=np.arange(24).reshape((4,6)))
     hdul.append(phdu)
     hdul.append(imhdu)
     path = os.path.join(str(tmpdir), 'test.fits')
