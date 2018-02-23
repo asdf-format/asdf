@@ -7,6 +7,7 @@ from ...asdftypes import AsdfType
 
 class AsdfObject(dict, AsdfType):
     name = 'core/asdf'
+    version = '1.1.0'
 
 
 class Software(dict, AsdfType):
