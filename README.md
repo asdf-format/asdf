@@ -2,6 +2,7 @@ ASDF - Advanced Scientific Data Format
 ======================================
 
 [![Build Status](https://travis-ci.org/spacetelescope/asdf.svg?branch=master)](https://travis-ci.org/spacetelescope/asdf)
+[![Build status](https://ci.appveyor.com/api/projects/status/s1jtd9np3catfr1c?svg=true)](https://ci.appveyor.com/project/spacetelescope/asdf)
 [![Documentation Status](https://readthedocs.org/projects/asdf/badge/?version=latest)](http://asdf.readthedocs.io/en/latest/?badge=latest)
 [![Coverage Status](https://coveralls.io/repos/github/spacetelescope/asdf/badge.svg?branch=master)](https://coveralls.io/github/spacetelescope/asdf?branch=master)
 [![stsci](https://img.shields.io/badge/powered%20by-STScI-blue.svg?colorA=707170&colorB=3e8ddd&style=flat)](http://www.stsci.edu)
