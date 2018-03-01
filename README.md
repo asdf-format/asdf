@@ -98,7 +98,7 @@ The metadata in the file mirrors the structure of the tree that was stored. It i
 It is possible to compress the array data when writing the file:
 
 ```Python
-af.write_to('compressed.asdf', all_array_storage='zlib')
+af.write_to('compressed.asdf', all_array_compression='zlib')
 ```
 Available compression algorithms are `'zlib'`, `'bzp2'`, and `'lz4'`.
 
