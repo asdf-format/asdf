@@ -1,3 +1,10 @@
+1.3.3 (2018-03-01)
+------------------
+
+- Update test infrastructure to rely on new Astropy v3.0 plugins. [#461]
+
+- Disable use of 2to3. This was causing test failures on Debian builds. [#463]
+
 1.3.2 (2018-02-22)
 ------------------
 

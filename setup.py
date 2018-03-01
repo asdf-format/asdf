@@ -46,7 +46,7 @@ LONG_DESCRIPTION = package.__doc__
 builtins._PACKAGE_NAME_ = 'asdf'
 
 # VERSION should be PEP386 compatible (http://www.python.org/dev/peps/pep-0386)
-VERSION = '1.3.2'
+VERSION = '1.3.3'
 
 # Indicates if this version is a release version
 RELEASE = 'dev' not in VERSION
@@ -130,7 +130,6 @@ setup(name=PACKAGENAME,
       long_description=LONG_DESCRIPTION,
       cmdclass=cmdclassd,
       zip_safe=False,
-      use_2to3=True,
       entry_points=entry_points,
       **package_info
 )
