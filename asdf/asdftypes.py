@@ -553,8 +553,6 @@ class ExtensionType(object):
     Besides the attributes defined below, most subclasses will also
     override `to_tree` and `from_tree`.
 
-    To customize how the type's schema is located, override `get_schema_path`.
-
     Attributes
     ----------
     name : str
