@@ -18,7 +18,7 @@ from . import util
 from .versioning import AsdfVersion, AsdfSpec, get_version_map, default_version
 
 
-__all__ = ['format_tag', 'AsdfTypeIndex', 'AsdfType']
+__all__ = ['format_tag', 'AsdfTypeIndex', 'AsdfType', 'CustomType']
 
 
 _BASIC_PYTHON_TYPES = [str, int, float, list, dict, tuple]
