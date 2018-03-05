@@ -24,9 +24,10 @@ env:
         - PYTHON_VERSION=3.6
         - ASTROPY_VERSION=stable
         - NUMPY_VERSION=stable
-        - PIP_DEPENDENCIES='pytest-astropy pytest-faulthandler'
-        - CONDA_DEPENDENCIES='semantic_version jsonschema pyyaml six lz4'
+        - PIP_DEPENDENCIES='pytest-faulthandler'
+        - CONDA_DEPENDENCIES='semantic_version jsonschema pyyaml six lz4 pytest-astropy'
         - GWCS_GIT='git+git://github.com/spacetelescope/gwcs.git#egg=gwcs'
+        - GWCS_PIP='gwcs'
         - MAIN_CMD='python setup.py'
         - SETUP_CMD='test --remote-data'
 
@@ -53,6 +54,7 @@ matrix:
         # run a test using native pytest
         # also test against development version of Astropy
         - env: MAIN_CMD='pytest' SETUP_CMD='' ASTROPY_VERSION=development
+               GWCS_PIP="$GWCS_GIT"
 
         # latest stable versions
         - env: NUMPY_VERSION=stable SETUP_CMD='test'
@@ -70,7 +72,7 @@ matrix:
 install:
     - git clone git://github.com/astropy/ci-helpers.git
     - source ci-helpers/travis/setup_conda.sh
-    - python -m pip install --no-deps $GWCS_GIT
+    - python -m pip install --no-deps $GWCS_PIP
     - python setup.py install
 
 script:

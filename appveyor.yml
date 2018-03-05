@@ -11,8 +11,9 @@ environment:
       NUMPY_VERSION: "stable"
       ASTROPY_VERSION: "stable"
       GWCS_GIT: "git+git://github.com/spacetelescope/gwcs.git#egg=gwcs"
-      CONDA_DEPENDENCIES: "semantic_version jsonschema pyyaml six lz4"
-      PIP_DEPENDENCIES: "pytest-astropy pytest-faulthandler"
+      GWCS_PIP: "gwcs"
+      CONDA_DEPENDENCIES: "semantic_version jsonschema pyyaml six lz4 pytest-astropy"
+      PIP_DEPENDENCIES: "pytest-faulthandler"
       PYTHON_ARCH: "64"
 
   matrix:
@@ -35,6 +36,11 @@ environment:
         ASTROPY_VERSION: "stable"
         platform: x64
 
+      - PYTHON_VERSION: "3.6"
+        ASTROPY_VERSION: "development"
+        GWCS_PIP: "%GWCS_GIT%"
+        platform: x64
+
       # Tests against development version of numpy may fail
       - PYTHON_VERSION: "3.6"
         NUMPY_VERSION: "development"
@@ -49,7 +55,7 @@ install:
     - "powershell ci-helpers/appveyor/install-miniconda.ps1"
     - "SET PATH=%PYTHON%;%PYTHON%\\Scripts;%PATH%"
     - "activate test"
-    - "%CMD_IN_ENV% python -m pip install --no-deps %GWCS_GIT%"
+    - "%CMD_IN_ENV% python -m pip install --no-deps %GWCS_PIP%"
     - "%CMD_IN_ENV% python setup.py develop --no-deps"
 
 # Not a .NET project
