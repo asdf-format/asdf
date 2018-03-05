@@ -11,8 +11,8 @@ environment:
       NUMPY_VERSION: "stable"
       ASTROPY_VERSION: "stable"
       GWCS_GIT: "git+git://github.com/spacetelescope/gwcs.git#egg=gwcs"
-      CONDA_DEPENDENCIES: "semantic_version jsonschema pyyaml six lz4"
-      PIP_DEPENDENCIES: "pytest-astropy pytest-faulthandler"
+      CONDA_DEPENDENCIES: "semantic_version jsonschema pyyaml six lz4 pytest-astropy"
+      PIP_DEPENDENCIES: "pytest-faulthandler"
       PYTHON_ARCH: "64"
 
   matrix:

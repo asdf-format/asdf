@@ -24,8 +24,8 @@ env:
         - PYTHON_VERSION=3.6
         - ASTROPY_VERSION=stable
         - NUMPY_VERSION=stable
-        - PIP_DEPENDENCIES='pytest-astropy pytest-faulthandler'
-        - CONDA_DEPENDENCIES='semantic_version jsonschema pyyaml six lz4'
+        - PIP_DEPENDENCIES='pytest-faulthandler'
+        - CONDA_DEPENDENCIES='semantic_version jsonschema pyyaml six lz4 pytest-astropy'
         - GWCS_GIT='git+git://github.com/spacetelescope/gwcs.git#egg=gwcs'
         - MAIN_CMD='python setup.py'
         - SETUP_CMD='test --remote-data'
