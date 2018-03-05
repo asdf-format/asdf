@@ -5,7 +5,7 @@ import pytest
 import warnings
 
 gwcs = pytest.importorskip('gwcs')
-astropy = pytest.importorskip('astropy', minversion='1.3.3')
+astropy = pytest.importorskip('astropy', minversion='3.0.0')
 
 from astropy.modeling import models
 from astropy import coordinates as coord
