@@ -12,6 +12,8 @@ from urllib import parse as urlparse
 
 import numpy as np
 
+from .extern.decorators import add_common_docstring
+
 
 def human_list(l, separator="and"):
     """

@@ -674,7 +674,7 @@ class ExtensionType(object):
 
 
 @six.add_metaclass(AsdfTypeMeta)
-@six.add_metaclass(util.InheritDocstrings)
+@util.add_common_docstring(append=ExtensionType.__doc__)
 class AsdfType(ExtensionType):
     """
     Base class for all built-in ASDF types. Types that inherit this class will
@@ -683,7 +683,7 @@ class AsdfType(ExtensionType):
     """
 
 @six.add_metaclass(ExtensionTypeMeta)
-@six.add_metaclass(util.InheritDocstrings)
+@util.add_common_docstring(append=ExtensionType.__doc__)
 class CustomType(ExtensionType):
     """
     Base class for all user-defined types. Unlike classes that inherit
