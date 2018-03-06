@@ -1,0 +1,46 @@
+#ASDF 1.0.0
+#ASDF_STANDARD 1.0.0
+%YAML 1.1
+%TAG ! tag:stsci.edu:asdf/
+--- !core/asdf-1.0.0
+asdf_library: !core/software-1.0.0 {author: Space Telescope Science Institute, homepage: 'http://github.com/spacetelescope/asdf',
+  name: asdf, version: 1.3.3}
+gw1: !wcs/wcs-1.0.0
+  name: ''
+  steps:
+  - !wcs/step-1.0.0
+    frame: detector
+    transform: !transform/concatenate-1.1.0
+      forward:
+      - !transform/shift-1.1.0 {offset: 12.4}
+      - !transform/shift-1.1.0 {offset: -2.0}
+  - !wcs/step-1.0.0 {frame: icrs}
+gw2: !wcs/wcs-1.0.0
+  name: ''
+  steps:
+  - !wcs/step-1.0.0
+    frame: detector
+    transform: !transform/concatenate-1.1.0
+      forward:
+      - !transform/shift-1.1.0 {offset: 12.4}
+      - !transform/shift-1.1.0 {offset: -2.0}
+  - !wcs/step-1.0.0 {frame: icrs}
+gw3: !wcs/wcs-1.0.0
+  name: ''
+  steps:
+  - !wcs/step-1.0.0
+    frame: !wcs/frame-1.1.0
+      axes_names: [x, y]
+      name: detector
+      unit: [!unit/unit-1.0.0 pixel, !unit/unit-1.0.0 pixel]
+    transform: !transform/concatenate-1.1.0
+      forward:
+      - !transform/shift-1.1.0 {offset: 12.4}
+      - !transform/shift-1.1.0 {offset: -2.0}
+  - !wcs/step-1.0.0
+    frame: !wcs/celestial_frame-1.0.0
+      axes_names: [lon, lat]
+      name: icrs
+      reference_frame: {type: ICRS}
+      unit: [!unit/unit-1.0.0 deg, !unit/unit-1.0.0 deg]
+...
