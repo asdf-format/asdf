@@ -32,11 +32,10 @@ def test_read_wcs(version):
     GWCS."""
 
     filename = os.path.join(TEST_DATA_PATH, "test_wcs-{}.asdf".format(version))
-    tree = asdf.open(filename)
-
-    assert isinstance(tree['gw1'], wcs.WCS)
-    assert isinstance(tree['gw2'], wcs.WCS)
-    assert isinstance(tree['gw3'], wcs.WCS)
+    with asdf.open(filename) as tree:
+        assert isinstance(tree['gw1'], wcs.WCS)
+        assert isinstance(tree['gw2'], wcs.WCS)
+        assert isinstance(tree['gw3'], wcs.WCS)
 
 
 @pytest.mark.parametrize('version', ['1.0.0', '1.1.0', '1.2.0'])
@@ -70,10 +69,9 @@ def test_frames(tmpdir):
     frames have moved to Astropy and gwcs."""
 
     filename = os.path.join(TEST_DATA_PATH, "test_frames-1.1.0.asdf")
-    tree = asdf.open(filename)
-
-    for frame in tree['frames']:
-        assert isinstance(frame, cf.CoordinateFrame)
+    with asdf.open(filename) as tree:
+        for frame in tree['frames']:
+            assert isinstance(frame, cf.CoordinateFrame)
 
 
 def test_backwards_compat_galcen():
