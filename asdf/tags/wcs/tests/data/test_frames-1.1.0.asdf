@@ -1,0 +1,97 @@
+#ASDF 1.0.0
+#ASDF_STANDARD 1.1.0
+%YAML 1.1
+%TAG ! tag:stsci.edu:asdf/
+--- !core/asdf-1.0.0
+asdf_library: !core/software-1.0.0 {author: Space Telescope Science Institute, homepage: 'http://github.com/spacetelescope/asdf',
+  name: asdf, version: 1.3.3}
+frames:
+- !wcs/celestial_frame-1.1.0
+  axes_names: [lon, lat]
+  name: CelestialFrame
+  reference_frame: {type: ICRS}
+  unit: [!unit/unit-1.0.0 deg, !unit/unit-1.0.0 deg]
+- !wcs/celestial_frame-1.1.0
+  axes_names: [lon, lat]
+  name: CelestialFrame
+  reference_frame: {equinox: !time/time-1.1.0 '2010-01-01 00:00:00.000', type: FK5}
+  unit: [!unit/unit-1.0.0 deg, !unit/unit-1.0.0 deg]
+- !wcs/celestial_frame-1.1.0
+  axes_names: [lon, lat]
+  name: CelestialFrame
+  reference_frame: {equinox: !time/time-1.1.0 '2010-01-01 00:00:00.000', obstime: !time/time-1.1.0 '2015-01-01
+      00:00:00.000', type: FK4}
+  unit: [!unit/unit-1.0.0 deg, !unit/unit-1.0.0 deg]
+- !wcs/celestial_frame-1.1.0
+  axes_names: [lon, lat]
+  name: CelestialFrame
+  reference_frame: {equinox: !time/time-1.1.0 '2010-01-01 00:00:00.000', obstime: !time/time-1.1.0 '2015-01-01
+      00:00:00.000', type: FK4_noeterms}
+  unit: [!unit/unit-1.0.0 deg, !unit/unit-1.0.0 deg]
+- !wcs/celestial_frame-1.1.0
+  axes_names: [lon, lat]
+  name: CelestialFrame
+  reference_frame: {type: galactic}
+  unit: [!unit/unit-1.0.0 deg, !unit/unit-1.0.0 deg]
+- !wcs/celestial_frame-1.1.0
+  axes_names: [x, y, z]
+  axes_order: [0, 1, 2]
+  name: CelestialFrame
+  reference_frame:
+    galcen_coord: !wcs/icrs_coord-1.1.0
+      dec: {value: -28.936175}
+      ra:
+        value: 266.4051
+        wrap_angle: !unit/quantity-1.1.0 {unit: !unit/unit-1.0.0 deg, value: 360.0}
+    galcen_distance: !unit/quantity-1.1.0 {unit: !unit/unit-1.0.0 m, value: 5.0}
+    galcen_v_sun:
+    - !unit/quantity-1.1.0 {unit: !unit/unit-1.0.0 km s-1, value: 11.1}
+    - !unit/quantity-1.1.0 {unit: !unit/unit-1.0.0 km s-1, value: 232.24}
+    - !unit/quantity-1.1.0 {unit: !unit/unit-1.0.0 km s-1, value: 7.25}
+    roll: !unit/quantity-1.1.0 {unit: !unit/unit-1.0.0 deg, value: 3.0}
+    type: galactocentric
+    z_sun: !unit/quantity-1.1.0 {unit: !unit/unit-1.0.0 pc, value: 3.0}
+  unit: [!unit/unit-1.0.0 deg, !unit/unit-1.0.0 deg, !unit/unit-1.0.0 deg]
+- !wcs/celestial_frame-1.1.0
+  axes_names: [lon, lat]
+  name: CelestialFrame
+  reference_frame:
+    obsgeoloc:
+    - !unit/quantity-1.1.0 {unit: !unit/unit-1.0.0 m, value: 3.0856775814671916e+16}
+    - !unit/quantity-1.1.0 {unit: !unit/unit-1.0.0 m, value: 9.257032744401574e+16}
+    - !unit/quantity-1.1.0 {unit: !unit/unit-1.0.0 m, value: 6.1713551629343834e+19}
+    obsgeovel:
+    - !unit/quantity-1.1.0 {unit: !unit/unit-1.0.0 m s-1, value: 2.0}
+    - !unit/quantity-1.1.0 {unit: !unit/unit-1.0.0 m s-1, value: 1.0}
+    - !unit/quantity-1.1.0 {unit: !unit/unit-1.0.0 m s-1, value: 8.0}
+    obstime: !time/time-1.1.0 2010-01-01 00:00:00.000
+    type: GCRS
+  unit: [!unit/unit-1.0.0 deg, !unit/unit-1.0.0 deg]
+- !wcs/celestial_frame-1.1.0
+  axes_names: [lon, lat]
+  name: CelestialFrame
+  reference_frame: {obstime: !time/time-1.1.0 '2010-01-01 00:00:00.000', type: CIRS}
+  unit: [!unit/unit-1.0.0 deg, !unit/unit-1.0.0 deg]
+- !wcs/celestial_frame-1.1.0
+  axes_names: [x, y, z]
+  axes_order: [0, 1, 2]
+  name: CelestialFrame
+  reference_frame: {obstime: !time/time-1.1.0 '2022-01-03 00:00:00.000', type: ITRS}
+  unit: [!unit/unit-1.0.0 deg, !unit/unit-1.0.0 deg, !unit/unit-1.0.0 deg]
+- !wcs/celestial_frame-1.1.0
+  axes_names: [lon, lat]
+  name: CelestialFrame
+  reference_frame:
+    equinox: !time/time-1.1.0 J2000.000
+    obsgeoloc:
+    - !unit/quantity-1.1.0 {unit: !unit/unit-1.0.0 m, value: 3.0856775814671916e+16}
+    - !unit/quantity-1.1.0 {unit: !unit/unit-1.0.0 m, value: 9.257032744401574e+16}
+    - !unit/quantity-1.1.0 {unit: !unit/unit-1.0.0 m, value: 6.1713551629343834e+19}
+    obsgeovel:
+    - !unit/quantity-1.1.0 {unit: !unit/unit-1.0.0 m s-1, value: 2.0}
+    - !unit/quantity-1.1.0 {unit: !unit/unit-1.0.0 m s-1, value: 1.0}
+    - !unit/quantity-1.1.0 {unit: !unit/unit-1.0.0 m s-1, value: 8.0}
+    obstime: !time/time-1.1.0 2010-01-01 00:00:00.000
+    type: precessed_geocentric
+  unit: [!unit/unit-1.0.0 deg, !unit/unit-1.0.0 deg]
+...

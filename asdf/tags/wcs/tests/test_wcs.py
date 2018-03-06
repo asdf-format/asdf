@@ -1,11 +1,12 @@
 # Licensed under a 3-clause BSD style license - see LICENSE.rst
 # -*- coding: utf-8 -*-
 
+import os
 import pytest
 import warnings
 
 gwcs = pytest.importorskip('gwcs')
-astropy = pytest.importorskip('astropy', minversion='1.3.3')
+astropy = pytest.importorskip('astropy', minversion='3.0.0')
 
 from astropy.modeling import models
 from astropy import coordinates as coord
@@ -15,28 +16,26 @@ from astropy import time
 from gwcs import coordinate_frames as cf
 from gwcs import wcs
 
+import asdf
 from asdf import AsdfFile
 from asdf.tests import helpers
 
 
-@pytest.mark.parametrize('version', ['1.0.0', '1.1.0', '1.2.0'])
-def test_create_wcs(tmpdir, version):
-    m1 = models.Shift(12.4) & models.Shift(-2)
-    m2 = models.Scale(2) & models.Scale(-2)
-    icrs = cf.CelestialFrame(name='icrs', reference_frame=coord.ICRS())
-    det = cf.Frame2D(name='detector', axes_order=(0,1))
-    gw1 = wcs.WCS(output_frame='icrs', input_frame='detector', forward_transform=m1)
-    gw2 = wcs.WCS(output_frame='icrs', forward_transform=m1)
-    gw3 = wcs.WCS(output_frame=icrs, input_frame=det, forward_transform=m1)
+TEST_DATA_PATH = os.path.join(os.path.dirname(__file__), 'data')
 
-    tree = {
-        'gw1': gw1,
-        'gw2': gw2,
-        'gw3': gw3
-    }
 
-    write_options = dict(version=version)
-    helpers.assert_roundtrip_tree(tree, tmpdir, write_options=write_options)
+@pytest.mark.parametrize('version', ['1.0.0', '1.1.0'])
+def test_read_wcs(version):
+    """Simple test to make sure that we can read older versions of files
+    containing WCS objects. We do not test against versions of the ASDF format
+    more recent than 1.1.0 since the schemas and tags have moved to Astropy and
+    GWCS."""
+
+    filename = os.path.join(TEST_DATA_PATH, "test_wcs-{}.asdf".format(version))
+    with asdf.open(filename) as tree:
+        assert isinstance(tree['gw1'], wcs.WCS)
+        assert isinstance(tree['gw2'], wcs.WCS)
+        assert isinstance(tree['gw3'], wcs.WCS)
 
 
 @pytest.mark.parametrize('version', ['1.0.0', '1.1.0', '1.2.0'])
@@ -62,83 +61,17 @@ def test_composite_frame(tmpdir, version):
     write_options = dict(version=version)
     helpers.assert_roundtrip_tree(tree, tmpdir, write_options=write_options)
 
-def create_test_frames():
-    """Creates an array of frames to be used for testing."""
 
-    # Suppress warnings from astropy that are caused by having 'dubious' dates
-    # that are too far in the future. It's not a concern for the purposes of
-    # unit tests. See issue #5809 on the astropy GitHub for discussion.
-    from astropy._erfa import ErfaWarning
-    warnings.simplefilter("ignore", ErfaWarning)
+def test_frames(tmpdir):
+    """Simple check to make sure we can still read older files with frames.
+    Serialization of these frames was only introduced in v1.1.0, and we do not
+    test any subsequent ASDF versions since the schemas and tags for those
+    frames have moved to Astropy and gwcs."""
 
-    frames = [
-        cf.Frame2D(name='detector', axes_order=(0,1)),
-
-        cf.CelestialFrame(reference_frame=coord.ICRS()),
-
-        cf.CelestialFrame(
-            reference_frame=coord.FK5(equinox=time.Time('2010-01-01'))),
-
-        cf.CelestialFrame(
-            reference_frame=coord.FK4(
-                equinox=time.Time('2010-01-01'),
-                obstime=time.Time('2015-01-01'))
-            ),
-
-        cf.CelestialFrame(
-            reference_frame=coord.FK4NoETerms(
-                equinox=time.Time('2010-01-01'),
-                obstime=time.Time('2015-01-01'))
-            ),
-
-        cf.CelestialFrame(
-            reference_frame=coord.Galactic()),
-
-        cf.CelestialFrame(
-            reference_frame=coord.Galactocentric(
-                # A default galcen_coord is used since none is provided here
-                galcen_distance=5.0*u.m,
-                z_sun=3*u.pc,
-                roll=3*u.deg)
-            ),
-
-        cf.CelestialFrame(
-            reference_frame=coord.GCRS(
-                obstime=time.Time('2010-01-01'),
-                obsgeoloc=[1, 3, 2000] * u.pc,
-                obsgeovel=[2, 1, 8] * (u.m/u.s))),
-
-        cf.CelestialFrame(
-            reference_frame=coord.CIRS(
-                obstime=time.Time('2010-01-01'))),
-
-        cf.CelestialFrame(
-            reference_frame=coord.ITRS(
-                obstime=time.Time('2022-01-03'))),
-
-        cf.CelestialFrame(
-            reference_frame=coord.PrecessedGeocentric(
-                obstime=time.Time('2010-01-01'),
-                obsgeoloc=[1, 3, 2000] * u.pc,
-                obsgeovel=[2, 1, 8] * (u.m/u.s)))
-    ]
-
-    return frames
-
-
-@pytest.mark.parametrize('version', ['1.0.0', '1.1.0', '1.2.0'])
-def test_frames(tmpdir, version):
-    # Version 1.0.0 test currently fails. It may be the case that some of the
-    # frame types simply weren't supported in version 1.0.0.
-    if version == '1.0.0':
-        pytest.xfail()
-
-    tree = {
-        'frames': create_test_frames()
-    }
-
-    write_options = dict(version=version)
-    helpers.assert_roundtrip_tree(tree, tmpdir, write_options=write_options)
+    filename = os.path.join(TEST_DATA_PATH, "test_frames-1.1.0.asdf")
+    with asdf.open(filename) as tree:
+        for frame in tree['frames']:
+            assert isinstance(frame, cf.CoordinateFrame)
 
 
 def test_backwards_compat_galcen():
