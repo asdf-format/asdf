@@ -96,7 +96,10 @@ class AsdfFile(versioning.VersionedMixin):
         else:
             self._custom_schema = None
 
-        self._extensions = self._process_extensions(extensions)
+        self._extensions = []
+        self._extension_metadata = {}
+
+        self._process_extensions(extensions)
         self._ignore_version_mismatch = ignore_version_mismatch
         self._ignore_unrecognized_tag = ignore_unrecognized_tag
 
@@ -127,6 +130,8 @@ class AsdfFile(versioning.VersionedMixin):
 
         self._comments = []
 
+        self._add_extension_history(self._extension_metadata)
+
         if version is not None:
             self.version = version
 
@@ -138,15 +143,34 @@ class AsdfFile(versioning.VersionedMixin):
 
     def _process_extensions(self, extensions):
         if extensions is None or extensions == []:
-            return default_extensions.extension_list
+            self._extensions = default_extensions.extension_list
+            self._extension_metadata = default_extensions.package_metadata
+            return
 
         if isinstance(extensions, AsdfExtensionList):
-            return extensions
+            self._extensions = extensions
+            return
 
         if not isinstance(extensions, list):
             extensions = [extensions]
+
         extensions = default_extensions.extensions + extensions
-        return AsdfExtensionList(extensions)
+        self._extensions = AsdfExtensionList(extensions)
+        self._extension_metadata = default_extensions.package_metadata
+
+    def _add_extension_history(self):
+        for entry in self._extensions_metadata:
+            description = 'Processed using extension {}'.format(entry)
+            package, version = self._extensions_metadata[entry]
+
+            software = {
+                'name': package,
+                'author': '',
+                'homepage': '',
+                'version': version
+            }
+
+            self.add_history_entry(description, software=software)
 
     @property
     def file_format_version(self):

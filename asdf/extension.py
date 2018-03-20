@@ -178,6 +178,7 @@ class _DefaultExtensions:
     def __init__(self):
         self._extensions = []
         self._extension_list = None
+        self._package_metadata = {}
 
     def _load_installed_extensions(self, group='asdf_extensions'):
         self._extensions = []
@@ -189,6 +190,8 @@ class _DefaultExtensions:
                               "being ignored.".format(ext, entry_point.dist))
                 continue
 
+            dist = entry_point.dist
+            self._package_metadata[ext] = (dist.project_name, dist.version)
             self._extensions.append(ext())
 
     @property
@@ -206,5 +209,8 @@ class _DefaultExtensions:
 
         return self._extension_list
 
+    @property
+    def package_metadata(self):
+        return self._package_metadata
 
 default_extensions = _DefaultExtensions()
