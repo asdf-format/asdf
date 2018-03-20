@@ -183,6 +183,12 @@ class _DefaultExtensions:
         self._extensions = []
         for entry_point in iter_entry_points(group=group):
             ext = entry_point.load()
+            if not issubclass(ext, AsdfExtension):
+                warnings.warn("Found entry point {}, from {} but it is not a "
+                              "subclass of AsdfExtension, as expected. It is "
+                              "being ignored.".format(ext, entry_point.dist))
+                continue
+
             self._extensions.append(ext())
 
     @property
