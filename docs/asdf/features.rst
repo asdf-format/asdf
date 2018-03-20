@@ -2,28 +2,26 @@
 Core Features
 *************
 
-Hello World
------------
+Data Model
+==========
 
-In it's simplest form, ASDF is a way of saving nested data structures
-to YAML.  Here we save a dictionary with the key/value pair ``'hello':
-'world'``.
+The fundamental data object in ASDF is the ``tree``, which is a nested
+combination of basic data structures: dictionaries, lists, strings and numbers.
+The top-level tree object behaves like a Python dictionary and supports
+arbitrary nesting of data structures.
 
-.. runcode::
+One of the key features of ASDF is its ability to serialize Numpy arrays. This
+is discussed in detail in :ref:`array-data`.
 
-   from asdf import AsdfFile
+While the core ASDF package supports serialization of a basic data types and
+Numpy arrays, its true power comes from the ability to extend ASDF to support
+serialization of a wide range of custom data types. Details on extending ASDF
+to support custom data types can be found in :ref:`extensions`.
 
-   # Make the tree structure, and create a AsdfFile from it.
-   tree = {'hello': 'world'}
-   ff = AsdfFile(tree)
-   ff.write_to("test.asdf")
+.. _array-data:
 
-   # You can also make the AsdfFile first, and modify its tree directly:
-   ff = AsdfFile()
-   ff.tree['hello'] = 'world'
-   ff.write_to("test.asdf")
-
-.. asdf:: test.asdf
+Array Data
+==========
 
 Saving arrays
 -------------
@@ -54,11 +52,6 @@ the array, but the actual array content is in a binary block.
 
 .. asdf:: test.asdf
 
-Schema validation
------------------
-
-This section needs to be updated later.
-
 Sharing of data
 ---------------
 
@@ -82,7 +75,6 @@ data being saved.
    ff.write_to("test.asdf")
 
 .. asdf:: test.asdf
-
 
 Saving inline arrays
 --------------------
@@ -113,59 +105,6 @@ can be used to set the type of block of the associated data, either
    ff.write_to("test.asdf")
 
 .. asdf:: test.asdf
-
-Saving external arrays
-----------------------
-
-ASDF files may also be saved in "exploded form", in multiple files:
-
-- An ASDF file containing only the header and tree.
-
-- *n* ASDF files, each containing a single block.
-
-Exploded form is useful in the following scenarios:
-
-- Not all text editors may handle the hybrid text and binary nature of
-  the ASDF file, and therefore either can't open a ASDF file or would
-  break a ASDF file upon saving.  In this scenario, a user may explode
-  the ASDF file, edit the YAML portion as a pure YAML file, and
-  implode the parts back together.
-
-- Over a network protocol, such as HTTP, a client may only need to
-  access some of the blocks.  While reading a subset of the file can
-  be done using HTTP ``Range`` headers, it still requires one (small)
-  request per block to "jump" through the file to determine the start
-  location of each block.  This can become time-consuming over a
-  high-latency network if there are many blocks.  Exploded form allows
-  each block to be requested directly by a specific URI.
-
-- An ASDF writer may stream a table to disk, when the size of the table
-  is not known at the outset.  Using exploded form simplifies this,
-  since a standalone file containing a single table can be iteratively
-  appended to without worrying about any blocks that may follow it.
-
-To save a block in an external file, set its block type to
-``'external'``.
-
-.. runcode::
-
-   from asdf import AsdfFile
-   import numpy as np
-
-   my_array = np.random.rand(8, 8)
-   tree = {'my_array': my_array}
-   ff = AsdfFile(tree)
-
-   # On an individual block basis:
-   ff.set_array_storage(my_array, 'external')
-   ff.write_to("test.asdf")
-
-   # Or for every block:
-   ff.write_to("test.asdf", all_array_storage='external')
-
-.. asdf:: test.asdf
-
-.. asdf:: test0000.asdf
 
 Streaming array data
 --------------------
@@ -237,8 +176,110 @@ to numpy arrays stored in ASDF:
                 # write the array to the output file handle
                 fd.write(array.tostring())
 
-References
-----------
+Saving external arrays
+----------------------
+
+ASDF files may also be saved in "exploded form", in multiple files:
+
+- An ASDF file containing only the header and tree.
+
+- *n* ASDF files, each containing a single block.
+
+Exploded form is useful in the following scenarios:
+
+- Not all text editors may handle the hybrid text and binary nature of
+  the ASDF file, and therefore either can't open a ASDF file or would
+  break a ASDF file upon saving.  In this scenario, a user may explode
+  the ASDF file, edit the YAML portion as a pure YAML file, and
+  implode the parts back together.
+
+- Over a network protocol, such as HTTP, a client may only need to
+  access some of the blocks.  While reading a subset of the file can
+  be done using HTTP ``Range`` headers, it still requires one (small)
+  request per block to "jump" through the file to determine the start
+  location of each block.  This can become time-consuming over a
+  high-latency network if there are many blocks.  Exploded form allows
+  each block to be requested directly by a specific URI.
+
+- An ASDF writer may stream a table to disk, when the size of the table
+  is not known at the outset.  Using exploded form simplifies this,
+  since a standalone file containing a single table can be iteratively
+  appended to without worrying about any blocks that may follow it.
+
+To save a block in an external file, set its block type to
+``'external'``.
+
+.. runcode::
+
+   from asdf import AsdfFile
+   import numpy as np
+
+   my_array = np.random.rand(8, 8)
+   tree = {'my_array': my_array}
+   ff = AsdfFile(tree)
+
+   # On an individual block basis:
+   ff.set_array_storage(my_array, 'external')
+   ff.write_to("test.asdf")
+
+   # Or for every block:
+   ff.write_to("test.asdf", all_array_storage='external')
+
+.. asdf:: test.asdf
+
+.. asdf:: test0000.asdf
+
+Compression
+-----------
+
+Individual blocks in an ASDF file may be compressed.
+
+You can easily `zlib <http://www.zlib.net/>`__ or `bzip2
+<http://www.bzip.org>`__ compress all blocks:
+
+.. runcode::
+
+   from asdf import AsdfFile
+   import numpy as np
+
+   tree = {
+       'a': np.random.rand(256, 256),
+       'b': np.random.rand(512, 512)
+   }
+
+   target = AsdfFile(tree)
+   target.write_to('target.asdf', all_array_compression='zlib')
+   target.write_to('target.asdf', all_array_compression='bzp2')
+
+.. asdf:: target.asdf
+
+
+Schema validation
+=================
+
+This section needs to be updated later.
+
+Versioning and Compatibility
+============================
+
+There are several different versions to keep in mind when discussing ASDF:
+
+* Software package version
+* ASDF standard version
+* ASDF file format version
+* Individual tag and schema versions
+
+
+ASDF is designed to serve as an archival format.
+
+Using Extensions
+================
+
+External References
+===================
+
+Array References
+----------------
 
 ASDF files may reference items in the tree in other ASDF files.  The
 syntax used in the file for this is called "JSON Pointer", but users
@@ -329,32 +370,11 @@ included twice in the same tree:
 
 .. asdf:: anchors.asdf
 
-Compression
------------
-
-Individual blocks in an ASDF file may be compressed.
-
-You can easily `zlib <http://www.zlib.net/>`__ or `bzip2
-<http://www.bzip.org>`__ compress all blocks:
-
-.. runcode::
-
-   from asdf import AsdfFile
-   import numpy as np
-
-   tree = {
-       'a': np.random.rand(256, 256),
-       'b': np.random.rand(512, 512)
-   }
-
-   target = AsdfFile(tree)
-   target.write_to('target.asdf', all_array_compression='zlib')
-   target.write_to('target.asdf', all_array_compression='bzp2')
-
-.. asdf:: target.asdf
+Array References
+----------------
 
 Saving history entries
-----------------------
+======================
 
 ``asdf`` has a convenience method for notating the history of
 transformations that have been performed on a file.
@@ -385,7 +405,7 @@ software, not ``asdf``) that performed the operation.
 .. asdf:: example.asdf
 
 Saving ASDF in FITS
--------------------
+===================
 
 Sometimes you may need to store the structured data supported by ASDF
 inside of a FITS file in order to be compatible with legacy tools that
