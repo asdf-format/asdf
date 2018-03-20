@@ -24,8 +24,8 @@ Getting Started
 
    asdf/install
    asdf/overview
+   asdf/features
    asdf/asdf_tool
-   asdf/examples
 
 Extending ASDF
 ==============

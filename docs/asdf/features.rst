@@ -1,7 +1,6 @@
-.. _examples:
-
-Examples
-========
+*************
+Core Features
+*************
 
 Hello World
 -----------
