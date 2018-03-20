@@ -253,6 +253,10 @@ You can easily `zlib <http://www.zlib.net/>`__ or `bzip2
 
 .. asdf:: target.asdf
 
+The `lz4 <https://en.wikipedia.org/wiki/LZ_4>`__ compression algorithm is also
+supported, but requires the optional
+`lz4 <https://python-lz4.readthedocs.io/>`__ package in order to work.
+
 
 Schema validation
 =================
