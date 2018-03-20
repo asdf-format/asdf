@@ -218,6 +218,8 @@ documentation <http://asdf.readthedocs.io/en/latest/asdf/extensions.html>`__.
 Installation
 ------------
 
+.. begin-pip-install-text::
+
 Stable releases of the ASDF Python package are registered `at
 PyPi <https://pypi.python.org/pypi/asdf>`__. The latest stable version
 can be installed using ``pip``:
@@ -226,8 +228,10 @@ can be installed using ``pip``:
 
     $ pip install asdf
 
-The latest development version of ASDF is available from the ``master``
-branch on github. To clone the project:
+.. begin-source-install-text::
+
+The latest development version of ASDF is available from the ``master`` branch
+`on github <https://github.com/spacetelescope/asdf>`__. To clone the project:
 
 ::
 
@@ -238,38 +242,35 @@ To install:
 ::
 
     $ cd asdf
-    $ python setup.py install
+    $ python3 setup.py install
 
 To install in `development
-mode <https://packaging.python.org/tutorials/distributing-packages/#working-in-development-mode>`__:
+mode <https://packaging.python.org/tutorials/distributing-packages/#working-in-development-mode>`__::
 
-::
-
-    $ python setup.py develop
-
-Currently `Astropy <https://github.com/astropy/astropy>`__ is a hard
-dependency of the ASDF Python package. However, we hope to eliminate
-Astropy as a dependency in the near future, although it will still be
-required for `running the test suite <#testing>`__.
+    $ python3 setup.py develop
 
 .. note::
-The source repository makes use of a git submodule for
-referencing the schemas provided by the ASDF standard. While this
-submodule is automatically initialized when installing the package
-(including in development mode), it may be necessary for developers to
-manually update the submodule if changes are made upstream. See the
-`documentation on git
-submodules <https://git-scm.com/docs/git-submodule>`__ for more
-information.
+
+    The source repository makes use of a git submodule for referencing the
+    schemas provided by the ASDF standard. While this submodule is
+    automatically initialized when installing the package (including in
+    development mode), it may be necessary for developers to manually update
+    the submodule if changes are made upstream. See the `documentation on git
+    submodules <https://git-scm.com/docs/git-submodule>`__ for more
+    information.
+
+.. end-source-install-text::
 
 Testing
 -------
+
+.. begin-testing-text::
 
 To run the unit tests from a source checkout of the repository:
 
 ::
 
-    $ python setup.py test
+    $ python3 setup.py test
 
 It is also possible to run the test suite from an installed version of
 the package. In a Python interpreter:
@@ -281,6 +282,8 @@ the package. In a Python interpreter:
 
 Please note that the `astropy <https://github.com/astropy/astropy>`__
 package must be installed to run the tests.
+
+.. end-testing-text::
 
 Documentation
 -------------
