@@ -2,13 +2,12 @@
 Introduction
 ************
 
-Data Model
-==========
+Let's start by taking a look at a few basic ASDF use cases. This will introduce
+us to some of the core features of ASDF and will show us how to get started
+with using ASDF in our own projects.
 
-The fundamental data model in ASDF is the ``tree``, which is a nested
-combination of basic data structures: dictionaries, lists, strings and
-numbers.  In addition, ASDF understands how to handle other types,
-such as Numpy arrays.
+To follow along with this tutorial, you will need to install the ``asdf``
+package. See :ref:`installation` for details.
 
 Creating Files
 ==============

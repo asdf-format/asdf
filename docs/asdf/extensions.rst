@@ -1,3 +1,5 @@
+.. _extensions:
+
 Writing ASDF extensions
 =======================
 
