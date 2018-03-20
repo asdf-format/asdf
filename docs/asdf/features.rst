@@ -257,6 +257,24 @@ The `lz4 <https://en.wikipedia.org/wiki/LZ_4>`__ compression algorithm is also
 supported, but requires the optional
 `lz4 <https://python-lz4.readthedocs.io/>`__ package in order to work.
 
+When reading a file with compressed blocks, the blocks will be automatically
+decompressed when accessed. If a file with compressed blocks is read and then
+written out again, by default the new file will use the same compression as the
+original file. This behavior can be overridden by explicitly providing a
+different compression algorithm when writing the file out again.
+
+.. code::
+
+    import asdf
+
+    # Open a file with some compression
+    af = asdf.open('compressed.asdf')
+
+    # Use the same compression when writing out a new file
+    af.write_to('same.asdf')
+
+    # Or specify the (possibly different) algorithm to use when writing out
+    af.write_to('different.asdf', all_array_compression='lz4')
 
 Schema validation
 =================
