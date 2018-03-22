@@ -121,10 +121,10 @@ class AsdfExtensionList(object):
             tag_mapping.extend(extension.tag_mapping)
             url_mapping.extend(extension.url_mapping)
             for typ in extension.types:
-                self._type_index.add_type(typ)
+                self._type_index.add_type(typ, extension)
                 validators.update(typ.validators)
                 for sibling in typ.versioned_siblings:
-                    self._type_index.add_type(sibling)
+                    self._type_index.add_type(sibling, extension)
                     validators.update(sibling.validators)
         self._tag_mapping = resolver.Resolver(tag_mapping, 'tag')
         self._url_mapping = resolver.Resolver(url_mapping, 'url')

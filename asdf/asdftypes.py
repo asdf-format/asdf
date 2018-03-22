@@ -88,6 +88,8 @@ class _AsdfWriteTypeIndex(object):
         self._type_by_subclasses = {}
         self._class_by_subclass = {}
         self._types_with_dynamic_subclasses = {}
+        self._extension_by_cls = {}
+        self._extensions_used = set()
 
         try:
             version_map = get_version_map(self._version)['tags']
@@ -107,11 +109,12 @@ class _AsdfWriteTypeIndex(object):
 
             return True
 
-        def add_type_to_index(index, cls, typ):
+        def add_type_to_index(cls, typ):
             if cls in self._type_by_cls and not should_overwrite(cls, typ):
                 return
 
             self._type_by_cls[cls] = typ
+            self._extension_by_cls[cls] = index._extension_by_type[typ]
 
         def add_subclasses(typ, asdftype):
             for subclass in util.iter_subclasses(typ):
@@ -123,11 +126,12 @@ class _AsdfWriteTypeIndex(object):
                         continue
                 self._class_by_subclass[subclass] = typ
                 self._type_by_subclasses[subclass] = asdftype
+                self._extension_by_cls[subclass] = index._extension_by_type[asdftype]
 
         def add_all_types(asdftype):
-            add_type_to_index(self._type_by_cls, asdftype, asdftype)
+            add_type_to_index(asdftype, asdftype)
             for typ in asdftype.types:
-                add_type_to_index(self._type_by_cls, typ, asdftype)
+                add_type_to_index(typ, asdftype)
                 add_subclasses(typ, asdftype)
 
             if asdftype.handle_dynamic_subclasses:
@@ -159,30 +163,51 @@ class _AsdfWriteTypeIndex(object):
         for asdftype in index._unnamed_types:
             add_all_types(asdftype)
 
+    def _mark_used_extension(self, custom_type):
+        self._extensions_used.add(self._extension_by_cls[custom_type])
+
+    def _process_dynamic_subclass(self, custom_type):
+        for key, val in self._types_with_dynamic_subclasses.items():
+            if issubclass(custom_type, key):
+                self._type_by_cls[custom_type] = val
+                self._mark_used_extension(key)
+                return val
+
+        return None
+
     def from_custom_type(self, custom_type):
         """
         Given a custom type, return the corresponding AsdfType
         definition.
         """
+        asdftype = None
+
         # Try to find an exact class match first...
         try:
-            return self._type_by_cls[custom_type]
+            asdftype = self._type_by_cls[custom_type]
         except KeyError:
             # ...failing that, match any subclasses
             try:
-                return self._type_by_subclasses[custom_type]
+                asdftype = self._type_by_subclasses[custom_type]
             except KeyError:
                 # ...failing that, try any subclasses that we couldn't
                 # cache in _type_by_subclasses.  This generally only
                 # includes classes that are created dynamically post
                 # Python-import, e.g. astropy.modeling._CompoundModel
                 # subclasses.
-                for key, val in self._types_with_dynamic_subclasses.items():
-                    if issubclass(custom_type, key):
-                        self._type_by_cls[custom_type] = val
-                        return val
+                return self._process_dynamic_subclass(custom_type)
 
-        return None
+        if asdftype is not None:
+            extension = self._extension_by_cls.get(custom_type)
+            if extension is not None:
+                self._mark_used_extension(custom_type)
+            else:
+                # Handle the case where the dynamic subclass was identified as
+                # a proper subclass above, but it has not yet been registered
+                # as such.
+                self._process_dynamic_subclass(custom_type)
+
+        return asdftype
 
 
 class AsdfTypeIndex(object):
@@ -205,12 +230,14 @@ class AsdfTypeIndex(object):
         self._hooks_by_type = {}
         self._all_types = set()
         self._has_warned = {}
+        self._extension_by_type = {}
 
-    def add_type(self, asdftype):
+    def add_type(self, asdftype, extension):
         """
         Add a type to the index.
         """
         self._all_types.add(asdftype)
+        self._extension_by_type[asdftype] = extension
 
         if asdftype.yaml_tag is None and asdftype.name is None:
             return
