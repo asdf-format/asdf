@@ -275,7 +275,7 @@ class AsdfTypeIndex(object):
         if custom_type in _BASIC_PYTHON_TYPES:
             return None
 
-        write_type_index = self._write_type_indices.get(version)
+        write_type_index = self._write_type_indices.get(str(version))
         if write_type_index is None:
             write_type_index = _AsdfWriteTypeIndex(version, self)
             self._write_type_indices[version] = write_type_index
@@ -409,6 +409,13 @@ class AsdfTypeIndex(object):
 
         hooks[typ] = None
         return None
+
+    def get_extensions_used(self, version=default_version):
+        write_type_index = self._write_type_indices.get(str(version))
+        if write_type_index is None:
+            return []
+
+        return list(write_type_index._extensions_used)
 
 
 _all_asdftypes = set()
