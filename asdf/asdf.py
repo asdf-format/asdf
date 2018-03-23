@@ -1109,14 +1109,14 @@ class AsdfFile(versioning.VersionedMixin):
             entry['software'] = software
 
         if 'history' not in self.tree:
-            self.tree['history'] = []
+            self.tree['history'] = dict(entries=[])
 
-        self.tree['history'].append(entry)
+        self.tree['history']['entries'].append(entry)
 
         try:
             self.validate()
         except:
-            self.tree['history'].pop()
+            self.tree['history']['entries'].pop()
             raise
 
 

@@ -19,16 +19,15 @@ def test_history():
                           'homepage': 'http://nowhere.com',
                           'author': 'John Doe',
                           'version': '2.0'})
-    assert len(ff.tree['history']) == 1
+    assert len(ff.tree['history']['entries']) == 1
 
     with pytest.raises(ValidationError):
         ff.add_history_entry('That happened',
-                             {'name': 'my_tool',
-                              'author': 'John Doe',
+                             {'author': 'John Doe',
                               'version': '2.0'})
-    assert len(ff.tree['history']) == 1
+    assert len(ff.tree['history']['entries']) == 1
 
     ff.add_history_entry('This other thing happened')
-    assert len(ff.tree['history']) == 2
+    assert len(ff.tree['history']['entries']) == 2
 
-    assert isinstance(ff.tree['history'][0]['time'], datetime.datetime)
+    assert isinstance(ff.tree['history']['entries'][0]['time'], datetime.datetime)
