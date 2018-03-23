@@ -145,14 +145,28 @@ class AsdfFile(versioning.VersionedMixin):
             return
 
         for extension in tree['history']['extensions']:
+            filename = "'{}'".format(self._fname) if self._fname else ''
+
             if extension.extension_class not in self._extension_metadata:
-                filename = "'{}'".format(self._fname) if self._fname else ''
                 msg = "File {} was created with extension '{}', which is " \
-                "not currently installed"
+                    "not currently installed"
                 if extension.software:
                     msg += " (from package {}-{})".format(
-                        extension.software['name'], extension.software['version'])
+                        extension.software['name'],
+                        extension.software['version'])
                 warnings.warn(msg.format(filename, extension.extension_class))
+
+            elif extension.software:
+                installed = self._extension_metadata[extension.extension_class]
+                # Compare version in file metadata with installed version
+                if installed[1] < extension.software['version']:
+                    msg = "File {} was created with extension '{}' from " \
+                    "package {}-{}, but older version {}-{} is installed"
+                    warnings.warn(msg.format(
+                        filename, extension.extension_class,
+                        extension.software['name'],
+                        extension.software['version'],
+                        installed[0], installed[1]))
 
     def _process_extensions(self, extensions):
         if extensions is None or extensions == []:
