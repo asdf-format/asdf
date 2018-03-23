@@ -8,6 +8,7 @@ import copy
 import datetime
 import warnings
 import importlib
+from distutils.version import LooseVersion
 
 import numpy as np
 from jsonschema import ValidationError
@@ -145,10 +146,9 @@ class AsdfFile(versioning.VersionedMixin):
             return
 
         for extension in tree['history']['extensions']:
-            filename = "'{}'".format(self._fname) if self._fname else ''
-
+            filename = "'{}' ".format(self._fname) if self._fname else ''
             if extension.extension_class not in self._extension_metadata:
-                msg = "File {} was created with extension '{}', which is " \
+                msg = "File {}was created with extension '{}', which is " \
                     "not currently installed"
                 if extension.software:
                     msg += " (from package {}-{})".format(
@@ -159,8 +159,8 @@ class AsdfFile(versioning.VersionedMixin):
             elif extension.software:
                 installed = self._extension_metadata[extension.extension_class]
                 # Compare version in file metadata with installed version
-                if installed[1] < extension.software['version']:
-                    msg = "File {} was created with extension '{}' from " \
+                if LooseVersion(installed[1]) < LooseVersion(extension.software['version']):
+                    msg = "File {}was created with extension '{}' from " \
                     "package {}-{}, but older version {}-{} is installed"
                     warnings.warn(msg.format(
                         filename, extension.extension_class,
