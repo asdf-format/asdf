@@ -25,7 +25,7 @@ from . import yamlutil
 from .exceptions import AsdfDeprecationWarning
 from .extension import AsdfExtensionList, default_extensions
 
-from .tags.core import AsdfObject, Software, HistoryEntry
+from .tags.core import AsdfObject, Software, HistoryEntry, ExtensionMetadata
 
 
 def get_asdf_library_info():
@@ -156,22 +156,25 @@ class AsdfFile(versioning.VersionedMixin):
         self._extensions = AsdfExtensionList(extensions)
         self._extension_metadata = default_extensions.package_metadata
 
-    def _add_extension_history(self):
-        # do nothing for now
-        return
+    def _update_extension_history(self):
 
-        for entry in self._extension_metadata:
-            description = 'Processed using extension {}'.format(entry)
-            package, version = self._extension_metadata[entry]
+        if 'history' not in self.tree:
+            self.tree['history'] = dict(extensions=[])
 
-            software = {
-                'name': package,
-                'author': '',
-                'homepage': '',
-                'version': version
-            }
+        for extension in self.type_index.get_extensions_used():
+            ext_name = util.get_class_name(extension)
+            ext_meta = ExtensionMetadata(extension_class=ext_name)
+            metadata = self._extension_metadata.get(type(extension))
+            if metadata is not None:
+                ext_meta.software = dict(name=metadata[0], version=metadata[1])
 
-            self.add_history_entry(description, software=software)
+            for i, entry in enumerate(self.tree['history']['extensions']):
+                # Update metadata about this extension if it already exists
+                if entry.extension_class == ext_meta.extension_class:
+                    self.tree['history']['extensions'][i] = ext_meta
+                    break
+            else:
+                self.tree['history']['extensions'].append(ext_meta)
 
     @property
     def file_format_version(self):
@@ -808,6 +811,9 @@ class AsdfFile(versioning.VersionedMixin):
             The ASDF version to write out.  If not provided, it will
             write out in the latest version supported by asdf.
         """
+
+        self._update_extension_history()
+
         fd = self._fd
 
         if fd is None:
@@ -948,7 +954,7 @@ class AsdfFile(versioning.VersionedMixin):
             write out in the latest version supported by asdf.
         """
 
-        self._add_extension_history()
+        self._update_extension_history()
 
         original_fd = self._fd
 

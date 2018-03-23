@@ -267,6 +267,22 @@ def resolve_name(name):
     return ret
 
 
+def get_class_name(instance):
+    """
+    Given an instance of a class, returns a string representing the fully
+    specified path of the class.
+
+    Parameters
+    ----------
+
+    instance : object
+        An instance of any object
+    """
+
+    typ = type(instance)
+    return "{}.{}".format(typ.__module__, typ.__name__)
+
+
 def minversion(module, version, inclusive=True, version_path='__version__'):
     """
     Returns `True` if the specified Python module satisfies a minimum version
