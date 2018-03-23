@@ -187,7 +187,7 @@ class AsdfFile(versioning.VersionedMixin):
 
     def _update_extension_history(self):
 
-        if 'history' not in self.tree:
+        if 'history' not in self.tree or 'extensions' not in self.tree['history']:
             self.tree['history'] = dict(extensions=[])
 
         for extension in self.type_index.get_extensions_used():
