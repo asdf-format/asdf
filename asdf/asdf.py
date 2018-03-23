@@ -139,6 +139,21 @@ class AsdfFile(versioning.VersionedMixin):
     def __exit__(self, type, value, traceback):
         self.close()
 
+    def _check_extensions(self, tree):
+        if 'history' not in tree or not isinstance(tree['history'], dict) or \
+                'extensions' not in tree['history']:
+            return
+
+        for extension in tree['history']['extensions']:
+            if extension.extension_class not in self._extension_metadata:
+                filename = "'{}'".format(self._fname) if self._fname else ''
+                msg = "File {} was created with extension '{}', which is " \
+                "not currently installed"
+                if extension.software:
+                    msg += " (from package {}-{})".format(
+                        extension.software['name'], extension.software['version'])
+                warnings.warn(msg.format(filename, extension.extension_class))
+
     def _process_extensions(self, extensions):
         if extensions is None or extensions == []:
             self._extensions = default_extensions.extension_list
@@ -164,7 +179,7 @@ class AsdfFile(versioning.VersionedMixin):
         for extension in self.type_index.get_extensions_used():
             ext_name = util.get_class_name(extension)
             ext_meta = ExtensionMetadata(extension_class=ext_name)
-            metadata = self._extension_metadata.get(type(extension))
+            metadata = self._extension_metadata.get(ext_name)
             if metadata is not None:
                 ext_meta.software = dict(name=metadata[0], version=metadata[1])
 
@@ -570,6 +585,8 @@ class AsdfFile(versioning.VersionedMixin):
             raise
 
         tree = yamlutil.tagged_tree_to_custom_tree(tree, self, _force_raw_types)
+
+        self._check_extensions(tree)
 
         self._tree = tree
         self.run_hook('post_read')

@@ -267,19 +267,21 @@ def resolve_name(name):
     return ret
 
 
-def get_class_name(instance):
+def get_class_name(obj, instance=True):
     """
-    Given an instance of a class, returns a string representing the fully
-    specified path of the class.
+    Given a class or instance of a class, returns a string representing the
+    fully specified path of the class.
 
     Parameters
     ----------
 
-    instance : object
+    obj : object
         An instance of any object
+    instance: bool
+        Indicates whether given object is an instance of the class to be named
     """
 
-    typ = type(instance)
+    typ = type(obj) if instance else obj
     return "{}.{}".format(typ.__module__, typ.__name__)
 
 

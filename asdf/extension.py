@@ -11,6 +11,7 @@ import importlib
 
 from . import asdftypes
 from . import resolver
+from .util import get_class_name
 from .exceptions import AsdfDeprecationWarning
 
 
@@ -191,7 +192,8 @@ class _DefaultExtensions:
                 continue
 
             dist = entry_point.dist
-            self._package_metadata[ext] = (dist.project_name, dist.version)
+            name = get_class_name(ext, instance=False)
+            self._package_metadata[name] = (dist.project_name, dist.version)
             self._extensions.append(ext())
 
     @property
