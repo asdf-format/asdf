@@ -130,8 +130,6 @@ class AsdfFile(versioning.VersionedMixin):
 
         self._comments = []
 
-        self._add_extension_history()
-
         if version is not None:
             self.version = version
 
@@ -159,6 +157,9 @@ class AsdfFile(versioning.VersionedMixin):
         self._extension_metadata = default_extensions.package_metadata
 
     def _add_extension_history(self):
+        # do nothing for now
+        return
+
         for entry in self._extension_metadata:
             description = 'Processed using extension {}'.format(entry)
             package, version = self._extension_metadata[entry]
@@ -946,6 +947,9 @@ class AsdfFile(versioning.VersionedMixin):
             The ASDF version to write out.  If not provided, it will
             write out in the latest version supported by asdf.
         """
+
+        self._add_extension_history()
+
         original_fd = self._fd
 
         if version is not None:
