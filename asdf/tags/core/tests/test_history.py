@@ -9,6 +9,7 @@ import pytest
 from jsonschema import ValidationError
 
 import asdf
+from asdf.tests.helpers import yaml_to_asdf
 
 
 def test_history():
@@ -31,3 +32,20 @@ def test_history():
     assert len(ff.tree['history']['entries']) == 2
 
     assert isinstance(ff.tree['history']['entries'][0]['time'], datetime.datetime)
+
+
+def test_old_history(tmpdir):
+    """Make sure that old versions of the history format are still accepted"""
+
+    yaml = """
+history: 
+  - !core/history_entry-1.0.0
+    description: "Here's a test of old history entries"
+    software: !core/software-1.0.0
+      name: foo
+      version: 1.2.3
+    """
+
+    buff = yaml_to_asdf(yaml)
+    with asdf.open(buff) as af:
+        assert len(af.tree['history']) == 1
