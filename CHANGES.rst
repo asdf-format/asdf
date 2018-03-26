@@ -12,6 +12,9 @@
 - Add metadata about extensions used to create a file to the history section of
   the file itself. [#475]
 
+- Add command for extracting ASDF extension from ASDF-in-FITS file and
+  converting it to a pure ASDF file. [#477]
+
 1.4.0 (unreleased)
 ------------------
 
