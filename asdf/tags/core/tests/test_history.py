@@ -1,15 +1,43 @@
 # Licensed under a 3-clause BSD style license - see LICENSE.rst
 # -*- coding: utf-8 -*-
 
-
+import os
 import datetime
+import fractions
 
 import pytest
 
 from jsonschema import ValidationError
 
 import asdf
+from asdf import util
+from asdf import asdftypes
+from asdf.tests import helpers
 from asdf.tests.helpers import yaml_to_asdf, display_warnings
+
+
+SCHEMA_PATH = os.path.join(os.path.dirname(helpers.__file__), 'data')
+
+
+class CustomExtension:
+    """
+    This is the base class that is used for extensions for custom tag
+    classes that exist only for the purposes of testing.
+    """
+    @property
+    def types(self):
+        return []
+
+    @property
+    def tag_mapping(self):
+        return [('tag:nowhere.org:custom',
+                 'http://nowhere.org/schemas/custom{tag_suffix}')]
+
+    @property
+    def url_mapping(self):
+        return [('http://nowhere.org/schemas/custom/',
+                 util.filepath_to_url(SCHEMA_PATH) +
+                 '/{url_suffix}.yaml')]
 
 
 def test_history():
@@ -130,3 +158,63 @@ history:
     with pytest.raises(RuntimeError):
         with asdf.open(buff, strict_extension_check=True) as af:
             pass
+
+
+def test_metadata_with_custom_extension(tmpdir):
+
+    class FractionType(asdftypes.AsdfType):
+        name = 'fraction'
+        organization = 'nowhere.org'
+        version = (1, 0, 0)
+        standard = 'custom'
+        types = [fractions.Fraction]
+
+        @classmethod
+        def to_tree(cls, node, ctx):
+            return [node.numerator, node.denominator]
+
+        @classmethod
+        def from_tree(cls, tree, ctx):
+            return fractions.Fraction(tree[0], tree[1])
+
+    class FractionExtension(CustomExtension):
+        @property
+        def types(self):
+            return [FractionType]
+
+    tree = {
+        'fraction': fractions.Fraction(2, 3)
+    }
+
+    tmpfile = str(tmpdir.join('custom_extension.asdf'))
+    with asdf.AsdfFile(tree, extensions=FractionExtension()) as ff:
+        ff.write_to(tmpfile)
+
+    # We expect metadata about both the Builtin extension and the custom one
+    with asdf.open(tmpfile, extensions=FractionExtension()) as af:
+        assert len(af['history']['extensions']) == 2
+
+    with pytest.warns(None) as warnings:
+        with asdf.open(tmpfile, ignore_unrecognized_tag=True) as af:
+            pass
+
+    # Since we're ignoring the unrecognized tag warning, we should only get
+    # one warning here, which is the one about the missing extension
+    assert len(warnings) == 1
+    assert "was created with extension" in str(warnings[0].message)
+
+    # If we use the extension but we don't serialize any types that require it,
+    # no metadata about this extension should be added to the file
+    tree2 = { 'x': [x for x in range(10)] }
+    tmpfile2 = str(tmpdir.join('no_extension.asdf'))
+    with asdf.AsdfFile(tree2, extensions=FractionExtension()) as ff:
+        ff.write_to(tmpfile2)
+
+    with asdf.open(tmpfile2) as af:
+        assert len(af['history']['extensions']) == 1
+
+    with pytest.warns(None) as warnings:
+        with asdf.open(tmpfile2) as af:
+            pass
+
+    assert len(warnings) == 0

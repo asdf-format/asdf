@@ -162,6 +162,9 @@ class AsdfFile(versioning.VersionedMixin):
 
             elif extension.software:
                 installed = self._extension_metadata[extension.extension_class]
+                # Local extensions may not have a real version
+                if not installed[1]:
+                    continue
                 # Compare version in file metadata with installed version
                 if LooseVersion(installed[1]) < LooseVersion(extension.software['version']):
                     msg = "File {}was created with extension '{}' from " \
@@ -189,9 +192,14 @@ class AsdfFile(versioning.VersionedMixin):
         if not isinstance(extensions, list):
             extensions = [extensions]
 
+        # Process metadata about custom extensions
+        for extension in extensions:
+            ext_name = util.get_class_name(extension)
+            self._extension_metadata[ext_name] = ('', '')
+
         extensions = default_extensions.extensions + extensions
         self._extensions = AsdfExtensionList(extensions)
-        self._extension_metadata = default_extensions.package_metadata
+        self._extension_metadata.update(default_extensions.package_metadata)
 
     def _update_extension_history(self):
 
