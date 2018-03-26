@@ -9,6 +9,9 @@
 
 - Create ``pytest`` plugin to be used for testing schema files. [#425]
 
+- Remove hard dependency on Astropy. It is still required for testing, and for
+  processing ASDF-in-FITS files. [#476]
+
 1.4.0 (unreleased)
 ------------------
 
