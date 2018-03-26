@@ -12,6 +12,9 @@
 - Add metadata about extensions used to create a file to the history section of
   the file itself. [#475]
 
+- Remove hard dependency on Astropy. It is still required for testing, and for
+  processing ASDF-in-FITS files. [#476]
+
 - Add command for extracting ASDF extension from ASDF-in-FITS file and
   converting it to a pure ASDF file. [#477]
 
