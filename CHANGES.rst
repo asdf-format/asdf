@@ -9,6 +9,9 @@
 
 - Create ``pytest`` plugin to be used for testing schema files. [#425]
 
+- Add metadata about extensions used to create a file to the history section of
+  the file itself. [#475]
+
 1.4.0 (unreleased)
 ------------------
 

@@ -526,7 +526,11 @@ def test_assert_roundtrip_with_extension(tmpdir):
     def check(ff):
         assert isinstance(ff.tree['custom'], CustomType)
 
-    helpers.assert_roundtrip_tree(tree, tmpdir, extensions=[CustomTypeExtension()])
+    with pytest.warns(None) as warnings:
+        helpers.assert_roundtrip_tree(
+            tree, tmpdir, extensions=[CustomTypeExtension()])
+
+    assert len(warnings) == 0, helpers.display_warnings(warnings)
 
     assert called_custom_assert_equal[0] is True
 

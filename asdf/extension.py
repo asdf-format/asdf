@@ -11,6 +11,7 @@ import importlib
 
 from . import asdftypes
 from . import resolver
+from .util import get_class_name
 from .exceptions import AsdfDeprecationWarning
 
 
@@ -121,10 +122,10 @@ class AsdfExtensionList(object):
             tag_mapping.extend(extension.tag_mapping)
             url_mapping.extend(extension.url_mapping)
             for typ in extension.types:
-                self._type_index.add_type(typ)
+                self._type_index.add_type(typ, extension)
                 validators.update(typ.validators)
                 for sibling in typ.versioned_siblings:
-                    self._type_index.add_type(sibling)
+                    self._type_index.add_type(sibling, extension)
                     validators.update(sibling.validators)
         self._tag_mapping = resolver.Resolver(tag_mapping, 'tag')
         self._url_mapping = resolver.Resolver(url_mapping, 'url')
@@ -178,11 +179,21 @@ class _DefaultExtensions:
     def __init__(self):
         self._extensions = []
         self._extension_list = None
+        self._package_metadata = {}
 
     def _load_installed_extensions(self, group='asdf_extensions'):
         self._extensions = []
         for entry_point in iter_entry_points(group=group):
             ext = entry_point.load()
+            if not issubclass(ext, AsdfExtension):
+                warnings.warn("Found entry point {}, from {} but it is not a "
+                              "subclass of AsdfExtension, as expected. It is "
+                              "being ignored.".format(ext, entry_point.dist))
+                continue
+
+            dist = entry_point.dist
+            name = get_class_name(ext, instance=False)
+            self._package_metadata[name] = (dist.project_name, dist.version)
             self._extensions.append(ext())
 
     @property
@@ -200,5 +211,8 @@ class _DefaultExtensions:
 
         return self._extension_list
 
+    @property
+    def package_metadata(self):
+        return self._package_metadata
 
 default_extensions = _DefaultExtensions()
