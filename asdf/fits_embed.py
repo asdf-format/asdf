@@ -231,7 +231,8 @@ class AsdfInFits(asdf.AsdfFile):
 
     @classmethod
     def open(cls, fd, uri=None, validate_checksums=False, extensions=None,
-             ignore_version_mismatch=True, ignore_unrecognized_tag=False):
+             ignore_version_mismatch=True, ignore_unrecognized_tag=False,
+             strict_extension_check=False):
         """Creates a new AsdfInFits object based on given input data
 
         Parameters
@@ -257,7 +258,26 @@ class AsdfInFits(asdf.AsdfFile):
 
         ignore_version_mismatch : bool, optional
             When `True`, do not raise warnings for mismatched schema versions.
+
+        strict_extension_check : bool, optional
+            When `True`, if the given ASDF file contains metadata about the
+            extensions used to create it, and if those extensions are not
+            installed, opening the file will fail. When `False`, opening a file
+            under such conditions will cause only a warning. Defaults to
+            `False`.
         """
+        return cls._open_impl(fd, uri=uri,
+                       validate_checksums=validate_checksums,
+                       extensions=extensions,
+                       ignore_version_mismatch=ignore_version_mismatch,
+                       ignore_unrecognized_tag=ignore_unrecognized_tag,
+                       strict_extension_check=strict_extension_check)
+
+    @classmethod
+    def _open_impl(cls, fd, uri=None, validate_checksums=False, extensions=None,
+             ignore_version_mismatch=True, ignore_unrecognized_tag=False,
+             strict_extension_check=False, _extension_metadata=None):
+
         close_hdulist = False
         if isinstance(fd, fits.hdu.hdulist.HDUList):
             hdulist = fd
@@ -275,6 +295,9 @@ class AsdfInFits(asdf.AsdfFile):
         self = cls(hdulist, uri=uri, extensions=extensions,
                    ignore_version_mismatch=ignore_version_mismatch,
                    ignore_unrecognized_tag=ignore_unrecognized_tag)
+        if _extension_metadata is not None:
+            self._extension_metadata = _extension_metadata
+
         self._close_hdulist = close_hdulist
 
         try:
@@ -284,8 +307,14 @@ class AsdfInFits(asdf.AsdfFile):
             return self
 
         buff = io.BytesIO(asdf_extension.data)
-        return cls._open_asdf(self, buff, uri=uri, mode='r',
-                              validate_checksums=validate_checksums)
+
+        try:
+            return cls._open_asdf(self, buff, uri=uri, mode='r',
+                              validate_checksums=validate_checksums,
+                              strict_extension_check=strict_extension_check)
+        except RuntimeError:
+            self.close()
+            raise
 
     def _create_hdu(self, buff, use_image_hdu):
         # Allow writing to old-style ImageHDU for backwards compatibility

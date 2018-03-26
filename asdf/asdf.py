@@ -630,10 +630,12 @@ class AsdfFile(versioning.VersionedMixin):
                 # this introduces another dependency on astropy which may
                 # not be desireable.
                 from . import fits_embed
-                return fits_embed.AsdfInFits.open(fd, uri=uri,
+                return fits_embed.AsdfInFits._open_impl(fd, uri=uri,
                             validate_checksums=validate_checksums,
                             ignore_version_mismatch=self._ignore_version_mismatch,
-                            extensions=self._extensions)
+                            extensions=self._extensions,
+                            strict_extension_check=strict_extension_check,
+                            _extension_metadata=self._extension_metadata)
             except ValueError:
                 pass
             raise ValueError(

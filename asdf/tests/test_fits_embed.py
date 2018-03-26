@@ -358,3 +358,18 @@ def test_serialize_table(tmpdir):
     with asdf.AsdfFile.open(tmpfile) as ff:
         data = ff.tree['my_table']
         assert data._source.startswith('fits:')
+
+def test_extension_check():
+    testfile = os.path.join(TEST_DATA_PATH, 'extension_check.fits')
+
+    with pytest.warns(None) as warnings:
+        with asdf.AsdfFile.open(testfile) as ff:
+            pass
+
+    assert len(warnings) == 1
+    assert ("was created with extension 'foo.bar.FooBar', which is not "
+        "currently installed (from package foo-1.2.3)") in str(warnings[0].message)
+
+    with pytest.raises(RuntimeError):
+        with asdf.AsdfFile.open(testfile, strict_extension_check=True) as ff:
+            pass
