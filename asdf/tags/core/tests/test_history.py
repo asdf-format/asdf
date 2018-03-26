@@ -112,3 +112,21 @@ history:
     assert str(warnings[0].message).startswith(
         "File was created with extension 'asdf.extension.BuiltinExtension' "
         "from package asdf-100.0.3")
+
+
+def test_strict_extension_check():
+
+    yaml = """
+history:
+  extensions:
+    - !core/extension_metadata-1.0.0
+      extension_class: foo.bar.FooBar
+      software: !core/software-1.0.0
+        name: foo
+        version: 1.2.3
+    """
+
+    buff = yaml_to_asdf(yaml)
+    with pytest.raises(RuntimeError):
+        with asdf.open(buff, strict_extension_check=True) as af:
+            pass
