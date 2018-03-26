@@ -9,7 +9,7 @@ import pytest
 from jsonschema import ValidationError
 
 import asdf
-from asdf.tests.helpers import yaml_to_asdf
+from asdf.tests.helpers import yaml_to_asdf, display_warnings
 
 
 def test_history():
@@ -86,7 +86,7 @@ history:
         with asdf.open(buff) as af:
             pass
 
-    assert len(warnings) == 1
+    assert len(warnings) == 1, display_warnings(warnings)
     assert str(warnings[0].message).startswith(
         "File was created with extension 'foo.bar.FooBar'")
 
@@ -108,7 +108,7 @@ history:
         with asdf.open(buff) as af:
             pass
 
-    assert len(warnings) == 1
+    assert len(warnings) == 1, display_warnings(warnings)
     assert str(warnings[0].message).startswith(
         "File was created with extension 'asdf.extension.BuiltinExtension' "
         "from package asdf-100.0.3")

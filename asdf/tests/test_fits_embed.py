@@ -18,7 +18,7 @@ import asdf
 from asdf import fits_embed
 from asdf import open as asdf_open
 
-from .helpers import assert_tree_match, yaml_to_asdf, display_warnings
+from .helpers import assert_tree_match, display_warnings
 
 
 TEST_DATA_PATH = os.path.join(os.path.dirname(__file__), 'data')
@@ -366,7 +366,7 @@ def test_extension_check():
         with asdf.AsdfFile.open(testfile) as ff:
             pass
 
-    assert len(warnings) == 1
+    assert len(warnings) == 1, display_warnings(warnings)
     assert ("was created with extension 'foo.bar.FooBar', which is not "
         "currently installed (from package foo-1.2.3)") in str(warnings[0].message)
 
