@@ -9,6 +9,9 @@
 
 - Create ``pytest`` plugin to be used for testing schema files. [#425]
 
+- Add metadata about extensions used to create a file to the history section of
+  the file itself. [#475]
+
 - Remove hard dependency on Astropy. It is still required for testing, and for
   processing ASDF-in-FITS files. [#476]
 
