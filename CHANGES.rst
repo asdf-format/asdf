@@ -18,6 +18,8 @@
 - Add command for extracting ASDF extension from ASDF-in-FITS file and
   converting it to a pure ASDF file. [#477]
 
+- Add command for removing ASDF extension from ASDF-in-FITS file. [#480]
+
 1.4.0 (unreleased)
 ------------------
 

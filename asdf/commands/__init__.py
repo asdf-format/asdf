@@ -13,3 +13,4 @@ from .extension import *
 # Extracting ASDF-in-FITS files requires Astropy
 if importlib.util.find_spec('astropy'):
     from .extract import *
+    from .remove_hdu import *
