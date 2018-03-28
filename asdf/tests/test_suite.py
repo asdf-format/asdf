@@ -59,10 +59,7 @@ def test_reference_file(reference_file):
     name_without_ext, _ = os.path.splitext(reference_file)
 
     known_fail = False
-    # We expect warnings from numpy due to the way that complex.yaml is
-    # constructed. We want to make sure we only suppress warnings when they are
-    # expected.
-    expect_warnings = basename == 'complex.asdf'
+    expect_warnings = False
 
     if sys.maxunicode <= 65535:
         known_fail = known_fail or (basename in ('unicode_spp.asdf'))
