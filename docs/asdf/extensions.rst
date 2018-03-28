@@ -287,3 +287,6 @@ asserts that the corresponding fraction is in simplified form:
                 yield ValidationError("Fraction is not in simplified form.")
 
     FractionType.validators = {'simplified': validate_simplified}
+
+Testing custom schemas
+======================

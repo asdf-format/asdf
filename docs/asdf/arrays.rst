@@ -254,3 +254,7 @@ different compression algorithm when writing the file out again.
     # Or specify the (possibly different) algorithm to use when writing out
     af.write_to('different.asdf', all_array_compression='lz4')
 
+Memory mapping
+--------------
+
+By default all array data is ...

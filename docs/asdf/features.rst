@@ -33,6 +33,16 @@ Schema validation
 
 This section needs to be updated later.
 
+Warnings and errors
+-------------------
+
+Discuss warning control using ``ignore_version_mismatch``.
+The documentation on ``ignore_unrecognized_tag`` should be mentioned here but
+detailed discussion probably belongs in the section about extensions.
+
+Custom schemas
+--------------
+
 Versioning and Compatibility
 ============================
 
@@ -46,8 +56,32 @@ There are several different versions to keep in mind when discussing ASDF:
 
 ASDF is designed to serve as an archival format.
 
+Mention the use of the ``version`` argument in the constructor and the
+``write_to`` function.
+
 Using Extensions
 ================
+
+The built-in extension
+----------------------
+
+Extensions from other packages
+------------------------------
+
+Using custom extensions
+-----------------------
+
+Differentiated from those that are installed with other packages.
+
+Warnings and errors
+-------------------
+
+Mention the use of ``ignore_unrecognized_tag`` here.
+
+Extension checking
+------------------
+
+New extension metadata. Mention the use of ``strict_extension_check`` here.
 
 External References
 ===================
