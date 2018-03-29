@@ -82,9 +82,14 @@ of ASDF on display:
     #ASDF_STANDARD 1.2.0
     %YAML 1.1
     %TAG ! tag:stsci.edu:asdf/
-    --- !core/asdf-1.0.0
+    --- !core/asdf-1.1.0
     asdf_library: !core/software-1.0.0 {author: Space Telescope Science Institute, homepage: 'http://github.com/spacetelescope/asdf',
-      name: asdf, version: 1.3.1}
+      name: asdf, version: 2.0.0}
+    history:
+      extensions:
+      - !core/extension_metadata-1.0.0
+        extension_class: asdf.extension.BuiltinExtension
+        software: {name: asdf, version: 2.0.0}
     foo: 42
     name: Monty
     powers:
