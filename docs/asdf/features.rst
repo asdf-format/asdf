@@ -2,13 +2,17 @@
 Core Features
 *************
 
+This section discusses the core features of the ASDF data format, and provides
+examples and use cases that are specific to the Python implementation.
+
 Data Model
 ==========
 
 The fundamental data object in ASDF is the ``tree``, which is a nested
 combination of basic data structures: dictionaries, lists, strings and numbers.
 The top-level tree object behaves like a Python dictionary and supports
-arbitrary nesting of data structures.
+arbitrary nesting of data structures. For simple examples of creating and
+reading trees, see :ref:`overview`.
 
 One of the key features of ASDF is its ability to serialize Numpy arrays. This
 is discussed in detail in :ref:`array-data`.
