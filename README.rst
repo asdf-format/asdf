@@ -44,9 +44,9 @@ Creating a file
 
 .. begin-create-file-text::
 
-We're going to store several ``numpy`` arrays and other data to an ASDF
-file. We do this by creating a "tree", which is simply a Python
-dictionary, and using it to create an ``AsdfFile`` object:
+We're going to store several :mod:`numpy` arrays and other data to an ASDF
+file. We do this by creating a "tree", which is simply a :class:`dict`,
+and using it to create an :class:`AsdfFile` object:
 
 .. code:: python
 
@@ -128,8 +128,8 @@ Reading a file
 
 .. begin-read-file-text::
 
-To read an existing ASDF file, we simply use the top-level ``open``
-function of the ``asdf`` package:
+To read an existing ASDF file, we simply use the top-level :func:`open`
+function of the :mod:`asdf` package:
 
 .. code:: python
 
@@ -137,14 +137,14 @@ function of the ``asdf`` package:
 
     af = asdf.open('example.asdf')
 
-The ``open`` function also works as a context handler:
+The :func:`open` function also works as a context handler:
 
 .. code:: python
 
     with asdf.open('example.asdf') as af:
         ...
 
-To access the data stored in the file, use the top-level ``tree``
+To access the data stored in the file, use the top-level :attr:`AsdfFile.tree`
 attribute:
 
 .. code:: python
@@ -162,7 +162,7 @@ attribute:
      'random': <array (unloaded) shape: [100] dtype: float64>,
      'sequence': <array (unloaded) shape: [100] dtype: int64>}
 
-The tree is simply a Python dictionary, and nodes are accessed like any
+The tree is simply a Python :class:`dict`, and nodes are accessed like any
 other dictionary entry:
 
 .. code:: python
@@ -195,7 +195,7 @@ Array data remains unloaded until it is explicitly accessed:
 
 By default, uncompressed data blocks are memory mapped for efficient
 access. Memory mapping can be disabled by using the ``copy_arrays``
-option when reading:
+option of :func:`open` when reading:
 
 .. code:: python
 
