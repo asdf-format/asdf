@@ -1,3 +1,5 @@
+.. currentmodule:: asdf
+
 Arrays
 ======
 
@@ -12,8 +14,8 @@ Beyond the basic data types of dictionaries, lists, strings and numbers, the
 most important thing ASDF can save is arrays.  It's as simple as putting a
 :mod:`numpy` array somewhere in the tree.  Here, we save an 8x8 array of random
 floating-point numbers (using `numpy.random.rand`).  Note that the resulting
-YAML data contains information about the structure (size and data type) of the
-array, but the actual array content is in a binary block.
+YAML output contains information about the structure (size and data type) of
+the array, but the actual array content is in a binary block.
 
 .. runcode::
 
@@ -61,17 +63,17 @@ data being saved.
 Saving inline arrays
 --------------------
 
-For these sort of small arrays, you may not care about the efficiency
-of a binary representation and want to just save the content directly
-in the YAML tree.  The `~asdf.AsdfFile.set_array_storage` method
-can be used to set the type of block of the associated data, either
-``internal``, ``external`` or ``inline``.
+For small arrays, you may not care about the efficiency of a binary
+representation and just want to save the array contents directly in the YAML
+tree.  The `~asdf.AsdfFile.set_array_storage` method can be used to set the
+storage type of the associated data. The allowed values are ``internal``,
+``external``, and ``inline``.
 
 - ``internal``: The default.  The array data will be
   stored in a binary block in the same ASDF file.
 
-- ``external``: Store the data in a binary block in a
-  separate ASDF file.
+- ``external``: Store the data in a binary block in a separate ASDF file (also
+  known as "exploded" format, which discussed below in :ref:`exploded`).
 
 - ``inline``: Store the data as YAML inline in the tree.
 
@@ -87,6 +89,72 @@ can be used to set the type of block of the associated data, either
    ff.write_to("test.asdf")
 
 .. asdf:: test.asdf
+
+Alternatively, it is possible to use the ``all_array_storage`` parameter of
+`AsdfFile.write_to` and `AsdfFile.update` to control the storage
+format of all arrays in the file.
+
+.. code::
+
+    # This controls the output format of all arrays in the file
+    ff.write_to("test.asdf", all_array_storage='inline')
+
+Saving external arrays
+----------------------
+
+ASDF files may also be saved in "exploded form", which creats multiple files
+corresponding to the following data items:
+
+- One ASDF file containing only the header and tree.
+
+- *n* ASDF files, each containing a single array data block.
+
+Exploded form is useful in the following scenarios:
+
+- Not all text editors may handle the hybrid text and binary nature of
+  the ASDF file, and therefore either can't open a ASDF file or would
+  break a ASDF file upon saving.  In this scenario, a user may explode
+  the ASDF file, edit the YAML portion as a pure YAML file, and
+  implode the parts back together.
+
+- Over a network protocol, such as HTTP, a client may only need to
+  access some of the blocks.  While reading a subset of the file can
+  be done using HTTP ``Range`` headers, it still requires one (small)
+  request per block to "jump" through the file to determine the start
+  location of each block.  This can become time-consuming over a
+  high-latency network if there are many blocks.  Exploded form allows
+  each block to be requested directly by a specific URI.
+
+- An ASDF writer may stream a table to disk, when the size of the table
+  is not known at the outset.  Using exploded form simplifies this,
+  since a standalone file containing a single table can be iteratively
+  appended to without worrying about any blocks that may follow it.
+
+To save a block in an external file, set its block type to
+``'external'``.
+
+.. runcode::
+
+   from asdf import AsdfFile
+   import numpy as np
+
+   my_array = np.random.rand(8, 8)
+   tree = {'my_array': my_array}
+   ff = AsdfFile(tree)
+
+   # On an individual block basis:
+   ff.set_array_storage(my_array, 'external')
+   ff.write_to("test.asdf")
+
+   # Or for every block:
+   ff.write_to("test.asdf", all_array_storage='external')
+
+.. asdf:: test.asdf
+
+.. asdf:: test0000.asdf
+
+Like inline arrays, this can also be controlled using the ``set_array_storage``
+parameter of `AsdfFile.write_to` and `AsdfFile.update`.
 
 Streaming array data
 --------------------
@@ -158,58 +226,7 @@ to numpy arrays stored in ASDF:
                 # write the array to the output file handle
                 fd.write(array.tostring())
 
-Saving external arrays
-----------------------
-
-ASDF files may also be saved in "exploded form", in multiple files:
-
-- An ASDF file containing only the header and tree.
-
-- *n* ASDF files, each containing a single block.
-
-Exploded form is useful in the following scenarios:
-
-- Not all text editors may handle the hybrid text and binary nature of
-  the ASDF file, and therefore either can't open a ASDF file or would
-  break a ASDF file upon saving.  In this scenario, a user may explode
-  the ASDF file, edit the YAML portion as a pure YAML file, and
-  implode the parts back together.
-
-- Over a network protocol, such as HTTP, a client may only need to
-  access some of the blocks.  While reading a subset of the file can
-  be done using HTTP ``Range`` headers, it still requires one (small)
-  request per block to "jump" through the file to determine the start
-  location of each block.  This can become time-consuming over a
-  high-latency network if there are many blocks.  Exploded form allows
-  each block to be requested directly by a specific URI.
-
-- An ASDF writer may stream a table to disk, when the size of the table
-  is not known at the outset.  Using exploded form simplifies this,
-  since a standalone file containing a single table can be iteratively
-  appended to without worrying about any blocks that may follow it.
-
-To save a block in an external file, set its block type to
-``'external'``.
-
-.. runcode::
-
-   from asdf import AsdfFile
-   import numpy as np
-
-   my_array = np.random.rand(8, 8)
-   tree = {'my_array': my_array}
-   ff = AsdfFile(tree)
-
-   # On an individual block basis:
-   ff.set_array_storage(my_array, 'external')
-   ff.write_to("test.asdf")
-
-   # Or for every block:
-   ff.write_to("test.asdf", all_array_storage='external')
-
-.. asdf:: test.asdf
-
-.. asdf:: test0000.asdf
+.. _exploded:
 
 Compression
 -----------
