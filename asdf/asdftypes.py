@@ -78,6 +78,9 @@ class _AsdfWriteTypeIndex(object):
     If version is ``'latest'``, it will just use the highest-numbered
     versions of each of the schemas.  This is currently only used to
     aid in testing.
+
+    In the future, this may be renamed to _ExtensionWriteTypeIndex since it is
+    not specific to classes that inherit `AsdfType`.
     """
     _version_map = None
 
@@ -178,7 +181,8 @@ class _AsdfWriteTypeIndex(object):
 
     def from_custom_type(self, custom_type):
         """
-        Given a custom type, return the corresponding `AsdfType` definition.
+        Given a custom type, return the corresponding `ExtensionType`
+        definition.
         """
         asdftype = None
 
@@ -212,7 +216,10 @@ class _AsdfWriteTypeIndex(object):
 
 class AsdfTypeIndex(object):
     """
-    An index of the known `AsdfType` classes.
+    An index of the known `ExtensionType` classes.
+
+    In the future this class may be renamed to ExtensionTypeIndex, since it is
+    not specific to classes that inherit `AsdfType`.
     """
     def __init__(self):
         self._write_type_indices = {}
@@ -267,11 +274,11 @@ class AsdfTypeIndex(object):
 
     def from_custom_type(self, custom_type, version=default_version):
         """
-        Given a custom type, return the corresponding `AsdfType`
+        Given a custom type, return the corresponding `ExtensionType`
         definition.
         """
-        # Basic Python types should not ever have an AsdfType
-        # associated with them.
+        # Basic Python types should not ever have an AsdfType associated with
+        # them.
         if custom_type in _BASIC_PYTHON_TYPES:
             return None
 
