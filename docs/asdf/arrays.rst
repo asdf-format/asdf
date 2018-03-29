@@ -1,15 +1,19 @@
 Arrays
 ======
 
+Much of ASDF's power and convenience comes from its ability to represent
+multidimensional array data. The :mod:`asdf` Python package provides native
+support for :mod:`numpy` arrays.
+
 Saving arrays
 -------------
 
-Beyond the basic data types of dictionaries, lists, strings and
-numbers, the most important thing ASDF can save is arrays.  It's as
-simple as putting a Numpy array somewhere in the tree.  Here, we save
-an 8x8 array of random floating-point numbers.  Note that the YAML
-part contains information about the structure (size and data type) of
-the array, but the actual array content is in a binary block.
+Beyond the basic data types of dictionaries, lists, strings and numbers, the
+most important thing ASDF can save is arrays.  It's as simple as putting a
+:mod:`numpy` array somewhere in the tree.  Here, we save an 8x8 array of random
+floating-point numbers (using `numpy.random.rand`).  Note that the resulting
+YAML data contains information about the structure (size and data type) of the
+array, but the actual array content is in a binary block.
 
 .. runcode::
 

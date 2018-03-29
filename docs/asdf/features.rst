@@ -10,12 +10,14 @@ Data Model
 
 The fundamental data object in ASDF is the ``tree``, which is a nested
 combination of basic data structures: dictionaries, lists, strings and numbers.
-The top-level tree object behaves like a Python dictionary and supports
-arbitrary nesting of data structures. For simple examples of creating and
-reading trees, see :ref:`overview`.
+In Python, these types correspond to :class:`dict`, :class:`list`,
+:class:`str`, and :class:`int`, :class:`float`, and :class:`complex`,
+respectively. The top-level tree object behaves like a Python dictionary and
+supports arbitrary nesting of data structures. For simple examples of creating
+and reading trees, see :ref:`overview`.
 
-One of the key features of ASDF is its ability to serialize Numpy arrays. This
-is discussed in detail in :ref:`array-data`.
+One of the key features of ASDF is its ability to serialize :mod:`numpy`
+arrays. This is discussed in detail in :ref:`array-data`.
 
 While the core ASDF package supports serialization of a basic data types and
 Numpy arrays, its true power comes from the ability to extend ASDF to support
