@@ -1,3 +1,5 @@
+.. currentmodule:: asdf.extensions
+
 .. _extensions:
 
 Writing ASDF extensions
@@ -5,19 +7,18 @@ Writing ASDF extensions
 
 Extensions provide a way for ASDF to represent complex types that are not
 defined by the ASDF standard. Examples of types that require custom extensions
-include types from third-party libraries, user-defined types, and also complex
-types that are part of the Python standard library but are not handled in the
-ASDF standard. From ASDF's perspective, these are all considered 'custom'
-types.
+include types from third-party libraries, user-defined types, and complex types
+that are part of the Python standard library but are not handled in the ASDF
+standard. From ASDF's perspective, these are all considered 'custom' types.
 
-Supporting new types in asdf is easy. There are three pieces needed:
+Supporting new types in ASDF is easy. Three components are required:
 
 1. A YAML Schema file for each new type.
 
 2. A tag class (inheriting from `asdf.CustomType`) corresponding to each new
-   custom type. The class must override ``to_tree`` and ``from_tree`` from
-   `asdf.CustomType` in order to define how ASDF serializes and deserializes
-   the custom type.
+   custom type. The class must override `~asdf.CustomType.to_tree` and
+   `~asdf.CustomType.from_tree` from `asdf.CustomType` in order to define how
+   ASDF serializes and deserializes the custom type.
 
 3. A Python class to define an "extension" to ASDF, which is a set of related
    types. This class must implement the `asdf.AsdfExtension` abstract base
@@ -109,6 +110,10 @@ Once you have these classes defined you can save an asdf file using them:
   with asdf.AsdfFile(tree, extensions=[FractionExtension()]) as ff:
       ff.write_to("test.asdf")
 
+Defining custom types
+---------------------
+
+Summarize the various properties of `~asdf.CustomType` here.
 
 Explicit version support
 ------------------------
@@ -199,15 +204,15 @@ versions of Person:
 We need to update our tag class implementation as well. However, we need to be
 careful. We still want to be able to read version 1.0.0 of our schema and be
 able to convert it to the newer version of ``Person`` objects. To accomplish
-this, we will make use of the ``supported_versions`` attribute for our tag
-class. This will allow us to declare explicit support for the schema versions
-our tag class implements.
+this, we will make use of the `~asdf.CustomType.supported_versions` attribute
+for our tag class. This will allow us to declare explicit support for the
+schema versions our tag class implements.
 
 Under the hood, ASDF creates multiple copies of our ``PersonType`` tag class,
-each with a different ``version`` attribute corresponding to one of the
-supported versions. This means that in our new tag class implementation, we can
-condition our ``from_tree`` implementation on the value of ``cls.version`` to
-determine which schema version should be used when reading:
+each with a different `~asdf.CustomType.version` attribute corresponding to one
+of the supported versions. This means that in our new tag class implementation,
+we can condition our `~asdf.CustomType.from_tree` implementation on the value
+of ``version`` to determine which schema version should be used when reading:
 
 .. code-block:: python
 
@@ -240,7 +245,6 @@ Note that the implementation of ``to_tree`` is not conditioned on
 ``cls.version`` since we do not need to convert new ``Person`` objects back to
 the older version of the schema.
 
-
 Adding custom validators
 ------------------------
 
@@ -249,12 +253,11 @@ language. This can be used to impose type-specific restrictions on the
 values in an ASDF file.  This feature is used internally so a schema
 can specify the required datatype of an array.
 
-To support custom validation keywords, set the ``validators`` member
-of a ``CustomType`` subclass to a dictionary where the keys are the
+To support custom validation keywords, set the `~asdf.CustomType.validators`
+member of a `~asdf.CustomType` subclass to a dictionary where the keys are the
 validation keyword name and the values are validation functions.  The
-validation functions are of the same form as the validation functions
-in the underlying ``jsonschema`` library, and are passed the following
-arguments:
+validation functions are of the same form as the validation functions in the
+underlying ``jsonschema`` library, and are passed the following arguments:
 
   - ``validator``: A `jsonschema.Validator` instance.
 
@@ -288,5 +291,8 @@ asserts that the corresponding fraction is in simplified form:
 
     FractionType.validators = {'simplified': validate_simplified}
 
+Packaging custom extensions
+---------------------------
+
 Testing custom schemas
-======================
+----------------------
