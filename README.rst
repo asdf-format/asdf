@@ -46,7 +46,7 @@ Creating a file
 
 We're going to store several :mod:`numpy` arrays and other data to an ASDF
 file. We do this by creating a "tree", which is simply a :class:`dict`,
-and using it to create an :class:`AsdfFile` object:
+and we provide it as input to the constructor of :class:`AsdfFile`:
 
 .. code:: python
 
@@ -105,12 +105,11 @@ of ASDF on display:
       shape: [100]
     ...
 
-The metadata in the file mirrors the structure of the tree that was
-stored. It is hierarchical and human-readable. Notice that ``asdf`` has
-added metadata to the tree that was not explicitly given by the user.
-Notice also that the numerical array data is not stored in the metadata
-tree itself. Instead, it is stored as binary data blocks below the
-metadata section (not shown here).
+The metadata in the file mirrors the structure of the tree that was stored. It
+is hierarchical and human-readable. Notice that metadata has been added to the
+tree that was not explicitly given by the user. Notice also that the numerical
+array data is not stored in the metadata tree itself. Instead, it is stored as
+binary data blocks below the metadata section (not shown here).
 
 It is possible to compress the array data when writing the file:
 
