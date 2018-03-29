@@ -7,7 +7,7 @@ ASDF - Advanced Scientific Data Format
 .. figure:: docs/_static/stsci_logo.png
    :alt: STScI Logo
 
-.. begin-summary-text::
+.. _begin-summary-text
 
 The **A**\ dvanced **S**\ cientific **D**\ ata **F**\ ormat (ASDF) is a
 next-generation interchange format for scientific data. This package
@@ -27,7 +27,7 @@ The ASDF format has the following features:
   serialized automatically
 * ASDF can be extended to serialize custom data types
 
-.. end-summary-text::
+.. _end-summary-text
 
 ASDF is under active development `on github
 <https://github.com/spacetelescope/asdf>`__. More information on contributing
@@ -42,7 +42,7 @@ and reading ASDF files.
 Creating a file
 ~~~~~~~~~~~~~~~
 
-.. begin-create-file-text::
+.. _begin-create-file-text
 
 We're going to store several `numpy` arrays and other data to an ASDF file. We
 do this by creating a "tree", which is simply a `dict`, and we provide it as
@@ -125,12 +125,12 @@ It is possible to compress the array data when writing the file:
 Available compression algorithms are ``'zlib'``, ``'bzp2'``, and
 ``'lz4'``.
 
-.. end-create-file-text::
+.. _end-create-file-text
 
 Reading a file
 ~~~~~~~~~~~~~~
 
-.. begin-read-file-text::
+.. _begin-read-file-text
 
 To read an existing ASDF file, we simply use the top-level `open` function of
 the `asdf` package:
@@ -205,7 +205,7 @@ option of `open` when reading:
 
     af = asdf.open('example.asdf', copy_arrays=True)
 
-.. end-read-file-text::
+.. _end-read-file-text
 
 For more information and for advanced usage examples, see the
 `documentation <#documentation>`__.
@@ -222,7 +222,7 @@ documentation <http://asdf.readthedocs.io/en/latest/asdf/extensions.html>`__.
 Installation
 ------------
 
-.. begin-pip-install-text::
+.. _begin-pip-install-text
 
 Stable releases of the ASDF Python package are registered `at
 PyPi <https://pypi.python.org/pypi/asdf>`__. The latest stable version
@@ -232,7 +232,7 @@ can be installed using ``pip``:
 
     $ pip install asdf
 
-.. begin-source-install-text::
+.. _begin-source-install-text
 
 The latest development version of ASDF is available from the ``master`` branch
 `on github <https://github.com/spacetelescope/asdf>`__. To clone the project:
@@ -263,12 +263,12 @@ mode <https://packaging.python.org/tutorials/distributing-packages/#working-in-d
     submodules <https://git-scm.com/docs/git-submodule>`__ for more
     information.
 
-.. end-source-install-text::
+.. _end-source-install-text
 
 Testing
 -------
 
-.. begin-testing-text::
+.. _begin-testing-text
 
 To run the unit tests from a source checkout of the repository:
 
@@ -287,7 +287,7 @@ the package. In a Python interpreter:
 Please note that the `astropy <https://github.com/astropy/astropy>`__
 package must be installed to run the tests.
 
-.. end-testing-text::
+.. _end-testing-text
 
 Documentation
 -------------
