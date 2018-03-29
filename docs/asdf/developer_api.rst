@@ -6,7 +6,7 @@ Developer API
     :include-all-objects:
     :inherited-members:
 
-.. autmodapi:: asdf.extension
+.. automodapi:: asdf.extension
 
 .. automodapi:: asdf.util
 

@@ -15,6 +15,9 @@ from .util import get_class_name
 from .exceptions import AsdfDeprecationWarning
 
 
+__all__ = ['AsdfExtension', 'AsdfExtensionList']
+
+
 @six.add_metaclass(abc.ABCMeta)
 class AsdfExtension(object):
     """

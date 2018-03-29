@@ -18,7 +18,8 @@ from . import util
 from .versioning import AsdfVersion, AsdfSpec, get_version_map, default_version
 
 
-__all__ = ['format_tag', 'AsdfTypeIndex', 'AsdfType', 'CustomType']
+__all__ = ['format_tag', 'ExtensionType', 'AsdfType', 'CustomType',
+           'AsdfTypeIndex']
 
 
 _BASIC_PYTHON_TYPES = [str, int, float, list, dict, tuple]
@@ -177,8 +178,7 @@ class _AsdfWriteTypeIndex(object):
 
     def from_custom_type(self, custom_type):
         """
-        Given a custom type, return the corresponding AsdfType
-        definition.
+        Given a custom type, return the corresponding `AsdfType` definition.
         """
         asdftype = None
 
@@ -212,7 +212,7 @@ class _AsdfWriteTypeIndex(object):
 
 class AsdfTypeIndex(object):
     """
-    An index of the known `AsdfType`s.
+    An index of the known `AsdfType` classes.
     """
     def __init__(self):
         self._write_type_indices = {}
@@ -267,7 +267,7 @@ class AsdfTypeIndex(object):
 
     def from_custom_type(self, custom_type, version=default_version):
         """
-        Given a custom type, return the corresponding AsdfType
+        Given a custom type, return the corresponding `AsdfType`
         definition.
         """
         # Basic Python types should not ever have an AsdfType
@@ -687,6 +687,7 @@ class AsdfType(ExtensionType):
 class CustomType(ExtensionType):
     """
     Base class for all user-defined types. Unlike classes that inherit
-    AsdfType, classes that inherit this class will *not* automatically be added
-    to the list of built-ins. This should be used for user-defined extensions.
+    `AsdfType`, classes that inherit this class will *not* automatically be
+    added to the list of built-ins. This should be used for user-defined
+    extensions.
     """

@@ -33,6 +33,10 @@ except ImportError:
     INTERNET_OFF = False
 
 
+__all__ = ['assert_tree_match', 'assert_roundtrip_tree', 'yaml_to_asdf',
+           'get_file_sizes', 'display_warnings']
+
+
 def assert_tree_match(old_tree, new_tree, ctx=None,
                       funcname='assert_equal', ignore_keys=None):
     """
