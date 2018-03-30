@@ -18,8 +18,7 @@ from . import util
 from .versioning import AsdfVersion, AsdfSpec, get_version_map, default_version
 
 
-__all__ = ['format_tag', 'ExtensionType', 'AsdfType', 'CustomType',
-           'AsdfTypeIndex']
+__all__ = ['format_tag', 'CustomType', 'AsdfTypeIndex']
 
 
 _BASIC_PYTHON_TYPES = [str, int, float, list, dict, tuple]
@@ -559,44 +558,6 @@ class ExtensionType(object):
 
     Besides the attributes defined below, most subclasses will also
     override `to_tree` and `from_tree`.
-
-    Attributes
-    ----------
-    name : str
-        The name of the type.
-
-    organization : str
-        The organization responsible for the type.
-
-    standard : str
-        The standard the type is defined in.  For built-in ASDF types,
-        this is ``"asdf"``.
-
-    version : 3-tuple of int
-        The version of the standard the type is defined in.
-
-    supported_versions : set
-        If provided, indicates explicit compatibility with the given set of
-        versions. Other versions of the same schema that are not included in
-        this set will not be converted to custom types with this class.
-
-    yaml_tag : str
-        The YAML tag to use for the type.  If not provided, it will be
-        automatically generated from name, organization, standard and
-        version.
-
-    types : list of Python types
-        Custom Python types that, when found in the tree, will be
-        converted into basic types for YAML output.
-
-    validators : dict
-        Mapping JSON Schema keywords to validation functions for
-        jsonschema.  Useful if the type defines extra types of
-        validation that can be performed.
-
-    requires : list of str
-        A list of Python packages that are required to instantiate the
-        object.
     """
     name = None
     organization = 'stsci.edu'
@@ -681,7 +642,6 @@ class ExtensionType(object):
 
 
 @six.add_metaclass(AsdfTypeMeta)
-@util.add_common_docstring(append=ExtensionType.__doc__)
 class AsdfType(ExtensionType):
     """
     Base class for all built-in ASDF types. Types that inherit this class will
@@ -690,11 +650,52 @@ class AsdfType(ExtensionType):
     """
 
 @six.add_metaclass(ExtensionTypeMeta)
-@util.add_common_docstring(append=ExtensionType.__doc__)
 class CustomType(ExtensionType):
     """
-    Base class for all user-defined types. Unlike classes that inherit
-    `AsdfType`, classes that inherit this class will *not* automatically be
-    added to the list of built-ins. This should be used for user-defined
-    extensions.
+    Base class for all user-defined types. Classes that inherit this type will
+    *not* automatically be added to the list of ASDF's built-in types. This
+    should be used for user-defined extensions.
     """
+
+    # These attributes are duplicated here with docstrings since a bug in
+    # sphinx prevents the docstrings of class attributes from being inherited
+    # properly (see https://github.com/sphinx-doc/sphinx/issues/741. The
+    # docstrings are not included anywhere else in the class hierarchy since
+    # this class is the only one exposed in the public API.
+    name = None
+    """The name of the type."""
+
+    organization = 'stsci.edu'
+    """The organization responsible for the type."""
+
+    standard = 'asdf'
+    """The standard the type is defined in."""
+
+    version = (1, 0, 0)
+    """The version of the type."""
+
+    supported_versions = set()
+    """If provided, indicates explicit compatibility with the given set of
+    versions. Other versions of the same schema that are not included in this
+    set will not be converted to custom types with this class. """
+
+    types = []
+    """Custom Python types that, when found in the tree, will be converted into
+    basic types for YAML output. Can be either strings referring to the types
+    or the types themselves."""
+
+    handle_dynamic_subclasses = False
+    """Flag indicating whether this type is capable of serializing subclasses
+    of any of the types listed in ``types`` that are generated dynamically."""
+
+    validators = {}
+    """Mapping JSON Schema keywords to validation functions for jsonschema.
+    Useful if the type defines extra types of validation that can be
+    performed."""
+
+    requires = []
+    """A list of Python packages that are required to instantiate the object."""
+
+    yaml_tag = None
+    """The YAML tag to use for the type. If not provided, it will be
+    automatically generated from name, organization, standard and version."""
