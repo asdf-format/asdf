@@ -17,6 +17,9 @@ from . import util
 from . constants import YAML_TAG_PREFIX
 
 
+__all__ = ['custom_tree_to_tagged_tree', 'tagged_tree_to_custom_tree']
+
+
 if getattr(yaml, '__with_libyaml__', None):  # pragma: no cover
     _yaml_base_dumper = yaml.CSafeDumper
     _yaml_base_loader = yaml.CSafeLoader
