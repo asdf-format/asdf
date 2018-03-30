@@ -26,16 +26,16 @@ def test(package=None, test_path=None, args=None, plugins=None,
          verbose=False, pastebin=None, remote_data=False, pep8=False,
          pdb=False, coverage=False, open_files=False, **kwargs):
     """
-    Run the tests using `py.test <http://pytest.org/latest>`__. A proper set
+    Run the tests using `pytest <http://pytest.org/latest>`__. A proper set
     of arguments is constructed and passed to `pytest.main`_.
 
-    .. _py.test: http://pytest.org/latest/
+    .. _pytest: http://pytest.org/latest/
     .. _pytest.main: http://pytest.org/latest/builtin.html#pytest.main
 
     Parameters
     ----------
     package : str, optional
-        The name of a specific package to test, e.g. 'io.fits' or 'utils'.
+        The name of a specific package to test, e.g. 'asdf.tags'.
         If nothing is specified all default tests are run.
 
     test_path : str, optional
@@ -52,11 +52,11 @@ def test(package=None, test_path=None, args=None, plugins=None,
         argument.
 
     verbose : bool, optional
-        Convenience option to turn on verbose output from py.test_. Passing
+        Convenience option to turn on verbose output from pytest_. Passing
         True is the same as specifying ``'-v'`` in ``args``.
 
     pastebin : {'failed','all',None}, optional
-        Convenience option for turning on py.test_ pastebin output. Set to
+        Convenience option for turning on pytest_ pastebin output. Set to
         ``'failed'`` to upload info for failed tests, or ``'all'`` to upload
         info for all tests.
 
@@ -88,7 +88,7 @@ def test(package=None, test_path=None, args=None, plugins=None,
         number of CPUs.  If parallel is negative, it will use the all
         the cores on the machine.  Requires the
         `pytest-xdist <https://pypi.python.org/pypi/pytest-xdist>`_ plugin
-        installed. Only available when using Astropy 0.3 or later.
+        installed.
 
     kwargs
         Any additional keywords passed into this function will be passed
