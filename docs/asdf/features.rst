@@ -1,3 +1,5 @@
+.. currentmodule:: asdf
+
 *************
 Core Features
 *************
@@ -21,8 +23,9 @@ arrays. This is discussed in detail in :ref:`array-data`.
 
 While the core ASDF package supports serialization of a basic data types and
 Numpy arrays, its true power comes from the ability to extend ASDF to support
-serialization of a wide range of custom data types. Details on extending ASDF
-to support custom data types can be found in :ref:`extensions`.
+serialization of a wide range of custom data types. Details on using ASDF
+extensions can be found in :ref:`using_extensions`. Details on creating custom
+ASDF extensions to support custom data types can be found in :ref:`extensions`.
 
 .. _array-data:
 
@@ -34,10 +37,45 @@ Array Data
 
     arrays
 
+.. _using_extensions:
+
+Using extensions
+================
+
+The built-in extension
+----------------------
+
+Extensions from other packages
+------------------------------
+
+Using custom extensions
+-----------------------
+
+Differentiated from those that are installed with other packages.
+
+Warnings and errors
+-------------------
+
+Mention the use of ``ignore_unrecognized_tag`` here.
+
+Extension checking
+------------------
+
+New extension metadata. Mention the use of ``strict_extension_check`` here.
+
+
 Schema validation
 =================
 
-This section needs to be updated later.
+Schema validation is used to determine whether an ASDF file is well formed. All
+ASDF files must conform to the schemas defined by the `ASDF Standard
+<https://asdf-standard.readthedocs.io/en/latest/>`_. Schema validation occurs
+when reading ASDF files (using `asdf.open`), and also when writing them out
+(using `AsdfFile.write_to` or `AsdfFile.update`).
+
+Schema validation also plays a role when using custom extensions (see
+:ref:`using_extensions` and :ref:`extensions`). Extensions must provide schemas
+for the types that they serialize.
 
 Warnings and errors
 -------------------
@@ -65,29 +103,6 @@ ASDF is designed to serve as an archival format.
 Mention the use of the ``version`` argument in the constructor and the
 ``write_to`` function.
 
-Using Extensions
-================
-
-The built-in extension
-----------------------
-
-Extensions from other packages
-------------------------------
-
-Using custom extensions
------------------------
-
-Differentiated from those that are installed with other packages.
-
-Warnings and errors
--------------------
-
-Mention the use of ``ignore_unrecognized_tag`` here.
-
-Extension checking
-------------------
-
-New extension metadata. Mention the use of ``strict_extension_check`` here.
 
 External References
 ===================
