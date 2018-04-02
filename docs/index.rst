@@ -50,3 +50,10 @@ See also
 
 - The `Advanced Scientific Data Format (ASDF) standard
   <https://asdf-standard.readthedocs.io/>`__
+
+Index
+=====
+
+* :ref:`genindex`
+* :ref:`modindex`
+* :ref:`search`
