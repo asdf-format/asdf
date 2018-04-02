@@ -21,8 +21,8 @@ and reading trees, see :ref:`overview`.
 One of the key features of ASDF is its ability to serialize :mod:`numpy`
 arrays. This is discussed in detail in :ref:`array-data`.
 
-While the core ASDF package supports serialization of a basic data types and
-Numpy arrays, its true power comes from the ability to extend ASDF to support
+While the core ASDF package supports serialization of basic data types and
+Numpy arrays, its true power comes from its ability to be extended to support
 serialization of a wide range of custom data types. Details on using ASDF
 extensions can be found in :ref:`using_extensions`. Details on creating custom
 ASDF extensions to support custom data types can be found in :ref:`extensions`.
@@ -76,6 +76,16 @@ when reading ASDF files (using `asdf.open`), and also when writing them out
 Schema validation also plays a role when using custom extensions (see
 :ref:`using_extensions` and :ref:`extensions`). Extensions must provide schemas
 for the types that they serialize.
+
+The ASDF software is capable of reading files that contain custom data types
+even if the extension that was used to create the file is not present. In this
+case, the custom data types will simply occur in the tree as a nested
+combination of basic data types. The structure of this data will mirror the
+structure of the schema for that type itself.
+
+However, ASDF is not capable of serializing any arbitrary custom type unless an
+extension is provided that defines how to serialize that type. More details on
+the use of extensions can be found in :ref:`using_extensions`.
 
 Warnings and errors
 -------------------
