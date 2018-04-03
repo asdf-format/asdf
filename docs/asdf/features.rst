@@ -42,14 +42,104 @@ Array Data
 Using extensions
 ================
 
+According to Wikipedia, serialization "is the process of translating data
+structures or object state into a format that can be stored...and reconstructed
+later" [#wiki]_.
+
+The power of ASDF is that it provides the ability to store, or serialize, the
+state of Python objects into a *human-readable* data format. The state of those
+objects can later be restored by another program in a process called
+deserialization.
+
+While ASDF is capable of serializing basic Python types and Numpy arrays out of
+the box, it can also be extended to serialize arbitrary custom data types. This
+section discusses the extension mechanism from a user's perspective. For
+documentation on creating extensions, see :ref:`extensions`.
+
+Even though this particular implementation of ASDF necessarily serializes
+Python data types, in theory an ASDF implementation in another language could
+read the resulting file and reconstruct an analogous type in that language.
+Conversely, this implementation can read ASDF files that were written by other
+implementations of ASDF.
+
+
 The built-in extension
 ----------------------
+
+The ability to serialize the following types is provided by ASDF's built-in
+extension:
+
+* `dict`
+* `list`
+* `str`
+* `int`
+* `float`
+* `complex`
+* `numpy.ndarray`
+
+The built-in extension is packaged with ASDF and is automatically used when
+reading and writing files. Users can not control the use of the built-in
+extension and in general they need not concern themselves with the details of
+its implementation.
+
+Custom types
+------------
+
+For the purposes of this documentation, a "custom type" is any data type that
+can not be serialized by the built-in extension.
+
+In order for a particular custom type to be serialized, a special class called
+a "tag type" must be implemented. Each tag type defines how the corresponding
+custom type will be serialized and deserialized. More details on how tag types
+are implemented can be found in :ref:`extensions`.
+
+In addition, each custom type must have a corresponding schema, which is used
+for validation. The definition of the schema is closely tied to the definition
+of the tag type. More details on schema validation can be found in
+:ref:`schema_validation`.
+
+Extensions
+----------
+
+In order for the tag types and schemas to be used by ASDF, they must be
+packaged into an **extension** class. In general, the details of extensions are
+transparent to users of ASDF. However, users need to be aware of extensions in
+the following two scenarios:
+
+* when storing custom data types to files to be written
+* when reading files that contain custom data types
+
+These scenarios require the use of extensions. There are two ways to use custom
+extensions, which are  detailed below in :ref:`other_packages` and
+:ref:`local_extensions`.
+
+Writing custom types to files
+*****************************
+
+ASDF is not capable of serializing any custom type unless an extension is
+provided that defines how to serialize that type.
+
+Reading files with custom types
+*******************************
+
+The ASDF software is capable of reading files that contain custom data types
+even if the extension that was used to create the file is not present. However,
+the extension **is** required in order to deserialize the original type.
+
+If the extension is **not** present, the custom data types will simply appear
+in the tree as a nested combination of basic data types. The structure of this
+data will mirror the structure defined by the schema that was provided by the
+extension used to serialize the custom type.
+
+.. _other_packages:
 
 Extensions from other packages
 ------------------------------
 
-Using custom extensions
------------------------
+.. _local_extensions:
+
+Local extensions
+----------------
 
 Differentiated from those that are installed with other packages.
 
@@ -63,6 +153,7 @@ Extension checking
 
 New extension metadata. Mention the use of ``strict_extension_check`` here.
 
+.. _schema_validation:
 
 Schema validation
 =================
@@ -77,18 +168,10 @@ Schema validation also plays a role when using custom extensions (see
 :ref:`using_extensions` and :ref:`extensions`). Extensions must provide schemas
 for the types that they serialize.
 
-The ASDF software is capable of reading files that contain custom data types
-even if the extension that was used to create the file is not present. In this
-case, the custom data types will simply occur in the tree as a nested
-combination of basic data types. The structure of this data will mirror the
-structure of the schema for that type itself.
-
-However, ASDF is not capable of serializing any arbitrary custom type unless an
-extension is provided that defines how to serialize that type. More details on
-the use of extensions can be found in :ref:`using_extensions`.
-
 Warnings and errors
 -------------------
+
+All schemas are versioned. Schema versions 
 
 Discuss warning control using ``ignore_version_mismatch``.
 The documentation on ``ignore_unrecognized_tag`` should be mentioned here but
@@ -320,3 +403,8 @@ pass that HDU list to `~asdf.fits_embed.AsdfInFits`:
     with fits.open('embedded_asdf.fits') as hdulist:
         with fits_embed.AsdfInFits.open(hdulist) as asdf:
             science = asdf.tree['model']['sci']
+
+
+.. rubric:: Footnotes
+
+.. [#wiki] https://en.wikipedia.org/wiki/Serialization
