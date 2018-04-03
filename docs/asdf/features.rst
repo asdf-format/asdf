@@ -101,6 +101,10 @@ which is used for validation. The definition of the schema is closely tied to
 the definition of the tag type. More details on schema validation can be found
 in :ref:`schema_validation`.
 
+All schemas and their associated tag types have versions that move in sync. The
+version will change whenever a schemas (and therefore the tag type
+implementation) changes.
+
 Extensions
 ----------
 
@@ -146,6 +150,9 @@ the type can be deserialized successfully. Instantiating the custom type may
 involve additional software dependencies, which, if not present, will cause an
 error when the type is deserialized. Users should be aware of the dependencies
 that are required for instantiating custom types when reading ASDF files.
+
+Custom types and versioning
+***************************
 
 .. _other_packages:
 
