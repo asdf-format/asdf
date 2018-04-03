@@ -291,6 +291,8 @@ asserts that the corresponding fraction is in simplified form:
 
     FractionType.validators = {'simplified': validate_simplified}
 
+.. _packaging_extensions:
+
 Packaging custom extensions
 ---------------------------
 

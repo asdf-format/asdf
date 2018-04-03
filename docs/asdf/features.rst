@@ -60,7 +60,7 @@ Even though this particular implementation of ASDF necessarily serializes
 Python data types, in theory an ASDF implementation in another language could
 read the resulting file and reconstruct an analogous type in that language.
 Conversely, this implementation can read ASDF files that were written by other
-implementations of ASDF.
+implementations of ASDF as long as the proper extensions are available.
 
 
 The built-in extension
@@ -80,7 +80,8 @@ extension:
 The built-in extension is packaged with ASDF and is automatically used when
 reading and writing files. Users can not control the use of the built-in
 extension and in general they need not concern themselves with the details of
-its implementation.
+its implementation. However, it is useful to be aware that the built-in
+extension is always in effect when reading and writing ASDF files.
 
 Custom types
 ------------
@@ -89,14 +90,16 @@ For the purposes of this documentation, a "custom type" is any data type that
 can not be serialized by the built-in extension.
 
 In order for a particular custom type to be serialized, a special class called
-a "tag type" must be implemented. Each tag type defines how the corresponding
-custom type will be serialized and deserialized. More details on how tag types
-are implemented can be found in :ref:`extensions`.
+a "tag type" (or "tag" for short) must be implemented. Each tag type defines
+how the corresponding custom type will be serialized and deserialized. More
+details on how tag types are implemented can be found in :ref:`extensions`.
+Users should never have to refer to tag implementations directly; they simply
+enable ASDF to recognize and process custom types.
 
-In addition, each custom type must have a corresponding schema, which is used
-for validation. The definition of the schema is closely tied to the definition
-of the tag type. More details on schema validation can be found in
-:ref:`schema_validation`.
+In addition to tag types, each custom type must have a corresponding schema,
+which is used for validation. The definition of the schema is closely tied to
+the definition of the tag type. More details on schema validation can be found
+in :ref:`schema_validation`.
 
 Extensions
 ----------
@@ -109,49 +112,141 @@ the following two scenarios:
 * when storing custom data types to files to be written
 * when reading files that contain custom data types
 
-These scenarios require the use of extensions. There are two ways to use custom
-extensions, which are  detailed below in :ref:`other_packages` and
-:ref:`local_extensions`.
+These scenarios require the use of custom extensions (the built-in extension is
+always used). There are two ways to use custom extensions, which are detailed
+below in :ref:`other_packages` and :ref:`explicit_extensions`.
 
 Writing custom types to files
 *****************************
 
 ASDF is not capable of serializing any custom type unless an extension is
-provided that defines how to serialize that type.
+provided that defines how to serialize that type. Attempting to do so will
+cause an error when trying to write the file. For details on writing custom tag
+types and extensions, see :ref:`extensions`.
 
 Reading files with custom types
 *******************************
 
 The ASDF software is capable of reading files that contain custom data types
 even if the extension that was used to create the file is not present. However,
-the extension **is** required in order to deserialize the original type.
+the extension is required in order to properly deserialize the original type.
 
-If the extension is **not** present, the custom data types will simply appear
-in the tree as a nested combination of basic data types. The structure of this
-data will mirror the structure defined by the schema that was provided by the
-extension used to serialize the custom type.
+If the necessary extension is **not** present, the custom data types will
+simply appear in the tree as a nested combination of basic data types. The
+structure of this data will mirror the structure of the schema used serialize
+the custom type.
+
+In this case, a warning will occur by default to indicate to the user that the
+custom type in the file was not recognized and can not be deserialized. To
+suppress these warnings, users should pass ``ignore_unrecognized_tag=True`` to
+`asdf.open`.
+
+Even if an extension for the custom type is present, it does not guarantee that
+the type can be deserialized successfully. Instantiating the custom type may
+involve additional software dependencies, which, if not present, will cause an
+error when the type is deserialized. Users should be aware of the dependencies
+that are required for instantiating custom types when reading ASDF files.
 
 .. _other_packages:
 
 Extensions from other packages
 ------------------------------
 
-.. _local_extensions:
+Some external packages may define extensions that allow ASDF to recognize some
+or all of the types that are defined by that package. Such packages may install
+the extension class as part of the package itself (details for developers can
+be found in :ref:`packaging_extensions`).
 
-Local extensions
-----------------
+If the package installs its extension, then ASDF will automatically detect the
+extension and use it when processing any files. No specific action is required
+by the user in order to successfully read and write custom types defined by
+the extension for that particular package.
 
-Differentiated from those that are installed with other packages.
+Users can use the ``extensions`` command of the ``asdftool`` command line tool
+in order to determine which packages in the current Python environment have
+installed ASDF extensions:
 
-Warnings and errors
--------------------
+.. code-block:: none
 
-Mention the use of ``ignore_unrecognized_tag`` here.
+    $ asdftool extensions -s
+    Extension Name: 'bizbaz' (from bizbaz 1.2.3) Class: bizbaz.io.asdf.extension.BizbazExtension
+    Extension Name: 'builtin' (from asdf 2.0.0) Class: asdf.extension.BuiltinExtension
+
+The output will always include the built-in extension, but may also display
+other extensions from other packages, depending on what is installed.
+
+.. _explicit_extensions:
+
+Explicit use of extensions
+--------------------------
+
+Sometimes no packaged extensions are provided for the types you wish to
+serialize. In this case, it is necessary to explicitly provide any necessary
+extension classes when reading and writing files that contain custom types.
+
+Both `asdf.open` and the `AsdfFile` constructor take an optional `extensions`
+keyword argument to control which extensions are used when reading or creating
+ASDF files.
+
+Consider the following example where there exists a custom type
+``MyCustomType`` that needs to be written to a file. An extension is defined
+``MyCustomExtension`` that contains a tag type that can serialize and
+deserialize ``MyCustomType``. Since ``MyCustomExtension`` is not installed by
+any package, we will need to pass it directly to the `AsdfFile` constructor:
+
+.. code-block:: python
+
+    import asdf
+
+    ...
+
+    af = asdf.AsdfFile(extensions=MyCustomExtension())
+    af.tree = {'thing': MyCustomType('foo') }
+    # This call would cause an error if the proper extension was not
+    # provided to the constructor
+    af.write_to('custom.asdf')
+
+Note that the extension class must actually be instantiated when it is passed
+as the `extensions` argument.
+
+To read the file, we pass the same extension to `asdf.open`:
+
+.. code-block:: python
+
+    import asdf
+
+    af = asdf.open('custom.asdf', extensions=MyCustomExtension())
+
+If necessary, it is also possible to pass a list of extension instances to
+`asdf.open` and the `AsdfFile` constructor:
+
+.. code-block:: python
+
+    extensions = [MyCustomExtension(), AnotherCustomExtension()]
+    af = asdf.AsdfFile(extensions=extensions)
+
+Passing either a single extension instance or a list of extension instances to
+either `asdf.open` or the `AsdfFile` constructor will not override any
+extensions that are installed in the environment. Instead, the custom types
+provided by the explicitly provided extensions will be added to the list of any
+types that are provided by installed extensions.
 
 Extension checking
 ------------------
 
-New extension metadata. Mention the use of ``strict_extension_check`` here.
+When writing ASDF files using this software, metadata about the extensions that
+were used to create the file will be added to the file itself. For extensions
+that were provided with another software package, the metadata includes the
+version of that package.
+
+When reading files with extension metadata, ASDF can check whether the required
+extensions are present before processing the file. If a required extension is
+not present, or if the wrong version of a package that provides an extension is
+installed, ASDF will issue a warning.
+
+It is possible to turn these warnings into errors by using the
+`strict_extension_check` parameter of `asdf.open`. If this parameter is set to
+`True`, then opening the file will fail if the required extensions are missing.
 
 .. _schema_validation:
 
