@@ -128,6 +128,8 @@ provided that defines how to serialize that type. Attempting to do so will
 cause an error when trying to write the file. For details on writing custom tag
 types and extensions, see :ref:`extensions`.
 
+.. _reading_custom_types:
+
 Reading files with custom types
 *******************************
 
@@ -151,8 +153,81 @@ involve additional software dependencies, which, if not present, will cause an
 error when the type is deserialized. Users should be aware of the dependencies
 that are required for instantiating custom types when reading ASDF files.
 
-Custom types and versioning
-***************************
+Custom types, extensions, and versioning
+----------------------------------------
+
+All tag types and schemas are versioned. This allows changes to tags and
+schemas to be recorded, and it allows ASDF to define behavior with respect to
+version compatibility.
+
+Tag and schema versions may change for several reasons. One common reason is to
+reflect a change to the API of the custom type that a tag represents. This
+typically corresponds to an update to the version of the software that defines
+that custom type.
+
+Since ASDF is designed to be an archival file format, it attempts to maintain
+backwards compatibility with all older tag and schema versions, at least when
+reading files. However, there are some caveats, which are described below.
+
+Reading files
+*************
+
+When ASDF encounters a tagged object in a file, it will compare the
+version of the tag in the file with the version of the corresponding tag type
+(if one is provided by an available extension).
+
+In general, when reading files ASDF abides by the following principles:
+
+* If a tag type is available and its version matches that of the tag in the
+  file, ASDF will return an instance of the original custom type.
+* If no corresponding tag type is found in any available extension, ASDF will
+  return a basic data structure representing the type. A warning will occur
+  unless the option ``ignore_unrecognized_tag=True`` was given. (see
+  :ref:`reading_custom_types`).
+* If a tag type is available but its version is **older** than that in the file
+  (meaning that the file was written using a newer version of the tag type),
+  ASDF will attempt to deserialize the tag using the existing tag type. If this
+  fails, ASDF will return a basic data structure representing the type, and a
+  warning will occur.
+* If a tag type is available but its version is **newer** than that in the
+  file, ASDF will attempt to deserialize the tag using the existing tag type.
+  If this fails, ASDF will return a basic data structure representing the type,
+  and a warning will occur.
+
+In cases where the available tag type version does not match the version of the
+tag in the file, warnings can be enabled by passing
+``ignore_version_mismatch=False`` to `asdf.open`. These warnings are ignored by
+default.
+
+Writing files
+*************
+
+In general, ASDF makes no guarantee of being able to write older versions of
+tag types.
+
+Explicit version support
+************************
+
+Some tag types explicitly support reading only particular versions of the tag
+and schema (see `asdf.CustomType.supported_versions`). In these cases,
+deserialization is only possible if the version in the file matches one of the
+explicitly supported versions. Otherwise, ASDF will return a basic data
+structure representing the type, and a warning will occur.
+
+Caveats
+*******
+
+While ASDF makes every attempt to deserialize stored objects even in the
+case of a tag version mismatch, deserialization will not always be possible. In
+most cases, if the versions do not match, ASDF will be able to return a basic
+data structure representing the original type.
+
+However, tag version mismatches often indicate a mismatch between the versions
+of the software packages that define the type being serialized. In some cases,
+these version incompatibilities may lead to errors when attempting to read a
+file (especially when multiple tags/packages are involved). In these cases, the
+best course of action is to try to install the necessary versions of the
+packages (and extensions) involved.
 
 .. _other_packages:
 
