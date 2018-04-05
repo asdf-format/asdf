@@ -245,6 +245,9 @@ Note that the implementation of ``to_tree`` is not conditioned on
 ``cls.version`` since we do not need to convert new ``Person`` objects back to
 the older version of the schema.
 
+Using runtime hooks
+-------------------
+
 Adding custom validators
 ------------------------
 

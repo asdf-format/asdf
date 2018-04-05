@@ -153,6 +153,8 @@ involve additional software dependencies, which, if not present, will cause an
 error when the type is deserialized. Users should be aware of the dependencies
 that are required for instantiating custom types when reading ASDF files.
 
+.. _custom_type_versions:
+
 Custom types, extensions, and versioning
 ----------------------------------------
 
@@ -313,6 +315,8 @@ extensions that are installed in the environment. Instead, the custom types
 provided by the explicitly provided extensions will be added to the list of any
 types that are provided by installed extensions.
 
+.. _extension_checking:
+
 Extension checking
 ------------------
 
@@ -345,15 +349,6 @@ Schema validation also plays a role when using custom extensions (see
 :ref:`using_extensions` and :ref:`extensions`). Extensions must provide schemas
 for the types that they serialize.
 
-Warnings and errors
--------------------
-
-All schemas are versioned. Schema versions 
-
-Discuss warning control using ``ignore_version_mismatch``.
-The documentation on ``ignore_unrecognized_tag`` should be mentioned here but
-detailed discussion probably belongs in the section about extensions.
-
 Custom schemas
 --------------
 
@@ -367,6 +362,8 @@ There are several different versions to keep in mind when discussing ASDF:
 * ASDF file format version
 * Individual tag and schema versions
 
+A detailed discussion of tag and schema versions from a user perspective can be
+found in :ref:`custom_type_versions`.
 
 ASDF is designed to serve as an archival format.
 
@@ -377,8 +374,8 @@ Mention the use of the ``version`` argument in the constructor and the
 External References
 ===================
 
-Array References
-----------------
+Tree References
+---------------
 
 ASDF files may reference items in the tree in other ASDF files.  The
 syntax used in the file for this is called "JSON Pointer", but users
@@ -475,13 +472,12 @@ Array References
 Saving history entries
 ======================
 
-``asdf`` has a convenience method for notating the history of
-transformations that have been performed on a file.
+``asdf`` has a convenience method for notating the history of transformations
+that have been performed on a file.
 
-Given a `~asdf.AsdfFile` object, call
-`~asdf.AsdfFile.add_history_entry`, given a description of the
-change and optionally a description of the software (i.e. your
-software, not ``asdf``) that performed the operation.
+Given a `~asdf.AsdfFile` object, call `~asdf.AsdfFile.add_history_entry`, given
+a description of the change and optionally a description of the software (i.e.
+your software, not ``asdf``) that performed the operation.
 
 .. runcode::
 
@@ -502,6 +498,11 @@ software, not ``asdf``) that performed the operation.
    ff.write_to('example.asdf')
 
 .. asdf:: example.asdf
+
+ASDF automatically saves history metadata about the extensions that were used
+to create the file. This information is used when opening files to determine if
+the proper extensions are installed (see :ref:`extension_checking` for more
+details).
 
 Saving ASDF in FITS
 ===================
