@@ -61,6 +61,28 @@ def test_history():
 
     assert isinstance(ff.tree['history']['entries'][0]['time'], datetime.datetime)
 
+def test_history_to_file(tmpdir):
+
+    tmpfile = str(tmpdir.join('history.asdf'))
+
+    with asdf.AsdfFile() as ff:
+        ff.add_history_entry('This happened',
+                             {'name': 'my_tool',
+                              'homepage': 'http://nowhere.com',
+                              'author': 'John Doe',
+                              'version': '2.0'})
+        ff.write_to(tmpfile)
+
+    with asdf.open(tmpfile) as ff:
+        assert 'entries' in ff.tree['history']
+        assert 'extensions' in ff.tree['history']
+        assert len(ff.tree['history']['entries']) == 1
+
+        entry = ff.tree['history']['entries'][0]
+        assert entry['description'] == 'This happened'
+        assert entry['software']['name'] == 'my_tool'
+        assert entry['software']['version'] == '2.0'
+
 
 def test_old_history(tmpdir):
     """Make sure that old versions of the history format are still accepted"""
