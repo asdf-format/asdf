@@ -242,8 +242,8 @@ You can easily `zlib <http://www.zlib.net/>`__ or `bzip2
    import numpy as np
 
    tree = {
-       'a': np.random.rand(256, 256),
-       'b': np.random.rand(512, 512)
+       'a': np.random.rand(32, 32),
+       'b': np.random.rand(64, 64)
    }
 
    target = AsdfFile(tree)

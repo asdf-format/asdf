@@ -485,7 +485,7 @@ your software, not ``asdf``) that performed the operation.
    import numpy as np
 
    tree = {
-       'a': np.random.rand(256, 256)
+       'a': np.random.rand(32, 32)
    }
 
    ff = AsdfFile(tree)
