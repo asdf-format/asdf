@@ -205,6 +205,13 @@ class AsdfFile(versioning.VersionedMixin):
 
         if 'history' not in self.tree:
             self.tree['history'] = dict(extensions=[])
+        # Support clients who are still using the old history format
+        elif isinstance(self.tree['history'], list):
+            histlist = self.tree['history']
+            self.tree['history'] = dict(entries=histlist, extensions=[])
+            warnings.warn("The ASDF history format has changed in order to "
+                          "support metadata about extensions. History entries "
+                          "should now be stored under tree['history']['entries'].")
         elif 'extensions' not in self.tree['history']:
             self.tree['history']['extensions'] = []
 
