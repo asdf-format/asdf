@@ -1,12 +1,5 @@
 .. currentmodule:: asdf
 
-Arrays
-======
-
-Much of ASDF's power and convenience comes from its ability to represent
-multidimensional array data. The :mod:`asdf` Python package provides native
-support for :mod:`numpy` arrays.
-
 Saving arrays
 -------------
 
