@@ -347,10 +347,86 @@ when reading ASDF files (using `asdf.open`), and also when writing them out
 
 Schema validation also plays a role when using custom extensions (see
 :ref:`using_extensions` and :ref:`extensions`). Extensions must provide schemas
-for the types that they serialize.
+for the types that they serialize. When writing a file with custom types, the
+output is validated against the schemas corresponding to those types. If the
+appropriate extension is installed when reading a file with custom types, then
+the types will be validated against the schemas provided by the corresponding
+extension.
 
 Custom schemas
 --------------
+
+Every ASDF file is validated against the ASDF Standard, and also against any
+schemas provided by custom extensions. However, it is sometimes useful for
+particular applications to impose additional restrictions when deciding whether
+a given file is valid or not.
+
+For example, consider an application that processes digital image data. The
+application expects the file to contain an image, and also some metadata about
+how the image was created. The following example schema reflects these
+expectations:
+
+.. code:: yaml
+
+    %YAML 1.1
+    ---
+    $schema: "http://stsci.edu/schemas/yaml-schema/draft-01"
+    id: "http://stsci.edu/schemas/asdf/core/asdf-1.1.0"
+
+    tag: "tag:stsci.edu:asdf/core/asdf-1.1.0"
+    type: object
+    properties:
+      image:
+        description: An ndarray containing image data.
+        $ref: "ndarray-1.0.0"
+
+      metadata:
+        type: object
+        description: Metadata about the image
+        properties:
+          time:
+            description: |
+              A timestamp for when the image was created, in UTC.
+            type: string
+            format: date-time
+          resolution:
+            description: |
+              A 2D array representing the resolution of the image (N x M).
+            type: array
+            items:
+              type: integer
+              number: 2
+
+    required: [image, metadata]
+    additionalProperties: true
+
+This schema restricts the kinds of files that will be accepted as valid to
+those that contain a top-level ``image`` property that is an ``ndarray``, and
+a top-level ``metadata`` property that contains information about the time the
+image was taken and the resolution of the image. Note that the schema uses the
+same ``id`` and ``tag`` as the `top-level core schema`_ from the ASDF Standard.
+This is because it is validating the file at the top level, but is imposing
+restrictions beyond what is normally required for an ASDF file.
+
+In order to use this schema for a secondary validation pass, we pass the
+`custom_schema` argument to either `asdf.open` or the `AsdfFile` constructor.
+Assume that the schema file lives in ``image_schema.yaml``, and we wish to
+open a file called ``image.asdf``. We would open the file with the following
+code:
+
+.. code::
+
+    import asdf
+    af = asdf.open('image.asdf', custom_schema='image_schema.yaml')
+
+Similarly, if we wished to use this schema when creating new files:
+
+.. code::
+
+    new_af = asdf.AsdfFile(custom_schema='image_schema.yaml')
+
+.. _top-level core schema:
+    https://github.com/spacetelescope/asdf-standard/blob/master/schemas/stsci.edu/asdf/core/asdf-1.1.0.yaml
 
 Versioning and Compatibility
 ============================
