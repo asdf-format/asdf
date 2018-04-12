@@ -434,19 +434,38 @@ Versioning and Compatibility
 
 There are several different versions to keep in mind when discussing ASDF:
 
-* Software package version
-* ASDF standard version
-* ASDF file format version
+* The software package version
+* The ASDF Standard version
+* The ASDF file format version
 * Individual tag and schema versions
 
-A detailed discussion of tag and schema versions from a user perspective can be
-found in :ref:`custom_type_versions`.
+Each ASDF file contains information about the various versions that were used
+to create the file. The most important of these are the ASDF Standard version
+and the ASDF file format version. A particular version of the ASDF software
+package will explicitly provide support for a specific combination of these
+versions.
 
-ASDF is designed to serve as an archival format.
+Tag and schema versions are also important for serializing and deserializing
+data types that are stored in ASDF files. A detailed discussion of tag and
+schema versions from a user perspective can be found in
+:ref:`custom_type_versions`.
 
-Mention the use of the ``version`` argument in the constructor and the
-``write_to`` function.
+Since ASDF is designed to serve as an archival format, the software attempts to
+provide backwards compatibility when reading older versions of the ASDF
+Standard and ASDF file format. However, since deserializing ASDF types
+sometimes requires other software packages, backwards compatibility is often
+contingent on the available versions of such software packages.
 
+In general, forward compatibility with newer versions of the ASDF Standard and
+ASDF file format is not supported by the software. However, if newer tag and
+schema versions are detected, the software will attempt to process them.
+
+When creating new ASDF files, it is possible to control the version of the file
+format that is used. This can be specified by passing the `version` argument to
+either the `AsdfFile` constructor when the file object is created, or to the
+`AsdfFile.write_to` method when it is written. By default, the latest version
+of the file format will be used. Note that this option has no effect on the
+versions of tag types from custom extensions.
 
 External References
 ===================
