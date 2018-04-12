@@ -424,6 +424,7 @@ Similarly, if we wished to use this schema when creating new files:
 .. code::
 
     new_af = asdf.AsdfFile(custom_schema='image_schema.yaml')
+    ...
 
 .. _top-level core schema:
     https://github.com/spacetelescope/asdf-standard/blob/master/schemas/stsci.edu/asdf/core/asdf-1.1.0.yaml
@@ -545,6 +546,56 @@ included twice in the same tree:
 Array References
 ----------------
 
+ASDF files can refer to array data that is stored in other files using the
+`ExternalArrayReference` type.
+
+External files need not be ASDF files: ASDF is completely agnostic as to the
+format of the external file. The ASDF external array reference does not define
+how the external data file will be resolved; in fact it does not even check for
+the existence of the external file. It simply provides a way for ASDF files to
+refer to arrays that exist in external files.
+
+Creating an external array reference is simple. Only four pieces of information
+are required:
+
+* The name of the external file. Since ASDF does not itself resolve the file or
+  check for its existence, the format of the name is not important. In most
+  cases the name will be a path relative to the ASDF file itself, or a URI
+  for a network resource.
+* The data type of the array data. This is a string representing any valid
+  `numpy.dtype`.
+* The shape of the data array. This is a tuple representing the dimensions of
+  the array data.
+* The array data ``target``. This is either an integer or a string that
+  indicates to the user something about how the data array should be accessed
+  in the external file. For example, if there are multiple data arrays in the
+  external file, the ``target`` might be an integer index. Or if the external
+  file is an ASDF file, the ``target`` might be a string indicating the key to
+  use in the external file's tree. The value and format of the ``target`` field
+  is completely arbitrary since ASDF will not use it itself.
+
+As an example, we will create a reference to an external CSV file. We will
+assume that one of the rows of the CSV file contains the array data we care
+about:
+
+.. runcode::
+
+    import asdf
+
+    csv_data_row = 10 # The row of the CSV file containing the data we want
+    csv_row_size = 100 # The size of the array
+    extref = asdf.ExternalArrayReference('data.csv', csv_data_row, "int64", (csv_row_size,))
+
+    tree = {'csv_data': extref}
+    af = asdf.AsdfFile(tree)
+    af.write_to('external_array.asdf')
+
+.. asdf:: external_array.asdf
+
+When reading a file containing external references, the user is responsible for
+using the information in the `ExternalArrayReference` type to open the external
+file and retrieve the associated array data.
+
 Saving history entries
 ======================
 
@@ -566,11 +617,11 @@ your software, not ``asdf``) that performed the operation.
 
    ff = AsdfFile(tree)
    ff.add_history_entry(
-       u"Initial random numbers",
-       {u'name': u'asdf examples',
-        u'author': u'John Q. Public',
-        u'homepage': u'http://github.com/spacetelescope/asdf',
-        u'version': u'0.1'})
+       "Initial random numbers",
+       {'name': 'asdf examples',
+        'author': 'John Q. Public',
+        'homepage': 'http://github.com/spacetelescope/asdf',
+        'version': '0.1'})
    ff.write_to('example.asdf')
 
 .. asdf:: example.asdf
