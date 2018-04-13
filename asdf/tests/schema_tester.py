@@ -2,6 +2,8 @@
 # -*- coding: utf-8 -*-
 import io
 import os
+from importlib.util import find_spec
+from pkg_resources import parse_version
 
 import yaml
 import pytest
@@ -93,6 +95,26 @@ class AsdfSchemaItem(pytest.Item):
         schema.check_schema(schema_tree)
 
 
+def should_skip(name, version):
+
+    if name == 'tag:stsci.edu:asdf/transform/multiplyscale':
+        astropy = find_spec('astropy')
+        if astropy is None:
+            return True
+
+        import astropy
+        if parse_version(astropy.version.version) < parse_version('3.1.dev0'):
+            return True
+
+    return False
+
+def parse_schema_filename(filename):
+    components = filename[filename.find('schemas') + 1:].split(os.path.sep)
+    tag = 'tag:{}:{}'.format(components[1], '/'.join(components[2:]))
+    name, version = asdftypes.split_tag_version(tag.replace('.yaml', ''))
+    return name, version
+
+
 class AsdfSchemaExampleItem(pytest.Item):
     def __init__(self, schema_path, parent, example):
         test_name = "{}-example".format(schema_path)
@@ -100,12 +122,7 @@ class AsdfSchemaExampleItem(pytest.Item):
         self.filename = str(schema_path)
         self.example = example
 
-    def _find_standard_version(self):
-        filename = self.filename
-        components = filename[filename.find('schemas') + 1:].split(os.path.sep)
-        tag = 'tag:{}:{}'.format(components[1], '/'.join(components[2:]))
-        name, version = asdftypes.split_tag_version(tag.replace('.yaml', ''))
-
+    def _find_standard_version(self, name, version):
         for sv in versioning.supported_versions:
             map_version = versioning.get_version_map(sv)['tags'].get(name)
             if map_version is not None and version == map_version:
@@ -114,7 +131,12 @@ class AsdfSchemaExampleItem(pytest.Item):
         return versioning.default_version
 
     def runtest(self):
-        standard_version = self._find_standard_version()
+
+        name, version = parse_schema_filename(self.filename)
+        if should_skip(name, version):
+            return
+
+        standard_version = self._find_standard_version(name, version)
 
         # Make sure that the examples in the schema files (and thus the
         # ASDF standard document) are valid.
