@@ -301,3 +301,44 @@ Packaging custom extensions
 
 Testing custom schemas
 ----------------------
+
+Packages that provide their own schemas can test them using ASDF's
+`pytest <https://docs.pytest.org/en/latest/>`_ plugin for schema testing.
+Schemas are tested for overall validity, and any examples given within the
+schemas are also tested.
+
+The schema tester plugin is automatically made available when the ASDF package
+is installed. In order to enable testing, the following steps are required:
+
+1. Add `asdf.tests.schema_tester` to the list of pytest plugins in the
+   top-level `conftest.py` file for your package. If that file does not already
+   exist, creating a `conftest.py` file containing the following should be
+   sufficient (see `this
+   <https://docs.pytest.org/en/2.7.3/plugins.html?highlight=re>`_ for more
+   information on `conftest.py` files):
+
+.. code:: python
+
+    pytest_plugins = [
+        'asdf.tests.schema_tester'
+    ]
+
+2. Add the directory containing your schema files to the pytest section of your
+   project's `setup.cfg` file. If you do not already have such a file, creating
+   a `setup.cfg` with the following should be sufficient:
+
+.. code:: ini
+
+    [tool:pytest]
+    asdf_schema_root = path/to/schemas another/path/to/schemas
+
+The schema directory paths should be paths that are relative to the top of the
+package directory **when it is installed**. If this is different from the path
+in the source directory, then both paths can be used to facilitate in-place
+testing (see ASDF's own `setup.cfg` for an example of this).
+
+The ``asdf_schema_skip_names`` configuration variable can be used to skip
+schema files that live within one of the ``asdf_schema_root`` directories but
+should not be tested. The names should be given as simple base file names
+(without directory paths or extensions). Again, see ASDF's own `setup.cfg` file
+for an example.
