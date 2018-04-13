@@ -294,6 +294,25 @@ asserts that the corresponding fraction is in simplified form:
 
     FractionType.validators = {'simplified': validate_simplified}
 
+.. _defining_extensions:
+
+Defining custom extension classes
+---------------------------------
+
+Extension classes are the mechanism that ASDF uses to register custom tag types
+so that they can be used when processing ASDF files. Packages that define their
+own custom tag types must also define extensions in order for those types to be
+used.
+
+All extension classes must implement the `asdf.AsdfExtension` abstract base
+class. A custom extension will override each of the following properties of
+`AsdfExtension` (the text in each bullet is also a link to the corresponding
+documentation):
+
+* `~asdf.AsdfExtension.types`
+* `~asdf.AsdfExtension.tag_mapping`
+* `~asdf.AsdfExtension.url_mapping`
+
 .. _packaging_extensions:
 
 Packaging custom extensions
@@ -301,6 +320,12 @@ Packaging custom extensions
 
 Packaging schemas
 *****************
+
+If a package provides custom schemas, the schema files must be installed as
+part of that package distribution. In general, schema files must be installed
+into a subdirectory of the package distribution. The ASDF extension class must
+supply a `~asdf.AsdfExtension.url_mapping` that maps to the installed location
+of the schemas. See :ref:`defining_extensions` for more details.
 
 Registering entry points
 ************************
