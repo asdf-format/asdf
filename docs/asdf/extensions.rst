@@ -299,6 +299,67 @@ asserts that the corresponding fraction is in simplified form:
 Packaging custom extensions
 ---------------------------
 
+Packaging schemas
+*****************
+
+Registering entry points
+************************
+
+Packages that provide their own ASDF extensions can (and should!) install them
+so that they are automatically detectable by the ASDF Python package. This is
+accomplished using Python's `setuptools` entry points. Entry points are
+registered in a package's `setup.py` file.
+
+Consider a package that provides an extension class `MyPackageExtension` in the
+submodule `mypackage.asdf.extensions`. We need to register this class as an
+extension entry point that ASDF will recognize. First, we create a dictionary:
+
+.. code:: python
+
+    entry_points = {}
+    entry_points['asdf_extensions'] = [
+        'mypackage = mypackage.asdf.extensions:MyPackageExtension'
+    ]
+
+The key used in the `entry_points` dictionary must be ``'asdf_extensions'``.
+The value must be an array of one or more strings, each with the following
+format:
+
+    ``extension_name = fully.specified.submodule:ExtensionClass``
+
+The extension name can be any arbitrary string, but it should be descriptive of
+the package and the extension. In most cases the package itself name will
+suffice.
+
+Note that depending on individual package requirements, there may be other
+entries in the `entry_points` dictionary.
+
+The entry points must be passed to the call to `setuptools.setup`:
+
+.. code:: python
+
+    from setuptools import setup
+
+    entry_points = {}
+    entry_points['asdf_extensions'] = [
+        'mypackage = mypackage.asdf.extensions:MyPackageExtension'
+    ]
+
+    setup(
+        # We omit other package-specific arguments that are not
+        # relevant to this example
+        entry_points=entry_points,
+    )
+
+When running ``python setup.py install`` or ``python setup.py develop`` on this
+package, the entry points will be registered automatically. This allows the
+ASDF package to recognize the extensions without any user intervention. Users
+of your package that wish to read ASDF files using types that you have
+registered will not need to use any extension explicitly. Instead, ASDF will
+automatically recognize the types you have registered and will process them
+appropriately. See :ref:`other_packages` for more information on using
+extensions.
+
 Testing custom schemas
 ----------------------
 
