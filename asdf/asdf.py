@@ -3,6 +3,8 @@
 
 
 import io
+import os
+import time
 import re
 import copy
 import datetime
@@ -1177,9 +1179,13 @@ class AsdfFile(versioning.VersionedMixin):
         elif software is not None:
             software = Software(software)
 
+        time_ = datetime.datetime.utcfromtimestamp(
+            int(os.environ.get('SOURCE_DATE_EPOCH', time.time())),
+        )
+
         entry = HistoryEntry({
             'description': description,
-            'time': datetime.datetime.utcnow()
+            'time': time_,
         })
 
         if software is not None:

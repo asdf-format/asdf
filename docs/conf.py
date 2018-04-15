@@ -41,6 +41,13 @@ except ImportError:
 # Load all of the global Astropy configuration
 from astropy_helpers.sphinx.conf import *
 
+# Ensure documentation examples are determinstically random.
+import numpy
+try:
+    numpy.random.seed(int(os.environ['SOURCE_DATE_EPOCH']))
+except KeyError:
+    pass
+
 # Get configuration information from setup.cfg
 try:
     from ConfigParser import ConfigParser
