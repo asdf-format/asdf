@@ -26,6 +26,7 @@ Getting Started
    asdf/overview
    asdf/features
    asdf/asdf_tool
+   asdf/changes
 
 Extending ASDF
 ==============
