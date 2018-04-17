@@ -441,7 +441,7 @@ def _from_tree_tagged_missing_requirements(cls, tree, ctx):
 
 class ExtensionTypeMeta(type):
     """
-    Custom class constructor for extension types.
+    Custom class constructor for tag types.
     """
     _import_cache = {}
 
@@ -572,6 +572,18 @@ class ExtensionType(object):
 
     @classmethod
     def names(cls):
+        """
+        Returns the name(s) represented by this tag type as a list.
+
+        While some tag types represent only a single custom type, others
+        represent multiple types. In the latter case, the `name` attribute of
+        the extension is actually a list, not simply a string. This method
+        normalizes the value of `name` by returning a list in all cases.
+
+        Returns
+        -------
+            `list` of names represented by this tag type
+        """
         if cls.name is None:
             return None
 
@@ -579,6 +591,25 @@ class ExtensionType(object):
 
     @classmethod
     def make_yaml_tag(cls, name, versioned=True):
+        """
+        Given the name of a type, returns a string representing its YAML tag.
+
+        Parameters
+        ----------
+        name : str
+            The name of the type. In most cases this will correspond to the
+            `name` attribute of the tag type. However, it is passed as a
+            parameter since some tag types represent multiple custom
+            types.
+
+        versioned : bool
+            If `True`, the tag will be versioned. Otherwise, a YAML tag without
+            a version will be returned.
+
+        Returns
+        -------
+            `str` representing the YAML tag
+        """
         return format_tag(
             cls.organization,
             cls.standard,
@@ -587,24 +618,78 @@ class ExtensionType(object):
 
     @classmethod
     def tag_base(cls):
+        """
+        Returns the base of the YAML tag for types represented by this class.
+
+        This method returns the portion of the tag that represents the standard
+        and the organization of any type represented by this class.
+
+        Returns
+        -------
+            `str` representing the base of the YAML tag
+        """
         return cls.make_yaml_tag('', versioned=False)
 
     @classmethod
     def to_tree(cls, node, ctx):
         """
-        Converts from a custom type to any of the basic types (dict,
-        list, str, number) supported by YAML.  In most cases, must be
-        overridden by subclasses.
+        Converts instances of custom types into YAML representations.
+
+        This method should be overridden by custom extension classes in order
+        to define how custom types are serialized into YAML. The method must
+        return a single Python object corresponding to one of the basic YAML
+        types (dict, list, str, or number). However, the types can be nested
+        and combined in order to represent more complex custom types.
+
+        This method is called as part of the process of writing an `AsdfFile`
+        object. Whenever a custom type (or a subclass of that type) that is
+        listed in the `types` attribute of this class is encountered, this
+        method will be used to serialize that type.
+
+        The name `to_tree` refers to the act of converting a custom type into
+        part of a YAML object tree.
+
+        Parameters
+        ----------
+        node : `object`
+            Instance of a custom type to be serialized. Will be an instance (or
+            an instance of a subclass) of one of the types listed in the
+            `types` attribute of this class.
+
+        ctx : `AsdfFile`
+            An instance of the `AsdfFile` object that is being written out.
+
+        Returns
+        -------
+            A basic YAML type (`dict`, `list`, `str`, `int`, `float`, or
+            `complex`) representing the properties of the custom type to be
+            serialized. These types can be nested in order to represent more
+            complex custom types.
         """
         return node.__class__.__bases__[0](node)
 
     @classmethod
     def to_tree_tagged(cls, node, ctx):
         """
-        Converts from a custom type to any of the basic types (dict,
-        list, str, number) supported by YAML.  The result should be a
-        tagged object.  Overriding this, rather than the more common
-        `to_tree`, allows types to customize how the result is tagged.
+        Converts instances of custom types into tagged objects.
+
+        It is more common for custom tag types to override `to_tree` instead of
+        this method. This method should only be overridden if it is necessary
+        to modify the YAML tag that will be used to tag this object.
+
+        Parameters
+        ----------
+        node : `object`
+            Instance of a custom type to be serialized. Will be an instance (or
+            an instance of a subclass) of one of the types listed in the
+            `types` attribute of this class.
+
+        ctx : `AsdfFile`
+            An instance of the `AsdfFile` object that is being written out.
+
+        Returns
+        -------
+            An instance of `asdf.tagged.Tagged`.
         """
         obj = cls.to_tree(node, ctx)
         return tagged.tag_object(cls.yaml_tag, obj, ctx=ctx)
@@ -612,28 +697,74 @@ class ExtensionType(object):
     @classmethod
     def from_tree(cls, tree, ctx):
         """
-        Converts from basic types to a custom type.
+        Converts basic types representing YAML trees into custom types.
+
+        This method should be overridden by custom extension classes in order
+        to define how custom types are deserialized from the YAML
+        representation back into their original types. The method will return
+        an instance of the original custom type.
+
+        This method is called as part of the process of reading an ASDF file in
+        order to construct an `AsdfFile` object. Whenever a YAML subtree is
+        encountered that has a tag that corresponds to the `yaml_tag` property
+        of this class, this method will be used to deserialize that tree back
+        into an instance of the original custom type.
+
+        Parameters
+        ----------
+        tree : `object` representing YAML tree
+            An instance of a basic Python type (possibly nested) that
+            corresponds to a YAML subtree.
+
+        ctx : `AsdfFile`
+            An instance of the `AsdfFile` object that is being constructed.
+
+        Returns
+        -------
+            An instance of the custom type represented by this extension class.
         """
         return cls(tree)
 
     @classmethod
     def from_tree_tagged(cls, tree, ctx):
         """
-        Converts from basic types to a custom type.  Overriding this,
-        rather than the more common `from_tree`, allows types to deal
-        with the tag directly.
+        Converts from tagged tree into custom type.
+
+        It is more common for extension classes to override `from_tree` instead
+        of this method. This method should only be overridden if it is
+        necessary to access the `_tag` property of the `Tagged` object
+        directly.
+
+        Parameters
+        ----------
+        tree : `asdf.tagged.Tagged` object representing YAML tree
+
+        ctx : `AsdfFile`
+            An instance of the `AsdfFile` object that is being constructed.
+
+        Returns
+        -------
+            An instance of the custom type represented by this extension class.
         """
         return cls.from_tree(tree.data, ctx)
 
     @classmethod
     def incompatible_version(cls, version):
         """
+        Indicates if given version is known to be incompatible with this type.
+
         If this tag class explicitly identifies compatible versions then this
-        checks whether a given version is compatible or not. Otherwise, all
-        versions are assumed to be compatible.
+        checks whether a given version is compatible or not (see
+        `supported_versions`). Otherwise, all versions are assumed to be
+        compatible.
 
         Child classes can override this method to affect how version
         compatiblity for this type is determined.
+
+        Parameters
+        ----------
+        version : `str` or `~asdf.versioning.AsdfVersion`
+            The version to test for compatibility.
         """
         if cls.supported_versions:
             if version not in cls.supported_versions:
@@ -652,9 +783,7 @@ class AsdfType(ExtensionType):
 @six.add_metaclass(ExtensionTypeMeta)
 class CustomType(ExtensionType):
     """
-    Base class for all user-defined types. Classes that inherit this type will
-    *not* automatically be added to the list of ASDF's built-in types. This
-    should be used for user-defined extensions.
+    Base class for all user-defined types.
     """
 
     # These attributes are duplicated here with docstrings since a bug in
@@ -663,39 +792,74 @@ class CustomType(ExtensionType):
     # docstrings are not included anywhere else in the class hierarchy since
     # this class is the only one exposed in the public API.
     name = None
-    """The name of the type."""
+    """
+    `str` or `list`: The name of the type.
+    """
 
     organization = 'stsci.edu'
-    """The organization responsible for the type."""
+    """
+    `str`: The organization responsible for the type.
+    """
 
     standard = 'asdf'
-    """The standard the type is defined in."""
+    """
+    `str`: The standard the type is defined in.
+    """
 
     version = (1, 0, 0)
-    """The version of the type."""
+    """
+    `str`, `tuple`, `AsdfVersion`, or `AsdfSpec`: The version of the type.
+    """
 
     supported_versions = set()
-    """If provided, indicates explicit compatibility with the given set of
-    versions. Other versions of the same schema that are not included in this
-    set will not be converted to custom types with this class. """
+    """
+    `set`: Versions that explicitly compatible with this extension class.
+
+    If provided, indicates explicit compatibility with the given set
+    of versions. Other versions of the same schema that are not included in
+    this set will not be converted to custom types with this class. """
 
     types = []
-    """Custom Python types that, when found in the tree, will be converted into
+    """
+    `list`: List of types that this extension class can convert to/from YAML.
+
+    Custom Python types that, when found in the tree, will be converted into
     basic types for YAML output. Can be either strings referring to the types
     or the types themselves."""
 
     handle_dynamic_subclasses = False
-    """Flag indicating whether this type is capable of serializing subclasses
-    of any of the types listed in ``types`` that are generated dynamically."""
+    """
+    `bool`: Indicates whether dynamically generated subclasses can be serialized
+
+    Flag indicating whether this type is capable of serializing subclasses
+    of any of the types listed in ``types`` that are generated dynamically.
+    """
 
     validators = {}
-    """Mapping JSON Schema keywords to validation functions for jsonschema.
+    """
+    `dict`: Mapping JSON Schema keywords to validation functions for jsonschema.
+
     Useful if the type defines extra types of validation that can be
-    performed."""
+    performed.
+    """
 
     requires = []
-    """A list of Python packages that are required to instantiate the object."""
+    """
+    `list`: Python packages that are required to instantiate the object.
+    """
 
     yaml_tag = None
-    """The YAML tag to use for the type. If not provided, it will be
-    automatically generated from name, organization, standard and version."""
+    """
+    `str`: The YAML tag to use for the type.
+
+    If not provided, it will be automatically generated from name,
+    organization, standard and version.
+    """
+
+    has_required_modules = True
+    """
+    `bool`: Indicates whether modules specified by `requires` are available.
+
+    NOTE: This value is automatically generated. Do not set it in subclasses as
+    it will be overwritten.
+    """
