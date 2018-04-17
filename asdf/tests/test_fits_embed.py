@@ -370,6 +370,13 @@ def test_extension_check():
     assert ("was created with extension 'foo.bar.FooBar', which is not "
         "currently installed (from package foo-1.2.3)") in str(warnings[0].message)
 
+    # Make sure that suppressing the warning works as well
+    with pytest.warns(None) as warnings:
+        with asdf.AsdfFile.open(testfile, ignore_missing_extensions=True) as ff:
+            pass
+
+    assert len(warnings) == 0, display_warnings(warnings)
+
     with pytest.raises(RuntimeError):
         with asdf.AsdfFile.open(testfile, strict_extension_check=True) as ff:
             pass

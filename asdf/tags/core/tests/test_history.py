@@ -163,6 +163,15 @@ history:
         "File was created with extension 'asdf.extension.BuiltinExtension' "
         "from package asdf-100.0.3")
 
+    buff.seek(0)
+
+    # Make sure suppressing the warning works too
+    with pytest.warns(None) as warnings:
+        with asdf.open(buff, ignore_missing_extensions=True) as af:
+            pass
+
+    assert len(warnings) == 0, display_warnings(warnings)
+
 
 def test_strict_extension_check():
 
@@ -179,6 +188,11 @@ history:
     buff = yaml_to_asdf(yaml)
     with pytest.raises(RuntimeError):
         with asdf.open(buff, strict_extension_check=True) as af:
+            pass
+
+    # Make sure to test for incompatibility with ignore_missing_extensions
+    with pytest.raises(ValueError):
+        with asdf.open(buff, strict_extension_check=True, ignore_missing_extensions=True) as af:
             pass
 
 
