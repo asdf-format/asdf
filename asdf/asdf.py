@@ -46,7 +46,7 @@ def get_asdf_library_info():
 
 class AsdfFile(versioning.VersionedMixin):
     """
-    The main class that represents a ASDF file.
+    The main class that represents an ASDF file object.
     """
     def __init__(self, tree=None, uri=None, extensions=None, version=None,
         ignore_version_mismatch=True, ignore_unrecognized_tag=False,
