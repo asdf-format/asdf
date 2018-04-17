@@ -129,7 +129,7 @@ using them:
     with asdf.AsdfFile(tree, extensions=FractionExtension()) as ff:
         ff.write_to("test.asdf")
 
-.. asdf:: test.asdf
+.. asdf:: test.asdf ignore_unrecognized_tag
 
 Defining custom types
 ---------------------
@@ -240,7 +240,7 @@ In this case, the associated schema would look like the following::
 
 We can compare the output using this representation to the example above:
 
-.. asdf:: test.asdf
+.. asdf:: test.asdf ignore_unrecognized_tag
 
 
 Serializing more complex types

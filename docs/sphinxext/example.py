@@ -66,6 +66,7 @@ class RunCodeDirective(Directive):
 
 class AsdfDirective(Directive):
     required_arguments = 1
+    optional_arguments = 1
 
     def run(self):
         filename = self.arguments[0]
@@ -83,7 +84,9 @@ class AsdfDirective(Directive):
             set_source_info(self, literal)
             parts.append(literal)
 
-            with AsdfFile.open(filename) as ff:
+            ignore_warnings = 'ignore_unrecognized_tag' in self.arguments
+
+            with AsdfFile.open(filename, ignore_unrecognized_tag=ignore_warnings) as ff:
                 for i, block in enumerate(ff.blocks.internal_blocks):
                     data = codecs.encode(block.data.tostring(), 'hex')
                     if len(data) > 40:
