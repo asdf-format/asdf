@@ -15,7 +15,7 @@ from ._internal_init import *
 
 __all__ = [
     'AsdfFile', 'CustomType', 'AsdfExtension', 'Stream', 'open', 'test',
-    'commands', 'ValidationError', 'ExternalArrayReference'
+    'commands', 'ExternalArrayReference'
 ]
 
 try:
@@ -42,6 +42,7 @@ from .tags.core.external_reference import ExternalArrayReference
 
 from jsonschema import ValidationError
 
+# TODO: there doesn't seem to be any reason to redefine this here
 class ValidationError(ValidationError):
     pass
 
