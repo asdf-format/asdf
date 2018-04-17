@@ -17,7 +17,7 @@ from sphinx.util.nodes import set_source_info
 
 from asdf import AsdfFile
 from asdf.constants import ASDF_MAGIC, BLOCK_FLAG_STREAMED
-from asdf import versioning
+from asdf import versioning, util
 
 version_string = str(versioning.default_version)
 
@@ -28,10 +28,7 @@ TMPDIR = tempfile.mkdtemp()
 def delete_tmpdir():
     shutil.rmtree(TMPDIR)
 
-
 GLOBALS = {}
-LOCALS = {}
-
 
 FLAGS = {
     BLOCK_FLAG_STREAMED: "BLOCK_FLAG_STREAMED"
@@ -50,7 +47,7 @@ class RunCodeDirective(Directive):
 
         try:
             try:
-                exec(code, GLOBALS, LOCALS)
+                exec(code, GLOBALS)
             except:
                 print(code)
                 raise

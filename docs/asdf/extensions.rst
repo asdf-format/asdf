@@ -30,8 +30,8 @@ An Example
 ----------
 
 As an example, we will write an extension for ASDF that allows us to represent
-Python's standard ``fractions.Fraction`` class for representing rational
-numbers. We will call our new ASDF type ``fraction``.
+Python's standard `fractions.Fraction` class for representing rational numbers.
+We will call our new ASDF type ``fraction``.
 
 First, the YAML Schema, defining the type as a pair of integers:
 
@@ -54,7 +54,14 @@ First, the YAML Schema, defining the type as a pair of integers:
 Then, the Python implementation of the tag class and extension class. See the
 `asdf.CustomType` and `asdf.AsdfExtension` documentation for more information:
 
-.. code-block:: python
+.. runcode:: hidden
+
+    import os
+    import asdf
+    # This is a hack in order to get the example below to work properly
+    __file__ = os.path.join(asdf.__path__[0], 'tests', 'data', 'fraction-1.0.0.yaml')
+
+.. runcode::
 
     import os
 
@@ -90,30 +97,171 @@ Then, the Python implementation of the tag class and extension class. See the
 
         @property
         def url_mapping(self):
-            return [('http://nowhere.org/schemas/custom/1.0.0/',
+            return [('http://nowhere.org/schemas/custom/',
                      util.filepath_to_url(os.path.dirname(__file__))
                      + '/{url_suffix}.yaml')]
 
-Note that the method ``to_tree`` of the tag class ``FractionType`` defines how
-the library converts ``fractions.Fraction`` into a tree that can be stored by
-ASDF. Conversely, the method ``from_tree`` defines how the library reads a
-serialized representation of the object and converts it back into a
-``fractions.Fraction``.
+Note that the method `~asdf.CustomType.to_tree` of the tag class
+``FractionType`` defines how the library converts `fractions.Fraction` into a
+tree that can be stored by ASDF. Conversely, the method
+`~asdf.CustomType.from_tree` defines how the library reads a serialized
+representation of the object and converts it back into an instance of
+`fractions.Fraction`.
 
-Once you have these classes defined you can save an asdf file using them:
+We also need to define a schema::
 
-.. code-block:: python
+    %YAML 1.1
+    ---
+    $schema: "http://stsci.edu/schemas/yaml-schema/draft-01"
+    id: "http://nowhere.org/schemas/custom/fraction-1.0.0"
+    title: An example custom type for handling fractions
 
-  tree = {'fraction': fractions.Fraction(10, 3)}
+    tag: "tag:nowhere.org:custom/fraction-1.0.0"
+    type: array
+    items:
+      type: integer
+    minItems: 2
+    maxItems: 2
+    ...
 
+Note that the values of the `~asdf.CustomType.name`,
+`~asdf.CustomType.organization`, `~asdf.CustomType.standard`, and
+`~asdf.CustomType.version` fields are all reflected in the ``id`` and ``tag``
+definitions in the schema.
 
-  with asdf.AsdfFile(tree, extensions=[FractionExtension()]) as ff:
-      ff.write_to("test.asdf")
+Note also that the base of the ``tag`` value (up to the `name` and `version`
+components) is reflected in `~asdf.AsdfExtension.tag_mapping` property of the
+`FractionExtension` type, which is used to map tags to URLs. The
+`~asdf.AsdfExtension.url_mapping` is used to map URLs (of the same form as the
+``id`` field in the schema) to the actual location of a schema file.
+
+Once these classes and the schema have been defined, we can save an asdf file
+using them:
+
+.. runcode::
+
+    tree = {'fraction': fractions.Fraction(10, 3)}
+
+    with asdf.AsdfFile(tree, extensions=FractionExtension()) as ff:
+        ff.write_to("test.asdf")
+
+.. asdf:: test.asdf
 
 Defining custom types
 ---------------------
 
-Summarize the various properties of `~asdf.CustomType` here.
+In the example above, we showed how to create an extension that is capable of
+serializing `fractions.Fraction`. The custom tag type that we created was
+defined as a subclass of `asdf.CustomType`.
+
+Custom type attributes
+**********************
+
+We overrode the following attributes of `~asdf.CustomType` in order to define
+`FractionType` (each bullet is also a link to the API documentation):
+
+* `~asdf.CustomType.name`
+* `~asdf.CustomType.organization`
+* `~asdf.CustomType.version`
+* `~asdf.CustomType.standard`
+* `~asdf.CustomType.types`
+
+Each of these attributes is important, and each is described in more detail in
+the linked API documentation.
+
+The choice of `~asdf.CustomType.name` should be descriptive of the custom type
+that is being serialized. The choice of `~asdf.CustomType.organization`, and
+`~asdf.CustomType.standard` is fairly arbitrary, but also important. Custom
+types that are provided by the same package should be grouped into the same
+`~asdf.CustomType.standard` and `~asdf.CustomType.organization`.
+
+These three values, along with the `~asdf.CustomType.version`, are used to
+define the YAML tag that will mark the serialized type in ASDF files. In our
+example, the tag becomes ``tag:nowhere.org:custom/fraction-1.0.0``. The tag
+is important when defining the `asdf.AsdfExtension` subclass.
+
+Critically, these values must all be reflected in the associated schema.
+
+Custom type methods
+*******************
+
+In addition to the attributes mentioned above, we also overrode the following
+methods of `~asdf.CustomType` (each bullet is also a link to the API
+documentation):
+
+* `~asdf.CustomType.to_tree`
+* `~asdf.CustomType.from_tree`
+
+The `~asdf.CustomType.to_tree` method defines how an instance of a custom data
+type is converted into data structures that represent a YAML tree that can be
+serialized to a file.
+
+The `~asdf.CustomType.from_tree` method defines how a YAML tree can be
+converted back into an instance of the original custom data type.
+
+In the example above, we used a `list` to contain the important attributes of
+`fractions.Fraction`. However, this choice is fairly arbitrary, as long as it
+is consistent between the way that `~asdf.CustomType.to_tree` and
+`~asdf.CustomType.from_tree` are defined. For example, we could have also
+chosen to use a `dict`:
+
+.. runcode::
+
+    import asdf
+    import fractions
+
+    class FractionType(asdf.CustomType):
+        name = 'fraction'
+        organization = 'nowhere.org'
+        version = (1, 0, 0)
+        standard = 'custom'
+        types = [fractions.Fraction]
+
+        @classmethod
+        def to_tree(cls, node, ctx):
+            return dict(numerator=node.numerator,
+                        denominator=node.denominator)
+
+        @classmethod
+        def from_tree(cls, tree, ctx):
+            return fractions.Fraction(tree['numerator'],
+                                      tree['denominator'])
+
+.. runcode:: hidden
+
+    # Redefine the fraction extension for the sake of the example
+    FractionExtension.types = [FractionType]
+
+    tree = {'fraction': fractions.Fraction(10, 3)}
+
+    with asdf.AsdfFile(tree, extensions=FractionExtension()) as ff:
+        ff.write_to("test.asdf")
+
+In this case, the associated schema would look like the following::
+
+    %YAML 1.1
+    ---
+    $schema: "http://stsci.edu/schemas/yaml-schema/draft-01"
+    id: "http://nowhere.org/schemas/custom/fraction-1.0.0"
+    title: An example custom type for handling fractions
+
+    tag: "tag:nowhere.org:custom/fraction-1.0.0"
+    type: object
+    properties:
+      numerator:
+        type: integer
+      denominator:
+        type: integer
+    ...
+
+We can compare the output using this representation to the example above:
+
+.. asdf:: test.asdf
+
+
+Serializing more complex types
+******************************
+
 
 Explicit version support
 ------------------------
