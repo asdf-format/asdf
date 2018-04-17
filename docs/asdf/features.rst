@@ -90,6 +90,8 @@ appropriate extension is installed when reading a file with custom types, then
 the types will be validated against the schemas provided by the corresponding
 extension.
 
+.. _custom-schemas:
+
 Custom schemas
 --------------
 
@@ -300,6 +302,8 @@ included twice in the same tree:
     ff.write_to('anchors.asdf')
 
 .. asdf:: anchors.asdf
+
+.. _array-references:
 
 Array References
 ----------------
