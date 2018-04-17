@@ -232,7 +232,7 @@ class AsdfInFits(asdf.AsdfFile):
     @classmethod
     def open(cls, fd, uri=None, validate_checksums=False, extensions=None,
              ignore_version_mismatch=True, ignore_unrecognized_tag=False,
-             strict_extension_check=False):
+             strict_extension_check=False, ignore_missing_extensions=False):
         """Creates a new AsdfInFits object based on given input data
 
         Parameters
@@ -265,18 +265,25 @@ class AsdfInFits(asdf.AsdfFile):
             installed, opening the file will fail. When `False`, opening a file
             under such conditions will cause only a warning. Defaults to
             `False`.
+
+        ignore_missing_extensions : bool, optional
+            When `True`, do not raise warnings when a file is read that
+            contains metadata about extensions that are not available. Defaults
+            to `False`.
         """
         return cls._open_impl(fd, uri=uri,
                        validate_checksums=validate_checksums,
                        extensions=extensions,
                        ignore_version_mismatch=ignore_version_mismatch,
                        ignore_unrecognized_tag=ignore_unrecognized_tag,
-                       strict_extension_check=strict_extension_check)
+                       strict_extension_check=strict_extension_check,
+                       ignore_missing_extensions=ignore_missing_extensions)
 
     @classmethod
     def _open_impl(cls, fd, uri=None, validate_checksums=False, extensions=None,
              ignore_version_mismatch=True, ignore_unrecognized_tag=False,
-             strict_extension_check=False, _extension_metadata=None):
+             strict_extension_check=False, _extension_metadata=None,
+             ignore_missing_extensions=False):
 
         close_hdulist = False
         if isinstance(fd, fits.hdu.hdulist.HDUList):
@@ -311,7 +318,8 @@ class AsdfInFits(asdf.AsdfFile):
         try:
             return cls._open_asdf(self, buff, uri=uri, mode='r',
                               validate_checksums=validate_checksums,
-                              strict_extension_check=strict_extension_check)
+                              strict_extension_check=strict_extension_check,
+                              ignore_missing_extensions=ignore_missing_extensions)
         except RuntimeError:
             self.close()
             raise

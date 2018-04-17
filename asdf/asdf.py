@@ -568,8 +568,15 @@ class AsdfFile(versioning.VersionedMixin):
                    do_not_fill_defaults=False,
                    _get_yaml_content=False,
                    _force_raw_types=False,
-                   strict_extension_check=False):
+                   strict_extension_check=False,
+                   ignore_missing_extensions=False):
         """Attempt to populate AsdfFile data from file-like object"""
+
+        if strict_extension_check and ignore_missing_extensions:
+            raise ValueError(
+                "'strict_extension_check' and 'ignore_missing_extensions' are "
+                "incompatible options")
+
         fd = generic_io.get_file(fd, mode=mode, uri=uri)
         self._fd = fd
         # The filename is currently only used for tracing warning information
@@ -628,7 +635,8 @@ class AsdfFile(versioning.VersionedMixin):
 
         tree = yamlutil.tagged_tree_to_custom_tree(tree, self, _force_raw_types)
 
-        self._check_extensions(tree, strict=strict_extension_check)
+        if not ignore_missing_extensions:
+            self._check_extensions(tree, strict=strict_extension_check)
 
         self._tree = tree
         self.run_hook('post_read')
@@ -641,7 +649,8 @@ class AsdfFile(versioning.VersionedMixin):
                    do_not_fill_defaults=False,
                    _get_yaml_content=False,
                    _force_raw_types=False,
-                   strict_extension_check=False):
+                   strict_extension_check=False,
+                   ignore_missing_extensions=False):
         """Attempt to open file-like object as either AsdfFile or AsdfInFits"""
         if not is_asdf_file(fd):
             try:
@@ -654,6 +663,7 @@ class AsdfFile(versioning.VersionedMixin):
                             ignore_version_mismatch=self._ignore_version_mismatch,
                             extensions=self._extensions,
                             strict_extension_check=strict_extension_check,
+                            ignore_missing_extensions=ignore_missing_extensions,
                             _extension_metadata=self._extension_metadata)
             except ValueError:
                 pass
@@ -665,7 +675,8 @@ class AsdfFile(versioning.VersionedMixin):
                 do_not_fill_defaults=do_not_fill_defaults,
                 _get_yaml_content=_get_yaml_content,
                 _force_raw_types=_force_raw_types,
-                strict_extension_check=strict_extension_check)
+                strict_extension_check=strict_extension_check,
+                ignore_missing_extensions=ignore_missing_extensions)
 
     @classmethod
     def open(cls, fd, uri=None, mode='r',
@@ -677,7 +688,8 @@ class AsdfFile(versioning.VersionedMixin):
              _force_raw_types=False,
              copy_arrays=False,
              custom_schema=None,
-             strict_extension_check=False):
+             strict_extension_check=False,
+             ignore_missing_extensions=False):
         """
         Open an existing ASDF file.
 
@@ -732,6 +744,10 @@ class AsdfFile(versioning.VersionedMixin):
             under such conditions will cause only a warning. Defaults to
             `False`.
 
+        ignore_missing_extensions : bool, optional
+            When `True`, do not raise warnings when a file is read that
+            contains metadata about extensions that are not available. Defaults
+            to `False`.
 
         Returns
         -------
@@ -748,7 +764,8 @@ class AsdfFile(versioning.VersionedMixin):
             validate_checksums=validate_checksums,
             do_not_fill_defaults=do_not_fill_defaults,
             _force_raw_types=_force_raw_types,
-            strict_extension_check=strict_extension_check)
+            strict_extension_check=strict_extension_check,
+            ignore_missing_extensions=ignore_missing_extensions)
 
     def _write_tree(self, tree, fd, pad_blocks):
         fd.write(constants.ASDF_MAGIC)
