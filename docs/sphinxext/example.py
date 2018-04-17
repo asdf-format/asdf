@@ -84,9 +84,12 @@ class AsdfDirective(Directive):
             set_source_info(self, literal)
             parts.append(literal)
 
-            ignore_warnings = 'ignore_unrecognized_tag' in self.arguments
+            kwargs = dict()
+            # Use the ignore_unrecognized_tag parameter as a proxy for both options
+            kwargs['ignore_unrecognized_tag'] = 'ignore_unrecognized_tag' in self.arguments
+            kwargs['ignore_missing_extensions'] = 'ignore_unrecognized_tag' in self.arguments
 
-            with AsdfFile.open(filename, ignore_unrecognized_tag=ignore_warnings) as ff:
+            with AsdfFile.open(filename, **kwargs) as ff:
                 for i, block in enumerate(ff.blocks.internal_blocks):
                     data = codecs.encode(block.data.tostring(), 'hex')
                     if len(data) > 40:
