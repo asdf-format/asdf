@@ -13,4 +13,6 @@ to create their own custom ASDF types and extensions.
 
 .. automodapi:: asdf.util
 
+.. automodapi:: asdf.versioning
+
 .. automodapi:: asdf.tests.helpers
