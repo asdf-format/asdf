@@ -166,6 +166,8 @@ Similarly, if we wished to use this schema when creating new files:
 .. _top-level core schema:
     https://github.com/spacetelescope/asdf-standard/blob/master/schemas/stsci.edu/asdf/core/asdf-1.1.0.yaml
 
+.. _version_and_compat:
+
 Versioning and Compatibility
 ============================
 
