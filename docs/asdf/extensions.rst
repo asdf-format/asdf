@@ -37,19 +37,19 @@ First, the YAML Schema, defining the type as a pair of integers:
 
 .. code-block:: yaml
 
-   %YAML 1.1
-   ---
-   $schema: "http://stsci.edu/schemas/yaml-schema/draft-01"
-   id: "http://nowhere.org/schemas/custom/1.0.0/fraction"
-   title: An example custom type for handling fractions
+    %YAML 1.1
+    ---
+    $schema: "http://stsci.edu/schemas/yaml-schema/draft-01"
+    id: "http://nowhere.org/schemas/custom/fraction-1.0.0"
+    title: An example custom type for handling fractions
 
-   tag: "tag:nowhere.org:custom/1.0.0/fraction"
-   type: array
-   items:
-     type: integer
-   minItems: 2
-   maxItems: 2
-   ...
+    tag: "tag:nowhere.org:custom/fraction-1.0.0"
+    type: array
+    items:
+      type: integer
+    minItems: 2
+    maxItems: 2
+    ...
 
 Then, the Python implementation of the tag class and extension class. See the
 `asdf.CustomType` and `asdf.AsdfExtension` documentation for more information:
@@ -388,10 +388,10 @@ Our version 1.0.0 YAML schema for ``Person`` might look like the following:
    %YAML 1.1
    ---
    $schema: "http://stsci.edu/schemas/yaml-schema/draft-01"
-   id: "http://nowhere.org/schemas/custom/1.0.0/person"
+   id: "http://nowhere.org/schemas/custom/person-1.0.0"
    title: An example custom type for representing a Person
 
-   tag: "tag:nowhere.org:custom/1.0.0/person"
+   tag: "tag:nowhere.org:custom/person-1.0.0"
    type: array
    items:
      type: string
@@ -438,10 +438,10 @@ versions of Person:
    %YAML 1.1
    ---
    $schema: "http://stsci.edu/schemas/yaml-schema/draft-01"
-   id: "http://nowhere.org/schemas/custom/1.1.0/person"
+   id: "http://nowhere.org/schemas/custom/person-1.1.0"
    title: An example custom type for representing a Person
 
-   tag: "tag:nowhere.org:custom/1.1.0/person"
+   tag: "tag:nowhere.org:custom/person-1.1.0"
    type: array
    items:
      type: string
@@ -493,8 +493,24 @@ Note that the implementation of ``to_tree`` is not conditioned on
 ``cls.version`` since we do not need to convert new ``Person`` objects back to
 the older version of the schema.
 
-Using runtime hooks
--------------------
+Creating custom schemas
+-----------------------
+
+All custom types to be serialized by ASDF require custom schemas. The best
+resource for creating ASDF schemas can be found in the `ASDF Standard
+<http://asdf-standard.readthedocs.io/en/latest/extending.html>`_ documentation.
+
+In most cases, ASDF schemas will be included as part of a packaged software
+distribution. In these cases, it is important for the
+`~asdf.AsdfExtension.url_mapping` of the corresponding `~asdf.AsdfExtension`
+extension class to map the schema URL to an actual location on disk. However,
+it is possible for schemas to be hosted online as well, in which case the URL
+mapping can map (perhaps trivially) to an actual network location. See
+:ref:`defining_extensions` for more information.
+
+It is also important for packages that provide custom schemas to test them,
+both to make sure that they are valid, and to ensure that any examples they
+provide are also valid. See :ref:`testing_custom_schemas` for more information.
 
 Adding custom validators
 ------------------------
@@ -632,6 +648,8 @@ registered will not need to use any extension explicitly. Instead, ASDF will
 automatically recognize the types you have registered and will process them
 appropriately. See :ref:`other_packages` for more information on using
 extensions.
+
+.. _testing_custom_schemas:
 
 Testing custom schemas
 ----------------------
