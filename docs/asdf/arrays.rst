@@ -92,6 +92,8 @@ format of all arrays in the file.
     # This controls the output format of all arrays in the file
     ff.write_to("test.asdf", all_array_storage='inline')
 
+.. _exploded:
+
 Saving external arrays
 ----------------------
 
@@ -218,8 +220,6 @@ to numpy arrays stored in ASDF:
                 array = np.array([int(x) for x in row], np.int64)
                 # write the array to the output file handle
                 fd.write(array.tostring())
-
-.. _exploded:
 
 Compression
 -----------

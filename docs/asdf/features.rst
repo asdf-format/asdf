@@ -389,6 +389,8 @@ to create the file. This information is used when opening files to determine if
 the proper extensions are installed (see :ref:`extension_checking` for more
 details).
 
+.. _asdf-in-fits:
+
 Saving ASDF in FITS
 ===================
 
