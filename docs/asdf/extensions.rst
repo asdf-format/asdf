@@ -108,22 +108,6 @@ tree that can be stored by ASDF. Conversely, the method
 representation of the object and converts it back into an instance of
 `fractions.Fraction`.
 
-We also need to define a schema::
-
-    %YAML 1.1
-    ---
-    $schema: "http://stsci.edu/schemas/yaml-schema/draft-01"
-    id: "http://nowhere.org/schemas/custom/fraction-1.0.0"
-    title: An example custom type for handling fractions
-
-    tag: "tag:nowhere.org:custom/fraction-1.0.0"
-    type: array
-    items:
-      type: integer
-    minItems: 2
-    maxItems: 2
-    ...
-
 Note that the values of the `~asdf.CustomType.name`,
 `~asdf.CustomType.organization`, `~asdf.CustomType.standard`, and
 `~asdf.CustomType.version` fields are all reflected in the ``id`` and ``tag``
@@ -262,9 +246,125 @@ We can compare the output using this representation to the example above:
 Serializing more complex types
 ******************************
 
+Sometimes the custom types that we wish to represent in ASDF themselves have
+attributes which are also custom types. As a somewhat contrived example,
+consider a 2D cartesian coordinate that uses `fraction.Fraction` to represent
+each of the components. We will call this type `Fractional2DCoordinate`.
+
+First we need to define a schema to represent this new type::
+
+    %YAML 1.1
+    ---
+    $schema: "http://stsci.edu/schemas/yaml-schema/draft-01"
+    id: "http://nowhere.org/schemas/custom/fractional_2d_coord-1.0.0"
+    title: An example custom type for handling components
+
+    tag: "tag:nowhere.org:custom/fractional_2d_coord-1.0.0"
+    type: object
+    properties:
+      x:
+        $ref: fraction-1.0.0
+      y:
+        $ref: fraction-1.0.0
+    ...
+
+Note that in the schema, the ``x`` and ``y`` attributes are expressed as
+references to our ``fraction-1.0.0`` schema. Since both of these schemas are
+defined under the same standard and organization, we can simply use the name
+and version of the ``fraction-1.0.0`` schema to refer to it. However, if the
+reference type was defined in a different organization and standard, it would
+be necessary to use the entire YAML tag in the reference (e.g.
+``tag:nowhere.org:custom/fraction-1.0.0``). Relative tag references are also
+allowed where appropriate.
+
+.. runcode:: hidden
+
+    class Fractional2DCoordinate:
+        x = None
+        y = None
+
+We also need to define the custom tag type that corresponds to our new type:
+
+.. runcode::
+
+    import asdf
+    from asdf.yamlutil import (custom_tree_to_tagged_tree,
+                               tagged_tree_to_custom_tree)
+
+    class Fractional2DCoordinateType(asdf.CustomType):
+        name = 'fractional_2d_coord'
+        organization = 'nowhere.org'
+        version = (1, 0, 0)
+        standard = 'custom'
+        types = [Fractional2DCoordinate]
+
+        @classmethod
+        def to_tree(cls, node, ctx):
+            tree = dict()
+            tree['x'] = custom_tree_to_tagged_tree(node.x, ctx)
+            tree['y'] = custom_tree_to_tagged_tree(node.y, ctx)
+            return tree
+
+        @classmethod
+        def from_tree(cls, tree, ctx):
+            coord = Fractional2DCoordinate()
+            coord.x = tagged_tree_to_custom_tree(tree['x'], ctx)
+            coord.y = tagged_tree_to_custom_tree(tree['y'], ctx)
+            return coord
+
+Recall that the ``x`` and ``y`` components of our `Fractional2DCoordinate` type
+are represented as `fractions.Fraction`. Since this is a type for which we have
+already defined a tag class, we don't want to duplicate the logic from its
+`~asdf.CustomType.to_tree` and `~asdf.CustomType.from_tree` methods here.
+
+Instead, we use the functions `~asdf.yamlutil.custom_tree_to_tagged_tree` and
+`~asdf.yamlutil.tagged_tree_to_custom_tree` to recursively process the
+subtrees. By doing so, we ensures that the `~asdf.CustomType.to_tree` and
+`~asdf.CustomType.from_tree` methods specific to `fractions.Fraction` will be
+called automatically.
+
+Since `Fractional2DCoordinateType` shares the same
+`~asdf.CustomType.organization` and `~asdf.CustomType.standard` as
+`FractionType`, it can be added to the same extension class:
+
+.. runcode::
+
+    class FractionExtension(asdf.AsdfExtension):
+        @property
+        def types(self):
+            return [FractionType, Fractional2DCoordinateType]
+
+        @property
+        def tag_mapping(self):
+            return [('tag:nowhere.org:custom',
+                     'http://nowhere.org/schemas/custom{tag_suffix}')]
+
+        @property
+        def url_mapping(self):
+            return [('http://nowhere.org/schemas/custom/',
+                     util.filepath_to_url(os.path.dirname(__file__))
+                     + '/{url_suffix}.yaml')]
+
+Now we can use this extension to create an ASDF file:
+
+.. runcode::
+
+    coord = Fractional2DCoordinate()
+    coord.x = fractions.Fraction(22, 7)
+    coord.y = fractions.Fraction(355, 113)
+
+    tree = {'coordinate': coord}
+
+    with asdf.AsdfFile(tree, extensions=FractionExtension()) as ff:
+        ff.write_to("coord.asdf")
+
+.. asdf:: coord.asdf ignore_unrecognized_tag
+
+Note that in the resulting ASDF file, the ``x`` and ``y`` components of
+our new `fraction_2d_coord` type are tagged as `fraction-1.0.0`.
 
 Explicit version support
-------------------------
+************************
 
 To some extent schemas and tag classes will be closely tied to the custom data
 types that they represent. This means that in some cases API changes or other
