@@ -635,7 +635,7 @@ class AsdfFile(versioning.VersionedMixin):
 
         tree = yamlutil.tagged_tree_to_custom_tree(tree, self, _force_raw_types)
 
-        if not ignore_missing_extensions:
+        if not (ignore_missing_extensions or _force_raw_types):
             self._check_extensions(tree, strict=strict_extension_check)
 
         self._tree = tree
