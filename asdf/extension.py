@@ -21,7 +21,7 @@ __all__ = ['AsdfExtension', 'AsdfExtensionList']
 @six.add_metaclass(abc.ABCMeta)
 class AsdfExtension(object):
     """
-    Subclass to define an extension to ASDF.
+    Abstract base class defining an extension to ASDF.
     """
     @classmethod
     def __subclasshook__(cls, C):
@@ -34,7 +34,7 @@ class AsdfExtension(object):
     @abc.abstractproperty
     def types(self):
         """
-        A list of AsdfType subclasses that describe how to store
+        A list of `asdf.CustomType` subclasses that describe how to store
         custom objects to and from ASDF.
         """
         pass
