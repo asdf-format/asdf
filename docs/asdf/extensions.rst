@@ -610,6 +610,28 @@ documentation):
 
 .. _packaging_extensions:
 
+Overriding built-in extensions
+******************************
+
+It is possible for externally defined extensions to override tag types that are
+provided by ASDF's built-in extension. For example, maybe an external package
+wants to provide a different implementation of `~asdf.tags.core.NDArrayType`.
+In this case, the external package does not need to provide custom schemas
+since the schema for the type to be overridden is already provided as part of
+the ASDF standard.
+
+Instead, the extension class may inherit from ASDF's
+`~asdf.extension.BuiltinExtension` and simply override the
+`~asdf.AsdfExtension.types` property to indicate the type that is being
+overridden.  Doing this preserves the `~asdf.AsdfExtension.tag_mapping` and
+`~asdf.AsdfExtension.url_mapping` that is used by the `BuiltinExtension`, which
+allows the schemas that are packaged by ASDF to be located.
+
+ASDF will give precedence to the type that is provided by the external
+extension, effectively overriding the corresponding type in the built-in
+extension. Note that it is currently undefined if multiple external extensions
+are provided that override the same built-in type.
+
 Packaging custom extensions
 ---------------------------
 
