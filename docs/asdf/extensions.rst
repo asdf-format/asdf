@@ -25,6 +25,16 @@ Supporting new types in ASDF is easy. Three components are required:
    class. In general, a third-party library that defines multiple custom types
    can group them all in the same extension.
 
+.. note::
+
+    The mechanisms of tag classes and extension classes are specific to this
+    particular implementation of ASDF. As of this writing, this is the only
+    complete implementation of the ASDF Standard. However, other language
+    implementations may use other mechanisms for processing custom types.
+    
+    All implementations of ASDF, regardless of language, will make use of the
+    same schemas for abstract data type definitions. This allows all ASDF files
+    to be language-agnostic, and also enables interoperability.
 
 An Example
 ----------
