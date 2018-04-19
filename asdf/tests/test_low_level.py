@@ -1,8 +1,5 @@
 # -*- coding: utf-8 -*-
 
-from __future__ import absolute_import, division, unicode_literals, print_function
-
-
 import io
 import os
 
@@ -12,25 +9,16 @@ from astropy.modeling import models
 
 import pytest
 
-import six
+import asdf
+from asdf import block
+from asdf import constants
+from asdf import extension
+from asdf import generic_io
+from asdf import treeutil
+from asdf import versioning
+from asdf.exceptions import AsdfDeprecationWarning
 
-from .. import asdf
-from .. import block
-from .. import constants
-from .. import generic_io
-from .. import treeutil
 from ..tests.helpers import assert_tree_match
-
-
-def _get_small_tree():
-    x = np.arange(0, 10, dtype=np.float)
-    tree = {
-        'science_data': x,
-        'subset': x[3:-3],
-        'skipping': x[::2],
-        'not_shared': np.arange(10, 0, -1, dtype=np.uint8)
-        }
-    return tree
 
 
 def test_no_yaml_end_marker(tmpdir):
@@ -136,10 +124,10 @@ XXXXXXXX
             assert len(ff.blocks) == 0
 
 
-def test_invalid_source():
+def test_invalid_source(small_tree):
     buff = io.BytesIO()
 
-    ff = asdf.AsdfFile(_get_small_tree())
+    ff = asdf.AsdfFile(small_tree)
     ff.write_to(buff)
 
     buff.seek(0)
@@ -226,22 +214,6 @@ def test_block_header_too_small():
     with pytest.raises(ValueError):
         with asdf.AsdfFile.open(buff):
             pass
-
-
-if six.PY2:
-    def test_file_already_closed(tmpdir):
-        # Test that referencing specific blocks in another asdf file
-        # works.
-        tree = _get_small_tree()
-
-        path = os.path.join(str(tmpdir), 'test.asdf')
-        ff = asdf.AsdfFile(tree)
-        ff.write_to(path)
-
-        with open(path, 'rb') as fd:
-            ff2 = asdf.AsdfFile.open(fd)
-        with pytest.raises(IOError):
-            str(ff2.tree['science_data'][:])
 
 
 def test_external_block(tmpdir):
@@ -764,12 +736,10 @@ def test_checksum_update(tmpdir):
             b'T\xaf~[\x90\x8a\x88^\xc2B\x96D,N\xadL'
 
 
-def test_atomic_write(tmpdir):
+def test_atomic_write(tmpdir, small_tree):
     tmpfile = os.path.join(str(tmpdir), 'test.asdf')
 
-    tree = _get_small_tree()
-
-    ff = asdf.AsdfFile(tree)
+    ff = asdf.AsdfFile(small_tree)
     ff.write_to(tmpfile)
 
     with asdf.AsdfFile.open(tmpfile) as ff:
@@ -828,10 +798,10 @@ def test_copy(tmpdir):
     assert_array_equal(ff2.tree['my_array'], ff2.tree['my_array'])
 
 
-def test_deferred_block_loading():
+def test_deferred_block_loading(small_tree):
     buff = io.BytesIO()
 
-    ff = asdf.AsdfFile(_get_small_tree())
+    ff = asdf.AsdfFile(small_tree)
     ff.write_to(buff, include_block_index=False)
 
     buff.seek(0)
@@ -1147,6 +1117,15 @@ foo : bar
     assert version.patch == 0
 
 
+def test_default_version():
+    # See https://github.com/spacetelescope/asdf/issues/364
+
+    version_map = versioning.get_version_map(versioning.default_version)
+
+    ff = asdf.AsdfFile()
+    assert ff.file_format_version == version_map['FILE_FORMAT']
+
+
 def test_fd_not_seekable():
     data = np.ones(1024)
     b = block.Block(data=data)
@@ -1165,11 +1144,54 @@ def test_fd_not_seekable():
     assert b.data.tobytes() == data.tobytes()
 
 
-def test_top_level_tree():
-    tree = {'tree': _get_small_tree()}
+def test_top_level_tree(small_tree):
+    tree = {'tree': small_tree}
     ff = asdf.AsdfFile(tree)
     assert_tree_match(ff.tree['tree'], ff['tree'])
 
     ff2 = asdf.AsdfFile()
-    ff2['tree'] = _get_small_tree()
+    ff2['tree'] = small_tree
     assert_tree_match(ff2.tree['tree'], ff2['tree'])
+
+
+def test_tag_to_schema_resolver_deprecation():
+    ff = asdf.AsdfFile()
+    with pytest.warns(AsdfDeprecationWarning):
+        ff.tag_to_schema_resolver('foo')
+
+    with pytest.warns(AsdfDeprecationWarning):
+        extension_list = extension.default_extensions.extension_list
+        extension_list.tag_to_schema_resolver('foo')
+
+
+def test_access_tree_outside_handler(tmpdir):
+    tempname = str(tmpdir.join('test.asdf'))
+
+    tree = {'random': np.random.random(10)}
+
+    ff = asdf.AsdfFile(tree)
+    ff.write_to(str(tempname))
+
+    with asdf.AsdfFile.open(tempname) as newf:
+        pass
+
+    # Accessing array data outside of handler should fail
+    with pytest.raises(OSError):
+        newf.tree['random'][0]
+
+
+def test_context_handler_resolve_and_inline(tmpdir):
+    # This reproduces the issue reported in
+    # https://github.com/spacetelescope/asdf/issues/406
+    tempname = str(tmpdir.join('test.asdf'))
+
+    tree = {'random': np.random.random(10)}
+
+    ff = asdf.AsdfFile(tree)
+    ff.write_to(str(tempname))
+
+    with asdf.AsdfFile.open(tempname) as newf:
+        newf.resolve_and_inline()
+
+    with pytest.raises(OSError):
+        newf.tree['random'][0]

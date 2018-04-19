@@ -1,0 +1,15 @@
+%YAML 1.1
+---
+$schema: "http://stsci.edu/schemas/yaml-schema/draft-01"
+id: "http://nowhere.org/schemas/custom/tag_reference-1.0.0"
+title: An example custom type for testing tag references
+
+tag: "tag:nowhere.org:custom/tag_reference-1.0.0"
+type: object
+properties:
+  name:
+    type: string
+  things:
+    $ref: "tag:stsci.edu:asdf/core/ndarray-1.0.0"
+required: [name, things]
+...

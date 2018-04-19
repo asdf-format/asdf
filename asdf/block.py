@@ -1,9 +1,6 @@
 # Licensed under a 3-clause BSD style license - see LICENSE.rst
 # -*- coding: utf-8 -*-
 
-from __future__ import absolute_import, division, unicode_literals, print_function
-
-from collections import namedtuple
 import copy
 import hashlib
 import io
@@ -11,11 +8,10 @@ import os
 import re
 import struct
 import weakref
+from collections import namedtuple
+from urllib import parse as urlparse
 
 import numpy as np
-
-import six
-from six.moves.urllib import parse as urlparse
 
 import yaml
 
@@ -472,7 +468,7 @@ class BlockManager(object):
 
         last_offset = 0
         for x in offsets:
-            if (not isinstance(x, six.integer_types) or
+            if (not isinstance(x, int) or
                 x > file_size or
                 x < 0 or
                 x <= last_offset + Block._header.size):
@@ -592,7 +588,7 @@ class BlockManager(object):
         buffer : buffer
         """
         # If an "int", it is the index of an internal block
-        if isinstance(source, six.integer_types):
+        if isinstance(source, int):
             if source == -1:
                 if len(self._streamed_blocks):
                     return self._streamed_blocks[0]
@@ -639,11 +635,15 @@ class BlockManager(object):
 
             raise ValueError("Block '{0}' not found.".format(source))
 
-        elif isinstance(source, six.string_types):
+        elif isinstance(source, str):
             asdffile = self._asdffile().open_external(
                 source, do_not_fill_defaults=True)
             block = asdffile.blocks._internal_blocks[0]
             self.set_array_storage(block, 'external')
+
+        # Handle the case of inline data
+        elif isinstance(source, list):
+            block = Block(data=np.array(source), array_storage='inline')
 
         else:
             raise TypeError("Unknown source '{0}'".format(source))
@@ -897,10 +897,8 @@ class Block(object):
         updating the file in-place, otherwise the work is redundant.
         """
         if self._data is not None:
-            if six.PY2: # pragma: no cover
-                self._data_size = len(self._data.data)
-            else:
-                self._data_size = self._data.data.nbytes
+            self._data_size = self._data.data.nbytes
+
             if not self.output_compression:
                 self._size = self._data_size
             else:

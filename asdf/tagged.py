@@ -31,11 +31,8 @@ and dumper (``yamlutil.AsdfLoader`` and ``yamlutil.AsdfDumper``) and
 is not intended to be exposed to the end user.
 """
 
-from __future__ import absolute_import, division, unicode_literals, print_function
+from collections import UserDict, UserList, UserString
 
-import six
-
-from .compat import UserDict, UserList, UserString
 
 __all__ = ['tag_object', 'get_tag']
 
@@ -85,7 +82,7 @@ class TaggedList(Tagged, UserList, list):
                 self._tag == other._tag)
 
 
-class TaggedString(Tagged, UserString, six.text_type):
+class TaggedString(Tagged, UserString, str):
     """
     A Python list with a tag attached.
     """
@@ -93,7 +90,7 @@ class TaggedString(Tagged, UserString, six.text_type):
 
     def __eq__(self, other):
         return (isinstance(other, TaggedString) and
-                six.text_type.__eq__(self, other) and
+                str.__eq__(self, other) and
                 self._tag == other._tag)
 
 
@@ -107,7 +104,7 @@ def tag_object(tag, instance, ctx=None):
         instance = TaggedDict(instance, tag)
     elif isinstance(instance, list):
         instance = TaggedList(instance, tag)
-    elif isinstance(instance, six.string_types):
+    elif isinstance(instance, str):
         instance = TaggedString(instance)
         instance._tag = tag
     else:

@@ -1,52 +1,36 @@
 # Licensed under a 3-clause BSD style license - see LICENSE.rst
 # -*- coding: utf-8 -*-
 
-from __future__ import absolute_import, division, unicode_literals, print_function
-
 import io
 import os
 import re
-
-try:
-    import astropy
-    HAS_ASTROPY = True
-except ImportError:
-    HAS_ASTROPY = False
-
-try:
-    import gwcs
-    HAS_GWCS = True
-except ImportError:
-    HAS_GWCS = False
+import warnings
 
 from jsonschema import ValidationError
 
-import numpy as np
-import pytest
-import six
 import yaml
-import warnings
+import pytest
 
-from .. import asdf
-from .. import asdftypes
-from .. import extension
-from .. import block
-from .. import resolver
-from .. import schema
-from .. import treeutil
-from .. import util
-from .. import versioning
+import numpy as np
+from numpy.testing import assert_array_equal
 
+import asdf
+from asdf import asdftypes
+from asdf import extension
+from asdf import resolver
+from asdf import schema
+from asdf import util
+from asdf import yamlutil
 
-from . import helpers, CustomTestType
-from astropy.tests.helper import catch_warnings
+from asdf.tests import helpers
 
 
 TEST_DATA_PATH = os.path.join(os.path.dirname(__file__), 'data')
 
 
 class CustomExtension:
-    """This is the base class that is used for extensions for custom tag
+    """
+    This is the base class that is used for extensions for custom tag
     classes that exist only for the purposes of testing.
     """
     @property
@@ -64,47 +48,26 @@ class CustomExtension:
                  util.filepath_to_url(TEST_DATA_PATH) +
                  '/{url_suffix}.yaml')]
 
-class LabelMapperTestType(CustomTestType):
-    version = '1.0.0'
-    name = 'transform/label_mapper'
 
-class RegionsSelectorTestType(CustomTestType):
-    version = '1.0.0'
-    name = 'transform/regions_selector'
-
-class TestExtension(extension.BuiltinExtension):
-    """This class defines an extension that represents tags whose
-    implementations current reside in other repositories (such as GWCS) but
-    whose schemas are defined in ASDF. This provides a workaround for schema
-    validation testing since we want to pass without warnings, but the fact
-    that these tag classes are not defined within ASDF means that warnings
-    occur unless this extension is used. Eventually these schemas may be moved
-    out of ASDF and into other repositories, or ASDF will potentially provide
-    abstract base classes for the tag implementations.
+class TagReferenceType(asdftypes.CustomType):
     """
-    @property
-    def types(self):
-        return [LabelMapperTestType, RegionsSelectorTestType]
+    This class is used by several tests below for validating foreign type
+    references in schemas and ASDF files.
+    """
+    name = 'tag_reference'
+    organization = 'nowhere.org'
+    version = (1, 0, 0)
+    standard = 'custom'
 
-    @property
-    def tag_mapping(self):
-        return [('tag:stsci.edu:asdf',
-                 'http://stsci.edu/schemas/asdf{tag_suffix}')]
-
-def test_violate_toplevel_schema():
-    tree = {'fits': 'This does not look like a FITS file'}
-
-    with pytest.raises(ValidationError):
-        asdf.AsdfFile(tree)
-
-    ff = asdf.AsdfFile()
-    ff.tree['fits'] = 'This does not look like a FITS file'
-    with pytest.raises(ValidationError):
-        buff = io.BytesIO()
-        ff.write_to(buff)
+    @classmethod
+    def from_tree(cls, tree, ctx):
+        node = {}
+        node['name'] = tree['name']
+        node['things'] = yamlutil.tagged_tree_to_custom_tree(tree['things'], ctx)
+        return node
 
 
-@pytest.mark.skipif('not HAS_ASTROPY')
+@pytest.mark.importorskip('astropy')
 def test_tagging_scalars():
     yaml = """
 unit: !unit/unit-1.0.0
@@ -118,26 +81,13 @@ not_unit:
     with asdf.AsdfFile.open(buff) as ff:
         assert isinstance(ff.tree['unit'], u.UnitBase)
         assert not isinstance(ff.tree['not_unit'], u.UnitBase)
-        assert isinstance(ff.tree['not_unit'], six.text_type)
+        assert isinstance(ff.tree['not_unit'], str)
 
         assert ff.tree == {
             'unit': u.m,
             'not_unit': 'm'
             }
 
-def test_validate_schema(schema_path):
-    """Pytest to check validity of schema file at given path
-
-    Parameters:
-    -----------
-    schema_path : name of the schema file to be validated
-
-    This function is called with a range of parameters by pytest's
-    'parametrize' utility in order to account for all schema files.
-    """
-    # Make sure that each schema itself is valid.
-    schema_tree = schema.load_schema(schema_path, resolve_references=True)
-    schema.check_schema(schema_tree)
 
 def test_read_json_schema():
     """Pytest to make sure reading JSON schemas succeeds.
@@ -149,166 +99,76 @@ def test_read_json_schema():
     schema_tree = schema.load_schema(json_schema, resolve_references=True)
     schema.check_schema(schema_tree)
 
-def generate_schema_list():
-    """Returns a generator for all schema files"""
-    src = os.path.join(os.path.dirname(__file__), '../schemas')
-    for root, dirs, files in os.walk(src):
-        for fname in files:
-            if not fname.endswith('.yaml'):
-                continue
-            if os.path.splitext(fname)[0] in (
-                    'draft-01', 'asdf-schema-1.0.0'):
-                continue
-            yield os.path.join(root, fname)
 
-def _assert_warnings(_warnings):
-    if astropy.__version__ < '1.3.3':
-        # Make sure at most only one warning occurred
-        assert len(_warnings) <= 1, helpers.display_warnings(_warnings)
-        # Make sure the warning was the one we expected
-        if len(_warnings) == 1:
-            message = str(_warnings[0].message)
-            target_string = "gwcs and astropy-1.3.3 packages are required"
-            assert message.startswith('Failed to convert'), \
-                helpers.display_warnings(_warnings)
-            assert target_string in str(_warnings[0].message), \
-                helpers.display_warnings(_warnings)
-    else:
-        assert len(_warnings) == 0, helpers.display_warnings(_warnings)
+def test_load_schema(tmpdir):
+    schema_def = """
+%YAML 1.1
+---
+$schema: "http://stsci.edu/schemas/asdf/asdf-schema-1.0.0"
+id: "http://stsci.edu/schemas/asdf/nugatory/nugatory-1.0.0"
+tag: "tag:stsci.edu:asdf/nugatory/nugatory-1.0.0"
 
-def _find_standard_version(filename):
-    components = filename[filename.find('schemas') + 1:].split(os.path.sep)
-    tag = 'tag:{}:{}'.format(components[1], '/'.join(components[2:]))
-    name, version = asdftypes.split_tag_version(tag.replace('.yaml', ''))
+type: object
+properties:
+  foobar:
+      $ref: "../core/ndarray-1.0.0"
 
-    for sv in versioning.supported_versions:
-        map_version = versioning.get_version_map(sv)['tags'].get(name)
-        if map_version is not None and version == map_version:
-            return sv
-
-    return versioning.default_version
-
-
-def test_schema_example(filename, example):
-    """Pytest to check validity of a specific example within schema file
-
-    Parameters:
-    -----------
-    filename : name of the schema file containing example to be tested
-
-    example: string representing example
-
-    This function is called with a range of parameters by pytest's
-    'parametrize' utility in order to account for all examples in all schema
-    files.
+required: [foobar]
+...
     """
-    if not HAS_GWCS and re.search(r'frame-\d\.\d\.\d\.yaml', filename):
-        return pytest.skip
+    schema_path = tmpdir.join('nugatory.yaml')
+    schema_path.write(schema_def.encode())
 
-    standard_version = _find_standard_version(filename)
+    schema_tree = schema.load_schema(str(schema_path), resolve_references=True)
+    schema.check_schema(schema_tree)
 
-    # Make sure that the examples in the schema files (and thus the
-    # ASDF standard document) are valid.
-    buff = helpers.yaml_to_asdf(
-        'example: ' + example.strip(), standard_version=standard_version)
-    ff = asdf.AsdfFile(
-        uri=util.filepath_to_url(os.path.abspath(filename)),
-        extensions=TestExtension())
 
-    # Fake an external file
-    ff2 = asdf.AsdfFile({'data': np.empty((1024*1024*8), dtype=np.uint8)})
+def test_load_schema_with_full_tag(tmpdir):
+    schema_def = """
+%YAML 1.1
+---
+$schema: "http://stsci.edu/schemas/asdf/asdf-schema-1.0.0"
+id: "http://stsci.edu/schemas/asdf/nugatory/nugatory-1.0.0"
+tag: "tag:stsci.edu:asdf/nugatory/nugatory-1.0.0"
 
-    ff._external_asdf_by_uri[
-        util.filepath_to_url(
-            os.path.abspath(
-                os.path.join(
-                    os.path.dirname(filename), 'external.asdf')))] = ff2
+type: object
+properties:
+  foobar:
+      $ref: "tag:stsci.edu:asdf/core/ndarray-1.0.0"
 
-    # Add some dummy blocks so that the ndarray examples work
-    for i in range(3):
-        b = block.Block(np.zeros((1024*1024*8), dtype=np.uint8))
-        b._used = True
-        ff.blocks.add(b)
-    b._array_storage = "streamed"
-
-    try:
-        with catch_warnings() as w:
-            ff._open_impl(ff, buff)
-        # Do not tolerate any warnings that occur during schema validation,
-        # other than a few that we expect to occur under certain circumstances
-        _assert_warnings(w)
-    except:
-        print("From file:", filename)
-        raise
-
-    # Just test we can write it out.  A roundtrip test
-    # wouldn't always yield the correct result, so those have
-    # to be covered by "real" unit tests.
-    if b'external.asdf' not in buff.getvalue():
-        buff = io.BytesIO()
-        ff.write_to(buff)
-
-def generate_example_schemas():
-    """Returns a generator for all examples in schema files"""
-    def find_examples_in_schema(path):
-        """Returns generator for all examples in schema at given path"""
-        with open(path, 'rb') as fd:
-            schema_tree = yaml.load(fd)
-
-        for node in treeutil.iter_tree(schema_tree):
-            if (isinstance(node, dict) and
-                'examples' in node and
-                isinstance(node['examples'], list)):
-                for desc, example in node['examples']:
-                    yield example
-
-    for schema_path in generate_schema_list():
-        for example in find_examples_in_schema(schema_path):
-            yield (schema_path, example)
-
-def pytest_generate_tests(metafunc):
-    """This function is used by pytest to parametrize test function inputs
-
-    Parameters:
-    -----------
-    metafunc : object returned by pytest to enable test parametrization
-
-    This function enables parametrization of the following tests:
-        test_validate_schema
-        test_schema_example
-
-    The 'yield' functionality in pytest for parametrized tests has been
-    deprecated. The @pytest.mark.parametrize decorator is not powerful enough
-    for the kind of programmatic parametrization that we require here.
+required: [foobar]
+...
     """
-    def get_schema_name(schema_path):
-        """Helper function to return the informative part of a schema path"""
-        path = os.path.normpath(schema_path)
-        return os.path.sep.join(path.split(os.path.sep)[-3:])
+    schema_path = tmpdir.join('nugatory.yaml')
+    schema_path.write(schema_def.encode())
 
-    def create_schema_example_id(argval):
-        """Helper function to create test ID for schema example validation"""
-        if argval[0] == '/':
-            # ID for the first argument is just the schema name
-            return get_schema_name(argval)
-        else:
-            # This will cause pytest to create labels of the form:
-            #   SCHEMA_NAME-example
-            # If there are multiple examples within a single schema, the
-            # examples will be numbered automatically to distinguish them
-            return "example"
+    schema_tree = schema.load_schema(str(schema_path), resolve_references=True)
+    schema.check_schema(schema_tree)
 
-    if metafunc.function is test_validate_schema:
-        metafunc.parametrize(
-            'schema_path',
-            generate_schema_list(),
-            # just use the schema name as a test ID instead of full path
-            ids=get_schema_name)
-    elif metafunc.function is test_schema_example:
-        metafunc.parametrize(
-            'filename,example',
-            generate_example_schemas(),
-            ids=create_schema_example_id)
+
+def test_load_schema_with_tag_address(tmpdir):
+    schema_def = """
+%YAML 1.1
+%TAG !asdf! tag:stsci.edu:asdf/
+---
+$schema: "http://stsci.edu/schemas/asdf/asdf-schema-1.0.0"
+id: "http://stsci.edu/schemas/asdf/nugatory/nugatory-1.0.0"
+tag: "tag:stsci.edu:asdf/nugatory/nugatory-1.0.0"
+
+type: object
+properties:
+  foobar:
+      $ref: "http://stsci.edu/schemas/asdf/core/ndarray-1.0.0"
+
+required: [foobar]
+...
+    """
+    schema_path = tmpdir.join('nugatory.yaml')
+    schema_path.write(schema_def.encode())
+
+    schema_tree = schema.load_schema(str(schema_path), resolve_references=True)
+    schema.check_schema(schema_tree)
+
 
 def test_schema_caching():
     # Make sure that if we request the same URL, we get the *exact
@@ -405,7 +265,7 @@ custom: !<tag:nowhere.org:custom/custom-1.0.0>
     # This should cause a warning but not an error because without explicitly
     # providing an extension, our custom type will not be recognized and will
     # simply be converted to a raw type.
-    with catch_warnings() as warning:
+    with pytest.warns(None) as warning:
         with asdf.AsdfFile.open(buff):
             pass
     assert len(warning) == 1
@@ -516,7 +376,71 @@ custom: !<tag:nowhere.org:custom/default-1.0.0>
         assert 'c' not in ff.tree['custom']['b']
 
 
-def test_references_in_schema():
+def test_tag_reference_validation():
+    class DefaultTypeExtension(CustomExtension):
+        @property
+        def types(self):
+            return [TagReferenceType]
+
+    yaml = """
+custom: !<tag:nowhere.org:custom/tag_reference-1.0.0>
+  name:
+    "Something"
+  things: !core/ndarray-1.0.0
+    data: [1, 2, 3]
+    """
+
+    buff = helpers.yaml_to_asdf(yaml)
+    with asdf.AsdfFile.open(buff, extensions=[DefaultTypeExtension()]) as ff:
+        custom = ff.tree['custom']
+        assert custom['name'] == "Something"
+        assert_array_equal(custom['things'], [1, 2, 3])
+
+
+def test_foreign_tag_reference_validation():
+    class ForeignTagReferenceType(asdftypes.CustomType):
+        name = 'foreign_tag_reference'
+        organization = 'nowhere.org'
+        version = (1, 0, 0)
+        standard = 'custom'
+
+        @classmethod
+        def from_tree(cls, tree, ctx):
+            node = {}
+            node['a'] = yamlutil.tagged_tree_to_custom_tree(tree['a'], ctx)
+            node['b'] = yamlutil.tagged_tree_to_custom_tree(tree['b'], ctx)
+            return node
+
+    class ForeignTypeExtension(CustomExtension):
+        @property
+        def types(self):
+            return [TagReferenceType, ForeignTagReferenceType]
+
+    yaml = """
+custom: !<tag:nowhere.org:custom/foreign_tag_reference-1.0.0>
+  a: !<tag:nowhere.org:custom/tag_reference-1.0.0>
+    name:
+      "Something"
+    things: !core/ndarray-1.0.0
+      data: [1, 2, 3]
+  b: !<tag:nowhere.org:custom/tag_reference-1.0.0>
+    name:
+      "Anything"
+    things: !core/ndarray-1.0.0
+      data: [4, 5, 6]
+    """
+
+    buff = helpers.yaml_to_asdf(yaml)
+    with asdf.AsdfFile.open(buff, extensions=ForeignTypeExtension()) as ff:
+        a = ff.tree['custom']['a']
+        b = ff.tree['custom']['b']
+        assert a['name'] == 'Something'
+        assert_array_equal(a['things'], [1, 2, 3])
+        assert b['name'] == 'Anything'
+        assert_array_equal(b['things'], [4, 5, 6])
+
+
+def test_self_reference_resolution():
     r = resolver.Resolver(CustomExtension().url_mapping, 'url')
     s = schema.load_schema(
         os.path.join(TEST_DATA_PATH, 'self_referencing-1.0.0.yaml'),
@@ -549,7 +473,7 @@ def test_large_literals():
         print(buff.getvalue())
 
 
-@pytest.mark.skipif('not HAS_ASTROPY')
+@pytest.mark.importorskip('astropy')
 def test_type_missing_dependencies():
 
     class MissingType(asdftypes.AsdfType):
@@ -570,7 +494,7 @@ custom: !<tag:nowhere.org:custom/missing-1.1.0>
   b: {foo: 42}
     """
     buff = helpers.yaml_to_asdf(yaml)
-    with catch_warnings() as w:
+    with pytest.warns(None) as w:
         with asdf.AsdfFile.open(buff, extensions=[DefaultTypeExtension()]) as ff:
             assert ff.tree['custom']['b']['foo'] == 42
 
@@ -602,6 +526,53 @@ def test_assert_roundtrip_with_extension(tmpdir):
     def check(ff):
         assert isinstance(ff.tree['custom'], CustomType)
 
-    helpers.assert_roundtrip_tree(tree, tmpdir, extensions=[CustomTypeExtension()])
+    with pytest.warns(None) as warnings:
+        helpers.assert_roundtrip_tree(
+            tree, tmpdir, extensions=[CustomTypeExtension()])
+
+    assert len(warnings) == 0, helpers.display_warnings(warnings)
 
     assert called_custom_assert_equal[0] is True
+
+
+def test_custom_validation_bad(tmpdir):
+    custom_schema_path = os.path.join(TEST_DATA_PATH, 'custom_schema.yaml')
+    asdf_file = os.path.join(str(tmpdir), 'out.asdf')
+
+    # This tree does not conform to the custom schema
+    tree = {'stuff': 42, 'other_stuff': 'hello'}
+
+    # Creating file without custom schema should pass
+    with asdf.AsdfFile(tree) as ff:
+        ff.write_to(asdf_file)
+
+    # Creating file using custom schema should fail
+    with pytest.raises(ValidationError):
+        with asdf.AsdfFile(tree, custom_schema=custom_schema_path) as ff:
+            pass
+
+    # Opening file without custom schema should pass
+    with asdf.open(asdf_file) as ff:
+        pass
+
+    # Opening file with custom schema should fail
+    with pytest.raises(ValidationError):
+        with asdf.open(asdf_file, custom_schema=custom_schema_path) as ff:
+            pass
+
+
+def test_custom_validation_good(tmpdir):
+    custom_schema_path = os.path.join(TEST_DATA_PATH, 'custom_schema.yaml')
+    asdf_file = os.path.join(str(tmpdir), 'out.asdf')
+
+    # This tree conforms to the custom schema
+    tree = {
+        'foo': {'x': 42, 'y': 10},
+        'bar': {'a': 'hello', 'b': 'banjo'}
+    }
+
+    with asdf.AsdfFile(tree, custom_schema=custom_schema_path) as ff:
+        ff.write_to(asdf_file)
+
+    with asdf.open(asdf_file, custom_schema=custom_schema_path) as ff:
+        pass

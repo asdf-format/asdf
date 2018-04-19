@@ -4,11 +4,7 @@
 Utility functions for managing tree-like data structures.
 """
 
-from __future__ import absolute_import, division, unicode_literals, print_function
-
 import inspect
-
-import six
 
 from .tagged import tag_object
 
@@ -74,7 +70,7 @@ def iter_tree(top):
             seen.remove(tree_id)
         elif isinstance(tree, dict):
             seen.add(tree_id)
-            for val in six.itervalues(tree):
+            for val in tree.values():
                 for sub in recurse(val):
                     yield sub
             seen.remove(tree_id)
@@ -129,7 +125,7 @@ def walk_and_modify(top, callback):
         if isinstance(tree, dict):
             result = tree.__class__()
             seen.add(id_tree)
-            for key, val in six.iteritems(tree):
+            for key, val in tree.items():
                 val = recurse(val)
                 if val is not None:
                     result[key] = val
@@ -161,7 +157,7 @@ def walk_and_modify(top, callback):
                 json_id = tree['id']
             result = tree.__class__()
             seen.add(id_tree)
-            for key, val in six.iteritems(tree):
+            for key, val in tree.items():
                 val = recurse_with_json_ids(val, json_id)
                 if val is not None:
                     result[key] = val

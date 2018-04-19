@@ -20,10 +20,10 @@ if os.name == 'nt': # pragma: no cover
     _MoveFileEx = ctypes.windll.kernel32.MoveFileExW
 
     def _rename(src, dst):
-        if not isinstance(src, six.text_type):
-            src = six.text_type(src, sys.getfilesystemencoding())
-        if not isinstance(dst, six.text_type):
-            dst = six.text_type(dst, sys.getfilesystemencoding())
+        if not isinstance(src, str):
+            src = str(src, sys.getfilesystemencoding())
+        if not isinstance(dst, str):
+            dst = str(dst, sys.getfilesystemencoding())
         if _rename_atomic(src, dst):
             return True
         retry = 0

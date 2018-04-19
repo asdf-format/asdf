@@ -1,23 +1,15 @@
 # -*- coding: utf-8 -*-
 # Licensed under a 3-clause BSD style license - see LICENSE.rst
 
-from __future__ import (absolute_import, division, print_function,
-                        unicode_literals)
-
 import argparse
 import logging
 import sys
-
-import six
 
 from .. import util
 
 
 # This list is ordered in order of average workflow
-command_order = [
-    'Explode',
-    'Implode',
-    ]
+command_order = [ 'Explode', 'Implode' ]
 
 
 class Command(object):
@@ -61,7 +53,7 @@ def make_argparser():
         commands[str(command)].setup_arguments(subparsers)
         del commands[command]
 
-    for name, command in sorted(six.iteritems(commands)):
+    for name, command in sorted(commands.items()):
         command.setup_arguments(subparsers)
 
     return parser, subparsers
@@ -80,10 +72,10 @@ def main_from_args(args):
     try:
         result = args.func(args)
     except RuntimeError as e:
-        logging.error(six.text_type(e))
+        logging.error(str(e))
         return 1
     except IOError as e:
-        logging.error(six.text_type(e))
+        logging.error(str(e))
         return e.errno
 
     if result is None:

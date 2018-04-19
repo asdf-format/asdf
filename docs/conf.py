@@ -41,6 +41,13 @@ except ImportError:
 # Load all of the global Astropy configuration
 from astropy_helpers.sphinx.conf import *
 
+# Ensure documentation examples are determinstically random.
+import numpy
+try:
+    numpy.random.seed(int(os.environ['SOURCE_DATE_EPOCH']))
+except KeyError:
+    pass
+
 # Get configuration information from setup.cfg
 try:
     from ConfigParser import ConfigParser
@@ -106,7 +113,14 @@ release = package.__version__
 # The theme to use for HTML and HTML Help pages.  See the documentation for
 # a list of builtin themes. To override the custom theme, set this to the
 # name of a builtin theme or the name of a custom theme in html_theme_path.
-#html_theme = None
+html_theme = 'alabaster'
+html_theme_options = {
+    'github_user': 'spacetelescope',
+    'github_repo': 'asdf',
+    'github_button': 'true',
+    'fixed_sidebar': 'true',
+    'page_width': '45%',
+}
 
 # Custom sidebar templates, maps document names to template names.
 #html_sidebars = {}

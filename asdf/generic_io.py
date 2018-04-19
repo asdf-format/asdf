@@ -9,9 +9,6 @@ The classes in this module should not be instantiated directly, but
 instead, one should use the factory function `get_file`.
 """
 
-from __future__ import absolute_import, division, unicode_literals, print_function
-
-from distutils.version import LooseVersion
 import io
 import math
 import os
@@ -19,22 +16,23 @@ import platform
 import re
 import sys
 import tempfile
+from distutils.version import LooseVersion
 
 from os import SEEK_SET, SEEK_CUR, SEEK_END
 
+import http.client
+from urllib import parse as urlparse
+from urllib.request import url2pathname
+
 import six
-from six.moves import xrange
-from six.moves.urllib import parse as urlparse
-from six.moves.urllib.request import url2pathname
 
 import numpy as np
 
+from . import util
 from .extern import atomicfile
 
-from . import util
 
-
-__all__ = ['get_file', 'resolve_uri', 'relative_uri']
+__all__ = ['get_file', 'get_uri', 'resolve_uri', 'relative_uri']
 
 
 _local_file_schemes = ['', 'file']
@@ -60,15 +58,10 @@ def _check_bytes(fd, mode):
         if not isinstance(x, bytes):
             return False
     elif 'w' in mode:
-        if six.PY2: # pragma: no cover
-            if isinstance(fd, file):
-                if 'b' not in fd.mode:
-                    return False
-        elif six.PY3:
-            try:
-                fd.write(b'')
-            except TypeError:
-                return False
+        try:
+            fd.write(b'')
+        except TypeError:
+            return False
 
     return True
 
@@ -81,7 +74,7 @@ if (sys.platform == 'darwin' and
             return np.fromfile(fd, dtype=np.uint8, count=size)
         else:
             array = np.empty(size, dtype=np.uint8)
-            for beg in xrange(0, size, chunk_size):
+            for beg in range(0, size, chunk_size):
                 end = min(size, beg + chunk_size)
                 array[beg:end] = np.fromfile(fd, dtype=np.uint8, count=end - beg)
             return array
@@ -104,7 +97,7 @@ size : integer
 
 def _array_tofile_chunked(write, array, chunksize):  # pragma: no cover
     array = array.view(np.uint8).flatten()
-    for i in xrange(0, array.nbytes, chunksize):
+    for i in range(0, array.nbytes, chunksize):
         write(array[i:i + chunksize].data)
 
 
@@ -362,23 +355,13 @@ class GenericFile(object):
         object.
         """
         i = 0
-        for i in xrange(0, size - self._blksize, self._blksize):
+        for i in range(0, size - self._blksize, self._blksize):
             yield self.read(self._blksize)
         if i < size:
             yield self.read(size - i)
 
-    if sys.version_info[:2] == (2, 7) and sys.version_info[2] < 4:  # pragma: no cover
-        # On Python 2.7.x prior to 2.7.4, the buffer does not support the
-        # new buffer interface, and thus can't be written directly.  See
-        # issue #10221.
-        def write(self, content):
-            if isinstance(content, buffer):
-                self._fd.write(bytes(content))
-            else:
-                self._fd.write(content)
-    else:
-        def write(self, content):
-            self._fd.write(content)
+    def write(self, content):
+        self._fd.write(content)
 
     write.__doc__ = """
     Write a string to the file. There is no return value. Due to
@@ -630,7 +613,7 @@ class GenericFile(object):
         Write nbytes of zeros.
         """
         blank_data = b'\0' * self.block_size
-        for i in xrange(0, nbytes, self.block_size):
+        for i in range(0, nbytes, self.block_size):
             length = min(nbytes - i, self.block_size)
             self.write(blank_data[:length])
 
@@ -760,7 +743,7 @@ class RealFile(RandomAccessFile):
             self._blksize = stat.st_blksize
         self._size = stat.st_size
         if (uri is None and
-            isinstance(fd.name, six.string_types)):
+            isinstance(fd.name, str)):
             self._uri = util.filepath_to_url(os.path.abspath(fd.name))
 
     def write_array(self, arr):
@@ -1015,7 +998,7 @@ class HTTPConnection(RandomAccessFile):
 
                 # Now copy over to the temporary file, block-by-block
                 self._local.seek(a * block_size, os.SEEK_SET)
-                for i in xrange(a, b):
+                for i in range(a, b):
                     chunk = response.read(block_size)
                     self._local.write(chunk)
                     mark_block(i)
@@ -1063,10 +1046,8 @@ def _make_http_connection(init, mode, uri=None):
     Creates a HTTPConnection instance if the HTTP server supports
     Range requests, otherwise falls back to a generic InputStream.
     """
-    from six.moves import http_client
-
     parsed = urlparse.urlparse(init)
-    connection = http_client.HTTPConnection(parsed.netloc)
+    connection = http.client.HTTPConnection(parsed.netloc)
     connection.connect()
 
     block_size = io.DEFAULT_BUFFER_SIZE
@@ -1101,6 +1082,22 @@ def _make_http_connection(init, mode, uri=None):
     response.close()
     return HTTPConnection(connection, size, parsed.path, uri or init,
                           first_chunk)
+
+def get_uri(file_obj):
+    """
+    Returns the uri of the given file object
+
+    Parameters
+    ----------
+    uri : object
+    """
+    if isinstance(file_obj, six.string_types):
+        return file_obj
+    if isinstance(file_obj, GenericFile):
+        return file_obj.uri
+
+    # A catch-all for types from Python's io module that have names
+    return getattr(file_obj, 'name', '')
 
 
 def get_file(init, mode='r', uri=None):
@@ -1157,10 +1154,7 @@ def get_file(init, mode='r', uri=None):
         raise ValueError("mode must be 'r', 'w' or 'rw'")
 
     if init in (sys.__stdout__, sys.__stdin__, sys.__stderr__):
-        if six.PY3:
-            init = init.buffer
-        else:
-            init = os.fdopen(init.fileno(), init.mode + 'b')
+        init = os.fdopen(init.fileno(), init.mode + 'b')
 
     if isinstance(init, (GenericFile, GenericWrapper)):
         if mode not in init.mode:
@@ -1169,7 +1163,7 @@ def get_file(init, mode='r', uri=None):
                     init.mode, mode))
         return GenericWrapper(init)
 
-    elif isinstance(init, six.string_types):
+    elif isinstance(init, str):
         parsed = urlparse.urlparse(init)
         if parsed.scheme == 'http':
             if 'w' in mode:
@@ -1195,25 +1189,6 @@ def get_file(init, mode='r', uri=None):
     elif isinstance(init, io.StringIO):
         raise TypeError(
             "io.StringIO objects are not supported.  Use io.BytesIO instead.")
-
-    elif six.PY2 and isinstance(init, file): # pragma: no cover
-        if init.mode[0] not in mode:
-            raise ValueError(
-                "File is opened as '{0}', but '{1}' was requested".format(
-                    init.mode, mode))
-
-        try:
-            init.tell()
-        except IOError:
-            if mode == 'w':
-                return OutputStream(init, uri=uri)
-            elif mode == 'r':
-                return InputStream(init, mode, uri=uri)
-            else:
-                raise ValueError(
-                    "File '{0}' could not be opened in 'rw' mode".format(init))
-        else:
-            return RealFile(init, mode, uri=uri)
 
     elif isinstance(init, io.IOBase):
         if (('r' in mode and not init.readable()) or

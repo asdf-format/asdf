@@ -1,16 +1,12 @@
 # Licensed under a 3-clause BSD style license - see LICENSE.rst
 # -*- coding: utf-8 -*-
 
-from __future__ import absolute_import, division, unicode_literals, print_function
-
 import sys
 
 import numpy as np
 from numpy import ma
 
 from jsonschema import ValidationError
-
-import six
 
 from ...asdftypes import AsdfType
 from ... import schema
@@ -52,14 +48,14 @@ def asdf_byteorder_to_numpy_byteorder(byteorder):
 def asdf_datatype_to_numpy_dtype(datatype, byteorder=None):
     if byteorder is None:
         byteorder = sys.byteorder
-    if isinstance(datatype, six.string_types) and datatype in _datatype_names:
+    if isinstance(datatype, str) and datatype in _datatype_names:
         datatype = _datatype_names[datatype]
         byteorder = asdf_byteorder_to_numpy_byteorder(byteorder)
         return np.dtype(str(byteorder + datatype))
     elif (isinstance(datatype, list) and
           len(datatype) == 2 and
-          isinstance(datatype[0], six.text_type) and
-          isinstance(datatype[1], six.integer_types) and
+          isinstance(datatype[0], str) and
+          isinstance(datatype[1], int) and
           datatype[0] in _string_datatype_names):
         length = datatype[1]
         byteorder = asdf_byteorder_to_numpy_byteorder(byteorder)

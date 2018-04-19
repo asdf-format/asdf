@@ -1,0 +1,31 @@
+%YAML 1.1
+---
+$schema: "http://stsci.edu/schemas/yaml-schema/draft-01"
+title: |
+  Top-level custom schema used for testing.
+
+description: |
+  This schema is used to test the custom schema validation mechanism in ASDF.
+
+type: object
+properties:
+  foo:
+    description: |
+      Your generic kind of foo.
+    type: object
+    properties:
+      x:
+        type: number
+      y:
+        type: number
+
+  bar:
+    type: object
+    properties:
+      a:
+        type: string
+      b:
+        type: string
+
+required: [foo, bar]
+additionalProperties: true

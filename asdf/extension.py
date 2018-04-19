@@ -1,20 +1,27 @@
 # Licensed under a 3-clause BSD style license - see LICENSE.rst
 # -*- coding: utf-8 -*-
 
-from __future__ import absolute_import, division, unicode_literals, print_function
 
 import abc
+import warnings
+from pkg_resources import iter_entry_points
 
 import six
+import importlib
 
 from . import asdftypes
 from . import resolver
+from .util import get_class_name
+from .exceptions import AsdfDeprecationWarning
+
+
+__all__ = ['AsdfExtension', 'AsdfExtensionList']
 
 
 @six.add_metaclass(abc.ABCMeta)
 class AsdfExtension(object):
     """
-    Subclass to define an extension to ASDF.
+    Abstract base class defining an extension to ASDF.
     """
     @classmethod
     def __subclasshook__(cls, C):
@@ -27,7 +34,7 @@ class AsdfExtension(object):
     @abc.abstractproperty
     def types(self):
         """
-        A list of AsdfType subclasses that describe how to store
+        A list of `asdf.CustomType` subclasses that describe how to store
         custom objects to and from ASDF.
         """
         pass
@@ -118,10 +125,10 @@ class AsdfExtensionList(object):
             tag_mapping.extend(extension.tag_mapping)
             url_mapping.extend(extension.url_mapping)
             for typ in extension.types:
-                self._type_index.add_type(typ)
+                self._type_index.add_type(typ, extension)
                 validators.update(typ.validators)
                 for sibling in typ.versioned_siblings:
-                    self._type_index.add_type(sibling)
+                    self._type_index.add_type(sibling, extension)
                     validators.update(sibling.validators)
         self._tag_mapping = resolver.Resolver(tag_mapping, 'tag')
         self._url_mapping = resolver.Resolver(url_mapping, 'url')
@@ -129,6 +136,15 @@ class AsdfExtensionList(object):
 
     @property
     def tag_to_schema_resolver(self):
+        """Deprecated. Use `tag_mapping` instead"""
+        warnings.warn(
+            "The 'tag_to_schema_resolver' property is deprecated. Use "
+            "'tag_mapping' instead.",
+            AsdfDeprecationWarning)
+        return self._tag_mapping
+
+    @property
+    def tag_mapping(self):
         return self._tag_mapping
 
     @property
@@ -156,15 +172,51 @@ class BuiltinExtension(object):
 
     @property
     def tag_mapping(self):
-        return [
-            ('tag:stsci.edu:asdf',
-             'http://stsci.edu/schemas/asdf{tag_suffix}')
-        ]
+        return resolver.DEFAULT_TAG_TO_URL_MAPPING
 
     @property
     def url_mapping(self):
         return resolver.DEFAULT_URL_MAPPING
 
 
-# A special singleton for the common case of when no extensions are used.
-_builtin_extension_list = AsdfExtensionList([BuiltinExtension()])
+class _DefaultExtensions:
+    def __init__(self):
+        self._extensions = []
+        self._extension_list = None
+        self._package_metadata = {}
+
+    def _load_installed_extensions(self, group='asdf_extensions'):
+        self._extensions = []
+        for entry_point in iter_entry_points(group=group):
+            ext = entry_point.load()
+            if not issubclass(ext, AsdfExtension):
+                warnings.warn("Found entry point {}, from {} but it is not a "
+                              "subclass of AsdfExtension, as expected. It is "
+                              "being ignored.".format(ext, entry_point.dist))
+                continue
+
+            dist = entry_point.dist
+            name = get_class_name(ext, instance=False)
+            self._package_metadata[name] = (dist.project_name, dist.version)
+            self._extensions.append(ext())
+
+    @property
+    def extensions(self):
+        # This helps avoid a circular dependency with external packages
+        if not self._extensions:
+            self._load_installed_extensions()
+
+        return self._extensions
+
+    @property
+    def extension_list(self):
+        if self._extension_list is None:
+            self._extension_list = AsdfExtensionList(self.extensions)
+
+        return self._extension_list
+
+    @property
+    def package_metadata(self):
+        return self._package_metadata
+
+default_extensions = _DefaultExtensions()

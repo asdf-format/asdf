@@ -1,12 +1,6 @@
 # Licensed under a 3-clause BSD style license - see LICENSE.rst
 # -*- coding: utf-8 -*-
 
-from __future__ import absolute_import, division, unicode_literals, print_function
-
-
-import six
-
-
 from ...asdftypes import AsdfType
 from ... import yamlutil
 
@@ -18,6 +12,7 @@ class WCSType(AsdfType):
     name = "wcs/wcs"
     requires = _REQUIRES
     types = ['gwcs.WCS']
+    version = '1.1.0'
 
     @classmethod
     def from_tree(cls, node, ctx):
@@ -65,18 +60,14 @@ class WCSType(AsdfType):
 class StepType(dict, AsdfType):
     name = "wcs/step"
     requires = _REQUIRES
+    version = '1.1.0'
 
 
 class FrameType(AsdfType):
     name = "wcs/frame"
-    version = '1.1.0'
-    requires = ['gwcs', 'astropy-1.3.3']
+    requires = ['gwcs']
     types = ['gwcs.Frame2D']
-
-    import astropy
-    _astropy_version = astropy.__version__
-    # This indicates that Cartesian Differential is not available
-    _old_astropy = astropy.__version__ <= '1.3.3'
+    version = '1.1.0'
 
     @classmethod
     def _get_reference_frame_mapping(cls):
@@ -108,15 +99,15 @@ class FrameType(AsdfType):
         reference_frame_mapping = cls._get_reference_frame_mapping()
 
         cls._inverse_reference_frame_mapping = {}
-        for key, val in six.iteritems(reference_frame_mapping):
+        for key, val in reference_frame_mapping.items():
             cls._inverse_reference_frame_mapping[val] = key
 
         return cls._inverse_reference_frame_mapping
 
     @classmethod
     def _reference_frame_from_tree(cls, node, ctx):
-        from ..unit import QuantityType
         from astropy.units import Quantity
+        from astropy.io.misc.asdf.tags.unit.quantity import QuantityType
         from astropy.coordinates import ICRS, CartesianRepresentation
 
         version = cls.version
@@ -148,7 +139,7 @@ class FrameType(AsdfType):
                         y = QuantityType.from_tree(val[1], ctx)
                         z = QuantityType.from_tree(val[2], ctx)
                     val = CartesianRepresentation(x, y, z)
-                elif not cls._old_astropy and name == 'galcen_v_sun':
+                elif name == 'galcen_v_sun':
                     from astropy.coordinates import CartesianDifferential
                     # This field only exists since v1.1.0, and it only uses
                     # CartesianDifferential after v1.3.3
@@ -193,10 +184,9 @@ class FrameType(AsdfType):
     @classmethod
     def _to_tree(cls, frame, ctx):
         import numpy as np
-        from ..unit import QuantityType
         from astropy.coordinates import CartesianRepresentation
-        if not cls._old_astropy:
-            from astropy.coordinates import CartesianDifferential
+        from astropy.io.misc.asdf.tags.unit.quantity import QuantityType
+        from astropy.coordinates import CartesianDifferential
 
         node = {}
 
@@ -220,7 +210,7 @@ class FrameType(AsdfType):
                 if isinstance(frameval, CartesianRepresentation):
                     value = [frameval.x, frameval.y, frameval.z]
                     frameval = value
-                elif not cls._old_astropy and isinstance(frameval, CartesianDifferential):
+                elif isinstance(frameval, CartesianDifferential):
                     value = [frameval.d_x, frameval.d_y, frameval.d_z]
                     frameval = value
                 yamlval = yamlutil.custom_tree_to_tagged_tree(frameval, ctx)
@@ -318,6 +308,7 @@ class SpectralFrame(FrameType):
 class CompositeFrame(FrameType):
     name = "wcs/composite_frame"
     types = ['gwcs.CompositeFrame']
+    version = '1.1.0'
 
     @classmethod
     def from_tree(cls, node, ctx):
@@ -347,6 +338,10 @@ class CompositeFrame(FrameType):
             helpers.assert_tree_match(old_frame, new_frame)
 
 class ICRSCoord(AsdfType):
+    """The newest version of this tag and the associated schema have  moved to
+    Astropy. This implementation is retained here for the purposes of backwards
+    compatibility with older files.
+    """
     name = "wcs/icrs_coord"
     types = ['astropy.coordinates.ICRS']
     requires = ['astropy']
@@ -354,7 +349,7 @@ class ICRSCoord(AsdfType):
 
     @classmethod
     def from_tree(cls, node, ctx):
-        from ..unit import QuantityType
+        from astropy.io.misc.asdf.tags.unit.quantity import QuantityType
         from astropy.coordinates import ICRS, Longitude, Latitude, Angle
 
         angle = QuantityType.from_tree(node['ra']['wrap_angle'], ctx)
@@ -368,10 +363,14 @@ class ICRSCoord(AsdfType):
         return ICRS(ra=ra, dec=dec)
 
     @classmethod
-    def to_tree(cls, frame, ctx):
-        from ..unit import QuantityType
+    def to_tree(cls, frame, ctx): # pragma: no cover
+        # We do not run coverage analysis since new ICRS objects will be
+        # serialized by the tag implementation in Astropy. Eventually if we
+        # have a better way to write older versions of tags, we can re-add
+        # tests for this code.
         from astropy.units import Quantity
         from astropy.coordinates import ICRS
+        from astropy.io.misc.asdf.tags.unit.quantity import QuantityType
 
         node = {}
 

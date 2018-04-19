@@ -1,0 +1,21 @@
+# Run the following command to set up this environment:
+# $ conda env create -f environment.yml
+# The environment name can be overridden with the following command:
+# $ conda env create -n <custom name> -f environment.yml
+name: asdf-dev
+dependencies:
+  - python=3.6
+  - ipython
+  - numpy
+  - pyyaml
+  - jsonschema
+  - semantic_version
+  - pip:
+    - git+https://github.com/astropy/astropy#egg=astropy
+    - pytest-astropy
+    # Optional dependencies: it's not necessary to install gwcs for testing
+    # but it may be useful. Note that gwcs will cause a stable version of ASDF
+    # to be installed as well. Unfortunately there's not a good way to express
+    # --no-deps in this file (which actually seems to be a limitation of pip
+    # itself, not conda).
+    # - git+https://github.com/spacetelescope/gwcs#egg=gwcs
