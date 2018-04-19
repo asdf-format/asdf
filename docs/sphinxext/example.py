@@ -17,7 +17,7 @@ from sphinx.util.nodes import set_source_info
 
 from asdf import AsdfFile
 from asdf.constants import ASDF_MAGIC, BLOCK_FLAG_STREAMED
-from asdf import versioning
+from asdf import versioning, util
 
 version_string = str(versioning.default_version)
 
@@ -28,10 +28,7 @@ TMPDIR = tempfile.mkdtemp()
 def delete_tmpdir():
     shutil.rmtree(TMPDIR)
 
-
 GLOBALS = {}
-LOCALS = {}
-
 
 FLAGS = {
     BLOCK_FLAG_STREAMED: "BLOCK_FLAG_STREAMED"
@@ -50,7 +47,7 @@ class RunCodeDirective(Directive):
 
         try:
             try:
-                exec(code, GLOBALS, LOCALS)
+                exec(code, GLOBALS)
             except:
                 print(code)
                 raise
@@ -69,6 +66,7 @@ class RunCodeDirective(Directive):
 
 class AsdfDirective(Directive):
     required_arguments = 1
+    optional_arguments = 1
 
     def run(self):
         filename = self.arguments[0]
@@ -86,7 +84,12 @@ class AsdfDirective(Directive):
             set_source_info(self, literal)
             parts.append(literal)
 
-            with AsdfFile.open(filename) as ff:
+            kwargs = dict()
+            # Use the ignore_unrecognized_tag parameter as a proxy for both options
+            kwargs['ignore_unrecognized_tag'] = 'ignore_unrecognized_tag' in self.arguments
+            kwargs['ignore_missing_extensions'] = 'ignore_unrecognized_tag' in self.arguments
+
+            with AsdfFile.open(filename, **kwargs) as ff:
                 for i, block in enumerate(ff.blocks.internal_blocks):
                     data = codecs.encode(block.data.tostring(), 'hex')
                     if len(data) > 40:

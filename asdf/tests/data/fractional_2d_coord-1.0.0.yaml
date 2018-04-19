@@ -1,0 +1,16 @@
+%YAML 1.1
+---
+$schema: "http://stsci.edu/schemas/yaml-schema/draft-01"
+id: "http://nowhere.org/schemas/custom/fractional_2d_coord-1.0.0"
+title: An example custom type for handling components
+
+tag: "tag:nowhere.org:custom/fractional_2d_coord-1.0.0"
+type: object
+properties:
+  x:
+    $ref: fraction-1.0.0
+  y:
+    $ref: fraction-1.0.0
+
+required: [x, y]
+...

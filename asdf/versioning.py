@@ -21,6 +21,9 @@ from . import resolver
 from . import util
 
 
+__all__ = ['AsdfVersion', 'AsdfSpec']
+
+
 _version_map = {}
 def get_version_map(version):
     version_map = _version_map.get(version)

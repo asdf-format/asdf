@@ -15,10 +15,13 @@ from .util import get_class_name
 from .exceptions import AsdfDeprecationWarning
 
 
+__all__ = ['AsdfExtension', 'AsdfExtensionList']
+
+
 @six.add_metaclass(abc.ABCMeta)
 class AsdfExtension(object):
     """
-    Subclass to define an extension to ASDF.
+    Abstract base class defining an extension to ASDF.
     """
     @classmethod
     def __subclasshook__(cls, C):
@@ -31,7 +34,7 @@ class AsdfExtension(object):
     @abc.abstractproperty
     def types(self):
         """
-        A list of AsdfType subclasses that describe how to store
+        A list of `asdf.CustomType` subclasses that describe how to store
         custom objects to and from ASDF.
         """
         pass
@@ -133,6 +136,7 @@ class AsdfExtensionList(object):
 
     @property
     def tag_to_schema_resolver(self):
+        """Deprecated. Use `tag_mapping` instead"""
         warnings.warn(
             "The 'tag_to_schema_resolver' property is deprecated. Use "
             "'tag_mapping' instead.",

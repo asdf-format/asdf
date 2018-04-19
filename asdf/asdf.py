@@ -46,7 +46,7 @@ def get_asdf_library_info():
 
 class AsdfFile(versioning.VersionedMixin):
     """
-    The main class that represents a ASDF file.
+    The main class that represents an ASDF file object.
     """
     def __init__(self, tree=None, uri=None, extensions=None, version=None,
         ignore_version_mismatch=True, ignore_unrecognized_tag=False,
@@ -65,9 +65,8 @@ class AsdfFile(versioning.VersionedMixin):
             if possible and if created from `AsdfFile.open`.
 
         extensions : list of AsdfExtension
-            A list of extensions to the ASDF to support when reading
-            and writing ASDF files.  See `asdftypes.AsdfExtension` for
-            more information.
+            A list of extensions to use when reading and writing ASDF files.
+            See `~asdf.asdftypes.AsdfExtension` for more information.
 
         version : str, optional
             The ASDF version to use when writing out.  If not
@@ -712,9 +711,8 @@ class AsdfFile(versioning.VersionedMixin):
             Requires reading the entire file, so disabled by default.
 
         extensions : list of AsdfExtension
-            A list of extensions to the ASDF to support when reading
-            and writing ASDF files.  See `asdftypes.AsdfExtension` for
-            more information.
+            A list of extensions to use when reading and writing ASDF files.
+            See `~asdf.asdftypes.AsdfExtension` for more information.
 
         do_not_fill_defaults : bool, optional
             When `True`, do not fill in missing default values.
