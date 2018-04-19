@@ -61,9 +61,10 @@ improvements to the ASDF Standard can be reported `here
 See also
 ========
 
-
 - The `Advanced Scientific Data Format (ASDF) standard
   <https://asdf-standard.readthedocs.io/>`__
+
+- ASDF Python package distribution on `pypi <https://pypi.org/project/asdf/>`_
 
 Index
 =====
