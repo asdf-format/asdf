@@ -139,7 +139,7 @@ class AsdfDirective(Directive):
         finally:
             os.chdir(cwd)
 
-        result = nodes.admonition()
+        result = nodes.literal_block()
         textnodes, messages = self.state.inline_text(filename, self.lineno)
         title = nodes.title(filename, '', *textnodes)
         result += title

@@ -1,0 +1,9 @@
+div.highlight {
+    transition: width 0.5s;
+    -webkit-transition: width 0.5s;
+    overflow: hidden;
+}
+
+div.highlight:hover {
+    width: 150%
+}
