@@ -34,6 +34,8 @@ env:
     matrix:
         # Make sure that installation does not fail
         - SETUP_CMD='install'
+        # Make sure README will display properly on pypi
+        - PIP_DEPENDENCIES='collective.checkdocs pygments' SETUP_CMD='checkdocs'
         - PYTHON_VERSION=3.5 SETUP_CMD='test'
         - PYTHON_VERSION=3.6 SETUP_CMD='test'
 
