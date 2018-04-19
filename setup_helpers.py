@@ -1,6 +1,7 @@
 # Licensed under a 3-clause BSD style license - see LICENSE.rst
 
 import os
+import re
 import sys
 import subprocess as sp
 
@@ -84,4 +85,12 @@ def read_metadata(config_filename):
 
 def read_readme(readme_filename):
     with open(readme_filename) as ff:
-        return ff.read()
+        lines = ff.read().splitlines()
+
+    # Fix hyperlink targets so that the README displays properly on pypi
+    label_re = re.compile(r'^\.\.\s+_(\w|-)+$')
+    for i, line in enumerate(lines):
+        if label_re.match(line):
+            lines[i] = line + ':'
+
+    return '\n'.join(lines)
