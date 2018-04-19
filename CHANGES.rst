@@ -60,6 +60,13 @@
 - Remove restrictions affecting top-level attributes ``data``, ``wcs``, and
   ``fits``. Bump top-level ASDF schema version to v1.1.0. [#444]
 
+1.3.3 (2018-03-01)
+------------------
+
+- Update test infrastructure to rely on new Astropy v3.0 plugins. [#461]
+
+- Disable use of 2to3. This was causing test failures on Debian builds. [#463]
+
 1.3.2 (2018-02-22)
 ------------------
 
