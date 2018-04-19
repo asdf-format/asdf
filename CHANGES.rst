@@ -1,4 +1,4 @@
-2.0.0 (unreleased)
+2.0.0 (2018-04-19)
 ------------------
 
 - Astropy-specific tags have moved to Astropy core package. [#359]
@@ -19,9 +19,6 @@
   converting it to a pure ASDF file. [#477]
 
 - Add command for removing ASDF extension from ASDF-in-FITS file. [#480]
-
-1.4.0 (unreleased)
-------------------
 
 - Add an ``ExternalArrayReference`` type for referencing arrays in external
   files. [#400]
