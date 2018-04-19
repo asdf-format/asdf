@@ -7,14 +7,13 @@ standard <http://tools.ietf.org/html/draft-pbryan-zyp-json-ref-03>`__
 and `JSON Pointer standard <http://tools.ietf.org/html/rfc6901>`__.
 """
 
-from __future__ import absolute_import, division, unicode_literals, print_function
 
 from collections import Sequence
 import weakref
 
 import numpy as np
 
-from six.moves.urllib import parse as urlparse
+from urllib import parse as urlparse
 
 from .asdftypes import AsdfType
 from . import generic_io

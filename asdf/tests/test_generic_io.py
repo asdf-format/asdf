@@ -1,59 +1,27 @@
 # Licensed under a 3-clause BSD style license - see LICENSE.rst
 # -*- coding: utf-8 -*-
 
-from __future__ import absolute_import, division, unicode_literals, print_function
-
 import io
 import os
 import sys
 
 import pytest
 
-import six
-import six.moves.urllib.request as urllib_request
+import urllib.request as urllib_request
 
 import numpy as np
 
-from .. import asdf
-from .. import generic_io
-from .. import util
+import asdf
+from asdf import util
+from asdf import generic_io
+from asdf.asdf import is_asdf_file
 
 from . import helpers
-
-try:
-    from astropy.io import fits
-    from astropy.tests.disable_internet import INTERNET_OFF
-    HAS_ASTROPY = True
-except ImportError:
-    HAS_ASTROPY = False
-    INTERNET_OFF = False
+# The only reason for importing these is to use them in the fixture below
+from .conftest import small_tree, large_tree
 
 
-def _get_small_tree():
-    x = np.arange(0, 10, dtype=np.float)
-    tree = {
-        'science_data': x,
-        'subset': x[3:-3],
-        'skipping': x[::2],
-        'not_shared': np.arange(10, 0, -1, dtype=np.uint8)
-        }
-    return tree
-
-
-def _get_large_tree():
-    # These are designed to be big enough so they don't fit in a
-    # single block, but not so big that RAM/disk space for the tests
-    # is enormous.
-    x = np.random.rand(256, 256)
-    y = np.random.rand(16, 16, 16)
-    tree = {
-        'science_data': x,
-        'more': y
-        }
-    return tree
-
-
-@pytest.fixture(params=[_get_small_tree, _get_large_tree])
+@pytest.fixture(params=[small_tree, large_tree])
 def tree(request):
     return request.param()
 
@@ -65,8 +33,7 @@ def _roundtrip(tree, get_write_fd, get_read_fd,
         # Work around the fact that generic_io's get_file doesn't have a way of
         # determining whether or not the underlying file handle should be
         # closed as part of the exit handler
-        if (six.PY3 and isinstance(fd._fd, io.FileIO)) or \
-                (six.PY2 and isinstance(fd._fd, file)):
+        if isinstance(fd._fd, io.FileIO):
             fd._fd.close()
 
     with get_read_fd() as fd:
@@ -83,13 +50,13 @@ def test_mode_fail(tmpdir):
         generic_io.get_file(path, mode="r+")
 
 
-def test_open(tmpdir):
+def test_open(tmpdir, small_tree):
     from .. import open
 
     path = os.path.join(str(tmpdir), 'test.asdf')
 
     # Simply tests the high-level "open" function
-    ff = asdf.AsdfFile(_get_small_tree())
+    ff = asdf.AsdfFile(small_tree)
     ff.write_to(path)
     with open(path) as ff2:
         helpers.assert_tree_match(ff2.tree, ff.tree)
@@ -158,16 +125,15 @@ def test_open_fail2(tmpdir):
             generic_io.get_file(fd, mode='w')
 
 
-if six.PY3:
-    def test_open_fail3(tmpdir):
-        path = os.path.join(str(tmpdir), 'test.asdf')
+def test_open_fail3(tmpdir):
+    path = os.path.join(str(tmpdir), 'test.asdf')
 
-        with open(path, 'w') as fd:
-            fd.write("\n\n\n")
+    with open(path, 'w') as fd:
+        fd.write("\n\n\n")
 
-        with open(path, 'r') as fd:
-            with pytest.raises(ValueError):
-                generic_io.get_file(fd, mode='r')
+    with open(path, 'r') as fd:
+        with pytest.raises(ValueError):
+            generic_io.get_file(fd, mode='r')
 
 
 def test_open_fail4(tmpdir):
@@ -253,7 +219,7 @@ def test_streams2():
     assert len(x) == 60
 
 
-@pytest.mark.skipif(INTERNET_OFF, reason="Astropy has disabled internet access")
+@pytest.mark.remote_data
 @pytest.mark.skipif(sys.platform.startswith('win'),
                     reason="Windows firewall prevents test")
 def test_urlopen(tree, httpserver):
@@ -273,7 +239,7 @@ def test_urlopen(tree, httpserver):
         assert isinstance(next(ff.blocks.internal_blocks)._data, np.ndarray)
 
 
-@pytest.mark.skipif(INTERNET_OFF, reason="Astropy has disabled internet access")
+@pytest.mark.remote_data
 @pytest.mark.skipif(sys.platform.startswith('win'),
                     reason="Windows firewall prevents test")
 def test_http_connection(tree, httpserver):
@@ -298,7 +264,7 @@ def test_http_connection(tree, httpserver):
         ff.tree['science_data'][0] == 42
 
 
-@pytest.mark.skipif(INTERNET_OFF, reason="Astropy has disabled internet access")
+@pytest.mark.remote_data
 @pytest.mark.skipif(sys.platform.startswith('win'),
                     reason="Windows firewall prevents test")
 def test_http_connection_range(tree, rhttpserver):
@@ -363,6 +329,7 @@ def test_exploded_filesystem_fail(tree, tmpdir):
                 helpers.assert_tree_match(tree, ff.tree)
 
 
+@pytest.mark.remote_data
 @pytest.mark.skipif(sys.platform.startswith('win'),
                     reason="Windows firewall prevents test")
 def test_exploded_http(tree, httpserver):
@@ -380,46 +347,39 @@ def test_exploded_http(tree, httpserver):
         assert len(list(ff.blocks.external_blocks)) == 2
 
 
-def test_exploded_stream_write():
+def test_exploded_stream_write(small_tree):
     # Writing an exploded file to an output stream should fail, since
     # we can't write "files" alongside it.
 
-    tree = _get_small_tree()
-
-    ff = asdf.AsdfFile(tree)
+    ff = asdf.AsdfFile(small_tree)
 
     with pytest.raises(ValueError):
         ff.write_to(io.BytesIO(), all_array_storage='external')
 
 
-def test_exploded_stream_read(tmpdir):
+def test_exploded_stream_read(tmpdir, small_tree):
     # Reading from an exploded input file should fail, but only once
     # the data block is accessed.  This behavior is important so that
     # the tree can still be accessed even if the data is missing.
-    tree = _get_small_tree()
 
     path = os.path.join(str(tmpdir), 'test.asdf')
 
-    ff = asdf.AsdfFile(tree)
+    ff = asdf.AsdfFile(small_tree)
     ff.write_to(path, all_array_storage='external')
 
     with open(path, 'rb') as fd:
         # This should work, so we can get the tree content
         x = generic_io.InputStream(fd, 'r')
         with asdf.AsdfFile.open(x) as ff:
-            pass
-
-    # It's only on trying to get at the block data that the error
-    # occurs.
-    with pytest.raises(ValueError):
-        ff.tree['science_data'][:]
+            # It's only when trying to access external data that an error occurs
+            with pytest.raises(ValueError):
+                ff.tree['science_data'][:]
 
 
-def test_unicode_open(tmpdir):
+def test_unicode_open(tmpdir, small_tree):
     path = os.path.join(str(tmpdir), 'test.asdf')
 
-    tree = _get_small_tree()
-    ff = asdf.AsdfFile(tree)
+    ff = asdf.AsdfFile(small_tree)
 
     ff.write_to(path)
 
@@ -457,10 +417,7 @@ def test_invalid_obj(tmpdir):
 
 
 def test_nonseekable_file(tmpdir):
-    if six.PY2:
-        base = file
-    else:
-        base = io.IOBase
+    base = io.IOBase
 
     class FileWrapper(base):
         def tell(self):
@@ -795,15 +752,17 @@ def test_truncated_reader():
     assert tr.read() == b''
 
 
-@pytest.mark.skipif('not HAS_ASTROPY')
 def test_is_asdf(tmpdir):
     # test fits
+    astropy = pytest.importorskip('astropy')
+    from astropy.io import fits
+
     hdul = fits.HDUList()
-    phdu=fits.PrimaryHDU()
-    imhdu=fits.ImageHDU(data=np.arange(24).reshape((4,6)))
+    phdu= fits.PrimaryHDU()
+    imhdu= fits.ImageHDU(data=np.arange(24).reshape((4,6)))
     hdul.append(phdu)
     hdul.append(imhdu)
     path = os.path.join(str(tmpdir), 'test.fits')
     hdul.writeto(path)
-    assert not asdf.is_asdf_file(path)
-    assert asdf.is_asdf_file(asdf.AsdfFile())
+    assert not is_asdf_file(path)
+    assert is_asdf_file(asdf.AsdfFile())

@@ -1,29 +1,12 @@
 # Licensed under a 3-clause BSD style license - see LICENSE.rst
 # -*- coding: utf-8 -*-
 
-from __future__ import absolute_import, division, unicode_literals, print_function
-
 import io
 import os
 import re
 import sys
 
-try:
-    import psutil
-except ImportError:
-    HAS_PSUTIL = False
-else:
-    HAS_PSUTIL = True
-
-import six
 import pytest
-
-try:
-    import astropy
-except ImportError:
-    HAS_ASTROPY = False
-else:
-    HAS_ASTROPY = True
 
 import numpy as np
 from numpy import ma
@@ -33,11 +16,10 @@ import jsonschema
 
 import yaml
 
-from ....tests import helpers, CustomTestType
-from .... import asdf
-from .... import util
-
-from .. import ndarray
+import asdf
+from asdf import util
+from asdf.tests import helpers, CustomTestType
+from asdf.tags.core import ndarray
 
 
 TEST_DATA_PATH = os.path.join(os.path.dirname(__file__), 'data')
@@ -52,11 +34,13 @@ class CustomNdim(CustomTestType):
     standard = 'custom'
     version = '1.0.0'
 
+
 class CustomDatatype(CustomTestType):
     name = 'datatype'
     organization = 'nowhere.org'
     standard = 'custom'
     version = '1.0.0'
+
 
 class CustomExtension(object):
     @property
@@ -101,7 +85,8 @@ def test_sharing(tmpdir):
     def check_raw_yaml(content):
         assert b'!core/ndarray' in content
 
-    helpers.assert_roundtrip_tree(tree, tmpdir, check_asdf, check_raw_yaml)
+    helpers.assert_roundtrip_tree(tree, tmpdir, asdf_check_func=check_asdf,
+                                  raw_yaml_check_func=check_raw_yaml)
 
 
 def test_byteorder(tmpdir):
@@ -124,7 +109,8 @@ def test_byteorder(tmpdir):
         assert b'byteorder: little' in content
         assert b'byteorder: big' in content
 
-    helpers.assert_roundtrip_tree(tree, tmpdir, check_asdf, check_raw_yaml)
+    helpers.assert_roundtrip_tree(tree, tmpdir, asdf_check_func=check_asdf,
+                                  raw_yaml_check_func=check_raw_yaml)
 
 
 def test_all_dtypes(tmpdir):
@@ -134,7 +120,7 @@ def test_all_dtypes(tmpdir):
             # Python 3 can't expose these dtypes in non-native byte
             # order, because it's using the new Python buffer
             # interface.
-            if six.PY3 and dtype in ('c32', 'f16'):
+            if dtype in ('c32', 'f16'):
                 continue
 
             if dtype == 'b1':
@@ -194,21 +180,37 @@ def test_table_inline(tmpdir):
             'shape': [2]
             }
 
-    helpers.assert_roundtrip_tree(
-        tree, tmpdir, None, check_raw_yaml, {'auto_inline': 64})
+    helpers.assert_roundtrip_tree(tree, tmpdir, raw_yaml_check_func=check_raw_yaml,
+                                  write_options={'auto_inline': 64})
 
 
-@pytest.mark.skipif('not HAS_ASTROPY')
 def test_auto_inline_recursive(tmpdir):
+    astropy = pytest.importorskip('astropy')
     from astropy.modeling import models
+
     aff = models.AffineTransformation2D(matrix=[[1, 2], [3, 4]])
     tree = {'test': aff}
 
     def check_asdf(asdf):
         assert len(list(asdf.blocks.internal_blocks)) == 0
 
-    helpers.assert_roundtrip_tree(
-        tree, tmpdir, check_asdf, None, {'auto_inline': 64})
+    helpers.assert_roundtrip_tree(tree, tmpdir, asdf_check_func=check_asdf,
+                                  write_options={'auto_inline': 64})
+
+
+def test_copy_inline():
+    yaml = """
+x0: !core/ndarray-1.0.0
+  data: [-1.0, 1.0]
+    """
+
+    buff = helpers.yaml_to_asdf(yaml)
+
+    with asdf.AsdfFile.open(buff) as infile:
+        with asdf.AsdfFile() as f:
+            f.tree['a'] = infile.tree['x0']
+            f.tree['b'] = f.tree['a']
+            f.write_to(io.BytesIO())
 
 
 def test_table(tmpdir):
@@ -235,7 +237,7 @@ def test_table(tmpdir):
             'byteorder': 'big'
             }
 
-    helpers.assert_roundtrip_tree(tree, tmpdir, None, check_raw_yaml)
+    helpers.assert_roundtrip_tree(tree, tmpdir, raw_yaml_check_func=check_raw_yaml)
 
 
 def test_table_nested_fields(tmpdir):
@@ -262,7 +264,7 @@ def test_table_nested_fields(tmpdir):
             'byteorder': 'big'
         }
 
-    helpers.assert_roundtrip_tree(tree, tmpdir, None, check_raw_yaml)
+    helpers.assert_roundtrip_tree(tree, tmpdir, raw_yaml_check_func=check_raw_yaml)
 
 
 def test_inline():
@@ -316,7 +318,7 @@ def test_mask_roundtrip(tmpdir):
         assert np.all(m.mask[6:])
         assert len(asdf.blocks) == 2
 
-    helpers.assert_roundtrip_tree(tree, tmpdir, check_asdf)
+    helpers.assert_roundtrip_tree(tree, tmpdir, asdf_check_func=check_asdf)
 
 
 def test_mask_arbitrary():
@@ -428,22 +430,25 @@ def test_unicode_to_list(tmpdir):
 
 
 def test_inline_masked_array(tmpdir):
+    testfile = os.path.join(str(tmpdir), 'masked.asdf')
+
     tree = {'test': ma.array([1, 2, 3], mask=[0, 1, 0])}
 
     f = asdf.AsdfFile(tree)
     f.set_array_storage(tree['test'], 'inline')
-    f.write_to('masked.asdf')
+    f.write_to(testfile)
 
-    with asdf.AsdfFile.open('masked.asdf') as f2:
+    with asdf.AsdfFile.open(testfile) as f2:
         assert len(list(f2.blocks.internal_blocks)) == 0
         assert_array_equal(f.tree['test'], f2.tree['test'])
 
-    with open('masked.asdf', 'rb') as fd:
+    with open(testfile, 'rb') as fd:
         assert b'null' in fd.read()
 
 
-@pytest.mark.skipif(not HAS_PSUTIL, reason="psutil not installed")
 def test_masked_array_stay_open_bug(tmpdir):
+    psutil = pytest.importorskip('psutil')
+
     tmppath = os.path.join(str(tmpdir), 'masked.asdf')
 
     tree = {
@@ -757,7 +762,7 @@ def test_string_inline():
     l = ndarray.numpy_array_to_list(x)
 
     for entry in l:
-        assert isinstance(entry, six.text_type)
+        assert isinstance(entry, str)
 
 
 def test_inline_shape_mismatch():
@@ -771,3 +776,30 @@ def test_inline_shape_mismatch():
     with pytest.raises(ValueError):
         with asdf.AsdfFile.open(buff) as ff:
             pass
+
+
+@pytest.mark.xfail(
+    reason="NDArrays with dtype=object are not currently supported")
+def test_simple_object_array(tmpdir):
+    # See https://github.com/spacetelescope/asdf/issues/383 for feature
+    # request
+    dictdata = np.empty((3, 3), dtype=object)
+    for i, _ in enumerate(dictdata.flat):
+        dictdata.flat[i] = {'foo': i*42, 'bar': i**2}
+
+    helpers.assert_roundtrip_tree({'bizbaz': dictdata}, tmpdir)
+
+
+@pytest.mark.xfail(
+    reason="NDArrays with dtype=object are not currently supported")
+def test_tagged_object_array(tmpdir):
+    # See https://github.com/spacetelescope/asdf/issues/383 for feature
+    # request
+    astropy = pytest.importorskip('astropy')
+    from astropy.units.quantity import Quantity
+
+    objdata = np.empty((3, 3), dtype=object)
+    for i, _ in enumerate(objdata.flat):
+        objdata.flat[i] = Quantity(i, 'angstrom')
+
+    helpers.assert_roundtrip_tree({'bizbaz': objdata}, tmpdir)

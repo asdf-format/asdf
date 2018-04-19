@@ -1,7 +1,6 @@
 # Licensed under a 3-clause BSD style license - see LICENSE.rst
 # -*- coding: utf-8 -*-
 
-from __future__ import absolute_import, division, unicode_literals, print_function
 
 import io
 import os
@@ -11,11 +10,10 @@ from numpy.testing import assert_array_equal
 
 import pytest
 
-from .. import asdf
-from .. import reference
-from .. import util
-
-from ..tags.core import ndarray
+import asdf
+from asdf import reference
+from asdf import util
+from asdf.tags.core import ndarray
 
 from .helpers import assert_tree_match
 
@@ -224,7 +222,9 @@ def test_make_reference(tmpdir):
         assert ff.tree['ref']._uri == 'external.asdf#f~0o~0o~1/a'
 
 
-def test_internal_reference():
+def test_internal_reference(tmpdir):
+    testfile = os.path.join(str(tmpdir), 'test.asdf')
+
     tree = {
         'foo': 2,
         'bar': {'$ref': '#'}
@@ -240,7 +240,7 @@ def test_internal_reference():
         'foo': 2
     }
     ff = asdf.AsdfFile(
-        tree, uri=util.filepath_to_url(os.path.abspath("test.asdf")))
+        tree, uri=util.filepath_to_url(os.path.abspath(testfile)))
     ff.tree['bar'] = ff.make_reference([])
     buff = io.BytesIO()
     ff.write_to(buff)

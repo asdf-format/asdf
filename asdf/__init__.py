@@ -1,7 +1,6 @@
 # Licensed under a 3-clause BSD style license - see LICENSE.rst
 # -*- coding: utf-8 -*-
 
-from __future__ import absolute_import, division, unicode_literals, print_function
 
 """
 asdf: Python library for reading and writing Advanced Scientific
@@ -14,35 +13,45 @@ Data Format (ASDF) files
 from ._internal_init import *
 # ----------------------------------------------------------------------------
 
-if _ASDF_SETUP_ is False:
-    __all__ = ['AsdfFile', 'CustomType', 'AsdfExtension',
-               'Stream', 'open', 'test', 'commands',
-               'ValidationError']
+__all__ = [
+    'AsdfFile', 'CustomType', 'AsdfExtension', 'Stream', 'open', 'test',
+    'commands', 'ExternalArrayReference'
+]
 
-    try:
-        import yaml as _
-    except ImportError:
-        raise ImportError("asdf requires pyyaml")
+try:
+    import yaml as _
+except ImportError:
+    raise ImportError("asdf requires pyyaml")
 
-    try:
-        import jsonschema as _
-    except ImportError:
-        raise ImportError("asdf requires jsonschema")
+try:
+    import jsonschema as _
+except ImportError:
+    raise ImportError("asdf requires jsonschema")
 
-    try:
-        import numpy as _
-    except ImportError:
-        raise ImportError("asdf requires numpy")
+try:
+    import numpy as _
+except ImportError:
+    raise ImportError("asdf requires numpy")
 
-    from .asdf import AsdfFile
-    from .asdftypes import CustomType
-    from .extension import AsdfExtension
-    from .stream import Stream
-    from . import commands
+from .asdf import AsdfFile
+from .asdftypes import CustomType
+from .extension import AsdfExtension
+from .stream import Stream
+from . import commands
+from .tags.core.external_reference import ExternalArrayReference
 
-    from jsonschema import ValidationError
+from jsonschema import ValidationError
 
-    class ValidationError(ValidationError):
-        pass
+# TODO: there doesn't seem to be any reason to redefine this here
+class ValidationError(ValidationError):
+    pass
 
-    open = AsdfFile.open
+try:
+    from astropy.io import fits
+except ImportError:
+    pass
+else:
+    from .fits_embed import _AsdfHDU
+    fits.register_hdu(_AsdfHDU)
+
+open = AsdfFile.open

@@ -1,23 +1,23 @@
 # Licensed under a 3-clause BSD style license - see LICENSE.rst
 # -*- coding: utf-8 -*-
 
-from __future__ import absolute_import, division, unicode_literals, print_function
+import warnings
+from collections import OrderedDict
 
 import numpy as np
 
-import six
 import yaml
-import warnings
 
-from collections import OrderedDict
-
-from . constants import YAML_TAG_PREFIX
 from . import schema
 from . import tagged
 from . import treeutil
 from . import asdftypes
 from . import versioning
 from . import util
+from . constants import YAML_TAG_PREFIX
+
+
+__all__ = ['custom_tree_to_tagged_tree', 'tagged_tree_to_custom_tree']
 
 
 if getattr(yaml, '__with_libyaml__', None):  # pragma: no cover
@@ -212,20 +212,6 @@ for scalar_type in util.iter_subclasses(np.floating):
 
 for scalar_type in util.iter_subclasses(np.integer):
     AsdfDumper.add_representer(scalar_type, AsdfDumper.represent_int)
-
-
-# ----------------------------------------------------------------------
-# Unicode fix on Python 2
-
-if six.PY2: # pragma: no cover
-    # This dumps Python unicode strings as regular YAML strings rather
-    # than !!python/unicode. See http://pyyaml.org/ticket/11
-    def _unicode_representer(dumper, value):
-        return dumper.represent_scalar("tag:yaml.org,2002:str", value)
-    AsdfDumper.add_representer(unicode, _unicode_representer)
-
-    AsdfLoader.add_constructor('tag:yaml.org,2002:str',
-                               AsdfLoader.construct_scalar)
 
 
 def custom_tree_to_tagged_tree(tree, ctx):

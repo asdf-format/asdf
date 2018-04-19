@@ -1,19 +1,22 @@
 # Licensed under a 3-clause BSD style license - see LICENSE.rst
 # -*- coding: utf-8 -*-
 
-from __future__ import absolute_import, division, unicode_literals, print_function
-
-
+import sys
 import os.path
-
-import six
 
 from . import constants
 from . import util
 
 
-SCHEMA_PATH = os.path.abspath(
-    os.path.join(os.path.dirname(__file__), 'schemas'))
+def find_schema_path():
+    dirname = os.path.dirname(__file__)
+
+    # This means we are working within a development build
+    if os.path.exists(os.path.join(dirname, '..', 'asdf-standard')):
+        return os.path.join(dirname, '..', 'asdf-standard', 'schemas')
+
+    # Otherwise, we return the installed location
+    return os.path.join(dirname, 'schemas')
 
 
 class Resolver(object):
@@ -48,33 +51,37 @@ class Resolver(object):
         prefix : str, optional
             The prefix to use for the Python formatting token names.
         """
-        self._mapping = self._validate_mapping(mapping)[::-1]
-        self._prefix = prefix
+        self._mapping = tuple()
+        if mapping:
+            self.add_mapping(mapping, prefix)
 
-    def _validate_mapping(self, mappings):
+    def add_mapping(self, mapping, prefix=''):
+        self._mapping = self._mapping + self._validate_mapping(mapping, prefix)
+
+    def _make_map_func(self, mapping, prefix):
+        def _map_func(uri):
+            if uri.startswith(mapping[0]):
+                format_tokens = {
+                    prefix: uri,
+                    prefix + "_prefix": mapping[0],
+                    prefix + "_suffix": uri[len(mapping[0]):]
+                }
+
+                return len(mapping[0]), mapping[1].format(**format_tokens)
+            return None
+        return _map_func
+
+    def _validate_mapping(self, mappings, prefix):
         normalized = []
         for mapping in mappings:
-            if six.callable(mapping):
+            if callable(mapping):
                 func = mapping
             elif (isinstance(mapping, (list, tuple)) and
                   len(mapping) == 2 and
-                  isinstance(mapping[0], six.string_types) and
-                  isinstance(mapping[1], six.string_types)):
+                  isinstance(mapping[0], str) and
+                  isinstance(mapping[1], str)):
 
-                def _make_map_func(mapping):
-                    def _map_func(uri):
-                        if uri.startswith(mapping[0]):
-                            format_tokens = {
-                                self._prefix: uri,
-                                self._prefix + "_prefix": mapping[0],
-                                self._prefix + "_suffix": uri[len(mapping[0]):]
-                            }
-
-                            return len(mapping[0]), mapping[1].format(**format_tokens)
-                        return None
-                    return _map_func
-
-                func = _make_map_func(mapping)
+                func = self._make_map_func(mapping, prefix)
             else:
                 raise ValueError("Invalid mapping '{0}'".format(mapping))
 
@@ -89,7 +96,7 @@ class Resolver(object):
             if isinstance(output, tuple):
                 candidates.append(output)
             elif output is not None:
-                candidates.append((six.MAXSIZE, output))
+                candidates.append((sys.maxsize, output))
         if len(candidates):
             candidates.sort()
             return candidates[-1][1]
@@ -103,8 +110,16 @@ class Resolver(object):
 DEFAULT_URL_MAPPING = [
     (constants.STSCI_SCHEMA_URI_BASE,
      util.filepath_to_url(
-         os.path.join(SCHEMA_PATH, 'stsci.edu')) +
+         os.path.join(find_schema_path(), 'stsci.edu')) +
          '/{url_suffix}.yaml')]
+DEFAULT_TAG_TO_URL_MAPPING = [
+    (constants.STSCI_SCHEMA_TAG_BASE,
+     'http://stsci.edu/schemas/asdf{tag_suffix}')
+]
 
 
 default_url_mapping = Resolver(DEFAULT_URL_MAPPING, 'url')
+default_tag_to_url_mapping = Resolver(DEFAULT_TAG_TO_URL_MAPPING, 'tag')
+
+def default_resolver(uri):
+    return default_url_mapping(default_tag_to_url_mapping(uri))

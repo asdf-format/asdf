@@ -1,23 +1,13 @@
-# Licensed under a 3-clause BSD style license - see LICENSE.rst
-# -*- coding: utf-8 -*-
-
-from __future__ import absolute_import, division, unicode_literals, print_function
+# Licensed under a 3-clause BSD style license - see LICENSE.rst # -*- coding: utf-8 -*-
 
 import io
 import os
 import sys
 
-import six
-
 try:
     from astropy.coordinates import ICRS
 except ImportError:
     ICRS = None
-
-try:
-    from astropy.tests.disable_internet import INTERNET_OFF
-except ImportError:
-    INTERNET_OFF = False
 
 try:
     from astropy.coordinates.representation import CartesianRepresentation
@@ -30,12 +20,21 @@ except ImportError:
     CartesianDifferential = None
 
 from ..asdf import AsdfFile, get_asdf_library_info
-from ..conftest import RangeHTTPServer
-from ..extension import _builtin_extension_list
+from .httpserver import RangeHTTPServer
+from ..extension import default_extensions
 from .. import util
 from .. import versioning
 
 from ..tags.core import AsdfObject
+
+try:
+    from pytest_remotedata.disable_internet import INTERNET_OFF
+except ImportError:
+    INTERNET_OFF = False
+
+
+__all__ = ['assert_tree_match', 'assert_roundtrip_tree', 'yaml_to_asdf',
+           'get_file_sizes', 'display_warnings']
 
 
 def assert_tree_match(old_tree, new_tree, ctx=None,
@@ -52,7 +51,7 @@ def assert_tree_match(old_tree, new_tree, ctx=None,
     ctx : ASDF file context
         Used to look up the set of types in effect.
 
-    funcname : string
+    funcname : `str` or `callable`
         The name of a method on members of old_tree and new_tree that
         will be used to compare custom objects.  The default of
         `assert_equal` handles Numpy arrays.
@@ -68,7 +67,7 @@ def assert_tree_match(old_tree, new_tree, ctx=None,
 
     if ctx is None:
         version_string = str(versioning.default_version)
-        ctx = _builtin_extension_list
+        ctx = default_extensions.extension_list
     else:
         version_string = ctx.version_string
 
@@ -84,8 +83,13 @@ def assert_tree_match(old_tree, new_tree, ctx=None,
         if (old_type is not None and
             new_type is not None and
             old_type is new_type and
-            hasattr(old_type, funcname)):
-            getattr(old_type, funcname)(old, new)
+            (callable(funcname) or hasattr(old_type, funcname))):
+
+            if callable(funcname):
+                funcname(old, new)
+            else:
+                getattr(old_type, funcname)(old, new)
+
         elif isinstance(old, dict) and isinstance(new, dict):
             assert (set(x for x in old.keys() if x not in ignore_keys) ==
                     set(x for x in new.keys() if x not in ignore_keys))
@@ -117,9 +121,9 @@ def assert_tree_match(old_tree, new_tree, ctx=None,
     recurse(old_tree, new_tree)
 
 
-def assert_roundtrip_tree(
-        tree, tmpdir, asdf_check_func=None, raw_yaml_check_func=None,
-        write_options={}, extensions=None):
+def assert_roundtrip_tree(tree, tmpdir, *, asdf_check_func=None,
+                          raw_yaml_check_func=None, write_options={}, extensions=None,
+                          tree_match_func='assert_equal'):
     """
     Assert that a given tree saves to ASDF and, when loaded back,
     the tree matches the original tree.
@@ -129,13 +133,17 @@ def assert_roundtrip_tree(
     tmpdir : str
         Path to temporary directory to save file
 
-    asdf_check_func : callable, optional
-        Will be called with the reloaded ASDF file to perform any
-        additional checks.
+    tree_match_func : `str` or `callable`
+        Passed to `assert_tree_match` and used to compare two objects in the
+        tree.
 
     raw_yaml_check_func : callable, optional
         Will be called with the raw YAML content as a string to
         perform any additional checks.
+
+    asdf_check_func : callable, optional
+        Will be called with the reloaded ASDF file to perform any
+        additional checks.
     """
     fname = str(tmpdir.join('test.asdf'))
 
@@ -149,7 +157,7 @@ def assert_roundtrip_tree(
         assert isinstance(ff.tree, AsdfObject)
         assert 'asdf_library' in ff.tree
         assert ff.tree['asdf_library'] == get_asdf_library_info()
-        assert_tree_match(tree, ff.tree, ff)
+        assert_tree_match(tree, ff.tree, ff, funcname=tree_match_func)
         if asdf_check_func:
             asdf_check_func(ff)
 
@@ -168,7 +176,7 @@ def assert_roundtrip_tree(
     ff = AsdfFile(tree, extensions=extensions)
     ff.write_to(fname, **write_options)
     with AsdfFile.open(fname, mode='rw', extensions=extensions) as ff:
-        assert_tree_match(tree, ff.tree, ff)
+        assert_tree_match(tree, ff.tree, ff, funcname=tree_match_func)
         if asdf_check_func:
             asdf_check_func(ff)
 
@@ -181,7 +189,7 @@ def assert_roundtrip_tree(
     with AsdfFile.open(buff, mode='rw', extensions=extensions) as ff:
         assert not buff.closed
         assert isinstance(ff.tree, AsdfObject)
-        assert_tree_match(tree, ff.tree, ff)
+        assert_tree_match(tree, ff.tree, ff, funcname=tree_match_func)
         if asdf_check_func:
             asdf_check_func(ff)
 
@@ -193,7 +201,7 @@ def assert_roundtrip_tree(
             ff.write_to(os.path.join(server.tmpdir, 'test.asdf'), **write_options)
             with AsdfFile.open(server.url + 'test.asdf', mode='r',
                                extensions=extensions) as ff:
-                assert_tree_match(tree, ff.tree, ff)
+                assert_tree_match(tree, ff.tree, ff, funcname=tree_match_func)
                 if asdf_check_func:
                     asdf_check_func(ff)
         finally:
@@ -217,7 +225,7 @@ def yaml_to_asdf(yaml_content, yaml_headers=True, standard_version=None):
     buff : io.BytesIO()
         A file-like object containing the ASDF-like content.
     """
-    if isinstance(yaml_content, six.text_type):
+    if isinstance(yaml_content, str):
         yaml_content = yaml_content.encode('utf-8')
 
     buff = io.BytesIO()
@@ -231,7 +239,7 @@ def yaml_to_asdf(yaml_content, yaml_headers=True, standard_version=None):
 %YAML 1.1
 %TAG ! tag:stsci.edu:asdf/
 --- !core/asdf-{0}
-""".format('1.0.0', standard_version).encode('ascii'))
+""".format(AsdfObject.version, standard_version).encode('ascii'))
     buff.write(yaml_content)
     if yaml_headers:
         buff.write(b"\n...\n")

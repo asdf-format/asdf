@@ -1,8 +1,13 @@
-asdf Documentation
-====================
+**************************************
+ASDF - Advanced Scientific Data Format
+**************************************
 
 ``asdf`` is a tool for reading and writing Advanced Scientific Data
 Format (ASDF) files.
+
+.. include:: ../README.rst
+    :start-after: begin-summary-text
+    :end-before: end-summary-text
 
 .. note::
 
@@ -11,89 +16,45 @@ Format (ASDF) files.
     **A**\ daptable **S**\ eismic **D**\ ata **F**\ ormat,
     go here: http://seismic-data.org/
 
-
-Installation
-------------
-
-``asdf`` requires:
-
-- `python <http://www.python.org/>`__ 2.7, 3.3, 3.4 or 3.5.
-
-- `numpy <http://www.numpy.org/>`__ 1.6 or later
-
-- `jsonschema <https://python-jsonschema.readthedocs.io/>`__ 2.3.0 or later
-
-- `pyyaml <http://pyyaml.org>`__ 3.10 or later
-
-- `six <https://pypi.python.org/pypi/six>`__ 1.9.0 or later
-
-Support for units, time, transform, wcs, or running the tests also
-requires:
-
-- `astropy <http://www.astropy.org/>`__ 1.1 or later
-
-
 Getting Started
----------------
+===============
 
-The fundamental data model in ASDF is the ``tree``, which is a nested
-combination of basic data structures: dictionaries, lists, strings and
-numbers.  In addition, ASDF understands how to handle other types,
-such as Numpy arrays.
+.. toctree::
+   :maxdepth: 2
 
-In the simplest example, you create a tree, and write it to a ASDF
-file.  ``asdf`` handles saving the Numpy array as a binary block
-transparently:
+   asdf/install
+   asdf/overview
+   asdf/features
+   asdf/asdf_tool
+   asdf/changes
 
-.. runcode::
-
-   from asdf import AsdfFile
-   import numpy as np
-
-   tree = {
-     'author': 'John Doe',
-     'my_array': np.random.rand(8, 8)
-   }
-   ff = AsdfFile(tree)
-   ff.write_to("example.asdf")
-
-.. asdf:: example.asdf
-
-Other :ref:`examples` are provided below.
+Extending ASDF
+==============
 
 .. toctree::
   :maxdepth: 2
 
-  asdf/examples.rst
   asdf/extensions.rst
 
-Commandline tool
-----------------
+API Documentation
+=================
 
-``asdf`` includes a command-line tool, ``asdftool`` that performs a
-number of basic operations:
+.. toctree::
+  :maxdepth: 1
 
-  - ``explode``: Convert a self-contained ASDF file into exploded form.
-
-  - ``implode``: Convert an ASDF file in exploded form into a
-    self-contained file.
-
-  - ``to_yaml``: Inline all of the data in an ASDF file so that it is
-    pure YAML.
-
-  - ``defragment``: Remove unused blocks and extra space.
-
-Run ``asdftool --help`` for more information.
+  asdf/user_api
+  asdf/developer_api
 
 See also
---------
+========
+
 
 - The `Advanced Scientific Data Format (ASDF) standard
   <https://asdf-standard.readthedocs.io/>`__
 
-Reference/API
--------------
+Index
+=====
 
-.. automodapi:: asdf
-
-.. automodapi:: asdf.fits_embed
+* :ref:`genindex`
+* :ref:`modindex`
+* :ref:`search`

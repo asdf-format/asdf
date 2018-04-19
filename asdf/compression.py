@@ -1,12 +1,9 @@
 # Licensed under a 3-clause BSD style license - see LICENSE.rst
 # -*- coding: utf-8 -*-
 
-from __future__ import absolute_import, division, unicode_literals, print_function
 import struct
 
 import numpy as np
-
-import six
 
 
 DEFAULT_BLOCK_SIZE = 1 << 22  #: Decompressed block size in bytes, 4MiB
@@ -158,7 +155,7 @@ def to_compression_header(compression):
     if not compression:
         return b''
 
-    if isinstance(compression, six.text_type):
+    if isinstance(compression, str):
         return compression.encode('ascii')
 
     return compression

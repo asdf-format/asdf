@@ -1,29 +1,27 @@
 # Licensed under a 3-clause BSD style license - see LICENSE.rst
 # -*- coding: utf-8 -*-
 
-from __future__ import absolute_import, division, unicode_literals, print_function
 
-import bisect
-import importlib
-import warnings
 import re
+import bisect
+import warnings
+import importlib
+from collections import OrderedDict
 
 import six
 from copy import copy
 
-from .compat import lru_cache
+from functools import lru_cache
 
 from . import tagged
 from . import util
-from .versioning import AsdfVersion, AsdfSpec, get_version_map
+from .versioning import AsdfVersion, AsdfSpec, get_version_map, default_version
 
 
-__all__ = ['format_tag', 'AsdfTypeIndex', 'AsdfType']
+__all__ = ['format_tag', 'CustomType', 'AsdfTypeIndex']
 
 
-_BASIC_PYTHON_TYPES = set(list(six.string_types) +
-                          list(six.integer_types) +
-                          [float, list, dict, tuple])
+_BASIC_PYTHON_TYPES = [str, int, float, list, dict, tuple]
 
 # regex used to parse module name from optional version string
 MODULE_RE = re.compile(r'([a-zA-Z]+)(-(\d+\.\d+\.\d+))?')
@@ -33,10 +31,15 @@ def format_tag(organization, standard, version, tag_name):
     """
     Format a YAML tag.
     """
+    tag = 'tag:{0}:{1}/{2}'.format(organization, standard, tag_name)
+
+    if version is None:
+        return tag
+
     if isinstance(version, AsdfSpec):
         version = str(version.spec)
-    return 'tag:{0}:{1}/{2}-{3}'.format(
-        organization, standard, tag_name, version)
+
+    return "{0}-{1}".format(tag, version)
 
 
 def split_tag_version(tag):
@@ -74,6 +77,9 @@ class _AsdfWriteTypeIndex(object):
     If version is ``'latest'``, it will just use the highest-numbered
     versions of each of the schemas.  This is currently only used to
     aid in testing.
+
+    In the future, this may be renamed to _ExtensionWriteTypeIndex since it is
+    not specific to classes that inherit `AsdfType`.
     """
     _version_map = None
 
@@ -83,14 +89,53 @@ class _AsdfWriteTypeIndex(object):
         self._type_by_cls = {}
         self._type_by_name = {}
         self._type_by_subclasses = {}
+        self._class_by_subclass = {}
         self._types_with_dynamic_subclasses = {}
+        self._extension_by_cls = {}
+        self._extensions_used = set()
 
-        def add_type(asdftype):
-            self._type_by_cls[asdftype] = asdftype
+        try:
+            version_map = get_version_map(self._version)['tags']
+        except ValueError:
+            raise ValueError(
+                "Don't know how to write out ASDF version {0}".format(
+                    self._version))
+
+        def should_overwrite(cls, new_type):
+            existing_type = self._type_by_cls[cls]
+
+            # Types that are provided by extensions from other packages should
+            # only override the type index corresponding to the latest version
+            # of ASDF.
+            if existing_type.tag_base() != new_type.tag_base():
+                return self._version == default_version
+
+            return True
+
+        def add_type_to_index(cls, typ):
+            if cls in self._type_by_cls and not should_overwrite(cls, typ):
+                return
+
+            self._type_by_cls[cls] = typ
+            self._extension_by_cls[cls] = index._extension_by_type[typ]
+
+        def add_subclasses(typ, asdftype):
+            for subclass in util.iter_subclasses(typ):
+                # Do not overwrite the tag type for an existing subclass if the
+                # new tag serializes a class that is higher in the type
+                # hierarchy than the existing subclass.
+                if subclass in self._class_by_subclass:
+                    if issubclass(self._class_by_subclass[subclass], typ):
+                        continue
+                self._class_by_subclass[subclass] = typ
+                self._type_by_subclasses[subclass] = asdftype
+                self._extension_by_cls[subclass] = index._extension_by_type[asdftype]
+
+        def add_all_types(asdftype):
+            add_type_to_index(asdftype, asdftype)
             for typ in asdftype.types:
-                self._type_by_cls[typ] = asdftype
-                for typ2 in util.iter_subclasses(typ):
-                    self._type_by_subclasses[typ2] = asdftype
+                add_type_to_index(typ, asdftype)
+                add_subclasses(typ, asdftype)
 
             if asdftype.handle_dynamic_subclasses:
                 for typ in asdftype.types:
@@ -101,84 +146,111 @@ class _AsdfWriteTypeIndex(object):
             if tag in index._type_by_tag:
                 asdftype = index._type_by_tag[tag]
                 self._type_by_name[name] = asdftype
-                add_type(asdftype)
+                add_all_types(asdftype)
 
-        if self._version == 'latest':
-            for name, versions in six.iteritems(index._versions_by_type_name):
+        # Process all types defined in the ASDF version map 
+        for name, _version in version_map.items():
+            add_by_tag(name, AsdfVersion(_version))
+
+        # Now add any extension types that aren't known to the ASDF standard.
+        # This expects that all types defined by ASDF will be encountered
+        # before any types that are defined by external packages. This
+        # allows external packages to override types that are also defined
+        # by ASDF. The ordering is guaranteed due to the use of OrderedDict
+        # for _versions_by_type_name, and due to the fact that the built-in
+        # extension will always be processed first.
+        for name, versions in index._versions_by_type_name.items():
+            if name not in self._type_by_name:
                 add_by_tag(name, versions[-1])
-        else:
-            try:
-                version_map = get_version_map(self._version)
-            except ValueError:
-                raise ValueError(
-                    "Don't know how to write out ASDF version {0}".format(
-                        self._version))
-
-            for name, _version in six.iteritems(version_map['tags']):
-                add_by_tag(name, AsdfVersion(_version))
-
-            # Now add any extension types that aren't known to the ASDF standard
-            for name, versions in six.iteritems(index._versions_by_type_name):
-                if name not in self._type_by_name:
-                    add_by_tag(name, versions[-1])
 
         for asdftype in index._unnamed_types:
-            add_type(asdftype)
+            add_all_types(asdftype)
+
+    def _mark_used_extension(self, custom_type):
+        self._extensions_used.add(self._extension_by_cls[custom_type])
+
+    def _process_dynamic_subclass(self, custom_type):
+        for key, val in self._types_with_dynamic_subclasses.items():
+            if issubclass(custom_type, key):
+                self._type_by_cls[custom_type] = val
+                self._mark_used_extension(key)
+                return val
+
+        return None
 
     def from_custom_type(self, custom_type):
         """
-        Given a custom type, return the corresponding AsdfType
+        Given a custom type, return the corresponding `ExtensionType`
         definition.
         """
+        asdftype = None
+
         # Try to find an exact class match first...
         try:
-            return self._type_by_cls[custom_type]
+            asdftype = self._type_by_cls[custom_type]
         except KeyError:
             # ...failing that, match any subclasses
             try:
-                return self._type_by_subclasses[custom_type]
+                asdftype = self._type_by_subclasses[custom_type]
             except KeyError:
                 # ...failing that, try any subclasses that we couldn't
                 # cache in _type_by_subclasses.  This generally only
                 # includes classes that are created dynamically post
                 # Python-import, e.g. astropy.modeling._CompoundModel
                 # subclasses.
-                for key, val in six.iteritems(
-                        self._types_with_dynamic_subclasses):
-                    if issubclass(custom_type, key):
-                        self._type_by_cls[custom_type] = val
-                        return val
+                return self._process_dynamic_subclass(custom_type)
 
-        return None
+        if asdftype is not None:
+            extension = self._extension_by_cls.get(custom_type)
+            if extension is not None:
+                self._mark_used_extension(custom_type)
+            else:
+                # Handle the case where the dynamic subclass was identified as
+                # a proper subclass above, but it has not yet been registered
+                # as such.
+                self._process_dynamic_subclass(custom_type)
+
+        return asdftype
 
 
 class AsdfTypeIndex(object):
     """
-    An index of the known `AsdfType`s.
+    An index of the known `ExtensionType` classes.
+
+    In the future this class may be renamed to ExtensionTypeIndex, since it is
+    not specific to classes that inherit `AsdfType`.
     """
     def __init__(self):
         self._write_type_indices = {}
         self._type_by_tag = {}
-        self._versions_by_type_name = {}
+        # Use OrderedDict here to preserve the order in which types are added
+        # to the type index. Since the ASDF built-in extension is always
+        # processed first, this ensures that types defined by external packages
+        # will always override corresponding types that are defined by ASDF
+        # itself. However, if two different external packages define tags for
+        # the same type, the result is currently undefined.
+        self._versions_by_type_name = OrderedDict()
         self._best_matches = {}
         self._real_tag = {}
         self._unnamed_types = set()
         self._hooks_by_type = {}
         self._all_types = set()
         self._has_warned = {}
+        self._extension_by_type = {}
 
-    def add_type(self, asdftype):
+    def add_type(self, asdftype, extension):
         """
         Add a type to the index.
         """
         self._all_types.add(asdftype)
+        self._extension_by_type[asdftype] = extension
 
         if asdftype.yaml_tag is None and asdftype.name is None:
             return
 
         if isinstance(asdftype.name, list):
             yaml_tags = [asdftype.make_yaml_tag(name) for name in asdftype.name]
-        elif isinstance(asdftype.name, six.string_types):
+        elif isinstance(asdftype.name, str):
             yaml_tags = [asdftype.yaml_tag]
         elif asdftype.name is None:
             yaml_tags = []
@@ -199,17 +271,17 @@ class AsdfTypeIndex(object):
         if not len(yaml_tags):
             self._unnamed_types.add(asdftype)
 
-    def from_custom_type(self, custom_type, version='latest'):
+    def from_custom_type(self, custom_type, version=default_version):
         """
-        Given a custom type, return the corresponding AsdfType
+        Given a custom type, return the corresponding `ExtensionType`
         definition.
         """
-        # Basic Python types should not ever have an AsdfType
-        # associated with them.
+        # Basic Python types should not ever have an AsdfType associated with
+        # them.
         if custom_type in _BASIC_PYTHON_TYPES:
             return None
 
-        write_type_index = self._write_type_indices.get(version)
+        write_type_index = self._write_type_indices.get(str(version))
         if write_type_index is None:
             write_type_index = _AsdfWriteTypeIndex(version, self)
             self._write_type_indices[version] = write_type_index
@@ -324,7 +396,7 @@ class AsdfTypeIndex(object):
                 return True
         return False
 
-    def get_hook_for_type(self, hookname, typ, version='latest'):
+    def get_hook_for_type(self, hookname, typ, version=default_version):
         """
         Get the hook function for the given type, if it exists,
         else return None.
@@ -344,6 +416,13 @@ class AsdfTypeIndex(object):
         hooks[typ] = None
         return None
 
+    def get_extensions_used(self, version=default_version):
+        write_type_index = self._write_type_indices.get(str(version))
+        if write_type_index is None:
+            return []
+
+        return list(write_type_index._extensions_used)
+
 
 _all_asdftypes = set()
 
@@ -362,7 +441,7 @@ def _from_tree_tagged_missing_requirements(cls, tree, ctx):
 
 class ExtensionTypeMeta(type):
     """
-    Custom class constructor for extension types.
+    Custom class constructor for tag types.
     """
     _import_cache = {}
 
@@ -413,7 +492,7 @@ class ExtensionTypeMeta(type):
             types = mcls._find_in_bases(attrs, bases, 'types', [])
             new_types = []
             for typ in types:
-                if isinstance(typ, six.string_types):
+                if isinstance(typ, str):
                     typ = util.resolve_name(typ)
                 new_types.append(typ)
             attrs['types'] = new_types
@@ -425,7 +504,7 @@ class ExtensionTypeMeta(type):
                 cls.version = AsdfVersion(cls.version)
 
         if hasattr(cls, 'name'):
-            if isinstance(cls.name, six.string_types):
+            if isinstance(cls.name, str):
                 if 'yaml_tag' not in attrs:
                     cls.yaml_tag = cls.make_yaml_tag(cls.name)
             elif isinstance(cls.name, list):
@@ -479,46 +558,6 @@ class ExtensionType(object):
 
     Besides the attributes defined below, most subclasses will also
     override `to_tree` and `from_tree`.
-
-    To customize how the type's schema is located, override `get_schema_path`.
-
-    Attributes
-    ----------
-    name : str
-        The name of the type.
-
-    organization : str
-        The organization responsible for the type.
-
-    standard : str
-        The standard the type is defined in.  For built-in ASDF types,
-        this is ``"asdf"``.
-
-    version : 3-tuple of int
-        The version of the standard the type is defined in.
-
-    supported_versions : set
-        If provided, indicates explicit compatibility with the given set of
-        versions. Other versions of the same schema that are not included in
-        this set will not be converted to custom types with this class.
-
-    yaml_tag : str
-        The YAML tag to use for the type.  If not provided, it will be
-        automatically generated from name, organization, standard and
-        version.
-
-    types : list of Python types
-        Custom Python types that, when found in the tree, will be
-        converted into basic types for YAML output.
-
-    validators : dict
-        Mapping JSON Schema keywords to validation functions for
-        jsonschema.  Useful if the type defines extra types of
-        validation that can be performed.
-
-    requires : list of str
-        A list of Python packages that are required to instantiate the
-        object.
     """
     name = None
     organization = 'stsci.edu'
@@ -532,29 +571,125 @@ class ExtensionType(object):
     yaml_tag = None
 
     @classmethod
-    def make_yaml_tag(cls, name):
+    def names(cls):
+        """
+        Returns the name(s) represented by this tag type as a list.
+
+        While some tag types represent only a single custom type, others
+        represent multiple types. In the latter case, the `name` attribute of
+        the extension is actually a list, not simply a string. This method
+        normalizes the value of `name` by returning a list in all cases.
+
+        Returns
+        -------
+            `list` of names represented by this tag type
+        """
+        if cls.name is None:
+            return None
+
+        return cls.name if isinstance(cls.name, list) else [cls.name]
+
+    @classmethod
+    def make_yaml_tag(cls, name, versioned=True):
+        """
+        Given the name of a type, returns a string representing its YAML tag.
+
+        Parameters
+        ----------
+        name : str
+            The name of the type. In most cases this will correspond to the
+            `name` attribute of the tag type. However, it is passed as a
+            parameter since some tag types represent multiple custom
+            types.
+
+        versioned : bool
+            If `True`, the tag will be versioned. Otherwise, a YAML tag without
+            a version will be returned.
+
+        Returns
+        -------
+            `str` representing the YAML tag
+        """
         return format_tag(
             cls.organization,
             cls.standard,
-            cls.version,
+            cls.version if versioned else None,
             name)
+
+    @classmethod
+    def tag_base(cls):
+        """
+        Returns the base of the YAML tag for types represented by this class.
+
+        This method returns the portion of the tag that represents the standard
+        and the organization of any type represented by this class.
+
+        Returns
+        -------
+            `str` representing the base of the YAML tag
+        """
+        return cls.make_yaml_tag('', versioned=False)
 
     @classmethod
     def to_tree(cls, node, ctx):
         """
-        Converts from a custom type to any of the basic types (dict,
-        list, str, number) supported by YAML.  In most cases, must be
-        overridden by subclasses.
+        Converts instances of custom types into YAML representations.
+
+        This method should be overridden by custom extension classes in order
+        to define how custom types are serialized into YAML. The method must
+        return a single Python object corresponding to one of the basic YAML
+        types (dict, list, str, or number). However, the types can be nested
+        and combined in order to represent more complex custom types.
+
+        This method is called as part of the process of writing an `AsdfFile`
+        object. Whenever a custom type (or a subclass of that type) that is
+        listed in the `types` attribute of this class is encountered, this
+        method will be used to serialize that type.
+
+        The name `to_tree` refers to the act of converting a custom type into
+        part of a YAML object tree.
+
+        Parameters
+        ----------
+        node : `object`
+            Instance of a custom type to be serialized. Will be an instance (or
+            an instance of a subclass) of one of the types listed in the
+            `types` attribute of this class.
+
+        ctx : `AsdfFile`
+            An instance of the `AsdfFile` object that is being written out.
+
+        Returns
+        -------
+            A basic YAML type (`dict`, `list`, `str`, `int`, `float`, or
+            `complex`) representing the properties of the custom type to be
+            serialized. These types can be nested in order to represent more
+            complex custom types.
         """
         return node.__class__.__bases__[0](node)
 
     @classmethod
     def to_tree_tagged(cls, node, ctx):
         """
-        Converts from a custom type to any of the basic types (dict,
-        list, str, number) supported by YAML.  The result should be a
-        tagged object.  Overriding this, rather than the more common
-        `to_tree`, allows types to customize how the result is tagged.
+        Converts instances of custom types into tagged objects.
+
+        It is more common for custom tag types to override `to_tree` instead of
+        this method. This method should only be overridden if it is necessary
+        to modify the YAML tag that will be used to tag this object.
+
+        Parameters
+        ----------
+        node : `object`
+            Instance of a custom type to be serialized. Will be an instance (or
+            an instance of a subclass) of one of the types listed in the
+            `types` attribute of this class.
+
+        ctx : `AsdfFile`
+            An instance of the `AsdfFile` object that is being written out.
+
+        Returns
+        -------
+            An instance of `asdf.tagged.Tagged`.
         """
         obj = cls.to_tree(node, ctx)
         return tagged.tag_object(cls.yaml_tag, obj, ctx=ctx)
@@ -562,28 +697,74 @@ class ExtensionType(object):
     @classmethod
     def from_tree(cls, tree, ctx):
         """
-        Converts from basic types to a custom type.
+        Converts basic types representing YAML trees into custom types.
+
+        This method should be overridden by custom extension classes in order
+        to define how custom types are deserialized from the YAML
+        representation back into their original types. The method will return
+        an instance of the original custom type.
+
+        This method is called as part of the process of reading an ASDF file in
+        order to construct an `AsdfFile` object. Whenever a YAML subtree is
+        encountered that has a tag that corresponds to the `yaml_tag` property
+        of this class, this method will be used to deserialize that tree back
+        into an instance of the original custom type.
+
+        Parameters
+        ----------
+        tree : `object` representing YAML tree
+            An instance of a basic Python type (possibly nested) that
+            corresponds to a YAML subtree.
+
+        ctx : `AsdfFile`
+            An instance of the `AsdfFile` object that is being constructed.
+
+        Returns
+        -------
+            An instance of the custom type represented by this extension class.
         """
         return cls(tree)
 
     @classmethod
     def from_tree_tagged(cls, tree, ctx):
         """
-        Converts from basic types to a custom type.  Overriding this,
-        rather than the more common `from_tree`, allows types to deal
-        with the tag directly.
+        Converts from tagged tree into custom type.
+
+        It is more common for extension classes to override `from_tree` instead
+        of this method. This method should only be overridden if it is
+        necessary to access the `_tag` property of the `Tagged` object
+        directly.
+
+        Parameters
+        ----------
+        tree : `asdf.tagged.Tagged` object representing YAML tree
+
+        ctx : `AsdfFile`
+            An instance of the `AsdfFile` object that is being constructed.
+
+        Returns
+        -------
+            An instance of the custom type represented by this extension class.
         """
         return cls.from_tree(tree.data, ctx)
 
     @classmethod
     def incompatible_version(cls, version):
         """
+        Indicates if given version is known to be incompatible with this type.
+
         If this tag class explicitly identifies compatible versions then this
-        checks whether a given version is compatible or not. Otherwise, all
-        versions are assumed to be compatible.
+        checks whether a given version is compatible or not (see
+        `supported_versions`). Otherwise, all versions are assumed to be
+        compatible.
 
         Child classes can override this method to affect how version
         compatiblity for this type is determined.
+
+        Parameters
+        ----------
+        version : `str` or `~asdf.versioning.AsdfVersion`
+            The version to test for compatibility.
         """
         if cls.supported_versions:
             if version not in cls.supported_versions:
@@ -592,7 +773,6 @@ class ExtensionType(object):
 
 
 @six.add_metaclass(AsdfTypeMeta)
-@six.add_metaclass(util.InheritDocstrings)
 class AsdfType(ExtensionType):
     """
     Base class for all built-in ASDF types. Types that inherit this class will
@@ -601,10 +781,85 @@ class AsdfType(ExtensionType):
     """
 
 @six.add_metaclass(ExtensionTypeMeta)
-@six.add_metaclass(util.InheritDocstrings)
 class CustomType(ExtensionType):
     """
-    Base class for all user-defined types. Unlike classes that inherit
-    AsdfType, classes that inherit this class will *not* automatically be added
-    to the list of built-ins. This should be used for user-defined extensions.
+    Base class for all user-defined types.
+    """
+
+    # These attributes are duplicated here with docstrings since a bug in
+    # sphinx prevents the docstrings of class attributes from being inherited
+    # properly (see https://github.com/sphinx-doc/sphinx/issues/741. The
+    # docstrings are not included anywhere else in the class hierarchy since
+    # this class is the only one exposed in the public API.
+    name = None
+    """
+    `str` or `list`: The name of the type.
+    """
+
+    organization = 'stsci.edu'
+    """
+    `str`: The organization responsible for the type.
+    """
+
+    standard = 'asdf'
+    """
+    `str`: The standard the type is defined in.
+    """
+
+    version = (1, 0, 0)
+    """
+    `str`, `tuple`, `AsdfVersion`, or `AsdfSpec`: The version of the type.
+    """
+
+    supported_versions = set()
+    """
+    `set`: Versions that explicitly compatible with this extension class.
+
+    If provided, indicates explicit compatibility with the given set
+    of versions. Other versions of the same schema that are not included in
+    this set will not be converted to custom types with this class. """
+
+    types = []
+    """
+    `list`: List of types that this extension class can convert to/from YAML.
+
+    Custom Python types that, when found in the tree, will be converted into
+    basic types for YAML output. Can be either strings referring to the types
+    or the types themselves."""
+
+    handle_dynamic_subclasses = False
+    """
+    `bool`: Indicates whether dynamically generated subclasses can be serialized
+
+    Flag indicating whether this type is capable of serializing subclasses
+    of any of the types listed in ``types`` that are generated dynamically.
+    """
+
+    validators = {}
+    """
+    `dict`: Mapping JSON Schema keywords to validation functions for jsonschema.
+
+    Useful if the type defines extra types of validation that can be
+    performed.
+    """
+
+    requires = []
+    """
+    `list`: Python packages that are required to instantiate the object.
+    """
+
+    yaml_tag = None
+    """
+    `str`: The YAML tag to use for the type.
+
+    If not provided, it will be automatically generated from name,
+    organization, standard and version.
+    """
+
+    has_required_modules = True
+    """
+    `bool`: Indicates whether modules specified by `requires` are available.
+
+    NOTE: This value is automatically generated. Do not set it in subclasses as
+    it will be overwritten.
     """

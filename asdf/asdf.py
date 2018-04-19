@@ -1,18 +1,22 @@
 # Licensed under a 3-clause BSD style license - see LICENSE.rst
 # -*- coding: utf-8 -*-
 
-from __future__ import absolute_import, division, unicode_literals, print_function
 
-import datetime
-import copy
 import io
+import os
+import time
 import re
+import copy
+import datetime
+import warnings
+import importlib
+from distutils.version import LooseVersion
 
 import numpy as np
+from jsonschema import ValidationError
 
 from . import block
 from . import constants
-from . import extension
 from . import generic_io
 from . import reference
 from . import schema
@@ -21,8 +25,10 @@ from . import util
 from . import version
 from . import versioning
 from . import yamlutil
+from .exceptions import AsdfDeprecationWarning
+from .extension import AsdfExtensionList, default_extensions
 
-from .tags.core import AsdfObject, Software, HistoryEntry
+from .tags.core import AsdfObject, Software, HistoryEntry, ExtensionMetadata
 
 
 def get_asdf_library_info():
@@ -40,11 +46,11 @@ def get_asdf_library_info():
 
 class AsdfFile(versioning.VersionedMixin):
     """
-    The main class that represents a ASDF file.
+    The main class that represents an ASDF file object.
     """
     def __init__(self, tree=None, uri=None, extensions=None, version=None,
         ignore_version_mismatch=True, ignore_unrecognized_tag=False,
-        copy_arrays=False):
+        copy_arrays=False, custom_schema=None):
         """
         Parameters
         ----------
@@ -59,9 +65,8 @@ class AsdfFile(versioning.VersionedMixin):
             if possible and if created from `AsdfFile.open`.
 
         extensions : list of AsdfExtension
-            A list of extensions to the ASDF to support when reading
-            and writing ASDF files.  See `asdftypes.AsdfExtension` for
-            more information.
+            A list of extensions to use when reading and writing ASDF files.
+            See `~asdf.asdftypes.AsdfExtension` for more information.
 
         version : str, optional
             The ASDF version to use when writing out.  If not
@@ -79,23 +84,31 @@ class AsdfFile(versioning.VersionedMixin):
         copy_arrays : bool, optional
             When `False`, when reading files, attempt to memmap underlying data
             arrays when possible.
+
+        custom_schema : str, optional
+            Path to a custom schema file that will be used for a secondary
+            validation pass. This can be used to ensure that particular ASDF
+            files follow custom conventions beyond those enforced by the
+            standard.
         """
 
-        if extensions is None or extensions == []:
-            self._extensions = extension._builtin_extension_list
+        if custom_schema is not None:
+            self._custom_schema = schema.load_schema(custom_schema)
+            schema.check_schema(self._custom_schema)
         else:
-            if isinstance(extensions, extension.AsdfExtensionList):
-                self._extensions = extensions
-            else:
-                if not isinstance(extensions, list):
-                    extensions = [extensions]
-                extensions.insert(0, extension.BuiltinExtension())
-                self._extensions = extension.AsdfExtensionList(extensions)
+            self._custom_schema = None
 
+        self._extensions = []
+        self._extension_metadata = {}
+
+        self._process_extensions(extensions)
         self._ignore_version_mismatch = ignore_version_mismatch
         self._ignore_unrecognized_tag = ignore_unrecognized_tag
 
+        self._file_format_version = None
+
         self._fd = None
+        self._closed = False
         self._external_asdf_by_uri = {}
         self._blocks = block.BlockManager(self, copy_arrays=copy_arrays)
         self._uri = None
@@ -126,20 +139,102 @@ class AsdfFile(versioning.VersionedMixin):
         return self
 
     def __exit__(self, type, value, traceback):
-        if self._fd:
-            # This is ok to always do because GenericFile knows
-            # whether it "owns" the file and should close it.
-            self._fd.__exit__(type, value, traceback)
-            self._fd = None
-        for external in self._external_asdf_by_uri.values():
-            external.__exit__(type, value, traceback)
-        self._external_asdf_by_uri.clear()
-        self._blocks.close()
+        self.close()
+
+    def _check_extensions(self, tree, strict=False):
+        if 'history' not in tree or not isinstance(tree['history'], dict) or \
+                'extensions' not in tree['history']:
+            return
+
+        for extension in tree['history']['extensions']:
+            filename = "'{}' ".format(self._fname) if self._fname else ''
+            if extension.extension_class not in self._extension_metadata:
+                msg = "File {}was created with extension '{}', which is " \
+                    "not currently installed"
+                if extension.software:
+                    msg += " (from package {}-{})".format(
+                        extension.software['name'],
+                        extension.software['version'])
+                fmt_msg = msg.format(filename, extension.extension_class)
+                if strict:
+                    raise RuntimeError(fmt_msg)
+                else:
+                    warnings.warn(fmt_msg)
+
+            elif extension.software:
+                installed = self._extension_metadata[extension.extension_class]
+                # Local extensions may not have a real version
+                if not installed[1]:
+                    continue
+                # Compare version in file metadata with installed version
+                if LooseVersion(installed[1]) < LooseVersion(extension.software['version']):
+                    msg = "File {}was created with extension '{}' from " \
+                    "package {}-{}, but older version {}-{} is installed"
+                    fmt_msg = msg.format(
+                        filename, extension.extension_class,
+                        extension.software['name'],
+                        extension.software['version'],
+                        installed[0], installed[1])
+                    if strict:
+                        raise RuntimeError(fmt_msg)
+                    else:
+                        warnings.warn(fmt_msg)
+
+    def _process_extensions(self, extensions):
+        if extensions is None or extensions == []:
+            self._extensions = default_extensions.extension_list
+            self._extension_metadata = default_extensions.package_metadata
+            return
+
+        if isinstance(extensions, AsdfExtensionList):
+            self._extensions = extensions
+            return
+
+        if not isinstance(extensions, list):
+            extensions = [extensions]
+
+        # Process metadata about custom extensions
+        for extension in extensions:
+            ext_name = util.get_class_name(extension)
+            self._extension_metadata[ext_name] = ('', '')
+
+        extensions = default_extensions.extensions + extensions
+        self._extensions = AsdfExtensionList(extensions)
+        self._extension_metadata.update(default_extensions.package_metadata)
+
+    def _update_extension_history(self):
+
+        if 'history' not in self.tree:
+            self.tree['history'] = dict(extensions=[])
+        # Support clients who are still using the old history format
+        elif isinstance(self.tree['history'], list):
+            histlist = self.tree['history']
+            self.tree['history'] = dict(entries=histlist, extensions=[])
+            warnings.warn("The ASDF history format has changed in order to "
+                          "support metadata about extensions. History entries "
+                          "should now be stored under tree['history']['entries'].")
+        elif 'extensions' not in self.tree['history']:
+            self.tree['history']['extensions'] = []
+
+        for extension in self.type_index.get_extensions_used():
+            ext_name = util.get_class_name(extension)
+            ext_meta = ExtensionMetadata(extension_class=ext_name)
+            metadata = self._extension_metadata.get(ext_name)
+            if metadata is not None:
+                ext_meta.software = dict(name=metadata[0], version=metadata[1])
+
+            for i, entry in enumerate(self.tree['history']['extensions']):
+                # Update metadata about this extension if it already exists
+                if entry.extension_class == ext_meta.extension_class:
+                    self.tree['history']['extensions'][i] = ext_meta
+                    break
+            else:
+                self.tree['history']['extensions'].append(ext_meta)
 
     @property
     def file_format_version(self):
         if self._file_format_version is None:
-            return versioning.AsdfVersion(self.versionspec['FILE_FORMAT'])
+            return versioning.AsdfVersion(self.version_map['FILE_FORMAT'])
         else:
             return self._file_format_version
 
@@ -147,11 +242,12 @@ class AsdfFile(versioning.VersionedMixin):
         """
         Close the file handles associated with the `AsdfFile`.
         """
-        if self._fd:
+        if self._fd and not self._closed:
             # This is ok to always do because GenericFile knows
             # whether it "owns" the file and should close it.
             self._fd.close()
             self._fd = None
+            self._closed = True
         for external in self._external_asdf_by_uri.values():
             external.close()
         self._external_asdf_by_uri.clear()
@@ -182,11 +278,22 @@ class AsdfFile(versioning.VersionedMixin):
 
     @property
     def tag_to_schema_resolver(self):
-        return self._extensions.tag_to_schema_resolver
+        warnings.warn(
+            "The 'tag_to_schema_resolver' property is deprecated. Use "
+            "'tag_mapping' instead.",
+            AsdfDeprecationWarning)
+        return self._extensions.tag_mapping
+
+    @property
+    def tag_mapping(self):
+        return self._extensions.tag_mapping
 
     @property
     def url_mapping(self):
         return self._extensions.url_mapping
+
+    def resolver(self, uri):
+        return self.url_mapping(self.tag_mapping(uri))
 
     @property
     def type_index(self):
@@ -256,12 +363,15 @@ class AsdfFile(versioning.VersionedMixin):
 
         When set, the tree will be validated against the ASDF schema.
         """
+        if self._closed:
+            raise OSError("Cannot access data from closed ASDF file")
         return self._tree
 
     @tree.setter
     def tree(self, tree):
         asdf_object = AsdfObject(tree)
-        self._validate(asdf_object)
+        # Only perform custom validation if the tree is not empty
+        self._validate(asdf_object, custom=bool(tree))
         self._tree = asdf_object
 
     def __getitem__(self, key):
@@ -277,10 +387,13 @@ class AsdfFile(versioning.VersionedMixin):
         """
         return self._comments
 
-    def _validate(self, tree):
+    def _validate(self, tree, custom=True):
         tagged_tree = yamlutil.custom_tree_to_tagged_tree(
             tree, self)
         schema.validate(tagged_tree, self)
+        # Perform secondary validation pass if requested
+        if custom and self._custom_schema:
+            schema.validate(tagged_tree, self, self._custom_schema)
 
     def validate(self):
         """
@@ -453,8 +566,16 @@ class AsdfFile(versioning.VersionedMixin):
                    validate_checksums=False,
                    do_not_fill_defaults=False,
                    _get_yaml_content=False,
-                   _force_raw_types=False):
+                   _force_raw_types=False,
+                   strict_extension_check=False,
+                   ignore_missing_extensions=False):
         """Attempt to populate AsdfFile data from file-like object"""
+
+        if strict_extension_check and ignore_missing_extensions:
+            raise ValueError(
+                "'strict_extension_check' and 'ignore_missing_extensions' are "
+                "incompatible options")
+
         fd = generic_io.get_file(fd, mode=mode, uri=uri)
         self._fd = fd
         # The filename is currently only used for tracing warning information
@@ -504,8 +625,17 @@ class AsdfFile(versioning.VersionedMixin):
         tree = reference.find_references(tree, self)
         if not do_not_fill_defaults:
             schema.fill_defaults(tree, self)
-        self._validate(tree)
+
+        try:
+            self._validate(tree)
+        except ValidationError:
+            self.close()
+            raise
+
         tree = yamlutil.tagged_tree_to_custom_tree(tree, self, _force_raw_types)
+
+        if not (ignore_missing_extensions or _force_raw_types):
+            self._check_extensions(tree, strict=strict_extension_check)
 
         self._tree = tree
         self.run_hook('post_read')
@@ -517,7 +647,9 @@ class AsdfFile(versioning.VersionedMixin):
                    validate_checksums=False,
                    do_not_fill_defaults=False,
                    _get_yaml_content=False,
-                   _force_raw_types=False):
+                   _force_raw_types=False,
+                   strict_extension_check=False,
+                   ignore_missing_extensions=False):
         """Attempt to open file-like object as either AsdfFile or AsdfInFits"""
         if not is_asdf_file(fd):
             try:
@@ -525,10 +657,13 @@ class AsdfFile(versioning.VersionedMixin):
                 # this introduces another dependency on astropy which may
                 # not be desireable.
                 from . import fits_embed
-                return fits_embed.AsdfInFits.open(fd, uri=uri,
+                return fits_embed.AsdfInFits._open_impl(fd, uri=uri,
                             validate_checksums=validate_checksums,
                             ignore_version_mismatch=self._ignore_version_mismatch,
-                            extensions=self._extensions)
+                            extensions=self._extensions,
+                            strict_extension_check=strict_extension_check,
+                            ignore_missing_extensions=ignore_missing_extensions,
+                            _extension_metadata=self._extension_metadata)
             except ValueError:
                 pass
             raise ValueError(
@@ -538,7 +673,9 @@ class AsdfFile(versioning.VersionedMixin):
                 validate_checksums=validate_checksums,
                 do_not_fill_defaults=do_not_fill_defaults,
                 _get_yaml_content=_get_yaml_content,
-                _force_raw_types=_force_raw_types)
+                _force_raw_types=_force_raw_types,
+                strict_extension_check=strict_extension_check,
+                ignore_missing_extensions=ignore_missing_extensions)
 
     @classmethod
     def open(cls, fd, uri=None, mode='r',
@@ -548,7 +685,10 @@ class AsdfFile(versioning.VersionedMixin):
              ignore_version_mismatch=True,
              ignore_unrecognized_tag=False,
              _force_raw_types=False,
-             copy_arrays=False):
+             copy_arrays=False,
+             custom_schema=None,
+             strict_extension_check=False,
+             ignore_missing_extensions=False):
         """
         Open an existing ASDF file.
 
@@ -571,9 +711,8 @@ class AsdfFile(versioning.VersionedMixin):
             Requires reading the entire file, so disabled by default.
 
         extensions : list of AsdfExtension
-            A list of extensions to the ASDF to support when reading
-            and writing ASDF files.  See `asdftypes.AsdfExtension` for
-            more information.
+            A list of extensions to use when reading and writing ASDF files.
+            See `~asdf.asdftypes.AsdfExtension` for more information.
 
         do_not_fill_defaults : bool, optional
             When `True`, do not fill in missing default values.
@@ -590,6 +729,24 @@ class AsdfFile(versioning.VersionedMixin):
             When `False`, when reading files, attempt to memmap underlying data
             arrays when possible.
 
+        custom_schema : str, optional
+            Path to a custom schema file that will be used for a secondary
+            validation pass. This can be used to ensure that particular ASDF
+            files follow custom conventions beyond those enforced by the
+            standard.
+
+        strict_extension_check : bool, optional
+            When `True`, if the given ASDF file contains metadata about the
+            extensions used to create it, and if those extensions are not
+            installed, opening the file will fail. When `False`, opening a file
+            under such conditions will cause only a warning. Defaults to
+            `False`.
+
+        ignore_missing_extensions : bool, optional
+            When `True`, do not raise warnings when a file is read that
+            contains metadata about extensions that are not available. Defaults
+            to `False`.
+
         Returns
         -------
         asdffile : AsdfFile
@@ -598,13 +755,15 @@ class AsdfFile(versioning.VersionedMixin):
         self = cls(extensions=extensions,
                    ignore_version_mismatch=ignore_version_mismatch,
                    ignore_unrecognized_tag=ignore_unrecognized_tag,
-                   copy_arrays=copy_arrays)
+                   copy_arrays=copy_arrays, custom_schema=custom_schema)
 
         return cls._open_impl(
             self, fd, uri=uri, mode=mode,
             validate_checksums=validate_checksums,
             do_not_fill_defaults=do_not_fill_defaults,
-            _force_raw_types=_force_raw_types)
+            _force_raw_types=_force_raw_types,
+            strict_extension_check=strict_extension_check,
+            ignore_missing_extensions=ignore_missing_extensions)
 
     def _write_tree(self, tree, fd, pad_blocks):
         fd.write(constants.ASDF_MAGIC)
@@ -740,6 +899,9 @@ class AsdfFile(versioning.VersionedMixin):
             The ASDF version to write out.  If not provided, it will
             write out in the latest version supported by asdf.
         """
+
+        self._update_extension_history()
+
         fd = self._fd
 
         if fd is None:
@@ -879,6 +1041,9 @@ class AsdfFile(versioning.VersionedMixin):
             The ASDF version to write out.  If not provided, it will
             write out in the latest version supported by asdf.
         """
+
+        self._update_extension_history()
+
         original_fd = self._fd
 
         if version is not None:
@@ -1029,23 +1194,27 @@ class AsdfFile(versioning.VersionedMixin):
         elif software is not None:
             software = Software(software)
 
+        time_ = datetime.datetime.utcfromtimestamp(
+            int(os.environ.get('SOURCE_DATE_EPOCH', time.time())),
+        )
+
         entry = HistoryEntry({
             'description': description,
-            'time': datetime.datetime.utcnow()
+            'time': time_,
         })
 
         if software is not None:
             entry['software'] = software
 
         if 'history' not in self.tree:
-            self.tree['history'] = []
+            self.tree['history'] = dict(entries=[])
 
-        self.tree['history'].append(entry)
+        self.tree['history']['entries'].append(entry)
 
         try:
             self.validate()
         except:
-            self.tree['history'].pop()
+            self.tree['history']['entries'].pop()
             raise
 
 

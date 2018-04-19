@@ -1,7 +1,6 @@
 # Licensed under a 3-clause BSD style license - see LICENSE.rst
 # -*- coding: utf-8 -*-
 
-from __future__ import absolute_import, division, unicode_literals, print_function
 
 import io
 import os
@@ -11,9 +10,9 @@ from numpy.testing import assert_array_equal
 
 import pytest
 
-from .. import asdf
-from .. import generic_io
-from .. import stream
+import asdf
+from asdf import generic_io
+from asdf import stream
 
 
 def test_stream():

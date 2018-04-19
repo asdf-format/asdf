@@ -1,30 +1,18 @@
 # Licensed under a 3-clause BSD style license - see LICENSE.rst
 # -*- coding: utf-8 -*-
 
-from __future__ import absolute_import, division, unicode_literals, print_function
-
 import io
-
-try:
-    import astropy
-except ImportError:
-    HAS_ASTROPY = False
-else:
-    HAS_ASTROPY = True
+from collections import OrderedDict
 
 import numpy as np
 
 import pytest
 
-import six
-
 import yaml
 
-from collections import OrderedDict
-
-from .. import asdf
-from .. import tagged
-from .. import treeutil
+import asdf
+from asdf import tagged
+from asdf import treeutil
 
 from . import helpers
 
@@ -57,7 +45,8 @@ def test_ordered_dict(tmpdir):
     def check_raw_yaml(content):
         assert b'OrderedDict' not in content
 
-    helpers.assert_roundtrip_tree(tree, tmpdir, check_asdf, check_raw_yaml)
+    helpers.assert_roundtrip_tree(tree, tmpdir, asdf_check_func=check_asdf,
+                                  raw_yaml_check_func=check_raw_yaml)
 
 
 def test_unicode_write(tmpdir):
@@ -71,7 +60,7 @@ def test_unicode_write(tmpdir):
 
     def check_asdf(asdf):
         assert "ɐʇɐp‾ǝpoɔıun" in asdf.tree
-        assert isinstance(asdf.tree['ascii_only'], six.text_type)
+        assert isinstance(asdf.tree['ascii_only'], str)
 
     def check_raw_yaml(content):
         # Ensure that unicode is written out as UTF-8 without escape
@@ -80,7 +69,8 @@ def test_unicode_write(tmpdir):
         # Ensure that the unicode "tag" is not used
         assert b"unicode" not in content
 
-    helpers.assert_roundtrip_tree(tree, tmpdir, check_asdf, check_raw_yaml)
+    helpers.assert_roundtrip_tree(tree, tmpdir, asdf_check_func=check_asdf,
+                                  raw_yaml_check_func=check_raw_yaml)
 
 
 def test_arbitrary_python_object():
@@ -113,7 +103,8 @@ def test_python_tuple(tmpdir):
     def check_raw_yaml(content):
         assert b'tuple' not in content
 
-    helpers.assert_roundtrip_tree(tree, tmpdir, check_asdf, check_raw_yaml)
+    helpers.assert_roundtrip_tree(tree, tmpdir, asdf_check_func=check_asdf,
+                                  raw_yaml_check_func=check_raw_yaml)
 
 
 def test_tags_removed_after_load(tmpdir):
@@ -126,26 +117,22 @@ def test_tags_removed_after_load(tmpdir):
             if node != asdf.tree:
                 assert not isinstance(node, tagged.Tagged)
 
-    helpers.assert_roundtrip_tree(tree, tmpdir, check_asdf)
+    helpers.assert_roundtrip_tree(tree, tmpdir, asdf_check_func=check_asdf)
 
 
-@pytest.mark.skipif('not HAS_ASTROPY')
 def test_explicit_tags():
-
-    yaml = """#ASDF 1.0.0
+    yaml = """#ASDF {}
 %YAML 1.1
 --- !<tag:stsci.edu:asdf/core/asdf-1.0.0>
-unit: !<tag:stsci.edu:asdf/unit/unit-1.0.0> m
+foo: !<tag:stsci.edu:asdf/core/ndarray-1.0.0> [1, 2, 3]
 ...
-    """
-    from astropy import units as u
+    """.format(asdf.versioning.default_version)
 
-    # Check that fully-qualified explicit tags work
-
+    # Check that fully qualified explicit tags work
     buff = helpers.yaml_to_asdf(yaml, yaml_headers=False)
-    ff = asdf.AsdfFile.open(buff)
 
-    assert isinstance(ff.tree['unit'], u.UnitBase)
+    with asdf.AsdfFile.open(buff) as ff:
+        assert all(ff.tree['foo'] == [1, 2, 3])
 
 
 def test_yaml_internal_reference(tmpdir):
@@ -187,3 +174,12 @@ def test_yaml_nan_inf():
         assert np.isnan(ff.tree['a'])
         assert np.isinf(ff.tree['b'])
         assert np.isinf(ff.tree['c'])
+
+
+def test_tag_object():
+    class SomeObject(object):
+        pass
+
+    tag = 'tag:nowhere.org:none/some/thing'
+    instance = tagged.tag_object(tag, SomeObject())
+    assert instance._tag == tag

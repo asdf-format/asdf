@@ -5,9 +5,18 @@ id: "http://nowhere.org/schemas/custom/fraction-1.0.0"
 title: An example custom type for handling fractions
 
 tag: "tag:nowhere.org:custom/fraction-1.0.0"
-type: array
-items:
-  type: integer
-minItems: 2
-maxItems: 2
+# Using anyOf here is a cheap hack to allow us to support both formats in an
+# example that is used in the documentation (see docs/asdf/extensions.rst).
+anyOf:
+  - type: array
+    items:
+      type: integer
+    minItems: 2
+    maxItems: 2
+  - type: object
+    properties:
+      numerator:
+        type: integer
+      denominator:
+        type: integer
 ...

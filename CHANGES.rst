@@ -1,3 +1,90 @@
+2.0.0 (2018-04-19)
+------------------
+
+- Astropy-specific tags have moved to Astropy core package. [#359]
+
+- ICRSCoord tag has moved to Astropy core package. [#401]
+
+- Remove support for Python 2. [#409]
+
+- Create ``pytest`` plugin to be used for testing schema files. [#425]
+
+- Add metadata about extensions used to create a file to the history section of
+  the file itself. [#475]
+
+- Remove hard dependency on Astropy. It is still required for testing, and for
+  processing ASDF-in-FITS files. [#476]
+
+- Add command for extracting ASDF extension from ASDF-in-FITS file and
+  converting it to a pure ASDF file. [#477]
+
+- Add command for removing ASDF extension from ASDF-in-FITS file. [#480]
+
+- Add an ``ExternalArrayReference`` type for referencing arrays in external
+  files. [#400]
+
+- Improve the way URIs are detected for ASDF-in-FITS files in order to fix bug
+  with reading gzipped ASDF-in-FITS files. [#416]
+
+- Explicitly disallow access to entire tree for ASDF file objects that have
+  been closed. [#407]
+
+- Install and load extensions using ``setuptools`` entry points. [#384]
+
+- Automatically initialize ``asdf-standard`` submodule in ``setup.py``. [#398]
+
+- Allow foreign tags to be resolved in schemas and files. Deprecate
+  ``tag_to_schema_resolver`` property for ``AsdfFile`` and
+  ``AsdfExtensionList``. [#399]
+
+- Fix bug that caused serialized FITS tables to be duplicated in embedded ASDF
+  HDU. [#411]
+
+- Create and use a new non-standard FITS extension instead of ImageHDU for
+  storing ASDF files embedded in FITS. Explicitly remove support for the
+  ``.update`` method of ``AsdfInFits``, even though it didn't appear to be
+  working previously. [#412]
+
+- Allow package to be imported and used from source directory and builds in
+  development mode. [#420]
+
+- Add command to ``asdftool`` for querying installed extensions. [#418]
+
+- Implement optional top-level validation pass using custom schema. This can be
+  used to ensure that particular ASDF files follow custom conventions beyond
+  those enforced by the standard. [#442]
+
+- Remove restrictions affecting top-level attributes ``data``, ``wcs``, and
+  ``fits``. Bump top-level ASDF schema version to v1.1.0. [#444]
+
+1.3.3 (2018-03-01)
+------------------
+
+- Update test infrastructure to rely on new Astropy v3.0 plugins. [#461]
+
+- Disable use of 2to3. This was causing test failures on Debian builds. [#463]
+
+1.3.2 (2018-02-22)
+------------------
+
+- Updates to allow this version of ASDF to be compatible with Astropy v3.0.
+  [#450]
+
+- Remove tests that are no longer relevant due to latest updates to Astropy's
+  testing infrastructure. [#458]
+
+1.3.1 (2017-11-02)
+------------------
+
+- Relax requirement on ``semantic_version`` version to 2.3.1. [#361]
+
+- Fix bug when retrieving file format version from new ASDF file. [#365]
+
+- Fix bug when duplicating inline arrays. [#370]
+
+- Allow tag references using the tag URI scheme to be resolved in schema files.
+  [#371]
+
 1.3.0 (2017-10-24)
 ------------------
 

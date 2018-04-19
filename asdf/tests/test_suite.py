@@ -1,7 +1,6 @@
 # Licensed under a 3-clause BSD style license - see LICENSE.rst
 # -*- coding: utf-8 -*-
 
-from __future__ import absolute_import, division, unicode_literals, print_function
 
 import os
 import sys
@@ -11,7 +10,6 @@ from asdf import open as asdf_open
 from asdf import versioning
 
 from .helpers import assert_tree_match, display_warnings
-from astropy.tests.helper import catch_warnings
 
 
 def get_test_id(reference_file_path):
@@ -49,7 +47,7 @@ def _compare_trees(name_without_ext, expect_warnings=False):
                 # Make sure to only suppress warnings when they are expected.
                 # However, there's still a chance of missing warnings that we
                 # actually care about here.
-                with catch_warnings(RuntimeWarning) as w:
+                with pytest.warns(RuntimeWarning) as w:
                     _compare_func()
             else:
                 _compare_func()
@@ -61,15 +59,10 @@ def test_reference_file(reference_file):
     name_without_ext, _ = os.path.splitext(reference_file)
 
     known_fail = False
-    # We expect warnings from numpy due to the way that complex.yaml is
-    # constructed. We want to make sure we only suppress warnings when they are
-    # expected.
-    expect_warnings = basename == 'complex.asdf'
-    if sys.version_info[:2] == (2, 7):
-        known_fail = (basename in ('complex.asdf'))
+    expect_warnings = False
 
     if sys.maxunicode <= 65535:
-        known_fail = known_fail | (basename in ('unicode_spp.asdf'))
+        known_fail = known_fail or (basename in ('unicode_spp.asdf'))
 
     try:
         _compare_trees(name_without_ext, expect_warnings=expect_warnings)

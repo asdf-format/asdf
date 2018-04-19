@@ -3,6 +3,7 @@ include CHANGES.rst
 
 include ez_setup.py
 include ah_bootstrap.py
+include setup_helpers.py
 include setup.cfg
 
 recursive-include *.pyx *.c *.pxd

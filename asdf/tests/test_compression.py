@@ -1,7 +1,6 @@
 # Licensed under a 3-clause BSD style license - see LICENSE.rst
 # -*- coding: utf-8 -*-
 
-from __future__ import absolute_import, division, unicode_literals, print_function
 
 import io
 import os
@@ -10,8 +9,10 @@ import numpy as np
 
 import pytest
 
-from .. import asdf, compression
-from .. import generic_io
+import asdf
+from asdf import compression
+from asdf import generic_io
+
 from ..tests import helpers
 
 
