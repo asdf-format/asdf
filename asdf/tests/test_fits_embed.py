@@ -380,3 +380,12 @@ def test_extension_check():
     with pytest.raises(RuntimeError):
         with asdf.AsdfFile.open(testfile, strict_extension_check=True) as ff:
             pass
+
+def test_verify_with_astropy(tmpdir):
+    tmpfile = str(tmpdir.join('asdf.fits'))
+
+    with create_asdf_in_fits() as aif:
+        aif.write_to(tmpfile)
+
+    with fits.open(tmpfile) as hdu:
+        hdu.verify('exception')
