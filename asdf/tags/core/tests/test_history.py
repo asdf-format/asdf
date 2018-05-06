@@ -14,6 +14,7 @@ from asdf import util
 from asdf import asdftypes
 from asdf.tests import helpers
 from asdf.tests.helpers import yaml_to_asdf, display_warnings
+from asdf.tags.core import HistoryEntry
 
 
 SCHEMA_PATH = os.path.join(os.path.dirname(helpers.__file__), 'data')
@@ -83,6 +84,14 @@ def test_history_to_file(tmpdir):
         assert entry['software']['name'] == 'my_tool'
         assert entry['software']['version'] == '2.0'
 
+        # Test the history entry retrieval API
+        entries = ff.get_history_entries()
+        assert len(entries) == 1
+        assert isinstance(entries, list)
+        assert isinstance(entries[0], HistoryEntry)
+        assert entries[0]['description'] == "This happened"
+        assert entries[0]['software']['name'] == 'my_tool'
+
 
 def test_old_history(tmpdir):
     """Make sure that old versions of the history format are still accepted"""
@@ -99,6 +108,29 @@ history:
     buff = yaml_to_asdf(yaml)
     with asdf.open(buff) as af:
         assert len(af.tree['history']) == 1
+
+        # Test the history entry retrieval API
+        entries = af.get_history_entries()
+        assert len(entries) == 1
+        assert isinstance(entries, list)
+        assert isinstance(entries[0], HistoryEntry)
+        assert entries[0]['description'] == "Here's a test of old history entries"
+        assert entries[0]['software']['name'] == 'foo'
+
+def test_get_history_entries(tmpdir):
+    """
+    Test edge cases for the get_history_entries API. Other cases tested above
+    """
+
+    tmpfile = str(tmpdir.join('empty.asdf'))
+
+    with asdf.AsdfFile() as af:
+        af.write_to(tmpfile)
+
+    # Make sure this works when there is no history section at all
+    with asdf.open(tmpfile) as af:
+        assert len(af['history']['extensions']) > 0
+        assert len(af.get_history_entries()) == 0
 
 
 def test_extension_metadata(tmpdir):
