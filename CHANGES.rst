@@ -1,6 +1,8 @@
 2.1.0 (unreleased)
 ------------------
 
+- Add API function for retrieving history entries. [#501]
+
 2.0.0 (2018-04-19)
 ------------------
 

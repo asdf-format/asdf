@@ -1217,6 +1217,27 @@ class AsdfFile(versioning.VersionedMixin):
             self.tree['history']['entries'].pop()
             raise
 
+    def get_history_entries(self):
+        """
+        Get a list of history entries from the file object.
+
+        Returns
+        -------
+        entries : list
+            A list of history entries.
+        """
+
+        if 'history' not in self.tree:
+            return []
+
+        if isinstance(self.tree['history'], list):
+            return self.tree['history']
+
+        if 'entries' in self.tree['history']:
+            return self.tree['history']['entries']
+
+        return []
+
 
 def is_asdf_file(fd):
     """
