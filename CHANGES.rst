@@ -3,7 +3,7 @@
 
 - Add API function for retrieving history entries. [#501]
 
-2.0.1 (unreleased)
+2.0.1 (2018-05-08)
 ------------------
 
 - Allow test suite to run even when package is not installed. [#502]
