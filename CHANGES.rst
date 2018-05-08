@@ -1,3 +1,8 @@
+2.0.1 (2018-05-08)
+------------------
+
+- Allow test suite to run even when package is not installed. [#502]
+
 2.0.0 (2018-04-19)
 ------------------
 

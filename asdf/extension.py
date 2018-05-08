@@ -1,7 +1,7 @@
 # Licensed under a 3-clause BSD style license - see LICENSE.rst
 # -*- coding: utf-8 -*-
 
-
+import os
 import abc
 import warnings
 from pkg_resources import iter_entry_points
@@ -11,11 +11,15 @@ import importlib
 
 from . import asdftypes
 from . import resolver
+from .version import version as asdf_version
 from .util import get_class_name
 from .exceptions import AsdfDeprecationWarning
 
 
 __all__ = ['AsdfExtension', 'AsdfExtensionList']
+
+
+ASDF_TEST_BUILD_ENV = 'ASDF_TEST_BUILD'
 
 
 @six.add_metaclass(abc.ABCMeta)
@@ -186,7 +190,6 @@ class _DefaultExtensions:
         self._package_metadata = {}
 
     def _load_installed_extensions(self, group='asdf_extensions'):
-        self._extensions = []
         for entry_point in iter_entry_points(group=group):
             ext = entry_point.load()
             if not issubclass(ext, AsdfExtension):
@@ -204,6 +207,15 @@ class _DefaultExtensions:
     def extensions(self):
         # This helps avoid a circular dependency with external packages
         if not self._extensions:
+            # If this environment variable is defined, load the default
+            # extension. This allows the package to be tested without being
+            # installed (e.g. for builds on Debian).
+            if os.environ.get(ASDF_TEST_BUILD_ENV):
+                # Fake the extension metadata
+                name = get_class_name(BuiltinExtension, instance=False)
+                self._package_metadata[name] = ('asdf', asdf_version)
+                self._extensions.append(BuiltinExtension())
+
             self._load_installed_extensions()
 
         return self._extensions

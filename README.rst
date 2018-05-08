@@ -148,7 +148,7 @@ The `open` function also works as a context handler:
     with asdf.open('example.asdf') as af:
         ...
 
-To access the data stored in the file, use the top-level :attr:`AsdfFile.tree`
+To access the data stored in the file, use the top-level `AsdfFile.tree`
 attribute:
 
 .. code:: python
