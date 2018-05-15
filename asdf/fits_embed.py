@@ -17,8 +17,7 @@ from . import generic_io
 
 try:
     from astropy.io import fits
-    from astropy.io.fits.file import _File
-    from astropy.io.fits.header import Header, _pad_length
+    from astropy.io.fits import Column, BinTableHDU
 except ImportError:
     raise ImportError("AsdfInFits requires astropy")
 
@@ -28,72 +27,6 @@ FITS_SOURCE_PREFIX = 'fits:'
 
 
 __all__ = ['AsdfInFits']
-
-
-class _AsdfHDU(fits.hdu.base.NonstandardExtHDU):
-    """
-    A non-standard extension HDU for encapsulating an entire ASDF file within a
-    single HDU of a container FITS file.  These HDUs have an extension (that is
-    an XTENSION keyword) of ASDF.
-    """
-
-    _extension = ASDF_EXTENSION_NAME
-
-    @classmethod
-    def from_buff(cls, buff, compress=False, **kwargs):
-        """
-        Creates a new _AsdfHDU from a given AsdfFile object.
-
-        Parameters
-        ----------
-        buff : io.BytesIO
-            A buffer containing an ASDF metadata tree
-        compress : bool, optional
-            Gzip compress the contents of the ASDF HDU
-        """
-
-        if compress:
-            buff = gzip.GzipFile(fileobj=buff, mode='wb')
-
-        # A proper HDU should still be padded out to a multiple of 2880
-        # technically speaking
-        data_length = buff.tell()
-        padding = (_pad_length(data_length) * cls._padding_byte).encode('ascii')
-        buff.write(padding)
-
-        buff.seek(0)
-
-        cards = [
-            ('XTENSION', cls._extension, 'ASDF extension'),
-            ('BITPIX', 8, 'array data type'),
-            ('NAXIS', 1, 'number of array dimensions'),
-            ('NAXIS1', data_length, 'Axis length'),
-            ('PCOUNT', 0, 'number of parameters'),
-            ('GCOUNT', 1, 'number of groups'),
-            ('COMPRESS', compress, 'Uses gzip compression'),
-            ('EXTNAME', cls._extension, 'Name of ASDF extension'),
-        ]
-
-        header = Header(cards)
-        return cls._readfrom_internal(_File(buff), header=header)
-
-
-    @classmethod
-    def match_header(cls, header):
-        card = header.cards[0]
-        if card.keyword != 'XTENSION':
-            return False
-        xtension = card.value
-        if isinstance(xtension, str):
-            xtension = xtension.rstrip()
-        return xtension == cls._extension
-
-    # TODO: Add header verification
-
-    def _summary(self):
-        # TODO: Perhaps make this more descriptive...
-        axes = tuple(self.data.shape)
-        return (self.name, self.ver, 'AsdfHDU', len(self._header), axes)
 
 
 class _FitsBlock(object):
@@ -330,7 +263,9 @@ class AsdfInFits(asdf.AsdfFile):
             array = np.frombuffer(buff.getvalue(), np.uint8)
             return fits.ImageHDU(array, name=ASDF_EXTENSION_NAME)
         else:
-            return _AsdfHDU.from_buff(buff)
+            data = buff.getbuffer()
+            column = fits.Column(array=data, format='B', name='ASDF_METADATA')
+            return fits.BinTableHDU.from_columns([column], name=ASDF_EXTENSION_NAME)
 
     def _update_asdf_extension(self, all_array_storage=None,
                                all_array_compression=None, auto_inline=None,

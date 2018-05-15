@@ -89,7 +89,7 @@ def test_embed_asdf_in_fits_file(tmpdir, backwards_compat):
             assert isinstance(asdf_hdu, fits.ImageHDU)
             assert asdf_hdu.data.tostring().strip().endswith(b'...')
         else:
-            assert isinstance(asdf_hdu, fits_embed._AsdfHDU)
+            assert isinstance(asdf_hdu, fits.BinTableHDU)
 
         with fits_embed.AsdfInFits.open(hdulist2) as ff2:
             assert_tree_match(tree, ff2.tree)
@@ -113,7 +113,7 @@ def test_embed_asdf_in_fits_file_anonymous_extensions(tmpdir):
         assert len(hdulist) == 4
         assert [x.name for x in hdulist] == ['PRIMARY', '', '', 'ASDF']
         asdf_hdu = hdulist['ASDF']
-        assert isinstance(asdf_hdu, fits_embed._AsdfHDU)
+        assert isinstance(asdf_hdu, fits.BinTableHDU)
         assert asdf_hdu.data.tostring().startswith(b'#ASDF')
 
         with fits_embed.AsdfInFits.open(hdulist) as ff2:
@@ -380,3 +380,12 @@ def test_extension_check():
     with pytest.raises(RuntimeError):
         with asdf.AsdfFile.open(testfile, strict_extension_check=True) as ff:
             pass
+
+def test_verify_with_astropy(tmpdir):
+    tmpfile = str(tmpdir.join('asdf.fits'))
+
+    with create_asdf_in_fits() as aif:
+        aif.write_to(tmpfile)
+
+    with fits.open(tmpfile) as hdu:
+        hdu.verify('exception')
