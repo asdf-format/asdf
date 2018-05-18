@@ -372,7 +372,7 @@ class GenericFile(object):
     """
 
     def write_array(self, array):
-        _array_tofile(None, self.write, array)
+        _array_tofile(None, self.write, np.ascontiguousarray(array))
 
     def seek(self, offset, whence=0):
         """
