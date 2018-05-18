@@ -803,3 +803,9 @@ def test_tagged_object_array(tmpdir):
         objdata.flat[i] = Quantity(i, 'angstrom')
 
     helpers.assert_roundtrip_tree({'bizbaz': objdata}, tmpdir)
+
+
+def test_broadcasted_array(tmpdir):
+    attrs = np.broadcast_arrays(np.array([10,20]), np.array(10), np.array(10))
+    tree = {'one': attrs[1] }#, 'two': attrs[1], 'three': attrs[2]}
+    helpers.assert_roundtrip_tree(tree, tmpdir)
