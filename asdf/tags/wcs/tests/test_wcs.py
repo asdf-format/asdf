@@ -8,6 +8,12 @@ import warnings
 gwcs = pytest.importorskip('gwcs')
 astropy = pytest.importorskip('astropy', minversion='3.0.0')
 
+_gwcs_version = gwcs.version.version
+_astropy_version = astropy.version.version
+
+INCOMPATIBLE_VERSIONS = _gwcs_version == '0.9.0' and _astropy_version < '3.1.dev0'
+
+
 from astropy.modeling import models
 from astropy import coordinates as coord
 from astropy import units as u
@@ -38,6 +44,7 @@ def test_read_wcs(version):
         assert isinstance(tree['gw3'], wcs.WCS)
 
 
+@pytest.mark.skipif(INCOMPATIBLE_VERSIONS, reason="Incompatible versions for GWCS and Astropy")
 @pytest.mark.parametrize('version', ['1.0.0', '1.1.0', '1.2.0'])
 def test_composite_frame(tmpdir, version):
     icrs = coord.ICRS()
