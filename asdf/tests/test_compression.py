@@ -155,24 +155,25 @@ def test_input(tmpdir):
 
 
 def test_none(tmpdir):
+
     tree = _get_large_tree()
+
     tmpfile1 = os.path.join(str(tmpdir), 'test1.asdf')
-    afile = asdf.AsdfFile(tree)
-    afile.write_to(tmpfile1)
-    afile.close()
-    afile = asdf.AsdfFile.open(tmpfile1)
-    assert afile.get_array_compression(afile.tree['science_data']) is None
+    with asdf.AsdfFile(tree) as afile:
+        afile.write_to(tmpfile1)
+
     tmpfile2 = os.path.join(str(tmpdir), 'test2.asdf')
-    afile.write_to(tmpfile2, all_array_compression='zlib')
-    assert afile.get_array_compression(afile.tree['science_data']) == 'zlib'
-    afile.close()
-    afile = asdf.AsdfFile.open(tmpfile2)
-    afile.write_to(tmpfile1, all_array_compression=None)
-    afile.close()
-    afile = asdf.AsdfFile.open(tmpfile1)
-    helpers.assert_tree_match(tree, afile.tree)
-    assert afile.get_array_compression(afile.tree['science_data']) is None
-    afile.close()
+    with asdf.AsdfFile.open(tmpfile1) as afile:
+        assert afile.get_array_compression(afile.tree['science_data']) is None
+        afile.write_to(tmpfile2, all_array_compression='zlib')
+        assert afile.get_array_compression(afile.tree['science_data']) == 'zlib'
+
+    with asdf.AsdfFile.open(tmpfile2) as afile:
+        afile.write_to(tmpfile1, all_array_compression=None)
+
+    with asdf.AsdfFile.open(tmpfile1) as afile:
+        helpers.assert_tree_match(tree, afile.tree)
+        assert afile.get_array_compression(afile.tree['science_data']) is None
 
 
 def test_set_array_compression(tmpdir):
