@@ -173,3 +173,21 @@ def test_none(tmpdir):
     helpers.assert_tree_match(tree, afile.tree)
     assert afile.get_array_compression(afile.tree['science_data']) is None
     afile.close()
+
+
+def test_set_array_compression(tmpdir):
+
+    tmpfile = os.path.join(str(tmpdir), 'compressed.asdf')
+
+    zlib_data = np.array([x for x in range(1000)])
+    bzp2_data = np.array([x for x in range(1000)])
+
+    tree = dict(zlib_data=zlib_data, bzp2_data=bzp2_data)
+    with asdf.AsdfFile(tree) as af_out:
+        af_out.set_array_compression(zlib_data, 'zlib')
+        af_out.set_array_compression(bzp2_data, 'bzp2')
+        af_out.write_to(tmpfile)
+
+    with asdf.open(tmpfile) as af_in:
+        assert af_in.get_array_compression(af_in.tree['zlib_data']) == 'zlib'
+        assert af_in.get_array_compression(af_in.tree['bzp2_data']) == 'bzp2'
