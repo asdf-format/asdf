@@ -551,7 +551,10 @@ class BlockManager(object):
             self.set_array_storage(block, all_array_storage)
 
         all_array_compression = getattr(ctx, '_all_array_compression', 'input')
-        block.output_compression = all_array_compression
+        # Only override block compression algorithm if it wasn't explicitly set
+        # by AsdfFile.set_array_compression.
+        if all_array_compression != 'input':
+            block.output_compression = all_array_compression
 
         auto_inline = getattr(ctx, '_auto_inline', None)
         if auto_inline:
