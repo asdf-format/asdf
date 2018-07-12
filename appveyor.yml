@@ -25,13 +25,6 @@ environment:
       - PYTHON_VERSION: "3.5"
         platform: x64
 
-      - PYTHON_VERSION: "3.7"
-        # This is necessary in order to grab a version of pytest that is
-        # compatible with Python 3.7
-        MINICONDA_VERSION: "4.5.4"
-        CONDA_CHANNELS: "conda-forge"
-        platform: x64
-
       - PYTHON_VERSION: "3.6"
         NUMPY_VERSION: "1.12.0"
         platform: x64
