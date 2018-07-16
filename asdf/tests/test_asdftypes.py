@@ -16,7 +16,7 @@ from asdf import versioning
 from . import helpers, CustomTestType
 
 
-TEST_DATA_PATH = os.path.join(os.path.dirname(__file__), 'data')
+TEST_DATA_PATH = str(helpers.get_test_data_path(''))
 
 
 def test_custom_tag():
