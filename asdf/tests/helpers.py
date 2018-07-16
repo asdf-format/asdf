@@ -56,7 +56,7 @@ def get_test_data_path(name, module=None):
         module = test_data
 
     with resources.path(module, name) as path:
-        return path
+        return str(path)
 
 
 def assert_tree_match(old_tree, new_tree, ctx=None,
