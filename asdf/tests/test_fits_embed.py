@@ -18,10 +18,7 @@ import asdf
 from asdf import fits_embed
 from asdf import open as asdf_open
 
-from .helpers import assert_tree_match, display_warnings
-
-
-TEST_DATA_PATH = os.path.join(os.path.dirname(__file__), 'data')
+from .helpers import assert_tree_match, display_warnings, get_test_data_path
 
 
 def create_asdf_in_fits():
@@ -282,7 +279,7 @@ def test_asdf_open(tmpdir):
             compare_asdfs(asdf_in_fits, ff)
 
 def test_open_gzipped():
-    testfile = os.path.join(TEST_DATA_PATH, 'asdf.fits.gz')
+    testfile = get_test_data_path('asdf.fits.gz')
 
     # Opening as an HDU should work
     with fits.open(testfile) as ff:
@@ -308,7 +305,7 @@ def test_bad_input(tmpdir):
 @pytest.mark.skipif(sys.platform.startswith('win'),
     reason='Avoid path manipulation on Windows')
 def test_version_mismatch_file():
-    testfile = os.path.join(TEST_DATA_PATH, 'version_mismatch.fits')
+    testfile = str(get_test_data_path('version_mismatch.fits'))
 
     with pytest.warns(None) as w:
         with asdf.AsdfFile.open(testfile,
@@ -360,7 +357,7 @@ def test_serialize_table(tmpdir):
         assert data._source.startswith('fits:')
 
 def test_extension_check():
-    testfile = os.path.join(TEST_DATA_PATH, 'extension_check.fits')
+    testfile = get_test_data_path('extension_check.fits')
 
     with pytest.warns(None) as warnings:
         with asdf.AsdfFile.open(testfile) as ff:
