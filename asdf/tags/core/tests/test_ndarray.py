@@ -21,8 +21,8 @@ from asdf import util
 from asdf.tests import helpers, CustomTestType
 from asdf.tags.core import ndarray
 
-
-TEST_DATA_PATH = os.path.join(os.path.dirname(__file__), 'data')
+from . import data as test_data
+TEST_DATA_PATH = helpers.get_test_data_path('', module=test_data)
 
 
 # These custom types and the custom extension are here purely for the purpose
