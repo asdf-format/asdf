@@ -4,25 +4,28 @@
 
 import os
 import io
+from functools import partial
 
 import numpy as np
 import pytest
 
 from ... import AsdfFile
+from ...tests import helpers
+
 from .. import main, diff
 
-
-TEST_DATA_PATH = os.path.join(os.path.dirname(__file__), 'data')
+from . import data as test_data
+get_test_data_path = partial(helpers.get_test_data_path, module=test_data)
 
 
 def _assert_diffs_equal(filenames, result_file, minimal=False):
     iostream = io.StringIO()
 
-    file_paths = ["{}/{}".format(TEST_DATA_PATH, name) for name in filenames]
+    file_paths = [get_test_data_path(name) for name in filenames]
     diff(file_paths, minimal=minimal, iostream=iostream)
     iostream.seek(0)
 
-    result_path = "{}/{}".format(TEST_DATA_PATH, result_file)
+    result_path = get_test_data_path(result_file)
     with open(result_path, 'r') as handle:
         assert handle.read() == iostream.read()
 
@@ -46,10 +49,10 @@ def test_file_not_found():
     # Try to open files that exist but are not valid asdf
     filenames = ['frames.diff', 'blocks.diff']
     with pytest.raises(RuntimeError):
-        diff(["{}/{}".format(TEST_DATA_PATH, name) for name in filenames], False)
+        diff([get_test_data_path(name) for name in filenames], False)
 
 def test_diff_command():
     filenames = ['frames0.asdf', 'frames1.asdf']
-    paths = ["{}/{}".format(TEST_DATA_PATH, name) for name in filenames]
+    paths = [get_test_data_path(name) for name in filenames]
 
     assert main.main_from_args(['diff'] + paths) == 0
