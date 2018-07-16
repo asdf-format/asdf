@@ -24,7 +24,7 @@ env:
         - PYTHON_VERSION=3.6
         - ASTROPY_VERSION=stable
         - NUMPY_VERSION=stable
-        - PIP_DEPENDENCIES='pytest-faulthandler'
+        - PIP_DEPENDENCIES='pytest-faulthandler importlib_resources'
         - CONDA_DEPENDENCIES='semantic_version jsonschema pyyaml six lz4 pytest-astropy'
         - GWCS_GIT='git+git://github.com/spacetelescope/gwcs.git#egg=gwcs'
         - GWCS_PIP='gwcs'
