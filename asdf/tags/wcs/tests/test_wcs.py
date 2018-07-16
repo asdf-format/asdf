@@ -4,6 +4,7 @@
 import os
 import pytest
 import warnings
+from functools import partial
 
 gwcs = pytest.importorskip('gwcs')
 astropy = pytest.importorskip('astropy', minversion='3.0.0')
@@ -26,8 +27,8 @@ import asdf
 from asdf import AsdfFile
 from asdf.tests import helpers
 
-
-TEST_DATA_PATH = os.path.join(os.path.dirname(__file__), 'data')
+from . import data as test_data
+get_test_data_path = partial(helpers.get_test_data_path, module=test_data)
 
 
 @pytest.mark.parametrize('version', ['1.0.0', '1.1.0'])
@@ -37,7 +38,7 @@ def test_read_wcs(version):
     more recent than 1.1.0 since the schemas and tags have moved to Astropy and
     GWCS."""
 
-    filename = os.path.join(TEST_DATA_PATH, "test_wcs-{}.asdf".format(version))
+    filename = get_test_data_path("test_wcs-{}.asdf".format(version))
     with asdf.open(filename) as tree:
         assert isinstance(tree['gw1'], wcs.WCS)
         assert isinstance(tree['gw2'], wcs.WCS)
@@ -75,7 +76,7 @@ def test_frames(tmpdir):
     test any subsequent ASDF versions since the schemas and tags for those
     frames have moved to Astropy and gwcs."""
 
-    filename = os.path.join(TEST_DATA_PATH, "test_frames-1.1.0.asdf")
+    filename = get_test_data_path("test_frames-1.1.0.asdf")
     with asdf.open(filename) as tree:
         for frame in tree['frames']:
             assert isinstance(frame, cf.CoordinateFrame)
