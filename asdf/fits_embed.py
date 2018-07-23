@@ -263,8 +263,9 @@ class AsdfInFits(asdf.AsdfFile):
             array = np.frombuffer(buff.getvalue(), np.uint8)
             return fits.ImageHDU(array, name=ASDF_EXTENSION_NAME)
         else:
-            data = buff.getbuffer()
-            column = fits.Column(array=data, format='B', name='ASDF_METADATA')
+            data = np.array(buff.getbuffer(), dtype=np.uint8)[None, :]
+            fmt = '{}B'.format(len(data[0]))
+            column = fits.Column(array=data, format=fmt, name='ASDF_METADATA')
             return fits.BinTableHDU.from_columns([column], name=ASDF_EXTENSION_NAME)
 
     def _update_asdf_extension(self, all_array_storage=None,

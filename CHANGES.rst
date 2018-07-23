@@ -3,6 +3,8 @@
 
 - Add API function for retrieving history entries. [#501]
 
+- Store ASDF-in-FITS data inside a 1x1 BINTABLE HDU. [#519]
+
 2.0.2 (unreleased)
 ------------------
 
