@@ -107,7 +107,7 @@ def _array_tofile_simple(fd, write, array):
 
 if sys.platform == 'darwin':  # pragma: no cover
     def _array_tofile(fd, write, array):
-        OSX_WRITE_LIMIT = 2 ** 32
+        OSX_WRITE_LIMIT = 2 ** 30
         if fd is None or array.nbytes >= OSX_WRITE_LIMIT and array.nbytes % 4096 == 0:
             return _array_tofile_chunked(write, array, OSX_WRITE_LIMIT)
         return _array_tofile_simple(fd, write, array)
