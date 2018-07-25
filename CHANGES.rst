@@ -6,6 +6,9 @@
 - Fix bug that caused result of ``set_array_compression`` to be overwritten by
   ``all_array_compression`` argument to ``write_to``. [#510]
 
+- Add workaround for Python OSX write limit bug
+  (see https://bugs.python.org/issue24658). [#521]
+
 2.0.1 (2018-05-08)
 ------------------
 
