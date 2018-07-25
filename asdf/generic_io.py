@@ -107,6 +107,10 @@ def _array_tofile_simple(fd, write, array):
 
 if sys.platform == 'darwin':  # pragma: no cover
     def _array_tofile(fd, write, array):
+        # This value is currently set as a workaround for a known bug in Python
+        # on OSX. Individual writes must be less than 2GB, which necessitates
+        # the chunk size here if we want it to remain a power of 2.
+        # See https://bugs.python.org/issue24658.
         OSX_WRITE_LIMIT = 2 ** 30
         if fd is None or array.nbytes >= OSX_WRITE_LIMIT and array.nbytes % 4096 == 0:
             return _array_tofile_chunked(write, array, OSX_WRITE_LIMIT)
