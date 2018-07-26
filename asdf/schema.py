@@ -305,6 +305,27 @@ HARDCODED_SCHEMA = {
 
 
 @lru_cache()
+def load_custom_schema(url):
+    # Avoid circular import
+    from .tags.core import AsdfObject
+    custom = load_schema(url, resolve_local_refs=True)
+    core = load_schema(AsdfObject.yaml_tag)
+
+    def update(d, u):
+        from collections import Mapping
+        for k, v in u.items():
+            # Respect the property ordering of the core schema
+            if k == 'propertyOrder' and k in d:
+                d[k] = u[k] + d[k]
+            elif isinstance(v, Mapping):
+                d[k] = update(d.get(k, {}), v)
+            else:
+                d[k] = v
+        return d
+
+    return update(custom, core)
+
+@lru_cache()
 def load_schema(url, resolver=None, resolve_references=False,
                 resolve_local_refs=False):
     """
@@ -444,9 +465,7 @@ def validate_large_literals(instance):
                 "literal in ASDF".format(instance))
 
 
-def validate(instance, ctx=None, schema={},
-             validators=None,
-             *args, **kwargs):
+def validate(instance, ctx=None, schema={}, validators=None, *args, **kwargs):
     """
     Validate the given instance (which must be a tagged tree) against
     the appropriate schema.  The schema itself is located using the
