@@ -599,7 +599,7 @@ def test_custom_validation_good(tmpdir):
         pass
 
 
-def test_custom_validation_with_definitions(tmpdir):
+def test_custom_validation_with_definitions_good(tmpdir):
     custom_schema_path = helpers.get_test_data_path('custom_schema_definitions.yaml')
     asdf_file = os.path.join(str(tmpdir), 'out.asdf')
 
@@ -613,3 +613,31 @@ def test_custom_validation_with_definitions(tmpdir):
 
     with asdf.open(asdf_file, custom_schema=custom_schema_path) as ff:
         pass
+
+
+def test_custom_validation_with_definitions_bad(tmpdir):
+    custom_schema_path = helpers.get_test_data_path('custom_schema_definitions.yaml')
+    asdf_file = os.path.join(str(tmpdir), 'out.asdf')
+
+    # This tree does NOT conform to the custom schema
+    tree = {
+        'forb': { 'biz': 'hello', 'baz': 'world' }
+    }
+
+    # Creating file without custom schema should pass
+    with asdf.AsdfFile(tree) as ff:
+        ff.write_to(asdf_file)
+
+    # Creating file with custom schema should fail
+    with pytest.raises(ValidationError):
+        with asdf.AsdfFile(tree, custom_schema=custom_schema_path) as ff:
+            pass
+
+    # Opening file without custom schema should pass
+    with asdf.open(asdf_file) as ff:
+        pass
+
+    # Opening file with custom schema should fail
+    with pytest.raises(ValidationError):
+        with asdf.open(asdf_file, custom_schema=custom_schema_path) as ff:
+            pass
