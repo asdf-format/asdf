@@ -1,4 +1,4 @@
-2.0.2 (unreleased)
+2.0.2 (2018-07-27)
 ------------------
 
 - Allow serialization of broadcasted ``numpy`` arrays. [#507]
