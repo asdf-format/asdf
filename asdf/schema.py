@@ -305,7 +305,8 @@ HARDCODED_SCHEMA = {
 
 
 @lru_cache()
-def load_schema(url, resolver=None, resolve_references=False):
+def load_schema(url, resolver=None, resolve_references=False,
+                resolve_local_refs=False):
     """
     Load a schema from the given URL.
 
@@ -322,6 +323,12 @@ def load_schema(url, resolver=None, resolve_references=False):
 
     resolve_references : bool, optional
         If `True`, resolve all `$ref` references.
+
+    resolve_local_refs : bool, optional
+        If `True`, resolve all `$ref` references that refer to other objects
+        within the same schema. This will automatically be handled when passing
+        `resolve_references=True`, but it may be desirable in some cases to
+        control local reference resolution separately.
     """
     if resolver is None:
         resolver = mresolver.default_resolver
@@ -330,6 +337,20 @@ def load_schema(url, resolver=None, resolve_references=False):
         schema = HARDCODED_SCHEMA[url]()
     else:
         schema, url = loader(url)
+
+    # Resolve local references
+    if resolve_local_refs:
+        def resolve_local(node, json_id):
+            if isinstance(node, dict) and '$ref' in node:
+                ref_url = resolver(node['$ref'])
+                if ref_url.startswith('#'):
+                    parts = urlparse.urlparse(ref_url)
+                    subschema_fragment = reference.resolve_fragment(
+                        schema, parts.fragment)
+                    return subschema_fragment
+            return node
+
+        schema = treeutil.walk_and_modify(schema, resolve_local)
 
     if resolve_references:
         def resolve_refs(node, json_id):
@@ -348,10 +369,13 @@ def load_schema(url, resolver=None, resolve_references=False):
                     subschema = schema
                 else:
                     subschema = load_schema(suburl_path, resolver, True)
+
                 subschema_fragment = reference.resolve_fragment(
                     subschema, fragment)
                 return subschema_fragment
+
             return node
+
         schema = treeutil.walk_and_modify(schema, resolve_refs)
 
     return schema
