@@ -5,7 +5,7 @@
 
 - Store ASDF-in-FITS data inside a 1x1 BINTABLE HDU. [#519]
 
-2.0.2 (unreleased)
+2.0.2 (2018-07-27)
 ------------------
 
 - Allow serialization of broadcasted ``numpy`` arrays. [#507]
