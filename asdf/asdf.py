@@ -93,7 +93,7 @@ class AsdfFile(versioning.VersionedMixin):
         """
 
         if custom_schema is not None:
-            self._custom_schema = schema.load_schema(custom_schema)
+            self._custom_schema = schema.load_custom_schema(custom_schema)
             schema.check_schema(self._custom_schema)
         else:
             self._custom_schema = None
