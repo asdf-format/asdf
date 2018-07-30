@@ -21,8 +21,8 @@ from asdf import util
 from asdf.tests import helpers, CustomTestType
 from asdf.tags.core import ndarray
 
-
-TEST_DATA_PATH = os.path.join(os.path.dirname(__file__), 'data')
+from . import data as test_data
+TEST_DATA_PATH = helpers.get_test_data_path('', module=test_data)
 
 
 # These custom types and the custom extension are here purely for the purpose
@@ -803,3 +803,9 @@ def test_tagged_object_array(tmpdir):
         objdata.flat[i] = Quantity(i, 'angstrom')
 
     helpers.assert_roundtrip_tree({'bizbaz': objdata}, tmpdir)
+
+
+def test_broadcasted_array(tmpdir):
+    attrs = np.broadcast_arrays(np.array([10,20]), np.array(10), np.array(10))
+    tree = {'one': attrs[1] }#, 'two': attrs[1], 'three': attrs[2]}
+    helpers.assert_roundtrip_tree(tree, tmpdir)

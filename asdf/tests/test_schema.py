@@ -25,9 +25,6 @@ from asdf import yamlutil
 from asdf.tests import helpers
 
 
-TEST_DATA_PATH = os.path.join(os.path.dirname(__file__), 'data')
-
-
 class CustomExtension:
     """
     This is the base class that is used for extensions for custom tag
@@ -45,7 +42,7 @@ class CustomExtension:
     @property
     def url_mapping(self):
         return [('http://nowhere.org/schemas/custom/',
-                 util.filepath_to_url(TEST_DATA_PATH) +
+                 util.filepath_to_url(helpers.get_test_data_path('')) +
                  '/{url_suffix}.yaml')]
 
 
@@ -95,7 +92,7 @@ def test_read_json_schema():
     This was known to fail on Python 3.5 See issue #314 at
     https://github.com/spacetelescope/asdf/issues/314 for more details.
     """
-    json_schema = os.path.join(TEST_DATA_PATH, 'example_schema.json')
+    json_schema = helpers.get_test_data_path('example_schema.json')
     schema_tree = schema.load_schema(json_schema, resolve_references=True)
     schema.check_schema(schema_tree)
 
@@ -443,7 +440,7 @@ custom: !<tag:nowhere.org:custom/foreign_tag_reference-1.0.0>
 def test_self_reference_resolution():
     r = resolver.Resolver(CustomExtension().url_mapping, 'url')
     s = schema.load_schema(
-        os.path.join(TEST_DATA_PATH, 'self_referencing-1.0.0.yaml'),
+        helpers.get_test_data_path('self_referencing-1.0.0.yaml'),
         resolver=r,
         resolve_references=True)
     assert '$ref' not in repr(s)
@@ -536,7 +533,7 @@ def test_assert_roundtrip_with_extension(tmpdir):
 
 
 def test_custom_validation_bad(tmpdir):
-    custom_schema_path = os.path.join(TEST_DATA_PATH, 'custom_schema.yaml')
+    custom_schema_path = helpers.get_test_data_path('custom_schema.yaml')
     asdf_file = os.path.join(str(tmpdir), 'out.asdf')
 
     # This tree does not conform to the custom schema
@@ -562,7 +559,7 @@ def test_custom_validation_bad(tmpdir):
 
 
 def test_custom_validation_good(tmpdir):
-    custom_schema_path = os.path.join(TEST_DATA_PATH, 'custom_schema.yaml')
+    custom_schema_path = helpers.get_test_data_path('custom_schema.yaml')
     asdf_file = os.path.join(str(tmpdir), 'out.asdf')
 
     # This tree conforms to the custom schema
@@ -576,3 +573,47 @@ def test_custom_validation_good(tmpdir):
 
     with asdf.open(asdf_file, custom_schema=custom_schema_path) as ff:
         pass
+
+
+def test_custom_validation_with_definitions_good(tmpdir):
+    custom_schema_path = helpers.get_test_data_path('custom_schema_definitions.yaml')
+    asdf_file = os.path.join(str(tmpdir), 'out.asdf')
+
+    # This tree conforms to the custom schema
+    tree = {
+        'thing': { 'biz': 'hello', 'baz': 'world' }
+    }
+
+    with asdf.AsdfFile(tree, custom_schema=custom_schema_path) as ff:
+        ff.write_to(asdf_file)
+
+    with asdf.open(asdf_file, custom_schema=custom_schema_path) as ff:
+        pass
+
+
+def test_custom_validation_with_definitions_bad(tmpdir):
+    custom_schema_path = helpers.get_test_data_path('custom_schema_definitions.yaml')
+    asdf_file = os.path.join(str(tmpdir), 'out.asdf')
+
+    # This tree does NOT conform to the custom schema
+    tree = {
+        'forb': { 'biz': 'hello', 'baz': 'world' }
+    }
+
+    # Creating file without custom schema should pass
+    with asdf.AsdfFile(tree) as ff:
+        ff.write_to(asdf_file)
+
+    # Creating file with custom schema should fail
+    with pytest.raises(ValidationError):
+        with asdf.AsdfFile(tree, custom_schema=custom_schema_path) as ff:
+            pass
+
+    # Opening file without custom schema should pass
+    with asdf.open(asdf_file) as ff:
+        pass
+
+    # Opening file with custom schema should fail
+    with pytest.raises(ValidationError):
+        with asdf.open(asdf_file, custom_schema=custom_schema_path) as ff:
+            pass

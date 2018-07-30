@@ -107,7 +107,11 @@ def _array_tofile_simple(fd, write, array):
 
 if sys.platform == 'darwin':  # pragma: no cover
     def _array_tofile(fd, write, array):
-        OSX_WRITE_LIMIT = 2 ** 32
+        # This value is currently set as a workaround for a known bug in Python
+        # on OSX. Individual writes must be less than 2GB, which necessitates
+        # the chunk size here if we want it to remain a power of 2.
+        # See https://bugs.python.org/issue24658.
+        OSX_WRITE_LIMIT = 2 ** 30
         if fd is None or array.nbytes >= OSX_WRITE_LIMIT and array.nbytes % 4096 == 0:
             return _array_tofile_chunked(write, array, OSX_WRITE_LIMIT)
         return _array_tofile_simple(fd, write, array)
@@ -372,7 +376,7 @@ class GenericFile(object):
     """
 
     def write_array(self, array):
-        _array_tofile(None, self.write, array)
+        _array_tofile(None, self.write, np.ascontiguousarray(array))
 
     def seek(self, offset, whence=0):
         """
@@ -751,7 +755,7 @@ class RealFile(RandomAccessFile):
             arr.flush()
             self.fast_forward(len(arr.data))
         else:
-            _array_tofile(self._fd, self._fd.write, arr)
+            _array_tofile(self._fd, self._fd.write, np.ascontiguousarray(arr))
 
     def can_memmap(self):
         return True
