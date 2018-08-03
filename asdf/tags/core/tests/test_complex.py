@@ -14,7 +14,7 @@ a: !core/complex-1.0.0
     """
 
     buff = helpers.yaml_to_asdf(yaml)
-    with pytest.raises(ValueError):
+    with pytest.raises(asdf.ValidationError):
         with asdf.AsdfFile.open(buff):
             pass
 
