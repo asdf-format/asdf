@@ -28,7 +28,7 @@ a: !core/complex-1.0.0
 @pytest.mark.parametrize('valid', [
     '3+4j', '(3+4j)', '.3+4j', '3+.4j', '3e10+4j', '3e-10+4j', '3+4e10j',
     '3.0+4j', '3+4.0j', '3.0+4.0j', '3+4e-10j', '3+4J', '3+4i', '3+4I', 'inf',
-    'inf+infj', 'inf+infi', 'infj', 'infi', 'INFi', 'INFI', '3+infj', 'inf+4j'
+    'inf+infj', 'inf+infi', 'infj', 'infi', 'INFi', 'INFI', '3+infj', 'inf+4j',
 ])
 def test_valid_complex(valid):
     yaml = """
@@ -39,6 +39,22 @@ a: !core/complex-1.0.0
     buff = helpers.yaml_to_asdf(yaml)
     with asdf.AsdfFile.open(buff) as af:
         assert af.tree['a'] == complex(re.sub(r'[iI]$', r'j', valid))
+
+
+@pytest.mark.parametrize('valid', [
+    'nan', 'nan+nanj', 'nan+nani', 'nanj', 'nani', 'NANi', 'NANI', '3+nanj',
+    'nan+4j'
+])
+def test_valid_nan_complex(valid):
+    yaml = """
+a: !core/complex-1.0.0
+  {}
+    """.format(valid)
+
+    buff = helpers.yaml_to_asdf(yaml)
+    with asdf.AsdfFile.open(buff) as af:
+        # Don't compare values since NANs are never equal
+        pass
 
 
 def test_roundtrip(tmpdir):
