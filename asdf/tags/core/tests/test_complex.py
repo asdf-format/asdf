@@ -9,19 +9,23 @@ import asdf
 from asdf.tests import helpers
 
 
+def make_complex_asdf(string):
+    yaml = """
+a: !core/complex-1.0.0
+  {}
+    """.format(string)
+
+    return helpers.yaml_to_asdf(yaml)
+
+
 @pytest.mark.parametrize('invalid', [
     '3 + 4i', '3+-4i', '3-+4i', '3i+4i', 'X3+4iX', '3+X4i', '3+4', '3i+4'
     '3+4z', '3.+4i', '3+4.i', '3e-4.0+4i', '3+4e4.0i', ''
 ])
 def test_invalid_complex(invalid):
-    yaml = """
-a: !core/complex-1.0.0
-  {}
-    """.format(invalid)
 
-    buff = helpers.yaml_to_asdf(yaml)
     with pytest.raises(asdf.ValidationError):
-        with asdf.AsdfFile.open(buff):
+        with asdf.AsdfFile.open(make_complex_asdf(invalid)):
             pass
 
 
@@ -31,13 +35,8 @@ a: !core/complex-1.0.0
     'inf+infj', 'inf+infi', 'infj', 'infi', 'INFi', 'INFI', '3+infj', 'inf+4j',
 ])
 def test_valid_complex(valid):
-    yaml = """
-a: !core/complex-1.0.0
-  {}
-    """.format(valid)
 
-    buff = helpers.yaml_to_asdf(yaml)
-    with asdf.AsdfFile.open(buff) as af:
+    with asdf.AsdfFile.open(make_complex_asdf(valid)) as af:
         assert af.tree['a'] == complex(re.sub(r'[iI]$', r'j', valid))
 
 
@@ -46,13 +45,8 @@ a: !core/complex-1.0.0
     'nan+4j'
 ])
 def test_valid_nan_complex(valid):
-    yaml = """
-a: !core/complex-1.0.0
-  {}
-    """.format(valid)
 
-    buff = helpers.yaml_to_asdf(yaml)
-    with asdf.AsdfFile.open(buff) as af:
+    with asdf.AsdfFile.open(make_complex_asdf(valid)) as af:
         # Don't compare values since NANs are never equal
         pass
 
