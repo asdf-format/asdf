@@ -5,6 +5,12 @@
 
 - Store ASDF-in-FITS data inside a 1x1 BINTABLE HDU. [#519]
 
+2.0.3 (unreleased)
+------------------
+
+- Update asdf-standard to reflect more stringent (and, consequently, more
+  correct) requirements on the formatting of complex numbers. [#526]
+
 2.0.2 (2018-07-27)
 ------------------
 
