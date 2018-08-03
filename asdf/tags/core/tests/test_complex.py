@@ -7,11 +7,14 @@ import asdf
 from asdf.tests import helpers
 
 
-def test_invalid_complex():
+@pytest.mark.parametrize('invalid', [
+    '3 + 4i', '3+-4i', '3-+4i', '3i+4i', 'X3+4iX', '3+X4i'
+])
+def test_invalid_complex(invalid):
     yaml = """
 a: !core/complex-1.0.0
-  3 + 4i
-    """
+  {}
+    """.format(invalid)
 
     buff = helpers.yaml_to_asdf(yaml)
     with pytest.raises(asdf.ValidationError):
