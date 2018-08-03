@@ -8,7 +8,8 @@ from asdf.tests import helpers
 
 
 @pytest.mark.parametrize('invalid', [
-    '3 + 4i', '3+-4i', '3-+4i', '3i+4i', 'X3+4iX', '3+X4i'
+    '3 + 4i', '3+-4i', '3-+4i', '3i+4i', 'X3+4iX', '3+X4i', '3+4', '3i+4'
+    '3+4z', '3.+4i', '3+4.i', '3e-4.0+4i', '3+4e4.0i', ''
 ])
 def test_invalid_complex(invalid):
     yaml = """
