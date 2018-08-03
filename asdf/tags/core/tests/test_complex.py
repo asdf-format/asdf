@@ -1,6 +1,8 @@
 # Licensed under a 3-clause BSD style license - see LICENSE.rst
 # -*- coding: utf-8 -*-
 
+import re
+
 import pytest
 
 import asdf
@@ -21,6 +23,21 @@ a: !core/complex-1.0.0
     with pytest.raises(asdf.ValidationError):
         with asdf.AsdfFile.open(buff):
             pass
+
+
+@pytest.mark.parametrize('valid', [
+    '3+4j', '(3+4j)', '.3+4j', '3+.4j', '3e10+4j', '3e-10+4j', '3+4e10j',
+    '3.0+4j', '3+4.0j', '3.0+4.0j', '3+4e-10j', '3+4J', '3+4i', '3+4I'
+])
+def test_valid_complex(valid):
+    yaml = """
+a: !core/complex-1.0.0
+  {}
+    """.format(valid)
+
+    buff = helpers.yaml_to_asdf(yaml)
+    with asdf.AsdfFile.open(buff) as af:
+        assert af.tree['a'] == complex(re.sub(r'[iI]', r'j', valid))
 
 
 def test_roundtrip(tmpdir):
