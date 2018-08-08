@@ -22,6 +22,7 @@ env:
         # overidden underneath. They are defined here in order to save having
         # to repeat them for all configurations.
         - PYTHON_VERSION=3.6
+        - PYTEST_VERSION=3.6
         - ASTROPY_VERSION=stable
         - NUMPY_VERSION=stable
         - PIP_DEPENDENCIES='pytest-faulthandler importlib_resources'
