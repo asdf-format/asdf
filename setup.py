@@ -71,7 +71,7 @@ setup(name=PACKAGE_NAME,
       install_requires=[
           'semantic_version>=2.3.1',
           'pyyaml>=3.10',
-          'jsonschema>=2.3.0',
+          'jsonschema>=2.3,<=2.6',
           'six>=1.9.0',
           'numpy>=1.8',
       ] + extras_require,
