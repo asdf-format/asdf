@@ -70,8 +70,12 @@ matrix:
         - os: osx
           env: NUMPY_VERSION=stable SETUP_CMD='test'
 
+        # Test against latest version of jsonschema
+        - env: PIP_DEPENDENCIES='jsonschema pytest-faulthandler importlib_resources'
+
     allow_failures:
         - env: NUMPY_VERSION=development SETUP_CMD='test'
+        - env: PIP_DEPENDENCIES='jsonschema pytest-faulthandler importlib_resources'
 
 install:
     - git clone git://github.com/astropy/ci-helpers.git
