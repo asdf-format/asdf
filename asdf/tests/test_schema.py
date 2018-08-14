@@ -494,6 +494,41 @@ def test_large_literals():
         print(buff.getvalue())
 
 
+def test_nested_array():
+    s = {
+        'type': 'object',
+        'properties':  {
+            'stuff': {
+                'type': 'array',
+                'items': {
+                    'type': 'array',
+                    'items': [
+                        { 'type': 'integer' },
+                        { 'type': 'string' },
+                        { 'type': 'number' },
+                    ],
+                    'minItems': 3,
+                    'maxItems': 3
+                }
+            }
+        }
+    }
+
+    good = dict(stuff=[[1, 'hello', 2], [4, 'world', 9.7]])
+    schema.validate(good, schema=s)
+
+    bads = [
+        dict(stuff=[12,'dldl']),
+        dict(stuff=[[12, 'dldl']]),
+        dict(stuff=[[1, 'hello', 2], [4, 5]]),
+        dict(stuff=[[1, 'hello', 2], [4, 5, 6]])
+    ]
+
+    for b in bads:
+        with pytest.raises(ValidationError):
+            schema.validate(b, schema=s)
+
+
 @pytest.mark.importorskip('astropy')
 def test_type_missing_dependencies():
 
