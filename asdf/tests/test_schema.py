@@ -494,6 +494,82 @@ def test_large_literals():
         print(buff.getvalue())
 
 
+def test_nested_array():
+    s = {
+        'type': 'object',
+        'properties':  {
+            'stuff': {
+                'type': 'array',
+                'items': {
+                    'type': 'array',
+                    'items': [
+                        { 'type': 'integer' },
+                        { 'type': 'string' },
+                        { 'type': 'number' },
+                    ],
+                    'minItems': 3,
+                    'maxItems': 3
+                }
+            }
+        }
+    }
+
+    good = dict(stuff=[[1, 'hello', 2], [4, 'world', 9.7]])
+    schema.validate(good, schema=s)
+
+    bads = [
+        dict(stuff=[[1, 2, 3]]),
+        dict(stuff=[12,'dldl']),
+        dict(stuff=[[12, 'dldl']]),
+        dict(stuff=[[1, 'hello', 2], [4, 5]]),
+        dict(stuff=[[1, 'hello', 2], [4, 5, 6]])
+    ]
+
+    for b in bads:
+        with pytest.raises(ValidationError):
+            schema.validate(b, schema=s)
+
+
+def test_nested_array_yaml(tmpdir):
+    schema_def = """
+%YAML 1.1
+---
+type: object
+properties:
+  stuff:
+    type: array
+    items:
+      type: array
+      items:
+        - type: integer
+        - type: string
+        - type: number
+      minItems: 3
+      maxItems: 3
+...
+    """
+    schema_path = tmpdir.join('nested.yaml')
+    schema_path.write(schema_def.encode())
+
+    schema_tree = schema.load_schema(str(schema_path))
+    schema.check_schema(schema_tree)
+
+    good = dict(stuff=[[1, 'hello', 2], [4, 'world', 9.7]])
+    schema.validate(good, schema=schema_tree)
+
+    bads = [
+        dict(stuff=[[1, 2, 3]]),
+        dict(stuff=[12,'dldl']),
+        dict(stuff=[[12, 'dldl']]),
+        dict(stuff=[[1, 'hello', 2], [4, 5]]),
+        dict(stuff=[[1, 'hello', 2], [4, 5, 6]])
+    ]
+
+    for b in bads:
+        with pytest.raises(ValidationError):
+            schema.validate(b, schema=schema_tree)
+
+
 @pytest.mark.importorskip('astropy')
 def test_type_missing_dependencies():
 
