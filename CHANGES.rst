@@ -11,6 +11,8 @@
 - Update asdf-standard to reflect more stringent (and, consequently, more
   correct) requirements on the formatting of complex numbers. [#526]
 
+- Fix bug with dangling file handle when using ASDF-in-FITS. [#533]
+
 2.0.2 (2018-07-27)
 ------------------
 

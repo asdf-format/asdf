@@ -1126,7 +1126,7 @@ class Block(object):
                 self._data.flush()
             if self._data._mmap is not None:
                 self._data._mmap.close()
-            self._data = None
+        self._data = None
 
 
 class UnloadedBlock(object):
