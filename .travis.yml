@@ -51,6 +51,9 @@ matrix:
         # may run for a long time
         - env: SETUP_CMD='build_docs -w'
 
+        # Do a code style check
+        - env: MAIN_CMD="flake8 asdf --count" SETUP_CMD=''
+
         # try older numpy versions
         - env: PYTHON_VERSION=3.5 NUMPY_VERSION=1.11 SETUP_CMD='test'
         - env: NUMPY_VERSION=1.12 SETUP_CMD='test'

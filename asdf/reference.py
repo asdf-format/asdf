@@ -97,7 +97,7 @@ class Reference(AsdfType):
             return None
         try:
             return getattr(self._get_target(), attr)
-        except:
+        except Exception:
             raise AttributeError("No attribute '{0}'".format(attr))
 
     def __getitem__(self, item):
