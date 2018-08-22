@@ -97,7 +97,7 @@ def test_old_history(tmpdir):
     """Make sure that old versions of the history format are still accepted"""
 
     yaml = """
-history: 
+history:
   - !core/history_entry-1.0.0
     description: "Here's a test of old history entries"
     software: !core/software-1.0.0
