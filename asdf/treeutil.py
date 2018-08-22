@@ -134,8 +134,13 @@ def walk_and_modify(top, callback):
                 result = tag_object(tree._tag, result)
         elif isinstance(tree, (list, tuple)):
             seen.add(id_tree)
-            result = tree.__class__(
-                [recurse(val) for val in tree])
+            contents = [recurse(val) for val in tree]
+            try:
+                result = tree.__class__(contents)
+            except TypeError:
+                # the derived class' signature is different
+                # erase the type
+                result = contents
             seen.remove(id_tree)
             if hasattr(tree, '_tag'):
                 result = tag_object(tree._tag, result)
@@ -166,8 +171,13 @@ def walk_and_modify(top, callback):
                 result = tag_object(tree._tag, result)
         elif isinstance(tree, (list, tuple)):
             seen.add(id_tree)
-            result = tree.__class__(
-                [recurse_with_json_ids(val, json_id) for val in tree])
+            contents = [recurse_with_json_ids(val, json_id) for val in tree]
+            try:
+                result = tree.__class__(contents)
+            except TypeError:
+                # the derived class' signature is different
+                # erase the type
+                result = contents
             seen.remove(id_tree)
             if hasattr(tree, '_tag'):
                 result = tag_object(tree._tag, result)
