@@ -36,7 +36,7 @@ def get_version_map(version):
             with generic_io.get_file(version_map_path, 'r') as fd:
                 version_map = yaml.load(
                     fd, Loader=_yaml_base_loader)
-        except:
+        except Exception:
             raise ValueError(
                 "Could not load version map for version {0}".format(version))
         _version_map[version] = version_map

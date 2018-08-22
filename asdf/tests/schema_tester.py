@@ -168,7 +168,7 @@ class AsdfSchemaExampleItem(pytest.Item):
                 ff._open_impl(ff, buff)
             # Do not tolerate any warnings that occur during schema validation
             assert len(w) == 0, helpers.display_warnings(w)
-        except:
+        except Exception:
             print("From file:", self.filename)
             raise
 
