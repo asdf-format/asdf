@@ -1213,7 +1213,7 @@ class AsdfFile(versioning.VersionedMixin):
 
         try:
             self.validate()
-        except:
+        except Exception:
             self.tree['history']['entries'].pop()
             raise
 

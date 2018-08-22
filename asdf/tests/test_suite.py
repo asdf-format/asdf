@@ -66,7 +66,7 @@ def test_reference_file(reference_file):
 
     try:
         _compare_trees(name_without_ext, expect_warnings=expect_warnings)
-    except:
+    except Exception:
         if known_fail:
             pytest.xfail()
         else:
