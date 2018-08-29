@@ -5,6 +5,7 @@ Utility functions for managing tree-like data structures.
 """
 
 import inspect
+import warnings
 
 from .tagged import tag_object
 
@@ -80,7 +81,7 @@ def iter_tree(top):
     return recurse(top)
 
 
-def walk_and_modify(top, callback):
+def walk_and_modify(top, callback, ignore_implicit_conversion=False):
     """Modify a tree by walking it with a callback function.  It also has
     the effect of doing a deep copy.
 
@@ -104,6 +105,13 @@ def walk_and_modify(top, callback):
 
         The callback is called on an instance after all of its
         children have been visited (depth-first order).
+
+    ignore_implicit_conversion : bool
+        Controls whether warnings should be issued when implicitly converting a
+        given type instance in the tree into a serializable object. The primary
+        case for this is currently `namedtuple`.
+
+        Defaults to `False`.
 
     Returns
     -------
@@ -134,8 +142,13 @@ def walk_and_modify(top, callback):
                 result = tag_object(tree._tag, result)
         elif isinstance(tree, (list, tuple)):
             seen.add(id_tree)
-            result = tree.__class__(
-                [recurse(val) for val in tree])
+            contents = [recurse(val) for val in tree]
+            try:
+                result = tree.__class__(contents)
+            except TypeError:
+                # the derived class' signature is different
+                # erase the type
+                result = contents
             seen.remove(id_tree)
             if hasattr(tree, '_tag'):
                 result = tag_object(tree._tag, result)
@@ -166,8 +179,17 @@ def walk_and_modify(top, callback):
                 result = tag_object(tree._tag, result)
         elif isinstance(tree, (list, tuple)):
             seen.add(id_tree)
-            result = tree.__class__(
-                [recurse_with_json_ids(val, json_id) for val in tree])
+            contents = [recurse_with_json_ids(val, json_id) for val in tree]
+            try:
+                result = tree.__class__(contents)
+            except TypeError:
+                # The derived class signature is different, so simply store the
+                # list representing the contents. Currently this is primarly
+                # intended to handle namedtuple and NamedTuple instances.
+                if not ignore_implicit_conversion:
+                    msg = "Failed to serialize instance of {}, converting to list instead"
+                    warnings.warn(msg.format(type(tree)))
+                result = contents
             seen.remove(id_tree)
             if hasattr(tree, '_tag'):
                 result = tag_object(tree._tag, result)

@@ -49,8 +49,9 @@ class AsdfFile(versioning.VersionedMixin):
     The main class that represents an ASDF file object.
     """
     def __init__(self, tree=None, uri=None, extensions=None, version=None,
-        ignore_version_mismatch=True, ignore_unrecognized_tag=False,
-        copy_arrays=False, custom_schema=None):
+                 ignore_version_mismatch=True, ignore_unrecognized_tag=False,
+                 ignore_implicit_conversion=False, copy_arrays=False,
+                 custom_schema=None):
         """
         Parameters
         ----------
@@ -81,6 +82,12 @@ class AsdfFile(versioning.VersionedMixin):
             When `True`, do not raise warnings for unrecognized tags. Set to
             `False` by default.
 
+        ignore_implicit_conversion : bool
+            When `True`, do not raise warnings when types in the tree are
+            implicitly converted into a serializable object. The motivating
+            case for this is currently `namedtuple`, which cannot be serialized
+            as-is.
+
         copy_arrays : bool, optional
             When `False`, when reading files, attempt to memmap underlying data
             arrays when possible.
@@ -90,6 +97,7 @@ class AsdfFile(versioning.VersionedMixin):
             validation pass. This can be used to ensure that particular ASDF
             files follow custom conventions beyond those enforced by the
             standard.
+
         """
 
         if custom_schema is not None:
@@ -104,6 +112,7 @@ class AsdfFile(versioning.VersionedMixin):
         self._process_extensions(extensions)
         self._ignore_version_mismatch = ignore_version_mismatch
         self._ignore_unrecognized_tag = ignore_unrecognized_tag
+        self._ignore_implicit_conversion = ignore_implicit_conversion
 
         self._file_format_version = None
 
@@ -1068,9 +1077,12 @@ class AsdfFile(versioning.VersionedMixin):
         Finds all external "JSON References" in the tree and converts
         them to `reference.Reference` objects.
         """
-        # Set directly to self._tree, since it doesn't need to be
-        # re-validated.
-        self._tree = reference.find_references(self._tree, self)
+        # Since this is the first place that the tree is processed when
+        # creating a new ASDF object, this is where we pass the option to
+        # ignore warnings about implicit type conversions.
+        # Set directly to self._tree, since it doesn't need to be re-validated.
+        self._tree = reference.find_references(self._tree, self,
+                ignore_implicit_conversion=self._ignore_implicit_conversion)
 
     def resolve_references(self, do_not_fill_defaults=False):
         """

@@ -5,6 +5,8 @@
 
 - Store ASDF-in-FITS data inside a 1x1 BINTABLE HDU. [#519]
 
+- Allow implicit conversion of ``namedtuple`` into serializable types. [#534]
+
 2.0.3 (unreleased)
 ------------------
 

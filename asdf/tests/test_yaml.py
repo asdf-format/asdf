@@ -2,7 +2,8 @@
 # -*- coding: utf-8 -*-
 
 import io
-from collections import OrderedDict
+from collections import namedtuple, OrderedDict
+from typing import NamedTuple
 
 import numpy as np
 
@@ -88,6 +89,21 @@ def test_arbitrary_python_object():
         ff.write_to(buff)
 
 
+def run_tuple_test(tree, tmpdir):
+    def check_asdf(asdf):
+        assert isinstance(asdf.tree['val'], list)
+
+    def check_raw_yaml(content):
+        assert b'tuple' not in content
+
+    # Ignore these warnings for the tests that don't actually test the warning
+    init_options = dict(ignore_implicit_conversion=True)
+
+    helpers.assert_roundtrip_tree(tree, tmpdir, asdf_check_func=check_asdf,
+                                  raw_yaml_check_func=check_raw_yaml,
+                                  init_options=init_options)
+
+
 def test_python_tuple(tmpdir):
     # We don't want to store tuples as tuples, because that's not a
     # built-in YAML data type.  This test ensures that they are
@@ -97,14 +113,77 @@ def test_python_tuple(tmpdir):
         "val": (1, 2, 3)
     }
 
+    run_tuple_test(tree, tmpdir)
+
+
+def test_named_tuple_collections(tmpdir):
+    # Ensure that we are able to serialize a collections.namedtuple.
+
+    nt = namedtuple("TestNamedTuple1", ("one", "two", "three"))
+
+    tree = {
+        "val": nt(1, 2, 3)
+    }
+
+    run_tuple_test(tree, tmpdir)
+
+def test_named_tuple_typing(tmpdir):
+    # Ensure that we are able to serialize a typing.NamedTuple.
+
+    nt = NamedTuple("TestNamedTuple2",
+                    (("one", int), ("two", int), ("three", int)))
+    tree = {
+        "val": nt(1, 2, 3)
+    }
+
+    run_tuple_test(tree, tmpdir)
+
+
+def test_named_tuple_collections_recursive(tmpdir):
+    nt = namedtuple("TestNamedTuple3", ("one", "two", "three"))
+
+    tree = {
+        "val": nt(1, 2, np.ones(3))
+    }
+
     def check_asdf(asdf):
-        assert isinstance(asdf.tree['val'], list)
+        assert (asdf.tree['val'][2] == np.ones(3)).all()
 
-    def check_raw_yaml(content):
-        assert b'tuple' not in content
-
+    init_options = dict(ignore_implicit_conversion=True)
     helpers.assert_roundtrip_tree(tree, tmpdir, asdf_check_func=check_asdf,
-                                  raw_yaml_check_func=check_raw_yaml)
+                                  init_options=init_options)
+
+
+def test_named_tuple_typing_recursive(tmpdir):
+    nt = NamedTuple("TestNamedTuple4",
+                    (("one", int), ("two", int), ("three", np.ndarray)))
+
+    tree = {
+        "val": nt(1, 2, np.ones(3))
+    }
+
+    def check_asdf(asdf):
+        assert (asdf.tree['val'][2] == np.ones(3)).all()
+
+    init_options = dict(ignore_implicit_conversion=True)
+    helpers.assert_roundtrip_tree(tree, tmpdir, asdf_check_func=check_asdf,
+                                  init_options=init_options)
+
+
+def test_implicit_conversion_warning():
+    nt = namedtuple("TestTupleWarning", ("one", "two", "three"))
+
+    tree = {
+        "val": nt(1, 2, np.ones(3))
+    }
+
+    with pytest.warns(UserWarning, match="Failed to serialize instance"):
+        with asdf.AsdfFile(tree) as af:
+            pass
+
+    with pytest.warns(None) as w:
+        with asdf.AsdfFile(tree, ignore_implicit_conversion=True) as af:
+            assert len(w) == 0
 
 
 def test_tags_removed_after_load(tmpdir):
