@@ -5,6 +5,7 @@ Utility functions for managing tree-like data structures.
 """
 
 import inspect
+import warnings
 
 from .tagged import tag_object
 
@@ -175,8 +176,11 @@ def walk_and_modify(top, callback):
             try:
                 result = tree.__class__(contents)
             except TypeError:
-                # the derived class' signature is different
-                # erase the type
+                # The derived class signature is different, so simply store the
+                # list representing the contents. Currently this is primarly
+                # intended to handle namedtuple and NamedTuple instances.
+                msg = "Failed to serialize instance of {}, converting to list instead"
+                warnings.warn(msg.format(type(tree)))
                 result = contents
             seen.remove(id_tree)
             if hasattr(tree, '_tag'):
