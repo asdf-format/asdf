@@ -19,6 +19,7 @@ from semantic_version import Version, SpecItem, Spec
 from . import generic_io
 from . import resolver
 from . import util
+from .version import version as asdf_version
 
 
 __all__ = ['AsdfVersion', 'AsdfSpec']
@@ -154,8 +155,9 @@ class VersionedMixin(object):
             human_versions = util.human_list(
                 [str(x) for x in supported_versions])
             raise ValueError(
-                "asdf only understands how to handle ASDF versions {0}. "
-                "Got '{1}'".format(human_versions, version))
+                "This version of the asdf package ({0}) only understands how "
+                "to handle versions {1} of the ASDF Standard. Got "
+                "'{2}'".format(asdf_version, human_versions, version))
 
         self._version = version
 
