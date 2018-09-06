@@ -15,6 +15,9 @@
 
 - Fix bug with dangling file handle when using ASDF-in-FITS. [#533]
 
+- Fix bug that prevented fortran-order arrays from being serialized properly.
+  [#539]
+
 2.0.2 (2018-07-27)
 ------------------
 

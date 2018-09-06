@@ -809,3 +809,9 @@ def test_broadcasted_array(tmpdir):
     attrs = np.broadcast_arrays(np.array([10,20]), np.array(10), np.array(10))
     tree = {'one': attrs[1] }#, 'two': attrs[1], 'three': attrs[2]}
     helpers.assert_roundtrip_tree(tree, tmpdir)
+
+
+def test_fortran_order(tmpdir):
+    array = np.array([[11,12,13], [21,22,23]], order='F')
+    tree = dict(data=array)
+    helpers.assert_roundtrip_tree(tree, tmpdir)

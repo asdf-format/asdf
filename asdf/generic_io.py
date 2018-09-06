@@ -376,7 +376,7 @@ class GenericFile(object):
     """
 
     def write_array(self, array):
-        _array_tofile(None, self.write, np.ascontiguousarray(array))
+        _array_tofile(None, self.write, array.ravel(order='A'))
 
     def seek(self, offset, whence=0):
         """
@@ -755,7 +755,7 @@ class RealFile(RandomAccessFile):
             arr.flush()
             self.fast_forward(len(arr.data))
         else:
-            _array_tofile(self._fd, self._fd.write, np.ascontiguousarray(arr))
+            _array_tofile(self._fd, self._fd.write, arr.ravel(order='A'))
 
     def can_memmap(self):
         return True
