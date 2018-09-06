@@ -1,4 +1,4 @@
-2.0.3 (unreleased)
+2.0.3 (2018-09-06)
 ------------------
 
 - Update asdf-standard to reflect more stringent (and, consequently, more
