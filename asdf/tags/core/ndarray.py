@@ -370,7 +370,7 @@ class NDArrayType(AsdfType):
             strides = node.get('strides', None)
             mask = node.get('mask', None)
 
-            return cls(source, shape, dtype, offset, strides, 'C', mask, ctx)
+            return cls(source, shape, dtype, offset, strides, 'A', mask, ctx)
 
         raise TypeError("Invalid ndarray description.")
 

@@ -1,3 +1,14 @@
+2.0.3 (2018-09-06)
+------------------
+
+- Update asdf-standard to reflect more stringent (and, consequently, more
+  correct) requirements on the formatting of complex numbers. [#526]
+
+- Fix bug with dangling file handle when using ASDF-in-FITS. [#533]
+
+- Fix bug that prevented fortran-order arrays from being serialized properly.
+  [#539]
+
 2.0.2 (2018-07-27)
 ------------------
 

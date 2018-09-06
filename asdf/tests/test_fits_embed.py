@@ -377,3 +377,37 @@ def test_extension_check():
     with pytest.raises(RuntimeError):
         with asdf.AsdfFile.open(testfile, strict_extension_check=True) as ff:
             pass
+
+def test_dangling_file_handle(tmpdir):
+    """
+    This tests the bug fix introduced in #533. Without the bug fix, this test
+    will fail when running the test suite with pytest-openfiles.
+    """
+    import gc
+
+    fits_filename = str(tmpdir.join('dangling.fits'))
+
+    # Create FITS file to use for test
+    hdulist = fits.HDUList()
+    hdulist.append(fits.ImageHDU(np.arange(512, dtype=np.float)))
+    hdulist.append(fits.ImageHDU(np.arange(512, dtype=np.float)))
+    hdulist.append(fits.ImageHDU(np.arange(512, dtype=np.float)))
+    hdulist.writeto(fits_filename)
+    hdulist.close()
+
+    hdul = fits.open(fits_filename)
+    gc.collect()
+
+    ctx = asdf.AsdfFile()
+    gc.collect()
+
+    ctx.blocks.find_or_create_block_for_array(hdul[0].data, ctx)
+    gc.collect()
+
+    hdul.close()
+    gc.collect()
+
+    ctx.close()
+    gc.collect()
+
+    del ctx

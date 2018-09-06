@@ -764,7 +764,10 @@ class Block(object):
 
     def __init__(self, data=None, uri=None, array_storage='internal', memmap=True):
         if isinstance(data, np.ndarray) and not data.flags.c_contiguous:
-            self._data = np.ascontiguousarray(data)
+            if data.flags.f_contiguous:
+                self._data = np.asfortranarray(data)
+            else:
+                self._data = np.ascontiguousarray(data)
         else:
             self._data = data
         self._uri = uri
@@ -867,7 +870,7 @@ class Block(object):
 
     def _calculate_checksum(self, data):
         m = hashlib.new('md5')
-        m.update(self.data)
+        m.update(self.data.flatten())
         return m.digest()
 
     def validate_checksum(self):
@@ -1126,7 +1129,7 @@ class Block(object):
                 self._data.flush()
             if self._data._mmap is not None:
                 self._data._mmap.close()
-            self._data = None
+        self._data = None
 
 
 class UnloadedBlock(object):

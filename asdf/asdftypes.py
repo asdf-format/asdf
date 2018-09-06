@@ -148,7 +148,7 @@ class _AsdfWriteTypeIndex(object):
                 self._type_by_name[name] = asdftype
                 add_all_types(asdftype)
 
-        # Process all types defined in the ASDF version map 
+        # Process all types defined in the ASDF version map
         for name, _version in version_map.items():
             add_by_tag(name, AsdfVersion(_version))
 

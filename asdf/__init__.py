@@ -42,10 +42,6 @@ from .tags.core.external_reference import ExternalArrayReference
 
 from jsonschema import ValidationError
 
-# TODO: there doesn't seem to be any reason to redefine this here
-class ValidationError(ValidationError):
-    pass
-
 try:
     from astropy.io import fits
 except ImportError:
