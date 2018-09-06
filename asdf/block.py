@@ -870,7 +870,7 @@ class Block(object):
 
     def _calculate_checksum(self, data):
         m = hashlib.new('md5')
-        m.update(np.ascontiguousarray(self.data))
+        m.update(self.data.flatten())
         return m.digest()
 
     def validate_checksum(self):
