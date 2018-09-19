@@ -57,6 +57,8 @@ def test_embed_asdf_in_fits_file(tmpdir, backwards_compat):
     hdulist = fits.HDUList()
     hdulist.append(fits.ImageHDU(np.arange(512, dtype=np.float), name='SCI'))
     hdulist.append(fits.ImageHDU(np.arange(512, dtype=np.float), name='DQ'))
+    # Test a name with underscores to make sure it works
+    hdulist.append(fits.ImageHDU(np.arange(512, dtype=np.float), name='WITH_UNDERSCORE'))
 
     tree = {
         'model': {
@@ -67,6 +69,10 @@ def test_embed_asdf_in_fits_file(tmpdir, backwards_compat):
             'dq': {
                 'data': hdulist['DQ'].data,
                 'wcs': 'WCS info'
+            },
+            'with_underscore': {
+                'data': hdulist['WITH_UNDERSCORE'].data,
+                'wcs': 'WCS info'
             }
         }
     }
@@ -75,8 +81,8 @@ def test_embed_asdf_in_fits_file(tmpdir, backwards_compat):
     ff.write_to(fits_testfile, use_image_hdu=backwards_compat)
 
     with fits.open(fits_testfile) as hdulist2:
-        assert len(hdulist2) == 3
-        assert [x.name for x in hdulist2] == ['SCI', 'DQ', 'ASDF']
+        assert len(hdulist2) == 4
+        assert [x.name for x in hdulist2] == ['SCI', 'DQ', 'WITH_UNDERSCORE', 'ASDF']
         assert_array_equal(hdulist2[0].data, np.arange(512, dtype=np.float))
         asdf_hdu = hdulist2['ASDF']
         assert asdf_hdu.data.tostring().startswith(b'#ASDF')
