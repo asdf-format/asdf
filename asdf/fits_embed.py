@@ -60,7 +60,8 @@ class _EmbeddedBlockManager(block.BlockManager):
     def get_block(self, source):
         if (isinstance(source, str) and source.startswith(FITS_SOURCE_PREFIX)):
             parts = re.match(
-                '((?P<name>[A-Z0-9_]+),)?(?P<ver>[0-9]+)',
+                # All printable ASCII characters are allowed in EXTNAME
+                '((?P<name>[ -~]+),)?(?P<ver>[0-9]+)',
                 source[len(FITS_SOURCE_PREFIX):])
             if parts is not None:
                 ver = int(parts.group('ver'))
