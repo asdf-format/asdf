@@ -58,10 +58,9 @@ class _EmbeddedBlockManager(block.BlockManager):
         super(_EmbeddedBlockManager, self).__init__(asdffile)
 
     def get_block(self, source):
-        if (isinstance(source, str) and
-            source.startswith(FITS_SOURCE_PREFIX)):
+        if (isinstance(source, str) and source.startswith(FITS_SOURCE_PREFIX)):
             parts = re.match(
-                '((?P<name>[A-Z0-9]+),)?(?P<ver>[0-9]+)',
+                '((?P<name>[A-Z0-9_]+),)?(?P<ver>[0-9]+)',
                 source[len(FITS_SOURCE_PREFIX):])
             if parts is not None:
                 ver = int(parts.group('ver'))

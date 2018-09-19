@@ -7,6 +7,12 @@
 
 - Allow implicit conversion of ``namedtuple`` into serializable types. [#534]
 
+2.0.4 (unreleased)
+------------------
+
+- Fix bug that prevented use of ASDF-in-FITS with HDUs that have names with
+  underscores. [#543]
+
 2.0.3 (2018-09-06)
 ------------------
 
