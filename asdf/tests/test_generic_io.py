@@ -91,17 +91,15 @@ def test_open2(tree, tmpdir):
     path = os.path.join(str(tmpdir), 'test.asdf')
 
     def get_write_fd():
-        f = generic_io.get_file(open(path, 'wb'), mode='w')
+        f = generic_io.get_file(open(path, 'wb'), mode='w', close=True)
         assert isinstance(f, generic_io.RealFile)
         assert f._uri == util.filepath_to_url(path)
-        f._close = True
         return f
 
     def get_read_fd():
-        f = generic_io.get_file(open(path, 'rb'), mode='r')
+        f = generic_io.get_file(open(path, 'rb'), mode='r', close=True)
         assert isinstance(f, generic_io.RealFile)
         assert f._uri == util.filepath_to_url(path)
-        f._close = True
         return f
 
     with _roundtrip(tree, get_write_fd, get_read_fd) as ff:
@@ -151,17 +149,15 @@ def test_io_open(tree, tmpdir):
     path = os.path.join(str(tmpdir), 'test.asdf')
 
     def get_write_fd():
-        f = generic_io.get_file(io.open(path, 'wb'), mode='w')
+        f = generic_io.get_file(io.open(path, 'wb'), mode='w', close=True)
         assert isinstance(f, generic_io.RealFile)
         assert f._uri == util.filepath_to_url(path)
-        f._close = True
         return f
 
     def get_read_fd():
-        f = generic_io.get_file(io.open(path, 'r+b'), mode='rw')
+        f = generic_io.get_file(io.open(path, 'r+b'), mode='rw', close=True)
         assert isinstance(f, generic_io.RealFile)
         assert f._uri == util.filepath_to_url(path)
-        f._close = True
         return f
 
     with _roundtrip(tree, get_write_fd, get_read_fd) as ff:
