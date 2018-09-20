@@ -383,6 +383,9 @@ class AsdfFile(versioning.VersionedMixin):
         self._validate(asdf_object, custom=bool(tree))
         self._tree = asdf_object
 
+    def keys(self):
+        return self._tree.keys()
+
     def __getitem__(self, key):
         return self._tree[key]
 
@@ -1249,6 +1252,10 @@ class AsdfFile(versioning.VersionedMixin):
             return self.tree['history']['entries']
 
         return []
+
+
+# Inherit docstring from dictionary
+AsdfFile.keys.__doc__ = dict.keys.__doc__
 
 
 def is_asdf_file(fd):

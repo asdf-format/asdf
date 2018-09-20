@@ -7,6 +7,8 @@
 
 - Allow implicit conversion of ``namedtuple`` into serializable types. [#534]
 
+- Add top-level ``keys`` method to ``AsdfFile`` to access tree keys. [#545]
+
 2.0.4 (unreleased)
 ------------------
 

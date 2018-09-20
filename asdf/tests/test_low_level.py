@@ -1154,6 +1154,12 @@ def test_top_level_tree(small_tree):
     assert_tree_match(ff2.tree['tree'], ff2['tree'])
 
 
+def test_top_level_keys(small_tree):
+    tree = {'tree': small_tree}
+    ff = asdf.AsdfFile(tree)
+    assert ff.tree.keys() == ff.keys()
+
+
 def test_tag_to_schema_resolver_deprecation():
     ff = asdf.AsdfFile()
     with pytest.warns(AsdfDeprecationWarning):
