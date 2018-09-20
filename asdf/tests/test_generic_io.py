@@ -170,6 +170,22 @@ def test_io_open(tree, tmpdir):
         ff.tree['science_data'][0] = 42
 
 
+def test_close_underlying(tmpdir):
+    path = os.path.join(str(tmpdir), 'test.asdf')
+
+    with generic_io.get_file(open(path, 'wb'), mode='w') as ff:
+        pass
+
+    assert ff.is_closed() == True
+    assert ff._fd.closed == True
+
+    with generic_io.get_file(open(path)) as ff2:
+        pass
+
+    assert ff2.is_closed() == True
+    assert ff2._fd.closed == True
+
+
 def test_bytes_io(tree):
     buff = io.BytesIO()
 
