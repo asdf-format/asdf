@@ -173,13 +173,13 @@ def test_io_open(tree, tmpdir):
 def test_close_underlying(tmpdir):
     path = os.path.join(str(tmpdir), 'test.asdf')
 
-    with generic_io.get_file(open(path, 'wb'), mode='w') as ff:
+    with generic_io.get_file(open(path, 'wb'), mode='w', close=True) as ff:
         pass
 
     assert ff.is_closed() == True
     assert ff._fd.closed == True
 
-    with generic_io.get_file(open(path)) as ff2:
+    with generic_io.get_file(open(path, 'rb'), close=True) as ff2:
         pass
 
     assert ff2.is_closed() == True
