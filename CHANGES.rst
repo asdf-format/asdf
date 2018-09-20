@@ -7,6 +7,8 @@
 
 - Allow implicit conversion of ``namedtuple`` into serializable types. [#534]
 
+- Add option to ``generic_io.get_file`` to close underlying file handle. [#544]
+
 2.0.4 (unreleased)
 ------------------
 
