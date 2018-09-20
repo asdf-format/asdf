@@ -1104,7 +1104,7 @@ def get_uri(file_obj):
     return getattr(file_obj, 'name', '')
 
 
-def get_file(init, mode='r', uri=None):
+def get_file(init, mode='r', uri=None, close=False):
     """
     Returns a `GenericFile` instance suitable for wrapping the given
     object `init`.
@@ -1145,6 +1145,10 @@ def get_file(init, mode='r', uri=None):
         will be the uri), and it may be determined automatically if
         `init` refers to a regular filesystem file.  It is not required
         if URI resolution is not used in the file.
+
+    close : bool
+        If ``True``, closes the underlying file handle when this object is
+        closed. Defaults to ``False``.
 
     Returns
     -------
@@ -1209,16 +1213,16 @@ def get_file(init, mode='r', uri=None):
             else:
                 init2 = init
             if isinstance(init2, io.RawIOBase):
-                result = RealFile(init2, mode, uri=uri)
+                result = RealFile(init2, mode, uri=uri, close=close)
             else:
                 result = MemoryIO(init2, mode, uri=uri)
             result._secondary_fd = init
             return result
         else:
             if mode == 'w':
-                return OutputStream(init, uri=uri)
+                return OutputStream(init, uri=uri, close=close)
             elif mode == 'r':
-                return InputStream(init, mode, uri=uri)
+                return InputStream(init, mode, uri=uri, close=close)
             else:
                 raise ValueError(
                     "File '{0}' could not be opened in 'rw' mode".format(init))
@@ -1243,10 +1247,10 @@ def get_file(init, mode='r', uri=None):
         return MemoryIO(init, mode, uri=uri)
 
     elif mode == 'w' and hasattr(init, 'write'):
-        return OutputStream(init, uri=uri)
+        return OutputStream(init, uri=uri, close=close)
 
     elif mode == 'r' and hasattr(init, 'read'):
-        return InputStream(init, mode, uri=uri)
+        return InputStream(init, mode, uri=uri, close=close)
 
     raise ValueError("Can't handle '{0}' as a file for mode '{1}'".format(
         init, mode))
