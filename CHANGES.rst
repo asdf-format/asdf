@@ -1,4 +1,4 @@
-2.1.0 (unreleased)
+2.1.0 (2018-09-25)
 ------------------
 
 - Add API function for retrieving history entries. [#501]
@@ -7,15 +7,12 @@
 
 - Allow implicit conversion of ``namedtuple`` into serializable types. [#534]
 
+- Fix bug that prevented use of ASDF-in-FITS with HDUs that have names with
+  underscores. [#543]
+
 - Add option to ``generic_io.get_file`` to close underlying file handle. [#544]
 
 - Add top-level ``keys`` method to ``AsdfFile`` to access tree keys. [#545]
-
-2.0.4 (unreleased)
-------------------
-
-- Fix bug that prevented use of ASDF-in-FITS with HDUs that have names with
-  underscores. [#543]
 
 2.0.3 (2018-09-06)
 ------------------
