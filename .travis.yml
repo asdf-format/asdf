@@ -21,87 +21,73 @@ env:
         # The following versions are the 'default' for tests, unless
         # overidden underneath. They are defined here in order to save having
         # to repeat them for all configurations.
-        - PYTHON_VERSION=3.6
-        - PYTEST_VERSION=3.10
-        - ASTROPY_VERSION=stable
-        - NUMPY_VERSION=stable
-        - ALL_PIP_DEPENDENCIES='pytest-faulthandler importlib_resources'
-        - PIP_DEPENDENCIES="$ALL_PIP_DEPENDENCIES"
-        - ALL_CONDA_DEPENDENCIES='semantic_version jsonschema pyyaml six lz4 pytest-astropy'
-        - CONDA_DEPENDENCIES="$ALL_CONDA_DEPENDENCIES"
-        - GWCS_GIT='git+git://github.com/spacetelescope/gwcs.git#egg=gwcs'
-        - GWCS_PIP='gwcs'
-        - RUN_CMD='pytest'
+        - TOX_CMD='tox --'
+        - TOX_ARGS='--remote-data'
 
     matrix:
         # Make sure that installation does not fail
-        - RUN_CMD='python setup.py install'
+        - TOXENV='py36-stable' TOX_CMD='tox --notest' TOX_ARGS=''
         # Make sure README will display properly on pypi
-        - PIP_DEPENDENCIES='twine' TWINE_CHECK=1
-        - PYTHON_VERSION=3.5
-        - PYTHON_VERSION=3.6 PYTEST_VERSION=3.8
-        - PYTHON_VERSION=3.7 PYTEST_VERSION=3.9
+        - TOXENV='checkdocs'
+        - TOXENV='py35-stable'
+        - TOXENV='py36-stable'
+        - TOXENV='py37-stable'
 
 matrix:
     fast_finish: true
     include:
 
         # Do a coverage test
-        - env: COVERAGE=1
-               PIP_DEPENDENCIES="$ALL_PIP_DEPENDENCIES coverage coveralls"
+        - env: TOXENV='py37-stable' TOX_ARGS='--coverage --open-files --remote-data'
 
         # Check for sphinx doc build warnings - we do this first because it
         # may run for a long time
-        - env: RUN_CMD='python setup.py build_docs -w'
-               CONDA_DEPENDENCIES="$ALL_CONDA_DEPENDENCIES sphinx-astropy"
+        - env: TOXENV='docbuild' TOX_ARGS=''
 
         # Do a code style check
-        - env: RUN_CMD="flake8 asdf --count"
-               PIP_DEPENDENCIES="$ALL_PIP_DEPENDENCIES flake8"
+        - env: TOXENV='style' TOX_ARGS=''
 
         # try older numpy versions
-        - env: PYTHON_VERSION=3.5 NUMPY_VERSION=1.11
-        - env: NUMPY_VERSION=1.12
+        - env: TOXENV='py35-numpy11'
+        - env: TOXENV='py36-numpy12'
 
-        # also test against development version of Astropy
-        - env: ASTROPY_VERSION=development GWCS_PIP="$GWCS_GIT"
-
-        # latest stable versions
-        - env: NUMPY_VERSION=stable
+        # also test against development versions of Astropy and GWCS
+        - env: TOXENV='py36-astropydev-gwcsdev'
 
         # Test against development version of numpy (this job can fail)
-        - env: NUMPY_VERSION=development
+        - env: TOXENV='py37-numpydev'
 
         # Try a run on OSX
         - os: osx
-          env: NUMPY_VERSION=stable
+          env: TOXENV='py37-stable'
 
-        # Test against latest version of jsonschema
-        - env: PIP_DEPENDENCIES='jsonschema pytest-faulthandler importlib_resources'
+        - os: windows
+          env: TOXENV='py37-stable' TOX_ARGS='--remote-data'
+
+        - os: windows
+          env: TOXENV='py35-stable'
+
+        - os: windows
+          env: TOXENV='py36-stable'
+
+        # Windows test against development version of numpy (this job can fail)
+        - os: windows
+          env: TOXENV='py37-numpydev'
+
 
     allow_failures:
-        - env: NUMPY_VERSION=development
-        - env: PIP_DEPENDENCIES='jsonschema pytest-faulthandler importlib_resources'
+        - env: TOXENV='py37-numpydev'
 
 install:
     - git clone git://github.com/astropy/ci-helpers.git
     - source ci-helpers/travis/setup_conda.sh
-    - python -m pip install --no-deps $GWCS_PIP
-    - python setup.py install
+    - pip install tox tox-conda
 
 script:
-    - if [[ $TWINE_CHECK ]]; then
-        python setup.py build sdist;
-        twine check dist/*;
-      elif [[ $COVERAGE ]]; then
-        coverage run --source=asdf -m pytest --remote-data --open-files;
-        coverage report -m;
-      else
-        $RUN_CMD;
-      fi
+   - $TOX_CMD $TOX_ARGS
 
 after_success:
     # If coveralls.io is set up for this package, uncomment the line
     # below and replace "packagename" with the name of your package.
     # The coveragerc file may be customized as needed for your package.
-    - if [[ $COVERAGE ]]; then coveralls --rcfile='asdf/tests/coveragerc'; fi
+    - if [[ $TOX_ARGS == '--coverage --open-files --remote-data' ]]; then coveralls --rcfile='asdf/tests/coveragerc'; fi
