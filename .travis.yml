@@ -38,7 +38,7 @@ matrix:
     include:
 
         # Do a coverage test
-        - env: TOXENV='py37-stable' TOX_ARGS='--coverage --open-files --remote-data'
+        - env: TOXENV='coverage' TOX_ARGS=''
 
         # Check for sphinx doc build warnings - we do this first because it
         # may run for a long time
@@ -90,4 +90,4 @@ after_success:
     # If coveralls.io is set up for this package, uncomment the line
     # below and replace "packagename" with the name of your package.
     # The coveragerc file may be customized as needed for your package.
-    - if [[ $TOX_ARGS == '--coverage --open-files --remote-data' ]]; then coveralls --rcfile='asdf/tests/coveragerc'; fi
+    - if [[ $TOXENV == 'coverage' ]]; then coveralls --rcfile='asdf/tests/coveragerc'; fi
