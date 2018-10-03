@@ -1,3 +1,9 @@
+2.1.1 (unreleased)
+------------------
+
+- Make sure extension metadata is written even when constructing the ASDF tree
+  on-the-fly. [#549]
+
 2.1.0 (2018-09-25)
 ------------------
 
