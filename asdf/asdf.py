@@ -827,6 +827,7 @@ class AsdfFile(versioning.VersionedMixin):
         self._blocks.finalize(self)
 
         self._tree['asdf_library'] = get_asdf_library_info()
+        self._update_extension_history()
 
     def _serial_write(self, fd, pad_blocks, include_block_index):
         self._write_tree(self._tree, fd, pad_blocks)
@@ -911,8 +912,6 @@ class AsdfFile(versioning.VersionedMixin):
             The ASDF version to write out.  If not provided, it will
             write out in the latest version supported by asdf.
         """
-
-        self._update_extension_history()
 
         fd = self._fd
 
@@ -1053,8 +1052,6 @@ class AsdfFile(versioning.VersionedMixin):
             The ASDF version to write out.  If not provided, it will
             write out in the latest version supported by asdf.
         """
-
-        self._update_extension_history()
 
         original_fd = self._fd
 
