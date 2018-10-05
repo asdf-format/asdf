@@ -8,6 +8,9 @@
 - Make sure extension metadata is written even when constructing the ASDF tree
   on-the-fly. [#549]
 
+- Fix large integer validation when storing `numpy` integer literals in the
+  tree. [#553]
+
 2.1.0 (2018-09-25)
 ------------------
 

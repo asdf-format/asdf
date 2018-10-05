@@ -471,16 +471,22 @@ def test_self_reference_resolution():
     assert s['anyOf'][1] == s['anyOf'][0]
 
 
-def test_large_literals():
+@pytest.mark.parametrize('use_numpy', [False, True])
+def test_large_literals(use_numpy):
+
+    largeval = 1 << 53
+    if use_numpy:
+        largeval = np.uint64(largeval)
+
     tree = {
-        'large_int': (1 << 53),
+        'large_int': largeval,
     }
 
     with pytest.raises(ValidationError):
         asdf.AsdfFile(tree)
 
     tree = {
-        'large_array': np.array([(1 << 53)], np.uint64)
+        'large_array': np.array([largeval], np.uint64)
     }
 
     ff = asdf.AsdfFile(tree)
