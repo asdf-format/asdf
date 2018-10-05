@@ -4,6 +4,7 @@
 import os
 import json
 import datetime
+from numbers import Integral
 from functools import lru_cache
 from collections import OrderedDict
 from urllib import parse as urlparse
@@ -457,7 +458,7 @@ def validate_large_literals(instance):
     """
     # We can count on 52 bits of precision
     for instance in treeutil.iter_tree(instance):
-        if (isinstance(instance, int) and (
+        if (isinstance(instance, (Integral)) and (
             instance > ((1 << 51) - 1) or
             instance < -((1 << 51) - 2))):
             raise ValidationError(
