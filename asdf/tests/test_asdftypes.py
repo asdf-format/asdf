@@ -585,3 +585,21 @@ flow_thing:
     assert str(_warnings[0].message) == (
         "Version 1.1.0 of tag:nowhere.org:custom/custom_flow is not compatible "
         "with any existing tag implementations")
+
+def test_extension_override(tmpdir):
+
+    gwcs = pytest.importorskip('gwcs', '0.9.0')
+
+    version = str(versioning.default_version)
+    tmpfile = str(tmpdir.join('override.asdf'))
+
+    with asdf.AsdfFile() as aa:
+        wti = aa.type_index._write_type_indices[version]
+        assert wti.from_custom_type(gwcs.WCS) is gwcs.tags.WCSType
+        aa.tree['wcs'] = gwcs.WCS(output_frame='icrs')
+        aa.write_to(tmpfile)
+
+    with open(tmpfile, 'rb') as ff:
+        contents = str(ff.read())
+        assert gwcs.tags.WCSType.yaml_tag in contents
+        assert asdf.tags.wcs.WCSType.yaml_tag not in contents
