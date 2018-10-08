@@ -486,6 +486,13 @@ def test_large_literals(use_numpy):
         asdf.AsdfFile(tree)
 
     tree = {
+        'large_list': [largeval],
+    }
+
+    with pytest.raises(ValidationError):
+        asdf.AsdfFile(tree)
+
+    tree = {
         'large_array': np.array([largeval], np.uint64)
     }
 
