@@ -25,6 +25,9 @@ from . import util
 from . import yamlutil
 
 
+_DEFAULT_INLINE_THRESHOLD_SIZE = 100
+
+
 class BlockManager(object):
     """
     Manages the `Block`s associated with a ASDF file.
@@ -44,6 +47,8 @@ class BlockManager(object):
             'inline': self._inline_blocks,
             'streamed': self._streamed_blocks
         }
+
+        self._inline_threshold_size = _DEFAULT_INLINE_THRESHOLD_SIZE
 
         self._data_to_block_mapping = {}
         self._validate_checksums = False
@@ -730,8 +735,7 @@ class BlockManager(object):
         block : Block
         """
         from .tags.core import ndarray
-        if (isinstance(arr, ndarray.NDArrayType) and
-            arr.block is not None):
+        if (isinstance(arr, ndarray.NDArrayType) and arr.block is not None):
             if arr.block in self.blocks:
                 return arr.block
             else:
@@ -742,6 +746,10 @@ class BlockManager(object):
         if block is not None:
             return block
         block = Block(base)
+
+        if arr.size <= self._inline_threshold_size:
+            block._array_storage = 'inline'
+
         self.add(block)
         self._handle_global_block_settings(ctx, block)
         return block
