@@ -33,7 +33,7 @@ class BlockManager(object):
     Manages the `Block`s associated with a ASDF file.
     """
     def __init__(self, asdffile, copy_arrays=False, lazy_load=True,
-                 readonly=False):
+                 readonly=False, inline_threshold=None):
         self._asdffile = weakref.ref(asdffile)
 
         self._internal_blocks = []
@@ -48,7 +48,10 @@ class BlockManager(object):
             'streamed': self._streamed_blocks
         }
 
-        self._inline_threshold_size = _DEFAULT_INLINE_THRESHOLD_SIZE
+        if inline_threshold is not None:
+            self._inline_threshold_size = inline_threshold
+        else:
+            self._inline_threshold_size = _DEFAULT_INLINE_THRESHOLD_SIZE
 
         self._data_to_block_mapping = {}
         self._validate_checksums = False
