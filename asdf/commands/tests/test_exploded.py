@@ -23,7 +23,10 @@ def test_explode_then_implode(tmpdir):
 
     path = os.path.join(str(tmpdir), 'original.asdf')
     ff = AsdfFile(tree)
-    ff.write_to(path)
+    # Since we're testing with small arrays, force all arrays to be stored
+    # in internal blocks rather than letting some of them be automatically put
+    # inline.
+    ff.write_to(path, all_array_storage='internal')
     assert len(ff.blocks) == 2
 
     result = main.main_from_args(['explode', path])

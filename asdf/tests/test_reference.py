@@ -32,11 +32,14 @@ def test_external_reference(tmpdir):
         }
     external_path = os.path.join(str(tmpdir), 'external.asdf')
     ext = asdf.AsdfFile(exttree)
-    ext.write_to(external_path)
+    # Since we're testing with small arrays, force all arrays to be stored
+    # in internal blocks rather than letting some of them be automatically put
+    # inline.
+    ext.write_to(external_path, all_array_storage='internal')
 
     external_path = os.path.join(str(tmpdir), 'external2.asdf')
     ff = asdf.AsdfFile(exttree)
-    ff.write_to(external_path)
+    ff.write_to(external_path, all_array_storage='internal')
 
     tree = {
         # The special name "data" here must be an array.  This is
