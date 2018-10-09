@@ -12,6 +12,7 @@ from collections import namedtuple
 from urllib import parse as urlparse
 
 import numpy as np
+from numpy.ma.core import masked_array
 
 import yaml
 
@@ -751,7 +752,8 @@ class BlockManager(object):
         block = Block(base)
 
         if arr.size <= self._inline_threshold_size:
-            block._array_storage = 'inline'
+            if not isinstance(arr, masked_array):
+                block._array_storage = 'inline'
 
         self.add(block)
         self._handle_global_block_settings(ctx, block)
