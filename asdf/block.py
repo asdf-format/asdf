@@ -26,7 +26,7 @@ from . import util
 from . import yamlutil
 
 
-_DEFAULT_INLINE_THRESHOLD_SIZE = 100
+_DEFAULT_INLINE_THRESHOLD_SIZE = 50
 
 
 class BlockManager(object):
