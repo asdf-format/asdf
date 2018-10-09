@@ -696,6 +696,20 @@ class BlockManager(object):
 
         raise ValueError("block not found.")
 
+    def _should_inline(self, array):
+
+        if not np.issubdtype(array.dtype, np.number):
+            return False
+
+        if isinstance(array, masked_array):
+            return False
+
+        # Make sure none of the values are too large to store as literals
+        if (array > 2**52).any():
+            return False
+
+        return array.size <= self._inline_threshold_size
+
     def find_or_create_block_for_array(self, arr, ctx):
         """
         For a given array, looks for an existing block containing its
@@ -723,9 +737,8 @@ class BlockManager(object):
             return block
         block = Block(base)
 
-        if arr.size <= self._inline_threshold_size:
-            if not isinstance(arr, masked_array):
-                block._array_storage = 'inline'
+        if self._should_inline(arr):
+            block._array_storage = 'inline'
 
         self.add(block)
         self._handle_global_block_settings(ctx, block)
