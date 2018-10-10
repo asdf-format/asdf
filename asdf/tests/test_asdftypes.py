@@ -646,7 +646,6 @@ def test_extension_override_subclass(tmpdir):
     with open(tmpfile, 'rb') as ff:
         contents = str(ff.read())
         assert gwcs.tags.WCSType.yaml_tag in contents
-        assert asdf.tags.wcs.WCSType.yaml_tag not in contents
 
 
 def test_tag_without_schema(tmpdir):
@@ -710,7 +709,7 @@ def test_subclass_decorator(tmpdir):
 
     tmpfile = str(tmpdir.join('fraction.asdf'))
 
-    class FractionType(asdftypes.AsdfType):
+    class FractionType(types.AsdfType):
         name = 'fraction'
         organization = 'nowhere.org'
         version = (1, 0, 0)

@@ -1,9 +1,9 @@
 # Licensed under a 3-clause BSD style license - see LICENSE.rst
 # -*- coding: utf-8 -*-
 
-
 import re
 import importlib
+from collections import defaultdict
 
 import six
 from copy import copy
@@ -18,6 +18,10 @@ __all__ = ['format_tag', 'CustomType']
 
 # regex used to parse module name from optional version string
 MODULE_RE = re.compile(r'([a-zA-Z]+)(-(\d+\.\d+\.\d+))?')
+
+
+class AsdfSubclassProperty(property):
+    pass
 
 
 def format_tag(organization, standard, version, tag_name):
@@ -180,6 +184,7 @@ class ExtensionType:
     validators = {}
     requires = []
     yaml_tag = None
+    _subclass_attr_map = defaultdict(lambda: list())
 
     @classmethod
     def names(cls):
@@ -303,6 +308,22 @@ class ExtensionType:
             An instance of `asdf.tagged.Tagged`.
         """
         obj = cls.to_tree(node, ctx)
+        yaml_tag = cls.yaml_tag
+
+        if type(node) in cls._subclass_attr_map:
+            if isinstance(obj, dict):
+                for name, member in cls._subclass_attr_map[type(node)]:
+                    obj[name] = member.fget(node)
+                yaml_tag += "#{}".format(type(node).__name__)
+            else:
+                # TODO: should this be an exception? Should it be a custom warning type?
+                warnings.warn(
+                    "Failed to add subclass attribute(s) to node that is "
+                    "not an object (is a {}). No subclass attributes are being "
+                    "added (tag={}, subclass={})".format(
+                        type(obj).__name__, cls, type(node))
+                )
+
         return tagged.tag_object(cls.yaml_tag, obj, ctx=ctx)
 
     @classmethod
@@ -381,6 +402,19 @@ class ExtensionType:
             if version not in cls.supported_versions:
                 return True
         return False
+
+    @classmethod
+    def subclass(cls, subclass):
+        cls.types.append(subclass)
+        for name, member in inspect.getmembers(subclass):
+            if isinstance(member, AsdfSubclassProperty):
+                print("WOOHOO", name, member)
+                cls._subclass_attr_map[subclass].append((name, member))
+        return subclass
+
+    @classmethod
+    def subclass_property(cls, attribute):
+        return AsdfSubclassProperty(attribute)
 
 
 @six.add_metaclass(AsdfTypeMeta)
