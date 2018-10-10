@@ -5,6 +5,7 @@
 import io
 import os
 import sys
+import fractions
 
 import pytest
 
@@ -21,7 +22,6 @@ TEST_DATA_PATH = str(helpers.get_test_data_path(''))
 
 
 def test_custom_tag():
-    import fractions
 
     class FractionType(types.CustomType):
         name = 'fraction'
@@ -646,6 +646,7 @@ def test_extension_override_subclass(tmpdir):
     with open(tmpfile, 'rb') as ff:
         contents = str(ff.read())
         assert gwcs.tags.WCSType.yaml_tag in contents
+        assert asdf.tags.wcs.WCSType.yaml_tag not in contents
 
 
 def test_tag_without_schema(tmpdir):
@@ -703,3 +704,62 @@ def test_tag_without_schema(tmpdir):
         # There is only one validation pass when writing.
         assert len(w) == 1, helpers.display_warnings(w)
         assert str(w[0].message).startswith('Unable to locate schema file')
+
+
+def test_subclass_decorator(tmpdir):
+
+    tmpfile = str(tmpdir.join('fraction.asdf'))
+
+    class FractionType(asdftypes.AsdfType):
+        name = 'fraction'
+        organization = 'nowhere.org'
+        version = (1, 0, 0)
+        standard = 'custom'
+        types = [fractions.Fraction]
+        handle_dynamic_subclasses = True
+
+        @classmethod
+        def to_tree(cls, node, ctx):
+            return [node.numerator, node.denominator]
+
+        @classmethod
+        def from_tree(cls, tree, ctx):
+            return fractions.Fraction(tree[0], tree[1])
+
+    class FractionExtension(object):
+        @property
+        def types(self):
+            return [FractionType]
+
+        @property
+        def tag_mapping(self):
+            return [('tag:nowhere.org:custom',
+                     'http://nowhere.org/schemas/custom{tag_suffix}')]
+
+        @property
+        def url_mapping(self):
+            return [('http://nowhere.org/schemas/custom/',
+                     util.filepath_to_url(TEST_DATA_PATH) +
+                     '/{url_suffix}.yaml')]
+
+    # Sanity check to make sure regular fraction works
+    tree = dict(fraction=fractions.Fraction(4, 5))
+    with asdf.AsdfFile(tree, extensions=FractionExtension()) as af:
+        af.write_to(tmpfile)
+
+    with asdf.open(tmpfile, extensions=FractionExtension()) as af:
+        assert isinstance(af['fraction'], fractions.Fraction)
+        assert af['fraction'] == tree['fraction']
+
+    # Now define a custom subclass of Fraction
+    class MyFraction(fractions.Fraction):
+        # We need to override __new__ since Fraction is immutable
+        def __new__(cls, *args, **kwargs):
+            return super().__new__(cls, *args, **kwargs)
+
+    tree = dict(fraction=MyFraction(7, 9))
+    with asdf.AsdfFile(tree, extensions=FractionExtension()) as af:
+        af.write_to(tmpfile)
+
+    with asdf.open(tmpfile, extensions=FractionExtension()) as af:
+        assert isinstance(af['fraction'], MyFraction)
