@@ -186,6 +186,7 @@ class ExtensionType:
     validators = {}
     requires = []
     yaml_tag = None
+    _subclasses = []
     _subclass_attr_map = defaultdict(lambda: list())
 
     @classmethod
@@ -312,18 +313,22 @@ class ExtensionType:
         obj = cls.to_tree(node, ctx)
         yaml_tag = cls.yaml_tag
 
-        if type(node) in cls._subclass_attr_map:
+        node_cls = type(node)
+
+        if node_cls in cls._subclasses:
+            yaml_tag = "{}#subclass={}".format(yaml_tag, node_cls.__name__)
+
+        if node_cls in cls._subclass_attr_map:
             if isinstance(obj, dict):
-                for name, member in cls._subclass_attr_map[type(node)]:
+                for name, member in cls._subclass_attr_map[node_cls]:
                     obj[name] = member.fget(node)
-                yaml_tag += "#{}".format(type(node).__name__)
             else:
                 # TODO: should this be an exception? Should it be a custom warning type?
                 warnings.warn(
                     "Failed to add subclass attribute(s) to node that is "
                     "not an object (is a {}). No subclass attributes are being "
                     "added (tag={}, subclass={})".format(
-                        type(obj).__name__, cls, type(node))
+                        type(obj).__name__, cls, node_cls)
                 )
 
         return tagged.tag_object(cls.yaml_tag, obj, ctx=ctx)
@@ -407,10 +412,9 @@ class ExtensionType:
 
     @classmethod
     def subclass(cls, subclass):
-        cls.types.append(subclass)
+        cls._subclasses.append(subclass)
         for name, member in inspect.getmembers(subclass):
             if isinstance(member, AsdfSubclassProperty):
-                print("WOOHOO", name, member)
                 cls._subclass_attr_map[subclass].append((name, member))
         return subclass
 
