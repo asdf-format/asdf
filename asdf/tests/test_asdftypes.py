@@ -705,7 +705,7 @@ def test_tag_without_schema(tmpdir):
         assert str(w[0].message).startswith('Unable to locate schema file')
 
 
-def test_subclass_decorator(tmpdir):
+def test_subclass_decorator_warning(tmpdir):
 
     tmpfile = str(tmpdir.join('fraction.asdf'))
 
@@ -741,24 +741,23 @@ def test_subclass_decorator(tmpdir):
                      util.filepath_to_url(TEST_DATA_PATH) +
                      '/{url_suffix}.yaml')]
 
-    # Sanity check to make sure regular fraction works
-    tree = dict(fraction=fractions.Fraction(4, 5))
-    with asdf.AsdfFile(tree, extensions=FractionExtension()) as af:
-        af.write_to(tmpfile)
-
-    with asdf.open(tmpfile, extensions=FractionExtension()) as af:
-        assert isinstance(af['fraction'], fractions.Fraction)
-        assert af['fraction'] == tree['fraction']
-
-    # Now define a custom subclass of Fraction
+    @FractionType.subclass
     class MyFraction(fractions.Fraction):
         # We need to override __new__ since Fraction is immutable
-        def __new__(cls, *args, **kwargs):
-            return super().__new__(cls, *args, **kwargs)
+        def __new__(cls, *args, custom='custom', **kwargs):
+            self = super().__new__(cls, *args, **kwargs)
+            self._custom_attribute = custom
+            return self
 
-    tree = dict(fraction=MyFraction(7, 9))
-    with asdf.AsdfFile(tree, extensions=FractionExtension()) as af:
-        af.write_to(tmpfile)
+        @FractionType.subclass_property
+        def custom_attribute(self):
+            return self._custom_attribute
 
-    with asdf.open(tmpfile, extensions=FractionExtension()) as af:
-        assert isinstance(af['fraction'], MyFraction)
+
+    tree = dict(fraction=MyFraction(7, 9, custom='TESTING!'))
+
+    with pytest.warns(UserWarning) as w:
+        with asdf.AsdfFile(tree, extensions=FractionExtension()) as af:
+            pass
+        assert len(w) == 1, helpers.display_warnings(w)
+        assert str(w[0].message).startswith("Failed to add subclass attribute(s)")
