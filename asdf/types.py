@@ -2,6 +2,7 @@
 # -*- coding: utf-8 -*-
 
 import re
+import inspect
 import importlib
 from collections import defaultdict
 

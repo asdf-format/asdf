@@ -15,7 +15,7 @@ from asdf import extension
 from asdf import util
 from asdf import versioning
 
-from . import helpers, CustomTestType
+from . import helpers, CustomTestType, CustomExtension
 
 
 TEST_DATA_PATH = str(helpers.get_test_data_path(''))
@@ -38,21 +38,10 @@ def test_custom_tag():
         def from_tree(cls, tree, ctx):
             return fractions.Fraction(tree[0], tree[1])
 
-    class FractionExtension:
+    class FractionExtension(CustomExtension):
         @property
         def types(self):
             return [FractionType]
-
-        @property
-        def tag_mapping(self):
-            return [('tag:nowhere.org:custom',
-                     'http://nowhere.org/schemas/custom{tag_suffix}')]
-
-        @property
-        def url_mapping(self):
-            return [('http://nowhere.org/schemas/custom/',
-                     util.filepath_to_url(TEST_DATA_PATH) +
-                     '/{url_suffix}.yaml')]
 
     class FractionCallable(FractionExtension):
         @property
@@ -175,21 +164,10 @@ def test_version_mismatch_with_supported_versions():
         standard = 'custom'
         types = [CustomFlow]
 
-    class CustomFlowExtension:
+    class CustomFlowExtension(CustomExtension):
         @property
         def types(self):
             return [CustomFlowType]
-
-        @property
-        def tag_mapping(self):
-            return [('tag:nowhere.org:custom',
-                     'http://nowhere.org/schemas/custom{tag_suffix}')]
-
-        @property
-        def url_mapping(self):
-            return [('http://nowhere.org/schemas/custom/',
-                     util.filepath_to_url(TEST_DATA_PATH) +
-                     '/{url_suffix}.yaml')]
 
     yaml = """
 flow_thing:
@@ -391,21 +369,10 @@ def test_newer_tag():
         def to_tree(cls, data, ctx):
             tree = dict(c=data.c, d=data.d)
 
-    class CustomFlowExtension:
+    class CustomFlowExtension(CustomExtension):
         @property
         def types(self):
             return [CustomFlowType]
-
-        @property
-        def tag_mapping(self):
-            return [('tag:nowhere.org:custom',
-                     'http://nowhere.org/schemas/custom{tag_suffix}')]
-
-        @property
-        def url_mapping(self):
-            return [('http://nowhere.org/schemas/custom/',
-                     util.filepath_to_url(TEST_DATA_PATH) +
-                     '/{url_suffix}.yaml')]
 
     new_yaml = """
 flow_thing:
@@ -518,21 +485,10 @@ def test_supported_versions():
             else:
                 tree = dict(c=data.c, d=data.d)
 
-    class CustomFlowExtension:
+    class CustomFlowExtension(CustomExtension):
         @property
         def types(self):
             return [CustomFlowType]
-
-        @property
-        def tag_mapping(self):
-            return [('tag:nowhere.org:custom',
-                     'http://nowhere.org/schemas/custom{tag_suffix}')]
-
-        @property
-        def url_mapping(self):
-            return [('http://nowhere.org/schemas/custom/',
-                     util.filepath_to_url(TEST_DATA_PATH) +
-                     '/{url_suffix}.yaml')]
 
     new_yaml = """
 flow_thing:
@@ -566,21 +522,10 @@ def test_unsupported_version_warning():
         standard = 'custom'
         types = [CustomFlow]
 
-    class CustomFlowExtension:
+    class CustomFlowExtension(CustomExtension):
         @property
         def types(self):
             return [CustomFlowType]
-
-        @property
-        def tag_mapping(self):
-            return [('tag:nowhere.org:custom',
-                     'http://nowhere.org/schemas/custom{tag_suffix}')]
-
-        @property
-        def url_mapping(self):
-            return [('http://nowhere.org/schemas/custom/',
-                     util.filepath_to_url(TEST_DATA_PATH) +
-                     '/{url_suffix}.yaml')]
 
     yaml = """
 flow_thing:
@@ -725,21 +670,10 @@ def test_subclass_decorator_warning(tmpdir):
         def from_tree(cls, tree, ctx):
             return fractions.Fraction(tree[0], tree[1])
 
-    class FractionExtension(object):
+    class FractionExtension(CustomExtension):
         @property
         def types(self):
             return [FractionType]
-
-        @property
-        def tag_mapping(self):
-            return [('tag:nowhere.org:custom',
-                     'http://nowhere.org/schemas/custom{tag_suffix}')]
-
-        @property
-        def url_mapping(self):
-            return [('http://nowhere.org/schemas/custom/',
-                     util.filepath_to_url(TEST_DATA_PATH) +
-                     '/{url_suffix}.yaml')]
 
     @FractionType.subclass
     class MyFraction(fractions.Fraction):
