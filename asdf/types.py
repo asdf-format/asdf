@@ -3,6 +3,7 @@
 
 import re
 import inspect
+import warnings
 import importlib
 from collections import defaultdict
 

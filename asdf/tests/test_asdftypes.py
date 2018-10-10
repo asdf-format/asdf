@@ -5,6 +5,7 @@
 import io
 import os
 import sys
+import copy
 import fractions
 
 import pytest
@@ -12,6 +13,7 @@ import pytest
 import asdf
 from asdf import types
 from asdf import extension
+from asdf import yamlutil
 from asdf import util
 from asdf import versioning
 
@@ -21,7 +23,7 @@ from . import helpers, CustomTestType, CustomExtension
 TEST_DATA_PATH = str(helpers.get_test_data_path(''))
 
 
-def test_custom_tag():
+def fractiontype_factory():
 
     class FractionType(types.CustomType):
         name = 'fraction'
@@ -29,6 +31,7 @@ def test_custom_tag():
         version = (1, 0, 0)
         standard = 'custom'
         types = [fractions.Fraction]
+        handle_dynamic_subclasses = True
 
         @classmethod
         def to_tree(cls, node, ctx):
@@ -37,6 +40,13 @@ def test_custom_tag():
         @classmethod
         def from_tree(cls, tree, ctx):
             return fractions.Fraction(tree[0], tree[1])
+
+    return FractionType
+
+
+def test_custom_tag():
+
+    FractionType = fractiontype_factory()
 
     class FractionExtension(CustomExtension):
         @property
@@ -650,25 +660,75 @@ def test_tag_without_schema(tmpdir):
         assert str(w[0].message).startswith('Unable to locate schema file')
 
 
+def test_subclass_decorator(tmpdir):
+
+    from fractions import Fraction
+
+    tmpfile = str(tmpdir.join('subclass.asdf'))
+    FractionType = fractiontype_factory()
+
+    class Fractional2dCoord:
+        def __init__(self, x, y):
+            self.x = x
+            self.y = y
+
+    class Fractional2dCoordType(types.CustomType):
+        name = 'fractional_2d_coord'
+        organization = 'nowhere.org'
+        standard = 'custom'
+        version = (1, 0, 0)
+        types = [Fractional2dCoord]
+
+        @classmethod
+        def to_tree(cls, node, ctx):
+            x = yamlutil.custom_tree_to_tagged_tree(node.x, ctx)
+            y = yamlutil.custom_tree_to_tagged_tree(node.y, ctx)
+            return dict(x=x, y=y)
+
+        @classmethod
+        def from_tree(cls, tree, ctx):
+            x = yamlutil.tagged_tree_to_custom_tree(tree['x'], ctx)
+            y = yamlutil.tagged_tree_to_custom_tree(tree['y'], ctx)
+            return Fractional2dCoord(x, y)
+
+    class Fractional2dCoordExtension(CustomExtension):
+        @property
+        def types(self):
+            return [Fractional2dCoordType, FractionType]
+
+    extension = Fractional2dCoordExtension()
+
+    coord = Fractional2dCoord(Fraction(2, 3), Fraction(7, 9))
+    tree = dict(coord=coord)
+
+    # First make sure the base type is serialized properly
+    with asdf.AsdfFile(tree, extensions=extension) as af:
+        af.write_to(tmpfile)
+
+    with asdf.open(tmpfile, extensions=extension) as af:
+        assert isinstance(af['coord'], Fractional2dCoord)
+        assert af['coord'].x == coord.x
+        assert af['coord'].y == coord.y
+
+    # Now create a subclass
+    @Fractional2dCoordType.subclass
+    class Subclass2dCoord(Fractional2dCoordType):
+        pass
+
+    subclass_coord = Fractional2dCoord(Fraction(2, 3), Fraction(7, 9))
+    tree = dict(coord=subclass_coord)
+
+    with asdf.AsdfFile(tree, extensions=extension) as af:
+        assert isinstance(af['coord'], Subclass2dCoord)
+        assert af['coord'].x == subclass_coord.x
+        assert af['coord'].y == subclass_coord.y
+
+
 def test_subclass_decorator_warning(tmpdir):
 
     tmpfile = str(tmpdir.join('fraction.asdf'))
 
-    class FractionType(types.AsdfType):
-        name = 'fraction'
-        organization = 'nowhere.org'
-        version = (1, 0, 0)
-        standard = 'custom'
-        types = [fractions.Fraction]
-        handle_dynamic_subclasses = True
-
-        @classmethod
-        def to_tree(cls, node, ctx):
-            return [node.numerator, node.denominator]
-
-        @classmethod
-        def from_tree(cls, tree, ctx):
-            return fractions.Fraction(tree[0], tree[1])
+    FractionType = fractiontype_factory()
 
     class FractionExtension(CustomExtension):
         @property
