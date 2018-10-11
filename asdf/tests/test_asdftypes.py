@@ -209,28 +209,38 @@ flow_thing:
         "file, but latest supported version is 1.1.0")
 
 
-def test_versioned_writing():
+def test_versioned_writing(monkeypatch):
     from ..tags.core.complex import ComplexType
 
     # Create a bogus version map
-    versioning._version_map['42.0.0'] = {
+    monkeypatch.setitem(versioning._version_map, '42.0.0', {
         'FILE_FORMAT': '42.0.0',
         'YAML_VERSION': '1.1',
         'tags': {
             'tag:stsci.edu:asdf/core/complex': '42.0.0',
             'tag:stscu.edu:asdf/core/asdf': '1.0.0'
         }
-    }
+    })
 
-    versioning.supported_versions.append(versioning.AsdfVersion('42.0.0'))
+    # Add bogus version to supported versions
+    monkeypatch.setattr(versioning, 'supported_versions',
+        versioning.supported_versions + [versioning.AsdfVersion('42.0.0')]
+    )
 
-    class FancyComplexType(ComplexType, asdftypes.CustomType):
+    class FancyComplexType(asdftypes.CustomType):
+        name = 'core/complex'
+        organization = 'stsci.edu'
+        standard = 'asdf'
         version = (42, 0, 0)
+        types = [complex]
 
-    # This is a sanity check to ensure that the custom FancyComplexType does
-    # not get added to ASDF's built-in extension, since this would cause any
-    # subsequent tests that rely on ComplexType to fail.
-    assert not issubclass(FancyComplexType, asdftypes.AsdfTypeMeta)
+        @classmethod
+        def to_tree(cls, node, ctx):
+            return ComplexType.to_tree(node, ctx)
+
+        @classmethod
+        def from_tree(cls, tree, ctx):
+            return ComplexType.from_tree(tree, ctx)
 
     class FancyComplexExtension(object):
         @property
@@ -255,9 +265,6 @@ def test_versioned_writing():
     ff.write_to(buff)
 
     assert b'complex-42.0.0' in buff.getvalue()
-
-    del versioning._version_map['42.0.0']
-    versioning.supported_versions.pop()
 
 
 def test_longest_match():
