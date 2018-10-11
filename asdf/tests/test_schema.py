@@ -202,7 +202,7 @@ def test_schema_caching():
 
 
 def test_flow_style():
-    class CustomFlowStyleType(dict, asdftypes.AsdfType):
+    class CustomFlowStyleType(dict, asdftypes.CustomType):
         name = 'custom_flow'
         organization = 'nowhere.org'
         version = (1, 0, 0)
@@ -225,7 +225,7 @@ def test_flow_style():
 
 
 def test_style():
-    class CustomStyleType(str, asdftypes.AsdfType):
+    class CustomStyleType(str, asdftypes.CustomType):
         name = 'custom_style'
         organization = 'nowhere.org'
         version = (1, 0, 0)
@@ -267,7 +267,7 @@ def test_property_order():
 
 
 def test_invalid_nested():
-    class CustomType(str, asdftypes.AsdfType):
+    class CustomType(str, asdftypes.CustomType):
         name = 'custom'
         organization = 'nowhere.org'
         version = (1, 0, 0)
@@ -361,7 +361,7 @@ def test_default_check_in_schema():
 
 
 def test_fill_and_remove_defaults():
-    class DefaultType(dict, asdftypes.AsdfType):
+    class DefaultType(dict, asdftypes.CustomType):
         name = 'default'
         organization = 'nowhere.org'
         version = (1, 0, 0)
@@ -579,7 +579,7 @@ properties:
 @pytest.mark.importorskip('astropy')
 def test_type_missing_dependencies():
 
-    class MissingType(asdftypes.AsdfType):
+    class MissingType(asdftypes.CustomType):
         name = 'missing'
         organization = 'nowhere.org'
         version = (1, 1, 0)
@@ -607,7 +607,7 @@ custom: !<tag:nowhere.org:custom/missing-1.1.0>
 def test_assert_roundtrip_with_extension(tmpdir):
     called_custom_assert_equal = [False]
 
-    class CustomType(dict, asdftypes.AsdfType):
+    class CustomType(dict, asdftypes.CustomType):
         name = 'custom_flow'
         organization = 'nowhere.org'
         version = (1, 0, 0)
