@@ -22,7 +22,7 @@ TEST_DATA_PATH = str(helpers.get_test_data_path(''))
 def test_custom_tag():
     import fractions
 
-    class FractionType(asdftypes.AsdfType):
+    class FractionType(asdftypes.CustomType):
         name = 'fraction'
         organization = 'nowhere.org'
         version = (1, 0, 0)
@@ -285,15 +285,15 @@ def test_longest_match():
 
 
 def test_module_versioning():
-    class NoModuleType(asdftypes.AsdfType):
+    class NoModuleType(asdftypes.CustomType):
         # It seems highly unlikely that this would be a real module
         requires = ['qkjvqdja']
 
-    class HasCorrectPytest(asdftypes.AsdfType):
+    class HasCorrectPytest(asdftypes.CustomType):
         # This means it requires 1.0.0 or greater, so it should succeed
         requires = ['pytest-1.0.0']
 
-    class DoesntHaveCorrectPytest(asdftypes.AsdfType):
+    class DoesntHaveCorrectPytest(asdftypes.CustomType):
         requires = ['pytest-91984.1.7']
 
     nmt = NoModuleType()
