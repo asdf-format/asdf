@@ -7,6 +7,9 @@
 - Fix large integer validation when storing `numpy` integer literals in the
   tree. [#553]
 
+- Fix bug that caused subclass of external type to be serialized by the wrong
+  tag. [#560]
+
 2.1.0 (2018-09-25)
 ------------------
 

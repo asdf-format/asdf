@@ -126,7 +126,11 @@ class _AsdfWriteTypeIndex(object):
                 # hierarchy than the existing subclass.
                 if subclass in self._class_by_subclass:
                     if issubclass(self._class_by_subclass[subclass], typ):
-                        continue
+                        # Allow for cases where a subclass tag is being
+                        # overridden by a tag from another extension.
+                        if (self._extension_by_cls[subclass] ==
+                                index._extension_by_type[asdftype]):
+                            continue
                 self._class_by_subclass[subclass] = typ
                 self._type_by_subclasses[subclass] = asdftype
                 self._extension_by_cls[subclass] = index._extension_by_type[asdftype]
