@@ -1213,3 +1213,82 @@ def test_context_handler_resolve_and_inline(tmpdir):
 
     with pytest.raises(OSError):
         newf.tree['random'][0]
+
+
+def test_inline_threshold(tmpdir):
+
+    tree = {
+        'small': np.ones(10),
+        'large': np.ones(100)
+    }
+
+    with asdf.AsdfFile(tree) as af:
+        assert len(list(af.blocks.inline_blocks)) == 1
+        assert len(list(af.blocks.internal_blocks)) == 1
+
+    with asdf.AsdfFile(tree, inline_threshold=10) as af:
+        assert len(list(af.blocks.inline_blocks)) == 1
+        assert len(list(af.blocks.internal_blocks)) == 1
+
+    with asdf.AsdfFile(tree, inline_threshold=5) as af:
+        assert len(list(af.blocks.inline_blocks)) == 0
+        assert len(list(af.blocks.internal_blocks)) == 2
+
+    with asdf.AsdfFile(tree, inline_threshold=100) as af:
+        assert len(list(af.blocks.inline_blocks)) == 2
+        assert len(list(af.blocks.internal_blocks)) == 0
+
+
+def test_inline_threshold_masked(tmpdir):
+
+    mask = np.random.randint(0, 1+1, 20)
+    masked_array = np.ma.masked_array(np.ones(20), mask=mask)
+
+    tree = {
+        'masked': masked_array
+    }
+
+    # Make sure that masked arrays aren't automatically inlined, even if they
+    # are small enough
+    with asdf.AsdfFile(tree) as af:
+        assert len(list(af.blocks.inline_blocks)) == 0
+        assert len(list(af.blocks.internal_blocks)) == 2
+
+    tree = {
+        'masked': masked_array,
+        'normal': np.random.random(20)
+    }
+
+    with asdf.AsdfFile(tree) as af:
+        assert len(list(af.blocks.inline_blocks)) == 1
+        assert len(list(af.blocks.internal_blocks)) == 2
+
+
+def test_inline_threshold_override(tmpdir):
+
+    tmpfile = str(tmpdir.join('inline.asdf'))
+
+    tree = {
+        'small': np.ones(10),
+        'large': np.ones(100)
+    }
+
+    with asdf.AsdfFile(tree) as af:
+        af.set_array_storage(tree['small'], 'internal')
+        assert len(list(af.blocks.inline_blocks)) == 0
+        assert len(list(af.blocks.internal_blocks)) == 2
+
+    with asdf.AsdfFile(tree) as af:
+        af.set_array_storage(tree['large'], 'inline')
+        assert len(list(af.blocks.inline_blocks)) == 2
+        assert len(list(af.blocks.internal_blocks)) == 0
+
+    with asdf.AsdfFile(tree) as af:
+        af.write_to(tmpfile, all_array_storage='internal')
+        assert len(list(af.blocks.inline_blocks)) == 0
+        assert len(list(af.blocks.internal_blocks)) == 2
+
+    with asdf.AsdfFile(tree) as af:
+        af.write_to(tmpfile, all_array_storage='inline')
+        assert len(list(af.blocks.inline_blocks)) == 2
+        assert len(list(af.blocks.internal_blocks)) == 0
