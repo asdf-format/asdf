@@ -590,6 +590,9 @@ def test_extension_override(tmpdir):
 
     gwcs = pytest.importorskip('gwcs', '0.9.0')
 
+    from asdf.extension import default_extensions
+    default_extensions.reset()
+
     version = str(versioning.default_version)
     tmpfile = str(tmpdir.join('override.asdf'))
 
@@ -597,6 +600,36 @@ def test_extension_override(tmpdir):
         wti = aa.type_index._write_type_indices[version]
         assert wti.from_custom_type(gwcs.WCS) is gwcs.tags.WCSType
         aa.tree['wcs'] = gwcs.WCS(output_frame='icrs')
+        aa.write_to(tmpfile)
+
+    with open(tmpfile, 'rb') as ff:
+        contents = str(ff.read())
+        assert gwcs.tags.WCSType.yaml_tag in contents
+        assert asdf.tags.wcs.WCSType.yaml_tag not in contents
+
+
+def test_extension_override_subclass(tmpdir):
+
+    gwcs = pytest.importorskip('gwcs', '0.9.0')
+    astropy = pytest.importorskip('astropy', '3.0.0')
+    from astropy.modeling import models
+
+    from asdf.extension import default_extensions
+    default_extensions.reset()
+
+    version = str(versioning.default_version)
+    tmpfile = str(tmpdir.join('override.asdf'))
+
+    class SubclassWCS(gwcs.WCS):
+        pass
+
+    with asdf.AsdfFile() as aa:
+        wti = aa.type_index._write_type_indices[version]
+        assert wti.from_custom_type(gwcs.WCS) is gwcs.tags.WCSType
+        assert wti.from_custom_type(SubclassWCS) is gwcs.tags.WCSType
+        # The duplication here is deliberate: make sure that nothing has changed
+        assert wti.from_custom_type(gwcs.WCS) is gwcs.tags.WCSType
+        aa.tree['wcs'] = SubclassWCS(output_frame='icrs')
         aa.write_to(tmpfile)
 
     with open(tmpfile, 'rb') as ff:
