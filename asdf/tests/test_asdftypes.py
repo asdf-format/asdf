@@ -712,13 +712,16 @@ def test_subclass_decorator(tmpdir):
 
     # Now create a subclass
     @Fractional2dCoordType.subclass
-    class Subclass2dCoord(Fractional2dCoordType):
+    class Subclass2dCoord(Fractional2dCoord):
         pass
 
-    subclass_coord = Fractional2dCoord(Fraction(2, 3), Fraction(7, 9))
+    subclass_coord = Subclass2dCoord(Fraction(2, 3), Fraction(7, 9))
     tree = dict(coord=subclass_coord)
 
     with asdf.AsdfFile(tree, extensions=extension) as af:
+        af.write_to(tmpfile)
+
+    with asdf.open(tmpfile, extensions=extension) as af:
         assert isinstance(af['coord'], Subclass2dCoord)
         assert af['coord'].x == subclass_coord.x
         assert af['coord'].y == subclass_coord.y
