@@ -1,6 +1,11 @@
 2.2.0 (unreleased)
 ------------------
 
+- Small numeric arrays are now automatically stored inline. This behavior can
+  be overridden using the new ``inline_threshold`` argument to the ``AsdfFile``
+  constructor. It can also be controlled with the existing
+  ``set_array_storage`` method of ``AsdfFile`` and the ``all_array_storage``
+  argument to ``AsdfFile.write_to``. [#557]
 
 2.1.1 (unreleased)
 ------------------

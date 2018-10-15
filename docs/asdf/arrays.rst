@@ -56,11 +56,37 @@ data being saved.
 Saving inline arrays
 --------------------
 
-For small arrays, you may not care about the efficiency of a binary
-representation and just want to save the array contents directly in the YAML
-tree.  The `~asdf.AsdfFile.set_array_storage` method can be used to set the
-storage type of the associated data. The allowed values are ``internal``,
-``external``, and ``inline``.
+As of `asdf-2.2.0`, small numerical arrays are automatically stored inline. The
+default threshold size for inline versus internal arrays can be found with the
+following:
+
+.. code::
+
+   >>> from asdf.block import _DEFAULT_INLINE_THRESHOLD_SIZE
+   >>> print(_DEFAULT_INLINE_THRESHOLD_SIZE)
+   50
+
+The default threshold can be overridden passing the `inline_threshold` argument
+to the `asdf.AsdfFile` constructor. Setting `inline_threshold=0` has the effect
+of making all small arrays be stored in internal blocks:
+
+.. runcode::
+
+   from asdf import AsdfFile
+   import numpy as np
+
+   # Ordinarilly an array this size would be automatically inlined
+   my_array = np.ones(10)
+   tree = {'my_array': my_array}
+   # Set the inline threshold to 0 to force internal storage
+   with AsdfFile(tree, inline_threshold=0) as ff:
+      ff.write_to("test.asdf")
+
+.. asdf:: test.asdf
+
+The `~asdf.AsdfFile.set_array_storage` method can be used to set or override
+the default storage type of a particular data array. The allowed values are
+``internal``, ``external``, and ``inline``.
 
 - ``internal``: The default.  The array data will be
   stored in a binary block in the same ASDF file.

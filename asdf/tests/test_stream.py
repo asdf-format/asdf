@@ -87,6 +87,9 @@ def test_stream_with_nonstream():
     }
 
     ff = asdf.AsdfFile(tree)
+    # Since we're testing with small arrays, force this array to be stored in
+    # an internal block rather than letting it be automatically put inline.
+    ff.set_array_storage(ff['nonstream'], 'internal')
     ff.write_to(buff)
     for i in range(100):
         buff.write(np.array([i] * 12, np.float64).tostring())
@@ -112,6 +115,10 @@ def test_stream_real_file(tmpdir):
 
     with open(path, 'wb') as fd:
         ff = asdf.AsdfFile(tree)
+        # Since we're testing with small arrays, force this array to be stored
+        # in an internal block rather than letting it be automatically put
+        # inline.
+        ff.set_array_storage(ff['nonstream'], 'internal')
         ff.write_to(fd)
         for i in range(100):
             fd.write(np.array([i] * 12, np.float64).tostring())

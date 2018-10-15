@@ -12,6 +12,7 @@ from collections import namedtuple
 from urllib import parse as urlparse
 
 import numpy as np
+from numpy.ma.core import masked_array
 
 import yaml
 
@@ -25,11 +26,14 @@ from . import util
 from . import yamlutil
 
 
+_DEFAULT_INLINE_THRESHOLD_SIZE = 50
+
+
 class BlockManager(object):
     """
     Manages the `Block`s associated with a ASDF file.
     """
-    def __init__(self, asdffile, copy_arrays=False):
+    def __init__(self, asdffile, copy_arrays=False, inline_threshold=None):
         self._asdffile = weakref.ref(asdffile)
 
         self._internal_blocks = []
@@ -43,6 +47,11 @@ class BlockManager(object):
             'inline': self._inline_blocks,
             'streamed': self._streamed_blocks
         }
+
+        if inline_threshold is not None:
+            self._inline_threshold_size = inline_threshold
+        else:
+            self._inline_threshold_size = _DEFAULT_INLINE_THRESHOLD_SIZE
 
         self._data_to_block_mapping = {}
         self._validate_checksums = False
@@ -687,6 +696,20 @@ class BlockManager(object):
 
         raise ValueError("block not found.")
 
+    def _should_inline(self, array):
+
+        if not np.issubdtype(array.dtype, np.number):
+            return False
+
+        if isinstance(array, masked_array):
+            return False
+
+        # Make sure none of the values are too large to store as literals
+        if (array > 2**52).any():
+            return False
+
+        return array.size <= self._inline_threshold_size
+
     def find_or_create_block_for_array(self, arr, ctx):
         """
         For a given array, looks for an existing block containing its
@@ -702,8 +725,7 @@ class BlockManager(object):
         block : Block
         """
         from .tags.core import ndarray
-        if (isinstance(arr, ndarray.NDArrayType) and
-            arr.block is not None):
+        if (isinstance(arr, ndarray.NDArrayType) and arr.block is not None):
             if arr.block in self.blocks:
                 return arr.block
             else:
@@ -714,6 +736,10 @@ class BlockManager(object):
         if block is not None:
             return block
         block = Block(base)
+
+        if self._should_inline(arr):
+            block._array_storage = 'inline'
+
         self.add(block)
         self._handle_global_block_settings(ctx, block)
         return block
