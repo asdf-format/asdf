@@ -5,7 +5,8 @@
   be overridden using the new ``inline_threshold`` argument to the ``AsdfFile``
   constructor. It can also be controlled with the existing
   ``set_array_storage`` method of ``AsdfFile`` and the ``all_array_storage``
-  argument to ``AsdfFile.write_to``. [#557]
+  argument to ``AsdfFile.write_to``. This change does not apply to ASDF-in-FITS
+  files. [#557]
 
 2.1.1 (unreleased)
 ------------------

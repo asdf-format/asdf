@@ -55,7 +55,8 @@ class _EmbeddedBlockManager(block.BlockManager):
     def __init__(self, hdulist, asdffile):
         self._hdulist = hdulist
 
-        super(_EmbeddedBlockManager, self).__init__(asdffile)
+        # Do not automatically inline any arrays for the ASDF-in-FITS case
+        super(_EmbeddedBlockManager, self).__init__(asdffile, inline_threshold=0)
 
     def get_block(self, source):
         if (isinstance(source, str) and source.startswith(FITS_SOURCE_PREFIX)):
