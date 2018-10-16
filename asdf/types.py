@@ -186,7 +186,7 @@ class ExtensionType:
     validators = {}
     requires = []
     yaml_tag = None
-    _subclasses = []
+    _subclass_map = {}
     _subclass_attr_map = defaultdict(lambda: list())
 
     @classmethod
@@ -315,8 +315,8 @@ class ExtensionType:
 
         node_cls = type(node)
 
-        if node_cls in cls._subclasses:
-            yaml_tag = "{}#subclass={}".format(yaml_tag, node_cls.__name__)
+        if node_cls.__name__ in cls._subclass_map and isinstance(obj, dict):
+            obj['subclass'] = node_cls.__name__
 
         if node_cls in cls._subclass_attr_map:
             if isinstance(obj, dict):
@@ -385,6 +385,9 @@ class ExtensionType:
         -------
             An instance of the custom type represented by this extension class.
         """
+        if isinstance(tree, dict) and 'subclass' in tree:
+            subcls_name = tree.pop('subclass')
+            return cls._subclass_map[subcls_name](**tree.data)
         return cls.from_tree(tree.data, ctx)
 
     @classmethod
@@ -412,7 +415,7 @@ class ExtensionType:
 
     @classmethod
     def subclass(cls, subclass):
-        cls._subclasses.append(subclass)
+        cls._subclass_map[subclass.__name__] = subclass
         for name, member in inspect.getmembers(subclass):
             if isinstance(member, AsdfSubclassProperty):
                 cls._subclass_attr_map[subclass].append((name, member))
