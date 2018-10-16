@@ -10,6 +10,9 @@
 - Fix bug that caused subclass of external type to be serialized by the wrong
   tag. [#560]
 
+- Fix bug that occurred when attempting to open invalid file but Astropy import
+  fails while checking for ASDF-in-FITS. [#562]
+
 2.1.0 (2018-09-25)
 ------------------
 
