@@ -677,10 +677,14 @@ class AsdfFile(versioning.VersionedMixin):
                             ignore_missing_extensions=ignore_missing_extensions,
                             _extension_metadata=self._extension_metadata)
             except ValueError:
-                pass
-            raise ValueError(
-                "Input object does not appear to be ASDF file or FITS with " +
-                "ASDF extension")
+                raise ValueError(
+                    "Input object does not appear to be an ASDF file or a FITS with " +
+                    "ASDF extension") from None
+            except ImportError:
+                raise ValueError(
+                    "Input object does not appear to be an ASDF file. Cannot check " +
+                    "if it is a FITS with ASDF extension because 'astropy' is not " +
+                    "installed") from None
         return cls._open_asdf(self, fd, uri=uri, mode=mode,
                 validate_checksums=validate_checksums,
                 do_not_fill_defaults=do_not_fill_defaults,
