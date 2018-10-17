@@ -6,7 +6,7 @@ import io
 import os
 import sys
 import copy
-import fractions
+from fractions import Fraction
 
 import pytest
 
@@ -23,6 +23,12 @@ from . import helpers, CustomTestType, CustomExtension
 TEST_DATA_PATH = str(helpers.get_test_data_path(''))
 
 
+class Fractional2dCoord:
+    def __init__(self, x, y):
+        self.x = x
+        self.y = y
+
+
 def fractiontype_factory():
 
     class FractionType(types.CustomType):
@@ -30,7 +36,7 @@ def fractiontype_factory():
         organization = 'nowhere.org'
         version = (1, 0, 0)
         standard = 'custom'
-        types = [fractions.Fraction]
+        types = [Fraction]
         handle_dynamic_subclasses = True
 
         @classmethod
@@ -39,9 +45,41 @@ def fractiontype_factory():
 
         @classmethod
         def from_tree(cls, tree, ctx):
-            return fractions.Fraction(tree[0], tree[1])
+            return Fraction(tree[0], tree[1])
 
     return FractionType
+
+
+def fractional2dcoordtype_factory():
+
+    FractionType = fractiontype_factory()
+
+    class Fractional2dCoordType(types.CustomType):
+        name = 'fractional_2d_coord'
+        organization = 'nowhere.org'
+        standard = 'custom'
+        version = (1, 0, 0)
+        types = [Fractional2dCoord]
+
+        @classmethod
+        def to_tree(cls, node, ctx):
+            x = yamlutil.custom_tree_to_tagged_tree(node.x, ctx)
+            y = yamlutil.custom_tree_to_tagged_tree(node.y, ctx)
+            return dict(x=x, y=y)
+
+        @classmethod
+        def from_tree(cls, tree, ctx):
+            x = yamlutil.tagged_tree_to_custom_tree(tree['x'], ctx)
+            y = yamlutil.tagged_tree_to_custom_tree(tree['y'], ctx)
+            return Fractional2dCoord(x, y)
+
+
+    class Fractional2dCoordExtension(CustomExtension):
+        @property
+        def types(self):
+            return [FractionType, Fractional2dCoordType]
+
+    return FractionType, Fractional2dCoordType, Fractional2dCoordExtension
 
 
 def test_custom_tag():
@@ -71,14 +109,14 @@ b: !core/complex-1.0.0
 
     buff = helpers.yaml_to_asdf(yaml)
     with asdf.open(buff, extensions=FractionExtension()) as ff:
-        assert ff.tree['a'] == fractions.Fraction(2, 3)
+        assert ff.tree['a'] == Fraction(2, 3)
 
         buff = io.BytesIO()
         ff.write_to(buff)
 
     buff = helpers.yaml_to_asdf(yaml)
     with asdf.open(buff, extensions=FractionCallable()) as ff:
-        assert ff.tree['a'] == fractions.Fraction(2, 3)
+        assert ff.tree['a'] == Fraction(2, 3)
 
         buff = io.BytesIO()
         ff.write_to(buff)
@@ -662,39 +700,10 @@ def test_tag_without_schema(tmpdir):
 
 def test_subclass_decorator(tmpdir):
 
-    from fractions import Fraction
-
     tmpfile = str(tmpdir.join('subclass.asdf'))
-    FractionType = fractiontype_factory()
 
-    class Fractional2dCoord:
-        def __init__(self, x, y):
-            self.x = x
-            self.y = y
-
-    class Fractional2dCoordType(types.CustomType):
-        name = 'fractional_2d_coord'
-        organization = 'nowhere.org'
-        standard = 'custom'
-        version = (1, 0, 0)
-        types = [Fractional2dCoord]
-
-        @classmethod
-        def to_tree(cls, node, ctx):
-            x = yamlutil.custom_tree_to_tagged_tree(node.x, ctx)
-            y = yamlutil.custom_tree_to_tagged_tree(node.y, ctx)
-            return dict(x=x, y=y)
-
-        @classmethod
-        def from_tree(cls, tree, ctx):
-            x = yamlutil.tagged_tree_to_custom_tree(tree['x'], ctx)
-            y = yamlutil.tagged_tree_to_custom_tree(tree['y'], ctx)
-            return Fractional2dCoord(x, y)
-
-    class Fractional2dCoordExtension(CustomExtension):
-        @property
-        def types(self):
-            return [Fractional2dCoordType, FractionType]
+    (FractionType, Fractional2dCoordType,
+        Fractional2dCoordExtension) = fractional2dcoordtype_factory()
 
     extension = Fractional2dCoordExtension()
 
@@ -727,6 +736,45 @@ def test_subclass_decorator(tmpdir):
         assert af['coord'].y == subclass_coord.y
 
 
+def test_subclass_decorator_attribute(tmpdir):
+
+    tmpfile = str(tmpdir.join('subclass.asdf'))
+
+    (FractionType, Fractional2dCoordType,
+        Fractional2dCoordExtension) = fractional2dcoordtype_factory()
+
+    extension = Fractional2dCoordExtension()
+
+    @Fractional2dCoordType.subclass
+    class Subclass2dCoord(Fractional2dCoord):
+        def __init__(self, *args, custom=None, other=None, **kwargs):
+            super().__init__(*args, **kwargs)
+            self._custom = custom
+            self._other = other
+
+        @Fractional2dCoordType.subclass_property
+        def custom(self):
+            return self._custom
+
+        @Fractional2dCoordType.subclass_property
+        def other(self):
+            return self._other
+
+    subclass_coord = Subclass2dCoord(Fraction(2, 3), Fraction(7, 9),
+                                     custom='testing', other=[1,2,3,4])
+    tree = dict(coord=subclass_coord)
+
+    with asdf.AsdfFile(tree, extensions=extension) as af:
+        af.write_to(tmpfile)
+
+    with asdf.open(tmpfile, extensions=extension) as af:
+        assert isinstance(af['coord'], Subclass2dCoord)
+        assert af['coord'].x == subclass_coord.x
+        assert af['coord'].y == subclass_coord.y
+        assert af['coord'].custom == 'testing'
+        assert af['coord'].other == [1,2,3,4]
+
+
 def test_subclass_decorator_warning(tmpdir):
 
     tmpfile = str(tmpdir.join('fraction.asdf'))
@@ -739,7 +787,7 @@ def test_subclass_decorator_warning(tmpdir):
             return [FractionType]
 
     @FractionType.subclass
-    class MyFraction(fractions.Fraction):
+    class MyFraction(Fraction):
         # We need to override __new__ since Fraction is immutable
         def __new__(cls, *args, custom='custom', **kwargs):
             self = super().__new__(cls, *args, **kwargs)
