@@ -10,6 +10,37 @@ from ...yamlutil import custom_tree_to_tagged_tree
 
 
 class IntegerType(AsdfType):
+    """
+    Enables the storage of arbitrarily large integer values
+
+    The ASDF Standard mandates that integer literals in the tree can be no
+    larger than 52 bits. Use of this class enables the storage of arbitrarily
+    large integer values.
+
+    When reading files that contain arbitrarily large integers, the values that
+    are restored in the tree will be raw Python `int` instances.
+
+    Parameters
+    ----------
+
+    value: `numbers.Integral`
+        A Python integral value (e.g. `int` or `numpy.integer`)
+
+    Examples
+    --------
+
+    >>> import asdf
+    >>> import random
+    >>> # Create a large integer value
+    >>> largeval = random.getrandombits(100)
+    >>> # Store the large integer value to the tree using asdf.IntegerType
+    >>> tree = dict(largeval=Asdf.IntegerType(largeval))
+    >>> with asdf.AsdfFile(tree) as af:
+    ...     af.write_to('largeval.asdf')
+    >>> with asdf.open('largeval.asdf') as aa:
+    ...     assert aa['largeval'] == largeval
+    """
+
     name = 'core/integer'
     version = '1.0.0'
 
