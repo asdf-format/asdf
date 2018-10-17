@@ -1,11 +1,28 @@
-ASDF - Advanced Scientific Data Format
-======================================
+..
+   ASDF - Advanced Scientific Data Format
+   ======================================
 
-|Build Status| |Documentation Status| |Coverage Status| |stsci|
-|astropy|
+.. raw:: html
 
-.. figure:: docs/_static/stsci_logo.png
-   :alt: STScI Logo
+   <p align="center">
+     <img src="docs/_static/stsci_logo.png" alt="STScI Logo">
+   </p>
+   <h1 align="center">ASDF - Advanced Scientific Data Format</h1>
+   <p align="center">
+     <a href="https://travis-ci.org/spacetelescope/asdf"><img src="https://travis-ci.org/spacetelescope/asdf.svg?branch=master" alt="Build Status"></a>
+     <a href="http://asdf.readthedocs.io/en/latest/?badge=latest"><img src="https://readthedocs.org/projects/asdf/badge/?version=latest" alt="Documentation Status"></a>
+     <a href="https://coveralls.io/github/spacetelescope/asdf?branch=master"><img src="https://coveralls.io/repos/github/spacetelescope/asdf/badge.svg?branch=master" alt="Coverage Status"></a>
+     <img src="https://img.shields.io/pypi/l/asdf.svg" alt="license">
+     <a href="http://www.stsci.edu"><img src="https://img.shields.io/badge/powered%20by-STScI-blue.svg?colorA=707170&colorB=3e8ddd&style=flat" alt="stsci"></a>
+     <a href="http://www.astropy.org/"><img src="http://img.shields.io/badge/powered%20by-AstroPy-orange.svg?style=flat" alt="astropy"></a>
+   </p>
+   <p align="center">
+     <a href="#overview">Overview</a> •
+     <a href="#installation">Installation</a> •
+     <a href="#testing">Testing</a> •
+     <a href="#documentation">Documentation</a> •
+     <a href="#contributing">Contributing</a>
+   </p>
 
 .. _begin-summary-text
 
@@ -312,14 +329,3 @@ issue or a pull request.
 
 We strive to provide a welcoming community to all of our users by
 abiding to the `Code of Conduct <CODE_OF_CONDUCT.md>`__.
-
-.. |Build Status| image:: https://travis-ci.org/spacetelescope/asdf.svg?branch=master
-   :target: https://travis-ci.org/spacetelescope/asdf
-.. |Documentation Status| image:: https://readthedocs.org/projects/asdf/badge/?version=latest
-   :target: http://asdf.readthedocs.io/en/latest/?badge=latest
-.. |Coverage Status| image:: https://coveralls.io/repos/github/spacetelescope/asdf/badge.svg?branch=master
-   :target: https://coveralls.io/github/spacetelescope/asdf?branch=master
-.. |stsci| image:: https://img.shields.io/badge/powered%20by-STScI-blue.svg?colorA=707170&colorB=3e8ddd&style=flat
-   :target: http://www.stsci.edu
-.. |astropy| image:: http://img.shields.io/badge/powered%20by-AstroPy-orange.svg?style=flat
-   :target: http://www.astropy.org/
