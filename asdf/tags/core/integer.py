@@ -26,6 +26,11 @@ class IntegerType(AsdfType):
     value: `numbers.Integral`
         A Python integral value (e.g. `int` or `numpy.integer`)
 
+    storage_type: `str`, optional
+        Optionally overrides the storage type of the array used to represent
+        the integer value. Valid values are "internal" (the default) and
+        "inline"
+
     Examples
     --------
 
@@ -44,9 +49,11 @@ class IntegerType(AsdfType):
     name = 'core/integer'
     version = '1.0.0'
 
-    def __init__(self, value):
+    def __init__(self, value, storage_type='internal'):
+        assert storage_type in ['internal', 'inline'], "Invalid storage type given"
         self._value = value
         self._sign = '-' if value < 0 else '+'
+        self._storage = storage_type
 
     @classmethod
     def to_tree(cls, node, ctx):
@@ -59,7 +66,8 @@ class IntegerType(AsdfType):
 
         tree = dict()
         array = np.array(words, dtype=np.uint32)
-        tree['words'] = custom_tree_to_tagged_tree(np.array(words), ctx)
+        ctx.set_array_storage(array, node._storage)
+        tree['words'] = custom_tree_to_tagged_tree(array, ctx)
         tree['sign'] = node._sign
 
         return tree
