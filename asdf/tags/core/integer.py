@@ -49,6 +49,8 @@ class IntegerType(AsdfType):
     name = 'core/integer'
     version = '1.0.0'
 
+    _value_cache = dict()
+
     def __init__(self, value, storage_type='internal'):
         assert storage_type in ['internal', 'inline'], "Invalid storage type given"
         self._value = value
@@ -57,15 +59,28 @@ class IntegerType(AsdfType):
 
     @classmethod
     def to_tree(cls, node, ctx):
-        # pack integer value into 32-bit words
-        words = []
-        value = int(np.abs(node._value))
-        while value > 0:
-            words.append(value & 0xffffffff)
-            value >>= 32
+
+        if ctx not in cls._value_cache:
+            cls._value_cache[ctx] = dict()
+
+        abs_value = int(np.abs(node._value))
+
+        # If the same value has already been stored, reuse the array
+        if abs_value in cls._value_cache[ctx]:
+            array = cls._value_cache[ctx][abs_value]
+        else:
+            # pack integer value into 32-bit words
+            words = []
+            value = abs_value
+            while value > 0:
+                words.append(value & 0xffffffff)
+                value >>= 32
+
+            array = np.array(words, dtype=np.uint32)
+            if node._storage == 'internal':
+                cls._value_cache[ctx][abs_value] = array
 
         tree = dict()
-        array = np.array(words, dtype=np.uint32)
         ctx.set_array_storage(array, node._storage)
         tree['words'] = custom_tree_to_tagged_tree(array, ctx)
         tree['sign'] = node._sign
