@@ -15,7 +15,7 @@ from ._internal_init import *
 
 __all__ = [
     'AsdfFile', 'CustomType', 'AsdfExtension', 'Stream', 'open', 'test',
-    'commands', 'ExternalArrayReference'
+    'commands', 'IntegerType', 'ExternalArrayReference'
 ]
 
 try:
