@@ -44,4 +44,5 @@ class ExtensionMetadata(AsdfType):
 from .constant import ConstantType
 from .ndarray import NDArrayType
 from .complex import ComplexType
+from .integer import IntegerType
 from .external_reference import ExternalArrayReference
