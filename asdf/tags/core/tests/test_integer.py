@@ -57,6 +57,9 @@ def test_integer_storage(tmpdir, inline):
             assert 'source' in rf.tree['integer']['words']
             assert 'data' not in rf.tree['integer']['words']
 
+        assert 'string' in rf.tree['integer']
+        assert rf.tree['integer']['string'] == str(value)
+
 
 def test_integer_storage_duplication(tmpdir):
 
