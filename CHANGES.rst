@@ -24,6 +24,12 @@
   types. This warning is converted to an error when using
   ``assert_roundtrip_tree`` for tests. [#583]
 
+- Storage of arbitrary precision integers is now provided by
+  ``asdf.IntegerType``.  Reading a file with integer literals that are too
+  large now causes only a warning instead of a validation error. This is to
+  provide backwards compatibility for files that were created with a buggy
+  version of ASDF (see #553 below). [#566]
+
 2.1.2 (2018-11-13)
 ------------------
 
