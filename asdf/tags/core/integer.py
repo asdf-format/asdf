@@ -37,9 +37,9 @@ class IntegerType(AsdfType):
     >>> import asdf
     >>> import random
     >>> # Create a large integer value
-    >>> largeval = random.getrandombits(100)
+    >>> largeval = random.getrandbits(100)
     >>> # Store the large integer value to the tree using asdf.IntegerType
-    >>> tree = dict(largeval=Asdf.IntegerType(largeval))
+    >>> tree = dict(largeval=asdf.IntegerType(largeval))
     >>> with asdf.AsdfFile(tree) as af:
     ...     af.write_to('largeval.asdf')
     >>> with asdf.open('largeval.asdf') as aa:

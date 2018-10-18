@@ -132,14 +132,14 @@ class AsdfSpec(SpecItem, Spec):
         return super(AsdfSpec, self).__hash__()
 
 
-default_version = AsdfVersion('1.2.0')
-
-
 supported_versions = [
     AsdfVersion('1.0.0'),
     AsdfVersion('1.1.0'),
-    AsdfVersion('1.2.0')
+    AsdfVersion('1.2.0'),
+    AsdfVersion('1.3.0')
 ]
+
+default_version = supported_versions[-1]
 
 
 class VersionedMixin(object):
