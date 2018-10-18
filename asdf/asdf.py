@@ -415,13 +415,14 @@ class AsdfFile(versioning.VersionedMixin):
         """
         return self._comments
 
-    def _validate(self, tree, custom=True):
+    def _validate(self, tree, custom=True, reading=False):
         tagged_tree = yamlutil.custom_tree_to_tagged_tree(
             tree, self)
-        schema.validate(tagged_tree, self)
+        schema.validate(tagged_tree, self, reading=reading)
         # Perform secondary validation pass if requested
         if custom and self._custom_schema:
-            schema.validate(tagged_tree, self, self._custom_schema)
+            schema.validate(tagged_tree, self, self._custom_schema,
+                            reading=reading)
 
     def validate(self):
         """
@@ -654,10 +655,10 @@ class AsdfFile(versioning.VersionedMixin):
 
         tree = reference.find_references(tree, self)
         if not do_not_fill_defaults:
-            schema.fill_defaults(tree, self)
+            schema.fill_defaults(tree, self, reading=True)
 
         try:
-            self._validate(tree)
+            self._validate(tree, reading=True)
         except ValidationError:
             self.close()
             raise
