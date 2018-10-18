@@ -84,6 +84,7 @@ class IntegerType(AsdfType):
         ctx.set_array_storage(array, node._storage)
         tree['words'] = custom_tree_to_tagged_tree(array, ctx)
         tree['sign'] = node._sign
+        tree['string'] = str(int(node._value))
 
         return tree
 
