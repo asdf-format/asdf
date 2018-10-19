@@ -21,11 +21,6 @@ packagename = os.path.basename(os.path.dirname(__file__))
 TESTED_VERSIONS[packagename] = version.version
 
 
-pytest_plugins = [
-    'asdf.tests.schema_tester'
-]
-
-
 try:
     PYTEST_HEADER_MODULES['Astropy'] = 'astropy'
     PYTEST_HEADER_MODULES['jsonschema'] = 'jsonschema'
