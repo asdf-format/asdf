@@ -8,6 +8,11 @@ from astropy.tests.helper import enable_deprecations_as_exceptions
 
 enable_deprecations_as_exceptions()
 
+pytest_plugins = [
+    'asdf.tests.schema_tester'
+]
+
+
 @pytest.fixture(autouse=True)
 def _docdir(request):
     """
