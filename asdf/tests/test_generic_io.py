@@ -16,12 +16,10 @@ from asdf import util
 from asdf import generic_io
 from asdf.asdf import is_asdf_file
 
-from . import helpers
-# The only reason for importing these is to use them in the fixture below
-from .conftest import small_tree, large_tree
+from . import helpers, create_small_tree, create_large_tree
 
 
-@pytest.fixture(params=[small_tree, large_tree])
+@pytest.fixture(params=[create_small_tree, create_large_tree])
 def tree(request):
     return request.param()
 
