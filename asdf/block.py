@@ -705,7 +705,7 @@ class BlockManager(object):
             return False
 
         # Make sure none of the values are too large to store as literals
-        if (array > 2**52).any():
+        if (array[~np.isnan(array)] > 2**52).any():
             return False
 
         return array.size <= self._inline_threshold_size

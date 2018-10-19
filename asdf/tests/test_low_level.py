@@ -18,7 +18,8 @@ from asdf import treeutil
 from asdf import versioning
 from asdf.exceptions import AsdfDeprecationWarning
 
-from ..tests.helpers import assert_tree_match
+from ..tests.helpers import (assert_tree_match, assert_roundtrip_tree,
+                             display_warnings)
 
 
 def test_no_yaml_end_marker(tmpdir):
@@ -1292,3 +1293,16 @@ def test_inline_threshold_override(tmpdir):
         af.write_to(tmpfile, all_array_storage='inline')
         assert len(list(af.blocks.inline_blocks)) == 2
         assert len(list(af.blocks.internal_blocks)) == 0
+
+
+def test_no_warning_nan_array(tmpdir):
+    """
+    Tests for a regression that was introduced by
+    https://github.com/spacetelescope/asdf/pull/557
+    """
+
+    tree = dict(array=np.array([1, 2, np.nan]))
+
+    with pytest.warns(None) as w:
+        assert_roundtrip_tree(tree, tmpdir)
+        assert len(w) == 0, display_warnings(w)
