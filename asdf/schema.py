@@ -4,6 +4,7 @@
 import os
 import json
 import datetime
+import warnings
 from numbers import Integral
 from functools import lru_cache
 from collections import OrderedDict
@@ -218,7 +219,12 @@ def _create_validator(validators=YAML_VALIDATORS):
                 if tag is not None:
                     schema_path = self.ctx.resolver(tag)
                     if schema_path != tag:
-                        s = load_schema(schema_path, self.ctx.resolver)
+                        try:
+                            s = load_schema(schema_path, self.ctx.resolver)
+                        except FileNotFoundError:
+                            msg = "Unable to locate schema file for '{}': '{}'"
+                            warnings.warn(msg.format(tag, schema_path))
+                            s = {}
                         if s:
                             with self.resolver.in_scope(schema_path):
                                 for x in super(ASDFValidator, self).iter_errors(instance, s):
