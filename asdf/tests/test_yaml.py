@@ -9,7 +9,7 @@ import numpy as np
 
 import pytest
 
-import yaml
+import ruamel.yaml as yaml
 
 import asdf
 from asdf import tagged

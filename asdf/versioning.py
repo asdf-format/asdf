@@ -5,9 +5,8 @@
 This module deals with things that change between different versions
 of the ASDF spec.
 """
+import ruamel.yaml as yaml
 from functools import total_ordering
-
-import yaml
 
 if getattr(yaml, '__with_libyaml__', None):  # pragma: no cover
     _yaml_base_loader = yaml.CSafeLoader

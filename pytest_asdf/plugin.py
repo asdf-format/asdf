@@ -5,7 +5,7 @@ import os
 from importlib.util import find_spec
 from pkg_resources import parse_version
 
-import yaml
+import ruamel.yaml as yaml
 import pytest
 
 import numpy as np

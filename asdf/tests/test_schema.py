@@ -8,7 +8,6 @@ import warnings
 
 from jsonschema import ValidationError
 
-import yaml
 import pytest
 
 import numpy as np

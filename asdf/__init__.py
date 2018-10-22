@@ -19,9 +19,9 @@ __all__ = [
 ]
 
 try:
-    import yaml as _
+    import ruamel.yaml as _
 except ImportError:
-    raise ImportError("asdf requires pyyaml")
+    raise ImportError("asdf requires ruamel.yaml")
 
 try:
     import jsonschema as _

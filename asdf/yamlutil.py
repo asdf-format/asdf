@@ -6,7 +6,7 @@ from collections import OrderedDict
 
 import numpy as np
 
-import yaml
+import ruamel.yaml as yaml
 
 from . import schema
 from . import tagged

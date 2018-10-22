@@ -14,7 +14,7 @@ from urllib import parse as urlparse
 from jsonschema import validators as mvalidators
 from jsonschema.exceptions import ValidationError
 
-import yaml
+import ruamel.yaml as yaml
 
 from . import constants
 from . import generic_io

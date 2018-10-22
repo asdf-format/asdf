@@ -14,7 +14,7 @@ from urllib import parse as urlparse
 import numpy as np
 from numpy.ma.core import masked_array
 
-import yaml
+import ruamel.yaml as yaml
 
 from . import compression as mcompression
 from .compat.numpycompat import NUMPY_LT_1_7

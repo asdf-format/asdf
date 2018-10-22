@@ -14,7 +14,7 @@ from numpy.testing import assert_array_equal
 
 import jsonschema
 
-import yaml
+import ruamel.yaml as yaml
 
 import asdf
 from asdf import util
