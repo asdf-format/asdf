@@ -730,3 +730,50 @@ def test_custom_validation_with_definitions_bad(tmpdir):
     with pytest.raises(ValidationError):
         with asdf.open(asdf_file, custom_schema=custom_schema_path) as ff:
             pass
+
+
+def test_nonexistent_tag(tmpdir):
+    """
+    This tests the case where a node is tagged with a type that apparently
+    comes from an extension that is known, but the type itself can't be found.
+
+    This could occur when a more recent version of an installed package
+    provides the new type, but an older version of the package is installed.
+    ASDF should still be able to open the file in this case, but it won't be
+    able to restore the type.
+
+    The bug that prompted this test results from attempting to load a schema
+    file that doesn't exist, which is why this test belongs in this file.
+    """
+
+    # This shouldn't ever happen, but it's a useful test case
+    yaml = """
+a: !core/doesnt_exist-1.0.0
+  hello
+    """
+
+    buff = helpers.yaml_to_asdf(yaml)
+    with pytest.warns(None) as w:
+        with asdf.open(buff) as af:
+            assert str(af['a']) == 'hello'
+        # Currently there are 3 warnings since one occurs on each of the
+        # validation passes. It would be good to consolidate these eventually
+        assert len(w) == 3, helpers.display_warnings(w)
+        assert str(w[0].message).startswith("Unable to locate schema file")
+        assert str(w[1].message).startswith("Unable to locate schema file")
+        assert str(w[2].message).startswith(af['a']._tag)
+
+    # This is a more realistic case since we're using an external extension
+    yaml = """
+a: !<tag:nowhere.org:custom/doesnt_exist-1.0.0>
+  hello
+  """
+
+    buff = helpers.yaml_to_asdf(yaml)
+    with pytest.warns(None) as w:
+        with asdf.open(buff, extensions=CustomExtension()) as af:
+            assert str(af['a']) == 'hello'
+        assert len(w) == 3, helpers.display_warnings(w)
+        assert str(w[0].message).startswith("Unable to locate schema file")
+        assert str(w[1].message).startswith("Unable to locate schema file")
+        assert str(w[2].message).startswith(af['a']._tag)
