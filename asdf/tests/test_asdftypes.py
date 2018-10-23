@@ -643,3 +643,60 @@ def test_extension_override_subclass(tmpdir):
         contents = str(ff.read())
         assert gwcs.tags.WCSType.yaml_tag in contents
         assert asdf.tags.wcs.WCSType.yaml_tag not in contents
+
+
+def test_tag_without_schema(tmpdir):
+
+    tmpfile = str(tmpdir.join('foo.asdf'))
+
+    class FooType(asdftypes.CustomType):
+        name = 'foo'
+
+        def __init__(self, a, b):
+            self.a = a
+            self.b = b
+
+        @classmethod
+        def from_tree(cls, tree, ctx):
+            return cls(tree['a'], tree['b'])
+
+        @classmethod
+        def to_tree(cls, node, ctx):
+            return dict(a=node.a, b=node.b)
+
+        def __eq__(self, other):
+            return self.a == other.a and self.b == other.b
+
+    class FooExtension:
+        @property
+        def types(self):
+            return [FooType]
+
+        @property
+        def tag_mapping(self):
+            return []
+
+        @property
+        def url_mapping(self):
+            return []
+
+    foo = FooType('hello', 42)
+    tree = dict(foo=foo)
+
+    with pytest.warns(UserWarning) as w:
+        with asdf.AsdfFile(tree, extensions=FooExtension()) as af:
+            af.write_to(tmpfile)
+        # There are three validation passes when writing. Eventually this may
+        # change
+        assert len(w) == 3, helpers.display_warnings(w)
+        assert str(w[0].message).startswith('Unable to locate schema file')
+        assert str(w[1].message).startswith('Unable to locate schema file')
+        assert str(w[2].message).startswith('Unable to locate schema file')
+
+    with pytest.warns(UserWarning) as w:
+        with asdf.AsdfFile(tree, extensions=FooExtension()) as ff:
+            assert isinstance(ff.tree['foo'], FooType)
+            assert ff.tree['foo'] == tree['foo']
+        # There is only one validation pass when writing.
+        assert len(w) == 1, helpers.display_warnings(w)
+        assert str(w[0].message).startswith('Unable to locate schema file')
