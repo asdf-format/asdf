@@ -90,13 +90,18 @@ class AsdfFile(versioning.VersionedMixin):
 
         copy_arrays : bool, optional
             When `False`, when reading files, attempt to memmap underlying data
-            arrays when possible.
+            arrays when possible. Please note that the file must be opened
+            in "rw" mode; "r" will result a SIGSEGV.
 
         lazy_load : bool, optional
-            When `True` and the read file is seekable, underlying data arrays
-            will be materialized when they are used for the first time.
-            This implies that the file should stay open during the lifetime
-            of the tree.
+            When `True` and the underlying file handle is seekable, data
+            arrays will only be loaded lazily: i.e. when they are accessed
+            for the first time. In this case the underlying file must stay
+            open during the lifetime of the tree. Setting to False causes
+            all data arrays to be loaded up front, which means that they
+            can be accessed even after the underlying file is closed.
+            Note: even if `lazy_load` is `False`, `copy_arrays` is still taken
+            into account.
 
         custom_schema : str, optional
             Path to a custom schema file that will be used for a secondary
@@ -751,13 +756,18 @@ class AsdfFile(versioning.VersionedMixin):
 
         copy_arrays : bool, optional
             When `False`, when reading files, attempt to memmap underlying data
-            arrays when possible.
+            arrays when possible. Please note that the file must be opened
+            in "rw" mode; "r" will result a SIGSEGV.
 
         lazy_load : bool, optional
-            When `True` and the read file is seekable, underlying data arrays
-            will be materialized when they are used for the first time.
-            This implies that the file should stay open during the lifetime
-            of the tree.
+            When `True` and the underlying file handle is seekable, data
+            arrays will only be loaded lazily: i.e. when they are accessed
+            for the first time. In this case the underlying file must stay
+            open during the lifetime of the tree. Setting to False causes
+            all data arrays to be loaded up front, which means that they
+            can be accessed even after the underlying file is closed.
+            Note: even if `lazy_load` is `False`, `copy_arrays` is still taken
+            into account.
 
         custom_schema : str, optional
             Path to a custom schema file that will be used for a secondary
