@@ -193,6 +193,21 @@ class BlockManager(object):
         for block in self._inline_blocks:
             yield block
 
+    @property
+    def memmap(self):
+        """
+        The flag which indicates whether the arrays are memory mapped
+        to the underlying file.
+        """
+        return self._memmap
+
+    @property
+    def lazy_load(self):
+        """
+        The flag which indicates whether the blocks are lazily read.
+        """
+        return self._lazy_load
+
     def has_blocks_with_offset(self):
         """
         Returns `True` if any of the internal blocks currently have an
@@ -204,7 +219,7 @@ class BlockManager(object):
         return False
 
     def _new_block(self):
-        return Block(memmap=self._memmap, lazy_load=self._lazy_load)
+        return Block(memmap=self.memmap, lazy_load=self.lazy_load)
 
     def _sort_blocks_by_offset(self):
         def sorter(x):
@@ -518,13 +533,13 @@ class BlockManager(object):
         for offset in offsets[1:-1]:
             self._internal_blocks.append(
                 UnloadedBlock(fd, offset,
-                              memmap=self._memmap, lazy_load=self._lazy_load))
+                              memmap=self.memmap, lazy_load=self.lazy_load))
 
         # We already read the last block in the file -- no need to read it again
         self._internal_blocks.append(block)
 
         # Materialize the internal blocks if we are not lazy
-        if not self._lazy_load:
+        if not self.lazy_load:
             self.finish_reading_internal_blocks()
 
     def get_external_filename(self, filename, index):
