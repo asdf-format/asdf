@@ -99,7 +99,13 @@ class IntegerType(AsdfType):
         if tree['sign'] == '-':
             value = -value
 
-        return value
+        return IntegerType(value)
+
+    def __int__(self):
+        return int(self._value)
+
+    def __float__(self):
+        return float(self._value)
 
     def __eq__(self, other):
         if isinstance(other, Integral):
