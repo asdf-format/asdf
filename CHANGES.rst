@@ -14,6 +14,12 @@
   is still effective and the active memory maps may still require the file
   to stay open in case ``copy_arrays`` is ``False``. [#573]
 
+- Storage of arbitrary precision integers is now provided by
+  ``asdf.IntegerType``.  Reading a file with integer literals that are too
+  large now causes only a warning instead of a validation error. This is to
+  provide backwards compatibility for files that were created with a buggy
+  version of ASDF (see #553 below). [#566]
+
 2.1.1 (unreleased)
 ------------------
 

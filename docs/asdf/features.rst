@@ -18,6 +18,19 @@ respectively. The top-level tree object behaves like a Python dictionary and
 supports arbitrary nesting of data structures. For simple examples of creating
 and reading trees, see :ref:`overview`.
 
+.. note::
+
+   The ASDF Standard imposes a maximum size of 52 bits for integer literals in
+   the tree (see `the docs <https://asdf-standard.readthedocs.io/en/latest/known_limits.html#literal-integer-values-in-the-tree>`_
+   for details and justification). Attempting to store a larger value will
+   result in a validation error.
+
+   Integers and floats of up to 64 bits can be stored inside of :mod:`numpy`
+   arrays (see below).
+
+   For arbitrary precision integer support, see `IntegerType`.
+
+
 One of the key features of ASDF is its ability to serialize :mod:`numpy`
 arrays. This is discussed in detail in :ref:`array-data`.
 

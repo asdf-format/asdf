@@ -507,6 +507,24 @@ def test_large_literals(use_numpy):
         print(buff.getvalue())
 
 
+def test_read_large_literal():
+
+    value = 1 << 64
+    yaml = """integer: {}""".format(value)
+
+    buff = helpers.yaml_to_asdf(yaml)
+
+    with pytest.warns(UserWarning) as w:
+        with asdf.open(buff) as af:
+            assert af['integer'] == value
+
+        # We get two warnings: one for validation time, and one when defaults
+        # are filled. It seems like we could improve this architecture, though...
+        assert len(w) == 2
+        assert str(w[0].message).startswith('Invalid integer literal value')
+        assert str(w[1].message).startswith('Invalid integer literal value')
+
+
 def test_nested_array():
     s = {
         'type': 'object',
