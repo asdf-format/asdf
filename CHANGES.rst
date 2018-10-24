@@ -6,13 +6,13 @@
   constructor. It can also be controlled with the existing
   ``set_array_storage`` method of ``AsdfFile`` and the ``all_array_storage``
   argument to ``AsdfFile.write_to``. [#557]
-- Add new parameter `lazy_load` to ``AsdfFile.open``. It is ``True`` by
+- Add new parameter ``lazy_load`` to ``AsdfFile.open``. It is ``True`` by
   default and preserves the default behavior. ``False`` detaches the
   loaded tree from the underlying file: all blocks are fully read and
   numpy arrays are materialized. Thus it becomes safe to close the file
-  and continue using ``AsdfFile.tree``. However, `copy_arrays` parameter
+  and continue using ``AsdfFile.tree``. However, ``copy_arrays`` parameter
   is still effective and the active memory maps may still require the file
-  to stay open in case `copy_arrays` is ``False``. [#573]
+  to stay open in case ``copy_arrays`` is ``False``. [#573]
 
 2.1.1 (unreleased)
 ------------------
