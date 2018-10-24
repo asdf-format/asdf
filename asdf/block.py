@@ -33,7 +33,8 @@ class BlockManager(object):
     """
     Manages the `Block`s associated with a ASDF file.
     """
-    def __init__(self, asdffile, copy_arrays=False, inline_threshold=None):
+    def __init__(self, asdffile, copy_arrays=False, inline_threshold=None,
+                 lazy_load=True):
         self._asdffile = weakref.ref(asdffile)
 
         self._internal_blocks = []
@@ -56,6 +57,7 @@ class BlockManager(object):
         self._data_to_block_mapping = {}
         self._validate_checksums = False
         self._memmap = not copy_arrays
+        self._lazy_load = lazy_load
 
     def __len__(self):
         """
@@ -201,6 +203,9 @@ class BlockManager(object):
                 return True
         return False
 
+    def _new_block(self):
+        return Block(memmap=self._memmap, lazy_load=self._lazy_load)
+
     def _sort_blocks_by_offset(self):
         def sorter(x):
             if x.offset is None:
@@ -212,7 +217,7 @@ class BlockManager(object):
     def _read_next_internal_block(self, fd, past_magic=False):
         # This assumes the file pointer is at the beginning of the
         # block, (or beginning + 4 if past_magic is True)
-        block = Block(memmap=self._memmap).read(
+        block = self._new_block().read(
             fd, past_magic=past_magic,
             validate_checksum=self._validate_checksums)
         if block is not None:
@@ -262,22 +267,23 @@ class BlockManager(object):
         This is called before updating a file, since updating requires
         knowledge of all internal blocks in the file.
         """
-        if len(self._internal_blocks):
-            for i, block in enumerate(self._internal_blocks):
-                if isinstance(block, UnloadedBlock):
-                    block.load()
+        if not self._internal_blocks:
+            return
+        for i, block in enumerate(self._internal_blocks):
+            if isinstance(block, UnloadedBlock):
+                block.load()
 
-            last_block = self._internal_blocks[-1]
+        last_block = self._internal_blocks[-1]
 
-            # Read all of the remaining blocks in the file, if any
-            if (last_block._fd is not None and
-                last_block._fd.seekable()):
-                last_block._fd.seek(last_block.end_offset)
-                while True:
-                    last_block = self._read_next_internal_block(
-                        last_block._fd, False)
-                    if last_block is None:
-                        break
+        # Read all of the remaining blocks in the file, if any
+        if (last_block._fd is not None and
+            last_block._fd.seekable()):
+            last_block._fd.seek(last_block.end_offset)
+            while True:
+                last_block = self._read_next_internal_block(
+                    last_block._fd, False)
+                if last_block is None:
+                    break
 
     def write_internal_blocks_serial(self, fd, pad_blocks=False):
         """
@@ -499,7 +505,7 @@ class BlockManager(object):
         # make sure it makes sense.
         fd.seek(offsets[-1], generic_io.SEEK_SET)
         try:
-            block = Block(memmap=self._memmap).read(fd)
+            block = self._new_block().read(fd)
         except (ValueError, IOError):
             return
 
@@ -511,10 +517,15 @@ class BlockManager(object):
         # objects
         for offset in offsets[1:-1]:
             self._internal_blocks.append(
-                UnloadedBlock(fd, offset, memmap=self._memmap))
+                UnloadedBlock(fd, offset,
+                              memmap=self._memmap, lazy_load=self._lazy_load))
 
         # We already read the last block in the file -- no need to read it again
         self._internal_blocks.append(block)
+
+        # Materialize the internal blocks if we are not lazy
+        if not self._lazy_load:
+            self.finish_reading_internal_blocks()
 
     def get_external_filename(self, filename, index):
         """
@@ -788,7 +799,8 @@ class Block(object):
         ('checksum', '16s')
     ])
 
-    def __init__(self, data=None, uri=None, array_storage='internal', memmap=True):
+    def __init__(self, data=None, uri=None, array_storage='internal',
+                 memmap=True, lazy_load=True):
         if isinstance(data, np.ndarray) and not data.flags.c_contiguous:
             if data.flags.f_contiguous:
                 self._data = np.asfortranarray(data)
@@ -806,6 +818,7 @@ class Block(object):
         self._checksum = None
         self._should_memmap = memmap
         self._memmapped = False
+        self._lazy_load = lazy_load
 
         self.update_size()
         self._allocated = self._size
@@ -943,10 +956,10 @@ class Block(object):
         """
         Read a Block from the given Python file-like object.
 
-        If the file is seekable, the reading or memmapping of the
-        actual data is postponed until an array requests it.  If the
-        file is a stream, the data will be read into memory
-        immediately.
+        If the file is seekable and lazy_load is True, the reading
+        or memmapping of the actual data is postponed until an array
+        requests it.  If the file is a stream or lazy_load is False,
+        the data will be read into memory immediately.
 
         Parameters
         ----------
@@ -1012,19 +1025,27 @@ class Block(object):
             # If the file is seekable, we can delay reading the actual
             # data until later.
             self._fd = fd
-            self._header_size = header_size
             self._offset = offset
+            self._header_size = header_size
             if header['flags'] & constants.BLOCK_FLAG_STREAMED:
                 # Support streaming blocks
-                fd.fast_forward(-1)
                 self._array_storage = 'streamed'
-                self._data_size = self._size = self._allocated = \
-                    (fd.tell() - self.data_offset) + 1
+                if self._lazy_load:
+                    fd.fast_forward(-1)
+                    self._data_size = self._size = self._allocated = \
+                        (fd.tell() - self.data_offset) + 1
+                else:
+                    self._data = fd.read_into_array(-1)
+                    self._data_size = self._size = self._allocated = len(self._data)
             else:
-                fd.fast_forward(header['allocated_size'])
                 self._allocated = header['allocated_size']
                 self._size = header['used_size']
                 self._data_size = header['data_size']
+                if self._lazy_load:
+                    fd.fast_forward(header['allocated_size'])
+                else:
+                    self._data = self._read_data(fd, self._size, self._data_size)
+                    fd.fast_forward(self._allocated - self._size)
         else:
             # If the file is a stream, we need to get the data now.
             if header['flags'] & constants.BLOCK_FLAG_STREAMED:
@@ -1033,9 +1054,9 @@ class Block(object):
                 self._data = fd.read_into_array(-1)
                 self._data_size = self._size = self._allocated = len(self._data)
             else:
-                self._data_size = header['data_size']
-                self._size = header['used_size']
                 self._allocated = header['allocated_size']
+                self._size = header['used_size']
+                self._data_size = header['data_size']
                 self._data = self._read_data(fd, self._size, self._data_size)
                 fd.fast_forward(self._allocated - self._size)
             fd.close()
@@ -1165,7 +1186,7 @@ class UnloadedBlock(object):
     full-fledged block whenever the underlying data or more detail is
     requested.
     """
-    def __init__(self, fd, offset, memmap=True):
+    def __init__(self, fd, offset, memmap=True, lazy_load=True):
         self._fd = fd
         self._offset = offset
         self._data = None
@@ -1176,6 +1197,7 @@ class UnloadedBlock(object):
         self._checksum = None
         self._should_memmap = memmap
         self._memmapped = False
+        self._lazy_load = lazy_load
 
     def __len__(self):
         self.load()
