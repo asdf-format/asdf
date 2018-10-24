@@ -1057,10 +1057,16 @@ class Block(object):
                 self._size = header['used_size']
                 self._data_size = header['data_size']
                 if self._lazy_load:
-                    fd.fast_forward(header['allocated_size'])
+                    fd.fast_forward(self._allocated)
                 else:
-                    self._data = self._read_data(fd, self._size, self._data_size)
-                    fd.fast_forward(self._allocated - self._size)
+                    curpos = fd.tell()
+                    self._memmap_data()
+                    fd.seek(curpos)
+                    if not self._memmapped:
+                        self._data = self._read_data(fd, self._size, self._data_size)
+                        fd.fast_forward(self._allocated - self._size)
+                    else:
+                        fd.fast_forward(self._allocated)
         else:
             # If the file is a stream, we need to get the data now.
             if header['flags'] & constants.BLOCK_FLAG_STREAMED:
@@ -1084,11 +1090,23 @@ class Block(object):
         return self
 
     def _read_data(self, fd, used_size, data_size):
+        """
+        Read the block data from a file.
+        """
         if not self.input_compression:
             return fd.read_into_array(used_size)
         else:
             return mcompression.decompress(
                 fd, used_size, data_size, self.input_compression)
+
+    def _memmap_data(self):
+        """
+        Memory map the block data from the file.
+        """
+        memmap = self._fd.can_memmap() and not self.input_compression
+        if self._should_memmap and memmap:
+            self._data = self._fd.memmap_array(self.data_offset, self._size)
+            self._memmapped = True
 
     def write(self, fd):
         """
@@ -1166,12 +1184,8 @@ class Block(object):
             # Be nice and reset the file position after we're done
             curpos = self._fd.tell()
             try:
-                memmap = self._fd.can_memmap() and not self.input_compression
-                if self._should_memmap and memmap:
-                    self._data = self._fd.memmap_array(
-                        self.data_offset, self._size)
-                    self._memmapped = True
-                else:
+                self._memmap_data()
+                if not self._memmapped:
                     self._fd.seek(self.data_offset)
                     self._data = self._read_data(
                         self._fd, self._size, self._data_size)

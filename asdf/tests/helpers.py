@@ -243,6 +243,14 @@ def assert_roundtrip_tree(tree, tmpdir, *, asdf_check_func=None,
     if asdf_check_func:
         asdf_check_func(ff)
 
+    # Now repeat with copy_arrays=False and a real file to test mmap()
+    AsdfFile(tree, extensions=extensions, **init_options).write_to(fname, **write_options)
+    with AsdfFile.open(fname, mode='rw', extensions=extensions, copy_arrays=False,
+                       lazy_load=False) as ff:
+        assert_tree_match(tree, ff.tree, ff, funcname=tree_match_func)
+        if asdf_check_func:
+            asdf_check_func(ff)
+
 def yaml_to_asdf(yaml_content, yaml_headers=True, standard_version=None):
     """
     Given a string of YAML content, adds the extra pre-
