@@ -1306,3 +1306,27 @@ def test_no_warning_nan_array(tmpdir):
     with pytest.warns(None) as w:
         assert_roundtrip_tree(tree, tmpdir)
         assert len(w) == 0, display_warnings(w)
+
+
+def test_read_mode(tmpdir):
+    """
+    This test attempts (unsuccessfully) to reproduce the issue reported in
+    https://github.com/spacetelescope/asdf/issues/574
+    """
+
+    tmpfile = str(tmpdir.join('data.asdf'))
+
+    data = np.ones(256)
+
+    with asdf.AsdfFile(tree=dict(data=data)) as af:
+        af.write_to(tmpfile)
+
+    with asdf.open(tmpfile, mode='r') as aa:
+        np.testing.assert_array_equal(aa['data'], data)
+
+    with asdf.open(tmpfile, mode='rw') as aa:
+        np.testing.assert_array_equal(aa['data'], data)
+
+    with open(tmpfile, 'rb') as ff:
+        with asdf.open(ff, mode='r') as aa:
+            np.testing.assert_array_equal(aa['data'], data)
