@@ -20,9 +20,9 @@ except ImportError:
     CartesianDifferential = None
 
 from ..asdf import AsdfFile, get_asdf_library_info
+from ..block import Block
 from .httpserver import RangeHTTPServer
 from ..extension import default_extensions
-from .. import util
 from .. import versioning
 
 from ..tags.core import AsdfObject
@@ -233,6 +233,30 @@ def assert_roundtrip_tree(tree, tmpdir, *, asdf_check_func=None,
         finally:
             server.finalize()
 
+    # Now don't be lazy and check that nothing breaks
+    with io.BytesIO() as buff:
+        AsdfFile(tree, extensions=extensions, **init_options).write_to(buff, **write_options)
+        buff.seek(0)
+        ff = AsdfFile.open(buff, extensions=extensions, copy_arrays=True, lazy_load=False)
+        # Ensure that all the blocks are loaded
+        for block in ff.blocks._internal_blocks:
+            assert isinstance(block, Block)
+            assert block._data is not None
+    # The underlying file is closed at this time and everything should still work
+    assert_tree_match(tree, ff.tree, ff, funcname=tree_match_func)
+    if asdf_check_func:
+        asdf_check_func(ff)
+
+    # Now repeat with copy_arrays=False and a real file to test mmap()
+    AsdfFile(tree, extensions=extensions, **init_options).write_to(fname, **write_options)
+    with AsdfFile.open(fname, mode='rw', extensions=extensions, copy_arrays=False,
+                       lazy_load=False) as ff:
+        for block in ff.blocks._internal_blocks:
+            assert isinstance(block, Block)
+            assert block._data is not None
+        assert_tree_match(tree, ff.tree, ff, funcname=tree_match_func)
+        if asdf_check_func:
+            asdf_check_func(ff)
 
 def yaml_to_asdf(yaml_content, yaml_headers=True, standard_version=None):
     """

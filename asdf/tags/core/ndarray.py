@@ -240,6 +240,8 @@ class NDArrayType(AsdfType):
         self._offset = offset
         self._strides = strides
         self._order = order
+        if not asdffile.blocks.lazy_load:
+            self._make_array()
 
     def _make_array(self):
         if self._array is None:

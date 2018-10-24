@@ -96,14 +96,16 @@ def test_byteorder(tmpdir):
         }
 
     def check_asdf(asdf):
-        tree = asdf.tree
+        my_tree = asdf.tree
+        for endian in ('bigendian', 'little'):
+            assert my_tree[endian].dtype == tree[endian].dtype
 
         if sys.byteorder == 'little':
-            assert tree['bigendian'].dtype.byteorder == '>'
-            assert tree['little'].dtype.byteorder == '='
+            assert my_tree['bigendian'].dtype.byteorder == '>'
+            assert my_tree['little'].dtype.byteorder == '='
         else:
-            assert tree['bigendian'].dtype.byteorder == '='
-            assert tree['little'].dtype.byteorder == '<'
+            assert my_tree['bigendian'].dtype.byteorder == '='
+            assert my_tree['little'].dtype.byteorder == '<'
 
     def check_raw_yaml(content):
         assert b'byteorder: little' in content
