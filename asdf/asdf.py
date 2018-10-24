@@ -90,8 +90,7 @@ class AsdfFile(versioning.VersionedMixin):
 
         copy_arrays : bool, optional
             When `False`, when reading files, attempt to memmap underlying data
-            arrays when possible. Please note that the file must be opened
-            in "rw" mode; "r" will result a SIGSEGV.
+            arrays when possible.
 
         lazy_load : bool, optional
             When `True` and the underlying file handle is seekable, data
@@ -760,8 +759,7 @@ class AsdfFile(versioning.VersionedMixin):
 
         copy_arrays : bool, optional
             When `False`, when reading files, attempt to memmap underlying data
-            arrays when possible. Please note that the file must be opened
-            in "rw" mode; "r" will result a SIGSEGV.
+            arrays when possible.
 
         lazy_load : bool, optional
             When `True` and the underlying file handle is seekable, data
