@@ -51,11 +51,7 @@ class AsdfFile(versioning.VersionedMixin):
     def __init__(self, tree=None, uri=None, extensions=None, version=None,
                  ignore_version_mismatch=True, ignore_unrecognized_tag=False,
                  ignore_implicit_conversion=False, copy_arrays=False,
-<<<<<<< HEAD
-                 custom_schema=None):
-=======
-                 lazy_load=True, custom_schema=None, inline_threshold=None):
->>>>>>> 564b159... Add lazy_load parameter to open()
+                 lazy_load=True, custom_schema=None):
         """
         Parameters
         ----------
@@ -129,13 +125,8 @@ class AsdfFile(versioning.VersionedMixin):
         self._fd = None
         self._closed = False
         self._external_asdf_by_uri = {}
-<<<<<<< HEAD
-        self._blocks = block.BlockManager(self, copy_arrays=copy_arrays)
-=======
         self._blocks = block.BlockManager(
-            self, copy_arrays=copy_arrays, inline_threshold=inline_threshold,
-            lazy_load=lazy_load)
->>>>>>> 564b159... Add lazy_load parameter to open()
+            self, copy_arrays=copy_arrays, lazy_load=lazy_load)
         self._uri = None
         if tree is None:
             self.tree = {}
