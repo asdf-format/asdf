@@ -51,7 +51,11 @@ class AsdfFile(versioning.VersionedMixin):
     def __init__(self, tree=None, uri=None, extensions=None, version=None,
                  ignore_version_mismatch=True, ignore_unrecognized_tag=False,
                  ignore_implicit_conversion=False, copy_arrays=False,
+<<<<<<< HEAD
                  custom_schema=None):
+=======
+                 lazy_load=True, custom_schema=None, inline_threshold=None):
+>>>>>>> 564b159... Add lazy_load parameter to open()
         """
         Parameters
         ----------
@@ -92,6 +96,12 @@ class AsdfFile(versioning.VersionedMixin):
             When `False`, when reading files, attempt to memmap underlying data
             arrays when possible.
 
+        lazy_load : bool, optional
+            When `True` and the read file is seekable, underlying data arrays
+            will be materialized when they are used for the first time.
+            This implies that the file should stay open during the lifetime
+            of the tree.
+
         custom_schema : str, optional
             Path to a custom schema file that will be used for a secondary
             validation pass. This can be used to ensure that particular ASDF
@@ -119,7 +129,13 @@ class AsdfFile(versioning.VersionedMixin):
         self._fd = None
         self._closed = False
         self._external_asdf_by_uri = {}
+<<<<<<< HEAD
         self._blocks = block.BlockManager(self, copy_arrays=copy_arrays)
+=======
+        self._blocks = block.BlockManager(
+            self, copy_arrays=copy_arrays, inline_threshold=inline_threshold,
+            lazy_load=lazy_load)
+>>>>>>> 564b159... Add lazy_load parameter to open()
         self._uri = None
         if tree is None:
             self.tree = {}
@@ -702,6 +718,7 @@ class AsdfFile(versioning.VersionedMixin):
              ignore_unrecognized_tag=False,
              _force_raw_types=False,
              copy_arrays=False,
+             lazy_load=True,
              custom_schema=None,
              strict_extension_check=False,
              ignore_missing_extensions=False):
@@ -745,6 +762,12 @@ class AsdfFile(versioning.VersionedMixin):
             When `False`, when reading files, attempt to memmap underlying data
             arrays when possible.
 
+        lazy_load : bool, optional
+            When `True` and the read file is seekable, underlying data arrays
+            will be materialized when they are used for the first time.
+            This implies that the file should stay open during the lifetime
+            of the tree.
+
         custom_schema : str, optional
             Path to a custom schema file that will be used for a secondary
             validation pass. This can be used to ensure that particular ASDF
@@ -771,7 +794,8 @@ class AsdfFile(versioning.VersionedMixin):
         self = cls(extensions=extensions,
                    ignore_version_mismatch=ignore_version_mismatch,
                    ignore_unrecognized_tag=ignore_unrecognized_tag,
-                   copy_arrays=copy_arrays, custom_schema=custom_schema)
+                   copy_arrays=copy_arrays, lazy_load=lazy_load,
+                   custom_schema=custom_schema)
 
         return cls._open_impl(
             self, fd, uri=uri, mode=mode,
