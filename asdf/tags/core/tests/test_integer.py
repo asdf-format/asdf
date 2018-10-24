@@ -80,3 +80,14 @@ def test_integer_storage_duplication(tmpdir):
     with asdf.open(tmpfile) as aa:
         assert aa.tree['integer1'] == value
         assert aa.tree['integer2'] == value
+
+
+def test_integer_conversion():
+
+    random.seed(0)
+    value = random.getrandbits(1000)
+
+    integer = asdf.IntegerType(value)
+    assert integer == value
+    assert int(integer) == int(value)
+    assert float(integer) == float(value)
