@@ -201,7 +201,7 @@ def assert_roundtrip_tree(tree, tmpdir, *, asdf_check_func=None,
     # Then, test writing/reading to a real file
     ff = AsdfFile(tree, extensions=extensions, **init_options)
     ff.write_to(fname, **write_options)
-    with AsdfFile.open(fname, mode='rw', extensions=extensions) as ff:
+    with AsdfFile.open(fname, mode='r', extensions=extensions) as ff:
         assert_tree_match(tree, ff.tree, ff, funcname=tree_match_func)
         if asdf_check_func:
             asdf_check_func(ff)
