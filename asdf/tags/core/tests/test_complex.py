@@ -25,7 +25,7 @@ a: !core/complex-1.0.0
 def test_invalid_complex(invalid):
 
     with pytest.raises(asdf.ValidationError):
-        with asdf.AsdfFile.open(make_complex_asdf(invalid)):
+        with asdf.open(make_complex_asdf(invalid)):
             pass
 
 
@@ -36,7 +36,7 @@ def test_invalid_complex(invalid):
 ])
 def test_valid_complex(valid):
 
-    with asdf.AsdfFile.open(make_complex_asdf(valid)) as af:
+    with asdf.open(make_complex_asdf(valid)) as af:
         assert af.tree['a'] == complex(re.sub(r'[iI]$', r'j', valid))
 
 
@@ -46,7 +46,7 @@ def test_valid_complex(valid):
 ])
 def test_valid_nan_complex(valid):
 
-    with asdf.AsdfFile.open(make_complex_asdf(valid)) as af:
+    with asdf.open(make_complex_asdf(valid)) as af:
         # Don't compare values since NANs are never equal
         pass
 

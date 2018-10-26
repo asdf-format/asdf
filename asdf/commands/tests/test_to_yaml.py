@@ -6,6 +6,7 @@ import os
 
 import numpy as np
 
+import asdf
 from ... import AsdfFile
 from .. import main
 from ...tests.helpers import get_file_sizes, assert_tree_match
@@ -35,6 +36,6 @@ def test_to_yaml(tmpdir):
     assert 'original.asdf' in files
     assert 'original.yaml' in files
 
-    with AsdfFile.open(os.path.join(str(tmpdir), 'original.yaml')) as ff:
+    with asdf.open(os.path.join(str(tmpdir), 'original.yaml')) as ff:
         assert_tree_match(ff.tree, tree)
         assert len(list(ff.blocks.internal_blocks)) == 0
