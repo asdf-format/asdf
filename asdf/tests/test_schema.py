@@ -75,7 +75,7 @@ not_unit:
     from astropy import units as u
 
     buff = helpers.yaml_to_asdf(yaml)
-    with asdf.AsdfFile.open(buff) as ff:
+    with asdf.open(buff) as ff:
         assert isinstance(ff.tree['unit'], u.UnitBase)
         assert not isinstance(ff.tree['not_unit'], u.UnitBase)
         assert isinstance(ff.tree['not_unit'], str)
@@ -287,13 +287,13 @@ custom: !<tag:nowhere.org:custom/custom-1.0.0>
     # providing an extension, our custom type will not be recognized and will
     # simply be converted to a raw type.
     with pytest.warns(None) as warning:
-        with asdf.AsdfFile.open(buff):
+        with asdf.open(buff):
             pass
     assert len(warning) == 1
 
     buff.seek(0)
     with pytest.raises(ValidationError):
-        with asdf.AsdfFile.open(buff, extensions=[CustomTypeExtension()]):
+        with asdf.open(buff, extensions=[CustomTypeExtension()]):
             pass
 
     # Make sure tags get validated inside of other tags that know
@@ -306,7 +306,7 @@ array: !core/ndarray-1.0.0
     """
     buff = helpers.yaml_to_asdf(yaml)
     with pytest.raises(ValidationError):
-        with asdf.AsdfFile.open(buff, extensions=[CustomTypeExtension()]):
+        with asdf.open(buff, extensions=[CustomTypeExtension()]):
             pass
 
 
@@ -377,13 +377,13 @@ custom: !<tag:nowhere.org:custom/default-1.0.0>
   b: {}
     """
     buff = helpers.yaml_to_asdf(yaml)
-    with asdf.AsdfFile.open(buff, extensions=[DefaultTypeExtension()]) as ff:
+    with asdf.open(buff, extensions=[DefaultTypeExtension()]) as ff:
         assert 'a' in ff.tree['custom']
         assert ff.tree['custom']['a'] == 42
         assert ff.tree['custom']['b']['c'] == 82
 
     buff.seek(0)
-    with asdf.AsdfFile.open(buff, extensions=[DefaultTypeExtension()],
+    with asdf.open(buff, extensions=[DefaultTypeExtension()],
                             do_not_fill_defaults=True) as ff:
         assert 'a' not in ff.tree['custom']
         assert 'c' not in ff.tree['custom']['b']
@@ -412,7 +412,7 @@ custom: !<tag:nowhere.org:custom/tag_reference-1.0.0>
     """
 
     buff = helpers.yaml_to_asdf(yaml)
-    with asdf.AsdfFile.open(buff, extensions=[DefaultTypeExtension()]) as ff:
+    with asdf.open(buff, extensions=[DefaultTypeExtension()]) as ff:
         custom = ff.tree['custom']
         assert custom['name'] == "Something"
         assert_array_equal(custom['things'], [1, 2, 3])
@@ -452,7 +452,7 @@ custom: !<tag:nowhere.org:custom/foreign_tag_reference-1.0.0>
     """
 
     buff = helpers.yaml_to_asdf(yaml)
-    with asdf.AsdfFile.open(buff, extensions=ForeignTypeExtension()) as ff:
+    with asdf.open(buff, extensions=ForeignTypeExtension()) as ff:
         a = ff.tree['custom']['a']
         b = ff.tree['custom']['b']
         assert a['name'] == 'Something'
@@ -598,7 +598,7 @@ custom: !<tag:nowhere.org:custom/missing-1.1.0>
     """
     buff = helpers.yaml_to_asdf(yaml)
     with pytest.warns(None) as w:
-        with asdf.AsdfFile.open(buff, extensions=[DefaultTypeExtension()]) as ff:
+        with asdf.open(buff, extensions=[DefaultTypeExtension()]) as ff:
             assert ff.tree['custom']['b']['foo'] == 42
 
     assert len(w) == 1

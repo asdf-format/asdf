@@ -100,7 +100,7 @@ def test_embed_asdf_in_fits_file(tmpdir, backwards_compat):
             ff = asdf.AsdfFile(copy.deepcopy(ff2.tree))
             ff.write_to(asdf_testfile)
 
-    with asdf.AsdfFile.open(asdf_testfile) as ff:
+    with asdf.open(asdf_testfile) as ff:
         assert_tree_match(tree, ff.tree)
 
 
@@ -125,7 +125,7 @@ def test_embed_asdf_in_fits_file_anonymous_extensions(tmpdir):
             ff = asdf.AsdfFile(copy.deepcopy(ff2.tree))
             ff.write_to(os.path.join(str(tmpdir), 'test.asdf'))
 
-    with asdf.AsdfFile.open(os.path.join(str(tmpdir), 'test.asdf')) as ff:
+    with asdf.open(os.path.join(str(tmpdir), 'test.asdf')) as ff:
         assert_tree_match(asdf_in_fits.tree, ff.tree)
 
 
@@ -213,12 +213,12 @@ def test_create_in_tree_first(tmpdir):
     with asdf.AsdfFile(tree) as ff:
         ff.write_to(os.path.join(str(tmpdir), 'plain.asdf'))
 
-    with asdf.AsdfFile.open(os.path.join(str(tmpdir), 'plain.asdf')) as ff:
+    with asdf.open(os.path.join(str(tmpdir), 'plain.asdf')) as ff:
         assert_array_equal(ff.tree['model']['sci']['data'],
                            np.arange(512, dtype=np.float))
 
     # This tests the changes that allow FITS files with ASDF extensions to be
-    # opened directly by the top-level AsdfFile.open API
+    # opened directly by the top-level asdf.open API
     with asdf_open(tmpfile) as ff:
         assert_array_equal(ff.tree['model']['sci']['data'],
                            np.arange(512, dtype=np.float))
@@ -289,13 +289,13 @@ def test_open_gzipped():
 
     # Opening as an HDU should work
     with fits.open(testfile) as ff:
-        with asdf.AsdfFile.open(ff) as af:
+        with asdf.open(ff) as af:
             assert af.tree['stuff'].shape == (20, 20)
 
     with fits_embed.AsdfInFits.open(testfile) as af:
         assert af.tree['stuff'].shape == (20, 20)
 
-    with asdf.AsdfFile.open(testfile) as af:
+    with asdf.open(testfile) as af:
         assert af.tree['stuff'].shape == (20, 20)
 
 def test_bad_input(tmpdir):
@@ -315,7 +315,7 @@ def test_version_mismatch_file():
     testfile = str(get_test_data_path('version_mismatch.fits'))
 
     with pytest.warns(None) as w:
-        with asdf.AsdfFile.open(testfile,
+        with asdf.open(testfile,
                 ignore_version_mismatch=False) as fits_handle:
             assert fits_handle.tree['a'] == complex(0j)
     # This is the warning that we expect from opening the FITS file
@@ -326,7 +326,7 @@ def test_version_mismatch_file():
 
     # Make sure warning does not occur when warning is ignored (default)
     with pytest.warns(None) as w:
-        with asdf.AsdfFile.open(testfile) as fits_handle:
+        with asdf.open(testfile) as fits_handle:
             assert fits_handle.tree['a'] == complex(0j)
     assert len(w) == 0, display_warnings(w)
 
@@ -359,7 +359,7 @@ def test_serialize_table(tmpdir):
     with fits_embed.AsdfInFits(hdulist, tree) as ff:
         ff.write_to(tmpfile)
 
-    with asdf.AsdfFile.open(tmpfile) as ff:
+    with asdf.open(tmpfile) as ff:
         data = ff.tree['my_table']
         assert data._source.startswith('fits:')
 
@@ -367,7 +367,7 @@ def test_extension_check():
     testfile = get_test_data_path('extension_check.fits')
 
     with pytest.warns(None) as warnings:
-        with asdf.AsdfFile.open(testfile) as ff:
+        with asdf.open(testfile) as ff:
             pass
 
     assert len(warnings) == 1, display_warnings(warnings)
@@ -376,13 +376,13 @@ def test_extension_check():
 
     # Make sure that suppressing the warning works as well
     with pytest.warns(None) as warnings:
-        with asdf.AsdfFile.open(testfile, ignore_missing_extensions=True) as ff:
+        with asdf.open(testfile, ignore_missing_extensions=True) as ff:
             pass
 
     assert len(warnings) == 0, display_warnings(warnings)
 
     with pytest.raises(RuntimeError):
-        with asdf.AsdfFile.open(testfile, strict_extension_check=True) as ff:
+        with asdf.open(testfile, strict_extension_check=True) as ff:
             pass
 
 def test_verify_with_astropy(tmpdir):

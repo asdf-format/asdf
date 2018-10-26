@@ -720,6 +720,11 @@ class AsdfFile(versioning.VersionedMixin):
              strict_extension_check=False,
              ignore_missing_extensions=False):
 
+        warnings.warn(
+            "The method AsdfFile.open has been deprecated and will be removed "
+            "in asdf-3.0. Use the top-level asdf.open function instead.",
+            AsdfDeprecationWarning)
+
         return open_asdf(
             fd, uri=uri, mode=mode,
             validate_checksums=validate_checksums,

@@ -210,7 +210,7 @@ foo: !<tag:stsci.edu:asdf/core/ndarray-1.0.0> [1, 2, 3]
     # Check that fully qualified explicit tags work
     buff = helpers.yaml_to_asdf(yaml, yaml_headers=False)
 
-    with asdf.AsdfFile.open(buff) as ff:
+    with asdf.open(buff) as ff:
         assert all(ff.tree['foo'] == [1, 2, 3])
 
 
@@ -249,7 +249,7 @@ def test_yaml_nan_inf():
     ff = asdf.AsdfFile(tree)
     ff.write_to(buff)
     buff.seek(0)
-    with asdf.AsdfFile.open(buff) as ff:
+    with asdf.open(buff) as ff:
         assert np.isnan(ff.tree['a'])
         assert np.isinf(ff.tree['b'])
         assert np.isinf(ff.tree['c'])

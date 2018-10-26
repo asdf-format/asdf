@@ -8,6 +8,7 @@ Contains commands for dealing with exploded and imploded forms.
 
 import os
 
+import asdf
 from .main import Command
 from .. import AsdfFile
 
@@ -65,7 +66,7 @@ def implode(input, output=None, resolve_references=False):
     if output is None:
         base, ext = os.path.splitext(input)
         output = base + '_all' + '.asdf'
-    with AsdfFile.open(input) as ff:
+    with asdf.open(input) as ff:
         ff2 = AsdfFile(ff)
         if resolve_references:
             ff2.resolve_references()
@@ -115,5 +116,5 @@ def explode(input, output=None):
     if output is None:
         base, ext = os.path.splitext(input)
         output = base + '_exploded' + '.asdf'
-    with AsdfFile.open(input) as ff:
+    with asdf.open(input) as ff:
         ff.write_to(output, all_array_storage='external')

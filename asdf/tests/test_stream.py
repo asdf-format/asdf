@@ -29,7 +29,7 @@ def test_stream():
 
     buff.seek(0)
 
-    with asdf.AsdfFile.open(buff) as ff:
+    with asdf.open(buff) as ff:
         assert len(ff.blocks) == 1
         assert ff.tree['stream'].shape == (100, 6, 2)
         for i, row in enumerate(ff.tree['stream']):
@@ -50,7 +50,7 @@ def test_stream_write_nothing():
 
     buff.seek(0)
 
-    with asdf.AsdfFile().open(buff) as ff:
+    with asdf.open(buff) as ff:
         assert len(ff.blocks) == 1
         assert ff.tree['stream'].shape == (0, 6, 2)
 
@@ -72,7 +72,7 @@ def test_stream_twice():
 
     buff.seek(0)
 
-    ff = asdf.AsdfFile().open(buff)
+    ff = asdf.open(buff)
     assert len(ff.blocks) == 1
     assert ff.tree['stream'].shape == (100, 6, 2)
     assert ff.tree['stream2'].shape == (50, 12, 2)
@@ -93,7 +93,7 @@ def test_stream_with_nonstream():
 
     buff.seek(0)
 
-    with asdf.AsdfFile().open(buff) as ff:
+    with asdf.open(buff) as ff:
         assert len(ff.blocks) == 1
         assert_array_equal(ff.tree['nonstream'], np.array([1, 2, 3, 4], np.int64))
         assert ff.tree['stream'].shape == (100, 6, 2)
@@ -116,7 +116,7 @@ def test_stream_real_file(tmpdir):
         for i in range(100):
             fd.write(np.array([i] * 12, np.float64).tostring())
 
-    with asdf.AsdfFile().open(path) as ff:
+    with asdf.open(path) as ff:
         assert len(ff.blocks) == 1
         assert_array_equal(ff.tree['nonstream'], np.array([1, 2, 3, 4], np.int64))
         assert ff.tree['stream'].shape == (100, 6, 2)
@@ -141,7 +141,7 @@ def test_stream_to_stream():
 
     buff.seek(0)
 
-    with asdf.AsdfFile().open(generic_io.InputStream(buff, 'r')) as ff:
+    with asdf.open(generic_io.InputStream(buff, 'r')) as ff:
         assert len(ff.blocks) == 2
         assert_array_equal(ff.tree['nonstream'], np.array([1, 2, 3, 4], np.int64))
         assert ff.tree['stream'].shape == (100, 6, 2)
@@ -161,7 +161,7 @@ def test_array_to_stream(tmpdir):
     buff.write(np.array([5, 6, 7, 8], np.int64).tostring())
 
     buff.seek(0)
-    ff = asdf.AsdfFile().open(generic_io.InputStream(buff))
+    ff = asdf.open(generic_io.InputStream(buff))
     assert_array_equal(ff.tree['stream'], [1, 2, 3, 4, 5, 6, 7, 8])
     buff.seek(0)
     ff2 = asdf.AsdfFile(ff)
@@ -174,7 +174,7 @@ def test_array_to_stream(tmpdir):
         ff.write_to(fd)
         fd.write(np.array([5, 6, 7, 8], np.int64).tostring())
 
-    with asdf.AsdfFile().open(os.path.join(str(tmpdir), 'test.asdf')) as ff:
+    with asdf.open(os.path.join(str(tmpdir), 'test.asdf')) as ff:
         assert_array_equal(ff.tree['stream'], [1, 2, 3, 4, 5, 6, 7, 8])
         ff2 = asdf.AsdfFile(ff)
         ff2.write_to(buff)
