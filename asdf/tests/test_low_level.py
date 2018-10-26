@@ -647,7 +647,7 @@ def test_update_exceptions(tmpdir):
     ff = asdf.AsdfFile(tree)
     ff.write_to(path)
 
-    with asdf.open(path) as ff:
+    with asdf.open(path, mode='r', copy_arrays=True) as ff:
         with pytest.raises(IOError):
             ff.update()
 
