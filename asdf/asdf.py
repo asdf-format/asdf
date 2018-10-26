@@ -370,7 +370,7 @@ class AsdfFile(versioning.VersionedMixin):
 
         asdffile = self._external_asdf_by_uri.get(resolved_uri)
         if asdffile is None:
-            asdffile = self.open(
+            asdffile = open_asdf(
                 resolved_uri,
                 do_not_fill_defaults=do_not_fill_defaults)
             self._external_asdf_by_uri[resolved_uri] = asdffile
