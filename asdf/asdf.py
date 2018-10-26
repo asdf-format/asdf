@@ -589,8 +589,33 @@ class AsdfFile(versioning.VersionedMixin):
 
         return None
 
+    def _check_and_set_mode(self, fileobj, asdf_mode):
+
+        memmap = self._blocks.memmap
+
+        if asdf_mode is not None and asdf_mode not in ['r', 'rw']:
+            msg = "Unrecognized asdf mode '{}'. Must be either 'r' or 'rw'"
+            raise ValueError(msg.format(asdf_mode))
+
+        if asdf_mode is None:
+            if isinstance(fileobj, str):
+                parsed = generic_io.urlparse(fileobj)
+                if parsed.scheme == 'http':
+                    return 'r'
+                return 'rw' if memmap else 'r'
+            if isinstance(fileobj, io.IOBase):
+                return 'rw' if fileobj.writable() and memmap else 'r'
+
+            raise ValueError("Unknown file object type, can't guess mode")
+
+        # It is not safe to open files with memory maps in readonly mode
+        elif asdf_mode == 'r' and memmap:
+            raise ValueError("Can't open file as readonly without copy_arrays=True") 
+
+        return asdf_mode
+
     @classmethod
-    def _open_asdf(cls, self, fd, uri=None, mode='r',
+    def _open_asdf(cls, self, fd, uri=None, mode=None,
                    validate_checksums=False,
                    do_not_fill_defaults=False,
                    _get_yaml_content=False,
@@ -604,7 +629,9 @@ class AsdfFile(versioning.VersionedMixin):
                 "'strict_extension_check' and 'ignore_missing_extensions' are "
                 "incompatible options")
 
-        fd = generic_io.get_file(fd, mode=mode, uri=uri)
+        self._mode = self._check_and_set_mode(fd, mode)
+
+        fd = generic_io.get_file(fd, mode=self._mode, uri=uri)
         self._fd = fd
         # The filename is currently only used for tracing warning information
         self._fname = self._fd._uri if self._fd._uri else ''
@@ -671,7 +698,7 @@ class AsdfFile(versioning.VersionedMixin):
         return self
 
     @classmethod
-    def _open_impl(cls, self, fd, uri=None, mode='r',
+    def _open_impl(cls, self, fd, uri=None, mode=None,
                    validate_checksums=False,
                    do_not_fill_defaults=False,
                    _get_yaml_content=False,
@@ -710,7 +737,7 @@ class AsdfFile(versioning.VersionedMixin):
                 ignore_missing_extensions=ignore_missing_extensions)
 
     @classmethod
-    def open(cls, fd, uri=None, mode='r',
+    def open(cls, fd, uri=None, mode=None,
              validate_checksums=False,
              extensions=None,
              do_not_fill_defaults=False,
