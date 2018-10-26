@@ -1229,6 +1229,9 @@ def _check_and_set_mode(fileobj, asdf_mode):
         if isinstance(fileobj, io.IOBase):
             return 'rw' if fileobj.writable() else 'r'
 
+        if isinstance(fileobj, generic_io.GenericFile):
+            return fileobj.mode
+
         # This is the safest default since it allows for memory mapping
         return 'rw'
 
