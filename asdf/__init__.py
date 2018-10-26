@@ -33,7 +33,7 @@ try:
 except ImportError:
     raise ImportError("asdf requires numpy")
 
-from .asdf import AsdfFile
+from .asdf import AsdfFile, open_asdf
 from .asdftypes import CustomType
 from .extension import AsdfExtension
 from .stream import Stream
@@ -43,4 +43,4 @@ from .tags.core.external_reference import ExternalArrayReference
 
 from jsonschema import ValidationError
 
-open = AsdfFile.open
+open = open_asdf
