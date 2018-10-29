@@ -24,6 +24,12 @@
   types. This warning is converted to an error when using
   ``assert_roundtrip_tree`` for tests. [#583]
 
+- Deprecate ``asdf.AsdfFile.open`` in favor of ``asdf.open``. [#579]
+
+- Add readonly protection to memory mapped arrays when the underlying file
+  handle is readonly. [#579]
+
+
 2.1.1 (unreleased)
 ------------------
 
