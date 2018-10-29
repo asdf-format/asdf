@@ -44,3 +44,5 @@ from .tags.core.external_reference import ExternalArrayReference
 from jsonschema import ValidationError
 
 open = open_asdf
+# Avoid redundancy/confusion in the top-level namespace
+del open_asdf
