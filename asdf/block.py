@@ -29,7 +29,8 @@ class BlockManager(object):
     """
     Manages the `Block`s associated with a ASDF file.
     """
-    def __init__(self, asdffile, copy_arrays=False, lazy_load=True):
+    def __init__(self, asdffile, copy_arrays=False, lazy_load=True,
+                 readonly=False):
         self._asdffile = weakref.ref(asdffile)
 
         self._internal_blocks = []
@@ -48,6 +49,7 @@ class BlockManager(object):
         self._validate_checksums = False
         self._memmap = not copy_arrays
         self._lazy_load = lazy_load
+        self._readonly = readonly
 
     def __len__(self):
         """
@@ -523,7 +525,8 @@ class BlockManager(object):
         for offset in offsets[1:-1]:
             self._internal_blocks.append(
                 UnloadedBlock(fd, offset,
-                              memmap=self.memmap, lazy_load=self.lazy_load))
+                              memmap=self.memmap, lazy_load=self.lazy_load,
+                              readonly=self._readonly))
 
         # We already read the last block in the file -- no need to read it again
         self._internal_blocks.append(block)
@@ -807,6 +810,7 @@ class Block(object):
         self._should_memmap = memmap
         self._memmapped = False
         self._lazy_load = lazy_load
+        self._readonly = False
 
         self.update_size()
         self._allocated = self._size
@@ -888,6 +892,10 @@ class Block(object):
     @property
     def checksum(self):
         return self._checksum
+
+    @property
+    def readonly(self):
+        return self._readonly
 
     def _set_checksum(self, checksum):
         if checksum == b'\0' * 16:
@@ -1188,7 +1196,7 @@ class UnloadedBlock(object):
     full-fledged block whenever the underlying data or more detail is
     requested.
     """
-    def __init__(self, fd, offset, memmap=True, lazy_load=True):
+    def __init__(self, fd, offset, memmap=True, lazy_load=True, readonly=False):
         self._fd = fd
         self._offset = offset
         self._data = None
@@ -1200,6 +1208,7 @@ class UnloadedBlock(object):
         self._should_memmap = memmap
         self._memmapped = False
         self._lazy_load = lazy_load
+        self._readonly = readonly
 
     def __len__(self):
         self.load()
