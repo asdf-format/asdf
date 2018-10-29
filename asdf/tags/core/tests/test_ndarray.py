@@ -817,3 +817,44 @@ def test_fortran_order(tmpdir):
     array = np.array([[11,12,13], [21,22,23]], order='F')
     tree = dict(data=array)
     helpers.assert_roundtrip_tree(tree, tmpdir)
+
+
+def test_readonly(tmpdir):
+
+    tmpfile = str(tmpdir.join('data.asdf'))
+    tree = dict(data=np.ndarray((100)))
+
+    with asdf.AsdfFile(tree) as af:
+        # Make sure we're actually writing to an internal array for this test
+        af.write_to(tmpfile, all_array_storage='internal')
+
+    # This should be perfectly fine
+    with asdf.open(tmpfile) as af:
+        assert af['data'].flags.writeable == True
+        af['data'][0] = 40
+
+    # Opening in read mode should mean array is readonly
+    with asdf.open(tmpfile, mode='r') as af:
+        assert af['data'].flags.writeable == False
+        with pytest.raises(ValueError) as err:
+            af['data'][0] = 41
+            assert str(err) == 'assignment destination is read-only'
+
+    # Copying the arrays makes it safe to write to the underlying array
+    with asdf.open(tmpfile, mode='r', copy_arrays=True) as af:
+        assert af['data'].flags.writeable == True
+        af['data'][0] = 42
+
+
+def test_readonly_inline(tmpdir):
+
+    tmpfile = str(tmpdir.join('data.asdf'))
+    tree = dict(data=np.ndarray((100)))
+
+    with asdf.AsdfFile(tree) as af:
+        af.write_to(tmpfile, all_array_storage='inline')
+
+    # This should be safe since it's an inline array
+    with asdf.open(tmpfile, mode='r') as af:
+        assert af['data'].flags.writeable == True
+        af['data'][0] = 42
