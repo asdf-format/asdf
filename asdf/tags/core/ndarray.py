@@ -346,6 +346,16 @@ class NDArrayType(AsdfType):
             raise AttributeError()
         return getattr(self._make_array(), attr)
 
+    def __setitem__(self, *args):
+        # This workaround appears to be necessary in order to avoid a segfault
+        # in the case that array assignment causes an exception. The segfault
+        # originates from the call to __repr__ inside the traceback report.
+        try:
+            self._make_array().__setitem__(*args)
+        except Exception:
+            self._array = None
+            raise
+
     @classmethod
     def from_tree(cls, node, ctx):
         if isinstance(node, list):
@@ -511,7 +521,7 @@ for op in [
         '__imul__', '__idiv__', '__itruediv__', '__ifloordiv__',
         '__imod__', '__ipow__', '__ilshift__', '__irshift__',
         '__iand__', '__ixor__', '__ior__', '__getitem__',
-        '__delitem__', '__contains__', '__setitem__']:
+        '__delitem__', '__contains__']:
     setattr(NDArrayType, op, _make_operation(op))
 
 
