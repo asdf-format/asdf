@@ -1228,7 +1228,7 @@ def _check_and_set_mode(fileobj, asdf_mode):
     if asdf_mode is None:
         if isinstance(fileobj, str):
             parsed = generic_io.urlparse.urlparse(fileobj)
-            if parsed.scheme == 'http':
+            if parsed.scheme in ['http', 'https']:
                 return 'r'
             return 'rw'
         if isinstance(fileobj, io.IOBase):
