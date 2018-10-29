@@ -9,6 +9,11 @@
   is still effective and the active memory maps may still require the file
   to stay open in case ``copy_arrays`` is ``False``. [#573]
 
+- Deprecate ``asdf.AsdfFile.open`` in favor of ``asdf.open``. [#579]
+
+- Add readonly protection to memory mapped arrays when the underlying file
+  handle is readonly. [#579]
+
 2.1.2 (2018-11-13)
 ------------------
 
