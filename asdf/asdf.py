@@ -373,7 +373,7 @@ class AsdfFile(versioning.VersionedMixin):
         if asdffile is None:
             asdffile = open_asdf(
                 resolved_uri,
-                do_not_fill_defaults=do_not_fill_defaults)
+                mode='r', do_not_fill_defaults=do_not_fill_defaults)
             self._external_asdf_by_uri[resolved_uri] = asdffile
         return asdffile
 
