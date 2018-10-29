@@ -725,6 +725,12 @@ class AsdfFile(versioning.VersionedMixin):
              custom_schema=None,
              strict_extension_check=False,
              ignore_missing_extensions=False):
+        """
+        Open an existing ASDF file.
+
+        .. deprecated:: 2.2
+            Use `asdf.open` instead.
+        """
 
         warnings.warn(
             "The method AsdfFile.open has been deprecated and will be removed "
