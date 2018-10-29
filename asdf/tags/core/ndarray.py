@@ -252,6 +252,8 @@ class NDArrayType(AsdfType):
                 shape, self._dtype, block.data,
                 self._offset, self._strides, self._order)
             self._array = self._apply_mask(self._array, self._mask)
+            if block.readonly:
+                self._array.setflags(write=False)
         return self._array
 
     def _apply_mask(self, array, mask):

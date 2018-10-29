@@ -51,7 +51,8 @@ class AsdfFile(versioning.VersionedMixin):
     def __init__(self, tree=None, uri=None, extensions=None, version=None,
                  ignore_version_mismatch=True, ignore_unrecognized_tag=False,
                  ignore_implicit_conversion=False, copy_arrays=False,
-                 lazy_load=True, custom_schema=None, inline_threshold=None):
+                 lazy_load=True, custom_schema=None, inline_threshold=None,
+                 _readonly=False):
         """
         Parameters
         ----------
@@ -134,7 +135,7 @@ class AsdfFile(versioning.VersionedMixin):
         self._external_asdf_by_uri = {}
         self._blocks = block.BlockManager(
             self, copy_arrays=copy_arrays, inline_threshold=inline_threshold,
-            lazy_load=lazy_load)
+            lazy_load=lazy_load, readonly=_readonly)
         self._uri = None
         if tree is None:
             self.tree = {}
@@ -1326,18 +1327,19 @@ def open_asdf(fd, uri=None, mode=None, validate_checksums=False,
         The new AsdfFile object.
     """
 
+    readonly = False
+
     # For now retain backwards compatibility with the old API behavior,
     # specifically when being called from AsdfFile.open
     if not _compat:
         mode = _check_and_set_mode(fd, mode)
-        if mode == 'r' and not copy_arrays:
-            copy_arrays = True
+        readonly = (mode == 'r' and not copy_arrays)
 
     instance = AsdfFile(extensions=extensions,
                    ignore_version_mismatch=ignore_version_mismatch,
                    ignore_unrecognized_tag=ignore_unrecognized_tag,
                    copy_arrays=copy_arrays, lazy_load=lazy_load,
-                   custom_schema=custom_schema)
+                   custom_schema=custom_schema, _readonly=readonly)
 
     return AsdfFile._open_impl(instance,
         fd, uri=uri, mode=mode,

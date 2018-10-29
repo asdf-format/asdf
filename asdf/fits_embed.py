@@ -44,6 +44,10 @@ class _FitsBlock(object):
         return self._hdu.data
 
     @property
+    def readonly(self):
+        return False
+
+    @property
     def array_storage(self):
         return 'fits'
 
