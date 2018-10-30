@@ -746,7 +746,7 @@ def test_atomic_write(tmpdir, small_tree):
     ff = asdf.AsdfFile(small_tree)
     ff.write_to(tmpfile)
 
-    with asdf.open(tmpfile) as ff:
+    with asdf.open(tmpfile, mode='r') as ff:
         ff.write_to(tmpfile)
 
 

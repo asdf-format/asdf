@@ -822,6 +822,7 @@ class AsdfFile(versioning.VersionedMixin):
         if len(self._tree):
             self.run_hook('post_write')
 
+        # TODO: there has got to be a better way to do this...
         if hasattr(self, '_all_array_storage'):
             del self._all_array_storage
         if hasattr(self, '_all_array_compression'):
@@ -1027,24 +1028,24 @@ class AsdfFile(versioning.VersionedMixin):
             write out in the latest version supported by asdf.
         """
 
-        original_fd = self._fd
-
         if version is not None:
             self.version = version
 
-        try:
-            with generic_io.get_file(fd, mode='w') as fd:
-                self._fd = fd
-                self._pre_write(fd, all_array_storage, all_array_compression,
-                                auto_inline)
 
-                try:
-                    self._serial_write(fd, pad_blocks, include_block_index)
-                    fd.flush()
-                finally:
-                    self._post_write(fd)
-        finally:
-            self._fd = original_fd
+        with generic_io.get_file(fd, mode='w') as fd:
+            # TODO: This is not ideal: we really should pass the URI through
+            # explicitly to wherever it is required instead of making it an
+            # attribute of the AsdfFile.
+            if self._uri is None:
+                self._uri = fd.uri
+            self._pre_write(fd, all_array_storage, all_array_compression,
+                            auto_inline)
+
+            try:
+                self._serial_write(fd, pad_blocks, include_block_index)
+                fd.flush()
+            finally:
+                self._post_write(fd)
 
     def find_references(self):
         """
