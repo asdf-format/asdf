@@ -352,9 +352,9 @@ class NDArrayType(AsdfType):
         # originates from the call to __repr__ inside the traceback report.
         try:
             self._make_array().__setitem__(*args)
-        except Exception:
+        except Exception as e:
             self._array = None
-            raise
+            raise e from None
 
     @classmethod
     def from_tree(cls, node, ctx):
