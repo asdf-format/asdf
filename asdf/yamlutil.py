@@ -14,7 +14,8 @@ from . import treeutil
 from . import asdftypes
 from . import versioning
 from . import util
-from . constants import YAML_TAG_PREFIX
+from .constants import YAML_TAG_PREFIX
+from .exceptions import AsdfConversionWarning
 
 
 __all__ = ['custom_tree_to_tagged_tree', 'tagged_tree_to_custom_tree']
@@ -248,7 +249,7 @@ def tagged_tree_to_custom_tree(tree, ctx, force_raw_types=False):
         if tag_type is None:
             if not ctx._ignore_unrecognized_tag:
                 warnings.warn("{} is not recognized, converting to raw Python "
-                    "data structure".format(tag_name))
+                    "data structure".format(tag_name), AsdfConversionWarning)
             return node
 
         real_tag = ctx.type_index.get_real_tag(tag_name)
@@ -259,7 +260,8 @@ def tagged_tree_to_custom_tree(tree, ctx, force_raw_types=False):
         if tag_type.incompatible_version(real_tag_version):
             warnings.warn("Version {} of {} is not compatible with any "
                 "existing tag implementations".format(
-                    real_tag_version, real_tag_name))
+                    real_tag_version, real_tag_name),
+                AsdfConversionWarning)
             return node
 
         # If a tag class does not explicitly list compatible versions, then all
@@ -271,7 +273,8 @@ def tagged_tree_to_custom_tree(tree, ctx, force_raw_types=False):
             return tag_type.from_tree_tagged(node, ctx)
         except TypeError as err:
             warnings.warn("Failed to convert {} to custom type (detail: {}). "
-                "Using raw Python data structure instead".format(real_tag, err))
+                "Using raw Python data structure instead".format(real_tag, err),
+                AsdfConversionWarning)
 
         return node
 
