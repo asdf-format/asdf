@@ -14,6 +14,10 @@
 - Add readonly protection to memory mapped arrays when the underlying file
   handle is readonly. [#579]
 
+- Add ``AsdfConversionWarning`` for failures to convert ASDF tree into custom
+  types. This warning is converted to an error when using
+  ``assert_roundtrip_tree`` for tests. [#583]
+
 2.1.2 (2018-11-13)
 ------------------
 
