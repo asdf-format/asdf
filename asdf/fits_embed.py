@@ -182,7 +182,7 @@ class AsdfInFits(asdf.AsdfFile):
             The URI for this ASDF file.  Used to resolve relative
             references against.  If not provided, will be
             automatically determined from the associated file object,
-            if possible and if created from `AsdfFile.open`.
+            if possible and if created from `asdf.open`.
 
         validate_checksums : bool, optional
             If `True`, validate the blocks against their checksums.
