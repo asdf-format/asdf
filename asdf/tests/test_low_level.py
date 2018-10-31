@@ -1201,3 +1201,16 @@ def test_context_handler_resolve_and_inline(tmpdir):
 
     with pytest.raises(OSError):
         newf.tree['random'][0]
+
+
+def test_warning_deprecated_open(tmpdir):
+
+    tmpfile = str(tmpdir.join('foo.asdf'))
+
+    tree = dict(foo=42, bar='hello')
+    with asdf.AsdfFile(tree) as af:
+        af.write_to(tmpfile)
+
+    with pytest.warns(AsdfDeprecationWarning):
+        with asdf.AsdfFile.open(tmpfile) as af:
+            assert_tree_match(tree, af.tree)
