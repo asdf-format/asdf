@@ -41,7 +41,7 @@ def _roundtrip(tree, get_write_fd, get_read_fd,
             fd._fd.close()
 
     with get_read_fd() as fd:
-        ff = asdf.AsdfFile.open(fd, **read_options)
+        ff = asdf.open(fd, **read_options)
         helpers.assert_tree_match(tree, ff.tree)
 
     return ff
@@ -76,7 +76,8 @@ def test_path(tree, tmpdir):
         return f
 
     def get_read_fd():
-        f = generic_io.get_file(path, mode='r')
+        # Must open with mode=rw in order to get memmapped data
+        f = generic_io.get_file(path, mode='rw')
         assert isinstance(f, generic_io.RealFile)
         assert f._uri == util.filepath_to_url(path)
         # This is to check for a "feature" in Python 3.x that reading zero
@@ -101,7 +102,8 @@ def test_open2(tree, tmpdir):
         return f
 
     def get_read_fd():
-        f = generic_io.get_file(open(path, 'rb'), mode='r', close=True)
+        # Must open with mode=rw in order to get memmapped data
+        f = generic_io.get_file(open(path, 'r+b'), mode='rw', close=True)
         assert isinstance(f, generic_io.RealFile)
         assert f._uri == util.filepath_to_url(path)
         return f
@@ -340,7 +342,7 @@ def test_exploded_filesystem_fail(tree, tmpdir):
         asdf.AsdfFile(tree).write_to(fd, all_array_storage='external')
 
     with get_read_fd() as fd:
-        with asdf.AsdfFile.open(fd) as ff:
+        with asdf.open(fd) as ff:
             with pytest.raises(ValueError):
                 helpers.assert_tree_match(tree, ff.tree)
 
@@ -386,7 +388,7 @@ def test_exploded_stream_read(tmpdir, small_tree):
     with open(path, 'rb') as fd:
         # This should work, so we can get the tree content
         x = generic_io.InputStream(fd, 'r')
-        with asdf.AsdfFile.open(x) as ff:
+        with asdf.open(x) as ff:
             # It's only when trying to access external data that an error occurs
             with pytest.raises(ValueError):
                 ff.tree['science_data'][:]
@@ -401,7 +403,7 @@ def test_unicode_open(tmpdir, small_tree):
 
     with io.open(path, 'rt', encoding="utf-8") as fd:
         with pytest.raises(ValueError):
-            with asdf.AsdfFile.open(fd):
+            with asdf.open(fd):
                 pass
 
 

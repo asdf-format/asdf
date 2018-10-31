@@ -15,6 +15,7 @@ from docutils import nodes
 
 from sphinx.util.nodes import set_source_info
 
+import asdf
 from asdf import AsdfFile
 from asdf.constants import ASDF_MAGIC, BLOCK_FLAG_STREAMED
 from asdf import versioning, util
@@ -89,7 +90,7 @@ class AsdfDirective(Directive):
             kwargs['ignore_unrecognized_tag'] = 'ignore_unrecognized_tag' in self.arguments
             kwargs['ignore_missing_extensions'] = 'ignore_unrecognized_tag' in self.arguments
 
-            with AsdfFile.open(filename, **kwargs) as ff:
+            with asdf.open(filename, **kwargs) as ff:
                 for i, block in enumerate(ff.blocks.internal_blocks):
                     data = codecs.encode(block.data.tostring(), 'hex')
                     if len(data) > 40:

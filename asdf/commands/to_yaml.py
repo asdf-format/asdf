@@ -8,6 +8,7 @@ Contains commands for dealing with exploded and imploded forms.
 
 import os
 
+import asdf
 from .main import Command
 from .. import AsdfFile
 
@@ -63,7 +64,7 @@ def to_yaml(input, output=None, resolve_references=False):
     if output is None:
         base, ext = os.path.splitext(input)
         output = base + '.yaml'
-    with AsdfFile.open(input) as ff:
+    with asdf.open(input) as ff:
         ff2 = AsdfFile(ff)
         if resolve_references:
             ff2.resolve_references()

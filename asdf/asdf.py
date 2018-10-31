@@ -51,7 +51,8 @@ class AsdfFile(versioning.VersionedMixin):
     def __init__(self, tree=None, uri=None, extensions=None, version=None,
                  ignore_version_mismatch=True, ignore_unrecognized_tag=False,
                  ignore_implicit_conversion=False, copy_arrays=False,
-                 lazy_load=True, custom_schema=None, inline_threshold=None):
+                 lazy_load=True, custom_schema=None, inline_threshold=None,
+                 _readonly=False):
         """
         Parameters
         ----------
@@ -134,7 +135,7 @@ class AsdfFile(versioning.VersionedMixin):
         self._external_asdf_by_uri = {}
         self._blocks = block.BlockManager(
             self, copy_arrays=copy_arrays, inline_threshold=inline_threshold,
-            lazy_load=lazy_load)
+            lazy_load=lazy_load, readonly=_readonly)
         self._uri = None
         if tree is None:
             self.tree = {}
@@ -374,9 +375,9 @@ class AsdfFile(versioning.VersionedMixin):
 
         asdffile = self._external_asdf_by_uri.get(resolved_uri)
         if asdffile is None:
-            asdffile = self.open(
+            asdffile = open_asdf(
                 resolved_uri,
-                do_not_fill_defaults=do_not_fill_defaults)
+                mode='r', do_not_fill_defaults=do_not_fill_defaults)
             self._external_asdf_by_uri[resolved_uri] = asdffile
         return asdffile
 
@@ -604,7 +605,9 @@ class AsdfFile(versioning.VersionedMixin):
                 "'strict_extension_check' and 'ignore_missing_extensions' are "
                 "incompatible options")
 
-        fd = generic_io.get_file(fd, mode=mode, uri=uri)
+        self._mode = mode
+
+        fd = generic_io.get_file(fd, mode=self._mode, uri=uri)
         self._fd = fd
         # The filename is currently only used for tracing warning information
         self._fname = self._fd._uri if self._fd._uri else ''
@@ -725,89 +728,28 @@ class AsdfFile(versioning.VersionedMixin):
         """
         Open an existing ASDF file.
 
-        Parameters
-        ----------
-        fd : string or file-like object
-            May be a string ``file`` or ``http`` URI, or a Python
-            file-like object.
-
-        uri : string, optional
-            The URI of the file.  Only required if the URI can not be
-            automatically determined from `fd`.
-
-        mode : string, optional
-            The mode to open the file in.  Must be ``r`` (default) or
-            ``rw``.
-
-        validate_checksums : bool, optional
-            If `True`, validate the blocks against their checksums.
-            Requires reading the entire file, so disabled by default.
-
-        extensions : list of AsdfExtension
-            A list of extensions to use when reading and writing ASDF files.
-            See `~asdf.asdftypes.AsdfExtension` for more information.
-
-        do_not_fill_defaults : bool, optional
-            When `True`, do not fill in missing default values.
-
-        ignore_version_mismatch : bool, optional
-            When `True`, do not raise warnings for mismatched schema versions.
-            Set to `True` by default.
-
-        ignore_unrecognized_tag : bool, optional
-            When `True`, do not raise warnings for unrecognized tags. Set to
-            `False` by default.
-
-        copy_arrays : bool, optional
-            When `False`, when reading files, attempt to memmap underlying data
-            arrays when possible.
-
-        lazy_load : bool, optional
-            When `True` and the underlying file handle is seekable, data
-            arrays will only be loaded lazily: i.e. when they are accessed
-            for the first time. In this case the underlying file must stay
-            open during the lifetime of the tree. Setting to False causes
-            all data arrays to be loaded up front, which means that they
-            can be accessed even after the underlying file is closed.
-            Note: even if `lazy_load` is `False`, `copy_arrays` is still taken
-            into account.
-
-        custom_schema : str, optional
-            Path to a custom schema file that will be used for a secondary
-            validation pass. This can be used to ensure that particular ASDF
-            files follow custom conventions beyond those enforced by the
-            standard.
-
-        strict_extension_check : bool, optional
-            When `True`, if the given ASDF file contains metadata about the
-            extensions used to create it, and if those extensions are not
-            installed, opening the file will fail. When `False`, opening a file
-            under such conditions will cause only a warning. Defaults to
-            `False`.
-
-        ignore_missing_extensions : bool, optional
-            When `True`, do not raise warnings when a file is read that
-            contains metadata about extensions that are not available. Defaults
-            to `False`.
-
-        Returns
-        -------
-        asdffile : AsdfFile
-            The new AsdfFile object.
+        .. deprecated:: 2.2
+            Use `asdf.open` instead.
         """
-        self = cls(extensions=extensions,
-                   ignore_version_mismatch=ignore_version_mismatch,
-                   ignore_unrecognized_tag=ignore_unrecognized_tag,
-                   copy_arrays=copy_arrays, lazy_load=lazy_load,
-                   custom_schema=custom_schema)
 
-        return cls._open_impl(
-            self, fd, uri=uri, mode=mode,
+        warnings.warn(
+            "The method AsdfFile.open has been deprecated and will be removed "
+            "in asdf-3.0. Use the top-level asdf.open function instead.",
+            AsdfDeprecationWarning)
+
+        return open_asdf(
+            fd, uri=uri, mode=mode,
             validate_checksums=validate_checksums,
+            extensions=extensions,
             do_not_fill_defaults=do_not_fill_defaults,
+            ignore_version_mismatch=ignore_version_mismatch,
+            ignore_unrecognized_tag=ignore_unrecognized_tag,
             _force_raw_types=_force_raw_types,
+            copy_arrays=copy_arrays, lazy_load=lazy_load,
+            custom_schema=custom_schema,
             strict_extension_check=strict_extension_check,
-            ignore_missing_extensions=ignore_missing_extensions)
+            ignore_missing_extensions=ignore_missing_extensions,
+            _compat=True)
 
     def _write_tree(self, tree, fd, pad_blocks):
         fd.write(constants.ASDF_MAGIC)
@@ -880,6 +822,7 @@ class AsdfFile(versioning.VersionedMixin):
         if len(self._tree):
             self.run_hook('post_write')
 
+        # TODO: there has got to be a better way to do this...
         if hasattr(self, '_all_array_storage'):
             del self._all_array_storage
         if hasattr(self, '_all_array_compression'):
@@ -1085,24 +1028,24 @@ class AsdfFile(versioning.VersionedMixin):
             write out in the latest version supported by asdf.
         """
 
-        original_fd = self._fd
-
         if version is not None:
             self.version = version
 
-        try:
-            with generic_io.get_file(fd, mode='w') as fd:
-                self._fd = fd
-                self._pre_write(fd, all_array_storage, all_array_compression,
-                                auto_inline)
 
-                try:
-                    self._serial_write(fd, pad_blocks, include_block_index)
-                    fd.flush()
-                finally:
-                    self._post_write(fd)
-        finally:
-            self._fd = original_fd
+        with generic_io.get_file(fd, mode='w') as fd:
+            # TODO: This is not ideal: we really should pass the URI through
+            # explicitly to wherever it is required instead of making it an
+            # attribute of the AsdfFile.
+            if self._uri is None:
+                self._uri = fd.uri
+            self._pre_write(fd, all_array_storage, all_array_compression,
+                            auto_inline)
+
+            try:
+                self._serial_write(fd, pad_blocks, include_block_index)
+                fd.flush()
+            finally:
+                self._post_write(fd)
 
     def find_references(self):
         """
@@ -1285,6 +1228,133 @@ class AsdfFile(versioning.VersionedMixin):
 
 # Inherit docstring from dictionary
 AsdfFile.keys.__doc__ = dict.keys.__doc__
+
+
+def _check_and_set_mode(fileobj, asdf_mode):
+
+    if asdf_mode is not None and asdf_mode not in ['r', 'rw']:
+        msg = "Unrecognized asdf mode '{}'. Must be either 'r' or 'rw'"
+        raise ValueError(msg.format(asdf_mode))
+
+    if asdf_mode is None:
+        if isinstance(fileobj, str):
+            parsed = generic_io.urlparse.urlparse(fileobj)
+            if parsed.scheme in ['http', 'https']:
+                return 'r'
+            return 'rw'
+        if isinstance(fileobj, io.IOBase):
+            return 'rw' if fileobj.writable() else 'r'
+
+        if isinstance(fileobj, generic_io.GenericFile):
+            return fileobj.mode
+
+        # This is the safest default since it allows for memory mapping
+        return 'rw'
+
+    return asdf_mode
+
+
+def open_asdf(fd, uri=None, mode=None, validate_checksums=False,
+              extensions=None, do_not_fill_defaults=False,
+              ignore_version_mismatch=True, ignore_unrecognized_tag=False,
+              _force_raw_types=False, copy_arrays=False, lazy_load=True,
+              custom_schema=None, strict_extension_check=False,
+              ignore_missing_extensions=False, _compat=False):
+    """
+    Open an existing ASDF file.
+
+    Parameters
+    ----------
+    fd : string or file-like object
+        May be a string ``file`` or ``http`` URI, or a Python
+        file-like object.
+
+    uri : string, optional
+        The URI of the file.  Only required if the URI can not be
+        automatically determined from `fd`.
+
+    mode : string, optional
+        The mode to open the file in.  Must be ``r`` (default) or
+        ``rw``.
+
+    validate_checksums : bool, optional
+        If `True`, validate the blocks against their checksums.
+        Requires reading the entire file, so disabled by default.
+
+    extensions : list of AsdfExtension
+        A list of extensions to use when reading and writing ASDF files.
+        See `~asdf.asdftypes.AsdfExtension` for more information.
+
+    do_not_fill_defaults : bool, optional
+        When `True`, do not fill in missing default values.
+
+    ignore_version_mismatch : bool, optional
+        When `True`, do not raise warnings for mismatched schema versions.
+        Set to `True` by default.
+
+    ignore_unrecognized_tag : bool, optional
+        When `True`, do not raise warnings for unrecognized tags. Set to
+        `False` by default.
+
+    copy_arrays : bool, optional
+        When `False`, when reading files, attempt to memmap underlying data
+        arrays when possible.
+
+    lazy_load : bool, optional
+        When `True` and the underlying file handle is seekable, data
+        arrays will only be loaded lazily: i.e. when they are accessed
+        for the first time. In this case the underlying file must stay
+        open during the lifetime of the tree. Setting to False causes
+        all data arrays to be loaded up front, which means that they
+        can be accessed even after the underlying file is closed.
+        Note: even if `lazy_load` is `False`, `copy_arrays` is still taken
+        into account.
+
+    custom_schema : str, optional
+        Path to a custom schema file that will be used for a secondary
+        validation pass. This can be used to ensure that particular ASDF
+        files follow custom conventions beyond those enforced by the
+        standard.
+
+    strict_extension_check : bool, optional
+        When `True`, if the given ASDF file contains metadata about the
+        extensions used to create it, and if those extensions are not
+        installed, opening the file will fail. When `False`, opening a file
+        under such conditions will cause only a warning. Defaults to
+        `False`.
+
+    ignore_missing_extensions : bool, optional
+        When `True`, do not raise warnings when a file is read that
+        contains metadata about extensions that are not available. Defaults
+        to `False`.
+
+    Returns
+    -------
+    asdffile : AsdfFile
+        The new AsdfFile object.
+    """
+
+    readonly = False
+
+    # For now retain backwards compatibility with the old API behavior,
+    # specifically when being called from AsdfFile.open
+    if not _compat:
+        mode = _check_and_set_mode(fd, mode)
+        readonly = (mode == 'r' and not copy_arrays)
+
+    instance = AsdfFile(extensions=extensions,
+                   ignore_version_mismatch=ignore_version_mismatch,
+                   ignore_unrecognized_tag=ignore_unrecognized_tag,
+                   copy_arrays=copy_arrays, lazy_load=lazy_load,
+                   custom_schema=custom_schema, _readonly=readonly)
+
+    return AsdfFile._open_impl(instance,
+        fd, uri=uri, mode=mode,
+        validate_checksums=validate_checksums,
+        do_not_fill_defaults=do_not_fill_defaults,
+        _force_raw_types=_force_raw_types,
+        strict_extension_check=strict_extension_check,
+        ignore_missing_extensions=ignore_missing_extensions)
 
 
 def is_asdf_file(fd):

@@ -148,7 +148,7 @@ def test_dont_load_data():
     ff.write_to(buff)
 
     buff.seek(0)
-    with asdf.AsdfFile.open(buff) as ff:
+    with asdf.open(buff) as ff:
         ff.run_hook('reserve_blocks')
 
         # repr and str shouldn't load data
@@ -208,7 +208,7 @@ x0: !core/ndarray-1.0.0
 
     buff = helpers.yaml_to_asdf(yaml)
 
-    with asdf.AsdfFile.open(buff) as infile:
+    with asdf.open(buff) as infile:
         with asdf.AsdfFile() as f:
             f.tree['a'] = infile.tree['x0']
             f.tree['b'] = f.tree['a']
@@ -284,7 +284,7 @@ def test_inline():
     ff.write_to(buff)
 
     buff.seek(0)
-    with asdf.AsdfFile.open(buff, mode='rw') as ff:
+    with asdf.open(buff, mode='rw') as ff:
         helpers.assert_tree_match(tree, ff.tree)
         assert len(list(ff.blocks.internal_blocks)) == 0
         buff = io.BytesIO()
@@ -297,7 +297,7 @@ def test_inline_bare():
     content = "arr: !core/ndarray-1.0.0 [[1, 2, 3, 4], [5, 6, 7, 8]]"
     buff = helpers.yaml_to_asdf(content)
 
-    with asdf.AsdfFile.open(buff) as ff:
+    with asdf.open(buff) as ff:
         assert_array_equal(ff.tree['arr'], [[1, 2, 3, 4], [5, 6, 7, 8]])
 
 
@@ -331,7 +331,7 @@ def test_mask_arbitrary():
     """
 
     buff = helpers.yaml_to_asdf(content)
-    with asdf.AsdfFile.open(buff) as ff:
+    with asdf.open(buff) as ff:
         assert_array_equal(
             ff.tree['arr'].mask,
             [[False, False, False, True], [False, False, False, False]])
@@ -345,7 +345,7 @@ def test_mask_nan():
     """
 
     buff = helpers.yaml_to_asdf(content)
-    with asdf.AsdfFile.open(buff) as ff:
+    with asdf.open(buff) as ff:
         assert_array_equal(
             ff.tree['arr'].mask,
             [[False, False, False, True], [False, False, False, False]])
@@ -372,7 +372,7 @@ def test_inline_string():
     content = "arr: !core/ndarray-1.0.0 ['a', 'b', 'c']"
     buff = helpers.yaml_to_asdf(content)
 
-    with asdf.AsdfFile.open(buff) as ff:
+    with asdf.open(buff) as ff:
         assert_array_equal(ff.tree['arr']._make_array(), ['a', 'b', 'c'])
 
 
@@ -387,7 +387,7 @@ def test_inline_structured():
 
     buff = helpers.yaml_to_asdf(content)
 
-    with asdf.AsdfFile.open(buff) as ff:
+    with asdf.open(buff) as ff:
         assert ff.tree['arr']['f1'].dtype.char == 'H'
 
 
@@ -426,7 +426,7 @@ def test_unicode_to_list(tmpdir):
     ff.write_to(fd)
     fd.seek(0)
 
-    with asdf.AsdfFile.open(fd) as ff:
+    with asdf.open(fd) as ff:
         ff.resolve_and_inline()
         ff.write_to(io.BytesIO())
 
@@ -440,7 +440,7 @@ def test_inline_masked_array(tmpdir):
     f.set_array_storage(tree['test'], 'inline')
     f.write_to(testfile)
 
-    with asdf.AsdfFile.open(testfile) as f2:
+    with asdf.open(testfile) as f2:
         assert len(list(f2.blocks.internal_blocks)) == 0
         assert_array_equal(f.tree['test'], f2.tree['test'])
 
@@ -464,7 +464,7 @@ def test_masked_array_stay_open_bug(tmpdir):
     orig_open = p.open_files()
 
     for i in range(3):
-        with asdf.AsdfFile.open(tmppath) as f2:
+        with asdf.open(tmppath) as f2:
             np.sum(f2.tree['test'])
 
     assert len(p.open_files()) == len(orig_open)
@@ -480,7 +480,7 @@ def test_masked_array_repr(tmpdir):
 
     asdf.AsdfFile(tree).write_to(tmppath)
 
-    with asdf.AsdfFile.open(tmppath) as ff:
+    with asdf.open(tmppath) as ff:
         assert 'masked array' in repr(ff.tree['masked'])
 
 
@@ -493,15 +493,15 @@ def test_operations_on_ndarray_proxies(tmpdir):
 
     asdf.AsdfFile(tree).write_to(tmppath)
 
-    with asdf.AsdfFile.open(tmppath) as ff:
+    with asdf.open(tmppath) as ff:
         x = ff.tree['array'] * 2
         assert_array_equal(x, np.arange(10) * 2)
 
-    with asdf.AsdfFile.open(tmppath) as ff:
+    with asdf.open(tmppath) as ff:
         x = -ff.tree['array']
         assert_array_equal(x, -np.arange(10))
 
-    with asdf.AsdfFile.open(tmppath, mode='rw') as ff:
+    with asdf.open(tmppath, mode='rw') as ff:
         ff.tree['array'][2] = 4
         x = np.arange(10)
         x[2] = 4
@@ -518,7 +518,7 @@ def test_mask_datatype(tmpdir):
     """
     buff = helpers.yaml_to_asdf(content)
 
-    with asdf.AsdfFile.open(buff) as ff:
+    with asdf.open(buff) as ff:
         pass
 
 
@@ -533,7 +533,7 @@ def test_invalid_mask_datatype(tmpdir):
     buff = helpers.yaml_to_asdf(content)
 
     with pytest.raises(jsonschema.ValidationError):
-        with asdf.AsdfFile.open(buff) as ff:
+        with asdf.open(buff) as ff:
             pass
 
 
@@ -546,7 +546,7 @@ def test_ndim_validation(tmpdir):
     buff = helpers.yaml_to_asdf(content)
 
     with pytest.raises(jsonschema.ValidationError):
-        with asdf.AsdfFile.open(buff, extensions=CustomExtension()) as ff:
+        with asdf.open(buff, extensions=CustomExtension()) as ff:
             pass
 
     content = """
@@ -556,7 +556,7 @@ def test_ndim_validation(tmpdir):
     """
     buff = helpers.yaml_to_asdf(content)
 
-    with asdf.AsdfFile.open(buff, extensions=CustomExtension()) as ff:
+    with asdf.open(buff, extensions=CustomExtension()) as ff:
         pass
 
     content = """
@@ -567,7 +567,7 @@ def test_ndim_validation(tmpdir):
     """
     buff = helpers.yaml_to_asdf(content)
 
-    with asdf.AsdfFile.open(buff, extensions=CustomExtension()) as ff:
+    with asdf.open(buff, extensions=CustomExtension()) as ff:
         pass
 
     content = """
@@ -577,7 +577,7 @@ def test_ndim_validation(tmpdir):
     """
     buff = helpers.yaml_to_asdf(content)
 
-    with asdf.AsdfFile.open(buff, extensions=CustomExtension()) as ff:
+    with asdf.open(buff, extensions=CustomExtension()) as ff:
         pass
 
     content = """
@@ -587,7 +587,7 @@ def test_ndim_validation(tmpdir):
     """
     buff = helpers.yaml_to_asdf(content)
 
-    with asdf.AsdfFile.open(buff, extensions=CustomExtension()) as ff:
+    with asdf.open(buff, extensions=CustomExtension()) as ff:
         pass
 
     content = """
@@ -598,7 +598,7 @@ def test_ndim_validation(tmpdir):
     buff = helpers.yaml_to_asdf(content)
 
     with pytest.raises(jsonschema.ValidationError):
-        with asdf.AsdfFile.open(buff, extensions=CustomExtension()) as ff:
+        with asdf.open(buff, extensions=CustomExtension()) as ff:
             pass
 
 
@@ -611,7 +611,7 @@ def test_datatype_validation(tmpdir):
     """
     buff = helpers.yaml_to_asdf(content)
 
-    with asdf.AsdfFile.open(buff, extensions=CustomExtension()) as ff:
+    with asdf.open(buff, extensions=CustomExtension()) as ff:
         pass
 
     content = """
@@ -623,7 +623,7 @@ def test_datatype_validation(tmpdir):
     buff = helpers.yaml_to_asdf(content)
 
     with pytest.raises(jsonschema.ValidationError):
-        with asdf.AsdfFile.open(buff, extensions=CustomExtension()) as ff:
+        with asdf.open(buff, extensions=CustomExtension()) as ff:
             pass
 
     content = """
@@ -634,7 +634,7 @@ def test_datatype_validation(tmpdir):
     """
     buff = helpers.yaml_to_asdf(content)
 
-    with asdf.AsdfFile.open(buff, extensions=CustomExtension()) as ff:
+    with asdf.open(buff, extensions=CustomExtension()) as ff:
         pass
 
     content = """
@@ -646,7 +646,7 @@ def test_datatype_validation(tmpdir):
     buff = helpers.yaml_to_asdf(content)
 
     with pytest.raises(jsonschema.ValidationError):
-        with asdf.AsdfFile.open(buff, extensions=CustomExtension()) as ff:
+        with asdf.open(buff, extensions=CustomExtension()) as ff:
             pass
 
     content = """
@@ -662,7 +662,7 @@ def test_datatype_validation(tmpdir):
     buff = helpers.yaml_to_asdf(content)
 
     with pytest.raises(jsonschema.ValidationError):
-        with asdf.AsdfFile.open(buff, extensions=CustomExtension()) as ff:
+        with asdf.open(buff, extensions=CustomExtension()) as ff:
             pass
 
 
@@ -679,7 +679,7 @@ def test_structured_datatype_validation(tmpdir):
     """
     buff = helpers.yaml_to_asdf(content)
 
-    with asdf.AsdfFile.open(buff, extensions=CustomExtension()) as ff:
+    with asdf.open(buff, extensions=CustomExtension()) as ff:
         pass
 
     content = """
@@ -695,7 +695,7 @@ def test_structured_datatype_validation(tmpdir):
     buff = helpers.yaml_to_asdf(content)
 
     with pytest.raises(jsonschema.ValidationError):
-        with asdf.AsdfFile.open(buff, extensions=CustomExtension()) as ff:
+        with asdf.open(buff, extensions=CustomExtension()) as ff:
             pass
 
     content = """
@@ -713,7 +713,7 @@ def test_structured_datatype_validation(tmpdir):
     buff = helpers.yaml_to_asdf(content)
 
     with pytest.raises(jsonschema.ValidationError):
-        with asdf.AsdfFile.open(buff, extensions=CustomExtension()) as ff:
+        with asdf.open(buff, extensions=CustomExtension()) as ff:
             pass
 
     content = """
@@ -724,7 +724,7 @@ def test_structured_datatype_validation(tmpdir):
     buff = helpers.yaml_to_asdf(content)
 
     with pytest.raises(jsonschema.ValidationError):
-        with asdf.AsdfFile.open(buff, extensions=CustomExtension()) as ff:
+        with asdf.open(buff, extensions=CustomExtension()) as ff:
             pass
 
     content = """
@@ -740,7 +740,7 @@ def test_structured_datatype_validation(tmpdir):
     buff = helpers.yaml_to_asdf(content)
 
     with pytest.raises(jsonschema.ValidationError):
-        with asdf.AsdfFile.open(buff, extensions=CustomExtension()) as ff:
+        with asdf.open(buff, extensions=CustomExtension()) as ff:
             pass
 
     content = """
@@ -755,7 +755,7 @@ def test_structured_datatype_validation(tmpdir):
     """
     buff = helpers.yaml_to_asdf(content)
 
-    with asdf.AsdfFile.open(buff, extensions=CustomExtension()) as ff:
+    with asdf.open(buff, extensions=CustomExtension()) as ff:
         pass
 
 
@@ -776,7 +776,7 @@ def test_inline_shape_mismatch():
 
     buff = helpers.yaml_to_asdf(content)
     with pytest.raises(ValueError):
-        with asdf.AsdfFile.open(buff) as ff:
+        with asdf.open(buff) as ff:
             pass
 
 
@@ -817,3 +817,44 @@ def test_fortran_order(tmpdir):
     array = np.array([[11,12,13], [21,22,23]], order='F')
     tree = dict(data=array)
     helpers.assert_roundtrip_tree(tree, tmpdir)
+
+
+def test_readonly(tmpdir):
+
+    tmpfile = str(tmpdir.join('data.asdf'))
+    tree = dict(data=np.ndarray((100)))
+
+    with asdf.AsdfFile(tree) as af:
+        # Make sure we're actually writing to an internal array for this test
+        af.write_to(tmpfile, all_array_storage='internal')
+
+    # This should be perfectly fine
+    with asdf.open(tmpfile) as af:
+        assert af['data'].flags.writeable == True
+        af['data'][0] = 40
+
+    # Opening in read mode should mean array is readonly
+    with asdf.open(tmpfile, mode='r') as af:
+        assert af['data'].flags.writeable == False
+        with pytest.raises(ValueError) as err:
+            af['data'][0] = 41
+            assert str(err) == 'assignment destination is read-only'
+
+    # Copying the arrays makes it safe to write to the underlying array
+    with asdf.open(tmpfile, mode='r', copy_arrays=True) as af:
+        assert af['data'].flags.writeable == True
+        af['data'][0] = 42
+
+
+def test_readonly_inline(tmpdir):
+
+    tmpfile = str(tmpdir.join('data.asdf'))
+    tree = dict(data=np.ndarray((100)))
+
+    with asdf.AsdfFile(tree) as af:
+        af.write_to(tmpfile, all_array_storage='inline')
+
+    # This should be safe since it's an inline array
+    with asdf.open(tmpfile, mode='r') as af:
+        assert af['data'].flags.writeable == True
+        af['data'][0] = 42

@@ -141,10 +141,10 @@ frames:
 """ % (declination, right_ascension, galcen_distance, roll, z_sun)
 
     old_buff = helpers.yaml_to_asdf(old_frame_yaml)
-    old_asdf = AsdfFile.open(old_buff)
+    old_asdf = asdf.open(old_buff)
     old_frame = old_asdf.tree['frames'][0]
     new_buff = helpers.yaml_to_asdf(new_frame_yaml)
-    new_asdf = AsdfFile.open(new_buff)
+    new_asdf = asdf.open(new_buff)
     new_frame = new_asdf.tree['frames'][0]
 
     # Poor man's frame comparison since it's not implemented by astropy
@@ -206,13 +206,13 @@ frames:
 """ % (obsgeovel + obsgeoloc)
 
     old_buff = helpers.yaml_to_asdf(old_frame_yaml)
-    old_asdf = AsdfFile.open(old_buff)
+    old_asdf = asdf.open(old_buff)
     old_frame = old_asdf.tree['frames'][0]
     old_loc = old_frame.reference_frame.obsgeoloc
     old_vel = old_frame.reference_frame.obsgeovel
 
     new_buff = helpers.yaml_to_asdf(new_frame_yaml)
-    new_asdf = AsdfFile.open(new_buff)
+    new_asdf = asdf.open(new_buff)
     new_frame = new_asdf.tree['frames'][0]
     new_loc = new_frame.reference_frame.obsgeoloc
     new_vel = new_frame.reference_frame.obsgeovel
