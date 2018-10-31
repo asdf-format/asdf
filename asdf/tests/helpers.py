@@ -3,6 +3,7 @@
 import io
 import os
 import sys
+import warnings
 
 try:
     from astropy.coordinates import ICRS
@@ -23,6 +24,7 @@ from ..asdf import AsdfFile, get_asdf_library_info
 from ..block import Block
 from .httpserver import RangeHTTPServer
 from ..extension import default_extensions
+from ..exceptions import AsdfConversionWarning
 from .. import versioning
 
 from ..tags.core import AsdfObject
@@ -143,10 +145,7 @@ def assert_tree_match(old_tree, new_tree, ctx=None,
     recurse(old_tree, new_tree)
 
 
-def assert_roundtrip_tree(tree, tmpdir, *, asdf_check_func=None,
-                          raw_yaml_check_func=None, write_options={},
-                          init_options={}, extensions=None,
-                          tree_match_func='assert_equal'):
+def assert_roundtrip_tree(*args, **kwargs):
     """
     Assert that a given tree saves to ASDF and, when loaded back,
     the tree matches the original tree.
@@ -168,6 +167,16 @@ def assert_roundtrip_tree(tree, tmpdir, *, asdf_check_func=None,
         Will be called with the reloaded ASDF file to perform any
         additional checks.
     """
+    with warnings.catch_warnings():
+        warnings.filterwarnings("error", category=AsdfConversionWarning)
+        _assert_roundtrip_tree(*args, **kwargs)
+
+
+def _assert_roundtrip_tree(tree, tmpdir, *, asdf_check_func=None,
+                           raw_yaml_check_func=None, write_options={},
+                           init_options={}, extensions=None,
+                           tree_match_func='assert_equal'):
+
     fname = str(tmpdir.join('test.asdf'))
 
     # Most tests assume that all blocks will be stored internally

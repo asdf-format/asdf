@@ -20,6 +20,10 @@
   provide backwards compatibility for files that were created with a buggy
   version of ASDF (see #553 below). [#566]
 
+- Add ``AsdfConversionWarning`` for failures to convert ASDF tree into custom
+  types. This warning is converted to an error when using
+  ``assert_roundtrip_tree`` for tests. [#583]
+
 2.1.1 (unreleased)
 ------------------
 
