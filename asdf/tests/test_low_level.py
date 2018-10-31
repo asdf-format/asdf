@@ -1306,3 +1306,16 @@ def test_no_warning_nan_array(tmpdir):
     with pytest.warns(None) as w:
         assert_roundtrip_tree(tree, tmpdir)
         assert len(w) == 0, display_warnings(w)
+
+
+def test_warning_deprecated_open(tmpdir):
+
+    tmpfile = str(tmpdir.join('foo.asdf'))
+
+    tree = dict(foo=42, bar='hello')
+    with asdf.AsdfFile(tree) as af:
+        af.write_to(tmpfile)
+
+    with pytest.warns(AsdfDeprecationWarning):
+        with asdf.AsdfFile.open(tmpfile) as af:
+            assert_tree_match(tree, af.tree)
