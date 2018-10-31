@@ -8,6 +8,7 @@ import warnings
 from numbers import Integral
 from functools import lru_cache
 from collections import OrderedDict
+from collections.abc import Mapping
 from urllib import parse as urlparse
 
 from jsonschema import validators as mvalidators
@@ -319,7 +320,6 @@ def load_custom_schema(url):
     core = load_schema(AsdfObject.yaml_tag)
 
     def update(d, u):
-        from collections import Mapping
         for k, v in u.items():
             # Respect the property ordering of the core schema
             if k == 'propertyOrder' and k in d:
