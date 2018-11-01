@@ -29,8 +29,7 @@
 - Add readonly protection to memory mapped arrays when the underlying file
   handle is readonly. [#579]
 
-
-2.1.1 (unreleased)
+2.1.1 (2018-11-01)
 ------------------
 
 - Make sure extension metadata is written even when constructing the ASDF tree
