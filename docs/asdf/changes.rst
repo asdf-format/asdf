@@ -1,6 +1,27 @@
+.. currentmodule:: asdf
+
 *******
 Changes
 *******
+
+What's New in ASDF 2.1?
+=======================
+
+ASDF 2.1 is a minor release, and most of the changes affect only a subset of
+users. The most notable changes are the following:
+
+* `namedtuple` objects can now be serialized. They are automatically converted
+  into `list` objects, and therefore are not strictly able to round-trip. By
+  default a warning occurs when performing this conversion, but the warning can
+  be disabled by passing `ignore_implicit_conversion=True` to the `AsdfFile`
+  constructor.
+
+* Added a method `AsdfFile.get_history_entries` for getting a list of history
+  entries from the tree.
+
+* Added an option to `generic_io.get_file` to close the underlying file handle.
+
+Please see the :ref:`change_log` for additional details.
 
 What's New in ASDF 2.0?
 =======================
