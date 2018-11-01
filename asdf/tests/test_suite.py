@@ -14,7 +14,7 @@ from .helpers import assert_tree_match, display_warnings
 
 def get_test_id(reference_file_path):
     """Helper function to return the informative part of a schema path"""
-    path = os.path.normpath(reference_file_path)
+    path = os.path.normpath(str(reference_file_path))
     return os.path.sep.join(path.split(os.path.sep)[-3:])
 
 def collect_reference_files():

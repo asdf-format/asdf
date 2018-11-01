@@ -677,10 +677,14 @@ class AsdfFile(versioning.VersionedMixin):
                             ignore_missing_extensions=ignore_missing_extensions,
                             _extension_metadata=self._extension_metadata)
             except ValueError:
-                pass
-            raise ValueError(
-                "Input object does not appear to be ASDF file or FITS with " +
-                "ASDF extension")
+                raise ValueError(
+                    "Input object does not appear to be an ASDF file or a FITS with " +
+                    "ASDF extension") from None
+            except ImportError:
+                raise ValueError(
+                    "Input object does not appear to be an ASDF file. Cannot check " +
+                    "if it is a FITS with ASDF extension because 'astropy' is not " +
+                    "installed") from None
         return cls._open_asdf(self, fd, uri=uri, mode=mode,
                 validate_checksums=validate_checksums,
                 do_not_fill_defaults=do_not_fill_defaults,
@@ -827,6 +831,7 @@ class AsdfFile(versioning.VersionedMixin):
         self._blocks.finalize(self)
 
         self._tree['asdf_library'] = get_asdf_library_info()
+        self._update_extension_history()
 
     def _serial_write(self, fd, pad_blocks, include_block_index):
         self._write_tree(self._tree, fd, pad_blocks)
@@ -912,8 +917,6 @@ class AsdfFile(versioning.VersionedMixin):
             write out in the latest version supported by asdf.
         """
 
-        self._update_extension_history()
-
         fd = self._fd
 
         if fd is None:
@@ -922,7 +925,9 @@ class AsdfFile(versioning.VersionedMixin):
 
         if not fd.writable():
             raise IOError(
-                "Can not update, since associated file is read-only")
+                "Can not update, since associated file is read-only. Make "
+                "sure that the AsdfFile was opened with mode='rw' and the "
+                "underlying file handle is writable.")
 
         if version is not None:
             self.version = version
@@ -1053,8 +1058,6 @@ class AsdfFile(versioning.VersionedMixin):
             The ASDF version to write out.  If not provided, it will
             write out in the latest version supported by asdf.
         """
-
-        self._update_extension_history()
 
         original_fd = self._fd
 

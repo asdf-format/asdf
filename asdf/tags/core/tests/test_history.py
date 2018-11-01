@@ -286,3 +286,12 @@ def test_metadata_with_custom_extension(tmpdir):
             pass
 
     assert len(warnings) == 0
+
+    # Make sure that this works even when constructing the tree on-the-fly
+    tmpfile3 = str(tmpdir.join('custom_extension2.asdf'))
+    with asdf.AsdfFile(extensions=FractionExtension()) as ff:
+        ff.tree['fraction'] = fractions.Fraction(4, 5)
+        ff.write_to(tmpfile3)
+
+    with asdf.open(tmpfile3, extensions=FractionExtension()) as af:
+        assert len(af['history']['extensions']) == 2

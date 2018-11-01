@@ -231,4 +231,10 @@ class _DefaultExtensions:
     def package_metadata(self):
         return self._package_metadata
 
+    def reset(self):
+        """This will be used primarily for testing purposes."""
+        self._extensions = []
+        self._extension_list = None
+        self._package_metadata = {}
+
 default_extensions = _DefaultExtensions()

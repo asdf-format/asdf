@@ -1,3 +1,22 @@
+2.1.1 (2018-11-01)
+------------------
+
+- Make sure extension metadata is written even when constructing the ASDF tree
+  on-the-fly. [#549]
+
+- Fix large integer validation when storing `numpy` integer literals in the
+  tree. [#553]
+
+- Fix bug that caused subclass of external type to be serialized by the wrong
+  tag. [#560]
+
+- Fix bug that occurred when attempting to open invalid file but Astropy import
+  fails while checking for ASDF-in-FITS. [#562]
+
+- Fix bug that caused tree creation to fail when unable to locate a schema file
+  for an unknown tag. This now simply causes a warning, and the offending node
+  is converted to basic Python data structures. [#571]
+
 2.1.0 (2018-09-25)
 ------------------
 

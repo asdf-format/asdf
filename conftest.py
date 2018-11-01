@@ -8,6 +8,11 @@ from astropy.tests.helper import enable_deprecations_as_exceptions
 
 enable_deprecations_as_exceptions()
 
+pytest_plugins = [
+    'asdf.tests.schema_tester'
+]
+
+
 @pytest.fixture(autouse=True)
 def _docdir(request):
     """
@@ -19,7 +24,7 @@ def _docdir(request):
     if isinstance(request.node, DoctestItem):
 
         # Get the fixture dynamically by its name.
-        tmpdir = request.getfuncargvalue('tmpdir')
+        tmpdir = request.getfixturevalue('tmpdir')
 
         # Chdir only for the duration of the test.
         olddir = os.getcwd()

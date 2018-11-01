@@ -311,6 +311,7 @@ def test_bad_input(tmpdir):
 @pytest.mark.skipif(sys.platform.startswith('win'),
     reason='Avoid path manipulation on Windows')
 def test_version_mismatch_file():
+
     testfile = str(get_test_data_path('version_mismatch.fits'))
 
     with pytest.warns(None) as w:
@@ -318,7 +319,7 @@ def test_version_mismatch_file():
                 ignore_version_mismatch=False) as fits_handle:
             assert fits_handle.tree['a'] == complex(0j)
     # This is the warning that we expect from opening the FITS file
-    assert len(w) == 1
+    assert len(w) == 1, display_warnings(w)
     assert str(w[0].message) == (
         "'tag:stsci.edu:asdf/core/complex' with version 7.0.0 found in file "
         "'{}', but latest supported version is 1.0.0".format(testfile))

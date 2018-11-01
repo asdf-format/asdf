@@ -5,6 +5,7 @@ environment:
 
   global:
       PYTHON: "C:\\conda"
+      PYTEST_VERSION: "3.7"
       MINICONDA_VERSION: "latest"
       CMD_IN_ENV: "cmd /E:ON /V:ON /C .\\ci-helpers\\appveyor\\windows_sdk.cmd"
       SETUP_CMD: "test"
@@ -29,20 +30,22 @@ environment:
         NUMPY_VERSION: "1.12.0"
         platform: x64
 
-      - PYTHON_VERSION: "3.6"
+      - PYTHON_VERSION: "3.7"
+        PYTEST_VERSION: "3.7"
         platform: x64
 
       - PYTHON_VERSION: "3.6"
         ASTROPY_VERSION: "stable"
         platform: x64
 
-      - PYTHON_VERSION: "3.6"
+      - PYTHON_VERSION: "3.7"
+        PYTEST_VERSION: "3.7"
         ASTROPY_VERSION: "development"
         GWCS_PIP: "%GWCS_GIT%"
         platform: x64
 
       # Tests against development version of numpy may fail
-      - PYTHON_VERSION: "3.6"
+      - PYTHON_VERSION: "3.7"
         NUMPY_VERSION: "development"
         platform: x64
 

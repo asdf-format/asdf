@@ -202,7 +202,7 @@ def test_schema_caching():
 
 
 def test_flow_style():
-    class CustomFlowStyleType(dict, asdftypes.AsdfType):
+    class CustomFlowStyleType(dict, asdftypes.CustomType):
         name = 'custom_flow'
         organization = 'nowhere.org'
         version = (1, 0, 0)
@@ -225,7 +225,7 @@ def test_flow_style():
 
 
 def test_style():
-    class CustomStyleType(str, asdftypes.AsdfType):
+    class CustomStyleType(str, asdftypes.CustomType):
         name = 'custom_style'
         organization = 'nowhere.org'
         version = (1, 0, 0)
@@ -267,7 +267,7 @@ def test_property_order():
 
 
 def test_invalid_nested():
-    class CustomType(str, asdftypes.AsdfType):
+    class CustomType(str, asdftypes.CustomType):
         name = 'custom'
         organization = 'nowhere.org'
         version = (1, 0, 0)
@@ -361,7 +361,7 @@ def test_default_check_in_schema():
 
 
 def test_fill_and_remove_defaults():
-    class DefaultType(dict, asdftypes.AsdfType):
+    class DefaultType(dict, asdftypes.CustomType):
         name = 'default'
         organization = 'nowhere.org'
         version = (1, 0, 0)
@@ -471,16 +471,22 @@ def test_self_reference_resolution():
     assert s['anyOf'][1] == s['anyOf'][0]
 
 
-def test_large_literals():
+@pytest.mark.parametrize('use_numpy', [False, True])
+def test_large_literals(use_numpy):
+
+    largeval = 1 << 53
+    if use_numpy:
+        largeval = np.uint64(largeval)
+
     tree = {
-        'large_int': (1 << 53),
+        'large_int': largeval,
     }
 
     with pytest.raises(ValidationError):
         asdf.AsdfFile(tree)
 
     tree = {
-        'large_array': np.array([(1 << 53)], np.uint64)
+        'large_array': np.array([largeval], np.uint64)
     }
 
     ff = asdf.AsdfFile(tree)
@@ -573,7 +579,7 @@ properties:
 @pytest.mark.importorskip('astropy')
 def test_type_missing_dependencies():
 
-    class MissingType(asdftypes.AsdfType):
+    class MissingType(asdftypes.CustomType):
         name = 'missing'
         organization = 'nowhere.org'
         version = (1, 1, 0)
@@ -601,7 +607,7 @@ custom: !<tag:nowhere.org:custom/missing-1.1.0>
 def test_assert_roundtrip_with_extension(tmpdir):
     called_custom_assert_equal = [False]
 
-    class CustomType(dict, asdftypes.AsdfType):
+    class CustomType(dict, asdftypes.CustomType):
         name = 'custom_flow'
         organization = 'nowhere.org'
         version = (1, 0, 0)
@@ -717,3 +723,50 @@ def test_custom_validation_with_definitions_bad(tmpdir):
     with pytest.raises(ValidationError):
         with asdf.open(asdf_file, custom_schema=custom_schema_path) as ff:
             pass
+
+
+def test_nonexistent_tag(tmpdir):
+    """
+    This tests the case where a node is tagged with a type that apparently
+    comes from an extension that is known, but the type itself can't be found.
+
+    This could occur when a more recent version of an installed package
+    provides the new type, but an older version of the package is installed.
+    ASDF should still be able to open the file in this case, but it won't be
+    able to restore the type.
+
+    The bug that prompted this test results from attempting to load a schema
+    file that doesn't exist, which is why this test belongs in this file.
+    """
+
+    # This shouldn't ever happen, but it's a useful test case
+    yaml = """
+a: !core/doesnt_exist-1.0.0
+  hello
+    """
+
+    buff = helpers.yaml_to_asdf(yaml)
+    with pytest.warns(None) as w:
+        with asdf.open(buff) as af:
+            assert str(af['a']) == 'hello'
+        # Currently there are 3 warnings since one occurs on each of the
+        # validation passes. It would be good to consolidate these eventually
+        assert len(w) == 3, helpers.display_warnings(w)
+        assert str(w[0].message).startswith("Unable to locate schema file")
+        assert str(w[1].message).startswith("Unable to locate schema file")
+        assert str(w[2].message).startswith(af['a']._tag)
+
+    # This is a more realistic case since we're using an external extension
+    yaml = """
+a: !<tag:nowhere.org:custom/doesnt_exist-1.0.0>
+  hello
+  """
+
+    buff = helpers.yaml_to_asdf(yaml)
+    with pytest.warns(None) as w:
+        with asdf.open(buff, extensions=CustomExtension()) as af:
+            assert str(af['a']) == 'hello'
+        assert len(w) == 3, helpers.display_warnings(w)
+        assert str(w[0].message).startswith("Unable to locate schema file")
+        assert str(w[1].message).startswith("Unable to locate schema file")
+        assert str(w[2].message).startswith(af['a']._tag)

@@ -4,8 +4,11 @@
 import os
 import json
 import datetime
+import warnings
+from numbers import Integral
 from functools import lru_cache
 from collections import OrderedDict
+from collections.abc import Mapping
 from urllib import parse as urlparse
 
 from jsonschema import validators as mvalidators
@@ -217,7 +220,12 @@ def _create_validator(validators=YAML_VALIDATORS):
                 if tag is not None:
                     schema_path = self.ctx.resolver(tag)
                     if schema_path != tag:
-                        s = load_schema(schema_path, self.ctx.resolver)
+                        try:
+                            s = load_schema(schema_path, self.ctx.resolver)
+                        except FileNotFoundError:
+                            msg = "Unable to locate schema file for '{}': '{}'"
+                            warnings.warn(msg.format(tag, schema_path))
+                            s = {}
                         if s:
                             with self.resolver.in_scope(schema_path):
                                 for x in super(ASDFValidator, self).iter_errors(instance, s):
@@ -312,7 +320,6 @@ def load_custom_schema(url):
     core = load_schema(AsdfObject.yaml_tag)
 
     def update(d, u):
-        from collections import Mapping
         for k, v in u.items():
             # Respect the property ordering of the core schema
             if k == 'propertyOrder' and k in d:
@@ -457,7 +464,7 @@ def validate_large_literals(instance):
     """
     # We can count on 52 bits of precision
     for instance in treeutil.iter_tree(instance):
-        if (isinstance(instance, int) and (
+        if (isinstance(instance, (Integral)) and (
             instance > ((1 << 51) - 1) or
             instance < -((1 << 51) - 2))):
             raise ValidationError(

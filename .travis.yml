@@ -22,7 +22,7 @@ env:
         # overidden underneath. They are defined here in order to save having
         # to repeat them for all configurations.
         - PYTHON_VERSION=3.6
-        - PYTEST_VERSION=3.6
+        - PYTEST_VERSION=3.7
         - ASTROPY_VERSION=stable
         - NUMPY_VERSION=stable
         - PIP_DEPENDENCIES='pytest-faulthandler importlib_resources'
@@ -39,9 +39,10 @@ env:
         - PIP_DEPENDENCIES='collective.checkdocs pygments' SETUP_CMD='checkdocs'
         - PYTHON_VERSION=3.5 SETUP_CMD='test'
         - PYTHON_VERSION=3.6 SETUP_CMD='test'
-        - PYTHON_VERSION=3.7 SETUP_CMD='test'
+        - PYTHON_VERSION=3.7 PYTEST_VERSION=3.8 SETUP_CMD='test'
 
 matrix:
+    fast_finish: true
     include:
 
         # Do a coverage test
@@ -62,6 +63,7 @@ matrix:
         # also test against development version of Astropy
         - env: MAIN_CMD='pytest' SETUP_CMD='' ASTROPY_VERSION=development
                GWCS_PIP="$GWCS_GIT"
+               PYTEST_VERSION=3.8
 
         # latest stable versions
         - env: NUMPY_VERSION=stable SETUP_CMD='test'
