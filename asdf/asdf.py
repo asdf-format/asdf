@@ -925,7 +925,9 @@ class AsdfFile(versioning.VersionedMixin):
 
         if not fd.writable():
             raise IOError(
-                "Can not update, since associated file is read-only")
+                "Can not update, since associated file is read-only. Make "
+                "sure that the AsdfFile was opened with mode='rw' and the "
+                "underlying file handle is writable.")
 
         if version is not None:
             self.version = version
