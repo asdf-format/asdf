@@ -120,17 +120,26 @@ class _AsdfWriteTypeIndex(object):
             self._extension_by_cls[cls] = index._extension_by_type[typ]
 
         def add_subclasses(typ, asdftype):
+
             for subclass in util.iter_subclasses(typ):
                 # Do not overwrite the tag type for an existing subclass if the
                 # new tag serializes a class that is higher in the type
                 # hierarchy than the existing subclass.
                 if subclass in self._class_by_subclass:
                     if issubclass(self._class_by_subclass[subclass], typ):
+
+                        from asdf.extension import BuiltinExtension
+                        ext_by_type = index._extension_by_type[asdftype]
+                        # Do not allow the BuiltinExtension to override types
+                        # from other packages
+                        if isinstance(ext_by_type, BuiltinExtension):
+                            continue
+
                         # Allow for cases where a subclass tag is being
                         # overridden by a tag from another extension.
-                        if (self._extension_by_cls[subclass] ==
-                                index._extension_by_type[asdftype]):
+                        if (self._extension_by_cls[subclass] == ext_by_type):
                             continue
+
                 self._class_by_subclass[subclass] = typ
                 self._type_by_subclasses[subclass] = asdftype
                 self._extension_by_cls[subclass] = index._extension_by_type[asdftype]
