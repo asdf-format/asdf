@@ -29,6 +29,13 @@
 - Add readonly protection to memory mapped arrays when the underlying file
   handle is readonly. [#579]
 
+2.1.2 (unreleased)
+------------------
+
+- Fix a regression that was introduced in v2.1.1: do not automatically add
+  subclasses of ``numpy.ndarray`` to the type index since this can have
+  unexpected consequences. [#595]
+
 2.1.1 (2018-11-01)
 ------------------
 

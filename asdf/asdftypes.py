@@ -13,6 +13,7 @@ from copy import copy
 
 from functools import lru_cache
 
+import asdf
 from . import tagged
 from . import util
 from .versioning import AsdfVersion, AsdfSpec, get_version_map, default_version
@@ -131,6 +132,7 @@ class _AsdfWriteTypeIndex(object):
                         if (self._extension_by_cls[subclass] ==
                                 index._extension_by_type[asdftype]):
                             continue
+
                 self._class_by_subclass[subclass] = typ
                 self._type_by_subclasses[subclass] = asdftype
                 self._extension_by_cls[subclass] = index._extension_by_type[asdftype]
@@ -139,7 +141,10 @@ class _AsdfWriteTypeIndex(object):
             add_type_to_index(asdftype, asdftype)
             for typ in asdftype.types:
                 add_type_to_index(typ, asdftype)
-                add_subclasses(typ, asdftype)
+                # Do not automatically add subclasses of numpy.ndarray since
+                # this could have unexpected (and undesirable) consequences
+                if not asdftype == asdf.tags.core.NDArrayType:
+                    add_subclasses(typ, asdftype)
 
             if asdftype.handle_dynamic_subclasses:
                 for typ in asdftype.types:
