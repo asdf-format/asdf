@@ -62,13 +62,22 @@ def pytest_addoption(parser):
         "asdf_schema_root", "Root path indicating where schemas are stored")
     parser.addini(
         "asdf_schema_skip_names", "Base names of files to skip in schema tests")
+    parser.addini(
+        "asdf_schema_skip_examples",
+        "Base names of schemas whose examples should not be tested")
 
 
 class AsdfSchemaFile(pytest.File):
+
+    def __init__(self, *args, skip_examples=False, **kwargs):
+        super().__init__(*args, **kwargs)
+        self.skip_examples = skip_examples
+
     def collect(self):
         yield AsdfSchemaItem(str(self.fspath), self)
-        for example in self.find_examples_in_schema():
-            yield AsdfSchemaExampleItem(str(self.fspath), self, example)
+        if not self.skip_examples:
+            for example in self.find_examples_in_schema():
+                yield AsdfSchemaExampleItem(str(self.fspath), self, example)
 
     def find_examples_in_schema(self):
         """Returns generator for all examples in schema at given path"""
@@ -186,6 +195,7 @@ def pytest_collect_file(path, parent):
         return
 
     skip_names = parent.config.getini('asdf_schema_skip_names')
+    skip_examples = parent.config.getini('asdf_schema_skip_examples')
 
     schema_roots = [os.path.join(str(parent.config.rootdir), root)
                         for root in schema_roots]
@@ -195,6 +205,9 @@ def pytest_collect_file(path, parent):
 
     for root in schema_roots:
         if str(path).startswith(root) and path.purebasename not in skip_names:
-            return AsdfSchemaFile(path, parent)
+            skip = path.purebasename in skip_examples
+            return AsdfSchemaFile(
+                            path, parent,
+                            skip_examples=(path.purebasename in skip_examples))
 
     return None
