@@ -29,6 +29,12 @@
 - Add readonly protection to memory mapped arrays when the underlying file
   handle is readonly. [#579]
 
+2.1.2 (unreleased)
+------------------
+
+- Fix bug in logic for determining when to override subclasses of types
+  serialized by a tag. [#596]
+
 2.1.1 (2018-11-01)
 ------------------
 
