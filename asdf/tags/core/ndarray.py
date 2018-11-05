@@ -2,6 +2,7 @@
 # -*- coding: utf-8 -*-
 
 import sys
+from importlib.util import find_spec
 
 import numpy as np
 from numpy import ma
@@ -215,6 +216,8 @@ def numpy_array_to_list(array):
 class NDArrayType(AsdfType):
     name = 'core/ndarray'
     types = [np.ndarray, ma.MaskedArray]
+    if find_spec('astropy'):
+        types.append('astropy.io.fits.FITS_rec')
 
     def __init__(self, source, shape, dtype, offset, strides,
                  order, mask, asdffile):
