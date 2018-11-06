@@ -29,6 +29,9 @@
 - Add readonly protection to memory mapped arrays when the underlying file
   handle is readonly. [#579]
 
+- Remove WCS tags. These are now provided by the `gwcs package
+  <https://github.com/spacetelescope/gwcs>`_. [#593]
+
 2.1.1 (2018-11-01)
 ------------------
 
