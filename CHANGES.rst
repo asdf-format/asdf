@@ -37,6 +37,9 @@
   index before any others. This fixes a bug that was related to the way that
   subclass tags were overwritten by external extensions. [#598]
 
+- Remove WCS tags. These are now provided by the `gwcs package
+  <https://github.com/spacetelescope/gwcs>`_. [#593]
+
 2.1.1 (2018-11-01)
 ------------------
 
