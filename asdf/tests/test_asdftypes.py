@@ -5,6 +5,7 @@
 import io
 import os
 import sys
+
 import pytest
 
 import asdf
@@ -217,7 +218,13 @@ def test_versioned_writing(monkeypatch):
         'tags': {
             'tag:stsci.edu:asdf/core/complex': '42.0.0',
             'tag:stscu.edu:asdf/core/asdf': '1.0.0'
-        }
+        },
+        # We need to insert these explicitly since we're monkeypatching
+        'core': {
+            'tag:stsci.edu:asdf/core/complex': '42.0.0',
+            'tag:stscu.edu:asdf/core/asdf': '1.0.0'
+        },
+        'standard': {}
     })
 
     # Add bogus version to supported versions
