@@ -1,3 +1,10 @@
+2.1.2 (unreleased)
+------------------
+
+- Make sure that all types corresponding to core tags are added to the type
+  index before any others. This fixes a bug that was related to the way that
+  subclass tags were overwritten by external extensions. [#598]
+
 2.1.1 (2018-11-01)
 ------------------
 
