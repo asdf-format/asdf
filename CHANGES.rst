@@ -32,7 +32,7 @@
 - Remove WCS tags. These are now provided by the `gwcs package
   <https://github.com/spacetelescope/gwcs>`_. [#593]
 
-2.1.2 (unreleased)
+2.1.2 (2018-11-13)
 ------------------
 
 - Make sure that all types corresponding to core tags are added to the type
