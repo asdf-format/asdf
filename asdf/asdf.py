@@ -1239,19 +1239,14 @@ def _check_and_set_mode(fileobj, asdf_mode):
         raise ValueError(msg.format(asdf_mode))
 
     if asdf_mode is None:
-        if isinstance(fileobj, str):
-            parsed = generic_io.urlparse.urlparse(fileobj)
-            if parsed.scheme in ['http', 'https']:
-                return 'r'
-            return 'rw'
         if isinstance(fileobj, io.IOBase):
             return 'rw' if fileobj.writable() else 'r'
 
         if isinstance(fileobj, generic_io.GenericFile):
             return fileobj.mode
 
-        # This is the safest default since it allows for memory mapping
-        return 'rw'
+        # This is the safest assumption for the default fallback
+        return 'r'
 
     return asdf_mode
 
