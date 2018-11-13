@@ -1,4 +1,4 @@
-2.1.2 (unreleased)
+2.1.2 (2018-11-13)
 ------------------
 
 - Make sure that all types corresponding to core tags are added to the type
