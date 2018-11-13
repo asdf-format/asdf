@@ -828,17 +828,17 @@ def test_readonly(tmpdir):
         # Make sure we're actually writing to an internal array for this test
         af.write_to(tmpfile, all_array_storage='internal')
 
-    # This should be perfectly fine
+    # Opening in read mode (the default) should mean array is readonly
     with asdf.open(tmpfile) as af:
-        assert af['data'].flags.writeable == True
-        af['data'][0] = 40
-
-    # Opening in read mode should mean array is readonly
-    with asdf.open(tmpfile, mode='r') as af:
         assert af['data'].flags.writeable == False
         with pytest.raises(ValueError) as err:
             af['data'][0] = 41
             assert str(err) == 'assignment destination is read-only'
+
+    # This should be perfectly fine
+    with asdf.open(tmpfile, mode='rw') as af:
+        assert af['data'].flags.writeable == True
+        af['data'][0] = 40
 
     # Copying the arrays makes it safe to write to the underlying array
     with asdf.open(tmpfile, mode='r', copy_arrays=True) as af:
