@@ -5,9 +5,9 @@
 This module deals with things that change between different versions
 of the ASDF spec.
 """
+from functools import total_ordering
 
 import yaml
-from functools import total_ordering
 
 if getattr(yaml, '__with_libyaml__', None):  # pragma: no cover
     _yaml_base_loader = yaml.CSafeLoader
@@ -39,6 +39,16 @@ def get_version_map(version):
         except Exception:
             raise ValueError(
                 "Could not load version map for version {0}".format(version))
+
+        # Separate the core tags from the rest of the standard for convenience
+        version_map['core'] = {}
+        version_map['standard'] = {}
+        for name, version in version_map['tags'].items():
+            if name.startswith('tag:stsci.edu:asdf/core'):
+                version_map['core'][name] = version
+            else:
+                version_map['standard'][name] = version
+
         _version_map[version] = version_map
 
     return version_map
