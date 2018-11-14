@@ -1,4 +1,4 @@
-2.2.0 (unreleased)
+2.2.0 (2018-11-14)
 ------------------
 
 - Small numeric arrays are now automatically stored inline. This behavior can
