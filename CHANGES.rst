@@ -1,4 +1,4 @@
-2.2.0 (unreleased)
+2.2.0 (2018-11-14)
 ------------------
 
 - Add new parameter `lazy_load` to ``AsdfFile.open``. It is ``True`` by
