@@ -95,7 +95,9 @@ class _AsdfWriteTypeIndex(object):
         self._extensions_used = set()
 
         try:
-            version_map = get_version_map(self._version)['tags']
+            version_map = get_version_map(self._version)
+            core_version_map = version_map['core']
+            standard_version_map = version_map['standard']
         except ValueError:
             raise ValueError(
                 "Don't know how to write out ASDF version {0}".format(
@@ -152,8 +154,12 @@ class _AsdfWriteTypeIndex(object):
                 self._type_by_name[name] = asdftype
                 add_all_types(asdftype)
 
-        # Process all types defined in the ASDF version map
-        for name, _version in version_map.items():
+        # Process all types defined in the ASDF version map. It is important to
+        # make sure that tags that are associated with the core part of the
+        # standard are processed first in order to handle subclasses properly.
+        for name, _version in core_version_map.items():
+            add_by_tag(name, AsdfVersion(_version))
+        for name, _version in standard_version_map.items():
             add_by_tag(name, AsdfVersion(_version))
 
         # Now add any extension types that aren't known to the ASDF standard.
