@@ -1214,3 +1214,22 @@ def test_warning_deprecated_open(tmpdir):
     with pytest.warns(AsdfDeprecationWarning):
         with asdf.AsdfFile.open(tmpfile) as af:
             assert_tree_match(tree, af.tree)
+
+
+def test_open_readonly(tmpdir):
+
+    tmpfile = str(tmpdir.join('readonly.asdf'))
+
+    tree = dict(foo=42, bar='hello', baz=np.arange(20))
+    with asdf.AsdfFile(tree) as af:
+        af.write_to(tmpfile, all_array_storage='internal')
+
+    os.chmod(tmpfile, 0o440)
+    assert os.access(tmpfile, os.W_OK) == False
+
+    with asdf.open(tmpfile) as af:
+        assert af['baz'].flags.writeable == False
+
+    with pytest.raises(PermissionError):
+        with asdf.open(tmpfile, mode='rw'):
+            pass
