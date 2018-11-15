@@ -22,7 +22,7 @@ env:
         # overidden underneath. They are defined here in order to save having
         # to repeat them for all configurations.
         - PYTHON_VERSION=3.6
-        - PYTEST_VERSION=3.7
+        - PYTEST_VERSION=3.10
         - ASTROPY_VERSION=stable
         - NUMPY_VERSION=stable
         - ALL_PIP_DEPENDENCIES='pytest-faulthandler importlib_resources'
@@ -39,8 +39,8 @@ env:
         # Make sure README will display properly on pypi
         - PIP_DEPENDENCIES='twine' TWINE_CHECK=1
         - PYTHON_VERSION=3.5
-        - PYTHON_VERSION=3.6
-        - PYTHON_VERSION=3.7 PYTEST_VERSION=3.8
+        - PYTHON_VERSION=3.6 PYTEST_VERSION=3.8
+        - PYTHON_VERSION=3.7 PYTEST_VERSION=3.9
 
 matrix:
     fast_finish: true
@@ -64,9 +64,7 @@ matrix:
         - env: NUMPY_VERSION=1.12
 
         # also test against development version of Astropy
-        - env: ASTROPY_VERSION=development
-               GWCS_PIP="$GWCS_GIT"
-               PYTEST_VERSION=3.8
+        - env: ASTROPY_VERSION=development GWCS_PIP="$GWCS_GIT"
 
         # latest stable versions
         - env: NUMPY_VERSION=stable
