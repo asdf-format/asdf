@@ -36,7 +36,7 @@ env:
         # Make sure that installation does not fail
         - SETUP_CMD='install'
         # Make sure README will display properly on pypi
-        - PIP_DEPENDENCIES='collective.checkdocs pygments' SETUP_CMD='checkdocs'
+        - PIP_DEPENDENCIES='twine' TWINE_CHECK=1
         - PYTHON_VERSION=3.5 SETUP_CMD='test'
         - PYTHON_VERSION=3.6 SETUP_CMD='test'
         - PYTHON_VERSION=3.7 PYTEST_VERSION=3.8 SETUP_CMD='test'
@@ -89,7 +89,12 @@ install:
     - python setup.py install
 
 script:
-   - $MAIN_CMD $SETUP_CMD
+    - if [[ $TWINE_CHECK ]]; then
+        python setup.py build sdist;
+        twine check dist/*;
+      else
+        $MAIN_CMD $SETUP_CMD;
+      fi
 
 after_success:
     # If coveralls.io is set up for this package, uncomment the line
