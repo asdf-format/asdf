@@ -1,3 +1,9 @@
+2.2.1 (2018-11-15)
+------------------
+
+- Fix an issue with the README that caused sporadic installation failures and
+  also prevented the long description from being rendered on pypi. [#607]
+
 2.2.0 (2018-11-14)
 ------------------
 
