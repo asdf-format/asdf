@@ -3,6 +3,7 @@
 import os
 import re
 import sys
+import codecs
 import subprocess as sp
 
 import ah_bootstrap
@@ -84,8 +85,15 @@ def read_metadata(config_filename):
 
 
 def read_readme(readme_filename):
-    with open(readme_filename) as ff:
+    with codecs.open(readme_filename, encoding='utf8') as ff:
         lines = ff.read().splitlines()
+
+    # Skip lines that contain raw HTML markup
+    lines = lines[:4] + lines[26:]
+
+    # Turn the header comment into a real header
+    lines = lines[1:]
+    lines[0:2] = [x.strip() for x in lines[0:2]]
 
     # Fix hyperlink targets so that the README displays properly on pypi
     label_re = re.compile(r'^\.\.\s+_(\w|-)+$')
