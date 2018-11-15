@@ -25,8 +25,10 @@ env:
         - PYTEST_VERSION=3.7
         - ASTROPY_VERSION=stable
         - NUMPY_VERSION=stable
-        - PIP_DEPENDENCIES='pytest-faulthandler importlib_resources'
-        - CONDA_DEPENDENCIES='semantic_version jsonschema pyyaml six lz4 pytest-astropy'
+        - ALL_PIP_DEPENDENCIES='pytest-faulthandler importlib_resources'
+        - PIP_DEPENDENCIES="$ALL_PIP_DEPENDENCIES"
+        - ALL_CONDA_DEPENDENCIES='semantic_version jsonschema pyyaml six lz4 pytest-astropy'
+        - CONDA_DEPENDENCIES="$ALL_CONDA_DEPENDENCIES"
         - GWCS_GIT='git+git://github.com/spacetelescope/gwcs.git#egg=gwcs'
         - GWCS_PIP='gwcs'
         - RUN_CMD='pytest'
@@ -46,13 +48,16 @@ matrix:
 
         # Do a coverage test
         - env: COVERAGE=1
+               PIP_DEPENDENCIES="$ALL_PIP_DEPENDENCIES coverage coveralls"
 
         # Check for sphinx doc build warnings - we do this first because it
         # may run for a long time
         - env: RUN_CMD='python setup.py build_docs -w'
+               CONDA_DEPENDENCIES="$ALL_CONDA_DEPENDENCIES sphinx-astropy"
 
         # Do a code style check
         - env: RUN_CMD="flake8 asdf --count"
+               PIP_DEPENDENCIES="$ALL_PIP_DEPENDENCIES flake8"
 
         # try older numpy versions
         - env: PYTHON_VERSION=3.5 NUMPY_VERSION=1.11
