@@ -1,17 +1,27 @@
 2.3.0 (unreleased)
 ------------------
 
+- Small numeric arrays are now automatically stored inline. This behavior can
+  be overridden using the new ``inline_threshold`` argument to the ``AsdfFile``
+  constructor. It can also be controlled with the existing
+  ``set_array_storage`` method of ``AsdfFile`` and the ``all_array_storage``
+  argument to ``AsdfFile.write_to``. [#557]
+
+- Storage of arbitrary precision integers is now provided by
+  ``asdf.IntegerType``.  Reading a file with integer literals that are too
+  large now causes only a warning instead of a validation error. This is to
+  provide backwards compatibility for files that were created with a buggy
+  version of ASDF (see #553 below). [#566]
+
+- Remove WCS tags. These are now provided by the `gwcs package
+  <https://github.com/spacetelescope/gwcs>`_. [#593]
+
 2.2.1 (unreleased)
 ------------------
 
 2.2.0 (2018-11-14)
 ------------------
 
-- Small numeric arrays are now automatically stored inline. This behavior can
-  be overridden using the new ``inline_threshold`` argument to the ``AsdfFile``
-  constructor. It can also be controlled with the existing
-  ``set_array_storage`` method of ``AsdfFile`` and the ``all_array_storage``
-  argument to ``AsdfFile.write_to``. [#557]
 - Add new parameter ``lazy_load`` to ``AsdfFile.open``. It is ``True`` by
   default and preserves the default behavior. ``False`` detaches the
   loaded tree from the underlying file: all blocks are fully read and
@@ -19,12 +29,6 @@
   and continue using ``AsdfFile.tree``. However, ``copy_arrays`` parameter
   is still effective and the active memory maps may still require the file
   to stay open in case ``copy_arrays`` is ``False``. [#573]
-
-- Storage of arbitrary precision integers is now provided by
-  ``asdf.IntegerType``.  Reading a file with integer literals that are too
-  large now causes only a warning instead of a validation error. This is to
-  provide backwards compatibility for files that were created with a buggy
-  version of ASDF (see #553 below). [#566]
 
 - Add ``AsdfConversionWarning`` for failures to convert ASDF tree into custom
   types. This warning is converted to an error when using
@@ -34,9 +38,6 @@
 
 - Add readonly protection to memory mapped arrays when the underlying file
   handle is readonly. [#579]
-
-- Remove WCS tags. These are now provided by the `gwcs package
-  <https://github.com/spacetelescope/gwcs>`_. [#593]
 
 2.1.2 (2018-11-13)
 ------------------
