@@ -4,6 +4,30 @@
 Changes
 *******
 
+What's New in ASDF 2.2?
+=======================
+
+ASDF 2.2 contains several API changes, although backwards compatibilty is
+preserved for now. The most significant changes are:
+
+* The function `AsdfFile.open` has been deprecated in favor of `asdf.open`.
+  It will be removed entirely in the 3.0 release. More intelligent file mode
+  handling has been added to `asdf.open`. Files that are opened in read-only
+  mode with `asdf.open` now explicitly block writes to memory-mapped arrays.
+  This may cause problems for some existing code, but any such code was
+  accessing these arrays in an unsafe manner, so backwards compatibility for
+  this case is not provided. The old mode handling behavior is retained for now
+  in `AsdfFile.open`.
+
+* It is now possible to disable lazy loading of internal arrays. This is useful
+  when the `AsdfFile` was opened using another open file. With lazy loading, it
+  is possible to close the original file but still retain access to the array
+  data.
+
+* There is a new warning `AsdfConversionWarning` that occurs when failing to
+  convert nodes in the ASDF tree into custom tagged types. This makes it easier
+  for users to filter specifically for this failure case.
+
 What's New in ASDF 2.1?
 =======================
 
