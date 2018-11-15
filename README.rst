@@ -17,10 +17,10 @@
      <a href="http://www.astropy.org/"><img src="http://img.shields.io/badge/powered%20by-AstroPy-orange.svg?style=flat" alt="astropy"></a>
    </p>
    <p align="center">
-     <a href="#overview">Overview</a> •
-     <a href="#installation">Installation</a> •
-     <a href="#testing">Testing</a> •
-     <a href="#documentation">Documentation</a> •
+     <a href="#overview">Overview</a> *
+     <a href="#installation">Installation</a> *
+     <a href="#testing">Testing</a> *
+     <a href="#documentation">Documentation</a> *
      <a href="#contributing">Contributing</a>
    </p>
 
