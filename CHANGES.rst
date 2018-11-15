@@ -1,3 +1,23 @@
+2.2.0 (2018-11-14)
+------------------
+
+- Add new parameter `lazy_load` to ``AsdfFile.open``. It is ``True`` by
+  default and preserves the default behavior. ``False`` detaches the
+  loaded tree from the underlying file: all blocks are fully read and
+  numpy arrays are materialized. Thus it becomes safe to close the file
+  and continue using ``AsdfFile.tree``. However, ``copy_arrays`` parameter
+  is still effective and the active memory maps may still require the file
+  to stay open in case ``copy_arrays`` is ``False``. [#573]
+
+- Deprecate ``asdf.AsdfFile.open`` in favor of ``asdf.open``. [#579]
+
+- Add readonly protection to memory mapped arrays when the underlying file
+  handle is readonly. [#579]
+
+- Add ``AsdfConversionWarning`` for failures to convert ASDF tree into custom
+  types. This warning is converted to an error when using
+  ``assert_roundtrip_tree`` for tests. [#583]
+
 2.1.2 (2018-11-13)
 ------------------
 

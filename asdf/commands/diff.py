@@ -28,6 +28,7 @@ except ImportError:
         GREEN = ''
         RESET = ''
 
+import asdf
 from .main import Command
 from .. import AsdfFile
 from .. import treeutil
@@ -245,8 +246,8 @@ def compare_trees(diff_ctx, tree0, tree1, keys=[]):
 def diff(filenames, minimal, iostream=sys.stdout):
     """Top-level implementation of diff algorithm"""
     try:
-        with AsdfFile.open(filenames[0], _force_raw_types=True) as asdf0:
-            with AsdfFile.open(filenames[1], _force_raw_types=True) as asdf1:
+        with asdf.open(filenames[0], _force_raw_types=True) as asdf0:
+            with asdf.open(filenames[1], _force_raw_types=True) as asdf1:
                 diff_ctx = DiffContext(asdf0, asdf1, iostream, minimal=minimal)
                 compare_trees(diff_ctx, asdf0.tree, asdf1.tree)
     except ValueError as error:

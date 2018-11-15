@@ -71,16 +71,14 @@ b: !core/complex-1.0.0
     """
 
     buff = helpers.yaml_to_asdf(yaml)
-    with asdf.AsdfFile.open(
-        buff, extensions=FractionExtension()) as ff:
+    with asdf.open(buff, extensions=FractionExtension()) as ff:
         assert ff.tree['a'] == fractions.Fraction(2, 3)
 
         buff = io.BytesIO()
         ff.write_to(buff)
 
     buff = helpers.yaml_to_asdf(yaml)
-    with asdf.AsdfFile.open(
-            buff, extensions=FractionCallable()) as ff:
+    with asdf.open(buff, extensions=FractionCallable()) as ff:
         assert ff.tree['a'] == fractions.Fraction(2, 3)
 
         buff = io.BytesIO()
@@ -96,7 +94,7 @@ a: !core/complex-42.0.0
 
     buff = helpers.yaml_to_asdf(yaml)
     with pytest.warns(None) as warning:
-        with asdf.AsdfFile.open(buff, ignore_version_mismatch=False) as ff:
+        with asdf.open(buff, ignore_version_mismatch=False) as ff:
             assert isinstance(ff.tree['a'], complex)
 
     assert len(warning) == 1
@@ -107,7 +105,7 @@ a: !core/complex-42.0.0
     # Make sure warning is repeatable
     buff.seek(0)
     with pytest.warns(None) as warning:
-        with asdf.AsdfFile.open(buff, ignore_version_mismatch=False) as ff:
+        with asdf.open(buff, ignore_version_mismatch=False) as ff:
             assert isinstance(ff.tree['a'], complex)
 
     assert len(warning) == 1
@@ -118,7 +116,7 @@ a: !core/complex-42.0.0
     # Make sure the warning does not occur if it is being ignored (default)
     buff.seek(0)
     with pytest.warns(None) as warning:
-        with asdf.AsdfFile.open(buff) as ff:
+        with asdf.open(buff) as ff:
             assert isinstance(ff.tree['a'], complex)
 
     assert len(warning) == 0, helpers.display_warnings(warning)
@@ -132,7 +130,7 @@ a: !core/complex-1.0.1
 
     buff = helpers.yaml_to_asdf(yaml)
     with pytest.warns(None) as warning:
-        with asdf.AsdfFile.open(buff, ignore_version_mismatch=False) as ff:
+        with asdf.open(buff, ignore_version_mismatch=False) as ff:
             assert isinstance(ff.tree['a'], complex)
 
     assert len(warning) == 0
@@ -152,7 +150,7 @@ a: !core/complex-42.0.0
         handle.write(buff.read())
 
     with pytest.warns(None) as w:
-        with asdf.AsdfFile.open(testfile, ignore_version_mismatch=False) as ff:
+        with asdf.open(testfile, ignore_version_mismatch=False) as ff:
             assert ff._fname == "file://{}".format(testfile)
             assert isinstance(ff.tree['a'], complex)
 
@@ -201,7 +199,7 @@ flow_thing:
 """
     buff = helpers.yaml_to_asdf(yaml)
     with pytest.warns(None) as w:
-        data = asdf.AsdfFile.open(
+        data = asdf.open(
             buff, ignore_version_mismatch=False,
             extensions=CustomFlowExtension())
     assert len(w) == 1, helpers.display_warnings(w)
@@ -339,7 +337,7 @@ undefined_data:
 """
     buff = helpers.yaml_to_asdf(yaml)
     with pytest.warns(None) as warning:
-        afile = asdf.AsdfFile.open(buff)
+        afile = asdf.open(buff)
         missing = afile.tree['undefined_data']
 
     assert missing[0] == 5
@@ -358,7 +356,7 @@ undefined_data:
     # Make sure no warning occurs if explicitly ignored
     buff.seek(0)
     with pytest.warns(None) as warning:
-        afile = asdf.AsdfFile.open(buff, ignore_unrecognized_tag=True)
+        afile = asdf.open(buff, ignore_unrecognized_tag=True)
     assert len(warning) == 0
 
 
@@ -416,7 +414,7 @@ flow_thing:
     d: 3.14
 """
     new_buff = helpers.yaml_to_asdf(new_yaml)
-    new_data = asdf.AsdfFile.open(new_buff, extensions=CustomFlowExtension())
+    new_data = asdf.open(new_buff, extensions=CustomFlowExtension())
     assert type(new_data.tree['flow_thing']) == CustomFlow
 
     old_yaml = """
@@ -427,7 +425,7 @@ flow_thing:
 """
     old_buff = helpers.yaml_to_asdf(old_yaml)
     with pytest.warns(None) as warning:
-        asdf.AsdfFile.open(old_buff, extensions=CustomFlowExtension())
+        asdf.open(old_buff, extensions=CustomFlowExtension())
 
     assert len(warning) == 1, helpers.display_warnings(warning)
     # We expect this warning since it will not be possible to convert version
@@ -549,11 +547,11 @@ flow_thing:
     b: 3.14
 """
     new_buff = helpers.yaml_to_asdf(new_yaml)
-    new_data = asdf.AsdfFile.open(new_buff, extensions=CustomFlowExtension())
+    new_data = asdf.open(new_buff, extensions=CustomFlowExtension())
     assert type(new_data.tree['flow_thing']) == CustomFlow
 
     old_buff = helpers.yaml_to_asdf(old_yaml)
-    old_data = asdf.AsdfFile.open(old_buff, extensions=CustomFlowExtension())
+    old_data = asdf.open(old_buff, extensions=CustomFlowExtension())
     assert type(old_data.tree['flow_thing']) == CustomFlow
 
 def test_unsupported_version_warning():
@@ -593,7 +591,7 @@ flow_thing:
     buff = helpers.yaml_to_asdf(yaml)
 
     with pytest.warns(None) as _warnings:
-        data = asdf.AsdfFile.open(buff, extensions=CustomFlowExtension())
+        data = asdf.open(buff, extensions=CustomFlowExtension())
 
     assert len(_warnings) == 1
     assert str(_warnings[0].message) == (

@@ -33,13 +33,13 @@ baz: 42
 
     buff = io.BytesIO(content)
     with pytest.raises(ValueError):
-        with asdf.AsdfFile.open(buff):
+        with asdf.open(buff):
             pass
 
     buff.seek(0)
     fd = generic_io.InputStream(buff, 'r')
     with pytest.raises(ValueError):
-        with asdf.AsdfFile.open(fd):
+        with asdf.open(fd):
             pass
 
     with open(path, 'wb') as fd:
@@ -47,7 +47,7 @@ baz: 42
 
     with open(path, 'rb') as fd:
         with pytest.raises(ValueError):
-            with asdf.AsdfFile.open(fd):
+            with asdf.open(fd):
                 pass
 
 
@@ -62,19 +62,19 @@ baz: 42
     path = os.path.join(str(tmpdir), 'test.asdf')
 
     buff = io.BytesIO(content)
-    with asdf.AsdfFile.open(buff) as ff:
+    with asdf.open(buff) as ff:
         assert len(ff.tree) == 2
 
     buff.seek(0)
     fd = generic_io.InputStream(buff, 'r')
-    with asdf.AsdfFile.open(fd) as ff:
+    with asdf.open(fd) as ff:
         assert len(ff.tree) == 2
 
     with open(path, 'wb') as fd:
         fd.write(content)
 
     with open(path, 'rb') as fd:
-        with asdf.AsdfFile.open(fd) as ff:
+        with asdf.open(fd) as ff:
             assert len(ff.tree) == 2
 
 
@@ -85,14 +85,14 @@ def test_no_asdf_header(tmpdir):
 
     buff = io.BytesIO(content)
     with pytest.raises(ValueError):
-        asdf.AsdfFile.open(buff)
+        asdf.open(buff)
 
     with open(path, 'wb') as fd:
         fd.write(content)
 
     with open(path, 'rb') as fd:
         with pytest.raises(ValueError):
-            asdf.AsdfFile.open(fd)
+            asdf.open(fd)
 
 
 def test_no_asdf_blocks(tmpdir):
@@ -108,19 +108,19 @@ XXXXXXXX
     path = os.path.join(str(tmpdir), 'test.asdf')
 
     buff = io.BytesIO(content)
-    with asdf.AsdfFile.open(buff) as ff:
+    with asdf.open(buff) as ff:
         assert len(ff.blocks) == 0
 
     buff.seek(0)
     fd = generic_io.InputStream(buff, 'r')
-    with asdf.AsdfFile.open(fd) as ff:
+    with asdf.open(fd) as ff:
         assert len(ff.blocks) == 0
 
     with open(path, 'wb') as fd:
         fd.write(content)
 
     with open(path, 'rb') as fd:
-        with asdf.AsdfFile.open(fd) as ff:
+        with asdf.open(fd) as ff:
             assert len(ff.blocks) == 0
 
 
@@ -131,7 +131,7 @@ def test_invalid_source(small_tree):
     ff.write_to(buff)
 
     buff.seek(0)
-    with asdf.AsdfFile.open(buff) as ff2:
+    with asdf.open(buff) as ff2:
         ff2.blocks.get_block(0)
 
         with pytest.raises(ValueError):
@@ -154,14 +154,14 @@ def test_empty_file():
     buff = io.BytesIO(b"#ASDF 1.0.0\n")
     buff.seek(0)
 
-    with asdf.AsdfFile.open(buff) as ff:
+    with asdf.open(buff) as ff:
         assert ff.tree == {}
         assert len(ff.blocks) == 0
 
     buff = io.BytesIO(b"#ASDF 1.0.0\n#ASDF_STANDARD 1.0.0")
     buff.seek(0)
 
-    with asdf.AsdfFile.open(buff) as ff:
+    with asdf.open(buff) as ff:
         assert ff.tree == {}
         assert len(ff.blocks) == 0
 
@@ -171,14 +171,14 @@ def test_not_asdf_file():
     buff.seek(0)
 
     with pytest.raises(ValueError):
-        with asdf.AsdfFile.open(buff):
+        with asdf.open(buff):
             pass
 
     buff = io.BytesIO(b"SIMPLE\n")
     buff.seek(0)
 
     with pytest.raises(ValueError):
-        with asdf.AsdfFile.open(buff):
+        with asdf.open(buff):
             pass
 
 
@@ -187,7 +187,7 @@ def test_junk_file():
     buff.seek(0)
 
     with pytest.raises(ValueError):
-        with asdf.AsdfFile.open(buff):
+        with asdf.open(buff):
             pass
 
 
@@ -200,7 +200,7 @@ def test_block_mismatch():
 
     buff.seek(0)
     with pytest.raises(ValueError):
-        with asdf.AsdfFile.open(buff):
+        with asdf.open(buff):
             pass
 
 
@@ -212,7 +212,7 @@ def test_block_header_too_small():
 
     buff.seek(0)
     with pytest.raises(ValueError):
-        with asdf.AsdfFile.open(buff):
+        with asdf.open(buff):
             pass
 
 
@@ -267,7 +267,7 @@ def test_transfer_array_sources(tmpdir):
     ff = asdf.AsdfFile(tree)
     ff.write_to(os.path.join(tmpdir, "test.asdf"))
 
-    with asdf.AsdfFile.open(os.path.join(tmpdir, "test.asdf")) as ff:
+    with asdf.open(os.path.join(tmpdir, "test.asdf")) as ff:
         assert_array_equal(my_array, ff.tree['my_array'])
         ff.write_to(os.path.join(tmpdir, "test2.asdf"))
         # write_to should have no effect on getting the original data
@@ -284,13 +284,13 @@ def test_write_to_same(tmpdir):
     ff = asdf.AsdfFile(tree)
     ff.write_to(os.path.join(tmpdir, "test.asdf"))
 
-    with asdf.AsdfFile.open(
+    with asdf.open(
             os.path.join(tmpdir, "test.asdf"), mode='rw') as ff:
         assert_array_equal(my_array, ff.tree['my_array'])
         ff.tree['extra'] = [0] * 1000
         ff.write_to(os.path.join(tmpdir, "test2.asdf"))
 
-    with asdf.AsdfFile.open(
+    with asdf.open(
             os.path.join(tmpdir, "test2.asdf"), mode='rw') as ff:
         assert_array_equal(my_array, ff.tree['my_array'])
 
@@ -309,7 +309,7 @@ def test_pad_blocks(tmpdir):
     ff = asdf.AsdfFile(tree)
     ff.write_to(os.path.join(tmpdir, "test.asdf"), pad_blocks=True)
 
-    with asdf.AsdfFile.open(os.path.join(tmpdir, "test.asdf")) as ff:
+    with asdf.open(os.path.join(tmpdir, "test.asdf")) as ff:
         assert_array_equal(ff.tree['my_array'], my_array)
         assert_array_equal(ff.tree['my_array2'], my_array2)
 
@@ -333,13 +333,13 @@ def test_update_expand_tree(tmpdir):
     ff.set_array_storage(tree['arrays'][2], 'inline')
     assert len(list(ff.blocks.inline_blocks)) == 1
     ff.write_to(testpath, pad_blocks=True)
-    with asdf.AsdfFile.open(testpath, mode='rw') as ff:
+    with asdf.open(testpath, mode='rw') as ff:
         assert_array_equal(ff.tree['arrays'][0], my_array)
         orig_offset = ff.blocks[ff.tree['arrays'][0]].offset
         ff.tree['extra'] = [0] * 6000
         ff.update()
 
-    with asdf.AsdfFile.open(testpath) as ff:
+    with asdf.open(testpath) as ff:
         assert orig_offset <= ff.blocks[ff.tree['arrays'][0]].offset
         assert ff.blocks[ff.tree['arrays'][2]].array_storage == 'inline'
         assert_array_equal(ff.tree['arrays'][0], my_array)
@@ -349,12 +349,12 @@ def test_update_expand_tree(tmpdir):
     ff = asdf.AsdfFile(tree)
     ff.set_array_storage(tree['arrays'][2], 'inline')
     ff.write_to(os.path.join(tmpdir, "test2.asdf"), pad_blocks=True)
-    with asdf.AsdfFile.open(os.path.join(tmpdir, "test2.asdf"), mode='rw') as ff:
+    with asdf.open(os.path.join(tmpdir, "test2.asdf"), mode='rw') as ff:
         orig_offset = ff.blocks[ff.tree['arrays'][0]].offset
         ff.tree['extra'] = [0] * 2
         ff.update()
 
-    with asdf.AsdfFile.open(os.path.join(tmpdir, "test2.asdf")) as ff:
+    with asdf.open(os.path.join(tmpdir, "test2.asdf")) as ff:
         assert orig_offset == ff.blocks[ff.tree['arrays'][0]].offset
         assert ff.blocks[ff.tree['arrays'][2]].array_storage == 'inline'
         assert_array_equal(ff.tree['arrays'][0], my_array)
@@ -383,13 +383,13 @@ def test_update_delete_first_array(tmpdir):
 
     original_size = os.stat(path).st_size
 
-    with asdf.AsdfFile.open(os.path.join(tmpdir, "test.asdf"), mode="rw") as ff:
+    with asdf.open(os.path.join(tmpdir, "test.asdf"), mode="rw") as ff:
         del ff.tree['arrays'][0]
         ff.update()
 
     assert os.stat(path).st_size <= original_size
 
-    with asdf.AsdfFile.open(os.path.join(tmpdir, "test.asdf")) as ff:
+    with asdf.open(os.path.join(tmpdir, "test.asdf")) as ff:
         assert_array_equal(ff.tree['arrays'][0], tree['arrays'][1])
         assert_array_equal(ff.tree['arrays'][1], tree['arrays'][2])
 
@@ -406,13 +406,13 @@ def test_update_delete_last_array(tmpdir):
 
     original_size = os.stat(path).st_size
 
-    with asdf.AsdfFile.open(os.path.join(tmpdir, "test.asdf"), mode="rw") as ff:
+    with asdf.open(os.path.join(tmpdir, "test.asdf"), mode="rw") as ff:
         del ff.tree['arrays'][-1]
         ff.update()
 
     assert os.stat(path).st_size <= original_size
 
-    with asdf.AsdfFile.open(os.path.join(tmpdir, "test.asdf")) as ff:
+    with asdf.open(os.path.join(tmpdir, "test.asdf")) as ff:
         assert_array_equal(ff.tree['arrays'][0], tree['arrays'][0])
         assert_array_equal(ff.tree['arrays'][1], tree['arrays'][1])
 
@@ -429,14 +429,14 @@ def test_update_delete_middle_array(tmpdir):
 
     original_size = os.stat(path).st_size
 
-    with asdf.AsdfFile.open(os.path.join(tmpdir, "test.asdf"), mode="rw") as ff:
+    with asdf.open(os.path.join(tmpdir, "test.asdf"), mode="rw") as ff:
         del ff.tree['arrays'][1]
         ff.update()
         assert len(ff.blocks._internal_blocks) == 2
 
     assert os.stat(path).st_size <= original_size
 
-    with asdf.AsdfFile.open(os.path.join(tmpdir, "test.asdf")) as ff:
+    with asdf.open(os.path.join(tmpdir, "test.asdf")) as ff:
         assert len(ff.tree['arrays']) == 2
         assert ff.tree['arrays'][0]._source == 0
         assert ff.tree['arrays'][1]._source == 1
@@ -456,13 +456,13 @@ def test_update_replace_first_array(tmpdir):
 
     original_size = os.stat(path).st_size
 
-    with asdf.AsdfFile.open(os.path.join(tmpdir, "test.asdf"), mode="rw") as ff:
+    with asdf.open(os.path.join(tmpdir, "test.asdf"), mode="rw") as ff:
         ff.tree['arrays'][0] = np.arange(32)
         ff.update()
 
     assert os.stat(path).st_size <= original_size
 
-    with asdf.AsdfFile.open(os.path.join(tmpdir, "test.asdf")) as ff:
+    with asdf.open(os.path.join(tmpdir, "test.asdf")) as ff:
         assert_array_equal(ff.tree['arrays'][0], np.arange(32))
         assert_array_equal(ff.tree['arrays'][1], tree['arrays'][1])
         assert_array_equal(ff.tree['arrays'][2], tree['arrays'][2])
@@ -480,13 +480,13 @@ def test_update_replace_last_array(tmpdir):
 
     original_size = os.stat(path).st_size
 
-    with asdf.AsdfFile.open(os.path.join(tmpdir, "test.asdf"), mode="rw") as ff:
+    with asdf.open(os.path.join(tmpdir, "test.asdf"), mode="rw") as ff:
         ff.tree['arrays'][2] = np.arange(32)
         ff.update()
 
     assert os.stat(path).st_size <= original_size
 
-    with asdf.AsdfFile.open(os.path.join(tmpdir, "test.asdf")) as ff:
+    with asdf.open(os.path.join(tmpdir, "test.asdf")) as ff:
         assert_array_equal(ff.tree['arrays'][0], tree['arrays'][0])
         assert_array_equal(ff.tree['arrays'][1], tree['arrays'][1])
         assert_array_equal(ff.tree['arrays'][2], np.arange(32))
@@ -504,13 +504,13 @@ def test_update_replace_middle_array(tmpdir):
 
     original_size = os.stat(path).st_size
 
-    with asdf.AsdfFile.open(os.path.join(tmpdir, "test.asdf"), mode="rw") as ff:
+    with asdf.open(os.path.join(tmpdir, "test.asdf"), mode="rw") as ff:
         ff.tree['arrays'][1] = np.arange(32)
         ff.update()
 
     assert os.stat(path).st_size <= original_size
 
-    with asdf.AsdfFile.open(os.path.join(tmpdir, "test.asdf")) as ff:
+    with asdf.open(os.path.join(tmpdir, "test.asdf")) as ff:
         assert_array_equal(ff.tree['arrays'][0], tree['arrays'][0])
         assert_array_equal(ff.tree['arrays'][1], np.arange(32))
         assert_array_equal(ff.tree['arrays'][2], tree['arrays'][2])
@@ -528,11 +528,11 @@ def test_update_add_array(tmpdir):
 
     original_size = os.stat(path).st_size
 
-    with asdf.AsdfFile.open(os.path.join(tmpdir, "test.asdf"), mode="rw") as ff:
+    with asdf.open(os.path.join(tmpdir, "test.asdf"), mode="rw") as ff:
         ff.tree['arrays'].append(np.arange(32))
         ff.update()
 
-    with asdf.AsdfFile.open(os.path.join(tmpdir, "test.asdf")) as ff:
+    with asdf.open(os.path.join(tmpdir, "test.asdf")) as ff:
         assert_array_equal(ff.tree['arrays'][0], tree['arrays'][0])
         assert_array_equal(ff.tree['arrays'][1], tree['arrays'][1])
         assert_array_equal(ff.tree['arrays'][2], tree['arrays'][2])
@@ -551,14 +551,14 @@ def test_update_add_array_at_end(tmpdir):
 
     original_size = os.stat(path).st_size
 
-    with asdf.AsdfFile.open(os.path.join(tmpdir, "test.asdf"), mode="rw") as ff:
+    with asdf.open(os.path.join(tmpdir, "test.asdf"), mode="rw") as ff:
         ff.tree['arrays'].append(np.arange(2048))
         ff.update()
         assert len(ff.blocks) == 4
 
     assert os.stat(path).st_size >= original_size
 
-    with asdf.AsdfFile.open(os.path.join(tmpdir, "test.asdf")) as ff:
+    with asdf.open(os.path.join(tmpdir, "test.asdf")) as ff:
         assert_array_equal(ff.tree['arrays'][0], tree['arrays'][0])
         assert_array_equal(ff.tree['arrays'][1], tree['arrays'][1])
         assert_array_equal(ff.tree['arrays'][2], tree['arrays'][2])
@@ -578,11 +578,11 @@ def test_update_replace_all_arrays(tmpdir):
     ff = asdf.AsdfFile(tree)
     ff.write_to(testpath, pad_blocks=True)
 
-    with asdf.AsdfFile.open(testpath, mode='rw') as ff:
+    with asdf.open(testpath, mode='rw') as ff:
         ff.tree['my_array'] = np.ones((64, 64)) * 2
         ff.update()
 
-    with asdf.AsdfFile.open(testpath) as ff:
+    with asdf.open(testpath) as ff:
         assert_array_equal(ff.tree['my_array'], np.ones((64, 64)) * 2)
 
 
@@ -599,12 +599,12 @@ def test_update_array_in_place(tmpdir):
     ff = asdf.AsdfFile(tree)
     ff.write_to(testpath, pad_blocks=True)
 
-    with asdf.AsdfFile.open(testpath, mode='rw') as ff:
+    with asdf.open(testpath, mode='rw') as ff:
         array = np.asarray(ff.tree['my_array'])
         array *= 2
         ff.update()
 
-    with asdf.AsdfFile.open(testpath) as ff:
+    with asdf.open(testpath) as ff:
         assert_array_equal(ff.tree['my_array'], np.ones((64, 64)) * 2)
 
 
@@ -624,7 +624,7 @@ def test_init_from_asdffile(tmpdir):
 
     ff.write_to(os.path.join(tmpdir, 'test.asdf'))
 
-    with asdf.AsdfFile().open(os.path.join(tmpdir, 'test.asdf')) as ff:
+    with asdf.open(os.path.join(tmpdir, 'test.asdf')) as ff:
         ff2 = asdf.AsdfFile(ff)
         assert not ff.tree['my_array'] is ff2.tree['my_array']
         assert_array_equal(ff.tree['my_array'], ff2.tree['my_array'])
@@ -643,7 +643,7 @@ def test_update_exceptions(tmpdir):
     ff = asdf.AsdfFile(tree)
     ff.write_to(path)
 
-    with asdf.AsdfFile().open(path) as ff:
+    with asdf.open(path, mode='r', copy_arrays=True) as ff:
         with pytest.raises(IOError):
             ff.update()
 
@@ -652,7 +652,7 @@ def test_update_exceptions(tmpdir):
     ff.write_to(buff)
 
     buff.seek(0)
-    with asdf.AsdfFile.open(buff, mode='rw') as ff:
+    with asdf.open(buff, mode='rw') as ff:
         ff.update()
 
     with pytest.raises(ValueError):
@@ -669,7 +669,7 @@ def test_get_data_from_closed_file(tmpdir):
     ff = asdf.AsdfFile(tree)
     ff.write_to(path)
 
-    with asdf.AsdfFile().open(path) as ff:
+    with asdf.open(path) as ff:
         pass
 
     with pytest.raises(IOError):
@@ -691,12 +691,12 @@ foo : bar
                 constants.BLOCK_MAGIC + b'\0\x30' + b'\0' * 50)
 
     buff = io.BytesIO(content)
-    ff = asdf.AsdfFile.open(buff)
+    ff = asdf.open(buff)
     assert len(ff.blocks) == 1
 
     buff.seek(0)
     fd = generic_io.InputStream(buff, 'r')
-    ff = asdf.AsdfFile.open(fd)
+    ff = asdf.open(fd)
     assert len(ff.blocks) == 1
 
 
@@ -709,7 +709,7 @@ def test_checksum(tmpdir):
     ff = asdf.AsdfFile(tree)
     ff.write_to(path)
 
-    with asdf.AsdfFile.open(path, validate_checksums=True) as ff:
+    with asdf.open(path, validate_checksums=True) as ff:
         assert type(ff.blocks._internal_blocks[0].checksum) == bytes
         assert ff.blocks._internal_blocks[0].checksum == \
             b'\xcaM\\\xb8t_L|\x00\n+\x01\xf1\xcfP1'
@@ -725,13 +725,13 @@ def test_checksum_update(tmpdir):
     ff = asdf.AsdfFile(tree)
     ff.write_to(path)
 
-    with asdf.AsdfFile.open(path, mode='rw') as ff:
+    with asdf.open(path, mode='rw') as ff:
         ff.tree['my_array'][7, 7] = 0.0
         # update() should update the checksum, even if the data itself
         # is memmapped and isn't expressly re-written.
         ff.update()
 
-    with asdf.AsdfFile.open(path, validate_checksums=True) as ff:
+    with asdf.open(path, validate_checksums=True) as ff:
         assert ff.blocks._internal_blocks[0].checksum == \
             b'T\xaf~[\x90\x8a\x88^\xc2B\x96D,N\xadL'
 
@@ -742,7 +742,7 @@ def test_atomic_write(tmpdir, small_tree):
     ff = asdf.AsdfFile(small_tree)
     ff.write_to(tmpfile)
 
-    with asdf.AsdfFile.open(tmpfile) as ff:
+    with asdf.open(tmpfile, mode='r') as ff:
         ff.write_to(tmpfile)
 
 
@@ -786,7 +786,7 @@ def test_copy(tmpdir):
     ff = asdf.AsdfFile(tree)
     ff.write_to(os.path.join(tmpdir, 'test.asdf'))
 
-    with asdf.AsdfFile.open(os.path.join(tmpdir, 'test.asdf')) as ff:
+    with asdf.open(os.path.join(tmpdir, 'test.asdf')) as ff:
         ff2 = ff.copy()
         ff2.tree['my_array'] *= 2
         ff2.tree['foo']['bar'] = 'boo'
@@ -805,7 +805,7 @@ def test_deferred_block_loading(small_tree):
     ff.write_to(buff, include_block_index=False)
 
     buff.seek(0)
-    with asdf.AsdfFile.open(buff) as ff2:
+    with asdf.open(buff) as ff2:
         assert len([x for x in ff2.blocks.blocks if isinstance(x, block.Block)]) == 1
         x = ff2.tree['science_data'] * 2
         x = ff2.tree['not_shared'] * 2
@@ -830,7 +830,7 @@ def test_block_index():
     ff.write_to(buff)
 
     buff.seek(0)
-    with asdf.AsdfFile.open(buff) as ff2:
+    with asdf.open(buff) as ff2:
         assert isinstance(ff2.blocks._internal_blocks[0], block.Block)
         assert len(ff2.blocks._internal_blocks) == 100
         for i in range(2, 99):
@@ -872,7 +872,7 @@ def test_large_block_index():
     ff.write_to(buff)
 
     buff.seek(0)
-    with asdf.AsdfFile.open(buff) as ff2:
+    with asdf.open(buff) as ff2:
         assert isinstance(ff2.blocks._internal_blocks[0], block.Block)
         assert len(ff2.blocks._internal_blocks) == narrays
 
@@ -915,7 +915,7 @@ def test_junk_after_index():
     # This has junk after the block index, so it
     # should fall back to the skip method, which
     # only loads the first block.
-    with asdf.AsdfFile.open(buff) as ff:
+    with asdf.open(buff) as ff:
         assert len(ff.blocks) == 1
 
 
@@ -933,7 +933,7 @@ def test_short_file_find_block_index():
     buff.write(b'0' * (io.DEFAULT_BUFFER_SIZE * 4))
 
     buff.seek(0)
-    with asdf.AsdfFile.open(buff) as ff:
+    with asdf.open(buff) as ff:
         assert len(ff.blocks) == 1
 
 
@@ -958,7 +958,7 @@ def test_invalid_block_index_values():
     ff.blocks.write_block_index(buff, ff)
 
     buff.seek(0)
-    with asdf.AsdfFile.open(buff) as ff:
+    with asdf.open(buff) as ff:
         assert len(ff.blocks) == 1
 
 
@@ -982,7 +982,7 @@ def test_invalid_last_block_index():
     ff.blocks.write_block_index(buff, ff)
 
     buff.seek(0)
-    with asdf.AsdfFile.open(buff) as ff:
+    with asdf.open(buff) as ff:
         assert len(ff.blocks) == 1
 
 
@@ -1005,7 +1005,7 @@ def test_unordered_block_index():
     ff.blocks.write_block_index(buff, ff)
 
     buff.seek(0)
-    with asdf.AsdfFile.open(buff) as ff:
+    with asdf.open(buff) as ff:
         assert len(ff.blocks) == 1
 
 
@@ -1029,7 +1029,7 @@ def test_invalid_block_index_first_block_value():
     ff.blocks.write_block_index(buff, ff)
 
     buff.seek(0)
-    with asdf.AsdfFile.open(buff) as ff:
+    with asdf.open(buff) as ff:
         assert len(ff.blocks) == 1
 
 
@@ -1056,7 +1056,7 @@ def test_dots_but_no_block_index():
     buff.write(b'...\n')
 
     buff.seek(0)
-    with asdf.AsdfFile.open(buff) as ff:
+    with asdf.open(buff) as ff:
         assert len(ff.blocks) == 1
 
 
@@ -1071,7 +1071,7 @@ def test_open_no_memmap(tmpdir):
     ff.write_to(tmpfile)
 
     # Test that by default we use memmapped arrays when possible
-    with asdf.AsdfFile.open(tmpfile) as af:
+    with asdf.open(tmpfile) as af:
         array = af.tree['array']
         # Make sure to access the block so that it gets loaded
         x = array[0]
@@ -1079,7 +1079,7 @@ def test_open_no_memmap(tmpdir):
         assert isinstance(array.block._data, np.memmap)
 
     # Test that if we ask for copy, we do not get memmapped arrays
-    with asdf.AsdfFile.open(tmpfile, copy_arrays=True) as af:
+    with asdf.open(tmpfile, copy_arrays=True) as af:
         array = af.tree['array']
         x = array[0]
         assert array.block._memmapped == False
@@ -1097,7 +1097,7 @@ foo : bar
 ..."""
     buff = io.BytesIO(content)
     with pytest.raises(ValueError):
-        with asdf.AsdfFile.open(buff) as ff:
+        with asdf.open(buff) as ff:
             pass
 
 
@@ -1109,7 +1109,7 @@ def test_valid_version(tmpdir):
 foo : bar
 ..."""
     buff = io.BytesIO(content)
-    with asdf.AsdfFile.open(buff) as ff:
+    with asdf.open(buff) as ff:
         version = ff.file_format_version
 
     assert version.major == 1
@@ -1178,7 +1178,7 @@ def test_access_tree_outside_handler(tmpdir):
     ff = asdf.AsdfFile(tree)
     ff.write_to(str(tempname))
 
-    with asdf.AsdfFile.open(tempname) as newf:
+    with asdf.open(tempname) as newf:
         pass
 
     # Accessing array data outside of handler should fail
@@ -1196,8 +1196,40 @@ def test_context_handler_resolve_and_inline(tmpdir):
     ff = asdf.AsdfFile(tree)
     ff.write_to(str(tempname))
 
-    with asdf.AsdfFile.open(tempname) as newf:
+    with asdf.open(tempname) as newf:
         newf.resolve_and_inline()
 
     with pytest.raises(OSError):
         newf.tree['random'][0]
+
+
+def test_warning_deprecated_open(tmpdir):
+
+    tmpfile = str(tmpdir.join('foo.asdf'))
+
+    tree = dict(foo=42, bar='hello')
+    with asdf.AsdfFile(tree) as af:
+        af.write_to(tmpfile)
+
+    with pytest.warns(AsdfDeprecationWarning):
+        with asdf.AsdfFile.open(tmpfile) as af:
+            assert_tree_match(tree, af.tree)
+
+
+def test_open_readonly(tmpdir):
+
+    tmpfile = str(tmpdir.join('readonly.asdf'))
+
+    tree = dict(foo=42, bar='hello', baz=np.arange(20))
+    with asdf.AsdfFile(tree) as af:
+        af.write_to(tmpfile, all_array_storage='internal')
+
+    os.chmod(tmpfile, 0o440)
+    assert os.access(tmpfile, os.W_OK) == False
+
+    with asdf.open(tmpfile) as af:
+        assert af['baz'].flags.writeable == False
+
+    with pytest.raises(PermissionError):
+        with asdf.open(tmpfile, mode='rw'):
+            pass

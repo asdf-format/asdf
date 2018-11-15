@@ -8,6 +8,7 @@ Defragment command.
 
 import os
 
+import asdf
 from .main import Command
 from .. import AsdfFile
 
@@ -65,7 +66,7 @@ def defragment(input, output=None, resolve_references=False, compress=None):
     compress : str, optional
         Compression to use.
     """
-    with AsdfFile.open(input) as ff:
+    with asdf.open(input) as ff:
         ff2 = AsdfFile(ff)
         if resolve_references:
             ff2.resolve_references()

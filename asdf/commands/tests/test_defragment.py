@@ -8,6 +8,7 @@ import sys
 import numpy as np
 import pytest
 
+import asdf
 from ... import AsdfFile
 from .. import main
 from ...tests.helpers import get_file_sizes, assert_tree_match
@@ -41,7 +42,7 @@ def _test_defragment(tmpdir, codec):
 
     assert files['original.defragment.asdf'] < files['original.asdf']
 
-    with AsdfFile.open(os.path.join(str(tmpdir), 'original.defragment.asdf')) as ff:
+    with asdf.open(os.path.join(str(tmpdir), 'original.defragment.asdf')) as ff:
         assert_tree_match(ff.tree, tree)
         assert len(list(ff.blocks.internal_blocks)) == 2
 

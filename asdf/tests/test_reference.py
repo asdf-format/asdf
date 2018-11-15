@@ -111,10 +111,10 @@ def test_external_reference(tmpdir):
         internal_path = os.path.join(str(tmpdir), 'main.asdf')
         ff.write_to(internal_path)
 
-    with asdf.AsdfFile.open(internal_path) as ff:
+    with asdf.open(internal_path) as ff:
         do_asserts(ff)
 
-    with asdf.AsdfFile.open(internal_path) as ff:
+    with asdf.open(internal_path) as ff:
         assert len(ff._external_asdf_by_uri) == 0
         ff.resolve_references()
         assert len(ff._external_asdf_by_uri) == 2
@@ -211,14 +211,14 @@ def test_make_reference(tmpdir):
     ext = asdf.AsdfFile(exttree)
     ext.write_to(external_path)
 
-    with asdf.AsdfFile.open(external_path) as ext:
+    with asdf.open(external_path) as ext:
         ff = asdf.AsdfFile()
         ff.tree['ref'] = ext.make_reference(['f~o~o/', 'a'])
         assert_array_equal(ff.tree['ref'], ext.tree['f~o~o/']['a'])
 
         ff.write_to(os.path.join(str(tmpdir), 'source.asdf'))
 
-    with asdf.AsdfFile.open(os.path.join(str(tmpdir), 'source.asdf')) as ff:
+    with asdf.open(os.path.join(str(tmpdir), 'source.asdf')) as ff:
         assert ff.tree['ref']._uri == 'external.asdf#f~0o~0o~1/a'
 
 

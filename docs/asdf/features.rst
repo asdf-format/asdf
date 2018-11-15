@@ -222,6 +222,7 @@ First, we'll create a ASDF file with a couple of arrays in it:
 
 .. runcode::
 
+   import asdf
    from asdf import AsdfFile
    import numpy as np
 
@@ -246,7 +247,7 @@ to the target file.
 
    ff = AsdfFile()
 
-   with AsdfFile.open('target.asdf') as target:
+   with asdf.open('target.asdf') as target:
        ff.tree['my_ref_a'] = target.make_reference(['a'])
 
    ff.tree['my_ref_b'] = {'$ref': 'target.asdf#b'}
@@ -262,7 +263,7 @@ references.
 
 .. runcode::
 
-   with AsdfFile.open('source.asdf') as ff:
+   with asdf.open('source.asdf') as ff:
        ff.find_references()
        assert ff.tree['my_ref_b'].shape == (10,)
 
@@ -273,7 +274,7 @@ literal content in its place.
 
 .. runcode::
 
-   with AsdfFile.open('source.asdf') as ff:
+   with asdf.open('source.asdf') as ff:
        ff.resolve_references()
        ff.write_to('resolved.asdf')
 
