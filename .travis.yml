@@ -29,57 +29,55 @@ env:
         - CONDA_DEPENDENCIES='semantic_version jsonschema pyyaml six lz4 pytest-astropy'
         - GWCS_GIT='git+git://github.com/spacetelescope/gwcs.git#egg=gwcs'
         - GWCS_PIP='gwcs'
-        - MAIN_CMD='python setup.py'
-        - SETUP_CMD='test --remote-data'
+        - RUN_CMD='pytest'
 
     matrix:
         # Make sure that installation does not fail
-        - SETUP_CMD='install'
+        - RUN_CMD='python setup.py install'
         # Make sure README will display properly on pypi
         - PIP_DEPENDENCIES='twine' TWINE_CHECK=1
-        - PYTHON_VERSION=3.5 SETUP_CMD='test'
-        - PYTHON_VERSION=3.6 SETUP_CMD='test'
-        - PYTHON_VERSION=3.7 PYTEST_VERSION=3.8 SETUP_CMD='test'
+        - PYTHON_VERSION=3.5
+        - PYTHON_VERSION=3.6
+        - PYTHON_VERSION=3.7 PYTEST_VERSION=3.8
 
 matrix:
     fast_finish: true
     include:
 
         # Do a coverage test
-        - env: SETUP_CMD='test --coverage --open-files --remote-data'
+        - env: COVERAGE=1
 
         # Check for sphinx doc build warnings - we do this first because it
         # may run for a long time
-        - env: SETUP_CMD='build_docs -w'
+        - env: RUN_CMD='python setup.py build_docs -w'
 
         # Do a code style check
-        - env: MAIN_CMD="flake8 asdf --count" SETUP_CMD=''
+        - env: RUN_CMD="flake8 asdf --count"
 
         # try older numpy versions
-        - env: PYTHON_VERSION=3.5 NUMPY_VERSION=1.11 SETUP_CMD='test'
-        - env: NUMPY_VERSION=1.12 SETUP_CMD='test'
+        - env: PYTHON_VERSION=3.5 NUMPY_VERSION=1.11
+        - env: NUMPY_VERSION=1.12
 
-        # run a test using native pytest
         # also test against development version of Astropy
-        - env: MAIN_CMD='pytest' SETUP_CMD='' ASTROPY_VERSION=development
+        - env: ASTROPY_VERSION=development
                GWCS_PIP="$GWCS_GIT"
                PYTEST_VERSION=3.8
 
         # latest stable versions
-        - env: NUMPY_VERSION=stable SETUP_CMD='test'
+        - env: NUMPY_VERSION=stable
 
         # Test against development version of numpy (this job can fail)
-        - env: NUMPY_VERSION=development SETUP_CMD='test'
+        - env: NUMPY_VERSION=development
 
         # Try a run on OSX
         - os: osx
-          env: NUMPY_VERSION=stable SETUP_CMD='test'
+          env: NUMPY_VERSION=stable
 
         # Test against latest version of jsonschema
         - env: PIP_DEPENDENCIES='jsonschema pytest-faulthandler importlib_resources'
 
     allow_failures:
-        - env: NUMPY_VERSION=development SETUP_CMD='test'
+        - env: NUMPY_VERSION=development
         - env: PIP_DEPENDENCIES='jsonschema pytest-faulthandler importlib_resources'
 
 install:
@@ -92,12 +90,15 @@ script:
     - if [[ $TWINE_CHECK ]]; then
         python setup.py build sdist;
         twine check dist/*;
+      elif [[ $COVERAGE ]]; then
+        coverage run --source=asdf -m pytest --remote-data --open-files;
+        coverage report -m;
       else
-        $MAIN_CMD $SETUP_CMD;
+        $RUN_CMD;
       fi
 
 after_success:
     # If coveralls.io is set up for this package, uncomment the line
     # below and replace "packagename" with the name of your package.
     # The coveragerc file may be customized as needed for your package.
-    - if [[ $SETUP_CMD == 'test --coverage --open-files --remote-data' ]]; then coveralls --rcfile='asdf/tests/coveragerc'; fi
+    - if [[ $COVERAGE ]]; then coveralls --rcfile='asdf/tests/coveragerc'; fi
