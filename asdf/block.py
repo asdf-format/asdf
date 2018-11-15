@@ -30,8 +30,8 @@ class BlockManager(object):
     """
     Manages the `Block`s associated with a ASDF file.
     """
-    def __init__(self, asdffile, copy_arrays=False, inline_threshold=None,
-                 lazy_load=True, readonly=False):
+    def __init__(self, asdffile, copy_arrays=False, lazy_load=True,
+                 readonly=False):
         self._asdffile = weakref.ref(asdffile)
 
         self._internal_blocks = []
