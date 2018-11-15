@@ -51,8 +51,7 @@ class AsdfFile(versioning.VersionedMixin):
     def __init__(self, tree=None, uri=None, extensions=None, version=None,
                  ignore_version_mismatch=True, ignore_unrecognized_tag=False,
                  ignore_implicit_conversion=False, copy_arrays=False,
-                 lazy_load=True, custom_schema=None, _readonly=False,
-                 inline_threshold=None):
+                 lazy_load=True, custom_schema=None, _readonly=False):
         """
         Parameters
         ----------
@@ -109,10 +108,7 @@ class AsdfFile(versioning.VersionedMixin):
             files follow custom conventions beyond those enforced by the
             standard.
 
-        inline_threshold : int, optional
-            Optional threshold size below which arrays will automatically be
-            stored inline. Defaults to {0}.
-        """.format(block._DEFAULT_INLINE_THRESHOLD_SIZE)
+        """
 
         if custom_schema is not None:
             self._custom_schema = schema.load_custom_schema(custom_schema)
@@ -135,7 +131,7 @@ class AsdfFile(versioning.VersionedMixin):
         self._external_asdf_by_uri = {}
         self._blocks = block.BlockManager(
             self, copy_arrays=copy_arrays, lazy_load=lazy_load,
-            readonly=_readonly, inline_threshold=inline_threshold)
+            readonly=_readonly)
         self._uri = None
         if tree is None:
             self.tree = {}
