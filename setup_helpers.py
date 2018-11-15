@@ -3,6 +3,7 @@
 import os
 import re
 import sys
+import codecs
 import subprocess as sp
 
 import ah_bootstrap
@@ -84,7 +85,7 @@ def read_metadata(config_filename):
 
 
 def read_readme(readme_filename):
-    with open(readme_filename) as ff:
+    with codecs.open(readme_filename, encoding='utf8') as ff:
         lines = ff.read().splitlines()
 
     # Skip lines that contain raw HTML markup
