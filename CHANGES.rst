@@ -1,3 +1,15 @@
+2.3.0 (unreleased)
+------------------
+
+- Storage of arbitrary precision integers is now provided by
+  ``asdf.IntegerType``.  Reading a file with integer literals that are too
+  large now causes only a warning instead of a validation error. This is to
+  provide backwards compatibility for files that were created with a buggy
+  version of ASDF (see #553 below). [#566]
+
+- Remove WCS tags. These are now provided by the `gwcs package
+  <https://github.com/spacetelescope/gwcs>`_. [#593]
+
 2.2.1 (2018-11-15)
 ------------------
 
@@ -23,12 +35,6 @@
 - Add ``AsdfConversionWarning`` for failures to convert ASDF tree into custom
   types. This warning is converted to an error when using
   ``assert_roundtrip_tree`` for tests. [#583]
-
-- Storage of arbitrary precision integers is now provided by
-  ``asdf.IntegerType``.  Reading a file with integer literals that are too
-  large now causes only a warning instead of a validation error. This is to
-  provide backwards compatibility for files that were created with a buggy
-  version of ASDF (see #553 below). [#566]
 
 2.1.2 (2018-11-13)
 ------------------
