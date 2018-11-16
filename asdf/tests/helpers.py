@@ -180,9 +180,6 @@ def _assert_roundtrip_tree(tree, tmpdir, *, asdf_check_func=None,
 
     fname = str(tmpdir.join('test.asdf'))
 
-    # Most tests assume that all blocks will be stored internally
-    init_options.setdefault('inline_threshold', 0)
-
     # First, test writing/reading a BytesIO buffer
     buff = io.BytesIO()
     AsdfFile(tree, extensions=extensions, **init_options).write_to(buff, **write_options)
