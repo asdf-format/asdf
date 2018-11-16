@@ -1247,6 +1247,7 @@ def test_open_readonly(tmpdir):
         with asdf.open(tmpfile, mode='rw'):
             pass
 
+@pytest.mark.skip(reason='Until inline_threshold is added as a write option')
 def test_inline_threshold(tmpdir):
 
     tree = {
@@ -1271,6 +1272,7 @@ def test_inline_threshold(tmpdir):
         assert len(list(af.blocks.internal_blocks)) == 0
 
 
+@pytest.mark.skip(reason='Until inline_threshold is added as a write option')
 def test_inline_threshold_masked(tmpdir):
 
     mask = np.random.randint(0, 1+1, 20)
@@ -1296,6 +1298,7 @@ def test_inline_threshold_masked(tmpdir):
         assert len(list(af.blocks.internal_blocks)) == 2
 
 
+@pytest.mark.skip(reason='Until inline_threshold is added as a write option')
 def test_inline_threshold_override(tmpdir):
 
     tmpfile = str(tmpdir.join('inline.asdf'))
