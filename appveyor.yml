@@ -8,7 +8,7 @@ environment:
       PYTEST_VERSION: "3.7"
       MINICONDA_VERSION: "latest"
       CMD_IN_ENV: "cmd /E:ON /V:ON /C .\\ci-helpers\\appveyor\\windows_sdk.cmd"
-      SETUP_CMD: "test"
+      RUN_CMD: "pytest"
       NUMPY_VERSION: "stable"
       ASTROPY_VERSION: "stable"
       GWCS_GIT: "git+git://github.com/spacetelescope/gwcs.git#egg=gwcs"
@@ -20,7 +20,7 @@ environment:
   matrix:
       # Make sure that installation does not fail
       - PYTHON_VERSION: "3.6"
-        SETUP_CMD: "install"
+        RUN_CMD: "python setup.py install"
         platform: x64
 
       - PYTHON_VERSION: "3.5"
@@ -65,4 +65,4 @@ install:
 build: false
 
 test_script:
-  - "%CMD_IN_ENV% python setup.py %SETUP_CMD%"
+  - "%CMD_IN_ENV% %RUN_CMD%"
