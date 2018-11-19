@@ -19,7 +19,7 @@ def find_schema_path():
     return os.path.join(dirname, 'schemas')
 
 
-class Resolver(object):
+class Resolver:
     """
     A class that can be used to map strings with a particular prefix
     to another.

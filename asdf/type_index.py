@@ -17,7 +17,7 @@ __all__ = ['AsdfTypeIndex']
 _BASIC_PYTHON_TYPES = [str, int, float, list, dict, tuple]
 
 
-class _AsdfWriteTypeIndex(object):
+class _AsdfWriteTypeIndex:
     """
     The _AsdfWriteTypeIndex is a helper class for AsdfTypeIndex that
     manages an index of types for writing out ASDF files, i.e. from
@@ -182,7 +182,7 @@ class _AsdfWriteTypeIndex(object):
         return asdftype
 
 
-class AsdfTypeIndex(object):
+class AsdfTypeIndex:
     """
     An index of the known `ExtensionType` classes.
 

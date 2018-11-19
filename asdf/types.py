@@ -163,7 +163,7 @@ class AsdfTypeMeta(ExtensionTypeMeta):
         return cls
 
 
-class ExtensionType(object):
+class ExtensionType:
     """
     The base class of all custom types in the tree.
 
