@@ -62,64 +62,13 @@ class _AsdfWriteTypeIndex(object):
                 "Don't know how to write out ASDF version {0}".format(
                     self._version))
 
-        def should_overwrite(cls, new_type):
-            existing_type = self._type_by_cls[cls]
-
-            # Types that are provided by extensions from other packages should
-            # only override the type index corresponding to the latest version
-            # of ASDF.
-            if existing_type.tag_base() != new_type.tag_base():
-                return self._version == default_version
-
-            return True
-
-        def add_type_to_index(cls, typ):
-            if cls in self._type_by_cls and not should_overwrite(cls, typ):
-                return
-
-            self._type_by_cls[cls] = typ
-            self._extension_by_cls[cls] = index._extension_by_type[typ]
-
-        def add_subclasses(typ, asdftype):
-            for subclass in util.iter_subclasses(typ):
-                # Do not overwrite the tag type for an existing subclass if the
-                # new tag serializes a class that is higher in the type
-                # hierarchy than the existing subclass.
-                if subclass in self._class_by_subclass:
-                    if issubclass(self._class_by_subclass[subclass], typ):
-                        # Allow for cases where a subclass tag is being
-                        # overridden by a tag from another extension.
-                        if (self._extension_by_cls[subclass] ==
-                                index._extension_by_type[asdftype]):
-                            continue
-                self._class_by_subclass[subclass] = typ
-                self._type_by_subclasses[subclass] = asdftype
-                self._extension_by_cls[subclass] = index._extension_by_type[asdftype]
-
-        def add_all_types(asdftype):
-            add_type_to_index(asdftype, asdftype)
-            for typ in asdftype.types:
-                add_type_to_index(typ, asdftype)
-                add_subclasses(typ, asdftype)
-
-            if asdftype.handle_dynamic_subclasses:
-                for typ in asdftype.types:
-                    self._types_with_dynamic_subclasses[typ] = asdftype
-
-        def add_by_tag(name, version):
-            tag = join_tag_version(name, version)
-            if tag in index._type_by_tag:
-                asdftype = index._type_by_tag[tag]
-                self._type_by_name[name] = asdftype
-                add_all_types(asdftype)
-
         # Process all types defined in the ASDF version map. It is important to
         # make sure that tags that are associated with the core part of the
         # standard are processed first in order to handle subclasses properly.
         for name, _version in core_version_map.items():
-            add_by_tag(name, AsdfVersion(_version))
+            self._add_by_tag(index, name, AsdfVersion(_version))
         for name, _version in standard_version_map.items():
-            add_by_tag(name, AsdfVersion(_version))
+            self._add_by_tag(index, name, AsdfVersion(_version))
 
         # Now add any extension types that aren't known to the ASDF standard.
         # This expects that all types defined by ASDF will be encountered
@@ -130,10 +79,61 @@ class _AsdfWriteTypeIndex(object):
         # extension will always be processed first.
         for name, versions in index._versions_by_type_name.items():
             if name not in self._type_by_name:
-                add_by_tag(name, versions[-1])
+                self._add_by_tag(index, name, versions[-1])
 
         for asdftype in index._unnamed_types:
-            add_all_types(asdftype)
+            self._add_all_types(index, asdftype)
+
+    def _should_overwrite(self, cls, new_type):
+        existing_type = self._type_by_cls[cls]
+
+        # Types that are provided by extensions from other packages should
+        # only override the type index corresponding to the latest version
+        # of ASDF.
+        if existing_type.tag_base() != new_type.tag_base():
+            return self._version == default_version
+
+        return True
+
+    def _add_type_to_index(self, index, cls, typ):
+        if cls in self._type_by_cls and not self._should_overwrite(cls, typ):
+            return
+
+        self._type_by_cls[cls] = typ
+        self._extension_by_cls[cls] = index._extension_by_type[typ]
+
+    def _add_subclasses(self, index, typ, asdftype):
+        for subclass in util.iter_subclasses(typ):
+            # Do not overwrite the tag type for an existing subclass if the
+            # new tag serializes a class that is higher in the type
+            # hierarchy than the existing subclass.
+            if subclass in self._class_by_subclass:
+                if issubclass(self._class_by_subclass[subclass], typ):
+                    # Allow for cases where a subclass tag is being
+                    # overridden by a tag from another extension.
+                    if (self._extension_by_cls[subclass] ==
+                            index._extension_by_type[asdftype]):
+                        continue
+            self._class_by_subclass[subclass] = typ
+            self._type_by_subclasses[subclass] = asdftype
+            self._extension_by_cls[subclass] = index._extension_by_type[asdftype]
+
+    def _add_all_types(self, index, asdftype):
+        self._add_type_to_index(index, asdftype, asdftype)
+        for typ in asdftype.types:
+            self._add_type_to_index(index, typ, asdftype)
+            self._add_subclasses(index, typ, asdftype)
+
+        if asdftype.handle_dynamic_subclasses:
+            for typ in asdftype.types:
+                self._types_with_dynamic_subclasses[typ] = asdftype
+
+    def _add_by_tag(self, index, name, version):
+        tag = join_tag_version(name, version)
+        if tag in index._type_by_tag:
+            asdftype = index._type_by_tag[tag]
+            self._type_by_name[name] = asdftype
+            self._add_all_types(index, asdftype)
 
     def _mark_used_extension(self, custom_type):
         self._extensions_used.add(self._extension_by_cls[custom_type])
