@@ -10,6 +10,8 @@
 - Remove WCS tags. These are now provided by the `gwcs package
   <https://github.com/spacetelescope/gwcs>`_. [#593]
 
+- Deprecate the ``asdf.asdftypes`` module in favor of ``asdf.types``. [#611]
+
 2.2.1 (2018-11-15)
 ------------------
 
