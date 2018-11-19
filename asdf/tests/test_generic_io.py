@@ -465,11 +465,11 @@ def test_relative_uri():
 
 
 def test_arbitrary_file_object():
-    class Wrapper(object):
+    class Wrapper:
         def __init__(self, init):
             self._fd = init
 
-    class Random(object):
+    class Random:
         def seek(self, *args):
             return self._fd.seek(*args)
 

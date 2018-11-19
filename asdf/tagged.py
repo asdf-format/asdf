@@ -37,7 +37,7 @@ from collections import UserDict, UserList, UserString
 __all__ = ['tag_object', 'get_tag']
 
 
-class Tagged(object):
+class Tagged:
     """
     Base class of classes that wrap a given object and store a tag
     with it.

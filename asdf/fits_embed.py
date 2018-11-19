@@ -29,7 +29,7 @@ FITS_SOURCE_PREFIX = 'fits:'
 __all__ = ['AsdfInFits']
 
 
-class _FitsBlock(object):
+class _FitsBlock:
     def __init__(self, hdu):
         self._hdu = hdu
 

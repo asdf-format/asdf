@@ -40,7 +40,7 @@ def validate(compression):
     return compression
 
 
-class Lz4Compressor(object):
+class Lz4Compressor:
     def __init__(self, block_api):
         self._api = block_api
 
@@ -50,7 +50,7 @@ class Lz4Compressor(object):
         return header + output
 
 
-class Lz4Decompressor(object):
+class Lz4Decompressor:
     def __init__(self, block_api):
         self._api = block_api
         self._size = 0

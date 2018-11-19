@@ -78,7 +78,7 @@ def test_arbitrary_python_object():
     # Putting "just any old" Python object in the tree should raise an
     # exception.
 
-    class Foo(object):
+    class Foo:
         pass
 
     tree = {'object': Foo()}
@@ -256,7 +256,7 @@ def test_yaml_nan_inf():
 
 
 def test_tag_object():
-    class SomeObject(object):
+    class SomeObject:
         pass
 
     tag = 'tag:nowhere.org:none/some/thing'

@@ -38,7 +38,7 @@ def test_custom_tag():
         def from_tree(cls, tree, ctx):
             return fractions.Fraction(tree[0], tree[1])
 
-    class FractionExtension(object):
+    class FractionExtension:
         @property
         def types(self):
             return [FractionType]
@@ -164,7 +164,7 @@ def test_version_mismatch_with_supported_versions():
     """Make sure that defining the supported_versions field does not affect
     whether or not schema mismatch warnings are triggered."""
 
-    class CustomFlow(object):
+    class CustomFlow:
         pass
 
     class CustomFlowType(CustomTestType):
@@ -175,7 +175,7 @@ def test_version_mismatch_with_supported_versions():
         standard = 'custom'
         types = [CustomFlow]
 
-    class CustomFlowExtension(object):
+    class CustomFlowExtension:
         @property
         def types(self):
             return [CustomFlowType]
@@ -247,7 +247,7 @@ def test_versioned_writing(monkeypatch):
         def from_tree(cls, tree, ctx):
             return ComplexType.from_tree(tree, ctx)
 
-    class FancyComplexExtension(object):
+    class FancyComplexExtension:
         @property
         def types(self):
             return [FancyComplexType]
@@ -273,7 +273,7 @@ def test_versioned_writing(monkeypatch):
 
 
 def test_longest_match():
-    class FancyComplexExtension(object):
+    class FancyComplexExtension:
         @property
         def types(self):
             return []
@@ -368,7 +368,7 @@ def test_newer_tag():
     # fairly contrived but we want to test whether ASDF can handle backwards
     # compatibility even when an explicit tag class for different versions of a
     # schema is not available.
-    class CustomFlow(object):
+    class CustomFlow:
         def __init__(self, c=None, d=None):
             self.c = c
             self.d = d
@@ -391,7 +391,7 @@ def test_newer_tag():
         def to_tree(cls, data, ctx):
             tree = dict(c=data.c, d=data.d)
 
-    class CustomFlowExtension(object):
+    class CustomFlowExtension:
         @property
         def types(self):
             return [CustomFlowType]
@@ -489,7 +489,7 @@ def test_incompatible_version_check():
             supported_versions = ['1.1.0', '2.2.0', 'blue']
 
 def test_supported_versions():
-    class CustomFlow(object):
+    class CustomFlow:
         def __init__(self, c=None, d=None):
             self.c = c
             self.d = d
@@ -518,7 +518,7 @@ def test_supported_versions():
             else:
                 tree = dict(c=data.c, d=data.d)
 
-    class CustomFlowExtension(object):
+    class CustomFlowExtension:
         @property
         def types(self):
             return [CustomFlowType]
@@ -555,7 +555,7 @@ flow_thing:
     assert type(old_data.tree['flow_thing']) == CustomFlow
 
 def test_unsupported_version_warning():
-    class CustomFlow(object):
+    class CustomFlow:
         pass
 
     class CustomFlowType(types.CustomType):
@@ -566,7 +566,7 @@ def test_unsupported_version_warning():
         standard = 'custom'
         types = [CustomFlow]
 
-    class CustomFlowExtension(object):
+    class CustomFlowExtension:
         @property
         def types(self):
             return [CustomFlowType]
