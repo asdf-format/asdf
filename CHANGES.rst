@@ -1,7 +1,6 @@
 2.3.0 (unreleased)
 ------------------
 
-
 - Storage of arbitrary precision integers is now provided by
   ``asdf.IntegerType``.  Reading a file with integer literals that are too
   large now causes only a warning instead of a validation error. This is to
@@ -10,6 +9,8 @@
 
 - Remove WCS tags. These are now provided by the `gwcs package
   <https://github.com/spacetelescope/gwcs>`_. [#593]
+
+- Deprecate the ``asdf.asdftypes`` module in favor of ``asdf.types``. [#611]
 
 2.2.1 (2018-11-15)
 ------------------

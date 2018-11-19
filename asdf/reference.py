@@ -15,7 +15,7 @@ import numpy as np
 
 from urllib import parse as urlparse
 
-from .asdftypes import AsdfType
+from .types import AsdfType
 from . import generic_io
 from . import treeutil
 from . import util

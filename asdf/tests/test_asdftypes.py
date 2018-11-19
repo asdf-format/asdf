@@ -9,7 +9,7 @@ import sys
 import pytest
 
 import asdf
-from asdf import asdftypes
+from asdf import types
 from asdf import extension
 from asdf import util
 from asdf import versioning
@@ -23,7 +23,7 @@ TEST_DATA_PATH = str(helpers.get_test_data_path(''))
 def test_custom_tag():
     import fractions
 
-    class FractionType(asdftypes.CustomType):
+    class FractionType(types.CustomType):
         name = 'fraction'
         organization = 'nowhere.org'
         version = (1, 0, 0)
@@ -232,7 +232,7 @@ def test_versioned_writing(monkeypatch):
         versioning.supported_versions + [versioning.AsdfVersion('42.0.0')]
     )
 
-    class FancyComplexType(asdftypes.CustomType):
+    class FancyComplexType(types.CustomType):
         name = 'core/complex'
         organization = 'stsci.edu'
         standard = 'asdf'
@@ -297,15 +297,15 @@ def test_longest_match():
 
 
 def test_module_versioning():
-    class NoModuleType(asdftypes.CustomType):
+    class NoModuleType(types.CustomType):
         # It seems highly unlikely that this would be a real module
         requires = ['qkjvqdja']
 
-    class HasCorrectPytest(asdftypes.CustomType):
+    class HasCorrectPytest(types.CustomType):
         # This means it requires 1.0.0 or greater, so it should succeed
         requires = ['pytest-1.0.0']
 
-    class DoesntHaveCorrectPytest(asdftypes.CustomType):
+    class DoesntHaveCorrectPytest(types.CustomType):
         requires = ['pytest-91984.1.7']
 
     nmt = NoModuleType()
@@ -373,7 +373,7 @@ def test_newer_tag():
             self.c = c
             self.d = d
 
-    class CustomFlowType(asdftypes.CustomType):
+    class CustomFlowType(types.CustomType):
         version = '1.1.0'
         name = 'custom_flow'
         organization = 'nowhere.org'
@@ -435,26 +435,26 @@ flow_thing:
         "tag:nowhere.org:custom/custom_flow-1.0.0 to custom type")
 
 def test_incompatible_version_check():
-    class TestType0(asdftypes.CustomType):
+    class TestType0(types.CustomType):
         supported_versions = versioning.AsdfSpec('>=1.2.0')
 
     assert TestType0.incompatible_version('1.1.0') == True
     assert TestType0.incompatible_version('1.2.0') == False
     assert TestType0.incompatible_version('2.0.1') == False
 
-    class TestType1(asdftypes.CustomType):
+    class TestType1(types.CustomType):
         supported_versions = versioning.AsdfVersion('1.0.0')
 
     assert TestType1.incompatible_version('1.0.0') == False
     assert TestType1.incompatible_version('1.1.0') == True
 
-    class TestType2(asdftypes.CustomType):
+    class TestType2(types.CustomType):
         supported_versions = '1.0.0'
 
     assert TestType2.incompatible_version('1.0.0') == False
     assert TestType2.incompatible_version('1.1.0') == True
 
-    class TestType3(asdftypes.CustomType):
+    class TestType3(types.CustomType):
         # This doesn't make much sense, but it's just for the sake of example
         supported_versions = ['1.0.0', versioning.AsdfSpec('>=2.0.0')]
 
@@ -463,7 +463,7 @@ def test_incompatible_version_check():
     assert TestType3.incompatible_version('2.0.0') == False
     assert TestType3.incompatible_version('2.0.1') == False
 
-    class TestType4(asdftypes.CustomType):
+    class TestType4(types.CustomType):
         supported_versions = ['1.0.0', versioning.AsdfVersion('1.1.0')]
 
     assert TestType4.incompatible_version('1.0.0') == False
@@ -471,7 +471,7 @@ def test_incompatible_version_check():
     assert TestType4.incompatible_version('1.1.0') == False
     assert TestType4.incompatible_version('1.1.1') == True
 
-    class TestType5(asdftypes.CustomType):
+    class TestType5(types.CustomType):
         supported_versions = \
             [versioning.AsdfSpec('<1.0.0'), versioning.AsdfSpec('>=2.0.0')]
 
@@ -482,10 +482,10 @@ def test_incompatible_version_check():
     assert TestType5.incompatible_version('1.1.0') == True
 
     with pytest.raises(ValueError):
-        class TestType6(asdftypes.CustomType):
+        class TestType6(types.CustomType):
             supported_versions = 'blue'
     with pytest.raises(ValueError):
-        class TestType6(asdftypes.CustomType):
+        class TestType6(types.CustomType):
             supported_versions = ['1.1.0', '2.2.0', 'blue']
 
 def test_supported_versions():
@@ -494,7 +494,7 @@ def test_supported_versions():
             self.c = c
             self.d = d
 
-    class CustomFlowType(asdftypes.CustomType):
+    class CustomFlowType(types.CustomType):
         version = '1.1.0'
         supported_versions = [(1,0,0), versioning.AsdfSpec('>=1.1.0')]
         name = 'custom_flow'
@@ -558,7 +558,7 @@ def test_unsupported_version_warning():
     class CustomFlow(object):
         pass
 
-    class CustomFlowType(asdftypes.CustomType):
+    class CustomFlowType(types.CustomType):
         version = '1.0.0'
         supported_versions = [(1,0,0)]
         name = 'custom_flow'
@@ -652,7 +652,7 @@ def test_tag_without_schema(tmpdir):
 
     tmpfile = str(tmpdir.join('foo.asdf'))
 
-    class FooType(asdftypes.CustomType):
+    class FooType(types.CustomType):
         name = 'foo'
 
         def __init__(self, a, b):

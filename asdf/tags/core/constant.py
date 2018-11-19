@@ -2,7 +2,7 @@
 # -*- coding: utf-8 -*-
 
 
-from ...asdftypes import AsdfType
+from ...types import AsdfType
 
 
 class Constant(object):

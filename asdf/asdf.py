@@ -67,7 +67,7 @@ class AsdfFile(versioning.VersionedMixin):
 
         extensions : list of AsdfExtension
             A list of extensions to use when reading and writing ASDF files.
-            See `~asdf.asdftypes.AsdfExtension` for more information.
+            See `~asdf.types.AsdfExtension` for more information.
 
         version : str, optional
             The ASDF version to use when writing out.  If not
@@ -1276,7 +1276,7 @@ def open_asdf(fd, uri=None, mode=None, validate_checksums=False,
 
     extensions : list of AsdfExtension
         A list of extensions to use when reading and writing ASDF files.
-        See `~asdf.asdftypes.AsdfExtension` for more information.
+        See `~asdf.types.AsdfExtension` for more information.
 
     do_not_fill_defaults : bool, optional
         When `True`, do not fill in missing default values.

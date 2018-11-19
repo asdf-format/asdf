@@ -34,7 +34,7 @@ except ImportError:
     raise ImportError("asdf requires numpy")
 
 from .asdf import AsdfFile, open_asdf
-from .asdftypes import CustomType
+from .types import CustomType
 from .extension import AsdfExtension
 from .stream import Stream
 from . import commands

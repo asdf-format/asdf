@@ -22,7 +22,23 @@ from . import util
 from .version import version as asdf_version
 
 
-__all__ = ['AsdfVersion', 'AsdfSpec']
+__all__ = ['AsdfVersion', 'AsdfSpec', 'split_tag_version', 'join_tag_version']
+
+
+def split_tag_version(tag):
+    """
+    Split a tag into its base and version.
+    """
+    name, version = tag.rsplit('-', 1)
+    version = AsdfVersion(version)
+    return name, version
+
+
+def join_tag_version(name, version):
+    """
+    Join the root and version of a tag back together.
+    """
+    return '{0}-{1}'.format(name, version)
 
 
 _version_map = {}
