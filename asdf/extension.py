@@ -9,8 +9,8 @@ from pkg_resources import iter_entry_points
 import six
 import importlib
 
+from . import types
 from . import resolver
-from . import asdftypes
 from .util import get_class_name
 from .type_index import AsdfTypeIndex
 from .version import version as asdf_version
@@ -125,7 +125,7 @@ class AsdfExtensionList(object):
         for extension in extensions:
             if not isinstance(extension, AsdfExtension):
                 raise TypeError(
-                    "Extension must implement asdftypes.AsdfExtension "
+                    "Extension must implement asdf.types.AsdfExtension "
                     "interface")
             tag_mapping.extend(extension.tag_mapping)
             url_mapping.extend(extension.url_mapping)
@@ -173,7 +173,7 @@ class BuiltinExtension(object):
     """
     @property
     def types(self):
-        return asdftypes._all_asdftypes
+        return types._all_asdftypes
 
     @property
     def tag_mapping(self):

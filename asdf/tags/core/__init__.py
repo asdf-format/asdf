@@ -2,7 +2,7 @@
 # -*- coding: utf-8 -*-
 
 
-from ...asdftypes import AsdfType
+from ...types import AsdfType
 from ...yamlutil import custom_tree_to_tagged_tree
 
 
