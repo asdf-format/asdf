@@ -37,6 +37,8 @@ matrix:
     fast_finish: true
     include:
 
+        - env: PIP_DEPENDENCIES='twine' TWINE_CHECK=1
+
         # Do a coverage test
         - env: TOXENV='coverage' TOX_ARGS=''
 
@@ -76,6 +78,10 @@ matrix:
         # Windows test against development version of numpy (this job can fail)
         - os: windows
           env: TOXENV='py37-numpydev'
+
+        # Windows test against development version of numpy (this job can fail)
+        - os: windows
+          env: NUMPY_VERSION=development
 
 
     allow_failures:
