@@ -12,7 +12,7 @@ from .. import util
 command_order = [ 'Explode', 'Implode' ]
 
 
-class Command(object):
+class Command:
     @classmethod
     def setup_arguments(cls, subparsers):
         raise NotImplementedError()

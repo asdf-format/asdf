@@ -118,7 +118,7 @@ def calculate_padding(content_size, pad_blocks, block_size):
     return max(new_size - content_size, 0)
 
 
-class BinaryStruct(object):
+class BinaryStruct:
     """
     A wrapper around the Python stdlib struct module to define a
     binary struct more like a dictionary than a tuple.
@@ -368,7 +368,7 @@ class InheritDocstrings(type):
         >>> from asdf.util import InheritDocstrings
         >>> import six
         >>> @six.add_metaclass(InheritDocstrings)
-        ... class A(object):
+        ... class A:
         ...     def wiggle(self):
         ...         "Wiggle the thingamajig"
         ...         pass

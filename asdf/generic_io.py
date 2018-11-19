@@ -182,7 +182,7 @@ def relative_uri(source, target):
     return relative
 
 
-class _TruncatedReader(object):
+class _TruncatedReader:
     """
     Reads until a given delimiter is found.  Only works with
     RandomAccessFile and InputStream, though as this is a private
@@ -257,7 +257,7 @@ class _TruncatedReader(object):
 
 
 @six.add_metaclass(util.InheritDocstrings)
-class GenericFile(object):
+class GenericFile:
     """
     Base class for an abstraction layer around a number of different
     file-like types.  Each of its subclasses handles a particular kind
@@ -656,7 +656,7 @@ class GenericFile(object):
         return np.frombuffer(buff, np.uint8, size, 0)
 
 
-class GenericWrapper(object):
+class GenericWrapper:
     """
     A wrapper around a `GenericFile` object so that closing only
     happens in the very outer layer.

@@ -26,7 +26,7 @@ from . import util
 from . import yamlutil
 
 
-class BlockManager(object):
+class BlockManager:
     """
     Manages the `Block`s associated with a ASDF file.
     """
@@ -789,7 +789,7 @@ class BlockManager(object):
             block.close()
 
 
-class Block(object):
+class Block:
     """
     Represents a single block in a ASDF file.  This is an
     implementation detail and should not be instantiated directly.
@@ -1204,7 +1204,7 @@ class Block(object):
         self._data = None
 
 
-class UnloadedBlock(object):
+class UnloadedBlock:
     """
     Represents an indexed, but not yet loaded, internal block.  All
     that is known about it is its offset.  It converts itself to a

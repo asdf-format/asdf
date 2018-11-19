@@ -71,7 +71,7 @@ def get_version_map(version):
 
 
 @total_ordering
-class AsdfVersionMixin(object):
+class AsdfVersionMixin:
     """This mix-in is required in order to impose the total ordering that we
     want for ``AsdfVersion``, rather than accepting the total ordering that is
     already provided by ``Version`` from ``semantic_version``. Defining these
@@ -168,7 +168,7 @@ supported_versions = [
 default_version = supported_versions[-1]
 
 
-class VersionedMixin(object):
+class VersionedMixin:
     _version = default_version
 
     @property

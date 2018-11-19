@@ -24,7 +24,7 @@ ASDF_TEST_BUILD_ENV = 'ASDF_TEST_BUILD'
 
 
 @six.add_metaclass(abc.ABCMeta)
-class AsdfExtension(object):
+class AsdfExtension:
     """
     Abstract base class defining an extension to ASDF.
     """
@@ -113,7 +113,7 @@ class AsdfExtension(object):
         pass
 
 
-class AsdfExtensionList(object):
+class AsdfExtensionList:
     """
     Manage a set of extensions that are in effect.
     """
@@ -165,7 +165,7 @@ class AsdfExtensionList(object):
         return self._validators
 
 
-class BuiltinExtension(object):
+class BuiltinExtension:
     """
     This is the "extension" to ASDF that includes all the built-in
     tags.  Even though it's not really an extension and it's always
