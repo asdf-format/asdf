@@ -36,8 +36,6 @@ env:
     matrix:
         # Make sure that installation does not fail
         - RUN_CMD='python setup.py install'
-        # Make sure README will display properly on pypi
-        - PIP_DEPENDENCIES='twine' TWINE_CHECK=1
         - PYTHON_VERSION=3.5
         - PYTHON_VERSION=3.6 PYTEST_VERSION=3.8
         - PYTHON_VERSION=3.7 PYTEST_VERSION=3.9
@@ -45,6 +43,8 @@ env:
 matrix:
     fast_finish: true
     include:
+
+        - env: PIP_DEPENDENCIES='twine' TWINE_CHECK=1
 
         # Do a coverage test
         - env: COVERAGE=1
@@ -78,6 +78,24 @@ matrix:
 
         # Test against latest version of jsonschema
         - env: PIP_DEPENDENCIES='jsonschema pytest-faulthandler importlib_resources'
+
+        # Run a series of tests on Windows
+        - os: windows
+          env: RUN_CMD='python setup.py install'
+
+        - os: windows
+          env: RUN_CMD=pytest
+
+        - os: windows
+          env: PYTHON_VERSION=3.5
+
+        - os: windows
+          env: PYTHON_VERSION=3.6
+
+        # Windows test against development version of numpy (this job can fail)
+        - os: windows
+          env: NUMPY_VERSION=development
+
 
     allow_failures:
         - env: NUMPY_VERSION=development
