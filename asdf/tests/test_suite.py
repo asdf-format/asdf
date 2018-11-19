@@ -12,6 +12,10 @@ from asdf import versioning
 from .helpers import assert_tree_match, display_warnings
 
 
+_REFFILE_PATH = os.path.join(os.path.dirname(__file__), '..', '..',
+                             'asdf-standard', 'reference_files')
+
+
 def get_test_id(reference_file_path):
     """Helper function to return the informative part of a schema path"""
     path = os.path.normpath(str(reference_file_path))
@@ -19,9 +23,8 @@ def get_test_id(reference_file_path):
 
 def collect_reference_files():
     """Function used by pytest to collect ASDF reference files for testing."""
-    root = os.path.join(os.path.dirname(__file__), '..', "reference_files")
     for version in versioning.supported_versions:
-        version_dir = os.path.join(root, str(version))
+        version_dir = os.path.join(_REFFILE_PATH, str(version))
         if os.path.exists(version_dir):
             for filename in os.listdir(version_dir):
                 if filename.endswith(".asdf"):
