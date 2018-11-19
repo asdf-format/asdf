@@ -62,7 +62,7 @@ def test_reference_file(reference_file):
     name_without_ext, _ = os.path.splitext(reference_file)
 
     known_fail = False
-    expect_warnings = False
+    expect_warnings = 'complex' in reference_file
 
     if sys.maxunicode <= 65535:
         known_fail = known_fail or (basename in ('unicode_spp.asdf'))
