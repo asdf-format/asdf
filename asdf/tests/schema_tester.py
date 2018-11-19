@@ -120,7 +120,7 @@ def should_skip(name, version):
 def parse_schema_filename(filename):
     components = filename[filename.find('schemas') + 1:].split(os.path.sep)
     tag = 'tag:{}:{}'.format(components[1], '/'.join(components[2:]))
-    name, version = asdftypes.split_tag_version(tag.replace('.yaml', ''))
+    name, version = versioning.split_tag_version(tag.replace('.yaml', ''))
     return name, version
 
 

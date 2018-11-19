@@ -9,10 +9,11 @@ from pkg_resources import iter_entry_points
 import six
 import importlib
 
-from . import asdftypes
 from . import resolver
-from .version import version as asdf_version
+from . import asdftypes
 from .util import get_class_name
+from .type_index import AsdfTypeIndex
+from .version import version as asdf_version
 from .exceptions import AsdfDeprecationWarning
 
 
@@ -120,7 +121,7 @@ class AsdfExtensionList(object):
         tag_mapping = []
         url_mapping = []
         validators = {}
-        self._type_index = asdftypes.AsdfTypeIndex()
+        self._type_index = AsdfTypeIndex()
         for extension in extensions:
             if not isinstance(extension, AsdfExtension):
                 raise TypeError(
