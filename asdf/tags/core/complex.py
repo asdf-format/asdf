@@ -3,7 +3,7 @@
 
 import numpy as np
 
-from ...asdftypes import AsdfType
+from ...types import AsdfType
 from ... import util
 
 

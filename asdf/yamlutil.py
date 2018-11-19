@@ -11,7 +11,6 @@ import yaml
 from . import schema
 from . import tagged
 from . import treeutil
-from . import asdftypes
 from . import util
 from .constants import YAML_TAG_PREFIX
 from .versioning import split_tag_version

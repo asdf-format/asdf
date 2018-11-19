@@ -12,7 +12,6 @@ import numpy as np
 
 import asdf
 from asdf import AsdfFile
-from asdf import asdftypes
 from asdf import block
 from asdf import schema
 from asdf import extension

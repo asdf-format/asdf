@@ -5,7 +5,7 @@ from numbers import Integral
 
 import numpy as np
 
-from ...asdftypes import AsdfType
+from ...types import AsdfType
 from ...yamlutil import custom_tree_to_tagged_tree
 
 
