@@ -12,6 +12,9 @@
 
 - Deprecate the ``asdf.asdftypes`` module in favor of ``asdf.types``. [#611]
 
+- Support use of ``pathlib.Path`` with ``asdf.open`` and ``AsdfFile.write_to``.
+  [#617]
+
 2.2.1 (2018-11-15)
 ------------------
 

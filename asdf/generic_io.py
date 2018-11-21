@@ -10,12 +10,13 @@ instead, one should use the factory function `get_file`.
 """
 
 import io
-import math
 import os
-import platform
 import re
 import sys
+import math
+import pathlib
 import tempfile
+import platform
 from distutils.version import LooseVersion
 
 from os import SEEK_SET, SEEK_CUR, SEEK_END
@@ -1171,8 +1172,8 @@ def get_file(init, mode='r', uri=None, close=False):
                     init.mode, mode))
         return GenericWrapper(init)
 
-    elif isinstance(init, str):
-        parsed = urlparse.urlparse(init)
+    elif isinstance(init, (str, pathlib.Path)):
+        parsed = urlparse.urlparse(str(init))
         if parsed.scheme in ['http', 'https']:
             if 'w' in mode:
                 raise ValueError(
