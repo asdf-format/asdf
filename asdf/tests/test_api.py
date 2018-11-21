@@ -2,6 +2,7 @@
 
 import os
 import io
+import pathlib
 
 import numpy as np
 from numpy.testing import assert_array_equal
@@ -232,6 +233,20 @@ def test_context_handler_resolve_and_inline(tmpdir):
 
     with pytest.raises(OSError):
         newf.tree['random'][0]
+
+
+def test_open_pathlib_path(tmpdir):
+
+    filename = str(tmpdir.join('pathlib.asdf'))
+    path = pathlib.Path(filename)
+
+    tree = {'data': np.ones(10)}
+
+    with asdf.AsdfFile(tree) as af:
+        af.write_to(path)
+
+    with asdf.open(tree) as af:
+        assert af['data'] == tree['data']
 
 
 @pytest.mark.skip(reason='Until inline_threshold is added as a write option')
