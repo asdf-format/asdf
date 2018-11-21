@@ -245,8 +245,8 @@ def test_open_pathlib_path(tmpdir):
     with asdf.AsdfFile(tree) as af:
         af.write_to(path)
 
-    with asdf.open(tree) as af:
-        assert af['data'] == tree['data']
+    with asdf.open(path) as af:
+        assert (af['data'] == tree['data']).all()
 
 
 @pytest.mark.skip(reason='Until inline_threshold is added as a write option')
