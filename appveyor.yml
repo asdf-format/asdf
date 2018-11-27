@@ -13,7 +13,7 @@ environment:
       ASTROPY_VERSION: "stable"
       GWCS_GIT: "git+git://github.com/spacetelescope/gwcs.git#egg=gwcs"
       GWCS_PIP: "gwcs"
-      CONDA_DEPENDENCIES: "semantic_version jsonschema pyyaml six lz4 pytest=3.6 pytest-astropy"
+      CONDA_DEPENDENCIES: "semantic_version jsonschema pyyaml six lz4 pytest-astropy"
       PIP_DEPENDENCIES: "pytest-faulthandler importlib_resources"
       PYTHON_ARCH: "64"
 
