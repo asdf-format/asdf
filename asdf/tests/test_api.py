@@ -249,6 +249,36 @@ def test_open_pathlib_path(tmpdir):
         assert (af['data'] == tree['data']).all()
 
 
+@pytest.mark.xfail(reason='Setting auto_inline option modifies AsdfFile state')
+def test_auto_inline(tmpdir):
+
+    outfile = str(tmpdir.join('test.asdf'))
+    tree = dict(data=np.arange(6))
+
+    # Use the same object for each write in order to make sure that there
+    # aren't unanticipated side effects
+    with asdf.AsdfFile(tree) as af:
+        af.write_to(outfile)
+        assert len(list(af.blocks.inline_blocks)) == 0
+        assert len(list(af.blocks.internal_blocks)) == 1
+
+        af.write_to(outfile, auto_inline=10)
+        assert len(list(af.blocks.inline_blocks)) == 1
+        assert len(list(af.blocks.internal_blocks)) == 0
+
+        af.write_to(outfile)
+        assert len(list(af.blocks.inline_blocks)) == 0
+        assert len(list(af.blocks.internal_blocks)) == 1
+
+        af.write_to(outfile, auto_inline=7)
+        assert len(list(af.blocks.inline_blocks)) == 1
+        assert len(list(af.blocks.internal_blocks)) == 0
+
+        af.write_to(outfile, auto_inline=5)
+        assert len(list(af.blocks.inline_blocks)) == 0
+        assert len(list(af.blocks.internal_blocks)) == 1
+
+
 @pytest.mark.skip(reason='Until inline_threshold is added as a write option')
 def test_inline_threshold(tmpdir):
 
