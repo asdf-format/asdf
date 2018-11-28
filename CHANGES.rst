@@ -15,6 +15,8 @@
 - Support use of ``pathlib.Path`` with ``asdf.open`` and ``AsdfFile.write_to``.
   [#617]
 
+- Update ASDF Standard submodule to version 1.3.0.
+
 2.2.1 (2018-11-15)
 ------------------
 
