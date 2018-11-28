@@ -4,6 +4,26 @@
 Changes
 *******
 
+What's New in ASDF 2.3?
+=======================
+
+ASDF 2.3 reflects the update of ASDF Standard to v1.3.0, and contains a few
+notable features and an API change:
+
+* Storage of arbitrary precision integers is now provided by
+  `asdf.IntegerType`. This new type is provided by version 1.3.0 of the ASDF
+  Standard.
+
+* Reading a file with integer literals that are too large now causes only a
+  warning instead of a validation error. This is to provide backwards
+  compatibility for files that were created with a buggy version of ASDF.
+
+* The functions `asdf.open` and `AsdfFile.write_to` now support the use of
+  `pathlib.Path`.
+
+* The `asdf.asdftypes` module has been deprecated in favor of `asdf.types`. The
+  old module will be removed entirely in the 3.0 release.
+
 What's New in ASDF 2.2?
 =======================
 
