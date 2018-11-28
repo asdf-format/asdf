@@ -11,6 +11,6 @@ dependencies:
   - sphinx<1.7
   - numpy
   - pyyaml
-  - jsonschema
+  - jsonschema>=2.3,<=2.6
   - semantic_version
   - astropy
