@@ -458,21 +458,33 @@ def get_validator(schema={}, ctx=None, validators=None, url_mapping=None,
     return validator
 
 
-def validate_large_literals(instance):
+def validate_large_literals(instance, reading=False):
     """
     Validate that the tree has no large numeric literals.
     """
     # We can count on 52 bits of precision
     for instance in treeutil.iter_tree(instance):
-        if (isinstance(instance, (Integral)) and (
-            instance > ((1 << 51) - 1) or
-            instance < -((1 << 51) - 2))):
+
+        if not isinstance(instance, Integral):
+            continue
+
+        if instance <= ((1 << 51) - 1) and instance >= -((1 << 51) - 2):
+            continue
+
+        if not reading:
             raise ValidationError(
                 "Integer value {0} is too large to safely represent as a "
                 "literal in ASDF".format(instance))
 
+        warnings.warn(
+            "Invalid integer literal value {0} detected while reading file. "
+            "The value has been read safely, but the file should be "
+            "fixed.".format(instance)
+        )
 
-def validate(instance, ctx=None, schema={}, validators=None, *args, **kwargs):
+
+def validate(instance, ctx=None, schema={}, validators=None, reading=False,
+             *args, **kwargs):
     """
     Validate the given instance (which must be a tagged tree) against
     the appropriate schema.  The schema itself is located using the
@@ -495,6 +507,11 @@ def validate(instance, ctx=None, schema={}, validators=None, *args, **kwargs):
     validators : dict, optional
         A dictionary mapping properties to validators to use (instead
         of the built-in ones and ones provided by extension types).
+
+    reading: bool, optional
+        Indicates whether validation is being performed when the file is being
+        read. This is useful to allow for different validation behavior when
+        reading vs writing files.
     """
     if ctx is None:
         from .asdf import AsdfFile
@@ -504,10 +521,10 @@ def validate(instance, ctx=None, schema={}, validators=None, *args, **kwargs):
                               *args, **kwargs)
     validator.validate(instance, _schema=(schema or None))
 
-    validate_large_literals(instance)
+    validate_large_literals(instance, reading=reading)
 
 
-def fill_defaults(instance, ctx):
+def fill_defaults(instance, ctx, reading=False):
     """
     For any default values in the schema, add them to the tree if they
     don't exist.
@@ -518,8 +535,12 @@ def fill_defaults(instance, ctx):
 
     ctx : AsdfFile context
         Used to resolve tags and urls
+
+    reading: bool, optional
+        Indicates whether the ASDF file is being read (in contrast to being
+        written).
     """
-    validate(instance, ctx, validators=FILL_DEFAULTS)
+    validate(instance, ctx, validators=FILL_DEFAULTS, reading=reading)
 
 
 def remove_defaults(instance, ctx):

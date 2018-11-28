@@ -8,7 +8,7 @@ from numpy import ma
 
 from jsonschema import ValidationError
 
-from ...asdftypes import AsdfType
+from ...types import AsdfType
 from ... import schema
 from ... import util
 from ... import yamlutil

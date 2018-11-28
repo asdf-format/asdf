@@ -11,7 +11,7 @@ from jsonschema import ValidationError
 
 import asdf
 from asdf import util
-from asdf import asdftypes
+from asdf import types
 from asdf.tests import helpers
 from asdf.tests.helpers import yaml_to_asdf, display_warnings
 from asdf.tags.core import HistoryEntry
@@ -230,7 +230,7 @@ history:
 
 def test_metadata_with_custom_extension(tmpdir):
 
-    class FractionType(asdftypes.AsdfType):
+    class FractionType(types.AsdfType):
         name = 'fraction'
         organization = 'nowhere.org'
         version = (1, 0, 0)

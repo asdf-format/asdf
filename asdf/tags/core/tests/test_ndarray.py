@@ -42,7 +42,7 @@ class CustomDatatype(CustomTestType):
     version = '1.0.0'
 
 
-class CustomExtension(object):
+class CustomExtension:
     @property
     def types(self):
         return [CustomNdim, CustomDatatype]

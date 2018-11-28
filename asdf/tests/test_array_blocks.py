@@ -18,202 +18,8 @@ from asdf import treeutil
 from asdf import versioning
 from asdf.exceptions import AsdfDeprecationWarning
 
-from ..tests.helpers import assert_tree_match
-
-
-def test_no_yaml_end_marker(tmpdir):
-    content = b"""#ASDF 1.0.0
-%YAML 1.1
-%TAG ! tag:stsci.edu:asdf/
---- !core/asdf-1.0.0
-foo: bar...baz
-baz: 42
-    """
-    path = os.path.join(str(tmpdir), 'test.asdf')
-
-    buff = io.BytesIO(content)
-    with pytest.raises(ValueError):
-        with asdf.open(buff):
-            pass
-
-    buff.seek(0)
-    fd = generic_io.InputStream(buff, 'r')
-    with pytest.raises(ValueError):
-        with asdf.open(fd):
-            pass
-
-    with open(path, 'wb') as fd:
-        fd.write(content)
-
-    with open(path, 'rb') as fd:
-        with pytest.raises(ValueError):
-            with asdf.open(fd):
-                pass
-
-
-def test_no_final_newline(tmpdir):
-    content = b"""#ASDF 1.0.0
-%YAML 1.1
-%TAG ! tag:stsci.edu:asdf/
---- !core/asdf-1.0.0
-foo: ...bar...
-baz: 42
-..."""
-    path = os.path.join(str(tmpdir), 'test.asdf')
-
-    buff = io.BytesIO(content)
-    with asdf.open(buff) as ff:
-        assert len(ff.tree) == 2
-
-    buff.seek(0)
-    fd = generic_io.InputStream(buff, 'r')
-    with asdf.open(fd) as ff:
-        assert len(ff.tree) == 2
-
-    with open(path, 'wb') as fd:
-        fd.write(content)
-
-    with open(path, 'rb') as fd:
-        with asdf.open(fd) as ff:
-            assert len(ff.tree) == 2
-
-
-def test_no_asdf_header(tmpdir):
-    content = b"What? This ain't no ASDF file"
-
-    path = os.path.join(str(tmpdir), 'test.asdf')
-
-    buff = io.BytesIO(content)
-    with pytest.raises(ValueError):
-        asdf.open(buff)
-
-    with open(path, 'wb') as fd:
-        fd.write(content)
-
-    with open(path, 'rb') as fd:
-        with pytest.raises(ValueError):
-            asdf.open(fd)
-
-
-def test_no_asdf_blocks(tmpdir):
-    content = b"""#ASDF 1.0.0
-%YAML 1.1
-%TAG ! tag:stsci.edu:asdf/
---- !core/asdf-1.0.0
-foo: bar
-...
-XXXXXXXX
-    """
-
-    path = os.path.join(str(tmpdir), 'test.asdf')
-
-    buff = io.BytesIO(content)
-    with asdf.open(buff) as ff:
-        assert len(ff.blocks) == 0
-
-    buff.seek(0)
-    fd = generic_io.InputStream(buff, 'r')
-    with asdf.open(fd) as ff:
-        assert len(ff.blocks) == 0
-
-    with open(path, 'wb') as fd:
-        fd.write(content)
-
-    with open(path, 'rb') as fd:
-        with asdf.open(fd) as ff:
-            assert len(ff.blocks) == 0
-
-
-def test_invalid_source(small_tree):
-    buff = io.BytesIO()
-
-    ff = asdf.AsdfFile(small_tree)
-    ff.write_to(buff)
-
-    buff.seek(0)
-    with asdf.open(buff) as ff2:
-        ff2.blocks.get_block(0)
-
-        with pytest.raises(ValueError):
-            ff2.blocks.get_block(2)
-
-        with pytest.raises(IOError):
-            ff2.blocks.get_block("http://127.0.0.1/")
-
-        with pytest.raises(TypeError):
-            ff2.blocks.get_block(42.0)
-
-        with pytest.raises(ValueError):
-            ff2.blocks.get_source(42.0)
-
-        block = ff2.blocks.get_block(0)
-        assert ff2.blocks.get_source(block) == 0
-
-
-def test_empty_file():
-    buff = io.BytesIO(b"#ASDF 1.0.0\n")
-    buff.seek(0)
-
-    with asdf.open(buff) as ff:
-        assert ff.tree == {}
-        assert len(ff.blocks) == 0
-
-    buff = io.BytesIO(b"#ASDF 1.0.0\n#ASDF_STANDARD 1.0.0")
-    buff.seek(0)
-
-    with asdf.open(buff) as ff:
-        assert ff.tree == {}
-        assert len(ff.blocks) == 0
-
-
-def test_not_asdf_file():
-    buff = io.BytesIO(b"SIMPLE")
-    buff.seek(0)
-
-    with pytest.raises(ValueError):
-        with asdf.open(buff):
-            pass
-
-    buff = io.BytesIO(b"SIMPLE\n")
-    buff.seek(0)
-
-    with pytest.raises(ValueError):
-        with asdf.open(buff):
-            pass
-
-
-def test_junk_file():
-    buff = io.BytesIO(b"#ASDF 1.0.0\nFOO")
-    buff.seek(0)
-
-    with pytest.raises(ValueError):
-        with asdf.open(buff):
-            pass
-
-
-def test_block_mismatch():
-    # This is a file with a single small block, followed by something
-    # that has an invalid block magic number.
-
-    buff = io.BytesIO(
-        b'#ASDF 1.0.0\n\xd3BLK\x00\x28\0\0\0\0\0\0\0\x01\0\0\0\0\0\0\0\x01\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0FOOBAR')
-
-    buff.seek(0)
-    with pytest.raises(ValueError):
-        with asdf.open(buff):
-            pass
-
-
-def test_block_header_too_small():
-    # The block header size must be at least 40
-
-    buff = io.BytesIO(
-        b'#ASDF 1.0.0\n\xd3BLK\0\0')
-
-    buff.seek(0)
-    with pytest.raises(ValueError):
-        with asdf.open(buff):
-            pass
+from ..tests.helpers import (assert_tree_match, assert_roundtrip_tree,
+                             display_warnings)
 
 
 def test_external_block(tmpdir):
@@ -802,7 +608,10 @@ def test_deferred_block_loading(small_tree):
     buff = io.BytesIO()
 
     ff = asdf.AsdfFile(small_tree)
-    ff.write_to(buff, include_block_index=False)
+    # Since we're testing with small arrays, force all arrays to be stored
+    # in internal blocks rather than letting some of them be automatically put
+    # inline.
+    ff.write_to(buff, include_block_index=False, all_array_storage='internal')
 
     buff.seek(0)
     with asdf.open(buff) as ff2:
@@ -869,7 +678,10 @@ def test_large_block_index():
     }
 
     ff = asdf.AsdfFile(tree)
-    ff.write_to(buff)
+    # Since we're testing with small arrays, force all arrays to be stored
+    # in internal blocks rather than letting some of them be automatically put
+    # inline.
+    ff.write_to(buff, all_array_storage='internal')
 
     buff.seek(0)
     with asdf.open(buff) as ff2:
@@ -927,7 +739,10 @@ def test_short_file_find_block_index():
     buff = io.BytesIO()
 
     ff = asdf.AsdfFile({'arr': np.ndarray([1]), 'arr2': np.ndarray([2])})
-    ff.write_to(buff, include_block_index=False)
+    # Since we're testing with small arrays, force all arrays to be stored
+    # in internal blocks rather than letting some of them be automatically put
+    # inline.
+    ff.write_to(buff, include_block_index=False, all_array_storage='internal')
 
     buff.write(b'#ASDF BLOCK INDEX\n')
     buff.write(b'0' * (io.DEFAULT_BUFFER_SIZE * 4))
@@ -1088,44 +903,6 @@ def test_open_no_memmap(tmpdir):
         assert not isinstance(array.block._data, np.memmap)
 
 
-def test_invalid_version(tmpdir):
-    content = b"""#ASDF 0.1.0
-%YAML 1.1
-%TAG ! tag:stsci.edu:asdf/
---- !core/asdf-0.1.0
-foo : bar
-..."""
-    buff = io.BytesIO(content)
-    with pytest.raises(ValueError):
-        with asdf.open(buff) as ff:
-            pass
-
-
-def test_valid_version(tmpdir):
-    content = b"""#ASDF 1.0.0
-%YAML 1.1
-%TAG ! tag:stsci.edu:asdf/
---- !core/asdf-1.0.0
-foo : bar
-..."""
-    buff = io.BytesIO(content)
-    with asdf.open(buff) as ff:
-        version = ff.file_format_version
-
-    assert version.major == 1
-    assert version.minor == 0
-    assert version.patch == 0
-
-
-def test_default_version():
-    # See https://github.com/spacetelescope/asdf/issues/364
-
-    version_map = versioning.get_version_map(versioning.default_version)
-
-    ff = asdf.AsdfFile()
-    assert ff.file_format_version == version_map['FILE_FORMAT']
-
-
 def test_fd_not_seekable():
     data = np.ones(1024)
     b = block.Block(data=data)
@@ -1233,3 +1010,97 @@ def test_open_readonly(tmpdir):
     with pytest.raises(PermissionError):
         with asdf.open(tmpfile, mode='rw'):
             pass
+
+@pytest.mark.skip(reason='Until inline_threshold is added as a write option')
+def test_inline_threshold(tmpdir):
+
+    tree = {
+        'small': np.ones(10),
+        'large': np.ones(100)
+    }
+
+    with asdf.AsdfFile(tree) as af:
+        assert len(list(af.blocks.inline_blocks)) == 1
+        assert len(list(af.blocks.internal_blocks)) == 1
+
+    with asdf.AsdfFile(tree, inline_threshold=10) as af:
+        assert len(list(af.blocks.inline_blocks)) == 1
+        assert len(list(af.blocks.internal_blocks)) == 1
+
+    with asdf.AsdfFile(tree, inline_threshold=5) as af:
+        assert len(list(af.blocks.inline_blocks)) == 0
+        assert len(list(af.blocks.internal_blocks)) == 2
+
+    with asdf.AsdfFile(tree, inline_threshold=100) as af:
+        assert len(list(af.blocks.inline_blocks)) == 2
+        assert len(list(af.blocks.internal_blocks)) == 0
+
+
+@pytest.mark.skip(reason='Until inline_threshold is added as a write option')
+def test_inline_threshold_masked(tmpdir):
+
+    mask = np.random.randint(0, 1+1, 20)
+    masked_array = np.ma.masked_array(np.ones(20), mask=mask)
+
+    tree = {
+        'masked': masked_array
+    }
+
+    # Make sure that masked arrays aren't automatically inlined, even if they
+    # are small enough
+    with asdf.AsdfFile(tree) as af:
+        assert len(list(af.blocks.inline_blocks)) == 0
+        assert len(list(af.blocks.internal_blocks)) == 2
+
+    tree = {
+        'masked': masked_array,
+        'normal': np.random.random(20)
+    }
+
+    with asdf.AsdfFile(tree) as af:
+        assert len(list(af.blocks.inline_blocks)) == 1
+        assert len(list(af.blocks.internal_blocks)) == 2
+
+
+@pytest.mark.skip(reason='Until inline_threshold is added as a write option')
+def test_inline_threshold_override(tmpdir):
+
+    tmpfile = str(tmpdir.join('inline.asdf'))
+
+    tree = {
+        'small': np.ones(10),
+        'large': np.ones(100)
+    }
+
+    with asdf.AsdfFile(tree) as af:
+        af.set_array_storage(tree['small'], 'internal')
+        assert len(list(af.blocks.inline_blocks)) == 0
+        assert len(list(af.blocks.internal_blocks)) == 2
+
+    with asdf.AsdfFile(tree) as af:
+        af.set_array_storage(tree['large'], 'inline')
+        assert len(list(af.blocks.inline_blocks)) == 2
+        assert len(list(af.blocks.internal_blocks)) == 0
+
+    with asdf.AsdfFile(tree) as af:
+        af.write_to(tmpfile, all_array_storage='internal')
+        assert len(list(af.blocks.inline_blocks)) == 0
+        assert len(list(af.blocks.internal_blocks)) == 2
+
+    with asdf.AsdfFile(tree) as af:
+        af.write_to(tmpfile, all_array_storage='inline')
+        assert len(list(af.blocks.inline_blocks)) == 2
+        assert len(list(af.blocks.internal_blocks)) == 0
+
+
+def test_no_warning_nan_array(tmpdir):
+    """
+    Tests for a regression that was introduced by
+    https://github.com/spacetelescope/asdf/pull/557
+    """
+
+    tree = dict(array=np.array([1, 2, np.nan]))
+
+    with pytest.warns(None) as w:
+        assert_roundtrip_tree(tree, tmpdir)
+        assert len(w) == 0, display_warnings(w)

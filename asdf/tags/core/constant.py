@@ -2,10 +2,10 @@
 # -*- coding: utf-8 -*-
 
 
-from ...asdftypes import AsdfType
+from ...types import AsdfType
 
 
-class Constant(object):
+class Constant:
     def __init__(self, value):
         self._value = value
 

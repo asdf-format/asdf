@@ -1,3 +1,22 @@
+2.3.0 (unreleased)
+------------------
+
+- Storage of arbitrary precision integers is now provided by
+  ``asdf.IntegerType``.  Reading a file with integer literals that are too
+  large now causes only a warning instead of a validation error. This is to
+  provide backwards compatibility for files that were created with a buggy
+  version of ASDF (see #553 below). [#566]
+
+- Remove WCS tags. These are now provided by the `gwcs package
+  <https://github.com/spacetelescope/gwcs>`_. [#593]
+
+- Deprecate the ``asdf.asdftypes`` module in favor of ``asdf.types``. [#611]
+
+- Support use of ``pathlib.Path`` with ``asdf.open`` and ``AsdfFile.write_to``.
+  [#617]
+
+- Update ASDF Standard submodule to version 1.3.0.
+
 2.2.1 (2018-11-15)
 ------------------
 
@@ -30,6 +49,9 @@
 - Make sure that all types corresponding to core tags are added to the type
   index before any others. This fixes a bug that was related to the way that
   subclass tags were overwritten by external extensions. [#598]
+
+- Remove WCS tags. These are now provided by the `gwcs package
+  <https://github.com/spacetelescope/gwcs>`_. [#593]
 
 2.1.1 (2018-11-01)
 ------------------

@@ -9,10 +9,11 @@ from pkg_resources import iter_entry_points
 import six
 import importlib
 
-from . import asdftypes
+from . import types
 from . import resolver
-from .version import version as asdf_version
 from .util import get_class_name
+from .type_index import AsdfTypeIndex
+from .version import version as asdf_version
 from .exceptions import AsdfDeprecationWarning
 
 
@@ -23,7 +24,7 @@ ASDF_TEST_BUILD_ENV = 'ASDF_TEST_BUILD'
 
 
 @six.add_metaclass(abc.ABCMeta)
-class AsdfExtension(object):
+class AsdfExtension:
     """
     Abstract base class defining an extension to ASDF.
     """
@@ -112,7 +113,7 @@ class AsdfExtension(object):
         pass
 
 
-class AsdfExtensionList(object):
+class AsdfExtensionList:
     """
     Manage a set of extensions that are in effect.
     """
@@ -120,11 +121,11 @@ class AsdfExtensionList(object):
         tag_mapping = []
         url_mapping = []
         validators = {}
-        self._type_index = asdftypes.AsdfTypeIndex()
+        self._type_index = AsdfTypeIndex()
         for extension in extensions:
             if not isinstance(extension, AsdfExtension):
                 raise TypeError(
-                    "Extension must implement asdftypes.AsdfExtension "
+                    "Extension must implement asdf.types.AsdfExtension "
                     "interface")
             tag_mapping.extend(extension.tag_mapping)
             url_mapping.extend(extension.url_mapping)
@@ -164,7 +165,7 @@ class AsdfExtensionList(object):
         return self._validators
 
 
-class BuiltinExtension(object):
+class BuiltinExtension:
     """
     This is the "extension" to ASDF that includes all the built-in
     tags.  Even though it's not really an extension and it's always
@@ -172,7 +173,7 @@ class BuiltinExtension(object):
     """
     @property
     def types(self):
-        return asdftypes._all_asdftypes
+        return types._all_asdftypes
 
     @property
     def tag_mapping(self):

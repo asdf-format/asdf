@@ -50,7 +50,7 @@ def run_server(tmpdir, handler_class, stop_event, queue):  # pragma: no cover
     server.server_close()
 
 
-class HTTPServer(object):
+class HTTPServer:
     handler_class = http.server.SimpleHTTPRequestHandler
 
     def __init__(self):

@@ -3,14 +3,14 @@
 
 import pytest
 
-from asdf import asdftypes
+from asdf import types
 from asdf.exceptions import AsdfConversionWarning
 from asdf.tests.helpers import assert_roundtrip_tree
 
 
 def test_conversion_error(tmpdir):
 
-    class FooType(asdftypes.CustomType):
+    class FooType(types.CustomType):
         name = 'foo'
 
         def __init__(self, a, b):

@@ -70,7 +70,7 @@ class Diff(Command): # pragma: no cover
     def run(cls, args):
         return diff(args.filenames, args.minimal)
 
-class ArrayNode(object):
+class ArrayNode:
     """This class is used to represent unique dummy nodes in the diff tree. In
     general these dummy nodes will be list elements that we want to keep track
     of but not necessarily display. This allows the diff output to be
@@ -81,7 +81,7 @@ class ArrayNode(object):
     def __hash__(self):
         return hash(self.name)
 
-class PrintTree(object):
+class PrintTree:
     """This class is used to remember the nodes in the tree that have already
     been displayed in the diff output.
     """
@@ -114,7 +114,7 @@ class PrintTree(object):
                 current['children'][node] = dict(visited=True, children=dict())
             current = current['children'][node]
 
-class DiffContext(object):
+class DiffContext:
     """Class that contains context data of the diff to be computed"""
     def __init__(self, asdf0, asdf1, iostream, minimal=False):
         self.asdf0 = asdf0

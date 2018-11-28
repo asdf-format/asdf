@@ -29,7 +29,7 @@ FITS_SOURCE_PREFIX = 'fits:'
 __all__ = ['AsdfInFits']
 
 
-class _FitsBlock(object):
+class _FitsBlock:
     def __init__(self, hdu):
         self._hdu = hdu
 
@@ -190,7 +190,7 @@ class AsdfInFits(asdf.AsdfFile):
 
         extensions : list of AsdfExtension, optional
             A list of extensions to the ASDF to support when reading
-            and writing ASDF files.  See `asdftypes.AsdfExtension` for
+            and writing ASDF files.  See `asdf.types.AsdfExtension` for
             more information.
 
         ignore_version_mismatch : bool, optional

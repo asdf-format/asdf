@@ -15,7 +15,7 @@ from ._internal_init import *
 
 __all__ = [
     'AsdfFile', 'CustomType', 'AsdfExtension', 'Stream', 'open', 'test',
-    'commands', 'ExternalArrayReference'
+    'commands', 'IntegerType', 'ExternalArrayReference'
 ]
 
 try:
@@ -34,10 +34,11 @@ except ImportError:
     raise ImportError("asdf requires numpy")
 
 from .asdf import AsdfFile, open_asdf
-from .asdftypes import CustomType
+from .types import CustomType
 from .extension import AsdfExtension
 from .stream import Stream
 from . import commands
+from .tags.core import IntegerType
 from .tags.core.external_reference import ExternalArrayReference
 
 from jsonschema import ValidationError

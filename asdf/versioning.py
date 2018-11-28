@@ -22,7 +22,23 @@ from . import util
 from .version import version as asdf_version
 
 
-__all__ = ['AsdfVersion', 'AsdfSpec']
+__all__ = ['AsdfVersion', 'AsdfSpec', 'split_tag_version', 'join_tag_version']
+
+
+def split_tag_version(tag):
+    """
+    Split a tag into its base and version.
+    """
+    name, version = tag.rsplit('-', 1)
+    version = AsdfVersion(version)
+    return name, version
+
+
+def join_tag_version(name, version):
+    """
+    Join the root and version of a tag back together.
+    """
+    return '{0}-{1}'.format(name, version)
 
 
 _version_map = {}
@@ -55,7 +71,7 @@ def get_version_map(version):
 
 
 @total_ordering
-class AsdfVersionMixin(object):
+class AsdfVersionMixin:
     """This mix-in is required in order to impose the total ordering that we
     want for ``AsdfVersion``, rather than accepting the total ordering that is
     already provided by ``Version`` from ``semantic_version``. Defining these
@@ -142,17 +158,17 @@ class AsdfSpec(SpecItem, Spec):
         return super(AsdfSpec, self).__hash__()
 
 
-default_version = AsdfVersion('1.2.0')
-
-
 supported_versions = [
     AsdfVersion('1.0.0'),
     AsdfVersion('1.1.0'),
-    AsdfVersion('1.2.0')
+    AsdfVersion('1.2.0'),
+    AsdfVersion('1.3.0')
 ]
 
+default_version = supported_versions[-1]
 
-class VersionedMixin(object):
+
+class VersionedMixin:
     _version = default_version
 
     @property

@@ -15,7 +15,7 @@ import numpy as np
 from numpy.testing import assert_array_equal
 
 import asdf
-from asdf import asdftypes
+from asdf import types
 from asdf import extension
 from asdf import resolver
 from asdf import schema
@@ -46,7 +46,7 @@ class CustomExtension:
                  '/{url_suffix}.yaml')]
 
 
-class TagReferenceType(asdftypes.CustomType):
+class TagReferenceType(types.CustomType):
     """
     This class is used by several tests below for validating foreign type
     references in schemas and ASDF files.
@@ -202,7 +202,7 @@ def test_schema_caching():
 
 
 def test_flow_style():
-    class CustomFlowStyleType(dict, asdftypes.CustomType):
+    class CustomFlowStyleType(dict, types.CustomType):
         name = 'custom_flow'
         organization = 'nowhere.org'
         version = (1, 0, 0)
@@ -225,7 +225,7 @@ def test_flow_style():
 
 
 def test_style():
-    class CustomStyleType(str, asdftypes.CustomType):
+    class CustomStyleType(str, types.CustomType):
         name = 'custom_style'
         organization = 'nowhere.org'
         version = (1, 0, 0)
@@ -267,7 +267,7 @@ def test_property_order():
 
 
 def test_invalid_nested():
-    class CustomType(str, asdftypes.CustomType):
+    class CustomType(str, types.CustomType):
         name = 'custom'
         organization = 'nowhere.org'
         version = (1, 0, 0)
@@ -361,7 +361,7 @@ def test_default_check_in_schema():
 
 
 def test_fill_and_remove_defaults():
-    class DefaultType(dict, asdftypes.CustomType):
+    class DefaultType(dict, types.CustomType):
         name = 'default'
         organization = 'nowhere.org'
         version = (1, 0, 0)
@@ -419,7 +419,7 @@ custom: !<tag:nowhere.org:custom/tag_reference-1.0.0>
 
 
 def test_foreign_tag_reference_validation():
-    class ForeignTagReferenceType(asdftypes.CustomType):
+    class ForeignTagReferenceType(types.CustomType):
         name = 'foreign_tag_reference'
         organization = 'nowhere.org'
         version = (1, 0, 0)
@@ -498,6 +498,24 @@ def test_large_literals(use_numpy):
     with pytest.raises(ValidationError):
         ff.write_to(buff)
         print(buff.getvalue())
+
+
+def test_read_large_literal():
+
+    value = 1 << 64
+    yaml = """integer: {}""".format(value)
+
+    buff = helpers.yaml_to_asdf(yaml)
+
+    with pytest.warns(UserWarning) as w:
+        with asdf.open(buff) as af:
+            assert af['integer'] == value
+
+        # We get two warnings: one for validation time, and one when defaults
+        # are filled. It seems like we could improve this architecture, though...
+        assert len(w) == 2
+        assert str(w[0].message).startswith('Invalid integer literal value')
+        assert str(w[1].message).startswith('Invalid integer literal value')
 
 
 def test_nested_array():
@@ -579,7 +597,7 @@ properties:
 @pytest.mark.importorskip('astropy')
 def test_type_missing_dependencies():
 
-    class MissingType(asdftypes.CustomType):
+    class MissingType(types.CustomType):
         name = 'missing'
         organization = 'nowhere.org'
         version = (1, 1, 0)
@@ -607,7 +625,7 @@ custom: !<tag:nowhere.org:custom/missing-1.1.0>
 def test_assert_roundtrip_with_extension(tmpdir):
     called_custom_assert_equal = [False]
 
-    class CustomType(dict, asdftypes.CustomType):
+    class CustomType(dict, types.CustomType):
         name = 'custom_flow'
         organization = 'nowhere.org'
         version = (1, 0, 0)

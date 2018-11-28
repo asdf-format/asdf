@@ -11,10 +11,9 @@ import yaml
 from . import schema
 from . import tagged
 from . import treeutil
-from . import asdftypes
-from . import versioning
 from . import util
 from .constants import YAML_TAG_PREFIX
+from .versioning import split_tag_version
 from .exceptions import AsdfConversionWarning
 
 
@@ -253,7 +252,7 @@ def tagged_tree_to_custom_tree(tree, ctx, force_raw_types=False):
             return node
 
         real_tag = ctx.type_index.get_real_tag(tag_name)
-        real_tag_name, real_tag_version = asdftypes.split_tag_version(real_tag)
+        real_tag_name, real_tag_version = split_tag_version(real_tag)
         # This means that there is an explicit description of versions that are
         # compatible with the associated tag class implementation, but the
         # version we found does not fit that description.
