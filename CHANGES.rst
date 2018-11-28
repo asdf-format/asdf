@@ -1,4 +1,4 @@
-2.3.0 (unreleased)
+2.3.0 (2018-11-28)
 ------------------
 
 - Storage of arbitrary precision integers is now provided by
