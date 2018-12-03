@@ -155,6 +155,17 @@ def test_top_level_keys(small_tree):
     assert ff.tree.keys() == ff.keys()
 
 
+def test_top_level_contains():
+    tree = {
+        'foo': 42,
+        'bar': 43,
+    }
+
+    with asdf.AsdfFile(tree) as af:
+        assert 'foo' in af
+        assert 'bar' in af
+
+
 def test_walk_and_modify_remove_keys():
     tree = {
         'foo': 42,

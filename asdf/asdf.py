@@ -404,6 +404,9 @@ class AsdfFile(versioning.VersionedMixin):
     def __setitem__(self, key, value):
         self._tree[key] = value
 
+    def __contains__(self, item):
+        return item in self._tree
+
     @property
     def comments(self):
         """
