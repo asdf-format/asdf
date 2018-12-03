@@ -40,6 +40,9 @@ matrix:
         # Do a coverage test
         - env: TOXENV='coverage' TOX_ARGS=''
 
+        # Perform a sanity check of packaging using twine
+        - env: TOXENV='twine' TOX_ARGS=''
+
         # Check for sphinx doc build warnings - we do this first because it
         # may run for a long time
         - env: TOXENV='docbuild' TOX_ARGS=''
