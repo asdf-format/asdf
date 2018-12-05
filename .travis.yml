@@ -38,7 +38,7 @@ env:
         - RUN_CMD='python setup.py install'
         - PYTHON_VERSION=3.5
         - PYTHON_VERSION=3.6 PYTEST_VERSION=3.8
-        - PYTHON_VERSION=3.7 PYTEST_VERSION=3.9
+        - PYTHON_VERSION=3.7 PYTEST_VERSION=3.9 RUN_CMD='pytest --remote-data'
 
 matrix:
     fast_finish: true
@@ -84,7 +84,7 @@ matrix:
           env: RUN_CMD='python setup.py install'
 
         - os: windows
-          env: RUN_CMD=pytest
+          env: RUN_CMD='pytest --remote-data'
 
         - os: windows
           env: PYTHON_VERSION=3.5
