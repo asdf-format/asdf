@@ -79,6 +79,11 @@ matrix:
 
 
     allow_failures:
+        # There doesn't appear to be a stable version of numpy available for
+        # Py37 on Windows at the moment
+        - os: windows
+          env: TOXENV='py37-stable' TOX_ARGS='--remote-data'
+
         - env: TOXENV='py37-numpydev'
 
 install:
