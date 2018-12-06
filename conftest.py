@@ -17,6 +17,13 @@ display.PYTEST_HEADER_MODULES = OrderedDict([
                                     ('pyyaml', 'pyyaml'),
                                     ('astropy', 'astropy')])
 
+try:
+    import gwcs
+    display.PYTEST_HEADER_MODULES['gwcs'] = 'gwcs'
+except ImportError:
+    pass
+
+
 pytest_plugins = [
     'asdf.tests.schema_tester',
     'astropy.tests.plugins.display'
