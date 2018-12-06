@@ -71,7 +71,7 @@ matrix:
           env: TOXENV='py35-stable'
 
         - os: windows
-          env: TOXENV='py36-stable'
+          env: TOXENV='py36-stable' TOX_ARGS='--remote-data'
 
         # Windows test against development version of numpy (this job can fail)
         - os: windows
