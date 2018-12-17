@@ -396,16 +396,16 @@ class AsdfFile(versioning.VersionedMixin):
         self._tree = asdf_object
 
     def keys(self):
-        return self._tree.keys()
+        return self.tree.keys()
 
     def __getitem__(self, key):
-        return self._tree[key]
+        return self.tree[key]
 
     def __setitem__(self, key, value):
-        self._tree[key] = value
+        self.tree[key] = value
 
     def __contains__(self, item):
-        return item in self._tree
+        return item in self.tree
 
     @property
     def comments(self):
