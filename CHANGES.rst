@@ -1,3 +1,9 @@
+2.3.1 (unreleased)
+------------------
+
+- Ensure that top-level accesses to the tree outside a closed context handler
+  result in an ``OSError``. [#628]
+
 2.3.0 (2018-11-28)
 ------------------
 
