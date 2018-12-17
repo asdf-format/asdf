@@ -192,7 +192,9 @@ class _DefaultExtensions:
 
     def _load_installed_extensions(self, group='asdf_extensions'):
         for entry_point in iter_entry_points(group=group):
-            ext = entry_point.load()
+            with warnings.catch_warnings(record=True) as w:
+                warnings.simplefilter('always', category=AsdfDeprecationWarning)
+                ext = entry_point.load()
             if not issubclass(ext, AsdfExtension):
                 warnings.warn("Found entry point {}, from {} but it is not a "
                               "subclass of AsdfExtension, as expected. It is "
@@ -203,6 +205,10 @@ class _DefaultExtensions:
             name = get_class_name(ext, instance=False)
             self._package_metadata[name] = (dist.project_name, dist.version)
             self._extensions.append(ext())
+
+            for warning in w:
+                warnings.warn('{} (from {})'.format(warning.message, name),
+                              AsdfDeprecationWarning)
 
     @property
     def extensions(self):

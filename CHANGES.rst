@@ -6,6 +6,9 @@
 2.3.1 (unreleased)
 ------------------
 
+- Provide source information for ``AsdfDeprecationWarning`` that come from
+  extensions from external packages. [#629]
+
 - Ensure that top-level accesses to the tree outside a closed context handler
   result in an ``OSError``. [#628]
 
