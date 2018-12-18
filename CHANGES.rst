@@ -12,6 +12,9 @@
 - Ensure that top-level accesses to the tree outside a closed context handler
   result in an ``OSError``. [#628]
 
+- Use ``atomicfile`` package from ``pypi`` for guaranteeing atomic file output.
+  This is intended to resolve a bug that was observed on Windows. [#631]
+
 2.3.0 (2018-11-28)
 ------------------
 
