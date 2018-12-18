@@ -74,6 +74,7 @@ setup(name=PACKAGE_NAME,
           'jsonschema>=2.3,<=2.6',
           'six>=1.9.0',
           'numpy>=1.8',
+          'atomicfile>=1.0'
       ] + extras_require,
       tests_require=['pytest-astropy'],
       author=AUTHOR,

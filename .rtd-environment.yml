@@ -14,3 +14,4 @@ dependencies:
   - jsonschema>=2.3,<=2.6
   - semantic_version
   - astropy
+  - atomicfile>=1.0
