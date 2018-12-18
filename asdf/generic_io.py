@@ -27,10 +27,11 @@ from urllib.request import url2pathname
 
 import six
 
+import atomicfile
+
 import numpy as np
 
 from . import util
-from .extern import atomicfile
 
 
 __all__ = ['get_file', 'get_uri', 'resolve_uri', 'relative_uri']
@@ -40,6 +41,22 @@ _local_file_schemes = ['', 'file']
 if sys.platform.startswith('win'):  # pragma: no cover
     import string
     _local_file_schemes.extend(string.ascii_letters)
+
+
+class AtomicFile(atomicfile.AtomicFile):
+
+    def __init__(self, name, *args, **kwargs):
+        super().__init__(name, *args, **kwargs)
+        self.name = self.__name
+
+    def tell(self, *args, **kwargs):
+        return self._fp.tell(*args, **kwargs)
+
+    def seek(self, *args, **kwargs):
+        return self._fp.seek(*args, **kwargs)
+
+    def flush(self, *args, **kwargs):
+        return self._fp.flush(*args, **kwargs)
 
 
 def _check_bytes(fd, mode):
@@ -1186,7 +1203,7 @@ def get_file(init, mode='r', uri=None, close=False):
                 realmode = mode + 'b'
             realpath = url2pathname(parsed.path)
             if mode == 'w':
-                fd = atomicfile.atomic_open(realpath, realmode)
+                fd = AtomicFile(realpath, mode=realmode)
             else:
                 fd = open(realpath, realmode)
             fd = fd.__enter__()
