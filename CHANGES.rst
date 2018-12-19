@@ -7,6 +7,8 @@
 - Provide source information for ``AsdfDeprecationWarning`` that come from
   extensions from external packages. [#629]
 
+- Fix the way ``generic_io`` handles URIs and paths on Windows. [#632]
+
 2.3.0 (2018-11-28)
 ------------------
 
