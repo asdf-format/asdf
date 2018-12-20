@@ -1184,7 +1184,14 @@ def get_file(init, mode='r', uri=None, close=False):
                 realmode = 'r+b'
             else:
                 realmode = mode + 'b'
-            realpath = url2pathname(parsed.path)
+            # Windows paths are not URIs, and so they should not be parsed as
+            # such. Otherwise, the drive component of the path can get lost.
+            # This is not an ideal solution, but we can't use pathlib here
+            # because it doesn't handle URIs properly.
+            if sys.platform.startswith('win') and parsed.scheme in string.ascii_letters:
+                realpath = str(init)
+            else:
+                realpath = url2pathname(parsed.path)
             if mode == 'w':
                 fd = atomicfile.atomic_open(realpath, realmode)
             else:

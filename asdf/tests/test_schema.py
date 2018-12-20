@@ -767,12 +767,13 @@ a: !core/doesnt_exist-1.0.0
     with pytest.warns(None) as w:
         with asdf.open(buff) as af:
             assert str(af['a']) == 'hello'
-        # Currently there are 3 warnings since one occurs on each of the
-        # validation passes. It would be good to consolidate these eventually
-        assert len(w) == 3, helpers.display_warnings(w)
-        assert str(w[0].message).startswith("Unable to locate schema file")
-        assert str(w[1].message).startswith("Unable to locate schema file")
-        assert str(w[2].message).startswith(af['a']._tag)
+            # Currently there are 3 warnings since one occurs on each of the
+            # validation passes. It would be good to consolidate these
+            # eventually
+            assert len(w) == 3, helpers.display_warnings(w)
+            assert str(w[0].message).startswith("Unable to locate schema file")
+            assert str(w[1].message).startswith("Unable to locate schema file")
+            assert str(w[2].message).startswith(af['a']._tag)
 
     # This is a more realistic case since we're using an external extension
     yaml = """
@@ -784,7 +785,7 @@ a: !<tag:nowhere.org:custom/doesnt_exist-1.0.0>
     with pytest.warns(None) as w:
         with asdf.open(buff, extensions=CustomExtension()) as af:
             assert str(af['a']) == 'hello'
-        assert len(w) == 3, helpers.display_warnings(w)
-        assert str(w[0].message).startswith("Unable to locate schema file")
-        assert str(w[1].message).startswith("Unable to locate schema file")
-        assert str(w[2].message).startswith(af['a']._tag)
+            assert len(w) == 3, helpers.display_warnings(w)
+            assert str(w[0].message).startswith("Unable to locate schema file")
+            assert str(w[1].message).startswith("Unable to locate schema file")
+            assert str(w[2].message).startswith(af['a']._tag)

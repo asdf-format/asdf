@@ -215,7 +215,11 @@ def test_access_tree_outside_handler(tmpdir):
 
     # Accessing array data outside of handler should fail
     with pytest.raises(OSError):
-        newf.tree['random'][0]
+        repr(newf.tree['random'])
+
+    # Using the top-level getattr should also fail
+    with pytest.raises(OSError):
+        repr(newf['random'])
 
 
 def test_context_handler_resolve_and_inline(tmpdir):

@@ -1,3 +1,17 @@
+2.3.1 (unreleased)
+------------------
+
+- Ensure that top-level accesses to the tree outside a closed context handler
+  result in an ``OSError``. [#628]
+
+- Provide source information for ``AsdfDeprecationWarning`` that come from
+  extensions from external packages. [#629]
+
+- Fix the way ``generic_io`` handles URIs and paths on Windows. [#632]
+
+- Fix bug in ``asdftool`` that prevented ``extract`` command from being
+  visible. [#633]
+
 2.3.0 (2018-11-28)
 ------------------
 
