@@ -12,6 +12,8 @@
 - Ensure that top-level accesses to the tree outside a closed context handler
   result in an ``OSError``. [#628]
 
+- Fix the way ``generic_io`` handles URIs and paths on Windows. [#632]
+
 2.3.0 (2018-11-28)
 ------------------
 
