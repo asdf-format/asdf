@@ -3,7 +3,7 @@
 
 - Define the ``in`` operator for top-level ``AsdfFile`` objects. [#623]
 
-2.3.1 (unreleased)
+2.3.1 (2018-12-20)
 ------------------
 
 - Provide source information for ``AsdfDeprecationWarning`` that come from
