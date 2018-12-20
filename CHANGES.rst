@@ -1,4 +1,4 @@
-2.3.1 (unreleased)
+2.3.1 (2018-12-20)
 ------------------
 
 - Ensure that top-level accesses to the tree outside a closed context handler
