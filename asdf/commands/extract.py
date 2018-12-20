@@ -17,7 +17,7 @@ from .main import Command
 __all__ = ['extract_file']
 
 
-class FitsExtractor(Command): # pragma: no cover
+class AsdfExtractor(Command): # pragma: no cover
     """This class is the plugin implementation for the asdftool runner."""
 
     @classmethod
