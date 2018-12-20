@@ -1,18 +1,18 @@
 [run]
 source = {packagename}
 omit =
-   {packagename}/_astropy_init*
-   {packagename}/conftest*
-   {packagename}/cython_version*
-   {packagename}/setup_package*
-   {packagename}/*/setup_package*
-   {packagename}/*/*/setup_package*
-   {packagename}/tests/*
-   {packagename}/*/tests/*
-   {packagename}/*/*/tests/*
-   {packagename}/version.*
-   {packagename}/compat*
-   {packagename}/extern*
+   asdf/_astropy_init*
+   asdf/conftest*
+   asdf/cython_version*
+   asdf/setup_package*
+   asdf/*/setup_package*
+   asdf/*/*/setup_package*
+   asdf/tests/*
+   asdf/*/tests/*
+   asdf/*/*/tests/*
+   asdf/version.*
+   asdf/compat*
+   asdf/extern*
 
 [report]
 exclude_lines =
