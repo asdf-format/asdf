@@ -14,6 +14,9 @@
 
 - Fix the way ``generic_io`` handles URIs and paths on Windows. [#632]
 
+- Fix bug in ``asdftool`` that prevented ``extract`` command from being
+  visible. [#633]
+
 2.3.0 (2018-11-28)
 ------------------
 
