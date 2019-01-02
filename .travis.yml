@@ -55,7 +55,7 @@ matrix:
         - env: TOXENV='py36-numpy12'
 
         # also test against development versions of Astropy and GWCS
-        - env: TOXENV='py36-astropydev-gwcsdev'
+        - env: TOXENV='py37-astrodev'
 
         # Test against development version of numpy (this job can fail)
         - env: TOXENV='py37-numpydev'
