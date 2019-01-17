@@ -1,11 +1,17 @@
+2.3.2 (unreleased)
+------------------
+
+- Fix bug that occurs when comparing installed extension version with that
+  found in file. [#641]
+
 2.3.1 (2018-12-20)
 ------------------
 
-- Ensure that top-level accesses to the tree outside a closed context handler
-  result in an ``OSError``. [#628]
-
 - Provide source information for ``AsdfDeprecationWarning`` that come from
   extensions from external packages. [#629]
+
+- Ensure that top-level accesses to the tree outside a closed context handler
+  result in an ``OSError``. [#628]
 
 - Fix the way ``generic_io`` handles URIs and paths on Windows. [#632]
 
