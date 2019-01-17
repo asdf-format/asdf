@@ -264,6 +264,40 @@ def test_open_pathlib_path(tmpdir):
         assert (af['data'] == tree['data']).all()
 
 
+@pytest.mark.parametrize('installed,extension,warns', [
+    ('1.2.3', '2.0.0', True),
+    ('1.2.3', '2.0.dev10842', True),
+    ('2.0.0', '2.0.0', False),
+    ('2.0.1', '2.0.0', False),
+    ('2.0.1', '2.0.dev12345', False),
+])
+def test_extension_version_check(installed, extension, warns):
+
+    af = asdf.AsdfFile()
+    af._fname = 'test.asdf'
+    af._extension_metadata['foo.extension.FooExtension'] = ('foo', installed)
+
+    tree = {
+        'history': {
+            'extensions': [
+                asdf.tags.core.ExtensionMetadata('foo.extension.FooExtension',
+                    asdf.tags.core.Software(name='foo', version=extension)),
+            ]
+        }
+    }
+
+    if warns:
+        with pytest.warns(UserWarning) as w:
+            af._check_extensions(tree)
+        assert str(w[0].message).startswith("File 'test.asdf' was created with")
+
+        with pytest.raises(RuntimeError) as err:
+            af._check_extensions(tree, strict=True)
+        err.match("^File 'test.asdf' was created with")
+    else:
+        af._check_extensions(tree)
+
+
 @pytest.mark.xfail(reason='Setting auto_inline option modifies AsdfFile state')
 def test_auto_inline(tmpdir):
 
