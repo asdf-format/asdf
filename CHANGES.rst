@@ -3,6 +3,12 @@
 
 - Define the ``in`` operator for top-level ``AsdfFile`` objects. [#623]
 
+2.3.2 (unreleased)
+------------------
+
+- Fix bug that occurs when comparing installed extension version with that
+  found in file. [#641]
+
 2.3.1 (2018-12-20)
 ------------------
 
