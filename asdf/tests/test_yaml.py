@@ -186,6 +186,19 @@ def test_implicit_conversion_warning():
             assert len(w) == 0
 
 
+@pytest.mark.xfail(reason='pyyaml has a bug and does not support tuple keys')
+def test_python_tuple_key(tmpdir):
+    """
+    This tests whether tuple keys are round-tripped properly.
+
+    As of this writing, this does not work in pyyaml but does work in
+    ruamel.yaml. If/when we decide to switch to ruamel.yaml, this test should
+    pass.
+    """
+    tree = { (42, 1): 'foo' }
+    helpers.assert_roundtrip_tree(tree, tmpdir)
+
+
 def test_tags_removed_after_load(tmpdir):
     tree = {
         "foo": ["bar", (1, 2, None)]
