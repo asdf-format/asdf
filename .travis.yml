@@ -23,6 +23,10 @@ env:
         # to repeat them for all configurations.
         - TOX_CMD='tox --'
         - TOX_ARGS='--remote-data'
+        # This is the Python version that will be used by the parent conda
+        # environment, but it will not be used in the test environments
+        # themselves.
+        - PYTHON_VERSION=3.6
 
     matrix:
         # Make sure that installation does not fail
