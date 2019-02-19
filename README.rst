@@ -11,7 +11,7 @@
    <p align="center">
      <a href="https://travis-ci.org/spacetelescope/asdf"><img src="https://travis-ci.org/spacetelescope/asdf.svg?branch=master" alt="Build Status"></a>
      <a href="http://asdf.readthedocs.io/en/latest/?badge=latest"><img src="https://readthedocs.org/projects/asdf/badge/?version=latest" alt="Documentation Status"></a>
-     <a href="https://coveralls.io/github/spacetelescope/asdf?branch=master"><img src="https://coveralls.io/repos/github/spacetelescope/asdf/badge.svg?branch=master" alt="Coverage Status"></a>
+     <a href="https://codecov.io/gh/spacetelescope/asdf"><img src="https://codecov.io/gh/spacetelescope/asdf/branch/master/graph/badge.svg alt="Coverage Status"></a>
      <img src="https://img.shields.io/pypi/l/asdf.svg" alt="license">
      <a href="http://www.stsci.edu"><img src="https://img.shields.io/badge/powered%20by-STScI-blue.svg?colorA=707170&colorB=3e8ddd&style=flat" alt="stsci"></a>
      <a href="http://www.astropy.org/"><img src="http://img.shields.io/badge/powered%20by-AstroPy-orange.svg?style=flat" alt="astropy"></a>
