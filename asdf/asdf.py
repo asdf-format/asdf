@@ -10,7 +10,7 @@ import copy
 import datetime
 import warnings
 import importlib
-from distutils.version import LooseVersion
+from pkg_resources import parse_version
 
 import numpy as np
 from jsonschema import ValidationError
@@ -188,7 +188,7 @@ class AsdfFile(versioning.VersionedMixin):
                 if not installed[1]:
                     continue
                 # Compare version in file metadata with installed version
-                if LooseVersion(installed[1]) < LooseVersion(extension.software['version']):
+                if parse_version(installed[1]) < parse_version(extension.software['version']):
                     msg = "File {}was created with extension '{}' from " \
                     "package {}-{}, but older version {}-{} is installed"
                     fmt_msg = msg.format(
