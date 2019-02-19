@@ -42,7 +42,7 @@ matrix:
     include:
 
         # Do a coverage test
-        - env: TOXENV='coverage' TOX_ARGS=''
+        #- env: TOXENV='coverage' TOX_ARGS=''
 
         # Perform a sanity check of packaging using twine
         - env: TOXENV='twine' TOX_ARGS=''
