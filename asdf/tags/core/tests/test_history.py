@@ -46,7 +46,7 @@ def test_history():
     assert 'history' not in ff.tree
     ff.add_history_entry('This happened',
                          {'name': 'my_tool',
-                          'homepage': 'http://nowhere.com',
+                          'homepage': 'http://nowhere.org',
                           'author': 'John Doe',
                           'version': '2.0'})
     assert len(ff.tree['history']['entries']) == 1
@@ -69,7 +69,7 @@ def test_history_to_file(tmpdir):
     with asdf.AsdfFile() as ff:
         ff.add_history_entry('This happened',
                              {'name': 'my_tool',
-                              'homepage': 'http://nowhere.com',
+                              'homepage': 'http://nowhere.org',
                               'author': 'John Doe',
                               'version': '2.0'})
         ff.write_to(tmpfile)
