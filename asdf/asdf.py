@@ -693,6 +693,7 @@ class AsdfFile(versioning.VersionedMixin):
                             extensions=self._extensions,
                             strict_extension_check=strict_extension_check,
                             ignore_missing_extensions=ignore_missing_extensions,
+                            ignore_unrecognized_tag=self._ignore_unrecognized_tag,
                             _extension_metadata=self._extension_metadata)
             except ValueError:
                 raise ValueError(
