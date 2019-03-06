@@ -582,7 +582,8 @@ def check_schema(schema):
         'default': validate_default
     })
 
-    meta_schema = load_schema(YAML_SCHEMA_METASCHEMA_ID, mresolver.default_resolver)
+    meta_schema_id = schema.get('$schema', YAML_SCHEMA_METASCHEMA_ID)
+    meta_schema = load_schema(meta_schema_id, mresolver.default_resolver)
 
     resolver = _make_resolver(mresolver.default_resolver)
 
