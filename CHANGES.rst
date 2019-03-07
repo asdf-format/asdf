@@ -8,6 +8,9 @@
 
 - Pass ``ignore_unrecognized_tag`` setting through to ASDF-in-FITS. [#650]
 
+- Use ``$schema`` keyword if available to determine meta-schema to use when
+  testing whether schemas themselves are valid. [#654]
+
 2.3.2 (2019-02-19)
 ------------------
 
