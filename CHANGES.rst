@@ -11,6 +11,9 @@
 - Use ``$schema`` keyword if available to determine meta-schema to use when
   testing whether schemas themselves are valid. [#654]
 
+- Take into account resolvers from installed extensions when loading schemas
+  for validation. [#655]
+
 2.3.2 (2019-02-19)
 ------------------
 

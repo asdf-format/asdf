@@ -19,9 +19,9 @@ import yaml
 from . import constants
 from . import generic_io
 from . import reference
-from . import resolver as mresolver
 from . import treeutil
 from . import util
+from .extension import default_extensions
 
 
 YAML_SCHEMA_METASCHEMA_ID = 'http://stsci.edu/schemas/yaml-schema/draft-01'
@@ -34,6 +34,15 @@ else:  # pragma: no cover
 
 
 __all__ = ['validate', 'fill_defaults', 'remove_defaults', 'check_schema']
+
+
+def default_ext_resolver(uri):
+    """
+    Resolver that uses tag/url mappings from all installed extensions
+    """
+    tag_mapping = default_extensions.extension_list.tag_mapping
+    url_mapping = default_extensions.extension_list.url_mapping
+    return url_mapping(tag_mapping(uri))
 
 
 PYTHON_TYPE_TO_YAML_TAG = {
@@ -191,7 +200,7 @@ REMOVE_DEFAULTS['properties'] = validate_remove_default
 
 @lru_cache()
 def _create_validator(validators=YAML_VALIDATORS):
-    meta_schema = load_schema(YAML_SCHEMA_METASCHEMA_ID, mresolver.default_resolver)
+    meta_schema = load_schema(YAML_SCHEMA_METASCHEMA_ID, default_ext_resolver)
     base_cls = mvalidators.create(meta_schema=meta_schema, validators=validators)
 
     class ASDFValidator(base_cls):
@@ -359,7 +368,7 @@ def load_schema(url, resolver=None, resolve_references=False,
         control local reference resolution separately.
     """
     if resolver is None:
-        resolver = mresolver.default_resolver
+        resolver = default_ext_resolver
     loader = _make_schema_loader(resolver)
     if url in HARDCODED_SCHEMA:
         schema = HARDCODED_SCHEMA[url]()
@@ -583,9 +592,9 @@ def check_schema(schema):
     })
 
     meta_schema_id = schema.get('$schema', YAML_SCHEMA_METASCHEMA_ID)
-    meta_schema = load_schema(meta_schema_id, mresolver.default_resolver)
+    meta_schema = load_schema(meta_schema_id, default_ext_resolver)
 
-    resolver = _make_resolver(mresolver.default_resolver)
+    resolver = _make_resolver(default_ext_resolver)
 
     cls = mvalidators.create(meta_schema=meta_schema,
                              validators=VALIDATORS)
