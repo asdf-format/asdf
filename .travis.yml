@@ -94,7 +94,7 @@ install:
     - git clone git://github.com/astropy/ci-helpers.git
     - source ci-helpers/travis/setup_conda.sh
     - conda install openssl
-    - pip install tox tox-conda
+    - pip install tox
 
 script:
    - $TOX_CMD $TOX_ARGS
