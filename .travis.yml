@@ -55,7 +55,7 @@ matrix:
         - env: TOXENV='style' TOX_ARGS=''
 
         # try older numpy versions
-        - env: TOXENV='py35-numpy11'
+        - env: PYTHON_VERSION=3.5 TOXENV='py35-numpy11'
         - env: TOXENV='py36-numpy12'
 
         # also test against development versions of Astropy and GWCS
@@ -72,7 +72,7 @@ matrix:
           env: TOXENV='py37-stable' TOX_ARGS='--remote-data'
 
         - os: windows
-          env: TOXENV='py35-stable'
+          env: PYTHON_VERSION=3.5 TOXENV='py35-stable'
 
         - os: windows
           env: TOXENV='py36-stable' TOX_ARGS='--remote-data'
