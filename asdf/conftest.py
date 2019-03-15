@@ -4,8 +4,6 @@
 # by importing them here in conftest.py they are discoverable by py.test
 # no matter how it is invoked within the source tree.
 
-from astropy.tests.plugins.display import PYTEST_HEADER_MODULES, TESTED_VERSIONS
-
 import os
 
 import pytest
@@ -16,21 +14,6 @@ from .extern.RangeHTTPServer import RangeHTTPRequestHandler
 # using Astropy's
 from . import version
 from .tests.httpserver import HTTPServer, RangeHTTPServer
-
-packagename = os.path.basename(os.path.dirname(__file__))
-TESTED_VERSIONS[packagename] = version.version
-
-
-try:
-    PYTEST_HEADER_MODULES['Astropy'] = 'astropy'
-    PYTEST_HEADER_MODULES['jsonschema'] = 'jsonschema'
-    PYTEST_HEADER_MODULES['pyyaml'] = 'yaml'
-    PYTEST_HEADER_MODULES['six'] = 'six'
-    del PYTEST_HEADER_MODULES['h5py']
-    del PYTEST_HEADER_MODULES['Matplotlib']
-    del PYTEST_HEADER_MODULES['Scipy']
-except (NameError, KeyError):
-    pass
 
 
 @pytest.fixture()
