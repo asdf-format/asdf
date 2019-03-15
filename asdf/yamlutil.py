@@ -74,6 +74,11 @@ class AsdfDumper(_yaml_base_dumper):
     A specialized YAML dumper that understands "tagged basic Python
     data types" as implemented in the `tagged` module.
     """
+
+    def __init__(self, *args, **kwargs):
+        kwargs['default_flow_style'] = None
+        super().__init__(*args, **kwargs)
+
     def represent_data(self, data):
         node = super(AsdfDumper, self).represent_data(data)
 
