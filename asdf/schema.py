@@ -286,7 +286,7 @@ def _load_schema(url):
 
 def _make_schema_loader(resolver):
     def load_schema(url):
-        url = resolver(url)
+        url = resolver(str(url))
         return _load_schema(url)
     return load_schema
 
