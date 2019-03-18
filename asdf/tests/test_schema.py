@@ -699,6 +699,30 @@ def test_custom_validation_good(tmpdir):
         pass
 
 
+def test_custom_validation_pathlib(tmpdir):
+    """
+    Make sure custom schema paths can be pathlib.Path objects
+
+    See https://github.com/spacetelescope/asdf/issues/653 for discussion.
+    """
+    from pathlib import Path
+
+    custom_schema_path = Path(helpers.get_test_data_path('custom_schema.yaml'))
+    asdf_file = os.path.join(str(tmpdir), 'out.asdf')
+
+    # This tree conforms to the custom schema
+    tree = {
+        'foo': {'x': 42, 'y': 10},
+        'bar': {'a': 'hello', 'b': 'banjo'}
+    }
+
+    with asdf.AsdfFile(tree, custom_schema=custom_schema_path) as ff:
+        ff.write_to(asdf_file)
+
+    with asdf.open(asdf_file, custom_schema=custom_schema_path) as ff:
+        pass
+
+
 def test_custom_validation_with_definitions_good(tmpdir):
     custom_schema_path = helpers.get_test_data_path('custom_schema_definitions.yaml')
     asdf_file = os.path.join(str(tmpdir), 'out.asdf')

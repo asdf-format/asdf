@@ -9,6 +9,10 @@
 - Take into account resolvers from installed extensions when loading schemas
   for validation. [#655]
 
+- Fix compatibility issue with new release of ``pyyaml`` (version 5.1). [#662]
+
+- Allow use of ``pathlib.Path`` objects for ``custom_schema`` option. [#663]
+
 2.3.2 (2019-02-19)
 ------------------
 
