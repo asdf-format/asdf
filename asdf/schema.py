@@ -102,6 +102,14 @@ def validate_propertyOrder(validator, order, instance, schema):
     instance.property_order = order
 
 
+def validate_additionalProperties(validator, additionalProperties, instance, schema):
+
+    if isinstance(instance, dict):
+        instance.pop('_description', None)
+    return mvalidators.Draft4Validator.VALIDATORS['additionalProperties'](
+        validator, additionalProperties, instance, schema)
+
+
 def validate_flowStyle(validator, flow_style, instance, schema):
     """
     Sets a flag on the `tagged.TaggedList` or `tagged.TaggedDict`
@@ -152,6 +160,7 @@ YAML_VALIDATORS = util.HashableDict(
 YAML_VALIDATORS.update({
     'tag': validate_tag,
     'propertyOrder': validate_propertyOrder,
+    'additionalProperties': validate_additionalProperties,
     'flowStyle': validate_flowStyle,
     'style': validate_style,
     'type': validate_type

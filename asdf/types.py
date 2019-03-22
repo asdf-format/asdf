@@ -303,6 +303,15 @@ class ExtensionType:
             An instance of `asdf.tagged.Tagged`.
         """
         obj = cls.to_tree(node, ctx)
+        if isinstance(obj, dict):
+            from .schema import _load_schema
+            try:
+                schema, _ = _load_schema(ctx.resolver(cls.yaml_tag))
+            except (ValueError, FileNotFoundError):
+                pass
+            else:
+                if 'description' in schema:
+                    obj['_description'] = schema['description']
         return tagged.tag_object(cls.yaml_tag, obj, ctx=ctx)
 
     @classmethod
