@@ -11,6 +11,7 @@ recursive-include docs *
 recursive-include licenses *
 recursive-include cextern *
 recursive-include scripts *
+recursive-include asdf-standard/schemas *.yaml
 
 # Python version specific compatibility packages, normally excluded by default
 # depending on the Python version doing the building
