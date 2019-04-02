@@ -44,6 +44,7 @@ sdist
 develop-eggs
 .installed.cfg
 distribute-*.tar.gz
+pip-wheel-metadata
 
 # Other
 .*.swp
