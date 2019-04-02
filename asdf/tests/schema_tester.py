@@ -81,7 +81,7 @@ class AsdfSchemaFile(pytest.File):
     def find_examples_in_schema(self):
         """Returns generator for all examples in schema at given path"""
         with open(str(self.fspath), 'rb') as fd:
-            schema_tree = yaml.load(fd)
+            schema_tree = yaml.safe_load(fd)
 
         for node in treeutil.iter_tree(schema_tree):
             if (isinstance(node, dict) and

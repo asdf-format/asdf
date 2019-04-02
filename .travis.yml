@@ -42,7 +42,7 @@ matrix:
     include:
 
         # Do a coverage test
-        #- env: TOXENV='coverage' TOX_ARGS=''
+        - env: TOXENV='coverage' TOX_ARGS=''
 
         # Perform a sanity check of packaging using twine
         - env: TOXENV='twine' TOX_ARGS=''
@@ -58,11 +58,17 @@ matrix:
         - env: TOXENV='py35-numpy11'
         - env: TOXENV='py36-numpy12'
 
+        # test against oldest compatible versions of all dependencies
+        - env: TOXENV='py35-legacy'
+
         # also test against development versions of Astropy and GWCS
         - env: TOXENV='py37-astrodev'
 
         # Test against development version of numpy (this job can fail)
         - env: TOXENV='py37-numpydev'
+
+        # Test against prerelease versions of all dependencies
+        - env: TOXENV='prerelease'
 
         # Try a run on OSX
         - os: osx
@@ -87,14 +93,14 @@ matrix:
         # Py37 on Windows at the moment
         - os: windows
           env: TOXENV='py37-stable' TOX_ARGS='--remote-data'
-
         - env: TOXENV='py37-numpydev'
+        - env: TOXENV='prerelease'
 
 install:
     - git clone git://github.com/astropy/ci-helpers.git
     - source ci-helpers/travis/setup_conda.sh
     - conda install openssl
-    - pip install tox tox-conda
+    - pip install tox tox-conda>=0.2
 
 script:
    - $TOX_CMD $TOX_ARGS

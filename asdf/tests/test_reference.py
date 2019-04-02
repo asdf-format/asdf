@@ -145,6 +145,7 @@ def test_external_reference(tmpdir):
         assert_array_equal(ff.tree['internal'], exttree['cool_stuff']['a'])
 
 
+@pytest.mark.remote_data
 def test_external_reference_invalid(tmpdir):
     tree = {
         'foo': {
@@ -156,7 +157,7 @@ def test_external_reference_invalid(tmpdir):
     with pytest.raises(ValueError):
         ff.resolve_references()
 
-    ff = asdf.AsdfFile(tree, uri="http://nowhere.com/")
+    ff = asdf.AsdfFile(tree, uri="http://httpstat.us/404")
     with pytest.raises(IOError):
         ff.resolve_references()
 
