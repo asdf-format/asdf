@@ -1,4 +1,4 @@
-2.3.3 (unreleased)
+2.3.3 (2019-04-02)
 ------------------
 
 - Pass ``ignore_unrecognized_tag`` setting through to ASDF-in-FITS. [#650]
