@@ -169,7 +169,7 @@ def test_table_inline(tmpdir):
     tree = {'table_data': table}
 
     def check_raw_yaml(content):
-        tree = yaml.load(
+        tree = yaml.safe_load(
             re.sub(br'!core/\S+', b'', content))
 
         assert tree['table_data'] == {
@@ -225,7 +225,7 @@ def test_table(tmpdir):
     tree = {'table_data': table}
 
     def check_raw_yaml(content):
-        tree = yaml.load(
+        tree = yaml.safe_load(
             re.sub(br'!core/\S+', b'', content))
 
         assert tree['table_data'] == {
@@ -251,7 +251,7 @@ def test_table_nested_fields(tmpdir):
     tree = {'table_data': table}
 
     def check_raw_yaml(content):
-        tree = yaml.load(
+        tree = yaml.safe_load(
             re.sub(br'!core/\S+', b'', content))
 
         assert tree['table_data'] == {
