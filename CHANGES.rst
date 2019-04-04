@@ -3,6 +3,8 @@
 
 - Define the ``in`` operator for top-level ``AsdfFile`` objects. [#623]
 
+- Overhaul packaging infrastructure. Remove use of ``astropy_helpers``. [#670]
+
 2.3.3 (2019-04-02)
 ------------------
 
