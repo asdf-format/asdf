@@ -263,12 +263,12 @@ To install:
 ::
 
     $ cd asdf
-    $ python3 setup.py install
+    $ pip install .
 
 To install in `development
 mode <https://packaging.python.org/tutorials/distributing-packages/#working-in-development-mode>`__::
 
-    $ python3 setup.py develop
+    $ pip install -e .
 
 .. note::
 
@@ -287,11 +287,17 @@ Testing
 
 .. _begin-testing-text
 
+To install the test dependencies from a source checkout of the repository:
+
+::
+
+   $ pip install -e .[tests]
+
 To run the unit tests from a source checkout of the repository:
 
 ::
 
-    $ python3 setup.py test
+    $ pytest
 
 It is also possible to run the test suite from an installed version of
 the package. In a Python interpreter:
@@ -303,6 +309,27 @@ the package. In a Python interpreter:
 
 Please note that the `astropy <https://github.com/astropy/astropy>`__
 package must be installed to run the tests.
+
+It is also possible to run the tests using `tox
+<https://tox.readthedocs.io/en/latest/>`__. It is first necessary to install
+``tox`` and `tox-conda <https://github.com/tox-dev/tox-conda>`__:
+
+::
+
+   $ pip install tox tox-conda
+
+To list all available environments:
+
+::
+
+   $ tox -va
+
+To run a specific environment:
+
+::
+
+   $ tox -e <envname>
+
 
 .. _end-testing-text
 
