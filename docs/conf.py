@@ -147,5 +147,6 @@ latex_documents = [('index', project + '.tex', project + u' Documentation',
 man_pages = [('index', project.lower(), project + u' Documentation',
               [author], 1)]
 
-sys.path.insert(0, os.path.join(os.path.dirname('__file__'), 'sphinxext'))
+sys.path.insert(0, os.path.join(os.path.abspath(os.path.dirname('__file__')),
+                                'sphinxext'))
 extensions += ['example']
