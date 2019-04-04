@@ -6,9 +6,10 @@ import os
 
 import numpy as np
 
-from ... import AsdfFile
-from .. import main
-from ...tests.helpers import get_file_sizes
+import asdf
+from asdf import AsdfFile
+from asdf.commands import main
+from ...tests.helpers import get_file_sizes, assert_tree_match
 
 
 def test_explode_then_implode(tmpdir):
@@ -46,10 +47,11 @@ def test_explode_then_implode(tmpdir):
     path = os.path.join(str(tmpdir), 'original_exploded.asdf')
     result = main.main_from_args(['implode', path])
 
-    files = get_file_sizes(str(tmpdir))
+    assert result == 0
 
-    assert 'original_exploded_all.asdf' in files
-    assert files['original_exploded_all.asdf'] == files['original.asdf']
+    with asdf.open(str(tmpdir.join('original_exploded_all.asdf'))) as af:
+        assert_tree_match(af.tree, tree)
+        assert len(af.blocks) == 2
 
 
 def test_file_not_found(tmpdir):
