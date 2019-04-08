@@ -18,7 +18,7 @@ from asdf import extension
 from asdf import treeutil
 from asdf import util
 from asdf import versioning
-from . import helpers, CustomTestType
+from .. import helpers, CustomTestType
 
 _ctx = AsdfFile()
 _resolver = _ctx.resolver
