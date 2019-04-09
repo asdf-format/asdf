@@ -67,6 +67,9 @@ def pytest_addoption(parser):
     parser.addini(
         "asdf_schema_tests_enabled",
         "Controls whether schema tests are enabled by default")
+    parser.addoption('--asdf-tests', action='store_true',
+        help='Enable ASDF schema tests')
+
 
 
 class AsdfSchemaFile(pytest.File):
@@ -192,7 +195,8 @@ class AsdfSchemaExampleItem(pytest.Item):
 
 
 def pytest_collect_file(path, parent):
-    if not parent.config.getini('asdf_schema_tests_enabled'):
+    if not (parent.config.getini('asdf_schema_tests_enabled') or
+            parent.config.getoption('asdf_tests')):
         return
 
     schema_roots = parent.config.getini('asdf_schema_root').split()
