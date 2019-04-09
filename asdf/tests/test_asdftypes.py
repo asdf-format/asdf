@@ -736,6 +736,50 @@ def test_subclass_decorator(tmpdir):
         assert af['coord'].y == subclass_coord.y
 
 
+def test_subclass_decorator_custom_attribute(tmpdir):
+
+    tmpfile = str(tmpdir.join('subclass.asdf'))
+
+    (FractionType, Fractional2dCoordType,
+        Fractional2dCoordExtension) = fractional2dcoordtype_factory()
+
+    extension = Fractional2dCoordExtension()
+
+    coord = Fractional2dCoord(Fraction(2, 3), Fraction(7, 9))
+    tree = dict(coord=coord)
+
+    # First make sure the base type is serialized properly
+    with asdf.AsdfFile(tree, extensions=extension) as af:
+        af.write_to(tmpfile)
+
+    with asdf.open(tmpfile, extensions=extension) as af:
+        assert isinstance(af['coord'], Fractional2dCoord)
+        assert af['coord'].x == coord.x
+        assert af['coord'].y == coord.y
+
+    # Now create a subclass
+    @Fractional2dCoordType.subclass(attribute='bizbaz')
+    class Subclass2dCoord(Fractional2dCoord):
+        pass
+
+    subclass_coord = Subclass2dCoord(Fraction(2, 3), Fraction(7, 9))
+    tree = dict(coord=subclass_coord)
+
+    with asdf.AsdfFile(tree, extensions=extension) as af:
+        af.write_to(tmpfile)
+
+    tmp = asdf.AsdfFile()
+    af_yaml = asdf.AsdfFile._open_asdf(tmp, tmpfile, _force_raw_types=True)
+    assert 'bizbaz' in af_yaml['coord']
+    assert 'Subclass2dCoord' in af_yaml['coord']['bizbaz']['name']
+    af_yaml.close()
+
+    with asdf.open(tmpfile, extensions=extension) as af:
+        assert isinstance(af['coord'], Subclass2dCoord)
+        assert af['coord'].x == subclass_coord.x
+        assert af['coord'].y == subclass_coord.y
+
+
 def test_subclass_decorator_attribute(tmpdir):
 
     tmpfile = str(tmpdir.join('subclass.asdf'))

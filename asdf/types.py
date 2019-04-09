@@ -314,12 +314,14 @@ class ExtensionType:
         yaml_tag = cls.yaml_tag
 
         node_cls = type(node)
+        cls_name = node_cls.__name__
 
         if node_cls.__name__ in cls._subclass_map and isinstance(obj, dict):
             from .tags.core import SubclassMetadata
             from .yamlutil import custom_tree_to_tagged_tree
-            obj['subclass'] = custom_tree_to_tagged_tree(
-                SubclassMetadata(name=str(node_cls.__name__)), ctx)
+            attribute = cls._subclass_map[cls_name][0]
+            subclass = SubclassMetadata(name=cls_name)
+            obj[attribute] = custom_tree_to_tagged_tree(subclass, ctx)
 
         if node_cls in cls._subclass_attr_map:
             if isinstance(obj, dict):
@@ -395,7 +397,7 @@ class ExtensionType:
                 if isinstance(v, SubclassMetadata):
                     tree.pop(k)
                     subclass_name = v['name']
-                    return cls._subclass_map[subclass_name](**tree.data)
+                    return cls._subclass_map[subclass_name][1](**tree.data)
 
         return cls.from_tree(tree.data, ctx)
 
@@ -423,12 +425,16 @@ class ExtensionType:
         return False
 
     @classmethod
-    def subclass(cls, subclass):
-        cls._subclass_map[subclass.__name__] = subclass
-        for name, member in inspect.getmembers(subclass):
-            if isinstance(member, AsdfSubclassProperty):
-                cls._subclass_attr_map[subclass].append((name, member))
-        return subclass
+    def subclass(cls, *args, attribute='subclass'):
+
+        def decorator(subclass):
+            cls._subclass_map[subclass.__name__] = (attribute, subclass)
+            for name, member in inspect.getmembers(subclass):
+                if isinstance(member, AsdfSubclassProperty):
+                    cls._subclass_attr_map[subclass].append((name, member))
+            return subclass
+
+        return decorator(args[0]) if args else decorator
 
     @classmethod
     def subclass_property(cls, attribute):
