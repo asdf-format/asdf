@@ -5,10 +5,14 @@
 
 - Overhaul packaging infrastructure. Remove use of ``astropy_helpers``. [#670]
 
+- Automatically register schema tester plugin. Do not enable schema tests by
+  default. Add configuration setting and command line option to enable schema
+  tests. [#676]
+
 2.3.4 (unreleased)
 ------------------
 
-- Fix bug in ``NDArrayType.__len__``.  It must be a method, not a 
+- Fix bug in ``NDArrayType.__len__``.  It must be a method, not a
   property. [#673]
 
 2.3.3 (2019-04-02)
