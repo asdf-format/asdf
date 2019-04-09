@@ -426,6 +426,36 @@ class ExtensionType:
 
     @classmethod
     def subclass(cls, *args, attribute='subclass'):
+        """
+        Decorator to enable serialization of a subclass of an existing type.
+
+        Use this method to decorate subclasses of custom types that are already
+        handled by an existing ASDF tag class. This enables subclasses of known
+        types to be properly serialized without having to write an entirely
+        separate tag class for the subclass.
+
+        This feature can only be used for tagged types where the underlying
+        YAML representation of the type is an object (i.e. a Python `dict`). It
+        will not work for nodes that are basic types.
+
+        The subclass metadata is stored in a new attribute of the YAML node. By
+        default the attribute name is "subclass", but it is customizable by
+        using the optional `attribute` keyword argument of the decorator.
+
+        The schema of the base custom type is used for validation. This feature
+        will not work if the base schema disallows additional attributes.
+
+        It is incumbent upon the user to avoid name conflicts with attributes
+        that already exist in the representation of the base custom class. For
+        example, a base class may use the attribute "subclass" for some other
+        purpose, in which case it would be necessary to provide a different
+        custom attribute name here.
+
+        Parameters
+        ----------
+        attribute : `str`
+            Custom attribute name used to store subclass metadata in this node.
+        """
 
         def decorator(subclass):
             cls._subclass_map[subclass.__name__] = (attribute, subclass)
@@ -438,6 +468,24 @@ class ExtensionType:
 
     @classmethod
     def subclass_property(cls, attribute):
+        """
+        Decorator to enable serialization of custom subclass attributes.
+
+        Use this decorator to serialize attributes that are specific to a
+        subclass of a custom type that is already handled by an existing ASDF
+        tag class. This decorator will only work on subclasses that have been
+        decorated with the `~asdf.AsdfTypes.subclass` decorator.
+
+        Methods that are decorated in this way are treated as properties (see
+        `property`). The name of the property **must** correspond to a keyword
+        argument of the subclass constructor.
+
+        The property will be serialized as a YAML object attribute with the
+        same name. Users are responsible for ensuring that any and all
+        additional subclass properties conform to the schema of the base custom
+        type and do not conflict with existing attributes.
+        """
+
         return AsdfSubclassProperty(attribute)
 
 
