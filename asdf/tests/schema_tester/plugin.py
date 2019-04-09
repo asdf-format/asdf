@@ -64,6 +64,9 @@ def pytest_addoption(parser):
     parser.addini(
         "asdf_schema_skip_examples",
         "Base names of schemas whose examples should not be tested")
+    parser.addini(
+        "asdf_schema_tests_enabled",
+        "Controls whether schema tests are enabled by default")
 
 
 class AsdfSchemaFile(pytest.File):
@@ -189,6 +192,9 @@ class AsdfSchemaExampleItem(pytest.Item):
 
 
 def pytest_collect_file(path, parent):
+    if not parent.config.getini('asdf_schema_tests_enabled'):
+        return
+
     schema_roots = parent.config.getini('asdf_schema_root').split()
     if not schema_roots:
         return
