@@ -316,7 +316,10 @@ class ExtensionType:
         node_cls = type(node)
 
         if node_cls.__name__ in cls._subclass_map and isinstance(obj, dict):
-            obj['subclass'] = node_cls.__name__
+            from .tags.core import SubclassMetadata
+            from .yamlutil import custom_tree_to_tagged_tree
+            obj['subclass'] = custom_tree_to_tagged_tree(
+                SubclassMetadata(name=str(node_cls.__name__)), ctx)
 
         if node_cls in cls._subclass_attr_map:
             if isinstance(obj, dict):
@@ -385,9 +388,15 @@ class ExtensionType:
         -------
             An instance of the custom type represented by this extension class.
         """
-        if isinstance(tree, dict) and 'subclass' in tree:
-            subcls_name = tree.pop('subclass')
-            return cls._subclass_map[subcls_name](**tree.data)
+        from .tags.core import SubclassMetadata
+
+        if isinstance(tree, dict):
+            for k, v in tree.items():
+                if isinstance(v, SubclassMetadata):
+                    tree.pop(k)
+                    subclass_name = v['name']
+                    return cls._subclass_map[subclass_name](**tree.data)
+
         return cls.from_tree(tree.data, ctx)
 
     @classmethod
@@ -442,7 +451,7 @@ class CustomType(ExtensionType):
 
     # These attributes are duplicated here with docstrings since a bug in
     # sphinx prevents the docstrings of class attributes from being inherited
-    # properly (see https://github.com/sphinx-doc/sphinx/issues/741. The
+    # properly (see https://github.com/sphinx-doc/sphinx/issues/741). The
     # docstrings are not included anywhere else in the class hierarchy since
     # this class is the only one exposed in the public API.
     name = None
