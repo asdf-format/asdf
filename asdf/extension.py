@@ -244,4 +244,10 @@ class _DefaultExtensions:
         self._extension_list = None
         self._package_metadata = {}
 
+    def resolver(self, uri):
+        tag_mapping = self.extension_list.tag_mapping
+        url_mapping = self.extension_list.url_mapping
+        return url_mapping(tag_mapping(uri))
+
+
 default_extensions = _DefaultExtensions()

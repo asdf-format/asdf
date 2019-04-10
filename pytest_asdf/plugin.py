@@ -61,12 +61,13 @@ class AsdfSchemaItem(pytest.Item):
         self.schema_path = schema_path
 
     def runtest(self):
-        from asdf import AsdfFile, schema
-        ctx = AsdfFile()
+        from asdf import schema
+        from asdf.extension import default_extensions
 
         # Make sure that each schema itself is valid.
         schema_tree = schema.load_schema(
-            self.schema_path, resolver=ctx.resolver, resolve_references=True)
+            self.schema_path, resolver=default_extensions.resolver,
+            resolve_references=True)
         schema.check_schema(schema_tree)
 
 
