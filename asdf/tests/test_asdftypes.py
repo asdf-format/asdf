@@ -5,30 +5,39 @@
 import io
 import os
 import sys
+import copy
+from fractions import Fraction
 
 import pytest
 
 import asdf
 from asdf import types
 from asdf import extension
+from asdf import yamlutil
 from asdf import util
 from asdf import versioning
 
-from . import helpers, CustomTestType
+from . import helpers, CustomTestType, CustomExtension
 
 
 TEST_DATA_PATH = str(helpers.get_test_data_path(''))
 
 
-def test_custom_tag():
-    import fractions
+class Fractional2dCoord:
+    def __init__(self, x, y):
+        self.x = x
+        self.y = y
+
+
+def fractiontype_factory():
 
     class FractionType(types.CustomType):
         name = 'fraction'
         organization = 'nowhere.org'
         version = (1, 0, 0)
         standard = 'custom'
-        types = [fractions.Fraction]
+        types = [Fraction]
+        handle_dynamic_subclasses = True
 
         @classmethod
         def to_tree(cls, node, ctx):
@@ -36,23 +45,51 @@ def test_custom_tag():
 
         @classmethod
         def from_tree(cls, tree, ctx):
-            return fractions.Fraction(tree[0], tree[1])
+            return Fraction(tree[0], tree[1])
 
-    class FractionExtension:
+    return FractionType
+
+
+def fractional2dcoordtype_factory():
+
+    FractionType = fractiontype_factory()
+
+    class Fractional2dCoordType(types.CustomType):
+        name = 'fractional_2d_coord'
+        organization = 'nowhere.org'
+        standard = 'custom'
+        version = (1, 0, 0)
+        types = [Fractional2dCoord]
+
+        @classmethod
+        def to_tree(cls, node, ctx):
+            x = yamlutil.custom_tree_to_tagged_tree(node.x, ctx)
+            y = yamlutil.custom_tree_to_tagged_tree(node.y, ctx)
+            return dict(x=x, y=y)
+
+        @classmethod
+        def from_tree(cls, tree, ctx):
+            x = yamlutil.tagged_tree_to_custom_tree(tree['x'], ctx)
+            y = yamlutil.tagged_tree_to_custom_tree(tree['y'], ctx)
+            return Fractional2dCoord(x, y)
+
+
+    class Fractional2dCoordExtension(CustomExtension):
+        @property
+        def types(self):
+            return [FractionType, Fractional2dCoordType]
+
+    return FractionType, Fractional2dCoordType, Fractional2dCoordExtension
+
+
+def test_custom_tag():
+
+    FractionType = fractiontype_factory()
+
+    class FractionExtension(CustomExtension):
         @property
         def types(self):
             return [FractionType]
-
-        @property
-        def tag_mapping(self):
-            return [('tag:nowhere.org:custom',
-                     'http://nowhere.org/schemas/custom{tag_suffix}')]
-
-        @property
-        def url_mapping(self):
-            return [('http://nowhere.org/schemas/custom/',
-                     util.filepath_to_url(TEST_DATA_PATH) +
-                     '/{url_suffix}.yaml')]
 
     class FractionCallable(FractionExtension):
         @property
@@ -72,14 +109,14 @@ b: !core/complex-1.0.0
 
     buff = helpers.yaml_to_asdf(yaml)
     with asdf.open(buff, extensions=FractionExtension()) as ff:
-        assert ff.tree['a'] == fractions.Fraction(2, 3)
+        assert ff.tree['a'] == Fraction(2, 3)
 
         buff = io.BytesIO()
         ff.write_to(buff)
 
     buff = helpers.yaml_to_asdf(yaml)
     with asdf.open(buff, extensions=FractionCallable()) as ff:
-        assert ff.tree['a'] == fractions.Fraction(2, 3)
+        assert ff.tree['a'] == Fraction(2, 3)
 
         buff = io.BytesIO()
         ff.write_to(buff)
@@ -175,21 +212,10 @@ def test_version_mismatch_with_supported_versions():
         standard = 'custom'
         types = [CustomFlow]
 
-    class CustomFlowExtension:
+    class CustomFlowExtension(CustomExtension):
         @property
         def types(self):
             return [CustomFlowType]
-
-        @property
-        def tag_mapping(self):
-            return [('tag:nowhere.org:custom',
-                     'http://nowhere.org/schemas/custom{tag_suffix}')]
-
-        @property
-        def url_mapping(self):
-            return [('http://nowhere.org/schemas/custom/',
-                     util.filepath_to_url(TEST_DATA_PATH) +
-                     '/{url_suffix}.yaml')]
 
     yaml = """
 flow_thing:
@@ -391,21 +417,10 @@ def test_newer_tag():
         def to_tree(cls, data, ctx):
             tree = dict(c=data.c, d=data.d)
 
-    class CustomFlowExtension:
+    class CustomFlowExtension(CustomExtension):
         @property
         def types(self):
             return [CustomFlowType]
-
-        @property
-        def tag_mapping(self):
-            return [('tag:nowhere.org:custom',
-                     'http://nowhere.org/schemas/custom{tag_suffix}')]
-
-        @property
-        def url_mapping(self):
-            return [('http://nowhere.org/schemas/custom/',
-                     util.filepath_to_url(TEST_DATA_PATH) +
-                     '/{url_suffix}.yaml')]
 
     new_yaml = """
 flow_thing:
@@ -518,21 +533,10 @@ def test_supported_versions():
             else:
                 tree = dict(c=data.c, d=data.d)
 
-    class CustomFlowExtension:
+    class CustomFlowExtension(CustomExtension):
         @property
         def types(self):
             return [CustomFlowType]
-
-        @property
-        def tag_mapping(self):
-            return [('tag:nowhere.org:custom',
-                     'http://nowhere.org/schemas/custom{tag_suffix}')]
-
-        @property
-        def url_mapping(self):
-            return [('http://nowhere.org/schemas/custom/',
-                     util.filepath_to_url(TEST_DATA_PATH) +
-                     '/{url_suffix}.yaml')]
 
     new_yaml = """
 flow_thing:
@@ -566,21 +570,10 @@ def test_unsupported_version_warning():
         standard = 'custom'
         types = [CustomFlow]
 
-    class CustomFlowExtension:
+    class CustomFlowExtension(CustomExtension):
         @property
         def types(self):
             return [CustomFlowType]
-
-        @property
-        def tag_mapping(self):
-            return [('tag:nowhere.org:custom',
-                     'http://nowhere.org/schemas/custom{tag_suffix}')]
-
-        @property
-        def url_mapping(self):
-            return [('http://nowhere.org/schemas/custom/',
-                     util.filepath_to_url(TEST_DATA_PATH) +
-                     '/{url_suffix}.yaml')]
 
     yaml = """
 flow_thing:
@@ -703,3 +696,157 @@ def test_tag_without_schema(tmpdir):
         # There is only one validation pass when writing.
         assert len(w) == 1, helpers.display_warnings(w)
         assert str(w[0].message).startswith('Unable to locate schema file')
+
+
+def test_subclass_decorator(tmpdir):
+
+    tmpfile = str(tmpdir.join('subclass.asdf'))
+
+    (FractionType, Fractional2dCoordType,
+        Fractional2dCoordExtension) = fractional2dcoordtype_factory()
+
+    extension = Fractional2dCoordExtension()
+
+    coord = Fractional2dCoord(Fraction(2, 3), Fraction(7, 9))
+    tree = dict(coord=coord)
+
+    # First make sure the base type is serialized properly
+    with asdf.AsdfFile(tree, extensions=extension) as af:
+        af.write_to(tmpfile)
+
+    with asdf.open(tmpfile, extensions=extension) as af:
+        assert isinstance(af['coord'], Fractional2dCoord)
+        assert af['coord'].x == coord.x
+        assert af['coord'].y == coord.y
+
+    # Now create a subclass
+    @Fractional2dCoordType.subclass
+    class Subclass2dCoord(Fractional2dCoord):
+        pass
+
+    subclass_coord = Subclass2dCoord(Fraction(2, 3), Fraction(7, 9))
+    tree = dict(coord=subclass_coord)
+
+    with asdf.AsdfFile(tree, extensions=extension) as af:
+        af.write_to(tmpfile)
+
+    with asdf.open(tmpfile, extensions=extension) as af:
+        assert isinstance(af['coord'], Subclass2dCoord)
+        assert af['coord'].x == subclass_coord.x
+        assert af['coord'].y == subclass_coord.y
+
+
+def test_subclass_decorator_custom_attribute(tmpdir):
+
+    tmpfile = str(tmpdir.join('subclass.asdf'))
+
+    (FractionType, Fractional2dCoordType,
+        Fractional2dCoordExtension) = fractional2dcoordtype_factory()
+
+    extension = Fractional2dCoordExtension()
+
+    coord = Fractional2dCoord(Fraction(2, 3), Fraction(7, 9))
+    tree = dict(coord=coord)
+
+    # First make sure the base type is serialized properly
+    with asdf.AsdfFile(tree, extensions=extension) as af:
+        af.write_to(tmpfile)
+
+    with asdf.open(tmpfile, extensions=extension) as af:
+        assert isinstance(af['coord'], Fractional2dCoord)
+        assert af['coord'].x == coord.x
+        assert af['coord'].y == coord.y
+
+    # Now create a subclass
+    @Fractional2dCoordType.subclass(attribute='bizbaz')
+    class Subclass2dCoord(Fractional2dCoord):
+        pass
+
+    subclass_coord = Subclass2dCoord(Fraction(2, 3), Fraction(7, 9))
+    tree = dict(coord=subclass_coord)
+
+    with asdf.AsdfFile(tree, extensions=extension) as af:
+        af.write_to(tmpfile)
+
+    tmp = asdf.AsdfFile()
+    af_yaml = asdf.AsdfFile._open_asdf(tmp, tmpfile, _force_raw_types=True)
+    assert 'bizbaz' in af_yaml['coord']
+    assert 'Subclass2dCoord' in af_yaml['coord']['bizbaz']['name']
+    af_yaml.close()
+
+    with asdf.open(tmpfile, extensions=extension) as af:
+        assert isinstance(af['coord'], Subclass2dCoord)
+        assert af['coord'].x == subclass_coord.x
+        assert af['coord'].y == subclass_coord.y
+
+
+def test_subclass_decorator_attribute(tmpdir):
+
+    tmpfile = str(tmpdir.join('subclass.asdf'))
+
+    (FractionType, Fractional2dCoordType,
+        Fractional2dCoordExtension) = fractional2dcoordtype_factory()
+
+    extension = Fractional2dCoordExtension()
+
+    @Fractional2dCoordType.subclass
+    class Subclass2dCoord(Fractional2dCoord):
+        def __init__(self, *args, custom=None, other=None, **kwargs):
+            super().__init__(*args, **kwargs)
+            self._custom = custom
+            self._other = other
+
+        @Fractional2dCoordType.subclass_property
+        def custom(self):
+            return self._custom
+
+        @Fractional2dCoordType.subclass_property
+        def other(self):
+            return self._other
+
+    subclass_coord = Subclass2dCoord(Fraction(2, 3), Fraction(7, 9),
+                                     custom='testing', other=[1,2,3,4])
+    tree = dict(coord=subclass_coord)
+
+    with asdf.AsdfFile(tree, extensions=extension) as af:
+        af.write_to(tmpfile)
+
+    with asdf.open(tmpfile, extensions=extension) as af:
+        assert isinstance(af['coord'], Subclass2dCoord)
+        assert af['coord'].x == subclass_coord.x
+        assert af['coord'].y == subclass_coord.y
+        assert af['coord'].custom == 'testing'
+        assert af['coord'].other == [1,2,3,4]
+
+
+def test_subclass_decorator_warning(tmpdir):
+
+    tmpfile = str(tmpdir.join('fraction.asdf'))
+
+    FractionType = fractiontype_factory()
+
+    class FractionExtension(CustomExtension):
+        @property
+        def types(self):
+            return [FractionType]
+
+    @FractionType.subclass
+    class MyFraction(Fraction):
+        # We need to override __new__ since Fraction is immutable
+        def __new__(cls, *args, custom='custom', **kwargs):
+            self = super().__new__(cls, *args, **kwargs)
+            self._custom_attribute = custom
+            return self
+
+        @FractionType.subclass_property
+        def custom_attribute(self):
+            return self._custom_attribute
+
+
+    tree = dict(fraction=MyFraction(7, 9, custom='TESTING!'))
+
+    with pytest.warns(UserWarning) as w:
+        with asdf.AsdfFile(tree, extensions=FractionExtension()) as af:
+            pass
+        assert len(w) == 1, helpers.display_warnings(w)
+        assert str(w[0].message).startswith("Failed to add subclass attribute(s)")

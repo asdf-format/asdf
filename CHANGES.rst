@@ -9,6 +9,9 @@
   default. Add configuration setting and command line option to enable schema
   tests. [#676]
 
+- Enable handling of subclasses of known custom types by using decorators for
+  convenience. [#563]
+
 2.3.4 (unreleased)
 ------------------
 

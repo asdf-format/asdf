@@ -72,6 +72,7 @@ def _type_to_tag(type_):
 
 
 def validate_tag(validator, tagname, instance, schema):
+
     if hasattr(instance, '_tag'):
         instance_tag = instance._tag
     else:

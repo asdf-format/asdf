@@ -1,9 +1,11 @@
 # Licensed under a 3-clause BSD style license - see LICENSE.rst
 # -*- coding: utf-8 -*-
 
-
 import re
+import inspect
+import warnings
 import importlib
+from collections import defaultdict
 
 import six
 from copy import copy
@@ -18,6 +20,10 @@ __all__ = ['format_tag', 'CustomType']
 
 # regex used to parse module name from optional version string
 MODULE_RE = re.compile(r'([a-zA-Z]+)(-(\d+\.\d+\.\d+))?')
+
+
+class AsdfSubclassProperty(property):
+    pass
 
 
 def format_tag(organization, standard, version, tag_name):
@@ -180,6 +186,8 @@ class ExtensionType:
     validators = {}
     requires = []
     yaml_tag = None
+    _subclass_map = {}
+    _subclass_attr_map = defaultdict(lambda: list())
 
     @classmethod
     def names(cls):
@@ -303,6 +311,31 @@ class ExtensionType:
             An instance of `asdf.tagged.Tagged`.
         """
         obj = cls.to_tree(node, ctx)
+        yaml_tag = cls.yaml_tag
+
+        node_cls = type(node)
+        cls_name = node_cls.__name__
+
+        if node_cls.__name__ in cls._subclass_map and isinstance(obj, dict):
+            from .tags.core import SubclassMetadata
+            from .yamlutil import custom_tree_to_tagged_tree
+            attribute = cls._subclass_map[cls_name][0]
+            subclass = SubclassMetadata(name=cls_name)
+            obj[attribute] = custom_tree_to_tagged_tree(subclass, ctx)
+
+        if node_cls in cls._subclass_attr_map:
+            if isinstance(obj, dict):
+                for name, member in cls._subclass_attr_map[node_cls]:
+                    obj[name] = member.fget(node)
+            else:
+                # TODO: should this be an exception? Should it be a custom warning type?
+                warnings.warn(
+                    "Failed to add subclass attribute(s) to node that is "
+                    "not an object (is a {}). No subclass attributes are being "
+                    "added (tag={}, subclass={})".format(
+                        type(obj).__name__, cls, node_cls)
+                )
+
         return tagged.tag_object(cls.yaml_tag, obj, ctx=ctx)
 
     @classmethod
@@ -357,6 +390,15 @@ class ExtensionType:
         -------
             An instance of the custom type represented by this extension class.
         """
+        from .tags.core import SubclassMetadata
+
+        if isinstance(tree, dict):
+            for k, v in tree.items():
+                if isinstance(v, SubclassMetadata):
+                    tree.pop(k)
+                    subclass_name = v['name']
+                    return cls._subclass_map[subclass_name][1](**tree.data)
+
         return cls.from_tree(tree.data, ctx)
 
     @classmethod
@@ -382,6 +424,70 @@ class ExtensionType:
                 return True
         return False
 
+    @classmethod
+    def subclass(cls, *args, attribute='subclass'):
+        """
+        Decorator to enable serialization of a subclass of an existing type.
+
+        Use this method to decorate subclasses of custom types that are already
+        handled by an existing ASDF tag class. This enables subclasses of known
+        types to be properly serialized without having to write an entirely
+        separate tag class for the subclass.
+
+        This feature can only be used for tagged types where the underlying
+        YAML representation of the type is an object (i.e. a Python `dict`). It
+        will not work for nodes that are basic types.
+
+        The subclass metadata is stored in a new attribute of the YAML node. By
+        default the attribute name is "subclass", but it is customizable by
+        using the optional `attribute` keyword argument of the decorator.
+
+        The schema of the base custom type is used for validation. This feature
+        will not work if the base schema disallows additional attributes.
+
+        It is incumbent upon the user to avoid name conflicts with attributes
+        that already exist in the representation of the base custom class. For
+        example, a base class may use the attribute "subclass" for some other
+        purpose, in which case it would be necessary to provide a different
+        custom attribute name here.
+
+        Parameters
+        ----------
+        attribute : `str`
+            Custom attribute name used to store subclass metadata in this node.
+        """
+
+        def decorator(subclass):
+            cls._subclass_map[subclass.__name__] = (attribute, subclass)
+            for name, member in inspect.getmembers(subclass):
+                if isinstance(member, AsdfSubclassProperty):
+                    cls._subclass_attr_map[subclass].append((name, member))
+            return subclass
+
+        return decorator(args[0]) if args else decorator
+
+    @classmethod
+    def subclass_property(cls, attribute):
+        """
+        Decorator to enable serialization of custom subclass attributes.
+
+        Use this decorator to serialize attributes that are specific to a
+        subclass of a custom type that is already handled by an existing ASDF
+        tag class. This decorator will only work on subclasses that have been
+        decorated with the `~asdf.AsdfTypes.subclass` decorator.
+
+        Methods that are decorated in this way are treated as properties (see
+        `property`). The name of the property **must** correspond to a keyword
+        argument of the subclass constructor.
+
+        The property will be serialized as a YAML object attribute with the
+        same name. Users are responsible for ensuring that any and all
+        additional subclass properties conform to the schema of the base custom
+        type and do not conflict with existing attributes.
+        """
+
+        return AsdfSubclassProperty(attribute)
+
 
 @six.add_metaclass(AsdfTypeMeta)
 class AsdfType(ExtensionType):
@@ -399,7 +505,7 @@ class CustomType(ExtensionType):
 
     # These attributes are duplicated here with docstrings since a bug in
     # sphinx prevents the docstrings of class attributes from being inherited
-    # properly (see https://github.com/sphinx-doc/sphinx/issues/741. The
+    # properly (see https://github.com/sphinx-doc/sphinx/issues/741). The
     # docstrings are not included anywhere else in the class hierarchy since
     # this class is the only one exposed in the public API.
     name = None
