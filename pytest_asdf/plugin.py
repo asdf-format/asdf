@@ -10,50 +10,7 @@ import pytest
 
 import numpy as np
 
-import asdf
-from asdf import AsdfFile
-from asdf import block
-from asdf import schema
-from asdf import extension
-from asdf import treeutil
-from asdf import util
-from asdf import versioning
-from asdf.tests import helpers, CustomTestType
-
-_ctx = AsdfFile()
-_resolver = _ctx.resolver
-
-
-class LabelMapperTestType(CustomTestType):
-    version = '1.0.0'
-    name = 'transform/label_mapper'
-
-
-class RegionsSelectorTestType(CustomTestType):
-    version = '1.0.0'
-    name = 'transform/regions_selector'
-
-
-class TestExtension(extension.BuiltinExtension):
-    """This class defines an extension that represents tags whose
-    implementations current reside in other repositories (such as GWCS) but
-    whose schemas are defined in ASDF. This provides a workaround for schema
-    validation testing since we want to pass without warnings, but the fact
-    that these tag classes are not defined within ASDF means that warnings
-    occur unless this extension is used. Eventually these schemas may be moved
-    out of ASDF and into other repositories, or ASDF will potentially provide
-    abstract base classes for the tag implementations.
-    """
-    @property
-    def types(self):
-        return [LabelMapperTestType, RegionsSelectorTestType]
-
-    @property
-    def tag_mapping(self):
-        return [('tag:stsci.edu:asdf',
-                 'http://stsci.edu/schemas/asdf{tag_suffix}')]
-
-
+# Avoid all imports of asdf at this level in order to avoid circular imports
 
 
 def pytest_addoption(parser):
@@ -71,7 +28,6 @@ def pytest_addoption(parser):
         help='Enable ASDF schema tests')
 
 
-
 class AsdfSchemaFile(pytest.File):
 
     def __init__(self, *args, skip_examples=False, **kwargs):
@@ -86,6 +42,8 @@ class AsdfSchemaFile(pytest.File):
 
     def find_examples_in_schema(self):
         """Returns generator for all examples in schema at given path"""
+        from asdf import treeutil
+
         with open(str(self.fspath), 'rb') as fd:
             schema_tree = yaml.safe_load(fd)
 
@@ -103,9 +61,12 @@ class AsdfSchemaItem(pytest.Item):
         self.schema_path = schema_path
 
     def runtest(self):
+        from asdf import AsdfFile, schema
+        ctx = AsdfFile()
+
         # Make sure that each schema itself is valid.
         schema_tree = schema.load_schema(
-            self.schema_path, resolver=_resolver, resolve_references=True)
+            self.schema_path, resolver=ctx.resolver, resolve_references=True)
         schema.check_schema(schema_tree)
 
 
@@ -123,6 +84,7 @@ def should_skip(name, version):
     return False
 
 def parse_schema_filename(filename):
+    from asdf import versioning
     components = filename[filename.find('schemas') + 1:].split(os.path.sep)
     tag = 'tag:{}:{}'.format(components[1], '/'.join(components[2:]))
     name, version = versioning.split_tag_version(tag.replace('.yaml', ''))
@@ -137,6 +99,7 @@ class AsdfSchemaExampleItem(pytest.Item):
         self.example = example
 
     def _find_standard_version(self, name, version):
+        from asdf import versioning
         for sv in versioning.supported_versions:
             map_version = versioning.get_version_map(sv)['tags'].get(name)
             if map_version is not None and version == map_version:
@@ -145,6 +108,9 @@ class AsdfSchemaExampleItem(pytest.Item):
         return versioning.default_version
 
     def runtest(self):
+        from asdf import AsdfFile, block, util
+        from asdf.tests import helpers
+        from .extension import TestExtension
 
         name, version = parse_schema_filename(self.filename)
         if should_skip(name, version):
