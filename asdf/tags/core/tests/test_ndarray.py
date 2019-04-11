@@ -860,7 +860,7 @@ def test_readonly(tmpdir):
 def test_readonly_inline(tmpdir):
 
     tmpfile = str(tmpdir.join('data.asdf'))
-    tree = dict(data=np.ndarray((100)))
+    tree = dict(data=np.ones((100)))
 
     with asdf.AsdfFile(tree) as af:
         af.write_to(tmpfile, all_array_storage='inline')
