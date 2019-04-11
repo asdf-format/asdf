@@ -164,52 +164,6 @@ class AsdfLoader(_yaml_base_loader):
 
 
 # ----------------------------------------------------------------------
-# Handle omap (ordered mappings)
-
-YAML_OMAP_TAG = YAML_TAG_PREFIX + 'omap'
-
-
-# Add support for loading YAML !!omap objects as OrderedDicts and dumping
-# OrderedDict in the omap format as well.
-def ordereddict_constructor(loader, node):
-    try:
-        omap = loader.construct_yaml_omap(node)
-        return OrderedDict(*omap)
-    except yaml.constructor.ConstructorError:
-        return list(*loader.construct_yaml_seq(node))
-
-
-def represent_ordered_mapping(dumper, tag, data):
-    # TODO: Again, adjust for preferred flow style, and other stylistic details
-    # NOTE: For block style this uses the compact omap notation, but for flow style
-    # it does not.
-
-    # TODO: Need to see if I can figure out a mechanism so that classes that
-    # use this representer can specify which values should use flow style
-    values = []
-    node = yaml.SequenceNode(tag, values,
-                             flow_style=dumper.default_flow_style)
-    if dumper.alias_key is not None:
-        dumper.represented_objects[dumper.alias_key] = node
-    for key, value in data.items():
-        key_item = dumper.represent_data(key)
-        value_item = dumper.represent_data(value)
-        node_item = yaml.MappingNode(YAML_OMAP_TAG,
-                                     [(key_item, value_item)],
-                                     flow_style=False)
-        values.append(node_item)
-    return node
-
-
-def represent_ordereddict(dumper, data):
-    return represent_ordered_mapping(dumper, YAML_OMAP_TAG, data)
-
-
-AsdfLoader.add_constructor(YAML_OMAP_TAG, ordereddict_constructor)
-AsdfDumper.add_representer(OrderedDict, represent_ordereddict)
-
-
-# ----------------------------------------------------------------------
 # Handle numpy scalars
 
 for scalar_type in util.iter_subclasses(np.floating):
