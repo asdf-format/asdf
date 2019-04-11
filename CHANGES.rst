@@ -12,6 +12,8 @@
 - Enable handling of subclasses of known custom types by using decorators for
   convenience. [#563]
 
+- Replace use of ``pyyaml`` with ``ruamel.yaml``. [#677]
+
 2.3.4 (unreleased)
 ------------------
 
