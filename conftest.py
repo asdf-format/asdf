@@ -14,7 +14,7 @@ display.PYTEST_HEADER_MODULES = OrderedDict([
                                     ('asdf', 'asdf'),
                                     ('numpy', 'numpy'),
                                     ('jsonschema', 'jsonschema'),
-                                    ('pyyaml', 'yaml'),
+                                    ('ruamel.yaml', 'ruamel.yaml'),
                                     ('astropy', 'astropy')])
 
 try:
