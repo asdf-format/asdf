@@ -450,6 +450,16 @@ def test_self_reference_resolution():
     assert s['anyOf'][1] == s['anyOf'][0]
 
 
+def test_schema_resolved_via_entry_points():
+    """Test that entry points mappings to core schema works"""
+    resolver = asdf.AsdfFile().resolver
+    s = schema.load_schema(
+        'http://stsci.edu/schemas/asdf/core/asdf-1.1.0',
+        resolver=resolver,
+        resolve_references=True)
+    assert 'tag:stsci.edu:asdf/core/asdf-1.1.0' in repr(s)
+
+
 @pytest.mark.parametrize('use_numpy', [False, True])
 def test_large_literals(use_numpy):
 
