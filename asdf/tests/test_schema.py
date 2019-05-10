@@ -452,12 +452,12 @@ def test_self_reference_resolution():
 
 def test_schema_resolved_via_entry_points():
     """Test that entry points mappings to core schema works"""
-    resolver = asdf.AsdfFile().resolver
-    s = schema.load_schema(
-        'http://stsci.edu/schemas/asdf/core/asdf-1.1.0',
-        resolver=resolver,
-        resolve_references=True)
-    assert 'tag:stsci.edu:asdf/core/asdf-1.1.0' in repr(s)
+    r = asdf.AsdfFile().resolver
+    tag = types.format_tag('stsci.edu', 'asdf', '1.0.0', 'fits/fits')
+    url = resolver.default_tag_to_url_mapping(tag)
+
+    s = schema.load_schema(url, resolver=r, resolve_references=True)
+    assert tag in repr(s)
 
 
 @pytest.mark.parametrize('use_numpy', [False, True])
