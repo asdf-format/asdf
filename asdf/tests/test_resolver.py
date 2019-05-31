@@ -21,6 +21,7 @@ def test_resolver_tuple_mapping():
     r = Resolver([("united_states:", "{test_suffix}:hampden")], "test")
     assert r("united_states:maryland:baltimore") == "maryland:baltimore:hampden"
 
+
 def test_resolver_callable_mapping():
     r = Resolver([lambda inp: "nowhere"], "test")
     assert r("united_states:maryland:baltimore") == "nowhere"
