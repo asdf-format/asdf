@@ -262,4 +262,3 @@ def get_default_resolver():
     Get the resolver that includes mappings from all installed extensions.
     """
     return default_extensions.resolver
-
