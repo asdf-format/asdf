@@ -10,9 +10,9 @@ def test_resolver_no_mappings():
     r = Resolver([], "test")
     assert r("united_states:maryland:baltimore") == "united_states:maryland:baltimore"
 
-    
+
 def test_resolver_tuple_mapping():
-    r = Resolver([("united_states:", "earth:{test}")], "test")    
+    r = Resolver([("united_states:", "earth:{test}")], "test")
     assert r("united_states:maryland:baltimore") == "earth:united_states:maryland:baltimore"
 
     r = Resolver([("united_states:", "{test_prefix}texas:houston")], "test")
@@ -63,7 +63,7 @@ def test_resolver_invalid_mapping():
 
     with pytest.raises(ValueError):
         Resolver([12], "test")
-        
+
 
 def test_resolver_hash_and_equals():
     r1 = Resolver([("united_states:", "earth:{test}")], "test")
@@ -74,7 +74,7 @@ def test_resolver_hash_and_equals():
     assert r1 == r2
 
     assert hash(r1) != hash(r3)
-    assert r1 != r3        
+    assert r1 != r3
 
 
 def test_resolver_add_mapping_deprecated():
@@ -82,7 +82,7 @@ def test_resolver_add_mapping_deprecated():
     with pytest.warns(AsdfDeprecationWarning):
         r.add_mapping([("united_states:", "earth:{test}")], "test")
 
-        
+
 def test_resolver_chain():
     r1 = Resolver([("maryland:", "united_states:{test}")], "test")
     r2 = Resolver([("united_states:", "earth:{test}")], "test")
@@ -90,8 +90,8 @@ def test_resolver_chain():
     chain = ResolverChain(r1, r2)
 
     assert chain("maryland:baltimore") == "earth:united_states:maryland:baltimore"
-    
-    
+
+
 def test_resolver_chain_hash_and_equals():
     r1 = Resolver([("united_states:", "earth:{test}")], "test")
     r2 = Resolver([("united_states:", "earth:{test}")], "test")
@@ -106,8 +106,3 @@ def test_resolver_chain_hash_and_equals():
 
     assert hash(c1) != hash(c3)
     assert c1 != c3
-
-
-
-
-

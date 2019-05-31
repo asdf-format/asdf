@@ -176,4 +176,4 @@ def default_resolver(uri):
         "'asdf.extension.get_default_resolver()(...)' instead.",
         AsdfDeprecationWarning)
     return default_resolver._resolver(uri)
-default_resolver._resolver = ResolverChain(default_tag_to_url_mapping, default_url_mapping)
+default_resolver._resolver = ResolverChain(default_tag_to_url_mapping._resolver, default_url_mapping._resolver)
