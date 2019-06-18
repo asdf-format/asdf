@@ -5,6 +5,7 @@ import os
 import json
 import datetime
 import warnings
+import copy
 from numbers import Integral
 from functools import lru_cache
 from collections import OrderedDict
@@ -363,7 +364,7 @@ def load_custom_schema(url):
 
     return update(custom, core)
 
-@lru_cache()
+
 def load_schema(url, resolver=None, resolve_references=False,
                 resolve_local_refs=False):
     """
@@ -394,6 +395,16 @@ def load_schema(url, resolver=None, resolve_references=False,
         # because invoking get_default_resolver at import time leads to a circular import.
         resolver = extension.get_default_resolver()
 
+    # We want to cache the work that went into constructing the schema, but returning
+    # the same object is treacherous, because users who mutate the result will not
+    # expect that they're changing the schema everywhere.
+    return copy.deepcopy(
+        _load_schema_cached(url, resolver, resolve_references, resolve_local_refs)
+    )
+
+
+@lru_cache()
+def _load_schema_cached(url, resolver, resolve_references, resolve_local_refs):
     loader = _make_schema_loader(resolver)
     if url in HARDCODED_SCHEMA:
         schema = HARDCODED_SCHEMA[url]()

@@ -171,38 +171,27 @@ required: [foobar]
 
 
 def test_schema_caching():
-    # Make sure that if we request the same URL, we get the *exact
-    # same* object, to ensure the cache is working.
+    # Make sure that if we request the same URL, we get a different object
+    # (despite the caching internal to load_schema).  Changes to a schema
+    # dict should not impact other uses of that schema.
+
     s1 = schema.load_schema(
         'http://stsci.edu/schemas/asdf/core/asdf-1.0.0')
     s2 = schema.load_schema(
         'http://stsci.edu/schemas/asdf/core/asdf-1.0.0')
-    assert s1 is s2
+    assert s1 is not s2
 
 
-def test_schema_caching_with_asdf_file():
+def test_asdf_file_resolver_hashing():
     # Confirm that resolvers from distinct AsdfFile instances
-    # hash to the same cache entry
-    schema.load_schema.cache_clear()
-
+    # hash to the same value (this allows schema caching to function).
     a1 = asdf.AsdfFile()
-    s1 = schema.load_schema(
-        'http://stsci.edu/schemas/asdf/core/asdf-1.0.0',
-        resolver=a1.resolver
-    )
-    info1 = schema.load_schema.cache_info()
-
     a2 = asdf.AsdfFile()
-    s2 = schema.load_schema(
-        'http://stsci.edu/schemas/asdf/core/asdf-1.0.0',
-        resolver=a2.resolver
-    )
-    info2 = schema.load_schema.cache_info()
 
-    assert s1 is s2
-    assert info1.misses == info2.misses
+    assert hash(a1.resolver) == hash(a2.resolver)
+    assert a1.resolver == a2.resolver
 
-
+    
 def test_flow_style():
     class CustomFlowStyleType(dict, types.CustomType):
         name = 'custom_flow'

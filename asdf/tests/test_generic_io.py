@@ -302,7 +302,7 @@ def test_http_connection_range(tree, rhttpserver):
         if len(tree) == 4:
             assert connection[0]._nreads == 0
         else:
-            assert connection[0]._nreads == 6
+            assert connection[0]._nreads == 5
 
         assert len(list(ff.blocks.internal_blocks)) == 2
         assert isinstance(next(ff.blocks.internal_blocks)._data, np.core.memmap)
