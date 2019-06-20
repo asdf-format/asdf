@@ -8,7 +8,7 @@ and `JSON Pointer standard <http://tools.ietf.org/html/rfc6901>`__.
 """
 
 
-from collections import Sequence
+from collections.abc import Sequence
 import weakref
 
 import numpy as np
