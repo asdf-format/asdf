@@ -203,7 +203,7 @@ REMOVE_DEFAULTS['properties'] = validate_remove_default
 @lru_cache()
 def _create_validator(validators=YAML_VALIDATORS):
     meta_schema = load_schema(YAML_SCHEMA_METASCHEMA_ID, default_ext_resolver)
-    
+
     if JSONSCHEMA_LT_3:
         base_cls = mvalidators.create(meta_schema=meta_schema, validators=validators)
     else:
@@ -223,7 +223,7 @@ def _create_validator(validators=YAML_VALIDATORS):
         if JSONSCHEMA_LT_3:
             DEFAULT_TYPES = base_cls.DEFAULT_TYPES.copy()
             DEFAULT_TYPES['array'] = (list, tuple)
-            
+
         def iter_errors(self, instance, _schema=None, _seen=set()):
             # We can't validate anything that looks like an external reference,
             # since we don't have the actual content, so we just have to defer
