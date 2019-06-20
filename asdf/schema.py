@@ -202,12 +202,19 @@ REMOVE_DEFAULTS['properties'] = validate_remove_default
 @lru_cache()
 def _create_validator(validators=YAML_VALIDATORS):
     meta_schema = load_schema(YAML_SCHEMA_METASCHEMA_ID, default_ext_resolver)
-    base_cls = mvalidators.create(meta_schema=meta_schema, validators=validators)
+    type_checker = mvalidators.Draft4Validator.TYPE_CHECKER.redefine(
+        'array',
+        lambda checker, instance: isinstance(instance, list) or isinstance(instance, tuple)
+    )
+    id_of = mvalidators.Draft4Validator.ID_OF
+    base_cls = mvalidators.create(
+        meta_schema=meta_schema,
+        validators=validators,
+        type_checker=type_checker,
+        id_of=id_of
+    )
 
     class ASDFValidator(base_cls):
-        DEFAULT_TYPES = base_cls.DEFAULT_TYPES.copy()
-        DEFAULT_TYPES['array'] = (list, tuple)
-
         def iter_errors(self, instance, _schema=None, _seen=set()):
             # We can't validate anything that looks like an external reference,
             # since we don't have the actual content, so we just have to defer
