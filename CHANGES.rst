@@ -12,6 +12,8 @@
 - Enable handling of subclasses of known custom types by using decorators for
   convenience. [#563]
 
+- Add support for jsonschema 3.x. [#684]
+
 2.3.4 (unreleased)
 ------------------
 
