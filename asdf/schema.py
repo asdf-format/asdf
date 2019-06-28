@@ -22,6 +22,7 @@ from . import reference
 from . import treeutil
 from . import util
 from .extension import default_extensions
+from .compat.jsonschemacompat import JSONSCHEMA_LT_3
 
 
 YAML_SCHEMA_METASCHEMA_ID = 'http://stsci.edu/schemas/yaml-schema/draft-01'
@@ -202,11 +203,26 @@ REMOVE_DEFAULTS['properties'] = validate_remove_default
 @lru_cache()
 def _create_validator(validators=YAML_VALIDATORS):
     meta_schema = load_schema(YAML_SCHEMA_METASCHEMA_ID, default_ext_resolver)
-    base_cls = mvalidators.create(meta_schema=meta_schema, validators=validators)
+
+    if JSONSCHEMA_LT_3:
+        base_cls = mvalidators.create(meta_schema=meta_schema, validators=validators)
+    else:
+        type_checker = mvalidators.Draft4Validator.TYPE_CHECKER.redefine(
+            'array',
+            lambda checker, instance: isinstance(instance, list) or isinstance(instance, tuple)
+        )
+        id_of = mvalidators.Draft4Validator.ID_OF
+        base_cls = mvalidators.create(
+            meta_schema=meta_schema,
+            validators=validators,
+            type_checker=type_checker,
+            id_of=id_of
+        )
 
     class ASDFValidator(base_cls):
-        DEFAULT_TYPES = base_cls.DEFAULT_TYPES.copy()
-        DEFAULT_TYPES['array'] = (list, tuple)
+        if JSONSCHEMA_LT_3:
+            DEFAULT_TYPES = base_cls.DEFAULT_TYPES.copy()
+            DEFAULT_TYPES['array'] = (list, tuple)
 
         def iter_errors(self, instance, _schema=None, _seen=set()):
             # We can't validate anything that looks like an external reference,
