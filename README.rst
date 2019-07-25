@@ -263,6 +263,7 @@ To install:
 ::
 
     $ cd asdf
+    $ git submodule update --init
     $ pip install .
 
 To install in `development
