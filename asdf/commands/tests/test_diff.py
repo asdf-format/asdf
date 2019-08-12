@@ -2,18 +2,13 @@
 # -*- coding: utf-8 -*-
 
 
-import os
 import io
 from functools import partial
 
-import numpy as np
 import pytest
 
-from ... import AsdfFile
-from ...tests import helpers
-
-from .. import main, diff
-
+from asdf.tests import helpers
+from asdf.commands import main, diff
 from . import data as test_data
 get_test_data_path = partial(helpers.get_test_data_path, module=test_data)
 

@@ -367,7 +367,7 @@ def test_extension_check():
     testfile = get_test_data_path('extension_check.fits')
 
     with pytest.warns(None) as warnings:
-        with asdf.open(testfile) as ff:
+        with asdf.open(testfile):
             pass
 
     assert len(warnings) == 1, display_warnings(warnings)
@@ -376,13 +376,13 @@ def test_extension_check():
 
     # Make sure that suppressing the warning works as well
     with pytest.warns(None) as warnings:
-        with asdf.open(testfile, ignore_missing_extensions=True) as ff:
+        with asdf.open(testfile, ignore_missing_extensions=True):
             pass
 
     assert len(warnings) == 0, display_warnings(warnings)
 
     with pytest.raises(RuntimeError):
-        with asdf.open(testfile, strict_extension_check=True) as ff:
+        with asdf.open(testfile, strict_extension_check=True):
             pass
 
 def test_verify_with_astropy(tmpdir):

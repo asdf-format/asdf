@@ -3,14 +3,21 @@
 
 import importlib
 
-from .exploded import *
-from .to_yaml import *
-from .defragment import *
-from .diff import *
-from .tags import *
-from .extension import *
+from .exploded import implode, explode
+from .to_yaml import to_yaml
+from .defragment import defragment
+from .diff import diff
+from .tags import list_tags
+from .extension import find_extensions
+
+
+__all__ = ['implode', 'explode', 'to_yaml', 'defragment', 'diff', 'list_tags',
+    'find_extensions']
+
 
 # Extracting ASDF-in-FITS files requires Astropy
 if importlib.util.find_spec('astropy'):
-    from .extract import *
-    from .remove_hdu import *
+    from .extract import extract_file
+    from .remove_hdu import remove_hdu
+
+    __all__ += ['extract_file', 'remove_hdu']

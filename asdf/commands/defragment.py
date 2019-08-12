@@ -5,9 +5,6 @@
 Defragment command.
 """
 
-
-import os
-
 import asdf
 from .main import Command
 from .. import AsdfFile

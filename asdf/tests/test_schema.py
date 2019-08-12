@@ -3,12 +3,9 @@
 
 import io
 import os
-import re
-import warnings
 
 from jsonschema import ValidationError
 
-import yaml
 import pytest
 
 import numpy as np
@@ -16,10 +13,8 @@ from numpy.testing import assert_array_equal
 
 import asdf
 from asdf import types
-from asdf import extension
 from asdf import resolver
 from asdf import schema
-from asdf import util
 from asdf import yamlutil
 
 from asdf.tests import helpers, CustomExtension

@@ -4,7 +4,6 @@
 Utility functions for managing tree-like data structures.
 """
 
-import inspect
 import warnings
 
 from .tagged import tag_object

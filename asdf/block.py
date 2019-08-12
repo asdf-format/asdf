@@ -20,7 +20,6 @@ from . import compression as mcompression
 from .compat.numpycompat import NUMPY_LT_1_7
 from . import constants
 from . import generic_io
-from . import stream
 from . import treeutil
 from . import util
 from . import yamlutil

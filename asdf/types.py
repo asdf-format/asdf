@@ -311,7 +311,6 @@ class ExtensionType:
             An instance of `asdf.tagged.Tagged`.
         """
         obj = cls.to_tree(node, ctx)
-        yaml_tag = cls.yaml_tag
 
         node_cls = type(node)
         cls_name = node_cls.__name__

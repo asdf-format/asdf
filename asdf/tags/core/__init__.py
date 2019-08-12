@@ -5,6 +5,17 @@
 from ...types import AsdfType
 from ...yamlutil import custom_tree_to_tagged_tree
 
+from .constant import ConstantType
+from .ndarray import NDArrayType
+from .complex import ComplexType
+from .integer import IntegerType
+from .external_reference import ExternalArrayReference
+
+
+__all__ = ['AsdfObject', 'Software', 'HistoryEntry', 'ExtensionMetadata',
+    'SubclassMetadata', 'ConstantType', 'NDArrayType', 'ComplexType',
+    'IntegerType', 'ExternalArrayReference']
+
 
 class AsdfObject(dict, AsdfType):
     name = 'core/asdf'
@@ -44,10 +55,3 @@ class ExtensionMetadata(AsdfType):
 class SubclassMetadata(dict, AsdfType):
     name = 'core/subclass_metadata'
     version = '1.0.0'
-
-
-from .constant import ConstantType
-from .ndarray import NDArrayType
-from .complex import ComplexType
-from .integer import IntegerType
-from .external_reference import ExternalArrayReference
