@@ -2,25 +2,19 @@
 # -*- coding: utf-8 -*-
 
 import io
-import re
-import warnings
 
 from jsonschema import ValidationError
-
-import yaml
-import pytest
-
 import numpy as np
 from numpy.testing import assert_array_equal
+import pytest
 
 import asdf
-from asdf import types
 from asdf import extension
 from asdf import resolver
 from asdf import schema
+from asdf import types
 from asdf import util
 from asdf import yamlutil
-
 from asdf.tests import helpers, CustomExtension
 
 
@@ -43,7 +37,7 @@ class TagReferenceType(types.CustomType):
 
 
 def test_tagging_scalars():
-    astropy = pytest.importorskip('astropy', '3.0.0')
+    pytest.importorskip('astropy', '3.0.0')
     from astropy import units as u
 
     yaml = """
@@ -602,7 +596,7 @@ properties:
 
 
 def test_type_missing_dependencies():
-    astropy = pytest.importorskip('astropy', '3.0.0')
+    pytest.importorskip('astropy', '3.0.0')
 
     class MissingType(types.CustomType):
         name = 'missing'

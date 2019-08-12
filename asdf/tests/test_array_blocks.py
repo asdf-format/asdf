@@ -324,8 +324,6 @@ def test_update_add_array(tmpdir):
     ff = asdf.AsdfFile(tree)
     ff.write_to(path, pad_blocks=True)
 
-    original_size = os.stat(path).st_size
-
     with asdf.open(os.path.join(tmpdir, "test.asdf"), mode="rw") as ff:
         ff.tree['arrays'].append(np.arange(32))
         ff.update()
@@ -504,8 +502,8 @@ def test_deferred_block_loading(small_tree):
     buff.seek(0)
     with asdf.open(buff) as ff2:
         assert len([x for x in ff2.blocks.blocks if isinstance(x, block.Block)]) == 1
-        x = ff2.tree['science_data'] * 2
-        x = ff2.tree['not_shared'] * 2
+        ff2.tree['science_data'] * 2
+        ff2.tree['not_shared'] * 2
         assert len([x for x in ff2.blocks.blocks if isinstance(x, block.Block)]) == 2
 
         with pytest.raises(ValueError):
@@ -535,7 +533,8 @@ def test_block_index():
         assert isinstance(ff2.blocks._internal_blocks[99], block.Block)
 
         # Force the loading of one array
-        x = ff2.tree['arrays'][50] * 2
+        ff2.tree['arrays'][50] * 2
+
         for i in range(2, 99):
             if i == 50:
                 assert isinstance(ff2.blocks._internal_blocks[i], block.Block)
@@ -777,14 +776,13 @@ def test_open_no_memmap(tmpdir):
     with asdf.open(tmpfile) as af:
         array = af.tree['array']
         # Make sure to access the block so that it gets loaded
-        x = array[0]
+        array[0]
         assert array.block._memmapped == True
         assert isinstance(array.block._data, np.memmap)
 
     # Test that if we ask for copy, we do not get memmapped arrays
     with asdf.open(tmpfile, copy_arrays=True) as af:
         array = af.tree['array']
-        x = array[0]
         assert array.block._memmapped == False
         # We can't just check for isinstance(..., np.array) since this will
         # be true for np.memmap as well

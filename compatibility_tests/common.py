@@ -1,5 +1,5 @@
 import asdf
-from asdf.versioning import supported_versions, AsdfVersion
+from asdf.versioning import supported_versions
 import numpy as np
 
 

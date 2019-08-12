@@ -5,8 +5,6 @@
 Implementation of command for displaying differences between two ASDF files.
 """
 
-
-import os
 import sys
 from numpy import array_equal
 try:
@@ -30,8 +28,6 @@ except ImportError:
 
 import asdf
 from .main import Command
-from .. import AsdfFile
-from .. import treeutil
 from ..tagged import Tagged
 from ..util import human_list
 from ..tags.core.ndarray import NDArrayType

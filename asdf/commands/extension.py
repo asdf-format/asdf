@@ -10,6 +10,7 @@ from pkg_resources import iter_entry_points
 
 from .main import Command
 
+__all__ = ['find_extensions']
 
 class QueryExtension(Command): # pragma: no cover
     """This class is the plugin implementation for the asdftool runner."""

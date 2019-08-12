@@ -18,7 +18,7 @@ from sphinx.util.nodes import set_source_info
 import asdf
 from asdf import AsdfFile
 from asdf.constants import ASDF_MAGIC, BLOCK_FLAG_STREAMED
-from asdf import versioning, util
+from asdf import versioning
 
 version_string = str(versioning.default_version)
 
@@ -49,7 +49,7 @@ class RunCodeDirective(Directive):
         try:
             try:
                 exec(code, GLOBALS)
-            except:
+            except Exception:
                 print(code)
                 raise
 

@@ -1,9 +1,9 @@
 # Licensed under a 3-clause BSD style license - see LICENSE.rst
 # -*- coding: utf-8 -*-
 
+from itertools import combinations
 
 import pytest
-from itertools import combinations
 
 from asdf.versioning import (
     AsdfVersion,

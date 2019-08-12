@@ -5,3 +5,5 @@ try:
 except DistributionNotFound:
     # package is not installed
     version = "unknown"
+
+__all__ = ['version']

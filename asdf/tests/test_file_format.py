@@ -216,7 +216,7 @@ foo : bar
 ..."""
     buff = io.BytesIO(content)
     with pytest.raises(ValueError):
-        with asdf.open(buff) as ff:
+        with asdf.open(buff):
             pass
 
 

@@ -5,10 +5,7 @@
 Implementation of command for converting ASDF-in-FITS to standalone ASDF file.
 """
 
-import sys
-
 import asdf
-from asdf import AsdfFile
 from asdf.fits_embed import AsdfInFits
 
 from .main import Command

@@ -97,10 +97,6 @@ def test(package=None, test_path=None, args=None, plugins=None,
         explicitly updating the package template.
 
     """
-    try:
-        import astropy
-    except ImportError:
-        raise ImportError("Running the tests requires astropy")
 
     test_runner = _get_test_runner()
     return test_runner.run_tests(

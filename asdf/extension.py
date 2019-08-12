@@ -6,8 +6,6 @@ import abc
 import warnings
 from pkg_resources import iter_entry_points
 
-import importlib
-
 from . import types
 from . import resolver
 from .util import get_class_name

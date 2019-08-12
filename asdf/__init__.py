@@ -10,28 +10,15 @@ Data Format (ASDF) files
 # Affiliated packages may add whatever they like to this file, but
 # should keep this content at the top.
 # ----------------------------------------------------------------------------
-from ._internal_init import *
+from ._internal_init import __version__, __githash__, test
 # ----------------------------------------------------------------------------
 
 __all__ = [
     'AsdfFile', 'CustomType', 'AsdfExtension', 'Stream', 'open', 'test',
-    'commands', 'IntegerType', 'ExternalArrayReference', 'info'
+    'commands', 'IntegerType', 'ExternalArrayReference', 'info', '__version__',
+    '__githash__', 'ValidationError'
 ]
 
-try:
-    import yaml as _
-except ImportError:
-    raise ImportError("asdf requires pyyaml")
-
-try:
-    import jsonschema as _
-except ImportError:
-    raise ImportError("asdf requires jsonschema")
-
-try:
-    import numpy as _
-except ImportError:
-    raise ImportError("asdf requires numpy")
 
 from .asdf import AsdfFile, open_asdf
 from .types import CustomType
