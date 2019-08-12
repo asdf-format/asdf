@@ -7,13 +7,12 @@ import warnings
 from pkg_resources import iter_entry_points
 
 import six
-import importlib
 
 from . import types
 from . import resolver
 from .util import get_class_name
 from .type_index import AsdfTypeIndex
-from .version import version as asdf_version
+from . import version as asdf_version
 from .exceptions import AsdfDeprecationWarning
 
 

@@ -19,7 +19,7 @@ from semantic_version import Version, SpecItem, Spec
 from . import generic_io
 from . import resolver
 from . import util
-from .version import version as asdf_version
+from . import version as asdf_version
 
 
 __all__ = ['AsdfVersion', 'AsdfSpec', 'split_tag_version', 'join_tag_version']
