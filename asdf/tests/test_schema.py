@@ -43,16 +43,16 @@ class TagReferenceType(types.CustomType):
         return node
 
 
-@pytest.mark.importorskip('astropy')
 def test_tagging_scalars():
+    astropy = pytest.importorskip('astropy', '3.0.0')
+    from astropy import units as u
+
     yaml = """
 unit: !unit/unit-1.0.0
   m
 not_unit:
   m
     """
-    from astropy import units as u
-
     buff = helpers.yaml_to_asdf(yaml)
     with asdf.open(buff) as ff:
         assert isinstance(ff.tree['unit'], u.UnitBase)
@@ -590,8 +590,8 @@ properties:
             schema.validate(b, schema=schema_tree)
 
 
-@pytest.mark.importorskip('astropy')
 def test_type_missing_dependencies():
+    astropy = pytest.importorskip('astropy', '3.0.0')
 
     class MissingType(types.CustomType):
         name = 'missing'
