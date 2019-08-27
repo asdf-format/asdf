@@ -25,8 +25,7 @@ except ImportError:
 
 
 pytest_plugins = [
-    'asdf.tests.schema_tester',
-    'astropy.tests.plugins.display',
+    'astropy.tests.plugins.display'
 ]
 
 enable_deprecations_as_exceptions()

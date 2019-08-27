@@ -322,6 +322,17 @@ def test_mask_roundtrip(tmpdir):
 
     helpers.assert_roundtrip_tree(tree, tmpdir, asdf_check_func=check_asdf)
 
+def test_len_roundtrip(tmpdir):
+    sequence = np.arange(0, 10, dtype=np.int)
+    tree = {
+        'sequence': sequence
+        }
+
+    def check_len(asdf):
+        s = asdf.tree["sequence"]
+        assert len(s) == 10
+
+    helpers.assert_roundtrip_tree(tree, tmpdir, asdf_check_func=check_len)
 
 def test_mask_arbitrary():
     content = """

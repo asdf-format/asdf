@@ -41,6 +41,11 @@ class ExtensionMetadata(AsdfType):
         return tree
 
 
+class SubclassMetadata(dict, AsdfType):
+    name = 'core/subclass_metadata'
+    version = '1.0.0'
+
+
 from .constant import ConstantType
 from .ndarray import NDArrayType
 from .complex import ComplexType

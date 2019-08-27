@@ -534,6 +534,57 @@ Note that the implementation of ``to_tree`` is not conditioned on
 ``cls.version`` since we do not need to convert new ``Person`` objects back to
 the older version of the schema.
 
+Handling subclasses
+*******************
+
+By default, if a custom type is serialized by an ASDF tag class, then all
+subclasses of that type can also be serialized. However, no attributes that are
+specific to the subclass will be stored in the file. When reading the file, an
+instance of the base custom type will be returned instead of the subclass that
+was written.
+
+To properly handle subclasses of custom types already recognized by ASDF, it is
+necessary to implement a separate tag class that is specific to the subclass to
+be serialized.
+
+However, this can be burdensome, especially if multiple subclasses need to be
+handled. Version 2.4.0 of the `asdf` package introduces a new way to handle
+subclasses of custom types using decorators.
+
+.. attention::
+
+   This feature was introduced in version 2.4.0 and is **experimental**. The
+   API may change in future versions.
+
+In previous examples we wrote a tag class for the built-in type
+`fractions.Fraction`. Let's create a subclass of this type that we wish to
+be able to serialize in ASDF. We have already defined ``FractionType`` which
+handles the serialization of `fractions.Fraction`. We will use decorators to
+indicate how to properly serialize the subclass:
+
+.. code-block:: python
+
+   @FractionType.subclass
+   class NamedFraction(fractions.Fraction):
+      """
+      A very contrived example, indeed.
+      """
+      def __init__(self, *args, name='', **kwargs):
+         super().__init__(*args, **kwargs)
+         self._name = name
+
+      @FractionType.subclass_property
+      def name(self):
+         return self._name
+
+The decorators we use are defined as class methods of the ``FractionType`` tag
+class. By using these we enable round-trip serialization of our custom subclass
+type. See `asdf.CustomType.subclass` and `asdf.CustomType.subclass_property`
+for additional details.
+
+Note that this feature is currently not reflected in the ASDF Standard, which
+means that other implementations of ASDF may not preserve subclass information.
+
 Creating custom schemas
 -----------------------
 
@@ -722,25 +773,11 @@ Packages that provide their own schemas can test them using ASDF's
 Schemas are tested for overall validity, and any examples given within the
 schemas are also tested.
 
-The schema tester plugin is automatically made available when the ASDF package
-is installed. In order to enable testing, the following steps are required:
-
-1. Add `asdf.tests.schema_tester` to the list of pytest plugins in the
-   top-level `conftest.py` file for your package. If that file does not already
-   exist, creating a `conftest.py` file containing the following should be
-   sufficient (see `this
-   <https://docs.pytest.org/en/2.7.3/plugins.html?highlight=re>`_ for more
-   information on `conftest.py` files):
-
-.. code:: python
-
-    pytest_plugins = [
-        'asdf.tests.schema_tester'
-    ]
-
-2. Add the directory containing your schema files to the pytest section of your
-   project's `setup.cfg` file. If you do not already have such a file, creating
-   a `setup.cfg` with the following should be sufficient:
+The schema tester plugin is automatically registered when the ASDF package is
+installed. In order to enable testing, it is necessary to add the directory
+containing your schema files to the pytest section of your project's
+`setup.cfg` file. If you do not already have such a file, creating a
+`setup.cfg` with the following should be sufficient:
 
 .. code:: ini
 
@@ -752,8 +789,22 @@ package directory **when it is installed**. If this is different from the path
 in the source directory, then both paths can be used to facilitate in-place
 testing (see ASDF's own `setup.cfg` for an example of this).
 
+.. note::
+
+   Older versions of ASDF (prior to 2.4.0) required the plugin to be registered
+   in your project's `conftest.py` file. As of 2.4.0, the plugin is now
+   registered automatically and so this line should be removed from your
+   `conftest.py` file, unless you need to retain compatibility with older
+   versions of ASDF.
+
 The ``asdf_schema_skip_names`` configuration variable can be used to skip
 schema files that live within one of the ``asdf_schema_root`` directories but
 should not be tested. The names should be given as simple base file names
 (without directory paths or extensions). Again, see ASDF's own `setup.cfg` file
 for an example.
+
+The schema tests do **not** run by default. In order to enable the tests by
+default for your package, add ``asdf_schema_tests_enabled = true`` to the
+``[tool:pytest]`` section of your `setup.cfg` file. If you do not wish to
+enable the schema tests by default, you can add the ``--asdf-tests`` option to
+the ``pytest`` command line to enable tests on a per-run basis.

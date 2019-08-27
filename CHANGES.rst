@@ -1,3 +1,25 @@
+2.4.0 (2019-08-27)
+------------------
+
+- Define the ``in`` operator for top-level ``AsdfFile`` objects. [#623]
+
+- Overhaul packaging infrastructure. Remove use of ``astropy_helpers``. [#670]
+
+- Automatically register schema tester plugin. Do not enable schema tests by
+  default. Add configuration setting and command line option to enable schema
+  tests. [#676]
+
+- Enable handling of subclasses of known custom types by using decorators for
+  convenience. [#563]
+
+- Add support for jsonschema 3.x. [#684]
+
+2.3.4 (unreleased)
+------------------
+
+- Fix bug in ``NDArrayType.__len__``.  It must be a method, not a
+  property. [#673]
+
 2.3.3 (2019-04-02)
 ------------------
 
@@ -61,7 +83,7 @@
 2.2.0 (2018-11-14)
 ------------------
 
-- Add new parameter `lazy_load` to ``AsdfFile.open``. It is ``True`` by
+- Add new parameter ``lazy_load`` to ``AsdfFile.open``. It is ``True`` by
   default and preserves the default behavior. ``False`` detaches the
   loaded tree from the underlying file: all blocks are fully read and
   numpy arrays are materialized. Thus it becomes safe to close the file
@@ -69,14 +91,14 @@
   is still effective and the active memory maps may still require the file
   to stay open in case ``copy_arrays`` is ``False``. [#573]
 
+- Add ``AsdfConversionWarning`` for failures to convert ASDF tree into custom
+  types. This warning is converted to an error when using
+  ``assert_roundtrip_tree`` for tests. [#583]
+
 - Deprecate ``asdf.AsdfFile.open`` in favor of ``asdf.open``. [#579]
 
 - Add readonly protection to memory mapped arrays when the underlying file
   handle is readonly. [#579]
-
-- Add ``AsdfConversionWarning`` for failures to convert ASDF tree into custom
-  types. This warning is converted to an error when using
-  ``assert_roundtrip_tree`` for tests. [#583]
 
 2.1.2 (2018-11-13)
 ------------------
@@ -84,9 +106,6 @@
 - Make sure that all types corresponding to core tags are added to the type
   index before any others. This fixes a bug that was related to the way that
   subclass tags were overwritten by external extensions. [#598]
-
-- Remove WCS tags. These are now provided by the `gwcs package
-  <https://github.com/spacetelescope/gwcs>`_. [#593]
 
 2.1.1 (2018-11-01)
 ------------------

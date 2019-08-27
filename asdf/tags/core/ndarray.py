@@ -331,7 +331,6 @@ class NDArrayType(AsdfType):
         else:
             return self._array.dtype
 
-    @property
     def __len__(self):
         if self._array is None:
             return self._shape[0]

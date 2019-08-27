@@ -25,21 +25,9 @@
 # Thus, any C-extensions that are needed to build the documentation will *not*
 # be accessible, and the documentation will not build correctly.
 
-import datetime
 import os
 import sys
-
-try:
-    import astropy_helpers
-except ImportError:
-    # Building from inside the docs/ directory?
-    if os.path.basename(os.getcwd()) == 'docs':
-        a_h_path = os.path.abspath(os.path.join('..', 'astropy_helpers'))
-        if os.path.isdir(a_h_path):
-            sys.path.insert(1, a_h_path)
-
-# Load all of the global Astropy configuration
-from astropy_helpers.sphinx.conf import *
+import datetime
 
 # Ensure documentation examples are determinstically random.
 import numpy
@@ -47,6 +35,12 @@ try:
     numpy.random.seed(int(os.environ['SOURCE_DATE_EPOCH']))
 except KeyError:
     pass
+
+try:
+    from sphinx_astropy.conf.v1 import *  # noqa
+except ImportError:
+    print('ERROR: the documentation requires the sphinx-astropy package to be installed')
+    sys.exit(1)
 
 # Get configuration information from setup.cfg
 try:
@@ -56,7 +50,6 @@ except ImportError:
 conf = ConfigParser()
 conf.read([os.path.join(os.path.dirname(__file__), '..', 'setup.cfg')])
 setup_cfg = dict(conf.items('metadata'))
-setup_cfg['package_name'] = 'asdf'
 
 # -- General configuration ----------------------------------------------------
 
@@ -79,7 +72,7 @@ rst_epilog += """
 # -- Project information ------------------------------------------------------
 
 # This does not *have* to match the package name, but typically does
-project = setup_cfg['package_name']
+project = setup_cfg['name']
 author = setup_cfg['author']
 copyright = '{0}, {1}'.format(
     datetime.datetime.now().year, setup_cfg['author'])
@@ -87,15 +80,10 @@ copyright = '{0}, {1}'.format(
 # The version info for the project you're documenting, acts as replacement for
 # |version| and |release|, also used in various other places throughout the
 # built documents.
-
-__import__(setup_cfg['package_name'])
-package = sys.modules[setup_cfg['package_name']]
-
-# The short X.Y version.
-version = package.__version__.split('-', 1)[0]
-# The full version, including alpha/beta/rc tags.
-release = package.__version__
-
+from pkg_resources import get_distribution
+release = get_distribution(setup_cfg['name']).version
+# for example take major/minor
+version = '.'.join(release.split('.')[:2])
 
 # -- Options for HTML output ---------------------------------------------------
 
@@ -159,22 +147,6 @@ latex_documents = [('index', project + '.tex', project + u' Documentation',
 man_pages = [('index', project.lower(), project + u' Documentation',
               [author], 1)]
 
-
-## -- Options for the edit_on_github extension ----------------------------------------
-
-if eval(setup_cfg.get('edit_on_github')):
-    extensions += ['astropy_helpers.sphinx.ext.edit_on_github']
-
-    versionmod = __import__(setup_cfg['package_name'] + '.version')
-    edit_on_github_project = setup_cfg['github_project']
-    if versionmod.version.release:
-        edit_on_github_branch = "v" + versionmod.version.version
-    else:
-        edit_on_github_branch = "master"
-
-    edit_on_github_source_root = ""
-    edit_on_github_doc_root = "docs"
-
-
-sys.path.insert(0, os.path.join(os.path.dirname('__file__'), 'sphinxext'))
+sys.path.insert(0, os.path.join(os.path.abspath(os.path.dirname('__file__')),
+                                'sphinxext'))
 extensions += ['example']

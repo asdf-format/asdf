@@ -22,28 +22,7 @@ from asdf import schema
 from asdf import util
 from asdf import yamlutil
 
-from asdf.tests import helpers
-
-
-class CustomExtension:
-    """
-    This is the base class that is used for extensions for custom tag
-    classes that exist only for the purposes of testing.
-    """
-    @property
-    def types(self):
-        return []
-
-    @property
-    def tag_mapping(self):
-        return [('tag:nowhere.org:custom',
-                 'http://nowhere.org/schemas/custom{tag_suffix}')]
-
-    @property
-    def url_mapping(self):
-        return [('http://nowhere.org/schemas/custom/',
-                 util.filepath_to_url(helpers.get_test_data_path('')) +
-                 '/{url_suffix}.yaml')]
+from asdf.tests import helpers, CustomExtension
 
 
 class TagReferenceType(types.CustomType):
@@ -471,6 +450,16 @@ def test_self_reference_resolution():
     assert s['anyOf'][1] == s['anyOf'][0]
 
 
+def test_schema_resolved_via_entry_points():
+    """Test that entry points mappings to core schema works"""
+    r = asdf.AsdfFile().resolver
+    tag = types.format_tag('stsci.edu', 'asdf', '1.0.0', 'fits/fits')
+    url = resolver.default_tag_to_url_mapping(tag)
+
+    s = schema.load_schema(url, resolver=r, resolve_references=True)
+    assert tag in repr(s)
+
+
 @pytest.mark.parametrize('use_numpy', [False, True])
 def test_large_literals(use_numpy):
 
@@ -480,6 +469,13 @@ def test_large_literals(use_numpy):
 
     tree = {
         'large_int': largeval,
+    }
+
+    with pytest.raises(ValidationError):
+        asdf.AsdfFile(tree)
+
+    tree = {
+        'large_list': [largeval],
     }
 
     with pytest.raises(ValidationError):
