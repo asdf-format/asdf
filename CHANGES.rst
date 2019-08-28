@@ -1,4 +1,8 @@
-2.4.0 (2019-08-27)
+2.4.2 (Unreleased)
+------------------
+
+
+2.4.1 (2019-08-27)
 ------------------
 
 - Define the ``in`` operator for top-level ``AsdfFile`` objects. [#623]
