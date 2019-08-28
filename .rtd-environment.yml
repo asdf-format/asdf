@@ -14,5 +14,6 @@ dependencies:
   - pyyaml
   - jsonschema>=2.3,<4
   - semantic_version
+  - pytest
   - pip:
     - ".[docs]"
