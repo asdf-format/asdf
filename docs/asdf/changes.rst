@@ -4,7 +4,7 @@
 Changes
 *******
 
-What's New in ASDF 2.4.1?
+What's New in ASDF 2.4.2?
 =========================
 
 The ASDF Standard is at v1.3.0. Changes include:
