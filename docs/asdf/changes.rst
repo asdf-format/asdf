@@ -4,6 +4,56 @@
 Changes
 *******
 
+What's New in ASDF 2.4.2?
+=========================
+
+The ASDF Standard is at v1.3.0. Changes include:
+
+* Define the ``in`` operator for top-level ``AsdfFile`` objects.
+
+* Automatically register schema tester plugin. Do not enable schema tests by
+  default. Add configuration setting and command line option to enable schema
+  tests.
+
+* Enable handling of subclasses of known custom types by using decorators for
+  convenience.
+
+* Add support for jsonschema 3.x.
+
+* Fix bug in ``NDArrayType.__len__``.  It must be a method, not a
+  property.
+
+What's New in ASDF 2.3.3?
+=========================
+
+
+The ASDF Standard is at v1.3.0. Changes include:
+
+* Pass ``ignore_unrecognized_tag`` setting through to ASDF-in-FITS.
+
+* Use ``$schema`` keyword if available to determine meta-schema to use when
+  testing whether schemas themselves are valid.
+
+* Take into account resolvers from installed extensions when loading schemas
+  for validation.
+
+* Fix compatibility issue with new release of ``pyyaml`` (version 5.1).
+
+* Allow use of ``pathlib.Path`` objects for ``custom_schema`` option.
+
+What's New in ASDF 2.3.1?
+=========================
+
+he ASDF Standard is at v1.3.0. Changes include:
+
+* Provide source information for ``AsdfDeprecationWarning`` that come from
+  extensions from external packages.
+
+* Fix the way ``generic_io`` handles URIs and paths on Windows.
+
+* Fix bug in ``asdftool`` that prevented ``extract`` command from being
+  visible.
+
 What's New in ASDF 2.3?
 =======================
 

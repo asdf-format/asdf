@@ -8,9 +8,12 @@ name: asdf
 
 dependencies:
   - python>=3
+  - pip>=10.0
   - sphinx<1.7
   - numpy
   - pyyaml
-  - jsonschema>=2.3,<=2.6
+  - jsonschema>=2.3,<4
   - semantic_version
-  - astropy
+  - pytest
+  - pip:
+    - ".[docs]"
