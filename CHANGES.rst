@@ -1,6 +1,8 @@
-2.4.2 (Unreleased)
+2.4.2 (2019-08-29)
 ------------------
 
+- Limit the version of ``semantic_version`` to <=2.6.0 to work
+  around a Deprecation warning. [#700]
 
 2.4.1 (2019-08-27)
 ------------------
