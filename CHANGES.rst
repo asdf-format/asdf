@@ -1,3 +1,8 @@
+2.5.0 (Unreleased)
+------------------
+
+- Added asdf-standard 1.4.0 to the list of supported versions. [#704]
+
 2.4.2 (2019-08-29)
 ------------------
 
