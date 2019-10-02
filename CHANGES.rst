@@ -4,6 +4,8 @@
 - Add ``package`` property to extension metadata, and deprecate
   use of ``software``. [#728]
 
+- AsdfDeprecationWarning now subclasses DeprecationWarning. [#710]
+
 2.5.0 (2019-12-23)
 ------------------
 
