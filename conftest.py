@@ -1,34 +1,9 @@
 # Licensed under a 3-clause BSD style license - see LICENSE.rst
 # -*- coding: utf-8 -*-
 import os
-from collections import OrderedDict
 
 import pytest
 from _pytest.doctest import DoctestItem
-
-from astropy.tests.helper import enable_deprecations_as_exceptions
-from astropy.tests.plugins import display
-
-
-display.PYTEST_HEADER_MODULES = OrderedDict([
-                                    ('asdf', 'asdf'),
-                                    ('numpy', 'numpy'),
-                                    ('jsonschema', 'jsonschema'),
-                                    ('pyyaml', 'yaml'),
-                                    ('astropy', 'astropy')])
-
-try:
-    import gwcs
-    display.PYTEST_HEADER_MODULES['gwcs'] = 'gwcs'
-except ImportError:
-    pass
-
-
-pytest_plugins = [
-    'astropy.tests.plugins.display'
-]
-
-enable_deprecations_as_exceptions()
 
 
 @pytest.fixture(autouse=True)
