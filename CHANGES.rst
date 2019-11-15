@@ -3,6 +3,11 @@
 
 - Added asdf-standard 1.4.0 to the list of supported versions. [#704]
 
+- ``SpecItem`` and ``Spec`` were depreicated  in ``semantic_version``
+  and were replaced with ``SimpleSpec``. [#715]
+
+- Pinned the minimum required ``semantic_version`` to 2.8. [#715]
+
 2.4.2 (2019-08-29)
 ------------------
 
