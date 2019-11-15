@@ -5,6 +5,7 @@
 This module deals with things that change between different versions
 of the ASDF spec.
 """
+
 from functools import total_ordering
 
 import yaml
@@ -14,7 +15,7 @@ if getattr(yaml, '__with_libyaml__', None):  # pragma: no cover
 else:  # pragma: no cover
     _yaml_base_loader = yaml.SafeLoader
 
-from semantic_version import Version, SpecItem, Spec
+from semantic_version import Version, SimpleSpec
 
 from . import generic_io
 from . import resolver
@@ -83,7 +84,7 @@ class AsdfVersionMixin:
 
     def __eq__(self, other):
         # Seems like a bit of a hack...
-        if isinstance(other, SpecItem):
+        if isinstance(other, SimpleSpec):
             return other == self
         if isinstance(other, (str, tuple, list)):
             other = AsdfVersion(other)
@@ -123,7 +124,7 @@ class AsdfVersion(AsdfVersionMixin, Version):
         super(AsdfVersion, self).__init__(version)
 
 
-class AsdfSpec(SpecItem, Spec):
+class AsdfSpec(SimpleSpec):
 
     def __init__(self, *args, **kwargs):
         super(AsdfSpec, self).__init__(*args, **kwargs)
@@ -147,7 +148,7 @@ class AsdfSpec(SpecItem, Spec):
 
     def __eq__(self, other):
         """Equality between Spec and Version, string, or tuple, means match"""
-        if isinstance(other, SpecItem):
+        if isinstance(other, SimpleSpec):
             return super(AsdfSpec, self).__eq__(other)
         return self.match(other)
 
