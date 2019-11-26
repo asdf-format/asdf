@@ -23,6 +23,7 @@ from . import treeutil
 from . import util
 from .extension import default_extensions
 from .compat.jsonschemacompat import JSONSCHEMA_LT_3
+from . import extension
 from .exceptions import AsdfDeprecationWarning
 
 
@@ -48,7 +49,7 @@ def default_ext_resolver(uri):
             "The 'default_ext_resolver(...)' function is deprecated. Use "
             "'asdf.extension.get_default_resolver()(...)' instead.",
             AsdfDeprecationWarning)
-    return default_extensions.extension_list.resolver(uri)
+    return extension.get_default_resolver()(uri)
 
 
 PYTHON_TYPE_TO_YAML_TAG = {
@@ -206,7 +207,7 @@ REMOVE_DEFAULTS['properties'] = validate_remove_default
 
 @lru_cache()
 def _create_validator(validators=YAML_VALIDATORS):
-    meta_schema = load_schema(YAML_SCHEMA_METASCHEMA_ID, default_extensions.extension_list.resolver)
+    meta_schema = load_schema(YAML_SCHEMA_METASCHEMA_ID, extension.get_default_resolver())
 
     if JSONSCHEMA_LT_3:
         base_cls = mvalidators.create(meta_schema=meta_schema, validators=validators)
@@ -390,8 +391,8 @@ def load_schema(url, resolver=None, resolve_references=False,
     """
     if resolver is None:
         # We can't just set this as the default in load_schema's definition
-        # because accessing extension_list at import time leads to a circular import.
-        resolver = default_extensions.extension_list.resolver
+        # because invoking get_default_resolver at import time leads to a circular import.
+        resolver = extension.get_default_resolver()
 
     loader = _make_schema_loader(resolver)
     if url in HARDCODED_SCHEMA:
@@ -616,9 +617,9 @@ def check_schema(schema):
     })
 
     meta_schema_id = schema.get('$schema', YAML_SCHEMA_METASCHEMA_ID)
-    meta_schema = load_schema(meta_schema_id, default_extensions.extension_list.resolver)
+    meta_schema = load_schema(meta_schema_id, extension.get_default_resolver())
 
-    resolver = _make_resolver(default_extensions.extension_list.resolver)
+    resolver = _make_resolver(extension.get_default_resolver())
 
     cls = mvalidators.create(meta_schema=meta_schema,
                              validators=VALIDATORS)
