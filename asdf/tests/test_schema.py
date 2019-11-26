@@ -162,7 +162,7 @@ properties:
 
 required: [foobar]
 ...
-    """.format(resolver.default_resolver('tag:stsci.edu:asdf/core/ndarray-1.0.0'))
+    """.format(extension.get_default_resolver()('tag:stsci.edu:asdf/core/ndarray-1.0.0'))
     schema_path = tmpdir.join('nugatory.yaml')
     schema_path.write(schema_def.encode())
 
@@ -178,6 +178,29 @@ def test_schema_caching():
     s2 = schema.load_schema(
         'http://stsci.edu/schemas/asdf/core/asdf-1.0.0')
     assert s1 is s2
+
+
+def test_schema_caching_with_asdf_file():
+    # Confirm that resolvers from distinct AsdfFile instances
+    # hash to the same cache entry
+    schema.load_schema.cache_clear()
+
+    a1 = asdf.AsdfFile()
+    s1 = schema.load_schema(
+        'http://stsci.edu/schemas/asdf/core/asdf-1.0.0',
+        resolver=a1.resolver
+    )
+    info1 = schema.load_schema.cache_info()
+
+    a2 = asdf.AsdfFile()
+    s2 = schema.load_schema(
+        'http://stsci.edu/schemas/asdf/core/asdf-1.0.0',
+        resolver=a2.resolver
+    )
+    info2 = schema.load_schema.cache_info()
+
+    assert s1 is s2
+    assert info1.misses == info2.misses
 
 
 def test_flow_style():
@@ -452,9 +475,9 @@ def test_self_reference_resolution():
 
 def test_schema_resolved_via_entry_points():
     """Test that entry points mappings to core schema works"""
-    r = asdf.AsdfFile().resolver
+    r = extension.get_default_resolver()
     tag = types.format_tag('stsci.edu', 'asdf', '1.0.0', 'fits/fits')
-    url = resolver.default_tag_to_url_mapping(tag)
+    url = extension.default_extensions.extension_list.tag_mapping(tag)
 
     s = schema.load_schema(url, resolver=r, resolve_references=True)
     assert tag in repr(s)

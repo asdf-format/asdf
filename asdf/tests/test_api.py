@@ -13,6 +13,8 @@ import pytest
 import asdf
 from asdf import treeutil
 from asdf import extension
+from asdf import resolver
+from asdf import schema
 from asdf import versioning
 from asdf.exceptions import AsdfDeprecationWarning
 from .helpers import assert_tree_match, assert_roundtrip_tree, display_warnings
@@ -408,3 +410,22 @@ def test_inline_threshold_override(tmpdir):
         af.write_to(tmpfile, all_array_storage='inline')
         assert len(list(af.blocks.inline_blocks)) == 2
         assert len(list(af.blocks.internal_blocks)) == 0
+
+
+def test_resolver_deprecations():
+    for resolver_method in [
+        resolver.default_resolver,
+        resolver.default_tag_to_url_mapping,
+        resolver.default_url_mapping,
+        schema.default_ext_resolver
+    ]:
+        with pytest.warns(AsdfDeprecationWarning):
+            resolver_method("foo")
+
+
+def test_get_default_resolver():
+    resolver = extension.get_default_resolver()
+
+    result = resolver('tag:stsci.edu:asdf/core/ndarray-1.0.0')
+
+    assert result.endswith("asdf-standard/schemas/stsci.edu/asdf/core/ndarray-1.0.0.yaml")

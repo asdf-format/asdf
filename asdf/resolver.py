@@ -3,9 +3,11 @@
 
 import sys
 import os.path
+import warnings
 
 from . import constants
 from . import util
+from .exceptions import AsdfDeprecationWarning
 
 
 def find_schema_path():
@@ -24,11 +26,11 @@ class Resolver:
     A class that can be used to map strings with a particular prefix
     to another.
     """
-    def __init__(self, mapping=[], prefix=''):
+    def __init__(self, mappings, prefix):
         """
         Parameters
         ----------
-        mapping : list of tuple or callable, optional
+        mappings : list of tuple or callable
             A list of mappings to try, in order.
             For each entry:
 
@@ -48,63 +50,104 @@ class Resolver:
               - ``{X_suffix}``: The part of the string following the
                 prefix.
 
-        prefix : str, optional
+        prefix : str
             The prefix to use for the Python formatting token names.
         """
-        self._mapping = tuple()
-        if mapping:
-            self.add_mapping(mapping, prefix)
+        self._mappings = self._validate_mappings(mappings)
+        self._prefix = prefix
 
-    def add_mapping(self, mapping, prefix=''):
-        self._mapping = self._mapping + self._validate_mapping(mapping, prefix)
 
-    def _make_map_func(self, mapping, prefix):
-        def _map_func(uri):
-            if uri.startswith(mapping[0]):
+    def add_mapping(self, mappings, prefix=''):
+        # Deprecating this because Resolver is used as part of a dictionary key
+        # and so shouldn't be mutable.
+        assert prefix == self._prefix
+
+        warnings.warn("The 'add_mapping' method is deprecated.", AsdfDeprecationWarning)
+        self._mappings = self._mappings + self._validate_mappings(mappings)
+
+
+    def _perform_mapping(self, mapping, input):
+        if callable(mapping):
+            output = mapping(input)
+            if output is not None:
+                return (sys.maxsize, mapping(input))
+            else:
+                return None
+        else:
+            if input.startswith(mapping[0]):
                 format_tokens = {
-                    prefix: uri,
-                    prefix + "_prefix": mapping[0],
-                    prefix + "_suffix": uri[len(mapping[0]):]
+                    self._prefix: input,
+                    self._prefix + "_prefix": mapping[0],
+                    self._prefix + "_suffix": input[len(mapping[0]):]
                 }
 
                 return len(mapping[0]), mapping[1].format(**format_tokens)
-            return None
-        return _map_func
+            else:
+                return None
 
-    def _validate_mapping(self, mappings, prefix):
+    def _validate_mappings(self, mappings):
         normalized = []
         for mapping in mappings:
             if callable(mapping):
-                func = mapping
+                normalized.append(mapping)
             elif (isinstance(mapping, (list, tuple)) and
                   len(mapping) == 2 and
                   isinstance(mapping[0], str) and
                   isinstance(mapping[1], str)):
-
-                func = self._make_map_func(mapping, prefix)
+                normalized.append(tuple(mapping))
             else:
                 raise ValueError("Invalid mapping '{0}'".format(mapping))
 
-            normalized.append(func)
-
         return tuple(normalized)
 
+
     def __call__(self, input):
-        candidates = []
-        for mapper in self._mapping:
-            output = mapper(input)
-            if isinstance(output, tuple):
+        candidates = [(0, input)]
+        for mapping in self._mappings:
+            output = self._perform_mapping(mapping, input)
+            if output is not None:
                 candidates.append(output)
-            elif output is not None:
-                candidates.append((sys.maxsize, output))
-        if len(candidates):
-            candidates.sort()
-            return candidates[-1][1]
-        else:
-            return input
+
+        candidates.sort()
+        return candidates[-1][1]
 
     def __hash__(self):
-        return hash(self._mapping)
+        return hash(self._mappings)
+
+    def __eq__(self, other):
+        if not isinstance(other, Resolver):
+            return NotImplemented
+
+        return self._mappings == other._mappings
+
+
+class ResolverChain:
+    """
+    A chain of Resolvers, each of which is called with the previous Resolver's
+    output to produce the final transformed string.
+    """
+    def __init__(self, *resolvers):
+        """
+        Parameters
+        ----------
+        *resolvers : list of Resolver
+            Resolvers to include in the chain.
+        """
+        self._resolvers = tuple(resolvers)
+
+    def __call__(self, input):
+        for resolver in self._resolvers:
+            input = resolver(input)
+        return input
+
+    def __hash__(self):
+        return hash(self._resolvers)
+
+    def __eq__(self, other):
+        if not isinstance(other, ResolverChain):
+            return NotImplemented
+
+        return self._resolvers == other._resolvers
 
 
 DEFAULT_URL_MAPPING = [
@@ -117,9 +160,20 @@ DEFAULT_TAG_TO_URL_MAPPING = [
      'http://stsci.edu/schemas/asdf{tag_suffix}')
 ]
 
+def default_url_mapping(uri):
+    warnings.warn("'default_url_mapping' is deprecated.", AsdfDeprecationWarning)
+    return default_url_mapping._resolver(uri)
+default_url_mapping._resolver = Resolver(DEFAULT_URL_MAPPING, 'url')
 
-default_url_mapping = Resolver(DEFAULT_URL_MAPPING, 'url')
-default_tag_to_url_mapping = Resolver(DEFAULT_TAG_TO_URL_MAPPING, 'tag')
+def default_tag_to_url_mapping(uri):
+    warnings.warn("'default_tag_to_url_mapping' is deprecated.", AsdfDeprecationWarning)
+    return default_tag_to_url_mapping._resolver(uri)
+default_tag_to_url_mapping._resolver = Resolver(DEFAULT_TAG_TO_URL_MAPPING, 'tag')
 
 def default_resolver(uri):
-    return default_url_mapping(default_tag_to_url_mapping(uri))
+    warnings.warn(
+        "The 'default_resolver(...)' function is deprecated. Use "
+        "'asdf.extension.get_default_resolver()(...)' instead.",
+        AsdfDeprecationWarning)
+    return default_resolver._resolver(uri)
+default_resolver._resolver = ResolverChain(default_tag_to_url_mapping, default_url_mapping)

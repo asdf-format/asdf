@@ -23,6 +23,7 @@ from . import treeutil
 from . import util
 from .extension import default_extensions
 from .compat.jsonschemacompat import JSONSCHEMA_LT_3
+from .exceptions import AsdfDeprecationWarning
 
 
 YAML_SCHEMA_METASCHEMA_ID = 'http://stsci.edu/schemas/yaml-schema/draft-01'
@@ -41,9 +42,13 @@ def default_ext_resolver(uri):
     """
     Resolver that uses tag/url mappings from all installed extensions
     """
-    tag_mapping = default_extensions.extension_list.tag_mapping
-    url_mapping = default_extensions.extension_list.url_mapping
-    return url_mapping(tag_mapping(uri))
+    # Deprecating this because it doesn't play nicely with the caching on
+    # load_schema(...).
+    warnings.warn(
+            "The 'default_ext_resolver(...)' function is deprecated. Use "
+            "'asdf.extension.get_default_resolver()(...)' instead.",
+            AsdfDeprecationWarning)
+    return default_extensions.extension_list.resolver(uri)
 
 
 PYTHON_TYPE_TO_YAML_TAG = {
@@ -199,10 +204,9 @@ for key in ('allOf', 'anyOf', 'oneOf', 'items'):
 REMOVE_DEFAULTS['properties'] = validate_remove_default
 
 
-
 @lru_cache()
 def _create_validator(validators=YAML_VALIDATORS):
-    meta_schema = load_schema(YAML_SCHEMA_METASCHEMA_ID, default_ext_resolver)
+    meta_schema = load_schema(YAML_SCHEMA_METASCHEMA_ID, default_extensions.extension_list.resolver)
 
     if JSONSCHEMA_LT_3:
         base_cls = mvalidators.create(meta_schema=meta_schema, validators=validators)
@@ -385,7 +389,10 @@ def load_schema(url, resolver=None, resolve_references=False,
         control local reference resolution separately.
     """
     if resolver is None:
-        resolver = default_ext_resolver
+        # We can't just set this as the default in load_schema's definition
+        # because accessing extension_list at import time leads to a circular import.
+        resolver = default_extensions.extension_list.resolver
+
     loader = _make_schema_loader(resolver)
     if url in HARDCODED_SCHEMA:
         schema = HARDCODED_SCHEMA[url]()
@@ -609,9 +616,9 @@ def check_schema(schema):
     })
 
     meta_schema_id = schema.get('$schema', YAML_SCHEMA_METASCHEMA_ID)
-    meta_schema = load_schema(meta_schema_id, default_ext_resolver)
+    meta_schema = load_schema(meta_schema_id, default_extensions.extension_list.resolver)
 
-    resolver = _make_resolver(default_ext_resolver)
+    resolver = _make_resolver(default_extensions.extension_list.resolver)
 
     cls = mvalidators.create(meta_schema=meta_schema,
                              validators=VALIDATORS)

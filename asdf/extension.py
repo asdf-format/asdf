@@ -137,6 +137,7 @@ class AsdfExtensionList:
                     validators.update(sibling.validators)
         self._tag_mapping = resolver.Resolver(tag_mapping, 'tag')
         self._url_mapping = resolver.Resolver(url_mapping, 'url')
+        self._resolver = resolver.ResolverChain(self._tag_mapping, self._url_mapping)
         self._validators = validators
 
     @property
@@ -155,6 +156,10 @@ class AsdfExtensionList:
     @property
     def url_mapping(self):
         return self._url_mapping
+
+    @property
+    def resolver(self):
+        return self._resolver
 
     @property
     def type_index(self):
@@ -244,10 +249,17 @@ class _DefaultExtensions:
         self._extension_list = None
         self._package_metadata = {}
 
-    def resolver(self, uri):
-        tag_mapping = self.extension_list.tag_mapping
-        url_mapping = self.extension_list.url_mapping
-        return url_mapping(tag_mapping(uri))
+    @property
+    def resolver(self):
+        return self.extension_list.resolver
 
 
 default_extensions = _DefaultExtensions()
+
+
+def get_default_resolver():
+    """
+    Get the resolver that includes mappings from all installed extensions.
+    """
+    return default_extensions.resolver
+
