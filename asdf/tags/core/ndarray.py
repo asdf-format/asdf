@@ -2,6 +2,7 @@
 # -*- coding: utf-8 -*-
 
 import sys
+import weakref
 
 import numpy as np
 from numpy import ma
@@ -221,6 +222,7 @@ class NDArrayType(AsdfType):
         self._asdffile = asdffile
         self._source = source
         self._block = None
+        self._block_data_ref = None
         self._array = None
         self._mask = mask
 
@@ -244,6 +246,12 @@ class NDArrayType(AsdfType):
             self._make_array()
 
     def _make_array(self):
+        if self._block_data_ref is not None:
+            block_data = self._block_data_ref()
+            if block_data is not self.block.data:
+                self._array = None
+                self._block_data_ref = None
+
         if self._array is None:
             block = self.block
             shape = self.get_actual_shape(
@@ -251,6 +259,7 @@ class NDArrayType(AsdfType):
             self._array = np.ndarray(
                 shape, self._dtype, block.data,
                 self._offset, self._strides, self._order)
+            self._block_data_ref = weakref.ref(block.data)
             self._array = self._apply_mask(self._array, self._mask)
             if block.readonly:
                 self._array.setflags(write=False)
@@ -353,6 +362,7 @@ class NDArrayType(AsdfType):
             self._make_array().__setitem__(*args)
         except Exception as e:
             self._array = None
+            self._block_data_ref = None
             raise e from None
 
     @classmethod
