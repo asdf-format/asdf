@@ -2,6 +2,8 @@
 ------------------
 
 - Added asdf-standard 1.4.0 to the list of supported versions. [#704]
+- Fix load_schema LRU cache memory usage issue [#682]
+- Add convenience method for fetching the default resolver [#682]
 
 - ``SpecItem`` and ``Spec`` were depreicated  in ``semantic_version``
   and were replaced with ``SimpleSpec``. [#715]
