@@ -876,7 +876,7 @@ def test_block_data_change(tmpdir):
     tmpfile = str(tmpdir.join("data.asdf"))
     tree = {"data": np.ndarray(10)}
     with asdf.AsdfFile(tree) as af:
-       af.write_to(tmpfile)
+        af.write_to(tmpfile)
 
     with asdf.open(tmpfile, mode="rw") as af:
         array_before = af.tree["data"].__array__()
