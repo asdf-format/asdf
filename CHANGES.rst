@@ -10,6 +10,8 @@
 
 - Pinned the minimum required ``semantic_version`` to 2.8. [#715]
 
+- Fix bug causing segfault after update of a memory-mapped file. [#716]
+
 2.4.2 (2019-08-29)
 ------------------
 
