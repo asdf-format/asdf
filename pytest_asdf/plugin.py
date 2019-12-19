@@ -71,18 +71,32 @@ class AsdfSchemaItem(pytest.Item):
         schema.check_schema(schema_tree)
 
 
+ASTROPY_4_0_TAGS = {
+    'tag:stsci.edu:asdf/transform/rotate_sequence_3d',
+    'tag:stsci.edu:asdf/transform/ortho_polynomial',
+    'tag:stsci.edu:asdf/transform/fix_inputs',
+    'tag:stsci.edu:asdf/transform/math_functions',
+    'tag:stsci.edu:asdf/time/time',
+}
+
+
 def should_skip(name, version):
-
     if name == 'tag:stsci.edu:asdf/transform/multiplyscale':
-        astropy = find_spec('astropy')
-        if astropy is None:
-            return True
-
-        import astropy
-        if parse_version(astropy.version.version) < parse_version('3.1.dev0'):
-            return True
+        return not is_min_astropy_version('3.1.dev0')
+    elif name in ASTROPY_4_0_TAGS:
+	return not is_min_astropy_version('4.0')
 
     return False
+
+
+def is_min_astropy_version(min_version):
+    astropy = find_spec('astropy')
+    if astropy is None:
+        return False
+
+    import astropy
+    return parse_version(astropy.version.version) >= parse_version(min_version)
+
 
 def parse_schema_filename(filename):
     from asdf import versioning
