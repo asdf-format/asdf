@@ -191,7 +191,7 @@ def test_asdf_file_resolver_hashing():
     assert hash(a1.resolver) == hash(a2.resolver)
     assert a1.resolver == a2.resolver
 
-    
+
 def test_flow_style():
     class CustomFlowStyleType(dict, types.CustomType):
         name = 'custom_flow'
