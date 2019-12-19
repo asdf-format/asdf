@@ -84,7 +84,7 @@ def should_skip(name, version):
     if name == 'tag:stsci.edu:asdf/transform/multiplyscale':
         return not is_min_astropy_version('3.1.dev0')
     elif name in ASTROPY_4_0_TAGS:
-	return not is_min_astropy_version('4.0')
+        return not is_min_astropy_version('4.0')
 
     return False
 
