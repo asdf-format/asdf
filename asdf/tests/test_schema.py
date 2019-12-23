@@ -43,16 +43,16 @@ class TagReferenceType(types.CustomType):
         return node
 
 
-@pytest.mark.importorskip('astropy')
 def test_tagging_scalars():
+    astropy = pytest.importorskip('astropy', '3.0.0')
+    from astropy import units as u
+
     yaml = """
 unit: !unit/unit-1.0.0
   m
 not_unit:
   m
     """
-    from astropy import units as u
-
     buff = helpers.yaml_to_asdf(yaml)
     with asdf.open(buff) as ff:
         assert isinstance(ff.tree['unit'], u.UnitBase)
@@ -162,7 +162,7 @@ properties:
 
 required: [foobar]
 ...
-    """.format(resolver.default_resolver('tag:stsci.edu:asdf/core/ndarray-1.0.0'))
+    """.format(extension.get_default_resolver()('tag:stsci.edu:asdf/core/ndarray-1.0.0'))
     schema_path = tmpdir.join('nugatory.yaml')
     schema_path.write(schema_def.encode())
 
@@ -171,13 +171,25 @@ required: [foobar]
 
 
 def test_schema_caching():
-    # Make sure that if we request the same URL, we get the *exact
-    # same* object, to ensure the cache is working.
+    # Make sure that if we request the same URL, we get a different object
+    # (despite the caching internal to load_schema).  Changes to a schema
+    # dict should not impact other uses of that schema.
+
     s1 = schema.load_schema(
         'http://stsci.edu/schemas/asdf/core/asdf-1.0.0')
     s2 = schema.load_schema(
         'http://stsci.edu/schemas/asdf/core/asdf-1.0.0')
-    assert s1 is s2
+    assert s1 is not s2
+
+
+def test_asdf_file_resolver_hashing():
+    # Confirm that resolvers from distinct AsdfFile instances
+    # hash to the same value (this allows schema caching to function).
+    a1 = asdf.AsdfFile()
+    a2 = asdf.AsdfFile()
+
+    assert hash(a1.resolver) == hash(a2.resolver)
+    assert a1.resolver == a2.resolver
 
 
 def test_flow_style():
@@ -452,9 +464,9 @@ def test_self_reference_resolution():
 
 def test_schema_resolved_via_entry_points():
     """Test that entry points mappings to core schema works"""
-    r = asdf.AsdfFile().resolver
+    r = extension.get_default_resolver()
     tag = types.format_tag('stsci.edu', 'asdf', '1.0.0', 'fits/fits')
-    url = resolver.default_tag_to_url_mapping(tag)
+    url = extension.default_extensions.extension_list.tag_mapping(tag)
 
     s = schema.load_schema(url, resolver=r, resolve_references=True)
     assert tag in repr(s)
@@ -590,8 +602,8 @@ properties:
             schema.validate(b, schema=schema_tree)
 
 
-@pytest.mark.importorskip('astropy')
 def test_type_missing_dependencies():
+    astropy = pytest.importorskip('astropy', '3.0.0')
 
     class MissingType(types.CustomType):
         name = 'missing'

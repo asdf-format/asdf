@@ -858,7 +858,6 @@ def test_readonly(tmpdir):
 
 
 def test_readonly_inline(tmpdir):
-
     tmpfile = str(tmpdir.join('data.asdf'))
     tree = dict(data=np.ndarray((100)))
 
@@ -869,3 +868,18 @@ def test_readonly_inline(tmpdir):
     with asdf.open(tmpfile, mode='r') as af:
         assert af['data'].flags.writeable == True
         af['data'][0] = 42
+
+
+# Confirm that NDArrayType's internal array is regenerated
+# following an update.
+def test_block_data_change(tmpdir):
+    tmpfile = str(tmpdir.join("data.asdf"))
+    tree = {"data": np.ndarray(10)}
+    with asdf.AsdfFile(tree) as af:
+        af.write_to(tmpfile)
+
+    with asdf.open(tmpfile, mode="rw") as af:
+        array_before = af.tree["data"].__array__()
+        af.update()
+        array_after = af.tree["data"].__array__()
+        assert array_before is not array_after

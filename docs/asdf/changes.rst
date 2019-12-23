@@ -4,6 +4,19 @@
 Changes
 *******
 
+What's New in ASDF 2.5.0?
+=========================
+
+The ASDF Standard is at v1.4.0.
+
+Changes include:
+
+* Added convenience method for fetching the default resolver
+
+* Fixed load_schema LRU cache memory usage issue
+
+* Fixed bug causing segfault after update of a memory-mapped file.
+
 What's New in ASDF 2.4.2?
 =========================
 
