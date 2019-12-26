@@ -593,7 +593,7 @@ flow_thing:
 
 def test_extension_override(tmpdir):
 
-    gwcs = pytest.importorskip('gwcs', '0.9.0')
+    gwcs = pytest.importorskip('gwcs', '0.12.0')
 
     from asdf.extension import default_extensions
     default_extensions.reset()
@@ -603,19 +603,19 @@ def test_extension_override(tmpdir):
 
     with asdf.AsdfFile() as aa:
         wti = aa.type_index._write_type_indices[version]
-        assert wti.from_custom_type(gwcs.WCS) is gwcs.tags.WCSType
+        assert wti.from_custom_type(gwcs.WCS) is gwcs.tags.wcs.WCSType
         aa.tree['wcs'] = gwcs.WCS(output_frame='icrs')
         aa.write_to(tmpfile)
 
     with open(tmpfile, 'rb') as ff:
         contents = str(ff.read())
-        assert gwcs.tags.WCSType.yaml_tag in contents
+        assert gwcs.tags.wcs.WCSType.yaml_tag in contents
 
 
 def test_extension_override_subclass(tmpdir):
 
-    gwcs = pytest.importorskip('gwcs', '0.9.0')
-    astropy = pytest.importorskip('astropy', '3.0.0')
+    gwcs = pytest.importorskip('gwcs', '0.12.0')
+    astropy = pytest.importorskip('astropy', '4.0.0')
     from astropy.modeling import models
 
     from asdf.extension import default_extensions
@@ -629,16 +629,16 @@ def test_extension_override_subclass(tmpdir):
 
     with asdf.AsdfFile() as aa:
         wti = aa.type_index._write_type_indices[version]
-        assert wti.from_custom_type(gwcs.WCS) is gwcs.tags.WCSType
-        assert wti.from_custom_type(SubclassWCS) is gwcs.tags.WCSType
+        assert wti.from_custom_type(gwcs.WCS) is gwcs.tags.wcs.WCSType
+        assert wti.from_custom_type(SubclassWCS) is gwcs.tags.wcs.WCSType
         # The duplication here is deliberate: make sure that nothing has changed
-        assert wti.from_custom_type(gwcs.WCS) is gwcs.tags.WCSType
+        assert wti.from_custom_type(gwcs.WCS) is gwcs.tags.wcs.WCSType
         aa.tree['wcs'] = SubclassWCS(output_frame='icrs')
         aa.write_to(tmpfile)
 
     with open(tmpfile, 'rb') as ff:
         contents = str(ff.read())
-        assert gwcs.tags.WCSType.yaml_tag in contents
+        assert gwcs.tags.wcs.WCSType.yaml_tag in contents
 
 
 def test_tag_without_schema(tmpdir):
