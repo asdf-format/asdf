@@ -28,7 +28,7 @@ from . import yamlutil
 from .exceptions import AsdfDeprecationWarning
 from .extension import AsdfExtensionList, default_extensions
 
-from .tags.core import AsdfObject, Software, HistoryEntry, ExtensionMetadata
+from .tags.core import AsdfObject, Software, HistoryEntry, ExtensionMetadata, Software
 
 
 def get_asdf_library_info():
@@ -172,29 +172,29 @@ class AsdfFile(versioning.VersionedMixin):
             if extension.extension_class not in self._extension_metadata:
                 msg = "File {}was created with extension '{}', which is " \
                     "not currently installed"
-                if extension.software:
+                if extension.package:
                     msg += " (from package {}-{})".format(
-                        extension.software['name'],
-                        extension.software['version'])
+                        extension.package['name'],
+                        extension.package['version'])
                 fmt_msg = msg.format(filename, extension.extension_class)
                 if strict:
                     raise RuntimeError(fmt_msg)
                 else:
                     warnings.warn(fmt_msg)
 
-            elif extension.software:
+            elif extension.package:
                 installed = self._extension_metadata[extension.extension_class]
                 # Local extensions may not have a real version
                 if not installed[1]:
                     continue
                 # Compare version in file metadata with installed version
-                if parse_version(installed[1]) < parse_version(extension.software['version']):
+                if parse_version(installed[1]) < parse_version(extension.package['version']):
                     msg = "File {}was created with extension '{}' from " \
                     "package {}-{}, but older version {}-{} is installed"
                     fmt_msg = msg.format(
                         filename, extension.extension_class,
-                        extension.software['name'],
-                        extension.software['version'],
+                        extension.package['name'],
+                        extension.package['version'],
                         installed[0], installed[1])
                     if strict:
                         raise RuntimeError(fmt_msg)
@@ -242,7 +242,7 @@ class AsdfFile(versioning.VersionedMixin):
             ext_meta = ExtensionMetadata(extension_class=ext_name)
             metadata = self._extension_metadata.get(ext_name)
             if metadata is not None:
-                ext_meta.software = dict(name=metadata[0], version=metadata[1])
+                ext_meta.package = Software(name=metadata[0], version=metadata[1])
 
             for i, entry in enumerate(self.tree['history']['extensions']):
                 # Update metadata about this extension if it already exists
