@@ -28,7 +28,7 @@ from . import yamlutil
 from .exceptions import AsdfDeprecationWarning
 from .extension import AsdfExtensionList, default_extensions
 
-from .tags.core import AsdfObject, Software, HistoryEntry, ExtensionMetadata, Software
+from .tags.core import AsdfObject, Software, HistoryEntry, ExtensionMetadata
 
 
 def get_asdf_library_info():
