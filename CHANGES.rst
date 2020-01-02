@@ -9,7 +9,7 @@
 - Remove unnecessary dependency on six. [#739]
 
 - Add a developer overview document to help understand how ASDF works
-  internally. Still a work in progress. [#729]
+  internally. Still a work in progress. [#730]
 
 2.5.1 (2020-01-07)
 ------------------
