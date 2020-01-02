@@ -1,3 +1,9 @@
+2.6 (unreleased)
+----------------
+
+- Add a developer overview document to help understand how ASDF works
+  internally. Still a work in progress. [#729] 
+
 2.5.0 (2019-12-23)
 ------------------
 
