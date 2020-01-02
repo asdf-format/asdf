@@ -35,9 +35,9 @@ resource is. Generally URLs are expected to be used on the web for the HTTP
 protocol, though for asdf, this isn't necessarily the case as mentioned next.
 
 **Resolver:** Tools to map URIs and tags into actual locations of schema files,
-**which may be local directories (the usual approach) or an actual URL for
-**retrieval over the network. This is more complicated that it may seem for
-**reasons explained later.
+which may be local directories (the usual approach) or an actual URL for
+retrieval over the network. This is more complicated that it may seem for
+reasons explained later.
 
 **Validation:** Tool to confirm that the YAML conforms to the schemas that
 apply. A lot goes on in this area and it is pretty complex in the

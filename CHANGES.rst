@@ -2,7 +2,7 @@
 ----------------
 
 - Add a developer overview document to help understand how ASDF works
-  internally. Still a work in progress. [#729] 
+  internally. Still a work in progress. [#730] 
 
 2.5.0 (2019-12-23)
 ------------------
