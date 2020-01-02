@@ -1,5 +1,5 @@
 2.6 (unreleased)
-------------------
+----------------
 
 - Add ``package`` property to extension metadata, and deprecate
   use of ``software``. [#728]
@@ -7,6 +7,9 @@
 - AsdfDeprecationWarning now subclasses DeprecationWarning. [#710]
 
 - Remove unnecessary dependency on six. [#739]
+
+- Add a developer overview document to help understand how ASDF works
+  internally. Still a work in progress. [#729]
 
 2.5.1 (2020-01-07)
 ------------------
