@@ -6,12 +6,13 @@ workings of the python asdf library for those unfamiliar with it. This is
 expected to grow organically so at the moment it should not be considered
 complete or comprehensive.
 
-The design is somewhat complicated by the fact that in using pyyaml and
-jsonschema, one uses them by supplying code for these libraries to use, and
-without becoming familiar with how these packages work, the operation of the
-asdf internals isn't always very clear. This will try to provide a small amount
-of context for these package to illuminate how the code in asdf interacts with
-them.
+Understanding the design is complicated by the fact that the library 
+effectively inserts custom methods or classes into the objects that
+the pyyaml and jsonschema libraries use. Understanding what is going on
+thus means having some understanding of the relevant parts of the 
+internals of both of those libraries. This overview will try to provide 
+a small amount of context for these package to illuminate how the code 
+in asdf interacts with them.
 
 There are at least two ways of outlining the design. One is to give high level
 overviews of the various modules and how they interact with other modules. The
