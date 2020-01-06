@@ -4,6 +4,9 @@
 - Add a developer overview document to help understand how ASDF works
   internally. Still a work in progress. [#730] 
 
+- Add ``package`` property to extension metadata, and deprecate
+  use of ``software``. [#728]
+
 2.5.0 (2019-12-23)
 ------------------
 
