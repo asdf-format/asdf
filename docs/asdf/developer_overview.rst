@@ -11,13 +11,13 @@ effectively inserts custom methods or classes into the objects that
 the pyyaml and jsonschema libraries use. Understanding what is going on
 thus means having some understanding of the relevant parts of the 
 internals of both of those libraries. This overview will try to provide 
-a small amount of context for these package to illuminate how the code 
+a small amount of context for these packages to illuminate how the code 
 in asdf interacts with them.
 
 There are at least two ways of outlining the design. One is to give high level
 overviews of the various modules and how they interact with other modules. The
 other is to illustrate how code is actually invoked in common operations, this
-often being much more informative on a practical level (at least I find that to
+often being much more informative on a practical level (at least some find that to
 be the case). This document will attempt to do both.
 
 We will start with a high-level review of concepts and terms and point to where
@@ -216,7 +216,7 @@ replacing such nodes wtih Python objects. The tree travsersal starts from the
 top, but the objects are created from the bottom up due to  recursion.
 
 The result is what af.tree is set to, after doing another tree travseral looking
-for special type hooks for each node. I haven't yet found any use of that
+for special type hooks for each node. It isn't cleaf if there is yet any use of that
 feature.
 
 Not quite that simple
@@ -257,7 +257,7 @@ on what style to use to write the string.
 
 **validate_type:** Used to deal with date strings
 
-(I'd suggest we rename the above to be more descriptive of the action than where
+(It may make sense to rename the above to be more descriptive of the action than where
 they  are stuck in the validation machinery; e.g., ``set_propertyOrder``)
 
 **validate_fill_default:** Set the default values for all properties that have a
@@ -290,7 +290,7 @@ does nothing new in the definition. But the following code defines
 added to the  ``OrderedLoader`` class by use of the base class add_constructor
 method. This function flattens the mapping and returns an ``OrderedDict`` of the
 property attributes (This needs some deep understanding of how the yaml parser
-actually works, which I don't have at the  moment. Apparently mappings can be
+actually works, which is not covered here. Apparently mappings can be
 represented as nested trees as the yaml is originally parsed. Or something like
 that.)
 
