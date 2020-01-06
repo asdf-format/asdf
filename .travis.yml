@@ -70,6 +70,9 @@ matrix:
         # Test against prerelease versions of all dependencies
         - env: TOXENV='prerelease'
 
+        # Test against an installed asdf package
+        - env: TOXENV='packaged'
+
         # Try a run on OSX
         - os: osx
           env: TOXENV='py37-stable'
