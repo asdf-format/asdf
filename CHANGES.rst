@@ -17,6 +17,9 @@
 - Fix bug in test causing failure when test suite is run against
   an installed asdf package. [#732]
 
+- Add ``package`` property to extension metadata, and deprecate
+  use of ``software``. [#728]
+
 2.5.0 (2019-12-23)
 ------------------
 
