@@ -40,22 +40,23 @@ which may be local directories (the usual approach) or an actual URL for
 retrieval over the network. This is more complicated that it may seem for
 reasons explained later.
 
-**Validation:** Tool to confirm that the YAML conforms to the schemas that
+**Validator:** Tool to confirm that the YAML conforms to the schemas that
 apply. A lot goes on in this area and it is pretty complex in the
 implementation.
 
 **Tree building:** The YAML content is built into a tree in two stages. The YAML
 parser converts the raw YAML into a custom Python structure. It is that
 structure that is validated. Then if no errors are found, the tree is
-converted into a tree where tagged nodes get converted into special Python
-objects (usually), e.g., WCS object or numpy arrays (well, not quite that
-simply for numpy arrays).
+converted into a tree where tagged nodes get converted into corresponding Python
+objects (usually, an option exists to prevent this from happening, which is
+useful for some applications), e.g., WCS object or numpy arrays (well, not 
+quite that simply for numpy arrays).
 
 The above is a simplified view of what happens when an ASDF file is read.
 
-Most of resolver tools and code is in ``resolver.py`` (but not all)
+Most of resolver tools and code is in ``resolver.py`` (but not all).
 
-Most of the validation code is in ``schema.py``
+Most of the validation code is in ``schema.py``.
 
 The code that builds the trees is spread in many places: ``tagged.py``,
 ``treeutil.py``, ``types.py`` as well as all the extension code that supplies
@@ -136,7 +137,7 @@ object.
 The yaml parsing phase described below normally returns a "tagged_tree". That is
 (somewhat simplified), it returns the data structure that yaml would normally
 return without any object conversion (i.e., all nodes are either dicts, lists,
-or scalar values), except that they are objects that now sport a tag attribute
+or scalar values), except that they are objects that now support a tag attribute
 that indicates if a tag was associated with that node and what the tag was.
 
 This reader object is passed to the yaml parser by calling
@@ -212,7 +213,7 @@ defining a walker "callback" function (defined within that function as to pick
 up the af object intrinsically). The function then passes the callback walker to
 treeutil.walk_and_modify() where the tree will be traversed recursively applying
 the tag code associated with the tag to the more primative tree representation
-replacing such nodes wtih Python objects. The tree travsersal starts from the
+replacing such nodes with Python objects. The tree travsersal starts from the
 top, but the objects are created from the bottom up due to  recursion.
 
 The result is what af.tree is set to, after doing another tree travseral looking
@@ -282,7 +283,7 @@ variants of calls (basically which JSONSCHEMA version is to be used). Otherwise
 it doesn't appear to vary except for that. Admittedly, this is only created at
 the top level. This is called by ``get_validator``.
 
-**class OrderedLoader:** Hnherits from the ``_yaml_base_loader``, but otherwise
+**class OrderedLoader:** Inherits from the ``_yaml_base_loader``, but otherwise
 does nothing new in the definition. But the following code defines 
 ``construct_mapping``, and then adds it as a method.
 
