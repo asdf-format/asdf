@@ -6,6 +6,12 @@
 
 - AsdfDeprecationWarning now subclasses DeprecationWarning. [#710]
 
+2.5.1 (unreleased)
+------------------
+
+- Fix bug in test causing failure when test suite is run against
+  an installed asdf package. [#732]
+
 2.5.0 (2019-12-23)
 ------------------
 
