@@ -4,6 +4,16 @@
 Changes
 *******
 
+What's New in ASDF 2.5.1?
+=========================
+
+The ASDF Standard is at v1.4.0.
+
+Changes include:
+
+- Fix bug in test causing failure when test suite is run against
+  an installed asdf package.
+
 What's New in ASDF 2.5.0?
 =========================
 
