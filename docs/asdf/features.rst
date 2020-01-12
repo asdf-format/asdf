@@ -492,3 +492,222 @@ other `AsdfFile` object.
 .. rubric:: Footnotes
 
 .. [#wiki] https://en.wikipedia.org/wiki/Serialization
+
+Rendering ASDF trees
+====================
+
+The `asdf.info` function prints a representation of an ASDF
+tree to stdout.  For example:
+
+.. code:: python
+
+    >>> asdf.info('path/to/some/file.asdf') # doctest: +SKIP
+    root.tree (AsdfObject)
+    ├─asdf_library (Software)
+    │ ├─author (str): Space Telescope Science Institute
+    │ ├─homepage (str): http://github.com/spacetelescope/asdf
+    │ ├─name (str): asdf
+    │ └─version (str): 2.5.1
+    ├─history (dict)
+    │ └─extensions (list) ...
+    └─data (dict)
+      └─example_key (str): example value
+
+The first argument may be a ``str`` or ``pathlib.Path`` filesystem path,
+or an `AsdfFile` or sub-node of an ASDF tree.
+
+By default, `asdf.info` limits the number of lines, and line length,
+of the displayed tree.  The ``max_rows`` parameter controls the number of
+lines, and ``max_cols`` controls the line length.  Set either to ``None`` to
+disable that limit.
+
+An integer ``max_rows`` will be interpreted as an overall limit on the
+number of displayed lines.  If ``max_rows`` is a tuple, then each member
+limits lines per node at the depth corresponding to its tuple index.
+For example, to show all top-level nodes and 5 of each's children:
+
+.. code:: python
+
+    >>> asdf.info('file.asdf', max_rows=(None, 5)) # doctest: +SKIP
+    ...
+
+The `AsdfFile.info` method behaves similarly to `asdf.info`, rendering
+the tree of the associated `AsdfFile`.
+
+Searching the ASDF tree
+=======================
+
+The `AsdfFile` search interface provides a way to interactively discover the
+locations and values of nodes within the ASDF tree.  We can search for
+nodes by key/index, type, or value.
+
+Basic usage
+-----------
+
+Initiate a search by calling `AsdfFile.search` on an open file:
+
+.. code:: python
+
+    >>> af.search() # doctest: +SKIP
+    root.tree (AsdfObject)
+    ├─asdf_library (Software)
+    │ ├─author (str): Space Telescope Science Institute
+    │ ├─homepage (str): http://github.com/spacetelescope/asdf
+    │ ├─name (str): asdf
+    │ └─version (str): 2.5.1
+    ├─history (dict)
+    │ └─extensions (list) ...
+    └─data (dict)
+      └─example_key (str): example value
+
+    >>> af.search('example') # doctest: +SKIP
+    root.tree (AsdfObject)
+    └─data (dict)
+      └─example_key (str): example value
+
+.. currentmodule:: asdf.search
+
+The search returns an `AsdfSearchResult` object that displays in
+the Python console as a rendered tree.  For single-node search
+results, the `AsdfSearchResult.path` property contains the Python code required to
+reference that node directly:
+
+.. code:: python
+
+    >>> af.search('example').path # doctest: +SKIP
+    "root.tree['data']['example_key']"
+
+While the `AsdfSearchResult.node` property contains the actual value of the node:
+
+.. code:: python
+
+   >>> af.search('example').node # doctest: +SKIP
+   'example value'
+
+For searches with multiple matching nodes, use the `AsdfSearchResult.paths` and `AsdfSearchResult.nodes`
+properties instead:
+
+.. code:: python
+
+    >>> af.search('duplicate_key').paths # doctest: +SKIP
+    ["root.tree['data']['duplicate_key']", "root.tree['other_data']['duplicate_key']"]
+    >>> af.search('duplicate_key').nodes # doctest: +SKIP
+    ["value 1", "value 2"]
+
+.. currentmodule:: asdf
+
+The first argument to `AsdfFile.search` searches by dict key or list/tuple index.  We can
+also search by type, value, or any combination thereof:
+
+.. code:: python
+
+   >>> af.search('foo') # Find nodes with key containing the string 'foo' # doctest: +SKIP
+   ...
+   >>> af.search(type=int) # Find nodes that are instances of int # doctest: +SKIP
+   ...
+   >>> af.search(value=10) # Find nodes whose value is equal to 10 # doctest: +SKIP
+   ...
+   >>> af.search('foo', type=int, value=10) # Find the intersection of the above # doctest: +SKIP
+
+Chaining searches
+-----------------
+
+The return value of `AsdfFile.search`, `asdf.search.AsdfSearchResult`, has its own search method,
+so it's possible to chain searches together.  This is useful when you need
+to see intermediate results before deciding how to further narrow the search.
+
+.. code:: python
+
+    >>> af.search() # See an overview of the entire ASDF tree # doctest: +SKIP
+    ...
+    >>> af.search().search(type='NDArrayType') # Find only ndarrays # doctest: +SKIP
+    ...
+    >>> af.search().search(type='NDArrayType').search('err') # Only ndarrays with 'err' in the key # doctest: +SKIP
+
+Descending into child nodes
+---------------------------
+
+Another way to narrow the search is to use the index operator to descend into
+a child node of the current tree root:
+
+.. code:: python
+
+    >>> af.search()['data'] # Restrict search to the 'data' child # doctest: +SKIP
+    ...
+    >>> af.search()['data'].search(type=int) # Find integer descendants of 'data' # doctest: +SKIP
+
+Regular expression searches
+---------------------------
+
+Any string argument to search is interpeted as a regular expression.  For example,
+we can search for nodes whose keys start with a particular string:
+
+.. code:: python
+
+    >>> af.search('foo') # Find nodes with 'foo' anywhere in the key # doctest: +SKIP
+    ...
+    >>> af.search('^foo') # Find only nodes whose keys start with 'foo' # doctest: +SKIP
+    ...
+
+Note that all node keys (even list indices) will be converted to string before
+the regular expression is matched:
+
+.. code:: python
+
+   >>> af.search('^7$') # Returns all nodes with key '7' or index 7 # doctest: +SKIP
+   ...
+
+When the ``type`` argument is a string, the search compares against the fully-qualified
+class name of each node:
+
+.. code:: python
+
+    >>> af.search(type='asdf.tags.core.Software') # Find instances of ASDF's Software type # doctest: +SKIP
+    ...
+    >>> af.search(type='^asdf\.') # Find all ASDF objects # doctest: +SKIP
+    ...
+
+When the ``value`` argument is a string, the search compares against the string
+representation of each node's value.
+
+.. code:: python
+
+    >>> af.search(value='^[0-9]{4}-[0-9]{2}-[0-9]{2}$') # Find values that look like dates # doctest: +SKIP
+    ...
+
+Arbitrary search criteria
+-------------------------
+
+If ``key``, ``type``, and ``value`` aren't sufficient, we can also provide a callback
+function to search by arbitrary criteria.  The ``filter`` parameter accepts
+a callable that receives the node under consideration, and returns ``True``
+to keep it or ``False`` to reject it from the search results.  For example,
+to search for NDArrayType with a particular shape:
+
+.. code:: python
+
+    >>> af.search(type='NDArrayType', filter=lambda n: n.shape[0] == 1024) # doctest: +SKIP
+    ...
+
+Formatting search results
+-------------------------
+
+.. currentmodule:: asdf.search
+
+The `AsdfSearchResult` object displays its content as a rendered tree with
+reasonable defaults for maximum number of lines and columns displayed.  To
+change those values, we call `AsdfSearchResult.format`:
+
+.. code:: python
+
+    >>> af.search(type=float) # Displays limited rows # doctest: +SKIP
+    ...
+    >>> af.search(type=float).format(max_rows=None) # Show all matching rows # doctest: +SKIP
+    ...
+
+Like `AsdfSearchResult.search`, calls to format may be chained:
+
+.. code:: python
+
+    >>> af.search('time').format(max_rows=10).search(type=str).format(max_rows=None) # doctest: +SKIP
+    ...

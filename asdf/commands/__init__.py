@@ -9,6 +9,7 @@ from .defragment import *
 from .diff import *
 from .tags import *
 from .extension import *
+from .info import *
 
 # Extracting ASDF-in-FITS files requires Astropy
 if importlib.util.find_spec('astropy'):
