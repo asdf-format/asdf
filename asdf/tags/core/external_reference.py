@@ -1,3 +1,5 @@
+from functools import partial
+
 from ...types import AsdfType
 
 
@@ -111,7 +113,7 @@ class ExternalArrayReferenceCollection(AsdfType):
         Ensure that if constructing from `asdf.ExternalArrayReference` objects
         all of them have the same shape, dtype and target.
         """
-        if isinstance(ears, (list, tuple)):
+        if isinstance(ear, (list, tuple)):
             return list(map(partial(cls._validate_homogenaity, shape, target, dtype), ear))
 
         if not isinstance(ear, ExternalArrayReference):
@@ -125,7 +127,7 @@ class ExternalArrayReferenceCollection(AsdfType):
         return ear.fileuri
 
     @classmethod
-    def from_external_array_references(cls, ears):
+    def from_external_array_references(cls, ears, **kwargs):
         """
         Construct a collection from a (nested) iterable of
         `asdf.ExternalArrayReference` objects.
@@ -135,7 +137,7 @@ class ExternalArrayReferenceCollection(AsdfType):
         target = ears[0].target
 
         for i, ele in enumerate(ears):
-            uris = cls._validate_homogenaity(shape, target, dtype, ears)
+            uris = cls._validate_homogenaity(shape, target, dtype, ears, **kwargs)
 
         return cls(uris, target, dtype, shape)
 
@@ -175,7 +177,7 @@ class ExternalArrayReferenceCollection(AsdfType):
         return all((uri, target, dtype, shape))
 
     @classmethod
-    def to_tree(self, data, ctx):
+    def to_tree(cls, data, ctx):
         node = {}
         node['fileuris'] = data.fileuris
         node['target'] = data.target

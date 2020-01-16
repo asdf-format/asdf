@@ -39,7 +39,7 @@ from .extension import AsdfExtension
 from .stream import Stream
 from . import commands
 from .tags.core import IntegerType
-from .tags.core.external_reference import ExternalArrayReference
+from .tags.core.external_reference import ExternalArrayReference, ExternalArrayReferenceCollection
 
 from jsonschema import ValidationError
 
