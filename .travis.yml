@@ -1,6 +1,6 @@
 os: linux
 language: python
-python: 3.8
+python: 3.7
 # Use Travis' container-based architecture
 sudo: false
 
@@ -14,25 +14,28 @@ addons:
 matrix:
     fast_finish: true
     include:
-        - python: 3.5
-          env: TOXENV='py35-stable'
+        - env: TOXENV=py35
+          python: 3.5
 
-        - python: 3.6
-          env: TOXENV='py36-stable'
+        - env: TOXENV=py36
+          python: 3.6
 
-        - python: 3.7
-          env: TOXENV='py37-stable'
+        - env: TOXENV=py37
+          python: 3.7
 
-        - env: TOXENV='py38-stable'
+        - env: TOXENV=py38
+          python: 3.8
 
         # Test against big-endian platform.  Currently an allowed failure due to
         # https://github.com/spacetelescope/asdf/issues/235
-        - arch: s390x
-          env: TOXENV='py38-stable'
+        - env: TOXENV=py37-s390x
+          python: 3.7
+          arch: s390x
 
     allow_failures:
-        - arch: s390x
-          env: TOXENV='py38-stable'
+        - env: TOXENV=py37-s390x
+          python: 3.7
+          arch: s390x
 
 install:
     - pip install tox
