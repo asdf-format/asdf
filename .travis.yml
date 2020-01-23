@@ -11,6 +11,10 @@ matrix:
         - env: TOXENV=s390x
           arch: s390x
 
+    allow_failures:
+	- env: TOXENV=s390x
+          arch: s390x
+
 install:
 - pip install tox
 
