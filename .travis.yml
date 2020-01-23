@@ -7,41 +7,18 @@ sudo: false
 addons:
   apt:
     packages:
-    - graphviz
-    - texlive-latex-extra
-    - dvipng
-    - libopenblas-base
-    - libopenblas-dev
+    - python3-numpy
 
 matrix:
-    fast_finish: true
     include:
-        - env: TOXENV=py35
-          python: 3.5
-
-        - env: TOXENV=py36
-          python: 3.6
-
-        - env: TOXENV=py37
-          python: 3.7
-
-        - env: TOXENV=py38
-          python: 3.8
-
         # Test against big-endian platform.  Currently an allowed failure due to
         # https://github.com/spacetelescope/asdf/issues/235
         - env: TOXENV=s390x
           python: 3.7
           arch: s390x
 
-    allow_failures:
-        - env: TOXENV=s390x
-          python: 3.7
-          arch: s390x
-
 install:
-    - pip install Cython
-    - pip install tox
+- pip install tox
 
 script:
-   - tox
+- tox
