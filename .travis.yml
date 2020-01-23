@@ -12,12 +12,7 @@ matrix:
           arch: s390x
 
 install:
-- ls -lsAht ~/
-- whoami
-- ls -lsAht ~/.cache/
-- ls -lsAht ~/.cache/pip/
-- ls -lsAht ~/.cache/pip/wheels/
 - pip install tox
 
 script:
-- tox -vv
+- tox
