@@ -98,6 +98,8 @@ matrix:
           env: TOXENV='py37-stable' TOX_ARGS='--remote-data'
         - env: TOXENV='py37-numpydev'
         - env: TOXENV='prerelease'
+        - arch: s390x
+          env: TOXENV='py37-stable'
 
 install:
     - git clone git://github.com/astropy/ci-helpers.git
