@@ -1,12 +1,18 @@
 os: linux
 language: python
 python: 3.7
+# Use Travis' container-based architecture
 sudo: false
 
 matrix:
     include:
-        - arch: s390x
-        - arch: amd64
+        # Test against big-endian platform.  Currently an allowed failure due to
+        # https://github.com/spacetelescope/asdf/issues/235
+        - env: TOXENV=s390x
+          arch: s390x
+
+install:
+- pip install tox
 
 script:
-- ls -l ~/.cache/pip/
+- tox
