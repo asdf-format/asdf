@@ -38,6 +38,7 @@ matrix:
           arch: s390x
 
 install:
+    - pip install Cython
     - pip install tox
 
 script:
