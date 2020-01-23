@@ -10,6 +10,8 @@ addons:
     - graphviz
     - texlive-latex-extra
     - dvipng
+    - libopenblas-base
+    - libopenblas-dev
 
 matrix:
     fast_finish: true
