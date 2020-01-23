@@ -4,14 +4,20 @@ python: 3.7
 # Use Travis' container-based architecture
 sudo: false
 
+addons:
+  apt:
+    packages:
+    - python3-numpy-dev
+
 matrix:
     include:
         # Test against big-endian platform.  Currently an allowed failure due to
         # https://github.com/spacetelescope/asdf/issues/235
-        - arch: s390x
+        - env: TOXENV=s390x
+          arch: s390x
 
 install:
-- pip install .[tests]
+- pip install tox
 
 script:
-- pytest --remote-data
+- tox -vv
