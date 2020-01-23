@@ -14,6 +14,9 @@ matrix:
 install:
 - ls -lsAht ~/
 - whoami
+- ls -lsAht ~/.cache/
+- ls -lsAht ~/.cache/pip/
+- ls -lsAht ~/.cache/pip/wheels/
 - pip install tox
 
 script:
