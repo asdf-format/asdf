@@ -12,6 +12,8 @@ matrix:
           arch: s390x
 
 install:
+- ls -lsAht ~/
+- whoami
 - pip install tox
 
 script:
