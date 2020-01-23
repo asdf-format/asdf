@@ -1,6 +1,6 @@
 os: linux
 language: python
-
+python: 3.8
 # Use Travis' container-based architecture
 sudo: false
 
@@ -23,8 +23,7 @@ matrix:
         - python: 3.7
           env: TOXENV='py37-stable'
 
-        - python: 3.8
-          env: TOXENV='py38-stable'
+        - env: TOXENV='py38-stable'
 
         # Test against big-endian platform.  Currently an allowed failure due to
         # https://github.com/spacetelescope/asdf/issues/235
