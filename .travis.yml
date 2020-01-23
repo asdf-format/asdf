@@ -4,11 +4,6 @@ python: 3.7
 # Use Travis' container-based architecture
 sudo: false
 
-addons:
-  apt:
-    packages:
-    - python3-numpy-dev
-
 matrix:
     include:
         # Test against big-endian platform.  Currently an allowed failure due to
