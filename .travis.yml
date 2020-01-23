@@ -1,109 +1,105 @@
-# We set the language to c because python isn't supported on the MacOS X nodes
-# on Travis. However, the language ends up being irrelevant anyway, since we
-# install Python ourselves using conda.
-language: c
-
-os:
-    - linux
-
+os: linux
+language: python
+python: 3.8
 # Use Travis' container-based architecture
 sudo: false
 
-addons:
-  apt:
-    packages:
-    - graphviz
-    - texlive-latex-extra
-    - dvipng
-
-env:
-    global:
-        # The following versions are the 'default' for tests, unless
-        # overidden underneath. They are defined here in order to save having
-        # to repeat them for all configurations.
-        - TOX_CMD='tox --'
-        - TOX_ARGS='--remote-data'
-        # This is the Python version that will be used by the parent conda
-        # environment, but it will not be used in the test environments
-        # themselves.
-        - PYTHON_VERSION=3.6
-
-    matrix:
-        # Make sure that installation does not fail
-        - TOXENV='py36-stable' TOX_CMD='tox --notest' TOX_ARGS=''
-        # Make sure README will display properly on pypi
-        - TOXENV='checkdocs'
-        - TOXENV='py35-stable'
-        - TOXENV='py36-stable'
-        - TOXENV='py37-stable'
-
 matrix:
-    fast_finish: true
-    include:
+  include:
+    # Python 3.8, stable dependencies
+    - env: TOXENV=py38
 
-        # Do a coverage test
-        - env: TOXENV='coverage' TOX_ARGS=''
+    # Python 3.7, stable dependencies
+    - env: TOXENV=py37
+      python: 3.7
 
-        # Perform a sanity check of packaging using twine
-        - env: TOXENV='twine' TOX_ARGS=''
+    # Python 3.6, stable dependencies
+    - env: TOXENV=py36
+      python: 3.6
 
-        # Check for sphinx doc build warnings - we do this first because it
-        # may run for a long time
-        - env: TOXENV='docbuild' TOX_ARGS=''
+    # Python 3.5, stable dependencies
+    - env: TOXENV=py35
+      python: 3.5
 
-        # Do a code style check
-        - env: TOXENV='style' TOX_ARGS=''
+    # Do a coverage test
+    - env: TOXENV=coverage
 
-        # try older numpy versions
-        - env: TOXENV='py35-numpy11'
-        - env: TOXENV='py36-numpy12'
+    # Perform a sanity check of packaging using twine
+    - env: TOXENV=twine
 
-        # test against oldest compatible versions of all dependencies
-        - env: TOXENV='py35-legacy'
+    # Make sure README will display properly on pypi
+    - env: TOXENV=checkdocs
 
-        # also test against development versions of Astropy and GWCS
-        - env: TOXENV='py37-astrodev'
+    # Check for sphinx doc build warnings
+    - env: TOXENV=docbuild
+      addons:
+        apt:
+          packages:
+            - graphviz
+            - texlive-latex-extra
+            - dvipng
 
-        # Test against development version of numpy (this job can fail)
-        - env: TOXENV='py37-numpydev'
+    # Do a code style check
+    - env: TOXENV=style
 
-        # Test against prerelease versions of all dependencies
-        - env: TOXENV='prerelease'
+    # Check older numpy versions
+    - env: TOXENV=py35-numpy11
+      python: 3.5
 
-        # Test against an installed asdf package
-        - env: TOXENV='packaged'
+    - env: TOXENV=py36-numpy12
+      python: 3.6
 
-        # Try a run on OSX
-        - os: osx
-          env: TOXENV='py37-stable'
+    # Test against oldest compatible versions of all dependencies
+    - env: TOXENV=py35-legacy
+      python: 3.5
 
-        - os: windows
-          env: TOXENV='py37-stable' TOX_ARGS='--remote-data'
+    # Test against development versions of Astropy and GWCS
+    - env: TOXENV=py38-astrodev
 
-        - os: windows
-          env: TOXENV='py35-stable'
+    # Test against development version of numpy (allowed failure)
+    - env: TOXENV=py38-numpydev
 
-        - os: windows
-          env: TOXENV='py36-stable' TOX_ARGS='--remote-data'
+    # Test against prerelease versions of all dependencies (allowed failure)
+    - env: TOXENV=prerelease
 
-        # Windows test against development version of numpy (this job can fail)
-        - os: windows
-          env: TOXENV='py37-numpydev'
+    # Test against an installed asdf package
+    - env: TOXENV=packaged
 
+    # Test on OS X
+    - env:
+        - TOXENV=py38
+        - PATH=/usr/local/opt/python@3.8/bin:$PATH
+        # As of 2020-01-24, homebrew on Travis requires an update
+        # to make Python 3.8 available.
+        # - HOMEBREW_NO_AUTO_UPDATE=1
+        - HOMEBREW_NO_INSTALL_CLEANUP=1
+      os: osx
+      language: shell
+      before_install:
+        - brew install python@3.8
 
-    allow_failures:
-        # There doesn't appear to be a stable version of numpy available for
-        # Py37 on Windows at the moment
-        - os: windows
-          env: TOXENV='py37-stable' TOX_ARGS='--remote-data'
-        - env: TOXENV='py37-numpydev'
-        - env: TOXENV='prerelease'
+    # Test on Windows
+    - env:
+        - TOXENV=py38
+        - PATH=/c/Python38:/c/Python38/Scripts:$PATH
+      os: windows
+      language: shell
+      before_install:
+        - choco install python --version=3.8
 
-install:
-    - git clone git://github.com/astropy/ci-helpers.git
-    - source ci-helpers/travis/setup_conda.sh
-    - conda install openssl
-    - pip install tox tox-conda>=0.2
+    # Test on big-endian platform.  Currently an allowed failure due to
+    # https://github.com/spacetelescope/asdf/issues/235
+    - env: TOXENV=s390x
+      arch: s390x
 
-script:
-   - $TOX_CMD $TOX_ARGS
+  allow_failures:
+    - env: TOXENV=s390x
+      arch: s390x
+
+    - env: TOXENV=prerelease
+
+    - env: TOXENV=py38-numpydev
+
+install: pip install tox
+
+script: tox -vv
