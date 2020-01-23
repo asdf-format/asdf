@@ -11,7 +11,10 @@ matrix:
         - env: TOXENV=s390x
           arch: s390x
 
+        - env: TOXENV=py37
+
 install:
+- ls -lsAht ~/.cache/pip/
 - pip install tox
 
 script:
