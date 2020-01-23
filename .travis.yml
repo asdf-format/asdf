@@ -1,7 +1,5 @@
+os: linux
 language: python
-
-os:
-    - linux
 
 # Use Travis' container-based architecture
 sudo: false
@@ -13,97 +11,32 @@ addons:
     - texlive-latex-extra
     - dvipng
 
-env:
-    global:
-        # The following versions are the 'default' for tests, unless
-        # overidden underneath. They are defined here in order to save having
-        # to repeat them for all configurations.
-        - TOX_CMD='tox --'
-        - TOX_ARGS='--remote-data'
-        # This is the Python version that will be used by the parent conda
-        # environment, but it will not be used in the test environments
-        # themselves.
-        - PYTHON_VERSION=3.6
-
-    matrix:
-        # Make sure that installation does not fail
-        - TOXENV='py36-stable' TOX_CMD='tox --notest' TOX_ARGS=''
-        # Make sure README will display properly on pypi
-        - TOXENV='checkdocs'
-        - TOXENV='py35-stable'
-        - TOXENV='py36-stable'
-        - TOXENV='py37-stable'
-
 matrix:
     fast_finish: true
     include:
-
-        # Do a coverage test
-        - env: TOXENV='coverage' TOX_ARGS=''
-
-        # Perform a sanity check of packaging using twine
-        - env: TOXENV='twine' TOX_ARGS=''
-
-        # Check for sphinx doc build warnings - we do this first because it
-        # may run for a long time
-        - env: TOXENV='docbuild' TOX_ARGS=''
-
-        # Do a code style check
-        - env: TOXENV='style' TOX_ARGS=''
-
-        # try older numpy versions
-        - env: TOXENV='py35-numpy11'
-        - env: TOXENV='py36-numpy12'
-
-        # test against oldest compatible versions of all dependencies
-        - env: TOXENV='py35-legacy'
-
-        # also test against development versions of Astropy and GWCS
-        - env: TOXENV='py37-astrodev'
-
-        # Test against development version of numpy (this job can fail)
-        - env: TOXENV='py37-numpydev'
-
-        # Test against prerelease versions of all dependencies
-        - env: TOXENV='prerelease'
-
-        # Test against an installed asdf package
-        - env: TOXENV='packaged'
-
-        # Try a run on OSX
-        - os: osx
-          env: TOXENV='py37-stable'
-
-        - os: windows
-          env: TOXENV='py37-stable' TOX_ARGS='--remote-data'
-
-        - os: windows
+        - python: 3.5
           env: TOXENV='py35-stable'
 
-        - os: windows
-          env: TOXENV='py36-stable' TOX_ARGS='--remote-data'
+        - python: 3.6
+          env: TOXENV='py36-stable'
 
-        # Windows test against development version of numpy (this job can fail)
-        - os: windows
-          env: TOXENV='py37-numpydev'
+        - python: 3.7
+          env: TOXENV='py37-stable'
+
+        - python: 3.8
+          env: TOXENV='py38-stable'
 
         # Test against big-endian platform.  Currently an allowed failure due to
         # https://github.com/spacetelescope/asdf/issues/235
         - arch: s390x
-          env: TOXENV='py37-stable'
+          env: TOXENV='py38-stable'
 
     allow_failures:
-        # There doesn't appear to be a stable version of numpy available for
-        # Py37 on Windows at the moment
-        - os: windows
-          env: TOXENV='py37-stable' TOX_ARGS='--remote-data'
-        - env: TOXENV='py37-numpydev'
-        - env: TOXENV='prerelease'
         - arch: s390x
-          env: TOXENV='py37-stable'
+          env: TOXENV='py38-stable'
 
 install:
     - pip install tox
 
 script:
-   - $TOX_CMD $TOX_ARGS
+   - tox
