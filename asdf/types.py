@@ -7,7 +7,6 @@ import warnings
 import importlib
 from collections import defaultdict
 
-import six
 from copy import copy
 
 from . import tagged
@@ -489,16 +488,14 @@ class ExtensionType:
         return AsdfSubclassProperty(attribute)
 
 
-@six.add_metaclass(AsdfTypeMeta)
-class AsdfType(ExtensionType):
+class AsdfType(ExtensionType, metaclass=AsdfTypeMeta):
     """
     Base class for all built-in ASDF types. Types that inherit this class will
     be automatically added to the list of built-ins. This should *not* be used
     for user-defined extensions.
     """
 
-@six.add_metaclass(ExtensionTypeMeta)
-class CustomType(ExtensionType):
+class CustomType(ExtensionType, metaclass=ExtensionTypeMeta):
     """
     Base class for all user-defined types.
     """

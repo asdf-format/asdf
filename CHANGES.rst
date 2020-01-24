@@ -6,6 +6,8 @@
 
 - AsdfDeprecationWarning now subclasses DeprecationWarning. [#710]
 
+- Remove unnecessary dependency on six. [#739]
+
 2.5.1 (2020-01-07)
 ------------------
 

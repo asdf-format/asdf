@@ -25,8 +25,6 @@ import http.client
 from urllib import parse as urlparse
 from urllib.request import url2pathname
 
-import six
-
 import numpy as np
 
 from . import util
@@ -257,8 +255,7 @@ class _TruncatedReader:
         return content
 
 
-@six.add_metaclass(util.InheritDocstrings)
-class GenericFile:
+class GenericFile(metaclass=util.InheritDocstrings):
     """
     Base class for an abstraction layer around a number of different
     file-like types.  Each of its subclasses handles a particular kind
@@ -1096,7 +1093,7 @@ def get_uri(file_obj):
     ----------
     uri : object
     """
-    if isinstance(file_obj, six.string_types):
+    if isinstance(file_obj, str):
         return file_obj
     if isinstance(file_obj, GenericFile):
         return file_obj.uri
