@@ -6,7 +6,6 @@ import abc
 import warnings
 from pkg_resources import iter_entry_points
 
-import six
 import importlib
 
 from . import types
@@ -23,8 +22,7 @@ __all__ = ['AsdfExtension', 'AsdfExtensionList']
 ASDF_TEST_BUILD_ENV = 'ASDF_TEST_BUILD'
 
 
-@six.add_metaclass(abc.ABCMeta)
-class AsdfExtension:
+class AsdfExtension(metaclass=abc.ABCMeta):
     """
     Abstract base class defining an extension to ASDF.
     """

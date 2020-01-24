@@ -366,9 +366,7 @@ class InheritDocstrings(type):
     For example::
 
         >>> from asdf.util import InheritDocstrings
-        >>> import six
-        >>> @six.add_metaclass(InheritDocstrings)
-        ... class A:
+        >>> class A(metaclass=InheritDocstrings):
         ...     def wiggle(self):
         ...         "Wiggle the thingamajig"
         ...         pass
