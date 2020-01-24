@@ -109,17 +109,15 @@ class AsdfFile(versioning.VersionedMixin):
             standard.
 
         """
+        self._extensions = []
+        self._extension_metadata = {}
+        self._process_extensions(extensions)
 
         if custom_schema is not None:
-            self._custom_schema = schema.load_custom_schema(custom_schema)
-            schema.check_schema(self._custom_schema)
+            self._custom_schema = schema.load_schema(custom_schema, self.resolver, True)
         else:
             self._custom_schema = None
 
-        self._extensions = []
-        self._extension_metadata = {}
-
-        self._process_extensions(extensions)
         self._ignore_version_mismatch = ignore_version_mismatch
         self._ignore_unrecognized_tag = ignore_unrecognized_tag
         self._ignore_implicit_conversion = ignore_implicit_conversion

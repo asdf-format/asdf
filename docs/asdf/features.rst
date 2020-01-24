@@ -82,7 +82,7 @@ implementations of ASDF as long as the proper extensions are available.
 .. toctree::
     :maxdepth: 2
 
-    using_extensions 
+    using_extensions
 
 .. _schema_validation:
 
@@ -122,10 +122,9 @@ expectations:
 
     %YAML 1.1
     ---
+    id: "http://example.com/schemas/your-custom-schema"
     $schema: "http://stsci.edu/schemas/yaml-schema/draft-01"
-    id: "http://stsci.edu/schemas/asdf/core/asdf-1.1.0"
 
-    tag: "tag:stsci.edu:asdf/core/asdf-1.1.0"
     type: object
     properties:
       image:
@@ -155,10 +154,7 @@ expectations:
 This schema restricts the kinds of files that will be accepted as valid to
 those that contain a top-level ``image`` property that is an ``ndarray``, and
 a top-level ``metadata`` property that contains information about the time the
-image was taken and the resolution of the image. Note that the schema uses the
-same ``id`` and ``tag`` as the `top-level core schema`_ from the ASDF Standard.
-This is because it is validating the file at the top level, but is imposing
-restrictions beyond what is normally required for an ASDF file.
+image was taken and the resolution of the image.
 
 In order to use this schema for a secondary validation pass, we pass the
 `custom_schema` argument to either `asdf.open` or the `AsdfFile` constructor.
@@ -177,6 +173,10 @@ Similarly, if we wished to use this schema when creating new files:
 
     new_af = asdf.AsdfFile(custom_schema='image_schema.yaml')
     ...
+
+If your custom schema is registered with ASDF in an extension, you may
+pass the schema URI (``http://example.com/schemas/your-custom-schema``, in this
+case) instead of a file path.
 
 .. _top-level core schema:
     https://github.com/spacetelescope/asdf-standard/blob/master/schemas/stsci.edu/asdf/core/asdf-1.1.0.yaml

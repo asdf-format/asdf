@@ -1,9 +1,7 @@
 %YAML 1.1
 ---
 $schema: "http://stsci.edu/schemas/yaml-schema/draft-01"
-id: "http://stsci.edu/schemas/asdf/core/asdf-1.1.0"
 
-tag: "tag:stsci.edu:asdf/core/asdf-1.1.0"
 type: object
 properties:
   thing:
