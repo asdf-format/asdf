@@ -102,4 +102,4 @@ matrix:
 
 install: pip install tox
 
-script: tox -vv
+script: tox
