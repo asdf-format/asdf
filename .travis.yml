@@ -90,15 +90,11 @@ matrix:
       before_install:
         - choco install python --version=3.8
 
-    # Test on big-endian platform.  Currently an allowed failure due to
-    # https://github.com/spacetelescope/asdf/issues/235
+    # Test on big-endian platform
     - env: TOXENV=s390x
       arch: s390x
 
   allow_failures:
-    - env: TOXENV=s390x
-      arch: s390x
-
     - env: TOXENV=prerelease
 
     - env: TOXENV=py38-numpydev
