@@ -162,9 +162,9 @@ def test_update_expand_tree(tmpdir):
 def _get_update_tree():
     return {
         'arrays': [
-            np.arange(64, dtype='<i8') * 1,
-            np.arange(64, dtype='<i8') * 2,
-            np.arange(64, dtype='<i8') * 3
+            np.arange(64) * 1,
+            np.arange(64) * 2,
+            np.arange(64) * 3
         ]
     }
 
@@ -350,7 +350,7 @@ def test_update_add_array_at_end(tmpdir):
     original_size = os.stat(path).st_size
 
     with asdf.open(os.path.join(tmpdir, "test.asdf"), mode="rw") as ff:
-        ff.tree['arrays'].append(np.arange(2048, dtype='<i8'))
+        ff.tree['arrays'].append(np.arange(65536, dtype='<i8'))
         ff.update()
         assert len(ff.blocks) == 4
 
@@ -360,7 +360,7 @@ def test_update_add_array_at_end(tmpdir):
         assert_array_equal(ff.tree['arrays'][0], tree['arrays'][0])
         assert_array_equal(ff.tree['arrays'][1], tree['arrays'][1])
         assert_array_equal(ff.tree['arrays'][2], tree['arrays'][2])
-        assert_array_equal(ff.tree['arrays'][3], np.arange(2048))
+        assert_array_equal(ff.tree['arrays'][3], np.arange(65536, dtype='<i8'))
 
 
 def test_update_replace_all_arrays(tmpdir):
