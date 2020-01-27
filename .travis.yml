@@ -6,86 +6,86 @@ sudo: false
 
 matrix:
   include:
-    # Python 3.8, stable dependencies
-    - env: TOXENV=py38
+    # # Python 3.8, stable dependencies
+    # - env: TOXENV=py38
 
-    # Python 3.7, stable dependencies
-    - env: TOXENV=py37
-      python: 3.7
+    # # Python 3.7, stable dependencies
+    # - env: TOXENV=py37
+    #   python: 3.7
 
-    # Python 3.6, stable dependencies
-    - env: TOXENV=py36
-      python: 3.6
+    # # Python 3.6, stable dependencies
+    # - env: TOXENV=py36
+    #   python: 3.6
 
-    # Python 3.5, stable dependencies
-    - env: TOXENV=py35
-      python: 3.5
+    # # Python 3.5, stable dependencies
+    # - env: TOXENV=py35
+    #   python: 3.5
 
-    # Do a coverage test
-    - env: TOXENV=coverage
+    # # Do a coverage test
+    # - env: TOXENV=coverage
 
-    # Perform a sanity check of packaging using twine
-    - env: TOXENV=twine
+    # # Perform a sanity check of packaging using twine
+    # - env: TOXENV=twine
 
-    # Make sure README will display properly on pypi
-    - env: TOXENV=checkdocs
+    # # Make sure README will display properly on pypi
+    # - env: TOXENV=checkdocs
 
-    # Check for sphinx doc build warnings
-    - env: TOXENV=docbuild
-      addons:
-        apt:
-          packages:
-            - graphviz
-            - texlive-latex-extra
-            - dvipng
+    # # Check for sphinx doc build warnings
+    # - env: TOXENV=docbuild
+    #   addons:
+    #     apt:
+    #       packages:
+    #         - graphviz
+    #         - texlive-latex-extra
+    #         - dvipng
 
-    # Do a code style check
-    - env: TOXENV=style
+    # # Do a code style check
+    # - env: TOXENV=style
 
-    # Check older numpy versions
-    - env: TOXENV=py35-numpy11
-      python: 3.5
+    # # Check older numpy versions
+    # - env: TOXENV=py35-numpy11
+    #   python: 3.5
 
-    - env: TOXENV=py36-numpy12
-      python: 3.6
+    # - env: TOXENV=py36-numpy12
+    #   python: 3.6
 
-    # Test against oldest compatible versions of all dependencies
-    - env: TOXENV=py35-legacy
-      python: 3.5
+    # # Test against oldest compatible versions of all dependencies
+    # - env: TOXENV=py35-legacy
+    #   python: 3.5
 
-    # Test against development versions of Astropy and GWCS
-    - env: TOXENV=py38-astrodev
+    # # Test against development versions of Astropy and GWCS
+    # - env: TOXENV=py38-astrodev
 
-    # Test against development version of numpy (allowed failure)
-    - env: TOXENV=py38-numpydev
+    # # Test against development version of numpy (allowed failure)
+    # - env: TOXENV=py38-numpydev
 
-    # Test against prerelease versions of all dependencies (allowed failure)
-    - env: TOXENV=prerelease
+    # # Test against prerelease versions of all dependencies (allowed failure)
+    # - env: TOXENV=prerelease
 
-    # Test against an installed asdf package
-    - env: TOXENV=packaged
+    # # Test against an installed asdf package
+    # - env: TOXENV=packaged
 
-    # Test on OS X
-    - env:
-        - TOXENV=py38
-        - PATH=/usr/local/opt/python@3.8/bin:$PATH
-        # As of 2020-01-24, homebrew on Travis requires an update
-        # to make Python 3.8 available.
-        # - HOMEBREW_NO_AUTO_UPDATE=1
-        - HOMEBREW_NO_INSTALL_CLEANUP=1
-      os: osx
-      language: shell
-      before_install:
-        - brew install python@3.8
+    # # Test on OS X
+    # - env:
+    #     - TOXENV=py38
+    #     - PATH=/usr/local/opt/python@3.8/bin:$PATH
+    #     # As of 2020-01-24, homebrew on Travis requires an update
+    #     # to make Python 3.8 available.
+    #     # - HOMEBREW_NO_AUTO_UPDATE=1
+    #     - HOMEBREW_NO_INSTALL_CLEANUP=1
+    #   os: osx
+    #   language: shell
+    #   before_install:
+    #     - brew install python@3.8
 
-    # Test on Windows
-    - env:
-        - TOXENV=py38
-        - PATH=/c/Python38:/c/Python38/Scripts:$PATH
-      os: windows
-      language: shell
-      before_install:
-        - choco install python --version=3.8
+    # # Test on Windows
+    # - env:
+    #     - TOXENV=py38
+    #     - PATH=/c/Python38:/c/Python38/Scripts:$PATH
+    #   os: windows
+    #   language: shell
+    #   before_install:
+    #     - choco install python --version=3.8
 
     # Test on big-endian platform.  Currently an allowed failure due to
     # https://github.com/spacetelescope/asdf/issues/235
@@ -96,9 +96,9 @@ matrix:
     - env: TOXENV=s390x
       arch: s390x
 
-    - env: TOXENV=prerelease
+    # - env: TOXENV=prerelease
 
-    - env: TOXENV=py38-numpydev
+    # - env: TOXENV=py38-numpydev
 
 install: pip install tox
 
