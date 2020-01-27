@@ -162,9 +162,9 @@ def test_update_expand_tree(tmpdir):
 def _get_update_tree():
     return {
         'arrays': [
-            np.arange(64) * 1,
-            np.arange(64) * 2,
-            np.arange(64) * 3
+            np.arange(64, dtype='<i8') * 1,
+            np.arange(64, dtype='<i8') * 2,
+            np.arange(64, dtype='<i8') * 3
         ]
     }
 
