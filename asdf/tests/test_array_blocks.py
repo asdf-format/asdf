@@ -350,7 +350,7 @@ def test_update_add_array_at_end(tmpdir):
     original_size = os.stat(path).st_size
 
     with asdf.open(os.path.join(tmpdir, "test.asdf"), mode="rw") as ff:
-        ff.tree['arrays'].append(np.arange(2048))
+        ff.tree['arrays'].append(np.arange(2048), dtype='<i8')
         ff.update()
         assert len(ff.blocks) == 4
 
@@ -460,7 +460,7 @@ def test_checksum(tmpdir):
     tmpdir = str(tmpdir)
     path = os.path.join(tmpdir, 'test.asdf')
 
-    my_array = np.arange(0, 64, dtype=np.int64).reshape((8, 8))
+    my_array = np.arange(0, 64, dtype='<i8').reshape((8, 8))
     tree = {'my_array': my_array}
     ff = asdf.AsdfFile(tree)
     ff.write_to(path)
@@ -475,7 +475,7 @@ def test_checksum_update(tmpdir):
     tmpdir = str(tmpdir)
     path = os.path.join(tmpdir, 'test.asdf')
 
-    my_array = np.arange(0, 64, dtype=np.int64).reshape((8, 8))
+    my_array = np.arange(0, 64, dtype='<i8').reshape((8, 8))
 
     tree = {'my_array': my_array}
     ff = asdf.AsdfFile(tree)
