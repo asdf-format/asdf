@@ -8,6 +8,9 @@
 
 - Remove unnecessary dependency on six. [#739]
 
+- Resolve external references in custom schemas, and deprecate
+  asdf.schema.load_custom_schema.  [#738]
+
 2.5.1 (2020-01-07)
 ------------------
 
