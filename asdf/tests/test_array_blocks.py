@@ -350,7 +350,7 @@ def test_update_add_array_at_end(tmpdir):
     original_size = os.stat(path).st_size
 
     with asdf.open(os.path.join(tmpdir, "test.asdf"), mode="rw") as ff:
-        ff.tree['arrays'].append(np.arange(2048), dtype='<i8')
+        ff.tree['arrays'].append(np.arange(2048, dtype='<i8'))
         ff.update()
         assert len(ff.blocks) == 4
 
