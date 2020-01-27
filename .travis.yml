@@ -93,9 +93,6 @@ matrix:
       arch: s390x
 
   allow_failures:
-    - env: TOXENV=s390x
-      arch: s390x
-
     # - env: TOXENV=prerelease
 
     # - env: TOXENV=py38-numpydev

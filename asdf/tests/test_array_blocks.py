@@ -337,6 +337,15 @@ def test_update_add_array(tmpdir):
         assert_array_equal(ff.tree['arrays'][3], np.arange(32))
 
 
+def test_os_stat_st_size(tmpdir):
+    path = str(tmpdir.join('test.dat'))
+
+    with open(path, 'w') as f:
+        f.write('a' * 1024)
+
+    assert os.stat(path).st_size == 1024
+
+
 def test_update_add_array_at_end(tmpdir):
     tmpdir = str(tmpdir)
     path = os.path.join(tmpdir, 'test.asdf')
