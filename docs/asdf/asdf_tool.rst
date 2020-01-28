@@ -17,6 +17,8 @@ useful operations:
   - ``remove-hdu``: Remove ASDF extension from ASDF-in-FITS file (requires
     `astropy`, see :ref:`asdf-in-fits`).
 
+  - ``info``: Print a rendering of an ASDF tree.
+
   - ``extensions``: Show information about installed extensions (see
     :ref:`other_packages`).
 

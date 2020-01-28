@@ -25,8 +25,11 @@ from . import util
 from . import version
 from . import versioning
 from . import yamlutil
+from . import _display as display
 from .exceptions import AsdfDeprecationWarning
 from .extension import AsdfExtensionList, default_extensions
+from .util import NotSet
+from .search import AsdfSearchResult
 
 from .tags.core import AsdfObject, Software, HistoryEntry, ExtensionMetadata
 
@@ -1225,6 +1228,78 @@ class AsdfFile(versioning.VersionedMixin):
             return self.tree['history']['entries']
 
         return []
+
+    def info(self, max_rows=display.DEFAULT_MAX_ROWS, max_cols=display.DEFAULT_MAX_COLS, show_values=display.DEFAULT_SHOW_VALUES):
+        """
+        Print a rendering of this file's tree to stdout.
+
+        Parameters
+        ----------
+        max_rows : int, tuple, or None, optional
+            Maximum number of lines to print.  Nodes that cannot be
+            displayed will be elided with a message.
+            If int, constrain total number of displayed lines.
+            If tuple, constrain lines per node at the depth corresponding \
+                to the tuple index.
+            If None, display all lines.
+
+        max_cols : int or None, optional
+            Maximum length of line to print.  Nodes that cannot
+            be fully displayed will be truncated with a message.
+            If int, constrain length of displayed lines.
+            If None, line length is unconstrained.
+
+        show_values : bool, optional
+            Set to False to disable display of primitive values in
+            the rendered tree.
+        """
+        lines = display.render_tree(self.tree, max_rows=max_rows, max_cols=max_cols, show_values=show_values, identifier="root.tree")
+        print("\n".join(lines))
+
+    def search(self, key=NotSet, type=NotSet, value=NotSet, filter=None):
+        """
+        Search this file's tree.
+
+        Parameters
+        ----------
+        key : NotSet, str, or any other object
+            Search query that selects nodes by dict key or list index.
+            If NotSet, the node key is unconstrained.
+            If str, the input is searched among keys/indexes as a regular
+            expression pattern.
+            If any other object, node's key or index must equal the queried key.
+
+        type : NotSet, str, or builtins.type
+            Search query that selects nodes by type.
+            If NotSet, the node type is unconstrained.
+            If str, the input is searched among (fully qualified) node type
+            names as a regular expression pattern.
+            If builtins.type, the node must be an instance of the input.
+
+        value : NotSet, str, or any other object
+            Search query that selects nodes by value.
+            If NotSet, the node value is unconstrained.
+            If str, the input is searched among values as a regular
+            expression pattern.
+            If any other object, node's value must equal the queried value.
+
+        filter : callable
+            Callable that filters nodes by arbitrary criteria.
+            The callable accepts one or two arguments:
+
+            - the node
+            - the node's list index or dict key (optional)
+
+            and returns True to retain the node, or False to remove it from
+            the search results.
+
+        Returns
+        -------
+        asdf.search.AsdfSearchResult
+            the result of the search
+        """
+        result = AsdfSearchResult(["root.tree"], self.tree)
+        return result.search(key=key, type=type, value=value, filter=filter)
 
 
 # Inherit docstring from dictionary

@@ -11,6 +11,9 @@
 - Resolve external references in custom schemas, and deprecate
   asdf.schema.load_custom_schema.  [#738]
 
+- Add ``asdf.info`` for displaying a summary of a tree, and
+  ``AsdfFile.search`` for searching a tree. [#736]
+
 2.5.1 (2020-01-07)
 ------------------
 
