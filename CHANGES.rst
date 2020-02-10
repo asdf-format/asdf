@@ -30,7 +30,7 @@
 - Fix load_schema LRU cache memory usage issue [#682]
 - Add convenience method for fetching the default resolver [#682]
 
-- ``SpecItem`` and ``Spec`` were depreicated  in ``semantic_version``
+- ``SpecItem`` and ``Spec`` were deprecated  in ``semantic_version``
   and were replaced with ``SimpleSpec``. [#715]
 
 - Pinned the minimum required ``semantic_version`` to 2.8. [#715]

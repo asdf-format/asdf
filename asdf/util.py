@@ -16,7 +16,8 @@ from .extern.decorators import add_common_docstring
 
 
 __all__ = ['human_list', 'get_array_base', 'get_base_uri', 'filepath_to_url',
-           'iter_subclasses', 'calculate_padding', 'resolve_name']
+           'iter_subclasses', 'calculate_padding', 'resolve_name', 'NotSet',
+           'is_primitive']
 
 
 def human_list(l, separator="and"):
@@ -366,9 +367,7 @@ class InheritDocstrings(type):
     For example::
 
         >>> from asdf.util import InheritDocstrings
-        >>> import six
-        >>> @six.add_metaclass(InheritDocstrings)
-        ... class A:
+        >>> class A(metaclass=InheritDocstrings):
         ...     def wiggle(self):
         ...         "Wiggle the thingamajig"
         ...         pass
@@ -397,3 +396,39 @@ class InheritDocstrings(type):
                         break
 
         super(InheritDocstrings, cls).__init__(name, bases, dct)
+
+
+class _NotSetType:
+    def __repr__(self):
+        return "NotSet"
+
+
+"""
+Special value indicating that a parameter is not set.  Distinct
+from None, which may for example be a value of interest in a search.
+"""
+NotSet = _NotSetType()
+
+
+def is_primitive(value):
+    """
+    Determine if a value is an instance of a "primitive" type.
+
+    Parameters
+    ----------
+    value : object
+        the value to test
+
+    Returns
+    -------
+    bool
+        True if the value is primitive, False otherwise
+    """
+    return (
+        value is None
+        or isinstance(value, bool)
+        or isinstance(value, int)
+        or isinstance(value, float)
+        or isinstance(value, complex)
+        or isinstance(value, str)
+    )

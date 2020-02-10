@@ -2,7 +2,6 @@
 # -*- coding: utf-8 -*-
 
 import io
-import os
 import re
 import warnings
 
@@ -666,7 +665,7 @@ def test_assert_roundtrip_with_extension(tmpdir):
 
 def test_custom_validation_bad(tmpdir):
     custom_schema_path = helpers.get_test_data_path('custom_schema.yaml')
-    asdf_file = os.path.join(str(tmpdir), 'out.asdf')
+    asdf_file = str(tmpdir.join('out.asdf'))
 
     # This tree does not conform to the custom schema
     tree = {'stuff': 42, 'other_stuff': 'hello'}
@@ -677,22 +676,22 @@ def test_custom_validation_bad(tmpdir):
 
     # Creating file using custom schema should fail
     with pytest.raises(ValidationError):
-        with asdf.AsdfFile(tree, custom_schema=custom_schema_path) as ff:
+        with asdf.AsdfFile(tree, custom_schema=custom_schema_path):
             pass
 
     # Opening file without custom schema should pass
-    with asdf.open(asdf_file) as ff:
+    with asdf.open(asdf_file):
         pass
 
     # Opening file with custom schema should fail
     with pytest.raises(ValidationError):
-        with asdf.open(asdf_file, custom_schema=custom_schema_path) as ff:
+        with asdf.open(asdf_file, custom_schema=custom_schema_path):
             pass
 
 
 def test_custom_validation_good(tmpdir):
     custom_schema_path = helpers.get_test_data_path('custom_schema.yaml')
-    asdf_file = os.path.join(str(tmpdir), 'out.asdf')
+    asdf_file = str(tmpdir.join('out.asdf'))
 
     # This tree conforms to the custom schema
     tree = {
@@ -703,7 +702,7 @@ def test_custom_validation_good(tmpdir):
     with asdf.AsdfFile(tree, custom_schema=custom_schema_path) as ff:
         ff.write_to(asdf_file)
 
-    with asdf.open(asdf_file, custom_schema=custom_schema_path) as ff:
+    with asdf.open(asdf_file, custom_schema=custom_schema_path):
         pass
 
 
@@ -716,7 +715,7 @@ def test_custom_validation_pathlib(tmpdir):
     from pathlib import Path
 
     custom_schema_path = Path(helpers.get_test_data_path('custom_schema.yaml'))
-    asdf_file = os.path.join(str(tmpdir), 'out.asdf')
+    asdf_file = str(tmpdir.join('out.asdf'))
 
     # This tree conforms to the custom schema
     tree = {
@@ -727,13 +726,13 @@ def test_custom_validation_pathlib(tmpdir):
     with asdf.AsdfFile(tree, custom_schema=custom_schema_path) as ff:
         ff.write_to(asdf_file)
 
-    with asdf.open(asdf_file, custom_schema=custom_schema_path) as ff:
+    with asdf.open(asdf_file, custom_schema=custom_schema_path):
         pass
 
 
 def test_custom_validation_with_definitions_good(tmpdir):
     custom_schema_path = helpers.get_test_data_path('custom_schema_definitions.yaml')
-    asdf_file = os.path.join(str(tmpdir), 'out.asdf')
+    asdf_file = str(tmpdir.join('out.asdf'))
 
     # This tree conforms to the custom schema
     tree = {
@@ -743,13 +742,13 @@ def test_custom_validation_with_definitions_good(tmpdir):
     with asdf.AsdfFile(tree, custom_schema=custom_schema_path) as ff:
         ff.write_to(asdf_file)
 
-    with asdf.open(asdf_file, custom_schema=custom_schema_path) as ff:
+    with asdf.open(asdf_file, custom_schema=custom_schema_path):
         pass
 
 
 def test_custom_validation_with_definitions_bad(tmpdir):
     custom_schema_path = helpers.get_test_data_path('custom_schema_definitions.yaml')
-    asdf_file = os.path.join(str(tmpdir), 'out.asdf')
+    asdf_file = str(tmpdir.join('out.asdf'))
 
     # This tree does NOT conform to the custom schema
     tree = {
@@ -762,17 +761,75 @@ def test_custom_validation_with_definitions_bad(tmpdir):
 
     # Creating file with custom schema should fail
     with pytest.raises(ValidationError):
-        with asdf.AsdfFile(tree, custom_schema=custom_schema_path) as ff:
+        with asdf.AsdfFile(tree, custom_schema=custom_schema_path):
             pass
 
     # Opening file without custom schema should pass
-    with asdf.open(asdf_file) as ff:
+    with asdf.open(asdf_file):
         pass
 
     # Opening file with custom schema should fail
     with pytest.raises(ValidationError):
-        with asdf.open(asdf_file, custom_schema=custom_schema_path) as ff:
+        with asdf.open(asdf_file, custom_schema=custom_schema_path):
             pass
+
+
+def test_custom_validation_with_external_ref_good(tmpdir):
+    custom_schema_path = helpers.get_test_data_path('custom_schema_external_ref.yaml')
+    asdf_file = str(tmpdir.join('out.asdf'))
+
+    # This tree conforms to the custom schema
+    tree = {
+        'foo': asdf.tags.core.Software(name="Microsoft Windows", version="95")
+    }
+
+    with asdf.AsdfFile(tree, custom_schema=custom_schema_path) as ff:
+        ff.write_to(asdf_file)
+
+    with asdf.open(asdf_file, custom_schema=custom_schema_path):
+        pass
+
+
+def test_custom_validation_with_external_ref_bad(tmpdir):
+    custom_schema_path = helpers.get_test_data_path('custom_schema_external_ref.yaml')
+    asdf_file = str(tmpdir.join('out.asdf'))
+
+    # This tree does not conform to the custom schema
+    tree = {
+        'foo': False
+    }
+
+    # Creating file without custom schema should pass
+    with asdf.AsdfFile(tree) as ff:
+        ff.write_to(asdf_file)
+
+    # Creating file with custom schema should fail
+    with pytest.raises(ValidationError):
+        with asdf.AsdfFile(tree, custom_schema=custom_schema_path):
+            pass
+
+    # Opening file without custom schema should pass
+    with asdf.open(asdf_file):
+        pass
+
+    # Opening file with custom schema should fail
+    with pytest.raises(ValidationError):
+        with asdf.open(asdf_file, custom_schema=custom_schema_path):
+            pass
+
+
+def test_load_custom_schema_deprecated():
+    custom_schema_path = helpers.get_test_data_path('custom_schema.yaml')
+
+    with pytest.deprecated_call():
+        schema.load_custom_schema(custom_schema_path)
+
+
+def test_load_schema_resolve_local_refs_deprecated():
+    custom_schema_path = helpers.get_test_data_path('custom_schema_definitions.yaml')
+
+    with pytest.deprecated_call():
+        schema.load_schema(custom_schema_path, resolve_local_refs=True)
 
 
 def test_nonexistent_tag(tmpdir):

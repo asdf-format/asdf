@@ -1,9 +1,10 @@
 # Licensed under a 3-clause BSD style license - see LICENSE.rst
 # -*- coding: utf-8 -*-
-
+import warnings
 
 from ...types import AsdfType
 from ...yamlutil import custom_tree_to_tagged_tree
+from ...exceptions import AsdfDeprecationWarning
 
 
 class AsdfObject(dict, AsdfType):
@@ -25,9 +26,17 @@ class ExtensionMetadata(AsdfType):
     name = 'core/extension_metadata'
     version = '1.0.0'
 
-    def __init__(self, extension_class=None, software={}):
+    def __init__(self, extension_class=None, package=None, software=None):
+        if software is not None:
+            warnings.warn("Previous versions of the ASDF library stored a 'software' property " +
+                          "in extension metadata.  That property has been renamed to 'package' " +
+                          "to match the ASDF standard.  Re-write your file with this version to " +
+                          "eliminate the warning.",
+                          AsdfDeprecationWarning)
+            package = Software(software)
+
         self.extension_class = extension_class
-        self.software = software
+        self.package = package
 
     @classmethod
     def from_tree(cls, node, ctx):
@@ -37,8 +46,14 @@ class ExtensionMetadata(AsdfType):
     def to_tree(cls, node, ctx):
         tree = {}
         tree['extension_class'] = node.extension_class
-        tree['software'] = custom_tree_to_tagged_tree(node.software, ctx)
+        tree['package'] = custom_tree_to_tagged_tree(node.package, ctx)
+
         return tree
+
+    @property
+    def software(self):
+        warnings.warn("The 'software' property is deprecated.  Please use 'package' instead.", AsdfDeprecationWarning)
+        return self.package
 
 
 class SubclassMetadata(dict, AsdfType):

@@ -428,4 +428,88 @@ def test_get_default_resolver():
 
     result = resolver('tag:stsci.edu:asdf/core/ndarray-1.0.0')
 
-    assert result.endswith("asdf-standard/schemas/stsci.edu/asdf/core/ndarray-1.0.0.yaml")
+    assert result.endswith("/schemas/stsci.edu/asdf/core/ndarray-1.0.0.yaml")
+
+
+def test_info_module(capsys, tmpdir):
+    tree = dict(
+        foo=42, bar="hello", baz=np.arange(20),
+        nested={"woo": "hoo", "yee": "haw"},
+        long_line="a" * 100
+    )
+    af = asdf.AsdfFile(tree)
+
+    def _assert_correct_info(node_or_path):
+        asdf.info(node_or_path)
+        captured = capsys.readouterr()
+        assert "foo" in captured.out
+        assert "bar" in captured.out
+        assert "baz" in captured.out
+
+    _assert_correct_info(af)
+    _assert_correct_info(af.tree)
+
+    tmpfile = str(tmpdir.join("written.asdf"))
+    af.write_to(tmpfile)
+    af.close()
+
+    _assert_correct_info(tmpfile)
+    _assert_correct_info(pathlib.Path(tmpfile))
+
+    for i in range(1, 10):
+        asdf.info(af, max_rows=i)
+        lines = capsys.readouterr().out.strip().split("\n")
+        assert len(lines) <= i
+
+    asdf.info(af, max_cols=80)
+    assert "(truncated)" in capsys.readouterr().out
+    asdf.info(af, max_cols=None)
+    captured = capsys.readouterr().out
+    assert "(truncated)" not in captured
+    assert "a" * 100 in captured
+
+    asdf.info(af, show_values=True)
+    assert "hello" in capsys.readouterr().out
+    asdf.info(af, show_values=False)
+    assert "hello" not in capsys.readouterr().out
+
+    tree = {
+        "foo": ["alpha", "bravo", "charlie", "delta", "eagle"]
+    }
+    af = asdf.AsdfFile(tree)
+    asdf.info(af, max_rows=(None,))
+    assert "alpha" not in capsys.readouterr().out
+    for i in range(1, 5):
+        asdf.info(af, max_rows=(None, i))
+        captured = capsys.readouterr()
+        for val in tree["foo"][0:i-1]:
+            assert val in captured.out
+        for val in tree["foo"][i-1:]:
+            assert val not in captured.out
+
+def test_info_asdf_file(capsys, tmpdir):
+    tree = dict(
+        foo=42, bar="hello", baz=np.arange(20),
+        nested={"woo": "hoo", "yee": "haw"},
+        long_line="a" * 100
+    )
+    af = asdf.AsdfFile(tree)
+    af.info()
+    captured = capsys.readouterr()
+    assert "foo" in captured.out
+    assert "bar" in captured.out
+    assert "baz" in captured.out
+
+
+def test_search():
+    tree = dict(foo=42, bar="hello", baz=np.arange(20))
+    af = asdf.AsdfFile(tree)
+
+    result = af.search("foo")
+    assert result.node == 42
+
+    result = af.search(type="ndarray")
+    assert (result.node == tree["baz"]).all()
+
+    result = af.search(value="hello")
+    assert result.node == "hello"

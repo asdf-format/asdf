@@ -22,8 +22,6 @@ The ``asdf`` package has the following dependencies:
 
 - `semantic_version <https://python-semanticversion.readthedocs.io/>`__ 2.3.1 or later
 
-- `six <https://pypi.python.org/pypi/six>`__ 1.9.0 or later
-
 Support for units, time, transform, wcs, or running the tests also
 requires:
 

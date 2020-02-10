@@ -346,23 +346,12 @@ HARDCODED_SCHEMA = {
 
 @lru_cache()
 def load_custom_schema(url):
-    # Avoid circular import
-    from .tags.core import AsdfObject
-    custom = load_schema(url, resolve_local_refs=True)
-    core = load_schema(AsdfObject.yaml_tag)
-
-    def update(d, u):
-        for k, v in u.items():
-            # Respect the property ordering of the core schema
-            if k == 'propertyOrder' and k in d:
-                d[k] = u[k] + d[k]
-            elif isinstance(v, Mapping):
-                d[k] = update(d.get(k, {}), v)
-            else:
-                d[k] = v
-        return d
-
-    return update(custom, core)
+    warnings.warn(
+        "The 'load_custom_schema(...)' function is deprecated. Use"
+        "'load_schema' instead.",
+        AsdfDeprecationWarning
+    )
+    return load_schema(url, resolve_references=True)
 
 
 def load_schema(url, resolver=None, resolve_references=False,
@@ -389,7 +378,14 @@ def load_schema(url, resolver=None, resolve_references=False,
         within the same schema. This will automatically be handled when passing
         `resolve_references=True`, but it may be desirable in some cases to
         control local reference resolution separately.
+        This parameter is deprecated.
     """
+    if resolve_local_refs is True:
+        warnings.warn(
+            "The 'resolve_local_refs' parameter is deprecated.",
+            AsdfDeprecationWarning
+        )
+
     if resolver is None:
         # We can't just set this as the default in load_schema's definition
         # because invoking get_default_resolver at import time leads to a circular import.

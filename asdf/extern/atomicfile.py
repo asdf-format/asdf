@@ -1,5 +1,3 @@
-import six
-
 import os
 import tempfile
 import sys

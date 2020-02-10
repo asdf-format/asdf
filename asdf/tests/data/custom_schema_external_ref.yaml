@@ -1,0 +1,17 @@
+%YAML 1.1
+---
+$schema: "http://stsci.edu/schemas/yaml-schema/draft-01"
+title: |
+  Custom schema with an external reference, used for testing.
+
+description: |
+  This schema is used to test custom schema validation with an external reference.
+
+type: object
+properties:
+  foo:
+    anyOf:
+      - $ref: "http://stsci.edu/schemas/asdf/core/software-1.0.0"
+
+required: [foo]
+additionalProperties: true

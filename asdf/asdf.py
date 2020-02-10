@@ -25,8 +25,11 @@ from . import util
 from . import version
 from . import versioning
 from . import yamlutil
+from . import _display as display
 from .exceptions import AsdfDeprecationWarning
 from .extension import AsdfExtensionList, default_extensions
+from .util import NotSet
+from .search import AsdfSearchResult
 
 from .tags.core import AsdfObject, Software, HistoryEntry, ExtensionMetadata
 
@@ -109,17 +112,15 @@ class AsdfFile(versioning.VersionedMixin):
             standard.
 
         """
+        self._extensions = []
+        self._extension_metadata = {}
+        self._process_extensions(extensions)
 
         if custom_schema is not None:
-            self._custom_schema = schema.load_custom_schema(custom_schema)
-            schema.check_schema(self._custom_schema)
+            self._custom_schema = schema.load_schema(custom_schema, self.resolver, True)
         else:
             self._custom_schema = None
 
-        self._extensions = []
-        self._extension_metadata = {}
-
-        self._process_extensions(extensions)
         self._ignore_version_mismatch = ignore_version_mismatch
         self._ignore_unrecognized_tag = ignore_unrecognized_tag
         self._ignore_implicit_conversion = ignore_implicit_conversion
@@ -172,29 +173,29 @@ class AsdfFile(versioning.VersionedMixin):
             if extension.extension_class not in self._extension_metadata:
                 msg = "File {}was created with extension '{}', which is " \
                     "not currently installed"
-                if extension.software:
+                if extension.package:
                     msg += " (from package {}-{})".format(
-                        extension.software['name'],
-                        extension.software['version'])
+                        extension.package['name'],
+                        extension.package['version'])
                 fmt_msg = msg.format(filename, extension.extension_class)
                 if strict:
                     raise RuntimeError(fmt_msg)
                 else:
                     warnings.warn(fmt_msg)
 
-            elif extension.software:
+            elif extension.package:
                 installed = self._extension_metadata[extension.extension_class]
                 # Local extensions may not have a real version
                 if not installed[1]:
                     continue
                 # Compare version in file metadata with installed version
-                if parse_version(installed[1]) < parse_version(extension.software['version']):
+                if parse_version(installed[1]) < parse_version(extension.package['version']):
                     msg = "File {}was created with extension '{}' from " \
                     "package {}-{}, but older version {}-{} is installed"
                     fmt_msg = msg.format(
                         filename, extension.extension_class,
-                        extension.software['name'],
-                        extension.software['version'],
+                        extension.package['name'],
+                        extension.package['version'],
                         installed[0], installed[1])
                     if strict:
                         raise RuntimeError(fmt_msg)
@@ -242,7 +243,7 @@ class AsdfFile(versioning.VersionedMixin):
             ext_meta = ExtensionMetadata(extension_class=ext_name)
             metadata = self._extension_metadata.get(ext_name)
             if metadata is not None:
-                ext_meta.software = dict(name=metadata[0], version=metadata[1])
+                ext_meta.package = Software(name=metadata[0], version=metadata[1])
 
             for i, entry in enumerate(self.tree['history']['extensions']):
                 # Update metadata about this extension if it already exists
@@ -1227,6 +1228,78 @@ class AsdfFile(versioning.VersionedMixin):
             return self.tree['history']['entries']
 
         return []
+
+    def info(self, max_rows=display.DEFAULT_MAX_ROWS, max_cols=display.DEFAULT_MAX_COLS, show_values=display.DEFAULT_SHOW_VALUES):
+        """
+        Print a rendering of this file's tree to stdout.
+
+        Parameters
+        ----------
+        max_rows : int, tuple, or None, optional
+            Maximum number of lines to print.  Nodes that cannot be
+            displayed will be elided with a message.
+            If int, constrain total number of displayed lines.
+            If tuple, constrain lines per node at the depth corresponding \
+                to the tuple index.
+            If None, display all lines.
+
+        max_cols : int or None, optional
+            Maximum length of line to print.  Nodes that cannot
+            be fully displayed will be truncated with a message.
+            If int, constrain length of displayed lines.
+            If None, line length is unconstrained.
+
+        show_values : bool, optional
+            Set to False to disable display of primitive values in
+            the rendered tree.
+        """
+        lines = display.render_tree(self.tree, max_rows=max_rows, max_cols=max_cols, show_values=show_values, identifier="root.tree")
+        print("\n".join(lines))
+
+    def search(self, key=NotSet, type=NotSet, value=NotSet, filter=None):
+        """
+        Search this file's tree.
+
+        Parameters
+        ----------
+        key : NotSet, str, or any other object
+            Search query that selects nodes by dict key or list index.
+            If NotSet, the node key is unconstrained.
+            If str, the input is searched among keys/indexes as a regular
+            expression pattern.
+            If any other object, node's key or index must equal the queried key.
+
+        type : NotSet, str, or builtins.type
+            Search query that selects nodes by type.
+            If NotSet, the node type is unconstrained.
+            If str, the input is searched among (fully qualified) node type
+            names as a regular expression pattern.
+            If builtins.type, the node must be an instance of the input.
+
+        value : NotSet, str, or any other object
+            Search query that selects nodes by value.
+            If NotSet, the node value is unconstrained.
+            If str, the input is searched among values as a regular
+            expression pattern.
+            If any other object, node's value must equal the queried value.
+
+        filter : callable
+            Callable that filters nodes by arbitrary criteria.
+            The callable accepts one or two arguments:
+
+            - the node
+            - the node's list index or dict key (optional)
+
+            and returns True to retain the node, or False to remove it from
+            the search results.
+
+        Returns
+        -------
+        asdf.search.AsdfSearchResult
+            the result of the search
+        """
+        result = AsdfSearchResult(["root.tree"], self.tree)
+        return result.search(key=key, type=type, value=value, filter=filter)
 
 
 # Inherit docstring from dictionary

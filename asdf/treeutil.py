@@ -10,6 +10,9 @@ import warnings
 from .tagged import tag_object
 
 
+__all__ = ["walk", "iter_tree", "walk_and_modify", "get_children", "is_container"]
+
+
 def walk(top, callback):
     """
     Walking through a tree of objects, calling a given function at
@@ -204,3 +207,46 @@ def walk_and_modify(top, callback, ignore_implicit_conversion=False):
         return recurse_with_json_ids(top, None)
     else:
         return recurse(top)
+
+
+def get_children(node):
+    """
+    Retrieve the children (and their dict keys or list/tuple indices) of
+    an ASDF tree node.
+
+    Parameters
+    ----------
+    node : object
+        an ASDF tree node
+
+    Returns
+    -------
+    list of (object, object) tuples
+        list of (identifier, child node) tuples, or empty list if the
+        node has no children (either it is an empty container, or is
+        a non-container type)
+    """
+    if isinstance(node, dict):
+        return list(node.items())
+    elif isinstance(node, list) or isinstance(node, tuple):
+        return list(enumerate(node))
+    else:
+        return []
+
+
+def is_container(node):
+    """
+    Determine if an ASDF tree node is an instance of a "container" type
+    (i.e., value may contain child nodes).
+
+    Parameters
+    ----------
+    node : object
+        an ASDF tree node
+
+    Returns
+    -------
+    bool
+        True if node is a container, False otherwise
+    """
+    return isinstance(node, dict) or isinstance(node,list) or isinstance(node, tuple)
