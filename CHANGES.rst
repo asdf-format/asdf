@@ -20,6 +20,16 @@
 - Add ``package`` property to extension metadata, and deprecate
   use of ``software``. [#728]
 
+- AsdfDeprecationWarning now subclasses DeprecationWarning. [#710]
+
+- Remove unnecessary dependency on six. [#739]
+
+- Resolve external references in custom schemas, and deprecate
+  asdf.schema.load_custom_schema.  [#738]
+
+- Add ``asdf.info`` for displaying a summary of a tree, and
+  ``AsdfFile.search`` for searching a tree. [#736]
+
 2.5.0 (2019-12-23)
 ------------------
 
