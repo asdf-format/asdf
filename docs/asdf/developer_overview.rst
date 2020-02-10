@@ -177,7 +177,7 @@ may not be convertable to the designated object.)
 
 The validate machinery is a bit confusing since there are essentially two basic 
 approaches to how validation is done. One type of validation is for validation
-of schema files themselves, and the fundamental schemas for ...
+of schema files themselves, and the other for schemas for tags.
 
 The schema.py file is fairly involved and the details are covered elsewhere.
 When the validator machinery is constructed, it uses the fundamental validation
