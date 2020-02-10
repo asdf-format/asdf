@@ -167,13 +167,13 @@ to. Otherwise:
  - variant where that object contains a ._tag attribute that is a reference to
  - the corresponding Tag class.
 
-The loading process returnes a tree of these Tagged object instances. This
+The loading process returns a tree of these Tagged object instances. This
 tagged_tree is then returned to the ``af`` instance (still running the
 ``_open_asdf()`` method) this tree is  passed to to the ``_validate()`` method
 (This is the major reason that the tree isn't  directly converted to an object
 tree since jsonschema would not be able to use the  final object tree for
 validation, besides issues relate to the fact that things that don't validate
-may not be converable to the designated object.) 
+may not be convertable to the designated object.) 
 
 The validate machinery is a bit confusing since there are essentially two basic 
 approaches to how validation is done. One type of validation is for validation
@@ -203,7 +203,7 @@ are  saved (details of how this works were recently changed to prevent a serious
 memory leak)
 
 In any event, a lot is going on behind the scenes in validation and it deserves
-its  own description elsewhere.
+its own description elsewhere.
 
 After validation, the tagged tree is then passed to
 yamlutil.tagged_tree_to_custom_tree() where the nodes in the tree that have
@@ -212,12 +212,12 @@ base asdf and extensions are aware of. This is accomplished by that function
 defining a walker "callback" function (defined within that function as to pick
 up the af object intrinsically). The function then passes the callback walker to
 treeutil.walk_and_modify() where the tree will be traversed recursively applying
-the tag code associated with the tag to the more primative tree representation
-replacing such nodes with Python objects. The tree travsersal starts from the
-top, but the objects are created from the bottom up due to  recursion.
+the tag code associated with the tag to the more primitive tree representation
+replacing such nodes with Python objects. The tree traversal starts from the
+top, but the objects are created from the bottom up due to recursion.
 
-The result is what af.tree is set to, after doing another tree travseral looking
-for special type hooks for each node. It isn't cleaf if there is yet any use of that
+The result is what af.tree is set to, after doing another tree traversal looking
+for special type hooks for each node. It isn't clear if there is yet any use of that
 feature.
 
 Not quite that simple
@@ -339,12 +339,12 @@ default, strip the attribute.
 calls  ``schema.validate`` with the tagged tree as the first argument (it can be
 called again if there is a custom schema).
 
-**in sSchema.py**
+**in schema.py**
 
 ``validate -> get_validator -> _create_validator`` (returns ``ASDFValidator``).
 There are two levels of validation, those passed to the json_validation
 machinery for the  schemas themselves, and those that the tag machinery triggers
-whenthe jsonschema validator calls through ``iter_errors``. The first level
+when the jsonschema validator calls through ``iter_errors``. The first level
 handles all the tricks at the top. the ``ASDFValidator`` uses ``load_schema``
 which in turn calls ``_make_schema_loader``, then ``_load_schema``.
 ``_load_schema`` uses the ``OrderedLoader`` to load the schemas.
