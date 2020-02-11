@@ -225,6 +225,8 @@ class AsdfFile(versioning.VersionedMixin):
         self._extension_metadata.update(default_extensions.package_metadata)
 
     def _update_extension_history(self):
+        if self.version < versioning.NEW_HISTORY_FORMAT_MIN_VERSION:
+            return
 
         if 'history' not in self.tree:
             self.tree['history'] = dict(extensions=[])
@@ -1197,16 +1199,28 @@ class AsdfFile(versioning.VersionedMixin):
         if software is not None:
             entry['software'] = software
 
-        if 'history' not in self.tree:
-            self.tree['history'] = dict(entries=[])
+        if self.version >= versioning.NEW_HISTORY_FORMAT_MIN_VERSION:
+            if 'history' not in self.tree:
+                self.tree['history'] = dict(entries=[])
 
-        self.tree['history']['entries'].append(entry)
+            self.tree['history']['entries'].append(entry)
 
-        try:
-            self.validate()
-        except Exception:
-            self.tree['history']['entries'].pop()
-            raise
+            try:
+                self.validate()
+            except Exception:
+                self.tree['history']['entries'].pop()
+                raise
+        else:
+            if 'history' not in self.tree:
+                self.tree['history'] = []
+
+            self.tree['history'].append(entry)
+
+            try:
+                self.validate()
+            except Exception:
+                self.tree['history'].pop()
+                raise
 
     def get_history_entries(self):
         """

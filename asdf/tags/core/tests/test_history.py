@@ -230,7 +230,7 @@ history:
 
 def test_metadata_with_custom_extension(tmpdir):
 
-    class FractionType(types.AsdfType):
+    class FractionType(types.CustomType):
         name = 'fraction'
         organization = 'nowhere.org'
         version = (1, 0, 0)
