@@ -215,6 +215,7 @@ def numpy_array_to_list(array):
 
 class NDArrayType(AsdfType):
     name = 'core/ndarray'
+    version = '1.0.0'
     types = [np.ndarray, ma.MaskedArray]
 
     def __init__(self, source, shape, dtype, offset, strides,

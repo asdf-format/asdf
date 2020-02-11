@@ -9,6 +9,7 @@ from ... import util
 
 class ComplexType(AsdfType):
     name = 'core/complex'
+    version = '1.0.0'
     types = list(util.iter_subclasses(np.complexfloating)) + [complex]
 
     @classmethod

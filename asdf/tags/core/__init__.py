@@ -6,9 +6,23 @@ from ...types import AsdfType
 from ...yamlutil import custom_tree_to_tagged_tree
 
 
-class AsdfObject(dict, AsdfType):
+class AsdfObject(dict):
+    pass
+
+
+class AsdfObjectType(AsdfType):
     name = 'core/asdf'
     version = '1.1.0'
+    supported_versions = {'1.0.0', '1.1.0'}
+    types = [AsdfObject]
+
+    @classmethod
+    def from_tree(cls, node, ctx):
+        return AsdfObject(node)
+
+    @classmethod
+    def to_tree(cls, data, ctx):
+        return dict(data)
 
 
 class Software(dict, AsdfType):

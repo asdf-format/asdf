@@ -115,7 +115,7 @@ class AsdfSchemaExampleItem(pytest.Item):
 
     def _find_standard_version(self, name, version):
         from asdf import versioning
-        for sv in versioning.supported_versions:
+        for sv in reversed(versioning.supported_versions):
             map_version = versioning.get_version_map(sv)['tags'].get(name)
             if map_version is not None and version == map_version:
                 return sv

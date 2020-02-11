@@ -20,6 +20,8 @@ try:
 except ImportError:
     CartesianDifferential = None
 
+import yaml
+
 import asdf
 from ..asdf import AsdfFile, get_asdf_library_info
 from ..block import Block
@@ -27,6 +29,10 @@ from .httpserver import RangeHTTPServer
 from ..extension import default_extensions
 from ..exceptions import AsdfConversionWarning
 from .. import versioning
+from ..resolver import Resolver, ResolverChain
+from .. import generic_io
+from ..constants import YAML_TAG_PREFIX
+from ..versioning import AsdfVersion, get_version_map
 
 from ..tags.core import AsdfObject
 
@@ -290,13 +296,20 @@ def yaml_to_asdf(yaml_content, yaml_headers=True, standard_version=None):
     if standard_version is None:
         standard_version = versioning.default_version
 
+    standard_version = AsdfVersion(standard_version)
+
+    vm = get_version_map(standard_version)
+    file_format_version = vm["FILE_FORMAT"]
+    yaml_version = vm["YAML_VERSION"]
+    tree_version = vm["tags"]["tag:stsci.edu:asdf/core/asdf"]
+
     if yaml_headers:
         buff.write("""#ASDF {0}
 #ASDF_STANDARD {1}
-%YAML 1.1
+%YAML {2}
 %TAG ! tag:stsci.edu:asdf/
---- !core/asdf-{0}
-""".format(AsdfObject.version, standard_version).encode('ascii'))
+--- !core/asdf-{3}
+""".format(file_format_version, standard_version, yaml_version, tree_version).encode('ascii'))
     buff.write(yaml_content)
     if yaml_headers:
         buff.write(b"\n...\n")
@@ -352,3 +365,73 @@ def display_warnings(_warnings):
             warning.category.__name__,
             warning.message)
     return msg
+
+
+def assert_extension_correctness(extension):
+    """
+    Assert that an ASDF extension's types are all correctly formed and
+    that the extension provides all of the required schemas.
+
+    Parameters
+    ----------
+    extension : asdf.AsdfExtension
+        The extension to validate
+    """
+    __tracebackhide__ = True
+
+    resolver = ResolverChain(
+        Resolver(extension.tag_mapping, "tag"),
+        Resolver(extension.url_mapping, "url"),
+    )
+
+    for extension_type in extension.types:
+        _assert_extension_type_correctness(extension, extension_type, resolver)
+
+
+def _assert_extension_type_correctness(extension, extension_type, resolver):
+    __tracebackhide__ = True
+
+    if extension_type.yaml_tag is not None and extension_type.yaml_tag.startswith(YAML_TAG_PREFIX):
+        return
+
+    if extension_type == asdf.stream.Stream:
+        # Stream is a special case.  It was implemented as a subclass of NDArrayType,
+        # but shares a tag with that class, so it isn't really a distinct type.
+        return
+
+    assert extension_type.name is not None, f"{extension_type.__name__} must set the 'name' class attribute"
+
+    # Currently ExtensionType sets a default version of 1.0.0,
+    # but we want to encourage an explicit version on the subclass.
+    assert "version" in extension_type.__dict__, f"{extension_type.__name__} must set the 'version' class attribute"
+
+    for check_type in extension_type.versioned_siblings + [extension_type]:
+        schema_location = resolver(check_type.yaml_tag)
+
+        assert schema_location is not None, (
+            f"{extension_type.__name__} supports tag, {check_type.yaml_tag}, "
+            "but tag does not resolve.  Check the tag_mapping and uri_mapping "
+            f"properties on the related extension ({extension.__name__})."
+        )
+
+        try:
+            with generic_io.get_file(schema_location) as f:
+                schema = yaml.load(f.read())
+        except Exception:
+            assert False, (
+                f"{extension_type.__name__} supports tag, {check_type.yaml_tag}, "
+                f"which resolves to schema at {schema_location}, but "
+                "schema cannot be read."
+            )
+
+        assert "tag" in schema, (
+            f"{extension_type.__name__} supports tag, {check_type.yaml_tag}, "
+            f"but tag resolves to a schema at {schema_location} that is "
+            "missing its tag field."
+        )
+
+        assert schema["tag"] == check_type.yaml_tag, (
+            f"{extension_type.__name__} supports tag, {check_type.yaml_tag}, "
+            f"but tag resolves to a schema at {schema_location} that "
+            f"describes a different tag: {schema['tag']}"
+        )
