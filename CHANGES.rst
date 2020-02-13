@@ -10,7 +10,7 @@
 
 - Add developer documentation on schema versioning, additional
   schema and extension-related tests, and fix a variety of
-  issues in ``AsdfType`` subclasses.
+  issues in ``AsdfType`` subclasses. [#750]
 
 2.5.1 (2020-01-07)
 ------------------
