@@ -1,9 +1,6 @@
 2.6 (unreleased)
 ----------------
 
-- Add ``package`` property to extension metadata, and deprecate
-  use of ``software``. [#728]
-
 - AsdfDeprecationWarning now subclasses DeprecationWarning. [#710]
 
 - Remove unnecessary dependency on six. [#739]
@@ -11,24 +8,15 @@
 - Add a developer overview document to help understand how ASDF works
   internally. Still a work in progress. [#730]
 
+- Add developer documentation on schema versioning, additional
+  schema and extension-related tests, and fix a variety of
+  issues in ``AsdfType`` subclasses.
+
 2.5.1 (2020-01-07)
 ------------------
 
 - Fix bug in test causing failure when test suite is run against
   an installed asdf package. [#732]
-
-- Add ``package`` property to extension metadata, and deprecate
-  use of ``software``. [#728]
-
-- AsdfDeprecationWarning now subclasses DeprecationWarning. [#710]
-
-- Remove unnecessary dependency on six. [#739]
-
-- Resolve external references in custom schemas, and deprecate
-  asdf.schema.load_custom_schema.  [#738]
-
-- Add ``asdf.info`` for displaying a summary of a tree, and
-  ``AsdfFile.search`` for searching a tree. [#736]
 
 2.5.1 (2020-01-07)
 ------------------
