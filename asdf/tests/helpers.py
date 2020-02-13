@@ -399,19 +399,19 @@ def _assert_extension_type_correctness(extension, extension_type, resolver):
         # but shares a tag with that class, so it isn't really a distinct type.
         return
 
-    assert extension_type.name is not None, f"{extension_type.__name__} must set the 'name' class attribute"
+    assert extension_type.name is not None, "{} must set the 'name' class attribute".format(extension_type.__name__)
 
     # Currently ExtensionType sets a default version of 1.0.0,
     # but we want to encourage an explicit version on the subclass.
-    assert "version" in extension_type.__dict__, f"{extension_type.__name__} must set the 'version' class attribute"
+    assert "version" in extension_type.__dict__, "{} must set the 'version' class attribute".format(extension_type.__name__)
 
     for check_type in extension_type.versioned_siblings + [extension_type]:
         schema_location = resolver(check_type.yaml_tag)
 
         assert schema_location is not None, (
-            f"{extension_type.__name__} supports tag, {check_type.yaml_tag}, "
-            "but tag does not resolve.  Check the tag_mapping and uri_mapping "
-            f"properties on the related extension ({extension.__name__})."
+            "{} supports tag, {}, ".format(extension_type.__name__, check_type.yaml_tag) +
+            "but tag does not resolve.  Check the tag_mapping and uri_mapping " +
+            "properties on the related extension ({}).".format(extension_type.__name__)
         )
 
         try:
@@ -419,19 +419,19 @@ def _assert_extension_type_correctness(extension, extension_type, resolver):
                 schema = yaml.load(f.read())
         except Exception:
             assert False, (
-                f"{extension_type.__name__} supports tag, {check_type.yaml_tag}, "
-                f"which resolves to schema at {schema_location}, but "
+                "{} supports tag, {}, ".format(extension_type.__name__, check_type.yaml_tag) +
+                "which resolves to schema at {}, but ".format(schema_location) +
                 "schema cannot be read."
             )
 
         assert "tag" in schema, (
-            f"{extension_type.__name__} supports tag, {check_type.yaml_tag}, "
-            f"but tag resolves to a schema at {schema_location} that is "
+            "{} supports tag, {}, ".format(extension_type.__name__, check_type.yaml_tag) +
+            "but tag resolves to a schema at {} that is ".format(schema_location) +
             "missing its tag field."
         )
 
         assert schema["tag"] == check_type.yaml_tag, (
-            f"{extension_type.__name__} supports tag, {check_type.yaml_tag}, "
-            f"but tag resolves to a schema at {schema_location} that "
-            f"describes a different tag: {schema['tag']}"
+            "{} supports tag, {}, ".format(extension_type.__name__, check_type.yaml_tag) +
+            "but tag resolves to a schema at {} that ".format(schema_location) +
+            "describes a different tag: {}".format(schema["tag"])
         )
