@@ -133,6 +133,11 @@ it proceeds as follows:
   and AsdfType are available for 1.1.0 and 1.3.0, it will
   use the 1.1.0 subclass.
 - If the above fails, use the earliest available AsdfType
+- If no AsdfType exists that supports any version of that tag,
+  then ASDF will deserialize the data into vanilla diff.
+
+The library does not currently emit a warning in either of the
+first two cases, but in the third case, a warning is emitted.
 
 The rules for selecting an AsdfType for a given tag are implemented
 by ``asdf.type_index.AsdfTypeIndex.fix_yaml_tag``.
@@ -142,6 +147,10 @@ to the ASDF Standard version in use, which dictates the subset of
 schema versions that are available.  From the subset of AsdfType
 subclasses that handle those schema versions, it selects the subclass
 that is able to handle the type of the core object being serialized.
+
+If an object is not supported by an AsdfType, its serialization will be
+handled by pyyaml.  If pyyaml doesn't know how to serialize, it will
+raise ``yaml.representer.RepresenterError``.
 
 The rules for selecting an AsdfType for a given serializable object
 are implemented by ``asdf.type_index.AsdfTypeIndex.from_custom_type``.
