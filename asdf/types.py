@@ -163,7 +163,8 @@ class AsdfTypeMeta(ExtensionTypeMeta):
         cls = super(AsdfTypeMeta, mcls).__new__(mcls, name, bases, attrs)
         # Classes using this metaclass get added to the list of built-in
         # extensions
-        _all_asdftypes.add(cls)
+        if name != "AsdfType":
+            _all_asdftypes.add(cls)
 
         return cls
 

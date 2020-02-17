@@ -2,7 +2,7 @@
 ----------------
 
 - Add a developer overview document to help understand how ASDF works
-  internally. Still a work in progress. [#730] 
+  internally. Still a work in progress. [#730]
 
 - Add ``package`` property to extension metadata, and deprecate
   use of ``software``. [#728]
@@ -16,6 +16,10 @@
 
 - Add ``asdf.info`` for displaying a summary of a tree, and
   ``AsdfFile.search`` for searching a tree. [#736]
+
+- Add developer documentation on schema versioning, additional
+  schema and extension-related tests, and fix a variety of
+  issues in ``AsdfType`` subclasses. [#750]
 
 2.5.1 (2020-01-07)
 ------------------

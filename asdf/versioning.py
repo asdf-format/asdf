@@ -202,3 +202,8 @@ class VersionedMixin:
                 "Don't have information about version {0}".format(
                     self.version_string))
         return version_map
+
+
+# This is the ASDF Standard version at which the format of the history
+# field changed to include extension metadata.
+NEW_HISTORY_FORMAT_MIN_VERSION = AsdfVersion("1.2.0")

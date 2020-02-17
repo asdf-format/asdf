@@ -319,10 +319,15 @@ def test_version_mismatch_file():
                 ignore_version_mismatch=False) as fits_handle:
             assert fits_handle.tree['a'] == complex(0j)
     # This is the warning that we expect from opening the FITS file
-    assert len(w) == 1, display_warnings(w)
+    assert len(w) == 2, display_warnings(w)
     assert str(w[0].message) == (
         "'tag:stsci.edu:asdf/core/complex' with version 7.0.0 found in file "
-        "'{}', but latest supported version is 1.0.0".format(testfile))
+        "'{}', but latest supported version is 1.0.0".format(testfile)
+    )
+    assert str(w[1].message) == (
+        "'tag:stsci.edu:asdf/core/asdf' with version 1.0.0 found in file "
+        "'{}', but latest supported version is 1.1.0".format(testfile)
+    )
 
     # Make sure warning does not occur when warning is ignored (default)
     with pytest.warns(None) as w:
@@ -334,10 +339,15 @@ def test_version_mismatch_file():
         with fits_embed.AsdfInFits.open(testfile,
                 ignore_version_mismatch=False) as fits_handle:
             assert fits_handle.tree['a'] == complex(0j)
-    assert len(w) == 1
+    assert len(w) == 2
     assert str(w[0].message) == (
         "'tag:stsci.edu:asdf/core/complex' with version 7.0.0 found in file "
-        "'{}', but latest supported version is 1.0.0".format(testfile))
+        "'{}', but latest supported version is 1.0.0".format(testfile)
+    )
+    assert str(w[1].message) == (
+        "'tag:stsci.edu:asdf/core/asdf' with version 1.0.0 found in file "
+        "'{}', but latest supported version is 1.1.0".format(testfile)
+    )
 
     # Make sure warning does not occur when warning is ignored (default)
     with pytest.warns(None) as w:

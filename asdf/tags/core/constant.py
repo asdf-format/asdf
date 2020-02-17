@@ -16,12 +16,13 @@ class Constant:
 
 class ConstantType(AsdfType):
     name = 'core/constant'
+    version = '1.0.0'
     types = [Constant]
 
     @classmethod
-    def from_tree(self, node, ctx):
+    def from_tree(cls, node, ctx):
         return Constant(node)
 
     @classmethod
-    def to_tree(self, data, ctx):
+    def to_tree(cls, data, ctx):
         return data.value

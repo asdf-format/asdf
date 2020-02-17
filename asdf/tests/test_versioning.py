@@ -5,7 +5,15 @@
 import pytest
 from itertools import combinations
 
-from asdf.versioning import AsdfVersion, AsdfSpec
+from asdf.versioning import (
+    AsdfVersion,
+    AsdfSpec,
+    supported_versions,
+    get_version_map,
+    join_tag_version,
+)
+from asdf.extension import default_extensions
+from asdf.schema import load_schema
 
 
 def test_version_constructor():
@@ -244,3 +252,50 @@ def test_spec_equal():
     assert (1, 1, 0) != spec
     assert spec == (1, 3, 0)
     assert (1, 3, 0) == spec
+
+
+@pytest.mark.parametrize("version", supported_versions)
+def test_version_map_core_support(version):
+    _test_version_map_support(version, "core")
+
+
+@pytest.mark.parametrize("version", supported_versions)
+@pytest.mark.xfail(
+    reason="astropy does not yet explicitly support older schema versions",
+    strict=True
+)
+def test_version_map_standard_support(version):
+    _test_version_map_support(version, "standard")
+
+
+def _test_version_map_support(version, schema_type):
+    vm = get_version_map(version)
+
+    type_index = default_extensions.extension_list.type_index
+    class MockContext:
+        def __init__(self):
+            self._fname = None
+    ctx = MockContext()
+
+    for tag_base, tag_version in vm[schema_type].items():
+        tag = join_tag_version(tag_base, tag_version)
+
+        try:
+            load_schema(tag)
+        except Exception:
+            assert False, (
+                "ASDF Standard version {} requires support for ".format(version) +
+                "{}, but the corresponding schema cannot be loaded.".format(tag)
+            )
+
+        extension_type = type_index.from_yaml_tag(ctx, tag)
+        assert extension_type is not None, (
+            "ASDF Standard version {} requires support for ".format(version) +
+            "{}, but no ExtensionType exists to support that tag.".format(tag)
+        )
+
+        assert extension_type.yaml_tag == tag, (
+            "ASDF Standard version {} requires support for ".format(version) +
+            "{}, but no ExtensionType exists that explicitly ".format(tag) +
+            "supports that version."
+        )

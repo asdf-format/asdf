@@ -48,13 +48,14 @@ API Documentation
 Developer Overview
 ==================
 
-Currently a work in progress. Intended to give an overview of how the various 
+Currently a work in progress. Intended to give an overview of how the various
 parts of ASDF interact and which modules do what and how.
 
 .. toctree::
   :maxdepth: 1
 
   asdf/developer_overview
+  asdf/developer_versioning
 
 Contributing and reporting issues
 =================================

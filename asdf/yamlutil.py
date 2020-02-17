@@ -322,11 +322,16 @@ def dump_tree(tree, fd, ctx):
     AsdfDumperTmp.ctx = ctx
 
     tags = None
-    if hasattr(tree, 'yaml_tag'):
-        tag = tree.yaml_tag
-        tag = tag[:tag.index('/core/asdf') + 1]
-        if tag.strip():
-            tags = {'!': tag}
+    tree_type = ctx.type_index.from_custom_type(type(tree))
+    if tree_type is not None:
+        tag_parts = tree_type.yaml_tag.split(':')
+        last_part = tag_parts[-1]
+        if '/' in last_part:
+            last_part = last_part[0:last_part.index('/') + 1]
+        else:
+            last_part = ''
+        yaml_tag = ':'.join(tag_parts[0:-1] + [last_part])
+        tags = {'!': yaml_tag}
 
     tree = custom_tree_to_tagged_tree(tree, ctx)
     schema.validate(tree, ctx)
