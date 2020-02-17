@@ -148,7 +148,7 @@ def test_extension_metadata(tmpdir):
         assert metadata.extension_class == 'asdf.extension.BuiltinExtension'
         # Don't bother with testing the version here since it will depend on
         # how recently the package was built (version is auto-generated)
-        assert metadata.package['name'] == 'asdf'
+        assert metadata.software['name'] == 'asdf'
 
 
 def test_missing_extension_warning():
@@ -158,7 +158,7 @@ history:
   extensions:
     - !core/extension_metadata-1.0.0
       extension_class: foo.bar.FooBar
-      package: !core/software-1.0.0
+      software: !core/software-1.0.0
         name: foo
         version: 1.2.3
     """
@@ -180,7 +180,7 @@ history:
   extensions:
     - !core/extension_metadata-1.0.0
       extension_class: asdf.extension.BuiltinExtension
-      package: !core/software-1.0.0
+      software: !core/software-1.0.0
         name: asdf
         version: 100.0.3
     """

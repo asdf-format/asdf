@@ -4,9 +4,6 @@
 - Add a developer overview document to help understand how ASDF works
   internally. Still a work in progress. [#730]
 
-- Add ``package`` property to extension metadata, and deprecate
-  use of ``software``. [#728]
-
 - AsdfDeprecationWarning now subclasses DeprecationWarning. [#710]
 
 - Remove unnecessary dependency on six. [#739]
