@@ -343,6 +343,11 @@ More detailed documentation on this software package can be found
 More information on the ASDF Standard itself can be found
 `here <https://asdf-standard.readthedocs.io>`__.
 
+There are two mailing lists for ASDF:
+
+* [asdf-users](https://groups.google.com/forum/#!forum/asdf-users)
+* [asdf-developers](https://groups.google.com/forum/#!forum/asdf-developers)
+
     If you are looking for the **A**\ daptable **S**\ eismic **D**\ ata
     **F**\ ormat, information can be found
     `here <https://seismic-data.org/>`__.
