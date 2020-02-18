@@ -21,6 +21,9 @@ matrix:
     - env: TOXENV=py35
       python: 3.5
 
+    # Test ASDF file compatibility between library versions
+    - env: TOXENV=compatibility
+
     # Do a coverage test
     - env: TOXENV=coverage
 
