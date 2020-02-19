@@ -132,9 +132,10 @@ def env_path(asdf_version, tmp_path_factory):
 @pytest.fixture(autouse=True)
 def change_tmpdir(tmpdir):
     """
-    Change the working directory, to prevent the virtualenv python
-    from loading the current version of asdf.  I don't understand
-    why this is necessary.
+    Change the working directory, in case the user is running these
+    tests from the repo root.  Python will import a module from the
+    current working directory by preference, so this prevents us
+    from accidentally comparing the current library code to itself.
     """
     original_cwd = os.getcwd()
     tmpdir.chdir()
