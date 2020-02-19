@@ -18,6 +18,8 @@
   schema and extension-related tests, and fix a variety of
   issues in ``AsdfType`` subclasses. [#750]
 
+- Simplify example in README.rst [#xxx]
+
 2.5.1 (2020-01-07)
 ------------------
 
