@@ -71,8 +71,8 @@ input to the constructor of `AsdfFile`:
     import numpy as np
 
     # Create some data
-    sequence = np.array([x for x in range(100)])
-    squares = np.array([x**2 for x in range(100)])
+    sequence = np.arange(100)
+    squares  = sequence**2
     random = np.random.random(100)
 
     # Store the data in an arbitrarily nested dictionary
