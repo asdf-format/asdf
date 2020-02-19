@@ -16,8 +16,14 @@ import asdf
 from common import generate_file, assert_file_correct
 
 
+# Strange version present on pypi that doesn't parse as a StrictVersion
 BAD_VERSIONS = {"0"}
+
+# Minimum library version to test.  Earlier versions aren't able to
+# generate files for all the ASDF Standard versions that they claim
+# to support.
 MIN_VERSION = StrictVersion("2.3.0")
+
 GENERATE_SCRIPT_PATH = Path(__file__).parent/"generate_file.py"
 ASSERT_SCRIPT_PATH = Path(__file__).parent/"assert_file_correct.py"
 
@@ -125,21 +131,34 @@ def env_path(asdf_version, tmp_path_factory):
 
 @pytest.fixture(autouse=True)
 def change_tmpdir(tmpdir):
-    os.chdir(tmpdir)
+    """
+    Change the working directory, to prevent the virtualenv python
+    from loading the current version of asdf.  I don't understand
+    why this is necessary.
+    """
+    original_cwd = os.getcwd()
+    tmpdir.chdir()
+    yield
+    os.chdir(original_cwd)
 
 
 @pytest.mark.remote_data
 def test_file_compatibility(asdf_version, env_path, tmpdir):
+    # Sanity check to ensure we're not accidentally comparing
+    # the current code to itself.
     installed_version = get_installed_version(env_path)
     assert installed_version == asdf_version, (
         "The version of asdf in the virtualenv ({}) does ".format(installed_version) +
         "not match the version being tested ({})".format(asdf_version)
     )
 
+    # We can only test ASDF Standard versions that both library
+    # versions support.
     current_supported_versions = set(asdf.versioning.supported_versions)
     old_supported_versions = set(get_supported_versions(env_path))
     standard_versions = [v for v in current_supported_versions.intersection(old_supported_versions)]
 
+    # Confirm that this test isn't giving us a false sense of security.
     assert len(standard_versions) > 0
 
     for standard_version in standard_versions:
