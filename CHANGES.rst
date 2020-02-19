@@ -12,7 +12,7 @@
   schema and extension-related tests, and fix a variety of
   issues in ``AsdfType`` subclasses. [#750]
 
-- Simplify example in README.rst [#xxx]
+- Simplify example in README.rst [#763]
 
 2.5.2 (unreleased)
 ------------------
