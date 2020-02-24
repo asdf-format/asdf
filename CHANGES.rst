@@ -16,7 +16,7 @@
 ------------------
 
 - Update asdf-standard to include schemas that were previously
-  missing from 1.4.0 version maps.  [#???]
+  missing from 1.4.0 version maps.  [#764]
 
 2.5.1 (2020-01-07)
 ------------------
