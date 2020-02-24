@@ -1,5 +1,5 @@
-2.6 (unreleased)
-----------------
+2.6.0 (unreleased)
+------------------
 
 - AsdfDeprecationWarning now subclasses DeprecationWarning. [#710]
 
@@ -11,6 +11,12 @@
 - Add developer documentation on schema versioning, additional
   schema and extension-related tests, and fix a variety of
   issues in ``AsdfType`` subclasses. [#750]
+
+2.5.2 (unreleased)
+------------------
+
+- Update asdf-standard to include schemas that were previously
+  missing from 1.4.0 version maps.  [#???]
 
 2.5.1 (2020-01-07)
 ------------------
