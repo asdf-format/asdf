@@ -1,8 +1,18 @@
-conda:
-  file: .rtd-environment.yml
+version: 2
+
+submodules:
+  include: all
+  recursive: true
+
+formats: all
 
 python:
-  setup_py_install: true
+  version: 3.8
+  install:
+    - method: pip
+      path: .
+      extra_requirements:
+        - docs
 
-formats:
-  - none
+sphinx:
+  configuration: docs/conf.py
