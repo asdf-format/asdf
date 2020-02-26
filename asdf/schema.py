@@ -347,9 +347,9 @@ HARDCODED_SCHEMA = {
 @lru_cache()
 def load_custom_schema(url):
     # Avoid circular import
-    from .tags.core import AsdfObject
+    from .tags.core import AsdfObjectType
     custom = load_schema(url, resolve_local_refs=True)
-    core = load_schema(AsdfObject.yaml_tag)
+    core = load_schema(AsdfObjectType.yaml_tag)
 
     def update(d, u):
         for k, v in u.items():
