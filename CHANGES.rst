@@ -1,5 +1,5 @@
-2.6 (unreleased)
-----------------
+2.6.0 (unreleased)
+------------------
 
 - Add a developer overview document to help understand how ASDF works
   internally. Still a work in progress. [#730]
@@ -19,6 +19,12 @@
   issues in ``AsdfType`` subclasses. [#750]
 
 - Simplify example in README.rst [#763]
+
+2.5.2 (unreleased)
+------------------
+
+- Update asdf-standard to include schemas that were previously
+  missing from 1.4.0 version maps.  [#767]
 
 2.5.1 (2020-01-07)
 ------------------
