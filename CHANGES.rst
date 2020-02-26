@@ -3,22 +3,22 @@
 
 - AsdfDeprecationWarning now subclasses DeprecationWarning. [#710]
 
-- Remove unnecessary dependency on six. [#739]
+2.5.2 (unreleased)
+------------------
 
 - Add a developer overview document to help understand how ASDF works
   internally. Still a work in progress. [#730]
+
+- Remove unnecessary dependency on six. [#739]
 
 - Add developer documentation on schema versioning, additional
   schema and extension-related tests, and fix a variety of
   issues in ``AsdfType`` subclasses. [#750]
 
-- Simplify example in README.rst [#763]
-
-2.5.2 (unreleased)
-------------------
-
 - Update asdf-standard to include schemas that were previously
   missing from 1.4.0 version maps.  [#764]
+
+- Simplify example in README.rst [#763]
 
 2.5.1 (2020-01-07)
 ------------------
