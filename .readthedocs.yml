@@ -1,0 +1,18 @@
+version: 2
+
+submodules:
+  include: all
+  recursive: true
+
+formats: all
+
+python:
+  version: 3.8
+  install:
+    - method: pip
+      path: .
+      extra_requirements:
+        - docs
+
+sphinx:
+  configuration: docs/conf.py
