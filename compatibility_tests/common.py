@@ -12,6 +12,8 @@ def generate_file(path, version):
 
 
 def assert_file_correct(path):
+    __tracebackhide__ = True
+
     with asdf.open(str(path)) as af:
         assert af["array"].shape == (8, 16)
         assert np.all(af["array"] == 1)
