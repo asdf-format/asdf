@@ -1,9 +1,4 @@
-2.6.0 (unreleased)
-------------------
-
-- AsdfDeprecationWarning now subclasses DeprecationWarning. [#710]
-
-2.5.2 (unreleased)
+2.5.2 (2020-02-28)
 ------------------
 
 - Add a developer overview document to help understand how ASDF works
