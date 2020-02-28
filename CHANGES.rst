@@ -9,7 +9,7 @@
 - Add ``asdf.info`` for displaying a summary of a tree, and
   ``AsdfFile.search`` for searching a tree. [#736]
 
-2.5.2 (unreleased)
+2.5.2 (2020-02-28)
 ------------------
 
 - Add a developer overview document to help understand how ASDF works
