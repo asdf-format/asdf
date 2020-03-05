@@ -9,6 +9,9 @@
 - Add ``asdf.info`` for displaying a summary of a tree, and
   ``AsdfFile.search`` for searching a tree. [#736]
 
+- Add pytest plugin option to skip warning when a tag is
+  unrecognized. [#771]
+
 2.5.2 (2020-02-28)
 ------------------
 

@@ -23,22 +23,37 @@ def pytest_addoption(parser):
         "Base names of schemas whose examples should not be tested")
     parser.addini(
         "asdf_schema_tests_enabled",
-        "Controls whether schema tests are enabled by default")
+        "Controls whether schema tests are enabled by default",
+        type="bool",
+        default=False,
+    )
+    parser.addini(
+        "asdf_schema_ignore_unrecognized_tag",
+        "Set to true to disable warnings when tag serializers are missing",
+        type="bool",
+        default=False,
+    )
     parser.addoption('--asdf-tests', action='store_true',
         help='Enable ASDF schema tests')
 
 
 class AsdfSchemaFile(pytest.File):
 
-    def __init__(self, *args, skip_examples=False, **kwargs):
+    def __init__(self, *args, skip_examples=False, ignore_unrecognized_tag=False, **kwargs):
         super().__init__(*args, **kwargs)
         self.skip_examples = skip_examples
+        self.ignore_unrecognized_tag = ignore_unrecognized_tag
 
     def collect(self):
         yield AsdfSchemaItem(str(self.fspath), self)
         if not self.skip_examples:
             for example in self.find_examples_in_schema():
-                yield AsdfSchemaExampleItem(str(self.fspath), self, example)
+                yield AsdfSchemaExampleItem(
+                    str(self.fspath),
+                    self,
+                    example,
+                    ignore_unrecognized_tag=self.ignore_unrecognized_tag
+                )
 
     def find_examples_in_schema(self):
         """Returns generator for all examples in schema at given path"""
@@ -107,11 +122,12 @@ def parse_schema_filename(filename):
 
 
 class AsdfSchemaExampleItem(pytest.Item):
-    def __init__(self, schema_path, parent, example):
+    def __init__(self, schema_path, parent, example, ignore_unrecognized_tag=False):
         test_name = "{}-example".format(schema_path)
         super(AsdfSchemaExampleItem, self).__init__(test_name, parent)
         self.filename = str(schema_path)
         self.example = example
+        self.ignore_unrecognized_tag = ignore_unrecognized_tag
 
     def _find_standard_version(self, name, version):
         from asdf import versioning
@@ -125,7 +141,6 @@ class AsdfSchemaExampleItem(pytest.Item):
     def runtest(self):
         from asdf import AsdfFile, block, util
         from asdf.tests import helpers
-        from .extension import TestExtension
 
         name, version = parse_schema_filename(self.filename)
         if should_skip(name, version):
@@ -139,7 +154,8 @@ class AsdfSchemaExampleItem(pytest.Item):
             'example: ' + self.example.strip(), standard_version=standard_version)
         ff = AsdfFile(
             uri=util.filepath_to_url(os.path.abspath(self.filename)),
-            extensions=TestExtension())
+            ignore_unrecognized_tag=self.ignore_unrecognized_tag,
+        )
 
         # Fake an external file
         ff2 = AsdfFile({'data': np.empty((1024*1024*8), dtype=np.uint8)})
@@ -186,6 +202,7 @@ def pytest_collect_file(path, parent):
 
     skip_names = parent.config.getini('asdf_schema_skip_names')
     skip_examples = parent.config.getini('asdf_schema_skip_examples')
+    ignore_unrecognized_tag = parent.config.getini('asdf_schema_ignore_unrecognized_tag')
 
     schema_roots = [os.path.join(str(parent.config.rootdir), os.path.normpath(root))
                         for root in schema_roots]
@@ -195,9 +212,11 @@ def pytest_collect_file(path, parent):
 
     for root in schema_roots:
         if str(path).startswith(root) and path.purebasename not in skip_names:
-            skip = path.purebasename in skip_examples
             return AsdfSchemaFile(
-                            path, parent,
-                            skip_examples=(path.purebasename in skip_examples))
+                path,
+                parent,
+                skip_examples=(path.purebasename in skip_examples),
+                ignore_unrecognized_tag=ignore_unrecognized_tag,
+            )
 
     return None
