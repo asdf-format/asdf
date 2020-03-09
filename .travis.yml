@@ -4,6 +4,11 @@ python: 3.8
 # Use Travis' container-based architecture
 sudo: false
 
+env:
+    global:
+        - TESTENV=
+
+
 matrix:
   include:
     # Python 3.8, stable dependencies
