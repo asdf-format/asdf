@@ -356,7 +356,6 @@ class GenericFile(metaclass=util.InheritDocstrings):
         time.  The result is a generator where each value is a bytes
         object.
         """
-        i = 0
         for i in range(0, size, self._blksize):
             thissize = min(self._blksize, size - i)
             yield self.read(thissize)
