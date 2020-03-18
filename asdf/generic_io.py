@@ -359,6 +359,7 @@ class GenericFile(metaclass=util.InheritDocstrings):
         i = 0
         for i in range(0, size - self._blksize, self._blksize):
             yield self.read(self._blksize)
+        i += self._blksize
         if i < size:
             yield self.read(size - i)
 
