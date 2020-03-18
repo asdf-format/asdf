@@ -357,11 +357,9 @@ class GenericFile(metaclass=util.InheritDocstrings):
         object.
         """
         i = 0
-        for i in range(0, size - self._blksize, self._blksize):
-            yield self.read(self._blksize)
-        i += self._blksize
-        if i < size:
-            yield self.read(size - i)
+        for i in range(0, size, self._blksize):
+            thissize = min(self._blksize, size - i)
+            yield self.read(thissize)
 
     def write(self, content):
         self._fd.write(content)
