@@ -164,10 +164,12 @@ supported_versions = [
     AsdfVersion('1.1.0'),
     AsdfVersion('1.2.0'),
     AsdfVersion('1.3.0'),
-    AsdfVersion('1.4.0')
+    AsdfVersion('1.4.0'),
+    AsdfVersion('1.5.0'),
 ]
 
-default_version = supported_versions[-1]
+# Version 1.5.0 is currently (2020-03-27) a work in progress.
+default_version = AsdfVersion('1.4.0')
 
 
 class VersionedMixin:

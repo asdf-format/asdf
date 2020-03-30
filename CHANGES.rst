@@ -11,8 +11,11 @@
 
 - Add pytest plugin option to skip warning when a tag is
   unrecognized. [#771]
-  
+
 - Fix generic_io ``read_blocks()`` reading past the requested size [#773]
+
+- Add support for ASDF Standard 1.5.0, which includes several new
+  transform schemas. [#776]
 
 2.5.2 (2020-02-28)
 ------------------
