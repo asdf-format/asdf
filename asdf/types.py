@@ -293,7 +293,7 @@ class ExtensionType:
         Converts instances of custom types into tagged objects.
 
         It is more common for custom tag types to override `to_tree` instead of
-        this method. This method should only be overridden if it is necessary
+        this method. This method should be overridden if it is necessary
         to modify the YAML tag that will be used to tag this object.
 
         Parameters
@@ -345,8 +345,11 @@ class ExtensionType:
 
         This method should be overridden by custom extension classes in order
         to define how custom types are deserialized from the YAML
-        representation back into their original types. The method will return
-        an instance of the original custom type.
+        representation back into their original types. Typically the method will
+        return an instance of the original custom type.  It is also permitted
+        to return a generator, which yields a partially constructed result, then
+        completes construction once the generator is drained.  This is useful
+        when constructing objects that contain reference cycles.
 
         This method is called as part of the process of reading an ASDF file in
         order to construct an `AsdfFile` object. Whenever a YAML subtree is
@@ -365,7 +368,8 @@ class ExtensionType:
 
         Returns
         -------
-            An instance of the custom type represented by this extension class.
+            An instance of the custom type represented by this extension class,
+            or a generator that yields that instance.
         """
         return cls(tree)
 

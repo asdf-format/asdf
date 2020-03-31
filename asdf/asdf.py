@@ -127,6 +127,11 @@ class AsdfFile(versioning.VersionedMixin):
 
         self._file_format_version = None
 
+        # Context of a call to treeutil.walk_and_modify, needed in the AsdfFile
+        # in case walk_and_modify is re-entered by extension code (via
+        # custom_tree_to_tagged_tree or tagged_tree_to_custom_tree).
+        self._tree_modification_context = treeutil._TreeModificationContext()
+
         self._fd = None
         self._closed = False
         self._external_asdf_by_uri = {}
@@ -1037,7 +1042,6 @@ class AsdfFile(versioning.VersionedMixin):
         if version is not None:
             self.version = version
 
-
         with generic_io.get_file(fd, mode='w') as fd:
             # TODO: This is not ideal: we really should pass the URI through
             # explicitly to wherever it is required instead of making it an
@@ -1058,12 +1062,8 @@ class AsdfFile(versioning.VersionedMixin):
         Finds all external "JSON References" in the tree and converts
         them to `reference.Reference` objects.
         """
-        # Since this is the first place that the tree is processed when
-        # creating a new ASDF object, this is where we pass the option to
-        # ignore warnings about implicit type conversions.
         # Set directly to self._tree, since it doesn't need to be re-validated.
-        self._tree = reference.find_references(self._tree, self,
-                ignore_implicit_conversion=self._ignore_implicit_conversion)
+        self._tree = reference.find_references(self._tree, self)
 
     def resolve_references(self, do_not_fill_defaults=False):
         """
@@ -1125,7 +1125,8 @@ class AsdfFile(versioning.VersionedMixin):
             if hook is not None:
                 return hook(node, self)
             return node
-        tree = treeutil.walk_and_modify(self.tree, walker)
+        tree = treeutil.walk_and_modify(self.tree, walker,
+            ignore_implicit_conversion=self._ignore_implicit_conversion)
 
         if validate:
             self._validate(tree)

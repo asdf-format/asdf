@@ -248,8 +248,7 @@ def test_yaml_internal_reference(tmpdir):
     }
 
     def check_yaml(content):
-        assert b'list:--&id002-*id002' in b''.join(content.split())
-
+        assert b'list:&id002-*id002' in b''.join(content.split())
     helpers.assert_roundtrip_tree(tree, tmpdir, raw_yaml_check_func=check_yaml)
 
 
