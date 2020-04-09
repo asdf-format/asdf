@@ -14,6 +14,7 @@ import yaml
 import asdf
 from asdf import tagged
 from asdf import treeutil
+from asdf import yamlutil
 
 from . import helpers
 
@@ -275,3 +276,31 @@ def test_tag_object():
     tag = 'tag:nowhere.org:none/some/thing'
     instance = tagged.tag_object(tag, SomeObject())
     assert instance._tag == tag
+
+
+@pytest.mark.parametrize("numpy_value,expected_value", [
+    (np.str_("foo"), "foo"),
+    (np.bytes_("foo"), b"foo"),
+    (np.float16(3.14), 3.14),
+    (np.float32(3.14159), 3.14159),
+    (np.float64(3.14159), 3.14159),
+    (np.float128(3.14159), 3.14159),
+    (np.int8(42), 42),
+    (np.int16(42), 42),
+    (np.int32(42), 42),
+    (np.int64(42), 42),
+    (np.longlong(42), 42),
+    (np.uint8(42), 42),
+    (np.uint16(42), 42),
+    (np.uint32(42), 42),
+    (np.uint64(42), 42),
+    (np.ulonglong(42), 42),
+])
+def test_numpy_scalar(numpy_value, expected_value):
+    ctx = asdf.AsdfFile()
+    tree = {"value": numpy_value}
+    buffer = io.BytesIO()
+
+    yamlutil.dump_tree(tree, buffer, ctx)
+    buffer.seek(0)
+    assert yamlutil.load_tree(buffer, ctx)["value"] == expected_value

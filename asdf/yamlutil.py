@@ -218,6 +218,15 @@ for scalar_type in util.iter_subclasses(np.floating):
 for scalar_type in util.iter_subclasses(np.integer):
     AsdfDumper.add_representer(scalar_type, AsdfDumper.represent_int)
 
+def represent_numpy_str(dumper, data):
+    # The CSafeDumper implementation will raise an error if it
+    # doesn't recognize data as a string.  The Python SafeDumper
+    # has no problem with np.str_.
+    return dumper.represent_str(str(data))
+
+AsdfDumper.add_representer(np.str_, represent_numpy_str)
+AsdfDumper.add_representer(np.bytes_, AsdfDumper.represent_binary)
+
 
 def custom_tree_to_tagged_tree(tree, ctx):
     """
