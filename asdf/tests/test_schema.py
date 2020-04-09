@@ -886,7 +886,8 @@ a: !<tag:nowhere.org:custom/doesnt_exist-1.0.0>
     (np.float16(3.14), {"number"}),
     (np.float32(3.14159), {"number"}),
     (np.float64(3.14159), {"number"}),
-    (np.float128(3.14159), {"number"}),
+    # Evidently float128 is not available on Windows:
+    (getattr(np, "float128", np.float64)(3.14159), {"number"}),
     (np.int8(42), {"number", "integer"}),
     (np.int16(42), {"number", "integer"}),
     (np.int32(42), {"number", "integer"}),

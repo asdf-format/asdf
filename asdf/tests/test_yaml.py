@@ -15,6 +15,7 @@ import asdf
 from asdf import tagged
 from asdf import treeutil
 from asdf import yamlutil
+from asdf.compat.numpycompat import NUMPY_LT_1_14
 
 from . import helpers
 
@@ -284,7 +285,8 @@ def test_tag_object():
     (np.float16(3.14), 3.14),
     (np.float32(3.14159), 3.14159),
     (np.float64(3.14159), 3.14159),
-    (np.float128(3.14159), 3.14159),
+    # Evidently float128 is not available on Windows:
+    (getattr(np, "float128", np.float64)(3.14159), 3.14159),
     (np.int8(42), 42),
     (np.int16(42), 42),
     (np.int32(42), 42),
@@ -303,4 +305,8 @@ def test_numpy_scalar(numpy_value, expected_value):
 
     yamlutil.dump_tree(tree, buffer, ctx)
     buffer.seek(0)
-    assert yamlutil.load_tree(buffer, ctx)["value"] == expected_value
+
+    if isinstance(expected_value, float) and NUMPY_LT_1_14:
+        assert yamlutil.load_tree(buffer, ctx)["value"] == pytest.approx(expected_value, rel=0.001)
+    else:
+        assert yamlutil.load_tree(buffer, ctx)["value"] == expected_value
