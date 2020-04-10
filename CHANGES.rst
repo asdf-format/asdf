@@ -17,6 +17,9 @@
 - Add support for ASDF Standard 1.5.0, which includes several new
   transform schemas. [#776]
 
+- Enable validation and serialization of previously unhandled numpy
+  scalar types. [#778]
+
 2.5.2 (2020-02-28)
 ------------------
 

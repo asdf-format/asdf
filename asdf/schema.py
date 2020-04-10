@@ -16,6 +16,7 @@ from jsonschema import validators as mvalidators
 from jsonschema.exceptions import ValidationError
 
 import yaml
+import numpy as np
 
 from . import constants
 from . import generic_io
@@ -213,10 +214,11 @@ def _create_validator(validators=YAML_VALIDATORS):
     if JSONSCHEMA_LT_3:
         base_cls = mvalidators.create(meta_schema=meta_schema, validators=validators)
     else:
-        type_checker = mvalidators.Draft4Validator.TYPE_CHECKER.redefine(
-            'array',
-            lambda checker, instance: isinstance(instance, list) or isinstance(instance, tuple)
-        )
+        type_checker = mvalidators.Draft4Validator.TYPE_CHECKER.redefine_many({
+            'array': lambda checker, instance: isinstance(instance, list) or isinstance(instance, tuple),
+            'integer': lambda checker, instance: not isinstance(instance, bool) and isinstance(instance, Integral),
+            'string': lambda checker, instance: isinstance(instance, (str, np.str_)),
+        })
         id_of = mvalidators.Draft4Validator.ID_OF
         base_cls = mvalidators.create(
             meta_schema=meta_schema,
@@ -229,6 +231,8 @@ def _create_validator(validators=YAML_VALIDATORS):
         if JSONSCHEMA_LT_3:
             DEFAULT_TYPES = base_cls.DEFAULT_TYPES.copy()
             DEFAULT_TYPES['array'] = (list, tuple)
+            DEFAULT_TYPES['integer'] = (Integral)
+            DEFAULT_TYPES['string'] = (str, np.str_)
 
         def iter_errors(self, instance, _schema=None, _seen=set()):
             # We can't validate anything that looks like an external reference,

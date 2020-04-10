@@ -878,3 +878,48 @@ a: !<tag:nowhere.org:custom/doesnt_exist-1.0.0>
             assert str(w[0].message).startswith("Unable to locate schema file")
             assert str(w[1].message).startswith("Unable to locate schema file")
             assert str(w[2].message).startswith(af['a']._tag)
+
+
+@pytest.mark.parametrize("numpy_value,valid_types", [
+    (np.str_("foo"), {"string"}),
+    (np.bytes_("foo"), set()),
+    (np.float16(3.14), {"number"}),
+    (np.float32(3.14159), {"number"}),
+    (np.float64(3.14159), {"number"}),
+    # Evidently float128 is not available on Windows:
+    (getattr(np, "float128", np.float64)(3.14159), {"number"}),
+    (np.int8(42), {"number", "integer"}),
+    (np.int16(42), {"number", "integer"}),
+    (np.int32(42), {"number", "integer"}),
+    (np.longlong(42), {"number", "integer"}),
+    (np.uint8(42), {"number", "integer"}),
+    (np.uint16(42), {"number", "integer"}),
+    (np.uint32(42), {"number", "integer"}),
+    (np.uint64(42), {"number", "integer"}),
+    (np.ulonglong(42), {"number", "integer"}),
+])
+def test_numpy_scalar_type_validation(numpy_value, valid_types):
+    def _assert_validation(jsonschema_type, expected_valid):
+        validator = schema.get_validator()
+        try:
+            validator.validate(numpy_value, _schema={"type": jsonschema_type})
+        except ValidationError:
+            valid = False
+        else:
+            valid = True
+
+        if valid is not expected_valid:
+            if expected_valid:
+                description = "valid"
+            else:
+                description = "invalid"
+            assert False, "Expected numpy.{} to be {} against jsonschema type '{}'".format(
+                type(numpy_value).__name__, description, jsonschema_type
+            )
+
+    for jsonschema_type in valid_types:
+        _assert_validation(jsonschema_type, True)
+
+    invalid_types = {"string", "number", "integer", "boolean", "null", "object"} - valid_types
+    for jsonschema_type in invalid_types:
+        _assert_validation(jsonschema_type, False)
