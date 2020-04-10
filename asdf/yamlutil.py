@@ -28,45 +28,11 @@ else:  # pragma: no cover
     _yaml_base_loader = yaml.SafeLoader
 
 
+YAML_OMAP_TAG = YAML_TAG_PREFIX + 'omap'
+
+
 # ----------------------------------------------------------------------
 # Custom loader/dumpers
-
-
-_yaml_base_type_map = {
-    yaml.MappingNode:
-        lambda node, loader: loader.construct_mapping(node, deep=True),
-    yaml.SequenceNode:
-        lambda node, loader: loader.construct_sequence(node, deep=True),
-    yaml.ScalarNode:
-        lambda node, loader: loader.construct_scalar(node)
-}
-
-
-def _yaml_to_base_type(node, loader):
-    """
-    Converts a PyYAML node type to a basic Python data type.
-
-    Parameters
-    ----------
-    node : yaml.Node
-        The node is converted to a basic Python type using the following:
-        - MappingNode -> dict
-        - SequenceNode -> list
-        - ScalarNode -> str, int, float etc.
-
-    loader : yaml.Loader
-
-    Returns
-    -------
-    basic : object
-        Basic Python data type.
-    """
-    def unknown_type_exception(node, loader):
-        raise TypeError("Don't know how to implicitly construct '{0}'".format(
-            type(node)))
-
-    return _yaml_base_type_map.get(
-        type(node), unknown_type_exception)(node, loader)
 
 
 class AsdfDumper(_yaml_base_dumper):
@@ -141,44 +107,6 @@ def represent_scalar(dumper, value):
         None, value.data, style)
 
 
-AsdfDumper.add_representer(tagged.TaggedList, represent_sequence)
-AsdfDumper.add_representer(tagged.TaggedDict, represent_mapping)
-AsdfDumper.add_representer(tagged.TaggedString, represent_scalar)
-
-
-class AsdfLoader(_yaml_base_loader):
-    """
-    A specialized YAML loader that can construct "tagged basic Python
-    data types" as implemented in the `tagged` module.
-    """
-    ignore_version_mismatch = False
-    def construct_object(self, node, deep=False):
-        tag = node.tag
-        if node.tag in self.yaml_constructors:
-            return super(AsdfLoader, self).construct_object(node, deep=False)
-        data = _yaml_to_base_type(node, self)
-        tag = self.ctx.type_index.fix_yaml_tag(
-            self.ctx, tag, self.ignore_version_mismatch)
-        data = tagged.tag_object(tag, data)
-        return data
-
-
-# ----------------------------------------------------------------------
-# Handle omap (ordered mappings)
-
-YAML_OMAP_TAG = YAML_TAG_PREFIX + 'omap'
-
-
-# Add support for loading YAML !!omap objects as OrderedDicts and dumping
-# OrderedDict in the omap format as well.
-def ordereddict_constructor(loader, node):
-    try:
-        omap = loader.construct_yaml_omap(node)
-        return OrderedDict(*omap)
-    except yaml.constructor.ConstructorError:
-        return list(*loader.construct_yaml_seq(node))
-
-
 def represent_ordered_mapping(dumper, tag, data):
     # TODO: Again, adjust for preferred flow style, and other stylistic details
     # NOTE: For block style this uses the compact omap notation, but for flow style
@@ -205,9 +133,10 @@ def represent_ordereddict(dumper, data):
     return represent_ordered_mapping(dumper, YAML_OMAP_TAG, data)
 
 
-AsdfLoader.add_constructor(YAML_OMAP_TAG, ordereddict_constructor)
+AsdfDumper.add_representer(tagged.TaggedList, represent_sequence)
+AsdfDumper.add_representer(tagged.TaggedDict, represent_mapping)
+AsdfDumper.add_representer(tagged.TaggedString, represent_scalar)
 AsdfDumper.add_representer(OrderedDict, represent_ordereddict)
-
 
 # ----------------------------------------------------------------------
 # Handle numpy scalars
@@ -228,6 +157,68 @@ AsdfDumper.add_representer(np.str_, represent_numpy_str)
 AsdfDumper.add_representer(np.bytes_, AsdfDumper.represent_binary)
 
 
+class AsdfLoader(_yaml_base_loader):
+    """
+    A specialized YAML loader that can construct "tagged basic Python
+    data types" as implemented in the `tagged` module.
+    """
+
+    def construct_undefined(self, node):
+        if isinstance(node, yaml.MappingNode):
+            return self._construct_tagged_mapping(node)
+        elif isinstance(node, yaml.SequenceNode):
+            return self._construct_tagged_sequence(node)
+        elif isinstance(node, yaml.ScalarNode):
+            return self._construct_tagged_scalar(node)
+        else:
+            return super().construct_undefined(node)
+
+    def _construct_tagged_mapping(self, node):
+        data = tagged.tag_object(self._fix_tag(node), {})
+        yield data
+        data.update(self.construct_mapping(node))
+
+    def _construct_tagged_sequence(self, node):
+        data = tagged.tag_object(self._fix_tag(node), [])
+        yield data
+        data.extend(self.construct_sequence(node))
+
+    def _construct_tagged_scalar(self, node):
+        return tagged.tag_object(self._fix_tag(node), self.construct_scalar(node))
+
+    # Custom omap deserializer that builds an OrderedDict instead
+    # of a list of tuples.  Code is mostly identical to pyyaml's SafeConstructor.
+    def construct_yaml_omap(self, node):
+        omap = OrderedDict()
+        yield omap
+        if not isinstance(node, yaml.SequenceNode):
+            raise yaml.ConstructorError("while constructing an ordered map", node.start_mark,
+                    "expected a sequence, but found %s" % node.id, node.start_mark)
+        for subnode in node.value:
+            if not isinstance(subnode, yaml.MappingNode):
+                raise yaml.ConstructorError("while constructing an ordered map", node.start_mark,
+                        "expected a mapping of length 1, but found %s" % subnode.id,
+                        subnode.start_mark)
+            if len(subnode.value) != 1:
+                raise yaml.ConstructorError("while constructing an ordered map", node.start_mark,
+                        "expected a single mapping item, but found %d items" % len(subnode.value),
+                        subnode.start_mark)
+            key_node, value_node = subnode.value[0]
+            key = self.construct_object(key_node)
+            value = self.construct_object(value_node)
+            omap[key] = value
+
+    def _fix_tag(self, node):
+        return self.ctx.type_index.fix_yaml_tag(
+            self.ctx, node.tag, self.ignore_version_mismatch)
+
+
+# pyyaml will invoke the constructor associated with None when a node's
+# tag is not explicitly handled by another constructor.
+AsdfLoader.add_constructor(None, AsdfLoader.construct_undefined)
+AsdfLoader.add_constructor(YAML_TAG_PREFIX + "omap", AsdfLoader.construct_yaml_omap)
+
+
 def custom_tree_to_tagged_tree(tree, ctx):
     """
     Convert a tree, possibly containing custom data types that aren't
@@ -240,7 +231,15 @@ def custom_tree_to_tagged_tree(tree, ctx):
             return tag.to_tree_tagged(node, ctx)
         return node
 
-    return treeutil.walk_and_modify(tree, walker)
+    return treeutil.walk_and_modify(
+        tree,
+        walker,
+        ignore_implicit_conversion=ctx._ignore_implicit_conversion,
+        # Walk the tree in preorder, so that extensions can return
+        # container nodes with unserialized children.
+        postorder=False,
+        _context=ctx._tree_modification_context,
+    )
 
 
 def tagged_tree_to_custom_tree(tree, ctx, force_raw_types=False):
@@ -248,7 +247,6 @@ def tagged_tree_to_custom_tree(tree, ctx, force_raw_types=False):
     Convert a tree containing only basic data types, annotated with
     tags, to a tree containing custom data types.
     """
-
     def walker(node):
         if force_raw_types:
             return node
@@ -291,7 +289,15 @@ def tagged_tree_to_custom_tree(tree, ctx, force_raw_types=False):
 
         return node
 
-    return treeutil.walk_and_modify(tree, walker)
+    return treeutil.walk_and_modify(
+        tree,
+        walker,
+        ignore_implicit_conversion=ctx._ignore_implicit_conversion,
+        # Walk the tree in postorder, so that extensions receive
+        # container nodes with children already deserialized.
+        postorder=True,
+        _context=ctx._tree_modification_context,
+    )
 
 
 def load_tree(stream, ctx, ignore_version_mismatch=False):

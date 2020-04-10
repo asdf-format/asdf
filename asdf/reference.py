@@ -128,7 +128,7 @@ class Reference(AsdfType):
         pass
 
 
-def find_references(tree, ctx, ignore_implicit_conversion=False):
+def find_references(tree, ctx):
     """
     Find all of the JSON references in the tree, and convert them into
     `Reference` objects.
@@ -139,7 +139,7 @@ def find_references(tree, ctx, ignore_implicit_conversion=False):
         return tree
 
     return treeutil.walk_and_modify(
-        tree, do_find, ignore_implicit_conversion=ignore_implicit_conversion)
+        tree, do_find, ignore_implicit_conversion=ctx._ignore_implicit_conversion)
 
 
 def resolve_references(tree, ctx, do_not_fill_defaults=False):
@@ -154,7 +154,8 @@ def resolve_references(tree, ctx, do_not_fill_defaults=False):
 
     tree = find_references(tree, ctx)
 
-    return treeutil.walk_and_modify(tree, do_resolve)
+    return treeutil.walk_and_modify(
+        tree, do_resolve, ignore_implicit_conversion=ctx._ignore_implicit_conversion)
 
 
 def make_reference(asdffile, path):

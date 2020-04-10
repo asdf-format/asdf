@@ -20,6 +20,11 @@
 - Enable validation and serialization of previously unhandled numpy
   scalar types. [#778]
 
+- Fix handling of trees containing implicit internal references and
+  reference cycles.  Eliminate need to call ``yamlutil.custom_tree_to_tagged_tree``
+  and ``yamlutil.tagged_tree_to_custom_tree`` from extension code,
+  and allow ``ExtensionType`` subclasses to return generators. [#777]
+
 2.5.2 (2020-02-28)
 ------------------
 

@@ -6,7 +6,6 @@ from numbers import Integral
 import numpy as np
 
 from ...types import AsdfType
-from ...yamlutil import custom_tree_to_tagged_tree
 
 
 class IntegerType(AsdfType):
@@ -82,7 +81,7 @@ class IntegerType(AsdfType):
 
         tree = dict()
         ctx.set_array_storage(array, node._storage)
-        tree['words'] = custom_tree_to_tagged_tree(array, ctx)
+        tree['words'] = array
         tree['sign'] = node._sign
         tree['string'] = str(int(node._value))
 

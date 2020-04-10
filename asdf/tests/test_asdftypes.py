@@ -13,7 +13,6 @@ import pytest
 import asdf
 from asdf import types
 from asdf import extension
-from asdf import yamlutil
 from asdf import util
 from asdf import versioning
 
@@ -27,6 +26,60 @@ class Fractional2dCoord:
     def __init__(self, x, y):
         self.x = x
         self.y = y
+
+
+class FractionWithInverse(Fraction):
+    def __init__(self, *args, **kwargs):
+        self._inverse = None
+
+    @property
+    def inverse(self):
+        return self._inverse
+
+    @inverse.setter
+    def inverse(self, value):
+        self._inverse = value
+
+
+class FractionWithInverseType(asdf.CustomType):
+    name = 'fraction_with_inverse'
+    organization = 'nowhere.org'
+    version = (1, 0, 0)
+    standard = 'custom'
+    types = [FractionWithInverse]
+
+    @classmethod
+    def to_tree(cls, node, ctx):
+        return {
+            "numerator": node.numerator,
+            "denominator": node.denominator,
+            "inverse": node.inverse
+        }
+
+    @classmethod
+    def from_tree(cls, tree, ctx):
+        result = FractionWithInverse(
+            tree["numerator"],
+            tree["denominator"]
+        )
+        yield result
+        result.inverse = tree["inverse"]
+
+
+class FractionWithInverseExtension(CustomExtension):
+    @property
+    def types(self):
+        return [FractionWithInverseType]
+
+    @property
+    def tag_mapping(self):
+        return [('tag:nowhere.org:custom',
+                    'http://nowhere.org/schemas/custom{tag_suffix}')]
+
+    @property
+    def url_mapping(self):
+        return [('http://nowhere.org/schemas/custom/',
+                    util.filepath_to_url(TEST_DATA_PATH) + '/{url_suffix}.yaml')]
 
 
 def fractiontype_factory():
@@ -63,15 +116,14 @@ def fractional2dcoordtype_factory():
 
         @classmethod
         def to_tree(cls, node, ctx):
-            x = yamlutil.custom_tree_to_tagged_tree(node.x, ctx)
-            y = yamlutil.custom_tree_to_tagged_tree(node.y, ctx)
-            return dict(x=x, y=y)
+            return {
+                "x": node.x,
+                "y": node.y
+            }
 
         @classmethod
         def from_tree(cls, tree, ctx):
-            x = yamlutil.tagged_tree_to_custom_tree(tree['x'], ctx)
-            y = yamlutil.tagged_tree_to_custom_tree(tree['y'], ctx)
-            return Fractional2dCoord(x, y)
+            return Fractional2dCoord(tree["x"], tree["y"])
 
 
     class Fractional2dCoordExtension(CustomExtension):
@@ -850,3 +902,19 @@ def test_subclass_decorator_warning(tmpdir):
             pass
         assert len(w) == 1, helpers.display_warnings(w)
         assert str(w[0].message).startswith("Failed to add subclass attribute(s)")
+
+
+def test_custom_reference_cycle(tmpdir):
+    f1 = FractionWithInverse(3, 5)
+    f2 = FractionWithInverse(5, 3)
+    f1.inverse = f2
+    f2.inverse = f1
+    tree = {"fraction": f1}
+
+    path = str(tmpdir.join("with_inverse.asdf"))
+
+    with asdf.AsdfFile(tree, extensions=FractionWithInverseExtension()) as af:
+        af.write_to(path)
+
+    with asdf.open(path, extensions=FractionWithInverseExtension()) as af:
+        assert af["fraction"].inverse.inverse is af["fraction"]

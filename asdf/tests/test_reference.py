@@ -252,3 +252,24 @@ def test_internal_reference(tmpdir):
     ff = asdf.AsdfFile()
     content = asdf.AsdfFile()._open_impl(ff, buff, _get_yaml_content=True)
     assert b"{$ref: ''}" in content
+
+
+def test_implicit_internal_reference(tmpdir):
+    target = {"foo": "bar"}
+    nested_in_dict = {"target": target}
+    nested_in_list = [target]
+    tree = {"target": target, "nested_in_dict": nested_in_dict, "nested_in_list": nested_in_list}
+
+    assert tree["target"] is tree["nested_in_dict"]["target"]
+    assert tree["target"] is tree["nested_in_list"][0]
+
+    af = asdf.AsdfFile(tree)
+
+    assert af["target"] is af["nested_in_dict"]["target"]
+    assert af["target"] is af["nested_in_list"][0]
+
+    output_path = os.path.join(str(tmpdir), "test.asdf")
+    af.write_to(output_path)
+    with asdf.open(output_path) as af:
+        assert af["target"] is af["nested_in_dict"]["target"]
+        assert af["target"] is af["nested_in_list"][0]

@@ -38,7 +38,7 @@ class TagReferenceType(types.CustomType):
     def from_tree(cls, tree, ctx):
         node = {}
         node['name'] = tree['name']
-        node['things'] = yamlutil.tagged_tree_to_custom_tree(tree['things'], ctx)
+        node['things'] = tree['things']
         return node
 
 
@@ -418,8 +418,8 @@ def test_foreign_tag_reference_validation():
         @classmethod
         def from_tree(cls, tree, ctx):
             node = {}
-            node['a'] = yamlutil.tagged_tree_to_custom_tree(tree['a'], ctx)
-            node['b'] = yamlutil.tagged_tree_to_custom_tree(tree['b'], ctx)
+            node['a'] = tree['a']
+            node['b'] = tree['b']
             return node
 
     class ForeignTypeExtension(CustomExtension):
@@ -923,3 +923,28 @@ def test_numpy_scalar_type_validation(numpy_value, valid_types):
     invalid_types = {"string", "number", "integer", "boolean", "null", "object"} - valid_types
     for jsonschema_type in invalid_types:
         _assert_validation(jsonschema_type, False)
+
+
+def test_validator_visit_repeat_nodes():
+    ctx = asdf.AsdfFile()
+    node = asdf.tags.core.Software(name="Minesweeper")
+    tree = yamlutil.custom_tree_to_tagged_tree(
+        {"node": node, "other_node": node, "nested": {"node": node}},
+        ctx
+    )
+
+    visited_nodes = []
+    def _test_validator(validator, value, instance, schema):
+        visited_nodes.append(instance)
+
+    validator = schema.get_validator(ctx=ctx, validators=util.HashableDict(type=_test_validator))
+    validator.validate(tree)
+    assert len(visited_nodes) == 1
+
+    visited_nodes.clear()
+    validator = schema.get_validator(
+        validators=util.HashableDict(type=_test_validator),
+        _visit_repeat_nodes=True
+    )
+    validator.validate(tree)
+    assert len(visited_nodes) == 3

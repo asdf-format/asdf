@@ -1,7 +1,6 @@
 # Licensed under a 3-clause BSD style license - see LICENSE.rst
 # -*- coding: utf-8 -*-
 from ...types import AsdfType
-from ...yamlutil import custom_tree_to_tagged_tree
 
 
 class AsdfObject(dict):
@@ -49,7 +48,7 @@ class ExtensionMetadata(AsdfType):
     def to_tree(cls, node, ctx):
         tree = {}
         tree['extension_class'] = node.extension_class
-        tree['software'] = custom_tree_to_tagged_tree(node.software, ctx)
+        tree['software'] = node.software
 
         return tree
 

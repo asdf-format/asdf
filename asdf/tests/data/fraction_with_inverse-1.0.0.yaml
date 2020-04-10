@@ -1,0 +1,17 @@
+%YAML 1.1
+---
+$schema: "http://stsci.edu/schemas/yaml-schema/draft-01"
+id: "http://nowhere.org/schemas/custom/fraction_with_inverse-1.0.0"
+title: An example custom type for handling fractions with inverses
+
+tag: "tag:nowhere.org:custom/fraction_with_inverse-1.0.0"
+type: object
+properties:
+  numerator:
+    type: integer
+  denominator:
+    type: integer
+  inverse:
+    $ref: fraction_with_inverse-1.0.0
+required: [numerator, denominator]
+...

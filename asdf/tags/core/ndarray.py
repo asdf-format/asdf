@@ -442,8 +442,7 @@ class NDArrayType(AsdfType):
 
         if block.array_storage == 'inline':
             listdata = numpy_array_to_list(data)
-            result['data'] = yamlutil.custom_tree_to_tagged_tree(
-                listdata, ctx)
+            result['data'] = listdata
             result['datatype'] = dtype
         else:
             result['shape'] = list(shape)
@@ -464,8 +463,7 @@ class NDArrayType(AsdfType):
             if np.any(data.mask):
                 if block.array_storage == 'inline':
                     ctx.blocks.set_array_storage(ctx.blocks[data.mask], 'inline')
-                result['mask'] = yamlutil.custom_tree_to_tagged_tree(
-                    data.mask, ctx)
+                result['mask'] = data.mask
 
         return result
 

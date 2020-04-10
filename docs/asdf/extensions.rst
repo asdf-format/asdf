@@ -31,7 +31,7 @@ Supporting new types in ASDF is easy. Three components are required:
     particular implementation of ASDF. As of this writing, this is the only
     complete implementation of the ASDF Standard. However, other language
     implementations may use other mechanisms for processing custom types.
-    
+
     All implementations of ASDF, regardless of language, will make use of the
     same schemas for abstract data type definitions. This allows all ASDF files
     to be language-agnostic, and also enables interoperability.
@@ -298,8 +298,6 @@ We also need to define the custom tag type that corresponds to our new type:
 .. runcode::
 
     import asdf
-    from asdf.yamlutil import (custom_tree_to_tagged_tree,
-                               tagged_tree_to_custom_tree)
 
     class Fractional2DCoordinateType(asdf.CustomType):
         name = 'fractional_2d_coord'
@@ -311,27 +309,23 @@ We also need to define the custom tag type that corresponds to our new type:
         @classmethod
         def to_tree(cls, node, ctx):
             tree = dict()
-            tree['x'] = custom_tree_to_tagged_tree(node.x, ctx)
-            tree['y'] = custom_tree_to_tagged_tree(node.y, ctx)
+            tree['x'] = node.x
+            tree['y'] = node.y
             return tree
 
         @classmethod
         def from_tree(cls, tree, ctx):
             coord = Fractional2DCoordinate()
-            coord.x = tagged_tree_to_custom_tree(tree['x'], ctx)
-            coord.y = tagged_tree_to_custom_tree(tree['y'], ctx)
+            coord.x = tree['x']
+            coord.y = tree['y']
             return coord
 
-Recall that the ``x`` and ``y`` components of our `Fractional2DCoordinate` type
-are represented as `fractions.Fraction`. Since this is a type for which we have
-already defined a tag class, we don't want to duplicate the logic from its
-`~asdf.CustomType.to_tree` and `~asdf.CustomType.from_tree` methods here.
-
-Instead, we use the functions `~asdf.yamlutil.custom_tree_to_tagged_tree` and
-`~asdf.yamlutil.tagged_tree_to_custom_tree` to recursively process the
-subtrees. By doing so, we ensures that the `~asdf.CustomType.to_tree` and
-`~asdf.CustomType.from_tree` methods specific to `fractions.Fraction` will be
-called automatically.
+In previous versions of this library, it was necessary for our
+`Fractional2DCoordinateType` class to call `~asdf.yamlutil` functions
+explicitly to convert the ``x`` and ``y`` components to and from
+their tree representations.  Now, the library will automatically
+convert nested custom types before calling `~asdf.CustomType.from_tree`,
+and after receiving the result from `~asdf.CustomType.to_tree`.
 
 Since `Fractional2DCoordinateType` shares the same
 `~asdf.CustomType.organization` and `~asdf.CustomType.standard` as
@@ -372,6 +366,143 @@ Now we can use this extension to create an ASDF file:
 
 Note that in the resulting ASDF file, the ``x`` and ``y`` components of
 our new `fraction_2d_coord` type are tagged as `fraction-1.0.0`.
+
+Serializing reference cycles
+****************************
+
+Special considerations must be made when deserializing a custom type that
+contains a reference to itself among its descendants.  Consider a
+`fractions.Fraction` subclass that maintains a reference to its multiplicative
+inverse:
+
+.. runcode::
+
+    class FractionWithInverse(fractions.Fraction):
+        def __init__(self, *args, **kwargs):
+            self._inverse = None
+
+        @property
+        def inverse(self):
+            return self._inverse
+
+        @inverse.setter
+        def inverse(self, value):
+            self._inverse = value
+
+The inverse of the inverse of a fraction is the fraction itself,
+so you might wish to construct your objects in the following way:
+
+.. runcode::
+
+    f1 = FractionWithInverse(3, 5)
+    f2 = FractionWithInverse(5, 3)
+    f1.inverse = f2
+    f2.inverse = f1
+
+Which creates an "infinite loop" between the two fractions.  An ordinary
+`~asdf.CustomType` wouldn't be able to deserialize this, since each object
+requires that the other be deserialized first!  Let's see what happens
+when we define our `~asdf.CustomType.from_tree` method in a naive way:
+
+.. runcode::
+
+    class FractionWithInverseType(asdf.CustomType):
+        name = 'fraction_with_inverse'
+        organization = 'nowhere.org'
+        version = (1, 0, 0)
+        standard = 'custom'
+        types = [FractionWithInverse]
+
+        @classmethod
+        def to_tree(cls, node, ctx):
+            return {
+                "numerator": node.numerator,
+                "denominator": node.denominator,
+                "inverse": node.inverse
+            }
+
+        @classmethod
+        def from_tree(cls, tree, ctx):
+            result = FractionWithInverse(
+                tree["numerator"],
+                tree["denominator"]
+            )
+            result.inverse = tree["inverse"]
+            return result
+
+After adding our type to the extension class, the tree will serialize correctly:
+
+.. runcode:: hidden
+
+    FractionExtension.types = [FractionType, Fractional2DCoordinateType, FractionWithInverseType]
+
+.. runcode::
+
+    tree = {'fraction': f1}
+
+    with asdf.AsdfFile(tree, extensions=FractionExtension()) as ff:
+        ff.write_to("with_inverse.asdf")
+
+But upon deserialization, we notice a problem:
+
+.. runcode::
+
+    with asdf.open("with_inverse.asdf", extensions=FractionExtension()) as ff:
+        reconstituted_f1 = ff["fraction"]
+
+    assert reconstituted_f1.inverse.inverse is asdf.treeutil.PendingValue
+
+The presence of `~asdf.treeutil.PendingValue` is asdf's way of telling you
+that the value corresponding to the key ``inverse`` was not fully deserialized
+at the time that you retrieved it.  We can handle this situation by making our
+`~asdf.CustomType.from_tree` a generator function:
+
+.. runcode::
+
+    class FractionWithInverseType(asdf.CustomType):
+        name = 'fraction_with_inverse'
+        organization = 'nowhere.org'
+        version = (1, 0, 0)
+        standard = 'custom'
+        types = [FractionWithInverse]
+
+        @classmethod
+        def to_tree(cls, node, ctx):
+            return {
+                "numerator": node.numerator,
+                "denominator": node.denominator,
+                "inverse": node.inverse
+            }
+
+        @classmethod
+        def from_tree(cls, tree, ctx):
+            result = FractionWithInverse(
+                tree["numerator"],
+                tree["denominator"]
+            )
+            yield result
+            result.inverse = tree["inverse"]
+
+The generator version of `~asdf.CustomType.from_tree` yields the partially constructed
+`FractionWithInverse` object before setting its inverse property.  This allows
+asdf to proceed to constructing the inverse `FractionWithInverse` object,
+and resume the original `~asdf.CustomType.from_tree` execution only when the inverse
+is actually available.
+
+With this new version of `~asdf.CustomType.from_tree`, we can successfully deserialize
+our ASDF file:
+
+.. runcode:: hidden
+
+    FractionExtension.types = [FractionType, Fractional2DCoordinateType, FractionWithInverseType]
+
+.. runcode::
+
+    with asdf.open("with_inverse.asdf", extensions=FractionExtension()) as ff:
+            reconstituted_f1 = ff["fraction"]
+
+    assert reconstituted_f1.inverse.inverse is reconstituted_f1
+
 
 Assigning schema and tag versions
 *********************************

@@ -207,8 +207,49 @@ for key in ('allOf', 'anyOf', 'oneOf', 'items'):
 REMOVE_DEFAULTS['properties'] = validate_remove_default
 
 
+class _ValidationContext:
+    """
+    Context that tracks (tree node, schema fragment) pairs that have
+    already been validated.
+
+    Instances of this class are context managers that track
+    how many times they have been entered, and only reset themselves
+    when exiting the outermost context.
+    """
+    def __init__(self):
+        self._depth = 0
+        self._seen = set()
+
+    def add(self, instance, schema):
+        """
+        Inform the context that an instance has
+        been validated against a schema fragment.
+        """
+        self._seen.add(self._make_seen_key(instance, schema))
+
+    def seen(self, instance, schema):
+        """
+        Return True if an instance has already been
+        validated against a schema fragment.
+        """
+        return self._make_seen_key(instance, schema) in self._seen
+
+    def __enter__(self):
+        self._depth += 1
+        return self
+
+    def __exit__(self, exc_type, exc_value, traceback):
+        self._depth -= 1
+
+        if self._depth == 0:
+            self._seen = set()
+
+    def _make_seen_key(self, instance, schema):
+        return (id(instance), id(schema))
+
+
 @lru_cache()
-def _create_validator(validators=YAML_VALIDATORS):
+def _create_validator(validators=YAML_VALIDATORS, visit_repeat_nodes=False):
     meta_schema = load_schema(YAML_SCHEMA_METASCHEMA_ID, extension.get_default_resolver())
 
     if JSONSCHEMA_LT_3:
@@ -234,70 +275,77 @@ def _create_validator(validators=YAML_VALIDATORS):
             DEFAULT_TYPES['integer'] = (Integral)
             DEFAULT_TYPES['string'] = (str, np.str_)
 
-        def iter_errors(self, instance, _schema=None, _seen=set()):
+        def __init__(self, *args, **kwargs):
+            super().__init__(*args, **kwargs)
+            self._context = _ValidationContext()
+
+        def iter_errors(self, instance, _schema=None):
             # We can't validate anything that looks like an external reference,
             # since we don't have the actual content, so we just have to defer
             # it for now.  If the user cares about complete validation, they
             # can call `AsdfFile.resolve_references`.
-            if id(instance) in _seen:
-                return
+            with self._context:
+                if _schema is None:
+                    schema = self.schema
+                else:
+                    schema = _schema
 
-            if _schema is None:
-                schema = self.schema
-            else:
-                schema = _schema
+                if self._context.seen(instance, schema):
+                    # We've already validated this instance against this schema,
+                    # no need to do it again.
+                    return
 
-            if ((isinstance(instance, dict) and '$ref' in instance) or
-                    isinstance(instance, reference.Reference)):
-                return
+                if not visit_repeat_nodes:
+                    self._context.add(instance, schema)
 
-            if _schema is None:
-                tag = getattr(instance, '_tag', None)
-                if tag is not None:
-                    schema_path = self.ctx.resolver(tag)
-                    if schema_path != tag:
-                        try:
-                            s = load_schema(schema_path, self.ctx.resolver)
-                        except FileNotFoundError:
-                            msg = "Unable to locate schema file for '{}': '{}'"
-                            warnings.warn(msg.format(tag, schema_path))
-                            s = {}
-                        if s:
-                            with self.resolver.in_scope(schema_path):
-                                for x in super(ASDFValidator, self).iter_errors(instance, s):
-                                    yield x
+                if ((isinstance(instance, dict) and '$ref' in instance) or
+                        isinstance(instance, reference.Reference)):
+                    return
 
-                if isinstance(instance, dict):
-                    new_seen = _seen | set([id(instance)])
-                    for val in instance.values():
-                        for x in self.iter_errors(val, _seen=new_seen):
-                            yield x
+                if _schema is None:
+                    tag = getattr(instance, '_tag', None)
+                    if tag is not None:
+                        schema_path = self.ctx.resolver(tag)
+                        if schema_path != tag:
+                            try:
+                                s = load_schema(schema_path, self.ctx.resolver)
+                            except FileNotFoundError:
+                                msg = "Unable to locate schema file for '{}': '{}'"
+                                warnings.warn(msg.format(tag, schema_path))
+                                s = {}
+                            if s:
+                                with self.resolver.in_scope(schema_path):
+                                    for x in super(ASDFValidator, self).iter_errors(instance, s):
+                                        yield x
 
-                elif isinstance(instance, list):
-                    new_seen = _seen | set([id(instance)])
-                    for val in instance:
-                        for x in self.iter_errors(val, _seen=new_seen):
-                            yield x
-            else:
-                for x in super(ASDFValidator, self).iter_errors(instance, _schema=schema):
-                    yield x
+                    if isinstance(instance, dict):
+                        for val in instance.values():
+                            for x in self.iter_errors(val):
+                                yield x
+
+                    elif isinstance(instance, list):
+                        for val in instance:
+                            for x in self.iter_errors(val):
+                                yield x
+                else:
+                    for x in super(ASDFValidator, self).iter_errors(instance, _schema=schema):
+                        yield x
 
     return ASDFValidator
 
 
 # We want to load mappings in schema as ordered dicts
 class OrderedLoader(_yaml_base_loader):
-    pass
-
-
-def construct_mapping(loader, node):
-    loader.flatten_mapping(node)
-    return OrderedDict(loader.construct_pairs(node))
+    def construct_yaml_map(self, node):
+        data = OrderedDict()
+        yield data
+        for key, value in self.construct_pairs(node):
+            data[key] = value
 
 
 OrderedLoader.add_constructor(
     yaml.resolver.BaseResolver.DEFAULT_MAPPING_TAG,
-    construct_mapping)
+    OrderedLoader.construct_yaml_map)
 
 
 @lru_cache()
@@ -455,7 +503,7 @@ def _load_schema_cached(url, resolver, resolve_references, resolve_local_refs):
 
 
 def get_validator(schema={}, ctx=None, validators=None, url_mapping=None,
-                  *args, **kwargs):
+                  *args, _visit_repeat_nodes=False, **kwargs):
     """
     Get a JSON schema validator object for the given schema.
 
@@ -478,6 +526,13 @@ def get_validator(schema={}, ctx=None, validators=None, url_mapping=None,
     url_mapping : resolver.Resolver, optional
         A resolver to convert remote URLs into local ones.
 
+    _visit_repeat_nodes : bool, optional
+        Force the validator to visit nodes that it has already
+        seen.  This flag is a temporary hack to support a specific
+        project that uses a custom validator to update a .fits file.
+        Setting `True` is discouraged and will lead to RecursionError
+        in trees containing reference cycles.
+
     Returns
     -------
     validator : jsonschema.Validator
@@ -497,7 +552,7 @@ def get_validator(schema={}, ctx=None, validators=None, url_mapping=None,
     # time of this writing, it was half of the runtime of the unit
     # test suite!!!).  Instead, we assume that the schemas are valid
     # through the running of the unit tests, not at run time.
-    cls = _create_validator(validators=validators)
+    cls = _create_validator(validators=validators, visit_repeat_nodes=_visit_repeat_nodes)
     validator = cls(schema, *args, **kwargs)
     validator.ctx = ctx
     return validator
