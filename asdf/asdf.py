@@ -1203,6 +1203,8 @@ class AsdfFile(versioning.VersionedMixin):
         if self.version >= versioning.NEW_HISTORY_FORMAT_MIN_VERSION:
             if 'history' not in self.tree:
                 self.tree['history'] = dict(entries=[])
+            elif 'entries' not in self.tree['history']:
+                self.tree['history']['entries'] = []
 
             self.tree['history']['entries'].append(entry)
 

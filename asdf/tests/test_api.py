@@ -513,3 +513,20 @@ def test_search():
 
     result = af.search(value="hello")
     assert result.node == "hello"
+
+
+def test_history_entries(tmpdir):
+    path = str(tmpdir.join("test.asdf"))
+    message = "Twas brillig, and the slithy toves"
+
+    af = asdf.AsdfFile()
+    af.add_history_entry(message)
+    af.write_to(path)
+    with asdf.open(path) as af:
+        assert af["history"]["entries"][0]["description"] == message
+
+    af = asdf.AsdfFile()
+    af.write_to(path)
+    with asdf.open(path) as af:
+        af.add_history_entry(message)
+        assert af["history"]["entries"][0]["description"] == message

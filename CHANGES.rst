@@ -25,6 +25,9 @@
   and ``yamlutil.tagged_tree_to_custom_tree`` from extension code,
   and allow ``ExtensionType`` subclasses to return generators. [#777]
 
+- Fix bug preventing history entries when a file was previously
+  saved without them. [#779]
+
 2.5.2 (2020-02-28)
 ------------------
 
