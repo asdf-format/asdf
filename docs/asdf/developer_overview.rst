@@ -160,7 +160,7 @@ does the following: it sees if the node.tag attribute is handled by yaml itself
 to. Otherwise:
 
  - it converts the node to the type indicated (dict, list, or scalar type) by
- yaml for that node.  
+   yaml for that node.  
  - it obtains the appropriate tag class (an AsdfType subclass) from the AsdfFile
    instance (using ``ctx.type_index.fix_yaml_tag`` to deal with version issues
    to match the most appropriate tag class).
@@ -361,13 +361,19 @@ How the ASDF library works with pyyaml
 A Tree Identifier
 .................
 
-There are three flavors of trees in the process of reading ASDF files, one will see many references to each in the code and description below.
+There are three flavors of trees in the process of reading ASDF files, one 
+will see many references to each in the code and description below.
 
-**pyyaml native tree.** This consists of standard Python containers like dict and list, and primitive values like string, integer, float, etc.
+**pyyaml native tree.** This consists of standard Python containers like dict
+and list, and primitive values like string, integer, float, etc.
 
-**Tagged tree.** These are similar to pyyaml native trees, but with the basic types wrapped in a class that has has an attribute that identifies the tag associated with that node so that later processing can apply the appropriate conversion code to convert to the final Python object.
+**Tagged tree.** These are similar to pyyaml native trees, but with the basic
+types wrapped in a class that has has an attribute that identifies the tag
+associated with that node so that later processing can apply the appropriate
+conversion code to convert to the final Python object.
 
-**Custom tree**. This is a tree where all nodes are converted to the destination Python objects. For example, a numpy array or GWCS object.
+**Custom tree**. This is a tree where all nodes are converted to the
+destination Python objects. For example, a numpy array or GWCS object.
 
 Brief overview of how pyyaml constructs a Python tree
 .....................................................
@@ -390,16 +396,15 @@ We will focus on the last step since that is where asdf integrates with how
 pyyaml works. 
 
 The key object in that module is ``BaseConstructor`` and its subclasses (asdf
-uses ``SafeConstructor`` for security purposes) Note that the pyyaml code is
+uses ``SafeConstructor`` for security purposes). Note that the pyyaml code is
 severely deficient in docstrings and comments. The key method that kicks 
-off the conversion is ``construct_document()`` The first thing it does is call
-the ``construct_object()`` method on the top node and then resetting (e.g., 
-clearing) the data structures, and most importantly, dealing with objects
-not yet constructed (more later). ``construct_object()`` is the recursive key
-method to the contruction process.
+off the conversion is ``construct_document()``. Its responsibilities are to call
+the ``construct_object()`` method on the top node, "drain" any generators
+produced by construction (more on this later), and finally reset internal
+data structures once construction is complete. 
 
 The actual process seems somewhat mysterious because what is going on is
-that it is using generators in place of actual code to construct the 
+that it is using generators in place of vanilla code to construct the 
 children for mutable items. The general scheme is that each constructor
 for mutable elements (see as an example the 
 ``SafeConstructor.construct_yaml_seq()`` method) is written
@@ -412,7 +417,7 @@ when called with ``deep=True``, it does immediately populate the child nodes.)
 Normally the generator is appended to the loader's state_generators
 attribute (a list) for later use. Any generators not handled in the 
 recursive chain are handled when contruct_object returns to 
-``construct_document``,where it iteratively asks each generator to complete
+``construct_document``, where it iteratively asks each generator to complete
 populating its referenced object. Since that step of populating the object
 may in turn create new generators on the ``state_generator`` list, it only
 stops when no more generators appear on the list.
@@ -522,11 +527,12 @@ The ``walk_and_modify`` code handles the case where the tag code returns
 a generator instead of a value. These generators are expected to be the
 similar kind of generator that pyyaml uses, but differing in that instead
 of returing an empty container object it will populate whatever elements
-it can completely (e.g, all non-mutable ones), and completing the 
+it can completely (e.g, all non-mutable ones), and complete the 
 population of all the mutable memebers on the second iteration
 (which may, in turn, generate new generators for mutable elements 
-contained within). In handling these generators, the 
-first iteration also saves the generator in the context. When the
+contained within). When it detects a generator, the ``walk_and_modify``
+code retrieves the first yielded value, then saves the generator in the
+context. When the
 top level of the context is reached (it handles nesting by indicating
 how many times it has been entered as a context), it starts "draining"
 the saved generators by doing the second iteration on them. Like 
@@ -547,16 +553,13 @@ uses a generator, so population of that attribute is automatically
 deferred until the context is exited. Thus there is no need to explicitly
 call a function to populate it.
 
-More explicitly, the ``_recurse`` function defined within the tree walker
-(in the usual postorder case) calls ``_handle_children()`` of the node
-in question first. If the node consists of a mutable container, that
-itself calls _recurse and collected with the results of all the children
-and the resulting structure is yielded. The effect is that a tree is
-returned consisting of scalars, tuples, and empty mutable items. This
-result is passed along to the callback, i.e., the ``tag.from_tree_tagged()``
-method. Since any of its attributes that itself is mutable is an empty
-container awaiting its registered generator to be called, there is 
-no need to explicitly populate it since when the generators are drained,
-it will be populated.
+More explicitly, the ``_recurse`` function defined within ``walk_and_modify``
+(in this postorder case) calls ``_handle_children()`` on the node
+in question first.  If the node contains children, they are each fed back into
+``_recurse`` and transformed into their final objects.  A new node is populated
+with these transformed children, and that is the node that gets handed to
+``tag.from_tree_tagged()``.  The effect is that the tag class receives
+a structure containing only transformed children, so it has no need to
+call ``tagged_tree_to_custom_tree`` on its own.
 
 Thus reader, your mind shall now be drained.
