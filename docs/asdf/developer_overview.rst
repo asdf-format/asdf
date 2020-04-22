@@ -387,7 +387,7 @@ a yaml file:
 1. **scanning:** Converting the text into lexical tokens. Done in scanner.py
 #. **parsing:** Converting the lexical tokens into parsing events. Done in
    parser.py.
-#. **composing:** Converting the scanning events into a tree structure of pyyaml
+#. **composing:** Converting the parsing events into a tree structure of pyyaml
    objects. Done in composer.py
 #. **loading:** Converting the pyyaml tree into a Python object tree. Done in 
    constructor.py
@@ -458,9 +458,9 @@ How ASDF hooks into pyyaml construction
 .......................................
 
 ASDF makes use of this by adding generators to this process by defining
-a new construct method construct_undefined that handles all ASDF tag
+a new construct method ``construct_undefined()`` that handles all ASDF tag
 cases. This is added to the pyyaml dict of construct methods under the
-key of None. When pyyaml doesn't find a tag, that is what it uses as 
+key of ``None``. When pyyaml doesn't find a tag, that is what it uses as 
 a key to handle unknown tags. Thus the construction is redirected to
 ASDF code. That code returns a generator in the case of mutable ASDF
 objects in line with how yaml works with mutable objects.
@@ -530,7 +530,7 @@ The ``walk_and_modify`` code handles the case where the tag code returns
 a generator instead of a value. This generator is expected to be a
 similar kind of generator to what pyyaml uses, but differing in that instead
 of returing an empty container object it will populate whatever elements
-it can completely (e.g, all non-mutable ones), and complete the 
+it can complete (e.g, all non-mutable ones), and complete the 
 population of all the mutable memebers on the second iteration
 (which may, in turn, generate new generators for mutable elements 
 contained within). When it detects a generator, the ``walk_and_modify``
