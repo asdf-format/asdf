@@ -509,7 +509,7 @@ a similar mechanism for building the ASDF objects. The
 holds the incomplete generators in a way similar to the pyyaml 
 ``construct_document`` function. 
 
-There are differences though. The calss ``TreeModificationContext`` provides
+There are differences though. The class ``TreeModificationContext`` provides
 methods to indicate if nodes are pending (i.e., incomplete), and there
 is a special value ``PendingValue`` that is a signal that the node hasn't 
 been handled yet (e.g., it may be referencing something yet to be done).
@@ -529,9 +529,9 @@ so we could have our cake and eat it too.
 The ``walk_and_modify`` code handles the case where the tag code returns 
 a generator instead of a value. This generator is expected to be a
 similar kind of generator to what pyyaml uses, but differing in that instead
-of returing an empty container object it will populate whatever elements
+of returning an empty container object it will populate whatever elements
 it can complete (e.g, all non-mutable ones), and complete the 
-population of all the mutable memebers on the second iteration
+population of all the mutable members on the second iteration
 (which may, in turn, generate new generators for mutable elements 
 contained within). When it detects a generator, the ``walk_and_modify``
 code retrieves the first yielded value, then saves the generator in the
