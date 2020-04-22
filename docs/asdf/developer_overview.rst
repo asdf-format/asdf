@@ -434,14 +434,15 @@ Suppose one had the following yaml source::
             item2: life, the universe, and everything
         circular: *a
 
-It would not be possible to handle this case since the anchor ``a`` has 
-not been completed when it encounters an attempt to reference it. The use
+Without generators, it would not be possible to handle this case since the node
+identified by anchor ``a`` has not been fully constructed when pyyaml encounters
+a reference to that anchor among the same node's descendants. The use
 of the generator allows creation of the container object to reference
 to before it is populated so that the above construction will work when
 constructing the tree. To follow the above example in more detail, the
-construction creates a dictionary for ``a`` and then returns to the 
-construct document, which then starts handling the generators put on
-the list (there is onely one in this case). The generator then populates
+construction creates a dictionary for ``a`` and then returns to the
+``construct_document()`` method, which then starts handling the generators put on
+the list (there is only one in this case). The generator then populates
 the contents of ``a``. For the attribute ``B`` it encounters a new
 mutable container, and puts its generator on the list to handle, and then
 makes a reference to ``a`` which now is defined. One last time it 
@@ -458,15 +459,15 @@ How ASDF hooks into pyyaml construction
 
 ASDF makes use of this by adding generators to this process by defining
 a new construct method construct_undefined that handles all ASDF tag
-cases. This is added to the pyyaml dict of contruct methods under the
+cases. This is added to the pyyaml dict of construct methods under the
 key of None. When pyyaml doesn't find a tag, that is what it uses as 
 a key to handle unknown tags. Thus the construction is redirected to
 ASDF code. That code returns a generator in the case of mutable ASDF
 objects in line with how yaml works with mutable objects.
 
 Historical note: Versions older than 2.6.0 did not work this way. Instead,
-those versions completely replaced the pyyaml method construct_object with
-its own version that did not use generators as pyyaml did.
+those versions completely replaced the pyyaml method ``construct_object()`` with
+their own version that did not use generators as pyyaml did.
 
 How conversion to ASDF objects is done
 ......................................
@@ -481,11 +482,13 @@ method ``_open_asdf()`` calls ``yamlutil.tagged_tree_to_custom_tree()``.
 This function defines a walker function that is to be used with
 ``treeutil.walk_and_modify()``. Most of what the walker function does is
 handle tag issues (e.g., can the tag be appropriately mapped to the
-tag creation code) and then return the appropriate ASDF type by calling
+tag creation code) and then returns the appropriate ASDF type by calling
 ``tag_type.from_tree_tagged()``.
 
 A note on tree traversal. One can traverse a tree in three ways:
-inorder, preorder, and postorder. These respectively mean whether
+inorder, preorder, and postorder (``asdf.info()`` uses a breadth-first
+traversal, yet another exciting option, which we won't describe here).
+These respectively mean whether
 nodes are visited in the horizontal ordering of the nodes displayed on 
 a graphs (inorder), descending the tree from the root, doing the left 
 node first, before the right node (preorder), or from the bottom up, doing
@@ -503,10 +506,10 @@ references between basic python objects, these references must be
 converted to references between ASDF objects, and doing so requires 
 a similar mechanism for building the ASDF objects. The 
 ``_TreeModificationContext`` object (hereafter context object)
-holds the incomplete generators a similar way the pyyaml
-``construct_document`` function did. 
+holds the incomplete generators in a way similar to the pyyaml 
+``construct_document`` function. 
 
-There are differences though. It provides
+There are differences though. The calss ``TreeModificationContext`` provides
 methods to indicate if nodes are pending (i.e., incomplete), and there
 is a special value ``PendingValue`` that is a signal that the node hasn't 
 been handled yet (e.g., it may be referencing something yet to be done).
@@ -515,7 +518,7 @@ circular references in the tag code. This approach was taken because
 one of the earlier prototype implementations did something like this, 
 passing dict and list subclasses that would throw an exception if a
 ``PendingValue`` element was accessed.  That would have been more friendly
-to extension developers, but it was discarded because it wasn't thougth
+to extension developers, but it was discarded because it wasn't thought
 it was worth turning all those high performance containers into slower
 asdf subclasses.  We may want to revisit this if we decide to implement
 a tree that tracks "dirty" nodes and only writes to disk those that
@@ -524,8 +527,8 @@ anyway.  We could also consider writing our own dict/list subclass in C
 so we could have our cake and eat it too.
 
 The ``walk_and_modify`` code handles the case where the tag code returns 
-a generator instead of a value. These generators are expected to be the
-similar kind of generator that pyyaml uses, but differing in that instead
+a generator instead of a value. This generator is expected to be a
+similar kind of generator to what pyyaml uses, but differing in that instead
 of returing an empty container object it will populate whatever elements
 it can completely (e.g, all non-mutable ones), and complete the 
 population of all the mutable memebers on the second iteration
