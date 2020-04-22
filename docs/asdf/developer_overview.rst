@@ -160,12 +160,13 @@ does the following: it sees if the node.tag attribute is handled by yaml itself
 to. Otherwise:
 
  - it converts the node to the type indicated (dict, list, or scalar type) by
- - yaml for that node.  it obtains the appropriate tag class (an AsdfType
- - subclass) from the AsdfFile instance (using ``ctx.type_index.fix_yaml_tag``
- - to deal with version issues to match the most appropriate tag class).  it
- - wraps all the node alternatives in a special asdf ``Tagged`` class instance
- - variant where that object contains a ._tag attribute that is a reference to
- - the corresponding Tag class.
+   yaml for that node.  
+ - it obtains the appropriate tag class (an AsdfType subclass) from the AsdfFile
+   instance (using ``ctx.type_index.fix_yaml_tag`` to deal with version issues
+   to match the most appropriate tag class).
+ - it wraps all the node alternatives in a special asdf ``Tagged`` class instance
+   variant where that object contains a ._tag attribute that is a reference to
+   the corresponding Tag class.
 
 The loading process returns a tree of these Tagged object instances. This
 tagged_tree is then returned to the ``af`` instance (still running the
@@ -214,7 +215,10 @@ up the af object intrinsically). The function then passes the callback walker to
 treeutil.walk_and_modify() where the tree will be traversed recursively applying
 the tag code associated with the tag to the more primitive tree representation
 replacing such nodes with Python objects. The tree traversal starts from the
-top, but the objects are created from the bottom up due to recursion.
+top, but the objects are created from the bottom up due to recursion (well, not 
+quite that simple).
+
+Understanding how this works is described more fully later on.
 
 The result is what af.tree is set to, after doing another tree traversal looking
 for special type hooks for each node. It isn't clear if there is yet any use of that
@@ -350,3 +354,215 @@ which in turn calls ``_make_schema_loader``, then ``_load_schema``.
 ``_load_schema`` uses the ``OrderedLoader`` to load the schemas.
 
 Got that?
+
+How the ASDF library works with pyyaml
+--------------------------------------
+
+A Tree Identifier
+.................
+
+There are three flavors of trees in the process of reading ASDF files, one 
+will see many references to each in the code and description below.
+
+**pyyaml native tree.** This consists of standard Python containers like dict
+and list, and primitive values like string, integer, float, etc.
+
+**Tagged tree.** These are similar to pyyaml native trees, but with the basic
+types wrapped in a class that has has an attribute that identifies the tag
+associated with that node so that later processing can apply the appropriate
+conversion code to convert to the final Python object.
+
+**Custom tree**. This is a tree where all nodes are converted to the
+destination Python objects. For example, a numpy array or GWCS object.
+
+Brief overview of how pyyaml constructs a Python tree
+.....................................................
+
+Understanding the process of creating Python objects from yaml requires some
+understanding of how pyyaml works. We will not go into all the details of
+pyyaml, but instead concentrate on one phase of its loading process. First
+an outline of the phases of processing that pyyaml goes through in loading
+a yaml file:
+
+1. **scanning:** Converting the text into lexical tokens. Done in scanner.py
+#. **parsing:** Converting the lexical tokens into parsing events. Done in
+   parser.py.
+#. **composing:** Converting the parsing events into a tree structure of pyyaml
+   objects. Done in composer.py
+#. **loading:** Converting the pyyaml tree into a Python object tree. Done in 
+   constructor.py
+
+We will focus on the last step since that is where asdf integrates with how
+pyyaml works. 
+
+The key object in that module is ``BaseConstructor`` and its subclasses (asdf
+uses ``SafeConstructor`` for security purposes). Note that the pyyaml code is
+severely deficient in docstrings and comments. The key method that kicks 
+off the conversion is ``construct_document()``. Its responsibilities are to call
+the ``construct_object()`` method on the top node, "drain" any generators
+produced by construction (more on this later), and finally reset internal
+data structures once construction is complete. 
+
+The actual process seems somewhat mysterious because what is going on is
+that it is using generators in place of vanilla code to construct the 
+children for mutable items. The general scheme is that each constructor
+for mutable elements (see as an example the 
+``SafeConstructor.construct_yaml_seq()`` method) is written
+as a generator that is expected to be asked a value twice. The first value
+returned is an empty object of the expected type (e.g., empty dict or 
+list) and when asked a second time, it populates the previous object 
+returned (and returns None, which is not used). (In rare exceptions,
+when called with ``deep=True``, it does immediately populate the child nodes.)
+
+Normally the generator is appended to the loader's state_generators
+attribute (a list) for later use. Any generators not handled in the 
+recursive chain are handled when contruct_object returns to 
+``construct_document``, where it iteratively asks each generator to complete
+populating its referenced object. Since that step of populating the object
+may in turn create new generators on the ``state_generator`` list, it only
+stops when no more generators appear on the list.
+
+Why is this done? One reason is to handle references (anchors and aliases)
+that may be circular.
+
+Suppose one had the following yaml source::
+
+    A: &a
+        x: 1
+        B: 
+            item1: 42
+            item2: life, the universe, and everything
+        circular: *a
+
+Without generators, it would not be possible to handle this case since the node
+identified by anchor ``a`` has not been fully constructed when pyyaml encounters
+a reference to that anchor among the same node's descendants. The use
+of the generator allows creation of the container object to reference
+to before it is populated so that the above construction will work when
+constructing the tree. To follow the above example in more detail, the
+construction creates a dictionary for ``a`` and then returns to the
+``construct_document()`` method, which then starts handling the generators put on
+the list (there is only one in this case). The generator then populates
+the contents of ``a``. For the attribute ``B`` it encounters a new
+mutable container, and puts its generator on the list to handle, and then
+makes a reference to ``a`` which now is defined. One last time it 
+handles the generator for ``B`` and since each item in that is not
+a container, the construction completes.
+
+Pyyaml tracks pending objects in a recursive objects dict and throws 
+an exception if generators fail to handle reference cycles. (The conversion
+of the tagged tree to the custom tree, performed later does not use the
+same technique; explained later) 
+
+How ASDF hooks into pyyaml construction
+.......................................
+
+ASDF makes use of this by adding generators to this process by defining
+a new construct method ``construct_undefined()`` that handles all ASDF tag
+cases. This is added to the pyyaml dict of construct methods under the
+key of ``None``. When pyyaml doesn't find a tag, that is what it uses as 
+a key to handle unknown tags. Thus the construction is redirected to
+ASDF code. That code returns a generator in the case of mutable ASDF
+objects in line with how yaml works with mutable objects.
+
+Historical note: Versions older than 2.6.0 did not work this way. Instead,
+those versions completely replaced the pyyaml method ``construct_object()`` with
+their own version that did not use generators as pyyaml did.
+
+How conversion to ASDF objects is done
+......................................
+
+The current means of conversion is simpler to use by tag code, but 
+also more subtle to understand how it actually works (for many,
+that means harder ;-)
+
+The YAML loading process produces a tagged tree of basic Python types.
+The conversion of these into ASDF types is kicked off when the ``AsdfFile``
+method ``_open_asdf()`` calls ``yamlutil.tagged_tree_to_custom_tree()``.
+This function defines a walker function that is to be used with
+``treeutil.walk_and_modify()``. Most of what the walker function does is
+handle tag issues (e.g., can the tag be appropriately mapped to the
+tag creation code) and then returns the appropriate ASDF type by calling
+``tag_type.from_tree_tagged()``.
+
+A note on tree traversal. One can traverse a tree in three ways:
+inorder, preorder, and postorder (``asdf.info()`` uses a breadth-first
+traversal, yet another exciting option, which we won't describe here).
+These respectively mean whether
+nodes are visited in the horizontal ordering of the nodes displayed on 
+a graphs (inorder), descending the tree from the root, doing the left 
+node first, before the right node (preorder), or from the bottom up, doing
+both leaf nodes before the parent node (postorder). In generating the 
+pyyaml tree, preorder works since it builds the tree from the root
+as one would expect in constructing the tree. But in converting the 
+tagged tree into the custom tree, postorder is the natural course, where
+the children are generated first so that the parent node can refer to 
+the final objects.
+
+An important part of this conversion process is handled by an instance
+of the class ``treeutil._TreeModificationContext``. This class does much the
+same trick that pyyaml does with generators. Although pyyaml creates
+references between basic python objects, these references must be
+converted to references between ASDF objects, and doing so requires 
+a similar mechanism for building the ASDF objects. The 
+``_TreeModificationContext`` object (hereafter context object)
+holds the incomplete generators in a way similar to the pyyaml 
+``construct_document`` function. 
+
+There are differences though. The class ``TreeModificationContext`` provides
+methods to indicate if nodes are pending (i.e., incomplete), and there
+is a special value ``PendingValue`` that is a signal that the node hasn't 
+been handled yet (e.g., it may be referencing something yet to be done).
+If ``PendingValue`` persists to the end, it indicates a failure to handle 
+circular references in the tag code. This approach was taken because 
+one of the earlier prototype implementations did something like this, 
+passing dict and list subclasses that would throw an exception if a
+``PendingValue`` element was accessed.  That would have been more friendly
+to extension developers, but it was discarded because it wasn't thought
+it was worth turning all those high performance containers into slower
+asdf subclasses.  We may want to revisit this if we decide to implement
+a tree that tracks "dirty" nodes and only writes to disk those that
+have changed, since in that case we'll need custom container subclasses
+anyway.  We could also consider writing our own dict/list subclass in C
+so we could have our cake and eat it too.
+
+The ``walk_and_modify`` code handles the case where the tag code returns 
+a generator instead of a value. This generator is expected to be a
+similar kind of generator to what pyyaml uses, but differing in that instead
+of returning an empty container object it will populate whatever elements
+it can complete (e.g, all non-mutable ones), and complete the 
+population of all the mutable members on the second iteration
+(which may, in turn, generate new generators for mutable elements 
+contained within). When it detects a generator, the ``walk_and_modify``
+code retrieves the first yielded value, then saves the generator in the
+context. When the
+top level of the context is reached (it handles nesting by indicating
+how many times it has been entered as a context), it starts "draining"
+the saved generators by doing the second iteration on them. Like 
+pyyaml, this second iteration may produce yet more generators that
+get saved, and thus keeps iterating on the saved generators until none
+are left.
+
+It is not possible to construct reference cycles in immutable
+objects within pure Python code, and thus the generators are only needed
+for mutable constructs (e.g., dicts and lists).
+
+Historical note: versions of the ASDF library prior to 2.6.0 required
+tag code when converting from a tagged object to a custom object to 
+call ``tagged_tree_to_custom_tree`` on any values of attributes that may be
+arbitrarily nested objects. That no longer is needed with the latest code
+since any attribute that contains a mapping or sequence object automatically
+uses a generator, so population of that attribute is automatically
+deferred until the context is exited. Thus there is no need to explicitly
+call a function to populate it.
+
+More explicitly, the ``_recurse`` function defined within ``walk_and_modify``
+(in this postorder case) calls ``_handle_children()`` on the node
+in question first.  If the node contains children, they are each fed back into
+``_recurse`` and transformed into their final objects.  A new node is populated
+with these transformed children, and that is the node that gets handed to
+``tag.from_tree_tagged()``.  The effect is that the tag class receives
+a structure containing only transformed children, so it has no need to
+call ``tagged_tree_to_custom_tree`` on its own.
+
+Thus reader, your mind shall now be drained.

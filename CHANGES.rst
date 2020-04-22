@@ -28,6 +28,9 @@
 - Fix bug preventing history entries when a file was previously
   saved without them. [#779]
 
+- Update developer overview documentation to describe design of changes 
+  to handle internal references and reference cycles. [#781]
+
 2.5.2 (2020-02-28)
 ------------------
 
