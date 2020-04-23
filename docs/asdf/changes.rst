@@ -4,6 +4,37 @@
 Changes
 *******
 
+What's New in ASDF 2.6.0?
+=========================
+
+The ASDF Standard is at v1.5.0.
+
+Changes include:
+
+* ASDF Standard 1.5.0 is now the default for new files.  Changes to
+  the standard include several new and updated transform schemas,
+  and removal of wcs schemas that were previously deprecated and
+  moved to the ``gwcs`` package.
+
+* Add ``asdf.info`` and ``AsdfFile.search`` methods for visualizing
+  and interactively searching an ASDF tree.
+
+* Fix bug causing too many bytes to be consumed when reading
+  compressed blocks.
+
+* Support validation and serialization of additional numpy
+  scalar types.
+
+* Fix serialization of trees containing implicit internal references
+  and reference cycles, and simplify handling of children in
+  ``ExtensionType`` subclasses.
+
+* Fix bug preventing addition of history entires to a file that
+  was initially saved without them.
+
+* Expand developer documentation to cover the details of pyyaml
+  integration and conversion between tagged trees and custom trees.
+
 What's New in ASDF 2.5.2?
 =========================
 
