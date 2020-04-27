@@ -39,8 +39,11 @@
 - Fix bug that corrupted ndarrays when the underlying block
   array was converted to C order on write. [#827]
 
-# Fix bug that produced unreadable ASDF files when an
+- Fix bug that produced unreadable ASDF files when an
   ndarray in the tree was both offset and broadcasted. [#827]
+
+- Fix bug preventing validation of default values in
+  ``schema.check_schema``. [#785]
 
 2.6.1 (unreleased)
 ------------------
