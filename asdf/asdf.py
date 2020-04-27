@@ -117,7 +117,7 @@ class AsdfFile(versioning.VersionedMixin):
         self._process_extensions(extensions)
 
         if custom_schema is not None:
-            self._custom_schema = schema.load_schema(custom_schema, self.resolver, True)
+            self._custom_schema = schema._load_schema_cached(custom_schema, self.resolver, True, False)
         else:
             self._custom_schema = None
 
