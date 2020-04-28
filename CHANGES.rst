@@ -1,3 +1,9 @@
+2.6.1 (unreleased)
+------------------
+
+- Fix bug preventing diff of files containing ndarray-1.0.0
+  objects in simplified form. [#786]
+
 2.6.0 (2020-04-22)
 ------------------
 
