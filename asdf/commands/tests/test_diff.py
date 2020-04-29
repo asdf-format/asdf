@@ -42,7 +42,11 @@ def test_diff_minimal():
 def test_diff_block():
     filenames = ['block0.asdf', 'block1.asdf']
     result_file = 'blocks.diff'
+    _assert_diffs_equal(filenames, result_file, minimal=False)
 
+def test_diff_simple_inline_array():
+    filenames = ['simple_inline_array0.asdf', 'simple_inline_array1.asdf']
+    result_file = 'simple_inline_array.diff'
     _assert_diffs_equal(filenames, result_file, minimal=False)
 
 def test_file_not_found():
