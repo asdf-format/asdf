@@ -32,7 +32,7 @@ is not intended to be exposed to the end user.
 """
 
 from collections import UserDict, UserList, UserString
-from copy import deepcopy
+from copy import deepcopy, copy
 
 
 __all__ = ['tag_object', 'get_tag']
@@ -68,6 +68,10 @@ class TaggedDict(Tagged, UserDict, dict):
         data_copy = deepcopy(self.data, memo)
         return TaggedDict(data_copy, self._tag)
 
+    def __copy__(self):
+        data_copy = copy(self.data)
+        return TaggedDict(data_copy, self._tag)
+
 
 class TaggedList(Tagged, UserList, list):
     """
@@ -88,6 +92,10 @@ class TaggedList(Tagged, UserList, list):
 
     def __deepcopy__(self, memo):
         data_copy = deepcopy(self.data, memo)
+        return TaggedList(data_copy, self._tag)
+
+    def __copy__(self):
+        data_copy = copy(self.data)
         return TaggedList(data_copy, self._tag)
 
 
