@@ -7,6 +7,9 @@
 - Fix bug causing duplicate elements to appear when calling
   ``copy.deepcopy`` on a ``TaggedList``. [#788]
 
+- Improve validator performance by skipping unnecessary step of
+  copying schema objects. [#784]
+
 2.6.0 (2020-04-22)
 ------------------
 

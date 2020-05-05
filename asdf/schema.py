@@ -250,7 +250,7 @@ class _ValidationContext:
 
 @lru_cache()
 def _create_validator(validators=YAML_VALIDATORS, visit_repeat_nodes=False):
-    meta_schema = load_schema(YAML_SCHEMA_METASCHEMA_ID, extension.get_default_resolver())
+    meta_schema = _load_schema_cached(YAML_SCHEMA_METASCHEMA_ID, extension.get_default_resolver(), False, False)
 
     if JSONSCHEMA_LT_3:
         base_cls = mvalidators.create(meta_schema=meta_schema, validators=validators)
@@ -308,7 +308,7 @@ def _create_validator(validators=YAML_VALIDATORS, visit_repeat_nodes=False):
                         schema_path = self.ctx.resolver(tag)
                         if schema_path != tag:
                             try:
-                                s = load_schema(schema_path, self.ctx.resolver)
+                                s = _load_schema_cached(schema_path, self.ctx.resolver, False, False)
                             except FileNotFoundError:
                                 msg = "Unable to locate schema file for '{}': '{}'"
                                 warnings.warn(msg.format(tag, schema_path))
@@ -683,7 +683,7 @@ def check_schema(schema):
     })
 
     meta_schema_id = schema.get('$schema', YAML_SCHEMA_METASCHEMA_ID)
-    meta_schema = load_schema(meta_schema_id, extension.get_default_resolver())
+    meta_schema = _load_schema_cached(meta_schema_id, extension.get_default_resolver(), False, False)
 
     resolver = _make_resolver(extension.get_default_resolver())
 
