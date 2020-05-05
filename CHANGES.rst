@@ -1,3 +1,9 @@
+2.7.0 (unreleased)
+------------------
+
+- Improve read performance by skipping unnecessary rebuild
+  of tagged tree. [#787]
+
 2.6.1 (unreleased)
 ------------------
 
