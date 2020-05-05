@@ -4,6 +4,9 @@
 - Fix bug preventing diff of files containing ndarray-1.0.0
   objects in simplified form. [#786]
 
+- Fix bug causing duplicate elements to appear when calling
+  ``copy.deepcopy`` on a ``TaggedList``. [#788]
+
 2.6.0 (2020-04-22)
 ------------------
 
