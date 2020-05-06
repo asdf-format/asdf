@@ -88,7 +88,7 @@ def test_open_validate_on_read(tmpdir):
     tmpfile = str(tmpdir.join('invalid.asdf'))
 
     content = """
-invalid_software: !<http://stsci.edu/schemas/asdf/core/software-1.0.0>
+invalid_software: !core/software-1.0.0
   name: Minesweeper
   version: 3
 """
