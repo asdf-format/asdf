@@ -10,6 +10,8 @@ from astropy.modeling import models
 
 import pytest
 
+from jsonschema.exceptions import ValidationError
+
 import asdf
 from asdf import treeutil
 from asdf import extension
@@ -17,7 +19,7 @@ from asdf import resolver
 from asdf import schema
 from asdf import versioning
 from asdf.exceptions import AsdfDeprecationWarning
-from .helpers import assert_tree_match, assert_roundtrip_tree, display_warnings
+from .helpers import assert_tree_match, assert_roundtrip_tree, display_warnings, yaml_to_asdf
 
 
 def test_get_data_from_closed_file(tmpdir):
@@ -80,6 +82,27 @@ def test_open_readonly(tmpdir):
     with pytest.raises(PermissionError):
         with asdf.open(tmpfile, mode='rw'):
             pass
+
+
+def test_open_validate_on_read(tmpdir):
+    tmpfile = str(tmpdir.join('invalid.asdf'))
+
+    content = """
+invalid_software: !<http://stsci.edu/schemas/asdf/core/software-1.0.0>
+  name: Minesweeper
+  version: 3
+"""
+    buff = yaml_to_asdf(content)
+
+    with pytest.raises(ValidationError):
+        with asdf.open(buff, validate_on_read=True):
+            pass
+
+    buff.seek(0)
+
+    with asdf.open(buff, validate_on_read=False) as af:
+        assert af["invalid_software"]["name"] == "Minesweeper"
+        assert af["invalid_software"]["version"] == 3
 
 
 def test_atomic_write(tmpdir, small_tree):
