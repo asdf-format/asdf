@@ -610,7 +610,8 @@ class AsdfFile(versioning.VersionedMixin):
                    _get_yaml_content=False,
                    _force_raw_types=False,
                    strict_extension_check=False,
-                   ignore_missing_extensions=False):
+                   ignore_missing_extensions=False,
+                   validate_on_read=True):
         """Attempt to populate AsdfFile data from file-like object"""
 
         if strict_extension_check and ignore_missing_extensions:
@@ -670,11 +671,12 @@ class AsdfFile(versioning.VersionedMixin):
         if not do_not_fill_defaults:
             schema.fill_defaults(tree, self, reading=True)
 
-        try:
-            self._validate(tree, reading=True)
-        except ValidationError:
-            self.close()
-            raise
+        if validate_on_read:
+            try:
+                self._validate(tree, reading=True)
+            except ValidationError:
+                self.close()
+                raise
 
         tree = yamlutil.tagged_tree_to_custom_tree(tree, self, _force_raw_types)
 
@@ -693,7 +695,8 @@ class AsdfFile(versioning.VersionedMixin):
                    _get_yaml_content=False,
                    _force_raw_types=False,
                    strict_extension_check=False,
-                   ignore_missing_extensions=False):
+                   ignore_missing_extensions=False,
+                   validate_on_read=True):
         """Attempt to open file-like object as either AsdfFile or AsdfInFits"""
         if not is_asdf_file(fd):
             try:
@@ -708,7 +711,8 @@ class AsdfFile(versioning.VersionedMixin):
                             strict_extension_check=strict_extension_check,
                             ignore_missing_extensions=ignore_missing_extensions,
                             ignore_unrecognized_tag=self._ignore_unrecognized_tag,
-                            _extension_metadata=self._extension_metadata)
+                            _extension_metadata=self._extension_metadata,
+                            validate_on_read=validate_on_read)
             except ValueError:
                 raise ValueError(
                     "Input object does not appear to be an ASDF file or a FITS with " +
@@ -724,7 +728,8 @@ class AsdfFile(versioning.VersionedMixin):
                 _get_yaml_content=_get_yaml_content,
                 _force_raw_types=_force_raw_types,
                 strict_extension_check=strict_extension_check,
-                ignore_missing_extensions=ignore_missing_extensions)
+                ignore_missing_extensions=ignore_missing_extensions,
+                validate_on_read=validate_on_read)
 
     @classmethod
     def open(cls, fd, uri=None, mode='r',
@@ -1352,7 +1357,8 @@ def open_asdf(fd, uri=None, mode=None, validate_checksums=False,
               ignore_version_mismatch=True, ignore_unrecognized_tag=False,
               _force_raw_types=False, copy_arrays=False, lazy_load=True,
               custom_schema=None, strict_extension_check=False,
-              ignore_missing_extensions=False, _compat=False):
+              ignore_missing_extensions=False, validate_on_read=True,
+              _compat=False):
     """
     Open an existing ASDF file.
 
@@ -1421,6 +1427,10 @@ def open_asdf(fd, uri=None, mode=None, validate_checksums=False,
         contains metadata about extensions that are not available. Defaults
         to `False`.
 
+    validate_on_read : bool, optional
+        When `True`, validate the newly opened file against tag and custom
+        schemas.  Recommended unless the file is already known to be valid.
+
     Returns
     -------
     asdffile : AsdfFile
@@ -1447,7 +1457,8 @@ def open_asdf(fd, uri=None, mode=None, validate_checksums=False,
         do_not_fill_defaults=do_not_fill_defaults,
         _force_raw_types=_force_raw_types,
         strict_extension_check=strict_extension_check,
-        ignore_missing_extensions=ignore_missing_extensions)
+        ignore_missing_extensions=ignore_missing_extensions,
+        validate_on_read=validate_on_read)
 
 
 def is_asdf_file(fd):

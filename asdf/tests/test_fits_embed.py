@@ -14,11 +14,13 @@ astropy = pytest.importorskip('astropy')
 from astropy.io import fits
 from astropy.table import Table
 
+from jsonschema.exceptions import ValidationError
+
 import asdf
 from asdf import fits_embed
 from asdf import open as asdf_open
 
-from .helpers import assert_tree_match, display_warnings, get_test_data_path
+from .helpers import assert_tree_match, display_warnings, get_test_data_path, yaml_to_asdf
 
 
 def create_asdf_in_fits():
@@ -283,6 +285,33 @@ def test_asdf_open(tmpdir):
     with fits.open(tmpfile) as hdulist:
         with asdf_open(hdulist) as ff:
             compare_asdfs(asdf_in_fits, ff)
+
+def test_validate_on_read(tmpdir):
+    tmpfile = str(tmpdir.join('invalid.fits'))
+
+    content = """
+invalid_software: !core/software-1.0.0
+  name: Minesweeper
+  version: 3
+"""
+    buff = yaml_to_asdf(content)
+    hdul = fits.HDUList()
+    data = np.array(buff.getbuffer(), dtype=np.uint8)[None, :]
+    fmt = '{}B'.format(len(data[0]))
+    column = fits.Column(array=data, format=fmt, name='ASDF_METADATA')
+    hdu = fits.BinTableHDU.from_columns([column], name='ASDF')
+    hdul.append(hdu)
+    hdul.writeto(tmpfile)
+
+    for open_method in [asdf.open, fits_embed.AsdfInFits.open]:
+        with pytest.raises(ValidationError):
+            with open_method(tmpfile, validate_on_read=True):
+                pass
+
+        with open_method(tmpfile, validate_on_read=False) as af:
+            assert af["invalid_software"]["name"] == "Minesweeper"
+            assert af["invalid_software"]["version"] == 3
+
 
 def test_open_gzipped():
     testfile = get_test_data_path('asdf.fits.gz')

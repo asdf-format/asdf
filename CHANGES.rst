@@ -4,6 +4,9 @@
 - Improve read performance by skipping unnecessary rebuild
   of tagged tree. [#787]
 
+- Add option to ``asdf.open`` and ``fits_embed.AsdfInFits.open``
+  that disables validation on read. [#792]
+
 2.6.1 (unreleased)
 ------------------
 
