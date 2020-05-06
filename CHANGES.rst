@@ -10,6 +10,9 @@
 - Improve read and write performance by validating and
   filling/removing defaults in a single pass. [#793]
 
+- Prevent validation of empty tree when ``AsdfFile`` is
+  initialized. [#794]
+
 2.6.1 (unreleased)
 ------------------
 
