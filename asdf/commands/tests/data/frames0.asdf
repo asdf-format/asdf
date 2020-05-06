@@ -6,35 +6,29 @@
 asdf_library: !core/software-1.0.0 {author: Space Telescope Science Institute, homepage: 'http://github.com/spacetelescope/asdf',
   name: asdf, version: 1.2.2.dev858}
 frames:
-- !wcs/celestial_frame-1.1.0
-  axes_names: [lon, lat]
+- axes_names: [lon, lat]
   name: CelestialFrame
   reference_frame: {type: ICRS}
   unit: [!unit/unit-1.0.0 deg, !unit/unit-1.0.0 deg]
-- !wcs/celestial_frame-1.1.0
-  axes_names: [lon, lat]
+- axes_names: [lon, lat]
   name: CelestialFrame
   reference_frame: {equinox: !time/time-1.1.0 '2010-01-01 00:00:00.000', type: FK5}
   unit: [!unit/unit-1.0.0 deg, !unit/unit-1.0.0 deg]
-- !wcs/celestial_frame-1.1.0
-  axes_names: [lon, lat]
+- axes_names: [lon, lat]
   name: CelestialFrame
   reference_frame: {equinox: !time/time-1.1.0 '2010-01-01 00:00:00.000', obstime: !time/time-1.1.0 '2015-01-01
       00:00:00.000', type: FK4}
   unit: [!unit/unit-1.0.0 deg, !unit/unit-1.0.0 deg]
-- !wcs/celestial_frame-1.1.0
-  axes_names: [lon, lat]
+- axes_names: [lon, lat]
   name: CelestialFrame
   reference_frame: {equinox: !time/time-1.1.0 '2010-01-01 00:00:00.000', obstime: !time/time-1.1.0 '2015-01-01
       00:00:00.000', type: FK4_noeterms}
   unit: [!unit/unit-1.0.0 deg, !unit/unit-1.0.0 deg]
-- !wcs/celestial_frame-1.1.0
-  axes_names: [lon, lat]
+- axes_names: [lon, lat]
   name: CelestialFrame
   reference_frame: {type: galactic}
   unit: [!unit/unit-1.0.0 deg, !unit/unit-1.0.0 deg]
-- !wcs/celestial_frame-1.1.0
-  axes_names: [x, y, z]
+- axes_names: [x, y, z]
   axes_order: [0, 1, 2]
   name: CelestialFrame
   reference_frame:
@@ -52,8 +46,7 @@ frames:
     type: galactocentric
     z_sun: !unit/quantity-1.1.0 {unit: !unit/unit-1.0.0 pc, value: 3.0}
   unit: [!unit/unit-1.0.0 deg, !unit/unit-1.0.0 deg, !unit/unit-1.0.0 deg]
-- !wcs/celestial_frame-1.1.0
-  axes_names: [lon, lat]
+- axes_names: [lon, lat]
   name: CelestialFrame
   reference_frame:
     obsgeoloc:
@@ -67,19 +60,16 @@ frames:
     obstime: !time/time-1.1.0 2010-01-01 00:00:00.000
     type: GCRS
   unit: [!unit/unit-1.0.0 deg, !unit/unit-1.0.0 deg]
-- !wcs/celestial_frame-1.1.0
-  axes_names: [lon, lat]
+- axes_names: [lon, lat]
   name: CelestialFrame
   reference_frame: {obstime: !time/time-1.1.0 '2010-01-01 00:00:00.000', type: CIRS}
   unit: [!unit/unit-1.0.0 deg, !unit/unit-1.0.0 deg]
-- !wcs/celestial_frame-1.1.0
-  axes_names: [x, y, z]
+- axes_names: [x, y, z]
   axes_order: [0, 1, 2]
   name: CelestialFrame
   reference_frame: {obstime: !time/time-1.1.0 '2022-01-03 00:00:00.000', type: ITRS}
   unit: [!unit/unit-1.0.0 deg, !unit/unit-1.0.0 deg, !unit/unit-1.0.0 deg]
-- !wcs/celestial_frame-1.1.0
-  axes_names: [lon, lat]
+- axes_names: [lon, lat]
   name: CelestialFrame
   reference_frame:
     equinox: !time/time-1.1.0 J2000.000

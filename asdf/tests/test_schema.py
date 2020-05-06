@@ -518,11 +518,8 @@ def test_read_large_literal():
         with asdf.open(buff) as af:
             assert af['integer'] == value
 
-        # We get two warnings: one for validation time, and one when defaults
-        # are filled. It seems like we could improve this architecture, though...
-        assert len(w) == 2
+        assert len(w) == 1
         assert str(w[0].message).startswith('Invalid integer literal value')
-        assert str(w[1].message).startswith('Invalid integer literal value')
 
 
 def test_nested_array():
@@ -856,13 +853,9 @@ a: !core/doesnt_exist-1.0.0
     with pytest.warns(None) as w:
         with asdf.open(buff) as af:
             assert str(af['a']) == 'hello'
-            # Currently there are 3 warnings since one occurs on each of the
-            # validation passes. It would be good to consolidate these
-            # eventually
-            assert len(w) == 3, helpers.display_warnings(w)
+            assert len(w) == 2, helpers.display_warnings(w)
             assert str(w[0].message).startswith("Unable to locate schema file")
-            assert str(w[1].message).startswith("Unable to locate schema file")
-            assert str(w[2].message).startswith(af['a']._tag)
+            assert str(w[1].message).startswith(af['a']._tag)
 
     # This is a more realistic case since we're using an external extension
     yaml = """
@@ -874,10 +867,9 @@ a: !<tag:nowhere.org:custom/doesnt_exist-1.0.0>
     with pytest.warns(None) as w:
         with asdf.open(buff, extensions=CustomExtension()) as af:
             assert str(af['a']) == 'hello'
-            assert len(w) == 3, helpers.display_warnings(w)
+            assert len(w) == 2, helpers.display_warnings(w)
             assert str(w[0].message).startswith("Unable to locate schema file")
-            assert str(w[1].message).startswith("Unable to locate schema file")
-            assert str(w[2].message).startswith(af['a']._tag)
+            assert str(w[1].message).startswith(af['a']._tag)
 
 
 @pytest.mark.parametrize("numpy_value,valid_types", [
