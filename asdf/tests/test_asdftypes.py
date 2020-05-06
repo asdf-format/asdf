@@ -734,18 +734,16 @@ def test_tag_without_schema(tmpdir):
     with pytest.warns(UserWarning) as w:
         with asdf.AsdfFile(tree, extensions=FooExtension()) as af:
             af.write_to(tmpfile)
-        # There are three validation passes when writing. Eventually this may
-        # change
-        assert len(w) == 3, helpers.display_warnings(w)
+        # We expected one warning on read and another on write:
+        assert len(w) == 2, helpers.display_warnings(w)
         assert str(w[0].message).startswith('Unable to locate schema file')
         assert str(w[1].message).startswith('Unable to locate schema file')
-        assert str(w[2].message).startswith('Unable to locate schema file')
 
     with pytest.warns(UserWarning) as w:
         with asdf.AsdfFile(tree, extensions=FooExtension()) as ff:
             assert isinstance(ff.tree['foo'], FooType)
             assert ff.tree['foo'] == tree['foo']
-        # There is only one validation pass when writing.
+        # Here we're just reading, so there should only be one warning:
         assert len(w) == 1, helpers.display_warnings(w)
         assert str(w[0].message).startswith('Unable to locate schema file')
 

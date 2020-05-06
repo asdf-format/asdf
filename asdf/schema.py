@@ -168,43 +168,50 @@ YAML_VALIDATORS.update({
 })
 
 
+_PROPERTIES_VALIDATOR = mvalidators.Draft4Validator.VALIDATORS['properties']
+
+
 def validate_fill_default(validator, properties, instance, schema):
-    if not validator.is_type(instance, 'object'):
-        return
+    if validator.is_type(instance, 'object'):
+        for property, subschema in properties.items():
+            if "default" in subschema:
+                instance.setdefault(property, subschema["default"])
 
-    for property, subschema in properties.items():
-        if "default" in subschema:
-            instance.setdefault(property, subschema["default"])
-
-    for err in mvalidators.Draft4Validator.VALIDATORS['properties'](
-        validator, properties, instance, schema):
-        yield err
+    yield from _PROPERTIES_VALIDATOR(validator, properties, instance, schema)
 
 
+# Used when filling defaults in a separate validation pass:
 FILL_DEFAULTS = util.HashableDict()
-for key in ('allOf', 'anyOf', 'oneOf', 'items'):
+for key in ('allOf', 'anyOf', 'oneOf', 'items', '$ref'):
     FILL_DEFAULTS[key] = mvalidators.Draft4Validator.VALIDATORS[key]
 FILL_DEFAULTS['properties'] = validate_fill_default
 
 
+# Used when combining schema validation and filling defaults:
+YAML_VALIDATORS_FILL_DEFAULTS = util.HashableDict(YAML_VALIDATORS.copy())
+YAML_VALIDATORS_FILL_DEFAULTS["properties"] = validate_fill_default
+
+
 def validate_remove_default(validator, properties, instance, schema):
-    if not validator.is_type(instance, 'object'):
-        return
+    if validator.is_type(instance, 'object'):
+        for property, subschema in properties.items():
+            if subschema.get("default", None) is not None:
+                if instance.get(property, None) == subschema["default"]:
+                    del instance[property]
 
-    for property, subschema in properties.items():
-        if subschema.get("default", None) is not None:
-            if instance.get(property, None) == subschema["default"]:
-                del instance[property]
-
-    for err in mvalidators.Draft4Validator.VALIDATORS['properties'](
-        validator, properties, instance, schema):
-        yield err
+    yield from _PROPERTIES_VALIDATOR(validator, properties, instance, schema)
 
 
+# Used when removing defaults in a separate validation pass:
 REMOVE_DEFAULTS = util.HashableDict()
 for key in ('allOf', 'anyOf', 'oneOf', 'items'):
     REMOVE_DEFAULTS[key] = mvalidators.Draft4Validator.VALIDATORS[key]
 REMOVE_DEFAULTS['properties'] = validate_remove_default
+
+
+# Used when combining schema validation and removing defaults:
+YAML_VALIDATORS_REMOVE_DEFAULTS = util.HashableDict(YAML_VALIDATORS.copy())
+YAML_VALIDATORS_REMOVE_DEFAULTS["properties"] = validate_remove_default
 
 
 class _ValidationContext:
@@ -643,6 +650,27 @@ def fill_defaults(instance, ctx, reading=False):
     validate(instance, ctx, validators=FILL_DEFAULTS, reading=reading)
 
 
+def validate_and_fill_defaults(instance, ctx, reading=False):
+    """
+    Validate the given instance against the schema and also
+    add missing default values, in one pass.
+
+    Parameters
+    ----------
+    instance : tagged tree
+
+    ctx : AsdfFile context
+        Used to resolve tags and urls
+
+    reading : bool, optional
+        Indicates whether the ASDF file is being read (in contrast to being
+        written).
+    """
+    validators = util.HashableDict(YAML_VALIDATORS_FILL_DEFAULTS.copy())
+    validators.update(ctx._extensions.validators)
+    validate(instance, ctx, validators=validators, reading=reading)
+
+
 def remove_defaults(instance, ctx):
     """
     For any values in the tree that are the same as the default values
@@ -656,6 +684,23 @@ def remove_defaults(instance, ctx):
         Used to resolve tags and urls
     """
     validate(instance, ctx, validators=REMOVE_DEFAULTS)
+
+
+def validate_and_remove_defaults(instance, ctx):
+    """
+    Validate the given instance against the schema and also
+    remove values that match schema defaults.
+
+    Parameters
+    ----------
+    instance : tagged tree
+
+    ctx : AsdfFile context
+        Used to resolve tags and urls
+    """
+    validators = util.HashableDict(YAML_VALIDATORS_REMOVE_DEFAULTS.copy())
+    validators.update(ctx._extensions.validators)
+    validate(instance, ctx, validators=validators)
 
 
 def check_schema(schema):
