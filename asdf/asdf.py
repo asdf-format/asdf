@@ -423,7 +423,7 @@ class AsdfFile(versioning.VersionedMixin):
         """
         return self._comments
 
-    def _validate(self, tree, custom=True, reading=False, fill_defaults=False):
+    def _validate(self, tree, custom=True, reading=False):
         if reading:
             # If we're validating on read then the tree
             # is already guaranteed to be in tagged form.
@@ -431,12 +431,7 @@ class AsdfFile(versioning.VersionedMixin):
         else:
             tagged_tree = yamlutil.custom_tree_to_tagged_tree(
                 tree, self)
-
-        if fill_defaults:
-            schema.validate_and_fill_defaults(tagged_tree, self, reading=reading)
-        else:
-            schema.validate(tagged_tree, self, reading=reading)
-
+        schema.validate(tagged_tree, self, reading=reading)
         # Perform secondary validation pass if requested
         if custom and self._custom_schema:
             schema.validate(tagged_tree, self, self._custom_schema,
@@ -673,15 +668,15 @@ class AsdfFile(versioning.VersionedMixin):
             self._blocks.read_block_index(fd, self)
 
         tree = reference.find_references(tree, self)
+        if not do_not_fill_defaults:
+            schema.fill_defaults(tree, self, reading=True)
 
         if validate_on_read:
             try:
-                self._validate(tree, reading=True, fill_defaults=(not do_not_fill_defaults))
+                self._validate(tree, reading=True)
             except ValidationError:
                 self.close()
                 raise
-        elif not do_not_fill_defaults:
-            schema.fill_defaults(tree, self, reading=True)
 
         tree = yamlutil.tagged_tree_to_custom_tree(tree, self, _force_raw_types)
 

@@ -7,9 +7,6 @@
 - Add option to ``asdf.open`` and ``fits_embed.AsdfInFits.open``
   that disables validation on read. [#792]
 
-- Improve read and write performance by validating and
-  filling/removing defaults in a single pass. [#793]
-
 2.6.1 (unreleased)
 ------------------
 
