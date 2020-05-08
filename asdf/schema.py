@@ -204,7 +204,7 @@ def validate_remove_default(validator, properties, instance, schema):
 
 # Used when removing defaults in a separate validation pass:
 REMOVE_DEFAULTS = util.HashableDict()
-for key in ('allOf', 'anyOf', 'oneOf', 'items', '$ref'):
+for key in ('allOf', 'anyOf', 'oneOf', 'items'):
     REMOVE_DEFAULTS[key] = mvalidators.Draft4Validator.VALIDATORS[key]
 REMOVE_DEFAULTS['properties'] = validate_remove_default
 
