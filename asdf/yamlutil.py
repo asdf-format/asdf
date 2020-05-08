@@ -349,8 +349,8 @@ def dump_tree(tree, fd, ctx):
         tags = {'!': yaml_tag}
 
     tree = custom_tree_to_tagged_tree(tree, ctx)
-
-    schema.validate_and_remove_defaults(tree, ctx)
+    schema.validate(tree, ctx)
+    schema.remove_defaults(tree, ctx)
 
     yaml_version = tuple(
         int(x) for x in ctx.version_map['YAML_VERSION'].split('.'))
