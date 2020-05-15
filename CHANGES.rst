@@ -7,6 +7,8 @@
 - Add option to ``asdf.open`` and ``fits_embed.AsdfInFits.open``
   that disables validation on read. [#792]
 
+- Fix bugs and code style found by adding F and W ``flake8`` checks. [#797]
+
 2.6.1 (unreleased)
 ------------------
 
