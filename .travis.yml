@@ -71,6 +71,9 @@ matrix:
     # Test against an installed asdf package
     - env: TOXENV=packaged
 
+    # Test with warnings converted to errors
+    - env: TOXENV=warnings
+
     # Test on OS X
     - env:
         - TOXENV=py38
@@ -101,6 +104,8 @@ matrix:
     - env: TOXENV=prerelease
 
     - env: TOXENV=py38-numpydev
+
+    - env: TOXENV=warnings
 
 install: pip install tox
 

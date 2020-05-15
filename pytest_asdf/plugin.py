@@ -38,19 +38,24 @@ def pytest_addoption(parser):
 
 
 class AsdfSchemaFile(pytest.File):
+    @classmethod
+    def from_parent(cls, parent, *, fspath, skip_examples=False, ignore_unrecognized_tag=False, **kwargs):
+        if hasattr(super(), "from_parent"):
+            result = super().from_parent(parent, fspath=fspath, **kwargs)
+        else:
+            result = AsdfSchemaFile(fspath, parent, **kwargs)
 
-    def __init__(self, *args, skip_examples=False, ignore_unrecognized_tag=False, **kwargs):
-        super().__init__(*args, **kwargs)
-        self.skip_examples = skip_examples
-        self.ignore_unrecognized_tag = ignore_unrecognized_tag
+        result.skip_examples = skip_examples
+        result.ignore_unrecognized_tag = ignore_unrecognized_tag
+        return result
 
     def collect(self):
-        yield AsdfSchemaItem(str(self.fspath), self)
+        yield AsdfSchemaItem.from_parent(self, self.fspath)
         if not self.skip_examples:
             for example in self.find_examples_in_schema():
-                yield AsdfSchemaExampleItem(
-                    str(self.fspath),
+                yield AsdfSchemaExampleItem.from_parent(
                     self,
+                    self.fspath,
                     example,
                     ignore_unrecognized_tag=self.ignore_unrecognized_tag
                 )
@@ -71,9 +76,15 @@ class AsdfSchemaFile(pytest.File):
 
 
 class AsdfSchemaItem(pytest.Item):
-    def __init__(self, schema_path, parent):
-        super(AsdfSchemaItem, self).__init__(schema_path, parent)
-        self.schema_path = schema_path
+    @classmethod
+    def from_parent(cls, parent, schema_path, **kwargs):
+        if hasattr(super(), "from_parent"):
+            result = super().from_parent(parent, name=str(schema_path), **kwargs)
+        else:
+            result = AsdfSchemaItem(str(schema_path), parent, **kwargs)
+
+        result.schema_path = schema_path
+        return result
 
     def runtest(self):
         from asdf import schema
@@ -122,12 +133,17 @@ def parse_schema_filename(filename):
 
 
 class AsdfSchemaExampleItem(pytest.Item):
-    def __init__(self, schema_path, parent, example, ignore_unrecognized_tag=False):
+    @classmethod
+    def from_parent(cls, parent, schema_path, example, ignore_unrecognized_tag=False, **kwargs):
         test_name = "{}-example".format(schema_path)
-        super(AsdfSchemaExampleItem, self).__init__(test_name, parent)
-        self.filename = str(schema_path)
-        self.example = example
-        self.ignore_unrecognized_tag = ignore_unrecognized_tag
+        if hasattr(super(), "from_parent"):
+            result = super().from_parent(parent, name=test_name, **kwargs)
+        else:
+            result = AsdfSchemaExampleItem(test_name, parent, **kwargs)
+        result.filename = str(schema_path)
+        result.example = example
+        result.ignore_unrecognized_tag = ignore_unrecognized_tag
+        return result
 
     def _find_standard_version(self, name, version):
         from asdf import versioning
@@ -211,9 +227,9 @@ def pytest_collect_file(path, parent):
 
     for root in schema_roots:
         if str(path).startswith(root) and path.purebasename not in skip_names:
-            return AsdfSchemaFile(
-                path,
+            return AsdfSchemaFile.from_parent(
                 parent,
+                fspath=path,
                 skip_examples=(path.purebasename in skip_examples),
                 ignore_unrecognized_tag=ignore_unrecognized_tag,
             )

@@ -416,7 +416,7 @@ def _assert_extension_type_correctness(extension, extension_type, resolver):
 
         try:
             with generic_io.get_file(schema_location) as f:
-                schema = yaml.load(f.read())
+                schema = yaml.safe_load(f.read())
         except Exception:
             assert False, (
                 "{} supports tag, {}, ".format(extension_type.__name__, check_type.yaml_tag) +
