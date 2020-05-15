@@ -16,7 +16,7 @@ from ._internal_init import __version__, __githash__, test
 __all__ = [
     'AsdfFile', 'CustomType', 'AsdfExtension', 'Stream', 'open', 'test',
     'commands', 'IntegerType', 'ExternalArrayReference', 'info', '__version__',
-    '__githash__'
+    '__githash__', 'ValidationError'
 ]
 
 
@@ -29,7 +29,7 @@ from .tags.core import IntegerType
 from .tags.core.external_reference import ExternalArrayReference
 from ._convenience import info
 
-from jsonschema import ValidationError  # noqa: F401
+from jsonschema import ValidationError
 
 open = open_asdf
 # Avoid redundancy/confusion in the top-level namespace
