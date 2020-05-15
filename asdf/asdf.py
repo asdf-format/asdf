@@ -5,11 +5,9 @@
 import io
 import os
 import time
-import re
 import copy
 import datetime
 import warnings
-import importlib
 from pkg_resources import parse_version
 
 import numpy as np

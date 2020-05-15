@@ -180,11 +180,11 @@ def test_implicit_conversion_warning():
     }
 
     with pytest.warns(UserWarning, match="Failed to serialize instance"):
-        with asdf.AsdfFile(tree) as af:
+        with asdf.AsdfFile(tree):
             pass
 
     with pytest.warns(None) as w:
-        with asdf.AsdfFile(tree, ignore_implicit_conversion=True) as af:
+        with asdf.AsdfFile(tree, ignore_implicit_conversion=True):
             assert len(w) == 0
 
 

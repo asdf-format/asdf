@@ -45,9 +45,7 @@ def test_valid_complex(valid):
     'nan+4j'
 ])
 def test_valid_nan_complex(valid):
-
-    with asdf.open(make_complex_asdf(valid)) as af:
-        # Don't compare values since NANs are never equal
+    with asdf.open(make_complex_asdf(valid)):
         pass
 
 

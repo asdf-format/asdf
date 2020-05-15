@@ -165,7 +165,7 @@ history:
 
     buff = yaml_to_asdf(yaml)
     with pytest.warns(None) as warnings:
-        with asdf.open(buff) as af:
+        with asdf.open(buff):
             pass
 
     assert len(warnings) == 1, display_warnings(warnings)
@@ -187,7 +187,7 @@ history:
 
     buff = yaml_to_asdf(yaml)
     with pytest.warns(None) as warnings:
-        with asdf.open(buff) as af:
+        with asdf.open(buff):
             pass
 
     assert len(warnings) == 1, display_warnings(warnings)
@@ -199,7 +199,7 @@ history:
 
     # Make sure suppressing the warning works too
     with pytest.warns(None) as warnings:
-        with asdf.open(buff, ignore_missing_extensions=True) as af:
+        with asdf.open(buff, ignore_missing_extensions=True):
             pass
 
     assert len(warnings) == 0, display_warnings(warnings)
@@ -219,12 +219,12 @@ history:
 
     buff = yaml_to_asdf(yaml)
     with pytest.raises(RuntimeError):
-        with asdf.open(buff, strict_extension_check=True) as af:
+        with asdf.open(buff, strict_extension_check=True):
             pass
 
     # Make sure to test for incompatibility with ignore_missing_extensions
     with pytest.raises(ValueError):
-        with asdf.open(buff, strict_extension_check=True, ignore_missing_extensions=True) as af:
+        with asdf.open(buff, strict_extension_check=True, ignore_missing_extensions=True):
             pass
 
 
@@ -263,7 +263,7 @@ def test_metadata_with_custom_extension(tmpdir):
         assert len(af['history']['extensions']) == 2
 
     with pytest.warns(None) as warnings:
-        with asdf.open(tmpfile, ignore_unrecognized_tag=True) as af:
+        with asdf.open(tmpfile, ignore_unrecognized_tag=True):
             pass
 
     # Since we're ignoring the unrecognized tag warning, we should only get
@@ -282,7 +282,7 @@ def test_metadata_with_custom_extension(tmpdir):
         assert len(af['history']['extensions']) == 1
 
     with pytest.warns(None) as warnings:
-        with asdf.open(tmpfile2) as af:
+        with asdf.open(tmpfile2):
             pass
 
     assert len(warnings) == 0

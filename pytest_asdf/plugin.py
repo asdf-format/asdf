@@ -175,7 +175,6 @@ class AsdfSchemaExampleItem(pytest.Item):
 
         try:
             with pytest.warns(None) as w:
-                import warnings
                 ff._open_impl(ff, buff, mode='rw')
             # Do not tolerate any warnings that occur during schema validation
             assert len(w) == 0, helpers.display_warnings(w)

@@ -187,8 +187,7 @@ def test_table_inline(tmpdir):
 
 
 def test_auto_inline_recursive(tmpdir):
-    astropy = pytest.importorskip('astropy')
-    from astropy.modeling import models
+    models = pytest.importorskip('astropy.modeling.models')
 
     aff = models.AffineTransformation2D(matrix=[[1, 2], [3, 4]])
     tree = {'test': aff}
@@ -313,7 +312,6 @@ def test_mask_roundtrip(tmpdir):
         tree = asdf.tree
 
         m = tree['masked_array']
-        x = tree['unmasked_array']
 
         print(m)
         print(m.mask)
@@ -529,7 +527,7 @@ def test_mask_datatype(tmpdir):
     """
     buff = helpers.yaml_to_asdf(content)
 
-    with asdf.open(buff) as ff:
+    with asdf.open(buff):
         pass
 
 
@@ -544,7 +542,7 @@ def test_invalid_mask_datatype(tmpdir):
     buff = helpers.yaml_to_asdf(content)
 
     with pytest.raises(jsonschema.ValidationError):
-        with asdf.open(buff) as ff:
+        with asdf.open(buff):
             pass
 
 
@@ -557,7 +555,7 @@ def test_ndim_validation(tmpdir):
     buff = helpers.yaml_to_asdf(content)
 
     with pytest.raises(jsonschema.ValidationError):
-        with asdf.open(buff, extensions=CustomExtension()) as ff:
+        with asdf.open(buff, extensions=CustomExtension()):
             pass
 
     content = """
@@ -567,7 +565,7 @@ def test_ndim_validation(tmpdir):
     """
     buff = helpers.yaml_to_asdf(content)
 
-    with asdf.open(buff, extensions=CustomExtension()) as ff:
+    with asdf.open(buff, extensions=CustomExtension()):
         pass
 
     content = """
@@ -578,7 +576,7 @@ def test_ndim_validation(tmpdir):
     """
     buff = helpers.yaml_to_asdf(content)
 
-    with asdf.open(buff, extensions=CustomExtension()) as ff:
+    with asdf.open(buff, extensions=CustomExtension()):
         pass
 
     content = """
@@ -588,7 +586,7 @@ def test_ndim_validation(tmpdir):
     """
     buff = helpers.yaml_to_asdf(content)
 
-    with asdf.open(buff, extensions=CustomExtension()) as ff:
+    with asdf.open(buff, extensions=CustomExtension()):
         pass
 
     content = """
@@ -598,7 +596,7 @@ def test_ndim_validation(tmpdir):
     """
     buff = helpers.yaml_to_asdf(content)
 
-    with asdf.open(buff, extensions=CustomExtension()) as ff:
+    with asdf.open(buff, extensions=CustomExtension()):
         pass
 
     content = """
@@ -609,7 +607,7 @@ def test_ndim_validation(tmpdir):
     buff = helpers.yaml_to_asdf(content)
 
     with pytest.raises(jsonschema.ValidationError):
-        with asdf.open(buff, extensions=CustomExtension()) as ff:
+        with asdf.open(buff, extensions=CustomExtension()):
             pass
 
 
@@ -622,7 +620,7 @@ def test_datatype_validation(tmpdir):
     """
     buff = helpers.yaml_to_asdf(content)
 
-    with asdf.open(buff, extensions=CustomExtension()) as ff:
+    with asdf.open(buff, extensions=CustomExtension()):
         pass
 
     content = """
@@ -634,7 +632,7 @@ def test_datatype_validation(tmpdir):
     buff = helpers.yaml_to_asdf(content)
 
     with pytest.raises(jsonschema.ValidationError):
-        with asdf.open(buff, extensions=CustomExtension()) as ff:
+        with asdf.open(buff, extensions=CustomExtension()):
             pass
 
     content = """
@@ -645,7 +643,7 @@ def test_datatype_validation(tmpdir):
     """
     buff = helpers.yaml_to_asdf(content)
 
-    with asdf.open(buff, extensions=CustomExtension()) as ff:
+    with asdf.open(buff, extensions=CustomExtension()):
         pass
 
     content = """
@@ -657,7 +655,7 @@ def test_datatype_validation(tmpdir):
     buff = helpers.yaml_to_asdf(content)
 
     with pytest.raises(jsonschema.ValidationError):
-        with asdf.open(buff, extensions=CustomExtension()) as ff:
+        with asdf.open(buff, extensions=CustomExtension()):
             pass
 
     content = """
@@ -673,7 +671,7 @@ def test_datatype_validation(tmpdir):
     buff = helpers.yaml_to_asdf(content)
 
     with pytest.raises(jsonschema.ValidationError):
-        with asdf.open(buff, extensions=CustomExtension()) as ff:
+        with asdf.open(buff, extensions=CustomExtension()):
             pass
 
 
@@ -690,7 +688,7 @@ def test_structured_datatype_validation(tmpdir):
     """
     buff = helpers.yaml_to_asdf(content)
 
-    with asdf.open(buff, extensions=CustomExtension()) as ff:
+    with asdf.open(buff, extensions=CustomExtension()):
         pass
 
     content = """
@@ -706,7 +704,7 @@ def test_structured_datatype_validation(tmpdir):
     buff = helpers.yaml_to_asdf(content)
 
     with pytest.raises(jsonschema.ValidationError):
-        with asdf.open(buff, extensions=CustomExtension()) as ff:
+        with asdf.open(buff, extensions=CustomExtension()):
             pass
 
     content = """
@@ -724,7 +722,7 @@ def test_structured_datatype_validation(tmpdir):
     buff = helpers.yaml_to_asdf(content)
 
     with pytest.raises(jsonschema.ValidationError):
-        with asdf.open(buff, extensions=CustomExtension()) as ff:
+        with asdf.open(buff, extensions=CustomExtension()):
             pass
 
     content = """
@@ -735,7 +733,7 @@ def test_structured_datatype_validation(tmpdir):
     buff = helpers.yaml_to_asdf(content)
 
     with pytest.raises(jsonschema.ValidationError):
-        with asdf.open(buff, extensions=CustomExtension()) as ff:
+        with asdf.open(buff, extensions=CustomExtension()):
             pass
 
     content = """
@@ -751,7 +749,7 @@ def test_structured_datatype_validation(tmpdir):
     buff = helpers.yaml_to_asdf(content)
 
     with pytest.raises(jsonschema.ValidationError):
-        with asdf.open(buff, extensions=CustomExtension()) as ff:
+        with asdf.open(buff, extensions=CustomExtension()):
             pass
 
     content = """
@@ -766,7 +764,7 @@ def test_structured_datatype_validation(tmpdir):
     """
     buff = helpers.yaml_to_asdf(content)
 
-    with asdf.open(buff, extensions=CustomExtension()) as ff:
+    with asdf.open(buff, extensions=CustomExtension()):
         pass
 
 
@@ -787,7 +785,7 @@ def test_inline_shape_mismatch():
 
     buff = helpers.yaml_to_asdf(content)
     with pytest.raises(ValueError):
-        with asdf.open(buff) as ff:
+        with asdf.open(buff):
             pass
 
 
@@ -808,12 +806,11 @@ def test_simple_object_array(tmpdir):
 def test_tagged_object_array(tmpdir):
     # See https://github.com/spacetelescope/asdf/issues/383 for feature
     # request
-    astropy = pytest.importorskip('astropy')
-    from astropy.units.quantity import Quantity
+    quantity = pytest.importorskip('astropy.units.quantity')
 
     objdata = np.empty((3, 3), dtype=object)
     for i, _ in enumerate(objdata.flat):
-        objdata.flat[i] = Quantity(i, 'angstrom')
+        objdata.flat[i] = quantity.Quantity(i, 'angstrom')
 
     helpers.assert_roundtrip_tree({'bizbaz': objdata}, tmpdir)
 

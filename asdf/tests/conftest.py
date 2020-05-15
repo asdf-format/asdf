@@ -2,7 +2,6 @@
 # -*- coding: utf-8 -*-
 
 import pytest
-import numpy as np
 
 from . import create_small_tree, create_large_tree
 

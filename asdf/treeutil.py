@@ -4,7 +4,6 @@
 Utility functions for managing tree-like data structures.
 """
 
-import inspect
 import warnings
 import types
 from contextlib import contextmanager

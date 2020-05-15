@@ -17,7 +17,6 @@ from . import generic_io
 
 try:
     from astropy.io import fits
-    from astropy.io.fits import Column, BinTableHDU
 except ImportError:
     raise ImportError("AsdfInFits requires astropy")
 

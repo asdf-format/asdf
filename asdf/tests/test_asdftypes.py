@@ -1,11 +1,9 @@
 # Licensed under a 3-clause BSD style license - see LICENSE.rst
 # -*- coding: utf-8 -*-
 
-
 import io
 import os
 import sys
-import copy
 from fractions import Fraction
 
 import pytest
@@ -277,8 +275,7 @@ flow_thing:
 """
     buff = helpers.yaml_to_asdf(yaml)
     with pytest.warns(None) as w:
-        data = asdf.open(
-            buff, ignore_version_mismatch=False,
+        asdf.open(buff, ignore_version_mismatch=False,
             extensions=CustomFlowExtension())
     assert len(w) == 1, helpers.display_warnings(w)
     assert str(w[0].message) == (
@@ -467,7 +464,7 @@ def test_newer_tag():
 
         @classmethod
         def to_tree(cls, data, ctx):
-            tree = dict(c=data.c, d=data.d)
+            return dict(c=data.c, d=data.d)
 
     class CustomFlowExtension(CustomExtension):
         @property
@@ -552,7 +549,7 @@ def test_incompatible_version_check():
         class TestType6(types.CustomType):
             supported_versions = 'blue'
     with pytest.raises(ValueError):
-        class TestType6(types.CustomType):
+        class TestType7(types.CustomType):
             supported_versions = ['1.1.0', '2.2.0', 'blue']
 
 def test_supported_versions():
@@ -576,14 +573,13 @@ def test_supported_versions():
                 return CustomFlow(c=tree['a'], d=tree['b'])
             else:
                 return CustomFlow(**tree)
-            return CustomFlow(**kwargs)
 
         @classmethod
         def to_tree(cls, data, ctx):
             if cls.version == '1.0.0':
-                tree = dict(a=data.c, b=data.d)
+                return dict(a=data.c, b=data.d)
             else:
-                tree = dict(c=data.c, d=data.d)
+                return dict(c=data.c, d=data.d)
 
     class CustomFlowExtension(CustomExtension):
         @property
@@ -636,7 +632,7 @@ flow_thing:
     buff = helpers.yaml_to_asdf(yaml)
 
     with pytest.warns(None) as _warnings:
-        data = asdf.open(buff, extensions=CustomFlowExtension())
+        asdf.open(buff, extensions=CustomFlowExtension())
 
     assert len(_warnings) == 1
     assert str(_warnings[0].message) == (
@@ -667,8 +663,7 @@ def test_extension_override(tmpdir):
 def test_extension_override_subclass(tmpdir):
 
     gwcs = pytest.importorskip('gwcs', '0.12.0')
-    astropy = pytest.importorskip('astropy', '4.0.0')
-    from astropy.modeling import models
+    pytest.importorskip('astropy', '4.0.0')
 
     from asdf.extension import default_extensions
     default_extensions.reset()
@@ -871,9 +866,7 @@ def test_subclass_decorator_attribute(tmpdir):
         assert af['coord'].other == [1,2,3,4]
 
 
-def test_subclass_decorator_warning(tmpdir):
-
-    tmpfile = str(tmpdir.join('fraction.asdf'))
+def test_subclass_decorator_warning():
 
     FractionType = fractiontype_factory()
 
@@ -898,7 +891,7 @@ def test_subclass_decorator_warning(tmpdir):
     tree = dict(fraction=MyFraction(7, 9, custom='TESTING!'))
 
     with pytest.warns(UserWarning) as w:
-        with asdf.AsdfFile(tree, extensions=FractionExtension()) as af:
+        with asdf.AsdfFile(tree, extensions=FractionExtension()):
             pass
         assert len(w) == 1, helpers.display_warnings(w)
         assert str(w[0].message).startswith("Failed to add subclass attribute(s)")

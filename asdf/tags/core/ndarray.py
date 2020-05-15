@@ -12,7 +12,6 @@ from jsonschema import ValidationError
 from ...types import AsdfType
 from ... import schema
 from ... import util
-from ... import yamlutil
 
 
 _datatype_names = {

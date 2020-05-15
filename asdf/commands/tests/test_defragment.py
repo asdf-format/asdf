@@ -1,17 +1,15 @@
 # Licensed under a 3-clause BSD style license - see LICENSE.rst
 # -*- coding: utf-8 -*-
 
-
 import os
-import sys
 
 import numpy as np
 import pytest
 
 import asdf
-from ... import AsdfFile
-from .. import main
-from ...tests.helpers import get_file_sizes, assert_tree_match
+from asdf import AsdfFile
+from asdf.commands import main
+from asdf.tests.helpers import get_file_sizes, assert_tree_match
 
 
 def _test_defragment(tmpdir, codec):

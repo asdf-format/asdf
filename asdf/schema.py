@@ -1,7 +1,6 @@
 # Licensed under a 3-clause BSD style license - see LICENSE.rst
 # -*- coding: utf-8 -*-
 
-import os
 import json
 import datetime
 import warnings
@@ -9,7 +8,6 @@ import copy
 from numbers import Integral
 from functools import lru_cache
 from collections import OrderedDict
-from collections.abc import Mapping
 from urllib import parse as urlparse
 
 from jsonschema import validators as mvalidators
@@ -23,7 +21,6 @@ from . import generic_io
 from . import reference
 from . import treeutil
 from . import util
-from .extension import default_extensions
 from .compat.jsonschemacompat import JSONSCHEMA_LT_3
 from . import extension
 from .exceptions import AsdfDeprecationWarning

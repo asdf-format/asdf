@@ -5,8 +5,6 @@
 Implementation of command for removing ASDF HDU from ASDF-in-FITS file.
 """
 
-import sys
-
 from astropy.io import fits
 
 from .main import Command
