@@ -9,6 +9,9 @@
 
 - Fix bugs and code style found by adding F and W ``flake8`` checks. [#797]
 
+- Eliminate warnings in pytest plugin by using ``from_parent``
+  when available. [#799]
+
 2.6.1 (unreleased)
 ------------------
 
