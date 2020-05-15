@@ -1,5 +1,7 @@
 from functools import partial
 
+import pytest
+
 from ...tests import helpers
 from . import data as test_data
 
@@ -9,6 +11,10 @@ from .. import main
 get_test_data_path = partial(helpers.get_test_data_path, module=test_data)
 
 
+# The test file we're using here contains objects whose schemas
+# have been dropped from the ASDF Standard.  We should select
+# a new file once the locations of schemas are more stable.
+@pytest.mark.filterwarnings("ignore::asdf.exceptions.AsdfConversionWarning")
 def test_info_command(capsys):
     file_path = get_test_data_path("frames0.asdf")
 
