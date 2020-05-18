@@ -24,6 +24,9 @@
 - Improve validator performance by skipping unnecessary step of
   copying schema objects. [#784]
 
+- Fix bug with ``auto_inline`` option where inline blocks
+  are not converted to internal when they exceed the threshold. [#802]
+
 2.6.0 (2020-04-22)
 ------------------
 
