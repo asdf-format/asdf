@@ -585,9 +585,12 @@ class BlockManager:
             block.output_compression = all_array_compression
 
         auto_inline = getattr(ctx, '_auto_inline', None)
-        if auto_inline:
+        if auto_inline and block.array_storage in ['internal', 'inline']:
+            num_elements = np.product(block.data.shape)
             if np.product(block.data.shape) < auto_inline:
                 self.set_array_storage(block, 'inline')
+            else:
+                self.set_array_storage(block, 'internal')
 
     def finalize(self, ctx):
         """
@@ -714,20 +717,6 @@ class BlockManager:
                 return self.get_external_filename(filename, i)
 
         raise ValueError("block not found.")
-
-    def _should_inline(self, array):
-
-        if not np.issubdtype(array.dtype, np.number):
-            return False
-
-        if isinstance(array, masked_array):
-            return False
-
-        # Make sure none of the values are too large to store as literals
-        if (array[~np.isnan(array)] > 2**52).any():
-            return False
-
-        return array.size <= self._inline_threshold_size
 
     def find_or_create_block_for_array(self, arr, ctx):
         """
