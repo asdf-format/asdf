@@ -12,7 +12,6 @@ from collections import namedtuple
 from urllib import parse as urlparse
 
 import numpy as np
-from numpy.ma.core import masked_array
 
 import yaml
 
@@ -586,7 +585,6 @@ class BlockManager:
 
         auto_inline = getattr(ctx, '_auto_inline', None)
         if auto_inline and block.array_storage in ['internal', 'inline']:
-            num_elements = np.product(block.data.shape)
             if np.product(block.data.shape) < auto_inline:
                 self.set_array_storage(block, 'inline')
             else:
