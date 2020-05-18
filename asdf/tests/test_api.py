@@ -374,8 +374,7 @@ def test_auto_inline_masked_array(tmpdir):
 
 def test_auto_inline_large_value(tmpdir):
     outfile = str(tmpdir.join('test.asdf'))
-    arr = np.arange(6)
-    arr[0] = 2**52 + 1
+    arr = np.array([2**52 + 1, 1, 2, 3, 4, 5])
     tree = {"array": arr}
 
     with asdf.AsdfFile(tree) as af:
