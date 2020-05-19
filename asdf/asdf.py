@@ -138,7 +138,9 @@ class AsdfFile(versioning.VersionedMixin):
             readonly=_readonly)
         self._uri = None
         if tree is None:
-            self.tree = {}
+            # Bypassing the tree property here, to avoid validating
+            # an empty tree.
+            self._tree = AsdfObject()
         elif isinstance(tree, AsdfFile):
             if self._extensions != tree._extensions:
                 raise ValueError(
@@ -637,8 +639,8 @@ class AsdfFile(versioning.VersionedMixin):
             self.version = version
 
         yaml_token = fd.read(4)
-        tree = {}
         has_blocks = False
+        tree = None
         if yaml_token == b'%YAM':
             reader = fd.reader_until(
                 constants.YAML_END_MARKER_REGEX, 7, 'End of YAML marker',
@@ -659,6 +661,13 @@ class AsdfFile(versioning.VersionedMixin):
             has_blocks = True
         elif yaml_token != b'':
             raise IOError("ASDF file appears to contain garbage after header.")
+
+        if tree is None:
+            # At this point the tree should be tagged, but we want it to be
+            # tagged with the core/asdf version appropriate to this file's
+            # ASDF Standard version.  We're using custom_tree_to_tagged_tree
+            # to select the correct tag for us.
+            tree = yamlutil.custom_tree_to_tagged_tree(AsdfObject(), self)
 
         if has_blocks:
             self._blocks.read_internal_blocks(

@@ -650,8 +650,7 @@ def test_extension_override(tmpdir):
     tmpfile = str(tmpdir.join('override.asdf'))
 
     with asdf.AsdfFile() as aa:
-        wti = aa.type_index._write_type_indices[version]
-        assert wti.from_custom_type(gwcs.WCS) is gwcs.tags.wcs.WCSType
+        assert aa.type_index.from_custom_type(gwcs.WCS, version=version) is gwcs.tags.wcs.WCSType
         aa.tree['wcs'] = gwcs.WCS(output_frame='icrs')
         aa.write_to(tmpfile)
 
@@ -675,11 +674,10 @@ def test_extension_override_subclass(tmpdir):
         pass
 
     with asdf.AsdfFile() as aa:
-        wti = aa.type_index._write_type_indices[version]
-        assert wti.from_custom_type(gwcs.WCS) is gwcs.tags.wcs.WCSType
-        assert wti.from_custom_type(SubclassWCS) is gwcs.tags.wcs.WCSType
+        assert aa.type_index.from_custom_type(gwcs.WCS, version=version) is gwcs.tags.wcs.WCSType
+        assert aa.type_index.from_custom_type(SubclassWCS, version=version) is gwcs.tags.wcs.WCSType
         # The duplication here is deliberate: make sure that nothing has changed
-        assert wti.from_custom_type(gwcs.WCS) is gwcs.tags.wcs.WCSType
+        assert aa.type_index.from_custom_type(gwcs.WCS, version=version) is gwcs.tags.wcs.WCSType
         aa.tree['wcs'] = SubclassWCS(output_frame='icrs')
         aa.write_to(tmpfile)
 

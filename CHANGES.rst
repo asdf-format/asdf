@@ -12,6 +12,9 @@
 - Eliminate warnings in pytest plugin by using ``from_parent``
   when available. [#799]
 
+- Prevent validation of empty tree when ``AsdfFile`` is
+  initialized. [#794]
+
 2.6.1 (unreleased)
 ------------------
 
