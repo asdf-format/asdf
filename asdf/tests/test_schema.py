@@ -610,7 +610,7 @@ custom: !<tag:nowhere.org:custom/missing-1.1.0>
   b: {foo: 42}
     """
     buff = helpers.yaml_to_asdf(yaml)
-    with pytest.warns(AsdfWarning, match="Failed to convert tag:nowhere.org:custom/missing-1.1.0"):
+    with pytest.warns(AsdfConversionWarning, match="Failed to convert tag:nowhere.org:custom/missing-1.1.0"):
         with asdf.open(buff, extensions=[DefaultTypeExtension()]) as ff:
             assert ff.tree['custom']['b']['foo'] == 42
 

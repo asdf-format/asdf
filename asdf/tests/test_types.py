@@ -180,30 +180,31 @@ a: !core/complex-42.0.0
     """
 
     buff = helpers.yaml_to_asdf(yaml)
-    with pytest.warns(AsdfWarning, match="tag:stsci.edu:asdf/core/complex"):
+    with pytest.warns(AsdfConversionWarning, match="tag:stsci.edu:asdf/core/complex"):
         with asdf.open(buff, ignore_version_mismatch=False) as ff:
             assert isinstance(ff.tree['a'], complex)
 
     # Make sure warning is repeatable
     buff.seek(0)
-    with pytest.warns(AsdfWarning, match="tag:stsci.edu:asdf/core/complex"):
+    with pytest.warns(AsdfConversionWarning, match="tag:stsci.edu:asdf/core/complex"):
         with asdf.open(buff, ignore_version_mismatch=False) as ff:
             assert isinstance(ff.tree['a'], complex)
 
     # Make sure the warning does not occur if it is being ignored (default)
     buff.seek(0)
-    with helpers.assert_no_warnings():
+    with helpers.assert_no_warnings(AsdfConversionWarning):
         with asdf.open(buff) as ff:
             assert isinstance(ff.tree['a'], complex)
 
-    # If the major and minor match, there should be no warning.
+    # If the major and minor match, but the patch doesn't, there
+    # should still be a warning.
     yaml = """
 a: !core/complex-1.0.1
   0j
     """
 
     buff = helpers.yaml_to_asdf(yaml)
-    with helpers.assert_no_warnings():
+    with pytest.warns(AsdfConversionWarning, match="tag:stsci.edu:asdf/core/complex"):
         with asdf.open(buff, ignore_version_mismatch=False) as ff:
             assert isinstance(ff.tree['a'], complex)
 
@@ -221,15 +222,15 @@ a: !core/complex-42.0.0
 
     expected_uri = util.filepath_to_url(str(testfile))
 
-    with pytest.warns(AsdfWarning, match="tag:stsci.edu:asdf/core/complex"):
+    with pytest.warns(AsdfConversionWarning, match="tag:stsci.edu:asdf/core/complex"):
         with asdf.open(testfile, ignore_version_mismatch=False) as ff:
             assert ff._fname == expected_uri
             assert isinstance(ff.tree['a'], complex)
 
 
 def test_version_mismatch_with_supported_versions():
-    """Make sure that defining the supported_versions field does not affect
-    whether or not schema mismatch warnings are triggered."""
+    """Make sure that defining the supported_versions field eliminates
+    the schema mismatch warning."""
 
     class CustomFlow:
         pass
@@ -254,7 +255,7 @@ flow_thing:
     d: 3.14
 """
     buff = helpers.yaml_to_asdf(yaml)
-    with pytest.warns(AsdfWarning, match="tag:nowhere.org:custom/custom_flow"):
+    with helpers.assert_no_warnings():
         asdf.open(buff, ignore_version_mismatch=False,
             extensions=CustomFlowExtension())
 

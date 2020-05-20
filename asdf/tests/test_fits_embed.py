@@ -18,7 +18,7 @@ from jsonschema.exceptions import ValidationError
 import asdf
 from asdf import fits_embed
 from asdf import open as asdf_open
-from asdf.exceptions import AsdfWarning
+from asdf.exceptions import AsdfWarning, AsdfConversionWarning
 
 from .helpers import (
     assert_tree_match,
@@ -344,49 +344,25 @@ def test_bad_input(tmpdir):
         asdf_open(text_file)
 
 def test_version_mismatch_file():
-
     testfile = str(get_test_data_path('version_mismatch.fits'))
 
-    with pytest.warns(None) as w:
+    with pytest.warns(AsdfConversionWarning, match="tag:stsci.edu:asdf/core/complex"):
         with asdf.open(testfile,
                 ignore_version_mismatch=False) as fits_handle:
             assert fits_handle.tree['a'] == complex(0j)
-    # This is the warning that we expect from opening the FITS file
-    expected_messages = {
-        (
-            "'tag:stsci.edu:asdf/core/complex' with version 7.0.0 found in file "
-            "'{}', but latest supported version is 1.0.0".format(testfile)
-        ),
-        (
-            "'tag:stsci.edu:asdf/core/asdf' with version 1.0.0 found in file "
-            "'{}', but latest supported version is 1.1.0".format(testfile)
-        ),
-    }
-    assert expected_messages == {warn.message.args[0] for warn in w}, display_warnings(w)
 
     # Make sure warning does not occur when warning is ignored (default)
-    with assert_no_warnings():
+    with assert_no_warnings(AsdfConversionWarning):
         with asdf.open(testfile) as fits_handle:
             assert fits_handle.tree['a'] == complex(0j)
 
-    with pytest.warns(None) as w:
+    with pytest.warns(AsdfConversionWarning, match="tag:stsci.edu:asdf/core/complex"):
         with fits_embed.AsdfInFits.open(testfile,
                 ignore_version_mismatch=False) as fits_handle:
             assert fits_handle.tree['a'] == complex(0j)
-    expected_messages = {
-        (
-            "'tag:stsci.edu:asdf/core/complex' with version 7.0.0 found in file "
-            "'{}', but latest supported version is 1.0.0".format(testfile)
-        ),
-        (
-            "'tag:stsci.edu:asdf/core/asdf' with version 1.0.0 found in file "
-            "'{}', but latest supported version is 1.1.0".format(testfile)
-        ),
-    }
-    assert expected_messages == {warn.message.args[0] for warn in w}, display_warnings(w)
 
     # Make sure warning does not occur when warning is ignored (default)
-    with assert_no_warnings():
+    with assert_no_warnings(AsdfConversionWarning):
         with fits_embed.AsdfInFits.open(testfile) as fits_handle:
             assert fits_handle.tree['a'] == complex(0j)
 

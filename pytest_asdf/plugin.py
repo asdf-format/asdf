@@ -4,6 +4,7 @@ import io
 import os
 from importlib.util import find_spec
 from pkg_resources import parse_version
+import warnings
 
 import yaml
 import pytest
@@ -33,13 +34,20 @@ def pytest_addoption(parser):
         type="bool",
         default=False,
     )
+    parser.addini(
+        "asdf_schema_ignore_version_mismatch",
+        "Set to true to disable warnings when missing explicit support for a tag",
+        type="bool",
+        default=True
+    )
     parser.addoption('--asdf-tests', action='store_true',
         help='Enable ASDF schema tests')
 
 
 class AsdfSchemaFile(pytest.File):
     @classmethod
-    def from_parent(cls, parent, *, fspath, skip_examples=False, ignore_unrecognized_tag=False, **kwargs):
+    def from_parent(cls, parent, *, fspath, skip_examples=False,
+        ignore_unrecognized_tag=False, ignore_version_mismatch=False, **kwargs):
         if hasattr(super(), "from_parent"):
             result = super().from_parent(parent, fspath=fspath, **kwargs)
         else:
@@ -47,6 +55,7 @@ class AsdfSchemaFile(pytest.File):
 
         result.skip_examples = skip_examples
         result.ignore_unrecognized_tag = ignore_unrecognized_tag
+        result.ignore_version_mismatch = ignore_version_mismatch
         return result
 
     def collect(self):
@@ -57,7 +66,8 @@ class AsdfSchemaFile(pytest.File):
                     self,
                     self.fspath,
                     example,
-                    ignore_unrecognized_tag=self.ignore_unrecognized_tag
+                    ignore_unrecognized_tag=self.ignore_unrecognized_tag,
+                    ignore_version_mismatch=self.ignore_version_mismatch,
                 )
 
     def find_examples_in_schema(self):
@@ -134,7 +144,8 @@ def parse_schema_filename(filename):
 
 class AsdfSchemaExampleItem(pytest.Item):
     @classmethod
-    def from_parent(cls, parent, schema_path, example, ignore_unrecognized_tag=False, **kwargs):
+    def from_parent(cls, parent, schema_path, example,
+        ignore_unrecognized_tag=False, ignore_version_mismatch=False, **kwargs):
         test_name = "{}-example".format(schema_path)
         if hasattr(super(), "from_parent"):
             result = super().from_parent(parent, name=test_name, **kwargs)
@@ -143,6 +154,7 @@ class AsdfSchemaExampleItem(pytest.Item):
         result.filename = str(schema_path)
         result.example = example
         result.ignore_unrecognized_tag = ignore_unrecognized_tag
+        result.ignore_version_mismatch = ignore_version_mismatch
         return result
 
     def _find_standard_version(self, name, version):
@@ -157,6 +169,7 @@ class AsdfSchemaExampleItem(pytest.Item):
     def runtest(self):
         from asdf import AsdfFile, block, util
         from asdf.tests import helpers
+        from asdf.exceptions import AsdfDeprecationWarning
 
         name, version = parse_schema_filename(self.filename)
         if should_skip(name, version):
@@ -168,9 +181,11 @@ class AsdfSchemaExampleItem(pytest.Item):
         # ASDF standard document) are valid.
         buff = helpers.yaml_to_asdf(
             'example: ' + self.example.strip(), standard_version=standard_version)
+
         ff = AsdfFile(
             uri=util.filepath_to_url(os.path.abspath(self.filename)),
             ignore_unrecognized_tag=self.ignore_unrecognized_tag,
+            ignore_version_mismatch=self.ignore_version_mismatch,
         )
 
         # Fake an external file
@@ -218,6 +233,7 @@ def pytest_collect_file(path, parent):
     skip_names = parent.config.getini('asdf_schema_skip_names')
     skip_examples = parent.config.getini('asdf_schema_skip_examples')
     ignore_unrecognized_tag = parent.config.getini('asdf_schema_ignore_unrecognized_tag')
+    ignore_version_mismatch = parent.config.getini('asdf_schema_ignore_version_mismatch')
 
     schema_roots = [os.path.join(str(parent.config.rootdir), os.path.normpath(root))
                         for root in schema_roots]
@@ -232,6 +248,7 @@ def pytest_collect_file(path, parent):
                 fspath=path,
                 skip_examples=(path.purebasename in skip_examples),
                 ignore_unrecognized_tag=ignore_unrecognized_tag,
+                ignore_version_mismatch=ignore_version_mismatch,
             )
 
     return None

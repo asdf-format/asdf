@@ -24,7 +24,7 @@ from . import version
 from . import versioning
 from . import yamlutil
 from . import _display as display
-from .exceptions import AsdfDeprecationWarning, AsdfWarning
+from .exceptions import AsdfDeprecationWarning, AsdfWarning, AsdfConversionWarning
 from .extension import AsdfExtensionList, default_extensions
 from .util import NotSet
 from .search import AsdfSearchResult
@@ -122,6 +122,10 @@ class AsdfFile(versioning.VersionedMixin):
         self._ignore_version_mismatch = ignore_version_mismatch
         self._ignore_unrecognized_tag = ignore_unrecognized_tag
         self._ignore_implicit_conversion = ignore_implicit_conversion
+
+        # Set of (string, string) tuples representing tag version mismatches
+        # that we've already warned about for this file.
+        self._warned_tag_pairs = set()
 
         self._file_format_version = None
 
@@ -656,7 +660,7 @@ class AsdfFile(versioning.VersionedMixin):
             # We parse the YAML content into basic data structures
             # now, but we don't do anything special with it until
             # after the blocks have been read
-            tree = yamlutil.load_tree(reader, self, self._ignore_version_mismatch)
+            tree = yamlutil.load_tree(reader)
             has_blocks = fd.seek_until(constants.BLOCK_MAGIC, 4, include=True)
         elif yaml_token == constants.BLOCK_MAGIC:
             has_blocks = True
@@ -1335,6 +1339,20 @@ class AsdfFile(versioning.VersionedMixin):
         """
         result = AsdfSearchResult(["root.tree"], self.tree)
         return result.search(key=key, type=type, value=value, filter=filter)
+
+    # This function is called from within TypeIndex when deserializing
+    # the tree for this file.  It is kept here so that we can keep
+    # state on the AsdfFile and prevent a flood of warnings for the
+    # same tag.
+    def _warn_tag_mismatch(self, tag, best_tag):
+        if not self._ignore_version_mismatch and (tag, best_tag) not in self._warned_tag_pairs:
+            message = (
+                "No explicit ExtensionType support provided for tag '{}'. "
+                "The ExtensionType subclass for tag '{}' will be used instead. "
+                "This fallback behavior will be removed in asdf 3.0."
+            ).format(tag, best_tag)
+            warnings.warn(message, AsdfConversionWarning)
+            self._warned_tag_pairs.add((tag, best_tag))
 
 
 # Inherit docstring from dictionary
