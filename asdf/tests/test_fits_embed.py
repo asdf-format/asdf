@@ -4,7 +4,6 @@
 
 import copy
 import os
-import sys
 import pytest
 
 import numpy as np
@@ -337,8 +336,6 @@ def test_bad_input(tmpdir):
     with pytest.raises(ValueError):
         asdf_open(text_file)
 
-@pytest.mark.skipif(sys.platform.startswith('win'),
-    reason='Avoid path manipulation on Windows')
 def test_version_mismatch_file():
 
     testfile = str(get_test_data_path('version_mismatch.fits'))

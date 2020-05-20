@@ -3,7 +3,6 @@
 
 import io
 import os
-import sys
 from fractions import Fraction
 
 import pytest
@@ -223,8 +222,6 @@ a: !core/complex-1.0.1
     assert len(warning) == 0
 
 
-@pytest.mark.skipif(sys.platform.startswith('win'),
-    reason='Avoid path manipulation on Windows')
 def test_version_mismatch_file(tmpdir):
     testfile = os.path.join(str(tmpdir), 'mismatch.asdf')
     yaml = """
@@ -236,15 +233,18 @@ a: !core/complex-42.0.0
     with open(testfile, 'wb') as handle:
         handle.write(buff.read())
 
+    expected_uri = util.filepath_to_url(str(testfile))
+
     with pytest.warns(None) as w:
         with asdf.open(testfile, ignore_version_mismatch=False) as ff:
-            assert ff._fname == "file://{}".format(testfile)
+            assert ff._fname == expected_uri
             assert isinstance(ff.tree['a'], complex)
 
     assert len(w) == 1
     assert str(w[0].message) == (
         "'tag:stsci.edu:asdf/core/complex' with version 42.0.0 found in file "
-        "'file://{}', but latest supported version is 1.0.0".format(testfile))
+        "'{}', but latest supported version is 1.0.0".format(expected_uri)
+    )
 
 
 def test_version_mismatch_with_supported_versions():
