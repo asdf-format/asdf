@@ -233,7 +233,7 @@ def _assert_roundtrip_tree(tree, tmpdir, *, asdf_check_func=None,
             asdf_check_func(ff)
 
     # Now try everything on an HTTP range server
-    if not INTERNET_OFF and not sys.platform.startswith('win'):
+    if not INTERNET_OFF:
         server = RangeHTTPServer()
         try:
             ff = AsdfFile(tree, extensions=extensions, **init_options)
