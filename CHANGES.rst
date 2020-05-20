@@ -17,6 +17,9 @@
 
 - All warnings now subclass ``asdf.exceptions.AsdfWarning``. [#804]
 
+- Improve warning message when falling back to an older schema,
+  and note that fallback behavior will be removed in 3.0. [#806]
+
 2.6.1 (unreleased)
 ------------------
 

@@ -4,7 +4,6 @@ import io
 import os
 from importlib.util import find_spec
 from pkg_resources import parse_version
-import warnings
 
 import yaml
 import pytest
@@ -169,7 +168,6 @@ class AsdfSchemaExampleItem(pytest.Item):
     def runtest(self):
         from asdf import AsdfFile, block, util
         from asdf.tests import helpers
-        from asdf.exceptions import AsdfDeprecationWarning
 
         name, version = parse_schema_filename(self.filename)
         if should_skip(name, version):

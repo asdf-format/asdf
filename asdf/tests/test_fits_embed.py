@@ -22,7 +22,6 @@ from asdf.exceptions import AsdfWarning, AsdfConversionWarning
 
 from .helpers import (
     assert_tree_match,
-    display_warnings,
     get_test_data_path,
     yaml_to_asdf,
     assert_no_warnings,

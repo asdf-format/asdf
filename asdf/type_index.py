@@ -265,7 +265,6 @@ class AsdfTypeIndex:
         version in the file.
         """
         if tag in self._type_by_tag:
-            asdftype = self._type_by_tag[tag]
             return tag
 
         if tag in self._best_matches:
