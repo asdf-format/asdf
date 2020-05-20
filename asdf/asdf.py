@@ -24,7 +24,7 @@ from . import version
 from . import versioning
 from . import yamlutil
 from . import _display as display
-from .exceptions import AsdfDeprecationWarning
+from .exceptions import AsdfDeprecationWarning, AsdfWarning
 from .extension import AsdfExtensionList, default_extensions
 from .util import NotSet
 from .search import AsdfSearchResult
@@ -186,7 +186,7 @@ class AsdfFile(versioning.VersionedMixin):
                 if strict:
                     raise RuntimeError(fmt_msg)
                 else:
-                    warnings.warn(fmt_msg)
+                    warnings.warn(fmt_msg, AsdfWarning)
 
             elif extension.software:
                 installed = self._extension_metadata[extension.extension_class]
@@ -205,7 +205,7 @@ class AsdfFile(versioning.VersionedMixin):
                     if strict:
                         raise RuntimeError(fmt_msg)
                     else:
-                        warnings.warn(fmt_msg)
+                        warnings.warn(fmt_msg, AsdfWarning)
 
     def _process_extensions(self, extensions):
         if extensions is None or extensions == []:
@@ -241,7 +241,8 @@ class AsdfFile(versioning.VersionedMixin):
             self.tree['history'] = dict(entries=histlist, extensions=[])
             warnings.warn("The ASDF history format has changed in order to "
                           "support metadata about extensions. History entries "
-                          "should now be stored under tree['history']['entries'].")
+                          "should now be stored under tree['history']['entries'].",
+                          AsdfWarning)
         elif 'extensions' not in self.tree['history']:
             self.tree['history']['extensions'] = []
 

@@ -4,6 +4,7 @@ import io
 import os
 import sys
 import warnings
+from contextlib import contextmanager
 
 try:
     from astropy.coordinates import ICRS
@@ -365,6 +366,18 @@ def display_warnings(_warnings):
             warning.category.__name__,
             warning.message)
     return msg
+
+
+@contextmanager
+def assert_no_warnings():
+    """
+    Assert that no warnings were emitted within the context.
+    Requires that pytest be installed.
+    """
+    import pytest
+    with pytest.warns(None) as recorded_warnings:
+        yield
+    assert len(recorded_warnings) == 0, display_warnings(recorded_warnings)
 
 
 def assert_extension_correctness(extension):

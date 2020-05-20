@@ -11,7 +11,7 @@ from . import resolver
 from .util import get_class_name
 from .type_index import AsdfTypeIndex
 from .version import version as asdf_version
-from .exceptions import AsdfDeprecationWarning
+from .exceptions import AsdfDeprecationWarning, AsdfWarning
 
 
 __all__ = ['AsdfExtension', 'AsdfExtensionList']
@@ -199,7 +199,8 @@ class _DefaultExtensions:
             if not issubclass(ext, AsdfExtension):
                 warnings.warn("Found entry point {}, from {} but it is not a "
                               "subclass of AsdfExtension, as expected. It is "
-                              "being ignored.".format(ext, entry_point.dist))
+                              "being ignored.".format(ext, entry_point.dist),
+                              AsdfWarning)
                 continue
 
             dist = entry_point.dist

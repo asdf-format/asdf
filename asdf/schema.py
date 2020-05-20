@@ -23,7 +23,7 @@ from . import treeutil
 from . import util
 from .compat.jsonschemacompat import JSONSCHEMA_LT_3
 from . import extension
-from .exceptions import AsdfDeprecationWarning
+from .exceptions import AsdfDeprecationWarning, AsdfWarning
 
 
 YAML_SCHEMA_METASCHEMA_ID = 'http://stsci.edu/schemas/yaml-schema/draft-01'
@@ -308,7 +308,7 @@ def _create_validator(validators=YAML_VALIDATORS, visit_repeat_nodes=False):
                                 s = _load_schema_cached(schema_path, self.ctx.resolver, False, False)
                             except FileNotFoundError:
                                 msg = "Unable to locate schema file for '{}': '{}'"
-                                warnings.warn(msg.format(tag, schema_path))
+                                warnings.warn(msg.format(tag, schema_path), AsdfWarning)
                                 s = {}
                             if s:
                                 with self.resolver.in_scope(schema_path):
@@ -576,7 +576,8 @@ def validate_large_literals(instance, reading=False):
         warnings.warn(
             "Invalid integer literal value {0} detected while reading file. "
             "The value has been read safely, but the file should be "
-            "fixed.".format(instance)
+            "fixed.".format(instance),
+            AsdfWarning
         )
 
 

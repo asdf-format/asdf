@@ -18,8 +18,15 @@ from jsonschema.exceptions import ValidationError
 import asdf
 from asdf import fits_embed
 from asdf import open as asdf_open
+from asdf.exceptions import AsdfWarning
 
-from .helpers import assert_tree_match, display_warnings, get_test_data_path, yaml_to_asdf
+from .helpers import (
+    assert_tree_match,
+    display_warnings,
+    get_test_data_path,
+    yaml_to_asdf,
+    assert_no_warnings,
+)
 
 
 def create_asdf_in_fits():
@@ -358,10 +365,9 @@ def test_version_mismatch_file():
     assert expected_messages == {warn.message.args[0] for warn in w}, display_warnings(w)
 
     # Make sure warning does not occur when warning is ignored (default)
-    with pytest.warns(None) as w:
+    with assert_no_warnings():
         with asdf.open(testfile) as fits_handle:
             assert fits_handle.tree['a'] == complex(0j)
-    assert len(w) == 0, display_warnings(w)
 
     with pytest.warns(None) as w:
         with fits_embed.AsdfInFits.open(testfile,
@@ -380,10 +386,10 @@ def test_version_mismatch_file():
     assert expected_messages == {warn.message.args[0] for warn in w}, display_warnings(w)
 
     # Make sure warning does not occur when warning is ignored (default)
-    with pytest.warns(None) as w:
+    with assert_no_warnings():
         with fits_embed.AsdfInFits.open(testfile) as fits_handle:
             assert fits_handle.tree['a'] == complex(0j)
-    assert len(w) == 0, display_warnings(w)
+
 
 def test_serialize_table(tmpdir):
     tmpfile = str(tmpdir.join('table.fits'))
@@ -406,20 +412,14 @@ def test_serialize_table(tmpdir):
 def test_extension_check():
     testfile = get_test_data_path('extension_check.fits')
 
-    with pytest.warns(None) as warnings:
+    with pytest.warns(AsdfWarning, match="was created with extension 'foo.bar.FooBar'"):
         with asdf.open(testfile):
             pass
 
-    assert len(warnings) == 1, display_warnings(warnings)
-    assert ("was created with extension 'foo.bar.FooBar', which is not "
-        "currently installed (from package foo-1.2.3)") in str(warnings[0].message)
-
     # Make sure that suppressing the warning works as well
-    with pytest.warns(None) as warnings:
+    with assert_no_warnings():
         with asdf.open(testfile, ignore_missing_extensions=True):
             pass
-
-    assert len(warnings) == 0, display_warnings(warnings)
 
     with pytest.raises(RuntimeError):
         with asdf.open(testfile, strict_extension_check=True):
