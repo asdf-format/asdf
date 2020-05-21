@@ -16,6 +16,7 @@ from asdf import tagged
 from asdf import treeutil
 from asdf import yamlutil
 from asdf.compat.numpycompat import NUMPY_LT_1_14
+from asdf.exceptions import AsdfWarning
 
 from . import helpers
 
@@ -179,13 +180,13 @@ def test_implicit_conversion_warning():
         "val": nt(1, 2, np.ones(3))
     }
 
-    with pytest.warns(UserWarning, match="Failed to serialize instance"):
+    with pytest.warns(AsdfWarning, match="Failed to serialize instance"):
         with asdf.AsdfFile(tree):
             pass
 
-    with pytest.warns(None) as w:
+    with helpers.assert_no_warnings():
         with asdf.AsdfFile(tree, ignore_implicit_conversion=True):
-            assert len(w) == 0
+            pass
 
 
 @pytest.mark.xfail(reason='pyyaml has a bug and does not support tuple keys')

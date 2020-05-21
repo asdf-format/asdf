@@ -9,6 +9,7 @@ from collections import OrderedDict
 from . import util
 from .versioning import (AsdfVersion, get_version_map, default_version,
                          split_tag_version, join_tag_version)
+from .exceptions import AsdfWarning
 
 
 __all__ = ['AsdfTypeIndex']
@@ -275,7 +276,7 @@ class AsdfTypeIndex:
             # TODO: If it is useful to only have a single warning per file on
             # disk, then use `fname` in the key instead of `ctx`.
             if not (ctx, tag) in self._has_warned:
-                warnings.warn(warning_string.format(fname))
+                warnings.warn(warning_string.format(fname), AsdfWarning)
                 self._has_warned[(ctx, tag)] = True
 
     def fix_yaml_tag(self, ctx, tag, ignore_version_mismatch=True):

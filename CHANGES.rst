@@ -15,6 +15,8 @@
 - Prevent validation of empty tree when ``AsdfFile`` is
   initialized. [#794]
 
+- All warnings now subclass ``asdf.exceptions.AsdfWarning``. [#804]
+
 2.6.1 (unreleased)
 ------------------
 

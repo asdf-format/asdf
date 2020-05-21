@@ -12,6 +12,7 @@ from copy import copy
 from . import tagged
 from . import util
 from .versioning import AsdfVersion, AsdfSpec
+from .exceptions import AsdfWarning
 
 
 __all__ = ['format_tag', 'CustomType']
@@ -332,7 +333,8 @@ class ExtensionType:
                     "Failed to add subclass attribute(s) to node that is "
                     "not an object (is a {}). No subclass attributes are being "
                     "added (tag={}, subclass={})".format(
-                        type(obj).__name__, cls, node_cls)
+                        type(obj).__name__, cls, node_cls),
+                    AsdfWarning
                 )
 
         return tagged.tag_object(cls.yaml_tag, obj, ctx=ctx)

@@ -4,7 +4,7 @@
 import pytest
 
 from asdf import types
-from asdf.exceptions import AsdfConversionWarning
+from asdf.exceptions import AsdfConversionWarning, AsdfWarning
 from asdf.tests.helpers import assert_roundtrip_tree
 
 
@@ -45,8 +45,5 @@ def test_conversion_error(tmpdir):
     tree = dict(foo=foo)
 
     with pytest.raises(AsdfConversionWarning):
-        with pytest.warns(UserWarning) as w:
+        with pytest.warns(AsdfWarning, match="Unable to locate schema file"):
             assert_roundtrip_tree(tree, tmpdir, extensions=FooExtension())
-        # Make sure we still get other warnings
-        assert len(w) == 1
-        assert str(w[0].message).startswith('Unable to locate schema file')

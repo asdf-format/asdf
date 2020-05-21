@@ -18,8 +18,13 @@ from asdf import extension
 from asdf import resolver
 from asdf import schema
 from asdf import versioning
-from asdf.exceptions import AsdfDeprecationWarning
-from .helpers import assert_tree_match, assert_roundtrip_tree, display_warnings, yaml_to_asdf
+from asdf.exceptions import AsdfDeprecationWarning, AsdfWarning
+from .helpers import (
+    assert_tree_match,
+    assert_roundtrip_tree,
+    yaml_to_asdf,
+    assert_no_warnings,
+)
 
 
 def test_get_data_from_closed_file(tmpdir):
@@ -47,9 +52,8 @@ def test_no_warning_nan_array(tmpdir):
 
     tree = dict(array=np.array([1, 2, np.nan]))
 
-    with pytest.warns(None) as w:
+    with assert_no_warnings():
         assert_roundtrip_tree(tree, tmpdir)
-        assert len(w) == 0, display_warnings(w)
 
 
 def test_warning_deprecated_open(tmpdir):
@@ -310,9 +314,8 @@ def test_extension_version_check(installed, extension, warns):
     }
 
     if warns:
-        with pytest.warns(UserWarning) as w:
+        with pytest.warns(AsdfWarning, match="File 'test.asdf' was created with"):
             af._check_extensions(tree)
-        assert str(w[0].message).startswith("File 'test.asdf' was created with")
 
         with pytest.raises(RuntimeError) as err:
             af._check_extensions(tree, strict=True)
