@@ -307,6 +307,6 @@ def test_numpy_scalar(numpy_value, expected_value):
     buffer.seek(0)
 
     if isinstance(expected_value, float) and NUMPY_LT_1_14:
-        assert yamlutil.load_tree(buffer, ctx)["value"] == pytest.approx(expected_value, rel=0.001)
+        assert yamlutil.load_tree(buffer)["value"] == pytest.approx(expected_value, rel=0.001)
     else:
-        assert yamlutil.load_tree(buffer, ctx)["value"] == expected_value
+        assert yamlutil.load_tree(buffer)["value"] == expected_value

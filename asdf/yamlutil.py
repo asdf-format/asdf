@@ -174,17 +174,17 @@ class AsdfLoader(_yaml_base_loader):
             return super().construct_undefined(node)
 
     def _construct_tagged_mapping(self, node):
-        data = tagged.tag_object(self._fix_tag(node), {})
+        data = tagged.tag_object(node.tag, {})
         yield data
         data.update(self.construct_mapping(node))
 
     def _construct_tagged_sequence(self, node):
-        data = tagged.tag_object(self._fix_tag(node), [])
+        data = tagged.tag_object(node.tag, [])
         yield data
         data.extend(self.construct_sequence(node))
 
     def _construct_tagged_scalar(self, node):
-        return tagged.tag_object(self._fix_tag(node), self.construct_scalar(node))
+        return tagged.tag_object(node.tag, self.construct_scalar(node))
 
     # Custom omap deserializer that builds an OrderedDict instead
     # of a list of tuples.  Code is mostly identical to pyyaml's SafeConstructor.
@@ -207,10 +207,6 @@ class AsdfLoader(_yaml_base_loader):
             key = self.construct_object(key_node)
             value = self.construct_object(value_node)
             omap[key] = value
-
-    def _fix_tag(self, node):
-        return self.ctx.type_index.fix_yaml_tag(
-            self.ctx, node.tag, self.ignore_version_mismatch)
 
 
 # pyyaml will invoke the constructor associated with None when a node's
@@ -251,27 +247,26 @@ def tagged_tree_to_custom_tree(tree, ctx, force_raw_types=False):
         if force_raw_types:
             return node
 
-        tag_name = getattr(node, '_tag', None)
-        if tag_name is None:
+        tag = getattr(node, '_tag', None)
+        if tag is None:
             return node
 
-        tag_type = ctx.type_index.from_yaml_tag(ctx, tag_name)
+        tag_type = ctx.type_index.from_yaml_tag(ctx, tag)
         # This means the tag did not correspond to any type in our type index.
         if tag_type is None:
             if not ctx._ignore_unrecognized_tag:
                 warnings.warn("{} is not recognized, converting to raw Python "
-                    "data structure".format(tag_name), AsdfConversionWarning)
+                    "data structure".format(tag), AsdfConversionWarning)
             return node
 
-        real_tag = ctx.type_index.get_real_tag(tag_name)
-        real_tag_name, real_tag_version = split_tag_version(real_tag)
+        tag_name, tag_version = split_tag_version(tag)
         # This means that there is an explicit description of versions that are
         # compatible with the associated tag class implementation, but the
         # version we found does not fit that description.
-        if tag_type.incompatible_version(real_tag_version):
+        if tag_type.incompatible_version(tag_version):
             warnings.warn("Version {} of {} is not compatible with any "
                 "existing tag implementations".format(
-                    real_tag_version, real_tag_name),
+                    tag_version, tag_name),
                 AsdfConversionWarning)
             return node
 
@@ -284,7 +279,7 @@ def tagged_tree_to_custom_tree(tree, ctx, force_raw_types=False):
             return tag_type.from_tree_tagged(node, ctx)
         except TypeError as err:
             warnings.warn("Failed to convert {} to custom type (detail: {}). "
-                "Using raw Python data structure instead".format(real_tag, err),
+                "Using raw Python data structure instead".format(tag, err),
                 AsdfConversionWarning)
 
         return node
@@ -300,7 +295,7 @@ def tagged_tree_to_custom_tree(tree, ctx, force_raw_types=False):
     )
 
 
-def load_tree(stream, ctx, ignore_version_mismatch=False):
+def load_tree(stream):
     """
     Load YAML, returning a tree of objects.
 
@@ -309,12 +304,7 @@ def load_tree(stream, ctx, ignore_version_mismatch=False):
     stream : readable file-like object
         Stream containing the raw YAML content.
     """
-    class AsdfLoaderTmp(AsdfLoader):
-        pass
-    AsdfLoaderTmp.ctx = ctx
-    AsdfLoaderTmp.ignore_version_mismatch = ignore_version_mismatch
-
-    return yaml.load(stream, Loader=AsdfLoaderTmp)
+    return yaml.load(stream, Loader=AsdfLoader)
 
 
 def dump_tree(tree, fd, ctx):

@@ -2,14 +2,12 @@
 # -*- coding: utf-8 -*-
 
 import bisect
-import warnings
 from functools import lru_cache
 from collections import OrderedDict
 
 from . import util
 from .versioning import (AsdfVersion, get_version_map, default_version,
                          split_tag_version, join_tag_version)
-from .exceptions import AsdfWarning
 
 
 __all__ = ['AsdfTypeIndex']
@@ -201,7 +199,6 @@ class AsdfTypeIndex:
         # the same type, the result is currently undefined.
         self._versions_by_type_name = OrderedDict()
         self._best_matches = {}
-        self._real_tag = {}
         self._unnamed_types = set()
         self._hooks_by_type = {}
         self._all_types = set()
@@ -258,28 +255,7 @@ class AsdfTypeIndex:
 
         return write_type_index.from_custom_type(custom_type)
 
-    def _get_version_mismatch(self, name, version, latest_version):
-        warning_string = None
-
-        if (latest_version.major, latest_version.minor) != \
-                (version.major, version.minor):
-            warning_string = \
-                "'{}' with version {} found in file{{}}, but latest " \
-                "supported version is {}".format(
-                    name, version, latest_version)
-
-        return warning_string
-
-    def _warn_version_mismatch(self, ctx, tag, warning_string, fname):
-        if warning_string is not None:
-            # Ensure that only a single warning occurs per tag per AsdfFile
-            # TODO: If it is useful to only have a single warning per file on
-            # disk, then use `fname` in the key instead of `ctx`.
-            if not (ctx, tag) in self._has_warned:
-                warnings.warn(warning_string.format(fname), AsdfWarning)
-                self._has_warned[(ctx, tag)] = True
-
-    def fix_yaml_tag(self, ctx, tag, ignore_version_mismatch=True):
+    def fix_yaml_tag(self, ctx, tag):
         """
         Given a YAML tag, adjust it to the best supported version.
 
@@ -287,37 +263,16 @@ class AsdfTypeIndex:
         understood that is still less than the version in file.  Or,
         the earliest understood version if none are less than the
         version in the file.
-
-        If ``ignore_version_mismatch==False``, this function raises a warning
-        if it could not find a match where the major and minor numbers are the
-        same.
         """
-        warning_string = None
-
-        name, version = split_tag_version(tag)
-
-        fname = " '{}'".format(ctx._fname) if ctx._fname else ''
-
         if tag in self._type_by_tag:
-            asdftype = self._type_by_tag[tag]
-            # Issue warnings for the case where there exists a class for the
-            # given tag due to the 'supported_versions' attribute being
-            # defined, but this tag is not the latest version of the type.
-            # This prevents 'supported_versions' from affecting the behavior of
-            # warnings that are purely related to YAML validation.
-            if not ignore_version_mismatch and hasattr(asdftype, '_latest_version'):
-                warning_string = self._get_version_mismatch(
-                    name, version, asdftype._latest_version)
-                self._warn_version_mismatch(ctx, tag, warning_string, fname)
             return tag
 
         if tag in self._best_matches:
-            best_tag, warning_string = self._best_matches[tag]
-
-            if not ignore_version_mismatch:
-                self._warn_version_mismatch(ctx, tag, warning_string, fname)
-
+            best_tag = self._best_matches[tag]
+            ctx._warn_tag_mismatch(tag, best_tag)
             return best_tag
+
+        name, version = split_tag_version(tag)
 
         versions = self._versions_by_type_name.get(name)
         if versions is None:
@@ -327,25 +282,11 @@ class AsdfTypeIndex:
         # quickly find the best option.
         i = bisect.bisect_left(versions, version)
         i = max(0, i - 1)
-
-        if not ignore_version_mismatch:
-            warning_string = self._get_version_mismatch(
-                name, version, versions[-1])
-            self._warn_version_mismatch(ctx, tag, warning_string, fname)
-
         best_version = versions[i]
         best_tag = join_tag_version(name, best_version)
-        self._best_matches[tag] = best_tag, warning_string
-        if tag != best_tag:
-            self._real_tag[best_tag] = tag
+        ctx._warn_tag_mismatch(tag, best_tag)
+        self._best_matches[tag] = best_tag
         return best_tag
-
-    def get_real_tag(self, tag):
-        if tag in self._real_tag:
-            return self._real_tag[tag]
-        elif tag in self._type_by_tag:
-            return tag
-        return None
 
     def from_yaml_tag(self, ctx, tag):
         """
