@@ -21,7 +21,6 @@ from . import generic_io
 from . import reference
 from . import treeutil
 from . import util
-from .compat.jsonschemacompat import JSONSCHEMA_LT_3
 from . import extension
 from .exceptions import AsdfDeprecationWarning, AsdfWarning
 
@@ -249,29 +248,20 @@ class _ValidationContext:
 def _create_validator(validators=YAML_VALIDATORS, visit_repeat_nodes=False):
     meta_schema = _load_schema_cached(YAML_SCHEMA_METASCHEMA_ID, extension.get_default_resolver(), False, False)
 
-    if JSONSCHEMA_LT_3:
-        base_cls = mvalidators.create(meta_schema=meta_schema, validators=validators)
-    else:
-        type_checker = mvalidators.Draft4Validator.TYPE_CHECKER.redefine_many({
-            'array': lambda checker, instance: isinstance(instance, list) or isinstance(instance, tuple),
-            'integer': lambda checker, instance: not isinstance(instance, bool) and isinstance(instance, Integral),
-            'string': lambda checker, instance: isinstance(instance, (str, np.str_)),
-        })
-        id_of = mvalidators.Draft4Validator.ID_OF
-        base_cls = mvalidators.create(
-            meta_schema=meta_schema,
-            validators=validators,
-            type_checker=type_checker,
-            id_of=id_of
-        )
+    type_checker = mvalidators.Draft4Validator.TYPE_CHECKER.redefine_many({
+        'array': lambda checker, instance: isinstance(instance, list) or isinstance(instance, tuple),
+        'integer': lambda checker, instance: not isinstance(instance, bool) and isinstance(instance, Integral),
+        'string': lambda checker, instance: isinstance(instance, (str, np.str_)),
+    })
+    id_of = mvalidators.Draft4Validator.ID_OF
+    base_cls = mvalidators.create(
+        meta_schema=meta_schema,
+        validators=validators,
+        type_checker=type_checker,
+        id_of=id_of
+    )
 
     class ASDFValidator(base_cls):
-        if JSONSCHEMA_LT_3:
-            DEFAULT_TYPES = base_cls.DEFAULT_TYPES.copy()
-            DEFAULT_TYPES['array'] = (list, tuple)
-            DEFAULT_TYPES['integer'] = (Integral)
-            DEFAULT_TYPES['string'] = (str, np.str_)
-
         def __init__(self, *args, **kwargs):
             super().__init__(*args, **kwargs)
             self._context = _ValidationContext()

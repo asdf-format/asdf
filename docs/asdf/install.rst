@@ -12,15 +12,15 @@ Requirements
 
 The ``asdf`` package has the following dependencies:
 
-- `python <https://www.python.org/>`__  3.3 or later
+- `python <https://www.python.org/>`__  3.5 or later
 
-- `numpy <https://www.numpy.org/>`__ 1.8 or later
+- `numpy <https://www.numpy.org/>`__ 1.10 or later
 
-- `jsonschema <https://python-jsonschema.readthedocs.io/>`__ 2.3.0 or later
+- `jsonschema <https://python-jsonschema.readthedocs.io/>`__ 3.0.2 or later
 
 - `pyyaml <https://pyyaml.org>`__ 3.10 or later
 
-- `semantic_version <https://python-semanticversion.readthedocs.io/>`__ 2.3.1 or later
+- `semantic_version <https://python-semanticversion.readthedocs.io/>`__ 2.8 or later
 
 Support for units, time, transform, wcs, or running the tests also
 requires:
@@ -31,10 +31,6 @@ Optional support for `lz4 <https://en.wikipedia.org/wiki/LZ4_(compression_algori
 compression is provided by:
 
 - `lz4 <https://python-lz4.readthedocs.io/>`__ 0.10 or later
-
-Also required for running the tests:
-
-- `pytest-astropy <https://github.com/astropy/pytest-astropy>`__
 
 Installing with pip
 ===================

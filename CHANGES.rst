@@ -20,6 +20,8 @@
 - Improve warning message when falling back to an older schema,
   and note that fallback behavior will be removed in 3.0. [#806]
 
+- Drop support for jsonschema 2.x. [#807]
+
 2.6.1 (unreleased)
 ------------------
 
