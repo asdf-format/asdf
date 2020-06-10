@@ -16,18 +16,23 @@ from ._internal_init import __version__, __githash__, test
 __all__ = [
     'AsdfFile', 'CustomType', 'AsdfExtension', 'Stream', 'open', 'test',
     'commands', 'IntegerType', 'ExternalArrayReference', 'info', '__version__',
-    '__githash__', 'ValidationError'
+    '__githash__', 'ValidationError', 'AsdfConverter', 'AsdfConverterProvider',
+    'configure'
 ]
 
 
 from .asdf import AsdfFile, open_asdf
 from .types import CustomType
+from .converter import AsdfConverter
 from .extension import AsdfExtension
 from .stream import Stream
 from . import commands
 from .tags.core import IntegerType
 from .tags.core.external_reference import ExternalArrayReference
 from ._convenience import info
+from .config import configure
+from .converter import AsdfConverter
+from .providers import AsdfConverterProvider
 
 from jsonschema import ValidationError
 

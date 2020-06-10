@@ -3,6 +3,7 @@
 
 import warnings
 from collections import OrderedDict
+from types import GeneratorType
 
 import numpy as np
 
@@ -15,6 +16,7 @@ from . import util
 from .constants import YAML_TAG_PREFIX
 from .versioning import split_tag_version
 from .exceptions import AsdfConversionWarning
+from .config import get_config
 
 
 __all__ = ['custom_tree_to_tagged_tree', 'tagged_tree_to_custom_tree']
@@ -221,15 +223,42 @@ def custom_tree_to_tagged_tree(tree, ctx):
     directly representable in YAML, to a tree of basic data types,
     annotated with tags.
     """
-    def walker(node):
+    def _to_yaml_tree_tagged(converter, node):
+        node = converter.to_yaml_tree(node)
+
+        if isinstance(node, GeneratorType):
+            generator = node
+            node = next(generator)
+        else:
+            generator = None
+
+        node = _maybe_tag_node(converter, node)
+        yield node
+        if generator is not None:
+            yield from generator
+
+    def _maybe_tag_node(converter, node):
+        # If the subclass opted to select its own tag, don't
+        # overwrite its choice:
+        if isinstance(node, tagged.Tagged):
+            return node
+        else:
+            return tagged.tag_object(converter.tag, node, ctx=ctx)
+
+    def _walker(node):
+        converter = get_config().converter_index.from_type(type(node))
+        if converter is not None:
+            return _to_yaml_tree_tagged(converter, node)
+
         tag = ctx.type_index.from_custom_type(type(node), ctx.version_string)
         if tag is not None:
             return tag.to_tree_tagged(node, ctx)
+
         return node
 
     return treeutil.walk_and_modify(
         tree,
-        walker,
+        _walker,
         ignore_implicit_conversion=ctx._ignore_implicit_conversion,
         # Walk the tree in preorder, so that extensions can return
         # container nodes with unserialized children.
@@ -243,13 +272,17 @@ def tagged_tree_to_custom_tree(tree, ctx, force_raw_types=False):
     Convert a tree containing only basic data types, annotated with
     tags, to a tree containing custom data types.
     """
-    def walker(node):
+    def _walker(node):
         if force_raw_types:
             return node
 
         tag = getattr(node, '_tag', None)
         if tag is None:
             return node
+
+        converter = get_config().converter_index.from_tag(tag)
+        if converter is not None:
+            return converter.from_yaml_tree(node)
 
         tag_type = ctx.type_index.from_yaml_tag(ctx, tag)
         # This means the tag did not correspond to any type in our type index.
@@ -286,7 +319,7 @@ def tagged_tree_to_custom_tree(tree, ctx, force_raw_types=False):
 
     return treeutil.walk_and_modify(
         tree,
-        walker,
+        _walker,
         ignore_implicit_conversion=ctx._ignore_implicit_conversion,
         # Walk the tree in postorder, so that extensions receive
         # container nodes with children already deserialized.
