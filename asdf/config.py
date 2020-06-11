@@ -1,5 +1,5 @@
 from .util import NotSet
-from .providers import AsdfConverterProvider, get_registered_converter_providers, create_converters
+from .providers import get_registered_converter_providers, create_converters
 from .converter import ConverterIndex
 
 

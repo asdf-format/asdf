@@ -23,7 +23,6 @@ __all__ = [
 
 from .asdf import AsdfFile, open_asdf
 from .types import CustomType
-from .converter import AsdfConverter
 from .extension import AsdfExtension
 from .stream import Stream
 from . import commands

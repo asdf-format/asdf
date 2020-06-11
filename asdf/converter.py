@@ -5,10 +5,6 @@ objects.  Will eventually replace the `asdf.types` and
 """
 from pkg_resources import parse_version
 
-from types import GeneratorType
-
-from . import tagged
-
 
 class AsdfConverterMeta(type):
     """
