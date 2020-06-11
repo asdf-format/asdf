@@ -15,12 +15,12 @@ class AsdfConverterMeta(type):
         if "tags" in attrs:
             tags = attrs["tags"]
             if not isinstance(tags, set) or not all(isinstance(t, str) for t in tags):
-                raise TypeError(f"{name} 'tags' attribute must be a set of string values")
+                raise TypeError("{} 'tags' attribute must be a set of string values".format(name))
 
         if "types" in attrs:
             types = attrs["types"]
             if not isinstance(types, set) or not all(isinstance(t, type) for t in types):
-                raise TypeError(f"{name} 'types' attribute must be a set of type instances")
+                raise TypeError("{} 'types' attribute must be a set of type instances".format(name))
 
         return super().__new__(mcls, name, bases, attrs)
 
@@ -160,9 +160,12 @@ class ConverterIndex:
             if converter.tag in self._converters_by_tag:
                 other_converter = self._converters_by_tag[converter.tag]
                 message = (
-                    f"AsdfConverter for tag '{converter.tag}' provided by both "
-                    f"{type(other_converter.extension).__name__} and {type(converter.extension).__name__}. "
-                    "Please deselect one of the conflicting extensions."
+                    "AsdfConverter for tag '{}' provided by both {} and {}. "
+                    "Please deselect one of the conflicting extensions.".format(
+                        converter.tag,
+                        type(other_converter.extension).__name__,
+                        type(converter.extension).__name__,
+                    )
                 )
                 raise ValueError(message)
             self._converters_by_tag[converter.tag] = converter
