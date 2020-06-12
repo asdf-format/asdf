@@ -28,12 +28,15 @@ from .helpers import (
 )
 
 
-def create_asdf_in_fits():
+TEST_DTYPES = ['<f8', '<f8', '<u4', '>u4', '<i4', '>i4']
+
+
+def create_asdf_in_fits(dtype):
     """Test fixture to create AsdfInFits object to use for testing"""
     hdulist = fits.HDUList()
-    hdulist.append(fits.ImageHDU(np.arange(512, dtype=np.float)))
-    hdulist.append(fits.ImageHDU(np.arange(512, dtype=np.float)))
-    hdulist.append(fits.ImageHDU(np.arange(512, dtype=np.float)))
+    hdulist.append(fits.ImageHDU(np.arange(512, dtype=dtype)))
+    hdulist.append(fits.ImageHDU(np.arange(512, dtype=dtype)))
+    hdulist.append(fits.ImageHDU(np.arange(512, dtype=dtype)))
 
     tree = {
         'model': {
@@ -57,15 +60,16 @@ def create_asdf_in_fits():
 # Testing backwards compatibility ensures that we can continue to read and
 # write files that use the old convention of ImageHDU to store the ASDF file.
 @pytest.mark.parametrize('backwards_compat', [False, True])
-def test_embed_asdf_in_fits_file(tmpdir, backwards_compat):
+@pytest.mark.parametrize('dtype', TEST_DTYPES)
+def test_embed_asdf_in_fits_file(tmpdir, backwards_compat, dtype):
     fits_testfile = str(tmpdir.join('test.fits'))
     asdf_testfile = str(tmpdir.join('test.asdf'))
 
     hdulist = fits.HDUList()
-    hdulist.append(fits.ImageHDU(np.arange(512, dtype=np.float), name='SCI'))
-    hdulist.append(fits.ImageHDU(np.arange(512, dtype=np.float), name='DQ'))
+    hdulist.append(fits.ImageHDU(np.arange(512, dtype=dtype), name='SCI'))
+    hdulist.append(fits.ImageHDU(np.arange(512, dtype=dtype), name='DQ'))
     # Test a name with underscores to make sure it works
-    hdulist.append(fits.ImageHDU(np.arange(512, dtype=np.float), name='WITH_UNDERSCORE'))
+    hdulist.append(fits.ImageHDU(np.arange(512, dtype=dtype), name='WITH_UNDERSCORE'))
 
     tree = {
         'model': {
@@ -90,7 +94,7 @@ def test_embed_asdf_in_fits_file(tmpdir, backwards_compat):
     with fits.open(fits_testfile) as hdulist2:
         assert len(hdulist2) == 4
         assert [x.name for x in hdulist2] == ['SCI', 'DQ', 'WITH_UNDERSCORE', 'ASDF']
-        assert_array_equal(hdulist2[0].data, np.arange(512, dtype=np.float))
+        assert_array_equal(hdulist2[0].data, np.arange(512, dtype=dtype))
         asdf_hdu = hdulist2['ASDF']
         assert asdf_hdu.data.tostring().startswith(b'#ASDF')
         # When in backwards compatibility mode, the ASDF file will be contained
@@ -111,9 +115,10 @@ def test_embed_asdf_in_fits_file(tmpdir, backwards_compat):
         assert_tree_match(tree, ff.tree)
 
 
-def test_embed_asdf_in_fits_file_anonymous_extensions(tmpdir):
+@pytest.mark.parametrize('dtype', TEST_DTYPES)
+def test_embed_asdf_in_fits_file_anonymous_extensions(tmpdir, dtype):
     # Write the AsdfInFits object out as a FITS file with ASDF extension
-    asdf_in_fits = create_asdf_in_fits()
+    asdf_in_fits = create_asdf_in_fits(dtype)
     asdf_in_fits.write_to(os.path.join(str(tmpdir), 'test.fits'))
 
     ff2 = asdf.AsdfFile(asdf_in_fits.tree)
@@ -138,11 +143,12 @@ def test_embed_asdf_in_fits_file_anonymous_extensions(tmpdir):
 
 @pytest.mark.xfail(
     reason="In-place update for ASDF-in-FITS does not currently work")
-def test_update_in_place(tmpdir):
+@pytest.mark.parametrize('dtype', TEST_DTYPES)
+def test_update_in_place(tmpdir, dtype):
     tempfile = str(tmpdir.join('test.fits'))
 
     # Create a file and write it out
-    asdf_in_fits = create_asdf_in_fits()
+    asdf_in_fits = create_asdf_in_fits(dtype)
     asdf_in_fits.write_to(tempfile)
 
     # Open the file and add data so it needs to be updated
@@ -156,12 +162,13 @@ def test_update_in_place(tmpdir):
         assert_tree_match(ff.tree['model'], asdf_in_fits.tree['model'])
 
 
-def test_update_and_write_new(tmpdir):
+@pytest.mark.parametrize('dtype', TEST_DTYPES)
+def test_update_and_write_new(tmpdir, dtype):
     tempfile = str(tmpdir.join('test.fits'))
     newfile = str(tmpdir.join('new.fits'))
 
     # Create a file and write it out
-    asdf_in_fits = create_asdf_in_fits()
+    asdf_in_fits = create_asdf_in_fits(dtype)
     asdf_in_fits.write_to(tempfile)
 
     # Open the file and add data so it needs to be updated
@@ -177,32 +184,34 @@ def test_update_and_write_new(tmpdir):
 
 @pytest.mark.xfail(
     reason="ASDF HDU implementation does not currently reseek after writing")
-def test_access_hdu_data_after_write(tmpdir):
+@pytest.mark.parametrize('dtype', TEST_DTYPES)
+def test_access_hdu_data_after_write(tmpdir, dtype):
     # There is actually probably not a great reason to support this kind of
     # functionality, but I am adding a test here to record the failure for
     # posterity.
     tempfile = str(tmpdir.join('test.fits'))
 
-    asdf_in_fits = create_asdf_in_fits()
+    asdf_in_fits = create_asdf_in_fits(dtype)
     asdf_in_fits.write_to(tempfile)
     asdf_hdu = asdf_in_fits._hdulist['ASDF']
 
     assert asdf_hdu.data.tostring().startswith('#ASDF')
 
 
-def test_create_in_tree_first(tmpdir):
+@pytest.mark.parametrize('dtype', TEST_DTYPES)
+def test_create_in_tree_first(tmpdir, dtype):
     tree = {
         'model': {
             'sci': {
-                'data': np.arange(512, dtype=np.float),
+                'data': np.arange(512, dtype=dtype),
                 'wcs': 'WCS info'
             },
             'dq': {
-                'data': np.arange(512, dtype=np.float),
+                'data': np.arange(512, dtype=dtype),
                 'wcs': 'WCS info'
             },
             'err': {
-                'data': np.arange(512, dtype=np.float),
+                'data': np.arange(512, dtype=dtype),
                 'wcs': 'WCS info'
             }
         }
@@ -222,13 +231,13 @@ def test_create_in_tree_first(tmpdir):
 
     with asdf.open(os.path.join(str(tmpdir), 'plain.asdf')) as ff:
         assert_array_equal(ff.tree['model']['sci']['data'],
-                           np.arange(512, dtype=np.float))
+                           np.arange(512, dtype=dtype))
 
     # This tests the changes that allow FITS files with ASDF extensions to be
     # opened directly by the top-level asdf.open API
     with asdf_open(tmpfile) as ff:
         assert_array_equal(ff.tree['model']['sci']['data'],
-                           np.arange(512, dtype=np.float))
+                           np.arange(512, dtype=dtype))
 
 def compare_asdfs(asdf0, asdf1):
     # Make sure the trees match
@@ -239,11 +248,13 @@ def compare_asdfs(asdf0, asdf1):
             asdf0.tree['model'][key]['data'],
             asdf1.tree['model'][key]['data'])
 
-def test_asdf_in_fits_open(tmpdir):
+
+@pytest.mark.parametrize('dtype', TEST_DTYPES)
+def test_asdf_in_fits_open(tmpdir, dtype):
     """Test the open method of AsdfInFits"""
     tmpfile = os.path.join(str(tmpdir), 'test.fits')
     # Write the AsdfInFits object out as a FITS file with ASDF extension
-    asdf_in_fits = create_asdf_in_fits()
+    asdf_in_fits = create_asdf_in_fits(dtype)
     asdf_in_fits.write_to(tmpfile)
 
     # Test opening the file directly from the URI
@@ -265,11 +276,13 @@ def test_asdf_in_fits_open(tmpdir):
         with fits_embed.AsdfInFits.open(hdulist) as ff:
             compare_asdfs(asdf_in_fits, ff)
 
-def test_asdf_open(tmpdir):
+
+@pytest.mark.parametrize('dtype', TEST_DTYPES)
+def test_asdf_open(tmpdir, dtype):
     """Test the top-level open method of the asdf module"""
     tmpfile = os.path.join(str(tmpdir), 'test.fits')
     # Write the AsdfInFits object out as a FITS file with ASDF extension
-    asdf_in_fits = create_asdf_in_fits()
+    asdf_in_fits = create_asdf_in_fits(dtype)
     asdf_in_fits.write_to(tmpfile)
 
     # Test opening the file directly from the URI
@@ -400,10 +413,12 @@ def test_extension_check():
         with asdf.open(testfile, strict_extension_check=True):
             pass
 
-def test_verify_with_astropy(tmpdir):
+
+@pytest.mark.parametrize('dtype', TEST_DTYPES)
+def test_verify_with_astropy(tmpdir, dtype):
     tmpfile = str(tmpdir.join('asdf.fits'))
 
-    with create_asdf_in_fits() as aif:
+    with create_asdf_in_fits(dtype) as aif:
         aif.write_to(tmpfile)
 
     with fits.open(tmpfile) as hdu:
