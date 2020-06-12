@@ -37,6 +37,9 @@
 - Fix bug with ``auto_inline`` option where inline blocks
   are not converted to internal when they exceed the threshold. [#802]
 
+- Fix misinterpretation of byte order of blocks stored
+  in FITS files. [#810]
+
 2.6.0 (2020-04-22)
 ------------------
 
