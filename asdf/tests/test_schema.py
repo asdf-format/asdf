@@ -359,26 +359,82 @@ def test_fill_and_remove_defaults():
     yaml = """
 custom: !<tag:nowhere.org:custom/default-1.0.0>
   b: {}
+  d: {}
+  g: {}
+  j:
+    l: 362
     """
     buff = helpers.yaml_to_asdf(yaml)
     with asdf.open(buff, extensions=[DefaultTypeExtension()]) as ff:
         assert 'a' in ff.tree['custom']
         assert ff.tree['custom']['a'] == 42
         assert ff.tree['custom']['b']['c'] == 82
+        # allOf combiner should fill defaults from all subschemas:
+        assert ff.tree['custom']['d']['e'] == 122
+        assert ff.tree['custom']['d']['f'] == 162
+        # anyOf combiners should be ignored:
+        assert 'h' not in ff.tree['custom']['g']
+        assert 'i' not in ff.tree['custom']['g']
+        # oneOf combiners should be ignored:
+        assert 'k' not in ff.tree['custom']['j']
+        assert ff.tree['custom']['j']['l'] == 362
 
     buff.seek(0)
     with asdf.open(buff, extensions=[DefaultTypeExtension()],
                             do_not_fill_defaults=True) as ff:
         assert 'a' not in ff.tree['custom']
         assert 'c' not in ff.tree['custom']['b']
+        assert 'e' not in ff.tree['custom']['d']
+        assert 'f' not in ff.tree['custom']['d']
+        assert 'h' not in ff.tree['custom']['g']
+        assert 'i' not in ff.tree['custom']['g']
+        assert 'k' not in ff.tree['custom']['j']
+        assert ff.tree['custom']['j']['l'] == 362
         ff.fill_defaults()
         assert 'a' in ff.tree['custom']
         assert ff.tree['custom']['a'] == 42
         assert 'c' in ff.tree['custom']['b']
         assert ff.tree['custom']['b']['c'] == 82
+        assert ff.tree['custom']['b']['c'] == 82
+        assert ff.tree['custom']['d']['e'] == 122
+        assert ff.tree['custom']['d']['f'] == 162
+        assert 'h' not in ff.tree['custom']['g']
+        assert 'i' not in ff.tree['custom']['g']
+        assert 'k' not in ff.tree['custom']['j']
+        assert ff.tree['custom']['j']['l'] == 362
         ff.remove_defaults()
         assert 'a' not in ff.tree['custom']
         assert 'c' not in ff.tree['custom']['b']
+        assert 'e' not in ff.tree['custom']['d']
+        assert 'f' not in ff.tree['custom']['d']
+        assert 'h' not in ff.tree['custom']['g']
+        assert 'i' not in ff.tree['custom']['g']
+        assert 'k' not in ff.tree['custom']['j']
+        assert ff.tree['custom']['j']['l'] == 362
+
+
+def test_one_of():
+    """
+    Covers https://github.com/spacetelescope/asdf/issues/809
+    """
+    class OneOfType(dict, types.CustomType):
+        name = 'one_of'
+        organization = 'nowhere.org'
+        version = (1, 0, 0)
+        standard = 'custom'
+
+    class OneOfTypeExtension(CustomExtension):
+        @property
+        def types(self):
+            return [OneOfType]
+
+    yaml = """
+one_of: !<tag:nowhere.org:custom/one_of-1.0.0>
+  value: foo
+    """
+    buff = helpers.yaml_to_asdf(yaml)
+    with asdf.open(buff, extensions=[OneOfTypeExtension()]) as ff:
+        assert ff['one_of']['value'] == 'foo'
 
 
 def test_tag_reference_validation():

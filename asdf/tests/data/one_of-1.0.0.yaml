@@ -1,0 +1,21 @@
+%YAML 1.1
+---
+$schema: "http://stsci.edu/schemas/yaml-schema/draft-01"
+id: "http://nowhere.org/schemas/custom/one_of-1.0.0"
+title: |
+  oneOf test schema
+oneOf:
+  - type: object
+    properties:
+      value:
+        type: number
+    required: [value]
+    additionalProperties: false
+
+  - type: object
+    properties:
+      value:
+        type: string
+    required: [value]
+    additionalProperties: false
+...

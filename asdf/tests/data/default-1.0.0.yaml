@@ -13,3 +13,43 @@ properties:
       c:
         type: integer
         default: 82
+  d:
+    allOf:
+      - type: object
+        properties:
+          e:
+            type: integer
+            default: 122
+      - type: object
+        properties:
+          f:
+            type: integer
+            default: 162
+  g:
+    anyOf:
+      - type: object
+        properties:
+          h:
+            type: integer
+            default: 202
+      - type: object
+        properties:
+          i:
+            type: integer
+            default: 242
+  j:
+    oneOf:
+      - type: object
+        properties:
+          k:
+            type: integer
+            default: 282
+        required: [k]
+        additionalProperties: false
+      - type: object
+        properties:
+          l:
+            type: integer
+            default: 322
+        required: [l]
+        additionalProperties: false
