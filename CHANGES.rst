@@ -22,6 +22,9 @@
 
 - Drop support for jsonschema 2.x. [#807]
 
+- Stop traversing oneOf and anyOf combiners when filling
+  or removing default values. [#811]
+
 2.6.1 (unreleased)
 ------------------
 
