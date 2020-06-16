@@ -96,7 +96,7 @@ class AsdfConfig:
         """
         return self._validate_on_read
 
-    def _merge(
+    def _replace(
         self,
         converter_providers=NotSet,
         validate_on_read=NotSet,
@@ -170,7 +170,7 @@ def configure(
     """
     global _global_config
 
-    _global_config = _global_config._merge(
+    _global_config = _global_config._replace(
         converter_providers=converter_providers,
         validate_on_read=validate_on_read,
     )
@@ -191,7 +191,7 @@ class AsdfConfigContext:
         else:
             base_config = _local.config_stack[-1]
 
-        config = base_config._merge(**self._config_options)
+        config = base_config._replace(**self._config_options)
         _local.config_stack.append(config)
         return config
 
