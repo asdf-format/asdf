@@ -97,14 +97,16 @@ invalid_software: !core/software-1.0.0
     buff = yaml_to_asdf(content)
 
     with pytest.raises(ValidationError):
-        with asdf.open(buff, validate_on_read=True):
-            pass
+        with asdf.configure_context(validate_on_read=True):
+            with asdf.open(buff):
+                pass
 
     buff.seek(0)
 
-    with asdf.open(buff, validate_on_read=False) as af:
-        assert af["invalid_software"]["name"] == "Minesweeper"
-        assert af["invalid_software"]["version"] == 3
+    with asdf.configure_context(validate_on_read=False):
+        with asdf.open(buff) as af:
+            assert af["invalid_software"]["name"] == "Minesweeper"
+            assert af["invalid_software"]["version"] == 3
 
 
 def test_atomic_write(tmpdir, small_tree):

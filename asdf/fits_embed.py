@@ -14,6 +14,7 @@ from . import asdf
 from . import block
 from . import util
 from . import generic_io
+from .util import NotSet
 
 try:
     from astropy.io import fits
@@ -169,7 +170,7 @@ class AsdfInFits(asdf.AsdfFile):
     def open(cls, fd, uri=None, validate_checksums=False, extensions=None,
              ignore_version_mismatch=True, ignore_unrecognized_tag=False,
              strict_extension_check=False, ignore_missing_extensions=False,
-             validate_on_read=True):
+             validate_on_read=NotSet):
         """Creates a new AsdfInFits object based on given input data
 
         Parameters
@@ -211,6 +212,8 @@ class AsdfInFits(asdf.AsdfFile):
         validate_on_read : bool, optional
             When `True`, validate the newly opened file against tag and custom
             schemas.  Recommended unless the file is already known to be valid.
+            This argument is deprecated, use asdf.configure or
+            asdf.configure_context instead.
         """
         return cls._open_impl(fd, uri=uri,
                        validate_checksums=validate_checksums,

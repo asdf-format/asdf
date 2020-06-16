@@ -24,6 +24,7 @@ from . import version
 from . import versioning
 from . import yamlutil
 from . import _display as display
+from .config import get_config
 from .exceptions import AsdfDeprecationWarning, AsdfWarning, AsdfConversionWarning
 from .extension import AsdfExtensionList, default_extensions
 from .util import NotSet
@@ -616,13 +617,22 @@ class AsdfFile(versioning.VersionedMixin):
                    _force_raw_types=False,
                    strict_extension_check=False,
                    ignore_missing_extensions=False,
-                   validate_on_read=True):
+                   validate_on_read=NotSet):
         """Attempt to populate AsdfFile data from file-like object"""
 
         if strict_extension_check and ignore_missing_extensions:
             raise ValueError(
                 "'strict_extension_check' and 'ignore_missing_extensions' are "
                 "incompatible options")
+
+        if validate_on_read is NotSet:
+            validate_on_read = get_config().validate_on_read
+        else:
+            warnings.warn(
+                "The 'validate_on_read' argument is deprecated, use "
+                "asdf.configure or asdf.configure_context instead.",
+                AsdfDeprecationWarning
+            )
 
         self._mode = mode
 
@@ -708,7 +718,7 @@ class AsdfFile(versioning.VersionedMixin):
                    _force_raw_types=False,
                    strict_extension_check=False,
                    ignore_missing_extensions=False,
-                   validate_on_read=True):
+                   validate_on_read=NotSet):
         """Attempt to open file-like object as either AsdfFile or AsdfInFits"""
         if not is_asdf_file(fd):
             try:
@@ -1383,7 +1393,7 @@ def open_asdf(fd, uri=None, mode=None, validate_checksums=False,
               ignore_version_mismatch=True, ignore_unrecognized_tag=False,
               _force_raw_types=False, copy_arrays=False, lazy_load=True,
               custom_schema=None, strict_extension_check=False,
-              ignore_missing_extensions=False, validate_on_read=True,
+              ignore_missing_extensions=False, validate_on_read=NotSet,
               _compat=False):
     """
     Open an existing ASDF file.
@@ -1456,6 +1466,8 @@ def open_asdf(fd, uri=None, mode=None, validate_checksums=False,
     validate_on_read : bool, optional
         When `True`, validate the newly opened file against tag and custom
         schemas.  Recommended unless the file is already known to be valid.
+        This argument is deprecated, use asdf.configure or
+        asdf.configure_context instead.
 
     Returns
     -------

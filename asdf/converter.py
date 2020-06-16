@@ -111,7 +111,7 @@ class AsdfConverter(metaclass=AsdfConverterMeta):
             The tree representation of the object. Implementations that
             wish to override the tag used to identify the object in YAML
             are free to instead return an instance of `asdf.tagged.TaggedDict`,
-            `asdf.tagged.TaggedDict`, or `asdf.tagged.TaggedString`.
+            `asdf.tagged.TaggedList`, or `asdf.tagged.TaggedString`.
         """
         raise NotImplementedError("AsdfConverter subclasses must implement to_yaml_tree")
 
@@ -134,8 +134,8 @@ class AsdfConverter(metaclass=AsdfConverterMeta):
         ----------
         tree : dict or list or str
             The YAML subtree to convert.  For the sake of performance, this
-            object will actually be an instance of `asdf.tagged.TaggedList`,
-            `asdf.tagged.TaggedDict`, or `asdf.tagged.TaggedString`.  These
+            object will actually be an instance of `asdf.tagged.TaggedDict`,
+            `asdf.tagged.TaggedList`, or `asdf.tagged.TaggedString`.  These
             objects should behave identically to their built-in counterparts.
 
         Returns
