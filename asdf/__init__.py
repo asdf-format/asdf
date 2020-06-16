@@ -17,7 +17,7 @@ __all__ = [
     'AsdfFile', 'CustomType', 'AsdfExtension', 'Stream', 'open', 'test',
     'commands', 'IntegerType', 'ExternalArrayReference', 'info', '__version__',
     '__githash__', 'ValidationError', 'AsdfConverter', 'AsdfConverterProvider',
-    'configure'
+    'configure', 'config_context'
 ]
 
 
