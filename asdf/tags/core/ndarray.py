@@ -261,8 +261,14 @@ class NDArrayType(AsdfType):
             block = self.block
             shape = self.get_actual_shape(
                 self._shape, self._strides, self._dtype, len(block))
+
+            if block.trust_data_dtype:
+                dtype = block.data.dtype
+            else:
+                dtype = self._dtype
+
             self._array = np.ndarray(
-                shape, self._dtype, block.data,
+                shape, dtype, block.data,
                 self._offset, self._strides, self._order)
             self._block_data_weakref = weakref.ref(block.data)
             self._array = self._apply_mask(self._array, self._mask)
