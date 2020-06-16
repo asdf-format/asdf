@@ -178,7 +178,7 @@ def validate_fill_default(validator, properties, instance, schema):
 
 
 FILL_DEFAULTS = util.HashableDict()
-for key in ('allOf', 'anyOf', 'oneOf', 'items'):
+for key in ('allOf', 'items'):
     FILL_DEFAULTS[key] = mvalidators.Draft4Validator.VALIDATORS[key]
 FILL_DEFAULTS['properties'] = validate_fill_default
 
@@ -198,7 +198,7 @@ def validate_remove_default(validator, properties, instance, schema):
 
 
 REMOVE_DEFAULTS = util.HashableDict()
-for key in ('allOf', 'anyOf', 'oneOf', 'items'):
+for key in ('allOf', 'items'):
     REMOVE_DEFAULTS[key] = mvalidators.Draft4Validator.VALIDATORS[key]
 REMOVE_DEFAULTS['properties'] = validate_remove_default
 
