@@ -17,11 +17,11 @@ def test_parameter_agreement():
         assert param.default is asdf.util.NotSet, message
     configure_keywords = set(sig.parameters.keys())
 
-    sig = inspect.signature(asdf.configure_context)
+    sig = inspect.signature(asdf.config_context)
     for param in sig.parameters.values():
-        message = "asdf.configure_context parameter '{}' default should be NotSet".format(param.name)
+        message = "asdf.config_context parameter '{}' default should be NotSet".format(param.name)
         assert param.default is asdf.util.NotSet, message
-    configure_context_keywords = set(sig.parameters.keys())
+    config_context_keywords = set(sig.parameters.keys())
 
     sig = inspect.signature(asdf.config.AsdfConfig)
     for param in sig.parameters.values():
@@ -29,15 +29,15 @@ def test_parameter_agreement():
         assert param.default is not asdf.util.NotSet, message
     config_keywords = set(sig.parameters.keys())
 
-    missing = configure_context_keywords - configure_keywords
+    missing = config_context_keywords - configure_keywords
     if len(missing) > 0:
         missing_str = ", ".join(list(missing))
         assert len(missing) == 0, "asdf.configure is missing keyword arguments: {}".format(missing_str)
 
-    missing = configure_keywords - configure_context_keywords
+    missing = configure_keywords - config_context_keywords
     if len(missing) > 0:
         missing_str = ", ".join(list(missing))
-        assert len(missing) == 0, "asdf.configure_context is missing keyword arguments: {}".format(missing_str)
+        assert len(missing) == 0, "asdf.config_context is missing keyword arguments: {}".format(missing_str)
 
     missing = configure_keywords - config_keywords
     if len(missing) > 0:
@@ -78,37 +78,37 @@ def test_configure_threaded():
     assert get_config().validate_on_read is True
 
 
-def test_configure_context():
+def test_config_context():
     assert get_config().validate_on_read is True
 
-    with asdf.configure_context(validate_on_read=False):
+    with asdf.config_context(validate_on_read=False):
         assert get_config().validate_on_read is False
 
     assert get_config().validate_on_read is True
 
 
-def test_configure_context_nested():
+def test_config_context_nested():
     assert get_config().validate_on_read is True
 
-    with asdf.configure_context(validate_on_read=False):
-        with asdf.configure_context(validate_on_read=True):
-            with asdf.configure_context(validate_on_read=False):
+    with asdf.config_context(validate_on_read=False):
+        with asdf.config_context(validate_on_read=True):
+            with asdf.config_context(validate_on_read=False):
                 assert get_config().validate_on_read is False
 
     assert get_config().validate_on_read is True
 
 
-def test_configure_context_threaded():
+def test_config_context_threaded():
     assert get_config().validate_on_read is True
 
     thread_value = None
     def worker():
         nonlocal thread_value
         thread_value = get_config().validate_on_read
-        with asdf.configure_context(validate_on_read=False):
+        with asdf.config_context(validate_on_read=False):
             pass
 
-    with asdf.configure_context(validate_on_read=False):
+    with asdf.config_context(validate_on_read=False):
         thread = threading.Thread(target=worker)
         thread.start()
         thread.join()

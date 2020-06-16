@@ -310,11 +310,11 @@ invalid_software: !core/software-1.0.0
 
     for open_method in [asdf.open, fits_embed.AsdfInFits.open]:
         with pytest.raises(ValidationError):
-            with asdf.configure_context(validate_on_read=True):
+            with asdf.config_context(validate_on_read=True):
                 with open_method(tmpfile):
                     pass
 
-        with asdf.configure_context(validate_on_read=False):
+        with asdf.config_context(validate_on_read=False):
             with open_method(tmpfile) as af:
                 assert af["invalid_software"]["name"] == "Minesweeper"
                 assert af["invalid_software"]["version"] == 3

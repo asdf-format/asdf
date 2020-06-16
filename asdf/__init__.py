@@ -29,7 +29,7 @@ from . import commands
 from .tags.core import IntegerType
 from .tags.core.external_reference import ExternalArrayReference
 from ._convenience import info
-from .config import configure, configure_context
+from .config import configure, config_context
 from .converter import AsdfConverter
 from .providers import AsdfConverterProvider
 

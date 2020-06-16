@@ -9,14 +9,14 @@ from .providers import get_registered_converter_providers, create_converters
 from .converter import ConverterIndex
 
 
-__all__ = ["get_config", "configure", "configure_context"]
+__all__ = ["get_config", "configure", "config_context"]
 
 
 class AsdfConfig:
     """
     Container for ASDF configuration options.  Users are not intended to
     construct this object directly; instead, use the `configure` and
-    `configure_context` module methods.
+    `config_context` module methods.
     """
     def __init__(
         self,
@@ -180,7 +180,7 @@ class AsdfConfigContext:
     """
     Context manager that temporarily overrides asdf configuration.
     Users are not intended to construct this object directly; instead,
-    use the `configure_context` module method.
+    use the `config_context` module method.
     """
     def __init__(self, **config_options):
         self._config_options = config_options
@@ -203,7 +203,7 @@ class AsdfConfigContext:
         return "{}({})".format(self.__class__.__name__, arg_string)
 
 
-def configure_context(
+def config_context(
     converter_providers=NotSet,
     validate_on_read=NotSet,
 ):

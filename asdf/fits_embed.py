@@ -213,7 +213,7 @@ class AsdfInFits(asdf.AsdfFile):
             When `True`, validate the newly opened file against tag and custom
             schemas.  Recommended unless the file is already known to be valid.
             This argument is deprecated, use asdf.configure or
-            asdf.configure_context instead.
+            asdf.config_context instead.
         """
         return cls._open_impl(fd, uri=uri,
                        validate_checksums=validate_checksums,

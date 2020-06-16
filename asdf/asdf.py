@@ -630,7 +630,7 @@ class AsdfFile(versioning.VersionedMixin):
         else:
             warnings.warn(
                 "The 'validate_on_read' argument is deprecated, use "
-                "asdf.configure or asdf.configure_context instead.",
+                "asdf.configure or asdf.config_context instead.",
                 AsdfDeprecationWarning
             )
 
@@ -1467,7 +1467,7 @@ def open_asdf(fd, uri=None, mode=None, validate_checksums=False,
         When `True`, validate the newly opened file against tag and custom
         schemas.  Recommended unless the file is already known to be valid.
         This argument is deprecated, use asdf.configure or
-        asdf.configure_context instead.
+        asdf.config_context instead.
 
     Returns
     -------
