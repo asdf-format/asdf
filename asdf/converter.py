@@ -151,7 +151,7 @@ class AsdfConverter(metaclass=AsdfConverterMeta):
 # TODO(eslavich): Implement base class for converters that manipulate blocks
 
 
-class ConverterIndex:
+class ConverterCollection:
     def __init__(self, converters):
         self._converters_by_tag = {}
         self._converters_by_type_by_tag = {}

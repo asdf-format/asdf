@@ -246,7 +246,7 @@ def custom_tree_to_tagged_tree(tree, ctx):
             return tagged.tag_object(converter.tag, node, ctx=ctx)
 
     def _walker(node):
-        converter = get_config().converter_index.from_type(type(node))
+        converter = get_config().converter_collection.from_type(type(node))
         if converter is not None:
             return _to_yaml_tree_tagged(converter, node)
 
@@ -280,7 +280,7 @@ def tagged_tree_to_custom_tree(tree, ctx, force_raw_types=False):
         if tag is None:
             return node
 
-        converter = get_config().converter_index.from_tag(tag)
+        converter = get_config().converter_collection.from_tag(tag)
         if converter is not None:
             return converter.from_yaml_tree(node)
 

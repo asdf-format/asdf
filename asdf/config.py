@@ -6,7 +6,7 @@ import threading
 
 from .util import NotSet
 from .providers import get_registered_converter_providers, create_converters
-from .converter import ConverterIndex
+from .converter import ConverterCollection
 
 
 __all__ = ["get_config", "configure", "config_context"]
@@ -22,12 +22,12 @@ class AsdfConfig:
         self,
         converter_providers=None,
         converters=None,
-        converter_index=None,
+        converter_collection=None,
         validate_on_read=True,
     ):
         self._converter_providers = converter_providers
         self._converters = converters
-        self._converter_index = converter_index
+        self._converter_collection = converter_collection
         self._validate_on_read = validate_on_read
 
         self._lock = threading.RLock()
@@ -68,21 +68,21 @@ class AsdfConfig:
         return self._converters
 
     @property
-    def converter_index(self):
+    def converter_collection(self):
         """
-        Get the `ConverterIndex` for the configured converters.
+        Get the `ConverterCollection` for the configured converters.
 
         Returns
         -------
-        asdf.converter.ConverterIndex
+        asdf.converter.ConverterCollection
         """
 
-        if self._converter_index is None:
+        if self._converter_collection is None:
             with self._lock:
-                if self._converter_index is None:
-                    self._converter_index = ConverterIndex(self.converters)
+                if self._converter_collection is None:
+                    self._converter_collection = ConverterCollection(self.converters)
 
-        return self._converter_index
+        return self._converter_collection
 
     @property
     def validate_on_read(self):
@@ -104,10 +104,10 @@ class AsdfConfig:
         if converter_providers is NotSet:
             converter_providers = self._converter_providers
             converters = self._converters
-            converter_index = self._converter_index
+            converter_collection = self._converter_collection
         else:
             converters = None
-            converter_index = None
+            converter_collection = None
 
         if validate_on_read is NotSet:
             validate_on_read = self._validate_on_read
@@ -115,7 +115,7 @@ class AsdfConfig:
         return AsdfConfig(
             converter_providers=converter_providers,
             converters=converters,
-            converter_index=converter_index,
+            converter_collection=converter_collection,
             validate_on_read=validate_on_read,
         )
 
