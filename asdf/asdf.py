@@ -617,7 +617,7 @@ class AsdfFile(versioning.VersionedMixin):
                    _force_raw_types=False,
                    strict_extension_check=False,
                    ignore_missing_extensions=False,
-                   validate_on_read=NotSet):
+                   **kwargs):
         """Attempt to populate AsdfFile data from file-like object"""
 
         if strict_extension_check and ignore_missing_extensions:
@@ -625,14 +625,15 @@ class AsdfFile(versioning.VersionedMixin):
                 "'strict_extension_check' and 'ignore_missing_extensions' are "
                 "incompatible options")
 
-        if validate_on_read is NotSet:
-            validate_on_read = get_config().validate_on_read
-        else:
+        if "validate_on_read" in kwargs:
             warnings.warn(
                 "The 'validate_on_read' argument is deprecated, use "
                 "asdf.configure or asdf.config_context instead.",
                 AsdfDeprecationWarning
             )
+            validate_on_read = kwargs["validate_on_read"]
+        else:
+            validate_on_read = get_config().validate_on_read
 
         self._mode = mode
 
@@ -718,7 +719,7 @@ class AsdfFile(versioning.VersionedMixin):
                    _force_raw_types=False,
                    strict_extension_check=False,
                    ignore_missing_extensions=False,
-                   validate_on_read=NotSet):
+                   **kwargs):
         """Attempt to open file-like object as either AsdfFile or AsdfInFits"""
         if not is_asdf_file(fd):
             try:
@@ -734,7 +735,7 @@ class AsdfFile(versioning.VersionedMixin):
                             ignore_missing_extensions=ignore_missing_extensions,
                             ignore_unrecognized_tag=self._ignore_unrecognized_tag,
                             _extension_metadata=self._extension_metadata,
-                            validate_on_read=validate_on_read)
+                            **kwargs)
             except ValueError:
                 raise ValueError(
                     "Input object does not appear to be an ASDF file or a FITS with " +
@@ -751,7 +752,7 @@ class AsdfFile(versioning.VersionedMixin):
                 _force_raw_types=_force_raw_types,
                 strict_extension_check=strict_extension_check,
                 ignore_missing_extensions=ignore_missing_extensions,
-                validate_on_read=validate_on_read)
+                **kwargs)
 
     @classmethod
     def open(cls, fd, uri=None, mode='r',
@@ -1393,8 +1394,8 @@ def open_asdf(fd, uri=None, mode=None, validate_checksums=False,
               ignore_version_mismatch=True, ignore_unrecognized_tag=False,
               _force_raw_types=False, copy_arrays=False, lazy_load=True,
               custom_schema=None, strict_extension_check=False,
-              ignore_missing_extensions=False, validate_on_read=NotSet,
-              _compat=False):
+              ignore_missing_extensions=False, _compat=False,
+              **kwargs):
     """
     Open an existing ASDF file.
 
@@ -1464,10 +1465,9 @@ def open_asdf(fd, uri=None, mode=None, validate_checksums=False,
         to `False`.
 
     validate_on_read : bool, optional
-        When `True`, validate the newly opened file against tag and custom
-        schemas.  Recommended unless the file is already known to be valid.
-        This argument is deprecated, use asdf.configure or
-        asdf.config_context instead.
+        DEPRECATED. When `True`, validate the newly opened file against tag
+        and custom schemas.  Recommended unless the file is already known
+        to be valid.
 
     Returns
     -------
@@ -1496,7 +1496,7 @@ def open_asdf(fd, uri=None, mode=None, validate_checksums=False,
         _force_raw_types=_force_raw_types,
         strict_extension_check=strict_extension_check,
         ignore_missing_extensions=ignore_missing_extensions,
-        validate_on_read=validate_on_read)
+        **kwargs)
 
 
 def is_asdf_file(fd):

@@ -12,6 +12,9 @@ from .converter import ConverterCollection
 __all__ = ["get_config", "configure", "config_context"]
 
 
+DEFAULT_VALIDATE_ON_READ = True
+
+
 class AsdfConfig:
     """
     Container for ASDF configuration options.  Users are not intended to
@@ -23,12 +26,16 @@ class AsdfConfig:
         converter_providers=None,
         converters=None,
         converter_collection=None,
-        validate_on_read=True,
+        validate_on_read=None,
     ):
         self._converter_providers = converter_providers
         self._converters = converters
         self._converter_collection = converter_collection
-        self._validate_on_read = validate_on_read
+
+        if validate_on_read is None:
+            self._validate_on_read = DEFAULT_VALIDATE_ON_READ
+        else:
+            self._validate_on_read = validate_on_read
 
         self._lock = threading.RLock()
 
@@ -132,7 +139,7 @@ _local = _ConfigLocal()
 def get_config():
     """
     Get the current config, which may have been altered by
-    one or more containing `AsdfConfigContext`.
+    one or more surrounding calls to `config_context`.
 
     Returns
     -------
@@ -155,17 +162,19 @@ def configure(
     can lead to race conditions.  Changes affect currently
     open `AsdfFile` instances.
 
-    The default parameter value `NotSet` leaves that parameter
+    The singleton value `NotSet` leaves that parameter
     set to its current value.
+
+    Setting any parameter to `None` will cause it to revert
+    to its default value.
 
     Parameters
     ----------
     converter_providers : list of asdf.AsdfConverterProvider or None or NotSet
         `asdf.AsdfConverterProvider` instances to use when reading
-        and writing ASDF files.  If `None`, all providers registered
-        with entry points are used.
+        and writing ASDF files.
 
-    validate_on_read : bool or NotSet
+    validate_on_read : bool or None or NotSet
         If True, ASDF files will be validated against schemas on read.
     """
     global _global_config
@@ -214,17 +223,19 @@ def config_context(
     with the innermost context overriding the others. Changes
     affect currently open `AsdfFile` instances.
 
-    The default parameter value `NotSet` leaves that parameter
+    The singleton value `NotSet` leaves that parameter
     set to its current value.
+
+    Setting any parameter to `None` will cause it to revert
+    to its default value.
 
     Parameters
     ----------
     converter_providers : list of asdf.AsdfConverterProvider or None or NotSet
         `asdf.AsdfConverterProvider` instances to use when reading
-        and writing ASDF files.  If `None`, all providers registered
-        with entry points are used.
+        and writing ASDF files.
 
-    validate_on_read : bool or NotSet
+    validate_on_read : bool or None or NotSet
         If True, ASDF files will be validated against schemas on read.
 
     Returns
