@@ -179,7 +179,7 @@ pass the schema URI (``http://example.com/schemas/your-custom-schema``, in this
 case) instead of a file path.
 
 .. _top-level core schema:
-    https://github.com/spacetelescope/asdf-standard/blob/master/schemas/stsci.edu/asdf/core/asdf-1.1.0.yaml
+    https://github.com/asdf-format/asdf-standard/blob/master/schemas/stsci.edu/asdf/core/asdf-1.1.0.yaml
 
 .. _version_and_compat:
 
@@ -396,7 +396,7 @@ your software, not ``asdf``) that performed the operation.
        "Initial random numbers",
        {'name': 'asdf examples',
         'author': 'John Q. Public',
-        'homepage': 'http://github.com/spacetelescope/asdf',
+        'homepage': 'http://github.com/asdf-format/asdf',
         'version': '0.1'})
    ff.write_to('example.asdf')
 
@@ -471,7 +471,7 @@ create an `AsdfInFits` object.
 
     with fits.open('embedded_asdf.fits') as new_hdulist:
         with open('content.asdf', 'wb') as fd:
-            fd.write(new_hdulist['ASDF'].data.tostring())
+            fd.write(new_hdulist['ASDF'].data.tobytes())
 
 The special ASDF extension in the resulting FITS file contains the following
 data.  Note that the data source of the arrays uses the ``fits:`` prefix to
@@ -504,8 +504,8 @@ tree to stdout.  For example:
     >>> asdf.info('path/to/some/file.asdf') # doctest: +SKIP
     root.tree (AsdfObject)
     ├─asdf_library (Software)
-    │ ├─author (str): Space Telescope Science Institute
-    │ ├─homepage (str): http://github.com/spacetelescope/asdf
+    │ ├─author (str): The ASDF Developers
+    │ ├─homepage (str): http://github.com/asdf-format/asdf
     │ ├─name (str): asdf
     │ └─version (str): 2.5.1
     ├─history (dict)
@@ -551,8 +551,8 @@ Initiate a search by calling `AsdfFile.search` on an open file:
     >>> af.search() # doctest: +SKIP
     root.tree (AsdfObject)
     ├─asdf_library (Software)
-    │ ├─author (str): Space Telescope Science Institute
-    │ ├─homepage (str): http://github.com/spacetelescope/asdf
+    │ ├─author (str): The ASDF Developers
+    │ ├─homepage (str): http://github.com/asdf-format/asdf
     │ ├─name (str): asdf
     │ └─version (str): 2.5.1
     ├─history (dict)

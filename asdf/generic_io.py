@@ -1,5 +1,3 @@
-# Licensed under a 3-clause BSD style license - see LICENSE.rst
-# -*- coding: utf-8 -*-
 """
 This provides abstractions around a number of different file and
 stream types available to Python so that they are always used in the

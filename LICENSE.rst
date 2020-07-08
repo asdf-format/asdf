@@ -1,4 +1,4 @@
-Copyright (c) 2019, Space Telescope Science Institute
+Copyright (c) 2020, Space Telescope Science Institute
 All rights reserved.
 
 Redistribution and use in source and binary forms, with or without modification,

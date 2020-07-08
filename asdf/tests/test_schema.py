@@ -1,6 +1,3 @@
-# Licensed under a 3-clause BSD style license - see LICENSE.rst
-# -*- coding: utf-8 -*-
-
 import io
 
 from jsonschema import ValidationError
@@ -63,7 +60,7 @@ def test_read_json_schema():
     """Pytest to make sure reading JSON schemas succeeds.
 
     This was known to fail on Python 3.5 See issue #314 at
-    https://github.com/spacetelescope/asdf/issues/314 for more details.
+    https://github.com/asdf-format/asdf/issues/314 for more details.
     """
     json_schema = helpers.get_test_data_path('example_schema.json')
     schema_tree = schema.load_schema(json_schema, resolve_references=True)
@@ -415,7 +412,7 @@ custom: !<tag:nowhere.org:custom/default-1.0.0>
 
 def test_one_of():
     """
-    Covers https://github.com/spacetelescope/asdf/issues/809
+    Covers https://github.com/asdf-format/asdf/issues/809
     """
     class OneOfType(dict, types.CustomType):
         name = 'one_of'
@@ -750,7 +747,7 @@ def test_custom_validation_pathlib(tmpdir):
     """
     Make sure custom schema paths can be pathlib.Path objects
 
-    See https://github.com/spacetelescope/asdf/issues/653 for discussion.
+    See https://github.com/asdf-format/asdf/issues/653 for discussion.
     """
     from pathlib import Path
 

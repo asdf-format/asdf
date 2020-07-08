@@ -1,7 +1,3 @@
-# Licensed under a 3-clause BSD style license - see LICENSE.rst
-# -*- coding: utf-8 -*-
-
-
 __all__ = ['__version__', '__githash__', 'test']
 
 

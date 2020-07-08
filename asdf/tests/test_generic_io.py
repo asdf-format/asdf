@@ -1,6 +1,3 @@
-# Licensed under a 3-clause BSD style license - see LICENSE.rst
-# -*- coding: utf-8 -*-
-
 import io
 import os
 import sys
@@ -525,7 +522,7 @@ def test_truncated_reader():
     Tests several edge cases for _TruncatedReader.read()
 
     Includes regression test for
-    https://github.com/spacetelescope/asdf/pull/181
+    https://github.com/asdf-format/asdf/pull/181
     """
 
     # TODO: Should probably break this up into multiple test cases

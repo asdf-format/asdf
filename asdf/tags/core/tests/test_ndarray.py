@@ -1,6 +1,3 @@
-# Licensed under a 3-clause BSD style license - see LICENSE.rst
-# -*- coding: utf-8 -*-
-
 import io
 import os
 import re
@@ -792,7 +789,7 @@ def test_inline_shape_mismatch():
 @pytest.mark.xfail(
     reason="NDArrays with dtype=object are not currently supported")
 def test_simple_object_array(tmpdir):
-    # See https://github.com/spacetelescope/asdf/issues/383 for feature
+    # See https://github.com/asdf-format/asdf/issues/383 for feature
     # request
     dictdata = np.empty((3, 3), dtype=object)
     for i, _ in enumerate(dictdata.flat):
@@ -804,7 +801,7 @@ def test_simple_object_array(tmpdir):
 @pytest.mark.xfail(
     reason="NDArrays with dtype=object are not currently supported")
 def test_tagged_object_array(tmpdir):
-    # See https://github.com/spacetelescope/asdf/issues/383 for feature
+    # See https://github.com/asdf-format/asdf/issues/383 for feature
     # request
     quantity = pytest.importorskip('astropy.units.quantity')
 

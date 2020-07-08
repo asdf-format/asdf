@@ -1,6 +1,3 @@
-# Licensed under a 3-clause BSD style license - see LICENSE.rst
-# -*- coding: utf-8 -*-
-
 # This contains pytest fixtures used in asdf tests.
 # by importing them here in conftest.py they are discoverable by pytest
 # no matter how it is invoked within the source tree.

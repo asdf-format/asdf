@@ -1,6 +1,3 @@
-# Licensed under a 3-clause BSD style license - see LICENSE.rst
-# -*- coding: utf-8 -*-
-
 from asdf.tags.core.external_reference import ExternalArrayReference
 from asdf.tests import helpers
 

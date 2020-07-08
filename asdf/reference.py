@@ -1,6 +1,3 @@
-# Licensed under a 3-clause BSD style license - see LICENSE.rst
-# -*- coding: utf-8 -*-
-
 """
 Manages external references in the YAML tree using the `JSON Reference
 standard <http://tools.ietf.org/html/draft-pbryan-zyp-json-ref-03>`__

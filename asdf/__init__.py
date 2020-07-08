@@ -1,7 +1,3 @@
-# Licensed under a 3-clause BSD style license - see LICENSE.rst
-# -*- coding: utf-8 -*-
-
-
 """
 asdf: Python library for reading and writing Advanced Scientific
 Data Format (ASDF) files

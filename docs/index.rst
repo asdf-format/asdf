@@ -6,8 +6,8 @@ ASDF - Advanced Scientific Data Format
 Format (ASDF) files.
 
 .. include:: ../README.rst
-    :start-after: begin-summary-text
-    :end-before: end-summary-text
+    :start-after: begin-summary-text:
+    :end-before: end-summary-text:
 
 .. note::
 
@@ -64,11 +64,11 @@ We welcome feedback and contributions of all kinds. Contributions of code,
 documentation, or general feedback are all appreciated.
 
 Feature requests and bug reports for the Python implementation can be posted at
-`ASDF's github page <https://github.com/spacetelescope/asdf>`_.
+`ASDF's github page <https://github.com/asdf-format/asdf>`_.
 
 The ASDF Standard itself also has a repository on github. Suggestions for
 improvements to the ASDF Standard can be reported `here
-<https://github.com/spacetelescope/asdf-standard>`_.
+<https://github.com/asdf-format/asdf-standard>`_.
 
 See also
 ========

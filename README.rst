@@ -1,30 +1,21 @@
-..
-   ASDF - Advanced Scientific Data Format
-   ======================================
+ASDF - Advanced Scientific Data Format
+======================================
 
-.. raw:: html
+.. image:: https://travis-ci.com/asdf-format/asdf.svg?branch=master
+    :target: https://travis-ci.com/asdf-format/asdf
 
-   <p align="center">
-     <img src="docs/_static/stsci_logo.png" alt="STScI Logo">
-   </p>
-   <h1 align="center">ASDF - Advanced Scientific Data Format</h1>
-   <p align="center">
-     <a href="https://travis-ci.org/spacetelescope/asdf"><img src="https://travis-ci.org/spacetelescope/asdf.svg?branch=master" alt="Build Status"></a>
-     <a href="http://asdf.readthedocs.io/en/latest/?badge=latest"><img src="https://readthedocs.org/projects/asdf/badge/?version=latest" alt="Documentation Status"></a>
-     <a href="https://codecov.io/gh/spacetelescope/asdf"><img src="https://codecov.io/gh/spacetelescope/asdf/branch/master/graphs/badge.svg" alt="Coverage Status"></a>
-     <img src="https://img.shields.io/pypi/l/asdf.svg" alt="license">
-     <a href="http://www.stsci.edu"><img src="https://img.shields.io/badge/powered%20by-STScI-blue.svg?colorA=707170&colorB=3e8ddd&style=flat" alt="stsci"></a>
-     <a href="http://www.astropy.org/"><img src="http://img.shields.io/badge/powered%20by-AstroPy-orange.svg?style=flat" alt="astropy"></a>
-   </p>
-   <p align="center">
-     <a href="#overview">Overview</a> •
-     <a href="#installation">Installation</a> •
-     <a href="#testing">Testing</a> •
-     <a href="#documentation">Documentation</a> •
-     <a href="#contributing">Contributing</a>
-   </p>
+.. image:: https://readthedocs.org/projects/asdf/badge/?version=latest
+    :target: https://asdf.readthedocs.io/en/latest/
 
-.. _begin-summary-text
+.. image:: https://codecov.io/gh/asdf-format/asdf/branch/master/graphs/badge.svg
+    :target: https://codecov.io/gh/asdf-format/asdf
+
+.. image:: https://img.shields.io/pypi/l/asdf.svg
+    :target: https://img.shields.io/pypi/l/asdf.svg
+
+|
+
+.. _begin-summary-text:
 
 The **A**\ dvanced **S**\ cientific **D**\ ata **F**\ ormat (ASDF) is a
 next-generation interchange format for scientific data. This package
@@ -44,10 +35,10 @@ The ASDF format has the following features:
   serialized automatically
 * ASDF can be extended to serialize custom data types
 
-.. _end-summary-text
+.. _end-summary-text:
 
 ASDF is under active development `on github
-<https://github.com/spacetelescope/asdf>`__. More information on contributing
+<https://github.com/asdf-format/asdf>`__. More information on contributing
 can be found `below <#contributing>`__.
 
 Overview
@@ -59,7 +50,7 @@ and reading ASDF files.
 Creating a file
 ~~~~~~~~~~~~~~~
 
-.. _begin-create-file-text
+.. _begin-create-file-text:
 
 We're going to store several `numpy` arrays and other data to an ASDF file. We
 do this by creating a "tree", which is simply a `dict`, and we provide it as
@@ -100,7 +91,7 @@ of ASDF on display:
     %YAML 1.1
     %TAG ! tag:stsci.edu:asdf/
     --- !core/asdf-1.1.0
-    asdf_library: !core/software-1.0.0 {author: Space Telescope Science Institute, homepage: 'http://github.com/spacetelescope/asdf',
+    asdf_library: !core/software-1.0.0 {author: The ASDF Developers, homepage: 'http://github.com/asdf-format/asdf',
       name: asdf, version: 2.0.0}
     history:
       extensions:
@@ -142,12 +133,12 @@ It is possible to compress the array data when writing the file:
 Available compression algorithms are ``'zlib'``, ``'bzp2'``, and
 ``'lz4'``.
 
-.. _end-create-file-text
+.. _end-create-file-text:
 
 Reading a file
 ~~~~~~~~~~~~~~
 
-.. _begin-read-file-text
+.. _begin-read-file-text:
 
 To read an existing ASDF file, we simply use the top-level `open` function of
 the `asdf` package:
@@ -173,8 +164,8 @@ attribute:
     >>> import asdf
     >>> af = asdf.open('example.asdf')
     >>> af.tree
-    {'asdf_library': {'author': 'Space Telescope Science Institute',
-      'homepage': 'http://github.com/spacetelescope/asdf',
+    {'asdf_library': {'author': 'The ASDF Developers',
+      'homepage': 'http://github.com/asdf-format/asdf',
       'name': 'asdf',
       'version': '1.3.1'},
      'foo': 42,
@@ -222,7 +213,7 @@ option of `open` when reading:
 
     af = asdf.open('example.asdf', copy_arrays=True)
 
-.. _end-read-file-text
+.. _end-read-file-text:
 
 For more information and for advanced usage examples, see the
 `documentation <#documentation>`__.
@@ -239,7 +230,7 @@ documentation <http://asdf.readthedocs.io/en/latest/asdf/extensions.html>`__.
 Installation
 ------------
 
-.. _begin-pip-install-text
+.. _begin-pip-install-text:
 
 Stable releases of the ASDF Python package are registered `at
 PyPi <https://pypi.python.org/pypi/asdf>`__. The latest stable version
@@ -249,14 +240,14 @@ can be installed using ``pip``:
 
     $ pip install asdf
 
-.. _begin-source-install-text
+.. _begin-source-install-text:
 
 The latest development version of ASDF is available from the ``master`` branch
-`on github <https://github.com/spacetelescope/asdf>`__. To clone the project:
+`on github <https://github.com/asdf-format/asdf>`__. To clone the project:
 
 ::
 
-    $ git clone https://github.com/spacetelescope/asdf
+    $ git clone https://github.com/asdf-format/asdf
 
 To install:
 
@@ -281,12 +272,12 @@ mode <https://packaging.python.org/tutorials/distributing-packages/#working-in-d
     submodules <https://git-scm.com/docs/git-submodule>`__ for more
     information.
 
-.. _end-source-install-text
+.. _end-source-install-text:
 
 Testing
 -------
 
-.. _begin-testing-text
+.. _begin-testing-text:
 
 To install the test dependencies from a source checkout of the repository:
 
@@ -332,7 +323,7 @@ To run a specific environment:
    $ tox -e <envname>
 
 
-.. _end-testing-text
+.. _end-testing-text:
 
 Documentation
 -------------
