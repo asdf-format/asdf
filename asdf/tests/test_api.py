@@ -11,6 +11,7 @@ import pytest
 from jsonschema.exceptions import ValidationError
 
 import asdf
+from asdf import get_config
 from asdf import treeutil
 from asdf import extension
 from asdf import resolver
@@ -95,12 +96,14 @@ invalid_software: !core/software-1.0.0
     buff = yaml_to_asdf(content)
 
     with pytest.raises(ValidationError):
-        with asdf.open(buff, validate_on_read=True):
+        get_config().validate_on_read = True
+        with asdf.open(buff):
             pass
 
     buff.seek(0)
 
-    with asdf.open(buff, validate_on_read=False) as af:
+    get_config().validate_on_read = False
+    with asdf.open(buff) as af:
         assert af["invalid_software"]["name"] == "Minesweeper"
         assert af["invalid_software"]["version"] == 3
 

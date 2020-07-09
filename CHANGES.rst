@@ -1,3 +1,11 @@
+2.8.0 (unreleased)
+------------------
+
+- Add new Mapping API for extending asdf with additional
+  schemas. [#819]
+
+- Add global configuration mechanism. [#819]
+
 2.7.0 (unreleased)
 ------------------
 
