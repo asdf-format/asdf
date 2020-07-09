@@ -1,6 +1,3 @@
-# Licensed under a 3-clause BSD style license - see LICENSE.rst
-# -*- coding: utf-8 -*-
-
 """
 Contains commands for dealing with exploded and imploded forms.
 """

@@ -1,5 +1,3 @@
-# -*- coding: utf-8 -*-
-
 import os
 import io
 import pathlib
@@ -47,7 +45,7 @@ def test_get_data_from_closed_file(tmpdir):
 def test_no_warning_nan_array(tmpdir):
     """
     Tests for a regression that was introduced by
-    https://github.com/spacetelescope/asdf/pull/557
+    https://github.com/asdf-format/asdf/pull/557
     """
 
     tree = dict(array=np.array([1, 2, np.nan]))
@@ -119,7 +117,7 @@ def test_atomic_write(tmpdir, small_tree):
 
 def test_overwrite(tmpdir):
     # This is intended to reproduce the following issue:
-    # https://github.com/spacetelescope/asdf/issues/100
+    # https://github.com/asdf-format/asdf/issues/100
     tmpfile = os.path.join(str(tmpdir), 'test.asdf')
     aff = models.AffineTransformation2D(matrix=[[1, 2], [3, 4]])
     f = asdf.AsdfFile()
@@ -133,7 +131,7 @@ def test_overwrite(tmpdir):
 
 
 def test_default_version():
-    # See https://github.com/spacetelescope/asdf/issues/364
+    # See https://github.com/asdf-format/asdf/issues/364
 
     version_map = versioning.get_version_map(versioning.default_version)
 
@@ -262,7 +260,7 @@ def test_access_tree_outside_handler(tmpdir):
 
 def test_context_handler_resolve_and_inline(tmpdir):
     # This reproduces the issue reported in
-    # https://github.com/spacetelescope/asdf/issues/406
+    # https://github.com/asdf-format/asdf/issues/406
     tempname = str(tmpdir.join('test.asdf'))
 
     tree = {'random': np.random.random(10)}

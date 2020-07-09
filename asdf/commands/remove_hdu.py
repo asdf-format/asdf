@@ -1,6 +1,3 @@
-# Licensed under a 3-clause BSD style license - see LICENSE.rst
-# -*- coding: utf-8 -*-
-
 """
 Implementation of command for removing ASDF HDU from ASDF-in-FITS file.
 """

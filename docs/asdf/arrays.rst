@@ -184,9 +184,9 @@ binary data.
        ff.write_to(fd)
        # Write 100 rows of data, one row at a time.  ``write``
        # expects the raw binary bytes, not an array, so we use
-       # ``tostring()``.
+       # ``tobytes()``.
        for i in range(100):
-           fd.write(np.array([i] * 128, np.float64).tostring())
+           fd.write(np.array([i] * 128, np.float64).tobytes())
 
 .. asdf:: test.asdf
 
@@ -219,7 +219,7 @@ to numpy arrays stored in ASDF:
                 # convert each row to a numpy array
                 array = np.array([int(x) for x in row], np.int64)
                 # write the array to the output file handle
-                fd.write(array.tostring())
+                fd.write(array.tobytes())
 
 Compression
 -----------

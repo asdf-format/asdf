@@ -1,6 +1,6 @@
-# Spacetelescope Open Source Code of Conduct
+# asdf-format Open Source Code of Conduct
 
-We expect all "spacetelescope" organization projects to adopt a code of conduct
+We expect all "asdf-format" organization projects to adopt a code of conduct
 that ensures a productive, respectful environment for all open source
 contributors and participants. We are committed to providing a strong and
 enforced code of conduct and expect everyone in our community to follow these

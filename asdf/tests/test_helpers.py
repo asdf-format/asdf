@@ -1,6 +1,3 @@
-# Licensed under a 3-clause BSD style license - see LICENSE.rst
-# -*- coding: utf-8 -*-
-
 import pytest
 
 from asdf import types

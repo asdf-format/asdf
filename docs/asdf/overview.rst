@@ -39,12 +39,12 @@ Creating Files
 ==============
 
 .. include:: ../../README.rst
-    :start-after: begin-create-file-text
-    :end-before: end-create-file-text
+    :start-after: begin-create-file-text:
+    :end-before: end-create-file-text:
 
 Reading Files
 =============
 
 .. include:: ../../README.rst
-    :start-after: begin-read-file-text
-    :end-before: end-read-file-text
+    :start-after: begin-read-file-text:
+    :end-before: end-read-file-text:

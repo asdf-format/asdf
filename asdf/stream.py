@@ -1,7 +1,3 @@
-# Licensed under a 3-clause BSD style license - see LICENSE.rst
-# -*- coding: utf-8 -*-
-
-
 from .tags.core import ndarray
 
 
@@ -22,7 +18,7 @@ class Stream(ndarray.NDArrayType):
          ...     ff.write_to(fd)
          ...     for i in range(200):
          ...         nbytes = fd.write(
-         ...                      np.array([i] * 1024, np.float64).tostring())
+         ...                      np.array([i] * 1024, np.float64).tobytes())
     """
     name = None
     types = []

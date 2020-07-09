@@ -1,6 +1,3 @@
-# Licensed under a 3-clause BSD style license - see LICENSE.rst
-# -*- coding: utf-8 -*-
-
 """
 This file manages a transient representation of the tree made up of
 simple Python data types (lists, dicts, scalars) wrapped inside of

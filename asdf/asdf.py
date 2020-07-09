@@ -1,7 +1,3 @@
-# Licensed under a 3-clause BSD style license - see LICENSE.rst
-# -*- coding: utf-8 -*-
-
-
 import io
 import os
 import time
@@ -40,8 +36,8 @@ def get_asdf_library_info():
     return Software({
         'name': 'asdf',
         'version': version.version,
-        'homepage': 'http://github.com/spacetelescope/asdf',
-        'author': 'Space Telescope Science Institute'
+        'homepage': 'http://github.com/asdf-format/asdf',
+        'author': 'The ASDF Developers'
     })
 
 

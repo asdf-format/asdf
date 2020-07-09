@@ -1,6 +1,3 @@
-# Licensed under a 3-clause BSD style license - see LICENSE.rst
-# -*- coding: utf-8 -*-
-
 """
 This module deals with things that change between different versions
 of the ASDF spec.

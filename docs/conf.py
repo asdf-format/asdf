@@ -1,6 +1,3 @@
-# -*- coding: utf-8 -*-
-# Licensed under a 3-clause BSD style license - see LICENSE.rst
-#
 # Astropy documentation build configuration file.
 #
 # This file is execfile()d with the current directory set to its containing dir.
@@ -103,7 +100,7 @@ version = '.'.join(release.split('.')[:2])
 # name of a builtin theme or the name of a custom theme in html_theme_path.
 html_theme = 'alabaster'
 html_theme_options = {
-    'github_user': 'spacetelescope',
+    'github_user': 'asdf-format',
     'github_repo': 'asdf',
     'github_button': 'true',
     'fixed_sidebar': 'true',

@@ -36,8 +36,8 @@ Installing with pip
 ===================
 
 .. include:: ../../README.rst
-    :start-after: begin-pip-install-text
-    :end-before: begin-source-install-text
+    :start-after: begin-pip-install-text:
+    :end-before: begin-source-install-text:
 
 Installing with conda
 =====================
@@ -59,12 +59,12 @@ Building from source
 ====================
 
 .. include:: ../../README.rst
-    :start-after: begin-source-install-text
-    :end-before: end-source-install-text
+    :start-after: begin-source-install-text:
+    :end-before: end-source-install-text:
 
 Running the tests
 =================
 
 .. include:: ../../README.rst
-    :start-after: begin-testing-text
-    :end-before: end-testing-text
+    :start-after: begin-testing-text:
+    :end-before: end-testing-text:
