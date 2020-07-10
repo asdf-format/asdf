@@ -57,11 +57,11 @@ def get_version_map(version):
         # Separate the core tags from the rest of the standard for convenience
         version_map['core'] = {}
         version_map['standard'] = {}
-        for name, version in version_map['tags'].items():
-            if name.startswith('tag:stsci.edu:asdf/core'):
-                version_map['core'][name] = version
+        for tag_name, tag_version in version_map['tags'].items():
+            if tag_name.startswith('tag:stsci.edu:asdf/core'):
+                version_map['core'][tag_name] = tag_version
             else:
-                version_map['standard'][name] = version
+                version_map['standard'][tag_name] = tag_version
 
         _version_map[version] = version_map
 
