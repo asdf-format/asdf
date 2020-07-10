@@ -25,6 +25,9 @@
 - Stop traversing oneOf and anyOf combiners when filling
   or removing default values. [#811]
 
+- Fix bug in version map caching that caused incompatible
+  tags to be written under ASDF Standard 1.0.0. [#821]
+
 2.6.1 (unreleased)
 ------------------
 
