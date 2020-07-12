@@ -17,19 +17,24 @@ else:
 import asdf
 
 
-__all__ = ["TraversableResourceMapping", "ResourceManager"]
+__all__ = [
+    "DirectoryResourceMapping",
+    "ResourceManager",
+    "JsonschemaResourceMapping",
+    "get_core_resource_mappings",
+]
 
 
-class TraversableResourceMapping(Mapping):
+class DirectoryResourceMapping(Mapping):
     """
     Resource mapping that reads resource content
-    from a root directory.
+    from a directory or directory tree.
 
     Parameters
     ----------
     root : str or importlib.resources.abc.Traversable
-        Root directory of the resource files.  `str` will
-        be interpreted as a filesystem path.
+        Root directory (or directory-like Traversable) of the resource
+        files.  `str` will be interpreted as a filesystem path.
     uri_prefix : str
         Prefix used to construct URIs from file paths.  The
         prefix will be prepended to paths relative to the root
@@ -44,7 +49,7 @@ class TraversableResourceMapping(Mapping):
         constructing its URI.
     """
     def __init__(self, root, uri_prefix, recursive=False, filename_pattern="*.yaml", stem_filename=True):
-        self._uri_to_traversable = {}
+        self._uri_to_file = {}
         self._recursive = recursive
         self._filename_pattern = filename_pattern
         self._stem_filename = stem_filename
@@ -59,32 +64,32 @@ class TraversableResourceMapping(Mapping):
         else:
             self._uri_prefix = uri_prefix
 
-        for traversable, path in self._iterate_files(self._root, []):
-            self._uri_to_traversable[self._make_uri(traversable, path)] = traversable
+        for file, path_components in self._iterate_files(self._root, []):
+            self._uri_to_file[self._make_uri(file, path_components)] = file
 
-    def _iterate_files(self, traversable, path):
-        for obj in traversable.iterdir():
+    def _iterate_files(self, directory, path_components):
+        for obj in directory.iterdir():
             if obj.is_file() and fnmatch.fnmatch(obj.name, self._filename_pattern):
-                yield obj, path
+                yield obj, path_components
             elif obj.is_dir() and self._recursive:
-                yield from self._iterate_files(obj, path + [obj.name])
+                yield from self._iterate_files(obj, path_components + [obj.name])
 
-    def _make_uri(self, traversable, path):
+    def _make_uri(self, file, path_components):
         if self._stem_filename:
-            filename = os.path.splitext(traversable.name)[0]
+            filename = os.path.splitext(file.name)[0]
         else:
-            filename = traversable.name
+            filename = file.name
 
-        return "/".join([self._uri_prefix] + path + [filename])
+        return "/".join([self._uri_prefix] + path_components + [filename])
 
     def __getitem__(self, uri):
-        return self._uri_to_traversable[uri].read_bytes()
+        return self._uri_to_file[uri].read_bytes()
 
     def __len__(self):
-        return len(self._uri_to_traversable)
+        return len(self._uri_to_file)
 
     def __iter__(self):
-        yield from self._uri_to_traversable
+        yield from self._uri_to_file
 
     def __repr__(self):
         return "{}({!r}, {!r}, recursive={!r}, filename_pattern={!r}, stem_filename={!r})".format(
@@ -134,6 +139,7 @@ class ResourceManager(Mapping):
         yield from self._mappings_by_uri
 
     def __contains__(self, uri):
+        # Implement __contains__ only for efficiency.
         return uri in self._mappings_by_uri
 
 
@@ -175,6 +181,6 @@ def get_core_resource_mappings():
             raise RuntimeError("Unable to locate core schemas")
 
     return [
-        TraversableResourceMapping(core_schemas_root, "http://stsci.edu/schemas", recursive=True),
+        DirectoryResourceMapping(core_schemas_root, "http://stsci.edu/schemas", recursive=True),
         JsonschemaResourceMapping(),
     ]

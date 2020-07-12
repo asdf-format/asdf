@@ -50,49 +50,65 @@ def test_config_context_threaded():
     assert get_config().validate_on_read is True
 
 
-def test_validate_on_read():
-    config = get_config()
-    assert config.validate_on_read == asdf._config.DEFAULT_VALIDATE_ON_READ
-    config.validate_on_read = False
-    assert get_config().validate_on_read is False
-    config.validate_on_read = True
+def test_global_config():
     assert get_config().validate_on_read is True
+
+    get_config().validate_on_read = False
+    assert get_config().validate_on_read is False
+
+    with asdf.config_context() as config:
+        assert config.validate_on_read is False
+        config.validate_on_read = True
+        assert get_config().validate_on_read is True
+
+    assert get_config().validate_on_read is False
+
+    # Global config is reset to defaults by autouse
+    # fixture in asdf/tests/conftest.py.
+
+
+def test_validate_on_read():
+    with asdf.config_context() as config:
+        assert config.validate_on_read == asdf._config.DEFAULT_VALIDATE_ON_READ
+        config.validate_on_read = False
+        assert get_config().validate_on_read is False
+        config.validate_on_read = True
+        assert get_config().validate_on_read is True
 
 
 def test_resource_mappings():
-    config = get_config()
-    core_mappings = resource.get_core_resource_mappings()
+    with asdf.config_context() as config:
+        core_mappings = resource.get_core_resource_mappings()
 
-    default_mappings = config.resource_mappings
-    assert len(default_mappings) >= len(core_mappings)
+        default_mappings = config.resource_mappings
+        assert len(default_mappings) >= len(core_mappings)
 
-    new_mapping = {"http://somewhere.org/schemas/foo-1.0.0": b"foo"}
-    config.add_resource_mapping(new_mapping)
+        new_mapping = {"http://somewhere.org/schemas/foo-1.0.0": b"foo"}
+        config.add_resource_mapping(new_mapping)
 
-    assert len(config.resource_mappings) == len(default_mappings) + 1
-    assert new_mapping in config.resource_mappings
+        assert len(config.resource_mappings) == len(default_mappings) + 1
+        assert new_mapping in config.resource_mappings
 
-    config.reset_resources()
+        config.reset_resources()
 
-    assert len(config.resource_mappings) == len(default_mappings)
+        assert len(config.resource_mappings) == len(default_mappings)
 
 
 def test_resource_manager():
-    config = get_config()
+    with asdf.config_context() as config:
+        assert "http://stsci.edu/schemas/asdf/core/asdf-1.1.0" in config.resource_manager
+        assert b"http://stsci.edu/schemas/asdf/core/asdf-1.1.0" in config.resource_manager["http://stsci.edu/schemas/asdf/core/asdf-1.1.0"]
+        assert "http://somewhere.org/schemas/foo-1.0.0" not in config.resource_manager
 
-    assert "http://stsci.edu/schemas/asdf/core/asdf-1.1.0" in config.resource_manager
-    assert b"http://stsci.edu/schemas/asdf/core/asdf-1.1.0" in config.resource_manager["http://stsci.edu/schemas/asdf/core/asdf-1.1.0"]
-    assert "http://somewhere.org/schemas/foo-1.0.0" not in config.resource_manager
+        config.add_resource_mapping({"http://somewhere.org/schemas/foo-1.0.0": b"foo"})
 
-    config.add_resource_mapping({"http://somewhere.org/schemas/foo-1.0.0": b"foo"})
+        assert "http://stsci.edu/schemas/asdf/core/asdf-1.1.0" in config.resource_manager
+        assert b"http://stsci.edu/schemas/asdf/core/asdf-1.1.0" in config.resource_manager["http://stsci.edu/schemas/asdf/core/asdf-1.1.0"]
+        assert "http://somewhere.org/schemas/foo-1.0.0" in config.resource_manager
+        assert config.resource_manager["http://somewhere.org/schemas/foo-1.0.0"] == b"foo"
 
-    assert "http://stsci.edu/schemas/asdf/core/asdf-1.1.0" in config.resource_manager
-    assert b"http://stsci.edu/schemas/asdf/core/asdf-1.1.0" in config.resource_manager["http://stsci.edu/schemas/asdf/core/asdf-1.1.0"]
-    assert "http://somewhere.org/schemas/foo-1.0.0" in config.resource_manager
-    assert config.resource_manager["http://somewhere.org/schemas/foo-1.0.0"] == b"foo"
+        config.reset_resources()
 
-    config.reset_resources()
-
-    assert "http://stsci.edu/schemas/asdf/core/asdf-1.1.0" in config.resource_manager
-    assert b"http://stsci.edu/schemas/asdf/core/asdf-1.1.0" in config.resource_manager["http://stsci.edu/schemas/asdf/core/asdf-1.1.0"]
-    assert "http://somewhere.org/schemas/foo-1.0.0" not in config.resource_manager
+        assert "http://stsci.edu/schemas/asdf/core/asdf-1.1.0" in config.resource_manager
+        assert b"http://stsci.edu/schemas/asdf/core/asdf-1.1.0" in config.resource_manager["http://stsci.edu/schemas/asdf/core/asdf-1.1.0"]
+        assert "http://somewhere.org/schemas/foo-1.0.0" not in config.resource_manager
