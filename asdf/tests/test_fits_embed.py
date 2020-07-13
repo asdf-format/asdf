@@ -12,6 +12,7 @@ from astropy.table import Table
 from jsonschema.exceptions import ValidationError
 
 import asdf
+from asdf import get_config
 from asdf import fits_embed
 from asdf import open as asdf_open
 from asdf.exceptions import AsdfWarning, AsdfConversionWarning
@@ -319,10 +320,12 @@ invalid_software: !core/software-1.0.0
 
     for open_method in [asdf.open, fits_embed.AsdfInFits.open]:
         with pytest.raises(ValidationError):
-            with open_method(tmpfile, validate_on_read=True):
+            get_config().validate_on_read = True
+            with open_method(tmpfile):
                 pass
 
-        with open_method(tmpfile, validate_on_read=False) as af:
+        get_config().validate_on_read = False
+        with open_method(tmpfile) as af:
             assert af["invalid_software"]["name"] == "Minesweeper"
             assert af["invalid_software"]["version"] == 3
 

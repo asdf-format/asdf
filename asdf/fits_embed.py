@@ -177,7 +177,7 @@ class AsdfInFits(asdf.AsdfFile):
     def open(cls, fd, uri=None, validate_checksums=False, extensions=None,
              ignore_version_mismatch=True, ignore_unrecognized_tag=False,
              strict_extension_check=False, ignore_missing_extensions=False,
-             validate_on_read=True):
+             **kwargs):
         """Creates a new AsdfInFits object based on given input data
 
         Parameters
@@ -217,8 +217,9 @@ class AsdfInFits(asdf.AsdfFile):
             to `False`.
 
         validate_on_read : bool, optional
-            When `True`, validate the newly opened file against tag and custom
-            schemas.  Recommended unless the file is already known to be valid.
+            DEPRECATED. When `True`, validate the newly opened file against tag
+            and custom schemas.  Recommended unless the file is already known
+            to be valid.
         """
         return cls._open_impl(fd, uri=uri,
                        validate_checksums=validate_checksums,
@@ -227,13 +228,13 @@ class AsdfInFits(asdf.AsdfFile):
                        ignore_unrecognized_tag=ignore_unrecognized_tag,
                        strict_extension_check=strict_extension_check,
                        ignore_missing_extensions=ignore_missing_extensions,
-                       validate_on_read=validate_on_read)
+                       **kwargs)
 
     @classmethod
     def _open_impl(cls, fd, uri=None, validate_checksums=False, extensions=None,
              ignore_version_mismatch=True, ignore_unrecognized_tag=False,
              strict_extension_check=False, _extension_metadata=None,
-             ignore_missing_extensions=False, validate_on_read=True):
+             ignore_missing_extensions=False, **kwargs):
 
         close_hdulist = False
         if isinstance(fd, fits.hdu.hdulist.HDUList):
@@ -270,7 +271,7 @@ class AsdfInFits(asdf.AsdfFile):
                               validate_checksums=validate_checksums,
                               strict_extension_check=strict_extension_check,
                               ignore_missing_extensions=ignore_missing_extensions,
-                              validate_on_read=validate_on_read)
+                              **kwargs)
         except RuntimeError:
             self.close()
             raise

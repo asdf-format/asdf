@@ -13,6 +13,7 @@ from jsonschema.exceptions import ValidationError
 import yaml
 import numpy as np
 
+from ._config import get_config
 from . import constants
 from . import generic_io
 from . import reference
@@ -334,6 +335,17 @@ OrderedLoader.add_constructor(
 
 @lru_cache()
 def _load_schema(url):
+    # Check if this is a URI provided by the new
+    # Mapping API:
+    resource_manager = get_config().resource_manager
+    if url in resource_manager:
+        content = resource_manager[url]
+        # The jsonschema metaschemas are JSON, but pyyaml
+        # doesn't mind:
+        result = yaml.load(content, Loader=OrderedLoader)
+        return result, url
+
+    # If not, fall back to fetching the schema the old way:
     with generic_io.get_file(url) as fd:
         if isinstance(url, str) and url.endswith('json'):
             json_data = fd.read().decode('utf-8')
@@ -366,18 +378,6 @@ def _make_resolver(url_mapping):
     # counterintuitively makes things slower.
     return mvalidators.RefResolver(
         '', {}, cache_remote=False, handlers=handlers)
-
-
-def _load_draft4_metaschema():
-    from jsonschema import _utils
-    return _utils.load_schema('draft4')
-
-
-# This is a list of schema that we have locally on disk but require
-# special methods to obtain
-HARDCODED_SCHEMA = {
-    'http://json-schema.org/draft-04/schema': _load_draft4_metaschema
-}
 
 
 @lru_cache()
@@ -438,10 +438,7 @@ def load_schema(url, resolver=None, resolve_references=False,
 @lru_cache()
 def _load_schema_cached(url, resolver, resolve_references, resolve_local_refs):
     loader = _make_schema_loader(resolver)
-    if url in HARDCODED_SCHEMA:
-        schema = HARDCODED_SCHEMA[url]()
-    else:
-        schema, url = loader(url)
+    schema, url = loader(url)
 
     # Resolve local references
     if resolve_local_refs:

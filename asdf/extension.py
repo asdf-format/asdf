@@ -25,8 +25,7 @@ class AsdfExtension(metaclass=abc.ABCMeta):
     def __subclasshook__(cls, C):
         if cls is AsdfExtension:
             return (hasattr(C, 'types') and
-                    hasattr(C, 'tag_mapping') and
-                    hasattr(C, 'url_mapping'))
+                    hasattr(C, 'tag_mapping'))
         return NotImplemented
 
     @abc.abstractproperty
@@ -70,9 +69,11 @@ class AsdfExtension(metaclass=abc.ABCMeta):
         """
         pass
 
-    @abc.abstractproperty
     def url_mapping(self):
         """
+        DEPRECATED.  This property will be ignored in asdf 3.0.
+        Schema content can be provided using the resource Mapping API.
+
         A list of 2-tuples or callables mapping JSON Schema URLs to
         other URLs.  This is useful if the JSON Schemas are not
         actually fetchable at their corresponding URLs but are on the
@@ -103,7 +104,7 @@ class AsdfExtension(metaclass=abc.ABCMeta):
                     '/{url_suffix}.yaml'
                    )]
         """
-        pass
+        return []
 
 
 class AsdfExtensionList:
@@ -121,7 +122,9 @@ class AsdfExtensionList:
                     "Extension must implement asdf.types.AsdfExtension "
                     "interface")
             tag_mapping.extend(extension.tag_mapping)
-            url_mapping.extend(extension.url_mapping)
+            # New-style extensions will not include a url_mapping attribute.
+            if hasattr(extension, "url_mapping"):
+                url_mapping.extend(extension.url_mapping)
             for typ in extension.types:
                 self._type_index.add_type(typ, extension)
                 validators.update(typ.validators)

@@ -6,6 +6,7 @@ from numpy.testing import assert_array_equal
 import pytest
 
 import asdf
+from asdf import get_config
 from asdf import extension
 from asdf import resolver
 from asdf import schema
@@ -181,6 +182,24 @@ def test_asdf_file_resolver_hashing():
 
     assert hash(a1.resolver) == hash(a2.resolver)
     assert a1.resolver == a2.resolver
+
+
+def test_load_schema_from_resource_mapping():
+    content = """
+id: http://somewhere.org/schemas/razmataz-1.0.0
+type: object
+properties:
+  foo:
+    type: string
+  bar:
+    type: boolean
+""".encode("utf-8")
+
+    get_config().add_resource_mapping({"http://somewhere.org/schemas/razmataz-1.0.0": content})
+
+    s = schema.load_schema("http://somewhere.org/schemas/razmataz-1.0.0")
+
+    assert s["id"] == "http://somewhere.org/schemas/razmataz-1.0.0"
 
 
 def test_flow_style():
