@@ -678,43 +678,9 @@ To properly handle subclasses of custom types already recognized by ASDF, it is
 necessary to implement a separate tag class that is specific to the subclass to
 be serialized.
 
-However, this can be burdensome, especially if multiple subclasses need to be
-handled. Version 2.4.0 of the `asdf` package introduces a new way to handle
-subclasses of custom types using decorators.
-
-.. attention::
-
-   This feature was introduced in version 2.4.0 and is **experimental**. The
-   API may change in future versions.
-
-In previous examples we wrote a tag class for the built-in type
-`fractions.Fraction`. Let's create a subclass of this type that we wish to
-be able to serialize in ASDF. We have already defined ``FractionType`` which
-handles the serialization of `fractions.Fraction`. We will use decorators to
-indicate how to properly serialize the subclass:
-
-.. code-block:: python
-
-   @FractionType.subclass
-   class NamedFraction(fractions.Fraction):
-      """
-      A very contrived example, indeed.
-      """
-      def __init__(self, *args, name='', **kwargs):
-         super().__init__(*args, **kwargs)
-         self._name = name
-
-      @FractionType.subclass_property
-      def name(self):
-         return self._name
-
-The decorators we use are defined as class methods of the ``FractionType`` tag
-class. By using these we enable round-trip serialization of our custom subclass
-type. See `asdf.CustomType.subclass` and `asdf.CustomType.subclass_property`
-for additional details.
-
-Note that this feature is currently not reflected in the ASDF Standard, which
-means that other implementations of ASDF may not preserve subclass information.
+Previous versions of this library implemented an experimental feature that
+allowed ADSF to serialize subclass attributes using the same tag class, but
+this feature was dropped as it produced files that were not portable.
 
 Creating custom schemas
 -----------------------
