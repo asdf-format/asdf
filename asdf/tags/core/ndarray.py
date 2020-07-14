@@ -416,18 +416,18 @@ class NDArrayType(AsdfType):
 
     @classmethod
     def to_tree(cls, data, ctx):
+        if any(stride == 0 for stride in data.strides):
+            data = np.ascontiguousarray(data)
+
         base = util.get_array_base(data)
         shape = data.shape
         dtype = data.dtype
         offset = data.ctypes.data - base.ctypes.data
-        strides = None
 
-        if not data.flags.c_contiguous:
-            # We do not want to encode strides for broadcasted arrays
-            if not all(data.strides):
-                data = np.ascontiguousarray(data)
-            else:
-                strides = data.strides
+        if data.flags.c_contiguous:
+            strides = None
+        else:
+            strides = data.strides
 
         block = ctx.blocks.find_or_create_block_for_array(data, ctx)
 

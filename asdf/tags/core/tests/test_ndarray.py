@@ -818,6 +818,21 @@ def test_broadcasted_array(tmpdir):
     helpers.assert_roundtrip_tree(tree, tmpdir)
 
 
+def test_broadcasted_offset_array(tmpdir):
+    base = np.arange(10)
+    offset = base[5:]
+    broadcasted = np.broadcast_to(offset, (4, 5))
+    tree = {'broadcasted': broadcasted}
+    helpers.assert_roundtrip_tree(tree, tmpdir)
+
+
+def test_non_contiguous_base_array(tmpdir):
+    base = np.arange(60).reshape(5, 4, 3).transpose(2, 0, 1) * 1
+    contiguous = base.transpose(1, 2, 0)
+    tree = {'contiguous': contiguous}
+    helpers.assert_roundtrip_tree(tree, tmpdir)
+
+
 def test_fortran_order(tmpdir):
     array = np.array([[11,12,13], [21,22,23]], order='F')
     tree = dict(data=array)
