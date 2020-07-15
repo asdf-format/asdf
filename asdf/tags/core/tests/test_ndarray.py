@@ -473,7 +473,7 @@ def test_masked_array_stay_open_bug(tmpdir):
         with asdf.open(tmppath) as f2:
             np.sum(f2.tree['test'])
 
-    assert len(p.open_files()) == len(orig_open)
+    assert len(p.open_files()) <= len(orig_open)
 
 
 def test_masked_array_repr(tmpdir):
