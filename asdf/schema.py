@@ -335,17 +335,6 @@ OrderedLoader.add_constructor(
 
 @lru_cache()
 def _load_schema(url):
-    # Check if this is a URI provided by the new
-    # Mapping API:
-    resource_manager = get_config().resource_manager
-    if url in resource_manager:
-        content = resource_manager[url]
-        # The jsonschema metaschemas are JSON, but pyyaml
-        # doesn't mind:
-        result = yaml.load(content, Loader=OrderedLoader)
-        return result, url
-
-    # If not, fall back to fetching the schema the old way:
     with generic_io.get_file(url) as fd:
         if isinstance(url, str) and url.endswith('json'):
             json_data = fd.read().decode('utf-8')
@@ -357,6 +346,17 @@ def _load_schema(url):
 
 def _make_schema_loader(resolver):
     def load_schema(url):
+        # Check if this is a URI provided by the new
+        # Mapping API:
+        resource_manager = get_config().resource_manager
+        if url in resource_manager:
+            content = resource_manager[url]
+            # The jsonschema metaschemas are JSON, but pyyaml
+            # doesn't mind:
+            result = yaml.load(content, Loader=OrderedLoader)
+            return result, url
+
+        # If not, fall back to fetching the schema the old way:
         url = resolver(str(url))
         return _load_schema(url)
     return load_schema
