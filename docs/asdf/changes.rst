@@ -4,6 +4,31 @@
 Changes
 *******
 
+What's New in ASDF 2.7.0?
+=========================
+
+The ASDF Standard is at v1.5.0.
+
+Changes include:
+
+* Performance improvements when reading and validating
+  ASDF files.
+
+* Numerous bug fixes.  See complete changelog below for details.
+
+* Add option to ``asdf.open`` that disables schema validation on read.
+
+* Improved warning messages.  All asdf library warnings now
+  subclass ``asdf.exceptions.AsdfWarning``.
+
+* Drop support for filling default values from subschemas
+  within oneOf or anyOf combiners.
+
+* Resolve deprecation warnings from the ASDF pytest plugin
+  when used with newer versions of pytest.
+
+* Drop support for 2.x versions of the jsonschema package.
+
 What's New in ASDF 2.6.0?
 =========================
 
