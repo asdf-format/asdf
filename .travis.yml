@@ -1,10 +1,9 @@
 os: linux
+dist: xenial
 language: python
 python: 3.8
-# Use Travis' container-based architecture
-sudo: false
 
-matrix:
+jobs:
   include:
     # Python 3.8, stable dependencies
     - env: TOXENV=py38
@@ -78,14 +77,15 @@ matrix:
     - env:
         - TOXENV=py38
         - PATH=/usr/local/opt/python@3.8/bin:$PATH
-        # As of 2020-01-24, homebrew on Travis requires an update
-        # to make Python 3.8 available.
-        # - HOMEBREW_NO_AUTO_UPDATE=1
-        - HOMEBREW_NO_INSTALL_CLEANUP=1
       os: osx
+      osx_image: xcode12
       language: shell
-      before_install:
-        - brew install python@3.8
+      addons:
+        homebrew:
+          packages:
+            - python@3.8
+      install:
+        - pip3 install tox
 
     # Test on Windows
     - env:
@@ -106,6 +106,10 @@ matrix:
     - env: TOXENV=py38-numpydev
 
     - env: TOXENV=warnings
+
+    # This build frequently fails due to timeout
+    - env: TOXENV=s390x
+      arch: s390x
 
 install: pip install tox
 
