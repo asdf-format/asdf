@@ -20,6 +20,7 @@ from . import reference
 from . import treeutil
 from . import util
 from . import extension
+from . import yamlutil
 from .exceptions import AsdfDeprecationWarning, AsdfWarning
 
 
@@ -319,20 +320,6 @@ def _create_validator(validators=YAML_VALIDATORS, visit_repeat_nodes=False):
     return ASDFValidator
 
 
-# We want to load mappings in schema as ordered dicts
-class OrderedLoader(_yaml_base_loader):
-    def construct_yaml_map(self, node):
-        data = OrderedDict()
-        yield data
-        for key, value in self.construct_pairs(node):
-            data[key] = value
-
-
-OrderedLoader.add_constructor(
-    yaml.resolver.BaseResolver.DEFAULT_MAPPING_TAG,
-    OrderedLoader.construct_yaml_map)
-
-
 @lru_cache()
 def _load_schema(url):
     # Check if this is a URI provided by the new
@@ -342,7 +329,7 @@ def _load_schema(url):
         content = resource_manager[url]
         # The jsonschema metaschemas are JSON, but pyyaml
         # doesn't mind:
-        result = yaml.load(content, Loader=OrderedLoader)
+        result = yaml.load(content, Loader=yamlutil.AsdfLoader)
         return result, url
 
     # If not, fall back to fetching the schema the old way:
@@ -351,7 +338,7 @@ def _load_schema(url):
             json_data = fd.read().decode('utf-8')
             result = json.loads(json_data, object_pairs_hook=OrderedDict)
         else:
-            result = yaml.load(fd, Loader=OrderedLoader)
+            result = yaml.load(fd, Loader=yamlutil.AsdfLoader)
     return result, fd.uri
 
 
@@ -673,7 +660,7 @@ def check_schema(schema):
                              validators=VALIDATORS)
     validator = cls(meta_schema, resolver=resolver)
 
-    instance_validator = mvalidators.Draft4Validator(schema, resolver=resolver)
+    instance_validator = get_validator(schema)
     scope = schema.get('id', '')
 
     validator.validate(schema, _schema=meta_schema)
