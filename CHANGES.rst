@@ -6,6 +6,9 @@
 
 - Add global configuration mechanism. [#819]
 
+- Drop support for automatic serialization of subclass
+  attributes. [#825]
+
 2.7.0 (unreleased)
 ------------------
 
