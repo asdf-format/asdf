@@ -36,6 +36,12 @@
 - Fix bug in version map caching that caused incompatible
   tags to be written under ASDF Standard 1.0.0. [#821]
 
+- Fix bug that corrupted ndarrays when the underlying block
+  array was converted to C order on write. [#827]
+
+# Fix bug that produced unreadable ASDF files when an
+  ndarray in the tree was both offset and broadcasted. [#827]
+
 2.6.1 (unreleased)
 ------------------
 
