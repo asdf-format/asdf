@@ -343,6 +343,8 @@ def test_default_check_in_schema():
     with pytest.raises(ValidationError):
         schema.check_schema(s)
 
+    schema.check_schema(s, validate_default=False)
+
 
 def test_fill_and_remove_defaults():
     class DefaultType(dict, types.CustomType):
