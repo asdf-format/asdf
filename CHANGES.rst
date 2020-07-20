@@ -63,6 +63,9 @@
 - Fix bug preventing validation of default values in
   ``schema.check_schema``. [#785]
 
+- Add option to disable validation of schema default values
+  in the pytest plugin. [#831]
+
 2.6.0 (2020-04-22)
 ------------------
 
