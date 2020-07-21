@@ -627,29 +627,40 @@ def remove_defaults(instance, ctx):
     validate(instance, ctx, validators=REMOVE_DEFAULTS)
 
 
-def check_schema(schema):
+def check_schema(schema, validate_default=True):
     """
     Check a given schema to make sure it is valid YAML schema.
+
+    Parameters
+    ----------
+    schema : dict
+        The schema object, as returned by `load_schema`.
+    validate_default : bool, optional
+        Set to `True` to validate the content of the default
+        field against the schema.
     """
-    # We also want to validate the "default" values in the schema
-    # against the schema itself.  jsonschema as a library doesn't do
-    # this on its own.
-
-    def validate_default(validator, default, instance, schema):
-        if not validator.is_type(instance, 'object'):
-            return
-
-        if 'default' in instance:
-            with instance_validator.resolver.in_scope(scope):
-                for err in instance_validator.iter_errors(
-                        instance['default'], instance):
-                    yield err
-
-    VALIDATORS = util.HashableDict(
+    validators = util.HashableDict(
         mvalidators.Draft4Validator.VALIDATORS.copy())
-    VALIDATORS.update({
-        'default': validate_default
-    })
+
+    if validate_default:
+        # The jsonschema library doesn't validate defaults
+        # on its own.
+        instance_validator = get_validator(schema)
+        instance_scope = schema.get('id', '')
+
+        def _validate_default(validator, default, instance, schema):
+            if not validator.is_type(instance, 'object'):
+                return
+
+            if 'default' in instance:
+                with instance_validator.resolver.in_scope(instance_scope):
+                    for err in instance_validator.iter_errors(
+                            instance['default'], instance):
+                        yield err
+
+        validators.update({
+            'default': _validate_default
+        })
 
     meta_schema_id = schema.get('$schema', YAML_SCHEMA_METASCHEMA_ID)
     meta_schema = _load_schema_cached(meta_schema_id, extension.get_default_resolver(), False, False)
@@ -657,10 +668,6 @@ def check_schema(schema):
     resolver = _make_resolver(extension.get_default_resolver())
 
     cls = mvalidators.create(meta_schema=meta_schema,
-                             validators=VALIDATORS)
+                             validators=validators)
     validator = cls(meta_schema, resolver=resolver)
-
-    instance_validator = get_validator(schema)
-    scope = schema.get('id', '')
-
     validator.validate(schema, _schema=meta_schema)

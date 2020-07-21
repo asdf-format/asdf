@@ -13,6 +13,7 @@ from asdf import schema
 from asdf import types
 from asdf import util
 from asdf import yamlutil
+from asdf import tagged
 from asdf.tests import helpers, CustomExtension
 from asdf.exceptions import AsdfWarning, AsdfConversionWarning
 
@@ -356,6 +357,32 @@ def test_default_check_in_schema():
         }
     }
 
+    with pytest.raises(ValidationError):
+        schema.check_schema(s)
+
+    schema.check_schema(s, validate_default=False)
+
+
+def test_check_complex_default():
+    default_software = tagged.TaggedDict(
+        {"name": "asdf", "version": "2.7.0"},
+        "tag:stsci.edu/asdf/core/software-1.0.0"
+    )
+
+    s = {
+        'type': 'object',
+        'properties': {
+            'a': {
+                'type': 'object',
+                'tag': 'tag:stsci.edu/asdf/core/software-1.0.0',
+                'default': default_software
+            }
+        }
+    }
+
+    schema.check_schema(s)
+
+    s['properties']['a']['tag'] = 'tag:stsci.edu/asdf/core/ndarray-1.0.0'
     with pytest.raises(ValidationError):
         schema.check_schema(s)
 
