@@ -1,6 +1,5 @@
 import asdf
 
-from asdf import yamlutil
 from asdf.tests import helpers
 
 def test_extra_properties():
