@@ -252,7 +252,7 @@ class AsdfFile(versioning.VersionedMixin):
             ext_meta = ExtensionMetadata(extension_class=ext_name)
             metadata = self._extension_metadata.get(ext_name)
             if metadata is not None:
-                ext_meta.software = Software(name=metadata[0], version=metadata[1])
+                ext_meta['software'] = Software(name=metadata[0], version=metadata[1])
 
             for i, entry in enumerate(self.tree['history']['extensions']):
                 # Update metadata about this extension if it already exists

@@ -66,6 +66,9 @@
 - Add option to disable validation of schema default values
   in the pytest plugin. [#831]
 
+- Prevent errors when extension metadata contains additional
+  properties. [#832]
+
 2.6.0 (2020-04-22)
 ------------------
 
