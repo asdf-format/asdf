@@ -22,7 +22,7 @@ class Stream(ndarray.NDArrayType):
          ...     ff.write_to(fd)
          ...     for i in range(200):
          ...         nbytes = fd.write(
-         ...                      np.array([i] * 1024, np.float64).tostring())
+         ...                      np.array([i] * 1024, np.float64).tobytes())
     """
     name = None
     types = []

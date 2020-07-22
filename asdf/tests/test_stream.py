@@ -25,7 +25,7 @@ def test_stream():
     ff = asdf.AsdfFile(tree)
     ff.write_to(buff)
     for i in range(100):
-        buff.write(np.array([i] * 12, np.float64).tostring())
+        buff.write(np.array([i] * 12, np.float64).tobytes())
 
     buff.seek(0)
 
@@ -68,7 +68,7 @@ def test_stream_twice():
     ff = asdf.AsdfFile(tree)
     ff.write_to(buff)
     for i in range(100):
-        buff.write(np.array([i] * 12, np.uint8).tostring())
+        buff.write(np.array([i] * 12, np.uint8).tobytes())
 
     buff.seek(0)
 
@@ -92,7 +92,7 @@ def test_stream_with_nonstream():
     ff.set_array_storage(ff['nonstream'], 'internal')
     ff.write_to(buff)
     for i in range(100):
-        buff.write(np.array([i] * 12, np.float64).tostring())
+        buff.write(np.array([i] * 12, np.float64).tobytes())
 
     buff.seek(0)
 
@@ -121,7 +121,7 @@ def test_stream_real_file(tmpdir):
         ff.set_array_storage(ff['nonstream'], 'internal')
         ff.write_to(fd)
         for i in range(100):
-            fd.write(np.array([i] * 12, np.float64).tostring())
+            fd.write(np.array([i] * 12, np.float64).tobytes())
 
     with asdf.open(path) as ff:
         assert len(ff.blocks) == 1
@@ -144,7 +144,7 @@ def test_stream_to_stream():
     ff = asdf.AsdfFile(tree)
     ff.write_to(fd)
     for i in range(100):
-        fd.write(np.array([i] * 12, np.float64).tostring())
+        fd.write(np.array([i] * 12, np.float64).tobytes())
 
     buff.seek(0)
 
@@ -165,7 +165,7 @@ def test_array_to_stream(tmpdir):
     ff = asdf.AsdfFile(tree)
     ff.set_array_storage(tree['stream'], 'streamed')
     ff.write_to(buff)
-    buff.write(np.array([5, 6, 7, 8], np.int64).tostring())
+    buff.write(np.array([5, 6, 7, 8], np.int64).tobytes())
 
     buff.seek(0)
     ff = asdf.open(generic_io.InputStream(buff))
@@ -179,7 +179,7 @@ def test_array_to_stream(tmpdir):
         ff = asdf.AsdfFile(tree)
         ff.set_array_storage(tree['stream'], 'streamed')
         ff.write_to(fd)
-        fd.write(np.array([5, 6, 7, 8], np.int64).tostring())
+        fd.write(np.array([5, 6, 7, 8], np.int64).tobytes())
 
     with asdf.open(os.path.join(str(tmpdir), 'test.asdf')) as ff:
         assert_array_equal(ff.tree['stream'], [1, 2, 3, 4, 5, 6, 7, 8])
