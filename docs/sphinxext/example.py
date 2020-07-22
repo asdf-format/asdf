@@ -92,7 +92,7 @@ class AsdfDirective(Directive):
 
             with asdf.open(filename, **kwargs) as ff:
                 for i, block in enumerate(ff.blocks.internal_blocks):
-                    data = codecs.encode(block.data.tostring(), 'hex')
+                    data = codecs.encode(block.data.tobytes(), 'hex')
                     if len(data) > 40:
                         data = data[:40] + '...'.encode()
                     allocated = block._allocated

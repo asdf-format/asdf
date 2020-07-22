@@ -58,6 +58,8 @@
 - Prevent errors when extension metadata contains additional
   properties. [#832]
 
+- Replace use of deprecated ``numpy.ndarray.tostring`` method. [#817]
+
 2.6.0 (2020-04-22)
 ------------------
 

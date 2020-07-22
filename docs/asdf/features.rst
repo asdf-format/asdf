@@ -471,7 +471,7 @@ create an `AsdfInFits` object.
 
     with fits.open('embedded_asdf.fits') as new_hdulist:
         with open('content.asdf', 'wb') as fd:
-            fd.write(new_hdulist['ASDF'].data.tostring())
+            fd.write(new_hdulist['ASDF'].data.tobytes())
 
 The special ASDF extension in the resulting FITS file contains the following
 data.  Note that the data source of the arrays uses the ``fits:`` prefix to
