@@ -307,8 +307,8 @@ def test_extension_version_check(installed, extension, warns):
     tree = {
         'history': {
             'extensions': [
-                asdf.tags.core.ExtensionMetadata('foo.extension.FooExtension',
-                    asdf.tags.core.Software(name='foo', version=extension)),
+                asdf.tags.core.ExtensionMetadata(extension_class='foo.extension.FooExtension',
+                    software=asdf.tags.core.Software(name='foo', version=extension)),
             ]
         }
     }
