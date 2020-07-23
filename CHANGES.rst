@@ -9,7 +9,7 @@
 - Drop support for automatic serialization of subclass
   attributes. [#825]
 
-2.7.0 (unreleased)
+2.7.0 (2020-07-23)
 ------------------
 
 - Fix bug preventing diff of files containing ndarray-1.0.0
