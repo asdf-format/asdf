@@ -16,7 +16,7 @@ __all__ = [
 ]
 
 
-from .asdf import AsdfFile, open_asdf
+from .asdf import AsdfFile, open_asdf as open
 from .types import CustomType
 from .extension import AsdfExtension
 from .stream import Stream
@@ -27,7 +27,3 @@ from ._convenience import info
 from ._config import get_config, config_context
 
 from jsonschema import ValidationError
-
-open = open_asdf
-# Avoid redundancy/confusion in the top-level namespace
-del open_asdf
