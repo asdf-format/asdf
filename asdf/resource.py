@@ -15,6 +15,7 @@ else:
     import importlib.resources as importlib_resources
 
 import asdf
+from .util import get_class_name
 
 
 __all__ = [
@@ -23,6 +24,61 @@ __all__ = [
     "JsonschemaResourceMapping",
     "get_core_resource_mappings",
 ]
+
+
+class ResourceMappingProxy(Mapping):
+    """
+    Proxy that wraps a resource `Mapping` and carries
+    additional information on the package that provided
+    the mapping.
+    """
+    @classmethod
+    def maybe_wrap(self, delegate):
+        if isinstance(delegate, ResourceMappingProxy):
+            return delegate
+        else:
+            return ResourceMappingProxy(delegate)
+
+    def __init__(self, delegate, package_name=None, package_version=None):
+        if not isinstance(delegate, Mapping):
+            raise TypeError("Resource mapping must implement the Mapping interface")
+
+        self._delegate = delegate
+        self._package_name = package_name
+        self._package_version = package_version
+        self._class_name = get_class_name(delegate)
+
+    def __getitem__(self, uri):
+        return self._delegate.__getitem__(uri)
+
+    def __len__(self):
+        return self._delegate.__len__()
+
+    def __iter__(self):
+        return self._delegate.__iter__()
+
+    @property
+    def delegate(self):
+        return self._delegate
+
+    @property
+    def package_name(self):
+        return self._package_name
+
+    @property
+    def package_version(self):
+        return self._package_version
+
+    @property
+    def class_name(self):
+        return self._class_name
+
+    def __repr__(self):
+        return "<ResourceMappingProxy class: {} package: {}=={}>".format(
+            self.class_name,
+            self.package_name,
+            self.package_version,
+        )
 
 
 class DirectoryResourceMapping(Mapping):

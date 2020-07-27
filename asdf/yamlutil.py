@@ -218,8 +218,12 @@ def custom_tree_to_tagged_tree(tree, ctx):
     directly representable in YAML, to a tree of basic data types,
     annotated with tags.
     """
+    # This attribute is set on the AsdfFile in the _write_tree
+    # method.
+    extensions_used = getattr(ctx, "_extensions_used", None)
+
     def walker(node):
-        tag = ctx.type_index.from_custom_type(type(node), ctx.version_string)
+        tag = ctx.type_index.from_custom_type(type(node), ctx.version_string, extensions_used=extensions_used)
         if tag is not None:
             return tag.to_tree_tagged(node, ctx)
         return node
@@ -304,7 +308,7 @@ def load_tree(stream):
     return yaml.load(stream, Loader=AsdfLoader)
 
 
-def dump_tree(tree, fd, ctx):
+def dump_tree(tree, fd, ctx, extensions_used=None, tree_finalizer=None):
     """
     Dump a tree of objects, possibly containing custom types, to YAML.
 
@@ -318,6 +322,13 @@ def dump_tree(tree, fd, ctx):
 
     ctx : Context
         The writing context.
+
+    extensions_used : set of asdf.AsdfExtension, optional
+        Set that records extensions used during the conversion.
+
+    tree_finalizer : callable, optional
+        Callable that modifies the tagged tree after conversion
+        is complete.
     """
     class AsdfDumperTmp(AsdfDumper):
         pass
@@ -336,6 +347,9 @@ def dump_tree(tree, fd, ctx):
         tags = {'!': yaml_tag}
 
     tree = custom_tree_to_tagged_tree(tree, ctx)
+    if tree_finalizer is not None:
+        tree_finalizer(tree)
+
     schema.validate(tree, ctx)
     schema.remove_defaults(tree, ctx)
 

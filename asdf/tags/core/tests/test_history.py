@@ -133,8 +133,6 @@ def test_get_history_entries(tmpdir):
 def test_extension_metadata(tmpdir):
 
     ff = asdf.AsdfFile()
-    # So far only the base extension has been used
-    assert len(ff.type_index.get_extensions_used()) == 1
 
     tmpfile = str(tmpdir.join('extension.asdf'))
     ff.write_to(tmpfile)
@@ -161,33 +159,8 @@ history:
     """
 
     buff = yaml_to_asdf(yaml)
-    with pytest.warns(AsdfWarning, match="File was created with extension 'foo.bar.FooBar'"):
+    with pytest.warns(AsdfWarning, match="File was created with extension foo.bar.FooBar"):
         with asdf.open(buff):
-            pass
-
-
-def test_extension_version_warning():
-
-    yaml = """
-history:
-  extensions:
-    - !core/extension_metadata-1.0.0
-      extension_class: asdf.extension.BuiltinExtension
-      software: !core/software-1.0.0
-        name: asdf
-        version: 100.0.3
-    """
-
-    buff = yaml_to_asdf(yaml)
-    with pytest.warns(AsdfWarning, match="File was created with extension 'asdf.extension.BuiltinExtension'"):
-        with asdf.open(buff):
-            pass
-
-    buff.seek(0)
-
-    # Make sure suppressing the warning works too
-    with assert_no_warnings():
-        with asdf.open(buff, ignore_missing_extensions=True):
             pass
 
 
@@ -241,11 +214,11 @@ def test_metadata_with_custom_extension(tmpdir):
     }
 
     tmpfile = str(tmpdir.join('custom_extension.asdf'))
-    with asdf.AsdfFile(tree, extensions=FractionExtension()) as ff:
+    with asdf.AsdfFile(tree, extensions=[FractionExtension()]) as ff:
         ff.write_to(tmpfile)
 
     # We expect metadata about both the Builtin extension and the custom one
-    with asdf.open(tmpfile, extensions=FractionExtension()) as af:
+    with asdf.open(tmpfile, extensions=[FractionExtension()]) as af:
         assert len(af['history']['extensions']) == 2
 
     with pytest.warns(AsdfWarning, match="was created with extension"):
@@ -256,7 +229,7 @@ def test_metadata_with_custom_extension(tmpdir):
     # no metadata about this extension should be added to the file
     tree2 = { 'x': [x for x in range(10)] }
     tmpfile2 = str(tmpdir.join('no_extension.asdf'))
-    with asdf.AsdfFile(tree2, extensions=FractionExtension()) as ff:
+    with asdf.AsdfFile(tree2, extensions=[FractionExtension()]) as ff:
         ff.write_to(tmpfile2)
 
     with asdf.open(tmpfile2) as af:
@@ -268,9 +241,9 @@ def test_metadata_with_custom_extension(tmpdir):
 
     # Make sure that this works even when constructing the tree on-the-fly
     tmpfile3 = str(tmpdir.join('custom_extension2.asdf'))
-    with asdf.AsdfFile(extensions=FractionExtension()) as ff:
+    with asdf.AsdfFile(extensions=[FractionExtension()]) as ff:
         ff.tree['fraction'] = fractions.Fraction(4, 5)
         ff.write_to(tmpfile3)
 
-    with asdf.open(tmpfile3, extensions=FractionExtension()) as af:
+    with asdf.open(tmpfile3, extensions=[FractionExtension()]) as af:
         assert len(af['history']['extensions']) == 2

@@ -220,7 +220,7 @@ def test_flow_style():
     }
 
     buff = io.BytesIO()
-    ff = asdf.AsdfFile(tree, extensions=CustomFlowStyleExtension())
+    ff = asdf.AsdfFile(tree, extensions=[CustomFlowStyleExtension()])
     ff.write_to(buff)
 
     assert b'  a: 42\n  b: 43' in buff.getvalue()
@@ -243,7 +243,7 @@ def test_style():
     }
 
     buff = io.BytesIO()
-    ff = asdf.AsdfFile(tree, extensions=CustomStyleExtension())
+    ff = asdf.AsdfFile(tree, extensions=[CustomStyleExtension()])
     ff.write_to(buff)
 
     assert b'|-\n  short\n' in buff.getvalue()
@@ -535,7 +535,7 @@ custom: !<tag:nowhere.org:custom/foreign_tag_reference-1.0.0>
     """
 
     buff = helpers.yaml_to_asdf(yaml)
-    with asdf.open(buff, extensions=ForeignTypeExtension()) as ff:
+    with asdf.open(buff, extensions=[ForeignTypeExtension()]) as ff:
         a = ff.tree['custom']['a']
         b = ff.tree['custom']['b']
         assert a['name'] == 'Something'
@@ -948,7 +948,7 @@ a: !<tag:nowhere.org:custom/doesnt_exist-1.0.0>
 
     buff = helpers.yaml_to_asdf(yaml)
     with pytest.warns(AsdfWarning, match="Unable to locate schema file"):
-        with asdf.open(buff, extensions=CustomExtension()) as af:
+        with asdf.open(buff, extensions=[CustomExtension()]) as af:
             assert str(af['a']) == 'hello'
 
 

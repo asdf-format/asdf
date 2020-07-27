@@ -7,7 +7,7 @@ from contextlib import contextmanager
 import copy
 
 from . import entry_points
-from .resource import ResourceManager
+from .resource import ResourceManager, ResourceMappingProxy
 
 
 DEFAULT_VALIDATE_ON_READ = True
@@ -24,10 +24,12 @@ class AsdfConfig:
         self,
         resource_mappings=None,
         resource_manager=None,
+        extensions=None,
         validate_on_read=None,
     ):
         self._resource_mappings = resource_mappings
         self._resource_manager = resource_manager
+        self._extensions = extensions
 
         if validate_on_read is None:
             self._validate_on_read = DEFAULT_VALIDATE_ON_READ
@@ -62,6 +64,10 @@ class AsdfConfig:
         mapping : collections.abc.Mapping
             map of `str` resource URI to `bytes` content
         """
+        mapping = ResourceMappingProxy.maybe_wrap(mapping)
+        if any(m.delegate is mapping.delegate for m in self.resource_mappings):
+            return
+
         with self._lock:
             resource_mappings = self.resource_mappings.copy()
             resource_mappings.append(mapping)
@@ -76,8 +82,9 @@ class AsdfConfig:
         ----------
         mapping : collections.abc.Mapping
         """
+        mapping = ResourceMappingProxy(mapping)
         with self._lock:
-            resource_mappings = [m for m in self.resource_mappings if m is not mapping]
+            resource_mappings = [m for m in self.resource_mappings if m.delegate is not mapping.delegate]
             self._resource_mappings = resource_mappings
             self._resource_manager = None
 
@@ -105,6 +112,21 @@ class AsdfConfig:
                 if self._resource_manager is None:
                     self._resource_manager = ResourceManager(self.resource_mappings)
         return self._resource_manager
+
+    @property
+    def extensions(self):
+        """
+        Get the list of installed `AsdfExtension` instances.
+
+        Returns
+        -------
+        list of asdf.AsdfExtension
+        """
+        if self._extensions is None:
+            with self._lock:
+                if self._extensions is None:
+                    self._extensions = entry_points.get_extensions()
+        return self._extensions
 
     @property
     def validate_on_read(self):

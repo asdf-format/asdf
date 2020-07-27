@@ -9,6 +9,22 @@
 - Drop support for automatic serialization of subclass
   attributes. [#825]
 
+- Fix bug that caused irrelevant extension metadata to
+  appear in the ASDF tree. [#835]
+
+- Introduce new entry point (asdf.extensions) for extensions. [#835]
+
+- Remove warning when reading a file with an older
+  version of an extension package. [#835]
+
+- Restrict the ``extensions`` parameter to ``asdf.open``
+  and ``asdf.AsdfFile`` to a list of ``asdf.AsdfExtension``.
+  Previously it accepted an instance of ``asdf.AsdfExtension``
+  or ``asdf.extension.AsdfExtensionList``. [#835]
+
+- Extend the ``asdf.AsdfExtension`` interface to support
+  versioned extensions. [#835]
+
 2.7.0 (2020-07-23)
 ------------------
 

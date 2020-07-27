@@ -3,7 +3,7 @@ import threading
 import asdf
 from asdf import get_config
 from asdf import resource
-
+from asdf.extension import BuiltinExtension
 
 def test_config_context():
     assert get_config().validate_on_read is True
@@ -112,3 +112,8 @@ def test_resource_manager():
         assert "http://stsci.edu/schemas/asdf/core/asdf-1.1.0" in config.resource_manager
         assert b"http://stsci.edu/schemas/asdf/core/asdf-1.1.0" in config.resource_manager["http://stsci.edu/schemas/asdf/core/asdf-1.1.0"]
         assert "http://somewhere.org/schemas/foo-1.0.0" not in config.resource_manager
+
+
+def test_extensions():
+    extensions = asdf.get_config().extensions
+    assert any(isinstance(e.delegate, BuiltinExtension) for e in extensions)

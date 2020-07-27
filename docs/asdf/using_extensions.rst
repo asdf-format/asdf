@@ -221,14 +221,14 @@ any package, we will need to pass it directly to the `AsdfFile` constructor:
 
     ...
 
-    af = asdf.AsdfFile(extensions=MyCustomExtension())
+    af = asdf.AsdfFile(extensions=[MyCustomExtension()])
     af.tree = {'thing': MyCustomType('foo') }
     # This call would cause an error if the proper extension was not
     # provided to the constructor
     af.write_to('custom.asdf')
 
 Note that the extension class must actually be instantiated when it is passed
-as the `extensions` argument.
+to the `extensions` argument.
 
 To read the file, we pass the same extension to `asdf.open`:
 
@@ -236,21 +236,19 @@ To read the file, we pass the same extension to `asdf.open`:
 
     import asdf
 
-    af = asdf.open('custom.asdf', extensions=MyCustomExtension())
+    af = asdf.open('custom.asdf', extensions=[MyCustomExtension()])
 
-If necessary, it is also possible to pass a list of extension instances to
-`asdf.open` and the `AsdfFile` constructor:
+The list may contain any number of extension instances:
 
 .. code-block:: python
 
     extensions = [MyCustomExtension(), AnotherCustomExtension()]
     af = asdf.AsdfFile(extensions=extensions)
 
-Passing either a single extension instance or a list of extension instances to
-either `asdf.open` or the `AsdfFile` constructor will not override any
-extensions that are installed in the environment. Instead, the custom types
-provided by the explicitly provided extensions will be added to the list of any
-types that are provided by installed extensions.
+Passing a list of extension instances to either `asdf.open` or the `AsdfFile`
+constructor will not override any extensions that are installed in the environment.
+Instead, the custom types provided by the explicitly provided extensions will be
+added to the list of any types that are provided by installed extensions.
 
 .. _extension_checking:
 
@@ -264,8 +262,7 @@ version of that package.
 
 When reading files with extension metadata, ASDF can check whether the required
 extensions are present before processing the file. If a required extension is
-not present, or if the wrong version of a package that provides an extension is
-installed, ASDF will issue a warning.
+not present, ASDF will issue a warning.
 
 It is possible to turn these warnings into errors by using the
 `strict_extension_check` parameter of `asdf.open`. If this parameter is set to

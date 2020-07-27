@@ -233,7 +233,7 @@ class AsdfInFits(asdf.AsdfFile):
     @classmethod
     def _open_impl(cls, fd, uri=None, validate_checksums=False, extensions=None,
              ignore_version_mismatch=True, ignore_unrecognized_tag=False,
-             strict_extension_check=False, _extension_metadata=None,
+             strict_extension_check=False,
              ignore_missing_extensions=False, **kwargs):
 
         close_hdulist = False
@@ -250,11 +250,9 @@ class AsdfInFits(asdf.AsdfFile):
                 msg = "Failed to parse given file '{}'. Is it FITS?"
                 raise ValueError(msg.format(uri))
 
-        self = cls(hdulist, uri=uri, extensions=extensions,
+        self = cls(hdulist, uri=uri,
                    ignore_version_mismatch=ignore_version_mismatch,
                    ignore_unrecognized_tag=ignore_unrecognized_tag)
-        if _extension_metadata is not None:
-            self._extension_metadata = _extension_metadata
 
         self._close_hdulist = close_hdulist
 
@@ -269,6 +267,7 @@ class AsdfInFits(asdf.AsdfFile):
         try:
             return cls._open_asdf(self, buff, uri=uri, mode='r',
                               validate_checksums=validate_checksums,
+                              extensions=extensions,
                               strict_extension_check=strict_extension_check,
                               ignore_missing_extensions=ignore_missing_extensions,
                               **kwargs)

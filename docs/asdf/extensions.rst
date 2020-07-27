@@ -136,7 +136,7 @@ using them:
 
     tree = {'fraction': fractions.Fraction(10, 3)}
 
-    with asdf.AsdfFile(tree, extensions=FractionExtension()) as ff:
+    with asdf.AsdfFile(tree, extensions=[FractionExtension()]) as ff:
         ff.write_to("test.asdf")
 
 .. asdf:: test.asdf ignore_unrecognized_tag
@@ -228,7 +228,7 @@ chosen to use a `dict`:
 
     tree = {'fraction': fractions.Fraction(10, 3)}
 
-    with asdf.AsdfFile(tree, extensions=FractionExtension()) as ff:
+    with asdf.AsdfFile(tree, extensions=[FractionExtension()]) as ff:
         ff.write_to("test.asdf")
 
 In this case, the associated schema would look like the following::
@@ -359,7 +359,7 @@ Now we can use this extension to create an ASDF file:
 
     tree = {'coordinate': coord}
 
-    with asdf.AsdfFile(tree, extensions=FractionExtension()) as ff:
+    with asdf.AsdfFile(tree, extensions=[FractionExtension()]) as ff:
         ff.write_to("coord.asdf")
 
 .. asdf:: coord.asdf ignore_unrecognized_tag
@@ -440,14 +440,14 @@ After adding our type to the extension class, the tree will serialize correctly:
 
     tree = {'fraction': f1}
 
-    with asdf.AsdfFile(tree, extensions=FractionExtension()) as ff:
+    with asdf.AsdfFile(tree, extensions=[FractionExtension()]) as ff:
         ff.write_to("with_inverse.asdf")
 
 But upon deserialization, we notice a problem:
 
 .. runcode::
 
-    with asdf.open("with_inverse.asdf", extensions=FractionExtension()) as ff:
+    with asdf.open("with_inverse.asdf", extensions=[FractionExtension()]) as ff:
         reconstituted_f1 = ff["fraction"]
 
     assert reconstituted_f1.inverse.inverse is asdf.treeutil.PendingValue
@@ -498,7 +498,7 @@ our ASDF file:
 
 .. runcode::
 
-    with asdf.open("with_inverse.asdf", extensions=FractionExtension()) as ff:
+    with asdf.open("with_inverse.asdf", extensions=[FractionExtension()]) as ff:
             reconstituted_f1 = ff["fraction"]
 
     assert reconstituted_f1.inverse.inverse is reconstituted_f1

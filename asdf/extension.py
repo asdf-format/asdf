@@ -1,23 +1,17 @@
-import os
 import abc
 import warnings
-from pkg_resources import iter_entry_points
 
 from . import types
 from . import resolver
 from .util import get_class_name
 from .type_index import AsdfTypeIndex
-from .version import version as asdf_version
-from .exceptions import AsdfDeprecationWarning, AsdfWarning
+from .exceptions import AsdfDeprecationWarning
 
 
 __all__ = ['AsdfExtension', 'AsdfExtensionList']
 
 
-ASDF_TEST_BUILD_ENV = 'ASDF_TEST_BUILD'
-
-
-class AsdfExtension(metaclass=abc.ABCMeta):
+class AsdfExtension(abc.ABC):
     """
     Abstract base class defining an extension to ASDF.
     """
@@ -27,6 +21,40 @@ class AsdfExtension(metaclass=abc.ABCMeta):
             return (hasattr(C, 'types') and
                     hasattr(C, 'tag_mapping'))
         return NotImplemented
+
+    @property
+    def always_enabled(self):
+        """
+        Return `True` if this extension should always be enabled
+        when reading and writing files.  Use judiciously, as users
+        will only be able to disable the extension by uninstalling
+        its associated package.  When `False`, the extension will
+        only be enabled when requested by the user or when listed
+        in a file's metadata.
+
+        Defaults to `False` for new-style extensions and `True`
+        for legacy extensions.
+
+        Returns
+        -------
+        bool
+        """
+        return False
+
+    @property
+    def legacy_class_names(self):
+        """
+        Get the set of fully-qualified class names used by
+        older versions of this extension.  This allows a new
+        implementation of an extension to be automatically
+        selected based on ASDF file metadata containing the
+        class name of an older implementation.
+
+        Returns
+        -------
+        iterable of str
+        """
+        return []
 
     @abc.abstractproperty
     def types(self):
@@ -107,24 +135,96 @@ class AsdfExtension(metaclass=abc.ABCMeta):
         return []
 
 
+class ExtensionProxy(AsdfExtension):
+    """
+    Proxy that wraps an `AsdfExtension`, provides default
+    implementations of optional methods, and carries additional
+    information on the package that provided the extension.
+    """
+    @classmethod
+    def maybe_wrap(self, delegate):
+        if isinstance(delegate, ExtensionProxy):
+            return delegate
+        else:
+            return ExtensionProxy(delegate)
+
+    def __init__(self, delegate, package_name=None, package_version=None, legacy=False):
+        if not isinstance(delegate, AsdfExtension):
+            raise TypeError("Extension must implement the AsdfExtension interface")
+
+        self._delegate = delegate
+        self._package_name = package_name
+        self._package_version = package_version
+        self._legacy = legacy
+
+        self._class_name = get_class_name(delegate)
+
+    @property
+    def always_enabled(self):
+        return getattr(self._delegate, "always_enabled", self.legacy)
+
+    @property
+    def legacy_class_names(self):
+        return set(getattr(self._delegate, "legacy_class_names", set()))
+
+    @property
+    def types(self):
+        return getattr(self._delegate, "types", [])
+
+    @property
+    def tag_mapping(self):
+        return getattr(self._delegate, "tag_mapping", [])
+
+    @property
+    def url_mapping(self):
+        return getattr(self._delegate, "url_mapping", [])
+
+    @property
+    def delegate(self):
+        return self._delegate
+
+    @property
+    def class_name(self):
+        return self._class_name
+
+    @property
+    def package_name(self):
+        return self._package_name
+
+    @property
+    def package_version(self):
+        return self._package_version
+
+    @property
+    def legacy(self):
+        return self._legacy
+
+    def __repr__(self):
+        return "<ExtensionProxy class: {} package: {}=={} legacy: {}>".format(
+            self.class_name,
+            self.package_name,
+            self.package_version,
+            self.legacy,
+        )
+
+
 class AsdfExtensionList:
     """
     Manage a set of extensions that are in effect.
     """
     def __init__(self, extensions):
+        self._extensions = [ExtensionProxy.maybe_wrap(e) for e in extensions]
         tag_mapping = []
         url_mapping = []
         validators = {}
         self._type_index = AsdfTypeIndex()
-        for extension in extensions:
+        for extension in self._extensions:
             if not isinstance(extension, AsdfExtension):
                 raise TypeError(
                     "Extension must implement asdf.types.AsdfExtension "
                     "interface")
             tag_mapping.extend(extension.tag_mapping)
-            # New-style extensions will not include a url_mapping attribute.
-            if hasattr(extension, "url_mapping"):
-                url_mapping.extend(extension.url_mapping)
+            url_mapping.extend(extension.url_mapping)
             for typ in extension.types:
                 self._type_index.add_type(typ, extension)
                 validators.update(typ.validators)
@@ -135,6 +235,10 @@ class AsdfExtensionList:
         self._url_mapping = resolver.Resolver(url_mapping, 'url')
         self._resolver = resolver.ResolverChain(self._tag_mapping, self._url_mapping)
         self._validators = validators
+
+    @property
+    def extensions(self):
+        return self._extensions
 
     @property
     def tag_to_schema_resolver(self):
@@ -187,64 +291,26 @@ class BuiltinExtension:
 
 class _DefaultExtensions:
     def __init__(self):
-        self._extensions = []
+        self._extensions = None
         self._extension_list = None
-        self._package_metadata = {}
-
-    def _load_installed_extensions(self, group='asdf_extensions'):
-        for entry_point in iter_entry_points(group=group):
-            with warnings.catch_warnings(record=True) as w:
-                warnings.simplefilter('always', category=AsdfDeprecationWarning)
-                ext = entry_point.load()
-            if not issubclass(ext, AsdfExtension):
-                warnings.warn("Found entry point {}, from {} but it is not a "
-                              "subclass of AsdfExtension, as expected. It is "
-                              "being ignored.".format(ext, entry_point.dist),
-                              AsdfWarning)
-                continue
-
-            dist = entry_point.dist
-            name = get_class_name(ext, instance=False)
-            self._package_metadata[name] = (dist.project_name, dist.version)
-            self._extensions.append(ext())
-
-            for warning in w:
-                warnings.warn('{} (from {})'.format(warning.message, name),
-                              AsdfDeprecationWarning)
 
     @property
     def extensions(self):
-        # This helps avoid a circular dependency with external packages
-        if not self._extensions:
-            # If this environment variable is defined, load the default
-            # extension. This allows the package to be tested without being
-            # installed (e.g. for builds on Debian).
-            if os.environ.get(ASDF_TEST_BUILD_ENV):
-                # Fake the extension metadata
-                name = get_class_name(BuiltinExtension, instance=False)
-                self._package_metadata[name] = ('asdf', asdf_version)
-                self._extensions.append(BuiltinExtension())
-
-            self._load_installed_extensions()
-
+        if self._extensions is None:
+            from ._config import get_config
+            self._extensions = [e for e in get_config().extensions if e.legacy]
         return self._extensions
 
     @property
     def extension_list(self):
         if self._extension_list is None:
             self._extension_list = AsdfExtensionList(self.extensions)
-
         return self._extension_list
-
-    @property
-    def package_metadata(self):
-        return self._package_metadata
 
     def reset(self):
         """This will be used primarily for testing purposes."""
-        self._extensions = []
+        self._extensions = None
         self._extension_list = None
-        self._package_metadata = {}
 
     @property
     def resolver(self):

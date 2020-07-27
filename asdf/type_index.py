@@ -47,7 +47,6 @@ class _AsdfWriteTypeIndex:
         self._class_by_subclass = {}
         self._types_with_dynamic_subclasses = {}
         self._extension_by_cls = {}
-        self._extensions_used = set()
 
         try:
             version_map = get_version_map(self._version)
@@ -131,19 +130,17 @@ class _AsdfWriteTypeIndex:
             self._type_by_name[name] = asdftype
             self._add_all_types(index, asdftype)
 
-    def _mark_used_extension(self, custom_type):
-        self._extensions_used.add(self._extension_by_cls[custom_type])
-
-    def _process_dynamic_subclass(self, custom_type):
+    def _process_dynamic_subclass(self, custom_type, extensions_used=None):
         for key, val in self._types_with_dynamic_subclasses.items():
             if issubclass(custom_type, key):
                 self._type_by_cls[custom_type] = val
-                self._mark_used_extension(key)
+                if extensions_used is not None:
+                    extensions_used.add(key)
                 return val
 
         return None
 
-    def from_custom_type(self, custom_type):
+    def from_custom_type(self, custom_type, extensions_used=None):
         """
         Given a custom type, return the corresponding `ExtensionType`
         definition.
@@ -163,17 +160,18 @@ class _AsdfWriteTypeIndex:
                 # includes classes that are created dynamically post
                 # Python-import, e.g. astropy.modeling._CompoundModel
                 # subclasses.
-                return self._process_dynamic_subclass(custom_type)
+                return self._process_dynamic_subclass(custom_type, extensions_used=extensions_used)
 
         if asdftype is not None:
             extension = self._extension_by_cls.get(custom_type)
             if extension is not None:
-                self._mark_used_extension(custom_type)
+                if extensions_used is not None:
+                    extensions_used.add(extension)
             else:
                 # Handle the case where the dynamic subclass was identified as
                 # a proper subclass above, but it has not yet been registered
                 # as such.
-                self._process_dynamic_subclass(custom_type)
+                self._process_dynamic_subclass(custom_type, extensions_used=extensions_used)
 
         return asdftype
 
@@ -235,7 +233,7 @@ class AsdfTypeIndex:
         if not len(yaml_tags):
             self._unnamed_types.add(asdftype)
 
-    def from_custom_type(self, custom_type, version=default_version):
+    def from_custom_type(self, custom_type, version=default_version, extensions_used=None):
         """
         Given a custom type, return the corresponding `ExtensionType`
         definition.
@@ -250,7 +248,7 @@ class AsdfTypeIndex:
             write_type_index = _AsdfWriteTypeIndex(version, self)
             self._write_type_indices[version] = write_type_index
 
-        return write_type_index.from_custom_type(custom_type)
+        return write_type_index.from_custom_type(custom_type, extensions_used=extensions_used)
 
     def fix_yaml_tag(self, ctx, tag):
         """
@@ -323,10 +321,3 @@ class AsdfTypeIndex:
 
         hooks[typ] = None
         return None
-
-    def get_extensions_used(self, version=default_version):
-        write_type_index = self._write_type_indices.get(str(version))
-        if write_type_index is None:
-            return []
-
-        return list(write_type_index._extensions_used)
