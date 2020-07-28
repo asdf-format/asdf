@@ -511,7 +511,7 @@ def get_validator(schema={}, ctx=None, validators=None, url_mapping=None,
 
     if validators is None:
         validators = util.HashableDict(YAML_VALIDATORS.copy())
-        validators.update(ctx._extension_list.validators)
+        validators.update(ctx.extension_list.validators)
 
     kwargs['resolver'] = _make_resolver(url_mapping)
 

@@ -20,20 +20,40 @@ class AsdfExtension(abc.ABC):
     @classmethod
     def __subclasshook__(cls, C):
         if cls is AsdfExtension:
-            return (hasattr(C, 'types') and
-                    hasattr(C, 'tag_mapping'))
-        return NotImplemented
+            # At this time, no attributes are required.
+            return True
+        return NotImplemented # pragma: no cover
+
+    @property
+    def default_enabled(self):
+        """
+        Return `True` if this extension should be enabled by default
+        for new files (with a supported ASDF Standard version).
+        Typically extension packages will designate the latest version
+        of an extension as a default.
+
+        Users can reconfigure default extensions globally or on an
+        individual file basis. This flag does not enable the extension
+        when reading existing files.  Instead, extensions will be
+        automatically enabled based on file metadata.
+
+        Returns
+        -------
+        bool
+        """
+        return False
 
     @property
     def always_enabled(self):
         """
         Return `True` if this extension should always be enabled
         when reading and writing files (with a supported ASDF
-        Standard version).  Use judiciously, as users will only be
-        able to disable the extension by uninstalling its associated
-        package.  When `False`, the extension will only be enabled
-        when requested by the user or when listed in a file's
+        Standard version).  When `False`, the extension will only be
+        enabled when requested by the user or when listed in a file's
         metadata.
+
+        Users will still be able to remove the extension
+        with a call to `AsdfConfig.remove_extension`.
 
         Defaults to `False` for new-style extensions and `True`
         for legacy extensions.
@@ -48,16 +68,15 @@ class AsdfExtension(abc.ABC):
     def legacy_class_names(self):
         """
         Get the set of fully-qualified class names used by
-        older versions of this extension.  This allows a new
-        implementation of an extension to be automatically
-        selected based on ASDF file metadata containing the
-        class name of an older implementation.
+        older versions of this extension.  This allows a
+        new-style implementation of an extension to override
+        a legacy extension.
 
         Returns
         -------
         iterable of str
         """
-        return []
+        return set()
 
     @property
     def asdf_standard_requirement(self):
@@ -72,15 +91,15 @@ class AsdfExtension(abc.ABC):
         """
         return None
 
-    @abc.abstractproperty
+    @property
     def types(self):
         """
         A list of `asdf.CustomType` subclasses that describe how to store
         custom objects to and from ASDF.
         """
-        pass
+        return []
 
-    @abc.abstractproperty
+    @property
     def tag_mapping(self):
         """
         A list of 2-tuples or callables mapping YAML tag prefixes to JSON Schema
@@ -111,8 +130,9 @@ class AsdfExtension(abc.ABC):
            return [('tag:nowhere.org:custom/',
                     'http://nowhere.org/schemas/custom/{tag_suffix}')]
         """
-        pass
+        return []
 
+    @property
     def url_mapping(self):
         """
         DEPRECATED.  This property will be ignored in asdf 3.0.
@@ -178,8 +198,12 @@ class ExtensionProxy(AsdfExtension):
         self._asdf_standard_requirement = None
 
     @property
+    def default_enabled(self):
+        return getattr(self._delegate, "default_enabled", False)
+
+    @property
     def always_enabled(self):
-        return getattr(self._delegate, "always_enabled", self.legacy)
+        return getattr(self._delegate, "always_enabled", False)
 
     @property
     def legacy_class_names(self):
@@ -230,11 +254,19 @@ class ExtensionProxy(AsdfExtension):
         return self._legacy
 
     def __repr__(self):
-        return "<ExtensionProxy class: {} package: {}=={} ASDF Standard: {} legacy: {}>".format(
+        if self.package_name is None:
+            package_description = "(none)"
+        else:
+            package_description = "{}=={}".format(self.package_name, self.package_version)
+
+        requirement_description = str(self.asdf_standard_requirement)
+        if requirement_description == "":
+            requirement_description = "(all)"
+
+        return "<ExtensionProxy class: {} package: {} ASDF Standard: {} legacy: {}>".format(
             self.class_name,
-            self.package_name,
-            self.package_version,
-            self.asdf_standard_requirement,
+            package_description,
+            requirement_description,
             self.legacy,
         )
 
@@ -307,6 +339,8 @@ class BuiltinExtension:
     tags.  Even though it's not really an extension and it's always
     available, it's built in the same way as an extension.
     """
+    always_enabled = True
+
     @property
     def types(self):
         return types._all_asdftypes

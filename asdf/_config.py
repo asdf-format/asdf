@@ -8,9 +8,13 @@ import copy
 
 from . import entry_points
 from .resource import ResourceManager, ResourceMappingProxy
+from .extension import ExtensionProxy
+from . import versioning
+from ._helpers import validate_version
 
 
 DEFAULT_VALIDATE_ON_READ = True
+DEFAULT_DEFAULT_VERSION = str(versioning.default_version)
 
 
 class AsdfConfig:
@@ -20,22 +24,13 @@ class AsdfConfig:
     `asdf.config_context` module methods.
     """
 
-    def __init__(
-        self,
-        resource_mappings=None,
-        resource_manager=None,
-        extensions=None,
-        validate_on_read=None,
-    ):
-        self._resource_mappings = resource_mappings
-        self._resource_manager = resource_manager
-        self._extensions = extensions
-
-        if validate_on_read is None:
-            self._validate_on_read = DEFAULT_VALIDATE_ON_READ
-        else:
-            self._validate_on_read = validate_on_read
-
+    def __init__(self):
+        self._resource_mappings = None
+        self._resource_manager = None
+        self._extensions = None
+        self._default_extensions = None
+        self._validate_on_read = DEFAULT_VALIDATE_ON_READ
+        self._default_version = DEFAULT_DEFAULT_VERSION
         self._lock = threading.RLock()
 
     @property
@@ -65,26 +60,33 @@ class AsdfConfig:
             map of `str` resource URI to `bytes` content
         """
         mapping = ResourceMappingProxy.maybe_wrap(mapping)
-        if any(m.delegate is mapping.delegate for m in self.resource_mappings):
-            return
 
         with self._lock:
+            if any(m.delegate is mapping.delegate for m in self.resource_mappings):
+                return
             resource_mappings = self.resource_mappings.copy()
             resource_mappings.append(mapping)
             self._resource_mappings = resource_mappings
             self._resource_manager = None
 
-    def remove_resource_mapping(self, mapping):
+    def remove_resource_mapping(self, mapping=None, *, package=None):
         """
         Remove a registered resource mapping.
 
         Parameters
         ----------
-        mapping : collections.abc.Mapping
+        mapping : collections.abc.Mapping, optional
+            A Mapping instance to remove.
+        package : str, optional
+            A Python package name whose mappings will all be removed.
         """
-        mapping = ResourceMappingProxy(mapping)
         with self._lock:
-            resource_mappings = [m for m in self.resource_mappings if m.delegate is not mapping.delegate]
+            resource_mappings = self.resource_mappings
+            if mapping is not None:
+                mapping = ResourceMappingProxy.maybe_wrap(mapping)
+                resource_mappings = [m for m in resource_mappings if m.delegate is not mapping.delegate]
+            if package is not None:
+                resource_mappings = [m for m in resource_mappings if m.package_name != package]
             self._resource_mappings = resource_mappings
             self._resource_manager = None
 
@@ -116,7 +118,7 @@ class AsdfConfig:
     @property
     def extensions(self):
         """
-        Get the list of installed `AsdfExtension` instances.
+        Get the list of registered `AsdfExtension` instances.
 
         Returns
         -------
@@ -128,21 +130,117 @@ class AsdfConfig:
                     self._extensions = entry_points.get_extensions()
         return self._extensions
 
-    def get_extensions(self, version):
+    @property
+    def default_extensions(self):
         """
-        Get a list of installed `AsdfExtension` instances that
-        support the specified ASDF Standard version.
-
-        Parameters
-        ----------
-        version : str
-            ASDF Standard version.
+        Get the list of `AsdfExtension` instances that are
+        enabled by default for new files.
 
         Returns
         -------
         list of asdf.AsdfExtension
         """
-        return [e for e in self.extensions if version in e.asdf_standard_requirement]
+        if self._default_extensions is None:
+            with self._lock:
+                if self._default_extensions is None:
+                    self._default_extensions = [e for e in self.extensions if e.default_enabled]
+        return self._default_extensions
+
+    def add_extension(self, extension):
+        """
+        Register a new extension.
+
+        Parameters
+        ----------
+        extension : asdf.AsdfExtension
+        """
+        extension = ExtensionProxy.maybe_wrap(extension)
+        with self._lock:
+            if any(e.delegate is extension.delegate for e in self.extensions):
+                return
+            extensions = self.extensions.copy()
+            extensions.append(extension)
+            self._extensions = extensions
+
+            if extension.default_enabled and self._default_extensions is not None:
+                default_extensions = self.default_extensions.copy()
+                default_extensions.append(extension)
+                self._default_extensions = default_extensions
+
+    def remove_extension(self, extension=None, *, package=None):
+        """
+        Remove a registered extension.
+
+        Parameters
+        ----------
+        extension : asdf.AsdfExtension, optional
+            An extension to remove.
+        package : str, optional
+            A Python package name whose extensions will all be removed.
+        """
+        with self._lock:
+            extensions = self.extensions
+            default_extensions = self.default_extensions
+            if extension is not None:
+                extension = ExtensionProxy.maybe_wrap(extension)
+                extensions = [e for e in extensions if e.delegate is not extension.delegate]
+                default_extensions = [e for e in default_extensions if e.delegate is not extension.delegate]
+            if package is not None:
+                extensions = [e for e in extensions if e.package_name != package]
+                default_extensions = [e for e in default_extensions if e.package_name != package]
+            self._extensions = extensions
+            self._default_extensions = default_extensions
+
+    def add_default_extension(self, extension):
+        """
+        Add to the list of extensions that are enabled by default
+        for new files.
+
+        Parameters
+        ----------
+        extension : asdf.AsdfExtension
+        """
+        extension = ExtensionProxy.maybe_wrap(extension)
+        with self._lock:
+            if any(e.delegate is extension.delegate for e in self.default_extensions):
+                return
+            self.add_extension(extension)
+            if not extension.default_enabled:
+                # Make sure we're using the same wrapper here:
+                extension = next(e for e in self.extensions if e.delegate is extension.delegate)
+                default_extensions = self.default_extensions.copy()
+                default_extensions.append(extension)
+                self._default_extensions = default_extensions
+
+    def remove_default_extension(self, extension=None, *, package=None):
+        """
+        Remove from the list of extensions that are enabled
+        by default for new files.
+
+        Parameters
+        ----------
+        extension : asdf.AsdfExtension, optional
+            An extension instance to remove.
+        package : str, optional
+            A Python package name whose extensions will all be removed.
+        """
+        with self._lock:
+            default_extensions = self.default_extensions
+            if extension is not None:
+                extension = ExtensionProxy.maybe_wrap(extension)
+                default_extensions = [e for e in default_extensions if e.delegate is not extension.delegate]
+            if package is not None:
+                default_extensions = [e for e in default_extensions if e.package_name != package]
+            self._default_extensions = default_extensions
+
+    def reset_extensions(self):
+        """
+        Reset registered and default extensions to the list
+        provided as entry points.
+        """
+        with self._lock:
+            self._extensions = None
+            self._default_extensions = None
 
     @property
     def validate_on_read(self):
@@ -169,13 +267,40 @@ class AsdfConfig:
         """
         self._validate_on_read = value
 
+    @property
+    def default_version(self):
+        """
+        Get the default ASDF Standard version used for
+        new files.
+
+        Returns
+        -------
+        str
+        """
+        return self._default_version
+
+    @default_version.setter
+    def default_version(self, value):
+        """
+        Set the default ASDF Standard version used for
+        new files.
+
+        Parameters
+        ----------
+        value : str
+        """
+        self._default_version = validate_version(value)
+
     def __repr__(self):
         return (
-            "AsdfConfig(\n"
-            "  resource_mappings=[...],\n"
-            "  validate_on_read={!r},\n"
-            ")"
-        ).format(self.validate_on_read)
+            "<AsdfConfig\n"
+            "  validate_on_read: {},\n"
+            "  default_version: {},\n"
+            ">"
+        ).format(
+            self.validate_on_read,
+            self.default_version,
+        )
 
 
 class _ConfigLocal(threading.local):

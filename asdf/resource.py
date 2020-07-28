@@ -74,10 +74,15 @@ class ResourceMappingProxy(Mapping):
         return self._class_name
 
     def __repr__(self):
-        return "<ResourceMappingProxy class: {} package: {}=={}>".format(
+        if self.package_name is not None:
+            package_description = "{}=={}".format(self.package_name, self.package_version)
+        else:
+            package_description = "(none)"
+
+        return "<ResourceMappingProxy class: {} package: {} len: {}>".format(
             self.class_name,
-            self.package_name,
-            self.package_version,
+            package_description,
+            len(self),
         )
 
 

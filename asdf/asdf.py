@@ -21,6 +21,7 @@ from . import versioning
 from . import yamlutil
 from . import tagged
 from . import _display as display
+from ._helpers import validate_version
 from .exceptions import AsdfDeprecationWarning, AsdfWarning, AsdfConversionWarning
 from .extension import AsdfExtensionList, ExtensionProxy
 from .util import NotSet
@@ -42,7 +43,7 @@ def get_asdf_library_info():
     })
 
 
-class AsdfFile(versioning.VersionedMixin):
+class AsdfFile:
     """
     The main class that represents an ASDF file object.
     """
@@ -63,14 +64,12 @@ class AsdfFile(versioning.VersionedMixin):
             automatically determined from the associated file object,
             if possible and if created from `AsdfFile.open`.
 
-        extensions : list of AsdfExtension
-            A list of extensions to use when reading and writing ASDF files.
-            See `~asdf.types.AsdfExtension` for more information.
+        extensions : list of AsdfExtension, optional
+            Override the list of extensions to use when writing this
+            file.
 
         version : str, optional
-            The ASDF version to use when writing out.  If not
-            provided, it will write out in the latest version
-            supported by asdf.
+            The ASDF Standard version.
 
         ignore_version_mismatch : bool, optional
             When `True`, do not raise warnings for mismatched schema versions.
@@ -107,11 +106,13 @@ class AsdfFile(versioning.VersionedMixin):
             standard.
 
         """
-        if version is not None:
-            self.version = version
+        if version is None:
+            self._version = versioning.AsdfVersion(get_config().default_version)
+        else:
+            self._version = versioning.AsdfVersion(validate_version(str(version)))
 
-        # This method sets the _extensions and _extension_list attributes.
-        self._process_extensions(extensions)
+        self._extensions = self._process_extensions(extensions)
+        self._extension_list = None
 
         if custom_schema is not None:
             self._custom_schema = schema._load_schema_cached(custom_schema, self.resolver, True, False)
@@ -162,6 +163,95 @@ class AsdfFile(versioning.VersionedMixin):
 
         self._comments = []
 
+    @property
+    def version(self):
+        """
+        Get this AsdfFile's ASDF Standard version.
+
+        Returns
+        -------
+        asdf.versioning.AsdfVersion
+        """
+        return self._version
+
+    @property
+    def version_string(self):
+        """
+        Get this AsdfFile's ASDF Standard version as a string.
+
+        Returns
+        -------
+        str
+        """
+        return str(self._version)
+
+    @property
+    def version_map(self):
+        return versioning.get_version_map(self.version_string)
+
+    @property
+    def extensions(self):
+        """
+        Get the list of extensions that are enabled for
+        use with this AsdfFile.
+
+        Returns
+        -------
+        list of asdf.AsdfExtension
+        """
+        return self._extensions
+
+    @property
+    def extension_list(self):
+        """
+        Get the AsdfExtensionList for this AsdfFile.
+
+        Returns
+        -------
+        asdf.extension.AsdfExtensionList
+        """
+        if self._extension_list is None:
+            self._extension_list = AsdfExtensionList(self.extensions)
+        return self._extension_list
+
+    def enable_extension(self, extension):
+        """
+        Enable an extension for use with this AsdfFile.
+        Extension must support the file's ASDF Standard
+        version.
+
+        Parameters
+        ----------
+        extension : asdf.AsdfExtension
+        """
+        extension = ExtensionProxy.maybe_wrap(extension)
+        if self.version_string not in extension.asdf_standard_requirement:
+            raise ValueError(
+                "{} does not support ASDF Standard version {}.".format(
+                    extension, self.version_string
+                )
+            )
+
+        if any(e.delegate is extension.delegate for e in self._extensions):
+            return
+
+        self._extensions.append(extension)
+        self._extension_list = None
+
+    def disable_extension(self, extension):
+        """
+        Disable an extension that is enabled for use with
+        this AsdfFile.
+
+        Parameters
+        ----------
+        extension : asdf.AsdfExtension
+        """
+        extension = ExtensionProxy.maybe_wrap(extension)
+
+        self._extensions = [e for e in self._extensions if e.delegate is not extension.delegate]
+        self._extension_list = None
+
     def __enter__(self):
         return self
 
@@ -170,19 +260,41 @@ class AsdfFile(versioning.VersionedMixin):
 
     def _process_extensions(self, requested_extensions):
         """
-        Validate a list of user-specified extensions, add always_enabled=True
-        extensions if missing, and set the _extensions and _extension_list
-        attributes.
+        Validate a list of user-specified extensions, add legacy=True and
+        always_enabled=True extensions if missing, and return the result.
         """
         if requested_extensions is None:
-            requested_extensions = []
+            requested_extensions = [
+                e for e in get_config().default_extensions
+                if self.version_string in e.asdf_standard_requirement
+            ]
 
         if not isinstance(requested_extensions, list):
             raise TypeError("extensions must be a list of asdf.AsdfExtension instances")
 
         requested_extensions = [ExtensionProxy.maybe_wrap(e) for e in requested_extensions]
 
-        extensions = []
+        selected_extensions = []
+        selected_delegates = set()
+        def _select_extension(extension):
+            if extension.delegate not in selected_delegates:
+                selected_delegates.add(extension.delegate)
+                selected_extensions.append(extension)
+
+        # Sort extensions with legacy=True first, so they get overridden
+        # by any new-style extensions.
+        installed_extensions = sorted(
+            [e for e in get_config().extensions if self.version_string in e.asdf_standard_requirement],
+            key=lambda e: e.legacy,
+            reverse=True
+        )
+
+        # Some extensions are always enabled:
+        for extension in installed_extensions:
+            if extension.always_enabled or extension.legacy:
+                _select_extension(extension)
+
+        # Finally, the user requested or default extensions:
         for extension in requested_extensions:
             if self.version_string not in extension.asdf_standard_requirement:
                 warnings.warn(
@@ -193,18 +305,9 @@ class AsdfFile(versioning.VersionedMixin):
                     AsdfWarning
                 )
             else:
-                extensions.append(extension)
+                _select_extension(extension)
 
-        for extension in get_config().get_extensions(self.version_string):
-            if extension.always_enabled:
-                extensions.append(extension)
-
-        # Remove duplicates, in case any of the always_enabled extensions
-        # were already in the list:
-        extensions = list({id(e.delegate): e for e in extensions}.values())
-
-        self._extensions = extensions
-        self._extension_list = AsdfExtensionList(extensions)
+        return selected_extensions
 
     def _update_extension_history(self, extensions_used):
         """
@@ -294,23 +397,23 @@ class AsdfFile(versioning.VersionedMixin):
             "The 'tag_to_schema_resolver' property is deprecated. Use "
             "'tag_mapping' instead.",
             AsdfDeprecationWarning)
-        return self._extension_list.tag_mapping
+        return self.extension_list.tag_mapping
 
     @property
     def tag_mapping(self):
-        return self._extension_list.tag_mapping
+        return self.extension_list.tag_mapping
 
     @property
     def url_mapping(self):
-        return self._extension_list.url_mapping
+        return self.extension_list.url_mapping
 
     @property
     def resolver(self):
-        return self._extension_list.resolver
+        return self.extension_list.resolver
 
     @property
     def type_index(self):
-        return self._extension_list.type_index
+        return self.extension_list.type_index
 
     def resolve_uri(self, uri):
         """
@@ -619,7 +722,7 @@ class AsdfFile(versioning.VersionedMixin):
         self._fd = fd
         header_line = fd.read_until(b'\r?\n', 2, "newline", include=True)
         self._file_format_version = cls._parse_header_line(header_line)
-        self.version = self._file_format_version
+        self._version = validate_version(self._file_format_version)
 
         comment_section = fd.read_until(
             b'(%YAML)|(' + constants.BLOCK_MAGIC + b')', 5,
@@ -628,7 +731,7 @@ class AsdfFile(versioning.VersionedMixin):
 
         version = cls._find_asdf_version_in_comments(self._comments)
         if version is not None:
-            self.version = version
+            self._version = validate_version(version)
 
         yaml_token = fd.read(4)
         has_blocks = False
@@ -656,7 +759,7 @@ class AsdfFile(versioning.VersionedMixin):
             raise IOError("ASDF file appears to contain garbage after header.")
 
         if tree is None:
-            if version == "1.0.0":
+            if self.version_string == "1.0.0":
                 tree_tag = "tag:stsci.edu:asdf/core/asdf-1.0.0"
             else:
                 tree_tag = "tag:stsci.edu:asdf/core/asdf-1.1.0"
@@ -669,7 +772,7 @@ class AsdfFile(versioning.VersionedMixin):
             strict_extension_check,
             ignore_missing_extensions,
         )
-        self._process_extensions(selected_extensions)
+        self._extensions = self._process_extensions(selected_extensions)
 
         if has_blocks:
             self._blocks.read_internal_blocks(
@@ -870,8 +973,7 @@ class AsdfFile(versioning.VersionedMixin):
             del self._auto_inline
 
     def update(self, all_array_storage=None, all_array_compression='input',
-               auto_inline=None, pad_blocks=False, include_block_index=True,
-               version=None):
+               auto_inline=None, pad_blocks=False, include_block_index=True):
         """
         Update the file on disk in place.
 
@@ -921,10 +1023,6 @@ class AsdfFile(versioning.VersionedMixin):
             If `False`, don't include a block index at the end of the
             file.  (Default: `True`)  A block index is never written
             if the file has a streamed block.
-
-        version : str, optional
-            The ASDF version to write out.  If not provided, it will
-            write out in the latest version supported by asdf.
         """
 
         fd = self._fd
@@ -938,9 +1036,6 @@ class AsdfFile(versioning.VersionedMixin):
                 "Can not update, since associated file is read-only. Make "
                 "sure that the AsdfFile was opened with mode='rw' and the "
                 "underlying file handle is writable.")
-
-        if version is not None:
-            self.version = version
 
         if all_array_storage == 'external':
             # If the file is fully exploded, there's no benefit to
@@ -1003,8 +1098,7 @@ class AsdfFile(versioning.VersionedMixin):
             self._post_write(fd)
 
     def write_to(self, fd, all_array_storage=None, all_array_compression='input',
-                 auto_inline=None, pad_blocks=False, include_block_index=True,
-                 version=None):
+                 auto_inline=None, pad_blocks=False, include_block_index=True):
         """
         Write the ASDF file to the given file-like object.
 
@@ -1063,15 +1157,7 @@ class AsdfFile(versioning.VersionedMixin):
             If `False`, don't include a block index at the end of the
             file.  (Default: `True`)  A block index is never written
             if the file has a streamed block.
-
-        version : str, optional
-            The ASDF version to write out.  If not provided, it will
-            write out in the latest version supported by asdf.
         """
-
-        if version is not None:
-            self.version = version
-
         with generic_io.get_file(fd, mode='w') as fd:
             # TODO: This is not ideal: we really should pass the URI through
             # explicitly to wherever it is required instead of making it an
@@ -1543,19 +1629,33 @@ def _select_extensions(
 ):
     """
     Select extensions based on the ASDF Standard version, user input,
-    file metadata, and the always_enabled extension flag.
+    file metadata, and always enabled/legacy flags.
     """
     extensions_by_class_name = {}
-    selected_extensions = []
-
     def _index_extension(extension):
         extensions_by_class_name[extension.class_name] = extension
         for class_name in extension.legacy_class_names:
             extensions_by_class_name[class_name] = extension
 
-    # Sort extensions with legacy=True first, so they get overwritten
+    selected_extensions = []
+    selected_delegates = set()
+    def _select_extension(extension):
+        if extension.delegate not in selected_delegates:
+            selected_delegates.add(extension.delegate)
+            selected_extensions.append(extension)
+
+    # Sort extensions with legacy=True first, so they get overridden
     # by any new-style extensions.
-    installed_extensions = sorted(get_config().get_extensions(version), key=lambda e: e.legacy, reverse=True)
+    installed_extensions = sorted(
+        [e for e in get_config().extensions if version in e.asdf_standard_requirement],
+        key=lambda e: e.legacy,
+        reverse=True
+    )
+
+    for extension in installed_extensions:
+        if extension.always_enabled or extension.legacy:
+            _index_extension(extension)
+            _select_extension(extension)
 
     if extensions is None:
         # If the user did not manually specify extensions, then
@@ -1564,15 +1664,11 @@ def _select_extensions(
             _index_extension(extension)
     else:
         # If the user did specify extensions, then we should
-        # restrict ourselves to that list + always enabled extensions.
+        # restrict ourselves to that list.
         if not isinstance(extensions, list):
             raise TypeError("extensions must be a list of asdf.AsdfExtension instances")
 
         extensions = [ExtensionProxy.maybe_wrap(e) for e in extensions]
-
-        for extension in installed_extensions:
-            if extension.always_enabled:
-                _index_extension(extension)
 
         for extension in extensions:
             if not version in extension.asdf_standard_requirement:
@@ -1587,7 +1683,7 @@ def _select_extensions(
                 _index_extension(extension)
                 # These user-specified extensions are selected even if
                 # they aren't found in the file metadata.
-                selected_extensions.append(extension)
+                _select_extension(extension)
 
     history = tagged_tree.get("history", {})
     if isinstance(history, dict):
@@ -1617,8 +1713,6 @@ def _select_extensions(
             elif not ignore_missing_extensions:
                 warnings.warn(message, AsdfWarning)
         else:
-            selected_extensions.append(extension)
+            _select_extension(extension)
 
-    # Unique the selected list based on the object id of the wrapped
-    # extension.
-    return list({id(e.delegate): e for e in selected_extensions}.values())
+    return selected_extensions
