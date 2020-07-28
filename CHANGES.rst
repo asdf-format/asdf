@@ -23,7 +23,7 @@
   or ``asdf.extension.AsdfExtensionList``. [#835]
 
 - Extend the ``asdf.AsdfExtension`` interface to support
-  versioned extensions. [#835]
+  versioned extensions. [#835, #836]
 
 2.7.0 (2020-07-23)
 ------------------

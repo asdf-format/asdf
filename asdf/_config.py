@@ -128,6 +128,22 @@ class AsdfConfig:
                     self._extensions = entry_points.get_extensions()
         return self._extensions
 
+    def get_extensions(self, version):
+        """
+        Get a list of installed `AsdfExtension` instances that
+        support the specified ASDF Standard version.
+
+        Parameters
+        ----------
+        version : str
+            ASDF Standard version.
+
+        Returns
+        -------
+        list of asdf.AsdfExtension
+        """
+        return [e for e in self.extensions if version in e.asdf_standard_requirement]
+
     @property
     def validate_on_read(self):
         """

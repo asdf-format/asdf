@@ -107,6 +107,9 @@ class AsdfFile(versioning.VersionedMixin):
             standard.
 
         """
+        if version is not None:
+            self.version = version
+
         # This method sets the _extensions and _extension_list attributes.
         self._process_extensions(extensions)
 
@@ -159,30 +162,40 @@ class AsdfFile(versioning.VersionedMixin):
 
         self._comments = []
 
-        if version is not None:
-            self.version = version
-
     def __enter__(self):
         return self
 
     def __exit__(self, type, value, traceback):
         self.close()
 
-    def _process_extensions(self, extensions):
+    def _process_extensions(self, requested_extensions):
         """
         Validate a list of user-specified extensions, add always_enabled=True
         extensions if missing, and set the _extensions and _extension_list
         attributes.
         """
-        if extensions is None:
-            extensions = []
+        if requested_extensions is None:
+            requested_extensions = []
 
-        if not isinstance(extensions, list):
+        if not isinstance(requested_extensions, list):
             raise TypeError("extensions must be a list of asdf.AsdfExtension instances")
 
-        extensions = [ExtensionProxy.maybe_wrap(e) for e in extensions]
+        requested_extensions = [ExtensionProxy.maybe_wrap(e) for e in requested_extensions]
 
-        for extension in get_config().extensions:
+        extensions = []
+        for extension in requested_extensions:
+            if self.version_string not in extension.asdf_standard_requirement:
+                warnings.warn(
+                    "{} does not support ASDF Standard version {}. "
+                    "Extension will not be enabled.".format(
+                        extension, self.version_string
+                    ),
+                    AsdfWarning
+                )
+            else:
+                extensions.append(extension)
+
+        for extension in get_config().get_extensions(self.version_string):
             if extension.always_enabled:
                 extensions.append(extension)
 
@@ -650,6 +663,7 @@ class AsdfFile(versioning.VersionedMixin):
             tree = tagged.TaggedDict(tag=tree_tag)
 
         selected_extensions = _select_extensions(
+            self.version_string,
             tree,
             extensions,
             strict_extension_check,
@@ -1521,14 +1535,15 @@ def is_asdf_file(fd):
 
 
 def _select_extensions(
+    version,
     tagged_tree,
     extensions,
     strict_extension_check,
     ignore_missing_extensions,
 ):
     """
-    Select extensions based on user input, file metadata, and the
-    always_enabled extension flag.
+    Select extensions based on the ASDF Standard version, user input,
+    file metadata, and the always_enabled extension flag.
     """
     extensions_by_class_name = {}
     selected_extensions = []
@@ -1540,7 +1555,7 @@ def _select_extensions(
 
     # Sort extensions with legacy=True first, so they get overwritten
     # by any new-style extensions.
-    installed_extensions = sorted(get_config().extensions, key=lambda e: e.legacy, reverse=True)
+    installed_extensions = sorted(get_config().get_extensions(version), key=lambda e: e.legacy, reverse=True)
 
     if extensions is None:
         # If the user did not manually specify extensions, then
@@ -1560,10 +1575,19 @@ def _select_extensions(
                 _index_extension(extension)
 
         for extension in extensions:
-            _index_extension(extension)
-            # These user-specified extensions are selected even if
-            # they aren't found in the file metadata.
-            selected_extensions.append(extension)
+            if not version in extension.asdf_standard_requirement:
+                warnings.warn(
+                    "{} does not support ASDF Standard version {}. "
+                    "Extension will not be enabled.".format(
+                        extension, version
+                    ),
+                    AsdfWarning
+                )
+            else:
+                _index_extension(extension)
+                # These user-specified extensions are selected even if
+                # they aren't found in the file metadata.
+                selected_extensions.append(extension)
 
     history = tagged_tree.get("history", {})
     if isinstance(history, dict):

@@ -1,6 +1,8 @@
 import abc
 import warnings
 
+from packaging.specifiers import SpecifierSet
+
 from . import types
 from . import resolver
 from .util import get_class_name
@@ -26,11 +28,12 @@ class AsdfExtension(abc.ABC):
     def always_enabled(self):
         """
         Return `True` if this extension should always be enabled
-        when reading and writing files.  Use judiciously, as users
-        will only be able to disable the extension by uninstalling
-        its associated package.  When `False`, the extension will
-        only be enabled when requested by the user or when listed
-        in a file's metadata.
+        when reading and writing files (with a supported ASDF
+        Standard version).  Use judiciously, as users will only be
+        able to disable the extension by uninstalling its associated
+        package.  When `False`, the extension will only be enabled
+        when requested by the user or when listed in a file's
+        metadata.
 
         Defaults to `False` for new-style extensions and `True`
         for legacy extensions.
@@ -55,6 +58,19 @@ class AsdfExtension(abc.ABC):
         iterable of str
         """
         return []
+
+    @property
+    def asdf_standard_requirement(self):
+        """
+        Get the ASDF Standard version requirement for this extension.
+
+        Returns
+        -------
+        str or None
+            If str, PEP 440 version specifier.
+            If None, support all versions.
+        """
+        return None
 
     @abc.abstractproperty
     def types(self):
@@ -159,6 +175,8 @@ class ExtensionProxy(AsdfExtension):
 
         self._class_name = get_class_name(delegate)
 
+        self._asdf_standard_requirement = None
+
     @property
     def always_enabled(self):
         return getattr(self._delegate, "always_enabled", self.legacy)
@@ -166,6 +184,18 @@ class ExtensionProxy(AsdfExtension):
     @property
     def legacy_class_names(self):
         return set(getattr(self._delegate, "legacy_class_names", set()))
+
+    @property
+    def asdf_standard_requirement(self):
+        if self._asdf_standard_requirement is None:
+            value = getattr(self._delegate, "asdf_standard_requirement", None)
+            if isinstance(value, str):
+                self._asdf_standard_requirement = SpecifierSet(value)
+            elif value is None:
+                self._asdf_standard_requirement = SpecifierSet()
+            else:
+                raise TypeError("asdf_standard_requirement must be str or None")
+        return self._asdf_standard_requirement
 
     @property
     def types(self):
@@ -200,10 +230,11 @@ class ExtensionProxy(AsdfExtension):
         return self._legacy
 
     def __repr__(self):
-        return "<ExtensionProxy class: {} package: {}=={} legacy: {}>".format(
+        return "<ExtensionProxy class: {} package: {}=={} ASDF Standard: {} legacy: {}>".format(
             self.class_name,
             self.package_name,
             self.package_version,
+            self.asdf_standard_requirement,
             self.legacy,
         )
 
