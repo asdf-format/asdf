@@ -75,6 +75,19 @@ def _type_to_tag(type_):
     return None
 
 
+def _compare_tag_version(instance_tag, tagname):
+    if instance_tag is not None:
+        tag_uri = tagname.rpartition("-")[0]
+        tag_version = [int(v) for v in tagname.rpartition("-")[-1].split(".")]
+        instance_tag_version = [int(v) for v in instance_tag.rpartition("-")[-1].split(".")]
+
+        version_compatible = all([v[0] == v[1] for v in zip(tag_version, instance_tag_version)])
+
+        if (not instance_tag.startswith(tag_uri)) or (not version_compatible):
+            return False
+    return True
+
+
 def validate_tag(validator, tagname, instance, schema):
 
     if hasattr(instance, '_tag'):
@@ -83,10 +96,11 @@ def validate_tag(validator, tagname, instance, schema):
         # Try tags for known Python builtins
         instance_tag = _type_to_tag(type(instance))
 
-    if instance_tag is not None and instance_tag != tagname:
-        yield ValidationError(
-            "mismatched tags, wanted '{0}', got '{1}'".format(
-                tagname, instance_tag))
+    if instance_tag is not None:
+        if not _compare_tag_version(instance_tag, tagname):
+            yield ValidationError(
+                "mismatched tags, wanted '{0}', got '{1}'".format(
+                    tagname, instance_tag))
 
 
 def validate_propertyOrder(validator, order, instance, schema):
