@@ -1,13 +1,10 @@
 import pytest
-from io import BytesIO
 
-from asdf import get_config, config_context
+from asdf import config_context
 from asdf.asdf import AsdfFile, open_asdf
 from asdf.extension import ExtensionProxy
 from asdf.exceptions import AsdfWarning
-from asdf import yamlutil
 from asdf.tests.helpers import yaml_to_asdf
-from asdf.util import get_class_name
 
 
 def assert_correct_extensions(asdf_file, includes=[], excludes=[]):
