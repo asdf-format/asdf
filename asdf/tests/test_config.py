@@ -171,7 +171,7 @@ def test_extensions():
         assert any(isinstance(e.delegate, BuiltinExtension) for e in original_extensions)
 
         class FooExtension:
-            pass
+            extension_uri = "http://somewhere.org/extensions/foo"
         new_extension = FooExtension()
 
         # Add an extension:
@@ -194,6 +194,11 @@ def test_extensions():
         # Removing should work when wrapped:
         config.add_extension(new_extension)
         config.remove_extension(ExtensionProxy(new_extension))
+        assert len(config.extensions) == len(original_extensions)
+
+        # May also remove by URI:
+        config.add_extension(new_extension)
+        config.remove_extension(FooExtension.extension_uri)
         assert len(config.extensions) == len(original_extensions)
 
         # Remove by the name of the extension's package:
@@ -221,11 +226,15 @@ def test_default_extensions():
         assert all(e.default for e in original_default_extensions)
 
         class NotDefaultExtension:
+            extension_uri = "http://somewhere.org/extensions/not-default"
             default = False
         not_default_extension = NotDefaultExtension()
 
         class DefaultExtension:
             default = True
+            extension_uri = "http://somewhere.org/extensions/default"
+            default = True
+
         default_extension = DefaultExtension()
 
         # Adding a default extension should add it to the list:
@@ -268,6 +277,14 @@ def test_default_extensions():
         assert len(config.default_extensions) == len(original_default_extensions)
         assert len(config.extensions) == len(original_extensions) + 1
 
+        # Add by URI:
+        config.add_default_extension(NotDefaultExtension.extension_uri)
+        assert len(config.default_extensions) == len(original_default_extensions) + 1
+
+        # Remove by URI:
+        config.remove_default_extension(NotDefaultExtension.extension_uri)
+        assert len(config.default_extensions) == len(original_default_extensions)
+
         config.reset_extensions()
 
         # Remove default status from a default=True extension:
@@ -298,6 +315,21 @@ def test_default_extensions():
         assert len(config.default_extensions) == len(original_default_extensions) + 2
         config.remove_default_extension(package="foo")
         assert len(config.default_extensions) == len(original_default_extensions)
+
+
+def test_get_extension():
+    class SomeExtension:
+        extension_uri = "http://somewhere.org/extensions/some"
+    extension = SomeExtension()
+
+    with asdf.config_context() as config:
+        # Raise KeyError when extension does not exist
+        with pytest.raises(KeyError):
+            config.get_extension(SomeExtension.extension_uri)
+
+        config.add_extension(extension)
+
+        assert config.get_extension(SomeExtension.extension_uri).delegate is extension
 
 
 def test_config_repr():

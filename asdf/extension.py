@@ -20,9 +20,23 @@ class AsdfExtension(abc.ABC):
     @classmethod
     def __subclasshook__(cls, C):
         if cls is AsdfExtension:
-            # At this time, no attributes are required.
+            # The extension_uri property is required of new-style
+            # extensions, but while legacy extensions exist we
+            # can't check it here.
             return True
         return NotImplemented # pragma: no cover
+
+    @property
+    def extension_uri(self):
+        """
+        Get this extension's identifying URI.  The URI is required
+        of new-style extensions.
+
+        Returns
+        -------
+        str
+        """
+        return None
 
     @property
     def default(self):
@@ -202,6 +216,10 @@ class ExtensionProxy(AsdfExtension):
         return getattr(self._delegate, "default", False)
 
     @property
+    def extension_uri(self):
+        return getattr(self._delegate, "extension_uri", None)
+
+    @property
     def always_enabled(self):
         return getattr(self._delegate, "always_enabled", False)
 
@@ -263,7 +281,13 @@ class ExtensionProxy(AsdfExtension):
         if requirement_description == "":
             requirement_description = "(all)"
 
-        return "<ExtensionProxy class: {} package: {} ASDF Standard: {} legacy: {}>".format(
+        if self.extension_uri is None:
+            uri_description = "(none)"
+        else:
+            uri_description = self.extension_uri
+
+        return "<ExtensionProxy URI: {} class: {} package: {} ASDF Standard: {} legacy: {}>".format(
+            uri_description,
             self.class_name,
             package_description,
             requirement_description,

@@ -23,7 +23,7 @@ def get_extensions():
     return extensions + legacy_extensions
 
 
-def _list_entry_points(group, proxy_class):
+def _list_entry_points(group, proxy_class, validator=None):
     results = []
     for entry_point in iter_entry_points(group=group):
         package_name = entry_point.dist.project_name
@@ -50,6 +50,8 @@ def _list_entry_points(group, proxy_class):
 
             for element in elements:
                 try:
+                    if validator:
+                        validator(element)
                     results.append(proxy_class(element, package_name=package_name, package_version=package_version))
                 except Exception as e:
                     _handle_error(e)

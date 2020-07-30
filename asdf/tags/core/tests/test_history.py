@@ -159,7 +159,7 @@ history:
     """
 
     buff = yaml_to_asdf(yaml)
-    with pytest.warns(AsdfWarning, match="File was created with extension foo.bar.FooBar"):
+    with pytest.warns(AsdfWarning, match="File was created with extension class foo.bar.FooBar"):
         with asdf.open(buff):
             pass
 
@@ -205,6 +205,8 @@ def test_metadata_with_custom_extension(tmpdir):
             return fractions.Fraction(tree[0], tree[1])
 
     class FractionExtension(CustomExtension):
+        extension_uri = "http://somewhere.org/extensions/fraction"
+
         @property
         def types(self):
             return [FractionType]
@@ -221,7 +223,7 @@ def test_metadata_with_custom_extension(tmpdir):
     with asdf.open(tmpfile, extensions=[FractionExtension()]) as af:
         assert len(af['history']['extensions']) == 2
 
-    with pytest.warns(AsdfWarning, match="was created with extension"):
+    with pytest.warns(AsdfWarning, match=r"was created with extension URI http://somewhere\.org/extensions/fraction"):
         with asdf.open(tmpfile, ignore_unrecognized_tag=True):
             pass
 

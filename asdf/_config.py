@@ -173,8 +173,8 @@ class AsdfConfig:
 
         Parameters
         ----------
-        extension : asdf.AsdfExtension, optional
-            An extension to remove.
+        extension : asdf.AsdfExtension or str, optional
+            An extension instance or URI to remove.
         package : str, optional
             A Python package name whose extensions will all be removed.
         """
@@ -182,9 +182,13 @@ class AsdfConfig:
             extensions = self.extensions
             default_extensions = self.default_extensions
             if extension is not None:
-                extension = ExtensionProxy.maybe_wrap(extension)
-                extensions = [e for e in extensions if e.delegate is not extension.delegate]
-                default_extensions = [e for e in default_extensions if e.delegate is not extension.delegate]
+                if isinstance(extension, str):
+                    extensions = [e for e in extensions if e.extension_uri != extension]
+                    default_extensions = [e for e in default_extensions if e.extension_uri != extension]
+                else:
+                    extension = ExtensionProxy.maybe_wrap(extension)
+                    extensions = [e for e in extensions if e.delegate is not extension.delegate]
+                    default_extensions = [e for e in default_extensions if e.delegate is not extension.delegate]
             if package is not None:
                 extensions = [e for e in extensions if e.package_name != package]
                 default_extensions = [e for e in default_extensions if e.package_name != package]
@@ -198,9 +202,19 @@ class AsdfConfig:
 
         Parameters
         ----------
-        extension : asdf.AsdfExtension
+        extension : asdf.AsdfExtension or str
+            Extension instance or URI.
+
+        Raises
+        ------
+        KeyError
+            Unrecognized extension URI.
         """
-        extension = ExtensionProxy.maybe_wrap(extension)
+        if isinstance(extension, str):
+            extension = self.get_extension(extension)
+        else:
+            extension = ExtensionProxy.maybe_wrap(extension)
+
         with self._lock:
             if any(e.delegate is extension.delegate for e in self.default_extensions):
                 return
@@ -219,19 +233,44 @@ class AsdfConfig:
 
         Parameters
         ----------
-        extension : asdf.AsdfExtension, optional
-            An extension instance to remove.
+        extension : asdf.AsdfExtension or str, optional
+            Extension instance or URI to remove.
         package : str, optional
             A Python package name whose extensions will all be removed.
         """
         with self._lock:
             default_extensions = self.default_extensions
             if extension is not None:
-                extension = ExtensionProxy.maybe_wrap(extension)
-                default_extensions = [e for e in default_extensions if e.delegate is not extension.delegate]
+                if isinstance(extension, str):
+                    default_extensions = [e for e in default_extensions if e.extension_uri != extension]
+                else:
+                    extension = ExtensionProxy.maybe_wrap(extension)
+                    default_extensions = [e for e in default_extensions if e.delegate is not extension.delegate]
             if package is not None:
                 default_extensions = [e for e in default_extensions if e.package_name != package]
             self._default_extensions = default_extensions
+
+    def get_extension(self, extension_uri):
+        """
+        Get an extension instance by URI.
+
+        Parameters
+        ----------
+        extension_uri : str
+
+        Returns
+        -------
+        asdf.AsdfExtension
+
+        Raises
+        ------
+        KeyError
+            Unrecognized extension URI.
+        """
+        extension = next((e for e in self.extensions if e.extension_uri == extension_uri), None)
+        if extension is None:
+            raise KeyError("Unrecognized extension URI: {}".format(extension_uri))
+        return extension
 
     def reset_extensions(self):
         """

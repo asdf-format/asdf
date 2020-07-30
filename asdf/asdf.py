@@ -222,9 +222,14 @@ class AsdfFile:
 
         Parameters
         ----------
-        extension : asdf.AsdfExtension
+        extension : asdf.AsdfExtension or str
+            Extension instance or URI.
         """
-        extension = ExtensionProxy.maybe_wrap(extension)
+        if isinstance(extension, str):
+            extension = get_config().get_extension(extension)
+        else:
+            extension = ExtensionProxy.maybe_wrap(extension)
+
         if self.version_string not in extension.asdf_standard_requirement:
             raise ValueError(
                 "{} does not support ASDF Standard version {}.".format(
@@ -245,11 +250,15 @@ class AsdfFile:
 
         Parameters
         ----------
-        extension : asdf.AsdfExtension
+        extension : asdf.AsdfExtension or str
+            Extension instance or URI.
         """
-        extension = ExtensionProxy.maybe_wrap(extension)
+        if isinstance(extension, str):
+            self._extensions = [e for e in self._extensions if e.extension_uri != extension]
+        else:
+            extension = ExtensionProxy.maybe_wrap(extension)
+            self._extensions = [e for e in self._extensions if e.delegate is not extension.delegate]
 
-        self._extensions = [e for e in self._extensions if e.delegate is not extension.delegate]
         self._extension_list = None
 
     def __enter__(self):
@@ -333,14 +342,21 @@ class AsdfFile:
 
         for extension in extensions_used:
             metadata = ExtensionMetadata(extension_class=extension.class_name)
+            if extension.extension_uri is not None:
+                metadata['extension_uri'] = extension.extension_uri
             if extension.package_name is not None:
                 metadata['software'] = Software(name=extension.package_name, version=extension.package_version)
 
             for i, entry in enumerate(self.tree['history']['extensions']):
-                # Update metadata about this extension if it already exists
-                if entry.extension_class == metadata.extension_class:
-                    self.tree['history']['extensions'][i] = metadata
-                    break
+                if metadata.extension_uri is not None:
+                    if (entry.extension_uri == extension.extension_uri
+                        or entry.extension_class in extension.legacy_class_names):
+                        self.tree['history']['extensions'][i] = metadata
+                        break
+                else:
+                    if entry.extension_class == extension.class_name:
+                        self.tree['history']['extensions'][i] = metadata
+                        break
             else:
                 self.tree['history']['extensions'].append(metadata)
 
@@ -1632,10 +1648,17 @@ def _select_extensions(
     file metadata, and always enabled/legacy flags.
     """
     extensions_by_class_name = {}
+    extensions_by_uri = {}
     def _index_extension(extension):
-        extensions_by_class_name[extension.class_name] = extension
-        for class_name in extension.legacy_class_names:
-            extensions_by_class_name[class_name] = extension
+        if extension.extension_uri is None:
+            # Legacy extensions are selected by class name.
+            extensions_by_class_name[extension.class_name] = extension
+        else:
+            # New-style extensions are selected by URI, but they
+            # can also match legacy extension class names.
+            extensions_by_uri[extension.extension_uri] = extension
+            for class_name in extension.legacy_class_names:
+                extensions_by_class_name[class_name] = extension
 
     selected_extensions = []
     selected_delegates = set()
@@ -1692,16 +1715,22 @@ def _select_extensions(
         metadata_list = []
 
     for metadata in metadata_list:
-        extension = extensions_by_class_name.get(metadata["extension_class"])
+        if "extension_uri" in metadata:
+            extension = extensions_by_uri.get(metadata["extension_uri"])
+        else:
+            extension = extensions_by_class_name.get(metadata["extension_class"])
+
         if extension is None:
+            if metadata.get("extension_uri"):
+                description = "URI " + metadata.get("extension_uri")
+            else:
+                description = "class " + metadata.get("extension_class")
+
             if metadata.get("software"):
-                description = "{} (from package {}=={})".format(
-                    metadata["extension_class"],
+                description = description + " (from package {}=={})".format(
                     metadata["software"]["name"],
                     metadata["software"]["version"],
                 )
-            else:
-                description = metadata["extension_class"]
 
             message = (
                 "File was created with extension {}, which is "

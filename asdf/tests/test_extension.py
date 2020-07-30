@@ -20,7 +20,7 @@ def test_asdf_extension():
 
 def test_proxy_maybe_wrap():
     class TestExtension:
-        pass
+        extension_uri = "http://somewhere.org/extensions/test"
 
     extension = TestExtension()
     proxy = ExtensionProxy.maybe_wrap(extension)
@@ -30,6 +30,7 @@ def test_proxy_maybe_wrap():
 
 def test_proxy_properties():
     class TestExtension:
+        extension_uri = "http://somewhere.org/extensions/test"
         default = True
         always_enabled = True
         legacy_class_names = {
@@ -39,6 +40,7 @@ def test_proxy_properties():
         asdf_standard_requirement = ">=1.5, <2"
     proxy = ExtensionProxy(TestExtension(), package_name="foo", package_version="1.2.3")
 
+    assert proxy.extension_uri == "http://somewhere.org/extensions/test"
     assert proxy.default is True
     assert proxy.always_enabled is True
     assert proxy.legacy_class_names == {
@@ -54,6 +56,7 @@ def test_proxy_properties():
 
 def test_proxy_repr():
     class TestExtension:
+        extension_uri = "http://somewhere.org/extensions/test"
         default = True
         always_enabled = True
         legacy_class_names = {
@@ -63,14 +66,16 @@ def test_proxy_repr():
         asdf_standard_requirement = ">=1.5, <2"
     proxy = ExtensionProxy(TestExtension(), package_name="foo", package_version="1.2.3")
 
+    assert "URI: http://somewhere.org/extensions/test" in repr(proxy)
     assert ".TestExtension" in repr(proxy)
     assert "package: foo==1.2.3" in repr(proxy)
     assert "ASDF Standard: " + str(proxy.asdf_standard_requirement) in repr(proxy)
 
     class EmptyExtension:
         pass
-    empty_proxy = ExtensionProxy(EmptyExtension())
+    empty_proxy = ExtensionProxy(EmptyExtension(), legacy=True)
 
+    assert "URI: (none)" in repr(empty_proxy)
     assert ".EmptyExtension" in repr(empty_proxy)
     assert "package: (none)" in repr(empty_proxy)
     assert "ASDF Standard: (all)" in repr(empty_proxy)
@@ -88,7 +93,10 @@ def test_extension_defaults():
 
     class TestExtension:
         pass
-    proxy = ExtensionProxy(TestExtension())
+    proxy = ExtensionProxy(TestExtension(), legacy=True)
+
+    assert proxy.extension_uri is None
+    assert proxy.extension_uri == asdf_extension.extension_uri
 
     assert proxy.default is False
     assert asdf_extension.default == proxy.default
@@ -111,4 +119,4 @@ def test_extension_defaults():
     assert proxy.url_mapping == []
     assert asdf_extension.url_mapping == proxy.url_mapping
 
-    assert proxy.legacy is False
+    assert proxy.legacy is True
