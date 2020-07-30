@@ -77,6 +77,8 @@ def _type_to_tag(type_):
 
 def _compare_tag_version(instance_tag, tagname):
     if instance_tag is not None:
+        if instance_tag.startswith("tag:yaml.org"):
+            return instance_tag == tagname
         tag_uri = tagname.rpartition("-")[0]
         tag_version = [int(v) for v in tagname.rpartition("-")[-1].split(".")]
         instance_tag_version = [int(v) for v in instance_tag.rpartition("-")[-1].split(".")]
