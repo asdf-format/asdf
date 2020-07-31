@@ -25,7 +25,7 @@ class AsdfExtension(abc.ABC):
         return NotImplemented # pragma: no cover
 
     @property
-    def default_enabled(self):
+    def default(self):
         """
         Return `True` if this extension should be enabled by default
         for new files (with a supported ASDF Standard version).
@@ -198,8 +198,8 @@ class ExtensionProxy(AsdfExtension):
         self._asdf_standard_requirement = None
 
     @property
-    def default_enabled(self):
-        return getattr(self._delegate, "default_enabled", False)
+    def default(self):
+        return getattr(self._delegate, "default", False)
 
     @property
     def always_enabled(self):

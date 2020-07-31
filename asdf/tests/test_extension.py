@@ -30,7 +30,7 @@ def test_proxy_maybe_wrap():
 
 def test_proxy_properties():
     class TestExtension:
-        default_enabled = True
+        default = True
         always_enabled = True
         legacy_class_names = {
             "org.foo.extensions.SomeLegacyClass",
@@ -39,7 +39,7 @@ def test_proxy_properties():
         asdf_standard_requirement = ">=1.5, <2"
     proxy = ExtensionProxy(TestExtension(), package_name="foo", package_version="1.2.3")
 
-    assert proxy.default_enabled is True
+    assert proxy.default is True
     assert proxy.always_enabled is True
     assert proxy.legacy_class_names == {
         "org.foo.extensions.SomeLegacyClass",
@@ -54,7 +54,7 @@ def test_proxy_properties():
 
 def test_proxy_repr():
     class TestExtension:
-        default_enabled = True
+        default = True
         always_enabled = True
         legacy_class_names = {
             "org.foo.extensions.SomeLegacyClass",
@@ -90,8 +90,8 @@ def test_extension_defaults():
         pass
     proxy = ExtensionProxy(TestExtension())
 
-    assert proxy.default_enabled is False
-    assert asdf_extension.default_enabled == proxy.default_enabled
+    assert proxy.default is False
+    assert asdf_extension.default == proxy.default
 
     assert proxy.always_enabled is False
     assert asdf_extension.always_enabled == proxy.always_enabled

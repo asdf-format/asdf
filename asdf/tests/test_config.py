@@ -218,14 +218,14 @@ def test_default_extensions():
     with asdf.config_context() as config:
         original_extensions = config.extensions
         original_default_extensions = config.default_extensions
-        assert all(e.default_enabled for e in original_default_extensions)
+        assert all(e.default for e in original_default_extensions)
 
         class NotDefaultExtension:
-            default_enabled = False
+            default = False
         not_default_extension = NotDefaultExtension()
 
         class DefaultExtension:
-            default_enabled = True
+            default = True
         default_extension = DefaultExtension()
 
         # Adding a default extension should add it to the list:
@@ -270,7 +270,7 @@ def test_default_extensions():
 
         config.reset_extensions()
 
-        # Remove default status from a default_enabled=True extension:
+        # Remove default status from a default=True extension:
         config.add_extension(default_extension)
         assert len(config.default_extensions) == len(original_default_extensions) + 1
         config.remove_default_extension(default_extension)
@@ -285,7 +285,7 @@ def test_default_extensions():
 
         config.reset_extensions()
 
-        # The same operation with an extension marked default_enabled:
+        # The same operation with an extension marked default:
         config.add_default_extension(default_extension)
         assert len(config.default_extensions) == len(original_default_extensions) + 1
         assert len(config.extensions) == len(original_extensions) + 1

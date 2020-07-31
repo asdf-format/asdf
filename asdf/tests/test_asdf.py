@@ -31,12 +31,12 @@ class TestExtension:
 
     def __init__(
         self,
-        default_enabled=False,
+        default=False,
         always_enabled=False,
         asdf_standard_requirement=None,
         legacy_class_names=None,
     ):
-        self.default_enabled = default_enabled
+        self.default = default
         self.always_enabled = always_enabled
         self.asdf_standard_requirement = asdf_standard_requirement
         if legacy_class_names is None:
@@ -65,7 +65,7 @@ def test_asdf_file_initial_extensions():
         assert_correct_extensions(AsdfFile(extensions=[non_default_extension]), includes=[non_default_extension])
 
     with config_context() as config:
-        default_extension = TestExtension(default_enabled=True)
+        default_extension = TestExtension(default=True)
         config.add_extension(default_extension)
         assert_correct_extensions(AsdfFile(), includes=[default_extension])
         assert_correct_extensions(AsdfFile(extensions=[]), excludes=[default_extension])
@@ -79,7 +79,7 @@ def test_asdf_file_initial_extensions():
         assert_correct_extensions(AsdfFile(extensions=[always_extension]), includes=[always_extension])
 
     with config_context() as config:
-        version_extension = TestExtension(default_enabled=True, asdf_standard_requirement=">1.3")
+        version_extension = TestExtension(default=True, asdf_standard_requirement=">1.3")
         config.add_extension(version_extension)
         assert_correct_extensions(AsdfFile(version="1.3.0"), excludes=[version_extension])
         assert_correct_extensions(AsdfFile(version="1.4.0"), includes=[version_extension])
@@ -93,22 +93,22 @@ def test_asdf_file_modify_extensions():
     af = AsdfFile(version="1.3.0")
     extension = TestExtension()
 
-    af.enable_extension(extension)
+    af.add_extension(extension)
     assert_correct_extensions(af, includes=[extension])
-    af.disable_extension(extension)
+    af.remove_extension(extension)
     assert_correct_extensions(af, excludes=[extension])
 
     version_extension = TestExtension(asdf_standard_requirement="==1.3.0")
-    af.enable_extension(version_extension)
+    af.add_extension(version_extension)
     assert_correct_extensions(af, includes=[version_extension])
 
     invalid_version_extension = TestExtension(asdf_standard_requirement="==1.4.0")
     with pytest.raises(ValueError):
-        af.enable_extension(invalid_version_extension)
+        af.add_extension(invalid_version_extension)
 
 
 def test_open_asdf_extensions():
-    default_extension = TestExtension(default_enabled=True)
+    default_extension = TestExtension(default=True)
     always_extension = TestExtension(always_enabled=True)
     version_1_3_extension = TestExtension(asdf_standard_requirement="==1.3.0")
     legacy_extension = LegacyExtension()

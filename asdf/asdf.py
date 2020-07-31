@@ -214,7 +214,7 @@ class AsdfFile:
             self._extension_list = AsdfExtensionList(self.extensions)
         return self._extension_list
 
-    def enable_extension(self, extension):
+    def add_extension(self, extension):
         """
         Enable an extension for use with this AsdfFile.
         Extension must support the file's ASDF Standard
@@ -238,7 +238,7 @@ class AsdfFile:
         self._extensions.append(extension)
         self._extension_list = None
 
-    def disable_extension(self, extension):
+    def remove_extension(self, extension):
         """
         Disable an extension that is enabled for use with
         this AsdfFile.

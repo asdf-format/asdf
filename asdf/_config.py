@@ -143,7 +143,7 @@ class AsdfConfig:
         if self._default_extensions is None:
             with self._lock:
                 if self._default_extensions is None:
-                    self._default_extensions = [e for e in self.extensions if e.default_enabled]
+                    self._default_extensions = [e for e in self.extensions if e.default]
         return self._default_extensions
 
     def add_extension(self, extension):
@@ -162,7 +162,7 @@ class AsdfConfig:
             extensions.append(extension)
             self._extensions = extensions
 
-            if extension.default_enabled and self._default_extensions is not None:
+            if extension.default and self._default_extensions is not None:
                 default_extensions = self.default_extensions.copy()
                 default_extensions.append(extension)
                 self._default_extensions = default_extensions
@@ -205,7 +205,7 @@ class AsdfConfig:
             if any(e.delegate is extension.delegate for e in self.default_extensions):
                 return
             self.add_extension(extension)
-            if not extension.default_enabled:
+            if not extension.default:
                 # Make sure we're using the same wrapper here:
                 extension = next(e for e in self.extensions if e.delegate is extension.delegate)
                 default_extensions = self.default_extensions.copy()
