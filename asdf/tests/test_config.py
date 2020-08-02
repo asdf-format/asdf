@@ -84,13 +84,16 @@ def test_resource_mappings():
         assert len(default_mappings) >= len(core_mappings)
 
         new_mapping = {"http://somewhere.org/schemas/foo-1.0.0": b"foo"}
-        config.add_resource_mapping(new_mapping)
 
+        config.add_resource_mapping(new_mapping)
         assert len(config.resource_mappings) == len(default_mappings) + 1
         assert new_mapping in config.resource_mappings
 
-        config.reset_resources()
+        config.remove_resource_mapping(new_mapping)
+        assert len(config.resource_mappings) == len(default_mappings)
 
+        config.add_resource_mapping(new_mapping)
+        config.reset_resources()
         assert len(config.resource_mappings) == len(default_mappings)
 
 
@@ -112,3 +115,10 @@ def test_resource_manager():
         assert "http://stsci.edu/schemas/asdf/core/asdf-1.1.0" in config.resource_manager
         assert b"http://stsci.edu/schemas/asdf/core/asdf-1.1.0" in config.resource_manager["http://stsci.edu/schemas/asdf/core/asdf-1.1.0"]
         assert "http://somewhere.org/schemas/foo-1.0.0" not in config.resource_manager
+
+
+def test_config_repr():
+    with asdf.config_context() as config:
+        config.validate_on_read = True
+
+        assert "validate_on_read: True" in repr(config)

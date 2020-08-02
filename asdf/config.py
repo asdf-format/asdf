@@ -23,19 +23,10 @@ class AsdfConfig:
     `asdf.config_context` module methods.
     """
 
-    def __init__(
-        self,
-        resource_mappings=None,
-        resource_manager=None,
-        validate_on_read=None,
-    ):
-        self._resource_mappings = resource_mappings
-        self._resource_manager = resource_manager
-
-        if validate_on_read is None:
-            self._validate_on_read = DEFAULT_VALIDATE_ON_READ
-        else:
-            self._validate_on_read = validate_on_read
+    def __init__(self):
+        self._resource_mappings = None
+        self._resource_manager = None
+        self._validate_on_read = DEFAULT_VALIDATE_ON_READ
 
         self._lock = threading.RLock()
 
@@ -136,10 +127,9 @@ class AsdfConfig:
 
     def __repr__(self):
         return (
-            "AsdfConfig(\n"
-            "  resource_mappings=[...],\n"
-            "  validate_on_read={!r},\n"
-            ")"
+            "<AsdfConfig\n"
+            "  validate_on_read: {}\n"
+            ">"
         ).format(self.validate_on_read)
 
 
