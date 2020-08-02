@@ -10,6 +10,9 @@ from . import entry_points
 from .resource import ResourceManager
 
 
+__all__ = ["AsdfConfig", "get_config", "config_context"]
+
+
 DEFAULT_VALIDATE_ON_READ = True
 
 
@@ -152,11 +155,11 @@ _local = _ConfigLocal()
 def get_config():
     """
     Get the current config, which may have been altered by
-    one or more surrounding calls to `config_context`.
+    one or more surrounding calls to `asdf.config_context`.
 
     Returns
     -------
-    AsdfConfig
+    asdf.config.AsdfConfig
     """
     if len(_local.config_stack) == 0:
         return _global_config
@@ -168,7 +171,7 @@ def get_config():
 def config_context():
     """
     Context manager that temporarily overrides asdf configuration.
-    The context yields an `AsdfConfig` instance that can be modified
+    The context yields an `asdf.config.AsdfConfig` instance that can be modified
     without affecting code outside of the context.
     """
     if len(_local.config_stack) == 0:

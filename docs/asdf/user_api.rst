@@ -8,3 +8,5 @@ User API
     :skip: ValidationError
 
 .. automodapi:: asdf.search
+
+.. automodapi:: asdf.config

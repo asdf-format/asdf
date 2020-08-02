@@ -69,7 +69,7 @@ def test_global_config():
 
 def test_validate_on_read():
     with asdf.config_context() as config:
-        assert config.validate_on_read == asdf._config.DEFAULT_VALIDATE_ON_READ
+        assert config.validate_on_read == asdf.config.DEFAULT_VALIDATE_ON_READ
         config.validate_on_read = False
         assert get_config().validate_on_read is False
         config.validate_on_read = True

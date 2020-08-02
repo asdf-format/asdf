@@ -4,7 +4,7 @@
 - Add new Mapping API for extending asdf with additional
   schemas. [#819, #828]
 
-- Add global configuration mechanism. [#819]
+- Add global configuration mechanism. [#819, #839]
 
 - Drop support for automatic serialization of subclass
   attributes. [#825]
