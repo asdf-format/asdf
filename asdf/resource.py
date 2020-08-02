@@ -43,7 +43,7 @@ class DirectoryResourceMapping(Mapping):
         If `True`, recurse into subdirectories.  Defaults to `False`.
     filename_pattern : str, optional
         Glob pattern that identifies relevant filenames.
-        Defaults to "*.yaml".
+        Defaults to `"*.yaml"`.
     stem_filename : bool, optional
         If `True`, remove the filename's extension when
         constructing its URI.
