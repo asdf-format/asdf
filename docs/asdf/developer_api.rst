@@ -1,5 +1,5 @@
 *************
-Developer API 
+Developer API
 *************
 
 The classes and functions documented here will be of use to developers who wish
@@ -8,6 +8,8 @@ to create their own custom ASDF types and extensions.
 .. automodapi:: asdf.types
 
 .. automodapi:: asdf.extension
+
+.. automodapi:: asdf.resource
 
 .. automodapi:: asdf.yamlutil
 

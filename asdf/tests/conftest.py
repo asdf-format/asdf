@@ -5,7 +5,7 @@ import pytest
 
 from . import create_small_tree, create_large_tree
 
-from asdf import _config
+from asdf import config
 
 
 @pytest.fixture
@@ -21,5 +21,5 @@ def large_tree():
 @pytest.fixture(autouse=True)
 def restore_default_config():
     yield
-    _config._global_config = _config.AsdfConfig()
-    _config._local = _config._ConfigLocal()
+    config._global_config = config.AsdfConfig()
+    config._local = config._ConfigLocal()

@@ -10,6 +10,9 @@ from . import entry_points
 from .resource import ResourceManager
 
 
+__all__ = ["AsdfConfig", "get_config", "config_context"]
+
+
 DEFAULT_VALIDATE_ON_READ = True
 
 
@@ -20,19 +23,10 @@ class AsdfConfig:
     `asdf.config_context` module methods.
     """
 
-    def __init__(
-        self,
-        resource_mappings=None,
-        resource_manager=None,
-        validate_on_read=None,
-    ):
-        self._resource_mappings = resource_mappings
-        self._resource_manager = resource_manager
-
-        if validate_on_read is None:
-            self._validate_on_read = DEFAULT_VALIDATE_ON_READ
-        else:
-            self._validate_on_read = validate_on_read
+    def __init__(self):
+        self._resource_mappings = None
+        self._resource_manager = None
+        self._validate_on_read = DEFAULT_VALIDATE_ON_READ
 
         self._lock = threading.RLock()
 
@@ -133,10 +127,9 @@ class AsdfConfig:
 
     def __repr__(self):
         return (
-            "AsdfConfig(\n"
-            "  resource_mappings=[...],\n"
-            "  validate_on_read={!r},\n"
-            ")"
+            "<AsdfConfig\n"
+            "  validate_on_read: {}\n"
+            ">"
         ).format(self.validate_on_read)
 
 
@@ -152,11 +145,11 @@ _local = _ConfigLocal()
 def get_config():
     """
     Get the current config, which may have been altered by
-    one or more surrounding calls to `config_context`.
+    one or more surrounding calls to `asdf.config_context`.
 
     Returns
     -------
-    AsdfConfig
+    asdf.config.AsdfConfig
     """
     if len(_local.config_stack) == 0:
         return _global_config
@@ -168,7 +161,7 @@ def get_config():
 def config_context():
     """
     Context manager that temporarily overrides asdf configuration.
-    The context yields an `AsdfConfig` instance that can be modified
+    The context yields an `asdf.config.AsdfConfig` instance that can be modified
     without affecting code outside of the context.
     """
     if len(_local.config_stack) == 0:

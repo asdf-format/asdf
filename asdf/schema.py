@@ -13,7 +13,7 @@ from jsonschema.exceptions import ValidationError
 import yaml
 import numpy as np
 
-from ._config import get_config
+from .config import get_config
 from . import constants
 from . import generic_io
 from . import reference
