@@ -3,15 +3,12 @@ import abc
 import warnings
 from pkg_resources import iter_entry_points
 
-from . import types
-from . import resolver
-from .util import get_class_name
-from .type_index import AsdfTypeIndex
-from .version import version as asdf_version
-from .exceptions import AsdfDeprecationWarning, AsdfWarning
-
-
-__all__ = ['AsdfExtension', 'AsdfExtensionList']
+from .. import types
+from .. import resolver
+from ..util import get_class_name
+from ..type_index import AsdfTypeIndex
+from ..version import version as asdf_version
+from ..exceptions import AsdfDeprecationWarning, AsdfWarning
 
 
 ASDF_TEST_BUILD_ENV = 'ASDF_TEST_BUILD'
@@ -69,9 +66,9 @@ class AsdfExtension(metaclass=abc.ABCMeta):
         """
         pass
 
+    @abc.abstractproperty
     def url_mapping(self):
         """
-        DEPRECATED.  This property will be ignored in asdf 3.0.
         Schema content can be provided using the resource Mapping API.
 
         A list of 2-tuples or callables mapping JSON Schema URLs to
@@ -104,7 +101,7 @@ class AsdfExtension(metaclass=abc.ABCMeta):
                     '/{url_suffix}.yaml'
                    )]
         """
-        return []
+        pass
 
 
 class AsdfExtensionList:
@@ -166,6 +163,9 @@ class AsdfExtensionList:
         return self._validators
 
 
+# A kludge in asdf.util.get_class_name allows this class to retain
+# its original name, despite being moved from extension.py to
+# this file.
 class BuiltinExtension:
     """
     This is the "extension" to ASDF that includes all the built-in
