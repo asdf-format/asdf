@@ -22,7 +22,7 @@ from . import versioning
 from . import yamlutil
 from . import _display as display
 from .exceptions import AsdfDeprecationWarning, AsdfWarning, AsdfConversionWarning
-from .extension import AsdfExtensionList, default_extensions
+from .extension import AsdfExtensionList, AsdfExtension, ExtensionProxy
 from .util import NotSet
 from .search import AsdfSearchResult
 from ._helpers import validate_version
@@ -64,9 +64,8 @@ class AsdfFile:
             automatically determined from the associated file object,
             if possible and if created from `AsdfFile.open`.
 
-        extensions : list of AsdfExtension
-            A list of extensions to use when reading and writing ASDF files.
-            See `~asdf.types.AsdfExtension` for more information.
+        extensions : asdf.extension.AsdfExtension or asdf.extension.AsdfExtensionList or list of asdf.extension.AsdfExtension
+            Additional extensions to use when reading and writing the file.
 
         version : str, optional
             The ASDF Standard version.  If not provided, defaults to the
@@ -105,16 +104,13 @@ class AsdfFile:
             validation pass. This can be used to ensure that particular ASDF
             files follow custom conventions beyond those enforced by the
             standard.
-
         """
         if version is None:
             self.version = get_config().default_version
         else:
             self.version = version
 
-        self._extensions = []
-        self._extension_metadata = {}
-        self._process_extensions(extensions)
+        self.extensions = extensions
 
         if custom_schema is not None:
             self._custom_schema = schema._load_schema_cached(custom_schema, self.resolver, True, False)
@@ -148,7 +144,7 @@ class AsdfFile:
             # an empty tree.
             self._tree = AsdfObject()
         elif isinstance(tree, AsdfFile):
-            if self._extensions != tree._extensions:
+            if self.extensions != tree.extensions:
                 raise ValueError(
                     "Can not copy AsdfFile and change active extensions")
             self._uri = tree.uri
@@ -202,6 +198,43 @@ class AsdfFile:
     def version_map(self):
         return versioning.get_version_map(self.version_string)
 
+    @property
+    def extensions(self):
+        """
+        Get the list of extensions that are enabled for
+        use with this AsdfFile.
+
+        Returns
+        -------
+        list of asdf.extension.AsdfExtension
+        """
+        return self._extensions
+
+    @extensions.setter
+    def extensions(self, value):
+        """
+        Set the list of extensions that are enabled for
+        use with this AsdfFile.
+
+        Parameters
+        ----------
+        value : list of asdf.extension.AsdfExtension
+        """
+        self._extensions = self._process_extensions(value)
+        self._extension_list = None
+
+    @property
+    def extension_list(self):
+        """
+        Get the AsdfExtensionList for this AsdfFile.
+        Returns
+        -------
+        asdf.extension.AsdfExtensionList
+        """
+        if self._extension_list is None:
+            self._extension_list = AsdfExtensionList(self.extensions)
+        return self._extension_list
+
     def __enter__(self):
         return self
 
@@ -214,8 +247,10 @@ class AsdfFile:
             return
 
         for extension in tree['history']['extensions']:
+            installed = next((e for e in self.extensions if e.class_name == extension.extension_class), None)
+
             filename = "'{}' ".format(self._fname) if self._fname else ''
-            if extension.extension_class not in self._extension_metadata:
+            if installed is None:
                 msg = "File {}was created with extension '{}', which is " \
                     "not currently installed"
                 if extension.software:
@@ -229,45 +264,47 @@ class AsdfFile:
                     warnings.warn(fmt_msg, AsdfWarning)
 
             elif extension.software:
-                installed = self._extension_metadata[extension.extension_class]
                 # Local extensions may not have a real version
-                if not installed[1]:
+                if not installed.package_version:
                     continue
                 # Compare version in file metadata with installed version
-                if parse_version(installed[1]) < parse_version(extension.software['version']):
+                if parse_version(installed.package_version) < parse_version(extension.software['version']):
                     msg = "File {}was created with extension '{}' from " \
                     "package {}-{}, but older version {}-{} is installed"
                     fmt_msg = msg.format(
                         filename, extension.extension_class,
                         extension.software['name'],
                         extension.software['version'],
-                        installed[0], installed[1])
+                        installed.package_name, installed.package_version)
                     if strict:
                         raise RuntimeError(fmt_msg)
                     else:
                         warnings.warn(fmt_msg, AsdfWarning)
 
-    def _process_extensions(self, extensions):
-        if extensions is None or extensions == []:
-            self._extensions = default_extensions.extension_list
-            self._extension_metadata = default_extensions.package_metadata
-            return
+    def _process_extensions(self, requested_extensions):
+        if requested_extensions is None:
+            requested_extensions = []
+        elif isinstance(requested_extensions, (AsdfExtension, ExtensionProxy)):
+            requested_extensions = [requested_extensions]
+        elif isinstance(requested_extensions, AsdfExtensionList):
+            requested_extensions = requested_extensions.extensions
 
-        if isinstance(extensions, AsdfExtensionList):
-            self._extensions = extensions
-            return
+        if not isinstance(requested_extensions, list):
+            raise TypeError(
+                "The extensions parameter must be an AsdfExtension, AsdfExtensionList, "
+                "or list of AsdfExtension."
+            )
 
-        if not isinstance(extensions, list):
-            extensions = [extensions]
+        requested_extensions = [ExtensionProxy.maybe_wrap(e) for e in requested_extensions]
 
-        # Process metadata about custom extensions
-        for extension in extensions:
-            ext_name = util.get_class_name(extension)
-            self._extension_metadata[ext_name] = ('', '')
+        extensions = []
+        # Add requested extensions to the list first, so that they
+        # take precedence.
+        for extension in requested_extensions + get_config().extensions:
+            if extension not in extensions:
+                extensions.append(extension)
 
-        extensions = default_extensions.extensions + extensions
-        self._extensions = AsdfExtensionList(extensions)
-        self._extension_metadata.update(default_extensions.package_metadata)
+        return extensions
 
     def _update_extension_history(self):
         if self.version < versioning.NEW_HISTORY_FORMAT_MIN_VERSION:
@@ -287,11 +324,10 @@ class AsdfFile:
             self.tree['history']['extensions'] = []
 
         for extension in self.type_index.get_extensions_used():
-            ext_name = util.get_class_name(extension)
+            ext_name = extension.class_name
             ext_meta = ExtensionMetadata(extension_class=ext_name)
-            metadata = self._extension_metadata.get(ext_name)
-            if metadata is not None:
-                ext_meta['software'] = Software(name=metadata[0], version=metadata[1])
+            if extension.package_name is not None:
+                ext_meta['software'] = Software(name=extension.package_name, version=extension.package_version)
 
             for i, entry in enumerate(self.tree['history']['extensions']):
                 # Update metadata about this extension if it already exists
@@ -352,23 +388,23 @@ class AsdfFile:
             "The 'tag_to_schema_resolver' property is deprecated. Use "
             "'tag_mapping' instead.",
             AsdfDeprecationWarning)
-        return self._extensions.tag_mapping
+        return self.extension_list.tag_mapping
 
     @property
     def tag_mapping(self):
-        return self._extensions.tag_mapping
+        return self.extension_list.tag_mapping
 
     @property
     def url_mapping(self):
-        return self._extensions.url_mapping
+        return self.extension_list.url_mapping
 
     @property
     def resolver(self):
-        return self._extensions.resolver
+        return self.extension_list.resolver
 
     @property
     def type_index(self):
-        return self._extensions.type_index
+        return self.extension_list.type_index
 
     def resolve_uri(self, uri):
         """
@@ -769,7 +805,6 @@ class AsdfFile:
                             strict_extension_check=strict_extension_check,
                             ignore_missing_extensions=ignore_missing_extensions,
                             ignore_unrecognized_tag=self._ignore_unrecognized_tag,
-                            _extension_metadata=self._extension_metadata,
                             **kwargs)
             except ValueError:
                 raise ValueError(
@@ -1452,9 +1487,8 @@ def open_asdf(fd, uri=None, mode=None, validate_checksums=False,
         If `True`, validate the blocks against their checksums.
         Requires reading the entire file, so disabled by default.
 
-    extensions : list of AsdfExtension
-        A list of extensions to use when reading and writing ASDF files.
-        See `~asdf.types.AsdfExtension` for more information.
+    extensions : asdf.extension.AsdfExtension or asdf.extension.AsdfExtensionList or list of asdf.extension.AsdfExtension
+        Additional extensions to use when reading and writing the file.
 
     do_not_fill_defaults : bool, optional
         When `True`, do not fill in missing default values.

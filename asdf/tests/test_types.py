@@ -608,9 +608,6 @@ def test_extension_override(tmpdir):
 
     gwcs = pytest.importorskip('gwcs', '0.12.0')
 
-    from asdf.extension import default_extensions
-    default_extensions.reset()
-
     version = str(versioning.default_version)
     tmpfile = str(tmpdir.join('override.asdf'))
 
@@ -628,9 +625,6 @@ def test_extension_override_subclass(tmpdir):
 
     gwcs = pytest.importorskip('gwcs', '0.12.0')
     pytest.importorskip('astropy', '4.0.0')
-
-    from asdf.extension import default_extensions
-    default_extensions.reset()
 
     version = str(versioning.default_version)
     tmpfile = str(tmpdir.join('override.asdf'))

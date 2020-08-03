@@ -7,6 +7,7 @@ from asdf import entry_points
 from asdf.exceptions import AsdfWarning
 from asdf.resource import ResourceMappingProxy
 from asdf.version import version as asdf_package_version
+from asdf.extension import ExtensionProxy
 
 
 @pytest.fixture
@@ -67,3 +68,30 @@ def test_get_resource_mappings(mock_entry_points):
     with pytest.warns(AsdfWarning, match="TypeError: Resource mapping must implement the Mapping interface"):
         mappings = entry_points.get_resource_mappings()
     assert len(mappings) == 2
+
+
+class LegacyExtension:
+    types = []
+    tag_mapping = []
+    url_mapping = []
+
+
+class FauxLegacyExtension:
+    pass
+
+
+def test_get_extensions(mock_entry_points):
+    mock_entry_points.append(("asdf_extensions", "legacy", "LegacyExtension"))
+    extensions = entry_points.get_extensions()
+    assert len(extensions) == 1
+    for e in extensions:
+        assert isinstance(e, ExtensionProxy)
+        assert e.package_name == "asdf"
+        assert e.package_version == asdf_package_version
+        assert e.legacy is True
+
+    mock_entry_points.clear()
+    mock_entry_points.append(("asdf_extensions", "failing", "FauxLegacyExtension"))
+    with pytest.warns(AsdfWarning, match="TypeError"):
+        extensions = entry_points.get_extensions()
+    assert len(extensions) == 0

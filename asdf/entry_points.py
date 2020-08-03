@@ -3,13 +3,21 @@ import warnings
 
 from .exceptions import AsdfWarning
 from .resource import ResourceMappingProxy
+from .extension import ExtensionProxy
 
 
 RESOURCE_MAPPINGS_GROUP = "asdf.resource_mappings"
+LEGACY_EXTENSIONS_GROUP = "asdf_extensions"
 
 
 def get_resource_mappings():
     return _list_entry_points(RESOURCE_MAPPINGS_GROUP, ResourceMappingProxy)
+
+
+def get_extensions():
+    legacy_extensions = _list_entry_points(LEGACY_EXTENSIONS_GROUP, ExtensionProxy)
+
+    return legacy_extensions
 
 
 def _list_entry_points(group, proxy_class):

@@ -11,13 +11,14 @@ import pytest
 from jsonschema.exceptions import ValidationError
 
 import asdf
-from asdf import get_config
+from asdf import get_config, config_context
 from asdf import treeutil
 from asdf import extension
 from asdf import resolver
 from asdf import schema
 from asdf import versioning
 from asdf.exceptions import AsdfDeprecationWarning, AsdfWarning
+from asdf.extension import ExtensionProxy
 from .helpers import (
     assert_tree_match,
     assert_roundtrip_tree,
@@ -291,6 +292,10 @@ def test_open_pathlib_path(tmpdir):
     with asdf.open(path) as af:
         assert (af['data'] == tree['data']).all()
 
+class FooExtension:
+    types = []
+    tag_mapping = []
+    url_mapping = []
 
 @pytest.mark.parametrize('installed,extension,warns', [
     ('1.2.3', '2.0.0', True),
@@ -300,15 +305,18 @@ def test_open_pathlib_path(tmpdir):
     ('2.0.1', '2.0.dev12345', False),
 ])
 def test_extension_version_check(installed, extension, warns):
+    proxy = ExtensionProxy(FooExtension(), package_name="foo", package_version=installed)
 
-    af = asdf.AsdfFile()
+    with config_context() as config:
+        config.add_extension(proxy)
+        af = asdf.AsdfFile()
+
     af._fname = 'test.asdf'
-    af._extension_metadata['foo.extension.FooExtension'] = ('foo', installed)
 
     tree = {
         'history': {
             'extensions': [
-                asdf.tags.core.ExtensionMetadata(extension_class='foo.extension.FooExtension',
+                asdf.tags.core.ExtensionMetadata(extension_class='asdf.tests.test_api.FooExtension',
                     software=asdf.tags.core.Software(name='foo', version=extension)),
             ]
         }

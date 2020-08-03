@@ -6,6 +6,7 @@ import asdf
 from asdf import get_config
 from asdf import resource
 from asdf.resource import ResourceMappingProxy
+from asdf.extension import BuiltinExtension, ExtensionProxy
 
 
 def test_config_context():
@@ -173,6 +174,57 @@ def test_resource_manager():
         assert "http://stsci.edu/schemas/asdf/core/asdf-1.1.0" in config.resource_manager
         assert b"http://stsci.edu/schemas/asdf/core/asdf-1.1.0" in config.resource_manager["http://stsci.edu/schemas/asdf/core/asdf-1.1.0"]
         assert "http://somewhere.org/schemas/foo-1.0.0" not in config.resource_manager
+
+
+def test_extensions():
+    with asdf.config_context() as config:
+        original_extensions = config.extensions
+        assert any(isinstance(e.delegate, BuiltinExtension) for e in original_extensions)
+
+        class FooExtension:
+            types = []
+            tag_mapping = []
+            url_mapping = []
+        new_extension = FooExtension()
+
+        # Add an extension:
+        config.add_extension(new_extension)
+        assert len(config.extensions) == len(original_extensions) + 1
+        assert any(e for e in config.extensions if e.delegate is new_extension)
+
+        # Adding an extension should be idempotent:
+        config.add_extension(new_extension)
+        assert len(config.extensions) == len(original_extensions) + 1
+
+        # Even when wrapped:
+        config.add_extension(ExtensionProxy(new_extension))
+        assert len(config.extensions) == len(original_extensions) + 1
+
+        # Remove an extension:
+        config.remove_extension(new_extension)
+        assert len(config.extensions) == len(original_extensions)
+
+        # Removing should work when wrapped:
+        config.add_extension(new_extension)
+        config.remove_extension(ExtensionProxy(new_extension))
+        assert len(config.extensions) == len(original_extensions)
+
+        # Remove by the name of the extension's package:
+        config.add_extension(ExtensionProxy(new_extension, package_name="foo"))
+        config.add_extension(ExtensionProxy(FooExtension(), package_name="foo"))
+        config.remove_extension(package="foo")
+
+        # Removing an extension should be idempotent:
+        config.add_extension(new_extension)
+        config.remove_extension(new_extension)
+        config.remove_extension(new_extension)
+        assert len(config.extensions) == len(original_extensions)
+
+        # Resetting should get rid of any additions:
+        config.add_extension(new_extension)
+        config.add_extension(FooExtension())
+        config.reset_extensions()
+        assert len(config.extensions) == len(original_extensions)
 
 
 def test_config_repr():
