@@ -66,7 +66,7 @@ def test_directory_resource_mapping(tmpdir):
     # Check that the repr is reasonable
     # Need to be careful checking the path string because
     # pathlib normalizes Windows paths.
-    assert repr(Path(tmpdir/"schemas")) in repr(mapping)
+    assert repr(Path(str(tmpdir/"schemas"))) in repr(mapping)
     assert "http://somewhere.org/schemas" in repr(mapping)
     assert "recursive=True" in repr(mapping)
     assert "filename_pattern='baz-*'" in repr(mapping)
