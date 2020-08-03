@@ -25,6 +25,7 @@ from .exceptions import AsdfDeprecationWarning, AsdfWarning, AsdfConversionWarni
 from .extension import AsdfExtensionList, default_extensions
 from .util import NotSet
 from .search import AsdfSearchResult
+from ._helpers import validate_version
 
 from .tags.core import AsdfObject, Software, HistoryEntry, ExtensionMetadata
 
@@ -42,7 +43,7 @@ def get_asdf_library_info():
     })
 
 
-class AsdfFile(versioning.VersionedMixin):
+class AsdfFile:
     """
     The main class that represents an ASDF file object.
     """
@@ -68,9 +69,8 @@ class AsdfFile(versioning.VersionedMixin):
             See `~asdf.types.AsdfExtension` for more information.
 
         version : str, optional
-            The ASDF version to use when writing out.  If not
-            provided, it will write out in the latest version
-            supported by asdf.
+            The ASDF Standard version.  If not provided, defaults to the
+            configured default version.  See `asdf.config.AsdfConfig.default_version`.
 
         ignore_version_mismatch : bool, optional
             When `True`, do not raise warnings for mismatched schema versions.
@@ -107,6 +107,11 @@ class AsdfFile(versioning.VersionedMixin):
             standard.
 
         """
+        if version is None:
+            self.version = get_config().default_version
+        else:
+            self.version = version
+
         self._extensions = []
         self._extension_metadata = {}
         self._process_extensions(extensions)
@@ -160,8 +165,42 @@ class AsdfFile(versioning.VersionedMixin):
 
         self._comments = []
 
-        if version is not None:
-            self.version = version
+    @property
+    def version(self):
+        """
+        Get this AsdfFile's ASDF Standard version.
+
+        Returns
+        -------
+        asdf.versioning.AsdfVersion
+        """
+        return self._version
+
+    @version.setter
+    def version(self, value):
+        """"
+        Set this AsdfFile's ASDF Standard version.
+
+        Parameters
+        ----------
+        value : str or asdf.versioning.AsdfVersion
+        """
+        self._version = versioning.AsdfVersion(validate_version(value))
+
+    @property
+    def version_string(self):
+        """
+        Get this AsdfFile's ASDF Standard version as a string.
+
+        Returns
+        -------
+        str
+        """
+        return str(self._version)
+
+    @property
+    def version_map(self):
+        return versioning.get_version_map(self.version_string)
 
     def __enter__(self):
         return self
@@ -922,8 +961,8 @@ class AsdfFile(versioning.VersionedMixin):
             if the file has a streamed block.
 
         version : str, optional
-            The ASDF version to write out.  If not provided, it will
-            write out in the latest version supported by asdf.
+            Update the ASDF Standard version of this AsdfFile before
+            writing.
         """
 
         fd = self._fd
@@ -1064,8 +1103,8 @@ class AsdfFile(versioning.VersionedMixin):
             if the file has a streamed block.
 
         version : str, optional
-            The ASDF version to write out.  If not provided, it will
-            write out in the latest version supported by asdf.
+            Update the ASDF Standard version of this AsdfFile before
+            writing.
         """
 
         if version is not None:

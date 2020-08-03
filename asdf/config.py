@@ -8,12 +8,14 @@ import copy
 
 from . import entry_points
 from .resource import ResourceMappingProxy, ResourceManager
-
+from . import versioning
+from ._helpers import validate_version
 
 __all__ = ["AsdfConfig", "get_config", "config_context"]
 
 
 DEFAULT_VALIDATE_ON_READ = True
+DEFAULT_DEFAULT_VERSION = str(versioning.default_version)
 
 
 class AsdfConfig:
@@ -27,6 +29,7 @@ class AsdfConfig:
         self._resource_mappings = None
         self._resource_manager = None
         self._validate_on_read = DEFAULT_VALIDATE_ON_READ
+        self._default_version = DEFAULT_DEFAULT_VERSION
 
         self._lock = threading.RLock()
 
@@ -140,12 +143,40 @@ class AsdfConfig:
         """
         self._validate_on_read = value
 
+    @property
+    def default_version(self):
+        """
+        Get the default ASDF Standard version used for
+        new files.
+
+        Returns
+        -------
+        str
+        """
+        return self._default_version
+
+    @default_version.setter
+    def default_version(self, value):
+        """
+        Set the default ASDF Standard version used for
+        new files.
+
+        Parameters
+        ----------
+        value : str
+        """
+        self._default_version = validate_version(value)
+
     def __repr__(self):
         return (
             "<AsdfConfig\n"
             "  validate_on_read: {}\n"
+            "  default_version: {}\n"
             ">"
-        ).format(self.validate_on_read)
+        ).format(
+            self.validate_on_read,
+            self.default_version,
+        )
 
 
 class _ConfigLocal(threading.local):

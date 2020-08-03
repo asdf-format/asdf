@@ -1,5 +1,7 @@
 import threading
 
+import pytest
+
 import asdf
 from asdf import get_config
 from asdf import resource
@@ -75,6 +77,16 @@ def test_validate_on_read():
         assert get_config().validate_on_read is False
         config.validate_on_read = True
         assert get_config().validate_on_read is True
+
+
+def test_default_version():
+    with asdf.config_context() as config:
+        assert config.default_version == asdf.config.DEFAULT_DEFAULT_VERSION
+        assert "1.2.0" != asdf.config.DEFAULT_DEFAULT_VERSION
+        config.default_version = "1.2.0"
+        assert config.default_version == "1.2.0"
+        with pytest.raises(ValueError):
+            config.default_version = "0.1.5"
 
 
 def test_resource_mappings():
@@ -166,5 +178,7 @@ def test_resource_manager():
 def test_config_repr():
     with asdf.config_context() as config:
         config.validate_on_read = True
+        config.default_version = "1.5.0"
 
         assert "validate_on_read: True" in repr(config)
+        assert "default_version: 1.5.0" in repr(config)
