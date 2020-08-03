@@ -1,4 +1,5 @@
 from asdf import util
+from asdf.extension import BuiltinExtension
 
 
 def test_is_primitive():
@@ -13,3 +14,19 @@ def test_not_set():
     assert util.NotSet != None
 
     assert repr(util.NotSet) == "NotSet"
+
+
+class SomeClass:
+    class SomeInnerClass:
+        pass
+
+
+def test_get_class_name():
+    assert util.get_class_name(SomeClass()) == "asdf.tests.test_util.SomeClass"
+    assert util.get_class_name(SomeClass, instance=False) == "asdf.tests.test_util.SomeClass"
+    assert util.get_class_name(SomeClass.SomeInnerClass()) == "asdf.tests.test_util.SomeClass.SomeInnerClass"
+    assert util.get_class_name(SomeClass.SomeInnerClass, instance=False) == "asdf.tests.test_util.SomeClass.SomeInnerClass"
+
+
+def test_get_class_name_override():
+    assert util.get_class_name(BuiltinExtension, instance=False) == "asdf.extension.BuiltinExtension"
