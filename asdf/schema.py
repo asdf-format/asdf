@@ -75,24 +75,73 @@ def _type_to_tag(type_):
     return None
 
 
-def _compare_tag_version(instance_tag, tagname):
-    if instance_tag is not None:
-        if instance_tag.startswith("tag:yaml.org"):
-            return instance_tag == tagname
-        tag_uri = tagname.rpartition("-")[0]
-        tag_version = [int(v) for v in tagname.rpartition("-")[-1].split(".")]
-        instance_tag_version = [int(v) for v in instance_tag.rpartition("-")[-1].split(".")]
+def _compare_tag_version(instance_tag: str, tagname: str):
+    """Compare ASDF tag-strings with flexible version syntax.
 
-        version_compatible = all([v[0] == v[1] for v in zip(tag_version, instance_tag_version)])
+    Parameters
+    ----------
+    instance_tag:
+        the full ASDF tag to validate
+    tagname:
+        tag string with custom version syntax to validate against
 
-        if (not instance_tag.startswith(tag_uri)) or (not version_compatible):
-            return False
+    Returns
+    -------
+        bool
+    """
+    if instance_tag is None:
+        return True
+
+    if instance_tag.startswith("tag:yaml.org"):  # test for python builtins
+        return instance_tag == tagname
+    instance_tag_version = [int(v) for v in instance_tag.rpartition("-")[-1].split(".")]
+
+    tag_parts = tagname.rpartition("-")
+    tag_uri = tag_parts[0]
+    tag_version = [v for v in tag_parts[-1].split(".")]
+
+    if tag_version == ["*"]:
+        version_compatible = True
+    elif all([vstr.isdigit() for vstr in tag_version]):
+        vnum = [int(vstr) for vstr in tag_version]
+        version_compatible = all(
+            [v[0] == v[1] for v in zip(vnum, instance_tag_version)]
+        )
+    else:
+        raise ValueError(f"Unknown wx_tag syntax {tagname}")
+
+    if (not instance_tag.startswith(tag_uri)) or (not version_compatible):
+        return False
     return True
 
 
 def validate_tag(validator, tagname, instance, schema):
+    """Validate instance tag string with flexible version syntax.
 
-    if hasattr(instance, '_tag'):
+        The following syntax is allowed to validate against:
+
+        tag: http://stsci.edu/schemas/asdf/core/software-* # allow every version
+        tag: http://stsci.edu/schemas/asdf/core/software-1 # fix major version
+        tag: http://stsci.edu/schemas/asdf/core/software-1.2 # fix minor version
+        tag: http://stsci.edu/schemas/asdf/core/software-1.2.3 # fix patch version
+
+        Parameters
+        ----------
+        validator:
+            A jsonschema.Validator instance.
+        tagname:
+            tag string with custom version syntax to validate against
+        instance:
+            Tree serialization (with default dtypes) of the instance
+        schema:
+            Dict representing the full ASDF schema.
+
+        Returns
+        -------
+            bool
+
+        """
+    if hasattr(instance, "_tag"):
         instance_tag = instance._tag
     else:
         # Try tags for known Python builtins
@@ -101,8 +150,8 @@ def validate_tag(validator, tagname, instance, schema):
     if instance_tag is not None:
         if not _compare_tag_version(instance_tag, tagname):
             yield ValidationError(
-                "mismatched tags, wanted '{0}', got '{1}'".format(
-                    tagname, instance_tag))
+                "mismatched tags, wanted '{0}', got '{1}'".format(tagname, instance_tag)
+            )
 
 
 def validate_propertyOrder(validator, order, instance, schema):
