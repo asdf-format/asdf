@@ -2,7 +2,7 @@
 ------------------
 
 - Add new resource mapping API for extending asdf with additional
-  schemas. [#819, #828, #843]
+  schemas. [#819, #828, #843, #846]
 
 - Add global configuration mechanism. [#819, #839, #844]
 
