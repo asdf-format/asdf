@@ -1,5 +1,6 @@
 import io
 import sys
+from pathlib import Path
 
 if sys.version_info < (3, 9):
     import importlib_resources
@@ -63,7 +64,9 @@ def test_directory_resource_mapping(tmpdir):
     assert "http://somewhere.org/schemas/nested/bar-4.5.6" not in mapping
 
     # Check that the repr is reasonable
-    assert str(tmpdir/"schemas") in repr(mapping)
+    # Need to be careful checking the path string because
+    # pathlib normalizes Windows paths.
+    assert repr(Path(tmpdir/"schemas")) in repr(mapping)
     assert "http://somewhere.org/schemas" in repr(mapping)
     assert "recursive=True" in repr(mapping)
     assert "filename_pattern='baz-*'" in repr(mapping)

@@ -1,6 +1,5 @@
 from pkg_resources import iter_entry_points
 import warnings
-from functools import partial
 
 from .exceptions import AsdfWarning
 from .resource import ResourceMappingProxy

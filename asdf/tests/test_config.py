@@ -1,7 +1,5 @@
 import threading
 
-import pytest
-
 import asdf
 from asdf import get_config
 from asdf import resource
