@@ -291,7 +291,7 @@ def get_class_name(obj, instance=True):
         Indicates whether given object is an instance of the class to be named
     """
     typ = type(obj) if instance else obj
-    class_name = "{}.{}".format(typ.__module__, typ.__name__)
+    class_name = "{}.{}".format(typ.__module__, typ.__qualname__)
     return _CLASS_NAME_OVERRIDES.get(class_name, class_name)
 
 
