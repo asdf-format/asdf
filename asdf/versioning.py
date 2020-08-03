@@ -16,8 +16,6 @@ from semantic_version import Version, SimpleSpec
 
 from . import generic_io
 from . import resolver
-from . import util
-from .version import version as asdf_version
 
 
 __all__ = ['AsdfVersion', 'AsdfSpec', 'split_tag_version', 'join_tag_version']
@@ -166,40 +164,6 @@ supported_versions = [
 ]
 
 default_version = supported_versions[-1]
-
-
-class VersionedMixin:
-    _version = default_version
-
-    @property
-    def version(self):
-        return self._version
-
-    @version.setter
-    def version(self, version):
-        if version not in supported_versions:
-            human_versions = util.human_list(
-                [str(x) for x in supported_versions])
-            raise ValueError(
-                "This version of the asdf package ({0}) only understands how "
-                "to handle versions {1} of the ASDF Standard. Got "
-                "'{2}'".format(asdf_version, human_versions, version))
-
-        self._version = version
-
-    @property
-    def version_string(self):
-        return str(self._version)
-
-    @property
-    def version_map(self):
-        try:
-            version_map = get_version_map(self.version_string)
-        except ValueError:
-            raise ValueError(
-                "Don't have information about version {0}".format(
-                    self.version_string))
-        return version_map
 
 
 # This is the ASDF Standard version at which the format of the history
