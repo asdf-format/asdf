@@ -8,7 +8,13 @@ else:
 
 import pytest
 
-from asdf import resource
+from asdf.resource import (
+    DirectoryResourceMapping,
+    ResourceManager,
+    ResourceMappingProxy,
+    get_core_resource_mappings,
+    JsonschemaResourceMapping,
+)
 
 
 def test_directory_resource_mapping(tmpdir):
@@ -21,7 +27,7 @@ def test_directory_resource_mapping(tmpdir):
     with (tmpdir/"schemas"/"baz-7.8.9").open("w") as f:
         f.write("id: http://somewhere.org/schemas/baz-7.8.9\n")
 
-    mapping = resource.DirectoryResourceMapping(str(tmpdir/"schemas"), "http://somewhere.org/schemas")
+    mapping = DirectoryResourceMapping(str(tmpdir/"schemas"), "http://somewhere.org/schemas")
     assert len(mapping) == 1
     assert set(mapping) == {"http://somewhere.org/schemas/foo-1.2.3"}
     assert "http://somewhere.org/schemas/foo-1.2.3" in mapping
@@ -31,7 +37,7 @@ def test_directory_resource_mapping(tmpdir):
     assert "http://somewhere.org/schemas/foo-1.2.3.yaml" not in mapping
     assert "http://somewhere.org/schemas/nested/bar-4.5.6" not in mapping
 
-    mapping = resource.DirectoryResourceMapping(str(tmpdir/"schemas"), "http://somewhere.org/schemas", recursive=True)
+    mapping = DirectoryResourceMapping(str(tmpdir/"schemas"), "http://somewhere.org/schemas", recursive=True)
     assert len(mapping) == 2
     assert set(mapping) == {"http://somewhere.org/schemas/foo-1.2.3", "http://somewhere.org/schemas/nested/bar-4.5.6"}
     assert "http://somewhere.org/schemas/foo-1.2.3" in mapping
@@ -41,13 +47,14 @@ def test_directory_resource_mapping(tmpdir):
     assert "http://somewhere.org/schemas/nested/bar-4.5.6" in mapping
     assert b"http://somewhere.org/schemas/nested/bar-4.5.6" in mapping["http://somewhere.org/schemas/nested/bar-4.5.6"]
 
-    mapping = resource.DirectoryResourceMapping(
+    mapping = DirectoryResourceMapping(
         str(tmpdir/"schemas"),
         "http://somewhere.org/schemas",
         recursive=True,
         filename_pattern="baz-*",
         stem_filename=False
     )
+
     assert len(mapping) == 1
     assert set(mapping) == {"http://somewhere.org/schemas/baz-7.8.9"}
     assert "http://somewhere.org/schemas/foo-1.2.3" not in mapping
@@ -55,8 +62,15 @@ def test_directory_resource_mapping(tmpdir):
     assert b"http://somewhere.org/schemas/baz-7.8.9" in mapping["http://somewhere.org/schemas/baz-7.8.9"]
     assert "http://somewhere.org/schemas/nested/bar-4.5.6" not in mapping
 
+    # Check that the repr is reasonable
+    assert str(tmpdir/"schemas") in repr(mapping)
+    assert "http://somewhere.org/schemas" in repr(mapping)
+    assert "recursive=True" in repr(mapping)
+    assert "filename_pattern='baz-*'" in repr(mapping)
+    assert "stem_filename=False" in repr(mapping)
+
     # Make sure trailing slash is handled correctly
-    mapping = resource.DirectoryResourceMapping(str(tmpdir/"schemas"), "http://somewhere.org/schemas/")
+    mapping = DirectoryResourceMapping(str(tmpdir/"schemas"), "http://somewhere.org/schemas/")
     assert len(mapping) == 1
     assert set(mapping) == {"http://somewhere.org/schemas/foo-1.2.3"}
     assert "http://somewhere.org/schemas/foo-1.2.3" in mapping
@@ -127,7 +141,7 @@ def test_directory_resource_mapping_with_traversable():
         }
     })
 
-    mapping = resource.DirectoryResourceMapping(root, "http://somewhere.org/schemas")
+    mapping = DirectoryResourceMapping(root, "http://somewhere.org/schemas")
     assert len(mapping) == 2
     assert set(mapping) == {"http://somewhere.org/schemas/foo-1.0.0", "http://somewhere.org/schemas/bar-1.0.0"}
     assert "http://somewhere.org/schemas/foo-1.0.0" in mapping
@@ -137,7 +151,7 @@ def test_directory_resource_mapping_with_traversable():
     assert "http://somewhere.org/schemas/baz-1.0.0" not in mapping
     assert "http://somewhere.org/schemas/nested/foz-1.0.0" not in mapping
 
-    mapping = resource.DirectoryResourceMapping(root, "http://somewhere.org/schemas", recursive=True)
+    mapping = DirectoryResourceMapping(root, "http://somewhere.org/schemas", recursive=True)
     assert len(mapping) == 3
     assert set(mapping) == {
         "http://somewhere.org/schemas/foo-1.0.0",
@@ -152,7 +166,7 @@ def test_directory_resource_mapping_with_traversable():
     assert "http://somewhere.org/schemas/nested/foz-1.0.0" in mapping
     assert mapping["http://somewhere.org/schemas/nested/foz-1.0.0"] == b"foz"
 
-    mapping = resource.DirectoryResourceMapping(root, "http://somewhere.org/schemas", filename_pattern="baz-*", stem_filename=False)
+    mapping = DirectoryResourceMapping(root, "http://somewhere.org/schemas", filename_pattern="baz-*", stem_filename=False)
     assert len(mapping) == 1
     assert set(mapping) == {"http://somewhere.org/schemas/baz-1.0.0"}
     assert "http://somewhere.org/schemas/foo-1.0.0" not in mapping
@@ -168,11 +182,11 @@ def test_resource_manager():
         "http://somewhere.org/schemas/bar-1.0.0": b"bar",
     }
     mapping2 = {
-        "http://somewhere.org/schemas/foo-1.0.0": b"foo override",
+        "http://somewhere.org/schemas/foo-1.0.0": b"duplicate foo",
         "http://somewhere.org/schemas/baz-1.0.0": b"baz",
         "http://somewhere.org/schemas/foz-1.0.0": "foz",
     }
-    manager = resource.ResourceManager([mapping1, mapping2])
+    manager = ResourceManager([mapping1, mapping2])
 
     assert len(manager) == 4
     assert set(manager) == {
@@ -182,7 +196,7 @@ def test_resource_manager():
         "http://somewhere.org/schemas/foz-1.0.0",
     }
     assert "http://somewhere.org/schemas/foo-1.0.0" in manager
-    assert manager["http://somewhere.org/schemas/foo-1.0.0"] == b"foo override"
+    assert manager["http://somewhere.org/schemas/foo-1.0.0"] == b"foo"
     assert "http://somewhere.org/schemas/bar-1.0.0" in manager
     assert manager["http://somewhere.org/schemas/bar-1.0.0"] == b"bar"
     assert "http://somewhere.org/schemas/baz-1.0.0" in manager
@@ -193,13 +207,18 @@ def test_resource_manager():
     with pytest.raises(KeyError, match="http://somewhere.org/schemas/missing-1.0.0"):
         manager["http://somewhere.org/schemas/missing-1.0.0"]
 
+    # Confirm that the repr string is reasonable:
+    assert "len: 4" in repr(manager)
+
 
 def test_jsonschema_resource_mapping():
-    mapping = resource.JsonschemaResourceMapping()
+    mapping = JsonschemaResourceMapping()
     assert len(mapping) == 1
     assert set(mapping) == {"http://json-schema.org/draft-04/schema"}
     assert "http://json-schema.org/draft-04/schema" in mapping
     assert b"http://json-schema.org/draft-04/schema" in mapping["http://json-schema.org/draft-04/schema"]
+
+    assert repr(mapping) == "JsonschemaResourceMapping()"
 
 
 @pytest.mark.parametrize("uri", [
@@ -208,9 +227,60 @@ def test_jsonschema_resource_mapping():
     "http://stsci.edu/schemas/asdf/core/asdf-1.1.0",
 ])
 def test_get_core_resource_mappings(uri):
-    mappings = resource.get_core_resource_mappings()
+    mappings = get_core_resource_mappings()
 
     mapping = next(m for m in mappings if uri in m)
     assert mapping is not None
 
     assert uri.encode("utf-8") in mapping[uri]
+
+
+def test_proxy_maybe_wrap():
+    mapping = {
+        "http://somewhere.org/resources/foo": "foo",
+        "http://somewhere.org/resources/bar": "bar",
+    }
+
+    proxy = ResourceMappingProxy.maybe_wrap(mapping)
+    assert proxy.delegate is mapping
+    assert ResourceMappingProxy.maybe_wrap(proxy) is proxy
+
+    with pytest.raises(TypeError):
+        ResourceMappingProxy.maybe_wrap([])
+
+
+def test_proxy_properties():
+    mapping = {
+        "http://somewhere.org/resources/foo": "foo",
+        "http://somewhere.org/resources/bar": "bar",
+    }
+
+    proxy = ResourceMappingProxy(mapping, package_name="foo", package_version="1.2.3")
+
+    assert len(proxy) == len(mapping)
+    assert set(proxy.keys()) == set(mapping.keys())
+    for uri in mapping:
+        assert proxy[uri] is mapping[uri]
+
+    assert proxy.package_name == "foo"
+    assert proxy.package_version == "1.2.3"
+    assert proxy.class_name.endswith("dict")
+
+
+def test_proxy_repr():
+    mapping = {
+        "http://somewhere.org/resources/foo": "foo",
+        "http://somewhere.org/resources/bar": "bar",
+    }
+
+    proxy = ResourceMappingProxy(mapping, package_name="foo", package_version="1.2.3")
+
+    assert ".dict" in repr(proxy)
+    assert "package: foo==1.2.3" in repr(proxy)
+    assert "len: 2" in repr(proxy)
+
+    empty_proxy = ResourceMappingProxy({})
+
+    assert ".dict" in repr(empty_proxy)
+    assert "package: (none)" in repr(empty_proxy)
+    assert "len: 0" in repr(empty_proxy)

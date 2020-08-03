@@ -1,27 +1,48 @@
 from pkg_resources import iter_entry_points
 import warnings
-from collections.abc import Mapping
+from functools import partial
 
 from .exceptions import AsdfWarning
+from .resource import ResourceMappingProxy
 
 
 RESOURCE_MAPPINGS_GROUP = "asdf.resource_mappings"
 
 
 def get_resource_mappings():
-    return _get_entry_point_elements(RESOURCE_MAPPINGS_GROUP, Mapping)
+    return _list_entry_points(RESOURCE_MAPPINGS_GROUP, ResourceMappingProxy)
 
 
-def _get_entry_point_elements(group, element_class):
+def _list_entry_points(group, proxy_class):
     results = []
     for entry_point in iter_entry_points(group=group):
-        elements = entry_point.load()()
-        for element in elements:
-            if not isinstance(element, element_class):
-                warnings.warn(
-                    "{} is not an instance of {}.  It will be ignored.".format(element, element_class.__name__),
-                    AsdfWarning
-                )
-            else:
-                results.append(element)
+        package_name = entry_point.dist.project_name
+        package_version = entry_point.dist.version
+
+        def _handle_error(e):
+            warnings.warn(
+                "{} plugin from package {}=={} failed to load:\n\n"
+                "{}: {}".format(
+                    group,
+                    package_name,
+                    package_version,
+                    e.__class__.__name__,
+                    e,
+                ),
+                AsdfWarning
+            )
+
+        try:
+            elements = entry_point.load()()
+
+            if not isinstance(elements, list):
+                elements = [elements]
+
+            for element in elements:
+                try:
+                    results.append(proxy_class(element, package_name=package_name, package_version=package_version))
+                except Exception as e:
+                    _handle_error(e)
+        except Exception as e:
+            _handle_error(e)
     return results
