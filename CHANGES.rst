@@ -1,8 +1,8 @@
 2.8.0 (unreleased)
 ------------------
 
-- Add new Mapping API for extending asdf with additional
-  schemas. [#819, #828]
+- Add new resource mapping API for extending asdf with additional
+  schemas. [#819, #828, #843]
 
 - Add global configuration mechanism. [#819, #839]
 

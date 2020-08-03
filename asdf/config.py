@@ -7,7 +7,7 @@ from contextlib import contextmanager
 import copy
 
 from . import entry_points
-from .resource import ResourceManager
+from .resource import ResourceMappingProxy, ResourceManager
 
 
 __all__ = ["AsdfConfig", "get_config", "config_context"]
@@ -33,8 +33,8 @@ class AsdfConfig:
     @property
     def resource_mappings(self):
         """
-        Get the list of enabled resource Mapping instances.  Unless
-        overridden by user configuration, this includes every Mapping
+        Get the list of registered resource mapping instances.  Unless
+        overridden by user configuration, this list contains every mapping
         registered with an entry point.
 
         Returns
@@ -49,29 +49,44 @@ class AsdfConfig:
 
     def add_resource_mapping(self, mapping):
         """
-        Register a new resource Mapping.
+        Register a new resource mapping.  The new mapping will
+        take precedence over all previously registered mappings.
 
         Parameters
         ----------
         mapping : collections.abc.Mapping
-            map of `str` resource URI to `bytes` content
+            Map of `str` resource URI to `bytes` content
         """
         with self._lock:
-            resource_mappings = self.resource_mappings.copy()
-            resource_mappings.append(mapping)
+            mapping = ResourceMappingProxy.maybe_wrap(mapping)
+
+            # Insert at the beginning of the list so that
+            # ResourceManager uses the new mapping first.
+            resource_mappings = [mapping] + [
+                r for r in self.resource_mappings
+                if r.delegate is not mapping.delegate
+            ]
             self._resource_mappings = resource_mappings
             self._resource_manager = None
 
-    def remove_resource_mapping(self, mapping):
+    def remove_resource_mapping(self, mapping=None, *, package=None):
         """
         Remove a registered resource mapping.
 
         Parameters
         ----------
-        mapping : collections.abc.Mapping
+        mapping : collections.abc.Mapping, optional
+            Mapping to remove.
+        package : str, optional
+            Python package whose mappings will all be removed.
         """
         with self._lock:
-            resource_mappings = [m for m in self.resource_mappings if m is not mapping]
+            resource_mappings = self.resource_mappings
+            if mapping is not None:
+                mapping = ResourceMappingProxy.maybe_wrap(mapping)
+                resource_mappings = [m for m in resource_mappings if m.delegate is not mapping.delegate]
+            if package is not None:
+                resource_mappings = [m for m in resource_mappings if m.package_name != package]
             self._resource_mappings = resource_mappings
             self._resource_manager = None
 
@@ -88,7 +103,7 @@ class AsdfConfig:
     def resource_manager(self):
         """
         Get the `ResourceManager` instance.  Includes resources from
-        registered resource Mappings and any Mappings added at runtime.
+        registered resource mappings and any mappings added at runtime.
 
         Returns
         -------
