@@ -105,6 +105,15 @@ class ResourceMappingProxy(Mapping):
         """
         return self._class_name
 
+    def __eq__(self, other):
+        if isinstance(other, ResourceMappingProxy):
+            return other.delegate is self.delegate
+        else:
+            return False
+
+    def __hash__(self):
+        return hash(id(self.delegate))
+
     def __repr__(self):
         if self.package_name is not None:
             package_description = "{}=={}".format(self.package_name, self.package_version)

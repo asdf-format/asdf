@@ -270,6 +270,20 @@ def test_proxy_properties():
     assert proxy.class_name.endswith("dict")
 
 
+def test_proxy_hash_and_eq():
+    mapping = {
+        "http://somewhere.org/resources/foo": "foo",
+        "http://somewhere.org/resources/bar": "bar",
+    }
+    proxy1 = ResourceMappingProxy(mapping)
+    proxy2 = ResourceMappingProxy(mapping, package_name="foo", package_version="1.2.3")
+
+    assert proxy1 == proxy2
+    assert hash(proxy1) == hash(proxy2)
+    assert proxy1 != mapping
+    assert proxy2 != mapping
+
+
 def test_proxy_repr():
     mapping = {
         "http://somewhere.org/resources/foo": "foo",

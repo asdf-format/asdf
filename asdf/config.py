@@ -67,7 +67,7 @@ class AsdfConfig:
             # ResourceManager uses the new mapping first.
             resource_mappings = [mapping] + [
                 r for r in self.resource_mappings
-                if r.delegate is not mapping.delegate
+                if r != mapping
             ]
             self._resource_mappings = resource_mappings
             self._resource_manager = None
@@ -87,7 +87,7 @@ class AsdfConfig:
             resource_mappings = self.resource_mappings
             if mapping is not None:
                 mapping = ResourceMappingProxy.maybe_wrap(mapping)
-                resource_mappings = [m for m in resource_mappings if m.delegate is not mapping.delegate]
+                resource_mappings = [m for m in resource_mappings if m != mapping]
             if package is not None:
                 resource_mappings = [m for m in resource_mappings if m.package_name != package]
             self._resource_mappings = resource_mappings
