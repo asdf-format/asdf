@@ -1,14 +1,10 @@
-import os
 import abc
 import warnings
-from pkg_resources import iter_entry_points
 
 from .. import types
 from .. import resolver
-from ..util import get_class_name
 from ..type_index import AsdfTypeIndex
-from ..version import version as asdf_version
-from ..exceptions import AsdfDeprecationWarning, AsdfWarning
+from ..exceptions import AsdfDeprecationWarning
 
 
 ASDF_TEST_BUILD_ENV = 'ASDF_TEST_BUILD'
@@ -109,25 +105,23 @@ class AsdfExtensionList:
     Manage a set of extensions that are in effect.
     """
     def __init__(self, extensions):
+        from ._extension import ExtensionProxy
+        extensions = [ExtensionProxy.maybe_wrap(e) for e in extensions]
+
         tag_mapping = []
         url_mapping = []
         validators = {}
         self._type_index = AsdfTypeIndex()
         for extension in extensions:
-            if not isinstance(extension, AsdfExtension):
-                raise TypeError(
-                    "Extension must implement asdf.types.AsdfExtension "
-                    "interface")
             tag_mapping.extend(extension.tag_mapping)
-            # New-style extensions will not include a url_mapping attribute.
-            if hasattr(extension, "url_mapping"):
-                url_mapping.extend(extension.url_mapping)
+            url_mapping.extend(extension.url_mapping)
             for typ in extension.types:
                 self._type_index.add_type(typ, extension)
                 validators.update(typ.validators)
                 for sibling in typ.versioned_siblings:
                     self._type_index.add_type(sibling, extension)
                     validators.update(sibling.validators)
+        self._extensions = extensions
         self._tag_mapping = resolver.Resolver(tag_mapping, 'tag')
         self._url_mapping = resolver.Resolver(url_mapping, 'url')
         self._resolver = resolver.ResolverChain(self._tag_mapping, self._url_mapping)
@@ -141,6 +135,10 @@ class AsdfExtensionList:
             "'tag_mapping' instead.",
             AsdfDeprecationWarning)
         return self._tag_mapping
+
+    @property
+    def extensions(self):
+        return self._extensions
 
     @property
     def tag_mapping(self):
@@ -186,65 +184,27 @@ class BuiltinExtension:
 
 
 class _DefaultExtensions:
-    def __init__(self):
-        self._extensions = []
-        self._extension_list = None
-        self._package_metadata = {}
-
-    def _load_installed_extensions(self, group='asdf_extensions'):
-        for entry_point in iter_entry_points(group=group):
-            with warnings.catch_warnings(record=True) as w:
-                warnings.simplefilter('always', category=AsdfDeprecationWarning)
-                ext = entry_point.load()
-            if not issubclass(ext, AsdfExtension):
-                warnings.warn("Found entry point {}, from {} but it is not a "
-                              "subclass of AsdfExtension, as expected. It is "
-                              "being ignored.".format(ext, entry_point.dist),
-                              AsdfWarning)
-                continue
-
-            dist = entry_point.dist
-            name = get_class_name(ext, instance=False)
-            self._package_metadata[name] = (dist.project_name, dist.version)
-            self._extensions.append(ext())
-
-            for warning in w:
-                warnings.warn('{} (from {})'.format(warning.message, name),
-                              AsdfDeprecationWarning)
-
     @property
     def extensions(self):
-        # This helps avoid a circular dependency with external packages
-        if not self._extensions:
-            # If this environment variable is defined, load the default
-            # extension. This allows the package to be tested without being
-            # installed (e.g. for builds on Debian).
-            if os.environ.get(ASDF_TEST_BUILD_ENV):
-                # Fake the extension metadata
-                name = get_class_name(BuiltinExtension, instance=False)
-                self._package_metadata[name] = ('asdf', asdf_version)
-                self._extensions.append(BuiltinExtension())
-
-            self._load_installed_extensions()
-
-        return self._extensions
+        from ..config import get_config
+        return [e for e in get_config().extensions if e.legacy]
 
     @property
     def extension_list(self):
-        if self._extension_list is None:
-            self._extension_list = AsdfExtensionList(self.extensions)
-
-        return self._extension_list
+        return AsdfExtensionList(self.extensions)
 
     @property
     def package_metadata(self):
-        return self._package_metadata
+        return {
+            e.class_name: (e.package_name, e.package_version)
+            for e in self.extensions
+            if e.package_name is not None
+        }
 
     def reset(self):
         """This will be used primarily for testing purposes."""
-        self._extensions = []
-        self._extension_list = None
-        self._package_metadata = {}
+        from ..config import get_config
+        get_config().reset_extensions()
 
     @property
     def resolver(self):

@@ -233,7 +233,7 @@ class AsdfInFits(asdf.AsdfFile):
     @classmethod
     def _open_impl(cls, fd, uri=None, validate_checksums=False, extensions=None,
              ignore_version_mismatch=True, ignore_unrecognized_tag=False,
-             strict_extension_check=False, _extension_metadata=None,
+             strict_extension_check=False,
              ignore_missing_extensions=False, **kwargs):
 
         close_hdulist = False
@@ -253,8 +253,6 @@ class AsdfInFits(asdf.AsdfFile):
         self = cls(hdulist, uri=uri, extensions=extensions,
                    ignore_version_mismatch=ignore_version_mismatch,
                    ignore_unrecognized_tag=ignore_unrecognized_tag)
-        if _extension_metadata is not None:
-            self._extension_metadata = _extension_metadata
 
         self._close_hdulist = close_hdulist
 

@@ -10,6 +10,7 @@ from . import entry_points
 from .resource import ResourceMappingProxy, ResourceManager
 from . import versioning
 from ._helpers import validate_version
+from .extension import ExtensionProxy
 
 __all__ = ["AsdfConfig", "get_config", "config_context"]
 
@@ -28,6 +29,7 @@ class AsdfConfig:
     def __init__(self):
         self._resource_mappings = None
         self._resource_manager = None
+        self._extensions = None
         self._validate_on_read = DEFAULT_VALIDATE_ON_READ
         self._default_version = DEFAULT_DEFAULT_VERSION
 
@@ -117,6 +119,61 @@ class AsdfConfig:
                 if self._resource_manager is None:
                     self._resource_manager = ResourceManager(self.resource_mappings)
         return self._resource_manager
+
+    @property
+    def extensions(self):
+        """
+        Get the list of registered `AsdfExtension` instances.
+
+        Returns
+        -------
+        list of asdf.extension.AsdfExtension
+        """
+        if self._extensions is None:
+            with self._lock:
+                if self._extensions is None:
+                    self._extensions = entry_points.get_extensions()
+        return self._extensions
+
+    def add_extension(self, extension):
+        """
+        Register a new extension.  The new extension will
+        take precedence over all previously registered extensions.
+
+        Parameters
+        ----------
+        extension : asdf.extension.AsdfExtension
+        """
+        with self._lock:
+            extension = ExtensionProxy.maybe_wrap(extension)
+            self._extensions = [extension] + [e for e in self.extensions if e != extension]
+
+    def remove_extension(self, extension=None, *, package=None):
+        """
+        Remove a registered extension.
+
+        Parameters
+        ----------
+        extension : asdf.extension.AsdfExtension, optional
+            An extension instance to remove.
+        package : str, optional
+            A Python package name whose extensions will all be removed.
+        """
+        with self._lock:
+            extensions = self.extensions
+            if extension is not None:
+                extension = ExtensionProxy.maybe_wrap(extension)
+                extensions = [e for e in extensions if e != extension]
+            if package is not None:
+                extensions = [e for e in extensions if e.package_name != package]
+            self._extensions = extensions
+
+    def reset_extensions(self):
+        """
+        Reset extensions to the default list registered via entry points.
+        """
+        with self._lock:
+            self._extensions = None
 
     @property
     def validate_on_read(self):

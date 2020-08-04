@@ -2,6 +2,7 @@
 Support for plugins that extend asdf to serialize
 additional custom types.
 """
+from ._extension import ExtensionProxy
 from ._legacy import (
     AsdfExtension,
     AsdfExtensionList,
@@ -12,6 +13,9 @@ from ._legacy import (
 
 
 __all__ = [
+    # New API
+    "ExtensionProxy",
+    # Legacy API
     "AsdfExtension",
     "AsdfExtensionList",
     "BuiltinExtension",

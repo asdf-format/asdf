@@ -38,7 +38,7 @@ def _qualified_name(_class):
 def list_tags(display_classes=False, iostream=sys.stdout):
     """Function to list tags"""
     af = AsdfFile()
-    type_by_tag = af._extensions._type_index._type_by_tag
+    type_by_tag = af.type_index._type_by_tag
     tags = sorted(type_by_tag.keys())
 
     for tag in tags:
