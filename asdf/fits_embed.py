@@ -250,7 +250,7 @@ class AsdfInFits(asdf.AsdfFile):
                 msg = "Failed to parse given file '{}'. Is it FITS?"
                 raise ValueError(msg.format(uri))
 
-        self = cls(hdulist, uri=uri, extensions=extensions,
+        self = cls(hdulist, uri=uri,
                    ignore_version_mismatch=ignore_version_mismatch,
                    ignore_unrecognized_tag=ignore_unrecognized_tag)
 
@@ -267,6 +267,7 @@ class AsdfInFits(asdf.AsdfFile):
         try:
             return cls._open_asdf(self, buff, uri=uri, mode='r',
                               validate_checksums=validate_checksums,
+                              extensions=extensions,
                               strict_extension_check=strict_extension_check,
                               ignore_missing_extensions=ignore_missing_extensions,
                               **kwargs)
