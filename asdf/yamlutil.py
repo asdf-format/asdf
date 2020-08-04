@@ -1,5 +1,6 @@
 import warnings
 from collections import OrderedDict
+from types import GeneratorType
 
 import numpy as np
 
@@ -221,15 +222,54 @@ def custom_tree_to_tagged_tree(tree, ctx, _serialization_context=None):
     if _serialization_context is None:
         _serialization_context = ctx._create_serialization_context()
 
-    def walker(node):
-        tag = ctx.type_index.from_custom_type(type(node), ctx.version_string, _serialization_context=_serialization_context)
-        if tag is not None:
-            return tag.to_tree_tagged(node, ctx)
-        return node
+    extension_manager = _serialization_context.extension_manager
+
+    def _convert_obj(obj):
+        converter = extension_manager.get_converter_for_type(type(obj))
+        tag = converter.select_tag(obj, _serialization_context)
+        node = converter.to_yaml_tree(obj, tag, _serialization_context)
+
+        if isinstance(node, GeneratorType):
+            generator = node
+            node = next(generator)
+        else:
+            generator = None
+
+        if isinstance(node, dict):
+            tagged_node = tagged.TaggedDict(node, tag)
+        elif isinstance(node, list):
+            tagged_node = tagged.TaggedList(node, tag)
+        elif isinstance(node, str):
+            tagged_node = tagged.TaggedString(node)
+            tagged_node._tag = tag
+        else:
+            raise TypeError(
+                "Converter returned illegal node type: {}".format(util.get_class_name(node))
+            )
+
+        _serialization_context._mark_extension_used(converter.extension)
+
+        yield tagged_node
+        if generator is not None:
+            yield from generator
+
+    def _walker(obj):
+        if extension_manager.handles_type(type(obj)):
+            return _convert_obj(obj)
+        else:
+            tag = ctx.type_index.from_custom_type(
+                type(obj),
+                ctx.version_string,
+                _serialization_context=_serialization_context
+            )
+
+            if tag is not None:
+                return tag.to_tree_tagged(obj, ctx)
+            return obj
 
     return treeutil.walk_and_modify(
         tree,
-        walker,
+        _walker,
         ignore_implicit_conversion=ctx._ignore_implicit_conversion,
         # Walk the tree in preorder, so that extensions can return
         # container nodes with unserialized children.
@@ -246,13 +286,21 @@ def tagged_tree_to_custom_tree(tree, ctx, force_raw_types=False, _serialization_
     if _serialization_context is None:
         _serialization_context = ctx._create_serialization_context()
 
-    def walker(node):
+    extension_manager = _serialization_context.extension_manager
+
+    def _walker(node):
         if force_raw_types:
             return node
 
         tag = getattr(node, '_tag', None)
         if tag is None:
             return node
+
+        if extension_manager.handles_tag(tag):
+            converter = extension_manager.get_converter_for_tag(tag)
+            obj = converter.from_yaml_tree(node.data, tag, _serialization_context)
+            _serialization_context._mark_extension_used(converter.extension)
+            return obj
 
         tag_type = ctx.type_index.from_yaml_tag(ctx, tag, _serialization_context=_serialization_context)
         # This means the tag did not correspond to any type in our type index.
@@ -289,7 +337,7 @@ def tagged_tree_to_custom_tree(tree, ctx, force_raw_types=False, _serialization_
 
     return treeutil.walk_and_modify(
         tree,
-        walker,
+        _walker,
         ignore_implicit_conversion=ctx._ignore_implicit_conversion,
         # Walk the tree in postorder, so that extensions receive
         # container nodes with children already deserialized.

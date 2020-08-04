@@ -139,7 +139,7 @@ class AsdfConfig:
 
         Returns
         -------
-        list of asdf.extension.AsdfExtension
+        list of asdf.extension.AsdfExtension or asdf.extension.Extension
         """
         if self._extensions is None:
             with self._lock:
@@ -154,7 +154,7 @@ class AsdfConfig:
 
         Parameters
         ----------
-        extension : asdf.extension.AsdfExtension
+        extension : asdf.extension.AsdfExtension or asdf.extension.Extension
         """
         with self._lock:
             extension = ExtensionProxy.maybe_wrap(extension)
@@ -166,8 +166,8 @@ class AsdfConfig:
 
         Parameters
         ----------
-        extension : asdf.extension.AsdfExtension or str, optional
-            An extension instance or URI or URI pattern to remove.
+        extension : asdf.extension.AsdfExtension or asdf.extension.Extension or str, optional
+            An extension instance or URI pattern to remove.
         package : str, optional
             Remove only extensions provided by this package.  If the `extension`
             argument is omitted, then all extensions from this package will
@@ -206,7 +206,7 @@ class AsdfConfig:
 
         Returns
         -------
-        asdf.extension.AsdfExtension
+        asdf.extension.AsdfExtension or asdf.extension.Extension
 
         Raises
         ------
