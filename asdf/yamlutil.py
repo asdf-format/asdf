@@ -212,14 +212,17 @@ AsdfLoader.add_constructor(None, AsdfLoader.construct_undefined)
 AsdfLoader.add_constructor(YAML_TAG_PREFIX + "omap", AsdfLoader.construct_yaml_omap)
 
 
-def custom_tree_to_tagged_tree(tree, ctx):
+def custom_tree_to_tagged_tree(tree, ctx, _serialization_context=None):
     """
     Convert a tree, possibly containing custom data types that aren't
     directly representable in YAML, to a tree of basic data types,
     annotated with tags.
     """
+    if _serialization_context is None:
+        _serialization_context = ctx._create_serialization_context()
+
     def walker(node):
-        tag = ctx.type_index.from_custom_type(type(node), ctx.version_string)
+        tag = ctx.type_index.from_custom_type(type(node), ctx.version_string, _serialization_context=_serialization_context)
         if tag is not None:
             return tag.to_tree_tagged(node, ctx)
         return node
@@ -235,11 +238,14 @@ def custom_tree_to_tagged_tree(tree, ctx):
     )
 
 
-def tagged_tree_to_custom_tree(tree, ctx, force_raw_types=False):
+def tagged_tree_to_custom_tree(tree, ctx, force_raw_types=False, _serialization_context=None):
     """
     Convert a tree containing only basic data types, annotated with
     tags, to a tree containing custom data types.
     """
+    if _serialization_context is None:
+        _serialization_context = ctx._create_serialization_context()
+
     def walker(node):
         if force_raw_types:
             return node
@@ -248,7 +254,7 @@ def tagged_tree_to_custom_tree(tree, ctx, force_raw_types=False):
         if tag is None:
             return node
 
-        tag_type = ctx.type_index.from_yaml_tag(ctx, tag)
+        tag_type = ctx.type_index.from_yaml_tag(ctx, tag, _serialization_context=_serialization_context)
         # This means the tag did not correspond to any type in our type index.
         if tag_type is None:
             if not ctx._ignore_unrecognized_tag:
@@ -304,7 +310,7 @@ def load_tree(stream):
     return yaml.load(stream, Loader=AsdfLoader)
 
 
-def dump_tree(tree, fd, ctx):
+def dump_tree(tree, fd, ctx, tree_finalizer=None, _serialization_context=None):
     """
     Dump a tree of objects, possibly containing custom types, to YAML.
 
@@ -318,11 +324,13 @@ def dump_tree(tree, fd, ctx):
 
     ctx : Context
         The writing context.
-    """
-    class AsdfDumperTmp(AsdfDumper):
-        pass
-    AsdfDumperTmp.ctx = ctx
 
+    tree_finalizer : callable, optional
+        Callback that receives the tagged tree before it is validated
+        and defaults are removed.  `asdf.AsdfFile` uses this to update
+        extension metadata on the tagged tree before it is fully
+        serialized to YAML.
+    """
     tags = None
     tree_type = ctx.type_index.from_custom_type(type(tree))
     if tree_type is not None:
@@ -335,7 +343,9 @@ def dump_tree(tree, fd, ctx):
         yaml_tag = ':'.join(tag_parts[0:-1] + [last_part])
         tags = {'!': yaml_tag}
 
-    tree = custom_tree_to_tagged_tree(tree, ctx)
+    tree = custom_tree_to_tagged_tree(tree, ctx, _serialization_context=_serialization_context)
+    if tree_finalizer is not None:
+        tree_finalizer(tree)
     schema.validate(tree, ctx)
     schema.remove_defaults(tree, ctx)
 
@@ -343,7 +353,7 @@ def dump_tree(tree, fd, ctx):
         int(x) for x in ctx.version_map['YAML_VERSION'].split('.'))
 
     yaml.dump_all(
-        [tree], stream=fd, Dumper=AsdfDumperTmp,
+        [tree], stream=fd, Dumper=AsdfDumper,
         explicit_start=True, explicit_end=True,
         version=yaml_version,
         allow_unicode=True, encoding='utf-8',

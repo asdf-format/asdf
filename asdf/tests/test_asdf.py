@@ -1,6 +1,6 @@
 import pytest
 
-from asdf.asdf import AsdfFile, open_asdf
+from asdf.asdf import AsdfFile, open_asdf, SerializationContext
 from asdf import config_context, get_config
 from asdf.versioning import AsdfVersion
 from asdf.extension import ExtensionProxy, AsdfExtensionList
@@ -100,3 +100,23 @@ def test_open_asdf_extensions(tmpdir):
         with pytest.raises(TypeError):
             with open_asdf(path, extensions=arg) as af:
                 pass
+
+
+def test_serialization_context():
+    context = SerializationContext("1.4.0")
+    assert context.version == "1.4.0"
+    assert context.extensions_used == set()
+
+    extension = get_config().extensions[0]
+    context.mark_extension_used(extension)
+    assert context.extensions_used == {extension}
+    context.mark_extension_used(extension)
+    assert context.extensions_used == {extension}
+    context.mark_extension_used(extension.delegate)
+    assert context.extensions_used == {extension}
+
+    with pytest.raises(TypeError):
+        context.mark_extension_used(object())
+
+    with pytest.raises(ValueError):
+        SerializationContext("0.5.4")

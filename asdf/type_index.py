@@ -131,19 +131,22 @@ class _AsdfWriteTypeIndex:
             self._type_by_name[name] = asdftype
             self._add_all_types(index, asdftype)
 
-    def _mark_used_extension(self, custom_type):
-        self._extensions_used.add(self._extension_by_cls[custom_type])
+    def _mark_used_extension(self, custom_type, serialization_context):
+        extension = self._extension_by_cls[custom_type]
+        self._extensions_used.add(extension)
+        if serialization_context is not None:
+            serialization_context.mark_extension_used(extension)
 
-    def _process_dynamic_subclass(self, custom_type):
+    def _process_dynamic_subclass(self, custom_type, serialization_context):
         for key, val in self._types_with_dynamic_subclasses.items():
             if issubclass(custom_type, key):
                 self._type_by_cls[custom_type] = val
-                self._mark_used_extension(key)
+                self._mark_used_extension(key, serialization_context)
                 return val
 
         return None
 
-    def from_custom_type(self, custom_type):
+    def from_custom_type(self, custom_type, _serialization_context=None):
         """
         Given a custom type, return the corresponding `ExtensionType`
         definition.
@@ -163,17 +166,17 @@ class _AsdfWriteTypeIndex:
                 # includes classes that are created dynamically post
                 # Python-import, e.g. astropy.modeling._CompoundModel
                 # subclasses.
-                return self._process_dynamic_subclass(custom_type)
+                return self._process_dynamic_subclass(custom_type, _serialization_context)
 
         if asdftype is not None:
             extension = self._extension_by_cls.get(custom_type)
             if extension is not None:
-                self._mark_used_extension(custom_type)
+                self._mark_used_extension(custom_type, _serialization_context)
             else:
                 # Handle the case where the dynamic subclass was identified as
                 # a proper subclass above, but it has not yet been registered
                 # as such.
-                self._process_dynamic_subclass(custom_type)
+                self._process_dynamic_subclass(custom_type, _serialization_context)
 
         return asdftype
 
@@ -235,7 +238,7 @@ class AsdfTypeIndex:
         if not len(yaml_tags):
             self._unnamed_types.add(asdftype)
 
-    def from_custom_type(self, custom_type, version=default_version):
+    def from_custom_type(self, custom_type, version=default_version, _serialization_context=None):
         """
         Given a custom type, return the corresponding `ExtensionType`
         definition.
@@ -250,7 +253,7 @@ class AsdfTypeIndex:
             write_type_index = _AsdfWriteTypeIndex(version, self)
             self._write_type_indices[version] = write_type_index
 
-        return write_type_index.from_custom_type(custom_type)
+        return write_type_index.from_custom_type(custom_type, _serialization_context=_serialization_context)
 
     def fix_yaml_tag(self, ctx, tag):
         """
@@ -285,13 +288,16 @@ class AsdfTypeIndex:
         self._best_matches[tag] = best_tag
         return best_tag
 
-    def from_yaml_tag(self, ctx, tag):
+    def from_yaml_tag(self, ctx, tag, _serialization_context=None):
         """
         From a given YAML tag string, return the corresponding
         AsdfType definition.
         """
         tag = self.fix_yaml_tag(ctx, tag)
-        return self._type_by_tag.get(tag)
+        asdftype = self._type_by_tag.get(tag)
+        if asdftype is not None and _serialization_context is not None:
+            _serialization_context.mark_extension_used(self._extension_by_type[asdftype])
+        return asdftype
 
     @lru_cache(5)
     def has_hook(self, hook_name):

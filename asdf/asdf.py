@@ -306,8 +306,8 @@ class AsdfFile:
 
         return extensions
 
-    def _update_extension_history(self):
-        if self.version < versioning.NEW_HISTORY_FORMAT_MIN_VERSION:
+    def _update_extension_history(self, serialization_context):
+        if serialization_context.version < versioning.NEW_HISTORY_FORMAT_MIN_VERSION:
             return
 
         if 'history' not in self.tree:
@@ -323,7 +323,7 @@ class AsdfFile:
         elif 'extensions' not in self.tree['history']:
             self.tree['history']['extensions'] = []
 
-        for extension in self.type_index.get_extensions_used():
+        for extension in serialization_context.extensions_used:
             ext_name = extension.class_name
             ext_meta = ExtensionMetadata(extension_class=ext_name)
             if extension.package_name is not None:
@@ -876,7 +876,29 @@ class AsdfFile:
         fd.write(b'\n')
 
         if len(tree):
-            yamlutil.dump_tree(tree, fd, self)
+            serialization_context = self._create_serialization_context()
+
+            def _tree_finalizer(tagged_tree):
+                """
+                The list of extensions used is not known until after
+                serialization, so we're using a hook provided by
+                yamlutil.dump_tree to update extension metadata
+                after the tree has been converted to tagged objects.
+                """
+                self._update_extension_history(serialization_context)
+                if 'history' in self.tree:
+                    tagged_tree['history'] = yamlutil.custom_tree_to_tagged_tree(
+                        self.tree['history'],
+                        self,
+                        _serialization_context=serialization_context
+                    )
+                else:
+                    tagged_tree.pop('history', None)
+
+            yamlutil.dump_tree(
+                tree, fd, self, tree_finalizer=_tree_finalizer,
+                _serialization_context=serialization_context
+            )
 
         if pad_blocks:
             padding = util.calculate_padding(
@@ -913,7 +935,6 @@ class AsdfFile:
         self._blocks.finalize(self)
 
         self._tree['asdf_library'] = get_asdf_library_info()
-        self._update_extension_history()
 
     def _serial_write(self, fd, pad_blocks, include_block_index):
         self._write_tree(self._tree, fd, pad_blocks)
@@ -1435,6 +1456,11 @@ class AsdfFile:
             warnings.warn(message, AsdfConversionWarning)
             self._warned_tag_pairs.add((tag, best_tag))
 
+    # This function is called from within yamlutil methods to create
+    # a context when one isn't explicitly passed in.
+    def _create_serialization_context(self):
+        return SerializationContext(self.version_string)
+
 
 # Inherit docstring from dictionary
 AsdfFile.keys.__doc__ = dict.keys.__doc__
@@ -1603,3 +1629,45 @@ def is_asdf_file(fd):
     if asdf_magic == constants.ASDF_MAGIC:
         return True
     return False
+
+
+class SerializationContext:
+    """
+    Container for parameters of the current (de)serialization.
+    """
+    def __init__(self, version):
+        self._version = validate_version(version)
+
+        self._extensions_used = set()
+
+    @property
+    def version(self):
+        """
+        Get the ASDF Standard version.
+
+        Returns
+        -------
+        str
+        """
+        return self._version
+
+    def mark_extension_used(self, extension):
+        """
+        Note that an extension was used when reading or writing the file.
+
+        Parameters
+        ----------
+        extension : asdf.extension.AsdfExtension
+        """
+        self._extensions_used.add(ExtensionProxy.maybe_wrap(extension))
+
+    @property
+    def extensions_used(self):
+        """
+        Get the set of extensions that were used when reading or writing the file.
+
+        Returns
+        -------
+        set of asdf.extension.AsdfExtension
+        """
+        return self._extensions_used
