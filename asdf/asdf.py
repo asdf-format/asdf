@@ -113,10 +113,12 @@ class AsdfFile:
             files follow custom conventions beyond those enforced by the
             standard.
         """
+        # Don't use the version setter here; it tries to access
+        # the extensions, which haven't been assigned yet.
         if version is None:
-            self.version = get_config().default_version
+            self._version = versioning.AsdfVersion(get_config().default_version)
         else:
-            self.version = version
+            self._version = versioning.AsdfVersion(validate_version(version))
 
         self.extensions = extensions
 
@@ -190,6 +192,9 @@ class AsdfFile:
         value : str or asdf.versioning.AsdfVersion
         """
         self._version = versioning.AsdfVersion(validate_version(value))
+        # Reassigning extensions cues the processing that checks each
+        # extension's ASDF Standard requirement.
+        self.extensions = self.extensions
 
     @property
     def version_string(self):
@@ -354,11 +359,20 @@ class AsdfFile:
 
         requested_extensions = [_get_extension(e) for e in requested_extensions]
 
+        for extension in requested_extensions:
+            if self.version_string not in extension.asdf_standard_requirement:
+                warnings.warn(
+                    "Extension {} does not support ASDF Standard {}.  It has been disabled.".format(
+                        extension, self.version_string
+                    ),
+                    AsdfWarning
+                )
+
         extensions = []
         # Add requested extensions to the list first, so that they
         # take precedence.
         for extension in requested_extensions + get_config().extensions:
-            if extension not in extensions:
+            if extension not in extensions and self.version_string in extension.asdf_standard_requirement:
                 extensions.append(extension)
 
         return extensions

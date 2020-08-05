@@ -15,12 +15,14 @@ class TestExtension:
         self,
         extension_uri=None,
         legacy_class_names=None,
+        asdf_standard_requirement=None,
         types=None,
         tag_mapping=None,
         url_mapping=None,
     ):
         self._extension_uri = extension_uri
         self._legacy_class_names = set() if legacy_class_names is None else legacy_class_names
+        self._asdf_standard_requirement = asdf_standard_requirement
         self._types = [] if types is None else types
         self._tag_mapping = [] if tag_mapping is None else tag_mapping
         self._url_mapping = [] if url_mapping is None else url_mapping
@@ -44,6 +46,10 @@ class TestExtension:
     @property
     def legacy_class_names(self):
         return self._legacy_class_names
+
+    @property
+    def asdf_standard_requirement(self):
+        return self._asdf_standard_requirement
 
 
 def test_asdf_file_version():
@@ -128,6 +134,43 @@ def test_asdf_file_extensions():
 
     with pytest.raises(KeyError):
         AsdfFile(extensions="not-a-URI")
+
+
+def test_asdf_file_version_requirement():
+    extension_with_requirement = TestExtension(
+        extension_uri="asdf://somewhere.org/extensions/foo-1.0",
+        asdf_standard_requirement="==1.5.0",
+    )
+
+    # No warnings if the requirement is fulfilled:
+    with assert_no_warnings():
+        AsdfFile(version="1.5.0", extensions=[extension_with_requirement])
+
+    # Version doesn't match the requirement, so we should see a warning
+    # and the extension should not be enabled:
+    with pytest.warns(AsdfWarning, match="does not support ASDF Standard 1.4.0"):
+        af = AsdfFile(version="1.4.0", extensions=[extension_with_requirement])
+        assert ExtensionProxy(extension_with_requirement) not in af.extensions
+
+    # Version initially matches the requirement, but changing
+    # the version on the AsdfFile invalidates it:
+    af = AsdfFile(version="1.5.0", extensions=[extension_with_requirement])
+    assert ExtensionProxy(extension_with_requirement) in af.extensions
+    with pytest.warns(AsdfWarning, match="does not support ASDF Standard 1.4.0"):
+        af.version = "1.4.0"
+    assert ExtensionProxy(extension_with_requirement) not in af.extensions
+
+    # Extension registered with the config should not provoke
+    # a warning:
+    with config_context() as config:
+        config.add_extension(extension_with_requirement)
+        with assert_no_warnings():
+            af = AsdfFile(version="1.4.0")
+            assert ExtensionProxy(extension_with_requirement) not in af.extensions
+
+        # ... unless the user explicitly requested the invalid exception:
+        with pytest.warns(AsdfWarning, match="does not support ASDF Standard 1.4.0"):
+            af = AsdfFile(version="1.4.0", extensions=[extension_with_requirement])
 
 
 def test_open_asdf_extensions(tmpdir):

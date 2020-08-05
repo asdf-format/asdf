@@ -1,3 +1,5 @@
+from packaging.specifiers import SpecifierSet
+
 from ..util import get_class_name
 from ._legacy import AsdfExtension
 
@@ -34,6 +36,14 @@ class ExtensionProxy(AsdfExtension):
             else:
                 raise TypeError("Extension property 'legacy_class_names' must contain str values")
 
+        value = getattr(self._delegate, "asdf_standard_requirement", None)
+        if isinstance(value, str):
+            self._asdf_standard_requirement = SpecifierSet(value)
+        elif value is None:
+            self._asdf_standard_requirement = SpecifierSet()
+        else:
+            raise TypeError("Extension property 'asdf_standard_requirement' must be str or None")
+
         if self._legacy:
             self._legacy_class_names.add(self._class_name)
 
@@ -61,6 +71,17 @@ class ExtensionProxy(AsdfExtension):
         iterable of str
         """
         return self._legacy_class_names
+
+    @property
+    def asdf_standard_requirement(self):
+        """
+        Get the extension's ASDF Standard requirement.
+
+        Returns
+        -------
+        packaging.specifiers.SpecifierSet
+        """
+        return self._asdf_standard_requirement
 
     @property
     def types(self):

@@ -17,7 +17,7 @@
 - Drop support for Python 3.5. [#856]
 
 - Add new extension API to support versioned extensions.
-  [#850]
+  [#850, #851]
 
 2.7.0 (2020-07-23)
 ------------------
