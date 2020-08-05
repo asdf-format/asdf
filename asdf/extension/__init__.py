@@ -9,6 +9,7 @@ from ._legacy import (
     BuiltinExtension,
     default_extensions,
     get_default_resolver,
+    get_cached_asdf_extension_list,
 )
 
 
@@ -21,4 +22,5 @@ __all__ = [
     "BuiltinExtension",
     "default_extensions",
     "get_default_resolver",
+    "get_cached_asdf_extension_list",
 ]

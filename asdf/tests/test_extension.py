@@ -1,6 +1,10 @@
 import pytest
 
-from asdf.extension import BuiltinExtension, ExtensionProxy
+from asdf.extension import (
+    BuiltinExtension,
+    ExtensionProxy,
+    get_cached_asdf_extension_list,
+)
 from asdf.types import CustomType
 
 from asdf.tests.helpers import assert_extension_correctness
@@ -67,3 +71,10 @@ def test_proxy_repr():
     assert "class: asdf.tests.test_extension.LegacyExtension" in repr(proxy)
     assert "package: (none)" in repr(proxy)
     assert "legacy: True" in repr(proxy)
+
+
+def test_get_cached_asdf_extension_list():
+    extension = LegacyExtension()
+    extension_list = get_cached_asdf_extension_list([extension])
+    assert get_cached_asdf_extension_list([extension]) is extension_list
+    assert get_cached_asdf_extension_list([LegacyExtension()]) is not extension_list

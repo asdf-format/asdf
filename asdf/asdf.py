@@ -22,7 +22,12 @@ from . import versioning
 from . import yamlutil
 from . import _display as display
 from .exceptions import AsdfDeprecationWarning, AsdfWarning, AsdfConversionWarning
-from .extension import AsdfExtensionList, AsdfExtension, ExtensionProxy
+from .extension import (
+    AsdfExtensionList,
+    AsdfExtension,
+    ExtensionProxy,
+    get_cached_asdf_extension_list,
+)
 from .util import NotSet
 from .search import AsdfSearchResult
 from ._helpers import validate_version
@@ -232,7 +237,7 @@ class AsdfFile:
         asdf.extension.AsdfExtensionList
         """
         if self._extension_list is None:
-            self._extension_list = AsdfExtensionList(self.extensions)
+            self._extension_list = get_cached_asdf_extension_list(self.extensions)
         return self._extension_list
 
     def __enter__(self):
