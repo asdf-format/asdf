@@ -159,7 +159,7 @@ history:
     """
 
     buff = yaml_to_asdf(yaml)
-    with pytest.warns(AsdfWarning, match="File was created with extension 'foo.bar.FooBar'"):
+    with pytest.warns(AsdfWarning, match="File was created with extension class 'foo.bar.FooBar'"):
         with asdf.open(buff):
             pass
 
@@ -177,7 +177,7 @@ history:
     """
 
     buff = yaml_to_asdf(yaml)
-    with pytest.warns(AsdfWarning, match="File was created with extension 'asdf.extension.BuiltinExtension'"):
+    with pytest.warns(AsdfWarning, match="File was created with extension class 'asdf.extension.BuiltinExtension'"):
         with asdf.open(buff):
             pass
 

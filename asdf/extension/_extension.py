@@ -27,6 +27,41 @@ class ExtensionProxy(AsdfExtension):
 
         self._legacy = True
 
+        self._legacy_class_names = set()
+        for class_name in getattr(self._delegate, "legacy_class_names", []):
+            if isinstance(class_name, str):
+                self._legacy_class_names.add(class_name)
+            else:
+                raise TypeError("Extension property 'legacy_class_names' must contain str values")
+
+        if self._legacy:
+            self._legacy_class_names.add(self._class_name)
+
+    @property
+    def extension_uri(self):
+        """
+        Get the extension's identifying URI.
+
+        Returns
+        -------
+        str or None
+        """
+        return getattr(self._delegate, "extension_uri", None)
+
+    @property
+    def legacy_class_names(self):
+        """
+        Get the set of fully-qualified class names used by older
+        versions of this extension.  This allows a new-style
+        implementation of an extension to prevent warnings when a
+        legacy extension is missing.
+
+        Returns
+        -------
+        iterable of str
+        """
+        return self._legacy_class_names
+
     @property
     def types(self):
         """

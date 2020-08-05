@@ -196,10 +196,11 @@ class AsdfInFits(asdf.AsdfFile):
             If `True`, validate the blocks against their checksums.
             Requires reading the entire file, so disabled by default.
 
-        extensions : list of AsdfExtension, optional
-            A list of extensions to the ASDF to support when reading
-            and writing ASDF files.  See `asdf.types.AsdfExtension` for
-            more information.
+        extensions : object, optional
+            Additional extensions to use when reading and writing the file.
+            May be any of the following: `asdf.extension.AsdfExtension`, `str`
+            extension URI, `asdf.extension.AsdfExtensionList` or a `list`
+            of URIs and/or extensions.
 
         ignore_version_mismatch : bool, optional
             When `True`, do not raise warnings for mismatched schema versions.

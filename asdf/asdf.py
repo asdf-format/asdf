@@ -69,8 +69,11 @@ class AsdfFile:
             automatically determined from the associated file object,
             if possible and if created from `AsdfFile.open`.
 
-        extensions : asdf.extension.AsdfExtension or asdf.extension.AsdfExtensionList or list of asdf.extension.AsdfExtension
+        extensions : object, optional
             Additional extensions to use when reading and writing the file.
+            May be any of the following: `asdf.extension.AsdfExtension`, `str`
+            extension URI, `asdf.extension.AsdfExtensionList` or a `list`
+            of URIs and/or extensions.
 
         version : str, optional
             The ASDF Standard version.  If not provided, defaults to the
@@ -252,55 +255,76 @@ class AsdfFile:
             return
 
         for extension in tree['history']['extensions']:
-            installed = next((e for e in self.extensions if e.class_name == extension.extension_class), None)
+            installed = None
+            for ext in self.extensions:
+                if (extension.extension_uri is not None and extension.extension_uri == ext.extension_uri
+                    or extension.extension_uri is None and extension.extension_class in ext.legacy_class_names):
+                    installed = ext
+                    break
 
             filename = "'{}' ".format(self._fname) if self._fname else ''
+            if extension.extension_uri is not None:
+                extension_description = "URI '{}'".format(extension.extension_uri)
+            else:
+                extension_description = "class '{}'".format(extension.extension_class)
+            if extension.software is not None:
+                extension_description += " (from package {}=={})".format(
+                    extension.software["name"],
+                    extension.software["version"],
+                )
+
             if installed is None:
-                msg = "File {}was created with extension '{}', which is " \
+                msg = (
+                    "File {}was created with extension {}, which is "
                     "not currently installed"
-                if extension.software:
-                    msg += " (from package {}-{})".format(
-                        extension.software['name'],
-                        extension.software['version'])
-                fmt_msg = msg.format(filename, extension.extension_class)
+                ).format(filename, extension_description)
                 if strict:
-                    raise RuntimeError(fmt_msg)
+                    raise RuntimeError(msg)
                 else:
-                    warnings.warn(fmt_msg, AsdfWarning)
+                    warnings.warn(msg, AsdfWarning)
 
             elif extension.software:
-                # Local extensions may not have a real version
-                if not installed.package_version:
+                # Local extensions may not have a real version.  If the package name changed,
+                # then the version sequence may have been reset.
+                if installed.package_version is None or installed.package_name != extension.software['name']:
                     continue
                 # Compare version in file metadata with installed version
                 if parse_version(installed.package_version) < parse_version(extension.software['version']):
-                    msg = "File {}was created with extension '{}' from " \
-                    "package {}-{}, but older version {}-{} is installed"
-                    fmt_msg = msg.format(
-                        filename, extension.extension_class,
-                        extension.software['name'],
-                        extension.software['version'],
-                        installed.package_name, installed.package_version)
+                    msg = (
+                        "File {}was created with extension {}, but older package ({}=={}) "
+                        "is installed."
+                    ).format(
+                        filename,
+                        extension_description,
+                        installed.package_name,
+                        installed.package_version,
+                    )
                     if strict:
-                        raise RuntimeError(fmt_msg)
+                        raise RuntimeError(msg)
                     else:
-                        warnings.warn(fmt_msg, AsdfWarning)
+                        warnings.warn(msg, AsdfWarning)
 
     def _process_extensions(self, requested_extensions):
         if requested_extensions is None:
             requested_extensions = []
-        elif isinstance(requested_extensions, (AsdfExtension, ExtensionProxy)):
+        elif isinstance(requested_extensions, (AsdfExtension, ExtensionProxy, str)):
             requested_extensions = [requested_extensions]
         elif isinstance(requested_extensions, AsdfExtensionList):
             requested_extensions = requested_extensions.extensions
 
         if not isinstance(requested_extensions, list):
             raise TypeError(
-                "The extensions parameter must be an AsdfExtension, AsdfExtensionList, "
-                "or list of AsdfExtension."
+                "The extensions parameter must be an AsdfExtension, string URI, AsdfExtensionList, "
+                "or list of AsdfExtension/URI."
             )
 
-        requested_extensions = [ExtensionProxy.maybe_wrap(e) for e in requested_extensions]
+        def _get_extension(e):
+            if isinstance(e, str):
+                return get_config().get_extension(e)
+            else:
+                return ExtensionProxy.maybe_wrap(e)
+
+        requested_extensions = [_get_extension(e) for e in requested_extensions]
 
         extensions = []
         # Add requested extensions to the list first, so that they
@@ -333,10 +357,13 @@ class AsdfFile:
             ext_meta = ExtensionMetadata(extension_class=ext_name)
             if extension.package_name is not None:
                 ext_meta['software'] = Software(name=extension.package_name, version=extension.package_version)
+            if extension.extension_uri is not None:
+                ext_meta['extension_uri'] = extension.extension_uri
 
             for i, entry in enumerate(self.tree['history']['extensions']):
                 # Update metadata about this extension if it already exists
-                if entry.extension_class == ext_meta.extension_class:
+                if (entry.extension_uri is not None and entry.extension_uri == extension.extension_uri
+                    or entry.extension_class in extension.legacy_class_names):
                     self.tree['history']['extensions'][i] = ext_meta
                     break
             else:
@@ -1525,8 +1552,11 @@ def open_asdf(fd, uri=None, mode=None, validate_checksums=False,
         If `True`, validate the blocks against their checksums.
         Requires reading the entire file, so disabled by default.
 
-    extensions : asdf.extension.AsdfExtension or asdf.extension.AsdfExtensionList or list of asdf.extension.AsdfExtension
+    extensions : object, optional
         Additional extensions to use when reading and writing the file.
+        May be any of the following: `asdf.extension.AsdfExtension`, `str`
+        extension URI, `asdf.extension.AsdfExtensionList` or a `list`
+        of URIs and/or extensions.
 
     do_not_fill_defaults : bool, optional
         When `True`, do not fill in missing default values.

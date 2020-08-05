@@ -399,7 +399,7 @@ def test_serialize_table(tmpdir):
 def test_extension_check():
     testfile = get_test_data_path('extension_check.fits')
 
-    with pytest.warns(AsdfWarning, match="was created with extension 'foo.bar.FooBar'"):
+    with pytest.warns(AsdfWarning, match="was created with extension class 'foo.bar.FooBar'"):
         with asdf.open(testfile):
             pass
 
