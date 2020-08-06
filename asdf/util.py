@@ -2,12 +2,26 @@ import inspect
 import math
 import struct
 import types
+import importlib.util
 
-from urllib.parse import urljoin
 from urllib.request import pathname2url
-from urllib import parse as urlparse
 
 import numpy as np
+
+# We're importing our own copy of urllib.parse because
+# we need to patch it to support asdf:// URIs, but it'd
+# be irresponsible to do this for all users of a
+# standard library.
+urllib_parse_spec = importlib.util.find_spec('urllib.parse')
+patched_urllib_parse = importlib.util.module_from_spec(urllib_parse_spec)
+urllib_parse_spec.loader.exec_module(patched_urllib_parse)
+del urllib_parse_spec
+
+# urllib.parse needs to know that it should treat asdf://
+# URIs like http:// URIs for the purposes of joining
+# a relative path to a base URI.
+patched_urllib_parse.uses_relative.append('asdf')
+patched_urllib_parse.uses_netloc.append('asdf')
 
 
 __all__ = ['human_list', 'get_array_base', 'get_base_uri', 'filepath_to_url',
@@ -58,15 +72,15 @@ def get_base_uri(uri):
     """
     For a given URI, return the part without any fragment.
     """
-    parts = urlparse.urlparse(uri)
-    return urlparse.urlunparse(list(parts[:5]) + [''])
+    parts = patched_urllib_parse.urlparse(uri)
+    return patched_urllib_parse.urlunparse(list(parts[:5]) + [''])
 
 
 def filepath_to_url(path):
     """
     For a given local file path, return a file:// url.
     """
-    return urljoin('file:', pathname2url(path))
+    return patched_urllib_parse.urljoin('file:', pathname2url(path))
 
 
 def iter_subclasses(cls):

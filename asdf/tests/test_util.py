@@ -30,3 +30,13 @@ def test_get_class_name():
 
 def test_get_class_name_override():
     assert util.get_class_name(BuiltinExtension, instance=False) == "asdf.extension.BuiltinExtension"
+
+
+def test_patched_urllib_parse():
+    assert "asdf" in util.patched_urllib_parse.uses_relative
+    assert "asdf" in util.patched_urllib_parse.uses_netloc
+
+    import urllib.parse
+    assert urllib.parse is not util.patched_urllib_parse
+    assert "asdf" not in urllib.parse.uses_relative
+    assert "asdf" not in urllib.parse.uses_netloc

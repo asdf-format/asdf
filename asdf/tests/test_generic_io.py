@@ -453,6 +453,22 @@ def test_relative_uri():
         'http://www.google.com', 'file://local') == 'file://local'
 
 
+@pytest.mark.parametrize("protocol", ["http", "asdf"])
+def test_resolve_uri(protocol):
+    """
+    Confirm that the patched urllib.parse is handling
+    asdf:// URIs correctly.
+    """
+    assert generic_io.resolve_uri(
+        '{}://somewhere.org/some-schema'.format(protocol), '#/definitions/foo'
+    ) == '{}://somewhere.org/some-schema#/definitions/foo'.format(protocol)
+
+    assert generic_io.resolve_uri(
+        '{}://somewhere.org/path/to/some-schema'.format(protocol),
+        '../../some/other/path/to/some-other-schema'
+    ) == '{}://somewhere.org/some/other/path/to/some-other-schema'.format(protocol)
+
+
 def test_arbitrary_file_object():
     class Wrapper:
         def __init__(self, init):

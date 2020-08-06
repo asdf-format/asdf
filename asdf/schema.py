@@ -454,7 +454,7 @@ def _load_schema_cached(url, resolver, resolve_references, resolve_local_refs):
                 else:
                     suburl_path = suburl
                 suburl_path = resolver(suburl_path)
-                if suburl_path == url:
+                if suburl_path == url or suburl_path == schema.get("id"):
                     subschema = schema
                 else:
                     subschema = load_schema(suburl_path, resolver, True)
