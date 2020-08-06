@@ -10,12 +10,13 @@ import weakref
 
 import numpy as np
 
-from urllib import parse as urlparse
-
 from .types import AsdfType
 from . import generic_io
 from . import treeutil
 from . import util
+
+from .util import patched_urllib_parse
+
 
 __all__ = [
     'resolve_fragment', 'Reference', 'find_references', 'resolve_references',
@@ -27,7 +28,7 @@ def resolve_fragment(tree, pointer):
     Resolve a JSON Pointer within the tree.
     """
     pointer = pointer.lstrip(u"/")
-    parts = urlparse.unquote(pointer).split(u"/") if pointer else []
+    parts = patched_urllib_parse.unquote(pointer).split(u"/") if pointer else []
 
     for part in parts:
         part = part.replace(u"~1", u"/").replace(u"~0", u"~")
@@ -65,7 +66,7 @@ class Reference(AsdfType):
             uri = generic_io.resolve_uri(base_uri, self._uri)
             asdffile = self._asdffile().open_external(
                 uri, do_not_fill_defaults=do_not_fill_defaults)
-            parts = urlparse.urlparse(self._uri)
+            parts = patched_urllib_parse.urlparse(self._uri)
             fragment = parts.fragment
             self._target = resolve_fragment(asdffile.tree, fragment)
         return self._target

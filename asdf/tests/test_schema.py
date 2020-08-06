@@ -164,28 +164,41 @@ required: [foobar]
 
 
 def test_load_schema_with_asdf_uri_scheme():
+    subschema_content="""%YAML 1.1
+---
+$schema: http://stsci.edu/schemas/asdf/asdf-schema-1.0.0
+id: asdf://somewhere.org/schemas/bar
+
+bar:
+  type: string
+...
+"""
     content = """%YAML 1.1
 ---
 $schema: http://stsci.edu/schemas/asdf/asdf-schema-1.0.0
 id: asdf://somewhere.org/schemas/foo
 
 definitions:
-  bar:
+  local_bar:
     type: string
 
 type: object
 properties:
-  id:
-    type: string
   bar:
-    $ref: #/definitions/bar
+    $ref: asdf://somewhere.org/schemas/bar#/bar
+  local_bar:
+    $ref: '#/definitions/local_bar'
 ...
 """
     with asdf.config_context() as config:
         config.add_resource_mapping({"asdf://somewhere.org/schemas/foo": content})
+        config.add_resource_mapping({"asdf://somewhere.org/schemas/bar": subschema_content})
 
-        schema_tree = schema.load_schema("asdf://somewhere.org/schemas/foo", resolve_references=True)
-        schema.check_schema(schema_tree)
+        schema_tree = schema.load_schema("asdf://somewhere.org/schemas/foo")
+        instance = {"bar": "baz", "local_bar": "foz"}
+        schema.validate(instance, schema=schema_tree)
+        with pytest.raises(ValidationError):
+            schema.validate({"bar": 12}, schema=schema_tree)
 
 
 def test_schema_caching():
