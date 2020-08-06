@@ -375,8 +375,10 @@ def walk_and_modify(top, callback, ignore_implicit_conversion=False, postorder=T
         with _context.pending(node):
             # Take note of the "id" field, in case we're modifying
             # a schema and need to know the namespace for resolving
-            # URIs.
-            if isinstance(node, dict) and "id" in node:
+            # URIs.  Ignore an id that is not a string, since it may
+            # be an object defining an id property and not an id
+            # itself (this is common in metaschemas).
+            if isinstance(node, dict) and "id" in node and isinstance(node["id"], str):
                 json_id = node["id"]
 
             if postorder:

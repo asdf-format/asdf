@@ -20,13 +20,13 @@ from distutils.version import LooseVersion
 from os import SEEK_SET, SEEK_CUR, SEEK_END
 
 import http.client
-from urllib import parse as urlparse
 from urllib.request import url2pathname
 
 import numpy as np
 
 from . import util
 from .extern import atomicfile
+from .util import patched_urllib_parse
 
 
 __all__ = ['get_file', 'get_uri', 'resolve_uri', 'relative_uri']
@@ -144,8 +144,8 @@ def resolve_uri(base, uri):
     """
     if base is None:
         base = ''
-    resolved = urlparse.urljoin(base, uri)
-    parsed = urlparse.urlparse(resolved)
+    resolved = patched_urllib_parse.urljoin(base, uri)
+    parsed = patched_urllib_parse.urlparse(resolved)
     if parsed.path != '' and not parsed.path.startswith('/'):
         raise ValueError(
             "Resolved to relative URL")
@@ -156,8 +156,8 @@ def relative_uri(source, target):
     """
     Make a relative URI from source to target.
     """
-    su = urlparse.urlparse(source)
-    tu = urlparse.urlparse(target)
+    su = patched_urllib_parse.urlparse(source)
+    tu = patched_urllib_parse.urlparse(target)
     extra = list(tu[3:])
     relative = None
     if tu[0] == '' and tu[1] == '':
@@ -175,7 +175,7 @@ def relative_uri(source, target):
             relative = os.path.relpath(tu[2], os.path.dirname(su[2]))
     if relative == '.':
         relative = ''
-    relative = urlparse.urlunparse(["", "", relative] + extra)
+    relative = patched_urllib_parse.urlunparse(["", "", relative] + extra)
     return relative
 
 
@@ -1044,7 +1044,7 @@ def _make_http_connection(init, mode, uri=None):
     Creates a HTTPConnection instance if the HTTP server supports
     Range requests, otherwise falls back to a generic InputStream.
     """
-    parsed = urlparse.urlparse(init)
+    parsed = patched_urllib_parse.urlparse(init)
     connection = http.client.HTTPConnection(parsed.netloc)
     connection.connect()
 
@@ -1166,7 +1166,7 @@ def get_file(init, mode='r', uri=None, close=False):
         return GenericWrapper(init)
 
     elif isinstance(init, (str, pathlib.Path)):
-        parsed = urlparse.urlparse(str(init))
+        parsed = patched_urllib_parse.urlparse(str(init))
         if parsed.scheme in ['http', 'https']:
             if 'w' in mode:
                 raise ValueError(
