@@ -133,8 +133,6 @@ def test_get_history_entries(tmpdir):
 def test_extension_metadata(tmpdir):
 
     ff = asdf.AsdfFile()
-    # No extensions used yet:
-    assert len(ff.type_index.get_extensions_used()) == 0
 
     tmpfile = str(tmpdir.join('extension.asdf'))
     ff.write_to(tmpfile)
