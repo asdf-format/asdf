@@ -16,10 +16,6 @@ jobs:
     - env: TOXENV=py36
       python: 3.6
 
-    # Python 3.5, stable dependencies
-    - env: TOXENV=py35
-      python: 3.5
-
     # Test ASDF file compatibility between library versions
     - env: TOXENV=compatibility
 
@@ -45,15 +41,15 @@ jobs:
     - env: TOXENV=style
 
     # Check older numpy versions
-    - env: TOXENV=py35-numpy11
-      python: 3.5
+    - env: TOXENV=py36-numpy11
+      python: 3.6
 
     - env: TOXENV=py36-numpy12
       python: 3.6
 
     # Test against oldest compatible versions of all dependencies
-    - env: TOXENV=py35-legacy
-      python: 3.5
+    - env: TOXENV=py36-legacy
+      python: 3.6
 
     # Test against development version of Astropy
     - env: TOXENV=py38-astropydev

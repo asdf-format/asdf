@@ -14,6 +14,8 @@
 - Include only extensions used during serialization in
   a file's metadata. [#848]
 
+- Drop support for Python 3.5. [#856]
+
 2.7.0 (2020-07-23)
 ------------------
 
