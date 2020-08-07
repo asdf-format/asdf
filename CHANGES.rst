@@ -9,7 +9,10 @@
 - Drop support for automatic serialization of subclass
   attributes. [#825]
 
-- Support asdf:// as a URI scheme. [#854. #855]
+- Support asdf:// as a URI scheme. [#854, #855]
+
+- Include only extensions used during serialization in
+  a file's metadata. [#848]
 
 2.7.0 (2020-07-23)
 ------------------
