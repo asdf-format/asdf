@@ -250,6 +250,19 @@ class AsdfFile:
         self.close()
 
     def _check_extensions(self, tree, strict=False):
+        """
+        Compare the user's installed extensions to metadata in the tree
+        and warn when a) an extension is missing or b) an extension is
+        present but the file was written with a later version of the
+        extension's package.
+
+        Parameters
+        ----------
+        tree : AsdfObject
+            Fully converted tree of custom types.
+        strict : bool, optional
+            Set to `True` to convert warnings to exceptions.
+        """
         if 'history' not in tree or not isinstance(tree['history'], dict) or \
                 'extensions' not in tree['history']:
             return
@@ -305,6 +318,21 @@ class AsdfFile:
                         warnings.warn(msg, AsdfWarning)
 
     def _process_extensions(self, requested_extensions):
+        """
+        Validate a list of extensions requested by the user and
+        add missing extensions registered with the current `AsdfConfig`.
+
+        Parameters
+        ----------
+        requested_extensions : object
+            May be any of the following: `asdf.extension.AsdfExtension`, `str`
+            extension URI, `asdf.extension.AsdfExtensionList` or a `list`
+            of URIs and/or extensions.
+
+        Returns
+        -------
+        list of asdf.extension.AsdfExtension
+        """
         if requested_extensions is None:
             requested_extensions = []
         elif isinstance(requested_extensions, (AsdfExtension, ExtensionProxy, str)):
@@ -336,6 +364,15 @@ class AsdfFile:
         return extensions
 
     def _update_extension_history(self, serialization_context):
+        """
+        Update the extension metadata on this file's tree to reflect
+        extensions used during serialization.
+
+        Parameters
+        ----------
+        serialization_context : asdf.asdf.SerializationContext
+            The context that was used to serialize the tree.
+        """
         if serialization_context.version < versioning.NEW_HISTORY_FORMAT_MIN_VERSION:
             return
 
