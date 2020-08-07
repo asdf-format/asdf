@@ -5,7 +5,6 @@ import copy
 from numbers import Integral
 from functools import lru_cache
 from collections import OrderedDict
-from urllib import parse as urlparse
 
 from jsonschema import validators as mvalidators
 from jsonschema.exceptions import ValidationError
@@ -22,6 +21,8 @@ from . import util
 from . import extension
 from . import yamlutil
 from .exceptions import AsdfDeprecationWarning, AsdfWarning
+
+from .util import patched_urllib_parse
 
 
 YAML_SCHEMA_METASCHEMA_ID = 'http://stsci.edu/schemas/yaml-schema/draft-01'
@@ -356,15 +357,24 @@ def _make_resolver(url_mapping):
     def get_schema(url):
         return schema_loader(url)[0]
 
-    for x in ['http', 'https', 'file', 'tag']:
+    for x in ['http', 'https', 'file', 'tag', 'asdf']:
         handlers[x] = get_schema
+
+    # Supplying our own implementation of urljoin_cache
+    # allows asdf:// URIs to be resolved correctly.
+    urljoin_cache = lru_cache(1024)(patched_urllib_parse.urljoin)
 
     # We set cache_remote=False here because we do the caching of
     # remote schemas here in `load_schema`, so we don't need
     # jsonschema to do it on our behalf.  Setting it to `True`
     # counterintuitively makes things slower.
     return mvalidators.RefResolver(
-        '', {}, cache_remote=False, handlers=handlers)
+        '',
+        {},
+        cache_remote=False,
+        handlers=handlers,
+        urljoin_cache=urljoin_cache,
+    )
 
 
 @lru_cache()
@@ -433,7 +443,7 @@ def _load_schema_cached(url, resolver, resolve_references, resolve_local_refs):
             if isinstance(node, dict) and '$ref' in node:
                 ref_url = resolver(node['$ref'])
                 if ref_url.startswith('#'):
-                    parts = urlparse.urlparse(ref_url)
+                    parts = patched_urllib_parse.urlparse(ref_url)
                     subschema_fragment = reference.resolve_fragment(
                         schema, parts.fragment)
                     return subschema_fragment
@@ -447,7 +457,7 @@ def _load_schema_cached(url, resolver, resolve_references, resolve_local_refs):
                 json_id = url
             if isinstance(node, dict) and '$ref' in node:
                 suburl = generic_io.resolve_uri(json_id, resolver(node['$ref']))
-                parts = urlparse.urlparse(suburl)
+                parts = patched_urllib_parse.urlparse(suburl)
                 fragment = parts.fragment
                 if len(fragment):
                     suburl_path = suburl[:-(len(fragment) + 1)]
