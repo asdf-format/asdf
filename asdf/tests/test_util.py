@@ -49,9 +49,16 @@ def test_patched_urllib_parse():
     ("asdf://somewhere.org/tags/foo-1.0", "asdf://somewhere.org/tags/bar-1.0", False),
     ("asdf://somewhere.org/tags/foo-*", "asdf://somewhere.org/tags/foo-1.0", True),
     ("asdf://somewhere.org/tags/foo-*", "asdf://somewhere.org/tags/bar-1.0", False),
+    ("asdf://somewhere.org/tags/foo-*", "asdf://somewhere.org/tags/foo-extras/bar-1.0", False),
     ("asdf://*/tags/foo-*", "asdf://anywhere.org/tags/foo-4.9", True),
     ("asdf://*/tags/foo-*", "asdf://anywhere.org/tags/bar-4.9", False),
+    ("asdf://*/tags/foo-*", "asdf://somewhere.org/tags/foo-extras/bar-4.9", False),
+    ("asdf://**/*-1.0", "asdf://somewhere.org/tags/foo-1.0", True),
+    ("asdf://**/*-1.0", "asdf://somewhere.org/tags/foo-2.0", False),
+    ("asdf://**/*-1.0", "asdf://somewhere.org/tags/foo-extras/bar-1.0", True),
+    ("asdf://**/*-1.0", "asdf://somewhere.org/tags/foo-extras/bar-2.0", False),
     ("asdf://somewhere.org/tags/foo-*", None, False),
+    ("**", None, False),
 ])
 def test_uri_match(pattern, uri, result):
     assert util.uri_match(pattern, uri) is result

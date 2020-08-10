@@ -79,7 +79,8 @@ def _type_to_tag(type_):
 def validate_tag(validator, tag_pattern, instance, schema):
     """
     Implements the tag validation directive, which checks the
-    tag against a pattern which may include '*' wildcards.
+    tag against a pattern that may include wildcards.  See
+    `asdf.util.uri_match` for details on the matching behavior.
     """
     if hasattr(instance, '_tag'):
         instance_tag = instance._tag
