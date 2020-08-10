@@ -12,7 +12,7 @@ Requirements
 
 The ``asdf`` package has the following dependencies:
 
-- `python <https://www.python.org/>`__  3.5 or later
+- `python <https://www.python.org/>`__  3.6 or later
 
 - `numpy <https://www.numpy.org/>`__ 1.10 or later
 
