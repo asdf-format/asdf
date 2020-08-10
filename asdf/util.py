@@ -3,6 +3,8 @@ import math
 import struct
 import types
 import importlib.util
+import re
+from functools import lru_cache
 
 from urllib.request import pathname2url
 
@@ -449,3 +451,37 @@ def is_primitive(value):
         or isinstance(value, complex)
         or isinstance(value, str)
     )
+
+
+def uri_match(pattern, uri):
+    """
+    Determine if a URI matches a URI pattern with possible
+    wildcards.
+
+    Parameters
+    ----------
+    pattern : str
+        URI pattern with * wildcards.
+    uri : str
+        URI to check against the pattern.
+
+    Returns
+    -------
+    bool
+        `True` if URI matches the pattern.
+    """
+    if not isinstance(uri, str):
+        return False
+
+    if "*" in pattern:
+        return _compile_uri_match_pattern(pattern).match(uri) is not None
+    else:
+        return pattern == uri
+
+
+@lru_cache(128)
+def _compile_uri_match_pattern(pattern):
+    # Escape the pattern in case it contains regex special characters
+    # ('.' in particular is common in URIs) and then replace the
+    # escaped asterisk with a .* regex matcher.
+    return re.compile(re.escape(pattern).replace(r"\*", ".*"))

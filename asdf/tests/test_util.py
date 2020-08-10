@@ -1,3 +1,5 @@
+import pytest
+
 from asdf import util
 from asdf.extension import BuiltinExtension
 
@@ -40,3 +42,16 @@ def test_patched_urllib_parse():
     assert urllib.parse is not util.patched_urllib_parse
     assert "asdf" not in urllib.parse.uses_relative
     assert "asdf" not in urllib.parse.uses_netloc
+
+
+@pytest.mark.parametrize("pattern, uri, result", [
+    ("asdf://somewhere.org/tags/foo-1.0", "asdf://somewhere.org/tags/foo-1.0", True),
+    ("asdf://somewhere.org/tags/foo-1.0", "asdf://somewhere.org/tags/bar-1.0", False),
+    ("asdf://somewhere.org/tags/foo-*", "asdf://somewhere.org/tags/foo-1.0", True),
+    ("asdf://somewhere.org/tags/foo-*", "asdf://somewhere.org/tags/bar-1.0", False),
+    ("asdf://*/tags/foo-*", "asdf://anywhere.org/tags/foo-4.9", True),
+    ("asdf://*/tags/foo-*", "asdf://anywhere.org/tags/bar-4.9", False),
+    ("asdf://somewhere.org/tags/foo-*", None, False),
+])
+def test_uri_match(pattern, uri, result):
+    assert util.uri_match(pattern, uri) is result

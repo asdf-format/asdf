@@ -1058,3 +1058,37 @@ def test_validator_visit_repeat_nodes():
     )
     validator.validate(tree)
     assert len(visited_nodes) == 3
+
+
+def test_tag_validator():
+    content="""%YAML 1.1
+---
+$schema: http://stsci.edu/schemas/asdf/asdf-schema-1.0.0
+id: asdf://somewhere.org/schemas/foo
+tag: asdf://somewhere.org/tags/foo
+...
+"""
+    with asdf.config_context() as config:
+        config.add_resource_mapping({"asdf://somewhere.org/schemas/foo": content})
+
+        schema_tree = schema.load_schema("asdf://somewhere.org/schemas/foo")
+        instance = tagged.TaggedDict(tag="asdf://somewhere.org/tags/foo")
+        schema.validate(instance, schema=schema_tree)
+        with pytest.raises(ValidationError):
+            schema.validate(tagged.TaggedDict(tag="asdf://somewhere.org/tags/bar"), schema=schema_tree)
+
+    content="""%YAML 1.1
+---
+$schema: http://stsci.edu/schemas/asdf/asdf-schema-1.0.0
+id: asdf://somewhere.org/schemas/bar
+tag: asdf://somewhere.org/tags/bar-*
+...
+"""
+    with asdf.config_context() as config:
+        config.add_resource_mapping({"asdf://somewhere.org/schemas/bar": content})
+
+        schema_tree = schema.load_schema("asdf://somewhere.org/schemas/bar")
+        instance = tagged.TaggedDict(tag="asdf://somewhere.org/tags/bar-2.5")
+        schema.validate(instance, schema=schema_tree)
+        with pytest.raises(ValidationError):
+            schema.validate(tagged.TaggedDict(tag="asdf://somewhere.org/tags/foo-1.0"), schema=schema_tree)

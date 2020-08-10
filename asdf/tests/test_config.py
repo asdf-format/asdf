@@ -230,6 +230,11 @@ def test_extensions():
         config.remove_extension(uri_extension.extension_uri)
         assert len(config.extensions) == len(original_extensions)
 
+        # And also by URI pattern:
+        config.add_extension(uri_extension)
+        config.remove_extension("asdf://somewhere.org/extensions/*")
+        assert len(config.extensions) == len(original_extensions)
+
         # Remove by the name of the extension's package:
         config.add_extension(ExtensionProxy(new_extension, package_name="foo"))
         config.add_extension(ExtensionProxy(uri_extension, package_name="foo"))

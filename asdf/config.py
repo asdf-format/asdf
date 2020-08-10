@@ -11,6 +11,8 @@ from .resource import ResourceMappingProxy, ResourceManager
 from . import versioning
 from ._helpers import validate_version
 from .extension import ExtensionProxy
+from . import util
+
 
 __all__ = ["AsdfConfig", "get_config", "config_context"]
 
@@ -165,7 +167,7 @@ class AsdfConfig:
         Parameters
         ----------
         extension : asdf.extension.AsdfExtension or str, optional
-            An extension instance or URI to remove.
+            An extension instance or URI or URI pattern to remove.
         package : str, optional
             Remove only extensions provided by this package.  If the `extension`
             argument is omitted, then all extensions from this package will
@@ -181,7 +183,7 @@ class AsdfConfig:
             result = True
 
             if isinstance(extension, str):
-                result = result and e.extension_uri == extension
+                result = result and util.uri_match(extension, e.extension_uri)
             elif isinstance(extension, ExtensionProxy):
                 result = result and e == extension
 
