@@ -13,5 +13,5 @@ haven't used GitHub before, please feel free to contact the package maintainers.
 
 Feedback and feature requests? Is there something missing you would like to see?
 Please open an issue or send an email to the maintainers. This package follows
-the asdf-format `Code of Conduct<CODE_OF_CONDUCT.md>`_ and strives to provide a
+the asdf-format [Code of Conduct](CODE_OF_CONDUCT.md) and strives to provide a
 welcoming community to all of our users and contributors.
