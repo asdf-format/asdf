@@ -204,6 +204,19 @@ class _PendingValue:
 PendingValue = _PendingValue()
 
 
+class _RemoveNode:
+    """
+    Class of the RemoveNode singleton instance.  This instance is used
+    as a signal for `asdf.treeutil.walk_and_modify` to remove the
+    node received by the callback.
+    """
+    def __repr__(self):
+        return "RemoveNode"
+
+
+RemoveNode = _RemoveNode()
+
+
 def walk_and_modify(top, callback, ignore_implicit_conversion=False, postorder=True, _context=None):
     """Modify a tree by walking it with a callback function.  It also has
     the effect of doing a deep copy.
@@ -221,7 +234,8 @@ def walk_and_modify(top, callback, ignore_implicit_conversion=False, postorder=T
         - a json id (optional)
 
         It may return a different instance in order to modify the
-        tree.
+        tree.  If the singleton instance `asdf.treeutil.RemoveNode`
+        is returned, the node will be removed from the tree.
 
         The json id is the context under which any relative URLs
         should be resolved.  It may be `None` if no ids are in the file
@@ -287,7 +301,7 @@ def walk_and_modify(top, callback, ignore_implicit_conversion=False, postorder=T
                 result[key] = PendingValue
             else:
                 value = _recurse(value, json_id)
-                if value is not None:
+                if value is not RemoveNode:
                     result[key] = value
 
         yield result
@@ -297,7 +311,7 @@ def walk_and_modify(top, callback, ignore_implicit_conversion=False, postorder=T
             # be available.
             for key, value in pending_items.items():
                 value = _recurse(value, json_id)
-                if value is not None:
+                if value is not RemoveNode:
                     result[key] = value
                 else:
                     # The callback may have decided to delete

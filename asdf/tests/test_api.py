@@ -203,13 +203,30 @@ def test_walk_and_modify_remove_keys():
 
     def func(x):
         if x == 42:
-            return None
+            return treeutil.RemoveNode
         return x
 
     tree2 = treeutil.walk_and_modify(tree, func)
 
     assert 'foo' not in tree2
     assert 'bar' in tree2
+
+
+def test_walk_and_modify_retain_none():
+    tree = {
+        'foo': 42,
+        'bar': None
+    }
+
+    def func(x):
+        if x == 42:
+            return None
+        return x
+
+    tree2 = treeutil.walk_and_modify(tree, func)
+
+    assert tree2['foo'] is None
+    assert tree2['bar'] is None
 
 
 def test_copy(tmpdir):
@@ -558,3 +575,12 @@ def test_array_access_after_file_close(tmpdir):
     with asdf.open(path, lazy_load=False, copy_arrays=True) as af:
         tree = af.tree
     assert_array_equal(tree["data"], data)
+
+def test_none_values(tmpdir):
+    path = str(tmpdir.join("test.asdf"))
+
+    af = asdf.AsdfFile({"foo": None})
+    af.write_to(path)
+    with asdf.open(path) as af:
+        assert "foo" in af
+        assert af["foo"] is None
