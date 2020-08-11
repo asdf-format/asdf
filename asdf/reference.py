@@ -58,14 +58,13 @@ class Reference(AsdfType):
         self._base_uri = base_uri
         self._target = target
 
-    def _get_target(self, do_not_fill_defaults=False):
+    def _get_target(self, **kwargs):
         if self._target is None:
             base_uri = self._base_uri
             if base_uri is None:
                 base_uri = self._asdffile().uri
             uri = generic_io.resolve_uri(base_uri, self._uri)
-            asdffile = self._asdffile().open_external(
-                uri, do_not_fill_defaults=do_not_fill_defaults)
+            asdffile = self._asdffile().open_external(uri, **kwargs)
             parts = patched_urllib_parse.urlparse(self._uri)
             fragment = parts.fragment
             self._target = resolve_fragment(asdffile.tree, fragment)
@@ -107,8 +106,8 @@ class Reference(AsdfType):
     def __array__(self):
         return np.asarray(self._get_target())
 
-    def __call__(self, do_not_fill_defaults=False):
-        return self._get_target(do_not_fill_defaults=do_not_fill_defaults)
+    def __call__(self, **kwargs):
+        return self._get_target(**kwargs)
 
     def __contains__(self, item):
         return item in self._get_target()
@@ -140,14 +139,14 @@ def find_references(tree, ctx):
         tree, do_find, ignore_implicit_conversion=ctx._ignore_implicit_conversion)
 
 
-def resolve_references(tree, ctx, do_not_fill_defaults=False):
+def resolve_references(tree, ctx, **kwargs):
     """
     Resolve all of the references in the tree, by loading the external
     data and inserting it directly into the tree.
     """
     def do_resolve(tree):
         if isinstance(tree, Reference):
-            return tree(do_not_fill_defaults=do_not_fill_defaults)
+            return tree(**kwargs)
         return tree
 
     tree = find_references(tree, ctx)

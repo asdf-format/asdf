@@ -666,8 +666,7 @@ class BlockManager:
             raise ValueError("Block '{0}' not found.".format(source))
 
         elif isinstance(source, str):
-            asdffile = self._asdffile().open_external(
-                source, do_not_fill_defaults=True)
+            asdffile = self._asdffile().open_external(source)
             block = asdffile.blocks._internal_blocks[0]
             self.set_array_storage(block, 'external')
 

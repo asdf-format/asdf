@@ -19,6 +19,7 @@ __all__ = ["AsdfConfig", "get_config", "config_context"]
 
 DEFAULT_VALIDATE_ON_READ = True
 DEFAULT_DEFAULT_VERSION = str(versioning.default_version)
+DEFAULT_LEGACY_FILL_SCHEMA_DEFAULTS = True
 
 
 class AsdfConfig:
@@ -34,6 +35,7 @@ class AsdfConfig:
         self._extensions = None
         self._validate_on_read = DEFAULT_VALIDATE_ON_READ
         self._default_version = DEFAULT_DEFAULT_VERSION
+        self._legacy_fill_schema_defaults = DEFAULT_LEGACY_FILL_SCHEMA_DEFAULTS
 
         self._lock = threading.RLock()
 
@@ -275,15 +277,45 @@ class AsdfConfig:
         """
         self._default_version = validate_version(value)
 
+    @property
+    def legacy_fill_schema_defaults(self):
+        """
+        Get the configuration that controls filling defaults
+        from schemas for older ASDF Standard versions.  If
+        `True`, missing default values will be filled from the
+        schema when reading files from ASDF Standard <= 1.5.0.
+        Later versions of the standard do not support removing
+        or filling schema defaults.
+
+        Returns
+        -------
+        bool
+        """
+        return self._legacy_fill_schema_defaults
+
+    @legacy_fill_schema_defaults.setter
+    def legacy_fill_schema_defaults(self, value):
+        """
+        Set the flag that controls filling defaults from
+        schemas for older ASDF Standard versions.
+
+        Parameters
+        ----------
+        value : bool
+        """
+        self._legacy_fill_schema_defaults = value
+
     def __repr__(self):
         return (
             "<AsdfConfig\n"
             "  validate_on_read: {}\n"
             "  default_version: {}\n"
+            "  legacy_fill_schema_defaults: {}\n"
             ">"
         ).format(
             self.validate_on_read,
             self.default_version,
+            self.legacy_fill_schema_defaults,
         )
 
 

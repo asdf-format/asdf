@@ -7,7 +7,7 @@ from numpy.testing import assert_array_equal
 import pytest
 
 import asdf
-from asdf import get_config
+from asdf import get_config, config_context
 from asdf import extension
 from asdf import resolver
 from asdf import schema
@@ -16,7 +16,7 @@ from asdf import util
 from asdf import yamlutil
 from asdf import tagged
 from asdf.tests import helpers, CustomExtension
-from asdf.exceptions import AsdfWarning, AsdfConversionWarning
+from asdf.exceptions import AsdfWarning, AsdfConversionWarning, AsdfDeprecationWarning
 
 
 class TagReferenceType(types.CustomType):
@@ -462,37 +462,51 @@ custom: !<tag:nowhere.org:custom/default-1.0.0>
         assert ff.tree['custom']['j']['l'] == 362
 
     buff.seek(0)
-    with asdf.open(buff, extensions=[DefaultTypeExtension()],
-                            do_not_fill_defaults=True) as ff:
-        assert 'a' not in ff.tree['custom']
-        assert 'c' not in ff.tree['custom']['b']
-        assert 'e' not in ff.tree['custom']['d']
-        assert 'f' not in ff.tree['custom']['d']
-        assert 'h' not in ff.tree['custom']['g']
-        assert 'i' not in ff.tree['custom']['g']
-        assert 'k' not in ff.tree['custom']['j']
-        assert ff.tree['custom']['j']['l'] == 362
-        ff.fill_defaults()
-        assert 'a' in ff.tree['custom']
-        assert ff.tree['custom']['a'] == 42
-        assert 'c' in ff.tree['custom']['b']
-        assert ff.tree['custom']['b']['c'] == 82
-        assert ff.tree['custom']['b']['c'] == 82
-        assert ff.tree['custom']['d']['e'] == 122
-        assert ff.tree['custom']['d']['f'] == 162
-        assert 'h' not in ff.tree['custom']['g']
-        assert 'i' not in ff.tree['custom']['g']
-        assert 'k' not in ff.tree['custom']['j']
-        assert ff.tree['custom']['j']['l'] == 362
-        ff.remove_defaults()
-        assert 'a' not in ff.tree['custom']
-        assert 'c' not in ff.tree['custom']['b']
-        assert 'e' not in ff.tree['custom']['d']
-        assert 'f' not in ff.tree['custom']['d']
-        assert 'h' not in ff.tree['custom']['g']
-        assert 'i' not in ff.tree['custom']['g']
-        assert 'k' not in ff.tree['custom']['j']
-        assert ff.tree['custom']['j']['l'] == 362
+    with pytest.warns(AsdfDeprecationWarning, match='do_not_fill_defaults'):
+        with asdf.open(buff, extensions=[DefaultTypeExtension()],
+                                do_not_fill_defaults=True) as ff:
+            assert 'a' not in ff.tree['custom']
+            assert 'c' not in ff.tree['custom']['b']
+            assert 'e' not in ff.tree['custom']['d']
+            assert 'f' not in ff.tree['custom']['d']
+            assert 'h' not in ff.tree['custom']['g']
+            assert 'i' not in ff.tree['custom']['g']
+            assert 'k' not in ff.tree['custom']['j']
+            assert ff.tree['custom']['j']['l'] == 362
+            ff.fill_defaults()
+            assert 'a' in ff.tree['custom']
+            assert ff.tree['custom']['a'] == 42
+            assert 'c' in ff.tree['custom']['b']
+            assert ff.tree['custom']['b']['c'] == 82
+            assert ff.tree['custom']['b']['c'] == 82
+            assert ff.tree['custom']['d']['e'] == 122
+            assert ff.tree['custom']['d']['f'] == 162
+            assert 'h' not in ff.tree['custom']['g']
+            assert 'i' not in ff.tree['custom']['g']
+            assert 'k' not in ff.tree['custom']['j']
+            assert ff.tree['custom']['j']['l'] == 362
+            ff.remove_defaults()
+            assert 'a' not in ff.tree['custom']
+            assert 'c' not in ff.tree['custom']['b']
+            assert 'e' not in ff.tree['custom']['d']
+            assert 'f' not in ff.tree['custom']['d']
+            assert 'h' not in ff.tree['custom']['g']
+            assert 'i' not in ff.tree['custom']['g']
+            assert 'k' not in ff.tree['custom']['j']
+            assert ff.tree['custom']['j']['l'] == 362
+
+    buff.seek(0)
+    with config_context() as config:
+        config.legacy_fill_schema_defaults = False
+        with asdf.open(buff, extensions=[DefaultTypeExtension()]) as ff:
+            assert 'a' not in ff.tree['custom']
+            assert 'c' not in ff.tree['custom']['b']
+            assert 'e' not in ff.tree['custom']['d']
+            assert 'f' not in ff.tree['custom']['d']
+            assert 'h' not in ff.tree['custom']['g']
+            assert 'i' not in ff.tree['custom']['g']
+            assert 'k' not in ff.tree['custom']['j']
+            assert ff.tree['custom']['j']['l'] == 362
 
 
 def test_one_of():

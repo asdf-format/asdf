@@ -509,7 +509,7 @@ class AsdfFile:
         """
         return generic_io.resolve_uri(self.uri, uri)
 
-    def open_external(self, uri, do_not_fill_defaults=False):
+    def open_external(self, uri, **kwargs):
         """
         Open an external ASDF file, from the given (possibly relative)
         URI.  There is a cache (internal to this ASDF file) that ensures
@@ -520,9 +520,6 @@ class AsdfFile:
         uri : str
             An absolute or relative URI to resolve against the URI of
             this ASDF file.
-
-        do_not_fill_defaults : bool, optional
-            When `True`, do not fill in missing default values.
 
         Returns
         -------
@@ -542,7 +539,7 @@ class AsdfFile:
         if asdffile is None:
             asdffile = open_asdf(
                 resolved_uri,
-                mode='r', do_not_fill_defaults=do_not_fill_defaults)
+                mode='r', **kwargs)
             self._external_asdf_by_uri[resolved_uri] = asdffile
         return asdffile
 
@@ -765,7 +762,6 @@ class AsdfFile:
     def _open_asdf(cls, self, fd, uri=None, mode='r',
                    validate_checksums=False,
                    extensions=None,
-                   do_not_fill_defaults=False,
                    _get_yaml_content=False,
                    _force_raw_types=False,
                    strict_extension_check=False,
@@ -787,6 +783,16 @@ class AsdfFile:
             validate_on_read = kwargs["validate_on_read"]
         else:
             validate_on_read = get_config().validate_on_read
+
+        if "do_not_fill_defaults" in kwargs:
+            warnings.warn(
+                "The 'do_not_fill_defaults' argument is deprecated, set "
+                "asdf.get_config().legacy_fill_schema_defaults instead.",
+                AsdfDeprecationWarning
+            )
+            legacy_fill_schema_defaults = not kwargs["do_not_fill_defaults"]
+        else:
+            legacy_fill_schema_defaults = get_config().legacy_fill_schema_defaults
 
         self._mode = mode
 
@@ -850,7 +856,8 @@ class AsdfFile:
             self._blocks.read_block_index(fd, self)
 
         tree = reference.find_references(tree, self)
-        if not do_not_fill_defaults:
+
+        if self.version <= versioning.FILL_DEFAULTS_MAX_VERSION and legacy_fill_schema_defaults:
             schema.fill_defaults(tree, self, reading=True)
 
         if validate_on_read:
@@ -874,7 +881,6 @@ class AsdfFile:
     def _open_impl(cls, self, fd, uri=None, mode='r',
                    validate_checksums=False,
                    extensions=None,
-                   do_not_fill_defaults=False,
                    _get_yaml_content=False,
                    _force_raw_types=False,
                    strict_extension_check=False,
@@ -907,7 +913,6 @@ class AsdfFile:
         return cls._open_asdf(self, fd, uri=uri, mode=mode,
                 validate_checksums=validate_checksums,
                 extensions=extensions,
-                do_not_fill_defaults=do_not_fill_defaults,
                 _get_yaml_content=_get_yaml_content,
                 _force_raw_types=_force_raw_types,
                 strict_extension_check=strict_extension_check,
@@ -918,7 +923,6 @@ class AsdfFile:
     def open(cls, fd, uri=None, mode='r',
              validate_checksums=False,
              extensions=None,
-             do_not_fill_defaults=False,
              ignore_version_mismatch=True,
              ignore_unrecognized_tag=False,
              _force_raw_types=False,
@@ -926,7 +930,8 @@ class AsdfFile:
              lazy_load=True,
              custom_schema=None,
              strict_extension_check=False,
-             ignore_missing_extensions=False):
+             ignore_missing_extensions=False,
+             **kwargs):
         """
         Open an existing ASDF file.
 
@@ -943,7 +948,6 @@ class AsdfFile:
             fd, uri=uri, mode=mode,
             validate_checksums=validate_checksums,
             extensions=extensions,
-            do_not_fill_defaults=do_not_fill_defaults,
             ignore_version_mismatch=ignore_version_mismatch,
             ignore_unrecognized_tag=ignore_unrecognized_tag,
             _force_raw_types=_force_raw_types,
@@ -951,7 +955,8 @@ class AsdfFile:
             custom_schema=custom_schema,
             strict_extension_check=strict_extension_check,
             ignore_missing_extensions=ignore_missing_extensions,
-            _compat=True)
+            _compat=True,
+            **kwargs)
 
     def _write_tree(self, tree, fd, pad_blocks):
         fd.write(constants.ASDF_MAGIC)
@@ -1279,7 +1284,7 @@ class AsdfFile:
         # Set directly to self._tree, since it doesn't need to be re-validated.
         self._tree = reference.find_references(self._tree, self)
 
-    def resolve_references(self, do_not_fill_defaults=False):
+    def resolve_references(self, **kwargs):
         """
         Finds all external "JSON References" in the tree, loads the
         external content, and places it directly in the tree.  Saving
@@ -1575,8 +1580,7 @@ def _check_and_set_mode(fileobj, asdf_mode):
     return asdf_mode
 
 
-def open_asdf(fd, uri=None, mode=None, validate_checksums=False,
-              extensions=None, do_not_fill_defaults=False,
+def open_asdf(fd, uri=None, mode=None, validate_checksums=False, extensions=None,
               ignore_version_mismatch=True, ignore_unrecognized_tag=False,
               _force_raw_types=False, copy_arrays=False, lazy_load=True,
               custom_schema=None, strict_extension_check=False,
@@ -1608,9 +1612,6 @@ def open_asdf(fd, uri=None, mode=None, validate_checksums=False,
         May be any of the following: `asdf.extension.AsdfExtension`, `str`
         extension URI, `asdf.extension.AsdfExtensionList` or a `list`
         of URIs and/or extensions.
-
-    do_not_fill_defaults : bool, optional
-        When `True`, do not fill in missing default values.
 
     ignore_version_mismatch : bool, optional
         When `True`, do not raise warnings for mismatched schema versions.
@@ -1681,7 +1682,6 @@ def open_asdf(fd, uri=None, mode=None, validate_checksums=False,
         fd, uri=uri, mode=mode,
         validate_checksums=validate_checksums,
         extensions=extensions,
-        do_not_fill_defaults=do_not_fill_defaults,
         _force_raw_types=_force_raw_types,
         strict_extension_check=strict_extension_check,
         ignore_missing_extensions=ignore_missing_extensions,
