@@ -686,6 +686,7 @@ class AsdfFile:
     @classmethod
     def _open_asdf(cls, self, fd, uri=None, mode='r',
                    validate_checksums=False,
+                   extensions=None,
                    do_not_fill_defaults=False,
                    _get_yaml_content=False,
                    _force_raw_types=False,
@@ -727,6 +728,12 @@ class AsdfFile:
         version = cls._find_asdf_version_in_comments(self._comments)
         if version is not None:
             self.version = version
+
+        # Now that version is set for good, we can add any additional
+        # extensions, which may have narrow ASDF Standard version
+        # requirements.
+        if extensions:
+            self.extensions = extensions
 
         yaml_token = fd.read(4)
         has_blocks = False
@@ -788,6 +795,7 @@ class AsdfFile:
     @classmethod
     def _open_impl(cls, self, fd, uri=None, mode='r',
                    validate_checksums=False,
+                   extensions=None,
                    do_not_fill_defaults=False,
                    _get_yaml_content=False,
                    _force_raw_types=False,
@@ -803,8 +811,8 @@ class AsdfFile:
                 from . import fits_embed
                 return fits_embed.AsdfInFits._open_impl(fd, uri=uri,
                             validate_checksums=validate_checksums,
+                            extensions=extensions,
                             ignore_version_mismatch=self._ignore_version_mismatch,
-                            extensions=self._extensions,
                             strict_extension_check=strict_extension_check,
                             ignore_missing_extensions=ignore_missing_extensions,
                             ignore_unrecognized_tag=self._ignore_unrecognized_tag,
@@ -820,6 +828,7 @@ class AsdfFile:
                     "installed") from None
         return cls._open_asdf(self, fd, uri=uri, mode=mode,
                 validate_checksums=validate_checksums,
+                extensions=extensions,
                 do_not_fill_defaults=do_not_fill_defaults,
                 _get_yaml_content=_get_yaml_content,
                 _force_raw_types=_force_raw_types,
@@ -1581,7 +1590,7 @@ def open_asdf(fd, uri=None, mode=None, validate_checksums=False,
         mode = _check_and_set_mode(fd, mode)
         readonly = (mode == 'r' and not copy_arrays)
 
-    instance = AsdfFile(extensions=extensions,
+    instance = AsdfFile(
                    ignore_version_mismatch=ignore_version_mismatch,
                    ignore_unrecognized_tag=ignore_unrecognized_tag,
                    copy_arrays=copy_arrays, lazy_load=lazy_load,
@@ -1590,6 +1599,7 @@ def open_asdf(fd, uri=None, mode=None, validate_checksums=False,
     return AsdfFile._open_impl(instance,
         fd, uri=uri, mode=mode,
         validate_checksums=validate_checksums,
+        extensions=extensions,
         do_not_fill_defaults=do_not_fill_defaults,
         _force_raw_types=_force_raw_types,
         strict_extension_check=strict_extension_check,
