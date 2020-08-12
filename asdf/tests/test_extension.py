@@ -40,6 +40,8 @@ def test_proxy_legacy():
     extension = LegacyExtension()
     proxy = ExtensionProxy(extension, package_name="foo", package_version="1.2.3")
 
+    assert proxy.extension_uri is None
+    assert proxy.legacy_class_names == {"asdf.tests.test_extension.LegacyExtension"}
     assert proxy.types == [LegacyType]
     assert proxy.tag_mapping == LegacyExtension.tag_mapping
     assert proxy.url_mapping == LegacyExtension.url_mapping

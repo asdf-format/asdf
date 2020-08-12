@@ -46,6 +46,10 @@ class ExtensionMetadata(dict, AsdfType):
     version = '1.0.0'
 
     @property
+    def extension_uri(self):
+        return self.get('extension_uri')
+
+    @property
     def extension_class(self):
         return self['extension_class']
 

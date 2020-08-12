@@ -3,7 +3,47 @@ import pytest
 from asdf.asdf import AsdfFile, open_asdf, SerializationContext
 from asdf import config_context, get_config
 from asdf.versioning import AsdfVersion
+from asdf.exceptions import AsdfWarning
 from asdf.extension import ExtensionProxy, AsdfExtensionList
+from asdf.tests.helpers import yaml_to_asdf, assert_no_warnings
+
+
+class TestExtension:
+    __test__ = False
+
+    def __init__(
+        self,
+        extension_uri=None,
+        legacy_class_names=None,
+        types=None,
+        tag_mapping=None,
+        url_mapping=None,
+    ):
+        self._extension_uri = extension_uri
+        self._legacy_class_names = set() if legacy_class_names is None else legacy_class_names
+        self._types = [] if types is None else types
+        self._tag_mapping = [] if tag_mapping is None else tag_mapping
+        self._url_mapping = [] if url_mapping is None else url_mapping
+
+    @property
+    def types(self):
+        return self._types
+
+    @property
+    def tag_mapping(self):
+        return self._tag_mapping
+
+    @property
+    def url_mapping(self):
+        return self._url_mapping
+
+    @property
+    def extension_uri(self):
+        return self._extension_uri
+
+    @property
+    def legacy_class_names(self):
+        return self._legacy_class_names
 
 
 def test_asdf_file_version():
@@ -55,11 +95,7 @@ def test_asdf_file_extensions():
     af = AsdfFile()
     assert af.extensions == get_config().extensions
 
-    class FooExtension:
-        types = []
-        tag_mapping = []
-        url_mapping = []
-    extension = FooExtension()
+    extension = TestExtension(extension_uri="asdf://somewhere.org/extensions/foo-1.0")
 
     for arg in ([extension], extension, AsdfExtensionList([extension])):
         af = AsdfFile(extensions=arg)
@@ -71,17 +107,31 @@ def test_asdf_file_extensions():
         assert af.extensions[0] == ExtensionProxy(extension)
         assert af.extensions[1:] == get_config().extensions
 
+    # This use case is a little silly, but in the future it will be
+    # possible to disable extensions globally and passing the URI
+    # will enable them on an individual file basis.  Currently all
+    # we can do with the URI is put the extension at the head of
+    # list so that it has priority.
+    with config_context() as config:
+        config.add_extension(extension)
+        for arg in ([extension.extension_uri], extension.extension_uri):
+            af = AsdfFile(extensions=arg)
+            assert af.extensions[0] == ExtensionProxy(extension)
+
+            af = AsdfFile()
+            af.extensions = arg
+            assert af.extensions[0] == ExtensionProxy(extension)
+
     for arg in (object(), [object()]):
         with pytest.raises(TypeError):
             AsdfFile(extensions=arg)
 
+    with pytest.raises(KeyError):
+        AsdfFile(extensions="not-a-URI")
+
 
 def test_open_asdf_extensions(tmpdir):
-    class FooExtension:
-        types = []
-        tag_mapping = []
-        url_mapping = []
-    extension = FooExtension()
+    extension = TestExtension(extension_uri="asdf://somewhere.org/extensions/foo-1.0")
 
     path = str(tmpdir/"test.asdf")
 
@@ -96,10 +146,25 @@ def test_open_asdf_extensions(tmpdir):
             assert af.extensions[0] == ExtensionProxy(extension)
             assert af.extensions[1:] == get_config().extensions
 
+    # This use case is a little silly, but in the future it will be
+    # possible to disable extensions globally and passing the URI
+    # will enable them on an individual file basis.  Currently all
+    # we can do with the URI is put the extension at the head of
+    # list so that it has priority.
+    with config_context() as config:
+        config.add_extension(extension)
+        for arg in ([extension.extension_uri], extension.extension_uri):
+            with open_asdf(path, extensions=arg) as af:
+                assert af.extensions[0] == ExtensionProxy(extension)
+
     for arg in (object(), [object()]):
         with pytest.raises(TypeError):
             with open_asdf(path, extensions=arg) as af:
                 pass
+
+    with pytest.raises(KeyError):
+        with open_asdf(path, extensions="not-a-URI"):
+            pass
 
 
 def test_serialization_context():
@@ -120,3 +185,154 @@ def test_serialization_context():
 
     with pytest.raises(ValueError):
         SerializationContext("0.5.4")
+
+
+def test_reading_extension_metadata():
+    extension_with_uri = ExtensionProxy(
+        TestExtension(extension_uri="asdf://somewhere.org/extensions/foo-1.0"),
+        package_name="foo",
+        package_version="1.2.3",
+    )
+    extension_without_uri = ExtensionProxy(
+        TestExtension(),
+        package_name="foo",
+        package_version="1.2.3",
+    )
+    extension_with_legacy_class_names = ExtensionProxy(
+        TestExtension(
+            extension_uri="asdf://somewhere.org/extensions/with-legacy-1.0",
+            legacy_class_names={"some.legacy.class.Name"},
+        ),
+        package_name="foo",
+        package_version="1.2.3",
+    )
+
+    with config_context() as config:
+        config.add_extension(extension_with_uri)
+        config.add_extension(extension_without_uri)
+        config.add_extension(extension_with_legacy_class_names)
+
+        # Test missing history:
+        content = """
+        foo: bar
+        """
+        buff = yaml_to_asdf(content)
+        with assert_no_warnings():
+            open_asdf(buff)
+
+        # Test the old history format:
+        content = """
+        history:
+          - !core/history_entry-1.0.0
+            description: Once upon a time, there was a carnivorous panda.
+          - !core/history_entry-1.0.0
+            description: This entry intentionally left blank.
+        foo: bar
+        """
+        buff = yaml_to_asdf(content, standard_version="1.0.0")
+        with assert_no_warnings():
+            open_asdf(buff)
+
+        # Test legacy extension matching by actual class name:
+        content = """
+        history:
+          extensions:
+            - !core/extension_metadata-1.0.0
+              extension_class: asdf.tests.test_asdf.TestExtension
+        """
+        buff = yaml_to_asdf(content)
+        with assert_no_warnings():
+            open_asdf(buff)
+
+        # Test matching by URI:
+        content = """
+        history:
+          extensions:
+            - !core/extension_metadata-1.0.0
+              extension_uri: asdf://somewhere.org/extensions/foo-1.0
+              extension_class: some.unrecognized.extension.class.Name
+        """
+        buff = yaml_to_asdf(content)
+        with assert_no_warnings():
+            open_asdf(buff)
+
+        # Test matching by legacy class name:
+        content = """
+        history:
+          extensions:
+            - !core/extension_metadata-1.0.0
+              extension_class: some.legacy.class.Name
+        """
+        buff = yaml_to_asdf(content)
+        with assert_no_warnings():
+            open_asdf(buff)
+
+        # Warn when the URI is missing, even if there's
+        # a class name match:
+        content = """
+        history:
+          extensions:
+            - !core/extension_metadata-1.0.0
+              extension_uri: some-missing-URI
+              extension_class: {}
+        """.format(extension_with_uri.class_name)
+        buff = yaml_to_asdf(content)
+        with pytest.warns(AsdfWarning, match="URI 'some-missing-URI'"):
+            open_asdf(buff)
+
+        # Warn when the class name is missing:
+        content = """
+        history:
+          extensions:
+            - !core/extension_metadata-1.0.0
+              extension_class: some.missing.class.Name
+        """
+        buff = yaml_to_asdf(content)
+        with pytest.warns(AsdfWarning, match="class 'some.missing.class.Name'"):
+            open_asdf(buff)
+
+        # Warn when the package version is older:
+        content = """
+        history:
+          extensions:
+            - !core/extension_metadata-1.0.0
+              extension_uri: asdf://somewhere.org/extensions/foo-1.0
+              extension_class: some.class.Name
+              software: !core/software-1.0.0
+                name: foo
+                version: 9.2.4
+        """
+        buff = yaml_to_asdf(content)
+        with pytest.warns(AsdfWarning, match="older package"):
+            open_asdf(buff)
+
+        # Shouldn't warn when the package version is later:
+        content = """
+        history:
+          extensions:
+            - !core/extension_metadata-1.0.0
+              extension_uri: asdf://somewhere.org/extensions/foo-1.0
+              extension_class: some.class.Name
+              software: !core/software-1.0.0
+                name: foo
+                version: 0.1.2
+        """
+        buff = yaml_to_asdf(content)
+        with assert_no_warnings():
+            open_asdf(buff)
+
+        # Shouldn't receive a warning when the package
+        # name changes, even if the version is later:
+        content = """
+        history:
+          extensions:
+            - !core/extension_metadata-1.0.0
+              extension_uri: asdf://somewhere.org/extensions/foo-1.0
+              extension_class: some.class.Name
+              software: !core/software-1.0.0
+                name: bar
+                version: 9.4.5
+        """
+        buff = yaml_to_asdf(content)
+        with assert_no_warnings():
+            open_asdf(buff)

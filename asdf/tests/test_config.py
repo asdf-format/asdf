@@ -140,6 +140,15 @@ def test_resource_mappings():
         config.remove_resource_mapping(package="foo")
         assert len(config.resource_mappings) == len(default_mappings)
 
+        # Can combine the package and mapping filters when removing:
+        config.add_resource_mapping(ResourceMappingProxy(new_mapping, package_name="foo"))
+        config.remove_resource_mapping(new_mapping, package="foo")
+        assert len(config.resource_mappings) == len(default_mappings)
+
+        # But not omit both:
+        with pytest.raises(ValueError):
+            config.remove_resource_mapping()
+
         # Removing a mapping should be idempotent:
         config.add_resource_mapping(new_mapping)
         config.remove_resource_mapping(new_mapping)
@@ -187,6 +196,13 @@ def test_extensions():
             url_mapping = []
         new_extension = FooExtension()
 
+        class BarExtension:
+            extension_uri = "asdf://somewhere.org/extensions/bar-1.0"
+            types = []
+            tag_mapping = []
+            url_mapping = []
+        uri_extension = BarExtension()
+
         # Add an extension:
         config.add_extension(new_extension)
         assert len(config.extensions) == len(original_extensions) + 1
@@ -209,10 +225,26 @@ def test_extensions():
         config.remove_extension(ExtensionProxy(new_extension))
         assert len(config.extensions) == len(original_extensions)
 
+        # And also by URI:
+        config.add_extension(uri_extension)
+        config.remove_extension(uri_extension.extension_uri)
+        assert len(config.extensions) == len(original_extensions)
+
         # Remove by the name of the extension's package:
         config.add_extension(ExtensionProxy(new_extension, package_name="foo"))
-        config.add_extension(ExtensionProxy(FooExtension(), package_name="foo"))
+        config.add_extension(ExtensionProxy(uri_extension, package_name="foo"))
         config.remove_extension(package="foo")
+        assert len(config.extensions) == len(original_extensions)
+
+        # Can combine remove filters:
+        config.add_extension(ExtensionProxy(new_extension, package_name="foo"))
+        config.add_extension(ExtensionProxy(uri_extension, package_name="foo"))
+        config.remove_extension(uri_extension.extension_uri, package="foo")
+        assert len(config.extensions) == len(original_extensions) + 1
+
+        # ... but not omit both:
+        with pytest.raises(ValueError):
+            config.remove_extension()
 
         # Removing an extension should be idempotent:
         config.add_extension(new_extension)
@@ -225,6 +257,27 @@ def test_extensions():
         config.add_extension(FooExtension())
         config.reset_extensions()
         assert len(config.extensions) == len(original_extensions)
+
+
+def test_get_extension():
+    class FooExtension:
+        extension_uri = "asdf://somewhere.org/extensions/foo-1.0"
+        types = []
+        tag_mapping = []
+        url_mapping = []
+
+    with asdf.config_context() as config:
+        with pytest.raises(KeyError):
+            config.get_extension(FooExtension.extension_uri)
+
+        extension = FooExtension()
+        config.add_extension(extension)
+        config.get_extension(FooExtension.extension_uri).delegate is extension
+
+        # Extensions added later take precedence:
+        duplicate_extension = FooExtension()
+        config.add_extension(extension)
+        config.get_extension(FooExtension.extension_uri).delegate is duplicate_extension
 
 
 def test_config_repr():

@@ -331,6 +331,10 @@ def dump_tree(tree, fd, ctx, tree_finalizer=None, _serialization_context=None):
         extension metadata on the tagged tree before it is fully
         serialized to YAML.
     """
+    # The _serialization_context parameter allows AsdfFile to track
+    # what extensions were used when converting the tree's custom
+    # types.  In 3.0, it will be passed as the `ctx` instead of the
+    # AsdfFile itself.
     tags = None
     tree_type = ctx.type_index.from_custom_type(type(tree))
     if tree_type is not None:
