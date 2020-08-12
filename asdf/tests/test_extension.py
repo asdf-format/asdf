@@ -1,4 +1,5 @@
 import pytest
+from packaging.specifiers import SpecifierSet
 
 from asdf.extension import (
     BuiltinExtension,
@@ -8,6 +9,7 @@ from asdf.extension import (
 from asdf.types import CustomType
 
 from asdf.tests.helpers import assert_extension_correctness
+
 
 def test_builtin_extension():
     extension = BuiltinExtension()
@@ -42,6 +44,7 @@ def test_proxy_legacy():
 
     assert proxy.extension_uri is None
     assert proxy.legacy_class_names == {"asdf.tests.test_extension.LegacyExtension"}
+    assert proxy.asdf_standard_requirement == SpecifierSet()
     assert proxy.types == [LegacyType]
     assert proxy.tag_mapping == LegacyExtension.tag_mapping
     assert proxy.url_mapping == LegacyExtension.url_mapping
