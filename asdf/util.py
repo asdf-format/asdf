@@ -3,6 +3,8 @@ import math
 import struct
 import types
 import importlib.util
+import re
+from functools import lru_cache
 
 from urllib.request import pathname2url
 
@@ -26,7 +28,7 @@ patched_urllib_parse.uses_netloc.append('asdf')
 
 __all__ = ['human_list', 'get_array_base', 'get_base_uri', 'filepath_to_url',
            'iter_subclasses', 'calculate_padding', 'resolve_name', 'NotSet',
-           'is_primitive']
+           'is_primitive', 'uri_match']
 
 
 def human_list(l, separator="and"):
@@ -449,3 +451,44 @@ def is_primitive(value):
         or isinstance(value, complex)
         or isinstance(value, str)
     )
+
+
+def uri_match(pattern, uri):
+    """
+    Determine if a URI matches a URI pattern with possible
+    wildcards.  The two recognized wildcards:
+
+    "*":  match any character except /
+
+    "**": match any character
+
+    Parameters
+    ----------
+    pattern : str
+        URI pattern.
+    uri : str
+        URI to check against the pattern.
+
+    Returns
+    -------
+    bool
+        `True` if URI matches the pattern.
+    """
+    if not isinstance(uri, str):
+        return False
+
+    if "*" in pattern:
+        return _compile_uri_match_pattern(pattern).fullmatch(uri) is not None
+    else:
+        return pattern == uri
+
+
+@lru_cache(128)
+def _compile_uri_match_pattern(pattern):
+    # Escape the pattern in case it contains regex special characters
+    # ('.' in particular is common in URIs) and then replace the
+    # escaped asterisks with the appropriate regex matchers.
+    pattern = re.escape(pattern)
+    pattern = pattern.replace(r"\*\*", r".*")
+    pattern = pattern.replace(r"\*", r"[^/]*")
+    return re.compile(pattern)

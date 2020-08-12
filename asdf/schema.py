@@ -76,18 +76,29 @@ def _type_to_tag(type_):
     return None
 
 
-def validate_tag(validator, tagname, instance, schema):
-
+def validate_tag(validator, tag_pattern, instance, schema):
+    """
+    Implements the tag validation directive, which checks the
+    tag against a pattern that may include wildcards.  See
+    `asdf.util.uri_match` for details on the matching behavior.
+    """
     if hasattr(instance, '_tag'):
         instance_tag = instance._tag
     else:
         # Try tags for known Python builtins
         instance_tag = _type_to_tag(type(instance))
 
-    if instance_tag is not None and instance_tag != tagname:
+    if instance_tag is None:
+        yield ValidationError(
+            "mismatched tags, wanted '{}', got unhandled object type '{}'".format(
+                tag_pattern, util.get_class_name(instance)
+            )
+        )
+
+    if not util.uri_match(tag_pattern, instance_tag):
         yield ValidationError(
             "mismatched tags, wanted '{0}', got '{1}'".format(
-                tagname, instance_tag))
+                tag_pattern, instance_tag))
 
 
 def validate_propertyOrder(validator, order, instance, schema):
