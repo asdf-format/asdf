@@ -403,7 +403,7 @@ class AsdfFile:
         elif 'extensions' not in self.tree['history']:
             self.tree['history']['extensions'] = []
 
-        for extension in serialization_context.extensions_used:
+        for extension in serialization_context._extensions_used:
             ext_name = extension.class_name
             ext_meta = ExtensionMetadata(extension_class=ext_name)
             if extension.package_name is not None:
@@ -1732,7 +1732,7 @@ class SerializationContext:
     def __init__(self, version):
         self._version = validate_version(version)
 
-        self._extensions_used = set()
+        self.__extensions_used = set()
 
     @property
     def version(self):
@@ -1745,7 +1745,7 @@ class SerializationContext:
         """
         return self._version
 
-    def mark_extension_used(self, extension):
+    def _mark_extension_used(self, extension):
         """
         Note that an extension was used when reading or writing the file.
 
@@ -1753,10 +1753,10 @@ class SerializationContext:
         ----------
         extension : asdf.extension.AsdfExtension
         """
-        self._extensions_used.add(ExtensionProxy.maybe_wrap(extension))
+        self.__extensions_used.add(ExtensionProxy.maybe_wrap(extension))
 
     @property
-    def extensions_used(self):
+    def _extensions_used(self):
         """
         Get the set of extensions that were used when reading or writing the file.
 
@@ -1764,4 +1764,4 @@ class SerializationContext:
         -------
         set of asdf.extension.AsdfExtension
         """
-        return self._extensions_used
+        return self.__extensions_used
