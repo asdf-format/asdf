@@ -5,6 +5,7 @@ import copy
 from numbers import Integral
 from functools import lru_cache
 from collections import OrderedDict
+from collections.abc import Mapping
 
 from jsonschema import validators as mvalidators
 from jsonschema.exceptions import ValidationError
@@ -20,6 +21,8 @@ from . import treeutil
 from . import util
 from . import extension
 from . import yamlutil
+from . import versioning
+from . import tagged
 from .exceptions import AsdfDeprecationWarning, AsdfWarning
 
 from .util import patched_urllib_parse
@@ -547,30 +550,59 @@ def get_validator(schema={}, ctx=None, validators=None, url_mapping=None,
     return validator
 
 
-def validate_large_literals(instance, reading=False):
+def _validate_large_literals(instance, reading):
     """
     Validate that the tree has no large numeric literals.
     """
-    # We can count on 52 bits of precision
-    for instance in treeutil.iter_tree(instance):
+    def _validate(value):
+        # We can count on 52 bits of precision
+        if value <= ((1 << 51) - 1) and value >= -((1 << 51) - 2):
+            return
 
-        if not isinstance(instance, Integral):
-            continue
-
-        if instance <= ((1 << 51) - 1) and instance >= -((1 << 51) - 2):
-            continue
-
-        if not reading:
+        if reading:
+            warnings.warn(
+                f"Invalid integer literal value {value} detected while reading file. "
+                "The value has been read safely, but the file should be "
+                "fixed.",
+                AsdfWarning
+            )
+        else:
             raise ValidationError(
-                "Integer value {0} is too large to safely represent as a "
-                "literal in ASDF".format(instance))
+                f"Integer value {value} is too large to safely represent as a "
+                "literal in ASDF"
+            )
 
-        warnings.warn(
-            "Invalid integer literal value {0} detected while reading file. "
-            "The value has been read safely, but the file should be "
-            "fixed.".format(instance),
-            AsdfWarning
-        )
+    if isinstance(instance, Integral):
+        _validate(instance)
+    elif isinstance(instance, Mapping):
+        for key in instance:
+            if isinstance(key, Integral):
+                _validate(key)
+
+
+def _validate_mapping_keys(instance, reading):
+    """
+    Validate that mappings do not contain illegal key types
+    (as of ASDF Standard 1.6.0, only str, int, and bool are
+    permitted).
+    """
+    if not isinstance(instance, Mapping):
+        return
+
+    for key in instance:
+        if isinstance(key, tagged.Tagged) or not isinstance(key, (str, int, bool)):
+            if reading:
+                warnings.warn(
+                    f"Invalid mapping key {key} detected while reading file. "
+                    "The value has been read safely, but the file should be "
+                    "fixed.",
+                    AsdfWarning
+                )
+            else:
+                raise ValidationError(
+                    f"Mapping key {key} is not permitted.  Valid types: "
+                    "str, int, bool."
+                )
 
 
 def validate(instance, ctx=None, schema={}, validators=None, reading=False,
@@ -611,7 +643,15 @@ def validate(instance, ctx=None, schema={}, validators=None, reading=False,
                               *args, **kwargs)
     validator.validate(instance, _schema=(schema or None))
 
-    validate_large_literals(instance, reading=reading)
+    additional_validators = [_validate_large_literals]
+    if ctx.version >= versioning.RESTRICTED_KEYS_MIN_VERSION:
+        additional_validators.append(_validate_mapping_keys)
+
+    def _callback(instance):
+        for validator in additional_validators:
+            validator(instance, reading)
+
+    treeutil.walk(instance, _callback)
 
 
 def fill_defaults(instance, ctx, reading=False):
