@@ -19,7 +19,7 @@
 - Add new extension API to support versioned extensions.
   [#850, #851]
 
-- Permit wildcard in tag validator URIs. [#858]
+- Permit wildcard in tag validator URIs. [#858, #865]
 
 2.7.0 (2020-07-23)
 ------------------

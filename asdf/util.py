@@ -483,7 +483,7 @@ def uri_match(pattern, uri):
         return pattern == uri
 
 
-@lru_cache(128)
+@lru_cache(1024)
 def _compile_uri_match_pattern(pattern):
     # Escape the pattern in case it contains regex special characters
     # ('.' in particular is common in URIs) and then replace the
