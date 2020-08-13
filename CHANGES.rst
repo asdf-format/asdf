@@ -12,7 +12,7 @@
 - Support asdf:// as a URI scheme. [#854, #855]
 
 - Include only extensions used during serialization in
-  a file's metadata. [#848]
+  a file's metadata. [#848, #864]
 
 - Drop support for Python 3.5. [#856]
 

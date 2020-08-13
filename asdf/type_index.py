@@ -135,7 +135,7 @@ class _AsdfWriteTypeIndex:
         extension = self._extension_by_cls[custom_type]
         self._extensions_used.add(extension)
         if serialization_context is not None:
-            serialization_context.mark_extension_used(extension)
+            serialization_context._mark_extension_used(extension)
 
     def _process_dynamic_subclass(self, custom_type, serialization_context):
         for key, val in self._types_with_dynamic_subclasses.items():
@@ -296,7 +296,7 @@ class AsdfTypeIndex:
         tag = self.fix_yaml_tag(ctx, tag)
         asdftype = self._type_by_tag.get(tag)
         if asdftype is not None and _serialization_context is not None:
-            _serialization_context.mark_extension_used(self._extension_by_type[asdftype])
+            _serialization_context._mark_extension_used(self._extension_by_type[asdftype])
         return asdftype
 
     @lru_cache(5)

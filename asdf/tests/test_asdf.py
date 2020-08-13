@@ -213,18 +213,18 @@ def test_open_asdf_extensions(tmpdir):
 def test_serialization_context():
     context = SerializationContext("1.4.0")
     assert context.version == "1.4.0"
-    assert context.extensions_used == set()
+    assert context._extensions_used == set()
 
     extension = get_config().extensions[0]
-    context.mark_extension_used(extension)
-    assert context.extensions_used == {extension}
-    context.mark_extension_used(extension)
-    assert context.extensions_used == {extension}
-    context.mark_extension_used(extension.delegate)
-    assert context.extensions_used == {extension}
+    context._mark_extension_used(extension)
+    assert context._extensions_used == {extension}
+    context._mark_extension_used(extension)
+    assert context._extensions_used == {extension}
+    context._mark_extension_used(extension.delegate)
+    assert context._extensions_used == {extension}
 
     with pytest.raises(TypeError):
-        context.mark_extension_used(object())
+        context._mark_extension_used(object())
 
     with pytest.raises(ValueError):
         SerializationContext("0.5.4")
