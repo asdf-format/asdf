@@ -7,9 +7,10 @@ from .diff import diff
 from .tags import list_tags
 from .extension import find_extensions
 from .info import info
+from .edit import edit
 
 
-__all__ = ['implode', 'explode', 'to_yaml', 'defragment', 'diff', 'list_tags',
+__all__ = ['edit', 'implode', 'explode', 'to_yaml', 'defragment', 'diff', 'list_tags',
     'find_extensions', 'info']
 
 
