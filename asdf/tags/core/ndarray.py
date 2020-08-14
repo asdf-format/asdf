@@ -7,7 +7,6 @@ from numpy import ma
 from jsonschema import ValidationError
 
 from ...types import AsdfType
-from ... import schema
 from ... import util
 
 
@@ -203,8 +202,6 @@ def numpy_array_to_list(array):
             return x
 
     result = ascii_to_unicode(tolist(array))
-
-    schema.validate_large_literals(result)
 
     return result
 

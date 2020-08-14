@@ -21,6 +21,10 @@
 
 - Permit wildcard in tag validator URIs. [#858, #865]
 
+- Implement support for ASDF Standard 1.6.0.  This version of
+  the standard limits mapping keys to string, integer, or
+  boolean. [#866]
+
 2.7.0 (2020-07-23)
 ------------------
 

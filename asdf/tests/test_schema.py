@@ -1,4 +1,5 @@
 import io
+from datetime import datetime
 
 from jsonschema import ValidationError
 import numpy as np
@@ -624,6 +625,13 @@ def test_large_literals(use_numpy):
         asdf.AsdfFile(tree)
 
     tree = {
+        largeval: 'large_key',
+    }
+
+    with pytest.raises(ValidationError):
+        asdf.AsdfFile(tree)
+
+    tree = {
         'large_array': np.array([largeval], np.uint64)
     }
 
@@ -639,15 +647,54 @@ def test_large_literals(use_numpy):
 
 
 def test_read_large_literal():
-
     value = 1 << 64
-    yaml = """integer: {}""".format(value)
+    yaml = f"integer: {value}"
 
     buff = helpers.yaml_to_asdf(yaml)
 
     with pytest.warns(AsdfWarning, match="Invalid integer literal value"):
         with asdf.open(buff) as af:
             assert af['integer'] == value
+
+    yaml = f"{value}: foo"
+
+    buff = helpers.yaml_to_asdf(yaml)
+
+    with pytest.warns(AsdfWarning, match="Invalid integer literal value"):
+        with asdf.open(buff) as af:
+            assert af[value] == "foo"
+
+
+@pytest.mark.parametrize(
+    "version,keys",
+    [
+        ("1.6.0", ["foo", 42, True]),
+        ("1.5.0", ["foo", 42, True, 3.14159, datetime.now(), b"foo", None]),
+    ]
+)
+def test_mapping_supported_key_types(keys, version):
+    for key in keys:
+        with helpers.assert_no_warnings():
+            af = asdf.AsdfFile({key: "value"}, version=version)
+            buff = io.BytesIO()
+            af.write_to(buff)
+            buff.seek(0)
+            with asdf.open(buff) as af:
+                assert af[key] == "value"
+
+
+@pytest.mark.parametrize(
+    "version,keys",
+    [
+        ("1.6.0", [3.14159, datetime.now(), b"foo", None, ("foo", "bar")]),
+    ]
+)
+def test_mapping_unsupported_key_types(keys, version):
+    for key in keys:
+        with pytest.raises(ValidationError, match="Mapping key .* is not permitted"):
+            af = asdf.AsdfFile({key: "value"}, version=version)
+            buff = io.BytesIO()
+            af.write_to(buff)
 
 
 def test_nested_array():
