@@ -28,6 +28,12 @@
 - Stop removing schema defaults for all ASDF Standard versions,
   and automatically fill defaults only for versions <= 1.5.0. [#860]
 
+2.7.1 (unreleased)
+------------------
+
+- Fix bug preventing access to copied array data after
+  ``AsdfFile`` is closed. [#869]
+
 2.7.0 (2020-07-23)
 ------------------
 

@@ -1,5 +1,4 @@
 import sys
-import weakref
 
 import numpy as np
 from numpy import ma
@@ -216,7 +215,6 @@ class NDArrayType(AsdfType):
         self._asdffile = asdffile
         self._source = source
         self._block = None
-        self._block_data_weakref = None
         self._array = None
         self._mask = mask
 
@@ -245,11 +243,10 @@ class NDArrayType(AsdfType):
         # closed and replaced.  We need to check here and re-generate
         # the array if necessary, otherwise we risk segfaults when
         # memory mapping.
-        if self._block_data_weakref is not None:
-            block_data = self._block_data_weakref()
-            if block_data is not self.block.data:
+        if self._array is not None:
+            base = util.get_array_base(self._array)
+            if isinstance(base, np.memmap) and base._mmap is not None and base._mmap.closed:
                 self._array = None
-                self._block_data_weakref = None
 
         if self._array is None:
             block = self.block
@@ -264,7 +261,6 @@ class NDArrayType(AsdfType):
             self._array = np.ndarray(
                 shape, dtype, block.data,
                 self._offset, self._strides, self._order)
-            self._block_data_weakref = weakref.ref(block.data)
             self._array = self._apply_mask(self._array, self._mask)
             if block.readonly:
                 self._array.setflags(write=False)
@@ -294,7 +290,7 @@ class NDArrayType(AsdfType):
             return "<{0} (unloaded) shape: {1} dtype: {2}>".format(
                 'array' if self._mask is None else 'masked array',
                 self._shape, self._dtype)
-        return repr(self._array)
+        return repr(self._make_array())
 
     def __str__(self):
         # str alone should not force loading of the data
@@ -302,7 +298,7 @@ class NDArrayType(AsdfType):
             return "<{0} (unloaded) shape: {1} dtype: {2}>".format(
                 'array' if self._mask is None else 'masked array',
                 self._shape, self._dtype)
-        return str(self._array)
+        return str(self._make_array())
 
     def get_actual_shape(self, shape, strides, dtype, block_size):
         """
@@ -343,13 +339,13 @@ class NDArrayType(AsdfType):
         if self._array is None:
             return self._dtype
         else:
-            return self._array.dtype
+            return self._make_array().dtype
 
     def __len__(self):
         if self._array is None:
             return self._shape[0]
         else:
-            return len(self._array)
+            return len(self._make_array())
 
     def __getattr__(self, attr):
         # We need to ignore __array_struct__, or unicode arrays end up
@@ -367,7 +363,6 @@ class NDArrayType(AsdfType):
             self._make_array().__setitem__(*args)
         except Exception as e:
             self._array = None
-            self._block_data_weakref = None
             raise e from None
 
     @classmethod

@@ -539,3 +539,22 @@ def test_history_entries(tmpdir):
     with asdf.open(path) as af:
         af.add_history_entry(message)
         assert af["history"]["entries"][0]["description"] == message
+
+
+def test_array_access_after_file_close(tmpdir):
+    path = str(tmpdir.join("test.asdf"))
+    data = np.arange(10)
+    asdf.AsdfFile({"data": data}).write_to(path)
+
+    # Normally it's not possible to read the array after
+    # the file has been closed:
+    with asdf.open(path) as af:
+        tree = af.tree
+    with pytest.raises(OSError, match="ASDF file has already been closed"):
+        tree["data"][0]
+
+    # With memory mapping disabled and copying arrays enabled,
+    # the array data should still persist in memory after close:
+    with asdf.open(path, lazy_load=False, copy_arrays=True) as af:
+        tree = af.tree
+    assert_array_equal(tree["data"], data)
