@@ -90,6 +90,15 @@ def test_default_version():
             config.default_version = "0.1.5"
 
 
+def test_legacy_fill_schema_defaults():
+    with asdf.config_context() as config:
+        assert config.legacy_fill_schema_defaults == asdf.config.DEFAULT_LEGACY_FILL_SCHEMA_DEFAULTS
+        config.legacy_fill_schema_defaults = False
+        assert get_config().legacy_fill_schema_defaults is False
+        config.legacy_fill_schema_defaults = True
+        assert get_config().legacy_fill_schema_defaults is True
+
+
 def test_resource_mappings():
     with asdf.config_context() as config:
         core_mappings = resource.get_core_resource_mappings()
@@ -289,6 +298,8 @@ def test_config_repr():
     with asdf.config_context() as config:
         config.validate_on_read = True
         config.default_version = "1.5.0"
+        config.legacy_fill_schema_defaults = False
 
         assert "validate_on_read: True" in repr(config)
         assert "default_version: 1.5.0" in repr(config)
+        assert "legacy_fill_schema_defaults: False" in repr(config)

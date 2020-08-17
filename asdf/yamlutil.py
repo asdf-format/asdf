@@ -399,7 +399,6 @@ def dump_tree(tree, fd, ctx, tree_finalizer=None, _serialization_context=None):
     if tree_finalizer is not None:
         tree_finalizer(tree)
     schema.validate(tree, ctx)
-    schema.remove_defaults(tree, ctx)
 
     yaml_version = tuple(
         int(x) for x in ctx.version_map['YAML_VERSION'].split('.'))

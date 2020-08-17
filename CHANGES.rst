@@ -25,6 +25,9 @@
   the standard limits mapping keys to string, integer, or
   boolean. [#866]
 
+- Stop removing schema defaults for all ASDF Standard versions,
+  and automatically fill defaults only for versions <= 1.5.0. [#860]
+
 2.7.0 (2020-07-23)
 ------------------
 
