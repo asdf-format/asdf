@@ -27,6 +27,7 @@ from .extension import (
     AsdfExtension,
     ExtensionProxy,
     get_cached_asdf_extension_list,
+    get_cached_extension_manager,
 )
 from .util import NotSet
 from .search import AsdfSearchResult
@@ -71,9 +72,10 @@ class AsdfFile:
 
         extensions : object, optional
             Additional extensions to use when reading and writing the file.
-            May be any of the following: `asdf.extension.AsdfExtension`, `str`
-            extension URI, `asdf.extension.AsdfExtensionList` or a `list`
-            of URIs and/or extensions.
+            May be any of the following: `asdf.extension.AsdfExtension`,
+            `asdf.extension.Extension`, `str` extension URI,
+            `asdf.extension.AsdfExtensionList` or a `list` of URIs and/or
+            extensions.
 
         version : str, optional
             The ASDF Standard version.  If not provided, defaults to the
@@ -184,7 +186,7 @@ class AsdfFile:
 
     @version.setter
     def version(self, value):
-        """"
+        """
         Set this AsdfFile's ASDF Standard version.
 
         Parameters
@@ -219,7 +221,7 @@ class AsdfFile:
 
         Returns
         -------
-        list of asdf.extension.AsdfExtension
+        list of asdf.extension.AsdfExtension or asdf.extension.Extension
         """
         return self._extensions
 
@@ -231,15 +233,30 @@ class AsdfFile:
 
         Parameters
         ----------
-        value : list of asdf.extension.AsdfExtension
+        value : list of asdf.extension.AsdfExtension or asdf.extension.Extension
         """
         self._extensions = self._process_extensions(value)
+        self._extension_manager = None
         self._extension_list = None
+
+    @property
+    def extension_manager(self):
+        """
+        Get the ExtensionManager for this AsdfFile.
+
+        Returns
+        -------
+        asdf.extension.ExtensionManager
+        """
+        if self._extension_manager is None:
+            self._extension_manager = get_cached_extension_manager(self.extensions)
+        return self._extension_manager
 
     @property
     def extension_list(self):
         """
         Get the AsdfExtensionList for this AsdfFile.
+
         Returns
         -------
         asdf.extension.AsdfExtensionList
@@ -1549,7 +1566,7 @@ class AsdfFile:
     # This function is called from within yamlutil methods to create
     # a context when one isn't explicitly passed in.
     def _create_serialization_context(self):
-        return SerializationContext(self.version_string)
+        return SerializationContext(self.version_string, self.extension_manager)
 
 
 # Inherit docstring from dictionary
@@ -1605,9 +1622,10 @@ def open_asdf(fd, uri=None, mode=None, validate_checksums=False,
 
     extensions : object, optional
         Additional extensions to use when reading and writing the file.
-        May be any of the following: `asdf.extension.AsdfExtension`, `str`
-        extension URI, `asdf.extension.AsdfExtensionList` or a `list`
-        of URIs and/or extensions.
+        May be any of the following: `asdf.extension.AsdfExtension`,
+        `asdf.extension.Extension`, `str` extension URI,
+        `asdf.extension.AsdfExtensionList` or a `list` of URIs and/or
+        extensions.
 
     do_not_fill_defaults : bool, optional
         When `True`, do not fill in missing default values.
@@ -1729,8 +1747,9 @@ class SerializationContext:
     """
     Container for parameters of the current (de)serialization.
     """
-    def __init__(self, version):
+    def __init__(self, version, extension_manager):
         self._version = validate_version(version)
+        self._extension_manager = extension_manager
 
         self.__extensions_used = set()
 
@@ -1745,13 +1764,24 @@ class SerializationContext:
         """
         return self._version
 
+    @property
+    def extension_manager(self):
+        """
+        Get the ExtensionManager for enabled extensions.
+
+        Returns
+        -------
+        asdf.extension.ExtensionManager
+        """
+        return self._extension_manager
+
     def _mark_extension_used(self, extension):
         """
         Note that an extension was used when reading or writing the file.
 
         Parameters
         ----------
-        extension : asdf.extension.AsdfExtension
+        extension : asdf.extension.AsdfExtension or asdf.extension.Extension
         """
         self.__extensions_used.add(ExtensionProxy.maybe_wrap(extension))
 
@@ -1762,6 +1792,6 @@ class SerializationContext:
 
         Returns
         -------
-        set of asdf.extension.AsdfExtension
+        set of asdf.extension.AsdfExtension or asdf.extension.Extension
         """
         return self.__extensions_used

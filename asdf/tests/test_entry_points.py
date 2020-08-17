@@ -70,6 +70,34 @@ def test_get_resource_mappings(mock_entry_points):
     assert len(mappings) == 2
 
 
+class MinimumExtension:
+    def __init__(self, extension_uri):
+        self._extension_uri = extension_uri
+
+    @property
+    def extension_uri(self):
+        return self._extension_uri
+
+
+def extensions_entry_point_successful():
+    return [
+        MinimumExtension("http://somewhere.org/extensions/foo-1.0"),
+        MinimumExtension("http://somewhere.org/extensions/bar-1.0"),
+    ]
+
+
+def extensions_entry_point_failing():
+    raise Exception("NOPE")
+
+
+def extensions_entry_point_bad_element():
+    return [
+        MinimumExtension("http://somewhere.org/extensions/baz-1.0"),
+        object(),
+        MinimumExtension("http://somewhere.org/extensions/foz-1.0"),
+    ]
+
+
 class LegacyExtension:
     types = []
     tag_mapping = []
@@ -81,6 +109,27 @@ class FauxLegacyExtension:
 
 
 def test_get_extensions(mock_entry_points):
+    mock_entry_points.append(("asdf.extensions", "successful", "extensions_entry_point_successful"))
+    extensions = entry_points.get_extensions()
+    assert len(extensions) == 2
+    for e in extensions:
+        assert isinstance(e, ExtensionProxy)
+        assert e.package_name == "asdf"
+        assert e.package_version == asdf_package_version
+
+    mock_entry_points.clear()
+    mock_entry_points.append(("asdf.extensions", "failing", "extensions_entry_point_failing"))
+    with pytest.warns(AsdfWarning, match="Exception: NOPE"):
+        extensions = entry_points.get_extensions()
+    assert len(extensions) == 0
+
+    mock_entry_points.clear()
+    mock_entry_points.append(("asdf.extensions", "bad_element", "extensions_entry_point_bad_element"))
+    with pytest.warns(AsdfWarning, match="TypeError: Extension must implement the Extension or AsdfExtension interface"):
+        extensions = entry_points.get_extensions()
+    assert len(extensions) == 2
+
+    mock_entry_points.clear()
     mock_entry_points.append(("asdf_extensions", "legacy", "LegacyExtension"))
     extensions = entry_points.get_extensions()
     assert len(extensions) == 1

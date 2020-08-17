@@ -7,6 +7,7 @@ from .extension import ExtensionProxy
 
 
 RESOURCE_MAPPINGS_GROUP = "asdf.resource_mappings"
+EXTENSIONS_GROUP = "asdf.extensions"
 LEGACY_EXTENSIONS_GROUP = "asdf_extensions"
 
 
@@ -15,9 +16,10 @@ def get_resource_mappings():
 
 
 def get_extensions():
+    extensions = _list_entry_points(EXTENSIONS_GROUP, ExtensionProxy)
     legacy_extensions = _list_entry_points(LEGACY_EXTENSIONS_GROUP, ExtensionProxy)
 
-    return legacy_extensions
+    return extensions + legacy_extensions
 
 
 def _list_entry_points(group, proxy_class):

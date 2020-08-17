@@ -4,7 +4,7 @@ from asdf.asdf import AsdfFile, open_asdf, SerializationContext
 from asdf import config_context, get_config
 from asdf.versioning import AsdfVersion
 from asdf.exceptions import AsdfWarning
-from asdf.extension import ExtensionProxy, AsdfExtensionList
+from asdf.extension import ExtensionProxy, AsdfExtensionList, ExtensionManager
 from asdf.tests.helpers import yaml_to_asdf, assert_no_warnings
 
 
@@ -211,8 +211,10 @@ def test_open_asdf_extensions(tmpdir):
 
 
 def test_serialization_context():
-    context = SerializationContext("1.4.0")
+    extension_manager = ExtensionManager([])
+    context = SerializationContext("1.4.0", extension_manager)
     assert context.version == "1.4.0"
+    assert context.extension_manager is extension_manager
     assert context._extensions_used == set()
 
     extension = get_config().extensions[0]
@@ -227,7 +229,7 @@ def test_serialization_context():
         context._mark_extension_used(object())
 
     with pytest.raises(ValueError):
-        SerializationContext("0.5.4")
+        SerializationContext("0.5.4", extension_manager)
 
 
 def test_reading_extension_metadata():

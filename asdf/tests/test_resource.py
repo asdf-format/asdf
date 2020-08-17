@@ -1,6 +1,7 @@
 import io
 import sys
 from pathlib import Path
+from collections.abc import Mapping
 
 if sys.version_info < (3, 9):
     import importlib_resources
@@ -29,6 +30,7 @@ def test_directory_resource_mapping(tmpdir):
         f.write("id: http://somewhere.org/schemas/baz-7.8.9\n")
 
     mapping = DirectoryResourceMapping(str(tmpdir/"schemas"), "http://somewhere.org/schemas")
+    assert isinstance(mapping, Mapping)
     assert len(mapping) == 1
     assert set(mapping) == {"http://somewhere.org/schemas/foo-1.2.3"}
     assert "http://somewhere.org/schemas/foo-1.2.3" in mapping
@@ -191,6 +193,8 @@ def test_resource_manager():
     }
     manager = ResourceManager([mapping1, mapping2])
 
+    assert isinstance(manager, Mapping)
+
     assert len(manager) == 4
     assert set(manager) == {
         "http://somewhere.org/schemas/foo-1.0.0",
@@ -216,6 +220,8 @@ def test_resource_manager():
 
 def test_jsonschema_resource_mapping():
     mapping = JsonschemaResourceMapping()
+    assert isinstance(mapping, Mapping)
+
     assert len(mapping) == 1
     assert set(mapping) == {"http://json-schema.org/draft-04/schema"}
     assert "http://json-schema.org/draft-04/schema" in mapping
@@ -236,6 +242,10 @@ def test_get_core_resource_mappings(uri):
     assert mapping is not None
 
     assert uri.encode("utf-8") in mapping[uri]
+
+
+def test_proxy_is_mapping():
+    assert isinstance(ResourceMappingProxy({}), Mapping)
 
 
 def test_proxy_maybe_wrap():

@@ -306,18 +306,26 @@ def _create_validator(validators=YAML_VALIDATORS, visit_repeat_nodes=False):
                 if _schema is None:
                     tag = getattr(instance, '_tag', None)
                     if tag is not None:
-                        schema_path = self.ctx.resolver(tag)
-                        if schema_path != tag:
+                        if self.serialization_context.extension_manager.handles_tag(tag):
+                            tag_def = self.serialization_context.extension_manager.get_tag_definition(tag)
+                            schema_uri = tag_def.schema_uri
+                        else:
+                            schema_uri = self.ctx.tag_mapping(tag)
+                            if schema_uri == tag:
+                                schema_uri = None
+
+                        if schema_uri is not None:
                             try:
-                                s = _load_schema_cached(schema_path, self.ctx.resolver, False, False)
+                                s = _load_schema_cached(schema_uri, self.ctx.resolver, False, False)
                             except FileNotFoundError:
                                 msg = "Unable to locate schema file for '{}': '{}'"
-                                warnings.warn(msg.format(tag, schema_path), AsdfWarning)
+                                warnings.warn(msg.format(tag, schema_uri), AsdfWarning)
                                 s = {}
                             if s:
-                                with self.resolver.in_scope(schema_path):
+                                with self.resolver.in_scope(schema_uri):
                                     for x in super(ASDFValidator, self).iter_errors(instance, s):
                                         yield x
+
 
                     if isinstance(instance, dict):
                         for val in instance.values():
@@ -495,7 +503,8 @@ def _load_schema_cached(url, resolver, resolve_references, resolve_local_refs):
 
 
 def get_validator(schema={}, ctx=None, validators=None, url_mapping=None,
-                  *args, _visit_repeat_nodes=False, **kwargs):
+                  *args, _visit_repeat_nodes=False, _serialization_context=None,
+                  **kwargs):
     """
     Get a JSON schema validator object for the given schema.
 
@@ -533,6 +542,9 @@ def get_validator(schema={}, ctx=None, validators=None, url_mapping=None,
         from .asdf import AsdfFile
         ctx = AsdfFile()
 
+    if _serialization_context is None:
+        _serialization_context = ctx._create_serialization_context()
+
     if validators is None:
         validators = util.HashableDict(YAML_VALIDATORS.copy())
         validators.update(ctx.extension_list.validators)
@@ -547,6 +559,7 @@ def get_validator(schema={}, ctx=None, validators=None, url_mapping=None,
     cls = _create_validator(validators=validators, visit_repeat_nodes=_visit_repeat_nodes)
     validator = cls(schema, *args, **kwargs)
     validator.ctx = ctx
+    validator.serialization_context = _serialization_context
     return validator
 
 

@@ -17,7 +17,7 @@
 - Drop support for Python 3.5. [#856]
 
 - Add new extension API to support versioned extensions.
-  [#850, #851]
+  [#850, #851, #853]
 
 - Permit wildcard in tag validator URIs. [#858, #865]
 
