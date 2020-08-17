@@ -4,6 +4,7 @@ from packaging.specifiers import SpecifierSet
 from asdf.extension import (
     Extension,
     ExtensionProxy,
+    ManifestExtension,
     ExtensionManager,
     get_cached_extension_manager,
     TagDefinition,
@@ -13,6 +14,8 @@ from asdf.extension import (
     BuiltinExtension,
     get_cached_asdf_extension_list
 )
+
+from asdf import config_context
 from asdf.types import CustomType
 
 from asdf.tests.helpers import assert_extension_correctness
@@ -535,3 +538,104 @@ def test_get_cached_asdf_extension_list():
     extension_list = get_cached_asdf_extension_list([extension])
     assert get_cached_asdf_extension_list([extension]) is extension_list
     assert get_cached_asdf_extension_list([LegacyExtension()]) is not extension_list
+
+
+def test_manifest_extension():
+    with config_context() as config:
+        minimal_manifest = """%YAML 1.1
+---
+id: asdf://somewhere.org/manifests/foo
+extension_uri: asdf://somewhere.org/extensions/foo
+...
+"""
+        config.add_resource_mapping({"asdf://somewhere.org/extensions/foo": minimal_manifest})
+        extension = ManifestExtension.from_uri("asdf://somewhere.org/extensions/foo")
+        assert isinstance(extension, Extension)
+        assert extension.extension_uri == "asdf://somewhere.org/extensions/foo"
+        assert extension.legacy_class_names == []
+        assert extension.asdf_standard_requirement is None
+        assert extension.converters == []
+        assert extension.tags == []
+
+        proxy = ExtensionProxy(extension)
+        assert proxy.extension_uri == "asdf://somewhere.org/extensions/foo"
+        assert proxy.legacy_class_names == set()
+        assert proxy.asdf_standard_requirement == SpecifierSet()
+        assert proxy.converters == []
+        assert proxy.tags == []
+
+    with config_context() as config:
+        full_manifest = """%YAML 1.1
+---
+id: asdf://somewhere.org/manifests/foo
+extension_uri: asdf://somewhere.org/extensions/foo
+asdf_standard_requirement:
+  gte: 1.6.0
+  lt: 2.0.0
+tags:
+  - asdf://somewhere.org/tags/bar
+  - tag_uri: asdf://somewhere.org/tags/baz
+    schema_uri: asdf://somewhere.org/schemas/baz
+    title: Baz title
+    description: Bar description
+...
+"""
+        config.add_resource_mapping({"asdf://somewhere.org/extensions/foo": full_manifest})
+
+        class FooConverter:
+            tags = ["asdf://somewhere.org/tags/bar", "asdf://somewhere.org/tags/baz"]
+            types = []
+
+            def select_tag(self, *args):
+                pass
+
+            def to_yaml_tree(self, *args):
+                pass
+
+            def from_yaml_tree(self, *args):
+                pass
+
+        converter = FooConverter()
+
+        extension = ManifestExtension.from_uri(
+            "asdf://somewhere.org/extensions/foo",
+            legacy_class_names=["foo.extension.LegacyExtension"],
+            converters=[converter]
+        )
+        assert extension.extension_uri == "asdf://somewhere.org/extensions/foo"
+        assert extension.legacy_class_names == ["foo.extension.LegacyExtension"]
+        assert extension.asdf_standard_requirement == SpecifierSet(">=1.6.0,<2.0.0")
+        assert extension.converters == [converter]
+        assert len(extension.tags) == 2
+        assert extension.tags[0] == "asdf://somewhere.org/tags/bar"
+        assert extension.tags[1].tag_uri == "asdf://somewhere.org/tags/baz"
+        assert extension.tags[1].schema_uri == "asdf://somewhere.org/schemas/baz"
+        assert extension.tags[1].title == "Baz title"
+        assert extension.tags[1].description == "Bar description"
+
+        proxy = ExtensionProxy(extension)
+        assert proxy.extension_uri == "asdf://somewhere.org/extensions/foo"
+        assert proxy.legacy_class_names == {"foo.extension.LegacyExtension"}
+        assert proxy.asdf_standard_requirement == SpecifierSet(">=1.6.0,<2.0.0")
+        assert proxy.converters == [ConverterProxy(converter, proxy)]
+        assert len(proxy.tags) == 2
+        assert proxy.tags[0].tag_uri == "asdf://somewhere.org/tags/bar"
+        assert proxy.tags[1].tag_uri == "asdf://somewhere.org/tags/baz"
+        assert proxy.tags[1].schema_uri == "asdf://somewhere.org/schemas/baz"
+        assert proxy.tags[1].title == "Baz title"
+        assert proxy.tags[1].description == "Bar description"
+
+    with config_context() as config:
+        simple_asdf_standard_manifest = """%YAML 1.1
+---
+id: asdf://somewhere.org/manifests/foo
+extension_uri: asdf://somewhere.org/extensions/foo
+asdf_standard_requirement: 1.6.0
+...
+"""
+        config.add_resource_mapping({"asdf://somewhere.org/extensions/foo": simple_asdf_standard_manifest})
+        extension = ManifestExtension.from_uri("asdf://somewhere.org/extensions/foo")
+        assert extension.asdf_standard_requirement == SpecifierSet("==1.6.0")
+
+        proxy = ExtensionProxy(extension)
+        assert proxy.asdf_standard_requirement == SpecifierSet("==1.6.0")
