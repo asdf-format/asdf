@@ -1,4 +1,4 @@
-2.7.1 (unreleased)
+2.7.1 (2020-08-18)
 ------------------
 
 - Fix bug preventing access to copied array data after

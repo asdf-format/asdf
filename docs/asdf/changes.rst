@@ -4,6 +4,16 @@
 Changes
 *******
 
+What's New in ASDF 2.7.1?
+=========================
+
+The ASDF Standard is at v1.5.0.
+
+The sole change in this release:
+
+* Fix bug preventing access to copied array data after
+  an ``AsdfFile`` is closed.
+
 What's New in ASDF 2.7.0?
 =========================
 
