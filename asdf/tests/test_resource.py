@@ -234,6 +234,7 @@ def test_jsonschema_resource_mapping():
     "http://json-schema.org/draft-04/schema",
     "http://stsci.edu/schemas/yaml-schema/draft-01",
     "http://stsci.edu/schemas/asdf/core/asdf-1.1.0",
+    "asdf://asdf-format.org/core/schemas/extension_manifest-1.0",
 ])
 def test_get_core_resource_mappings(uri):
     mappings = get_core_resource_mappings()
