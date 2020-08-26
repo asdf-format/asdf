@@ -285,7 +285,16 @@ def get_core_resource_mappings():
         if not core_schemas_root.is_dir():
             raise RuntimeError("Unable to locate core schemas")
 
+    resources_root = importlib_resources.files(asdf)/"resources"
+    if not resources_root.is_dir():
+        # In an editable install, the resources can be found in the
+        # asdf-standard submodule.
+        resources_root = Path(__file__).parent.parent/"asdf-standard"/"resources"
+        if not resources_root.is_dir():
+            raise RuntimeError("Unable to locate core resources")
+
     return [
         DirectoryResourceMapping(core_schemas_root, "http://stsci.edu/schemas", recursive=True),
+        DirectoryResourceMapping(resources_root / "asdf-format.org", "asdf://asdf-format.org", recursive=True),
         JsonschemaResourceMapping(),
     ]
