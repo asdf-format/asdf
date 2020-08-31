@@ -14,7 +14,7 @@ from .. import AsdfFile
 __all__ = ['edit']
 
 
-class ToYaml(Command):
+class Edit(Command):
     @classmethod
     def setup_arguments(cls, subparsers):
         desc_string = "Allows for easy editing of the YAML in an ASDF file.  " \
@@ -23,14 +23,17 @@ class ToYaml(Command):
                       "editing.  For save mode, the edited text file is written" \
                       "to its ASDF file."
 
+        # Set up the parser
         parser = subparsers.add_parser(
             str("edit"), help="Edit YAML portion of an ASDF file.",
             description=desc_string)
 
+        # Need an input file
         parser.add_argument(
             '--infile', '-f', type=str, required=True, dest='fname',
             help="Input file")
 
+        # The edit is either being performed or saved
         group = parser.add_mutually_exclusive_group(required=True)
         group.add_argument(
             '-s',action='store_true',dest='save',
@@ -97,6 +100,8 @@ def get_yaml ( fname, return_yaml=False ) :
     '''
 
     chunk_size = 1024                   # Arbitrary chunk to read
+
+    # TODO - this needs to change to look for '\r\n' and not just '\n'.
     dstart = b'\x0a\x2e\x2e\x2e\x0a'    # The binary data delimiter - '\n...\n'
     dlen = len(dstart)                  # Length of binary delimiter
 
@@ -160,7 +165,7 @@ def edit_func ( fname ) :
     # TODO - validate an ASDF file
     fullpath = os.path.abspath(fname)
     if not is_asdf_file(fullpath) :
-        print(f"To use the '-e' option, as ASDF file must be inputted.")
+        print("To use the '-e' option, as ASDF file must be inputted.")
         print(f"The file is not an ASDF: \n'{fullpath}'\n")
         return False
 
@@ -222,7 +227,7 @@ def save_func ( fname ) :
     fullpath = os.path.abspath(fname)
     fullasdf = get_asdf_name(fullpath)
     if not is_yaml_file(fullpath) : # Validate YAML file
-        print(f"To use the '-s' option, as YAML fle must be inputted.")
+        print("To use the '-s' option, as YAML fle must be inputted.")
         print(f"The file is not a YAML: \n'{fullpath}'\n")
         return False
 
