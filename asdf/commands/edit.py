@@ -9,7 +9,10 @@ import sys
 import asdf.constants as constants
 
 from asdf.asdf import _parse_asdf_header_line
+from asdf.asdf import _parse_asdf_comment_section
+from asdf.asdf import _get_asdf_version_in_comments
 from .. import generic_io
+from .. import yamlutil
 from .main import Command
 from .. import AsdfFile
 
@@ -17,6 +20,7 @@ from .. import AsdfFile
 __all__ = ['edit']
 
 asdf_format_version = None
+asdf_standard_version = None
 
 class Edit(Command):
     @classmethod
@@ -167,6 +171,7 @@ def validate_asdf_path ( fname ) :
 
 def validate_asdf_file ( fd ) :
     global asdf_format_version 
+    global asdf_standard_version 
 
     header_line = fd.read_until(b'\r?\n', 2, "newline", include=True)
     asdf_format_version = _parse_asdf_header_line(header_line)
@@ -176,6 +181,8 @@ def validate_asdf_file ( fd ) :
                                      "start of content", 
                                      include=False, 
                                      exception=False)
+    comments = _parse_asdf_comment_section(comment_section)
+    asdf_standard_version = _get_asdf_version_in_comments(comments)
 
     return header_line + comment_section 
     
@@ -189,12 +196,25 @@ def open_and_validate_asdf ( fname ) :
     header_and_comment = validate_asdf_file(fd)
     ret_string = header_and_comment 
 
-    print(f"ret_string = {ret_string}")
+    return fd, ret_string
+    
+def read_and_validate_yaml ( fd, fname ) :
+    YAML_TOKEN = b'%YAML'
+    token = fd.read(len(YAML_TOKEN))
+    if token != YAML_TOKEN :
+        print(f"Error: No YAML in '{fname}'")
+        sys.exit(0)
+    
+    reader = fd.reader_until(constants.YAML_END_MARKER_REGEX, 
+                             7, 
+                             'End of YAML marker',  
+                             include=True, 
+                             initial_content=token)
+    yaml_content = reader.read()
+    tree = yamlutil.load_tree(reader)
+    print(f"tree = \n{tree}\n") # Why is this None?
     sys.exit(1)
 
-    return ret_string
-    
-def open_and_validate_yaml ( fname ) :
     ret_string = ''
     return ret_string
 
@@ -212,9 +232,11 @@ def edit_func ( fname ) :
         return False
 
     # 1. Validate input file is an ASDF file.
-    yaml_text = open_and_validate_asdf(fname)
+    fd, asdf_text = open_and_validate_asdf(fname)
 
     # 2. Read and validate the YAML of an ASDF file.
+    yaml_text = read_and_validate_yaml(fd,fname)
+
     # 3. Open a YAML file for the ASDF YAML.
     # 4. Write the YAML for the original ASDF file.
 

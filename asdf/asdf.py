@@ -35,6 +35,19 @@ from ._helpers import validate_version
 
 from .tags.core import AsdfObject, Software, HistoryEntry, ExtensionMetadata
 
+def _get_asdf_version_in_comments( comments ):
+    for comment in comments:
+        parts = comment.split()
+        if len(parts) == 2 and parts[0] == constants.ASDF_STANDARD_COMMENT:
+            try:
+                version = versioning.AsdfVersion(parts[1].decode('ascii'))
+            except ValueError:
+                pass
+            else:
+                return version
+
+    return None
+
 def _parse_asdf_comment_section( content ):
     comments = []
 
@@ -794,6 +807,8 @@ class AsdfFile:
 
     @classmethod
     def _find_asdf_version_in_comments(cls, comments):
+        return _get_asdf_version_in_comments(comments)
+        '''
         for comment in comments:
             parts = comment.split()
             if len(parts) == 2 and parts[0] == constants.ASDF_STANDARD_COMMENT:
@@ -805,6 +820,7 @@ class AsdfFile:
                     return version
 
         return None
+        '''
 
     @classmethod
     def _open_asdf(cls, self, fd, uri=None, mode='r',
@@ -873,6 +889,7 @@ class AsdfFile:
             self.extensions = extensions
 
         # Read and validate YAML text.
+        # It's possible there is no YAML, so the next token could be BLOCK_MAGIC 
         yaml_token = fd.read(4)
         has_blocks = False
         tree = None
