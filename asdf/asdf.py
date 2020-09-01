@@ -35,6 +35,17 @@ from ._helpers import validate_version
 
 from .tags.core import AsdfObject, Software, HistoryEntry, ExtensionMetadata
 
+def parse_asdf_header_line ( line ) :
+    parts = line.split()
+    if len(parts) != 2 or parts[0] != constants.ASDF_MAGIC:
+        raise ValueError("Does not appear to be a ASDF file.")
+
+    try:
+        version = versioning.AsdfVersion(parts[1].decode('ascii'))
+    except ValueError:
+        raise ValueError("Unparseable version in ASDF file: {0}".format(parts[1]))
+
+    return version
 
 def get_asdf_library_info():
     """
@@ -733,6 +744,8 @@ class AsdfFile:
         """
         Parses the header line in a ASDF file to obtain the ASDF version.
         """
+        return parse_asdf_header_line(line)
+        '''
         parts = line.split()
         if len(parts) != 2 or parts[0] != constants.ASDF_MAGIC:
             raise ValueError("Does not appear to be a ASDF file.")
@@ -744,6 +757,7 @@ class AsdfFile:
                 "Unparseable version in ASDF file: {0}".format(parts[1]))
 
         return version
+        '''
 
     @classmethod
     def _parse_comment_section(cls, content):
@@ -786,11 +800,13 @@ class AsdfFile:
                    **kwargs):
         """Attempt to populate AsdfFile data from file-like object"""
 
+        # Function 1 Extensions
         if strict_extension_check and ignore_missing_extensions:
             raise ValueError(
                 "'strict_extension_check' and 'ignore_missing_extensions' are "
                 "incompatible options")
 
+        # Function 2 Validate
         if "validate_on_read" in kwargs:
             warnings.warn(
                 "The 'validate_on_read' argument is deprecated, set "
@@ -811,16 +827,20 @@ class AsdfFile:
         else:
             legacy_fill_schema_defaults = get_config().legacy_fill_schema_defaults
 
+        # Function 3 Open
         self._mode = mode
 
         fd = generic_io.get_file(fd, mode=self._mode, uri=uri)
         self._fd = fd
+
+        # Function 4 Validate ASDF
         # The filename is currently only used for tracing warning information
         self._fname = self._fd._uri if self._fd._uri else ''
         header_line = fd.read_until(b'\r?\n', 2, "newline", include=True)
         self._file_format_version = cls._parse_header_line(header_line)
         self.version = self._file_format_version
 
+        # Function 5 Read and validate YAML
         comment_section = fd.read_until(
             b'(%YAML)|(' + constants.BLOCK_MAGIC + b')', 5,
             "start of content", include=False, exception=False)
@@ -867,13 +887,16 @@ class AsdfFile:
             # to select the correct tag for us.
             tree = yamlutil.custom_tree_to_tagged_tree(AsdfObject(), self)
 
+        # Function 6 Process binary blocks
         if has_blocks:
             self._blocks.read_internal_blocks(
                 fd, past_magic=True, validate_checksums=validate_checksums)
             self._blocks.read_block_index(fd, self)
 
+        # Function 7 References
         tree = reference.find_references(tree, self)
 
+        # Function 8 Schemas
         if self.version <= versioning.FILL_DEFAULTS_MAX_VERSION and legacy_fill_schema_defaults:
             schema.fill_defaults(tree, self, reading=True)
 

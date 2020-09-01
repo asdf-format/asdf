@@ -13,6 +13,7 @@ __all__ = [
     'AsdfFile', 'CustomType', 'AsdfExtension', 'Stream', 'open', 'test',
     'commands', 'IntegerType', 'ExternalArrayReference', 'info', '__version__',
     '__githash__', 'ValidationError', 'get_config', 'config_context',
+    'parse_asdf_header_line',
 ]
 
 

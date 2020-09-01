@@ -9,10 +9,17 @@ from .extension import find_extensions
 from .info import info
 from .edit import edit
 
-
-__all__ = ['edit', 'implode', 'explode', 'to_yaml', 'defragment', 'diff', 'list_tags',
-    'find_extensions', 'info']
-
+__all__ = [
+    'defragment', 
+    'diff', 
+    'edit', 
+    'explode', 
+    'find_extensions', 
+    'implode', 
+    'info'
+    'list_tags',
+    'to_yaml', 
+]
 
 # Extracting ASDF-in-FITS files requires Astropy
 if importlib.util.find_spec('astropy'):

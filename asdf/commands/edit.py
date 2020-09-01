@@ -7,6 +7,7 @@ import os
 import sys
 
 import asdf
+from .. import generic_io
 from .main import Command
 from .. import AsdfFile
 
@@ -151,7 +152,41 @@ def get_asdf_name ( fname ) :
     base, ext = os.path.splitext(fname)
     return base + '.asdf'
 
+def validate_asdf_path ( fname ) :
+    if not os.path.exists(fname) :
+        print(f"Error: No file '{fname}' exists.")
+        return False
+
+    base, ext = os.path.splitext(fname)
+    if ext!='.asdf' :
+        return False
+    return True
+
+def validate_asdf_file ( fd ) :
+    header_line = fd.read_until(b'\r?\n', 2, "newline", include=True)
+    print(f"header_line = {header_line}")
+    #self._file_format_version = cls._parse_header_line(header_line)
+    file_format_version = asdf.parse_asdf_header_line(header_line)
+
+    
 def edit_func ( fname ) :
+    """
+    Creates a YAML file from an ASDF file.  The YAML file will contain only the
+    YAML from the ASDF file.  The YAML text will be written to a YAML text file
+    in the same, so from 'example.asdf' the file 'example.yaml' will be created.
+
+    Parameters
+    ----------
+    fname : The input file name.
+    """
+    if not validate_asdf_path(fname) :
+        return False
+
+    fullpath = os.path.abspath(fname)
+    fd = generic_io.get_file(fullpath, mode="r")
+    validate_asdf_file(fd)
+
+def edit_func_old ( fname ) :
     """
     Creates a YAML file from an ASDF file.  The YAML file will contain only the
     YAML from the ASDF file.  The YAML text will be written to a YAML text file
