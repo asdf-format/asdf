@@ -35,6 +35,17 @@ from ._helpers import validate_version
 
 from .tags.core import AsdfObject, Software, HistoryEntry, ExtensionMetadata
 
+def _parse_asdf_comment_section( content ):
+    comments = []
+
+    lines = content.splitlines()
+    for line in lines:
+        if not line.startswith(b'#'):
+            raise ValueError("Invalid content between header and tree")
+        comments.append(line[1:].strip())
+
+    return comments
+
 def _parse_asdf_header_line ( line ) :
     """ Parses the header line (first line) of an ASDF file and verifies
     it is properly formatted.
@@ -768,6 +779,8 @@ class AsdfFile:
         Parses the comment section, between the header line and the
         Tree or first block.
         """
+        return _parse_asdf_comment_section(content)
+        '''
         comments = []
 
         lines = content.splitlines()
@@ -777,6 +790,7 @@ class AsdfFile:
             comments.append(line[1:].strip())
 
         return comments
+        '''
 
     @classmethod
     def _find_asdf_version_in_comments(cls, comments):
@@ -803,13 +817,13 @@ class AsdfFile:
                    **kwargs):
         """Attempt to populate AsdfFile data from file-like object"""
 
-        # Function 1 Extensions
+        # Make sure arguments aren't contradictory
         if strict_extension_check and ignore_missing_extensions:
             raise ValueError(
                 "'strict_extension_check' and 'ignore_missing_extensions' are "
                 "incompatible options")
 
-        # Function 2 Validate
+        # Set local variables
         if "validate_on_read" in kwargs:
             warnings.warn(
                 "The 'validate_on_read' argument is deprecated, set "
@@ -830,20 +844,19 @@ class AsdfFile:
         else:
             legacy_fill_schema_defaults = get_config().legacy_fill_schema_defaults
 
-        # Function 3 Open
+        # Open the file
         self._mode = mode
 
         fd = generic_io.get_file(fd, mode=self._mode, uri=uri)
         self._fd = fd
 
-        # Function 4 Validate ASDF
-        # The filename is currently only used for tracing warning information
+        # Validate the ASDF header
         self._fname = self._fd._uri if self._fd._uri else ''
         header_line = fd.read_until(b'\r?\n', 2, "newline", include=True)
         self._file_format_version = cls._parse_header_line(header_line)
         self.version = self._file_format_version
 
-        # Function 5 Read and validate YAML
+        # Read the optional comments line(s)
         comment_section = fd.read_until(
             b'(%YAML)|(' + constants.BLOCK_MAGIC + b')', 5,
             "start of content", include=False, exception=False)
@@ -859,6 +872,7 @@ class AsdfFile:
         if extensions:
             self.extensions = extensions
 
+        # Read and validate YAML text.
         yaml_token = fd.read(4)
         has_blocks = False
         tree = None

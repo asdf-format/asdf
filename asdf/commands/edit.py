@@ -6,6 +6,8 @@ Contains commands for dealing with exploded and imploded forms.
 import os
 import sys
 
+import asdf.constants as constants
+
 from asdf.asdf import _parse_asdf_header_line
 from .. import generic_io
 from .main import Command
@@ -165,11 +167,37 @@ def validate_asdf_path ( fname ) :
 
 def validate_asdf_file ( fd ) :
     global asdf_format_version 
+
     header_line = fd.read_until(b'\r?\n', 2, "newline", include=True)
     asdf_format_version = _parse_asdf_header_line(header_line)
     # Validate ASDF format version
-    return True
+    comment_section = fd.read_until( b'(%YAML)|(' + constants.BLOCK_MAGIC + b')', 
+                                     5, 
+                                     "start of content", 
+                                     include=False, 
+                                     exception=False)
+
+    return header_line + comment_section 
     
+def open_and_validate_asdf ( fname ) :
+    """ Open and validate the ASDF file, as well as read in all the YAML
+    that will be outputted to a YAML file.
+    """
+    fullpath = os.path.abspath(fname)
+    fd = generic_io.get_file(fullpath, mode="r")
+
+    header_and_comment = validate_asdf_file(fd)
+    ret_string = header_and_comment 
+
+    print(f"ret_string = {ret_string}")
+    sys.exit(1)
+
+    return ret_string
+    
+def open_and_validate_yaml ( fname ) :
+    ret_string = ''
+    return ret_string
+
 def edit_func ( fname ) :
     """
     Creates a YAML file from an ASDF file.  The YAML file will contain only the
@@ -183,9 +211,12 @@ def edit_func ( fname ) :
     if not validate_asdf_path(fname) :
         return False
 
-    fullpath = os.path.abspath(fname)
-    fd = generic_io.get_file(fullpath, mode="r")
-    validate_asdf_file(fd)
+    # 1. Validate input file is an ASDF file.
+    yaml_text = open_and_validate_asdf(fname)
+
+    # 2. Read and validate the YAML of an ASDF file.
+    # 3. Open a YAML file for the ASDF YAML.
+    # 4. Write the YAML for the original ASDF file.
 
 def edit_func_old ( fname ) :
     """
