@@ -6,7 +6,7 @@ Contains commands for dealing with exploded and imploded forms.
 import os
 import sys
 
-from asdf.asdf import __parse_asdf_header_line
+from asdf.asdf import _parse_asdf_header_line
 from .. import generic_io
 from .main import Command
 from .. import AsdfFile
@@ -166,7 +166,7 @@ def validate_asdf_path ( fname ) :
 def validate_asdf_file ( fd ) :
     global asdf_format_version 
     header_line = fd.read_until(b'\r?\n', 2, "newline", include=True)
-    asdf_format_version = __parse_asdf_header_line(header_line)
+    asdf_format_version = _parse_asdf_header_line(header_line)
     # Validate ASDF format version
     return True
     

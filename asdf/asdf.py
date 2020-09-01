@@ -35,7 +35,7 @@ from ._helpers import validate_version
 
 from .tags.core import AsdfObject, Software, HistoryEntry, ExtensionMetadata
 
-def __parse_asdf_header_line ( line ) :
+def _parse_asdf_header_line ( line ) :
     """ Parses the header line (first line) of an ASDF file and verifies
     it is properly formatted.
     """
@@ -747,7 +747,7 @@ class AsdfFile:
         """
         Parses the header line in a ASDF file to obtain the ASDF version.
         """
-        return __parse_asdf_header_line(line)
+        return _parse_asdf_header_line(line)
         '''
         parts = line.split()
         if len(parts) != 2 or parts[0] != constants.ASDF_MAGIC:
@@ -803,11 +803,13 @@ class AsdfFile:
                    **kwargs):
         """Attempt to populate AsdfFile data from file-like object"""
 
+        # Function 1 Extensions
         if strict_extension_check and ignore_missing_extensions:
             raise ValueError(
                 "'strict_extension_check' and 'ignore_missing_extensions' are "
                 "incompatible options")
 
+        # Function 2 Validate
         if "validate_on_read" in kwargs:
             warnings.warn(
                 "The 'validate_on_read' argument is deprecated, set "
@@ -828,11 +830,13 @@ class AsdfFile:
         else:
             legacy_fill_schema_defaults = get_config().legacy_fill_schema_defaults
 
+        # Function 3 Open
         self._mode = mode
 
         fd = generic_io.get_file(fd, mode=self._mode, uri=uri)
         self._fd = fd
 
+        # Function 4 Validate ASDF
         # The filename is currently only used for tracing warning information
         self._fname = self._fd._uri if self._fd._uri else ''
         header_line = fd.read_until(b'\r?\n', 2, "newline", include=True)
