@@ -1,8 +1,9 @@
 """
-Contains commands for dealing with exploded and imploded forms.
+Contains commands for lightweight text editing of an ASDF file.
+Future work: Make this interactive editing.
 """
 
-
+import io
 import os
 import sys
 
@@ -11,20 +12,26 @@ import asdf.constants as constants
 from asdf.asdf import _parse_asdf_header_line
 from asdf.asdf import _parse_asdf_comment_section
 from asdf.asdf import _get_asdf_version_in_comments
-from .. import generic_io
-from .. import yamlutil
-from .main import Command
-from .. import AsdfFile
 
+from .. import AsdfFile
+from .. import generic_io
+from .. import reference
+from .. import schema
+from .. import yamlutil
+
+from .main import Command
 
 __all__ = ['edit']
 
-asdf_format_version = None
-asdf_standard_version = None
+#asdf_format_version = None
+#asdf_standard_version = None
+
 
 class Edit(Command):
     @classmethod
     def setup_arguments(cls, subparsers):
+        """ Set up a command line argument parser for the edit subcommand.
+        """
         desc_string = "Allows for easy editing of the YAML in an ASDF file.  " \
                       "For edit mode, the YAML portion of an ASDF file is"  \
                       "separated from the ASDF into a text file for easy" \
@@ -39,7 +46,12 @@ class Edit(Command):
         # Need an input file
         parser.add_argument(
             '--infile', '-f', type=str, required=True, dest='fname',
-            help="Input file")
+            help="Input file (ASDF for -e option, YAML for -s option")
+
+        # Need an output file
+        parser.add_argument(
+            '--outfile', '-o', type=str, required=True, dest='oname',
+            help="Output file (YAML for -e option, ASDF for -s option")
 
         # The edit is either being performed or saved
         group = parser.add_mutually_exclusive_group(required=True)
@@ -56,7 +68,10 @@ class Edit(Command):
 
     @classmethod
     def run(cls, args):
+        """ Execute the edit subcommand.
+        """
         return edit(args)
+
 
 def is_yaml_file ( fname ) :
     '''
@@ -71,6 +86,7 @@ def is_yaml_file ( fname ) :
     if '.yaml' != ext :
         return False
     return True
+
 
 def is_asdf_file ( fname ) :
     '''
@@ -94,131 +110,142 @@ def is_asdf_file ( fname ) :
 
     return True
 
-def get_yaml ( fname, return_yaml=False ) :
-    '''
-    Reads all bytes from an ASDF file up to the '\n...\n' delimiter, which 
-    separates the YAML text from the binary data.  The location of the
-    first byte of the delimiter is alwyas returned.  When requested, the 
-    YAML text is also, returned.
+
+def is_validate_path_and_ext ( fname, wanted_ext=None ) :
+    """ Validates the path exists and the extension is one wanted.
 
     Parameters
     ----------
     fname : The input file name.
-    return_yaml : the boolean flag to return the YAML text
-    '''
-
-    chunk_size = 1024                   # Arbitrary chunk to read
-
-    # TODO - this needs to change to look for '\r\n' and not just '\n'.
-    dstart = b'\x0a\x2e\x2e\x2e\x0a'    # The binary data delimiter - '\n...\n'
-    dlen = len(dstart)                  # Length of binary delimiter
-
-    with open(fname,"r+b") as fd :
-        dfound = False                  # No data found, yet
-        fbytes = fd.read(chunk_size)
-        chunk_cnt = 0
-        chunk_start = 0
-        chunk_end = chunk_start + chunk_size - dlen
-        while not dfound :
-            for k in range(chunk_start,chunk_end) :
-                if dstart==fbytes[k:k+dlen] :   # Check for the data delimiter
-                    dfound = True
-                    if return_yaml :
-                        return k, fbytes[:k].decode('utf-8')
-                    else :
-                        return k, ''
-            chunk_cnt = chunk_cnt + 1           # Count the number of chunks read
-            cbytes = fd.read(chunk_size)
-            if cbytes is None :
-                return -1, ''   # EOF without finding delimiter
-            fbytes += cbytes    # Save all bytes read
-            chunk_start = chunk_cnt * chunk_size - dlen
-            chunk_end = chunk_start + chunk_size
-
-    return -1, ''   # EOF without finding delimiter
-
-def get_yaml_name ( fname ) :
-    '''
-    Using the base ASDF name, create a corresponding YAML file name.
-
-    Parameters
-    ----------
-    fname : The input file name.
-    '''
-    base, ext = os.path.splitext(fname)
-    return base + '.yaml'
-
-def get_asdf_name ( fname ) :
-    '''
-    Using the base YAML name, create a corresponding ASDF file name.
-
-    Parameters
-    ----------
-    fname : The input file name.
-    '''
-    base, ext = os.path.splitext(fname)
-    return base + '.asdf'
-
-def validate_asdf_path ( fname ) :
+    wanted_ext : List of extensions to check.
+    """
     if not os.path.exists(fname) :
         print(f"Error: No file '{fname}' exists.")
         return False
 
+    # Simply validates the path existence
+    if wanted_ext is None:  
+        return True
+    
+    # Make sure the extension is one desired.
     base, ext = os.path.splitext(fname)
-    if ext!='.asdf' :
+    if ext not in wanted_ext:
         return False
+
     return True
 
+
+def is_validate_asdf_path ( fname ) :
+    """ Validates fname path exists and has extension '.asdf'.
+
+    Parameters
+    ----------
+    fname : The input file name.
+    """
+    ext = ['.asdf']
+    if is_validate_path_and_ext(fname,ext) : 
+        return True
+    print(f"Error: '{fname}' should have extension '{ext[0]}'")
+    return False
+
+
+def is_validate_yaml_path ( fname ) :
+    """ Validates fname path exists and has extension '.yaml'.
+
+    Parameters
+    ----------
+    fname : The input file name.
+    """
+    ext = ['.yaml']
+    if is_validate_path_and_ext(fname,ext) : 
+        return True
+    print(f"Error: '{fname}' should have extension '{ext[0]}'")
+    return False
+
+
 def validate_asdf_file ( fd ) :
-    global asdf_format_version 
-    global asdf_standard_version 
+    """ Makes sure the header line is the expected one, as well
+    as getting the optional comment line.
+
+    Parameters
+    ----------
+    fd : GenericFile
+    """
+    #global asdf_format_version 
+    #global asdf_standard_version 
+    ASDF_ID = b'#ASDF'
 
     header_line = fd.read_until(b'\r?\n', 2, "newline", include=True)
-    asdf_format_version = _parse_asdf_header_line(header_line)
-    # Validate ASDF format version
+    if ASDF_ID!=header_line[:len(ASDF_ID)] :
+        # Raise exception
+        print("Invalid ASDF ID")
+        sys.exit(1)
+    
+    #asdf_format_version = _parse_asdf_header_line(header_line)
+    # Maybe validate ASDF format version
     comment_section = fd.read_until( b'(%YAML)|(' + constants.BLOCK_MAGIC + b')', 
                                      5, 
                                      "start of content", 
                                      include=False, 
                                      exception=False)
-    comments = _parse_asdf_comment_section(comment_section)
-    asdf_standard_version = _get_asdf_version_in_comments(comments)
+    # Maybe do the following for more validate.  But maybe not.
+    #comments = _parse_asdf_comment_section(comment_section)
+    #asdf_standard_version = _get_asdf_version_in_comments(comments)
 
     return header_line + comment_section 
     
 def open_and_validate_asdf ( fname ) :
     """ Open and validate the ASDF file, as well as read in all the YAML
     that will be outputted to a YAML file.
+
+    Parameters
+    ----------
+    fname : The input file name.
     """
     fullpath = os.path.abspath(fname)
     fd = generic_io.get_file(fullpath, mode="r")
 
+    # Read the ASDF header and optional comments section
     header_and_comment = validate_asdf_file(fd)
-    ret_string = header_and_comment 
 
-    return fd, ret_string
+    return fd, header_and_comment # Return GenericFile and ASDF header bytes.
     
 def read_and_validate_yaml ( fd, fname ) :
+    """ Get the YAML text from an ASDF formatted file.
+
+    Parameters
+    ----------
+    fname : The input file name.
+    fd : GenericFile for fname.
+    """
     YAML_TOKEN = b'%YAML'
     token = fd.read(len(YAML_TOKEN))
     if token != YAML_TOKEN :
+        # Raise exception
         print(f"Error: No YAML in '{fname}'")
         sys.exit(0)
     
+    # Get YAML reader and content
     reader = fd.reader_until(constants.YAML_END_MARKER_REGEX, 
                              7, 
                              'End of YAML marker',  
                              include=True, 
                              initial_content=token)
     yaml_content = reader.read()
-    tree = yamlutil.load_tree(reader)
-    print(f"tree = \n{tree}\n") # Why is this None?
-    sys.exit(1)
 
-    ret_string = ''
-    return ret_string
+    # Create a YAML tree to validate
+    # The YAML text must be converted to a stream.
+    tree = yamlutil.load_tree(io.BytesIO(yaml_content))
+    if tree is None:
+        # Raise exception.
+        print("Error: 'yamlutil.load_tree' failed to return a tree.")
+        sys.exist(1)
+    
+    schema.validate(tree, None) # Failure raises and exception.
 
-def edit_func ( fname ) :
+    return yaml_content
+
+def edit_func ( fname, oname ) :
     """
     Creates a YAML file from an ASDF file.  The YAML file will contain only the
     YAML from the ASDF file.  The YAML text will be written to a YAML text file
@@ -226,9 +253,10 @@ def edit_func ( fname ) :
 
     Parameters
     ----------
-    fname : The input file name.
+    fname : The input ASDF file name.
+    oname : The output YAML file name.
     """
-    if not validate_asdf_path(fname) :
+    if not is_validate_asdf_path(fname) :
         return False
 
     # 1. Validate input file is an ASDF file.
@@ -238,63 +266,35 @@ def edit_func ( fname ) :
     yaml_text = read_and_validate_yaml(fd,fname)
 
     # 3. Open a YAML file for the ASDF YAML.
-    # 4. Write the YAML for the original ASDF file.
-
-def edit_func_old ( fname ) :
-    """
-    Creates a YAML file from an ASDF file.  The YAML file will contain only the
-    YAML from the ASDF file.  The YAML text will be written to a YAML text file
-    in the same, so from 'example.asdf' the file 'example.yaml' will be created.
-
-    Parameters
-    ----------
-    fname : The input file name.
-    """
-
-    # TODO - validate an ASDF file
-    fullpath = os.path.abspath(fname)
-    if not is_asdf_file(fullpath) :
-        print("To use the '-e' option, as ASDF file must be inputted.")
-        print(f"The file is not an ASDF: \n'{fullpath}'\n")
-        return False
-
-    # Get YAML from ASDF and its end location in the YAML file
-    loc, yaml_string = get_yaml(fullpath,return_yaml=True)
-    if -1==loc :
-        print(f"Could not find the YAML of '{fullpath}'",file=sys.stderr)
+    if not is_yaml_file(oname) : 
+        # Raise an exception
+        print(f"Error: '{oname}' must have '.yaml' extension.")
         sys.exit(1)
 
-    # Open YAML file
-    fullyaml = get_yaml_name(fullpath)
+    # 4. Write the YAML for the original ASDF file.
+    with open(oname,"wb") as ofd :
+        ofd.write(asdf_text)
+        ofd.write(yaml_text)
 
-    # Write all YAML from ASDF to YAML
-    with open(fullyaml,"w") as fd :
-        fd.write(f"{yaml_string}")
-    # Tell user 
-    delim = '*' * 65
-    print(f"{delim}")
-    print(f"A YAML text file has been created at:\n'{fullyaml}'\n")
-    print("Edit this file in any text editor, then run the following command")
-    print("to save YAML edits to the ASDF file:\n")
-    print(f"'asdftool edit -s --infile {fullyaml}")
+    # 5. Output message to user.
+    delim = '*' * 70
     print(f"\n{delim}")
-    
+    print("ASDF formatting and YAML schema validated.") 
+    print(f"The text portion of '{fname}' is written to:")
+    print(f"    '{oname}'")
+    print(f"The file '{oname}' can be edited using your favorite text editor.")
+    print("The edited text can then be saved to the ASDF file of your choice")
+    print("using 'asdftool edit -s -f <edited text file> -o <ASDF file>.")
+    print('-' * 70)
+    print("Note: This is meant to be a lightweight text editing tool of")
+    print("      ASDF .If the edited text is larger than the YAML portion")
+    print("      of the ASDF file to be written to, the edits may not be")
+    print("      able to saved.")
+    print(f"{delim}\n")
 
-def get_yaml_with_no_trailing_whitespace ( yamlpath ) :
-    '''
-    Get the YAML text from an ASDF file and remove any trailing whitespace.
+    return
 
-    Parameters
-    ----------
-    fname : The input YAML file.
-    '''
-    with open(yamlpath,"r") as fd :
-        yaml = fd.read()
-        return yaml.rstrip()
-
-    return ''
-
-def save_func ( fname ) :
+def save_func ( fname, oname ) :
     """
     Checks to makes sure a corresponding ASDF file exists.  This is done by 
         seeing if a file of the same name with '.asdf' as an extension exists.
@@ -308,65 +308,31 @@ def save_func ( fname ) :
     Parameters
     ----------
     fname : The input YAML file.
+    oname : The output ASDF file name.
     """
     _1G = 1000**3   # 1 gig
     C   = 1         # constant multiple of gig
     SMALL_FILE_SIZE = C * _1G
 
-    fullpath = os.path.abspath(fname)
-    fullasdf = get_asdf_name(fullpath)
-    if not is_yaml_file(fullpath) : # Validate YAML file
-        print("To use the '-s' option, as YAML fle must be inputted.")
-        print(f"The file is not a YAML: \n'{fullpath}'\n")
+    if not is_validate_yaml_path(fname):
         return False
 
-    # Check to see if a corresponding ASDF file exists
-    if not os.path.exists(fullasdf) :
-        print(f"Error: ASDF file does not exist '{fullasdf}'",file=sys.stderr)
+    if not is_validate_asdf_path(oname):
+        return False
 
-    # Find end of YAML in ASDF
-    loc, yaml_string = get_yaml(fullasdf,return_yaml=False)
-    if -1==loc :
-        print(f"Could not find the YAML of '{fullasdf}'",file=sys.stderr)
-        sys.exit(1)
+    # 1. Validate input file is an ASDF file.
+    fd, asdf_text = open_and_validate_asdf(fname)
 
-    # Read YAML
-    yaml = get_yaml_with_no_trailing_whitespace(fullpath) 
-    yaml_bytes = bytes(yaml,'utf-8')
+    # 2. Read and validate the YAML of an ASDF file.
+    yaml_text = read_and_validate_yaml(fd,fname)
 
-    # TODO - validate YAML format and schema (maybe do this else where)
+    edited_text = asdf_text + yaml_text
 
-    # If larger than YAML in ASDF
-    # TODO - Investigate python module fileinput
-    #print(f"loc = {loc}, len(yaml) = {len(yaml)}")
-    if loc == len(yaml_bytes) :
-        #with open(fullasdf,"w") as fd :
-        with open(fullasdf,"r+b") as fd :
-            fd.write(yaml_bytes)
-        print("Good write")
-    elif loc > len(yaml_bytes) :
-        diff = loc - len(yaml_bytes)
-        # pad out YAML with spaces to ensure the entire YAML portion is overwritten 
-        whitespace = ' ' * diff 
-        bwrite = yaml_bytes + bytes(whitespace,'utf-8')
-        with open(fullasdf,"r+b") as fd :
-            fd.write(bwrite)
-    else :
-        # TODO - add functionality to detect the size of the ASDF file.  If it's
-        #        smaller than a specific size rewrire the whole file.  If it's
-        #        larger than a specific size tell the user to see if he wants a
-        #        rewrite.
-        print(f"\n\nYAML text ({len(yaml):,} bytes) in\n    '{fullpath}'")
-        print(f"is larger than available space ({loc} bytes)  in")
-        print(f"    {fullasdf}\n\n")
-        asdf_size = os.path.getsize(fullasdf)
-        if asdf_size < SMALL_FILE_SIZE :
-            print(f"asdf_size = {asdf_size:,} and is less than {SMALL_FILE_SIZE:,} bytes")
-        else :
-            print(f"asdf_size = {asdf_size:,} and is greater than {SMALL_FILE_SIZE:,} bytes")
-        print("\n")
+    # 3. Get text from ASDF file.
+    # 4. Compare text sizes and maybe output.
+    # 5. Output message to user.
 
-
+    return
 
 def edit ( args ) :
     """
@@ -378,9 +344,9 @@ def edit ( args ) :
     args : The command line arguments. 
     """
     if args.edit :
-        return edit_func(args.fname)
+        return edit_func(args.fname,args.oname)
     elif args.save :
-        return save_func(args.fname)
+        return save_func(args.fname,args.oname)
     else :
         return print("Invalid arguments")
 

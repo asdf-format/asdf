@@ -6,6 +6,8 @@ import datetime
 import warnings
 from pkg_resources import parse_version
 
+import ipdb
+
 import numpy as np
 from jsonschema import ValidationError
 
@@ -36,6 +38,8 @@ from ._helpers import validate_version
 from .tags.core import AsdfObject, Software, HistoryEntry, ExtensionMetadata
 
 def _get_asdf_version_in_comments( comments ):
+    """ From the initial comments line in an ASDF file, capture the ASDF version.
+    """
     for comment in comments:
         parts = comment.split()
         if len(parts) == 2 and parts[0] == constants.ASDF_STANDARD_COMMENT:
@@ -49,6 +53,9 @@ def _get_asdf_version_in_comments( comments ):
     return None
 
 def _parse_asdf_comment_section( content ):
+    """ Parses the comment section, between the header line and the
+        Tree or first block.
+    """
     comments = []
 
     lines = content.splitlines()
@@ -772,19 +779,6 @@ class AsdfFile:
         Parses the header line in a ASDF file to obtain the ASDF version.
         """
         return _parse_asdf_header_line(line)
-        '''
-        parts = line.split()
-        if len(parts) != 2 or parts[0] != constants.ASDF_MAGIC:
-            raise ValueError("Does not appear to be a ASDF file.")
-
-        try:
-            version = versioning.AsdfVersion(parts[1].decode('ascii'))
-        except ValueError:
-            raise ValueError(
-                "Unparseable version in ASDF file: {0}".format(parts[1]))
-
-        return version
-        '''
 
     @classmethod
     def _parse_comment_section(cls, content):
@@ -793,34 +787,13 @@ class AsdfFile:
         Tree or first block.
         """
         return _parse_asdf_comment_section(content)
-        '''
-        comments = []
-
-        lines = content.splitlines()
-        for line in lines:
-            if not line.startswith(b'#'):
-                raise ValueError("Invalid content between header and tree")
-            comments.append(line[1:].strip())
-
-        return comments
-        '''
 
     @classmethod
     def _find_asdf_version_in_comments(cls, comments):
+        """ From the initial comments line in an ASDF file, capture the ASDF 
+        version.
+        """
         return _get_asdf_version_in_comments(comments)
-        '''
-        for comment in comments:
-            parts = comment.split()
-            if len(parts) == 2 and parts[0] == constants.ASDF_STANDARD_COMMENT:
-                try:
-                    version = versioning.AsdfVersion(parts[1].decode('ascii'))
-                except ValueError:
-                    pass
-                else:
-                    return version
-
-        return None
-        '''
 
     @classmethod
     def _open_asdf(cls, self, fd, uri=None, mode='r',
@@ -840,6 +813,8 @@ class AsdfFile:
                 "incompatible options")
 
         # Set local variables
+        # TODO From here to self._mode = mode, can put in a function
+        # TODO validate_on_read, legacy_fill_schema_defaults = validate_and_schema(kwargs)
         if "validate_on_read" in kwargs:
             warnings.warn(
                 "The 'validate_on_read' argument is deprecated, set "
@@ -914,6 +889,7 @@ class AsdfFile:
         elif yaml_token != b'':
             raise IOError("ASDF file appears to contain garbage after header.")
 
+        # The variable tree gets overwritten mulitple times.  Why?
         if tree is None:
             # At this point the tree should be tagged, but we want it to be
             # tagged with the core/asdf version appropriate to this file's
@@ -928,6 +904,7 @@ class AsdfFile:
             self._blocks.read_block_index(fd, self)
 
         # Function 7 References
+        ipdb.set_trace()
         tree = reference.find_references(tree, self)
 
         # Function 8 Schemas
@@ -936,6 +913,7 @@ class AsdfFile:
 
         if validate_on_read:
             try:
+                # TODO Validation will take some work to separate from the class.
                 self._validate(tree, reading=True)
             except ValidationError:
                 self.close()
