@@ -273,27 +273,6 @@ def test_extensions():
         assert len(config.extensions) == len(original_extensions)
 
 
-def test_get_extension():
-    class FooExtension:
-        extension_uri = "asdf://somewhere.org/extensions/foo-1.0"
-        types = []
-        tag_mapping = []
-        url_mapping = []
-
-    with asdf.config_context() as config:
-        with pytest.raises(KeyError):
-            config.get_extension(FooExtension.extension_uri)
-
-        extension = FooExtension()
-        config.add_extension(extension)
-        config.get_extension(FooExtension.extension_uri).delegate is extension
-
-        # Extensions added later take precedence:
-        duplicate_extension = FooExtension()
-        config.add_extension(extension)
-        config.get_extension(FooExtension.extension_uri).delegate is duplicate_extension
-
-
 def test_config_repr():
     with asdf.config_context() as config:
         config.validate_on_read = True

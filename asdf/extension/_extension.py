@@ -311,10 +311,14 @@ class ExtensionProxy(Extension, AsdfExtension):
         if self.package_name is None:
             package_description = "(none)"
         else:
-            package_description = "{}=={}".format(self.package_name, self.package_version)
+            package_description = f"{self.package_name}=={self.package_version}"
 
-        return "<ExtensionProxy class: {} package: {} legacy: {}>".format(
-            self.class_name,
-            package_description,
-            self.legacy,
+        if self.extension_uri is None:
+            uri_description = "(none)"
+        else:
+            uri_description = self.extension_uri
+
+        return (
+            f"<ExtensionProxy URI: {uri_description} class: {self.class_name} "
+            f"package: {package_description} legacy: {self.legacy}>"
         )

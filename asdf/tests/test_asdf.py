@@ -99,41 +99,21 @@ def test_asdf_file_version():
 
 def test_asdf_file_extensions():
     af = AsdfFile()
-    assert af.extensions == get_config().extensions
+    assert af.extensions == []
 
     extension = TestExtension(extension_uri="asdf://somewhere.org/extensions/foo-1.0")
 
     for arg in ([extension], extension, AsdfExtensionList([extension])):
         af = AsdfFile(extensions=arg)
-        assert af.extensions[0] == ExtensionProxy(extension)
-        assert af.extensions[1:] == get_config().extensions
+        assert af.extensions == [ExtensionProxy(extension)]
 
         af = AsdfFile()
         af.extensions = arg
-        assert af.extensions[0] == ExtensionProxy(extension)
-        assert af.extensions[1:] == get_config().extensions
-
-    # This use case is a little silly, but in the future it will be
-    # possible to disable extensions globally and passing the URI
-    # will enable them on an individual file basis.  Currently all
-    # we can do with the URI is put the extension at the head of
-    # list so that it has priority.
-    with config_context() as config:
-        config.add_extension(extension)
-        for arg in ([extension.extension_uri], extension.extension_uri):
-            af = AsdfFile(extensions=arg)
-            assert af.extensions[0] == ExtensionProxy(extension)
-
-            af = AsdfFile()
-            af.extensions = arg
-            assert af.extensions[0] == ExtensionProxy(extension)
+        assert af.extensions == [ExtensionProxy(extension)]
 
     for arg in (object(), [object()]):
         with pytest.raises(TypeError):
             AsdfFile(extensions=arg)
-
-    with pytest.raises(KeyError):
-        AsdfFile(extensions="not-a-URI")
 
 
 def test_asdf_file_version_requirement():
@@ -166,9 +146,8 @@ def test_asdf_file_version_requirement():
         config.add_extension(extension_with_requirement)
         with assert_no_warnings():
             af = AsdfFile(version="1.4.0")
-            assert ExtensionProxy(extension_with_requirement) not in af.extensions
 
-        # ... unless the user explicitly requested the invalid exception:
+        # ... unless the user explicitly requested the invalid extension:
         with pytest.warns(AsdfWarning, match="does not support ASDF Standard 1.4.0"):
             af = AsdfFile(version="1.4.0", extensions=[extension_with_requirement])
 
@@ -182,32 +161,16 @@ def test_open_asdf_extensions(tmpdir):
         af.write_to(path)
 
     with open_asdf(path) as af:
-        assert af.extensions == get_config().extensions
+        assert af.extensions == []
 
     for arg in ([extension], extension, AsdfExtensionList([extension])):
         with open_asdf(path, extensions=arg) as af:
-            assert af.extensions[0] == ExtensionProxy(extension)
-            assert af.extensions[1:] == get_config().extensions
-
-    # This use case is a little silly, but in the future it will be
-    # possible to disable extensions globally and passing the URI
-    # will enable them on an individual file basis.  Currently all
-    # we can do with the URI is put the extension at the head of
-    # list so that it has priority.
-    with config_context() as config:
-        config.add_extension(extension)
-        for arg in ([extension.extension_uri], extension.extension_uri):
-            with open_asdf(path, extensions=arg) as af:
-                assert af.extensions[0] == ExtensionProxy(extension)
+            assert af.extensions == [ExtensionProxy(extension)]
 
     for arg in (object(), [object()]):
         with pytest.raises(TypeError):
             with open_asdf(path, extensions=arg) as af:
                 pass
-
-    with pytest.raises(KeyError):
-        with open_asdf(path, extensions="not-a-URI"):
-            pass
 
 
 def test_serialization_context():

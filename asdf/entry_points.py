@@ -24,7 +24,19 @@ def get_extensions():
 
 def _list_entry_points(group, proxy_class):
     results = []
-    for entry_point in iter_entry_points(group=group):
+
+    entry_points = list(iter_entry_points(group=group))
+
+    # The order of plugins may be significant, since in the case of
+    # duplicate functionality the first plugin in the list takes
+    # precedence.  It's not clear if entry points are ordered
+    # in a consistent way across systems so we explicitly sort
+    # by package name.  Plugins from this package are placed
+    # at the end so that other packages can override them.
+    asdf_entry_points = [e for e in entry_points if e.dist.project_name == "asdf"]
+    other_entry_points = sorted([e for e in entry_points if e.dist.project_name != "asdf"], key=lambda e: e.dist.project_name)
+
+    for entry_point in other_entry_points + asdf_entry_points:
         package_name = entry_point.dist.project_name
         package_version = entry_point.dist.version
 
