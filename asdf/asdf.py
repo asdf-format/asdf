@@ -805,6 +805,9 @@ class AsdfFile:
                    ignore_missing_extensions=False,
                    **kwargs):
         """Attempt to populate AsdfFile data from file-like object"""
+        # Generally, I think this function should be made smaller.  There are
+        # many steps being taken here that can be broken down, with expressible
+        # function names to make clearer what this function does.
 
         # Make sure arguments aren't contradictory
         if strict_extension_check and ignore_missing_extensions:

@@ -316,6 +316,7 @@ def buffer_edited_text ( edited_text, orig_text ) :
         print(f"last {len(wdelim)} bytes are {edited_text[-len(wdelim):]}.")
         sys.exit(1)
 
+    # May not be correct.  If on Windows use '\r\n'.
     buffered_text = edited_text[:-len(delim)] + b'\n' + b' '*(diff-1) + delim
     return buffered_text, diff-1 
 
@@ -323,6 +324,14 @@ def buffer_edited_text ( edited_text, orig_text ) :
     #return buffered_text, diff
 
 def rewrite_asdf_file ( edited_text, orig_text, oname, fname ) :
+    """ TODO This function implentation needs to be finished.
+    Rewrite an ASDF file for too large edited YAML.  The edited YAML, a buffer,
+    the blocks will be rewritten.  A block index will also be rewritten.  If a
+    block index existed in the old file, it will have to be recomputed to 
+    because of the larger YAML size and buffer, which changes the location of 
+    the binary blocks.
+    """
+    
     tmp_oname = oname + '.tmp'
     buffer_size = 10 * 1000
     buffer_text = b'\n' + b' ' * buffer_size
@@ -331,10 +340,16 @@ def rewrite_asdf_file ( edited_text, orig_text, oname, fname ) :
 
     with open(oname,"r+b") as fd :
         orig_buffer = fd.read()
+    
+    # Compute asdf_blocks and block_index
     asdf_blocks = orig_buffer[len(orig_text):] 
     out_bytes = edited_text + buffer_text + asdf_blocks
 
     # TODO Compute new block index!!!!
+    # This should be straight forward by figuring out.  Compute the length of 
+    # edited_text plus the length of the buffer_text, the compute that difference
+    # with the length of the orig_text.  This difference will be added to each 
+    # index in the block index list.
 
     with open(tmp_oname,"w+b") as fd :
         fd.write(out_bytes)
@@ -405,6 +420,13 @@ def save_func ( fname, oname ) :
         print(f"Added a {diff} buffer of spaces between the YAML text and binary blocks.")
         print(f"{msg_delim}\n")
     else :
+        print(f"\n{msg_delim}")
+        print(f"Cannot write the text from '{fname}' to '{oname}'.")
+        print(f"There is too much edited text to write and the ASDF file")
+        print(f"is too large to rewrite.")
+        print("Another method must be used to edit '{oname}'.")
+        print(f"{msg_delim}\n")
+        '''
         if os.stat(oname).st_size <= SMALL_FILE_SIZE :
             rewrite_asdf_file(edited_text,asdf_text,oname,fname)
         else:
@@ -414,8 +436,7 @@ def save_func ( fname, oname ) :
             print(f"is too large to rewrite.")
             print("Another method must be used to edit '{oname}'.")
             print(f"{msg_delim}\n")
-            
-    # Output message to user.
+        '''
 
     return
 
