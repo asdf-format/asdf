@@ -5,6 +5,7 @@ Future work: Make this interactive editing.
 
 import io
 import os
+import struct
 import sys
 
 import asdf.constants as constants
@@ -177,7 +178,7 @@ def validate_asdf_file ( fd ) :
 
     header_line = fd.read_until(b'\r?\n', 2, "newline", include=True)
     if ASDF_ID!=header_line[:len(ASDF_ID)] :
-        # Raise exception
+        # Maybe raise exception
         print("Invalid ASDF ID")
         sys.exit(1)
     
@@ -221,7 +222,7 @@ def read_and_validate_yaml ( fd, fname ) :
     YAML_TOKEN = b'%YAML'
     token = fd.read(len(YAML_TOKEN))
     if token != YAML_TOKEN :
-        # Raise exception
+        # Maybe raise exception
         print(f"Error: No YAML in '{fname}'")
         sys.exit(0)
     
@@ -237,7 +238,7 @@ def read_and_validate_yaml ( fd, fname ) :
     # The YAML text must be converted to a stream.
     tree = yamlutil.load_tree(io.BytesIO(yaml_content))
     if tree is None:
-        # Raise exception.
+        # Maybe raise exception.
         print("Error: 'yamlutil.load_tree' failed to return a tree.")
         sys.exist(1)
     
@@ -310,7 +311,7 @@ def buffer_edited_text ( edited_text, orig_text ) :
     elif edited_text[-len(ldelim):]==ldelim :
         delim = ldelim
     else:
-        # Raise exception
+        # Mabye raise exception
         print("Unrecognized YAML delimiter ending the YAML text.")
         print(f"It should be {wdelim} or {ldelim}, but the")
         print(f"last {len(wdelim)} bytes are {edited_text[-len(wdelim):]}.")
@@ -320,48 +321,116 @@ def buffer_edited_text ( edited_text, orig_text ) :
     buffered_text = edited_text[:-len(delim)] + b'\n' + b' '*(diff-1) + delim
     return buffered_text, diff-1 
 
-    # buffered_text = edited_text[:-len(delim)] + b' '*diff + delim
-    #return buffered_text, diff
+
+def add_buffer_to_new_text ( edited_text, buffer_size ) :
+    """ Adds buffer to edited text.
+    """
+    wdelim = b'\r\n...\r\n'
+    ldelim = b'\n...\n'
+    if edited_text[-len(wdelim):]==wdelim :
+        delim = wdelim
+    elif edited_text[-len(ldelim):]==ldelim :
+        delim = ldelim
+    else:
+        # Maybe raise exception
+        print("Unrecognized YAML delimiter ending the YAML text.")
+        print(f"It should be {wdelim} or {ldelim}, but the")
+        print(f"last {len(wdelim)} bytes are {edited_text[-len(wdelim):]}.")
+        sys.exit(1)
+
+    buf = b' ' * buffer_size
+    buffered_text = edited_text[:-len(delim)] + b'\n' + buf + delim
+
+    return buffered_text 
+
+def compute_block_index_blocks ( start, asdf_blocks ) :
+    """ Computes new block index and strips any data after last found block.
+    """
+    if constants.BLOCK_MAGIC!=asdf_blocks[:len(constants.BLOCK_MAGIC)] :
+        return [], asdf_blocks      # Not sure if this should happen
+
+    # Minimum block header is 
+    # 4 bytes of magic number
+    # 2 bytes of header length, after the length field (min 48)
+    # 4 bytes flag
+    # 4 bytes compression
+    # 8 bytes allocated size
+    # 8 bytes used (on disk) size
+    # 8 bytes data size
+    # 16 bytes checksum
+    bmlen = len(constants.BLOCK_MAGIC)
+    min_header = bmlen + 2 + 48  
+    uidx = 22
+    bindex = [start]
+    k = 0
+    while len(asdf_blocks) - k > min_header :
+        hsz = struct.unpack(">H",asdf_blocks[k+bmlen:k+bmlen+2])[0]
+        used = struct.unpack(">Q",asdf_blocks[k+uidx:k+uidx+8])[0]
+        k = k + bmlen + 2 + hsz + used
+        if constants.BLOCK_MAGIC==asdf_blocks[k:k+bmlen] :
+            bindex.append(k+start)
+        else :
+            break
+    return bindex, asdf_blocks[:k]
+
+    
+def write_block_index ( fd, index ) :
+    if len(index) < 1 :
+        return
+
+    bindex_hdr = b'#ASDF BLOCK INDEX\n%YAML 1.1\n---\n'
+    fd.write(bindex_hdr)
+    for idx in index :
+        ostr = f'- {idx}\n'
+        fd.write(ostr.encode('utf-8'))
+    end = b'...'
+    fd.write(end)
+    return
+
 
 def rewrite_asdf_file ( edited_text, orig_text, oname, fname ) :
-    """ TODO This function implentation needs to be finished.
-    Rewrite an ASDF file for too large edited YAML.  The edited YAML, a buffer,
+    """ Rewrite an ASDF file for too large edited YAML.  The edited YAML, a buffer,
     the blocks will be rewritten.  A block index will also be rewritten.  If a
     block index existed in the old file, it will have to be recomputed to 
     because of the larger YAML size and buffer, which changes the location of 
     the binary blocks.
+
+    Parameters
+    ----------
+    edited_text : the new YAML text to write out.
+    orig_text : the original YAML text to overwrite.
+    oname : the ASDF file to overwrite.
+    fname : the edit YAML to write to new file.
     """
     
-    tmp_oname = oname + '.tmp'
+    tmp_oname = oname + '.tmp' # Save as a temp file, in case anything goes wrong.
     buffer_size = 10 * 1000
-    buffer_text = b'\n' + b' ' * buffer_size
-    #print("Here")
-    #return
+    buffered_text = add_buffer_to_new_text(edited_text,buffer_size) 
 
     with open(oname,"r+b") as fd :
-        orig_buffer = fd.read()
+        orig_buffer = fd.read() # Small enough to simply read the  whole thing
     
-    # Compute asdf_blocks and block_index
+    # Get the binary blocks, compute the new block index, and strip old block
+    # index, if it exists.
     asdf_blocks = orig_buffer[len(orig_text):] 
-    out_bytes = edited_text + buffer_text + asdf_blocks
+    index, asdf_blocks = compute_block_index_blocks(len(buffered_text),asdf_blocks)
+    out_bytes = buffered_text + asdf_blocks
 
-    # TODO Compute new block index!!!!
-    # This should be straight forward by figuring out.  Compute the length of 
-    # edited_text plus the length of the buffer_text, the compute that difference
-    # with the length of the orig_text.  This difference will be added to each 
-    # index in the block index list.
-
+    # Write new file with edited text, buffer, and recomputed block index.
     with open(tmp_oname,"w+b") as fd :
         fd.write(out_bytes)
+        write_block_index(fd,index)
+
+    # Rename temp file.
     os.rename(tmp_oname,oname)
+
+    # Output message to user.
     delim = '*' * 70
     print(f"\n{delim}")
     print(f"The text in '{fname}' was too large to simply overwrite the")
     print(f"text in '{oname}'.  The file '{oname}' was rewritten to")
-    print(f"accommodate the larger text size.  Also, {len(buffer_text):,} bytes")
+    print(f"accommodate the larger text size.  Also, {buffer_size:,} bytes")
     print(f"as a buffer for the text in '{oname}' to allow for future edits.")
-    print(f"**** If a block index existed in the original ASDF,")
-    print(f"     it is now invalidated.  This needs to be fixed.")
     print(f"{delim}\n")
 
 def save_func ( fname, oname ) :
@@ -420,13 +489,6 @@ def save_func ( fname, oname ) :
         print(f"Added a {diff} buffer of spaces between the YAML text and binary blocks.")
         print(f"{msg_delim}\n")
     else :
-        print(f"\n{msg_delim}")
-        print(f"Cannot write the text from '{fname}' to '{oname}'.")
-        print(f"There is too much edited text to write and the ASDF file")
-        print(f"is too large to rewrite.")
-        print("Another method must be used to edit '{oname}'.")
-        print(f"{msg_delim}\n")
-        '''
         if os.stat(oname).st_size <= SMALL_FILE_SIZE :
             rewrite_asdf_file(edited_text,asdf_text,oname,fname)
         else:
@@ -436,7 +498,6 @@ def save_func ( fname, oname ) :
             print(f"is too large to rewrite.")
             print("Another method must be used to edit '{oname}'.")
             print(f"{msg_delim}\n")
-        '''
 
     return
 
