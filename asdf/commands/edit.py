@@ -367,6 +367,8 @@ def compute_block_index_blocks ( start, asdf_blocks ) :
         hsz = struct.unpack(">H",asdf_blocks[k+bmlen:k+bmlen+2])[0]
         used = struct.unpack(">Q",asdf_blocks[k+uidx:k+uidx+8])[0]
         k = k + bmlen + 2 + hsz + used
+        if k+bmlen > len(asdf_blocks) :
+            break
         if constants.BLOCK_MAGIC==asdf_blocks[k:k+bmlen] :
             bindex.append(k+start)
         else :
