@@ -31,7 +31,8 @@ __all__ = ['edit']
 class Edit(Command):
     @classmethod
     def setup_arguments(cls, subparsers):
-        """ Set up a command line argument parser for the edit subcommand.
+        """ 
+        Set up a command line argument parser for the edit subcommand.
         """
         desc_string = "Allows for easy editing of the YAML in an ASDF file.  " \
                       "For edit mode, the YAML portion of an ASDF file is"  \
@@ -69,12 +70,13 @@ class Edit(Command):
 
     @classmethod
     def run(cls, args):
-        """ Execute the edit subcommand.
+        """ 
+        Execute the edit subcommand.
         """
         return edit(args)
 
 
-def is_yaml_file ( fname ) :
+def is_yaml_file(fname):
     '''
     Determines if a file is a YAML file based only on the file extension.
 
@@ -89,7 +91,7 @@ def is_yaml_file ( fname ) :
     return True
 
 
-def is_asdf_file ( fname ) :
+def is_asdf_file(fname):
     '''
     Determines if a file is ASDF based on file extension and the first
     5 bytes of the file, which should be '#ASDF'.
@@ -104,23 +106,23 @@ def is_asdf_file ( fname ) :
         return False
 
     with open(fname,"r+b") as fd :
-        first_string = "#ASDF"
-        first_line = fd.read(len(first_string)).decode('utf-8')
-        if first_string != first_line :
+        first_line = fd.read(len(constants.ASDF_MAGIC))
+        if first_string != constants.ASDF_MAGIC:
             return False
 
     return True
 
 
-def is_validate_path_and_ext ( fname, wanted_ext=None ) :
-    """ Validates the path exists and the extension is one wanted.
+def is_validate_path_and_ext(fname, wanted_ext=None):
+    """ 
+    Validates the path exists and the extension is one wanted.
 
     Parameters
     ----------
     fname : The input file name.
     wanted_ext : List of extensions to check.
     """
-    if not os.path.exists(fname) :
+    if not os.path.exists(fname):
         print(f"Error: No file '{fname}' exists.")
         return False
 
@@ -136,8 +138,9 @@ def is_validate_path_and_ext ( fname, wanted_ext=None ) :
     return True
 
 
-def is_validate_asdf_path ( fname ) :
-    """ Validates fname path exists and has extension '.asdf'.
+def is_validate_asdf_path(fname):
+    """ 
+    Validates fname path exists and has extension '.asdf'.
 
     Parameters
     ----------
@@ -150,8 +153,9 @@ def is_validate_asdf_path ( fname ) :
     return False
 
 
-def is_validate_yaml_path ( fname ) :
-    """ Validates fname path exists and has extension '.yaml'.
+def is_validate_yaml_path(fname):
+    """ 
+    Validates fname path exists and has extension '.yaml'.
 
     Parameters
     ----------
@@ -164,39 +168,34 @@ def is_validate_yaml_path ( fname ) :
     return False
 
 
-def validate_asdf_file ( fd ) :
-    """ Makes sure the header line is the expected one, as well
+def validate_asdf_file(fd):
+    """ 
+    Makes sure the header line is the expected one, as well
     as getting the optional comment line.
 
     Parameters
     ----------
     fd : GenericFile
     """
-    #global asdf_format_version 
-    #global asdf_standard_version 
-    ASDF_ID = b'#ASDF'
 
     header_line = fd.read_until(b'\r?\n', 2, "newline", include=True)
-    if ASDF_ID!=header_line[:len(ASDF_ID)] :
+    if constants.ASDF_MAGIC!=header_line[:len(constants.ASDF_MAGIC)] :
         # Maybe raise exception
         print("Invalid ASDF ID")
         sys.exit(1)
     
-    #asdf_format_version = _parse_asdf_header_line(header_line)
     # Maybe validate ASDF format version
     comment_section = fd.read_until( b'(%YAML)|(' + constants.BLOCK_MAGIC + b')', 
                                      5, 
                                      "start of content", 
                                      include=False, 
                                      exception=False)
-    # Maybe do the following for more validate.  But maybe not.
-    #comments = _parse_asdf_comment_section(comment_section)
-    #asdf_standard_version = _get_asdf_version_in_comments(comments)
 
     return header_line + comment_section 
     
-def open_and_validate_asdf ( fname ) :
-    """ Open and validate the ASDF file, as well as read in all the YAML
+def open_and_validate_asdf(fname):
+    """ 
+    Open and validate the ASDF file, as well as read in all the YAML
     that will be outputted to a YAML file.
 
     Parameters
@@ -211,8 +210,9 @@ def open_and_validate_asdf ( fname ) :
 
     return fd, header_and_comment # Return GenericFile and ASDF header bytes.
     
-def read_and_validate_yaml ( fd, fname ) :
-    """ Get the YAML text from an ASDF formatted file.
+def read_and_validate_yaml(fd, fname):
+    """ 
+    Get the YAML text from an ASDF formatted file.
 
     Parameters
     ----------
@@ -246,7 +246,7 @@ def read_and_validate_yaml ( fd, fname ) :
 
     return yaml_content
 
-def edit_func ( fname, oname ) :
+def edit_func(fname, oname):
     """
     Creates a YAML file from an ASDF file.  The YAML file will contain only the
     YAML from the ASDF file.  The YAML text will be written to a YAML text file
@@ -295,8 +295,9 @@ def edit_func ( fname, oname ) :
 
     return
 
-def buffer_edited_text ( edited_text, orig_text ) :
-    """ There is more text in the original ASDF file than in the edited text,
+def buffer_edited_text(edited_text, orig_text):
+    """ 
+    There is more text in the original ASDF file than in the edited text,
     so we will buffer the edited text with spaces.
     """ 
     diff = len(orig_text) - len(edited_text)
@@ -322,8 +323,9 @@ def buffer_edited_text ( edited_text, orig_text ) :
     return buffered_text, diff-1 
 
 
-def add_buffer_to_new_text ( edited_text, buffer_size ) :
-    """ Adds buffer to edited text.
+def add_buffer_to_new_text(edited_text, buffer_size):
+    """ 
+    Adds buffer to edited text.
     """
     wdelim = b'\r\n...\r\n'
     ldelim = b'\n...\n'
@@ -343,8 +345,9 @@ def add_buffer_to_new_text ( edited_text, buffer_size ) :
 
     return buffered_text 
 
-def compute_block_index_blocks ( start, asdf_blocks ) :
-    """ Computes new block index and strips any data after last found block.
+def compute_block_index_blocks(start, asdf_blocks):
+    """ 
+    Computes new block index and strips any data after last found block.
     """
     if constants.BLOCK_MAGIC!=asdf_blocks[:len(constants.BLOCK_MAGIC)] :
         return [], asdf_blocks      # Not sure if this should happen
@@ -376,7 +379,7 @@ def compute_block_index_blocks ( start, asdf_blocks ) :
     return bindex, asdf_blocks[:k]
 
     
-def write_block_index ( fd, index ) :
+def write_block_index(fd, index):
     if len(index) < 1 :
         return
 
@@ -390,8 +393,9 @@ def write_block_index ( fd, index ) :
     return
 
 
-def rewrite_asdf_file ( edited_text, orig_text, oname, fname ) :
-    """ Rewrite an ASDF file for too large edited YAML.  The edited YAML, a buffer,
+def rewrite_asdf_file(edited_text, orig_text, oname, fname):
+    """ 
+    Rewrite an ASDF file for too large edited YAML.  The edited YAML, a buffer,
     the blocks will be rewritten.  A block index will also be rewritten.  If a
     block index existed in the old file, it will have to be recomputed to 
     because of the larger YAML size and buffer, which changes the location of 
@@ -435,7 +439,7 @@ def rewrite_asdf_file ( edited_text, orig_text, oname, fname ) :
     print(f"as a buffer for the text in '{oname}' to allow for future edits.")
     print(f"{delim}\n")
 
-def save_func ( fname, oname ) :
+def save_func(fname, oname):
     """
     Checks to makes sure a corresponding ASDF file exists.  This is done by 
         seeing if a file of the same name with '.asdf' as an extension exists.
@@ -503,7 +507,7 @@ def save_func ( fname, oname ) :
 
     return
 
-def edit ( args ) :
+def edit(args):
     """
     Implode a given ASDF file, which may reference external data, back
     into a single ASDF file.

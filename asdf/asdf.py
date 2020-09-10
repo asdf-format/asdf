@@ -6,8 +6,6 @@ import datetime
 import warnings
 from pkg_resources import parse_version
 
-import ipdb
-
 import numpy as np
 from jsonschema import ValidationError
 
@@ -37,8 +35,9 @@ from ._helpers import validate_version
 
 from .tags.core import AsdfObject, Software, HistoryEntry, ExtensionMetadata
 
-def _get_asdf_version_in_comments( comments ):
-    """ From the initial comments line in an ASDF file, capture the ASDF version.
+def _get_asdf_version_in_comments(comments):
+    """ 
+    From the initial comments line in an ASDF file, capture the ASDF version.
     """
     for comment in comments:
         parts = comment.split()
@@ -52,9 +51,10 @@ def _get_asdf_version_in_comments( comments ):
 
     return None
 
-def _parse_asdf_comment_section( content ):
-    """ Parses the comment section, between the header line and the
-        Tree or first block.
+def _parse_asdf_comment_section(content):
+    """ 
+    Parses the comment section, between the header line and the
+    Tree or first block.
     """
     comments = []
 
@@ -66,8 +66,9 @@ def _parse_asdf_comment_section( content ):
 
     return comments
 
-def _parse_asdf_header_line ( line ) :
-    """ Parses the header line (first line) of an ASDF file and verifies
+def _parse_asdf_header_line(line):
+    """ 
+    Parses the header line (first line) of an ASDF file and verifies
     it is properly formatted.
     """
     parts = line.split()
