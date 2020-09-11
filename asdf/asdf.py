@@ -908,7 +908,6 @@ class AsdfFile:
             self._blocks.read_block_index(fd, self)
 
         # Function 7 References
-        ipdb.set_trace()
         tree = reference.find_references(tree, self)
 
         # Function 8 Schemas
