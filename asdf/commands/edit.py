@@ -10,10 +10,6 @@ import sys
 
 import asdf.constants as constants
 
-from asdf.asdf import _parse_asdf_header_line
-from asdf.asdf import _parse_asdf_comment_section
-from asdf.asdf import _get_asdf_version_in_comments
-
 from .. import AsdfFile
 from .. import generic_io
 from .. import reference
@@ -23,10 +19,6 @@ from .. import yamlutil
 from .main import Command
 
 __all__ = ['edit']
-
-#asdf_format_version = None
-#asdf_standard_version = None
-
 
 class Edit(Command):
     @classmethod
@@ -107,7 +99,7 @@ def is_asdf_file(fname):
 
     with open(fname,"r+b") as fd :
         first_line = fd.read(len(constants.ASDF_MAGIC))
-        if first_string != constants.ASDF_MAGIC:
+        if not first_string.startswith(constants.ASDF_MAGIC):
             return False
 
     return True
@@ -168,7 +160,7 @@ def is_validate_yaml_path(fname):
     return False
 
 
-def validate_asdf_file(fd):
+def check_asdf_header(fd):
     """ 
     Makes sure the header line is the expected one, as well
     as getting the optional comment line.
@@ -179,7 +171,7 @@ def validate_asdf_file(fd):
     """
 
     header_line = fd.read_until(b'\r?\n', 2, "newline", include=True)
-    if constants.ASDF_MAGIC!=header_line[:len(constants.ASDF_MAGIC)] :
+    if not header_line.startswith(constants.ASDF_MAGIC):
         # Maybe raise exception
         print("Invalid ASDF ID")
         sys.exit(1)
@@ -193,7 +185,7 @@ def validate_asdf_file(fd):
 
     return header_line + comment_section 
     
-def open_and_validate_asdf(fname):
+def open_and_check_asdf_header(fname):
     """ 
     Open and validate the ASDF file, as well as read in all the YAML
     that will be outputted to a YAML file.
@@ -206,7 +198,7 @@ def open_and_validate_asdf(fname):
     fd = generic_io.get_file(fullpath, mode="r")
 
     # Read the ASDF header and optional comments section
-    header_and_comment = validate_asdf_file(fd)
+    header_and_comment = check_asdf_header(fd)
 
     return fd, header_and_comment # Return GenericFile and ASDF header bytes.
     
@@ -261,7 +253,7 @@ def edit_func(fname, oname):
         return False
 
     # Validate input file is an ASDF file.
-    fd, asdf_text = open_and_validate_asdf(fname)
+    fd, asdf_text = open_and_check_asdf_header(fname)
 
     # Read and validate the YAML of an ASDF file.
     yaml_text = read_and_validate_yaml(fd,fname)
@@ -466,13 +458,13 @@ def save_func(fname, oname):
         return False
 
     # Validate input file is an ASDF formatted YAML.
-    ifd, iasdf_text = open_and_validate_asdf(fname)
+    ifd, iasdf_text = open_and_check_asdf_header(fname)
     iyaml_text = read_and_validate_yaml(ifd,fname)
     ifd.close()
     edited_text = iasdf_text + iyaml_text
 
     # Get text from ASDF file.
-    ofd, oasdf_text = open_and_validate_asdf(oname)
+    ofd, oasdf_text = open_and_check_asdf_header(oname)
     oyaml_text = read_and_validate_yaml(ofd,oname)
     ofd.close()
     asdf_text = oasdf_text + oyaml_text
@@ -492,9 +484,11 @@ def save_func(fname, oname):
             fd.write(buffered_text)
         print(f"\n{msg_delim}")
         print(f"The edited text in '{fname}' was written to '{oname}'")
-        print(f"Added a {diff} buffer of spaces between the YAML text and binary blocks.")
+        print(f"Added a  '\n' and {diff} buffer of spaces between the YAML text and binary blocks.")
         print(f"{msg_delim}\n")
     else :
+        # Should pass trees and figure out how to replace tree in output AsdfFile
+        # with the input tree, then the output can simply call 'write_to'.
         if os.stat(oname).st_size <= SMALL_FILE_SIZE :
             rewrite_asdf_file(edited_text,asdf_text,oname,fname)
         else:

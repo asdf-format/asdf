@@ -35,53 +35,6 @@ from ._helpers import validate_version
 
 from .tags.core import AsdfObject, Software, HistoryEntry, ExtensionMetadata
 
-def _get_asdf_version_in_comments(comments):
-    """ 
-    From the initial comments line in an ASDF file, capture the ASDF version.
-    """
-    for comment in comments:
-        parts = comment.split()
-        if len(parts) == 2 and parts[0] == constants.ASDF_STANDARD_COMMENT:
-            try:
-                version = versioning.AsdfVersion(parts[1].decode('ascii'))
-            except ValueError:
-                pass
-            else:
-                return version
-
-    return None
-
-def _parse_asdf_comment_section(content):
-    """ 
-    Parses the comment section, between the header line and the
-    Tree or first block.
-    """
-    comments = []
-
-    lines = content.splitlines()
-    for line in lines:
-        if not line.startswith(b'#'):
-            raise ValueError("Invalid content between header and tree")
-        comments.append(line[1:].strip())
-
-    return comments
-
-def _parse_asdf_header_line(line):
-    """ 
-    Parses the header line (first line) of an ASDF file and verifies
-    it is properly formatted.
-    """
-    parts = line.split()
-    if len(parts) != 2 or parts[0] != constants.ASDF_MAGIC:
-        raise ValueError("Does not appear to be a ASDF file.")
-
-    try:
-        version = versioning.AsdfVersion(parts[1].decode('ascii'))
-    except ValueError:
-        raise ValueError("Unparseable version in ASDF file: {0}".format(parts[1]))
-
-    return version
-
 def get_asdf_library_info():
     """
     Get information about asdf to include in the asdf_library entry
@@ -779,7 +732,16 @@ class AsdfFile:
         """
         Parses the header line in a ASDF file to obtain the ASDF version.
         """
-        return _parse_asdf_header_line(line)
+        parts = line.split()
+        if len(parts) != 2 or parts[0] != constants.ASDF_MAGIC:
+            raise ValueError("Does not appear to be a ASDF file.")
+
+        try:
+            version = versioning.AsdfVersion(parts[1].decode('ascii'))
+        except ValueError:
+            raise ValueError("Unparseable version in ASDF file: {0}".format(parts[1]))
+
+        return version
 
     @classmethod
     def _parse_comment_section(cls, content):
@@ -787,14 +749,32 @@ class AsdfFile:
         Parses the comment section, between the header line and the
         Tree or first block.
         """
-        return _parse_asdf_comment_section(content)
+        comments = []
+
+        lines = content.splitlines()
+        for line in lines:
+            if not line.startswith(b'#'):
+                raise ValueError("Invalid content between header and tree")
+            comments.append(line[1:].strip())
+
+        return comments
 
     @classmethod
     def _find_asdf_version_in_comments(cls, comments):
         """ From the initial comments line in an ASDF file, capture the ASDF 
         version.
         """
-        return _get_asdf_version_in_comments(comments)
+        for comment in comments:
+            parts = comment.split()
+            if len(parts) == 2 and parts[0] == constants.ASDF_STANDARD_COMMENT:
+                try:
+                    version = versioning.AsdfVersion(parts[1].decode('ascii'))
+                except ValueError:
+                    pass
+                else:
+                    return version
+
+        return None
 
     @classmethod
     def _open_asdf(cls, self, fd, uri=None, mode='r',
