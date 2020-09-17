@@ -54,16 +54,18 @@ class Edit(Command):
 
         # The edit is either being performed or saved
         group = parser.add_mutually_exclusive_group(required=True)
+
         group.add_argument(
             '-s',
             action='store_true',
             dest='save',
-            help="Saves a YAML text file to its ASDF file.  Requires an ASDF input file.")
+            help="Saves a YAML text file to its ASDF file.  Requires an YAML input file and ASDF output file.")
+
         group.add_argument(
             '-e',
             action='store_true',
             dest='edit',
-            help="Create a YAML text file for a ASDF file.  Requires a YAML input file.")
+            help="Create a YAML text file for a ASDF file.  Requires a ASDF input file.")
 
         parser.set_defaults(func=cls.run)
 
@@ -83,7 +85,7 @@ def is_yaml_file(fname):
 
     Parameters
     ----------
-    fname : The input file name.
+    fname : The character string of the input file name.
     """
 
     base, ext = os.path.splitext(fname)
@@ -92,13 +94,13 @@ def is_yaml_file(fname):
     return True
 
 
-def is_validate_path_and_ext(fname, wanted_ext=None):
+def is_valid_path_and_ext(fname, wanted_ext=None):
     """
     Validates the path exists and the extension is one wanted.
 
     Parameters
     ----------
-    fname : The input file name.
+    fname : The character string of the input file name.
     wanted_ext : List of extensions to check.
     """
     if not os.path.exists(fname):
@@ -117,31 +119,31 @@ def is_validate_path_and_ext(fname, wanted_ext=None):
     return True
 
 
-def is_validate_asdf_path(fname):
+def is_valid_asdf_path(fname):
     """
     Validates fname path exists and has extension '.asdf'.
 
     Parameters
     ----------
-    fname : The input file name.
+    fname : The character string of the input file name.
     """
     ext = ['.asdf']
-    if is_validate_path_and_ext(fname, ext):
+    if is_valid_path_and_ext(fname, ext):
         return True
     print(f"Error: '{fname}' should have extension '{ext[0]}'")
     return False
 
 
-def is_validate_yaml_path(fname):
+def is_valid_yaml_path(fname):
     """
     Validates fname path exists and has extension '.yaml'.
 
     Parameters
     ----------
-    fname : The input file name.
+    fname : The character string of the input file name.
     """
     ext = ['.yaml']
-    if is_validate_path_and_ext(fname, ext):
+    if is_valid_path_and_ext(fname, ext):
         return True
     print(f"Error: '{fname}' should have extension '{ext[0]}'")
     return False
@@ -162,7 +164,6 @@ def check_asdf_header(fd):
         print("Invalid ASDF ID")
         sys.exit(1)
 
-    # Maybe validate ASDF format version
     comment_section = fd.read_until( b'(%YAML)|(' + constants.BLOCK_MAGIC + b')',
                                      5,
                                      "start of content",
@@ -179,7 +180,7 @@ def open_and_check_asdf_header(fname):
 
     Parameters
     ----------
-    fname : The input file name.
+    fname : The character string of the input file name.
     """
     fullpath = os.path.abspath(fname)
     fd = generic_io.get_file(fullpath, mode="r")
@@ -196,7 +197,7 @@ def read_and_validate_yaml(fd, fname):
 
     Parameters
     ----------
-    fname : The input file name.
+    fname : The character string of the input file name.
     fd : GenericFile for fname.
     """
     YAML_TOKEN = b'%YAML'
@@ -232,10 +233,10 @@ def edit_func(fname, oname):
 
     Parameters
     ----------
-    fname : The input ASDF file name.
-    oname : The output YAML file name.
+    fname : The character string of the input ASDF file name.
+    oname : The character string of the output YAML file name.
     """
-    if not is_validate_asdf_path(fname):
+    if not is_valid_asdf_path(fname):
         return False
 
     # Validate input file is an ASDF file.
@@ -437,10 +438,10 @@ def save_func(fname, oname):
     oname : The output ASDF file name.
     """
 
-    if not is_validate_yaml_path(fname):
+    if not is_valid_yaml_path(fname):
         return False
 
-    if not is_validate_asdf_path(oname):
+    if not is_valid_asdf_path(oname):
         return False
 
     # Validate input file is an ASDF formatted YAML.

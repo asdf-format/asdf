@@ -869,7 +869,6 @@ class AsdfFile:
         elif yaml_token != b'':
             raise IOError("ASDF file appears to contain garbage after header.")
 
-        # The variable tree gets overwritten mulitple times.  Why?
         if tree is None:
             # At this point the tree should be tagged, but we want it to be
             # tagged with the core/asdf version appropriate to this file's
@@ -877,16 +876,13 @@ class AsdfFile:
             # to select the correct tag for us.
             tree = yamlutil.custom_tree_to_tagged_tree(AsdfObject(), self)
 
-        # Function 6 Process binary blocks
         if has_blocks:
             self._blocks.read_internal_blocks(
                 fd, past_magic=True, validate_checksums=validate_checksums)
             self._blocks.read_block_index(fd, self)
 
-        # Function 7 References
         tree = reference.find_references(tree, self)
 
-        # Function 8 Schemas
         if self.version <= versioning.FILL_DEFAULTS_MAX_VERSION and legacy_fill_schema_defaults:
             schema.fill_defaults(tree, self, reading=True)
 
