@@ -78,7 +78,7 @@ def is_yaml_file(fname):
     '''
 
     base, ext = os.path.splitext(fname)
-    if '.yaml' != ext :
+    if '.yaml' != ext:
         return False
     return True
 
@@ -94,10 +94,10 @@ def is_asdf_file(fname):
     '''
 
     base, ext = os.path.splitext(fname)
-    if '.asdf' != ext :
+    if '.asdf' != ext:
         return False
 
-    with open(fname,"r+b") as fd :
+    with open(fname,"r+b") as fd:
         first_line = fd.read(len(constants.ASDF_MAGIC))
         if not first_string.startswith(constants.ASDF_MAGIC):
             return False
@@ -139,7 +139,7 @@ def is_validate_asdf_path(fname):
     fname : The input file name.
     """
     ext = ['.asdf']
-    if is_validate_path_and_ext(fname,ext) : 
+    if is_validate_path_and_ext(fname, ext): 
         return True
     print(f"Error: '{fname}' should have extension '{ext[0]}'")
     return False
@@ -154,7 +154,7 @@ def is_validate_yaml_path(fname):
     fname : The input file name.
     """
     ext = ['.yaml']
-    if is_validate_path_and_ext(fname,ext) : 
+    if is_validate_path_and_ext(fname, ext): 
         return True
     print(f"Error: '{fname}' should have extension '{ext[0]}'")
     return False
@@ -184,6 +184,7 @@ def check_asdf_header(fd):
                                      exception=False)
 
     return header_line + comment_section 
+
     
 def open_and_check_asdf_header(fname):
     """ 
@@ -200,7 +201,8 @@ def open_and_check_asdf_header(fname):
     # Read the ASDF header and optional comments section
     header_and_comment = check_asdf_header(fd)
 
-    return fd, header_and_comment # Return GenericFile and ASDF header bytes.
+    return fd, header_and_comment   # Return GenericFile and ASDF header bytes.
+
     
 def read_and_validate_yaml(fd, fname):
     """ 
@@ -213,7 +215,7 @@ def read_and_validate_yaml(fd, fname):
     """
     YAML_TOKEN = b'%YAML'
     token = fd.read(len(YAML_TOKEN))
-    if token != YAML_TOKEN :
+    if token != YAML_TOKEN:
         # Maybe raise exception
         print(f"Error: No YAML in '{fname}'")
         sys.exit(0)
@@ -234,7 +236,7 @@ def read_and_validate_yaml(fd, fname):
         print("Error: 'yamlutil.load_tree' failed to return a tree.")
         sys.exist(1)
     
-    schema.validate(tree, None) # Failure raises and exception.
+    schema.validate(tree, None)     # Failure raises an exception.
 
     return yaml_content
 
@@ -249,7 +251,7 @@ def edit_func(fname, oname):
     fname : The input ASDF file name.
     oname : The output YAML file name.
     """
-    if not is_validate_asdf_path(fname) :
+    if not is_validate_asdf_path(fname):
         return False
 
     # Validate input file is an ASDF file.
@@ -259,13 +261,13 @@ def edit_func(fname, oname):
     yaml_text = read_and_validate_yaml(fd,fname)
 
     # Open a YAML file for the ASDF YAML.
-    if not is_yaml_file(oname) : 
+    if not is_yaml_file(oname): 
         # Raise an exception
         print(f"Error: '{oname}' must have '.yaml' extension.")
         sys.exit(1)
 
     # Write the YAML for the original ASDF file.
-    with open(oname,"wb") as ofd :
+    with open(oname,"wb") as ofd:
         ofd.write(asdf_text)
         ofd.write(yaml_text)
 
@@ -293,15 +295,15 @@ def buffer_edited_text(edited_text, orig_text):
     so we will buffer the edited text with spaces.
     """ 
     diff = len(orig_text) - len(edited_text)
-    if diff<1 :
+    if diff < 1:
         print("Error: shouldn't be here.")
         sys.exit(1)
 
     wdelim = b'\r\n...\r\n'
     ldelim = b'\n...\n'
-    if edited_text[-len(wdelim):]==wdelim :
+    if edited_text[-len(wdelim) :]==wdelim:
         delim = wdelim
-    elif edited_text[-len(ldelim):]==ldelim :
+    elif edited_text[-len(ldelim) :]==ldelim:
         delim = ldelim
     else:
         # Mabye raise exception
@@ -311,8 +313,8 @@ def buffer_edited_text(edited_text, orig_text):
         sys.exit(1)
 
     # May not be correct.  If on Windows use '\r\n'.
-    buffered_text = edited_text[:-len(delim)] + b'\n' + b' '*(diff-1) + delim
-    return buffered_text, diff-1 
+    buffered_text = edited_text[: -len(delim)] + b'\n' + b' '*(diff - 1) + delim
+    return buffered_text, diff - 1 
 
 
 def add_buffer_to_new_text(edited_text, buffer_size):
@@ -321,9 +323,9 @@ def add_buffer_to_new_text(edited_text, buffer_size):
     """
     wdelim = b'\r\n...\r\n'
     ldelim = b'\n...\n'
-    if edited_text[-len(wdelim):]==wdelim :
+    if edited_text[-len(wdelim) :]==wdelim:
         delim = wdelim
-    elif edited_text[-len(ldelim):]==ldelim :
+    elif edited_text[-len(ldelim) :]==ldelim:
         delim = ldelim
     else:
         # Maybe raise exception
@@ -333,17 +335,25 @@ def add_buffer_to_new_text(edited_text, buffer_size):
         sys.exit(1)
 
     buf = b' ' * buffer_size
-    buffered_text = edited_text[:-len(delim)] + b'\n' + buf + delim
+    buffered_text = edited_text[: -len(delim)] + b'\n' + buf + delim
 
     return buffered_text 
+    
 
-def compute_block_index_blocks(start, asdf_blocks):
-    """ 
-    Computes new block index and strips any data after last found block.
-    """
-    if constants.BLOCK_MAGIC!=asdf_blocks[:len(constants.BLOCK_MAGIC)] :
-        return [], asdf_blocks      # Not sure if this should happen
+def write_block_index(fd, index):
+    if len(index) < 1:
+        return
 
+    bindex_hdr = b"#ASDF BLOCK INDEX\n%YAML 1.1\n---\n"
+    fd.write(bindex_hdr)
+    for idx in index:
+        ostr = f'- {idx}\n'
+        fd.write(ostr.encode('utf-8'))
+    end = b'...'
+    fd.write(end)
+    return
+
+def get_next_block_header(fd):
     # Minimum block header is 
     # 4 bytes of magic number
     # 2 bytes of header length, after the length field (min 48)
@@ -353,37 +363,14 @@ def compute_block_index_blocks(start, asdf_blocks):
     # 8 bytes used (on disk) size
     # 8 bytes data size
     # 16 bytes checksum
-    bmlen = len(constants.BLOCK_MAGIC)
-    min_header = bmlen + 2 + 48  
-    uidx = 22
-    bindex = [start]
-    k = 0
-    while len(asdf_blocks) - k > min_header :
-        hsz = struct.unpack(">H",asdf_blocks[k+bmlen:k+bmlen+2])[0]
-        used = struct.unpack(">Q",asdf_blocks[k+uidx:k+uidx+8])[0]
-        k = k + bmlen + 2 + hsz + used
-        if k+bmlen > len(asdf_blocks) :
-            break
-        if constants.BLOCK_MAGIC==asdf_blocks[k:k+bmlen] :
-            bindex.append(k+start)
-        else :
-            break
-    return bindex, asdf_blocks[:k]
-
-    
-def write_block_index(fd, index):
-    if len(index) < 1 :
-        return
-
-    bindex_hdr = b'#ASDF BLOCK INDEX\n%YAML 1.1\n---\n'
-    fd.write(bindex_hdr)
-    for idx in index :
-        ostr = f'- {idx}\n'
-        fd.write(ostr.encode('utf-8'))
-    end = b'...'
-    fd.write(end)
-    return
-
+    blk_header = fd.read(6)
+    if len(blk_header) != 6:
+        return None
+    if not blk_header.startswith(constants.BLOCK_MAGIC):
+        return None
+    hsz = struct.unpack(">H",blk_header[4:6])[0]
+    header = fd.read(hsz)
+    return blk_header + header
 
 def rewrite_asdf_file(edited_text, orig_text, oname, fname):
     """ 
@@ -401,23 +388,44 @@ def rewrite_asdf_file(edited_text, orig_text, oname, fname):
     fname : the edit YAML to write to new file.
     """
     
-    tmp_oname = oname + '.tmp' # Save as a temp file, in case anything goes wrong.
+    tmp_oname = oname + '.tmp'      # Save as a temp file, in case anything goes wrong.
     buffer_size = 10 * 1000
     buffered_text = add_buffer_to_new_text(edited_text,buffer_size) 
 
-    with open(oname,"r+b") as fd :
-        orig_buffer = fd.read() # Small enough to simply read the  whole thing
-    
-    # Get the binary blocks, compute the new block index, and strip old block
-    # index, if it exists.
-    asdf_blocks = orig_buffer[len(orig_text):] 
-    index, asdf_blocks = compute_block_index_blocks(len(buffered_text),asdf_blocks)
-    out_bytes = buffered_text + asdf_blocks
+    ifd = open(oname,"r+b")         # Open old ASDF to get binary blocks
+    ifd.seek(len(orig_text)) 
 
-    # Write new file with edited text, buffer, and recomputed block index.
-    with open(tmp_oname,"w+b") as fd :
-        fd.write(out_bytes)
-        write_block_index(fd,index)
+    ofd = open(tmp_oname,"w+b")     # Open temp file to write
+    ofd.write(buffered_text)        # Write edited YAML
+    
+    current_location = len(buffered_text)
+    block_index = []
+    alloc_loc = 14      # 4 bytes of block ID, 2 blocks of size, 8 blocks into header
+    block_chunk = 2048
+    while True:
+        next_block = get_next_block_header(ifd)
+        if next_block is None:
+            break
+
+        # Get block size on disk
+        alloc = struct.unpack(">Q",next_block[alloc_loc:alloc_loc+8])[0]
+
+        # Save block location for block index
+        block_index.append(current_location)
+        current_location = current_location + len(next_block) + alloc
+
+        # Copy block
+        ofd.write(next_block)
+        while alloc >= block_chunk:
+            chunk = ifd.read(block_chunk)
+            ofd.write(chunk)
+            alloc -= block_chunk
+        if alloc>0:
+            chunk = ifd.read(alloc)
+            ofd.write(chunk)
+
+
+    write_block_index(ofd,block_index)
 
     # Rename temp file.
     os.rename(tmp_oname,oname)
@@ -427,8 +435,9 @@ def rewrite_asdf_file(edited_text, orig_text, oname, fname):
     print(f"\n{delim}")
     print(f"The text in '{fname}' was too large to simply overwrite the")
     print(f"text in '{oname}'.  The file '{oname}' was rewritten to")
-    print(f"accommodate the larger text size.  Also, {buffer_size:,} bytes")
-    print(f"as a buffer for the text in '{oname}' to allow for future edits.")
+    print(f"accommodate the larger text size.")
+    print(f"Also, added a '\\n' and {buffer_size:,} spaces as a buffer for")
+    print(f"the text in '{oname}' to allow for future edits.")
     print(f"{delim}\n")
 
 def save_func(fname, oname):
@@ -447,9 +456,6 @@ def save_func(fname, oname):
     fname : The input YAML file.
     oname : The output ASDF file name.
     """
-    _1G = 1000**3   # 1 gig
-    C   = 1         # constant multiple of gig
-    SMALL_FILE_SIZE = C * _1G
 
     if not is_validate_yaml_path(fname):
         return False
@@ -472,32 +478,22 @@ def save_func(fname, oname):
     # Compare text sizes and maybe output. 
     # There are three cases:
     msg_delim = '*' * 70
-    if len(edited_text) == len(asdf_text) :
-        with open(oname,"r+b") as fd :
+    if len(edited_text) == len(asdf_text):
+        with open(oname,"r+b") as fd:
             fd.write(edited_text)
         print(f"\n{msg_delim}")
         print(f"The edited text in '{fname}' was written to '{oname}'")
         print(f"{msg_delim}\n")
-    elif len(edited_text) < len(asdf_text) :
+    elif len(edited_text) < len(asdf_text):
         buffered_text, diff = buffer_edited_text(edited_text,asdf_text) 
-        with open(oname,"r+b") as fd :
+        with open(oname,"r+b") as fd:
             fd.write(buffered_text)
         print(f"\n{msg_delim}")
         print(f"The edited text in '{fname}' was written to '{oname}'")
-        print(f"Added a  '\n' and {diff} buffer of spaces between the YAML text and binary blocks.")
+        print(f"Added a  '\\n' and {diff} buffer of spaces between the YAML text and binary blocks.")
         print(f"{msg_delim}\n")
-    else :
-        # Should pass trees and figure out how to replace tree in output AsdfFile
-        # with the input tree, then the output can simply call 'write_to'.
-        if os.stat(oname).st_size <= SMALL_FILE_SIZE :
-            rewrite_asdf_file(edited_text,asdf_text,oname,fname)
-        else:
-            print(f"\n{msg_delim}")
-            print(f"Cannot write the text from '{fname}' to '{oname}'.")
-            print(f"There is too much edited text to write and the ASDF file")
-            print(f"is too large to rewrite.")
-            print("Another method must be used to edit '{oname}'.")
-            print(f"{msg_delim}\n")
+    else:
+        rewrite_asdf_file(edited_text,asdf_text,oname,fname)
 
     return
 
@@ -510,11 +506,11 @@ def edit(args):
     ----------
     args : The command line arguments. 
     """
-    if args.edit :
+    if args.edit:
         return edit_func(args.fname,args.oname)
-    elif args.save :
+    elif args.save:
         return save_func(args.fname,args.oname)
-    else :
+    else:
         return print("Invalid arguments")
 
 
