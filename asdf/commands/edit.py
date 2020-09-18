@@ -157,6 +157,10 @@ def check_asdf_header(fd):
     Parameters
     ----------
     fd : GenericFile
+
+    Return
+    ------
+    The ASDF header line and the ASDF comment as bytes.
     """
 
     header_line = fd.read_until(b'\r?\n', 2, "newline", include=True)
@@ -181,6 +185,10 @@ def open_and_check_asdf_header(fname):
     Parameters
     ----------
     fname : The character string of the input file name.
+
+    Return
+    ------
+    File descriptor for ASDF file and the ASDF header and ASDF comments as bytes.
     """
     fullpath = os.path.abspath(fname)
     fd = generic_io.get_file(fullpath, mode="r")
@@ -199,6 +207,10 @@ def read_and_validate_yaml(fd, fname):
     ----------
     fname : The character string of the input file name.
     fd : GenericFile for fname.
+
+    Return
+    ------
+    The YAML portion of an ASDF file as bytes.
     """
     YAML_TOKEN = b'%YAML'
     token = fd.read(len(YAML_TOKEN))
@@ -276,6 +288,15 @@ def buffer_edited_text(edited_text, orig_text):
     """
     There is more text in the original ASDF file than in the edited text,
     so we will buffer the edited text with spaces.
+
+    Parameters
+    ----------
+    edited_text - The text from the edited YAML file
+    orig_text - The text from the original ASDF file
+
+    Return
+    ------
+    The buffered text and the number of spaces added as buffer.
     """
     diff = len(orig_text) - len(edited_text)
     if diff < 1:
@@ -302,6 +323,15 @@ def buffer_edited_text(edited_text, orig_text):
 def add_buffer_to_new_text(edited_text, buffer_size):
     """
     Adds buffer to edited text.
+
+    Parameters
+    ----------
+    edited_text - The text from the edited YAML file.
+    buffer_size - The number of spaces to add as a buffer.
+
+    Return
+    ------
+    Buffered text with the number of spaces requested as buffer.
     """
     wdelim = b'\r\n...\r\n'
     ldelim = b'\n...\n'
@@ -322,6 +352,14 @@ def add_buffer_to_new_text(edited_text, buffer_size):
 
 
 def write_block_index(fd, index):
+    """
+    Write the block index to an ASDF file.
+
+    Parameters
+    ----------
+    fd - The output file to write the block index.
+    index - A list of locations for each block.
+    """
     if len(index) < 1:
         return
 
@@ -335,6 +373,18 @@ def write_block_index(fd, index):
     return
 
 def get_next_block_header(fd):
+    """
+    From a file, gets the next block header.
+
+    Parameters
+    ----------
+    fd - The ASDF file to get the next block.
+
+    Return
+    ------
+    If a block is found, return the bytes of the block header.
+    Otherwise return None.
+    """
     #     Block header structure:
     # 4 bytes of magic number
     # 2 bytes of header length, after the length field (min 48)
