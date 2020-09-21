@@ -465,7 +465,9 @@ class NDArrayType(AsdfType):
     def _assert_equality(cls, old, new, func):
         if old.dtype.fields:
             if not new.dtype.fields:
-                assert False, "arrays not equal"
+                # This line is safe because this is actually a piece of test
+                # code, even though it lives in this file:
+                assert False, "arrays not equal" # nosec
             for a, b in zip(old, new):
                 cls._assert_equality(a, b, func)
         else:
@@ -478,7 +480,9 @@ class NDArrayType(AsdfType):
                     new = new.astype('U')
                 old = old.tolist()
                 new = new.tolist()
-                assert old == new
+                # This line is safe because this is actually a piece of test
+                # code, even though it lives in this file:
+                assert old == new # nosec
             else:
                 func(old, new)
 

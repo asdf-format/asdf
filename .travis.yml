@@ -40,6 +40,9 @@ jobs:
     # Do a code style check
     - env: TOXENV=style
 
+    # Bandit security audit:
+    - env: TOXENV=bandit
+
     # Check older numpy versions
     - env: TOXENV=py36-numpy11
       python: 3.6

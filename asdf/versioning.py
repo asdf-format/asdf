@@ -46,7 +46,9 @@ def get_version_map(version):
             '{url_suffix}', 'asdf/version_map-{0}'.format(version))
         try:
             with generic_io.get_file(version_map_path, 'r') as fd:
-                version_map = yaml.load(
+                # The following call to yaml.load is safe because we're
+                # using a loader that inherits from pyyaml's SafeLoader.
+                version_map = yaml.load( # nosec
                     fd, Loader=_yaml_base_loader)
         except Exception:
             raise ValueError(

@@ -350,7 +350,9 @@ def _load_schema(url):
             json_data = fd.read().decode('utf-8')
             result = json.loads(json_data, object_pairs_hook=OrderedDict)
         else:
-            result = yaml.load(fd, Loader=yamlutil.AsdfLoader)
+            # The following call to yaml.load is safe because we're
+            # using a loader that inherits from pyyaml's SafeLoader.
+            result = yaml.load(fd, Loader=yamlutil.AsdfLoader) # nosec
     return result, fd.uri
 
 
@@ -362,8 +364,10 @@ def _make_schema_loader(resolver):
         if url in resource_manager:
             content = resource_manager[url]
             # The jsonschema metaschemas are JSON, but pyyaml
-            # doesn't mind:
-            result = yaml.load(content, Loader=yamlutil.AsdfLoader)
+            # doesn't mind.
+            # The following call to yaml.load is safe because we're
+            # using a loader that inherits from pyyaml's SafeLoader.
+            result = yaml.load(content, Loader=yamlutil.AsdfLoader) # nosec
             return result, url
 
         # If not, fall back to fetching the schema the old way:

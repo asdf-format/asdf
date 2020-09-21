@@ -100,7 +100,8 @@ class PrintTree:
         return print_list
 
     def __setitem__(self, node_list, visit):
-        assert isinstance(node_list, list)
+        if not isinstance(node_list, list):
+            raise TypeError("node_list parameter must be an instance of list")
         current = self.__tree
         for node in ['tree'] + node_list:
             if not node in current['children']:
