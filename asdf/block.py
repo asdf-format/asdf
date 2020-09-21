@@ -480,7 +480,9 @@ class BlockManager:
 
         yaml_content = content[content.find(b'\n') + 1:]
 
-        offsets = yaml.load(yaml_content,
+        # The following call to yaml.load is safe because we're
+        # using pyyaml's SafeLoader.
+        offsets = yaml.load(yaml_content, # nosec
                             Loader=yamlutil._yaml_base_loader)
 
         # Make sure the indices look sane
@@ -912,7 +914,9 @@ class Block:
             self._checksum = checksum
 
     def _calculate_checksum(self, data):
-        m = hashlib.new('md5')
+        # The following line is safe because we're only using
+        # the MD5 as a checksum.
+        m = hashlib.new('md5') # nosec
         m.update(self.data.ravel('K'))
         return m.digest()
 
@@ -1118,7 +1122,9 @@ class Block:
             allocated_size = self.allocated
             used_size = self._size
         self.input_compression = self.output_compression
-        assert allocated_size >= used_size
+
+        if allocated_size < used_size:
+            raise RuntimeError(f"Block used size {used_size} larger than allocated size {allocated_size}")
 
         if self.checksum is not None:
             checksum = self.checksum
@@ -1156,7 +1162,8 @@ class Block:
                         used_size=self._size)
                     fd.seek(end)
             else:
-                assert used_size == data_size
+                if used_size != data_size:
+                    raise RuntimeError(f"Block used size {used_size} is not equal to the data size {data_size}")
                 fd.write_array(self._data)
 
     @property

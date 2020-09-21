@@ -304,7 +304,9 @@ def load_tree(stream):
     stream : readable file-like object
         Stream containing the raw YAML content.
     """
-    return yaml.load(stream, Loader=AsdfLoader)
+    # The following call to yaml.load is safe because we're
+    # using a loader that inherits from pyyaml's SafeLoader.
+    return yaml.load(stream, Loader=AsdfLoader) # nosec
 
 
 def dump_tree(tree, fd, ctx):

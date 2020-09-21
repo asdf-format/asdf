@@ -60,9 +60,11 @@ class Resolver:
     def add_mapping(self, mappings, prefix=''):
         # Deprecating this because Resolver is used as part of a dictionary key
         # and so shouldn't be mutable.
-        assert prefix == self._prefix
-
         warnings.warn("The 'add_mapping' method is deprecated.", AsdfDeprecationWarning)
+
+        if prefix != self._prefix:
+            raise ValueError(f"Prefix '{prefix}' does not match the Resolver prefix '{self._prefix}'")
+
         self._mappings = self._mappings + self._validate_mappings(mappings)
 
 
