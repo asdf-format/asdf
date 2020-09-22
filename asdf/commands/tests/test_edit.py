@@ -78,7 +78,28 @@ def create_edit_equal(base_yaml):
     return oname
 
 
-added_line = "bar: 13"
+def create_edit_smaller(base_yaml):
+    """
+    The YAML from the base ASDF file will have a 'foo' value of 42.  Create
+    an edited YAML file with this value being 41.  This will create an edited
+    YAML file with the same number of characters in the YAML section as was in
+    the original ASDF file.
+    """
+    with open(base_yaml, "r") as fd:
+        lines = fd.readlines()
+
+    base, ext = os.path.splitext(base_yaml)
+    oname = f"{base}_edit_smaller.yaml"
+    if os.path.exists(oname):
+        os.remove(oname)
+    with open(oname, "w") as fd:
+        for l in lines:
+            if "foo" in l:
+                print("foo: 2", file=fd)  #  Change a value
+            else:
+                fd.write(l)
+
+    return oname
 
 
 def create_edit_larger(base_yaml):
@@ -98,7 +119,7 @@ def create_edit_larger(base_yaml):
         for l in lines:
             fd.write(l)
             if "foo" in l:
-                print(f"{added_line}", file=fd)  # Add a line
+                print("bar: 13", file=fd)  # Add a line
 
     return oname
 
@@ -110,6 +131,20 @@ def copy_base_asdf_equal(base_asdf):
     """
     base, ext = os.path.splitext(base_asdf)
     oname = f"{base}_equal.asdf"
+    if os.path.exists(oname):
+        os.remove(oname)
+    shutil.copyfile(base_asdf, oname)
+
+    return oname
+
+
+def copy_base_asdf_smaller(base_asdf):
+    """
+    Create an ASDF file from the base ASDF file to test the editing of the
+    YAML portion with equal number of YAML characters.
+    """
+    base, ext = os.path.splitext(base_asdf)
+    oname = f"{base}_smaller.asdf"
     if os.path.exists(oname):
         os.remove(oname)
     shutil.copyfile(base_asdf, oname)
@@ -144,7 +179,22 @@ def test_edits(tmpdir):
     args = ["edit", "-e", "-f", f"{asdf_base}", "-o", f"{yaml_base}"]
     main.main_from_args(args)
 
+    # Test smaller
+    # Create ASDF file to edit with larger sized YAML
+    asdf_smaller = copy_base_asdf_smaller(asdf_base)
 
+    # Create edited YAML file with larger number of characters
+    yaml_smaller = create_edit_smaller(yaml_base)
+
+    # Run: asdftool edit -s -f {yaml_larger} -o {asdf_larger}
+    args = ["edit", "-s", "-f", f"{yaml_smaller}", "-o", f"{asdf_smaller}"]
+    main.main_from_args(args)
+
+    af_smaller = asdf.open(asdf_smaller)
+    assert af_smaller.tree["foo"] == 2
+    assert os.path.getsize(asdf_smaller) == os.path.getsize(asdf_base)
+
+    # Test equal
     # Create ASDF file to edit with equal sized YAML
     asdf_equal = copy_base_asdf_equal(asdf_base)
 
@@ -159,10 +209,9 @@ def test_edits(tmpdir):
 
     af_equal = asdf.open(asdf_equal)
     assert af_equal.tree["foo"] == 41
-    assert os.path.getsize(asdf_equal) == os.path.getsize(asdf_base) 
+    assert os.path.getsize(asdf_equal) == os.path.getsize(asdf_base)
 
-
-
+    # Test larger
     # Create ASDF file to edit with larger sized YAML
     asdf_larger = copy_base_asdf_larger(asdf_base)
 
