@@ -173,7 +173,6 @@ def copy_base_asdf_larger(base_asdf):
 def test_edits(tmpdir,version):
     #        Test:
     # Create base ASDF file for testing
-    tmpdir = "/Users/kmacdonald/tmp"
     asdf_base = create_base_asdf(tmpdir, version)
 
     # Create base YAML file from base ASDF file
