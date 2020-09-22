@@ -2,11 +2,13 @@ import os
 import shutil
 
 import numpy as np
+import pytest
 
 import asdf
 from asdf import AsdfFile
 from asdf.commands import main
 from ...tests.helpers import get_file_sizes, assert_tree_match
+
 
 
 """
@@ -30,7 +32,8 @@ Three tests are defined.
 """
 
 
-def create_base_asdf(tmpdir):
+
+def create_base_asdf(tmpdir, version):
     """
     In the test temp directory, create a base ASDF file to edit
     and test against.
@@ -48,7 +51,7 @@ def create_base_asdf(tmpdir):
     oname = os.path.join(tmpdir, fname)
     if os.path.exists(oname):
         os.remove(oname)
-    af = asdf.AsdfFile(tree)
+    af = asdf.AsdfFile(tree,version=version)
     af.write_to(oname)
 
     return oname
@@ -166,11 +169,12 @@ def copy_base_asdf_larger(base_asdf):
     return oname
 
 
-def test_edits(tmpdir):
+@pytest.mark.parametrize("version", asdf.versioning.supported_versions)
+def test_edits(tmpdir,version):
     #        Test:
     # Create base ASDF file for testing
     tmpdir = "/Users/kmacdonald/tmp"
-    asdf_base = create_base_asdf(tmpdir)
+    asdf_base = create_base_asdf(tmpdir, version)
 
     # Create base YAML file from base ASDF file
     base, ext = os.path.splitext(asdf_base)
