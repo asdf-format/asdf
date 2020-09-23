@@ -68,7 +68,7 @@ class Edit(Command):
             action="store_true",
             dest="save",
             help="Saves a YAML text file to an ASDF file.  Requires a "
-                 "YAML input file and ASDF output file.",
+            "YAML input file and ASDF output file.",
         )
 
         group.add_argument(
@@ -96,7 +96,12 @@ def is_yaml_file(fname):
 
     Parameters
     ----------
-    fname : The character string of the input file name.
+    fname : str
+        Input file name.
+
+    Return
+    ------
+    bool
     """
 
     base, ext = os.path.splitext(fname)
@@ -111,8 +116,13 @@ def is_valid_path_and_ext(fname, wanted_ext=None):
 
     Parameters
     ----------
-    fname : The character string of the input file name.
+    fname : str
+        Input file name.
     wanted_ext : List of extensions to check.
+
+    Return
+    ------
+    bool
     """
     if not os.path.exists(fname):
         print(f"Error: No file '{fname}' exists.")
@@ -136,7 +146,12 @@ def is_valid_asdf_path(fname):
 
     Parameters
     ----------
-    fname : The character string of the input file name.
+    fname : str
+        ASDF file name
+
+    Return
+    ------
+    bool
     """
     ext = [".asdf"]
     if is_valid_path_and_ext(fname, ext):
@@ -151,7 +166,12 @@ def is_valid_yaml_path(fname):
 
     Parameters
     ----------
-    fname : The character string of the input file name.
+    fname : str
+        ASDF file name
+
+    Return
+    ------
+    bool
     """
     ext = [".yaml"]
     if is_valid_path_and_ext(fname, ext):
@@ -197,7 +217,8 @@ def open_and_check_asdf_header(fname):
 
     Parameters
     ----------
-    fname : The character string of the input file name.
+    fname : str
+        Input file name
 
     Return
     ------
@@ -218,7 +239,8 @@ def read_and_validate_yaml(fd, fname):
 
     Parameters
     ----------
-    fname : The character string of the input file name.
+    fname : str
+        Input file name
     fd : GenericFile for fname.
 
     Return
@@ -261,8 +283,10 @@ def edit_func(fname, oname):
 
     Parameters
     ----------
-    fname : The character string of the input ASDF file name.
-    oname : The character string of the output YAML file name.
+    fname : str
+        Input ASDF file name
+    oname : str
+        Output YAML file name.
     """
     if not is_valid_asdf_path(fname):
         return False
@@ -297,11 +321,31 @@ def edit_func(fname, oname):
     return
 
 
-# TODO conosidate the next two functions and change 'buffer' to 'pad'.
-def buffer_edited_text(edited_text, orig_text):
+def get_yaml_text_and_delimiter(yaml_text):
+    """
+    Splits the YAML text into the text and the end delimiter in preparation
+    for padding.
+    """
+
+    wdelim = b"\r\n...\r\n"
+    ldelim = b"\n...\n"
+    if yaml_text[-len(wdelim) :] == wdelim:
+        delim = wdelim
+    elif yaml_text[-len(ldelim) :] == ldelim:
+        delim = ldelim
+    else:
+        print("Unrecognized YAML delimiter ending the YAML text.")
+        print(f"It should be {wdelim} or {ldelim}, but the")
+        print(f"last {len(wdelim)} bytes are {yaml_text[-len(wdelim):]}.")
+        sys.exit(1)
+
+    return yaml_text[: -len(delim)], delim
+
+
+def pad_edited_text(edited_text, orig_text):
     """
     There is more text in the original ASDF file than in the edited text,
-    so we will buffer the edited text with spaces.
+    so we will pad the edited text with spaces.
 
     Parameters
     ----------
@@ -310,55 +354,36 @@ def buffer_edited_text(edited_text, orig_text):
 
     Return
     ------
-    The buffered text and the number of spaces added as buffer.
+    The padded text and the number of spaces added as pad.
     """
     diff = len(orig_text) - len(edited_text)
 
-    wdelim = b"\r\n...\r\n"
-    ldelim = b"\n...\n"
-    if edited_text[-len(wdelim) :] == wdelim:
-        delim = wdelim
-    elif edited_text[-len(ldelim) :] == ldelim:
-        delim = ldelim
-    else:
-        print("Unrecognized YAML delimiter ending the YAML text.")
-        print(f"It should be {wdelim} or {ldelim}, but the")
-        print(f"last {len(wdelim)} bytes are {edited_text[-len(wdelim):]}.")
-        sys.exit(1)
+    edited_text, delim = get_yaml_text_and_delimiter(edited_text)
 
-    buffered_text = edited_text[: -len(delim)] + b"\n" + b"\0" * (diff - 1) + delim
-    return buffered_text, diff - 1
+    padded_text = edited_text + b"\n" + b" " * (diff - 1) + delim
+    return padded_text, diff - 1
 
 
-def add_buffer_to_new_text(edited_text, buffer_size):
+def add_pad_to_new_text(edited_text, pad_size):
     """
-    Adds buffer to edited text.
+    Adds pad to edited text.
 
     Parameters
     ----------
     edited_text - The text from the edited YAML file.
-    buffer_size - The number of spaces to add as a buffer.
+    pad_size - The number of spaces to add as a pad.
 
     Return
     ------
-    Buffered text with the number of spaces requested as buffer.
+    Pad text with the number of spaces requested as pad.
     """
-    wdelim = b"\r\n...\r\n"
-    ldelim = b"\n...\n"
-    if edited_text[-len(wdelim) :] == wdelim:
-        delim = wdelim
-    elif edited_text[-len(ldelim) :] == ldelim:
-        delim = ldelim
-    else:
-        print("Unrecognized YAML delimiter ending the YAML text.")
-        print(f"It should be {wdelim} or {ldelim}, but the")
-        print(f"last {len(wdelim)} bytes are {edited_text[-len(wdelim):]}.")
-        sys.exit(1)
 
-    buf = b" " * buffer_size
-    buffered_text = edited_text[: -len(delim)] + b"\n" + buf + delim
+    edited_text, delim = get_yaml_text_and_delimiter(edited_text)
 
-    return buffered_text
+    pad = b" " * pad_size
+    padded_text = edited_text + b"\n" + pad + delim
+
+    return padded_text
 
 
 def write_block_index(fd, index):
@@ -418,10 +443,10 @@ def get_next_block_header(fd):
 
 def rewrite_asdf_file(edited_text, orig_text, oname, fname):
     """
-    Rewrite an ASDF file for too large edited YAML.  The edited YAML, a buffer,
+    Rewrite an ASDF file for too large edited YAML.  The edited YAML, a pad,
     the blocks will be rewritten.  A block index will also be rewritten.  If a
     block index existed in the old file, it will have to be recomputed to
-    because of the larger YAML size and buffer, which changes the location of
+    because of the larger YAML size and pad, which changes the location of
     the binary blocks.
 
     Parameters
@@ -433,16 +458,16 @@ def rewrite_asdf_file(edited_text, orig_text, oname, fname):
     """
 
     tmp_oname = oname + ".tmp"  # Save as a temp file, in case anything goes wrong.
-    buffer_size = 10 * 1000
-    buffered_text = add_buffer_to_new_text(edited_text, buffer_size)
+    pad_size = 10 * 1000
+    padded_text = add_pad_to_new_text(edited_text, pad_size)
 
     ifd = open(oname, "r+b")  # Open old ASDF to get binary blocks
     ifd.seek(len(orig_text))
 
     ofd = open(tmp_oname, "w+b")  # Open temp file to write
-    ofd.write(buffered_text)  # Write edited YAML
+    ofd.write(padded_text)  # Write edited YAML
 
-    current_location = len(buffered_text)
+    current_location = len(padded_text)
     block_index = []
     alloc_loc = 14  # 4 bytes of block ID, 2 blocks of size, 8 blocks into header
     block_chunk = 2048
@@ -479,7 +504,7 @@ def rewrite_asdf_file(edited_text, orig_text, oname, fname):
     print(f"The text in '{fname}' was too large to simply overwrite the")
     print(f"text in '{oname}'.  The file '{oname}' was rewritten to")
     print("accommodate the larger text size.")
-    print(f"Also, added a '\\n' and {buffer_size:,} spaces as a buffer for")
+    print(f"Also, added a '\\n' and {pad_size:,} '\\0' as a pad for")
     print(f"the text in '{oname}' to allow for future edits.")
     print(f"{delim}\n")
 
@@ -529,13 +554,13 @@ def save_func(fname, oname):
         print(f"The edited text in '{fname}' was written to '{oname}'")
         print(f"{msg_delim}\n")
     elif len(edited_text) < len(asdf_text):
-        buffered_text, diff = buffer_edited_text(edited_text, asdf_text)
+        padded_text, diff = pad_edited_text(edited_text, asdf_text)
         with open(oname, "r+b") as fd:
-            fd.write(buffered_text)
+            fd.write(padded_text)
         print(f"\n{msg_delim}")
         print(f"The edited text in '{fname}' was written to '{oname}'")
         print(
-            f"Added a '\\n' and {diff} buffer of spaces between the YAML text and binary blocks."
+            f"Added a '\\n' and {diff} pad of '\\0' between the YAML text and binary blocks."
         )
         print(f"{msg_delim}\n")
     else:
