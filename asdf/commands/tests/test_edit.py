@@ -35,11 +35,11 @@ def _create_edited_yaml(base_yaml, edited_yaml, pattern, replacement):
             fd.write(new_content)
 
 
-def _initialize_test(tmpdir, version):
-    asdf_base = os.path.join(tmpdir, "base.asdf")
-    yaml_base = os.path.join(tmpdir, "base.yaml")
-    asdf_edit = os.path.join(tmpdir, "edit.asdf")
-    yaml_edit = os.path.join(tmpdir, "edit.yaml")
+def _initialize_test(tmpdir, version, test_name):
+    asdf_base = os.path.join(tmpdir, f"{test_name}_base.asdf")
+    yaml_base = os.path.join(tmpdir, f"{test_name}_base.yaml")
+    asdf_edit = os.path.join(tmpdir, f"{test_name}_edit.asdf")
+    yaml_edit = os.path.join(tmpdir, f"{test_name}_edit.yaml")
 
     _create_base_asdf(version, asdf_base)
     shutil.copyfile(asdf_base, asdf_edit)
@@ -52,12 +52,12 @@ def _initialize_test(tmpdir, version):
 
 @pytest.mark.parametrize("version", asdf.versioning.supported_versions)
 def test_edit_smaller(tmpdir, version):
-    asdf_base, yaml_base, asdf_edit, yaml_edit = _initialize_test(tmpdir, version)
+    asdf_base, yaml_base, asdf_edit, yaml_edit = _initialize_test(tmpdir, version, "smaller")
 
     _create_edited_yaml(yaml_base, yaml_edit, "foo: 42", "foo: 2")
 
     args = ["edit", "-s", "-f", f"{yaml_edit}", "-o", f"{asdf_edit}"]
-    ret = main.main_from_args(args)
+    main.main_from_args(args)
     assert os.path.getsize(asdf_edit) == os.path.getsize(asdf_base)
 
     with asdf.open(asdf_edit) as af:
@@ -66,12 +66,12 @@ def test_edit_smaller(tmpdir, version):
 
 @pytest.mark.parametrize("version", asdf.versioning.supported_versions)
 def test_edit_equal(tmpdir, version):
-    asdf_base, yaml_base, asdf_edit, yaml_edit = _initialize_test(tmpdir, version)
+    asdf_base, yaml_base, asdf_edit, yaml_edit = _initialize_test(tmpdir, version, "equal")
 
     _create_edited_yaml(yaml_base, yaml_edit, "foo: 42", "foo: 41")
 
     args = ["edit", "-s", "-f", f"{yaml_edit}", "-o", f"{asdf_edit}"]
-    ret = main.main_from_args(args)
+    main.main_from_args(args)
     assert os.path.getsize(asdf_edit) == os.path.getsize(asdf_base)
 
     with asdf.open(asdf_edit) as af:
@@ -80,12 +80,12 @@ def test_edit_equal(tmpdir, version):
 
 @pytest.mark.parametrize("version", asdf.versioning.supported_versions)
 def test_edit_larger(tmpdir, version):
-    asdf_base, yaml_base, asdf_edit, yaml_edit = _initialize_test(tmpdir, version)
+    asdf_base, yaml_base, asdf_edit, yaml_edit = _initialize_test(tmpdir, version, "larger")
 
     _create_edited_yaml(yaml_base, yaml_edit, "foo: 42", "foo: 42\nbar: 13")
 
     args = ["edit", "-s", "-f", f"{yaml_edit}", "-o", f"{asdf_edit}"]
-    ret = main.main_from_args(args)
+    main.main_from_args(args)
     assert os.path.getsize(asdf_edit) - os.path.getsize(asdf_base) > 10000
 
     with asdf.open(asdf_edit) as af:

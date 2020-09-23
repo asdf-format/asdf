@@ -296,6 +296,7 @@ def edit_func(fname, oname):
 
     # Read and validate the YAML of an ASDF file.
     yaml_text = read_and_validate_yaml(fd, fname)
+    fd.close()
 
     # Open a YAML file for the ASDF YAML.
     if not is_yaml_file(oname):
@@ -492,8 +493,10 @@ def rewrite_asdf_file(edited_text, orig_text, oname, fname):
         if alloc > 0:
             chunk = ifd.read(alloc)
             ofd.write(chunk)
+    ifd.close()
 
     write_block_index(ofd, block_index)
+    ofd.close()
 
     # Rename temp file.
     os.rename(tmp_oname, oname)
