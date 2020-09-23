@@ -507,7 +507,7 @@ def rewrite_asdf_file(edited_text, orig_text, oname, fname):
     print(f"The text in '{fname}' was too large to simply overwrite the")
     print(f"text in '{oname}'.  The file '{oname}' was rewritten to")
     print("accommodate the larger text size.")
-    print(f"Also, added a '\\n' and {pad_size:,} '\\0' as a pad for")
+    print(f"Also, added a '\\n' and {pad_size:,} ' ' as a pad for")
     print(f"the text in '{oname}' to allow for future edits.")
     print(f"{delim}\n")
 
@@ -563,7 +563,7 @@ def save_func(fname, oname):
         print(f"\n{msg_delim}")
         print(f"The edited text in '{fname}' was written to '{oname}'")
         print(
-            f"Added a '\\n' and {diff} pad of '\\0' between the YAML text and binary blocks."
+            f"Added a '\\n' and {diff} pad of ' ' between the YAML text and binary blocks."
         )
         print(f"{msg_delim}\n")
     else:
