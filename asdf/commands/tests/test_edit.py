@@ -23,8 +23,8 @@ def _create_base_asdf(version, oname):
         "sequence": seq,
     }
 
-    af = asdf.AsdfFile(tree, version=version)
-    af.write_to(oname)
+    with asdf.AsdfFile(tree, version=version) as af:
+        af.write_to(oname)
 
 
 def _create_edited_yaml(base_yaml, edited_yaml, pattern, replacement):
@@ -52,7 +52,9 @@ def _initialize_test(tmpdir, version, test_name):
 
 @pytest.mark.parametrize("version", asdf.versioning.supported_versions)
 def test_edit_smaller(tmpdir, version):
-    asdf_base, yaml_base, asdf_edit, yaml_edit = _initialize_test(tmpdir, version, "smaller")
+    asdf_base, yaml_base, asdf_edit, yaml_edit = _initialize_test(
+        tmpdir, version, "smaller"
+    )
 
     _create_edited_yaml(yaml_base, yaml_edit, "foo: 42", "foo: 2")
 
@@ -66,7 +68,9 @@ def test_edit_smaller(tmpdir, version):
 
 @pytest.mark.parametrize("version", asdf.versioning.supported_versions)
 def test_edit_equal(tmpdir, version):
-    asdf_base, yaml_base, asdf_edit, yaml_edit = _initialize_test(tmpdir, version, "equal")
+    asdf_base, yaml_base, asdf_edit, yaml_edit = _initialize_test(
+        tmpdir, version, "equal"
+    )
 
     _create_edited_yaml(yaml_base, yaml_edit, "foo: 42", "foo: 41")
 
@@ -80,7 +84,9 @@ def test_edit_equal(tmpdir, version):
 
 @pytest.mark.parametrize("version", asdf.versioning.supported_versions)
 def test_edit_larger(tmpdir, version):
-    asdf_base, yaml_base, asdf_edit, yaml_edit = _initialize_test(tmpdir, version, "larger")
+    asdf_base, yaml_base, asdf_edit, yaml_edit = _initialize_test(
+        tmpdir, version, "larger"
+    )
 
     _create_edited_yaml(yaml_base, yaml_edit, "foo: 42", "foo: 42\nbar: 13")
 
