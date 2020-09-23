@@ -10,7 +10,7 @@ from .info import info
 from .edit import edit
 
 
-__all__ = [ 'implode', 'explode', 'to_yaml', 'defragment', 'diff', 'list_tags',
+__all__ = ['implode', 'explode', 'to_yaml', 'defragment', 'diff', 'list_tags',
     'find_extensions', 'info', 'edit']
 
 
