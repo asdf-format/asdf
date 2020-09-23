@@ -6,9 +6,7 @@ import numpy as np
 import pytest
 
 import asdf
-from asdf import AsdfFile
 from asdf.commands import main
-from ...tests.helpers import get_file_sizes, assert_tree_match
 
 
 def _create_base_asdf(version, oname):
@@ -43,7 +41,7 @@ def _initialize_test(tmpdir, version):
     asdf_edit = os.path.join(tmpdir, "edit.asdf")
     yaml_edit = os.path.join(tmpdir, "edit.yaml")
 
-    _create_base_asdf(version,asdf_base)
+    _create_base_asdf(version, asdf_base)
     shutil.copyfile(asdf_base, asdf_edit)
 
     args = ["edit", "-e", "-f", f"{asdf_base}", "-o", f"{yaml_base}"]
@@ -60,11 +58,11 @@ def test_edit_smaller(tmpdir, version):
 
     args = ["edit", "-s", "-f", f"{yaml_edit}", "-o", f"{asdf_edit}"]
     ret = main.main_from_args(args)
-    assert 0==ret
     assert os.path.getsize(asdf_edit) == os.path.getsize(asdf_base)
 
     with asdf.open(asdf_edit) as af:
         assert af.tree["foo"] == 2
+
 
 @pytest.mark.parametrize("version", asdf.versioning.supported_versions)
 def test_edit_equal(tmpdir, version):
@@ -74,11 +72,11 @@ def test_edit_equal(tmpdir, version):
 
     args = ["edit", "-s", "-f", f"{yaml_edit}", "-o", f"{asdf_edit}"]
     ret = main.main_from_args(args)
-    assert 0==ret
     assert os.path.getsize(asdf_edit) == os.path.getsize(asdf_base)
 
     with asdf.open(asdf_edit) as af:
         assert af.tree["foo"] == 41
+
 
 @pytest.mark.parametrize("version", asdf.versioning.supported_versions)
 def test_edit_larger(tmpdir, version):
@@ -88,7 +86,6 @@ def test_edit_larger(tmpdir, version):
 
     args = ["edit", "-s", "-f", f"{yaml_edit}", "-o", f"{asdf_edit}"]
     ret = main.main_from_args(args)
-    assert 0==ret
     assert os.path.getsize(asdf_edit) - os.path.getsize(asdf_base) > 10000
 
     with asdf.open(asdf_edit) as af:
