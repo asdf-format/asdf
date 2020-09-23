@@ -499,7 +499,7 @@ def rewrite_asdf_file(edited_text, orig_text, oname, fname):
     ofd.close()
 
     # Rename temp file.
-    os.rename(tmp_oname, oname)
+    os.replace(tmp_oname, oname)
 
     # Output message to user.
     delim = "*" * 70
