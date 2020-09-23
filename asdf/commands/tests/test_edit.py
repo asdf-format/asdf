@@ -1,6 +1,5 @@
 import os
 import re
-import shutil
 
 import numpy as np
 import pytest
@@ -42,7 +41,7 @@ def _initialize_test(tmpdir, version, test_name):
     yaml_edit = os.path.join(tmpdir, f"{test_name}_edit.yaml")
 
     _create_base_asdf(version, asdf_base)
-    shutil.copyfile(asdf_base, asdf_edit)
+    _create_base_asdf(version, asdf_edit)
 
     args = ["edit", "-e", "-f", f"{asdf_base}", "-o", f"{yaml_base}"]
     main.main_from_args(args)
