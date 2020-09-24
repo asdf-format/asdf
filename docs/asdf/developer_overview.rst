@@ -6,12 +6,12 @@ workings of the python asdf library for those unfamiliar with it. This is
 expected to grow organically so at the moment it should not be considered
 complete or comprehensive.
 
-Understanding the design is complicated by the fact that the library 
+Understanding the design is complicated by the fact that the library
 effectively inserts custom methods or classes into the objects that
 the pyyaml and jsonschema libraries use. Understanding what is going on
-thus means having some understanding of the relevant parts of the 
-internals of both of those libraries. This overview will try to provide 
-a small amount of context for these packages to illuminate how the code 
+thus means having some understanding of the relevant parts of the
+internals of both of those libraries. This overview will try to provide
+a small amount of context for these packages to illuminate how the code
 in asdf interacts with them.
 
 There are at least two ways of outlining the design. One is to give high level
@@ -21,12 +21,12 @@ often being much more informative on a practical level (at least some find that 
 be the case). This document will attempt to do both.
 
 We will start with a high-level review of concepts and terms and point to where
-these are handled in the asdf modules. 
+these are handled in the asdf modules.
 
 Because of the complexity, this initial design overview will focus on issues of
 validation and tree construction when reading.
 
-Some terminology and definitions 
+Some terminology and definitions
 --------------------------------
 
 **URI vs URL (Universal Resource Identifier)**. This is distinguished from URL
@@ -49,7 +49,7 @@ parser converts the raw YAML into a custom Python structure. It is that
 structure that is validated. Then if no errors are found, the tree is
 converted into a tree where tagged nodes get converted into corresponding Python
 objects (usually, an option exists to prevent this from happening, which is
-useful for some applications), e.g., WCS object or numpy arrays (well, not 
+useful for some applications), e.g., WCS object or numpy arrays (well, not
 quite that simply for numpy arrays).
 
 The above is a simplified view of what happens when an ASDF file is read.
@@ -74,7 +74,7 @@ Actions that happen when ASDF is imported
 
 The entry points for all asdf extensions are obtained in ``extension.py`` (by
 the class ``_DefaultExtensions``) which is instantiated at the end of the module
-as ``default_extensions``, but the entry points are only found when 
+as ``default_extensions``, but the entry points are only found when
 default_extensions.extensions is accessed (it's a property)
 
 The effect of this is to load all the specified entry point classes for  all the
@@ -108,7 +108,7 @@ maps it to an actual location (url or file path). Again the second part may
 include a place holder for the suffix or prefix, and code to generate the path
 to the schema file.
 
-The use of the resolver object turns these lists into functions so that 
+The use of the resolver object turns these lists into functions so that
 supplied the appropriate input that matches something in the list, it gives the
 corresponding output.
 
@@ -146,7 +146,7 @@ to understand how this all works. Yaml supports various kinds of loaders. For
 security reasons, the "safe" loader is used (note that both C and python
 versions are supported through an indirection of the ``_yaml_base_loader``
 defined at the beginning of that module that determines whether the C version is
-available). The loaders are recursive mechanisms that build the tree structure. 
+available). The loaders are recursive mechanisms that build the tree structure.
 Note that ``yamlutil.load_tree`` creates a temporary subclass of ``AsdfLoader``
 and attaches a reference to the AsdfFile instance as the ``.ctx`` attribute of
 that temporary subclass.
@@ -160,7 +160,7 @@ does the following: it sees if the node.tag attribute is handled by yaml itself
 to. Otherwise:
 
  - it converts the node to the type indicated (dict, list, or scalar type) by
-   yaml for that node.  
+   yaml for that node.
  - it obtains the appropriate tag class (an AsdfType subclass) from the AsdfFile
    instance (using ``ctx.type_index.fix_yaml_tag`` to deal with version issues
    to match the most appropriate tag class).
@@ -174,9 +174,9 @@ tagged_tree is then returned to the ``af`` instance (still running the
 (This is the major reason that the tree isn't  directly converted to an object
 tree since jsonschema would not be able to use the  final object tree for
 validation, besides issues relate to the fact that things that don't validate
-may not be convertable to the designated object.) 
+may not be convertable to the designated object.)
 
-The validate machinery is a bit confusing since there are essentially two basic 
+The validate machinery is a bit confusing since there are essentially two basic
 approaches to how validation is done. One type of validation is for validation
 of schema files themselves, and the other for schemas for tags.
 
@@ -215,7 +215,7 @@ up the af object intrinsically). The function then passes the callback walker to
 treeutil.walk_and_modify() where the tree will be traversed recursively applying
 the tag code associated with the tag to the more primitive tree representation
 replacing such nodes with Python objects. The tree traversal starts from the
-top, but the objects are created from the bottom up due to recursion (well, not 
+top, but the objects are created from the bottom up due to recursion (well, not
 quite that simple).
 
 Understanding how this works is described more fully later on.
@@ -288,7 +288,7 @@ it doesn't appear to vary except for that. Admittedly, this is only created at
 the top level. This is called by ``get_validator``.
 
 **class OrderedLoader:** Inherits from the ``_yaml_base_loader``, but otherwise
-does nothing new in the definition. But the following code defines 
+does nothing new in the definition. But the following code defines
 ``construct_mapping``, and then adds it as a method.
 
 **construct_mapping:** Defined outside the ``OrderedLoader`` class but to be
@@ -361,7 +361,7 @@ How the ASDF library works with pyyaml
 A Tree Identifier
 .................
 
-There are three flavors of trees in the process of reading ASDF files, one 
+There are three flavors of trees in the process of reading ASDF files, one
 will see many references to each in the code and description below.
 
 **pyyaml native tree.** This consists of standard Python containers like dict
@@ -389,34 +389,34 @@ a yaml file:
    parser.py.
 #. **composing:** Converting the parsing events into a tree structure of pyyaml
    objects. Done in composer.py
-#. **loading:** Converting the pyyaml tree into a Python object tree. Done in 
+#. **loading:** Converting the pyyaml tree into a Python object tree. Done in
    constructor.py
 
 We will focus on the last step since that is where asdf integrates with how
-pyyaml works. 
+pyyaml works.
 
 The key object in that module is ``BaseConstructor`` and its subclasses (asdf
 uses ``SafeConstructor`` for security purposes). Note that the pyyaml code is
-severely deficient in docstrings and comments. The key method that kicks 
+severely deficient in docstrings and comments. The key method that kicks
 off the conversion is ``construct_document()``. Its responsibilities are to call
 the ``construct_object()`` method on the top node, "drain" any generators
 produced by construction (more on this later), and finally reset internal
-data structures once construction is complete. 
+data structures once construction is complete.
 
 The actual process seems somewhat mysterious because what is going on is
-that it is using generators in place of vanilla code to construct the 
+that it is using generators in place of vanilla code to construct the
 children for mutable items. The general scheme is that each constructor
-for mutable elements (see as an example the 
+for mutable elements (see as an example the
 ``SafeConstructor.construct_yaml_seq()`` method) is written
 as a generator that is expected to be asked a value twice. The first value
-returned is an empty object of the expected type (e.g., empty dict or 
-list) and when asked a second time, it populates the previous object 
+returned is an empty object of the expected type (e.g., empty dict or
+list) and when asked a second time, it populates the previous object
 returned (and returns None, which is not used). (In rare exceptions,
 when called with ``deep=True``, it does immediately populate the child nodes.)
 
 Normally the generator is appended to the loader's state_generators
-attribute (a list) for later use. Any generators not handled in the 
-recursive chain are handled when contruct_object returns to 
+attribute (a list) for later use. Any generators not handled in the
+recursive chain are handled when contruct_object returns to
 ``construct_document``, where it iteratively asks each generator to complete
 populating its referenced object. Since that step of populating the object
 may in turn create new generators on the ``state_generator`` list, it only
@@ -429,7 +429,7 @@ Suppose one had the following yaml source::
 
     A: &a
         x: 1
-        B: 
+        B:
             item1: 42
             item2: life, the universe, and everything
         circular: *a
@@ -445,14 +445,14 @@ construction creates a dictionary for ``a`` and then returns to the
 the list (there is only one in this case). The generator then populates
 the contents of ``a``. For the attribute ``B`` it encounters a new
 mutable container, and puts its generator on the list to handle, and then
-makes a reference to ``a`` which now is defined. One last time it 
+makes a reference to ``a`` which now is defined. One last time it
 handles the generator for ``B`` and since each item in that is not
 a container, the construction completes.
 
-Pyyaml tracks pending objects in a recursive objects dict and throws 
+Pyyaml tracks pending objects in a recursive objects dict and throws
 an exception if generators fail to handle reference cycles. (The conversion
 of the tagged tree to the custom tree, performed later does not use the
-same technique; explained later) 
+same technique; explained later)
 
 How ASDF hooks into pyyaml construction
 .......................................
@@ -460,7 +460,7 @@ How ASDF hooks into pyyaml construction
 ASDF makes use of this by adding generators to this process by defining
 a new construct method ``construct_undefined()`` that handles all ASDF tag
 cases. This is added to the pyyaml dict of construct methods under the
-key of ``None``. When pyyaml doesn't find a tag, that is what it uses as 
+key of ``None``. When pyyaml doesn't find a tag, that is what it uses as
 a key to handle unknown tags. Thus the construction is redirected to
 ASDF code. That code returns a generator in the case of mutable ASDF
 objects in line with how yaml works with mutable objects.
@@ -472,7 +472,7 @@ their own version that did not use generators as pyyaml did.
 How conversion to ASDF objects is done
 ......................................
 
-The current means of conversion is simpler to use by tag code, but 
+The current means of conversion is simpler to use by tag code, but
 also more subtle to understand how it actually works (for many,
 that means harder ;-)
 
@@ -489,33 +489,33 @@ A note on tree traversal. One can traverse a tree in three ways:
 inorder, preorder, and postorder (``asdf.info()`` uses a breadth-first
 traversal, yet another exciting option, which we won't describe here).
 These respectively mean whether
-nodes are visited in the horizontal ordering of the nodes displayed on 
-a graphs (inorder), descending the tree from the root, doing the left 
+nodes are visited in the horizontal ordering of the nodes displayed on
+a graphs (inorder), descending the tree from the root, doing the left
 node first, before the right node (preorder), or from the bottom up, doing
-both leaf nodes before the parent node (postorder). In generating the 
+both leaf nodes before the parent node (postorder). In generating the
 pyyaml tree, preorder works since it builds the tree from the root
-as one would expect in constructing the tree. But in converting the 
+as one would expect in constructing the tree. But in converting the
 tagged tree into the custom tree, postorder is the natural course, where
-the children are generated first so that the parent node can refer to 
+the children are generated first so that the parent node can refer to
 the final objects.
 
 An important part of this conversion process is handled by an instance
 of the class ``treeutil._TreeModificationContext``. This class does much the
 same trick that pyyaml does with generators. Although pyyaml creates
 references between basic python objects, these references must be
-converted to references between ASDF objects, and doing so requires 
-a similar mechanism for building the ASDF objects. The 
+converted to references between ASDF objects, and doing so requires
+a similar mechanism for building the ASDF objects. The
 ``_TreeModificationContext`` object (hereafter context object)
-holds the incomplete generators in a way similar to the pyyaml 
-``construct_document`` function. 
+holds the incomplete generators in a way similar to the pyyaml
+``construct_document`` function.
 
 There are differences though. The class ``TreeModificationContext`` provides
 methods to indicate if nodes are pending (i.e., incomplete), and there
-is a special value ``PendingValue`` that is a signal that the node hasn't 
+is a special value ``PendingValue`` that is a signal that the node hasn't
 been handled yet (e.g., it may be referencing something yet to be done).
-If ``PendingValue`` persists to the end, it indicates a failure to handle 
-circular references in the tag code. This approach was taken because 
-one of the earlier prototype implementations did something like this, 
+If ``PendingValue`` persists to the end, it indicates a failure to handle
+circular references in the tag code. This approach was taken because
+one of the earlier prototype implementations did something like this,
 passing dict and list subclasses that would throw an exception if a
 ``PendingValue`` element was accessed.  That would have been more friendly
 to extension developers, but it was discarded because it wasn't thought
@@ -526,19 +526,19 @@ have changed, since in that case we'll need custom container subclasses
 anyway.  We could also consider writing our own dict/list subclass in C
 so we could have our cake and eat it too.
 
-The ``walk_and_modify`` code handles the case where the tag code returns 
+The ``walk_and_modify`` code handles the case where the tag code returns
 a generator instead of a value. This generator is expected to be a
 similar kind of generator to what pyyaml uses, but differing in that instead
 of returning an empty container object it will populate whatever elements
-it can complete (e.g, all non-mutable ones), and complete the 
+it can complete (e.g, all non-mutable ones), and complete the
 population of all the mutable members on the second iteration
-(which may, in turn, generate new generators for mutable elements 
+(which may, in turn, generate new generators for mutable elements
 contained within). When it detects a generator, the ``walk_and_modify``
 code retrieves the first yielded value, then saves the generator in the
 context. When the
 top level of the context is reached (it handles nesting by indicating
 how many times it has been entered as a context), it starts "draining"
-the saved generators by doing the second iteration on them. Like 
+the saved generators by doing the second iteration on them. Like
 pyyaml, this second iteration may produce yet more generators that
 get saved, and thus keeps iterating on the saved generators until none
 are left.
@@ -548,7 +548,7 @@ objects within pure Python code, and thus the generators are only needed
 for mutable constructs (e.g., dicts and lists).
 
 Historical note: versions of the ASDF library prior to 2.6.0 required
-tag code when converting from a tagged object to a custom object to 
+tag code when converting from a tagged object to a custom object to
 call ``tagged_tree_to_custom_tree`` on any values of attributes that may be
 arbitrarily nested objects. That no longer is needed with the latest code
 since any attribute that contains a mapping or sequence object automatically
