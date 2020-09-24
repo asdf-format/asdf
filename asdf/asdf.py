@@ -25,6 +25,7 @@ from .exceptions import AsdfDeprecationWarning, AsdfWarning, AsdfConversionWarni
 from .extension import (
     AsdfExtensionList,
     AsdfExtension,
+    Extension,
     ExtensionProxy,
     get_cached_asdf_extension_list,
     get_cached_extension_manager,
@@ -73,9 +74,8 @@ class AsdfFile:
         extensions : object, optional
             Additional extensions to use when reading and writing the file.
             May be any of the following: `asdf.extension.AsdfExtension`,
-            `asdf.extension.Extension`, `str` extension URI,
-            `asdf.extension.AsdfExtensionList` or a `list` of URIs and/or
-            extensions.
+            `asdf.extension.Extension`, `asdf.extension.AsdfExtensionList`
+            or a `list` of extensions.
 
         version : str, optional
             The ASDF Standard version.  If not provided, defaults to the
@@ -122,7 +122,10 @@ class AsdfFile:
         else:
             self._version = versioning.AsdfVersion(validate_version(version))
 
-        self.extensions = extensions
+        self._user_extensions = self._process_user_extensions(extensions)
+        self._plugin_extensions = self._process_plugin_extensions()
+        self._extension_manager = None
+        self._extension_list = None
 
         if custom_schema is not None:
             self._custom_schema = schema._load_schema_cached(custom_schema, self.resolver, True, False)
@@ -157,6 +160,8 @@ class AsdfFile:
             self._tree = AsdfObject()
         elif isinstance(tree, AsdfFile):
             if self.extensions != tree.extensions:
+                # TODO(eslavich): Why not?  What if that's the goal
+                # of copying the file?
                 raise ValueError(
                     "Can not copy AsdfFile and change active extensions")
             self._uri = tree.uri
@@ -194,9 +199,12 @@ class AsdfFile:
         value : str or asdf.versioning.AsdfVersion
         """
         self._version = versioning.AsdfVersion(validate_version(value))
-        # Reassigning extensions cues the processing that checks each
-        # extension's ASDF Standard requirement.
-        self.extensions = self.extensions
+        # The new version may not be compatible with the previous
+        # set of extensions, so we need to check them again:
+        self._user_extensions = self._process_user_extensions(self._user_extensions)
+        self._plugin_extensions = self._process_plugin_extensions()
+        self._extension_manager = None
+        self._extension_list = None
 
     @property
     def version_string(self):
@@ -216,26 +224,26 @@ class AsdfFile:
     @property
     def extensions(self):
         """
-        Get the list of extensions that are enabled for
+        Get the list of user extensions that are enabled for
         use with this AsdfFile.
 
         Returns
         -------
-        list of asdf.extension.AsdfExtension or asdf.extension.Extension
+        list of asdf.extension.ExtensionProxy
         """
-        return self._extensions
+        return self._user_extensions
 
     @extensions.setter
     def extensions(self, value):
         """
-        Set the list of extensions that are enabled for
+        Set the list of user extensions that are enabled for
         use with this AsdfFile.
 
         Parameters
         ----------
         value : list of asdf.extension.AsdfExtension or asdf.extension.Extension
         """
-        self._extensions = self._process_extensions(value)
+        self._user_extensions = self._process_user_extensions(value)
         self._extension_manager = None
         self._extension_list = None
 
@@ -249,7 +257,7 @@ class AsdfFile:
         asdf.extension.ExtensionManager
         """
         if self._extension_manager is None:
-            self._extension_manager = get_cached_extension_manager(self.extensions)
+            self._extension_manager = get_cached_extension_manager(self._user_extensions + self._plugin_extensions)
         return self._extension_manager
 
     @property
@@ -262,7 +270,7 @@ class AsdfFile:
         asdf.extension.AsdfExtensionList
         """
         if self._extension_list is None:
-            self._extension_list = get_cached_asdf_extension_list(self.extensions)
+            self._extension_list = get_cached_asdf_extension_list(self._user_extensions + self._plugin_extensions)
         return self._extension_list
 
     def __enter__(self):
@@ -291,7 +299,7 @@ class AsdfFile:
 
         for extension in tree['history']['extensions']:
             installed = None
-            for ext in self.extensions:
+            for ext in self._user_extensions + self._plugin_extensions:
                 if (extension.extension_uri is not None and extension.extension_uri == ext.extension_uri
                     or extension.extension_uri is None and extension.extension_class in ext.legacy_class_names):
                     installed = ext
@@ -339,44 +347,50 @@ class AsdfFile:
                     else:
                         warnings.warn(msg, AsdfWarning)
 
-    def _process_extensions(self, requested_extensions):
+    def _process_plugin_extensions(self):
         """
-        Validate a list of extensions requested by the user and
+        Select installed extensions that are compatible with this
+        file's ASDF Standard version.
+
+        Returns
+        -------
+        list of asdf.extension.ExtensionProxy
+        """
+        return [e for e in get_config().extensions if self.version_string in e.asdf_standard_requirement]
+
+    def _process_user_extensions(self, extensions):
+        """
+        Validate a list of extensions requested by the user
         add missing extensions registered with the current `AsdfConfig`.
 
         Parameters
         ----------
-        requested_extensions : object
-            May be any of the following: `asdf.extension.AsdfExtension`, `str`
-            extension URI, `asdf.extension.AsdfExtensionList` or a `list`
-            of URIs and/or extensions.
+        extensions : object
+            May be any of the following: `asdf.extension.AsdfExtension`,
+            `asdf.extension.Extension`, `asdf.extension.AsdfExtensionList`
+            or a `list` of extensions.
 
         Returns
         -------
-        list of asdf.extension.AsdfExtension
+        list of asdf.extension.ExtensionProxy
         """
-        if requested_extensions is None:
-            requested_extensions = []
-        elif isinstance(requested_extensions, (AsdfExtension, ExtensionProxy, str)):
-            requested_extensions = [requested_extensions]
-        elif isinstance(requested_extensions, AsdfExtensionList):
-            requested_extensions = requested_extensions.extensions
+        if extensions is None:
+            extensions = []
+        elif isinstance(extensions, (AsdfExtension, Extension, ExtensionProxy)):
+            extensions = [extensions]
+        elif isinstance(extensions, AsdfExtensionList):
+            extensions = extensions.extensions
 
-        if not isinstance(requested_extensions, list):
+        if not isinstance(extensions, list):
             raise TypeError(
-                "The extensions parameter must be an AsdfExtension, string URI, AsdfExtensionList, "
-                "or list of AsdfExtension/URI."
+                "The extensions parameter must be an extension, list of extensions, or "
+                "instance of AsdfExtensionList"
             )
 
-        def _get_extension(e):
-            if isinstance(e, str):
-                return get_config().get_extension(e)
-            else:
-                return ExtensionProxy.maybe_wrap(e)
+        extensions = [ExtensionProxy.maybe_wrap(e) for e in extensions]
 
-        requested_extensions = [_get_extension(e) for e in requested_extensions]
-
-        for extension in requested_extensions:
+        result = []
+        for extension in extensions:
             if self.version_string not in extension.asdf_standard_requirement:
                 warnings.warn(
                     "Extension {} does not support ASDF Standard {}.  It has been disabled.".format(
@@ -384,15 +398,10 @@ class AsdfFile:
                     ),
                     AsdfWarning
                 )
+            else:
+                result.append(extension)
 
-        extensions = []
-        # Add requested extensions to the list first, so that they
-        # take precedence.
-        for extension in requested_extensions + get_config().extensions:
-            if extension not in extensions and self.version_string in extension.asdf_standard_requirement:
-                extensions.append(extension)
-
-        return extensions
+        return result
 
     def _update_extension_history(self, serialization_context):
         """
@@ -463,7 +472,7 @@ class AsdfFile:
         return self.__class__(
             copy.deepcopy(self._tree),
             self._uri,
-            self._extensions
+            self._user_extensions,
         )
 
     __copy__ = __deepcopy__ = copy
@@ -1627,9 +1636,8 @@ def open_asdf(fd, uri=None, mode=None, validate_checksums=False, extensions=None
     extensions : object, optional
         Additional extensions to use when reading and writing the file.
         May be any of the following: `asdf.extension.AsdfExtension`,
-        `asdf.extension.Extension`, `str` extension URI,
-        `asdf.extension.AsdfExtensionList` or a `list` of URIs and/or
-        extensions.
+        `asdf.extension.Extension`, `asdf.extension.AsdfExtensionList`
+        or a `list` of extensions.
 
     ignore_version_mismatch : bool, optional
         When `True`, do not raise warnings for mismatched schema versions.

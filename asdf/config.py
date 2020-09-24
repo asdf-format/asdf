@@ -48,7 +48,7 @@ class AsdfConfig:
 
         Returns
         -------
-        list of collections.abc.Mapping
+        list of asdf.resource.ResourceMappingProxy
         """
         if self._resource_mappings is None:
             with self._lock:
@@ -137,11 +137,11 @@ class AsdfConfig:
     @property
     def extensions(self):
         """
-        Get the list of registered `AsdfExtension` instances.
+        Get the list of registered extensions.
 
         Returns
         -------
-        list of asdf.extension.AsdfExtension or asdf.extension.Extension
+        list of asdf.extension.ExtensionProxy
         """
         if self._extensions is None:
             with self._lock:
@@ -196,30 +196,6 @@ class AsdfConfig:
 
         with self._lock:
             self._extensions = [e for e in self.extensions if not _remove_condition(e)]
-
-    def get_extension(self, extension_uri):
-        """
-        Get an extension by URI.
-
-        Parameters
-        ----------
-        extension_uri : str
-            The URI of the extension to fetch.
-
-        Returns
-        -------
-        asdf.extension.AsdfExtension or asdf.extension.Extension
-
-        Raises
-        ------
-        KeyError
-            If no such extension exists.
-        """
-        for extension in self.extensions:
-            if extension.extension_uri == extension_uri:
-                return extension
-
-        raise KeyError("No registered extension with URI '{}'".format(extension_uri))
 
     def reset_extensions(self):
         """

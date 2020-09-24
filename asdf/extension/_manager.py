@@ -52,7 +52,7 @@ class ExtensionManager:
 
         Returns
         -------
-        list of asdf.extension.Extension
+        list of asdf.extension.ExtensionProxy
         """
         return self._extensions
 

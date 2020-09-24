@@ -293,7 +293,7 @@ class ConverterProxy(Converter):
 
         Returns
         -------
-        asdf.extension.Extension
+        asdf.extension.ExtensionProxy
         """
         return self._extension
 

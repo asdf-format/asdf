@@ -199,9 +199,8 @@ class AsdfInFits(asdf.AsdfFile):
         extensions : object, optional
             Additional extensions to use when reading and writing the file.
             May be any of the following: `asdf.extension.AsdfExtension`,
-            `asdf.extension.Extension`, `str` extension URI,
-            `asdf.extension.AsdfExtensionList` or a `list` of URIs and/or
-            extensions.
+            `asdf.extension.Extension`, `asdf.extension.AsdfExtensionList`
+            or a `list` extensions.
 
         ignore_version_mismatch : bool, optional
             When `True`, do not raise warnings for mismatched schema versions.
