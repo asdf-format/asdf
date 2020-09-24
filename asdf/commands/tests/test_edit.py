@@ -27,7 +27,7 @@ def _create_base_asdf(version, oname):
 
 
 def _create_edited_yaml(base_yaml, edited_yaml, pattern, replacement):
-    with open(base_yaml,"rb") as fd:
+    with open(base_yaml, "rb") as fd:
         content = fd.read()
         new_content = re.sub(pattern, replacement, content)
         with open(edited_yaml, "wb") as fd:
