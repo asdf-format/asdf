@@ -1,15 +1,18 @@
-Schema Versioning and You
-=========================
+Tag Versioning and You
+======================
 
-Here we'll explore ASDF schema versioning, and walk through the process
-of supporting new and updated schemas with AsdfType subclasses.
+Here we'll explore ASDF tag versioning, and walk through the process
+of supporting new and updated tags with AsdfType subclasses.  AsdfType
+is the original API that is currently used to support the ASDF core tags.
+The new API, Converter, remains experimental and is currently (2020-09-24)
+being trialled in the asdf-astropy package.
 
 ASDF versioning conventions
 ---------------------------
 
 The ASDF Standard document provides a helpful overview_ of the various ASDF
 versioning conventions.  We will be concerned with the *standard version*
-and individual *schema versions*.
+and individual *tag versions*.
 
 .. _overview: https://asdf-standard.readthedocs.io/en/latest/versioning.html
 
@@ -17,35 +20,35 @@ Overview
 --------
 
 The "standard version" or "ASDF Standard version" refers to the subset
-of individual schema versions that correspond to a specific release version
-of the ASDF Standard.  The list of schemas and versions is maintained in
+of individual tag versions that correspond to a specific release version
+of the ASDF Standard.  The list of tags and versions is maintained in
 version_map files in the asdf-standard repository.  For example,
-version_map-1.3.0.yaml contains a list of all schema versions that
+version_map-1.3.0.yaml contains a list of all tag versions that
 we must handle in order to fully support version 1.3.0 of the ASDF
-Standard.  This list contains both "core" schemas and non-core schemas.
-The distinction there is that core schemas are supported by this library,
+Standard.  This list contains both "core" tags and non-core tags.
+The distinction there is that core tags are supported by this library,
 while the others are supported by some external Python library,
 such as astropy.
 
-Our support for specific versions of the ASDF core schemas is implemented
+Our support for specific versions of the ASDF core tags is implemented
 with AsdfType subclasses.  We'll discuss these more later, but
 for now the important thing to know is that each AsdfType class
-identifies the schema name and version(s) that it supports.  Any core
-schema objects that lack this support will not serialize or deserialize
+identifies the tag name and version(s) that it supports.  Any core
+tag objects that lack this support will not serialize or deserialize
 properly.
 
 When reading an ASDF file, the standard version doesn't play a
-significant role.  The schema of each core object is self-described
+significant role.  Each core object is self-described
 by a YAML tag, which will be used to deserialize the object even
 if that tag conflicts with the overall standard version of the file.
 The library will use the tag to identify the most appropriate
 AsdfType to deserialize the object.
 
 On write, the situation is different.  The library may have a choice
-in which schema and/or AsdfType to use when serializing
-a given core object -- if multiple versions of the same schema
+in which tag and/or AsdfType to use when serializing
+a given core object -- if multiple versions of the same tag
 are present, which shall we choose?  Here the standard version
-becomes important.  The schema version selected is specified by
+becomes important.  The tag version selected is specified by
 the version map of the standard version that the file is being
 written under.
 
@@ -67,9 +70,9 @@ supported version.
 AsdfType
 ~~~~~~~~
 
-In this library, each core schema is handled by a distinct
+In this library, each core tag is handled by a distinct
 ``asdf.types.AsdfType`` subclass.  The AsdfType subclass is responsible
-for identifying the base name of its schema and the schema version(s)
+for identifying the base name of its tag and the tag version(s)
 that it supports.  It also provides any custom serialization/deserialization
 behavior that is required -- AsdfType provides a default
 implementation that is only able to get and set attributes on dict-like
@@ -78,8 +81,8 @@ objects.
 In some cases, the AsdfType subclass also serves as the deserialized
 object type.  For example, ``asdf.types.core.Software`` subclasses both
 AsdfType and dict.  Its AsdfType-like behavior is
-to identify its schema and version, while its dict-like behavior is
-to act as a container for the attributes described by the schema.  The class
+to identify its tag and version, while its dict-like behavior is
+to act as a container for the attributes described by the tag.  The class
 definition is mostly empty because as a dict it can rely on
 AsdfType's default implementation for (de)serialization.
 
@@ -107,16 +110,15 @@ the console like so:
 
 The AsdfType class attributes relevant to versioning are as follows:
 
-- *name*: the base name of the schema, without its version string.
-  For example, a schema located at
-  ``asdf-standard/schemas/stsci.edu/asdf/core/example-1.2.0.yaml`` will
+- *name*: the base name of the tag, without its version string.
+  For example, the tag URI ``tag:stsci.edu:asdf/core/example-1.2.0`` will
   have a name value of ``"core/example"``.
 
-- *version*: the primary schema version supported by the AsdfType.
+- *version*: the primary tag version supported by the AsdfType.
   For the example above, version should be set to ``"1.2.0"``.  This should
-  be the latest version that the AsdfType supports.
+  be the latest version that the tag supports.
 
-- *supported_versions*: a set of schema versions that the AsdfType
+- *supported_versions*: a set of tag versions that the AsdfType
   supports.  In the above example, this might be
   ``{"1.0.0", "1.1.0", "1.2.0"}``.
 
@@ -144,8 +146,8 @@ by ``asdf.type_index.AsdfTypeIndex.fix_yaml_tag``.
 
 On write, the library will read the version map that corresponds
 to the ASDF Standard version in use, which dictates the subset of
-schema versions that are available.  From the subset of AsdfType
-subclasses that handle those schema versions, it selects the subclass
+tag versions that are available.  From the subset of AsdfType
+subclasses that handle those tag versions, it selects the subclass
 that is able to handle the type of the core object being serialized.
 
 If an object is not supported by an AsdfType, its serialization will be
@@ -159,10 +161,10 @@ Implementing updates to the standard
 ------------------------------------
 
 Let's assume that there is a new standard version, 2.0.0, which
-includes one entirely new core schema, ``core/new_object-1.0.0.yaml``,
-one backwards-compatible update to an existing schema,
-``core/updated_object-1.1.0.yaml``, and one breaking change to an
-existing schema, ``core/breaking_object-2.0.0.yaml``.  The following
+includes one entirely new core tag, ``core/new_object-1.0.0``,
+one backwards-compatible update to an existing tag,
+``core/updated_object-1.1.0``, and one breaking change to an
+existing tag, ``core/breaking_object-2.0.0``.  The following
 sections walk through the steps we'll need to take to support
 this new material.
 
@@ -188,10 +190,10 @@ Add ``AsdfVersion("2.0.0")`` to the end of the list
 for new files, but we can update the definition of
 ``asdf.versioning.default_version`` if that is undesirable.
 
-Support the new schema
-~~~~~~~~~~~~~~~~~~~~~~
+Support the new tag
+~~~~~~~~~~~~~~~~~~~
 
-Schemas for previously unsupported objects are straightforward, since
+Tags for previously unsupported objects are straightforward, since
 we don't need to worry about compatibility issues.  Create a new
 AsdfType subclass with ``name`` and ``version`` set appropriately:
 
@@ -204,10 +206,10 @@ AsdfType subclass with ``name`` and ``version`` set appropriately:
 In a real-life scenario, we'd need to actually support (de)serialization
 in some way, but those details are beyond the scope of this document.
 
-Support the backwards-compatible schema
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+Support the backwards-compatible tag
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-Since our updated_object-1.1.0.yaml schema is backwards-compatible,
+Since our updated_object-1.1.0 is backwards-compatible,
 we can share the same AsdfType subclass between it and the previous
 version.  Presumably there exists an AsdfType that looks something
 like this:
@@ -228,10 +230,10 @@ version, so that this class can continue to handle it:
         version = "1.1.0"
         supported_versions = {"1.0.0", "1.1.0"}
 
-Support the breaking schema
-~~~~~~~~~~~~~~~~~~~~~~~~~~~
+Support the breaking tag
+~~~~~~~~~~~~~~~~~~~~~~~~
 
-The schema with breaking changes, core/breaking_object-2.0.0.yaml,
+The tag with breaking changes, core/breaking_object-2.0.0,
 may not be easily supported by the same AsdfType as the previous
 version.  In that case, we can create a new AsdfType for 2.0.0,
 and as long as the two subclasses have distinct ``version`` values
@@ -255,8 +257,8 @@ The new AsdfType might look something like this:
         version = "2.0.0"
 
 **CAUTION:** We might be tempted here to simply update the original
-BreakingObjectType, but failing to handle an older version of the schema
+BreakingObjectType, but failing to handle an older version of the tag
 constitutes dropping support for any ASDF Standard version that relies
-on that schema.  This should only be done after a deprecation period and
+on that tag.  This should only be done after a deprecation period and
 with a major version release of the library, since files written by an
 older release will not be readable by the new code.
