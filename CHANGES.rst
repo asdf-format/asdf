@@ -28,7 +28,15 @@
 - Stop removing schema defaults for all ASDF Standard versions,
   and automatically fill defaults only for versions <= 1.5.0. [#860]
 
-2.7.1 (2020-08-18)
+- Stop removing keys with ``None`` values from the tree on write.  This
+  fixes a long-standing issue where the tree structure is not preserved
+  on write, but will break ``ExtensionType`` subclasses that depend on
+  this behavior.  Extension developers will need to modify their
+  ``to_tree`` methods to check for ``None`` before adding a key to
+  the tree (or modify the schema to permit nulls, if that is the
+  intention). [#863]
+
+2.7.1 (unreleased)
 ------------------
 
 - Fix bug preventing access to copied array data after
