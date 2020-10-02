@@ -27,9 +27,9 @@ class Edit(Command):
         """
         desc_string = (
             "Allows for easy editing of the YAML in an ASDF file.  "
-            "For edit mode, the YAML portion of an ASDF file is"
-            "separated from the ASDF into a text file for easy"
-            "editing.  For save mode, the edited text file is written"
+            "For edit mode, the YAML portion of an ASDF file is "
+            "separated from the ASDF into a text file for easy "
+            "editing.  For save mode, the edited text file is written "
             "to its ASDF file."
         )
 
@@ -47,7 +47,7 @@ class Edit(Command):
             type=str,
             required=True,
             dest="fname",
-            help="Input file (ASDF for -e option, YAML for -s option",
+            help="Input file (ASDF for -e option, YAML for -s option)",
         )
 
         # Need an output file
@@ -57,7 +57,7 @@ class Edit(Command):
             type=str,
             required=True,
             dest="oname",
-            help="Output file (YAML for -e option, ASDF for -s option",
+            help="Output file (YAML for -e option, ASDF for -s option)",
         )
 
         """
@@ -130,7 +130,8 @@ def is_valid_path_and_ext(fname, wanted_ext=None):
     ----------
     fname : str
         Input file name.
-    wanted_ext : List of extensions to check.
+    wanted_ext : List of str, optional
+        Extensions to check
 
     Return
     ------
@@ -203,7 +204,8 @@ def check_asdf_header(fd):
 
     Return
     ------
-    The ASDF header line and the ASDF comment as bytes.
+    bytes
+        The ASDF header line and the ASDF comment.
     """
 
     header_line = fd.read_until(b"\r?\n", 2, "newline", include=True)
@@ -234,7 +236,10 @@ def open_and_check_asdf_header(fname):
 
     Return
     ------
-    File descriptor for ASDF file and the ASDF header and ASDF comments as bytes.
+    GenericFile
+        File descriptor for ASDF file.
+    bytes
+        ASDF header and ASDF comments.
     """
     fullpath = os.path.abspath(fname)
     fd = generic_io.get_file(fullpath, mode="r")
@@ -253,11 +258,13 @@ def read_and_validate_yaml(fd, fname, validate_yaml):
     ----------
     fname : str
         Input file name
-    fd : GenericFile for fname.
+    fd : GenericFile 
+        for fname.
 
     Return
     ------
-    The YAML portion of an ASDF file as bytes.
+    bytes
+        The YAML portion of an ASDF file.
     """
     YAML_TOKEN = b"%YAML"
     token = fd.read(len(YAML_TOKEN))
@@ -283,7 +290,7 @@ def read_and_validate_yaml(fd, fname, validate_yaml):
             print("Error: 'yamlutil.load_tree' failed to return a tree.")
             sys.exist(1)
 
-        schema.validate(tree, None)  # Failure raises an exception.
+        schema.validate(tree)  # Failure raises an exception.
 
     return yaml_content
 
@@ -361,7 +368,6 @@ def find_first_block(fname):
     """
     Finds the location of the first binary block in an ASDF file.
 
-
     Parameters
     ----------
     fname : str
@@ -369,7 +375,8 @@ def find_first_block(fname):
 
     Return
     ------
-    Location, in bytes, of the first binary block.
+    int
+        Location, in bytes, of the first binary block.
     """
     with generic_io.get_file(fname, mode="r") as fd:
         reader = fd.reader_until(
@@ -381,22 +388,85 @@ def find_first_block(fname):
         content_to_first_block = reader.read()
     return len(content_to_first_block) 
 
-def write_edited_yaml_larger (oname, edited_yaml, first_block_loc):
-    print("Larger")
+def copy_binary_blocks(ofd, ifd):
+    """
+    Copies the binary blocks from the input ASDF to the output ASDF.
+
+    Parameters
+    ----------
+    ofd: file descriptor
+        Output ASDF file.
+    ifd: file descriptor
+        Input ASDF file.
+    """
+    block_index = [] # A new block index needs to be computed.
+
+    while True:
+        token_length = ifd.read(6)
+        if not token_length.startswith(constants.BLOCK_MAGIC):
+            ifd.seek(-6,os.SEEK_CUR)
+            break
 
 
-def write_edited_yaml(oname, edited_yaml, first_block_loc):
+def write_edited_yaml_larger(fname, oname, edited_yaml, first_block_loc):
+    """
+    The edited YAML is too large to simply overwrite the exiting YAML in an 
+    ASDF file, so the ASDF file needs to be rewritten.
+
+    Parameters
+    ----------
+    oname : str
+        Input ASDF file name.
+    edited_yaml : byte string
+        The edited YAML to be saved to an ASDF file
+    first_block_location : the location in the ASDF file for the first binary
+                           block
+    """
+    tmp_oname = oname + "tmp"
+
+    ifd = open(oname,"rb")
+    ifd.seek(first_block_loc)
+
+    ofd = open(tmp_oname,"wb")
+    ofd.write(edited_yaml)
+
+    pad_length = 10000  
+    padding = b'\0' * pad_length
+    ofd.write(padding)
+
+    copy_binary_blocks(ofd, ifd)
+
+    ifd.close()
+    ofd.close()
+    # os.replace(tmp_oname,oname)
+
+
+def write_edited_yaml(fname, oname, edited_yaml, first_block_loc):
+    """
+    Write the edited YAML is to an existing ASDF file.
+
+    Parameters
+    ----------
+    oname : str
+        Input ASDF file name.
+    edited_yaml : byte string
+        The edited YAML to be saved to an ASDF file
+    first_block_location : the location in the ASDF file for the first binary
+                           block
+    """
     if len(edited_yaml) < first_block_loc:
+        # The YAML in the ASDF can simply be overwritten
         pad_length = first_block_loc - len(edited_yaml)
         padding = b'\0' * pad_length
         with open(oname, "r+b") as fd:
             fd.write(edited_yaml)
             fd.write(padding)
     elif len(edited_yaml) == first_block_loc:
+        # The YAML in the ASDF can simply be overwritten
         with open(oname, "r+b") as fd:
             fd.write(edited_yaml)
     else:
-        write_edited_yaml_larger(oname, edited_yaml, first_block_loc)  
+        write_edited_yaml_larger(fname, oname, edited_yaml, first_block_loc)  
 
 
 def save_func(fname, oname):
@@ -430,23 +500,8 @@ def save_func(fname, oname):
     ifd.close()
     edited_text = iasdf_text + iyaml_text
 
-    # - Find location of first block.
     loc = find_first_block(oname)
-    write_edited_yaml(oname, edited_text, loc)
-    # - Using edited_text length and first block location determine.
-    #   space availability for new YAML.
-    # - Smaller:
-    #   - Overwrite YAML in ASDF, then pad 0x00 to first b'\xd3BLK'.
-    # - Equal:
-    #   - Overwrite YAML in ASDF.  No padding.
-    # - Larger:
-    #   - Create new file.
-    #   - Write new YAML.
-    #   - Add 10,000 0x00 pad bytes between '...\r?\n' and '\xd3BLK'.
-    #   - If no streaming block found, write block index.
-    #   - If streaming block found, handle correctly.
-
-    return
+    write_edited_yaml(fname, oname, edited_text, loc)
 
 
 def edit(args):

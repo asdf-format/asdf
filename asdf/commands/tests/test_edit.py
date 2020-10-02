@@ -51,9 +51,7 @@ def _initialize_test(tmpdir, version):
 
 @pytest.mark.parametrize("version", asdf.versioning.supported_versions)
 def test_edit_smaller(tmpdir, version):
-    asdf_base, yaml_base, asdf_edit, yaml_edit = _initialize_test(
-        tmpdir, version
-    )
+    asdf_base, yaml_base, asdf_edit, yaml_edit = _initialize_test(tmpdir, version)
 
     _create_edited_yaml(yaml_base, yaml_edit, b"foo: 42", b"foo: 2")
 
@@ -67,9 +65,7 @@ def test_edit_smaller(tmpdir, version):
 
 @pytest.mark.parametrize("version", asdf.versioning.supported_versions)
 def test_edit_equal(tmpdir, version):
-    asdf_base, yaml_base, asdf_edit, yaml_edit = _initialize_test(
-        tmpdir, version
-    )
+    asdf_base, yaml_base, asdf_edit, yaml_edit = _initialize_test(tmpdir, version)
 
     _create_edited_yaml(yaml_base, yaml_edit, b"foo: 42", b"foo: 41")
 
