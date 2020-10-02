@@ -34,11 +34,11 @@ def _create_edited_yaml(base_yaml, edited_yaml, pattern, replacement):
             fd.write(new_content)
 
 
-def _initialize_test(tmpdir, version, test_name):
-    asdf_base = os.path.join(tmpdir, f"{test_name}_base.asdf")
-    yaml_base = os.path.join(tmpdir, f"{test_name}_base.yaml")
-    asdf_edit = os.path.join(tmpdir, f"{test_name}_edit.asdf")
-    yaml_edit = os.path.join(tmpdir, f"{test_name}_edit.yaml")
+def _initialize_test(tmpdir, version):
+    asdf_base = os.path.join(tmpdir, f"base.asdf")
+    yaml_base = os.path.join(tmpdir, f"base.yaml")
+    asdf_edit = os.path.join(tmpdir, f"edit.asdf")
+    yaml_edit = os.path.join(tmpdir, f"edit.yaml")
 
     _create_base_asdf(version, asdf_base)
     _create_base_asdf(version, asdf_edit)
@@ -52,7 +52,7 @@ def _initialize_test(tmpdir, version, test_name):
 @pytest.mark.parametrize("version", asdf.versioning.supported_versions)
 def test_edit_smaller(tmpdir, version):
     asdf_base, yaml_base, asdf_edit, yaml_edit = _initialize_test(
-        tmpdir, version, "smaller"
+        tmpdir, version
     )
 
     _create_edited_yaml(yaml_base, yaml_edit, b"foo: 42", b"foo: 2")
@@ -68,7 +68,7 @@ def test_edit_smaller(tmpdir, version):
 @pytest.mark.parametrize("version", asdf.versioning.supported_versions)
 def test_edit_equal(tmpdir, version):
     asdf_base, yaml_base, asdf_edit, yaml_edit = _initialize_test(
-        tmpdir, version, "equal"
+        tmpdir, version
     )
 
     _create_edited_yaml(yaml_base, yaml_edit, b"foo: 42", b"foo: 41")
@@ -81,10 +81,11 @@ def test_edit_equal(tmpdir, version):
         assert af.tree["foo"] == 41
 
 
+"""
 @pytest.mark.parametrize("version", asdf.versioning.supported_versions)
 def test_edit_larger(tmpdir, version):
     asdf_base, yaml_base, asdf_edit, yaml_edit = _initialize_test(
-        tmpdir, version, "larger"
+        tmpdir, version
     )
 
     _create_edited_yaml(yaml_base, yaml_edit, b"foo: 42", b"foo: 42\nbar: 13")
@@ -95,3 +96,6 @@ def test_edit_larger(tmpdir, version):
 
     with asdf.open(asdf_edit) as af:
         assert "bar" in af.tree
+
+#TODO - Test stream
+"""
