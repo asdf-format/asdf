@@ -49,15 +49,11 @@ def _create_edited_yaml(base_yaml, edited_yaml, pattern, replacement):
 
 
 def _initialize_test(tmpdir, version, create_asdf):
-    asdf_base = os.path.join(tmpdir, f"base.asdf")
-    yaml_base = os.path.join(tmpdir, f"base.yaml")
-    asdf_edit = os.path.join(tmpdir, f"edit.asdf")
-    yaml_edit = os.path.join(tmpdir, f"edit.yaml")
+    asdf_base = os.path.join(tmpdir, "base.asdf")
+    yaml_base = os.path.join(tmpdir, "base.yaml")
+    asdf_edit = os.path.join(tmpdir, "edit.asdf")
+    yaml_edit = os.path.join(tmpdir, "edit.yaml")
 
-    """
-    _create_base_asdf(version, asdf_base)
-    _create_base_asdf(version, asdf_edit)
-    """
     create_asdf(version, asdf_base)
     create_asdf(version, asdf_edit)
 
