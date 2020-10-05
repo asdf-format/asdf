@@ -243,7 +243,7 @@ def open_and_check_asdf_header(fname):
 
 def get_yaml_version(fd, token):
     """
-    A YAML token is found, so see if the YAML version can be parsed. 
+    A YAML token is found, so see if the YAML version can be parsed.
 
     Parameters
     ----------
@@ -265,7 +265,6 @@ def get_yaml_version(fd, token):
     sl = line.split(" ")
     if len(sl) == 2:
         yaml_version = tuple([int(x) for x in sl[1].split(".")])
-
 
 
 def read_and_validate_yaml(fd, fname, validate_yaml):
@@ -482,14 +481,14 @@ def copy_binary_blocks(ofd, ifd):
         if constants.BLOCK_FLAG_STREAMED & flags:
             while True:
                 chunk = ifd.read(chunk_sz)
-                if 0==len(chunk):
+                if 0 == len(chunk):
                     return  # End of file
                 ofd.write(chunk)
 
         alloc = struct.unpack(">Q", header[alloc_loc : alloc_loc + 8])[0]
         while alloc >= chunk_sz:
             chunk = ifd.read(chunk_sz)
-            if len(chunk)==0:
+            if len(chunk) == 0:
                 print("Error: Invalid reading of binary block {block_num}.")
                 print("       Exiting ...")
                 sys.exit(1)
@@ -518,7 +517,7 @@ def write_edited_yaml_larger(fname, oname, edited_yaml, first_block_loc):
         The edited YAML to be saved to an ASDF file.
     first_block_location : int
         The location in the ASDF file for the first binary block.
-                           
+
     """
     tmp_oname = oname + ".tmp"
 
