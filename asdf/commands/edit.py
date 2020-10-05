@@ -63,18 +63,6 @@ class Edit(Command):
             help="Output file (YAML for -e option, ASDF for -s option)",
         )
 
-        """
-        # Validate input YAML.  Optional, since this could be what's being corrected.
-        parser.add_argument(
-            "--validate",
-            "-v",
-            type=bool,
-            action="store_true",
-            dest="validate",
-            help="Validate input YAML format.",
-        )
-        """
-
         # The edit is either being performed or saved
         group = parser.add_mutually_exclusive_group(required=True)
 
@@ -380,8 +368,9 @@ def write_block_index(fd, index):
 
     Parameters
     ----------
-    fd - The output file to write the block index.
-    index - A list of locations for each block.
+    fd : file descriptor
+    index : list
+        Integer location for each block.
     """
     global yaml_version
     if len(index) < 1:
@@ -526,9 +515,10 @@ def write_edited_yaml_larger(fname, oname, edited_yaml, first_block_loc):
     oname : str
         Input ASDF file name.
     edited_yaml : byte string
-        The edited YAML to be saved to an ASDF file
-    first_block_location : the location in the ASDF file for the first binary
-                           block
+        The edited YAML to be saved to an ASDF file.
+    first_block_location : int
+        The location in the ASDF file for the first binary block.
+                           
     """
     tmp_oname = oname + ".tmp"
 
@@ -559,8 +549,8 @@ def write_edited_yaml(fname, oname, edited_yaml, first_block_loc):
         Input ASDF file name.
     edited_yaml : byte string
         The edited YAML to be saved to an ASDF file
-    first_block_location : the location in the ASDF file for the first binary
-                           block
+    first_block_location : int
+        The location in the ASDF file for the first binary block.
     """
     if len(edited_yaml) < first_block_loc:
         # The YAML in the ASDF can simply be overwritten
