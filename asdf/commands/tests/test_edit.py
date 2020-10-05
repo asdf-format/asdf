@@ -8,6 +8,20 @@ import asdf
 from asdf.commands import main
 
 
+def _create_base_asdf_stream(version, oname):
+    # Store the data in an arbitrarily nested dictionary
+    tree = {
+        "foo": 42,
+        "name": "Monty",
+        "my_stream": asdf.Stream([128], np.float64),
+    }
+    af = asdf.AsdfFile(tree)
+    with open(oname, "wb") as fd:
+        af.write_to(fd)
+        for k in range(5):
+            fd.write(np.array([k] * 128, np.float64).tobytes())
+
+
 def _create_base_asdf(version, oname):
     """
     In the test temp directory, create a base ASDF file to edit
@@ -34,14 +48,18 @@ def _create_edited_yaml(base_yaml, edited_yaml, pattern, replacement):
             fd.write(new_content)
 
 
-def _initialize_test(tmpdir, version):
+def _initialize_test(tmpdir, version, create_asdf):
     asdf_base = os.path.join(tmpdir, f"base.asdf")
     yaml_base = os.path.join(tmpdir, f"base.yaml")
     asdf_edit = os.path.join(tmpdir, f"edit.asdf")
     yaml_edit = os.path.join(tmpdir, f"edit.yaml")
 
+    """
     _create_base_asdf(version, asdf_base)
     _create_base_asdf(version, asdf_edit)
+    """
+    create_asdf(version, asdf_base)
+    create_asdf(version, asdf_edit)
 
     args = ["edit", "-e", "-f", f"{asdf_base}", "-o", f"{yaml_base}"]
     main.main_from_args(args)
@@ -51,7 +69,9 @@ def _initialize_test(tmpdir, version):
 
 @pytest.mark.parametrize("version", asdf.versioning.supported_versions)
 def test_edit_smaller(tmpdir, version):
-    asdf_base, yaml_base, asdf_edit, yaml_edit = _initialize_test(tmpdir, version)
+    asdf_base, yaml_base, asdf_edit, yaml_edit = _initialize_test(
+        tmpdir, version, _create_base_asdf
+    )
 
     _create_edited_yaml(yaml_base, yaml_edit, b"foo: 42", b"foo: 2")
 
@@ -65,7 +85,9 @@ def test_edit_smaller(tmpdir, version):
 
 @pytest.mark.parametrize("version", asdf.versioning.supported_versions)
 def test_edit_equal(tmpdir, version):
-    asdf_base, yaml_base, asdf_edit, yaml_edit = _initialize_test(tmpdir, version)
+    asdf_base, yaml_base, asdf_edit, yaml_edit = _initialize_test(
+        tmpdir, version, _create_base_asdf
+    )
 
     _create_edited_yaml(yaml_base, yaml_edit, b"foo: 42", b"foo: 41")
 
@@ -77,11 +99,10 @@ def test_edit_equal(tmpdir, version):
         assert af.tree["foo"] == 41
 
 
-"""
 @pytest.mark.parametrize("version", asdf.versioning.supported_versions)
 def test_edit_larger(tmpdir, version):
     asdf_base, yaml_base, asdf_edit, yaml_edit = _initialize_test(
-        tmpdir, version
+        tmpdir, version, _create_base_asdf
     )
 
     _create_edited_yaml(yaml_base, yaml_edit, b"foo: 42", b"foo: 42\nbar: 13")
@@ -93,5 +114,18 @@ def test_edit_larger(tmpdir, version):
     with asdf.open(asdf_edit) as af:
         assert "bar" in af.tree
 
-#TODO - Test stream
-"""
+
+@pytest.mark.parametrize("version", asdf.versioning.supported_versions)
+def test_edit_larger_stream(tmpdir, version):
+    asdf_base, yaml_base, asdf_edit, yaml_edit = _initialize_test(
+        tmpdir, version, _create_base_asdf_stream
+    )
+
+    _create_edited_yaml(yaml_base, yaml_edit, b"foo: 42", b"foo: 42\nbar: 13")
+
+    args = ["edit", "-s", "-f", f"{yaml_edit}", "-o", f"{asdf_edit}"]
+    main.main_from_args(args)
+    assert os.path.getsize(asdf_edit) - os.path.getsize(asdf_base) > 10000
+
+    with asdf.open(asdf_edit) as af:
+        assert "bar" in af.tree

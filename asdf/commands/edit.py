@@ -7,6 +7,7 @@ import io
 import os
 import struct
 import sys
+import yaml
 
 import asdf.constants as constants
 
@@ -17,6 +18,8 @@ from .. import yamlutil
 from .main import Command
 
 __all__ = ["edit"]
+
+yaml_version = None
 
 
 class Edit(Command):
@@ -250,6 +253,33 @@ def open_and_check_asdf_header(fname):
     return fd, header_and_comment  # Return GenericFile and ASDF header bytes.
 
 
+def get_yaml_version(fd, token):
+    """
+    A YAML token is found, so see if the YAML version can be parsed. 
+
+    Parameters
+    ----------
+    fd : GenericFile
+    token : bytes
+        The YAML token
+    """
+    global yaml_version
+    offset = fd.tell()
+    while True:
+        c = fd.read(1)
+        token += c
+        if b"\n" == c:
+            break
+    fd.seek(offset)
+
+    # Expects a string looking like '%YAML X.X'
+    line = token.decode("utf-8").strip()
+    sl = line.split(" ")
+    if len(sl) == 2:
+        yaml_version = tuple([int(x) for x in sl[1].split(".")])
+
+
+
 def read_and_validate_yaml(fd, fname, validate_yaml):
     """
     Get the YAML text from an ASDF formatted file.
@@ -258,7 +288,7 @@ def read_and_validate_yaml(fd, fname, validate_yaml):
     ----------
     fname : str
         Input file name
-    fd : GenericFile 
+    fd : GenericFile
         for fname.
 
     Return
@@ -271,6 +301,9 @@ def read_and_validate_yaml(fd, fname, validate_yaml):
     if token != YAML_TOKEN:
         print(f"Error: No YAML in '{fname}'")
         sys.exit(0)
+
+    if validate_yaml:
+        get_yaml_version(fd, token)
 
     # Get YAML reader and content
     reader = fd.reader_until(
@@ -350,18 +383,26 @@ def write_block_index(fd, index):
     fd - The output file to write the block index.
     index - A list of locations for each block.
     """
+    global yaml_version
     if len(index) < 1:
         return
 
-    # TODO - this needs to be changed to use constants.py and pyyaml
-    bindex_hdr = b"#ASDF BLOCK INDEX\n%YAML 1.1\n---\n"
-    fd.write(bindex_hdr)
-    for idx in index:
-        ostr = f"- {idx}\n"
-        fd.write(ostr.encode("utf-8"))
-    end = b"..."
-    fd.write(end)
-    return
+    fd.write(constants.INDEX_HEADER)
+    fd.write(b"\n")
+
+    # If no YAML version found in edited YAML force it to 1.1
+    if yaml_version is None:
+        yaml_version = tuple([1, 1])
+    yaml.dump(
+        index,
+        Dumper=yamlutil._yaml_base_dumper,
+        stream=fd,
+        explicit_start=True,
+        explicit_end=True,
+        version=yaml_version,
+        allow_unicode=True,
+        encoding="utf-8",
+    )
 
 
 def find_first_block(fname):
@@ -386,7 +427,43 @@ def find_first_block(fname):
             include=False,
         )
         content_to_first_block = reader.read()
-    return len(content_to_first_block) 
+    return len(content_to_first_block)
+
+
+def get_next_binary_block_header(fd):
+    """
+    Gets the next binary block token and length field, as well as the header.
+
+    Parameters
+    ----------
+    fd: file descriptor
+        Input ASDF file.
+
+    Return
+    ------
+    bytes
+        Binary block header
+    """
+    min_header_sz = 48
+    token_length = fd.read(6)
+    if not token_length.startswith(constants.BLOCK_MAGIC):
+        fd.seek(-6, os.SEEK_CUR)
+        return None
+
+    hlen = struct.unpack(">H", token_length[4:])[0]
+    if hlen < min_header_sz:
+        print(f"Error: Invalid binary block length ({hlen}).")
+        print(f"       Header length must be a minimum of {min_header_sz}.")
+        sys.exit(1)
+
+    header = fd.read(hlen)
+    if len(header) != hlen:
+        print(f"Error: Expected to read {hlen} bytes of binary block")
+        print(f"       header, but read only {len(header)}.")
+        sys.exit(1)
+
+    return token_length + header
+
 
 def copy_binary_blocks(ofd, ifd):
     """
@@ -399,18 +476,49 @@ def copy_binary_blocks(ofd, ifd):
     ifd: file descriptor
         Input ASDF file.
     """
-    block_index = [] # A new block index needs to be computed.
+    block_index = []  # A new block index needs to be computed.
+    alloc_loc = 14
+    chunk_sz = 1024
 
+    block_num = 0
     while True:
-        token_length = ifd.read(6)
-        if not token_length.startswith(constants.BLOCK_MAGIC):
-            ifd.seek(-6,os.SEEK_CUR)
+        header = get_next_binary_block_header(ifd)
+        if header is None:
             break
+        block_index.append(ofd.tell())
+
+        ofd.write(header)
+
+        flags = struct.unpack(">I", header[6:10])[0]
+        if constants.BLOCK_FLAG_STREAMED & flags:
+            while True:
+                chunk = ifd.read(chunk_sz)
+                if 0==len(chunk):
+                    return  # End of file
+                ofd.write(chunk)
+
+        alloc = struct.unpack(">Q", header[alloc_loc : alloc_loc + 8])[0]
+        while alloc >= chunk_sz:
+            chunk = ifd.read(chunk_sz)
+            if len(chunk)==0:
+                print("Error: Invalid reading of binary block {block_num}.")
+                print("       Exiting ...")
+                sys.exit(1)
+            ofd.write(chunk)
+            alloc -= chunk_sz
+
+        if alloc > 0:
+            chunk = ifd.read(alloc)
+            ofd.write(chunk)
+        block_num += 1
+
+    if len(block_index) > 0:
+        write_block_index(ofd, block_index)
 
 
 def write_edited_yaml_larger(fname, oname, edited_yaml, first_block_loc):
     """
-    The edited YAML is too large to simply overwrite the exiting YAML in an 
+    The edited YAML is too large to simply overwrite the exiting YAML in an
     ASDF file, so the ASDF file needs to be rewritten.
 
     Parameters
@@ -422,23 +530,23 @@ def write_edited_yaml_larger(fname, oname, edited_yaml, first_block_loc):
     first_block_location : the location in the ASDF file for the first binary
                            block
     """
-    tmp_oname = oname + "tmp"
+    tmp_oname = oname + ".tmp"
 
-    ifd = open(oname,"rb")
+    ifd = open(oname, "rb")
     ifd.seek(first_block_loc)
 
-    ofd = open(tmp_oname,"wb")
+    ofd = open(tmp_oname, "wb")
     ofd.write(edited_yaml)
 
-    pad_length = 10000  
-    padding = b'\0' * pad_length
+    pad_length = 10000
+    padding = b"\0" * pad_length
     ofd.write(padding)
 
     copy_binary_blocks(ofd, ifd)
 
     ifd.close()
     ofd.close()
-    # os.replace(tmp_oname,oname)
+    os.replace(tmp_oname, oname)
 
 
 def write_edited_yaml(fname, oname, edited_yaml, first_block_loc):
@@ -457,7 +565,7 @@ def write_edited_yaml(fname, oname, edited_yaml, first_block_loc):
     if len(edited_yaml) < first_block_loc:
         # The YAML in the ASDF can simply be overwritten
         pad_length = first_block_loc - len(edited_yaml)
-        padding = b'\0' * pad_length
+        padding = b"\0" * pad_length
         with open(oname, "r+b") as fd:
             fd.write(edited_yaml)
             fd.write(padding)
@@ -466,7 +574,7 @@ def write_edited_yaml(fname, oname, edited_yaml, first_block_loc):
         with open(oname, "r+b") as fd:
             fd.write(edited_yaml)
     else:
-        write_edited_yaml_larger(fname, oname, edited_yaml, first_block_loc)  
+        write_edited_yaml_larger(fname, oname, edited_yaml, first_block_loc)
 
 
 def save_func(fname, oname):
