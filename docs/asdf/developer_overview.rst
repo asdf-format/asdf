@@ -26,6 +26,52 @@ these are handled in the asdf modules.
 Because of the complexity, this initial design overview will focus on issues of
 validation and tree construction when reading.
 
+Construction in progress
+------------------------
+
+Before we get into further details, a word on the transition to new plugin APIs.
+Starting in asdf 2.8 we've introduced new interfaces for extending the asdf
+library to support additional tags and schemas.  The interfaces were redesigned
+with the following goals in mind:
+
+- Simplify the connection between tags and their schema content.  The old
+  "resolver" system involves sending the tag URI through a lengthy series of
+  transformations to get the filesystem path to the schema document.  This has
+  been error-prone and difficult to troubleshoot, so the new "resource mapping"
+  system explicitly maps schema URIs to their content, and tag URIs directly
+  to schema URIs.
+
+- Make it easier to separate schemas from extension code.  Until now the schemas
+  have always been provided by the same Python package that implements support
+  for their tags, but we would like to move the schemas to language-agnostic
+  repositories that non-Python implementations can use.  To better support this,
+  the new interface splits the old extension plugin into two new plugins, one
+  of which is dedicated to schemas.
+
+- Allow tag serialization support to handle arbitrary sets of URIs.  Previously
+  tag code was restricted to working with tag URIs that were identical
+  except for version.  This presented a problem for the transition of URIs
+  from stsci.edu to asdf-format.org, so the new interface allows for supporting
+  diverse URIs with the same code.
+
+- Improve the terminology used in the tag serialization support classes.  The
+  old ``ExtensionType`` has been renamed ``Converter`` to indicate its purpose,
+  and to eliminate the ambiguity betwenen YAML types and Python types.  The
+  ``to_tree`` and ``from_tree`` methods have been renamed ``to_yaml_tree`` and
+  ``from_yaml_tree`` to better indicate which tree they're expected to convert.
+
+- Simplify the code and behavior of tag classes.  Converters are used as instances
+  instead of classes with a custom metaclass, Python sub-types are no longer
+  automatically handled, URIs are treated as single values instead of broken
+  down into various components, etc.
+
+You can witness the gory details of this effort by clicking through the PR links
+on the asdf 2.8.0 `roadmap <https://github.com/asdf-format/asdf/wiki/Roadmap#280>`_.
+
+Support for ASDF core tags has not yet been moved to the new system.  Doing so
+would be a breaking change for users who subclass that code, so we'll need
+to wait until asdf 3.0 to do that.
+
 Some terminology and definitions
 --------------------------------
 
@@ -47,16 +93,26 @@ of resource mappings; new code should use the latter instead.
 **Global config:** A global library configuration feature that was added in
 asdf 2.8.  Allows plugins to be added or removed at runtime and ``AsdfFile``
 defaults to be modified by the user.  Accessed via the ``get_config`` method
-on the top-level ``asdf`` module.
+on the top-level ``asdf`` module.  For example, the default ASDF Standard
+version for new files can be set like this::
 
-**Entry point:** A Python packaging feature that allows a given package
-to use plugins registered by other packages.  See [https://packaging.python.org/specifications/entry-points/]
+    asdf.get_config().default_version = "1.3.0"
+
+Or a resource mapping plugin added at runtime like this::
+
+    asdf.get_config().add_resource_mapping({"http://somewhere.org/resources/foo", b"foo resource content"})
+
+**Entry point:** A Python packaging feature that allows asdf to use plugins
+provided by other packages.  Entry points are registered when a package is
+installed and become available to asdf without any additional effort on
+the part of the user.  See `<https://packaging.python.org/specifications/entry-points/>`_
 for more information.
 
 **Resource mapping:** An asdf plugin that provides access to "resources" which
 are binary blobs associated with a URI.  These resources are mostly schemas,
 but any resource may provided by a mapping.  Resource mappings are provided
 via entry points or added at runtime using a method on the global config object.
+This feature is intended to replace the deprecated "resolver" mechanism.
 
 **Extension:** An extension to the ASDF Standard that defines additional
 YAML tags.  In the future an extension may include other additional features
@@ -179,8 +235,7 @@ The use of the resolver object turns these lists into functions so that
 supplied the appropriate input that matches something in the list, it gives the
 corresponding output.
 
-Outline of how an ASDF file is opened and read into the corresponding Python
-object.
+Outline of how an ASDF file is opened and read into the corresponding Python object.
 ------------------------------------------------------------------------------------
 
 The starting point can be found in ``asdf.py`` essentially through the following
@@ -657,4 +712,3 @@ unmodified.  The ``SerializationContext`` will be relatively lightweight and
 creating it will not incur as much of a performance penalty as creating an
 ``AsdfFile``.
 
-Thus reader, your mind shall now be drained.
