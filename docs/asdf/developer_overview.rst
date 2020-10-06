@@ -26,6 +26,52 @@ these are handled in the asdf modules.
 Because of the complexity, this initial design overview will focus on issues of
 validation and tree construction when reading.
 
+Construction in progress
+------------------------
+
+Before we get into further details, a word on the transition to new plugin APIs.
+Starting in asdf 2.8 we've introduced new interfaces for extending the asdf
+library to support additional tags and schemas.  The interfaces were redesigned
+with the following goals in mind:
+
+- Simplify the connection between tags and their schema content.  The old
+  "resolver" system involves sending the tag URI through a lengthy series of
+  transformations to get the filesystem path to the schema document.  This has
+  been error-prone and difficult to troubleshoot, so the new "resource mapping"
+  system explicitly maps schema URIs to their content, and tag URIs directly
+  to schema URIs.
+
+- Make it easier to separate schemas from extension code.  Until now the schemas
+  have always been provided by the same Python package that implements support
+  for their tags, but we would like to move the schemas to language-agnostic
+  repositories that non-Python implementations can use.  To better support this,
+  the new interface splits the old extension plugin into two new plugins, one
+  of which is dedicated to schemas.
+
+- Allow tag serialization support to handle arbitrary sets of URIs.  Previously
+  tag code was restricted to working with tag URIs that were identical
+  except for version.  This presented a problem for the transition of URIs
+  from stsci.edu to asdf-format.org, so the new interface allows for supporting
+  diverse URIs with the same code.
+
+- Improve the terminology used in the tag serialization support classes.  The
+  old ``ExtensionType`` has been renamed ``Converter`` to indicate its purpose,
+  and to eliminate the ambiguity betwenen YAML types and Python types.  The
+  ``to_tree`` and ``from_tree`` methods have been renamed ``to_yaml_tree`` and
+  ``from_yaml_tree`` to better indicate which tree they're expected to convert.
+
+- Simplify the code and behavior of tag classes.  Converters are used as instances
+  instead of classes with a custom metaclass, Python sub-types are no longer
+  automatically handled, URIs are treated as single values instead of broken
+  down into various components, etc.
+
+You can witness the gory details of this effort by clicking through the PR links
+on the asdf 2.8.0 `roadmap <https://github.com/asdf-format/asdf/wiki/Roadmap#280>`_.
+
+Support for ASDF core tags has not yet been moved to the new system.  Doing so
+would be a breaking change for users who subclass that code, so we'll need
+to wait until asdf 3.0 to do that.
+
 Some terminology and definitions
 --------------------------------
 
@@ -34,11 +80,60 @@ Some terminology and definitions
 name that follows a particular syntax, but itself may not indicate where the
 resource is. Generally URLs are expected to be used on the web for the HTTP
 protocol, though for asdf, this isn't necessarily the case as mentioned next.
+Recent changes to the library permit use of URIs with the asdf:// scheme, which
+is intended to reduce confusion over the distinction between identifiers
+and locations.
 
 **Resolver:** Tools to map URIs and tags into actual locations of schema files,
 which may be local directories (the usual approach) or an actual URL for
 retrieval over the network. This is more complicated that it may seem for
-reasons explained later.
+reasons explained later.  The resolver system has been deprecated in favor
+of resource mappings; new code should use the latter instead.
+
+**Global config:** A global library configuration feature that was added in
+asdf 2.8.  Allows plugins to be added or removed at runtime and ``AsdfFile``
+defaults to be modified by the user.  Accessed via the ``get_config`` method
+on the top-level ``asdf`` module.  For example, the default ASDF Standard
+version for new files can be set like this::
+
+    asdf.get_config().default_version = "1.3.0"
+
+Or a resource mapping plugin added at runtime like this::
+
+    asdf.get_config().add_resource_mapping({"http://somewhere.org/resources/foo", b"foo resource content"})
+
+**Entry point:** A Python packaging feature that allows asdf to use plugins
+provided by other packages.  Entry points are registered when a package is
+installed and become available to asdf without any additional effort on
+the part of the user.  See `<https://packaging.python.org/specifications/entry-points/>`_
+for more information.
+
+**Resource mapping:** An asdf plugin that provides access to "resources" which
+are binary blobs associated with a URI.  These resources are mostly schemas,
+but any resource may provided by a mapping.  Resource mappings are provided
+via entry points or added at runtime using a method on the global config object.
+This feature is intended to replace the deprecated "resolver" mechanism.
+
+**Extension:** An extension to the ASDF Standard that defines additional
+YAML tags.  In the future an extension may include other additional features
+such as binary block compressors or filters, but currently only tags
+are supported.
+
+**Extension implementation:** An asdf plugin that implements an extension
+to the ASDF Standard.  This is the asdf library's support for an extended
+set of YAML tags.  The library currently provides two interfaces for
+implementing extensions: the ``AsdfExtension`` class and the
+new, still-experimental ``Extension`` class.  Extension implementations are
+provided via entry points or added at runtime using a method on the global
+config object.  The ``AsdfFile`` also permits adding additional extensions
+on a per-instance basis, but use of that feature is discouraged and may be
+removed in asdf 3.0.
+
+**Tag code/tag class:** A class responsible for converting a family of tags
+into Python objects and vice versa.  Each extension implementation includes
+a list of such classes.  For the original ``AsdfExtension`` API, the tag
+classes all implement the ``ExtensionType`` interface.  For the new API,
+tag classes implement ``Converter``.
 
 **Validator:** Tool to confirm that the YAML conforms to the schemas that
 apply. A lot goes on in this area and it is pretty complex in the
@@ -67,43 +162,71 @@ aspect to this since schema should be language agnostic and in that view, not
 bundled with specific language library code. But currently nearly all of the
 implementation is in Python so while the long-term goal is to keep them
 separate, it is more convenient to keep them together for now. You will see
-cases where they are separate and some where they are bundled].
+cases where they are separate and some where they are bundled.  The introduction
+of a separate plugin for providing access to schemas (the "resource mapping")
+is intended to allow extension authors to keep the schema documents in a separate
+language-neutral repository.
 
-Actions that happen when ASDF is imported
------------------------------------------
+Actions that happen when an AsdfFile is instantiated
+----------------------------------------------------
 
-The entry points for all asdf extensions are obtained in ``extension.py`` (by
-the class ``_DefaultExtensions``) which is instantiated at the end of the module
-as ``default_extensions``, but the entry points are only found when
-default_extensions.extensions is accessed (it's a property)
+The asdf plugins (new and old-style extensions as well as resource mappings)
+registered as entry points can be obtained by calling methods in ``entry_points.py``.
+These methods are invoked by ``config.AsdfConfig`` the first time library needs to
+use the plugins, and thereafter are cached within that config object.  Both
+extensions and resource mappings are stored wrapped in proxy objects (``ExtensionProxy``
+and ``ResourceMappingProxy``, respectively) that carry additional metadata
+like the package name and version of the entry point, and add some convenience
+methods on top of what the extension developer provides.  Additionally, ``ExtensionProxy``
+allows the library to treat both new-style ``Extension`` instances and old-style
+``AsdfExtension`` instances similarly.
 
-The effect of this is to load all the specified entry point classes for  all the
-extensions that have registered through the entry point mechanism. (see
-[https://packaging.python.org/specifications/entry-points/]) The list of classes
-so loaded is what ``default_extensions.extensions`` returns along with all the
-built-in extensions part of ASDF.
+To see the list of extensions loaded by the library, call ``asdf.get_config().extensions``.
+To see the list of resource mappings, call ``asdf.get_config().resource_mappings``.
+Both of these properties are lazy-loaded and then cached, so the first call will take
+a moment to complete but subsequent calls will return immediately.
 
 When an ``AsdfFile`` class is instantiated, one thing that happens on the
-``__init__`` is that ``self._process_extensions()`` is called with an empty
-list. That results in ``default_extensions.extension_list`` being accessed,
-which then results in ``extension.AsdfExtensionList`` being instantiated with
-the created extensions property.
+``__init__`` is that ``self._process_plugin_extensions()`` is called.  This method
+retrieves the extensions from the global config and selects those that
+are compatible with the ``AsdfFile``'s ASDF Standard version.  It returns the
+resulting list, which is assigned to the ``_plugin_extensions`` variable.  The
+term "plugin extensions" constrasts with "user extensions" which are additional
+extensions provided by the user as an argument to ``AsdfFile.__init__``.
 
-This class populates the ``tag_mapping``, ``url_mapping`` lists and the
-validators  dictionary, as well as populating the ``_type_index`` attribute with
-the ``AsdfTypes`` subclasses defined in the extensions.
+The extension lists are used by ``AsdfFile`` to create the file's ``ExtensionList``
+and ``ExtensionManager`` instances, which manage extensions for the old and
+new extension APIs, respectively.  These instances are created lazily when
+the ``extension_list`` and ``extension_manager`` properties are first accessed,
+to help speed up the initial construction of the ``AsdfFile``.
 
-As a last step, the ``tag_mapping`` and ``url_mapping`` methods are generated
-from  ``resolver.Resolver`` with the initial lists. These lists consist of
-2-tuples. In the first case it is a mechanism to map the tag string to a url
-string, typically with an expected prefix or suffix to the tag (suffix is
-typical)  so that given a full tag, it generates a url that includes the suffix
-This permits one mapping to cover many tag variants. (The details of mapping
-machinery with examples are given in a later section since understanding this is
-essential to defining new tags and corresponding schemas.)
+The ``extension_manager`` is responsible for mapping tag URIs to schema URIs
+for validation and retrieving type converters (instances of the ``Converter`` interface)
+by Python type or by YAML tag URI.  ``extension_list`` handles the same duties,
+but for old-style extensions.  ``extension_manager`` takes precedence over
+``extension_list`` throughout the asdf library, so ``extension_list`` will
+only be consulted if ``extension_manager`` can't handle a particular tag
+or Python type.
+
+On the subject of resolvers and tag/url mapping
+-----------------------------------------------
+
+The ``AsdfFile`` class has ``tag_mapping`` and ``url_mapping`` properties
+that each return the ``extension_list`` properties of the same name.  These
+objects implement the original support for mapping tag URIs to schema content
+that in the new API is provided by resource mappings.
+
+``tag_mapping`` and ``url_mapping`` are each ``resolver.Resolver`` instances that
+are generated from the mapping lists in the old-style extensions. These lists consist
+of 2-tuples. In the first case it is a mechanism to map the tag string to a url string,
+typically with an expected prefix or suffix to the tag (suffix is typical)  so that
+given a full tag, it generates a url that includes the suffix.  This permits one mapping
+to cover many tag variants (The details of mapping machinery with examples are given
+in a later section since understanding this is essential to defining new tags and
+corresponding schemas).
 
 The URL mapping works in a similar way, except that it consists of 2-tuples
-where the first element is the common elements of the url, and the second  part
+where the first element is the common elements of the url, and the second part
 maps it to an actual location (url or file path). Again the second part may
 include a place holder for the suffix or prefix, and code to generate the path
 to the schema file.
@@ -112,8 +235,7 @@ The use of the resolver object turns these lists into functions so that
 supplied the appropriate input that matches something in the list, it gives the
 corresponding output.
 
-Outline of how an ASDF file is opened and read into the corresponding Python
-object.
+Outline of how an ASDF file is opened and read into the corresponding Python object.
 ------------------------------------------------------------------------------------
 
 The starting point can be found in ``asdf.py`` essentially through the following
@@ -163,7 +285,9 @@ to. Otherwise:
    yaml for that node.
  - it obtains the appropriate tag class (an AsdfType subclass) from the AsdfFile
    instance (using ``ctx.type_index.fix_yaml_tag`` to deal with version issues
-   to match the most appropriate tag class).
+   to match the most appropriate tag class).  The new extension API does not
+   support this "fix YAML tag" feature so file's ExtensionManager is not used
+   here.
  - it wraps all the node alternatives in a special asdf ``Tagged`` class instance
    variant where that object contains a ._tag attribute that is a reference to
    the corresponding Tag class.
@@ -565,4 +689,26 @@ with these transformed children, and that is the node that gets handed to
 a structure containing only transformed children, so it has no need to
 call ``tagged_tree_to_custom_tree`` on its own.
 
-Thus reader, your mind shall now be drained.
+Future plans for SerializationContext
+-------------------------------------
+
+Currently, the ``AsdfFile`` itself is used as a container for serialization
+parameters and is passed to various methods in block.py, reference.py,
+schema.py, yamlutil.py, in ``ExtensionType`` subclasses, and others.  This
+doesn't work very well for a couple of reasons.  For one, the intention of
+``AsdfFile.write_to`` is to "export" a copy of the file to disk without
+changing the in-memory ``AsdfFile``, but since serialization parameters
+are read from the ``AsdfFile``, the code currently modifies the open file
+as part of the write (and doesn't change it back).  The second issue is that
+requiring an ``AsdfFile`` instance in so many method signatures forces
+the code (or users themselves) to create an empty dummy ``AsdfFile`` just
+to use the method.
+
+The new ``Converter`` interface also accepts a ``ctx`` variable, but
+instead of an ``AsdfFile`` it's an instance of ``SerializationContext``.  This
+new object will serve the purpose of configuring serialization parameters
+and keeping necessary state, which means that the ``AsdfFile`` can go
+unmodified.  The ``SerializationContext`` will be relatively lightweight and
+creating it will not incur as much of a performance penalty as creating an
+``AsdfFile``.
+
