@@ -109,6 +109,7 @@ def test_edit_larger(tmpdir, version):
 
     with asdf.open(asdf_edit) as af:
         assert "bar" in af.tree
+        assert af.tree["bar"] == 13
 
 
 @pytest.mark.parametrize("version", asdf.versioning.supported_versions)
@@ -125,3 +126,4 @@ def test_edit_larger_stream(tmpdir, version):
 
     with asdf.open(asdf_edit) as af:
         assert "bar" in af.tree
+        assert af.tree["bar"] == 13
