@@ -271,6 +271,32 @@ def get_yaml_version(fd, token):
     return yaml_version
 
 
+def binary_block_exists(fd):
+    """
+    Checks to see if there is a binary block.
+
+    Parameters
+    ----------
+    fd : GenericFile
+    """
+    offset = fd.tell()
+
+    # Find location of the first binary block after the end of the YAML.
+    reader = fd.reader_until(
+        constants.BLOCK_MAGIC,
+        7,
+        "First binary block",
+        include=False,
+    )
+    try:
+        reader.read()  # Read to the beginning of the first binary block.
+        fd.seek(offset)
+        return True
+    except ValueError:
+        fd.seek(offset)
+        return False
+
+
 def read_and_validate_yaml(fd, fname, validate_yaml):
     """
     Get the YAML text from an ASDF formatted file.
@@ -281,6 +307,7 @@ def read_and_validate_yaml(fd, fname, validate_yaml):
         Input file name
     fd : GenericFile
         for fname.
+    validate_yaml: bool
 
     Return
     ------
@@ -307,6 +334,17 @@ def read_and_validate_yaml(fd, fname, validate_yaml):
         initial_content=token,
     )
     yaml_content = reader.read()
+
+    # YAML validation implies we are reading from a normal YAML file, so
+    # should not have any binary blocks.
+    if not validate_yaml and not binary_block_exists(fd):
+        delim = "!" * 70
+        print(delim)
+        print(f"No binary blocks exist in {fname}.  This ASDF file can")
+        print("directly edited in any text file.  Or the file is poorly")
+        print("formatted and cannot be corrected with this tool.")
+        print(delim)
+        sys.exit(1)
 
     if validate_yaml:
         # Create a YAML tree to validate
@@ -335,11 +373,11 @@ def edit_func(fname, oname):
         Output YAML file name.
     """
     if not is_valid_asdf_path(fname):
-        return False
+        return 1
 
     if not is_yaml_file(oname):
         print("A YAML file is expected, with '.yaml' or '.yml' extension.")
-        sys.exit(1)
+        return 1
 
     # Validate input file is an ASDF file.
     fd, asdf_text = open_and_check_asdf_header(fname)
@@ -429,7 +467,16 @@ def find_first_block(fname):
             "First binary block",
             include=False,
         )
-        reader.read()  # Read to the beginning of the first binary block.
+        try:
+            reader.read()  # Read to the beginning of the first binary block.
+        except ValueError:
+            delim = "!" * 50
+            print(delim)
+            print(f"No binary blocks are found in {fname}.")
+            print("The file should be directly edited in a standard text editor")
+            print("without use of this tool.")
+            print(delim)
+            sys.exit(1)
         binary_block_location = fd.tell()
     return binary_block_location
 
@@ -619,10 +666,10 @@ def save_func(fname, oname):
     """
 
     if not is_valid_yaml_path(fname):
-        return False
+        return 1
 
     if not is_valid_asdf_path(oname):
-        return False
+        return 1
 
     # Validate input file is an ASDF formatted YAML.
     ifd, iasdf_text = open_and_check_asdf_header(fname)
