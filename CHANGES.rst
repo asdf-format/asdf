@@ -36,6 +36,9 @@
   the tree (or modify the schema to permit nulls, if that is the
   intention). [#863]
 
+- Add ``edit`` subcommand to asdftool for efficient editing of
+  the YAML portion of an ASDF file.  [#873]
+
 2.7.1 (unreleased)
 ------------------
 
