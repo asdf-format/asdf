@@ -6,14 +6,14 @@ import asdf
 
 
 def _write_test_file(version, oname):
-    small_array = np.random.rand(75)
-    large_array = np.random.rand(150)
+    small_array = np.random.rand(99)
+    large_array = np.random.rand(100)
     tree = {
-        "author": "Monty", 
-        "foo": 42, 
+        "author": "Monty",
+        "foo": 42,
         "bar": 13,
         "small_array": small_array,
-        "large_array": large_array
+        "large_array": large_array,
     }
     asdf_name = os.path.join(oname)
     with asdf.AsdfFile(tree, version=version) as af:
