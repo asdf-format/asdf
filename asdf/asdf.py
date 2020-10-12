@@ -1218,7 +1218,7 @@ class AsdfFile:
             self._post_write(fd)
 
     def write_to(self, fd, all_array_storage=None, all_array_compression='input',
-                 auto_inline=100, pad_blocks=False, include_block_index=True,
+                 auto_inline=constants.DEFAULT_AUTO_INLINE, pad_blocks=False, include_block_index=True,
                  version=None):
         """
         Write the ASDF file to the given file-like object.
