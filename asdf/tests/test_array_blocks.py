@@ -128,7 +128,7 @@ def test_update_expand_tree(tmpdir):
     ff = asdf.AsdfFile(tree)
     ff.set_array_storage(tree['arrays'][2], 'inline')
     assert len(list(ff.blocks.inline_blocks)) == 1
-    ff.write_to(testpath, pad_blocks=True)
+    ff.write_to(testpath, auto_inline=None, pad_blocks=True)
     with asdf.open(testpath, mode='rw') as ff:
         assert_array_equal(ff.tree['arrays'][0], my_array)
         orig_offset = ff.blocks[ff.tree['arrays'][0]].offset
@@ -221,7 +221,7 @@ def test_update_delete_middle_array(tmpdir):
     tree = _get_update_tree()
 
     ff = asdf.AsdfFile(tree)
-    ff.write_to(path, pad_blocks=True)
+    ff.write_to(path, auto_inline=None, pad_blocks=True)
 
     original_size = os.stat(path).st_size
 
@@ -248,7 +248,7 @@ def test_update_replace_first_array(tmpdir):
     tree = _get_update_tree()
 
     ff = asdf.AsdfFile(tree)
-    ff.write_to(path, pad_blocks=True)
+    ff.write_to(path, auto_inline=None, pad_blocks=True)
 
     original_size = os.stat(path).st_size
 
@@ -272,7 +272,7 @@ def test_update_replace_last_array(tmpdir):
     tree = _get_update_tree()
 
     ff = asdf.AsdfFile(tree)
-    ff.write_to(path, pad_blocks=True)
+    ff.write_to(path, auto_inline=None, pad_blocks=True)
 
     original_size = os.stat(path).st_size
 
@@ -296,7 +296,7 @@ def test_update_replace_middle_array(tmpdir):
     tree = _get_update_tree()
 
     ff = asdf.AsdfFile(tree)
-    ff.write_to(path, pad_blocks=True)
+    ff.write_to(path, auto_inline=None, pad_blocks=True)
 
     original_size = os.stat(path).st_size
 
@@ -459,7 +459,7 @@ def test_checksum(tmpdir):
     my_array = np.arange(0, 64, dtype='<i8').reshape((8, 8))
     tree = {'my_array': my_array}
     ff = asdf.AsdfFile(tree)
-    ff.write_to(path)
+    ff.write_to(path, auto_inline=None)
 
     with asdf.open(path, validate_checksums=True) as ff:
         assert type(ff.blocks._internal_blocks[0].checksum) == bytes
@@ -475,7 +475,7 @@ def test_checksum_update(tmpdir):
 
     tree = {'my_array': my_array}
     ff = asdf.AsdfFile(tree)
-    ff.write_to(path)
+    ff.write_to(path, auto_inline=None)
 
     with asdf.open(path, mode='rw') as ff:
         ff.tree['my_array'][7, 7] = 0.0
@@ -520,7 +520,7 @@ def test_block_index():
     }
 
     ff = asdf.AsdfFile(tree)
-    ff.write_to(buff)
+    ff.write_to(buff, auto_inline=None)
 
     buff.seek(0)
     with asdf.open(buff) as ff2:
@@ -603,7 +603,7 @@ def test_junk_after_index():
     }
 
     ff = asdf.AsdfFile(tree)
-    ff.write_to(buff)
+    ff.write_to(buff, auto_inline=None)
 
     buff.write(b"JUNK")
 
@@ -653,7 +653,7 @@ def test_invalid_block_index_values():
     }
 
     ff = asdf.AsdfFile(tree)
-    ff.write_to(buff, include_block_index=False)
+    ff.write_to(buff, auto_inline=None, include_block_index=False)
     ff.blocks._internal_blocks.append(block.UnloadedBlock(buff, 123456789))
     ff.blocks.write_block_index(buff, ff)
 
@@ -677,7 +677,7 @@ def test_invalid_last_block_index():
     }
 
     ff = asdf.AsdfFile(tree)
-    ff.write_to(buff, include_block_index=False)
+    ff.write_to(buff, auto_inline=None, include_block_index=False)
     ff.blocks._internal_blocks[-1]._offset -= 4
     ff.blocks.write_block_index(buff, ff)
 
@@ -700,7 +700,7 @@ def test_unordered_block_index():
     }
 
     ff = asdf.AsdfFile(tree)
-    ff.write_to(buff, include_block_index=False)
+    ff.write_to(buff, auto_inline=None, include_block_index=False)
     ff.blocks._internal_blocks = ff.blocks._internal_blocks[::-1]
     ff.blocks.write_block_index(buff, ff)
 
@@ -724,7 +724,7 @@ def test_invalid_block_index_first_block_value():
     }
 
     ff = asdf.AsdfFile(tree)
-    ff.write_to(buff, include_block_index=False)
+    ff.write_to(buff, auto_inline=None, include_block_index=False)
     ff.blocks._internal_blocks[0]._offset -= 4
     ff.blocks.write_block_index(buff, ff)
 

@@ -86,7 +86,7 @@ def test_stream_with_nonstream():
     # Since we're testing with small arrays, force this array to be stored in
     # an internal block rather than letting it be automatically put inline.
     ff.set_array_storage(ff['nonstream'], 'internal')
-    ff.write_to(buff)
+    ff.write_to(buff, auto_inline=None)
     for i in range(100):
         buff.write(np.array([i] * 12, np.float64).tobytes())
 
@@ -114,8 +114,7 @@ def test_stream_real_file(tmpdir):
         # Since we're testing with small arrays, force this array to be stored
         # in an internal block rather than letting it be automatically put
         # inline.
-        ff.set_array_storage(ff['nonstream'], 'internal')
-        ff.write_to(fd)
+        ff.write_to(fd, auto_inline=None)
         for i in range(100):
             fd.write(np.array([i] * 12, np.float64).tobytes())
 
