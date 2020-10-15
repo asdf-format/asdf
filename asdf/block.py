@@ -369,7 +369,8 @@ class BlockManager:
             block._array_storage = 'internal'
             asdffile.blocks.add(block)
             block._used = True
-            asdffile.write_to(subfd, pad_blocks=pad_blocks)
+            #asdffile.write_to(subfd, pad_blocks=pad_blocks)
+            asdffile.write_to(subfd, auto_inline=None, pad_blocks=pad_blocks)
 
     def write_block_index(self, fd, ctx):
         """
