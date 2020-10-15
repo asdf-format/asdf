@@ -1289,23 +1289,11 @@ class AsdfFile:
             writing.
         """
 
-
-        """
-        import sys
-        import traceback
-        traceback.print_stack(file=sys.stdout)
-        print(f"fd = {fd}") 
-        print(f"    -> auto_inline = {auto_inline}")
-        print(f"    -> all_array_storage = {all_array_storage}")
-        """
-
         if version is not None:
             self.version = version
 
         if all_array_storage in [ 'internal', 'external' ]:
             auto_inline = None
-
-        #print(f"    *** auto_inline = {auto_inline}, all_array_storage = {all_array_storage}\n\n")
 
         with generic_io.get_file(fd, mode='w') as fd:
             # TODO: This is not ideal: we really should pass the URI through
