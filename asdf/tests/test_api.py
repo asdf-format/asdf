@@ -372,12 +372,9 @@ def test_auto_inline(tmpdir):
 
         # The previous write modified the small array block's storage
         # to inline, and a subsequent write should maintain that setting.
-        # TODO kmacdonald 
-        #    Not sure what this test does.  I don't fully understand auto_inline.
-        #    Should the inline values be persistent.
-        #af.write_to(outfile)
-        #assert len(list(af.blocks.inline_blocks)) == 0
-        #assert len(list(af.blocks.internal_blocks)) == 2
+        af.write_to(outfile)
+        assert len(list(af.blocks.inline_blocks)) == 1
+        assert len(list(af.blocks.internal_blocks)) == 1
 
         af.write_to(outfile, auto_inline=150)
         assert len(list(af.blocks.inline_blocks)) == 2

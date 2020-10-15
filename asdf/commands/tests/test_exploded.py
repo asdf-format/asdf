@@ -9,7 +9,6 @@ from ...tests.helpers import get_file_sizes, assert_tree_match
 
 
 def test_explode_then_implode(tmpdir):
-    print("\ntest_explode_then_implode:")
     x = np.arange(0, 10, dtype=np.float)
 
     tree = {
@@ -24,7 +23,6 @@ def test_explode_then_implode(tmpdir):
     # Since we're testing with small arrays, force all arrays to be stored
     # in internal blocks rather than letting some of them be automatically put
     # inline.
-    #ff.write_to(path, auto_inline=None, all_array_storage='internal')
     ff.write_to(path, all_array_storage='internal')
     assert len(ff.blocks) == 2
 

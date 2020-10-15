@@ -67,8 +67,6 @@ def implode(input, output=None, resolve_references=False):
         ff2 = AsdfFile(ff)
         if resolve_references:
             ff2.resolve_references()
-        print("\nimplode:")
-        #ff2.write_to(output, auto_inline=None, all_array_storage='internal')
         ff2.write_to(output, all_array_storage='internal')
 
 
@@ -116,6 +114,4 @@ def explode(input, output=None):
         base, ext = os.path.splitext(input)
         output = base + '_exploded' + '.asdf'
     with asdf.open(input) as ff:
-        print("\nexplode:")
-        #ff.write_to(output, auto_inline=None, all_array_storage='external')
         ff.write_to(output, all_array_storage='external')
