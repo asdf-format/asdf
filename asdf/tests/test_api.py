@@ -370,8 +370,8 @@ def test_auto_inline(tmpdir):
         assert len(list(af.blocks.inline_blocks)) == 0
         assert len(list(af.blocks.internal_blocks)) == 2
 
-        # The previous write modified the small array block's storage
-        # to inline, and a subsequent write should maintain that setting.
+        # The previous write modified the small array block's storage to
+        # inline, and a subsequent write should not maintain that setting.
         af.write_to(outfile)
         assert len(list(af.blocks.inline_blocks)) == 1
         assert len(list(af.blocks.internal_blocks)) == 1
