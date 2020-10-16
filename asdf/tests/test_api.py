@@ -355,7 +355,7 @@ def test_extension_version_check(installed, extension, warns):
 def test_auto_inline(tmpdir):
     outfile = str(tmpdir.join('test.asdf'))
     small = 75
-    large = constants.DEFAULT_AUTO_INLINE 
+    large = constants.DEFAULT_AUTO_INLINE
     tree = {"small_array": np.arange(small), "large_array": np.arange(large)}
 
     # Use the same object for each write in order to make sure that there
