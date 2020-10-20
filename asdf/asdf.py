@@ -1236,7 +1236,7 @@ class AsdfFile:
         fd : string or file-like object
             May be a string path to a file, or a Python file-like
             object.  If a string path, the file is automatically
-            closed after writing.  If not a string path, it is the 
+            closed after writing.  If not a string path, it is the
             caller's responsibility to close the object.
 
         all_array_storage : string, optional
@@ -1275,7 +1275,7 @@ class AsdfFile:
             is not kept.  For example, reading an array of length ten
             stored internally, then writing it out using default values
             it will be changed to be stored inline.
-            
+
         pad_blocks : float or bool, optional
             Add extra space between blocks to allow for updating of
             the file.  If `False` (default), add no padding (always
