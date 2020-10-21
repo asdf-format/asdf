@@ -354,19 +354,18 @@ def test_extension_version_check(installed, extension, warns):
 
 def test_auto_inline(tmpdir):
     outfile = str(tmpdir.join('test.asdf'))
-    small = 75
+    small = constants.DEFAULT_AUTO_INLINE - 1
     large = constants.DEFAULT_AUTO_INLINE
     tree = {"small_array": np.arange(small), "large_array": np.arange(large)}
 
     # Use the same object for each write in order to make sure that there
     # aren't unanticipated side effects
     with asdf.AsdfFile(tree) as af:
-        # By default blocks are written internal.
         af.write_to(outfile)
         assert len(list(af.blocks.inline_blocks)) == 1
         assert len(list(af.blocks.internal_blocks)) == 1
 
-        af.write_to(outfile, auto_inline=10)
+        af.write_to(outfile, auto_inline=small)
         assert len(list(af.blocks.inline_blocks)) == 0
         assert len(list(af.blocks.internal_blocks)) == 2
 
@@ -376,14 +375,15 @@ def test_auto_inline(tmpdir):
         assert len(list(af.blocks.inline_blocks)) == 1
         assert len(list(af.blocks.internal_blocks)) == 1
 
-        af.write_to(outfile, auto_inline=150)
+        af.write_to(outfile, auto_inline=large+1)
         assert len(list(af.blocks.inline_blocks)) == 2
         assert len(list(af.blocks.internal_blocks)) == 0
 
 
 def test_auto_inline_masked_array(tmpdir):
     outfile = str(tmpdir.join('test.asdf'))
-    arr = np.arange(constants.DEFAULT_AUTO_INLINE)
+    array_length = constants.DEFAULT_AUTO_INLINE
+    arr = np.arange(array_length)
     masked_arr = np.ma.masked_equal(arr, 3)
     tree = {"masked_arr": masked_arr}
 
@@ -392,11 +392,11 @@ def test_auto_inline_masked_array(tmpdir):
         assert len(list(af.blocks.inline_blocks)) == 0
         assert len(list(af.blocks.internal_blocks)) == 2
 
-        af.write_to(outfile, auto_inline=110)
+        af.write_to(outfile, auto_inline=array_length+1)
         assert len(list(af.blocks.inline_blocks)) == 2
         assert len(list(af.blocks.internal_blocks)) == 0
 
-        af.write_to(outfile, auto_inline=95)
+        af.write_to(outfile, auto_inline=array_length-1)
         assert len(list(af.blocks.inline_blocks)) == 0
         assert len(list(af.blocks.internal_blocks)) == 2
 

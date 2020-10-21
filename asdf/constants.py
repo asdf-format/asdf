@@ -23,5 +23,5 @@ STSCI_SCHEMA_TAG_BASE = 'tag:stsci.edu:asdf'
 
 BLOCK_FLAG_STREAMED = 0x1
 
-# All arrays shorter than this defaults to inline storage
+# All arrays shorter than this default to inline storage.
 DEFAULT_AUTO_INLINE = 100

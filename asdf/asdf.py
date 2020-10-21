@@ -1032,9 +1032,13 @@ class AsdfFile:
             raise ValueError(
                 "Invalid value for all_array_storage: '{0}'".format(
                     all_array_storage))
+
         self._all_array_storage = all_array_storage
 
         self._all_array_compression = all_array_compression
+
+        if all_array_storage in ['internal', 'external', 'inline']:
+            auto_inline = None
 
         if auto_inline in (True, False):
             raise ValueError(
@@ -1157,9 +1161,6 @@ class AsdfFile:
         if version is not None:
             self.version = version
 
-        if all_array_storage in ['internal', 'external']:
-            auto_inline = None
-
         if all_array_storage == 'external':
             # If the file is fully exploded, there's no benefit to
             # update, so just use write_to()
@@ -1271,10 +1272,11 @@ class AsdfFile:
             threshold, store the array as inline YAML, rather than a
             binary block.  This only works on arrays that do not share
             data with other arrays.  Default is 100.  Care needs to be
-            taken when reading files not using the default.  Storage type
-            is not kept.  For example, reading an array of length ten
-            stored internally, then writing it out using default values
-            it will be changed to be stored inline.
+            taken when modifying files not written with default.  Storage
+            type is not preserved.  For example, reading an array of 
+            length ten stored in a binary block, then writing it out 
+            using the default ``auto_inline`` will cause that array's
+            storage to change to inline.
 
         pad_blocks : float or bool, optional
             Add extra space between blocks to allow for updating of
@@ -1295,9 +1297,6 @@ class AsdfFile:
 
         if version is not None:
             self.version = version
-
-        if all_array_storage in [ 'internal', 'external' ]:
-            auto_inline = None
 
         with generic_io.get_file(fd, mode='w') as fd:
             # TODO: This is not ideal: we really should pass the URI through

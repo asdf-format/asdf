@@ -37,7 +37,6 @@ def test_write_to_auto_inline(tmpdir, version):
     num_long = 13
     _write_test_file_multi(version, oname, num_short, num_long)
 
-    assert True
     with asdf.open(oname) as af:
         assert len(af._blocks._internal_blocks) == num_long
         assert len(af._blocks._inline_blocks) == num_short
