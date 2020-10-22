@@ -1273,8 +1273,8 @@ class AsdfFile:
             binary block.  This only works on arrays that do not share
             data with other arrays.  Default is 100.  Care needs to be
             taken when modifying files not written with default.  Storage
-            type is not preserved.  For example, reading an array of 
-            length ten stored in a binary block, then writing it out 
+            type is not preserved.  For example, reading an array of
+            length ten stored in a binary block, then writing it out
             using the default ``auto_inline`` will cause that array's
             storage to change to inline.
 
