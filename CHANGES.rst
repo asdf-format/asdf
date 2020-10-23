@@ -40,6 +40,9 @@
   now defaults to inlining small arrays (arrays less than 100), rather
   than defaulting to storing all arrays internally. [#882]
 
+- Add ``edit`` subcommand to asdftool for efficient editing of
+  the YAML portion of an ASDF file.  [#873]
+
 2.7.1 (unreleased)
 ------------------
 
