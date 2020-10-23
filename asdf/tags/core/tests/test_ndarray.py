@@ -484,7 +484,7 @@ def test_masked_array_repr(tmpdir):
         'masked': np.ma.array([1, 2, 3], mask=[False, True, False])
     }
 
-    asdf.AsdfFile(tree).write_to(tmppath)
+    asdf.AsdfFile(tree).write_to(tmppath, auto_inline=None)
 
     with asdf.open(tmppath) as ff:
         assert 'masked array' in repr(ff.tree['masked'])
@@ -871,7 +871,7 @@ def test_readonly_inline(tmpdir):
     tree = dict(data=np.ndarray((100)))
 
     with asdf.AsdfFile(tree) as af:
-        af.write_to(tmpfile, all_array_storage='inline')
+        af.write_to(tmpfile, auto_inline=None, all_array_storage='inline')
 
     # This should be safe since it's an inline array
     with asdf.open(tmpfile, mode='r') as af:
@@ -885,7 +885,7 @@ def test_block_data_change(tmpdir):
     tmpfile = str(tmpdir.join("data.asdf"))
     tree = {"data": np.ndarray(10)}
     with asdf.AsdfFile(tree) as af:
-        af.write_to(tmpfile)
+        af.write_to(tmpfile, auto_inline=None)
 
     with asdf.open(tmpfile, mode="rw") as af:
         array_before = af.tree["data"].__array__()

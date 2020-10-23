@@ -651,7 +651,7 @@ def test_large_literals(use_numpy):
 
     ff = asdf.AsdfFile(tree)
     buff = io.BytesIO()
-    ff.write_to(buff)
+    ff.write_to(buff, auto_inline=None)
 
     ff.set_array_storage(ff.tree['large_array'], 'inline')
     buff = io.BytesIO()

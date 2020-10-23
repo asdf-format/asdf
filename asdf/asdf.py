@@ -1032,9 +1032,13 @@ class AsdfFile:
             raise ValueError(
                 "Invalid value for all_array_storage: '{0}'".format(
                     all_array_storage))
+
         self._all_array_storage = all_array_storage
 
         self._all_array_compression = all_array_compression
+
+        if all_array_storage in ['internal', 'external', 'inline']:
+            auto_inline = None
 
         if auto_inline in (True, False):
             raise ValueError(
@@ -1160,7 +1164,7 @@ class AsdfFile:
         if all_array_storage == 'external':
             # If the file is fully exploded, there's no benefit to
             # update, so just use write_to()
-            self.write_to(fd, all_array_storage=all_array_storage)
+            self.write_to(fd, auto_inline=auto_inline, all_array_storage=all_array_storage)
             fd.truncate()
             return
 
@@ -1217,9 +1221,10 @@ class AsdfFile:
         finally:
             self._post_write(fd)
 
+
     def write_to(self, fd, all_array_storage=None, all_array_compression='input',
-                 auto_inline=None, pad_blocks=False, include_block_index=True,
-                 version=None):
+                 auto_inline=constants.DEFAULT_AUTO_INLINE, pad_blocks=False,
+                 include_block_index=True, version=None):
         """
         Write the ASDF file to the given file-like object.
 
@@ -1232,7 +1237,8 @@ class AsdfFile:
         fd : string or file-like object
             May be a string path to a file, or a Python file-like
             object.  If a string path, the file is automatically
-            closed after writing.  If not a string path,
+            closed after writing.  If not a string path, it is the
+            caller's responsibility to close the object.
 
         all_array_storage : string, optional
             If provided, override the array storage type of all blocks
@@ -1265,7 +1271,12 @@ class AsdfFile:
             When the number of elements in an array is less than this
             threshold, store the array as inline YAML, rather than a
             binary block.  This only works on arrays that do not share
-            data with other arrays.  Default is 0.
+            data with other arrays.  Default is 100.  Care needs to be
+            taken when modifying files not written with default.  Storage
+            type is not preserved.  For example, reading an array of
+            length ten stored in a binary block, then writing it out
+            using the default ``auto_inline`` will cause that array's
+            storage to change to inline.
 
         pad_blocks : float or bool, optional
             Add extra space between blocks to allow for updating of

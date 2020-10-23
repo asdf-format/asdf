@@ -230,7 +230,7 @@ def walk_and_modify(top, callback, ignore_implicit_conversion=False, postorder=T
         A function to call at each node in the tree.  It takes either
         one or two arguments:
 
-        - an instance from the tere
+        - an instance from the tree
         - a json id (optional)
 
         It may return a different instance in order to modify the
