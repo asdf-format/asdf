@@ -5,7 +5,7 @@
 
 import pytest
 
-from .tests.httpserver import HTTPServer, RangeHTTPServer
+from asdf.tests.httpserver import HTTPServer, RangeHTTPServer
 
 
 @pytest.fixture()
