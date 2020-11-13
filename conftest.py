@@ -1,10 +1,4 @@
-# Licensed under a 3-clause BSD style license - see LICENSE.rst
-# -*- coding: utf-8 -*-
-import os
-
 import pytest
-from _pytest.doctest import DoctestItem
-
 
 @pytest.fixture(autouse=True)
 def _docdir(request):
@@ -12,19 +6,11 @@ def _docdir(request):
     Make sure that doctests run in a temporary directory so that any files that
     are created as part of the test get removed automatically.
     """
-
-    # Trigger ONLY for the doctests.
-    if isinstance(request.node, DoctestItem):
-
-        # Get the fixture dynamically by its name.
+    # Trigger ONLY for doctestplus.
+    doctest_plugin = request.config.pluginmanager.getplugin("doctestplus")
+    if isinstance(request.node.parent, doctest_plugin._doctest_textfile_item_cls):
         tmpdir = request.getfixturevalue('tmpdir')
-
-        # Chdir only for the duration of the test.
-        olddir = os.getcwd()
-        tmpdir.chdir()
-        yield
-        os.chdir(olddir)
-
+        with tmpdir.as_cwd():
+            yield
     else:
-        # For normal tests, we have to yield, since this is a yield-fixture.
         yield

@@ -5,6 +5,11 @@ python: 3.8.6
 
 jobs:
   include:
+    # Python 3.9, stable dependencies
+    - name: Python 3.9
+      env: TOXENV=py39
+      python: 3.9.0
+
     # Python 3.8, stable dependencies
     - name: Python 3.8
       env: TOXENV=py38
