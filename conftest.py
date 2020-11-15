@@ -7,10 +7,14 @@ def _docdir(request):
     are created as part of the test get removed automatically.
     """
     # Trigger ONLY for doctestplus.
-    doctest_plugin = request.config.pluginmanager.getplugin("doctestplus")
-    if isinstance(request.node.parent, doctest_plugin._doctest_textfile_item_cls):
-        tmpdir = request.getfixturevalue('tmpdir')
-        with tmpdir.as_cwd():
+    try:
+        doctest_plugin = request.config.pluginmanager.getplugin("doctestplus")
+        if isinstance(request.node.parent, doctest_plugin._doctest_textfile_item_cls):
+            tmpdir = request.getfixturevalue('tmpdir')
+            with tmpdir.as_cwd():
+                yield
+        else:
             yield
-    else:
+    # Handle case where doctestplus is not available
+    except AttributeError:
         yield
