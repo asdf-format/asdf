@@ -1,7 +1,7 @@
 os: linux
 dist: xenial
 language: python
-python: 3.8
+python: 3.9
 
 jobs:
   include:
@@ -11,6 +11,7 @@ jobs:
 
     # Python 3.8, stable dependencies
     - env: TOXENV=py38
+      python: 3.8
 
     # Python 3.7, stable dependencies
     - env: TOXENV=py37
@@ -60,13 +61,13 @@ jobs:
       python: 3.5
 
     # Test against development version of Astropy
-    - env: TOXENV=py38-astropydev
+    - env: TOXENV=py39-astropydev
 
     # Test against development version of GWCS
-    - env: TOXENV=py38-gwcsdev
+    - env: TOXENV=py39-gwcsdev
 
     # Test against development version of numpy (allowed failure)
-    - env: TOXENV=py38-numpydev
+    - env: TOXENV=py39-numpydev
 
     # Test against prerelease versions of all dependencies (allowed failure)
     - env: TOXENV=prerelease
@@ -79,26 +80,26 @@ jobs:
 
     # Test on OS X
     - env:
-        - TOXENV=py38
-        - PATH=/usr/local/opt/python@3.8/bin:$PATH
+        - TOXENV=py39
+        - PATH=/usr/local/opt/python@3.9/bin:$PATH
       os: osx
       osx_image: xcode12
       language: shell
       addons:
         homebrew:
           packages:
-            - python@3.8
+            - python@3.9
       install:
         - pip3 install tox
 
     # Test on Windows
     - env:
-        - TOXENV=py38
-        - PATH=/c/Python38:/c/Python38/Scripts:$PATH
+        - TOXENV=py39
+        - PATH=/c/Python39:/c/Python39/Scripts:$PATH
       os: windows
       language: shell
       before_install:
-        - choco install python --version=3.8
+        - choco install python --version=3.9
 
     # Test on big-endian platform
     - env: TOXENV=s390x
@@ -107,7 +108,7 @@ jobs:
   allow_failures:
     - env: TOXENV=prerelease
 
-    - env: TOXENV=py38-numpydev
+    - env: TOXENV=py39-numpydev
 
     - env: TOXENV=warnings
 
