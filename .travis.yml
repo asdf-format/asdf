@@ -5,6 +5,10 @@ python: 3.8
 
 jobs:
   include:
+    # Python 3.9, stable dependencies
+    - env: TOXENV=py39
+      python: 3.9
+
     # Python 3.8, stable dependencies
     - env: TOXENV=py38
 
