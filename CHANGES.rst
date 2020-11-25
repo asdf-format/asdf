@@ -43,7 +43,12 @@
 - Add ``edit`` subcommand to asdftool for efficient editing of
   the YAML portion of an ASDF file.  [#873]
 
-2.7.1 (unreleased)
+2.7.2 (unreleased)
+------------------
+
+- Fix bug causing test collection failures in some environments. [#889]
+
+2.7.1 (2020-08-18)
 ------------------
 
 - Fix bug preventing access to copied array data after
