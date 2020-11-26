@@ -406,7 +406,7 @@ def dump_tree(tree, fd, ctx, tree_finalizer=None, _serialization_context=None):
         int(x) for x in ctx.version_map['YAML_VERSION'].split('.'))
 
     # add yaml %TAG definitions from extensions
-    for ext in ctx.extension_list.extensions:
+    for ext in _serialization_context._extensions_used:
         ext_tags = getattr(ext.delegate, "yaml_tag_context", None)
         if ext_tags:
             for key, val in ext_tags.items():
