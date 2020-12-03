@@ -573,7 +573,10 @@ def _validate_large_literals(instance, reading):
     """
     def _validate(value):
         # We can count on 52 bits of precision
-        if value <= ((1 << 51) - 1) and value >= -((1 << 51) - 2):
+        bits = 63
+        max_integer_limit = (1 << bits) - 1
+        min_integer_limit = -((1 << bits) - 2)
+        if value <= max_integer_limit and value >= min_integer_limit:
             return
 
         if reading:
