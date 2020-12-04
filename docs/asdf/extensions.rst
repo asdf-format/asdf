@@ -687,7 +687,7 @@ Creating custom schemas
 
 All custom types to be serialized by ASDF require custom schemas. The best
 resource for creating ASDF schemas can be found in the `ASDF Standard
-<http://asdf-standard.readthedocs.io/en/latest/extending.html>`_ documentation.
+<https://asdf-standard.readthedocs.io/en/latest/schemas.html>`_ documentation.
 
 In most cases, ASDF schemas will be included as part of a packaged software
 distribution. In these cases, it is important for the
