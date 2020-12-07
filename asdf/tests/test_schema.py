@@ -617,68 +617,6 @@ def test_schema_resolved_via_entry_points():
     assert tag in repr(s)
 
 
-@pytest.mark.parametrize('use_numpy', [False, True])
-def test_large_literals(use_numpy):
-
-    largeval = 1 << 53
-    if use_numpy:
-        largeval = np.uint64(largeval)
-
-    tree = {
-        'large_int': largeval,
-    }
-
-    with pytest.raises(ValidationError):
-        asdf.AsdfFile(tree)
-
-    tree = {
-        'large_list': [largeval],
-    }
-
-    with pytest.raises(ValidationError):
-        asdf.AsdfFile(tree)
-
-    tree = {
-        largeval: 'large_key',
-    }
-
-    with pytest.raises(ValidationError):
-        asdf.AsdfFile(tree)
-
-    tree = {
-        'large_array': np.array([largeval], np.uint64)
-    }
-
-    ff = asdf.AsdfFile(tree)
-    buff = io.BytesIO()
-    ff.write_to(buff, auto_inline=None)
-
-    ff.set_array_storage(ff.tree['large_array'], 'inline')
-    buff = io.BytesIO()
-    with pytest.raises(ValidationError):
-        ff.write_to(buff)
-        print(buff.getvalue())
-
-
-def test_read_large_literal():
-    value = 1 << 64
-    yaml = f"integer: {value}"
-
-    buff = helpers.yaml_to_asdf(yaml)
-
-    with pytest.warns(AsdfWarning, match="Invalid integer literal value"):
-        with asdf.open(buff) as af:
-            assert af['integer'] == value
-
-    yaml = f"{value}: foo"
-
-    buff = helpers.yaml_to_asdf(yaml)
-
-    with pytest.warns(AsdfWarning, match="Invalid integer literal value"):
-        with asdf.open(buff) as af:
-            assert af[value] == "foo"
-
-
 @pytest.mark.parametrize(
     "version,keys",
     [

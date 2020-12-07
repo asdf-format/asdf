@@ -567,39 +567,6 @@ def get_validator(schema={}, ctx=None, validators=None, url_mapping=None,
     return validator
 
 
-def _validate_large_literals(instance, reading):
-    """
-    Validate that the tree has no large numeric literals.
-    """
-    def _validate(value):
-        bits = 63
-        max_integer_limit = (1 << bits) - 1
-        min_integer_limit = -((1 << bits) - 2)
-
-        if value <= max_integer_limit and value >= min_integer_limit:
-            return
-
-        if reading:
-            warnings.warn(
-                f"Invalid integer literal value {value} detected while reading file. "
-                "The value has been read safely, but the file should be "
-                "fixed.",
-                AsdfWarning
-            )
-        else:
-            raise ValidationError(
-                f"Integer value {value} is too large to safely represent as a "
-                "literal in ASDF"
-            )
-
-    if isinstance(instance, Integral):
-        _validate(instance)
-    elif isinstance(instance, Mapping):
-        for key in instance:
-            if isinstance(key, Integral):
-                _validate(key)
-
-
 def _validate_mapping_keys(instance, reading):
     """
     Validate that mappings do not contain illegal key types

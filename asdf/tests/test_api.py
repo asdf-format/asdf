@@ -401,24 +401,6 @@ def test_auto_inline_masked_array(tmpdir):
         assert len(list(af.blocks.internal_blocks)) == 2
 
 
-def test_auto_inline_large_value(tmpdir):
-    outfile = str(tmpdir.join('test.asdf'))
-    arr = np.array([2**52 + 1] + [k for k in range(constants.DEFAULT_AUTO_INLINE)])
-    tree = {"array": arr}
-
-    with asdf.AsdfFile(tree) as af:
-        af.write_to(outfile)
-        assert len(list(af.blocks.inline_blocks)) == 0
-        assert len(list(af.blocks.internal_blocks)) == 1
-
-        with pytest.raises(ValidationError):
-            af.write_to(outfile, auto_inline=150)
-
-        af.write_to(outfile, auto_inline=5)
-        assert len(list(af.blocks.inline_blocks)) == 0
-        assert len(list(af.blocks.internal_blocks)) == 1
-
-
 def test_auto_inline_string_array(tmpdir):
     outfile = str(tmpdir.join('test.asdf'))
     arr = np.array(["peach", "plum", "apricot", "nectarine", "cherry", "pluot"])
