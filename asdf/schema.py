@@ -630,7 +630,6 @@ def validate(instance, ctx=None, schema={}, validators=None, reading=False,
                               *args, **kwargs)
     validator.validate(instance, _schema=(schema or None))
 
-    # additional_validators = [_validate_large_literals]
     additional_validators = []
     if ctx.version >= versioning.RESTRICTED_KEYS_MIN_VERSION:
         additional_validators.append(_validate_mapping_keys)
