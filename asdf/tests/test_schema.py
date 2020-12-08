@@ -617,6 +617,25 @@ def test_schema_resolved_via_entry_points():
     assert tag in repr(s)
 
 
+def test_read_large_literal():
+    value = 1 << 64
+    yaml = f"integer: {value}"
+
+    buff = helpers.yaml_to_asdf(yaml)
+
+    with pytest.warns(AsdfWarning, match="Invalid integer literal value"):
+        with asdf.open(buff) as af:
+            assert af['integer'] == value
+
+    yaml = f"{value}: foo"
+
+    buff = helpers.yaml_to_asdf(yaml)
+
+    with pytest.warns(AsdfWarning, match="Invalid integer literal value"):
+        with asdf.open(buff) as af:
+            assert af[value] == "foo"
+
+
 @pytest.mark.parametrize(
     "version,keys",
     [
