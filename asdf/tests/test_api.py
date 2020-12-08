@@ -403,7 +403,22 @@ def test_auto_inline_masked_array(tmpdir):
 
 def test_auto_inline_large_value(tmpdir):
     outfile = str(tmpdir.join('test.asdf'))
+
+    # Check for large positive numbers
     val = 2**64
+
+    tree = {"array": val}
+    with pytest.raises(ValidationError):
+        with asdf.AsdfFile(tree) as af:
+            pass
+
+    tree = {val: "foo"}
+    with pytest.raises(ValidationError):
+        with asdf.AsdfFile(tree) as af:
+            pass
+
+    # Check for large negative numbers
+    val = -((1<<63) - 1)
 
     tree = {"array": val}
     with pytest.raises(ValidationError):
