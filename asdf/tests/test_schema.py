@@ -617,6 +617,33 @@ def test_schema_resolved_via_entry_points():
     assert tag in repr(s)
 
 
+# @pytest.mark.parametrize('use_numpy', [False, True])
+def test_large_literals():
+
+    largeval = 1 << 64
+
+    tree = {
+        'large_int': largeval,
+    }
+
+    with pytest.raises(ValidationError):
+        asdf.AsdfFile(tree)
+
+    tree = {
+        'large_list': [largeval],
+    }
+
+    with pytest.raises(ValidationError):
+        asdf.AsdfFile(tree)
+
+    tree = {
+        largeval: 'large_key',
+    }
+
+    with pytest.raises(ValidationError):
+        asdf.AsdfFile(tree)
+
+
 def test_read_large_literal():
     value = 1 << 64
     yaml = f"integer: {value}"
