@@ -572,11 +572,7 @@ def _validate_large_literals(instance, reading):
     Validate that the tree has no large numeric literals.
     """
     def _validate(value):
-        # We can count on 52 bits of precision
-        bits = 63
-        max_large_literal = (1<<bits) - 1
-        min_large_literal = -((1<<bits) - 2)
-        if value <= max_large_literal and value >= min_large_literal:
+        if value <= constants.MAX_NUMBER and value >= constants.MIN_NUMBER:
             return
 
         if reading:
@@ -663,7 +659,6 @@ def validate(instance, ctx=None, schema={}, validators=None, reading=False,
                               *args, **kwargs)
     validator.validate(instance, _schema=(schema or None))
 
-    # additional_validators = []
     additional_validators = [_validate_large_literals]
     if ctx.version >= versioning.RESTRICTED_KEYS_MIN_VERSION:
         additional_validators.append(_validate_mapping_keys)

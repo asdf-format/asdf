@@ -11,6 +11,7 @@ import pytest
 from jsonschema.exceptions import ValidationError
 
 import asdf
+from asdf import constants
 from asdf import get_config, config_context
 from asdf import treeutil
 from asdf import extension
@@ -26,7 +27,6 @@ from .helpers import (
     assert_no_warnings,
 )
 
-from .. import constants
 
 
 def test_get_data_from_closed_file(tmpdir):
@@ -405,7 +405,7 @@ def test_auto_inline_large_value(tmpdir):
     outfile = str(tmpdir.join('test.asdf'))
 
     # Check for large positive numbers
-    val = 2**64
+    val = constants.MAX_NUMBER+1
 
     tree = {"array": val}
     with pytest.raises(ValidationError):
@@ -418,7 +418,7 @@ def test_auto_inline_large_value(tmpdir):
             pass
 
     # Check for large negative numbers
-    val = -((1<<63) - 1)
+    val = constants.MIN_NUMBER-1
 
     tree = {"array": val}
     with pytest.raises(ValidationError):

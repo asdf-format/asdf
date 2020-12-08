@@ -7,6 +7,7 @@ from numpy.testing import assert_array_equal
 import pytest
 
 import asdf
+from asdf import constants
 from asdf import get_config, config_context
 from asdf import extension
 from asdf import resolver
@@ -17,6 +18,7 @@ from asdf import yamlutil
 from asdf import tagged
 from asdf.tests import helpers, CustomExtension
 from asdf.exceptions import AsdfWarning, AsdfConversionWarning, AsdfDeprecationWarning
+
 
 
 class TagReferenceType(types.CustomType):
@@ -617,35 +619,34 @@ def test_schema_resolved_via_entry_points():
     assert tag in repr(s)
 
 
-# @pytest.mark.parametrize('use_numpy', [False, True])
-def test_large_literals():
 
-    largeval = 1 << 64
+@pytest.mark.parametrize("num", [constants.MAX_NUMBER+1, constants.MIN_NUMBER-1])
+def test_max_min_literals(num):
 
     tree = {
-        'large_int': largeval,
+        'test_int': num,
     }
 
     with pytest.raises(ValidationError):
         asdf.AsdfFile(tree)
 
     tree = {
-        'large_list': [largeval],
+        'test_list': [num],
     }
 
     with pytest.raises(ValidationError):
         asdf.AsdfFile(tree)
 
     tree = {
-        largeval: 'large_key',
+        num: 'test_key',
     }
 
     with pytest.raises(ValidationError):
         asdf.AsdfFile(tree)
 
 
-def test_read_large_literal():
-    value = 1 << 64
+@pytest.mark.parametrize("value", [constants.MAX_NUMBER+1, constants.MIN_NUMBER-1])
+def test_read_large_literal(value):
     yaml = f"integer: {value}"
 
     buff = helpers.yaml_to_asdf(yaml)
