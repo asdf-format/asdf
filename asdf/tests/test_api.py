@@ -401,34 +401,18 @@ def test_auto_inline_masked_array(tmpdir):
         assert len(list(af.blocks.internal_blocks)) == 2
 
 
-def test_auto_inline_large_value(tmpdir):
-    outfile = str(tmpdir.join('test.asdf'))
-
-    # Check for large positive numbers
-    val = constants.MAX_NUMBER+1
+@pytest.mark.parametrize("val", [constants.MAX_NUMBER+1, constants.MIN_NUMBER-1])
+def test_auto_inline_large_value(val):
 
     tree = {"array": val}
     with pytest.raises(ValidationError):
-        with asdf.AsdfFile(tree) as af:
-            pass
+        af = asdf.AsdfFile(tree)
+        af.close()
 
     tree = {val: "foo"}
     with pytest.raises(ValidationError):
-        with asdf.AsdfFile(tree) as af:
-            pass
-
-    # Check for large negative numbers
-    val = constants.MIN_NUMBER-1
-
-    tree = {"array": val}
-    with pytest.raises(ValidationError):
-        with asdf.AsdfFile(tree) as af:
-            pass
-
-    tree = {val: "foo"}
-    with pytest.raises(ValidationError):
-        with asdf.AsdfFile(tree) as af:
-            pass
+        af = asdf.AsdfFile(tree)
+        af.close()
 
 
 def test_auto_inline_string_array(tmpdir):

@@ -644,6 +644,9 @@ def test_max_min_literals(num):
     with pytest.raises(ValidationError):
         asdf.AsdfFile(tree)
 
+# TODO mirror the above, but create an empty ASDF, add the tree, then write
+#      to get an error on asdf.write_to
+
 
 @pytest.mark.parametrize("value", [constants.MAX_NUMBER+1, constants.MIN_NUMBER-1])
 def test_read_large_literal(value):
