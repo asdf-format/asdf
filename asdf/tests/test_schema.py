@@ -619,7 +619,6 @@ def test_schema_resolved_via_entry_points():
     assert tag in repr(s)
 
 
-
 @pytest.mark.parametrize("num", [constants.MAX_NUMBER+1, constants.MIN_NUMBER-1])
 def test_max_min_literals(num):
 
@@ -644,8 +643,31 @@ def test_max_min_literals(num):
     with pytest.raises(ValidationError):
         asdf.AsdfFile(tree)
 
-# TODO mirror the above, but create an empty ASDF, add the tree, then write
-#      to get an error on asdf.write_to
+
+@pytest.mark.parametrize("num, ttype", [
+    (constants.MAX_NUMBER+1, "val"),
+    (constants.MAX_NUMBER+1, "list"),
+    (constants.MAX_NUMBER+1, "key"),
+    (constants.MIN_NUMBER-1, "val"),
+    (constants.MIN_NUMBER-1, "list"),
+    (constants.MIN_NUMBER-1, "key")
+])
+def test_max_min_literals_write(num, ttype, tmpdir):
+    outfile = tmpdir / "test.asdf"
+    af = asdf.AsdfFile()
+
+    # Validation doesn't occur here, so no warning/error will be raised.
+    if ttype == "val":
+        af.tree['test_int'] = num
+    elif ttype == "list":
+        af.tree['test_int'] = [num]
+    else:
+        af.tree[num] = 'test_key'
+
+    # Validation will occur on write, though, so detect it.
+    with pytest.raises(ValidationError):
+        af.write_to(outfile)
+    af.close()
 
 
 @pytest.mark.parametrize("value", [constants.MAX_NUMBER+1, constants.MIN_NUMBER-1])

@@ -406,13 +406,11 @@ def test_auto_inline_large_value(val):
 
     tree = {"array": val}
     with pytest.raises(ValidationError):
-        af = asdf.AsdfFile(tree)
-        af.close()
+        asdf.AsdfFile(tree)
 
     tree = {val: "foo"}
     with pytest.raises(ValidationError):
-        af = asdf.AsdfFile(tree)
-        af.close()
+        asdf.AsdfFile(tree)
 
 
 def test_auto_inline_string_array(tmpdir):
