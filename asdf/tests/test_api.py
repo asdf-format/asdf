@@ -401,18 +401,6 @@ def test_auto_inline_masked_array(tmpdir):
         assert len(list(af.blocks.internal_blocks)) == 2
 
 
-@pytest.mark.parametrize("val", [constants.MAX_NUMBER+1, constants.MIN_NUMBER-1])
-def test_auto_inline_large_value(val):
-
-    tree = {"array": val}
-    with pytest.raises(ValidationError):
-        asdf.AsdfFile(tree)
-
-    tree = {val: "foo"}
-    with pytest.raises(ValidationError):
-        asdf.AsdfFile(tree)
-
-
 def test_auto_inline_string_array(tmpdir):
     outfile = str(tmpdir.join('test.asdf'))
     arr = np.array(["peach", "plum", "apricot", "nectarine", "cherry", "pluot"])

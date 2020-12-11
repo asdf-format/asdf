@@ -644,14 +644,8 @@ def test_max_min_literals(num):
         asdf.AsdfFile(tree)
 
 
-@pytest.mark.parametrize("num, ttype", [
-    (constants.MAX_NUMBER+1, "val"),
-    (constants.MAX_NUMBER+1, "list"),
-    (constants.MAX_NUMBER+1, "key"),
-    (constants.MIN_NUMBER-1, "val"),
-    (constants.MIN_NUMBER-1, "list"),
-    (constants.MIN_NUMBER-1, "key")
-])
+@pytest.mark.parametrize("num", [constants.MAX_NUMBER+1, constants.MIN_NUMBER-1])
+@pytest.mark.parametrize("ttype", ["val", "list", "key"])
 def test_max_min_literals_write(num, ttype, tmpdir):
     outfile = tmpdir / "test.asdf"
     af = asdf.AsdfFile()
