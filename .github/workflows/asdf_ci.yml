@@ -1,4 +1,4 @@
-name: Continuous Integration
+name: ASDF Continuous Integration
 
 on:
   push:
@@ -27,3 +27,20 @@ jobs:
     - name: Lint with flake8
       run: |
         flake8 asdf --count --show-source --statistics
+
+  bandit:
+    runs-on: ubuntu-latest
+
+    steps:
+    - uses: actions/checkout@v2
+    - name: Set up Python
+      uses: actions/setup-python@v1
+      with:
+        python-version: 3.8
+    - name: Install Dependencies
+      run: |
+        python -m pip install --upgrade pip
+        pip install bandit
+    - name: Security checks with bandit
+      run: |
+        bandit asdf -r -x tests
