@@ -77,7 +77,7 @@ if os.name == 'nt': # pragma: no cover
             try:
                 os.unlink(old)
             except Exception:
-                pass
+                continue
 else:
     atomic_rename = os.rename
 
