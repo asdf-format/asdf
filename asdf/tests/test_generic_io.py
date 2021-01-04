@@ -275,7 +275,8 @@ def test_http_connection(tree, httpserver):
         ff.tree['science_data'][0] == 42
 
 
-@pytest.mark.remote_data
+# @pytest.mark.remote_data
+@pytest.mark.skip(reason="The _roundtrip assert isn't well defined and returning different lengths in different environments.")
 def test_http_connection_range(tree, rhttpserver):
     path = os.path.join(rhttpserver.tmpdir, 'test.asdf')
     connection = [None]
