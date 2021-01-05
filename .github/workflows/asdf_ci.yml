@@ -39,13 +39,6 @@ jobs:
             python-version: 3.8
             toxenv: docbuild
 
-          - name: Big-endian platform
-            os: ubuntu-latest
-            python-version: 3.9
-            with: 
-              arch: s390x
-            toxenv: s390x
-
           - name: Windows
             os: windows-latest
             python-version: 3.9
@@ -58,12 +51,12 @@ jobs:
 
           - name: Compatibility 
             os: ubuntu-latest
-            python-version: 3.8
+            python-version: 3.9
             toxenv: compatibility
 
           - name: Bandit Security Checks
             os: ubuntu-latest
-            python-version: 3.8
+            python-version: 3.9
             toxenv: bandit
 
           - name: Code Coverage
@@ -73,23 +66,18 @@ jobs:
 
           - name: Code Style Checks
             os: ubuntu-latest
-            python-version: 3.8
+            python-version: 3.9
             toxenv: style
 
           - name: Twine
             os: ubuntu-latest
-            python-version: 3.8
+            python-version: 3.9
             toxenv: twine
 
-          - name: Checkdocx
+          - name: Checkdocs
             os: ubuntu-latest
-            python-version: 3.8
+            python-version: 3.9
             toxenv: checkdocs
-
-          - name: Numpy 1.11
-            os: ubuntu-latest
-            python-version: 3.6.10
-            toxenv: py36-numpy11
 
           - name: Numpy 1.12
             os: ubuntu-latest
@@ -134,14 +122,37 @@ jobs:
         uses: actions/checkout@v2
         with:
           fetch-depth: 0
+          submodules: true
       - name: Set up Python ${{ matrix.python-version }}
         uses: actions/setup-python@v2
         with:
           python-version: ${{ matrix.python-version }}
       - name: Install tox
         run: |
-          git submodule update --init --recursive
           python -m pip install --upgrade pip
           pip install tox
       - name: Run tox
         run: tox -e ${{ matrix.toxenv }}
+
+  big_endian_build:
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        python-version: ['3.9']
+
+    steps:
+    - uses: actions/checkout@v2
+    - name: Set up Python ${{ matrix.python-version }}
+      uses: actions/setup-python@v2
+      with:
+        arch: s390x
+        python-version: ${{ matrix.python-version }}
+    - name: Checkout submodules
+      run: git submodule update --init --recursive
+    - name: Install dependencies
+      run: |
+        python -m pip install --upgrade pip
+          pip install tox
+    - name: Run tox
+      run: |
+        tox -e s390x
