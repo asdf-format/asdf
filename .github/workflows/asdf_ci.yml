@@ -14,10 +14,10 @@ jobs:
       fail-fast: false
       matrix:
         include:
-          - name: Python 3.9 Testing
+          - name: Code Coverage with Python 3.9
             os: ubuntu-latest
             python-version: 3.9
-            toxenv: py39
+            toxenv: coverage
 
           - name: Python 3.8 Testing
             os: ubuntu-latest
@@ -58,11 +58,6 @@ jobs:
             os: ubuntu-latest
             python-version: 3.9
             toxenv: bandit
-
-          - name: Code Coverage
-            os: ubuntu-latest
-            python-version: 3.8
-            toxenv: coverage
 
           - name: Code Style Checks
             os: ubuntu-latest
