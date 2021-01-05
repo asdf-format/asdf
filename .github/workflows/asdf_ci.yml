@@ -39,11 +39,6 @@ jobs:
             python-version: 3.8
             toxenv: docbuild
 
-          - name: Windows
-            os: windows-latest
-            python-version: 3.9
-            toxenv: py39
-
           - name: Mac OS Latest
             os: macos-latest
             python-version: 3.9
@@ -129,7 +124,32 @@ jobs:
       - name: Run tox
         run: tox -e ${{ matrix.toxenv }}
 
+  windows_build:
+    name: Windows with Python ${{ matrix.python-version }}
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        python-version: ['3.9']
+
+    steps:
+    - uses: actions/checkout@v2
+    - name: Set up Python ${{ matrix.python-version }}
+      uses: actions/setup-python@v2
+      with:
+        python-version: ${{ matrix.python-version }}
+        submodules: true
+    - name: Install dependencies
+      run: |
+        PATH=/c/Python39:/c/Python39/Scripts:$PATH
+        python -m pip install --upgrade pip
+        pip install tox
+        choco install python --version=3.9
+    - name: Run tox
+      run: |
+        tox -e py39
+
   big_endian_build:
+    name: Big Endian
     runs-on: ubuntu-latest
     strategy:
       matrix:
@@ -142,8 +162,7 @@ jobs:
       with:
         arch: s390x
         python-version: ${{ matrix.python-version }}
-    - name: Checkout submodules
-      run: git submodule update --init --recursive
+        submodules: true
     - name: Install dependencies
       run: |
         python -m pip install --upgrade pip
