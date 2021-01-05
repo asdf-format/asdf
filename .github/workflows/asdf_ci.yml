@@ -56,7 +56,7 @@ jobs:
 
           - name: Code Style Checks
             os: ubuntu-latest
-            python-version: 3.9
+            python-version: 3.8
             toxenv: style
 
           - name: Twine
