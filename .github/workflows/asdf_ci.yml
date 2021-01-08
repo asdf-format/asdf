@@ -1,4 +1,4 @@
-name: ASDF Continuous Integration
+name: ASDF CI
 
 on:
   push:
