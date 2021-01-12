@@ -57,7 +57,7 @@ class CustomExtension:
 
 
 def test_sharing(tmpdir):
-    x = np.arange(0, 10, dtype=np.float)
+    x = np.arange(0, 10, dtype=float)
     tree = {
         'science_data': x,
         'subset': x[3:-3],
@@ -133,7 +133,7 @@ def test_all_dtypes(tmpdir):
 
 
 def test_dont_load_data():
-    x = np.arange(0, 10, dtype=np.float)
+    x = np.arange(0, 10, dtype=float)
     tree = {
         'science_data': x,
         'subset': x[3:-3],
@@ -266,7 +266,7 @@ def test_table_nested_fields(tmpdir):
 
 
 def test_inline():
-    x = np.arange(0, 10, dtype=np.float)
+    x = np.arange(0, 10, dtype=float)
     tree = {
         'science_data': x,
         'subset': x[3:-3],
@@ -298,7 +298,7 @@ def test_inline_bare():
 
 
 def test_mask_roundtrip(tmpdir):
-    x = np.arange(0, 10, dtype=np.float)
+    x = np.arange(0, 10, dtype=float)
     m = ma.array(x, mask=x > 5)
     tree = {
         'masked_array': m,
@@ -318,7 +318,7 @@ def test_mask_roundtrip(tmpdir):
     helpers.assert_roundtrip_tree(tree, tmpdir, asdf_check_func=check_asdf)
 
 def test_len_roundtrip(tmpdir):
-    sequence = np.arange(0, 10, dtype=np.int)
+    sequence = np.arange(0, 10, dtype=int)
     tree = {
         'sequence': sequence
         }

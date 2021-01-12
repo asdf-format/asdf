@@ -17,13 +17,13 @@ from .helpers import assert_tree_match
 def test_external_reference(tmpdir):
     exttree = {
         'cool_stuff': {
-            'a': np.array([0, 1, 2], np.float),
-            'b': np.array([3, 4, 5], np.float)
+            'a': np.array([0, 1, 2], float),
+            'b': np.array([3, 4, 5], float)
             },
         'list_of_stuff': [
             'foobar',
             42,
-            np.array([7, 8, 9], np.float)
+            np.array([7, 8, 9], float)
             ]
         }
     external_path = os.path.join(str(tmpdir), 'external.asdf')
@@ -168,7 +168,7 @@ def test_external_reference_invalid_fragment(tmpdir):
         'list_of_stuff': [
             'foobar',
             42,
-            np.array([7, 8, 9], np.float)
+            np.array([7, 8, 9], float)
             ]
         }
     external_path = os.path.join(str(tmpdir), 'external.asdf')
@@ -203,8 +203,8 @@ def test_make_reference(tmpdir):
         # Include some ~ and / in the name to make sure that escaping
         # is working correctly
         'f~o~o/': {
-            'a': np.array([0, 1, 2], np.float),
-            'b': np.array([3, 4, 5], np.float)
+            'a': np.array([0, 1, 2], float),
+            'b': np.array([3, 4, 5], float)
             }
         }
     external_path = os.path.join(str(tmpdir), 'external.asdf')

@@ -434,9 +434,9 @@ def test_dangling_file_handle(tmpdir):
 
     # Create FITS file to use for test
     hdulist = fits.HDUList()
-    hdulist.append(fits.ImageHDU(np.arange(512, dtype=np.float)))
-    hdulist.append(fits.ImageHDU(np.arange(512, dtype=np.float)))
-    hdulist.append(fits.ImageHDU(np.arange(512, dtype=np.float)))
+    hdulist.append(fits.ImageHDU(np.arange(512, dtype=float)))
+    hdulist.append(fits.ImageHDU(np.arange(512, dtype=float)))
+    hdulist.append(fits.ImageHDU(np.arange(512, dtype=float)))
     hdulist.writeto(fits_filename)
     hdulist.close()
 
