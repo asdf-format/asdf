@@ -26,7 +26,7 @@ class CustomTestType(CustomType):
 
 
 def create_small_tree():
-    x = np.arange(0, 10, dtype=np.float)
+    x = np.arange(0, 10, dtype=float)
     tree = {
         'science_data': x,
         'subset': x[3:-3],

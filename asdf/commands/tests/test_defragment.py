@@ -13,7 +13,7 @@ from asdf.tests.helpers import get_file_sizes, assert_tree_match
 
 
 def _test_defragment(tmpdir, codec):
-    x = np.arange(0, 1000, dtype=np.float)
+    x = np.arange(0, 1000, dtype=float)
 
     tree = {
         'science_data': x,
