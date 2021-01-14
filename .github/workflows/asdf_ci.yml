@@ -2,9 +2,13 @@ name: ASDF CI
 
 on:
   push:
-    branches: [ master ]
+    branches:
+      - master
+      - stable
+      - '*.x'
+    tags:
+      - '*'
   pull_request:
-    branches: [ master ]
 
 jobs:
   tox:
@@ -44,7 +48,7 @@ jobs:
             python-version: 3.9
             toxenv: py39
 
-          - name: Compatibility 
+          - name: Compatibility
             os: ubuntu-latest
             python-version: 3.9
             toxenv: compatibility
