@@ -5,6 +5,7 @@ import os
 import sys
 import warnings
 from contextlib import contextmanager
+from pathlib import Path
 
 try:
     from astropy.coordinates import ICRS
@@ -43,30 +44,21 @@ except ImportError:
     INTERNET_OFF = False
 
 
-if sys.version_info >= (3, 7):
-    from importlib import resources
-else:
-    try:
-        import importlib_resources as resources
-    except ImportError:
-        resources = None
-
-
 __all__ = ['get_test_data_path', 'assert_tree_match', 'assert_roundtrip_tree',
            'yaml_to_asdf', 'get_file_sizes', 'display_warnings']
 
 
 def get_test_data_path(name, module=None):
-    if resources is None:
-        raise RuntimeError("The importlib_resources package is required to get"
-                           " test data on systems with Python < 3.7")
-
     if module is None:
         from . import data as test_data
         module = test_data
 
-    with resources.path(module, name) as path:
-        return str(path)
+    module_root = Path(module.__file__).parent
+
+    if name is None or name == "":
+        return str(module_root)
+    else:
+        return str(module_root/name)
 
 
 def assert_tree_match(old_tree, new_tree, ctx=None,
