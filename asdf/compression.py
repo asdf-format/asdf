@@ -203,7 +203,11 @@ def decompress(fd, used_size, data_size, compression):
             raise ValueError("Decompressed data too long")
         elif i + len(decoded) < data_size:
             raise ValueError("Decompressed data too short")
-        buffer[i:i+len(decoded)] = decoded
+        # Previous versions of numpy permitted assignment of an
+        # empty bytes object to an empty array range, but starting
+        # with numpy 1.20 this raises an error.
+        elif len(decoded) > 0:
+            buffer[i:i+len(decoded)] = decoded
 
     return buffer
 

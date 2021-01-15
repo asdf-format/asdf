@@ -137,8 +137,8 @@ class AsdfInFits(asdf.AsdfFile):
         from astropy.io import fits
 
         hdulist = fits.HDUList()
-        hdulist.append(fits.ImageHDU(np.arange(512, dtype=np.float), name='SCI'))
-        hdulist.append(fits.ImageHDU(np.arange(512, dtype=np.float), name='DQ'))
+        hdulist.append(fits.ImageHDU(np.arange(512, dtype=float), name='SCI'))
+        hdulist.append(fits.ImageHDU(np.arange(512, dtype=float), name='DQ'))
 
         tree = {
             'model': {

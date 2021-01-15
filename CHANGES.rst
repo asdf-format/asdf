@@ -3,6 +3,8 @@
 
 - Fix bug causing test collection failures in some environments. [#889]
 
+- Fix bug when decompressing arrays with numpy 1.20.  [#901]
+
 2.7.1 (2020-08-18)
 ------------------
 
