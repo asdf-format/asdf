@@ -63,7 +63,7 @@ class Resolver:
         warnings.warn("The 'add_mapping' method is deprecated.", AsdfDeprecationWarning)
 
         if prefix != self._prefix:
-            raise ValueError(f"Prefix '{prefix}' does not match the Resolver prefix '{self._prefix}'")
+            raise ValueError("Prefix '{}' does not match the Resolver prefix '{}'".format(prefix, self._prefix))
 
         self._mappings = self._mappings + self._validate_mappings(mappings)
 

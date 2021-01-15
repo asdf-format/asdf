@@ -52,7 +52,7 @@ class IntegerType(AsdfType):
 
     def __init__(self, value, storage_type='internal'):
         if storage_type not in ['internal', 'inline']:
-            raise ValueError(f"storage_type '{storage_type}' is not a recognized storage type")
+            raise ValueError("storage_type '{}' is not a recognized storage type".format(storage_type))
         self._value = value
         self._sign = '-' if value < 0 else '+'
         self._storage = storage_type
