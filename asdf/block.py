@@ -1124,7 +1124,7 @@ class Block:
         self.input_compression = self.output_compression
 
         if allocated_size < used_size:
-            raise RuntimeError(f"Block used size {used_size} larger than allocated size {allocated_size}")
+            raise RuntimeError("Block used size {} larger than allocated size {}".format(used_size, allocated_size))
 
         if self.checksum is not None:
             checksum = self.checksum
@@ -1163,7 +1163,7 @@ class Block:
                     fd.seek(end)
             else:
                 if used_size != data_size:
-                    raise RuntimeError(f"Block used size {used_size} is not equal to the data size {data_size}")
+                    raise RuntimeError("Block used size {} is not equal to the data size {}".format(used_size, data_size))
                 fd.write_array(self._data)
 
     @property
