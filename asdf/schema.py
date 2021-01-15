@@ -329,7 +329,9 @@ def _load_schema(url):
             json_data = fd.read().decode('utf-8')
             result = json.loads(json_data, object_pairs_hook=OrderedDict)
         else:
-            result = yaml.load(fd, Loader=yamlutil.AsdfLoader)
+            # The following call to yaml.load is safe because we're
+            # using a loader that inherits from pyyaml's SafeLoader.
+            result = yaml.load(fd, Loader=yamlutil.AsdfLoader) # nosec
     return result, fd.uri
 
 

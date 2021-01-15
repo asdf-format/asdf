@@ -51,7 +51,8 @@ class IntegerType(AsdfType):
     _value_cache = dict()
 
     def __init__(self, value, storage_type='internal'):
-        assert storage_type in ['internal', 'inline'], "Invalid storage type given"
+        if storage_type not in ['internal', 'inline']:
+            raise ValueError(f"storage_type '{storage_type}' is not a recognized storage type")
         self._value = value
         self._sign = '-' if value < 0 else '+'
         self._storage = storage_type
