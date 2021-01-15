@@ -4,6 +4,20 @@
 Changes
 *******
 
+What's New in ASDF 2.7.2?
+=========================
+
+The ASDF Standard is at v1.5.0.
+
+Changes include:
+
+* Fix bug causing test collection failures under Python 3.9.
+
+* Fix bug when decompressing arrays with numpy 1.20.
+
+* Replace ``assert`` statements with ``raise`` at the behest
+  of the bandit security linter.
+
 What's New in ASDF 2.7.1?
 =========================
 
