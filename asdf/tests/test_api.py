@@ -2,7 +2,9 @@
 
 import os
 import io
+import getpass
 import pathlib
+import sys
 
 import numpy as np
 from numpy.testing import assert_array_equal
@@ -69,6 +71,10 @@ def test_warning_deprecated_open(tmpdir):
             assert_tree_match(tree, af.tree)
 
 
+@pytest.mark.skipif(
+    not sys.platform.startswith('win') and getpass.getuser() == 'root',
+    reason="Cannot make file read-only if user is root"
+)
 def test_open_readonly(tmpdir):
 
     tmpfile = str(tmpdir.join('readonly.asdf'))

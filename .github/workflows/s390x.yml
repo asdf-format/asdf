@@ -1,0 +1,41 @@
+name: s390x
+
+on:
+  push:
+    tags:
+      - '*'
+  schedule:
+    # Run every Monday at 6am UTC
+    - cron: '0 6 * * 1'
+
+jobs:
+  pytest:
+    runs-on: ubuntu-18.04
+    name: Python 3.7
+    steps:
+      - uses: actions/checkout@v2
+        with:
+          fetch-depth: 0
+          submodules: true
+      - uses: uraimo/run-on-arch-action@v2.0.5
+        name: Run tests
+        id: build
+        with:
+          arch: s390x
+          distro: buster
+          shell: /bin/bash
+          install: |
+            apt-get update -q -y
+            apt-get install -q -y git \
+                                  python3 \
+                                  python3-astropy \
+                                  python3-lz4 \
+                                  python3-numpy \
+                                  python3-venv \
+                                  python3-wheel
+          run: |
+            python3 -m venv --system-site-packages tests
+            source tests/bin/activate
+            pip3 install --upgrade pip setuptools gwcs==0.9.1 pytest==5.4.3 pytest-doctestplus==0.8.0
+            pip3 install .[all,tests]
+            python3 -m pytest --remote-data
