@@ -198,9 +198,11 @@ def decompress(fd, used_size, data_size, compression):
         decoded = decoder.flush()
         if i + len(decoded) > data_size:
             raise ValueError("Decompressed data too long")
-        elif i + len(decoded) < data_size:
-            raise ValueError("Decompressed data too short")
         buffer.data[i:i+len(decoded)] = decoded
+        i += len(decoded)
+
+    if i < data_size:
+        raise ValueError("Decompressed data too short")
 
     return buffer
 
