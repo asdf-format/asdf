@@ -7,7 +7,6 @@ on:
   schedule:
     # Run every Monday at 6am UTC
     - cron: '0 6 * * 1'
-  pull_request:
 
 jobs:
   pytest:
