@@ -25,3 +25,8 @@ BLOCK_FLAG_STREAMED = 0x1
 
 # All arrays shorter than this default to inline storage.
 DEFAULT_AUTO_INLINE = 100
+
+# ASDF max number size
+MAX_BITS = 63
+MAX_NUMBER = (1<<MAX_BITS) - 1
+MIN_NUMBER = -((1<<MAX_BITS) - 2)

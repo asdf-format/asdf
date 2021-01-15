@@ -13,6 +13,7 @@ import pytest
 from jsonschema.exceptions import ValidationError
 
 import asdf
+from asdf import constants
 from asdf import get_config, config_context
 from asdf import treeutil
 from asdf import extension
@@ -28,7 +29,6 @@ from .helpers import (
     assert_no_warnings,
 )
 
-from .. import constants
 
 
 def test_get_data_from_closed_file(tmpdir):
@@ -405,24 +405,6 @@ def test_auto_inline_masked_array(tmpdir):
         af.write_to(outfile, auto_inline=array_length-1)
         assert len(list(af.blocks.inline_blocks)) == 0
         assert len(list(af.blocks.internal_blocks)) == 2
-
-
-def test_auto_inline_large_value(tmpdir):
-    outfile = str(tmpdir.join('test.asdf'))
-    arr = np.array([2**52 + 1] + [k for k in range(constants.DEFAULT_AUTO_INLINE)])
-    tree = {"array": arr}
-
-    with asdf.AsdfFile(tree) as af:
-        af.write_to(outfile)
-        assert len(list(af.blocks.inline_blocks)) == 0
-        assert len(list(af.blocks.internal_blocks)) == 1
-
-        with pytest.raises(ValidationError):
-            af.write_to(outfile, auto_inline=150)
-
-        af.write_to(outfile, auto_inline=5)
-        assert len(list(af.blocks.inline_blocks)) == 0
-        assert len(list(af.blocks.internal_blocks)) == 1
 
 
 def test_auto_inline_string_array(tmpdir):
