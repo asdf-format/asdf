@@ -1,4 +1,4 @@
-name: ASDF CI
+name: CI
 
 on:
   push:
