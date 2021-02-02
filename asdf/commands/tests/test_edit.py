@@ -21,17 +21,22 @@ def create_editor(tmp_path):
     Fixture providing a function that generates an editor script.
     """
     def _create_editor(pattern, replacement):
+        if isinstance(pattern, str):
+            pattern = pattern.encode("utf-8")
+        if isinstance(replacement, str):
+            replacement = replacement.encode("utf-8")
+
         editor_path = tmp_path / "editor.py"
 
         content = f"""import re
 import sys
 
-with open(sys.argv[1], "r") as file:
+with open(sys.argv[1], "rb") as file:
     content = file.read()
 
 content = re.sub({pattern!r}, {replacement!r}, content, flags=(re.DOTALL | re.MULTILINE))
 
-with open(sys.argv[1], "w") as file:
+with open(sys.argv[1], "wb") as file:
     file.write(content)
 """
 
