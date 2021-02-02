@@ -122,8 +122,10 @@ def write_edited_yaml_larger(path, new_content, version):
     # Since the original file may be large, create the temporary
     # file in the same directory to avoid filling up the system
     # temporary area.
-    with tempfile.NamedTemporaryFile(dir=os.path.dirname(path), prefix=prefix, suffix=".asdf") as temp_file:
-        with generic_io.get_file(temp_file, mode="w") as fd:
+    temp_file = tempfile.NamedTemporaryFile(dir=os.path.dirname(path), prefix=prefix, suffix=".asdf", delete=False)
+    try:
+        temp_file.close()
+        with generic_io.get_file(temp_file.name, mode="w") as fd:
             fd.write(new_content)
             # Allocate additional space for future YAML updates:
             pad_length = util.calculate_padding(len(new_content), True, fd.block_size)
@@ -144,6 +146,8 @@ def write_edited_yaml_larger(path, new_content, version):
 
         # Swap in the new version of the file atomically:
         shutil.copy(temp_file.name, path)
+    finally:
+        os.unlink(temp_file.name)
 
 
 def write_edited_yaml(path, new_content, available_bytes):
