@@ -144,6 +144,7 @@ def write_edited_yaml_larger(path, new_content, version):
                 blocks.finish_reading_internal_blocks()
                 blocks.write_internal_blocks_serial(fd)
                 blocks.write_block_index(fd, ctx)
+                blocks.close()
 
         # Swap in the new version of the file atomically:
         shutil.copy(temp_file.name, path)
