@@ -5,7 +5,9 @@ Contains commands for lightweight text editing of an ASDF file.
 import io
 import os
 import shutil
-import subprocess
+# Marked safe because the editor command is specified by an
+# environment variable that the user controls.
+import subprocess # nosec
 import sys
 import tempfile
 import yaml
@@ -189,17 +191,21 @@ def edit(path):
     original_version = parse_version(original_content)
 
     prefix = os.path.splitext(os.path.basename(path))[0] + "-"
-    with tempfile.NamedTemporaryFile(prefix=prefix, suffix=".yaml") as temp_file:
+    # We can't use temp_file's automatic delete because Windows
+    # won't allow reading the file from the editor process unless
+    # it is closed here.
+    temp_file = tempfile.NamedTemporaryFile(prefix=prefix, suffix=".yaml", delete=False)
+    try:
         # Write the YAML to a temporary path:
         temp_file.write(original_content)
-        temp_file.flush()
+        temp_file.close()
 
         # Loop so that the user can correct errors in the edited file:
         while True:
             open_editor(temp_file.name)
 
-            temp_file.seek(0)
-            new_content = temp_file.read()
+            with open(temp_file.name, "rb") as f:
+                new_content = f.read()
 
             if new_content == original_content:
                 print("No changes made to file")
@@ -250,6 +256,8 @@ def edit(path):
             # Break out of the loop so that we can update the
             # original file.
             break
+    finally:
+        os.unlink(temp_file.name)
 
     if len(new_content) <= available_bytes:
         # File has sufficient space allocated in the YAML area.
@@ -322,4 +330,6 @@ def open_editor(path):
     Launch an editor process with the file at path opened.
     """
     editor = os.environ.get("EDITOR", DEFAULT_EDITOR)
-    subprocess.run(f"{editor} {path}", check=True, shell=True)
+    # Marked safe because the editor command is specified by an
+    # environment variable that the user controls.
+    subprocess.run(f"{editor} {path}", check=True, shell=True) # nosec
