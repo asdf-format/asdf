@@ -139,8 +139,9 @@ def write_edited_yaml_larger(path, new_content, version):
                     len(constants.BLOCK_MAGIC),
                 )
                 ctx = AsdfFile(version=version)
-                blocks = BlockManager(ctx)
+                blocks = BlockManager(ctx, copy_arrays=False, lazy_load=False)
                 blocks.read_internal_blocks(original_fd, past_magic=True, validate_checksums=False)
+                blocks.finish_reading_internal_blocks()
                 blocks.write_internal_blocks_serial(fd)
                 blocks.write_block_index(fd, ctx)
 

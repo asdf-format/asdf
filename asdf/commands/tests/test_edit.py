@@ -3,6 +3,8 @@ import os
 import re
 
 import numpy as np
+from numpy.testing import assert_array_equal
+
 import pytest
 
 import asdf
@@ -149,8 +151,11 @@ def test_no_blocks_decrease_size(tmp_path, create_editor, version):
 def test_with_blocks(tmp_path, create_editor, version):
     file_path = str(tmp_path/"test.asdf")
 
+    array1 = np.random.rand(constants.DEFAULT_AUTO_INLINE + 1)
+    array2 = np.random.rand(constants.DEFAULT_AUTO_INLINE + 1)
     with asdf.AsdfFile(version=version) as af:
-        af["array"] = np.arange(constants.DEFAULT_AUTO_INLINE + 1)
+        af["array1"] = array1
+        af["array2"] = array2
         af["foo"] = "bar"
         af.write_to(file_path)
 
@@ -160,13 +165,19 @@ def test_with_blocks(tmp_path, create_editor, version):
 
     with asdf.open(file_path) as af:
         assert af["foo"] == "baz"
+        assert_array_equal(af["array1"], array1)
+        assert_array_equal(af["array2"], array2)
+
 
 
 def test_with_blocks_increase_size(tmp_path, create_editor, version, mock_input):
     file_path = str(tmp_path/"test.asdf")
 
+    array1 = np.random.rand(constants.DEFAULT_AUTO_INLINE + 1)
+    array2 = np.random.rand(constants.DEFAULT_AUTO_INLINE + 1)
     with asdf.AsdfFile(version=version) as af:
-        af["array"] = np.arange(constants.DEFAULT_AUTO_INLINE + 1)
+        af["array1"] = array1
+        af["array2"] = array2
         af["foo"] = "bar"
         af.write_to(file_path)
 
@@ -184,6 +195,9 @@ def test_with_blocks_increase_size(tmp_path, create_editor, version, mock_input)
 
     with asdf.open(file_path) as af:
         assert af["foo"] == new_value
+        assert_array_equal(af["array1"], array1)
+        assert_array_equal(af["array2"], array2)
+
 
 
 def test_with_blocks_decrease_size(tmp_path, create_editor, version):
@@ -191,7 +205,11 @@ def test_with_blocks_decrease_size(tmp_path, create_editor, version):
 
     original_value = "a" * 32768
 
+    array1 = np.random.rand(constants.DEFAULT_AUTO_INLINE + 1)
+    array2 = np.random.rand(constants.DEFAULT_AUTO_INLINE + 1)
     with asdf.AsdfFile(version=version) as af:
+        af["array1"] = array1
+        af["array2"] = array2
         af["foo"] = original_value
         af.write_to(file_path)
 
@@ -201,6 +219,8 @@ def test_with_blocks_decrease_size(tmp_path, create_editor, version):
 
     with asdf.open(file_path) as af:
         assert af["foo"] == "bar"
+        assert_array_equal(af["array1"], array1)
+        assert_array_equal(af["array2"], array2)
 
 
 def test_no_changes(tmp_path, create_editor, version):
