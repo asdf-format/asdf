@@ -169,7 +169,6 @@ def test_with_blocks(tmp_path, create_editor, version):
         assert_array_equal(af["array2"], array2)
 
 
-
 def test_with_blocks_increase_size(tmp_path, create_editor, version, mock_input):
     file_path = str(tmp_path/"test.asdf")
 
