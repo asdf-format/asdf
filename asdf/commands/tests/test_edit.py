@@ -250,6 +250,20 @@ def test_update_asdf_standard_version(tmp_path, create_editor, version, mock_inp
             assert main.main_from_args(["edit", file_path]) == 1
 
 
+def test_update_yaml_version(tmp_path, create_editor, version, mock_input):
+    file_path = str(tmp_path/"test.asdf")
+
+    with asdf.AsdfFile(version=version) as af:
+        af["foo"] = "bar"
+        af.write_to(file_path)
+
+    os.environ["EDITOR"] = create_editor(r"^%YAML 1.1$", "%YAML 1.2")
+
+    with file_not_modified(file_path):
+        with mock_input(r"\(c\)ontinue editing or \(a\)bort\?", "a"):
+            assert main.main_from_args(["edit", file_path]) == 1
+
+
 def test_bad_yaml(tmp_path, create_editor, version, mock_input):
     file_path = str(tmp_path/"test.asdf")
 

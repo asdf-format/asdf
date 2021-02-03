@@ -4,6 +4,7 @@ Contains commands for lightweight text editing of an ASDF file.
 
 import io
 import os
+import re
 import shutil
 # Marked safe because the editor command is specified by an
 # environment variable that the user controls.
@@ -194,7 +195,8 @@ def edit(path):
 
         original_content, available_bytes, contains_blocks = read_yaml(fd)
 
-    original_version = parse_version(original_content)
+    original_asdf_version = parse_asdf_version(original_content)
+    original_yaml_version = parse_yaml_version(original_content)
 
     prefix = os.path.splitext(os.path.basename(path))[0] + "-"
     # We can't use temp_file's automatic delete because Windows
@@ -217,9 +219,19 @@ def edit(path):
                 print("No changes made to file")
                 return 0
 
-            new_version = parse_version(new_content)
-            if new_version != original_version:
-                print("Error: cannot modify ASDF Standard version using this tool.")
+            try:
+                new_asdf_version = parse_asdf_version(new_content)
+                new_yaml_version = parse_yaml_version(new_content)
+            except Exception as e:
+                print("Error: failed to parse ASDF header: " + str(e))
+                choice = request_input("(c)ontinue editing or (a)bort? ", ["c", "a"])
+                if choice == "a":
+                    return 1
+                else:
+                    continue
+
+            if new_asdf_version != original_asdf_version or new_yaml_version != original_yaml_version:
+                print("Error: cannot modify ASDF Standard or YAML version using this tool.")
                 choice = request_input("(c)ontinue editing or (a)bort? ", ["c", "a"])
                 if choice == "a":
                     return 1
@@ -280,10 +292,10 @@ def edit(path):
         if choice == "a":
             return 1
         else:
-            write_edited_yaml_larger(path, new_content, new_version)
+            write_edited_yaml_larger(path, new_content, new_asdf_version)
 
 
-def parse_version(content):
+def parse_asdf_version(content):
     """
     Extract the ASDF Standard version from YAML content.
 
@@ -298,6 +310,25 @@ def parse_version(content):
     """
     comments = AsdfFile._read_comment_section(generic_io.get_file(io.BytesIO(content)))
     return AsdfFile._find_asdf_version_in_comments(comments)
+
+
+def parse_yaml_version(content):
+    """
+    Extract the YAML version from YAML content.
+
+    Parameters
+    ----------
+    content : bytes
+
+    Returns
+    -------
+    bytes
+        YAML version string.
+    """
+    match = re.search(b"^%YAML (.*)$", content, flags=re.MULTILINE)
+    if match is None:
+        raise ValueError("YAML version number not found")
+    return match.group(1)
 
 
 def print_exception(e):
