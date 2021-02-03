@@ -1,4 +1,4 @@
-name: Downstream Packages
+name: Downstream
 
 on:
   workflow_dispatch:

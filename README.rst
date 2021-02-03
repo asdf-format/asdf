@@ -1,8 +1,17 @@
 ASDF - Advanced Scientific Data Format
 ======================================
 
-.. image:: https://travis-ci.com/asdf-format/asdf.svg?branch=master
-    :target: https://travis-ci.com/asdf-format/asdf
+.. image:: https://github.com/asdf-format/asdf/workflows/CI/badge.svg
+    :target: https://github.com/asdf-format/asdf/actions
+    :alt: CI Status
+
+.. image:: https://github.com/asdf-format/asdf/workflows/s390x/badge.svg
+    :target: https://github.com/asdf-format/asdf/actions
+    :alt: s390x Status
+
+.. image:: https://github.com/asdf-format/asdf/workflows/Downstream/badge.svg
+    :target: https://github.com/asdf-format/asdf/actions
+    :alt: Downstream CI Status
 
 .. image:: https://readthedocs.org/projects/asdf/badge/?version=latest
     :target: https://asdf.readthedocs.io/en/latest/
