@@ -41,7 +41,7 @@
   than defaulting to storing all arrays internally. [#882]
 
 - Add ``edit`` subcommand to asdftool for efficient editing of
-  the YAML portion of an ASDF file.  [#873]
+  the YAML portion of an ASDF file.  [#873, #922]
 
 2.7.2 (2021-01-15)
 ------------------

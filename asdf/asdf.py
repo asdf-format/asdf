@@ -755,11 +755,15 @@ class AsdfFile:
         return version
 
     @classmethod
-    def _parse_comment_section(cls, content):
+    def _read_comment_section(cls, fd):
         """
-        Parses the comment section, between the header line and the
+        Reads the comment section, between the header line and the
         Tree or first block.
         """
+        content = fd.read_until(
+            b'(%YAML)|(' + constants.BLOCK_MAGIC + b')', 5,
+            "start of content", include=False, exception=False)
+
         comments = []
 
         lines = content.splitlines()
@@ -830,10 +834,7 @@ class AsdfFile:
         self._file_format_version = cls._parse_header_line(header_line)
         self.version = self._file_format_version
 
-        comment_section = fd.read_until(
-            b'(%YAML)|(' + constants.BLOCK_MAGIC + b')', 5,
-            "start of content", include=False, exception=False)
-        self._comments = cls._parse_comment_section(comment_section)
+        self._comments = cls._read_comment_section(fd)
 
         version = cls._find_asdf_version_in_comments(self._comments)
         if version is not None:
