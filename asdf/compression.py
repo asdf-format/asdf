@@ -1,6 +1,9 @@
 import struct
 
 import numpy as np
+import warnings
+
+from .exceptions import AsdfWarning
 
 
 DEFAULT_BLOCK_SIZE = 1 << 22  #: Decompressed block size in bytes, 4MiB
@@ -30,9 +33,21 @@ def validate(compression):
         compression = compression.decode('ascii')
 
     compression = compression.strip('\0')
-    if compression not in ('zlib', 'bzp2', 'lz4', 'input'):
+    
+    builtin_labels = ('zlib', 'bzp2', 'lz4', 'input')
+    ext_labels = _get_all_compression_extension_labels()
+    all_labels = ext_labels + builtin_labels
+    
+    # An extension is allowed to override a builtin compression or another extension,
+    # but let's warn the user of this.
+    # TODO: is this the desired behavior?
+    for i,label in enumerate(all_labels):
+        if label in all_labels[i+1:]:
+            warnings.warn(f'Found more than one compressor for "{label}"', AsdfWarning)
+    
+    if compression not in all_labels:
         raise ValueError(
-            "Supported compression types are: 'zlib', 'bzp2', 'lz4', or 'input'")
+            f"Supported compression types are: {all_labels}, not '{compression}'")
 
     return compression
 
@@ -78,8 +93,47 @@ class Lz4Decompressor:
             return output + self.decompress(data)
 
 
+def _get_compressor_from_extensions(compression):
+    '''
+    Look at the loaded ASDF extensions and see if any of them
+    know how to handle this kind of compression.
+    Returns None if no match found.
+    '''
+    # TODO: in ASDF 3, this will be done by the ExtensionManager
+    extensions = asdf.config.get_config().extensions
+    for ext in extensions:
+        for comp in ext.compressors:
+            for label in comp.labels:
+                if compression == label:
+                    return comp
+    return None
+    
+
+def _get_all_compression_extension_labels():
+    '''
+    Get the list of compression labels supported via extensions
+    '''
+    # TODO: in ASDF 3, this will be done by the ExtensionManager
+    labels = []
+    extensions = asdf.config.get_config().extensions
+    for ext in extensions:
+        for comp in ext.compressors:
+            for label in comp.labels:
+                labels += [label]
+    return labels
+    
+    
 def _get_decoder(compression):
-    if compression == 'zlib':
+    ext_comp = _get_compressor_from_extensions(compression)
+    
+    # Check if we have any options set for this decompressor
+    options = asdf.config.get_config().compression_options
+    options = options.get(compression,{})
+    
+    if ext_comp != None:
+        # Use an extension before builtins
+        return ext_comp(**options)
+    elif compression == 'zlib':
         try:
             import zlib
         except ImportError:
@@ -87,7 +141,7 @@ def _get_decoder(compression):
                 "Your Python does not have the zlib library, "
                 "therefore the compressed block in this ASDF file "
                 "can not be decompressed.")
-        return zlib.decompressobj()
+        return zlib.decompressobj(**options)
     elif compression == 'bzp2':
         try:
             import bz2
@@ -96,7 +150,7 @@ def _get_decoder(compression):
                 "Your Python does not have the bz2 library, "
                 "therefore the compressed block in this ASDF file "
                 "can not be decompressed.")
-        return bz2.BZ2Decompressor()
+        return bz2.BZ2Decompressor(**options)
     elif compression == 'lz4':
         try:
             import lz4.block
@@ -105,14 +159,23 @@ def _get_decoder(compression):
                 "lz4 library in not installed in your Python environment, "
                 "therefore the compressed block in this ASDF file "
                 "can not be decompressed.")
-        return Lz4Decompressor(lz4.block)
+        return Lz4Decompressor(lz4.block, **options)
     else:
         raise ValueError(
             "Unknown compression type: '{0}'".format(compression))
 
 
 def _get_encoder(compression):
-    if compression == 'zlib':
+    ext_comp = _get_compressor_from_extensions(compression)
+    
+    # Check if we have any options set for this compressor
+    options = asdf.config.get_config().compression_options
+    options = options.get(compression,{})
+    
+    if ext_comp != None:
+        # Use an extension before builtins
+        return ext_comp(**options)
+    elif compression == 'zlib':
         try:
             import zlib
         except ImportError:
@@ -120,7 +183,7 @@ def _get_encoder(compression):
                 "Your Python does not have the zlib library, "
                 "therefore the block in this ASDF file "
                 "can not be compressed.")
-        return zlib.compressobj()
+        return zlib.compressobj(**options)
     elif compression == 'bzp2':
         try:
             import bz2
@@ -129,7 +192,7 @@ def _get_encoder(compression):
                 "Your Python does not have the bz2 library, "
                 "therefore the block in this ASDF file "
                 "can not be compressed.")
-        return bz2.BZ2Compressor()
+        return bz2.BZ2Compressor(**options)
     elif compression == 'lz4':
         try:
             import lz4.block
@@ -138,7 +201,7 @@ def _get_encoder(compression):
                 "lz4 library in not installed in your Python environment, "
                 "therefore the block in this ASDF file "
                 "can not be compressed.")
-        return Lz4Compressor(lz4.block)
+        return Lz4Compressor(lz4.block, **options)
     else:
         raise ValueError(
             "Unknown compression type: '{0}'".format(compression))
@@ -188,26 +251,31 @@ def decompress(fd, used_size, data_size, compression):
 
     i = 0
     for block in fd.read_blocks(used_size):
-        decoded = decoder.decompress(block)
-        if i + len(decoded) > data_size:
-            raise ValueError("Decompressed data too long")
-        buffer.data[i:i+len(decoded)] = decoded
-        i += len(decoded)
+        if hasattr(decoder, 'decompress_into'):
+            i += decoder.decompress_into(block, out=buffer[i:])
+        else:
+            decoded = decoder.decompress(block)
+            if i + len(decoded) > data_size:
+                raise ValueError("Decompressed data too long")
+            buffer.data[i:i+len(decoded)] = decoded
+            i += len(decoded)
 
     if hasattr(decoder, 'flush'):
         decoded = decoder.flush()
         if i + len(decoded) > data_size:
             raise ValueError("Decompressed data too long")
-        buffer.data[i:i+len(decoded)] = decoded
+        buffer[i:i+len(decoded)] = decoded
         i += len(decoded)
-
-    if i < data_size:
-        raise ValueError("Decompressed data too short")
+    
+    if hasattr(decoder, '_buffer'):
+        assert decoder._buffer is None
+    if i != data_size:
+        raise ValueError("Decompressed data wrong size")
 
     return buffer
 
 
-def compress(fd, data, compression, block_size=DEFAULT_BLOCK_SIZE):
+def compress(fd, data, compression, block_size=None):
     """
     Compress array data and write to a file.
 
@@ -222,20 +290,33 @@ def compress(fd, data, compression, block_size=DEFAULT_BLOCK_SIZE):
     compression : str
         The type of compression to use.
 
-    block_size : int, optional
+    block_size : int or None, optional
         Input data will be split into blocks of this size (in bytes) before compression.
+        Default of None will use compression.DEFAULT_BLOCK_SIZE.
+        May be overriden with the asdf_block_size option in the
+        compression config.
     """
     compression = validate(compression)
     encoder = _get_encoder(compression)
+    
+    # The encoder is allowed to request a specific ASDF block size,
+    # one that is a multiple of its internal block size, for example
+    if hasattr(encoder, 'asdf_block_size'):
+        if block_size != None:
+            warnings.warn(f'The asdf_block_size compression option requests {encoder.asdf_block_size}, '
+                      f'which will override the block_size argument of {block_size}',
+                      AsdfWarning)
+        block_size = asdf_block_size
 
     # We can have numpy arrays here. While compress() will work with them,
     # it is impossible to split them into fixed size blocks without converting
     # them to bytes.
     if isinstance(data, np.ndarray):
-        data = data.tobytes()
+        data = memoryview(data.reshape(-1))
 
-    for i in range(0, len(data), block_size):
-        fd.write(encoder.compress(data[i:i+block_size]))
+    nelem = block_size // data.itemsize
+    for i in range(0, len(data), nelem):
+        fd.write(encoder.compress(data[i:i+nelem]))
     if hasattr(encoder, "flush"):
         fd.write(encoder.flush())
 
@@ -261,11 +342,17 @@ def get_compressed_size(data, compression, block_size=DEFAULT_BLOCK_SIZE):
     """
     compression = validate(compression)
     encoder = _get_encoder(compression)
+    
+    if hasattr(encoder, 'asdf_block_size'):
+        block_size = asdf_block_size
 
+    if isinstance(data, np.ndarray):
+        data = memoryview(data.reshape(-1))
+
+    nelem = block_size // data.itemsize
     l = 0
-    for i in range(0, len(data), block_size):
-        l += len(encoder.compress(data[i:i+block_size]))
+    for i in range(0, len(data), nelem):
+        l += len(encoder.compress(data[i:i+nelem]))
     if hasattr(encoder, "flush"):
-        l += len(encoder.flush())
-
+        l += len(fd.write(encoder.flush()))
     return l

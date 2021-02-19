@@ -36,6 +36,9 @@ class AsdfConfig:
         self._validate_on_read = DEFAULT_VALIDATE_ON_READ
         self._default_version = DEFAULT_DEFAULT_VERSION
         self._legacy_fill_schema_defaults = DEFAULT_LEGACY_FILL_SCHEMA_DEFAULTS
+        
+        self._compression_options = {}
+        self._decompression_options = {}
 
         self._lock = threading.RLock()
 
@@ -280,6 +283,15 @@ class AsdfConfig:
         value : bool
         """
         self._legacy_fill_schema_defaults = value
+        
+    @property
+    def compression_options(self):
+        '''
+        A dict, keyed by compression label, of kwargs that will
+        be passed to the Compressor object for compression
+        or decompression.
+        '''
+        return self._compression_options
 
     def __repr__(self):
         return (
@@ -287,11 +299,13 @@ class AsdfConfig:
             "  validate_on_read: {}\n"
             "  default_version: {}\n"
             "  legacy_fill_schema_defaults: {}\n"
+            "  compression_options: {}\n"
             ">"
         ).format(
             self.validate_on_read,
             self.default_version,
             self.legacy_fill_schema_defaults,
+            self.compression_options
         )
 
 

@@ -83,6 +83,18 @@ class Extension(abc.ABC):
         iterable of str or asdf.extension.TagDefinition
         """
         return []
+    
+    @property
+    def compressors(self):
+        """
+        Get the `asdf.extension.Compressor` instances for
+        compression schemes supported by this extension.
+
+        Returns
+        -------
+        iterable of asdf.extension.Compressor
+        """
+        return []
 
 
 class ExtensionProxy(Extension, AsdfExtension):
@@ -206,6 +218,17 @@ class ExtensionProxy(Extension, AsdfExtension):
         list of asdf.extension.TagDefinition
         """
         return self._tags
+    
+    @property
+    def compressors(self):
+        """
+        Get the extension's compressors.
+
+        Returns
+        -------
+        list of asdf.extension.Compressor
+        """
+        return self._compressors
 
     @property
     def types(self):
