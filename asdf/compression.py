@@ -54,11 +54,12 @@ def validate(compression):
 
 
 class Lz4Compressor:
-    def __init__(self, block_api):
+    def __init__(self, block_api, mode='high_compression'):
         self._api = block_api
+        self._mode = mode
 
     def compress(self, data):
-        output = self._api.compress(data, mode='high_compression')
+        output = self._api.compress(data, mode=self._mode)
         header = struct.pack('!I', len(output))
         return header + output
 
