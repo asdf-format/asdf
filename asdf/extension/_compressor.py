@@ -26,6 +26,7 @@ class Compressor(abc.ABC):
     """
     @classmethod
     def __subclasshook__(cls, C):
+        # TODO: is this the right way to enforce that a subclass define `decompress()` or `decompress_into()`?
         if cls is Compressor:
             return (hasattr(C, "labels") and
                     hasattr(C, "compress") and

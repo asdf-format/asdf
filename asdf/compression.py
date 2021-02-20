@@ -4,6 +4,7 @@ import numpy as np
 import warnings
 
 from .exceptions import AsdfWarning
+from .config import get_config
 
 
 DEFAULT_BLOCK_SIZE = 1 << 22  #: Decompressed block size in bytes, 4MiB
@@ -34,7 +35,7 @@ def validate(compression):
 
     compression = compression.strip('\0')
     
-    builtin_labels = ('zlib', 'bzp2', 'lz4', 'input')
+    builtin_labels = ['zlib', 'bzp2', 'lz4', 'input']
     ext_labels = _get_all_compression_extension_labels()
     all_labels = ext_labels + builtin_labels
     
@@ -67,30 +68,61 @@ class Lz4Decompressor:
         self._api = block_api
         self._size = 0
         self._pos = 0
-        self._buffer = b''
+        self._partial_len = b''
+        self._buffer = None
+        
+    def __del__(self):
+        if self._buffer is not None:
+            raise Exception('Found data left in lz4 buffer after decompression')
 
-    def decompress(self, data):
-        if not self._size:
-            data = self._buffer + data
-            if len(data) < 4:
-                self._buffer += data
-                return b''
-            self._size = struct.unpack('!I', data[:4])[0]
-            data = data[4:]
-            self._buffer = bytearray(self._size)
-        if self._pos + len(data) < self._size:
-            self._buffer[self._pos:self._pos + len(data)] = data
-            self._pos += len(data)
-            return b''
-        else:
-            offset = self._size - self._pos
-            self._buffer[self._pos:] = data[:offset]
-            data = data[offset:]
-            self._size = 0
-            self._pos = 0
-            output = self._api.decompress(self._buffer)
-            self._buffer = b''
-            return output + self.decompress(data)
+    def decompress_into(self, data, out):
+        bytesout = 0
+        data = memoryview(data).cast('c').toreadonly()  # don't copy on slice
+        
+        while len(data):
+            if not self._size:
+                # Don't know the (compressed) length of this block yet
+                if len(self._partial_len) + len(data) < 4:
+                    self._partial_len += data
+                    break  # we've exhausted the data
+                if self._partial_len:
+                    # If we started to fill a len key, finish filling it
+                    remaining = 4-len(self._partial_len)
+                    if remaining:
+                        self._partial_len += data[:remaining]
+                        data = data[remaining:]
+                    self._size = struct.unpack('!I', self._partial_len)[0]
+                    self._partial_len = b''
+                else:
+                    # Otherwise just read the len key directly
+                    self._size = struct.unpack('!I', data[:4])[0]
+                    data = data[4:]
+
+            if len(data) < self._size or self._buffer is not None:
+                # If we have a partial block, or we're already filling a buffer, use the buffer
+                if self._buffer is None:
+                    self._buffer = np.empty(self._size, dtype=np.byte)  # use numpy instead of bytearray so we can avoid zero initialization
+                    self._pos = 0
+                newbytes = min(self._size - self._pos, len(data))  # don't fill past the buffer len!
+                self._buffer[self._pos:self._pos+newbytes] = np.frombuffer(data[:newbytes], dtype=np.byte)
+                self._pos += newbytes
+                data = data[newbytes:]
+
+                if self._pos == self._size:
+                    _out = self._api.decompress(self._buffer, return_bytearray=True)
+                    out[bytesout:bytesout+len(_out)] = _out
+                    bytesout += len(_out)
+                    self._buffer = None
+                    self._size = 0
+            else:
+                # We have at least one full block
+                _out = self._api.decompress(memoryview(data[:self._size]), return_bytearray=True)
+                out[bytesout:bytesout+len(_out)] = _out
+                bytesout += len(_out)
+                data = data[self._size:]
+                self._size = 0
+
+        return bytesout
 
 
 def _get_compressor_from_extensions(compression):
@@ -100,10 +132,11 @@ def _get_compressor_from_extensions(compression):
     Returns None if no match found.
     '''
     # TODO: in ASDF 3, this will be done by the ExtensionManager
-    extensions = asdf.config.get_config().extensions
+    extensions = get_config().extensions
     for ext in extensions:
         for comp in ext.compressors:
-            for label in comp.labels:
+            # TODO: slightly unfortunate to have to construct the object to get the labels
+            for label in comp().labels:
                 if compression == label:
                     return comp
     return None
@@ -115,10 +148,11 @@ def _get_all_compression_extension_labels():
     '''
     # TODO: in ASDF 3, this will be done by the ExtensionManager
     labels = []
-    extensions = asdf.config.get_config().extensions
+    extensions = get_config().extensions
     for ext in extensions:
         for comp in ext.compressors:
-            for label in comp.labels:
+            # TODO: slightly unfortunate to have to construct the object to get the labels
+            for label in comp().labels:
                 labels += [label]
     return labels
     
@@ -127,7 +161,7 @@ def _get_decoder(compression):
     ext_comp = _get_compressor_from_extensions(compression)
     
     # Check if we have any options set for this decompressor
-    options = asdf.config.get_config().compression_options
+    options = get_config().compression_options
     options = options.get(compression,{})
     
     if ext_comp != None:
@@ -169,7 +203,7 @@ def _get_encoder(compression):
     ext_comp = _get_compressor_from_extensions(compression)
     
     # Check if we have any options set for this compressor
-    options = asdf.config.get_config().compression_options
+    options = get_config().compression_options
     options = options.get(compression,{})
     
     if ext_comp != None:
@@ -251,6 +285,10 @@ def decompress(fd, used_size, data_size, compression):
 
     i = 0
     for block in fd.read_blocks(used_size):
+        # Use a memoryview so decompressors don't trigger a copy on slice
+        # The cast ensures 1D and byte-size records
+        block = memoryview(block).cast('c').toreadonly()
+        
         if hasattr(decoder, 'decompress_into'):
             i += decoder.decompress_into(block, out=buffer[i:])
         else:
@@ -267,8 +305,6 @@ def decompress(fd, used_size, data_size, compression):
         buffer[i:i+len(decoded)] = decoded
         i += len(decoded)
     
-    if hasattr(decoder, '_buffer'):
-        assert decoder._buffer is None
     if i != data_size:
         raise ValueError("Decompressed data wrong size")
 
@@ -291,7 +327,8 @@ def compress(fd, data, compression, block_size=None):
         The type of compression to use.
 
     block_size : int or None, optional
-        Input data will be split into blocks of this size (in bytes) before compression.
+        Input data will be split into blocks of this size (in bytes)
+        before compression.
         Default of None will use compression.DEFAULT_BLOCK_SIZE.
         May be overriden with the asdf_block_size option in the
         compression config.
@@ -307,13 +344,23 @@ def compress(fd, data, compression, block_size=None):
                       f'which will override the block_size argument of {block_size}',
                       AsdfWarning)
         block_size = asdf_block_size
+    else:
+        block_size = DEFAULT_BLOCK_SIZE
 
-    # We can have numpy arrays here. While compress() will work with them,
-    # it is impossible to split them into fixed size blocks without converting
-    # them to bytes.
-    if isinstance(data, np.ndarray):
-        data = memoryview(data.reshape(-1))
+    # Get a contiguous, 1D, read-only memoryview of the underlying data, preserving data.itemsize
+    # - contiguous: because we may not want to assume that all compressors can handle arbitrary strides
+    # - 1D: so that len(data) works, not just data.nbytes
+    # - itemsize: should preserve data.itemsize for compressors that want to use the record size
+    # - memoryview: don't incur the expense of a memcpy, such as with tobytes()
+    # - read-only: shouldn't need to modify data!
+    data = memoryview(data)
+    if not data.contiguous:
+        data = memoryview(data.tobytes())  # make a contiguous copy
+    data = data.cast('c').cast(data.format).toreadonly()  # we get a 1D array by a cast to byte, then a cast to data.format
+    assert data.contiguous  # this is true by construction, but better safe than sorry!
 
+    # Because we are preserving the record size,
+    # block_size will only be respected to the nearest multiple
     nelem = block_size // data.itemsize
     for i in range(0, len(data), nelem):
         fd.write(encoder.compress(data[i:i+nelem]))
@@ -340,19 +387,38 @@ def get_compressed_size(data, compression, block_size=DEFAULT_BLOCK_SIZE):
     -------
     bytes : int
     """
-    compression = validate(compression)
+    ompression = validate(compression)
     encoder = _get_encoder(compression)
     
+    # The encoder is allowed to request a specific ASDF block size,
+    # one that is a multiple of its internal block size, for example
     if hasattr(encoder, 'asdf_block_size'):
+        if block_size != None:
+            warnings.warn(f'The asdf_block_size compression option requests {encoder.asdf_block_size}, '
+                      f'which will override the block_size argument of {block_size}',
+                      AsdfWarning)
         block_size = asdf_block_size
+    else:
+        block_size = DEFAULT_BLOCK_SIZE
 
-    if isinstance(data, np.ndarray):
-        data = memoryview(data.reshape(-1))
+    # Get a contiguous, 1D, read-only memoryview of the underlying data, preserving data.itemsize
+    # - contiguous: because we may not want to assume that all compressors can handle arbitrary strides
+    # - 1D: so that len(data) works, not just data.nbytes
+    # - itemsize: should preserve data.itemsize for compressors that want to use the record size
+    # - memoryview: don't incur the expense of a memcpy, such as with tobytes()
+    # - read-only: shouldn't need to modify data!
+    data = memoryview(data)
+    if not data.contiguous:
+        data = memoryview(data.tobytes())  # make a contiguous copy
+    data = data.cast('c').cast(data.format).toreadonly()  # we get a 1D array by a cast to byte, then a cast to data.format
+    assert data.contiguous  # this is true by construction, but better safe than sorry!
 
+    # Because we are preserving the record size,
+    # block_size will only be respected to the nearest multiple
     nelem = block_size // data.itemsize
     l = 0
     for i in range(0, len(data), nelem):
         l += len(encoder.compress(data[i:i+nelem]))
     if hasattr(encoder, "flush"):
-        l += len(fd.write(encoder.flush()))
+        l += len(encoder.flush())
     return l

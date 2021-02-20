@@ -7,6 +7,7 @@ from ._manager import ExtensionManager, get_cached_extension_manager
 from ._manifest import ManifestExtension
 from ._tag import TagDefinition
 from ._converter import Converter, ConverterProxy
+from ._compressor import Compressor
 from ._legacy import (
     AsdfExtension,
     AsdfExtensionList,
