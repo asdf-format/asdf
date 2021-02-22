@@ -371,7 +371,7 @@ def test_string(tmpdir):
 
 def test_string_table(tmpdir):
     tree = {
-        'table': np.array([(b'foo', 'სამეცნიერო', 42, 53.0)])
+        'table': np.array([(b'foo', 'სამეცნიერო', '42', '53.0')])
         }
 
     helpers.assert_roundtrip_tree(tree, tmpdir)
