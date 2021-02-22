@@ -50,6 +50,9 @@
 
 - Fix bug when decompressing arrays with numpy 1.20.  [#901, #909]
 
+- Add pytest plugin options to skip and xfail individual tests
+  and xfail the unsupported ndarray-1.0.0 example. [#929]
+
 2.7.1 (2020-08-18)
 ------------------
 
