@@ -1,5 +1,6 @@
 import io
 import os
+import lzma
 
 import numpy as np
 
@@ -8,6 +9,8 @@ import pytest
 import asdf
 from asdf import compression
 from asdf import generic_io
+from asdf import config_context
+from asdf.extension import Extension, Compressor, Decompressor
 
 from ..tests import helpers
 
@@ -67,7 +70,7 @@ def _roundtrip(tmpdir, tree, compression=None,
     with asdf.open(generic_io.InputStream(buff), **read_options) as ff:
         helpers.assert_tree_match(tree, ff.tree)
 
-    return ff
+    return tmpfile
 
 
 def test_invalid_compression():
@@ -188,3 +191,61 @@ def test_set_array_compression(tmpdir):
     with asdf.open(tmpfile) as af_in:
         assert af_in.get_array_compression(af_in.tree['zlib_data']) == 'zlib'
         assert af_in.get_array_compression(af_in.tree['bzp2_data']) == 'bzp2'
+
+
+class LzmaCompressor(Compressor):
+    def __init__(self, preset=None):
+        self._compressor = lzma.LZMACompressor(preset=preset)
+        
+    def compress(self, data):
+        comp = self._compressor.compress(data)
+        return comp
+    
+    def flush(self):
+        return self._compressor.flush()
+    
+    @property
+    def labels(self):
+        return ['lzma']
+    
+class LzmaDecompressor(Decompressor):
+    def __init__(self):
+        self._decompressor = lzma.LZMADecompressor()
+    
+    def decompress(self, data):
+        decomp = self._decompressor.decompress(data)
+        return decomp
+    
+    @property
+    def labels(self):
+        return ['lzma']
+    
+class LzmaExtension(Extension):
+    @property
+    def extension_uri(self):
+        return "http://somewhere.org/extensions/lzma-1.0"
+    
+    @property
+    def compressors(self):
+        return [LzmaCompressor]
+    
+    @property
+    def decompressors(self):
+        return [LzmaDecompressor]
+
+def test_compression_with_extension(tmpdir):
+    tree = _get_large_tree()
+
+    with config_context() as config:
+        config.add_extension(LzmaExtension())
+        
+        asdf.config.get_config().compression_options['lzma'] = {'preset':lzma.PRESET_DEFAULT}
+        fn = _roundtrip(tmpdir, tree, 'lzma')
+        
+        hist = {'extension_class': 'asdf.tests.test_compression.LzmaExtension',
+                'extension_uri': 'http://somewhere.org/extensions/lzma-1.0',
+                'compression_labels': ['lzma']}
+
+        with asdf.open(fn) as af:
+            assert hist in af['history']['extensions']
+        
