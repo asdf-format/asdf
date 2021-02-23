@@ -396,7 +396,7 @@ def get_compressed_size(data, compression, block_size=DEFAULT_BLOCK_SIZE):
     -------
     bytes : int
     """
-    ompression = validate(compression)
+    compression = validate(compression)
     encoder = _get_encoder(compression)
     
     # The encoder is allowed to request a specific ASDF block size,

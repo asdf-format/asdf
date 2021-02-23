@@ -1,7 +1,8 @@
 """
 Compressor is an interface to implement extensions to the compression
 module. Extensions will typically subclass the Compressor ABC and
-provide that subclass as a setuptools entry point.
+provide that subclass as a setuptools entry point.  Decompressor
+is likewise used for decompression.
 
 Note that this interface has similar patterns to Converter.  This
 interface is designed for compression and decompression of ASDF
@@ -25,7 +26,6 @@ class Compressor(abc.ABC):
     """
     @classmethod
     def __subclasshook__(cls, C):
-        # TODO: is this the right way to enforce that a subclass define `decompress()` or `decompress_into()`?
         if cls is Compressor:
             return (hasattr(C, "labels") and
                     hasattr(C, "compress"))
