@@ -765,6 +765,23 @@ class BlockManager:
         block = Block(array, array_storage='inline')
         self.add(block)
         return block
+    
+    def get_output_compressions(self):
+        '''
+        Get the list of unqiue compressions used on blocks.
+        '''
+        return list(set([b.output_compression for b in self.blocks]))
+        
+    def get_output_compression_extensions(self):
+        '''
+        Infer the compression extensions used on blocks.
+        '''
+        ext = []
+        for label in self.get_output_compressions():
+            compressor = mcompression._get_compressor_from_extensions(label, return_extension=True)
+            if compressor != None:
+                ext += [compressor[1]]  # second item is the extension
+        return ext
 
     def __getitem__(self, arr):
         return self.find_or_create_block_for_array(arr, object())
@@ -1013,8 +1030,12 @@ class Block:
 
         # This is used by the documentation system, but nowhere else.
         self._flags = header['flags']
-        self.input_compression = header['compression']
         self._set_checksum(header['checksum'])
+        
+        try:
+            self.input_compression = header['compression']
+        except ValueError as v:
+            raise v  # TODO: hint extension?
 
         if (self.input_compression is None and
                 header['used_size'] != header['data_size']):

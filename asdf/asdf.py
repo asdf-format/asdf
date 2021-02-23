@@ -436,6 +436,8 @@ class AsdfFile:
                 ext_meta['software'] = Software(name=extension.package_name, version=extension.package_version)
             if extension.extension_uri is not None:
                 ext_meta['extension_uri'] = extension.extension_uri
+            for comp in extension.compressors:
+                ext_meta['compression_labels'] = comp().labels
 
             for i, entry in enumerate(self.tree['history']['extensions']):
                 # Update metadata about this extension if it already exists
@@ -999,6 +1001,10 @@ class AsdfFile:
 
         if len(tree):
             serialization_context = self._create_serialization_context()
+            
+            compression_extensions = self.blocks.get_output_compression_extensions()
+            for ext in compression_extensions:
+                serialization_context._mark_extension_used(ext)
 
             def _tree_finalizer(tagged_tree):
                 """
