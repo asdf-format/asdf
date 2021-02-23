@@ -1,12 +1,18 @@
-2.7.2 (2020-01-15)
+2.7.3 (unreleased)
+------------------
+
+- Add pytest plugin options to skip and xfail individual tests
+  and xfail the unsupported ndarray-1.0.0 example. [#929]
+
+- Fix bugs resulting in invalid strides values for FITS arrays
+  and views over base arrays with negative strides. [#930]
+
+2.7.2 (2021-01-15)
 ------------------
 
 - Fix bug causing test collection failures in some environments. [#889]
 
 - Fix bug when decompressing arrays with numpy 1.20.  [#901, #909]
-
-- Add pytest plugin options to skip and xfail individual tests
-  and xfail the unsupported ndarray-1.0.0 example. [#929]
 
 2.7.1 (2020-08-18)
 ------------------

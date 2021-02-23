@@ -85,7 +85,10 @@ def asdf_datatype_to_numpy_dtype(datatype, byteorder=None):
     raise ValueError("Unknown datatype {0}".format(datatype))
 
 
-def numpy_byteorder_to_asdf_byteorder(byteorder):
+def numpy_byteorder_to_asdf_byteorder(byteorder, override=None):
+    if override is not None:
+        return override
+
     if byteorder == '=':
         return sys.byteorder
     elif byteorder == '<':
@@ -94,7 +97,7 @@ def numpy_byteorder_to_asdf_byteorder(byteorder):
         return 'big'
 
 
-def numpy_dtype_to_asdf_datatype(dtype, include_byteorder=True):
+def numpy_dtype_to_asdf_datatype(dtype, include_byteorder=True, override_byteorder=None):
     dtype = np.dtype(dtype)
     if dtype.names is not None:
         fields = []
@@ -102,30 +105,30 @@ def numpy_dtype_to_asdf_datatype(dtype, include_byteorder=True):
             field = dtype.fields[name][0]
             d = {}
             d['name'] = name
-            field_dtype, byteorder = numpy_dtype_to_asdf_datatype(field)
+            field_dtype, byteorder = numpy_dtype_to_asdf_datatype(field, override_byteorder=override_byteorder)
             d['datatype'] = field_dtype
             if include_byteorder:
                 d['byteorder'] = byteorder
             if field.shape:
                 d['shape'] = list(field.shape)
             fields.append(d)
-        return fields, numpy_byteorder_to_asdf_byteorder(dtype.byteorder)
+        return fields, numpy_byteorder_to_asdf_byteorder(dtype.byteorder, override=override_byteorder)
 
     elif dtype.subdtype is not None:
-        return numpy_dtype_to_asdf_datatype(dtype.subdtype[0])
+        return numpy_dtype_to_asdf_datatype(dtype.subdtype[0], override_byteorder=override_byteorder)
 
     elif dtype.name in _datatype_names:
-        return dtype.name, numpy_byteorder_to_asdf_byteorder(dtype.byteorder)
+        return dtype.name, numpy_byteorder_to_asdf_byteorder(dtype.byteorder, override=override_byteorder)
 
     elif dtype.name == 'bool':
-        return 'bool8', numpy_byteorder_to_asdf_byteorder(dtype.byteorder)
+        return 'bool8', numpy_byteorder_to_asdf_byteorder(dtype.byteorder, override=override_byteorder)
 
     elif dtype.name.startswith('string') or dtype.name.startswith('bytes'):
         return ['ascii', dtype.itemsize], 'big'
 
     elif dtype.name.startswith('unicode') or dtype.name.startswith('str'):
         return (['ucs4', int(dtype.itemsize / 4)],
-                numpy_byteorder_to_asdf_byteorder(dtype.byteorder))
+                numpy_byteorder_to_asdf_byteorder(dtype.byteorder, override=override_byteorder))
 
     raise ValueError("Unknown dtype {0}".format(dtype))
 
@@ -414,31 +417,55 @@ class NDArrayType(AsdfType):
 
     @classmethod
     def to_tree(cls, data, ctx):
+        # The ndarray-1.0.0 schema does not permit 0 valued strides.
+        # Perhaps we'll want to allow this someday, to efficiently
+        # represent an array of all the same value.
         if any(stride == 0 for stride in data.strides):
             data = np.ascontiguousarray(data)
 
-        base = util.get_array_base(data)
         shape = data.shape
-        dtype = data.dtype
-        offset = data.ctypes.data - base.ctypes.data
-
-        if data.flags.c_contiguous:
-            strides = None
-        else:
-            strides = data.strides
 
         block = ctx.blocks.find_or_create_block_for_array(data, ctx)
+
+        if block.array_storage == "fits":
+            # Views over arrays stored in FITS files have some idiosyncracies.
+            # astropy.io.fits always writes arrays C-contiguous with big-endian
+            # byte order, whereas asdf preserves the "contiguousity" and byte order
+            # of the base array.
+            if (block.data.shape != data.shape or
+                block.data.dtype.itemsize != data.dtype.itemsize or
+                block.data.ctypes.data != data.ctypes.data or
+                block.data.strides != data.strides):
+                raise ValueError("Views over FITS arrays must have identical memory layout")
+
+            offset = 0
+            strides = None
+            dtype, byteorder = numpy_dtype_to_asdf_datatype(
+                data.dtype,
+                include_byteorder=(block.array_storage != "inline"),
+                override_byteorder="big",
+            )
+        else:
+            base = util.get_array_base(data)
+            # Compute the offset relative to the base array and not the
+            # block data, in case the block is compressed.
+            offset = data.ctypes.data - base.ctypes.data
+
+            if data.flags.c_contiguous:
+                strides = None
+            else:
+                strides = data.strides
+
+            dtype, byteorder = numpy_dtype_to_asdf_datatype(
+                data.dtype,
+                include_byteorder=(block.array_storage != "inline"),
+            )
 
         result = {}
 
         result['shape'] = list(shape)
         if block.array_storage == 'streamed':
             result['shape'][0] = '*'
-
-        dtype, byteorder = numpy_dtype_to_asdf_datatype(
-            dtype, include_byteorder=(block.array_storage != 'inline'))
-
-        byteorder = block.override_byteorder(byteorder)
 
         if block.array_storage == 'inline':
             listdata = numpy_array_to_list(data)

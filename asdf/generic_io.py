@@ -94,7 +94,7 @@ size : integer
 """
 
 
-def _array_tofile_chunked(write, array, chunksize):  # pragma: no cover
+def _array_tofile_chunked(write, array, chunksize):
     array = array.view(np.uint8)
     for i in range(0, array.nbytes, chunksize):
         write(array[i:i + chunksize].data)
@@ -103,8 +103,7 @@ def _array_tofile_chunked(write, array, chunksize):  # pragma: no cover
 def _array_tofile_simple(fd, write, array):
     return write(array.data)
 
-
-if sys.platform == 'darwin':  # pragma: no cover
+if sys.platform == 'darwin':
     def _array_tofile(fd, write, array):
         # This value is currently set as a workaround for a known bug in Python
         # on OSX. Individual writes must be less than 2GB, which necessitates
@@ -114,7 +113,7 @@ if sys.platform == 'darwin':  # pragma: no cover
         if fd is None or array.nbytes >= OSX_WRITE_LIMIT and array.nbytes % 4096 == 0:
             return _array_tofile_chunked(write, array, OSX_WRITE_LIMIT)
         return _array_tofile_simple(fd, write, array)
-elif sys.platform.startswith('win'):  # pragma: no cover
+elif sys.platform.startswith('win'):
     def _array_tofile(fd, write, array):
         WIN_WRITE_LIMIT = 2 ** 30
         return _array_tofile_chunked(write, array, WIN_WRITE_LIMIT)
@@ -372,7 +371,20 @@ class GenericFile(metaclass=util.InheritDocstrings):
     """
 
     def write_array(self, array):
-        _array_tofile(None, self.write, array.ravel(order='K'))
+        """
+        Write array content to the file.  Array must be 1D contiguous
+        so that this method can avoid making assumptions about the
+        intended memory layout.  Endianness is preserved.
+
+        Parameters
+        ----------
+        array : np.ndarray
+            Must be 1D contiguous.
+        """
+        if len(array.shape) != 1 or not array.flags.contiguous:
+            raise ValueError("Requires 1D contiguous array.")
+
+        _array_tofile(None, self.write, array)
 
     def seek(self, offset, whence=0):
         """
@@ -751,7 +763,10 @@ class RealFile(RandomAccessFile):
             arr.flush()
             self.fast_forward(len(arr.data))
         else:
-            _array_tofile(self._fd, self._fd.write, arr.ravel(order='K'))
+            if len(arr.shape) != 1 or not arr.flags.contiguous:
+                raise ValueError("Requires 1D contiguous array.")
+
+            _array_tofile(self._fd, self._fd.write, arr)
 
     def can_memmap(self):
         return True
