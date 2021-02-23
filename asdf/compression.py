@@ -352,7 +352,7 @@ def compress(fd, data, compression, block_size=None):
             warnings.warn(f'The asdf_block_size compression option requests {encoder.asdf_block_size}, '
                       f'which will override the block_size argument of {block_size}',
                       AsdfWarning)
-        block_size = asdf_block_size
+        block_size = encoder.asdf_block_size
     else:
         block_size = DEFAULT_BLOCK_SIZE
 
@@ -407,7 +407,7 @@ def get_compressed_size(data, compression, block_size=DEFAULT_BLOCK_SIZE):
             warnings.warn(f'The asdf_block_size compression option requests {encoder.asdf_block_size}, '
                       f'which will override the block_size argument of {block_size}',
                       AsdfWarning)
-        block_size = asdf_block_size
+        block_size = encoder.asdf_block_size
     else:
         block_size = DEFAULT_BLOCK_SIZE
 

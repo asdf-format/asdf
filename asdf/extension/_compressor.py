@@ -12,9 +12,6 @@ of custom Python types into the YAML tree.
 
 import abc
 
-from ..util import get_class_name, uri_match
-
-
 class Compressor(abc.ABC):
     """
     Abstract base class for plugins that compress binary data.

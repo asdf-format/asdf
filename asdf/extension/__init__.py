@@ -29,7 +29,7 @@ __all__ = [
     "Converter",
     "ConverterProxy",
     "Compressor",
-    "Decompressor"
+    "Decompressor",
     # Legacy API
     "AsdfExtension",
     "AsdfExtensionList",
