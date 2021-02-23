@@ -36,7 +36,7 @@ class AsdfConfig:
         self._validate_on_read = DEFAULT_VALIDATE_ON_READ
         self._default_version = DEFAULT_DEFAULT_VERSION
         self._legacy_fill_schema_defaults = DEFAULT_LEGACY_FILL_SCHEMA_DEFAULTS
-        
+
         self._compression_options = {}
         self._decompression_options = {}
 
@@ -283,7 +283,7 @@ class AsdfConfig:
         value : bool
         """
         self._legacy_fill_schema_defaults = value
-        
+
     @property
     def compression_options(self):
         '''
@@ -292,7 +292,7 @@ class AsdfConfig:
         or decompression.
         '''
         return self._compression_options
-    
+
     @property
     def decompression_options(self):
         '''

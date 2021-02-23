@@ -765,13 +765,13 @@ class BlockManager:
         block = Block(array, array_storage='inline')
         self.add(block)
         return block
-    
+
     def get_output_compressions(self):
         '''
         Get the list of unqiue compressions used on blocks.
         '''
         return list(set([b.output_compression for b in self.blocks]))
-        
+
     def get_output_compression_extensions(self):
         '''
         Infer the compression extensions used on blocks.
@@ -1031,7 +1031,7 @@ class Block:
         # This is used by the documentation system, but nowhere else.
         self._flags = header['flags']
         self._set_checksum(header['checksum'])
-        
+
         try:
             self.input_compression = header['compression']
         except ValueError as v:

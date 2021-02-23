@@ -83,7 +83,7 @@ class Extension(abc.ABC):
         iterable of str or asdf.extension.TagDefinition
         """
         return []
-    
+
     @property
     def compressors(self):
         """
@@ -95,7 +95,7 @@ class Extension(abc.ABC):
         iterable of asdf.extension.Compressor
         """
         return []
-    
+
     @property
     def decompressors(self):
         """
@@ -221,7 +221,7 @@ class ExtensionProxy(Extension, AsdfExtension):
         list of asdf.extension.Converter
         """
         return self._converters
-    
+
     @property
     def compressors(self):
         """
@@ -232,7 +232,7 @@ class ExtensionProxy(Extension, AsdfExtension):
         list of asdf.extension.Compressor
         """
         return self._compressors
-    
+
     @property
     def decompressors(self):
         """

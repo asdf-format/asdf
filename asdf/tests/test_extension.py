@@ -70,11 +70,11 @@ class FullExtension:
     @property
     def converters(self):
         return self._converters
-    
+
     @property
     def compressors(self):
         return self._compressors
-    
+
     @property
     def decompressors(self):
         return self._decompressors
@@ -123,23 +123,23 @@ class FullConverter(MinimumConverter):
     def select_tag(self, obj, tags, ctx):
         return "select_tag result"
 
-    
+
 class MinimalCompressor(Compressor):
     def compress(data):
         return b''
-    
+
     @property
     def labels(self):
         return ['mini']
-    
+
 class MinimalDecompressor(Decompressor):
     def decompress(data):
         return b''
-    
+
     @property
     def labels(self):
         return ['mini']
-    
+
 
 # Some dummy types for testing converters:
 class FooType:
@@ -246,11 +246,11 @@ def test_extension_proxy():
     # Should fail with a bad converter:
     with pytest.raises(TypeError):
         ExtensionProxy(FullExtension(converters=[object()]))
-        
+
     # Should fail with a bad compressor:
     with pytest.raises(TypeError):
         ExtensionProxy(FullExtension(compressors=[object()]))
-        
+
     # Should fail with a bad decompressor:
     with pytest.raises(TypeError):
         ExtensionProxy(FullExtension(decompressors=[object()]))

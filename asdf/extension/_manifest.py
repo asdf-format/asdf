@@ -51,12 +51,12 @@ class ManifestExtension(Extension):
             self._converters = []
         else:
             self._converters = converters
-            
+
         if compressors is None:
             self._compressors = []
         else:
             self._compressors = compressors
-            
+
         if decompressors is None:
             self._decompressors = []
         else:
@@ -88,11 +88,11 @@ class ManifestExtension(Extension):
     @property
     def converters(self):
         return self._converters
-    
+
     @property
     def compressors(self):
         return self._compressors
-    
+
     @property
     def decompressors(self):
         return self._decompressors

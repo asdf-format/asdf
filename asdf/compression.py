@@ -34,19 +34,19 @@ def validate(compression):
         compression = compression.decode('ascii')
 
     compression = compression.strip('\0')
-    
+
     builtin_labels = ['zlib', 'bzp2', 'lz4', 'input']
     ext_labels = list(set(_get_all_compression_extension_labels(decompressor=True) +
                           _get_all_compression_extension_labels(decompressor=False)))
     all_labels = ext_labels + builtin_labels
-    
+
     # An extension is allowed to override a builtin compression or another extension,
     # but let's warn the user of this.
     # TODO: is this the desired behavior?
     for i,label in enumerate(all_labels):
         if label in all_labels[i+1:]:
             warnings.warn(f'Found more than one compressor for "{label}"', AsdfWarning)
-    
+
     if compression not in all_labels:
         raise ValueError(
             f"Supported compression types are: {all_labels}, not '{compression}'")
@@ -72,7 +72,7 @@ class Lz4Decompressor:
         self._pos = 0
         self._partial_len = b''
         self._buffer = None
-        
+
     def __del__(self):
         if self._buffer is not None:
             raise Exception('Found data left in lz4 buffer after decompression')
@@ -80,7 +80,7 @@ class Lz4Decompressor:
     def decompress_into(self, data, out):
         bytesout = 0
         data = memoryview(data).cast('c')  # don't copy on slice
-        
+
         while len(data):
             if not self._size:
                 # Don't know the (compressed) length of this block yet
@@ -136,7 +136,7 @@ def _get_compressor_from_extensions(compression, decompressor=False, return_exte
     '''
     # TODO: in ASDF 3, this will be done by the ExtensionManager
     extensions = get_config().extensions
-    
+
     for ext in extensions:
         compressors = ext.decompressors if decompressor else ext.compressors
         for comp in compressors:
@@ -148,7 +148,7 @@ def _get_compressor_from_extensions(compression, decompressor=False, return_exte
                     else:
                         return comp
     return None
-    
+
 
 def _get_all_compression_extension_labels(decompressor=False):
     '''
@@ -164,15 +164,15 @@ def _get_all_compression_extension_labels(decompressor=False):
             for label in comp().labels:
                 labels += [label]
     return labels
-    
-    
+
+
 def _get_decoder(compression):
     ext_comp = _get_compressor_from_extensions(compression, decompressor=True)
-    
+
     # Check if we have any options set for this decompressor
     options = get_config().decompression_options
     options = options.get(compression,{})
-    
+
     if ext_comp != None:
         # Use an extension before builtins
         return ext_comp(**options)
@@ -210,11 +210,11 @@ def _get_decoder(compression):
 
 def _get_encoder(compression):
     ext_comp = _get_compressor_from_extensions(compression, decompressor=False)
-    
+
     # Check if we have any options set for this compressor
     options = get_config().compression_options
     options = options.get(compression,{})
-    
+
     if ext_comp != None:
         # Use an extension before builtins
         return ext_comp(**options)
@@ -297,7 +297,7 @@ def decompress(fd, used_size, data_size, compression):
         # Use a memoryview so decompressors don't trigger a copy on slice
         # The cast ensures 1D and byte-size records
         block = memoryview(block).cast('c')
-        
+
         if hasattr(decoder, 'decompress_into'):
             i += decoder.decompress_into(block, out=buffer[i:])
         else:
@@ -313,7 +313,7 @@ def decompress(fd, used_size, data_size, compression):
             raise ValueError("Decompressed data too long")
         buffer.data[i:i+len(decoded)] = decoded
         i += len(decoded)
-    
+
     if i != data_size:
         raise ValueError("Decompressed data wrong size")
 
@@ -344,7 +344,7 @@ def compress(fd, data, compression, block_size=None):
     """
     compression = validate(compression)
     encoder = _get_encoder(compression)
-    
+
     # The encoder is allowed to request a specific ASDF block size,
     # one that is a multiple of its internal block size, for example
     if hasattr(encoder, 'asdf_block_size'):
@@ -399,7 +399,7 @@ def get_compressed_size(data, compression, block_size=DEFAULT_BLOCK_SIZE):
     """
     compression = validate(compression)
     encoder = _get_encoder(compression)
-    
+
     # The encoder is allowed to request a specific ASDF block size,
     # one that is a multiple of its internal block size, for example
     if hasattr(encoder, 'asdf_block_size'):

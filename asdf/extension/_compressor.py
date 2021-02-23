@@ -30,7 +30,7 @@ class Compressor(abc.ABC):
             return (hasattr(C, "labels") and
                     hasattr(C, "compress"))
         return NotImplemented # pragma: no cover
-    
+
 
     @abc.abstractproperty
     def labels(self):
@@ -45,7 +45,7 @@ class Compressor(abc.ABC):
         """
         pass # pragma: no cover
 
-    
+
     @abc.abstractmethod
     def compress(self, data):
         """
@@ -53,7 +53,7 @@ class Compressor(abc.ABC):
         """
         pass # pragma: no cover
 
-    
+
 class Decompressor(abc.ABC):
     """
     Abstract base class for plugins that decompress binary data.
@@ -71,7 +71,7 @@ class Decompressor(abc.ABC):
                     ( hasattr(C, "decompress") or
                       hasattr(C, "decompress_into") ))
         return NotImplemented # pragma: no cover
-    
+
 
     @abc.abstractproperty
     def labels(self):

@@ -196,39 +196,39 @@ def test_set_array_compression(tmpdir):
 class LzmaCompressor(Compressor):
     def __init__(self, preset=None):
         self._compressor = lzma.LZMACompressor(preset=preset)
-        
+
     def compress(self, data):
         comp = self._compressor.compress(data)
         return comp
-    
+
     def flush(self):
         return self._compressor.flush()
-    
+
     @property
     def labels(self):
         return ['lzma']
-    
+
 class LzmaDecompressor(Decompressor):
     def __init__(self):
         self._decompressor = lzma.LZMADecompressor()
-    
+
     def decompress(self, data):
         decomp = self._decompressor.decompress(data)
         return decomp
-    
+
     @property
     def labels(self):
         return ['lzma']
-    
+
 class LzmaExtension(Extension):
     @property
     def extension_uri(self):
         return "http://somewhere.org/extensions/lzma-1.0"
-    
+
     @property
     def compressors(self):
         return [LzmaCompressor]
-    
+
     @property
     def decompressors(self):
         return [LzmaDecompressor]
@@ -238,14 +238,13 @@ def test_compression_with_extension(tmpdir):
 
     with config_context() as config:
         config.add_extension(LzmaExtension())
-        
+
         asdf.config.get_config().compression_options['lzma'] = {'preset':lzma.PRESET_DEFAULT}
         fn = _roundtrip(tmpdir, tree, 'lzma')
-        
+
         hist = {'extension_class': 'asdf.tests.test_compression.LzmaExtension',
                 'extension_uri': 'http://somewhere.org/extensions/lzma-1.0',
                 'compression_labels': ['lzma']}
 
         with asdf.open(fn) as af:
             assert hist in af['history']['extensions']
-        

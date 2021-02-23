@@ -1001,7 +1001,7 @@ class AsdfFile:
 
         if len(tree):
             serialization_context = self._create_serialization_context()
-            
+
             compression_extensions = self.blocks.get_output_compression_extensions()
             for ext in compression_extensions:
                 serialization_context._mark_extension_used(ext)
