@@ -79,7 +79,7 @@ class Lz4Decompressor:
 
     def decompress_into(self, data, out):
         bytesout = 0
-        data = memoryview(data).cast('c').toreadonly()  # don't copy on slice
+        data = memoryview(data).cast('c')  # don't copy on slice
         
         while len(data):
             if not self._size:
@@ -296,7 +296,7 @@ def decompress(fd, used_size, data_size, compression):
     for block in fd.read_blocks(used_size):
         # Use a memoryview so decompressors don't trigger a copy on slice
         # The cast ensures 1D and byte-size records
-        block = memoryview(block).cast('c').toreadonly()
+        block = memoryview(block).cast('c')
         
         if hasattr(decoder, 'decompress_into'):
             i += decoder.decompress_into(block, out=buffer[i:])
@@ -356,17 +356,18 @@ def compress(fd, data, compression, block_size=None):
     else:
         block_size = DEFAULT_BLOCK_SIZE
 
-    # Get a contiguous, 1D, read-only memoryview of the underlying data, preserving data.itemsize
+    # Get a contiguous, 1D memoryview of the underlying data, preserving data.itemsize
     # - contiguous: because we may not want to assume that all compressors can handle arbitrary strides
     # - 1D: so that len(data) works, not just data.nbytes
     # - itemsize: should preserve data.itemsize for compressors that want to use the record size
     # - memoryview: don't incur the expense of a memcpy, such as with tobytes()
-    # - read-only: shouldn't need to modify data!
     data = memoryview(data)
     if not data.contiguous:
         data = memoryview(data.tobytes())  # make a contiguous copy
-    data = data.cast('c').cast(data.format).toreadonly()  # we get a 1D array by a cast to byte, then a cast to data.format
-    assert data.contiguous  # this is true by construction, but better safe than sorry!
+    data = data.cast('c').cast(data.format)  # we get a 1D array by a cast to byte, then a cast to data.format
+    if not data.contiguous:
+        # the data will be contiguous by construction, but better safe than sorry!
+        raise ValueError(data.contiguous)
 
     # Because we are preserving the record size,
     # block_size will only be respected to the nearest multiple
@@ -410,17 +411,18 @@ def get_compressed_size(data, compression, block_size=DEFAULT_BLOCK_SIZE):
     else:
         block_size = DEFAULT_BLOCK_SIZE
 
-    # Get a contiguous, 1D, read-only memoryview of the underlying data, preserving data.itemsize
+    # Get a contiguous, 1D memoryview of the underlying data, preserving data.itemsize
     # - contiguous: because we may not want to assume that all compressors can handle arbitrary strides
     # - 1D: so that len(data) works, not just data.nbytes
     # - itemsize: should preserve data.itemsize for compressors that want to use the record size
     # - memoryview: don't incur the expense of a memcpy, such as with tobytes()
-    # - read-only: shouldn't need to modify data!
     data = memoryview(data)
     if not data.contiguous:
         data = memoryview(data.tobytes())  # make a contiguous copy
-    data = data.cast('c').cast(data.format).toreadonly()  # we get a 1D array by a cast to byte, then a cast to data.format
-    assert data.contiguous  # this is true by construction, but better safe than sorry!
+    data = data.cast('c').cast(data.format)  # we get a 1D array by a cast to byte, then a cast to data.format
+    if not data.contiguous:
+        # the data will be contiguous by construction, but better safe than sorry!
+        raise ValueError(data.contiguous)
 
     # Because we are preserving the record size,
     # block_size will only be respected to the nearest multiple
