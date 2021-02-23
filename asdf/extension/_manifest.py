@@ -38,7 +38,8 @@ class ManifestExtension(Extension):
         manifest = yaml.safe_load(get_config().resource_manager[manifest_uri])
         return cls(manifest, **kwargs)
 
-    def __init__(self, manifest, *, legacy_class_names=None, converters=None):
+    def __init__(self, manifest, *, legacy_class_names=None, converters=None,
+                compressors=None, decompressors=None):
         self._manifest = manifest
 
         if legacy_class_names is None:
@@ -50,6 +51,16 @@ class ManifestExtension(Extension):
             self._converters = []
         else:
             self._converters = converters
+            
+        if compressors is None:
+            self._compressors = []
+        else:
+            self._compressors = compressors
+            
+        if decompressors is None:
+            self._decompressors = []
+        else:
+            self._decompressors = decompressors
 
     @property
     def extension_uri(self):
@@ -77,6 +88,14 @@ class ManifestExtension(Extension):
     @property
     def converters(self):
         return self._converters
+    
+    @property
+    def compressors(self):
+        return self._compressors
+    
+    @property
+    def decompressors(self):
+        return self._decompressors
 
     @property
     def tags(self):

@@ -7,7 +7,7 @@ from ._manager import ExtensionManager, get_cached_extension_manager
 from ._manifest import ManifestExtension
 from ._tag import TagDefinition
 from ._converter import Converter, ConverterProxy
-from ._compressor import Compressor
+from ._compressor import Compressor, Decompressor
 from ._legacy import (
     AsdfExtension,
     AsdfExtensionList,
@@ -28,6 +28,8 @@ __all__ = [
     "TagDefinition",
     "Converter",
     "ConverterProxy",
+    "Compressor",
+    "Decompressor"
     # Legacy API
     "AsdfExtension",
     "AsdfExtensionList",

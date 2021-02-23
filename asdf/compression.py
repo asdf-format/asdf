@@ -36,7 +36,8 @@ def validate(compression):
     compression = compression.strip('\0')
     
     builtin_labels = ['zlib', 'bzp2', 'lz4', 'input']
-    ext_labels = _get_all_compression_extension_labels()
+    ext_labels = list(set(_get_all_compression_extension_labels(decompressor=True) +
+                          _get_all_compression_extension_labels(decompressor=False)))
     all_labels = ext_labels + builtin_labels
     
     # An extension is allowed to override a builtin compression or another extension,
@@ -126,24 +127,30 @@ class Lz4Decompressor:
         return bytesout
 
 
-def _get_compressor_from_extensions(compression):
+def _get_compressor_from_extensions(compression, decompressor=False, return_extension=False):
     '''
-    Look at the loaded ASDF extensions and see if any of them
-    know how to handle this kind of compression.
+    Look at the loaded ASDF extensions and return the first one (if any)
+    that can handle this type of compression.
+    `return_extension` can be used to return corresponding extension for bookeeping purposes.
     Returns None if no match found.
     '''
     # TODO: in ASDF 3, this will be done by the ExtensionManager
     extensions = get_config().extensions
+    
     for ext in extensions:
-        for comp in ext.compressors:
+        compressors = ext.decompressors if decompressor else ext.compressors
+        for comp in compressors:
             # TODO: slightly unfortunate to have to construct the object to get the labels
             for label in comp().labels:
                 if compression == label:
-                    return comp
+                    if return_extension:
+                        return comp,ext
+                    else:
+                        return comp
     return None
     
 
-def _get_all_compression_extension_labels():
+def _get_all_compression_extension_labels(decompressor=False):
     '''
     Get the list of compression labels supported via extensions
     '''
@@ -151,7 +158,8 @@ def _get_all_compression_extension_labels():
     labels = []
     extensions = get_config().extensions
     for ext in extensions:
-        for comp in ext.compressors:
+        compressors = ext.decompressors if decompressor else ext.compressors
+        for comp in compressors:
             # TODO: slightly unfortunate to have to construct the object to get the labels
             for label in comp().labels:
                 labels += [label]
@@ -159,10 +167,10 @@ def _get_all_compression_extension_labels():
     
     
 def _get_decoder(compression):
-    ext_comp = _get_compressor_from_extensions(compression)
+    ext_comp = _get_compressor_from_extensions(compression, decompressor=True)
     
     # Check if we have any options set for this decompressor
-    options = get_config().compression_options
+    options = get_config().decompression_options
     options = options.get(compression,{})
     
     if ext_comp != None:
@@ -201,7 +209,7 @@ def _get_decoder(compression):
 
 
 def _get_encoder(compression):
-    ext_comp = _get_compressor_from_extensions(compression)
+    ext_comp = _get_compressor_from_extensions(compression, decompressor=False)
     
     # Check if we have any options set for this compressor
     options = get_config().compression_options

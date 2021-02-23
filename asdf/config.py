@@ -292,6 +292,14 @@ class AsdfConfig:
         or decompression.
         '''
         return self._compression_options
+    
+    @property
+    def decompression_options(self):
+        '''
+        A dict, keyed by compression label, of kwargs that will
+        be passed to the Compressor object for decompression
+        '''
+        return self._decompression_options
 
     def __repr__(self):
         return (
@@ -300,12 +308,14 @@ class AsdfConfig:
             "  default_version: {}\n"
             "  legacy_fill_schema_defaults: {}\n"
             "  compression_options: {}\n"
+            "  decompression_options: {}\n"
             ">"
         ).format(
             self.validate_on_read,
             self.default_version,
             self.legacy_fill_schema_defaults,
-            self.compression_options
+            self.compression_options,
+            self.decompression_options
         )
 
 
