@@ -520,5 +520,5 @@ def test_array_view_different_layout(tmp_path):
     with asdf.fits_embed.AsdfInFits(hdulist=hdul) as af:
         af["fits"] = hdul[-1].data
         af["other"] = other_view
-        with pytest.raises(ValueError, match="Views over FITS arrays must have identical memory layout"):
+        with pytest.raises(ValueError, match="ASDF has only limited support for serializing views over arrays stored in FITS HDUs"):
             af.write_to(file_path)

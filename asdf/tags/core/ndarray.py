@@ -430,7 +430,12 @@ class NDArrayType(AsdfType):
                 block.data.dtype.itemsize != data.dtype.itemsize or
                 block.data.ctypes.data != data.ctypes.data or
                 block.data.strides != data.strides):
-                raise ValueError("Views over FITS arrays must have identical memory layout")
+                raise ValueError(
+                    "ASDF has only limited support for serializing views over arrays stored "
+                    "in FITS HDUs.  This error likely means that a slice of such an array "
+                    "was found in the ASDF tree.  The slice can be decoupled from the FITS "
+                    "array by calling copy() before assigning it to the tree."
+                )
 
             offset = 0
             strides = None
