@@ -43,7 +43,7 @@
 - Add ``edit`` subcommand to asdftool for efficient editing of
   the YAML portion of an ASDF file.  [#873, #922]
 
-2.7.3 (unreleased)
+2.7.3 (2021-02-25)
 ------------------
 
 - Add pytest plugin options to skip and xfail individual tests
