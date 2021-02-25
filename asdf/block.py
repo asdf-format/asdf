@@ -1107,20 +1107,10 @@ class Block:
         """
         data = self.data
 
-        # Reverse axes with negative strides so that we write the array
-        # according to the memory layout of the underlying buffer.
-        if any(s < 0 for s in data.strides):
-            slices = []
-            for stride in data.strides:
-                if stride < 0:
-                    slices.append(slice(None, None, -1))
-                else:
-                    slices.append(slice(None))
-            data = data[tuple(slices)]
-
         # 'K' order flattens the array in the order that elements
-        # occur in memory (except negative strides are reversed,
-        # which we handled above).
+        # occur in memory, except axes with negative strides which
+        # are reversed.  That is a problem for base arrays with
+        # negative strides and is an outstanding bug in this library.
         return data.ravel(order='K')
 
     def write(self, fd):
