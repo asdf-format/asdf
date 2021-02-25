@@ -396,6 +396,7 @@ def test_serialize_table(tmpdir):
         data = ff.tree['my_table']
         assert data._source.startswith('fits:')
 
+
 def test_extension_check():
     testfile = get_test_data_path('extension_check.fits')
 
@@ -422,6 +423,7 @@ def test_verify_with_astropy(tmpdir, dtype):
 
     with fits.open(tmpfile) as hdu:
         hdu.verify('exception')
+
 
 def test_dangling_file_handle(tmpdir):
     """
@@ -456,3 +458,67 @@ def test_dangling_file_handle(tmpdir):
     gc.collect()
 
     del ctx
+
+
+def test_array_view(tmp_path):
+    """
+    Special handling is required when a view over a larger array
+    is assigned to an HDU and referenced from the ASDF tree.
+    """
+    file_path = tmp_path / "test.fits"
+
+    data = np.zeros((10, 10))
+    data_view = data[:, :5]
+
+    hdul = fits.HDUList([fits.PrimaryHDU(), fits.ImageHDU(data_view)])
+    with asdf.fits_embed.AsdfInFits(hdulist=hdul) as af:
+        af["data"] = hdul[-1].data
+        af.write_to(file_path)
+
+    with asdf.open(file_path) as af:
+        assert_array_equal(af["data"], data_view)
+
+
+def test_array_view_compatible_layout(tmp_path):
+    """
+    We should be able to serialize additional views that have
+    the same memory layout.
+    """
+    file_path = tmp_path / "test.fits"
+
+    data = np.zeros((10, 10), dtype=np.float64)
+    data_view = data[:, :5]
+    other_view = data_view[:, :]
+    different_dtype_view = data_view.view(np.int64)
+
+    hdul = fits.HDUList([fits.PrimaryHDU(), fits.ImageHDU(data_view)])
+    with asdf.fits_embed.AsdfInFits(hdulist=hdul) as af:
+        af["data"] = hdul[-1].data
+        af["other"] = other_view
+        af["different_dtype"] = different_dtype_view
+        af.write_to(file_path)
+
+    with asdf.open(file_path) as af:
+        assert_array_equal(af["data"], data_view)
+        assert_array_equal(af["other"], other_view)
+        assert_array_equal(af["other"], different_dtype_view)
+
+
+def test_array_view_different_layout(tmp_path):
+    """
+    A view over the FITS array with a different memory layout
+    might end up corrupted when astropy.io.fits changes the
+    array to C-contiguous and big-endian on write.
+    """
+    file_path = tmp_path / "test.fits"
+
+    data = np.zeros((10, 10))
+    data_view = data[:, :5]
+    other_view = data_view[:, ::-1]
+
+    hdul = fits.HDUList([fits.PrimaryHDU(), fits.ImageHDU(data_view)])
+    with asdf.fits_embed.AsdfInFits(hdulist=hdul) as af:
+        af["fits"] = hdul[-1].data
+        af["other"] = other_view
+        with pytest.raises(ValueError, match="ASDF has only limited support for serializing views over arrays stored in FITS HDUs"):
+            af.write_to(file_path)
