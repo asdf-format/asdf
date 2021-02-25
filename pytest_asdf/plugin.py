@@ -121,7 +121,8 @@ class AsdfSchemaItem(pytest.Item):
         if hasattr(super(), "from_parent"):
             result = super().from_parent(parent, **kwargs)
         else:
-            result = AsdfSchemaItem(str(schema_path), parent, **kwargs)
+            name = kwargs.pop("name")
+            result = AsdfSchemaItem(name, parent, **kwargs)
 
         result.schema_path = schema_path
         result.validate_default = validate_default
@@ -183,7 +184,9 @@ class AsdfSchemaExampleItem(pytest.Item):
         if hasattr(super(), "from_parent"):
             result = super().from_parent(parent, **kwargs)
         else:
-            result = AsdfSchemaExampleItem(parent, **kwargs)
+            name = kwargs.pop("name")
+            result = AsdfSchemaExampleItem(name, parent, **kwargs)
+
         result.filename = str(schema_path)
         result.example = example
         result.ignore_unrecognized_tag = ignore_unrecognized_tag

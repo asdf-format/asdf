@@ -43,6 +43,11 @@ jobs:
             python-version: 3.5
             toxenv: py35
 
+          - name: Python 3.5 with legacy packages
+            os: ubuntu-latest
+            python-version: 3.5
+            toxenv: py35-legacy
+
           - name: Documentation Build
             os: ubuntu-latest
             python-version: 3.8
