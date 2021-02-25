@@ -87,7 +87,7 @@ class AsdfSchemaFile(pytest.File):
 
         if not self.skip_examples:
             for index, example in enumerate(self.find_examples_in_schema()):
-                name = f"test_example_{index}"
+                name = "test_example_{}".format(example)
                 item = AsdfSchemaExampleItem.from_parent(
                     self,
                     self.fspath,
@@ -307,7 +307,7 @@ def pytest_collect_file(path, parent):
 
     for root in schema_roots:
         if str(path).startswith(root) and path.purebasename not in skip_names:
-            posix_path = pathlib.Path(path).as_posix()
+            posix_path = pathlib.Path(str(path)).as_posix()
             schema_skip_tests = []
             for suffix, names in skip_tests.items():
                 if posix_path.endswith(suffix):

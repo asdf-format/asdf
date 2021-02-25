@@ -466,7 +466,7 @@ def test_array_view(tmp_path):
     Special handling is required when a view over a larger array
     is assigned to an HDU and referenced from the ASDF tree.
     """
-    file_path = tmp_path / "test.fits"
+    file_path = str(tmp_path / "test.fits")
 
     data = np.zeros((10, 10))
     data_view = data[:, :5]
@@ -485,7 +485,7 @@ def test_array_view_compatible_layout(tmp_path):
     We should be able to serialize additional views that have
     the same memory layout.
     """
-    file_path = tmp_path / "test.fits"
+    file_path = str(tmp_path / "test.fits")
 
     data = np.zeros((10, 10), dtype=np.float64)
     data_view = data[:, :5]
@@ -511,7 +511,7 @@ def test_array_view_different_layout(tmp_path):
     might end up corrupted when astropy.io.fits changes the
     array to C-contiguous and big-endian on write.
     """
-    file_path = tmp_path / "test.fits"
+    file_path = str(tmp_path / "test.fits")
 
     data = np.zeros((10, 10))
     data_view = data[:, :5]
