@@ -445,9 +445,10 @@ class NDArrayType(AsdfType):
                 override_byteorder="big",
             )
         else:
-            base = util.get_array_base(data)
             # Compute the offset relative to the base array and not the
             # block data, in case the block is compressed.
+            base = util.get_array_base(data)
+
             offset = data.ctypes.data - base.ctypes.data
 
             if data.flags.c_contiguous:
