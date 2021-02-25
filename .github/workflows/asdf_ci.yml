@@ -38,6 +38,11 @@ jobs:
             python-version: 3.6.10
             toxenv: py36
 
+          - name: Python 3.6 with legacy packages
+            os: ubuntu-latest
+            python-version: 3.6.10
+            toxenv: py36-legacy
+
           - name: Documentation Build
             os: ubuntu-latest
             python-version: 3.8
