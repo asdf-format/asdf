@@ -1,0 +1,83 @@
+name: Downstream
+
+on:
+  workflow_dispatch:
+    inputs:
+      asdf_ref:
+        description: asdf ref
+        required: true
+        default: master
+      astropy_ref:
+        description: astropy ref
+        required: true
+        default: master
+      gwcs_ref:
+        description: gwcs ref
+        required: true
+        default: master
+      jwst_ref:
+        description: jwst ref
+        required: true
+        default: master
+      specutils_ref:
+        description: specutils ref
+        required: true
+        default: master
+  schedule:
+    # Run every Monday at 6am UTC
+    - cron: '0 6 * * 1'
+
+env:
+  CRDS_SERVER_URL: https://jwst-crds.stsci.edu
+  CRDS_PATH: ~/crds_cache
+  CRDS_CLIENT_RETRY_COUNT: 3
+  CRDS_CLIENT_RETRY_DELAY_SECONDS: 20
+
+jobs:
+  common:
+    name: ${{ matrix.package_name }}@${{ matrix.ref }} unit tests
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - package_name: gwcs
+            repository: spacetelescope/gwcs
+            ref: ${{ github.event.inputs.gwcs_ref || 'master' }}
+          - package_name: jwst
+            repository: spacetelescope/jwst
+            ref: ${{ github.event.inputs.jwst_ref || 'master' }}
+          - package_name: specutils
+            repository: astropy/specutils
+            ref: ${{ github.event.inputs.specutils_ref || 'master' }}
+    steps:
+      - uses: actions/checkout@v2
+        with:
+          fetch-depth: 0
+          repository: ${{ matrix.repository }}
+          ref: ${{ matrix.ref }}
+      - name: Set up Python 3.9
+        uses: actions/setup-python@v2
+        with:
+          python-version: 3.9
+      - name: Install asdf
+        run: pip install git+https://github.com/asdf-format/asdf@${{ github.event.inputs.asdf_ref || 'master' }}
+      - name: Install remaining ${{ matrix.package_name }} dependencies
+        run: pip install .[test]
+      - name: Run ${{ matrix.package_name}} tests
+        run: pytest
+
+  astropy:
+    name: astropy@${{ github.event.inputs.astropy_ref || 'master' }} unit tests
+    runs-on: ubuntu-latest
+    steps:
+      - name: Set up Python 3.9
+        uses: actions/setup-python@v2
+        with:
+          python-version: 3.9
+      - name: Install asdf
+        run: pip install git+https://github.com/asdf-format/asdf@${{ github.event.inputs.asdf_ref || 'master' }}
+      - name: Install astropy
+        run: pip install git+https://github.com/astropy/astropy@${{ github.event.inputs.astropy_ref || 'master' }}#egg=astropy[test]
+      - name: Run astropy tests
+        run: pytest --pyargs astropy
