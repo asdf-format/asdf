@@ -10,7 +10,7 @@ import asdf
 from asdf import compression
 from asdf import generic_io
 from asdf import config_context
-from asdf.extension import Extension, Compressor, Decompressor
+from asdf.extension import Extension, Compressor
 
 from ..tests import helpers
 
@@ -191,36 +191,54 @@ def test_set_array_compression(tmpdir):
     with asdf.open(tmpfile) as af_in:
         assert af_in.get_array_compression(af_in.tree['zlib_data']) == 'zlib'
         assert af_in.get_array_compression(af_in.tree['bzp2_data']) == 'bzp2'
-
+    
 
 class LzmaCompressor(Compressor):
-    def __init__(self, preset=None):
-        self._compressor = lzma.LZMACompressor(preset=preset)
-
-    def compress(self, data):
-        comp = self._compressor.compress(data)
-        return comp
-
-    def flush(self):
-        return self._compressor.flush()
-
-    @property
-    def labels(self):
-        return ['lzma']
-
-class LzmaDecompressor(Decompressor):
-    def __init__(self):
+    def __init__(self, compression_kwargs=None, decompression_kwargs=None):
+        if compression_kwargs is None:
+            compression_kwargs = {}
+        if decompression_kwargs is None:
+            decompression_kwargs = {}
+        
+        self.compression_kwargs = compression_kwargs.copy()
         self._decompressor = lzma.LZMADecompressor()
 
-    def decompress(self, data):
+    def compress(self, data):
+        compressor = lzma.LZMACompressor(**self.compression_kwargs)
+        comp = compressor.compress(data)
+        flushed = compressor.flush()
+        return comp + flushed
+    
+    def decompress(self, data, out=None):
         decomp = self._decompressor.decompress(data)
+        if out is not None:
+            out[:len(decomp)] = decomp
+            return len(decomp)
         return decomp
 
     @property
     def labels(self):
         return ['lzma']
 
+class LzmaExtensionConfig:
+    def __init__(self):
+        self._compressor_options = {}
+  
+    @property
+    def compressor_options(self):
+        return self._compressor_options
+    
+    @compressor_options.setter
+    def compressor_options(self, value):
+        """
+        Additional keyword arguments passed to `lzma.LZMACompressor`.  See
+        https://docs.python.org/3/library/lzma.html for details.
+        """
+        self._compressor_options = value
+    
 class LzmaExtension(Extension):
+    config_class = LzmaExtensionConfig
+    
     @property
     def extension_uri(self):
         return "http://somewhere.org/extensions/lzma-1.0"
@@ -229,17 +247,16 @@ class LzmaExtension(Extension):
     def compressors(self):
         return [LzmaCompressor]
 
-    @property
-    def decompressors(self):
-        return [LzmaDecompressor]
-
 def test_compression_with_extension(tmpdir):
     tree = _get_large_tree()
 
     with config_context() as config:
         config.add_extension(LzmaExtension())
 
-        asdf.config.get_config().compression_options['lzma'] = {'preset':lzma.PRESET_DEFAULT}
+        #lzma_conf = asdf.config.get_config().compression_options['lzma']
+        #with pytest.raises(ValueError):
+        #    lzma_conf.preset = 9000
+        #lzma_conf.preset = 6
         fn = _roundtrip(tmpdir, tree, 'lzma')
 
         hist = {'extension_class': 'asdf.tests.test_compression.LzmaExtension',

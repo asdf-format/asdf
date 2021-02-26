@@ -96,18 +96,6 @@ class Extension(abc.ABC):
         """
         return []
 
-    @property
-    def decompressors(self):
-        """
-        Get the `asdf.extension.Deompressor` instances for
-        decompression schemes supported by this extension.
-
-        Returns
-        -------
-        iterable of asdf.extension.Decompressor
-        """
-        return []
-
 
 class ExtensionProxy(Extension, AsdfExtension):
     """
@@ -171,7 +159,6 @@ class ExtensionProxy(Extension, AsdfExtension):
         # properties to already be available.
         self._converters = [ConverterProxy(c, self) for c in getattr(self._delegate, "converters", [])]
         self._compressors = self._delegate.compressors if hasattr(self._delegate, "compressors") else []
-        self._decompressors = self._delegate.decompressors if hasattr(self._delegate, "decompressors") else []
 
     @property
     def extension_uri(self):
@@ -232,17 +219,6 @@ class ExtensionProxy(Extension, AsdfExtension):
         list of asdf.extension.Compressor
         """
         return self._compressors
-
-    @property
-    def decompressors(self):
-        """
-        Get the extension's decompressors.
-
-        Returns
-        -------
-        list of asdf.extension.Decompressor
-        """
-        return self._decompressors
 
     @property
     def tags(self):

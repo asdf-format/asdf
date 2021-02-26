@@ -11,7 +11,6 @@ from asdf.extension import (
     Converter,
     ConverterProxy,
     Compressor,
-    Decompressor,
     AsdfExtension,
     BuiltinExtension,
     get_cached_asdf_extension_list
@@ -55,14 +54,12 @@ class FullExtension:
         self,
         converters=None,
         compressors=None,
-        decompressors=None,
         asdf_standard_requirement=None,
         tags=None,
         legacy_class_names=None,
     ):
         self._converters = [] if converters is None else converters
         self._compressors = [] if compressors is None else compressors
-        self._decompressors = [] if decompressors is None else decompressors
         self._asdf_standard_requirement = asdf_standard_requirement
         self._tags = tags
         self._legacy_class_names = [] if legacy_class_names is None else legacy_class_names
@@ -74,10 +71,6 @@ class FullExtension:
     @property
     def compressors(self):
         return self._compressors
-
-    @property
-    def decompressors(self):
-        return self._decompressors
 
     @property
     def asdf_standard_requirement(self):
@@ -132,15 +125,6 @@ class MinimalCompressor(Compressor):
     def labels(self):
         return ['mini']
 
-class MinimalDecompressor(Decompressor):
-    def decompress(data):
-        return b''
-
-    @property
-    def labels(self):
-        return ['mini']
-
-
 # Some dummy types for testing converters:
 class FooType:
     pass
@@ -177,7 +161,6 @@ def test_extension_proxy():
     assert proxy.asdf_standard_requirement == SpecifierSet()
     assert proxy.converters == []
     assert proxy.compressors == []
-    assert proxy.decompressors == []
     assert proxy.tags == []
     assert proxy.types == []
     assert proxy.tag_mapping == []
@@ -215,7 +198,6 @@ def test_extension_proxy():
     extension = FullExtension(
         converters=converters,
         compressors=[MinimalCompressor],
-        decompressors=[MinimalDecompressor],
         asdf_standard_requirement=">=1.4.0",
         tags=["asdf://somewhere.org/extensions/full/tags/foo-1.0"],
         legacy_class_names=["foo.extensions.SomeOldExtensionClass"]
@@ -227,7 +209,6 @@ def test_extension_proxy():
     assert proxy.asdf_standard_requirement == SpecifierSet(">=1.4.0")
     assert proxy.converters == [ConverterProxy(c, proxy) for c in converters]
     assert proxy.compressors == [MinimalCompressor]
-    assert proxy.decompressors == [MinimalDecompressor]
     assert len(proxy.tags) == 1
     assert proxy.tags[0].tag_uri == "asdf://somewhere.org/extensions/full/tags/foo-1.0"
     assert proxy.types == []
@@ -250,10 +231,6 @@ def test_extension_proxy():
     # Should fail with a bad compressor:
     with pytest.raises(TypeError):
         ExtensionProxy(FullExtension(compressors=[object()]))
-
-    # Should fail with a bad decompressor:
-    with pytest.raises(TypeError):
-        ExtensionProxy(FullExtension(decompressors=[object()]))
 
     # Unparseable ASDF Standard requirement:
     with pytest.raises(ValueError):
@@ -601,7 +578,6 @@ extension_uri: asdf://somewhere.org/extensions/foo
         assert extension.asdf_standard_requirement is None
         assert extension.converters == []
         assert extension.compressors == []
-        assert extension.decompressors == []
         assert extension.tags == []
 
         proxy = ExtensionProxy(extension)
@@ -610,7 +586,6 @@ extension_uri: asdf://somewhere.org/extensions/foo
         assert proxy.asdf_standard_requirement == SpecifierSet()
         assert proxy.converters == []
         assert proxy.compressors == []
-        assert proxy.decompressors == []
         assert proxy.tags == []
 
     with config_context() as config:
@@ -651,14 +626,12 @@ tags:
             legacy_class_names=["foo.extension.LegacyExtension"],
             converters=[converter],
             compressors=[MinimalCompressor],
-            decompressors=[MinimalDecompressor],
         )
         assert extension.extension_uri == "asdf://somewhere.org/extensions/foo"
         assert extension.legacy_class_names == ["foo.extension.LegacyExtension"]
         assert extension.asdf_standard_requirement == SpecifierSet(">=1.6.0,<2.0.0")
         assert extension.converters == [converter]
         assert extension.compressors == [MinimalCompressor]
-        assert extension.decompressors == [MinimalDecompressor]
         assert len(extension.tags) == 2
         assert extension.tags[0] == "asdf://somewhere.org/tags/bar"
         assert extension.tags[1].tag_uri == "asdf://somewhere.org/tags/baz"
@@ -672,7 +645,6 @@ tags:
         assert proxy.asdf_standard_requirement == SpecifierSet(">=1.6.0,<2.0.0")
         assert proxy.converters == [ConverterProxy(converter, proxy)]
         assert proxy.compressors == [MinimalCompressor]
-        assert proxy.decompressors == [MinimalDecompressor]
         assert len(proxy.tags) == 2
         assert proxy.tags[0].tag_uri == "asdf://somewhere.org/tags/bar"
         assert proxy.tags[1].tag_uri == "asdf://somewhere.org/tags/baz"
