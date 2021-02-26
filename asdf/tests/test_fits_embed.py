@@ -12,6 +12,7 @@ from astropy.table import Table
 from jsonschema.exceptions import ValidationError
 
 import asdf
+from asdf.constants import DEFAULT_AUTO_INLINE
 from asdf import get_config
 from asdf import fits_embed
 from asdf import open as asdf_open
@@ -467,8 +468,8 @@ def test_array_view(tmp_path):
     """
     file_path = tmp_path / "test.fits"
 
-    data = np.zeros((10, 10))
-    data_view = data[:, :5]
+    data = np.arange(DEFAULT_AUTO_INLINE ** 2, dtype=np.float64).reshape(DEFAULT_AUTO_INLINE, DEFAULT_AUTO_INLINE)
+    data_view = data[:, :(DEFAULT_AUTO_INLINE // 2)]
 
     hdul = fits.HDUList([fits.PrimaryHDU(), fits.ImageHDU(data_view)])
     with asdf.fits_embed.AsdfInFits(hdulist=hdul) as af:
@@ -486,22 +487,43 @@ def test_array_view_compatible_layout(tmp_path):
     """
     file_path = tmp_path / "test.fits"
 
-    data = np.zeros((10, 10), dtype=np.float64)
-    data_view = data[:, :5]
+    data = np.arange(DEFAULT_AUTO_INLINE ** 2, dtype=np.float64).reshape(DEFAULT_AUTO_INLINE, DEFAULT_AUTO_INLINE)
+    data_view = data[:, :(DEFAULT_AUTO_INLINE // 2)]
     other_view = data_view[:, :]
-    different_dtype_view = data_view.view(np.int64)
 
     hdul = fits.HDUList([fits.PrimaryHDU(), fits.ImageHDU(data_view)])
     with asdf.fits_embed.AsdfInFits(hdulist=hdul) as af:
         af["data"] = hdul[-1].data
         af["other"] = other_view
-        af["different_dtype"] = different_dtype_view
         af.write_to(file_path)
 
     with asdf.open(file_path) as af:
         assert_array_equal(af["data"], data_view)
         assert_array_equal(af["other"], other_view)
-        assert_array_equal(af["other"], different_dtype_view)
+
+
+@pytest.mark.xfail(reason="Outstanding bug in AsdfInFits", strict=True)
+def test_array_view_compatible_dtype(tmp_path):
+    """
+    We should be able to serialize additional views that have
+    the same memory layout and different dtype of the same
+    size.
+    """
+    file_path = tmp_path / "test.fits"
+
+    data = np.arange(DEFAULT_AUTO_INLINE ** 2, dtype=np.float64).reshape(DEFAULT_AUTO_INLINE, DEFAULT_AUTO_INLINE)
+    data_view = data[:, :(DEFAULT_AUTO_INLINE // 2)]
+    other_view = data.view(np.int64)
+
+    hdul = fits.HDUList([fits.PrimaryHDU(), fits.ImageHDU(data_view)])
+    with asdf.fits_embed.AsdfInFits(hdulist=hdul) as af:
+        af["data"] = hdul[-1].data
+        af["other"] = other_view
+        af.write_to(file_path)
+
+    with asdf.open(file_path) as af:
+        assert_array_equal(af["data"], data_view)
+        assert_array_equal(af["other"], other_view)
 
 
 def test_array_view_different_layout(tmp_path):
@@ -512,13 +534,13 @@ def test_array_view_different_layout(tmp_path):
     """
     file_path = tmp_path / "test.fits"
 
-    data = np.zeros((10, 10))
-    data_view = data[:, :5]
-    other_view = data_view[:, ::-1]
+    data = np.arange(DEFAULT_AUTO_INLINE ** 2, dtype=np.float64).reshape(DEFAULT_AUTO_INLINE, DEFAULT_AUTO_INLINE)
+    data_view = data[:, :(DEFAULT_AUTO_INLINE // 2)]
+    other_view = data_view[:, (DEFAULT_AUTO_INLINE // 2):]
 
     hdul = fits.HDUList([fits.PrimaryHDU(), fits.ImageHDU(data_view)])
     with asdf.fits_embed.AsdfInFits(hdulist=hdul) as af:
-        af["fits"] = hdul[-1].data
+        af["data"] = hdul[-1].data
         af["other"] = other_view
         with pytest.raises(ValueError, match="ASDF has only limited support for serializing views over arrays stored in FITS HDUs"):
             af.write_to(file_path)
