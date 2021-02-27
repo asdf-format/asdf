@@ -54,7 +54,7 @@ def validate(compression):
 
 
 class Lz4Compressor:
-    def __init__(self, block_api, mode='high_compression', compression_block_size=1<<22):
+    def __init__(self, block_api, mode='default', compression_block_size=1<<22):
         self._api = block_api
         self._mode = mode
         self._compression_block_size = compression_block_size
