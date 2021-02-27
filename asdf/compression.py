@@ -54,14 +54,18 @@ def validate(compression):
 
 
 class Lz4Compressor:
-    def __init__(self, block_api, mode='high_compression'):
+    def __init__(self, block_api, mode='high_compression', compression_block_size=1<<22):
         self._api = block_api
         self._mode = mode
+        self._compression_block_size = compression_block_size
 
     def compress(self, data):
-        output = self._api.compress(data, mode=self._mode)
-        header = struct.pack('!I', len(output))
-        return header + output
+        nelem = self._compression_block_size // data.itemsize
+        output = b''  # TODO: better way to pre-allocate array without knowing final size?
+        for i in range(0,len(data),nelem):
+            _output = self._api.compress(data[i:i+nelem], mode=self._mode)
+            header = struct.pack('!I', len(_output))
+            yield header + _output
 
 
 class Lz4Decompressor:
