@@ -219,7 +219,7 @@ class AsdfConfig:
         Instantiate an extension's config class and register any compression
         options.
         '''
-        if not hasattr(extension, 'config_class'):
+        if not extension.config_class:
             return
         
         conf = extension.config_class()
