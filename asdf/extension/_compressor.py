@@ -48,7 +48,7 @@ class Compressor(abc.ABC):
         """
         Returns compressed data.
         """
-        pass # pragma: no cover
+        raise NotImplementedError
     
     
     @abc.abstractmethod
@@ -56,4 +56,4 @@ class Compressor(abc.ABC):
         """
         Returns decompressed data.
         """
-        pass # pragma: no cover
+        raise NotImplementedError

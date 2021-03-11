@@ -79,9 +79,7 @@ def test_invalid_compression():
     with pytest.raises(ValueError):
         ff.set_array_compression(tree['science_data'], 'foo')
     with pytest.raises(ValueError):
-        compression._get_decoder('foo')
-    with pytest.raises(ValueError):
-        compression._get_encoder('foo')
+        compression._get_compressor('foo')
 
 
 def test_get_compressed_size():
@@ -201,7 +199,7 @@ class LzmaCompressor(Compressor):
             decompression_kwargs = {}
         
         self.compression_kwargs = compression_kwargs.copy()
-        self._decompressor = lzma.LZMADecompressor()
+        self._decompressor = lzma.LZMADecompressor(**decompression_kwargs)
 
     def compress(self, data):
         compressor = lzma.LZMACompressor(**self.compression_kwargs)
@@ -222,26 +220,23 @@ class LzmaCompressor(Compressor):
 
 class LzmaExtensionConfig:
     def __init__(self):
-        self._compressor_options = {}
+        self._compression_options = {'lzma':dict()}
+        self._decompression_options = {'lzma':dict()}
   
     @property
-    def compressor_options(self):
-        return self._compressor_options
+    def compression_options(self):
+        return self._compression_options
     
-    @compressor_options.setter
-    def compressor_options(self, value):
-        """
-        Additional keyword arguments passed to `lzma.LZMACompressor`.  See
-        https://docs.python.org/3/library/lzma.html for details.
-        """
-        self._compressor_options = value
+    @property
+    def decompression_options(self):
+        return self._decompression_options
     
 class LzmaExtension(Extension):
     config_class = LzmaExtensionConfig
     
     @property
     def extension_uri(self):
-        return "http://somewhere.org/extensions/lzma-1.0"
+        return "asdf://somewhere.org/extensions/lzma-1.0"
 
     @property
     def compressors(self):
@@ -253,14 +248,15 @@ def test_compression_with_extension(tmpdir):
     with config_context() as config:
         config.add_extension(LzmaExtension())
 
-        #lzma_conf = asdf.config.get_config().compression_options['lzma']
-        #with pytest.raises(ValueError):
-        #    lzma_conf.preset = 9000
-        #lzma_conf.preset = 6
+        lzma_conf = asdf.config.get_config().compression('lzma')
+        lzma_conf['preset'] = 9000
+        with pytest.raises(lzma.LZMAError):
+            fn = _roundtrip(tmpdir, tree, 'lzma')
+        lzma_conf['preset'] = 6
         fn = _roundtrip(tmpdir, tree, 'lzma')
 
         hist = {'extension_class': 'asdf.tests.test_compression.LzmaExtension',
-                'extension_uri': 'http://somewhere.org/extensions/lzma-1.0',
+                'extension_uri': 'asdf://somewhere.org/extensions/lzma-1.0',
                 'compression_labels': ['lzma']}
 
         with asdf.open(fn) as af:

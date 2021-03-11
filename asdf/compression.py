@@ -54,10 +54,37 @@ def validate(compression):
 
 
 class Lz4Compressor:
-    def __init__(self, block_api, mode='default', compression_block_size=1<<22):
-        self._api = block_api
-        self._mode = mode
-        self._compression_block_size = compression_block_size
+    def __init__(self, compression_kwargs=None, decompression_kwargs=None):
+        if compression_kwargs is None:
+            compression_kwargs = {}
+        if decompression_kwargs is None:
+            decompression_kwargs = {}
+            
+        try:
+            import lz4.block
+        except ImportError:
+            raise ImportError(
+                "lz4 library in not installed in your Python environment, "
+                "therefore the compressed block in this ASDF file "
+                "can not be decompressed.")
+            
+        self._api = lz4.block
+        
+        # compression
+        self._mode= compression_kwargs.get('mode','default')
+        self._compression_block_size = compression_kwargs.get('compression_block_size',1<<22)
+        
+        # decompression
+        self._size = 0
+        self._pos = 0
+        self._partial_len = b''
+        self._buffer = None
+        
+    
+    def __del__(self):
+        if self._buffer is not None:
+            raise Exception('Found data left in lz4 buffer after decompression')
+        
 
     def compress(self, data):
         nelem = self._compression_block_size // data.itemsize
@@ -66,20 +93,8 @@ class Lz4Compressor:
             _output = self._api.compress(data[i:i+nelem], mode=self._mode)
             header = struct.pack('!I', len(_output))
             yield header + _output
-
-
-class Lz4Decompressor:
-    def __init__(self, block_api):
-        self._api = block_api
-        self._size = 0
-        self._pos = 0
-        self._partial_len = b''
-        self._buffer = None
-
-    def __del__(self):
-        if self._buffer is not None:
-            raise Exception('Found data left in lz4 buffer after decompression')
-
+            
+    
     def decompress(self, data, out=None):
         bytesout = 0
         data = memoryview(data).cast('c')  # don't copy on slice
@@ -191,7 +206,7 @@ def _get_compressor_from_extensions(compression, return_extension=False):
     '''
     Look at the loaded ASDF extensions and return the first one (if any)
     that can handle this type of compression.
-    `return_extension` can be used to return corresponding extension for bookeeping purposes.
+    `return_extension` can be used to return corresponding extension for bookkeeping purposes.
     Returns None if no match found.
     '''
     # TODO: in ASDF 3, this will be done by the ExtensionManager
@@ -224,60 +239,31 @@ def _get_all_compression_extension_labels():
     return labels
 
 
-def _get_decoder(compression):
-    ext_comp = _get_compressor_from_extensions(compression)
-
-    # Check if we have any options set for this decompressor
-    options = get_config().decompression_options
-    options = options.get(compression,{})
+def _get_compressor(label, decompression=False):
+    ext_comp = _get_compressor_from_extensions(label)
 
     if ext_comp != None:
         # Use an extension before builtins
-        return ext_comp(**options)
-    elif compression == 'zlib':
-        return ZlibCompressor(decompression_kwargs=options)
-    elif compression == 'bzp2':
-        return Bzp2Compressor(decompression_kwargs=options)
-    elif compression == 'lz4':
-        try:
-            import lz4.block
-        except ImportError:
-            raise ImportError(
-                "lz4 library in not installed in your Python environment, "
-                "therefore the compressed block in this ASDF file "
-                "can not be decompressed.")
-        return Lz4Decompressor(lz4.block, **options)
+        comp_class = ext_comp
+    elif label == 'zlib':
+        comp_class = ZlibCompressor
+    elif label == 'bzp2':
+        comp_class = Bzp2Compressor
+    elif label == 'lz4':
+        comp_class = Lz4Compressor
     else:
         raise ValueError(
-            "Unknown compression type: '{0}'".format(compression))
-
-
-def _get_encoder(compression):
-    ext_comp = _get_compressor_from_extensions(compression)
-
-    # Check if we have any options set for this compressor
-    options = get_config().compression_options
-    options = options.get(compression,{})
-
-    if ext_comp != None:
-        # Use an extension before builtins
-        return ext_comp(**options)
-    elif compression == 'zlib':
-        return ZlibCompressor(compression_kwargs=options)
-    elif compression == 'bzp2':
-        return Bzp2Compressor(compression_kwargs=options)
-    elif compression == 'lz4':
-        try:
-            import lz4.block
-        except ImportError:
-            raise ImportError(
-                "lz4 library in not installed in your Python environment, "
-                "therefore the block in this ASDF file "
-                "can not be compressed.")
-        return Lz4Compressor(lz4.block, **options)
+            "Unknown compression type: '{0}'".format(label))
+        
+    if decompression:
+        # Check if we have any options set for this compressor
+        comp_kwargs = get_config().decompression(label)
+        comp_obj = comp_class(decompression_kwargs=comp_kwargs)
     else:
-        raise ValueError(
-            "Unknown compression type: '{0}'".format(compression))
+        comp_kwargs = get_config().compression(label)
+        comp_obj = comp_class(compression_kwargs=comp_kwargs)
+        
+    return comp_obj
 
 
 def to_compression_header(compression):
@@ -320,7 +306,7 @@ def decompress(fd, used_size, data_size, compression):
     buffer = np.empty((data_size,), np.uint8)
 
     compression = validate(compression)
-    decoder = _get_decoder(compression)
+    decoder = _get_compressor(compression, decompression=True)
 
     i = 0
     for block in fd.read_blocks(used_size):
@@ -357,7 +343,7 @@ def compress(fd, data, compression):
         The type of compression to use.
     """
     compression = validate(compression)
-    encoder = _get_encoder(compression)
+    encoder = _get_compressor(compression, decompression=False)
 
     # Get a contiguous, 1D memoryview of the underlying data, preserving data.itemsize
     # - contiguous: because we may not want to assume that all compressors can handle arbitrary strides
@@ -398,7 +384,7 @@ def get_compressed_size(data, compression):
     bytes : int
     """
     compression = validate(compression)
-    encoder = _get_encoder(compression)
+    encoder = _get_compressor(compression, decompression=False)
 
     # Get a contiguous, 1D memoryview of the underlying data, preserving data.itemsize
     # - contiguous: because we may not want to assume that all compressors can handle arbitrary strides
