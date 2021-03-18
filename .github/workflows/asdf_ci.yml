@@ -123,7 +123,7 @@ jobs:
           - name: Windows
             os: windows-latest
             python-version: 3.9
-            toxenv: py39
+            toxenv: py39-packaged
     steps:
       - name: Install System Packages
         if: ${{ contains(matrix.toxenv,'docbuild') }}
