@@ -46,13 +46,6 @@ class _FitsBlock:
     def array_storage(self):
         return 'fits'
 
-    def override_byteorder(self, byteorder):
-        # FITS data is always stored in big-endian byte order.
-        # The data array may not report big-endian, but we want
-        # the value written to the tree to match the actual
-        # byte order on disk.
-        return 'big'
-
     @property
     def trust_data_dtype(self):
         # astropy.io.fits returns arrays in native byte order

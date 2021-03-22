@@ -4,6 +4,19 @@
 Changes
 *******
 
+What's New in ASDF 2.7.3?
+=========================
+
+The ASDF Standard is at v1.5.0.
+
+Changes include:
+
+- Fix bug resulting in invalid strides values for views over
+  FITS arrays.
+
+- Add pytest plugin options to skip and xfail individual tests
+  and xfail the unsupported ndarray-1.0.0 schema example.
+
 What's New in ASDF 2.7.2?
 =========================
 

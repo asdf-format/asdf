@@ -43,6 +43,17 @@
 - Add ``edit`` subcommand to asdftool for efficient editing of
   the YAML portion of an ASDF file.  [#873, #922]
 
+- Remove the ``asdf.test`` method and ``asdf.__githash__`` attribute. [#943]
+
+2.7.3 (2021-02-25)
+------------------
+
+- Add pytest plugin options to skip and xfail individual tests
+  and xfail the unsupported ndarray-1.0.0 example. [#929]
+
+- Fix bug resulting in invalid strides values for views over
+  FITS arrays. [#930]
+
 2.7.2 (2021-01-15)
 ------------------
 

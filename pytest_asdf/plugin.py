@@ -2,6 +2,7 @@ import io
 import os
 from importlib.util import find_spec
 from pkg_resources import parse_version
+import pathlib
 
 import yaml
 import pytest
@@ -16,6 +17,12 @@ def pytest_addoption(parser):
         "asdf_schema_root", "Root path indicating where schemas are stored")
     parser.addini(
         "asdf_schema_skip_names", "Base names of files to skip in schema tests")
+    parser.addini(
+        "asdf_schema_skip_tests",
+        "List of tests to skip, one per line, in format <schema path suffix>::<test name>")
+    parser.addini(
+        "asdf_schema_xfail_tests",
+        "List of tests to xfail, one per line, in format <schema path suffix>::<test name>")
     parser.addini(
         "asdf_schema_skip_examples",
         "Base names of schemas whose examples should not be tested")
@@ -50,7 +57,7 @@ def pytest_addoption(parser):
 class AsdfSchemaFile(pytest.File):
     @classmethod
     def from_parent(cls, parent, *, fspath, skip_examples=False, validate_default=True,
-        ignore_unrecognized_tag=False, ignore_version_mismatch=False, **kwargs):
+        ignore_unrecognized_tag=False, ignore_version_mismatch=False, skip_tests=[], xfail_tests=[], **kwargs):
         if hasattr(super(), "from_parent"):
             result = super().from_parent(parent, fspath=fspath, **kwargs)
         else:
@@ -60,19 +67,36 @@ class AsdfSchemaFile(pytest.File):
         result.validate_default = validate_default
         result.ignore_unrecognized_tag = ignore_unrecognized_tag
         result.ignore_version_mismatch = ignore_version_mismatch
+        result.skip_tests = skip_tests
+        result.xfail_tests = xfail_tests
+
         return result
 
+    def _set_markers(self, item):
+        if item.name in self.skip_tests or "*" in self.skip_tests:
+            item.add_marker(pytest.mark.skip)
+        if item.name in self.xfail_tests or "*" in self.xfail_tests:
+            item.add_marker(pytest.mark.xfail)
+
     def collect(self):
-        yield AsdfSchemaItem.from_parent(self, self.fspath, validate_default=self.validate_default)
+        item = AsdfSchemaItem.from_parent(self, self.fspath, validate_default=self.validate_default, name="test_schema")
+        self._set_markers(item)
+        yield item
+
         if not self.skip_examples:
-            for example in self.find_examples_in_schema():
-                yield AsdfSchemaExampleItem.from_parent(
+            for index, example in enumerate(self.find_examples_in_schema()):
+                name = f"test_example_{index}"
+                item = AsdfSchemaExampleItem.from_parent(
                     self,
                     self.fspath,
                     example,
+                    index,
                     ignore_unrecognized_tag=self.ignore_unrecognized_tag,
                     ignore_version_mismatch=self.ignore_version_mismatch,
+                    name=name,
                 )
+                self._set_markers(item)
+                yield item
 
     def find_examples_in_schema(self):
         """Returns generator for all examples in schema at given path"""
@@ -93,9 +117,10 @@ class AsdfSchemaItem(pytest.Item):
     @classmethod
     def from_parent(cls, parent, schema_path, validate_default=True, **kwargs):
         if hasattr(super(), "from_parent"):
-            result = super().from_parent(parent, name=str(schema_path), **kwargs)
+            result = super().from_parent(parent, **kwargs)
         else:
-            result = AsdfSchemaItem(str(schema_path), parent, **kwargs)
+            name = kwargs.pop("name")
+            result = AsdfSchemaItem(name, parent, **kwargs)
 
         result.schema_path = schema_path
         result.validate_default = validate_default
@@ -110,6 +135,9 @@ class AsdfSchemaItem(pytest.Item):
             self.schema_path, resolver=default_extensions.resolver,
             resolve_references=True)
         schema.check_schema(schema_tree, validate_default=self.validate_default)
+
+    def reportinfo(self):
+        return self.fspath, 0, ""
 
 
 ASTROPY_4_0_TAGS = {
@@ -149,13 +177,14 @@ def parse_schema_filename(filename):
 
 class AsdfSchemaExampleItem(pytest.Item):
     @classmethod
-    def from_parent(cls, parent, schema_path, example,
+    def from_parent(cls, parent, schema_path, example, example_index,
         ignore_unrecognized_tag=False, ignore_version_mismatch=False, **kwargs):
-        test_name = "{}-example".format(schema_path)
         if hasattr(super(), "from_parent"):
-            result = super().from_parent(parent, name=test_name, **kwargs)
+            result = super().from_parent(parent, **kwargs)
         else:
-            result = AsdfSchemaExampleItem(test_name, parent, **kwargs)
+            name = kwargs.pop("name")
+            result = AsdfSchemaExampleItem(name, parent, **kwargs)
+
         result.filename = str(schema_path)
         result.example = example
         result.ignore_unrecognized_tag = ignore_unrecognized_tag
@@ -224,6 +253,31 @@ class AsdfSchemaExampleItem(pytest.Item):
             buff = io.BytesIO()
             ff.write_to(buff)
 
+    def reportinfo(self):
+        return self.fspath, 0, ""
+
+
+def _parse_test_list(content):
+    result = {}
+
+    for line in content.split("\n"):
+        line = line.strip()
+        if len(line) > 0:
+            parts = line.split("::", 1)
+            path_suffix = pathlib.Path(parts[0]).as_posix()
+
+            if len(parts) == 1:
+                name = "*"
+            else:
+                name = parts[-1]
+
+            if path_suffix not in result:
+                result[path_suffix] = []
+
+            result[path_suffix].append(name)
+
+    return result
+
 
 def pytest_collect_file(path, parent):
     if not (parent.config.getini('asdf_schema_tests_enabled') or
@@ -240,6 +294,9 @@ def pytest_collect_file(path, parent):
     ignore_unrecognized_tag = parent.config.getini('asdf_schema_ignore_unrecognized_tag')
     ignore_version_mismatch = parent.config.getini('asdf_schema_ignore_version_mismatch')
 
+    skip_tests = _parse_test_list(parent.config.getini('asdf_schema_skip_tests'))
+    xfail_tests = _parse_test_list(parent.config.getini('asdf_schema_xfail_tests'))
+
     schema_roots = [os.path.join(str(parent.config.rootdir), os.path.normpath(root))
                         for root in schema_roots]
 
@@ -248,6 +305,16 @@ def pytest_collect_file(path, parent):
 
     for root in schema_roots:
         if str(path).startswith(root) and path.purebasename not in skip_names:
+            posix_path = pathlib.Path(path).as_posix()
+            schema_skip_tests = []
+            for suffix, names in skip_tests.items():
+                if posix_path.endswith(suffix):
+                    schema_skip_tests.extend(names)
+            schema_xfail_tests = []
+            for suffix, names in xfail_tests.items():
+                if posix_path.endswith(suffix):
+                    schema_xfail_tests.extend(names)
+
             return AsdfSchemaFile.from_parent(
                 parent,
                 fspath=path,
@@ -255,6 +322,8 @@ def pytest_collect_file(path, parent):
                 validate_default=validate_default,
                 ignore_unrecognized_tag=ignore_unrecognized_tag,
                 ignore_version_mismatch=ignore_version_mismatch,
+                skip_tests=schema_skip_tests,
+                xfail_tests=schema_xfail_tests,
             )
 
     return None

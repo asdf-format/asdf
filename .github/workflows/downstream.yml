@@ -22,7 +22,7 @@ on:
       specutils_ref:
         description: specutils ref
         required: true
-        default: master
+        default: main
   schedule:
     # Run every Monday at 6am UTC
     - cron: '0 6 * * 1'
@@ -49,7 +49,7 @@ jobs:
             ref: ${{ github.event.inputs.jwst_ref || 'master' }}
           - package_name: specutils
             repository: astropy/specutils
-            ref: ${{ github.event.inputs.specutils_ref || 'master' }}
+            ref: ${{ github.event.inputs.specutils_ref || 'main' }}
     steps:
       - uses: actions/checkout@v2
         with:

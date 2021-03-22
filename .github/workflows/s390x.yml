@@ -1,6 +1,7 @@
 name: s390x
 
 on:
+  workflow_dispatch:
   push:
     tags:
       - '*'
@@ -37,5 +38,5 @@ jobs:
             python3 -m venv --system-site-packages tests
             source tests/bin/activate
             pip3 install --upgrade pip setuptools gwcs==0.9.1 pytest==5.4.3 pytest-doctestplus==0.8.0
-            pip3 install .[all,tests]
+            pip3 install -e .[all,tests]
             python3 -m pytest --remote-data
