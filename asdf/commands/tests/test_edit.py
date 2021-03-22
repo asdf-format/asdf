@@ -284,7 +284,7 @@ def test_validation_failure(tmp_path, create_editor, version, mock_input):
         af["array"] = np.arange(constants.DEFAULT_AUTO_INLINE + 1)
         af.write_to(file_path)
 
-    os.environ["EDITOR"] = create_editor(r"byteorder: .*?$", "byteorder: medium")
+    os.environ["EDITOR"] = create_editor(r"byteorder: .*?$", "byteorder: med")
 
     with file_not_modified(file_path):
         with mock_input(r"\(c\)ontinue editing, \(f\)orce update, or \(a\)bort\?", "a"):
@@ -295,7 +295,7 @@ def test_validation_failure(tmp_path, create_editor, version, mock_input):
 
     with open(file_path, "rb") as f:
         content = f.read()
-        assert b"byteorder: medium" in content
+        assert b"byteorder: med" in content
 
 
 def test_asdf_open_failure(tmp_path, create_editor, version, mock_input):
