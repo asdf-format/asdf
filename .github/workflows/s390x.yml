@@ -1,6 +1,7 @@
 name: s390x
 
 on:
+  workflow_dispatch:
   push:
     tags:
       - '*'
