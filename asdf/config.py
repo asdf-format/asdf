@@ -36,17 +36,9 @@ class AsdfConfig:
         self._validate_on_read = DEFAULT_VALIDATE_ON_READ
         self._default_version = DEFAULT_DEFAULT_VERSION
         self._legacy_fill_schema_defaults = DEFAULT_LEGACY_FILL_SCHEMA_DEFAULTS
+        self._io_block_size = 'auto'
 
         self._lock = threading.RLock()
-        
-        self._compression_options = {}
-        self._decompression_options = {}
-        self._init_builtin_compression_options()
-        
-    def _init_builtin_compression_options(self):
-        for label in ['zlib', 'bzp2', 'lz4']:
-            self._compression_options[label] = {}
-            self._decompression_options[label] = {}
 
     @property
     def resource_mappings(self):
@@ -170,7 +162,6 @@ class AsdfConfig:
         with self._lock:
             extension = ExtensionProxy.maybe_wrap(extension)
             self._extensions = [extension] + [e for e in self.extensions if e != extension]
-            self._register_config(extension)
 
     def remove_extension(self, extension=None, *, package=None):
         """
@@ -213,39 +204,6 @@ class AsdfConfig:
         """
         with self._lock:
             self._extensions = None
-
-    def _register_config(self, extension):
-        '''
-        Instantiate an extension's config class and register any compression
-        options.
-        '''
-        if not extension.config_class:
-            return
-        
-        conf = extension.config_class()
-        extension.config = conf
-        
-        if hasattr(conf, '_compression_options'):
-            comp_conf = conf._compression_options
-            labels = comp_conf.keys()
-            for label in labels:
-                if label in self._compression_options:
-                    raise ValueError(f'Compression label {label} already found')
-                self._compression_options[label] = comp_conf[label]
-                
-        if hasattr(conf, '_decompression_options'):
-            comp_conf = conf._decompression_options
-            labels = comp_conf.keys()
-            for label in labels:
-                if label in self._decompression_options:
-                    raise ValueError(f'Compression label {label} already found')
-                self._decompression_options[label] = comp_conf[label]
-        
-    def compression(self, label):
-        return self._compression_options.get(label)
-    
-    def decompression(self, label):
-        return self._decompression_options.get(label)
 
     @property
     def validate_on_read(self):
@@ -323,6 +281,14 @@ class AsdfConfig:
         value : bool
         """
         self._legacy_fill_schema_defaults = value
+        
+    @property
+    def io_block_size(self):
+        return self._io_block_size
+    
+    @io_block_size.setter
+    def io_block_size(self, block_size):
+        self._io_block_size = block_size
 
     def __repr__(self):
         return (

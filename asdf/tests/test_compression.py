@@ -36,10 +36,12 @@ def _get_sparse_tree():
 
 def _roundtrip(tmpdir, tree, compression=None,
                write_options={}, read_options={}):
+    write_options = write_options.copy()
+    write_options.update(all_array_compression=compression)
+    
     tmpfile = os.path.join(str(tmpdir), 'test.asdf')
 
     ff = asdf.AsdfFile(tree)
-    ff.set_array_compression(tree['science_data'], compression)
     ff.write_to(tmpfile, **write_options)
 
     with asdf.open(tmpfile, mode="rw") as ff:
@@ -52,7 +54,6 @@ def _roundtrip(tmpdir, tree, compression=None,
     buff = io.BytesIO()
 
     ff = asdf.AsdfFile(tree)
-    ff.set_array_compression(tree['science_data'], compression)
     ff.write_to(buff, **write_options)
 
     buff.seek(0)
@@ -63,7 +64,6 @@ def _roundtrip(tmpdir, tree, compression=None,
     buff = io.BytesIO()
 
     ff = asdf.AsdfFile(tree)
-    ff.set_array_compression(tree['science_data'], compression)
     ff.write_to(generic_io.OutputStream(buff), **write_options)
 
     buff.seek(0)
@@ -182,8 +182,11 @@ def test_set_array_compression(tmpdir):
 
     tree = dict(zlib_data=zlib_data, bzp2_data=bzp2_data)
     with asdf.AsdfFile(tree) as af_out:
-        af_out.set_array_compression(zlib_data, 'zlib')
-        af_out.set_array_compression(bzp2_data, 'bzp2')
+        af_out.set_array_compression(zlib_data, 'zlib', level=1)
+        af_out.set_array_compression(bzp2_data, 'bzp2', compresslevel=9000)
+        with pytest.raises(ValueError):
+            af_out.write_to(tmpfile)
+        af_out.set_array_compression(bzp2_data, 'bzp2', compresslevel=9)
         af_out.write_to(tmpfile)
 
     with asdf.open(tmpfile) as af_in:
@@ -207,33 +210,19 @@ class LzmaCompressor(Compressor):
         flushed = compressor.flush()
         return comp + flushed
     
-    def decompress(self, data, out=None):
-        decomp = self._decompressor.decompress(data)
-        if out is not None:
-            out[:len(decomp)] = decomp
-            return len(decomp)
-        return decomp
+    def decompress(self, blocks, out):
+        i = 0
+        for block in blocks:
+            decomp = self._decompressor.decompress(block)
+            out[i:i+len(decomp)] = decomp
+            i += len(decomp)
+        return i
 
     @property
     def labels(self):
         return ['lzma']
-
-class LzmaExtensionConfig:
-    def __init__(self):
-        self._compression_options = {'lzma':dict()}
-        self._decompression_options = {'lzma':dict()}
-  
-    @property
-    def compression_options(self):
-        return self._compression_options
-    
-    @property
-    def decompression_options(self):
-        return self._decompression_options
     
 class LzmaExtension(Extension):
-    config_class = LzmaExtensionConfig
-    
     @property
     def extension_uri(self):
         return "asdf://somewhere.org/extensions/lzma-1.0"
@@ -248,12 +237,11 @@ def test_compression_with_extension(tmpdir):
     with config_context() as config:
         config.add_extension(LzmaExtension())
 
-        lzma_conf = asdf.config.get_config().compression('lzma')
-        lzma_conf['preset'] = 9000
         with pytest.raises(lzma.LZMAError):
-            fn = _roundtrip(tmpdir, tree, 'lzma')
-        lzma_conf['preset'] = 6
-        fn = _roundtrip(tmpdir, tree, 'lzma')
+            _roundtrip(tmpdir, tree, 'lzma',
+                        write_options=dict(compression_kwargs={'preset':9000}))
+        fn = _roundtrip(tmpdir, tree, 'lzma',
+                       write_options=dict(compression_kwargs={'preset':6}))
 
         hist = {'extension_class': 'asdf.tests.test_compression.LzmaExtension',
                 'extension_uri': 'asdf://somewhere.org/extensions/lzma-1.0',

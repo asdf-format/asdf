@@ -697,7 +697,7 @@ class AsdfFile:
         """
         return self.blocks[arr].array_storage
 
-    def set_array_compression(self, arr, compression):
+    def set_array_compression(self, arr, compression, **compression_kwargs):
         """
         Set the compression to use for the given array data.
 
@@ -724,6 +724,7 @@ class AsdfFile:
 
         """
         self.blocks[arr].output_compression = compression
+        self.blocks[arr].output_compression_kwargs = compression_kwargs
 
     def get_array_compression(self, arr):
         """
@@ -738,6 +739,11 @@ class AsdfFile:
         compression : str or None
         """
         return self.blocks[arr].output_compression
+    
+    def get_array_compression_kwargs(self, arr):
+        """
+        """
+        return self.blocks[arr].output_compression_kwargs
 
     @classmethod
     def _parse_header_line(cls, line):
@@ -1034,7 +1040,7 @@ class AsdfFile:
             fd.fast_forward(padding)
 
     def _pre_write(self, fd, all_array_storage, all_array_compression,
-                   auto_inline):
+                   auto_inline, compression_kwargs=None):
         if all_array_storage not in (None, 'internal', 'external', 'inline'):
             raise ValueError(
                 "Invalid value for all_array_storage: '{0}'".format(
@@ -1043,6 +1049,7 @@ class AsdfFile:
         self._all_array_storage = all_array_storage
 
         self._all_array_compression = all_array_compression
+        self._all_array_compression_kwargs = compression_kwargs
 
         if all_array_storage in ['internal', 'external', 'inline']:
             auto_inline = None
@@ -1092,12 +1099,13 @@ class AsdfFile:
             del self._all_array_storage
         if hasattr(self, '_all_array_compression'):
             del self._all_array_compression
+            del self._all_array_compression_kwargs
         if hasattr(self, '_auto_inline'):
             del self._auto_inline
 
     def update(self, all_array_storage=None, all_array_compression='input',
                auto_inline=None, pad_blocks=False, include_block_index=True,
-               version=None):
+               version=None, compression_kwargs=None):
         """
         Update the file on disk in place.
 
@@ -1182,7 +1190,7 @@ class AsdfFile:
         self.blocks.finish_reading_internal_blocks()
 
         self._pre_write(fd, all_array_storage, all_array_compression,
-                        auto_inline)
+                        auto_inline, compression_kwargs=compression_kwargs)
 
         try:
             fd.seek(0)
@@ -1231,7 +1239,7 @@ class AsdfFile:
 
     def write_to(self, fd, all_array_storage=None, all_array_compression='input',
                  auto_inline=constants.DEFAULT_AUTO_INLINE, pad_blocks=False,
-                 include_block_index=True, version=None):
+                 include_block_index=True, version=None, compression_kwargs=None):
         """
         Write the ASDF file to the given file-like object.
 
@@ -1312,7 +1320,7 @@ class AsdfFile:
             if self._uri is None:
                 self._uri = fd.uri
             self._pre_write(fd, all_array_storage, all_array_compression,
-                            auto_inline)
+                            auto_inline, compression_kwargs=compression_kwargs)
 
             try:
                 self._serial_write(fd, pad_blocks, include_block_index)

@@ -290,12 +290,17 @@ class GenericFile(metaclass=util.InheritDocstrings):
             raise ValueError(
                 "File-like object must be opened in binary mode.")
 
+        # can't import at the top level due to circular import
+        from .config import get_config
+        self._asdf_get_config = get_config
+        
         self._fd = fd
         self._mode = mode
         self._close = close
-        self._blksize = io.DEFAULT_BUFFER_SIZE
         self._size = None
         self._uri = uri
+        
+        self.block_size = get_config().io_block_size
 
     def __enter__(self):
         return self
@@ -310,6 +315,22 @@ class GenericFile(metaclass=util.InheritDocstrings):
     @property
     def block_size(self):
         return self._blksize
+    
+    @block_size.setter
+    def block_size(self, block_size):
+        if block_size == 'auto':
+            if sys.platform.startswith('win'):  # pragma: no cover
+                # There appears to be reliable way to get block size on Windows,
+                # so just choose a reasonable default
+                self._blksize = io.DEFAULT_BUFFER_SIZE
+            else:
+                try:
+                    block_size = os.fstat(self._fd.fileno()).st_blksize
+                except:
+                    block_size = io.DEFAULT_BUFFER_SIZE
+        else:
+            block_size = block_size
+        self._blksize = block_size
 
     @property
     def mode(self):
@@ -732,13 +753,8 @@ class RealFile(RandomAccessFile):
     """
     def __init__(self, fd, mode, close=False, uri=None):
         super(RealFile, self).__init__(fd, mode, close=close, uri=uri)
+        
         stat = os.fstat(fd.fileno())
-        if sys.platform.startswith('win'):  # pragma: no cover
-            # There appears to be reliable way to get block size on Windows,
-            # so just choose a reasonable default
-            self._blksize = io.DEFAULT_BUFFER_SIZE
-        else:
-            self._blksize = stat.st_blksize
         self._size = stat.st_size
         if (uri is None and
             isinstance(fd.name, str)):
@@ -889,7 +905,6 @@ class HTTPConnection(RandomAccessFile):
 
     def __init__(self, connection, size, path, uri, first_chunk):
         self._mode = 'r'
-        self._blksize = io.DEFAULT_BUFFER_SIZE
         # The underlying HTTPConnection object doesn't track closed
         # status, so we do that here.
         self._closed = False
@@ -1048,7 +1063,9 @@ def _make_http_connection(init, mode, uri=None):
     connection = http.client.HTTPConnection(parsed.netloc)
     connection.connect()
 
-    block_size = io.DEFAULT_BUFFER_SIZE
+    block_size = get_config().io_block_size
+    if block_size == 'auto':
+        block_size = io.DEFAULT_BUFFER_SIZE
 
     # We request a range of the whole file ("0-") to check if the
     # server understands that header entry, and also to get the
