@@ -43,6 +43,8 @@
 - Add ``edit`` subcommand to asdftool for efficient editing of
   the YAML portion of an ASDF file.  [#873, #922]
 
+- Remove the ``asdf.test`` method and ``asdf.__githash__`` attribute. [#943]
+
 2.7.3 (2021-02-25)
 ------------------
 

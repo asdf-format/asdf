@@ -301,23 +301,18 @@ To run the unit tests from a source checkout of the repository:
     $ pytest
 
 It is also possible to run the test suite from an installed version of
-the package. In a Python interpreter:
+the package.
 
-.. code:: python
-
-    import asdf
-    asdf.test()
-
-Please note that the `astropy <https://github.com/astropy/astropy>`__
-package must be installed to run the tests.
+::
+    pip install asdf[tests]
+    pytest --pyargs asdf
 
 It is also possible to run the tests using `tox
-<https://tox.readthedocs.io/en/latest/>`__. It is first necessary to install
-``tox`` and `tox-conda <https://github.com/tox-dev/tox-conda>`__:
+<https://tox.readthedocs.io/en/latest/>`__.
 
 ::
 
-   $ pip install tox tox-conda
+   $ pip install tox
 
 To list all available environments:
 
