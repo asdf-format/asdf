@@ -327,8 +327,10 @@ class GenericFile(metaclass=util.InheritDocstrings):
                     block_size = os.fstat(self._fd.fileno()).st_blksize
                 except:
                     block_size = io.DEFAULT_BUFFER_SIZE
-        else:
-            block_size = block_size
+
+        if block_size <= 0:
+            raise ValueError(f'block_size ({block_size}) must be > 0')
+
         self._blksize = block_size
 
     @property
