@@ -5,6 +5,8 @@
 
 - Copy array views when the base array is non-contiguous. [#949]
 
+- Prohibit views over FITS arrays that change dtype. [#952]
+
 2.7.3 (2021-02-25)
 ------------------
 
