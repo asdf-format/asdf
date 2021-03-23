@@ -1,20 +1,15 @@
+import os
+import tempfile
+
 import pytest
 
-@pytest.fixture(autouse=True)
-def _docdir(request):
-    """
-    Make sure that doctests run in a temporary directory so that any files that
-    are created as part of the test get removed automatically.
-    """
-    # Trigger ONLY for doctestplus.
+
+@pytest.fixture(scope="session", autouse=True)
+def temp_cwd():
+    original_cwd = os.getcwd()
     try:
-        doctest_plugin = request.config.pluginmanager.getplugin("doctestplus")
-        if isinstance(request.node.parent, doctest_plugin._doctest_textfile_item_cls):
-            tmpdir = request.getfixturevalue('tmpdir')
-            with tmpdir.as_cwd():
-                yield
-        else:
+        with tempfile.TemporaryDirectory() as tmp:
+            os.chdir(tmp)
             yield
-    # Handle case where doctestplus is not available
-    except AttributeError:
-        yield
+    finally:
+        os.chdir(original_cwd)
