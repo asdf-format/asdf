@@ -1527,7 +1527,7 @@ class AsdfFile:
             Set to False to disable display of primitive values in
             the rendered tree.
         """
-        lines = display.render_tree(self.tree, max_rows=max_rows, max_cols=max_cols, show_values=show_values, identifier="root.tree")
+        lines = display.render_tree(self.tree, max_rows=max_rows, max_cols=max_cols, show_values=show_values, identifier="root")
         print("\n".join(lines))
 
     def search(self, key=NotSet, type=NotSet, value=NotSet, filter=None):
@@ -1572,7 +1572,7 @@ class AsdfFile:
         asdf.search.AsdfSearchResult
             the result of the search
         """
-        result = AsdfSearchResult(["root.tree"], self.tree)
+        result = AsdfSearchResult(["root"], self.tree)
         return result.search(key=key, type=type, value=value, filter=filter)
 
     # This function is called from within TypeIndex when deserializing

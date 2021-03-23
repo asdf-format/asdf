@@ -36,7 +36,7 @@ def test_single_result(asdf_file):
     assert len(result.paths) == 1
     assert len(result.nodes) == 1
     assert result.node == "hello"
-    assert result.path == "root.tree['bar']"
+    assert result.path == "root['bar']"
 
 
 def test_multiple_results(asdf_file):
@@ -45,8 +45,8 @@ def test_multiple_results(asdf_file):
     assert len(result.nodes) == 2
     assert 42 in result.nodes
     assert 24 in result.nodes
-    assert "root.tree['foo']" in result.paths
-    assert "root.tree['nested']['foo']" in result.paths
+    assert "root['foo']" in result.paths
+    assert "root['nested']['foo']" in result.paths
 
     with pytest.raises(RuntimeError):
         result.path
