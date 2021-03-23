@@ -63,80 +63,6 @@ def _check_bytes(fd, mode):
     return True
 
 
-if (sys.platform == 'darwin' and
-    LooseVersion(platform.mac_ver()[0]) < LooseVersion('10.9')):  # pragma: no cover
-    def _array_fromfile(fd, size):
-        chunk_size = 1024 ** 3
-        if size < chunk_size:
-            return np.fromfile(fd, dtype=np.uint8, count=size)
-        else:
-            array = np.empty(size, dtype=np.uint8)
-            for beg in range(0, size, chunk_size):
-                end = min(size, beg + chunk_size)
-                array[beg:end] = np.fromfile(fd, dtype=np.uint8, count=end - beg)
-            return array
-else:
-    def _array_fromfile(fd, size):
-        return np.fromfile(fd, dtype=np.uint8, count=size)
-
-
-_array_fromfile.__doc__ = """
-Load a binary array from a real file object.
-
-Parameters
-----------
-fd : real file object
-
-size : integer
-    Number of bytes to read.
-"""
-
-
-def _array_tofile_chunked(write, array, chunksize):
-    array = array.view(np.uint8)
-    for i in range(0, array.nbytes, chunksize):
-        write(array[i:i + chunksize].data)
-
-
-def _array_tofile_simple(fd, write, array):
-    return write(array.data)
-
-if sys.platform == 'darwin':
-    def _array_tofile(fd, write, array):
-        # This value is currently set as a workaround for a known bug in Python
-        # on OSX. Individual writes must be less than 2GB, which necessitates
-        # the chunk size here if we want it to remain a power of 2.
-        # See https://bugs.python.org/issue24658.
-        OSX_WRITE_LIMIT = 2 ** 30
-        if fd is None or array.nbytes >= OSX_WRITE_LIMIT and array.nbytes % 4096 == 0:
-            return _array_tofile_chunked(write, array, OSX_WRITE_LIMIT)
-        return _array_tofile_simple(fd, write, array)
-elif sys.platform.startswith('win'):
-    def _array_tofile(fd, write, array):
-        WIN_WRITE_LIMIT = 2 ** 30
-        return _array_tofile_chunked(write, array, WIN_WRITE_LIMIT)
-else:
-    _array_tofile = _array_tofile_simple
-
-
-_array_tofile.__doc__ = """
-Write an array to a file.
-
-Parameters
-----------
-fd : real file object
-   If fd is provided, must be a real system file as supported by
-   numpy.tofile.  May be None, in which case all writing will be done
-   through the `write` method.
-
-write : callable
-   A callable that writes bytes to the file.
-
-array : Numpy array
-   Must be an underlying data array, not a view.
-"""
-
-
 def resolve_uri(base, uri):
     """
     Resolve a URI against a base URI.
@@ -382,7 +308,7 @@ class GenericFile(metaclass=util.InheritDocstrings):
         if len(array.shape) != 1 or not array.flags.contiguous:
             raise ValueError("Requires 1D contiguous array.")
 
-        _array_tofile(None, self.write, array)
+        self.write(array.data)
 
     def seek(self, offset, whence=0):
         """
@@ -764,7 +690,7 @@ class RealFile(RandomAccessFile):
             if len(arr.shape) != 1 or not arr.flags.contiguous:
                 raise ValueError("Requires 1D contiguous array.")
 
-            _array_tofile(self._fd, self._fd.write, arr)
+            self._fd.write(arr.data)
 
     def can_memmap(self):
         return True
@@ -780,7 +706,7 @@ class RealFile(RandomAccessFile):
         return mmap
 
     def read_into_array(self, size):
-        return _array_fromfile(self._fd, size)
+        return np.fromfile(self._fd, dtype=np.uint8, count=size)
 
 
 class MemoryIO(RandomAccessFile):

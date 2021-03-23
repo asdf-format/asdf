@@ -47,6 +47,8 @@
 
 - Remove unnecessary ``.tree`` from search result paths. [#954]
 
+- Drop support for bugs in older operating systems and Python versions. [#955]
+
 2.7.4 (unreleased)
 ------------------
 
