@@ -417,6 +417,14 @@ class NDArrayType(AsdfType):
         if any(stride == 0 for stride in data.strides):
             data = np.ascontiguousarray(data)
 
+        # The view computations that follow assume that the base array
+        # is contiguous.  If not, we need to make a copy to avoid
+        # writing a nonsense view.
+        base = util.get_array_base(data)
+        if not base.flags.contiguous:
+            data = np.ascontiguousarray(data)
+            base = util.get_array_base(data)
+
         shape = data.shape
 
         block = ctx.blocks.find_or_create_block_for_array(data, ctx)
@@ -447,8 +455,6 @@ class NDArrayType(AsdfType):
         else:
             # Compute the offset relative to the base array and not the
             # block data, in case the block is compressed.
-            base = util.get_array_base(data)
-
             offset = data.ctypes.data - base.ctypes.data
 
             if data.flags.c_contiguous:
