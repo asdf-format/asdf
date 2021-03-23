@@ -14,8 +14,6 @@ import sys
 import math
 import pathlib
 import tempfile
-import platform
-from distutils.version import LooseVersion
 
 from os import SEEK_SET, SEEK_CUR, SEEK_END
 
