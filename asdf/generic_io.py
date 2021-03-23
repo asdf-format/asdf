@@ -321,7 +321,7 @@ class GenericFile(metaclass=util.InheritDocstrings):
             if sys.platform.startswith('win'):  # pragma: no cover
                 # There appears to be reliable way to get block size on Windows,
                 # so just choose a reasonable default
-                self._blksize = io.DEFAULT_BUFFER_SIZE
+                block_size = io.DEFAULT_BUFFER_SIZE
             else:
                 try:
                     block_size = os.fstat(self._fd.fileno()).st_blksize
@@ -1080,9 +1080,7 @@ def _make_http_connection(init, mode, uri=None):
     connection = http.client.HTTPConnection(parsed.netloc)
     connection.connect()
 
-    block_size = get_config().io_block_size
-    if block_size == 'auto':
-        block_size = io.DEFAULT_BUFFER_SIZE
+    block_size = io.DEFAULT_BUFFER_SIZE
 
     # We request a range of the whole file ("0-") to check if the
     # server understands that header entry, and also to get the
