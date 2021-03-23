@@ -922,6 +922,7 @@ class HTTPConnection(RandomAccessFile):
 
     def __init__(self, connection, size, path, uri, first_chunk):
         self._mode = 'r'
+        self.block_size = io.DEFAULT_BUFFER_SIZE
         # The underlying HTTPConnection object doesn't track closed
         # status, so we do that here.
         self._closed = False
