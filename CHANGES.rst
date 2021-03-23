@@ -1,3 +1,10 @@
+2.7.4 (unreleased)
+------------------
+
+- Fix pytest plugin failure under older versions of pytest. [#934]
+
+- Copy array views when the base array is non-contiguous. [#949]
+
 2.7.3 (2021-02-25)
 ------------------
 
