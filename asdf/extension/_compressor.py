@@ -45,16 +45,16 @@ class Compressor(abc.ABC):
         """
         Compress `data`, yielding the results.  The yield may be
         block-by-block, or all at once.
-        
+
         Parameters
         ----------
         data : bytes-like
             The data to compress. Must be contiguous and 1D, with
-            the underlying `itemsize` preserved.    
+            the underlying `itemsize` preserved.
         **kwargs
             Keyword arguments to be passed to the underlying compression
             function
-            
+
         Yields
         ------
         compressed : bytes-like

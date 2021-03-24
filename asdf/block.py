@@ -911,7 +911,7 @@ class Block:
     @output_compression.setter
     def output_compression(self, compression):
         self._output_compression = mcompression.validate(compression)
-        
+
     @property
     def output_compression_kwargs(self):
         """
@@ -920,7 +920,7 @@ class Block:
         :return:
         """
         return self._output_compression_kwargs
-    
+
     @output_compression_kwargs.setter
     def output_compression_kwargs(self, config):
         if config is None:

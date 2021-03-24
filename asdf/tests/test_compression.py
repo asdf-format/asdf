@@ -38,7 +38,7 @@ def _roundtrip(tmpdir, tree, compression=None,
                write_options={}, read_options={}):
     write_options = write_options.copy()
     write_options.update(all_array_compression=compression)
-    
+
     tmpfile = os.path.join(str(tmpdir), 'test.asdf')
 
     ff = asdf.AsdfFile(tree)

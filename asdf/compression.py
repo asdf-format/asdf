@@ -73,7 +73,7 @@ class Lz4Compressor:
     def compress(self, data, **kwargs):
         kwargs['mode'] = kwargs.get('mode','default')
         compression_block_size = kwargs.pop('compression_block_size', 1<<22)
-        
+
         nelem = compression_block_size // data.itemsize
         for i in range(0,len(data),nelem):
             _output = self._api.compress(data[i:i+nelem], **kwargs)
@@ -87,7 +87,7 @@ class Lz4Compressor:
         _partial_len = b''
         _buffer = None
         bytesout = 0
-        
+
         for block in blocks:
             block = memoryview(block).cast('c')  # don't copy on slice
 
@@ -141,7 +141,7 @@ class ZlibCompressor:
     def compress(self, data, **kwargs):
         comp = zlib.compress(data, **kwargs)
         yield comp
-    
+
     def decompress(self, blocks, out, **kwargs):
         decompressor = zlib.decompressobj(**kwargs)
 
@@ -153,7 +153,7 @@ class ZlibCompressor:
         return i
 
 
-class Bzp2Compressor:        
+class Bzp2Compressor:
     def compress(self, data, **kwargs):
         comp = bz2.compress(data, **kwargs)
         yield comp
@@ -168,7 +168,7 @@ class Bzp2Compressor:
             i += len(decomp)
         return i
 
-        
+
 def _get_compressor_from_extensions(compression, return_extension=False):
     '''
     Look at the loaded ASDF extensions and return the first one (if any)
@@ -252,7 +252,7 @@ def decompress(fd, used_size, data_size, compression, config=None):
 
     compression : str
         The compression type used.
-         
+
     config : dict or None, optional
         Any kwarg parameters to pass to the underlying decompression
         function
@@ -292,7 +292,7 @@ def compress(fd, data, compression, config=None):
 
     compression : str
         The type of compression to use.
-        
+
     config : dict or None, optional
         Any kwarg parameters to pass to the underlying compression
         function
@@ -329,14 +329,14 @@ def get_compressed_size(data, compression, config=None):
     Parameters
     ----------
     See `compress()`.
-        
+
     Returns
     -------
     nbytes : int
         The size of the compressed data
-    
+
     """
-    
+
     class _ByteCountingFile:
         def __init__(self):
             self.count = 0
@@ -344,7 +344,7 @@ def get_compressed_size(data, compression, config=None):
         def write(self, data):
             self.count += len(data)
 
-    bcf = _ByteCountingFile()    
+    bcf = _ByteCountingFile()
     compress(bcf, data, compression, config=config)
-    
+
     return bcf.count

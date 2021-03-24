@@ -738,7 +738,7 @@ class AsdfFile:
         compression : str or None
         """
         return self.blocks[arr].output_compression
-    
+
     def get_array_compression_kwargs(self, arr):
         """
         """

@@ -292,13 +292,13 @@ class GenericFile(metaclass=util.InheritDocstrings):
         # can't import at the top level due to circular import
         from .config import get_config
         self._asdf_get_config = get_config
-        
+
         self._fd = fd
         self._mode = mode
         self._close = close
         self._size = None
         self._uri = uri
-        
+
         self.block_size = get_config().io_block_size
 
     def __enter__(self):
@@ -314,13 +314,13 @@ class GenericFile(metaclass=util.InheritDocstrings):
     @property
     def block_size(self):
         return self._blksize
-    
+
     @block_size.setter
     def block_size(self, block_size):
         if block_size == -1:
             try:
                 block_size = os.fstat(self._fd.fileno()).st_blksize
-            except:
+            except Exception:
                 block_size = io.DEFAULT_BUFFER_SIZE
 
         if block_size <= 0:
@@ -762,7 +762,7 @@ class RealFile(RandomAccessFile):
     """
     def __init__(self, fd, mode, close=False, uri=None):
         super(RealFile, self).__init__(fd, mode, close=close, uri=uri)
-        
+
         stat = os.fstat(fd.fileno())
         self._size = stat.st_size
         if (uri is None and

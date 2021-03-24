@@ -281,11 +281,11 @@ class AsdfConfig:
         value : bool
         """
         self._legacy_fill_schema_defaults = value
-        
+
     @property
     def io_block_size(self):
         return self._io_block_size
-    
+
     @io_block_size.setter
     def io_block_size(self, block_size):
         self._io_block_size = block_size
