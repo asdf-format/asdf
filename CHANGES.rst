@@ -45,6 +45,8 @@
 
 - Remove the ``asdf.test`` method and ``asdf.__githash__`` attribute. [#943]
 
+- Add support for custom compression via extensions [#931]
+
 2.7.3 (2021-02-25)
 ------------------
 

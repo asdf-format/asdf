@@ -1,7 +1,6 @@
 import struct
 import zlib
 import bz2
-import types
 
 import numpy as np
 import warnings
