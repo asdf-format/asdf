@@ -16,44 +16,71 @@ class Compressor(abc.ABC):
     Abstract base class for plugins that compress binary data.
 
     Implementing classes must provide the `labels` property, and
-    the `compress()` method.
-    May also provide a constructor that takes kwargs that are
-    set via `asdf.get_config().compression_options[label] = kwargs`.
+    at least one of the `compress()` and `decompress()` methods.
+    May also provide a constructor.
     """
     @classmethod
     def __subclasshook__(cls, C):
         if cls is Compressor:
-            return (hasattr(C, "labels") and
-                    hasattr(C, "compress"),
-                    hasattr(C, "decompress"))
+            return ( hasattr(C, "label") and
+                    (hasattr(C, "compress") or
+                     hasattr(C, "decompress")) )
         return NotImplemented # pragma: no cover
 
 
     @abc.abstractproperty
-    def labels(self):
+    def label(self):
         """
-        Get the string labels that this Compressor
-        is able to compress.
+        Get the 4-byte label identifying this compression
 
         Returns
         -------
-        iterable of str
-            str labels handled by this class
+        label : bytes
+            The compression label
         """
         pass # pragma: no cover
 
 
-    @abc.abstractmethod
-    def compress(self, data):
+    def compress(self, data, **kwargs):
         """
-        Returns compressed data.
+        Compress `data`, yielding the results.  The yield may be
+        block-by-block, or all at once.
+        
+        Parameters
+        ----------
+        data : bytes-like
+            The data to compress. Must be contiguous and 1D, with
+            the underlying `itemsize` preserved.    
+        **kwargs
+            Keyword arguments to be passed to the underlying compression
+            function
+            
+        Yields
+        ------
+        compressed : bytes-like
+            A block of compressed data
         """
         raise NotImplementedError
-    
-    
-    @abc.abstractmethod
-    def decompress(self, data, out=None):
+
+
+    def decompress(self, data, out, **kwargs):
         """
-        Returns decompressed data.
+        Decompress `data`, writing the result into `out`.
+
+        Parameters
+        ----------
+        data : bytes-like
+            The data to decompress. Must be contiguous and 1D.
+        out : read-write bytes-like
+            A contiguous, 1D output array, of equal or greater length
+            than the decompressed data.
+        **kwargs
+            Keyword arguments to be passed to the underlying decompression
+            function
+
+        Returns
+        -------
+        nbytes : int
+            The number of bytes written to `out`
         """
         raise NotImplementedError

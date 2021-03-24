@@ -36,7 +36,7 @@ class AsdfConfig:
         self._validate_on_read = DEFAULT_VALIDATE_ON_READ
         self._default_version = DEFAULT_DEFAULT_VERSION
         self._legacy_fill_schema_defaults = DEFAULT_LEGACY_FILL_SCHEMA_DEFAULTS
-        self._io_block_size = 'auto'
+        self._io_block_size = -1  # auto
 
         self._lock = threading.RLock()
 

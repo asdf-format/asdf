@@ -54,12 +54,7 @@ def validate(compression):
 
 
 class Lz4Compressor:
-    def __init__(self, compression_kwargs=None, decompression_kwargs=None):
-        if compression_kwargs is None:
-            compression_kwargs = {}
-        if decompression_kwargs is None:
-            decompression_kwargs = {}
-
+    def __init__(self):
         try:
             import lz4.block
         except ImportError:
@@ -70,103 +65,87 @@ class Lz4Compressor:
 
         self._api = lz4.block
 
-        # compression
-        self._mode= compression_kwargs.get('mode','default')
-        self._compression_block_size = compression_kwargs.get('compression_block_size',1<<22)
-
-        # decompression
-        self._size = 0
-        self._pos = 0
-        self._partial_len = b''
-        self._buffer = None
-
 
     def __del__(self):
         if self._buffer is not None:
             raise Exception('Found data left in lz4 buffer after decompression')
 
 
-    def compress(self, data):
-        nelem = self._compression_block_size // data.itemsize
-        output = b''  # TODO: better way to pre-allocate array without knowing final size?
+    def compress(self, data, **kwargs):
+        kwargs['mode'] = kwargs.get('mode','default')
+        compression_block_size = kwargs.pop('compression_block_size', 1<<22)
+        
+        nelem = compression_block_size // data.itemsize
         for i in range(0,len(data),nelem):
-            _output = self._api.compress(data[i:i+nelem], mode=self._mode)
+            _output = self._api.compress(data[i:i+nelem], **kwargs)
             header = struct.pack('!I', len(_output))
             yield header + _output
-            
-    
-    def decompress(self, blocks, out=None):
+
+
+    def decompress(self, blocks, out, **kwargs):
+        _size = 0
+        _pos = 0
+        _partial_len = b''
+        _buffer = None
         bytesout = 0
         
         for block in blocks:
             block = memoryview(block).cast('c')  # don't copy on slice
 
             while len(block):
-                if not self._size:
+                if not _size:
                     # Don't know the (compressed) length of this block yet
-                    if len(self._partial_len) + len(block) < 4:
-                        self._partial_len += block
+                    if len(_partial_len) + len(block) < 4:
+                        _partial_len += block
                         break  # we've exhausted the block
-                    if self._partial_len:
+                    if _partial_len:
                         # If we started to fill a len key, finish filling it
-                        remaining = 4-len(self._partial_len)
+                        remaining = 4-len(_partial_len)
                         if remaining:
-                            self._partial_len += block[:remaining]
+                            _partial_len += block[:remaining]
                             block = block[remaining:]
-                        self._size = struct.unpack('!I', self._partial_len)[0]
-                        self._partial_len = b''
+                        _size = struct.unpack('!I', _partial_len)[0]
+                        _partial_len = b''
                     else:
                         # Otherwise just read the len key directly
-                        self._size = struct.unpack('!I', block[:4])[0]
+                        _size = struct.unpack('!I', block[:4])[0]
                         block = block[4:]
 
-                if len(block) < self._size or self._buffer is not None:
+                if len(block) < _size or _buffer is not None:
                     # If we have a partial block, or we're already filling a buffer, use the buffer
-                    if self._buffer is None:
-                        self._buffer = np.empty(self._size, dtype=np.byte)  # use numpy instead of bytearray so we can avoid zero initialization
-                        self._pos = 0
-                    newbytes = min(self._size - self._pos, len(block))  # don't fill past the buffer len!
-                    self._buffer[self._pos:self._pos+newbytes] = np.frombuffer(block[:newbytes], dtype=np.byte)
-                    self._pos += newbytes
+                    if _buffer is None:
+                        _buffer = np.empty(_size, dtype=np.byte)  # use numpy instead of bytearray so we can avoid zero initialization
+                        _pos = 0
+                    newbytes = min(_size - _pos, len(block))  # don't fill past the buffer len!
+                    _buffer[_pos:_pos+newbytes] = np.frombuffer(block[:newbytes], dtype=np.byte)
+                    _pos += newbytes
                     block = block[newbytes:]
 
-                    if self._pos == self._size:
-                        _out = self._api.decompress(self._buffer, return_bytearray=True)
+                    if _pos == _size:
+                        _out = self._api.decompress(_buffer, return_bytearray=True, **kwargs)
                         out[bytesout:bytesout+len(_out)] = _out
                         bytesout += len(_out)
-                        self._buffer = None
-                        self._size = 0
+                        _buffer = None
+                        _size = 0
                 else:
                     # We have at least one full block
-                    _out = self._api.decompress(memoryview(block[:self._size]), return_bytearray=True)
+                    _out = self._api.decompress(memoryview(block[:_size]), return_bytearray=True, **kwargs)
                     out[bytesout:bytesout+len(_out)] = _out
                     bytesout += len(_out)
-                    block = block[self._size:]
-                    self._size = 0
+                    block = block[_size:]
+                    _size = 0
 
         return bytesout
 
-    
+
 class ZlibCompressor:
-    def __init__(self, compression_kwargs=None, decompression_kwargs=None):
-        if compression_kwargs is None:
-            compression_kwargs = {}
-        if decompression_kwargs is None:
-            decompression_kwargs = {}
-            
-        self.compression_kwargs = compression_kwargs.copy()
-        self.decompression_kwargs = decompression_kwargs.copy()
-        
-    def compress(self, data, out=None):
-        comp = zlib.compress(data, **self.compression_kwargs)
-        if out is not None:
-            out[:len(comp)] = comp
-            return len(comp)
-        return comp
+    def compress(self, data, **kwargs):
+        comp = zlib.compress(data, **kwargs)
+        yield comp
     
-    def decompress(self, blocks, out):
-        decompressor = zlib.decompressobj(**self.decompression_kwargs)
-        
+    def decompress(self, blocks, out, **kwargs):
+        decompressor = zlib.decompressobj(**kwargs)
+
         i = 0
         for block in blocks:
             decomp = decompressor.decompress(block)
@@ -175,25 +154,13 @@ class ZlibCompressor:
         return i
 
 
-class Bzp2Compressor:
-    def __init__(self, compression_kwargs=None, decompression_kwargs=None):
-        if compression_kwargs is None:
-            compression_kwargs = {}
-        if decompression_kwargs is None:
-            decompression_kwargs = {}
-            
-        self.compression_kwargs = compression_kwargs.copy()
-        self.decompression_kwargs = decompression_kwargs.copy()
-        
-    def compress(self, data, out=None):
-        comp = bz2.compress(data, **self.compression_kwargs)
-        if out is not None:
-            out[:len(comp)] = comp
-            return len(comp)
-        return comp
-    
-    def decompress(self, blocks, out):
-        decompressor = bz2.BZ2Decompressor(**self.decompression_kwargs)
+class Bzp2Compressor:        
+    def compress(self, data, **kwargs):
+        comp = bz2.compress(data, **kwargs)
+        yield comp
+
+    def decompress(self, blocks, out, **kwargs):
+        decompressor = bz2.BZ2Decompressor(**kwargs)
 
         i = 0
         for block in blocks:
@@ -215,13 +182,11 @@ def _get_compressor_from_extensions(compression, return_extension=False):
 
     for ext in extensions:
         for comp in ext.compressors:
-            # TODO: slightly unfortunate to have to construct the object to get the labels
-            for label in comp().labels:
-                if compression == label:
-                    if return_extension:
-                        return comp,ext
-                    else:
-                        return comp
+            if compression == comp.label.decode('ascii'):
+                if return_extension:
+                    return comp,ext
+                else:
+                    return comp
     return None
 
 
@@ -234,32 +199,27 @@ def _get_all_compression_extension_labels():
     extensions = get_config().extensions
     for ext in extensions:
         for comp in ext.compressors:
-            # TODO: slightly unfortunate to have to construct the object to get the labels
-            for label in comp().labels:
-                labels += [label]
+            labels += [comp.label.decode('ascii')]
     return labels
 
 
-def _get_compressor(label, compression_kwargs=None, decompression_kwargs=None):
+def _get_compressor(label):
     ext_comp = _get_compressor_from_extensions(label)
 
     if ext_comp != None:
         # Use an extension before builtins
-        comp_class = ext_comp
+        comp = ext_comp
     elif label == 'zlib':
-        comp_class = ZlibCompressor
+        comp = ZlibCompressor()
     elif label == 'bzp2':
-        comp_class = Bzp2Compressor
+        comp = Bzp2Compressor()
     elif label == 'lz4':
-        comp_class = Lz4Compressor
+        comp = Lz4Compressor()
     else:
         raise ValueError(
             "Unknown compression type: '{0}'".format(label))
 
-    comp_obj = comp_class(compression_kwargs=compression_kwargs,
-                          decompression_kwargs=decompression_kwargs)
-
-    return comp_obj
+    return comp
 
 
 def to_compression_header(compression):
@@ -283,16 +243,20 @@ def decompress(fd, used_size, data_size, compression, config=None):
     Parameters
     ----------
     fd : generic_io.GenericIO object
-         The file to read the compressed data from.
+        The file to read the compressed data from.
 
     used_size : int
-         The size of the compressed data
+        The size of the compressed data
 
     data_size : int
-         The size of the uncompressed data
+        The size of the uncompressed data
 
     compression : str
-         The compression type used.
+        The compression type used.
+         
+    config : dict or None, optional
+        Any kwarg parameters to pass to the underlying decompression
+        function
 
     Returns
     -------
@@ -302,10 +266,12 @@ def decompress(fd, used_size, data_size, compression, config=None):
     buffer = np.empty((data_size,), np.uint8)
 
     compression = validate(compression)
-    decoder = _get_compressor(compression, decompression_kwargs=config)
+    decoder = _get_compressor(compression)
+    if config is None:
+        config = {}
 
     blocks = fd.read_blocks(used_size)  # data is a generator
-    len_decoded = decoder.decompress(blocks, out=buffer.data)
+    len_decoded = decoder.decompress(blocks, out=buffer.data, **config)
 
     if len_decoded != data_size:
         raise ValueError("Decompressed data wrong size")
@@ -327,9 +293,15 @@ def compress(fd, data, compression, config=None):
 
     compression : str
         The type of compression to use.
+        
+    config : dict or None, optional
+        Any kwarg parameters to pass to the underlying compression
+        function
     """
     compression = validate(compression)
-    encoder = _get_compressor(compression, compression_kwargs=config)
+    encoder = _get_compressor(compression)
+    if config is None:
+        config = {}
 
     # Get a contiguous, 1D memoryview of the underlying data, preserving data.itemsize
     # - contiguous: because we may not want to assume that all compressors can handle arbitrary strides
@@ -344,13 +316,10 @@ def compress(fd, data, compression, config=None):
         # the data will be contiguous by construction, but better safe than sorry!
         raise ValueError(data.contiguous)
 
-    compressed = encoder.compress(data)
-    if type(compressed) is types.GeneratorType:
-        # Write block by block
-        for comp in compressed:
-            fd.write(comp)
-    else:
-        fd.write(compressed)
+    compressed = encoder.compress(data, **config)
+    # Write block by block
+    for comp in compressed:
+        fd.write(comp)
 
 
 def get_compressed_size(data, compression, config=None):
@@ -360,37 +329,23 @@ def get_compressed_size(data, compression, config=None):
 
     Parameters
     ----------
-    data : buffer
-
-    compression : str
-        The type of compression to use.
+    See `compress()`.
         
     Returns
     -------
-    bytes : int
+    nbytes : int
+        The size of the compressed data
+    
     """
-    compression = validate(compression)
-    encoder = _get_compressor(compression, compression_kwargs=config)
+    
+    class _ByteCountingFile:
+        def __init__(self):
+            self.count = 0
 
-    # Get a contiguous, 1D memoryview of the underlying data, preserving data.itemsize
-    # - contiguous: because we may not want to assume that all compressors can handle arbitrary strides
-    # - 1D: so that len(data) works, not just data.nbytes
-    # - itemsize: should preserve data.itemsize for compressors that want to use the record size
-    # - memoryview: don't incur the expense of a memcpy, such as with tobytes()
-    data = memoryview(data)
-    if not data.contiguous:
-        data = memoryview(data.tobytes())  # make a contiguous copy
-    data = data.cast('c').cast(data.format)  # we get a 1D array by a cast to byte, then a cast to data.format
-    if not data.contiguous:
-        # the data will be contiguous by construction, but better safe than sorry!
-        raise ValueError(data.contiguous)
+        def write(self, data):
+            self.count += len(data)
 
-    compressed = encoder.compress(data)
-    l = 0
-    if type(compressed) is types.GeneratorType:
-        # Write block by block
-        for comp in compressed:
-            l += len(comp)
-    else:
-        l += len(compressed)
-    return l
+    bcf = _ByteCountingFile()    
+    compress(bcf, data, compression, config=config)
+    
+    return bcf.count

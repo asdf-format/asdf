@@ -92,7 +92,7 @@ class Extension(abc.ABC):
 
         Returns
         -------
-        iterable of asdf.extension.Compressor
+        iterable of asdf.extension.Compressor instances
         """
         return []
 

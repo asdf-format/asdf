@@ -436,8 +436,7 @@ class AsdfFile:
                 ext_meta['software'] = Software(name=extension.package_name, version=extension.package_version)
             if extension.extension_uri is not None:
                 ext_meta['extension_uri'] = extension.extension_uri
-            for comp in extension.compressors:
-                ext_meta['compression_labels'] = comp().labels
+            ext_meta['compression_labels'] = [comp.label.decode('ascii') for comp in extension.compressors]
 
             for i, entry in enumerate(self.tree['history']['extensions']):
                 # Update metadata about this extension if it already exists

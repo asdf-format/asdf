@@ -317,16 +317,11 @@ class GenericFile(metaclass=util.InheritDocstrings):
     
     @block_size.setter
     def block_size(self, block_size):
-        if block_size == 'auto':
-            if sys.platform.startswith('win'):  # pragma: no cover
-                # There appears to be reliable way to get block size on Windows,
-                # so just choose a reasonable default
+        if block_size == -1:
+            try:
+                block_size = os.fstat(self._fd.fileno()).st_blksize
+            except:
                 block_size = io.DEFAULT_BUFFER_SIZE
-            else:
-                try:
-                    block_size = os.fstat(self._fd.fileno()).st_blksize
-                except:
-                    block_size = io.DEFAULT_BUFFER_SIZE
 
         if block_size <= 0:
             raise ValueError(f'block_size ({block_size}) must be > 0')

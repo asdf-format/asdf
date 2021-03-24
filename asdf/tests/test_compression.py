@@ -192,36 +192,26 @@ def test_set_array_compression(tmpdir):
     with asdf.open(tmpfile) as af_in:
         assert af_in.get_array_compression(af_in.tree['zlib_data']) == 'zlib'
         assert af_in.get_array_compression(af_in.tree['bzp2_data']) == 'bzp2'
-    
+
 
 class LzmaCompressor(Compressor):
-    def __init__(self, compression_kwargs=None, decompression_kwargs=None):
-        if compression_kwargs is None:
-            compression_kwargs = {}
-        if decompression_kwargs is None:
-            decompression_kwargs = {}
-        
-        self.compression_kwargs = compression_kwargs.copy()
-        self._decompressor = lzma.LZMADecompressor(**decompression_kwargs)
+    def compress(self, data, **kwargs):
+        comp = lzma.compress(data, **kwargs)
+        yield comp
 
-    def compress(self, data):
-        compressor = lzma.LZMACompressor(**self.compression_kwargs)
-        comp = compressor.compress(data)
-        flushed = compressor.flush()
-        return comp + flushed
-    
-    def decompress(self, blocks, out):
+    def decompress(self, blocks, out, **kwargs):
+        decompressor = lzma.LZMADecompressor(**kwargs)
         i = 0
         for block in blocks:
-            decomp = self._decompressor.decompress(block)
+            decomp = decompressor.decompress(block)
             out[i:i+len(decomp)] = decomp
             i += len(decomp)
         return i
 
     @property
-    def labels(self):
-        return ['lzma']
-    
+    def label(self):
+        return b'lzma'
+
 class LzmaExtension(Extension):
     @property
     def extension_uri(self):
@@ -229,7 +219,7 @@ class LzmaExtension(Extension):
 
     @property
     def compressors(self):
-        return [LzmaCompressor]
+        return [LzmaCompressor()]
 
 def test_compression_with_extension(tmpdir):
     tree = _get_large_tree()

@@ -128,7 +128,7 @@ def test_invalid_source(small_tree):
 
         with pytest.raises(IOError):
             # ff2.blocks.get_block("http://127.0.0.1/")
-            ff2.blocks.get_block("http://0.42.42.42/")
+            ff2.blocks.get_block("http://ABadUrl.verybad")
 
         with pytest.raises(TypeError):
             ff2.blocks.get_block(42.0)
