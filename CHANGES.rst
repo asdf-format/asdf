@@ -45,6 +45,8 @@
 
 - Remove the ``asdf.test`` method and ``asdf.__githash__`` attribute. [#943]
 
+- Remove unnecessary ``.tree`` from search result paths. [#954]
+
 2.7.4 (unreleased)
 ------------------
 
