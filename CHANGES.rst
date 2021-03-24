@@ -45,7 +45,18 @@
 
 - Remove the ``asdf.test`` method and ``asdf.__githash__`` attribute. [#943]
 
-- Add support for custom compression via extensions [#931]
+- Add support for custom compression via extensions. [#931]
+
+- Remove unnecessary ``.tree`` from search result paths. [#954]
+
+- Drop support for bugs in older operating systems and Python versions. [#955]
+
+2.7.4 (unreleased)
+------------------
+
+- Fix pytest plugin failure under older versions of pytest. [#934]
+
+- Copy array views when the base array is non-contiguous. [#949]
 
 2.7.3 (2021-02-25)
 ------------------

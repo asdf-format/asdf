@@ -502,7 +502,7 @@ tree to stdout.  For example:
 .. code:: python
 
     >>> asdf.info('path/to/some/file.asdf') # doctest: +SKIP
-    root.tree (AsdfObject)
+    root (AsdfObject)
     ├─asdf_library (Software)
     │ ├─author (str): The ASDF Developers
     │ ├─homepage (str): http://github.com/asdf-format/asdf
@@ -549,7 +549,7 @@ Initiate a search by calling `AsdfFile.search` on an open file:
 .. code:: python
 
     >>> af.search() # doctest: +SKIP
-    root.tree (AsdfObject)
+    root (AsdfObject)
     ├─asdf_library (Software)
     │ ├─author (str): The ASDF Developers
     │ ├─homepage (str): http://github.com/asdf-format/asdf
@@ -561,7 +561,7 @@ Initiate a search by calling `AsdfFile.search` on an open file:
       └─example_key (str): example value
 
     >>> af.search('example') # doctest: +SKIP
-    root.tree (AsdfObject)
+    root (AsdfObject)
     └─data (dict)
       └─example_key (str): example value
 
@@ -575,7 +575,7 @@ reference that node directly:
 .. code:: python
 
     >>> af.search('example').path # doctest: +SKIP
-    "root.tree['data']['example_key']"
+    "root['data']['example_key']"
 
 While the `AsdfSearchResult.node` property contains the actual value of the node:
 
@@ -590,7 +590,7 @@ properties instead:
 .. code:: python
 
     >>> af.search('duplicate_key').paths # doctest: +SKIP
-    ["root.tree['data']['duplicate_key']", "root.tree['other_data']['duplicate_key']"]
+    ["root['data']['duplicate_key']", "root['other_data']['duplicate_key']"]
     >>> af.search('duplicate_key').nodes # doctest: +SKIP
     ["value 1", "value 2"]
 
