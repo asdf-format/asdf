@@ -235,7 +235,7 @@ def test_compression_with_extension(tmpdir):
 
         hist = {'extension_class': 'asdf.tests.test_compression.LzmaExtension',
                 'extension_uri': 'asdf://somewhere.org/extensions/lzma-1.0',
-                'compression_labels': ['lzma']}
+                'supported_compression': ['lzma']}
 
         with asdf.open(fn) as af:
             assert hist in af['history']['extensions']
