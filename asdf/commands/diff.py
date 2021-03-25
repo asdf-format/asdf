@@ -4,6 +4,9 @@ Implementation of command for displaying differences between two ASDF files.
 
 import sys
 from numpy import array_equal
+
+import jmespath
+
 try:
     # Provides cross-platform color support
     import colorama
@@ -54,14 +57,18 @@ class Diff(Command): # pragma: no cover
 
         parser.add_argument(
             '-m', '--minimal', action='store_true',
-            help="Show minimal differences between the two files")
+            help="Show minimal differences between the two files.")
+
+        parser.add_argument(
+            '-i', '--ignore-query', action='append', dest='ignore_queries',
+            help="JMESPath query to tree nodes that should be ignored.")
 
         parser.set_defaults(func=cls.run)
         return parser
 
     @classmethod
     def run(cls, args):
-        return diff(args.filenames, args.minimal)
+        return diff(args.filenames, args.minimal, ignore_queries=args.ignore_queries)
 
 class ArrayNode:
     """This class is used to represent unique dummy nodes in the diff tree. In
@@ -110,12 +117,17 @@ class PrintTree:
 
 class DiffContext:
     """Class that contains context data of the diff to be computed"""
-    def __init__(self, asdf0, asdf1, iostream, minimal=False):
+    def __init__(self, asdf0, asdf1, iostream, minimal=False, ignore_ids=None):
         self.asdf0 = asdf0
         self.asdf1 = asdf1
         self.iostream = iostream
         self.minimal = minimal
         self.print_tree = PrintTree()
+
+        if ignore_ids is None:
+            self.ignore_ids = set()
+        else:
+            self.ignore_ids = ignore_ids
 
 def print_tree_context(diff_ctx, node_list, other, use_marker, last_was_list):
     """Print context information indicating location in ASDF tree."""
@@ -231,6 +243,9 @@ def compare_dicts(diff_ctx, dict0, dict1, keys, ignores=set()):
 
 def compare_trees(diff_ctx, tree0, tree1, keys=[]):
     """Recursively traverses two ASDF tree and compares them"""
+    if id(tree0) in diff_ctx.ignore_ids and id(tree1) in diff_ctx.ignore_ids:
+        return
+
     if both_are_ndarrays(tree0, tree1):
         compare_ndarrays(diff_ctx, tree0, tree1, keys)
     elif isinstance(tree0, dict) and isinstance(tree1, dict):
@@ -242,12 +257,30 @@ def compare_trees(diff_ctx, tree0, tree1, keys=[]):
     else:
         compare_objects(diff_ctx, tree0, tree1, keys)
 
-def diff(filenames, minimal, iostream=sys.stdout):
+def diff(filenames, minimal, iostream=sys.stdout, ignore_queries=None):
     """Top-level implementation of diff algorithm"""
+    if ignore_queries is None:
+        ignore_queries = []
+    else:
+        ignore_queries = [jmespath.compile(q) for q in ignore_queries]
+
     try:
         with asdf.open(filenames[0], _force_raw_types=True) as asdf0:
             with asdf.open(filenames[1], _force_raw_types=True) as asdf1:
-                diff_ctx = DiffContext(asdf0, asdf1, iostream, minimal=minimal)
+                ignore_ids = set()
+                for query in ignore_queries:
+                    for tree in [asdf0.tree, asdf1.tree]:
+                        result = query.search(tree)
+                        if result is not None:
+                            ignore_ids.add(id(result))
+                        if isinstance(result, list):
+                            for elem in result:
+                                ignore_ids.add(id(elem))
+                        elif isinstance(result, dict):
+                            for value in result.values():
+                                ignore_ids.add(id(value))
+
+                diff_ctx = DiffContext(asdf0, asdf1, iostream, minimal=minimal, ignore_ids=ignore_ids)
                 compare_trees(diff_ctx, asdf0.tree, asdf1.tree)
     except ValueError as error:
         raise RuntimeError(str(error))
