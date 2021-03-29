@@ -435,7 +435,7 @@ class NDArrayType(AsdfType):
             # byte order, whereas asdf preserves the "contiguousity" and byte order
             # of the base array.
             if (block.data.shape != data.shape or
-                block.data.dtype.itemsize != data.dtype.itemsize or
+                block.data.dtype != data.dtype or
                 block.data.ctypes.data != data.ctypes.data or
                 block.data.strides != data.strides):
                 raise ValueError(

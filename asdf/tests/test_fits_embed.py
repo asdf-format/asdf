@@ -502,28 +502,18 @@ def test_array_view_compatible_layout(tmp_path):
         assert_array_equal(af["other"], other_view)
 
 
-@pytest.mark.xfail(reason="Outstanding bug in AsdfInFits", strict=True)
 def test_array_view_compatible_dtype(tmp_path):
     """
-    We should be able to serialize additional views that have
-    the same memory layout and different dtype of the same
-    size.
+    Changing the dtype of a view over a FITS array is prohibited.
     """
     file_path = tmp_path / "test.fits"
 
-    data = np.arange(DEFAULT_AUTO_INLINE ** 2, dtype=np.float64).reshape(DEFAULT_AUTO_INLINE, DEFAULT_AUTO_INLINE)
-    data_view = data[:, :(DEFAULT_AUTO_INLINE // 2)]
-    other_view = data.view(np.int64)
-
-    hdul = fits.HDUList([fits.PrimaryHDU(), fits.ImageHDU(data_view)])
-    with asdf.fits_embed.AsdfInFits(hdulist=hdul) as af:
-        af["data"] = hdul[-1].data
-        af["other"] = other_view
-        af.write_to(file_path)
-
-    with asdf.open(file_path) as af:
-        assert_array_equal(af["data"], data_view)
-        assert_array_equal(af["other"], other_view)
+    data = np.arange(DEFAULT_AUTO_INLINE + 1, dtype=np.float64)
+    hdul = fits.HDUList([fits.PrimaryHDU(), fits.ImageHDU(data)])
+    with pytest.raises(ValueError, match="ASDF has only limited support for serializing views over arrays stored in FITS HDUs"):
+        with asdf.fits_embed.AsdfInFits(hdulist=hdul) as af:
+            af["view"] = hdul[-1].data.view(np.int64)
+            af.write_to(file_path)
 
 
 def test_array_view_different_layout(tmp_path):
