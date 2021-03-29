@@ -1,0 +1,42 @@
+[32m> tree:[0m
+[32m> frames:[0m
+[32m>   - reference_frame:[0m
+[32m>       galcen_coord:[0m
+[32m>         dec:[0m
+[32m>           unit:[0m
+[32m>             deg[0m
+[32m>           value:[0m
+[32m>             -28.936175[0m
+[32m>         ra:[0m
+[32m>           unit:[0m
+[32m>             deg[0m
+[32m>           value:[0m
+[32m>             266.4051[0m
+[32m>           wrap_angle:[0m
+[32m>             unit:[0m
+[32m>               deg[0m
+[32m>             value:[0m
+[32m>               360.0[0m
+[32m>       galcen_v_sun:[0m
+[32m>         - unit:[0m
+[32m>             km s-1[0m
+[32m>           value:[0m
+[32m>             11.1[0m
+[32m>         - unit:[0m
+[32m>             km s-1[0m
+[32m>           value:[0m
+[32m>             232.24[0m
+[32m>         - unit:[0m
+[32m>             km s-1[0m
+[32m>           value:[0m
+[32m>             7.25[0m
+[31m<       galcen_dec:[0m
+[31m<         unit:[0m
+[31m<           rad[0m
+[31m<         value:[0m
+[31m<           1.0[0m
+[31m<       galcen_ra:[0m
+[31m<         unit:[0m
+[31m<           deg[0m
+[31m<         value:[0m
+[31m<           45.0[0m

@@ -49,6 +49,9 @@
 
 - Drop support for bugs in older operating systems and Python versions. [#955]
 
+- Add argument to ``asdftool diff`` that ignores tree nodes that match
+  a JMESPath expression. [#956]
+
 2.7.4 (unreleased)
 ------------------
 
