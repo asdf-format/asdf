@@ -9,11 +9,11 @@ from . import data as test_data
 get_test_data_path = partial(helpers.get_test_data_path, module=test_data)
 
 
-def _assert_diffs_equal(filenames, result_file, minimal=False, ignore_queries=None):
+def _assert_diffs_equal(filenames, result_file, minimal=False, ignore=None):
     iostream = io.StringIO()
 
     file_paths = [get_test_data_path(name) for name in filenames]
-    diff(file_paths, minimal=minimal, iostream=iostream, ignore_queries=ignore_queries)
+    diff(file_paths, minimal=minimal, iostream=iostream, ignore=ignore)
     iostream.seek(0)
 
     result_path = get_test_data_path(result_file)
@@ -33,14 +33,14 @@ def test_diff_minimal():
     _assert_diffs_equal(filenames, result_file, minimal=True)
 
 
-@pytest.mark.parametrize('result_file, ignore_queries', [
+@pytest.mark.parametrize('result_file, ignore', [
     ('frames_ignore_asdf_library.diff', ['asdf_library']),
     ('frames_ignore_reference_frame.diff', ['frames[*].reference_frame']),
     ('frames_ignore_both.diff', ['asdf_library', 'frames[*].reference_frame']),
 ])
-def test_diff_ignore(result_file, ignore_queries):
+def test_diff_ignore(result_file, ignore):
     filenames = ['frames0.asdf', 'frames1.asdf']
-    _assert_diffs_equal(filenames, result_file, minimal=False, ignore_queries=ignore_queries)
+    _assert_diffs_equal(filenames, result_file, minimal=False, ignore=ignore)
 
 
 def test_diff_block():

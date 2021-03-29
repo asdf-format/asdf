@@ -2,6 +2,7 @@
 Implementation of command for displaying differences between two ASDF files.
 """
 
+import argparse
 import sys
 from numpy import array_equal
 
@@ -47,9 +48,26 @@ class Diff(Command): # pragma: no cover
     """This class is the plugin implementation for the asdftool runner."""
     @classmethod
     def setup_arguments(cls, subparsers):
+        epilog = """
+examples:
+  diff two files:
+    asdftool diff file_before.asdf file_after.asdf
+  ignore differences in the file's ASDF metadata:
+    asdftool diff file_before.asdf file_after.asdf -i '[asdf_library,history]'
+  ignore differences in the 'foo' field of all objects in a list:
+    asdftool diff file_before.asdf file_after.asdf -i 'path.to.some_list[*].foo'
+
+See https://jmespath.org/ for more information on constructing
+JMESPath expressions.
+    """.strip()
+
         parser = subparsers.add_parser(
-            str("diff"), help="Report differences between two ASDF files",
-            description="""Reports differences between two ASDF files""")
+            "diff",
+            description="Report differences between two ASDF files",
+            epilog=epilog,
+            formatter_class=argparse.RawDescriptionHelpFormatter,
+            help="Report differences between two ASDF files",
+        )
 
         parser.add_argument(
             'filenames', metavar='asdf_file', nargs=2,
@@ -60,15 +78,15 @@ class Diff(Command): # pragma: no cover
             help="Show minimal differences between the two files.")
 
         parser.add_argument(
-            '-i', '--ignore-query', action='append', dest='ignore_queries',
-            help="JMESPath query to tree nodes that should be ignored.")
+            '-i', '--ignore', action='append', dest='ignore',
+            help="JMESPath expression indicating tree nodes that should be ignored.")
 
         parser.set_defaults(func=cls.run)
         return parser
 
     @classmethod
     def run(cls, args):
-        return diff(args.filenames, args.minimal, ignore_queries=args.ignore_queries)
+        return diff(args.filenames, args.minimal, ignore=args.ignore)
 
 class ArrayNode:
     """This class is used to represent unique dummy nodes in the diff tree. In
@@ -257,20 +275,38 @@ def compare_trees(diff_ctx, tree0, tree1, keys=[]):
     else:
         compare_objects(diff_ctx, tree0, tree1, keys)
 
-def diff(filenames, minimal, iostream=sys.stdout, ignore_queries=None):
-    """Top-level implementation of diff algorithm"""
-    if ignore_queries is None:
-        ignore_queries = []
+def diff(filenames, minimal, iostream=sys.stdout, ignore=None):
+    """
+    Compare two ASDF files and write diff output to the stdout
+    or the specified I/O stream.
+
+    filenames : list of str
+        List of ASDF filenames to compare.  Must be length 2.
+
+    minimal : boolean
+        Set to True to forego some pretty-printing to minimize
+        the diff output.
+
+    iostream : io.TextIOBase, optional
+        Text-mode stream to write the diff, e.g., sys.stdout
+        or an io.StringIO instance.  Defaults to stdout.
+
+    ignore : list of str, optional
+        List of JMESPath expressions indicating tree nodes that
+        should be ignored.
+    """
+    if ignore is None:
+        ignore_expressions = []
     else:
-        ignore_queries = [jmespath.compile(q) for q in ignore_queries]
+        ignore_expressions = [jmespath.compile(e) for e in ignore]
 
     try:
         with asdf.open(filenames[0], _force_raw_types=True) as asdf0:
             with asdf.open(filenames[1], _force_raw_types=True) as asdf1:
                 ignore_ids = set()
-                for query in ignore_queries:
+                for expression in ignore_expressions:
                     for tree in [asdf0.tree, asdf1.tree]:
-                        result = query.search(tree)
+                        result = expression.search(tree)
                         if result is not None:
                             ignore_ids.add(id(result))
                         if isinstance(result, list):
