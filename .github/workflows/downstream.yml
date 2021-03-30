@@ -55,8 +55,8 @@ jobs:
             repository: astropy/specutils
             ref: ${{ github.event.inputs.specutils_ref || 'main' }}
           - package_name: weldx
-              repository: BAMWelDX/weldx
-              ref: ${{ github.event.inputs.weldx_ref || 'asdf_2.8' }}
+            repository: BAMWelDX/weldx
+            ref: ${{ github.event.inputs.weldx_ref || 'asdf_2.8' }}
     steps:
       - uses: actions/checkout@v2
         with:
