@@ -85,17 +85,17 @@ jobs:
   weldx:
     name: weldx@master unit tests
     runs-on: ubuntu-latest
-      steps:
-          - name: Set up Python 3.9
-            uses: actions/setup-python@v2
-            with:
-              python-version: 3.9
-              - name: Install asdf
-                run: pip install git+https://github.com/asdf-format/asdf@${{ github.event.inputs.asdf_ref || 'master' }}
-              - name: Install weldx
-                run: |
-                  git clone https://github.com/BAMWelDX/weldx.git
-                  cd weldx
-                  pip install -e .[test]
-              - name: Run weldx tests
-                run: pytest tests/asdf_tests --asdf-tests
+    steps:
+      - name: Set up Python 3.9
+        uses: actions/setup-python@v2
+        with:
+          python-version: 3.9
+      - name: Install asdf
+        run: pip install git+https://github.com/asdf-format/asdf@${{ github.event.inputs.asdf_ref || 'master' }}
+      - name: Install weldx
+        run: |
+          git clone https://github.com/BAMWelDX/weldx.git
+          cd weldx
+          pip install -e .[test]
+      - name: Run weldx tests
+        run: pytest tests/asdf_tests --asdf-tests
