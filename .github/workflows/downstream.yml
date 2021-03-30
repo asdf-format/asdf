@@ -56,7 +56,7 @@ jobs:
             ref: ${{ github.event.inputs.specutils_ref || 'main' }}
           - package_name: weldx
               repository: BAMWelDX/weldx
-              ref: ${{ github.event.inputs.weldx_ref || 'master' }}
+              ref: ${{ github.event.inputs.weldx_ref || 'asdf_2.8' }}
     steps:
       - uses: actions/checkout@v2
         with:
@@ -88,23 +88,3 @@ jobs:
         run: pip install git+https://github.com/astropy/astropy@${{ github.event.inputs.astropy_ref || 'master' }}#egg=astropy[test]
       - name: Run astropy tests
         run: pytest --pyargs astropy
-
-  weldx:
-    name: weldx@master unit tests
-    runs-on: ubuntu-latest
-    steps:
-      - name: Set up Python 3.9
-        uses: actions/setup-python@v2
-        with:
-          python-version: 3.9
-      - name: Install asdf
-        run: pip install git+https://github.com/asdf-format/asdf@${{ github.event.inputs.asdf_ref || 'master' }}
-      - name: Install weldx
-        run: |
-          git clone https://github.com/BAMWelDX/weldx.git
-          cd weldx
-          pip install -e .[test]
-      - name: Run weldx tests
-        run: |
-          cd weldx
-          pytest tests/asdf_tests --asdf-tests
