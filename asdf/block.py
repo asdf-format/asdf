@@ -851,13 +851,6 @@ class Block:
         """
         return self.offset + self.header_size + self.allocated
 
-    def override_byteorder(self, byteorder):
-        """
-        Hook to permit overriding the byteorder value stored in the
-        tree.  This is used to support blocks stored in FITS files.
-        """
-        return byteorder
-
     @property
     def trust_data_dtype(self):
         """
@@ -910,11 +903,11 @@ class Block:
         else:
             self._checksum = checksum
 
-    def _calculate_checksum(self, data):
+    def _calculate_checksum(self, array):
         # The following line is safe because we're only using
         # the MD5 as a checksum.
         m = hashlib.new('md5') # nosec
-        m.update(self.data.ravel('K'))
+        m.update(array)
         return m.digest()
 
     def validate_checksum(self):
@@ -929,7 +922,7 @@ class Block:
             `False`.
         """
         if self._checksum:
-            checksum = self._calculate_checksum(self.data)
+            checksum = self._calculate_checksum(self._flattened_data)
             if checksum != self._checksum:
                 return False
         return True
@@ -938,7 +931,7 @@ class Block:
         """
         Update the checksum based on the current data contents.
         """
-        self._checksum = self._calculate_checksum(self.data)
+        self._checksum = self._calculate_checksum(self._flattened_data)
 
     def update_size(self):
         """
@@ -947,13 +940,14 @@ class Block:
         updating the file in-place, otherwise the work is redundant.
         """
         if self._data is not None:
-            self._data_size = self._data.data.nbytes
+            data = self._flattened_data
+            self._data_size = data.nbytes
 
             if not self.output_compression:
                 self._size = self._data_size
             else:
                 self._size = mcompression.get_compressed_size(
-                    self._data, self.output_compression)
+                    data, self.output_compression)
         else:
             self._data_size = self._size = 0
 
@@ -1098,22 +1092,45 @@ class Block:
             self._data = self._fd.memmap_array(self.data_offset, self._size)
             self._memmapped = True
 
+    @property
+    def _flattened_data(self):
+        """
+        Retrieve flattened data suitable for writing.
+
+        Returns
+        -------
+        np.ndarray
+            1D contiguous array.
+        """
+        data = self.data
+
+        # 'K' order flattens the array in the order that elements
+        # occur in memory, except axes with negative strides which
+        # are reversed.  That is a problem for base arrays with
+        # negative strides and is an outstanding bug in this library.
+        return data.ravel(order='K')
+
     def write(self, fd):
         """
         Write an internal block to the given Python file-like object.
         """
         self._header_size = self._header.size
 
+        if self._data is not None:
+            data = self._flattened_data
+        else:
+            data = None
+
         flags = 0
         data_size = used_size = allocated_size = 0
         if self._array_storage == 'streamed':
             flags |= constants.BLOCK_FLAG_STREAMED
-        elif self._data is not None:
-            self.update_checksum()
-            data_size = self._data.nbytes
+        elif data is not None:
+            self._checksum = self._calculate_checksum(data)
+            data_size = data.nbytes
             if not fd.seekable() and self.output_compression:
                 buff = io.BytesIO()
-                mcompression.compress(buff, self._data,
+                mcompression.compress(buff, data,
                                       self.output_compression)
                 self.allocated = self._size = buff.tell()
             allocated_size = self.allocated
@@ -1138,7 +1155,7 @@ class Block:
             used_size=used_size, data_size=data_size,
             checksum=checksum))
 
-        if self._data is not None:
+        if data is not None:
             if self.output_compression:
                 if not fd.seekable():
                     fd.write(buff.getvalue())
@@ -1149,7 +1166,7 @@ class Block:
                     # header.
                     start = fd.tell()
                     mcompression.compress(
-                        fd, self._data, self.output_compression)
+                        fd, data, self.output_compression)
                     end = fd.tell()
                     self.allocated = self._size = end - start
                     fd.seek(self.offset + 6)
@@ -1161,7 +1178,7 @@ class Block:
             else:
                 if used_size != data_size:
                     raise RuntimeError(f"Block used size {used_size} is not equal to the data size {data_size}")
-                fd.write_array(self._data)
+                fd.write_array(data)
 
     @property
     def data(self):

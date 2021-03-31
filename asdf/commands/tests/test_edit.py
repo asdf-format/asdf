@@ -1,219 +1,322 @@
+from contextlib import contextmanager
 import os
 import re
 
 import numpy as np
+from numpy.testing import assert_array_equal
+
 import pytest
 
 import asdf
 from asdf.commands import main
+from asdf import constants
 
 
-def _create_base_asdf_stream(version, oname):
-    # Store the data in an arbitrarily nested dictionary
-    tree = {
-        "foo": 42,
-        "name": "Monty",
-        "my_stream": asdf.Stream([128], np.float64),
-    }
-    af = asdf.AsdfFile(tree)
-    with open(oname, "wb") as fd:
-        af.write_to(fd)
-        for k in range(5):
-            fd.write(np.array([k] * 128, np.float64).tobytes())
+@pytest.fixture(params=asdf.versioning.supported_versions)
+def version(request):
+    return request.param
 
 
-def _create_base_asdf(version, oname):
+@pytest.fixture
+def create_editor(tmp_path):
     """
-    In the test temp directory, create a base ASDF file to edit
-    and test against.
+    Fixture providing a function that generates an editor script.
     """
-    seq = np.arange(713)
+    def _create_editor(pattern, replacement):
+        if isinstance(pattern, str):
+            pattern = pattern.encode("utf-8")
+        if isinstance(replacement, str):
+            replacement = replacement.encode("utf-8")
 
-    # Store the data in an arbitrarily nested dictionary
-    tree = {
-        "foo": 42,
-        "name": "Monty",
-        "sequence": seq,
-    }
+        editor_path = tmp_path / "editor.py"
 
-    with asdf.AsdfFile(tree, version=version) as af:
-        af.write_to(oname)
+        content = f"""import re
+import sys
 
+with open(sys.argv[1], "rb") as file:
+    content = file.read()
 
-def _create_base_asdf_no_blocks(version, oname):
-    tree = {
-        "foo": 42,
-        "name": "Monty",
-    }
+content = re.sub({pattern!r}, {replacement!r}, content, flags=(re.DOTALL | re.MULTILINE))
 
-    with asdf.AsdfFile(tree, version=version) as af:
-        af.write_to(oname)
+with open(sys.argv[1], "wb") as file:
+    file.write(content)
+"""
 
+        with editor_path.open("w") as file:
+            file.write(content)
 
-def _create_edited_yaml(base_yaml, edited_yaml, pattern, replacement):
-    with open(base_yaml, "rb") as fd:
-        content = fd.read()
-        new_content = re.sub(pattern, replacement, content)
-        with open(edited_yaml, "wb") as fd:
-            fd.write(new_content)
+        return f"python {editor_path}"
+
+    return _create_editor
 
 
-def _initialize_test(tmpdir, version, create_asdf):
-    asdf_base = os.path.join(tmpdir, "base.asdf")
-    yaml_base = os.path.join(tmpdir, "base.yaml")
-    asdf_edit = os.path.join(tmpdir, "edit.asdf")
-    yaml_edit = os.path.join(tmpdir, "edit.yaml")
+@contextmanager
+def file_not_modified(path):
+    """
+    Assert that a file was not modified during the context.
+    """
+    original_mtime = os.stat(path).st_mtime_ns
 
-    create_asdf(version, asdf_base)
-    create_asdf(version, asdf_edit)
+    yield
 
-    args = ["edit", "-e", "-f", f"{asdf_base}", "-o", f"{yaml_base}"]
-    main.main_from_args(args)
-
-    return asdf_base, yaml_base, asdf_edit, yaml_edit
+    assert os.stat(path).st_mtime_ns == original_mtime
 
 
-# --------------- Tests ---------------
-@pytest.mark.parametrize("version", asdf.versioning.supported_versions)
-def test_edit_tack_s_bad_args_bad_f(tmpdir, version):
-    asdf_base = os.path.join(tmpdir, "base.asdf")
+@pytest.fixture
+def mock_input(monkeypatch):
+    """
+    Fixture providing a function that mocks the edit module's
+    built-in input function.
+    """
+    @contextmanager
+    def _mock_input(pattern, response):
+        called = False
+        def _input(prompt=None):
+            nonlocal called
+            called = True
+            assert prompt is not None and re.match(pattern, prompt)
+            return response
 
-    args = ["edit", "-e", "-f", f"{asdf_base}", "-o", f"{asdf_base}"]
-    with pytest.raises(SystemExit) as e:
-        main.main(args)
-    assert e.value.code == 1
+        with monkeypatch.context() as m:
+            m.setattr("builtins.input", _input)
+            yield
 
+        assert called, "input was not called as expected"
 
-@pytest.mark.parametrize("version", asdf.versioning.supported_versions)
-def test_edit_tack_s_bad_args_bad_o(tmpdir, version):
-    yaml_base = os.path.join(tmpdir, "base.yaml")
-
-    args = ["edit", "-e", "-f", f"{yaml_base}", "-o", f"{yaml_base}"]
-    with pytest.raises(SystemExit) as e:
-        main.main(args)
-    assert e.value.code == 1
-
-
-@pytest.mark.parametrize("version", asdf.versioning.supported_versions)
-def test_edit_tack_e_bad_args_bad_o(tmpdir, version):
-    asdf_base = os.path.join(tmpdir, "base.asdf")
-
-    args = ["edit", "-e", "-f", f"{asdf_base}", "-o", f"{asdf_base}"]
-    with pytest.raises(SystemExit) as e:
-        main.main(args)
-    assert e.value.code == 1
+    return _mock_input
 
 
-@pytest.mark.parametrize("version", asdf.versioning.supported_versions)
-def test_edit_tack_e_bad_args_bad_f(tmpdir, version):
-    yaml_base = os.path.join(tmpdir, "base.yaml")
+@pytest.fixture(autouse=True)
+def default_mock_input(monkeypatch):
+    """
+    Fixture that raises an error when the program
+    requests unexpected input.
+    """
+    def _input(prompt=None):
+        raise AssertionError(f"Received unexpected request for input: {prompt}")
 
-    args = ["edit", "-e", "-f", f"{yaml_base}", "-o", f"{yaml_base}"]
-    with pytest.raises(SystemExit) as e:
-        main.main(args)
-    assert e.value.code == 1
-
-
-@pytest.mark.parametrize("version", asdf.versioning.supported_versions)
-def test_edit_bad_args(tmpdir, version):
-    asdf_base = os.path.join(tmpdir, "base.asdf")
-
-    args = ["edit", "-e", "-f", f"{asdf_base}"]
-    with pytest.raises(SystemExit) as e:
-        main.main(args)
-    assert e.value.code == 2
+    monkeypatch.setattr("builtins.input", _input)
 
 
-@pytest.mark.parametrize("version", asdf.versioning.supported_versions)
-def test_edit_save_to_no_binary(tmpdir, version):
-    asdf_base = os.path.join(tmpdir, "base.asdf")
-    yaml_base = os.path.join(tmpdir, "base.yaml")
-    yaml_edit = os.path.join(tmpdir, "edit.yaml")
+def test_no_blocks(tmp_path, create_editor, version):
+    file_path = str(tmp_path/"test.asdf")
 
-    _create_base_asdf_no_blocks(version, asdf_base)
-    _create_base_asdf_no_blocks(version, yaml_base)
+    with asdf.AsdfFile(version=version) as af:
+        af["foo"] = "bar"
+        af.write_to(file_path)
 
-    _create_edited_yaml(yaml_base, yaml_edit, b"foo: 42", b"foo: 2")
+    os.environ["EDITOR"] = create_editor(r"foo: bar", "foo: baz")
 
-    args = ["edit", "-s", "-f", f"{yaml_edit}", "-o", f"{asdf_base}"]
-    with pytest.raises(SystemExit) as e:
-        main.main(args)
-    assert e.value.code == 1
+    assert main.main_from_args(["edit", file_path]) == 0
+
+    with asdf.open(file_path) as af:
+        assert af["foo"] == "baz"
 
 
-@pytest.mark.parametrize("version", asdf.versioning.supported_versions)
-def test_edit_no_binary(tmpdir, version):
-    asdf_base = os.path.join(tmpdir, "base.asdf")
-    yaml_base = os.path.join(tmpdir, "base.yaml")
-    _create_base_asdf_no_blocks(version, asdf_base)
+def test_no_blocks_increase_size(tmp_path, create_editor, version):
+    file_path = str(tmp_path/"test.asdf")
 
-    args = ["edit", "-e", "-f", f"{asdf_base}", "-o", f"{yaml_base}"]
-    with pytest.raises(SystemExit) as e:
-        main.main(args)
-    assert e.value.code == 1
+    with asdf.AsdfFile(version=version) as af:
+        af["foo"] = "bar"
+        af.write_to(file_path)
 
+    new_value = "a" * 32768
+    os.environ["EDITOR"] = create_editor(r"foo: bar", f"foo: {new_value}")
 
-@pytest.mark.parametrize("version", asdf.versioning.supported_versions)
-def test_edit_smaller(tmpdir, version):
-    asdf_base, yaml_base, asdf_edit, yaml_edit = _initialize_test(
-        tmpdir, version, _create_base_asdf
-    )
+    # With no blocks, we can expand the existing file, so this case
+    # shouldn't require confirmation from the user.
+    assert main.main_from_args(["edit", file_path]) == 0
 
-    _create_edited_yaml(yaml_base, yaml_edit, b"foo: 42", b"foo: 2")
-
-    args = ["edit", "-s", "-f", f"{yaml_edit}", "-o", f"{asdf_edit}"]
-    main.main_from_args(args)
-    assert os.path.getsize(asdf_edit) == os.path.getsize(asdf_base)
-
-    with asdf.open(asdf_edit) as af:
-        assert af.tree["foo"] == 2
+    with asdf.open(file_path) as af:
+        assert af["foo"] == new_value
 
 
-@pytest.mark.parametrize("version", asdf.versioning.supported_versions)
-def test_edit_equal(tmpdir, version):
-    asdf_base, yaml_base, asdf_edit, yaml_edit = _initialize_test(
-        tmpdir, version, _create_base_asdf
-    )
+def test_no_blocks_decrease_size(tmp_path, create_editor, version):
+    file_path = str(tmp_path/"test.asdf")
 
-    _create_edited_yaml(yaml_base, yaml_edit, b"foo: 42", b"foo: 41")
+    original_value = "a" * 32768
 
-    args = ["edit", "-s", "-f", f"{yaml_edit}", "-o", f"{asdf_edit}"]
-    main.main_from_args(args)
-    assert os.path.getsize(asdf_edit) == os.path.getsize(asdf_base)
+    with asdf.AsdfFile(version=version) as af:
+        af["foo"] = original_value
+        af.write_to(file_path)
 
-    with asdf.open(asdf_edit) as af:
-        assert af.tree["foo"] == 41
+    os.environ["EDITOR"] = create_editor(f"foo: {original_value}", "foo: bar")
 
+    assert main.main_from_args(["edit", file_path]) == 0
 
-@pytest.mark.parametrize("version", asdf.versioning.supported_versions)
-def test_edit_larger(tmpdir, version):
-    asdf_base, yaml_base, asdf_edit, yaml_edit = _initialize_test(
-        tmpdir, version, _create_base_asdf
-    )
-
-    _create_edited_yaml(yaml_base, yaml_edit, b"foo: 42", b"foo: 42\nbar: 13")
-
-    args = ["edit", "-s", "-f", f"{yaml_edit}", "-o", f"{asdf_edit}"]
-    main.main_from_args(args)
-    assert os.path.getsize(asdf_edit) - os.path.getsize(asdf_base) > 10000
-
-    with asdf.open(asdf_edit) as af:
-        assert "bar" in af.tree
-        assert af.tree["bar"] == 13
+    with asdf.open(file_path) as af:
+        assert af["foo"] == "bar"
 
 
-@pytest.mark.parametrize("version", asdf.versioning.supported_versions)
-def test_edit_larger_stream(tmpdir, version):
-    asdf_base, yaml_base, asdf_edit, yaml_edit = _initialize_test(
-        tmpdir, version, _create_base_asdf_stream
-    )
+def test_with_blocks(tmp_path, create_editor, version):
+    file_path = str(tmp_path/"test.asdf")
 
-    _create_edited_yaml(yaml_base, yaml_edit, b"foo: 42", b"foo: 42\nbar: 13")
+    array1 = np.random.rand(constants.DEFAULT_AUTO_INLINE + 1)
+    array2 = np.random.rand(constants.DEFAULT_AUTO_INLINE + 1)
+    with asdf.AsdfFile(version=version) as af:
+        af["array1"] = array1
+        af["array2"] = array2
+        af["foo"] = "bar"
+        af.write_to(file_path)
 
-    args = ["edit", "-s", "-f", f"{yaml_edit}", "-o", f"{asdf_edit}"]
-    main.main_from_args(args)
-    assert os.path.getsize(asdf_edit) - os.path.getsize(asdf_base) > 10000
+    os.environ["EDITOR"] = create_editor(r"foo: bar", "foo: baz")
 
-    with asdf.open(asdf_edit) as af:
-        assert "bar" in af.tree
-        assert af.tree["bar"] == 13
+    assert main.main_from_args(["edit", file_path]) == 0
+
+    with asdf.open(file_path) as af:
+        assert af["foo"] == "baz"
+        assert_array_equal(af["array1"], array1)
+        assert_array_equal(af["array2"], array2)
+
+
+def test_with_blocks_increase_size(tmp_path, create_editor, version, mock_input):
+    file_path = str(tmp_path/"test.asdf")
+
+    array1 = np.random.rand(constants.DEFAULT_AUTO_INLINE + 1)
+    array2 = np.random.rand(constants.DEFAULT_AUTO_INLINE + 1)
+    with asdf.AsdfFile(version=version) as af:
+        af["array1"] = array1
+        af["array2"] = array2
+        af["foo"] = "bar"
+        af.write_to(file_path)
+
+    new_value = "a" * 32768
+    os.environ["EDITOR"] = create_editor(r"foo: bar", f"foo: {new_value}")
+
+    # Abort without updating the file
+    with mock_input(r"\(c\)ontinue or \(a\)bort\?", "a"):
+        with file_not_modified(file_path):
+            assert main.main_from_args(["edit", file_path]) == 1
+
+    # Agree to allow the file to be rewritten
+    with mock_input(r"\(c\)ontinue or \(a\)bort\?", "c"):
+        assert main.main_from_args(["edit", file_path]) == 0
+
+    with asdf.open(file_path) as af:
+        assert af["foo"] == new_value
+        assert_array_equal(af["array1"], array1)
+        assert_array_equal(af["array2"], array2)
+
+
+
+def test_with_blocks_decrease_size(tmp_path, create_editor, version):
+    file_path = str(tmp_path/"test.asdf")
+
+    original_value = "a" * 32768
+
+    array1 = np.random.rand(constants.DEFAULT_AUTO_INLINE + 1)
+    array2 = np.random.rand(constants.DEFAULT_AUTO_INLINE + 1)
+    with asdf.AsdfFile(version=version) as af:
+        af["array1"] = array1
+        af["array2"] = array2
+        af["foo"] = original_value
+        af.write_to(file_path)
+
+    os.environ["EDITOR"] = create_editor(f"foo: {original_value}", "foo: bar")
+
+    assert main.main_from_args(["edit", file_path]) == 0
+
+    with asdf.open(file_path) as af:
+        assert af["foo"] == "bar"
+        assert_array_equal(af["array1"], array1)
+        assert_array_equal(af["array2"], array2)
+
+
+def test_no_changes(tmp_path, create_editor, version):
+    file_path = str(tmp_path/"test.asdf")
+
+    with asdf.AsdfFile(version=version) as af:
+        af["foo"] = "bar"
+        af.write_to(file_path)
+
+    os.environ["EDITOR"] = create_editor(r"non-existent-string", "non-existent-string")
+
+    with file_not_modified(file_path):
+        assert main.main_from_args(["edit", file_path]) == 0
+
+
+def test_update_asdf_standard_version(tmp_path, create_editor, version, mock_input):
+    file_path = str(tmp_path/"test.asdf")
+
+    with asdf.AsdfFile(version=version) as af:
+        af["foo"] = "bar"
+        af.write_to(file_path)
+
+    os.environ["EDITOR"] = create_editor(r"^#ASDF_STANDARD .*?$", "#ASDF_STANDARD 999.999.999")
+
+    with file_not_modified(file_path):
+        with mock_input(r"\(c\)ontinue editing or \(a\)bort\?", "a"):
+            assert main.main_from_args(["edit", file_path]) == 1
+
+
+def test_update_yaml_version(tmp_path, create_editor, version, mock_input):
+    file_path = str(tmp_path/"test.asdf")
+
+    with asdf.AsdfFile(version=version) as af:
+        af["foo"] = "bar"
+        af.write_to(file_path)
+
+    os.environ["EDITOR"] = create_editor(r"^%YAML 1.1$", "%YAML 1.2")
+
+    with file_not_modified(file_path):
+        with mock_input(r"\(c\)ontinue editing or \(a\)bort\?", "a"):
+            assert main.main_from_args(["edit", file_path]) == 1
+
+
+def test_bad_yaml(tmp_path, create_editor, version, mock_input):
+    file_path = str(tmp_path/"test.asdf")
+
+    with asdf.AsdfFile(version=version) as af:
+        af["foo"] = "bar"
+        af.write_to(file_path)
+
+    os.environ["EDITOR"] = create_editor(r"foo: bar", "foo: [")
+
+    with file_not_modified(file_path):
+        with mock_input(r"\(c\)ontinue editing or \(a\)bort\?", "a"):
+            assert main.main_from_args(["edit", file_path]) == 1
+
+
+def test_validation_failure(tmp_path, create_editor, version, mock_input):
+    file_path = str(tmp_path/"test.asdf")
+
+    with asdf.AsdfFile(version=version) as af:
+        af["array"] = np.arange(constants.DEFAULT_AUTO_INLINE + 1)
+        af.write_to(file_path)
+
+    os.environ["EDITOR"] = create_editor(r"byteorder: .*?$", "byteorder: med")
+
+    with file_not_modified(file_path):
+        with mock_input(r"\(c\)ontinue editing, \(f\)orce update, or \(a\)bort\?", "a"):
+            assert main.main_from_args(["edit", file_path]) == 1
+
+    with mock_input(r"\(c\)ontinue editing, \(f\)orce update, or \(a\)bort\?", "f"):
+        assert main.main_from_args(["edit", file_path]) == 0
+
+    with open(file_path, "rb") as f:
+        content = f.read()
+        assert b"byteorder: med" in content
+
+
+def test_asdf_open_failure(tmp_path, create_editor, version, mock_input):
+    file_path = str(tmp_path/"test.asdf")
+
+    with asdf.AsdfFile(version=version) as af:
+        af["foo"] = "bar"
+        af.write_to(file_path)
+
+    os.environ["EDITOR"] = create_editor(r"^#ASDF .*?$", "#HJKL 1.0.0")
+
+    with file_not_modified(file_path):
+        with mock_input(r"\(c\)ontinue editing or \(a\)bort\?", "a"):
+            assert main.main_from_args(["edit", file_path]) == 1
+
+
+def test_non_asdf_file(tmp_path):
+    file_path = str(tmp_path/"test.asdf")
+
+    with open(file_path, "w") as f:
+        f.write("Dear diary...")
+
+    with file_not_modified(file_path):
+        assert main.main_from_args(["edit", file_path]) == 1

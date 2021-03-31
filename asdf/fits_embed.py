@@ -46,13 +46,6 @@ class _FitsBlock:
     def array_storage(self):
         return 'fits'
 
-    def override_byteorder(self, byteorder):
-        # FITS data is always stored in big-endian byte order.
-        # The data array may not report big-endian, but we want
-        # the value written to the tree to match the actual
-        # byte order on disk.
-        return 'big'
-
     @property
     def trust_data_dtype(self):
         # astropy.io.fits returns arrays in native byte order
@@ -133,8 +126,8 @@ class AsdfInFits(asdf.AsdfFile):
         from astropy.io import fits
 
         hdulist = fits.HDUList()
-        hdulist.append(fits.ImageHDU(np.arange(512, dtype=np.float), name='SCI'))
-        hdulist.append(fits.ImageHDU(np.arange(512, dtype=np.float), name='DQ'))
+        hdulist.append(fits.ImageHDU(np.arange(512, dtype=float), name='SCI'))
+        hdulist.append(fits.ImageHDU(np.arange(512, dtype=float), name='DQ'))
 
         tree = {
             'model': {

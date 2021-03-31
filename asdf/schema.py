@@ -572,8 +572,7 @@ def _validate_large_literals(instance, reading):
     Validate that the tree has no large numeric literals.
     """
     def _validate(value):
-        # We can count on 52 bits of precision
-        if value <= ((1 << 51) - 1) and value >= -((1 << 51) - 2):
+        if value <= constants.MAX_NUMBER and value >= constants.MIN_NUMBER:
             return
 
         if reading:

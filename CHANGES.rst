@@ -41,9 +41,43 @@
   than defaulting to storing all arrays internally. [#882]
 
 - Add ``edit`` subcommand to asdftool for efficient editing of
-  the YAML portion of an ASDF file.  [#873]
+  the YAML portion of an ASDF file.  [#873, #922]
 
-2.7.1 (unreleased)
+- Remove the ``asdf.test`` method and ``asdf.__githash__`` attribute. [#943]
+
+- Remove unnecessary ``.tree`` from search result paths. [#954]
+
+- Drop support for bugs in older operating systems and Python versions. [#955]
+
+- Add argument to ``asdftool diff`` that ignores tree nodes that match
+  a JMESPath expression. [#956]
+
+2.7.4 (unreleased)
+------------------
+
+- Fix pytest plugin failure under older versions of pytest. [#934]
+
+- Copy array views when the base array is non-contiguous. [#949]
+
+- Prohibit views over FITS arrays that change dtype. [#952]
+
+2.7.3 (2021-02-25)
+------------------
+
+- Add pytest plugin options to skip and xfail individual tests
+  and xfail the unsupported ndarray-1.0.0 example. [#929]
+
+- Fix bug resulting in invalid strides values for views over
+  FITS arrays. [#930]
+
+2.7.2 (2021-01-15)
+------------------
+
+- Fix bug causing test collection failures in some environments. [#889]
+
+- Fix bug when decompressing arrays with numpy 1.20.  [#901, #909]
+
+2.7.1 (2020-08-18)
 ------------------
 
 - Fix bug preventing access to copied array data after

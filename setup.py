@@ -1,4 +1,5 @@
 #!/usr/bin/env python
+import os
 from setuptools import setup, find_packages
 
 
@@ -23,7 +24,7 @@ package_data = {
 }
 
 setup(
-    use_scm_version=True,
+    use_scm_version={"write_to": os.path.join("asdf", "version.py"), "write_to_template": 'version = "{version}"\n'},
     packages=packages,
     package_dir=package_dir,
     package_data=package_data,

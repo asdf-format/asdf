@@ -9,7 +9,7 @@ from ...tests.helpers import get_file_sizes, assert_tree_match
 
 
 def test_explode_then_implode(tmpdir):
-    x = np.arange(0, 10, dtype=np.float)
+    x = np.arange(0, 10, dtype=float)
 
     tree = {
         'science_data': x,

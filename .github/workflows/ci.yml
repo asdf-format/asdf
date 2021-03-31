@@ -1,0 +1,141 @@
+name: CI
+
+on:
+  push:
+    branches:
+      - master
+      - stable
+      - '*.x'
+    tags:
+      - '*'
+  pull_request:
+
+jobs:
+  tox:
+    name: ${{ matrix.name }}
+    runs-on: ${{ matrix.os }}
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - name: Code Coverage with Python 3.9
+            os: ubuntu-latest
+            python-version: 3.9
+            toxenv: coverage
+
+          - name: Python 3.8 Testing
+            os: ubuntu-latest
+            python-version: 3.8
+            toxenv: py38
+
+          - name: Python 3.7 Testing
+            os: ubuntu-latest
+            python-version: 3.7.9
+            toxenv: py37
+
+          - name: Python 3.6 Testing
+            os: ubuntu-latest
+            python-version: 3.6.10
+            toxenv: py36
+
+          - name: Python 3.6 with legacy packages
+            os: ubuntu-latest
+            python-version: 3.6.10
+            toxenv: py36-legacy
+
+          - name: Documentation Build
+            os: ubuntu-latest
+            python-version: 3.8
+            toxenv: docbuild
+
+          - name: Mac OS Latest
+            os: macos-latest
+            python-version: 3.9
+            toxenv: py39
+
+          - name: Compatibility
+            os: ubuntu-latest
+            python-version: 3.9
+            toxenv: compatibility
+
+          - name: Bandit Security Checks
+            os: ubuntu-latest
+            python-version: 3.9
+            toxenv: bandit
+
+          - name: Code Style Checks
+            os: ubuntu-latest
+            python-version: 3.8
+            toxenv: style
+
+          - name: Twine
+            os: ubuntu-latest
+            python-version: 3.9
+            toxenv: twine
+
+          - name: Checkdocs
+            os: ubuntu-latest
+            python-version: 3.9
+            toxenv: checkdocs
+
+          - name: Numpy 1.12
+            os: ubuntu-latest
+            python-version: 3.6.10
+            toxenv: py36-numpy12
+
+          - name: Astropy Dev
+            os: ubuntu-latest
+            python-version: 3.8
+            toxenv: py38-astropydev
+
+          - name: GWCS Dev
+            os: ubuntu-latest
+            python-version: 3.8
+            toxenv: py38-gwcsdev
+
+          # Fail
+          - name: Numpy Dev
+            os: ubuntu-latest
+            python-version: 3.8
+            toxenv: py38-numpydev
+
+          # Fail
+          - name: Pre-Release Dependencies
+            os: ubuntu-latest
+            python-version: 3.8
+            toxenv: prerelease
+
+          - name: Test Against Installed Packaged
+            os: ubuntu-latest
+            python-version: 3.8
+            toxenv: packaged
+
+          - name: Warnings Treated as Exceptions
+            os: ubuntu-latest
+            python-version: 3.8
+            toxenv: warnings
+
+          - name: Windows
+            os: windows-latest
+            python-version: 3.9
+            toxenv: py39
+    steps:
+      - name: Install System Packages
+        if: ${{ contains(matrix.toxenv,'docbuild') }}
+        run: |
+          sudo apt-get install graphviz texlive-latex-extra dvipng
+      - name: Checkout code
+        uses: actions/checkout@v2
+        with:
+          fetch-depth: 0
+          submodules: true
+      - name: Set up Python ${{ matrix.python-version }}
+        uses: actions/setup-python@v2
+        with:
+          python-version: ${{ matrix.python-version }}
+      - name: Install tox
+        run: |
+          python -m pip install --upgrade pip
+          pip install tox
+      - name: Run tox
+        run: tox -e ${{ matrix.toxenv }}

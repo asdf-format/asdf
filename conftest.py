@@ -1,28 +1,17 @@
 import os
 
 import pytest
-from _pytest.doctest import DoctestItem
 
 
-@pytest.fixture(autouse=True)
-def _docdir(request):
+@pytest.fixture(scope="session", autouse=True)
+def temp_cwd(tmpdir_factory):
     """
-    Make sure that doctests run in a temporary directory so that any files that
-    are created as part of the test get removed automatically.
+    This fixture creates a temporary current working directory
+    for the test session, so that docstring tests that write files
+    don't clutter up the real cwd.
     """
-
-    # Trigger ONLY for the doctests.
-    if isinstance(request.node, DoctestItem):
-
-        # Get the fixture dynamically by its name.
-        tmpdir = request.getfixturevalue('tmpdir')
-
-        # Chdir only for the duration of the test.
-        olddir = os.getcwd()
-        tmpdir.chdir()
-        yield
-        os.chdir(olddir)
-
-    else:
-        # For normal tests, we have to yield, since this is a yield-fixture.
-        yield
+    original_cwd = os.getcwd()
+    try:
+        os.chdir(tmpdir_factory.mktemp("cwd"))
+    finally:
+        os.chdir(original_cwd)

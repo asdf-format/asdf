@@ -4,6 +4,33 @@
 Changes
 *******
 
+What's New in ASDF 2.7.3?
+=========================
+
+The ASDF Standard is at v1.5.0.
+
+Changes include:
+
+- Fix bug resulting in invalid strides values for views over
+  FITS arrays.
+
+- Add pytest plugin options to skip and xfail individual tests
+  and xfail the unsupported ndarray-1.0.0 schema example.
+
+What's New in ASDF 2.7.2?
+=========================
+
+The ASDF Standard is at v1.5.0.
+
+Changes include:
+
+* Fix bug causing test collection failures under Python 3.9.
+
+* Fix bug when decompressing arrays with numpy 1.20.
+
+* Replace ``assert`` statements with ``raise`` at the behest
+  of the bandit security linter.
+
 What's New in ASDF 2.7.1?
 =========================
 

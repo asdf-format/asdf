@@ -4,9 +4,9 @@ from pathlib import Path
 from collections.abc import Mapping
 
 if sys.version_info < (3, 9):
-    import importlib_resources
+    import importlib_resources as importlib
 else:
-    import importlib.resources as importlib_resources
+    import importlib
 
 import pytest
 
@@ -87,7 +87,7 @@ def test_directory_resource_mapping_with_traversable():
     Confirm that DirectoryResourceMapping doesn't use pathlib.Path
     methods outside of the Traversable interface.
     """
-    class MockTraversable(importlib_resources.abc.Traversable):
+    class MockTraversable(importlib.abc.Traversable):
         def __init__(self, name, value):
             self._name = name
             self._value = value

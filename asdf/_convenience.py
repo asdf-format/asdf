@@ -41,8 +41,8 @@ def info(node_or_path, max_rows=DEFAULT_MAX_ROWS, max_cols=DEFAULT_MAX_COLS, sho
         Set to False to disable display of primitive values in
         the rendered tree.
     """
-    with _manage_node(node_or_path) as (identifier, node):
-        lines = render_tree(node, max_rows=max_rows, max_cols=max_cols, show_values=show_values, identifier=identifier)
+    with _manage_node(node_or_path) as node:
+        lines = render_tree(node, max_rows=max_rows, max_cols=max_cols, show_values=show_values, identifier="root")
         print("\n".join(lines))
 
 
@@ -50,9 +50,9 @@ def info(node_or_path, max_rows=DEFAULT_MAX_ROWS, max_cols=DEFAULT_MAX_COLS, sho
 def _manage_node(node_or_path):
     if isinstance(node_or_path, str) or isinstance(node_or_path, pathlib.Path):
         with open_asdf(node_or_path) as af:
-            yield "root.tree", af.tree
+            yield af.tree
     else:
         if isinstance(node_or_path, AsdfFile):
-            yield "root.tree", node_or_path.tree
+            yield node_or_path.tree
         else:
-            yield "root", node_or_path
+            yield node_or_path

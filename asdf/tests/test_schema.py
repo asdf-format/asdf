@@ -7,6 +7,7 @@ from numpy.testing import assert_array_equal
 import pytest
 
 import asdf
+from asdf import constants
 from asdf import get_config, config_context
 from asdf import extension
 from asdf import resolver
@@ -17,6 +18,7 @@ from asdf import yamlutil
 from asdf import tagged
 from asdf.tests import helpers, CustomExtension
 from asdf.exceptions import AsdfWarning, AsdfConversionWarning, AsdfDeprecationWarning
+
 
 
 class TagReferenceType(types.CustomType):
@@ -617,51 +619,53 @@ def test_schema_resolved_via_entry_points():
     assert tag in repr(s)
 
 
-@pytest.mark.parametrize('use_numpy', [False, True])
-def test_large_literals(use_numpy):
-
-    largeval = 1 << 53
-    if use_numpy:
-        largeval = np.uint64(largeval)
+@pytest.mark.parametrize("num", [constants.MAX_NUMBER+1, constants.MIN_NUMBER-1])
+def test_max_min_literals(num):
 
     tree = {
-        'large_int': largeval,
+        'test_int': num,
     }
 
     with pytest.raises(ValidationError):
         asdf.AsdfFile(tree)
 
     tree = {
-        'large_list': [largeval],
+        'test_list': [num],
     }
 
     with pytest.raises(ValidationError):
         asdf.AsdfFile(tree)
 
     tree = {
-        largeval: 'large_key',
+        num: 'test_key',
     }
 
     with pytest.raises(ValidationError):
         asdf.AsdfFile(tree)
 
-    tree = {
-        'large_array': np.array([largeval], np.uint64)
-    }
 
-    ff = asdf.AsdfFile(tree)
-    buff = io.BytesIO()
-    ff.write_to(buff, auto_inline=None)
+@pytest.mark.parametrize("num", [constants.MAX_NUMBER+1, constants.MIN_NUMBER-1])
+@pytest.mark.parametrize("ttype", ["val", "list", "key"])
+def test_max_min_literals_write(num, ttype, tmpdir):
+    outfile = tmpdir / "test.asdf"
+    af = asdf.AsdfFile()
 
-    ff.set_array_storage(ff.tree['large_array'], 'inline')
-    buff = io.BytesIO()
+    # Validation doesn't occur here, so no warning/error will be raised.
+    if ttype == "val":
+        af.tree['test_int'] = num
+    elif ttype == "list":
+        af.tree['test_int'] = [num]
+    else:
+        af.tree[num] = 'test_key'
+
+    # Validation will occur on write, though, so detect it.
     with pytest.raises(ValidationError):
-        ff.write_to(buff)
-        print(buff.getvalue())
+        af.write_to(outfile)
+    af.close()
 
 
-def test_read_large_literal():
-    value = 1 << 64
+@pytest.mark.parametrize("value", [constants.MAX_NUMBER+1, constants.MIN_NUMBER-1])
+def test_read_large_literal(value):
     yaml = f"integer: {value}"
 
     buff = helpers.yaml_to_asdf(yaml)
