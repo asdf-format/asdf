@@ -160,8 +160,6 @@ class ExtensionProxy(Extension, AsdfExtension):
         self._converters = [ConverterProxy(c, self) for c in getattr(self._delegate, "converters", [])]
         self._compressors = self._delegate.compressors if hasattr(self._delegate, "compressors") else []
 
-        self._config_class = self._delegate.config_class if hasattr(self._delegate, 'config_class') else None
-
     @property
     def extension_uri(self):
         """
@@ -323,11 +321,6 @@ class ExtensionProxy(Extension, AsdfExtension):
         bool
         """
         return self._legacy
-
-    @property
-    def config_class(self):
-        return self._config_class
-
 
     def __eq__(self, other):
         if isinstance(other, ExtensionProxy):

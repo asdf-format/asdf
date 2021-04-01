@@ -122,8 +122,8 @@ class MinimalCompressor(Compressor):
         return b''
 
     @property
-    def labels(self):
-        return ['mini']
+    def label(self):
+        return b'mini'
 
 # Some dummy types for testing converters:
 class FooType:

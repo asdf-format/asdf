@@ -65,11 +65,6 @@ class Lz4Compressor:
         self._api = lz4.block
 
 
-    def __del__(self):
-        if self._buffer is not None:
-            raise Exception('Found data left in lz4 buffer after decompression')
-
-
     def compress(self, data, **kwargs):
         kwargs['mode'] = kwargs.get('mode','default')
         compression_block_size = kwargs.pop('compression_block_size', 1<<22)
