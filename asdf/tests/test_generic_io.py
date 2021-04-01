@@ -12,6 +12,7 @@ import asdf
 from asdf import util
 from asdf import generic_io
 from asdf.asdf import is_asdf_file
+from asdf.config import config_context
 
 from . import helpers, create_small_tree, create_large_tree
 
@@ -789,3 +790,21 @@ def test_is_asdf(tmpdir):
     hdul.writeto(path)
     assert not is_asdf_file(path)
     assert is_asdf_file(asdf.AsdfFile())
+
+
+def test_blocksize(tree, tmpdir):
+    path = os.path.join(str(tmpdir), 'test.asdf')
+
+    def get_write_fd():
+        f = generic_io.get_file(open(path, 'wb'), mode='w', close=True)
+        return f
+
+    def get_read_fd():
+        # Must open with mode=rw in order to get memmapped data
+        f = generic_io.get_file(open(path, 'r+b'), mode='rw', close=True)
+        return f
+
+    with config_context() as config:
+        config.io_block_size = 1233  # make sure everything works with a strange blocksize
+        with _roundtrip(tree, get_write_fd, get_read_fd) as ff:
+            assert ff._fd.block_size == 1233

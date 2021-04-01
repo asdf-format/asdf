@@ -45,6 +45,8 @@
 
 - Remove the ``asdf.test`` method and ``asdf.__githash__`` attribute. [#943]
 
+- Add support for custom compression via extensions. [#931]
+
 - Remove unnecessary ``.tree`` from search result paths. [#954]
 
 - Drop support for bugs in older operating systems and Python versions. [#955]

@@ -84,6 +84,18 @@ class Extension(abc.ABC):
         """
         return []
 
+    @property
+    def compressors(self):
+        """
+        Get the `asdf.extension.Compressor` instances for
+        compression schemes supported by this extension.
+
+        Returns
+        -------
+        iterable of asdf.extension.Compressor instances
+        """
+        return []
+
 
 class ExtensionProxy(Extension, AsdfExtension):
     """
@@ -146,6 +158,7 @@ class ExtensionProxy(Extension, AsdfExtension):
         # Process the converters last, since they expect ExtensionProxy
         # properties to already be available.
         self._converters = [ConverterProxy(c, self) for c in getattr(self._delegate, "converters", [])]
+        self._compressors = self._delegate.compressors if hasattr(self._delegate, "compressors") else []
 
     @property
     def extension_uri(self):
@@ -195,6 +208,17 @@ class ExtensionProxy(Extension, AsdfExtension):
         list of asdf.extension.Converter
         """
         return self._converters
+
+    @property
+    def compressors(self):
+        """
+        Get the extension's compressors.
+
+        Returns
+        -------
+        list of asdf.extension.Compressor
+        """
+        return self._compressors
 
     @property
     def tags(self):
