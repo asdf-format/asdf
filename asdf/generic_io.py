@@ -11,14 +11,12 @@ import io
 import os
 import re
 import sys
-import math
 import pathlib
 import tempfile
 
 from os import SEEK_SET, SEEK_CUR, SEEK_END
 
-import http.client
-from urllib.request import url2pathname
+from urllib.request import url2pathname, urlopen
 
 import numpy as np
 
@@ -827,211 +825,40 @@ class OutputStream(GenericFile):
         self.clear(size)
 
 
-class HTTPConnection(RandomAccessFile):
+def _http_to_temp(init, mode, uri=None):
     """
-    Uses a persistent HTTP connection to request specific ranges of
-    the file and obtain its structure without transferring it in its
-    entirety.
+    Stream the content of an http or https URL to a temporary file.
 
-    It creates a temporary file on the local filesystem and copies
-    blocks into it as needed.  The `_blocks` array is a bitfield that
-    keeps track of which blocks we have.
+    Parameters
+    ----------
+    init : str
+        HTTP or HTTPS URL.
+    mode : str
+        ASDF file mode.  The temporary file will always be opened
+        in w+b mode, but the resulting GenericFile will report itself
+        writable based on this value.
+    uri : str, optional
+        URI against which relative paths within the file are
+        resolved.  If None, the init value will be used.
+
+    Returns
+    -------
+    RealFile
+        Temporary file.
     """
-    # TODO: Handle HTTPS connection
+    fd = tempfile.NamedTemporaryFile("w+b")
+    try:
+        with urlopen(init) as response:
+            chunk = response.read(io.DEFAULT_BUFFER_SIZE)
+            while len(chunk) > 0:
+                fd.write(chunk)
+                chunk = response.read(io.DEFAULT_BUFFER_SIZE)
+        fd.seek(0)
+        return RealFile(fd, mode, close=True, uri=uri or init)
+    except Exception:
+        fd.close()
+        raise
 
-    def __init__(self, connection, size, path, uri, first_chunk):
-        self._mode = 'r'
-        self.block_size = io.DEFAULT_BUFFER_SIZE
-        # The underlying HTTPConnection object doesn't track closed
-        # status, so we do that here.
-        self._closed = False
-        self._fd = connection
-        self._path = path
-        self._uri = uri
-
-        # A bitmap of the blocks that we've already read and cached
-        # locally
-        self._blocks = np.zeros(
-            int(math.ceil(size / self._blksize / 8)), np.uint8)
-
-        local_file = tempfile.TemporaryFile()
-        self._local = RealFile(local_file, 'rw', close=True)
-        self._local.truncate(size)
-        self._local.seek(0)
-        self._local.write(first_chunk)
-        self._local.seek(0)
-        self._blocks[0] = 1
-
-        # The size of the entire file
-        self._size = size
-        self._nreads = 0
-
-        # Some methods just short-circuit to the local copy
-        self.seek = self._local.seek
-        self.tell = self._local.tell
-
-    def __exit__(self, type, value, traceback):
-        if not self._closed:
-            self._local.close()
-            if hasattr(self._fd, '__exit__'):
-                self._fd.__exit__(type, value, traceback)
-            else:
-                self._fd.close()
-            self._closed = True
-
-    def close(self):
-        if not self._closed:
-            self._local.close()
-            self._fd.close()
-            self._closed = True
-
-    def is_closed(self):
-        return self._closed
-
-    def _get_range(self, start, end):
-        """
-        Ensure the range of bytes has been copied to the local cache.
-        """
-        if start >= self._size:
-            return
-
-        end = min(end, self._size)
-
-        blocks = self._blocks
-        block_size = self.block_size
-
-        def has_block(x):
-            return blocks[x >> 3] & (1 << (x & 0x7))
-
-        def mark_block(x):
-            blocks[x >> 3] |= (1 << (x & 0x7))
-
-        block_start = start // block_size
-        block_end = end // block_size + 1
-
-        pos = self._local.tell()
-
-        try:
-            # Between block_start and block_end, some blocks may be
-            # already loaded.  We want to load all of the missing
-            # blocks in as few requests as possible.
-            a = block_start
-            while a < block_end:
-                # Skip over whole groups of blocks at a time
-                while a < block_end and blocks[a >> 3] == 0xff:
-                    a = ((a >> 3) + 1) << 3
-                while a < block_end and has_block(a):
-                    a += 1
-                if a >= block_end:
-                    break
-
-                b = a + 1
-                # Skip over whole groups of blocks at a time
-                while b < block_end and blocks[b >> 3] == 0x0:
-                    b = ((b >> 3) + 1) << 3
-                while b < block_end and not has_block(b):
-                    b += 1
-                if b > block_end:
-                    b = block_end
-
-                if a * block_size >= self._size:
-                    return
-
-                headers = {
-                    'Range': 'bytes={0}-{1}'.format(
-                        a * block_size, (b * block_size) - 1)}
-                self._fd.request('GET', self._path, headers=headers)
-                response = self._fd.getresponse()
-                if response.status != 206:
-                    raise IOError("HTTP failed: {0} {1}".format(
-                        response.status, response.reason))
-
-                # Now copy over to the temporary file, block-by-block
-                self._local.seek(a * block_size, os.SEEK_SET)
-                for i in range(a, b):
-                    chunk = response.read(block_size)
-                    self._local.write(chunk)
-                    mark_block(i)
-                response.close()
-
-                self._nreads += 1
-
-                a = b
-        finally:
-            self._local.seek(pos, os.SEEK_SET)
-
-    def read(self, size=-1):
-        if self._closed:
-            raise IOError("read from closed connection")
-
-        pos = self._local.tell()
-
-        # Adjust size so it doesn't go beyond the end of the file
-        if size < 0 or pos + size > self._size:
-            size = self._size - pos
-
-        # On Python 3, reading 0 bytes from a socket causes it to stop
-        # working, so avoid doing that at all costs.
-        if size == 0:
-            return b''
-
-        self._get_range(pos, pos + size)
-        return self._local.read(size)
-
-    def read_into_array(self, size):
-        if self._closed:
-            raise IOError("read from closed connection")
-
-        pos = self._local.tell()
-
-        if pos + size > self._size:
-            raise IOError("Read past end of file.")
-
-        self._get_range(pos, pos + size)
-        return self._local.memmap_array(pos, size)
-
-
-def _make_http_connection(init, mode, uri=None):
-    """
-    Creates a HTTPConnection instance if the HTTP server supports
-    Range requests, otherwise falls back to a generic InputStream.
-    """
-    parsed = patched_urllib_parse.urlparse(init)
-    connection = http.client.HTTPConnection(parsed.netloc)
-    connection.connect()
-
-    block_size = io.DEFAULT_BUFFER_SIZE
-
-    # We request a range of the whole file ("0-") to check if the
-    # server understands that header entry, and also to get the
-    # size of the entire file
-    headers = {'Range': 'bytes=0-'}
-    connection.request('GET', parsed.path, headers=headers)
-    response = connection.getresponse()
-    if response.status // 100 != 2:
-        raise IOError("HTTP failed: {0} {1}".format(
-            response.status, response.reason))
-
-    # Status 206 means a range was returned.  If it's anything else
-    # that indicates the server probably doesn't support Range
-    # headers.
-    if (response.status != 206 or
-        response.getheader('accept-ranges', None) != 'bytes' or
-        response.getheader('content-range', None) is None or
-        response.getheader('content-length', None) is None):
-        # Fall back to a regular input stream, but we don't
-        # need to open a new connection.
-        response.close = connection.close
-        return InputStream(response, mode, uri=uri or init, close=True)
-
-    # Since we'll be requesting chunks, we can't read at all with the
-    # current request (because we can't abort it), so just close and
-    # start over
-    size = int(response.getheader('content-length'))
-    first_chunk = response.read(block_size)
-    response.close()
-    return HTTPConnection(connection, size, parsed.path, uri or init,
-                          first_chunk)
 
 def get_uri(file_obj):
     """
@@ -1123,7 +950,7 @@ def get_file(init, mode='r', uri=None, close=False):
             if 'w' in mode:
                 raise ValueError(
                     "HTTP connections can not be opened for writing")
-            return _make_http_connection(init, mode, uri=uri)
+            return _http_to_temp(init, mode, uri=uri)
         elif parsed.scheme in _local_file_schemes:
             if mode == 'rw':
                 realmode = 'r+b'
