@@ -7,6 +7,8 @@
 
 - Prohibit views over FITS arrays that change dtype. [#952]
 
+- Add support for HTTPS URLs and following redirects. [#971]
+
 2.7.3 (2021-02-25)
 ------------------
 
