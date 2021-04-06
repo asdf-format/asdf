@@ -912,7 +912,8 @@ def _http_to_temp(init, mode, uri=None):
     """
     fd = tempfile.NamedTemporaryFile("w+b")
     try:
-        with urlopen(init) as response:
+        # This method is only called with http and https schemes:
+        with urlopen(init) as response: # nosec
             chunk = response.read(io.DEFAULT_BUFFER_SIZE)
             while len(chunk) > 0:
                 fd.write(chunk)
