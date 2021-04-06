@@ -26,7 +26,7 @@ from . import yamlutil
 from . import _display as display
 from .exceptions import AsdfDeprecationWarning, AsdfWarning, AsdfConversionWarning
 from .extension import AsdfExtensionList, default_extensions
-from .util import NotSet
+from .util import NotSet, patched_urllib_parse
 from .search import AsdfSearchResult
 
 from .tags.core import AsdfObject, Software, HistoryEntry, ExtensionMetadata
@@ -1491,7 +1491,10 @@ def is_asdf_file(fd):
     """
     Determine if fd is an ASDF file.
 
-    Reads the first five bytes and looks for the ``#ASDF`` string.
+    For most input, reads the first five bytes and looks
+    for the ``#ASDF`` string.
+
+    For URL input, looks for a .asdf extension.
 
     Parameters
     ----------
@@ -1501,6 +1504,13 @@ def is_asdf_file(fd):
     if isinstance(fd, generic_io.InputStream):
         # If it's an InputStream let ASDF deal with it.
         return True
+
+    if isinstance(fd, str):
+        parsed = patched_urllib_parse.urlparse(fd)
+        if parsed.scheme in ["http", "https"]:
+            # We don't want to read URL content here because
+            # that will cause the file to be downloaded twice.
+            return os.path.splitext(parsed.path)[1] == "asdf"
 
     to_close = False
     if isinstance(fd, AsdfFile):
