@@ -1763,7 +1763,7 @@ def is_asdf_file(fd):
         if parsed.scheme in ["http", "https"]:
             # We don't want to read URL content here because
             # that will cause the file to be downloaded twice.
-            return os.path.splitext(parsed.path)[1] == "asdf"
+            return os.path.splitext(parsed.path)[1] == ".asdf"
 
     to_close = False
     if isinstance(fd, AsdfFile):
