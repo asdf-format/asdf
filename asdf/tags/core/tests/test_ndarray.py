@@ -79,8 +79,9 @@ def test_sharing(tmpdir):
         assert len(list(asdf.blocks.internal_blocks)) == 1
         assert next(asdf.blocks.internal_blocks)._size == 80
 
-        tree['science_data'][0] = 42
-        assert tree['skipping'][0] == 42
+        if 'w' in asdf._mode:
+            tree['science_data'][0] = 42
+            assert tree['skipping'][0] == 42
 
     def check_raw_yaml(content):
         assert b'!core/ndarray' in content
