@@ -128,7 +128,7 @@ def test_invalid_source(small_tree):
         with pytest.raises(ValueError):
             ff2.blocks.get_block(2)
 
-        with pytest.raises(ValueError):
+        with pytest.raises(IOError):
             ff2.blocks.get_block("http://ABadUrl.verybad/test.asdf")
 
         with pytest.raises(TypeError):
