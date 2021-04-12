@@ -846,14 +846,24 @@ def _http_to_temp(init, mode, uri=None):
     RealFile
         Temporary file.
     """
+    from asdf import get_config
+
     fd = tempfile.NamedTemporaryFile("w+b")
+
+    block_size = get_config().io_block_size
+    if block_size == -1:
+        try:
+            block_size = os.fstat(fd.fileno()).st_blksize
+        except Exception:
+            block_size = io.DEFAULT_BUFFER_SIZE
+
     try:
         # This method is only called with http and https schemes:
         with urlopen(init) as response: # nosec
-            chunk = response.read(io.DEFAULT_BUFFER_SIZE)
+            chunk = response.read(block_size)
             while len(chunk) > 0:
                 fd.write(chunk)
-                chunk = response.read(io.DEFAULT_BUFFER_SIZE)
+                chunk = response.read(block_size)
         fd.seek(0)
         return RealFile(fd, mode, close=True, uri=uri or init)
     except Exception:

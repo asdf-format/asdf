@@ -1740,6 +1740,13 @@ def open_asdf(fd, uri=None, mode=None, validate_checksums=False, extensions=None
         **kwargs)
 
 
+# astropy.io.fits supports opening files that are externally
+# compressed with gzip or zip, and asdf does not, so we may as
+# well give those extensions to FITS.
+_FITS_EXTENSIONS = [".fits", ".gz", ".zip"]
+_ASDF_EXTENSIONS = [".asdf"]
+
+
 def is_asdf_file(fd):
     """
     Determine if fd is an ASDF file.
@@ -1747,7 +1754,8 @@ def is_asdf_file(fd):
     For most input, reads the first five bytes and looks
     for the ``#ASDF`` string.
 
-    For URL input, looks for a .asdf extension.
+    For URL input, looks for an extension that should be passed
+    to AsdfInFits, otherwise assumes ASDF.
 
     Parameters
     ----------
@@ -1763,7 +1771,20 @@ def is_asdf_file(fd):
         if parsed.scheme in ["http", "https"]:
             # We don't want to read URL content here because
             # that will cause the file to be downloaded twice.
-            return os.path.splitext(parsed.path)[1] == ".asdf"
+            ext = os.path.splitext(parsed.path)[1].lower()
+            if ext in _FITS_EXTENSIONS:
+                return False
+            elif ext in _ASDF_EXTENSIONS:
+                return True
+            else:
+                message = (
+                    f"The URL '{fd}' does not include an obvious FITS "
+                    "or ASDF filename extension.  Assuming ASDF.\n\n"
+                    "If this URL returns FITS content, it cannot be opened "
+                    "with asdf.open().  Use asdf.fits_embed.AsdfInFits.open() instead."
+                )
+                warnings.warn(message, AsdfWarning)
+                return True
 
     to_close = False
     if isinstance(fd, AsdfFile):
