@@ -21,6 +21,7 @@ from distutils.version import LooseVersion
 from os import SEEK_SET, SEEK_CUR, SEEK_END
 
 from urllib.request import url2pathname, urlopen
+from urllib import parse as urlparse
 
 import numpy as np
 
@@ -910,14 +911,21 @@ def _http_to_temp(init, mode, uri=None):
     RealFile
         Temporary file.
     """
+
     fd = tempfile.NamedTemporaryFile("w+b")
+
+    try:
+        block_size = os.fstat(fd.fileno()).st_blksize
+    except Exception:
+        block_size = io.DEFAULT_BUFFER_SIZE
+
     try:
         # This method is only called with http and https schemes:
         with urlopen(init) as response: # nosec
-            chunk = response.read(io.DEFAULT_BUFFER_SIZE)
+            chunk = response.read(block_size)
             while len(chunk) > 0:
                 fd.write(chunk)
-                chunk = response.read(io.DEFAULT_BUFFER_SIZE)
+                chunk = response.read(block_size)
         fd.seek(0)
         return RealFile(fd, mode, close=True, uri=uri or init)
     except Exception:
