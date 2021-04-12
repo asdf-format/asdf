@@ -262,7 +262,6 @@ def test_http_connection(tree, httpserver):
 
     def get_read_fd():
         fd = generic_io.get_file(httpserver.url + "test.asdf")
-        assert isinstance(fd, generic_io.InputStream)
         # This is to check for a "feature" in Python 3.x that reading zero
         # bytes from a socket causes it to stop.  We have code in generic_io.py
         # to workaround it.
@@ -271,7 +270,6 @@ def test_http_connection(tree, httpserver):
 
     with _roundtrip(tree, get_write_fd, get_read_fd) as ff:
         assert len(list(ff.blocks.internal_blocks)) == 2
-        assert not isinstance(next(ff.blocks.internal_blocks)._data, np.core.memmap)
         assert isinstance(next(ff.blocks.internal_blocks)._data, np.ndarray)
         ff.tree['science_data'][0] == 42
 
