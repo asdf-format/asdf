@@ -1,6 +1,9 @@
 2.8.0 (unreleased)
 ------------------
 
+- Add ``yaml_tag_handles`` property to allow definition of custom yaml
+  ``%TAG`` handles in the asdf file header. [#963]
+
 - Add new resource mapping API for extending asdf with additional
   schemas. [#819, #828, #843, #846]
 
