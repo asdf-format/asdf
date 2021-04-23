@@ -97,7 +97,7 @@ class Extension(abc.ABC):
         return []
 
     @property
-    def yaml_tag_handle(self):
+    def yaml_tag_handles(self):
         """
         Get a dictionary of custom yaml TAG handles defined by the extension.
 
@@ -341,7 +341,7 @@ class ExtensionProxy(Extension, AsdfExtension):
         return self._legacy
 
     @property
-    def yaml_tag_handle(self):
+    def yaml_tag_handles(self):
         """
         Get a dictionary of custom yaml TAG handles defined by the extension.
 
@@ -356,7 +356,7 @@ class ExtensionProxy(Extension, AsdfExtension):
         dict
 
         """
-        return self._yaml_tag_handle
+        return self._yaml_tag_handles
 
     def __eq__(self, other):
         if isinstance(other, ExtensionProxy):
