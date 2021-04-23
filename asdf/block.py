@@ -126,6 +126,7 @@ class BlockManager:
             self.add(block)
             if array_storage == 'streamed':
                 block.output_compression = None
+                block.output_compression_kwargs = None
 
     @property
     def blocks(self):
@@ -578,10 +579,12 @@ class BlockManager:
             self.set_array_storage(block, all_array_storage)
 
         all_array_compression = getattr(ctx, '_all_array_compression', 'input')
+        all_array_compression_kwargs = getattr(ctx, '_all_array_compression_kwargs', {})
         # Only override block compression algorithm if it wasn't explicitly set
         # by AsdfFile.set_array_compression.
         if all_array_compression != 'input':
             block.output_compression = all_array_compression
+            block.output_compression_kwargs = all_array_compression_kwargs
 
         auto_inline = getattr(ctx, '_auto_inline', None)
         if auto_inline and block.array_storage in ['internal', 'inline']:
@@ -766,6 +769,25 @@ class BlockManager:
         self.add(block)
         return block
 
+    def get_output_compressions(self):
+        '''
+        Get the list of unqiue compressions used on blocks.
+        '''
+        return list(set([b.output_compression for b in self.blocks]))
+
+    def get_output_compression_extensions(self):
+        '''
+        Infer the compression extensions used on blocks.
+        Note that this is somewhat indirect and could be fooled if a new extension
+        for the same compression label is loaded after the compression of the block.
+        '''
+        ext = []
+        for label in self.get_output_compressions():
+            compressor = mcompression._get_compressor_from_extensions(label, return_extension=True)
+            if compressor != None:
+                ext += [compressor[1]]  # second item is the extension
+        return ext
+
     def __getitem__(self, arr):
         return self.find_or_create_block_for_array(arr, object())
 
@@ -800,6 +822,7 @@ class Block:
         self._offset = None
         self._input_compression = None
         self._output_compression = 'input'
+        self._output_compression_kwargs = {}
         self._checksum = None
         self._should_memmap = memmap
         self._memmapped = False
@@ -890,6 +913,21 @@ class Block:
         self._output_compression = mcompression.validate(compression)
 
     @property
+    def output_compression_kwargs(self):
+        """
+        The configuration options to the Compressor constructur
+        used to write the block.
+        :return:
+        """
+        return self._output_compression_kwargs
+
+    @output_compression_kwargs.setter
+    def output_compression_kwargs(self, config):
+        if config is None:
+            config = {}
+        self._output_compression_kwargs = config.copy()
+
+    @property
     def checksum(self):
         return self._checksum
 
@@ -947,7 +985,8 @@ class Block:
                 self._size = self._data_size
             else:
                 self._size = mcompression.get_compressed_size(
-                    data, self.output_compression)
+                    data, self.output_compression,
+                    config=self.output_compression_kwargs)
         else:
             self._data_size = self._size = 0
 
@@ -1007,8 +1046,12 @@ class Block:
 
         # This is used by the documentation system, but nowhere else.
         self._flags = header['flags']
-        self.input_compression = header['compression']
         self._set_checksum(header['checksum'])
+
+        try:
+            self.input_compression = header['compression']
+        except ValueError as v:
+            raise v  # TODO: hint extension?
 
         if (self.input_compression is None and
                 header['used_size'] != header['data_size']):
@@ -1131,7 +1174,8 @@ class Block:
             if not fd.seekable() and self.output_compression:
                 buff = io.BytesIO()
                 mcompression.compress(buff, data,
-                                      self.output_compression)
+                                      self.output_compression,
+                                      config=self.output_compression_kwargs)
                 self.allocated = self._size = buff.tell()
             allocated_size = self.allocated
             used_size = self._size
@@ -1166,7 +1210,8 @@ class Block:
                     # header.
                     start = fd.tell()
                     mcompression.compress(
-                        fd, data, self.output_compression)
+                        fd, data, self.output_compression,
+                        config=self.output_compression_kwargs)
                     end = fd.tell()
                     self.allocated = self._size = end - start
                     fd.seek(self.offset + 6)
@@ -1233,6 +1278,7 @@ class UnloadedBlock:
         self._array_storage = 'internal'
         self._input_compression = None
         self._output_compression = 'input'
+        self._output_compression_kwargs = {}
         self._checksum = None
         self._should_memmap = memmap
         self._memmapped = False

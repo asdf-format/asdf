@@ -304,6 +304,7 @@ It is also possible to run the test suite from an installed version of
 the package.
 
 ::
+
     pip install asdf[tests]
     pytest --pyargs asdf
 

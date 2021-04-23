@@ -30,7 +30,7 @@ from .extension import (
     get_cached_asdf_extension_list,
     get_cached_extension_manager,
 )
-from .util import NotSet
+from .util import NotSet, patched_urllib_parse
 from .search import AsdfSearchResult
 from ._helpers import validate_version
 
@@ -436,6 +436,8 @@ class AsdfFile:
                 ext_meta['software'] = Software(name=extension.package_name, version=extension.package_version)
             if extension.extension_uri is not None:
                 ext_meta['extension_uri'] = extension.extension_uri
+            if extension.compressors:
+                ext_meta['supported_compression'] = [comp.label.decode('ascii') for comp in extension.compressors]
 
             for i, entry in enumerate(self.tree['history']['extensions']):
                 # Update metadata about this extension if it already exists
@@ -695,7 +697,7 @@ class AsdfFile:
         """
         return self.blocks[arr].array_storage
 
-    def set_array_compression(self, arr, compression):
+    def set_array_compression(self, arr, compression, **compression_kwargs):
         """
         Set the compression to use for the given array data.
 
@@ -722,6 +724,7 @@ class AsdfFile:
 
         """
         self.blocks[arr].output_compression = compression
+        self.blocks[arr].output_compression_kwargs = compression_kwargs
 
     def get_array_compression(self, arr):
         """
@@ -736,6 +739,11 @@ class AsdfFile:
         compression : str or None
         """
         return self.blocks[arr].output_compression
+
+    def get_array_compression_kwargs(self, arr):
+        """
+        """
+        return self.blocks[arr].output_compression_kwargs
 
     @classmethod
     def _parse_header_line(cls, line):
@@ -1000,6 +1008,10 @@ class AsdfFile:
         if len(tree):
             serialization_context = self._create_serialization_context()
 
+            compression_extensions = self.blocks.get_output_compression_extensions()
+            for ext in compression_extensions:
+                serialization_context._mark_extension_used(ext)
+
             def _tree_finalizer(tagged_tree):
                 """
                 The list of extensions used is not known until after
@@ -1028,7 +1040,7 @@ class AsdfFile:
             fd.fast_forward(padding)
 
     def _pre_write(self, fd, all_array_storage, all_array_compression,
-                   auto_inline):
+                   auto_inline, compression_kwargs=None):
         if all_array_storage not in (None, 'internal', 'external', 'inline'):
             raise ValueError(
                 "Invalid value for all_array_storage: '{0}'".format(
@@ -1037,6 +1049,7 @@ class AsdfFile:
         self._all_array_storage = all_array_storage
 
         self._all_array_compression = all_array_compression
+        self._all_array_compression_kwargs = compression_kwargs
 
         if all_array_storage in ['internal', 'external', 'inline']:
             auto_inline = None
@@ -1086,12 +1099,13 @@ class AsdfFile:
             del self._all_array_storage
         if hasattr(self, '_all_array_compression'):
             del self._all_array_compression
+            del self._all_array_compression_kwargs
         if hasattr(self, '_auto_inline'):
             del self._auto_inline
 
     def update(self, all_array_storage=None, all_array_compression='input',
                auto_inline=None, pad_blocks=False, include_block_index=True,
-               version=None):
+               version=None, compression_kwargs=None):
         """
         Update the file on disk in place.
 
@@ -1176,7 +1190,7 @@ class AsdfFile:
         self.blocks.finish_reading_internal_blocks()
 
         self._pre_write(fd, all_array_storage, all_array_compression,
-                        auto_inline)
+                        auto_inline, compression_kwargs=compression_kwargs)
 
         try:
             fd.seek(0)
@@ -1225,7 +1239,7 @@ class AsdfFile:
 
     def write_to(self, fd, all_array_storage=None, all_array_compression='input',
                  auto_inline=constants.DEFAULT_AUTO_INLINE, pad_blocks=False,
-                 include_block_index=True, version=None):
+                 include_block_index=True, version=None, compression_kwargs=None):
         """
         Write the ASDF file to the given file-like object.
 
@@ -1306,7 +1320,7 @@ class AsdfFile:
             if self._uri is None:
                 self._uri = fd.uri
             self._pre_write(fd, all_array_storage, all_array_compression,
-                            auto_inline)
+                            auto_inline, compression_kwargs=compression_kwargs)
 
             try:
                 self._serial_write(fd, pad_blocks, include_block_index)
@@ -1726,11 +1740,22 @@ def open_asdf(fd, uri=None, mode=None, validate_checksums=False, extensions=None
         **kwargs)
 
 
+# astropy.io.fits supports opening files that are externally
+# compressed with gzip or zip, and asdf does not, so we may as
+# well give those extensions to FITS.
+_FITS_EXTENSIONS = [".fits", ".gz", ".zip"]
+_ASDF_EXTENSIONS = [".asdf"]
+
+
 def is_asdf_file(fd):
     """
     Determine if fd is an ASDF file.
 
-    Reads the first five bytes and looks for the ``#ASDF`` string.
+    For most input, reads the first five bytes and looks
+    for the ``#ASDF`` string.
+
+    For URL input, looks for an extension that should be passed
+    to AsdfInFits, otherwise assumes ASDF.
 
     Parameters
     ----------
@@ -1740,6 +1765,26 @@ def is_asdf_file(fd):
     if isinstance(fd, generic_io.InputStream):
         # If it's an InputStream let ASDF deal with it.
         return True
+
+    if isinstance(fd, str):
+        parsed = patched_urllib_parse.urlparse(fd)
+        if parsed.scheme in ["http", "https"]:
+            # We don't want to read URL content here because
+            # that will cause the file to be downloaded twice.
+            ext = os.path.splitext(parsed.path)[1].lower()
+            if ext in _FITS_EXTENSIONS:
+                return False
+            elif ext in _ASDF_EXTENSIONS:
+                return True
+            else:
+                message = (
+                    f"The URL '{fd}' does not include an obvious FITS "
+                    "or ASDF filename extension.  Assuming ASDF.\n\n"
+                    "If this URL returns FITS content, it cannot be opened "
+                    "with asdf.open().  Use asdf.fits_embed.AsdfInFits.open() instead."
+                )
+                warnings.warn(message, AsdfWarning)
+                return True
 
     to_close = False
     if isinstance(fd, AsdfFile):

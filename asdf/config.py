@@ -36,6 +36,7 @@ class AsdfConfig:
         self._validate_on_read = DEFAULT_VALIDATE_ON_READ
         self._default_version = DEFAULT_DEFAULT_VERSION
         self._legacy_fill_schema_defaults = DEFAULT_LEGACY_FILL_SCHEMA_DEFAULTS
+        self._io_block_size = -1  # auto
 
         self._lock = threading.RLock()
 
@@ -280,6 +281,14 @@ class AsdfConfig:
         value : bool
         """
         self._legacy_fill_schema_defaults = value
+
+    @property
+    def io_block_size(self):
+        return self._io_block_size
+
+    @io_block_size.setter
+    def io_block_size(self, block_size):
+        self._io_block_size = block_size
 
     def __repr__(self):
         return (
