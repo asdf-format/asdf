@@ -408,11 +408,9 @@ def dump_tree(tree, fd, ctx, tree_finalizer=None, _serialization_context=None):
     # add yaml %TAG definitions from extensions
     if _serialization_context:
         for ext in _serialization_context._extensions_used:
-            ext_tags = getattr(ext.delegate, "yaml_tag_handle", None)
-            if ext_tags:
-                for key, val in ext_tags.items():
-                    if key not in tags.keys():
-                        tags[key] = val
+            for key, val in ext.yaml_tag_handles.items():
+                if key not in tags:
+                    tags[key] = val
 
     yaml.dump_all(
         [tree], stream=fd, Dumper=AsdfDumper,
