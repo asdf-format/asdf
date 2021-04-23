@@ -101,7 +101,7 @@ class Extension(abc.ABC):
         """
         Get a dictionary of custom yaml TAG handles defined by the extension.
 
-        The dictionary key indicates the TAG handle to be placed in the YAML header,
+        The dictionary key indicates the TAG handles to be placed in the YAML header,
         the value defines the string for tag replacement.
         See https://yaml.org/spec/1.2/spec.html#tag/shorthand/
 
@@ -172,6 +172,8 @@ class ExtensionProxy(Extension, AsdfExtension):
                 self._tags.append(tag)
             else:
                 raise TypeError("Extension property 'tags' must contain str or asdf.extension.TagDefinition values")
+
+        self._yaml_tag_handles = getattr(delegate, "yaml_tag_handles", {})
 
         # Process the converters last, since they expect ExtensionProxy
         # properties to already be available.
@@ -345,7 +347,7 @@ class ExtensionProxy(Extension, AsdfExtension):
         """
         Get a dictionary of custom yaml TAG handles defined by the extension.
 
-        The dictionary key indicates the TAG handle to be placed in the YAML header,
+        The dictionary key indicates the TAG handles to be placed in the YAML header,
         the value defines the string for tag replacement.
         See https://yaml.org/spec/1.2/spec.html#tag/shorthand/
 
