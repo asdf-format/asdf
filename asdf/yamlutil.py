@@ -385,7 +385,7 @@ def dump_tree(tree, fd, ctx, tree_finalizer=None, _serialization_context=None):
     # what extensions were used when converting the tree's custom
     # types.  In 3.0, it will be passed as the `ctx` instead of the
     # AsdfFile itself.
-    tags = None
+    tags = {}
     tree_type = ctx.type_index.from_custom_type(type(tree))
     if tree_type is not None:
         tag_parts = tree_type.yaml_tag.split(':')
@@ -395,7 +395,7 @@ def dump_tree(tree, fd, ctx, tree_finalizer=None, _serialization_context=None):
         else:
             last_part = ''
         yaml_tag = ':'.join(tag_parts[0:-1] + [last_part])
-        tags = {'!': yaml_tag}
+        tags['!'] = yaml_tag
 
     tree = custom_tree_to_tagged_tree(tree, ctx, _serialization_context=_serialization_context)
     if tree_finalizer is not None:
@@ -404,6 +404,13 @@ def dump_tree(tree, fd, ctx, tree_finalizer=None, _serialization_context=None):
 
     yaml_version = tuple(
         int(x) for x in ctx.version_map['YAML_VERSION'].split('.'))
+
+    # add yaml %TAG definitions from extensions
+    if _serialization_context:
+        for ext in _serialization_context._extensions_used:
+            for key, val in ext.yaml_tag_handles.items():
+                if key not in tags:
+                    tags[key] = val
 
     yaml.dump_all(
         [tree], stream=fd, Dumper=AsdfDumper,
