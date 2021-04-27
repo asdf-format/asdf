@@ -345,6 +345,8 @@ def test_open_gzipped():
     with asdf.open(testfile) as af:
         assert af.tree['stuff'].shape == (20, 20)
 
+
+@pytest.mark.filterwarnings('ignore::astropy.io.fits.verify.VerifyWarning')
 def test_bad_input(tmpdir):
     """Make sure these functions behave properly with bad input"""
     text_file = os.path.join(str(tmpdir), 'test.txt')

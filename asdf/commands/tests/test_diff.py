@@ -44,6 +44,7 @@ def test_diff_simple_inline_array():
     result_file = 'simple_inline_array.diff'
     _assert_diffs_equal(filenames, result_file, minimal=False)
 
+@pytest.mark.filterwarnings('ignore::astropy.io.fits.verify.VerifyWarning')
 def test_file_not_found():
     # Try to open files that exist but are not valid asdf
     filenames = ['frames.diff', 'blocks.diff']

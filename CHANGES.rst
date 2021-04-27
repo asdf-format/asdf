@@ -9,6 +9,8 @@
 
 - Add support for HTTPS URLs and following redirects. [#971]
 
+- Prevent astropy warnings in tests when opening known bad files. [#977]
+
 2.7.3 (2021-02-25)
 ------------------
 
