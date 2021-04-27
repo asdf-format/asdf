@@ -207,6 +207,7 @@ history:
             pass
 
     # Make sure to test for incompatibility with ignore_missing_extensions
+    buff.seek(0)
     with pytest.raises(ValueError):
         with asdf.open(buff, strict_extension_check=True, ignore_missing_extensions=True):
             pass
