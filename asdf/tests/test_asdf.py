@@ -3,7 +3,7 @@ import pytest
 from asdf.asdf import AsdfFile, open_asdf, SerializationContext, is_asdf_file
 from asdf import config_context, get_config
 from asdf.versioning import AsdfVersion
-from asdf.exceptions import AsdfWarning
+from asdf.exceptions import AsdfWarning, AsdfDeprecationWarning
 from asdf.extension import ExtensionProxy, AsdfExtensionList, ExtensionManager
 from asdf.tests.helpers import yaml_to_asdf, assert_no_warnings
 
@@ -355,7 +355,8 @@ def test_reading_extension_metadata():
     ("http://example.com/some/path/to/file.zip", False),
 ])
 def test_is_asdf_file_url(url, result):
-    assert is_asdf_file(url) is result
+    with pytest.warns(AsdfDeprecationWarning):
+        assert is_asdf_file(url) is result
 
 
 @pytest.mark.parametrize("url", [

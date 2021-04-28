@@ -132,13 +132,13 @@ class _TruncatedReader:
             return content
 
         if nbytes is None:
-            content = self._fd._peek()
+            content = self._fd.peek()
         elif nbytes <= len(self._initial_content):
             content = self._initial_content[:nbytes]
             self._initial_content = self._initial_content[nbytes:]
             return content
         else:
-            content = self._fd._peek(nbytes - len(self._initial_content) +
+            content = self._fd.peek(nbytes - len(self._initial_content) +
                                      self._readahead_bytes)
 
         if content == b'':
@@ -324,6 +324,26 @@ class GenericFile(metaclass=util.InheritDocstrings):
             raise ValueError("Requires 1D contiguous array.")
 
         self.write(array.data)
+
+    def peek(self, size=-1):
+        """
+        Read bytes of the file without consuming them.  This method
+        must be implemented by all GenericFile implementations that
+        provide ASDF input (those that aren't seekable should use a
+        buffer to store peeked bytes).
+
+        Parameters
+        ----------
+        size : int
+            Number of bytes to peek, or -1 to peek all remaining bytes.
+        """
+        if self.seekable():
+            cursor = self.tell()
+            content = self.read(size)
+            self.seek(cursor, SEEK_SET)
+            return content
+        else:
+            raise RuntimeError("Non-seekable file")
 
     def seek(self, offset, whence=0):
         """
@@ -629,12 +649,6 @@ class RandomAccessFile(GenericFile):
     def seekable(self):
         return True
 
-    def _peek(self, size=-1):
-        cursor = self.tell()
-        content = self.read(size)
-        self.seek(cursor, SEEK_SET)
-        return content
-
     def reader_until(self, delimiter, readahead_bytes, delimiter_name=None,
                      include=True, initial_content=b'', exception=True):
         return _TruncatedReader(
@@ -751,7 +765,7 @@ class InputStream(GenericFile):
         self._fd = fd
         self._buffer = b''
 
-    def _peek(self, size=-1):
+    def peek(self, size=-1):
         if size < 0:
             self._buffer += self._fd.read()
         else:

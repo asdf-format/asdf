@@ -797,7 +797,7 @@ class AsdfFile:
         return None
 
     @classmethod
-    def _open_asdf(cls, self, fd, uri=None, mode='r',
+    def _open_asdf(cls, self, fd,
                    validate_checksums=False,
                    extensions=None,
                    _get_yaml_content=False,
@@ -832,9 +832,7 @@ class AsdfFile:
         else:
             legacy_fill_schema_defaults = get_config().legacy_fill_schema_defaults
 
-        self._mode = mode
-
-        fd = generic_io.get_file(fd, mode=self._mode, uri=uri)
+        self._mode = fd.mode
         self._fd = fd
         # The filename is currently only used for tracing warning information
         self._fname = self._fd._uri if self._fd._uri else ''
@@ -922,13 +920,16 @@ class AsdfFile:
                    ignore_missing_extensions=False,
                    **kwargs):
         """Attempt to open file-like object as either AsdfFile or AsdfInFits"""
-        if not is_asdf_file(fd):
+        generic_file = generic_io.get_file(fd, mode=mode, uri=uri)
+        file_type = util.get_file_type(generic_file)
+
+        if file_type == util.FileType.FITS:
             try:
                 # TODO: this feels a bit circular, try to clean up. Also
                 # this introduces another dependency on astropy which may
                 # not be desireable.
                 from . import fits_embed
-                return fits_embed.AsdfInFits._open_impl(fd, uri=uri,
+                return fits_embed.AsdfInFits._open_impl(generic_file, uri=uri,
                             validate_checksums=validate_checksums,
                             extensions=extensions,
                             ignore_version_mismatch=self._ignore_version_mismatch,
@@ -945,14 +946,20 @@ class AsdfFile:
                     "Input object does not appear to be an ASDF file. Cannot check " +
                     "if it is a FITS with ASDF extension because 'astropy' is not " +
                     "installed") from None
-        return cls._open_asdf(self, fd, uri=uri, mode=mode,
-                validate_checksums=validate_checksums,
-                extensions=extensions,
-                _get_yaml_content=_get_yaml_content,
-                _force_raw_types=_force_raw_types,
-                strict_extension_check=strict_extension_check,
-                ignore_missing_extensions=ignore_missing_extensions,
-                **kwargs)
+        elif file_type == util.FileType.ASDF:
+            return cls._open_asdf(self, generic_file, uri=uri, mode=mode,
+                    validate_checksums=validate_checksums,
+                    extensions=extensions,
+                    _get_yaml_content=_get_yaml_content,
+                    _force_raw_types=_force_raw_types,
+                    strict_extension_check=strict_extension_check,
+                    ignore_missing_extensions=ignore_missing_extensions,
+                    **kwargs)
+        else:
+            raise ValueError(
+                "Input object does not appear to be an ASDF file or a FITS with " +
+                "ASDF extension"
+            )
 
     @classmethod
     def open(cls, fd, uri=None, mode='r',
@@ -1757,11 +1764,18 @@ def is_asdf_file(fd):
     For URL input, looks for an extension that should be passed
     to AsdfInFits, otherwise assumes ASDF.
 
+    This method is deprecated in favor of `~asdf.util.get_file_type`.
+
     Parameters
     ----------
     fd : str, `~asdf.generic_io.GenericFile`
 
     """
+    warnings.warn(
+        "The asdf.asdf.is_asdf_file method is deprecated.  Use asdf.util.get_file_type instead.",
+        AsdfDeprecationWarning,
+    )
+
     if isinstance(fd, generic_io.InputStream):
         # If it's an InputStream let ASDF deal with it.
         return True

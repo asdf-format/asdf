@@ -59,6 +59,9 @@
 
 - Fix behavior of ``exception`` argument to ``GenericFile.seek_until``. [#980]
 
+- Fix issues in file type detection to allow non-seekable input and
+  filenames without recognizable extensions. [#978]
+
 2.7.4 (unreleased)
 ------------------
 

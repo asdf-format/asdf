@@ -231,7 +231,7 @@ def test_streams2():
 
     fd = generic_io.InputStream(buff, 'r')
 
-    x = fd._peek(10)
+    x = fd.peek(10)
     x = fd.read()
     assert len(x) == 60
 
@@ -760,8 +760,9 @@ def test_is_asdf(tmpdir):
     hdul.append(imhdu)
     path = os.path.join(str(tmpdir), 'test.fits')
     hdul.writeto(path)
-    assert not is_asdf_file(path)
-    assert is_asdf_file(asdf.AsdfFile())
+    with pytest.warns(asdf.exceptions.AsdfDeprecationWarning):
+        assert not is_asdf_file(path)
+        assert is_asdf_file(asdf.AsdfFile())
 
 
 def test_blocksize(tree, tmpdir):

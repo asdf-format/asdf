@@ -18,7 +18,7 @@ from .. import generic_io
 from .. import schema
 from .. import util
 
-from ..asdf import is_asdf_file, open_asdf, AsdfFile
+from ..asdf import open_asdf, AsdfFile
 from ..block import BlockManager
 from .main import Command
 
@@ -101,7 +101,7 @@ def read_yaml(fd):
     )
     buffer = reader.read()
 
-    contains_blocks = fd._peek(len(constants.BLOCK_MAGIC)) == constants.BLOCK_MAGIC
+    contains_blocks = fd.peek(len(constants.BLOCK_MAGIC)) == constants.BLOCK_MAGIC
 
     return content, len(content) + len(buffer), contains_blocks
 
@@ -189,7 +189,7 @@ def edit(path):
     """
     # Extract the YAML portion of the original file:
     with generic_io.get_file(path, mode="r") as fd:
-        if not is_asdf_file(fd):
+        if util.get_file_type(fd) != util.FileType.ASDF:
             print(f"Error: '{path}' is not an ASDF file.")
             return 1
 
