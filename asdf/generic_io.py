@@ -21,6 +21,7 @@ from urllib.request import url2pathname, urlopen
 import numpy as np
 
 from . import util
+from .exceptions import DelimiterNotFoundError
 from .extern import atomicfile
 from .util import patched_urllib_parse
 
@@ -142,7 +143,7 @@ class _TruncatedReader:
 
         if content == b'':
             if self._exception:
-                raise ValueError("{0} not found".format(self._delimiter_name))
+                raise DelimiterNotFoundError("{0} not found".format(self._delimiter_name))
             self._past_end = True
             return content
 
@@ -156,7 +157,7 @@ class _TruncatedReader:
             self._past_end = True
         elif nbytes is None and self._exception:
             # Read the whole file and didn't find the delimiter
-            raise ValueError("{0} not found".format(self._delimiter_name))
+            raise DelimiterNotFoundError("{0} not found".format(self._delimiter_name))
         else:
             if nbytes:
                 content = content[:nbytes - len(self._initial_content)]
@@ -442,7 +443,7 @@ class GenericFile(metaclass=util.InheritDocstrings):
 
         Raises
         ------
-        ValueError :
+        DelimiterNotFoundError :
             If the delimiter is not found before the end of the file.
         """
         buff = io.BytesIO()
@@ -491,7 +492,7 @@ class GenericFile(metaclass=util.InheritDocstrings):
 
         Raises
         ------
-        ValueError :
+        DelimiterNotFoundError :
             If the delimiter is not found before the end of the file.
         """
         raise NotImplementedError()
@@ -530,27 +531,28 @@ class GenericFile(metaclass=util.InheritDocstrings):
 
         Returns
         -------
-        content : bytes
-            The content from the current position in the file, up to
-            the delimiter.  Includes the delimiter if `include` is
-            ``True``.
+        bool
+            ``True`` if the delimiter was found.
 
         Raises
         ------
-        ValueError :
-            If the delimiter is not found before the end of the file.
+        DelimiterNotFoundError :
+            If ``exception`` is enabled and the delimiter is not found
+            before the end of the file.
         """
         reader = self.reader_until(
             delimiter, readahead_bytes, delimiter_name=delimiter_name,
             include=include, initial_content=initial_content,
-            exception=exception)
-        while True:
-            try:
-                content = reader.read(self.block_size)
-            except ValueError:
+            exception=True)
+        try:
+            while reader.read(self.block_size) != b'':
+                pass
+            return True
+        except DelimiterNotFoundError as e:
+            if exception:
+                raise e
+            else:
                 return False
-            if content == b'':
-                return True
 
     def fast_forward(self, size):
         """

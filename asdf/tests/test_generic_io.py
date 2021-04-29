@@ -9,6 +9,7 @@ import urllib.request as urllib_request
 import numpy as np
 
 import asdf
+from asdf import exceptions
 from asdf import util
 from asdf import generic_io
 from asdf.asdf import is_asdf_file
@@ -523,14 +524,14 @@ def test_truncated_reader():
 
     # Simple cases where the delimiter is not found at all
     tr = generic_io._TruncatedReader(fd, b'x', 1)
-    with pytest.raises(ValueError):
+    with pytest.raises(exceptions.DelimiterNotFoundError):
         tr.read()
 
     fd.seek(0)
     tr = generic_io._TruncatedReader(fd, b'x', 1)
     assert tr.read(100) == content[:100]
     assert tr.read(1) == content[100:]
-    with pytest.raises(ValueError):
+    with pytest.raises(exceptions.DelimiterNotFoundError):
         tr.read()
 
     fd.seek(0)

@@ -57,6 +57,8 @@
 - Add argument to ``asdftool diff`` that ignores tree nodes that match
   a JMESPath expression. [#956]
 
+- Fix behavior of ``exception`` argument to ``GenericFile.seek_until``. [#980]
+
 2.7.4 (unreleased)
 ------------------
 
