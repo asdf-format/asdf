@@ -12,3 +12,9 @@ class AsdfConversionWarning(AsdfWarning):
     """
     Warning class used for failures to convert data into custom types.
     """
+
+class DelimiterNotFoundError(ValueError):
+    """
+    Indicates that a delimiter was not found when reading or
+    seeking through a file.
+    """

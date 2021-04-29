@@ -872,7 +872,7 @@ class AsdfFile:
             # now, but we don't do anything special with it until
             # after the blocks have been read
             tree = yamlutil.load_tree(reader)
-            has_blocks = fd.seek_until(constants.BLOCK_MAGIC, 4, include=True)
+            has_blocks = fd.seek_until(constants.BLOCK_MAGIC, 4, include=True, exception=False)
         elif yaml_token == constants.BLOCK_MAGIC:
             has_blocks = True
         elif yaml_token != b'':
