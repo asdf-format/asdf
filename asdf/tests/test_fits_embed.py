@@ -275,6 +275,29 @@ def test_asdf_in_fits_open(tmpdir, dtype):
             compare_asdfs(asdf_in_fits, ff)
 
 
+@pytest.mark.parametrize('dtype', TEST_DTYPES)
+def test_asdf_open(tmpdir, dtype):
+    """Test the top-level open method of the asdf module"""
+    tmpfile = os.path.join(str(tmpdir), 'test.fits')
+    # Write the AsdfInFits object out as a FITS file with ASDF extension
+    asdf_in_fits = create_asdf_in_fits(dtype)
+    asdf_in_fits.write_to(tmpfile)
+
+    # Test opening the file directly from the URI
+    with asdf_open(tmpfile) as ff:
+        compare_asdfs(asdf_in_fits, ff)
+
+    # Test open/close without context handler
+    ff = asdf_open(tmpfile)
+    compare_asdfs(asdf_in_fits, ff)
+    ff.close()
+
+    # Test reading in the file from an already-opened file handle
+    with open(tmpfile, 'rb') as handle:
+        with asdf_open(handle) as ff:
+            compare_asdfs(asdf_in_fits, ff)
+
+
 def test_validate_on_read(tmpdir):
     tmpfile = str(tmpdir.join('invalid.fits'))
 
