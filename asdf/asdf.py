@@ -30,7 +30,7 @@ from .extension import (
     get_cached_asdf_extension_list,
     get_cached_extension_manager,
 )
-from .util import NotSet, patched_urllib_parse
+from .util import NotSet
 from .search import AsdfSearchResult
 from ._helpers import validate_version
 
@@ -797,7 +797,7 @@ class AsdfFile:
         return None
 
     @classmethod
-    def _open_asdf(cls, self, fd, uri=None, mode='r',
+    def _open_asdf(cls, self, fd,
                    validate_checksums=False,
                    extensions=None,
                    _get_yaml_content=False,
@@ -832,9 +832,7 @@ class AsdfFile:
         else:
             legacy_fill_schema_defaults = get_config().legacy_fill_schema_defaults
 
-        self._mode = mode
-
-        fd = generic_io.get_file(fd, mode=self._mode, uri=uri)
+        self._mode = fd.mode
         self._fd = fd
         # The filename is currently only used for tracing warning information
         self._fname = self._fd._uri if self._fd._uri else ''
@@ -922,13 +920,16 @@ class AsdfFile:
                    ignore_missing_extensions=False,
                    **kwargs):
         """Attempt to open file-like object as either AsdfFile or AsdfInFits"""
-        if not is_asdf_file(fd):
+        generic_file = generic_io.get_file(fd, mode=mode, uri=uri)
+        file_type = util.get_file_type(generic_file)
+
+        if file_type == util.FileType.FITS:
             try:
                 # TODO: this feels a bit circular, try to clean up. Also
                 # this introduces another dependency on astropy which may
                 # not be desireable.
                 from . import fits_embed
-                return fits_embed.AsdfInFits._open_impl(fd, uri=uri,
+                return fits_embed.AsdfInFits._open_impl(generic_file, uri=uri,
                             validate_checksums=validate_checksums,
                             extensions=extensions,
                             ignore_version_mismatch=self._ignore_version_mismatch,
@@ -945,14 +946,20 @@ class AsdfFile:
                     "Input object does not appear to be an ASDF file. Cannot check " +
                     "if it is a FITS with ASDF extension because 'astropy' is not " +
                     "installed") from None
-        return cls._open_asdf(self, fd, uri=uri, mode=mode,
-                validate_checksums=validate_checksums,
-                extensions=extensions,
-                _get_yaml_content=_get_yaml_content,
-                _force_raw_types=_force_raw_types,
-                strict_extension_check=strict_extension_check,
-                ignore_missing_extensions=ignore_missing_extensions,
-                **kwargs)
+        elif file_type == util.FileType.ASDF:
+            return cls._open_asdf(self, generic_file,
+                    validate_checksums=validate_checksums,
+                    extensions=extensions,
+                    _get_yaml_content=_get_yaml_content,
+                    _force_raw_types=_force_raw_types,
+                    strict_extension_check=strict_extension_check,
+                    ignore_missing_extensions=ignore_missing_extensions,
+                    **kwargs)
+        else:
+            raise ValueError(
+                "Input object does not appear to be an ASDF file or a FITS with " +
+                "ASDF extension"
+            )
 
     @classmethod
     def open(cls, fd, uri=None, mode='r',
@@ -1738,74 +1745,6 @@ def open_asdf(fd, uri=None, mode=None, validate_checksums=False, extensions=None
         strict_extension_check=strict_extension_check,
         ignore_missing_extensions=ignore_missing_extensions,
         **kwargs)
-
-
-# astropy.io.fits supports opening files that are externally
-# compressed with gzip or zip, and asdf does not, so we may as
-# well give those extensions to FITS.
-_FITS_EXTENSIONS = [".fits", ".gz", ".zip"]
-_ASDF_EXTENSIONS = [".asdf"]
-
-
-def is_asdf_file(fd):
-    """
-    Determine if fd is an ASDF file.
-
-    For most input, reads the first five bytes and looks
-    for the ``#ASDF`` string.
-
-    For URL input, looks for an extension that should be passed
-    to AsdfInFits, otherwise assumes ASDF.
-
-    Parameters
-    ----------
-    fd : str, `~asdf.generic_io.GenericFile`
-
-    """
-    if isinstance(fd, generic_io.InputStream):
-        # If it's an InputStream let ASDF deal with it.
-        return True
-
-    if isinstance(fd, str):
-        parsed = patched_urllib_parse.urlparse(fd)
-        if parsed.scheme in ["http", "https"]:
-            # We don't want to read URL content here because
-            # that will cause the file to be downloaded twice.
-            ext = os.path.splitext(parsed.path)[1].lower()
-            if ext in _FITS_EXTENSIONS:
-                return False
-            elif ext in _ASDF_EXTENSIONS:
-                return True
-            else:
-                message = (
-                    f"The URL '{fd}' does not include an obvious FITS "
-                    "or ASDF filename extension.  Assuming ASDF.\n\n"
-                    "If this URL returns FITS content, it cannot be opened "
-                    "with asdf.open().  Use asdf.fits_embed.AsdfInFits.open() instead."
-                )
-                warnings.warn(message, AsdfWarning)
-                return True
-
-    to_close = False
-    if isinstance(fd, AsdfFile):
-        return True
-    elif isinstance(fd, generic_io.GenericFile):
-        pass
-    else:
-        try:
-            fd = generic_io.get_file(fd, mode='r', uri=None)
-            if not isinstance(fd, io.IOBase):
-                to_close = True
-        except ValueError:
-            return False
-    asdf_magic = fd.read(5)
-    if fd.seekable():
-        fd.seek(0)
-    if to_close:
-        fd.close()
-    if asdf_magic == constants.ASDF_MAGIC:
-        return True
-    return False
 
 
 class SerializationContext:

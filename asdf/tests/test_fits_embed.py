@@ -26,7 +26,7 @@ from .helpers import (
 )
 
 
-TEST_DTYPES = ['<f8', '<f8', '<u4', '>u4', '<i4', '>i4']
+TEST_DTYPES = ['<f8', '>f8', '<u4', '>u4', '<i4', '>i4']
 
 
 def create_asdf_in_fits(dtype):
@@ -297,10 +297,6 @@ def test_asdf_open(tmpdir, dtype):
         with asdf_open(handle) as ff:
             compare_asdfs(asdf_in_fits, ff)
 
-    # Test opening the file as a FITS file first and passing the HDUList
-    with fits.open(tmpfile) as hdulist:
-        with asdf_open(hdulist) as ff:
-            compare_asdfs(asdf_in_fits, ff)
 
 def test_validate_on_read(tmpdir):
     tmpfile = str(tmpdir.join('invalid.fits'))
@@ -334,15 +330,7 @@ invalid_software: !core/software-1.0.0
 def test_open_gzipped():
     testfile = get_test_data_path('asdf.fits.gz')
 
-    # Opening as an HDU should work
-    with fits.open(testfile) as ff:
-        with asdf.open(ff) as af:
-            assert af.tree['stuff'].shape == (20, 20)
-
     with fits_embed.AsdfInFits.open(testfile) as af:
-        assert af.tree['stuff'].shape == (20, 20)
-
-    with asdf.open(testfile) as af:
         assert af.tree['stuff'].shape == (20, 20)
 
 

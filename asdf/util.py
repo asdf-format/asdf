@@ -1,3 +1,4 @@
+import enum
 import inspect
 import math
 import struct
@@ -9,6 +10,8 @@ from functools import lru_cache
 from urllib.request import pathname2url
 
 import numpy as np
+
+from . import constants
 
 # We're importing our own copy of urllib.parse because
 # we need to patch it to support asdf:// URIs, but it'd
@@ -492,3 +495,32 @@ def _compile_uri_match_pattern(pattern):
     pattern = pattern.replace(r"\*\*", r".*")
     pattern = pattern.replace(r"\*", r"[^/]*")
     return re.compile(pattern)
+
+
+def get_file_type(fd):
+    """
+    Determine the file type of an open GenericFile instance.
+
+    Parameters
+    ----------
+    fd : GenericFile
+
+    Returns
+    -------
+    FileType
+    """
+    if fd.peek(5) == constants.ASDF_MAGIC:
+        return FileType.ASDF
+    elif fd.peek(6) == constants.FITS_MAGIC:
+        return FileType.FITS
+    else:
+        return FileType.UNKNOWN
+
+
+class FileType(enum.Enum):
+    """
+    Enum representing file types recognized by asdf.
+    """
+    ASDF = 1
+    FITS = 2
+    UNKNOWN = 3

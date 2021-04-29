@@ -256,10 +256,10 @@ class AsdfInFits(asdf.AsdfFile):
             # This means there is no ASDF extension
             return self
 
-        buff = io.BytesIO(asdf_extension.data)
+        generic_file = generic_io.get_file(io.BytesIO(asdf_extension.data), mode='r', uri=uri)
 
         try:
-            return cls._open_asdf(self, buff, uri=uri, mode='r',
+            return cls._open_asdf(self, generic_file,
                               validate_checksums=validate_checksums,
                               extensions=extensions,
                               strict_extension_check=strict_extension_check,
