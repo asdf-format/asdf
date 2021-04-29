@@ -12,7 +12,6 @@ import asdf
 from asdf import exceptions
 from asdf import util
 from asdf import generic_io
-from asdf.asdf import is_asdf_file
 from asdf.config import config_context
 
 from . import helpers, create_small_tree, create_large_tree
@@ -747,22 +746,6 @@ def test_truncated_reader():
     assert tr.read(99) == (init + content[:95])
     assert tr.read(50) == content[95:105]
     assert tr.read() == b''
-
-
-def test_is_asdf(tmpdir):
-    # test fits
-    fits = pytest.importorskip('astropy.io.fits')
-
-    hdul = fits.HDUList()
-    phdu= fits.PrimaryHDU()
-    imhdu= fits.ImageHDU(data=np.arange(24).reshape((4,6)))
-    hdul.append(phdu)
-    hdul.append(imhdu)
-    path = os.path.join(str(tmpdir), 'test.fits')
-    hdul.writeto(path)
-    with pytest.warns(asdf.exceptions.AsdfDeprecationWarning):
-        assert not is_asdf_file(path)
-        assert is_asdf_file(asdf.AsdfFile())
 
 
 def test_blocksize(tree, tmpdir):
