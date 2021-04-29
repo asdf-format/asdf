@@ -947,7 +947,7 @@ class AsdfFile:
                     "if it is a FITS with ASDF extension because 'astropy' is not " +
                     "installed") from None
         elif file_type == util.FileType.ASDF:
-            return cls._open_asdf(self, generic_file, uri=uri, mode=mode,
+            return cls._open_asdf(self, generic_file,
                     validate_checksums=validate_checksums,
                     extensions=extensions,
                     _get_yaml_content=_get_yaml_content,
