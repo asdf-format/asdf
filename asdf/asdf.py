@@ -30,7 +30,7 @@ from .extension import (
     get_cached_asdf_extension_list,
     get_cached_extension_manager,
 )
-from .util import NotSet, patched_urllib_parse
+from .util import NotSet
 from .search import AsdfSearchResult
 from ._helpers import validate_version
 
