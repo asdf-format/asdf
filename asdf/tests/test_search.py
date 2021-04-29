@@ -37,6 +37,8 @@ def test_single_result(asdf_file):
     assert len(result.nodes) == 1
     assert result.node == "hello"
     assert result.path == "root['bar']"
+    result.replace("goodbye")
+    assert asdf_file["bar"] == "goodbye"
 
 
 def test_multiple_results(asdf_file):
@@ -53,6 +55,10 @@ def test_multiple_results(asdf_file):
 
     with pytest.raises(RuntimeError):
         result.node
+
+    result.replace(54)
+    assert asdf_file["foo"] == 54
+    assert asdf_file["nested"]["foo"] == 54
 
 
 def test_by_key(asdf_file):
@@ -120,12 +126,20 @@ def test_multiple_conditions(asdf_file):
     result = asdf_file.search("foo", value=24)
     assert len(result.nodes) == 1
     assert result.node == 24
+    result.replace(19)
+    assert len(result.nodes) == 0
+    assert asdf_file["foo"] == 42
+    assert asdf_file["nested"]["foo"] == 19
 
 
 def test_chaining(asdf_file):
     result = asdf_file.search("foo").search(value=24)
     assert len(result.nodes) == 1
     assert result.node == 24
+    result.replace(19)
+    assert len(result.nodes) == 0
+    assert asdf_file["foo"] == 42
+    assert asdf_file["nested"]["foo"] == 19
 
 
 def test_index_operator(asdf_file):
@@ -158,6 +172,8 @@ def test_no_results(asdf_file):
     assert "No results found." in repr(result)
     assert result.node is None
     assert result.path is None
+    # Testing no exceptions here:
+    result.replace("foo")
 
 
 def test_recursive_tree():
@@ -171,3 +187,7 @@ def test_recursive_tree():
     result = af.search("bar")
     assert len(result.nodes) == 1
     assert result.node == "baz"
+
+    result.replace("zap")
+    assert af["foo"]["bar"] == "zap"
+    assert af["foo"]["nested"]["bar"] == "zap"
