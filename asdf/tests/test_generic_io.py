@@ -274,33 +274,6 @@ def test_http_connection(tree, httpserver):
         ff.tree['science_data'][0] == 42
 
 
-#@pytest.mark.remote_data
-@pytest.mark.skip(reason="The _roundtrip assert isn't well defined and returning different lengths in different environments.")
-def test_http_connection_range(tree, rhttpserver):
-    path = os.path.join(rhttpserver.tmpdir, 'test.asdf')
-    connection = [None]
-
-    def get_write_fd():
-        return generic_io.get_file(open(path, 'wb'), mode='w')
-
-    def get_read_fd():
-        fd = generic_io.get_file(rhttpserver.url + "test.asdf")
-        assert isinstance(fd, generic_io.HTTPConnection)
-        connection[0] = fd
-        return fd
-
-    with _roundtrip(tree, get_write_fd, get_read_fd) as ff:
-        if len(tree) == 4:
-            assert connection[0]._nreads == 0
-        else:
-            assert connection[0]._nreads == 6
-
-        assert len(list(ff.blocks.internal_blocks)) == 2
-        assert isinstance(next(ff.blocks.internal_blocks)._data, np.core.memmap)
-        assert isinstance(next(ff.blocks.internal_blocks)._data, np.ndarray)
-        ff.tree['science_data'][0] == 42
-
-
 def test_exploded_filesystem(tree, tmpdir):
     path = os.path.join(str(tmpdir), 'test.asdf')
 
