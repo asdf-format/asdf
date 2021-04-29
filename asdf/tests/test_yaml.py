@@ -296,8 +296,8 @@ def test_tag_object():
     (np.ulonglong(42), 42),
 ])
 def test_numpy_scalar(numpy_value, expected_value):
-    ctx = asdf.AsdfFile()
-    tree = {"value": numpy_value}
+    ctx = asdf.AsdfFile({"value": numpy_value})
+    tree = ctx.tree
     buffer = io.BytesIO()
 
     yamlutil.dump_tree(tree, buffer, ctx)

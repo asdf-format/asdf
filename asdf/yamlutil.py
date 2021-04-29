@@ -10,9 +10,10 @@ from . import schema
 from . import tagged
 from . import treeutil
 from . import util
-from .constants import YAML_TAG_PREFIX
+from .constants import YAML_TAG_PREFIX, STSCI_SCHEMA_TAG_BASE
 from .versioning import split_tag_version
 from .exceptions import AsdfConversionWarning
+from .tags.core import AsdfObject
 
 
 __all__ = ['custom_tree_to_tagged_tree', 'tagged_tree_to_custom_tree']
@@ -385,18 +386,10 @@ def dump_tree(tree, fd, ctx, tree_finalizer=None, _serialization_context=None):
     # what extensions were used when converting the tree's custom
     # types.  In 3.0, it will be passed as the `ctx` instead of the
     # AsdfFile itself.
-    tags = {}
-    tree_type = ctx.type_index.from_custom_type(type(tree))
-    if tree_type is not None:
-        tag_parts = tree_type.yaml_tag.split(':')
-        last_part = tag_parts[-1]
-        if '/' in last_part:
-            last_part = last_part[0:last_part.index('/') + 1]
-        else:
-            last_part = ''
-        yaml_tag = ':'.join(tag_parts[0:-1] + [last_part])
-        tags['!'] = yaml_tag
+    if type(tree) is not AsdfObject:
+        raise TypeError("Root node of ASDF tree must be of type AsdfObject")
 
+    tags = {'!': STSCI_SCHEMA_TAG_BASE + '/'}
     tree = custom_tree_to_tagged_tree(tree, ctx, _serialization_context=_serialization_context)
     if tree_finalizer is not None:
         tree_finalizer(tree)
