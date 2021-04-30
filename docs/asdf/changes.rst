@@ -4,6 +4,21 @@
 Changes
 *******
 
+What's New in ASDF 2.7.4?
+=========================
+
+The ASDF Standard is at v1.5.0.
+
+Changes include:
+
+- Fix pytest plugin failure under older versions of pytest.
+
+- Fix bugs when serializing views over non-contiguous and FITS
+  base arrays.
+
+- Add support for opening files from HTTPS URLs and following
+  HTTP/HTTPS redirects.
+
 What's New in ASDF 2.7.3?
 =========================
 
