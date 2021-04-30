@@ -1526,11 +1526,11 @@ def is_asdf_file(fd):
                 return True
             else:
                 message = (
-                    f"The URL '{fd}' does not include an obvious FITS "
+                    "The URL '{}' does not include an obvious FITS "
                     "or ASDF filename extension.  Assuming ASDF.\n\n"
                     "If this URL returns FITS content, it cannot be opened "
                     "with asdf.open().  Use asdf.fits_embed.AsdfInFits.open() instead."
-                )
+                ).format(fd)
                 warnings.warn(message, AsdfWarning)
                 return True
 
