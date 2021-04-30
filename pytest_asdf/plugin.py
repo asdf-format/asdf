@@ -87,7 +87,7 @@ class AsdfSchemaFile(pytest.File):
 
         if not self.skip_examples:
             for index, example in enumerate(self.find_examples_in_schema()):
-                name = "test_example_{}".format(example)
+                name = "test_example_{}".format(index)
                 item = AsdfSchemaExampleItem.from_parent(
                     self,
                     self.fspath,

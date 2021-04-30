@@ -66,6 +66,7 @@ baz: 42
             assert len(ff.tree) == 2
 
 
+@pytest.mark.filterwarnings('ignore::astropy.io.fits.verify.VerifyWarning')
 def test_no_asdf_header(tmpdir):
     content = b"What? This ain't no ASDF file"
 
@@ -129,8 +130,7 @@ def test_invalid_source(small_tree):
             ff2.blocks.get_block(2)
 
         with pytest.raises(IOError):
-            # ff2.blocks.get_block("http://127.0.0.1/")
-            ff2.blocks.get_block("http://0.42.42.42/")
+            ff2.blocks.get_block("http://ABadUrl.verybad/test.asdf")
 
         with pytest.raises(TypeError):
             ff2.blocks.get_block(42.0)
@@ -158,6 +158,7 @@ def test_empty_file():
         assert len(ff.blocks) == 0
 
 
+@pytest.mark.filterwarnings('ignore::astropy.io.fits.verify.VerifyWarning')
 def test_not_asdf_file():
     buff = io.BytesIO(b"SIMPLE")
     buff.seek(0)

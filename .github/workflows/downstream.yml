@@ -10,7 +10,7 @@ on:
       astropy_ref:
         description: astropy ref
         required: true
-        default: master
+        default: main
       gwcs_ref:
         description: gwcs ref
         required: true
@@ -22,7 +22,11 @@ on:
       specutils_ref:
         description: specutils ref
         required: true
-        default: master
+        default: main
+      weldx_ref:
+        description: weldx ref
+        required: true
+        default: asdf_2.8
   schedule:
     # Run every Monday at 6am UTC
     - cron: '0 6 * * 1'
@@ -44,12 +48,19 @@ jobs:
           - package_name: gwcs
             repository: spacetelescope/gwcs
             ref: ${{ github.event.inputs.gwcs_ref || 'master' }}
+            test_command: pytest
           - package_name: jwst
             repository: spacetelescope/jwst
             ref: ${{ github.event.inputs.jwst_ref || 'master' }}
+            test_command: pytest
           - package_name: specutils
             repository: astropy/specutils
-            ref: ${{ github.event.inputs.specutils_ref || 'master' }}
+            ref: ${{ github.event.inputs.specutils_ref || 'main' }}
+            test_command: pytest
+          - package_name: weldx
+            repository: BAMWelDX/weldx
+            ref: ${{ github.event.inputs.weldx_ref || 'asdf_2.8' }}
+            test_command: pytest weldx/tests/asdf_tests weldx/asdf/schemas --asdf-tests
     steps:
       - uses: actions/checkout@v2
         with:
@@ -65,10 +76,10 @@ jobs:
       - name: Install remaining ${{ matrix.package_name }} dependencies
         run: pip install .[test]
       - name: Run ${{ matrix.package_name}} tests
-        run: pytest
+        run: ${{ matrix.test_command }}
 
   astropy:
-    name: astropy@${{ github.event.inputs.astropy_ref || 'master' }} unit tests
+    name: astropy@${{ github.event.inputs.astropy_ref || 'main' }} unit tests
     runs-on: ubuntu-latest
     steps:
       - name: Set up Python 3.9
@@ -78,6 +89,6 @@ jobs:
       - name: Install asdf
         run: pip install git+https://github.com/asdf-format/asdf@${{ github.event.inputs.asdf_ref || 'master' }}
       - name: Install astropy
-        run: pip install git+https://github.com/astropy/astropy@${{ github.event.inputs.astropy_ref || 'master' }}#egg=astropy[test]
+        run: pip install git+https://github.com/astropy/astropy@${{ github.event.inputs.astropy_ref || 'main' }}#egg=astropy[test]
       - name: Run astropy tests
         run: pytest --pyargs astropy

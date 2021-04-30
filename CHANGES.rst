@@ -1,3 +1,16 @@
+2.7.4 (2021-04-30)
+------------------
+
+- Fix pytest plugin failure under older versions of pytest. [#934]
+
+- Copy array views when the base array is non-contiguous. [#949]
+
+- Prohibit views over FITS arrays that change dtype. [#952]
+
+- Add support for HTTPS URLs and following redirects. [#971]
+
+- Prevent astropy warnings in tests when opening known bad files. [#977]
+
 2.7.3 (2021-02-25)
 ------------------
 
