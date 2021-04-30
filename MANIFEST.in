@@ -8,7 +8,6 @@ include setup.cfg
 
 recursive-include *.pyx *.c *.pxd
 recursive-include docs *
-recursive-include licenses *
 recursive-include cextern *
 recursive-include scripts *
 recursive-include asdf-standard/schemas *.yaml
