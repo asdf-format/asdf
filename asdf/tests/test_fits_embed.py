@@ -471,8 +471,6 @@ def test_array_view(tmp_path):
     data = np.arange(400, dtype=np.float64).reshape(20, 20)
     data_view = data[:, :20]
 
-    assert data_view.size > asdf.constants.DEFAULT_AUTO_INLINE
-
     hdul = fits.HDUList([fits.PrimaryHDU(), fits.ImageHDU(data_view)])
     with asdf.fits_embed.AsdfInFits(hdulist=hdul) as af:
         af["data"] = hdul[-1].data
@@ -492,8 +490,6 @@ def test_array_view_compatible_layout(tmp_path):
     data = np.arange(400, dtype=np.float64).reshape(20, 20)
     data_view = data[:, :10]
     other_view = data_view[:, :]
-
-    assert data_view.size > asdf.constants.DEFAULT_AUTO_INLINE
 
     hdul = fits.HDUList([fits.PrimaryHDU(), fits.ImageHDU(data_view)])
     with asdf.fits_embed.AsdfInFits(hdulist=hdul) as af:
@@ -519,8 +515,6 @@ def test_array_view_compatible_dtype(tmp_path):
     data_view = data[:, :10]
     other_view = data.view(np.int64)
 
-    assert data_view.size > asdf.constants.DEFAULT_AUTO_INLINE
-
     hdul = fits.HDUList([fits.PrimaryHDU(), fits.ImageHDU(data_view)])
     with asdf.fits_embed.AsdfInFits(hdulist=hdul) as af:
         af["data"] = hdul[-1].data
@@ -543,8 +537,6 @@ def test_array_view_different_layout(tmp_path):
     data = np.arange(400, dtype=np.float64).reshape(20, 20)
     data_view = data[:, :10]
     other_view = data_view[:, 10:]
-
-    assert data_view.size > asdf.constants.DEFAULT_AUTO_INLINE
 
     hdul = fits.HDUList([fits.PrimaryHDU(), fits.ImageHDU(data_view)])
     with asdf.fits_embed.AsdfInFits(hdulist=hdul) as af:
