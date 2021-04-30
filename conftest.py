@@ -13,5 +13,6 @@ def temp_cwd(tmpdir_factory):
     original_cwd = os.getcwd()
     try:
         os.chdir(tmpdir_factory.mktemp("cwd"))
+        yield
     finally:
         os.chdir(original_cwd)
