@@ -63,7 +63,7 @@
   filenames without recognizable extensions.  Remove the ``asdf.asdf.is_asdf_file``
   function. [#978]
 
-2.7.4 (unreleased)
+2.7.4 (2021-04-30)
 ------------------
 
 - Fix pytest plugin failure under older versions of pytest. [#934]
