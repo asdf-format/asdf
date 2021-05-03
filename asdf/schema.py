@@ -675,7 +675,11 @@ def check_schema(schema, validate_default=True):
 
     resolver = _make_resolver(extension.get_default_resolver())
 
-    cls = mvalidators.create(meta_schema=meta_schema,
-                             validators=validators)
+    cls = mvalidators.create(
+        meta_schema=meta_schema,
+        validators=validators,
+        type_checker=mvalidators.Draft4Validator.TYPE_CHECKER,
+        id_of=mvalidators.Draft4Validator.ID_OF,
+    )
     validator = cls(meta_schema, resolver=resolver)
     validator.validate(schema, _schema=meta_schema)
