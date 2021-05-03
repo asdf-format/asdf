@@ -63,7 +63,10 @@
   filenames without recognizable extensions.  Remove the ``asdf.asdf.is_asdf_file``
   function. [#978]
 
-- Fix bug in ``asdf.schema.check_schema`` that caused relative references in
+2.7.5 (unreleased)
+------------------
+
+- Fix bug in ``asdf.schema.check_schema`` causing relative references in
   metaschemas to be resolved incorrectly. [#987]
 
 2.7.4 (2021-04-30)
