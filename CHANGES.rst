@@ -63,6 +63,9 @@
   filenames without recognizable extensions.  Remove the ``asdf.asdf.is_asdf_file``
   function. [#978]
 
+- Update ``asdftool extensions`` and ``asdftool tags`` to incorporate
+  the new extension API. [#988]
+
 2.7.5 (unreleased)
 ------------------
 
