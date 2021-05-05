@@ -32,17 +32,26 @@ class TagLister(Command): # pragma: no cover
     def run(cls, args):
         return list_tags(display_classes=args.display_classes)
 
-def _qualified_name(_class):
-    return "{}.{}".format(_class.__module__, _class.__name__)
+
+def _format_type(typ):
+    if isinstance(typ, str):
+        return typ
+    else:
+        return "{}.{}".format(typ.__module__, typ.__name__)
+
 
 def list_tags(display_classes=False, iostream=sys.stdout):
     """Function to list tags"""
     af = AsdfFile()
-    type_by_tag = af.type_index._type_by_tag
-    tags = sorted(type_by_tag.keys())
 
-    for tag in tags:
+    tag_pairs = []
+    for tag in af.extension_manager._tag_defs_by_tag:
+        tag_pairs.append((tag, af.extension_manager.get_converter_for_tag(tag).types))
+    for tag in af.type_index._type_by_tag:
+        tag_pairs.append((tag, [af.type_index._type_by_tag[tag]]))
+
+    for tag, types in sorted(tag_pairs, key=lambda pair: pair[0]):
         string = str(tag)
         if display_classes:
-            string += ":  " + _qualified_name(type_by_tag[tag])
+            string += ":  " + ", ".join(_format_type(t) for t in types)
         iostream.write(string + '\n')
