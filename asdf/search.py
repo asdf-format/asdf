@@ -198,6 +198,26 @@ class AsdfSearchResult:
             show_values=self._show_values
         )
 
+    def replace(self, value):
+        """
+        Assign a new value in place of all leaf nodes in the
+        search results.
+
+        Parameters
+        ----------
+        value : object
+        """
+        results = []
+
+        def _callback(identifiers, parent, node, children):
+            if all(f(node, identifiers[-1]) for f in self._filters):
+                results.append((identifiers[-1], parent))
+
+        _walk_tree_breadth_first(self._identifiers, self._node, _callback)
+
+        for identifier, parent in results:
+            parent[identifier] = value
+
     @property
     def node(self):
         """
@@ -247,7 +267,7 @@ class AsdfSearchResult:
         """
         results = []
 
-        def _callback(identifiers, node, children):
+        def _callback(identifiers, parent, node, children):
             if all(f(node, identifiers[-1]) for f in self._filters):
                 results.append(node)
 
@@ -266,7 +286,7 @@ class AsdfSearchResult:
         """
         results = []
 
-        def _callback(identifiers, node, children):
+        def _callback(identifiers, parent, node, children):
             if all(f(node, identifiers[-1]) for f in self._filters):
                 results.append(_build_path(identifiers))
 
@@ -310,18 +330,18 @@ def _walk_tree_breadth_first(root_identifiers, root_node, callback):
     Walk the tree in breadth-first order (useful for prioritizing
     lower-depth nodes).
     """
-    current_nodes = [(root_identifiers, root_node)]
+    current_nodes = [(root_identifiers, None, root_node)]
     seen = set()
     while True:
         next_nodes = []
 
-        for identifiers, node in current_nodes:
+        for identifiers, parent, node in current_nodes:
             if (isinstance(node, dict) or isinstance(node, list) or isinstance(node, tuple)) and id(node) in seen:
                 continue
 
             children = get_children(node)
-            callback(identifiers, node, [c for _, c in children])
-            next_nodes.extend([(identifiers + [i], c) for i, c in children])
+            callback(identifiers, parent, node, [c for _, c in children])
+            next_nodes.extend([(identifiers + [i], node, c) for i, c in children])
             seen.add(id(node))
 
         if len(next_nodes) == 0:

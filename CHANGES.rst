@@ -66,6 +66,9 @@
 - Update ``asdftool extensions`` and ``asdftool tags`` to incorporate
   the new extension API. [#988]
 
+- Add ``AsdfSearchResult.replace`` method for assigning new values to
+  search results. [#981]
+
 2.7.5 (unreleased)
 ------------------
 

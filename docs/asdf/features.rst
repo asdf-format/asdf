@@ -594,6 +594,14 @@ properties instead:
     >>> af.search('duplicate_key').nodes # doctest: +SKIP
     ["value 1", "value 2"]
 
+To replace matching nodes with a new value, use the `AsdfSearchResult.replace` method:
+
+.. code:: python
+
+    >>> af.search('example').replace('replacement value') # doctest: +SKIP
+    >>> af.search('example').node # doctest: +SKIP
+    'replacement value'
+
 .. currentmodule:: asdf
 
 The first argument to `AsdfFile.search` searches by dict key or list/tuple index.  We can
