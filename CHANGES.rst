@@ -70,7 +70,7 @@
   search results. [#981]
 
 - Search for block index starting from end of file. Fixes rare bug when
-  a data block contains a block index. [#989]
+  a data block contains a block index. [#990]
 
 2.7.5 (unreleased)
 ------------------
