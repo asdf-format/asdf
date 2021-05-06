@@ -455,7 +455,7 @@ class BlockManager:
         # Read blocks in reverse order from the end of the file
         while True:
             # Look for the index header
-            idx = content.find(constants.INDEX_HEADER)
+            idx = content.rfind(constants.INDEX_HEADER)
             if idx != -1:
                 content = content[idx:]
                 index_start = block_start + idx
