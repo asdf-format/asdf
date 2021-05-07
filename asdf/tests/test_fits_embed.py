@@ -12,7 +12,6 @@ from astropy.table import Table
 from jsonschema.exceptions import ValidationError
 
 import asdf
-from asdf.constants import DEFAULT_AUTO_INLINE
 from asdf import get_config
 from asdf import fits_embed
 from asdf import open as asdf_open
@@ -458,8 +457,8 @@ def test_array_view(tmp_path):
     """
     file_path = tmp_path / "test.fits"
 
-    data = np.arange(DEFAULT_AUTO_INLINE ** 2, dtype=np.float64).reshape(DEFAULT_AUTO_INLINE, DEFAULT_AUTO_INLINE)
-    data_view = data[:, :(DEFAULT_AUTO_INLINE // 2)]
+    data = np.arange(100, dtype=np.float64).reshape(5, 20)
+    data_view = data[:, :10]
 
     hdul = fits.HDUList([fits.PrimaryHDU(), fits.ImageHDU(data_view)])
     with asdf.fits_embed.AsdfInFits(hdulist=hdul) as af:
@@ -477,8 +476,8 @@ def test_array_view_compatible_layout(tmp_path):
     """
     file_path = tmp_path / "test.fits"
 
-    data = np.arange(DEFAULT_AUTO_INLINE ** 2, dtype=np.float64).reshape(DEFAULT_AUTO_INLINE, DEFAULT_AUTO_INLINE)
-    data_view = data[:, :(DEFAULT_AUTO_INLINE // 2)]
+    data = np.arange(100, dtype=np.float64).reshape(5, 20)
+    data_view = data[:, :10]
     other_view = data_view[:, :]
 
     hdul = fits.HDUList([fits.PrimaryHDU(), fits.ImageHDU(data_view)])
@@ -498,7 +497,7 @@ def test_array_view_compatible_dtype(tmp_path):
     """
     file_path = tmp_path / "test.fits"
 
-    data = np.arange(DEFAULT_AUTO_INLINE + 1, dtype=np.float64)
+    data = np.arange(100, dtype=np.float64)
     hdul = fits.HDUList([fits.PrimaryHDU(), fits.ImageHDU(data)])
     with pytest.raises(ValueError, match="ASDF has only limited support for serializing views over arrays stored in FITS HDUs"):
         with asdf.fits_embed.AsdfInFits(hdulist=hdul) as af:
@@ -514,9 +513,9 @@ def test_array_view_different_layout(tmp_path):
     """
     file_path = tmp_path / "test.fits"
 
-    data = np.arange(DEFAULT_AUTO_INLINE ** 2, dtype=np.float64).reshape(DEFAULT_AUTO_INLINE, DEFAULT_AUTO_INLINE)
-    data_view = data[:, :(DEFAULT_AUTO_INLINE // 2)]
-    other_view = data_view[:, (DEFAULT_AUTO_INLINE // 2):]
+    data = np.arange(100, dtype=np.float64).reshape(5, 20)
+    data_view = data[:, :10]
+    other_view = data_view[:, 10:]
 
     hdul = fits.HDUList([fits.PrimaryHDU(), fits.ImageHDU(data_view)])
     with asdf.fits_embed.AsdfInFits(hdulist=hdul) as af:

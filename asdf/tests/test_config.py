@@ -99,6 +99,15 @@ def test_legacy_fill_schema_defaults():
         assert get_config().legacy_fill_schema_defaults is True
 
 
+def test_array_inline_threshold():
+    with asdf.config_context() as config:
+        assert config.array_inline_threshold == asdf.config.DEFAULT_ARRAY_INLINE_THRESHOLD
+        config.array_inline_threshold = 10
+        assert get_config().array_inline_threshold == 10
+        config.array_inline_threshold = None
+        assert get_config().array_inline_threshold is None
+
+
 def test_resource_mappings():
     with asdf.config_context() as config:
         core_mappings = resource.get_core_resource_mappings()
@@ -278,7 +287,9 @@ def test_config_repr():
         config.validate_on_read = True
         config.default_version = "1.5.0"
         config.legacy_fill_schema_defaults = False
+        config.array_inline_threshold = 14
 
         assert "validate_on_read: True" in repr(config)
         assert "default_version: 1.5.0" in repr(config)
         assert "legacy_fill_schema_defaults: False" in repr(config)
+        assert "array_inline_threshold: 14" in repr(config)

@@ -12,6 +12,7 @@ import numpy as np
 import yaml
 
 from . import compression as mcompression
+from .config import get_config
 from .compat.numpycompat import NUMPY_LT_1_7
 from . import constants
 from . import generic_io
@@ -370,7 +371,7 @@ class BlockManager:
             block._array_storage = 'internal'
             asdffile.blocks.add(block)
             block._used = True
-            asdffile.write_to(subfd, auto_inline=None, pad_blocks=pad_blocks)
+            asdffile.write_to(subfd, pad_blocks=pad_blocks)
 
     def write_block_index(self, fd, ctx):
         """
@@ -586,12 +587,13 @@ class BlockManager:
             block.output_compression = all_array_compression
             block.output_compression_kwargs = all_array_compression_kwargs
 
-        auto_inline = getattr(ctx, '_auto_inline', None)
-        if auto_inline and block.array_storage in ['internal', 'inline']:
-            if np.product(block.data.shape) < auto_inline:
-                self.set_array_storage(block, 'inline')
-            else:
-                self.set_array_storage(block, 'internal')
+        if all_array_storage is None:
+            threshold = get_config().array_inline_threshold
+            if threshold is not None and block.array_storage in ['internal', 'inline']:
+                if np.product(block.data.shape) < threshold:
+                    self.set_array_storage(block, 'inline')
+                else:
+                    self.set_array_storage(block, 'internal')
 
     def finalize(self, ctx):
         """

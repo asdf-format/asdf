@@ -170,7 +170,7 @@ def assert_roundtrip_tree(*args, **kwargs):
 
 
 def _assert_roundtrip_tree(tree, tmpdir, *, asdf_check_func=None,
-                           raw_yaml_check_func=None, write_options={'auto_inline': None},
+                           raw_yaml_check_func=None, write_options={},
                            init_options={}, extensions=None,
                            tree_match_func='assert_equal'):
 
