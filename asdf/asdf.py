@@ -1183,13 +1183,13 @@ class AsdfFile:
                 from .tags.core.ndarray import NDArrayType
 
                 for node in treeutil.iter_tree(self._tree):
-                    if (isinstance(node, (np.ndarray, NDArrayType)) and
-                        self.blocks[node].array_storage == 'internal'):
+                    if (isinstance(node, (np.ndarray, NDArrayType))
+                        and self.blocks[node].array_storage == 'internal'):
                         array_ref_count[0] += 1
 
                 serialized_tree_size = (
-                    tree_serialized.tell() +
-                    constants.MAX_BLOCKS_DIGITS * array_ref_count[0])
+                    tree_serialized.tell()
+                    + constants.MAX_BLOCKS_DIGITS * array_ref_count[0])
 
                 if not block.calculate_updated_layout(
                         self.blocks, serialized_tree_size,
