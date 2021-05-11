@@ -31,7 +31,7 @@ def _roundtrip(tree, get_write_fd, get_read_fd,
     write_options.setdefault('all_array_storage', 'internal')
 
     with get_write_fd() as fd:
-        asdf.AsdfFile(tree).write_to(fd, auto_inline=None, **write_options)
+        asdf.AsdfFile(tree).write_to(fd, **write_options)
         # Work around the fact that generic_io's get_file doesn't have a way of
         # determining whether or not the underlying file handle should be
         # closed as part of the exit handler

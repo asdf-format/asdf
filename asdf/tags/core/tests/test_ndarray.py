@@ -180,11 +180,12 @@ def test_table_inline(tmpdir):
             'shape': [2]
             }
 
-    helpers.assert_roundtrip_tree(tree, tmpdir, raw_yaml_check_func=check_raw_yaml,
-                                  write_options={'auto_inline': 64})
+    with asdf.config_context() as config:
+        config.array_inline_threshold = 100
+        helpers.assert_roundtrip_tree(tree, tmpdir, raw_yaml_check_func=check_raw_yaml)
 
 
-def test_auto_inline_recursive(tmpdir):
+def test_array_inline_threshold_recursive(tmpdir):
     models = pytest.importorskip('astropy.modeling.models')
 
     aff = models.AffineTransformation2D(matrix=[[1, 2], [3, 4]])
@@ -193,8 +194,9 @@ def test_auto_inline_recursive(tmpdir):
     def check_asdf(asdf):
         assert len(list(asdf.blocks.internal_blocks)) == 0
 
-    helpers.assert_roundtrip_tree(tree, tmpdir, asdf_check_func=check_asdf,
-                                  write_options={'auto_inline': 64})
+    with asdf.config_context() as config:
+        config.array_inline_threshold = 100
+        helpers.assert_roundtrip_tree(tree, tmpdir, asdf_check_func=check_asdf)
 
 
 def test_copy_inline():
@@ -485,7 +487,7 @@ def test_masked_array_repr(tmpdir):
         'masked': np.ma.array([1, 2, 3], mask=[False, True, False])
     }
 
-    asdf.AsdfFile(tree).write_to(tmppath, auto_inline=None)
+    asdf.AsdfFile(tree).write_to(tmppath)
 
     with asdf.open(tmppath) as ff:
         assert 'masked array' in repr(ff.tree['masked'])
@@ -872,7 +874,7 @@ def test_readonly_inline(tmpdir):
     tree = dict(data=np.ndarray((100)))
 
     with asdf.AsdfFile(tree) as af:
-        af.write_to(tmpfile, auto_inline=None, all_array_storage='inline')
+        af.write_to(tmpfile, all_array_storage='inline')
 
     # This should be safe since it's an inline array
     with asdf.open(tmpfile, mode='r') as af:
@@ -886,7 +888,7 @@ def test_block_data_change(tmpdir):
     tmpfile = str(tmpdir.join("data.asdf"))
     tree = {"data": np.ndarray(10)}
     with asdf.AsdfFile(tree) as af:
-        af.write_to(tmpfile, auto_inline=None)
+        af.write_to(tmpfile)
 
     with asdf.open(tmpfile, mode="rw") as af:
         array_before = af.tree["data"].__array__()

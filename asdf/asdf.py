@@ -9,7 +9,7 @@ from pkg_resources import parse_version
 import numpy as np
 from jsonschema import ValidationError
 
-from .config import get_config
+from .config import get_config, config_context
 from . import block
 from . import constants
 from . import generic_io
@@ -812,103 +812,86 @@ class AsdfFile:
                 "'strict_extension_check' and 'ignore_missing_extensions' are "
                 "incompatible options")
 
-        if "validate_on_read" in kwargs:
-            warnings.warn(
-                "The 'validate_on_read' argument is deprecated, set "
-                "asdf.get_config().validate_on_read instead.",
-                AsdfDeprecationWarning
-            )
-            validate_on_read = kwargs["validate_on_read"]
-        else:
-            validate_on_read = get_config().validate_on_read
+        with config_context() as config:
+            _handle_deprecated_kwargs(config, kwargs)
 
-        if "do_not_fill_defaults" in kwargs:
-            warnings.warn(
-                "The 'do_not_fill_defaults' argument is deprecated, set "
-                "asdf.get_config().legacy_fill_schema_defaults instead.",
-                AsdfDeprecationWarning
-            )
-            legacy_fill_schema_defaults = not kwargs["do_not_fill_defaults"]
-        else:
-            legacy_fill_schema_defaults = get_config().legacy_fill_schema_defaults
+            self._mode = fd.mode
+            self._fd = fd
+            # The filename is currently only used for tracing warning information
+            self._fname = self._fd._uri if self._fd._uri else ''
+            header_line = fd.read_until(b'\r?\n', 2, "newline", include=True)
+            self._file_format_version = cls._parse_header_line(header_line)
+            self.version = self._file_format_version
 
-        self._mode = fd.mode
-        self._fd = fd
-        # The filename is currently only used for tracing warning information
-        self._fname = self._fd._uri if self._fd._uri else ''
-        header_line = fd.read_until(b'\r?\n', 2, "newline", include=True)
-        self._file_format_version = cls._parse_header_line(header_line)
-        self.version = self._file_format_version
+            self._comments = cls._read_comment_section(fd)
 
-        self._comments = cls._read_comment_section(fd)
+            version = cls._find_asdf_version_in_comments(self._comments)
+            if version is not None:
+                self.version = version
 
-        version = cls._find_asdf_version_in_comments(self._comments)
-        if version is not None:
-            self.version = version
+            # Now that version is set for good, we can add any additional
+            # extensions, which may have narrow ASDF Standard version
+            # requirements.
+            if extensions:
+                self.extensions = extensions
 
-        # Now that version is set for good, we can add any additional
-        # extensions, which may have narrow ASDF Standard version
-        # requirements.
-        if extensions:
-            self.extensions = extensions
+            yaml_token = fd.read(4)
+            has_blocks = False
+            tree = None
+            if yaml_token == b'%YAM':
+                reader = fd.reader_until(
+                    constants.YAML_END_MARKER_REGEX, 7, 'End of YAML marker',
+                    include=True, initial_content=yaml_token)
 
-        yaml_token = fd.read(4)
-        has_blocks = False
-        tree = None
-        if yaml_token == b'%YAM':
-            reader = fd.reader_until(
-                constants.YAML_END_MARKER_REGEX, 7, 'End of YAML marker',
-                include=True, initial_content=yaml_token)
+                # For testing: just return the raw YAML content
+                if _get_yaml_content:
+                    yaml_content = reader.read()
+                    fd.close()
+                    return yaml_content
 
-            # For testing: just return the raw YAML content
-            if _get_yaml_content:
-                yaml_content = reader.read()
-                fd.close()
-                return yaml_content
+                # We parse the YAML content into basic data structures
+                # now, but we don't do anything special with it until
+                # after the blocks have been read
+                tree = yamlutil.load_tree(reader)
+                has_blocks = fd.seek_until(constants.BLOCK_MAGIC, 4, include=True, exception=False)
+            elif yaml_token == constants.BLOCK_MAGIC:
+                has_blocks = True
+            elif yaml_token != b'':
+                raise IOError("ASDF file appears to contain garbage after header.")
 
-            # We parse the YAML content into basic data structures
-            # now, but we don't do anything special with it until
-            # after the blocks have been read
-            tree = yamlutil.load_tree(reader)
-            has_blocks = fd.seek_until(constants.BLOCK_MAGIC, 4, include=True, exception=False)
-        elif yaml_token == constants.BLOCK_MAGIC:
-            has_blocks = True
-        elif yaml_token != b'':
-            raise IOError("ASDF file appears to contain garbage after header.")
+            if tree is None:
+                # At this point the tree should be tagged, but we want it to be
+                # tagged with the core/asdf version appropriate to this file's
+                # ASDF Standard version.  We're using custom_tree_to_tagged_tree
+                # to select the correct tag for us.
+                tree = yamlutil.custom_tree_to_tagged_tree(AsdfObject(), self)
 
-        if tree is None:
-            # At this point the tree should be tagged, but we want it to be
-            # tagged with the core/asdf version appropriate to this file's
-            # ASDF Standard version.  We're using custom_tree_to_tagged_tree
-            # to select the correct tag for us.
-            tree = yamlutil.custom_tree_to_tagged_tree(AsdfObject(), self)
+            if has_blocks:
+                self._blocks.read_internal_blocks(
+                    fd, past_magic=True, validate_checksums=validate_checksums)
+                self._blocks.read_block_index(fd, self)
 
-        if has_blocks:
-            self._blocks.read_internal_blocks(
-                fd, past_magic=True, validate_checksums=validate_checksums)
-            self._blocks.read_block_index(fd, self)
+            tree = reference.find_references(tree, self)
 
-        tree = reference.find_references(tree, self)
+            if self.version <= versioning.FILL_DEFAULTS_MAX_VERSION and get_config().legacy_fill_schema_defaults:
+                schema.fill_defaults(tree, self, reading=True)
 
-        if self.version <= versioning.FILL_DEFAULTS_MAX_VERSION and legacy_fill_schema_defaults:
-            schema.fill_defaults(tree, self, reading=True)
+            if get_config().validate_on_read:
+                try:
+                    self._validate(tree, reading=True)
+                except ValidationError:
+                    self.close()
+                    raise
 
-        if validate_on_read:
-            try:
-                self._validate(tree, reading=True)
-            except ValidationError:
-                self.close()
-                raise
+            tree = yamlutil.tagged_tree_to_custom_tree(tree, self, _force_raw_types)
 
-        tree = yamlutil.tagged_tree_to_custom_tree(tree, self, _force_raw_types)
+            if not (ignore_missing_extensions or _force_raw_types):
+                self._check_extensions(tree, strict=strict_extension_check)
 
-        if not (ignore_missing_extensions or _force_raw_types):
-            self._check_extensions(tree, strict=strict_extension_check)
+            self._tree = tree
+            self.run_hook('post_read')
 
-        self._tree = tree
-        self.run_hook('post_read')
-
-        return self
+            return self
 
     @classmethod
     def _open_impl(cls, self, fd, uri=None, mode='r',
@@ -1046,8 +1029,7 @@ class AsdfFile:
                 fd.tell(), pad_blocks, fd.block_size)
             fd.fast_forward(padding)
 
-    def _pre_write(self, fd, all_array_storage, all_array_compression,
-                   auto_inline, compression_kwargs=None):
+    def _pre_write(self, fd, all_array_storage, all_array_compression, compression_kwargs=None):
         if all_array_storage not in (None, 'internal', 'external', 'inline'):
             raise ValueError(
                 "Invalid value for all_array_storage: '{0}'".format(
@@ -1057,21 +1039,6 @@ class AsdfFile:
 
         self._all_array_compression = all_array_compression
         self._all_array_compression_kwargs = compression_kwargs
-
-        if all_array_storage in ['internal', 'external', 'inline']:
-            auto_inline = None
-
-        if auto_inline in (True, False):
-            raise ValueError(
-                "Invalid value for auto_inline: '{0}'".format(auto_inline))
-        if auto_inline is not None:
-            try:
-                self._auto_inline = int(auto_inline)
-            except ValueError:
-                raise ValueError(
-                    "Invalid value for auto_inline: '{0}'".format(auto_inline))
-        else:
-            self._auto_inline = None
 
         if len(self._tree):
             self.run_hook('pre_write')
@@ -1101,18 +1068,10 @@ class AsdfFile:
         if len(self._tree):
             self.run_hook('post_write')
 
-        # TODO: there has got to be a better way to do this...
-        if hasattr(self, '_all_array_storage'):
-            del self._all_array_storage
-        if hasattr(self, '_all_array_compression'):
-            del self._all_array_compression
-            del self._all_array_compression_kwargs
-        if hasattr(self, '_auto_inline'):
-            del self._auto_inline
 
     def update(self, all_array_storage=None, all_array_compression='input',
-               auto_inline=None, pad_blocks=False, include_block_index=True,
-               version=None, compression_kwargs=None):
+               pad_blocks=False, include_block_index=True,
+               version=None, compression_kwargs=None, **kwargs):
         """
         Update the file on disk in place.
 
@@ -1145,12 +1104,6 @@ class AsdfFile:
             - ``input``: Use the same compression as in the file read.
               If there is no prior file, acts as None
 
-        auto_inline : int, optional
-            When the number of elements in an array is less than this
-            threshold, store the array as inline YAML, rather than a
-            binary block.  This only works on arrays that do not share
-            data with other arrays.  Default is 0.
-
         pad_blocks : float or bool, optional
             Add extra space between blocks to allow for updating of
             the file.  If `False` (default), add no padding (always
@@ -1166,87 +1119,97 @@ class AsdfFile:
         version : str, optional
             Update the ASDF Standard version of this AsdfFile before
             writing.
+
+        auto_inline : int, optional
+            DEPRECATED.  When the number of elements in an array is less
+            than this threshold, store the array as inline YAML, rather
+            than a binary block.  This only works on arrays that do not
+            share data with other arrays.  Default is the value specified
+            in ``asdf.get_config().array_inline_threshold``.
         """
 
-        fd = self._fd
+        with config_context() as config:
+            _handle_deprecated_kwargs(config, kwargs)
 
-        if fd is None:
-            raise ValueError(
-                "Can not update, since there is no associated file")
+            fd = self._fd
 
-        if not fd.writable():
-            raise IOError(
-                "Can not update, since associated file is read-only. Make "
-                "sure that the AsdfFile was opened with mode='rw' and the "
-                "underlying file handle is writable.")
+            if fd is None:
+                raise ValueError(
+                    "Can not update, since there is no associated file")
 
-        if version is not None:
-            self.version = version
+            if not fd.writable():
+                raise IOError(
+                    "Can not update, since associated file is read-only. Make "
+                    "sure that the AsdfFile was opened with mode='rw' and the "
+                    "underlying file handle is writable.")
 
-        if all_array_storage == 'external':
-            # If the file is fully exploded, there's no benefit to
-            # update, so just use write_to()
-            self.write_to(fd, auto_inline=auto_inline, all_array_storage=all_array_storage)
-            fd.truncate()
-            return
+            if version is not None:
+                self.version = version
 
-        if not fd.seekable():
-            raise IOError(
-                "Can not update, since associated file is not seekable")
-
-        self.blocks.finish_reading_internal_blocks()
-
-        self._pre_write(fd, all_array_storage, all_array_compression,
-                        auto_inline, compression_kwargs=compression_kwargs)
-
-        try:
-            fd.seek(0)
-
-            if not self.blocks.has_blocks_with_offset():
-                # If we don't have any blocks that are being reused, just
-                # write out in a serial fashion.
-                self._serial_write(fd, pad_blocks, include_block_index)
+            if all_array_storage == 'external':
+                # If the file is fully exploded, there's no benefit to
+                # update, so just use write_to()
+                self.write_to(fd, all_array_storage=all_array_storage)
                 fd.truncate()
                 return
 
-            # Estimate how big the tree will be on disk by writing the
-            # YAML out in memory.  Since the block indices aren't yet
-            # known, we have to count the number of block references and
-            # add enough space to accommodate the largest block number
-            # possible there.
-            tree_serialized = io.BytesIO()
-            self._write_tree(self._tree, tree_serialized, pad_blocks=False)
-            array_ref_count = [0]
-            from .tags.core.ndarray import NDArrayType
+            if not fd.seekable():
+                raise IOError(
+                    "Can not update, since associated file is not seekable")
 
-            for node in treeutil.iter_tree(self._tree):
-                if (isinstance(node, (np.ndarray, NDArrayType)) and
-                    self.blocks[node].array_storage == 'internal'):
-                    array_ref_count[0] += 1
+            self.blocks.finish_reading_internal_blocks()
 
-            serialized_tree_size = (
-                tree_serialized.tell() +
-                constants.MAX_BLOCKS_DIGITS * array_ref_count[0])
+            self._pre_write(fd, all_array_storage, all_array_compression,
+                            compression_kwargs=compression_kwargs)
 
-            if not block.calculate_updated_layout(
-                    self.blocks, serialized_tree_size,
-                    pad_blocks, fd.block_size):
-                # If we don't have any blocks that are being reused, just
-                # write out in a serial fashion.
-                self._serial_write(fd, pad_blocks, include_block_index)
-                fd.truncate()
-                return
+            try:
+                fd.seek(0)
 
-            fd.seek(0)
-            self._random_write(fd, pad_blocks, include_block_index)
-            fd.flush()
-        finally:
-            self._post_write(fd)
+                if not self.blocks.has_blocks_with_offset():
+                    # If we don't have any blocks that are being reused, just
+                    # write out in a serial fashion.
+                    self._serial_write(fd, pad_blocks, include_block_index)
+                    fd.truncate()
+                    return
+
+                # Estimate how big the tree will be on disk by writing the
+                # YAML out in memory.  Since the block indices aren't yet
+                # known, we have to count the number of block references and
+                # add enough space to accommodate the largest block number
+                # possible there.
+                tree_serialized = io.BytesIO()
+                self._write_tree(self._tree, tree_serialized, pad_blocks=False)
+                array_ref_count = [0]
+                from .tags.core.ndarray import NDArrayType
+
+                for node in treeutil.iter_tree(self._tree):
+                    if (isinstance(node, (np.ndarray, NDArrayType))
+                        and self.blocks[node].array_storage == 'internal'):
+                        array_ref_count[0] += 1
+
+                serialized_tree_size = (
+                    tree_serialized.tell()
+                    + constants.MAX_BLOCKS_DIGITS * array_ref_count[0])
+
+                if not block.calculate_updated_layout(
+                        self.blocks, serialized_tree_size,
+                        pad_blocks, fd.block_size):
+                    # If we don't have any blocks that are being reused, just
+                    # write out in a serial fashion.
+                    self._serial_write(fd, pad_blocks, include_block_index)
+                    fd.truncate()
+                    return
+
+                fd.seek(0)
+                self._random_write(fd, pad_blocks, include_block_index)
+                fd.flush()
+            finally:
+                self._post_write(fd)
 
 
     def write_to(self, fd, all_array_storage=None, all_array_compression='input',
-                 auto_inline=constants.DEFAULT_AUTO_INLINE, pad_blocks=False,
-                 include_block_index=True, version=None, compression_kwargs=None):
+                 pad_blocks=False, include_block_index=True, version=None,
+                 compression_kwargs=None, **kwargs):
         """
         Write the ASDF file to the given file-like object.
 
@@ -1289,17 +1252,6 @@ class AsdfFile:
             - ``input``: Use the same compression as in the file read.
               If there is no prior file, acts as None.
 
-        auto_inline : int, optional
-            When the number of elements in an array is less than this
-            threshold, store the array as inline YAML, rather than a
-            binary block.  This only works on arrays that do not share
-            data with other arrays.  Default is 100.  Care needs to be
-            taken when modifying files not written with default.  Storage
-            type is not preserved.  For example, reading an array of
-            length ten stored in a binary block, then writing it out
-            using the default ``auto_inline`` will cause that array's
-            storage to change to inline.
-
         pad_blocks : float or bool, optional
             Add extra space between blocks to allow for updating of
             the file.  If `False` (default), add no padding (always
@@ -1315,25 +1267,36 @@ class AsdfFile:
         version : str, optional
             Update the ASDF Standard version of this AsdfFile before
             writing.
+
+        auto_inline : int, optional
+            DEPRECATED.
+            When the number of elements in an array is less than this
+            threshold, store the array as inline YAML, rather than a
+            binary block.  This only works on arrays that do not share
+            data with other arrays.  Default is the value specified in
+            ``asdf.get_config().array_inline_threshold``.
+
         """
+        with config_context() as config:
+            _handle_deprecated_kwargs(config, kwargs)
 
-        if version is not None:
-            self.version = version
+            if version is not None:
+                self.version = version
 
-        with generic_io.get_file(fd, mode='w') as fd:
-            # TODO: This is not ideal: we really should pass the URI through
-            # explicitly to wherever it is required instead of making it an
-            # attribute of the AsdfFile.
-            if self._uri is None:
-                self._uri = fd.uri
-            self._pre_write(fd, all_array_storage, all_array_compression,
-                            auto_inline, compression_kwargs=compression_kwargs)
+            with generic_io.get_file(fd, mode='w') as fd:
+                # TODO: This is not ideal: we really should pass the URI through
+                # explicitly to wherever it is required instead of making it an
+                # attribute of the AsdfFile.
+                if self._uri is None:
+                    self._uri = fd.uri
+                self._pre_write(fd, all_array_storage, all_array_compression,
+                                compression_kwargs=compression_kwargs)
 
-            try:
-                self._serial_write(fd, pad_blocks, include_block_index)
-                fd.flush()
-            finally:
-                self._post_write(fd)
+                try:
+                    self._serial_write(fd, pad_blocks, include_block_index)
+                    fd.flush()
+                finally:
+                    self._post_write(fd)
 
     def find_references(self):
         """
@@ -1637,6 +1600,26 @@ def _check_and_set_mode(fileobj, asdf_mode):
         return 'r'
 
     return asdf_mode
+
+
+_DEPRECATED_KWARG_TO_CONFIG_PROPERTY = {
+    "auto_inline": ("array_inline_threshold", lambda v: v),
+    "validate_on_read": ("validate_on_read", lambda v: v),
+    "do_not_fill_defaults": ("legacy_fill_schema_defaults", lambda v: not v),
+}
+
+def _handle_deprecated_kwargs(config, kwargs):
+    for key, value in kwargs.items():
+        if key in _DEPRECATED_KWARG_TO_CONFIG_PROPERTY:
+            config_property, func = _DEPRECATED_KWARG_TO_CONFIG_PROPERTY[key]
+            warnings.warn(
+                f"The '{key}' argument is deprecated, set "
+                "asdf.get_config().{config_property} instead.",
+                AsdfDeprecationWarning
+            )
+            setattr(config, config_property, func(value))
+        else:
+            raise TypeError(f"Unexpected keyword argument '{key}'")
 
 
 def open_asdf(fd, uri=None, mode=None, validate_checksums=False, extensions=None,

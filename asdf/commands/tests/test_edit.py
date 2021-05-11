@@ -9,7 +9,6 @@ import pytest
 
 import asdf
 from asdf.commands import main
-from asdf import constants
 
 
 @pytest.fixture(params=asdf.versioning.supported_versions)
@@ -151,8 +150,8 @@ def test_no_blocks_decrease_size(tmp_path, create_editor, version):
 def test_with_blocks(tmp_path, create_editor, version):
     file_path = str(tmp_path/"test.asdf")
 
-    array1 = np.random.rand(constants.DEFAULT_AUTO_INLINE + 1)
-    array2 = np.random.rand(constants.DEFAULT_AUTO_INLINE + 1)
+    array1 = np.random.rand(100)
+    array2 = np.random.rand(100)
     with asdf.AsdfFile(version=version) as af:
         af["array1"] = array1
         af["array2"] = array2
@@ -172,8 +171,8 @@ def test_with_blocks(tmp_path, create_editor, version):
 def test_with_blocks_increase_size(tmp_path, create_editor, version, mock_input):
     file_path = str(tmp_path/"test.asdf")
 
-    array1 = np.random.rand(constants.DEFAULT_AUTO_INLINE + 1)
-    array2 = np.random.rand(constants.DEFAULT_AUTO_INLINE + 1)
+    array1 = np.random.rand(100)
+    array2 = np.random.rand(100)
     with asdf.AsdfFile(version=version) as af:
         af["array1"] = array1
         af["array2"] = array2
@@ -204,8 +203,8 @@ def test_with_blocks_decrease_size(tmp_path, create_editor, version):
 
     original_value = "a" * 32768
 
-    array1 = np.random.rand(constants.DEFAULT_AUTO_INLINE + 1)
-    array2 = np.random.rand(constants.DEFAULT_AUTO_INLINE + 1)
+    array1 = np.random.rand(100)
+    array2 = np.random.rand(100)
     with asdf.AsdfFile(version=version) as af:
         af["array1"] = array1
         af["array2"] = array2
@@ -281,7 +280,7 @@ def test_validation_failure(tmp_path, create_editor, version, mock_input):
     file_path = str(tmp_path/"test.asdf")
 
     with asdf.AsdfFile(version=version) as af:
-        af["array"] = np.arange(constants.DEFAULT_AUTO_INLINE + 1)
+        af["array"] = np.arange(100)
         af.write_to(file_path)
 
     os.environ["EDITOR"] = create_editor(r"byteorder: .*?$", "byteorder: med")

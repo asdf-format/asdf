@@ -39,9 +39,8 @@
   the tree (or modify the schema to permit nulls, if that is the
   intention). [#863]
 
-- Changed the API for ``asdf.write_to``.  The ``auto_inline`` parameter
-  now defaults to inlining small arrays (arrays less than 100), rather
-  than defaulting to storing all arrays internally. [#882]
+- Deprecated the ``auto_inline`` argument to ``AsdfFile.write_to`` and
+  ``AsdfFile.update`` and added ``AsdfConfig.array_inline_threshold``. [#882, #991]
 
 - Add ``edit`` subcommand to asdftool for efficient editing of
   the YAML portion of an ASDF file.  [#873, #922]

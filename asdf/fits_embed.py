@@ -281,8 +281,8 @@ class AsdfInFits(asdf.AsdfFile):
             return fits.BinTableHDU.from_columns([column], name=ASDF_EXTENSION_NAME)
 
     def _update_asdf_extension(self, all_array_storage=None,
-                               all_array_compression=None, auto_inline=None,
-                               pad_blocks=False, use_image_hdu=False):
+                               all_array_compression=None,
+                               pad_blocks=False, use_image_hdu=False, **kwargs):
         if self.blocks.streamed_block is not None:
             raise ValueError(
                 "Can not save streamed data to ASDF-in-FITS file.")
@@ -291,30 +291,35 @@ class AsdfInFits(asdf.AsdfFile):
         super(AsdfInFits, self).write_to(
             buff, all_array_storage=all_array_storage,
             all_array_compression=all_array_compression,
-            auto_inline=auto_inline, pad_blocks=pad_blocks,
-            include_block_index=False)
+            pad_blocks=pad_blocks,
+            include_block_index=False, **kwargs)
 
         if ASDF_EXTENSION_NAME in self._hdulist:
             del self._hdulist[ASDF_EXTENSION_NAME]
         self._hdulist.append(self._create_hdu(buff, use_image_hdu))
 
     def write_to(self, filename, all_array_storage=None,
-                 all_array_compression=None, auto_inline=None,
+                 all_array_compression=None,
                  pad_blocks=False, use_image_hdu=False, *args, **kwargs):
+        if "auto_inline" in kwargs:
+            asdf_kwargs = {"auto_inline": kwargs.pop("auto_inline")}
+        else:
+            asdf_kwargs = {}
+
         self._update_asdf_extension(
             all_array_storage=all_array_storage,
             all_array_compression=all_array_compression,
-            auto_inline=auto_inline, pad_blocks=pad_blocks,
-            use_image_hdu=use_image_hdu)
+            pad_blocks=pad_blocks,
+            use_image_hdu=use_image_hdu, **asdf_kwargs)
 
         self._hdulist.writeto(filename, *args, **kwargs)
 
     def update(self, all_array_storage=None, all_array_compression=None,
-               auto_inline=None, pad_blocks=False):
+               pad_blocks=False, **kwargs):
         raise NotImplementedError(
             "In-place update is not currently implemented for ASDF-in-FITS")
 
         self._update_asdf_extension(
             all_array_storage=all_array_storage,
             all_array_compression=all_array_compression,
-            auto_inline=auto_inline, pad_blocks=pad_blocks)
+            pad_blocks=pad_blocks, **kwargs)

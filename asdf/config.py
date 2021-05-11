@@ -20,6 +20,8 @@ __all__ = ["AsdfConfig", "get_config", "config_context"]
 DEFAULT_VALIDATE_ON_READ = True
 DEFAULT_DEFAULT_VERSION = str(versioning.default_version)
 DEFAULT_LEGACY_FILL_SCHEMA_DEFAULTS = True
+DEFAULT_IO_BLOCK_SIZE = -1 # auto
+DEFAULT_ARRAY_INLINE_THRESHOLD = None
 
 
 class AsdfConfig:
@@ -36,7 +38,8 @@ class AsdfConfig:
         self._validate_on_read = DEFAULT_VALIDATE_ON_READ
         self._default_version = DEFAULT_DEFAULT_VERSION
         self._legacy_fill_schema_defaults = DEFAULT_LEGACY_FILL_SCHEMA_DEFAULTS
-        self._io_block_size = -1  # auto
+        self._io_block_size = DEFAULT_IO_BLOCK_SIZE
+        self._array_inline_threshold = DEFAULT_ARRAY_INLINE_THRESHOLD
 
         self._lock = threading.RLock()
 
@@ -284,23 +287,75 @@ class AsdfConfig:
 
     @property
     def io_block_size(self):
+        """
+        Get the chunk size used when reading or writing
+        files.
+
+        Returns
+        -------
+        int
+            Block size, or -1 to auto-select.
+        """
         return self._io_block_size
 
     @io_block_size.setter
-    def io_block_size(self, block_size):
-        self._io_block_size = block_size
+    def io_block_size(self, value):
+        """
+        Set the chunk size used when reading or writing
+        files.
+
+        Parameters
+        ----------
+        value : int
+            Block size, or -2 to auto-select.
+        """
+        self._io_block_size = value
+
+    @property
+    def array_inline_threshold(self):
+        """
+        Get the threshold below which arrays are automatically written
+        as inline YAML literals instead of binary blocks.  This number
+        is compared to number of elements in the array.
+
+        Returns
+        -------
+        int or None
+            Integer threshold, or None to disable automatic selection
+            of the array storage type.
+        """
+        return self._array_inline_threshold
+
+    @array_inline_threshold.setter
+    def array_inline_threshold(self, value):
+        """
+        Set the threshold below which arrays are automatically written
+        as inline YAML literals instead of binary blocks.  This number
+        is compared to number of elements in the array.
+
+        Parameters
+        ----------
+        value : int or None
+            Integer threshold, or None to disable automatic selection
+            of the array storage type.
+        """
+        self._array_inline_threshold = value
 
     def __repr__(self):
         return (
             "<AsdfConfig\n"
-            "  validate_on_read: {}\n"
+            "  array_inline_threshold: {}\n"
             "  default_version: {}\n"
+            "  io_block_size: {}\n"
             "  legacy_fill_schema_defaults: {}\n"
+            "  validate_on_read: {}\n"
             ">"
         ).format(
-            self.validate_on_read,
+            self.array_inline_threshold,
             self.default_version,
+            self.io_block_size,
             self.legacy_fill_schema_defaults,
+            self.validate_on_read,
         )
 
 

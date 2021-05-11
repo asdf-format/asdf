@@ -13,7 +13,6 @@ import pytest
 from jsonschema.exceptions import ValidationError
 
 import asdf
-from asdf import constants
 from asdf import get_config, config_context
 from asdf import treeutil
 from asdf import extension
@@ -377,72 +376,96 @@ def test_extension_version_check(installed, extension, warns):
         af._check_extensions(tree)
 
 
+@pytest.mark.filterwarnings(AsdfDeprecationWarning)
 def test_auto_inline(tmpdir):
     outfile = str(tmpdir.join('test.asdf'))
-    small = constants.DEFAULT_AUTO_INLINE - 1
-    large = constants.DEFAULT_AUTO_INLINE
-    tree = {"small_array": np.arange(small), "large_array": np.arange(large)}
+    tree = {"small_array": np.arange(6), "large_array": np.arange(100)}
 
     # Use the same object for each write in order to make sure that there
     # aren't unanticipated side effects
     with asdf.AsdfFile(tree) as af:
-        af.write_to(outfile)
-        assert len(list(af.blocks.inline_blocks)) == 1
-        assert len(list(af.blocks.internal_blocks)) == 1
-
-        af.write_to(outfile, auto_inline=small)
-        assert len(list(af.blocks.inline_blocks)) == 0
-        assert len(list(af.blocks.internal_blocks)) == 2
-
-        # The previous write modified the small array block's storage to
-        # inline, and a subsequent write should not maintain that setting.
-        af.write_to(outfile)
-        assert len(list(af.blocks.inline_blocks)) == 1
-        assert len(list(af.blocks.internal_blocks)) == 1
-
-        af.write_to(outfile, auto_inline=large+1)
-        assert len(list(af.blocks.inline_blocks)) == 2
-        assert len(list(af.blocks.internal_blocks)) == 0
-
-
-def test_auto_inline_masked_array(tmpdir):
-    outfile = str(tmpdir.join('test.asdf'))
-    array_length = constants.DEFAULT_AUTO_INLINE
-    arr = np.arange(array_length)
-    masked_arr = np.ma.masked_equal(arr, 3)
-    tree = {"masked_arr": masked_arr}
-
-    with asdf.AsdfFile(tree) as af:
+        # By default blocks are written internal.
         af.write_to(outfile)
         assert len(list(af.blocks.inline_blocks)) == 0
         assert len(list(af.blocks.internal_blocks)) == 2
-
-        af.write_to(outfile, auto_inline=array_length+1)
-        assert len(list(af.blocks.inline_blocks)) == 2
-        assert len(list(af.blocks.internal_blocks)) == 0
-
-        af.write_to(outfile, auto_inline=array_length-1)
-        assert len(list(af.blocks.inline_blocks)) == 0
-        assert len(list(af.blocks.internal_blocks)) == 2
-
-
-def test_auto_inline_string_array(tmpdir):
-    outfile = str(tmpdir.join('test.asdf'))
-    arr = np.array(["peach", "plum", "apricot", "nectarine", "cherry", "pluot"])
-    tree = {"array": arr}
-
-    with asdf.AsdfFile(tree) as af:
-        af.write_to(outfile)
-        assert len(list(af.blocks.inline_blocks)) == 1
-        assert len(list(af.blocks.internal_blocks)) == 0
-
-        af.write_to(outfile, auto_inline=5)
-        assert len(list(af.blocks.inline_blocks)) == 0
-        assert len(list(af.blocks.internal_blocks)) == 1
 
         af.write_to(outfile, auto_inline=10)
         assert len(list(af.blocks.inline_blocks)) == 1
-        assert len(list(af.blocks.internal_blocks)) == 0
+        assert len(list(af.blocks.internal_blocks)) == 1
+
+        # The previous write modified the small array block's storage
+        # to inline, and a subsequent write should maintain that setting.
+        af.write_to(outfile)
+        assert len(list(af.blocks.inline_blocks)) == 1
+        assert len(list(af.blocks.internal_blocks)) == 1
+
+        af.write_to(outfile, auto_inline=7)
+        assert len(list(af.blocks.inline_blocks)) == 1
+        assert len(list(af.blocks.internal_blocks)) == 1
+
+        af.write_to(outfile, auto_inline=5)
+        assert len(list(af.blocks.inline_blocks)) == 0
+        assert len(list(af.blocks.internal_blocks)) == 2
+
+
+@pytest.mark.parametrize("array_inline_threshold, inline_blocks, internal_blocks", [
+    (None, 0, 2),
+    (10, 1, 1),
+    (7, 1, 1),
+    (5, 0, 2),
+    (0, 0, 2),
+    (1, 0, 2),
+])
+def test_array_inline_threshold(array_inline_threshold, inline_blocks, internal_blocks, tmp_path):
+    file_path = tmp_path / "test.asdf"
+    tree = {"small_array": np.arange(6), "large_array": np.arange(100)}
+
+    with asdf.config_context() as config:
+        config.array_inline_threshold = array_inline_threshold
+
+        with asdf.AsdfFile(tree) as af:
+            af.write_to(file_path)
+            assert len(list(af.blocks.inline_blocks)) == inline_blocks
+            assert len(list(af.blocks.internal_blocks)) == internal_blocks
+
+
+@pytest.mark.parametrize("array_inline_threshold, inline_blocks, internal_blocks", [
+    (None, 0, 2),
+    (10, 2, 0),
+    (5, 0, 2),
+])
+def test_array_inline_threshold_masked_array(array_inline_threshold, inline_blocks, internal_blocks, tmp_path):
+    file_path = tmp_path / "test.asdf"
+    arr = np.arange(6)
+    masked_arr = np.ma.masked_equal(arr, 3)
+    tree = {"masked_arr": masked_arr}
+
+    with asdf.config_context() as config:
+        config.array_inline_threshold = array_inline_threshold
+
+        with asdf.AsdfFile(tree) as af:
+            af.write_to(file_path)
+            assert len(list(af.blocks.inline_blocks)) == inline_blocks
+            assert len(list(af.blocks.internal_blocks)) == internal_blocks
+
+
+@pytest.mark.parametrize("array_inline_threshold, inline_blocks, internal_blocks", [
+    (None, 0, 1),
+    (10, 1, 0),
+    (5, 0, 1),
+])
+def test_array_inline_threshold_string_array(array_inline_threshold, inline_blocks, internal_blocks, tmp_path):
+    file_path = tmp_path / "test.asdf"
+    arr = np.array(["peach", "plum", "apricot", "nectarine", "cherry", "pluot"])
+    tree = {"array": arr}
+
+    with asdf.config_context() as config:
+        config.array_inline_threshold = array_inline_threshold
+
+        with asdf.AsdfFile(tree) as af:
+            af.write_to(file_path)
+            assert len(list(af.blocks.inline_blocks)) == inline_blocks
+            assert len(list(af.blocks.internal_blocks)) == internal_blocks
 
 
 def test_resolver_deprecations():
@@ -568,7 +591,7 @@ def test_history_entries(tmpdir):
 def test_array_access_after_file_close(tmpdir):
     path = str(tmpdir.join("test.asdf"))
     data = np.arange(10)
-    asdf.AsdfFile({"data": data}).write_to(path, auto_inline=None)
+    asdf.AsdfFile({"data": data}).write_to(path)
 
     # Normally it's not possible to read the array after
     # the file has been closed:
