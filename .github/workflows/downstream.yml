@@ -41,25 +41,25 @@ jobs:
       fail-fast: false
       matrix:
         include:
+          - package_name: astropy
+            repository: astropy/astropy
+            ref: ${{ github.event.inputs.astropy_ref || 'main' }}
+            test_command: pytest
           - package_name: gwcs
             repository: spacetelescope/gwcs
             ref: ${{ github.event.inputs.gwcs_ref || 'master' }}
-            install_command: pip install .[test]
             test_command: pytest
           - package_name: jwst
             repository: spacetelescope/jwst
             ref: ${{ github.event.inputs.jwst_ref || 'master' }}
-            install_command: pip install --editable .[test]
             test_command: pytest
           - package_name: specutils
             repository: astropy/specutils
             ref: ${{ github.event.inputs.specutils_ref || 'main' }}
-            install_command: pip install .[test]
             test_command: pytest
           - package_name: weldx
             repository: BAMWelDX/weldx
             ref: ${{ github.event.inputs.weldx_ref || 'asdf_2.8' }}
-            install_command: pip install .[test]
             test_command: pytest weldx/tests/asdf_tests weldx/asdf/schemas --asdf-tests
     steps:
       - name: Checkout asdf
@@ -82,27 +82,6 @@ jobs:
       - name: Install asdf
         run: cd asdf && pip install .
       - name: Install remaining ${{ matrix.package_name }} dependencies
-        run: cd target && ${{ matrix.install_command }}
+        run: cd target && pip install -e .[test]
       - name: Run ${{ matrix.package_name}} tests
         run: cd target && ${{ matrix.test_command }}
-
-  astropy:
-    name: astropy@${{ github.event.inputs.astropy_ref || 'main' }} unit tests
-    runs-on: ubuntu-latest
-    steps:
-      - name: Checkout asdf
-        uses: actions/checkout@v2
-        with:
-          fetch-depth: 0
-          submodules: true
-          path: asdf
-      - name: Set up Python 3.9
-        uses: actions/setup-python@v2
-        with:
-          python-version: 3.9
-      - name: Install asdf
-        run: cd asdf && pip install .
-      - name: Install astropy
-        run: pip install git+https://github.com/astropy/astropy@${{ github.event.inputs.astropy_ref || 'main' }}#egg=astropy[test]
-      - name: Run astropy tests
-        run: pytest --pyargs astropy
