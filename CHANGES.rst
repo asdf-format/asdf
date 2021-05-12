@@ -1,4 +1,4 @@
-2.8.0 (unreleased)
+2.8.0 (2021-05-12)
 ------------------
 
 - Add ``yaml_tag_handles`` property to allow definition of custom yaml
