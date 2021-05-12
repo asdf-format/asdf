@@ -1614,7 +1614,7 @@ def _handle_deprecated_kwargs(config, kwargs):
             config_property, func = _DEPRECATED_KWARG_TO_CONFIG_PROPERTY[key]
             warnings.warn(
                 f"The '{key}' argument is deprecated, set "
-                "asdf.get_config().{config_property} instead.",
+                f"asdf.get_config().{config_property} instead.",
                 AsdfDeprecationWarning
             )
             setattr(config, config_property, func(value))
