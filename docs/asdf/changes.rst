@@ -4,6 +4,34 @@
 Changes
 *******
 
+What's new in ASDF 2.8.0?
+=========================
+
+The ASDF Standard is at v1.6.0.
+
+Changes include:
+
+- New plugin APIs for block compressors, extensions, and schemas.
+
+- New global configuration mechanism (``asdf.get_config()``).
+
+- Support for the asdf:// URI scheme.
+
+- Drop support for Python 3.5.
+
+- Support for ASDF Standard 1.6.0, which is available via the
+  ``version`` argument to ``AsdfFile.__init__`` but not yet the
+  default.
+
+- Values that match defaults defined in schemas are no longer
+  automatically removed from the ASDF tree.
+
+- ``None`` values are no longer removed from the tree on write.
+
+- Remove the ``asdf.test`` method and ``asdf.__githash__`` attribute.
+
+- And more, see full changelog below for details.
+
 What's New in ASDF 2.7.4?
 =========================
 
