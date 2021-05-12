@@ -71,6 +71,8 @@
 - Search for block index starting from end of file. Fixes rare bug when
   a data block contains a block index. [#990]
 
+- Update asdf-standard to 1.6.0 tag. [#993]
+
 2.7.5 (unreleased)
 ------------------
 
