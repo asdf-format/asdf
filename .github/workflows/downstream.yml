@@ -22,7 +22,7 @@ on:
       weldx_ref:
         description: weldx ref
         required: true
-        default: asdf_2.8
+        default: master
   schedule:
     # Run every Monday at 6am UTC
     - cron: '0 6 * * 1'
