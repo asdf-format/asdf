@@ -5,11 +5,13 @@ Utility functions for managing tree-like data structures.
 import warnings
 import types
 from contextlib import contextmanager
+from _collections_abc import Mapping, MutableSequence
 
 from . import tagged
 from .exceptions import AsdfWarning
 
-__all__ = ["walk", "iter_tree", "walk_and_modify", "get_children", "is_container"]
+__all__ = ["walk", "iter_tree", "walk_and_modify",
+           "get_children", "is_container"]
 
 
 def walk(top, callback):
@@ -71,7 +73,7 @@ def iter_tree(top):
                 for sub in recurse(val):
                     yield sub
             seen.remove(tree_id)
-        elif isinstance(tree, dict):
+        elif isinstance(tree, Mapping):
             seen.add(tree_id)
             for val in tree.values():
                 for sub in recurse(val):
@@ -96,6 +98,7 @@ class _TreeModificationContext:
     context.  They are also collections that map unmodified
     nodes to the corresponding modified result.
     """
+
     def __init__(self):
         self._map = {}
         self._generators = []
@@ -197,6 +200,7 @@ class _PendingValue:
     in an asdf tree indicates that extension code is failing to handle
     reference cycles.
     """
+
     def __repr__(self):
         return "PendingValue"
 
@@ -210,6 +214,7 @@ class _RemoveNode:
     as a signal for `asdf.treeutil.walk_and_modify` to remove the
     node received by the callback.
     """
+
     def __repr__(self):
         return "RemoveNode"
 
@@ -365,11 +370,11 @@ def walk_and_modify(top, callback, ignore_implicit_conversion=False, postorder=T
         return result
 
     def _handle_children(node, json_id):
-        if isinstance(node, dict):
+        if isinstance(node, Mapping):
             result = _handle_mapping(node, json_id)
         elif isinstance(node, tuple):
             result = _handle_immutable_sequence(node, json_id)
-        elif isinstance(node, list):
+        elif isinstance(node, MutableSequence):
             result = _handle_mutable_sequence(node, json_id)
         else:
             result = node
@@ -392,7 +397,7 @@ def walk_and_modify(top, callback, ignore_implicit_conversion=False, postorder=T
             # URIs.  Ignore an id that is not a string, since it may
             # be an object defining an id property and not an id
             # itself (this is common in metaschemas).
-            if isinstance(node, dict) and "id" in node and isinstance(node["id"], str):
+            if isinstance(node, Mapping) and "id" in node and isinstance(node["id"], str):
                 json_id = node["id"]
 
             if postorder:
@@ -439,9 +444,9 @@ def get_children(node):
         node has no children (either it is an empty container, or is
         a non-container type)
     """
-    if isinstance(node, dict):
+    if isinstance(node, Mapping):
         return list(node.items())
-    elif isinstance(node, list) or isinstance(node, tuple):
+    elif isinstance(node, MutableSequence) or isinstance(node, tuple):
         return list(enumerate(node))
     else:
         return []
@@ -462,4 +467,4 @@ def is_container(node):
     bool
         True if node is a container, False otherwise
     """
-    return isinstance(node, dict) or isinstance(node,list) or isinstance(node, tuple)
+    return isinstance(node, Mapping) or isinstance(node, MutableSequence) or isinstance(node, tuple)

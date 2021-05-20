@@ -3,6 +3,7 @@ Utilities for displaying the content of an ASDF tree.
 """
 import numpy as np
 
+from _collections_abc import Mapping, Sequence
 from .util import is_primitive
 from .treeutil import get_children
 from .tags.core.ndarray import NDArrayType
@@ -82,8 +83,9 @@ class _NodeInfo:
             next_nodes = []
 
             for parent, identifier, node in current_nodes:
-                if (isinstance(node, dict) or isinstance(node, list) or isinstance(node, tuple)) and id(node) in seen:
-                    info = _NodeInfo(parent, identifier, node, current_depth, recursive=True)
+                if (isinstance(node, Mapping) or isinstance(node, Sequence) or isinstance(node, tuple)) and id(node) in seen:
+                    info = _NodeInfo(parent, identifier, node,
+                                     current_depth, recursive=True)
                     parent.children.append(info)
                 else:
                     info = _NodeInfo(parent, identifier, node, current_depth)
@@ -145,6 +147,7 @@ class _TreeRenderer:
     """
     Render a _NodeInfo tree with indent showing depth.
     """
+
     def __init__(self, max_rows, max_cols, show_values):
         self._max_rows = max_rows
         self._max_cols = max_cols
@@ -194,9 +197,9 @@ class _TreeRenderer:
                     rows_left -= len(info.children)
                     next_infos.extend(info.children)
                 elif rows_left > 1:
-                    for child in info.children[rows_left-1:]:
+                    for child in info.children[rows_left - 1:]:
                         child.visible = False
-                    next_infos.extend(info.children[0:rows_left-1])
+                    next_infos.extend(info.children[0:rows_left - 1])
                     rows_left = 0
                 else:
                     for child in info.children:
@@ -224,9 +227,9 @@ class _TreeRenderer:
                     if rows_left is None or rows_left >= len(info.children):
                         next_infos.extend(info.children)
                     elif rows_left > 1:
-                        for child in info.children[rows_left-1:]:
+                        for child in info.children[rows_left - 1:]:
                             child.visible = False
-                        next_infos.extend(info.children[0:rows_left-1])
+                        next_infos.extend(info.children[0:rows_left - 1])
                     else:
                         for child in info.children:
                             child.visible = False
@@ -260,7 +263,8 @@ class _TreeRenderer:
                 child_is_tail = False
                 child_active_depths = active_depths.union({info.depth})
 
-            child_list, child_elided = self._render(child, child_active_depths, child_is_tail)
+            child_list, child_elided = self._render(
+                child, child_active_depths, child_is_tail)
             lines.extend(child_list)
             elided = elided or child_elided
 
@@ -268,7 +272,8 @@ class _TreeRenderer:
         if num_visible_children > 0 and num_visible_children != len(info.children):
             hidden_count = len(info.children) - num_visible_children
             prefix = self._make_prefix(info.depth + 1, active_depths, True)
-            message = format_faint(format_italic(str(hidden_count) + ' not shown'))
+            message = format_faint(format_italic(
+                str(hidden_count) + ' not shown'))
             lines.append(
                 "{}{}".format(prefix, message)
             )
@@ -280,20 +285,24 @@ class _TreeRenderer:
         value = self._render_node_value(info)
 
         if isinstance(info.parent_node, list) or isinstance(info.parent_node, tuple):
-            line = "{}[{}] {}".format(prefix, format_bold(info.identifier), value)
+            line = "{}[{}] {}".format(
+                prefix, format_bold(info.identifier), value)
         else:
-            line = "{}{} {}".format(prefix, format_bold(info.identifier), value)
+            line = "{}{} {}".format(
+                prefix, format_bold(info.identifier), value)
 
         visible_children = info.visible_children
         if len(visible_children) == 0 and len(info.children) > 0:
             line = line + format_italic(" ...")
 
         if info.recursive:
-            line = line + " " + format_faint(format_italic("(recursive reference)"))
+            line = line + " " + \
+                format_faint(format_italic("(recursive reference)"))
 
         if self._max_cols is not None and len(line) > self._max_cols:
             message = " (truncated)"
-            line = line[0 : (self._max_cols - len(message))] + format_faint(format_italic(message))
+            line = line[0: (self._max_cols - len(message))] + \
+                format_faint(format_italic(message))
 
         return line
 
