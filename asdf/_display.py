@@ -3,7 +3,7 @@ Utilities for displaying the content of an ASDF tree.
 """
 import numpy as np
 
-from _collections_abc import Mapping, Sequence
+from _collections_abc import Mapping, MutableSequence
 from .util import is_primitive
 from .treeutil import get_children
 from .tags.core.ndarray import NDArrayType
@@ -83,7 +83,7 @@ class _NodeInfo:
             next_nodes = []
 
             for parent, identifier, node in current_nodes:
-                if (isinstance(node, Mapping) or isinstance(node, Sequence) or isinstance(node, tuple)) and id(node) in seen:
+                if (isinstance(node, Mapping) or isinstance(node, MutableSequence) or isinstance(node, tuple)) and id(node) in seen:
                     info = _NodeInfo(parent, identifier, node,
                                      current_depth, recursive=True)
                     parent.children.append(info)
