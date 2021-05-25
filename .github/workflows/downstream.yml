@@ -59,7 +59,7 @@ jobs:
             test_command: pytest
           - package_name: weldx
             repository: BAMWelDX/weldx
-            ref: ${{ github.event.inputs.weldx_ref || 'asdf_2.8' }}
+            ref: ${{ github.event.inputs.weldx_ref || 'master' }}
             test_command: pytest weldx/tests/asdf_tests weldx/asdf/schemas --asdf-tests
     steps:
       - name: Checkout asdf
