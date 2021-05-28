@@ -31,7 +31,7 @@ patched_urllib_parse.uses_netloc.append('asdf')
 
 __all__ = ['human_list', 'get_array_base', 'get_base_uri', 'filepath_to_url',
            'iter_subclasses', 'calculate_padding', 'resolve_name', 'NotSet',
-           'is_primitive', 'uri_match']
+           'is_primitive', 'uri_match', 'get_class_name']
 
 
 def human_list(l, separator="and"):

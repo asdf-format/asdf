@@ -102,7 +102,7 @@ in the code; that list is assembled at runtime by AsdfType's
 metaclass, ``asdf.types.AsdfTypeMeta``.  The list can be inspected in
 the console like so:
 
-.. code-block:: pycon
+.. code-block:: python
 
     >>> import asdf
     >>> asdf.types._all_asdftypes # doctest: +SKIP

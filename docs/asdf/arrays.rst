@@ -92,6 +92,9 @@ format of all arrays in the file.
     # This controls the output format of all arrays in the file
     ff.write_to("test.asdf", all_array_storage='inline')
 
+For automatic management of the array storage type based on number of elements,
+see :ref:`config_options_array_inline_threshold`.
+
 .. _exploded:
 
 Saving external arrays
@@ -105,12 +108,6 @@ corresponding to the following data items:
 - *n* ASDF files, each containing a single array data block.
 
 Exploded form is useful in the following scenarios:
-
-- Not all text editors may handle the hybrid text and binary nature of
-  the ASDF file, and therefore either can't open a ASDF file or would
-  break a ASDF file upon saving.  In this scenario, a user may explode
-  the ASDF file, edit the YAML portion as a pure YAML file, and
-  implode the parts back together.
 
 - Over a network protocol, such as HTTP, a client may only need to
   access some of the blocks.  While reading a subset of the file can
@@ -147,9 +144,6 @@ To save a block in an external file, set its block type to
 .. asdf:: test.asdf
 
 .. asdf:: test0000.asdf
-
-Like inline arrays, this can also be controlled using the ``set_array_storage``
-parameter of `AsdfFile.write_to` and `AsdfFile.update`.
 
 Streaming array data
 --------------------
@@ -283,7 +277,7 @@ permitted:
     with asdf.open('my_data.asdf') as af:
         ...
 
-     af.tree
+    af.tree
 
 Specifically, if an ASDF file has been opened using a `with` context, it is not
 possible to access the file contents outside of the scope of that context,

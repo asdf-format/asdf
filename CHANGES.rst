@@ -1,6 +1,11 @@
 2.9.0 (unreleased)
 ------------------
 
+2.8.2 (unreleased)
+------------------
+
+- Update documentation to reflect new 2.8 features. [#998]
+
 2.8.1 (2021-06-09)
 ------------------
 
@@ -53,6 +58,8 @@
 
 - Add ``edit`` subcommand to asdftool for efficient editing of
   the YAML portion of an ASDF file.  [#873, #922]
+
+- Increase limit on integer literals to signed 64-bit. [#894]
 
 - Remove the ``asdf.test`` method and ``asdf.__githash__`` attribute. [#943]
 

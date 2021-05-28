@@ -104,7 +104,7 @@ html_theme_options = {
     'github_repo': 'asdf',
     'github_button': 'true',
     'fixed_sidebar': 'true',
-    'page_width': '45%',
+    'page_width': '90%',
 }
 
 html_static_path = ['_static']

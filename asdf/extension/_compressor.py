@@ -48,7 +48,7 @@ class Compressor(abc.ABC):
 
         Parameters
         ----------
-        data : bytes-like
+        data : memoryview
             The data to compress. Must be contiguous and 1D, with
             the underlying `itemsize` preserved.
         **kwargs
@@ -69,8 +69,9 @@ class Compressor(abc.ABC):
 
         Parameters
         ----------
-        data : bytes-like
-            The data to decompress. Must be contiguous and 1D.
+        data : Iterable of bytes-like
+            An Iterable of bytes-like objects containing chunks
+            of compressed data.
         out : read-write bytes-like
             A contiguous, 1D output array, of equal or greater length
             than the decompressed data.

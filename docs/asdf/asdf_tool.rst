@@ -1,3 +1,5 @@
+.. asdf_tool:
+
 Command line tool
 -----------------
 
@@ -12,7 +14,9 @@ useful operations:
 
   - ``defragment``: Remove unused blocks and extra space.
 
-  - ``diff``: Report differences between two ASDF files
+  - ``diff``: Report differences between two ASDF files.
+
+  - ``edit``: Edit the YAML portion of an ASDF file.
 
   - ``remove-hdu``: Remove ASDF extension from ASDF-in-FITS file (requires
     `astropy`, see :ref:`asdf-in-fits`).
@@ -22,7 +26,7 @@ useful operations:
   - ``extensions``: Show information about installed extensions (see
     :ref:`other_packages`).
 
-  - ``tags``: List currently available tags
+  - ``tags``: List currently available tags.
 
   - ``to_yaml``: Inline all of the data in an ASDF file so that it is
     pure YAML.

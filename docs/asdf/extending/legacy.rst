@@ -1,9 +1,14 @@
 .. currentmodule:: asdf.extensions
 
-.. _extensions:
+.. _extending_legacy:
 
-Writing ASDF extensions
-=======================
+Deprecated extension API
+========================
+
+This page documents the original asdf extension API, which has been
+deprecated in favor of :ref:`extending_extensions`.  Since support
+for the deprecated API will be removed in asdf 3.0, we recommend that
+all new extensions be implemented with the new API.
 
 Extensions provide a way for ASDF to represent complex types that are not
 defined by the ASDF standard. Examples of types that require custom extensions

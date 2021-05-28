@@ -139,8 +139,9 @@ It is possible to compress the array data when writing the file:
 
     af.write_to('compressed.asdf', all_array_compression='zlib')
 
-Available compression algorithms are ``'zlib'``, ``'bzp2'``, and
-``'lz4'``.
+The built-in compression algorithms are ``'zlib'``, and ``'bzp2'``.  The
+``'lz4'`` algorithm becomes available when the `lz4 <https://python-lz4.readthedocs.io/>`__ package
+is installed.  Other compression algorithms may be available via extensions.
 
 .. _end-create-file-text:
 
@@ -165,39 +166,49 @@ The `open` function also works as a context handler:
     with asdf.open('example.asdf') as af:
         ...
 
-To access the data stored in the file, use the top-level `AsdfFile.tree`
-attribute:
+To get a quick overview of the data stored in the file, use the top-level
+`AsdfFile.info()` method:
 
 .. code:: python
 
     >>> import asdf
     >>> af = asdf.open('example.asdf')
-    >>> af.tree
-    {'asdf_library': {'author': 'The ASDF Developers',
-      'homepage': 'http://github.com/asdf-format/asdf',
-      'name': 'asdf',
-      'version': '1.3.1'},
-     'foo': 42,
-     'name': 'Monty',
-     'powers': {'squares': <array (unloaded) shape: [100] dtype: int64>},
-     'random': <array (unloaded) shape: [100] dtype: float64>,
-     'sequence': <array (unloaded) shape: [100] dtype: int64>}
+    >>> af.info()
+    root (AsdfObject)
+    ├─asdf_library (Software)
+    │ ├─author (str): The ASDF Developers
+    │ ├─homepage (str): http://github.com/asdf-format/asdf
+    │ ├─name (str): asdf
+    │ └─version (str): 2.8.0
+    ├─history (dict)
+    │ └─extensions (list)
+    │   └─[0] (ExtensionMetadata)
+    │     ├─extension_class (str): asdf.extension.BuiltinExtension
+    │     └─software (Software)
+    │       ├─name (str): asdf
+    │       └─version (str): 2.8.0
+    ├─foo (int): 42
+    ├─name (str): Monty
+    ├─powers (dict)
+    │ └─squares (NDArrayType): shape=(100,), dtype=int64
+    ├─random (NDArrayType): shape=(100,), dtype=float64
+    └─sequence (NDArrayType): shape=(100,), dtype=int64
 
-The tree is simply a Python `dict`, and nodes are accessed like any other
-dictionary entry:
+The `AsdfFile` behaves like a Python `dict`, and nodes are accessed like
+any other dictionary entry:
 
 .. code:: python
 
-    >>> af.tree['name']
+    >>> af['name']
     'Monty'
-    >>> af.tree['powers']
+    >>> af['powers']
     {'squares': <array (unloaded) shape: [100] dtype: int64>}
 
 Array data remains unloaded until it is explicitly accessed:
 
 .. code:: python
 
-    >>> af.tree['powers']['squares']
+    >>> af['powers']['squares']
     array([   0,    1,    4,    9,   16,   25,   36,   49,   64,   81,  100,
             121,  144,  169,  196,  225,  256,  289,  324,  361,  400,  441,
             484,  529,  576,  625,  676,  729,  784,  841,  900,  961, 1024,
@@ -211,7 +222,7 @@ Array data remains unloaded until it is explicitly accessed:
 
     >>> import numpy as np
     >>> expected = [x**2 for x in range(100)]
-    >>> np.equal(af.tree['powers']['squares'], expected).all()
+    >>> np.equal(af['powers']['squares'], expected).all()
     True
 
 By default, uncompressed data blocks are memory mapped for efficient
@@ -232,9 +243,9 @@ Extending ASDF
 
 Out of the box, the ``asdf`` package automatically serializes and
 deserializes native Python types. It is possible to extend ``asdf`` by
-implementing custom tag types that correspond to custom user types. More
+implementing custom tags that correspond to custom user types. More
 information on extending ASDF can be found in the `official
-documentation <http://asdf.readthedocs.io/en/latest/asdf/extensions.html>`__.
+documentation <http://asdf.readthedocs.io/en/latest/#extending-asdf>`__.
 
 Installation
 ------------

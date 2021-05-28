@@ -25,8 +25,11 @@ Getting Started
    asdf/install
    asdf/overview
    asdf/features
+   asdf/config
    asdf/asdf_tool
    asdf/changes
+
+.. _extending:
 
 Extending ASDF
 ==============
@@ -34,7 +37,15 @@ Extending ASDF
 .. toctree::
   :maxdepth: 2
 
-  asdf/extensions.rst
+  asdf/extending/use_cases
+  asdf/extending/uris
+  asdf/extending/schemas
+  asdf/extending/resources
+  asdf/extending/converters
+  asdf/extending/extensions
+  asdf/extending/manifests
+  asdf/extending/compressors
+  asdf/extending/legacy
 
 API Documentation
 =================
