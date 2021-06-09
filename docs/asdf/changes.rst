@@ -32,6 +32,19 @@ Changes include:
 
 - And more, see full changelog below for details.
 
+What's new in ASDF 2.7.5?
+=========================
+
+The ASDF Standard is at v1.5.0.
+
+Changes include:
+
+- Fix bug in ``asdf.schema.check_schema`` causing relative references in
+  metaschemas to be resolved incorrectly.
+
+- Fix bug that corrupts ndarray views when a new block is added
+  to an existing file in absence of a block index.
+
 What's New in ASDF 2.7.4?
 =========================
 
