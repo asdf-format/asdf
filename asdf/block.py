@@ -49,6 +49,7 @@ class BlockManager:
         self._memmap = not copy_arrays
         self._lazy_load = lazy_load
         self._readonly = readonly
+        self._internal_blocks_mapped = False
 
     def __len__(self):
         """
@@ -65,6 +66,15 @@ class BlockManager:
         """
         Add an internal block to the manager.
         """
+        if not self._internal_blocks_mapped:
+            # If the block index is missing we need to locate the remaining
+            # blocks so that we don't accidentally add our new block
+            # in the middle of the list.
+            self.finish_reading_internal_blocks()
+
+        self._add(block)
+
+    def _add(self, block):
         block_set = self._block_type_mapping.get(block.array_storage, None)
         if block_set is not None:
             if block not in block_set:
@@ -227,7 +237,7 @@ class BlockManager:
             fd, past_magic=past_magic,
             validate_checksum=self._validate_checksums)
         if block is not None:
-            self.add(block)
+            self._add(block)
 
         return block
 
@@ -290,6 +300,8 @@ class BlockManager:
                     last_block._fd, False)
                 if last_block is None:
                     break
+
+        self._internal_blocks_mapped = True
 
     def write_internal_blocks_serial(self, fd, pad_blocks=False):
         """
@@ -531,6 +543,10 @@ class BlockManager:
 
         # We already read the last block in the file -- no need to read it again
         self._internal_blocks.append(block)
+
+        # Record that all block locations have been mapped out (used to avoid
+        # unnecessary calls to finish_reading_internal_blocks later).
+        self._internal_blocks_mapped = True
 
         # Materialize the internal blocks if we are not lazy
         if not self.lazy_load:
