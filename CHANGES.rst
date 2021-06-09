@@ -1,6 +1,12 @@
 2.9.0 (unreleased)
 ------------------
 
+2.8.1 (unreleased)
+------------------
+
+- Fix bug in block manager when a new block is added to an existing
+  file without a block index. [#1000]
+
 2.8.0 (2021-05-12)
 ------------------
 
@@ -81,6 +87,9 @@
 
 - Fix bug in ``asdf.schema.check_schema`` causing relative references in
   metaschemas to be resolved incorrectly. [#987]
+
+- Fix bug in block manager when a new block is added to an existing
+  file without a block index. [#1000]
 
 2.7.4 (2021-04-30)
 ------------------

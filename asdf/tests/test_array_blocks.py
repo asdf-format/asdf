@@ -2,6 +2,7 @@ import io
 import os
 
 import numpy as np
+from numpy.random import random
 from numpy.testing import assert_array_equal
 
 import pytest
@@ -803,3 +804,36 @@ def test_fd_not_seekable():
     # We lost the information about the underlying array type,
     # but still can compare the bytes.
     assert b.data.tobytes() == data.tobytes()
+
+
+def test_add_block_before_fully_loaded(tmp_path):
+    """
+    This test covers a subtle case where a block is added
+    to a file before all pre-existing internal blocks have
+    been located.  If the BlockManager isn't careful to
+    locate them all first, the new block will take the index
+    of an existing block and views over that index will
+    point to the wrong data.
+
+    See https://github.com/asdf-format/asdf/issues/999
+    """
+    file_path1 = tmp_path / "test1.asdf"
+    file_path2 = tmp_path = "test2.asdf"
+    arr0 = random(10)
+    arr1 = random(10)
+    arr2 = random(10)
+
+    with asdf.AsdfFile() as af:
+        af["arr0"] = None
+        af["arr1"] = arr1
+        af["arr2"] = arr2
+        af.write_to(file_path1, include_block_index=False)
+
+    with asdf.open(file_path1) as af:
+        af["arr0"] = arr0
+        af.write_to(file_path2)
+
+    with asdf.open(file_path2) as af:
+        assert_array_equal(af["arr0"], arr0)
+        assert_array_equal(af["arr1"], arr1)
+        assert_array_equal(af["arr2"], arr2)
