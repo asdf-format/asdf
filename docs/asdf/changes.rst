@@ -4,6 +4,16 @@
 Changes
 *******
 
+What's new in ASDF 2.8.1?
+=========================
+
+The ASDF Standard is at v1.6.0.
+
+Changes include:
+
+- Fix bug that corrupts ndarray views when a new block is added
+  to an existing file in absence of a block index.
+
 What's new in ASDF 2.8.0?
 =========================
 

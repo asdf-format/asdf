@@ -1,7 +1,7 @@
 2.9.0 (unreleased)
 ------------------
 
-2.8.1 (unreleased)
+2.8.1 (2021-06-09)
 ------------------
 
 - Fix bug in block manager when a new block is added to an existing
