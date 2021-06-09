@@ -82,7 +82,7 @@
 
 - Update asdf-standard to 1.6.0 tag. [#993]
 
-2.7.5 (unreleased)
+2.7.5 (2021-06-09)
 ------------------
 
 - Fix bug in ``asdf.schema.check_schema`` causing relative references in
