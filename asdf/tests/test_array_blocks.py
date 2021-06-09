@@ -808,7 +808,7 @@ def test_fd_not_seekable():
     assert b.data.tobytes() == data.tobytes()
 
 
-def test_add_block_before_fully_loaded(tmp_path):
+def test_add_block_before_fully_loaded(tmpdir):
     """
     This test covers a subtle case where a block is added
     to a file before all pre-existing internal blocks have
@@ -819,8 +819,10 @@ def test_add_block_before_fully_loaded(tmp_path):
 
     See https://github.com/asdf-format/asdf/issues/999
     """
-    file_path1 = tmp_path / "test1.asdf"
-    file_path2 = tmp_path = "test2.asdf"
+    tmpdir = str(tmpdir)
+
+    file_path1 = os.path.join(tmpdir, "test1.asdf")
+    file_path2 = os.path.join(tmpdir, "test2.asdf")
     arr0 = random(10)
     arr1 = random(10)
     arr2 = random(10)
