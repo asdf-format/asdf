@@ -23,10 +23,6 @@ on:
         description: specutils ref
         required: true
         default: main
-      weldx_ref:
-        description: weldx ref
-        required: true
-        default: asdf_2.8
   schedule:
     # Run every Monday at 6am UTC
     - cron: '0 6 * * 1'
@@ -57,10 +53,6 @@ jobs:
             repository: astropy/specutils
             ref: ${{ github.event.inputs.specutils_ref || 'main' }}
             test_command: pytest
-          - package_name: weldx
-            repository: BAMWelDX/weldx
-            ref: ${{ github.event.inputs.weldx_ref || 'asdf_2.8' }}
-            test_command: pytest weldx/tests/asdf_tests weldx/asdf/schemas --asdf-tests
     steps:
       - uses: actions/checkout@v2
         with:
