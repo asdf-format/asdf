@@ -818,7 +818,7 @@ def test_add_block_before_fully_loaded(tmp_path):
     See https://github.com/asdf-format/asdf/issues/999
     """
     file_path1 = tmp_path / "test1.asdf"
-    file_path2 = tmp_path = "test2.asdf"
+    file_path2 = tmp_path / "test2.asdf"
     arr0 = random(10)
     arr1 = random(10)
     arr2 = random(10)
