@@ -190,7 +190,7 @@ Installing an extension
 Once an extension is implemented, it must be installed so that the asdf
 library knows to use it.  There are two options for installing an extension:
 manually per session using `~asdf.config.AsdfConfig`, or automatically
-for every session using the ``asdf.resource_mappings`` entry point
+for every session using the ``asdf.extensions`` entry point
 
 .. _extending_extensions_installing_asdf_config:
 
@@ -244,7 +244,7 @@ identifies the method as an ``asdf.extensions`` entry point:
 
     # setup.cfg
     [options.entry_points]
-    asdf.resource_mappings =
+    asdf.extensions =
         asdf_foo_extension = asdf_foo_extension.integration:get_extensions
 
 After installing the package, the extension should be automatically available in any
