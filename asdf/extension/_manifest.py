@@ -39,7 +39,7 @@ class ManifestExtension(Extension):
         return cls(manifest, **kwargs)
 
     def __init__(self, manifest, *, legacy_class_names=None, converters=None,
-                compressors=None, decompressors=None):
+                compressors=None):
         self._manifest = manifest
 
         if legacy_class_names is None:
@@ -56,11 +56,6 @@ class ManifestExtension(Extension):
             self._compressors = []
         else:
             self._compressors = compressors
-
-        if decompressors is None:
-            self._decompressors = []
-        else:
-            self._decompressors = decompressors
 
     @property
     def extension_uri(self):
@@ -92,10 +87,6 @@ class ManifestExtension(Extension):
     @property
     def compressors(self):
         return self._compressors
-
-    @property
-    def decompressors(self):
-        return self._decompressors
 
     @property
     def tags(self):

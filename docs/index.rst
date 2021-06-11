@@ -2,7 +2,7 @@
 ASDF - Advanced Scientific Data Format
 **************************************
 
-``asdf`` is a tool for reading and writing Advanced Scientific Data
+`asdf` is a tool for reading and writing Advanced Scientific Data
 Format (ASDF) files.
 
 .. include:: ../README.rst
@@ -25,8 +25,11 @@ Getting Started
    asdf/install
    asdf/overview
    asdf/features
+   asdf/config
    asdf/asdf_tool
    asdf/changes
+
+.. _extending:
 
 Extending ASDF
 ==============
@@ -34,7 +37,15 @@ Extending ASDF
 .. toctree::
   :maxdepth: 2
 
-  asdf/extensions.rst
+  asdf/extending/use_cases
+  asdf/extending/uris
+  asdf/extending/schemas
+  asdf/extending/resources
+  asdf/extending/converters
+  asdf/extending/extensions
+  asdf/extending/manifests
+  asdf/extending/compressors
+  asdf/extending/legacy
 
 API Documentation
 =================
@@ -64,7 +75,7 @@ We welcome feedback and contributions of all kinds. Contributions of code,
 documentation, or general feedback are all appreciated.
 
 Feature requests and bug reports for the Python implementation can be posted at
-`ASDF's github page <https://github.com/asdf-format/asdf>`_.
+`asdf's github page <https://github.com/asdf-format/asdf>`_.
 
 The ASDF Standard itself also has a repository on github. Suggestions for
 improvements to the ASDF Standard can be reported `here
@@ -76,7 +87,7 @@ See also
 - The `Advanced Scientific Data Format (ASDF) standard
   <https://asdf-standard.readthedocs.io/>`__
 
-- ASDF Python package distribution on `pypi <https://pypi.org/project/asdf/>`_
+- `asdf` Python package distribution on `pypi <https://pypi.org/project/asdf/>`_
 
 Index
 =====

@@ -9,7 +9,7 @@ from contextlib import contextmanager
 from . import tagged
 from .exceptions import AsdfWarning
 
-__all__ = ["walk", "iter_tree", "walk_and_modify", "get_children", "is_container"]
+__all__ = ["walk", "iter_tree", "walk_and_modify", "get_children", "is_container", "PendingValue"]
 
 
 def walk(top, callback):

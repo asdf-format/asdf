@@ -103,7 +103,7 @@ class Extension(abc.ABC):
 
         The dictionary key indicates the TAG handles to be placed in the YAML header,
         the value defines the string for tag replacement.
-        See https://yaml.org/spec/1.2/spec.html#tag/shorthand/
+        See https://yaml.org/spec/1.1/#tag%20shorthand/
 
         Example: ``{"!foo!": "tag:nowhere.org:custom/"}``
 
@@ -349,7 +349,7 @@ class ExtensionProxy(Extension, AsdfExtension):
 
         The dictionary key indicates the TAG handles to be placed in the YAML header,
         the value defines the string for tag replacement.
-        See https://yaml.org/spec/1.2/spec.html#tag/shorthand/
+        See https://yaml.org/spec/1.1/#tag%20shorthand/
 
         Example: ``{"!foo!": "tag:nowhere.org:custom/"}``
 

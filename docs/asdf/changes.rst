@@ -4,7 +4,7 @@
 Changes
 *******
 
-What's new in ASDF 2.8.1?
+What's new in asdf 2.8.1?
 =========================
 
 The ASDF Standard is at v1.6.0.
@@ -14,7 +14,7 @@ Changes include:
 - Fix bug that corrupts ndarray views when a new block is added
   to an existing file in absence of a block index.
 
-What's new in ASDF 2.8.0?
+What's new in asdf 2.8.0?
 =========================
 
 The ASDF Standard is at v1.6.0.
@@ -42,7 +42,7 @@ Changes include:
 
 - And more, see full changelog below for details.
 
-What's new in ASDF 2.7.5?
+What's new in asdf 2.7.5?
 =========================
 
 The ASDF Standard is at v1.5.0.
@@ -55,7 +55,7 @@ Changes include:
 - Fix bug that corrupts ndarray views when a new block is added
   to an existing file in absence of a block index.
 
-What's New in ASDF 2.7.4?
+What's New in asdf 2.7.4?
 =========================
 
 The ASDF Standard is at v1.5.0.
@@ -70,7 +70,7 @@ Changes include:
 - Add support for opening files from HTTPS URLs and following
   HTTP/HTTPS redirects.
 
-What's New in ASDF 2.7.3?
+What's New in asdf 2.7.3?
 =========================
 
 The ASDF Standard is at v1.5.0.
@@ -83,7 +83,7 @@ Changes include:
 - Add pytest plugin options to skip and xfail individual tests
   and xfail the unsupported ndarray-1.0.0 schema example.
 
-What's New in ASDF 2.7.2?
+What's New in asdf 2.7.2?
 =========================
 
 The ASDF Standard is at v1.5.0.
@@ -97,7 +97,7 @@ Changes include:
 * Replace ``assert`` statements with ``raise`` at the behest
   of the bandit security linter.
 
-What's New in ASDF 2.7.1?
+What's New in asdf 2.7.1?
 =========================
 
 The ASDF Standard is at v1.5.0.
@@ -107,7 +107,7 @@ The sole change in this release:
 * Fix bug preventing access to copied array data after
   an ``AsdfFile`` is closed.
 
-What's New in ASDF 2.7.0?
+What's New in asdf 2.7.0?
 =========================
 
 The ASDF Standard is at v1.5.0.
@@ -121,18 +121,18 @@ Changes include:
 
 * Add option to ``asdf.open`` that disables schema validation on read.
 
-* Improved warning messages.  All asdf library warnings now
+* Improved warning messages.  All `asdf` library warnings now
   subclass ``asdf.exceptions.AsdfWarning``.
 
 * Drop support for filling default values from subschemas
   within oneOf or anyOf combiners.
 
-* Resolve deprecation warnings from the ASDF pytest plugin
+* Resolve deprecation warnings from the `asdf` pytest plugin
   when used with newer versions of pytest.
 
 * Drop support for 2.x versions of the jsonschema package.
 
-What's New in ASDF 2.6.0?
+What's New in asdf 2.6.0?
 =========================
 
 The ASDF Standard is at v1.5.0.
@@ -163,7 +163,7 @@ Changes include:
 * Expand developer documentation to cover the details of pyyaml
   integration and conversion between tagged trees and custom trees.
 
-What's New in ASDF 2.5.2?
+What's New in asdf 2.5.2?
 =========================
 
 The ASDF Standard is at v1.4.0.
@@ -175,7 +175,7 @@ Changes include:
 
 * Add general and versioning-specific developer documentation.
 
-What's New in ASDF 2.5.1?
+What's New in asdf 2.5.1?
 =========================
 
 The ASDF Standard is at v1.4.0.
@@ -183,9 +183,9 @@ The ASDF Standard is at v1.4.0.
 Changes include:
 
 * Fix bug in test causing failure when test suite is run against
-  an installed asdf package.
+  an installed `asdf` package.
 
-What's New in ASDF 2.5.0?
+What's New in asdf 2.5.0?
 =========================
 
 The ASDF Standard is at v1.4.0.
@@ -198,7 +198,7 @@ Changes include:
 
 * Fixed bug causing segfault after update of a memory-mapped file.
 
-What's New in ASDF 2.4.2?
+What's New in asdf 2.4.2?
 =========================
 
 The ASDF Standard is at v1.3.0. Changes include:
@@ -217,9 +217,8 @@ The ASDF Standard is at v1.3.0. Changes include:
 * Fix bug in ``NDArrayType.__len__``.  It must be a method, not a
   property.
 
-What's New in ASDF 2.3.3?
+What's New in asdf 2.3.3?
 =========================
-
 
 The ASDF Standard is at v1.3.0. Changes include:
 
@@ -235,7 +234,7 @@ The ASDF Standard is at v1.3.0. Changes include:
 
 * Allow use of ``pathlib.Path`` objects for ``custom_schema`` option.
 
-What's New in ASDF 2.3.1?
+What's New in asdf 2.3.1?
 =========================
 
 he ASDF Standard is at v1.3.0. Changes include:
@@ -248,10 +247,10 @@ he ASDF Standard is at v1.3.0. Changes include:
 * Fix bug in ``asdftool`` that prevented ``extract`` command from being
   visible.
 
-What's New in ASDF 2.3?
+What's New in asdf 2.3?
 =======================
 
-ASDF 2.3 reflects the update of ASDF Standard to v1.3.0, and contains a few
+`asdf` 2.3 reflects the update of ASDF Standard to v1.3.0, and contains a few
 notable features and an API change:
 
 * Storage of arbitrary precision integers is now provided by
@@ -260,7 +259,7 @@ notable features and an API change:
 
 * Reading a file with integer literals that are too large now causes only a
   warning instead of a validation error. This is to provide backwards
-  compatibility for files that were created with a buggy version of ASDF.
+  compatibility for files that were created with a buggy version of `asdf`.
 
 * The functions `asdf.open` and `AsdfFile.write_to` now support the use of
   `pathlib.Path`.
@@ -268,10 +267,10 @@ notable features and an API change:
 * The `asdf.asdftypes` module has been deprecated in favor of `asdf.types`. The
   old module will be removed entirely in the 3.0 release.
 
-What's New in ASDF 2.2?
+What's New in asdf 2.2?
 =======================
 
-ASDF 2.2 contains several API changes, although backwards compatibilty is
+`asdf` 2.2 contains several API changes, although backwards compatibilty is
 preserved for now. The most significant changes are:
 
 * The function `AsdfFile.open` has been deprecated in favor of `asdf.open`.
@@ -292,10 +291,10 @@ preserved for now. The most significant changes are:
   convert nodes in the ASDF tree into custom tagged types. This makes it easier
   for users to filter specifically for this failure case.
 
-What's New in ASDF 2.1?
+What's New in asdf 2.1?
 =======================
 
-ASDF 2.1 is a minor release, and most of the changes affect only a subset of
+`asdf` 2.1 is a minor release, and most of the changes affect only a subset of
 users. The most notable changes are the following:
 
 * `namedtuple` objects can now be serialized. They are automatically converted
@@ -314,8 +313,8 @@ Please see the :ref:`change_log` for additional details.
 What's New in ASDF 2.0?
 =======================
 
-ASDF 2.0 is a major release that includes many improvements, new features, and
-some API changes. It is the first release of the ASDF package that only
+`asdf` 2.0 is a major release that includes many improvements, new features, and
+some API changes. It is the first release of the `asdf` package that only
 supports Python 3.
 
 The full list of changes, including bug fixes, can be found in the
@@ -328,7 +327,7 @@ The full list of changes, including bug fixes, can be found in the
   have been moved to the Astropy package itself.
 * External packages can now install and register custom ASDF extensions using
   `setuptools` entry points (see :ref:`other_packages` and
-  :ref:`packaging_extensions`). ASDF detects extensions that are installed in
+  :ref:`packaging_extensions`). `asdf` detects extensions that are installed in
   this way and automatically uses them when reading and writing files with
   custom types.
 * A bug was fixed that now allows fully-specified tags from external packages

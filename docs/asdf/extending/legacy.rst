@@ -1,9 +1,14 @@
 .. currentmodule:: asdf.extensions
 
-.. _extensions:
+.. _extending_legacy:
 
-Writing ASDF extensions
-=======================
+Deprecated extension API
+========================
+
+This page documents the original `asdf` extension API, which has been
+deprecated in favor of :ref:`extending_extensions`.  Since support
+for the deprecated API will be removed in `asdf` 3.0, we recommend that
+all new extensions be implemented with the new API.
 
 Extensions provide a way for ASDF to represent complex types that are not
 defined by the ASDF standard. Examples of types that require custom extensions
@@ -129,7 +134,7 @@ components) is reflected in `~asdf.AsdfExtension.tag_mapping` property of the
 `~asdf.AsdfExtension.url_mapping` is used to map URLs (of the same form as the
 ``id`` field in the schema) to the actual location of a schema file.
 
-Once these classes and the schema have been defined, we can save an asdf file
+Once these classes and the schema have been defined, we can save an ASDF file
 using them:
 
 .. runcode::
@@ -452,7 +457,7 @@ But upon deserialization, we notice a problem:
 
     assert reconstituted_f1.inverse.inverse is asdf.treeutil.PendingValue
 
-The presence of `~asdf.treeutil.PendingValue` is asdf's way of telling you
+The presence of `~asdf.treeutil.PendingValue` is `asdf`'s way of telling you
 that the value corresponding to the key ``inverse`` was not fully deserialized
 at the time that you retrieved it.  We can handle this situation by making our
 `~asdf.CustomType.from_tree` a generator function:
@@ -628,7 +633,7 @@ this, we will make use of the `~asdf.CustomType.supported_versions` attribute
 for our tag class. This will allow us to declare explicit support for the
 schema versions our tag class implements.
 
-Under the hood, ASDF creates multiple copies of our ``PersonType`` tag class,
+Under the hood, `asdf` creates multiple copies of our ``PersonType`` tag class,
 each with a different `~asdf.CustomType.version` attribute corresponding to one
 of the supported versions. This means that in our new tag class implementation,
 we can condition our `~asdf.CustomType.from_tree` implementation on the value
@@ -668,13 +673,13 @@ the older version of the schema.
 Handling subclasses
 *******************
 
-By default, if a custom type is serialized by an ASDF tag class, then all
+By default, if a custom type is serialized by an `asdf` tag class, then all
 subclasses of that type can also be serialized. However, no attributes that are
 specific to the subclass will be stored in the file. When reading the file, an
 instance of the base custom type will be returned instead of the subclass that
 was written.
 
-To properly handle subclasses of custom types already recognized by ASDF, it is
+To properly handle subclasses of custom types already recognized by `asdf`, it is
 necessary to implement a separate tag class that is specific to the subclass to
 be serialized.
 
@@ -685,7 +690,7 @@ this feature was dropped as it produced files that were not portable.
 Creating custom schemas
 -----------------------
 
-All custom types to be serialized by ASDF require custom schemas. The best
+All custom types to be serialized by `asdf` require custom schemas. The best
 resource for creating ASDF schemas can be found in the `ASDF Standard
 <https://asdf-standard.readthedocs.io/en/latest/schemas.html>`_ documentation.
 
@@ -752,7 +757,7 @@ asserts that the corresponding fraction is in simplified form:
 Defining custom extension classes
 ---------------------------------
 
-Extension classes are the mechanism that ASDF uses to register custom tag types
+Extension classes are the mechanism that `asdf` uses to register custom tag types
 so that they can be used when processing ASDF files. Packages that define their
 own custom tag types must also define extensions in order for those types to be
 used.
@@ -772,20 +777,20 @@ Overriding built-in extensions
 ******************************
 
 It is possible for externally defined extensions to override tag types that are
-provided by ASDF's built-in extension. For example, maybe an external package
+provided by `asdf`'s built-in extension. For example, maybe an external package
 wants to provide a different implementation of `~asdf.tags.core.NDArrayType`.
 In this case, the external package does not need to provide custom schemas
 since the schema for the type to be overridden is already provided as part of
 the ASDF standard.
 
-Instead, the extension class may inherit from ASDF's
+Instead, the extension class may inherit from `asdf`'s
 `~asdf.extension.BuiltinExtension` and simply override the
 `~asdf.AsdfExtension.types` property to indicate the type that is being
 overridden.  Doing this preserves the `~asdf.AsdfExtension.tag_mapping` and
 `~asdf.AsdfExtension.url_mapping` that is used by the `BuiltinExtension`, which
-allows the schemas that are packaged by ASDF to be located.
+allows the schemas that are packaged by `asdf` to be located.
 
-ASDF will give precedence to the type that is provided by the external
+`asdf` will give precedence to the type that is provided by the external
 extension, effectively overriding the corresponding type in the built-in
 extension. Note that it is currently undefined if multiple external extensions
 are provided that override the same built-in type.
@@ -798,7 +803,7 @@ Packaging schemas
 
 If a package provides custom schemas, the schema files must be installed as
 part of that package distribution. In general, schema files must be installed
-into a subdirectory of the package distribution. The ASDF extension class must
+into a subdirectory of the package distribution. The `asdf` extension class must
 supply a `~asdf.AsdfExtension.url_mapping` that maps to the installed location
 of the schemas. See :ref:`defining_extensions` for more details.
 
@@ -806,13 +811,13 @@ Registering entry points
 ************************
 
 Packages that provide their own ASDF extensions can (and should!) install them
-so that they are automatically detectable by the ASDF Python package. This is
+so that they are automatically detectable by the `asdf` Python package. This is
 accomplished using Python's `setuptools` entry points. Entry points are
 registered in a package's `setup.py` file.
 
 Consider a package that provides an extension class `MyPackageExtension` in the
 submodule `mypackage.asdf.extensions`. We need to register this class as an
-extension entry point that ASDF will recognize. First, we create a dictionary:
+extension entry point that `asdf` will recognize. First, we create a dictionary:
 
 .. code:: python
 
@@ -853,9 +858,9 @@ The entry points must be passed to the call to `setuptools.setup`:
 
 When running ``python setup.py install`` or ``python setup.py develop`` on this
 package, the entry points will be registered automatically. This allows the
-ASDF package to recognize the extensions without any user intervention. Users
+`asdf` package to recognize the extensions without any user intervention. Users
 of your package that wish to read ASDF files using types that you have
-registered will not need to use any extension explicitly. Instead, ASDF will
+registered will not need to use any extension explicitly. Instead, `asdf` will
 automatically recognize the types you have registered and will process them
 appropriately. See :ref:`other_packages` for more information on using
 extensions.
@@ -865,12 +870,12 @@ extensions.
 Testing custom schemas
 ----------------------
 
-Packages that provide their own schemas can test them using ASDF's
+Packages that provide their own schemas can test them using `asdf`'s
 `pytest <https://docs.pytest.org/en/latest/>`_ plugin for schema testing.
 Schemas are tested for overall validity, and any examples given within the
 schemas are also tested.
 
-The schema tester plugin is automatically registered when the ASDF package is
+The schema tester plugin is automatically registered when the `asdf` package is
 installed. In order to enable testing, it is necessary to add the directory
 containing your schema files to the pytest section of your project's
 `setup.cfg` file. If you do not already have such a file, creating a
@@ -884,20 +889,20 @@ containing your schema files to the pytest section of your project's
 The schema directory paths should be paths that are relative to the top of the
 package directory **when it is installed**. If this is different from the path
 in the source directory, then both paths can be used to facilitate in-place
-testing (see ASDF's own `setup.cfg` for an example of this).
+testing (see `asdf`'s own `setup.cfg` for an example of this).
 
 .. note::
 
-   Older versions of ASDF (prior to 2.4.0) required the plugin to be registered
+   Older versions of `asdf` (prior to 2.4.0) required the plugin to be registered
    in your project's `conftest.py` file. As of 2.4.0, the plugin is now
    registered automatically and so this line should be removed from your
    `conftest.py` file, unless you need to retain compatibility with older
-   versions of ASDF.
+   versions of `asdf`.
 
 The ``asdf_schema_skip_names`` configuration variable can be used to skip
 schema files that live within one of the ``asdf_schema_root`` directories but
 should not be tested. The names should be given as simple base file names
-(without directory paths or extensions). Again, see ASDF's own `setup.cfg` file
+(without directory paths or extensions). Again, see `asdf`'s own `setup.cfg` file
 for an example.
 
 The schema tests do **not** run by default. In order to enable the tests by

@@ -209,31 +209,6 @@ class AsdfConfig:
             self._extensions = None
 
     @property
-    def validate_on_read(self):
-        """
-        Get configuration that controls schema validation of
-        ASDF files on read.
-
-        Returns
-        -------
-        bool
-        """
-        return self._validate_on_read
-
-    @validate_on_read.setter
-    def validate_on_read(self, value):
-        """
-        Set the configuration that controls schema validation of
-        ASDF files on read.  If `True`, newly opened files will
-        be validated.
-
-        Parameters
-        ----------
-        value : bool
-        """
-        self._validate_on_read = value
-
-    @property
     def default_version(self):
         """
         Get the default ASDF Standard version used for
@@ -256,6 +231,34 @@ class AsdfConfig:
         value : str
         """
         self._default_version = validate_version(value)
+
+    @property
+    def io_block_size(self):
+        """
+        Get the block size used when reading and writing
+        files.
+
+        Returns
+        -------
+        int
+            Block size, or -1 to use the filesystem's
+            preferred block size.
+        """
+        return self._io_block_size
+
+    @io_block_size.setter
+    def io_block_size(self, value):
+        """
+        Set the block size used when reading and writing
+        files.
+
+        Parameters
+        ----------
+        value : int
+            Block size, or -1 to use the filesystem's
+            preferred block size.
+        """
+        self._io_block_size = value
 
     @property
     def legacy_fill_schema_defaults(self):
@@ -286,32 +289,6 @@ class AsdfConfig:
         self._legacy_fill_schema_defaults = value
 
     @property
-    def io_block_size(self):
-        """
-        Get the chunk size used when reading or writing
-        files.
-
-        Returns
-        -------
-        int
-            Block size, or -1 to auto-select.
-        """
-        return self._io_block_size
-
-    @io_block_size.setter
-    def io_block_size(self, value):
-        """
-        Set the chunk size used when reading or writing
-        files.
-
-        Parameters
-        ----------
-        value : int
-            Block size, or -2 to auto-select.
-        """
-        self._io_block_size = value
-
-    @property
     def array_inline_threshold(self):
         """
         Get the threshold below which arrays are automatically written
@@ -340,6 +317,31 @@ class AsdfConfig:
             of the array storage type.
         """
         self._array_inline_threshold = value
+
+    @property
+    def validate_on_read(self):
+        """
+        Get configuration that controls schema validation of
+        ASDF files on read.
+
+        Returns
+        -------
+        bool
+        """
+        return self._validate_on_read
+
+    @validate_on_read.setter
+    def validate_on_read(self, value):
+        """
+        Set the configuration that controls schema validation of
+        ASDF files on read.  If `True`, newly opened files will
+        be validated.
+
+        Parameters
+        ----------
+        value : bool
+        """
+        self._validate_on_read = value
 
     def __repr__(self):
         return (

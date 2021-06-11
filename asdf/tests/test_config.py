@@ -286,10 +286,12 @@ def test_config_repr():
     with asdf.config_context() as config:
         config.validate_on_read = True
         config.default_version = "1.5.0"
+        config.io_block_size = 9999
         config.legacy_fill_schema_defaults = False
         config.array_inline_threshold = 14
 
         assert "validate_on_read: True" in repr(config)
         assert "default_version: 1.5.0" in repr(config)
+        assert "io_block_size: 9999" in repr(config)
         assert "legacy_fill_schema_defaults: False" in repr(config)
         assert "array_inline_threshold: 14" in repr(config)

@@ -20,25 +20,25 @@ and reading trees, see :ref:`overview`.
 
 .. note::
 
-   The ASDF Standard imposes a maximum size of 52 bits for integer literals in
+   The ASDF Standard imposes a maximum size of 64-bit signed integers literals in
    the tree (see `the docs <https://asdf-standard.readthedocs.io/en/latest/known_limits.html#literal-integer-values-in-the-tree>`_
-   for details and justification). Attempting to store a larger value will
+   for details and justification). Attempting to store a larger value as a YAML literal will
    result in a validation error.
+
+   For arbitrary precision integer support, see `IntegerType`.
 
    Integers and floats of up to 64 bits can be stored inside of :mod:`numpy`
    arrays (see below).
 
-   For arbitrary precision integer support, see `IntegerType`.
 
-
-One of the key features of ASDF is its ability to serialize :mod:`numpy`
+One of the key features of `asdf` is its ability to serialize :mod:`numpy`
 arrays. This is discussed in detail in :ref:`array-data`.
 
-While the core ASDF package supports serialization of basic data types and
+While the core `asdf` package supports serialization of basic data types and
 Numpy arrays, its true power comes from its ability to be extended to support
 serialization of a wide range of custom data types. Details on using ASDF
 extensions can be found in :ref:`using_extensions`. Details on creating custom
-ASDF extensions to support custom data types can be found in :ref:`extensions`.
+ASDF extensions to support custom data types can be found in :ref:`extending`.
 
 .. _array-data:
 
@@ -71,7 +71,7 @@ deserialization.
 While ASDF is capable of serializing basic Python types and Numpy arrays out of
 the box, it can also be extended to serialize arbitrary custom data types. This
 section discusses the extension mechanism from a user's perspective. For
-documentation on creating extensions, see :ref:`extensions`.
+documentation on creating extensions, see :ref:`extending_extensions`.
 
 Even though this particular implementation of ASDF necessarily serializes
 Python data types, in theory an ASDF implementation in another language could
@@ -96,7 +96,7 @@ when reading ASDF files (using `asdf.open`), and also when writing them out
 (using `AsdfFile.write_to` or `AsdfFile.update`).
 
 Schema validation also plays a role when using custom extensions (see
-:ref:`using_extensions` and :ref:`extensions`). Extensions must provide schemas
+:ref:`using_extensions` and :ref:`extending_extensions`). Extensions must provide schemas
 for the types that they serialize. When writing a file with custom types, the
 output is validated against the schemas corresponding to those types. If the
 appropriate extension is installed when reading a file with custom types, then
@@ -191,35 +191,33 @@ There are several different versions to keep in mind when discussing ASDF:
 * The software package version
 * The ASDF Standard version
 * The ASDF file format version
-* Individual tag and schema versions
+* Individual tag, schema, and extension versions
 
 Each ASDF file contains information about the various versions that were used
 to create the file. The most important of these are the ASDF Standard version
 and the ASDF file format version. A particular version of the ASDF software
-package will explicitly provide support for a specific combination of these
+package will explicitly provide support for specific combinations of these
 versions.
 
-Tag and schema versions are also important for serializing and deserializing
-data types that are stored in ASDF files. A detailed discussion of tag and
-schema versions from a user perspective can be found in
-:ref:`custom_type_versions`.
+Tag, schema, and extension versions are also important for serializing and
+deserializing data types that are stored in ASDF files. A detailed discussion
+of these versions from a user perspective can be found in :ref:`custom_type_versions`.
 
-Since ASDF is designed to serve as an archival format, the software attempts to
-provide backwards compatibility when reading older versions of the ASDF
-Standard and ASDF file format. However, since deserializing ASDF types
-sometimes requires other software packages, backwards compatibility is often
+Since ASDF is designed to serve as an archival format, this library is careful
+to maintain backwards compatibility with older versions of the ASDF Standard, ASDF
+file format, and core tags.  However, since deserializing custom tags
+requires other software packages, backwards compatibility is often
 contingent on the available versions of such software packages.
 
 In general, forward compatibility with newer versions of the ASDF Standard and
-ASDF file format is not supported by the software. However, if newer tag and
-schema versions are detected, the software will attempt to process them.
+ASDF file format is not supported by the software.
 
 When creating new ASDF files, it is possible to control the version of the file
 format that is used. This can be specified by passing the `version` argument to
 either the `AsdfFile` constructor when the file object is created, or to the
 `AsdfFile.write_to` method when it is written. By default, the latest version
 of the file format will be used. Note that this option has no effect on the
-versions of tag types from custom extensions.
+versions of tags from custom extensions.
 
 External References
 ===================
@@ -229,7 +227,7 @@ Tree References
 
 ASDF files may reference items in the tree in other ASDF files.  The
 syntax used in the file for this is called "JSON Pointer", but users
-of ``asdf`` can largely ignore that.
+of `asdf` can largely ignore that.
 
 First, we'll create a ASDF file with a couple of arrays in it:
 
@@ -295,14 +293,14 @@ literal content in its place.
 
 A similar feature provided by YAML, anchors and aliases, also provides
 a way to support references within the same file.  These are supported
-by asdf, however the JSON Pointer approach is generally favored because:
+by `asdf`, however the JSON Pointer approach is generally favored because:
 
    - It is possible to reference elements in another file
 
    - Elements are referenced by location in the tree, not an
      identifier, therefore, everything can be referenced.
 
-Anchors and aliases are handled automatically by ``asdf`` when the
+Anchors and aliases are handled automatically by `asdf` when the
 data structure is recursive.  For example here is a dictionary that is
 included twice in the same tree:
 
@@ -375,12 +373,12 @@ file and retrieve the associated array data.
 Saving history entries
 ======================
 
-``asdf`` has a convenience method for notating the history of transformations
+`asdf` has a convenience method for notating the history of transformations
 that have been performed on a file.
 
 Given a `~asdf.AsdfFile` object, call `~asdf.AsdfFile.add_history_entry`, given
 a description of the change and optionally a description of the software (i.e.
-your software, not ``asdf``) that performed the operation.
+your software, not `asdf`) that performed the operation.
 
 .. runcode::
 
@@ -402,7 +400,7 @@ your software, not ``asdf``) that performed the operation.
 
 .. asdf:: example.asdf
 
-ASDF automatically saves history metadata about the extensions that were used
+`asdf` automatically saves history metadata about the extensions that were used
 to create the file. This information is used when opening files to determine if
 the proper extensions are installed (see :ref:`extension_checking` for more
 details).
