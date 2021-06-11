@@ -3,7 +3,7 @@
 The built-in extension
 ----------------------
 
-The ability to serialize the following types is provided by ASDF's built-in
+The ability to serialize the following types is provided by `asdf`'s built-in
 extension:
 
 * `dict`
@@ -14,7 +14,7 @@ extension:
 * `complex`
 * `numpy.ndarray`
 
-The built-in extension is packaged with ASDF and is automatically used when
+The built-in extension is packaged with `asdf` and is automatically used when
 reading and writing files. Users can not control the use of the built-in
 extension and in general they need not concern themselves with the details of
 its implementation. However, it is useful to be aware that the built-in
@@ -30,7 +30,7 @@ In order for a particular custom type to be serialized, a special class called
 a "converter" must be implemented. Each converter defines how the corresponding
 custom type will be serialized and deserialized. More details on how converters
 are implemented can be found in :ref:`extending_converters`. Users should never
-have to refer to converter implementations directly; they simply enable ASDF to
+have to refer to converter implementations directly; they simply enable `asdf` to
 recognize and process custom types.
 
 In addition to converters, each custom type may have a corresponding schema,
@@ -45,9 +45,9 @@ implementation) changes.
 Extensions
 ----------
 
-In order for the converters and schemas to be used by ASDF, they must be
+In order for the converters and schemas to be used by `asdf`, they must be
 packaged into an **extension** class. In general, the details of extensions are
-irrelevant to users of ASDF. However, users need to be aware of extensions in
+irrelevant to users of `asdf`. However, users need to be aware of extensions in
 the following two scenarios:
 
 * when storing custom data types to files to be written
@@ -60,7 +60,7 @@ below in :ref:`other_packages` and :ref:`explicit_extensions`.
 Writing custom types to files
 *****************************
 
-ASDF is not capable of serializing any custom type unless an extension is
+`asdf` is not capable of serializing any custom type unless an extension is
 provided that defines how to serialize that type. Attempting to do so will
 cause an error when trying to write the file. For details on developing support
 for custom types and extensions, see :ref:`extending_extensions`.
@@ -70,7 +70,7 @@ for custom types and extensions, see :ref:`extending_extensions`.
 Reading files with custom types
 *******************************
 
-The ASDF software is capable of reading files that contain custom data types
+The `asdf` software is capable of reading files that contain custom data types
 even if the extension that was used to create the file is not present. However,
 the extension is required in order to properly deserialize the original type.
 
@@ -96,7 +96,7 @@ Custom types, extensions, and versioning
 ----------------------------------------
 
 Tags and schemas that follow best practices are versioned. This allows changes
-to tags and schemas to be recorded, and it allows ASDF to define behavior with
+to tags and schemas to be recorded, and it allows `asdf` to define behavior with
 respect to version compatibility.
 
 Tag and schema versions may change for several reasons. One common reason is to
@@ -110,7 +110,7 @@ encouraged to maintain backwards compatibility with all older tag versions.
 Reading files
 *************
 
-When ASDF encounters a tagged object in a file, it will compare the URI of
+When `asdf` encounters a tagged object in a file, it will compare the URI of
 the tag in the file with the list of tags handled by available converters.
 The first matching converter will be selected to deserialize the object.  If
 no such converters exist, the library will emit a warning and the object will
@@ -123,7 +123,7 @@ its extension with the `~asdf.config.AsdfConfig.remove_extension` method.
 Writing files
 *************
 
-When writing a object to a file, ASDF compares the object's type to the list
+When writing a object to a file, `asdf` compares the object's type to the list
 of types handled by available converters.  The first matching converter will
 be selected to serialize the object.  If no such converters exist, the library
 will raise an error.
@@ -137,12 +137,12 @@ its extension with the `~asdf.config.AsdfConfig.remove_extension` method.
 Extensions from other packages
 ------------------------------
 
-Some external packages may define extensions that allow ASDF to recognize some
+Some external packages may define extensions that allow `asdf` to recognize some
 or all of the types that are defined by that package. Such packages may install
 the extension class as part of the package itself (details for developers can
 be found in :ref:`extending_extensions_installing_entry_points`).
 
-If the package installs its extension, then ASDF will automatically detect the
+If the package installs its extension, then `asdf` will automatically detect the
 extension and use it when processing any files. No specific action is required
 by the user in order to successfully read and write custom types defined by
 the extension for that particular package.
@@ -214,9 +214,9 @@ were used to create the file will be added to the file itself.  This includes
 the extension's URI, which uniquely identifies a particular version of the
 extension.
 
-When reading files with extension metadata, ASDF can check whether the required
+When reading files with extension metadata, `asdf` can check whether the required
 extensions are present before processing the file. If a required extension is
-not present, ASDF will issue a warning.
+not present, `asdf` will issue a warning.
 
 It is possible to turn these warnings into errors by using the
 `strict_extension_check` parameter of `asdf.open`. If this parameter is set to

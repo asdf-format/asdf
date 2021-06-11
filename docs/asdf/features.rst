@@ -31,10 +31,10 @@ and reading trees, see :ref:`overview`.
    arrays (see below).
 
 
-One of the key features of ASDF is its ability to serialize :mod:`numpy`
+One of the key features of `asdf` is its ability to serialize :mod:`numpy`
 arrays. This is discussed in detail in :ref:`array-data`.
 
-While the core ASDF package supports serialization of basic data types and
+While the core `asdf` package supports serialization of basic data types and
 Numpy arrays, its true power comes from its ability to be extended to support
 serialization of a wide range of custom data types. Details on using ASDF
 extensions can be found in :ref:`using_extensions`. Details on creating custom
@@ -227,7 +227,7 @@ Tree References
 
 ASDF files may reference items in the tree in other ASDF files.  The
 syntax used in the file for this is called "JSON Pointer", but users
-of ``asdf`` can largely ignore that.
+of `asdf` can largely ignore that.
 
 First, we'll create a ASDF file with a couple of arrays in it:
 
@@ -293,14 +293,14 @@ literal content in its place.
 
 A similar feature provided by YAML, anchors and aliases, also provides
 a way to support references within the same file.  These are supported
-by asdf, however the JSON Pointer approach is generally favored because:
+by `asdf`, however the JSON Pointer approach is generally favored because:
 
    - It is possible to reference elements in another file
 
    - Elements are referenced by location in the tree, not an
      identifier, therefore, everything can be referenced.
 
-Anchors and aliases are handled automatically by ``asdf`` when the
+Anchors and aliases are handled automatically by `asdf` when the
 data structure is recursive.  For example here is a dictionary that is
 included twice in the same tree:
 
@@ -373,12 +373,12 @@ file and retrieve the associated array data.
 Saving history entries
 ======================
 
-``asdf`` has a convenience method for notating the history of transformations
+`asdf` has a convenience method for notating the history of transformations
 that have been performed on a file.
 
 Given a `~asdf.AsdfFile` object, call `~asdf.AsdfFile.add_history_entry`, given
 a description of the change and optionally a description of the software (i.e.
-your software, not ``asdf``) that performed the operation.
+your software, not `asdf`) that performed the operation.
 
 .. runcode::
 
@@ -400,7 +400,7 @@ your software, not ``asdf``) that performed the operation.
 
 .. asdf:: example.asdf
 
-ASDF automatically saves history metadata about the extensions that were used
+`asdf` automatically saves history metadata about the extensions that were used
 to create the file. This information is used when opening files to determine if
 the proper extensions are installed (see :ref:`extension_checking` for more
 details).

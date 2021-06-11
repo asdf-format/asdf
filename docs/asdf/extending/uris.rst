@@ -35,7 +35,7 @@ downside that users expect to be able to retrieve the document contents from tha
 The asdf:// URI scheme
 ======================
 
-To counter the problem of URIs vs URLs, asdf 2.8 introduced support for the ``asdf://`` URI
+To counter the problem of URIs vs URLs, `asdf` 2.8 introduced support for the ``asdf://`` URI
 scheme.  These URIs are constructed just like ``http://`` or ``https://`` URIs, but the ASDF-specific
 scheme makes clear that the content cannot be fetched from a webserver.
 
@@ -50,7 +50,7 @@ Schemas
 -------
 
 Schemas are expected to include an ``id`` property that contains the URI that identifies them.
-That URI is used when referring to the schema in calls to asdf library functions.
+That URI is used when referring to the schema in calls to `asdf` library functions.
 We recommend the following pattern for schema URIs:
 
 ``asdf://<domain>/<project>/schemas/<name>-<version>``
@@ -84,7 +84,7 @@ Manifests
 
 Manifest documents are language-independent definitions of extensions to ASDF and
 include an ``id`` property that contains the URI that identifies them.  That URI is
-used when referring to the manifest in calls to asdf library functions.  We
+used when referring to the manifest in calls to `asdf` library functions.  We
 recommend the following pattern for manifest URIs:
 
 ``asdf://<domain>/<project>/manifests/<name>-<version>``
@@ -100,7 +100,7 @@ Extensions
 
 Finally, extensions URIs identify extensions to the ASDF format.  These URIs are included
 in an ASDF file's metadata to advertise the fact that additional software support (beyond
-a core asdf library) is needed to properly interpret the file.  Like tags, these URIs
+a core ASDF library) is needed to properly interpret the file.  Like tags, these URIs
 are not associated with a particular resource.  We recommend the following pattern
 for extension URIs:
 

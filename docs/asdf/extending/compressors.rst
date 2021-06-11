@@ -18,7 +18,7 @@ The Compressor interface
 ========================
 
 Every Compressor implementation must provide one required property
-two required methods:
+and two required methods:
 
 `Compressor.label` - A 4-byte compression code.  This code is used
 by users to select a compression algorithm and also stored in the
@@ -45,7 +45,7 @@ number of bytes written to the output array.
 Entry point performance considerations
 ======================================
 
-For the good of asdf users everywhere, it's important that entry point
+For the good of `asdf` users everywhere, it's important that entry point
 methods load as quickly as possible.  All extensions must be loaded before
 reading an ASDF file, and therefore all compressors are created as well.  Any
 compressor module or ``__init__`` method that lingers will introduce a delay
@@ -54,4 +54,4 @@ authors minimize the number of imports that occur in the module containing the
 Compressor implementation, and defer imports of compression libraries to inside
 the `Comrpessor.compress` and `Compressor.decompress` methods.  This will
 prevent the library from ever being imported when reading ASDF files that
-to not utilize the Compressor's algorithm.
+do not utilize the Compressor's algorithm.

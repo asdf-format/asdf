@@ -31,7 +31,7 @@ class's implementation and not just a module where it is imported for convenienc
 For example, if class ``Foo`` is implemented in ``example_package.foo.Foo`` but
 imported as ``example_package.Foo`` for convenience, it is the former name that
 must be used.  The `~asdf.util.get_class_name` method will return the name that
-asdf expects.
+`asdf` expects.
 
 The string type name is recommended over a type object for performance reasons,
 see :ref:`extending_converters_performance`.
@@ -269,7 +269,7 @@ at the time that we retrieved it.  We can handle this situation by making our
 
 The generator version of ``from_yaml_tree`` yields the partially constructed
 ``FractionWithInverse`` object before setting its inverse property.  This allows
-asdf to proceed to constructing the inverse ``FractionWithInverse`` object,
+`asdf` to proceed to constructing the inverse ``FractionWithInverse`` object,
 and resume the original ``from_yaml_tree`` execution only when the inverse
 is actually available.
 
@@ -287,7 +287,7 @@ With this modification we can successfully deserialize our ASDF file:
 Entry point performance considerations
 ======================================
 
-For the good of asdf users everywhere, it's important that entry point
+For the good of `asdf` users everywhere, it's important that entry point
 methods load as quickly as possible.  All extensions must be loaded before
 reading an ASDF file, and therefore all converters are created as well.  Any
 converter module or ``__init__`` method that lingers will introduce a delay

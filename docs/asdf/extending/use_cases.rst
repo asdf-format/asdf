@@ -12,7 +12,7 @@ to get the job done.
 Validate an ASDF tree against a schema
 ======================================
 
-The asdf library already validates individual tagged objects within the tree,
+The `asdf` library already validates individual tagged objects within the tree,
 but what if we want to validate the structure of the tree itself?  Such
 "document schemas" can be associated with an `~asdf.AsdfFile` using the
 ``custom_schema`` argument, but this argument accepts a URI and the asdf
@@ -22,8 +22,8 @@ URI.
 1. Designate a URI for the schema.  See :ref:`extending_uris_entities_schemas` for
    recommendations on schema URI structure.
 2. Write the schema.  See :ref:`extending_schemas` if you're new to authoring schemas.
-3. Install the schema as an asdf library resource.  See :ref:`extending_resources`
-   for an overview of resources in asdf and options for installing them.
+3. Install the schema as an `asdf` library resource.  See :ref:`extending_resources`
+   for an overview of resources in `asdf` and options for installing them.
 
 Serialize a new type
 ====================
@@ -66,10 +66,10 @@ For sharing with other Python users
 
 Now say our files are getting out into the world and into the hands of
 other Python users.  We'll want to build an installable package
-around our code and use the asdf library's entry points to make our
+around our code and use the `asdf` library's entry points to make our
 extension more convenient to use.  We should also think about adding
 a schema that validates our tagged objects, so if someone manually edits
-a file and makes a mistake, we get a clear error when asdf opens the file.
+a file and makes a mistake, we get a clear error when `asdf` opens the file.
 
 1. Identify the Python type to serialize.  We'll need to know the fully-qualified
    name of the type (module path + class name).
@@ -83,8 +83,8 @@ a file and makes a mistake, we get a clear error when asdf opens the file.
 4. Write the schema that will validate the tagged object.  See :ref:`extending_schemas`
    if you're new to authoring schemas.
 
-5. Make the schema installable as an asdf library resource.  See :ref:`extending_resources`
-   for an overview of resources in asdf and :ref:`extending_resources_entry_points` for
+5. Make the schema installable as an `asdf` library resource.  See :ref:`extending_resources`
+   for an overview of resources in `asdf` and :ref:`extending_resources_entry_points` for
    information on installing resources via an entry point.
 
 6. Implement a `~asdf.extension.Converter` class that converts the type to
@@ -93,7 +93,7 @@ a file and makes a mistake, we get a clear error when asdf opens the file.
    that the Converter is writing YAML objects correctly.
 
 7. Implement an `~asdf.extension.Extension` class which is the vehicle
-   for plugging our converter into the asdf library.  See :ref:`extending_extensions`
+   for plugging our converter into the `asdf` library.  See :ref:`extending_extensions`
    for a discussion of the Extension interface.  We'll need to associate the schema
    URI with the tag URI in our tag's `~asdf.extension.TagDefinition` object.
 
@@ -127,8 +127,8 @@ called an extension manifest that defines the extension in a language-independen
    we're including in our extension.  See :ref:`extending_manifests` for information
    on the manifest format.
 
-5. Make the schema and manifest installable as asdf library resources.  See
-   :ref:`extending_resources` for an overview of resources in asdf and
+5. Make the schema and manifest installable as `asdf` library resources.  See
+   :ref:`extending_resources` for an overview of resources in `asdf` and
    :ref:`extending_resources_entry_points` for information on installing resources
    via an entry point.
 
@@ -161,7 +161,7 @@ that in an extension.
    of the Compressor interface.
 
 2. Implement an `~asdf.extension.Extension` class which is the vehicle
-   for plugging our compressor into the asdf library.  See :ref:`extending_extensions`
+   for plugging our compressor into the `asdf` library.  See :ref:`extending_extensions`
    for a discussion of the Extension interface.
 
 3. Install the extension via one of the two available methods.  See

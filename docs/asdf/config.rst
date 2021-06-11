@@ -13,7 +13,7 @@ AsdfConfig and you
 ==================
 
 The `AsdfConfig` class provides properties that can be adjusted to change the
-behavior of the asdf library for all files.  For example, to disable schema validation
+behavior of the `asdf` library for all files.  For example, to disable schema validation
 on read:
 
 .. code-block:: python
@@ -73,9 +73,9 @@ This allows for short-lived configuration changes that do not impact other code:
 Special note to library maintainers
 -----------------------------------
 
-Libraries that use asdf are encouraged to only modify `AsdfConfig` within a
+Libraries that use `asdf` are encouraged to only modify `AsdfConfig` within a
 surrounding call to `~asdf.config_context`.  The downstream library will then
-be able to customize asdf's behavior without impacting other libraries or
+be able to customize `asdf`'s behavior without impacting other libraries or
 clobbering changes made by the user.
 
 Config options
@@ -116,7 +116,7 @@ legacy_fill_schema_defaults
 Flag that controls filling default values from schemas for older versions of
 the ASDF Standard.  This library used to remove nodes from the tree whose
 values matched the default property in the schema.  That behavior was changed
-in asdf 2.8, but in order to read files produced by older versions of the library,
+in `asdf` 2.8, but in order to read files produced by older versions of the library,
 default values must still be filled from the schema for ASDF Standard <= 1.5.0.
 
 Set to False to disable filling default values from the schema for these
@@ -166,4 +166,3 @@ a schema, which can then be used to validate a file:
     >>> af.validate()
 
 See the `AsdfConfig` API documentation for more detail.
-

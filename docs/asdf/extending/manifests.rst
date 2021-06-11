@@ -42,7 +42,7 @@ with one tag and schema:
     id: asdf://example.com/example-project/manifests/example-1.0.0
 
 The ``id`` property contains the URI that uniquely identifies our manifest.  This
-URI is how we'll refer to the manifest document's content when using the asdf
+URI is how we'll refer to the manifest document's content when using the `asdf`
 library.
 
 .. code-block:: yaml

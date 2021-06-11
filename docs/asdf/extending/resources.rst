@@ -7,21 +7,21 @@ Resources and resource mappings
 ===============================
 
 In the terminology of this library, a "resource" is a sequence of bytes associated
-with a URI.  Currently the two types of resources recognized by asdf are schemas
+with a URI.  Currently the two types of resources recognized by `asdf` are schemas
 and extension manifests.  Both of these are YAML documents whose associated URI
 is expected to match the ``id`` property of the document.
 
-A "resource mapping" is an asdf plugin that provides access to
+A "resource mapping" is an `asdf` plugin that provides access to
 the content for a URI.  These plugins must implement the
 `~collections.abc.Mapping` interface (a simple `dict` qualifies) and map
 `str` URI keys to `bytes` values.  Resource mappings are installed into
-the asdf library via one of two routes: the `AsdfConfig.add_resource_mapping <asdf.config.AsdfConfig.add_resource_mapping>`
+the `asdf` library via one of two routes: the `AsdfConfig.add_resource_mapping <asdf.config.AsdfConfig.add_resource_mapping>`
 method or the ``asdf.resource_mappings`` entry point.
 
 Installing resources via AsdfConfig
 ===================================
 
-The simplest way to isntall a resource into asdf is to add it at runtime using the
+The simplest way to isntall a resource into `asdf` is to add it at runtime using the
 `AsdfConfig.add_resource_mapping <asdf.config.AsdfConfig.add_resource_mapping>` method.
 For example, the following code istalls a schema for use with the `asdf.AsdfFile`
 custom_schema argument:
@@ -58,7 +58,7 @@ The DirectoryResourceMapping class
 ==================================
 
 But what if we don't want to store our schemas in variables in the code?
-Storing resources in a directory tree is a common use case, so asdf provides
+Storing resources in a directory tree is a common use case, so `asdf` provides
 a `~collections.abc.Mapping` implementation that reads schema content from
 a filesystem.  This is the `DirectoryResourceMapping` class.
 
@@ -88,11 +88,11 @@ which are arranged in the following directory structure::
         └─ baz-8.1.1.yaml
 
 Our goal is to install all schemas in the directory tree so that they
-are available for use with asdf.  The `DirectoryResourceMapping` class
+are available for use with `asdf`.  The `DirectoryResourceMapping` class
 can do that for us, but we need to show it how to construct the schema URIs
 from the file paths *without reading the id property from the files*.  This
 requirement is a performance consideration; not all resources are used
-in every session, and if asdf were to read and parse all available files
+in every session, and if `asdf` were to read and parse all available files
 when plugins are loaded, the first call to `asdf.open` would be
 intolerably slow.
 
@@ -121,7 +121,7 @@ searching for schemas, ``filename_pattern`` is a glob pattern chosen to exclude
 our README file, and ``stem_filename`` causes the class to drop the ``.yaml`` suffix
 when constructing URIs.
 
-We can test that our configuration is correct by asking asdf to read
+We can test that our configuration is correct by asking `asdf` to read
 and parse one of the schemas:
 
 .. code-block:: python
@@ -137,7 +137,7 @@ and parse one of the schemas:
 Installing resources via entry points
 =====================================
 
-The asdf package also offers an entry point for installing resource
+The `asdf` package also offers an entry point for installing resource
 mapping plugins.  This installs a package's resources automatically
 without requiring calls to the AsdfConfig method.  The entry point is
 called ``asdf.resource_mappings`` and expects to receive
@@ -222,13 +222,13 @@ that all files with a ``.yaml`` extension be installed:
 Entry point performance considerations
 --------------------------------------
 
-For the good of asdf users everywhere, it's important that entry point
+For the good of `asdf` users everywhere, it's important that entry point
 methods load as quickly as possible.  All resource URIs must be loaded
 before reading an ASDF file, so any entry point method that lingers
 will introduce a delay to the initial call to `asdf.open`.  For that reason,
 we recommend to minimize the number of imports that occur in the module
 containing the entry point method, particularly imports of modules outside
-of the Python standard library or asdf itself.  When resources are stored
+of the Python standard library or `asdf` itself.  When resources are stored
 in a filesystem, it's also helpful to delay reading a file until its URI
 is actually requested, which may not occur in a given session.  The
 DirectoryResourceMapping class is implemented with this behavior.

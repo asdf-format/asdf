@@ -187,7 +187,7 @@ an additional list of class names that previously identified the extension:
 Installing an extension
 =======================
 
-Once an extension is implemented, it must be installed so that the asdf
+Once an extension is implemented, it must be installed so that the `asdf`
 library knows to use it.  There are two options for installing an extension:
 manually per session using `~asdf.config.AsdfConfig`, or automatically
 for every session using the ``asdf.extensions`` entry point
@@ -219,7 +219,7 @@ for the duration of the current Python session.
 Installing extensions via entry points
 --------------------------------------
 
-The asdf package also offers an entry point for installing extensions
+The `asdf` package also offers an entry point for installing extensions
 This registers a package's extensions automatically on package install
 without requiring calls to the AsdfConfig method.  The entry point is
 called ``asdf.extensions`` and expects to receive a method that returns
@@ -253,13 +253,13 @@ new Python session.
 Entry point performance considerations
 --------------------------------------
 
-For the good of asdf users everywhere, it's important that entry point
+For the good of `asdf` users everywhere, it's important that entry point
 methods load as quickly as possible.  All extensions must be loaded before
 reading an ASDF file, so any entry point method that lingers will introduce a delay
 to the initial call to `asdf.open`.  For that reason, we recommend that extension
 authors minimize the number of imports that occur in the module containing
 the entry point method, particularly imports of modules outside of the
-Python standard library or asdf itself.
+Python standard library or `asdf` itself.
 
 .. _extending_extensions_manifest:
 
@@ -323,7 +323,7 @@ loaded:
     def get_extensions():
         return [EXTENSION]
 
-When the module is imported, ``ManifestExtension.from_uri`` asks the asdf library to load
+When the module is imported, ``ManifestExtension.from_uri`` asks the `asdf` library to load
 all available resources so that it can retrieve the manifest content.  But loading the resources
 requires importing this module to get at the ``get_resource_mappings`` method, so now we're stuck!
 
@@ -336,5 +336,5 @@ The solution is to instantiate the ManifestExtension inside of its entry point m
             ManifestExtension.from_uri("asdf://example.com/example-project/manifests/foo-1.0.0")
         ]
 
-This is not as inefficient as it might seem, since the asdf library only calls the method once
+This is not as inefficient as it might seem, since the `asdf` library only calls the method once
 and reuses a cached result thereafter.
