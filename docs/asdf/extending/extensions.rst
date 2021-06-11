@@ -84,6 +84,8 @@ instead of just a string:
         ]
         converters = [FooConverter()]
 
+.. _extending_extensions_compressors:
+
 Additional block compressors
 ----------------------------
 

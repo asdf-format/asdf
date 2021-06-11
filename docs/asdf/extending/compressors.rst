@@ -14,6 +14,9 @@ will be available to users as an argument to `~asdf.AsdfFile.set_array_compressi
 the ``all_array_compression`` argument to `~asdf.AsdfFile.write_to` and
 `~asdf.AsdfFile.update`.
 
+See :ref:`extending_extensions_compressors` for details on including
+a Compressor in an extension.
+
 The Compressor interface
 ========================
 
