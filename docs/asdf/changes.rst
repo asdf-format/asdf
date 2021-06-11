@@ -310,7 +310,7 @@ users. The most notable changes are the following:
 
 Please see the :ref:`change_log` for additional details.
 
-What's New in ASDF 2.0?
+What's New in asdf 2.0?
 =======================
 
 `asdf` 2.0 is a major release that includes many improvements, new features, and
