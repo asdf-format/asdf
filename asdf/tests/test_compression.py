@@ -194,6 +194,17 @@ def test_set_array_compression(tmpdir):
         assert af_in.get_array_compression(af_in.tree['bzp2_data']) == 'bzp2'
 
 
+def test_nonnative_endian_compression(tmpdir):
+    tmpfile = os.path.join(str(tmpdir), 'compressed.asdf')
+
+    ledata = np.arange(1000, dtype='<i8')
+    bedata = np.arange(1000, dtype='>i8')
+
+    _roundtrip(tmpdir,
+               dict(ledata=ledata, bedata=bedata),
+               'lz4')
+
+
 class LzmaCompressor(Compressor):
     def compress(self, data, **kwargs):
         comp = lzma.compress(data, **kwargs)

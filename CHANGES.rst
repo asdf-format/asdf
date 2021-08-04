@@ -6,6 +6,8 @@
 
 - Update documentation to reflect new 2.8 features. [#998]
 
+- Fix array compression for non-native byte order [#1010]
+
 2.8.1 (2021-06-09)
 ------------------
 

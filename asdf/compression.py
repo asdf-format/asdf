@@ -305,7 +305,7 @@ def compress(fd, data, compression, config=None):
     data = memoryview(data)
     if not data.contiguous:
         data = memoryview(data.tobytes())  # make a contiguous copy
-    data = data.cast('c').cast(data.format)  # we get a 1D array by a cast to byte, then a cast to data.format
+    data = memoryview(np.frombuffer(data, dtype=data.format))  # get a 1D array that preserves byteorder
     if not data.contiguous:
         # the data will be contiguous by construction, but better safe than sorry!
         raise ValueError(data.contiguous)
