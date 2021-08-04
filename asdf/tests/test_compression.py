@@ -195,8 +195,6 @@ def test_set_array_compression(tmpdir):
 
 
 def test_nonnative_endian_compression(tmpdir):
-    tmpfile = os.path.join(str(tmpdir), 'compressed.asdf')
-
     ledata = np.arange(1000, dtype='<i8')
     bedata = np.arange(1000, dtype='>i8')
 
