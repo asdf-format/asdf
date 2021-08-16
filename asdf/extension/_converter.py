@@ -134,7 +134,7 @@ class Converter(abc.ABC):
 
         Parameters
         ----------
-        tree : dict or list or str
+        node : dict or list or str
             The YAML node to convert.
         tag : str
             The YAML tag of the object being converted.
