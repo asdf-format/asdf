@@ -371,7 +371,10 @@ class NDArrayType(AsdfType):
     @classmethod
     def from_tree(cls, node, ctx):
         if isinstance(node, list):
-            return cls(node, None, None, None, None, None, None, ctx)
+            array = cls(node, None, None, None, None, None, None, ctx)
+            array.name = None
+            array.version = None
+            return array
 
         elif isinstance(node, dict):
             source = node.get('source')
@@ -396,7 +399,10 @@ class NDArrayType(AsdfType):
             strides = node.get('strides', None)
             mask = node.get('mask', None)
 
-            return cls(source, shape, dtype, offset, strides, 'A', mask, ctx)
+            array = cls(source, shape, dtype, offset, strides, 'A', mask, ctx)
+            array.name = None
+            array.version = None
+            return array
 
         raise TypeError("Invalid ndarray description.")
 
