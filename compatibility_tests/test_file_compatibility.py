@@ -100,7 +100,7 @@ def get_supported_versions(env_path):
     installed in the specified virtual environment.
     """
     script = r"""import asdf; print("\n".join(str(v) for v in asdf.versioning.supported_versions))"""
-    output = env_check_output(env_path, "python", "-c", script)
+    output = env_check_output(env_path, "python3", "-c", script)
     return [asdf.versioning.AsdfVersion(v) for v in output.split("\n")]
 
 
@@ -110,7 +110,7 @@ def get_installed_version(env_path):
     virtual environment.
     """
     script = r"""import asdf; print(asdf.__version__)"""
-    return StrictVersion(env_check_output(env_path, "python", "-c", script))
+    return StrictVersion(env_check_output(env_path, "python3", "-c", script))
 
 
 @pytest.fixture(scope="module", params=PATCH_VERSIONS)
@@ -176,7 +176,7 @@ def test_file_compatibility(asdf_version, env_path, tmpdir):
         if asdf_version >= MIN_VERSION_NEW_FILES:
             current_file_path = Path(str(tmpdir))/"test-current.asdf"
             generate_file(current_file_path, standard_version)
-            assert env_run(env_path, "python", ASSERT_SCRIPT_PATH, current_file_path, capture_output=True), (
+            assert env_run(env_path, "python3", ASSERT_SCRIPT_PATH, current_file_path, capture_output=True), (
                 "asdf library version {} failed to read an ASDF Standard {} ".format(asdf_version, standard_version) +
                 "file produced by this code"
             )
@@ -185,7 +185,7 @@ def test_file_compatibility(asdf_version, env_path, tmpdir):
         # can be read by the current version of the code.
         if asdf_version >= MIN_VERSION_OLD_FILES:
             old_file_path = Path(str(tmpdir))/"test-old.asdf"
-            assert env_run(env_path, "python", GENERATE_SCRIPT_PATH, old_file_path, str(standard_version), capture_output=True), (
+            assert env_run(env_path, "python3", GENERATE_SCRIPT_PATH, old_file_path, str(standard_version), capture_output=True), (
                 "asdf library version {} failed to generate an ASDF Standard {} file".format(asdf_version, standard_version)
             )
             assert_file_correct(old_file_path), (
