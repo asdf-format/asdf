@@ -23,6 +23,11 @@ jobs:
             python-version: 3.9
             toxenv: coverage
 
+          - name: Python 3.10 Testing
+            os: ubuntu-latest
+            python-version: 3.10.0-rc.1
+            toxenv: py310
+
           - name: Python 3.8 Testing
             os: ubuntu-latest
             python-version: 3.8
