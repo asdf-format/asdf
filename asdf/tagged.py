@@ -98,7 +98,7 @@ class TaggedList(Tagged, UserList, list):
 
 class TaggedString(Tagged, UserString, str):
     """
-    A Python list with a tag attached.
+    A Python string with a tag attached.
     """
     style = None
 
