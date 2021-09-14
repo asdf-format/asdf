@@ -123,6 +123,7 @@ jobs:
       - name: Install System Packages
         if: ${{ contains(matrix.toxenv,'docbuild') }}
         run: |
+          sudo apt update -y
           sudo apt-get install graphviz texlive-latex-extra dvipng
       - name: Checkout code
         uses: actions/checkout@v2
