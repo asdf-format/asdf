@@ -44,7 +44,7 @@ with open(sys.argv[1], "wb") as file:
         with editor_path.open("w") as file:
             file.write(content)
 
-        return f"python {editor_path}"
+        return f"python3 {editor_path}"
 
     return _create_editor
 
