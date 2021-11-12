@@ -8,6 +8,8 @@
 
 - Fix array compression for non-native byte order [#1010]
 
+- Fix use of 'python' where 'python3' is intended. [#1026]
+
 2.8.1 (2021-06-09)
 ------------------
 
