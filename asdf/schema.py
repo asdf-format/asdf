@@ -458,48 +458,73 @@ def load_schema(url, resolver=None, resolve_references=False,
     )
 
 
+def _safe_resolve(resolver, json_id, uri):
+    """
+    This function handles the tricky task of resolving a schema URI
+    in the presence of both new and legacy extensions.
+
+    There are two senses of "resolve" here: one is to resolve the URI
+    to a file:// URL using the legacy extension resolver object. The other
+    is to resolve relative URIs against the id of the current schema document,
+    which is what generic_io.resolve_uri does.
+
+    For URIs associated with new-style extensions, we want to resolve with
+    generic_io.resolve_uri, but not with the resolver object, otherwise we risk
+    mangling URIs that share a prefix with a resolver mapping.
+    """
+    # We can't use urllib.parse here because tag: URIs don't
+    # parse correctly.
+    parts = uri.split("#")
+    base = parts[0]
+    if len(parts) > 1:
+        fragment = parts[1]
+    else:
+        fragment = ""
+
+    # The generic_io.resolve_uri method cannot operate on tag: URIs.
+    # New-style extensions don't support $ref with a tag URI target anyway,
+    # so it's safe to feed this through the resolver right away.
+    if base.startswith("tag:"):
+        base = resolver(base)
+
+    # Resolve relative URIs (e.g., #foo/bar, ../foo/bar) against
+    # the current schema id.
+    base = generic_io.resolve_uri(json_id, base)
+
+    # Use the resolver object only if the URI does not belong to one
+    # of the new-style extensions.
+    if base not in get_config().resource_manager:
+        base = resolver(base)
+
+    return base, fragment
+
+
 @lru_cache()
 def _load_schema_cached(url, resolver, resolve_references, resolve_local_refs):
     loader = _make_schema_loader(resolver)
     schema, url = loader(url)
 
-    # Resolve local references
-    if resolve_local_refs:
-        def resolve_local(node, json_id):
-            if isinstance(node, dict) and '$ref' in node:
-                ref_url = resolver(node['$ref'])
-                if ref_url.startswith('#'):
-                    parts = patched_urllib_parse.urlparse(ref_url)
-                    subschema_fragment = reference.resolve_fragment(
-                        schema, parts.fragment)
-                    return subschema_fragment
-            return node
-
-        schema = treeutil.walk_and_modify(schema, resolve_local)
-
-    if resolve_references:
+    if resolve_references or resolve_local_refs:
         def resolve_refs(node, json_id):
             if json_id is None:
                 json_id = url
+
             if isinstance(node, dict) and '$ref' in node:
-                suburl = generic_io.resolve_uri(json_id, resolver(node['$ref']))
-                parts = patched_urllib_parse.urlparse(suburl)
-                fragment = parts.fragment
-                if len(fragment):
-                    suburl_path = suburl[:-(len(fragment) + 1)]
-                else:
-                    suburl_path = suburl
-                suburl_path = resolver(suburl_path)
-                if suburl_path == url or suburl_path == schema.get("id"):
+                suburl_base, suburl_fragment = _safe_resolve(resolver, json_id, node['$ref'])
+
+                if suburl_base == url or suburl_base == schema.get("id"):
+                    # This is a local ref, which we'll resolve in both cases.
                     subschema = schema
+                elif resolve_references:
+                    # Only resolve non-local refs when the flag is set.
+                    subschema = load_schema(suburl_base, resolver, True)
                 else:
-                    subschema = load_schema(suburl_path, resolver, True)
+                    # Otherwise return the $ref unmodified.
+                    return node
 
-                subschema_fragment = reference.resolve_fragment(
-                    subschema, fragment)
-                return subschema_fragment
-
-            return node
+                return reference.resolve_fragment(subschema, suburl_fragment)
+            else:
+                return node
 
         schema = treeutil.walk_and_modify(schema, resolve_refs)
 

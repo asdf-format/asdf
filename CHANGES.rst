@@ -10,6 +10,9 @@
 
 - Fix use of 'python' where 'python3' is intended. [#1026]
 
+- Fix schema URI resolving when the URI prefix is also
+  claimed by a legacy extension. [#1029]
+
 2.8.1 (2021-06-09)
 ------------------
 
