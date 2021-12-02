@@ -204,6 +204,53 @@ properties:
             schema.validate({"bar": 12}, schema=schema_tree)
 
 
+def test_load_schema_with_stsci_id():
+    """
+    This tests the following edge case:
+    - schema references a subschema provided by the new extension API
+    - subschema URI shares a prefix with one of the old-style extension resolvers
+    - resolve_references is enabled
+
+    If we're not careful, the old-style resolver will mangle the URI and
+    we won't be able to retrieve the schema content.
+    """
+    subschema_content="""%YAML 1.1
+---
+$schema: http://stsci.edu/schemas/asdf/asdf-schema-1.0.0
+id: http://stsci.edu/schemas/bar
+
+bar:
+  type: string
+...
+"""
+    content = """%YAML 1.1
+---
+$schema: http://stsci.edu/schemas/asdf/asdf-schema-1.0.0
+id: http://stsci.edu/schemas/foo
+
+definitions:
+  local_bar:
+    type: string
+
+type: object
+properties:
+  bar:
+    $ref: http://stsci.edu/schemas/bar#/bar
+  local_bar:
+    $ref: '#/definitions/local_bar'
+...
+"""
+    with asdf.config_context() as config:
+        config.add_resource_mapping({"http://stsci.edu/schemas/foo": content})
+        config.add_resource_mapping({"http://stsci.edu/schemas/bar": subschema_content})
+
+        schema_tree = schema.load_schema("http://stsci.edu/schemas/foo", resolve_references=True)
+        instance = {"bar": "baz", "local_bar": "foz"}
+        schema.validate(instance, schema=schema_tree)
+        with pytest.raises(ValidationError):
+            schema.validate({"bar": 12}, schema=schema_tree)
+
+
 def test_schema_caching():
     # Make sure that if we request the same URL, we get a different object
     # (despite the caching internal to load_schema).  Changes to a schema
