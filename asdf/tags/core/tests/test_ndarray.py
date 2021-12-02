@@ -895,3 +895,26 @@ def test_block_data_change(tmpdir):
         af.update()
         array_after = af.tree["data"].__array__()
         assert array_before is not array_after
+
+
+def test_problematic_class_attributes(tmp_path):
+    """
+    The presence of the "name" and "version" attributes
+    in NDArrayType cause problems when our arrays are used
+    with other libraries.
+
+    See https://github.com/asdf-format/asdf/issues/1015
+    """
+    file_path = tmp_path / "test.asdf"
+    with asdf.AsdfFile() as af:
+        af["arr"] = np.arange(100)
+        af.write_to(file_path)
+
+    with asdf.open(file_path) as af:
+        assert isinstance(af["arr"], ndarray.NDArrayType)
+
+        with pytest.raises(AttributeError):
+            af["arr"].name
+
+        with pytest.raises(AttributeError):
+            af["arr"].version

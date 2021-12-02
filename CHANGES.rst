@@ -13,6 +13,9 @@
 - Fix schema URI resolving when the URI prefix is also
   claimed by a legacy extension. [#1029]
 
+- Remove 'name' and 'version' attributes from NDArrayType
+  instances. [#1031]
+
 2.8.1 (2021-06-09)
 ------------------
 
