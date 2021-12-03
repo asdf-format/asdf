@@ -368,6 +368,18 @@ class NDArrayType(AsdfType):
             self._array = None
             raise e from None
 
+    def __getattribute__(self, name):
+        # The presence of these attributes on an NDArrayType instance
+        # can cause problems when the array is passed to other
+        # libraries.
+        # See https://github.com/asdf-format/asdf/issues/1015
+        if name in ("name", "version"):
+            raise AttributeError(
+                f"'{self.__class__.name}' object has no attribute '{name}'"
+            )
+        else:
+            return super().__getattribute__(name)
+
     @classmethod
     def from_tree(cls, node, ctx):
         if isinstance(node, list):
