@@ -4,6 +4,21 @@
 Changes
 *******
 
+What's new in asdf 2.8.2?
+=========================
+
+The ASDF Standard is at v1.6.0.
+
+Changes include:
+
+- Fix array compression for non-native byte order.
+
+- Fix bug in schema loading when URI is claimed by both legacy
+  and new-style extensions.
+
+- Hide 'name' and 'version' attributes on instances of
+  NDArrayType.
+
 What's new in asdf 2.8.1?
 =========================
 
