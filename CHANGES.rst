@@ -1,7 +1,7 @@
 2.9.0 (unreleased)
 ------------------
 
-2.8.2 (unreleased)
+2.8.2 (2021-12-06)
 ------------------
 
 - Update documentation to reflect new 2.8 features. [#998]
