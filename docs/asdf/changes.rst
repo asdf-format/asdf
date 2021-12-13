@@ -4,6 +4,15 @@
 Changes
 *******
 
+What's new in asdf 2.8.3?
+=========================
+
+The ASDF Standard is at v1.6.0.
+
+Changes include:
+
+- Fix use of "python" instead of "python3" in compatibility tests.
+
 What's new in asdf 2.8.2?
 =========================
 
