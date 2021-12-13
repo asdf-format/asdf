@@ -21,5 +21,5 @@ def test_all_tags_present():
     af = AsdfFile()
     for tag in af.type_index._type_by_tag:
         assert tag in tags
-    for tag in af.extension_manager._tag_defs_by_tag:
+    for tag in af.extension_manager._converters_by_tag:
         assert tag in tags

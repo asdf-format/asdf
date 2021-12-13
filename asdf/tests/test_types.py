@@ -604,47 +604,6 @@ flow_thing:
         asdf.open(buff, extensions=CustomFlowExtension())
 
 
-def test_extension_override(tmpdir):
-
-    gwcs = pytest.importorskip('gwcs', '0.12.0')
-
-    version = str(versioning.default_version)
-    tmpfile = str(tmpdir.join('override.asdf'))
-
-    with asdf.AsdfFile() as aa:
-        assert aa.type_index.from_custom_type(gwcs.WCS, version=version) is gwcs.tags.wcs.WCSType
-        aa.tree['wcs'] = gwcs.WCS(output_frame='icrs')
-        aa.write_to(tmpfile)
-
-    with open(tmpfile, 'rb') as ff:
-        contents = str(ff.read())
-        assert gwcs.tags.wcs.WCSType.yaml_tag in contents
-
-
-def test_extension_override_subclass(tmpdir):
-
-    gwcs = pytest.importorskip('gwcs', '0.12.0')
-    pytest.importorskip('astropy', '4.0.0')
-
-    version = str(versioning.default_version)
-    tmpfile = str(tmpdir.join('override.asdf'))
-
-    class SubclassWCS(gwcs.WCS):
-        pass
-
-    with asdf.AsdfFile() as aa:
-        assert aa.type_index.from_custom_type(gwcs.WCS, version=version) is gwcs.tags.wcs.WCSType
-        assert aa.type_index.from_custom_type(SubclassWCS, version=version) is gwcs.tags.wcs.WCSType
-        # The duplication here is deliberate: make sure that nothing has changed
-        assert aa.type_index.from_custom_type(gwcs.WCS, version=version) is gwcs.tags.wcs.WCSType
-        aa.tree['wcs'] = SubclassWCS(output_frame='icrs')
-        aa.write_to(tmpfile)
-
-    with open(tmpfile, 'rb') as ff:
-        contents = str(ff.read())
-        assert gwcs.tags.wcs.WCSType.yaml_tag in contents
-
-
 def test_tag_without_schema(tmpdir):
 
     tmpfile = str(tmpdir.join('foo.asdf'))
