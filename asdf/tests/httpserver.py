@@ -41,7 +41,7 @@ def run_server(tmpdir, handler_class, stop_event, queue):  # pragma: no cover
     # Using server.serve_forever does not work here since it ignores the
     # timeout value set above. Having an explicit loop also allows us to kill
     # the server from the parent thread.
-    while not stop_event.isSet():
+    while not stop_event.is_set():
         server.handle_request()
 
     server.server_close()
