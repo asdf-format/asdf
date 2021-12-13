@@ -45,7 +45,7 @@ def list_tags(display_classes=False, iostream=sys.stdout):
     af = AsdfFile()
 
     tag_pairs = []
-    for tag in af.extension_manager._tag_defs_by_tag:
+    for tag in af.extension_manager._converters_by_tag:
         tag_pairs.append((tag, af.extension_manager.get_converter_for_tag(tag).types))
     for tag in af.type_index._type_by_tag:
         tag_pairs.append((tag, [af.type_index._type_by_tag[tag]]))

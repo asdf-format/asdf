@@ -1,3 +1,8 @@
+2.8.4 (unreleased)
+------------------
+
+- Fix tag listing when extension is not fully implemented. [#1034]
+
 2.8.3 (2021-12-13)
 ------------------
 
