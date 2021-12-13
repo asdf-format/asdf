@@ -1,6 +1,8 @@
 2.9.0 (unreleased)
 ------------------
 
+- Fix more use of 'python' where 'python3' is intended. [#1033]
+
 2.8.2 (2021-12-06)
 ------------------
 
