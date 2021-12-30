@@ -1,6 +1,6 @@
 import json
 import urllib.request
-from distutils.version import StrictVersion
+from packaging.version import Version
 from itertools import groupby
 from pathlib import Path
 import subprocess
@@ -16,18 +16,18 @@ import asdf
 from common import generate_file, assert_file_correct
 
 
-# Strange version present on pypi that doesn't parse as a StrictVersion
+# Strange version present on pypi that doesn't parse as a Version
 BAD_VERSIONS = {"0"}
 
 # Minimum library version to read files produced by the current
 # version of the code.  We're not maintaining < 2.7.x and bugs in older
 # versions prevent valid files from being read.
-MIN_VERSION_NEW_FILES = StrictVersion("2.7.0")
+MIN_VERSION_NEW_FILES = Version("2.7.0")
 
 # Minimum library version to produce files read by the current
 # version of the code.  Earlier versions aren't able to generate
 # files for all the ASDF Standard versions that they claim to support.
-MIN_VERSION_OLD_FILES = StrictVersion("2.3.0")
+MIN_VERSION_OLD_FILES = Version("2.3.0")
 
 GENERATE_SCRIPT_PATH = Path(__file__).parent/"generate_file.py"
 ASSERT_SCRIPT_PATH = Path(__file__).parent/"assert_file_correct.py"
@@ -56,7 +56,7 @@ def fetch_package_versions(package_name):
     content = urllib.request.urlopen("https://pypi.org/pypi/{}/json".format(package_name)).read()
     version_strings = json.loads(content)["releases"].keys()
     return [
-        StrictVersion(v) for v in version_strings
+        Version(v) for v in version_strings
         if v not in BAD_VERSIONS and (v >= MIN_VERSION_NEW_FILES or v >= MIN_VERSION_OLD_FILES)
     ]
 
@@ -110,7 +110,7 @@ def get_installed_version(env_path):
     virtual environment.
     """
     script = r"""import asdf; print(asdf.__version__)"""
-    return StrictVersion(env_check_output(env_path, "python3", "-c", script))
+    return Version(env_check_output(env_path, "python3", "-c", script))
 
 
 @pytest.fixture(scope="module", params=PATCH_VERSIONS)
