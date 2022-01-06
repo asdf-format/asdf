@@ -1,5 +1,4 @@
 import io
-import os
 from fractions import Fraction
 
 import pytest
@@ -170,61 +169,6 @@ b: !core/complex-1.0.0
         buff.close()
 
 
-def test_version_mismatch():
-    yaml = """
-a: !core/complex-42.0.0
-  0j
-    """
-
-    buff = helpers.yaml_to_asdf(yaml)
-    with pytest.warns(AsdfConversionWarning, match="tag:stsci.edu:asdf/core/complex"):
-        with asdf.open(buff, ignore_version_mismatch=False) as ff:
-            assert isinstance(ff.tree['a'], complex)
-
-    # Make sure warning is repeatable
-    buff.seek(0)
-    with pytest.warns(AsdfConversionWarning, match="tag:stsci.edu:asdf/core/complex"):
-        with asdf.open(buff, ignore_version_mismatch=False) as ff:
-            assert isinstance(ff.tree['a'], complex)
-
-    # Make sure the warning does not occur if it is being ignored (default)
-    buff.seek(0)
-    with helpers.assert_no_warnings(AsdfConversionWarning):
-        with asdf.open(buff) as ff:
-            assert isinstance(ff.tree['a'], complex)
-
-    # If the major and minor match, but the patch doesn't, there
-    # should still be a warning.
-    yaml = """
-a: !core/complex-1.0.1
-  0j
-    """
-
-    buff = helpers.yaml_to_asdf(yaml)
-    with pytest.warns(AsdfConversionWarning, match="tag:stsci.edu:asdf/core/complex"):
-        with asdf.open(buff, ignore_version_mismatch=False) as ff:
-            assert isinstance(ff.tree['a'], complex)
-
-
-def test_version_mismatch_file(tmpdir):
-    testfile = os.path.join(str(tmpdir), 'mismatch.asdf')
-    yaml = """
-a: !core/complex-42.0.0
-  0j
-    """
-
-    buff = helpers.yaml_to_asdf(yaml)
-    with open(testfile, 'wb') as handle:
-        handle.write(buff.read())
-
-    expected_uri = util.filepath_to_url(str(testfile))
-
-    with pytest.warns(AsdfConversionWarning, match="tag:stsci.edu:asdf/core/complex"):
-        with asdf.open(testfile, ignore_version_mismatch=False) as ff:
-            assert ff._fname == expected_uri
-            assert isinstance(ff.tree['a'], complex)
-
-
 def test_version_mismatch_with_supported_versions():
     """Make sure that defining the supported_versions field eliminates
     the schema mismatch warning."""
@@ -255,70 +199,6 @@ flow_thing:
     with helpers.assert_no_warnings():
         asdf.open(buff, ignore_version_mismatch=False,
             extensions=CustomFlowExtension())
-
-
-def test_versioned_writing(monkeypatch):
-    from ..tags.core.complex import ComplexType
-
-    # Create a bogus version map
-    monkeypatch.setitem(versioning._version_map, '42.0.0', {
-        'FILE_FORMAT': '42.0.0',
-        'YAML_VERSION': '1.1',
-        'tags': {
-            'tag:stsci.edu:asdf/core/complex': '42.0.0',
-            'tag:stscu.edu:asdf/core/asdf': '1.0.0'
-        },
-        # We need to insert these explicitly since we're monkeypatching
-        'core': {
-            'tag:stsci.edu:asdf/core/complex': '42.0.0',
-            'tag:stscu.edu:asdf/core/asdf': '1.0.0'
-        },
-        'standard': {}
-    })
-
-    # Add bogus version to supported versions
-    monkeypatch.setattr(versioning, 'supported_versions',
-        versioning.supported_versions + [versioning.AsdfVersion('42.0.0')]
-    )
-
-    class FancyComplexType(types.CustomType):
-        name = 'core/complex'
-        organization = 'stsci.edu'
-        standard = 'asdf'
-        version = (42, 0, 0)
-        types = [complex]
-
-        @classmethod
-        def to_tree(cls, node, ctx):
-            return ComplexType.to_tree(node, ctx)
-
-        @classmethod
-        def from_tree(cls, tree, ctx):
-            return ComplexType.from_tree(tree, ctx)
-
-    class FancyComplexExtension:
-        @property
-        def types(self):
-            return [FancyComplexType]
-
-        @property
-        def tag_mapping(self):
-            return []
-
-        @property
-        def url_mapping(self):
-            return [('http://stsci.edu/schemas/asdf/core/complex-42.0.0',
-                     util.filepath_to_url(TEST_DATA_PATH) +
-                     '/complex-42.0.0.yaml')]
-
-    tree = {'a': complex(0, -1)}
-
-    buff = io.BytesIO()
-    ff = asdf.AsdfFile(tree, version="42.0.0",
-                       extensions=[FancyComplexExtension()])
-    ff.write_to(buff)
-
-    assert b'complex-42.0.0' in buff.getvalue()
 
 
 def test_longest_match():
