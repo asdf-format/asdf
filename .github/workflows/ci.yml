@@ -6,6 +6,7 @@ on:
       - master
       - stable
       - '*.x'
+      - asdf-3.0-epic
     tags:
       - '*'
   pull_request:
@@ -18,57 +19,52 @@ jobs:
       fail-fast: false
       matrix:
         include:
-          - name: Python 3.10 Testing
+          - name: Python 3.10
             os: ubuntu-latest
             python-version: "3.10"
             toxenv: py310
 
-          - name: Code Coverage with Python 3.9
+          - name: Python 3.9 (with code coverage)
             os: ubuntu-latest
             python-version: "3.9"
             toxenv: coverage
 
-          - name: Python 3.8 Testing
+          - name: Python 3.8
             os: ubuntu-latest
             python-version: "3.8"
             toxenv: py38
 
-          - name: Python 3.7 Testing
+          - name: Python 3.8 with oldest supported dependencies
             os: ubuntu-latest
-            python-version: "3.7"
-            toxenv: py37
+            python-version: "3.8"
+            toxenv: py38-oldestdeps
 
-          - name: Python 3.7 with legacy packages
-            os: ubuntu-latest
-            python-version: "3.7"
-            toxenv: py37-legacy
-
-          - name: Documentation Build
+          - name: Build documentation
             os: ubuntu-latest
             python-version: "3.9"
-            toxenv: docbuild
+            toxenv: docs
 
-          - name: Mac OS Latest
+          - name: macOS
             os: macos-latest
             python-version: "3.9"
             toxenv: py39
 
-          - name: Compatibility
+          - name: Compatibility with older asdf libraries
             os: ubuntu-latest
             python-version: "3.9"
             toxenv: compatibility
 
-          - name: Bandit Security Checks
+          - name: Bandit security checks
             os: ubuntu-latest
             python-version: "3.9"
             toxenv: bandit
 
-          - name: Code Style Checks
+          - name: Flake8 checks
             os: ubuntu-latest
             python-version: "3.9"
-            toxenv: style
+            toxenv: flake8
 
-          - name: Twine
+          - name: Twine checks
             os: ubuntu-latest
             python-version: "3.9"
             toxenv: twine
@@ -81,21 +77,19 @@ jobs:
           - name: Astropy Dev
             os: ubuntu-latest
             python-version: "3.9"
-            toxenv: py38-astropydev
+            toxenv: py39-astropydev
 
-          - name: GWCS Dev
+          - name: gwcs dev
             os: ubuntu-latest
             python-version: "3.9"
-            toxenv: py38-gwcsdev
+            toxenv: py39-gwcsdev
 
-          # Fail
-          - name: Numpy Dev
+          - name: numpy dev
             os: ubuntu-latest
             python-version: "3.9"
-            toxenv: py38-numpydev
+            toxenv: py39-numpydev
 
-          # Fail
-          - name: Pre-Release Dependencies
+          - name: Pre-release dependencies
             os: ubuntu-latest
             python-version: "3.9"
             toxenv: prerelease
@@ -105,7 +99,7 @@ jobs:
             python-version: "3.9"
             toxenv: packaged
 
-          - name: Warnings Treated as Exceptions
+          - name: Warnings treated as exceptions
             os: ubuntu-latest
             python-version: "3.9"
             toxenv: warnings
@@ -115,8 +109,8 @@ jobs:
             python-version: "3.9"
             toxenv: py39
     steps:
-      - name: Install System Packages
-        if: ${{ contains(matrix.toxenv,'docbuild') }}
+      - name: Install system packages for documentation
+        if: ${{ contains(matrix.toxenv,'docs') }}
         run: |
           sudo apt update -y
           sudo apt-get install graphviz texlive-latex-extra dvipng
@@ -133,5 +127,5 @@ jobs:
         run: |
           python -m pip install --upgrade pip
           pip install tox
-      - name: Run tox
+      - name: Run tox environment '${{ matrix.toxenv }}'
         run: tox -e ${{ matrix.toxenv }}

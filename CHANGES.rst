@@ -1,3 +1,8 @@
+3.0.0 (unreleased)
+------------------
+
+- Drop support for Python 3.6 and 3.7 [#1043]
+
 2.8.4 (unreleased)
 ------------------
 
