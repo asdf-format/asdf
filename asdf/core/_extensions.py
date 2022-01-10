@@ -1,9 +1,11 @@
 from ._converters.complex import ComplexConverter
+from ._converters.integer import IntegerConverter
 from ..extension import ManifestExtension
 
 
 CONVERTERS = [
     ComplexConverter(),
+    IntegerConverter(),
 ]
 
 

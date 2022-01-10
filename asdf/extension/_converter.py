@@ -73,9 +73,10 @@ class Converter(abc.ABC):
 
         Returns
         -------
-        str
+        str or None
             The selected tag.  Should be one of the tags passed
-            to this method in the `tags` parameter.
+            to this method in the `tags` parameter.  Return None to
+            indicate that the node shold be untagged.
         """
         return tags[0]
 
@@ -226,8 +227,9 @@ class ConverterProxy(Converter):
 
         Returns
         -------
-        str
-            Selected tag.
+        str or None
+            Selected tag, or None to indicate that the node should
+            be untagged.
         """
         method = getattr(self._delegate, "select_tag", None)
         if method is None:
