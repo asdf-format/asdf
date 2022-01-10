@@ -252,6 +252,10 @@ def test_spec_equal():
 
 
 @pytest.mark.parametrize("version", supported_versions)
+@pytest.mark.xfail(
+    reason="the ExtensionType subclasses are being replaced by Converters",
+    strict=True
+)
 def test_version_map_core_support(version):
     _test_version_map_support(version, "core")
 

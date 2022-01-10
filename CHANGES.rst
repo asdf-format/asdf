@@ -3,6 +3,8 @@
 
 - Drop support for Python 3.6 and 3.7 [#1043]
 
+- Move support for complex types to Converter. [#1042]
+
 2.8.4 (unreleased)
 ------------------
 
