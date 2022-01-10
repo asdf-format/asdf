@@ -5,6 +5,8 @@
 
 - Move support for complex types to Converter. [#1042]
 
+- Move support for large magnitude integer literals to Converter. [#1044]
+
 2.8.4 (unreleased)
 ------------------
 

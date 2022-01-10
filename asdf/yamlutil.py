@@ -236,6 +236,10 @@ def custom_tree_to_tagged_tree(tree, ctx, _serialization_context=None):
         else:
             generator = None
 
+        if tag is None:
+            yield node
+            return
+
         if isinstance(node, dict):
             tagged_node = tagged.TaggedDict(node, tag)
         elif isinstance(node, list):
