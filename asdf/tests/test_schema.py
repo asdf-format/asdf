@@ -16,6 +16,7 @@ from asdf import types
 from asdf import util
 from asdf import yamlutil
 from asdf import tagged
+from asdf.testing.helpers import yaml_to_asdf, roundtrip_object
 from asdf.tests import helpers, CustomExtension
 from asdf.exceptions import AsdfWarning, AsdfConversionWarning, AsdfDeprecationWarning
 
@@ -667,48 +668,21 @@ def test_schema_resolved_via_entry_points():
 
 
 @pytest.mark.parametrize("num", [constants.MAX_NUMBER+1, constants.MIN_NUMBER-1])
-def test_max_min_literals(num):
-
-    tree = {
-        'test_int': num,
-    }
-
-    with pytest.raises(ValidationError):
-        asdf.AsdfFile(tree)
-
-    tree = {
-        'test_list': [num],
-    }
-
-    with pytest.raises(ValidationError):
-        asdf.AsdfFile(tree)
-
-    tree = {
-        num: 'test_key',
-    }
-
-    with pytest.raises(ValidationError):
-        asdf.AsdfFile(tree)
+def test_max_min_literals_read(num):
+    for content in [f"test_int: {num}", f"test_list: [{num}]", f"{num}: test_key"]:
+        with pytest.warns(AsdfWarning, match="Invalid integer literal"):
+            with asdf.open(yaml_to_asdf(content)):
+                pass
 
 
 @pytest.mark.parametrize("num", [constants.MAX_NUMBER+1, constants.MIN_NUMBER-1])
-@pytest.mark.parametrize("ttype", ["val", "list", "key"])
-def test_max_min_literals_write(num, ttype, tmpdir):
-    outfile = tmpdir / "test.asdf"
-    af = asdf.AsdfFile()
+def test_max_min_literals_write(num):
+    assert roundtrip_object({"test_int": num})["test_int"] == num
 
-    # Validation doesn't occur here, so no warning/error will be raised.
-    if ttype == "val":
-        af.tree['test_int'] = num
-    elif ttype == "list":
-        af.tree['test_int'] = [num]
-    else:
-        af.tree[num] = 'test_key'
+    assert roundtrip_object({"test_list": [num]})["test_list"] == [num]
 
-    # Validation will occur on write, though, so detect it.
-    with pytest.raises(ValidationError):
-        af.write_to(outfile)
-    af.close()
+    with pytest.raises(ValidationError, match="is too large to safely represent as a literal"):
+        roundtrip_object({num: "test_key"})
 
 
 @pytest.mark.parametrize("value", [constants.MAX_NUMBER+1, constants.MIN_NUMBER-1])

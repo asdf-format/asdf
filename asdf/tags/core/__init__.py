@@ -6,13 +6,12 @@ class AsdfObject(dict):
 
 from .constant import ConstantType
 from .ndarray import NDArrayType
-from .integer import IntegerType
 from .external_reference import ExternalArrayReference
 
 
 __all__ = ['AsdfObject', 'Software', 'HistoryEntry', 'ExtensionMetadata',
     'SubclassMetadata', 'ConstantType', 'NDArrayType',
-    'IntegerType', 'ExternalArrayReference']
+    'ExternalArrayReference']
 
 
 class AsdfObjectType(AsdfType):
