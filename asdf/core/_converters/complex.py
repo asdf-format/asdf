@@ -1,6 +1,6 @@
 import re
 
-from ...extension import Converter
+from asdf.extension import Converter
 
 
 _REPLACEMENTS = {
