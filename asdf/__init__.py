@@ -5,7 +5,7 @@ Data Format (ASDF) files
 
 __all__ = [
     'AsdfFile', 'CustomType', 'AsdfExtension', 'Stream', 'open',
-    'commands', 'ExternalArrayReference', 'info', '__version__',
+    'commands', 'info', '__version__',
     'ValidationError', 'get_config', 'config_context',
 ]
 
@@ -15,7 +15,6 @@ from .types import CustomType
 from .extension import AsdfExtension
 from .stream import Stream
 from . import commands
-from .tags.core.external_reference import ExternalArrayReference
 from ._convenience import info
 from .config import get_config, config_context
 from .version import version as __version__

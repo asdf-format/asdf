@@ -5,11 +5,9 @@ class AsdfObject(dict):
     pass
 
 from .ndarray import NDArrayType
-from .external_reference import ExternalArrayReference
 
 
-__all__ = ['AsdfObject', 'Software', 'HistoryEntry', 'ExtensionMetadata',
-    'NDArrayType', 'ExternalArrayReference']
+__all__ = ['AsdfObject', 'Software', 'HistoryEntry', 'ExtensionMetadata', 'NDArrayType']
 
 
 class AsdfObjectType(AsdfType):
