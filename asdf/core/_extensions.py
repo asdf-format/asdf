@@ -1,10 +1,12 @@
 from ._converters.complex import ComplexConverter
 from ._converters.integer import IntegerConverter
+from ._converters.entities import ExternalArrayReferenceConverter
 from ..extension import ManifestExtension
 
 
 CONVERTERS = [
     ComplexConverter(),
+    ExternalArrayReferenceConverter(),
     IntegerConverter(),
 ]
 

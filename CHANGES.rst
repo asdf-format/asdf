@@ -9,6 +9,8 @@
 
 - Drop support for core/subclass_metadata-1.0.0 and core/constant-1.0.0 tags. [#1045]
 
+- Move support for ExternalArrayReference to Converter [#1046]
+
 2.8.4 (unreleased)
 ------------------
 

@@ -358,7 +358,7 @@ about:
 
     csv_data_row = 10 # The row of the CSV file containing the data we want
     csv_row_size = 100 # The size of the array
-    extref = asdf.ExternalArrayReference('data.csv', csv_data_row, "int64", (csv_row_size,))
+    extref = asdf.core.ExternalArrayReference('data.csv', csv_data_row, "int64", (csv_row_size,))
 
     tree = {'csv_data': extref}
     af = asdf.AsdfFile(tree)
