@@ -4,14 +4,12 @@ from ...types import AsdfType
 class AsdfObject(dict):
     pass
 
-from .constant import ConstantType
 from .ndarray import NDArrayType
 from .external_reference import ExternalArrayReference
 
 
 __all__ = ['AsdfObject', 'Software', 'HistoryEntry', 'ExtensionMetadata',
-    'SubclassMetadata', 'ConstantType', 'NDArrayType',
-    'ExternalArrayReference']
+    'NDArrayType', 'ExternalArrayReference']
 
 
 class AsdfObjectType(AsdfType):
@@ -54,15 +52,3 @@ class ExtensionMetadata(dict, AsdfType):
     @property
     def software(self):
         return self.get('software')
-
-
-class SubclassMetadata(dict, AsdfType):
-    """
-    The tagged object supported by this class is part of
-    an experimental feature that has since been dropped
-    from this library.  This class remains so that ASDF
-    files that used that feature will still deserialize
-    without warnings.
-    """
-    name = 'core/subclass_metadata'
-    version = '1.0.0'
