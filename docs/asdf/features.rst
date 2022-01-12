@@ -383,6 +383,7 @@ your software, not `asdf`) that performed the operation.
 .. runcode::
 
    from asdf import AsdfFile
+   from asdf.core import Software
    import numpy as np
 
    tree = {
@@ -392,10 +393,13 @@ your software, not `asdf`) that performed the operation.
    ff = AsdfFile(tree)
    ff.add_history_entry(
        "Initial random numbers",
-       {'name': 'asdf examples',
-        'author': 'John Q. Public',
-        'homepage': 'http://github.com/asdf-format/asdf',
-        'version': '0.1'})
+       [Software(
+           name='asdf examples',
+           version='0.1',
+           author='John Q. Public',
+           homepage='http://github.com/asdf-format/asdf'
+       )]
+   )
    ff.write_to('example.asdf')
 
 .. asdf:: example.asdf
