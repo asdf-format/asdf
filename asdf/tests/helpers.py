@@ -33,7 +33,7 @@ from .. import generic_io
 from ..constants import YAML_TAG_PREFIX
 from ..versioning import AsdfVersion, get_version_map
 
-from ..tags.core import AsdfObject
+from asdf.core import AsdfObject
 
 try:
     from pytest_remotedata.disable_internet import INTERNET_OFF

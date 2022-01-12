@@ -1,6 +1,19 @@
 from asdf.extension import Converter
 
 
+class AsdfObjectConverter(Converter):
+    tags = ["tag:stsci.edu:asdf/core/asdf-*"]
+    types = ["asdf.core._entities.AsdfObject"]
+
+    def to_yaml_tree(self, obj, tag, ctx):
+        return dict(obj)
+
+    def from_yaml_tree(self, node, tag, ctx):
+        from asdf.core import AsdfObject
+
+        return AsdfObject(node)
+
+
 class ExternalArrayReferenceConverter(Converter):
     tags = ["tag:stsci.edu:asdf/core/externalarray-*"]
     types = ["asdf.core._entities.ExternalArrayReference"]

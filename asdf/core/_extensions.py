@@ -1,6 +1,7 @@
 from ._converters.complex import ComplexConverter
 from ._converters.integer import IntegerConverter
 from ._converters.entities import (
+    AsdfObjectConverter,
     ExtensionMetadataConverter,
     ExternalArrayReferenceConverter,
     HistoryEntryConverter,
@@ -10,6 +11,7 @@ from ..extension import ManifestExtension
 
 
 CONVERTERS = [
+    AsdfObjectConverter(),
     ComplexConverter(),
     ExtensionMetadataConverter(),
     ExternalArrayReferenceConverter(),

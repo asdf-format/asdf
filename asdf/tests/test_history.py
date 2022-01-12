@@ -103,14 +103,8 @@ def test_extension_metadata(tmpdir):
     ff.write_to(tmpfile)
 
     with asdf.open(tmpfile) as af:
-        assert len(af.tree['history']['extensions']) == 2
+        assert len(af.tree['history']['extensions']) == 1
         metadata = af.tree['history']['extensions'][0]
-        assert metadata.extension_class == 'asdf.extension.BuiltinExtension'
-        # Don't bother with testing the version here since it will depend on
-        # how recently the package was built (version is auto-generated)
-        assert metadata.software.name == 'asdf'
-
-        metadata = af.tree['history']['extensions'][1]
         assert metadata.extension_class == 'asdf.extension._manifest.ManifestExtension'
         # Don't bother with testing the version here since it will depend on
         # how recently the package was built (version is auto-generated)
@@ -212,7 +206,7 @@ def test_metadata_with_custom_extension(tmp_path):
 
         # We expect metadata about both the Builtin/core extensions and the custom one
         with asdf.open(file_path) as af:
-            assert len(af["history"]["extensions"]) == 3
+            assert len(af["history"]["extensions"]) == 2
 
     with pytest.warns(AsdfWarning, match="was created with extension"):
         with asdf.open(file_path, ignore_unrecognized_tag=True):
@@ -229,7 +223,7 @@ def test_metadata_with_custom_extension(tmp_path):
             af.write_to(file_path2)
 
         with asdf.open(file_path2) as af:
-            assert len(af["history"]["extensions"]) == 2
+            assert len(af["history"]["extensions"]) == 1
 
     with assert_no_warnings():
         with asdf.open(file_path2):
@@ -245,4 +239,4 @@ def test_metadata_with_custom_extension(tmp_path):
             af.write_to(file_path3)
 
         with asdf.open(file_path3) as af:
-            assert len(af["history"]["extensions"]) == 3
+            assert len(af["history"]["extensions"]) == 2

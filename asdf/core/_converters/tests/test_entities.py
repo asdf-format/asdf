@@ -1,8 +1,22 @@
 import datetime
 
 import asdf
-from asdf.core import ExternalArrayReference, ExtensionMetadata, HistoryEntry, Software
+from asdf.core import (
+    AsdfObject,
+    ExternalArrayReference,
+    ExtensionMetadata,
+    HistoryEntry,
+    Software,
+)
 from asdf.testing import helpers
+
+
+def test_asdf_object():
+    asdf_object = AsdfObject({"foo": "bar"})
+
+    result = helpers.roundtrip_object(asdf_object)
+
+    assert result == asdf_object
 
 
 def test_external_array_reference():

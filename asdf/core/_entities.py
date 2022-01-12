@@ -3,6 +3,14 @@ import datetime
 from typing import Any, Dict, List, Tuple, Union
 
 
+class AsdfObject(dict):
+    """
+    The root of an ASDF tree.  Exists mainly to provide a type
+    that corresponds to the asdf-x.y.z tag.
+    """
+    pass
+
+
 @dataclass
 class ExternalArrayReference:
     """
