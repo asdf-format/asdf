@@ -104,7 +104,7 @@ class ExtensionMetadataConverter(Converter):
         return node
 
     def from_yaml_tree(self, node, tag, ctx):
-        from asdf.core import ExtensionMetadata
+        from asdf.core import ExtensionMetadata, Software
 
         extra = dict(node)
 
@@ -119,6 +119,11 @@ class ExtensionMetadataConverter(Converter):
             software = extra.pop("software")
         except KeyError:
             software = None
+
+        # A bug in version 2.5.x of this library caused files to be written with
+        # an untagged software object here.
+        if isinstance(software, dict):
+            software = Software(**software)
 
         return ExtensionMetadata(
             extension_class=extension_class,

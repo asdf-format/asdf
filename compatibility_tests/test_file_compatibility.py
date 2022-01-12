@@ -27,7 +27,7 @@ MIN_VERSION_NEW_FILES = StrictVersion("2.7.0")
 # Minimum library version to produce files read by the current
 # version of the code.  Earlier versions aren't able to generate
 # files for all the ASDF Standard versions that they claim to support.
-MIN_VERSION_OLD_FILES = StrictVersion("2.3.0")
+MIN_VERSION_OLD_FILES = StrictVersion("2.5.0")
 
 GENERATE_SCRIPT_PATH = Path(__file__).parent/"generate_file.py"
 ASSERT_SCRIPT_PATH = Path(__file__).parent/"assert_file_correct.py"
@@ -113,7 +113,7 @@ def get_installed_version(env_path):
     return StrictVersion(env_check_output(env_path, "python3", "-c", script))
 
 
-@pytest.fixture(scope="module", params=PATCH_VERSIONS)
+@pytest.fixture(scope="module", params=PATCH_VERSIONS, ids=[str(v) for v in PATCH_VERSIONS])
 def asdf_version(request):
     """
     The (old) version of the asdf library under test.
