@@ -7,7 +7,7 @@ class AsdfObject(dict):
 from .ndarray import NDArrayType
 
 
-__all__ = ['AsdfObject', 'Software', 'HistoryEntry', 'ExtensionMetadata', 'NDArrayType']
+__all__ = ['AsdfObject', 'NDArrayType']
 
 
 class AsdfObjectType(AsdfType):
@@ -23,30 +23,3 @@ class AsdfObjectType(AsdfType):
     @classmethod
     def to_tree(cls, data, ctx):
         return dict(data)
-
-
-class Software(dict, AsdfType):
-    name = 'core/software'
-    version = '1.0.0'
-
-
-class HistoryEntry(dict, AsdfType):
-    name = 'core/history_entry'
-    version = '1.0.0'
-
-
-class ExtensionMetadata(dict, AsdfType):
-    name = 'core/extension_metadata'
-    version = '1.0.0'
-
-    @property
-    def extension_uri(self):
-        return self.get('extension_uri')
-
-    @property
-    def extension_class(self):
-        return self['extension_class']
-
-    @property
-    def software(self):
-        return self.get('software')

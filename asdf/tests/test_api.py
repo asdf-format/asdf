@@ -112,8 +112,8 @@ invalid_software: !core/software-1.0.0
 
     get_config().validate_on_read = False
     with asdf.open(buff) as af:
-        assert af["invalid_software"]["name"] == "Minesweeper"
-        assert af["invalid_software"]["version"] == 3
+        assert af["invalid_software"].name == "Minesweeper"
+        assert af["invalid_software"].version == 3
 
 
 def test_open_stream(tmp_path):
@@ -359,8 +359,8 @@ def test_extension_version_check(installed, extension, warns):
     tree = {
         'history': {
             'extensions': [
-                asdf.tags.core.ExtensionMetadata(extension_class='asdf.tests.test_api.FooExtension',
-                    software=asdf.tags.core.Software(name='foo', version=extension)),
+                asdf.core.ExtensionMetadata(extension_class='asdf.tests.test_api.FooExtension',
+                    software=asdf.core.Software(name='foo', version=extension)),
             ]
         }
     }
@@ -625,13 +625,13 @@ def test_history_entries(tmpdir):
     af.add_history_entry(message)
     af.write_to(path)
     with asdf.open(path) as af:
-        assert af["history"]["entries"][0]["description"] == message
+        assert af["history"]["entries"][0].description == message
 
     af = asdf.AsdfFile()
     af.write_to(path)
     with asdf.open(path) as af:
         af.add_history_entry(message)
-        assert af["history"]["entries"][0]["description"] == message
+        assert af["history"]["entries"][0].description == message
 
 
 def test_array_access_after_file_close(tmpdir):

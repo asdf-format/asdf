@@ -1,13 +1,21 @@
 from ._converters.complex import ComplexConverter
 from ._converters.integer import IntegerConverter
-from ._converters.entities import ExternalArrayReferenceConverter
+from ._converters.entities import (
+    ExtensionMetadataConverter,
+    ExternalArrayReferenceConverter,
+    HistoryEntryConverter,
+    SoftwareConverter,
+)
 from ..extension import ManifestExtension
 
 
 CONVERTERS = [
     ComplexConverter(),
+    ExtensionMetadataConverter(),
     ExternalArrayReferenceConverter(),
     IntegerConverter(),
+    HistoryEntryConverter(),
+    SoftwareConverter(),
 ]
 
 

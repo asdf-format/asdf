@@ -4,14 +4,12 @@ import fractions
 
 import pytest
 
-from jsonschema import ValidationError
-
 import asdf
 from asdf import util
 from asdf import types
 from asdf.tests import helpers
 from asdf.tests.helpers import yaml_to_asdf, assert_no_warnings
-from asdf.tags.core import HistoryEntry
+from asdf.core import HistoryEntry, Software
 from asdf.exceptions import AsdfWarning
 
 SCHEMA_PATH = os.path.join(os.path.dirname(helpers.__file__), 'data')
@@ -41,34 +39,27 @@ class CustomExtension:
 def test_history():
     ff = asdf.AsdfFile()
     assert 'history' not in ff.tree
-    ff.add_history_entry('This happened',
-                         {'name': 'my_tool',
-                          'homepage': 'http://nowhere.org',
-                          'author': 'John Doe',
-                          'version': '2.0'})
-    assert len(ff.tree['history']['entries']) == 1
+    ff.add_history_entry(
+        'This happened',
+        [Software(name="my_tool", homepage="http://nowhere.org", author="John Doe", version="2.0")],
+    )
 
-    with pytest.raises(ValidationError):
-        ff.add_history_entry('That happened',
-                             {'author': 'John Doe',
-                              'version': '2.0'})
     assert len(ff.tree['history']['entries']) == 1
 
     ff.add_history_entry('This other thing happened')
     assert len(ff.tree['history']['entries']) == 2
 
-    assert isinstance(ff.tree['history']['entries'][0]['time'], datetime.datetime)
+    assert isinstance(ff.tree['history']['entries'][0].time, datetime.datetime)
 
 def test_history_to_file(tmpdir):
 
     tmpfile = str(tmpdir.join('history.asdf'))
 
     with asdf.AsdfFile() as ff:
-        ff.add_history_entry('This happened',
-                             {'name': 'my_tool',
-                              'homepage': 'http://nowhere.org',
-                              'author': 'John Doe',
-                              'version': '2.0'})
+        ff.add_history_entry(
+            'This happened',
+            [Software(name="my_tool", homepage="http://nowhere.org", author="John Doe", version="2.0",)],
+        )
         ff.write_to(tmpfile)
 
     with asdf.open(tmpfile) as ff:
@@ -77,17 +68,17 @@ def test_history_to_file(tmpdir):
         assert len(ff.tree['history']['entries']) == 1
 
         entry = ff.tree['history']['entries'][0]
-        assert entry['description'] == 'This happened'
-        assert entry['software']['name'] == 'my_tool'
-        assert entry['software']['version'] == '2.0'
+        assert entry.description == 'This happened'
+        assert entry.software[0].name == 'my_tool'
+        assert entry.software[0].version == '2.0'
 
         # Test the history entry retrieval API
         entries = ff.get_history_entries()
         assert len(entries) == 1
         assert isinstance(entries, list)
         assert isinstance(entries[0], HistoryEntry)
-        assert entries[0]['description'] == "This happened"
-        assert entries[0]['software']['name'] == 'my_tool'
+        assert entries[0].description == "This happened"
+        assert entries[0].software[0].name == 'my_tool'
 
 
 def test_old_history(tmpdir):
@@ -111,8 +102,8 @@ history:
         assert len(entries) == 1
         assert isinstance(entries, list)
         assert isinstance(entries[0], HistoryEntry)
-        assert entries[0]['description'] == "Here's a test of old history entries"
-        assert entries[0]['software']['name'] == 'foo'
+        assert entries[0].description == "Here's a test of old history entries"
+        assert entries[0].software[0].name == 'foo'
 
 def test_get_history_entries(tmpdir):
     """
@@ -138,12 +129,18 @@ def test_extension_metadata(tmpdir):
     ff.write_to(tmpfile)
 
     with asdf.open(tmpfile) as af:
-        assert len(af.tree['history']['extensions']) == 1
+        assert len(af.tree['history']['extensions']) == 2
         metadata = af.tree['history']['extensions'][0]
         assert metadata.extension_class == 'asdf.extension.BuiltinExtension'
         # Don't bother with testing the version here since it will depend on
         # how recently the package was built (version is auto-generated)
-        assert metadata.software['name'] == 'asdf'
+        assert metadata.software.name == 'asdf'
+
+        metadata = af.tree['history']['extensions'][1]
+        assert metadata.extension_class == 'asdf.extension._manifest.ManifestExtension'
+        # Don't bother with testing the version here since it will depend on
+        # how recently the package was built (version is auto-generated)
+        assert metadata.software.name == 'asdf'
 
 
 def test_missing_extension_warning():
@@ -243,9 +240,9 @@ def test_metadata_with_custom_extension(tmpdir):
     with asdf.AsdfFile(tree, extensions=FractionExtension()) as ff:
         ff.write_to(tmpfile)
 
-    # We expect metadata about both the Builtin extension and the custom one
+    # We expect metadata about both the Builtin/core extensions and the custom one
     with asdf.open(tmpfile, extensions=FractionExtension()) as af:
-        assert len(af['history']['extensions']) == 2
+        assert len(af['history']['extensions']) == 3
 
     with pytest.warns(AsdfWarning, match="was created with extension"):
         with asdf.open(tmpfile, ignore_unrecognized_tag=True):
@@ -259,7 +256,7 @@ def test_metadata_with_custom_extension(tmpdir):
         ff.write_to(tmpfile2)
 
     with asdf.open(tmpfile2) as af:
-        assert len(af['history']['extensions']) == 1
+        assert len(af['history']['extensions']) == 2
 
     with assert_no_warnings():
         with asdf.open(tmpfile2):
@@ -272,4 +269,4 @@ def test_metadata_with_custom_extension(tmpdir):
         ff.write_to(tmpfile3)
 
     with asdf.open(tmpfile3, extensions=FractionExtension()) as af:
-        assert len(af['history']['extensions']) == 2
+        assert len(af['history']['extensions']) == 3

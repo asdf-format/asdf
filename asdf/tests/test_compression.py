@@ -242,9 +242,11 @@ def test_compression_with_extension(tmpdir):
         fn = _roundtrip(tmpdir, tree, 'lzma',
                        write_options=dict(compression_kwargs={'preset':6}))
 
-        hist = {'extension_class': 'asdf.tests.test_compression.LzmaExtension',
-                'extension_uri': 'asdf://somewhere.org/extensions/lzma-1.0',
-                'supported_compression': ['lzma']}
+        hist = asdf.core.ExtensionMetadata(
+            extension_class='asdf.tests.test_compression.LzmaExtension',
+            extension_uri='asdf://somewhere.org/extensions/lzma-1.0',
+            extra={'supported_compression': ['lzma']}
+        )
 
         with asdf.open(fn) as af:
             assert hist in af['history']['extensions']
