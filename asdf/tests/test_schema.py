@@ -987,7 +987,7 @@ def test_custom_validation_with_external_ref_good(tmpdir):
 
     # This tree conforms to the custom schema
     tree = {
-        'foo': asdf.tags.core.Software(name="Microsoft Windows", version="95")
+        'foo': asdf.core.Software(name="Microsoft Windows", version="95")
     }
 
     with asdf.AsdfFile(tree, custom_schema=custom_schema_path) as ff:
@@ -1123,7 +1123,7 @@ def test_numpy_scalar_type_validation(numpy_value, valid_types):
 
 def test_validator_visit_repeat_nodes():
     ctx = asdf.AsdfFile()
-    node = asdf.tags.core.Software(name="Minesweeper")
+    node = asdf.core.Software(name="Minesweeper", version="3.1.4")
     tree = yamlutil.custom_tree_to_tagged_tree(
         {"node": node, "other_node": node, "nested": {"node": node}},
         ctx

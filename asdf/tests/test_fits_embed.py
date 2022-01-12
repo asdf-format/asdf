@@ -322,8 +322,8 @@ invalid_software: !core/software-1.0.0
 
         get_config().validate_on_read = False
         with open_method(tmpfile) as af:
-            assert af["invalid_software"]["name"] == "Minesweeper"
-            assert af["invalid_software"]["version"] == 3
+            assert af["invalid_software"].name == "Minesweeper"
+            assert af["invalid_software"].version == 3
 
 
 def test_open_gzipped():

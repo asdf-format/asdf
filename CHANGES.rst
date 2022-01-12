@@ -9,7 +9,9 @@
 
 - Drop support for core/subclass_metadata-1.0.0 and core/constant-1.0.0 tags. [#1045]
 
-- Move support for ExternalArrayReference to Converter [#1046]
+- Move support for ExternalArrayReference to Converter. [#1046]
+
+- Move support for ExtensionMetadata, HistoryEntry, and Software to Converter. [#1047]
 
 2.8.4 (unreleased)
 ------------------
