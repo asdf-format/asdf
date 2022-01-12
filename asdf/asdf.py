@@ -35,7 +35,7 @@ from .util import NotSet
 from .search import AsdfSearchResult
 from ._helpers import validate_version
 
-from .tags.core import AsdfObject
+from .core import AsdfObject
 
 
 def get_asdf_library_info():

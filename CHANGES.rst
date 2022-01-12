@@ -13,6 +13,8 @@
 
 - Move support for ExtensionMetadata, HistoryEntry, and Software to Converter. [#1047]
 
+- Move support for AsdfObject to Converter. [#1048]
+
 2.8.4 (unreleased)
 ------------------
 
