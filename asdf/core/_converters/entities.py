@@ -2,7 +2,12 @@ from asdf.extension import Converter
 
 
 class AsdfObjectConverter(Converter):
-    tags = ["tag:stsci.edu:asdf/core/asdf-*"]
+    # Since AsdfObject is just a dict, we're able to use the same converter
+    # for both tag versions.
+    tags = [
+        "tag:stsci.edu:asdf/core/asdf-1.0.0",
+        "tag:stsci.edu:asdf/core/asdf-1.1.0",
+    ]
     types = ["asdf.core._entities.AsdfObject"]
 
     def to_yaml_tree(self, obj, tag, ctx):
