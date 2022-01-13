@@ -38,6 +38,9 @@ class ExternalArrayReference:
     shape: tuple of int
         The shape of the array to be loaded.
 
+    extra : dict, optional
+        Additional metadata to include when serializing this
+        object.
 
     Examples
     --------
@@ -53,6 +56,7 @@ class ExternalArrayReference:
     target: Union[str, int]
     datatype: str
     shape: Tuple[int]
+    extra: Dict[str, Any] = field(default_factory=dict)
 
 
 @dataclass
@@ -74,11 +78,16 @@ class Software:
 
     homepage: str, optional
         A URI to the homepage of the software.
+
+    extra : dict, optional
+        Additional metadata to include when serializing this
+        object.
     """
     name: str
     version: str
     author: Union[str, None] = None
     homepage: Union[str, None] = None
+    extra: Dict[str, Any] = field(default_factory=dict)
 
 
 @dataclass
@@ -97,10 +106,15 @@ class HistoryEntry:
 
     software : list of Software, optional
         The software that performed the operation.
+
+    extra : dict, optional
+        Additional metadata to include when serializing this
+        object.
     """
     description: str
     time: Union[datetime.datetime, None] = None
     software: List[Software] = field(default_factory=list)
+    extra: Dict[str, Any] = field(default_factory=dict)
 
 
 @dataclass

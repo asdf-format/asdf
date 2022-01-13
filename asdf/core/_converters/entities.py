@@ -20,30 +20,41 @@ class AsdfObjectConverter(Converter):
 
 
 class ExternalArrayReferenceConverter(Converter):
-    tags = ["tag:stsci.edu:asdf/core/externalarray-*"]
+    tags = ["tag:stsci.edu:asdf/core/externalarray-1.0.0"]
     types = ["asdf.core._entities.ExternalArrayReference"]
 
     def to_yaml_tree(self, obj, tag, ctx):
-        return {
+        node = {
             "fileuri": obj.fileuri,
             "target": obj.target,
             "datatype": obj.datatype,
             "shape": list(obj.shape),
         }
 
+        node.update(obj.extra)
+
+        return node
+
     def from_yaml_tree(self, node, tag, ctx):
         from asdf.core import ExternalArrayReference
 
+        extra = dict(node)
+        fileuri = extra.pop("fileuri")
+        target = extra.pop("target")
+        datatype = extra.pop("datatype")
+        shape = tuple(extra.pop("shape"))
+
         return ExternalArrayReference(
-            fileuri=node["fileuri"],
-            target=node["target"],
-            datatype=node["datatype"],
-            shape=tuple(node["shape"]),
+            fileuri=fileuri,
+            target=target,
+            datatype=datatype,
+            shape=shape,
+            extra=extra,
         )
 
 
 class SoftwareConverter(Converter):
-    tags = ["tag:stsci.edu:asdf/core/software-*"]
+    tags = ["tag:stsci.edu:asdf/core/software-1.0.0"]
     types = ["asdf.core._entities.Software"]
 
     def to_yaml_tree(self, obj, tag, ctx):
@@ -58,21 +69,38 @@ class SoftwareConverter(Converter):
         if obj.homepage is not None:
             node["homepage"] = obj.homepage
 
+        node.update(obj.extra)
+
         return node
 
     def from_yaml_tree(self, node, tag, ctx):
         from asdf.core import Software
 
+        extra = dict(node)
+        name = extra.pop("name")
+        version = extra.pop("version")
+
+        try:
+            author = extra.pop("author")
+        except KeyError:
+            author = None
+
+        try:
+            homepage = extra.pop("homepage")
+        except KeyError:
+            homepage = None
+
         return Software(
-            name=node["name"],
-            version=node["version"],
-            author=node.get("author"),
-            homepage=node.get("homepage"),
+            name=name,
+            version=version,
+            author=author,
+            homepage=homepage,
+            extra=extra,
         )
 
 
 class HistoryEntryConverter(Converter):
-    tags = ["tag:stsci.edu:asdf/core/history_entry-*"]
+    tags = ["tag:stsci.edu:asdf/core/history_entry-1.0.0"]
     types = ["asdf.core._entities.HistoryEntry"]
 
     def to_yaml_tree(self, obj, tag, ctx):
@@ -86,24 +114,40 @@ class HistoryEntryConverter(Converter):
         if len(obj.software) > 0:
             node["software"] = obj.software
 
+        node.update(obj.extra)
+
         return node
 
     def from_yaml_tree(self, node, tag, ctx):
         from asdf.core import HistoryEntry, Software
 
-        software = node.get("software", [])
+        extra = dict(node)
+
+        description = extra.pop("description")
+
+        try:
+            time = extra.pop("time")
+        except KeyError:
+            time = None
+
+        try:
+            software = extra.pop("software")
+        except KeyError:
+            software = []
+
         if isinstance(software, Software):
             software = [software]
 
         return HistoryEntry(
-            description=node["description"],
-            time=node.get("time"),
+            description=description,
+            time=time,
             software=software,
+            extra=extra,
         )
 
 
 class ExtensionMetadataConverter(Converter):
-    tags = ["tag:stsci.edu:asdf/core/extension_metadata-*"]
+    tags = ["tag:stsci.edu:asdf/core/extension_metadata-1.0.0"]
     types = ["asdf.core._entities.ExtensionMetadata"]
 
     def to_yaml_tree(self, obj, tag, ctx):
