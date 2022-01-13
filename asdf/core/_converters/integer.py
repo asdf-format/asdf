@@ -5,7 +5,7 @@ from asdf.extension import Converter
 
 
 class IntegerConverter(Converter):
-    tags = ["tag:stsci.edu:asdf/core/integer-*"]
+    tags = ["tag:stsci.edu:asdf/core/integer-1.0.0"]
     types = [
         "builtins.int",
         "numpy.int8",

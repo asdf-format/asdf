@@ -10,7 +10,7 @@ _REPLACEMENTS = {
 
 
 class ComplexConverter(Converter):
-    tags = ["tag:stsci.edu:asdf/core/complex-*"]
+    tags = ["tag:stsci.edu:asdf/core/complex-1.0.0"]
     types = ["builtins.complex", "numpy.complex64", "numpy.complex128", "numpy.complex256"]
 
     def to_yaml_tree(self, obj, tag, ctx):

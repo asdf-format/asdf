@@ -20,7 +20,13 @@ def test_asdf_object():
 
 
 def test_external_array_reference():
-    ref = ExternalArrayReference("./nonexistant.fits", 1, "np.float64", (100, 100))
+    ref = ExternalArrayReference(
+        fileuri="./nonexistant.fits",
+        target=1,
+        datatype="np.float64",
+        shape=(100, 100),
+        extra={"extra": "property"},
+    )
 
     result = helpers.roundtrip_object(ref)
 
@@ -29,10 +35,10 @@ def test_external_array_reference():
 
 def test_extension_metadata():
     metadata = ExtensionMetadata(
-        "foo.extension.FooExtension",
-        "http://foo.biz/extensions/foo-1.0.0",
-        Software("FooSoft", "1.5"),
-        {"extra": "property"}
+        extension_class="foo.extension.FooExtension",
+        extension_uri="http://foo.biz/extensions/foo-1.0.0",
+        software=Software("FooSoft", "1.5"),
+        extra={"extra": "property"},
     )
 
     result = helpers.roundtrip_object(metadata)
@@ -63,10 +69,11 @@ metadata: !core/extension_metadata-1.0.0
 
 def test_software():
     software = Software(
-        "FooSoft",
-        "1.5.0",
-        "The Foo Developers",
-        "http://nowhere.org",
+        name="FooSoft",
+        version="1.5.0",
+        author="The Foo Developers",
+        homepage="http://nowhere.org",
+        extra={"extra": "property"},
     )
 
     result = helpers.roundtrip_object(software)
@@ -78,7 +85,8 @@ def test_history_entry():
     history_entry = HistoryEntry(
         "Some history happened here",
         time=datetime.datetime.now(),
-        software=[Software("FooSoft", "1.5.0")]
+        software=[Software("FooSoft", "1.5.0")],
+        extra={"extra": "property"},
     )
 
     result = helpers.roundtrip_object(history_entry)

@@ -15,6 +15,8 @@
 
 - Move support for AsdfObject to Converter. [#1048]
 
+- Remove wildcard from Converter tag matchers and handle extra properties. [#1049]
+
 2.8.4 (unreleased)
 ------------------
 
