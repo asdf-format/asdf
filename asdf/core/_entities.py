@@ -1,5 +1,6 @@
-from dataclasses import dataclass
-from typing import Tuple, Union
+from dataclasses import dataclass, field
+import datetime
+from typing import Any, Dict, List, Tuple, Union
 
 
 @dataclass
@@ -44,3 +45,78 @@ class ExternalArrayReference:
     target: Union[str, int]
     datatype: str
     shape: Tuple[int]
+
+
+@dataclass
+class Software:
+    """
+    General-purpose description of a software package.
+
+    Parameters
+    ----------
+
+    name : str
+        The name of the application or library.
+
+    version : str
+        The version of the software used.
+
+    author : str, optional
+        The author (or institution) that produced the software package.
+
+    homepage: str, optional
+        A URI to the homepage of the software.
+    """
+    name: str
+    version: str
+    author: Union[str, None] = None
+    homepage: Union[str, None] = None
+
+
+@dataclass
+class HistoryEntry:
+    """
+    An entry in the ASDF file history.
+
+    Parameters
+    ----------
+
+    description : str
+        A description of the transformation performed.
+
+    time : datetime.datetime, optional
+        A timestamp for the operation, in UTC.
+
+    software : list of Software, optional
+        The software that performed the operation.
+    """
+    description: str
+    time: Union[datetime.datetime, None] = None
+    software: List[Software] = field(default_factory=list)
+
+
+@dataclass
+class ExtensionMetadata:
+    """
+    Metadata about specific ASDF extensions that were used to create this file.
+
+    Parameters
+    ----------
+
+    extension_class : str
+        The fully-specified name of the extension class.
+
+    extension_uri : str, optional
+        The extension's identifying URI.
+
+    software : Software, optional
+        The software package that provided the extension.
+
+    extra : dict, optional
+        Additional metadata to include when serializing this
+        object.
+    """
+    extension_class: str
+    extension_uri: Union[str, None] = None
+    software: Union[Software, None] = None
+    extra: Dict[str, Any] = field(default_factory=dict)

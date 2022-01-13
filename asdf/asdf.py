@@ -12,6 +12,7 @@ from jsonschema import ValidationError
 from .config import get_config, config_context
 from . import block
 from . import constants
+from . import core
 from . import generic_io
 from . import reference
 from . import schema
@@ -34,7 +35,7 @@ from .util import NotSet
 from .search import AsdfSearchResult
 from ._helpers import validate_version
 
-from .tags.core import AsdfObject, Software, HistoryEntry, ExtensionMetadata
+from .tags.core import AsdfObject
 
 
 def get_asdf_library_info():
@@ -42,12 +43,12 @@ def get_asdf_library_info():
     Get information about asdf to include in the asdf_library entry
     in the Tree.
     """
-    return Software({
-        'name': 'asdf',
-        'version': version.version,
-        'homepage': 'http://github.com/asdf-format/asdf',
-        'author': 'The ASDF Developers'
-    })
+    return core.Software(
+        name="asdf",
+        version=version.version,
+        homepage="http://github.com/asdf-format/asdf",
+        author="The ASDF Developers",
+    )
 
 
 class AsdfFile:
@@ -312,8 +313,8 @@ class AsdfFile:
                 extension_description = "class '{}'".format(extension.extension_class)
             if extension.software is not None:
                 extension_description += " (from package {}=={})".format(
-                    extension.software["name"],
-                    extension.software["version"],
+                    extension.software.name,
+                    extension.software.version,
                 )
 
             if installed is None:
@@ -329,10 +330,10 @@ class AsdfFile:
             elif extension.software:
                 # Local extensions may not have a real version.  If the package name changed,
                 # then the version sequence may have been reset.
-                if installed.package_version is None or installed.package_name != extension.software['name']:
+                if installed.package_version is None or installed.package_name != extension.software.name:
                     continue
                 # Compare version in file metadata with installed version
-                if parse_version(installed.package_version) < parse_version(extension.software['version']):
+                if parse_version(installed.package_version) < parse_version(extension.software.version):
                     msg = (
                         "File {}was created with extension {}, but older package ({}=={}) "
                         "is installed."
@@ -431,13 +432,13 @@ class AsdfFile:
 
         for extension in serialization_context._extensions_used:
             ext_name = extension.class_name
-            ext_meta = ExtensionMetadata(extension_class=ext_name)
+            ext_meta = core.ExtensionMetadata(extension_class=ext_name)
             if extension.package_name is not None:
-                ext_meta['software'] = Software(name=extension.package_name, version=extension.package_version)
+                ext_meta.software = core.Software(name=extension.package_name, version=extension.package_version)
             if extension.extension_uri is not None:
-                ext_meta['extension_uri'] = extension.extension_uri
+                ext_meta.extension_uri = extension.extension_uri
             if extension.compressors:
-                ext_meta['supported_compression'] = [comp.label.decode('ascii') for comp in extension.compressors]
+                ext_meta.extra['supported_compression'] = [comp.label.decode('ascii') for comp in extension.compressors]
 
             for i, entry in enumerate(self.tree['history']['extensions']):
                 # Update metadata about this extension if it already exists
@@ -1412,34 +1413,23 @@ class AsdfFile:
         description : str
             A description of the change.
 
-        software : dict or list of dict
-            A description of the software used.  It should not include
+        software : list of asdf.core.Software, optional
+            A list of the software used.  It should not include
             asdf itself, as that is automatically notated in the
             `asdf_library` entry.
-
-            Each dict must have the following keys:
-
-            - ``name``: The name of the software
-            - ``author``: The author or institution that produced the software
-            - ``homepage``: A URI to the homepage of the software
-            - ``version``: The version of the software
         """
-        if isinstance(software, list):
-            software = [Software(x) for x in software]
-        elif software is not None:
-            software = Software(software)
+        if software is None:
+            software = []
 
         time_ = datetime.datetime.utcfromtimestamp(
             int(os.environ.get('SOURCE_DATE_EPOCH', time.time())),
         )
 
-        entry = HistoryEntry({
-            'description': description,
-            'time': time_,
-        })
-
-        if software is not None:
-            entry['software'] = software
+        entry = core.HistoryEntry(
+            description=description,
+            time=time_,
+            software=software,
+        )
 
         if self.version >= versioning.NEW_HISTORY_FORMAT_MIN_VERSION:
             if 'history' not in self.tree:
@@ -1472,7 +1462,7 @@ class AsdfFile:
 
         Returns
         -------
-        entries : list
+        entries : list of asdf.core.HistoryEntry
             A list of history entries.
         """
 
