@@ -13,7 +13,7 @@ from . import util
 from .constants import YAML_TAG_PREFIX, STSCI_SCHEMA_TAG_BASE
 from .versioning import split_tag_version
 from .exceptions import AsdfConversionWarning
-from .tags.core import AsdfObject
+from .core import AsdfObject
 
 
 __all__ = ['custom_tree_to_tagged_tree', 'tagged_tree_to_custom_tree']
