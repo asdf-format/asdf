@@ -19,6 +19,9 @@ class ManifestExtension(Extension):
     compressors : iterable of asdf.extension.Compressor, optional
         Compressor instances to support additional binary
         block compression options.
+    validators : iterable of asdf.extension.Validator, optional
+        Validator instances to support validation of custom
+        schema properties.
     legacy_class_names : iterable of str, optional
         Fully-qualified class names used by older versions
         of this extension.
@@ -42,7 +45,7 @@ class ManifestExtension(Extension):
         return cls(manifest, **kwargs)
 
     def __init__(self, manifest, *, legacy_class_names=None, converters=None,
-                compressors=None):
+                compressors=None, validators=None):
         self._manifest = manifest
 
         if legacy_class_names is None:
@@ -59,6 +62,11 @@ class ManifestExtension(Extension):
             self._compressors = []
         else:
             self._compressors = compressors
+
+        if validators is None:
+            self._validators = []
+        else:
+            self._validators = validators
 
     @property
     def extension_uri(self):
@@ -90,6 +98,10 @@ class ManifestExtension(Extension):
     @property
     def compressors(self):
         return self._compressors
+
+    @property
+    def validators(self):
+        return self._validators
 
     @property
     def tags(self):

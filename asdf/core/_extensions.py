@@ -7,6 +7,7 @@ from ._converters.entities import (
     HistoryEntryConverter,
     SoftwareConverter,
 )
+from ._validators.ndarray import NdimValidator, MaxNdimValidator, DatatypeValidator
 from ..extension import ManifestExtension
 
 
@@ -21,6 +22,13 @@ CONVERTERS = [
 ]
 
 
+VALIDATORS = [
+    NdimValidator(),
+    MaxNdimValidator(),
+    DatatypeValidator(),
+]
+
+
 MANIFEST_URIS = [
     "asdf://asdf-format.org/core/manifests/core-1.0.0",
     "asdf://asdf-format.org/core/manifests/core-1.1.0",
@@ -32,4 +40,4 @@ MANIFEST_URIS = [
 ]
 
 
-EXTENSIONS = [ManifestExtension.from_uri(u, converters=CONVERTERS) for u in MANIFEST_URIS]
+EXTENSIONS = [ManifestExtension.from_uri(u, converters=CONVERTERS, validators=VALIDATORS) for u in MANIFEST_URIS]
