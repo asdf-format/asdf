@@ -1,5 +1,11 @@
 """
 Utilities for displaying the content of an ASDF tree.
+
+Normally these tools only will introspect dicts, lists, and primative values
+(with an exception for arrays). However, if the objecct that is generated
+by the converter mechanism has a __asdf_traverse__() method, then it will
+call that method expecting a dict or list to be returned. The method can
+return what it thinks is suitable for display.
 """
 import numpy as np
 
@@ -92,9 +98,13 @@ class _NodeInfo:
                     if parent is not None:
                         parent.children.append(info)
                     seen.add(id(node))
-
-                    for child_identifier, child_node in get_children(node):
-                        next_nodes.append((info, child_identifier, child_node))
+                    if cls.supports_info(node):
+                        info.tag = node._tag
+                        for child_identifier, child_node in node.__asdf_traverse__():
+                            next_nodes.append((info, child_identifier, child_node))
+                    else:
+                        for child_identifier, child_node in get_children(node):
+                            next_nodes.append((info, child_identifier, child_node))
 
             if len(next_nodes) == 0:
                 break
@@ -105,7 +115,8 @@ class _NodeInfo:
         return root_info
 
     def __init__(
-        self, parent, identifier, node, depth, recursive=False, visible=True
+        self, parent, identifier, node, depth, recursive=False, visible=True,
+        tag=None
     ):
         self.parent = parent
         self.identifier = identifier
@@ -114,6 +125,15 @@ class _NodeInfo:
         self.recursive = recursive
         self.visible = visible
         self.children = []
+        self.tag = tag
+
+    def supports_info(node):
+        """
+        This method determines if the node is an instance of a class that 
+        supports introspection by the info machinery. This determined by
+        the presence of a __asdf_traverse__ method.
+        """
+        return hasattr(node, "__asdf_traverse__")
 
     @property
     def visible_children(self):

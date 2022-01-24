@@ -557,6 +557,27 @@ def test_info_asdf_file(capsys, tmpdir):
     assert "baz" in captured.out
 
 
+class ObjectWithInfoSupport:
+
+    def __init__(self):
+        self._tag = "foo"
+
+    def __asdf_traverse__(self):
+        return list({'the_meaning_of_life_the_universe_and_everything': 42,
+                'clown': 'Bozo'}.items())
+
+
+def test_info_object_support(capsys):
+    tree = dict(random=3.14159, object=ObjectWithInfoSupport())
+    af = asdf.AsdfFile(tree)
+    af.info()
+    captured = capsys.readouterr()
+    assert "the_meaning_of_life_the_universe_and_everything" in captured.out
+    assert "clown" in captured.out
+    assert "42" in captured.out
+    assert "Bozo" in captured.out
+
+
 def test_search():
     tree = dict(foo=42, bar="hello", baz=np.arange(20))
     af = asdf.AsdfFile(tree)
