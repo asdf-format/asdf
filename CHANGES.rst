@@ -4,7 +4,7 @@
 - Added the capability for tag classes to provide an interface
   to asdf info functionality to obtain information about the 
   class attributes rather than appear as an opaque class object.
-  []
+  [#1052]
 
 - Fix tag listing when extension is not fully implemented. [#1034]
 
