@@ -532,6 +532,12 @@ For example, to show all top-level nodes and 5 of each's children:
 The `AsdfFile.info` method behaves similarly to `asdf.info`, rendering
 the tree of the associated `AsdfFile`.
 
+Normally `asdf.info` will not show the contents of asdf nodes turned
+into Python custom objects, but if that object supports a special 
+method, you may see the contents of such objects. 
+See :ref:`exposing_extension_object_internals` for how
+to implement such support for `asdf.info` and `asdf.search`. 
+
 Searching the ASDF tree
 =======================
 

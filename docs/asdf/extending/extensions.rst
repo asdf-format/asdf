@@ -184,6 +184,19 @@ an additional list of class names that previously identified the extension:
             "foo_package.extensions.FooExtension",
         ]
 
+.. _exposing_extension_object_internals:
+
+Making converted object's contents visible to `info` and `search`
+-----------------------------------------------------------------
+
+If the object produced by the extension supports a class method
+`.__asdf_traverse__` then it can be used by those tools to expose the contents
+of the object. That method should accept no arguments and return a list.
+For most objects the list should consiste of tuple pairs of attribute names 
+and their values (much like the `dict` `.item` method returns).
+If instead the object is itself list-like, the list should consist of tuples
+of index position and value pairs.
+
 .. _extending_extensions_installing:
 
 Installing an extension

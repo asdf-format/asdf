@@ -1,8 +1,8 @@
 """
 Utilities for displaying the content of an ASDF tree.
 
-Normally these tools only will introspect dicts, lists, and primative values
-(with an exception for arrays). However, if the objecct that is generated
+Normally these tools only will introspect dicts, lists, and primitive values
+(with an exception for arrays). However, if the object that is generated
 by the converter mechanism has a __asdf_traverse__() method, then it will
 call that method expecting a dict or list to be returned. The method can
 return what it thinks is suitable for display.
@@ -115,9 +115,7 @@ class _NodeInfo:
         return root_info
 
     def __init__(
-        self, parent, identifier, node, depth, recursive=False, visible=True,
-        tag=None
-    ):
+        self, parent, identifier, node, depth, recursive=False, visible=True):
         self.parent = parent
         self.identifier = identifier
         self.node = node
@@ -125,9 +123,9 @@ class _NodeInfo:
         self.recursive = recursive
         self.visible = visible
         self.children = []
-        self.tag = tag
 
-    def supports_info(node):
+    @classmethod
+    def supports_info(cls, node):
         """
         This method determines if the node is an instance of a class that
         supports introspection by the info machinery. This determined by
