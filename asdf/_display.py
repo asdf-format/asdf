@@ -129,7 +129,7 @@ class _NodeInfo:
 
     def supports_info(node):
         """
-        This method determines if the node is an instance of a class that 
+        This method determines if the node is an instance of a class that
         supports introspection by the info machinery. This determined by
         the presence of a __asdf_traverse__ method.
         """
