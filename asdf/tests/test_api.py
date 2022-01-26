@@ -543,6 +543,7 @@ def test_info_module(capsys, tmpdir):
         for val in tree["foo"][i-1:]:
             assert val not in captured.out
 
+
 def test_info_asdf_file(capsys, tmpdir):
     tree = dict(
         foo=42, bar="hello", baz=np.arange(20),
@@ -576,6 +577,7 @@ def test_info_object_support(capsys):
     assert "clown" in captured.out
     assert "42" in captured.out
     assert "Bozo" in captured.out
+
 
 class RecursiveObjectWithInfoSupport:
 
