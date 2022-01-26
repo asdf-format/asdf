@@ -99,12 +99,11 @@ class _NodeInfo:
                         parent.children.append(info)
                     seen.add(id(node))
                     if cls.supports_info(node):
-                        info.tag = node._tag
-                        for child_identifier, child_node in node.__asdf_traverse__():
-                            next_nodes.append((info, child_identifier, child_node))
+                        tnode = node.__asdf_traverse__()
                     else:
-                        for child_identifier, child_node in get_children(node):
-                            next_nodes.append((info, child_identifier, child_node))
+                        tnode = node
+                    for child_identifier, child_node in get_children(tnode):
+                        next_nodes.append((info, child_identifier, child_node))
 
             if len(next_nodes) == 0:
                 break

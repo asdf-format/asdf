@@ -563,8 +563,8 @@ class ObjectWithInfoSupport:
         self._tag = "foo"
 
     def __asdf_traverse__(self):
-        return list({'the_meaning_of_life_the_universe_and_everything': 42,
-                'clown': 'Bozo'}.items())
+        return {'the_meaning_of_life_the_universe_and_everything': 42,
+                'clown': 'Bozo'}
 
 
 def test_info_object_support(capsys):
