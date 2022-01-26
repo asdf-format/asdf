@@ -88,7 +88,10 @@ class _NodeInfo:
             next_nodes = []
 
             for parent, identifier, node in current_nodes:
-                if (isinstance(node, dict) or isinstance(node, list) or isinstance(node, tuple)) and id(node) in seen:
+                if (isinstance(node, dict) or 
+                    isinstance(node, list) or 
+                    isinstance(node, tuple) or
+                    cls.supports_info(node)) and id(node) in seen:
                     info = _NodeInfo(parent, identifier, node, current_depth, recursive=True)
                     parent.children.append(info)
                 else:

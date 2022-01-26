@@ -577,6 +577,29 @@ def test_info_object_support(capsys):
     assert "42" in captured.out
     assert "Bozo" in captured.out
 
+class RecursiveObjectWithInfoSupport:
+
+    def __init__(self):
+        self._tag = "foo"
+        self.the_meaning = 42
+        self.clown = "Bozo"
+        self.recursive = None
+
+    def __asdf_traverse__(self):
+        return {'the_meaning': self.the_meaning,
+                'clown': self.clown,
+                'recursive': self.recursive}
+
+
+def test_recursive_info_object_support(capsys):
+    recursive_obj = RecursiveObjectWithInfoSupport()
+    recursive_obj.recursive = recursive_obj
+    tree = dict(random=3.14159, rtest=recursive_obj)
+    af = asdf.AsdfFile(tree)
+    af.info()
+    captured = capsys.readouterr()
+    assert "recursive reference" in captured.out
+
 
 def test_search():
     tree = dict(foo=42, bar="hello", baz=np.arange(20))
