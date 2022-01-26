@@ -543,6 +543,7 @@ def test_info_module(capsys, tmpdir):
         for val in tree["foo"][i-1:]:
             assert val not in captured.out
 
+
 def test_info_asdf_file(capsys, tmpdir):
     tree = dict(
         foo=42, bar="hello", baz=np.arange(20),
@@ -555,6 +556,51 @@ def test_info_asdf_file(capsys, tmpdir):
     assert "foo" in captured.out
     assert "bar" in captured.out
     assert "baz" in captured.out
+
+
+class ObjectWithInfoSupport:
+
+    def __init__(self):
+        self._tag = "foo"
+
+    def __asdf_traverse__(self):
+        return {'the_meaning_of_life_the_universe_and_everything': 42,
+                'clown': 'Bozo'}
+
+
+def test_info_object_support(capsys):
+    tree = dict(random=3.14159, object=ObjectWithInfoSupport())
+    af = asdf.AsdfFile(tree)
+    af.info()
+    captured = capsys.readouterr()
+    assert "the_meaning_of_life_the_universe_and_everything" in captured.out
+    assert "clown" in captured.out
+    assert "42" in captured.out
+    assert "Bozo" in captured.out
+
+
+class RecursiveObjectWithInfoSupport:
+
+    def __init__(self):
+        self._tag = "foo"
+        self.the_meaning = 42
+        self.clown = "Bozo"
+        self.recursive = None
+
+    def __asdf_traverse__(self):
+        return {'the_meaning': self.the_meaning,
+                'clown': self.clown,
+                'recursive': self.recursive}
+
+
+def test_recursive_info_object_support(capsys):
+    recursive_obj = RecursiveObjectWithInfoSupport()
+    recursive_obj.recursive = recursive_obj
+    tree = dict(random=3.14159, rtest=recursive_obj)
+    af = asdf.AsdfFile(tree)
+    af.info()
+    captured = capsys.readouterr()
+    assert "recursive reference" in captured.out
 
 
 def test_search():

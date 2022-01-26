@@ -1,5 +1,11 @@
 """
 Utilities for displaying the content of an ASDF tree.
+
+Normally these tools only will introspect dicts, lists, and primitive values
+(with an exception for arrays). However, if the object that is generated
+by the converter mechanism has a __asdf_traverse__() method, then it will
+call that method expecting a dict or list to be returned. The method can
+return what it thinks is suitable for display.
 """
 import numpy as np
 
@@ -82,7 +88,9 @@ class _NodeInfo:
             next_nodes = []
 
             for parent, identifier, node in current_nodes:
-                if (isinstance(node, dict) or isinstance(node, list) or isinstance(node, tuple)) and id(node) in seen:
+                if (isinstance(node, dict) or
+                    isinstance(node, tuple) or
+                    cls.supports_info(node)) and id(node) in seen:
                     info = _NodeInfo(parent, identifier, node, current_depth, recursive=True)
                     parent.children.append(info)
                 else:
@@ -92,8 +100,11 @@ class _NodeInfo:
                     if parent is not None:
                         parent.children.append(info)
                     seen.add(id(node))
-
-                    for child_identifier, child_node in get_children(node):
+                    if cls.supports_info(node):
+                        tnode = node.__asdf_traverse__()
+                    else:
+                        tnode = node
+                    for child_identifier, child_node in get_children(tnode):
                         next_nodes.append((info, child_identifier, child_node))
 
             if len(next_nodes) == 0:
@@ -105,8 +116,7 @@ class _NodeInfo:
         return root_info
 
     def __init__(
-        self, parent, identifier, node, depth, recursive=False, visible=True
-    ):
+        self, parent, identifier, node, depth, recursive=False, visible=True):
         self.parent = parent
         self.identifier = identifier
         self.node = node
@@ -114,6 +124,15 @@ class _NodeInfo:
         self.recursive = recursive
         self.visible = visible
         self.children = []
+
+    @classmethod
+    def supports_info(cls, node):
+        """
+        This method determines if the node is an instance of a class that
+        supports introspection by the info machinery. This determined by
+        the presence of a __asdf_traverse__ method.
+        """
+        return hasattr(node, "__asdf_traverse__")
 
     @property
     def visible_children(self):
