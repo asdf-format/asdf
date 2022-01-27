@@ -78,11 +78,6 @@ jobs:
             python-version: "3.9"
             toxenv: checkdocs
 
-          - name: Numpy 1.12
-            os: ubuntu-latest
-            python-version: "3.7"
-            toxenv: py37-numpy12
-
           - name: Astropy Dev
             os: ubuntu-latest
             python-version: "3.9"
