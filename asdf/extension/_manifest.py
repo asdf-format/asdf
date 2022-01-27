@@ -16,6 +16,9 @@ class ManifestExtension(Extension):
     converters : iterable of asdf.extension.Converter, optional
         Converter instances for the tags and Python types
         supported by this extension.
+    compressors : iterable of asdf.extension.Compressor, optional
+        Compressor instances to support additional binary
+        block compression options.
     legacy_class_names : iterable of str, optional
         Fully-qualified class names used by older versions
         of this extension.
