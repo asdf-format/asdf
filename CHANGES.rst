@@ -2,11 +2,13 @@
 ------------------
 
 - Added the capability for tag classes to provide an interface
-  to asdf info functionality to obtain information about the 
+  to asdf info functionality to obtain information about the
   class attributes rather than appear as an opaque class object.
   [#1052]
 
 - Fix tag listing when extension is not fully implemented. [#1034]
+
+- Drop support for Python 3.6. [#1054]
 
 2.8.3 (2021-12-13)
 ------------------
