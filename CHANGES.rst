@@ -10,6 +10,8 @@
 
 - Drop support for Python 3.6. [#1054]
 
+- Adjustments to compression plugin tests and documentation. [#1053]
+
 2.8.3 (2021-12-13)
 ------------------
 

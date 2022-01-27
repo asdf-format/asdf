@@ -6,6 +6,7 @@ from ..util import get_class_name
 from ._tag import TagDefinition
 from ._legacy import AsdfExtension
 from ._converter import ConverterProxy
+from ._compressor import Compressor
 
 
 class Extension(abc.ABC):
@@ -92,7 +93,7 @@ class Extension(abc.ABC):
 
         Returns
         -------
-        iterable of asdf.extension.Compressor instances
+        iterable of asdf.extension.Compressor
         """
         return []
 
@@ -178,7 +179,13 @@ class ExtensionProxy(Extension, AsdfExtension):
         # Process the converters last, since they expect ExtensionProxy
         # properties to already be available.
         self._converters = [ConverterProxy(c, self) for c in getattr(self._delegate, "converters", [])]
-        self._compressors = self._delegate.compressors if hasattr(self._delegate, "compressors") else []
+
+        self._compressors = []
+        if hasattr(self._delegate, "compressors"):
+            for compressor in self._delegate.compressors:
+                if not isinstance(compressor, Compressor):
+                    raise TypeError("Extension property 'compressors' must contain instances of asdf.extension.Compressor")
+                self._compressors.append(compressor)
 
     @property
     def extension_uri(self):
