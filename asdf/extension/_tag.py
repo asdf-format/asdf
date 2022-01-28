@@ -19,7 +19,15 @@ class TagDefinition:
             raise ValueError("URI patterns are not permitted in TagDefinition")
 
         self._tag_uri = tag_uri
-        self._schema_uris = schema_uris
+
+        if schema_uris is None:
+            self._schema_uris = None
+        else:
+            if isinstance(schema_uris, list):
+                self._schema_uris = schema_uris
+            else:
+                self._schema_uris = [schema_uris]
+
         self._title = title
         self._description = description
 
@@ -44,11 +52,7 @@ class TagDefinition:
         -------
         str or None
         """
-
-        if isinstance(self._schema_uris, list):
-            return self._schema_uris
-        else:
-            return [self._schema_uris]
+        return self._schema_uris
 
     @property
     def title(self):
