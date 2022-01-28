@@ -2,6 +2,11 @@
 import os
 from setuptools import setup, find_packages
 
+if not os.listdir('./asdf-standard'):
+    from setuptools.errors import SetupError
+
+    raise SetupError("asdf-standard is empty. Need to run `git submodule update --init` and try again!")
+
 
 packages = find_packages()
 packages.append('asdf.schemas')
