@@ -310,8 +310,14 @@ class AsdfSearchResult:
             return "\n".join(lines)
 
     def __getitem__(self, key):
-        if isinstance(self._node, dict) or isinstance(self._node, list) or isinstance(self._node, tuple):
-            child = self._node[key]
+        if (isinstance(self._node, dict) or
+            isinstance(self._node, list) or
+            isinstance(self._node, tuple) or
+            _NodeInfo.supports_info(self._node)):
+            if _NodeInfo.supports_info(self._node):
+                child = self._node.__asdf_traverse__()[key]
+            else:
+                child = self._node[key]
         else:
             raise TypeError("This node cannot be indexed")
 
