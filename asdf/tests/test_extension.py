@@ -431,7 +431,7 @@ def test_tag_definition():
     )
 
     assert tag_def.tag_uri == "asdf://somewhere.org/extensions/foo/tags/foo-1.0"
-    assert tag_def.schema_uris == "asdf://somewhere.org/extensions/foo/schemas/foo-1.0"
+    assert tag_def.schema_uris == ["asdf://somewhere.org/extensions/foo/schemas/foo-1.0"]
     assert tag_def.title == "Some title"
     assert tag_def.description == "Some description"
 
@@ -640,7 +640,7 @@ tags:
         assert len(extension.tags) == 2
         assert extension.tags[0] == "asdf://somewhere.org/tags/bar"
         assert extension.tags[1].tag_uri == "asdf://somewhere.org/tags/baz"
-        assert extension.tags[1].schema_uris == "asdf://somewhere.org/schemas/baz"
+        assert extension.tags[1].schema_uris == ["asdf://somewhere.org/schemas/baz"]
         assert extension.tags[1].title == "Baz title"
         assert extension.tags[1].description == "Bar description"
 
@@ -653,7 +653,7 @@ tags:
         assert len(proxy.tags) == 2
         assert proxy.tags[0].tag_uri == "asdf://somewhere.org/tags/bar"
         assert proxy.tags[1].tag_uri == "asdf://somewhere.org/tags/baz"
-        assert proxy.tags[1].schema_uris == "asdf://somewhere.org/schemas/baz"
+        assert proxy.tags[1].schema_uris == ["asdf://somewhere.org/schemas/baz"]
         assert proxy.tags[1].title == "Baz title"
         assert proxy.tags[1].description == "Bar description"
 

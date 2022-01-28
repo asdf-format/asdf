@@ -44,7 +44,11 @@ class TagDefinition:
         -------
         str or None
         """
-        return self._schema_uris
+
+        if isinstance(self._schema_uris, list):
+            return self._schema_uris
+        else:
+            return [self._schema_uris]
 
     @property
     def title(self):
