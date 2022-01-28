@@ -347,8 +347,8 @@ def _walk_tree_breadth_first(root_identifiers, root_node, callback):
             else:
                 tnode = node
             children = get_children(tnode)
-            callback(identifiers, parent, tnode, [c for _, c in children])
-            next_nodes.extend([(identifiers + [i], tnode, c) for i, c in children])
+            callback(identifiers, parent, node, [c for _, c in children])
+            next_nodes.extend([(identifiers + [i], node, c) for i, c in children])
             seen.add(id(node))
 
         if len(next_nodes) == 0:
