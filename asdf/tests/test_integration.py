@@ -46,7 +46,7 @@ class FooExtension:
     tags = [
         TagDefinition(
             "asdf://somewhere.org/extensions/foo/tags/foo-1.0",
-            schema_uri=FOO_SCHEMA_URI,
+            schema_uris=FOO_SCHEMA_URI,
         )
     ]
 

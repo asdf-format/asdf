@@ -308,7 +308,7 @@ def _create_validator(validators=YAML_VALIDATORS, visit_repeat_nodes=False):
                     if tag is not None:
                         if self.serialization_context.extension_manager.handles_tag(tag):
                             tag_def = self.serialization_context.extension_manager.get_tag_definition(tag)
-                            schema_uri = tag_def.schema_uri
+                            schema_uri = tag_def.schema_uris
                         else:
                             schema_uri = self.ctx.tag_mapping(tag)
                             if schema_uri == tag:

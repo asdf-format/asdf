@@ -102,7 +102,7 @@ class ManifestExtension(Extension):
                 result.append(
                     TagDefinition(
                         tag["tag_uri"],
-                        schema_uri=tag.get("schema_uri"),
+                        schema_uris=tag.get("schema_uri"),
                         title=tag.get("title"),
                         description=tag.get("description"),
                     )

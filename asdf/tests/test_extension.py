@@ -260,7 +260,7 @@ def test_extension_proxy_tags():
     foo_tag_uri = "asdf://somewhere.org/extensions/full/tags/foo-1.0"
     foo_tag_def = TagDefinition(
         foo_tag_uri,
-        schema_uri="asdf://somewhere.org/extensions/full/schemas/foo-1.0",
+        schema_uris="asdf://somewhere.org/extensions/full/schemas/foo-1.0",
         title="Some tag title",
         description="Some tag description"
     )
@@ -268,7 +268,7 @@ def test_extension_proxy_tags():
     bar_tag_uri = "asdf://somewhere.org/extensions/full/tags/bar-1.0"
     bar_tag_def = TagDefinition(
         bar_tag_uri,
-        schema_uri="asdf://somewhere.org/extensions/full/schemas/bar-1.0",
+        schema_uris="asdf://somewhere.org/extensions/full/schemas/bar-1.0",
         title="Some other tag title",
         description="Some other tag description"
     )
@@ -425,13 +425,13 @@ def test_get_cached_extension_manager():
 def test_tag_definition():
     tag_def = TagDefinition(
         "asdf://somewhere.org/extensions/foo/tags/foo-1.0",
-        schema_uri="asdf://somewhere.org/extensions/foo/schemas/foo-1.0",
+        schema_uris="asdf://somewhere.org/extensions/foo/schemas/foo-1.0",
         title="Some title",
         description="Some description",
     )
 
     assert tag_def.tag_uri == "asdf://somewhere.org/extensions/foo/tags/foo-1.0"
-    assert tag_def.schema_uri == "asdf://somewhere.org/extensions/foo/schemas/foo-1.0"
+    assert tag_def.schema_uris == "asdf://somewhere.org/extensions/foo/schemas/foo-1.0"
     assert tag_def.title == "Some title"
     assert tag_def.description == "Some description"
 
@@ -514,13 +514,13 @@ def test_converter_proxy():
         tags=[
             TagDefinition(
                 "asdf://somewhere.org/extensions/test/tags/foo-1.0",
-                schema_uri="asdf://somewhere.org/extensions/test/schemas/foo-1.0",
+                schema_uris="asdf://somewhere.org/extensions/test/schemas/foo-1.0",
                 title="Foo tag title",
                 description="Foo tag description"
             ),
             TagDefinition(
                 "asdf://somewhere.org/extensions/test/tags/bar-1.0",
-                schema_uri="asdf://somewhere.org/extensions/test/schemas/bar-1.0",
+                schema_uris="asdf://somewhere.org/extensions/test/schemas/bar-1.0",
                 title="Bar tag title",
                 description="Bar tag description"
             ),
@@ -640,7 +640,7 @@ tags:
         assert len(extension.tags) == 2
         assert extension.tags[0] == "asdf://somewhere.org/tags/bar"
         assert extension.tags[1].tag_uri == "asdf://somewhere.org/tags/baz"
-        assert extension.tags[1].schema_uri == "asdf://somewhere.org/schemas/baz"
+        assert extension.tags[1].schema_uris == "asdf://somewhere.org/schemas/baz"
         assert extension.tags[1].title == "Baz title"
         assert extension.tags[1].description == "Bar description"
 
@@ -653,7 +653,7 @@ tags:
         assert len(proxy.tags) == 2
         assert proxy.tags[0].tag_uri == "asdf://somewhere.org/tags/bar"
         assert proxy.tags[1].tag_uri == "asdf://somewhere.org/tags/baz"
-        assert proxy.tags[1].schema_uri == "asdf://somewhere.org/schemas/baz"
+        assert proxy.tags[1].schema_uris == "asdf://somewhere.org/schemas/baz"
         assert proxy.tags[1].title == "Baz title"
         assert proxy.tags[1].description == "Bar description"
 
