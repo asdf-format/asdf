@@ -1,6 +1,12 @@
 #!/usr/bin/env python
 import os
+from pathlib import Path
 from setuptools import setup, find_packages
+
+if not any((Path(__file__).parent / "asdf-standard").iterdir()):
+    from setuptools.errors import SetupError
+
+    raise SetupError("asdf-standard is empty. Need to run `git submodule update --init` and try again!")
 
 
 packages = find_packages()

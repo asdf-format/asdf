@@ -12,6 +12,9 @@
 
 - Adjustments to compression plugin tests and documentation. [#1053]
 
+- Update setup.py to raise error if "git submodule update --init" has
+  not been run. [#1057]
+
 2.8.3 (2021-12-13)
 ------------------
 
