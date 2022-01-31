@@ -13,7 +13,6 @@ from asdf import tagged
 from asdf import treeutil
 from asdf import yamlutil
 from asdf.compat.numpycompat import NUMPY_LT_1_14
-from asdf.exceptions import AsdfWarning
 
 from . import helpers
 
