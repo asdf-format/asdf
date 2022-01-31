@@ -75,12 +75,6 @@ def test_resolver_hash_and_equals():
     assert r1 != r3
 
 
-def test_resolver_add_mapping_deprecated():
-    r = Resolver([], "test")
-    with pytest.warns(AsdfDeprecationWarning):
-        r.add_mapping([("united_states:", "earth:{test}")], "test")
-
-
 def test_resolver_chain():
     r1 = Resolver([("maryland:", "united_states:{test}")], "test")
     r2 = Resolver([("united_states:", "earth:{test}")], "test")
