@@ -197,8 +197,7 @@ flow_thing:
 """
     buff = helpers.yaml_to_asdf(yaml)
     with helpers.assert_no_warnings():
-        asdf.open(buff, ignore_version_mismatch=False,
-            extensions=CustomFlowExtension())
+        asdf.open(buff, extensions=CustomFlowExtension())
 
 
 def test_longest_match():

@@ -56,7 +56,7 @@ class AsdfFile:
     The main class that represents an ASDF file object.
     """
     def __init__(self, tree=None, uri=None, extensions=None, version=None,
-                 ignore_version_mismatch=True, ignore_unrecognized_tag=False,
+                 ignore_unrecognized_tag=False,
                  ignore_implicit_conversion=False, copy_arrays=False,
                  lazy_load=True, custom_schema=None, _readonly=False):
         """
@@ -81,10 +81,6 @@ class AsdfFile:
         version : str, optional
             The ASDF Standard version.  If not provided, defaults to the
             configured default version.  See `asdf.config.AsdfConfig.default_version`.
-
-        ignore_version_mismatch : bool, optional
-            When `True`, do not raise warnings for mismatched schema versions.
-            Set to `True` by default.
 
         ignore_unrecognized_tag : bool, optional
             When `True`, do not raise warnings for unrecognized tags. Set to
@@ -133,7 +129,6 @@ class AsdfFile:
         else:
             self._custom_schema = None
 
-        self._ignore_version_mismatch = ignore_version_mismatch
         self._ignore_unrecognized_tag = ignore_unrecognized_tag
         self._ignore_implicit_conversion = ignore_implicit_conversion
 
@@ -904,7 +899,6 @@ class AsdfFile:
                 return fits_embed.AsdfInFits._open_impl(generic_file, uri=uri,
                             validate_checksums=validate_checksums,
                             extensions=extensions,
-                            ignore_version_mismatch=self._ignore_version_mismatch,
                             strict_extension_check=strict_extension_check,
                             ignore_missing_extensions=ignore_missing_extensions,
                             ignore_unrecognized_tag=self._ignore_unrecognized_tag,
@@ -1476,20 +1470,6 @@ class AsdfFile:
         result = AsdfSearchResult(["root"], self.tree)
         return result.search(key=key, type=type, value=value, filter=filter)
 
-    # This function is called from within TypeIndex when deserializing
-    # the tree for this file.  It is kept here so that we can keep
-    # state on the AsdfFile and prevent a flood of warnings for the
-    # same tag.
-    def _warn_tag_mismatch(self, tag, best_tag):
-        if not self._ignore_version_mismatch and (tag, best_tag) not in self._warned_tag_pairs:
-            message = (
-                "No explicit ExtensionType support provided for tag '{}'. "
-                "The ExtensionType subclass for tag '{}' will be used instead. "
-                "This fallback behavior will be removed in asdf 3.0."
-            ).format(tag, best_tag)
-            warnings.warn(message, AsdfConversionWarning)
-            self._warned_tag_pairs.add((tag, best_tag))
-
     # This function is called from within yamlutil methods to create
     # a context when one isn't explicitly passed in.
     def _create_serialization_context(self):
@@ -1520,7 +1500,7 @@ def _check_and_set_mode(fileobj, asdf_mode):
 
 
 def open_asdf(fd, uri=None, mode=None, validate_checksums=False, extensions=None,
-              ignore_version_mismatch=True, ignore_unrecognized_tag=False,
+              ignore_unrecognized_tag=False,
               _force_raw_types=False, copy_arrays=False, lazy_load=True,
               custom_schema=None, strict_extension_check=False,
               ignore_missing_extensions=False, _compat=False,
@@ -1551,10 +1531,6 @@ def open_asdf(fd, uri=None, mode=None, validate_checksums=False, extensions=None
         May be any of the following: `asdf.extension.AsdfExtension`,
         `asdf.extension.Extension`, `asdf.extension.AsdfExtensionList`
         or a `list` of extensions.
-
-    ignore_version_mismatch : bool, optional
-        When `True`, do not raise warnings for mismatched schema versions.
-        Set to `True` by default.
 
     ignore_unrecognized_tag : bool, optional
         When `True`, do not raise warnings for unrecognized tags. Set to
@@ -1607,7 +1583,6 @@ def open_asdf(fd, uri=None, mode=None, validate_checksums=False, extensions=None
         readonly = (mode == 'r' and not copy_arrays)
 
     instance = AsdfFile(
-                   ignore_version_mismatch=ignore_version_mismatch,
                    ignore_unrecognized_tag=ignore_unrecognized_tag,
                    copy_arrays=copy_arrays, lazy_load=lazy_load,
                    custom_schema=custom_schema, _readonly=readonly)

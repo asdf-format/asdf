@@ -44,12 +44,6 @@ def pytest_addoption(parser):
         type="bool",
         default=False,
     )
-    parser.addini(
-        "asdf_schema_ignore_version_mismatch",
-        "Set to true to disable warnings when missing explicit support for a tag",
-        type="bool",
-        default=True
-    )
     parser.addoption('--asdf-tests', action='store_true',
         help='Enable ASDF schema tests')
 
@@ -57,7 +51,7 @@ def pytest_addoption(parser):
 class AsdfSchemaFile(pytest.File):
     @classmethod
     def from_parent(cls, parent, *, fspath, skip_examples=False, validate_default=True,
-        ignore_unrecognized_tag=False, ignore_version_mismatch=False, skip_tests=[], xfail_tests=[], **kwargs):
+        ignore_unrecognized_tag=False, skip_tests=[], xfail_tests=[], **kwargs):
         if hasattr(super(), "from_parent"):
             result = super().from_parent(parent, fspath=fspath, **kwargs)
         else:
@@ -66,7 +60,6 @@ class AsdfSchemaFile(pytest.File):
         result.skip_examples = skip_examples
         result.validate_default = validate_default
         result.ignore_unrecognized_tag = ignore_unrecognized_tag
-        result.ignore_version_mismatch = ignore_version_mismatch
         result.skip_tests = skip_tests
         result.xfail_tests = xfail_tests
 
@@ -92,7 +85,6 @@ class AsdfSchemaFile(pytest.File):
                     example,
                     index,
                     ignore_unrecognized_tag=self.ignore_unrecognized_tag,
-                    ignore_version_mismatch=self.ignore_version_mismatch,
                     name=name,
                 )
                 self._set_markers(item)
@@ -178,7 +170,7 @@ def parse_schema_filename(filename):
 class AsdfSchemaExampleItem(pytest.Item):
     @classmethod
     def from_parent(cls, parent, schema_path, example, example_index,
-        ignore_unrecognized_tag=False, ignore_version_mismatch=False, **kwargs):
+        ignore_unrecognized_tag=False, **kwargs):
         if hasattr(super(), "from_parent"):
             result = super().from_parent(parent, **kwargs)
         else:
@@ -188,7 +180,6 @@ class AsdfSchemaExampleItem(pytest.Item):
         result.filename = str(schema_path)
         result.example = example
         result.ignore_unrecognized_tag = ignore_unrecognized_tag
-        result.ignore_version_mismatch = ignore_version_mismatch
         return result
 
     def _find_standard_version(self, name, version):
@@ -218,7 +209,6 @@ class AsdfSchemaExampleItem(pytest.Item):
         ff = AsdfFile(
             uri=util.filepath_to_url(os.path.abspath(self.filename)),
             ignore_unrecognized_tag=self.ignore_unrecognized_tag,
-            ignore_version_mismatch=self.ignore_version_mismatch,
         )
 
         # Fake an external file
@@ -292,7 +282,6 @@ def pytest_collect_file(path, parent):
     skip_examples = parent.config.getini('asdf_schema_skip_examples')
     validate_default = parent.config.getini('asdf_schema_validate_default')
     ignore_unrecognized_tag = parent.config.getini('asdf_schema_ignore_unrecognized_tag')
-    ignore_version_mismatch = parent.config.getini('asdf_schema_ignore_version_mismatch')
 
     skip_tests = _parse_test_list(parent.config.getini('asdf_schema_skip_tests'))
     xfail_tests = _parse_test_list(parent.config.getini('asdf_schema_xfail_tests'))
@@ -321,7 +310,6 @@ def pytest_collect_file(path, parent):
                 skip_examples=(path.purebasename in skip_examples),
                 validate_default=validate_default,
                 ignore_unrecognized_tag=ignore_unrecognized_tag,
-                ignore_version_mismatch=ignore_version_mismatch,
                 skip_tests=schema_skip_tests,
                 xfail_tests=schema_xfail_tests,
             )
