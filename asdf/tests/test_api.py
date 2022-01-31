@@ -445,17 +445,6 @@ def test_array_inline_threshold_string_array(array_inline_threshold, inline_bloc
             assert len(list(af.blocks.internal_blocks)) == internal_blocks
 
 
-def test_resolver_deprecations():
-    for resolver_method in [
-        resolver.default_resolver,
-        resolver.default_tag_to_url_mapping,
-        resolver.default_url_mapping,
-        schema.default_ext_resolver
-    ]:
-        with pytest.warns(AsdfDeprecationWarning):
-            resolver_method("foo")
-
-
 def test_get_default_resolver():
     resolver = extension.get_default_resolver()
 
