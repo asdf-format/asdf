@@ -310,9 +310,6 @@ def tagged_tree_to_custom_tree(tree, ctx, force_raw_types=False, _serialization_
         tag_type = ctx.type_index.from_yaml_tag(ctx, tag, _serialization_context=_serialization_context)
         # This means the tag did not correspond to any type in our type index.
         if tag_type is None:
-            if not ctx._ignore_unrecognized_tag:
-                warnings.warn("{} is not recognized, converting to raw Python "
-                    "data structure".format(tag), AsdfConversionWarning)
             return node
 
         tag_name, tag_version = split_tag_version(tag)

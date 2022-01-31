@@ -168,7 +168,6 @@ class AsdfInFits(asdf.AsdfFile):
 
     @classmethod
     def open(cls, fd, uri=None, validate_checksums=False, extensions=None,
-             ignore_unrecognized_tag=False,
              strict_extension_check=False, ignore_missing_extensions=False,
              **kwargs):
         """Creates a new AsdfInFits object based on given input data
@@ -210,14 +209,12 @@ class AsdfInFits(asdf.AsdfFile):
         return cls._open_impl(fd, uri=uri,
                        validate_checksums=validate_checksums,
                        extensions=extensions,
-                       ignore_unrecognized_tag=ignore_unrecognized_tag,
                        strict_extension_check=strict_extension_check,
                        ignore_missing_extensions=ignore_missing_extensions,
                        **kwargs)
 
     @classmethod
     def _open_impl(cls, fd, uri=None, validate_checksums=False, extensions=None,
-             ignore_unrecognized_tag=False,
              strict_extension_check=False,
              ignore_missing_extensions=False, **kwargs):
 
@@ -235,8 +232,7 @@ class AsdfInFits(asdf.AsdfFile):
                 msg = "Failed to parse given file '{}'. Is it FITS?"
                 raise ValueError(msg.format(uri))
 
-        self = cls(hdulist, uri=uri,
-                   ignore_unrecognized_tag=ignore_unrecognized_tag)
+        self = cls(hdulist, uri=uri)
 
         self._close_hdulist = close_hdulist
 

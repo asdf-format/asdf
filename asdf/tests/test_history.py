@@ -209,7 +209,7 @@ def test_metadata_with_custom_extension(tmp_path):
             assert len(af["history"]["extensions"]) == 2
 
     with pytest.warns(AsdfWarning, match="was created with extension"):
-        with asdf.open(file_path, ignore_unrecognized_tag=True):
+        with asdf.open(file_path):
             pass
 
     # If we use the extension but we don't serialize any types that require it,

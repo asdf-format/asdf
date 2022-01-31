@@ -79,11 +79,6 @@ simply appear in the tree as a nested combination of basic data types. The
 structure of this data will mirror the structure of the YAML objects in the
 ASDF file.
 
-In this case, a warning will occur by default to indicate to the user that the
-custom type in the file was not recognized and can not be deserialized. To
-suppress these warnings, users should pass ``ignore_unrecognized_tag=True`` to
-`asdf.open`.
-
 Even if an extension for the custom type is present, it does not guarantee that
 the type can be deserialized successfully. Instantiating the custom type may
 involve additional software dependencies, which, if not present, will cause an

@@ -56,7 +56,6 @@ class AsdfFile:
     The main class that represents an ASDF file object.
     """
     def __init__(self, tree=None, uri=None, extensions=None, version=None,
-                 ignore_unrecognized_tag=False,
                  ignore_implicit_conversion=False, copy_arrays=False,
                  lazy_load=True, custom_schema=None, _readonly=False):
         """
@@ -81,10 +80,6 @@ class AsdfFile:
         version : str, optional
             The ASDF Standard version.  If not provided, defaults to the
             configured default version.  See `asdf.config.AsdfConfig.default_version`.
-
-        ignore_unrecognized_tag : bool, optional
-            When `True`, do not raise warnings for unrecognized tags. Set to
-            `False` by default.
 
         ignore_implicit_conversion : bool
             When `True`, do not raise warnings when types in the tree are
@@ -129,7 +124,6 @@ class AsdfFile:
         else:
             self._custom_schema = None
 
-        self._ignore_unrecognized_tag = ignore_unrecognized_tag
         self._ignore_implicit_conversion = ignore_implicit_conversion
 
         # Set of (string, string) tuples representing tag version mismatches
@@ -901,7 +895,6 @@ class AsdfFile:
                             extensions=extensions,
                             strict_extension_check=strict_extension_check,
                             ignore_missing_extensions=ignore_missing_extensions,
-                            ignore_unrecognized_tag=self._ignore_unrecognized_tag,
                             **kwargs)
             except ValueError:
                 raise ValueError(
@@ -1500,7 +1493,6 @@ def _check_and_set_mode(fileobj, asdf_mode):
 
 
 def open_asdf(fd, uri=None, mode=None, validate_checksums=False, extensions=None,
-              ignore_unrecognized_tag=False,
               _force_raw_types=False, copy_arrays=False, lazy_load=True,
               custom_schema=None, strict_extension_check=False,
               ignore_missing_extensions=False, _compat=False,
@@ -1531,10 +1523,6 @@ def open_asdf(fd, uri=None, mode=None, validate_checksums=False, extensions=None
         May be any of the following: `asdf.extension.AsdfExtension`,
         `asdf.extension.Extension`, `asdf.extension.AsdfExtensionList`
         or a `list` of extensions.
-
-    ignore_unrecognized_tag : bool, optional
-        When `True`, do not raise warnings for unrecognized tags. Set to
-        `False` by default.
 
     copy_arrays : bool, optional
         When `False`, when reading files, attempt to memmap underlying data
@@ -1583,7 +1571,6 @@ def open_asdf(fd, uri=None, mode=None, validate_checksums=False, extensions=None
         readonly = (mode == 'r' and not copy_arrays)
 
     instance = AsdfFile(
-                   ignore_unrecognized_tag=ignore_unrecognized_tag,
                    copy_arrays=copy_arrays, lazy_load=lazy_load,
                    custom_schema=custom_schema, _readonly=readonly)
 

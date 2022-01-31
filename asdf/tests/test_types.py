@@ -264,7 +264,7 @@ undefined_data:
         - !core/complex-1.0.0 3.14j
 """
     buff = helpers.yaml_to_asdf(yaml)
-    with pytest.warns(None) as warning:
+    with pytest.warns(None):
         afile = asdf.open(buff)
         missing = afile.tree['undefined_data']
 
@@ -274,17 +274,10 @@ undefined_data:
     assert (missing[3][0] == array([[7],[8],[9],[10]])).all()
     assert missing[3][1] == 3.14j
 
-    # There are two undefined tags, so we expect two warnings
-    assert len(warning) == 2
-    for i, tag in enumerate(["also_undefined-1.3.0", "undefined_tag-1.0.0"]):
-        assert str(warning[i].message) == (
-            "tag:nowhere.org:custom/{} is not recognized, converting to raw "
-            "Python data structure".format(tag))
-
     # Make sure no warning occurs if explicitly ignored
     buff.seek(0)
     with helpers.assert_no_warnings():
-        afile = asdf.open(buff, ignore_unrecognized_tag=True)
+        afile = asdf.open(buff)
 
 
 def test_newer_tag():

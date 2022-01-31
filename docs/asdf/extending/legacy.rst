@@ -144,8 +144,6 @@ using them:
     with asdf.AsdfFile(tree, extensions=FractionExtension()) as ff:
         ff.write_to("test.asdf")
 
-.. asdf:: test.asdf ignore_unrecognized_tag
-
 Defining custom types
 ---------------------
 
@@ -254,8 +252,6 @@ In this case, the associated schema would look like the following::
     ...
 
 We can compare the output using this representation to the example above:
-
-.. asdf:: test.asdf ignore_unrecognized_tag
 
 
 Serializing more complex types
@@ -366,8 +362,6 @@ Now we can use this extension to create an ASDF file:
 
     with asdf.AsdfFile(tree, extensions=FractionExtension()) as ff:
         ff.write_to("coord.asdf")
-
-.. asdf:: coord.asdf ignore_unrecognized_tag
 
 Note that in the resulting ASDF file, the ``x`` and ``y`` components of
 our new `fraction_2d_coord` type are tagged as `fraction-1.0.0`.
