@@ -361,8 +361,6 @@ some variant of validate in their name. This will try to make clear what they do
 Here is a list of the functions/classes in ``schema.py`` and their purpose and
 where  they sit in the order of things
 
-default_ext_resolver
-
 **_type_to_tag:** Handles mapping python types to yaml_tags, with the addition
 of support for OrderedDicts.
 

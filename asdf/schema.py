@@ -40,19 +40,6 @@ else:  # pragma: no cover
 __all__ = ['validate', 'fill_defaults', 'remove_defaults', 'check_schema']
 
 
-def default_ext_resolver(uri):
-    """
-    Resolver that uses tag/url mappings from all installed extensions
-    """
-    # Deprecating this because it doesn't play nicely with the caching on
-    # load_schema(...).
-    warnings.warn(
-            "The 'default_ext_resolver(...)' function is deprecated. Use "
-            "'asdf.extension.get_default_resolver()(...)' instead.",
-            AsdfDeprecationWarning)
-    return extension.get_default_resolver()(uri)
-
-
 PYTHON_TYPE_TO_YAML_TAG = {
     None: 'null',
     str: 'str',
