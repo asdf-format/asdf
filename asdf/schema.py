@@ -312,21 +312,20 @@ def _create_validator(validators=YAML_VALIDATORS, visit_repeat_nodes=False):
                         else:
                             schema_uris = [self.ctx.tag_mapping(tag)]
                             if schema_uris[0] == tag:
-                                schema_uris = None
+                                schema_uris = []
 
-                        if schema_uris is not None:
-                            # Must validate against all schema_uris
-                            for schema_uri in schema_uris:
-                                try:
-                                    s = _load_schema_cached(schema_uri, self.ctx.resolver, False, False)
-                                except FileNotFoundError:
-                                    msg = "Unable to locate schema file for '{}': '{}'"
-                                    warnings.warn(msg.format(tag, schema_uri), AsdfWarning)
-                                    s = {}
-                                if s:
-                                    with self.resolver.in_scope(schema_uri):
-                                        for x in super(ASDFValidator, self).iter_errors(instance, s):
-                                            yield x
+                        # Must validate against all schema_uris
+                        for schema_uri in schema_uris:
+                            try:
+                                s = _load_schema_cached(schema_uri, self.ctx.resolver, False, False)
+                            except FileNotFoundError:
+                                msg = "Unable to locate schema file for '{}': '{}'"
+                                warnings.warn(msg.format(tag, schema_uri), AsdfWarning)
+                                s = {}
+                            if s:
+                                with self.resolver.in_scope(schema_uri):
+                                    for x in super(ASDFValidator, self).iter_errors(instance, s):
+                                        yield x
 
 
                     if isinstance(instance, dict):

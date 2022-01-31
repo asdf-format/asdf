@@ -97,7 +97,6 @@ class FooFooConverter:
     tags = ["asdf://somewhere.org/extensions/foo/tags/foo_foo-*"]
 
     def to_yaml_tree(self, obj, tag, ctx):
-        print("HERE")
         return {
             "value": obj.value,
             "value_value": obj.value_value

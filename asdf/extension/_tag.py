@@ -21,7 +21,7 @@ class TagDefinition:
         self._tag_uri = tag_uri
 
         if schema_uris is None:
-            self._schema_uris = None
+            self._schema_uris = []
         else:
             if isinstance(schema_uris, list):
                 self._schema_uris = schema_uris
