@@ -170,3 +170,28 @@ that in an extension.
 Now the compression algorithm will be available for both reading and writing ASDF files.
 Users writing files will simply need to specify the new 4-byte compression code when making calls
 to `asdf.AsdfFile.set_array_compression`.
+
+Support a new schema property
+=============================
+
+In order to support custom validation behavior that is triggered by a new schema
+property, we need to implement the `~asdf.extension.Validator` interface
+and install that in an extension.
+
+1. Determine the tag or tags that this property will apply to.
+
+2. Select a schema property for the validator.  The property need not be globally unique,
+   but it should be unique among the validators that apply to the tag(s), and must
+   not collide with any of the built-in JSON schema properties (type, additionalProperties, etc).
+
+3. Implement a `~asdf.extension.Validator` class that associates the schema property and tag(s)
+   with a ``validate`` method that does the work of checking an ADSF node against the schema.
+
+4. Implement an `~asdf.extension.Extension` class which is the vehicle
+   for plugging our validator into the `asdf` library.  See :ref:`extending_extensions`
+   for a discussion of the Extension interface.
+
+5. Install the extension via one of the two available methods.  See
+   :ref:`extending_extensions_installing` for instructions.
+
+Now the new schema property will have an effect when validating ASDF files.

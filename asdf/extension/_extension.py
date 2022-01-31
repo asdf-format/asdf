@@ -7,6 +7,7 @@ from ._tag import TagDefinition
 from ._legacy import AsdfExtension
 from ._converter import ConverterProxy
 from ._compressor import Compressor
+from ._validator import Validator
 
 
 class Extension(abc.ABC):
@@ -115,6 +116,18 @@ class Extension(abc.ABC):
         """
         return {}
 
+    @property
+    def validators(self):
+        """
+        Get the `asdf.extension.Validator` instances for additional
+        schema properties supported by this extension.
+
+        Returns
+        -------
+        iterable of asdf.extension.Validator
+        """
+        return []
+
 
 class ExtensionProxy(Extension, AsdfExtension):
     """
@@ -186,6 +199,13 @@ class ExtensionProxy(Extension, AsdfExtension):
                 if not isinstance(compressor, Compressor):
                     raise TypeError("Extension property 'compressors' must contain instances of asdf.extension.Compressor")
                 self._compressors.append(compressor)
+
+        self._validators = []
+        if hasattr(self._delegate, "validators"):
+            for validator in self._delegate.validators:
+                if not isinstance(validator, Validator):
+                    raise TypeError("Extension property 'validators' must contain instances of asdf.extension.Validator")
+                self._validators.append(validator)
 
     @property
     def extension_uri(self):
@@ -366,6 +386,18 @@ class ExtensionProxy(Extension, AsdfExtension):
 
         """
         return self._yaml_tag_handles
+
+    @property
+    def validators(self):
+        """
+        Get the `asdf.extension.Validator` instances for additional
+        schema properties supported by this extension.
+
+        Returns
+        -------
+        list of asdf.extension.Validator
+        """
+        return self._validators
 
     def __eq__(self, other):
         if isinstance(other, ExtensionProxy):

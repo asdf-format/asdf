@@ -17,6 +17,8 @@
 
 - Remove wildcard from Converter tag matchers and handle extra properties. [#1049]
 
+- Add new plugin type for custom schema validators. [#1050]
+
 2.8.4 (unreleased)
 ------------------
 

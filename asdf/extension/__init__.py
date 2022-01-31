@@ -8,6 +8,7 @@ from ._manifest import ManifestExtension
 from ._tag import TagDefinition
 from ._converter import Converter, ConverterProxy
 from ._compressor import Compressor
+from ._validator import Validator
 from ._legacy import (
     AsdfExtension,
     AsdfExtensionList,
@@ -29,6 +30,7 @@ __all__ = [
     "Converter",
     "ConverterProxy",
     "Compressor",
+    "Validator",
     # Legacy API
     "AsdfExtension",
     "AsdfExtensionList",
