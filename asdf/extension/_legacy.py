@@ -5,7 +5,6 @@ from functools import lru_cache
 from .. import types
 from .. import resolver
 from ..type_index import AsdfTypeIndex
-from ..exceptions import AsdfDeprecationWarning
 
 
 class AsdfExtension(metaclass=abc.ABCMeta):

@@ -4,7 +4,6 @@ import warnings
 
 from . import constants
 from . import util
-from .exceptions import AsdfDeprecationWarning
 
 
 def find_schema_path():

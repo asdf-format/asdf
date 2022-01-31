@@ -23,7 +23,7 @@ from . import extension
 from . import yamlutil
 from . import versioning
 from . import tagged
-from .exceptions import AsdfDeprecationWarning, AsdfWarning
+from .exceptions import AsdfWarning
 
 from .util import patched_urllib_parse
 
