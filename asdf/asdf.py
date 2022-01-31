@@ -495,14 +495,6 @@ class AsdfFile:
         return None
 
     @property
-    def tag_to_schema_resolver(self):
-        warnings.warn(
-            "The 'tag_to_schema_resolver' property is deprecated. Use "
-            "'tag_mapping' instead.",
-            AsdfDeprecationWarning)
-        return self.extension_list.tag_mapping
-
-    @property
     def tag_mapping(self):
         return self.extension_list.tag_mapping
 

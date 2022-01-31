@@ -262,16 +262,6 @@ def test_copy(tmpdir):
     assert_array_equal(ff2.tree['my_array'], ff2.tree['my_array'])
 
 
-def test_tag_to_schema_resolver_deprecation():
-    ff = asdf.AsdfFile()
-    with pytest.warns(AsdfDeprecationWarning):
-        ff.tag_to_schema_resolver('foo')
-
-    with pytest.warns(AsdfDeprecationWarning):
-        extension_list = extension.default_extensions.extension_list
-        extension_list.tag_to_schema_resolver('foo')
-
-
 def test_access_tree_outside_handler(tmpdir):
     tempname = str(tmpdir.join('test.asdf'))
 
