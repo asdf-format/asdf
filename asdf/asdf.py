@@ -56,8 +56,7 @@ class AsdfFile:
     The main class that represents an ASDF file object.
     """
     def __init__(self, tree=None, uri=None, extensions=None, version=None,
-                 ignore_implicit_conversion=False, copy_arrays=False,
-                 lazy_load=True, custom_schema=None, _readonly=False):
+                 copy_arrays=False, lazy_load=True, custom_schema=None, _readonly=False):
         """
         Parameters
         ----------
@@ -80,12 +79,6 @@ class AsdfFile:
         version : str, optional
             The ASDF Standard version.  If not provided, defaults to the
             configured default version.  See `asdf.config.AsdfConfig.default_version`.
-
-        ignore_implicit_conversion : bool
-            When `True`, do not raise warnings when types in the tree are
-            implicitly converted into a serializable object. The motivating
-            case for this is currently `namedtuple`, which cannot be serialized
-            as-is.
 
         copy_arrays : bool, optional
             When `False`, when reading files, attempt to memmap underlying data
@@ -123,8 +116,6 @@ class AsdfFile:
             self._custom_schema = schema._load_schema_cached(custom_schema, self.resolver, True)
         else:
             self._custom_schema = None
-
-        self._ignore_implicit_conversion = ignore_implicit_conversion
 
         # Set of (string, string) tuples representing tag version mismatches
         # that we've already warned about for this file.
@@ -1281,8 +1272,7 @@ class AsdfFile:
             if hook is not None:
                 return hook(node, self)
             return node
-        tree = treeutil.walk_and_modify(self.tree, walker,
-            ignore_implicit_conversion=self._ignore_implicit_conversion)
+        tree = treeutil.walk_and_modify(self.tree, walker)
 
         if validate:
             self._validate(tree)

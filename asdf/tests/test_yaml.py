@@ -97,7 +97,7 @@ def run_tuple_test(tree, tmpdir):
         assert b'tuple' not in content
 
     # Ignore these warnings for the tests that don't actually test the warning
-    init_options = dict(ignore_implicit_conversion=True)
+    init_options = dict()
 
     helpers.assert_roundtrip_tree(tree, tmpdir, asdf_check_func=check_asdf,
                                   raw_yaml_check_func=check_raw_yaml,
@@ -149,7 +149,7 @@ def test_named_tuple_collections_recursive(tmpdir):
     def check_asdf(asdf):
         assert (asdf.tree['val'][2] == np.ones(3)).all()
 
-    init_options = dict(ignore_implicit_conversion=True)
+    init_options = dict()
     helpers.assert_roundtrip_tree(tree, tmpdir, asdf_check_func=check_asdf,
                                   init_options=init_options)
 
@@ -165,7 +165,7 @@ def test_named_tuple_typing_recursive(tmpdir):
     def check_asdf(asdf):
         assert (asdf.tree['val'][2] == np.ones(3)).all()
 
-    init_options = dict(ignore_implicit_conversion=True)
+    init_options = dict()
     helpers.assert_roundtrip_tree(tree, tmpdir, asdf_check_func=check_asdf,
                                   init_options=init_options)
 
@@ -177,12 +177,8 @@ def test_implicit_conversion_warning():
         "val": nt(1, 2, np.ones(3))
     }
 
-    with pytest.warns(AsdfWarning, match="Failed to serialize instance"):
-        with asdf.AsdfFile(tree):
-            pass
-
     with helpers.assert_no_warnings():
-        with asdf.AsdfFile(tree, ignore_implicit_conversion=True):
+        with asdf.AsdfFile(tree):
             pass
 
 
