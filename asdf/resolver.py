@@ -1,6 +1,5 @@
 import sys
 import os.path
-import warnings
 
 from . import constants
 from . import util

@@ -1,5 +1,4 @@
 import abc
-import warnings
 from functools import lru_cache
 
 from .. import types

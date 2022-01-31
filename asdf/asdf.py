@@ -9,7 +9,7 @@ from pkg_resources import parse_version
 import numpy as np
 from jsonschema import ValidationError
 
-from .config import get_config, config_context
+from .config import get_config
 from . import block
 from . import constants
 from . import core
