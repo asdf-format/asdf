@@ -19,6 +19,8 @@
 
 - Add new plugin type for custom schema validators. [#1050]
 
+- Remove all deprecations to be removed in 3.0 (see issue #588). [#1059]
+
 2.8.4 (unreleased)
 ------------------
 
