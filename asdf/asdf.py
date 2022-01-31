@@ -129,7 +129,7 @@ class AsdfFile:
         self._extension_list = None
 
         if custom_schema is not None:
-            self._custom_schema = schema._load_schema_cached(custom_schema, self.resolver, True, False)
+            self._custom_schema = schema._load_schema_cached(custom_schema, self.resolver, True)
         else:
             self._custom_schema = None
 
