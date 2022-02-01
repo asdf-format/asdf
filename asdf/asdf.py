@@ -24,9 +24,6 @@ from . import yamlutil
 from . import _display as display
 from .exceptions import AsdfWarning
 from .extension import (
-    AsdfExtensionList,
-    AsdfExtension,
-    Extension,
     ExtensionProxy,
     get_cached_asdf_extension_list,
     get_cached_extension_manager,

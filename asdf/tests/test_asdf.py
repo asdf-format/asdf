@@ -4,7 +4,7 @@ from asdf.asdf import AsdfFile, open_asdf, SerializationContext
 from asdf import config_context, get_config
 from asdf.versioning import AsdfVersion
 from asdf.exceptions import AsdfWarning
-from asdf.extension import ExtensionProxy, AsdfExtensionList, ExtensionManager
+from asdf.extension import ExtensionProxy, ExtensionManager
 from asdf.tests.helpers import yaml_to_asdf, assert_no_warnings
 
 
