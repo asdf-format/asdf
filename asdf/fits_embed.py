@@ -123,11 +123,15 @@ class AsdfInFits(asdf.AsdfFile):
     Create a FITS file with ASDF structure, based on an existing FITS
     file::
 
+        import numpy as np
         from astropy.io import fits
 
-        hdulist = fits.HDUList()
-        hdulist.append(fits.ImageHDU(np.arange(512, dtype=float), name='SCI'))
-        hdulist.append(fits.ImageHDU(np.arange(512, dtype=float), name='DQ'))
+        from asdf import fits_embed
+
+        hdulist = fits.HDUList([
+            fits.PrimaryHDU(),
+            fits.ImageHDU(np.arange(512, dtype=np.float32), name='SCI'),
+            fits.ImageHDU(np.zeros(512, dtype=np.int16), name='DQ')])
 
         tree = {
             'model': {
