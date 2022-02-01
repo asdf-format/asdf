@@ -24,6 +24,8 @@
 - Remove ignore_version_mismatch, ignore_unrecognized_tag, and ignore_implicit_conversion
   from AsdfFile. [#1060]
 
+- Remove extensions argument from AsdfFile class and open functions. [#1062]
+
 2.8.4 (unreleased)
 ------------------
 
