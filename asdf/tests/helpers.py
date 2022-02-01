@@ -178,7 +178,7 @@ def _assert_roundtrip_tree(tree, tmpdir, *, asdf_check_func=None,
 
     # First, test writing/reading a BytesIO buffer
     buff = io.BytesIO()
-    AsdfFile(tree, extensions=extensions, **init_options).write_to(buff, **write_options)
+    AsdfFile(tree, **init_options).write_to(buff, **write_options)
     assert not buff.closed
     buff.seek(0)
     with asdf.open(buff, mode='rw', extensions=extensions) as ff:
@@ -191,7 +191,7 @@ def _assert_roundtrip_tree(tree, tmpdir, *, asdf_check_func=None,
             asdf_check_func(ff)
 
     buff.seek(0)
-    ff = AsdfFile(extensions=extensions, **init_options)
+    ff = AsdfFile(**init_options)
     content = AsdfFile._open_impl(ff, buff, mode='r', _get_yaml_content=True)
     buff.close()
     # We *never* want to get any raw python objects out
@@ -202,7 +202,7 @@ def _assert_roundtrip_tree(tree, tmpdir, *, asdf_check_func=None,
         raw_yaml_check_func(content)
 
     # Then, test writing/reading to a real file
-    ff = AsdfFile(tree, extensions=extensions, **init_options)
+    ff = AsdfFile(tree, **init_options)
     ff.write_to(fname, **write_options)
     with asdf.open(fname, mode='rw', extensions=extensions) as ff:
         assert_tree_match(tree, ff.tree, ff, funcname=tree_match_func)
@@ -212,7 +212,7 @@ def _assert_roundtrip_tree(tree, tmpdir, *, asdf_check_func=None,
     # Make sure everything works without a block index
     write_options['include_block_index'] = False
     buff = io.BytesIO()
-    AsdfFile(tree, extensions=extensions, **init_options).write_to(buff, **write_options)
+    AsdfFile(tree, **init_options).write_to(buff, **write_options)
     assert not buff.closed
     buff.seek(0)
     with asdf.open(buff, mode='rw', extensions=extensions) as ff:
@@ -226,7 +226,7 @@ def _assert_roundtrip_tree(tree, tmpdir, *, asdf_check_func=None,
     if not INTERNET_OFF:
         server = RangeHTTPServer()
         try:
-            ff = AsdfFile(tree, extensions=extensions, **init_options)
+            ff = AsdfFile(tree, **init_options)
             ff.write_to(os.path.join(server.tmpdir, 'test.asdf'), **write_options)
             with asdf.open(server.url + 'test.asdf', mode='r',
                                extensions=extensions) as ff:
@@ -238,7 +238,7 @@ def _assert_roundtrip_tree(tree, tmpdir, *, asdf_check_func=None,
 
     # Now don't be lazy and check that nothing breaks
     with io.BytesIO() as buff:
-        AsdfFile(tree, extensions=extensions, **init_options).write_to(buff, **write_options)
+        AsdfFile(tree, **init_options).write_to(buff, **write_options)
         buff.seek(0)
         ff = asdf.open(buff, extensions=extensions, copy_arrays=True, lazy_load=False)
         # Ensure that all the blocks are loaded
@@ -251,7 +251,7 @@ def _assert_roundtrip_tree(tree, tmpdir, *, asdf_check_func=None,
         asdf_check_func(ff)
 
     # Now repeat with copy_arrays=False and a real file to test mmap()
-    AsdfFile(tree, extensions=extensions, **init_options).write_to(fname, **write_options)
+    AsdfFile(tree, **init_options).write_to(fname, **write_options)
     with asdf.open(fname, mode='rw', extensions=extensions, copy_arrays=False,
                        lazy_load=False) as ff:
         for block in ff.blocks._internal_blocks:

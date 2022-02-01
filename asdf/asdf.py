@@ -55,7 +55,7 @@ class AsdfFile:
     """
     The main class that represents an ASDF file object.
     """
-    def __init__(self, tree=None, uri=None, extensions=None, version=None,
+    def __init__(self, tree=None, uri=None, version=None,
                  copy_arrays=False, lazy_load=True, custom_schema=None, _readonly=False):
         """
         Parameters
@@ -69,12 +69,6 @@ class AsdfFile:
             references against.  If not provided, will be
             automatically determined from the associated file object,
             if possible and if created from `AsdfFile.open`.
-
-        extensions : object, optional
-            Additional extensions to use when reading and writing the file.
-            May be any of the following: `asdf.extension.AsdfExtension`,
-            `asdf.extension.Extension`, `asdf.extension.AsdfExtensionList`
-            or a `list` of extensions.
 
         version : str, optional
             The ASDF Standard version.  If not provided, defaults to the
@@ -107,7 +101,6 @@ class AsdfFile:
         else:
             self._version = versioning.AsdfVersion(validate_version(version))
 
-        self._user_extensions = self._process_user_extensions(extensions)
         self._plugin_extensions = self._process_plugin_extensions()
         self._extension_manager = None
         self._extension_list = None
@@ -140,11 +133,6 @@ class AsdfFile:
             # an empty tree.
             self._tree = AsdfObject()
         elif isinstance(tree, AsdfFile):
-            if self.extensions != tree.extensions:
-                # TODO(eslavich): Why not?  What if that's the goal
-                # of copying the file?
-                raise ValueError(
-                    "Can not copy AsdfFile and change active extensions")
             self._uri = tree.uri
             # Set directly to self._tree (bypassing property), since
             # we can assume the other AsdfFile is already valid.
@@ -182,7 +170,6 @@ class AsdfFile:
         self._version = versioning.AsdfVersion(validate_version(value))
         # The new version may not be compatible with the previous
         # set of extensions, so we need to check them again:
-        self._user_extensions = self._process_user_extensions(self._user_extensions)
         self._plugin_extensions = self._process_plugin_extensions()
         self._extension_manager = None
         self._extension_list = None
@@ -203,32 +190,6 @@ class AsdfFile:
         return versioning.get_version_map(self.version_string)
 
     @property
-    def extensions(self):
-        """
-        Get the list of user extensions that are enabled for
-        use with this AsdfFile.
-
-        Returns
-        -------
-        list of asdf.extension.ExtensionProxy
-        """
-        return self._user_extensions
-
-    @extensions.setter
-    def extensions(self, value):
-        """
-        Set the list of user extensions that are enabled for
-        use with this AsdfFile.
-
-        Parameters
-        ----------
-        value : list of asdf.extension.AsdfExtension or asdf.extension.Extension
-        """
-        self._user_extensions = self._process_user_extensions(value)
-        self._extension_manager = None
-        self._extension_list = None
-
-    @property
     def extension_manager(self):
         """
         Get the ExtensionManager for this AsdfFile.
@@ -238,7 +199,7 @@ class AsdfFile:
         asdf.extension.ExtensionManager
         """
         if self._extension_manager is None:
-            self._extension_manager = get_cached_extension_manager(self._user_extensions + self._plugin_extensions)
+            self._extension_manager = get_cached_extension_manager(self._plugin_extensions)
         return self._extension_manager
 
     @property
@@ -251,7 +212,7 @@ class AsdfFile:
         asdf.extension.AsdfExtensionList
         """
         if self._extension_list is None:
-            self._extension_list = get_cached_asdf_extension_list(self._user_extensions + self._plugin_extensions)
+            self._extension_list = get_cached_asdf_extension_list(self._plugin_extensions)
         return self._extension_list
 
     def __enter__(self):
@@ -280,7 +241,7 @@ class AsdfFile:
 
         for extension in tree['history']['extensions']:
             installed = None
-            for ext in self._user_extensions + self._plugin_extensions:
+            for ext in self._plugin_extensions:
                 if (extension.extension_uri is not None and extension.extension_uri == ext.extension_uri
                     or extension.extension_uri is None and extension.extension_class in ext.legacy_class_names):
                     installed = ext
@@ -338,51 +299,6 @@ class AsdfFile:
         list of asdf.extension.ExtensionProxy
         """
         return [e for e in get_config().extensions if self.version_string in e.asdf_standard_requirement]
-
-    def _process_user_extensions(self, extensions):
-        """
-        Validate a list of extensions requested by the user
-        add missing extensions registered with the current `AsdfConfig`.
-
-        Parameters
-        ----------
-        extensions : object
-            May be any of the following: `asdf.extension.AsdfExtension`,
-            `asdf.extension.Extension`, `asdf.extension.AsdfExtensionList`
-            or a `list` of extensions.
-
-        Returns
-        -------
-        list of asdf.extension.ExtensionProxy
-        """
-        if extensions is None:
-            extensions = []
-        elif isinstance(extensions, (AsdfExtension, Extension, ExtensionProxy)):
-            extensions = [extensions]
-        elif isinstance(extensions, AsdfExtensionList):
-            extensions = extensions.extensions
-
-        if not isinstance(extensions, list):
-            raise TypeError(
-                "The extensions parameter must be an extension, list of extensions, or "
-                "instance of AsdfExtensionList"
-            )
-
-        extensions = [ExtensionProxy.maybe_wrap(e) for e in extensions]
-
-        result = []
-        for extension in extensions:
-            if self.version_string not in extension.asdf_standard_requirement:
-                warnings.warn(
-                    "Extension {} does not support ASDF Standard {}.  It has been disabled.".format(
-                        extension, self.version_string
-                    ),
-                    AsdfWarning
-                )
-            else:
-                result.append(extension)
-
-        return result
 
     def _update_extension_history(self, serialization_context):
         """
@@ -455,7 +371,6 @@ class AsdfFile:
         return self.__class__(
             copy.deepcopy(self._tree),
             self._uri,
-            self._user_extensions,
         )
 
     __copy__ = __deepcopy__ = copy

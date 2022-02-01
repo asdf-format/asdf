@@ -1,5 +1,6 @@
 import pytest
 
+import asdf
 from asdf import types
 from asdf.exceptions import AsdfConversionWarning, AsdfWarning
 from asdf.tests.helpers import assert_roundtrip_tree
@@ -41,6 +42,9 @@ def test_conversion_error(tmpdir):
     foo = FooType(10, 'hello')
     tree = dict(foo=foo)
 
-    with pytest.raises(AsdfConversionWarning):
-        with pytest.warns(AsdfWarning, match="Unable to locate schema file"):
-            assert_roundtrip_tree(tree, tmpdir, extensions=FooExtension())
+    with asdf.config_context() as config:
+        config.add_extension(FooExtension())
+
+        with pytest.raises(AsdfConversionWarning):
+            with pytest.warns(AsdfWarning, match="Unable to locate schema file"):
+                assert_roundtrip_tree(tree, tmpdir)
