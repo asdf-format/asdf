@@ -687,7 +687,6 @@ class AsdfFile:
     @classmethod
     def _open_asdf(cls, self, fd,
                    validate_checksums=False,
-                   extensions=None,
                    _get_yaml_content=False,
                    _force_raw_types=False,
                    strict_extension_check=False,
@@ -780,7 +779,6 @@ class AsdfFile:
     @classmethod
     def _open_impl(cls, self, fd, uri=None, mode='r',
                    validate_checksums=False,
-                   extensions=None,
                    _get_yaml_content=False,
                    _force_raw_types=False,
                    strict_extension_check=False,
@@ -798,7 +796,6 @@ class AsdfFile:
                 from . import fits_embed
                 return fits_embed.AsdfInFits._open_impl(generic_file, uri=uri,
                             validate_checksums=validate_checksums,
-                            extensions=extensions,
                             strict_extension_check=strict_extension_check,
                             ignore_missing_extensions=ignore_missing_extensions,
                             **kwargs)
@@ -814,7 +811,6 @@ class AsdfFile:
         elif file_type == util.FileType.ASDF:
             return cls._open_asdf(self, generic_file,
                     validate_checksums=validate_checksums,
-                    extensions=extensions,
                     _get_yaml_content=_get_yaml_content,
                     _force_raw_types=_force_raw_types,
                     strict_extension_check=strict_extension_check,
@@ -1423,12 +1419,6 @@ def open_asdf(fd, uri=None, mode=None, validate_checksums=False, extensions=None
         If `True`, validate the blocks against their checksums.
         Requires reading the entire file, so disabled by default.
 
-    extensions : object, optional
-        Additional extensions to use when reading and writing the file.
-        May be any of the following: `asdf.extension.AsdfExtension`,
-        `asdf.extension.Extension`, `asdf.extension.AsdfExtensionList`
-        or a `list` of extensions.
-
     copy_arrays : bool, optional
         When `False`, when reading files, attempt to memmap underlying data
         arrays when possible.
@@ -1482,7 +1472,6 @@ def open_asdf(fd, uri=None, mode=None, validate_checksums=False, extensions=None
     return AsdfFile._open_impl(instance,
         fd, uri=uri, mode=mode,
         validate_checksums=validate_checksums,
-        extensions=extensions,
         _force_raw_types=_force_raw_types,
         strict_extension_check=strict_extension_check,
         ignore_missing_extensions=ignore_missing_extensions,

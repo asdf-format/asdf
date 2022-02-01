@@ -168,6 +168,7 @@ class AsdfInFits(asdf.AsdfFile):
 
     @classmethod
     def open(cls, fd, uri=None, validate_checksums=False, extensions=None,
+             ignore_version_mismatch=True, ignore_unrecognized_tag=False,
              strict_extension_check=False, ignore_missing_extensions=False,
              **kwargs):
         """Creates a new AsdfInFits object based on given input data
@@ -188,12 +189,6 @@ class AsdfInFits(asdf.AsdfFile):
             If `True`, validate the blocks against their checksums.
             Requires reading the entire file, so disabled by default.
 
-        extensions : object, optional
-            Additional extensions to use when reading and writing the file.
-            May be any of the following: `asdf.extension.AsdfExtension`,
-            `asdf.extension.Extension`, `asdf.extension.AsdfExtensionList`
-            or a `list` extensions.
-
         strict_extension_check : bool, optional
             When `True`, if the given ASDF file contains metadata about the
             extensions used to create it, and if those extensions are not
@@ -208,13 +203,12 @@ class AsdfInFits(asdf.AsdfFile):
         """
         return cls._open_impl(fd, uri=uri,
                        validate_checksums=validate_checksums,
-                       extensions=extensions,
                        strict_extension_check=strict_extension_check,
                        ignore_missing_extensions=ignore_missing_extensions,
                        **kwargs)
 
     @classmethod
-    def _open_impl(cls, fd, uri=None, validate_checksums=False, extensions=None,
+    def _open_impl(cls, fd, uri=None, validate_checksums=False,
              strict_extension_check=False,
              ignore_missing_extensions=False, **kwargs):
 
@@ -247,7 +241,6 @@ class AsdfInFits(asdf.AsdfFile):
         try:
             return cls._open_asdf(self, generic_file,
                               validate_checksums=validate_checksums,
-                              extensions=extensions,
                               strict_extension_check=strict_extension_check,
                               ignore_missing_extensions=ignore_missing_extensions,
                               **kwargs)

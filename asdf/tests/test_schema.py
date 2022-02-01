@@ -558,8 +558,11 @@ one_of: !<tag:nowhere.org:custom/one_of-1.0.0>
   value: foo
     """
     buff = helpers.yaml_to_asdf(yaml)
-    with asdf.open(buff, extensions=[OneOfTypeExtension()]) as ff:
-        assert ff['one_of']['value'] == 'foo'
+    with asdf.config_context() as config:
+        config.add_extension(OneOfTypeExtension())
+
+        with asdf.open(buff) as ff:
+            assert ff['one_of']['value'] == 'foo'
 
 
 def test_tag_reference_validation():
@@ -577,10 +580,13 @@ custom: !<tag:nowhere.org:custom/tag_reference-1.0.0>
     """
 
     buff = helpers.yaml_to_asdf(yaml)
-    with asdf.open(buff, extensions=[DefaultTypeExtension()]) as ff:
-        custom = ff.tree['custom']
-        assert custom['name'] == "Something"
-        assert_array_equal(custom['things'], [1, 2, 3])
+    with asdf.config_context() as config:
+        config.add_extension(DefaultTypeExtension())
+
+        with asdf.open(buff) as ff:
+            custom = ff.tree['custom']
+            assert custom['name'] == "Something"
+            assert_array_equal(custom['things'], [1, 2, 3])
 
 
 def test_foreign_tag_reference_validation():
@@ -617,13 +623,16 @@ custom: !<tag:nowhere.org:custom/foreign_tag_reference-1.0.0>
     """
 
     buff = helpers.yaml_to_asdf(yaml)
-    with asdf.open(buff, extensions=ForeignTypeExtension()) as ff:
-        a = ff.tree['custom']['a']
-        b = ff.tree['custom']['b']
-        assert a['name'] == 'Something'
-        assert_array_equal(a['things'], [1, 2, 3])
-        assert b['name'] == 'Anything'
-        assert_array_equal(b['things'], [4, 5, 6])
+    with asdf.config_context() as config:
+        config.add_extension(ForeignTypeExtension())
+
+        with asdf.open(buff) as ff:
+            a = ff.tree['custom']['a']
+            b = ff.tree['custom']['b']
+            assert a['name'] == 'Something'
+            assert_array_equal(a['things'], [1, 2, 3])
+            assert b['name'] == 'Anything'
+            assert_array_equal(b['things'], [4, 5, 6])
 
 
 def test_self_reference_resolution():
