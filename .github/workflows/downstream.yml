@@ -61,6 +61,14 @@ jobs:
             repository: BAMWelDX/weldx
             ref: ${{ github.event.inputs.weldx_ref || 'master' }}
             test_command: pytest weldx/tests/asdf_tests weldx/schemas --asdf-tests
+          - package_name: sunpy
+            repository: sunpy/sunpy
+            ref: ${{ github.event.inputs.sunpy_ref || 'main' }}
+            test_command: pytest sunpy/io/
+          - package_name: sunpy
+            repository: DKISTDC/dkist
+            ref: ${{ github.event.inputs.dkist_ref || 'main' }}
+            test_command: pytest
     steps:
       - name: Checkout asdf
         uses: actions/checkout@v2
