@@ -7,6 +7,10 @@ on:
         description: astropy ref
         required: true
         default: main
+      dkist_ref:
+        description: dkist ref
+        required: true
+        default: main
       gwcs_ref:
         description: gwcs ref
         required: true
@@ -17,6 +21,10 @@ on:
         default: master
       specutils_ref:
         description: specutils ref
+        required: true
+        default: main
+      sunpy_ref:
+        description: sunpy ref
         required: true
         default: main
       weldx_ref:
@@ -65,7 +73,7 @@ jobs:
             repository: sunpy/sunpy
             ref: ${{ github.event.inputs.sunpy_ref || 'main' }}
             test_command: pytest sunpy/io/
-          - package_name: sunpy
+          - package_name: dkist
             repository: DKISTDC/dkist
             ref: ${{ github.event.inputs.dkist_ref || 'main' }}
             test_command: pytest
