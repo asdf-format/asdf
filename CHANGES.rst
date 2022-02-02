@@ -18,6 +18,8 @@
 - Add ability for tags to correspond to multiple schema_uri, with an
   implied allOf among the schema_uris. [#1058]
 
+- Add the URI of the file being parsed to ``SerializationContext``. [#1065]
+
 2.8.3 (2021-12-13)
 ------------------
 
