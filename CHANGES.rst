@@ -1,4 +1,4 @@
-2.8.4 (unreleased)
+2.9.0 (unreleased)
 ------------------
 
 - Added the capability for tag classes to provide an interface
@@ -19,6 +19,9 @@
   implied allOf among the schema_uris. [#1058]
 
 - Add the URI of the file being parsed to ``SerializationContext``. [#1065]
+
+- Add ``asdf.testing.helpers`` module with simplified versions of test
+  helpers previously available in ``asdf.tests.helpers``. [#1067]
 
 2.8.3 (2021-12-13)
 ------------------
