@@ -98,6 +98,6 @@ jobs:
       - name: Install asdf
         run: cd asdf && pip install .
       - name: Install remaining ${{ matrix.package_name }} dependencies
-        run: cd target && pip install -e .[test]
+        run: cd target && pip install -e .[test,tests]
       - name: Run ${{ matrix.package_name}} tests
         run: cd target && ${{ matrix.test_command }}
