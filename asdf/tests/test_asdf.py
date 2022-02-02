@@ -188,7 +188,7 @@ def test_serialization_context():
     context._mark_extension_used(extension.delegate)
     assert context._extensions_used == {extension}
 
-    assert context.uri == context._uri == "file://test.asdf"
+    assert context.url == context._url == "file://test.asdf"
 
     with pytest.raises(TypeError):
         context._mark_extension_used(object())

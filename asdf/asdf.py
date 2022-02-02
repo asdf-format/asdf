@@ -1734,23 +1734,27 @@ class SerializationContext:
     """
     Container for parameters of the current (de)serialization.
     """
-    def __init__(self, version, extension_manager, uri):
+    def __init__(self, version, extension_manager, url):
         self._version = validate_version(version)
         self._extension_manager = extension_manager
-        self._uri = uri
+        self._url = url
 
         self.__extensions_used = set()
 
     @property
-    def uri(self):
+    def url(self):
         """
-        The URI (if any) of the file being read.
+        The URL (if any) of the file being read or written.
+
+        Used to compute relative locations of external files referenced by this
+        ASDF file. The URL will not exist in some cases (e.g. when the file is
+        written to an `io.BytesIO`).
 
         Returns
-        -------
-        str
+        --------
+        str or None
         """
-        return self._uri
+        return self._url
 
     @property
     def version(self):
