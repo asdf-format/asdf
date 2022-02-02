@@ -8,14 +8,14 @@ from asdf.extension import TagDefinition
 
 
 FOO_SCHEMA_URI = "asdf://somewhere.org/extensions/foo/schemas/foo-1.0"
-FOO_SCHEMA = """
-id: {}
+FOO_SCHEMA = f"""
+id: {FOO_SCHEMA_URI}
 type: object
 properties:
   value:
     type: string
 required: ["value"]
-""".format(FOO_SCHEMA_URI)
+"""
 
 
 class Foo:
@@ -46,7 +46,7 @@ class FooExtension:
     tags = [
         TagDefinition(
             "asdf://somewhere.org/extensions/foo/tags/foo-1.0",
-            schema_uri=FOO_SCHEMA_URI,
+            schema_uris=FOO_SCHEMA_URI,
         )
     ]
 
@@ -67,4 +67,76 @@ def test_serialize_custom_type(tmpdir):
 
         with pytest.raises(asdf.ValidationError):
             af["foo"] = Foo(12)
+            af.write_to(path)
+
+
+FOOFOO_SCHEMA_URI = "asdf://somewhere.org/extensions/foo/schemas/foo_foo-1.0"
+FOOFOO_SCHEMA = f"""
+id: {FOOFOO_SCHEMA_URI}
+type: object
+properties:
+  value_value:
+    type: string
+required: ["value_value"]
+"""
+
+
+class FooFoo(Foo):
+    def __init__(self, value, value_value):
+        super().__init__(value)
+
+        self._value_value = value_value
+
+    @property
+    def value_value(self):
+        return self._value_value
+
+
+class FooFooConverter:
+    types = [FooFoo]
+    tags = ["asdf://somewhere.org/extensions/foo/tags/foo_foo-*"]
+
+    def to_yaml_tree(self, obj, tag, ctx):
+        return {
+            "value": obj.value,
+            "value_value": obj.value_value
+        }
+
+    def from_yaml_tree(self, obj, tag, ctx):
+        return FooFoo(obj["value"], obj["value_value"])
+
+
+class FooFooExtension:
+    extension_uri = "asdf://somewhere.org/extensions/foo_foo-1.0"
+    converters = [FooFooConverter()]
+    tags = [
+        TagDefinition(
+            "asdf://somewhere.org/extensions/foo/tags/foo_foo-1.0",
+            schema_uris=[FOO_SCHEMA_URI, FOOFOO_SCHEMA_URI],
+        )
+    ]
+
+
+def test_serialize_with_multiple_schemas(tmpdir):
+    with asdf.config_context() as config:
+        config.add_resource_mapping({FOO_SCHEMA_URI: FOO_SCHEMA,
+                                     FOOFOO_SCHEMA_URI: FOOFOO_SCHEMA})
+        config.add_extension(FooFooExtension())
+
+        path = str(tmpdir/"test.asdf")
+
+        af = asdf.AsdfFile()
+        af["foo_foo"] = FooFoo("bar", "bar_bar")
+        af.write_to(path)
+
+        with asdf.open(path) as af2:
+            assert af2["foo_foo"].value == "bar"
+            assert af2["foo_foo"].value_value == "bar_bar"
+
+        with pytest.raises(asdf.ValidationError):
+            af["foo_foo"] = FooFoo(12, "bar_bar")
+            af.write_to(path)
+
+        with pytest.raises(asdf.ValidationError):
+            af["foo_foo"] = FooFoo("bar", 34)
             af.write_to(path)
