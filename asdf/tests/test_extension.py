@@ -17,6 +17,7 @@ from asdf.extension import (
 )
 
 from asdf import config_context
+from asdf.exceptions import AsdfDeprecationWarning
 from asdf.types import CustomType
 
 from asdf.tests.helpers import assert_extension_correctness
@@ -436,6 +437,21 @@ def test_tag_definition():
     assert tag_def.description == "Some description"
 
     assert "URI: asdf://somewhere.org/extensions/foo/tags/foo-1.0" in repr(tag_def)
+
+    with pytest.warns(AsdfDeprecationWarning):
+        assert tag_def.schema_uri == "asdf://somewhere.org/extensions/foo/schemas/foo-1.0"
+
+    tag_def = TagDefinition(
+        "asdf://somewhere.org/extensions/foo/tags/foo-1.0",
+        schema_uris=["asdf://somewhere.org/extensions/foo/schemas/foo-1.0", "asdf://somewhere.org/extensions/foo/schemas/base-1.0"],
+        title="Some title",
+        description="Some description",
+    )
+
+    assert tag_def.schema_uris == ["asdf://somewhere.org/extensions/foo/schemas/foo-1.0", "asdf://somewhere.org/extensions/foo/schemas/base-1.0"]
+    with pytest.warns(AsdfDeprecationWarning):
+        with pytest.raises(RuntimeError):
+            tag_def.schema_uri
 
     with pytest.raises(ValueError):
         TagDefinition("asdf://somewhere.org/extensions/foo/tags/foo-*")

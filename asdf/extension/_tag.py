@@ -1,3 +1,8 @@
+import warnings
+
+from asdf.exceptions import AsdfDeprecationWarning
+
+
 class TagDefinition:
     """
     Container for properties of a custom YAML tag.
@@ -43,14 +48,38 @@ class TagDefinition:
         return self._tag_uri
 
     @property
-    def schema_uris(self):
+    def schema_uri(self):
         """
+        DEPRECATED
+
         Get the URI of the schema that should be used to validate
-        objects wtih this tag.
+        objects with this tag.
 
         Returns
         -------
         str or None
+        """
+        warnings.warn(
+            "The TagDefinition.schema_uri property is deprecated.  Use TagDefinition.schema_uris instead.",
+            AsdfDeprecationWarning
+        )
+
+        if len(self._schema_uris) == 0:
+            return None
+        elif len(self._schema_uris) == 1:
+            return self._schema_uris[0]
+        else:
+            raise RuntimeError("Cannot use TagDefinition.schema_uri when multiple schema URIs are present")
+
+    @property
+    def schema_uris(self):
+        """
+        Get the URIs of the schemas that should be used to validate
+        objects with this tag.
+
+        Returns
+        -------
+        list
         """
         return self._schema_uris
 

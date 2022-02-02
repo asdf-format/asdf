@@ -16,7 +16,7 @@
   not been run. [#1057]
 
 - Add ability for tags to correspond to multiple schema_uri, with an
-  implied allOf among the schema_uris. [#1058]
+  implied allOf among the schema_uris. [#1058, #1069]
 
 - Add the URI of the file being parsed to ``SerializationContext``. [#1065]
 
