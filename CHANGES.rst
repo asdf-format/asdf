@@ -1,4 +1,4 @@
-2.9.0 (unreleased)
+2.9.0 (2022-02-02)
 ------------------
 
 - Added the capability for tag classes to provide an interface
@@ -18,7 +18,7 @@
 - Add ability for tags to correspond to multiple schema_uri, with an
   implied allOf among the schema_uris. [#1058, #1069]
 
-- Add the URI of the file being parsed to ``SerializationContext``. [#1065]
+- Add the URL of the file being parsed to ``SerializationContext``. [#1065]
 
 - Add ``asdf.testing.helpers`` module with simplified versions of test
   helpers previously available in ``asdf.tests.helpers``. [#1067]
