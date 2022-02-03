@@ -4,6 +4,15 @@
 Changes
 *******
 
+What's new in asdf 2.9.1?
+=========================
+
+The ASDF Standard is at v1.6.0.
+
+Changes include:
+
+- Fix typo in testing module ``__init__.py`` name.
+
 What's new in asdf 2.9.0?
 =========================
 
