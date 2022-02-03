@@ -81,23 +81,23 @@ jobs:
           - name: Astropy Dev
             os: ubuntu-latest
             python-version: "3.9"
-            toxenv: py38-astropydev
+            toxenv: py39-astropydev
 
           - name: ASDF-Astropy Dev
             os: ubuntu-latest
             python-version: "3.9"
-            toxenv: py38-asdfastropydev
+            toxenv: py39-asdfastropydev
 
           - name: GWCS Dev
             os: ubuntu-latest
             python-version: "3.9"
-            toxenv: py38-gwcsdev
+            toxenv: py39-gwcsdev
 
           # Fail
           - name: Numpy Dev
             os: ubuntu-latest
             python-version: "3.9"
-            toxenv: py38-numpydev
+            toxenv: py39-numpydev
 
           # Fail
           - name: Pre-Release Dependencies
