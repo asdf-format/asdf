@@ -20,13 +20,17 @@ package_dir = {
     'asdf.resources': 'asdf-standard/resources',
 }
 
+def package_yaml_files(directory):
+    paths = sorted(Path(directory).rglob("*.yaml"))
+    return [str(p.relative_to(directory)) for p in paths]
+
 package_data = {
     'asdf.commands.tests.data': ['*'],
     'asdf.tags.core.tests.data': ['*'],
     'asdf.tests.data': ['*'],
     'asdf.reference_files': ['*', '**/*'],
-    'asdf.schemas':  ['*.yaml', '**/*.yaml', '**/**/*.yaml', '**/**/**/*.yaml'],
-    'asdf.resources': ['*.yaml', '**/*.yaml', '**/**/*.yaml', '**/**/**/*.yaml'],
+    'asdf.schemas':  package_yaml_files("asdf-standard/schemas"),
+    'asdf.resources': package_yaml_files("asdf-standard/resources"),
 }
 
 setup(
