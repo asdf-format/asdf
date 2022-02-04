@@ -1069,13 +1069,6 @@ class AsdfFile:
         version : str, optional
             Update the ASDF Standard version of this AsdfFile before
             writing.
-
-        auto_inline : int, optional
-            DEPRECATED.  When the number of elements in an array is less
-            than this threshold, store the array as inline YAML, rather
-            than a binary block.  This only works on arrays that do not
-            share data with other arrays.  Default is the value specified
-            in ``asdf.get_config().array_inline_threshold``.
         """
 
         fd = self._fd
@@ -1214,15 +1207,6 @@ class AsdfFile:
         version : str, optional
             Update the ASDF Standard version of this AsdfFile before
             writing.
-
-        auto_inline : int, optional
-            DEPRECATED.
-            When the number of elements in an array is less than this
-            threshold, store the array as inline YAML, rather than a
-            binary block.  This only works on arrays that do not share
-            data with other arrays.  Default is the value specified in
-            ``asdf.get_config().array_inline_threshold``.
-
         """
         if version is not None:
             self.version = version
@@ -1607,11 +1591,6 @@ def open_asdf(fd, uri=None, mode=None, validate_checksums=False, extensions=None
         When `True`, do not raise warnings when a file is read that
         contains metadata about extensions that are not available. Defaults
         to `False`.
-
-    validate_on_read : bool, optional
-        DEPRECATED. When `True`, validate the newly opened file against tag
-        and custom schemas.  Recommended unless the file is already known
-        to be valid.
 
     Returns
     -------

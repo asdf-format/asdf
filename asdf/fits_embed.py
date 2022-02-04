@@ -209,11 +209,6 @@ class AsdfInFits(asdf.AsdfFile):
             When `True`, do not raise warnings when a file is read that
             contains metadata about extensions that are not available. Defaults
             to `False`.
-
-        validate_on_read : bool, optional
-            DEPRECATED. When `True`, validate the newly opened file against tag
-            and custom schemas.  Recommended unless the file is already known
-            to be valid.
         """
         return cls._open_impl(fd, uri=uri,
                        validate_checksums=validate_checksums,
@@ -301,16 +296,12 @@ class AsdfInFits(asdf.AsdfFile):
     def write_to(self, filename, all_array_storage=None,
                  all_array_compression=None,
                  pad_blocks=False, use_image_hdu=False, *args, **kwargs):
-        if "auto_inline" in kwargs:
-            asdf_kwargs = {"auto_inline": kwargs.pop("auto_inline")}
-        else:
-            asdf_kwargs = {}
 
         self._update_asdf_extension(
             all_array_storage=all_array_storage,
             all_array_compression=all_array_compression,
             pad_blocks=pad_blocks,
-            use_image_hdu=use_image_hdu, **asdf_kwargs)
+            use_image_hdu=use_image_hdu)
 
         self._hdulist.writeto(filename, *args, **kwargs)
 
