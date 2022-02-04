@@ -31,6 +31,22 @@ on:
         description: weldx ref
         required: true
         default: master
+      asdf-astropy_ref:
+        description: asdf-astropy ref
+        required: true
+        default: main
+      asdf-transform-schemas_ref:
+        description: asdf-transform-schemas ref
+        required: true
+        default: master
+      asdf-wcs-schemas_ref:
+        description: asdf-wcs-schemas ref
+        required: true
+        default: main
+      asdf-coordinates-schemas_ref:
+        description: asdf-coordinates-schemas ref
+        required: true
+        default: main
   schedule:
     # Run every Monday at 6am UTC
     - cron: '0 6 * * 1'
@@ -83,6 +99,26 @@ jobs:
             repository: DKISTDC/dkist
             ref: ${{ github.event.inputs.dkist_ref || 'main' }}
             install_command: pip install -e .[tests]
+            test_command: pytest
+          - package_name: asdf-astropy
+            repository: astropy/asdf-astropy
+            ref: ${{ github.event.inputs.asdf-astropy_ref || 'main' }}
+            install_command: pip install -e .[test]
+            test_command: pytest
+          - package_name: asdf-transform-schemas
+            repository: asdf-format/asdf-transform-schemas
+            ref: ${{ github.event.inputs.asdf-transform-schemas_ref || 'master' }}
+            install_command: pip install -e .[test]
+            test_command: pytest
+          - package_name: asdf-wcs-schemas
+            repository: asdf-format/asdf-wcs-schemas
+            ref: ${{ github.event.inputs.asdf-wcs-schemas_ref || 'main' }}
+            install_command: pip install -e .[test]
+            test_command: pytest
+          - package_name: asdf-coordinates-schemas
+            repository: asdf-format/asdf-coordinates-schemas
+            ref: ${{ github.event.inputs.asdf-coordinates-schemas_ref || 'main' }}
+            install_command: pip install -e .[test]
             test_command: pytest
     steps:
       - name: Checkout asdf
