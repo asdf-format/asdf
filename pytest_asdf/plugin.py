@@ -58,8 +58,11 @@ class AsdfSchemaFile(pytest.File):
     @classmethod
     def from_parent(cls, parent, *, fspath, skip_examples=False, validate_default=True,
         ignore_unrecognized_tag=False, ignore_version_mismatch=False, skip_tests=[], xfail_tests=[], **kwargs):
+
+        path = pathlib.Path(fspath)
+
         if hasattr(super(), "from_parent"):
-            result = super().from_parent(parent, fspath=fspath, **kwargs)
+            result = super().from_parent(parent, path=path, **kwargs)
         else:
             result = AsdfSchemaFile(fspath, parent, **kwargs)
 
