@@ -1,5 +1,6 @@
 import io
 import os
+import warnings
 from importlib.util import find_spec
 from pkg_resources import parse_version
 import pathlib
@@ -58,10 +59,20 @@ class AsdfSchemaFile(pytest.File):
     @classmethod
     def from_parent(cls, parent, *, fspath, skip_examples=False, validate_default=True,
         ignore_unrecognized_tag=False, ignore_version_mismatch=False, skip_tests=[], xfail_tests=[], **kwargs):
-        if hasattr(super(), "from_parent"):
-            result = super().from_parent(parent, fspath=fspath, **kwargs)
+
+        # Fix for depreciation of fspath in pytest 7+
+        from asdf.util import minversion
+        if minversion("pytest", "7.0.0"):
+            path = pathlib.Path(fspath)
+            kwargs["path"] = path
         else:
-            result = AsdfSchemaFile(fspath, parent, **kwargs)
+            path = fspath
+            kwargs["fspath"] = path
+
+        if hasattr(super(), "from_parent"):
+            result = super().from_parent(parent, **kwargs)
+        else:
+            result = AsdfSchemaFile(path, parent)
 
         result.skip_examples = skip_examples
         result.validate_default = validate_default
@@ -238,10 +249,11 @@ class AsdfSchemaExampleItem(pytest.Item):
         b._array_storage = "streamed"
 
         try:
-            with pytest.warns(None) as w:
-                ff._open_impl(ff, buff, mode='rw')
             # Do not tolerate any warnings that occur during schema validation
-            assert len(w) == 0, helpers.display_warnings(w)
+            with warnings.catch_warnings():
+                warnings.simplefilter("error")
+
+                ff._open_impl(ff, buff, mode='rw')
         except Exception:
             print("From file:", self.filename)
             raise
