@@ -22,7 +22,7 @@ from . import version
 from . import versioning
 from . import yamlutil
 from . import _display as display
-from .exceptions import AsdfWarning, AsdfConversionWarning
+from .exceptions import AsdfWarning
 from .extension import (
     AsdfExtensionList,
     AsdfExtension,
