@@ -69,11 +69,6 @@ jobs:
             python-version: "3.9"
             toxenv: twine
 
-          - name: Checkdocs
-            os: ubuntu-latest
-            python-version: "3.9"
-            toxenv: checkdocs
-
           - name: Astropy Dev
             os: ubuntu-latest
             python-version: "3.9"

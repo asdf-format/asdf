@@ -1,11 +1,9 @@
 import abc
-import warnings
 from functools import lru_cache
 
 from .. import types
 from .. import resolver
 from ..type_index import AsdfTypeIndex
-from ..exceptions import AsdfDeprecationWarning
 
 
 class AsdfExtension(metaclass=abc.ABCMeta):
@@ -125,15 +123,6 @@ class AsdfExtensionList:
         self._url_mapping = resolver.Resolver(url_mapping, 'url')
         self._resolver = resolver.ResolverChain(self._tag_mapping, self._url_mapping)
         self._validators = validators
-
-    @property
-    def tag_to_schema_resolver(self):
-        """Deprecated. Use `tag_mapping` instead"""
-        warnings.warn(
-            "The 'tag_to_schema_resolver' property is deprecated. Use "
-            "'tag_mapping' instead.",
-            AsdfDeprecationWarning)
-        return self._tag_mapping
 
     @property
     def extensions(self):

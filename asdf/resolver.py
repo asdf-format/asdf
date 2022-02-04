@@ -1,10 +1,8 @@
 import sys
 import os.path
-import warnings
 
 from . import constants
 from . import util
-from .exceptions import AsdfDeprecationWarning
 
 
 def find_schema_path():
@@ -52,18 +50,6 @@ class Resolver:
         """
         self._mappings = self._validate_mappings(mappings)
         self._prefix = prefix
-
-
-    def add_mapping(self, mappings, prefix=''):
-        # Deprecating this because Resolver is used as part of a dictionary key
-        # and so shouldn't be mutable.
-        warnings.warn("The 'add_mapping' method is deprecated.", AsdfDeprecationWarning)
-
-        if prefix != self._prefix:
-            raise ValueError(f"Prefix '{prefix}' does not match the Resolver prefix '{self._prefix}'")
-
-        self._mappings = self._mappings + self._validate_mappings(mappings)
-
 
     def _perform_mapping(self, mapping, input):
         if callable(mapping):
@@ -158,21 +144,3 @@ DEFAULT_TAG_TO_URL_MAPPING = [
     (constants.STSCI_SCHEMA_TAG_BASE,
      'http://stsci.edu/schemas/asdf{tag_suffix}')
 ]
-
-def default_url_mapping(uri):
-    warnings.warn("'default_url_mapping' is deprecated.", AsdfDeprecationWarning)
-    return default_url_mapping._resolver(uri)
-default_url_mapping._resolver = Resolver(DEFAULT_URL_MAPPING, 'url')
-
-def default_tag_to_url_mapping(uri):
-    warnings.warn("'default_tag_to_url_mapping' is deprecated.", AsdfDeprecationWarning)
-    return default_tag_to_url_mapping._resolver(uri)
-default_tag_to_url_mapping._resolver = Resolver(DEFAULT_TAG_TO_URL_MAPPING, 'tag')
-
-def default_resolver(uri):
-    warnings.warn(
-        "The 'default_resolver(...)' function is deprecated. Use "
-        "'asdf.extension.get_default_resolver()(...)' instead.",
-        AsdfDeprecationWarning)
-    return default_resolver._resolver(uri)
-default_resolver._resolver = ResolverChain(default_tag_to_url_mapping._resolver, default_url_mapping._resolver)

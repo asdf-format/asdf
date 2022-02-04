@@ -1,7 +1,6 @@
 import pytest
 
 from asdf.resolver import Resolver, ResolverChain
-from asdf.exceptions import AsdfDeprecationWarning
 
 def test_resolver_no_mappings():
     r = Resolver([], "test")
@@ -73,12 +72,6 @@ def test_resolver_hash_and_equals():
 
     assert hash(r1) != hash(r3)
     assert r1 != r3
-
-
-def test_resolver_add_mapping_deprecated():
-    r = Resolver([], "test")
-    with pytest.warns(AsdfDeprecationWarning):
-        r.add_mapping([("united_states:", "earth:{test}")], "test")
 
 
 def test_resolver_chain():

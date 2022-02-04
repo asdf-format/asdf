@@ -16,10 +16,8 @@ import asdf
 from asdf import get_config, config_context
 from asdf import treeutil
 from asdf import extension
-from asdf import resolver
-from asdf import schema
 from asdf import versioning
-from asdf.exceptions import AsdfDeprecationWarning, AsdfWarning
+from asdf.exceptions import AsdfWarning
 from asdf.extension import ExtensionProxy
 from .helpers import (
     assert_tree_match,
@@ -57,19 +55,6 @@ def test_no_warning_nan_array(tmpdir):
 
     with assert_no_warnings():
         assert_roundtrip_tree(tree, tmpdir)
-
-
-def test_warning_deprecated_open(tmpdir):
-
-    tmpfile = str(tmpdir.join('foo.asdf'))
-
-    tree = dict(foo=42, bar='hello')
-    with asdf.AsdfFile(tree) as af:
-        af.write_to(tmpfile)
-
-    with pytest.warns(AsdfDeprecationWarning):
-        with asdf.AsdfFile.open(tmpfile) as af:
-            assert_tree_match(tree, af.tree)
 
 
 @pytest.mark.skipif(
@@ -275,16 +260,6 @@ def test_copy(tmpdir):
     assert_array_equal(ff2.tree['my_array'], ff2.tree['my_array'])
 
 
-def test_tag_to_schema_resolver_deprecation():
-    ff = asdf.AsdfFile()
-    with pytest.warns(AsdfDeprecationWarning):
-        ff.tag_to_schema_resolver('foo')
-
-    with pytest.warns(AsdfDeprecationWarning):
-        extension_list = extension.default_extensions.extension_list
-        extension_list.tag_to_schema_resolver('foo')
-
-
 def test_access_tree_outside_handler(tmpdir):
     tempname = str(tmpdir.join('test.asdf'))
 
@@ -376,38 +351,6 @@ def test_extension_version_check(installed, extension, warns):
         af._check_extensions(tree)
 
 
-@pytest.mark.filterwarnings(AsdfDeprecationWarning)
-def test_auto_inline(tmpdir):
-    outfile = str(tmpdir.join('test.asdf'))
-    tree = {"small_array": np.arange(6), "large_array": np.arange(100)}
-
-    # Use the same object for each write in order to make sure that there
-    # aren't unanticipated side effects
-    with asdf.AsdfFile(tree) as af:
-        # By default blocks are written internal.
-        af.write_to(outfile)
-        assert len(list(af.blocks.inline_blocks)) == 0
-        assert len(list(af.blocks.internal_blocks)) == 2
-
-        af.write_to(outfile, auto_inline=10)
-        assert len(list(af.blocks.inline_blocks)) == 1
-        assert len(list(af.blocks.internal_blocks)) == 1
-
-        # The previous write modified the small array block's storage
-        # to inline, and a subsequent write should maintain that setting.
-        af.write_to(outfile)
-        assert len(list(af.blocks.inline_blocks)) == 1
-        assert len(list(af.blocks.internal_blocks)) == 1
-
-        af.write_to(outfile, auto_inline=7)
-        assert len(list(af.blocks.inline_blocks)) == 1
-        assert len(list(af.blocks.internal_blocks)) == 1
-
-        af.write_to(outfile, auto_inline=5)
-        assert len(list(af.blocks.inline_blocks)) == 0
-        assert len(list(af.blocks.internal_blocks)) == 2
-
-
 @pytest.mark.parametrize("array_inline_threshold, inline_blocks, internal_blocks", [
     (None, 0, 2),
     (10, 1, 1),
@@ -466,17 +409,6 @@ def test_array_inline_threshold_string_array(array_inline_threshold, inline_bloc
             af.write_to(file_path)
             assert len(list(af.blocks.inline_blocks)) == inline_blocks
             assert len(list(af.blocks.internal_blocks)) == internal_blocks
-
-
-def test_resolver_deprecations():
-    for resolver_method in [
-        resolver.default_resolver,
-        resolver.default_tag_to_url_mapping,
-        resolver.default_url_mapping,
-        schema.default_ext_resolver
-    ]:
-        with pytest.warns(AsdfDeprecationWarning):
-            resolver_method("foo")
 
 
 def test_get_default_resolver():

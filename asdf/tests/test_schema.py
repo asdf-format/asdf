@@ -18,7 +18,7 @@ from asdf import yamlutil
 from asdf import tagged
 from asdf.testing.helpers import yaml_to_asdf, roundtrip_object
 from asdf.tests import helpers, CustomExtension
-from asdf.exceptions import AsdfWarning, AsdfConversionWarning, AsdfDeprecationWarning
+from asdf.exceptions import AsdfWarning, AsdfConversionWarning
 
 
 
@@ -512,40 +512,6 @@ custom: !<tag:nowhere.org:custom/default-1.0.0>
         assert ff.tree['custom']['j']['l'] == 362
 
     buff.seek(0)
-    with pytest.warns(AsdfDeprecationWarning, match='do_not_fill_defaults'):
-        with asdf.open(buff, extensions=[DefaultTypeExtension()],
-                                do_not_fill_defaults=True) as ff:
-            assert 'a' not in ff.tree['custom']
-            assert 'c' not in ff.tree['custom']['b']
-            assert 'e' not in ff.tree['custom']['d']
-            assert 'f' not in ff.tree['custom']['d']
-            assert 'h' not in ff.tree['custom']['g']
-            assert 'i' not in ff.tree['custom']['g']
-            assert 'k' not in ff.tree['custom']['j']
-            assert ff.tree['custom']['j']['l'] == 362
-            ff.fill_defaults()
-            assert 'a' in ff.tree['custom']
-            assert ff.tree['custom']['a'] == 42
-            assert 'c' in ff.tree['custom']['b']
-            assert ff.tree['custom']['b']['c'] == 82
-            assert ff.tree['custom']['b']['c'] == 82
-            assert ff.tree['custom']['d']['e'] == 122
-            assert ff.tree['custom']['d']['f'] == 162
-            assert 'h' not in ff.tree['custom']['g']
-            assert 'i' not in ff.tree['custom']['g']
-            assert 'k' not in ff.tree['custom']['j']
-            assert ff.tree['custom']['j']['l'] == 362
-            ff.remove_defaults()
-            assert 'a' not in ff.tree['custom']
-            assert 'c' not in ff.tree['custom']['b']
-            assert 'e' not in ff.tree['custom']['d']
-            assert 'f' not in ff.tree['custom']['d']
-            assert 'h' not in ff.tree['custom']['g']
-            assert 'i' not in ff.tree['custom']['g']
-            assert 'k' not in ff.tree['custom']['j']
-            assert ff.tree['custom']['j']['l'] == 362
-
-    buff.seek(0)
     with config_context() as config:
         config.legacy_fill_schema_defaults = False
         with asdf.open(buff, extensions=[DefaultTypeExtension()]) as ff:
@@ -1023,20 +989,6 @@ def test_custom_validation_with_external_ref_bad(tmpdir):
     with pytest.raises(ValidationError):
         with asdf.open(asdf_file, custom_schema=custom_schema_path):
             pass
-
-
-def test_load_custom_schema_deprecated():
-    custom_schema_path = helpers.get_test_data_path('custom_schema.yaml')
-
-    with pytest.deprecated_call():
-        schema.load_custom_schema(custom_schema_path)
-
-
-def test_load_schema_resolve_local_refs_deprecated():
-    custom_schema_path = helpers.get_test_data_path('custom_schema_definitions.yaml')
-
-    with pytest.deprecated_call():
-        schema.load_schema(custom_schema_path, resolve_local_refs=True)
 
 
 def test_nonexistent_tag(tmpdir):

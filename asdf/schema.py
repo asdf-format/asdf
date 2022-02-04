@@ -23,7 +23,7 @@ from . import extension
 from . import yamlutil
 from . import versioning
 from . import tagged
-from .exceptions import AsdfDeprecationWarning, AsdfWarning
+from .exceptions import AsdfWarning
 
 from .util import patched_urllib_parse
 
@@ -38,19 +38,6 @@ else:  # pragma: no cover
 
 
 __all__ = ['validate', 'fill_defaults', 'remove_defaults', 'check_schema']
-
-
-def default_ext_resolver(uri):
-    """
-    Resolver that uses tag/url mappings from all installed extensions
-    """
-    # Deprecating this because it doesn't play nicely with the caching on
-    # load_schema(...).
-    warnings.warn(
-            "The 'default_ext_resolver(...)' function is deprecated. Use "
-            "'asdf.extension.get_default_resolver()(...)' instead.",
-            AsdfDeprecationWarning)
-    return extension.get_default_resolver()(uri)
 
 
 PYTHON_TYPE_TO_YAML_TAG = {
@@ -260,7 +247,7 @@ class _ValidationContext:
 
 @lru_cache()
 def _create_validator(validators=YAML_VALIDATORS, visit_repeat_nodes=False):
-    meta_schema = _load_schema_cached(YAML_SCHEMA_METASCHEMA_ID, extension.get_default_resolver(), False, False)
+    meta_schema = _load_schema_cached(YAML_SCHEMA_METASCHEMA_ID, extension.get_default_resolver(), False)
 
     type_checker = mvalidators.Draft4Validator.TYPE_CHECKER.redefine_many({
         'array': lambda checker, instance: isinstance(instance, list) or isinstance(instance, tuple),
@@ -316,7 +303,7 @@ def _create_validator(validators=YAML_VALIDATORS, visit_repeat_nodes=False):
 
                         if schema_uri is not None:
                             try:
-                                s = _load_schema_cached(schema_uri, self.ctx.resolver, False, False)
+                                s = _load_schema_cached(schema_uri, self.ctx.resolver, False)
                             except FileNotFoundError:
                                 msg = "Unable to locate schema file for '{}': '{}'"
                                 warnings.warn(msg.format(tag, schema_uri), AsdfWarning)
@@ -403,18 +390,7 @@ def _make_resolver(url_mapping):
     )
 
 
-@lru_cache()
-def load_custom_schema(url):
-    warnings.warn(
-        "The 'load_custom_schema(...)' function is deprecated. Use"
-        "'load_schema' instead.",
-        AsdfDeprecationWarning
-    )
-    return load_schema(url, resolve_references=True)
-
-
-def load_schema(url, resolver=None, resolve_references=False,
-                resolve_local_refs=False):
+def load_schema(url, resolver=None, resolve_references=False):
     """
     Load a schema from the given URL.
 
@@ -431,20 +407,7 @@ def load_schema(url, resolver=None, resolve_references=False,
 
     resolve_references : bool, optional
         If `True`, resolve all `$ref` references.
-
-    resolve_local_refs : bool, optional
-        If `True`, resolve all `$ref` references that refer to other objects
-        within the same schema. This will automatically be handled when passing
-        `resolve_references=True`, but it may be desirable in some cases to
-        control local reference resolution separately.
-        This parameter is deprecated.
     """
-    if resolve_local_refs is True:
-        warnings.warn(
-            "The 'resolve_local_refs' parameter is deprecated.",
-            AsdfDeprecationWarning
-        )
-
     if resolver is None:
         # We can't just set this as the default in load_schema's definition
         # because invoking get_default_resolver at import time leads to a circular import.
@@ -454,7 +417,7 @@ def load_schema(url, resolver=None, resolve_references=False,
     # the same object is treacherous, because users who mutate the result will not
     # expect that they're changing the schema everywhere.
     return copy.deepcopy(
-        _load_schema_cached(url, resolver, resolve_references, resolve_local_refs)
+        _load_schema_cached(url, resolver, resolve_references)
     )
 
 
@@ -500,11 +463,11 @@ def _safe_resolve(resolver, json_id, uri):
 
 
 @lru_cache()
-def _load_schema_cached(url, resolver, resolve_references, resolve_local_refs):
+def _load_schema_cached(url, resolver, resolve_references):
     loader = _make_schema_loader(resolver)
     schema, url = loader(url)
 
-    if resolve_references or resolve_local_refs:
+    if resolve_references:
         def resolve_refs(node, json_id):
             if json_id is None:
                 json_id = url
@@ -766,7 +729,7 @@ def check_schema(schema, validate_default=True):
         })
 
     meta_schema_id = schema.get('$schema', YAML_SCHEMA_METASCHEMA_ID)
-    meta_schema = _load_schema_cached(meta_schema_id, extension.get_default_resolver(), False, False)
+    meta_schema = _load_schema_cached(meta_schema_id, extension.get_default_resolver(), False)
 
     resolver = _make_resolver(extension.get_default_resolver())
 
