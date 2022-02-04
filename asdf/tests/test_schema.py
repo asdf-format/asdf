@@ -357,6 +357,7 @@ def test_property_order():
             last_index = index
 
 
+@pytest.mark.filterwarnings(r'ignore:.*is not recognized, converting to raw Python data structure.')
 def test_invalid_nested():
     class CustomType(str, types.CustomType):
         name = 'custom'

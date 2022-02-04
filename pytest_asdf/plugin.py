@@ -184,6 +184,7 @@ class AsdfSchemaExampleItem(pytest.Item):
     def runtest(self):
         from asdf import AsdfFile, block, util
         from asdf.tests import helpers
+        from asdf.exceptions import AsdfConversionWarning
 
         name, version = parse_schema_filename(self.filename)
         if should_skip(name, version):
@@ -220,7 +221,12 @@ class AsdfSchemaExampleItem(pytest.Item):
             with pytest.warns(None) as w:
                 ff._open_impl(ff, buff, mode='rw')
             # Do not tolerate any warnings that occur during schema validation
-            assert len(w) == 0, helpers.display_warnings(w)
+            if len(w) > 0:
+                for warning in w:
+                    assert warning.category == AsdfConversionWarning
+                    assert "is not recognized, converting to raw Python data structure." in str(warning.message)
+            else:
+                assert len(w) == 0, helpers.display_warnings(w)
         except Exception:
             print("From file:", self.filename)
             raise
