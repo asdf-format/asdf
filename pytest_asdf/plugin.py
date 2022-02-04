@@ -60,15 +60,13 @@ class AsdfSchemaFile(pytest.File):
     def from_parent(cls, parent, *, fspath, skip_examples=False, validate_default=True,
         ignore_unrecognized_tag=False, ignore_version_mismatch=False, skip_tests=[], xfail_tests=[], **kwargs):
 
+        # Fix for depreciation of fspath in pytest 7+
         from asdf.util import minversion
-
         if minversion("pytest", "7.0.0"):
             path = pathlib.Path(fspath)
-
             kwargs["path"] = path
         else:
             path = fspath
-
             kwargs["fspath"] = path
 
         if hasattr(super(), "from_parent"):
