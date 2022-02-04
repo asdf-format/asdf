@@ -97,5 +97,7 @@ jobs:
         run: cd asdf && pip install .
       - name: Install remaining ${{ matrix.package_name }} dependencies
         run: cd target && ${{ matrix.install_command }}
+      - name: Pip Freeze
+        run: pip freeze
       - name: Run ${{ matrix.package_name}} tests
         run: cd target && ${{ matrix.test_command }}
