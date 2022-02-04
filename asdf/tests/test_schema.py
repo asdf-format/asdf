@@ -357,6 +357,7 @@ def test_property_order():
             last_index = index
 
 
+@pytest.mark.filterwarnings(r'ignore:.*is not recognized, converting to raw Python data structure.')
 def test_invalid_nested():
     class CustomType(str, types.CustomType):
         name = 'custom'
@@ -377,9 +378,8 @@ custom: !<tag:nowhere.org:custom/custom-1.0.0>
     # This should cause a warning but not an error because without explicitly
     # providing an extension, our custom type will not be recognized and will
     # simply be converted to a raw type.
-    with pytest.warns(AsdfConversionWarning, match="tag:nowhere.org:custom/custom-1.0.0"):
-        with asdf.open(buff):
-            pass
+    with asdf.open(buff):
+        pass
 
     buff.seek(0)
     with pytest.raises(ValidationError):

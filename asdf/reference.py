@@ -135,8 +135,7 @@ def find_references(tree, ctx):
             return Reference(tree['$ref'], json_id, asdffile=ctx)
         return tree
 
-    return treeutil.walk_and_modify(
-        tree, do_find, ignore_implicit_conversion=ctx._ignore_implicit_conversion)
+    return treeutil.walk_and_modify(tree, do_find)
 
 
 def resolve_references(tree, ctx, **kwargs):
@@ -151,8 +150,7 @@ def resolve_references(tree, ctx, **kwargs):
 
     tree = find_references(tree, ctx)
 
-    return treeutil.walk_and_modify(
-        tree, do_resolve, ignore_implicit_conversion=ctx._ignore_implicit_conversion)
+    return treeutil.walk_and_modify(tree, do_resolve)
 
 
 def make_reference(asdffile, path):

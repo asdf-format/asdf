@@ -97,7 +97,7 @@ def run_tuple_test(tree, tmpdir):
         assert b'tuple' not in content
 
     # Ignore these warnings for the tests that don't actually test the warning
-    init_options = dict(ignore_implicit_conversion=True)
+    init_options = dict()
 
     helpers.assert_roundtrip_tree(tree, tmpdir, asdf_check_func=check_asdf,
                                   raw_yaml_check_func=check_raw_yaml,
@@ -116,6 +116,7 @@ def test_python_tuple(tmpdir):
     run_tuple_test(tree, tmpdir)
 
 
+@pytest.mark.filterwarnings('ignore:Failed to serialize instance of')
 def test_named_tuple_collections(tmpdir):
     # Ensure that we are able to serialize a collections.namedtuple.
 
@@ -127,6 +128,7 @@ def test_named_tuple_collections(tmpdir):
 
     run_tuple_test(tree, tmpdir)
 
+@pytest.mark.filterwarnings('ignore:Failed to serialize instance of')
 def test_named_tuple_typing(tmpdir):
     # Ensure that we are able to serialize a typing.NamedTuple.
 
@@ -139,6 +141,7 @@ def test_named_tuple_typing(tmpdir):
     run_tuple_test(tree, tmpdir)
 
 
+@pytest.mark.filterwarnings('ignore:Failed to serialize instance of')
 def test_named_tuple_collections_recursive(tmpdir):
     nt = namedtuple("TestNamedTuple3", ("one", "two", "three"))
 
@@ -149,11 +152,12 @@ def test_named_tuple_collections_recursive(tmpdir):
     def check_asdf(asdf):
         assert (asdf.tree['val'][2] == np.ones(3)).all()
 
-    init_options = dict(ignore_implicit_conversion=True)
+    init_options = dict()
     helpers.assert_roundtrip_tree(tree, tmpdir, asdf_check_func=check_asdf,
                                   init_options=init_options)
 
 
+@pytest.mark.filterwarnings('ignore:Failed to serialize instance of')
 def test_named_tuple_typing_recursive(tmpdir):
     nt = NamedTuple("TestNamedTuple4",
                     (("one", int), ("two", int), ("three", np.ndarray)))
@@ -165,7 +169,7 @@ def test_named_tuple_typing_recursive(tmpdir):
     def check_asdf(asdf):
         assert (asdf.tree['val'][2] == np.ones(3)).all()
 
-    init_options = dict(ignore_implicit_conversion=True)
+    init_options = dict()
     helpers.assert_roundtrip_tree(tree, tmpdir, asdf_check_func=check_asdf,
                                   init_options=init_options)
 
@@ -180,11 +184,6 @@ def test_implicit_conversion_warning():
     with pytest.warns(AsdfWarning, match="Failed to serialize instance"):
         with asdf.AsdfFile(tree):
             pass
-
-    with helpers.assert_no_warnings():
-        with asdf.AsdfFile(tree, ignore_implicit_conversion=True):
-            pass
-
 
 @pytest.mark.xfail(reason='pyyaml has a bug and does not support tuple keys')
 def test_python_tuple_key(tmpdir):

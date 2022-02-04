@@ -197,8 +197,7 @@ flow_thing:
 """
     buff = helpers.yaml_to_asdf(yaml)
     with helpers.assert_no_warnings():
-        asdf.open(buff, ignore_version_mismatch=False,
-            extensions=CustomFlowExtension())
+        asdf.open(buff, extensions=CustomFlowExtension())
 
 
 def test_longest_match():
@@ -280,12 +279,7 @@ undefined_data:
     for i, tag in enumerate(["also_undefined-1.3.0", "undefined_tag-1.0.0"]):
         assert str(warning[i].message) == (
             "tag:nowhere.org:custom/{} is not recognized, converting to raw "
-            "Python data structure".format(tag))
-
-    # Make sure no warning occurs if explicitly ignored
-    buff.seek(0)
-    with helpers.assert_no_warnings():
-        afile = asdf.open(buff, ignore_unrecognized_tag=True)
+            "Python data structure.".format(tag))
 
 
 def test_newer_tag():

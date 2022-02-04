@@ -269,7 +269,6 @@ class AsdfTypeIndex:
 
         if tag in self._best_matches:
             best_tag = self._best_matches[tag]
-            ctx._warn_tag_mismatch(tag, best_tag)
             return best_tag
 
         name, version = split_tag_version(tag)
@@ -284,7 +283,6 @@ class AsdfTypeIndex:
         i = max(0, i - 1)
         best_version = versions[i]
         best_tag = join_tag_version(name, best_version)
-        ctx._warn_tag_mismatch(tag, best_tag)
         self._best_matches[tag] = best_tag
         return best_tag
 

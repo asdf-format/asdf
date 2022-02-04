@@ -275,7 +275,6 @@ def custom_tree_to_tagged_tree(tree, ctx, _serialization_context=None):
     return treeutil.walk_and_modify(
         tree,
         _walker,
-        ignore_implicit_conversion=ctx._ignore_implicit_conversion,
         # Walk the tree in preorder, so that extensions can return
         # container nodes with unserialized children.
         postorder=False,
@@ -310,9 +309,9 @@ def tagged_tree_to_custom_tree(tree, ctx, force_raw_types=False, _serialization_
         tag_type = ctx.type_index.from_yaml_tag(ctx, tag, _serialization_context=_serialization_context)
         # This means the tag did not correspond to any type in our type index.
         if tag_type is None:
-            if not ctx._ignore_unrecognized_tag:
-                warnings.warn("{} is not recognized, converting to raw Python "
-                    "data structure".format(tag), AsdfConversionWarning)
+            msg = f"{tag} is not recognized, converting to raw Python data structure."
+            warnings.warn(msg, AsdfConversionWarning)
+
             return node
 
         tag_name, tag_version = split_tag_version(tag)
@@ -343,7 +342,6 @@ def tagged_tree_to_custom_tree(tree, ctx, force_raw_types=False, _serialization_
     return treeutil.walk_and_modify(
         tree,
         _walker,
-        ignore_implicit_conversion=ctx._ignore_implicit_conversion,
         # Walk the tree in postorder, so that extensions receive
         # container nodes with children already deserialized.
         postorder=True,

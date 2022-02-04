@@ -83,8 +83,6 @@ class AsdfDirective(Directive):
 
             kwargs = dict()
             # Use the ignore_unrecognized_tag parameter as a proxy for both options
-            kwargs['ignore_unrecognized_tag'] = 'ignore_unrecognized_tag' in self.arguments
-            kwargs['ignore_missing_extensions'] = 'ignore_unrecognized_tag' in self.arguments
 
             with asdf.open(filename, **kwargs) as ff:
                 for i, block in enumerate(ff.blocks.internal_blocks):

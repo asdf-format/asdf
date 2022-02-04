@@ -2,8 +2,8 @@
 Utility functions for managing tree-like data structures.
 """
 
-import warnings
 import types
+import warnings
 from contextlib import contextmanager
 
 from . import tagged
@@ -217,7 +217,7 @@ class _RemoveNode:
 RemoveNode = _RemoveNode()
 
 
-def walk_and_modify(top, callback, ignore_implicit_conversion=False, postorder=True, _context=None):
+def walk_and_modify(top, callback, postorder=True, _context=None):
     """Modify a tree by walking it with a callback function.  It also has
     the effect of doing a deep copy.
 
@@ -248,13 +248,6 @@ def walk_and_modify(top, callback, ignore_implicit_conversion=False, postorder=T
         the tree.  If `True`, the callable will be invoked on children
         before their parents.  If `False`, the callable is invoked on the
         parents first.  Defaults to `True`.
-
-    ignore_implicit_conversion : bool
-        Controls whether warnings should be issued when implicitly converting a
-        given type instance in the tree into a serializable object. The primary
-        case for this is currently `namedtuple`.
-
-        Defaults to `False`.
 
     Returns
     -------
@@ -357,9 +350,9 @@ def walk_and_modify(top, callback, ignore_implicit_conversion=False, postorder=T
             # The derived class signature is different, so simply store the
             # list representing the contents. Currently this is primarly
             # intended to handle namedtuple and NamedTuple instances.
-            if not ignore_implicit_conversion:
-                msg = "Failed to serialize instance of {}, converting to list instead"
-                warnings.warn(msg.format(type(node)), AsdfWarning)
+            msg = f"Failed to serialize instance of {type(node)}, converting to list instead"
+            warnings.warn(msg, AsdfWarning)
+
             result = contents
 
         return result

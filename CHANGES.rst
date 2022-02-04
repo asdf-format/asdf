@@ -21,6 +21,9 @@
 
 - Remove all deprecations to be removed in 3.0 (see issue #588). [#1059]
 
+- Remove ignore_version_mismatch, ignore_unrecognized_tag, and ignore_implicit_conversion
+  from AsdfFile. [#1060]
+
 2.8.4 (unreleased)
 ------------------
 

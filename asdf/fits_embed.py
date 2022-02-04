@@ -168,7 +168,6 @@ class AsdfInFits(asdf.AsdfFile):
 
     @classmethod
     def open(cls, fd, uri=None, validate_checksums=False, extensions=None,
-             ignore_version_mismatch=True, ignore_unrecognized_tag=False,
              strict_extension_check=False, ignore_missing_extensions=False,
              **kwargs):
         """Creates a new AsdfInFits object based on given input data
@@ -195,9 +194,6 @@ class AsdfInFits(asdf.AsdfFile):
             `asdf.extension.Extension`, `asdf.extension.AsdfExtensionList`
             or a `list` extensions.
 
-        ignore_version_mismatch : bool, optional
-            When `True`, do not raise warnings for mismatched schema versions.
-
         strict_extension_check : bool, optional
             When `True`, if the given ASDF file contains metadata about the
             extensions used to create it, and if those extensions are not
@@ -213,15 +209,12 @@ class AsdfInFits(asdf.AsdfFile):
         return cls._open_impl(fd, uri=uri,
                        validate_checksums=validate_checksums,
                        extensions=extensions,
-                       ignore_version_mismatch=ignore_version_mismatch,
-                       ignore_unrecognized_tag=ignore_unrecognized_tag,
                        strict_extension_check=strict_extension_check,
                        ignore_missing_extensions=ignore_missing_extensions,
                        **kwargs)
 
     @classmethod
     def _open_impl(cls, fd, uri=None, validate_checksums=False, extensions=None,
-             ignore_version_mismatch=True, ignore_unrecognized_tag=False,
              strict_extension_check=False,
              ignore_missing_extensions=False, **kwargs):
 
@@ -239,9 +232,7 @@ class AsdfInFits(asdf.AsdfFile):
                 msg = "Failed to parse given file '{}'. Is it FITS?"
                 raise ValueError(msg.format(uri))
 
-        self = cls(hdulist, uri=uri,
-                   ignore_version_mismatch=ignore_version_mismatch,
-                   ignore_unrecognized_tag=ignore_unrecognized_tag)
+        self = cls(hdulist, uri=uri)
 
         self._close_hdulist = close_hdulist
 
