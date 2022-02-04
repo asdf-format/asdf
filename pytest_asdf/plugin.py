@@ -1,5 +1,6 @@
 import io
 import os
+import warnings
 from importlib.util import find_spec
 from pkg_resources import parse_version
 import pathlib
@@ -64,7 +65,7 @@ class AsdfSchemaFile(pytest.File):
         if hasattr(super(), "from_parent"):
             result = super().from_parent(parent, path=path, **kwargs)
         else:
-            result = AsdfSchemaFile(fspath, parent, **kwargs)
+            result = AsdfSchemaFile(path, parent, **kwargs)
 
         result.skip_examples = skip_examples
         result.validate_default = validate_default
@@ -241,10 +242,11 @@ class AsdfSchemaExampleItem(pytest.Item):
         b._array_storage = "streamed"
 
         try:
-            with pytest.warns(None) as w:
-                ff._open_impl(ff, buff, mode='rw')
             # Do not tolerate any warnings that occur during schema validation
-            assert len(w) == 0, helpers.display_warnings(w)
+            with warnings.catch_warnings():
+                warnings.simplefilter("error")
+
+                ff._open_impl(ff, buff, mode='rw')
         except Exception:
             print("From file:", self.filename)
             raise
