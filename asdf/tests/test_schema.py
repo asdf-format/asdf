@@ -510,11 +510,10 @@ custom: !<tag:nowhere.org:custom/default-1.0.0>
     buff = helpers.yaml_to_asdf(yaml)
     with asdf.config_context() as config:
         config.add_extension(DefaultTypeExtension())
-
-    buff.seek(0)
-    with config_context() as config:
         config.legacy_fill_schema_defaults = False
-        with asdf.open(buff, extensions=[DefaultTypeExtension()]) as ff:
+
+        buff.seek(0)
+        with asdf.open(buff) as ff:
             assert 'a' not in ff.tree['custom']
             assert 'c' not in ff.tree['custom']['b']
             assert 'e' not in ff.tree['custom']['d']
@@ -524,18 +523,19 @@ custom: !<tag:nowhere.org:custom/default-1.0.0>
             assert 'k' not in ff.tree['custom']['j']
             assert ff.tree['custom']['j']['l'] == 362
 
+    with asdf.config_context() as config:
+        config.legacy_fill_schema_defaults = False
+
         buff.seek(0)
-        with config_context() as config:
-            config.legacy_fill_schema_defaults = False
-            with asdf.open(buff) as ff:
-                assert 'a' not in ff.tree['custom']
-                assert 'c' not in ff.tree['custom']['b']
-                assert 'e' not in ff.tree['custom']['d']
-                assert 'f' not in ff.tree['custom']['d']
-                assert 'h' not in ff.tree['custom']['g']
-                assert 'i' not in ff.tree['custom']['g']
-                assert 'k' not in ff.tree['custom']['j']
-                assert ff.tree['custom']['j']['l'] == 362
+        with asdf.open(buff) as ff:
+            assert 'a' not in ff.tree['custom']
+            assert 'c' not in ff.tree['custom']['b']
+            assert 'e' not in ff.tree['custom']['d']
+            assert 'f' not in ff.tree['custom']['d']
+            assert 'h' not in ff.tree['custom']['g']
+            assert 'i' not in ff.tree['custom']['g']
+            assert 'k' not in ff.tree['custom']['j']
+            assert ff.tree['custom']['j']['l'] == 362
 
 
 def test_one_of():

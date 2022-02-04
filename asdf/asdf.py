@@ -321,6 +321,7 @@ class AsdfFile:
                           "should now be stored under tree['history']['entries'].",
                           AsdfWarning)
         elif 'extensions' not in self.tree['history']:
+
             self.tree['history']['extensions'] = []
 
         for extension in serialization_context._extensions_used:
@@ -712,8 +713,6 @@ class AsdfFile:
         # Now that version is set for good, we can add any additional
         # extensions, which may have narrow ASDF Standard version
         # requirements.
-        if extensions:
-            self.extensions = extensions
 
         yaml_token = fd.read(4)
         has_blocks = False
@@ -1390,7 +1389,7 @@ def _check_and_set_mode(fileobj, asdf_mode):
     return asdf_mode
 
 
-def open_asdf(fd, uri=None, mode=None, validate_checksums=False, extensions=None,
+def open_asdf(fd, uri=None, mode=None, validate_checksums=False,
               _force_raw_types=False, copy_arrays=False, lazy_load=True,
               custom_schema=None, strict_extension_check=False,
               ignore_missing_extensions=False, _compat=False,

@@ -205,7 +205,7 @@ flow_thing:
     with asdf.config_context() as config:
         config.add_extension(CustomFlowExtension())
         with helpers.assert_no_warnings():
-            asdf.open(buff, ignore_version_mismatch=False)
+            asdf.open(buff)
 
 
 def test_longest_match():
