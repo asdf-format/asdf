@@ -8,7 +8,7 @@ import pytest
 
 import asdf
 from asdf import constants
-from asdf import get_config, config_context
+from asdf import get_config
 from asdf import extension
 from asdf import resolver
 from asdf import schema
