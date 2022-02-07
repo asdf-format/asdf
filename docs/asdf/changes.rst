@@ -4,6 +4,17 @@
 Changes
 *******
 
+What's new in asdf 2.9.2?
+=========================
+
+The ASDF Standard is at v1.6.0.
+
+Changes include:
+
+- Fix deprecation warnings stemming from the release of pytest 7.0.0.
+
+- Fix bug in pytest plugin when schemas are not in a directory named "schemas".
+
 What's new in asdf 2.9.1?
 =========================
 
