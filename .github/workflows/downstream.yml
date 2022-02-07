@@ -2,35 +2,6 @@ name: Downstream
 
 on:
   workflow_dispatch:
-    inputs:
-      astropy_ref:
-        description: astropy ref
-        required: true
-        default: main
-      dkist_ref:
-        description: dkist ref
-        required: true
-        default: main
-      gwcs_ref:
-        description: gwcs ref
-        required: true
-        default: master
-      jwst_ref:
-        description: jwst ref
-        required: true
-        default: master
-      specutils_ref:
-        description: specutils ref
-        required: true
-        default: main
-      sunpy_ref:
-        description: sunpy ref
-        required: true
-        default: main
-      weldx_ref:
-        description: weldx ref
-        required: true
-        default: master
   schedule:
     # Run every Monday at 6am UTC
     - cron: '0 6 * * 1'
@@ -51,38 +22,58 @@ jobs:
         include:
           - package_name: astropy
             repository: astropy/astropy
-            ref: ${{ github.event.inputs.astropy_ref || 'main' }}
+            ref: main
             install_command: pip install -e .[test]
             test_command: pytest
           - package_name: gwcs
             repository: spacetelescope/gwcs
-            ref: ${{ github.event.inputs.gwcs_ref || 'master' }}
+            ref: master
             install_command: pip install -e .[test]
             test_command: pytest
           - package_name: jwst
             repository: spacetelescope/jwst
-            ref: ${{ github.event.inputs.jwst_ref || 'master' }}
+            ref: master
             install_command: pip install -e .[test]
             test_command: pytest
           - package_name: specutils
             repository: astropy/specutils
-            ref: ${{ github.event.inputs.specutils_ref || 'main' }}
+            ref: main
             install_command: pip install -e .[test]
             test_command: pytest
           - package_name: weldx
             repository: BAMWelDX/weldx
-            ref: ${{ github.event.inputs.weldx_ref || 'master' }}
+            ref: master
             install_command: pip install -e .[test]
             test_command: pytest weldx/tests/asdf_tests weldx/schemas --asdf-tests
           - package_name: sunpy
             repository: sunpy/sunpy
-            ref: ${{ github.event.inputs.sunpy_ref || 'main' }}
+            ref: main
             install_command: pip install -e .[tests,all]
             test_command: pytest sunpy/io/
           - package_name: dkist
             repository: DKISTDC/dkist
-            ref: ${{ github.event.inputs.dkist_ref || 'main' }}
+            ref: main
             install_command: pip install -e .[tests]
+            test_command: pytest
+          - package_name: asdf-astropy
+            repository: astropy/asdf-astropy
+            ref: main
+            install_command: pip install -e .[test]
+            test_command: pytest
+          - package_name: asdf-transform-schemas
+            repository: asdf-format/asdf-transform-schemas
+            ref: master
+            install_command: pip install -e .[test]
+            test_command: pytest
+          - package_name: asdf-wcs-schemas
+            repository: asdf-format/asdf-wcs-schemas
+            ref: main
+            install_command: pip install -e .[test]
+            test_command: pytest
+          - package_name: asdf-coordinates-schemas
+            repository: asdf-format/asdf-coordinates-schemas
+            ref: main
+            install_command: pip install -e .[test]
             test_command: pytest
     steps:
       - name: Checkout asdf
@@ -106,5 +97,7 @@ jobs:
         run: cd asdf && pip install .
       - name: Install remaining ${{ matrix.package_name }} dependencies
         run: cd target && ${{ matrix.install_command }}
+      - name: Pip Freeze
+        run: pip freeze
       - name: Run ${{ matrix.package_name}} tests
         run: cd target && ${{ matrix.test_command }}
