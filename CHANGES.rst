@@ -3,6 +3,8 @@
 
 - Fix deprecation warnings stemming from the release of pytest 7.0.0. [#1075]
 
+- Fix bug in pytest plugin when schemas are not in a directory named "schemas". [#1076]
+
 2.9.1 (2022-02-03)
 ------------------
 
