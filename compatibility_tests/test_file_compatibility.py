@@ -57,7 +57,7 @@ def fetch_package_versions(package_name):
     version_strings = json.loads(content)["releases"].keys()
     return [
         Version(v) for v in version_strings
-        if v not in BAD_VERSIONS and (v >= MIN_VERSION_NEW_FILES or v >= MIN_VERSION_OLD_FILES)
+        if v not in BAD_VERSIONS and (Version(v) >= MIN_VERSION_NEW_FILES or Version(v) >= MIN_VERSION_OLD_FILES)
     ]
 
 
