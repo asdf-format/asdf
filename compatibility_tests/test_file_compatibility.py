@@ -66,7 +66,7 @@ def fetch_latest_patch_versions(package_name):
     Return the latest patch version within each of the package's
     minor versions.
     """
-    key_fn = lambda v: v.version[0:2]
+    key_fn = lambda v: v.release[0:2]
 
     versions = sorted(fetch_package_versions(package_name), key=key_fn)
     return [max(group) for _, group in groupby(versions, key=key_fn)]
