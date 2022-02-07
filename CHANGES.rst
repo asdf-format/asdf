@@ -1,4 +1,4 @@
-2.9.2 (unreleased)
+2.9.2 (2022-02-07)
 ------------------
 
 - Fix deprecation warnings stemming from the release of pytest 7.0.0. [#1075]
