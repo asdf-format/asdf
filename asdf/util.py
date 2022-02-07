@@ -321,7 +321,7 @@ def minversion(module, version, inclusive=True, version_path='__version__'):
 
     By default this uses `pkg_resources.parse_version` to do the version
     comparison if available.  Otherwise it falls back on
-    `distutils.version.LooseVersion`.
+    `packaging.version.Version`.
 
     Parameters
     ----------
@@ -366,7 +366,7 @@ def minversion(module, version, inclusive=True, version_path='__version__'):
     try:
         from pkg_resources import parse_version
     except ImportError:
-        from distutils.version import LooseVersion as parse_version
+        from packaging.version import Version as parse_version
 
     if inclusive:
         return parse_version(have_version) >= parse_version(version)
