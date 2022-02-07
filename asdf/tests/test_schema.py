@@ -8,7 +8,7 @@ import pytest
 
 import asdf
 from asdf import constants
-from asdf import get_config, config_context
+from asdf import get_config
 from asdf import extension
 from asdf import resolver
 from asdf import schema
@@ -309,10 +309,13 @@ def test_flow_style():
     }
 
     buff = io.BytesIO()
-    ff = asdf.AsdfFile(tree, extensions=CustomFlowStyleExtension())
-    ff.write_to(buff)
+    with asdf.config_context() as config:
+        config.add_extension(CustomFlowStyleExtension())
 
-    assert b'  a: 42\n  b: 43' in buff.getvalue()
+        ff = asdf.AsdfFile(tree)
+        ff.write_to(buff)
+
+        assert b'  a: 42\n  b: 43' in buff.getvalue()
 
 
 def test_style():
@@ -332,10 +335,13 @@ def test_style():
     }
 
     buff = io.BytesIO()
-    ff = asdf.AsdfFile(tree, extensions=CustomStyleExtension())
-    ff.write_to(buff)
+    with asdf.config_context() as config:
+        config.add_extension(CustomStyleExtension())
 
-    assert b'|-\n  short\n' in buff.getvalue()
+        ff = asdf.AsdfFile(tree)
+        ff.write_to(buff)
+
+        assert b'|-\n  short\n' in buff.getvalue()
 
 
 def test_property_order():
@@ -382,9 +388,12 @@ custom: !<tag:nowhere.org:custom/custom-1.0.0>
         pass
 
     buff.seek(0)
-    with pytest.raises(ValidationError):
-        with asdf.open(buff, extensions=[CustomTypeExtension()]):
-            pass
+    with asdf.config_context() as config:
+        config.add_extension(CustomTypeExtension())
+
+        with pytest.raises(ValidationError):
+            with asdf.open(buff):
+                pass
 
     # Make sure tags get validated inside of other tags that know
     # nothing about them.
@@ -395,9 +404,11 @@ array: !core/ndarray-1.0.0
     foo
     """
     buff = helpers.yaml_to_asdf(yaml)
-    with pytest.raises(ValidationError):
-        with asdf.open(buff, extensions=[CustomTypeExtension()]):
-            pass
+    with asdf.config_context() as config:
+        config.add_extension(CustomTypeExtension())
+        with pytest.raises(ValidationError):
+            with asdf.open(buff):
+                pass
 
 
 def test_invalid_schema():
@@ -497,24 +508,26 @@ custom: !<tag:nowhere.org:custom/default-1.0.0>
     l: 362
     """
     buff = helpers.yaml_to_asdf(yaml)
-    with asdf.open(buff, extensions=[DefaultTypeExtension()]) as ff:
-        assert 'a' in ff.tree['custom']
-        assert ff.tree['custom']['a'] == 42
-        assert ff.tree['custom']['b']['c'] == 82
-        # allOf combiner should fill defaults from all subschemas:
-        assert ff.tree['custom']['d']['e'] == 122
-        assert ff.tree['custom']['d']['f'] == 162
-        # anyOf combiners should be ignored:
-        assert 'h' not in ff.tree['custom']['g']
-        assert 'i' not in ff.tree['custom']['g']
-        # oneOf combiners should be ignored:
-        assert 'k' not in ff.tree['custom']['j']
-        assert ff.tree['custom']['j']['l'] == 362
-
-    buff.seek(0)
-    with config_context() as config:
+    with asdf.config_context() as config:
+        config.add_extension(DefaultTypeExtension())
         config.legacy_fill_schema_defaults = False
-        with asdf.open(buff, extensions=[DefaultTypeExtension()]) as ff:
+
+        buff.seek(0)
+        with asdf.open(buff) as ff:
+            assert 'a' not in ff.tree['custom']
+            assert 'c' not in ff.tree['custom']['b']
+            assert 'e' not in ff.tree['custom']['d']
+            assert 'f' not in ff.tree['custom']['d']
+            assert 'h' not in ff.tree['custom']['g']
+            assert 'i' not in ff.tree['custom']['g']
+            assert 'k' not in ff.tree['custom']['j']
+            assert ff.tree['custom']['j']['l'] == 362
+
+    with asdf.config_context() as config:
+        config.legacy_fill_schema_defaults = False
+
+        buff.seek(0)
+        with asdf.open(buff) as ff:
             assert 'a' not in ff.tree['custom']
             assert 'c' not in ff.tree['custom']['b']
             assert 'e' not in ff.tree['custom']['d']
@@ -545,8 +558,11 @@ one_of: !<tag:nowhere.org:custom/one_of-1.0.0>
   value: foo
     """
     buff = helpers.yaml_to_asdf(yaml)
-    with asdf.open(buff, extensions=[OneOfTypeExtension()]) as ff:
-        assert ff['one_of']['value'] == 'foo'
+    with asdf.config_context() as config:
+        config.add_extension(OneOfTypeExtension())
+
+        with asdf.open(buff) as ff:
+            assert ff['one_of']['value'] == 'foo'
 
 
 def test_tag_reference_validation():
@@ -564,10 +580,13 @@ custom: !<tag:nowhere.org:custom/tag_reference-1.0.0>
     """
 
     buff = helpers.yaml_to_asdf(yaml)
-    with asdf.open(buff, extensions=[DefaultTypeExtension()]) as ff:
-        custom = ff.tree['custom']
-        assert custom['name'] == "Something"
-        assert_array_equal(custom['things'], [1, 2, 3])
+    with asdf.config_context() as config:
+        config.add_extension(DefaultTypeExtension())
+
+        with asdf.open(buff) as ff:
+            custom = ff.tree['custom']
+            assert custom['name'] == "Something"
+            assert_array_equal(custom['things'], [1, 2, 3])
 
 
 def test_foreign_tag_reference_validation():
@@ -604,13 +623,16 @@ custom: !<tag:nowhere.org:custom/foreign_tag_reference-1.0.0>
     """
 
     buff = helpers.yaml_to_asdf(yaml)
-    with asdf.open(buff, extensions=ForeignTypeExtension()) as ff:
-        a = ff.tree['custom']['a']
-        b = ff.tree['custom']['b']
-        assert a['name'] == 'Something'
-        assert_array_equal(a['things'], [1, 2, 3])
-        assert b['name'] == 'Anything'
-        assert_array_equal(b['things'], [4, 5, 6])
+    with asdf.config_context() as config:
+        config.add_extension(ForeignTypeExtension())
+
+        with asdf.open(buff) as ff:
+            a = ff.tree['custom']['a']
+            b = ff.tree['custom']['b']
+            assert a['name'] == 'Something'
+            assert_array_equal(a['things'], [1, 2, 3])
+            assert b['name'] == 'Anything'
+            assert_array_equal(b['things'], [4, 5, 6])
 
 
 def test_self_reference_resolution():
@@ -799,9 +821,12 @@ custom: !<tag:nowhere.org:custom/missing-1.1.0>
   b: {foo: 42}
     """
     buff = helpers.yaml_to_asdf(yaml)
-    with pytest.warns(AsdfConversionWarning, match="Failed to convert tag:nowhere.org:custom/missing-1.1.0"):
-        with asdf.open(buff, extensions=[DefaultTypeExtension()]) as ff:
-            assert ff.tree['custom']['b']['foo'] == 42
+    with asdf.config_context() as config:
+        config.add_extension(DefaultTypeExtension())
+
+        with pytest.warns(AsdfConversionWarning, match="Failed to convert tag:nowhere.org:custom/missing-1.1.0"):
+            with asdf.open(buff) as ff:
+                assert ff.tree['custom']['b']['foo'] == 42
 
 
 def test_assert_roundtrip_with_extension(tmpdir):
@@ -826,14 +851,13 @@ def test_assert_roundtrip_with_extension(tmpdir):
         'custom': CustomType({'a': 42, 'b': 43})
     }
 
-    def check(ff):
-        assert isinstance(ff.tree['custom'], CustomType)
+    with asdf.config_context() as config:
+        config.add_extension(CustomTypeExtension())
 
-    with helpers.assert_no_warnings():
-        helpers.assert_roundtrip_tree(
-            tree, tmpdir, extensions=[CustomTypeExtension()])
+        with helpers.assert_no_warnings():
+            helpers.assert_roundtrip_tree(tree, tmpdir)
 
-    assert called_custom_assert_equal[0] is True
+        assert called_custom_assert_equal[0] is True
 
 
 def test_custom_validation_bad(tmpdir):
@@ -1023,9 +1047,12 @@ a: !<tag:nowhere.org:custom/doesnt_exist-1.0.0>
   """
 
     buff = helpers.yaml_to_asdf(yaml)
-    with pytest.warns(AsdfWarning, match="Unable to locate schema file"):
-        with asdf.open(buff, extensions=CustomExtension()) as af:
-            assert str(af['a']) == 'hello'
+    with asdf.config_context() as config:
+        config.add_extension(CustomExtension())
+
+        with pytest.warns(AsdfWarning, match="Unable to locate schema file"):
+            with asdf.open(buff) as af:
+                assert str(af['a']) == 'hello'
 
 
 @pytest.mark.parametrize("numpy_value,valid_types", [

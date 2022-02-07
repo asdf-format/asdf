@@ -141,8 +141,11 @@ using them:
 
     tree = {'fraction': fractions.Fraction(10, 3)}
 
-    with asdf.AsdfFile(tree, extensions=FractionExtension()) as ff:
-        ff.write_to("test.asdf")
+    with asdf.config_context() as config:
+        config.add_extension(FractionExtension())
+
+        with asdf.AsdfFile(tree) as ff:
+            ff.write_to("test.asdf")
 
 Defining custom types
 ---------------------
@@ -231,8 +234,11 @@ chosen to use a `dict`:
 
     tree = {'fraction': fractions.Fraction(10, 3)}
 
-    with asdf.AsdfFile(tree, extensions=FractionExtension()) as ff:
-        ff.write_to("test.asdf")
+    with asdf.config_context() as config:
+        config.add_extension(FractionExtension())
+
+        with asdf.AsdfFile(tree) as ff:
+            ff.write_to("test.asdf")
 
 In this case, the associated schema would look like the following::
 
@@ -360,8 +366,11 @@ Now we can use this extension to create an ASDF file:
 
     tree = {'coordinate': coord}
 
-    with asdf.AsdfFile(tree, extensions=FractionExtension()) as ff:
-        ff.write_to("coord.asdf")
+    with asdf.config_context() as config:
+        config.add_extension(FractionExtension())
+
+        with asdf.AsdfFile(tree) as ff:
+            ff.write_to("coord.asdf")
 
 Note that in the resulting ASDF file, the ``x`` and ``y`` components of
 our new `fraction_2d_coord` type are tagged as `fraction-1.0.0`.
@@ -439,17 +448,23 @@ After adding our type to the extension class, the tree will serialize correctly:
 
     tree = {'fraction': f1}
 
-    with asdf.AsdfFile(tree, extensions=FractionExtension()) as ff:
-        ff.write_to("with_inverse.asdf")
+    with asdf.config_context() as config:
+        config.add_extension(FractionExtension())
+
+        with asdf.AsdfFile(tree) as ff:
+            ff.write_to("with_inverse.asdf")
 
 But upon deserialization, we notice a problem:
 
 .. runcode::
 
-    with asdf.open("with_inverse.asdf", extensions=FractionExtension()) as ff:
-        reconstituted_f1 = ff["fraction"]
+    with asdf.config_context() as config:
+        config.add_extension(FractionExtension())
 
-    assert reconstituted_f1.inverse.inverse is asdf.treeutil.PendingValue
+        with asdf.open("with_inverse.asdf") as ff:
+            reconstituted_f1 = ff["fraction"]
+
+        assert reconstituted_f1.inverse.inverse is asdf.treeutil.PendingValue
 
 The presence of `~asdf.treeutil.PendingValue` is `asdf`'s way of telling you
 that the value corresponding to the key ``inverse`` was not fully deserialized
@@ -497,10 +512,13 @@ our ASDF file:
 
 .. runcode::
 
-    with asdf.open("with_inverse.asdf", extensions=FractionExtension()) as ff:
-            reconstituted_f1 = ff["fraction"]
+    with asdf.config_context() as config:
+        config.add_extension(FractionExtension())
 
-    assert reconstituted_f1.inverse.inverse is reconstituted_f1
+        with asdf.open("with_inverse.asdf") as ff:
+                reconstituted_f1 = ff["fraction"]
+
+        assert reconstituted_f1.inverse.inverse is reconstituted_f1
 
 
 Assigning schema and tag versions

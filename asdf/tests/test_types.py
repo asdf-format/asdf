@@ -154,19 +154,25 @@ b: !core/complex-1.0.0
     """
 
     buff = helpers.yaml_to_asdf(yaml)
-    with asdf.open(buff, extensions=FractionExtension()) as ff:
-        assert ff.tree['a'] == Fraction(2, 3)
+    with asdf.config_context() as config:
+        config.add_extension(FractionExtension())
 
-        buff = io.BytesIO()
-        ff.write_to(buff)
+        with asdf.open(buff) as ff:
+            assert ff.tree['a'] == Fraction(2, 3)
+
+            buff = io.BytesIO()
+            ff.write_to(buff)
 
     buff = helpers.yaml_to_asdf(yaml)
-    with asdf.open(buff, extensions=FractionCallable()) as ff:
-        assert ff.tree['a'] == Fraction(2, 3)
+    with asdf.config_context() as config:
+        config.add_extension(FractionExtension())
 
-        buff = io.BytesIO()
-        ff.write_to(buff)
-        buff.close()
+        with asdf.open(buff) as ff:
+            assert ff.tree['a'] == Fraction(2, 3)
+
+            buff = io.BytesIO()
+            ff.write_to(buff)
+            buff.close()
 
 
 def test_version_mismatch_with_supported_versions():
@@ -196,8 +202,10 @@ flow_thing:
     d: 3.14
 """
     buff = helpers.yaml_to_asdf(yaml)
-    with helpers.assert_no_warnings():
-        asdf.open(buff, extensions=CustomFlowExtension())
+    with asdf.config_context() as config:
+        config.add_extension(CustomFlowExtension())
+        with helpers.assert_no_warnings():
+            asdf.open(buff)
 
 
 def test_longest_match():
@@ -324,9 +332,12 @@ flow_thing:
     c: 100
     d: 3.14
 """
-    new_buff = helpers.yaml_to_asdf(new_yaml)
-    new_data = asdf.open(new_buff, extensions=CustomFlowExtension())
-    assert type(new_data.tree['flow_thing']) == CustomFlow
+    with asdf.config_context() as config:
+        config.add_extension(CustomFlowExtension())
+
+        new_buff = helpers.yaml_to_asdf(new_yaml)
+        new_data = asdf.open(new_buff)
+        assert type(new_data.tree['flow_thing']) == CustomFlow
 
     old_yaml = """
 flow_thing:
@@ -334,11 +345,13 @@ flow_thing:
     a: 100
     b: 3.14
 """
-    old_buff = helpers.yaml_to_asdf(old_yaml)
-    # We expect this warning since it will not be possible to convert version
-    # 1.0.0 of CustomFlow to a CustomType (by design, for testing purposes).
-    with pytest.warns(AsdfConversionWarning, match="Failed to convert tag:nowhere.org:custom/custom_flow-1.0.0"):
-        asdf.open(old_buff, extensions=CustomFlowExtension())
+    with asdf.config_context() as config:
+        config.add_extension(CustomFlowExtension())
+        old_buff = helpers.yaml_to_asdf(old_yaml)
+        # We expect this warning since it will not be possible to convert version
+        # 1.0.0 of CustomFlow to a CustomType (by design, for testing purposes).
+        with pytest.warns(AsdfConversionWarning, match="Failed to convert tag:nowhere.org:custom/custom_flow-1.0.0"):
+            asdf.open(old_buff)
 
 
 def test_incompatible_version_check():
@@ -441,13 +454,16 @@ flow_thing:
     a: 100
     b: 3.14
 """
-    new_buff = helpers.yaml_to_asdf(new_yaml)
-    new_data = asdf.open(new_buff, extensions=CustomFlowExtension())
-    assert type(new_data.tree['flow_thing']) == CustomFlow
+    with asdf.config_context() as config:
+        config.add_extension(CustomFlowExtension())
 
-    old_buff = helpers.yaml_to_asdf(old_yaml)
-    old_data = asdf.open(old_buff, extensions=CustomFlowExtension())
-    assert type(old_data.tree['flow_thing']) == CustomFlow
+        new_buff = helpers.yaml_to_asdf(new_yaml)
+        new_data = asdf.open(new_buff)
+        assert type(new_data.tree['flow_thing']) == CustomFlow
+
+        old_buff = helpers.yaml_to_asdf(old_yaml)
+        old_data = asdf.open(old_buff)
+        assert type(old_data.tree['flow_thing']) == CustomFlow
 
 def test_unsupported_version_warning():
     class CustomFlow:
@@ -473,9 +489,12 @@ flow_thing:
     d: 3.14
 """
     buff = helpers.yaml_to_asdf(yaml)
+    with asdf.config_context() as config:
+        config.add_extension(CustomFlowExtension())
 
-    with pytest.warns(AsdfConversionWarning, match="Version 1.1.0 of tag:nowhere.org:custom/custom_flow is not compatible"):
-        asdf.open(buff, extensions=CustomFlowExtension())
+        with pytest.warns(AsdfConversionWarning,
+                          match="Version 1.1.0 of tag:nowhere.org:custom/custom_flow is not compatible"):
+            asdf.open(buff)
 
 
 def test_tag_without_schema(tmpdir):
@@ -515,15 +534,17 @@ def test_tag_without_schema(tmpdir):
 
     foo = FooType('hello', 42)
     tree = dict(foo=foo)
+    with asdf.config_context() as config:
+        config.add_extension(FooExtension())
 
-    with pytest.warns(AsdfWarning, match="Unable to locate schema file"):
-        with asdf.AsdfFile(tree, extensions=FooExtension()) as af:
-            af.write_to(tmpfile)
+        with pytest.warns(AsdfWarning, match="Unable to locate schema file"):
+            with asdf.AsdfFile(tree) as af:
+                af.write_to(tmpfile)
 
-    with pytest.warns(AsdfWarning, match="Unable to locate schema file"):
-        with asdf.AsdfFile(tree, extensions=FooExtension()) as ff:
-            assert isinstance(ff.tree['foo'], FooType)
-            assert ff.tree['foo'] == tree['foo']
+        with pytest.warns(AsdfWarning, match="Unable to locate schema file"):
+            with asdf.AsdfFile(tree) as ff:
+                assert isinstance(ff.tree['foo'], FooType)
+                assert ff.tree['foo'] == tree['foo']
 
 
 def test_custom_reference_cycle(tmpdir):
@@ -534,9 +555,11 @@ def test_custom_reference_cycle(tmpdir):
     tree = {"fraction": f1}
 
     path = str(tmpdir.join("with_inverse.asdf"))
+    with asdf.config_context() as config:
+        config.add_extension(FractionWithInverseExtension())
 
-    with asdf.AsdfFile(tree, extensions=FractionWithInverseExtension()) as af:
-        af.write_to(path)
+        with asdf.AsdfFile(tree) as af:
+            af.write_to(path)
 
-    with asdf.open(path, extensions=FractionWithInverseExtension()) as af:
-        assert af["fraction"].inverse.inverse is af["fraction"]
+        with asdf.open(path) as af:
+            assert af["fraction"].inverse.inverse is af["fraction"]
