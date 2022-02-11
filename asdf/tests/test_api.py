@@ -484,7 +484,7 @@ def test_get_default_resolver():
 
     result = resolver('tag:stsci.edu:asdf/core/ndarray-1.0.0')
 
-    assert result.endswith("/schemas/stsci.edu/asdf/core/ndarray-1.0.0.yaml")
+    assert result == 'http://stsci.edu/schemas/asdf/core/ndarray-1.0.0'
 
 
 def test_info_module(capsys, tmpdir):
