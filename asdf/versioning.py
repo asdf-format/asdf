@@ -14,9 +14,6 @@ else:  # pragma: no cover
 
 from semantic_version import Version, SimpleSpec
 
-from . import generic_io
-from . import resolver
-
 
 __all__ = ['AsdfVersion', 'AsdfSpec', 'split_tag_version', 'join_tag_version']
 
@@ -45,7 +42,7 @@ def get_version_map(version):
         from .config import get_config
 
         uri = f"http://stsci.edu/schemas/asdf/version_map-{version}"
-        version_map = yaml.load(get_config().resource_manager[uri],
+        version_map = yaml.load(get_config().resource_manager[uri], # nosec
                                 Loader=_yaml_base_loader)
 
         # Separate the core tags from the rest of the standard for convenience

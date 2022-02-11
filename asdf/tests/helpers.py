@@ -434,7 +434,7 @@ def _assert_extension_type_correctness(extension, extension_type, resolver):
         if schema_location not in asdf.get_config().resource_manager:
             try:
                 with generic_io.get_file(schema_location) as f:
-                    schema = yaml.safe_load(f.read())
+                    yaml.safe_load(f.read())
             except Exception:
                 assert False, (
                     "{} supports tag, {}, ".format(extension_type.__name__, check_type.yaml_tag) +

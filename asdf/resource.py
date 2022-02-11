@@ -7,14 +7,7 @@ from pathlib import Path
 import fnmatch
 import os
 import pkgutil
-import sys
 
-if sys.version_info < (3, 9):
-    import importlib_resources
-else:
-    import importlib.resources as importlib_resources
-
-import asdf
 
 from .util import get_class_name
 
@@ -24,7 +17,7 @@ __all__ = [
     "DirectoryResourceMapping",
     "ResourceManager",
     "JsonschemaResourceMapping",
-    "get_core_resource_mappings",
+    "get_json_schema_resource_mappings",
 ]
 
 
