@@ -318,7 +318,7 @@ def _create_validator(validators=YAML_VALIDATORS, visit_repeat_nodes=False):
                         for schema_uri in schema_uris:
                             try:
                                 s = _load_schema_cached(schema_uri, self.ctx.resolver, False, False)
-                            except FileNotFoundError:
+                            except IOError:
                                 msg = "Unable to locate schema file for '{}': '{}'"
                                 warnings.warn(msg.format(tag, schema_uri), AsdfWarning)
                                 s = {}
