@@ -272,29 +272,7 @@ class JsonschemaResourceMapping(Mapping):
         return "JsonschemaResourceMapping()"
 
 
-def get_core_resource_mappings():
-    """
-    Get the resource mapping instances for the core schemas.
-    This method is registered with the asdf.resource_mappings entry point.
-    """
-    core_schemas_root = importlib_resources.files(asdf)/"schemas"/"stsci.edu"
-    if not core_schemas_root.is_dir():
-        # In an editable install, the schemas can be found in the
-        # asdf-standard submodule.
-        core_schemas_root = Path(__file__).parent.parent/"asdf-standard"/"schemas"/"stsci.edu"
-        if not core_schemas_root.is_dir():
-            raise RuntimeError("Unable to locate core schemas")
-
-    resources_root = importlib_resources.files(asdf)/"resources"
-    if not resources_root.is_dir():
-        # In an editable install, the resources can be found in the
-        # asdf-standard submodule.
-        resources_root = Path(__file__).parent.parent/"asdf-standard"/"resources"
-        if not resources_root.is_dir():
-            raise RuntimeError("Unable to locate core resources")
-
+def get_json_schema_resource_mappings():
     return [
-        DirectoryResourceMapping(core_schemas_root, "http://stsci.edu/schemas", recursive=True),
-        DirectoryResourceMapping(resources_root / "asdf-format.org", "asdf://asdf-format.org", recursive=True),
         JsonschemaResourceMapping(),
     ]

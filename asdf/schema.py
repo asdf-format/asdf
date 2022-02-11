@@ -318,7 +318,7 @@ def _create_validator(validators=YAML_VALIDATORS, visit_repeat_nodes=False):
                         for schema_uri in schema_uris:
                             try:
                                 s = _load_schema_cached(schema_uri, self.ctx.resolver, False, False)
-                            except FileNotFoundError:
+                            except IOError:
                                 msg = "Unable to locate schema file for '{}': '{}'"
                                 warnings.warn(msg.format(tag, schema_uri), AsdfWarning)
                                 s = {}
@@ -362,6 +362,13 @@ def _make_schema_loader(resolver):
         # Check if this is a URI provided by the new
         # Mapping API:
         resource_manager = get_config().resource_manager
+
+        if url not in resource_manager:
+            # Allow the resolvers to do their thing, in case they know
+            # how to turn this string into a URI that the resource manager
+            # recognizes.
+            url = resolver(str(url))
+
         if url in resource_manager:
             content = resource_manager[url]
             # The jsonschema metaschemas are JSON, but pyyaml
@@ -371,8 +378,8 @@ def _make_schema_loader(resolver):
             result = yaml.load(content, Loader=yamlutil.AsdfLoader) # nosec
             return result, url
 
-        # If not, fall back to fetching the schema the old way:
-        url = resolver(str(url))
+        # If not, this must be a URL (or missing).  Fall back to fetching
+        # the schema the old way:
         return _load_schema(url)
     return load_schema
 

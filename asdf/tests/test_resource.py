@@ -14,7 +14,7 @@ from asdf.resource import (
     DirectoryResourceMapping,
     ResourceManager,
     ResourceMappingProxy,
-    get_core_resource_mappings,
+    get_json_schema_resource_mappings,
     JsonschemaResourceMapping,
 )
 
@@ -232,12 +232,9 @@ def test_jsonschema_resource_mapping():
 
 @pytest.mark.parametrize("uri", [
     "http://json-schema.org/draft-04/schema",
-    "http://stsci.edu/schemas/yaml-schema/draft-01",
-    "http://stsci.edu/schemas/asdf/core/asdf-1.1.0",
-    "asdf://asdf-format.org/core/schemas/extension_manifest-1.0.0",
 ])
-def test_get_core_resource_mappings(uri):
-    mappings = get_core_resource_mappings()
+def test_get_json_schema_resource_mappings(uri):
+    mappings = get_json_schema_resource_mappings()
 
     mapping = next(m for m in mappings if uri in m)
     assert mapping is not None
