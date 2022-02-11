@@ -318,7 +318,7 @@ def _create_validator(validators=YAML_VALIDATORS, visit_repeat_nodes=False):
                         for schema_uri in schema_uris:
                             try:
                                 s = _load_schema_cached(schema_uri, self.ctx.resolver, False, False)
-                            except IOError:
+                            except FileNotFoundError:
                                 msg = "Unable to locate schema file for '{}': '{}'"
                                 warnings.warn(msg.format(tag, schema_uri), AsdfWarning)
                                 s = {}
@@ -346,6 +346,9 @@ def _create_validator(validators=YAML_VALIDATORS, visit_repeat_nodes=False):
 
 @lru_cache()
 def _load_schema(url):
+    if url.startswith("http://") or url.startswith("https://") or url.startswith("asdf://"):
+        raise FileNotFoundError("Unable to fetch schema from non-file URL: " + url)
+
     with generic_io.get_file(url) as fd:
         if isinstance(url, str) and url.endswith('json'):
             json_data = fd.read().decode('utf-8')
