@@ -368,14 +368,18 @@ def assert_no_warnings(warning_class=None):
         emitted.
     """
     import pytest
-    with pytest.warns(None) as recorded_warnings:
-        yield
 
-    if warning_class is not None:
+    if warning_class is None:
+        with warnings.catch_warnings():
+            warnings.simplefilter("error")
+
+            yield
+    else:
+        with pytest.warns(Warning) as recorded_warnings:
+            yield
+
         assert not any(isinstance(w.message, warning_class) for w in recorded_warnings), \
             display_warnings(recorded_warnings)
-    else:
-        assert len(recorded_warnings) == 0, display_warnings(recorded_warnings)
 
 
 def assert_extension_correctness(extension):

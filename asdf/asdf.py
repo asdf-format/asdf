@@ -1363,7 +1363,7 @@ class AsdfFile:
     # This function is called from within yamlutil methods to create
     # a context when one isn't explicitly passed in.
     def _create_serialization_context(self):
-        return SerializationContext(self.version_string, self.extension_manager)
+        return SerializationContext(self.version_string, self.extension_manager, self.uri)
 
 
 # Inherit docstring from dictionary
@@ -1478,11 +1478,27 @@ class SerializationContext:
     """
     Container for parameters of the current (de)serialization.
     """
-    def __init__(self, version, extension_manager):
+    def __init__(self, version, extension_manager, url):
         self._version = validate_version(version)
         self._extension_manager = extension_manager
+        self._url = url
 
         self.__extensions_used = set()
+
+    @property
+    def url(self):
+        """
+        The URL (if any) of the file being read or written.
+
+        Used to compute relative locations of external files referenced by this
+        ASDF file. The URL will not exist in some cases (e.g. when the file is
+        written to an `io.BytesIO`).
+
+        Returns
+        --------
+        str or None
+        """
+        return self._url
 
     @property
     def version(self):

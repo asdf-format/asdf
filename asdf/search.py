@@ -7,7 +7,8 @@ import typing
 import builtins
 
 from .util import NotSet
-from ._display import render_tree, DEFAULT_MAX_ROWS, DEFAULT_MAX_COLS, DEFAULT_SHOW_VALUES, format_italic, format_faint
+from ._display import (render_tree, DEFAULT_MAX_ROWS, DEFAULT_MAX_COLS, DEFAULT_SHOW_VALUES,
+                       format_italic, format_faint, _NodeInfo)
 from .treeutil import get_children, is_container
 
 
@@ -309,8 +310,14 @@ class AsdfSearchResult:
             return "\n".join(lines)
 
     def __getitem__(self, key):
-        if isinstance(self._node, dict) or isinstance(self._node, list) or isinstance(self._node, tuple):
-            child = self._node[key]
+        if (isinstance(self._node, dict) or
+            isinstance(self._node, list) or
+            isinstance(self._node, tuple) or
+            _NodeInfo.supports_info(self._node)):
+            if _NodeInfo.supports_info(self._node):
+                child = self._node.__asdf_traverse__()[key]
+            else:
+                child = self._node[key]
         else:
             raise TypeError("This node cannot be indexed")
 
@@ -336,10 +343,16 @@ def _walk_tree_breadth_first(root_identifiers, root_node, callback):
         next_nodes = []
 
         for identifiers, parent, node in current_nodes:
-            if (isinstance(node, dict) or isinstance(node, list) or isinstance(node, tuple)) and id(node) in seen:
+            if (isinstance(node, dict) or
+                isinstance(node, list) or
+                isinstance(node, tuple) or
+                _NodeInfo.supports_info(node)) and id(node) in seen:
                 continue
-
-            children = get_children(node)
+            if _NodeInfo.supports_info(node):
+                tnode = node.__asdf_traverse__()
+            else:
+                tnode = node
+            children = get_children(tnode)
             callback(identifiers, parent, node, [c for _, c in children])
             next_nodes.extend([(identifiers + [i], node, c) for i, c in children])
             seen.add(id(node))

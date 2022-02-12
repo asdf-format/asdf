@@ -4,6 +4,49 @@
 Changes
 *******
 
+What's new in asdf 2.9.2?
+=========================
+
+The ASDF Standard is at v1.6.0.
+
+Changes include:
+
+- Fix deprecation warnings stemming from the release of pytest 7.0.0.
+
+- Fix bug in pytest plugin when schemas are not in a directory named "schemas".
+
+What's new in asdf 2.9.1?
+=========================
+
+The ASDF Standard is at v1.6.0.
+
+Changes include:
+
+- Fix typo in testing module ``__init__.py`` name.
+
+What's new in asdf 2.9.0?
+=========================
+
+The ASDF Standard is at v1.6.0.
+
+Changes include:
+
+- Added the capability for classes to expose their contents
+  to AsdfFile.info and AsdfFile.search via the ``__asdf_traverse__`` method.
+
+- Drop support for Python 3.6.
+
+- Update setup.py to raise error if "git submodule update --init" has
+  not been run.
+
+- Add ability for tags to correspond to multiple schema_uri, with an
+  implied allOf among the schema_uris.
+
+- Add the URL of the file being parsed to ``SerializationContext``.
+
+- Add ``asdf.testing.helpers`` module with simplified versions of test
+  helpers previously available in ``asdf.tests.helpers``.
+
 What's new in asdf 2.8.3?
 =========================
 

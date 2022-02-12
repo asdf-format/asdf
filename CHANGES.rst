@@ -26,19 +26,42 @@
 
 - Remove extensions argument from AsdfFile class and open functions. [#1062]
 
-2.8.4 (unreleased)
+2.9.2 (2022-02-07)
+------------------
+
+- Fix deprecation warnings stemming from the release of pytest 7.0.0. [#1075]
+
+- Fix bug in pytest plugin when schemas are not in a directory named "schemas". [#1076]
+
+2.9.1 (2022-02-03)
+------------------
+
+- Fix typo in testing module ``__init__.py`` name. [#1071]
+
+2.9.0 (2022-02-02)
 ------------------
 
 - Added the capability for tag classes to provide an interface
   to asdf info functionality to obtain information about the
   class attributes rather than appear as an opaque class object.
-  [#1052]
+  [#1052 #1055]
 
 - Fix tag listing when extension is not fully implemented. [#1034]
 
 - Drop support for Python 3.6. [#1054]
 
 - Adjustments to compression plugin tests and documentation. [#1053]
+
+- Update setup.py to raise error if "git submodule update --init" has
+  not been run. [#1057]
+
+- Add ability for tags to correspond to multiple schema_uri, with an
+  implied allOf among the schema_uris. [#1058, #1069]
+
+- Add the URL of the file being parsed to ``SerializationContext``. [#1065]
+
+- Add ``asdf.testing.helpers`` module with simplified versions of test
+  helpers previously available in ``asdf.tests.helpers``. [#1067]
 
 2.8.3 (2021-12-13)
 ------------------

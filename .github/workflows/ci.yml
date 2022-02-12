@@ -74,7 +74,12 @@ jobs:
             python-version: "3.9"
             toxenv: py39-astropydev
 
-          - name: gwcs dev
+          - name: ASDF-Astropy Dev
+            os: ubuntu-latest
+            python-version: "3.9"
+            toxenv: py39-asdfastropydev
+
+          - name: GWCS Dev
             os: ubuntu-latest
             python-version: "3.9"
             toxenv: py39-gwcsdev
@@ -84,7 +89,23 @@ jobs:
             python-version: "3.9"
             toxenv: py39-numpydev
 
-          - name: Pre-release dependencies
+          - name: ASDF-Transform-Schemas Dev
+            os: ubuntu-latest
+            python-version: "3.9"
+            toxenv: py39-asdftransformschemasdev
+
+          - name: ASDF-WCS-Schemas Dev
+            os: ubuntu-latest
+            python-version: "3.9"
+            toxenv: py39-asdfwcsschemasdev
+
+          - name: ASDF-Coordinates-Schemas Dev
+            os: ubuntu-latest
+            python-version: "3.9"
+            toxenv: py39-asdfcoordinatesschemasdev
+
+          # Fail
+          - name: Pre-Release Dependencies
             os: ubuntu-latest
             python-version: "3.9"
             toxenv: prerelease

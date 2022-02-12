@@ -1,8 +1,7 @@
 import io
 import os
-from importlib.util import find_spec
-from pkg_resources import parse_version
 import pathlib
+import warnings
 
 import yaml
 import pytest
@@ -45,11 +44,21 @@ def pytest_addoption(parser):
 class AsdfSchemaFile(pytest.File):
     @classmethod
     def from_parent(cls, parent, *, fspath, skip_examples=False, validate_default=True,
-        skip_tests=[], xfail_tests=[], **kwargs):
-        if hasattr(super(), "from_parent"):
-            result = super().from_parent(parent, fspath=fspath, **kwargs)
+        ignore_unrecognized_tag=False, ignore_version_mismatch=False, skip_tests=[], xfail_tests=[], **kwargs):
+
+        # Fix for depreciation of fspath in pytest 7+
+        from asdf.util import minversion
+        if minversion("pytest", "7.0.0"):
+            path = pathlib.Path(fspath)
+            kwargs["path"] = path
         else:
-            result = AsdfSchemaFile(fspath, parent, **kwargs)
+            path = fspath
+            kwargs["fspath"] = path
+
+        if hasattr(super(), "from_parent"):
+            result = super().from_parent(parent, **kwargs)
+        else:
+            result = AsdfSchemaFile(path, parent)
 
         result.skip_examples = skip_examples
         result.validate_default = validate_default
@@ -124,41 +133,6 @@ class AsdfSchemaItem(pytest.Item):
         return self.fspath, 0, ""
 
 
-ASTROPY_4_0_TAGS = {
-    'tag:stsci.edu:asdf/transform/rotate_sequence_3d',
-    'tag:stsci.edu:asdf/transform/ortho_polynomial',
-    'tag:stsci.edu:asdf/transform/fix_inputs',
-    'tag:stsci.edu:asdf/transform/math_functions',
-    'tag:stsci.edu:asdf/time/time',
-}
-
-
-def should_skip(name, version):
-    if name == 'tag:stsci.edu:asdf/transform/multiplyscale':
-        return not is_min_astropy_version('3.1.dev0')
-    elif name in ASTROPY_4_0_TAGS:
-        return not is_min_astropy_version('4.0')
-
-    return False
-
-
-def is_min_astropy_version(min_version):
-    astropy = find_spec('astropy')
-    if astropy is None:
-        return False
-
-    import astropy
-    return parse_version(astropy.version.version) >= parse_version(min_version)
-
-
-def parse_schema_filename(filename):
-    from asdf import versioning
-    components = filename[filename.find('schemas') + 1:].split(os.path.sep)
-    tag = 'tag:{}:{}'.format(components[1], '/'.join(components[2:]))
-    name, version = versioning.split_tag_version(tag.replace('.yaml', ''))
-    return name, version
-
-
 class AsdfSchemaExampleItem(pytest.Item):
     @classmethod
     def from_parent(cls, parent, schema_path, example, example_index, **kwargs):
@@ -172,30 +146,14 @@ class AsdfSchemaExampleItem(pytest.Item):
         result.example = example
         return result
 
-    def _find_standard_version(self, name, version):
-        from asdf import versioning
-        for sv in reversed(versioning.supported_versions):
-            map_version = versioning.get_version_map(sv)['tags'].get(name)
-            if map_version is not None and version == map_version:
-                return sv
-
-        return versioning.default_version
-
     def runtest(self):
         from asdf import AsdfFile, block, util
         from asdf.tests import helpers
         from asdf.exceptions import AsdfConversionWarning
 
-        name, version = parse_schema_filename(self.filename)
-        if should_skip(name, version):
-            return
-
-        standard_version = self._find_standard_version(name, version)
-
         # Make sure that the examples in the schema files (and thus the
         # ASDF standard document) are valid.
-        buff = helpers.yaml_to_asdf(
-            'example: ' + self.example.strip(), standard_version=standard_version)
+        buff = helpers.yaml_to_asdf('example: ' + self.example.strip())
 
         ff = AsdfFile(
             uri=util.filepath_to_url(os.path.abspath(self.filename)),
@@ -218,15 +176,11 @@ class AsdfSchemaExampleItem(pytest.Item):
         b._array_storage = "streamed"
 
         try:
-            with pytest.warns(None) as w:
-                ff._open_impl(ff, buff, mode='rw')
             # Do not tolerate any warnings that occur during schema validation
-            if len(w) > 0:
-                for warning in w:
-                    assert warning.category == AsdfConversionWarning
-                    assert "is not recognized, converting to raw Python data structure." in str(warning.message)
-            else:
-                assert len(w) == 0, helpers.display_warnings(w)
+            with warnings.catch_warnings():
+                warnings.simplefilter("error")
+
+                ff._open_impl(ff, buff, mode='rw')
         except Exception:
             print("From file:", self.filename)
             raise

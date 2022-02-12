@@ -295,13 +295,14 @@ def _create_validator(validators=YAML_VALIDATORS, visit_repeat_nodes=False):
                     if tag is not None:
                         if self.serialization_context.extension_manager.handles_tag(tag):
                             tag_def = self.serialization_context.extension_manager.get_tag_definition(tag)
-                            schema_uri = tag_def.schema_uri
+                            schema_uris = tag_def.schema_uris
                         else:
-                            schema_uri = self.ctx.tag_mapping(tag)
-                            if schema_uri == tag:
-                                schema_uri = None
+                            schema_uris = [self.ctx.tag_mapping(tag)]
+                            if schema_uris[0] == tag:
+                                schema_uris = []
 
-                        if schema_uri is not None:
+                        # Must validate against all schema_uris
+                        for schema_uri in schema_uris:
                             try:
                                 s = _load_schema_cached(schema_uri, self.ctx.resolver, False)
                             except FileNotFoundError:

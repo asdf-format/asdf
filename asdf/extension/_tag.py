@@ -1,3 +1,8 @@
+import warnings
+
+from asdf.exceptions import AsdfDeprecationWarning
+
+
 class TagDefinition:
     """
     Container for properties of a custom YAML tag.
@@ -14,12 +19,20 @@ class TagDefinition:
     description : str, optional
         Long description of the tag.
     """
-    def __init__(self, tag_uri, *, schema_uri=None, title=None, description=None):
+    def __init__(self, tag_uri, *, schema_uris=None, title=None, description=None):
         if "*" in tag_uri:
             raise ValueError("URI patterns are not permitted in TagDefinition")
 
         self._tag_uri = tag_uri
-        self._schema_uri = schema_uri
+
+        if schema_uris is None:
+            self._schema_uris = []
+        else:
+            if isinstance(schema_uris, list):
+                self._schema_uris = schema_uris
+            else:
+                self._schema_uris = [schema_uris]
+
         self._title = title
         self._description = description
 
@@ -37,14 +50,38 @@ class TagDefinition:
     @property
     def schema_uri(self):
         """
+        DEPRECATED
+
         Get the URI of the schema that should be used to validate
-        objects wtih this tag.
+        objects with this tag.
 
         Returns
         -------
         str or None
         """
-        return self._schema_uri
+        warnings.warn(
+            "The TagDefinition.schema_uri property is deprecated.  Use TagDefinition.schema_uris instead.",
+            AsdfDeprecationWarning
+        )
+
+        if len(self._schema_uris) == 0:
+            return None
+        elif len(self._schema_uris) == 1:
+            return self._schema_uris[0]
+        else:
+            raise RuntimeError("Cannot use TagDefinition.schema_uri when multiple schema URIs are present")
+
+    @property
+    def schema_uris(self):
+        """
+        Get the URIs of the schemas that should be used to validate
+        objects with this tag.
+
+        Returns
+        -------
+        list
+        """
+        return self._schema_uris
 
     @property
     def title(self):
