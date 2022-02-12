@@ -17,7 +17,7 @@ from asdf.extension import (
     get_cached_asdf_extension_list
 )
 
-from asdf.exceptions import ValidationError
+from asdf.exceptions import ValidationError, AsdfDeprecationWarning
 from asdf import config_context, AsdfFile
 from asdf.types import CustomType
 
