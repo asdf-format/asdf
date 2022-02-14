@@ -1,3 +1,8 @@
+2.10.0 (unreleased)
+-------------------
+
+- Replace asdf-standard submodule with pypi package. [#1079]
+
 2.9.2 (2022-02-07)
 ------------------
 

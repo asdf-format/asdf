@@ -14,9 +14,6 @@ else:  # pragma: no cover
 
 from semantic_version import Version, SimpleSpec
 
-from . import generic_io
-from . import resolver
-
 
 __all__ = ['AsdfVersion', 'AsdfSpec', 'split_tag_version', 'join_tag_version']
 
@@ -42,17 +39,11 @@ def get_version_map(version):
     version_map = _version_map.get(version)
 
     if version_map is None:
-        version_map_path = resolver.DEFAULT_URL_MAPPING[0][1].replace(
-            '{url_suffix}', 'asdf/version_map-{0}'.format(version))
-        try:
-            with generic_io.get_file(version_map_path, 'r') as fd:
-                # The following call to yaml.load is safe because we're
-                # using a loader that inherits from pyyaml's SafeLoader.
-                version_map = yaml.load( # nosec
-                    fd, Loader=_yaml_base_loader)
-        except Exception:
-            raise ValueError(
-                "Could not load version map for version {0}".format(version))
+        from .config import get_config
+
+        uri = f"http://stsci.edu/schemas/asdf/version_map-{version}"
+        version_map = yaml.load(get_config().resource_manager[uri], # nosec
+                                Loader=_yaml_base_loader)
 
         # Separate the core tags from the rest of the standard for convenience
         version_map['core'] = {}
