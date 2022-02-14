@@ -333,6 +333,9 @@ def _create_validator(validators=YAML_VALIDATORS, visit_repeat_nodes=False):
 
 @lru_cache()
 def _load_schema(url):
+    if url.startswith("http://") or url.startswith("https://") or url.startswith("asdf://"):
+        raise FileNotFoundError("Unable to fetch schema from non-file URL: " + url)
+
     with generic_io.get_file(url) as fd:
         if isinstance(url, str) and url.endswith('json'):
             json_data = fd.read().decode('utf-8')
@@ -349,6 +352,13 @@ def _make_schema_loader(resolver):
         # Check if this is a URI provided by the new
         # Mapping API:
         resource_manager = get_config().resource_manager
+
+        if url not in resource_manager:
+            # Allow the resolvers to do their thing, in case they know
+            # how to turn this string into a URI that the resource manager
+            # recognizes.
+            url = resolver(str(url))
+
         if url in resource_manager:
             content = resource_manager[url]
             # The jsonschema metaschemas are JSON, but pyyaml
@@ -358,8 +368,8 @@ def _make_schema_loader(resolver):
             result = yaml.load(content, Loader=yamlutil.AsdfLoader) # nosec
             return result, url
 
-        # If not, fall back to fetching the schema the old way:
-        url = resolver(str(url))
+        # If not, this must be a URL (or missing).  Fall back to fetching
+        # the schema the old way:
         return _load_schema(url)
     return load_schema
 

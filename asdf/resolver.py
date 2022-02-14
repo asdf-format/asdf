@@ -5,17 +5,6 @@ from . import constants
 from . import util
 
 
-def find_schema_path():
-    dirname = os.path.dirname(__file__)
-
-    # This means we are working within a development build
-    if os.path.exists(os.path.join(dirname, '..', 'asdf-standard')):
-        return os.path.join(dirname, '..', 'asdf-standard', 'schemas')
-
-    # Otherwise, we return the installed location
-    return os.path.join(dirname, 'schemas')
-
-
 class Resolver:
     """
     A class that can be used to map strings with a particular prefix
@@ -135,11 +124,8 @@ class ResolverChain:
         return self._resolvers == other._resolvers
 
 
-DEFAULT_URL_MAPPING = [
-    (constants.STSCI_SCHEMA_URI_BASE,
-     util.filepath_to_url(
-         os.path.join(find_schema_path(), 'stsci.edu')) +
-         '/{url_suffix}.yaml')]
+DEFAULT_URL_MAPPING = []
+
 DEFAULT_TAG_TO_URL_MAPPING = [
     (constants.STSCI_SCHEMA_TAG_BASE,
      'http://stsci.edu/schemas/asdf{tag_suffix}')
