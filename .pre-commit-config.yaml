@@ -12,3 +12,10 @@ repos:
     exclude: ".*fits"
   - id: trailing-whitespace
     exclude: ".*fits"
+
+- repo: https://gitlab.com/pycqa/flake8
+  rev: 4.0.1
+  hooks:
+    - id: flake8
+      args: ["--count", "--ignore", "E501, E203, W503, W504"]
+      exclude: "(reference_files|asdf/extern/.*)"
