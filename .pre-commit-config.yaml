@@ -1,0 +1,14 @@
+repos:
+
+- repo: https://github.com/pre-commit/pre-commit-hooks
+  rev: v4.1.0
+  hooks:
+  - id: check-added-large-files
+  - id: check-case-conflict
+  - id: check-yaml
+    args: ["--unsafe"]
+  - id: debug-statements
+  - id: end-of-file-fixer
+    exclude: ".*fits"
+  - id: trailing-whitespace
+    exclude: ".*fits"
