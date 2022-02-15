@@ -58,15 +58,10 @@ jobs:
             python-version: "3.9"
             toxenv: compatibility
 
-          - name: Bandit Security Checks
+          - name: Code style checks
             os: ubuntu-latest
             python-version: "3.9"
-            toxenv: bandit
-
-          - name: Code Style Checks
-            os: ubuntu-latest
-            python-version: "3.9"
-            toxenv: style
+            toxenv: codestyle
 
           - name: Twine
             os: ubuntu-latest
