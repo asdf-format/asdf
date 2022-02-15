@@ -60,6 +60,11 @@ jobs:
             ref: main
             install_command: pip install -e .[test]
             test_command: pytest
+          - package_name: asdf-standard
+            repository: asdf-format/asdf-standard
+            ref: master
+            install_command: pip install -e .[test]
+            test_command: pytest
           - package_name: asdf-transform-schemas
             repository: asdf-format/asdf-transform-schemas
             ref: master
