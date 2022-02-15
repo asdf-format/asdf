@@ -1,8 +1,6 @@
 import sys
-import os.path
 
 from . import constants
-from . import util
 
 
 class Resolver:

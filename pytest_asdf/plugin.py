@@ -149,7 +149,6 @@ class AsdfSchemaExampleItem(pytest.Item):
     def runtest(self):
         from asdf import AsdfFile, block, util
         from asdf.tests import helpers
-        from asdf.exceptions import AsdfConversionWarning
 
         # Make sure that the examples in the schema files (and thus the
         # ASDF standard document) are valid.

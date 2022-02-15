@@ -1,7 +1,4 @@
-from pathlib import Path
-
-import asdf
-from asdf.resource import DirectoryResourceMapping, JsonschemaResourceMapping
+from asdf.resource import JsonschemaResourceMapping
 
 
 def get_extensions():

@@ -27,7 +27,7 @@ MIN_VERSION_NEW_FILES = Version("2.7.0")
 # Minimum library version to produce files read by the current
 # version of the code.  Earlier versions aren't able to generate
 # files for all the ASDF Standard versions that they claim to support.
-MIN_VERSION_OLD_FILES = StrictVersion("2.5.0")
+MIN_VERSION_OLD_FILES = Version("2.5.0")
 
 GENERATE_SCRIPT_PATH = Path(__file__).parent/"generate_file.py"
 ASSERT_SCRIPT_PATH = Path(__file__).parent/"assert_file_correct.py"
