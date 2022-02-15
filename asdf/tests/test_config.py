@@ -1,6 +1,7 @@
 import threading
 
 import pytest
+import asdf_standard.integration
 
 import asdf
 from asdf import get_config

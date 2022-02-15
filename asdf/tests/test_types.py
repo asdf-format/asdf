@@ -272,7 +272,7 @@ undefined_data:
         - !core/complex-1.0.0 3.14j
 """
     buff = helpers.yaml_to_asdf(yaml)
-    with pytest.warns(None) as warning:
+    with pytest.warns(Warning) as warning:
         afile = asdf.open(buff)
         missing = afile.tree['undefined_data']
 

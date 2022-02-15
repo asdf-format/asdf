@@ -99,7 +99,7 @@ def test_asdf_file_version():
 
 def test_serialization_context():
     extension_manager = ExtensionManager([])
-    context = SerializationContext("1.4.0", extension_manager)
+    context = SerializationContext("1.4.0", extension_manager, "file://test.asdf")
     assert context.version == "1.4.0"
     assert context.extension_manager is extension_manager
     assert context._extensions_used == set()
@@ -112,11 +112,13 @@ def test_serialization_context():
     context._mark_extension_used(extension.delegate)
     assert context._extensions_used == {extension}
 
+    assert context.url == context._url == "file://test.asdf"
+
     with pytest.raises(TypeError):
         context._mark_extension_used(object())
 
     with pytest.raises(ValueError):
-        SerializationContext("0.5.4", extension_manager)
+        SerializationContext("0.5.4", extension_manager, None)
 
 
 def test_reading_extension_metadata():

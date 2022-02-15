@@ -1,0 +1,16 @@
+name: Publish to PyPI
+
+on:
+  release:
+    types: [released]
+
+jobs:
+  publish:
+    uses: spacetelescope/action-publish_to_pypi/.github/workflows/workflow.yml@master
+    with:
+      test: false
+      build_platform_wheels: false # Set to true if your package contains a C extension
+    secrets:
+      user: ${{ secrets.PYPI_USERNAME_ASDF_MAINTAINER }}
+      password: ${{ secrets.PYPI_PASSWORD_ASDF_MAINTAINER }} # WARNING: Do not hardcode secret values here! If you want to use a different user or password, you can override this secret by creating one with the same name in your Github repository settings.
+      test_password: ${{ secrets.PYPI_PASSWORD_ASDF_MAINTAINER_TEST }}
