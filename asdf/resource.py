@@ -17,7 +17,6 @@ __all__ = [
     "DirectoryResourceMapping",
     "ResourceManager",
     "JsonschemaResourceMapping",
-    "get_json_schema_resource_mappings",
 ]
 
 

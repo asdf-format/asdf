@@ -111,7 +111,7 @@ def test_array_inline_threshold():
 
 def test_resource_mappings():
     with asdf.config_context() as config:
-        core_mappings = _integration.get_resource_mappings()
+        core_mappings = _integration.get_json_schema_resource_mappings()
 
         default_mappings = config.resource_mappings
         assert len(default_mappings) >= len(core_mappings)
