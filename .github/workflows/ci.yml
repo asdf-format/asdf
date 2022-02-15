@@ -43,11 +43,6 @@ jobs:
             python-version: "3.7"
             toxenv: py37-legacy
 
-          - name: Documentation Build
-            os: ubuntu-latest
-            python-version: "3.9"
-            toxenv: docbuild
-
           - name: Mac OS Latest
             os: macos-latest
             python-version: "3.9"
@@ -67,11 +62,6 @@ jobs:
             os: ubuntu-latest
             python-version: "3.9"
             toxenv: twine
-
-          - name: Checkdocs
-            os: ubuntu-latest
-            python-version: "3.9"
-            toxenv: checkdocs
 
           - name: Astropy Dev
             os: ubuntu-latest
