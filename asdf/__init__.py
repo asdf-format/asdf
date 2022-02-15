@@ -9,7 +9,6 @@ __all__ = [
     "AsdfExtension",
     "Stream",
     "open",
-    "commands",
     "info",
     "__version__",
     "ValidationError",
@@ -17,14 +16,13 @@ __all__ = [
     "config_context",
 ]
 
+from jsonschema import ValidationError
 
-from .asdf import AsdfFile, open_asdf as open
-from .types import CustomType
+from ._convenience import info
+from .asdf import AsdfFile
+from .asdf import open_asdf as open
+from .config import config_context, get_config
 from .extension import AsdfExtension
 from .stream import Stream
-from . import commands
-from ._convenience import info
-from .config import get_config, config_context
+from .types import CustomType
 from .version import version as __version__
-
-from jsonschema import ValidationError
