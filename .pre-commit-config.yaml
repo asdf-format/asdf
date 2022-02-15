@@ -13,6 +13,13 @@ repos:
   - id: trailing-whitespace
     exclude: ".*fits"
 
+- repo: https://github.com/pycqa/isort
+  rev: 5.10.1
+  hooks:
+    - id: isort
+      args: ["--profile", "black", "--filter-files"]
+      exclude: "(reference_files|asdf/extern/.*)"
+
 - repo: https://github.com/psf/black
   rev: 22.1.0
   hooks:
