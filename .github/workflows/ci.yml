@@ -160,6 +160,11 @@ jobs:
           pip install tox
       - name: Run tox
         run: tox -e ${{ matrix.toxenv }}
+      - name: Upload coverage to codecov
+        if: ${{ contains(matrix.toxenv,'coverage') }}
+        uses: codecov/codecov-action@v2
+        with:
+          file: ./coverage.xml
 
   asdf-standard:
     name: Run asdf-standard tests
