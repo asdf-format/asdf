@@ -3,11 +3,10 @@ from functools import lru_cache
 from collections import OrderedDict
 
 from . import util
-from .versioning import (AsdfVersion, get_version_map, default_version,
-                         split_tag_version, join_tag_version)
+from .versioning import AsdfVersion, get_version_map, default_version, split_tag_version, join_tag_version
 
 
-__all__ = ['AsdfTypeIndex']
+__all__ = ["AsdfTypeIndex"]
 
 
 _BASIC_PYTHON_TYPES = [str, int, float, list, dict, tuple]
@@ -36,6 +35,7 @@ class _AsdfWriteTypeIndex:
     In the future, this may be renamed to _ExtensionWriteTypeIndex since it is
     not specific to classes that inherit `AsdfType`.
     """
+
     _version_map = None
 
     def __init__(self, version, index):
@@ -51,12 +51,10 @@ class _AsdfWriteTypeIndex:
 
         try:
             version_map = get_version_map(self._version)
-            core_version_map = version_map['core']
-            standard_version_map = version_map['standard']
+            core_version_map = version_map["core"]
+            standard_version_map = version_map["standard"]
         except ValueError:
-            raise ValueError(
-                "Don't know how to write out ASDF version {0}".format(
-                    self._version))
+            raise ValueError("Don't know how to write out ASDF version {0}".format(self._version))
 
         # Process all types defined in the ASDF version map. It is important to
         # make sure that tags that are associated with the core part of the
@@ -107,8 +105,7 @@ class _AsdfWriteTypeIndex:
                 if issubclass(self._class_by_subclass[subclass], typ):
                     # Allow for cases where a subclass tag is being
                     # overridden by a tag from another extension.
-                    if (self._extension_by_cls[subclass] ==
-                            index._extension_by_type[asdftype]):
+                    if self._extension_by_cls[subclass] == index._extension_by_type[asdftype]:
                         continue
             self._class_by_subclass[subclass] = typ
             self._type_by_subclasses[subclass] = asdftype
@@ -188,6 +185,7 @@ class AsdfTypeIndex:
     In the future this class may be renamed to ExtensionTypeIndex, since it is
     not specific to classes that inherit `AsdfType`.
     """
+
     def __init__(self):
         self._write_type_indices = {}
         self._type_by_tag = {}

@@ -11,6 +11,7 @@ def get_extensions():
     list of asdf.extension.Extension
     """
     from . import _extensions
+
     return _extensions.EXTENSIONS
 
 

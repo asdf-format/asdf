@@ -8,6 +8,7 @@ class Resolver:
     A class that can be used to map strings with a particular prefix
     to another.
     """
+
     def __init__(self, mappings, prefix):
         """
         Parameters
@@ -50,7 +51,7 @@ class Resolver:
                 format_tokens = {
                     self._prefix: input,
                     self._prefix + "_prefix": mapping[0],
-                    self._prefix + "_suffix": input[len(mapping[0]):]
+                    self._prefix + "_suffix": input[len(mapping[0]) :],
                 }
 
                 return len(mapping[0]), mapping[1].format(**format_tokens)
@@ -62,16 +63,17 @@ class Resolver:
         for mapping in mappings:
             if callable(mapping):
                 normalized.append(mapping)
-            elif (isinstance(mapping, (list, tuple)) and
-                  len(mapping) == 2 and
-                  isinstance(mapping[0], str) and
-                  isinstance(mapping[1], str)):
+            elif (
+                isinstance(mapping, (list, tuple))
+                and len(mapping) == 2
+                and isinstance(mapping[0], str)
+                and isinstance(mapping[1], str)
+            ):
                 normalized.append(tuple(mapping))
             else:
                 raise ValueError("Invalid mapping '{0}'".format(mapping))
 
         return tuple(normalized)
-
 
     def __call__(self, input):
         candidates = [(0, input)]
@@ -98,6 +100,7 @@ class ResolverChain:
     A chain of Resolvers, each of which is called with the previous Resolver's
     output to produce the final transformed string.
     """
+
     def __init__(self, *resolvers):
         """
         Parameters
@@ -124,7 +127,4 @@ class ResolverChain:
 
 DEFAULT_URL_MAPPING = []
 
-DEFAULT_TAG_TO_URL_MAPPING = [
-    (constants.STSCI_SCHEMA_TAG_BASE,
-     'http://stsci.edu/schemas/asdf{tag_suffix}')
-]
+DEFAULT_TAG_TO_URL_MAPPING = [(constants.STSCI_SCHEMA_TAG_BASE, "http://stsci.edu/schemas/asdf{tag_suffix}")]

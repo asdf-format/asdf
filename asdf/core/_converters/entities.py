@@ -104,9 +104,7 @@ class HistoryEntryConverter(Converter):
     types = ["asdf.core._entities.HistoryEntry"]
 
     def to_yaml_tree(self, obj, tag, ctx):
-        node = {
-            "description": obj.description
-        }
+        node = {"description": obj.description}
 
         if obj.time is not None:
             node["time"] = obj.time
@@ -151,9 +149,7 @@ class ExtensionMetadataConverter(Converter):
     types = ["asdf.core._entities.ExtensionMetadata"]
 
     def to_yaml_tree(self, obj, tag, ctx):
-        node = {
-            "extension_class": obj.extension_class
-        }
+        node = {"extension_class": obj.extension_class}
 
         if obj.extension_uri is not None:
             node["extension_uri"] = obj.extension_uri

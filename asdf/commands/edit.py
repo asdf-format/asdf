@@ -6,9 +6,10 @@ import io
 import os
 import re
 import shutil
+
 # Marked safe because the editor command is specified by an
 # environment variable that the user controls.
-import subprocess # nosec
+import subprocess  # nosec
 import sys
 import tempfile
 import yaml
@@ -369,4 +370,4 @@ def open_editor(path):
     editor = os.environ.get("EDITOR", DEFAULT_EDITOR)
     # Marked safe because the editor command is specified by an
     # environment variable that the user controls.
-    subprocess.run(f"{editor} {path}", check=True, shell=True) # nosec
+    subprocess.run(f"{editor} {path}", check=True, shell=True)  # nosec

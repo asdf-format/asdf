@@ -17,9 +17,7 @@ class NdimValidator(Validator):
         actual_ndim = _get_ndim(node)
 
         if actual_ndim != expected_ndim:
-            yield ValidationError(
-                f"Wrong number of dimensions: Expected {expected_ndim}, got {actual_ndim}"
-            )
+            yield ValidationError(f"Wrong number of dimensions: Expected {expected_ndim}, got {actual_ndim}")
 
 
 class MaxNdimValidator(Validator):
@@ -30,9 +28,7 @@ class MaxNdimValidator(Validator):
         ndim = _get_ndim(node)
 
         if ndim > max_ndim:
-            yield ValidationError(
-                f"Wrong number of dimensions: Expected max of {max_ndim}, got {ndim}"
-            )
+            yield ValidationError(f"Wrong number of dimensions: Expected max of {max_ndim}, got {ndim}")
 
 
 class DatatypeValidator(Validator):
@@ -52,33 +48,24 @@ class DatatypeValidator(Validator):
             return
 
         if schema.get("exact_datatype", False):
-            yield ValidationError(
-                f"Expected datatype '{expected_datatype}', got '{actual_datatype}'"
-            )
+            yield ValidationError(f"Expected datatype '{expected_datatype}', got '{actual_datatype}'")
 
         expected_np_datatype = asdf_datatype_to_numpy_dtype(expected_datatype)
         actual_np_datatype = asdf_datatype_to_numpy_dtype(actual_datatype)
 
         if not expected_np_datatype.fields:
             if actual_np_datatype.fields:
-                yield ValidationError(
-                    f"Expected scalar datatype '{expected_datatype}', got '{actual_datatype}'"
-                )
+                yield ValidationError(f"Expected scalar datatype '{expected_datatype}', got '{actual_datatype}'")
 
             if not np.can_cast(actual_np_datatype, expected_np_datatype, "safe"):
-                yield ValidationError(
-                    f"Cannot safely cast from '{actual_datatype}' to '{expected_datatype}'"
-                )
+                yield ValidationError(f"Cannot safely cast from '{actual_datatype}' to '{expected_datatype}'")
         else:
             if not actual_np_datatype.fields:
-                yield ValidationError(
-                    f"Expected structured datatype '{expected_datatype}', got '{actual_datatype}'"
-                )
+                yield ValidationError(f"Expected structured datatype '{expected_datatype}', got '{actual_datatype}'")
 
             if len(actual_np_datatype.fields) != len(expected_np_datatype.fields):
                 yield ValidationError(
-                    "Mismatch in number of columns: "
-                    f"Expected {len(expected_datatype)}, got {len(actual_datatype)}"
+                    "Mismatch in number of columns: " f"Expected {len(expected_datatype)}, got {len(actual_datatype)}"
                 )
 
             for i in range(len(actual_np_datatype.fields)):

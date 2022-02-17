@@ -27,14 +27,13 @@ from .helpers import (
 )
 
 
-
 def test_get_data_from_closed_file(tmpdir):
     tmpdir = str(tmpdir)
-    path = os.path.join(tmpdir, 'test.asdf')
+    path = os.path.join(tmpdir, "test.asdf")
 
     my_array = np.arange(0, 64).reshape((8, 8))
 
-    tree = {'my_array': my_array}
+    tree = {"my_array": my_array}
     ff = asdf.AsdfFile(tree)
     ff.write_to(path)
 
@@ -42,7 +41,7 @@ def test_get_data_from_closed_file(tmpdir):
         pass
 
     with pytest.raises(IOError):
-        assert_array_equal(my_array, ff.tree['my_array'])
+        assert_array_equal(my_array, ff.tree["my_array"])
 
 
 def test_no_warning_nan_array(tmpdir):
@@ -58,25 +57,25 @@ def test_no_warning_nan_array(tmpdir):
 
 
 @pytest.mark.skipif(
-    not sys.platform.startswith('win') and getpass.getuser() == 'root',
-    reason="Cannot make file read-only if user is root"
+    not sys.platform.startswith("win") and getpass.getuser() == "root",
+    reason="Cannot make file read-only if user is root",
 )
 def test_open_readonly(tmpdir):
 
-    tmpfile = str(tmpdir.join('readonly.asdf'))
+    tmpfile = str(tmpdir.join("readonly.asdf"))
 
-    tree = dict(foo=42, bar='hello', baz=np.arange(20))
+    tree = dict(foo=42, bar="hello", baz=np.arange(20))
     with asdf.AsdfFile(tree) as af:
-        af.write_to(tmpfile, all_array_storage='internal')
+        af.write_to(tmpfile, all_array_storage="internal")
 
     os.chmod(tmpfile, 0o440)
     assert os.access(tmpfile, os.W_OK) == False
 
     with asdf.open(tmpfile) as af:
-        assert af['baz'].flags.writeable == False
+        assert af["baz"].flags.writeable == False
 
     with pytest.raises(PermissionError):
-        with asdf.open(tmpfile, mode='rw'):
+        with asdf.open(tmpfile, mode="rw"):
             pass
 
 
@@ -121,27 +120,27 @@ def test_open_stream(tmp_path):
 
 
 def test_atomic_write(tmpdir, small_tree):
-    tmpfile = os.path.join(str(tmpdir), 'test.asdf')
+    tmpfile = os.path.join(str(tmpdir), "test.asdf")
 
     ff = asdf.AsdfFile(small_tree)
     ff.write_to(tmpfile)
 
-    with asdf.open(tmpfile, mode='r') as ff:
+    with asdf.open(tmpfile, mode="r") as ff:
         ff.write_to(tmpfile)
 
 
 def test_overwrite(tmpdir):
     # This is intended to reproduce the following issue:
     # https://github.com/asdf-format/asdf/issues/100
-    tmpfile = os.path.join(str(tmpdir), 'test.asdf')
+    tmpfile = os.path.join(str(tmpdir), "test.asdf")
     aff = models.AffineTransformation2D(matrix=[[1, 2], [3, 4]])
     f = asdf.AsdfFile()
-    f.tree['model'] = aff
+    f.tree["model"] = aff
     f.write_to(tmpfile)
-    model = f.tree['model']
+    model = f.tree["model"]
 
     ff = asdf.AsdfFile()
-    ff.tree['model'] = model
+    ff.tree["model"] = model
     ff.write_to(tmpfile)
 
 
@@ -151,19 +150,19 @@ def test_default_version():
     version_map = versioning.get_version_map(versioning.default_version)
 
     ff = asdf.AsdfFile()
-    assert ff.file_format_version == version_map['FILE_FORMAT']
+    assert ff.file_format_version == version_map["FILE_FORMAT"]
 
 
 def test_update_exceptions(tmpdir):
     tmpdir = str(tmpdir)
-    path = os.path.join(tmpdir, 'test.asdf')
+    path = os.path.join(tmpdir, "test.asdf")
 
     my_array = np.random.rand(8, 8)
-    tree = {'my_array': my_array}
+    tree = {"my_array": my_array}
     ff = asdf.AsdfFile(tree)
     ff.write_to(path)
 
-    with asdf.open(path, mode='r', copy_arrays=True) as ff:
+    with asdf.open(path, mode="r", copy_arrays=True) as ff:
         with pytest.raises(IOError):
             ff.update()
 
@@ -172,7 +171,7 @@ def test_update_exceptions(tmpdir):
     ff.write_to(buff)
 
     buff.seek(0)
-    with asdf.open(buff, mode='rw') as ff:
+    with asdf.open(buff, mode="rw") as ff:
         ff.update()
 
     with pytest.raises(ValueError):
@@ -180,37 +179,34 @@ def test_update_exceptions(tmpdir):
 
 
 def test_top_level_tree(small_tree):
-    tree = {'tree': small_tree}
+    tree = {"tree": small_tree}
     ff = asdf.AsdfFile(tree)
-    assert_tree_match(ff.tree['tree'], ff['tree'])
+    assert_tree_match(ff.tree["tree"], ff["tree"])
 
     ff2 = asdf.AsdfFile()
-    ff2['tree'] = small_tree
-    assert_tree_match(ff2.tree['tree'], ff2['tree'])
+    ff2["tree"] = small_tree
+    assert_tree_match(ff2.tree["tree"], ff2["tree"])
 
 
 def test_top_level_keys(small_tree):
-    tree = {'tree': small_tree}
+    tree = {"tree": small_tree}
     ff = asdf.AsdfFile(tree)
     assert ff.tree.keys() == ff.keys()
 
 
 def test_top_level_contains():
     tree = {
-        'foo': 42,
-        'bar': 43,
+        "foo": 42,
+        "bar": 43,
     }
 
     with asdf.AsdfFile(tree) as af:
-        assert 'foo' in af
-        assert 'bar' in af
+        assert "foo" in af
+        assert "bar" in af
 
 
 def test_walk_and_modify_remove_keys():
-    tree = {
-        'foo': 42,
-        'bar': 43
-    }
+    tree = {"foo": 42, "bar": 43}
 
     def func(x):
         if x == 42:
@@ -219,15 +215,12 @@ def test_walk_and_modify_remove_keys():
 
     tree2 = treeutil.walk_and_modify(tree, func)
 
-    assert 'foo' not in tree2
-    assert 'bar' in tree2
+    assert "foo" not in tree2
+    assert "bar" in tree2
 
 
 def test_walk_and_modify_retain_none():
-    tree = {
-        'foo': 42,
-        'bar': None
-    }
+    tree = {"foo": 42, "bar": None}
 
     def func(x):
         if x == 42:
@@ -236,34 +229,33 @@ def test_walk_and_modify_retain_none():
 
     tree2 = treeutil.walk_and_modify(tree, func)
 
-    assert tree2['foo'] is None
-    assert tree2['bar'] is None
+    assert tree2["foo"] is None
+    assert tree2["bar"] is None
 
 
 def test_copy(tmpdir):
     tmpdir = str(tmpdir)
 
     my_array = np.random.rand(8, 8)
-    tree = {'my_array': my_array, 'foo': {'bar': 'baz'}}
+    tree = {"my_array": my_array, "foo": {"bar": "baz"}}
     ff = asdf.AsdfFile(tree)
-    ff.write_to(os.path.join(tmpdir, 'test.asdf'))
+    ff.write_to(os.path.join(tmpdir, "test.asdf"))
 
-    with asdf.open(os.path.join(tmpdir, 'test.asdf')) as ff:
+    with asdf.open(os.path.join(tmpdir, "test.asdf")) as ff:
         ff2 = ff.copy()
-        ff2.tree['my_array'] *= 2
-        ff2.tree['foo']['bar'] = 'boo'
+        ff2.tree["my_array"] *= 2
+        ff2.tree["foo"]["bar"] = "boo"
 
-        assert np.all(ff2.tree['my_array'] ==
-                      ff.tree['my_array'] * 2)
-        assert ff.tree['foo']['bar'] == 'baz'
+        assert np.all(ff2.tree["my_array"] == ff.tree["my_array"] * 2)
+        assert ff.tree["foo"]["bar"] == "baz"
 
-    assert_array_equal(ff2.tree['my_array'], ff2.tree['my_array'])
+    assert_array_equal(ff2.tree["my_array"], ff2.tree["my_array"])
 
 
 def test_access_tree_outside_handler(tmpdir):
-    tempname = str(tmpdir.join('test.asdf'))
+    tempname = str(tmpdir.join("test.asdf"))
 
-    tree = {'random': np.random.random(10)}
+    tree = {"random": np.random.random(10)}
 
     ff = asdf.AsdfFile(tree)
     ff.write_to(str(tempname))
@@ -273,19 +265,19 @@ def test_access_tree_outside_handler(tmpdir):
 
     # Accessing array data outside of handler should fail
     with pytest.raises(OSError):
-        repr(newf.tree['random'])
+        repr(newf.tree["random"])
 
     # Using the top-level getattr should also fail
     with pytest.raises(OSError):
-        repr(newf['random'])
+        repr(newf["random"])
 
 
 def test_context_handler_resolve_and_inline(tmpdir):
     # This reproduces the issue reported in
     # https://github.com/asdf-format/asdf/issues/406
-    tempname = str(tmpdir.join('test.asdf'))
+    tempname = str(tmpdir.join("test.asdf"))
 
-    tree = {'random': np.random.random(10)}
+    tree = {"random": np.random.random(10)}
 
     ff = asdf.AsdfFile(tree)
     ff.write_to(str(tempname))
@@ -294,34 +286,39 @@ def test_context_handler_resolve_and_inline(tmpdir):
         newf.resolve_and_inline()
 
     with pytest.raises(OSError):
-        newf.tree['random'][0]
+        newf.tree["random"][0]
 
 
 def test_open_pathlib_path(tmpdir):
 
-    filename = str(tmpdir.join('pathlib.asdf'))
+    filename = str(tmpdir.join("pathlib.asdf"))
     path = pathlib.Path(filename)
 
-    tree = {'data': np.ones(10)}
+    tree = {"data": np.ones(10)}
 
     with asdf.AsdfFile(tree) as af:
         af.write_to(path)
 
     with asdf.open(path) as af:
-        assert (af['data'] == tree['data']).all()
+        assert (af["data"] == tree["data"]).all()
+
 
 class FooExtension:
     types = []
     tag_mapping = []
     url_mapping = []
 
-@pytest.mark.parametrize('installed,extension,warns', [
-    ('1.2.3', '2.0.0', True),
-    ('1.2.3', '2.0.dev10842', True),
-    ('2.0.0', '2.0.0', False),
-    ('2.0.1', '2.0.0', False),
-    ('2.0.1', '2.0.dev12345', False),
-])
+
+@pytest.mark.parametrize(
+    "installed,extension,warns",
+    [
+        ("1.2.3", "2.0.0", True),
+        ("1.2.3", "2.0.dev10842", True),
+        ("2.0.0", "2.0.0", False),
+        ("2.0.1", "2.0.0", False),
+        ("2.0.1", "2.0.dev12345", False),
+    ],
+)
 def test_extension_version_check(installed, extension, warns):
     proxy = ExtensionProxy(FooExtension(), package_name="foo", package_version=installed)
 
@@ -329,13 +326,15 @@ def test_extension_version_check(installed, extension, warns):
         config.add_extension(proxy)
         af = asdf.AsdfFile()
 
-    af._fname = 'test.asdf'
+    af._fname = "test.asdf"
 
     tree = {
-        'history': {
-            'extensions': [
-                asdf.core.ExtensionMetadata(extension_class='asdf.tests.test_api.FooExtension',
-                    software=asdf.core.Software(name='foo', version=extension)),
+        "history": {
+            "extensions": [
+                asdf.core.ExtensionMetadata(
+                    extension_class="asdf.tests.test_api.FooExtension",
+                    software=asdf.core.Software(name="foo", version=extension),
+                ),
             ]
         }
     }
@@ -351,14 +350,17 @@ def test_extension_version_check(installed, extension, warns):
         af._check_extensions(tree)
 
 
-@pytest.mark.parametrize("array_inline_threshold, inline_blocks, internal_blocks", [
-    (None, 0, 2),
-    (10, 1, 1),
-    (7, 1, 1),
-    (5, 0, 2),
-    (0, 0, 2),
-    (1, 0, 2),
-])
+@pytest.mark.parametrize(
+    "array_inline_threshold, inline_blocks, internal_blocks",
+    [
+        (None, 0, 2),
+        (10, 1, 1),
+        (7, 1, 1),
+        (5, 0, 2),
+        (0, 0, 2),
+        (1, 0, 2),
+    ],
+)
 def test_array_inline_threshold(array_inline_threshold, inline_blocks, internal_blocks, tmp_path):
     file_path = tmp_path / "test.asdf"
     tree = {"small_array": np.arange(6), "large_array": np.arange(100)}
@@ -372,11 +374,14 @@ def test_array_inline_threshold(array_inline_threshold, inline_blocks, internal_
             assert len(list(af.blocks.internal_blocks)) == internal_blocks
 
 
-@pytest.mark.parametrize("array_inline_threshold, inline_blocks, internal_blocks", [
-    (None, 0, 2),
-    (10, 2, 0),
-    (5, 0, 2),
-])
+@pytest.mark.parametrize(
+    "array_inline_threshold, inline_blocks, internal_blocks",
+    [
+        (None, 0, 2),
+        (10, 2, 0),
+        (5, 0, 2),
+    ],
+)
 def test_array_inline_threshold_masked_array(array_inline_threshold, inline_blocks, internal_blocks, tmp_path):
     file_path = tmp_path / "test.asdf"
     arr = np.arange(6)
@@ -392,11 +397,14 @@ def test_array_inline_threshold_masked_array(array_inline_threshold, inline_bloc
             assert len(list(af.blocks.internal_blocks)) == internal_blocks
 
 
-@pytest.mark.parametrize("array_inline_threshold, inline_blocks, internal_blocks", [
-    (None, 0, 1),
-    (10, 1, 0),
-    (5, 0, 1),
-])
+@pytest.mark.parametrize(
+    "array_inline_threshold, inline_blocks, internal_blocks",
+    [
+        (None, 0, 1),
+        (10, 1, 0),
+        (5, 0, 1),
+    ],
+)
 def test_array_inline_threshold_string_array(array_inline_threshold, inline_blocks, internal_blocks, tmp_path):
     file_path = tmp_path / "test.asdf"
     arr = np.array(["peach", "plum", "apricot", "nectarine", "cherry", "pluot"])
@@ -414,17 +422,13 @@ def test_array_inline_threshold_string_array(array_inline_threshold, inline_bloc
 def test_get_default_resolver():
     resolver = extension.get_default_resolver()
 
-    result = resolver('tag:stsci.edu:asdf/core/ndarray-1.0.0')
+    result = resolver("tag:stsci.edu:asdf/core/ndarray-1.0.0")
 
-    assert result == 'http://stsci.edu/schemas/asdf/core/ndarray-1.0.0'
+    assert result == "http://stsci.edu/schemas/asdf/core/ndarray-1.0.0"
 
 
 def test_info_module(capsys, tmpdir):
-    tree = dict(
-        foo=42, bar="hello", baz=np.arange(20),
-        nested={"woo": "hoo", "yee": "haw"},
-        long_line="a" * 100
-    )
+    tree = dict(foo=42, bar="hello", baz=np.arange(20), nested={"woo": "hoo", "yee": "haw"}, long_line="a" * 100)
     af = asdf.AsdfFile(tree)
 
     def _assert_correct_info(node_or_path):
@@ -461,27 +465,21 @@ def test_info_module(capsys, tmpdir):
     asdf.info(af, show_values=False)
     assert "hello" not in capsys.readouterr().out
 
-    tree = {
-        "foo": ["alpha", "bravo", "charlie", "delta", "eagle"]
-    }
+    tree = {"foo": ["alpha", "bravo", "charlie", "delta", "eagle"]}
     af = asdf.AsdfFile(tree)
     asdf.info(af, max_rows=(None,))
     assert "alpha" not in capsys.readouterr().out
     for i in range(1, 5):
         asdf.info(af, max_rows=(None, i))
         captured = capsys.readouterr()
-        for val in tree["foo"][0:i-1]:
+        for val in tree["foo"][0 : i - 1]:
             assert val in captured.out
-        for val in tree["foo"][i-1:]:
+        for val in tree["foo"][i - 1 :]:
             assert val not in captured.out
 
 
 def test_info_asdf_file(capsys, tmpdir):
-    tree = dict(
-        foo=42, bar="hello", baz=np.arange(20),
-        nested={"woo": "hoo", "yee": "haw"},
-        long_line="a" * 100
-    )
+    tree = dict(foo=42, bar="hello", baz=np.arange(20), nested={"woo": "hoo", "yee": "haw"}, long_line="a" * 100)
     af = asdf.AsdfFile(tree)
     af.info()
     captured = capsys.readouterr()
@@ -491,13 +489,11 @@ def test_info_asdf_file(capsys, tmpdir):
 
 
 class ObjectWithInfoSupport:
-
     def __init__(self):
         self._tag = "foo"
 
     def __asdf_traverse__(self):
-        return {'the_meaning_of_life_the_universe_and_everything': 42,
-                'clown': 'Bozo'}
+        return {"the_meaning_of_life_the_universe_and_everything": 42, "clown": "Bozo"}
 
 
 def test_info_object_support(capsys):
@@ -512,7 +508,6 @@ def test_info_object_support(capsys):
 
 
 class RecursiveObjectWithInfoSupport:
-
     def __init__(self):
         self._tag = "foo"
         self.the_meaning = 42
@@ -520,9 +515,7 @@ class RecursiveObjectWithInfoSupport:
         self.recursive = None
 
     def __asdf_traverse__(self):
-        return {'the_meaning': self.the_meaning,
-                'clown': self.clown,
-                'recursive': self.recursive}
+        return {"the_meaning": self.the_meaning, "clown": self.clown, "recursive": self.recursive}
 
 
 def test_recursive_info_object_support(capsys):

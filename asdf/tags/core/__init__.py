@@ -1,4 +1,4 @@
 from .ndarray import NDArrayType
 
 
-__all__ = ['NDArrayType']
+__all__ = ["NDArrayType"]

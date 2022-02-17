@@ -11,11 +11,11 @@ class AsdfExtension(metaclass=abc.ABCMeta):
     Abstract base class defining a (legacy) extension to ASDF.
     New code should use `asdf.extension.Extension` instead.
     """
+
     @classmethod
     def __subclasshook__(cls, C):
         if cls is AsdfExtension:
-            return (hasattr(C, 'types') and
-                    hasattr(C, 'tag_mapping'))
+            return hasattr(C, "types") and hasattr(C, "tag_mapping")
         return NotImplemented
 
     @abc.abstractproperty
@@ -101,8 +101,10 @@ class AsdfExtensionList:
     """
     Manage a set of extensions that are in effect.
     """
+
     def __init__(self, extensions):
         from ._extension import ExtensionProxy
+
         extensions = [ExtensionProxy.maybe_wrap(e) for e in extensions]
 
         tag_mapping = []
@@ -119,8 +121,8 @@ class AsdfExtensionList:
                     self._type_index.add_type(sibling, extension)
                     validators.update(sibling.validators)
         self._extensions = extensions
-        self._tag_mapping = resolver.Resolver(tag_mapping, 'tag')
-        self._url_mapping = resolver.Resolver(url_mapping, 'url')
+        self._tag_mapping = resolver.Resolver(tag_mapping, "tag")
+        self._url_mapping = resolver.Resolver(url_mapping, "url")
         self._resolver = resolver.ResolverChain(self._tag_mapping, self._url_mapping)
         self._validators = validators
 
@@ -165,6 +167,7 @@ def get_cached_asdf_extension_list(extensions):
     asdf.extension.AsdfExtensionList
     """
     from ._extension import ExtensionProxy
+
     # The tuple makes the extensions hashable so that we
     # can pass them to the lru_cache method.  The ExtensionProxy
     # overrides __hash__ to return the hashed object id of the wrapped
@@ -190,6 +193,7 @@ class BuiltinExtension:
     tags.  Even though it's not really an extension and it's always
     available, it's built in the same way as an extension.
     """
+
     @property
     def types(self):
         return types._all_asdftypes
@@ -207,6 +211,7 @@ class _DefaultExtensions:
     @property
     def extensions(self):
         from ..config import get_config
+
         return [e for e in get_config().extensions if e.legacy]
 
     @property
@@ -216,14 +221,13 @@ class _DefaultExtensions:
     @property
     def package_metadata(self):
         return {
-            e.class_name: (e.package_name, e.package_version)
-            for e in self.extensions
-            if e.package_name is not None
+            e.class_name: (e.package_name, e.package_version) for e in self.extensions if e.package_name is not None
         }
 
     def reset(self):
         """This will be used primarily for testing purposes."""
         from ..config import get_config
+
         get_config().reset_extensions()
 
     @property

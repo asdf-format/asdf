@@ -17,11 +17,11 @@ except ImportError:
     raise ImportError("AsdfInFits requires astropy")
 
 
-ASDF_EXTENSION_NAME = 'ASDF'
-FITS_SOURCE_PREFIX = 'fits:'
+ASDF_EXTENSION_NAME = "ASDF"
+FITS_SOURCE_PREFIX = "fits:"
 
 
-__all__ = ['AsdfInFits']
+__all__ = ["AsdfInFits"]
 
 
 class _FitsBlock:
@@ -29,7 +29,7 @@ class _FitsBlock:
         self._hdu = hdu
 
     def __repr__(self):
-        return '<FitsBlock {0},{1}>'.format(self._hdu.name, self._hdu.ver)
+        return "<FitsBlock {0},{1}>".format(self._hdu.name, self._hdu.ver)
 
     def __len__(self):
         return self._hdu.data.nbytes
@@ -44,7 +44,7 @@ class _FitsBlock:
 
     @property
     def array_storage(self):
-        return 'fits'
+        return "fits"
 
     @property
     def trust_data_dtype(self):
@@ -62,15 +62,16 @@ class _EmbeddedBlockManager(block.BlockManager):
         super(_EmbeddedBlockManager, self).__init__(asdffile)
 
     def get_block(self, source):
-        if (isinstance(source, str) and source.startswith(FITS_SOURCE_PREFIX)):
+        if isinstance(source, str) and source.startswith(FITS_SOURCE_PREFIX):
             parts = re.match(
                 # All printable ASCII characters are allowed in EXTNAME
-                '((?P<name>[ -~]+),)?(?P<ver>[0-9]+)',
-                source[len(FITS_SOURCE_PREFIX):])
+                "((?P<name>[ -~]+),)?(?P<ver>[0-9]+)",
+                source[len(FITS_SOURCE_PREFIX) :],
+            )
             if parts is not None:
-                ver = int(parts.group('ver'))
-                if parts.group('name'):
-                    pair = (parts.group('name'), ver)
+                ver = int(parts.group("ver"))
+                if parts.group("name"):
+                    pair = (parts.group("name"), ver)
                 else:
                     pair = ver
                 return _FitsBlock(self._hdulist[pair])
@@ -83,12 +84,10 @@ class _EmbeddedBlockManager(block.BlockManager):
         if isinstance(block, _FitsBlock):
             for i, hdu in enumerate(self._hdulist):
                 if hdu is block._hdu:
-                    if hdu.name == '':
-                        return '{0}{1}'.format(
-                            FITS_SOURCE_PREFIX, i)
+                    if hdu.name == "":
+                        return "{0}{1}".format(FITS_SOURCE_PREFIX, i)
                     else:
-                        return '{0}{1},{2}'.format(
-                            FITS_SOURCE_PREFIX, hdu.name, hdu.ver)
+                        return "{0}{1},{2}".format(FITS_SOURCE_PREFIX, hdu.name, hdu.ver)
             raise ValueError("FITS block seems to have been removed")
 
         return super(_EmbeddedBlockManager, self).get_source(block)
@@ -104,8 +103,7 @@ class _EmbeddedBlockManager(block.BlockManager):
                 if base is util.get_array_base(hdu.data):
                     return _FitsBlock(hdu)
 
-        return super(
-            _EmbeddedBlockManager, self).find_or_create_block_for_array(arr, ctx)
+        return super(_EmbeddedBlockManager, self).find_or_create_block_for_array(arr, ctx)
 
 
 class AsdfInFits(asdf.AsdfFile):
@@ -171,10 +169,18 @@ class AsdfInFits(asdf.AsdfFile):
         self._tree = {}
 
     @classmethod
-    def open(cls, fd, uri=None, validate_checksums=False, extensions=None,
-             ignore_version_mismatch=True, ignore_unrecognized_tag=False,
-             strict_extension_check=False, ignore_missing_extensions=False,
-             **kwargs):
+    def open(
+        cls,
+        fd,
+        uri=None,
+        validate_checksums=False,
+        extensions=None,
+        ignore_version_mismatch=True,
+        ignore_unrecognized_tag=False,
+        strict_extension_check=False,
+        ignore_missing_extensions=False,
+        **kwargs
+    ):
         """Creates a new AsdfInFits object based on given input data
 
         Parameters
@@ -205,16 +211,25 @@ class AsdfInFits(asdf.AsdfFile):
             contains metadata about extensions that are not available. Defaults
             to `False`.
         """
-        return cls._open_impl(fd, uri=uri,
-                       validate_checksums=validate_checksums,
-                       strict_extension_check=strict_extension_check,
-                       ignore_missing_extensions=ignore_missing_extensions,
-                       **kwargs)
+        return cls._open_impl(
+            fd,
+            uri=uri,
+            validate_checksums=validate_checksums,
+            strict_extension_check=strict_extension_check,
+            ignore_missing_extensions=ignore_missing_extensions,
+            **kwargs
+        )
 
     @classmethod
-    def _open_impl(cls, fd, uri=None, validate_checksums=False,
-             strict_extension_check=False,
-             ignore_missing_extensions=False, **kwargs):
+    def _open_impl(
+        cls,
+        fd,
+        uri=None,
+        validate_checksums=False,
+        strict_extension_check=False,
+        ignore_missing_extensions=False,
+        **kwargs
+    ):
 
         close_hdulist = False
         if isinstance(fd, fits.hdu.hdulist.HDUList):
@@ -240,14 +255,17 @@ class AsdfInFits(asdf.AsdfFile):
             # This means there is no ASDF extension
             return self
 
-        generic_file = generic_io.get_file(io.BytesIO(asdf_extension.data), mode='r', uri=uri)
+        generic_file = generic_io.get_file(io.BytesIO(asdf_extension.data), mode="r", uri=uri)
 
         try:
-            return cls._open_asdf(self, generic_file,
-                              validate_checksums=validate_checksums,
-                              strict_extension_check=strict_extension_check,
-                              ignore_missing_extensions=ignore_missing_extensions,
-                              **kwargs)
+            return cls._open_asdf(
+                self,
+                generic_file,
+                validate_checksums=validate_checksums,
+                strict_extension_check=strict_extension_check,
+                ignore_missing_extensions=ignore_missing_extensions,
+                **kwargs
+            )
         except RuntimeError:
             self.close()
             raise
@@ -259,46 +277,56 @@ class AsdfInFits(asdf.AsdfFile):
             return fits.ImageHDU(array, name=ASDF_EXTENSION_NAME)
         else:
             data = np.array(buff.getbuffer(), dtype=np.uint8)[None, :]
-            fmt = '{}B'.format(len(data[0]))
-            column = fits.Column(array=data, format=fmt, name='ASDF_METADATA')
+            fmt = "{}B".format(len(data[0]))
+            column = fits.Column(array=data, format=fmt, name="ASDF_METADATA")
             return fits.BinTableHDU.from_columns([column], name=ASDF_EXTENSION_NAME)
 
-    def _update_asdf_extension(self, all_array_storage=None,
-                               all_array_compression=None,
-                               pad_blocks=False, use_image_hdu=False, **kwargs):
+    def _update_asdf_extension(
+        self, all_array_storage=None, all_array_compression=None, pad_blocks=False, use_image_hdu=False, **kwargs
+    ):
         if self.blocks.streamed_block is not None:
-            raise ValueError(
-                "Can not save streamed data to ASDF-in-FITS file.")
+            raise ValueError("Can not save streamed data to ASDF-in-FITS file.")
 
         buff = io.BytesIO()
         super(AsdfInFits, self).write_to(
-            buff, all_array_storage=all_array_storage,
+            buff,
+            all_array_storage=all_array_storage,
             all_array_compression=all_array_compression,
             pad_blocks=pad_blocks,
-            include_block_index=False, **kwargs)
+            include_block_index=False,
+            **kwargs
+        )
 
         if ASDF_EXTENSION_NAME in self._hdulist:
             del self._hdulist[ASDF_EXTENSION_NAME]
         self._hdulist.append(self._create_hdu(buff, use_image_hdu))
 
-    def write_to(self, filename, all_array_storage=None,
-                 all_array_compression=None,
-                 pad_blocks=False, use_image_hdu=False, *args, **kwargs):
+    def write_to(
+        self,
+        filename,
+        all_array_storage=None,
+        all_array_compression=None,
+        pad_blocks=False,
+        use_image_hdu=False,
+        *args,
+        **kwargs
+    ):
 
         self._update_asdf_extension(
             all_array_storage=all_array_storage,
             all_array_compression=all_array_compression,
             pad_blocks=pad_blocks,
-            use_image_hdu=use_image_hdu)
+            use_image_hdu=use_image_hdu,
+        )
 
         self._hdulist.writeto(filename, *args, **kwargs)
 
-    def update(self, all_array_storage=None, all_array_compression=None,
-               pad_blocks=False, **kwargs):
-        raise NotImplementedError(
-            "In-place update is not currently implemented for ASDF-in-FITS")
+    def update(self, all_array_storage=None, all_array_compression=None, pad_blocks=False, **kwargs):
+        raise NotImplementedError("In-place update is not currently implemented for ASDF-in-FITS")
 
         self._update_asdf_extension(
             all_array_storage=all_array_storage,
             all_array_compression=all_array_compression,
-            pad_blocks=pad_blocks, **kwargs)
+            pad_blocks=pad_blocks,
+            **kwargs
+        )

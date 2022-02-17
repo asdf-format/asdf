@@ -9,20 +9,24 @@ from .main import Command
 from .. import AsdfFile
 
 
-__all__ = ['list_tags']
+__all__ = ["list_tags"]
 
 
-class TagLister(Command): # pragma: no cover
+class TagLister(Command):  # pragma: no cover
     """This class is the plugin implementation for the asdftool runner."""
+
     @classmethod
     def setup_arguments(cls, subparsers):
         parser = subparsers.add_parser(
-            str("tags"), help="List currently available tags",
-            description="""Lists currently available tags.""")
+            str("tags"), help="List currently available tags", description="""Lists currently available tags."""
+        )
 
         parser.add_argument(
-            '-d', '--display-classes', action='store_true',
-            help="""Display associated class names in addition to tags""")
+            "-d",
+            "--display-classes",
+            action="store_true",
+            help="""Display associated class names in addition to tags""",
+        )
 
         parser.set_defaults(func=cls.run)
 
@@ -54,4 +58,4 @@ def list_tags(display_classes=False, iostream=sys.stdout):
         string = str(tag)
         if display_classes:
             string += ":  " + ", ".join(_format_type(t) for t in types)
-        iostream.write(string + '\n')
+        iostream.write(string + "\n")

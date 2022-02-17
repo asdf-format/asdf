@@ -12,39 +12,47 @@ from asdf.exceptions import AsdfWarning
 
 def test_history():
     ff = asdf.AsdfFile()
-    assert 'history' not in ff.tree
+    assert "history" not in ff.tree
     ff.add_history_entry(
-        'This happened',
+        "This happened",
         [Software(name="my_tool", homepage="http://nowhere.org", author="John Doe", version="2.0")],
     )
 
-    assert len(ff.tree['history']['entries']) == 1
+    assert len(ff.tree["history"]["entries"]) == 1
 
-    ff.add_history_entry('This other thing happened')
-    assert len(ff.tree['history']['entries']) == 2
+    ff.add_history_entry("This other thing happened")
+    assert len(ff.tree["history"]["entries"]) == 2
 
-    assert isinstance(ff.tree['history']['entries'][0].time, datetime.datetime)
+    assert isinstance(ff.tree["history"]["entries"][0].time, datetime.datetime)
+
 
 def test_history_to_file(tmpdir):
 
-    tmpfile = str(tmpdir.join('history.asdf'))
+    tmpfile = str(tmpdir.join("history.asdf"))
 
     with asdf.AsdfFile() as ff:
         ff.add_history_entry(
-            'This happened',
-            [Software(name="my_tool", homepage="http://nowhere.org", author="John Doe", version="2.0",)],
+            "This happened",
+            [
+                Software(
+                    name="my_tool",
+                    homepage="http://nowhere.org",
+                    author="John Doe",
+                    version="2.0",
+                )
+            ],
         )
         ff.write_to(tmpfile)
 
     with asdf.open(tmpfile) as ff:
-        assert 'entries' in ff.tree['history']
-        assert 'extensions' in ff.tree['history']
-        assert len(ff.tree['history']['entries']) == 1
+        assert "entries" in ff.tree["history"]
+        assert "extensions" in ff.tree["history"]
+        assert len(ff.tree["history"]["entries"]) == 1
 
-        entry = ff.tree['history']['entries'][0]
-        assert entry.description == 'This happened'
-        assert entry.software[0].name == 'my_tool'
-        assert entry.software[0].version == '2.0'
+        entry = ff.tree["history"]["entries"][0]
+        assert entry.description == "This happened"
+        assert entry.software[0].name == "my_tool"
+        assert entry.software[0].version == "2.0"
 
         # Test the history entry retrieval API
         entries = ff.get_history_entries()
@@ -52,7 +60,7 @@ def test_history_to_file(tmpdir):
         assert isinstance(entries, list)
         assert isinstance(entries[0], HistoryEntry)
         assert entries[0].description == "This happened"
-        assert entries[0].software[0].name == 'my_tool'
+        assert entries[0].software[0].name == "my_tool"
 
 
 def test_old_history(tmpdir):
@@ -69,7 +77,7 @@ history:
 
     buff = yaml_to_asdf(yaml)
     with asdf.open(buff) as af:
-        assert len(af.tree['history']) == 1
+        assert len(af.tree["history"]) == 1
 
         # Test the history entry retrieval API
         entries = af.get_history_entries()
@@ -77,21 +85,22 @@ history:
         assert isinstance(entries, list)
         assert isinstance(entries[0], HistoryEntry)
         assert entries[0].description == "Here's a test of old history entries"
-        assert entries[0].software[0].name == 'foo'
+        assert entries[0].software[0].name == "foo"
+
 
 def test_get_history_entries(tmpdir):
     """
     Test edge cases for the get_history_entries API. Other cases tested above
     """
 
-    tmpfile = str(tmpdir.join('empty.asdf'))
+    tmpfile = str(tmpdir.join("empty.asdf"))
 
     with asdf.AsdfFile() as af:
         af.write_to(tmpfile)
 
     # Make sure this works when there is no history section at all
     with asdf.open(tmpfile) as af:
-        assert len(af['history']['extensions']) > 0
+        assert len(af["history"]["extensions"]) > 0
         assert len(af.get_history_entries()) == 0
 
 
@@ -99,16 +108,16 @@ def test_extension_metadata(tmpdir):
 
     ff = asdf.AsdfFile()
 
-    tmpfile = str(tmpdir.join('extension.asdf'))
+    tmpfile = str(tmpdir.join("extension.asdf"))
     ff.write_to(tmpfile)
 
     with asdf.open(tmpfile) as af:
-        assert len(af.tree['history']['extensions']) == 1
-        metadata = af.tree['history']['extensions'][0]
-        assert metadata.extension_class == 'asdf.extension._manifest.ManifestExtension'
+        assert len(af.tree["history"]["extensions"]) == 1
+        metadata = af.tree["history"]["extensions"][0]
+        assert metadata.extension_class == "asdf.extension._manifest.ManifestExtension"
         # Don't bother with testing the version here since it will depend on
         # how recently the package was built (version is auto-generated)
-        assert metadata.software.name == 'asdf'
+        assert metadata.software.name == "asdf"
 
 
 def test_missing_extension_warning():
@@ -198,9 +207,7 @@ def test_metadata_with_custom_extension(tmp_path):
     with asdf.config_context() as config:
         config.add_extension(FractionExtension())
 
-        tree = {
-            "fraction": fractions.Fraction(2, 3)
-        }
+        tree = {"fraction": fractions.Fraction(2, 3)}
         with asdf.AsdfFile(tree) as af:
             af.write_to(file_path)
 
@@ -217,7 +224,7 @@ def test_metadata_with_custom_extension(tmp_path):
     file_path2 = tmp_path / "no_extension.asdf"
     with asdf.config_context() as config:
         config.add_extension(FractionExtension())
-        tree2 = { "x": [x for x in range(10)] }
+        tree2 = {"x": [x for x in range(10)]}
 
         with asdf.AsdfFile(tree2) as af:
             af.write_to(file_path2)

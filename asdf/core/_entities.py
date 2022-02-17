@@ -8,6 +8,7 @@ class AsdfObject(dict):
     The root of an ASDF tree.  Exists mainly to provide a type
     that corresponds to the asdf-x.y.z tag.
     """
+
     pass
 
 
@@ -52,6 +53,7 @@ class ExternalArrayReference:
     ...     ff.write_to("test.asdf")
 
     """
+
     fileuri: str
     target: Union[str, int]
     datatype: str
@@ -83,6 +85,7 @@ class Software:
         Additional metadata to include when serializing this
         object.
     """
+
     name: str
     version: str
     author: Union[str, None] = None
@@ -111,6 +114,7 @@ class HistoryEntry:
         Additional metadata to include when serializing this
         object.
     """
+
     description: str
     time: Union[datetime.datetime, None] = None
     software: List[Software] = field(default_factory=list)
@@ -138,6 +142,7 @@ class ExtensionMetadata:
         Additional metadata to include when serializing this
         object.
     """
+
     extension_class: str
     extension_uri: Union[str, None] = None
     software: Union[Software, None] = None

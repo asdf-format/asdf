@@ -11,6 +11,7 @@ of custom Python types into the YAML tree.
 
 import abc
 
+
 class Compressor(abc.ABC):
     """
     Abstract base class for plugins that compress binary data.
@@ -19,14 +20,12 @@ class Compressor(abc.ABC):
     at least one of the `compress()` and `decompress()` methods.
     May also provide a constructor.
     """
+
     @classmethod
     def __subclasshook__(cls, C):
         if cls is Compressor:
-            return ( hasattr(C, "label") and
-                    (hasattr(C, "compress") or
-                     hasattr(C, "decompress")) )
-        return NotImplemented # pragma: no cover
-
+            return hasattr(C, "label") and (hasattr(C, "compress") or hasattr(C, "decompress"))
+        return NotImplemented  # pragma: no cover
 
     @abc.abstractproperty
     def label(self):
@@ -38,8 +37,7 @@ class Compressor(abc.ABC):
         label : bytes
             The compression label
         """
-        pass # pragma: no cover
-
+        pass  # pragma: no cover
 
     def compress(self, data, **kwargs):
         """
@@ -61,7 +59,6 @@ class Compressor(abc.ABC):
             A block of compressed data
         """
         raise NotImplementedError
-
 
     def decompress(self, data, out, **kwargs):
         """

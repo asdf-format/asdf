@@ -5,24 +5,30 @@ from .main import Command
 from ..entry_points import get_extensions
 
 
-__all__ = ['find_extensions']
+__all__ = ["find_extensions"]
 
 
-class QueryExtension(Command): # pragma: no cover
+class QueryExtension(Command):  # pragma: no cover
     """This class is the plugin implementation for the asdftool runner."""
+
     @classmethod
     def setup_arguments(cls, subparsers):
         parser = subparsers.add_parser(
-            "extensions", help="Show information about installed extensions",
-            description="""Reports information about installed ASDF extensions""")
+            "extensions",
+            help="Show information about installed extensions",
+            description="""Reports information about installed ASDF extensions""",
+        )
 
         display_group = parser.add_mutually_exclusive_group()
         display_group.add_argument(
-            "-s", "--summary", action="store_true",
-            help="Display only the installed extensions themselves")
+            "-s", "--summary", action="store_true", help="Display only the installed extensions themselves"
+        )
         display_group.add_argument(
-            "-t", "--tags-only", action="store_true",
-            help="Display tags from installed extensions, but no other information")
+            "-t",
+            "--tags-only",
+            action="store_true",
+            help="Display tags from installed extensions, but no other information",
+        )
 
         parser.set_defaults(func=cls.run)
         return parser

@@ -19,6 +19,7 @@ class TagDefinition:
     description : str, optional
         Long description of the tag.
     """
+
     def __init__(self, tag_uri, *, schema_uris=None, title=None, description=None):
         if "*" in tag_uri:
             raise ValueError("URI patterns are not permitted in TagDefinition")
@@ -61,7 +62,7 @@ class TagDefinition:
         """
         warnings.warn(
             "The TagDefinition.schema_uri property is deprecated.  Use TagDefinition.schema_uris instead.",
-            AsdfDeprecationWarning
+            AsdfDeprecationWarning,
         )
 
         if len(self._schema_uris) == 0:
@@ -106,4 +107,4 @@ class TagDefinition:
         return self._description
 
     def __repr__(self):
-        return ("<TagDefinition URI: {}>".format(self.tag_uri))
+        return "<TagDefinition URI: {}>".format(self.tag_uri)

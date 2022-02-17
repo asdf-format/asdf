@@ -16,10 +16,10 @@ from .exceptions import AsdfConversionWarning
 from .core import AsdfObject
 
 
-__all__ = ['custom_tree_to_tagged_tree', 'tagged_tree_to_custom_tree']
+__all__ = ["custom_tree_to_tagged_tree", "tagged_tree_to_custom_tree"]
 
 
-if getattr(yaml, '__with_libyaml__', None):  # pragma: no cover
+if getattr(yaml, "__with_libyaml__", None):  # pragma: no cover
     _yaml_base_dumper = yaml.CSafeDumper
     _yaml_base_loader = yaml.CSafeLoader
 else:  # pragma: no cover
@@ -27,7 +27,7 @@ else:  # pragma: no cover
     _yaml_base_loader = yaml.SafeLoader
 
 
-YAML_OMAP_TAG = YAML_TAG_PREFIX + 'omap'
+YAML_OMAP_TAG = YAML_TAG_PREFIX + "omap"
 
 
 # ----------------------------------------------------------------------
@@ -41,36 +41,31 @@ class AsdfDumper(_yaml_base_dumper):
     """
 
     def __init__(self, *args, **kwargs):
-        kwargs['default_flow_style'] = None
+        kwargs["default_flow_style"] = None
         super().__init__(*args, **kwargs)
 
     def represent_data(self, data):
         node = super(AsdfDumper, self).represent_data(data)
 
-        tag_name = getattr(data, '_tag', None)
+        tag_name = getattr(data, "_tag", None)
         if tag_name is not None:
             node.tag = tag_name
 
         return node
 
 
-_flow_style_map = {
-    'flow': True,
-    'block': False
-}
+_flow_style_map = {"flow": True, "block": False}
 
 
 def represent_sequence(dumper, sequence):
     flow_style = _flow_style_map.get(sequence.flow_style, None)
     sequence = sequence.data
-    return super(AsdfDumper, dumper).represent_sequence(
-        None, sequence, flow_style)
+    return super(AsdfDumper, dumper).represent_sequence(None, sequence, flow_style)
 
 
 def represent_mapping(dumper, mapping):
     flow_style = _flow_style_map.get(mapping.flow_style, None)
-    node = super(AsdfDumper, dumper).represent_mapping(
-        None, mapping.data, flow_style)
+    node = super(AsdfDumper, dumper).represent_mapping(None, mapping.data, flow_style)
 
     if mapping.property_order:
         values = node.value
@@ -93,17 +88,12 @@ def represent_mapping(dumper, mapping):
     return node
 
 
-_style_map = {
-    'inline': '"',
-    'folded': '>',
-    'literal': '|'
-}
+_style_map = {"inline": '"', "folded": ">", "literal": "|"}
 
 
 def represent_scalar(dumper, value):
     style = _style_map.get(value.style, None)
-    return super(AsdfDumper, dumper).represent_scalar(
-        None, value.data, style)
+    return super(AsdfDumper, dumper).represent_scalar(None, value.data, style)
 
 
 def represent_ordered_mapping(dumper, tag, data):
@@ -114,16 +104,13 @@ def represent_ordered_mapping(dumper, tag, data):
     # TODO: Need to see if I can figure out a mechanism so that classes that
     # use this representer can specify which values should use flow style
     values = []
-    node = yaml.SequenceNode(tag, values,
-                             flow_style=dumper.default_flow_style)
+    node = yaml.SequenceNode(tag, values, flow_style=dumper.default_flow_style)
     if dumper.alias_key is not None:
         dumper.represented_objects[dumper.alias_key] = node
     for key, value in data.items():
         key_item = dumper.represent_data(key)
         value_item = dumper.represent_data(value)
-        node_item = yaml.MappingNode(YAML_OMAP_TAG,
-                                     [(key_item, value_item)],
-                                     flow_style=False)
+        node_item = yaml.MappingNode(YAML_OMAP_TAG, [(key_item, value_item)], flow_style=False)
         values.append(node_item)
     return node
 
@@ -146,11 +133,13 @@ for scalar_type in util.iter_subclasses(np.floating):
 for scalar_type in util.iter_subclasses(np.integer):
     AsdfDumper.add_representer(scalar_type, AsdfDumper.represent_int)
 
+
 def represent_numpy_str(dumper, data):
     # The CSafeDumper implementation will raise an error if it
     # doesn't recognize data as a string.  The Python SafeDumper
     # has no problem with np.str_.
     return dumper.represent_str(str(data))
+
 
 AsdfDumper.add_representer(np.str_, represent_numpy_str)
 AsdfDumper.add_representer(np.bytes_, AsdfDumper.represent_binary)
@@ -191,17 +180,27 @@ class AsdfLoader(_yaml_base_loader):
         omap = OrderedDict()
         yield omap
         if not isinstance(node, yaml.SequenceNode):
-            raise yaml.ConstructorError("while constructing an ordered map", node.start_mark,
-                    "expected a sequence, but found %s" % node.id, node.start_mark)
+            raise yaml.ConstructorError(
+                "while constructing an ordered map",
+                node.start_mark,
+                "expected a sequence, but found %s" % node.id,
+                node.start_mark,
+            )
         for subnode in node.value:
             if not isinstance(subnode, yaml.MappingNode):
-                raise yaml.ConstructorError("while constructing an ordered map", node.start_mark,
-                        "expected a mapping of length 1, but found %s" % subnode.id,
-                        subnode.start_mark)
+                raise yaml.ConstructorError(
+                    "while constructing an ordered map",
+                    node.start_mark,
+                    "expected a mapping of length 1, but found %s" % subnode.id,
+                    subnode.start_mark,
+                )
             if len(subnode.value) != 1:
-                raise yaml.ConstructorError("while constructing an ordered map", node.start_mark,
-                        "expected a single mapping item, but found %d items" % len(subnode.value),
-                        subnode.start_mark)
+                raise yaml.ConstructorError(
+                    "while constructing an ordered map",
+                    node.start_mark,
+                    "expected a single mapping item, but found %d items" % len(subnode.value),
+                    subnode.start_mark,
+                )
             key_node, value_node = subnode.value[0]
             key = self.construct_object(key_node)
             value = self.construct_object(value_node)
@@ -248,9 +247,7 @@ def custom_tree_to_tagged_tree(tree, ctx, _serialization_context=None):
             tagged_node = tagged.TaggedString(node)
             tagged_node._tag = tag
         else:
-            raise TypeError(
-                "Converter returned illegal node type: {}".format(util.get_class_name(node))
-            )
+            raise TypeError("Converter returned illegal node type: {}".format(util.get_class_name(node)))
 
         _serialization_context._mark_extension_used(converter.extension)
 
@@ -263,9 +260,7 @@ def custom_tree_to_tagged_tree(tree, ctx, _serialization_context=None):
             return _convert_obj(obj)
         else:
             tag = ctx.type_index.from_custom_type(
-                type(obj),
-                ctx.version_string,
-                _serialization_context=_serialization_context
+                type(obj), ctx.version_string, _serialization_context=_serialization_context
             )
 
             if tag is not None:
@@ -296,7 +291,7 @@ def tagged_tree_to_custom_tree(tree, ctx, force_raw_types=False, _serialization_
         if force_raw_types:
             return node
 
-        tag = getattr(node, '_tag', None)
+        tag = getattr(node, "_tag", None)
         if tag is None:
             return node
 
@@ -319,10 +314,11 @@ def tagged_tree_to_custom_tree(tree, ctx, force_raw_types=False, _serialization_
         # compatible with the associated tag class implementation, but the
         # version we found does not fit that description.
         if tag_type.incompatible_version(tag_version):
-            warnings.warn("Version {} of {} is not compatible with any "
-                "existing tag implementations".format(
-                    tag_version, tag_name),
-                AsdfConversionWarning)
+            warnings.warn(
+                "Version {} of {} is not compatible with any "
+                "existing tag implementations".format(tag_version, tag_name),
+                AsdfConversionWarning,
+            )
             return node
 
         # If a tag class does not explicitly list compatible versions, then all
@@ -333,9 +329,11 @@ def tagged_tree_to_custom_tree(tree, ctx, force_raw_types=False, _serialization_
         try:
             return tag_type.from_tree_tagged(node, ctx)
         except TypeError as err:
-            warnings.warn("Failed to convert {} to custom type (detail: {}). "
+            warnings.warn(
+                "Failed to convert {} to custom type (detail: {}). "
                 "Using raw Python data structure instead".format(tag, err),
-                AsdfConversionWarning)
+                AsdfConversionWarning,
+            )
 
         return node
 
@@ -360,7 +358,7 @@ def load_tree(stream):
     """
     # The following call to yaml.load is safe because we're
     # using a loader that inherits from pyyaml's SafeLoader.
-    return yaml.load(stream, Loader=AsdfLoader) # nosec
+    return yaml.load(stream, Loader=AsdfLoader)  # nosec
 
 
 def dump_tree(tree, fd, ctx, tree_finalizer=None, _serialization_context=None):
@@ -391,14 +389,13 @@ def dump_tree(tree, fd, ctx, tree_finalizer=None, _serialization_context=None):
     if type(tree) is not AsdfObject:
         raise TypeError("Root node of ASDF tree must be of type AsdfObject")
 
-    tags = {'!': STSCI_SCHEMA_TAG_BASE + '/'}
+    tags = {"!": STSCI_SCHEMA_TAG_BASE + "/"}
     tree = custom_tree_to_tagged_tree(tree, ctx, _serialization_context=_serialization_context)
     if tree_finalizer is not None:
         tree_finalizer(tree)
     schema.validate(tree, ctx)
 
-    yaml_version = tuple(
-        int(x) for x in ctx.version_map['YAML_VERSION'].split('.'))
+    yaml_version = tuple(int(x) for x in ctx.version_map["YAML_VERSION"].split("."))
 
     # add yaml %TAG definitions from extensions
     if _serialization_context:
@@ -408,8 +405,13 @@ def dump_tree(tree, fd, ctx, tree_finalizer=None, _serialization_context=None):
                     tags[key] = val
 
     yaml.dump_all(
-        [tree], stream=fd, Dumper=AsdfDumper,
-        explicit_start=True, explicit_end=True,
+        [tree],
+        stream=fd,
+        Dumper=AsdfDumper,
+        explicit_start=True,
+        explicit_end=True,
         version=yaml_version,
-        allow_unicode=True, encoding='utf-8',
-        tags=tags)
+        allow_unicode=True,
+        encoding="utf-8",
+        tags=tags,
+    )

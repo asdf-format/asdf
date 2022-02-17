@@ -12,19 +12,15 @@ import numpy as np
 
 
 def pytest_addoption(parser):
+    parser.addini("asdf_schema_root", "Root path indicating where schemas are stored")
+    parser.addini("asdf_schema_skip_names", "Base names of files to skip in schema tests")
     parser.addini(
-        "asdf_schema_root", "Root path indicating where schemas are stored")
+        "asdf_schema_skip_tests", "List of tests to skip, one per line, in format <schema path suffix>::<test name>"
+    )
     parser.addini(
-        "asdf_schema_skip_names", "Base names of files to skip in schema tests")
-    parser.addini(
-        "asdf_schema_skip_tests",
-        "List of tests to skip, one per line, in format <schema path suffix>::<test name>")
-    parser.addini(
-        "asdf_schema_xfail_tests",
-        "List of tests to xfail, one per line, in format <schema path suffix>::<test name>")
-    parser.addini(
-        "asdf_schema_skip_examples",
-        "Base names of schemas whose examples should not be tested")
+        "asdf_schema_xfail_tests", "List of tests to xfail, one per line, in format <schema path suffix>::<test name>"
+    )
+    parser.addini("asdf_schema_skip_examples", "Base names of schemas whose examples should not be tested")
     parser.addini(
         "asdf_schema_tests_enabled",
         "Controls whether schema tests are enabled by default",
@@ -37,17 +33,18 @@ def pytest_addoption(parser):
         type="bool",
         default=True,
     )
-    parser.addoption('--asdf-tests', action='store_true',
-        help='Enable ASDF schema tests')
+    parser.addoption("--asdf-tests", action="store_true", help="Enable ASDF schema tests")
 
 
 class AsdfSchemaFile(pytest.File):
     @classmethod
-    def from_parent(cls, parent, *, fspath, skip_examples=False, validate_default=True,
-        skip_tests=[], xfail_tests=[], **kwargs):
+    def from_parent(
+        cls, parent, *, fspath, skip_examples=False, validate_default=True, skip_tests=[], xfail_tests=[], **kwargs
+    ):
 
         # Fix for depreciation of fspath in pytest 7+
         from asdf.util import minversion
+
         if minversion("pytest", "7.0.0"):
             path = pathlib.Path(fspath)
             kwargs["path"] = path
@@ -95,14 +92,12 @@ class AsdfSchemaFile(pytest.File):
         """Returns generator for all examples in schema at given path"""
         from asdf import treeutil
 
-        with open(str(self.fspath), 'rb') as fd:
+        with open(str(self.fspath), "rb") as fd:
             schema_tree = yaml.safe_load(fd)
 
         for node in treeutil.iter_tree(schema_tree):
-            if (isinstance(node, dict) and
-                'examples' in node and
-                isinstance(node['examples'], list)):
-                for desc, example in node['examples']:
+            if isinstance(node, dict) and "examples" in node and isinstance(node["examples"], list):
+                for desc, example in node["examples"]:
                     yield example
 
 
@@ -125,8 +120,8 @@ class AsdfSchemaItem(pytest.Item):
 
         # Make sure that each schema itself is valid.
         schema_tree = schema.load_schema(
-            self.schema_path, resolver=default_extensions.resolver,
-            resolve_references=True)
+            self.schema_path, resolver=default_extensions.resolver, resolve_references=True
+        )
         schema.check_schema(schema_tree, validate_default=self.validate_default)
 
     def reportinfo(self):
@@ -152,24 +147,22 @@ class AsdfSchemaExampleItem(pytest.Item):
 
         # Make sure that the examples in the schema files (and thus the
         # ASDF standard document) are valid.
-        buff = helpers.yaml_to_asdf('example: ' + self.example.strip())
+        buff = helpers.yaml_to_asdf("example: " + self.example.strip())
 
         ff = AsdfFile(
             uri=util.filepath_to_url(os.path.abspath(self.filename)),
         )
 
         # Fake an external file
-        ff2 = AsdfFile({'data': np.empty((1024*1024*8), dtype=np.uint8)})
+        ff2 = AsdfFile({"data": np.empty((1024 * 1024 * 8), dtype=np.uint8)})
 
         ff._external_asdf_by_uri[
-            util.filepath_to_url(
-                os.path.abspath(
-                    os.path.join(
-                        os.path.dirname(self.filename), 'external.asdf')))] = ff2
+            util.filepath_to_url(os.path.abspath(os.path.join(os.path.dirname(self.filename), "external.asdf")))
+        ] = ff2
 
         # Add some dummy blocks so that the ndarray examples work
         for i in range(3):
-            b = block.Block(np.zeros((1024*1024*8), dtype=np.uint8))
+            b = block.Block(np.zeros((1024 * 1024 * 8), dtype=np.uint8))
             b._used = True
             ff.blocks.add(b)
         b._array_storage = "streamed"
@@ -179,7 +172,7 @@ class AsdfSchemaExampleItem(pytest.Item):
             with warnings.catch_warnings():
                 warnings.simplefilter("error")
 
-                ff._open_impl(ff, buff, mode='rw')
+                ff._open_impl(ff, buff, mode="rw")
         except Exception:
             print("From file:", self.filename)
             raise
@@ -187,7 +180,7 @@ class AsdfSchemaExampleItem(pytest.Item):
         # Just test we can write it out.  A roundtrip test
         # wouldn't always yield the correct result, so those have
         # to be covered by "real" unit tests.
-        if b'external.asdf' not in buff.getvalue():
+        if b"external.asdf" not in buff.getvalue():
             buff = io.BytesIO()
             ff.write_to(buff)
 
@@ -218,25 +211,23 @@ def _parse_test_list(content):
 
 
 def pytest_collect_file(path, parent):
-    if not (parent.config.getini('asdf_schema_tests_enabled') or
-            parent.config.getoption('asdf_tests')):
+    if not (parent.config.getini("asdf_schema_tests_enabled") or parent.config.getoption("asdf_tests")):
         return
 
-    schema_roots = parent.config.getini('asdf_schema_root').split()
+    schema_roots = parent.config.getini("asdf_schema_root").split()
     if not schema_roots:
         return
 
-    skip_names = parent.config.getini('asdf_schema_skip_names')
-    skip_examples = parent.config.getini('asdf_schema_skip_examples')
-    validate_default = parent.config.getini('asdf_schema_validate_default')
+    skip_names = parent.config.getini("asdf_schema_skip_names")
+    skip_examples = parent.config.getini("asdf_schema_skip_examples")
+    validate_default = parent.config.getini("asdf_schema_validate_default")
 
-    skip_tests = _parse_test_list(parent.config.getini('asdf_schema_skip_tests'))
-    xfail_tests = _parse_test_list(parent.config.getini('asdf_schema_xfail_tests'))
+    skip_tests = _parse_test_list(parent.config.getini("asdf_schema_skip_tests"))
+    xfail_tests = _parse_test_list(parent.config.getini("asdf_schema_xfail_tests"))
 
-    schema_roots = [os.path.join(str(parent.config.rootdir), os.path.normpath(root))
-                        for root in schema_roots]
+    schema_roots = [os.path.join(str(parent.config.rootdir), os.path.normpath(root)) for root in schema_roots]
 
-    if path.ext != '.yaml':
+    if path.ext != ".yaml":
         return None
 
     for root in schema_roots:

@@ -27,10 +27,10 @@ class CustomTestType(CustomType):
 def create_small_tree():
     x = np.arange(0, 10, dtype=float)
     tree = {
-        'science_data': x,
-        'subset': x[3:-3],
-        'skipping': x[::2],
-        'not_shared': np.arange(10, 0, -1, dtype=np.uint8)
+        "science_data": x,
+        "subset": x[3:-3],
+        "skipping": x[::2],
+        "not_shared": np.arange(10, 0, -1, dtype=np.uint8),
     }
     return tree
 
@@ -41,10 +41,7 @@ def create_large_tree():
     # is enormous.
     x = np.random.rand(256, 256)
     y = np.random.rand(16, 16, 16)
-    tree = {
-        'science_data': x,
-        'more': y
-    }
+    tree = {"science_data": x, "more": y}
     return tree
 
 
@@ -53,17 +50,17 @@ class CustomExtension:
     This is the base class that is used for extensions for custom tag
     classes that exist only for the purposes of testing.
     """
+
     @property
     def types(self):
         return []
 
     @property
     def tag_mapping(self):
-        return [('tag:nowhere.org:custom',
-                 'http://nowhere.org/schemas/custom{tag_suffix}')]
+        return [("tag:nowhere.org:custom", "http://nowhere.org/schemas/custom{tag_suffix}")]
 
     @property
     def url_mapping(self):
-        return [('http://nowhere.org/schemas/custom/',
-                 util.filepath_to_url(get_test_data_path('')) +
-                 '/{url_suffix}.yaml')]
+        return [
+            ("http://nowhere.org/schemas/custom/", util.filepath_to_url(get_test_data_path("")) + "/{url_suffix}.yaml")
+        ]

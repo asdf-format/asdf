@@ -6,6 +6,7 @@ class Validator(abc.ABC):
     Abstract base class for plugins that handle custom validators
     in ASDF schemas.
     """
+
     @abc.abstractproperty
     def schema_property(self):
         """
