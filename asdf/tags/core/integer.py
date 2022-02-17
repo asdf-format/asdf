@@ -42,16 +42,16 @@ class IntegerType(AsdfType):
     ...     assert aa['largeval'] == largeval
     """
 
-    name = 'core/integer'
-    version = '1.0.0'
+    name = "core/integer"
+    version = "1.0.0"
 
     _value_cache = dict()
 
-    def __init__(self, value, storage_type='internal'):
-        if storage_type not in ['internal', 'inline']:
+    def __init__(self, value, storage_type="internal"):
+        if storage_type not in ["internal", "inline"]:
             raise ValueError(f"storage_type '{storage_type}' is not a recognized storage type")
         self._value = value
-        self._sign = '-' if value < 0 else '+'
+        self._sign = "-" if value < 0 else "+"
         self._storage = storage_type
 
     @classmethod
@@ -70,18 +70,18 @@ class IntegerType(AsdfType):
             words = []
             value = abs_value
             while value > 0:
-                words.append(value & 0xffffffff)
+                words.append(value & 0xFFFFFFFF)
                 value >>= 32
 
             array = np.array(words, dtype=np.uint32)
-            if node._storage == 'internal':
+            if node._storage == "internal":
                 cls._value_cache[ctx][abs_value] = array
 
         tree = dict()
         ctx.set_array_storage(array, node._storage)
-        tree['words'] = array
-        tree['sign'] = node._sign
-        tree['string'] = str(int(node._value))
+        tree["words"] = array
+        tree["sign"] = node._sign
+        tree["string"] = str(int(node._value))
 
         return tree
 
@@ -89,11 +89,11 @@ class IntegerType(AsdfType):
     def from_tree(cls, tree, ctx):
 
         value = 0
-        for x in tree['words'][::-1]:
+        for x in tree["words"][::-1]:
             value <<= 32
             value |= int(x)
 
-        if tree['sign'] == '-':
+        if tree["sign"] == "-":
             value = -value
 
         return IntegerType(value)
@@ -110,9 +110,7 @@ class IntegerType(AsdfType):
         elif isinstance(other, IntegerType):
             return self._value == other._value
         else:
-            raise ValueError(
-                "Can't compare IntegralType to unknown type: {}".format(
-                    type(other)))
+            raise ValueError("Can't compare IntegralType to unknown type: {}".format(type(other)))
 
     def __repr__(self):
         return "IntegerType({})".format(self._value)

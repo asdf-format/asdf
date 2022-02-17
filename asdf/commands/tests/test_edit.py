@@ -21,6 +21,7 @@ def create_editor(tmp_path):
     """
     Fixture providing a function that generates an editor script.
     """
+
     def _create_editor(pattern, replacement):
         if isinstance(pattern, str):
             pattern = pattern.encode("utf-8")
@@ -67,9 +68,11 @@ def mock_input(monkeypatch):
     Fixture providing a function that mocks the edit module's
     built-in input function.
     """
+
     @contextmanager
     def _mock_input(pattern, response):
         called = False
+
         def _input(prompt=None):
             nonlocal called
             called = True
@@ -91,6 +94,7 @@ def default_mock_input(monkeypatch):
     Fixture that raises an error when the program
     requests unexpected input.
     """
+
     def _input(prompt=None):
         raise AssertionError(f"Received unexpected request for input: {prompt}")
 
@@ -98,7 +102,7 @@ def default_mock_input(monkeypatch):
 
 
 def test_no_blocks(tmp_path, create_editor, version):
-    file_path = str(tmp_path/"test.asdf")
+    file_path = str(tmp_path / "test.asdf")
 
     with asdf.AsdfFile(version=version) as af:
         af["foo"] = "bar"
@@ -113,7 +117,7 @@ def test_no_blocks(tmp_path, create_editor, version):
 
 
 def test_no_blocks_increase_size(tmp_path, create_editor, version):
-    file_path = str(tmp_path/"test.asdf")
+    file_path = str(tmp_path / "test.asdf")
 
     with asdf.AsdfFile(version=version) as af:
         af["foo"] = "bar"
@@ -131,7 +135,7 @@ def test_no_blocks_increase_size(tmp_path, create_editor, version):
 
 
 def test_no_blocks_decrease_size(tmp_path, create_editor, version):
-    file_path = str(tmp_path/"test.asdf")
+    file_path = str(tmp_path / "test.asdf")
 
     original_value = "a" * 32768
 
@@ -148,7 +152,7 @@ def test_no_blocks_decrease_size(tmp_path, create_editor, version):
 
 
 def test_with_blocks(tmp_path, create_editor, version):
-    file_path = str(tmp_path/"test.asdf")
+    file_path = str(tmp_path / "test.asdf")
 
     array1 = np.random.rand(100)
     array2 = np.random.rand(100)
@@ -169,7 +173,7 @@ def test_with_blocks(tmp_path, create_editor, version):
 
 
 def test_with_blocks_increase_size(tmp_path, create_editor, version, mock_input):
-    file_path = str(tmp_path/"test.asdf")
+    file_path = str(tmp_path / "test.asdf")
 
     array1 = np.random.rand(100)
     array2 = np.random.rand(100)
@@ -197,9 +201,8 @@ def test_with_blocks_increase_size(tmp_path, create_editor, version, mock_input)
         assert_array_equal(af["array2"], array2)
 
 
-
 def test_with_blocks_decrease_size(tmp_path, create_editor, version):
-    file_path = str(tmp_path/"test.asdf")
+    file_path = str(tmp_path / "test.asdf")
 
     original_value = "a" * 32768
 
@@ -222,7 +225,7 @@ def test_with_blocks_decrease_size(tmp_path, create_editor, version):
 
 
 def test_no_changes(tmp_path, create_editor, version):
-    file_path = str(tmp_path/"test.asdf")
+    file_path = str(tmp_path / "test.asdf")
 
     with asdf.AsdfFile(version=version) as af:
         af["foo"] = "bar"
@@ -235,7 +238,7 @@ def test_no_changes(tmp_path, create_editor, version):
 
 
 def test_update_asdf_standard_version(tmp_path, create_editor, version, mock_input):
-    file_path = str(tmp_path/"test.asdf")
+    file_path = str(tmp_path / "test.asdf")
 
     with asdf.AsdfFile(version=version) as af:
         af["foo"] = "bar"
@@ -249,7 +252,7 @@ def test_update_asdf_standard_version(tmp_path, create_editor, version, mock_inp
 
 
 def test_update_yaml_version(tmp_path, create_editor, version, mock_input):
-    file_path = str(tmp_path/"test.asdf")
+    file_path = str(tmp_path / "test.asdf")
 
     with asdf.AsdfFile(version=version) as af:
         af["foo"] = "bar"
@@ -263,7 +266,7 @@ def test_update_yaml_version(tmp_path, create_editor, version, mock_input):
 
 
 def test_bad_yaml(tmp_path, create_editor, version, mock_input):
-    file_path = str(tmp_path/"test.asdf")
+    file_path = str(tmp_path / "test.asdf")
 
     with asdf.AsdfFile(version=version) as af:
         af["foo"] = "bar"
@@ -277,7 +280,7 @@ def test_bad_yaml(tmp_path, create_editor, version, mock_input):
 
 
 def test_validation_failure(tmp_path, create_editor, version, mock_input):
-    file_path = str(tmp_path/"test.asdf")
+    file_path = str(tmp_path / "test.asdf")
 
     with asdf.AsdfFile(version=version) as af:
         af["array"] = np.arange(100)
@@ -298,7 +301,7 @@ def test_validation_failure(tmp_path, create_editor, version, mock_input):
 
 
 def test_asdf_open_failure(tmp_path, create_editor, version, mock_input):
-    file_path = str(tmp_path/"test.asdf")
+    file_path = str(tmp_path / "test.asdf")
 
     with asdf.AsdfFile(version=version) as af:
         af["foo"] = "bar"
@@ -312,7 +315,7 @@ def test_asdf_open_failure(tmp_path, create_editor, version, mock_input):
 
 
 def test_non_asdf_file(tmp_path):
-    file_path = str(tmp_path/"test.asdf")
+    file_path = str(tmp_path / "test.asdf")
 
     with open(file_path, "w") as f:
         f.write("Dear diary...")

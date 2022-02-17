@@ -20,7 +20,7 @@ __all__ = ["AsdfConfig", "get_config", "config_context"]
 DEFAULT_VALIDATE_ON_READ = True
 DEFAULT_DEFAULT_VERSION = str(versioning.default_version)
 DEFAULT_LEGACY_FILL_SCHEMA_DEFAULTS = True
-DEFAULT_IO_BLOCK_SIZE = -1 # auto
+DEFAULT_IO_BLOCK_SIZE = -1  # auto
 DEFAULT_ARRAY_INLINE_THRESHOLD = None
 
 
@@ -75,10 +75,7 @@ class AsdfConfig:
 
             # Insert at the beginning of the list so that
             # ResourceManager uses the new mapping first.
-            resource_mappings = [mapping] + [
-                r for r in self.resource_mappings
-                if r != mapping
-            ]
+            resource_mappings = [mapping] + [r for r in self.resource_mappings if r != mapping]
             self._resource_mappings = resource_mappings
             self._resource_manager = None
 
@@ -99,7 +96,7 @@ class AsdfConfig:
             raise ValueError("Must specify at least one of mapping or package")
 
         if mapping is not None:
-                mapping = ResourceMappingProxy.maybe_wrap(mapping)
+            mapping = ResourceMappingProxy.maybe_wrap(mapping)
 
         def _remove_condition(m):
             result = True

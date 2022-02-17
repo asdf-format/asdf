@@ -155,7 +155,7 @@ def test_asdf_file_version_requirement():
 def test_open_asdf_extensions(tmpdir):
     extension = TestExtension(extension_uri="asdf://somewhere.org/extensions/foo-1.0")
 
-    path = str(tmpdir/"test.asdf")
+    path = str(tmpdir / "test.asdf")
 
     with AsdfFile() as af:
         af.write_to(path)
@@ -285,7 +285,9 @@ def test_reading_extension_metadata():
             - !core/extension_metadata-1.0.0
               extension_uri: some-missing-URI
               extension_class: {}
-        """.format(extension_with_uri.class_name)
+        """.format(
+            extension_with_uri.class_name
+        )
         buff = yaml_to_asdf(content)
         with pytest.warns(AsdfWarning, match="URI 'some-missing-URI'"):
             open_asdf(buff)

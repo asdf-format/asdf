@@ -7,7 +7,7 @@ from functools import total_ordering
 
 import yaml
 
-if getattr(yaml, '__with_libyaml__', None):  # pragma: no cover
+if getattr(yaml, "__with_libyaml__", None):  # pragma: no cover
     _yaml_base_loader = yaml.CSafeLoader
 else:  # pragma: no cover
     _yaml_base_loader = yaml.SafeLoader
@@ -15,14 +15,14 @@ else:  # pragma: no cover
 from semantic_version import Version, SimpleSpec
 
 
-__all__ = ['AsdfVersion', 'AsdfSpec', 'split_tag_version', 'join_tag_version']
+__all__ = ["AsdfVersion", "AsdfSpec", "split_tag_version", "join_tag_version"]
 
 
 def split_tag_version(tag):
     """
     Split a tag into its base and version.
     """
-    name, version = tag.rsplit('-', 1)
+    name, version = tag.rsplit("-", 1)
     version = AsdfVersion(version)
     return name, version
 
@@ -31,10 +31,12 @@ def join_tag_version(name, version):
     """
     Join the root and version of a tag back together.
     """
-    return '{0}-{1}'.format(name, version)
+    return "{0}-{1}".format(name, version)
 
 
 _version_map = {}
+
+
 def get_version_map(version):
     version_map = _version_map.get(version)
 
@@ -42,17 +44,16 @@ def get_version_map(version):
         from .config import get_config
 
         uri = f"http://stsci.edu/schemas/asdf/version_map-{version}"
-        version_map = yaml.load(get_config().resource_manager[uri], # nosec
-                                Loader=_yaml_base_loader)
+        version_map = yaml.load(get_config().resource_manager[uri], Loader=_yaml_base_loader)  # nosec
 
         # Separate the core tags from the rest of the standard for convenience
-        version_map['core'] = {}
-        version_map['standard'] = {}
-        for tag_name, tag_version in version_map['tags'].items():
-            if tag_name.startswith('tag:stsci.edu:asdf/core'):
-                version_map['core'][tag_name] = tag_version
+        version_map["core"] = {}
+        version_map["standard"] = {}
+        for tag_name, tag_version in version_map["tags"].items():
+            if tag_name.startswith("tag:stsci.edu:asdf/core"):
+                version_map["core"][tag_name] = tag_version
             else:
-                version_map['standard'][tag_name] = tag_version
+                version_map["standard"][tag_name] = tag_version
 
         _version_map[version] = version_map
 
@@ -108,12 +109,11 @@ class AsdfVersion(AsdfVersionMixin, Version):
         if isinstance(version, AsdfVersion):
             version = str(version)
         if isinstance(version, (tuple, list)):
-            version = '.'.join([str(x) for x in version])
+            version = ".".join([str(x) for x in version])
         super(AsdfVersion, self).__init__(version)
 
 
 class AsdfSpec(SimpleSpec):
-
     def __init__(self, *args, **kwargs):
         super(AsdfSpec, self).__init__(*args, **kwargs)
 
@@ -148,16 +148,16 @@ class AsdfSpec(SimpleSpec):
 
 
 supported_versions = [
-    AsdfVersion('1.0.0'),
-    AsdfVersion('1.1.0'),
-    AsdfVersion('1.2.0'),
-    AsdfVersion('1.3.0'),
-    AsdfVersion('1.4.0'),
-    AsdfVersion('1.5.0'),
-    AsdfVersion('1.6.0'),
+    AsdfVersion("1.0.0"),
+    AsdfVersion("1.1.0"),
+    AsdfVersion("1.2.0"),
+    AsdfVersion("1.3.0"),
+    AsdfVersion("1.4.0"),
+    AsdfVersion("1.5.0"),
+    AsdfVersion("1.6.0"),
 ]
 
-default_version = AsdfVersion('1.5.0')
+default_version = AsdfVersion("1.5.0")
 
 
 # This is the ASDF Standard version at which the format of the history

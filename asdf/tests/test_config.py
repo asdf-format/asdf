@@ -38,6 +38,7 @@ def test_config_context_threaded():
     assert get_config().validate_on_read is True
 
     thread_value = None
+
     def worker():
         nonlocal thread_value
         thread_value = get_config().validate_on_read
@@ -155,7 +156,9 @@ def test_resource_mappings():
 
         # ... and also by the name of the package the mappings came from:
         config.add_resource_mapping(ResourceMappingProxy(new_mapping, package_name="foo"))
-        config.add_resource_mapping(ResourceMappingProxy({"http://somewhere.org/schemas/bar-1.0.0": b"bar"}, package_name="foo"))
+        config.add_resource_mapping(
+            ResourceMappingProxy({"http://somewhere.org/schemas/bar-1.0.0": b"bar"}, package_name="foo")
+        )
         config.remove_resource_mapping(package="foo")
         assert len(config.resource_mappings) == len(default_mappings)
 
@@ -179,28 +182,40 @@ def test_resource_manager():
     with asdf.config_context() as config:
         # Initial resource manager should contain just the entry points resources:
         assert "http://stsci.edu/schemas/asdf/core/asdf-1.1.0" in config.resource_manager
-        assert b"http://stsci.edu/schemas/asdf/core/asdf-1.1.0" in config.resource_manager["http://stsci.edu/schemas/asdf/core/asdf-1.1.0"]
+        assert (
+            b"http://stsci.edu/schemas/asdf/core/asdf-1.1.0"
+            in config.resource_manager["http://stsci.edu/schemas/asdf/core/asdf-1.1.0"]
+        )
         assert "http://somewhere.org/schemas/foo-1.0.0" not in config.resource_manager
 
         # Add a mapping and confirm that the manager now contains it:
         new_mapping = {"http://somewhere.org/schemas/foo-1.0.0": b"foo"}
         config.add_resource_mapping(new_mapping)
         assert "http://stsci.edu/schemas/asdf/core/asdf-1.1.0" in config.resource_manager
-        assert b"http://stsci.edu/schemas/asdf/core/asdf-1.1.0" in config.resource_manager["http://stsci.edu/schemas/asdf/core/asdf-1.1.0"]
+        assert (
+            b"http://stsci.edu/schemas/asdf/core/asdf-1.1.0"
+            in config.resource_manager["http://stsci.edu/schemas/asdf/core/asdf-1.1.0"]
+        )
         assert "http://somewhere.org/schemas/foo-1.0.0" in config.resource_manager
         assert config.resource_manager["http://somewhere.org/schemas/foo-1.0.0"] == b"foo"
 
         # Remove a mapping and confirm that the manager no longer contains it:
         config.remove_resource_mapping(new_mapping)
         assert "http://stsci.edu/schemas/asdf/core/asdf-1.1.0" in config.resource_manager
-        assert b"http://stsci.edu/schemas/asdf/core/asdf-1.1.0" in config.resource_manager["http://stsci.edu/schemas/asdf/core/asdf-1.1.0"]
+        assert (
+            b"http://stsci.edu/schemas/asdf/core/asdf-1.1.0"
+            in config.resource_manager["http://stsci.edu/schemas/asdf/core/asdf-1.1.0"]
+        )
         assert "http://somewhere.org/schemas/foo-1.0.0" not in config.resource_manager
 
         # Reset and confirm that the manager no longer contains the custom mapping:
         config.add_resource_mapping(new_mapping)
         config.reset_resources()
         assert "http://stsci.edu/schemas/asdf/core/asdf-1.1.0" in config.resource_manager
-        assert b"http://stsci.edu/schemas/asdf/core/asdf-1.1.0" in config.resource_manager["http://stsci.edu/schemas/asdf/core/asdf-1.1.0"]
+        assert (
+            b"http://stsci.edu/schemas/asdf/core/asdf-1.1.0"
+            in config.resource_manager["http://stsci.edu/schemas/asdf/core/asdf-1.1.0"]
+        )
         assert "http://somewhere.org/schemas/foo-1.0.0" not in config.resource_manager
 
 
@@ -213,6 +228,7 @@ def test_extensions():
             types = []
             tag_mapping = []
             url_mapping = []
+
         new_extension = FooExtension()
 
         class BarExtension:
@@ -220,6 +236,7 @@ def test_extensions():
             types = []
             tag_mapping = []
             url_mapping = []
+
         uri_extension = BarExtension()
 
         # Add an extension:

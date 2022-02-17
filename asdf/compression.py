@@ -26,28 +26,27 @@ def validate(compression):
     ------
     ValueError
     """
-    if not compression or compression == b'\0\0\0\0':
+    if not compression or compression == b"\0\0\0\0":
         return None
 
     if isinstance(compression, bytes):
-        compression = compression.decode('ascii')
+        compression = compression.decode("ascii")
 
-    compression = compression.strip('\0')
+    compression = compression.strip("\0")
 
-    builtin_labels = ['zlib', 'bzp2', 'lz4', 'input']
+    builtin_labels = ["zlib", "bzp2", "lz4", "input"]
     ext_labels = _get_all_compression_extension_labels()
     all_labels = ext_labels + builtin_labels
 
     # An extension is allowed to override a builtin compression or another extension,
     # but let's warn the user of this.
     # TODO: is this the desired behavior?
-    for i,label in enumerate(all_labels):
-        if label in all_labels[i+1:]:
+    for i, label in enumerate(all_labels):
+        if label in all_labels[i + 1 :]:
             warnings.warn(f'Found more than one compressor for "{label}"', AsdfWarning)
 
     if compression not in all_labels:
-        raise ValueError(
-            f"Supported compression types are: {all_labels}, not '{compression}'")
+        raise ValueError(f"Supported compression types are: {all_labels}, not '{compression}'")
 
     return compression
 
@@ -60,31 +59,30 @@ class Lz4Compressor:
             raise ImportError(
                 "lz4 library in not installed in your Python environment, "
                 "therefore the compressed block in this ASDF file "
-                "can not be decompressed.")
+                "can not be decompressed."
+            )
 
         self._api = lz4.block
 
-
     def compress(self, data, **kwargs):
-        kwargs['mode'] = kwargs.get('mode','default')
-        compression_block_size = kwargs.pop('compression_block_size', 1<<22)
+        kwargs["mode"] = kwargs.get("mode", "default")
+        compression_block_size = kwargs.pop("compression_block_size", 1 << 22)
 
         nelem = compression_block_size // data.itemsize
-        for i in range(0,len(data),nelem):
-            _output = self._api.compress(data[i:i+nelem], **kwargs)
-            header = struct.pack('!I', len(_output))
+        for i in range(0, len(data), nelem):
+            _output = self._api.compress(data[i : i + nelem], **kwargs)
+            header = struct.pack("!I", len(_output))
             yield header + _output
-
 
     def decompress(self, blocks, out, **kwargs):
         _size = 0
         _pos = 0
-        _partial_len = b''
+        _partial_len = b""
         _buffer = None
         bytesout = 0
 
         for block in blocks:
-            block = memoryview(block).cast('c')  # don't copy on slice
+            block = memoryview(block).cast("c")  # don't copy on slice
 
             while len(block):
                 if not _size:
@@ -94,37 +92,39 @@ class Lz4Compressor:
                         break  # we've exhausted the block
                     if _partial_len:
                         # If we started to fill a len key, finish filling it
-                        remaining = 4-len(_partial_len)
+                        remaining = 4 - len(_partial_len)
                         if remaining:
                             _partial_len += block[:remaining]
                             block = block[remaining:]
-                        _size = struct.unpack('!I', _partial_len)[0]
-                        _partial_len = b''
+                        _size = struct.unpack("!I", _partial_len)[0]
+                        _partial_len = b""
                     else:
                         # Otherwise just read the len key directly
-                        _size = struct.unpack('!I', block[:4])[0]
+                        _size = struct.unpack("!I", block[:4])[0]
                         block = block[4:]
 
                 if len(block) < _size or _buffer is not None:
                     # If we have a partial block, or we're already filling a buffer, use the buffer
                     if _buffer is None:
-                        _buffer = np.empty(_size, dtype=np.byte)  # use numpy instead of bytearray so we can avoid zero initialization
+                        _buffer = np.empty(
+                            _size, dtype=np.byte
+                        )  # use numpy instead of bytearray so we can avoid zero initialization
                         _pos = 0
                     newbytes = min(_size - _pos, len(block))  # don't fill past the buffer len!
-                    _buffer[_pos:_pos+newbytes] = np.frombuffer(block[:newbytes], dtype=np.byte)
+                    _buffer[_pos : _pos + newbytes] = np.frombuffer(block[:newbytes], dtype=np.byte)
                     _pos += newbytes
                     block = block[newbytes:]
 
                     if _pos == _size:
                         _out = self._api.decompress(_buffer, return_bytearray=True, **kwargs)
-                        out[bytesout:bytesout+len(_out)] = _out
+                        out[bytesout : bytesout + len(_out)] = _out
                         bytesout += len(_out)
                         _buffer = None
                         _size = 0
                 else:
                     # We have at least one full block
                     _out = self._api.decompress(memoryview(block[:_size]), return_bytearray=True, **kwargs)
-                    out[bytesout:bytesout+len(_out)] = _out
+                    out[bytesout : bytesout + len(_out)] = _out
                     bytesout += len(_out)
                     block = block[_size:]
                     _size = 0
@@ -143,7 +143,7 @@ class ZlibCompressor:
         i = 0
         for block in blocks:
             decomp = decompressor.decompress(block)
-            out[i:i+len(decomp)] = decomp
+            out[i : i + len(decomp)] = decomp
             i += len(decomp)
         return i
 
@@ -159,41 +159,41 @@ class Bzp2Compressor:
         i = 0
         for block in blocks:
             decomp = decompressor.decompress(block)
-            out[i:i+len(decomp)] = decomp
+            out[i : i + len(decomp)] = decomp
             i += len(decomp)
         return i
 
 
 def _get_compressor_from_extensions(compression, return_extension=False):
-    '''
+    """
     Look at the loaded ASDF extensions and return the first one (if any)
     that can handle this type of compression.
     `return_extension` can be used to return corresponding extension for bookkeeping purposes.
     Returns None if no match found.
-    '''
+    """
     # TODO: in ASDF 3, this will be done by the ExtensionManager
     extensions = get_config().extensions
 
     for ext in extensions:
         for comp in ext.compressors:
-            if compression == comp.label.decode('ascii'):
+            if compression == comp.label.decode("ascii"):
                 if return_extension:
-                    return comp,ext
+                    return comp, ext
                 else:
                     return comp
     return None
 
 
 def _get_all_compression_extension_labels():
-    '''
+    """
     Get the list of compression labels supported via extensions
-    '''
+    """
     # TODO: in ASDF 3, this will be done by the ExtensionManager
     labels = []
     extensions = get_config().extensions
     for ext in extensions:
         for comp in ext.compressors:
-            labels += [comp.label.decode('ascii')]
+            labels += [comp.label.decode("ascii")]
     return labels
 
 
@@ -203,15 +203,14 @@ def _get_compressor(label):
     if ext_comp != None:
         # Use an extension before builtins
         comp = ext_comp
-    elif label == 'zlib':
+    elif label == "zlib":
         comp = ZlibCompressor()
-    elif label == 'bzp2':
+    elif label == "bzp2":
         comp = Bzp2Compressor()
-    elif label == 'lz4':
+    elif label == "lz4":
         comp = Lz4Compressor()
     else:
-        raise ValueError(
-            "Unknown compression type: '{0}'".format(label))
+        raise ValueError("Unknown compression type: '{0}'".format(label))
 
     return comp
 
@@ -222,10 +221,10 @@ def to_compression_header(compression):
     header.
     """
     if not compression:
-        return b''
+        return b""
 
     if isinstance(compression, str):
-        return compression.encode('ascii')
+        return compression.encode("ascii")
 
     return compression
 

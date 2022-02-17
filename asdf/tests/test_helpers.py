@@ -6,9 +6,8 @@ from asdf.tests.helpers import assert_roundtrip_tree
 
 
 def test_conversion_error(tmpdir):
-
     class FooType(types.CustomType):
-        name = 'foo'
+        name = "foo"
 
         def __init__(self, a, b):
             self.a = a
@@ -38,7 +37,7 @@ def test_conversion_error(tmpdir):
         def url_mapping(self):
             return []
 
-    foo = FooType(10, 'hello')
+    foo = FooType(10, "hello")
     tree = dict(foo=foo)
 
     with pytest.raises(AsdfConversionWarning):

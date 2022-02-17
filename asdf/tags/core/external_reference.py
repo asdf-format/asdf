@@ -38,6 +38,7 @@ class ExternalArrayReference(AsdfType):
     ...     ff.write_to("test.asdf")
 
     """
+
     name = "core/externalarray"
     version = (1, 0, 0)
 
@@ -49,7 +50,8 @@ class ExternalArrayReference(AsdfType):
 
     def __repr__(self):
         return "<External array reference in {0} at {1} shape: {2} dtype: {3}>".format(
-            self.fileuri, self.target, self.shape, self.dtype)
+            self.fileuri, self.target, self.shape, self.dtype
+        )
 
     def __str__(self):
         return repr(self)
@@ -65,13 +67,13 @@ class ExternalArrayReference(AsdfType):
     @classmethod
     def to_tree(self, data, ctx):
         node = {}
-        node['fileuri'] = data.fileuri
-        node['target'] = data.target
-        node['datatype'] = data.dtype
-        node['shape'] = data.shape
+        node["fileuri"] = data.fileuri
+        node["target"] = data.target
+        node["datatype"] = data.dtype
+        node["shape"] = data.shape
 
         return node
 
     @classmethod
     def from_tree(cls, tree, ctx):
-        return cls(tree['fileuri'], tree['target'], tree['datatype'], tree['shape'])
+        return cls(tree["fileuri"], tree["target"], tree["datatype"], tree["shape"])

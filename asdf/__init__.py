@@ -4,9 +4,19 @@ Data Format (ASDF) files
 """
 
 __all__ = [
-    'AsdfFile', 'CustomType', 'AsdfExtension', 'Stream', 'open',
-    'commands', 'IntegerType', 'ExternalArrayReference', 'info', '__version__',
-    'ValidationError', 'get_config', 'config_context',
+    "AsdfFile",
+    "CustomType",
+    "AsdfExtension",
+    "Stream",
+    "open",
+    "commands",
+    "IntegerType",
+    "ExternalArrayReference",
+    "info",
+    "__version__",
+    "ValidationError",
+    "get_config",
+    "config_context",
 ]
 
 

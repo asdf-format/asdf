@@ -2,6 +2,7 @@ import asdf
 
 from asdf.tests import helpers
 
+
 def test_extra_properties():
     yaml = """
 metadata: !core/extension_metadata-1.0.0

@@ -10,6 +10,7 @@ class Resolver:
     A class that can be used to map strings with a particular prefix
     to another.
     """
+
     def __init__(self, mappings, prefix):
         """
         Parameters
@@ -40,8 +41,7 @@ class Resolver:
         self._mappings = self._validate_mappings(mappings)
         self._prefix = prefix
 
-
-    def add_mapping(self, mappings, prefix=''):
+    def add_mapping(self, mappings, prefix=""):
         # Deprecating this because Resolver is used as part of a dictionary key
         # and so shouldn't be mutable.
         warnings.warn("The 'add_mapping' method is deprecated.", AsdfDeprecationWarning)
@@ -50,7 +50,6 @@ class Resolver:
             raise ValueError(f"Prefix '{prefix}' does not match the Resolver prefix '{self._prefix}'")
 
         self._mappings = self._mappings + self._validate_mappings(mappings)
-
 
     def _perform_mapping(self, mapping, input):
         if callable(mapping):
@@ -64,7 +63,7 @@ class Resolver:
                 format_tokens = {
                     self._prefix: input,
                     self._prefix + "_prefix": mapping[0],
-                    self._prefix + "_suffix": input[len(mapping[0]):]
+                    self._prefix + "_suffix": input[len(mapping[0]) :],
                 }
 
                 return len(mapping[0]), mapping[1].format(**format_tokens)
@@ -76,16 +75,17 @@ class Resolver:
         for mapping in mappings:
             if callable(mapping):
                 normalized.append(mapping)
-            elif (isinstance(mapping, (list, tuple)) and
-                  len(mapping) == 2 and
-                  isinstance(mapping[0], str) and
-                  isinstance(mapping[1], str)):
+            elif (
+                isinstance(mapping, (list, tuple))
+                and len(mapping) == 2
+                and isinstance(mapping[0], str)
+                and isinstance(mapping[1], str)
+            ):
                 normalized.append(tuple(mapping))
             else:
                 raise ValueError("Invalid mapping '{0}'".format(mapping))
 
         return tuple(normalized)
-
 
     def __call__(self, input):
         candidates = [(0, input)]
@@ -112,6 +112,7 @@ class ResolverChain:
     A chain of Resolvers, each of which is called with the previous Resolver's
     output to produce the final transformed string.
     """
+
     def __init__(self, *resolvers):
         """
         Parameters
@@ -138,25 +139,32 @@ class ResolverChain:
 
 DEFAULT_URL_MAPPING = []
 
-DEFAULT_TAG_TO_URL_MAPPING = [
-    (constants.STSCI_SCHEMA_TAG_BASE,
-     'http://stsci.edu/schemas/asdf{tag_suffix}')
-]
+DEFAULT_TAG_TO_URL_MAPPING = [(constants.STSCI_SCHEMA_TAG_BASE, "http://stsci.edu/schemas/asdf{tag_suffix}")]
+
 
 def default_url_mapping(uri):
     warnings.warn("'default_url_mapping' is deprecated.", AsdfDeprecationWarning)
     return default_url_mapping._resolver(uri)
-default_url_mapping._resolver = Resolver(DEFAULT_URL_MAPPING, 'url')
+
+
+default_url_mapping._resolver = Resolver(DEFAULT_URL_MAPPING, "url")
+
 
 def default_tag_to_url_mapping(uri):
     warnings.warn("'default_tag_to_url_mapping' is deprecated.", AsdfDeprecationWarning)
     return default_tag_to_url_mapping._resolver(uri)
-default_tag_to_url_mapping._resolver = Resolver(DEFAULT_TAG_TO_URL_MAPPING, 'tag')
+
+
+default_tag_to_url_mapping._resolver = Resolver(DEFAULT_TAG_TO_URL_MAPPING, "tag")
+
 
 def default_resolver(uri):
     warnings.warn(
         "The 'default_resolver(...)' function is deprecated. Use "
         "'asdf.extension.get_default_resolver()(...)' instead.",
-        AsdfDeprecationWarning)
+        AsdfDeprecationWarning,
+    )
     return default_resolver._resolver(uri)
+
+
 default_resolver._resolver = ResolverChain(default_tag_to_url_mapping._resolver, default_url_mapping._resolver)

@@ -12,7 +12,7 @@ def asdf_file():
         "foo": 42,
         "nested": {"foo": 24, "foible": "whoops", "folicle": "yup", "moo": 24},
         "bar": "hello",
-        "list": [{"index": 0}, {"index": 1}, {"index": 2}]
+        "list": [{"index": 0}, {"index": 1}, {"index": 2}],
     }
     return AsdfFile(tree)
 
@@ -101,9 +101,7 @@ def test_by_value_with_ndarray():
     """
     Check some edge cases when comparing integers and booleans to numpy arrays.
     """
-    tree = {
-        "foo": np.arange(10)
-    }
+    tree = {"foo": np.arange(10)}
     af = AsdfFile(tree)
     result = af.search(value=True)
     assert len(result.nodes) == 0

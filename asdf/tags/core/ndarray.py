@@ -10,33 +10,30 @@ from ... import util
 
 
 _datatype_names = {
-    'int8'       : 'i1',
-    'int16'      : 'i2',
-    'int32'      : 'i4',
-    'int64'      : 'i8',
-    'uint8'      : 'u1',
-    'uint16'     : 'u2',
-    'uint32'     : 'u4',
-    'uint64'     : 'u8',
-    'float32'    : 'f4',
-    'float64'    : 'f8',
-    'complex64'  : 'c8',
-    'complex128' : 'c16',
-    'bool8'      : 'b1'
+    "int8": "i1",
+    "int16": "i2",
+    "int32": "i4",
+    "int64": "i8",
+    "uint8": "u1",
+    "uint16": "u2",
+    "uint32": "u4",
+    "uint64": "u8",
+    "float32": "f4",
+    "float64": "f8",
+    "complex64": "c8",
+    "complex128": "c16",
+    "bool8": "b1",
 }
 
 
-_string_datatype_names = {
-    'ascii' : 'S',
-    'ucs4'  : 'U'
-}
+_string_datatype_names = {"ascii": "S", "ucs4": "U"}
 
 
 def asdf_byteorder_to_numpy_byteorder(byteorder):
-    if byteorder == 'big':
-        return '>'
-    elif byteorder == 'little':
-        return '<'
+    if byteorder == "big":
+        return ">"
+    elif byteorder == "little":
+        return "<"
     raise ValueError("Invalid ASDF byteorder '{0}'".format(byteorder))
 
 
@@ -47,22 +44,24 @@ def asdf_datatype_to_numpy_dtype(datatype, byteorder=None):
         datatype = _datatype_names[datatype]
         byteorder = asdf_byteorder_to_numpy_byteorder(byteorder)
         return np.dtype(str(byteorder + datatype))
-    elif (isinstance(datatype, list) and
-          len(datatype) == 2 and
-          isinstance(datatype[0], str) and
-          isinstance(datatype[1], int) and
-          datatype[0] in _string_datatype_names):
+    elif (
+        isinstance(datatype, list)
+        and len(datatype) == 2
+        and isinstance(datatype[0], str)
+        and isinstance(datatype[1], int)
+        and datatype[0] in _string_datatype_names
+    ):
         length = datatype[1]
         byteorder = asdf_byteorder_to_numpy_byteorder(byteorder)
         datatype = str(byteorder) + str(_string_datatype_names[datatype[0]]) + str(length)
         return np.dtype(datatype)
     elif isinstance(datatype, dict):
-        if 'datatype' not in datatype:
+        if "datatype" not in datatype:
             raise ValueError("Field entry has no datatype: '{0}'".format(datatype))
-        name = datatype.get('name', '')
-        byteorder = datatype.get('byteorder', byteorder)
-        shape = datatype.get('shape')
-        datatype = asdf_datatype_to_numpy_dtype(datatype['datatype'], byteorder)
+        name = datatype.get("name", "")
+        byteorder = datatype.get("byteorder", byteorder)
+        shape = datatype.get("shape")
+        datatype = asdf_datatype_to_numpy_dtype(datatype["datatype"], byteorder)
         if shape is None:
             return (str(name), datatype)
         else:
@@ -74,7 +73,7 @@ def asdf_datatype_to_numpy_dtype(datatype, byteorder=None):
             if isinstance(np_dtype, tuple):
                 datatype_list.append(np_dtype)
             elif isinstance(np_dtype, np.dtype):
-                datatype_list.append((str(''), np_dtype))
+                datatype_list.append((str(""), np_dtype))
             else:
                 raise RuntimeError("Error parsing asdf datatype")
         return np.dtype(datatype_list)
@@ -85,12 +84,12 @@ def numpy_byteorder_to_asdf_byteorder(byteorder, override=None):
     if override is not None:
         return override
 
-    if byteorder == '=':
+    if byteorder == "=":
         return sys.byteorder
-    elif byteorder == '<':
-        return 'little'
+    elif byteorder == "<":
+        return "little"
     else:
-        return 'big'
+        return "big"
 
 
 def numpy_dtype_to_asdf_datatype(dtype, include_byteorder=True, override_byteorder=None):
@@ -100,13 +99,13 @@ def numpy_dtype_to_asdf_datatype(dtype, include_byteorder=True, override_byteord
         for name in dtype.names:
             field = dtype.fields[name][0]
             d = {}
-            d['name'] = name
+            d["name"] = name
             field_dtype, byteorder = numpy_dtype_to_asdf_datatype(field, override_byteorder=override_byteorder)
-            d['datatype'] = field_dtype
+            d["datatype"] = field_dtype
             if include_byteorder:
-                d['byteorder'] = byteorder
+                d["byteorder"] = byteorder
             if field.shape:
-                d['shape'] = list(field.shape)
+                d["shape"] = list(field.shape)
             fields.append(d)
         return fields, numpy_byteorder_to_asdf_byteorder(dtype.byteorder, override=override_byteorder)
 
@@ -116,15 +115,17 @@ def numpy_dtype_to_asdf_datatype(dtype, include_byteorder=True, override_byteord
     elif dtype.name in _datatype_names:
         return dtype.name, numpy_byteorder_to_asdf_byteorder(dtype.byteorder, override=override_byteorder)
 
-    elif dtype.name == 'bool':
-        return 'bool8', numpy_byteorder_to_asdf_byteorder(dtype.byteorder, override=override_byteorder)
+    elif dtype.name == "bool":
+        return "bool8", numpy_byteorder_to_asdf_byteorder(dtype.byteorder, override=override_byteorder)
 
-    elif dtype.name.startswith('string') or dtype.name.startswith('bytes'):
-        return ['ascii', dtype.itemsize], 'big'
+    elif dtype.name.startswith("string") or dtype.name.startswith("bytes"):
+        return ["ascii", dtype.itemsize], "big"
 
-    elif dtype.name.startswith('unicode') or dtype.name.startswith('str'):
-        return (['ucs4', int(dtype.itemsize / 4)],
-                numpy_byteorder_to_asdf_byteorder(dtype.byteorder, override=override_byteorder))
+    elif dtype.name.startswith("unicode") or dtype.name.startswith("str"):
+        return (
+            ["ucs4", int(dtype.itemsize / 4)],
+            numpy_byteorder_to_asdf_byteorder(dtype.byteorder, override=override_byteorder),
+        )
 
     raise ValueError("Unknown dtype {0}".format(dtype))
 
@@ -140,37 +141,40 @@ def inline_data_asarray(inline, dtype=None):
     # object dtypes, but ASDF explicitly excludes those, so we're ok
     # there.
     if dtype is not None and dtype.fields is not None:
+
         def find_innermost_match(l, depth=0):
             if not isinstance(l, list) or not len(l):
-                raise ValueError(
-                    "data can not be converted to structured array")
+                raise ValueError("data can not be converted to structured array")
             try:
                 np.asarray(tuple(l), dtype=dtype)
             except ValueError:
                 return find_innermost_match(l[0], depth + 1)
             else:
                 return depth
+
         depth = find_innermost_match(inline)
 
         def convert_to_tuples(l, data_depth, depth=0):
             if data_depth == depth:
                 return tuple(l)
             else:
-                return [convert_to_tuples(x, data_depth, depth+1) for x in l]
+                return [convert_to_tuples(x, data_depth, depth + 1) for x in l]
+
         inline = convert_to_tuples(inline, depth)
 
         return np.asarray(inline, dtype=dtype)
     else:
+
         def handle_mask(inline):
             if isinstance(inline, list):
                 if None in inline:
                     inline_array = np.asarray(inline)
                     nones = np.equal(inline_array, None)
-                    return np.ma.array(np.where(nones, 0, inline),
-                                       mask=nones)
+                    return np.ma.array(np.where(nones, 0, inline), mask=nones)
                 else:
                     return [handle_mask(x) for x in inline]
             return inline
+
         inline = handle_mask(inline)
 
         inline = np.ma.asarray(inline, dtype=dtype)
@@ -183,8 +187,8 @@ def inline_data_asarray(inline, dtype=None):
 def numpy_array_to_list(array):
     def tolist(x):
         if isinstance(x, (np.ndarray, NDArrayType)):
-            if x.dtype.char == 'S':
-                x = x.astype('U').tolist()
+            if x.dtype.char == "S":
+                x = x.astype("U").tolist()
             else:
                 x = x.tolist()
 
@@ -199,7 +203,7 @@ def numpy_array_to_list(array):
         if isinstance(x, list):
             return [ascii_to_unicode(y) for y in x]
         elif isinstance(x, bytes):
-            return x.decode('ascii')
+            return x.decode("ascii")
         else:
             return x
 
@@ -209,12 +213,11 @@ def numpy_array_to_list(array):
 
 
 class NDArrayType(AsdfType):
-    name = 'core/ndarray'
-    version = '1.0.0'
+    name = "core/ndarray"
+    version = "1.0.0"
     types = [np.ndarray, ma.MaskedArray]
 
-    def __init__(self, source, shape, dtype, offset, strides,
-                 order, mask, asdffile):
+    def __init__(self, source, shape, dtype, offset, strides, order, mask, asdffile):
         self._asdffile = asdffile
         self._source = source
         self._block = None
@@ -226,11 +229,10 @@ class NDArrayType(AsdfType):
             self._array = self._apply_mask(self._array, self._mask)
             self._block = asdffile.blocks.add_inline(self._array)
             if shape is not None:
-                if ((shape[0] == '*' and
-                     self._array.shape[1:] != tuple(shape[1:])) or
-                    (self._array.shape != tuple(shape))):
-                    raise ValueError(
-                        "inline data doesn't match the given shape")
+                if (shape[0] == "*" and self._array.shape[1:] != tuple(shape[1:])) or (
+                    self._array.shape != tuple(shape)
+                ):
+                    raise ValueError("inline data doesn't match the given shape")
 
         self._shape = shape
         self._dtype = dtype
@@ -253,17 +255,14 @@ class NDArrayType(AsdfType):
 
         if self._array is None:
             block = self.block
-            shape = self.get_actual_shape(
-                self._shape, self._strides, self._dtype, len(block))
+            shape = self.get_actual_shape(self._shape, self._strides, self._dtype, len(block))
 
             if block.trust_data_dtype:
                 dtype = block.data.dtype
             else:
                 dtype = self._dtype
 
-            self._array = np.ndarray(
-                shape, dtype, block.data,
-                self._offset, self._strides, self._order)
+            self._array = np.ndarray(shape, dtype, block.data, self._offset, self._strides, self._order)
             self._array = self._apply_mask(self._array, self._mask)
             if block.readonly:
                 self._array.setflags(write=False)
@@ -291,16 +290,16 @@ class NDArrayType(AsdfType):
         # repr alone should not force loading of the data
         if self._array is None:
             return "<{0} (unloaded) shape: {1} dtype: {2}>".format(
-                'array' if self._mask is None else 'masked array',
-                self._shape, self._dtype)
+                "array" if self._mask is None else "masked array", self._shape, self._dtype
+            )
         return repr(self._make_array())
 
     def __str__(self):
         # str alone should not force loading of the data
         if self._array is None:
             return "<{0} (unloaded) shape: {1} dtype: {2}>".format(
-                'array' if self._mask is None else 'masked array',
-                self._shape, self._dtype)
+                "array" if self._mask is None else "masked array", self._shape, self._dtype
+            )
         return str(self._make_array())
 
     def get_actual_shape(self, shape, strides, dtype, block_size):
@@ -308,11 +307,11 @@ class NDArrayType(AsdfType):
         Get the actual shape of an array, by computing it against the
         block_size if it contains a ``*``.
         """
-        num_stars = shape.count('*')
+        num_stars = shape.count("*")
         if num_stars == 0:
             return shape
         elif num_stars == 1:
-            if shape[0] != '*':
+            if shape[0] != "*":
                 raise ValueError("'*' may only be in first entry of shape")
             if strides is not None:
                 stride = strides[0]
@@ -332,9 +331,8 @@ class NDArrayType(AsdfType):
     def shape(self):
         if self._shape is None:
             return self.__array__().shape
-        if '*' in self._shape:
-            return tuple(self.get_actual_shape(
-                self._shape, self._strides, self._dtype, len(self.block)))
+        if "*" in self._shape:
+            return tuple(self.get_actual_shape(self._shape, self._strides, self._dtype, len(self.block)))
         return tuple(self._shape)
 
     @property
@@ -354,7 +352,7 @@ class NDArrayType(AsdfType):
         # We need to ignore __array_struct__, or unicode arrays end up
         # getting "double casted" and upsized.  This also reduces the
         # number of array creations in the general case.
-        if attr == '__array_struct__':
+        if attr == "__array_struct__":
             raise AttributeError()
         return getattr(self._make_array(), attr)
 
@@ -374,9 +372,7 @@ class NDArrayType(AsdfType):
         # libraries.
         # See https://github.com/asdf-format/asdf/issues/1015
         if name in ("name", "version"):
-            raise AttributeError(
-                f"'{self.__class__.name}' object has no attribute '{name}'"
-            )
+            raise AttributeError(f"'{self.__class__.name}' object has no attribute '{name}'")
         else:
             return super().__getattribute__(name)
 
@@ -386,29 +382,26 @@ class NDArrayType(AsdfType):
             return cls(node, None, None, None, None, None, None, ctx)
 
         elif isinstance(node, dict):
-            source = node.get('source')
-            data = node.get('data')
+            source = node.get("source")
+            data = node.get("data")
             if source and data:
-                raise ValueError(
-                    "Both source and data may not be provided "
-                    "at the same time")
+                raise ValueError("Both source and data may not be provided " "at the same time")
             if data:
                 source = data
-            shape = node.get('shape', None)
+            shape = node.get("shape", None)
             if data is not None:
                 byteorder = sys.byteorder
             else:
-                byteorder = node['byteorder']
-            if 'datatype' in node:
-                dtype = asdf_datatype_to_numpy_dtype(
-                    node['datatype'], byteorder)
+                byteorder = node["byteorder"]
+            if "datatype" in node:
+                dtype = asdf_datatype_to_numpy_dtype(node["datatype"], byteorder)
             else:
                 dtype = None
-            offset = node.get('offset', 0)
-            strides = node.get('strides', None)
-            mask = node.get('mask', None)
+            offset = node.get("offset", 0)
+            strides = node.get("strides", None)
+            mask = node.get("mask", None)
 
-            return cls(source, shape, dtype, offset, strides, 'A', mask, ctx)
+            return cls(source, shape, dtype, offset, strides, "A", mask, ctx)
 
         raise TypeError("Invalid ndarray description.")
 
@@ -446,10 +439,12 @@ class NDArrayType(AsdfType):
             # astropy.io.fits always writes arrays C-contiguous with big-endian
             # byte order, whereas asdf preserves the "contiguousity" and byte order
             # of the base array.
-            if (block.data.shape != data.shape or
-                block.data.dtype != data.dtype or
-                block.data.ctypes.data != data.ctypes.data or
-                block.data.strides != data.strides):
+            if (
+                block.data.shape != data.shape
+                or block.data.dtype != data.dtype
+                or block.data.ctypes.data != data.ctypes.data
+                or block.data.strides != data.strides
+            ):
                 raise ValueError(
                     "ASDF has only limited support for serializing views over arrays stored "
                     "in FITS HDUs.  This error likely means that a slice of such an array "
@@ -481,34 +476,34 @@ class NDArrayType(AsdfType):
 
         result = {}
 
-        result['shape'] = list(shape)
-        if block.array_storage == 'streamed':
-            result['shape'][0] = '*'
+        result["shape"] = list(shape)
+        if block.array_storage == "streamed":
+            result["shape"][0] = "*"
 
-        if block.array_storage == 'inline':
+        if block.array_storage == "inline":
             listdata = numpy_array_to_list(data)
-            result['data'] = listdata
-            result['datatype'] = dtype
+            result["data"] = listdata
+            result["datatype"] = dtype
         else:
-            result['shape'] = list(shape)
-            if block.array_storage == 'streamed':
-                result['shape'][0] = '*'
+            result["shape"] = list(shape)
+            if block.array_storage == "streamed":
+                result["shape"][0] = "*"
 
-            result['source'] = ctx.blocks.get_source(block)
-            result['datatype'] = dtype
-            result['byteorder'] = byteorder
+            result["source"] = ctx.blocks.get_source(block)
+            result["datatype"] = dtype
+            result["byteorder"] = byteorder
 
             if offset > 0:
-                result['offset'] = offset
+                result["offset"] = offset
 
             if strides is not None:
-                result['strides'] = list(strides)
+                result["strides"] = list(strides)
 
         if isinstance(data, ma.MaskedArray):
             if np.any(data.mask):
-                if block.array_storage == 'inline':
-                    ctx.blocks.set_array_storage(ctx.blocks[data.mask], 'inline')
-                result['mask'] = data.mask
+                if block.array_storage == "inline":
+                    ctx.blocks.set_array_storage(ctx.blocks[data.mask], "inline")
+                result["mask"] = data.mask
 
         return result
 
@@ -518,22 +513,22 @@ class NDArrayType(AsdfType):
             if not new.dtype.fields:
                 # This line is safe because this is actually a piece of test
                 # code, even though it lives in this file:
-                assert False, "arrays not equal" # nosec
+                assert False, "arrays not equal"  # nosec
             for a, b in zip(old, new):
                 cls._assert_equality(a, b, func)
         else:
             old = old.__array__()
             new = new.__array__()
-            if old.dtype.char in 'SU':
-                if old.dtype.char == 'S':
-                    old = old.astype('U')
-                if new.dtype.char == 'S':
-                    new = new.astype('U')
+            if old.dtype.char in "SU":
+                if old.dtype.char == "S":
+                    old = old.astype("U")
+                if new.dtype.char == "S":
+                    new = new.astype("U")
                 old = old.tolist()
                 new = new.tolist()
                 # This line is safe because this is actually a piece of test
                 # code, even though it lives in this file:
-                assert old == new # nosec
+                assert old == new  # nosec
             else:
                 func(old, new)
 
@@ -547,8 +542,7 @@ class NDArrayType(AsdfType):
     def assert_allclose(cls, old, new):
         from numpy.testing import assert_allclose, assert_array_equal
 
-        if (old.dtype.kind in 'iu' and
-            new.dtype.kind in 'iu'):
+        if old.dtype.kind in "iu" and new.dtype.kind in "iu":
             cls._assert_equality(old, new, assert_array_equal)
         else:
             cls._assert_equality(old, new, assert_allclose)
@@ -557,8 +551,7 @@ class NDArrayType(AsdfType):
     def copy_to_new_asdf(cls, node, asdffile):
         if isinstance(node, NDArrayType):
             array = node._make_array()
-            asdffile.blocks.set_array_storage(asdffile.blocks[array],
-                                              node.block.array_storage)
+            asdffile.blocks.set_array_storage(asdffile.blocks[array], node.block.array_storage)
             return node._make_array()
         return node
 
@@ -566,24 +559,74 @@ class NDArrayType(AsdfType):
 def _make_operation(name):
     def __operation__(self, *args):
         return getattr(self._make_array(), name)(*args)
+
     return __operation__
 
 
 for op in [
-        '__neg__', '__pos__', '__abs__', '__invert__', '__complex__',
-        '__int__', '__long__', '__float__', '__oct__', '__hex__',
-        '__lt__', '__le__', '__eq__', '__ne__', '__gt__', '__ge__',
-        '__cmp__', '__rcmp__', '__add__', '__sub__', '__mul__',
-        '__floordiv__', '__mod__', '__divmod__', '__pow__',
-        '__lshift__', '__rshift__', '__and__', '__xor__', '__or__',
-        '__div__', '__truediv__', '__radd__', '__rsub__', '__rmul__',
-        '__rdiv__', '__rtruediv__', '__rfloordiv__', '__rmod__',
-        '__rdivmod__', '__rpow__', '__rlshift__', '__rrshift__',
-        '__rand__', '__rxor__', '__ror__', '__iadd__', '__isub__',
-        '__imul__', '__idiv__', '__itruediv__', '__ifloordiv__',
-        '__imod__', '__ipow__', '__ilshift__', '__irshift__',
-        '__iand__', '__ixor__', '__ior__', '__getitem__',
-        '__delitem__', '__contains__']:
+    "__neg__",
+    "__pos__",
+    "__abs__",
+    "__invert__",
+    "__complex__",
+    "__int__",
+    "__long__",
+    "__float__",
+    "__oct__",
+    "__hex__",
+    "__lt__",
+    "__le__",
+    "__eq__",
+    "__ne__",
+    "__gt__",
+    "__ge__",
+    "__cmp__",
+    "__rcmp__",
+    "__add__",
+    "__sub__",
+    "__mul__",
+    "__floordiv__",
+    "__mod__",
+    "__divmod__",
+    "__pow__",
+    "__lshift__",
+    "__rshift__",
+    "__and__",
+    "__xor__",
+    "__or__",
+    "__div__",
+    "__truediv__",
+    "__radd__",
+    "__rsub__",
+    "__rmul__",
+    "__rdiv__",
+    "__rtruediv__",
+    "__rfloordiv__",
+    "__rmod__",
+    "__rdivmod__",
+    "__rpow__",
+    "__rlshift__",
+    "__rrshift__",
+    "__rand__",
+    "__rxor__",
+    "__ror__",
+    "__iadd__",
+    "__isub__",
+    "__imul__",
+    "__idiv__",
+    "__itruediv__",
+    "__ifloordiv__",
+    "__imod__",
+    "__ipow__",
+    "__ilshift__",
+    "__irshift__",
+    "__iand__",
+    "__ixor__",
+    "__ior__",
+    "__getitem__",
+    "__delitem__",
+    "__contains__",
+]:
     setattr(NDArrayType, op, _make_operation(op))
 
 
@@ -592,10 +635,10 @@ def _get_ndim(instance):
         array = inline_data_asarray(instance)
         return array.ndim
     elif isinstance(instance, dict):
-        if 'shape' in instance:
-            return len(instance['shape'])
-        elif 'data' in instance:
-            array = inline_data_asarray(instance['data'])
+        if "shape" in instance:
+            return len(instance["shape"])
+        elif "data" in instance:
+            array = inline_data_asarray(instance["data"])
             return array.ndim
     elif isinstance(instance, (np.ndarray, NDArrayType)):
         return len(instance.shape)
@@ -606,8 +649,8 @@ def validate_ndim(validator, ndim, instance, schema):
 
     if in_ndim != ndim:
         yield ValidationError(
-            "Wrong number of dimensions: Expected {0}, got {1}".format(
-                ndim, in_ndim), instance=repr(instance))
+            "Wrong number of dimensions: Expected {0}, got {1}".format(ndim, in_ndim), instance=repr(instance)
+        )
 
 
 def validate_max_ndim(validator, max_ndim, instance, schema):
@@ -615,8 +658,9 @@ def validate_max_ndim(validator, max_ndim, instance, schema):
 
     if in_ndim > max_ndim:
         yield ValidationError(
-            "Wrong number of dimensions: Expected max of {0}, got {1}".format(
-                max_ndim, in_ndim), instance=repr(instance))
+            "Wrong number of dimensions: Expected max of {0}, got {1}".format(max_ndim, in_ndim),
+            instance=repr(instance),
+        )
 
 
 def validate_datatype(validator, datatype, instance, schema):
@@ -624,10 +668,10 @@ def validate_datatype(validator, datatype, instance, schema):
         array = inline_data_asarray(instance)
         in_datatype, _ = numpy_dtype_to_asdf_datatype(array.dtype)
     elif isinstance(instance, dict):
-        if 'datatype' in instance:
-            in_datatype = instance['datatype']
-        elif 'data' in instance:
-            array = inline_data_asarray(instance['data'])
+        if "datatype" in instance:
+            in_datatype = instance["datatype"]
+        elif "data" in instance:
+            array = inline_data_asarray(instance["data"])
             in_datatype, _ = numpy_dtype_to_asdf_datatype(array.dtype)
         else:
             raise ValidationError("Not an array")
@@ -639,50 +683,38 @@ def validate_datatype(validator, datatype, instance, schema):
     if datatype == in_datatype:
         return
 
-    if schema.get('exact_datatype', False):
-        yield ValidationError(
-            "Expected datatype '{0}', got '{1}'".format(
-                datatype, in_datatype))
+    if schema.get("exact_datatype", False):
+        yield ValidationError("Expected datatype '{0}', got '{1}'".format(datatype, in_datatype))
 
     np_datatype = asdf_datatype_to_numpy_dtype(datatype)
     np_in_datatype = asdf_datatype_to_numpy_dtype(in_datatype)
 
     if not np_datatype.fields:
         if np_in_datatype.fields:
-            yield ValidationError(
-                "Expected scalar datatype '{0}', got '{1}'".format(
-                    datatype, in_datatype))
+            yield ValidationError("Expected scalar datatype '{0}', got '{1}'".format(datatype, in_datatype))
 
-        if not np.can_cast(np_in_datatype, np_datatype, 'safe'):
-            yield ValidationError(
-                "Can not safely cast from '{0}' to '{1}' ".format(
-                    in_datatype, datatype))
+        if not np.can_cast(np_in_datatype, np_datatype, "safe"):
+            yield ValidationError("Can not safely cast from '{0}' to '{1}' ".format(in_datatype, datatype))
 
     else:
         if not np_in_datatype.fields:
-            yield ValidationError(
-                "Expected structured datatype '{0}', got '{1}'".format(
-                    datatype, in_datatype))
+            yield ValidationError("Expected structured datatype '{0}', got '{1}'".format(datatype, in_datatype))
 
         if len(np_in_datatype.fields) != len(np_datatype.fields):
             yield ValidationError(
-                "Mismatch in number of columns: "
-                "Expected {0}, got {1}".format(
-                    len(datatype), len(in_datatype)))
+                "Mismatch in number of columns: " "Expected {0}, got {1}".format(len(datatype), len(in_datatype))
+            )
 
         for i in range(len(np_datatype.fields)):
             in_type = np_in_datatype[i]
             out_type = np_datatype[i]
-            if not np.can_cast(in_type, out_type, 'safe'):
+            if not np.can_cast(in_type, out_type, "safe"):
                 yield ValidationError(
                     "Can not safely cast to expected datatype: "
                     "Expected {0}, got {1}".format(
-                        numpy_dtype_to_asdf_datatype(out_type)[0],
-                        numpy_dtype_to_asdf_datatype(in_type)[0]))
+                        numpy_dtype_to_asdf_datatype(out_type)[0], numpy_dtype_to_asdf_datatype(in_type)[0]
+                    )
+                )
 
 
-NDArrayType.validators = {
-    'ndim': validate_ndim,
-    'max_ndim': validate_max_ndim,
-    'datatype': validate_datatype
-}
+NDArrayType.validators = {"ndim": validate_ndim, "max_ndim": validate_max_ndim, "datatype": validate_datatype}

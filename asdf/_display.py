@@ -30,7 +30,14 @@ DEFAULT_MAX_COLS = 120
 DEFAULT_SHOW_VALUES = True
 
 
-def render_tree(node, max_rows=DEFAULT_MAX_ROWS, max_cols=DEFAULT_MAX_COLS, show_values=DEFAULT_SHOW_VALUES, filters=[], identifier="root"):
+def render_tree(
+    node,
+    max_rows=DEFAULT_MAX_ROWS,
+    max_cols=DEFAULT_MAX_COLS,
+    show_values=DEFAULT_SHOW_VALUES,
+    filters=[],
+    identifier="root",
+):
     """
     Render a tree as text with indents showing depth.
     """
@@ -73,6 +80,7 @@ class _NodeInfo:
     """
     Container for a node, its state of visibility, and values used to display it.
     """
+
     @classmethod
     def from_root_node(cls, root_identifier, root_node):
         """
@@ -88,9 +96,7 @@ class _NodeInfo:
             next_nodes = []
 
             for parent, identifier, node in current_nodes:
-                if (isinstance(node, dict) or
-                    isinstance(node, tuple) or
-                    cls.supports_info(node)) and id(node) in seen:
+                if (isinstance(node, dict) or isinstance(node, tuple) or cls.supports_info(node)) and id(node) in seen:
                     info = _NodeInfo(parent, identifier, node, current_depth, recursive=True)
                     parent.children.append(info)
                 else:
@@ -115,8 +121,7 @@ class _NodeInfo:
 
         return root_info
 
-    def __init__(
-        self, parent, identifier, node, depth, recursive=False, visible=True):
+    def __init__(self, parent, identifier, node, depth, recursive=False, visible=True):
         self.parent = parent
         self.identifier = identifier
         self.node = node
@@ -164,6 +169,7 @@ class _TreeRenderer:
     """
     Render a _NodeInfo tree with indent showing depth.
     """
+
     def __init__(self, max_rows, max_cols, show_values):
         self._max_rows = max_rows
         self._max_cols = max_cols
@@ -213,9 +219,9 @@ class _TreeRenderer:
                     rows_left -= len(info.children)
                     next_infos.extend(info.children)
                 elif rows_left > 1:
-                    for child in info.children[rows_left-1:]:
+                    for child in info.children[rows_left - 1 :]:
                         child.visible = False
-                    next_infos.extend(info.children[0:rows_left-1])
+                    next_infos.extend(info.children[0 : rows_left - 1])
                     rows_left = 0
                 else:
                     for child in info.children:
@@ -243,9 +249,9 @@ class _TreeRenderer:
                     if rows_left is None or rows_left >= len(info.children):
                         next_infos.extend(info.children)
                     elif rows_left > 1:
-                        for child in info.children[rows_left-1:]:
+                        for child in info.children[rows_left - 1 :]:
                             child.visible = False
-                        next_infos.extend(info.children[0:rows_left-1])
+                        next_infos.extend(info.children[0 : rows_left - 1])
                     else:
                         for child in info.children:
                             child.visible = False
@@ -287,10 +293,8 @@ class _TreeRenderer:
         if num_visible_children > 0 and num_visible_children != len(info.children):
             hidden_count = len(info.children) - num_visible_children
             prefix = self._make_prefix(info.depth + 1, active_depths, True)
-            message = format_faint(format_italic(str(hidden_count) + ' not shown'))
-            lines.append(
-                "{}{}".format(prefix, message)
-            )
+            message = format_faint(format_italic(str(hidden_count) + " not shown"))
+            lines.append("{}{}".format(prefix, message))
 
         return lines, elided
 

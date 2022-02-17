@@ -13,20 +13,12 @@ class Info(Command):
     @classmethod
     def setup_arguments(cls, subparsers):
         parser = subparsers.add_parser(
-            "info", help="Print a rendering of an ASDF tree.",
-            description="Print a rendering of an ASDF tree."
+            "info", help="Print a rendering of an ASDF tree.", description="Print a rendering of an ASDF tree."
         )
 
         parser.add_argument("filename", help="ASDF file to render")
-        parser.add_argument(
-            "--max-rows",
-            type=int,
-            help="maximum number of lines"
-        )
-        parser.add_argument(
-            "--max-cols",
-            type=int,
-            help="maximum length of line")
+        parser.add_argument("--max-rows", type=int, help="maximum number of lines")
+        parser.add_argument("--max-cols", type=int, help="maximum length of line")
 
         parser.add_argument("--show-values", dest="show_values", action="store_true")
         parser.add_argument("--no-show-values", dest="show_values", action="store_false")

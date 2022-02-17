@@ -15,6 +15,7 @@ class ExtensionManager:
         List of enabled extensions to manage.  Extensions placed earlier
         in the list take precedence.
     """
+
     def __init__(self, extensions):
         self._extensions = [ExtensionProxy.maybe_wrap(e) for e in extensions]
 
@@ -85,10 +86,7 @@ class ExtensionManager:
         -------
         bool
         """
-        return (
-            typ in self._converters_by_type
-            or get_class_name(typ, instance=False) in self._converters_by_type
-        )
+        return typ in self._converters_by_type or get_class_name(typ, instance=False) in self._converters_by_type
 
     def get_tag_definition(self, tag):
         """
@@ -112,10 +110,7 @@ class ExtensionManager:
             return self._tag_defs_by_tag[tag]
         except KeyError:
             raise KeyError(
-                "No support available for YAML tag '{}'.  "
-                "You may need to install a missing extension.".format(
-                    tag
-                )
+                "No support available for YAML tag '{}'.  " "You may need to install a missing extension.".format(tag)
             ) from None
 
     def get_converter_for_tag(self, tag):
@@ -140,10 +135,7 @@ class ExtensionManager:
             return self._converters_by_tag[tag]
         except KeyError:
             raise KeyError(
-                "No support available for YAML tag '{}'.  "
-                "You may need to install a missing extension.".format(
-                    tag
-                )
+                "No support available for YAML tag '{}'.  " "You may need to install a missing extension.".format(tag)
             ) from None
 
     def get_converter_for_type(self, typ):
@@ -172,9 +164,7 @@ class ExtensionManager:
             except KeyError:
                 raise KeyError(
                     "No support available for Python type '{}'.  "
-                    "You may need to install or enable an extension.".format(
-                        get_class_name(typ, instance=False)
-                    )
+                    "You may need to install or enable an extension.".format(get_class_name(typ, instance=False))
                 ) from None
 
 
@@ -194,6 +184,7 @@ def get_cached_extension_manager(extensions):
     asdf.extension.ExtensionManager
     """
     from ._extension import ExtensionProxy
+
     # The tuple makes the extensions hashable so that we
     # can pass them to the lru_cache method.  The ExtensionProxy
     # overrides __hash__ to return the hashed object id of the wrapped

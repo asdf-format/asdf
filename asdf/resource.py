@@ -27,6 +27,7 @@ class ResourceMappingProxy(Mapping):
     additional information on the package that provided
     the mapping.
     """
+
     @classmethod
     def maybe_wrap(self, delegate):
         if isinstance(delegate, ResourceMappingProxy):
@@ -89,7 +90,7 @@ class ResourceMappingProxy(Mapping):
 
     @property
     def class_name(self):
-        """"
+        """ "
         Get the fully qualified class name of the mapping.
 
         Returns
@@ -143,6 +144,7 @@ class DirectoryResourceMapping(Mapping):
         If `True`, remove the filename's extension when
         constructing its URI.
     """
+
     def __init__(self, root, uri_prefix, recursive=False, filename_pattern="*.yaml", stem_filename=True):
         self._uri_to_file = {}
         self._recursive = recursive
@@ -208,6 +210,7 @@ class ResourceManager(Mapping):
         Underlying resource mappings.  In the case of a duplicate URI,
         the first mapping takes precedence.
     """
+
     def __init__(self, resource_mappings):
         self._resource_mappings = resource_mappings
 
@@ -251,6 +254,7 @@ class JsonschemaResourceMapping(Mapping):
     Resource mapping that fetches metaschemas from
     the jsonschema package.
     """
+
     def __getitem__(self, uri):
         filename = _JSONSCHEMA_URI_TO_FILENAME[uri]
         return pkgutil.get_data("jsonschema", "schemas/{}".format(filename))

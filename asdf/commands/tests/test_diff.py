@@ -6,6 +6,7 @@ import pytest
 from asdf.tests import helpers
 from asdf.commands import main, diff
 from . import data as test_data
+
 get_test_data_path = partial(helpers.get_test_data_path, module=test_data)
 
 
@@ -17,54 +18,57 @@ def _assert_diffs_equal(filenames, result_file, minimal=False, ignore=None):
     iostream.seek(0)
 
     result_path = get_test_data_path(result_file)
-    with open(result_path, 'r') as handle:
+    with open(result_path, "r") as handle:
         assert handle.read() == iostream.read()
 
 
 def test_diff():
-    filenames = ['frames0.asdf', 'frames1.asdf']
-    result_file = 'frames.diff'
+    filenames = ["frames0.asdf", "frames1.asdf"]
+    result_file = "frames.diff"
     _assert_diffs_equal(filenames, result_file, minimal=False)
 
 
 def test_diff_minimal():
-    filenames = ['frames0.asdf', 'frames1.asdf']
-    result_file = 'frames_minimal.diff'
+    filenames = ["frames0.asdf", "frames1.asdf"]
+    result_file = "frames_minimal.diff"
     _assert_diffs_equal(filenames, result_file, minimal=True)
 
 
-@pytest.mark.parametrize('result_file, ignore', [
-    ('frames_ignore_asdf_library.diff', ['asdf_library']),
-    ('frames_ignore_reference_frame.diff', ['frames[*].reference_frame']),
-    ('frames_ignore_both.diff', ['asdf_library', 'frames[*].reference_frame']),
-])
+@pytest.mark.parametrize(
+    "result_file, ignore",
+    [
+        ("frames_ignore_asdf_library.diff", ["asdf_library"]),
+        ("frames_ignore_reference_frame.diff", ["frames[*].reference_frame"]),
+        ("frames_ignore_both.diff", ["asdf_library", "frames[*].reference_frame"]),
+    ],
+)
 def test_diff_ignore(result_file, ignore):
-    filenames = ['frames0.asdf', 'frames1.asdf']
+    filenames = ["frames0.asdf", "frames1.asdf"]
     _assert_diffs_equal(filenames, result_file, minimal=False, ignore=ignore)
 
 
 def test_diff_block():
-    filenames = ['block0.asdf', 'block1.asdf']
-    result_file = 'blocks.diff'
+    filenames = ["block0.asdf", "block1.asdf"]
+    result_file = "blocks.diff"
     _assert_diffs_equal(filenames, result_file, minimal=False)
 
 
 def test_diff_simple_inline_array():
-    filenames = ['simple_inline_array0.asdf', 'simple_inline_array1.asdf']
-    result_file = 'simple_inline_array.diff'
+    filenames = ["simple_inline_array0.asdf", "simple_inline_array1.asdf"]
+    result_file = "simple_inline_array.diff"
     _assert_diffs_equal(filenames, result_file, minimal=False)
 
 
-@pytest.mark.filterwarnings('ignore::astropy.io.fits.verify.VerifyWarning')
+@pytest.mark.filterwarnings("ignore::astropy.io.fits.verify.VerifyWarning")
 def test_file_not_found():
     # Try to open files that exist but are not valid asdf
-    filenames = ['frames.diff', 'blocks.diff']
+    filenames = ["frames.diff", "blocks.diff"]
     with pytest.raises(RuntimeError):
         diff([get_test_data_path(name) for name in filenames], False)
 
 
 def test_diff_command():
-    filenames = ['frames0.asdf', 'frames1.asdf']
+    filenames = ["frames0.asdf", "frames1.asdf"]
     paths = [get_test_data_path(name) for name in filenames]
 
-    assert main.main_from_args(['diff'] + paths) == 0
+    assert main.main_from_args(["diff"] + paths) == 0

@@ -3,6 +3,7 @@ import pytest
 from asdf.resolver import Resolver, ResolverChain
 from asdf.exceptions import AsdfDeprecationWarning
 
+
 def test_resolver_no_mappings():
     r = Resolver([], "test")
     assert r("united_states:maryland:baltimore") == "united_states:maryland:baltimore"
@@ -25,26 +26,35 @@ def test_resolver_callable_mapping():
 
 
 def test_resolver_multiple_mappings():
-    r = Resolver([
-        ("united_states:", "unknown_region:{test_suffix}"),
-        ("united_states:maryland:", "mid_atlantic:maryland:{test_suffix}")
-        ], "test")
+    r = Resolver(
+        [
+            ("united_states:", "unknown_region:{test_suffix}"),
+            ("united_states:maryland:", "mid_atlantic:maryland:{test_suffix}"),
+        ],
+        "test",
+    )
     # Should choose the mapping with the longest matched prefix:
     assert r("united_states:maryland:baltimore") == "mid_atlantic:maryland:baltimore"
 
-    r = Resolver([
-        ("united_states:", "unknown_region:{test_suffix}"),
-        lambda inp: "nowhere",
-        ("united_states:maryland:", "mid_atlantic:maryland:{test_suffix}")
-        ], "test")
+    r = Resolver(
+        [
+            ("united_states:", "unknown_region:{test_suffix}"),
+            lambda inp: "nowhere",
+            ("united_states:maryland:", "mid_atlantic:maryland:{test_suffix}"),
+        ],
+        "test",
+    )
     # Should prioritize the mapping offered by the callable:
     assert r("united_states:maryland:baltimore") == "nowhere"
 
-    r = Resolver([
-        ("united_states:", "unknown_region:{test_suffix}"),
-        lambda inp: None,
-        ("united_states:maryland:", "mid_atlantic:maryland:{test_suffix}")
-        ], "test")
+    r = Resolver(
+        [
+            ("united_states:", "unknown_region:{test_suffix}"),
+            lambda inp: None,
+            ("united_states:maryland:", "mid_atlantic:maryland:{test_suffix}"),
+        ],
+        "test",
+    )
     # None from the callable is a signal that it can't handle the input,
     # so we should fall back to the longest matched prefix:
     assert r("united_states:maryland:baltimore") == "mid_atlantic:maryland:baltimore"

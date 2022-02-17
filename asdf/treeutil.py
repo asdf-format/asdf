@@ -96,6 +96,7 @@ class _TreeModificationContext:
     context.  They are also collections that map unmodified
     nodes to the corresponding modified result.
     """
+
     def __init__(self):
         self._map = {}
         self._generators = []
@@ -197,6 +198,7 @@ class _PendingValue:
     in an asdf tree indicates that extension code is failing to handle
     reference cycles.
     """
+
     def __repr__(self):
         return "PendingValue"
 
@@ -210,6 +212,7 @@ class _RemoveNode:
     as a signal for `asdf.treeutil.walk_and_modify` to remove the
     node received by the callback.
     """
+
     def __repr__(self):
         return "RemoveNode"
 
@@ -462,4 +465,4 @@ def is_container(node):
     bool
         True if node is a container, False otherwise
     """
-    return isinstance(node, dict) or isinstance(node,list) or isinstance(node, tuple)
+    return isinstance(node, dict) or isinstance(node, list) or isinstance(node, tuple)
