@@ -6,23 +6,25 @@ import asdf
 from asdf import IntegerType
 from asdf.tests import helpers
 
-
 # Make sure tests are deterministic
 random.seed(0)
 
 
-@pytest.mark.parametrize('sign', ['+', '-'])
-@pytest.mark.parametrize('value', [
-    random.getrandbits(64),
-    random.getrandbits(65),
-    random.getrandbits(100),
-    random.getrandbits(128),
-    random.getrandbits(129),
-    random.getrandbits(200),
-])
+@pytest.mark.parametrize("sign", ["+", "-"])
+@pytest.mark.parametrize(
+    "value",
+    [
+        random.getrandbits(64),
+        random.getrandbits(65),
+        random.getrandbits(100),
+        random.getrandbits(128),
+        random.getrandbits(129),
+        random.getrandbits(200),
+    ],
+)
 def test_integer_value(tmpdir, value, sign):
 
-    if sign == '-':
+    if sign == "-":
         value = -value
 
     integer = IntegerType(value)
@@ -30,14 +32,14 @@ def test_integer_value(tmpdir, value, sign):
     helpers.assert_roundtrip_tree(tree, tmpdir)
 
 
-@pytest.mark.parametrize('inline', [False, True])
+@pytest.mark.parametrize("inline", [False, True])
 def test_integer_storage(tmpdir, inline):
 
-    tmpfile = str(tmpdir.join('integer.asdf'))
+    tmpfile = str(tmpdir.join("integer.asdf"))
 
     kwargs = dict()
     if inline:
-        kwargs['storage_type'] = 'inline'
+        kwargs["storage_type"] = "inline"
 
     random.seed(0)
     value = random.getrandbits(1000)
@@ -48,19 +50,19 @@ def test_integer_storage(tmpdir, inline):
 
     with asdf.open(tmpfile, _force_raw_types=True) as rf:
         if inline:
-            assert 'source' not in rf.tree['integer']['words']
-            assert 'data' in rf.tree['integer']['words']
+            assert "source" not in rf.tree["integer"]["words"]
+            assert "data" in rf.tree["integer"]["words"]
         else:
-            assert 'source' in rf.tree['integer']['words']
-            assert 'data' not in rf.tree['integer']['words']
+            assert "source" in rf.tree["integer"]["words"]
+            assert "data" not in rf.tree["integer"]["words"]
 
-        assert 'string' in rf.tree['integer']
-        assert rf.tree['integer']['string'] == str(value)
+        assert "string" in rf.tree["integer"]
+        assert rf.tree["integer"]["string"] == str(value)
 
 
 def test_integer_storage_duplication(tmpdir):
 
-    tmpfile = str(tmpdir.join('integer.asdf'))
+    tmpfile = str(tmpdir.join("integer.asdf"))
 
     random.seed(0)
     value = random.getrandbits(1000)
@@ -71,12 +73,12 @@ def test_integer_storage_duplication(tmpdir):
         assert len(af.blocks) == 1
 
     with asdf.open(tmpfile, _force_raw_types=True) as rf:
-        assert rf.tree['integer1']['words']['source'] == 0
-        assert rf.tree['integer2']['words']['source'] == 0
+        assert rf.tree["integer1"]["words"]["source"] == 0
+        assert rf.tree["integer2"]["words"]["source"] == 0
 
     with asdf.open(tmpfile) as aa:
-        assert aa.tree['integer1'] == value
-        assert aa.tree['integer2'] == value
+        assert aa.tree["integer1"] == value
+        assert aa.tree["integer2"] == value
 
 
 def test_integer_conversion():

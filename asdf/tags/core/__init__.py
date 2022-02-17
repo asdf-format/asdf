@@ -4,22 +4,31 @@ from ...types import AsdfType
 class AsdfObject(dict):
     pass
 
-from .constant import ConstantType
-from .ndarray import NDArrayType
+
 from .complex import ComplexType
-from .integer import IntegerType
+from .constant import ConstantType
 from .external_reference import ExternalArrayReference
+from .integer import IntegerType
+from .ndarray import NDArrayType
 
-
-__all__ = ['AsdfObject', 'Software', 'HistoryEntry', 'ExtensionMetadata',
-    'SubclassMetadata', 'ConstantType', 'NDArrayType', 'ComplexType',
-    'IntegerType', 'ExternalArrayReference']
+__all__ = [
+    "AsdfObject",
+    "Software",
+    "HistoryEntry",
+    "ExtensionMetadata",
+    "SubclassMetadata",
+    "ConstantType",
+    "NDArrayType",
+    "ComplexType",
+    "IntegerType",
+    "ExternalArrayReference",
+]
 
 
 class AsdfObjectType(AsdfType):
-    name = 'core/asdf'
-    version = '1.1.0'
-    supported_versions = {'1.0.0', '1.1.0'}
+    name = "core/asdf"
+    version = "1.1.0"
+    supported_versions = {"1.0.0", "1.1.0"}
     types = [AsdfObject]
 
     @classmethod
@@ -32,30 +41,30 @@ class AsdfObjectType(AsdfType):
 
 
 class Software(dict, AsdfType):
-    name = 'core/software'
-    version = '1.0.0'
+    name = "core/software"
+    version = "1.0.0"
 
 
 class HistoryEntry(dict, AsdfType):
-    name = 'core/history_entry'
-    version = '1.0.0'
+    name = "core/history_entry"
+    version = "1.0.0"
 
 
 class ExtensionMetadata(dict, AsdfType):
-    name = 'core/extension_metadata'
-    version = '1.0.0'
+    name = "core/extension_metadata"
+    version = "1.0.0"
 
     @property
     def extension_uri(self):
-        return self.get('extension_uri')
+        return self.get("extension_uri")
 
     @property
     def extension_class(self):
-        return self['extension_class']
+        return self["extension_class"]
 
     @property
     def software(self):
-        return self.get('software')
+        return self.get("software")
 
 
 class SubclassMetadata(dict, AsdfType):
@@ -66,5 +75,6 @@ class SubclassMetadata(dict, AsdfType):
     files that used that feature will still deserialize
     without warnings.
     """
-    name = 'core/subclass_metadata'
-    version = '1.0.0'
+
+    name = "core/subclass_metadata"
+    version = "1.0.0"

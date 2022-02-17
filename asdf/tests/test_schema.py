@@ -1,24 +1,26 @@
 import io
 from datetime import datetime
 
-from jsonschema import ValidationError
 import numpy as np
-from numpy.testing import assert_array_equal
 import pytest
+from jsonschema import ValidationError
+from numpy.testing import assert_array_equal
 
 import asdf
-from asdf import constants
-from asdf import get_config, config_context
-from asdf import extension
-from asdf import resolver
-from asdf import schema
-from asdf import types
-from asdf import util
-from asdf import yamlutil
-from asdf import tagged
-from asdf.tests import helpers, CustomExtension
-from asdf.exceptions import AsdfWarning, AsdfConversionWarning, AsdfDeprecationWarning
-
+from asdf import (
+    config_context,
+    constants,
+    extension,
+    get_config,
+    resolver,
+    schema,
+    tagged,
+    types,
+    util,
+    yamlutil,
+)
+from asdf.exceptions import AsdfConversionWarning, AsdfDeprecationWarning, AsdfWarning
+from asdf.tests import CustomExtension, helpers
 
 
 class TagReferenceType(types.CustomType):
@@ -26,21 +28,22 @@ class TagReferenceType(types.CustomType):
     This class is used by several tests below for validating foreign type
     references in schemas and ASDF files.
     """
-    name = 'tag_reference'
-    organization = 'nowhere.org'
+
+    name = "tag_reference"
+    organization = "nowhere.org"
     version = (1, 0, 0)
-    standard = 'custom'
+    standard = "custom"
 
     @classmethod
     def from_tree(cls, tree, ctx):
         node = {}
-        node['name'] = tree['name']
-        node['things'] = tree['things']
+        node["name"] = tree["name"]
+        node["things"] = tree["things"]
         return node
 
 
 def test_tagging_scalars():
-    pytest.importorskip('astropy', '3.0.0')
+    pytest.importorskip("astropy", "3.0.0")
     from astropy import units as u
 
     yaml = """
@@ -51,14 +54,11 @@ not_unit:
     """
     buff = helpers.yaml_to_asdf(yaml)
     with asdf.open(buff) as ff:
-        assert isinstance(ff.tree['unit'], u.UnitBase)
-        assert not isinstance(ff.tree['not_unit'], u.UnitBase)
-        assert isinstance(ff.tree['not_unit'], str)
+        assert isinstance(ff.tree["unit"], u.UnitBase)
+        assert not isinstance(ff.tree["not_unit"], u.UnitBase)
+        assert isinstance(ff.tree["not_unit"], str)
 
-        assert ff.tree == {
-            'unit': u.m,
-            'not_unit': 'm'
-            }
+        assert ff.tree == {"unit": u.m, "not_unit": "m"}
 
 
 def test_read_json_schema():
@@ -67,7 +67,7 @@ def test_read_json_schema():
     This was known to fail on Python 3.5 See issue #314 at
     https://github.com/asdf-format/asdf/issues/314 for more details.
     """
-    json_schema = helpers.get_test_data_path('example_schema.json')
+    json_schema = helpers.get_test_data_path("example_schema.json")
     schema_tree = schema.load_schema(json_schema, resolve_references=True)
     schema.check_schema(schema_tree)
 
@@ -88,7 +88,7 @@ properties:
 required: [foobar]
 ...
     """
-    schema_path = tmpdir.join('nugatory.yaml')
+    schema_path = tmpdir.join("nugatory.yaml")
     schema_path.write(schema_def.encode())
 
     schema_tree = schema.load_schema(str(schema_path), resolve_references=True)
@@ -111,7 +111,7 @@ properties:
 required: [foobar]
 ...
     """
-    schema_path = tmpdir.join('nugatory.yaml')
+    schema_path = tmpdir.join("nugatory.yaml")
     schema_path.write(schema_def.encode())
 
     schema_tree = schema.load_schema(str(schema_path), resolve_references=True)
@@ -135,7 +135,7 @@ properties:
 required: [foobar]
 ...
     """
-    schema_path = tmpdir.join('nugatory.yaml')
+    schema_path = tmpdir.join("nugatory.yaml")
     schema_path.write(schema_def.encode())
 
     schema_tree = schema.load_schema(str(schema_path), resolve_references=True)
@@ -158,8 +158,10 @@ properties:
 
 required: [foobar]
 ...
-    """.format(extension.get_default_resolver()('tag:stsci.edu:asdf/core/ndarray-1.0.0'))
-    schema_path = tmpdir.join('nugatory.yaml')
+    """.format(
+        extension.get_default_resolver()("tag:stsci.edu:asdf/core/ndarray-1.0.0")
+    )
+    schema_path = tmpdir.join("nugatory.yaml")
     schema_path.write(schema_def.encode())
 
     schema_tree = schema.load_schema(str(schema_path), resolve_references=True)
@@ -167,7 +169,7 @@ required: [foobar]
 
 
 def test_load_schema_with_asdf_uri_scheme():
-    subschema_content="""%YAML 1.1
+    subschema_content = """%YAML 1.1
 ---
 $schema: http://stsci.edu/schemas/asdf/asdf-schema-1.0.0
 id: asdf://somewhere.org/schemas/bar
@@ -214,7 +216,7 @@ def test_load_schema_with_stsci_id():
     If we're not careful, the old-style resolver will mangle the URI and
     we won't be able to retrieve the schema content.
     """
-    subschema_content="""%YAML 1.1
+    subschema_content = """%YAML 1.1
 ---
 $schema: http://stsci.edu/schemas/asdf/asdf-schema-1.0.0
 id: http://stsci.edu/schemas/bar
@@ -256,10 +258,8 @@ def test_schema_caching():
     # (despite the caching internal to load_schema).  Changes to a schema
     # dict should not impact other uses of that schema.
 
-    s1 = schema.load_schema(
-        'http://stsci.edu/schemas/asdf/core/asdf-1.0.0')
-    s2 = schema.load_schema(
-        'http://stsci.edu/schemas/asdf/core/asdf-1.0.0')
+    s1 = schema.load_schema("http://stsci.edu/schemas/asdf/core/asdf-1.0.0")
+    s2 = schema.load_schema("http://stsci.edu/schemas/asdf/core/asdf-1.0.0")
     assert s1 is not s2
 
 
@@ -282,7 +282,9 @@ properties:
     type: string
   bar:
     type: boolean
-""".encode("utf-8")
+""".encode(
+        "utf-8"
+    )
 
     get_config().add_resource_mapping({"http://somewhere.org/schemas/razmataz-1.0.0": content})
 
@@ -293,64 +295,59 @@ properties:
 
 def test_flow_style():
     class CustomFlowStyleType(dict, types.CustomType):
-        name = 'custom_flow'
-        organization = 'nowhere.org'
+        name = "custom_flow"
+        organization = "nowhere.org"
         version = (1, 0, 0)
-        standard = 'custom'
+        standard = "custom"
 
     class CustomFlowStyleExtension(CustomExtension):
         @property
         def types(self):
             return [CustomFlowStyleType]
 
-    tree = {
-        'custom_flow': CustomFlowStyleType({'a': 42, 'b': 43})
-    }
+    tree = {"custom_flow": CustomFlowStyleType({"a": 42, "b": 43})}
 
     buff = io.BytesIO()
     ff = asdf.AsdfFile(tree, extensions=CustomFlowStyleExtension())
     ff.write_to(buff)
 
-    assert b'  a: 42\n  b: 43' in buff.getvalue()
+    assert b"  a: 42\n  b: 43" in buff.getvalue()
 
 
 def test_style():
     class CustomStyleType(str, types.CustomType):
-        name = 'custom_style'
-        organization = 'nowhere.org'
+        name = "custom_style"
+        organization = "nowhere.org"
         version = (1, 0, 0)
-        standard = 'custom'
+        standard = "custom"
 
     class CustomStyleExtension(CustomExtension):
         @property
         def types(self):
             return [CustomStyleType]
 
-    tree = {
-        'custom_style': CustomStyleType("short")
-    }
+    tree = {"custom_style": CustomStyleType("short")}
 
     buff = io.BytesIO()
     ff = asdf.AsdfFile(tree, extensions=CustomStyleExtension())
     ff.write_to(buff)
 
-    assert b'|-\n  short\n' in buff.getvalue()
+    assert b"|-\n  short\n" in buff.getvalue()
 
 
 def test_property_order():
-    tree = {'foo': np.ndarray([1, 2, 3])}
+    tree = {"foo": np.ndarray([1, 2, 3])}
 
     buff = io.BytesIO()
     ff = asdf.AsdfFile(tree)
     ff.write_to(buff)
 
-    ndarray_schema = schema.load_schema(
-        'http://stsci.edu/schemas/asdf/core/ndarray-1.0.0')
-    property_order = ndarray_schema['anyOf'][1]['propertyOrder']
+    ndarray_schema = schema.load_schema("http://stsci.edu/schemas/asdf/core/ndarray-1.0.0")
+    property_order = ndarray_schema["anyOf"][1]["propertyOrder"]
 
     last_index = 0
     for prop in property_order:
-        index = buff.getvalue().find(prop.encode('utf-8') + b':')
+        index = buff.getvalue().find(prop.encode("utf-8") + b":")
         if index != -1:
             assert index > last_index
             last_index = index
@@ -358,10 +355,10 @@ def test_property_order():
 
 def test_invalid_nested():
     class CustomType(str, types.CustomType):
-        name = 'custom'
-        organization = 'nowhere.org'
+        name = "custom"
+        organization = "nowhere.org"
         version = (1, 0, 0)
-        standard = 'custom'
+        standard = "custom"
 
     class CustomTypeExtension(CustomExtension):
         @property
@@ -400,24 +397,16 @@ array: !core/ndarray-1.0.0
 
 
 def test_invalid_schema():
-    s = {'type': 'integer'}
+    s = {"type": "integer"}
     schema.check_schema(s)
 
-    s = {'type': 'foobar'}
+    s = {"type": "foobar"}
     with pytest.raises(ValidationError):
         schema.check_schema(s)
 
 
 def test_defaults():
-    s = {
-        'type': 'object',
-        'properties': {
-            'a': {
-                'type': 'integer',
-                'default': 42
-            }
-        }
-    }
+    s = {"type": "object", "properties": {"a": {"type": "integer", "default": 42}}}
 
     t = {}
 
@@ -425,7 +414,7 @@ def test_defaults():
     validator = cls(s)
     validator.validate(t, _schema=s)
 
-    assert t['a'] == 42
+    assert t["a"] == 42
 
     cls = schema._create_validator(schema.REMOVE_DEFAULTS)
     validator = cls(s)
@@ -435,15 +424,7 @@ def test_defaults():
 
 
 def test_default_check_in_schema():
-    s = {
-        'type': 'object',
-        'properties': {
-            'a': {
-                'type': 'integer',
-                'default': 'foo'
-            }
-        }
-    }
+    s = {"type": "object", "properties": {"a": {"type": "integer", "default": "foo"}}}
 
     with pytest.raises(ValidationError):
         schema.check_schema(s)
@@ -452,35 +433,28 @@ def test_default_check_in_schema():
 
 
 def test_check_complex_default():
-    default_software = tagged.TaggedDict(
-        {"name": "asdf", "version": "2.7.0"},
-        "tag:stsci.edu/asdf/core/software-1.0.0"
-    )
+    default_software = tagged.TaggedDict({"name": "asdf", "version": "2.7.0"}, "tag:stsci.edu/asdf/core/software-1.0.0")
 
     s = {
-        'type': 'object',
-        'properties': {
-            'a': {
-                'type': 'object',
-                'tag': 'tag:stsci.edu/asdf/core/software-1.0.0',
-                'default': default_software
-            }
-        }
+        "type": "object",
+        "properties": {
+            "a": {"type": "object", "tag": "tag:stsci.edu/asdf/core/software-1.0.0", "default": default_software}
+        },
     }
 
     schema.check_schema(s)
 
-    s['properties']['a']['tag'] = 'tag:stsci.edu/asdf/core/ndarray-1.0.0'
+    s["properties"]["a"]["tag"] = "tag:stsci.edu/asdf/core/ndarray-1.0.0"
     with pytest.raises(ValidationError):
         schema.check_schema(s)
 
 
 def test_fill_and_remove_defaults():
     class DefaultType(dict, types.CustomType):
-        name = 'default'
-        organization = 'nowhere.org'
+        name = "default"
+        organization = "nowhere.org"
         version = (1, 0, 0)
-        standard = 'custom'
+        standard = "custom"
 
     class DefaultTypeExtension(CustomExtension):
         @property
@@ -497,76 +471,76 @@ custom: !<tag:nowhere.org:custom/default-1.0.0>
     """
     buff = helpers.yaml_to_asdf(yaml)
     with asdf.open(buff, extensions=[DefaultTypeExtension()]) as ff:
-        assert 'a' in ff.tree['custom']
-        assert ff.tree['custom']['a'] == 42
-        assert ff.tree['custom']['b']['c'] == 82
+        assert "a" in ff.tree["custom"]
+        assert ff.tree["custom"]["a"] == 42
+        assert ff.tree["custom"]["b"]["c"] == 82
         # allOf combiner should fill defaults from all subschemas:
-        assert ff.tree['custom']['d']['e'] == 122
-        assert ff.tree['custom']['d']['f'] == 162
+        assert ff.tree["custom"]["d"]["e"] == 122
+        assert ff.tree["custom"]["d"]["f"] == 162
         # anyOf combiners should be ignored:
-        assert 'h' not in ff.tree['custom']['g']
-        assert 'i' not in ff.tree['custom']['g']
+        assert "h" not in ff.tree["custom"]["g"]
+        assert "i" not in ff.tree["custom"]["g"]
         # oneOf combiners should be ignored:
-        assert 'k' not in ff.tree['custom']['j']
-        assert ff.tree['custom']['j']['l'] == 362
+        assert "k" not in ff.tree["custom"]["j"]
+        assert ff.tree["custom"]["j"]["l"] == 362
 
     buff.seek(0)
-    with pytest.warns(AsdfDeprecationWarning, match='do_not_fill_defaults'):
-        with asdf.open(buff, extensions=[DefaultTypeExtension()],
-                                do_not_fill_defaults=True) as ff:
-            assert 'a' not in ff.tree['custom']
-            assert 'c' not in ff.tree['custom']['b']
-            assert 'e' not in ff.tree['custom']['d']
-            assert 'f' not in ff.tree['custom']['d']
-            assert 'h' not in ff.tree['custom']['g']
-            assert 'i' not in ff.tree['custom']['g']
-            assert 'k' not in ff.tree['custom']['j']
-            assert ff.tree['custom']['j']['l'] == 362
+    with pytest.warns(AsdfDeprecationWarning, match="do_not_fill_defaults"):
+        with asdf.open(buff, extensions=[DefaultTypeExtension()], do_not_fill_defaults=True) as ff:
+            assert "a" not in ff.tree["custom"]
+            assert "c" not in ff.tree["custom"]["b"]
+            assert "e" not in ff.tree["custom"]["d"]
+            assert "f" not in ff.tree["custom"]["d"]
+            assert "h" not in ff.tree["custom"]["g"]
+            assert "i" not in ff.tree["custom"]["g"]
+            assert "k" not in ff.tree["custom"]["j"]
+            assert ff.tree["custom"]["j"]["l"] == 362
             ff.fill_defaults()
-            assert 'a' in ff.tree['custom']
-            assert ff.tree['custom']['a'] == 42
-            assert 'c' in ff.tree['custom']['b']
-            assert ff.tree['custom']['b']['c'] == 82
-            assert ff.tree['custom']['b']['c'] == 82
-            assert ff.tree['custom']['d']['e'] == 122
-            assert ff.tree['custom']['d']['f'] == 162
-            assert 'h' not in ff.tree['custom']['g']
-            assert 'i' not in ff.tree['custom']['g']
-            assert 'k' not in ff.tree['custom']['j']
-            assert ff.tree['custom']['j']['l'] == 362
+            assert "a" in ff.tree["custom"]
+            assert ff.tree["custom"]["a"] == 42
+            assert "c" in ff.tree["custom"]["b"]
+            assert ff.tree["custom"]["b"]["c"] == 82
+            assert ff.tree["custom"]["b"]["c"] == 82
+            assert ff.tree["custom"]["d"]["e"] == 122
+            assert ff.tree["custom"]["d"]["f"] == 162
+            assert "h" not in ff.tree["custom"]["g"]
+            assert "i" not in ff.tree["custom"]["g"]
+            assert "k" not in ff.tree["custom"]["j"]
+            assert ff.tree["custom"]["j"]["l"] == 362
             ff.remove_defaults()
-            assert 'a' not in ff.tree['custom']
-            assert 'c' not in ff.tree['custom']['b']
-            assert 'e' not in ff.tree['custom']['d']
-            assert 'f' not in ff.tree['custom']['d']
-            assert 'h' not in ff.tree['custom']['g']
-            assert 'i' not in ff.tree['custom']['g']
-            assert 'k' not in ff.tree['custom']['j']
-            assert ff.tree['custom']['j']['l'] == 362
+            assert "a" not in ff.tree["custom"]
+            assert "c" not in ff.tree["custom"]["b"]
+            assert "e" not in ff.tree["custom"]["d"]
+            assert "f" not in ff.tree["custom"]["d"]
+            assert "h" not in ff.tree["custom"]["g"]
+            assert "i" not in ff.tree["custom"]["g"]
+            assert "k" not in ff.tree["custom"]["j"]
+            assert ff.tree["custom"]["j"]["l"] == 362
 
     buff.seek(0)
     with config_context() as config:
         config.legacy_fill_schema_defaults = False
         with asdf.open(buff, extensions=[DefaultTypeExtension()]) as ff:
-            assert 'a' not in ff.tree['custom']
-            assert 'c' not in ff.tree['custom']['b']
-            assert 'e' not in ff.tree['custom']['d']
-            assert 'f' not in ff.tree['custom']['d']
-            assert 'h' not in ff.tree['custom']['g']
-            assert 'i' not in ff.tree['custom']['g']
-            assert 'k' not in ff.tree['custom']['j']
-            assert ff.tree['custom']['j']['l'] == 362
+            assert "a" not in ff.tree["custom"]
+            assert "c" not in ff.tree["custom"]["b"]
+            assert "e" not in ff.tree["custom"]["d"]
+            assert "f" not in ff.tree["custom"]["d"]
+            assert "h" not in ff.tree["custom"]["g"]
+            assert "i" not in ff.tree["custom"]["g"]
+            assert "k" not in ff.tree["custom"]["j"]
+            assert ff.tree["custom"]["j"]["l"] == 362
 
 
 def test_one_of():
     """
     Covers https://github.com/asdf-format/asdf/issues/809
     """
+
     class OneOfType(dict, types.CustomType):
-        name = 'one_of'
-        organization = 'nowhere.org'
+        name = "one_of"
+        organization = "nowhere.org"
         version = (1, 0, 0)
-        standard = 'custom'
+        standard = "custom"
 
     class OneOfTypeExtension(CustomExtension):
         @property
@@ -579,7 +553,7 @@ one_of: !<tag:nowhere.org:custom/one_of-1.0.0>
     """
     buff = helpers.yaml_to_asdf(yaml)
     with asdf.open(buff, extensions=[OneOfTypeExtension()]) as ff:
-        assert ff['one_of']['value'] == 'foo'
+        assert ff["one_of"]["value"] == "foo"
 
 
 def test_tag_reference_validation():
@@ -598,23 +572,23 @@ custom: !<tag:nowhere.org:custom/tag_reference-1.0.0>
 
     buff = helpers.yaml_to_asdf(yaml)
     with asdf.open(buff, extensions=[DefaultTypeExtension()]) as ff:
-        custom = ff.tree['custom']
-        assert custom['name'] == "Something"
-        assert_array_equal(custom['things'], [1, 2, 3])
+        custom = ff.tree["custom"]
+        assert custom["name"] == "Something"
+        assert_array_equal(custom["things"], [1, 2, 3])
 
 
 def test_foreign_tag_reference_validation():
     class ForeignTagReferenceType(types.CustomType):
-        name = 'foreign_tag_reference'
-        organization = 'nowhere.org'
+        name = "foreign_tag_reference"
+        organization = "nowhere.org"
         version = (1, 0, 0)
-        standard = 'custom'
+        standard = "custom"
 
         @classmethod
         def from_tree(cls, tree, ctx):
             node = {}
-            node['a'] = tree['a']
-            node['b'] = tree['b']
+            node["a"] = tree["a"]
+            node["b"] = tree["b"]
             return node
 
     class ForeignTypeExtension(CustomExtension):
@@ -638,60 +612,59 @@ custom: !<tag:nowhere.org:custom/foreign_tag_reference-1.0.0>
 
     buff = helpers.yaml_to_asdf(yaml)
     with asdf.open(buff, extensions=ForeignTypeExtension()) as ff:
-        a = ff.tree['custom']['a']
-        b = ff.tree['custom']['b']
-        assert a['name'] == 'Something'
-        assert_array_equal(a['things'], [1, 2, 3])
-        assert b['name'] == 'Anything'
-        assert_array_equal(b['things'], [4, 5, 6])
+        a = ff.tree["custom"]["a"]
+        b = ff.tree["custom"]["b"]
+        assert a["name"] == "Something"
+        assert_array_equal(a["things"], [1, 2, 3])
+        assert b["name"] == "Anything"
+        assert_array_equal(b["things"], [4, 5, 6])
 
 
 def test_self_reference_resolution():
-    r = resolver.Resolver(CustomExtension().url_mapping, 'url')
+    r = resolver.Resolver(CustomExtension().url_mapping, "url")
     s = schema.load_schema(
-        helpers.get_test_data_path('self_referencing-1.0.0.yaml'),
-        resolver=r,
-        resolve_references=True)
-    assert '$ref' not in repr(s)
-    assert s['anyOf'][1] == s['anyOf'][0]
+        helpers.get_test_data_path("self_referencing-1.0.0.yaml"), resolver=r, resolve_references=True
+    )
+    assert "$ref" not in repr(s)
+    assert s["anyOf"][1] == s["anyOf"][0]
 
 
 def test_schema_resolved_via_entry_points():
     """Test that entry points mappings to core schema works"""
     r = extension.get_default_resolver()
-    tag = types.format_tag('stsci.edu', 'asdf', '1.0.0', 'fits/fits')
+    tag = types.format_tag("stsci.edu", "asdf", "1.0.0", "fits/fits")
     url = extension.default_extensions.extension_list.tag_mapping(tag)
 
     s = schema.load_schema(url, resolver=r, resolve_references=True)
     assert tag in repr(s)
 
 
-@pytest.mark.parametrize("num", [constants.MAX_NUMBER+1, constants.MIN_NUMBER-1])
+@pytest.mark.parametrize("num", [constants.MAX_NUMBER + 1, constants.MIN_NUMBER - 1])
 def test_max_min_literals(num):
 
     tree = {
-        'test_int': num,
+        "test_int": num,
     }
 
     with pytest.raises(ValidationError):
         asdf.AsdfFile(tree)
 
     tree = {
-        'test_list': [num],
+        "test_list": [num],
     }
 
     with pytest.raises(ValidationError):
         asdf.AsdfFile(tree)
 
     tree = {
-        num: 'test_key',
+        num: "test_key",
     }
 
     with pytest.raises(ValidationError):
         asdf.AsdfFile(tree)
 
 
-@pytest.mark.parametrize("num", [constants.MAX_NUMBER+1, constants.MIN_NUMBER-1])
+@pytest.mark.parametrize("num", [constants.MAX_NUMBER + 1, constants.MIN_NUMBER - 1])
 @pytest.mark.parametrize("ttype", ["val", "list", "key"])
 def test_max_min_literals_write(num, ttype, tmpdir):
     outfile = tmpdir / "test.asdf"
@@ -699,11 +672,11 @@ def test_max_min_literals_write(num, ttype, tmpdir):
 
     # Validation doesn't occur here, so no warning/error will be raised.
     if ttype == "val":
-        af.tree['test_int'] = num
+        af.tree["test_int"] = num
     elif ttype == "list":
-        af.tree['test_int'] = [num]
+        af.tree["test_int"] = [num]
     else:
-        af.tree[num] = 'test_key'
+        af.tree[num] = "test_key"
 
     # Validation will occur on write, though, so detect it.
     with pytest.raises(ValidationError):
@@ -711,7 +684,7 @@ def test_max_min_literals_write(num, ttype, tmpdir):
     af.close()
 
 
-@pytest.mark.parametrize("value", [constants.MAX_NUMBER+1, constants.MIN_NUMBER-1])
+@pytest.mark.parametrize("value", [constants.MAX_NUMBER + 1, constants.MIN_NUMBER - 1])
 def test_read_large_literal(value):
     yaml = f"integer: {value}"
 
@@ -719,7 +692,7 @@ def test_read_large_literal(value):
 
     with pytest.warns(AsdfWarning, match="Invalid integer literal value"):
         with asdf.open(buff) as af:
-            assert af['integer'] == value
+            assert af["integer"] == value
 
     yaml = f"{value}: foo"
 
@@ -735,7 +708,7 @@ def test_read_large_literal(value):
     [
         ("1.6.0", ["foo", 42, True]),
         ("1.5.0", ["foo", 42, True, 3.14159, datetime.now(), b"foo", None]),
-    ]
+    ],
 )
 def test_mapping_supported_key_types(keys, version):
     for key in keys:
@@ -752,7 +725,7 @@ def test_mapping_supported_key_types(keys, version):
     "version,keys",
     [
         ("1.6.0", [3.14159, datetime.now(), b"foo", None, ("foo", "bar")]),
-    ]
+    ],
 )
 def test_mapping_unsupported_key_types(keys, version):
     for key in keys:
@@ -764,33 +737,33 @@ def test_mapping_unsupported_key_types(keys, version):
 
 def test_nested_array():
     s = {
-        'type': 'object',
-        'properties':  {
-            'stuff': {
-                'type': 'array',
-                'items': {
-                    'type': 'array',
-                    'items': [
-                        { 'type': 'integer' },
-                        { 'type': 'string' },
-                        { 'type': 'number' },
+        "type": "object",
+        "properties": {
+            "stuff": {
+                "type": "array",
+                "items": {
+                    "type": "array",
+                    "items": [
+                        {"type": "integer"},
+                        {"type": "string"},
+                        {"type": "number"},
                     ],
-                    'minItems': 3,
-                    'maxItems': 3
-                }
+                    "minItems": 3,
+                    "maxItems": 3,
+                },
             }
-        }
+        },
     }
 
-    good = dict(stuff=[[1, 'hello', 2], [4, 'world', 9.7]])
+    good = dict(stuff=[[1, "hello", 2], [4, "world", 9.7]])
     schema.validate(good, schema=s)
 
     bads = [
         dict(stuff=[[1, 2, 3]]),
-        dict(stuff=[12,'dldl']),
-        dict(stuff=[[12, 'dldl']]),
-        dict(stuff=[[1, 'hello', 2], [4, 5]]),
-        dict(stuff=[[1, 'hello', 2], [4, 5, 6]])
+        dict(stuff=[12, "dldl"]),
+        dict(stuff=[[12, "dldl"]]),
+        dict(stuff=[[1, "hello", 2], [4, 5]]),
+        dict(stuff=[[1, "hello", 2], [4, 5, 6]]),
     ]
 
     for b in bads:
@@ -816,21 +789,21 @@ properties:
       maxItems: 3
 ...
     """
-    schema_path = tmpdir.join('nested.yaml')
+    schema_path = tmpdir.join("nested.yaml")
     schema_path.write(schema_def.encode())
 
     schema_tree = schema.load_schema(str(schema_path))
     schema.check_schema(schema_tree)
 
-    good = dict(stuff=[[1, 'hello', 2], [4, 'world', 9.7]])
+    good = dict(stuff=[[1, "hello", 2], [4, "world", 9.7]])
     schema.validate(good, schema=schema_tree)
 
     bads = [
         dict(stuff=[[1, 2, 3]]),
-        dict(stuff=[12,'dldl']),
-        dict(stuff=[[12, 'dldl']]),
-        dict(stuff=[[1, 'hello', 2], [4, 5]]),
-        dict(stuff=[[1, 'hello', 2], [4, 5, 6]])
+        dict(stuff=[12, "dldl"]),
+        dict(stuff=[[12, "dldl"]]),
+        dict(stuff=[[1, "hello", 2], [4, 5]]),
+        dict(stuff=[[1, "hello", 2], [4, 5, 6]]),
     ]
 
     for b in bads:
@@ -839,14 +812,14 @@ properties:
 
 
 def test_type_missing_dependencies():
-    pytest.importorskip('astropy', '3.0.0')
+    pytest.importorskip("astropy", "3.0.0")
 
     class MissingType(types.CustomType):
-        name = 'missing'
-        organization = 'nowhere.org'
+        name = "missing"
+        organization = "nowhere.org"
         version = (1, 1, 0)
-        standard = 'custom'
-        types = ['asdfghjkl12345.foo']
+        standard = "custom"
+        types = ["asdfghjkl12345.foo"]
         requires = ["ASDFGHJKL12345"]
 
     class DefaultTypeExtension(CustomExtension):
@@ -861,17 +834,17 @@ custom: !<tag:nowhere.org:custom/missing-1.1.0>
     buff = helpers.yaml_to_asdf(yaml)
     with pytest.warns(AsdfConversionWarning, match="Failed to convert tag:nowhere.org:custom/missing-1.1.0"):
         with asdf.open(buff, extensions=[DefaultTypeExtension()]) as ff:
-            assert ff.tree['custom']['b']['foo'] == 42
+            assert ff.tree["custom"]["b"]["foo"] == 42
 
 
 def test_assert_roundtrip_with_extension(tmpdir):
     called_custom_assert_equal = [False]
 
     class CustomType(dict, types.CustomType):
-        name = 'custom_flow'
-        organization = 'nowhere.org'
+        name = "custom_flow"
+        organization = "nowhere.org"
         version = (1, 0, 0)
-        standard = 'custom'
+        standard = "custom"
 
         @classmethod
         def assert_equal(cls, old, new):
@@ -882,26 +855,23 @@ def test_assert_roundtrip_with_extension(tmpdir):
         def types(self):
             return [CustomType]
 
-    tree = {
-        'custom': CustomType({'a': 42, 'b': 43})
-    }
+    tree = {"custom": CustomType({"a": 42, "b": 43})}
 
     def check(ff):
-        assert isinstance(ff.tree['custom'], CustomType)
+        assert isinstance(ff.tree["custom"], CustomType)
 
     with helpers.assert_no_warnings():
-        helpers.assert_roundtrip_tree(
-            tree, tmpdir, extensions=[CustomTypeExtension()])
+        helpers.assert_roundtrip_tree(tree, tmpdir, extensions=[CustomTypeExtension()])
 
     assert called_custom_assert_equal[0] is True
 
 
 def test_custom_validation_bad(tmpdir):
-    custom_schema_path = helpers.get_test_data_path('custom_schema.yaml')
-    asdf_file = str(tmpdir.join('out.asdf'))
+    custom_schema_path = helpers.get_test_data_path("custom_schema.yaml")
+    asdf_file = str(tmpdir.join("out.asdf"))
 
     # This tree does not conform to the custom schema
-    tree = {'stuff': 42, 'other_stuff': 'hello'}
+    tree = {"stuff": 42, "other_stuff": "hello"}
 
     # Creating file without custom schema should pass
     with asdf.AsdfFile(tree) as ff:
@@ -923,14 +893,11 @@ def test_custom_validation_bad(tmpdir):
 
 
 def test_custom_validation_good(tmpdir):
-    custom_schema_path = helpers.get_test_data_path('custom_schema.yaml')
-    asdf_file = str(tmpdir.join('out.asdf'))
+    custom_schema_path = helpers.get_test_data_path("custom_schema.yaml")
+    asdf_file = str(tmpdir.join("out.asdf"))
 
     # This tree conforms to the custom schema
-    tree = {
-        'foo': {'x': 42, 'y': 10},
-        'bar': {'a': 'hello', 'b': 'banjo'}
-    }
+    tree = {"foo": {"x": 42, "y": 10}, "bar": {"a": "hello", "b": "banjo"}}
 
     with asdf.AsdfFile(tree, custom_schema=custom_schema_path) as ff:
         ff.write_to(asdf_file)
@@ -947,14 +914,11 @@ def test_custom_validation_pathlib(tmpdir):
     """
     from pathlib import Path
 
-    custom_schema_path = Path(helpers.get_test_data_path('custom_schema.yaml'))
-    asdf_file = str(tmpdir.join('out.asdf'))
+    custom_schema_path = Path(helpers.get_test_data_path("custom_schema.yaml"))
+    asdf_file = str(tmpdir.join("out.asdf"))
 
     # This tree conforms to the custom schema
-    tree = {
-        'foo': {'x': 42, 'y': 10},
-        'bar': {'a': 'hello', 'b': 'banjo'}
-    }
+    tree = {"foo": {"x": 42, "y": 10}, "bar": {"a": "hello", "b": "banjo"}}
 
     with asdf.AsdfFile(tree, custom_schema=custom_schema_path) as ff:
         ff.write_to(asdf_file)
@@ -964,13 +928,11 @@ def test_custom_validation_pathlib(tmpdir):
 
 
 def test_custom_validation_with_definitions_good(tmpdir):
-    custom_schema_path = helpers.get_test_data_path('custom_schema_definitions.yaml')
-    asdf_file = str(tmpdir.join('out.asdf'))
+    custom_schema_path = helpers.get_test_data_path("custom_schema_definitions.yaml")
+    asdf_file = str(tmpdir.join("out.asdf"))
 
     # This tree conforms to the custom schema
-    tree = {
-        'thing': { 'biz': 'hello', 'baz': 'world' }
-    }
+    tree = {"thing": {"biz": "hello", "baz": "world"}}
 
     with asdf.AsdfFile(tree, custom_schema=custom_schema_path) as ff:
         ff.write_to(asdf_file)
@@ -980,13 +942,11 @@ def test_custom_validation_with_definitions_good(tmpdir):
 
 
 def test_custom_validation_with_definitions_bad(tmpdir):
-    custom_schema_path = helpers.get_test_data_path('custom_schema_definitions.yaml')
-    asdf_file = str(tmpdir.join('out.asdf'))
+    custom_schema_path = helpers.get_test_data_path("custom_schema_definitions.yaml")
+    asdf_file = str(tmpdir.join("out.asdf"))
 
     # This tree does NOT conform to the custom schema
-    tree = {
-        'forb': { 'biz': 'hello', 'baz': 'world' }
-    }
+    tree = {"forb": {"biz": "hello", "baz": "world"}}
 
     # Creating file without custom schema should pass
     with asdf.AsdfFile(tree) as ff:
@@ -1008,13 +968,11 @@ def test_custom_validation_with_definitions_bad(tmpdir):
 
 
 def test_custom_validation_with_external_ref_good(tmpdir):
-    custom_schema_path = helpers.get_test_data_path('custom_schema_external_ref.yaml')
-    asdf_file = str(tmpdir.join('out.asdf'))
+    custom_schema_path = helpers.get_test_data_path("custom_schema_external_ref.yaml")
+    asdf_file = str(tmpdir.join("out.asdf"))
 
     # This tree conforms to the custom schema
-    tree = {
-        'foo': asdf.tags.core.Software(name="Microsoft Windows", version="95")
-    }
+    tree = {"foo": asdf.tags.core.Software(name="Microsoft Windows", version="95")}
 
     with asdf.AsdfFile(tree, custom_schema=custom_schema_path) as ff:
         ff.write_to(asdf_file)
@@ -1024,13 +982,11 @@ def test_custom_validation_with_external_ref_good(tmpdir):
 
 
 def test_custom_validation_with_external_ref_bad(tmpdir):
-    custom_schema_path = helpers.get_test_data_path('custom_schema_external_ref.yaml')
-    asdf_file = str(tmpdir.join('out.asdf'))
+    custom_schema_path = helpers.get_test_data_path("custom_schema_external_ref.yaml")
+    asdf_file = str(tmpdir.join("out.asdf"))
 
     # This tree does not conform to the custom schema
-    tree = {
-        'foo': False
-    }
+    tree = {"foo": False}
 
     # Creating file without custom schema should pass
     with asdf.AsdfFile(tree) as ff:
@@ -1052,14 +1008,14 @@ def test_custom_validation_with_external_ref_bad(tmpdir):
 
 
 def test_load_custom_schema_deprecated():
-    custom_schema_path = helpers.get_test_data_path('custom_schema.yaml')
+    custom_schema_path = helpers.get_test_data_path("custom_schema.yaml")
 
     with pytest.deprecated_call():
         schema.load_custom_schema(custom_schema_path)
 
 
 def test_load_schema_resolve_local_refs_deprecated():
-    custom_schema_path = helpers.get_test_data_path('custom_schema_definitions.yaml')
+    custom_schema_path = helpers.get_test_data_path("custom_schema_definitions.yaml")
 
     with pytest.deprecated_call():
         schema.load_schema(custom_schema_path, resolve_local_refs=True)
@@ -1088,7 +1044,7 @@ a: !core/doesnt_exist-1.0.0
     buff = helpers.yaml_to_asdf(yaml)
     with pytest.warns(AsdfWarning, match="Unable to locate schema file"):
         with asdf.open(buff) as af:
-            assert str(af['a']) == 'hello'
+            assert str(af["a"]) == "hello"
 
     # This is a more realistic case since we're using an external extension
     yaml = """
@@ -1099,27 +1055,30 @@ a: !<tag:nowhere.org:custom/doesnt_exist-1.0.0>
     buff = helpers.yaml_to_asdf(yaml)
     with pytest.warns(AsdfWarning, match="Unable to locate schema file"):
         with asdf.open(buff, extensions=CustomExtension()) as af:
-            assert str(af['a']) == 'hello'
+            assert str(af["a"]) == "hello"
 
 
-@pytest.mark.parametrize("numpy_value,valid_types", [
-    (np.str_("foo"), {"string"}),
-    (np.bytes_("foo"), set()),
-    (np.float16(3.14), {"number"}),
-    (np.float32(3.14159), {"number"}),
-    (np.float64(3.14159), {"number"}),
-    # Evidently float128 is not available on Windows:
-    (getattr(np, "float128", np.float64)(3.14159), {"number"}),
-    (np.int8(42), {"number", "integer"}),
-    (np.int16(42), {"number", "integer"}),
-    (np.int32(42), {"number", "integer"}),
-    (np.longlong(42), {"number", "integer"}),
-    (np.uint8(42), {"number", "integer"}),
-    (np.uint16(42), {"number", "integer"}),
-    (np.uint32(42), {"number", "integer"}),
-    (np.uint64(42), {"number", "integer"}),
-    (np.ulonglong(42), {"number", "integer"}),
-])
+@pytest.mark.parametrize(
+    "numpy_value,valid_types",
+    [
+        (np.str_("foo"), {"string"}),
+        (np.bytes_("foo"), set()),
+        (np.float16(3.14), {"number"}),
+        (np.float32(3.14159), {"number"}),
+        (np.float64(3.14159), {"number"}),
+        # Evidently float128 is not available on Windows:
+        (getattr(np, "float128", np.float64)(3.14159), {"number"}),
+        (np.int8(42), {"number", "integer"}),
+        (np.int16(42), {"number", "integer"}),
+        (np.int32(42), {"number", "integer"}),
+        (np.longlong(42), {"number", "integer"}),
+        (np.uint8(42), {"number", "integer"}),
+        (np.uint16(42), {"number", "integer"}),
+        (np.uint32(42), {"number", "integer"}),
+        (np.uint64(42), {"number", "integer"}),
+        (np.ulonglong(42), {"number", "integer"}),
+    ],
+)
 def test_numpy_scalar_type_validation(numpy_value, valid_types):
     def _assert_validation(jsonschema_type, expected_valid):
         validator = schema.get_validator()
@@ -1150,12 +1109,10 @@ def test_numpy_scalar_type_validation(numpy_value, valid_types):
 def test_validator_visit_repeat_nodes():
     ctx = asdf.AsdfFile()
     node = asdf.tags.core.Software(name="Minesweeper")
-    tree = yamlutil.custom_tree_to_tagged_tree(
-        {"node": node, "other_node": node, "nested": {"node": node}},
-        ctx
-    )
+    tree = yamlutil.custom_tree_to_tagged_tree({"node": node, "other_node": node, "nested": {"node": node}}, ctx)
 
     visited_nodes = []
+
     def _test_validator(validator, value, instance, schema):
         visited_nodes.append(instance)
 
@@ -1164,16 +1121,13 @@ def test_validator_visit_repeat_nodes():
     assert len(visited_nodes) == 1
 
     visited_nodes.clear()
-    validator = schema.get_validator(
-        validators=util.HashableDict(type=_test_validator),
-        _visit_repeat_nodes=True
-    )
+    validator = schema.get_validator(validators=util.HashableDict(type=_test_validator), _visit_repeat_nodes=True)
     validator.validate(tree)
     assert len(visited_nodes) == 3
 
 
 def test_tag_validator():
-    content="""%YAML 1.1
+    content = """%YAML 1.1
 ---
 $schema: http://stsci.edu/schemas/asdf/asdf-schema-1.0.0
 id: asdf://somewhere.org/schemas/foo
@@ -1189,7 +1143,7 @@ tag: asdf://somewhere.org/tags/foo
         with pytest.raises(ValidationError):
             schema.validate(tagged.TaggedDict(tag="asdf://somewhere.org/tags/bar"), schema=schema_tree)
 
-    content="""%YAML 1.1
+    content = """%YAML 1.1
 ---
 $schema: http://stsci.edu/schemas/asdf/asdf-schema-1.0.0
 id: asdf://somewhere.org/schemas/bar

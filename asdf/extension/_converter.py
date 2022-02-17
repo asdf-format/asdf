@@ -16,14 +16,17 @@ class Converter(abc.ABC):
     properties and `to_yaml_tree` and `from_yaml_tree` methods.
     The `select_tag` method is optional.
     """
+
     @classmethod
     def __subclasshook__(cls, C):
         if cls is Converter:
-            return (hasattr(C, "tags") and
-                    hasattr(C, "types") and
-                    hasattr(C, "to_yaml_tree") and
-                    hasattr(C, "from_yaml_tree"))
-        return NotImplemented # pragma: no cover
+            return (
+                hasattr(C, "tags")
+                and hasattr(C, "types")
+                and hasattr(C, "to_yaml_tree")
+                and hasattr(C, "from_yaml_tree")
+            )
+        return NotImplemented  # pragma: no cover
 
     @abc.abstractproperty
     def tags(self):
@@ -37,7 +40,7 @@ class Converter(abc.ABC):
         iterable of str
             Tag URIs or URI patterns.
         """
-        pass # pragma: no cover
+        pass  # pragma: no cover
 
     @abc.abstractproperty
     def types(self):
@@ -50,7 +53,7 @@ class Converter(abc.ABC):
         iterable of str or type
             If str, the fully qualified class name of the type.
         """
-        pass # pragma: no cover
+        pass  # pragma: no cover
 
     def select_tag(self, obj, tags, ctx):
         """
@@ -114,7 +117,7 @@ class Converter(abc.ABC):
         dict or list or str
             The YAML node representation of the object.
         """
-        pass # pragma: no cover
+        pass  # pragma: no cover
 
     @abc.abstractmethod
     def from_yaml_tree(self, node, tag, ctx):
@@ -147,7 +150,7 @@ class Converter(abc.ABC):
             An instance of one of the types listed in the `types` property,
             or a generator that yields such an instance.
         """
-        pass # pragma: no cover
+        pass  # pragma: no cover
 
 
 class ConverterProxy(Converter):
@@ -155,6 +158,7 @@ class ConverterProxy(Converter):
     Proxy that wraps a `Converter` and provides default
     implementations of optional methods.
     """
+
     def __init__(self, delegate, extension):
         if not isinstance(delegate, Converter):
             raise TypeError("Converter must implement the asdf.extension.Converter interface")
@@ -176,8 +180,7 @@ class ConverterProxy(Converter):
 
         if len(relevant_tags) > 1 and not hasattr(delegate, "select_tag"):
             raise RuntimeError(
-                "Converter handles multiple tags for this extension, "
-                "but does not implement a select_tag method."
+                "Converter handles multiple tags for this extension, " "but does not implement a select_tag method."
             )
 
         self._tags = sorted(relevant_tags)

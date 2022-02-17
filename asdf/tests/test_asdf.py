@@ -1,11 +1,11 @@
 import pytest
 
-from asdf.asdf import AsdfFile, open_asdf, SerializationContext
 from asdf import config_context, get_config
-from asdf.versioning import AsdfVersion
+from asdf.asdf import AsdfFile, SerializationContext, open_asdf
 from asdf.exceptions import AsdfWarning
-from asdf.extension import ExtensionProxy, AsdfExtensionList, ExtensionManager
-from asdf.tests.helpers import yaml_to_asdf, assert_no_warnings
+from asdf.extension import AsdfExtensionList, ExtensionManager, ExtensionProxy
+from asdf.tests.helpers import assert_no_warnings, yaml_to_asdf
+from asdf.versioning import AsdfVersion
 
 
 class TestExtension:
@@ -155,7 +155,7 @@ def test_asdf_file_version_requirement():
 def test_open_asdf_extensions(tmpdir):
     extension = TestExtension(extension_uri="asdf://somewhere.org/extensions/foo-1.0")
 
-    path = str(tmpdir/"test.asdf")
+    path = str(tmpdir / "test.asdf")
 
     with AsdfFile() as af:
         af.write_to(path)
@@ -285,7 +285,9 @@ def test_reading_extension_metadata():
             - !core/extension_metadata-1.0.0
               extension_uri: some-missing-URI
               extension_class: {}
-        """.format(extension_with_uri.class_name)
+        """.format(
+            extension_with_uri.class_name
+        )
         buff = yaml_to_asdf(content)
         with pytest.warns(AsdfWarning, match="URI 'some-missing-URI'"):
             open_asdf(buff)

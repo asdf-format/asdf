@@ -5,33 +5,27 @@ and `JSON Pointer standard <http://tools.ietf.org/html/rfc6901>`__.
 """
 
 
-from collections.abc import Sequence
 import weakref
+from collections.abc import Sequence
 
 import numpy as np
 
+from . import generic_io, treeutil, util
 from .types import AsdfType
-from . import generic_io
-from . import treeutil
-from . import util
-
 from .util import patched_urllib_parse
 
-
-__all__ = [
-    'resolve_fragment', 'Reference', 'find_references', 'resolve_references',
-    'make_reference']
+__all__ = ["resolve_fragment", "Reference", "find_references", "resolve_references", "make_reference"]
 
 
 def resolve_fragment(tree, pointer):
     """
     Resolve a JSON Pointer within the tree.
     """
-    pointer = pointer.lstrip(u"/")
-    parts = patched_urllib_parse.unquote(pointer).split(u"/") if pointer else []
+    pointer = pointer.lstrip("/")
+    parts = patched_urllib_parse.unquote(pointer).split("/") if pointer else []
 
     for part in parts:
-        part = part.replace(u"~1", u"/").replace(u"~0", u"~")
+        part = part.replace("~1", "/").replace("~0", "~")
 
         if isinstance(tree, Sequence):
             # Array indexes should be turned into integers
@@ -42,14 +36,13 @@ def resolve_fragment(tree, pointer):
         try:
             tree = tree[part]
         except (TypeError, LookupError):
-            raise ValueError(
-                "Unresolvable reference: '{0}'".format(pointer))
+            raise ValueError("Unresolvable reference: '{0}'".format(pointer))
 
     return tree
 
 
 class Reference(AsdfType):
-    yaml_tag = 'tag:yaml.org,2002:map'
+    yaml_tag = "tag:yaml.org,2002:map"
 
     def __init__(self, uri, base_uri=None, asdffile=None, target=None):
         self._uri = uri
@@ -73,16 +66,14 @@ class Reference(AsdfType):
     def __repr__(self):
         # repr alone should not force loading of the reference
         if self._target is None:
-            return "<Reference (unloaded) to '{0}'>".format(
-                self._uri)
+            return "<Reference (unloaded) to '{0}'>".format(self._uri)
         else:
             return "<Reference to {0}>".format(repr(self._target))
 
     def __str__(self):
         # str alone should not force loading of the reference
         if self._target is None:
-            return "<Reference (unloaded) to '{0}'>".format(
-                self._uri)
+            return "<Reference (unloaded) to '{0}'>".format(self._uri)
         else:
             return str(self._target)
 
@@ -90,7 +81,7 @@ class Reference(AsdfType):
         return len(self._get_target())
 
     def __getattr__(self, attr):
-        if attr == '_tag':
+        if attr == "_tag":
             return None
         try:
             return getattr(self._get_target(), attr)
@@ -118,7 +109,7 @@ class Reference(AsdfType):
             uri = generic_io.relative_uri(ctx.uri, data._uri)
         else:
             uri = data._uri
-        return {'$ref': uri}
+        return {"$ref": uri}
 
     @classmethod
     def validate(self, data):
@@ -130,13 +121,13 @@ def find_references(tree, ctx):
     Find all of the JSON references in the tree, and convert them into
     `Reference` objects.
     """
+
     def do_find(tree, json_id):
-        if isinstance(tree, dict) and '$ref' in tree:
-            return Reference(tree['$ref'], json_id, asdffile=ctx)
+        if isinstance(tree, dict) and "$ref" in tree:
+            return Reference(tree["$ref"], json_id, asdffile=ctx)
         return tree
 
-    return treeutil.walk_and_modify(
-        tree, do_find, ignore_implicit_conversion=ctx._ignore_implicit_conversion)
+    return treeutil.walk_and_modify(tree, do_find, ignore_implicit_conversion=ctx._ignore_implicit_conversion)
 
 
 def resolve_references(tree, ctx, **kwargs):
@@ -144,6 +135,7 @@ def resolve_references(tree, ctx, **kwargs):
     Resolve all of the references in the tree, by loading the external
     data and inserting it directly into the tree.
     """
+
     def do_resolve(tree):
         if isinstance(tree, Reference):
             return tree(**kwargs)
@@ -151,8 +143,7 @@ def resolve_references(tree, ctx, **kwargs):
 
     tree = find_references(tree, ctx)
 
-    return treeutil.walk_and_modify(
-        tree, do_resolve, ignore_implicit_conversion=ctx._ignore_implicit_conversion)
+    return treeutil.walk_and_modify(tree, do_resolve, ignore_implicit_conversion=ctx._ignore_implicit_conversion)
 
 
 def make_reference(asdffile, path):
@@ -172,14 +163,11 @@ def make_reference(asdffile, path):
     reference : reference.Reference
         A reference object.
     """
-    path_str = '/'.join(
-        x.replace(u"~", u"~0").replace(u"/", u"~1")
-        for x in path)
+    path_str = "/".join(x.replace("~", "~0").replace("/", "~1") for x in path)
     target = resolve_fragment(asdffile.tree, path_str)
 
     if asdffile.uri is None:
-        raise ValueError(
-            "Can not make a reference to a AsdfFile without an associated URI.")
+        raise ValueError("Can not make a reference to a AsdfFile without an associated URI.")
     base_uri = util.get_base_uri(asdffile.uri)
-    uri = base_uri + '#' + path_str
+    uri = base_uri + "#" + path_str
     return Reference(uri, target=target)

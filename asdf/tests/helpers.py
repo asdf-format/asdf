@@ -22,18 +22,17 @@ except ImportError:
 import yaml
 
 import asdf
+
+from .. import generic_io, versioning
 from ..asdf import AsdfFile, get_asdf_library_info
 from ..block import Block
-from .httpserver import RangeHTTPServer
-from ..extension import default_extensions
-from ..exceptions import AsdfConversionWarning
-from .. import versioning
-from ..resolver import Resolver, ResolverChain
-from .. import generic_io
 from ..constants import YAML_TAG_PREFIX
-from ..versioning import AsdfVersion, get_version_map
-
+from ..exceptions import AsdfConversionWarning
+from ..extension import default_extensions
+from ..resolver import Resolver, ResolverChain
 from ..tags.core import AsdfObject
+from ..versioning import AsdfVersion, get_version_map
+from .httpserver import RangeHTTPServer
 
 try:
     from pytest_remotedata.disable_internet import INTERNET_OFF
@@ -41,13 +40,20 @@ except ImportError:
     INTERNET_OFF = False
 
 
-__all__ = ['get_test_data_path', 'assert_tree_match', 'assert_roundtrip_tree',
-           'yaml_to_asdf', 'get_file_sizes', 'display_warnings']
+__all__ = [
+    "get_test_data_path",
+    "assert_tree_match",
+    "assert_roundtrip_tree",
+    "yaml_to_asdf",
+    "get_file_sizes",
+    "display_warnings",
+]
 
 
 def get_test_data_path(name, module=None):
     if module is None:
         from . import data as test_data
+
         module = test_data
 
     module_root = Path(module.__file__).parent
@@ -55,11 +61,10 @@ def get_test_data_path(name, module=None):
     if name is None or name == "":
         return str(module_root)
     else:
-        return str(module_root/name)
+        return str(module_root / name)
 
 
-def assert_tree_match(old_tree, new_tree, ctx=None,
-                      funcname='assert_equal', ignore_keys=None):
+def assert_tree_match(old_tree, new_tree, ctx=None, funcname="assert_equal", ignore_keys=None):
     """
     Assert that two ASDF trees match.
 
@@ -83,7 +88,7 @@ def assert_tree_match(old_tree, new_tree, ctx=None,
     seen = set()
 
     if ignore_keys is None:
-        ignore_keys = ['asdf_library', 'history']
+        ignore_keys = ["asdf_library", "history"]
     ignore_keys = set(ignore_keys)
 
     if ctx is None:
@@ -101,10 +106,12 @@ def assert_tree_match(old_tree, new_tree, ctx=None,
         old_type = ctx.type_index.from_custom_type(type(old), version_string)
         new_type = ctx.type_index.from_custom_type(type(new), version_string)
 
-        if (old_type is not None and
-            new_type is not None and
-            old_type is new_type and
-            (callable(funcname) or hasattr(old_type, funcname))):
+        if (
+            old_type is not None
+            and new_type is not None
+            and old_type is new_type
+            and (callable(funcname) or hasattr(old_type, funcname))
+        ):
 
             if callable(funcname):
                 funcname(old, new)
@@ -112,8 +119,9 @@ def assert_tree_match(old_tree, new_tree, ctx=None,
                 getattr(old_type, funcname)(old, new)
 
         elif isinstance(old, dict) and isinstance(new, dict):
-            assert (set(x for x in old.keys() if x not in ignore_keys) ==
-                    set(x for x in new.keys() if x not in ignore_keys))
+            assert set(x for x in old.keys() if x not in ignore_keys) == set(
+                x for x in new.keys() if x not in ignore_keys
+            )
             for key in old.keys():
                 if key not in ignore_keys:
                     recurse(old[key], new[key])
@@ -127,13 +135,10 @@ def assert_tree_match(old_tree, new_tree, ctx=None,
         # to enable our unit testing. It is possible that in the future it will
         # be necessary or useful to account for fields that are not currently
         # compared.
-        elif CartesianRepresentation is not None and \
-                isinstance(old, CartesianRepresentation):
+        elif CartesianRepresentation is not None and isinstance(old, CartesianRepresentation):
             assert old.x == new.x and old.y == new.y and old.z == new.z
-        elif CartesianDifferential is not None and \
-                isinstance(old, CartesianDifferential):
-            assert old.d_x == new.d_x and old.d_y == new.d_y and \
-                old.d_z == new.d_z
+        elif CartesianDifferential is not None and isinstance(old, CartesianDifferential):
+            assert old.d_x == new.d_x and old.d_y == new.d_y and old.d_z == new.d_z
         elif ICRS is not None and isinstance(old, ICRS):
             assert old.ra == new.ra and old.dec == new.dec
         else:
@@ -169,53 +174,60 @@ def assert_roundtrip_tree(*args, **kwargs):
         _assert_roundtrip_tree(*args, **kwargs)
 
 
-def _assert_roundtrip_tree(tree, tmpdir, *, asdf_check_func=None,
-                           raw_yaml_check_func=None, write_options={},
-                           init_options={}, extensions=None,
-                           tree_match_func='assert_equal'):
+def _assert_roundtrip_tree(
+    tree,
+    tmpdir,
+    *,
+    asdf_check_func=None,
+    raw_yaml_check_func=None,
+    write_options={},
+    init_options={},
+    extensions=None,
+    tree_match_func="assert_equal"
+):
 
-    fname = str(tmpdir.join('test.asdf'))
+    fname = str(tmpdir.join("test.asdf"))
 
     # First, test writing/reading a BytesIO buffer
     buff = io.BytesIO()
     AsdfFile(tree, extensions=extensions, **init_options).write_to(buff, **write_options)
     assert not buff.closed
     buff.seek(0)
-    with asdf.open(buff, mode='rw', extensions=extensions) as ff:
+    with asdf.open(buff, mode="rw", extensions=extensions) as ff:
         assert not buff.closed
         assert isinstance(ff.tree, AsdfObject)
-        assert 'asdf_library' in ff.tree
-        assert ff.tree['asdf_library'] == get_asdf_library_info()
+        assert "asdf_library" in ff.tree
+        assert ff.tree["asdf_library"] == get_asdf_library_info()
         assert_tree_match(tree, ff.tree, ff, funcname=tree_match_func)
         if asdf_check_func:
             asdf_check_func(ff)
 
     buff.seek(0)
     ff = AsdfFile(extensions=extensions, **init_options)
-    content = AsdfFile._open_impl(ff, buff, mode='r', _get_yaml_content=True)
+    content = AsdfFile._open_impl(ff, buff, mode="r", _get_yaml_content=True)
     buff.close()
     # We *never* want to get any raw python objects out
-    assert b'!!python' not in content
-    assert b'!core/asdf' in content
-    assert content.startswith(b'%YAML 1.1')
+    assert b"!!python" not in content
+    assert b"!core/asdf" in content
+    assert content.startswith(b"%YAML 1.1")
     if raw_yaml_check_func:
         raw_yaml_check_func(content)
 
     # Then, test writing/reading to a real file
     ff = AsdfFile(tree, extensions=extensions, **init_options)
     ff.write_to(fname, **write_options)
-    with asdf.open(fname, mode='rw', extensions=extensions) as ff:
+    with asdf.open(fname, mode="rw", extensions=extensions) as ff:
         assert_tree_match(tree, ff.tree, ff, funcname=tree_match_func)
         if asdf_check_func:
             asdf_check_func(ff)
 
     # Make sure everything works without a block index
-    write_options['include_block_index'] = False
+    write_options["include_block_index"] = False
     buff = io.BytesIO()
     AsdfFile(tree, extensions=extensions, **init_options).write_to(buff, **write_options)
     assert not buff.closed
     buff.seek(0)
-    with asdf.open(buff, mode='rw', extensions=extensions) as ff:
+    with asdf.open(buff, mode="rw", extensions=extensions) as ff:
         assert not buff.closed
         assert isinstance(ff.tree, AsdfObject)
         assert_tree_match(tree, ff.tree, ff, funcname=tree_match_func)
@@ -227,9 +239,8 @@ def _assert_roundtrip_tree(tree, tmpdir, *, asdf_check_func=None,
         server = RangeHTTPServer()
         try:
             ff = AsdfFile(tree, extensions=extensions, **init_options)
-            ff.write_to(os.path.join(server.tmpdir, 'test.asdf'), **write_options)
-            with asdf.open(server.url + 'test.asdf', mode='r',
-                               extensions=extensions) as ff:
+            ff.write_to(os.path.join(server.tmpdir, "test.asdf"), **write_options)
+            with asdf.open(server.url + "test.asdf", mode="r", extensions=extensions) as ff:
                 assert_tree_match(tree, ff.tree, ff, funcname=tree_match_func)
                 if asdf_check_func:
                     asdf_check_func(ff)
@@ -252,14 +263,14 @@ def _assert_roundtrip_tree(tree, tmpdir, *, asdf_check_func=None,
 
     # Now repeat with copy_arrays=False and a real file to test mmap()
     AsdfFile(tree, extensions=extensions, **init_options).write_to(fname, **write_options)
-    with asdf.open(fname, mode='rw', extensions=extensions, copy_arrays=False,
-                       lazy_load=False) as ff:
+    with asdf.open(fname, mode="rw", extensions=extensions, copy_arrays=False, lazy_load=False) as ff:
         for block in ff.blocks._internal_blocks:
             assert isinstance(block, Block)
             assert block._data is not None
         assert_tree_match(tree, ff.tree, ff, funcname=tree_match_func)
         if asdf_check_func:
             asdf_check_func(ff)
+
 
 def yaml_to_asdf(yaml_content, yaml_headers=True, standard_version=None):
     """
@@ -279,7 +290,7 @@ def yaml_to_asdf(yaml_content, yaml_headers=True, standard_version=None):
         A file-like object containing the ASDF-like content.
     """
     if isinstance(yaml_content, str):
-        yaml_content = yaml_content.encode('utf-8')
+        yaml_content = yaml_content.encode("utf-8")
 
     buff = io.BytesIO()
 
@@ -294,12 +305,18 @@ def yaml_to_asdf(yaml_content, yaml_headers=True, standard_version=None):
     tree_version = vm["tags"]["tag:stsci.edu:asdf/core/asdf"]
 
     if yaml_headers:
-        buff.write("""#ASDF {0}
+        buff.write(
+            """#ASDF {0}
 #ASDF_STANDARD {1}
 %YAML {2}
 %TAG ! tag:stsci.edu:asdf/
 --- !core/asdf-{3}
-""".format(file_format_version, standard_version, yaml_version, tree_version).encode('ascii'))
+""".format(
+                file_format_version, standard_version, yaml_version, tree_version
+            ).encode(
+                "ascii"
+            )
+        )
     buff.write(yaml_content)
     if yaml_headers:
         buff.write(b"\n...\n")
@@ -349,11 +366,7 @@ def display_warnings(_warnings):
 
     msg = "Unexpected warning(s) occurred:\n"
     for warning in _warnings:
-        msg += "{}:{}: {}: {}\n".format(
-            warning.filename,
-            warning.lineno,
-            warning.category.__name__,
-            warning.message)
+        msg += "{}:{}: {}: {}\n".format(warning.filename, warning.lineno, warning.category.__name__, warning.message)
     return msg
 
 
@@ -380,8 +393,9 @@ def assert_no_warnings(warning_class=None):
         with pytest.warns(Warning) as recorded_warnings:
             yield
 
-        assert not any(isinstance(w.message, warning_class) for w in recorded_warnings), \
-            display_warnings(recorded_warnings)
+        assert not any(isinstance(w.message, warning_class) for w in recorded_warnings), display_warnings(
+            recorded_warnings
+        )
 
 
 def assert_extension_correctness(extension):
@@ -420,15 +434,17 @@ def _assert_extension_type_correctness(extension, extension_type, resolver):
 
     # Currently ExtensionType sets a default version of 1.0.0,
     # but we want to encourage an explicit version on the subclass.
-    assert "version" in extension_type.__dict__, "{} must set the 'version' class attribute".format(extension_type.__name__)
+    assert "version" in extension_type.__dict__, "{} must set the 'version' class attribute".format(
+        extension_type.__name__
+    )
 
     for check_type in extension_type.versioned_siblings + [extension_type]:
         schema_location = resolver(check_type.yaml_tag)
 
         assert schema_location is not None, (
-            "{} supports tag, {}, ".format(extension_type.__name__, check_type.yaml_tag) +
-            "but tag does not resolve.  Check the tag_mapping and uri_mapping " +
-            "properties on the related extension ({}).".format(extension_type.__name__)
+            "{} supports tag, {}, ".format(extension_type.__name__, check_type.yaml_tag)
+            + "but tag does not resolve.  Check the tag_mapping and uri_mapping "
+            + "properties on the related extension ({}).".format(extension_type.__name__)
         )
 
         if schema_location not in asdf.get_config().resource_manager:
@@ -437,7 +453,7 @@ def _assert_extension_type_correctness(extension, extension_type, resolver):
                     yaml.safe_load(f.read())
             except Exception:
                 assert False, (
-                    "{} supports tag, {}, ".format(extension_type.__name__, check_type.yaml_tag) +
-                    "which resolves to schema at {}, but ".format(schema_location) +
-                    "schema cannot be read."
+                    "{} supports tag, {}, ".format(extension_type.__name__, check_type.yaml_tag)
+                    + "which resolves to schema at {}, but ".format(schema_location)
+                    + "schema cannot be read."
                 )

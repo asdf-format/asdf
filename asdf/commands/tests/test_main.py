@@ -5,7 +5,7 @@ from .. import main
 
 def test_help():
     # Just a smoke test, really
-    main.main_from_args(['help'])
+    main.main_from_args(["help"])
 
 
 def test_invalid_command():
@@ -14,7 +14,7 @@ def test_invalid_command():
     assert e.value.code == 2
 
     with pytest.raises(SystemExit) as e:
-        main.main(['foo'])
+        main.main(["foo"])
     if isinstance(e.value, int):
         assert e.value == 2
     else:

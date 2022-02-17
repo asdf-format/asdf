@@ -1,43 +1,42 @@
-import json
-import datetime
-import warnings
 import copy
-from numbers import Integral
-from functools import lru_cache
+import datetime
+import json
+import warnings
 from collections import OrderedDict
 from collections.abc import Mapping
+from functools import lru_cache
+from numbers import Integral
 
+import numpy as np
+import yaml
 from jsonschema import validators as mvalidators
 from jsonschema.exceptions import ValidationError
 
-import yaml
-import numpy as np
-
+from . import (
+    constants,
+    extension,
+    generic_io,
+    reference,
+    tagged,
+    treeutil,
+    util,
+    versioning,
+    yamlutil,
+)
 from .config import get_config
-from . import constants
-from . import generic_io
-from . import reference
-from . import treeutil
-from . import util
-from . import extension
-from . import yamlutil
-from . import versioning
-from . import tagged
 from .exceptions import AsdfDeprecationWarning, AsdfWarning
-
 from .util import patched_urllib_parse
 
+YAML_SCHEMA_METASCHEMA_ID = "http://stsci.edu/schemas/yaml-schema/draft-01"
 
-YAML_SCHEMA_METASCHEMA_ID = 'http://stsci.edu/schemas/yaml-schema/draft-01'
 
-
-if getattr(yaml, '__with_libyaml__', None):  # pragma: no cover
+if getattr(yaml, "__with_libyaml__", None):  # pragma: no cover
     _yaml_base_loader = yaml.CSafeLoader
 else:  # pragma: no cover
     _yaml_base_loader = yaml.SafeLoader
 
 
-__all__ = ['validate', 'fill_defaults', 'remove_defaults', 'check_schema']
+__all__ = ["validate", "fill_defaults", "remove_defaults", "check_schema"]
 
 
 def default_ext_resolver(uri):
@@ -47,23 +46,24 @@ def default_ext_resolver(uri):
     # Deprecating this because it doesn't play nicely with the caching on
     # load_schema(...).
     warnings.warn(
-            "The 'default_ext_resolver(...)' function is deprecated. Use "
-            "'asdf.extension.get_default_resolver()(...)' instead.",
-            AsdfDeprecationWarning)
+        "The 'default_ext_resolver(...)' function is deprecated. Use "
+        "'asdf.extension.get_default_resolver()(...)' instead.",
+        AsdfDeprecationWarning,
+    )
     return extension.get_default_resolver()(uri)
 
 
 PYTHON_TYPE_TO_YAML_TAG = {
-    None: 'null',
-    str: 'str',
-    bytes: 'str',
-    bool: 'bool',
-    int: 'int',
-    float: 'float',
-    list: 'seq',
-    dict: 'map',
-    set: 'set',
-    OrderedDict: 'omap'
+    None: "null",
+    str: "str",
+    bytes: "str",
+    bool: "bool",
+    int: "int",
+    float: "float",
+    list: "seq",
+    dict: "map",
+    set: "set",
+    OrderedDict: "omap",
 }
 
 
@@ -85,7 +85,7 @@ def validate_tag(validator, tag_pattern, instance, schema):
     tag against a pattern that may include wildcards.  See
     `asdf.util.uri_match` for details on the matching behavior.
     """
-    if hasattr(instance, '_tag'):
+    if hasattr(instance, "_tag"):
         instance_tag = instance._tag
     else:
         # Try tags for known Python builtins
@@ -99,9 +99,7 @@ def validate_tag(validator, tag_pattern, instance, schema):
         )
 
     if not util.uri_match(tag_pattern, instance_tag):
-        yield ValidationError(
-            "mismatched tags, wanted '{0}', got '{1}'".format(
-                tag_pattern, instance_tag))
+        yield ValidationError("mismatched tags, wanted '{0}', got '{1}'".format(tag_pattern, instance_tag))
 
 
 def validate_propertyOrder(validator, order, instance, schema):
@@ -112,7 +110,7 @@ def validate_propertyOrder(validator, order, instance, schema):
     library's extensible validation system is the easiest way to get
     this property assigned.
     """
-    if not validator.is_type(instance, 'object'):
+    if not validator.is_type(instance, "object"):
         return
 
     if not order:
@@ -130,8 +128,7 @@ def validate_flowStyle(validator, flow_style, instance, schema):
     but using the `jsonschema` library's extensible validation system
     is the easiest way to get this property assigned.
     """
-    if not (validator.is_type(instance, 'object') or
-            validator.is_type(instance, 'array')):
+    if not (validator.is_type(instance, "object") or validator.is_type(instance, "array")):
         return
 
     instance.flow_style = flow_style
@@ -145,7 +142,7 @@ def validate_style(validator, style, instance, schema):
     library's extensible validation system is the easiest way to get
     this property assigned.
     """
-    if not validator.is_type(instance, 'string'):
+    if not validator.is_type(instance, "string"):
         return
 
     instance.style = style
@@ -158,47 +155,44 @@ def validate_type(validator, types, instance, schema):
     format==date-time.  That detects for that case and doesn't raise
     an error, otherwise falling back to the default type checker.
     """
-    if (isinstance(instance, datetime.datetime) and
-        schema.get('format') == 'date-time' and
-        'string' in types):
+    if isinstance(instance, datetime.datetime) and schema.get("format") == "date-time" and "string" in types:
         return
 
-    return mvalidators.Draft4Validator.VALIDATORS['type'](
-        validator, types, instance, schema)
+    return mvalidators.Draft4Validator.VALIDATORS["type"](validator, types, instance, schema)
 
 
-YAML_VALIDATORS = util.HashableDict(
-    mvalidators.Draft4Validator.VALIDATORS.copy())
-YAML_VALIDATORS.update({
-    'tag': validate_tag,
-    'propertyOrder': validate_propertyOrder,
-    'flowStyle': validate_flowStyle,
-    'style': validate_style,
-    'type': validate_type
-})
+YAML_VALIDATORS = util.HashableDict(mvalidators.Draft4Validator.VALIDATORS.copy())
+YAML_VALIDATORS.update(
+    {
+        "tag": validate_tag,
+        "propertyOrder": validate_propertyOrder,
+        "flowStyle": validate_flowStyle,
+        "style": validate_style,
+        "type": validate_type,
+    }
+)
 
 
 def validate_fill_default(validator, properties, instance, schema):
-    if not validator.is_type(instance, 'object'):
+    if not validator.is_type(instance, "object"):
         return
 
     for property, subschema in properties.items():
         if "default" in subschema:
             instance.setdefault(property, subschema["default"])
 
-    for err in mvalidators.Draft4Validator.VALIDATORS['properties'](
-        validator, properties, instance, schema):
+    for err in mvalidators.Draft4Validator.VALIDATORS["properties"](validator, properties, instance, schema):
         yield err
 
 
 FILL_DEFAULTS = util.HashableDict()
-for key in ('allOf', 'items'):
+for key in ("allOf", "items"):
     FILL_DEFAULTS[key] = mvalidators.Draft4Validator.VALIDATORS[key]
-FILL_DEFAULTS['properties'] = validate_fill_default
+FILL_DEFAULTS["properties"] = validate_fill_default
 
 
 def validate_remove_default(validator, properties, instance, schema):
-    if not validator.is_type(instance, 'object'):
+    if not validator.is_type(instance, "object"):
         return
 
     for property, subschema in properties.items():
@@ -206,15 +200,14 @@ def validate_remove_default(validator, properties, instance, schema):
             if instance.get(property, None) == subschema["default"]:
                 del instance[property]
 
-    for err in mvalidators.Draft4Validator.VALIDATORS['properties'](
-        validator, properties, instance, schema):
+    for err in mvalidators.Draft4Validator.VALIDATORS["properties"](validator, properties, instance, schema):
         yield err
 
 
 REMOVE_DEFAULTS = util.HashableDict()
-for key in ('allOf', 'items'):
+for key in ("allOf", "items"):
     REMOVE_DEFAULTS[key] = mvalidators.Draft4Validator.VALIDATORS[key]
-REMOVE_DEFAULTS['properties'] = validate_remove_default
+REMOVE_DEFAULTS["properties"] = validate_remove_default
 
 
 class _ValidationContext:
@@ -226,6 +219,7 @@ class _ValidationContext:
     how many times they have been entered, and only reset themselves
     when exiting the outermost context.
     """
+
     def __init__(self):
         self._depth = 0
         self._seen = set()
@@ -262,17 +256,16 @@ class _ValidationContext:
 def _create_validator(validators=YAML_VALIDATORS, visit_repeat_nodes=False):
     meta_schema = _load_schema_cached(YAML_SCHEMA_METASCHEMA_ID, extension.get_default_resolver(), False, False)
 
-    type_checker = mvalidators.Draft4Validator.TYPE_CHECKER.redefine_many({
-        'array': lambda checker, instance: isinstance(instance, list) or isinstance(instance, tuple),
-        'integer': lambda checker, instance: not isinstance(instance, bool) and isinstance(instance, Integral),
-        'string': lambda checker, instance: isinstance(instance, (str, np.str_)),
-    })
+    type_checker = mvalidators.Draft4Validator.TYPE_CHECKER.redefine_many(
+        {
+            "array": lambda checker, instance: isinstance(instance, list) or isinstance(instance, tuple),
+            "integer": lambda checker, instance: not isinstance(instance, bool) and isinstance(instance, Integral),
+            "string": lambda checker, instance: isinstance(instance, (str, np.str_)),
+        }
+    )
     id_of = mvalidators.Draft4Validator.ID_OF
     base_cls = mvalidators.create(
-        meta_schema=meta_schema,
-        validators=validators,
-        type_checker=type_checker,
-        id_of=id_of
+        meta_schema=meta_schema, validators=validators, type_checker=type_checker, id_of=id_of
     )
 
     class ASDFValidator(base_cls):
@@ -299,12 +292,11 @@ def _create_validator(validators=YAML_VALIDATORS, visit_repeat_nodes=False):
                 if not visit_repeat_nodes:
                     self._context.add(instance, schema)
 
-                if ((isinstance(instance, dict) and '$ref' in instance) or
-                        isinstance(instance, reference.Reference)):
+                if (isinstance(instance, dict) and "$ref" in instance) or isinstance(instance, reference.Reference):
                     return
 
                 if _schema is None:
-                    tag = getattr(instance, '_tag', None)
+                    tag = getattr(instance, "_tag", None)
                     if tag is not None:
                         if self.serialization_context.extension_manager.handles_tag(tag):
                             tag_def = self.serialization_context.extension_manager.get_tag_definition(tag)
@@ -326,7 +318,6 @@ def _create_validator(validators=YAML_VALIDATORS, visit_repeat_nodes=False):
                                 with self.resolver.in_scope(schema_uri):
                                     for x in super(ASDFValidator, self).iter_errors(instance, s):
                                         yield x
-
 
                     if isinstance(instance, dict):
                         for val in instance.values():
@@ -350,13 +341,13 @@ def _load_schema(url):
         raise FileNotFoundError("Unable to fetch schema from non-file URL: " + url)
 
     with generic_io.get_file(url) as fd:
-        if isinstance(url, str) and url.endswith('json'):
-            json_data = fd.read().decode('utf-8')
+        if isinstance(url, str) and url.endswith("json"):
+            json_data = fd.read().decode("utf-8")
             result = json.loads(json_data, object_pairs_hook=OrderedDict)
         else:
             # The following call to yaml.load is safe because we're
             # using a loader that inherits from pyyaml's SafeLoader.
-            result = yaml.load(fd, Loader=yamlutil.AsdfLoader) # nosec
+            result = yaml.load(fd, Loader=yamlutil.AsdfLoader)  # nosec
     return result, fd.uri
 
 
@@ -378,12 +369,13 @@ def _make_schema_loader(resolver):
             # doesn't mind.
             # The following call to yaml.load is safe because we're
             # using a loader that inherits from pyyaml's SafeLoader.
-            result = yaml.load(content, Loader=yamlutil.AsdfLoader) # nosec
+            result = yaml.load(content, Loader=yamlutil.AsdfLoader)  # nosec
             return result, url
 
         # If not, this must be a URL (or missing).  Fall back to fetching
         # the schema the old way:
         return _load_schema(url)
+
     return load_schema
 
 
@@ -394,7 +386,7 @@ def _make_resolver(url_mapping):
     def get_schema(url):
         return schema_loader(url)[0]
 
-    for x in ['http', 'https', 'file', 'tag', 'asdf']:
+    for x in ["http", "https", "file", "tag", "asdf"]:
         handlers[x] = get_schema
 
     # Supplying our own implementation of urljoin_cache
@@ -406,7 +398,7 @@ def _make_resolver(url_mapping):
     # jsonschema to do it on our behalf.  Setting it to `True`
     # counterintuitively makes things slower.
     return mvalidators.RefResolver(
-        '',
+        "",
         {},
         cache_remote=False,
         handlers=handlers,
@@ -417,15 +409,12 @@ def _make_resolver(url_mapping):
 @lru_cache()
 def load_custom_schema(url):
     warnings.warn(
-        "The 'load_custom_schema(...)' function is deprecated. Use"
-        "'load_schema' instead.",
-        AsdfDeprecationWarning
+        "The 'load_custom_schema(...)' function is deprecated. Use" "'load_schema' instead.", AsdfDeprecationWarning
     )
     return load_schema(url, resolve_references=True)
 
 
-def load_schema(url, resolver=None, resolve_references=False,
-                resolve_local_refs=False):
+def load_schema(url, resolver=None, resolve_references=False, resolve_local_refs=False):
     """
     Load a schema from the given URL.
 
@@ -451,10 +440,7 @@ def load_schema(url, resolver=None, resolve_references=False,
         This parameter is deprecated.
     """
     if resolve_local_refs is True:
-        warnings.warn(
-            "The 'resolve_local_refs' parameter is deprecated.",
-            AsdfDeprecationWarning
-        )
+        warnings.warn("The 'resolve_local_refs' parameter is deprecated.", AsdfDeprecationWarning)
 
     if resolver is None:
         # We can't just set this as the default in load_schema's definition
@@ -464,9 +450,7 @@ def load_schema(url, resolver=None, resolve_references=False,
     # We want to cache the work that went into constructing the schema, but returning
     # the same object is treacherous, because users who mutate the result will not
     # expect that they're changing the schema everywhere.
-    return copy.deepcopy(
-        _load_schema_cached(url, resolver, resolve_references, resolve_local_refs)
-    )
+    return copy.deepcopy(_load_schema_cached(url, resolver, resolve_references, resolve_local_refs))
 
 
 def _safe_resolve(resolver, json_id, uri):
@@ -516,12 +500,13 @@ def _load_schema_cached(url, resolver, resolve_references, resolve_local_refs):
     schema, url = loader(url)
 
     if resolve_references or resolve_local_refs:
+
         def resolve_refs(node, json_id):
             if json_id is None:
                 json_id = url
 
-            if isinstance(node, dict) and '$ref' in node:
-                suburl_base, suburl_fragment = _safe_resolve(resolver, json_id, node['$ref'])
+            if isinstance(node, dict) and "$ref" in node:
+                suburl_base, suburl_fragment = _safe_resolve(resolver, json_id, node["$ref"])
 
                 if suburl_base == url or suburl_base == schema.get("id"):
                     # This is a local ref, which we'll resolve in both cases.
@@ -542,9 +527,16 @@ def _load_schema_cached(url, resolver, resolve_references, resolve_local_refs):
     return schema
 
 
-def get_validator(schema={}, ctx=None, validators=None, url_mapping=None,
-                  *args, _visit_repeat_nodes=False, _serialization_context=None,
-                  **kwargs):
+def get_validator(
+    schema={},
+    ctx=None,
+    validators=None,
+    url_mapping=None,
+    *args,
+    _visit_repeat_nodes=False,
+    _serialization_context=None,
+    **kwargs,
+):
     """
     Get a JSON schema validator object for the given schema.
 
@@ -580,6 +572,7 @@ def get_validator(schema={}, ctx=None, validators=None, url_mapping=None,
     """
     if ctx is None:
         from .asdf import AsdfFile
+
         ctx = AsdfFile()
 
     if _serialization_context is None:
@@ -589,7 +582,7 @@ def get_validator(schema={}, ctx=None, validators=None, url_mapping=None,
         validators = util.HashableDict(YAML_VALIDATORS.copy())
         validators.update(ctx.extension_list.validators)
 
-    kwargs['resolver'] = _make_resolver(url_mapping)
+    kwargs["resolver"] = _make_resolver(url_mapping)
 
     # We don't just call validators.validate() directly here, because
     # that validates the schema itself, wasting a lot of time (at the
@@ -607,6 +600,7 @@ def _validate_large_literals(instance, reading):
     """
     Validate that the tree has no large numeric literals.
     """
+
     def _validate(value):
         if value <= constants.MAX_NUMBER and value >= constants.MIN_NUMBER:
             return
@@ -616,13 +610,10 @@ def _validate_large_literals(instance, reading):
                 f"Invalid integer literal value {value} detected while reading file. "
                 "The value has been read safely, but the file should be "
                 "fixed.",
-                AsdfWarning
+                AsdfWarning,
             )
         else:
-            raise ValidationError(
-                f"Integer value {value} is too large to safely represent as a "
-                "literal in ASDF"
-            )
+            raise ValidationError(f"Integer value {value} is too large to safely represent as a " "literal in ASDF")
 
     if isinstance(instance, Integral):
         _validate(instance)
@@ -648,17 +639,13 @@ def _validate_mapping_keys(instance, reading):
                     f"Invalid mapping key {key} detected while reading file. "
                     "The value has been read safely, but the file should be "
                     "fixed.",
-                    AsdfWarning
+                    AsdfWarning,
                 )
             else:
-                raise ValidationError(
-                    f"Mapping key {key} is not permitted.  Valid types: "
-                    "str, int, bool."
-                )
+                raise ValidationError(f"Mapping key {key} is not permitted.  Valid types: " "str, int, bool.")
 
 
-def validate(instance, ctx=None, schema={}, validators=None, reading=False,
-             *args, **kwargs):
+def validate(instance, ctx=None, schema={}, validators=None, reading=False, *args, **kwargs):
     """
     Validate the given instance (which must be a tagged tree) against
     the appropriate schema.  The schema itself is located using the
@@ -689,10 +676,10 @@ def validate(instance, ctx=None, schema={}, validators=None, reading=False,
     """
     if ctx is None:
         from .asdf import AsdfFile
+
         ctx = AsdfFile()
 
-    validator = get_validator(schema, ctx, validators, ctx.resolver,
-                              *args, **kwargs)
+    validator = get_validator(schema, ctx, validators, ctx.resolver, *args, **kwargs)
     validator.validate(instance, _schema=(schema or None))
 
     additional_validators = [_validate_large_literals]
@@ -752,30 +739,26 @@ def check_schema(schema, validate_default=True):
         Set to `True` to validate the content of the default
         field against the schema.
     """
-    validators = util.HashableDict(
-        mvalidators.Draft4Validator.VALIDATORS.copy())
+    validators = util.HashableDict(mvalidators.Draft4Validator.VALIDATORS.copy())
 
     if validate_default:
         # The jsonschema library doesn't validate defaults
         # on its own.
         instance_validator = get_validator(schema)
-        instance_scope = schema.get('id', '')
+        instance_scope = schema.get("id", "")
 
         def _validate_default(validator, default, instance, schema):
-            if not validator.is_type(instance, 'object'):
+            if not validator.is_type(instance, "object"):
                 return
 
-            if 'default' in instance:
+            if "default" in instance:
                 with instance_validator.resolver.in_scope(instance_scope):
-                    for err in instance_validator.iter_errors(
-                            instance['default'], instance):
+                    for err in instance_validator.iter_errors(instance["default"], instance):
                         yield err
 
-        validators.update({
-            'default': _validate_default
-        })
+        validators.update({"default": _validate_default})
 
-    meta_schema_id = schema.get('$schema', YAML_SCHEMA_METASCHEMA_ID)
+    meta_schema_id = schema.get("$schema", YAML_SCHEMA_METASCHEMA_ID)
     meta_schema = _load_schema_cached(meta_schema_id, extension.get_default_resolver(), False, False)
 
     resolver = _make_resolver(extension.get_default_resolver())

@@ -6,7 +6,6 @@ import pytest
 import asdf
 from asdf.extension import TagDefinition
 
-
 FOO_SCHEMA_URI = "asdf://somewhere.org/extensions/foo/schemas/foo-1.0"
 FOO_SCHEMA = f"""
 id: {FOO_SCHEMA_URI}
@@ -32,9 +31,7 @@ class FooConverter:
     tags = ["asdf://somewhere.org/extensions/foo/tags/foo-*"]
 
     def to_yaml_tree(self, obj, tag, ctx):
-        return {
-            "value": obj.value
-        }
+        return {"value": obj.value}
 
     def from_yaml_tree(self, obj, tag, ctx):
         return Foo(obj["value"])
@@ -56,7 +53,7 @@ def test_serialize_custom_type(tmpdir):
         config.add_resource_mapping({FOO_SCHEMA_URI: FOO_SCHEMA})
         config.add_extension(FooExtension())
 
-        path = str(tmpdir/"test.asdf")
+        path = str(tmpdir / "test.asdf")
 
         af = asdf.AsdfFile()
         af["foo"] = Foo("bar")
@@ -97,10 +94,7 @@ class FooFooConverter:
     tags = ["asdf://somewhere.org/extensions/foo/tags/foo_foo-*"]
 
     def to_yaml_tree(self, obj, tag, ctx):
-        return {
-            "value": obj.value,
-            "value_value": obj.value_value
-        }
+        return {"value": obj.value, "value_value": obj.value_value}
 
     def from_yaml_tree(self, obj, tag, ctx):
         return FooFoo(obj["value"], obj["value_value"])
@@ -119,11 +113,10 @@ class FooFooExtension:
 
 def test_serialize_with_multiple_schemas(tmpdir):
     with asdf.config_context() as config:
-        config.add_resource_mapping({FOO_SCHEMA_URI: FOO_SCHEMA,
-                                     FOOFOO_SCHEMA_URI: FOOFOO_SCHEMA})
+        config.add_resource_mapping({FOO_SCHEMA_URI: FOO_SCHEMA, FOOFOO_SCHEMA_URI: FOOFOO_SCHEMA})
         config.add_extension(FooFooExtension())
 
-        path = str(tmpdir/"test.asdf")
+        path = str(tmpdir / "test.asdf")
 
         af = asdf.AsdfFile()
         af["foo_foo"] = FooFoo("bar", "bar_bar")

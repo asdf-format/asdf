@@ -1,10 +1,10 @@
-from pkg_resources import iter_entry_points
 import warnings
 
-from .exceptions import AsdfWarning
-from .resource import ResourceMappingProxy
-from .extension import ExtensionProxy
+from pkg_resources import iter_entry_points
 
+from .exceptions import AsdfWarning
+from .extension import ExtensionProxy
+from .resource import ResourceMappingProxy
 
 RESOURCE_MAPPINGS_GROUP = "asdf.resource_mappings"
 EXTENSIONS_GROUP = "asdf.extensions"
@@ -34,7 +34,9 @@ def _list_entry_points(group, proxy_class):
     # by package name.  Plugins from this package are placed
     # at the end so that other packages can override them.
     asdf_entry_points = [e for e in entry_points if e.dist.project_name == "asdf"]
-    other_entry_points = sorted([e for e in entry_points if e.dist.project_name != "asdf"], key=lambda e: e.dist.project_name)
+    other_entry_points = sorted(
+        [e for e in entry_points if e.dist.project_name != "asdf"], key=lambda e: e.dist.project_name
+    )
 
     for entry_point in other_entry_points + asdf_entry_points:
         package_name = entry_point.dist.project_name
@@ -50,7 +52,7 @@ def _list_entry_points(group, proxy_class):
                     e.__class__.__name__,
                     e,
                 ),
-                AsdfWarning
+                AsdfWarning,
             )
 
         try:

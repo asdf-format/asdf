@@ -3,10 +3,8 @@ from functools import partial
 import pytest
 
 from ...tests import helpers
-from . import data as test_data
-
 from .. import main
-
+from . import data as test_data
 
 get_test_data_path = partial(helpers.get_test_data_path, module=test_data)
 

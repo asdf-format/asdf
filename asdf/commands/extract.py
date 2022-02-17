@@ -7,25 +7,26 @@ from asdf.fits_embed import AsdfInFits
 
 from .main import Command
 
+__all__ = ["extract_file"]
 
-__all__ = ['extract_file']
 
-
-class AsdfExtractor(Command): # pragma: no cover
+class AsdfExtractor(Command):  # pragma: no cover
     """This class is the plugin implementation for the asdftool runner."""
 
     @classmethod
     def setup_arguments(cls, subparsers):
-        parser = subparsers.add_parser(str("extract"),
+        parser = subparsers.add_parser(
+            str("extract"),
             help="Extract ASDF extensions in ASDF-in-FITS files into pure ASDF files",
-            description="Extracts ASDF extensions into pure ASDF files.")
+            description="Extracts ASDF extensions into pure ASDF files.",
+        )
 
         parser.add_argument(
-            'infile', action='store', type=str,
-            help="Name of ASDF-in-FITS file containing extension to be extracted")
+            "infile", action="store", type=str, help="Name of ASDF-in-FITS file containing extension to be extracted"
+        )
         parser.add_argument(
-            'outfile', action='store', type=str,
-            help="Name of new pure ASDF file containing extracted extension")
+            "outfile", action="store", type=str, help="Name of new pure ASDF file containing extracted extension"
+        )
 
         parser.set_defaults(func=cls.run)
 

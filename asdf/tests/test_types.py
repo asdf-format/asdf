@@ -5,16 +5,12 @@ from fractions import Fraction
 import pytest
 
 import asdf
-from asdf import types
-from asdf import extension
-from asdf import util
-from asdf import versioning
-from asdf.exceptions import AsdfWarning, AsdfConversionWarning
+from asdf import extension, types, util, versioning
+from asdf.exceptions import AsdfConversionWarning, AsdfWarning
 
-from . import helpers, CustomTestType, CustomExtension
+from . import CustomExtension, CustomTestType, helpers
 
-
-TEST_DATA_PATH = str(helpers.get_test_data_path(''))
+TEST_DATA_PATH = str(helpers.get_test_data_path(""))
 
 
 class Fractional2dCoord:
@@ -37,26 +33,19 @@ class FractionWithInverse(Fraction):
 
 
 class FractionWithInverseType(asdf.CustomType):
-    name = 'fraction_with_inverse'
-    organization = 'nowhere.org'
+    name = "fraction_with_inverse"
+    organization = "nowhere.org"
     version = (1, 0, 0)
-    standard = 'custom'
+    standard = "custom"
     types = [FractionWithInverse]
 
     @classmethod
     def to_tree(cls, node, ctx):
-        return {
-            "numerator": node.numerator,
-            "denominator": node.denominator,
-            "inverse": node.inverse
-        }
+        return {"numerator": node.numerator, "denominator": node.denominator, "inverse": node.inverse}
 
     @classmethod
     def from_tree(cls, tree, ctx):
-        result = FractionWithInverse(
-            tree["numerator"],
-            tree["denominator"]
-        )
+        result = FractionWithInverse(tree["numerator"], tree["denominator"])
         yield result
         result.inverse = tree["inverse"]
 
@@ -68,22 +57,19 @@ class FractionWithInverseExtension(CustomExtension):
 
     @property
     def tag_mapping(self):
-        return [('tag:nowhere.org:custom',
-                    'http://nowhere.org/schemas/custom{tag_suffix}')]
+        return [("tag:nowhere.org:custom", "http://nowhere.org/schemas/custom{tag_suffix}")]
 
     @property
     def url_mapping(self):
-        return [('http://nowhere.org/schemas/custom/',
-                    util.filepath_to_url(TEST_DATA_PATH) + '/{url_suffix}.yaml')]
+        return [("http://nowhere.org/schemas/custom/", util.filepath_to_url(TEST_DATA_PATH) + "/{url_suffix}.yaml")]
 
 
 def fractiontype_factory():
-
     class FractionType(types.CustomType):
-        name = 'fraction'
-        organization = 'nowhere.org'
+        name = "fraction"
+        organization = "nowhere.org"
         version = (1, 0, 0)
-        standard = 'custom'
+        standard = "custom"
         types = [Fraction]
         handle_dynamic_subclasses = True
 
@@ -103,23 +89,19 @@ def fractional2dcoordtype_factory():
     FractionType = fractiontype_factory()
 
     class Fractional2dCoordType(types.CustomType):
-        name = 'fractional_2d_coord'
-        organization = 'nowhere.org'
-        standard = 'custom'
+        name = "fractional_2d_coord"
+        organization = "nowhere.org"
+        standard = "custom"
         version = (1, 0, 0)
         types = [Fractional2dCoord]
 
         @classmethod
         def to_tree(cls, node, ctx):
-            return {
-                "x": node.x,
-                "y": node.y
-            }
+            return {"x": node.x, "y": node.y}
 
         @classmethod
         def from_tree(cls, tree, ctx):
             return Fractional2dCoord(tree["x"], tree["y"])
-
 
     class Fractional2dCoordExtension(CustomExtension):
         @property
@@ -142,9 +124,10 @@ def test_custom_tag():
         @property
         def tag_mapping(self):
             def check(tag):
-                prefix = 'tag:nowhere.org:custom'
+                prefix = "tag:nowhere.org:custom"
                 if tag.startswith(prefix):
-                    return 'http://nowhere.org/schemas/custom' + tag[len(prefix):]
+                    return "http://nowhere.org/schemas/custom" + tag[len(prefix) :]
+
             return [check]
 
     yaml = """
@@ -156,14 +139,14 @@ b: !core/complex-1.0.0
 
     buff = helpers.yaml_to_asdf(yaml)
     with asdf.open(buff, extensions=FractionExtension()) as ff:
-        assert ff.tree['a'] == Fraction(2, 3)
+        assert ff.tree["a"] == Fraction(2, 3)
 
         buff = io.BytesIO()
         ff.write_to(buff)
 
     buff = helpers.yaml_to_asdf(yaml)
     with asdf.open(buff, extensions=FractionCallable()) as ff:
-        assert ff.tree['a'] == Fraction(2, 3)
+        assert ff.tree["a"] == Fraction(2, 3)
 
         buff = io.BytesIO()
         ff.write_to(buff)
@@ -179,19 +162,19 @@ a: !core/complex-42.0.0
     buff = helpers.yaml_to_asdf(yaml)
     with pytest.warns(AsdfConversionWarning, match="tag:stsci.edu:asdf/core/complex"):
         with asdf.open(buff, ignore_version_mismatch=False) as ff:
-            assert isinstance(ff.tree['a'], complex)
+            assert isinstance(ff.tree["a"], complex)
 
     # Make sure warning is repeatable
     buff.seek(0)
     with pytest.warns(AsdfConversionWarning, match="tag:stsci.edu:asdf/core/complex"):
         with asdf.open(buff, ignore_version_mismatch=False) as ff:
-            assert isinstance(ff.tree['a'], complex)
+            assert isinstance(ff.tree["a"], complex)
 
     # Make sure the warning does not occur if it is being ignored (default)
     buff.seek(0)
     with helpers.assert_no_warnings(AsdfConversionWarning):
         with asdf.open(buff) as ff:
-            assert isinstance(ff.tree['a'], complex)
+            assert isinstance(ff.tree["a"], complex)
 
     # If the major and minor match, but the patch doesn't, there
     # should still be a warning.
@@ -203,18 +186,18 @@ a: !core/complex-1.0.1
     buff = helpers.yaml_to_asdf(yaml)
     with pytest.warns(AsdfConversionWarning, match="tag:stsci.edu:asdf/core/complex"):
         with asdf.open(buff, ignore_version_mismatch=False) as ff:
-            assert isinstance(ff.tree['a'], complex)
+            assert isinstance(ff.tree["a"], complex)
 
 
 def test_version_mismatch_file(tmpdir):
-    testfile = os.path.join(str(tmpdir), 'mismatch.asdf')
+    testfile = os.path.join(str(tmpdir), "mismatch.asdf")
     yaml = """
 a: !core/complex-42.0.0
   0j
     """
 
     buff = helpers.yaml_to_asdf(yaml)
-    with open(testfile, 'wb') as handle:
+    with open(testfile, "wb") as handle:
         handle.write(buff.read())
 
     expected_uri = util.filepath_to_url(str(testfile))
@@ -222,7 +205,7 @@ a: !core/complex-42.0.0
     with pytest.warns(AsdfConversionWarning, match="tag:stsci.edu:asdf/core/complex"):
         with asdf.open(testfile, ignore_version_mismatch=False) as ff:
             assert ff._fname == expected_uri
-            assert isinstance(ff.tree['a'], complex)
+            assert isinstance(ff.tree["a"], complex)
 
 
 def test_version_mismatch_with_supported_versions():
@@ -233,11 +216,11 @@ def test_version_mismatch_with_supported_versions():
         pass
 
     class CustomFlowType(CustomTestType):
-        version = '1.1.0'
-        supported_versions = ['1.0.0', '1.1.0']
-        name = 'custom_flow'
-        organization = 'nowhere.org'
-        standard = 'custom'
+        version = "1.1.0"
+        supported_versions = ["1.0.0", "1.1.0"]
+        name = "custom_flow"
+        organization = "nowhere.org"
+        standard = "custom"
         types = [CustomFlow]
 
     class CustomFlowExtension(CustomExtension):
@@ -253,38 +236,35 @@ flow_thing:
 """
     buff = helpers.yaml_to_asdf(yaml)
     with helpers.assert_no_warnings():
-        asdf.open(buff, ignore_version_mismatch=False,
-            extensions=CustomFlowExtension())
+        asdf.open(buff, ignore_version_mismatch=False, extensions=CustomFlowExtension())
 
 
 def test_versioned_writing(monkeypatch):
     from ..tags.core.complex import ComplexType
 
     # Create a bogus version map
-    monkeypatch.setitem(versioning._version_map, '42.0.0', {
-        'FILE_FORMAT': '42.0.0',
-        'YAML_VERSION': '1.1',
-        'tags': {
-            'tag:stsci.edu:asdf/core/complex': '42.0.0',
-            'tag:stscu.edu:asdf/core/asdf': '1.0.0'
+    monkeypatch.setitem(
+        versioning._version_map,
+        "42.0.0",
+        {
+            "FILE_FORMAT": "42.0.0",
+            "YAML_VERSION": "1.1",
+            "tags": {"tag:stsci.edu:asdf/core/complex": "42.0.0", "tag:stscu.edu:asdf/core/asdf": "1.0.0"},
+            # We need to insert these explicitly since we're monkeypatching
+            "core": {"tag:stsci.edu:asdf/core/complex": "42.0.0", "tag:stscu.edu:asdf/core/asdf": "1.0.0"},
+            "standard": {},
         },
-        # We need to insert these explicitly since we're monkeypatching
-        'core': {
-            'tag:stsci.edu:asdf/core/complex': '42.0.0',
-            'tag:stscu.edu:asdf/core/asdf': '1.0.0'
-        },
-        'standard': {}
-    })
+    )
 
     # Add bogus version to supported versions
-    monkeypatch.setattr(versioning, 'supported_versions',
-        versioning.supported_versions + [versioning.AsdfVersion('42.0.0')]
+    monkeypatch.setattr(
+        versioning, "supported_versions", versioning.supported_versions + [versioning.AsdfVersion("42.0.0")]
     )
 
     class FancyComplexType(types.CustomType):
-        name = 'core/complex'
-        organization = 'stsci.edu'
-        standard = 'asdf'
+        name = "core/complex"
+        organization = "stsci.edu"
+        standard = "asdf"
         version = (42, 0, 0)
         types = [complex]
 
@@ -307,18 +287,20 @@ def test_versioned_writing(monkeypatch):
 
         @property
         def url_mapping(self):
-            return [('http://stsci.edu/schemas/asdf/core/complex-42.0.0',
-                     util.filepath_to_url(TEST_DATA_PATH) +
-                     '/complex-42.0.0.yaml')]
+            return [
+                (
+                    "http://stsci.edu/schemas/asdf/core/complex-42.0.0",
+                    util.filepath_to_url(TEST_DATA_PATH) + "/complex-42.0.0.yaml",
+                )
+            ]
 
-    tree = {'a': complex(0, -1)}
+    tree = {"a": complex(0, -1)}
 
     buff = io.BytesIO()
-    ff = asdf.AsdfFile(tree, version="42.0.0",
-                       extensions=[FancyComplexExtension()])
+    ff = asdf.AsdfFile(tree, version="42.0.0", extensions=[FancyComplexExtension()])
     ff.write_to(buff)
 
-    assert b'complex-42.0.0' in buff.getvalue()
+    assert b"complex-42.0.0" in buff.getvalue()
 
 
 def test_longest_match():
@@ -333,29 +315,25 @@ def test_longest_match():
 
         @property
         def url_mapping(self):
-            return [('http://stsci.edu/schemas/asdf/core/',
-                     'FOOBAR/{url_suffix}')]
+            return [("http://stsci.edu/schemas/asdf/core/", "FOOBAR/{url_suffix}")]
 
-    l = extension.AsdfExtensionList(
-        [extension.BuiltinExtension(), FancyComplexExtension()])
+    l = extension.AsdfExtensionList([extension.BuiltinExtension(), FancyComplexExtension()])
 
-    assert l.url_mapping(
-        'http://stsci.edu/schemas/asdf/core/asdf-1.0.0') == 'FOOBAR/asdf-1.0.0'
-    assert l.url_mapping(
-        'http://stsci.edu/schemas/asdf/transform/transform-1.0.0') != 'FOOBAR/transform-1.0.0'
+    assert l.url_mapping("http://stsci.edu/schemas/asdf/core/asdf-1.0.0") == "FOOBAR/asdf-1.0.0"
+    assert l.url_mapping("http://stsci.edu/schemas/asdf/transform/transform-1.0.0") != "FOOBAR/transform-1.0.0"
 
 
 def test_module_versioning():
     class NoModuleType(types.CustomType):
         # It seems highly unlikely that this would be a real module
-        requires = ['qkjvqdja']
+        requires = ["qkjvqdja"]
 
     class HasCorrectPytest(types.CustomType):
         # This means it requires 1.0.0 or greater, so it should succeed
-        requires = ['pytest-1.0.0']
+        requires = ["pytest-1.0.0"]
 
     class DoesntHaveCorrectPytest(types.CustomType):
-        requires = ['pytest-91984.1.7']
+        requires = ["pytest-91984.1.7"]
 
     nmt = NoModuleType()
     hcp = HasCorrectPytest()
@@ -387,20 +365,20 @@ undefined_data:
     buff = helpers.yaml_to_asdf(yaml)
     with pytest.warns(Warning) as warning:
         afile = asdf.open(buff)
-        missing = afile.tree['undefined_data']
+        missing = afile.tree["undefined_data"]
 
     assert missing[0] == 5
-    assert missing[1] == {'message': 'there is no tag'}
+    assert missing[1] == {"message": "there is no tag"}
     assert (missing[2] == array([[1, 2, 3], [4, 5, 6]])).all()
-    assert (missing[3][0] == array([[7],[8],[9],[10]])).all()
+    assert (missing[3][0] == array([[7], [8], [9], [10]])).all()
     assert missing[3][1] == 3.14j
 
     # There are two undefined tags, so we expect two warnings
     assert len(warning) == 2
     for i, tag in enumerate(["also_undefined-1.3.0", "undefined_tag-1.0.0"]):
         assert str(warning[i].message) == (
-            "tag:nowhere.org:custom/{} is not recognized, converting to raw "
-            "Python data structure".format(tag))
+            "tag:nowhere.org:custom/{} is not recognized, converting to raw " "Python data structure".format(tag)
+        )
 
     # Make sure no warning occurs if explicitly ignored
     buff.seek(0)
@@ -422,10 +400,10 @@ def test_newer_tag():
             self.d = d
 
     class CustomFlowType(types.CustomType):
-        version = '1.1.0'
-        name = 'custom_flow'
-        organization = 'nowhere.org'
-        standard = 'custom'
+        version = "1.1.0"
+        name = "custom_flow"
+        organization = "nowhere.org"
+        standard = "custom"
         types = [CustomFlow]
 
         @classmethod
@@ -452,7 +430,7 @@ flow_thing:
 """
     new_buff = helpers.yaml_to_asdf(new_yaml)
     new_data = asdf.open(new_buff, extensions=CustomFlowExtension())
-    assert type(new_data.tree['flow_thing']) == CustomFlow
+    assert type(new_data.tree["flow_thing"]) == CustomFlow
 
     old_yaml = """
 flow_thing:
@@ -469,57 +447,60 @@ flow_thing:
 
 def test_incompatible_version_check():
     class TestType0(types.CustomType):
-        supported_versions = versioning.AsdfSpec('>=1.2.0')
+        supported_versions = versioning.AsdfSpec(">=1.2.0")
 
-    assert TestType0.incompatible_version('1.1.0') == True
-    assert TestType0.incompatible_version('1.2.0') == False
-    assert TestType0.incompatible_version('2.0.1') == False
+    assert TestType0.incompatible_version("1.1.0") == True
+    assert TestType0.incompatible_version("1.2.0") == False
+    assert TestType0.incompatible_version("2.0.1") == False
 
     class TestType1(types.CustomType):
-        supported_versions = versioning.AsdfVersion('1.0.0')
+        supported_versions = versioning.AsdfVersion("1.0.0")
 
-    assert TestType1.incompatible_version('1.0.0') == False
-    assert TestType1.incompatible_version('1.1.0') == True
+    assert TestType1.incompatible_version("1.0.0") == False
+    assert TestType1.incompatible_version("1.1.0") == True
 
     class TestType2(types.CustomType):
-        supported_versions = '1.0.0'
+        supported_versions = "1.0.0"
 
-    assert TestType2.incompatible_version('1.0.0') == False
-    assert TestType2.incompatible_version('1.1.0') == True
+    assert TestType2.incompatible_version("1.0.0") == False
+    assert TestType2.incompatible_version("1.1.0") == True
 
     class TestType3(types.CustomType):
         # This doesn't make much sense, but it's just for the sake of example
-        supported_versions = ['1.0.0', versioning.AsdfSpec('>=2.0.0')]
+        supported_versions = ["1.0.0", versioning.AsdfSpec(">=2.0.0")]
 
-    assert TestType3.incompatible_version('1.0.0') == False
-    assert TestType3.incompatible_version('1.1.0') == True
-    assert TestType3.incompatible_version('2.0.0') == False
-    assert TestType3.incompatible_version('2.0.1') == False
+    assert TestType3.incompatible_version("1.0.0") == False
+    assert TestType3.incompatible_version("1.1.0") == True
+    assert TestType3.incompatible_version("2.0.0") == False
+    assert TestType3.incompatible_version("2.0.1") == False
 
     class TestType4(types.CustomType):
-        supported_versions = ['1.0.0', versioning.AsdfVersion('1.1.0')]
+        supported_versions = ["1.0.0", versioning.AsdfVersion("1.1.0")]
 
-    assert TestType4.incompatible_version('1.0.0') == False
-    assert TestType4.incompatible_version('1.0.1') == True
-    assert TestType4.incompatible_version('1.1.0') == False
-    assert TestType4.incompatible_version('1.1.1') == True
+    assert TestType4.incompatible_version("1.0.0") == False
+    assert TestType4.incompatible_version("1.0.1") == True
+    assert TestType4.incompatible_version("1.1.0") == False
+    assert TestType4.incompatible_version("1.1.1") == True
 
     class TestType5(types.CustomType):
-        supported_versions = \
-            [versioning.AsdfSpec('<1.0.0'), versioning.AsdfSpec('>=2.0.0')]
+        supported_versions = [versioning.AsdfSpec("<1.0.0"), versioning.AsdfSpec(">=2.0.0")]
 
-    assert TestType5.incompatible_version('0.9.9') == False
-    assert TestType5.incompatible_version('2.0.0') == False
-    assert TestType5.incompatible_version('2.0.1') == False
-    assert TestType5.incompatible_version('1.0.0') == True
-    assert TestType5.incompatible_version('1.1.0') == True
+    assert TestType5.incompatible_version("0.9.9") == False
+    assert TestType5.incompatible_version("2.0.0") == False
+    assert TestType5.incompatible_version("2.0.1") == False
+    assert TestType5.incompatible_version("1.0.0") == True
+    assert TestType5.incompatible_version("1.1.0") == True
 
     with pytest.raises(ValueError):
+
         class TestType6(types.CustomType):
-            supported_versions = 'blue'
+            supported_versions = "blue"
+
     with pytest.raises(ValueError):
+
         class TestType7(types.CustomType):
-            supported_versions = ['1.1.0', '2.2.0', 'blue']
+            supported_versions = ["1.1.0", "2.2.0", "blue"]
+
 
 def test_supported_versions():
     class CustomFlow:
@@ -528,24 +509,24 @@ def test_supported_versions():
             self.d = d
 
     class CustomFlowType(types.CustomType):
-        version = '1.1.0'
-        supported_versions = [(1,0,0), versioning.AsdfSpec('>=1.1.0')]
-        name = 'custom_flow'
-        organization = 'nowhere.org'
-        standard = 'custom'
+        version = "1.1.0"
+        supported_versions = [(1, 0, 0), versioning.AsdfSpec(">=1.1.0")]
+        name = "custom_flow"
+        organization = "nowhere.org"
+        standard = "custom"
         types = [CustomFlow]
 
         @classmethod
         def from_tree(cls, tree, ctx):
             # Convert old schema to new CustomFlow type
-            if cls.version == '1.0.0':
-                return CustomFlow(c=tree['a'], d=tree['b'])
+            if cls.version == "1.0.0":
+                return CustomFlow(c=tree["a"], d=tree["b"])
             else:
                 return CustomFlow(**tree)
 
         @classmethod
         def to_tree(cls, data, ctx):
-            if cls.version == '1.0.0':
+            if cls.version == "1.0.0":
                 return dict(a=data.c, b=data.d)
             else:
                 return dict(c=data.c, d=data.d)
@@ -569,22 +550,23 @@ flow_thing:
 """
     new_buff = helpers.yaml_to_asdf(new_yaml)
     new_data = asdf.open(new_buff, extensions=CustomFlowExtension())
-    assert type(new_data.tree['flow_thing']) == CustomFlow
+    assert type(new_data.tree["flow_thing"]) == CustomFlow
 
     old_buff = helpers.yaml_to_asdf(old_yaml)
     old_data = asdf.open(old_buff, extensions=CustomFlowExtension())
-    assert type(old_data.tree['flow_thing']) == CustomFlow
+    assert type(old_data.tree["flow_thing"]) == CustomFlow
+
 
 def test_unsupported_version_warning():
     class CustomFlow:
         pass
 
     class CustomFlowType(types.CustomType):
-        version = '1.0.0'
-        supported_versions = [(1,0,0)]
-        name = 'custom_flow'
-        organization = 'nowhere.org'
-        standard = 'custom'
+        version = "1.0.0"
+        supported_versions = [(1, 0, 0)]
+        name = "custom_flow"
+        organization = "nowhere.org"
+        standard = "custom"
         types = [CustomFlow]
 
     class CustomFlowExtension(CustomExtension):
@@ -600,16 +582,18 @@ flow_thing:
 """
     buff = helpers.yaml_to_asdf(yaml)
 
-    with pytest.warns(AsdfConversionWarning, match="Version 1.1.0 of tag:nowhere.org:custom/custom_flow is not compatible"):
+    with pytest.warns(
+        AsdfConversionWarning, match="Version 1.1.0 of tag:nowhere.org:custom/custom_flow is not compatible"
+    ):
         asdf.open(buff, extensions=CustomFlowExtension())
 
 
 def test_tag_without_schema(tmpdir):
 
-    tmpfile = str(tmpdir.join('foo.asdf'))
+    tmpfile = str(tmpdir.join("foo.asdf"))
 
     class FooType(types.CustomType):
-        name = 'foo'
+        name = "foo"
 
         def __init__(self, a, b):
             self.a = a
@@ -617,7 +601,7 @@ def test_tag_without_schema(tmpdir):
 
         @classmethod
         def from_tree(cls, tree, ctx):
-            return cls(tree['a'], tree['b'])
+            return cls(tree["a"], tree["b"])
 
         @classmethod
         def to_tree(cls, node, ctx):
@@ -639,7 +623,7 @@ def test_tag_without_schema(tmpdir):
         def url_mapping(self):
             return []
 
-    foo = FooType('hello', 42)
+    foo = FooType("hello", 42)
     tree = dict(foo=foo)
 
     with pytest.warns(AsdfWarning, match="Unable to locate schema file"):
@@ -648,8 +632,8 @@ def test_tag_without_schema(tmpdir):
 
     with pytest.warns(AsdfWarning, match="Unable to locate schema file"):
         with asdf.AsdfFile(tree, extensions=FooExtension()) as ff:
-            assert isinstance(ff.tree['foo'], FooType)
-            assert ff.tree['foo'] == tree['foo']
+            assert isinstance(ff.tree["foo"], FooType)
+            assert ff.tree["foo"] == tree["foo"]
 
 
 def test_custom_reference_cycle(tmpdir):

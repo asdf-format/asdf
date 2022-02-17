@@ -8,18 +8,12 @@ import weakref
 from collections import namedtuple
 
 import numpy as np
-
 import yaml
 
 from . import compression as mcompression
-from .config import get_config
+from . import constants, generic_io, treeutil, util, yamlutil
 from .compat.numpycompat import NUMPY_LT_1_7
-from . import constants
-from . import generic_io
-from . import treeutil
-from . import util
-from . import yamlutil
-
+from .config import get_config
 from .util import patched_urllib_parse
 
 
@@ -27,8 +21,8 @@ class BlockManager:
     """
     Manages the `Block`s associated with a ASDF file.
     """
-    def __init__(self, asdffile, copy_arrays=False, lazy_load=True,
-                 readonly=False):
+
+    def __init__(self, asdffile, copy_arrays=False, lazy_load=True, readonly=False):
         self._asdffile = weakref.ref(asdffile)
 
         self._internal_blocks = []
@@ -37,10 +31,10 @@ class BlockManager:
         self._streamed_blocks = []
 
         self._block_type_mapping = {
-            'internal': self._internal_blocks,
-            'external': self._external_blocks,
-            'inline': self._inline_blocks,
-            'streamed': self._streamed_blocks
+            "internal": self._internal_blocks,
+            "external": self._external_blocks,
+            "inline": self._inline_blocks,
+            "streamed": self._streamed_blocks,
         }
 
         self._data_to_block_mapping = {}
@@ -79,10 +73,9 @@ class BlockManager:
             if block not in block_set:
                 block_set.append(block)
         else:
-            raise ValueError(
-                "Unknown array storage type {0}".format(block.array_storage))
+            raise ValueError("Unknown array storage type {0}".format(block.array_storage))
 
-        if block.array_storage == 'streamed' and len(self._streamed_blocks) > 1:
+        if block.array_storage == "streamed" and len(self._streamed_blocks) > 1:
             raise ValueError("Can not add second streaming block")
 
         if block._data is not None:
@@ -100,8 +93,7 @@ class BlockManager:
                     if id(block._data) in self._data_to_block_mapping:
                         del self._data_to_block_mapping[id(block._data)]
         else:
-            raise ValueError(
-                "Unknown array storage type {0}".format(block.array_storage))
+            raise ValueError("Unknown array storage type {0}".format(block.array_storage))
 
     def set_array_storage(self, block, array_storage):
         """
@@ -125,17 +117,15 @@ class BlockManager:
             - ``streamed``: The special streamed inline block that
               appears at the end of the file.
         """
-        if array_storage not in ['internal', 'external', 'streamed', 'inline']:
-            raise ValueError(
-                "array_storage must be one of 'internal', 'external', "
-                "'streamed' or 'inline'")
+        if array_storage not in ["internal", "external", "streamed", "inline"]:
+            raise ValueError("array_storage must be one of 'internal', 'external', " "'streamed' or 'inline'")
 
         if block.array_storage != array_storage:
             if block in self.blocks:
                 self.remove(block)
             block._array_storage = array_storage
             self.add(block)
-            if array_storage == 'streamed':
+            if array_storage == "streamed":
                 block.output_compression = None
                 block.output_compression_kwargs = None
 
@@ -225,24 +215,22 @@ class BlockManager:
     def _sort_blocks_by_offset(self):
         def sorter(x):
             if x.offset is None:
-                raise ValueError('Block is missing offset')
+                raise ValueError("Block is missing offset")
             else:
                 return x.offset
+
         self._internal_blocks.sort(key=sorter)
 
     def _read_next_internal_block(self, fd, past_magic=False):
         # This assumes the file pointer is at the beginning of the
         # block, (or beginning + 4 if past_magic is True)
-        block = self._new_block().read(
-            fd, past_magic=past_magic,
-            validate_checksum=self._validate_checksums)
+        block = self._new_block().read(fd, past_magic=past_magic, validate_checksum=self._validate_checksums)
         if block is not None:
             self._add(block)
 
         return block
 
-    def read_internal_blocks(self, fd, past_magic=False,
-                             validate_checksums=False):
+    def read_internal_blocks(self, fd, past_magic=False, validate_checksums=False):
         """
         Read internal blocks present in the file.  If the file is
         seekable, only the first block will be read, and the reading
@@ -292,12 +280,10 @@ class BlockManager:
         last_block = self._internal_blocks[-1]
 
         # Read all of the remaining blocks in the file, if any
-        if (last_block._fd is not None and
-            last_block._fd.seekable()):
+        if last_block._fd is not None and last_block._fd.seekable():
             last_block._fd.seek(last_block.end_offset)
             while True:
-                last_block = self._read_next_internal_block(
-                    last_block._fd, False)
+                last_block = self._read_next_internal_block(last_block._fd, False)
                 if last_block is None:
                     break
 
@@ -320,8 +306,7 @@ class BlockManager:
             else:
                 if block.input_compression:
                     block.update_size()
-                padding = util.calculate_padding(
-                    block.size, pad_blocks, fd.block_size)
+                padding = util.calculate_padding(block.size, pad_blocks, fd.block_size)
                 block.allocated = block._size + padding
                 block.offset = fd.tell()
                 block.write(fd)
@@ -349,8 +334,7 @@ class BlockManager:
         fd.clear(last_block.offset - fd.tell())
 
         for block in iter:
-            last_block.allocated = ((block.offset - last_block.offset) -
-                                    last_block.header_size)
+            last_block.allocated = (block.offset - last_block.offset) - last_block.header_size
             fd.seek(last_block.offset)
             last_block.write(fd)
             last_block = block
@@ -374,13 +358,11 @@ class BlockManager:
 
         for i, block in enumerate(self.external_blocks):
             if uri is None:
-                raise ValueError(
-                    "Can't write external blocks, since URI of main file is "
-                    "unknown.")
+                raise ValueError("Can't write external blocks, since URI of main file is " "unknown.")
             subfd = self.get_external_uri(uri, i)
             asdffile = asdf.AsdfFile()
             block = copy.copy(block)
-            block._array_storage = 'internal'
+            block._array_storage = "internal"
             asdffile.blocks.add(block)
             block._used = True
             asdffile.write_to(subfd, pad_blocks=pad_blocks)
@@ -397,21 +379,24 @@ class BlockManager:
         """
         if len(self._internal_blocks) and not len(self._streamed_blocks):
             fd.write(constants.INDEX_HEADER)
-            fd.write(b'\n')
+            fd.write(b"\n")
             offsets = [x.offset for x in self.internal_blocks]
 
-            yaml_version = tuple(
-                int(x) for x in ctx.version_map['YAML_VERSION'].split('.'))
+            yaml_version = tuple(int(x) for x in ctx.version_map["YAML_VERSION"].split("."))
 
             yaml.dump(
-                offsets, Dumper=yamlutil._yaml_base_dumper, stream=fd,
-                explicit_start=True, explicit_end=True,
+                offsets,
+                Dumper=yamlutil._yaml_base_dumper,
+                stream=fd,
+                explicit_start=True,
+                explicit_end=True,
                 version=yaml_version,
-                allow_unicode=True, encoding='utf-8')
+                allow_unicode=True,
+                encoding="utf-8",
+            )
 
-    _re_index_content = re.compile(
-        br'^' + constants.INDEX_HEADER + br'\r?\n%YAML.*\.\.\.\r?\n?$')
-    _re_index_misc = re.compile(br'^[\n\r\x20-\x7f]+$')
+    _re_index_content = re.compile(rb"^" + constants.INDEX_HEADER + rb"\r?\n%YAML.*\.\.\.\r?\n?$")
+    _re_index_misc = re.compile(rb"^[\n\r\x20-\x7f]+$")
 
     def read_block_index(self, fd, ctx):
         """
@@ -447,19 +432,19 @@ class BlockManager:
         block_start = ((block_end - 5) // fd.block_size) * fd.block_size
         buff_size = block_end - block_start
 
-        content = b''
+        content = b""
 
         fd.seek(block_start, generic_io.SEEK_SET)
         buff = fd.read(buff_size)
 
         # Extra '\0' bytes are allowed after the ..., mainly to
         # workaround poor truncation support on Windows
-        buff = buff.rstrip(b'\0')
+        buff = buff.rstrip(b"\0")
         content = buff
 
         # We need an explicit YAML end marker, or there's no
         # block index
-        for ending in (b'...', b'...\r\n', b'...\n'):
+        for ending in (b"...", b"...\r\n", b"...\n"):
             if content.endswith(ending):
                 break
         else:
@@ -490,12 +475,11 @@ class BlockManager:
             buff = fd.read(buff_size)
             content = buff + content
 
-        yaml_content = content[content.find(b'\n') + 1:]
+        yaml_content = content[content.find(b"\n") + 1 :]
 
         # The following call to yaml.load is safe because we're
         # using pyyaml's SafeLoader.
-        offsets = yaml.load(yaml_content, # nosec
-                            Loader=yamlutil._yaml_base_loader)
+        offsets = yaml.load(yaml_content, Loader=yamlutil._yaml_base_loader)  # nosec
 
         # Make sure the indices look sane
         if not isinstance(offsets, list) or len(offsets) == 0:
@@ -503,10 +487,7 @@ class BlockManager:
 
         last_offset = 0
         for x in offsets:
-            if (not isinstance(x, int) or
-                x > file_size or
-                x < 0 or
-                x <= last_offset + Block._header.size):
+            if not isinstance(x, int) or x > file_size or x < 0 or x <= last_offset + Block._header.size:
                 return
             last_offset = x
 
@@ -530,16 +511,15 @@ class BlockManager:
             return
 
         # Now see if the end of the last block leads right into the index
-        if (block.end_offset != index_start):
+        if block.end_offset != index_start:
             return
 
         # It seems we're good to go, so instantiate the UnloadedBlock
         # objects
         for offset in offsets[1:-1]:
             self._internal_blocks.append(
-                UnloadedBlock(fd, offset,
-                              memmap=self.memmap, lazy_load=self.lazy_load,
-                              readonly=self._readonly))
+                UnloadedBlock(fd, offset, memmap=self.memmap, lazy_load=self.lazy_load, readonly=self._readonly)
+            )
 
         # We already read the last block in the file -- no need to read it again
         self._internal_blocks.append(block)
@@ -558,7 +538,7 @@ class BlockManager:
         name for referencing an external block.
         """
         filename = os.path.splitext(filename)[0]
-        return filename + '{0:04d}.asdf'.format(index)
+        return filename + "{0:04d}.asdf".format(index)
 
     def get_external_uri(self, uri, index):
         """
@@ -566,7 +546,7 @@ class BlockManager:
         saving an external block.
         """
         if uri is None:
-            uri = ''
+            uri = ""
         parts = list(patched_urllib_parse.urlparse(uri))
         path = parts[2]
         dirname, filename = os.path.split(path)
@@ -579,37 +559,35 @@ class BlockManager:
         reserved_blocks = set()
 
         for node in treeutil.iter_tree(tree):
-            hook = ctx.type_index.get_hook_for_type(
-                'reserve_blocks', type(node), ctx.version_string)
+            hook = ctx.type_index.get_hook_for_type("reserve_blocks", type(node), ctx.version_string)
             if hook is not None:
                 for block in hook(node, ctx):
                     reserved_blocks.add(block)
 
         for block in list(self.blocks):
-            if (getattr(block, '_used', 0) == 0 and
-                block not in reserved_blocks):
+            if getattr(block, "_used", 0) == 0 and block not in reserved_blocks:
                 self.remove(block)
 
     def _handle_global_block_settings(self, ctx, block):
-        all_array_storage = getattr(ctx, '_all_array_storage', None)
+        all_array_storage = getattr(ctx, "_all_array_storage", None)
         if all_array_storage:
             self.set_array_storage(block, all_array_storage)
 
-        all_array_compression = getattr(ctx, '_all_array_compression', 'input')
-        all_array_compression_kwargs = getattr(ctx, '_all_array_compression_kwargs', {})
+        all_array_compression = getattr(ctx, "_all_array_compression", "input")
+        all_array_compression_kwargs = getattr(ctx, "_all_array_compression_kwargs", {})
         # Only override block compression algorithm if it wasn't explicitly set
         # by AsdfFile.set_array_compression.
-        if all_array_compression != 'input':
+        if all_array_compression != "input":
             block.output_compression = all_array_compression
             block.output_compression_kwargs = all_array_compression_kwargs
 
         if all_array_storage is None:
             threshold = get_config().array_inline_threshold
-            if threshold is not None and block.array_storage in ['internal', 'inline']:
+            if threshold is not None and block.array_storage in ["internal", "inline"]:
                 if np.product(block.data.shape) < threshold:
-                    self.set_array_storage(block, 'inline')
+                    self.set_array_storage(block, "inline")
                 else:
-                    self.set_array_storage(block, 'internal')
+                    self.set_array_storage(block, "internal")
 
     def finalize(self, ctx):
         """
@@ -670,20 +648,17 @@ class BlockManager:
             # more internal blocks.  This is "deferred block loading".
             last_block = self._internal_blocks[-1]
 
-            if (last_block._fd is not None and
-                last_block._fd.seekable()):
+            if last_block._fd is not None and last_block._fd.seekable():
                 last_block._fd.seek(last_block.end_offset)
                 while True:
-                    next_block = self._read_next_internal_block(
-                        last_block._fd, False)
+                    next_block = self._read_next_internal_block(last_block._fd, False)
                     if next_block is None:
                         break
                     if len(self._internal_blocks) - 1 == source:
                         return next_block
                     last_block = next_block
 
-            if (source == -1 and
-                last_block.array_storage == 'streamed'):
+            if source == -1 and last_block.array_storage == "streamed":
                 return last_block
 
             raise ValueError("Block '{0}' not found.".format(source))
@@ -691,11 +666,11 @@ class BlockManager:
         elif isinstance(source, str):
             asdffile = self._asdffile().open_external(source)
             block = asdffile.blocks._internal_blocks[0]
-            self.set_array_storage(block, 'external')
+            self.set_array_storage(block, "external")
 
         # Handle the case of inline data
         elif isinstance(source, list):
-            block = Block(data=np.array(source), array_storage='inline')
+            block = Block(data=np.array(source), array_storage="inline")
 
         else:
             raise TypeError("Unknown source '{0}'".format(source))
@@ -718,16 +693,14 @@ class BlockManager:
         """
         for i, internal_block in enumerate(self.internal_blocks):
             if block == internal_block:
-                if internal_block.array_storage == 'streamed':
+                if internal_block.array_storage == "streamed":
                     return -1
                 return i
 
         for i, external_block in enumerate(self.external_blocks):
             if block == external_block:
                 if self._asdffile().uri is None:
-                    raise ValueError(
-                        "Can't write external blocks, since URI of main file is "
-                        "unknown.")
+                    raise ValueError("Can't write external blocks, since URI of main file is " "unknown.")
 
                 parts = list(patched_urllib_parse.urlparse(self._asdffile().uri))
                 path = parts[2]
@@ -751,8 +724,8 @@ class BlockManager:
         block : Block
         """
         from .tags.core import ndarray
-        if (isinstance(arr, ndarray.NDArrayType) and
-            arr.block is not None):
+
+        if isinstance(arr, ndarray.NDArrayType) and arr.block is not None:
             if arr.block in self.blocks:
                 return arr.block
             else:
@@ -775,7 +748,7 @@ class BlockManager:
         """
         block = self.streamed_block
         if block is None:
-            block = Block(array_storage='streamed')
+            block = Block(array_storage="streamed")
             self.add(block)
         return block
 
@@ -783,22 +756,22 @@ class BlockManager:
         """
         Add an inline block for ``array`` to the block set.
         """
-        block = Block(array, array_storage='inline')
+        block = Block(array, array_storage="inline")
         self.add(block)
         return block
 
     def get_output_compressions(self):
-        '''
+        """
         Get the list of unqiue compressions used on blocks.
-        '''
+        """
         return list(set([b.output_compression for b in self.blocks]))
 
     def get_output_compression_extensions(self):
-        '''
+        """
         Infer the compression extensions used on blocks.
         Note that this is somewhat indirect and could be fooled if a new extension
         for the same compression label is loaded after the compression of the block.
-        '''
+        """
         ext = []
         for label in self.get_output_compressions():
             compressor = mcompression._get_compressor_from_extensions(label, return_extension=True)
@@ -821,17 +794,18 @@ class Block:
     Instead, should only be created through the `BlockManager`.
     """
 
-    _header = util.BinaryStruct([
-        ('flags', 'I'),
-        ('compression', '4s'),
-        ('allocated_size', 'Q'),
-        ('used_size', 'Q'),
-        ('data_size', 'Q'),
-        ('checksum', '16s')
-    ])
+    _header = util.BinaryStruct(
+        [
+            ("flags", "I"),
+            ("compression", "4s"),
+            ("allocated_size", "Q"),
+            ("used_size", "Q"),
+            ("data_size", "Q"),
+            ("checksum", "16s"),
+        ]
+    )
 
-    def __init__(self, data=None, uri=None, array_storage='internal',
-                 memmap=True, lazy_load=True):
+    def __init__(self, data=None, uri=None, array_storage="internal", memmap=True, lazy_load=True):
         self._data = data
         self._uri = uri
         self._array_storage = array_storage
@@ -839,7 +813,7 @@ class Block:
         self._fd = None
         self._offset = None
         self._input_compression = None
-        self._output_compression = 'input'
+        self._output_compression = "input"
         self._output_compression_kwargs = {}
         self._checksum = None
         self._should_memmap = memmap
@@ -851,9 +825,9 @@ class Block:
         self._allocated = self._size
 
     def __repr__(self):
-        return '<Block {0} off: {1} alc: {2} siz: {3}>'.format(
-            self._array_storage[:3], self._offset, self._allocated,
-            self._size)
+        return "<Block {0} off: {1} alc: {2} siz: {3}>".format(
+            self._array_storage[:3], self._offset, self._allocated, self._size
+        )
 
     def __len__(self):
         return self._size
@@ -861,6 +835,7 @@ class Block:
     @property
     def offset(self):
         return self._offset
+
     @offset.setter
     def offset(self, offset):
         self._offset = offset
@@ -868,6 +843,7 @@ class Block:
     @property
     def allocated(self):
         return self._allocated
+
     @allocated.setter
     def allocated(self, allocated):
         self._allocated = allocated
@@ -922,7 +898,7 @@ class Block:
         The compression codec used to write the block.
         :return:
         """
-        if self._output_compression == 'input':
+        if self._output_compression == "input":
             return self._input_compression
         return self._output_compression
 
@@ -954,7 +930,7 @@ class Block:
         return self._readonly
 
     def _set_checksum(self, checksum):
-        if checksum == b'\0' * 16:
+        if checksum == b"\0" * 16:
             self._checksum = None
         else:
             self._checksum = checksum
@@ -962,7 +938,7 @@ class Block:
     def _calculate_checksum(self, array):
         # The following line is safe because we're only using
         # the MD5 as a checksum.
-        m = hashlib.new('md5') # nosec
+        m = hashlib.new("md5")  # nosec
         m.update(array)
         return m.digest()
 
@@ -1003,8 +979,8 @@ class Block:
                 self._size = self._data_size
             else:
                 self._size = mcompression.get_compressed_size(
-                    data, self.output_compression,
-                    config=self.output_compression_kwargs)
+                    data, self.output_compression, config=self.output_compression_kwargs
+                )
         else:
             self._data_size = self._size = 0
 
@@ -1040,46 +1016,41 @@ class Block:
             if len(buff) < 4:
                 return None
 
-            if buff not in (constants.BLOCK_MAGIC,
-                            constants.INDEX_HEADER[:len(buff)]):
+            if buff not in (constants.BLOCK_MAGIC, constants.INDEX_HEADER[: len(buff)]):
                 raise ValueError(
                     "Bad magic number in block. "
                     "This may indicate an internal inconsistency about the "
-                    "sizes of the blocks in the file.")
+                    "sizes of the blocks in the file."
+                )
 
-            if buff == constants.INDEX_HEADER[:len(buff)]:
+            if buff == constants.INDEX_HEADER[: len(buff)]:
                 return None
 
         elif offset is not None:
             offset -= 4
 
         buff = fd.read(2)
-        header_size, = struct.unpack(b'>H', buff)
+        (header_size,) = struct.unpack(b">H", buff)
         if header_size < self._header.size:
-            raise ValueError(
-                "Header size must be >= {0}".format(self._header.size))
+            raise ValueError("Header size must be >= {0}".format(self._header.size))
 
         buff = fd.read(header_size)
         header = self._header.unpack(buff)
 
         # This is used by the documentation system, but nowhere else.
-        self._flags = header['flags']
-        self._set_checksum(header['checksum'])
+        self._flags = header["flags"]
+        self._set_checksum(header["checksum"])
 
         try:
-            self.input_compression = header['compression']
+            self.input_compression = header["compression"]
         except ValueError as v:
             raise v  # TODO: hint extension?
 
-        if (self.input_compression is None and
-                header['used_size'] != header['data_size']):
-            raise ValueError(
-                "used_size and data_size must be equal when no compression is used.")
+        if self.input_compression is None and header["used_size"] != header["data_size"]:
+            raise ValueError("used_size and data_size must be equal when no compression is used.")
 
-        if (header['flags'] & constants.BLOCK_FLAG_STREAMED and
-                self.input_compression is not None):
-            raise ValueError(
-                "Compression set on a streamed block.")
+        if header["flags"] & constants.BLOCK_FLAG_STREAMED and self.input_compression is not None:
+            raise ValueError("Compression set on a streamed block.")
 
         if fd.seekable():
             # If the file is seekable, we can delay reading the actual
@@ -1087,20 +1058,19 @@ class Block:
             self._fd = fd
             self._offset = offset
             self._header_size = header_size
-            if header['flags'] & constants.BLOCK_FLAG_STREAMED:
+            if header["flags"] & constants.BLOCK_FLAG_STREAMED:
                 # Support streaming blocks
-                self._array_storage = 'streamed'
+                self._array_storage = "streamed"
                 if self._lazy_load:
                     fd.fast_forward(-1)
-                    self._data_size = self._size = self._allocated = \
-                        (fd.tell() - self.data_offset) + 1
+                    self._data_size = self._size = self._allocated = (fd.tell() - self.data_offset) + 1
                 else:
                     self._data = fd.read_into_array(-1)
                     self._data_size = self._size = self._allocated = len(self._data)
             else:
-                self._allocated = header['allocated_size']
-                self._size = header['used_size']
-                self._data_size = header['data_size']
+                self._allocated = header["allocated_size"]
+                self._size = header["used_size"]
+                self._data_size = header["data_size"]
                 if self._lazy_load:
                     fd.fast_forward(self._allocated)
                 else:
@@ -1114,23 +1084,21 @@ class Block:
                         fd.fast_forward(self._allocated)
         else:
             # If the file is a stream, we need to get the data now.
-            if header['flags'] & constants.BLOCK_FLAG_STREAMED:
+            if header["flags"] & constants.BLOCK_FLAG_STREAMED:
                 # Support streaming blocks
-                self._array_storage = 'streamed'
+                self._array_storage = "streamed"
                 self._data = fd.read_into_array(-1)
                 self._data_size = self._size = self._allocated = len(self._data)
             else:
-                self._allocated = header['allocated_size']
-                self._size = header['used_size']
-                self._data_size = header['data_size']
+                self._allocated = header["allocated_size"]
+                self._size = header["used_size"]
+                self._data_size = header["data_size"]
                 self._data = self._read_data(fd, self._size, self._data_size)
                 fd.fast_forward(self._allocated - self._size)
             fd.close()
 
         if validate_checksum and not self.validate_checksum():
-            raise ValueError(
-                "Block at {0} does not match given checksum".format(
-                self._offset))
+            raise ValueError("Block at {0} does not match given checksum".format(self._offset))
 
         return self
 
@@ -1141,8 +1109,7 @@ class Block:
         if not self.input_compression:
             return fd.read_into_array(used_size)
         else:
-            return mcompression.decompress(
-                fd, used_size, data_size, self.input_compression)
+            return mcompression.decompress(fd, used_size, data_size, self.input_compression)
 
     def _memmap_data(self):
         """
@@ -1169,7 +1136,7 @@ class Block:
         # occur in memory, except axes with negative strides which
         # are reversed.  That is a problem for base arrays with
         # negative strides and is an outstanding bug in this library.
-        return data.ravel(order='K')
+        return data.ravel(order="K")
 
     def write(self, fd):
         """
@@ -1184,16 +1151,14 @@ class Block:
 
         flags = 0
         data_size = used_size = allocated_size = 0
-        if self._array_storage == 'streamed':
+        if self._array_storage == "streamed":
             flags |= constants.BLOCK_FLAG_STREAMED
         elif data is not None:
             self._checksum = self._calculate_checksum(data)
             data_size = data.nbytes
             if not fd.seekable() and self.output_compression:
                 buff = io.BytesIO()
-                mcompression.compress(buff, data,
-                                      self.output_compression,
-                                      config=self.output_compression_kwargs)
+                mcompression.compress(buff, data, self.output_compression, config=self.output_compression_kwargs)
                 self.allocated = self._size = buff.tell()
             allocated_size = self.allocated
             used_size = self._size
@@ -1205,17 +1170,20 @@ class Block:
         if self.checksum is not None:
             checksum = self.checksum
         else:
-            checksum = b'\0' * 16
+            checksum = b"\0" * 16
 
         fd.write(constants.BLOCK_MAGIC)
-        fd.write(struct.pack(b'>H', self._header_size))
-        fd.write(self._header.pack(
-            flags=flags,
-            compression=mcompression.to_compression_header(
-                self.output_compression),
-            allocated_size=allocated_size,
-            used_size=used_size, data_size=data_size,
-            checksum=checksum))
+        fd.write(struct.pack(b">H", self._header_size))
+        fd.write(
+            self._header.pack(
+                flags=flags,
+                compression=mcompression.to_compression_header(self.output_compression),
+                allocated_size=allocated_size,
+                used_size=used_size,
+                data_size=data_size,
+                checksum=checksum,
+            )
+        )
 
         if data is not None:
             if self.output_compression:
@@ -1227,16 +1195,11 @@ class Block:
                     # and write the resulting size in the block
                     # header.
                     start = fd.tell()
-                    mcompression.compress(
-                        fd, data, self.output_compression,
-                        config=self.output_compression_kwargs)
+                    mcompression.compress(fd, data, self.output_compression, config=self.output_compression_kwargs)
                     end = fd.tell()
                     self.allocated = self._size = end - start
                     fd.seek(self.offset + 6)
-                    self._header.update(
-                        fd,
-                        allocated_size=self.allocated,
-                        used_size=self._size)
+                    self._header.update(fd, allocated_size=self.allocated, used_size=self._size)
                     fd.seek(end)
             else:
                 if used_size != data_size:
@@ -1250,9 +1213,7 @@ class Block:
         """
         if self._data is None:
             if self._fd.is_closed():
-                raise IOError(
-                    "ASDF file has already been closed. "
-                    "Can not get the data.")
+                raise IOError("ASDF file has already been closed. " "Can not get the data.")
 
             # Be nice and reset the file position after we're done
             curpos = self._fd.tell()
@@ -1260,8 +1221,7 @@ class Block:
                 self._memmap_data()
                 if not self._memmapped:
                     self._fd.seek(self.data_offset)
-                    self._data = self._read_data(
-                        self._fd, self._size, self._data_size)
+                    self._data = self._read_data(self._fd, self._size, self._data_size)
             finally:
                 self._fd.seek(curpos)
 
@@ -1288,14 +1248,15 @@ class UnloadedBlock:
     full-fledged block whenever the underlying data or more detail is
     requested.
     """
+
     def __init__(self, fd, offset, memmap=True, lazy_load=True, readonly=False):
         self._fd = fd
         self._offset = offset
         self._data = None
         self._uri = None
-        self._array_storage = 'internal'
+        self._array_storage = "internal"
         self._input_compression = None
-        self._output_compression = 'input'
+        self._output_compression = "input"
         self._output_compression_kwargs = {}
         self._checksum = None
         self._should_memmap = memmap
@@ -1312,7 +1273,7 @@ class UnloadedBlock:
 
     @property
     def array_storage(self):
-        return 'internal'
+        return "internal"
 
     @property
     def offset(self):
@@ -1347,6 +1308,7 @@ def calculate_updated_layout(blocks, tree_size, pad_blocks, block_size):
     Returns `False` if no good layout can be found and one is best off
     rewriting the file serially, otherwise, returns `True`.
     """
+
     def unfix_block(i):
         # If this algorithm gets more sophisticated we could carefully
         # move memmapped blocks around without clobbering other ones.
@@ -1364,15 +1326,14 @@ def calculate_updated_layout(blocks, tree_size, pad_blocks, block_size):
         fixed.append(Entry(block.offset, block.offset + block.size, block))
         fixed.sort()
 
-    Entry = namedtuple("Entry", ['start', 'end', 'block'])
+    Entry = namedtuple("Entry", ["start", "end", "block"])
 
     fixed = []
     free = []
     for block in blocks._internal_blocks:
         if block.offset is not None:
             block.update_size()
-            fixed.append(
-                Entry(block.offset, block.offset + block.size, block))
+            fixed.append(Entry(block.offset, block.offset + block.size, block))
         else:
             free.append(block)
 
@@ -1400,13 +1361,11 @@ def calculate_updated_layout(blocks, tree_size, pad_blocks, block_size):
                 break
             last_end = entry.end
         else:
-            padding = util.calculate_padding(
-                entry.block.size, pad_blocks, block_size)
+            padding = util.calculate_padding(entry.block.size, pad_blocks, block_size)
             fix_block(block, last_end + padding)
 
     if blocks.streamed_block is not None:
-        padding = util.calculate_padding(
-            fixed[-1].block.size, pad_blocks, block_size)
+        padding = util.calculate_padding(fixed[-1].block.size, pad_blocks, block_size)
         blocks.streamed_block.offset = fixed[-1].end + padding
 
     blocks._sort_blocks_by_offset()

@@ -11,8 +11,8 @@ class Constant:
 
 
 class ConstantType(AsdfType):
-    name = 'core/constant'
-    version = '1.0.0'
+    name = "core/constant"
+    version = "1.0.0"
     types = [Constant]
 
     @classmethod

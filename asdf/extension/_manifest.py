@@ -23,6 +23,7 @@ class ManifestExtension(Extension):
         Fully-qualified class names used by older versions
         of this extension.
     """
+
     @classmethod
     def from_uri(cls, manifest_uri, **kwargs):
         """
@@ -38,11 +39,11 @@ class ManifestExtension(Extension):
         See the class docstring for details on keyword parameters.
         """
         from ..config import get_config
+
         manifest = yaml.safe_load(get_config().resource_manager[manifest_uri])
         return cls(manifest, **kwargs)
 
-    def __init__(self, manifest, *, legacy_class_names=None, converters=None,
-                compressors=None):
+    def __init__(self, manifest, *, legacy_class_names=None, converters=None, compressors=None):
         self._manifest = manifest
 
         if legacy_class_names is None:

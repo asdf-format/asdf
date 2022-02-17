@@ -1,13 +1,12 @@
-from pkg_resources import EntryPoint
 import pkg_resources
-
 import pytest
+from pkg_resources import EntryPoint
 
 from asdf import entry_points
 from asdf.exceptions import AsdfWarning
+from asdf.extension import ExtensionProxy
 from asdf.resource import ResourceMappingProxy
 from asdf.version import version as asdf_package_version
-from asdf.extension import ExtensionProxy
 
 
 @pytest.fixture
@@ -21,7 +20,8 @@ def monkeypatch_entry_points(monkeypatch, mock_entry_points):
         for candidate_group, name, func_name in mock_entry_points:
             if candidate_group == group:
                 yield EntryPoint(
-                    name, "asdf.tests.test_entry_points",
+                    name,
+                    "asdf.tests.test_entry_points",
                     attrs=(func_name,),
                     dist=pkg_resources.get_distribution("asdf"),
                 )
@@ -125,7 +125,9 @@ def test_get_extensions(mock_entry_points):
 
     mock_entry_points.clear()
     mock_entry_points.append(("asdf.extensions", "bad_element", "extensions_entry_point_bad_element"))
-    with pytest.warns(AsdfWarning, match="TypeError: Extension must implement the Extension or AsdfExtension interface"):
+    with pytest.warns(
+        AsdfWarning, match="TypeError: Extension must implement the Extension or AsdfExtension interface"
+    ):
         extensions = entry_points.get_extensions()
     assert len(extensions) == 2
 
