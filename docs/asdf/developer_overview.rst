@@ -709,4 +709,3 @@ and keeping necessary state, which means that the ``AsdfFile`` can go
 unmodified.  The ``SerializationContext`` will be relatively lightweight and
 creating it will not incur as much of a performance penalty as creating an
 ``AsdfFile``.
-

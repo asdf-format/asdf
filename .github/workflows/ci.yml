@@ -24,7 +24,7 @@ jobs:
             python-version: "3.10"
             toxenv: py310
 
-          - name: Python 3.9 (with code coverage)
+          - name: Python 3.9 with Code Coverage
             os: ubuntu-latest
             python-version: "3.9"
             toxenv: coverage
@@ -41,10 +41,10 @@ jobs:
 
           - name: Build documentation
             os: ubuntu-latest
-            python-version: "3.9"
-            toxenv: docs
+            python-version: "3.7"
+            toxenv: py37-legacy
 
-          - name: macOS
+          - name: Mac OS Latest
             os: macos-latest
             python-version: "3.9"
             toxenv: py39
@@ -54,17 +54,12 @@ jobs:
             python-version: "3.9"
             toxenv: compatibility
 
-          - name: Bandit security checks
+          - name: Code style checks
             os: ubuntu-latest
             python-version: "3.9"
-            toxenv: bandit
+            toxenv: codestyle
 
-          - name: Flake8 checks
-            os: ubuntu-latest
-            python-version: "3.9"
-            toxenv: flake8
-
-          - name: Twine checks
+          - name: Twine
             os: ubuntu-latest
             python-version: "3.9"
             toxenv: twine
@@ -150,6 +145,11 @@ jobs:
           pip install tox
       - name: Run tox environment '${{ matrix.toxenv }}'
         run: tox -e ${{ matrix.toxenv }}
+      - name: Upload coverage to codecov
+        if: ${{ contains(matrix.toxenv,'coverage') }}
+        uses: codecov/codecov-action@v2
+        with:
+          file: ./coverage.xml
 
   asdf-standard:
     name: Run asdf-standard tests

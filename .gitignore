@@ -14,6 +14,7 @@ __pycache__
 htmlcov
 .coverage
 MANIFEST
+coverage.xml
 
 # Tox
 .tox
