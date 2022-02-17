@@ -22,6 +22,11 @@ ASDF - Advanced Scientific Data Format
 .. image:: https://img.shields.io/pypi/l/asdf.svg
     :target: https://img.shields.io/pypi/l/asdf.svg
 
+.. image:: https://img.shields.io/badge/pre--commit-enabled-brightgreen?logo=pre-commit&logoColor=white
+    :target: https://github.com/pre-commit/pre-commit
+    :alt: pre-commit
+
+
 |
 
 .. _begin-summary-text:

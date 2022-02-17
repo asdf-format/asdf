@@ -1,0 +1,27 @@
+repos:
+
+- repo: https://github.com/pre-commit/pre-commit-hooks
+  rev: v4.1.0
+  hooks:
+  - id: check-added-large-files
+  - id: check-case-conflict
+  - id: check-yaml
+    args: ["--unsafe"]
+  - id: debug-statements
+  - id: end-of-file-fixer
+    exclude: ".*fits"
+  - id: trailing-whitespace
+    exclude: ".*fits"
+
+- repo: https://gitlab.com/pycqa/flake8
+  rev: 4.0.1
+  hooks:
+    - id: flake8
+      args: ["--count", "--ignore", "E501, E203, W503, W504"]
+      exclude: "(reference_files|asdf/extern/.*)"
+
+- repo: https://github.com/PyCQA/bandit
+  rev: 1.7.2
+  hooks:
+    - id: bandit
+      args: ["-x", "asdf/tests,asdf/commands/tests,asdf/tags/core/tests,asdf/extern,compatibility_tests,docs"]
