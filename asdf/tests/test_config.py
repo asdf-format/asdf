@@ -5,8 +5,8 @@ import pytest
 import asdf
 from asdf import get_config
 from asdf.core import _integration
-from asdf.resource import ResourceMappingProxy
 from asdf.extension import BuiltinExtension, ExtensionProxy
+from asdf.resource import ResourceMappingProxy
 
 
 def test_config_context():

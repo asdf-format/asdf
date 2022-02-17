@@ -3,9 +3,9 @@ Defragment command.
 """
 
 import asdf
-from .main import Command
-from .. import AsdfFile
 
+from .. import AsdfFile
+from .main import Command
 
 __all__ = ["defragment"]
 

@@ -1,20 +1,18 @@
 import atexit
+import codecs
 import io
 import os
 import shutil
 import tempfile
 import textwrap
-import codecs
 
-from docutils.parsers.rst import Directive
 from docutils import nodes
-
+from docutils.parsers.rst import Directive
 from sphinx.util.nodes import set_source_info
 
 import asdf
-from asdf import AsdfFile
+from asdf import AsdfFile, versioning
 from asdf.constants import ASDF_MAGIC, BLOCK_FLAG_STREAMED
-from asdf import versioning
 
 version_string = str(versioning.default_version)
 

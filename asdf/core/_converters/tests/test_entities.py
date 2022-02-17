@@ -3,8 +3,8 @@ import datetime
 import asdf
 from asdf.core import (
     AsdfObject,
-    ExternalArrayReference,
     ExtensionMetadata,
+    ExternalArrayReference,
     HistoryEntry,
     Software,
 )

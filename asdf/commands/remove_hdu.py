@@ -6,7 +6,6 @@ from astropy.io import fits
 
 from .main import Command
 
-
 __all__ = ["remove_hdu"]
 
 

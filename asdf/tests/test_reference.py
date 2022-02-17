@@ -2,13 +2,11 @@ import io
 import os
 
 import numpy as np
+import pytest
 from numpy.testing import assert_array_equal
 
-import pytest
-
 import asdf
-from asdf import reference
-from asdf import util
+from asdf import reference, util
 from asdf.tags.core import ndarray
 
 from .helpers import assert_tree_match

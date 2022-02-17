@@ -4,7 +4,6 @@ import sys
 
 from .. import util
 
-
 # This list is ordered in order of average workflow
 command_order = ["Explode", "Implode"]
 

@@ -3,9 +3,9 @@ import random
 import pytest
 
 import asdf
-from asdf.testing import helpers
 from asdf import constants
 from asdf.tagged import TaggedDict
+from asdf.testing import helpers
 
 
 @pytest.fixture(autouse=True)

@@ -2,7 +2,6 @@ import re
 
 from asdf.extension import Converter
 
-
 _REPLACEMENTS = {
     re.compile("i(?!nf)"): "j",
     re.compile("I(?!NF)"): "J",

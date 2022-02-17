@@ -1,5 +1,5 @@
+from ..extension import ManifestExtension
 from ._converters.complex import ComplexConverter
-from ._converters.integer import IntegerConverter
 from ._converters.entities import (
     AsdfObjectConverter,
     ExtensionMetadataConverter,
@@ -7,9 +7,8 @@ from ._converters.entities import (
     HistoryEntryConverter,
     SoftwareConverter,
 )
-from ._validators.ndarray import NdimValidator, MaxNdimValidator, DatatypeValidator
-from ..extension import ManifestExtension
-
+from ._converters.integer import IntegerConverter
+from ._validators.ndarray import DatatypeValidator, MaxNdimValidator, NdimValidator
 
 CONVERTERS = [
     AsdfObjectConverter(),

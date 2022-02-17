@@ -9,13 +9,11 @@ instead, one should use the factory function `get_file`.
 
 import io
 import os
+import pathlib
 import re
 import sys
-import pathlib
 import tempfile
-
-from os import SEEK_SET, SEEK_CUR, SEEK_END
-
+from os import SEEK_CUR, SEEK_END, SEEK_SET
 from urllib.request import url2pathname, urlopen
 
 import numpy as np
@@ -24,7 +22,6 @@ from . import util
 from .exceptions import DelimiterNotFoundError
 from .extern import atomicfile
 from .util import patched_urllib_parse
-
 
 __all__ = ["get_file", "get_uri", "resolve_uri", "relative_uri"]
 

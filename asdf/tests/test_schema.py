@@ -1,24 +1,26 @@
 import io
 from datetime import datetime
 
-from jsonschema import ValidationError
 import numpy as np
-from numpy.testing import assert_array_equal
 import pytest
+from jsonschema import ValidationError
+from numpy.testing import assert_array_equal
 
 import asdf
-from asdf import constants
-from asdf import get_config
-from asdf import extension
-from asdf import resolver
-from asdf import schema
-from asdf import types
-from asdf import util
-from asdf import yamlutil
-from asdf import tagged
-from asdf.testing.helpers import yaml_to_asdf, roundtrip_object
-from asdf.tests import helpers, CustomExtension
-from asdf.exceptions import AsdfWarning, AsdfConversionWarning
+from asdf import (
+    constants,
+    extension,
+    get_config,
+    resolver,
+    schema,
+    tagged,
+    types,
+    util,
+    yamlutil,
+)
+from asdf.exceptions import AsdfConversionWarning, AsdfWarning
+from asdf.testing.helpers import roundtrip_object, yaml_to_asdf
+from asdf.tests import CustomExtension, helpers
 
 
 class TagReferenceType(types.CustomType):

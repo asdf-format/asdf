@@ -29,8 +29,7 @@ is not intended to be exposed to the end user.
 """
 
 from collections import UserDict, UserList, UserString
-from copy import deepcopy, copy
-
+from copy import copy, deepcopy
 
 __all__ = ["tag_object", "get_tag"]
 

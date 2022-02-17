@@ -1,32 +1,31 @@
-import json
-import datetime
-import warnings
 import copy
-from numbers import Integral
-from functools import lru_cache
+import datetime
+import json
+import warnings
 from collections import OrderedDict
 from collections.abc import Mapping
+from functools import lru_cache
+from numbers import Integral
 
+import numpy as np
+import yaml
 from jsonschema import validators as mvalidators
 from jsonschema.exceptions import ValidationError
 
-import yaml
-import numpy as np
-
+from . import (
+    constants,
+    extension,
+    generic_io,
+    reference,
+    tagged,
+    treeutil,
+    util,
+    versioning,
+    yamlutil,
+)
 from .config import get_config
-from . import constants
-from . import generic_io
-from . import reference
-from . import treeutil
-from . import util
-from . import extension
-from . import yamlutil
-from . import versioning
-from . import tagged
 from .exceptions import AsdfWarning
-
 from .util import patched_urllib_parse
-
 
 YAML_SCHEMA_METASCHEMA_ID = "http://stsci.edu/schemas/yaml-schema/draft-01"
 

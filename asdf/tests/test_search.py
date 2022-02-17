@@ -1,7 +1,7 @@
 import re
 
-import pytest
 import numpy as np
+import pytest
 
 from asdf import AsdfFile
 

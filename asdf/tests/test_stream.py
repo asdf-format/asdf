@@ -2,13 +2,11 @@ import io
 import os
 
 import numpy as np
+import pytest
 from numpy.testing import assert_array_equal
 
-import pytest
-
 import asdf
-from asdf import generic_io
-from asdf import stream
+from asdf import generic_io, stream
 
 
 def test_stream():

@@ -4,14 +4,10 @@ from fractions import Fraction
 import pytest
 
 import asdf
-from asdf import types
-from asdf import extension
-from asdf import util
-from asdf import versioning
-from asdf.exceptions import AsdfWarning, AsdfConversionWarning
+from asdf import extension, types, util, versioning
+from asdf.exceptions import AsdfConversionWarning, AsdfWarning
 
-from . import helpers, CustomTestType, CustomExtension
-
+from . import CustomExtension, CustomTestType, helpers
 
 TEST_DATA_PATH = str(helpers.get_test_data_path(""))
 

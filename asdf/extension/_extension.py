@@ -3,10 +3,10 @@ import abc
 from packaging.specifiers import SpecifierSet
 
 from ..util import get_class_name
-from ._tag import TagDefinition
-from ._legacy import AsdfExtension
-from ._converter import ConverterProxy
 from ._compressor import Compressor
+from ._converter import ConverterProxy
+from ._legacy import AsdfExtension
+from ._tag import TagDefinition
 from ._validator import Validator
 
 

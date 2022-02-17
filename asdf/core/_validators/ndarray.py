@@ -1,7 +1,7 @@
 import numpy as np
 
-from asdf.extension import Validator
 from asdf.exceptions import ValidationError
+from asdf.extension import Validator
 from asdf.tags.core.ndarray import (
     asdf_datatype_to_numpy_dtype,
     inline_data_asarray,

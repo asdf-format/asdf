@@ -3,9 +3,8 @@ import sys
 import numpy as np
 from numpy import ma
 
-from ...types import AsdfType
 from ... import util
-
+from ...types import AsdfType
 
 _datatype_names = {
     "int8": "i1",

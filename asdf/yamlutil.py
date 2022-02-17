@@ -3,18 +3,13 @@ from collections import OrderedDict
 from types import GeneratorType
 
 import numpy as np
-
 import yaml
 
-from . import schema
-from . import tagged
-from . import treeutil
-from . import util
-from .constants import YAML_TAG_PREFIX, STSCI_SCHEMA_TAG_BASE
-from .versioning import split_tag_version
-from .exceptions import AsdfConversionWarning
+from . import schema, tagged, treeutil, util
+from .constants import STSCI_SCHEMA_TAG_BASE, YAML_TAG_PREFIX
 from .core import AsdfObject
-
+from .exceptions import AsdfConversionWarning
+from .versioning import split_tag_version
 
 __all__ = ["custom_tree_to_tagged_tree", "tagged_tree_to_custom_tree"]
 

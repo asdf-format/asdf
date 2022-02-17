@@ -1,13 +1,13 @@
 import os
 
 import numpy as np
-
 import pytest
 
 astropy = pytest.importorskip("astropy")
 from astropy.io import fits
 
 from asdf.fits_embed import AsdfInFits
+
 from .. import remove_hdu
 
 

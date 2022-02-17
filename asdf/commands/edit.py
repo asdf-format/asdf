@@ -12,17 +12,13 @@ import shutil
 import subprocess  # nosec
 import sys
 import tempfile
+
 import yaml
 
-from .. import constants
-from .. import generic_io
-from .. import schema
-from .. import util
-
-from ..asdf import open_asdf, AsdfFile
+from .. import constants, generic_io, schema, util
+from ..asdf import AsdfFile, open_asdf
 from ..block import BlockManager
 from .main import Command
-
 
 __all__ = ["edit"]
 

@@ -22,18 +22,17 @@ except ImportError:
 import yaml
 
 import asdf
+from asdf.core import AsdfObject
+
+from .. import generic_io, versioning
 from ..asdf import AsdfFile, get_asdf_library_info
 from ..block import Block
-from .httpserver import RangeHTTPServer
-from ..extension import default_extensions
-from ..exceptions import AsdfConversionWarning
-from .. import versioning
-from ..resolver import Resolver, ResolverChain
-from .. import generic_io
 from ..constants import YAML_TAG_PREFIX
+from ..exceptions import AsdfConversionWarning
+from ..extension import default_extensions
+from ..resolver import Resolver, ResolverChain
 from ..versioning import AsdfVersion, get_version_map
-
-from asdf.core import AsdfObject
+from .httpserver import RangeHTTPServer
 
 try:
     from pytest_remotedata.disable_internet import INTERNET_OFF

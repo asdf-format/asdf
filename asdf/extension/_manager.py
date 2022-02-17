@@ -1,8 +1,8 @@
 from functools import lru_cache
 
-from ._extension import ExtensionProxy
-from ..util import get_class_name, uri_match
 from ..tagged import Tagged
+from ..util import get_class_name, uri_match
+from ._extension import ExtensionProxy
 
 
 class ExtensionManager:

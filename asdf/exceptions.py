@@ -1,6 +1,5 @@
 from jsonschema import ValidationError
 
-
 __all__ = [
     "AsdfConversionWarning",
     "AsdfDeprecationWarning",

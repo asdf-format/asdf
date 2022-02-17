@@ -1,20 +1,18 @@
 import json
+import os
+import subprocess
 import urllib.request
-from packaging.version import Version
+from contextlib import contextmanager
 from itertools import groupby
 from pathlib import Path
-import subprocess
-from contextlib import contextmanager
-import os
 
 import pytest
 import pytest_remotedata
 import virtualenv
+from common import assert_file_correct, generate_file
+from packaging.version import Version
 
 import asdf
-
-from common import generate_file, assert_file_correct
-
 
 # Strange version present on pypi that doesn't parse as a Version
 BAD_VERSIONS = {"0"}

@@ -6,7 +6,7 @@ import pytest
 import asdf
 from asdf import AsdfFile
 from asdf.commands import main
-from asdf.tests.helpers import get_file_sizes, assert_tree_match
+from asdf.tests.helpers import assert_tree_match, get_file_sizes
 
 
 def _test_defragment(tmpdir, codec):

@@ -2,15 +2,13 @@
 Support for plugins that provide access to resources such
 as schemas.
 """
-from collections.abc import Mapping
-from pathlib import Path
 import fnmatch
 import os
 import pkgutil
-
+from collections.abc import Mapping
+from pathlib import Path
 
 from .util import get_class_name
-
 
 __all__ = [
     "ResourceMappingProxy",

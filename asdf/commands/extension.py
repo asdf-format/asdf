@@ -1,9 +1,8 @@
 """
 Implementation of command for reporting information about installed extensions.
 """
-from .main import Command
 from ..entry_points import get_extensions
-
+from .main import Command
 
 __all__ = ["find_extensions"]
 

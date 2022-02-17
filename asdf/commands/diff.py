@@ -4,9 +4,9 @@ Implementation of command for displaying differences between two ASDF files.
 
 import argparse
 import sys
-from numpy import array_equal
 
 import jmespath
+from numpy import array_equal
 
 try:
     # Provides cross-platform color support
@@ -30,11 +30,11 @@ except ImportError:
         RESET = ""
 
 import asdf
-from .main import Command
-from ..tagged import Tagged
-from ..util import human_list
-from ..tags.core.ndarray import NDArrayType
 
+from ..tagged import Tagged
+from ..tags.core.ndarray import NDArrayType
+from ..util import human_list
+from .main import Command
 
 __all__ = ["diff"]
 

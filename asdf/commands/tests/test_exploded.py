@@ -5,7 +5,8 @@ import numpy as np
 import asdf
 from asdf import AsdfFile
 from asdf.commands import main
-from ...tests.helpers import get_file_sizes, assert_tree_match
+
+from ...tests.helpers import assert_tree_match, get_file_sizes
 
 
 def test_explode_then_implode(tmpdir):

@@ -6,7 +6,6 @@ import pytest
 import asdf
 from asdf.extension import TagDefinition
 
-
 FOO_SCHEMA_URI = "asdf://somewhere.org/extensions/foo/schemas/foo-1.0"
 FOO_SCHEMA = f"""
 id: {FOO_SCHEMA_URI}

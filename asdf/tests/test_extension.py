@@ -1,28 +1,25 @@
 import pytest
 from packaging.specifiers import SpecifierSet
 
+from asdf import AsdfFile, config_context
+from asdf.exceptions import AsdfDeprecationWarning, ValidationError
 from asdf.extension import (
-    Extension,
-    ExtensionProxy,
-    ManifestExtension,
-    ExtensionManager,
-    get_cached_extension_manager,
-    TagDefinition,
-    Converter,
-    ConverterProxy,
-    Compressor,
-    Validator,
     AsdfExtension,
     BuiltinExtension,
+    Compressor,
+    Converter,
+    ConverterProxy,
+    Extension,
+    ExtensionManager,
+    ExtensionProxy,
+    ManifestExtension,
+    TagDefinition,
+    Validator,
     get_cached_asdf_extension_list,
+    get_cached_extension_manager,
 )
-
-from asdf.exceptions import AsdfDeprecationWarning
-from asdf.exceptions import ValidationError
-from asdf import config_context, AsdfFile
-from asdf.types import CustomType
-
 from asdf.tests.helpers import assert_extension_correctness
+from asdf.types import CustomType
 
 
 def test_builtin_extension():

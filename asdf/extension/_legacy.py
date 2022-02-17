@@ -1,8 +1,7 @@
 import abc
 from functools import lru_cache
 
-from .. import types
-from .. import resolver
+from .. import resolver, types
 from ..type_index import AsdfTypeIndex
 
 

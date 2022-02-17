@@ -9,10 +9,9 @@ return what it thinks is suitable for display.
 """
 import numpy as np
 
-from .util import is_primitive
-from .treeutil import get_children
 from .tags.core.ndarray import NDArrayType
-
+from .treeutil import get_children
+from .util import is_primitive
 
 __all__ = [
     "DEFAULT_MAX_ROWS",
