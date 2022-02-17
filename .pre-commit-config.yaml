@@ -24,4 +24,5 @@ repos:
   rev: 1.7.2
   hooks:
     - id: bandit
-      args: ["-x", "asdf/tests,asdf/commands/tests,asdf/tags/core/tests,asdf/extern,compatibility_tests,docs"]
+      args: ["--skip", "B101",
+        "-x", "asdf/tests,asdf/commands/tests,asdf/tags/core/tests,asdf/extern,compatibility_tests,docs"]
