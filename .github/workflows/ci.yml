@@ -23,7 +23,7 @@ jobs:
             python-version: "3.10"
             toxenv: py310
 
-          - name: Code Coverage with Python 3.9
+          - name: Python 3.9 with Code Coverage
             os: ubuntu-latest
             python-version: "3.9"
             toxenv: coverage
