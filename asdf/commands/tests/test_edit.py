@@ -1,11 +1,10 @@
-from contextlib import contextmanager
 import os
 import re
+from contextlib import contextmanager
 
 import numpy as np
-from numpy.testing import assert_array_equal
-
 import pytest
+from numpy.testing import assert_array_equal
 
 import asdf
 from asdf.commands import main

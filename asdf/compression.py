@@ -1,12 +1,12 @@
-import struct
-import zlib
 import bz2
+import struct
+import warnings
+import zlib
 
 import numpy as np
-import warnings
 
-from .exceptions import AsdfWarning
 from .config import get_config
+from .exceptions import AsdfWarning
 
 
 def validate(compression):

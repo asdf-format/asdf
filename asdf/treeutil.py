@@ -2,8 +2,8 @@
 Utility functions for managing tree-like data structures.
 """
 
-import warnings
 import types
+import warnings
 from contextlib import contextmanager
 
 from . import tagged

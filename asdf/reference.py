@@ -5,18 +5,14 @@ and `JSON Pointer standard <http://tools.ietf.org/html/rfc6901>`__.
 """
 
 
-from collections.abc import Sequence
 import weakref
+from collections.abc import Sequence
 
 import numpy as np
 
+from . import generic_io, treeutil, util
 from .types import AsdfType
-from . import generic_io
-from . import treeutil
-from . import util
-
 from .util import patched_urllib_parse
-
 
 __all__ = ["resolve_fragment", "Reference", "find_references", "resolve_references", "make_reference"]
 

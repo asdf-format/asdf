@@ -1,13 +1,12 @@
 import threading
 
-import pytest
 import asdf_standard.integration
+import pytest
 
 import asdf
-from asdf import get_config
-from asdf import resource
-from asdf.resource import ResourceMappingProxy
+from asdf import get_config, resource
 from asdf.extension import BuiltinExtension, ExtensionProxy
+from asdf.resource import ResourceMappingProxy
 
 
 def test_config_context():

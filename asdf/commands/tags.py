@@ -5,9 +5,8 @@ Implementation of command for displaying available tags in asdf
 
 import sys
 
-from .main import Command
 from .. import AsdfFile
-
+from .main import Command
 
 __all__ = ["list_tags"]
 

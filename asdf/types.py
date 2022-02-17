@@ -1,12 +1,9 @@
-import re
 import importlib
-
+import re
 from copy import copy
 
-from . import tagged
-from . import util
-from .versioning import AsdfVersion, AsdfSpec
-
+from . import tagged, util
+from .versioning import AsdfSpec, AsdfVersion
 
 __all__ = ["format_tag", "CustomType"]
 

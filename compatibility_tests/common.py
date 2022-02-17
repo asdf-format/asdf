@@ -1,6 +1,7 @@
+import numpy as np
+
 import asdf
 from asdf.versioning import supported_versions
-import numpy as np
 
 
 def generate_file(path, version):

@@ -1,11 +1,11 @@
 import pytest
 
-from asdf.asdf import AsdfFile, open_asdf, SerializationContext
 from asdf import config_context, get_config
-from asdf.versioning import AsdfVersion
+from asdf.asdf import AsdfFile, SerializationContext, open_asdf
 from asdf.exceptions import AsdfWarning
-from asdf.extension import ExtensionProxy, AsdfExtensionList, ExtensionManager
-from asdf.tests.helpers import yaml_to_asdf, assert_no_warnings
+from asdf.extension import AsdfExtensionList, ExtensionManager, ExtensionProxy
+from asdf.tests.helpers import assert_no_warnings, yaml_to_asdf
+from asdf.versioning import AsdfVersion
 
 
 class TestExtension:

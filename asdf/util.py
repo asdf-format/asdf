@@ -1,12 +1,11 @@
 import enum
+import importlib.util
 import inspect
 import math
+import re
 import struct
 import types
-import importlib.util
-import re
 from functools import lru_cache
-
 from urllib.request import pathname2url
 
 import numpy as np

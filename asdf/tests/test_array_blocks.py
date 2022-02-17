@@ -2,15 +2,12 @@ import io
 import os
 
 import numpy as np
+import pytest
 from numpy.random import random
 from numpy.testing import assert_array_equal
 
-import pytest
-
 import asdf
-from asdf import block
-from asdf import constants
-from asdf import generic_io
+from asdf import block, constants, generic_io
 
 
 def test_external_block(tmpdir):

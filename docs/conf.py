@@ -22,9 +22,9 @@
 # Thus, any C-extensions that are needed to build the documentation will *not*
 # be accessible, and the documentation will not build correctly.
 
+import datetime
 import os
 import sys
-import datetime
 
 # Ensure documentation examples are determinstically random.
 import numpy

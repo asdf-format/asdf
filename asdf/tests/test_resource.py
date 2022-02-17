@@ -1,7 +1,7 @@
 import io
 import sys
-from pathlib import Path
 from collections.abc import Mapping
+from pathlib import Path
 
 if sys.version_info < (3, 9):
     import importlib_resources as importlib
@@ -12,10 +12,10 @@ import pytest
 
 from asdf.resource import (
     DirectoryResourceMapping,
+    JsonschemaResourceMapping,
     ResourceManager,
     ResourceMappingProxy,
     get_json_schema_resource_mappings,
-    JsonschemaResourceMapping,
 )
 
 

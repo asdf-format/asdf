@@ -3,10 +3,9 @@ import os
 import pathlib
 import warnings
 
-import yaml
-import pytest
-
 import numpy as np
+import pytest
+import yaml
 
 # Avoid all imports of asdf at this level in order to avoid circular imports
 

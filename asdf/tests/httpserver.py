@@ -1,14 +1,12 @@
+import http.server
 import os
 import queue
 import shutil
+import socketserver
 import tempfile
 import threading
-import http.server
-import socketserver
-
 
 from ..extern.RangeHTTPServer import RangeHTTPRequestHandler
-
 
 __all__ = ["HTTPServer", "RangeHTTPServer"]
 

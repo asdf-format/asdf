@@ -1,20 +1,16 @@
 import io
 import os
 import sys
-
-import pytest
-
 import urllib.request as urllib_request
 
 import numpy as np
+import pytest
 
 import asdf
-from asdf import exceptions
-from asdf import util
-from asdf import generic_io
+from asdf import exceptions, generic_io, util
 from asdf.config import config_context
 
-from . import helpers, create_small_tree, create_large_tree
+from . import create_large_tree, create_small_tree, helpers
 
 
 @pytest.fixture(params=[create_small_tree, create_large_tree])

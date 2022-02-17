@@ -1,23 +1,22 @@
 """
 Utilities for searching ASDF trees.
 """
+import builtins
 import inspect
 import re
 import typing
-import builtins
 
-from .util import NotSet
 from ._display import (
-    render_tree,
-    DEFAULT_MAX_ROWS,
     DEFAULT_MAX_COLS,
+    DEFAULT_MAX_ROWS,
     DEFAULT_SHOW_VALUES,
-    format_italic,
-    format_faint,
     _NodeInfo,
+    format_faint,
+    format_italic,
+    render_tree,
 )
 from .treeutil import get_children, is_container
-
+from .util import NotSet
 
 __all__ = ["AsdfSearchResult"]
 

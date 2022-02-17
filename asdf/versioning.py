@@ -12,8 +12,7 @@ if getattr(yaml, "__with_libyaml__", None):  # pragma: no cover
 else:  # pragma: no cover
     _yaml_base_loader = yaml.SafeLoader
 
-from semantic_version import Version, SimpleSpec
-
+from semantic_version import SimpleSpec, Version
 
 __all__ = ["AsdfVersion", "AsdfSpec", "split_tag_version", "join_tag_version"]
 

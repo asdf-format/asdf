@@ -1,10 +1,10 @@
 import warnings
 
 from .exceptions import AsdfDeprecationWarning
+from .types import AsdfType, CustomType, ExtensionTypeMeta, format_tag
 
 # This is not exhaustive, but represents the public API
 from .versioning import join_tag_version, split_tag_version
-from .types import AsdfType, CustomType, format_tag, ExtensionTypeMeta
 
 __all__ = ["join_tag_version", "split_tag_version", "AsdfType", "CustomType", "format_tag", "ExtensionTypeMeta"]
 

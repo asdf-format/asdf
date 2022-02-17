@@ -1,5 +1,4 @@
 import asdf
-
 from asdf.tests import helpers
 
 

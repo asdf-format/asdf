@@ -2,10 +2,9 @@ import abc
 import warnings
 from functools import lru_cache
 
-from .. import types
-from .. import resolver
-from ..type_index import AsdfTypeIndex
+from .. import resolver, types
 from ..exceptions import AsdfDeprecationWarning
+from ..type_index import AsdfTypeIndex
 
 
 class AsdfExtension(metaclass=abc.ABCMeta):

@@ -2,17 +2,14 @@
 Methods for getting and setting asdf global configuration
 options.
 """
+import copy
 import threading
 from contextlib import contextmanager
-import copy
 
-from . import entry_points
-from .resource import ResourceMappingProxy, ResourceManager
-from . import versioning
+from . import entry_points, util, versioning
 from ._helpers import validate_version
 from .extension import ExtensionProxy
-from . import util
-
+from .resource import ResourceManager, ResourceMappingProxy
 
 __all__ = ["AsdfConfig", "get_config", "config_context"]
 

@@ -1,7 +1,7 @@
 from functools import lru_cache
 
-from ._extension import ExtensionProxy
 from ..util import get_class_name
+from ._extension import ExtensionProxy
 
 
 class ExtensionManager:

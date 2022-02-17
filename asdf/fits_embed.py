@@ -6,10 +6,7 @@ import re
 
 import numpy as np
 
-from . import asdf
-from . import block
-from . import util
-from . import generic_io
+from . import asdf, block, generic_io, util
 
 try:
     from astropy.io import fits

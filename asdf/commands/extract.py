@@ -7,7 +7,6 @@ from asdf.fits_embed import AsdfInFits
 
 from .main import Command
 
-
 __all__ = ["extract_file"]
 
 

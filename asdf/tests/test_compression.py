@@ -1,16 +1,13 @@
 import io
-import os
 import lzma
+import os
 
 import numpy as np
-
 import pytest
 
 import asdf
-from asdf import compression
-from asdf import generic_io
-from asdf import config_context
-from asdf.extension import Extension, Compressor
+from asdf import compression, config_context, generic_io
+from asdf.extension import Compressor, Extension
 
 from ..tests import helpers
 

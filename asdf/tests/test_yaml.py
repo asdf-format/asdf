@@ -1,17 +1,13 @@
 import io
-from collections import namedtuple, OrderedDict
+from collections import OrderedDict, namedtuple
 from typing import NamedTuple
 
 import numpy as np
-
 import pytest
-
 import yaml
 
 import asdf
-from asdf import tagged
-from asdf import treeutil
-from asdf import yamlutil
+from asdf import tagged, treeutil, yamlutil
 from asdf.compat.numpycompat import NUMPY_LT_1_14
 from asdf.exceptions import AsdfWarning
 

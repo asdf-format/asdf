@@ -3,8 +3,9 @@ from functools import partial
 
 import pytest
 
+from asdf.commands import diff, main
 from asdf.tests import helpers
-from asdf.commands import main, diff
+
 from . import data as test_data
 
 get_test_data_path = partial(helpers.get_test_data_path, module=test_data)

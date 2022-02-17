@@ -1,18 +1,16 @@
-import os
 import datetime
 import fractions
+import os
 
 import pytest
-
 from jsonschema import ValidationError
 
 import asdf
-from asdf import util
-from asdf import types
-from asdf.tests import helpers
-from asdf.tests.helpers import yaml_to_asdf, assert_no_warnings
-from asdf.tags.core import HistoryEntry
+from asdf import types, util
 from asdf.exceptions import AsdfWarning
+from asdf.tags.core import HistoryEntry
+from asdf.tests import helpers
+from asdf.tests.helpers import assert_no_warnings, yaml_to_asdf
 
 SCHEMA_PATH = os.path.join(os.path.dirname(helpers.__file__), "data")
 

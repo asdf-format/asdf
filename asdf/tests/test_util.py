@@ -2,7 +2,7 @@ import io
 
 import pytest
 
-from asdf import util, generic_io
+from asdf import generic_io, util
 from asdf.extension import BuiltinExtension
 
 

@@ -3,20 +3,17 @@ import os
 import re
 import sys
 
-import pytest
-
+import jsonschema
 import numpy as np
+import pytest
+import yaml
 from numpy import ma
 from numpy.testing import assert_array_equal
 
-import jsonschema
-
-import yaml
-
 import asdf
 from asdf import util
-from asdf.tests import helpers, CustomTestType
 from asdf.tags.core import ndarray
+from asdf.tests import CustomTestType, helpers
 
 from . import data as test_data
 

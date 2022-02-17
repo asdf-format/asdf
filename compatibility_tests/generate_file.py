@@ -1,9 +1,9 @@
 import argparse
 from pathlib import Path
 
-from asdf.versioning import AsdfVersion
-
 from common import generate_file
+
+from asdf.versioning import AsdfVersion
 
 
 def parse_args():

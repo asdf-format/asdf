@@ -6,7 +6,6 @@ import asdf
 from asdf import IntegerType
 from asdf.tests import helpers
 
-
 # Make sure tests are deterministic
 random.seed(0)
 

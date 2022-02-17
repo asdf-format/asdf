@@ -5,12 +5,11 @@ class AsdfObject(dict):
     pass
 
 
-from .constant import ConstantType
-from .ndarray import NDArrayType
 from .complex import ComplexType
-from .integer import IntegerType
+from .constant import ConstantType
 from .external_reference import ExternalArrayReference
-
+from .integer import IntegerType
+from .ndarray import NDArrayType
 
 __all__ = [
     "AsdfObject",

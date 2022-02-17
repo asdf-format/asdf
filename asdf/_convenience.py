@@ -5,9 +5,13 @@ around _display module code.
 import pathlib
 from contextlib import contextmanager
 
-from .asdf import open_asdf, AsdfFile
-from ._display import render_tree, DEFAULT_MAX_ROWS, DEFAULT_MAX_COLS, DEFAULT_SHOW_VALUES
-
+from ._display import (
+    DEFAULT_MAX_COLS,
+    DEFAULT_MAX_ROWS,
+    DEFAULT_SHOW_VALUES,
+    render_tree,
+)
+from .asdf import AsdfFile, open_asdf
 
 __all__ = ["info"]
 

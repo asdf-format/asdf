@@ -1,10 +1,10 @@
-from pkg_resources import iter_entry_points
 import warnings
 
-from .exceptions import AsdfWarning
-from .resource import ResourceMappingProxy
-from .extension import ExtensionProxy
+from pkg_resources import iter_entry_points
 
+from .exceptions import AsdfWarning
+from .extension import ExtensionProxy
+from .resource import ResourceMappingProxy
 
 RESOURCE_MAPPINGS_GROUP = "asdf.resource_mappings"
 EXTENSIONS_GROUP = "asdf.extensions"
