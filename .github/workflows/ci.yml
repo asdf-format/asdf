@@ -74,7 +74,12 @@ jobs:
             python-version: "3.9"
             toxenv: py39-astropydev
 
-          - name: gwcs dev
+          - name: ASDF-Astropy Dev
+            os: ubuntu-latest
+            python-version: "3.9"
+            toxenv: py39-asdfastropydev
+
+          - name: GWCS Dev
             os: ubuntu-latest
             python-version: "3.9"
             toxenv: py39-gwcsdev
@@ -84,7 +89,28 @@ jobs:
             python-version: "3.9"
             toxenv: py39-numpydev
 
-          - name: Pre-release dependencies
+          - name: ASDF-Standard Dev
+            os: ubuntu-latest
+            python-version: "3.9"
+            toxenv: py39-asdfstandarddev
+
+          - name: ASDF-Transform-Schemas Dev
+            os: ubuntu-latest
+            python-version: "3.9"
+            toxenv: py39-asdftransformschemasdev
+
+          - name: ASDF-WCS-Schemas Dev
+            os: ubuntu-latest
+            python-version: "3.9"
+            toxenv: py39-asdfwcsschemasdev
+
+          - name: ASDF-Coordinates-Schemas Dev
+            os: ubuntu-latest
+            python-version: "3.9"
+            toxenv: py39-asdfcoordinatesschemasdev
+
+          # Fail
+          - name: Pre-Release Dependencies
             os: ubuntu-latest
             python-version: "3.9"
             toxenv: prerelease
@@ -124,3 +150,32 @@ jobs:
           pip install tox
       - name: Run tox environment '${{ matrix.toxenv }}'
         run: tox -e ${{ matrix.toxenv }}
+
+  asdf-standard:
+    name: Run asdf-standard tests
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout asdf
+        uses: actions/checkout@v2
+        with:
+          fetch-depth: 0
+          path: asdf
+      - name: Checkout asdf-standard
+        uses: actions/checkout@v2
+        with:
+          fetch-depth: 0
+          repository: asdf-format/asdf-standard
+          ref: master
+          path: asdf-standard
+      - name: Set up Python 3.9
+        uses: actions/setup-python@v2
+        with:
+          python-version: 3.9
+      - name: Install asdf
+        run: cd asdf && pip install .
+      - name: Install asdf-standard
+        run: cd asdf-standard && pip install -e .[test]
+      - name: Pip Freeze
+        run: pip freeze
+      - name: Run asdf-standard tests
+        run: cd asdf-standard && pytest

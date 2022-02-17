@@ -3,17 +3,14 @@ import yaml
 import pytest
 
 import asdf
-from asdf.core._integration import get_resource_mappings, get_extensions
+from asdf.core._integration import get_json_schema_resource_mappings, get_extensions
 
 
 @pytest.mark.parametrize("uri", [
     "http://json-schema.org/draft-04/schema",
-    "http://stsci.edu/schemas/yaml-schema/draft-01",
-    "http://stsci.edu/schemas/asdf/core/asdf-1.1.0",
-    "asdf://asdf-format.org/core/schemas/extension_manifest-1.0.0",
 ])
 def test_get_resource_mappings(uri):
-    mappings = get_resource_mappings()
+    mappings = get_json_schema_resource_mappings()
 
     mapping = next(m for m in mappings if uri in m)
     assert mapping is not None

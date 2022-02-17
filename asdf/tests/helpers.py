@@ -368,14 +368,18 @@ def assert_no_warnings(warning_class=None):
         emitted.
     """
     import pytest
-    with pytest.warns(None) as recorded_warnings:
-        yield
 
-    if warning_class is not None:
+    if warning_class is None:
+        with warnings.catch_warnings():
+            warnings.simplefilter("error")
+
+            yield
+    else:
+        with pytest.warns(Warning) as recorded_warnings:
+            yield
+
         assert not any(isinstance(w.message, warning_class) for w in recorded_warnings), \
             display_warnings(recorded_warnings)
-    else:
-        assert len(recorded_warnings) == 0, display_warnings(recorded_warnings)
 
 
 def assert_extension_correctness(extension):
@@ -425,24 +429,13 @@ def _assert_extension_type_correctness(extension, extension_type, resolver):
             "properties on the related extension ({}).".format(extension_type.__name__)
         )
 
-        try:
-            with generic_io.get_file(schema_location) as f:
-                schema = yaml.safe_load(f.read())
-        except Exception:
-            assert False, (
-                "{} supports tag, {}, ".format(extension_type.__name__, check_type.yaml_tag) +
-                "which resolves to schema at {}, but ".format(schema_location) +
-                "schema cannot be read."
-            )
-
-        assert "tag" in schema, (
-            "{} supports tag, {}, ".format(extension_type.__name__, check_type.yaml_tag) +
-            "but tag resolves to a schema at {} that is ".format(schema_location) +
-            "missing its tag field."
-        )
-
-        assert schema["tag"] == check_type.yaml_tag, (
-            "{} supports tag, {}, ".format(extension_type.__name__, check_type.yaml_tag) +
-            "but tag resolves to a schema at {} that ".format(schema_location) +
-            "describes a different tag: {}".format(schema["tag"])
-        )
+        if schema_location not in asdf.get_config().resource_manager:
+            try:
+                with generic_io.get_file(schema_location) as f:
+                    yaml.safe_load(f.read())
+            except Exception:
+                assert False, (
+                    "{} supports tag, {}, ".format(extension_type.__name__, check_type.yaml_tag) +
+                    "which resolves to schema at {}, but ".format(schema_location) +
+                    "schema cannot be read."
+                )

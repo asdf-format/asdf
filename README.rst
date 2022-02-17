@@ -303,7 +303,7 @@ To install the test dependencies from a source checkout of the repository:
 
 ::
 
-   $ pip install -e .[tests]
+    $ pip install -e ".[tests]"
 
 To run the unit tests from a source checkout of the repository:
 
@@ -316,8 +316,8 @@ the package.
 
 ::
 
-    pip install asdf[tests]
-    pytest --pyargs asdf
+    $ pip install "asdf[tests]"
+    $ pytest --pyargs asdf
 
 It is also possible to run the tests using `tox
 <https://tox.readthedocs.io/en/latest/>`__.

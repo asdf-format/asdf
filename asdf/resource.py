@@ -8,6 +8,7 @@ import fnmatch
 import os
 import pkgutil
 
+
 from .util import get_class_name
 
 
@@ -261,3 +262,9 @@ class JsonschemaResourceMapping(Mapping):
 
     def __repr__(self):
         return "JsonschemaResourceMapping()"
+
+
+def get_json_schema_resource_mappings():
+    return [
+        JsonschemaResourceMapping(),
+    ]
