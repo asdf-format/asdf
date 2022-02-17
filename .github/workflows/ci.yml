@@ -39,11 +39,6 @@ jobs:
             python-version: "3.8"
             toxenv: py38-oldestdeps
 
-          - name: Build documentation
-            os: ubuntu-latest
-            python-version: "3.7"
-            toxenv: py37-legacy
-
           - name: Mac OS Latest
             os: macos-latest
             python-version: "3.9"
