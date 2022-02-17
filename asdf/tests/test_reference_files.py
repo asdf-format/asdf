@@ -1,12 +1,12 @@
 import os
 import sys
+
 import pytest
 
 from asdf import open as asdf_open
 from asdf import versioning
 
 from .helpers import assert_tree_match
-
 
 _REFFILE_PATH = os.path.join(os.path.dirname(__file__), "..", "..", "asdf-standard", "reference_files")
 
