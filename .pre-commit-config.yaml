@@ -18,7 +18,7 @@ repos:
   hooks:
     - id: isort
       args: ["--profile", "black", "--filter-files"]
-      exclude: "(reference_files|asdf/extern/.*)"
+      exclude: "asdf/extern/.*"
 
 - repo: https://github.com/psf/black
   rev: 22.1.0
@@ -31,7 +31,7 @@ repos:
   hooks:
     - id: flake8
       args: ["--count", "--ignore", "E501, E203, W503, W504"]
-      exclude: "(reference_files|asdf/extern/.*)"
+      exclude: "asdf/extern/.*"
 
 - repo: https://github.com/PyCQA/bandit
   rev: 1.7.2
