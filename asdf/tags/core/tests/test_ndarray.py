@@ -3,40 +3,38 @@ import os
 import re
 import sys
 
-import pytest
-
+import jsonschema
 import numpy as np
+import pytest
+import yaml
 from numpy import ma
 from numpy.testing import assert_array_equal
 
-import jsonschema
-
-import yaml
-
 import asdf
 from asdf import util
-from asdf.tests import helpers, CustomTestType
 from asdf.tags.core import ndarray
+from asdf.tests import CustomTestType, helpers
 
 from . import data as test_data
-TEST_DATA_PATH = helpers.get_test_data_path('', module=test_data)
+
+TEST_DATA_PATH = helpers.get_test_data_path("", module=test_data)
 
 
 # These custom types and the custom extension are here purely for the purpose
 # of testing NDArray objects and making sure that they can be validated as part
 # of a nested hierarchy, and not just top-level objects.
 class CustomNdim(CustomTestType):
-    name = 'ndim'
-    organization = 'nowhere.org'
-    standard = 'custom'
-    version = '1.0.0'
+    name = "ndim"
+    organization = "nowhere.org"
+    standard = "custom"
+    version = "1.0.0"
 
 
 class CustomDatatype(CustomTestType):
-    name = 'datatype'
-    organization = 'nowhere.org'
-    standard = 'custom'
-    version = '1.0.0'
+    name = "datatype"
+    organization = "nowhere.org"
+    standard = "custom"
+    version = "1.0.0"
 
 
 class CustomExtension:
@@ -46,84 +44,75 @@ class CustomExtension:
 
     @property
     def tag_mapping(self):
-        return [('tag:nowhere.org:custom',
-                 'http://nowhere.org/schemas/custom{tag_suffix}')]
+        return [("tag:nowhere.org:custom", "http://nowhere.org/schemas/custom{tag_suffix}")]
 
     @property
     def url_mapping(self):
-        return [(
-            'http://nowhere.org/schemas/custom/',
-            util.filepath_to_url(TEST_DATA_PATH) + '/{url_suffix}.yaml')]
+        return [("http://nowhere.org/schemas/custom/", util.filepath_to_url(TEST_DATA_PATH) + "/{url_suffix}.yaml")]
 
 
 def test_sharing(tmpdir):
     x = np.arange(0, 10, dtype=float)
-    tree = {
-        'science_data': x,
-        'subset': x[3:-3],
-        'skipping': x[::2]
-        }
+    tree = {"science_data": x, "subset": x[3:-3], "skipping": x[::2]}
 
     def check_asdf(asdf):
         tree = asdf.tree
 
-        assert_array_equal(tree['science_data'], x)
-        assert_array_equal(tree['subset'], x[3:-3])
-        assert_array_equal(tree['skipping'], x[::2])
+        assert_array_equal(tree["science_data"], x)
+        assert_array_equal(tree["subset"], x[3:-3])
+        assert_array_equal(tree["skipping"], x[::2])
 
-        assert tree['science_data'].ctypes.data == tree['skipping'].ctypes.data
+        assert tree["science_data"].ctypes.data == tree["skipping"].ctypes.data
 
         assert len(list(asdf.blocks.internal_blocks)) == 1
         assert next(asdf.blocks.internal_blocks)._size == 80
 
-        if 'w' in asdf._mode:
-            tree['science_data'][0] = 42
-            assert tree['skipping'][0] == 42
+        if "w" in asdf._mode:
+            tree["science_data"][0] = 42
+            assert tree["skipping"][0] == 42
 
     def check_raw_yaml(content):
-        assert b'!core/ndarray' in content
+        assert b"!core/ndarray" in content
 
-    helpers.assert_roundtrip_tree(tree, tmpdir, asdf_check_func=check_asdf,
-                                  raw_yaml_check_func=check_raw_yaml)
+    helpers.assert_roundtrip_tree(tree, tmpdir, asdf_check_func=check_asdf, raw_yaml_check_func=check_raw_yaml)
 
 
 def test_byteorder(tmpdir):
     tree = {
-        'bigendian': np.arange(0, 10, dtype=str('>f8')),
-        'little': np.arange(0, 10, dtype=str('<f8')),
-        }
+        "bigendian": np.arange(0, 10, dtype=str(">f8")),
+        "little": np.arange(0, 10, dtype=str("<f8")),
+    }
 
     def check_asdf(asdf):
         my_tree = asdf.tree
-        for endian in ('bigendian', 'little'):
+        for endian in ("bigendian", "little"):
             assert my_tree[endian].dtype == tree[endian].dtype
 
-        if sys.byteorder == 'little':
-            assert my_tree['bigendian'].dtype.byteorder == '>'
-            assert my_tree['little'].dtype.byteorder == '='
+        if sys.byteorder == "little":
+            assert my_tree["bigendian"].dtype.byteorder == ">"
+            assert my_tree["little"].dtype.byteorder == "="
         else:
-            assert my_tree['bigendian'].dtype.byteorder == '='
-            assert my_tree['little'].dtype.byteorder == '<'
+            assert my_tree["bigendian"].dtype.byteorder == "="
+            assert my_tree["little"].dtype.byteorder == "<"
 
     def check_raw_yaml(content):
-        assert b'byteorder: little' in content
-        assert b'byteorder: big' in content
+        assert b"byteorder: little" in content
+        assert b"byteorder: big" in content
 
-    helpers.assert_roundtrip_tree(tree, tmpdir, asdf_check_func=check_asdf,
-                                  raw_yaml_check_func=check_raw_yaml)
+    helpers.assert_roundtrip_tree(tree, tmpdir, asdf_check_func=check_asdf, raw_yaml_check_func=check_raw_yaml)
 
 
 def test_all_dtypes(tmpdir):
     tree = {}
-    for byteorder in ('>', '<'):
+    for byteorder in (">", "<"):
         for dtype in ndarray._datatype_names.values():
             # Python 3 can't expose these dtypes in non-native byte
             # order, because it's using the new Python buffer
             # interface.
-            if dtype in ('c32', 'f16'):
+            if dtype in ("c32", "f16"):
                 continue
 
-            if dtype == 'b1':
+            if dtype == "b1":
                 arr = np.array([True, False])
             else:
                 arr = np.arange(0, 10, dtype=str(byteorder + dtype))
@@ -135,11 +124,7 @@ def test_all_dtypes(tmpdir):
 
 def test_dont_load_data():
     x = np.arange(0, 10, dtype=float)
-    tree = {
-        'science_data': x,
-        'subset': x[3:-3],
-        'skipping': x[::2]
-        }
+    tree = {"science_data": x, "subset": x[3:-3], "skipping": x[::2]}
     ff = asdf.AsdfFile(tree)
 
     buff = io.BytesIO()
@@ -147,10 +132,10 @@ def test_dont_load_data():
 
     buff.seek(0)
     with asdf.open(buff) as ff:
-        ff.run_hook('reserve_blocks')
+        ff.run_hook("reserve_blocks")
 
         # repr and str shouldn't load data
-        str(ff.tree['science_data'])
+        str(ff.tree["science_data"])
         repr(ff.tree)
 
         for block in ff.blocks.internal_blocks:
@@ -160,25 +145,23 @@ def test_dont_load_data():
 def test_table_inline(tmpdir):
     table = np.array(
         [(0, 1, (2, 3)), (4, 5, (6, 7))],
-        dtype=[(str('MINE'), np.int8),
-               (str(''), np.float64),
-               (str('arr'), '>i4', (2,))])
+        dtype=[(str("MINE"), np.int8), (str(""), np.float64), (str("arr"), ">i4", (2,))],
+    )
 
-    tree = {'table_data': table}
+    tree = {"table_data": table}
 
     def check_raw_yaml(content):
-        tree = yaml.safe_load(
-            re.sub(br'!core/\S+', b'', content))
+        tree = yaml.safe_load(re.sub(rb"!core/\S+", b"", content))
 
-        assert tree['table_data'] == {
-            'datatype': [
-                {'datatype': 'int8', 'name': 'MINE'},
-                {'datatype': 'float64', 'name': 'f1'},
-                {'datatype': 'int32', 'name': 'arr', 'shape': [2]}
-                ],
-            'data': [[0, 1.0, [2, 3]], [4, 5.0, [6, 7]]],
-            'shape': [2]
-            }
+        assert tree["table_data"] == {
+            "datatype": [
+                {"datatype": "int8", "name": "MINE"},
+                {"datatype": "float64", "name": "f1"},
+                {"datatype": "int32", "name": "arr", "shape": [2]},
+            ],
+            "data": [[0, 1.0, [2, 3]], [4, 5.0, [6, 7]]],
+            "shape": [2],
+        }
 
     with asdf.config_context() as config:
         config.array_inline_threshold = 100
@@ -186,10 +169,10 @@ def test_table_inline(tmpdir):
 
 
 def test_array_inline_threshold_recursive(tmpdir):
-    models = pytest.importorskip('astropy.modeling.models')
+    models = pytest.importorskip("astropy.modeling.models")
 
     aff = models.AffineTransformation2D(matrix=[[1, 2], [3, 4]])
-    tree = {'test': aff}
+    tree = {"test": aff}
 
     def check_asdf(asdf):
         assert len(list(asdf.blocks.internal_blocks)) == 0
@@ -209,34 +192,31 @@ x0: !core/ndarray-1.0.0
 
     with asdf.open(buff) as infile:
         with asdf.AsdfFile() as f:
-            f.tree['a'] = infile.tree['x0']
-            f.tree['b'] = f.tree['a']
+            f.tree["a"] = infile.tree["x0"]
+            f.tree["b"] = f.tree["a"]
             f.write_to(io.BytesIO())
 
 
 def test_table(tmpdir):
     table = np.array(
-        [(0, 1, (2, 3)), (4, 5, (6, 7))],
-        dtype=[(str('MINE'), np.int8),
-               (str(''), '<f8'),
-               (str('arr'), '>i4', (2,))])
+        [(0, 1, (2, 3)), (4, 5, (6, 7))], dtype=[(str("MINE"), np.int8), (str(""), "<f8"), (str("arr"), ">i4", (2,))]
+    )
 
-    tree = {'table_data': table}
+    tree = {"table_data": table}
 
     def check_raw_yaml(content):
-        tree = yaml.safe_load(
-            re.sub(br'!core/\S+', b'', content))
+        tree = yaml.safe_load(re.sub(rb"!core/\S+", b"", content))
 
-        assert tree['table_data'] == {
-            'datatype': [
-                {'byteorder': 'big', 'datatype': 'int8', 'name': 'MINE'},
-                {'byteorder': 'little', 'datatype': 'float64', 'name': 'f1'},
-                {'byteorder': 'big', 'datatype': 'int32', 'name': 'arr', 'shape': [2]}
-                ],
-            'shape': [2],
-            'source': 0,
-            'byteorder': 'big'
-            }
+        assert tree["table_data"] == {
+            "datatype": [
+                {"byteorder": "big", "datatype": "int8", "name": "MINE"},
+                {"byteorder": "little", "datatype": "float64", "name": "f1"},
+                {"byteorder": "big", "datatype": "int32", "name": "arr", "shape": [2]},
+            ],
+            "shape": [2],
+            "source": 0,
+            "byteorder": "big",
+        }
 
     helpers.assert_roundtrip_tree(tree, tmpdir, raw_yaml_check_func=check_raw_yaml)
 
@@ -244,25 +224,29 @@ def test_table(tmpdir):
 def test_table_nested_fields(tmpdir):
     table = np.array(
         [(0, (1, 2)), (4, (5, 6)), (7, (8, 9))],
-        dtype=[(str('A'), '<i8'),
-               (str('B'), [(str('C'), '<i8'), (str('D'), '<i8')])])
+        dtype=[(str("A"), "<i8"), (str("B"), [(str("C"), "<i8"), (str("D"), "<i8")])],
+    )
 
-    tree = {'table_data': table}
+    tree = {"table_data": table}
 
     def check_raw_yaml(content):
-        tree = yaml.safe_load(
-            re.sub(br'!core/\S+', b'', content))
+        tree = yaml.safe_load(re.sub(rb"!core/\S+", b"", content))
 
-        assert tree['table_data'] == {
-            'datatype': [
-                {'datatype': 'int64', 'name': 'A', 'byteorder': 'little'},
-                {'datatype': [
-                    {'datatype': 'int64', 'name': 'C', 'byteorder': 'little'},
-                    {'datatype': 'int64', 'name': 'D', 'byteorder': 'little'}
-                ], 'name': 'B', 'byteorder': 'big'}],
-            'shape': [3],
-            'source': 0,
-            'byteorder': 'big'
+        assert tree["table_data"] == {
+            "datatype": [
+                {"datatype": "int64", "name": "A", "byteorder": "little"},
+                {
+                    "datatype": [
+                        {"datatype": "int64", "name": "C", "byteorder": "little"},
+                        {"datatype": "int64", "name": "D", "byteorder": "little"},
+                    ],
+                    "name": "B",
+                    "byteorder": "big",
+                },
+            ],
+            "shape": [3],
+            "source": 0,
+            "byteorder": "big",
         }
 
     helpers.assert_roundtrip_tree(tree, tmpdir, raw_yaml_check_func=check_raw_yaml)
@@ -270,26 +254,22 @@ def test_table_nested_fields(tmpdir):
 
 def test_inline():
     x = np.arange(0, 10, dtype=float)
-    tree = {
-        'science_data': x,
-        'subset': x[3:-3],
-        'skipping': x[::2]
-        }
+    tree = {"science_data": x, "subset": x[3:-3], "skipping": x[::2]}
 
     buff = io.BytesIO()
 
     ff = asdf.AsdfFile(tree)
-    ff.blocks.set_array_storage(ff.blocks[tree['science_data']], 'inline')
+    ff.blocks.set_array_storage(ff.blocks[tree["science_data"]], "inline")
     ff.write_to(buff)
 
     buff.seek(0)
-    with asdf.open(buff, mode='rw') as ff:
+    with asdf.open(buff, mode="rw") as ff:
         helpers.assert_tree_match(tree, ff.tree)
         assert len(list(ff.blocks.internal_blocks)) == 0
         buff = io.BytesIO()
         ff.write_to(buff)
 
-    assert b'[0.0, 1.0, 2.0, 3.0, 4.0, 5.0, 6.0, 7.0, 8.0, 9.0]' in buff.getvalue()
+    assert b"[0.0, 1.0, 2.0, 3.0, 4.0, 5.0, 6.0, 7.0, 8.0, 9.0]" in buff.getvalue()
 
 
 def test_inline_bare():
@@ -297,21 +277,18 @@ def test_inline_bare():
     buff = helpers.yaml_to_asdf(content)
 
     with asdf.open(buff) as ff:
-        assert_array_equal(ff.tree['arr'], [[1, 2, 3, 4], [5, 6, 7, 8]])
+        assert_array_equal(ff.tree["arr"], [[1, 2, 3, 4], [5, 6, 7, 8]])
 
 
 def test_mask_roundtrip(tmpdir):
     x = np.arange(0, 10, dtype=float)
     m = ma.array(x, mask=x > 5)
-    tree = {
-        'masked_array': m,
-        'unmasked_array': x
-        }
+    tree = {"masked_array": m, "unmasked_array": x}
 
     def check_asdf(asdf):
         tree = asdf.tree
 
-        m = tree['masked_array']
+        m = tree["masked_array"]
 
         print(m)
         print(m.mask)
@@ -320,17 +297,17 @@ def test_mask_roundtrip(tmpdir):
 
     helpers.assert_roundtrip_tree(tree, tmpdir, asdf_check_func=check_asdf)
 
+
 def test_len_roundtrip(tmpdir):
     sequence = np.arange(0, 10, dtype=int)
-    tree = {
-        'sequence': sequence
-        }
+    tree = {"sequence": sequence}
 
     def check_len(asdf):
         s = asdf.tree["sequence"]
         assert len(s) == 10
 
     helpers.assert_roundtrip_tree(tree, tmpdir, asdf_check_func=check_len)
+
 
 def test_mask_arbitrary():
     content = """
@@ -341,9 +318,7 @@ def test_mask_arbitrary():
 
     buff = helpers.yaml_to_asdf(content)
     with asdf.open(buff) as ff:
-        assert_array_equal(
-            ff.tree['arr'].mask,
-            [[False, False, False, True], [False, False, False, False]])
+        assert_array_equal(ff.tree["arr"].mask, [[False, False, False, True], [False, False, False, False]])
 
 
 def test_mask_nan():
@@ -355,24 +330,17 @@ def test_mask_nan():
 
     buff = helpers.yaml_to_asdf(content)
     with asdf.open(buff) as ff:
-        assert_array_equal(
-            ff.tree['arr'].mask,
-            [[False, False, False, True], [False, False, False, False]])
+        assert_array_equal(ff.tree["arr"].mask, [[False, False, False, True], [False, False, False, False]])
 
 
 def test_string(tmpdir):
-    tree = {
-        'ascii': np.array([b'foo', b'bar', b'baz']),
-        'unicode': np.array(['სამეცნიერო', 'данные', 'வடிவம்'])
-        }
+    tree = {"ascii": np.array([b"foo", b"bar", b"baz"]), "unicode": np.array(["სამეცნიერო", "данные", "வடிவம்"])}
 
     helpers.assert_roundtrip_tree(tree, tmpdir)
 
 
 def test_string_table(tmpdir):
-    tree = {
-        'table': np.array([(b'foo', 'სამეცნიერო', '42', '53.0')])
-        }
+    tree = {"table": np.array([(b"foo", "სამეცნიერო", "42", "53.0")])}
 
     helpers.assert_roundtrip_tree(tree, tmpdir)
 
@@ -382,7 +350,7 @@ def test_inline_string():
     buff = helpers.yaml_to_asdf(content)
 
     with asdf.open(buff) as ff:
-        assert_array_equal(ff.tree['arr']._make_array(), ['a', 'b', 'c'])
+        assert_array_equal(ff.tree["arr"]._make_array(), ["a", "b", "c"])
 
 
 def test_inline_structured():
@@ -397,41 +365,43 @@ def test_inline_structured():
     buff = helpers.yaml_to_asdf(content)
 
     with asdf.open(buff) as ff:
-        assert ff.tree['arr']['f1'].dtype.char == 'H'
+        assert ff.tree["arr"]["f1"].dtype.char == "H"
 
 
 def test_simple_table():
     table = np.array(
-        [(10.683262825012207, 41.2674560546875, 0.13, 0.12, 213.916),
-         (10.682777404785156, 41.270111083984375, 0.1, 0.09, 306.825),
-         (10.684737205505371, 41.26903533935547, 0.08, 0.07, 96.656),
-         (10.682382583618164, 41.26792526245117, 0.1, 0.09, 237.145),
-         (10.686025619506836, 41.26922607421875, 0.13, 0.12, 79.581),
-         (10.685656547546387, 41.26955032348633, 0.13, 0.12, 55.219),
-         (10.684028625488281, 41.27090072631836, 0.13, 0.12, 345.269),
-         (10.687610626220703, 41.270301818847656, 0.18, 0.14, 60.192)],
+        [
+            (10.683262825012207, 41.2674560546875, 0.13, 0.12, 213.916),
+            (10.682777404785156, 41.270111083984375, 0.1, 0.09, 306.825),
+            (10.684737205505371, 41.26903533935547, 0.08, 0.07, 96.656),
+            (10.682382583618164, 41.26792526245117, 0.1, 0.09, 237.145),
+            (10.686025619506836, 41.26922607421875, 0.13, 0.12, 79.581),
+            (10.685656547546387, 41.26955032348633, 0.13, 0.12, 55.219),
+            (10.684028625488281, 41.27090072631836, 0.13, 0.12, 345.269),
+            (10.687610626220703, 41.270301818847656, 0.18, 0.14, 60.192),
+        ],
         dtype=[
-            (str('ra'), str('<f4')),
-            (str('dec'), str('<f4')),
-            (str('err_maj'), str('<f8')),
-            (str('err_min'), str('<f8')),
-            (str('angle'), str('<f8'))])
+            (str("ra"), str("<f4")),
+            (str("dec"), str("<f4")),
+            (str("err_maj"), str("<f8")),
+            (str("err_min"), str("<f8")),
+            (str("angle"), str("<f8")),
+        ],
+    )
 
-    tree = {'table': table}
+    tree = {"table": table}
     ff = asdf.AsdfFile(tree)
-    ff.set_array_storage(table, 'inline')
+    ff.set_array_storage(table, "inline")
     ff.write_to(io.BytesIO())
 
 
 def test_unicode_to_list(tmpdir):
-    arr = np.array(['', '𐀠'], dtype='<U')
-    tree = {
-        'unicode': arr
-    }
+    arr = np.array(["", "𐀠"], dtype="<U")
+    tree = {"unicode": arr}
 
     fd = io.BytesIO()
     ff = asdf.AsdfFile(tree)
-    ff.set_array_storage(arr, 'inline')
+    ff.set_array_storage(arr, "inline")
     ff.write_to(fd)
     fd.seek(0)
 
@@ -441,30 +411,28 @@ def test_unicode_to_list(tmpdir):
 
 
 def test_inline_masked_array(tmpdir):
-    testfile = os.path.join(str(tmpdir), 'masked.asdf')
+    testfile = os.path.join(str(tmpdir), "masked.asdf")
 
-    tree = {'test': ma.array([1, 2, 3], mask=[0, 1, 0])}
+    tree = {"test": ma.array([1, 2, 3], mask=[0, 1, 0])}
 
     f = asdf.AsdfFile(tree)
-    f.set_array_storage(tree['test'], 'inline')
+    f.set_array_storage(tree["test"], "inline")
     f.write_to(testfile)
 
     with asdf.open(testfile) as f2:
         assert len(list(f2.blocks.internal_blocks)) == 0
-        assert_array_equal(f.tree['test'], f2.tree['test'])
+        assert_array_equal(f.tree["test"], f2.tree["test"])
 
-    with open(testfile, 'rb') as fd:
-        assert b'null' in fd.read()
+    with open(testfile, "rb") as fd:
+        assert b"null" in fd.read()
 
 
 def test_masked_array_stay_open_bug(tmpdir):
-    psutil = pytest.importorskip('psutil')
+    psutil = pytest.importorskip("psutil")
 
-    tmppath = os.path.join(str(tmpdir), 'masked.asdf')
+    tmppath = os.path.join(str(tmpdir), "masked.asdf")
 
-    tree = {
-        'test': np.ma.array([1, 2, 3], mask=[False, True, False])
-    }
+    tree = {"test": np.ma.array([1, 2, 3], mask=[False, True, False])}
 
     f = asdf.AsdfFile(tree)
     f.write_to(tmppath)
@@ -474,47 +442,42 @@ def test_masked_array_stay_open_bug(tmpdir):
 
     for i in range(3):
         with asdf.open(tmppath) as f2:
-            np.sum(f2.tree['test'])
+            np.sum(f2.tree["test"])
 
     assert len(p.open_files()) <= len(orig_open)
 
 
 def test_masked_array_repr(tmpdir):
-    tmppath = os.path.join(str(tmpdir), 'masked.asdf')
+    tmppath = os.path.join(str(tmpdir), "masked.asdf")
 
-    tree = {
-        'array': np.arange(10),
-        'masked': np.ma.array([1, 2, 3], mask=[False, True, False])
-    }
+    tree = {"array": np.arange(10), "masked": np.ma.array([1, 2, 3], mask=[False, True, False])}
 
     asdf.AsdfFile(tree).write_to(tmppath)
 
     with asdf.open(tmppath) as ff:
-        assert 'masked array' in repr(ff.tree['masked'])
+        assert "masked array" in repr(ff.tree["masked"])
 
 
 def test_operations_on_ndarray_proxies(tmpdir):
-    tmppath = os.path.join(str(tmpdir), 'test.asdf')
+    tmppath = os.path.join(str(tmpdir), "test.asdf")
 
-    tree = {
-        'array': np.arange(10)
-    }
+    tree = {"array": np.arange(10)}
 
     asdf.AsdfFile(tree).write_to(tmppath)
 
     with asdf.open(tmppath) as ff:
-        x = ff.tree['array'] * 2
+        x = ff.tree["array"] * 2
         assert_array_equal(x, np.arange(10) * 2)
 
     with asdf.open(tmppath) as ff:
-        x = -ff.tree['array']
+        x = -ff.tree["array"]
         assert_array_equal(x, -np.arange(10))
 
-    with asdf.open(tmppath, mode='rw') as ff:
-        ff.tree['array'][2] = 4
+    with asdf.open(tmppath, mode="rw") as ff:
+        ff.tree["array"][2] = 4
         x = np.arange(10)
         x[2] = 4
-        assert_array_equal(ff.tree['array'], x)
+        assert_array_equal(ff.tree["array"], x)
 
 
 def test_mask_datatype(tmpdir):
@@ -803,7 +766,7 @@ def test_structured_datatype_validation(tmpdir):
 
 
 def test_string_inline():
-    x = np.array([b'a', b'b', b'c'])
+    x = np.array([b"a", b"b", b"c"])
     l = ndarray.numpy_array_to_list(x)
 
     for entry in l:
@@ -823,35 +786,33 @@ def test_inline_shape_mismatch():
             pass
 
 
-@pytest.mark.xfail(
-    reason="NDArrays with dtype=object are not currently supported")
+@pytest.mark.xfail(reason="NDArrays with dtype=object are not currently supported")
 def test_simple_object_array(tmpdir):
     # See https://github.com/asdf-format/asdf/issues/383 for feature
     # request
     dictdata = np.empty((3, 3), dtype=object)
     for i, _ in enumerate(dictdata.flat):
-        dictdata.flat[i] = {'foo': i*42, 'bar': i**2}
+        dictdata.flat[i] = {"foo": i * 42, "bar": i**2}
 
-    helpers.assert_roundtrip_tree({'bizbaz': dictdata}, tmpdir)
+    helpers.assert_roundtrip_tree({"bizbaz": dictdata}, tmpdir)
 
 
-@pytest.mark.xfail(
-    reason="NDArrays with dtype=object are not currently supported")
+@pytest.mark.xfail(reason="NDArrays with dtype=object are not currently supported")
 def test_tagged_object_array(tmpdir):
     # See https://github.com/asdf-format/asdf/issues/383 for feature
     # request
-    quantity = pytest.importorskip('astropy.units.quantity')
+    quantity = pytest.importorskip("astropy.units.quantity")
 
     objdata = np.empty((3, 3), dtype=object)
     for i, _ in enumerate(objdata.flat):
-        objdata.flat[i] = quantity.Quantity(i, 'angstrom')
+        objdata.flat[i] = quantity.Quantity(i, "angstrom")
 
-    helpers.assert_roundtrip_tree({'bizbaz': objdata}, tmpdir)
+    helpers.assert_roundtrip_tree({"bizbaz": objdata}, tmpdir)
 
 
 def test_broadcasted_array(tmpdir):
-    attrs = np.broadcast_arrays(np.array([10,20]), np.array(10), np.array(10))
-    tree = {'one': attrs[1] }#, 'two': attrs[1], 'three': attrs[2]}
+    attrs = np.broadcast_arrays(np.array([10, 20]), np.array(10), np.array(10))
+    tree = {"one": attrs[1]}  # , 'two': attrs[1], 'three': attrs[2]}
     helpers.assert_roundtrip_tree(tree, tmpdir)
 
 
@@ -859,61 +820,61 @@ def test_broadcasted_offset_array(tmpdir):
     base = np.arange(10)
     offset = base[5:]
     broadcasted = np.broadcast_to(offset, (4, 5))
-    tree = {'broadcasted': broadcasted}
+    tree = {"broadcasted": broadcasted}
     helpers.assert_roundtrip_tree(tree, tmpdir)
 
 
 def test_non_contiguous_base_array(tmpdir):
     base = np.arange(60).reshape(5, 4, 3).transpose(2, 0, 1) * 1
     contiguous = base.transpose(1, 2, 0)
-    tree = {'contiguous': contiguous}
+    tree = {"contiguous": contiguous}
     helpers.assert_roundtrip_tree(tree, tmpdir)
 
 
 def test_fortran_order(tmpdir):
-    array = np.array([[11,12,13], [21,22,23]], order='F')
+    array = np.array([[11, 12, 13], [21, 22, 23]], order="F")
     tree = dict(data=array)
     helpers.assert_roundtrip_tree(tree, tmpdir)
 
 
 def test_readonly(tmpdir):
 
-    tmpfile = str(tmpdir.join('data.asdf'))
+    tmpfile = str(tmpdir.join("data.asdf"))
     tree = dict(data=np.ndarray((100)))
 
     with asdf.AsdfFile(tree) as af:
         # Make sure we're actually writing to an internal array for this test
-        af.write_to(tmpfile, all_array_storage='internal')
+        af.write_to(tmpfile, all_array_storage="internal")
 
     # Opening in read mode (the default) should mean array is readonly
     with asdf.open(tmpfile) as af:
-        assert af['data'].flags.writeable == False
+        assert af["data"].flags.writeable == False
         with pytest.raises(ValueError) as err:
-            af['data'][0] = 41
-            assert str(err) == 'assignment destination is read-only'
+            af["data"][0] = 41
+            assert str(err) == "assignment destination is read-only"
 
     # This should be perfectly fine
-    with asdf.open(tmpfile, mode='rw') as af:
-        assert af['data'].flags.writeable == True
-        af['data'][0] = 40
+    with asdf.open(tmpfile, mode="rw") as af:
+        assert af["data"].flags.writeable == True
+        af["data"][0] = 40
 
     # Copying the arrays makes it safe to write to the underlying array
-    with asdf.open(tmpfile, mode='r', copy_arrays=True) as af:
-        assert af['data'].flags.writeable == True
-        af['data'][0] = 42
+    with asdf.open(tmpfile, mode="r", copy_arrays=True) as af:
+        assert af["data"].flags.writeable == True
+        af["data"][0] = 42
 
 
 def test_readonly_inline(tmpdir):
-    tmpfile = str(tmpdir.join('data.asdf'))
+    tmpfile = str(tmpdir.join("data.asdf"))
     tree = dict(data=np.ndarray((100)))
 
     with asdf.AsdfFile(tree) as af:
-        af.write_to(tmpfile, all_array_storage='inline')
+        af.write_to(tmpfile, all_array_storage="inline")
 
     # This should be safe since it's an inline array
-    with asdf.open(tmpfile, mode='r') as af:
-        assert af['data'].flags.writeable == True
-        af['data'][0] = 42
+    with asdf.open(tmpfile, mode="r") as af:
+        assert af["data"].flags.writeable == True
+        af["data"][0] = 42
 
 
 # Confirm that NDArrayType's internal array is regenerated

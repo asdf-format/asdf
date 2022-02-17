@@ -1,12 +1,12 @@
 #!/usr/bin/env python
 import os
+
 from setuptools import setup
 
-
 package_data = {
-    'asdf.commands.tests.data': ['*'],
-    'asdf.tags.core.tests.data': ['*'],
-    'asdf.tests.data': ['*'],
+    "asdf.commands.tests.data": ["*"],
+    "asdf.tags.core.tests.data": ["*"],
+    "asdf.tests.data": ["*"],
 }
 
 setup(

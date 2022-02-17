@@ -1,6 +1,6 @@
-from copy import deepcopy, copy
+from copy import copy, deepcopy
 
-from asdf.tagged import TaggedList, TaggedDict, TaggedString
+from asdf.tagged import TaggedDict, TaggedList, TaggedString
 
 
 def test_tagged_list_deepcopy():

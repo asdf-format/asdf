@@ -1,16 +1,14 @@
+import http.server
 import os
 import queue
 import shutil
+import socketserver
 import tempfile
 import threading
-import http.server
-import socketserver
-
 
 from ..extern.RangeHTTPServer import RangeHTTPRequestHandler
 
-
-__all__ = ['HTTPServer', 'RangeHTTPServer']
+__all__ = ["HTTPServer", "RangeHTTPServer"]
 
 
 def run_server(tmpdir, handler_class, stop_event, queue):  # pragma: no cover
@@ -20,12 +18,11 @@ def run_server(tmpdir, handler_class, stop_event, queue):  # pragma: no cover
     queue so the main process (the HTTP client) can start making
     requests of it.
     """
+
     class HTTPRequestHandler(handler_class):
         def translate_path(self, path):
             path = handler_class.translate_path(self, path)
-            path = os.path.join(
-                tmpdir,
-                os.path.relpath(path, os.getcwd()))
+            path = os.path.join(tmpdir, os.path.relpath(path, os.getcwd()))
             return path
 
     server = socketserver.TCPServer(("127.0.0.1", 0), HTTPRequestHandler)

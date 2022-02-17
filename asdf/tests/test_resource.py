@@ -1,7 +1,7 @@
 import io
 import sys
-from pathlib import Path
 from collections.abc import Mapping
+from pathlib import Path
 
 if sys.version_info < (3, 9):
     import importlib_resources as importlib
@@ -12,23 +12,23 @@ import pytest
 
 from asdf.resource import (
     DirectoryResourceMapping,
+    JsonschemaResourceMapping,
     ResourceManager,
     ResourceMappingProxy,
-    JsonschemaResourceMapping,
 )
 
 
 def test_directory_resource_mapping(tmpdir):
     tmpdir.mkdir("schemas")
-    (tmpdir/"schemas").mkdir("nested")
-    with (tmpdir/"schemas"/"foo-1.2.3.yaml").open("w") as f:
+    (tmpdir / "schemas").mkdir("nested")
+    with (tmpdir / "schemas" / "foo-1.2.3.yaml").open("w") as f:
         f.write("id: http://somewhere.org/schemas/foo-1.2.3\n")
-    with (tmpdir/"schemas"/"nested"/"bar-4.5.6.yaml").open("w") as f:
+    with (tmpdir / "schemas" / "nested" / "bar-4.5.6.yaml").open("w") as f:
         f.write("id: http://somewhere.org/schemas/nested/bar-4.5.6\n")
-    with (tmpdir/"schemas"/"baz-7.8.9").open("w") as f:
+    with (tmpdir / "schemas" / "baz-7.8.9").open("w") as f:
         f.write("id: http://somewhere.org/schemas/baz-7.8.9\n")
 
-    mapping = DirectoryResourceMapping(str(tmpdir/"schemas"), "http://somewhere.org/schemas")
+    mapping = DirectoryResourceMapping(str(tmpdir / "schemas"), "http://somewhere.org/schemas")
     assert isinstance(mapping, Mapping)
     assert len(mapping) == 1
     assert set(mapping) == {"http://somewhere.org/schemas/foo-1.2.3"}
@@ -39,7 +39,7 @@ def test_directory_resource_mapping(tmpdir):
     assert "http://somewhere.org/schemas/foo-1.2.3.yaml" not in mapping
     assert "http://somewhere.org/schemas/nested/bar-4.5.6" not in mapping
 
-    mapping = DirectoryResourceMapping(str(tmpdir/"schemas"), "http://somewhere.org/schemas", recursive=True)
+    mapping = DirectoryResourceMapping(str(tmpdir / "schemas"), "http://somewhere.org/schemas", recursive=True)
     assert len(mapping) == 2
     assert set(mapping) == {"http://somewhere.org/schemas/foo-1.2.3", "http://somewhere.org/schemas/nested/bar-4.5.6"}
     assert "http://somewhere.org/schemas/foo-1.2.3" in mapping
@@ -50,11 +50,11 @@ def test_directory_resource_mapping(tmpdir):
     assert b"http://somewhere.org/schemas/nested/bar-4.5.6" in mapping["http://somewhere.org/schemas/nested/bar-4.5.6"]
 
     mapping = DirectoryResourceMapping(
-        str(tmpdir/"schemas"),
+        str(tmpdir / "schemas"),
         "http://somewhere.org/schemas",
         recursive=True,
         filename_pattern="baz-*",
-        stem_filename=False
+        stem_filename=False,
     )
 
     assert len(mapping) == 1
@@ -67,14 +67,14 @@ def test_directory_resource_mapping(tmpdir):
     # Check that the repr is reasonable
     # Need to be careful checking the path string because
     # pathlib normalizes Windows paths.
-    assert repr(Path(str(tmpdir/"schemas"))) in repr(mapping)
+    assert repr(Path(str(tmpdir / "schemas"))) in repr(mapping)
     assert "http://somewhere.org/schemas" in repr(mapping)
     assert "recursive=True" in repr(mapping)
     assert "filename_pattern='baz-*'" in repr(mapping)
     assert "stem_filename=False" in repr(mapping)
 
     # Make sure trailing slash is handled correctly
-    mapping = DirectoryResourceMapping(str(tmpdir/"schemas"), "http://somewhere.org/schemas/")
+    mapping = DirectoryResourceMapping(str(tmpdir / "schemas"), "http://somewhere.org/schemas/")
     assert len(mapping) == 1
     assert set(mapping) == {"http://somewhere.org/schemas/foo-1.2.3"}
     assert "http://somewhere.org/schemas/foo-1.2.3" in mapping
@@ -86,6 +86,7 @@ def test_directory_resource_mapping_with_traversable():
     Confirm that DirectoryResourceMapping doesn't use pathlib.Path
     methods outside of the Traversable interface.
     """
+
     class MockTraversable(importlib.abc.Traversable):
         def __init__(self, name, value):
             self._name = name
@@ -136,14 +137,10 @@ def test_directory_resource_mapping_with_traversable():
         def name(self):
             return self._name
 
-    root = MockTraversable("/path/to/some/root", {
-        "foo-1.0.0.yaml": b"foo",
-        "bar-1.0.0.yaml": b"bar",
-        "baz-1.0.0": b"baz",
-        "nested": {
-            "foz-1.0.0.yaml": b"foz"
-        }
-    })
+    root = MockTraversable(
+        "/path/to/some/root",
+        {"foo-1.0.0.yaml": b"foo", "bar-1.0.0.yaml": b"bar", "baz-1.0.0": b"baz", "nested": {"foz-1.0.0.yaml": b"foz"}},
+    )
 
     mapping = DirectoryResourceMapping(root, "http://somewhere.org/schemas")
     assert len(mapping) == 2
@@ -160,7 +157,7 @@ def test_directory_resource_mapping_with_traversable():
     assert set(mapping) == {
         "http://somewhere.org/schemas/foo-1.0.0",
         "http://somewhere.org/schemas/bar-1.0.0",
-        "http://somewhere.org/schemas/nested/foz-1.0.0"
+        "http://somewhere.org/schemas/nested/foz-1.0.0",
     }
     assert "http://somewhere.org/schemas/foo-1.0.0" in mapping
     assert mapping["http://somewhere.org/schemas/foo-1.0.0"] == b"foo"
@@ -170,7 +167,9 @@ def test_directory_resource_mapping_with_traversable():
     assert "http://somewhere.org/schemas/nested/foz-1.0.0" in mapping
     assert mapping["http://somewhere.org/schemas/nested/foz-1.0.0"] == b"foz"
 
-    mapping = DirectoryResourceMapping(root, "http://somewhere.org/schemas", filename_pattern="baz-*", stem_filename=False)
+    mapping = DirectoryResourceMapping(
+        root, "http://somewhere.org/schemas", filename_pattern="baz-*", stem_filename=False
+    )
     assert len(mapping) == 1
     assert set(mapping) == {"http://somewhere.org/schemas/baz-1.0.0"}
     assert "http://somewhere.org/schemas/foo-1.0.0" not in mapping

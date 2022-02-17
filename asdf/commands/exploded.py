@@ -6,34 +6,41 @@ Contains commands for dealing with exploded and imploded forms.
 import os
 
 import asdf
-from .main import Command
+
 from .. import AsdfFile
+from .main import Command
 
-
-__all__ = ['implode', 'explode']
+__all__ = ["implode", "explode"]
 
 
 class Implode(Command):
     @classmethod
     def setup_arguments(cls, subparsers):
         parser = subparsers.add_parser(
-            str("implode"), help="Implode a ASDF file.",
+            str("implode"),
+            help="Implode a ASDF file.",
             description="""Combine a ASDF file, where the data may be
             stored in multiple ASDF files, into a single ASDF
-            file.""")
+            file.""",
+        )
 
+        parser.add_argument("filename", nargs=1, help="""The ASDF file to implode.""")
         parser.add_argument(
-            'filename', nargs=1,
-            help="""The ASDF file to implode.""")
-        parser.add_argument(
-            "--output", "-o", type=str, nargs="?",
+            "--output",
+            "-o",
+            type=str,
+            nargs="?",
             help="""The name of the output file.  If not provided, it
             will be the name of the input file with "_all"
-            appended.""")
+            appended.""",
+        )
         parser.add_argument(
-            "--resolve-references", "-r", action="store_true",
+            "--resolve-references",
+            "-r",
+            action="store_true",
             help="""Resolve all references and store them directly in
-            the output file.""")
+            the output file.""",
+        )
 
         parser.set_defaults(func=cls.run)
 
@@ -62,31 +69,35 @@ def implode(input, output=None, resolve_references=False):
     """
     if output is None:
         base, ext = os.path.splitext(input)
-        output = base + '_all' + '.asdf'
+        output = base + "_all" + ".asdf"
     with asdf.open(input) as ff:
         ff2 = AsdfFile(ff)
         if resolve_references:
             ff2.resolve_references()
-        ff2.write_to(output, all_array_storage='internal')
+        ff2.write_to(output, all_array_storage="internal")
 
 
 class Explode(Command):
     @classmethod
     def setup_arguments(cls, subparsers):
         parser = subparsers.add_parser(
-            str("explode"), help="Explode a ASDF file.",
+            str("explode"),
+            help="Explode a ASDF file.",
             description="""From a single ASDF file, create a set of
             ASDF files where each data block is stored in a separate
-            file.""")
+            file.""",
+        )
 
+        parser.add_argument("filename", nargs=1, help="""The ASDF file to explode.""")
         parser.add_argument(
-            'filename', nargs=1,
-            help="""The ASDF file to explode.""")
-        parser.add_argument(
-            "--output", "-o", type=str, nargs="?",
+            "--output",
+            "-o",
+            type=str,
+            nargs="?",
             help="""The name of the output file.  If not provided, it
             will be the name of the input file with "_exploded"
-            appended.""")
+            appended.""",
+        )
 
         parser.set_defaults(func=cls.run)
 
@@ -112,6 +123,6 @@ def explode(input, output=None):
     """
     if output is None:
         base, ext = os.path.splitext(input)
-        output = base + '_exploded' + '.asdf'
+        output = base + "_exploded" + ".asdf"
     with asdf.open(input) as ff:
-        ff.write_to(output, all_array_storage='external')
+        ff.write_to(output, all_array_storage="external")

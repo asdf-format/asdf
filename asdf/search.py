@@ -1,16 +1,22 @@
 """
 Utilities for searching ASDF trees.
 """
+import builtins
 import inspect
 import re
 import typing
-import builtins
 
-from .util import NotSet
-from ._display import (render_tree, DEFAULT_MAX_ROWS, DEFAULT_MAX_COLS, DEFAULT_SHOW_VALUES,
-                       format_italic, format_faint, _NodeInfo)
+from ._display import (
+    DEFAULT_MAX_COLS,
+    DEFAULT_MAX_ROWS,
+    DEFAULT_SHOW_VALUES,
+    _NodeInfo,
+    format_faint,
+    format_italic,
+    render_tree,
+)
 from .treeutil import get_children, is_container
-
+from .util import NotSet
 
 __all__ = ["AsdfSearchResult"]
 
@@ -19,7 +25,17 @@ class AsdfSearchResult:
     """
     Result of a call to AsdfFile.search.
     """
-    def __init__(self, identifiers, node, filters=[], parent_node=None, max_rows=DEFAULT_MAX_ROWS, max_cols=DEFAULT_MAX_COLS, show_values=DEFAULT_SHOW_VALUES):
+
+    def __init__(
+        self,
+        identifiers,
+        node,
+        filters=[],
+        parent_node=None,
+        max_rows=DEFAULT_MAX_ROWS,
+        max_cols=DEFAULT_MAX_COLS,
+        show_values=DEFAULT_SHOW_VALUES,
+    ):
         self._identifiers = identifiers
         self._node = node
         self._filters = filters
@@ -76,7 +92,7 @@ class AsdfSearchResult:
             parent_node=self._parent_node,
             max_rows=max_rows,
             max_cols=max_cols,
-            show_values=show_values
+            show_values=show_values,
         )
 
     def _maybe_compile_pattern(self, query):
@@ -87,7 +103,7 @@ class AsdfSearchResult:
 
     def _safe_equals(self, a, b):
         try:
-            result = (a == b)
+            result = a == b
             if isinstance(result, bool):
                 return result
             else:
@@ -144,7 +160,12 @@ class AsdfSearchResult:
         AsdfSearchResult
             the subsequent search result
         """
-        if not (type is NotSet or isinstance(type, str) or isinstance(type, typing.Pattern) or isinstance(type, builtins.type)):
+        if not (
+            type is NotSet
+            or isinstance(type, str)
+            or isinstance(type, typing.Pattern)
+            or isinstance(type, builtins.type)
+        ):
             raise TypeError("type must be NotSet, str, regular expression, or instance of builtins.type")
 
         # value and key arguments can be anything, but pattern and str have special behavior
@@ -196,7 +217,7 @@ class AsdfSearchResult:
             parent_node=self._parent_node,
             max_rows=self._max_rows,
             max_cols=self._max_cols,
-            show_values=self._show_values
+            show_values=self._show_values,
         )
 
     def replace(self, value):
@@ -301,7 +322,7 @@ class AsdfSearchResult:
             max_cols=self._max_cols,
             show_values=self._show_values,
             filters=self._filters,
-            identifier=self._identifiers[-1]
+            identifier=self._identifiers[-1],
         )
 
         if len(lines) == 0:
@@ -310,10 +331,12 @@ class AsdfSearchResult:
             return "\n".join(lines)
 
     def __getitem__(self, key):
-        if (isinstance(self._node, dict) or
-            isinstance(self._node, list) or
-            isinstance(self._node, tuple) or
-            _NodeInfo.supports_info(self._node)):
+        if (
+            isinstance(self._node, dict)
+            or isinstance(self._node, list)
+            or isinstance(self._node, tuple)
+            or _NodeInfo.supports_info(self._node)
+        ):
             if _NodeInfo.supports_info(self._node):
                 child = self._node.__asdf_traverse__()[key]
             else:
@@ -343,10 +366,12 @@ def _walk_tree_breadth_first(root_identifiers, root_node, callback):
         next_nodes = []
 
         for identifiers, parent, node in current_nodes:
-            if (isinstance(node, dict) or
-                isinstance(node, list) or
-                isinstance(node, tuple) or
-                _NodeInfo.supports_info(node)) and id(node) in seen:
+            if (
+                isinstance(node, dict)
+                or isinstance(node, list)
+                or isinstance(node, tuple)
+                or _NodeInfo.supports_info(node)
+            ) and id(node) in seen:
                 continue
             if _NodeInfo.supports_info(node):
                 tnode = node.__asdf_traverse__()

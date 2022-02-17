@@ -6,22 +6,19 @@ import io
 import os
 import re
 import shutil
+
 # Marked safe because the editor command is specified by an
 # environment variable that the user controls.
-import subprocess # nosec
+import subprocess  # nosec
 import sys
 import tempfile
+
 import yaml
 
-from .. import constants
-from .. import generic_io
-from .. import schema
-from .. import util
-
-from ..asdf import open_asdf, AsdfFile
+from .. import constants, generic_io, schema, util
+from ..asdf import AsdfFile, open_asdf
 from ..block import BlockManager
 from .main import Command
-
 
 __all__ = ["edit"]
 
@@ -369,4 +366,4 @@ def open_editor(path):
     editor = os.environ.get("EDITOR", DEFAULT_EDITOR)
     # Marked safe because the editor command is specified by an
     # environment variable that the user controls.
-    subprocess.run(f"{editor} {path}", check=True, shell=True) # nosec
+    subprocess.run(f"{editor} {path}", check=True, shell=True)  # nosec

@@ -29,10 +29,9 @@ is not intended to be exposed to the end user.
 """
 
 from collections import UserDict, UserList, UserString
-from copy import deepcopy, copy
+from copy import copy, deepcopy
 
-
-__all__ = ['tag_object', 'get_tag']
+__all__ = ["tag_object", "get_tag"]
 
 
 class Tagged:
@@ -40,6 +39,7 @@ class Tagged:
     Base class of classes that wrap a given object and store a tag
     with it.
     """
+
     pass
 
 
@@ -47,6 +47,7 @@ class TaggedDict(Tagged, UserDict, dict):
     """
     A Python dict with a tag attached.
     """
+
     flow_style = None
     property_order = None
 
@@ -57,9 +58,7 @@ class TaggedDict(Tagged, UserDict, dict):
         self._tag = tag
 
     def __eq__(self, other):
-        return (isinstance(other, TaggedDict) and
-                self.data == other.data and
-                self._tag == other._tag)
+        return isinstance(other, TaggedDict) and self.data == other.data and self._tag == other._tag
 
     def __deepcopy__(self, memo):
         data_copy = deepcopy(self.data, memo)
@@ -74,6 +73,7 @@ class TaggedList(Tagged, UserList, list):
     """
     A Python list with a tag attached.
     """
+
     flow_style = None
 
     def __init__(self, data=None, tag=None):
@@ -83,9 +83,7 @@ class TaggedList(Tagged, UserList, list):
         self._tag = tag
 
     def __eq__(self, other):
-        return (isinstance(other, TaggedList) and
-                self.data == other.data and
-                self._tag == other._tag)
+        return isinstance(other, TaggedList) and self.data == other.data and self._tag == other._tag
 
     def __deepcopy__(self, memo):
         data_copy = deepcopy(self.data, memo)
@@ -100,12 +98,11 @@ class TaggedString(Tagged, UserString, str):
     """
     A Python string with a tag attached.
     """
+
     style = None
 
     def __eq__(self, other):
-        return (isinstance(other, TaggedString) and
-                str.__eq__(self, other) and
-                self._tag == other._tag)
+        return isinstance(other, TaggedString) and str.__eq__(self, other) and self._tag == other._tag
 
 
 def tag_object(tag, instance, ctx=None):
@@ -123,6 +120,7 @@ def tag_object(tag, instance, ctx=None):
         instance._tag = tag
     else:
         from . import AsdfFile, yamlutil
+
         if ctx is None:
             ctx = AsdfFile()
         try:
@@ -137,4 +135,4 @@ def get_tag(instance):
     """
     Get the tag associated with the instance, if there is one.
     """
-    return getattr(instance, '_tag', None)
+    return getattr(instance, "_tag", None)

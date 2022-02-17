@@ -20,6 +20,7 @@ class Stream(ndarray.NDArrayType):
          ...         nbytes = fd.write(
          ...                      np.array([i] * 1024, np.float64).tobytes())
     """
+
     name = None
     types = []
 
@@ -46,17 +47,16 @@ class Stream(ndarray.NDArrayType):
         ctx.blocks.get_streamed_block()
 
         result = {}
-        result['source'] = -1
-        result['shape'] = ['*'] + data._shape
-        result['datatype'] = data._datatype
-        result['byteorder'] = data._byteorder
+        result["source"] = -1
+        result["shape"] = ["*"] + data._shape
+        result["datatype"] = data._datatype
+        result["byteorder"] = data._byteorder
         if data._strides is not None:
-            result['strides'] = data._strides
+            result["strides"] = data._strides
         return result
 
     def __repr__(self):
-        return "Stream({}, {}, strides={})".format(
-            self._shape, self._datatype, self._strides)
+        return "Stream({}, {}, strides={})".format(self._shape, self._datatype, self._strides)
 
     def __str__(self):
         return str(self.__repr__())

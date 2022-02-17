@@ -40,7 +40,7 @@ class IntegerConverter(Converter):
         words = []
         value = abs_value
         while value > 0:
-            words.append(value & 0xffffffff)
+            words.append(value & 0xFFFFFFFF)
             value >>= 32
 
         return {

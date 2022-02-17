@@ -9,13 +9,11 @@ instead, one should use the factory function `get_file`.
 
 import io
 import os
+import pathlib
 import re
 import sys
-import pathlib
 import tempfile
-
-from os import SEEK_SET, SEEK_CUR, SEEK_END
-
+from os import SEEK_CUR, SEEK_END, SEEK_SET
 from urllib.request import url2pathname, urlopen
 
 import numpy as np
@@ -25,13 +23,13 @@ from .exceptions import DelimiterNotFoundError
 from .extern import atomicfile
 from .util import patched_urllib_parse
 
+__all__ = ["get_file", "get_uri", "resolve_uri", "relative_uri"]
 
-__all__ = ['get_file', 'get_uri', 'resolve_uri', 'relative_uri']
 
-
-_local_file_schemes = ['', 'file']
-if sys.platform.startswith('win'):  # pragma: no cover
+_local_file_schemes = ["", "file"]
+if sys.platform.startswith("win"):  # pragma: no cover
     import string
+
     _local_file_schemes.extend(string.ascii_letters)
 
 
@@ -47,13 +45,13 @@ def _check_bytes(fd, mode):
             return False
         return True
 
-    if 'r' in mode:
+    if "r" in mode:
         x = fd.read(0)
         if not isinstance(x, bytes):
             return False
-    elif 'w' in mode:
+    elif "w" in mode:
         try:
-            fd.write(b'')
+            fd.write(b"")
         except TypeError:
             return False
 
@@ -65,12 +63,11 @@ def resolve_uri(base, uri):
     Resolve a URI against a base URI.
     """
     if base is None:
-        base = ''
+        base = ""
     resolved = patched_urllib_parse.urljoin(base, uri)
     parsed = patched_urllib_parse.urlparse(resolved)
-    if parsed.path != '' and not parsed.path.startswith('/'):
-        raise ValueError(
-            "Resolved to relative URL")
+    if parsed.path != "" and not parsed.path.startswith("/"):
+        raise ValueError("Resolved to relative URL")
     return resolved
 
 
@@ -82,21 +79,21 @@ def relative_uri(source, target):
     tu = patched_urllib_parse.urlparse(target)
     extra = list(tu[3:])
     relative = None
-    if tu[0] == '' and tu[1] == '':
+    if tu[0] == "" and tu[1] == "":
         if tu[2] == su[2]:
-            relative = ''
-        elif not tu[2].startswith('/'):
+            relative = ""
+        elif not tu[2].startswith("/"):
             relative = tu[2]
     elif su[0:2] != tu[0:2]:
         return target
 
     if relative is None:
         if tu[2] == su[2]:
-            relative = ''
+            relative = ""
         else:
             relative = os.path.relpath(tu[2], os.path.dirname(su[2]))
-    if relative == '.':
-        relative = ''
+    if relative == ".":
+        relative = ""
     relative = patched_urllib_parse.urlunparse(["", "", relative] + extra)
     return relative
 
@@ -107,8 +104,10 @@ class _TruncatedReader:
     RandomAccessFile and InputStream, though as this is a private
     class, this is not explicitly enforced.
     """
-    def __init__(self, fd, delimiter, readahead_bytes, delimiter_name=None,
-                 include=False, initial_content=b'', exception=True):
+
+    def __init__(
+        self, fd, delimiter, readahead_bytes, delimiter_name=None, include=False, initial_content=b"", exception=True
+    ):
         self._fd = fd
         self._delimiter = delimiter
         self._readahead_bytes = readahead_bytes
@@ -117,7 +116,7 @@ class _TruncatedReader:
         self._delimiter_name = delimiter_name
         self._include = include
         self._initial_content = initial_content
-        self._trailing_content = b''
+        self._trailing_content = b""
         self._exception = exception
         self._past_end = False
 
@@ -125,7 +124,7 @@ class _TruncatedReader:
         if self._past_end:
             content = self._trailing_content[:nbytes]
             if nbytes is None:
-                self._trailing_content = b''
+                self._trailing_content = b""
             else:
                 self._trailing_content = self._trailing_content[nbytes:]
 
@@ -138,10 +137,9 @@ class _TruncatedReader:
             self._initial_content = self._initial_content[nbytes:]
             return content
         else:
-            content = self._fd.peek(nbytes - len(self._initial_content) +
-                                     self._readahead_bytes)
+            content = self._fd.peek(nbytes - len(self._initial_content) + self._readahead_bytes)
 
-        if content == b'':
+        if content == b"":
             if self._exception:
                 raise DelimiterNotFoundError("{0} not found".format(self._delimiter_name))
             self._past_end = True
@@ -160,13 +158,13 @@ class _TruncatedReader:
             raise DelimiterNotFoundError("{0} not found".format(self._delimiter_name))
         else:
             if nbytes:
-                content = content[:nbytes - len(self._initial_content)]
+                content = content[: nbytes - len(self._initial_content)]
 
         self._fd.fast_forward(len(content))
 
         if self._initial_content:
             content = self._initial_content + content
-            self._initial_content = b''
+            self._initial_content = b""
 
         if self._past_end and nbytes:
             self._trailing_content = content[nbytes:]
@@ -185,6 +183,7 @@ class GenericFile(metaclass=util.InheritDocstrings):
     factory function `get_file` should be used to get the correct
     subclass for the given file-like object.
     """
+
     def __init__(self, fd, mode, close=False, uri=None):
         """
         Parameters
@@ -209,11 +208,11 @@ class GenericFile(metaclass=util.InheritDocstrings):
             sources.
         """
         if not _check_bytes(fd, mode):
-            raise ValueError(
-                "File-like object must be opened in binary mode.")
+            raise ValueError("File-like object must be opened in binary mode.")
 
         # can't import at the top level due to circular import
         from .config import get_config
+
         self._asdf_get_config = get_config
 
         self._fd = fd
@@ -229,7 +228,7 @@ class GenericFile(metaclass=util.InheritDocstrings):
 
     def __exit__(self, type, value, traceback):
         if self._close:
-            if hasattr(self._fd, '__exit__'):
+            if hasattr(self._fd, "__exit__"):
                 self._fd.__exit__(type, value, traceback)
             else:
                 self._fd.close()
@@ -247,7 +246,7 @@ class GenericFile(metaclass=util.InheritDocstrings):
                 block_size = io.DEFAULT_BUFFER_SIZE
 
         if block_size <= 0:
-            raise ValueError(f'block_size ({block_size}) must be > 0')
+            raise ValueError(f"block_size ({block_size}) must be > 0")
 
         self._blksize = block_size
 
@@ -278,7 +277,7 @@ class GenericFile(metaclass=util.InheritDocstrings):
         # On Python 3, reading 0 bytes from a socket causes it to stop
         # working, so avoid doing that at all costs.
         if size == 0:
-            return b''
+            return b""
         return self._fd.read(size)
 
     def read_block(self):
@@ -397,13 +396,13 @@ class GenericFile(metaclass=util.InheritDocstrings):
         """
         Returns `True` if the file can be written to.
         """
-        return 'w' in self.mode
+        return "w" in self.mode
 
     def readable(self):
         """
         Returns `True` if the file can be read from.
         """
-        return 'r' in self.mode
+        return "r" in self.mode
 
     def seekable(self):
         """
@@ -424,8 +423,9 @@ class GenericFile(metaclass=util.InheritDocstrings):
         """
         return self._fd.closed
 
-    def read_until(self, delimiter, readahead_bytes, delimiter_name=None,
-                   include=True, initial_content=b'', exception=True):
+    def read_until(
+        self, delimiter, readahead_bytes, delimiter_name=None, include=True, initial_content=b"", exception=True
+    ):
         """
         Reads until a match for a given regular expression is found.
 
@@ -468,9 +468,13 @@ class GenericFile(metaclass=util.InheritDocstrings):
         """
         buff = io.BytesIO()
         reader = self.reader_until(
-            delimiter, readahead_bytes, delimiter_name=delimiter_name,
-            include=include, initial_content=initial_content,
-            exception=exception)
+            delimiter,
+            readahead_bytes,
+            delimiter_name=delimiter_name,
+            include=include,
+            initial_content=initial_content,
+            exception=exception,
+        )
         while True:
             content = reader.read(self.block_size)
             buff.write(content)
@@ -478,9 +482,9 @@ class GenericFile(metaclass=util.InheritDocstrings):
                 break
         return buff.getvalue()
 
-    def reader_until(self, delimiter, readahead_bytes,
-                     delimiter_name=None, include=True,
-                     initial_content=b'', exception=True):
+    def reader_until(
+        self, delimiter, readahead_bytes, delimiter_name=None, include=True, initial_content=b"", exception=True
+    ):
         """
         Returns a readable file-like object that treats the given
         delimiter as the end-of-file.
@@ -517,8 +521,9 @@ class GenericFile(metaclass=util.InheritDocstrings):
         """
         raise NotImplementedError()
 
-    def seek_until(self, delimiter, readahead_bytes, delimiter_name=None,
-                   include=True, initial_content=b'', exception=True):
+    def seek_until(
+        self, delimiter, readahead_bytes, delimiter_name=None, include=True, initial_content=b"", exception=True
+    ):
         """
         Seeks in the file until a match for a given regular expression
         is found.  This is similar to ``read_until``, except the
@@ -561,11 +566,15 @@ class GenericFile(metaclass=util.InheritDocstrings):
             before the end of the file.
         """
         reader = self.reader_until(
-            delimiter, readahead_bytes, delimiter_name=delimiter_name,
-            include=include, initial_content=initial_content,
-            exception=True)
+            delimiter,
+            readahead_bytes,
+            delimiter_name=delimiter_name,
+            include=include,
+            initial_content=initial_content,
+            exception=True,
+        )
         try:
-            while reader.read(self.block_size) != b'':
+            while reader.read(self.block_size) != b"":
                 pass
             return True
         except DelimiterNotFoundError as e:
@@ -584,7 +593,7 @@ class GenericFile(metaclass=util.InheritDocstrings):
         """
         Write nbytes of zeros.
         """
-        blank_data = b'\0' * self.block_size
+        blank_data = b"\0" * self.block_size
         for i in range(0, nbytes, self.block_size):
             length = min(nbytes - i, self.block_size)
             self.write(blank_data[:length])
@@ -629,6 +638,7 @@ class GenericWrapper:
     A wrapper around a `GenericFile` object so that closing only
     happens in the very outer layer.
     """
+
     def __init__(self, fd):
         self._fd = fd
 
@@ -646,22 +656,30 @@ class RandomAccessFile(GenericFile):
     """
     The base class of file types that support random access.
     """
+
     def seekable(self):
         return True
 
-    def reader_until(self, delimiter, readahead_bytes, delimiter_name=None,
-                     include=True, initial_content=b'', exception=True):
+    def reader_until(
+        self, delimiter, readahead_bytes, delimiter_name=None, include=True, initial_content=b"", exception=True
+    ):
         return _TruncatedReader(
-            self, delimiter, readahead_bytes, delimiter_name=delimiter_name,
-            include=include, initial_content=initial_content,
-            exception=exception)
+            self,
+            delimiter,
+            readahead_bytes,
+            delimiter_name=delimiter_name,
+            include=include,
+            initial_content=initial_content,
+            exception=exception,
+        )
 
     def fast_forward(self, size):
         if size < 0:
             self.seek(0, SEEK_END)
         self.seek(size, SEEK_CUR)
 
-    if sys.platform.startswith('win'):  # pragma: no cover
+    if sys.platform.startswith("win"):  # pragma: no cover
+
         def truncate(self, size=None):
             # ftruncate doesn't work on an open file in Windows.  The
             # best we can do is clear the extra bytes or add extra
@@ -679,13 +697,15 @@ class RandomAccessFile(GenericFile):
             else:
                 nbytes = 0
 
-            block = b'\0' * self.block_size
+            block = b"\0" * self.block_size
             while nbytes > 0:
-                self.write(block[:min(nbytes, self.block_size)])
+                self.write(block[: min(nbytes, self.block_size)])
                 nbytes -= self.block_size
 
             self.seek(size, SEEK_SET)
+
     else:
+
         def truncate(self, size=None):
             if size is None:
                 self._fd.truncate()
@@ -698,17 +718,17 @@ class RealFile(RandomAccessFile):
     """
     Handles "real" files on a filesystem.
     """
+
     def __init__(self, fd, mode, close=False, uri=None):
         super(RealFile, self).__init__(fd, mode, close=close, uri=uri)
 
         stat = os.fstat(fd.fileno())
         self._size = stat.st_size
-        if (uri is None and
-            isinstance(fd.name, str)):
+        if uri is None and isinstance(fd.name, str):
             self._uri = util.filepath_to_url(os.path.abspath(fd.name))
 
     def write_array(self, arr):
-        if isinstance(arr, np.memmap) and getattr(arr, 'fd', None) is self:
+        if isinstance(arr, np.memmap) and getattr(arr, "fd", None) is self:
             arr.flush()
             self.fast_forward(len(arr.data))
         else:
@@ -721,12 +741,11 @@ class RealFile(RandomAccessFile):
         return True
 
     def memmap_array(self, offset, size):
-        if 'w' in self._mode:
-            mode = 'r+'
+        if "w" in self._mode:
+            mode = "r+"
         else:
-            mode = 'r'
-        mmap = np.memmap(
-            self._fd, mode=mode, offset=offset, shape=size)
+            mode = "r"
+        mmap = np.memmap(self._fd, mode=mode, offset=offset, shape=size)
         mmap.fd = self
         return mmap
 
@@ -739,6 +758,7 @@ class MemoryIO(RandomAccessFile):
     Handles random-access memory buffers, mainly `io.BytesIO` and
     `StringIO.StringIO`.
     """
+
     def __init__(self, fd, mode, uri=None):
         super(MemoryIO, self).__init__(fd, mode, uri=uri)
         tell = fd.tell()
@@ -760,10 +780,11 @@ class InputStream(GenericFile):
     """
     Handles an input stream, such as stdin.
     """
-    def __init__(self, fd, mode='r', close=False, uri=None):
+
+    def __init__(self, fd, mode="r", close=False, uri=None):
         super(InputStream, self).__init__(fd, mode, close=close, uri=uri)
         self._fd = fd
-        self._buffer = b''
+        self._buffer = b""
 
     def peek(self, size=-1):
         if size < 0:
@@ -778,7 +799,7 @@ class InputStream(GenericFile):
         # On Python 3, reading 0 bytes from a socket causes it to stop
         # working, so avoid doing that at all costs.
         if size == 0:
-            return b''
+            return b""
 
         len_buffer = len(self._buffer)
         if len_buffer == 0:
@@ -786,25 +807,31 @@ class InputStream(GenericFile):
         elif size < 0:
             self._buffer += self._fd.read()
             buffer = self._buffer
-            self._buffer = b''
+            self._buffer = b""
             return buffer
         elif len_buffer < size:
             if len_buffer < size:
                 self._buffer += self._fd.read(size - len(self._buffer))
             buffer = self._buffer
-            self._buffer = b''
+            self._buffer = b""
             return buffer
         else:
             buffer = self._buffer[:size]
             self._buffer = self._buffer[size:]
             return buffer
 
-    def reader_until(self, delimiter, readahead_bytes, delimiter_name=None,
-                     include=True, initial_content=b'', exception=True):
+    def reader_until(
+        self, delimiter, readahead_bytes, delimiter_name=None, include=True, initial_content=b"", exception=True
+    ):
         return _TruncatedReader(
-            self, delimiter, readahead_bytes, delimiter_name=delimiter_name,
-            include=include, initial_content=initial_content,
-            exception=exception)
+            self,
+            delimiter,
+            readahead_bytes,
+            delimiter_name=delimiter_name,
+            include=include,
+            initial_content=initial_content,
+            exception=exception,
+        )
 
     def fast_forward(self, size):
         if size >= 0 and len(self.read(size)) != size:
@@ -822,7 +849,7 @@ class InputStream(GenericFile):
             result = np.frombuffer(data, np.uint8, size)
             # When creating an array from a buffer, it is read-only.
             # If we need a read/write array, we have to copy it.
-            if 'w' in self._mode:
+            if "w" in self._mode:
                 result = result.copy()
             return result
 
@@ -831,8 +858,9 @@ class OutputStream(GenericFile):
     """
     Handles an output stream, such as stdout.
     """
+
     def __init__(self, fd, close=False, uri=None):
-        super(OutputStream, self).__init__(fd, 'w', close=close, uri=uri)
+        super(OutputStream, self).__init__(fd, "w", close=close, uri=uri)
         self._fd = fd
 
     def fast_forward(self, size):
@@ -875,7 +903,7 @@ def _http_to_temp(init, mode, uri=None):
 
     try:
         # This method is only called with http and https schemes:
-        with urlopen(init) as response: # nosec
+        with urlopen(init) as response:  # nosec
             chunk = response.read(block_size)
             while len(chunk) > 0:
                 fd.write(chunk)
@@ -901,10 +929,10 @@ def get_uri(file_obj):
         return file_obj.uri
 
     # A catch-all for types from Python's io module that have names
-    return getattr(file_obj, 'name', '')
+    return getattr(file_obj, "name", "")
 
 
-def get_file(init, mode='r', uri=None, close=False):
+def get_file(init, mode="r", uri=None, close=False):
     """
     Returns a `GenericFile` instance suitable for wrapping the given
     object `init`.
@@ -958,40 +986,37 @@ def get_file(init, mode='r', uri=None, close=False):
     ------
     ValueError, TypeError, IOError
     """
-    if mode not in ('r', 'w', 'rw'):
+    if mode not in ("r", "w", "rw"):
         raise ValueError("mode must be 'r', 'w' or 'rw'")
 
     if init in (sys.__stdout__, sys.__stdin__, sys.__stderr__):
-        init = os.fdopen(init.fileno(), init.mode + 'b')
+        init = os.fdopen(init.fileno(), init.mode + "b")
 
     if isinstance(init, (GenericFile, GenericWrapper)):
         if mode not in init.mode:
-            raise ValueError(
-                "File is opened as '{0}', but '{1}' was requested".format(
-                    init.mode, mode))
+            raise ValueError("File is opened as '{0}', but '{1}' was requested".format(init.mode, mode))
         return GenericWrapper(init)
 
     elif isinstance(init, (str, pathlib.Path)):
         parsed = patched_urllib_parse.urlparse(str(init))
-        if parsed.scheme in ['http', 'https']:
-            if 'w' in mode:
-                raise ValueError(
-                    "HTTP connections can not be opened for writing")
+        if parsed.scheme in ["http", "https"]:
+            if "w" in mode:
+                raise ValueError("HTTP connections can not be opened for writing")
             return _http_to_temp(init, mode, uri=uri)
         elif parsed.scheme in _local_file_schemes:
-            if mode == 'rw':
-                realmode = 'r+b'
+            if mode == "rw":
+                realmode = "r+b"
             else:
-                realmode = mode + 'b'
+                realmode = mode + "b"
             # Windows paths are not URIs, and so they should not be parsed as
             # such. Otherwise, the drive component of the path can get lost.
             # This is not an ideal solution, but we can't use pathlib here
             # because it doesn't handle URIs properly.
-            if sys.platform.startswith('win') and parsed.scheme in string.ascii_letters:
+            if sys.platform.startswith("win") and parsed.scheme in string.ascii_letters:
                 realpath = str(init)
             else:
                 realpath = url2pathname(parsed.path)
-            if mode == 'w':
+            if mode == "w":
                 fd = atomicfile.atomic_open(realpath, realmode)
             else:
                 fd = open(realpath, realmode)
@@ -1002,20 +1027,14 @@ def get_file(init, mode='r', uri=None, close=False):
         return MemoryIO(init, mode, uri=uri)
 
     elif isinstance(init, io.StringIO):
-        raise TypeError(
-            "io.StringIO objects are not supported.  Use io.BytesIO instead.")
+        raise TypeError("io.StringIO objects are not supported.  Use io.BytesIO instead.")
 
     elif isinstance(init, io.IOBase):
-        if (('r' in mode and not init.readable()) or
-            ('w' in mode and not init.writable())):
-            raise ValueError(
-                "File is opened as '{0}', but '{1}' was requested".format(
-                    init.mode, mode))
+        if ("r" in mode and not init.readable()) or ("w" in mode and not init.writable()):
+            raise ValueError("File is opened as '{0}', but '{1}' was requested".format(init.mode, mode))
 
         if init.seekable():
-            if isinstance(init, (io.BufferedReader,
-                                 io.BufferedWriter,
-                                 io.BufferedRandom)):
+            if isinstance(init, (io.BufferedReader, io.BufferedWriter, io.BufferedRandom)):
                 init2 = init.raw
             else:
                 init2 = init
@@ -1026,38 +1045,28 @@ def get_file(init, mode='r', uri=None, close=False):
             result._secondary_fd = init
             return result
         else:
-            if mode == 'w':
+            if mode == "w":
                 return OutputStream(init, uri=uri, close=close)
-            elif mode == 'r':
+            elif mode == "r":
                 return InputStream(init, mode, uri=uri, close=close)
             else:
-                raise ValueError(
-                    "File '{0}' could not be opened in 'rw' mode".format(init))
+                raise ValueError("File '{0}' could not be opened in 'rw' mode".format(init))
 
-    elif mode == 'w' and (
-          hasattr(init, 'write') and
-          hasattr(init, 'seek') and
-          hasattr(init, 'tell')):
+    elif mode == "w" and (hasattr(init, "write") and hasattr(init, "seek") and hasattr(init, "tell")):
         return MemoryIO(init, mode, uri=uri)
 
-    elif mode == 'r' and (
-          hasattr(init, 'read') and
-          hasattr(init, 'seek') and
-          hasattr(init, 'tell')):
+    elif mode == "r" and (hasattr(init, "read") and hasattr(init, "seek") and hasattr(init, "tell")):
         return MemoryIO(init, mode, uri=uri)
 
-    elif mode == 'rw' and (
-          hasattr(init, 'read') and
-          hasattr(init, 'write') and
-          hasattr(init, 'seek') and
-          hasattr(init, 'tell')):
+    elif mode == "rw" and (
+        hasattr(init, "read") and hasattr(init, "write") and hasattr(init, "seek") and hasattr(init, "tell")
+    ):
         return MemoryIO(init, mode, uri=uri)
 
-    elif mode == 'w' and hasattr(init, 'write'):
+    elif mode == "w" and hasattr(init, "write"):
         return OutputStream(init, uri=uri, close=close)
 
-    elif mode == 'r' and hasattr(init, 'read'):
+    elif mode == "r" and hasattr(init, "read"):
         return InputStream(init, mode, uri=uri, close=close)
 
-    raise ValueError("Can't handle '{0}' as a file for mode '{1}'".format(
-        init, mode))
+    raise ValueError("Can't handle '{0}' as a file for mode '{1}'".format(init, mode))

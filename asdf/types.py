@@ -1,25 +1,22 @@
-import re
 import importlib
-
+import re
 from copy import copy
 
-from . import tagged
-from . import util
-from .versioning import AsdfVersion, AsdfSpec
+from . import tagged, util
+from .versioning import AsdfSpec, AsdfVersion
 
-
-__all__ = ['format_tag', 'CustomType']
+__all__ = ["format_tag", "CustomType"]
 
 
 # regex used to parse module name from optional version string
-MODULE_RE = re.compile(r'([a-zA-Z]+)(-(\d+\.\d+\.\d+))?')
+MODULE_RE = re.compile(r"([a-zA-Z]+)(-(\d+\.\d+\.\d+))?")
 
 
 def format_tag(organization, standard, version, tag_name):
     """
     Format a YAML tag.
     """
-    tag = 'tag:{0}:{1}/{2}'.format(organization, standard, tag_name)
+    tag = "tag:{0}:{1}/{2}".format(organization, standard, tag_name)
 
     if version is None:
         return tag
@@ -36,9 +33,10 @@ _all_asdftypes = set()
 def _from_tree_tagged_missing_requirements(cls, tree, ctx):
     # A special version of AsdfType.from_tree_tagged for when the
     # required dependencies for an AsdfType are missing.
-    plural, verb = ('s', 'are') if len(cls.requires) else ('', 'is')
+    plural, verb = ("s", "are") if len(cls.requires) else ("", "is")
     message = "{0} package{1} {2} required to instantiate '{3}'".format(
-        util.human_list(cls.requires), plural, verb, tree._tag)
+        util.human_list(cls.requires), plural, verb, tree._tag
+    )
     # This error will be handled by yamlutil.tagged_tree_to_custom_tree, which
     # will cause a warning to be issued indicating that the tree failed to be
     # converted.
@@ -49,6 +47,7 @@ class ExtensionTypeMeta(type):
     """
     Custom class constructor for tag types.
     """
+
     _import_cache = {}
 
     @classmethod
@@ -62,7 +61,7 @@ class ExtensionTypeMeta(type):
                     return False
             try:
                 module = importlib.import_module(modname)
-                if version and hasattr(module, '__version__'):
+                if version and hasattr(module, "__version__"):
                     if module.__version__ < version:
                         has_module = False
             except ImportError:
@@ -84,41 +83,40 @@ class ExtensionTypeMeta(type):
 
     @property
     def versioned_siblings(mcls):
-        return getattr(mcls, '__versioned_siblings') or []
+        return getattr(mcls, "__versioned_siblings") or []
 
     def __new__(mcls, name, bases, attrs):
-        requires = mcls._find_in_bases(attrs, bases, 'requires', [])
+        requires = mcls._find_in_bases(attrs, bases, "requires", [])
         if not mcls._has_required_modules(requires):
-            attrs['from_tree_tagged'] = classmethod(
-                _from_tree_tagged_missing_requirements)
-            attrs['types'] = []
-            attrs['has_required_modules'] = False
+            attrs["from_tree_tagged"] = classmethod(_from_tree_tagged_missing_requirements)
+            attrs["types"] = []
+            attrs["has_required_modules"] = False
         else:
-            attrs['has_required_modules'] = True
-            types = mcls._find_in_bases(attrs, bases, 'types', [])
+            attrs["has_required_modules"] = True
+            types = mcls._find_in_bases(attrs, bases, "types", [])
             new_types = []
             for typ in types:
                 if isinstance(typ, str):
                     typ = util.resolve_name(typ)
                 new_types.append(typ)
-            attrs['types'] = new_types
+            attrs["types"] = new_types
 
         cls = super(ExtensionTypeMeta, mcls).__new__(mcls, name, bases, attrs)
 
-        if hasattr(cls, 'version'):
+        if hasattr(cls, "version"):
             if not isinstance(cls.version, (AsdfVersion, AsdfSpec)):
                 cls.version = AsdfVersion(cls.version)
 
-        if hasattr(cls, 'name'):
+        if hasattr(cls, "name"):
             if isinstance(cls.name, str):
-                if 'yaml_tag' not in attrs:
+                if "yaml_tag" not in attrs:
                     cls.yaml_tag = cls.make_yaml_tag(cls.name)
             elif isinstance(cls.name, list):
                 pass
             elif cls.name is not None:
                 raise TypeError("name must be string or list")
 
-        if hasattr(cls, 'supported_versions'):
+        if hasattr(cls, "supported_versions"):
             if not isinstance(cls.supported_versions, (list, set)):
                 cls.supported_versions = [cls.supported_versions]
             supported_versions = set()
@@ -134,12 +132,11 @@ class ExtensionTypeMeta(type):
             for version in cls.supported_versions:
                 if version != cls.version:
                     new_attrs = copy(attrs)
-                    new_attrs['version'] = version
-                    new_attrs['supported_versions'] = set()
-                    new_attrs['_latest_version'] = cls.version
-                    siblings.append(
-                       ExtensionTypeMeta. __new__(mcls, name, bases, new_attrs))
-            setattr(cls, '__versioned_siblings', siblings)
+                    new_attrs["version"] = version
+                    new_attrs["supported_versions"] = set()
+                    new_attrs["_latest_version"] = cls.version
+                    siblings.append(ExtensionTypeMeta.__new__(mcls, name, bases, new_attrs))
+            setattr(cls, "__versioned_siblings", siblings)
 
         return cls
 
@@ -149,6 +146,7 @@ class AsdfTypeMeta(ExtensionTypeMeta):
     Keeps track of `AsdfType` subclasses that are created, and stores them in
     `AsdfTypeIndex`.
     """
+
     def __new__(mcls, name, bases, attrs):
         cls = super(AsdfTypeMeta, mcls).__new__(mcls, name, bases, attrs)
         # Classes using this metaclass get added to the list of built-in
@@ -166,9 +164,10 @@ class ExtensionType:
     Besides the attributes defined below, most subclasses will also
     override `to_tree` and `from_tree`.
     """
+
     name = None
-    organization = 'stsci.edu'
-    standard = 'asdf'
+    organization = "stsci.edu"
+    standard = "asdf"
     version = (1, 0, 0)
     supported_versions = set()
     types = []
@@ -217,11 +216,7 @@ class ExtensionType:
         -------
             `str` representing the YAML tag
         """
-        return format_tag(
-            cls.organization,
-            cls.standard,
-            cls.version if versioned else None,
-            name)
+        return format_tag(cls.organization, cls.standard, cls.version if versioned else None, name)
 
     @classmethod
     def tag_base(cls):
@@ -235,7 +230,7 @@ class ExtensionType:
         -------
             `str` representing the base of the YAML tag
         """
-        return cls.make_yaml_tag('', versioned=False)
+        return cls.make_yaml_tag("", versioned=False)
 
     @classmethod
     def to_tree(cls, node, ctx):
@@ -390,6 +385,7 @@ class AsdfType(ExtensionType, metaclass=AsdfTypeMeta):
     for user-defined extensions.
     """
 
+
 class CustomType(ExtensionType, metaclass=ExtensionTypeMeta):
     """
     Base class for all user-defined types.
@@ -405,12 +401,12 @@ class CustomType(ExtensionType, metaclass=ExtensionTypeMeta):
     `str` or `list`: The name of the type.
     """
 
-    organization = 'stsci.edu'
+    organization = "stsci.edu"
     """
     `str`: The organization responsible for the type.
     """
 
-    standard = 'asdf'
+    standard = "asdf"
     """
     `str`: The standard the type is defined in.
     """

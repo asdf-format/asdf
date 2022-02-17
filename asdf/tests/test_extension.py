@@ -1,28 +1,25 @@
 import pytest
 from packaging.specifiers import SpecifierSet
 
+from asdf import AsdfFile, config_context
+from asdf.exceptions import AsdfDeprecationWarning, ValidationError
 from asdf.extension import (
-    Extension,
-    ExtensionProxy,
-    ManifestExtension,
-    ExtensionManager,
-    get_cached_extension_manager,
-    TagDefinition,
-    Converter,
-    ConverterProxy,
-    Compressor,
-    Validator,
     AsdfExtension,
     BuiltinExtension,
-    get_cached_asdf_extension_list
+    Compressor,
+    Converter,
+    ConverterProxy,
+    Extension,
+    ExtensionManager,
+    ExtensionProxy,
+    ManifestExtension,
+    TagDefinition,
+    Validator,
+    get_cached_asdf_extension_list,
+    get_cached_extension_manager,
 )
-
-from asdf.exceptions import AsdfDeprecationWarning
-from asdf.exceptions import ValidationError
-from asdf import config_context, AsdfFile
-from asdf.types import CustomType
-
 from asdf.tests.helpers import assert_extension_correctness
+from asdf.types import CustomType
 
 
 def test_builtin_extension():
@@ -128,11 +125,11 @@ class FullConverter(MinimumConverter):
 
 class MinimalCompressor(Compressor):
     def compress(data):
-        return b''
+        return b""
 
     @property
     def label(self):
-        return b'mini'
+        return b"mini"
 
 
 class MinimalValidator(Validator):
@@ -211,25 +208,16 @@ def test_extension_proxy():
     assert subclassed_proxy.class_name == "asdf.tests.test_extension.MinimumExtensionSubclassed"
 
     # Test with all properties present:
-    converters = [
-        MinimumConverter(
-            tags=["asdf://somewhere.org/extensions/full/tags/foo-*"],
-            types=[]
-        )
-    ]
-    validators = [
-        MinimalValidator()
-    ]
-    compressors = [
-        MinimalCompressor()
-    ]
+    converters = [MinimumConverter(tags=["asdf://somewhere.org/extensions/full/tags/foo-*"], types=[])]
+    validators = [MinimalValidator()]
+    compressors = [MinimalCompressor()]
     extension = FullExtension(
         converters=converters,
         compressors=compressors,
         validators=validators,
         asdf_standard_requirement=">=1.4.0",
         tags=["asdf://somewhere.org/extensions/full/tags/foo-1.0"],
-        legacy_class_names=["foo.extensions.SomeOldExtensionClass"]
+        legacy_class_names=["foo.extensions.SomeOldExtensionClass"],
     )
     proxy = ExtensionProxy(extension, package_name="foo", package_version="1.2.3")
 
@@ -292,7 +280,7 @@ def test_extension_proxy_tags():
         foo_tag_uri,
         schema_uris="asdf://somewhere.org/extensions/full/schemas/foo-1.0",
         title="Some tag title",
-        description="Some tag description"
+        description="Some tag description",
     )
 
     bar_tag_uri = "asdf://somewhere.org/extensions/full/tags/bar-1.0"
@@ -300,7 +288,7 @@ def test_extension_proxy_tags():
         bar_tag_uri,
         schema_uris="asdf://somewhere.org/extensions/full/schemas/bar-1.0",
         title="Some other tag title",
-        description="Some other tag description"
+        description="Some other tag description",
     )
 
     # The converter should return only the tags
@@ -387,11 +375,9 @@ def test_extension_manager():
         tags=[
             "asdf://somewhere.org/extensions/full/tags/baz-*",
         ],
-        types=[
-            BazType
-        ],
+        types=[BazType],
     )
-    converter3= FullConverter(
+    converter3 = FullConverter(
         tags=[
             "asdf://somewhere.org/extensions/full/tags/foo-*",
         ],
@@ -405,13 +391,13 @@ def test_extension_manager():
         tags=[
             "asdf://somewhere.org/extensions/full/tags/foo-1.0",
             "asdf://somewhere.org/extensions/full/tags/baz-1.0",
-        ]
+        ],
     )
     extension2 = FullExtension(
         converters=[converter3],
-        tags = [
+        tags=[
             "asdf://somewhere.org/extensions/full/tags/foo-1.0",
-        ]
+        ],
     )
 
     manager = ExtensionManager([extension1, extension2])
@@ -428,8 +414,14 @@ def test_extension_manager():
     assert manager.handles_type(BarType) is True
     assert manager.handles_type(BazType) is True
 
-    assert manager.get_tag_definition("asdf://somewhere.org/extensions/full/tags/foo-1.0").tag_uri == "asdf://somewhere.org/extensions/full/tags/foo-1.0"
-    assert manager.get_tag_definition("asdf://somewhere.org/extensions/full/tags/baz-1.0").tag_uri == "asdf://somewhere.org/extensions/full/tags/baz-1.0"
+    assert (
+        manager.get_tag_definition("asdf://somewhere.org/extensions/full/tags/foo-1.0").tag_uri
+        == "asdf://somewhere.org/extensions/full/tags/foo-1.0"
+    )
+    assert (
+        manager.get_tag_definition("asdf://somewhere.org/extensions/full/tags/baz-1.0").tag_uri
+        == "asdf://somewhere.org/extensions/full/tags/baz-1.0"
+    )
     with pytest.raises(KeyError):
         manager.get_tag_definition("asdf://somewhere.org/extensions/full/tags/bar-1.0")
 
@@ -472,12 +464,18 @@ def test_tag_definition():
 
     tag_def = TagDefinition(
         "asdf://somewhere.org/extensions/foo/tags/foo-1.0",
-        schema_uris=["asdf://somewhere.org/extensions/foo/schemas/foo-1.0", "asdf://somewhere.org/extensions/foo/schemas/base-1.0"],
+        schema_uris=[
+            "asdf://somewhere.org/extensions/foo/schemas/foo-1.0",
+            "asdf://somewhere.org/extensions/foo/schemas/base-1.0",
+        ],
         title="Some title",
         description="Some description",
     )
 
-    assert tag_def.schema_uris == ["asdf://somewhere.org/extensions/foo/schemas/foo-1.0", "asdf://somewhere.org/extensions/foo/schemas/base-1.0"]
+    assert tag_def.schema_uris == [
+        "asdf://somewhere.org/extensions/foo/schemas/foo-1.0",
+        "asdf://somewhere.org/extensions/foo/schemas/base-1.0",
+    ]
     with pytest.warns(AsdfDeprecationWarning):
         with pytest.raises(RuntimeError):
             tag_def.schema_uri
@@ -537,10 +535,7 @@ def test_converter_proxy():
     assert proxy != ConverterProxy(MinimumConverter(), extension)
     assert proxy != ConverterProxy(converter, MinimumExtension())
     assert proxy in {ConverterProxy(converter, extension)}
-    assert proxy not in {
-        ConverterProxy(MinimumConverter(), extension),
-        ConverterProxy(converter, MinimumExtension())
-    }
+    assert proxy not in {ConverterProxy(MinimumConverter(), extension), ConverterProxy(converter, MinimumExtension())}
 
     # Check the __repr__:
     assert "class: asdf.tests.test_extension.MinimumConverter" in repr(proxy)
@@ -552,7 +547,7 @@ def test_converter_proxy():
             "asdf://somewhere.org/extensions/test/tags/foo-*",
             "asdf://somewhere.org/extensions/test/tags/bar-*",
         ],
-        types=[FooType, BarType]
+        types=[FooType, BarType],
     )
 
     extension = FullExtension(
@@ -561,13 +556,13 @@ def test_converter_proxy():
                 "asdf://somewhere.org/extensions/test/tags/foo-1.0",
                 schema_uris="asdf://somewhere.org/extensions/test/schemas/foo-1.0",
                 title="Foo tag title",
-                description="Foo tag description"
+                description="Foo tag description",
             ),
             TagDefinition(
                 "asdf://somewhere.org/extensions/test/tags/bar-1.0",
                 schema_uris="asdf://somewhere.org/extensions/test/schemas/bar-1.0",
                 title="Bar tag title",
-                description="Bar tag description"
+                description="Bar tag description",
             ),
         ]
     )
@@ -744,10 +739,12 @@ def test_validator():
 
     with config_context() as config:
         config.add_extension(extension)
-        config.add_resource_mapping({
-            "asdf://somewhere.org/schemas/failing": failing_schema,
-            "asdf://somewhere.org/schemas/passing": passing_schema,
-        })
+        config.add_resource_mapping(
+            {
+                "asdf://somewhere.org/schemas/failing": failing_schema,
+                "asdf://somewhere.org/schemas/passing": passing_schema,
+            }
+        )
 
         with AsdfFile(custom_schema="asdf://somewhere.org/schemas/passing") as af:
             af["foo"] = "bar"

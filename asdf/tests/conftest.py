@@ -1,9 +1,8 @@
 import pytest
 
-from . import create_small_tree, create_large_tree
+from asdf import config, schema
 
-from asdf import config
-from asdf import schema
+from . import create_large_tree, create_small_tree
 
 
 @pytest.fixture

@@ -6,7 +6,6 @@ from ._entities import (
     Software,
 )
 
-
 __all__ = [
     "AsdfObject",
     "ExtensionMetadata",

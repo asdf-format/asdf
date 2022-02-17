@@ -3,10 +3,10 @@ import abc
 from packaging.specifiers import SpecifierSet
 
 from ..util import get_class_name
-from ._tag import TagDefinition
-from ._legacy import AsdfExtension
-from ._converter import ConverterProxy
 from ._compressor import Compressor
+from ._converter import ConverterProxy
+from ._legacy import AsdfExtension
+from ._tag import TagDefinition
 from ._validator import Validator
 
 
@@ -17,11 +17,12 @@ class Extension(abc.ABC):
     Implementing classes must provide the `extension_uri`.
     Other properties are optional.
     """
+
     @classmethod
     def __subclasshook__(cls, C):
         if cls is Extension:
             return hasattr(C, "extension_uri")
-        return NotImplemented # pragma: no cover
+        return NotImplemented  # pragma: no cover
 
     @abc.abstractproperty
     def extension_uri(self):
@@ -34,7 +35,7 @@ class Extension(abc.ABC):
         -------
         str
         """
-        pass # pragma: no cover
+        pass  # pragma: no cover
 
     @property
     def legacy_class_names(self):
@@ -135,6 +136,7 @@ class ExtensionProxy(Extension, AsdfExtension):
     of optional methods, and carries additional information on the
     package that provided the extension.
     """
+
     @classmethod
     def maybe_wrap(self, delegate):
         if isinstance(delegate, ExtensionProxy):
@@ -144,9 +146,7 @@ class ExtensionProxy(Extension, AsdfExtension):
 
     def __init__(self, delegate, package_name=None, package_version=None):
         if not isinstance(delegate, (Extension, AsdfExtension)):
-            raise TypeError(
-                "Extension must implement the Extension or AsdfExtension interface"
-            )
+            raise TypeError("Extension must implement the Extension or AsdfExtension interface")
 
         self._delegate = delegate
         self._package_name = package_name
@@ -197,14 +197,18 @@ class ExtensionProxy(Extension, AsdfExtension):
         if hasattr(self._delegate, "compressors"):
             for compressor in self._delegate.compressors:
                 if not isinstance(compressor, Compressor):
-                    raise TypeError("Extension property 'compressors' must contain instances of asdf.extension.Compressor")
+                    raise TypeError(
+                        "Extension property 'compressors' must contain instances of asdf.extension.Compressor"
+                    )
                 self._compressors.append(compressor)
 
         self._validators = []
         if hasattr(self._delegate, "validators"):
             for validator in self._delegate.validators:
                 if not isinstance(validator, Validator):
-                    raise TypeError("Extension property 'validators' must contain instances of asdf.extension.Validator")
+                    raise TypeError(
+                        "Extension property 'validators' must contain instances of asdf.extension.Validator"
+                    )
                 self._validators.append(validator)
 
     @property

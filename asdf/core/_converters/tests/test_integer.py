@@ -3,9 +3,9 @@ import random
 import pytest
 
 import asdf
-from asdf.testing import helpers
 from asdf import constants
 from asdf.tagged import TaggedDict
+from asdf.testing import helpers
 
 
 @pytest.fixture(autouse=True)
@@ -14,15 +14,18 @@ def set_random_seed():
     random.seed(0)
 
 
-@pytest.mark.parametrize('sign', ['+', '-'])
-@pytest.mark.parametrize('value', [
-    random.getrandbits(64),
-    random.getrandbits(65),
-    random.getrandbits(100),
-    random.getrandbits(128),
-    random.getrandbits(129),
-    random.getrandbits(200),
-])
+@pytest.mark.parametrize("sign", ["+", "-"])
+@pytest.mark.parametrize(
+    "value",
+    [
+        random.getrandbits(64),
+        random.getrandbits(65),
+        random.getrandbits(100),
+        random.getrandbits(128),
+        random.getrandbits(129),
+        random.getrandbits(200),
+    ],
+)
 def test_integer_roundtrip(sign, value):
     if sign == "-":
         value = -value

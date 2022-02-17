@@ -1,38 +1,39 @@
+import copy
+import datetime
 import io
 import os
 import time
-import copy
-import datetime
 import warnings
-from pkg_resources import parse_version
 
 import numpy as np
 from jsonschema import ValidationError
+from pkg_resources import parse_version
 
-from .config import get_config
-from . import block
-from . import constants
-from . import core
-from . import generic_io
-from . import reference
-from . import schema
-from . import treeutil
-from . import util
-from . import version
-from . import versioning
-from . import yamlutil
 from . import _display as display
+from . import (
+    block,
+    constants,
+    core,
+    generic_io,
+    reference,
+    schema,
+    treeutil,
+    util,
+    version,
+    versioning,
+    yamlutil,
+)
+from ._helpers import validate_version
+from .config import get_config
+from .core import AsdfObject
 from .exceptions import AsdfWarning
 from .extension import (
     ExtensionProxy,
     get_cached_asdf_extension_list,
     get_cached_extension_manager,
 )
-from .util import NotSet
 from .search import AsdfSearchResult
-from ._helpers import validate_version
-
-from .core import AsdfObject
+from .util import NotSet
 
 
 def get_asdf_library_info():
@@ -52,8 +53,10 @@ class AsdfFile:
     """
     The main class that represents an ASDF file object.
     """
-    def __init__(self, tree=None, uri=None, version=None,
-                 copy_arrays=False, lazy_load=True, custom_schema=None, _readonly=False):
+
+    def __init__(
+        self, tree=None, uri=None, version=None, copy_arrays=False, lazy_load=True, custom_schema=None, _readonly=False
+    ):
         """
         Parameters
         ----------
@@ -121,9 +124,7 @@ class AsdfFile:
         self._fd = None
         self._closed = False
         self._external_asdf_by_uri = {}
-        self._blocks = block.BlockManager(
-            self, copy_arrays=copy_arrays, lazy_load=lazy_load,
-            readonly=_readonly)
+        self._blocks = block.BlockManager(self, copy_arrays=copy_arrays, lazy_load=lazy_load, readonly=_readonly)
         self._uri = None
         if tree is None:
             # Bypassing the tree property here, to avoid validating
@@ -134,7 +135,7 @@ class AsdfFile:
             # Set directly to self._tree (bypassing property), since
             # we can assume the other AsdfFile is already valid.
             self._tree = tree.tree
-            self.run_modifying_hook('copy_to_new_asdf', validate=False)
+            self.run_modifying_hook("copy_to_new_asdf", validate=False)
             self.find_references()
         else:
             self.tree = tree
@@ -232,19 +233,22 @@ class AsdfFile:
         strict : bool, optional
             Set to `True` to convert warnings to exceptions.
         """
-        if 'history' not in tree or not isinstance(tree['history'], dict) or \
-                'extensions' not in tree['history']:
+        if "history" not in tree or not isinstance(tree["history"], dict) or "extensions" not in tree["history"]:
             return
 
-        for extension in tree['history']['extensions']:
+        for extension in tree["history"]["extensions"]:
             installed = None
             for ext in self._plugin_extensions:
-                if (extension.extension_uri is not None and extension.extension_uri == ext.extension_uri
-                    or extension.extension_uri is None and extension.extension_class in ext.legacy_class_names):
+                if (
+                    extension.extension_uri is not None
+                    and extension.extension_uri == ext.extension_uri
+                    or extension.extension_uri is None
+                    and extension.extension_class in ext.legacy_class_names
+                ):
                     installed = ext
                     break
 
-            filename = "'{}' ".format(self._fname) if self._fname else ''
+            filename = "'{}' ".format(self._fname) if self._fname else ""
             if extension.extension_uri is not None:
                 extension_description = "URI '{}'".format(extension.extension_uri)
             else:
@@ -256,10 +260,9 @@ class AsdfFile:
                 )
 
             if installed is None:
-                msg = (
-                    "File {}was created with extension {}, which is "
-                    "not currently installed"
-                ).format(filename, extension_description)
+                msg = ("File {}was created with extension {}, which is " "not currently installed").format(
+                    filename, extension_description
+                )
                 if strict:
                     raise RuntimeError(msg)
                 else:
@@ -272,10 +275,7 @@ class AsdfFile:
                     continue
                 # Compare version in file metadata with installed version
                 if parse_version(installed.package_version) < parse_version(extension.software.version):
-                    msg = (
-                        "File {}was created with extension {}, but older package ({}=={}) "
-                        "is installed."
-                    ).format(
+                    msg = ("File {}was created with extension {}, but older package ({}=={}) " "is installed.").format(
                         filename,
                         extension_description,
                         installed.package_name,
@@ -310,19 +310,21 @@ class AsdfFile:
         if serialization_context.version < versioning.NEW_HISTORY_FORMAT_MIN_VERSION:
             return
 
-        if 'history' not in self.tree:
-            self.tree['history'] = dict(extensions=[])
+        if "history" not in self.tree:
+            self.tree["history"] = dict(extensions=[])
         # Support clients who are still using the old history format
-        elif isinstance(self.tree['history'], list):
-            histlist = self.tree['history']
-            self.tree['history'] = dict(entries=histlist, extensions=[])
-            warnings.warn("The ASDF history format has changed in order to "
-                          "support metadata about extensions. History entries "
-                          "should now be stored under tree['history']['entries'].",
-                          AsdfWarning)
-        elif 'extensions' not in self.tree['history']:
+        elif isinstance(self.tree["history"], list):
+            histlist = self.tree["history"]
+            self.tree["history"] = dict(entries=histlist, extensions=[])
+            warnings.warn(
+                "The ASDF history format has changed in order to "
+                "support metadata about extensions. History entries "
+                "should now be stored under tree['history']['entries'].",
+                AsdfWarning,
+            )
+        elif "extensions" not in self.tree["history"]:
 
-            self.tree['history']['extensions'] = []
+            self.tree["history"]["extensions"] = []
 
         for extension in serialization_context._extensions_used:
             ext_name = extension.class_name
@@ -332,21 +334,24 @@ class AsdfFile:
             if extension.extension_uri is not None:
                 ext_meta.extension_uri = extension.extension_uri
             if extension.compressors:
-                ext_meta.extra['supported_compression'] = [comp.label.decode('ascii') for comp in extension.compressors]
+                ext_meta.extra["supported_compression"] = [comp.label.decode("ascii") for comp in extension.compressors]
 
-            for i, entry in enumerate(self.tree['history']['extensions']):
+            for i, entry in enumerate(self.tree["history"]["extensions"]):
                 # Update metadata about this extension if it already exists
-                if (entry.extension_uri is not None and entry.extension_uri == extension.extension_uri
-                    or entry.extension_class in extension.legacy_class_names):
-                    self.tree['history']['extensions'][i] = ext_meta
+                if (
+                    entry.extension_uri is not None
+                    and entry.extension_uri == extension.extension_uri
+                    or entry.extension_class in extension.legacy_class_names
+                ):
+                    self.tree["history"]["extensions"][i] = ext_meta
                     break
             else:
-                self.tree['history']['extensions'].append(ext_meta)
+                self.tree["history"]["extensions"].append(ext_meta)
 
     @property
     def file_format_version(self):
         if self._file_format_version is None:
-            return versioning.AsdfVersion(self.version_map['FILE_FORMAT'])
+            return versioning.AsdfVersion(self.version_map["FILE_FORMAT"])
         else:
             return self._file_format_version
 
@@ -446,14 +451,12 @@ class AsdfFile:
 
         # A uri like "#" should resolve back to ourself.  In that case,
         # just return `self`.
-        if resolved_uri == '' or resolved_uri == self.uri:
+        if resolved_uri == "" or resolved_uri == self.uri:
             return self
 
         asdffile = self._external_asdf_by_uri.get(resolved_uri)
         if asdffile is None:
-            asdffile = open_asdf(
-                resolved_uri,
-                mode='r', **kwargs)
+            asdffile = open_asdf(resolved_uri, mode="r", **kwargs)
             self._external_asdf_by_uri[resolved_uri] = asdffile
         return asdffile
 
@@ -500,13 +503,11 @@ class AsdfFile:
             # is already guaranteed to be in tagged form.
             tagged_tree = tree
         else:
-            tagged_tree = yamlutil.custom_tree_to_tagged_tree(
-                tree, self)
+            tagged_tree = yamlutil.custom_tree_to_tagged_tree(tree, self)
         schema.validate(tagged_tree, self, reading=reading)
         # Perform secondary validation pass if requested
         if custom and self._custom_schema:
-            schema.validate(tagged_tree, self, self._custom_schema,
-                            reading=reading)
+            schema.validate(tagged_tree, self, self._custom_schema, reading=reading)
 
     def validate(self):
         """
@@ -627,8 +628,7 @@ class AsdfFile:
         return self.blocks[arr].output_compression
 
     def get_array_compression_kwargs(self, arr):
-        """
-        """
+        """ """
         return self.blocks[arr].output_compression_kwargs
 
     @classmethod
@@ -641,10 +641,9 @@ class AsdfFile:
             raise ValueError("Does not appear to be a ASDF file.")
 
         try:
-            version = versioning.AsdfVersion(parts[1].decode('ascii'))
+            version = versioning.AsdfVersion(parts[1].decode("ascii"))
         except ValueError:
-            raise ValueError(
-                "Unparseable version in ASDF file: {0}".format(parts[1]))
+            raise ValueError("Unparseable version in ASDF file: {0}".format(parts[1]))
 
         return version
 
@@ -655,14 +654,14 @@ class AsdfFile:
         Tree or first block.
         """
         content = fd.read_until(
-            b'(%YAML)|(' + constants.BLOCK_MAGIC + b')', 5,
-            "start of content", include=False, exception=False)
+            b"(%YAML)|(" + constants.BLOCK_MAGIC + b")", 5, "start of content", include=False, exception=False
+        )
 
         comments = []
 
         lines = content.splitlines()
         for line in lines:
-            if not line.startswith(b'#'):
+            if not line.startswith(b"#"):
                 raise ValueError("Invalid content between header and tree")
             comments.append(line[1:].strip())
 
@@ -674,7 +673,7 @@ class AsdfFile:
             parts = comment.split()
             if len(parts) == 2 and parts[0] == constants.ASDF_STANDARD_COMMENT:
                 try:
-                    version = versioning.AsdfVersion(parts[1].decode('ascii'))
+                    version = versioning.AsdfVersion(parts[1].decode("ascii"))
                 except ValueError:
                     pass
                 else:
@@ -683,24 +682,26 @@ class AsdfFile:
         return None
 
     @classmethod
-    def _open_asdf(cls, self, fd,
-                   validate_checksums=False,
-                   _get_yaml_content=False,
-                   _force_raw_types=False,
-                   strict_extension_check=False,
-                   ignore_missing_extensions=False):
+    def _open_asdf(
+        cls,
+        self,
+        fd,
+        validate_checksums=False,
+        _get_yaml_content=False,
+        _force_raw_types=False,
+        strict_extension_check=False,
+        ignore_missing_extensions=False,
+    ):
         """Attempt to populate AsdfFile data from file-like object"""
 
         if strict_extension_check and ignore_missing_extensions:
-            raise ValueError(
-                "'strict_extension_check' and 'ignore_missing_extensions' are "
-                "incompatible options")
+            raise ValueError("'strict_extension_check' and 'ignore_missing_extensions' are " "incompatible options")
 
         self._mode = fd.mode
         self._fd = fd
         # The filename is currently only used for tracing warning information
-        self._fname = self._fd._uri if self._fd._uri else ''
-        header_line = fd.read_until(b'\r?\n', 2, "newline", include=True)
+        self._fname = self._fd._uri if self._fd._uri else ""
+        header_line = fd.read_until(b"\r?\n", 2, "newline", include=True)
         self._file_format_version = cls._parse_header_line(header_line)
         self.version = self._file_format_version
 
@@ -717,10 +718,10 @@ class AsdfFile:
         yaml_token = fd.read(4)
         has_blocks = False
         tree = None
-        if yaml_token == b'%YAM':
+        if yaml_token == b"%YAM":
             reader = fd.reader_until(
-                constants.YAML_END_MARKER_REGEX, 7, 'End of YAML marker',
-                include=True, initial_content=yaml_token)
+                constants.YAML_END_MARKER_REGEX, 7, "End of YAML marker", include=True, initial_content=yaml_token
+            )
 
             # For testing: just return the raw YAML content
             if _get_yaml_content:
@@ -735,7 +736,7 @@ class AsdfFile:
             has_blocks = fd.seek_until(constants.BLOCK_MAGIC, 4, include=True, exception=False)
         elif yaml_token == constants.BLOCK_MAGIC:
             has_blocks = True
-        elif yaml_token != b'':
+        elif yaml_token != b"":
             raise IOError("ASDF file appears to contain garbage after header.")
 
         if tree is None:
@@ -746,8 +747,7 @@ class AsdfFile:
             tree = yamlutil.custom_tree_to_tagged_tree(AsdfObject(), self)
 
         if has_blocks:
-            self._blocks.read_internal_blocks(
-                fd, past_magic=True, validate_checksums=validate_checksums)
+            self._blocks.read_internal_blocks(fd, past_magic=True, validate_checksums=validate_checksums)
             self._blocks.read_block_index(fd, self)
 
         tree = reference.find_references(tree, self)
@@ -768,18 +768,24 @@ class AsdfFile:
             self._check_extensions(tree, strict=strict_extension_check)
 
         self._tree = tree
-        self.run_hook('post_read')
+        self.run_hook("post_read")
 
         return self
 
     @classmethod
-    def _open_impl(cls, self, fd, uri=None, mode='r',
-                   validate_checksums=False,
-                   _get_yaml_content=False,
-                   _force_raw_types=False,
-                   strict_extension_check=False,
-                   ignore_missing_extensions=False,
-                   **kwargs):
+    def _open_impl(
+        cls,
+        self,
+        fd,
+        uri=None,
+        mode="r",
+        validate_checksums=False,
+        _get_yaml_content=False,
+        _force_raw_types=False,
+        strict_extension_check=False,
+        ignore_missing_extensions=False,
+        **kwargs
+    ):
         """Attempt to open file-like object as either AsdfFile or AsdfInFits"""
         generic_file = generic_io.get_file(fd, mode=mode, uri=uri)
         file_type = util.get_file_type(generic_file)
@@ -790,45 +796,50 @@ class AsdfFile:
                 # this introduces another dependency on astropy which may
                 # not be desireable.
                 from . import fits_embed
-                return fits_embed.AsdfInFits._open_impl(generic_file, uri=uri,
-                            validate_checksums=validate_checksums,
-                            strict_extension_check=strict_extension_check,
-                            ignore_missing_extensions=ignore_missing_extensions,
-                            **kwargs)
-            except ValueError:
-                raise ValueError(
-                    "Input object does not appear to be an ASDF file or a FITS with " +
-                    "ASDF extension") from None
-            except ImportError:
-                raise ValueError(
-                    "Input object does not appear to be an ASDF file. Cannot check " +
-                    "if it is a FITS with ASDF extension because 'astropy' is not " +
-                    "installed") from None
-        elif file_type == util.FileType.ASDF:
-            return cls._open_asdf(self, generic_file,
+
+                return fits_embed.AsdfInFits._open_impl(
+                    generic_file,
+                    uri=uri,
                     validate_checksums=validate_checksums,
-                    _get_yaml_content=_get_yaml_content,
-                    _force_raw_types=_force_raw_types,
                     strict_extension_check=strict_extension_check,
                     ignore_missing_extensions=ignore_missing_extensions,
-                    **kwargs)
-        else:
-            raise ValueError(
-                "Input object does not appear to be an ASDF file or a FITS with " +
-                "ASDF extension"
+                    **kwargs
+                )
+            except ValueError:
+                raise ValueError(
+                    "Input object does not appear to be an ASDF file or a FITS with " + "ASDF extension"
+                ) from None
+            except ImportError:
+                raise ValueError(
+                    "Input object does not appear to be an ASDF file. Cannot check "
+                    + "if it is a FITS with ASDF extension because 'astropy' is not "
+                    + "installed"
+                ) from None
+        elif file_type == util.FileType.ASDF:
+            return cls._open_asdf(
+                self,
+                generic_file,
+                validate_checksums=validate_checksums,
+                _get_yaml_content=_get_yaml_content,
+                _force_raw_types=_force_raw_types,
+                strict_extension_check=strict_extension_check,
+                ignore_missing_extensions=ignore_missing_extensions,
+                **kwargs
             )
+        else:
+            raise ValueError("Input object does not appear to be an ASDF file or a FITS with " + "ASDF extension")
 
     def _write_tree(self, tree, fd, pad_blocks):
         fd.write(constants.ASDF_MAGIC)
-        fd.write(b' ')
-        fd.write(self.version_map['FILE_FORMAT'].encode('ascii'))
-        fd.write(b'\n')
+        fd.write(b" ")
+        fd.write(self.version_map["FILE_FORMAT"].encode("ascii"))
+        fd.write(b"\n")
 
-        fd.write(b'#')
+        fd.write(b"#")
         fd.write(constants.ASDF_STANDARD_COMMENT)
-        fd.write(b' ')
-        fd.write(self.version_string.encode('ascii'))
-        fd.write(b'\n')
+        fd.write(b" ")
+        fd.write(self.version_string.encode("ascii"))
+        fd.write(b"\n")
 
         if len(tree):
             serialization_context = self._create_serialization_context()
@@ -845,30 +856,24 @@ class AsdfFile:
                 after the tree has been converted to tagged objects.
                 """
                 self._update_extension_history(serialization_context)
-                if 'history' in self.tree:
-                    tagged_tree['history'] = yamlutil.custom_tree_to_tagged_tree(
-                        self.tree['history'],
-                        self,
-                        _serialization_context=serialization_context
+                if "history" in self.tree:
+                    tagged_tree["history"] = yamlutil.custom_tree_to_tagged_tree(
+                        self.tree["history"], self, _serialization_context=serialization_context
                     )
                 else:
-                    tagged_tree.pop('history', None)
+                    tagged_tree.pop("history", None)
 
             yamlutil.dump_tree(
-                tree, fd, self, tree_finalizer=_tree_finalizer,
-                _serialization_context=serialization_context
+                tree, fd, self, tree_finalizer=_tree_finalizer, _serialization_context=serialization_context
             )
 
         if pad_blocks:
-            padding = util.calculate_padding(
-                fd.tell(), pad_blocks, fd.block_size)
+            padding = util.calculate_padding(fd.tell(), pad_blocks, fd.block_size)
             fd.fast_forward(padding)
 
     def _pre_write(self, fd, all_array_storage, all_array_compression, compression_kwargs=None):
-        if all_array_storage not in (None, 'internal', 'external', 'inline'):
-            raise ValueError(
-                "Invalid value for all_array_storage: '{0}'".format(
-                    all_array_storage))
+        if all_array_storage not in (None, "internal", "external", "inline"):
+            raise ValueError("Invalid value for all_array_storage: '{0}'".format(all_array_storage))
 
         self._all_array_storage = all_array_storage
 
@@ -876,13 +881,13 @@ class AsdfFile:
         self._all_array_compression_kwargs = compression_kwargs
 
         if len(self._tree):
-            self.run_hook('pre_write')
+            self.run_hook("pre_write")
 
         # This is where we'd do some more sophisticated block
         # reorganization, if necessary
         self._blocks.finalize(self)
 
-        self._tree['asdf_library'] = get_asdf_library_info()
+        self._tree["asdf_library"] = get_asdf_library_info()
 
     def _serial_write(self, fd, pad_blocks, include_block_index):
         self._write_tree(self._tree, fd, pad_blocks)
@@ -901,12 +906,17 @@ class AsdfFile:
 
     def _post_write(self, fd):
         if len(self._tree):
-            self.run_hook('post_write')
+            self.run_hook("post_write")
 
-
-    def update(self, all_array_storage=None, all_array_compression='input',
-               pad_blocks=False, include_block_index=True,
-               version=None, compression_kwargs=None):
+    def update(
+        self,
+        all_array_storage=None,
+        all_array_compression="input",
+        pad_blocks=False,
+        include_block_index=True,
+        version=None,
+        compression_kwargs=None,
+    ):
         """
         Update the file on disk in place.
 
@@ -959,19 +969,19 @@ class AsdfFile:
         fd = self._fd
 
         if fd is None:
-            raise ValueError(
-                "Can not update, since there is no associated file")
+            raise ValueError("Can not update, since there is no associated file")
 
         if not fd.writable():
             raise IOError(
                 "Can not update, since associated file is read-only. Make "
                 "sure that the AsdfFile was opened with mode='rw' and the "
-                "underlying file handle is writable.")
+                "underlying file handle is writable."
+            )
 
         if version is not None:
             self.version = version
 
-        if all_array_storage == 'external':
+        if all_array_storage == "external":
             # If the file is fully exploded, there's no benefit to
             # update, so just use write_to()
             self.write_to(fd, all_array_storage=all_array_storage)
@@ -979,13 +989,11 @@ class AsdfFile:
             return
 
         if not fd.seekable():
-            raise IOError(
-                "Can not update, since associated file is not seekable")
+            raise IOError("Can not update, since associated file is not seekable")
 
         self.blocks.finish_reading_internal_blocks()
 
-        self._pre_write(fd, all_array_storage, all_array_compression,
-                        compression_kwargs=compression_kwargs)
+        self._pre_write(fd, all_array_storage, all_array_compression, compression_kwargs=compression_kwargs)
 
         try:
             fd.seek(0)
@@ -1008,17 +1016,12 @@ class AsdfFile:
             from .tags.core.ndarray import NDArrayType
 
             for node in treeutil.iter_tree(self._tree):
-                if (isinstance(node, (np.ndarray, NDArrayType))
-                    and self.blocks[node].array_storage == 'internal'):
+                if isinstance(node, (np.ndarray, NDArrayType)) and self.blocks[node].array_storage == "internal":
                     array_ref_count[0] += 1
 
-            serialized_tree_size = (
-                tree_serialized.tell()
-                + constants.MAX_BLOCKS_DIGITS * array_ref_count[0])
+            serialized_tree_size = tree_serialized.tell() + constants.MAX_BLOCKS_DIGITS * array_ref_count[0]
 
-            if not block.calculate_updated_layout(
-                    self.blocks, serialized_tree_size,
-                    pad_blocks, fd.block_size):
+            if not block.calculate_updated_layout(self.blocks, serialized_tree_size, pad_blocks, fd.block_size):
                 # If we don't have any blocks that are being reused, just
                 # write out in a serial fashion.
                 self._serial_write(fd, pad_blocks, include_block_index)
@@ -1031,10 +1034,16 @@ class AsdfFile:
         finally:
             self._post_write(fd)
 
-
-    def write_to(self, fd, all_array_storage=None, all_array_compression='input',
-                 pad_blocks=False, include_block_index=True, version=None,
-                 compression_kwargs=None):
+    def write_to(
+        self,
+        fd,
+        all_array_storage=None,
+        all_array_compression="input",
+        pad_blocks=False,
+        include_block_index=True,
+        version=None,
+        compression_kwargs=None,
+    ):
         """
         Write the ASDF file to the given file-like object.
 
@@ -1096,14 +1105,13 @@ class AsdfFile:
         if version is not None:
             self.version = version
 
-        with generic_io.get_file(fd, mode='w') as fd:
+        with generic_io.get_file(fd, mode="w") as fd:
             # TODO: This is not ideal: we really should pass the URI through
             # explicitly to wherever it is required instead of making it an
             # attribute of the AsdfFile.
             if self._uri is None:
                 self._uri = fd.uri
-            self._pre_write(fd, all_array_storage, all_array_compression,
-                            compression_kwargs=compression_kwargs)
+            self._pre_write(fd, all_array_storage, all_array_compression, compression_kwargs=compression_kwargs)
 
             try:
                 self._serial_write(fd, pad_blocks, include_block_index)
@@ -1147,8 +1155,7 @@ class AsdfFile:
             return
 
         for node in treeutil.iter_tree(self._tree):
-            hook = type_index.get_hook_for_type(hookname, type(node),
-                                                self.version_string)
+            hook = type_index.get_hook_for_type(hookname, type(node), self.version_string)
             if hook is not None:
                 hook(node, self)
 
@@ -1174,11 +1181,11 @@ class AsdfFile:
             return
 
         def walker(node):
-            hook = type_index.get_hook_for_type(hookname, type(node),
-                                                self.version_string)
+            hook = type_index.get_hook_for_type(hookname, type(node), self.version_string)
             if hook is not None:
                 return hook(node, self)
             return node
+
         tree = treeutil.walk_and_modify(self.tree, walker)
 
         if validate:
@@ -1195,7 +1202,7 @@ class AsdfFile:
         self.blocks.finish_reading_internal_blocks()
         self.resolve_references()
         for b in list(self.blocks.blocks):
-            self.blocks.set_array_storage(b, 'inline')
+            self.blocks.set_array_storage(b, "inline")
 
     def fill_defaults(self):
         """
@@ -1233,7 +1240,7 @@ class AsdfFile:
             software = []
 
         time_ = datetime.datetime.utcfromtimestamp(
-            int(os.environ.get('SOURCE_DATE_EPOCH', time.time())),
+            int(os.environ.get("SOURCE_DATE_EPOCH", time.time())),
         )
 
         entry = core.HistoryEntry(
@@ -1243,28 +1250,28 @@ class AsdfFile:
         )
 
         if self.version >= versioning.NEW_HISTORY_FORMAT_MIN_VERSION:
-            if 'history' not in self.tree:
-                self.tree['history'] = dict(entries=[])
-            elif 'entries' not in self.tree['history']:
-                self.tree['history']['entries'] = []
+            if "history" not in self.tree:
+                self.tree["history"] = dict(entries=[])
+            elif "entries" not in self.tree["history"]:
+                self.tree["history"]["entries"] = []
 
-            self.tree['history']['entries'].append(entry)
+            self.tree["history"]["entries"].append(entry)
 
             try:
                 self.validate()
             except Exception:
-                self.tree['history']['entries'].pop()
+                self.tree["history"]["entries"].pop()
                 raise
         else:
-            if 'history' not in self.tree:
-                self.tree['history'] = []
+            if "history" not in self.tree:
+                self.tree["history"] = []
 
-            self.tree['history'].append(entry)
+            self.tree["history"].append(entry)
 
             try:
                 self.validate()
             except Exception:
-                self.tree['history'].pop()
+                self.tree["history"].pop()
                 raise
 
     def get_history_entries(self):
@@ -1277,18 +1284,23 @@ class AsdfFile:
             A list of history entries.
         """
 
-        if 'history' not in self.tree:
+        if "history" not in self.tree:
             return []
 
-        if isinstance(self.tree['history'], list):
-            return self.tree['history']
+        if isinstance(self.tree["history"], list):
+            return self.tree["history"]
 
-        if 'entries' in self.tree['history']:
-            return self.tree['history']['entries']
+        if "entries" in self.tree["history"]:
+            return self.tree["history"]["entries"]
 
         return []
 
-    def info(self, max_rows=display.DEFAULT_MAX_ROWS, max_cols=display.DEFAULT_MAX_COLS, show_values=display.DEFAULT_SHOW_VALUES):
+    def info(
+        self,
+        max_rows=display.DEFAULT_MAX_ROWS,
+        max_cols=display.DEFAULT_MAX_COLS,
+        show_values=display.DEFAULT_SHOW_VALUES,
+    ):
         """
         Print a rendering of this file's tree to stdout.
 
@@ -1312,7 +1324,9 @@ class AsdfFile:
             Set to False to disable display of primitive values in
             the rendered tree.
         """
-        lines = display.render_tree(self.tree, max_rows=max_rows, max_cols=max_cols, show_values=show_values, identifier="root")
+        lines = display.render_tree(
+            self.tree, max_rows=max_rows, max_cols=max_cols, show_values=show_values, identifier="root"
+        )
         print("\n".join(lines))
 
     def search(self, key=NotSet, type=NotSet, value=NotSet, filter=None):
@@ -1372,28 +1386,37 @@ AsdfFile.keys.__doc__ = dict.keys.__doc__
 
 def _check_and_set_mode(fileobj, asdf_mode):
 
-    if asdf_mode is not None and asdf_mode not in ['r', 'rw']:
+    if asdf_mode is not None and asdf_mode not in ["r", "rw"]:
         msg = "Unrecognized asdf mode '{}'. Must be either 'r' or 'rw'"
         raise ValueError(msg.format(asdf_mode))
 
     if asdf_mode is None:
         if isinstance(fileobj, io.IOBase):
-            return 'rw' if fileobj.writable() else 'r'
+            return "rw" if fileobj.writable() else "r"
 
         if isinstance(fileobj, generic_io.GenericFile):
             return fileobj.mode
 
         # This is the safest assumption for the default fallback
-        return 'r'
+        return "r"
 
     return asdf_mode
 
 
-def open_asdf(fd, uri=None, mode=None, validate_checksums=False,
-              _force_raw_types=False, copy_arrays=False, lazy_load=True,
-              custom_schema=None, strict_extension_check=False,
-              ignore_missing_extensions=False, _compat=False,
-              **kwargs):
+def open_asdf(
+    fd,
+    uri=None,
+    mode=None,
+    validate_checksums=False,
+    _force_raw_types=False,
+    copy_arrays=False,
+    lazy_load=True,
+    custom_schema=None,
+    strict_extension_check=False,
+    ignore_missing_extensions=False,
+    _compat=False,
+    **kwargs
+):
     """
     Open an existing ASDF file.
 
@@ -1459,25 +1482,28 @@ def open_asdf(fd, uri=None, mode=None, validate_checksums=False,
     # specifically when being called from AsdfFile.open
     if not _compat:
         mode = _check_and_set_mode(fd, mode)
-        readonly = (mode == 'r' and not copy_arrays)
+        readonly = mode == "r" and not copy_arrays
 
-    instance = AsdfFile(
-                   copy_arrays=copy_arrays, lazy_load=lazy_load,
-                   custom_schema=custom_schema, _readonly=readonly)
+    instance = AsdfFile(copy_arrays=copy_arrays, lazy_load=lazy_load, custom_schema=custom_schema, _readonly=readonly)
 
-    return AsdfFile._open_impl(instance,
-        fd, uri=uri, mode=mode,
+    return AsdfFile._open_impl(
+        instance,
+        fd,
+        uri=uri,
+        mode=mode,
         validate_checksums=validate_checksums,
         _force_raw_types=_force_raw_types,
         strict_extension_check=strict_extension_check,
         ignore_missing_extensions=ignore_missing_extensions,
-        **kwargs)
+        **kwargs
+    )
 
 
 class SerializationContext:
     """
     Container for parameters of the current (de)serialization.
     """
+
     def __init__(self, version, extension_manager, url):
         self._version = validate_version(version)
         self._extension_manager = extension_manager

@@ -1,14 +1,16 @@
+import pytest
 import yaml
 
-import pytest
-
 import asdf
-from asdf.core._integration import get_json_schema_resource_mappings, get_extensions
+from asdf.core._integration import get_extensions, get_json_schema_resource_mappings
 
 
-@pytest.mark.parametrize("uri", [
-    "http://json-schema.org/draft-04/schema",
-])
+@pytest.mark.parametrize(
+    "uri",
+    [
+        "http://json-schema.org/draft-04/schema",
+    ],
+)
 def test_get_resource_mappings(uri):
     mappings = get_json_schema_resource_mappings()
 

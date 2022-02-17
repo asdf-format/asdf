@@ -1,12 +1,11 @@
 import enum
+import importlib.util
 import inspect
 import math
+import re
 import struct
 import types
-import importlib.util
-import re
 from functools import lru_cache
-
 from urllib.request import pathname2url
 
 import numpy as np
@@ -17,7 +16,7 @@ from . import constants
 # we need to patch it to support asdf:// URIs, but it'd
 # be irresponsible to do this for all users of a
 # standard library.
-urllib_parse_spec = importlib.util.find_spec('urllib.parse')
+urllib_parse_spec = importlib.util.find_spec("urllib.parse")
 patched_urllib_parse = importlib.util.module_from_spec(urllib_parse_spec)
 urllib_parse_spec.loader.exec_module(patched_urllib_parse)
 del urllib_parse_spec
@@ -25,13 +24,23 @@ del urllib_parse_spec
 # urllib.parse needs to know that it should treat asdf://
 # URIs like http:// URIs for the purposes of joining
 # a relative path to a base URI.
-patched_urllib_parse.uses_relative.append('asdf')
-patched_urllib_parse.uses_netloc.append('asdf')
+patched_urllib_parse.uses_relative.append("asdf")
+patched_urllib_parse.uses_netloc.append("asdf")
 
 
-__all__ = ['human_list', 'get_array_base', 'get_base_uri', 'filepath_to_url',
-           'iter_subclasses', 'calculate_padding', 'resolve_name', 'NotSet',
-           'is_primitive', 'uri_match', 'get_class_name']
+__all__ = [
+    "human_list",
+    "get_array_base",
+    "get_base_uri",
+    "filepath_to_url",
+    "iter_subclasses",
+    "calculate_padding",
+    "resolve_name",
+    "NotSet",
+    "is_primitive",
+    "uri_match",
+    "get_class_name",
+]
 
 
 def human_list(l, separator="and"):
@@ -59,7 +68,7 @@ def human_list(l, separator="and"):
     if len(l) == 1:
         return l[0]
     else:
-        return ', '.join(l[:-1]) + ' ' + separator + ' ' + l[-1]
+        return ", ".join(l[:-1]) + " " + separator + " " + l[-1]
 
 
 def get_array_base(arr):
@@ -78,14 +87,14 @@ def get_base_uri(uri):
     For a given URI, return the part without any fragment.
     """
     parts = patched_urllib_parse.urlparse(uri)
-    return patched_urllib_parse.urlunparse(list(parts[:5]) + [''])
+    return patched_urllib_parse.urlunparse(list(parts[:5]) + [""])
 
 
 def filepath_to_url(path):
     """
     For a given local file path, return a file:// url.
     """
-    return patched_urllib_parse.urljoin('file:', pathname2url(path))
+    return patched_urllib_parse.urljoin("file:", pathname2url(path))
 
 
 def iter_subclasses(cls):
@@ -128,8 +137,7 @@ def calculate_padding(content_size, pad_blocks, block_size):
     if pad_blocks is True:
         pad_blocks = 1.1
     new_size = content_size * pad_blocks
-    new_size = int((math.ceil(
-        float(new_size) / block_size) + 1) * block_size)
+    new_size = int((math.ceil(float(new_size) / block_size) + 1) * block_size)
     return max(new_size - content_size, 0)
 
 
@@ -138,7 +146,8 @@ class BinaryStruct:
     A wrapper around the Python stdlib struct module to define a
     binary struct more like a dictionary than a tuple.
     """
-    def __init__(self, descr, endian='>'):
+
+    def __init__(self, descr, endian=">"):
         """
         Parameters
         ----------
@@ -155,10 +164,10 @@ class BinaryStruct:
         i = 0
         for name, fmt in descr:
             self._fmt.append(fmt)
-            self._offsets[name] = (i, (endian + fmt).encode('ascii'))
+            self._offsets[name] = (i, (endian + fmt).encode("ascii"))
             self._names.append(name)
-            i += struct.calcsize(fmt.encode('ascii'))
-        self._fmt = ''.join(self._fmt).encode('ascii')
+            i += struct.calcsize(fmt.encode("ascii"))
+        self._fmt = "".join(self._fmt).encode("ascii")
         self._size = struct.calcsize(self._fmt)
 
     @property
@@ -186,7 +195,7 @@ class BinaryStruct:
         Unpack the given binary buffer into the fields.  The result
         is a dictionary mapping field names to values.
         """
-        args = struct.unpack_from(self._fmt, buff[:self._size])
+        args = struct.unpack_from(self._fmt, buff[: self._size])
         return dict(zip(self._names, args))
 
     def update(self, fd, **kwargs):
@@ -222,6 +231,7 @@ class HashableDict(dict):
     This is sure to be slow, but for small dictionaries it shouldn't
     matter.
     """
+
     def __hash__(self):
         return hash(frozenset(self.items()))
 
@@ -255,12 +265,12 @@ def resolve_name(name):
     """
 
     # Note: On python 2 these must be str objects and not unicode
-    parts = [str(part) for part in name.split('.')]
+    parts = [str(part) for part in name.split(".")]
 
     if len(parts) == 1:
         # No dots in the name--just a straight up module import
         cursor = 1
-        attr_name = str('')  # Must not be unicode on Python 2
+        attr_name = str("")  # Must not be unicode on Python 2
     else:
         cursor = len(parts) - 1
         attr_name = parts[-1]
@@ -269,7 +279,7 @@ def resolve_name(name):
 
     while cursor > 0:
         try:
-            ret = __import__(str('.'.join(module_name)), fromlist=[attr_name])
+            ret = __import__(str(".".join(module_name)), fromlist=[attr_name])
             break
         except ImportError:
             if cursor == 0:
@@ -277,7 +287,7 @@ def resolve_name(name):
             cursor -= 1
             module_name = parts[:cursor]
             attr_name = parts[cursor]
-            ret = ''
+            ret = ""
 
     for part in parts[cursor:]:
         try:
@@ -314,7 +324,7 @@ def get_class_name(obj, instance=True):
     return _CLASS_NAME_OVERRIDES.get(class_name, class_name)
 
 
-def minversion(module, version, inclusive=True, version_path='__version__'):
+def minversion(module, version, inclusive=True, version_path="__version__"):
     """
     Returns `True` if the specified Python module satisfies a minimum version
     requirement, and `False` if not.
@@ -354,14 +364,16 @@ def minversion(module, version, inclusive=True, version_path='__version__'):
         except ImportError:
             return False
     else:
-        raise ValueError('module argument must be an actual imported '
-                         'module, or the import name of the module; '
-                         'got {0!r}'.format(module))
+        raise ValueError(
+            "module argument must be an actual imported "
+            "module, or the import name of the module; "
+            "got {0!r}".format(module)
+        )
 
-    if '.' not in version_path:
+    if "." not in version_path:
         have_version = getattr(module, version_path)
     else:
-        have_version = resolve_name('.'.join([module.__name__, version_path]))
+        have_version = resolve_name(".".join([module.__name__, version_path]))
 
     try:
         from pkg_resources import parse_version
@@ -402,15 +414,10 @@ class InheritDocstrings(type):
 
     def __init__(cls, name, bases, dct):
         def is_public_member(key):
-            return (
-                (key.startswith('__') and key.endswith('__')
-                 and len(key) > 4) or
-                not key.startswith('_'))
+            return (key.startswith("__") and key.endswith("__") and len(key) > 4) or not key.startswith("_")
 
         for key, val in dct.items():
-            if (inspect.isfunction(val) and
-                is_public_member(key) and
-                val.__doc__ is None):
+            if inspect.isfunction(val) and is_public_member(key) and val.__doc__ is None:
                 for base in cls.__mro__[1:]:
                     super_method = getattr(base, key, None)
                     if super_method is not None:
@@ -521,6 +528,7 @@ class FileType(enum.Enum):
     """
     Enum representing file types recognized by asdf.
     """
+
     ASDF = 1
     FITS = 2
     UNKNOWN = 3

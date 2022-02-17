@@ -1,20 +1,16 @@
 import io
 import os
 import sys
-
-import pytest
-
 import urllib.request as urllib_request
 
 import numpy as np
+import pytest
 
 import asdf
-from asdf import exceptions
-from asdf import util
-from asdf import generic_io
+from asdf import exceptions, generic_io, util
 from asdf.config import config_context
 
-from . import helpers, create_small_tree, create_large_tree
+from . import create_large_tree, create_small_tree, helpers
 
 
 @pytest.fixture(params=[create_small_tree, create_large_tree])
@@ -22,13 +18,12 @@ def tree(request):
     return request.param()
 
 
-def _roundtrip(tree, get_write_fd, get_read_fd,
-               write_options={}, read_options={}):
+def _roundtrip(tree, get_write_fd, get_read_fd, write_options={}, read_options={}):
 
     # Since we're testing with small arrays, force all arrays to be stored
     # in internal blocks rather than letting some of them be automatically put
     # inline.
-    write_options.setdefault('all_array_storage', 'internal')
+    write_options.setdefault("all_array_storage", "internal")
 
     with get_write_fd() as fd:
         asdf.AsdfFile(tree).write_to(fd, **write_options)
@@ -46,7 +41,7 @@ def _roundtrip(tree, get_write_fd, get_read_fd,
 
 
 def test_mode_fail(tmpdir):
-    path = os.path.join(str(tmpdir), 'test.asdf')
+    path = os.path.join(str(tmpdir), "test.asdf")
 
     with pytest.raises(ValueError):
         generic_io.get_file(path, mode="r+")
@@ -55,7 +50,7 @@ def test_mode_fail(tmpdir):
 def test_open(tmpdir, small_tree):
     from .. import open
 
-    path = os.path.join(str(tmpdir), 'test.asdf')
+    path = os.path.join(str(tmpdir), "test.asdf")
 
     # Simply tests the high-level "open" function
     ff = asdf.AsdfFile(small_tree)
@@ -65,17 +60,17 @@ def test_open(tmpdir, small_tree):
 
 
 def test_path(tree, tmpdir):
-    path = os.path.join(str(tmpdir), 'test.asdf')
+    path = os.path.join(str(tmpdir), "test.asdf")
 
     def get_write_fd():
-        f = generic_io.get_file(path, mode='w')
+        f = generic_io.get_file(path, mode="w")
         assert isinstance(f, generic_io.RealFile)
         assert f._uri == util.filepath_to_url(path)
         return f
 
     def get_read_fd():
         # Must open with mode=rw in order to get memmapped data
-        f = generic_io.get_file(path, mode='rw')
+        f = generic_io.get_file(path, mode="rw")
         assert isinstance(f, generic_io.RealFile)
         assert f._uri == util.filepath_to_url(path)
         # This is to check for a "feature" in Python 3.x that reading zero
@@ -91,17 +86,17 @@ def test_path(tree, tmpdir):
 
 
 def test_open2(tree, tmpdir):
-    path = os.path.join(str(tmpdir), 'test.asdf')
+    path = os.path.join(str(tmpdir), "test.asdf")
 
     def get_write_fd():
-        f = generic_io.get_file(open(path, 'wb'), mode='w', close=True)
+        f = generic_io.get_file(open(path, "wb"), mode="w", close=True)
         assert isinstance(f, generic_io.RealFile)
         assert f._uri == util.filepath_to_url(path)
         return f
 
     def get_read_fd():
         # Must open with mode=rw in order to get memmapped data
-        f = generic_io.get_file(open(path, 'r+b'), mode='rw', close=True)
+        f = generic_io.get_file(open(path, "r+b"), mode="rw", close=True)
         assert isinstance(f, generic_io.RealFile)
         assert f._uri == util.filepath_to_url(path)
         return f
@@ -112,54 +107,54 @@ def test_open2(tree, tmpdir):
 
 
 def test_open_fail(tmpdir):
-    path = os.path.join(str(tmpdir), 'test.asdf')
+    path = os.path.join(str(tmpdir), "test.asdf")
 
-    with open(path, 'w') as fd:
+    with open(path, "w") as fd:
         with pytest.raises(ValueError):
-            generic_io.get_file(fd, mode='w')
+            generic_io.get_file(fd, mode="w")
 
 
 def test_open_fail2(tmpdir):
-    path = os.path.join(str(tmpdir), 'test.asdf')
+    path = os.path.join(str(tmpdir), "test.asdf")
 
-    with io.open(path, 'w') as fd:
+    with io.open(path, "w") as fd:
         with pytest.raises(ValueError):
-            generic_io.get_file(fd, mode='w')
+            generic_io.get_file(fd, mode="w")
 
 
 def test_open_fail3(tmpdir):
-    path = os.path.join(str(tmpdir), 'test.asdf')
+    path = os.path.join(str(tmpdir), "test.asdf")
 
-    with open(path, 'w') as fd:
+    with open(path, "w") as fd:
         fd.write("\n\n\n")
 
-    with open(path, 'r') as fd:
+    with open(path, "r") as fd:
         with pytest.raises(ValueError):
-            generic_io.get_file(fd, mode='r')
+            generic_io.get_file(fd, mode="r")
 
 
 def test_open_fail4(tmpdir):
-    path = os.path.join(str(tmpdir), 'test.asdf')
+    path = os.path.join(str(tmpdir), "test.asdf")
 
-    with open(path, 'w') as fd:
+    with open(path, "w") as fd:
         fd.write("\n\n\n")
 
-    with io.open(path, 'r') as fd:
+    with io.open(path, "r") as fd:
         with pytest.raises(ValueError):
-            generic_io.get_file(fd, mode='r')
+            generic_io.get_file(fd, mode="r")
 
 
 def test_io_open(tree, tmpdir):
-    path = os.path.join(str(tmpdir), 'test.asdf')
+    path = os.path.join(str(tmpdir), "test.asdf")
 
     def get_write_fd():
-        f = generic_io.get_file(io.open(path, 'wb'), mode='w', close=True)
+        f = generic_io.get_file(io.open(path, "wb"), mode="w", close=True)
         assert isinstance(f, generic_io.RealFile)
         assert f._uri == util.filepath_to_url(path)
         return f
 
     def get_read_fd():
-        f = generic_io.get_file(io.open(path, 'r+b'), mode='rw', close=True)
+        f = generic_io.get_file(io.open(path, "r+b"), mode="rw", close=True)
         assert isinstance(f, generic_io.RealFile)
         assert f._uri == util.filepath_to_url(path)
         return f
@@ -167,19 +162,19 @@ def test_io_open(tree, tmpdir):
     with _roundtrip(tree, get_write_fd, get_read_fd) as ff:
         assert len(list(ff.blocks.internal_blocks)) == 2
         assert isinstance(next(ff.blocks.internal_blocks)._data, np.core.memmap)
-        ff.tree['science_data'][0] = 42
+        ff.tree["science_data"][0] = 42
 
 
 def test_close_underlying(tmpdir):
-    path = os.path.join(str(tmpdir), 'test.asdf')
+    path = os.path.join(str(tmpdir), "test.asdf")
 
-    with generic_io.get_file(open(path, 'wb'), mode='w', close=True) as ff:
+    with generic_io.get_file(open(path, "wb"), mode="w", close=True) as ff:
         pass
 
     assert ff.is_closed() == True
     assert ff._fd.closed == True
 
-    with generic_io.get_file(open(path, 'rb'), close=True) as ff2:
+    with generic_io.get_file(open(path, "rb"), close=True) as ff2:
         pass
 
     assert ff2.is_closed() == True
@@ -190,13 +185,13 @@ def test_bytes_io(tree):
     buff = io.BytesIO()
 
     def get_write_fd():
-        f = generic_io.get_file(buff, mode='w')
+        f = generic_io.get_file(buff, mode="w")
         assert isinstance(f, generic_io.MemoryIO)
         return f
 
     def get_read_fd():
         buff.seek(0)
-        f = generic_io.get_file(buff, mode='rw')
+        f = generic_io.get_file(buff, mode="rw")
         assert isinstance(f, generic_io.MemoryIO)
         return f
 
@@ -204,7 +199,7 @@ def test_bytes_io(tree):
         assert len(list(ff.blocks.internal_blocks)) == 2
         assert not isinstance(next(ff.blocks.internal_blocks)._data, np.core.memmap)
         assert isinstance(next(ff.blocks.internal_blocks)._data, np.ndarray)
-        ff.tree['science_data'][0] = 42
+        ff.tree["science_data"][0] = 42
 
 
 def test_streams(tree):
@@ -215,20 +210,20 @@ def test_streams(tree):
 
     def get_read_fd():
         buff.seek(0)
-        return generic_io.InputStream(buff, 'rw')
+        return generic_io.InputStream(buff, "rw")
 
     with _roundtrip(tree, get_write_fd, get_read_fd) as ff:
         assert len(ff.blocks) == 2
         assert not isinstance(next(ff.blocks.internal_blocks)._data, np.core.memmap)
         assert isinstance(next(ff.blocks.internal_blocks)._data, np.ndarray)
-        ff.tree['science_data'][0] = 42
+        ff.tree["science_data"][0] = 42
 
 
 def test_streams2():
-    buff = io.BytesIO(b'\0' * 60)
+    buff = io.BytesIO(b"\0" * 60)
     buff.seek(0)
 
-    fd = generic_io.InputStream(buff, 'r')
+    fd = generic_io.InputStream(buff, "r")
 
     x = fd.peek(10)
     x = fd.read()
@@ -237,15 +232,13 @@ def test_streams2():
 
 @pytest.mark.remote_data
 def test_urlopen(tree, httpserver):
-    path = os.path.join(httpserver.tmpdir, 'test.asdf')
+    path = os.path.join(httpserver.tmpdir, "test.asdf")
 
     def get_write_fd():
-        return generic_io.get_file(open(path, 'wb'), mode='w')
+        return generic_io.get_file(open(path, "wb"), mode="w")
 
     def get_read_fd():
-        return generic_io.get_file(
-            urllib_request.urlopen(
-                httpserver.url + "test.asdf"))
+        return generic_io.get_file(urllib_request.urlopen(httpserver.url + "test.asdf"))
 
     with _roundtrip(tree, get_write_fd, get_read_fd) as ff:
         assert len(list(ff.blocks.internal_blocks)) == 2
@@ -255,10 +248,10 @@ def test_urlopen(tree, httpserver):
 
 @pytest.mark.remote_data
 def test_http_connection(tree, httpserver):
-    path = os.path.join(httpserver.tmpdir, 'test.asdf')
+    path = os.path.join(httpserver.tmpdir, "test.asdf")
 
     def get_write_fd():
-        return generic_io.get_file(open(path, 'wb'), mode='w')
+        return generic_io.get_file(open(path, "wb"), mode="w")
 
     def get_read_fd():
         fd = generic_io.get_file(httpserver.url + "test.asdf")
@@ -271,39 +264,38 @@ def test_http_connection(tree, httpserver):
     with _roundtrip(tree, get_write_fd, get_read_fd) as ff:
         assert len(list(ff.blocks.internal_blocks)) == 2
         assert isinstance(next(ff.blocks.internal_blocks)._data, np.ndarray)
-        ff.tree['science_data'][0] == 42
+        ff.tree["science_data"][0] == 42
 
 
 def test_exploded_filesystem(tree, tmpdir):
-    path = os.path.join(str(tmpdir), 'test.asdf')
+    path = os.path.join(str(tmpdir), "test.asdf")
 
     def get_write_fd():
-        return generic_io.get_file(path, mode='w')
+        return generic_io.get_file(path, mode="w")
 
     def get_read_fd():
-        return generic_io.get_file(path, mode='r')
+        return generic_io.get_file(path, mode="r")
 
-    with _roundtrip(tree, get_write_fd, get_read_fd,
-                    write_options={'all_array_storage': 'external'}) as ff:
+    with _roundtrip(tree, get_write_fd, get_read_fd, write_options={"all_array_storage": "external"}) as ff:
         assert len(list(ff.blocks.internal_blocks)) == 0
         assert len(list(ff.blocks.external_blocks)) == 2
 
 
 def test_exploded_filesystem_fail(tree, tmpdir):
-    path = os.path.join(str(tmpdir), 'test.asdf')
+    path = os.path.join(str(tmpdir), "test.asdf")
 
     def get_write_fd():
-        return generic_io.get_file(path, mode='w')
+        return generic_io.get_file(path, mode="w")
 
     def get_read_fd():
         fd = io.BytesIO()
-        with open(path, mode='rb') as fd2:
+        with open(path, mode="rb") as fd2:
             fd.write(fd2.read())
         fd.seek(0)
         return fd
 
     with get_write_fd() as fd:
-        asdf.AsdfFile(tree).write_to(fd, all_array_storage='external')
+        asdf.AsdfFile(tree).write_to(fd, all_array_storage="external")
 
     with get_read_fd() as fd:
         with asdf.open(fd) as ff:
@@ -313,16 +305,15 @@ def test_exploded_filesystem_fail(tree, tmpdir):
 
 @pytest.mark.remote_data
 def test_exploded_http(tree, httpserver):
-    path = os.path.join(httpserver.tmpdir, 'test.asdf')
+    path = os.path.join(httpserver.tmpdir, "test.asdf")
 
     def get_write_fd():
-        return generic_io.get_file(path, mode='w')
+        return generic_io.get_file(path, mode="w")
 
     def get_read_fd():
         return generic_io.get_file(httpserver.url + "test.asdf")
 
-    with _roundtrip(tree, get_write_fd, get_read_fd,
-                    write_options={'all_array_storage': 'external'}) as ff:
+    with _roundtrip(tree, get_write_fd, get_read_fd, write_options={"all_array_storage": "external"}) as ff:
         assert len(list(ff.blocks.internal_blocks)) == 0
         assert len(list(ff.blocks.external_blocks)) == 2
 
@@ -334,7 +325,7 @@ def test_exploded_stream_write(small_tree):
     ff = asdf.AsdfFile(small_tree)
 
     with pytest.raises(ValueError):
-        ff.write_to(io.BytesIO(), all_array_storage='external')
+        ff.write_to(io.BytesIO(), all_array_storage="external")
 
 
 def test_exploded_stream_read(tmpdir, small_tree):
@@ -342,28 +333,28 @@ def test_exploded_stream_read(tmpdir, small_tree):
     # the data block is accessed.  This behavior is important so that
     # the tree can still be accessed even if the data is missing.
 
-    path = os.path.join(str(tmpdir), 'test.asdf')
+    path = os.path.join(str(tmpdir), "test.asdf")
 
     ff = asdf.AsdfFile(small_tree)
-    ff.write_to(path, all_array_storage='external')
+    ff.write_to(path, all_array_storage="external")
 
-    with open(path, 'rb') as fd:
+    with open(path, "rb") as fd:
         # This should work, so we can get the tree content
-        x = generic_io.InputStream(fd, 'r')
+        x = generic_io.InputStream(fd, "r")
         with asdf.open(x) as ff:
             # It's only when trying to access external data that an error occurs
             with pytest.raises(ValueError):
-                ff.tree['science_data'][:]
+                ff.tree["science_data"][:]
 
 
 def test_unicode_open(tmpdir, small_tree):
-    path = os.path.join(str(tmpdir), 'test.asdf')
+    path = os.path.join(str(tmpdir), "test.asdf")
 
     ff = asdf.AsdfFile(small_tree)
 
     ff.write_to(path)
 
-    with io.open(path, 'rt', encoding="utf-8") as fd:
+    with io.open(path, "rt", encoding="utf-8") as fd:
         with pytest.raises(ValueError):
             with asdf.open(fd):
                 pass
@@ -373,10 +364,10 @@ def test_invalid_obj(tmpdir):
     with pytest.raises(ValueError):
         generic_io.get_file(42)
 
-    path = os.path.join(str(tmpdir), 'test.asdf')
-    with generic_io.get_file(path, 'w') as fd:
+    path = os.path.join(str(tmpdir), "test.asdf")
+    with generic_io.get_file(path, "w") as fd:
         with pytest.raises(ValueError):
-            generic_io.get_file(fd, 'r')
+            generic_io.get_file(fd, "r")
 
     with pytest.raises(ValueError):
         generic_io.get_file("http://www.google.com", "w")
@@ -384,15 +375,15 @@ def test_invalid_obj(tmpdir):
     with pytest.raises(TypeError):
         generic_io.get_file(io.StringIO())
 
-    with open(path, 'rb') as fd:
+    with open(path, "rb") as fd:
         with pytest.raises(ValueError):
-            generic_io.get_file(fd, 'w')
+            generic_io.get_file(fd, "w")
 
-    with io.open(path, 'rb') as fd:
+    with io.open(path, "rb") as fd:
         with pytest.raises(ValueError):
-            generic_io.get_file(fd, 'w')
+            generic_io.get_file(fd, "w")
 
-    with generic_io.get_file(sys.__stdout__, 'w'):
+    with generic_io.get_file(sys.__stdout__, "w"):
         pass
 
 
@@ -412,18 +403,17 @@ def test_nonseekable_file(tmpdir):
         def writable(self):
             return True
 
-    with FileWrapper(os.path.join(str(tmpdir), 'test.asdf'), 'wb') as fd:
-        assert isinstance(generic_io.get_file(fd, 'w'), generic_io.OutputStream)
+    with FileWrapper(os.path.join(str(tmpdir), "test.asdf"), "wb") as fd:
+        assert isinstance(generic_io.get_file(fd, "w"), generic_io.OutputStream)
         with pytest.raises(ValueError):
-            generic_io.get_file(fd, 'rw')
+            generic_io.get_file(fd, "rw")
 
-    with FileWrapper(os.path.join(str(tmpdir), 'test.asdf'), 'rb') as fd:
-        assert isinstance(generic_io.get_file(fd, 'r'), generic_io.InputStream)
+    with FileWrapper(os.path.join(str(tmpdir), "test.asdf"), "rb") as fd:
+        assert isinstance(generic_io.get_file(fd, "r"), generic_io.InputStream)
 
 
 def test_relative_uri():
-    assert generic_io.relative_uri(
-        'http://www.google.com', 'file://local') == 'file://local'
+    assert generic_io.relative_uri("http://www.google.com", "file://local") == "file://local"
 
 
 @pytest.mark.parametrize("protocol", ["http", "asdf"])
@@ -433,13 +423,12 @@ def test_resolve_uri(protocol):
     asdf:// URIs correctly.
     """
     assert generic_io.resolve_uri(
-        '{}://somewhere.org/some-schema'.format(protocol), '#/definitions/foo'
-    ) == '{}://somewhere.org/some-schema#/definitions/foo'.format(protocol)
+        "{}://somewhere.org/some-schema".format(protocol), "#/definitions/foo"
+    ) == "{}://somewhere.org/some-schema#/definitions/foo".format(protocol)
 
     assert generic_io.resolve_uri(
-        '{}://somewhere.org/path/to/some-schema'.format(protocol),
-        '../../some/other/path/to/some-other-schema'
-    ) == '{}://somewhere.org/some/other/path/to/some-other-schema'.format(protocol)
+        "{}://somewhere.org/path/to/some-schema".format(protocol), "../../some/other/path/to/some-other-schema"
+    ) == "{}://somewhere.org/some/other/path/to/some-other-schema".format(protocol)
 
 
 def test_arbitrary_file_object():
@@ -472,38 +461,31 @@ def test_arbitrary_file_object():
         pass
 
     buff = io.BytesIO()
-    assert isinstance(
-        generic_io.get_file(Reader(buff), 'r'), generic_io.InputStream)
-    assert isinstance(
-        generic_io.get_file(Writer(buff), 'w'), generic_io.OutputStream)
-    assert isinstance(
-        generic_io.get_file(RandomReader(buff), 'r'), generic_io.MemoryIO)
-    assert isinstance(
-        generic_io.get_file(RandomWriter(buff), 'w'), generic_io.MemoryIO)
-    assert isinstance(
-        generic_io.get_file(All(buff), 'rw'), generic_io.MemoryIO)
-    assert isinstance(
-        generic_io.get_file(All(buff), 'r'), generic_io.MemoryIO)
-    assert isinstance(
-        generic_io.get_file(All(buff), 'w'), generic_io.MemoryIO)
+    assert isinstance(generic_io.get_file(Reader(buff), "r"), generic_io.InputStream)
+    assert isinstance(generic_io.get_file(Writer(buff), "w"), generic_io.OutputStream)
+    assert isinstance(generic_io.get_file(RandomReader(buff), "r"), generic_io.MemoryIO)
+    assert isinstance(generic_io.get_file(RandomWriter(buff), "w"), generic_io.MemoryIO)
+    assert isinstance(generic_io.get_file(All(buff), "rw"), generic_io.MemoryIO)
+    assert isinstance(generic_io.get_file(All(buff), "r"), generic_io.MemoryIO)
+    assert isinstance(generic_io.get_file(All(buff), "w"), generic_io.MemoryIO)
 
     with pytest.raises(ValueError):
-        generic_io.get_file(Reader(buff), 'w')
+        generic_io.get_file(Reader(buff), "w")
 
     with pytest.raises(ValueError):
-        generic_io.get_file(Writer(buff), 'r')
+        generic_io.get_file(Writer(buff), "r")
 
 
 def test_check_bytes(tmpdir):
-    with io.open(os.path.join(str(tmpdir), 'test.asdf'), 'w', encoding='utf-8') as fd:
-        assert generic_io._check_bytes(fd, 'r') is False
-        assert generic_io._check_bytes(fd, 'rw') is False
-        assert generic_io._check_bytes(fd, 'w') is False
+    with io.open(os.path.join(str(tmpdir), "test.asdf"), "w", encoding="utf-8") as fd:
+        assert generic_io._check_bytes(fd, "r") is False
+        assert generic_io._check_bytes(fd, "rw") is False
+        assert generic_io._check_bytes(fd, "w") is False
 
-    with io.open(os.path.join(str(tmpdir), 'test.asdf'), 'wb') as fd:
-        assert generic_io._check_bytes(fd, 'r') is True
-        assert generic_io._check_bytes(fd, 'rw') is True
-        assert generic_io._check_bytes(fd, 'w') is True
+    with io.open(os.path.join(str(tmpdir), "test.asdf"), "wb") as fd:
+        assert generic_io._check_bytes(fd, "r") is True
+        assert generic_io._check_bytes(fd, "rw") is True
+        assert generic_io._check_bytes(fd, "w") is True
 
 
 def test_truncated_reader():
@@ -516,141 +498,137 @@ def test_truncated_reader():
 
     # TODO: Should probably break this up into multiple test cases
 
-    fd = generic_io.RandomAccessFile(io.BytesIO(), 'rw')
-    content = b'a' * 100 + b'b'
+    fd = generic_io.RandomAccessFile(io.BytesIO(), "rw")
+    content = b"a" * 100 + b"b"
     fd.write(content)
     fd.seek(0)
 
     # Simple cases where the delimiter is not found at all
-    tr = generic_io._TruncatedReader(fd, b'x', 1)
+    tr = generic_io._TruncatedReader(fd, b"x", 1)
     with pytest.raises(exceptions.DelimiterNotFoundError):
         tr.read()
 
     fd.seek(0)
-    tr = generic_io._TruncatedReader(fd, b'x', 1)
+    tr = generic_io._TruncatedReader(fd, b"x", 1)
     assert tr.read(100) == content[:100]
     assert tr.read(1) == content[100:]
     with pytest.raises(exceptions.DelimiterNotFoundError):
         tr.read()
 
     fd.seek(0)
-    tr = generic_io._TruncatedReader(fd, b'x', 1, exception=False)
+    tr = generic_io._TruncatedReader(fd, b"x", 1, exception=False)
     assert tr.read() == content
 
     # No delimiter but with 'initial_content'
-    init = b'abcd'
+    init = b"abcd"
     fd.seek(0)
-    tr = generic_io._TruncatedReader(fd, b'x', 1, initial_content=init,
-                                     exception=False)
+    tr = generic_io._TruncatedReader(fd, b"x", 1, initial_content=init, exception=False)
     assert tr.read(100) == (init + content)[:100]
     assert tr.read() == (init + content)[100:]
 
     fd.seek(0)
-    tr = generic_io._TruncatedReader(fd, b'x', 1, initial_content=init,
-                                     exception=False)
+    tr = generic_io._TruncatedReader(fd, b"x", 1, initial_content=init, exception=False)
     assert tr.read() == init + content
 
     fd.seek(0)
-    tr = generic_io._TruncatedReader(fd, b'x', 1, initial_content=init,
-                                     exception=False)
+    tr = generic_io._TruncatedReader(fd, b"x", 1, initial_content=init, exception=False)
     assert tr.read(2) == init[:2]
     assert tr.read() == init[2:] + content
 
     # Some tests of a single character delimiter
     # Add some trailing data after the delimiter
     fd.seek(0, 2)
-    fd.write(b'ffff')
+    fd.write(b"ffff")
 
     # Delimiter not included in read
     fd.seek(0)
-    tr = generic_io._TruncatedReader(fd, b'b', 1)
+    tr = generic_io._TruncatedReader(fd, b"b", 1)
     assert tr.read(100) == content[:100]
-    assert tr.read() == b''
+    assert tr.read() == b""
 
     fd.seek(0)
-    tr = generic_io._TruncatedReader(fd, b'b', 1)
+    tr = generic_io._TruncatedReader(fd, b"b", 1)
     assert tr.read() == content[:100]
 
     # Delimiter included
     fd.seek(0)
-    tr = generic_io._TruncatedReader(fd, b'b', 1, include=True)
+    tr = generic_io._TruncatedReader(fd, b"b", 1, include=True)
     assert tr.read() == content[:101]
-    assert tr.read() == b''
+    assert tr.read() == b""
 
     fd.seek(0)
-    tr = generic_io._TruncatedReader(fd, b'b', 1, include=True)
+    tr = generic_io._TruncatedReader(fd, b"b", 1, include=True)
     assert tr.read(101) == content[:101]
-    assert tr.read() == b''
+    assert tr.read() == b""
 
     fd.seek(0)
-    tr = generic_io._TruncatedReader(fd, b'b', 1, include=True)
+    tr = generic_io._TruncatedReader(fd, b"b", 1, include=True)
     assert tr.read(102) == content[:101]
-    assert tr.read() == b''
+    assert tr.read() == b""
 
     fd.seek(0)
-    tr = generic_io._TruncatedReader(fd, b'b', 1, include=True)
+    tr = generic_io._TruncatedReader(fd, b"b", 1, include=True)
     assert tr.read(100) == content[:100]
     assert tr.read(1) == content[100:101]
-    assert tr.read() == b''
-
+    assert tr.read() == b""
 
     # Longer delimiter with variable length
-    content = b'a' * 100 + b'\n...\n' + b'ffffff'
-    delimiter = br'\r?\n\.\.\.((\r?\n)|$)'
+    content = b"a" * 100 + b"\n...\n" + b"ffffff"
+    delimiter = rb"\r?\n\.\.\.((\r?\n)|$)"
     readahead = 7
 
-    fd = generic_io.RandomAccessFile(io.BytesIO(), 'rw')
+    fd = generic_io.RandomAccessFile(io.BytesIO(), "rw")
     fd.write(content)
 
     # Delimiter not included in read
     fd.seek(0)
     tr = generic_io._TruncatedReader(fd, delimiter, readahead)
     assert tr.read() == content[:100]
-    assert tr.read() == b''
+    assert tr.read() == b""
 
     fd.seek(0)
     tr = generic_io._TruncatedReader(fd, delimiter, readahead)
     assert tr.read(100) == content[:100]
-    assert tr.read() == b''
+    assert tr.read() == b""
 
     # (read just up to the delimiter)
     fd.seek(0)
     tr = generic_io._TruncatedReader(fd, delimiter, readahead)
     assert tr.read(99) == content[:99]
     assert tr.read() == content[99:100]
-    assert tr.read() == b''
+    assert tr.read() == b""
 
     # (read partway into the delimiter)
     fd.seek(0)
     tr = generic_io._TruncatedReader(fd, delimiter, readahead)
     assert tr.read(99) == content[:99]
     assert tr.read(2) == content[99:100]
-    assert tr.read() == b''
+    assert tr.read() == b""
 
     # (read well past the delimiter)
     fd.seek(0)
     tr = generic_io._TruncatedReader(fd, delimiter, readahead)
     assert tr.read(99) == content[:99]
     assert tr.read(50) == content[99:100]
-    assert tr.read() == b''
+    assert tr.read() == b""
 
     # Same as the previous set of tests, but including the delimiter
     fd.seek(0)
     tr = generic_io._TruncatedReader(fd, delimiter, readahead, include=True)
     assert tr.read() == content[:105]
-    assert tr.read() == b''
+    assert tr.read() == b""
 
     fd.seek(0)
     tr = generic_io._TruncatedReader(fd, delimiter, readahead, include=True)
     assert tr.read(105) == content[:105]
-    assert tr.read() == b''
+    assert tr.read() == b""
 
     # (read just up to the delimiter)
     fd.seek(0)
     tr = generic_io._TruncatedReader(fd, delimiter, readahead, include=True)
     assert tr.read(99) == content[:99]
     assert tr.read() == content[99:105]
-    assert tr.read() == b''
+    assert tr.read() == b""
 
     # (read partway into the delimiter)
     fd.seek(0)
@@ -658,106 +636,96 @@ def test_truncated_reader():
     assert tr.read(99) == content[:99]
     assert tr.read(2) == content[99:101]
     assert tr.read() == content[101:105]
-    assert tr.read() == b''
+    assert tr.read() == b""
 
     # (read well past the delimiter)
     fd.seek(0)
     tr = generic_io._TruncatedReader(fd, delimiter, readahead, include=True)
     assert tr.read(99) == content[:99]
     assert tr.read(50) == content[99:105]
-    assert tr.read() == b''
+    assert tr.read() == b""
 
     # Same sequence of tests but with some 'initial_content'
-    init = b'abcd'
+    init = b"abcd"
 
     # Delimiter not included in read
     fd.seek(0)
-    tr = generic_io._TruncatedReader(fd, delimiter, readahead,
-                                     initial_content=init)
+    tr = generic_io._TruncatedReader(fd, delimiter, readahead, initial_content=init)
     assert tr.read() == (init + content[:100])
-    assert tr.read() == b''
+    assert tr.read() == b""
 
     fd.seek(0)
-    tr = generic_io._TruncatedReader(fd, delimiter, readahead,
-                                     initial_content=init)
+    tr = generic_io._TruncatedReader(fd, delimiter, readahead, initial_content=init)
     assert tr.read(100) == (init + content[:96])
     assert tr.read() == content[96:100]
-    assert tr.read() == b''
+    assert tr.read() == b""
 
     # (read just up to the delimiter)
     fd.seek(0)
-    tr = generic_io._TruncatedReader(fd, delimiter, readahead,
-                                     initial_content=init)
+    tr = generic_io._TruncatedReader(fd, delimiter, readahead, initial_content=init)
     assert tr.read(99) == (init + content[:95])
     assert tr.read() == content[95:100]
-    assert tr.read() == b''
+    assert tr.read() == b""
 
     # (read partway into the delimiter)
     fd.seek(0)
-    tr = generic_io._TruncatedReader(fd, delimiter, readahead,
-                                     initial_content=init)
+    tr = generic_io._TruncatedReader(fd, delimiter, readahead, initial_content=init)
     assert tr.read(99) == (init + content[:95])
     assert tr.read(6) == content[95:100]
-    assert tr.read() == b''
+    assert tr.read() == b""
 
     # (read well past the delimiter)
     fd.seek(0)
-    tr = generic_io._TruncatedReader(fd, delimiter, readahead,
-                                     initial_content=init)
+    tr = generic_io._TruncatedReader(fd, delimiter, readahead, initial_content=init)
     assert tr.read(99) == (init + content[:95])
     assert tr.read(50) == content[95:100]
-    assert tr.read() == b''
+    assert tr.read() == b""
 
     # Same as the previous set of tests, but including the delimiter
     fd.seek(0)
-    tr = generic_io._TruncatedReader(fd, delimiter, readahead, include=True,
-                                     initial_content=init)
+    tr = generic_io._TruncatedReader(fd, delimiter, readahead, include=True, initial_content=init)
     assert tr.read() == (init + content[:105])
-    assert tr.read() == b''
+    assert tr.read() == b""
 
     fd.seek(0)
-    tr = generic_io._TruncatedReader(fd, delimiter, readahead, include=True,
-                                     initial_content=init)
+    tr = generic_io._TruncatedReader(fd, delimiter, readahead, include=True, initial_content=init)
     assert tr.read(105) == (init + content[:101])
     assert tr.read() == content[101:105]
-    assert tr.read() == b''
+    assert tr.read() == b""
 
     # (read just up to the delimiter)
     fd.seek(0)
-    tr = generic_io._TruncatedReader(fd, delimiter, readahead, include=True,
-                                     initial_content=init)
+    tr = generic_io._TruncatedReader(fd, delimiter, readahead, include=True, initial_content=init)
     assert tr.read(103) == (init + content[:99])
     assert tr.read() == content[99:105]
-    assert tr.read() == b''
+    assert tr.read() == b""
 
     # (read partway into the delimiter)
     fd.seek(0)
-    tr = generic_io._TruncatedReader(fd, delimiter, readahead, include=True,
-                                     initial_content=init)
+    tr = generic_io._TruncatedReader(fd, delimiter, readahead, include=True, initial_content=init)
     assert tr.read(99) == (init + content[:95])
     assert tr.read(6) == content[95:101]
     assert tr.read() == content[101:105]
-    assert tr.read() == b''
+    assert tr.read() == b""
 
     # (read well past the delimiter)
     fd.seek(0)
-    tr = generic_io._TruncatedReader(fd, delimiter, readahead, include=True,
-                                     initial_content=init)
+    tr = generic_io._TruncatedReader(fd, delimiter, readahead, include=True, initial_content=init)
     assert tr.read(99) == (init + content[:95])
     assert tr.read(50) == content[95:105]
-    assert tr.read() == b''
+    assert tr.read() == b""
 
 
 def test_blocksize(tree, tmpdir):
-    path = os.path.join(str(tmpdir), 'test.asdf')
+    path = os.path.join(str(tmpdir), "test.asdf")
 
     def get_write_fd():
-        f = generic_io.get_file(open(path, 'wb'), mode='w', close=True)
+        f = generic_io.get_file(open(path, "wb"), mode="w", close=True)
         return f
 
     def get_read_fd():
         # Must open with mode=rw in order to get memmapped data
-        f = generic_io.get_file(open(path, 'r+b'), mode='rw', close=True)
+        f = generic_io.get_file(open(path, "r+b"), mode="rw", close=True)
         return f
 
     with config_context() as config:
