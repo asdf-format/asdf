@@ -3,7 +3,19 @@ requires = ["setuptools>=30.3.0", "setuptools_scm", "wheel"]
 
 [tool.black]
 line-length = 120
-force-exclude = "/(asdf/extern|.eggs|.tox)/"
+force-exclude = '''
+^/(
+  (
+      \.eggs
+    | \.git
+    | \.pytest_cache
+    | \.tox
+    | asdf/extern
+    | build
+    | dist
+  )/
+)
+'''
 
 [tool.isort]
 profile = "black"
