@@ -4,6 +4,15 @@
 Changes
 *******
 
+What's new in asdf 2.10.0?
+==========================
+
+The ASDF Standard is at v1.6.0.
+
+Changes include:
+
+- Replace asdf-standard submodule with pypi package.
+
 What's new in asdf 2.9.2?
 =========================
 
