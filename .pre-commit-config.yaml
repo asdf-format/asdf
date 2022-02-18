@@ -17,8 +17,7 @@ repos:
   rev: 5.10.1
   hooks:
     - id: isort
-      args: ["--profile", "black", "--filter-files"]
-      exclude: "asdf/extern/.*"
+      args: ["--filter-files"]
 
 - repo: https://github.com/psf/black
   rev: 22.1.0
@@ -30,11 +29,10 @@ repos:
   rev: 4.0.1
   hooks:
     - id: flake8
-      args: ["--count", "--ignore", "E501, E203, W503, W504"]
-      exclude: "asdf/extern/.*"
+      exclude: "asdf/extern/.*|docs/.*"
 
 - repo: https://github.com/PyCQA/bandit
   rev: 1.7.2
   hooks:
     - id: bandit
-      args: ["-x", "asdf/tests,asdf/commands/tests,asdf/tags/core/tests,asdf/extern,compatibility_tests,docs"]
+      args: ["-c", "bandit.yaml"]

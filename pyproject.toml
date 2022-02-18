@@ -3,3 +3,21 @@ requires = ["setuptools>=30.3.0", "setuptools_scm", "wheel"]
 
 [tool.black]
 line-length = 120
+exclude = '''
+^/(
+  (
+      \.eggs
+    | \.git
+    | \.pytest_cache
+    | \.tox
+    | asdf/extern
+    | build
+    | dist
+  )/
+)
+'''
+
+[tool.isort]
+profile = "black"
+line_length = 120
+extend_skip_glob = [ "asdf/extern/*" ]
