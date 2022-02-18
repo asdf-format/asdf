@@ -559,7 +559,9 @@ class BlockManager:
         reserved_blocks = set()
 
         for node in treeutil.iter_tree(tree):
-            hook = ctx.type_index.get_hook_for_type("reserve_blocks", type(node), ctx.version_string)
+            hook = get_config().extension_list.type_index.get_hook_for_type(
+                "reserve_blocks", type(node), ctx.version_string
+            )
             if hook is not None:
                 for block in hook(node, ctx):
                     reserved_blocks.add(block)

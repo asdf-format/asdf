@@ -6,6 +6,7 @@ import numpy as np
 import yaml
 
 from . import schema, tagged, treeutil, util
+from .config import get_config
 from .constants import STSCI_SCHEMA_TAG_BASE, YAML_TAG_PREFIX
 from .core import AsdfObject
 from .exceptions import AsdfConversionWarning
@@ -217,7 +218,7 @@ def custom_tree_to_tagged_tree(tree, ctx, _serialization_context=None):
     if _serialization_context is None:
         _serialization_context = ctx._create_serialization_context()
 
-    extension_manager = _serialization_context.extension_manager
+    extension_manager = get_config().get_extension_manager(_serialization_context.version)
 
     def _convert_obj(obj):
         converter = extension_manager.get_converter_for_type(type(obj))
@@ -254,7 +255,7 @@ def custom_tree_to_tagged_tree(tree, ctx, _serialization_context=None):
         if extension_manager.handles_type(type(obj)):
             return _convert_obj(obj)
         else:
-            tag = ctx.type_index.from_custom_type(
+            tag = get_config().extension_list.type_index.from_custom_type(
                 type(obj), ctx.version_string, _serialization_context=_serialization_context
             )
 
@@ -280,7 +281,7 @@ def tagged_tree_to_custom_tree(tree, ctx, force_raw_types=False, _serialization_
     if _serialization_context is None:
         _serialization_context = ctx._create_serialization_context()
 
-    extension_manager = _serialization_context.extension_manager
+    extension_manager = get_config().get_extension_manager(_serialization_context.version)
 
     def _walker(node):
         if force_raw_types:
@@ -296,7 +297,9 @@ def tagged_tree_to_custom_tree(tree, ctx, force_raw_types=False, _serialization_
             _serialization_context._mark_extension_used(converter.extension)
             return obj
 
-        tag_type = ctx.type_index.from_yaml_tag(ctx, tag, _serialization_context=_serialization_context)
+        tag_type = get_config().extension_list.type_index.from_yaml_tag(
+            ctx, tag, _serialization_context=_serialization_context
+        )
         # This means the tag did not correspond to any type in our type index.
         if tag_type is None:
             msg = f"{tag} is not recognized, converting to raw Python data structure."

@@ -15,7 +15,7 @@ from ._helpers import validate_version
 from .config import get_config
 from .core import AsdfObject
 from .exceptions import AsdfWarning
-from .extension import ExtensionProxy, get_cached_asdf_extension_list, get_cached_extension_manager
+from .extension import ExtensionProxy
 from .search import AsdfSearchResult
 from .util import NotSet
 
@@ -85,12 +85,8 @@ class AsdfFile:
         else:
             self._version = versioning.AsdfVersion(validate_version(version))
 
-        self._plugin_extensions = self._process_plugin_extensions()
-        self._extension_manager = None
-        self._extension_list = None
-
         if custom_schema is not None:
-            self._custom_schema = schema._load_schema_cached(custom_schema, self.resolver, True)
+            self._custom_schema = schema._load_schema_cached(custom_schema, get_config().extension_list.resolver, True)
         else:
             self._custom_schema = None
 
@@ -140,22 +136,6 @@ class AsdfFile:
         """
         return self._version
 
-    @version.setter
-    def version(self, value):
-        """
-        Set this AsdfFile's ASDF Standard version.
-
-        Parameters
-        ----------
-        value : str or asdf.versioning.AsdfVersion
-        """
-        self._version = versioning.AsdfVersion(validate_version(value))
-        # The new version may not be compatible with the previous
-        # set of extensions, so we need to check them again:
-        self._plugin_extensions = self._process_plugin_extensions()
-        self._extension_manager = None
-        self._extension_list = None
-
     @property
     def version_string(self):
         """
@@ -170,32 +150,6 @@ class AsdfFile:
     @property
     def version_map(self):
         return versioning.get_version_map(self.version_string)
-
-    @property
-    def extension_manager(self):
-        """
-        Get the ExtensionManager for this AsdfFile.
-
-        Returns
-        -------
-        asdf.extension.ExtensionManager
-        """
-        if self._extension_manager is None:
-            self._extension_manager = get_cached_extension_manager(self._plugin_extensions)
-        return self._extension_manager
-
-    @property
-    def extension_list(self):
-        """
-        Get the AsdfExtensionList for this AsdfFile.
-
-        Returns
-        -------
-        asdf.extension.AsdfExtensionList
-        """
-        if self._extension_list is None:
-            self._extension_list = get_cached_asdf_extension_list(self._plugin_extensions)
-        return self._extension_list
 
     def __enter__(self):
         return self
@@ -222,7 +176,7 @@ class AsdfFile:
 
         for extension in tree["history"]["extensions"]:
             installed = None
-            for ext in self._plugin_extensions:
+            for ext in get_config().get_extension_manager(self.version).extensions:
                 if (
                     extension.extension_uri is not None
                     and extension.extension_uri == ext.extension_uri
@@ -269,17 +223,6 @@ class AsdfFile:
                         raise RuntimeError(msg)
                     else:
                         warnings.warn(msg, AsdfWarning)
-
-    def _process_plugin_extensions(self):
-        """
-        Select installed extensions that are compatible with this
-        file's ASDF Standard version.
-
-        Returns
-        -------
-        list of asdf.extension.ExtensionProxy
-        """
-        return [e for e in get_config().extensions if self.version_string in e.asdf_standard_requirement]
 
     def _update_extension_history(self, serialization_context):
         """
@@ -375,22 +318,6 @@ class AsdfFile:
         if self._fd is not None:
             return self._fd._uri
         return None
-
-    @property
-    def tag_mapping(self):
-        return self.extension_list.tag_mapping
-
-    @property
-    def url_mapping(self):
-        return self.extension_list.url_mapping
-
-    @property
-    def resolver(self):
-        return self.extension_list.resolver
-
-    @property
-    def type_index(self):
-        return self.extension_list.type_index
 
     def resolve_uri(self, uri):
         """
@@ -687,13 +614,13 @@ class AsdfFile:
         self._fname = self._fd._uri if self._fd._uri else ""
         header_line = fd.read_until(b"\r?\n", 2, "newline", include=True)
         self._file_format_version = cls._parse_header_line(header_line)
-        self.version = self._file_format_version
+        self._version = self._file_format_version
 
         self._comments = cls._read_comment_section(fd)
 
         version = cls._find_asdf_version_in_comments(self._comments)
         if version is not None:
-            self.version = version
+            self._version = version
 
         # Now that version is set for good, we can add any additional
         # extensions, which may have narrow ASDF Standard version
@@ -1133,7 +1060,7 @@ class AsdfFile:
             with this name, it will be called for every instance of the
             corresponding custom type in the tree.
         """
-        type_index = self.type_index
+        type_index = get_config().extension_list.type_index
 
         if not type_index.has_hook(hookname):
             return
@@ -1159,7 +1086,7 @@ class AsdfFile:
         validate : bool
             When `True` (default) validate the resulting tree.
         """
-        type_index = self.type_index
+        type_index = get_config().extension_list.type_index
 
         if not type_index.has_hook(hookname):
             return
@@ -1361,7 +1288,7 @@ class AsdfFile:
     # This function is called from within yamlutil methods to create
     # a context when one isn't explicitly passed in.
     def _create_serialization_context(self):
-        return SerializationContext(self.version_string, self.extension_manager, self.uri)
+        return SerializationContext(self.version_string, self.uri)
 
 
 # Inherit docstring from dictionary
@@ -1488,9 +1415,8 @@ class SerializationContext:
     Container for parameters of the current (de)serialization.
     """
 
-    def __init__(self, version, extension_manager, url):
+    def __init__(self, version, url):
         self._version = validate_version(version)
-        self._extension_manager = extension_manager
         self._url = url
 
         self.__extensions_used = set()
@@ -1520,17 +1446,6 @@ class SerializationContext:
         str
         """
         return self._version
-
-    @property
-    def extension_manager(self):
-        """
-        Get the ExtensionManager for enabled extensions.
-
-        Returns
-        -------
-        asdf.extension.ExtensionManager
-        """
-        return self._extension_manager
 
     def _mark_extension_used(self, extension):
         """

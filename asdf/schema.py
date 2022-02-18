@@ -274,18 +274,19 @@ def _create_validator(validators=YAML_VALIDATORS, visit_repeat_nodes=False):
                 if _schema is None:
                     tag = getattr(instance, "_tag", None)
                     if tag is not None:
-                        if self.serialization_context.extension_manager.handles_tag_definition(tag):
-                            tag_def = self.serialization_context.extension_manager.get_tag_definition(tag)
+                        extension_manager = get_config().get_extension_manager(self.serialization_context.version)
+                        if extension_manager.handles_tag_definition(tag):
+                            tag_def = extension_manager.get_tag_definition(tag)
                             schema_uris = tag_def.schema_uris
                         else:
-                            schema_uris = [self.ctx.tag_mapping(tag)]
+                            schema_uris = [get_config().extension_list.tag_mapping(tag)]
                             if schema_uris[0] == tag:
                                 schema_uris = []
 
                         # Must validate against all schema_uris
                         for schema_uri in schema_uris:
                             try:
-                                s = _load_schema_cached(schema_uri, self.ctx.resolver, False)
+                                s = _load_schema_cached(schema_uri, get_config().extension_list.resolver, False)
                             except FileNotFoundError:
                                 msg = "Unable to locate schema file for '{}': '{}'"
                                 warnings.warn(msg.format(tag, schema_uri), AsdfWarning)
@@ -537,9 +538,11 @@ def get_validator(
         _serialization_context = ctx._create_serialization_context()
 
     if validators is None:
+        extension_manager = get_config().get_extension_manager(_serialization_context.version)
+        extension_list = get_config().extension_list
         validators = util.HashableDict(YAML_VALIDATORS.copy())
-        validators.update(ctx.extension_list.validators)
-        validators.update(ctx.extension_manager.validator_manager.get_jsonschema_validators())
+        validators.update(extension_list.validators)
+        validators.update(extension_manager.validator_manager.get_jsonschema_validators())
 
     kwargs["resolver"] = _make_resolver(url_mapping)
 
@@ -638,7 +641,7 @@ def validate(instance, ctx=None, schema={}, validators=None, reading=False, *arg
 
         ctx = AsdfFile()
 
-    validator = get_validator(schema, ctx, validators, ctx.resolver, *args, **kwargs)
+    validator = get_validator(schema, ctx, validators, get_config().extension_list.resolver, *args, **kwargs)
     validator.validate(instance, _schema=(schema or None))
 
     additional_validators = [_validate_large_literals]

@@ -253,16 +253,6 @@ def test_schema_caching():
     assert s1 is not s2
 
 
-def test_asdf_file_resolver_hashing():
-    # Confirm that resolvers from distinct AsdfFile instances
-    # hash to the same value (this allows schema caching to function).
-    a1 = asdf.AsdfFile()
-    a2 = asdf.AsdfFile()
-
-    assert hash(a1.resolver) == hash(a2.resolver)
-    assert a1.resolver == a2.resolver
-
-
 def test_load_schema_from_resource_mapping():
     content = """
 id: http://somewhere.org/schemas/razmataz-1.0.0

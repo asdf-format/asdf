@@ -22,6 +22,7 @@ except ImportError:
 import yaml
 
 import asdf
+from asdf import get_config
 from asdf.core import AsdfObject
 
 from .. import generic_io, versioning
@@ -29,7 +30,6 @@ from ..asdf import AsdfFile, get_asdf_library_info
 from ..block import Block
 from ..constants import YAML_TAG_PREFIX
 from ..exceptions import AsdfConversionWarning
-from ..extension import default_extensions
 from ..resolver import Resolver, ResolverChain
 from ..versioning import AsdfVersion, get_version_map
 from .httpserver import RangeHTTPServer
@@ -92,10 +92,11 @@ def assert_tree_match(old_tree, new_tree, ctx=None, funcname="assert_equal", ign
     ignore_keys = set(ignore_keys)
 
     if ctx is None:
-        version_string = str(versioning.default_version)
-        ctx = default_extensions.extension_list
+        version_string = get_config().default_version
     else:
         version_string = ctx.version_string
+
+    ctx = get_config().extension_list
 
     def recurse(old, new):
         if id(old) in seen or id(new) in seen:

@@ -15,8 +15,6 @@ from asdf.extension import (
     ManifestExtension,
     TagDefinition,
     Validator,
-    get_cached_asdf_extension_list,
-    get_cached_extension_manager,
 )
 from asdf.tests.helpers import assert_extension_correctness
 from asdf.types import CustomType
@@ -437,13 +435,6 @@ def test_extension_manager():
         manager.get_converter_for_type(object)
 
 
-def test_get_cached_extension_manager():
-    extension = MinimumExtension()
-    extension_manager = get_cached_extension_manager([extension])
-    assert get_cached_extension_manager([extension]) is extension_manager
-    assert get_cached_extension_manager([MinimumExtension()]) is not extension_manager
-
-
 def test_tag_definition():
     tag_def = TagDefinition(
         "asdf://somewhere.org/extensions/foo/tags/foo-1.0",
@@ -597,13 +588,6 @@ def test_converter_proxy():
     # Should fail because types must instances of type:
     with pytest.raises(TypeError):
         ConverterProxy(MinimumConverter(types=[object()]), extension)
-
-
-def test_get_cached_asdf_extension_list():
-    extension = LegacyExtension()
-    extension_list = get_cached_asdf_extension_list([extension])
-    assert get_cached_asdf_extension_list([extension]) is extension_list
-    assert get_cached_asdf_extension_list([LegacyExtension()]) is not extension_list
 
 
 def test_manifest_extension():

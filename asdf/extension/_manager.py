@@ -1,5 +1,3 @@
-from functools import lru_cache
-
 from ..tagged import Tagged
 from ..util import get_class_name, uri_match
 from ._extension import ExtensionProxy
@@ -192,39 +190,6 @@ class ExtensionManager:
     @property
     def validator_manager(self):
         return self._validator_manager
-
-
-def get_cached_extension_manager(extensions):
-    """
-    Get a previously created ExtensionManager for the specified
-    extensions, or create and cache one if necessary.  Building
-    the manager is expensive, so it helps performance to reuse
-    it when possible.
-
-    Parameters
-    ----------
-    extensions : list of asdf.extension.AsdfExtension or asdf.extension.Extension
-
-    Returns
-    -------
-    asdf.extension.ExtensionManager
-    """
-    from ._extension import ExtensionProxy
-
-    # The tuple makes the extensions hashable so that we
-    # can pass them to the lru_cache method.  The ExtensionProxy
-    # overrides __hash__ to return the hashed object id of the wrapped
-    # extension, so this will method will only return the same
-    # ExtensionManager if the list contains identical extension
-    # instances in identical order.
-    extensions = tuple(ExtensionProxy.maybe_wrap(e) for e in extensions)
-
-    return _get_cached_extension_manager(extensions)
-
-
-@lru_cache()
-def _get_cached_extension_manager(extensions):
-    return ExtensionManager(extensions)
 
 
 class ValidatorManager:

@@ -26,6 +26,11 @@
 
 - Remove extensions argument from AsdfFile class and open functions. [#1062]
 
+- Remove ExtensionManager and ExtensionList from AsdfFile instance and store
+  in AsdfConfig instead. [#1092]
+
+- Remove setter for AsdfFile.version. [#1092]
+
 2.10.2 (unreleased)
 -------------------
 

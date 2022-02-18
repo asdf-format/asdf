@@ -3,7 +3,7 @@ import pytest
 from asdf import config_context, get_config
 from asdf.asdf import AsdfFile, SerializationContext, open_asdf
 from asdf.exceptions import AsdfWarning
-from asdf.extension import ExtensionManager, ExtensionProxy
+from asdf.extension import ExtensionProxy
 from asdf.tests.helpers import assert_no_warnings, yaml_to_asdf
 from asdf.versioning import AsdfVersion
 
@@ -74,34 +74,10 @@ def test_asdf_file_version():
         with pytest.raises(ValueError):
             AsdfFile(version=AsdfVersion("0.5.4"))
 
-        af = AsdfFile()
-
-        af.version = "1.3.0"
-        assert af.version == AsdfVersion("1.3.0")
-        assert af.version_string == "1.3.0"
-
-        af.version = AsdfVersion("1.4.0")
-        assert af.version == AsdfVersion("1.4.0")
-        assert af.version_string == "1.4.0"
-
-        with pytest.raises(ValueError):
-            af.version = "0.5.4"
-
-        with pytest.raises(ValueError):
-            af.version = AsdfVersion("2.5.4")
-
-        af.version = "1.0.0"
-        assert af.version_map["tags"]["tag:stsci.edu:asdf/core/asdf"] == "1.0.0"
-
-        af.version = "1.2.0"
-        assert af.version_map["tags"]["tag:stsci.edu:asdf/core/asdf"] == "1.1.0"
-
 
 def test_serialization_context():
-    extension_manager = ExtensionManager([])
-    context = SerializationContext("1.4.0", extension_manager, "file://test.asdf")
+    context = SerializationContext("1.4.0", "file://test.asdf")
     assert context.version == "1.4.0"
-    assert context.extension_manager is extension_manager
     assert context._extensions_used == set()
 
     extension = get_config().extensions[0]
@@ -118,7 +94,7 @@ def test_serialization_context():
         context._mark_extension_used(object())
 
     with pytest.raises(ValueError):
-        SerializationContext("0.5.4", extension_manager, None)
+        SerializationContext("0.5.4", None)
 
 
 def test_reading_extension_metadata():
