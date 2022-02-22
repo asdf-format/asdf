@@ -88,6 +88,21 @@ class ExtensionManager:
         """
         return typ in self._converters_by_type or get_class_name(typ, instance=False) in self._converters_by_type
 
+    def handles_tag_definition(self, tag):
+        """
+        Return `True` if the specified tag has a definition.
+
+        Parameters
+        ----------
+        tag : str
+            Tag URI.
+
+        Returns
+        -------
+        bool
+        """
+        return tag in self._tag_defs_by_tag
+
     def get_tag_definition(self, tag):
         """
         Get the tag definition for the specified tag.
