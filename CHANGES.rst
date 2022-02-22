@@ -1,3 +1,8 @@
+2.10.1 (unreleased)
+-------------------
+
+- Fix small bug with handling multiple schema uris per tag. [#1095]
+
 2.10.0 (2022-02-17)
 -------------------
 
