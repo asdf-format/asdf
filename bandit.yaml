@@ -1,0 +1,16 @@
+skips: [ B101 ]
+
+exclude_dirs:
+  - .eggs
+  - .git
+  - .pytest_cache
+  - .tox
+  - asdf/commands/tests
+  - asdf/extern
+  - asdf/tags/core/tests
+  - asdf/tests
+  - build
+  - compatibility_tests
+  - dist
+  - docs
+  - __pycache__

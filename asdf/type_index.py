@@ -3,13 +3,7 @@ from collections import OrderedDict
 from functools import lru_cache
 
 from . import util
-from .versioning import (
-    AsdfVersion,
-    default_version,
-    get_version_map,
-    join_tag_version,
-    split_tag_version,
-)
+from .versioning import AsdfVersion, default_version, get_version_map, join_tag_version, split_tag_version
 
 __all__ = ["AsdfTypeIndex"]
 
