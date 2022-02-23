@@ -3,7 +3,7 @@ requires = ["setuptools>=30.3.0", "setuptools_scm", "wheel"]
 
 [tool.black]
 line-length = 120
-exclude = '''
+force-exclude = '''
 ^/(
   (
       \.eggs
@@ -19,5 +19,6 @@ exclude = '''
 
 [tool.isort]
 profile = "black"
+filter_files = true
 line_length = 120
-extend_skip_glob = [ "asdf/extern/*" ]
+extend_skip_glob = ["asdf/extern/*", ".eggs/*", ".tox/*"]
