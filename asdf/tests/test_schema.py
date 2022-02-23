@@ -7,18 +7,7 @@ from jsonschema import ValidationError
 from numpy.testing import assert_array_equal
 
 import asdf
-from asdf import (
-    config_context,
-    constants,
-    extension,
-    get_config,
-    resolver,
-    schema,
-    tagged,
-    types,
-    util,
-    yamlutil,
-)
+from asdf import config_context, constants, extension, get_config, resolver, schema, tagged, types, util, yamlutil
 from asdf.exceptions import AsdfConversionWarning, AsdfDeprecationWarning, AsdfWarning
 from asdf.tests import CustomExtension, helpers
 

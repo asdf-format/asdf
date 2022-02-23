@@ -12,17 +12,7 @@ import yaml
 from jsonschema import validators as mvalidators
 from jsonschema.exceptions import ValidationError
 
-from . import (
-    constants,
-    extension,
-    generic_io,
-    reference,
-    tagged,
-    treeutil,
-    util,
-    versioning,
-    yamlutil,
-)
+from . import constants, extension, generic_io, reference, tagged, treeutil, util, versioning, yamlutil
 from .config import get_config
 from .exceptions import AsdfDeprecationWarning, AsdfWarning
 from .util import patched_urllib_parse
