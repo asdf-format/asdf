@@ -16,11 +16,13 @@ __all__ = [
     "ValidationError",
     "get_config",
     "config_context",
+    "fits_embed",
 ]
 
 
 from jsonschema import ValidationError
 
+from . import fits_embed
 from ._convenience import info
 from .asdf import AsdfFile
 from .asdf import open_asdf as open
