@@ -1,3 +1,8 @@
+2.10.1 (unreleased)
+-------------------
+
+- Bugfix for roman_datamodels use of ``fits_embed`` [#1097]
+
 2.10.0 (2022-02-17)
 -------------------
 
