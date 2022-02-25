@@ -16,13 +16,11 @@ __all__ = [
     "ValidationError",
     "get_config",
     "config_context",
-    "fits_embed",
 ]
 
 
 from jsonschema import ValidationError
 
-from . import fits_embed
 from ._convenience import info
 from .asdf import AsdfFile
 from .asdf import open_asdf as open
@@ -33,3 +31,12 @@ from .tags.core import IntegerType
 from .tags.core.external_reference import ExternalArrayReference
 from .types import CustomType
 from .version import version as __version__
+
+try:
+    import astropy  # noqa
+except ImportError:
+    pass
+else:
+    from . import fits_embed  # noqa
+
+    __all__.append("fits_embed")
