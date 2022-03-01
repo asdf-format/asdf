@@ -1,3 +1,8 @@
+2.10.1 (unreleased)
+-------------------
+
+- Bugfix for circular build dependency for asdf. [#1094]
+
 2.10.0 (2022-02-17)
 -------------------
 
