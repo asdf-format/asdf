@@ -288,7 +288,7 @@ def _create_validator(validators=YAML_VALIDATORS, visit_repeat_nodes=False):
                 if _schema is None:
                     tag = getattr(instance, "_tag", None)
                     if tag is not None:
-                        if self.serialization_context.extension_manager.handles_tag(tag):
+                        if self.serialization_context.extension_manager.handles_tag_definition(tag):
                             tag_def = self.serialization_context.extension_manager.get_tag_definition(tag)
                             schema_uris = tag_def.schema_uris
                         else:

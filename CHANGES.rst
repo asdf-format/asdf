@@ -1,6 +1,8 @@
 2.10.1 (unreleased)
 -------------------
 
+- Bugfix for circular build dependency for asdf. [#1094]
+- Fix small bug with handling multiple schema uris per tag. [#1095]
 - Bugfix for roman_datamodels use of ``fits_embed`` [#1097]
 
 2.10.0 (2022-02-17)
