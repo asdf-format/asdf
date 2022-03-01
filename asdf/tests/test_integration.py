@@ -133,3 +133,29 @@ def test_serialize_with_multiple_schemas(tmpdir):
         with pytest.raises(asdf.ValidationError):
             af["foo_foo"] = FooFoo("bar", 34)
             af.write_to(path)
+
+
+class FooFooConverterlessExtension:
+    extension_uri = "asdf://somewhere.org/extensions/foo_foo-1.0"
+    converters = []
+    tags = [
+        TagDefinition(
+            "asdf://somewhere.org/extensions/foo/tags/foo_foo-1.0",
+            schema_uris=[FOO_SCHEMA_URI, FOOFOO_SCHEMA_URI],
+        )
+    ]
+
+
+def test_converterless_serialize_with_multiple_schemas(tmpdir):
+    with asdf.config_context() as config:
+        config.add_resource_mapping({FOO_SCHEMA_URI: FOO_SCHEMA, FOOFOO_SCHEMA_URI: FOOFOO_SCHEMA})
+        config.add_extension(FooFooConverterlessExtension())
+
+        path = str(tmpdir / "test.asdf")
+
+        af = asdf.AsdfFile()
+        af["foo_foo"] = "asdf://somewhere.org/extensions/foo/tags/foo_foo-1.0 {bar: bar_bar}"
+        af.write_to(path)
+
+        with asdf.open(path) as af2:
+            assert af2["foo_foo"] == af["foo_foo"]

@@ -2,6 +2,7 @@
 -------------------
 
 - Bugfix for circular build dependency for asdf. [#1094]
+- Fix small bug with handling multiple schema uris per tag. [#1095]
 
 2.10.0 (2022-02-17)
 -------------------
