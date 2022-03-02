@@ -1,13 +1,7 @@
 import datetime
 
 import asdf
-from asdf.core import (
-    AsdfObject,
-    ExtensionMetadata,
-    ExternalArrayReference,
-    HistoryEntry,
-    Software,
-)
+from asdf.core import AsdfObject, ExtensionMetadata, ExternalArrayReference, HistoryEntry, Software
 from asdf.testing import helpers
 
 

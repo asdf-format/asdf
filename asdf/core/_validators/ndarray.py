@@ -2,11 +2,7 @@ import numpy as np
 
 from asdf.exceptions import ValidationError
 from asdf.extension import Validator
-from asdf.tags.core.ndarray import (
-    asdf_datatype_to_numpy_dtype,
-    inline_data_asarray,
-    numpy_dtype_to_asdf_datatype,
-)
+from asdf.tags.core.ndarray import asdf_datatype_to_numpy_dtype, inline_data_asarray, numpy_dtype_to_asdf_datatype
 
 
 class NdimValidator(Validator):
