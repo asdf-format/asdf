@@ -1,5 +1,5 @@
 from . import versioning
-from .version import version as asdf_package_version
+from ._version import version as asdf_package_version
 
 
 def validate_version(version):

@@ -3,10 +3,10 @@ import pytest
 from pkg_resources import EntryPoint
 
 from asdf import entry_points
+from asdf._version import version as asdf_package_version
 from asdf.exceptions import AsdfWarning
 from asdf.extension import ExtensionProxy
 from asdf.resource import ResourceMappingProxy
-from asdf.version import version as asdf_package_version
 
 
 @pytest.fixture
