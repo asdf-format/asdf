@@ -15,12 +15,7 @@ from asdf import config_context, extension, get_config, treeutil, versioning
 from asdf.exceptions import AsdfWarning
 from asdf.extension import ExtensionProxy
 
-from .helpers import (
-    assert_no_warnings,
-    assert_roundtrip_tree,
-    assert_tree_match,
-    yaml_to_asdf,
-)
+from .helpers import assert_no_warnings, assert_roundtrip_tree, assert_tree_match, yaml_to_asdf
 
 
 def test_get_data_from_closed_file(tmpdir):

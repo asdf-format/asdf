@@ -26,7 +26,16 @@
 
 - Remove extensions argument from AsdfFile class and open functions. [#1062]
 
-2.10.0 (unreleased)
+2.10.2 (unreleased)
+-------------------
+
+2.10.1 (2022-03-02)
+-------------------
+
+- Bugfix for circular build dependency for asdf. [#1094]
+- Fix small bug with handling multiple schema uris per tag. [#1095]
+
+2.10.0 (2022-02-17)
 -------------------
 
 - Replace asdf-standard submodule with pypi package. [#1079]

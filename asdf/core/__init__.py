@@ -1,10 +1,4 @@
-from ._entities import (
-    AsdfObject,
-    ExtensionMetadata,
-    ExternalArrayReference,
-    HistoryEntry,
-    Software,
-)
+from ._entities import AsdfObject, ExtensionMetadata, ExternalArrayReference, HistoryEntry, Software
 
 __all__ = [
     "AsdfObject",
