@@ -5,8 +5,9 @@ import pytest
 import asdf
 from asdf import get_config
 from asdf.core import _integration
-from asdf.extension import BuiltinExtension, ExtensionProxy
+from asdf.extension import AsdfExtensionList, BuiltinExtension, ExtensionProxy
 from asdf.resource import ResourceMappingProxy
+from asdf.versioning import supported_versions
 
 
 def test_config_context():
@@ -312,3 +313,33 @@ def test_config_repr():
         assert "io_block_size: 9999" in repr(config)
         assert "legacy_fill_schema_defaults: False" in repr(config)
         assert "array_inline_threshold: 14" in repr(config)
+
+
+def test_extension_list():
+    # This is being removed in 3.0 so we don't need more than
+    # a smoke test here.
+    assert isinstance(get_config().extension_list, AsdfExtensionList)
+
+
+@pytest.mark.parametrize("version", supported_versions)
+def test_get_extension_manager(version):
+    with asdf.config_context() as config:
+
+        class RelevantExtension:
+            extension_uri = "asdf://somewhere.org/extensions/relevant-1.0"
+            asdf_standard_requirement = f"=={version}"
+
+        class IrrelevantExtension:
+            extension_uri = "asdf://somewhere.org/extensions/irrelevant-1.0"
+            asdf_standard_requirement = "==999.999.999"
+
+        relevant_extension = RelevantExtension()
+        irrelevant_extension = IrrelevantExtension()
+
+        config.add_extension(relevant_extension)
+        config.add_extension(irrelevant_extension)
+
+        extension_manager = config.get_extension_manager(version)
+
+        assert any(e.delegate is relevant_extension for e in extension_manager.extensions)
+        assert not any(e.delegate is irrelevant_extension for e in extension_manager.extensions)

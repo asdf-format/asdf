@@ -10,10 +10,9 @@ from ._legacy import (
     AsdfExtensionList,
     BuiltinExtension,
     default_extensions,
-    get_cached_asdf_extension_list,
     get_default_resolver,
 )
-from ._manager import ExtensionManager, get_cached_extension_manager
+from ._manager import ExtensionManager
 from ._manifest import ManifestExtension
 from ._tag import TagDefinition
 from ._validator import Validator
@@ -24,7 +23,6 @@ __all__ = [
     "ExtensionProxy",
     "ManifestExtension",
     "ExtensionManager",
-    "get_cached_extension_manager",
     "TagDefinition",
     "Converter",
     "ConverterProxy",
@@ -36,5 +34,4 @@ __all__ = [
     "BuiltinExtension",
     "default_extensions",
     "get_default_resolver",
-    "get_cached_asdf_extension_list",
 ]

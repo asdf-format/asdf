@@ -8,7 +8,7 @@ from contextlib import contextmanager
 
 from . import entry_points, util, versioning
 from ._helpers import validate_version
-from .extension import ExtensionProxy
+from .extension import AsdfExtensionList, ExtensionManager, ExtensionProxy
 from .resource import ResourceManager, ResourceMappingProxy
 
 __all__ = ["AsdfConfig", "get_config", "config_context"]
@@ -32,6 +32,9 @@ class AsdfConfig:
         self._resource_mappings = None
         self._resource_manager = None
         self._extensions = None
+        # Indexed by ASDF Standard version
+        self._extension_managers = {}
+        self._extension_list = None
         self._validate_on_read = DEFAULT_VALIDATE_ON_READ
         self._default_version = DEFAULT_DEFAULT_VERSION
         self._legacy_fill_schema_defaults = DEFAULT_LEGACY_FILL_SCHEMA_DEFAULTS
@@ -159,6 +162,8 @@ class AsdfConfig:
         with self._lock:
             extension = ExtensionProxy.maybe_wrap(extension)
             self._extensions = [extension] + [e for e in self.extensions if e != extension]
+            self._extension_managers = {}
+            self._extension_list = None
 
     def remove_extension(self, extension=None, *, package=None):
         """
@@ -194,6 +199,8 @@ class AsdfConfig:
 
         with self._lock:
             self._extensions = [e for e in self.extensions if not _remove_condition(e)]
+            self._extension_managers = {}
+            self._extension_list = None
 
     def reset_extensions(self):
         """
@@ -201,6 +208,45 @@ class AsdfConfig:
         """
         with self._lock:
             self._extensions = None
+            self._extension_managers = {}
+            self._extension_list = None
+
+    def get_extension_manager(self, version):
+        """
+        Get the extension manager for an ASDF Standard version.
+
+        Parameters
+        ----------
+        version : str
+            ASDF Standard version.
+
+        Returns
+        -------
+        asdf.extension.ExtensionManager
+        """
+        version = validate_version(version)
+
+        if version not in self._extension_managers:
+            with self._lock:
+                relevant_extensions = [e for e in self.extensions if version in e.asdf_standard_requirement]
+                self._extension_managers[version] = ExtensionManager(relevant_extensions)
+
+        return self._extension_managers[version]
+
+    @property
+    def extension_list(self):
+        """
+        Get the extension list object.
+
+        Returns
+        -------
+        asdf.extension.ExtensionList
+        """
+        if self._extension_list is None:
+            with self._lock:
+                self._extension_list = AsdfExtensionList(self.extensions)
+
+        return self._extension_list
 
     @property
     def default_version(self):

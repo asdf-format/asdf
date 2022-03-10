@@ -5,7 +5,8 @@ Implementation of command for displaying available tags in asdf
 
 import sys
 
-from .. import AsdfFile
+from asdf import get_config
+
 from .main import Command
 
 __all__ = ["list_tags"]
@@ -45,13 +46,14 @@ def _format_type(typ):
 
 def list_tags(display_classes=False, iostream=sys.stdout):
     """Function to list tags"""
-    af = AsdfFile()
+    extension_manager = get_config().get_extension_manager(get_config().default_version)
+    type_index = get_config().extension_list.type_index
 
     tag_pairs = []
-    for tag in af.extension_manager._converters_by_tag:
-        tag_pairs.append((tag, af.extension_manager.get_converter_for_tag(tag).types))
-    for tag in af.type_index._type_by_tag:
-        tag_pairs.append((tag, [af.type_index._type_by_tag[tag]]))
+    for tag in extension_manager._converters_by_tag:
+        tag_pairs.append((tag, extension_manager.get_converter_for_tag(tag).types))
+    for tag in type_index._type_by_tag:
+        tag_pairs.append((tag, [type_index._type_by_tag[tag]]))
 
     for tag, types in sorted(tag_pairs, key=lambda pair: pair[0]):
         string = str(tag)

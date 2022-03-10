@@ -2,7 +2,8 @@ import io
 
 import pytest
 
-from ... import AsdfFile
+from asdf import get_config
+
 from .. import list_tags
 
 
@@ -18,8 +19,10 @@ def test_all_tags_present():
     iostream.seek(0)
     tags = {line.strip() for line in iostream.readlines()}
 
-    af = AsdfFile()
-    for tag in af.type_index._type_by_tag:
+    type_index = get_config().extension_list.type_index
+    extension_manager = get_config().get_extension_manager(get_config().default_version)
+
+    for tag in type_index._type_by_tag:
         assert tag in tags
-    for tag in af.extension_manager._converters_by_tag:
+    for tag in extension_manager._converters_by_tag:
         assert tag in tags
