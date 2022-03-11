@@ -7,10 +7,11 @@ from collections.abc import Mapping
 from functools import lru_cache
 from numbers import Integral
 
+import attr
 import numpy as np
 import yaml
 from jsonschema import validators as mvalidators
-from jsonschema.exceptions import ValidationError
+from jsonschema.exceptions import RefResolutionError, ValidationError
 
 from . import constants, extension, generic_io, reference, tagged, treeutil, util, versioning, yamlutil
 from .config import get_config
@@ -258,34 +259,30 @@ def _create_validator(validators=YAML_VALIDATORS, visit_repeat_nodes=False):
         meta_schema=meta_schema, validators=validators, type_checker=type_checker, id_of=id_of
     )
 
+    @attr.s
     class ASDFValidator(base_cls):
-        def __init__(self, *args, **kwargs):
-            super().__init__(*args, **kwargs)
-            self._context = _ValidationContext()
+        _context = attr.ib(factory=lambda: _ValidationContext())
+        ctx = attr.ib(default=None)
+        serialization_context = attr.ib(default=None)
 
-        def iter_errors(self, instance, _schema=None):
+        def iter_errors(self, instance, *args, **kwargs):
             # We can't validate anything that looks like an external reference,
             # since we don't have the actual content, so we just have to defer
             # it for now.  If the user cares about complete validation, they
             # can call `AsdfFile.resolve_references`.
             with self._context:
-                if _schema is None:
-                    schema = self.schema
-                else:
-                    schema = _schema
-
-                if self._context.seen(instance, schema):
+                if self._context.seen(instance, self.schema):
                     # We've already validated this instance against this schema,
                     # no need to do it again.
                     return
 
                 if not visit_repeat_nodes:
-                    self._context.add(instance, schema)
+                    self._context.add(instance, self.schema)
 
                 if (isinstance(instance, dict) and "$ref" in instance) or isinstance(instance, reference.Reference):
                     return
 
-                if _schema is None:
+                if not self.schema:
                     tag = getattr(instance, "_tag", None)
                     if tag is not None:
                         if self.serialization_context.extension_manager.handles_tag_definition(tag):
@@ -299,15 +296,11 @@ def _create_validator(validators=YAML_VALIDATORS, visit_repeat_nodes=False):
                         # Must validate against all schema_uris
                         for schema_uri in schema_uris:
                             try:
-                                s = _load_schema_cached(schema_uri, self.ctx.resolver, False, False)
-                            except FileNotFoundError:
+                                with self.resolver.resolving(schema_uri) as resolved:
+                                    yield from self.descend(instance, resolved)
+                            except RefResolutionError:
                                 msg = "Unable to locate schema file for '{}': '{}'"
                                 warnings.warn(msg.format(tag, schema_uri), AsdfWarning)
-                                s = {}
-                            if s:
-                                with self.resolver.in_scope(schema_uri):
-                                    for x in super(ASDFValidator, self).iter_errors(instance, s):
-                                        yield x
 
                     if isinstance(instance, dict):
                         for val in instance.values():
@@ -319,8 +312,7 @@ def _create_validator(validators=YAML_VALIDATORS, visit_repeat_nodes=False):
                             for x in self.iter_errors(val):
                                 yield x
                 else:
-                    for x in super(ASDFValidator, self).iter_errors(instance, _schema=schema):
-                        yield x
+                    yield from super(ASDFValidator, self).iter_errors(instance)
 
     return ASDFValidator
 
@@ -580,10 +572,7 @@ def get_validator(
     # test suite!!!).  Instead, we assume that the schemas are valid
     # through the running of the unit tests, not at run time.
     cls = _create_validator(validators=validators, visit_repeat_nodes=_visit_repeat_nodes)
-    validator = cls(schema, *args, **kwargs)
-    validator.ctx = ctx
-    validator.serialization_context = _serialization_context
-    return validator
+    return cls(schema, *args, ctx=ctx, serialization_context=_serialization_context, **kwargs)
 
 
 def _validate_large_literals(instance, reading):
@@ -670,7 +659,7 @@ def validate(instance, ctx=None, schema={}, validators=None, reading=False, *arg
         ctx = AsdfFile()
 
     validator = get_validator(schema, ctx, validators, ctx.resolver, *args, **kwargs)
-    validator.validate(instance, _schema=(schema or None))
+    validator.validate(instance)
 
     additional_validators = [_validate_large_literals]
     if ctx.version >= versioning.RESTRICTED_KEYS_MIN_VERSION:
@@ -742,9 +731,11 @@ def check_schema(schema, validate_default=True):
                 return
 
             if "default" in instance:
-                with instance_validator.resolver.in_scope(instance_scope):
-                    for err in instance_validator.iter_errors(instance["default"], instance):
-                        yield err
+                instance_validator.resolver.push_scope(instance_scope)
+                try:
+                    yield from instance_validator.descend(instance["default"], instance)
+                finally:
+                    instance_validator.resolver.pop_scope()
 
         validators.update({"default": _validate_default})
 
@@ -760,4 +751,4 @@ def check_schema(schema, validate_default=True):
         id_of=mvalidators.Draft4Validator.ID_OF,
     )
     validator = cls(meta_schema, resolver=resolver)
-    validator.validate(schema, _schema=meta_schema)
+    validator.validate(schema)

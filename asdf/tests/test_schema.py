@@ -401,13 +401,13 @@ def test_defaults():
 
     cls = schema._create_validator(schema.FILL_DEFAULTS)
     validator = cls(s)
-    validator.validate(t, _schema=s)
+    validator.validate(t)
 
     assert t["a"] == 42
 
     cls = schema._create_validator(schema.REMOVE_DEFAULTS)
     validator = cls(s)
-    validator.validate(t, _schema=s)
+    validator.validate(t)
 
     assert t == {}
 
@@ -1070,9 +1070,9 @@ a: !<tag:nowhere.org:custom/doesnt_exist-1.0.0>
 )
 def test_numpy_scalar_type_validation(numpy_value, valid_types):
     def _assert_validation(jsonschema_type, expected_valid):
-        validator = schema.get_validator()
+        validator = schema.get_validator(schema={"type": jsonschema_type})
         try:
-            validator.validate(numpy_value, _schema={"type": jsonschema_type})
+            validator.validate(numpy_value)
         except ValidationError:
             valid = False
         else:
