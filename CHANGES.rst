@@ -1,5 +1,7 @@
-2.10.2 (unreleased)
+2.11.0 (unreleased)
 -------------------
+
+- Update minimum jsonschema version to 4.0.1. [#1105]
 
 2.10.1 (2022-03-02)
 -------------------
