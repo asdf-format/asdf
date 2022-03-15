@@ -4,6 +4,15 @@
 Changes
 *******
 
+What's new in asdf 2.10.0?
+==========================
+
+The ASDF Standard is at v1.6.0.
+
+Changes include:
+
+- Update minimum jsonschema version to 4.0.1.
+
 What's new in asdf 2.10.1?
 ==========================
 
