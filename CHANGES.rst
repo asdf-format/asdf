@@ -32,7 +32,11 @@
 - Remove setter for AsdfFile.version. [#1092]
 
 2.10.2 (unreleased)
+
+2.11.0 (2022-03-15)
 -------------------
+
+- Update minimum jsonschema version to 4.0.1. [#1105]
 
 2.10.1 (2022-03-02)
 -------------------

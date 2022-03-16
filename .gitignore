@@ -56,4 +56,4 @@ pip-wheel-metadata
 .DS_Store
 
 # setuptools-scm generated version file
-asdf/version.py
+asdf/_version.py

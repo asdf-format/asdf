@@ -47,6 +47,11 @@ jobs:
             ref: master
             install_command: pip install -e .[test]
             test_command: pytest
+          - package_name: stdatamodels
+            repository: spacetelescope/stdatamodels
+            ref: master
+            install_command: pip install -e .[test]
+            test_command: pytest
           - package_name: roman_datamodels
             repository: spacetelescope/roman_datamodels
             ref: main
