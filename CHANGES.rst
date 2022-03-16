@@ -31,8 +31,6 @@
 
 - Remove setter for AsdfFile.version. [#1092]
 
-2.10.2 (unreleased)
-
 2.11.0 (2022-03-15)
 -------------------
 
