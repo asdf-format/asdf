@@ -10,7 +10,8 @@ from jsonschema import ValidationError
 from pkg_resources import parse_version
 
 from . import _display as display
-from . import block, constants, core, generic_io, reference, schema, treeutil, util, version, versioning, yamlutil
+from . import _version as version
+from . import block, constants, core, generic_io, reference, schema, treeutil, util, versioning, yamlutil
 from ._helpers import validate_version
 from .config import get_config
 from .core import AsdfObject
