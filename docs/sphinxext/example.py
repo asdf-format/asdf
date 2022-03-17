@@ -75,6 +75,7 @@ class AsdfDirective(Directive):
             code = "\n{0} {1}\n".format(ASDF_MAGIC.strip().decode("utf-8"), version_string) + code.strip().decode(
                 "utf-8"
             )
+            code += "\n"
             literal = nodes.literal_block(code, code)
             literal["language"] = "yaml"
             set_source_info(self, literal)
@@ -115,6 +116,7 @@ class AsdfDirective(Directive):
                     lines.append("    data: {0}".format(data))
 
                     code = "\n".join(lines)
+                    code += "\n"
 
                     literal = nodes.literal_block(code, code)
                     literal["language"] = "yaml"
