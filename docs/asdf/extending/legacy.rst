@@ -66,6 +66,12 @@ First, the YAML Schema, defining the type as a pair of integers:
     maxItems: 2
     ...
 
+.. note::
+
+   If you are writing code in a local working directory and you wish to use
+   this YAML code, then save it in the local working directory with the 
+   filename of "fraction-1.0.0.yaml".
+
 Then, the Python implementation of the tag class and extension class. See the
 `asdf.CustomType` and `asdf.AsdfExtension` documentation for more information:
 
