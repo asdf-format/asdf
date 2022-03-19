@@ -182,3 +182,4 @@ RESTRICTED_KEYS_MIN_VERSION = AsdfVersion("1.6.0")
 # This library never removed defaults for ASDF Standard versions
 # later than 1.5.0, so filling them isn't necessary.
 FILL_DEFAULTS_MAX_VERSION = AsdfVersion("1.5.0")
+
