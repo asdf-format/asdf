@@ -156,7 +156,17 @@ supported_versions = [
     AsdfVersion("1.6.0"),
 ]
 
-default_version = AsdfVersion("1.5.0")
+""" quote from file:///config.rst:
+default_version
+---------------
+
+The default ASDF Standard version used for new files.  This can be overridden
+on an individual file basis (using the version argument to ``AsdfFile.__init__``)
+or set here to change the default for all new files created in the current session.
+
+Defaults to the latest supported ASDF Standard version.
+"""
+default_version = AsdfVersion("1.6.0")
 
 
 # This is the ASDF Standard version at which the format of the history
