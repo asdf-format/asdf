@@ -26,8 +26,8 @@ the array, but the actual array content is in a binary block.
    data in the file, but are presented in human-readable form on this
    page.
 
-
-.. asdf:: test.asdf
+.. literalinclude:: test.asdf
+   :language: yaml
 
 Sharing of data
 ---------------
