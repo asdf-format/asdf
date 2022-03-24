@@ -121,7 +121,9 @@ jobs:
             toxenv: warnings
 
           - name: Windows
-            os: windows-latest
+            # Windows-2019 until until https://github.com/pytest-dev/pytest/issues/9765
+            # is resolved:
+            os: windows-2019
             python-version: "3.9"
             toxenv: py39
     steps:
