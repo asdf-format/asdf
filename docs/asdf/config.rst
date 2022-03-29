@@ -99,7 +99,7 @@ The default ASDF Standard version used for new files.  This can be overridden
 on an individual file basis (using the version argument to ``AsdfFile.__init__``)
 or set here to change the default for all new files created in the current session.
 
-Defaults to the latest supported ASDF Standard version.
+Defaults to the latest stable ASDF Standard version.
 
 io_block_size
 -------------
