@@ -651,6 +651,9 @@ class GenericWrapper:
     def __getattr__(self, attr):
         return getattr(self._fd, attr)
 
+    def seekable(self):
+        return False
+
 
 class RandomAccessFile(GenericFile):
     """
