@@ -285,23 +285,12 @@ To install:
 ::
 
     $ cd asdf
-    $ git submodule update --init
     $ pip install .
 
 To install in `development
 mode <https://packaging.python.org/tutorials/distributing-packages/#working-in-development-mode>`__::
 
     $ pip install -e .
-
-.. note::
-
-    The source repository makes use of a git submodule for referencing the
-    schemas provided by the ASDF standard. While this submodule is
-    automatically initialized when installing the package (including in
-    development mode), it may be necessary for developers to manually update
-    the submodule if changes are made upstream. See the `documentation on git
-    submodules <https://git-scm.com/docs/git-submodule>`__ for more
-    information.
 
 .. _end-source-install-text:
 
