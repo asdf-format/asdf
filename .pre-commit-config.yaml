@@ -23,14 +23,14 @@ repos:
   hooks:
     - id: black
 
-- repo: https://gitlab.com/pycqa/flake8
+- repo: https://github.com/PyCQA/flake8
   rev: 4.0.1
   hooks:
     - id: flake8
       exclude: "asdf/extern/.*|docs/.*"
 
 - repo: https://github.com/PyCQA/bandit
-  rev: 1.7.2
+  rev: 1.7.4
   hooks:
     - id: bandit
       args: ["-c", "bandit.yaml"]
