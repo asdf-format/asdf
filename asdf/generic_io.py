@@ -651,9 +651,6 @@ class GenericWrapper:
     def __getattr__(self, attr):
         return getattr(self._fd, attr)
 
-    def seekable(self):
-        return False
-
 
 class RandomAccessFile(GenericFile):
     """
@@ -785,6 +782,9 @@ class InputStream(GenericFile):
         super(InputStream, self).__init__(fd, mode, close=close, uri=uri)
         self._fd = fd
         self._buffer = b""
+
+    def seekable(self):
+        return False
 
     def peek(self, size=-1):
         if size < 0:
