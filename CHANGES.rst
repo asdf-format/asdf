@@ -31,6 +31,9 @@
 
 - Remove setter for AsdfFile.version. [#1092]
 
+- Refactor "seekable" default for GenericFile from False, to the value provided by
+  the wrapped object. [#1129]
+
 2.11.0 (2022-03-15)
 -------------------
 
