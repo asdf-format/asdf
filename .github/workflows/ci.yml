@@ -33,15 +33,10 @@ jobs:
             python-version: "3.8"
             toxenv: py38
 
-          - name: Python 3.7 Testing
+          - name: Python 3.8 with legacy packages
             os: ubuntu-latest
-            python-version: "3.7"
-            toxenv: py37
-
-          - name: Python 3.7 with legacy packages
-            os: ubuntu-latest
-            python-version: "3.7"
-            toxenv: py37-legacy
+            python-version: "3.8"
+            toxenv: py38-legacy
 
           - name: Mac OS Latest
             os: macos-latest
