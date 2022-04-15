@@ -4,6 +4,15 @@
 Changes
 *******
 
+What's new in asdf 2.11.1?
+==========================
+
+The ASDF Standard is at v1.6.0.
+
+Changes include:
+
+- Update minimum astropy version to 5.0.4.
+
 What's new in asdf 2.11.0?
 ==========================
 
