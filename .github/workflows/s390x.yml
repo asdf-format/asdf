@@ -12,18 +12,18 @@ on:
 jobs:
   pytest:
     runs-on: ubuntu-18.04
-    name: Python 3.7
+    name: Python 3.8
     steps:
       - uses: actions/checkout@v2
         with:
           fetch-depth: 0
           submodules: true
-      - uses: uraimo/run-on-arch-action@v2.0.5
+      - uses: uraimo/run-on-arch-action@v2.2.0
         name: Run tests
         id: build
         with:
           arch: s390x
-          distro: buster
+          distro: bullseye
           shell: /bin/bash
           install: |
             apt-get update -q -y
