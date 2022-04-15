@@ -1,4 +1,4 @@
-2.11.1 (unreleased)
+2.11.1 (2022-04-15)
 -------------------
 
 - Update minimum astropy version to 5.0.4. [#1133]
@@ -12,6 +12,7 @@
 -------------------
 
 - Bugfix for circular build dependency for asdf. [#1094]
+
 - Fix small bug with handling multiple schema uris per tag. [#1095]
 
 2.10.0 (2022-02-17)
