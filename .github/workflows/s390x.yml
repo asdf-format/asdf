@@ -2,17 +2,26 @@ name: s390x
 
 on:
   workflow_dispatch:
-  push:
-    tags:
-      - '*'
   schedule:
     # Run every Monday at 6am UTC
     - cron: '0 6 * * 1'
+  pull_request:
+    # We also want this workflow triggered if the `s390x` label is
+    # added or present when PR is updated
+    types:
+      - synchronize
+      - labeled
+  push:
+    branches:
+      - '*.*.x'
+    tags:
+      - '*'
 
 jobs:
   pytest:
-    runs-on: ubuntu-18.04
     name: Python 3.8
+    runs-on: ubuntu-18.04
+    if: (github.repository == 'asdf-format/asdf' && (github.event_name == 'schedule' || github.event_name == 'push' || github.event_name == 'workflow_dispatch' || contains(github.event.pull_request.labels.*.name, 's390x')))
     steps:
       - uses: actions/checkout@v2
         with:
