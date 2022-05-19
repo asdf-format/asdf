@@ -339,9 +339,9 @@ def test_info_object_support(capsys):
             I_example=1,
         ),
         "list_of_stuff": [
-           ObjectWithInfoSupport3("v1", "v2"),
-           ObjectWithInfoSupport3("x1", "x2"),
-        ]
+            ObjectWithInfoSupport3("v1", "v2"),
+            ObjectWithInfoSupport3("x1", "x2"),
+        ],
     }
     af.info(refresh_extension_manager=True)
 
