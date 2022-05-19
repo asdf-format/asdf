@@ -7,14 +7,14 @@ by the converter mechanism has a __asdf_traverse__() method, then it will
 call that method expecting a dict or list to be returned. The method can
 return what it thinks is suitable for display.
 """
-import numpy as np
 import re
 
+import numpy as np
+
+from .schema import load_schema
 from .tags.core.ndarray import NDArrayType
 from .treeutil import get_children
 from .util import is_primitive
-from .schema import load_schema
-
 
 __all__ = [
     "DEFAULT_MAX_ROWS",
@@ -41,19 +41,22 @@ def render_tree(
     show_values=DEFAULT_SHOW_VALUES,
     filters=[],
     identifier="root",
-    refresh_extension_manager=False
+    refresh_extension_manager=False,
 ):
     """
     Render a tree as text with indents showing depth.
     """
-    info = _NodeInfo.from_root_node(identifier, node,
-                                    refresh_extension_manager=refresh_extension_manager)
+    info = _NodeInfo.from_root_node(identifier, node, refresh_extension_manager=refresh_extension_manager)
 
     if len(filters) > 0:
         if not _filter_tree(info, filters):
             return []
 
-    renderer = _TreeRenderer(max_rows, max_cols, show_values,)
+    renderer = _TreeRenderer(
+        max_rows,
+        max_cols,
+        show_values,
+    )
     return renderer.render(info)
 
 
@@ -83,15 +86,15 @@ def _format_code(value, code):
 
 
 def _get_schema_for_property(schema, attr):
-    subschema = schema.get('properties', {}).get(attr, None)
+    subschema = schema.get("properties", {}).get(attr, None)
     if subschema is not None:
         return subschema
-    for combiner in ['allOf', 'anyOf', 'oneOf']:
+    for combiner in ["allOf", "anyOf", "oneOf"]:
         for subschema in schema.get(combiner, []):
             subsubschema = _get_schema_for_property(subschema, attr)
             if subsubschema != {}:
                 return subsubschema
-    subschema = schema.get('properties', {}).get('patternProperties', None)
+    subschema = schema.get("properties", {}).get("patternProperties", None)
     if subschema:
         for key in subschema:
             if re.search(key, attr):
@@ -100,7 +103,7 @@ def _get_schema_for_property(schema, attr):
 
 
 def _get_schema_for_index(schema, i):
-    items = schema.get('items', {})
+    items = schema.get("items", {})
     if isinstance(items, list):
         if i >= len(items):
             return {}
@@ -114,9 +117,9 @@ class _NodeInfo:
     """
     Container for a node, its state of visibility, and values used to display it.
     """
+
     @classmethod
-    def from_root_node(cls, root_identifier, root_node, schema=None,
-                       refresh_extension_manager=False):
+    def from_root_node(cls, root_identifier, root_node, schema=None, refresh_extension_manager=False):
         """
         Build a _NodeInfo tree from the given ASDF root node.
         Intentionally processes the tree in breadth-first order so that recursively
@@ -124,6 +127,7 @@ class _NodeInfo:
         """
         from .asdf import AsdfFile, get_config
         from .extension import ExtensionManager
+
         af = AsdfFile()
         if refresh_extension_manager:
             config = get_config()
@@ -138,9 +142,7 @@ class _NodeInfo:
             next_nodes = []
 
             for parent, identifier, node in current_nodes:
-                if (isinstance(node, dict) or
-                    isinstance(node, tuple) or
-                    cls.supports_info(node)) and id(node) in seen:
+                if (isinstance(node, dict) or isinstance(node, tuple) or cls.supports_info(node)) and id(node) in seen:
                     info = _NodeInfo(parent, identifier, node, current_depth, recursive=True)
                     parent.children.append(info)
                 else:
@@ -152,10 +154,10 @@ class _NodeInfo:
                             # Extract subschema if it exists
                             subschema = _get_schema_for_property(parent.schema, identifier)
                             info.schema = subschema
-                            info.title = subschema.get('title', None)
+                            info.title = subschema.get("title", None)
                         if parent is None and schema is not None:
                             info.schema = schema
-                            info.title = schema.get('title, None')
+                            info.title = schema.get("title, None")
                         parent.children.append(info)
                     seen.add(id(node))
                     if cls.supports_info(node):
@@ -166,7 +168,7 @@ class _NodeInfo:
                         schema_uri = tagdef.schema_uris[0]
                         schema = load_schema(schema_uri)
                         info.schema = schema
-                        info.title = schema.get('title', None)
+                        info.title = schema.get("title", None)
                     else:
                         tnode = node
                     if parent is None:
