@@ -203,4 +203,3 @@ def test_search():
 
     result = af.search(value="hello")
     assert result.node == "hello"
-

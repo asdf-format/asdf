@@ -1,4 +1,4 @@
-2.11.2 
+2.11.2
 ------
 
 - Added ability to display title as a comment in using the
