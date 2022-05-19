@@ -524,6 +524,12 @@ number of displayed lines.  If ``max_rows`` is a tuple, then each member
 limits lines per node at the depth corresponding to its tuple index.
 For example, to show all top-level nodes and 5 of each's children:
 
+If the attribute is described in a schema, the info functionality
+will see if it has an associated title and if it does, display it
+as a comment on the same line. This provides a way for users to
+see more information about the the attribute in a similar way that
+FITS header comments are used.
+
 .. code:: python
 
     >>> asdf.info('file.asdf', max_rows=(None, 5)) # doctest: +SKIP

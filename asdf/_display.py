@@ -89,11 +89,6 @@ def _get_schema_for_property(schema, attr):
     subschema = schema.get("properties", {}).get(attr, None)
     if subschema is not None:
         return subschema
-    for combiner in ["allOf", "anyOf", "oneOf"]:
-        for subschema in schema.get(combiner, []):
-            subsubschema = _get_schema_for_property(subschema, attr)
-            if subsubschema != {}:
-                return subsubschema
     subschema = schema.get("properties", {}).get("patternProperties", None)
     if subschema:
         for key in subschema:
@@ -155,9 +150,6 @@ class _NodeInfo:
                             subschema = _get_schema_for_property(parent.schema, identifier)
                             info.schema = subschema
                             info.title = subschema.get("title", None)
-                        if parent is None and schema is not None:
-                            info.schema = schema
-                            info.title = schema.get("title, None")
                         parent.children.append(info)
                     seen.add(id(node))
                     if cls.supports_info(node):

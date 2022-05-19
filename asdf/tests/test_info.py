@@ -122,6 +122,17 @@ class ObjectWithInfoSupport2:
         return returnval
 
 
+class ObjectWithInfoSupport3:
+    def __init__(self, attribute_one="", attribute_two=""):
+        self._tag = "asdf://somewhere.org/asdf/tags/drink-1.0.0"
+        self.attribute_one = attribute_one
+        self.attribute_two = attribute_two
+
+    def __asdf_traverse__(self):
+        returnval = {"attributeOne": self.attribute_one, "attributeTwo": self.attribute_two}
+        return returnval
+
+
 def manifest_extension(tmpdir):
 
     foo_manifest = """%YAML 1.1
@@ -140,6 +151,10 @@ tags:
     schema_uri: asdf://somewhere.org/asdf/schemas/bar-1.0.0
     title: Bar title
     description: Bar Description
+  - tag_uri: asdf://somewhere.org/asdf/tags/drink-1.0.0
+    schema_uri: asdf://somewhere.org/asdf/schemas/drink-1.0.0
+    title: Drink title
+    description: Drink Description
 ...
 """
     foo_schema = """
@@ -210,6 +225,24 @@ properties:
     type: string
 ...
 """
+
+    drink_schema = """
+%YAML 1.1
+---
+$schema: "asdf://stsci.edu/schemas/asdf/asdf-schema-1.0.0"
+id: "asdf://somewhere.org/asdf/schemas/drink-1.0.0"
+
+type: object
+title: object with info support 3 title
+properties:
+  attributeOne:
+    title: AttributeOne Title
+    type: string
+  attributeTwo:
+    title: AttributeTwo Title
+    type: string
+...
+"""
     os.mkdir(tmpdir / "schemas")
     spath = tmpdir / "schemas" / "foo-1.0.0.yaml"
     with open(spath, "w") as fschema:
@@ -217,6 +250,9 @@ properties:
     spath = tmpdir / "schemas" / "bar-1.0.0.yaml"
     with open(spath, "w") as fschema:
         fschema.write(bar_schema)
+    spath = tmpdir / "schemas" / "drink-1.0.0.yaml"
+    with open(spath, "w") as fschema:
+        fschema.write(drink_schema)
     os.mkdir(tmpdir / "manifests")
     mpath = str(tmpdir / "manifests" / "foo_manifest-1.0.yaml")
     with open(mpath, "w") as fmanifest:
@@ -260,12 +296,24 @@ properties:
         def from_yaml_tree(self, node, tag, ctx):
             return ObjectWithInfoSupport(attribute1="value1", attribute2="value2")
 
+    class DrinkConverter:
+        tags = ["asdf://somewhere.org/asdf/tags/drink-1.0.0"]
+        types = [ObjectWithInfoSupport3]
+
+        def to_yaml_tree(self, obj, tag, ctx):
+            node = {"attributeOne": obj.attribute_one, "attributeTwo": obj.attribute_two}
+            return node
+
+        def from_yaml_tree(self, node, tag, ctx):
+            return ObjectWithInfoSupport(attribute_one="value1", attribute_two="value2")
+
     converter1 = FooConverter()
     converter2 = BarConverter()
+    converter3 = DrinkConverter()
 
     extension = ManifestExtension.from_uri(
         "asdf://somewhere.org/asdf/manifests/foo_manifest-1.0",
-        converters=[converter1, converter2],
+        converters=[converter1, converter2, converter3],
     )
     config = asdf.get_config()
     proxy = ExtensionProxy(extension)
@@ -290,6 +338,10 @@ def test_info_object_support(capsys):
             S_example="beep",
             I_example=1,
         ),
+        "list_of_stuff": [
+           ObjectWithInfoSupport3("v1", "v2"),
+           ObjectWithInfoSupport3("x1", "x2"),
+        ]
     }
     af.info(refresh_extension_manager=True)
 
@@ -307,6 +359,8 @@ def test_info_object_support(capsys):
     assert "oneOf example attribute" in captured.out
     assert "string pattern property" in captured.out
     assert "integer pattern property" in captured.out
+    assert "AttributeOne" in captured.out
+    assert "AttributeTwo" in captured.out
 
     shutil.rmtree(tempdir)
 
