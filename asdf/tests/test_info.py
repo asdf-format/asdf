@@ -7,7 +7,7 @@ import tempfile
 import numpy as np
 
 import asdf
-from asdf.extension import ExtensionProxy, ManifestExtension, ExtensionManager
+from asdf.extension import ExtensionManager, ExtensionProxy, ManifestExtension
 from asdf.resource import DirectoryResourceMapping
 
 
