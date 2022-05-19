@@ -8,10 +8,13 @@ call that method expecting a dict or list to be returned. The method can
 return what it thinks is suitable for display.
 """
 import numpy as np
+import re
 
 from .tags.core.ndarray import NDArrayType
 from .treeutil import get_children
 from .util import is_primitive
+from .schema import load_schema
+
 
 __all__ = [
     "DEFAULT_MAX_ROWS",
@@ -28,6 +31,8 @@ DEFAULT_MAX_ROWS = 24
 DEFAULT_MAX_COLS = 120
 DEFAULT_SHOW_VALUES = True
 
+EXTENSION_MANAGER = None
+
 
 def render_tree(
     node,
@@ -36,17 +41,19 @@ def render_tree(
     show_values=DEFAULT_SHOW_VALUES,
     filters=[],
     identifier="root",
+    refresh_extension_manager=False
 ):
     """
     Render a tree as text with indents showing depth.
     """
-    info = _NodeInfo.from_root_node(identifier, node)
+    info = _NodeInfo.from_root_node(identifier, node,
+                                    refresh_extension_manager=refresh_extension_manager)
 
     if len(filters) > 0:
         if not _filter_tree(info, filters):
             return []
 
-    renderer = _TreeRenderer(max_rows, max_cols, show_values)
+    renderer = _TreeRenderer(max_rows, max_cols, show_values,)
     return renderer.render(info)
 
 
@@ -75,18 +82,54 @@ def _format_code(value, code):
     return "\x1B[{}m{}\x1B[0m".format(code, value)
 
 
+def _get_schema_for_property(schema, attr):
+    subschema = schema.get('properties', {}).get(attr, None)
+    if subschema is not None:
+        return subschema
+    for combiner in ['allOf', 'anyOf', 'oneOf']:
+        for subschema in schema.get(combiner, []):
+            subsubschema = _get_schema_for_property(subschema, attr)
+            if subsubschema != {}:
+                return subsubschema
+    subschema = schema.get('properties', {}).get('patternProperties', None)
+    if subschema:
+        for key in subschema:
+            if re.search(key, attr):
+                return subschema[key]
+    return {}
+
+
+def _get_schema_for_index(schema, i):
+    items = schema.get('items', {})
+    if isinstance(items, list):
+        if i >= len(items):
+            return {}
+        else:
+            return items[i]
+    else:
+        return items
+
+
 class _NodeInfo:
     """
     Container for a node, its state of visibility, and values used to display it.
     """
-
     @classmethod
-    def from_root_node(cls, root_identifier, root_node):
+    def from_root_node(cls, root_identifier, root_node, schema=None,
+                       refresh_extension_manager=False):
         """
         Build a _NodeInfo tree from the given ASDF root node.
         Intentionally processes the tree in breadth-first order so that recursively
         referenced nodes are displayed at their shallowest reference point.
         """
+        from .asdf import AsdfFile, get_config
+        from .extension import ExtensionManager
+        af = AsdfFile()
+        if refresh_extension_manager:
+            config = get_config()
+            af._extension_manager = ExtensionManager(config.extensions)
+        extmgr = af.extension_manager
+
         current_nodes = [(None, root_identifier, root_node)]
         seen = set()
         root_info = None
@@ -95,7 +138,9 @@ class _NodeInfo:
             next_nodes = []
 
             for parent, identifier, node in current_nodes:
-                if (isinstance(node, dict) or isinstance(node, tuple) or cls.supports_info(node)) and id(node) in seen:
+                if (isinstance(node, dict) or
+                    isinstance(node, tuple) or
+                    cls.supports_info(node)) and id(node) in seen:
                     info = _NodeInfo(parent, identifier, node, current_depth, recursive=True)
                     parent.children.append(info)
                 else:
@@ -103,14 +148,32 @@ class _NodeInfo:
                     if root_info is None:
                         root_info = info
                     if parent is not None:
+                        if parent.schema is not None and not cls.supports_info(node):
+                            # Extract subschema if it exists
+                            subschema = _get_schema_for_property(parent.schema, identifier)
+                            info.schema = subschema
+                            info.title = subschema.get('title', None)
+                        if parent is None and schema is not None:
+                            info.schema = schema
+                            info.title = schema.get('title, None')
                         parent.children.append(info)
                     seen.add(id(node))
                     if cls.supports_info(node):
                         tnode = node.__asdf_traverse__()
+                        # Look for a title for the attribute if it is a tagged object
+                        tag = node._tag
+                        tagdef = extmgr.get_tag_definition(tag)
+                        schema_uri = tagdef.schema_uris[0]
+                        schema = load_schema(schema_uri)
+                        info.schema = schema
+                        info.title = schema.get('title', None)
                     else:
                         tnode = node
+                    if parent is None:
+                        info.schema = schema
                     for child_identifier, child_node in get_children(tnode):
                         next_nodes.append((info, child_identifier, child_node))
+                        # extract subschema if appropriate
 
             if len(next_nodes) == 0:
                 break
@@ -128,6 +191,8 @@ class _NodeInfo:
         self.recursive = recursive
         self.visible = visible
         self.children = []
+        self.title = None
+        self.schema = None
 
     @classmethod
     def supports_info(cls, node):
@@ -266,6 +331,12 @@ class _TreeRenderer:
     def _render(self, info, active_depths, is_tail):
         """
         Render the tree.  Called recursively on child nodes.
+
+        is_tail indicates if the child is the last of the children,
+        needed to indicate the proper connecting character in the tree
+        display. Likewise, active_depths is used to track which preceeding
+        depths are incomplete thus need continuing lines preceding in
+        the tree display.
         """
         lines = []
 
@@ -306,6 +377,8 @@ class _TreeRenderer:
         else:
             line = "{}{} {}".format(prefix, format_bold(info.identifier), value)
 
+        if info.title is not None:
+            line = line + format_faint(format_italic(" # " + info.title))
         visible_children = info.visible_children
         if len(visible_children) == 0 and len(info.children) > 0:
             line = line + format_italic(" ...")

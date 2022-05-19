@@ -189,3 +189,18 @@ def test_recursive_tree():
     result.replace("zap")
     assert af["foo"]["bar"] == "zap"
     assert af["foo"]["nested"]["bar"] == "zap"
+
+
+def test_search():
+    tree = dict(foo=42, bar="hello", baz=np.arange(20))
+    af = asdf.AsdfFile(tree)
+
+    result = af.search("foo")
+    assert result.node == 42
+
+    result = af.search(type="ndarray")
+    assert (result.node == tree["baz"]).all()
+
+    result = af.search(value="hello")
+    assert result.node == "hello"
+
