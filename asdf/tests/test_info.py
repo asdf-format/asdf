@@ -1,24 +1,12 @@
 import os
-import io
-import getpass
 import pathlib
-import sys
 import tempfile
 import shutil
 import re
 
 import numpy as np
-import pytest
-from jsonschema.exceptions import ValidationError
 
 import asdf
-from asdf import get_config, config_context
-from asdf import treeutil
-from asdf import extension
-from asdf import resolver
-from asdf import schema
-from asdf import versioning
-from asdf.exceptions import AsdfDeprecationWarning, AsdfWarning
 from asdf.extension import ExtensionProxy, ManifestExtension, ExtensionManager
 from asdf.resource import DirectoryResourceMapping
 

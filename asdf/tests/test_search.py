@@ -193,7 +193,7 @@ def test_recursive_tree():
 
 def test_search():
     tree = dict(foo=42, bar="hello", baz=np.arange(20))
-    af = asdf.AsdfFile(tree)
+    af = AsdfFile(tree)
 
     result = af.search("foo")
     assert result.node == 42
