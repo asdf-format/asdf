@@ -2,7 +2,7 @@
 ------
 
 - Added ability to display title as a comment in using the
-  ``info()`` functionality. []
+  ``info()`` functionality. [#1138]
 
 2.11.1 (2022-04-15)
 -------------------
