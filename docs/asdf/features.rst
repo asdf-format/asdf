@@ -7,6 +7,8 @@ Core Features
 This section discusses the core features of the ASDF data format, and provides
 examples and use cases that are specific to the Python implementation.
 
+.. _data-model:
+
 Data Model
 ==========
 
