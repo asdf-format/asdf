@@ -97,17 +97,6 @@ def _get_schema_for_property(schema, attr):
     return {}
 
 
-def _get_schema_for_index(schema, i):
-    items = schema.get("items", {})
-    if isinstance(items, list):
-        if i >= len(items):
-            return {}
-        else:
-            return items[i]
-    else:
-        return items
-
-
 class _NodeInfo:
     """
     Container for a node, its state of visibility, and values used to display it.
