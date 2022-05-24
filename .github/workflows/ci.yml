@@ -39,7 +39,7 @@ jobs:
             toxenv: py38-legacy
 
           - name: Mac OS Latest
-            os: macos-latest
+            os: osx-arm64
             python-version: "3.9"
             toxenv: py39
 
