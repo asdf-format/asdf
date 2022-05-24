@@ -1510,6 +1510,7 @@ class AsdfFile:
         max_rows=display.DEFAULT_MAX_ROWS,
         max_cols=display.DEFAULT_MAX_COLS,
         show_values=display.DEFAULT_SHOW_VALUES,
+        refresh_extension_manager=False,
     ):
         """
         Print a rendering of this file's tree to stdout.
@@ -1534,8 +1535,14 @@ class AsdfFile:
             Set to False to disable display of primitive values in
             the rendered tree.
         """
+
         lines = display.render_tree(
-            self.tree, max_rows=max_rows, max_cols=max_cols, show_values=show_values, identifier="root"
+            self.tree,
+            max_rows=max_rows,
+            max_cols=max_cols,
+            show_values=show_values,
+            identifier="root",
+            refresh_extension_manager=refresh_extension_manager,
         )
         print("\n".join(lines))
 
