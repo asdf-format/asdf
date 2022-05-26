@@ -99,14 +99,8 @@ version = ".".join(release.split(".")[:2])
 # The theme to use for HTML and HTML Help pages.  See the documentation for
 # a list of builtin themes. To override the custom theme, set this to the
 # name of a builtin theme or the name of a custom theme in html_theme_path.
-html_theme = "alabaster"
-html_theme_options = {
-    "github_user": "asdf-format",
-    "github_repo": "asdf",
-    "github_button": "true",
-    "fixed_sidebar": "true",
-    "page_width": "90%",
-}
+html_theme = "sphinx_rtd_theme"
+html_theme_options = {}
 
 html_static_path = ["_static"]
 
