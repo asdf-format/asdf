@@ -2,12 +2,11 @@ import io
 import os
 import pathlib
 import warnings
+from dataclasses import dataclass
 
 import numpy as np
 import pytest
 import yaml
-
-from dataclasses import dataclass
 
 # Avoid all imports of asdf at this level in order to avoid circular imports
 
@@ -188,7 +187,7 @@ class SchemaExample:
 
         if self._version is None:
             return versioning.default_version
-        
+
         version = self._version.lower().split("asdf-standard-")[1]
         return versioning.AsdfVersion(version)
 
