@@ -1,8 +1,9 @@
-2.11.2
-------
+2.11.2 (unreleased)
+-------------------
 
 - Added ability to display title as a comment in using the
   ``info()`` functionality. [#1138]
+- Add ability to set asdf-standard version for schema example items. [#1143]
 
 2.11.1 (2022-04-15)
 -------------------
