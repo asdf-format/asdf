@@ -7,6 +7,8 @@ import numpy as np
 import pytest
 import yaml
 
+from dataclasses import dataclass
+
 # Avoid all imports of asdf at this level in order to avoid circular imports
 
 
@@ -122,7 +124,7 @@ class AsdfSchemaFile(pytest.File):
 
         for node in treeutil.iter_tree(schema_tree):
             if isinstance(node, dict) and "examples" in node and isinstance(node["examples"], list):
-                for desc, example in node["examples"]:
+                for example in node["examples"]:
                     yield example
 
 
@@ -153,6 +155,44 @@ class AsdfSchemaItem(pytest.Item):
         return self.fspath, 0, ""
 
 
+@dataclass
+class SchemaExample:
+    description: str
+    example: str
+    _version: str = None
+    other: any = None
+
+    @classmethod
+    def from_schema(cls, example: list):
+        if len(example) == 1:
+            _description = ""
+            _example = example[0]
+        elif len(example) == 2:
+            _description = example[0]
+            _example = example[1]
+            _version = None
+            _other = None
+        elif len(example) > 2:
+            _description = example[0]
+            _example = example[2]
+            _version = example[1]
+            _other = example[3:] if len(example) > 3 else None
+        else:
+            raise RuntimeError("Invalid example")
+
+        return cls(_description, _example, _version, _other)
+
+    @property
+    def version(self):
+        import asdf.versioning as versioning
+
+        if self._version is None:
+            return versioning.default_version
+        
+        version = self._version.lower().split("asdf-standard-")[1]
+        return versioning.AsdfVersion(version)
+
+
 class AsdfSchemaExampleItem(pytest.Item):
     @classmethod
     def from_parent(
@@ -172,7 +212,7 @@ class AsdfSchemaExampleItem(pytest.Item):
             result = AsdfSchemaExampleItem(name, parent, **kwargs)
 
         result.filename = str(schema_path)
-        result.example = example
+        result.example = SchemaExample.from_schema(example)
         result.ignore_unrecognized_tag = ignore_unrecognized_tag
         result.ignore_version_mismatch = ignore_version_mismatch
         return result
@@ -183,7 +223,7 @@ class AsdfSchemaExampleItem(pytest.Item):
 
         # Make sure that the examples in the schema files (and thus the
         # ASDF standard document) are valid.
-        buff = helpers.yaml_to_asdf("example: " + self.example.strip())
+        buff = helpers.yaml_to_asdf("example: " + self.example.example.strip(), standard_version=self.example.version)
 
         ff = AsdfFile(
             uri=util.filepath_to_url(os.path.abspath(self.filename)),
@@ -212,7 +252,7 @@ class AsdfSchemaExampleItem(pytest.Item):
 
                 ff._open_impl(ff, buff, mode="rw")
         except Exception:
-            print("From file:", self.filename)
+            print(f"Example: {self.example.description}\n From file: {self.filename}")
             raise
 
         # Just test we can write it out.  A roundtrip test
