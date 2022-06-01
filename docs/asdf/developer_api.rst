@@ -10,6 +10,7 @@ to create their own custom ASDF types and extensions.
 .. automodapi:: asdf.extension
 
 .. automodapi:: asdf.resource
+    :skip: DirectoryResourceMapping
 
 .. automodapi:: asdf.yamlutil
 
