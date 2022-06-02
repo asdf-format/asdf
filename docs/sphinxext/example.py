@@ -136,12 +136,10 @@ class AsdfDirective(Directive):
         finally:
             os.chdir(cwd)
 
-        result = nodes.literal_block()
-        textnodes, messages = self.state.inline_text(f"FILENAME: {filename}\n", self.lineno)
+        result = nodes.admonition()
+        textnodes, messages = self.state.inline_text(filename, self.lineno)
         title = nodes.title(filename, "", *textnodes)
-        line = nodes.line("", "=========\n")
         result += title
-        result += line
         result += parts
         return [result]
 
