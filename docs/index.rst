@@ -22,14 +22,13 @@ Getting Started
 ===============
 
 .. toctree::
-   :maxdepth: 2
+  :maxdepth: 2
 
-   asdf/install
-   asdf/overview
-   asdf/features
-   asdf/config
-   asdf/asdf_tool
-   asdf/changes
+  asdf/install
+  asdf/overview
+  asdf/features
+  asdf/config
+  asdf/asdf_tool
 
 .. _extending:
 
@@ -90,6 +89,13 @@ See also
   <https://asdf-standard.readthedocs.io/>`__
 
 - `asdf` Python package distribution on `pypi <https://pypi.org/project/asdf/>`_
+
+Changes
+=======
+.. toctree::
+  :maxdepth: 2
+
+  asdf/changes
 
 Index
 =====
