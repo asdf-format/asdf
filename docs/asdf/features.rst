@@ -464,7 +464,7 @@ create an `AsdfInFits` object.
     from asdf import fits_embed
 
     ff = fits_embed.AsdfInFits(hdulist, tree)
-    ff.write_to('embedded_asdf.fits')
+    ff.write_to('embedded_asdf.fits', overwrite=True)
 
 .. runcode:: hidden
 

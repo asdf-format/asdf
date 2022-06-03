@@ -145,7 +145,7 @@ latex_logo = "_static/logo.pdf"
 man_pages = [("index", project.lower(), project + " Documentation", [author], 1)]
 
 sys.path.insert(0, os.path.join(os.path.abspath(os.path.dirname("__file__")), "sphinxext"))
-extensions += ["example"]
+extensions += ["example", "sphinx_asdf"]
 
 
 def setup(app):

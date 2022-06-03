@@ -22,7 +22,7 @@ class DirectoryResourceMapping(_DirectoryResourceMapping):
     """
     A resource mapping that reads resource content from a directory or directory tree.
 
-    See :class:`~asdf_standard.resource.DirectoryResourceMapping` for details.
+    See :ref:`asdf_standard.resource.DirectoryResourceMapping` for details.
     """
 
     pass
