@@ -105,7 +105,7 @@ Or a resource mapping plugin added at runtime like this::
 **Entry point:** A Python packaging feature that allows asdf to use plugins
 provided by other packages.  Entry points are registered when a package is
 installed and become available to asdf without any additional effort on
-the part of the user.  See `<https://packaging.python.org/specifications/entry-points/>`_
+the part of the user.  See :ref:`pypa-packaging:entry-points`
 for more information.
 
 **Resource mapping:** An asdf plugin that provides access to "resources" which

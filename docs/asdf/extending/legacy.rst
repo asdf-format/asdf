@@ -871,7 +871,7 @@ Testing custom schemas
 ----------------------
 
 Packages that provide their own schemas can test them using `asdf`'s
-`pytest <https://docs.pytest.org/en/latest/>`_ plugin for schema testing.
+:ref:`pytest <pytest:toc>` plugin for schema testing.
 Schemas are tested for overall validity, and any examples given within the
 schemas are also tested.
 
