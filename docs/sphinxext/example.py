@@ -72,7 +72,10 @@ class AsdfDirective(Directive):
         try:
             ff = AsdfFile()
             code = AsdfFile._open_impl(ff, filename, _get_yaml_content=True)
-            code = "{0} {1}\n".format(ASDF_MAGIC, version_string) + code.strip().decode("utf-8")
+            code = "\n{0} {1}\n".format(ASDF_MAGIC.strip().decode("utf-8"), version_string) + code.strip().decode(
+                "utf-8"
+            )
+            code += "\n"
             literal = nodes.literal_block(code, code)
             literal["language"] = "yaml"
             set_source_info(self, literal)
@@ -113,6 +116,7 @@ class AsdfDirective(Directive):
                     lines.append("    data: {0}".format(data))
 
                     code = "\n".join(lines)
+                    code += "\n"
 
                     literal = nodes.literal_block(code, code)
                     literal["language"] = "yaml"
@@ -132,7 +136,7 @@ class AsdfDirective(Directive):
         finally:
             os.chdir(cwd)
 
-        result = nodes.literal_block()
+        result = nodes.admonition()
         textnodes, messages = self.state.inline_text(filename, self.lineno)
         title = nodes.title(filename, "", *textnodes)
         result += title
