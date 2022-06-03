@@ -10,11 +10,9 @@ being trialled in the asdf-astropy package.
 ASDF versioning conventions
 ---------------------------
 
-The ASDF Standard document provides a helpful overview_ of the various ASDF
-versioning conventions.  We will be concerned with the *standard version*
+The ASDF Standard document provides a helpful :ref:`overview <asdf-standard:versioning-conventions>`
+of the various ASDF versioning conventions.  We will be concerned with the *standard version*
 and individual *tag versions*.
-
-.. _overview: https://asdf-standard.readthedocs.io/en/latest/versioning.html
 
 Overview
 --------

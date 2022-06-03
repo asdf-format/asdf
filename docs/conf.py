@@ -54,6 +54,8 @@ setup_cfg = dict(conf.items("metadata"))
 # If your documentation needs a minimal Sphinx version, state it here.
 # needs_sphinx = '1.2'
 
+intersphinx_mapping["asdf-standard"] = ("https://asdf-standard.readthedocs.io/en/latest/", None)
+
 # To perform a Sphinx version check that needs to be more specific than
 # major.minor, call `check_sphinx_version("x.y.z")` here.
 # check_sphinx_version("1.2.1")
