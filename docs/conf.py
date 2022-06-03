@@ -113,6 +113,7 @@ html_static_path = ["_static"]
 # docs.  This file should be a Windows icon file (.ico) being 16x16 or 32x32
 # pixels large.
 html_favicon = "_static/logo.ico"
+html_logo = "_static/logo.png"
 
 # If not '', a 'Last updated on:' timestamp is inserted at every page bottom,
 # using the given strftime format.
