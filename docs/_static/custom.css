@@ -8,6 +8,10 @@ div.admonition:active {
     width: 150%
 }
 
+div.note:active {
+    width: 100%
+}
+
 div.highlight-yaml {
     transition: width 0.5s;
     -webkit-transition: width 0.5s;
