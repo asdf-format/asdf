@@ -1,4 +1,4 @@
-2.11.2 (unreleased)
+2.12.0 (2022-06-06)
 -------------------
 
 - Added ability to display title as a comment in using the

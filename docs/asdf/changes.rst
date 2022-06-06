@@ -4,6 +4,17 @@
 Changes
 *******
 
+What's new in asdf 2.12.0?
+==========================
+
+The ASDF Standard is at v1.6.0.
+
+Changes include:
+
+- Added ability to display title as a comment in using the
+  ``info()`` functionality.
+- Add ability to set asdf-standard version for schema example items.
+
 What's new in asdf 2.11.1?
 ==========================
 
