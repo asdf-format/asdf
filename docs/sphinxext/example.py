@@ -68,6 +68,9 @@ class AsdfDirective(Directive):
         cwd = os.getcwd()
         os.chdir(TMPDIR)
 
+        show_header = not ("no_header" in self.arguments)
+        show_bocks = not ("no_blocks" in self.arguments)
+
         parts = []
         try:
             ff = AsdfFile()
@@ -79,59 +82,61 @@ class AsdfDirective(Directive):
             literal = nodes.literal_block(code, code)
             literal["language"] = "yaml"
             set_source_info(self, literal)
-            parts.append(literal)
+            if show_header:
+                parts.append(literal)
 
             kwargs = dict()
             # Use the ignore_unrecognized_tag parameter as a proxy for both options
             kwargs["ignore_unrecognized_tag"] = "ignore_unrecognized_tag" in self.arguments
             kwargs["ignore_missing_extensions"] = "ignore_unrecognized_tag" in self.arguments
 
-            with asdf.open(filename, **kwargs) as ff:
-                for i, block in enumerate(ff.blocks.internal_blocks):
-                    data = codecs.encode(block.data.tobytes(), "hex")
-                    if len(data) > 40:
-                        data = data[:40] + "...".encode()
-                    allocated = block._allocated
-                    size = block._size
-                    data_size = block._data_size
-                    flags = block._flags
+            if show_bocks:
+                with asdf.open(filename, **kwargs) as ff:
+                    for i, block in enumerate(ff.blocks.internal_blocks):
+                        data = codecs.encode(block.data.tobytes(), "hex")
+                        if len(data) > 40:
+                            data = data[:40] + "...".encode()
+                        allocated = block._allocated
+                        size = block._size
+                        data_size = block._data_size
+                        flags = block._flags
 
-                    if flags & BLOCK_FLAG_STREAMED:
-                        allocated = size = data_size = 0
+                        if flags & BLOCK_FLAG_STREAMED:
+                            allocated = size = data_size = 0
 
-                    lines = []
-                    lines.append("BLOCK {0}:".format(i))
+                        lines = []
+                        lines.append("BLOCK {0}:".format(i))
 
-                    human_flags = []
-                    for key, val in FLAGS.items():
-                        if flags & key:
-                            human_flags.append(val)
-                    if len(human_flags):
-                        lines.append("    flags: {0}".format(" | ".join(human_flags)))
-                    if block.input_compression:
-                        lines.append("    compression: {0}".format(block.input_compression))
-                    lines.append("    allocated_size: {0}".format(allocated))
-                    lines.append("    used_size: {0}".format(size))
-                    lines.append("    data_size: {0}".format(data_size))
-                    lines.append("    data: {0}".format(data))
+                        human_flags = []
+                        for key, val in FLAGS.items():
+                            if flags & key:
+                                human_flags.append(val)
+                        if len(human_flags):
+                            lines.append("    flags: {0}".format(" | ".join(human_flags)))
+                        if block.input_compression:
+                            lines.append("    compression: {0}".format(block.input_compression))
+                        lines.append("    allocated_size: {0}".format(allocated))
+                        lines.append("    used_size: {0}".format(size))
+                        lines.append("    data_size: {0}".format(data_size))
+                        lines.append("    data: {0}".format(data))
 
-                    code = "\n".join(lines)
-                    code += "\n"
+                        code = "\n".join(lines)
+                        code += "\n"
 
-                    literal = nodes.literal_block(code, code)
-                    literal["language"] = "yaml"
-                    set_source_info(self, literal)
-                    parts.append(literal)
+                        literal = nodes.literal_block(code, code)
+                        literal["language"] = "yaml"
+                        set_source_info(self, literal)
+                        parts.append(literal)
 
-                internal_blocks = list(ff.blocks.internal_blocks)
-                if len(internal_blocks) and internal_blocks[-1].array_storage != "streamed":
-                    buff = io.BytesIO()
-                    ff.blocks.write_block_index(buff, ff)
-                    block_index = buff.getvalue().decode("utf-8")
-                    literal = nodes.literal_block(block_index, block_index)
-                    literal["language"] = "yaml"
-                    set_source_info(self, literal)
-                    parts.append(literal)
+                    internal_blocks = list(ff.blocks.internal_blocks)
+                    if len(internal_blocks) and internal_blocks[-1].array_storage != "streamed":
+                        buff = io.BytesIO()
+                        ff.blocks.write_block_index(buff, ff)
+                        block_index = buff.getvalue().decode("utf-8")
+                        literal = nodes.literal_block(block_index, block_index)
+                        literal["language"] = "yaml"
+                        set_source_info(self, literal)
+                        parts.append(literal)
 
         finally:
             os.chdir(cwd)

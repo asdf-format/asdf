@@ -104,6 +104,8 @@ input to the constructor of `AsdfFile`:
 If we open the newly created file's metadata section, we can see some of the key features
 of ASDF on display:
 
+.. _begin-example-asdf-metadata:
+
 .. code:: yaml
 
     #ASDF 1.0.0
@@ -138,11 +140,16 @@ of ASDF on display:
       shape: [100]
     ...
 
+.. _end-example-asdf-metadata:
+
 The metadata in the file mirrors the structure of the tree that was stored. It
 is hierarchical and human-readable. Notice that metadata has been added to the
 tree that was not explicitly given by the user. Notice also that the numerical
 array data is not stored in the metadata tree itself. Instead, it is stored as
-binary data blocks below the metadata section (not shown here).
+binary data blocks below the metadata section (not shown above).
+
+.. _end-create-file-text:
+.. _begin-compress-file:
 
 It is possible to compress the array data when writing the file:
 
@@ -154,7 +161,7 @@ The built-in compression algorithms are ``'zlib'``, and ``'bzp2'``.  The
 ``'lz4'`` algorithm becomes available when the `lz4 <https://python-lz4.readthedocs.io/>`__ package
 is installed.  Other compression algorithms may be available via extensions.
 
-.. _end-create-file-text:
+.. _end-compress-file:
 
 Reading a file
 ~~~~~~~~~~~~~~
