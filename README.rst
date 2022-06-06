@@ -101,10 +101,10 @@ input to the constructor of `AsdfFile`:
     # Write the data to a new file
     af.write_to('example.asdf')
 
-If we open the newly created file, we can see some of the key features
+If we open the newly created file's metadata section, we can see some of the key features
 of ASDF on display:
 
-::
+.. code:: yaml
 
     #ASDF 1.0.0
     #ASDF_STANDARD 1.2.0
