@@ -23,7 +23,7 @@ and reading trees, see :ref:`overview`.
 .. note::
 
    The ASDF Standard imposes a maximum size of 64-bit signed integers literals in
-   the tree (see :ref:`<asdf-standard:literal_integers>` for details and justification).
+   the tree (see :ref:`asdf-standard:literal_integers` for details and justification).
    Attempting to store a larger value as a YAML literal will result in a validation
    error.
 
