@@ -23,9 +23,9 @@ and reading trees, see :ref:`overview`.
 .. note::
 
    The ASDF Standard imposes a maximum size of 64-bit signed integers literals in
-   the tree (see `the docs <https://asdf-standard.readthedocs.io/en/latest/known_limits.html#literal-integer-values-in-the-tree>`_
-   for details and justification). Attempting to store a larger value as a YAML literal will
-   result in a validation error.
+   the tree (see :ref:`asdf-standard:literal_integers` for details and justification).
+   Attempting to store a larger value as a YAML literal will result in a validation
+   error.
 
    For arbitrary precision integer support, see `IntegerType`.
 
@@ -92,8 +92,8 @@ Schema validation
 =================
 
 Schema validation is used to determine whether an ASDF file is well formed. All
-ASDF files must conform to the schemas defined by the `ASDF Standard
-<https://asdf-standard.readthedocs.io/en/latest/>`_. Schema validation occurs
+ASDF files must conform to the schemas defined by the :ref:`ASDF Standard
+<asdf-standard:asdf-standard>`. Schema validation occurs
 when reading ASDF files (using `asdf.open`), and also when writing them out
 (using `AsdfFile.write_to` or `AsdfFile.update`).
 
@@ -181,7 +181,8 @@ pass the schema URI (``http://example.com/schemas/your-custom-schema``, in this
 case) instead of a file path.
 
 .. _top-level core schema:
-    https://github.com/asdf-format/asdf-standard/blob/master/schemas/stsci.edu/asdf/core/asdf-1.1.0.yaml
+.. note::
+    The top-level core schemas can be found :ref:`here <asdf-standard:core-schema>`.
 
 .. _version_and_compat:
 
@@ -463,7 +464,7 @@ create an `AsdfInFits` object.
     from asdf import fits_embed
 
     ff = fits_embed.AsdfInFits(hdulist, tree)
-    ff.write_to('embedded_asdf.fits')
+    ff.write_to('embedded_asdf.fits', overwrite=True)
 
 .. runcode:: hidden
 

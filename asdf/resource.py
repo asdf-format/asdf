@@ -5,7 +5,7 @@ as schemas.
 import pkgutil
 from collections.abc import Mapping
 
-from asdf_standard import DirectoryResourceMapping
+from asdf_standard import DirectoryResourceMapping as _DirectoryResourceMapping
 
 from .util import get_class_name
 
@@ -16,6 +16,16 @@ __all__ = [
     "JsonschemaResourceMapping",
     "get_json_schema_resource_mappings",
 ]
+
+
+class DirectoryResourceMapping(_DirectoryResourceMapping):
+    """
+    A resource mapping that reads resource content from a directory or directory tree.
+
+    See :class:`~asdf_standard.resource.DirectoryResourceMapping` for details.
+    """
+
+    pass
 
 
 class ResourceMappingProxy(Mapping):
