@@ -691,8 +691,8 @@ Creating custom schemas
 -----------------------
 
 All custom types to be serialized by `asdf` require custom schemas. The best
-resource for creating ASDF schemas can be found in the `ASDF Standard
-<https://asdf-standard.readthedocs.io/en/latest/schemas.html>`_ documentation.
+resource for creating ASDF schemas can be found in the :ref:`ASDF Standard
+<asdf-standard:asdf-schemas>` documentation.
 
 In most cases, ASDF schemas will be included as part of a packaged software
 distribution. In these cases, it is important for the
@@ -871,7 +871,7 @@ Testing custom schemas
 ----------------------
 
 Packages that provide their own schemas can test them using `asdf`'s
-`pytest <https://docs.pytest.org/en/latest/>`_ plugin for schema testing.
+:ref:`pytest <pytest:toc>` plugin for schema testing.
 Schemas are tested for overall validity, and any examples given within the
 schemas are also tested.
 

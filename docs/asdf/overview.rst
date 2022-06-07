@@ -38,9 +38,50 @@ save a :class:`dict` with the key/value pair ``'hello': 'world'``.
 Creating Files
 ==============
 
+.. runcode:: hidden
+
+    import asdf
+    import numpy as np
+
+    # Create some data
+    sequence = np.arange(100)
+    squares  = sequence**2
+    random = np.random.random(100)
+
+    # Store the data in an arbitrarily nested dictionary
+    tree = {
+        'foo': 42,
+        'name': 'Monty',
+        'sequence': sequence,
+        'powers': { 'squares' : squares },
+        'random': random
+    }
+
+    # Create the ASDF file object from our data tree
+    af = asdf.AsdfFile(tree)
+
+    # Write the data to a new file
+    af.write_to('example.asdf')
+
 .. include:: ../../README.rst
     :start-after: begin-create-file-text:
+    :end-before: begin-example-asdf-metadata:
+
+.. asdf:: example.asdf no_blocks
+
+.. include:: ../../README.rst
+    :start-after: end-example-asdf-metadata:
     :end-before: end-create-file-text:
+
+A rendering of the binary data contained in the file can be found below. Observe that
+the value of ``source`` in the metadata corresponds to the block number (e.g. ``BLOCK 0``)
+of the block which contains the binary data.
+
+.. asdf:: example.asdf no_header
+
+.. include:: ../../README.rst
+    :start-after: _begin-compress-file:
+    :end-before: _end-compress-file:
 
 Reading Files
 =============

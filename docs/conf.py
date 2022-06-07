@@ -54,6 +54,10 @@ setup_cfg = dict(conf.items("metadata"))
 # If your documentation needs a minimal Sphinx version, state it here.
 # needs_sphinx = '1.2'
 
+intersphinx_mapping["pypa-packaging"] = ("https://packaging.python.org/en/latest/", None)
+intersphinx_mapping["asdf-standard"] = ("https://asdf-standard.readthedocs.io/en/latest/", None)
+intersphinx_mapping["pytest"] = ("https://docs.pytest.org/en/latest/", None)
+
 # To perform a Sphinx version check that needs to be more specific than
 # major.minor, call `check_sphinx_version("x.y.z")` here.
 # check_sphinx_version("1.2.1")
@@ -99,14 +103,8 @@ version = ".".join(release.split(".")[:2])
 # The theme to use for HTML and HTML Help pages.  See the documentation for
 # a list of builtin themes. To override the custom theme, set this to the
 # name of a builtin theme or the name of a custom theme in html_theme_path.
-html_theme = "alabaster"
-html_theme_options = {
-    "github_user": "asdf-format",
-    "github_repo": "asdf",
-    "github_button": "true",
-    "fixed_sidebar": "true",
-    "page_width": "90%",
-}
+html_theme = "sphinx_rtd_theme"
+html_theme_options = {}
 
 html_static_path = ["_static"]
 
@@ -116,7 +114,8 @@ html_static_path = ["_static"]
 # The name of an image file (within the static path) to use as favicon of the
 # docs.  This file should be a Windows icon file (.ico) being 16x16 or 32x32
 # pixels large.
-# html_favicon = ''
+html_favicon = "_static/logo.ico"
+html_logo = "_static/logo.png"
 
 # If not '', a 'Last updated on:' timestamp is inserted at every page bottom,
 # using the given strftime format.
@@ -136,6 +135,8 @@ htmlhelp_basename = project + "doc"
 # (source start file, target name, title, author, documentclass [howto/manual]).
 latex_documents = [("index", project + ".tex", project + " Documentation", author, "manual")]
 
+latex_logo = "_static/logo.pdf"
+
 
 # -- Options for manual page output --------------------------------------------
 
@@ -144,4 +145,8 @@ latex_documents = [("index", project + ".tex", project + " Documentation", autho
 man_pages = [("index", project.lower(), project + " Documentation", [author], 1)]
 
 sys.path.insert(0, os.path.join(os.path.abspath(os.path.dirname("__file__")), "sphinxext"))
-extensions += ["example"]
+extensions += ["example", "sphinx_asdf"]
+
+
+def setup(app):
+    app.add_css_file("custom.css")

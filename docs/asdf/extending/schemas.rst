@@ -49,7 +49,7 @@ numeric value and corresponding unit:
       required: [value, unit]
     ...
 
-This is similar to the `quantity schema`_ in the ASDF Standard, but
+This is similar to the quantity schema, found :ref:`here <asdf-standard:unit-schema>`, of the ASDF Standard, but
 has been updated to reflect current recommendations regarding schemas.
 Let's walk through this schema line by line.
 
@@ -241,6 +241,11 @@ function will validate a Python object against a schema:
 The validate function will return successfully if the object is valid, or raise
 an error if not.
 
-.. _JSON Schema Draft 4: https://json-schema.org/specification-links.html#draft-4
-.. _Understanding JSON Schema: https://json-schema.org/understanding-json-schema/
-.. _quantity schema: https://asdf-standard.readthedocs.io/en/latest/generated/stsci.edu/asdf/unit/quantity-1.1.0.html
+See also:
+=========
+
+- `JSON Schema Draft 4 <https://json-schema.org/specification-links.html#draft-4>`_
+
+- `Understanding JSON Schema <https://json-schema.org/understanding-json-schema/>`_
+
+- :ref:`Unit Schemas <asdf-standard:unit-schema>`
