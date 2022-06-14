@@ -28,7 +28,8 @@ class Converter(abc.ABC):
             )
         return NotImplemented  # pragma: no cover
 
-    @abc.abstractproperty
+    @property
+    @abc.abstractmethod
     def tags(self):
         """
         Get the YAML tags that this converter is capable of
@@ -42,7 +43,8 @@ class Converter(abc.ABC):
         """
         pass  # pragma: no cover
 
-    @abc.abstractproperty
+    @property
+    @abc.abstractmethod
     def types(self):
         """
         Get the Python types that this converter is capable of
