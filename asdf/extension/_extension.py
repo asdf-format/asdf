@@ -23,7 +23,8 @@ class Extension(abc.ABC):
             return hasattr(C, "extension_uri")
         return NotImplemented  # pragma: no cover
 
-    @abc.abstractproperty
+    @property
+    @abc.abstractmethod
     def extension_uri(self):
         """
         Get the URI of the extension to the ASDF Standard implemented

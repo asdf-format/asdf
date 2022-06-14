@@ -27,7 +27,8 @@ class Compressor(abc.ABC):
             return hasattr(C, "label") and (hasattr(C, "compress") or hasattr(C, "decompress"))
         return NotImplemented  # pragma: no cover
 
-    @abc.abstractproperty
+    @property
+    @abc.abstractmethod
     def label(self):
         """
         Get the 4-byte label identifying this compression

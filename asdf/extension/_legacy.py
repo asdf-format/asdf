@@ -19,7 +19,8 @@ class AsdfExtension(metaclass=abc.ABCMeta):
             return hasattr(C, "types") and hasattr(C, "tag_mapping")
         return NotImplemented
 
-    @abc.abstractproperty
+    @property
+    @abc.abstractmethod
     def types(self):
         """
         A list of `asdf.CustomType` subclasses that describe how to store
@@ -27,7 +28,8 @@ class AsdfExtension(metaclass=abc.ABCMeta):
         """
         pass
 
-    @abc.abstractproperty
+    @property
+    @abc.abstractmethod
     def tag_mapping(self):
         """
         A list of 2-tuples or callables mapping YAML tag prefixes to JSON Schema
@@ -60,7 +62,8 @@ class AsdfExtension(metaclass=abc.ABCMeta):
         """
         pass
 
-    @abc.abstractproperty
+    @property
+    @abc.abstractmethod
     def url_mapping(self):
         """
         Schema content can be provided using the resource Mapping API.
