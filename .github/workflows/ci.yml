@@ -15,8 +15,58 @@ on:
   pull_request:
 
 jobs:
-  tox:
+  lint:
     name: ${{ matrix.name }}
+    runs-on: ${{ matrix.os }}
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - name: Code style checks
+            os: ubuntu-latest
+            python-version: "3.9"
+            toxenv: codestyle
+    steps:
+      - name: Install System Packages
+        if: ${{ contains(matrix.toxenv,'docbuild') }}
+        run: |
+          sudo apt update -y
+          sudo apt-get install graphviz texlive-latex-extra dvipng
+      - name: Checkout code
+        uses: actions/checkout@v2
+        with:
+          submodules: true
+      - name: Set up Python ${{ matrix.python-version }}
+        uses: actions/setup-python@v2
+        with:
+          python-version: ${{ matrix.python-version }}
+      - name: Restore cached tox installation
+        uses: actions/cache@v3
+        id: tox_cache
+        with:
+          path: ${{ env.pythonLocation }}
+          key: tox-install-${{ runner.os }}-${{ env.pythonLocation }}-${{ hashFiles('**/pyproject.toml', '**/setup.*') }}
+      - name: Install tox
+        if: steps.tox_cache.outputs.cache-hit != 'true'
+        run: |
+          python -m pip install --upgrade pip
+          pip install tox
+      - name: Restore cached tox environment
+        uses: actions/cache@v3
+        with:
+          path: .tox
+          key: tox-${{ matrix.toxenv }}-${{ runner.os }}-${{ env.pythonLocation }}-${{ hashFiles('**/pyproject.toml', '**/setup.*') }}
+      - name: Run tox
+        run: tox -e ${{ matrix.toxenv }}
+      - name: Upload coverage to codecov
+        if: ${{ contains(matrix.toxenv,'coverage') }}
+        uses: codecov/codecov-action@v2
+        with:
+          file: ./coverage.xml
+
+  test:
+    name: ${{ matrix.name }}
+    needs: [ lint ]
     runs-on: ${{ matrix.os }}
     strategy:
       fail-fast: false
@@ -51,21 +101,6 @@ jobs:
             os: ubuntu-latest
             python-version: "3.9"
             toxenv: compatibility
-
-          - name: Code style checks
-            os: ubuntu-latest
-            python-version: "3.9"
-            toxenv: codestyle
-
-          - name: Build Documents
-            python-version: "3.9"
-            os: ubuntu-latest
-            toxenv: docbuild
-
-          - name: Twine
-            os: ubuntu-latest
-            python-version: "3.9"
-            toxenv: twine
 
           - name: Astropy Dev
             os: ubuntu-latest
@@ -135,16 +170,27 @@ jobs:
       - name: Checkout code
         uses: actions/checkout@v2
         with:
-          fetch-depth: 0
           submodules: true
       - name: Set up Python ${{ matrix.python-version }}
         uses: actions/setup-python@v2
         with:
           python-version: ${{ matrix.python-version }}
+      - name: Restore cached tox installation
+        uses: actions/cache@v3
+        id: tox_cache
+        with:
+          path: ${{ env.pythonLocation }}
+          key: tox-install-${{ runner.os }}-${{ env.pythonLocation }}-${{ hashFiles('**/pyproject.toml', '**/setup.*') }}
       - name: Install tox
+        if: steps.tox_cache.outputs.cache-hit != 'true'
         run: |
           python -m pip install --upgrade pip
           pip install tox
+      - name: Restore cached tox environment
+        uses: actions/cache@v3
+        with:
+          path: .tox
+          key: tox-${{ matrix.toxenv }}-${{ runner.os }}-${{ env.pythonLocation }}-${{ hashFiles('**/pyproject.toml', '**/setup.*') }}
       - name: Run tox
         run: tox -e ${{ matrix.toxenv }}
       - name: Upload coverage to codecov
@@ -155,17 +201,16 @@ jobs:
 
   asdf-standard:
     name: Run asdf-standard tests
+    needs: [ lint ]
     runs-on: ubuntu-latest
     steps:
       - name: Checkout asdf
         uses: actions/checkout@v2
         with:
-          fetch-depth: 0
           path: asdf
       - name: Checkout asdf-standard
         uses: actions/checkout@v2
         with:
-          fetch-depth: 0
           repository: asdf-format/asdf-standard
           ref: master
           path: asdf-standard
@@ -181,3 +226,58 @@ jobs:
         run: pip freeze
       - name: Run asdf-standard tests
         run: cd asdf-standard && pytest
+
+  build:
+    name: ${{ matrix.name }}
+    needs: [ test, asdf-standard ]
+    runs-on: ${{ matrix.os }}
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - name: Build Documents
+            python-version: "3.9"
+            os: ubuntu-latest
+            toxenv: docbuild
+
+          - name: Twine
+            os: ubuntu-latest
+            python-version: "3.9"
+            toxenv: twine
+    steps:
+      - name: Install System Packages
+        if: ${{ contains(matrix.toxenv,'docbuild') }}
+        run: |
+          sudo apt update -y
+          sudo apt-get install graphviz texlive-latex-extra dvipng
+      - name: Checkout code
+        uses: actions/checkout@v2
+        with:
+          submodules: true
+      - name: Set up Python ${{ matrix.python-version }}
+        uses: actions/setup-python@v2
+        with:
+          python-version: ${{ matrix.python-version }}
+      - name: Restore cached tox installation
+        uses: actions/cache@v3
+        id: tox_cache
+        with:
+          path: ${{ env.pythonLocation }}
+          key: tox-install-${{ runner.os }}-${{ env.pythonLocation }}-${{ hashFiles('**/pyproject.toml', '**/setup.*') }}
+      - name: Install tox
+        if: steps.tox_cache.outputs.cache-hit != 'true'
+        run: |
+          python -m pip install --upgrade pip
+          pip install tox
+      - name: Restore cached tox environment
+        uses: actions/cache@v3
+        with:
+          path: .tox
+          key: tox-${{ matrix.toxenv }}-${{ runner.os }}-${{ env.pythonLocation }}-${{ hashFiles('**/pyproject.toml', '**/setup.*') }}
+      - name: Run tox
+        run: tox -e ${{ matrix.toxenv }}
+      - name: Upload coverage to codecov
+        if: ${{ contains(matrix.toxenv,'coverage') }}
+        uses: codecov/codecov-action@v2
+        with:
+          file: ./coverage.xml

@@ -31,6 +31,7 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
+        python: [ 3.9 ]
         include:
           - package_name: astropy
             repository: astropy/astropy
@@ -106,20 +107,18 @@ jobs:
       - name: Checkout asdf
         uses: actions/checkout@v2
         with:
-          fetch-depth: 0
           submodules: true
           path: asdf
       - name: Checkout ${{ matrix.package_name }}
         uses: actions/checkout@v2
         with:
-          fetch-depth: 0
           repository: ${{ matrix.repository }}
           ref: ${{ matrix.ref }}
           path: target
-      - name: Set up Python 3.9
+      - name: Set up Python ${{ matrix.python }}
         uses: actions/setup-python@v2
         with:
-          python-version: 3.9
+          python-version: ${{ matrix.python }}
       - name: Install asdf
         run: cd asdf && pip install .
       - name: Install remaining ${{ matrix.package_name }} dependencies
