@@ -878,7 +878,7 @@ schemas are also tested.
 The schema tester plugin is automatically registered when the `asdf` package is
 installed. In order to enable testing, it is necessary to add the directory
 containing your schema files to the pytest section of your project's
-`setup.cfg` file. If you do not already have such a file, creating a
+``pyproject.toml`` file. If you do not already have such a file, creating a
 `setup.cfg` with the following should be sufficient:
 
 .. code:: ini
