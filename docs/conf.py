@@ -43,9 +43,9 @@ except ImportError:
     sys.exit(1)
 
 # Get configuration information from `pyproject.toml`
-with open(Path(__file__).parent / "pyproject.toml") as configuration_file:
+with open(Path(__file__).parent.parent / "pyproject.toml") as configuration_file:
     conf = toml.load(configuration_file)
-configuration = conf["metadata"]
+configuration = conf["project"]
 
 # -- General configuration ----------------------------------------------------
 
@@ -73,8 +73,9 @@ rst_epilog += """
 
 # This does not *have* to match the package name, but typically does
 project = configuration["name"]
-author = configuration["authors"][0]["name"]
-copyright = "{0}, {1}".format(datetime.datetime.now().year, configuration["authors"][0]["name"])
+author = configuration["authors"][0]
+author = f'{author["name"]} <{author["email"]}>'
+copyright = f"{datetime.datetime.now().year}, {author['name']}"
 
 # The version info for the project you're documenting, acts as replacement for
 # |version| and |release|, also used in various other places throughout the
