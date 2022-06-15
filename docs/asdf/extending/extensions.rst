@@ -187,7 +187,7 @@ an additional list of class names that previously identified the extension:
 .. _exposing_extension_object_internals:
 
 Making converted object's contents visible to ``info`` and ``search``
------------------------------------------------------------------
+---------------------------------------------------------------------
 
 If the object produced by the extension supports a class method
 `.__asdf_traverse__` then it can be used by those tools to expose the contents
