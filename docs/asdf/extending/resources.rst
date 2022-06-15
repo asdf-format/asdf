@@ -148,7 +148,8 @@ that provides the same schemas described in the previous section.  Our
 directory structure might look something like this::
 
     asdf-foo-schemas
-    ├─ pyproject.toml
+    ├─ setup.py
+    ├─ setup.cfg
     └─ src
        └─ asdf_foo_schemas
           ├─ __init__.py
@@ -186,8 +187,14 @@ instance:
         )
         return [mapping]
 
-Then in ``pyproject.toml``, define an ``[project.entry-points]`` section that
+Then in ``setup.config``, define an ``[options.entry_points]`` section (or ``[project.entry-points]`` in ``pyproject.toml``) that
 identifies the method as an ``asdf.resource_mappings`` entry point:
+
+.. code-block:: ini
+
+    # setup.cfg
+    [options.package_data]
+    * = *.yaml
 
 .. code-block:: toml
 
