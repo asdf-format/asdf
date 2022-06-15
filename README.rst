@@ -21,8 +21,12 @@ ASDF - Advanced Scientific Data Format
 .. image:: https://codecov.io/gh/asdf-format/asdf/branch/master/graphs/badge.svg
     :target: https://codecov.io/gh/asdf-format/asdf
 
+.. _begin-zenodo:
+
 .. image:: https://zenodo.org/badge/18112754.svg
     :target: https://zenodo.org/badge/latestdoi/18112754
+
+.. _end-zenodo:
 
 .. image:: https://img.shields.io/pypi/l/asdf.svg
     :target: https://img.shields.io/pypi/l/asdf.svg

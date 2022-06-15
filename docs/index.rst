@@ -82,6 +82,7 @@ Resources
   asdf/contributing
   asdf/code_of_conduct
   asdf/changes
+  asdf/citation
 
 See also
 ========
