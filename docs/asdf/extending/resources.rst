@@ -148,8 +148,8 @@ that provides the same schemas described in the previous section.  Our
 directory structure might look something like this::
 
     asdf-foo-schemas
-    ├─ setup.py
     ├─ setup.cfg
+    ├─ setup.py
     └─ src
        └─ asdf_foo_schemas
           ├─ __init__.py
@@ -187,7 +187,7 @@ instance:
         )
         return [mapping]
 
-Then in ``setup.config``, define an ``[options.entry_points]`` section (or ``[project.entry-points]`` in ``pyproject.toml``) that
+Then in ``setup.cfg``, define an ``[options.entry_points]`` section (or ``[project.entry-points]`` in ``pyproject.toml``) that
 identifies the method as an ``asdf.resource_mappings`` entry point:
 
 .. code-block:: ini
@@ -215,7 +215,7 @@ in a new session without any additional setup:
 
 Note that the package will need to be configured to include the
 YAML files.  There are multiple ways to accomplish this, but one easy option
-is to add an ``[tool.setuptools.package-data]`` section to ``pyproject.toml`` requesting
+is to add an ``[options.package_data]`` section to ``setup.cfg`` (or ``[tool.setuptools.package-data]`` in ``pyproject.toml``) requesting
 that all files with a ``.yaml`` extension be installed:
 
 .. code-block:: toml
