@@ -4,6 +4,10 @@
 ASDF - Advanced Scientific Data Format
 **************************************
 
+.. include:: ../README.rst
+    :start-after: begin-badges:
+    :end-before: end-badges:
+
 `asdf` is a tool for reading and writing Advanced Scientific Data
 Format (ASDF) files.
 
@@ -69,8 +73,8 @@ parts of ASDF interact and which modules do what and how.
   asdf/developer_overview
   asdf/developer_versioning
 
-Developer Resources
-===================
+Resources
+=========
 
 .. toctree::
   :maxdepth: 1
