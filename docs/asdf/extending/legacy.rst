@@ -879,17 +879,17 @@ The schema tester plugin is automatically registered when the `asdf` package is
 installed. In order to enable testing, it is necessary to add the directory
 containing your schema files to the pytest section of your project's
 ``pyproject.toml`` file. If you do not already have such a file, creating a
-`setup.cfg` with the following should be sufficient:
+``pyproject.toml`` with the following should be sufficient:
 
-.. code:: ini
+.. code:: toml
 
-    [tool:pytest]
-    asdf_schema_root = path/to/schemas another/path/to/schemas
+    [tool.pytest.ini_options]
+    asdf_schema_root = 'path/to/schemas another/path/to/schemas'
 
 The schema directory paths should be paths that are relative to the top of the
 package directory **when it is installed**. If this is different from the path
 in the source directory, then both paths can be used to facilitate in-place
-testing (see `asdf`'s own `setup.cfg` for an example of this).
+testing (see `asdf`'s own ``pyproject.toml`` for an example of this).
 
 .. note::
 
@@ -902,11 +902,11 @@ testing (see `asdf`'s own `setup.cfg` for an example of this).
 The ``asdf_schema_skip_names`` configuration variable can be used to skip
 schema files that live within one of the ``asdf_schema_root`` directories but
 should not be tested. The names should be given as simple base file names
-(without directory paths or extensions). Again, see `asdf`'s own `setup.cfg` file
+(without directory paths or extensions). Again, see `asdf`'s own ``pyproject.toml`` file
 for an example.
 
 The schema tests do **not** run by default. In order to enable the tests by
-default for your package, add ``asdf_schema_tests_enabled = true`` to the
-``[tool:pytest]`` section of your `setup.cfg` file. If you do not wish to
+default for your package, add ``asdf_schema_tests_enabled = 'true'`` to the
+``[tool.pytest.ini_options]`` section of your ``pyproject.toml`` file. If you do not wish to
 enable the schema tests by default, you can add the ``--asdf-tests`` option to
 the ``pytest`` command line to enable tests on a per-run basis.
