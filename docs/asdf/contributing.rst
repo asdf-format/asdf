@@ -2,7 +2,7 @@
 
 .. _contributing:
 
-Contributing and reporting issues
-=================================
+Contributing
+============
 
 .. include:: ../../CONTRIBUTING.rst
