@@ -76,6 +76,7 @@ Developer Resources
   :maxdepth: 1
 
   asdf/contributing
+  asdf/code_of_conduct
   asdf/changes
 
 See also

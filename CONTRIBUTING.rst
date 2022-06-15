@@ -1,6 +1,6 @@
 We welcome feedback and contributions of all kinds. Contributions of code,
 documentation, or general feedback are all appreciated. This package follows
-the asdf-format [Code of Conduct and strives to provide a
+the ASDF-format :ref:`Code Of Conduct <code-of-conduct>` and strives to provide a
 welcoming community to all of our users and contributors.
 
 New to GitHub or open source projects? If you are unsure about where to start or
