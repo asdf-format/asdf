@@ -878,20 +878,20 @@ schemas are also tested.
 The schema tester plugin is automatically registered when the `asdf` package is
 installed. In order to enable testing, it is necessary to add the directory
 containing your schema files to the pytest section of your project's build configuration
-(``setup.cfg`` or ``pyproject.toml``). If you do not already have such a file, creating
+(``pyproject.toml`` or ``setup.cfg``). If you do not already have such a file, creating
 one with the following should be sufficient:
-
-.. code:: ini
-
-    # setup.cfg
-    [tool:pytest]
-    asdf_schema_root = path/to/schemas another/path/to/schemas
 
 .. code:: toml
 
     # pyproject.toml
     [tool.pytest.ini_options]
     asdf_schema_root = 'path/to/schemas another/path/to/schemas'
+
+.. code:: ini
+
+    # setup.cfg
+    [tool:pytest]
+    asdf_schema_root = path/to/schemas another/path/to/schemas
 
 The schema directory paths should be paths that are relative to the top of the
 package directory **when it is installed**. If this is different from the path
@@ -914,6 +914,6 @@ for an example.
 
 The schema tests do **not** run by default. In order to enable the tests by
 default for your package, add ``asdf_schema_tests_enabled = 'true'`` to the
-``[tool:pytest]`` section of your ``setup.cfg`` file (or ``[tool.pytest.ini_options]`` in ``pyproject.toml``). If you do not wish to
-enable the schema tests by default, you can add the ``--asdf-tests`` option to
+``[tool.pytest.ini_options]`` section of your ``pyproject.toml`` file (or ``[tool:pytest]`` in ``setup.cfg``).
+If you do not wish to enable the schema tests by default, you can add the ``--asdf-tests`` option to
 the ``pytest`` command line to enable tests on a per-run basis.

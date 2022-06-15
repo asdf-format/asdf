@@ -148,8 +148,7 @@ that provides the same schemas described in the previous section.  Our
 directory structure might look something like this::
 
     asdf-foo-schemas
-    ├─ setup.cfg
-    ├─ setup.py
+    ├─ pyproject.toml
     └─ src
        └─ asdf_foo_schemas
           ├─ __init__.py
@@ -162,6 +161,10 @@ directory structure might look something like this::
                 ├─ __init__.py
                 ├─ bar-2.3.4.yaml
                 └─ baz-8.1.1.yaml
+
+``pyproject.toml`` is the preferred central configuration file for Python build and development systems.
+However, it is also possible to write configuration to a ``setup.cfg`` file (used by `setuptools`) placed in the root
+directory of the project. This documentation will cover both options.
 
 In ``integration.py``, we'll define the entry point method
 and have it return a list with a single element, our `DirectoryResourceMapping`
@@ -187,20 +190,20 @@ instance:
         )
         return [mapping]
 
-Then in ``setup.cfg``, define an ``[options.entry_points]`` section (or ``[project.entry-points]`` in ``pyproject.toml``) that
-identifies the method as an ``asdf.resource_mappings`` entry point:
-
-.. code-block:: ini
-
-    # setup.cfg
-    [options.package_data]
-    * = *.yaml
+Then in ``pyproject.toml``, define an ``[project.entry-points]`` section (or ``[options.entry_points]`` in ``setup.cfg``)
+that identifies the method as an ``asdf.resource_mappings`` entry point:
 
 .. code-block:: toml
 
     # pyproject.toml
     [project.entry-points]
     'asdf.resource_mappings' = { asdf_foo_schemas = 'asdf_foo_schemas.integration:get_resource_mappings' }
+
+.. code-block:: ini
+
+    # setup.cfg
+    [options.package_data]
+    * = *.yaml
 
 After installing the package, it should be possible to load one of our schemas
 in a new session without any additional setup:
@@ -215,14 +218,20 @@ in a new session without any additional setup:
 
 Note that the package will need to be configured to include the
 YAML files.  There are multiple ways to accomplish this, but one easy option
-is to add an ``[options.package_data]`` section to ``setup.cfg`` (or ``[tool.setuptools.package-data]`` in ``pyproject.toml``) requesting
-that all files with a ``.yaml`` extension be installed:
+is to add a ``[tool.setuptools.package-data]`` section to ``pyproject.toml`` (or ``[options.package_data]`` in
+``setup.cfg``) requesting that all files with a ``.yaml`` extension be installed:
 
 .. code-block:: toml
 
     # pyproject.toml
     [tool.setuptools.package-data]
     '*' = ['*.yaml']
+
+.. code-block:: ini
+
+    # setup.cfg
+    [options.package_data]
+    * = *.yaml
 
 Entry point performance considerations
 --------------------------------------

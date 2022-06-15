@@ -250,8 +250,14 @@ containing an instance of ``FooExtension``:
 
 We'll assume that method is located in the module ``asdf_foo_extension.integration``.
 
-Next, in the package's ``setup.cfg``, define an ``[options.entry_points]`` (or ``[project.entry-points]`` in ``pyproject.toml``) section that
-identifies the method as an ``asdf.extensions`` entry point:
+Next, in the package's ``pyproject.toml``, define a ``[project.entry-points]`` section (or ``[options.entry_points]`` in
+``setup.cfg``) that identifies the method as an ``asdf.extensions`` entry point:
+
+.. code-block:: toml
+
+    # pyproject.toml
+    [project.entry-points]
+    'asdf.extensions' = { asdf_foo_extension = 'asdf_foo_extension.integration:get_extensions' }
 
 .. code-block:: ini
 
@@ -259,12 +265,6 @@ identifies the method as an ``asdf.extensions`` entry point:
     [options.entry_points]
     asdf.extensions =
         asdf_foo_extension = asdf_foo_extension.integration:get_extensions
-
-.. code-block:: toml
-
-    # pyproject.toml
-    [project.entry-points]
-    'asdf.extensions' = { asdf_foo_extension = 'asdf_foo_extension.integration:get_extensions' }
 
 After installing the package, the extension should be automatically available in any
 new Python session.
