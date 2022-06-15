@@ -6,7 +6,7 @@
 Converters
 ==========
 
-The `~asdf.extension.Converter` interface defines a mapping between
+The ``~asdf.extension.Converter`` interface defines a mapping between
 tagged objects in the ASDF tree and their corresponding Python object(s).
 Typically a Converter will map one YAML tag to one Python type, but
 the interface also supports many-to-one and many-to-many mappings.  A
@@ -22,22 +22,22 @@ two required methods:
 
 `Converter.tags` - a list of tag URIs or URI patterns handled by the converter.
 Patterns may include the wildcard character `*`, which matches any sequence of
-characters up to a `/`, or `**`, which matches any sequence of characters.
-The `~asdf.util.uri_match` method can be used to test URI patterns.
+characters up to a ``/``, or `**`, which matches any sequence of characters.
+The ``~asdf.util.uri_match`` method can be used to test URI patterns.
 
 `Converter.types` - a list of Python types or fully-qualified Python type names handled
 by the converter.  Note that a string name must reflect the actual location of the
 class's implementation and not just a module where it is imported for convenience.
 For example, if class ``Foo`` is implemented in ``example_package.foo.Foo`` but
 imported as ``example_package.Foo`` for convenience, it is the former name that
-must be used.  The `~asdf.util.get_class_name` method will return the name that
+must be used.  The ``~asdf.util.get_class_name`` method will return the name that
 `asdf` expects.
 
 The string type name is recommended over a type object for performance reasons,
 see :ref:`extending_converters_performance`.
 
 `Converter.to_yaml_tree` - a method that accepts a complex Python object and returns
-a simple node object (typically a `dict`) suitable for serialization to YAML.  The
+a simple node object (typically a ``dict``) suitable for serialization to YAML.  The
 node is permitted to contain nested complex objects; these will in turn
 be passed to other ``to_yaml_tree`` methods in other Converters.
 
@@ -114,7 +114,7 @@ around it and install that extension:
 
     asdf.get_config().add_extension(ShapesExtension())
 
-Now we can include a Rectangle object in an `~asdf.asdf.AsdfFile` tree
+Now we can include a Rectangle object in an ``~asdf.asdf.AsdfFile`` tree
 and write out a file:
 
 .. code-block:: python
@@ -250,7 +250,7 @@ But upon deserialization, we notice a problem:
 
     assert reconstituted_f1.inverse.inverse is asdf.treeutil.PendingValue
 
-The presence of `~asdf.treeutil.PendingValue` is asdf's way of telling us
+The presence of ``~asdf.treeutil.PendingValue`` is asdf's way of telling us
 that the value corresponding to the key ``inverse`` was not fully deserialized
 at the time that we retrieved it.  We can handle this situation by making our
 ``from_yaml_tree`` a generator function:
@@ -287,11 +287,11 @@ With this modification we can successfully deserialize our ASDF file:
 Entry point performance considerations
 ======================================
 
-For the good of `asdf` users everywhere, it's important that entry point
+For the good of ``asdf`` users everywhere, it's important that entry point
 methods load as quickly as possible.  All extensions must be loaded before
 reading an ASDF file, and therefore all converters are created as well.  Any
 converter module or ``__init__`` method that lingers will introduce a delay
-to the initial call to `asdf.open`.  For that reason, we recommend that converter
+to the initial call to ``asdf.open``.  For that reason, we recommend that converter
 authors minimize the number of imports that occur in the module containing the
 Converter implementation, and defer imports of serializable types to within the
 ``from_yaml_tree`` method.  This will prevent the type from ever being imported

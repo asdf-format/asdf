@@ -4,16 +4,16 @@
 Configuration
 =============
 
-Version 2.8 of this library introduced a new mechanism, `AsdfConfig`, for setting
+Version 2.8 of this library introduced a new mechanism, ``AsdfConfig``, for setting
 global configuration options.  Currently available options are limited, but we expect
 to eventually move many of the ``AsdfFile.__init__`` and ``AsdfFile.write_to``
-keyword arguments to `AsdfConfig`.
+keyword arguments to ``AsdfConfig``.
 
 AsdfConfig and you
 ==================
 
-The `AsdfConfig` class provides properties that can be adjusted to change the
-behavior of the `asdf` library for all files.  For example, to disable schema validation
+The ``AsdfConfig`` class provides properties that can be adjusted to change the
+behavior of the ``asdf`` library for all files.  For example, to disable schema validation
 on read:
 
 .. code-block:: python
@@ -21,13 +21,13 @@ on read:
     >>> import asdf
     >>> asdf.get_config().validate_on_read = False # doctest: +SKIP
 
-This will prevent validation on any subsequent call to `~asdf.open`.
+This will prevent validation on any subsequent call to ``~asdf.open``.
 
 Obtaining an AsdfConfig instance
 --------------------------------
 
-There are two methods available that give access to an `AsdfConfig` instance:
-`~asdf.get_config` and `~asdf.config_context`.  The former simply returns
+There are two methods available that give access to an ``AsdfConfig`` instance:
+`~asdf.get_config` and ``~asdf.config_context``.  The former simply returns
 the currently active config:
 
 .. code-block:: python
@@ -42,9 +42,9 @@ the currently active config:
       validate_on_read: True
     >
 
-The latter method, `~asdf.config_context`, returns a context manager that
+The latter method, ``~asdf.config_context``, returns a context manager that
 yields a copy of the currently active config.  The copy is also returned by
-subsequent calls to `~asdf.get_config`, but only until the context manager exits.
+subsequent calls to ``~asdf.get_config``, but only until the context manager exits.
 This allows for short-lived configuration changes that do not impact other code:
 
 .. code-block:: python
@@ -73,9 +73,9 @@ This allows for short-lived configuration changes that do not impact other code:
 Special note to library maintainers
 -----------------------------------
 
-Libraries that use `asdf` are encouraged to only modify `AsdfConfig` within a
-surrounding call to `~asdf.config_context`.  The downstream library will then
-be able to customize `asdf`'s behavior without impacting other libraries or
+Libraries that use ``asdf`` are encouraged to only modify ``AsdfConfig`` within a
+surrounding call to ``~asdf.config_context``.  The downstream library will then
+be able to customize ``asdf``'s behavior without impacting other libraries or
 clobbering changes made by the user.
 
 Config options
@@ -116,7 +116,7 @@ legacy_fill_schema_defaults
 Flag that controls filling default values from schemas for older versions of
 the ASDF Standard.  This library used to remove nodes from the tree whose
 values matched the default property in the schema.  That behavior was changed
-in `asdf` 2.8, but in order to read files produced by older versions of the library,
+in ``asdf`` 2.8, but in order to read files produced by older versions of the library,
 default values must still be filled from the schema for ASDF Standard <= 1.5.0.
 
 Set to False to disable filling default values from the schema for these
@@ -137,7 +137,7 @@ Additional AsdfConfig features
 ==============================
 
 `AsdfConfig` also provides methods for adding and removing plugins at runtime.
-For example, the `AsdfConfig.add_resource_mapping` method can be used to register
+For example, the ``AsdfConfig.add_resource_mapping`` method can be used to register
 a schema, which can then be used to validate a file:
 
 .. code-block:: python
@@ -165,4 +165,4 @@ a schema, which can then be used to validate a file:
     >>> af["foo"] = "bar"
     >>> af.validate()
 
-See the `AsdfConfig` API documentation for more detail.
+See the ``AsdfConfig`` API documentation for more detail.

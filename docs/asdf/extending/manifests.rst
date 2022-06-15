@@ -10,7 +10,7 @@ ASDF extensions that are intended to be implemented by ASDF libraries
 in multiple languages, so that other implementers do not need to go
 spelunking through Python code to discover the tags and schemas that
 are included in the extension.  This library provides support for
-automatically populating a `~asdf.extension.Extension` object from
+automatically populating a ``~asdf.extension.Extension`` object from
 a manifest; see :ref:`extending_extensions_manifest` for more information.
 
 Anatomy of a manifest
@@ -42,7 +42,7 @@ with one tag and schema:
     id: asdf://example.com/example-project/manifests/example-1.0.0
 
 The ``id`` property contains the URI that uniquely identifies our manifest.  This
-URI is how we'll refer to the manifest document's content when using the `asdf`
+URI is how we'll refer to the manifest document's content when using the ``asdf``
 library.
 
 .. code-block:: yaml

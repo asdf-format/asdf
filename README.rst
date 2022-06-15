@@ -75,9 +75,9 @@ Creating a file
 
 .. _begin-create-file-text:
 
-We're going to store several `numpy` arrays and other data to an ASDF file. We
-do this by creating a "tree", which is simply a `dict`, and we provide it as
-input to the constructor of `AsdfFile`:
+We're going to store several ``numpy`` arrays and other data to an ASDF file. We
+do this by creating a "tree", which is simply a ``dict``, and we provide it as
+input to the constructor of ``AsdfFile``:
 
 .. code:: python
 
@@ -171,8 +171,8 @@ Reading a file
 
 .. _begin-read-file-text:
 
-To read an existing ASDF file, we simply use the top-level `open` function of
-the `asdf` package:
+To read an existing ASDF file, we simply use the top-level ``open`` function of
+the ``asdf`` package:
 
 .. code:: python
 
@@ -180,7 +180,7 @@ the `asdf` package:
 
     af = asdf.open('example.asdf')
 
-The `open` function also works as a context handler:
+The ``open`` function also works as a context handler:
 
 .. code:: python
 
@@ -215,7 +215,7 @@ To get a quick overview of the data stored in the file, use the top-level
     ├─random (NDArrayType): shape=(100,), dtype=float64
     └─sequence (NDArrayType): shape=(100,), dtype=int64
 
-The `AsdfFile` behaves like a Python `dict`, and nodes are accessed like
+The ``AsdfFile`` behaves like a Python ``dict``, and nodes are accessed like
 any other dictionary entry:
 
 .. code:: python
@@ -248,7 +248,7 @@ Array data remains unloaded until it is explicitly accessed:
 
 By default, uncompressed data blocks are memory mapped for efficient
 access. Memory mapping can be disabled by using the ``copy_arrays``
-option of `open` when reading:
+option of ``open`` when reading:
 
 .. code:: python
 

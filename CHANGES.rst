@@ -4,7 +4,7 @@
 The ASDF Standard is at v1.6.0
 
 - Overhaul of the ASDF documentation to make it more consistent and readable. [#1142]
-- Update deprecated instances of `abstractproperty` to `abstractmethod` [#1148]
+- Update deprecated instances of ``abstractproperty`` to ``abstractmethod`` [#1148]
 
 2.12.0 (2022-06-06)
 -------------------
@@ -521,7 +521,7 @@ The ASDF Standard is at v1.3.0
 - Make sure extension metadata is written even when constructing the ASDF tree
   on-the-fly. [#549]
 
-- Fix large integer validation when storing `numpy` integer literals in the
+- Fix large integer validation when storing ``numpy`` integer literals in the
   tree. [#553]
 
 - Fix bug that caused subclass of external type to be serialized by the wrong

@@ -19,7 +19,7 @@ useful operations:
   - ``edit``: Edit the YAML portion of an ASDF file.
 
   - ``remove-hdu``: Remove ASDF extension from ASDF-in-FITS file (requires
-    `astropy`, see :ref:`asdf-in-fits`).
+    ``astropy``, see :ref:`asdf-in-fits`).
 
   - ``info``: Print a rendering of an ASDF tree.
 

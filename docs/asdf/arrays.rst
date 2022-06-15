@@ -6,7 +6,7 @@ Saving arrays
 Beyond the basic data types of dictionaries, lists, strings and numbers, the
 most important thing ASDF can save is arrays.  It's as simple as putting a
 :mod:`numpy` array somewhere in the tree.  Here, we save an 8x8 array of random
-floating-point numbers (using `numpy.random.rand`).  Note that the resulting
+floating-point numbers (using ``numpy.random.rand``).  Note that the resulting
 YAML output contains information about the structure (size and data type) of
 the array, but the actual array content is in a binary block.
 
@@ -58,7 +58,7 @@ Saving inline arrays
 
 For small arrays, you may not care about the efficiency of a binary
 representation and just want to save the array contents directly in the YAML
-tree.  The `~asdf.AsdfFile.set_array_storage` method can be used to set the
+tree.  The ``~asdf.AsdfFile.set_array_storage`` method can be used to set the
 storage type of the associated data. The allowed values are ``internal``,
 ``external``, and ``inline``.
 
@@ -84,7 +84,7 @@ storage type of the associated data. The allowed values are ``internal``,
 .. asdf:: test.asdf
 
 Alternatively, it is possible to use the ``all_array_storage`` parameter of
-`AsdfFile.write_to` and `AsdfFile.update` to control the storage
+`AsdfFile.write_to` and ``AsdfFile.update`` to control the storage
 format of all arrays in the file.
 
 .. code::
@@ -158,9 +158,9 @@ implicitly determined to include all of the remaining contents of the
 file.  By definition, it must be the last block in the file.
 
 To use streaming, rather than including a Numpy array object in the
-tree, you include a `asdf.Stream` object which sets up the structure
+tree, you include a ``asdf.Stream`` object which sets up the structure
 of the streamed data, but will not write out the actual content.  The
-file handle's `write` method is then used to manually write out the
+file handle's ``write`` method is then used to manually write out the
 binary data.
 
 .. runcode::
@@ -265,7 +265,7 @@ different compression algorithm when writing the file out again.
 Memory mapping
 --------------
 
-By default, all internal array data is memory mapped using `numpy.memmap`. This
+By default, all internal array data is memory mapped using ``numpy.memmap``. This
 allows for the efficient use of memory even when reading files with very large
 arrays. The use of memory mapping means that the following usage pattern is not
 permitted:
@@ -279,11 +279,11 @@ permitted:
 
     af.tree
 
-Specifically, if an ASDF file has been opened using a `with` context, it is not
+Specifically, if an ASDF file has been opened using a ``with`` context, it is not
 possible to access the file contents outside of the scope of that context,
 because any memory mapped arrays will no longer be available.
 
 It may sometimes be useful to copy array data into memory instead of using
-memory maps. This can be controlled by passing the `copy_arrays` parameter to
-either the `AsdfFile` constructor or `asdf.open`. By default,
+memory maps. This can be controlled by passing the ``copy_arrays`` parameter to
+either the ``AsdfFile`` constructor or ``asdf.open``. By default,
 `copy_arrays=False`.

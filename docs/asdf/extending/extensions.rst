@@ -23,7 +23,7 @@ Every extension to ASDF must be uniquely identified by a URI; this URI is
 written to the file's metadata when the extension is used and allows
 software to determine if the necessary extensions are installed when the file
 is read.  An ASDF extension implementation intended for use with this library
-must, at a minimum, implement the `Extension` interface and
+must, at a minimum, implement the ``Extension`` interface and
 provide its URI as a property:
 
 .. code-block:: python
@@ -42,7 +42,7 @@ Additional tags
 ---------------
 
 In order to implement support for additional YAML tags, an Extension subclass
-must provide both a list of relevant tags and a list of `Converter`
+must provide both a list of relevant tags and a list of ``Converter``
 instances that translate objects with those tags to and from YAML.  These lists
 are provided in the ``tags`` and ``converters`` properties, respectively:
 
@@ -64,7 +64,7 @@ detail in :ref:`extending_converters`.
 The Extension implemented above will happily convert between ``foo-1.0.0``
 tagged YAML objects and the appropriate Python representation, but it will
 not perform any schema validation.  In order to associate the tag with
-a schema, we'll need to provide a `TagDefinition` object
+a schema, we'll need to provide a ``TagDefinition`` object
 instead of just a string:
 
 .. code-block:: python
@@ -89,7 +89,7 @@ instead of just a string:
 Additional block compressors
 ----------------------------
 
-Binary block compressors implement the `Compressor` interface
+Binary block compressors implement the ``Compressor`` interface
 and are included in an extension via the ``compressors`` property:
 
 .. code-block:: python
@@ -186,7 +186,7 @@ an additional list of class names that previously identified the extension:
 
 .. _exposing_extension_object_internals:
 
-Making converted object's contents visible to `info` and `search`
+Making converted object's contents visible to ``info`` and ``search``
 -----------------------------------------------------------------
 
 If the object produced by the extension supports a class method
@@ -200,9 +200,9 @@ list-like.
 Installing an extension
 =======================
 
-Once an extension is implemented, it must be installed so that the `asdf`
+Once an extension is implemented, it must be installed so that the ``asdf``
 library knows to use it.  There are two options for installing an extension:
-manually per session using `~asdf.config.AsdfConfig`, or automatically
+manually per session using ``~asdf.config.AsdfConfig``, or automatically
 for every session using the ``asdf.extensions`` entry point
 
 .. _extending_extensions_installing_asdf_config:
@@ -232,7 +232,7 @@ for the duration of the current Python session.
 Installing extensions via entry points
 --------------------------------------
 
-The `asdf` package also offers an entry point for installing extensions
+The ``asdf`` package also offers an entry point for installing extensions
 This registers a package's extensions automatically on package install
 without requiring calls to the AsdfConfig method.  The entry point is
 called ``asdf.extensions`` and expects to receive a method that returns
@@ -266,13 +266,13 @@ new Python session.
 Entry point performance considerations
 --------------------------------------
 
-For the good of `asdf` users everywhere, it's important that entry point
+For the good of ``asdf`` users everywhere, it's important that entry point
 methods load as quickly as possible.  All extensions must be loaded before
 reading an ASDF file, so any entry point method that lingers will introduce a delay
-to the initial call to `asdf.open`.  For that reason, we recommend that extension
+to the initial call to ``asdf.open``.  For that reason, we recommend that extension
 authors minimize the number of imports that occur in the module containing
 the entry point method, particularly imports of modules outside of the
-Python standard library or `asdf` itself.
+Python standard library or ``asdf`` itself.
 
 .. _extending_extensions_manifest:
 
@@ -284,7 +284,7 @@ that includes information such as the extension URI, list of tags, ASDF Standard
 requirement, etc.  Instructions on writing a manifest can be found in
 :ref:`extending_manifests`, but once written, we'll still need a Python Extension (big 'E')
 whose content mirrors the manifest. Rather than duplicate that information in Python code,
-we recommend use of the `ManifestExtension` class, which reads a manifest
+we recommend use of the ``ManifestExtension`` class, which reads a manifest
 and maps its content to the appropriate Extension interface properties.
 
 Assuming the manifest is installed as a resource (see :ref:`extending_resources`), an extension
@@ -336,7 +336,7 @@ loaded:
     def get_extensions():
         return [EXTENSION]
 
-When the module is imported, ``ManifestExtension.from_uri`` asks the `asdf` library to load
+When the module is imported, ``ManifestExtension.from_uri`` asks the ``asdf`` library to load
 all available resources so that it can retrieve the manifest content.  But loading the resources
 requires importing this module to get at the ``get_resource_mappings`` method, so now we're stuck!
 
@@ -349,5 +349,5 @@ The solution is to instantiate the ManifestExtension inside of its entry point m
             ManifestExtension.from_uri("asdf://example.com/example-project/manifests/foo-1.0.0")
         ]
 
-This is not as inefficient as it might seem, since the `asdf` library only calls the method once
+This is not as inefficient as it might seem, since the ``asdf`` library only calls the method once
 and reuses a cached result thereafter.

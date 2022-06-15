@@ -4,15 +4,15 @@
 Installation
 ************
 
-There are several different ways to install the `asdf` package. Each is
+There are several different ways to install the ``asdf`` package. Each is
 described in detail below.
 
 Requirements
 ============
 
-The `asdf` package has several dependencies which are listed in the project's
+The ``asdf`` package has several dependencies which are listed in the project's
 setup.cfg file.  All dependencies are available on pypi and will be automatically
-installed along with `asdf`.
+installed along with ``asdf``.
 
 Support for units, time, and transform tags requires an implementation of these
 types.  One recommended option is the `astropy <https://www.astropy.org/>`__ package.
@@ -35,11 +35,11 @@ the `conda-forge <https://conda-forge.org/>`__ channel. It is also available
 through the `astroconda <https://astroconda.readthedocs.io/en/latest/>`__
 channel.
 
-To install `asdf` within an existing conda environment::
+To install ``asdf`` within an existing conda environment::
 
     $ conda install -c conda-forge asdf
 
-To create a new conda environment and install `asdf`::
+To create a new conda environment and install ``asdf``::
 
     $ conda create -n new-env-name -c conda-forge python asdf
 

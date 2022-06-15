@@ -113,7 +113,7 @@ not have an impact on the validation process.
 
 This line invokes the ``type`` validator to check the data type of the
 top-level value.  We're asserting that the type must be a YAML mapping,
-which in Python is represented as a `dict`.
+which in Python is represented as a ``dict``.
 
 .. code-block:: yaml
     :lineno-start: 12
@@ -199,7 +199,7 @@ Finally, the YAML document end indicator indicates the end of the schema.
 Checking schema syntax
 ======================
 
-The `~asdf.schema.check_schema` function performs basic syntax checks on a schema and
+The ``~asdf.schema.check_schema`` function performs basic syntax checks on a schema and
 will raise an error if it discovers a problem.  It does not currently accept URIs and
 requires that the schema already be loaded into Python objects.  If the schema is already
 registered with the asdf library as a resource (see :ref:`extending_resources`), it can
@@ -226,7 +226,7 @@ Testing validation
 ==================
 
 Getting a schema to validate as intended can be a tricky business, so it's helpful
-to test validation against some example objects as you go along.  The `~asdf.schema.validate`
+to test validation against some example objects as you go along.  The ``~asdf.schema.validate``
 function will validate a Python object against a schema:
 
 .. code-block:: python

@@ -27,16 +27,16 @@ and reading trees, see :ref:`overview`.
    Attempting to store a larger value as a YAML literal will result in a validation
    error.
 
-   For arbitrary precision integer support, see `IntegerType`.
+   For arbitrary precision integer support, see ``IntegerType``.
 
    Integers and floats of up to 64 bits can be stored inside of :mod:`numpy`
    arrays (see below).
 
 
-One of the key features of `asdf` is its ability to serialize :mod:`numpy`
+One of the key features of ``asdf`` is its ability to serialize :mod:`numpy`
 arrays. This is discussed in detail in :ref:`array-data`.
 
-While the core `asdf` package supports serialization of basic data types and
+While the core ``asdf`` package supports serialization of basic data types and
 Numpy arrays, its true power comes from its ability to be extended to support
 serialization of a wide range of custom data types. Details on using ASDF
 extensions can be found in :ref:`using_extensions`. Details on creating custom
@@ -94,8 +94,8 @@ Schema validation
 Schema validation is used to determine whether an ASDF file is well formed. All
 ASDF files must conform to the schemas defined by the :ref:`ASDF Standard
 <asdf-standard:asdf-standard>`. Schema validation occurs
-when reading ASDF files (using `asdf.open`), and also when writing them out
-(using `AsdfFile.write_to` or `AsdfFile.update`).
+when reading ASDF files (using ``asdf.open``), and also when writing them out
+(using ``AsdfFile.write_to`` or ``AsdfFile.update``).
 
 Schema validation also plays a role when using custom extensions (see
 :ref:`using_extensions` and :ref:`extending_extensions`). Extensions must provide schemas
@@ -159,7 +159,7 @@ a top-level ``metadata`` property that contains information about the time the
 image was taken and the resolution of the image.
 
 In order to use this schema for a secondary validation pass, we pass the
-`custom_schema` argument to either `asdf.open` or the `AsdfFile` constructor.
+`custom_schema` argument to either ``asdf.open`` or the ``AsdfFile`` constructor.
 Assume that the schema file lives in ``image_schema.yaml``, and we wish to
 open a file called ``image.asdf``. We would open the file with the following
 code:
@@ -216,8 +216,8 @@ In general, forward compatibility with newer versions of the ASDF Standard and
 ASDF file format is not supported by the software.
 
 When creating new ASDF files, it is possible to control the version of the file
-format that is used. This can be specified by passing the `version` argument to
-either the `AsdfFile` constructor when the file object is created, or to the
+format that is used. This can be specified by passing the ``version`` argument to
+either the ``AsdfFile`` constructor when the file object is created, or to the
 `AsdfFile.write_to` method when it is written. By default, the latest version
 of the file format will be used. Note that this option has no effect on the
 versions of tags from custom extensions.
@@ -230,7 +230,7 @@ Tree References
 
 ASDF files may reference items in the tree in other ASDF files.  The
 syntax used in the file for this is called "JSON Pointer", but users
-of `asdf` can largely ignore that.
+of ``asdf`` can largely ignore that.
 
 First, we'll create a ASDF file with a couple of arrays in it:
 
@@ -270,7 +270,7 @@ to the target file.
 
 .. asdf:: source.asdf
 
-Calling `~asdf.AsdfFile.find_references` will look up all of the
+Calling ``~asdf.AsdfFile.find_references`` will look up all of the
 references so they can be used as if they were local to the tree.  It
 doesn't actually move any of the data, and keeps the references as
 references.
@@ -281,7 +281,7 @@ references.
        ff.find_references()
        assert ff.tree['my_ref_b'].shape == (10,)
 
-On the other hand, calling `~asdf.AsdfFile.resolve_references`
+On the other hand, calling ``~asdf.AsdfFile.resolve_references``
 places all of the referenced content directly in the tree, so when we
 write it out again, all of the external references are gone, with the
 literal content in its place.
@@ -296,14 +296,14 @@ literal content in its place.
 
 A similar feature provided by YAML, anchors and aliases, also provides
 a way to support references within the same file.  These are supported
-by `asdf`, however the JSON Pointer approach is generally favored because:
+by ``asdf``, however the JSON Pointer approach is generally favored because:
 
    - It is possible to reference elements in another file
 
    - Elements are referenced by location in the tree, not an
      identifier, therefore, everything can be referenced.
 
-Anchors and aliases are handled automatically by `asdf` when the
+Anchors and aliases are handled automatically by ``asdf`` when the
 data structure is recursive.  For example here is a dictionary that is
 included twice in the same tree:
 
@@ -340,7 +340,7 @@ are required:
   cases the name will be a path relative to the ASDF file itself, or a URI
   for a network resource.
 * The data type of the array data. This is a string representing any valid
-  `numpy.dtype`.
+  ``numpy.dtype``.
 * The shape of the data array. This is a tuple representing the dimensions of
   the array data.
 * The array data ``target``. This is either an integer or a string that
@@ -370,7 +370,7 @@ about:
 .. asdf:: external_array.asdf
 
 When reading a file containing external references, the user is responsible for
-using the information in the `ExternalArrayReference` type to open the external
+using the information in the ``ExternalArrayReference`` type to open the external
 file and retrieve the associated array data.
 
 Saving history entries
@@ -379,9 +379,9 @@ Saving history entries
 `asdf` has a convenience method for notating the history of transformations
 that have been performed on a file.
 
-Given a `~asdf.AsdfFile` object, call `~asdf.AsdfFile.add_history_entry`, given
+Given a ``~asdf.AsdfFile`` object, call ``~asdf.AsdfFile.add_history_entry``, given
 a description of the change and optionally a description of the software (i.e.
-your software, not `asdf`) that performed the operation.
+your software, not ``asdf``) that performed the operation.
 
 .. runcode::
 
@@ -418,13 +418,13 @@ Saving ASDF in FITS
     This section is about packaging entire ASDF files inside of
     `FITS data format <https://en.wikipedia.org/wiki/FITS>`_ files. This is
     probably only of interest to astronomers. Making use of this feature
-    requires the `astropy` package to be installed.
+    requires the ``astropy`` package to be installed.
 
 Sometimes you may need to store the structured data supported by ASDF inside of
 a FITS file in order to be compatible with legacy tools that support only FITS.
 
-First, create an `~astropy.io.fits.HDUList` object using `astropy.io.fits`.
-Here, we are building an `~astropy.io.fits.HDUList` from scratch, but it could
+First, create an ``~astropy.io.fits.HDUList`` object using ``astropy.io.fits``.
+Here, we are building an ``~astropy.io.fits.HDUList`` from scratch, but it could
 also have been loaded from an existing file.
 
 We will create a FITS file that has two image extensions, SCI and DQ
@@ -439,7 +439,7 @@ respectively.
     hdulist.append(fits.ImageHDU(np.arange(512, dtype=float), name='DQ'))
 
 Next we make a tree structure out of the data in the FITS file.  Importantly,
-we use the *same* array references in the FITS `~astropy.io.fits.HDUList` and
+we use the *same* array references in the FITS ``~astropy.io.fits.HDUList`` and
 store them in the tree. By doing this, ASDF will automatically refer to the
 data in the regular FITS extensions.
 
@@ -456,8 +456,8 @@ data in the regular FITS extensions.
         }
     }
 
-Now we take both the FITS `~astropy.io.fits.HDUList` and the ASDF tree and
-create an `AsdfInFits` object.
+Now we take both the FITS ``~astropy.io.fits.HDUList`` and the ASDF tree and
+create an ``AsdfInFits`` object.
 
 .. runcode::
 
@@ -480,9 +480,9 @@ indicate that the data comes from a FITS extension:
 
 .. asdf:: content.asdf
 
-To load an ASDF-in-FITS file, simply open it using `asdf.open`. The returned
-value will be an `AsdfInFits` object, which can be used in the same way as any
-other `AsdfFile` object.
+To load an ASDF-in-FITS file, simply open it using ``asdf.open``. The returned
+value will be an ``AsdfInFits`` object, which can be used in the same way as any
+other ``AsdfFile`` object.
 
 .. runcode::
 
@@ -497,7 +497,7 @@ other `AsdfFile` object.
 Rendering ASDF trees
 ====================
 
-The `asdf.info` function prints a representation of an ASDF
+The ``asdf.info`` function prints a representation of an ASDF
 tree to stdout.  For example:
 
 .. code:: python
@@ -515,9 +515,9 @@ tree to stdout.  For example:
       └─example_key (str): example value
 
 The first argument may be a ``str`` or ``pathlib.Path`` filesystem path,
-or an `AsdfFile` or sub-node of an ASDF tree.
+or an ``AsdfFile`` or sub-node of an ASDF tree.
 
-By default, `asdf.info` limits the number of lines, and line length,
+By default, ``asdf.info`` limits the number of lines, and line length,
 of the displayed tree.  The ``max_rows`` parameter controls the number of
 lines, and ``max_cols`` controls the line length.  Set either to ``None`` to
 disable that limit.
@@ -538,26 +538,26 @@ FITS header comments are used.
     >>> asdf.info('file.asdf', max_rows=(None, 5)) # doctest: +SKIP
     ...
 
-The `AsdfFile.info` method behaves similarly to `asdf.info`, rendering
-the tree of the associated `AsdfFile`.
+The ``AsdfFile.info`` method behaves similarly to ``asdf.info``, rendering
+the tree of the associated ``AsdfFile``.
 
-Normally `asdf.info` will not show the contents of asdf nodes turned
+Normally ``asdf.info`` will not show the contents of asdf nodes turned
 into Python custom objects, but if that object supports a special
 method, you may see the contents of such objects.
 See :ref:`exposing_extension_object_internals` for how
-to implement such support for `asdf.info` and `asdf.search`.
+to implement such support for ``asdf.info`` and ``asdf.search``.
 
 Searching the ASDF tree
 =======================
 
-The `AsdfFile` search interface provides a way to interactively discover the
+The ``AsdfFile`` search interface provides a way to interactively discover the
 locations and values of nodes within the ASDF tree.  We can search for
 nodes by key/index, type, or value.
 
 Basic usage
 -----------
 
-Initiate a search by calling `AsdfFile.search` on an open file:
+Initiate a search by calling ``AsdfFile.search`` on an open file:
 
 .. code:: python
 
@@ -580,9 +580,9 @@ Initiate a search by calling `AsdfFile.search` on an open file:
 
 .. currentmodule:: asdf.search
 
-The search returns an `AsdfSearchResult` object that displays in
+The search returns an ``AsdfSearchResult`` object that displays in
 the Python console as a rendered tree.  For single-node search
-results, the `AsdfSearchResult.path` property contains the Python code required to
+results, the ``AsdfSearchResult.path`` property contains the Python code required to
 reference that node directly:
 
 .. code:: python
@@ -590,14 +590,14 @@ reference that node directly:
     >>> af.search('example').path # doctest: +SKIP
     "root['data']['example_key']"
 
-While the `AsdfSearchResult.node` property contains the actual value of the node:
+While the ``AsdfSearchResult.node`` property contains the actual value of the node:
 
 .. code:: python
 
    >>> af.search('example').node # doctest: +SKIP
    'example value'
 
-For searches with multiple matching nodes, use the `AsdfSearchResult.paths` and `AsdfSearchResult.nodes`
+For searches with multiple matching nodes, use the ``AsdfSearchResult.paths`` and ``AsdfSearchResult.nodes``
 properties instead:
 
 .. code:: python
@@ -607,7 +607,7 @@ properties instead:
     >>> af.search('duplicate_key').nodes # doctest: +SKIP
     ["value 1", "value 2"]
 
-To replace matching nodes with a new value, use the `AsdfSearchResult.replace` method:
+To replace matching nodes with a new value, use the ``AsdfSearchResult.replace`` method:
 
 .. code:: python
 
@@ -617,7 +617,7 @@ To replace matching nodes with a new value, use the `AsdfSearchResult.replace` m
 
 .. currentmodule:: asdf
 
-The first argument to `AsdfFile.search` searches by dict key or list/tuple index.  We can
+The first argument to ``AsdfFile.search`` searches by dict key or list/tuple index.  We can
 also search by type, value, or any combination thereof:
 
 .. code:: python
@@ -633,7 +633,7 @@ also search by type, value, or any combination thereof:
 Chaining searches
 -----------------
 
-The return value of `AsdfFile.search`, `asdf.search.AsdfSearchResult`, has its own search method,
+The return value of ``AsdfFile.search``, ``asdf.search.AsdfSearchResult``, has its own search method,
 so it's possible to chain searches together.  This is useful when you need
 to see intermediate results before deciding how to further narrow the search.
 
@@ -715,9 +715,9 @@ Formatting search results
 
 .. currentmodule:: asdf.search
 
-The `AsdfSearchResult` object displays its content as a rendered tree with
+The ``AsdfSearchResult`` object displays its content as a rendered tree with
 reasonable defaults for maximum number of lines and columns displayed.  To
-change those values, we call `AsdfSearchResult.format`:
+change those values, we call ``AsdfSearchResult.format``:
 
 .. code:: python
 
@@ -726,7 +726,7 @@ change those values, we call `AsdfSearchResult.format`:
     >>> af.search(type=float).format(max_rows=None) # Show all matching rows # doctest: +SKIP
     ...
 
-Like `AsdfSearchResult.search`, calls to format may be chained:
+Like ``AsdfSearchResult.search``, calls to format may be chained:
 
 .. code:: python
 
