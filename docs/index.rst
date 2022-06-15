@@ -69,10 +69,14 @@ parts of ASDF interact and which modules do what and how.
   asdf/developer_overview
   asdf/developer_versioning
 
-Contributing and reporting issues
-=================================
+Developer Resources
+===================
 
-.. include:: ../CONTRIBUTING.rst
+.. toctree::
+  :maxdepth: 1
+
+  asdf/contributing
+  asdf/changes
 
 See also
 ========
@@ -81,13 +85,6 @@ See also
   <asdf-standard:asdf-standard>`.
 
 - `asdf` Python package distribution on `pypi <https://pypi.org/project/asdf/>`_
-
-Changes
-=======
-.. toctree::
-  :maxdepth: 2
-
-  asdf/changes
 
 Index
 =====
