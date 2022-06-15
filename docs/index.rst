@@ -72,15 +72,7 @@ parts of ASDF interact and which modules do what and how.
 Contributing and reporting issues
 =================================
 
-We welcome feedback and contributions of all kinds. Contributions of code,
-documentation, or general feedback are all appreciated.
-
-Feature requests and bug reports for the Python implementation can be posted at
-`asdf's github page <https://github.com/asdf-format/asdf>`_.
-
-The ASDF Standard itself also has a repository on github. Suggestions for
-improvements to the ASDF Standard can be reported `here
-<https://github.com/asdf-format/asdf-standard>`_.
+.. include:: ../CONTRIBUTING.rst
 
 See also
 ========
