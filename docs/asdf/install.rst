@@ -11,7 +11,7 @@ Requirements
 ============
 
 The `asdf` package has several dependencies which are listed in the project's
-setup.cfg file.  All dependencies are available on pypi and will be automatically
+build configuration (``setup.cfg`` / ``pyproject.toml``).  All dependencies are available on pypi and will be automatically
 installed along with `asdf`.
 
 Support for units, time, and transform tags requires an implementation of these

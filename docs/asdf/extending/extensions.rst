@@ -250,10 +250,16 @@ containing an instance of ``FooExtension``:
 
 We'll assume that method is located in the module ``asdf_foo_extension.integration``.
 
-Next, in the package's ``setup.cfg``, define an ``[options.entry_points]`` section that
-identifies the method as an ``asdf.extensions`` entry point:
+Next, in the package's ``pyproject.toml``, define a ``[project.entry-points]`` section (or ``[options.entry_points]`` in
+``setup.cfg``) that identifies the method as an ``asdf.extensions`` entry point:
 
-.. code-block:: cfg
+.. code-block:: toml
+
+    # pyproject.toml
+    [project.entry-points]
+    'asdf.extensions' = { asdf_foo_extension = 'asdf_foo_extension.integration:get_extensions' }
+
+.. code-block:: ini
 
     # setup.cfg
     [options.entry_points]
