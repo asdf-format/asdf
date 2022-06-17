@@ -25,10 +25,12 @@
 import datetime
 import os
 import sys
+from pathlib import Path
+
+import numpy
+import toml
 
 # Ensure documentation examples are determinstically random.
-import numpy
-
 try:
     numpy.random.seed(int(os.environ["SOURCE_DATE_EPOCH"]))
 except KeyError:
@@ -40,14 +42,10 @@ except ImportError:
     print("ERROR: the documentation requires the sphinx-astropy package to be installed")
     sys.exit(1)
 
-# Get configuration information from setup.cfg
-try:
-    from ConfigParser import ConfigParser
-except ImportError:
-    from configparser import ConfigParser
-conf = ConfigParser()
-conf.read([os.path.join(os.path.dirname(__file__), "..", "setup.cfg")])
-setup_cfg = dict(conf.items("metadata"))
+# Get configuration information from `pyproject.toml`
+with open(Path(__file__).parent.parent / "pyproject.toml") as configuration_file:
+    conf = toml.load(configuration_file)
+configuration = conf["project"]
 
 # -- General configuration ----------------------------------------------------
 
@@ -74,16 +72,16 @@ rst_epilog += """
 # -- Project information ------------------------------------------------------
 
 # This does not *have* to match the package name, but typically does
-project = setup_cfg["name"]
-author = setup_cfg["author"]
-copyright = "{0}, {1}".format(datetime.datetime.now().year, setup_cfg["author"])
+project = configuration["name"]
+author = f"{configuration['authors'][0]['name']} <{configuration['authors'][0]['email']}>"
+copyright = f"{datetime.datetime.now().year}, {configuration['authors'][0]}"
 
 # The version info for the project you're documenting, acts as replacement for
 # |version| and |release|, also used in various other places throughout the
 # built documents.
 from pkg_resources import get_distribution
 
-release = get_distribution(setup_cfg["name"]).version
+release = get_distribution(configuration["name"]).version
 # for example take major/minor
 version = ".".join(release.split(".")[:2])
 
@@ -128,7 +126,6 @@ html_title = "{0} v{1}".format(project, release)
 # Output file base name for HTML help builder.
 htmlhelp_basename = project + "doc"
 
-
 # -- Options for LaTeX output --------------------------------------------------
 
 # Grouping the document tree into LaTeX files. List of tuples
@@ -136,7 +133,6 @@ htmlhelp_basename = project + "doc"
 latex_documents = [("index", project + ".tex", project + " Documentation", author, "manual")]
 
 latex_logo = "_static/logo.pdf"
-
 
 # -- Options for manual page output --------------------------------------------
 
