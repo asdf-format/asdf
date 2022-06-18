@@ -1,6 +1,7 @@
-# asdf-format Open Source Code of Conduct
+ASDF-format Open Source Code of Conduct
+---------------------------------------
 
-We expect all "asdf-format" organization projects to adopt a code of conduct
+We expect all "ASDF-format" organization projects to adopt a code of conduct
 that ensures a productive, respectful environment for all open source
 contributors and participants. We are committed to providing a strong and
 enforced code of conduct and expect everyone in our community to follow these
@@ -53,7 +54,7 @@ This code of conduct applies to all community situations online and offline,
 including mailing lists, forums, social media, conferences, meetings, associated
 social events, and one-to-one interactions.
 
-Parts of this code of conduct have been adapted from the Astropy and Numfocus
+Parts of this code of conduct have been adapted from the
+`Astropy <http://www.astropy.org/code_of_conduct.html>`__
+and `Numfocus <https://www.numfocus.org/about/code-of-conduct/>`__
 codes of conduct.
-http://www.astropy.org/code_of_conduct.html
-https://www.numfocus.org/about/code-of-conduct/

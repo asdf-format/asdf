@@ -4,6 +4,10 @@
 ASDF - Advanced Scientific Data Format
 **************************************
 
+.. include:: ../README.rst
+    :start-after: begin-badges:
+    :end-before: end-badges:
+
 `asdf` is a tool for reading and writing Advanced Scientific Data
 Format (ASDF) files.
 
@@ -69,18 +73,16 @@ parts of ASDF interact and which modules do what and how.
   asdf/developer_overview
   asdf/developer_versioning
 
-Contributing and reporting issues
-=================================
+Resources
+=========
 
-We welcome feedback and contributions of all kinds. Contributions of code,
-documentation, or general feedback are all appreciated.
+.. toctree::
+  :maxdepth: 1
 
-Feature requests and bug reports for the Python implementation can be posted at
-`asdf's github page <https://github.com/asdf-format/asdf>`_.
-
-The ASDF Standard itself also has a repository on github. Suggestions for
-improvements to the ASDF Standard can be reported `here
-<https://github.com/asdf-format/asdf-standard>`_.
+  asdf/contributing
+  asdf/code_of_conduct
+  asdf/changes
+  asdf/citation
 
 See also
 ========
@@ -89,13 +91,6 @@ See also
   <asdf-standard:asdf-standard>`.
 
 - `asdf` Python package distribution on `pypi <https://pypi.org/project/asdf/>`_
-
-Changes
-=======
-.. toctree::
-  :maxdepth: 2
-
-  asdf/changes
 
 Index
 =====
