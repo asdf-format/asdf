@@ -193,17 +193,19 @@ instance:
 Then in ``pyproject.toml``, define an ``[project.entry-points]`` section (or ``[options.entry_points]`` in ``setup.cfg``)
 that identifies the method as an ``asdf.resource_mappings`` entry point:
 
-.. code-block:: toml
+.. tab:: pyproject.toml
 
-    # pyproject.toml
-    [project.entry-points]
-    'asdf.resource_mappings' = { asdf_foo_schemas = 'asdf_foo_schemas.integration:get_resource_mappings' }
+    .. code-block:: toml
 
-.. code-block:: ini
+        [project.entry-points]
+        'asdf.resource_mappings' = { asdf_foo_schemas = 'asdf_foo_schemas.integration:get_resource_mappings' }
 
-    # setup.cfg
-    [options.package_data]
-    * = *.yaml
+.. tab:: setup.cfg
+
+    .. code-block:: ini
+
+        [options.package_data]
+        * = *.yaml
 
 After installing the package, it should be possible to load one of our schemas
 in a new session without any additional setup:
@@ -221,17 +223,19 @@ YAML files.  There are multiple ways to accomplish this, but one easy option
 is to add a ``[tool.setuptools.package-data]`` section to ``pyproject.toml`` (or ``[options.package_data]`` in
 ``setup.cfg``) requesting that all files with a ``.yaml`` extension be installed:
 
-.. code-block:: toml
+.. tab:: pyproject.toml
 
-    # pyproject.toml
-    [tool.setuptools.package-data]
-    '*' = ['*.yaml']
+    .. code-block:: toml
 
-.. code-block:: ini
+        [tool.setuptools.package-data]
+        '*' = ['*.yaml']
 
-    # setup.cfg
-    [options.package_data]
-    * = *.yaml
+.. tab:: setup.cfg
+
+    .. code-block:: ini
+
+        [options.package_data]
+        * = *.yaml
 
 Entry point performance considerations
 --------------------------------------

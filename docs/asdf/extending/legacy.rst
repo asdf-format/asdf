@@ -881,17 +881,19 @@ containing your schema files to the pytest section of your project's build confi
 (``pyproject.toml`` or ``setup.cfg``). If you do not already have such a file, creating
 one with the following should be sufficient:
 
-.. code:: toml
+.. tab:: pyproject.toml
 
-    # pyproject.toml
-    [tool.pytest.ini_options]
-    asdf_schema_root = 'path/to/schemas another/path/to/schemas'
+    .. code-block:: toml
 
-.. code:: ini
+        [tool.pytest.ini_options]
+        asdf_schema_root = 'path/to/schemas another/path/to/schemas'
 
-    # setup.cfg
-    [tool:pytest]
-    asdf_schema_root = path/to/schemas another/path/to/schemas
+.. tab:: setup.cfg
+
+    .. code-block:: ini
+
+        [tool:pytest]
+        asdf_schema_root = path/to/schemas another/path/to/schemas
 
 The schema directory paths should be paths that are relative to the top of the
 package directory **when it is installed**. If this is different from the path

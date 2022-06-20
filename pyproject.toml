@@ -39,6 +39,7 @@ docs = [
     'sphinx-asdf',
     'sphinx-astropy',
     'sphinx-rtd-theme',
+    'sphinx-inline-tabs',
     'toml',
 ]
 tests = [
