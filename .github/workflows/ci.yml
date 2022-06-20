@@ -15,7 +15,7 @@ on:
   pull_request:
 
 jobs:
-  lint:
+  style:
     name: ${{ matrix.name }}
     runs-on: ${{ matrix.os }}
     strategy:
@@ -27,46 +27,30 @@ jobs:
             python-version: "3.9"
             toxenv: codestyle
     steps:
-      - name: Install System Packages
-        if: ${{ contains(matrix.toxenv,'docbuild') }}
-        run: |
-          sudo apt update -y
-          sudo apt-get install graphviz texlive-latex-extra dvipng
-      - name: Checkout code
-        uses: actions/checkout@v2
+      - uses: actions/checkout@v2
         with:
           submodules: true
-      - name: Set up Python ${{ matrix.python-version }}
-        uses: actions/setup-python@v2
+      - uses: actions/setup-python@v2
         with:
           python-version: ${{ matrix.python-version }}
-      - name: Restore cached tox installation
-        uses: actions/cache@v3
+      - uses: actions/cache@v3
         id: tox_cache
         with:
           path: ${{ env.pythonLocation }}
           key: tox-install-${{ runner.os }}-${{ env.pythonLocation }}-${{ hashFiles('**/pyproject.toml', '**/setup.*') }}
-      - name: Install tox
-        if: steps.tox_cache.outputs.cache-hit != 'true'
-        run: |
+      - run: |
           python -m pip install --upgrade pip
           pip install tox
-      - name: Restore cached tox environment
-        uses: actions/cache@v3
+        if: steps.tox_cache.outputs.cache-hit != 'true'
+      - uses: actions/cache@v3
         with:
           path: .tox
           key: tox-${{ matrix.toxenv }}-${{ runner.os }}-${{ env.pythonLocation }}-${{ hashFiles('**/pyproject.toml', '**/setup.*') }}
-      - name: Run tox
-        run: tox -e ${{ matrix.toxenv }}
-      - name: Upload coverage to codecov
-        if: ${{ contains(matrix.toxenv,'coverage') }}
-        uses: codecov/codecov-action@v2
-        with:
-          file: ./coverage.xml
+      - run: tox -e ${{ matrix.toxenv }}
 
   test:
     name: ${{ matrix.name }}
-    needs: [ lint ]
+    needs: [ style ]
     runs-on: ${{ matrix.os }}
     strategy:
       fail-fast: false
@@ -76,11 +60,6 @@ jobs:
             os: ubuntu-latest
             python-version: "3.10"
             toxenv: py310
-
-          - name: Python 3.9 with Code Coverage
-            os: ubuntu-latest
-            python-version: "3.9"
-            toxenv: coverage
 
           - name: Python 3.8 Testing
             os: ubuntu-latest
@@ -97,11 +76,89 @@ jobs:
             python-version: "3.9"
             toxenv: py39
 
+          - name: Windows
+            os: windows-latest
+            python-version: "3.9"
+            toxenv: py39
+    steps:
+      - uses: actions/checkout@v2
+        with:
+          submodules: true
+      - uses: actions/setup-python@v2
+        with:
+          python-version: ${{ matrix.python-version }}
+      - uses: actions/cache@v3
+        id: tox_cache
+        with:
+          path: ${{ env.pythonLocation }}
+          key: tox-install-${{ runner.os }}-${{ env.pythonLocation }}-${{ hashFiles('**/pyproject.toml', '**/setup.*') }}
+      - run: |
+          python -m pip install --upgrade pip
+          pip install tox
+        if: steps.tox_cache.outputs.cache-hit != 'true'
+      - uses: actions/cache@v3
+        with:
+          path: .tox
+          key: tox-${{ matrix.toxenv }}-${{ runner.os }}-${{ env.pythonLocation }}-${{ hashFiles('**/pyproject.toml', '**/setup.*') }}
+      - run: tox -e ${{ matrix.toxenv }}
+
+  test_dependencies:
+    name: ${{ matrix.name }}
+    needs: [ test ]
+    runs-on: ${{ matrix.os }}
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - name: Python 3.8 with legacy packages
+            os: ubuntu-latest
+            python-version: "3.8"
+            toxenv: py38-legacy
+
           - name: Compatibility
             os: ubuntu-latest
             python-version: "3.9"
             toxenv: compatibility
 
+          - name: Pre-Release Dependencies
+            os: ubuntu-latest
+            python-version: "3.9"
+            toxenv: prerelease
+
+          - name: Test Against Installed Package
+            os: ubuntu-latest
+            python-version: "3.9"
+            toxenv: packaged
+    steps:
+      - uses: actions/checkout@v2
+        with:
+          submodules: true
+      - uses: actions/setup-python@v2
+        with:
+          python-version: ${{ matrix.python-version }}
+      - uses: actions/cache@v3
+        id: tox_cache
+        with:
+          path: ${{ env.pythonLocation }}
+          key: tox-install-${{ runner.os }}-${{ env.pythonLocation }}-${{ hashFiles('**/pyproject.toml', '**/setup.*') }}
+      - run: |
+          python -m pip install --upgrade pip
+          pip install tox
+        if: steps.tox_cache.outputs.cache-hit != 'true'
+      - uses: actions/cache@v3
+        with:
+          path: .tox
+          key: tox-${{ matrix.toxenv }}-${{ runner.os }}-${{ env.pythonLocation }}-${{ hashFiles('**/pyproject.toml', '**/setup.*') }}
+      - run: tox -e ${{ matrix.toxenv }}
+
+  test_dev:
+    name: ${{ matrix.name }}
+    needs: [ test ]
+    runs-on: ${{ matrix.os }}
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
           - name: Astropy Dev
             os: ubuntu-latest
             python-version: "3.9"
@@ -141,95 +198,128 @@ jobs:
             os: ubuntu-latest
             python-version: "3.9"
             toxenv: py39-asdfcoordinatesschemasdev
-
-          - name: Pre-Release Dependencies
-            os: ubuntu-latest
-            python-version: "3.9"
-            toxenv: prerelease
-
-          - name: Test Against Installed Package
-            os: ubuntu-latest
-            python-version: "3.9"
-            toxenv: packaged
-
-          - name: Warnings Treated as Exceptions
-            os: ubuntu-latest
-            python-version: "3.10"
-            toxenv: warnings
-
-          - name: Windows
-            os: windows-latest
-            python-version: "3.9"
-            toxenv: py39
     steps:
-      - name: Install System Packages
-        if: ${{ contains(matrix.toxenv,'docbuild') }}
-        run: |
-          sudo apt update -y
-          sudo apt-get install graphviz texlive-latex-extra dvipng
-      - name: Checkout code
-        uses: actions/checkout@v2
+      - uses: actions/checkout@v2
         with:
           submodules: true
-      - name: Set up Python ${{ matrix.python-version }}
-        uses: actions/setup-python@v2
+      - uses: actions/setup-python@v2
         with:
           python-version: ${{ matrix.python-version }}
-      - name: Restore cached tox installation
-        uses: actions/cache@v3
+      - uses: actions/cache@v3
         id: tox_cache
         with:
           path: ${{ env.pythonLocation }}
           key: tox-install-${{ runner.os }}-${{ env.pythonLocation }}-${{ hashFiles('**/pyproject.toml', '**/setup.*') }}
-      - name: Install tox
-        if: steps.tox_cache.outputs.cache-hit != 'true'
-        run: |
+      - run: |
           python -m pip install --upgrade pip
           pip install tox
-      - name: Restore cached tox environment
-        uses: actions/cache@v3
+        if: steps.tox_cache.outputs.cache-hit != 'true'
+      - uses: actions/cache@v3
         with:
           path: .tox
           key: tox-${{ matrix.toxenv }}-${{ runner.os }}-${{ env.pythonLocation }}-${{ hashFiles('**/pyproject.toml', '**/setup.*') }}
       - name: Run tox
         run: tox -e ${{ matrix.toxenv }}
-      - name: Upload coverage to codecov
-        if: ${{ contains(matrix.toxenv,'coverage') }}
+
+  test_warnings:
+    name: ${{ matrix.name }}
+    needs: [ test_dependencies, test_dev ]
+    runs-on: ${{ matrix.os }}
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - name: Warnings Treated as Exceptions
+            os: ubuntu-latest
+            python-version: "3.10"
+            toxenv: warnings
+    steps:
+      - uses: actions/checkout@v2
+        with:
+          submodules: true
+      - uses: actions/setup-python@v2
+        with:
+          python-version: ${{ matrix.python-version }}
+      - uses: actions/cache@v3
+        id: tox_cache
+        with:
+          path: ${{ env.pythonLocation }}
+          key: tox-install-${{ runner.os }}-${{ env.pythonLocation }}-${{ hashFiles('**/pyproject.toml', '**/setup.*') }}
+      - run: |
+          python -m pip install --upgrade pip
+          pip install tox
+        if: steps.tox_cache.outputs.cache-hit != 'true'
+      - uses: actions/cache@v3
+        with:
+          path: .tox
+          key: tox-${{ matrix.toxenv }}-${{ runner.os }}-${{ env.pythonLocation }}-${{ hashFiles('**/pyproject.toml', '**/setup.*') }}
+      - run: tox -e ${{ matrix.toxenv }}
+
+  test_coverage:
+    name: ${{ matrix.name }}
+    needs: [ test_warnings ]
+    runs-on: ${{ matrix.os }}
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - name: Python 3.9 with Code Coverage
+            os: ubuntu-latest
+            python-version: "3.9"
+            toxenv: coverage
+    steps:
+      - uses: actions/checkout@v2
+        with:
+          submodules: true
+      - uses: actions/setup-python@v2
+        with:
+          python-version: ${{ matrix.python-version }}
+      - uses: actions/cache@v3
+        id: tox_cache
+        with:
+          path: ${{ env.pythonLocation }}
+          key: tox-install-${{ runner.os }}-${{ env.pythonLocation }}-${{ hashFiles('**/pyproject.toml', '**/setup.*') }}
+      - run: |
+          python -m pip install --upgrade pip
+          pip install tox
+        if: steps.tox_cache.outputs.cache-hit != 'true'
+      - uses: actions/cache@v3
+        with:
+          path: .tox
+          key: tox-${{ matrix.toxenv }}-${{ runner.os }}-${{ env.pythonLocation }}-${{ hashFiles('**/pyproject.toml', '**/setup.*') }}
+      - run: tox -e ${{ matrix.toxenv }}
+      - if: ${{ contains(matrix.toxenv,'coverage') }}
         uses: codecov/codecov-action@v2
         with:
           file: ./coverage.xml
 
-  asdf-standard:
+  test_asdf_standard:
     name: Run asdf-standard tests
-    needs: [ lint ]
+    needs: [ style ]
     runs-on: ubuntu-latest
     steps:
-      - name: Checkout asdf
-        uses: actions/checkout@v2
+      - uses: actions/checkout@v2
         with:
           path: asdf
-      - name: Checkout asdf-standard
-        uses: actions/checkout@v2
+      - uses: actions/checkout@v2
         with:
           repository: asdf-format/asdf-standard
-          ref: master
           path: asdf-standard
-      - name: Set up Python 3.9
-        uses: actions/setup-python@v2
+      - uses: actions/setup-python@v2
         with:
           python-version: 3.9
-      - name: Install asdf
-        run: cd asdf && pip install .
-      - name: Install asdf-standard
-        run: cd asdf-standard && pip install -e .[test]
-      - name: Pip Freeze
-        run: pip freeze
-      - name: Run asdf-standard tests
-        run: cd asdf-standard && pytest
+      - uses: actions/cache@v3
+        with:
+          path: ${{ env.pythonLocation }}
+          key: test-asdf-standard-${{ runner.os }}-${{ env.pythonLocation }}-${{ hashFiles('**/pyproject.toml', '**/setup.*') }}
+      - run: cd asdf && pip install .
+      - run: cd asdf-standard && pip install -e .[test]
+      - run: pip freeze
+      - run: cd asdf-standard && pytest
 
   build:
     name: ${{ matrix.name }}
-    needs: [ test, asdf-standard ]
+    needs: [ test_warnings, test_asdf_standard ]
     runs-on: ${{ matrix.os }}
     strategy:
       fail-fast: false
@@ -245,39 +335,27 @@ jobs:
             python-version: "3.9"
             toxenv: twine
     steps:
-      - name: Install System Packages
-        if: ${{ contains(matrix.toxenv,'docbuild') }}
-        run: |
+      - run: |
           sudo apt update -y
           sudo apt-get install graphviz texlive-latex-extra dvipng
-      - name: Checkout code
-        uses: actions/checkout@v2
+        if: ${{ contains(matrix.toxenv,'docbuild') }}
+      - uses: actions/checkout@v2
         with:
           submodules: true
-      - name: Set up Python ${{ matrix.python-version }}
-        uses: actions/setup-python@v2
+      - uses: actions/setup-python@v2
         with:
           python-version: ${{ matrix.python-version }}
-      - name: Restore cached tox installation
-        uses: actions/cache@v3
+      - uses: actions/cache@v3
         id: tox_cache
         with:
           path: ${{ env.pythonLocation }}
           key: tox-install-${{ runner.os }}-${{ env.pythonLocation }}-${{ hashFiles('**/pyproject.toml', '**/setup.*') }}
-      - name: Install tox
-        if: steps.tox_cache.outputs.cache-hit != 'true'
-        run: |
+      - run: |
           python -m pip install --upgrade pip
           pip install tox
-      - name: Restore cached tox environment
-        uses: actions/cache@v3
+        if: steps.tox_cache.outputs.cache-hit != 'true'
+      - uses: actions/cache@v3
         with:
           path: .tox
           key: tox-${{ matrix.toxenv }}-${{ runner.os }}-${{ env.pythonLocation }}-${{ hashFiles('**/pyproject.toml', '**/setup.*') }}
-      - name: Run tox
-        run: tox -e ${{ matrix.toxenv }}
-      - name: Upload coverage to codecov
-        if: ${{ contains(matrix.toxenv,'coverage') }}
-        uses: codecov/codecov-action@v2
-        with:
-          file: ./coverage.xml
+      - run: tox -e ${{ matrix.toxenv }}
