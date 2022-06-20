@@ -28,7 +28,6 @@ jobs:
           fetch-depth: 0
           submodules: true
       - uses: uraimo/run-on-arch-action@v2.2.0
-        name: Run tests
         id: build
         with:
           arch: s390x

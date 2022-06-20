@@ -104,26 +104,19 @@ jobs:
             install_command: pip install -e .[test]
             test_command: pytest
     steps:
-      - name: Checkout asdf
-        uses: actions/checkout@v2
+      - uses: actions/checkout@v2
         with:
           submodules: true
           path: asdf
-      - name: Checkout ${{ matrix.package_name }}
-        uses: actions/checkout@v2
+      - uses: actions/checkout@v2
         with:
           repository: ${{ matrix.repository }}
           ref: ${{ matrix.ref }}
           path: target
-      - name: Set up Python ${{ matrix.python }}
-        uses: actions/setup-python@v2
+      - uses: actions/setup-python@v2
         with:
           python-version: ${{ matrix.python }}
-      - name: Install asdf
-        run: cd asdf && pip install .
-      - name: Install remaining ${{ matrix.package_name }} dependencies
-        run: cd target && ${{ matrix.install_command }}
-      - name: Pip Freeze
-        run: pip freeze
-      - name: Run ${{ matrix.package_name}} tests
-        run: cd target && ${{ matrix.test_command }}
+      - run: cd asdf && pip install .
+      - run: cd target && ${{ matrix.install_command }}
+      - run: pip freeze
+      - run: cd target && ${{ matrix.test_command }}
