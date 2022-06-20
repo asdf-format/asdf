@@ -2,9 +2,17 @@ If you use ASDF for work/research presented in a publication (whether directly,
 as a dependency to another package), please cite the Zenodo DOI for the appropriate
 version of ASDF.  The versions (and their BibTeX entries) can be found at:
 
-.. include:: ../../README.rst
-    :start-after: begin-zenodo:
-    :end-before: end-zenodo:
+.. only:: html
+
+    .. include:: ../../README.rst
+        :start-after: begin-zenodo:
+        :end-before: end-zenodo:
+
+.. only:: latex
+
+    .. admonition:: Zenodo DOI
+
+        https://zenodo.org/badge/latestdoi/18112754
 
 We also recommend and encourage you to cite the general ASDF paper:
 
