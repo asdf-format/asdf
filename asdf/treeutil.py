@@ -68,14 +68,12 @@ def iter_tree(top):
         if isinstance(tree, (list, tuple)):
             seen.add(tree_id)
             for val in tree:
-                for sub in recurse(val):
-                    yield sub
+                yield from recurse(val)
             seen.remove(tree_id)
         elif isinstance(tree, dict):
             seen.add(tree_id)
             for val in tree.values():
-                for sub in recurse(val):
-                    yield sub
+                yield from recurse(val)
             seen.remove(tree_id)
 
         yield tree

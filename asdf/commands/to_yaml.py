@@ -17,7 +17,7 @@ class ToYaml(Command):
     @classmethod
     def setup_arguments(cls, subparsers):
         parser = subparsers.add_parser(
-            str("to_yaml"),
+            "to_yaml",
             help="Convert as ASDF file to pure YAML.",
             description="""Convert all data to inline YAML so the ASDF
             file contains no binary blocks.""",

@@ -186,7 +186,7 @@ def print_in_tree(diff_ctx, node_list, thing, other, use_marker=False, last_was_
     # If tree element is list, recursively print list contents
     if isinstance(thing, list):
         for i, subthing in enumerate(thing):
-            key = ArrayNode("{}_{}".format(node_list[-1], i))
+            key = ArrayNode(f"{node_list[-1]}_{i}")
             last_was_list = print_in_tree(
                 diff_ctx,
                 node_list + [key],
@@ -245,7 +245,7 @@ def compare_ndarrays(diff_ctx, array0, array1, keys):
     if isinstance(array1, list):
         array1 = {"data": array1}
 
-    ignore_keys = set(["source", "data"])
+    ignore_keys = {"source", "data"}
     compare_dicts(diff_ctx, array0, array1, keys, ignore_keys)
 
     differences = []
@@ -260,7 +260,7 @@ def compare_ndarrays(diff_ctx, array0, array1, keys):
 
     if differences:
         prefix = "  " * (len(keys) + 1)
-        msg = "ndarrays differ by {}".format(human_list(differences))
+        msg = f"ndarrays differ by {human_list(differences)}"
         diff_ctx.iostream.write(prefix + RED + msg + RESET_NEWLINE)
 
 
@@ -299,7 +299,7 @@ def compare_trees(diff_ctx, tree0, tree1, keys=[]):
         compare_dicts(diff_ctx, tree0, tree1, keys)
     elif isinstance(tree0, list) and isinstance(tree1, list):
         for i, (obj0, obj1) in enumerate(zip(tree0, tree1)):
-            key = ArrayNode("item_{}".format(i))
+            key = ArrayNode(f"item_{i}")
             compare_trees(diff_ctx, obj0, obj1, keys + [key])
     else:
         compare_objects(diff_ctx, tree0, tree1, keys)

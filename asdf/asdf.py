@@ -309,11 +309,11 @@ class AsdfFile:
                     installed = ext
                     break
 
-            filename = "'{}' ".format(self._fname) if self._fname else ""
+            filename = f"'{self._fname}' " if self._fname else ""
             if extension.extension_uri is not None:
-                extension_description = "URI '{}'".format(extension.extension_uri)
+                extension_description = f"URI '{extension.extension_uri}'"
             else:
-                extension_description = "class '{}'".format(extension.extension_class)
+                extension_description = f"class '{extension.extension_class}'"
             if extension.software is not None:
                 extension_description += " (from package {}=={})".format(
                     extension.software["name"],
@@ -755,7 +755,7 @@ class AsdfFile:
         try:
             version = versioning.AsdfVersion(parts[1].decode("ascii"))
         except ValueError:
-            raise ValueError("Unparseable version in ASDF file: {0}".format(parts[1]))
+            raise ValueError(f"Unparseable version in ASDF file: {parts[1]}")
 
         return version
 
@@ -856,7 +856,7 @@ class AsdfFile:
             elif yaml_token == constants.BLOCK_MAGIC:
                 has_blocks = True
             elif yaml_token != b"":
-                raise IOError("ASDF file appears to contain garbage after header.")
+                raise OSError("ASDF file appears to contain garbage after header.")
 
             if tree is None:
                 # At this point the tree should be tagged, but we want it to be
@@ -1046,7 +1046,7 @@ class AsdfFile:
 
     def _pre_write(self, fd, all_array_storage, all_array_compression, compression_kwargs=None):
         if all_array_storage not in (None, "internal", "external", "inline"):
-            raise ValueError("Invalid value for all_array_storage: '{0}'".format(all_array_storage))
+            raise ValueError(f"Invalid value for all_array_storage: '{all_array_storage}'")
 
         self._all_array_storage = all_array_storage
 
@@ -1156,7 +1156,7 @@ class AsdfFile:
                 raise ValueError("Can not update, since there is no associated file")
 
             if not fd.writable():
-                raise IOError(
+                raise OSError(
                     "Can not update, since associated file is read-only. Make "
                     "sure that the AsdfFile was opened with mode='rw' and the "
                     "underlying file handle is writable."
@@ -1173,7 +1173,7 @@ class AsdfFile:
                 return
 
             if not fd.seekable():
-                raise IOError("Can not update, since associated file is not seekable")
+                raise OSError("Can not update, since associated file is not seekable")
 
             self.blocks.finish_reading_internal_blocks()
 

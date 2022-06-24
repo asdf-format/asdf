@@ -50,7 +50,7 @@ def test_unicode_write(tmpdir):
     def check_raw_yaml(content):
         # Ensure that unicode is written out as UTF-8 without escape
         # sequences
-        assert "ɐʇɐp‾ǝpoɔıun".encode("utf-8") in content
+        assert "ɐʇɐp‾ǝpoɔıun".encode() in content
         # Ensure that the unicode "tag" is not used
         assert b"unicode" not in content
 

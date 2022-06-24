@@ -269,7 +269,7 @@ invalid_software: !core/software-1.0.0
     buff = yaml_to_asdf(content)
     hdul = fits.HDUList()
     data = np.array(buff.getbuffer(), dtype=np.uint8)[None, :]
-    fmt = "{}B".format(len(data[0]))
+    fmt = f"{len(data[0])}B"
     column = fits.Column(array=data, format=fmt, name="ASDF_METADATA")
     hdu = fits.BinTableHDU.from_columns([column], name="ASDF")
     hdul.append(hdu)

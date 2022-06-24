@@ -26,7 +26,7 @@ class _FitsBlock:
         self._hdu = hdu
 
     def __repr__(self):
-        return "<FitsBlock {0},{1}>".format(self._hdu.name, self._hdu.ver)
+        return f"<FitsBlock {self._hdu.name},{self._hdu.ver}>"
 
     def __len__(self):
         return self._hdu.data.nbytes
@@ -56,7 +56,7 @@ class _EmbeddedBlockManager(block.BlockManager):
     def __init__(self, hdulist, asdffile):
         self._hdulist = hdulist
 
-        super(_EmbeddedBlockManager, self).__init__(asdffile)
+        super().__init__(asdffile)
 
     def get_block(self, source):
         if isinstance(source, str) and source.startswith(FITS_SOURCE_PREFIX):
@@ -73,21 +73,21 @@ class _EmbeddedBlockManager(block.BlockManager):
                     pair = ver
                 return _FitsBlock(self._hdulist[pair])
             else:
-                raise ValueError("Can not parse source '{0}'".format(source))
+                raise ValueError(f"Can not parse source '{source}'")
 
-        return super(_EmbeddedBlockManager, self).get_block(source)
+        return super().get_block(source)
 
     def get_source(self, block):
         if isinstance(block, _FitsBlock):
             for i, hdu in enumerate(self._hdulist):
                 if hdu is block._hdu:
                     if hdu.name == "":
-                        return "{0}{1}".format(FITS_SOURCE_PREFIX, i)
+                        return f"{FITS_SOURCE_PREFIX}{i}"
                     else:
-                        return "{0}{1},{2}".format(FITS_SOURCE_PREFIX, hdu.name, hdu.ver)
+                        return f"{FITS_SOURCE_PREFIX}{hdu.name},{hdu.ver}"
             raise ValueError("FITS block seems to have been removed")
 
-        return super(_EmbeddedBlockManager, self).get_source(block)
+        return super().get_source(block)
 
     def find_or_create_block_for_array(self, arr, ctx):
         from .tags.core import ndarray
@@ -100,7 +100,7 @@ class _EmbeddedBlockManager(block.BlockManager):
                 if base is util.get_array_base(hdu.data):
                     return _FitsBlock(hdu)
 
-        return super(_EmbeddedBlockManager, self).find_or_create_block_for_array(arr, ctx)
+        return super().find_or_create_block_for_array(arr, ctx)
 
 
 class AsdfInFits(asdf.AsdfFile):
@@ -148,19 +148,19 @@ class AsdfInFits(asdf.AsdfFile):
     def __init__(self, hdulist=None, tree=None, **kwargs):
         if hdulist is None:
             hdulist = fits.HDUList()
-        super(AsdfInFits, self).__init__(tree=tree, **kwargs)
+        super().__init__(tree=tree, **kwargs)
         self._blocks = _EmbeddedBlockManager(hdulist, self)
         self._hdulist = hdulist
         self._close_hdulist = False
 
     def __exit__(self, type, value, traceback):
-        super(AsdfInFits, self).__exit__(type, value, traceback)
+        super().__exit__(type, value, traceback)
         if self._close_hdulist:
             self._hdulist.close()
         self._tree = {}
 
     def close(self):
-        super(AsdfInFits, self).close()
+        super().close()
         if self._close_hdulist:
             self._hdulist.close()
         self._tree = {}
@@ -176,7 +176,7 @@ class AsdfInFits(asdf.AsdfFile):
         ignore_unrecognized_tag=False,
         strict_extension_check=False,
         ignore_missing_extensions=False,
-        **kwargs
+        **kwargs,
     ):
         """Creates a new AsdfInFits object based on given input data
 
@@ -231,7 +231,7 @@ class AsdfInFits(asdf.AsdfFile):
             ignore_unrecognized_tag=ignore_unrecognized_tag,
             strict_extension_check=strict_extension_check,
             ignore_missing_extensions=ignore_missing_extensions,
-            **kwargs
+            **kwargs,
         )
 
     @classmethod
@@ -245,7 +245,7 @@ class AsdfInFits(asdf.AsdfFile):
         ignore_unrecognized_tag=False,
         strict_extension_check=False,
         ignore_missing_extensions=False,
-        **kwargs
+        **kwargs,
     ):
 
         close_hdulist = False
@@ -258,7 +258,7 @@ class AsdfInFits(asdf.AsdfFile):
                 # Since we created this HDUList object, we need to be
                 # responsible for cleaning up upon close() or __exit__
                 close_hdulist = True
-            except IOError:
+            except OSError:
                 msg = "Failed to parse given file '{}'. Is it FITS?"
                 raise ValueError(msg.format(uri))
 
@@ -287,7 +287,7 @@ class AsdfInFits(asdf.AsdfFile):
                 extensions=extensions,
                 strict_extension_check=strict_extension_check,
                 ignore_missing_extensions=ignore_missing_extensions,
-                **kwargs
+                **kwargs,
             )
         except RuntimeError:
             self.close()
@@ -300,7 +300,7 @@ class AsdfInFits(asdf.AsdfFile):
             return fits.ImageHDU(array, name=ASDF_EXTENSION_NAME)
         else:
             data = np.array(buff.getbuffer(), dtype=np.uint8)[None, :]
-            fmt = "{}B".format(len(data[0]))
+            fmt = f"{len(data[0])}B"
             column = fits.Column(array=data, format=fmt, name="ASDF_METADATA")
             return fits.BinTableHDU.from_columns([column], name=ASDF_EXTENSION_NAME)
 
@@ -311,13 +311,13 @@ class AsdfInFits(asdf.AsdfFile):
             raise ValueError("Can not save streamed data to ASDF-in-FITS file.")
 
         buff = io.BytesIO()
-        super(AsdfInFits, self).write_to(
+        super().write_to(
             buff,
             all_array_storage=all_array_storage,
             all_array_compression=all_array_compression,
             pad_blocks=pad_blocks,
             include_block_index=False,
-            **kwargs
+            **kwargs,
         )
 
         if ASDF_EXTENSION_NAME in self._hdulist:
@@ -332,7 +332,7 @@ class AsdfInFits(asdf.AsdfFile):
         pad_blocks=False,
         use_image_hdu=False,
         *args,
-        **kwargs
+        **kwargs,
     ):
         if "auto_inline" in kwargs:
             asdf_kwargs = {"auto_inline": kwargs.pop("auto_inline")}
@@ -344,7 +344,7 @@ class AsdfInFits(asdf.AsdfFile):
             all_array_compression=all_array_compression,
             pad_blocks=pad_blocks,
             use_image_hdu=use_image_hdu,
-            **asdf_kwargs
+            **asdf_kwargs,
         )
 
         self._hdulist.writeto(filename, *args, **kwargs)
@@ -356,5 +356,5 @@ class AsdfInFits(asdf.AsdfFile):
             all_array_storage=all_array_storage,
             all_array_compression=all_array_compression,
             pad_blocks=pad_blocks,
-            **kwargs
+            **kwargs,
         )

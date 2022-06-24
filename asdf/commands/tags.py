@@ -17,7 +17,7 @@ class TagLister(Command):  # pragma: no cover
     @classmethod
     def setup_arguments(cls, subparsers):
         parser = subparsers.add_parser(
-            str("tags"), help="List currently available tags", description="""Lists currently available tags."""
+            "tags", help="List currently available tags", description="""Lists currently available tags."""
         )
 
         parser.add_argument(
@@ -40,7 +40,7 @@ def _format_type(typ):
     if isinstance(typ, str):
         return typ
     else:
-        return "{}.{}".format(typ.__module__, typ.__name__)
+        return f"{typ.__module__}.{typ.__name__}"
 
 
 def list_tags(display_classes=False, iostream=sys.stdout):

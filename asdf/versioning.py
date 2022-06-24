@@ -30,7 +30,7 @@ def join_tag_version(name, version):
     """
     Join the root and version of a tag back together.
     """
-    return "{0}-{1}".format(name, version)
+    return f"{name}-{version}"
 
 
 _version_map = {}
@@ -109,17 +109,17 @@ class AsdfVersion(AsdfVersionMixin, Version):
             version = str(version)
         if isinstance(version, (tuple, list)):
             version = ".".join([str(x) for x in version])
-        super(AsdfVersion, self).__init__(version)
+        super().__init__(version)
 
 
 class AsdfSpec(SimpleSpec):
     def __init__(self, *args, **kwargs):
-        super(AsdfSpec, self).__init__(*args, **kwargs)
+        super().__init__(*args, **kwargs)
 
     def match(self, version):
         if isinstance(version, (str, tuple, list)):
             version = AsdfVersion(version)
-        return super(AsdfSpec, self).match(version)
+        return super().match(version)
 
     def __iterate_versions(self, versions):
         for v in versions:
@@ -128,22 +128,22 @@ class AsdfSpec(SimpleSpec):
             yield v
 
     def select(self, versions):
-        return super(AsdfSpec, self).select(self.__iterate_versions(versions))
+        return super().select(self.__iterate_versions(versions))
 
     def filter(self, versions):
-        return super(AsdfSpec, self).filter(self.__iterate_versions(versions))
+        return super().filter(self.__iterate_versions(versions))
 
     def __eq__(self, other):
         """Equality between Spec and Version, string, or tuple, means match"""
         if isinstance(other, SimpleSpec):
-            return super(AsdfSpec, self).__eq__(other)
+            return super().__eq__(other)
         return self.match(other)
 
     def __ne__(self, other):
         return not self.__eq__(other)
 
     def __hash__(self):
-        return super(AsdfSpec, self).__hash__()
+        return super().__hash__()
 
 
 supported_versions = [

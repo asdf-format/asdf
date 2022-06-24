@@ -16,7 +16,7 @@ def format_tag(organization, standard, version, tag_name):
     """
     Format a YAML tag.
     """
-    tag = "tag:{0}:{1}/{2}".format(organization, standard, tag_name)
+    tag = f"tag:{organization}:{standard}/{tag_name}"
 
     if version is None:
         return tag
@@ -24,7 +24,7 @@ def format_tag(organization, standard, version, tag_name):
     if isinstance(version, AsdfSpec):
         version = str(version.spec)
 
-    return "{0}-{1}".format(tag, version)
+    return f"{tag}-{version}"
 
 
 _all_asdftypes = set()
@@ -34,7 +34,7 @@ def _from_tree_tagged_missing_requirements(cls, tree, ctx):
     # A special version of AsdfType.from_tree_tagged for when the
     # required dependencies for an AsdfType are missing.
     plural, verb = ("s", "are") if len(cls.requires) else ("", "is")
-    message = "{0} package{1} {2} required to instantiate '{3}'".format(
+    message = "{} package{} {} required to instantiate '{}'".format(
         util.human_list(cls.requires), plural, verb, tree._tag
     )
     # This error will be handled by yamlutil.tagged_tree_to_custom_tree, which
@@ -101,7 +101,7 @@ class ExtensionTypeMeta(type):
                 new_types.append(typ)
             attrs["types"] = new_types
 
-        cls = super(ExtensionTypeMeta, mcls).__new__(mcls, name, bases, attrs)
+        cls = super().__new__(mcls, name, bases, attrs)
 
         if hasattr(cls, "version"):
             if not isinstance(cls.version, (AsdfVersion, AsdfSpec)):
@@ -148,7 +148,7 @@ class AsdfTypeMeta(ExtensionTypeMeta):
     """
 
     def __new__(mcls, name, bases, attrs):
-        cls = super(AsdfTypeMeta, mcls).__new__(mcls, name, bases, attrs)
+        cls = super().__new__(mcls, name, bases, attrs)
         # Classes using this metaclass get added to the list of built-in
         # extensions
         if name != "AsdfType":

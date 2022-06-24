@@ -73,7 +73,7 @@ class BlockManager:
             if block not in block_set:
                 block_set.append(block)
         else:
-            raise ValueError("Unknown array storage type {0}".format(block.array_storage))
+            raise ValueError(f"Unknown array storage type {block.array_storage}")
 
         if block.array_storage == "streamed" and len(self._streamed_blocks) > 1:
             raise ValueError("Can not add second streaming block")
@@ -93,7 +93,7 @@ class BlockManager:
                     if id(block._data) in self._data_to_block_mapping:
                         del self._data_to_block_mapping[id(block._data)]
         else:
-            raise ValueError("Unknown array storage type {0}".format(block.array_storage))
+            raise ValueError(f"Unknown array storage type {block.array_storage}")
 
     def set_array_storage(self, block, array_storage):
         """
@@ -140,8 +140,7 @@ class BlockManager:
         header information of all blocks in the file.
         """
         for block_set in self._block_type_mapping.values():
-            for block in block_set:
-                yield block
+            yield from block_set
 
     @property
     def internal_blocks(self):
@@ -154,8 +153,7 @@ class BlockManager:
         header information of all blocks in the file.
         """
         for block_set in (self._internal_blocks, self._streamed_blocks):
-            for block in block_set:
-                yield block
+            yield from block_set
 
     @property
     def streamed_block(self):
@@ -173,16 +171,14 @@ class BlockManager:
         """
         An iterator over all external blocks being managed.
         """
-        for block in self._external_blocks:
-            yield block
+        yield from self._external_blocks
 
     @property
     def inline_blocks(self):
         """
         An iterator over all inline blocks being managed.
         """
-        for block in self._inline_blocks:
-            yield block
+        yield from self._inline_blocks
 
     @property
     def memmap(self):
@@ -507,7 +503,7 @@ class BlockManager:
         fd.seek(offsets[-1], generic_io.SEEK_SET)
         try:
             block = self._new_block().read(fd)
-        except (ValueError, IOError):
+        except (ValueError, OSError):
             return
 
         # Now see if the end of the last block leads right into the index
@@ -538,7 +534,7 @@ class BlockManager:
         name for referencing an external block.
         """
         filename = os.path.splitext(filename)[0]
-        return filename + "{0:04d}.asdf".format(index)
+        return filename + f"{index:04d}.asdf"
 
     def get_external_uri(self, uri, index):
         """
@@ -633,13 +629,13 @@ class BlockManager:
                 if source < len(self._internal_blocks):
                     return self._internal_blocks[source]
             else:
-                raise ValueError("Invalid source id {0}".format(source))
+                raise ValueError(f"Invalid source id {source}")
 
             # If we have a streamed block or we already know we have
             # no blocks, reading any further isn't going to yield any
             # new blocks.
             if len(self._streamed_blocks) or len(self._internal_blocks) == 0:
-                raise ValueError("Block '{0}' not found.".format(source))
+                raise ValueError(f"Block '{source}' not found.")
 
             # If the desired block hasn't already been read, and the
             # file is seekable, and we have at least one internal
@@ -661,7 +657,7 @@ class BlockManager:
             if source == -1 and last_block.array_storage == "streamed":
                 return last_block
 
-            raise ValueError("Block '{0}' not found.".format(source))
+            raise ValueError(f"Block '{source}' not found.")
 
         elif isinstance(source, str):
             asdffile = self._asdffile().open_external(source)
@@ -673,7 +669,7 @@ class BlockManager:
             block = Block(data=np.array(source), array_storage="inline")
 
         else:
-            raise TypeError("Unknown source '{0}'".format(source))
+            raise TypeError(f"Unknown source '{source}'")
 
         return block
 
@@ -764,7 +760,7 @@ class BlockManager:
         """
         Get the list of unqiue compressions used on blocks.
         """
-        return list(set([b.output_compression for b in self.blocks]))
+        return list({b.output_compression for b in self.blocks})
 
     def get_output_compression_extensions(self):
         """
@@ -825,7 +821,7 @@ class Block:
         self._allocated = self._size
 
     def __repr__(self):
-        return "<Block {0} off: {1} alc: {2} siz: {3}>".format(
+        return "<Block {} off: {} alc: {} siz: {}>".format(
             self._array_storage[:3], self._offset, self._allocated, self._size
         )
 
@@ -1032,7 +1028,7 @@ class Block:
         buff = fd.read(2)
         (header_size,) = struct.unpack(b">H", buff)
         if header_size < self._header.size:
-            raise ValueError("Header size must be >= {0}".format(self._header.size))
+            raise ValueError(f"Header size must be >= {self._header.size}")
 
         buff = fd.read(header_size)
         header = self._header.unpack(buff)
@@ -1098,7 +1094,7 @@ class Block:
             fd.close()
 
         if validate_checksum and not self.validate_checksum():
-            raise ValueError("Block at {0} does not match given checksum".format(self._offset))
+            raise ValueError(f"Block at {self._offset} does not match given checksum")
 
         return self
 
@@ -1213,7 +1209,7 @@ class Block:
         """
         if self._data is None:
             if self._fd.is_closed():
-                raise IOError("ASDF file has already been closed. " "Can not get the data.")
+                raise OSError("ASDF file has already been closed. " "Can not get the data.")
 
             # Be nice and reset the file position after we're done
             curpos = self._fd.tell()

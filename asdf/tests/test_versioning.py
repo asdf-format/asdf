@@ -288,17 +288,19 @@ def _test_version_map_support(version, schema_type):
         try:
             load_schema(tag)
         except Exception:
-            assert False, "ASDF Standard version {} requires support for ".format(
-                version
-            ) + "{}, but the corresponding schema cannot be loaded.".format(tag)
+            assert False, (
+                f"ASDF Standard version {version} requires support for "
+                + f"{tag}, but the corresponding schema cannot be loaded."
+            )
 
         extension_type = type_index.from_yaml_tag(ctx, tag)
-        assert extension_type is not None, "ASDF Standard version {} requires support for ".format(
-            version
-        ) + "{}, but no ExtensionType exists to support that tag.".format(tag)
+        assert extension_type is not None, (
+            f"ASDF Standard version {version} requires support for "
+            + f"{tag}, but no ExtensionType exists to support that tag."
+        )
 
         assert extension_type.yaml_tag == tag, (
-            "ASDF Standard version {} requires support for ".format(version)
-            + "{}, but no ExtensionType exists that explicitly ".format(tag)
+            f"ASDF Standard version {version} requires support for "
+            + f"{tag}, but no ExtensionType exists that explicitly "
             + "supports that version."
         )

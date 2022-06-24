@@ -210,7 +210,7 @@ def _get_compressor(label):
     elif label == "lz4":
         comp = Lz4Compressor()
     else:
-        raise ValueError("Unknown compression type: '{0}'".format(label))
+        raise ValueError(f"Unknown compression type: '{label}'")
 
     return comp
 

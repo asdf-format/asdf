@@ -103,8 +103,7 @@ def iter_subclasses(cls):
     """
     for x in cls.__subclasses__():
         yield x
-        for y in iter_subclasses(x):
-            yield y
+        yield from iter_subclasses(x)
 
 
 def calculate_padding(content_size, pad_blocks, block_size):
@@ -185,7 +184,7 @@ class BinaryStruct:
         fields = [0] * len(self._names)
         for key, val in kwargs.items():
             if key not in self._offsets:
-                raise KeyError("No header field '{0}'".format(key))
+                raise KeyError(f"No header field '{key}'")
             i = self._names.index(key)
             fields[i] = val
         return struct.pack(self._fmt, *fields)
@@ -214,7 +213,7 @@ class BinaryStruct:
         updates = []
         for key, val in kwargs.items():
             if key not in self._offsets:
-                raise KeyError("No header field '{0}'".format(key))
+                raise KeyError(f"No header field '{key}'")
             updates.append((self._offsets[key], val))
         updates.sort()
 
@@ -270,7 +269,7 @@ def resolve_name(name):
     if len(parts) == 1:
         # No dots in the name--just a straight up module import
         cursor = 1
-        attr_name = str("")  # Must not be unicode on Python 2
+        attr_name = ""  # Must not be unicode on Python 2
     else:
         cursor = len(parts) - 1
         attr_name = parts[-1]
@@ -320,7 +319,7 @@ def get_class_name(obj, instance=True):
         Indicates whether given object is an instance of the class to be named
     """
     typ = type(obj) if instance else obj
-    class_name = "{}.{}".format(typ.__module__, typ.__qualname__)
+    class_name = f"{typ.__module__}.{typ.__qualname__}"
     return _CLASS_NAME_OVERRIDES.get(class_name, class_name)
 
 
@@ -367,7 +366,7 @@ def minversion(module, version, inclusive=True, version_path="__version__"):
         raise ValueError(
             "module argument must be an actual imported "
             "module, or the import name of the module; "
-            "got {0!r}".format(module)
+            "got {!r}".format(module)
         )
 
     if "." not in version_path:
@@ -424,7 +423,7 @@ class InheritDocstrings(type):
                         val.__doc__ = super_method.__doc__
                         break
 
-        super(InheritDocstrings, cls).__init__(name, bases, dct)
+        super().__init__(name, bases, dct)
 
 
 class _NotSetType:

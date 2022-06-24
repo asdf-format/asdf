@@ -191,7 +191,7 @@ def get_cached_asdf_extension_list(extensions):
     return _get_cached_asdf_extension_list(extensions)
 
 
-@lru_cache()
+@lru_cache
 def _get_cached_asdf_extension_list(extensions):
     return AsdfExtensionList(extensions)
 

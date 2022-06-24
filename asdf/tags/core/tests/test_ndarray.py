@@ -79,8 +79,8 @@ def test_sharing(tmpdir):
 
 def test_byteorder(tmpdir):
     tree = {
-        "bigendian": np.arange(0, 10, dtype=str(">f8")),
-        "little": np.arange(0, 10, dtype=str("<f8")),
+        "bigendian": np.arange(0, 10, dtype=">f8"),
+        "little": np.arange(0, 10, dtype="<f8"),
     }
 
     def check_asdf(asdf):
@@ -145,7 +145,7 @@ def test_dont_load_data():
 def test_table_inline(tmpdir):
     table = np.array(
         [(0, 1, (2, 3)), (4, 5, (6, 7))],
-        dtype=[(str("MINE"), np.int8), (str(""), np.float64), (str("arr"), ">i4", (2,))],
+        dtype=[("MINE", np.int8), ("", np.float64), ("arr", ">i4", (2,))],
     )
 
     tree = {"table_data": table}
@@ -198,9 +198,7 @@ x0: !core/ndarray-1.0.0
 
 
 def test_table(tmpdir):
-    table = np.array(
-        [(0, 1, (2, 3)), (4, 5, (6, 7))], dtype=[(str("MINE"), np.int8), (str(""), "<f8"), (str("arr"), ">i4", (2,))]
-    )
+    table = np.array([(0, 1, (2, 3)), (4, 5, (6, 7))], dtype=[("MINE", np.int8), ("", "<f8"), ("arr", ">i4", (2,))])
 
     tree = {"table_data": table}
 
@@ -224,7 +222,7 @@ def test_table(tmpdir):
 def test_table_nested_fields(tmpdir):
     table = np.array(
         [(0, (1, 2)), (4, (5, 6)), (7, (8, 9))],
-        dtype=[(str("A"), "<i8"), (str("B"), [(str("C"), "<i8"), (str("D"), "<i8")])],
+        dtype=[("A", "<i8"), ("B", [("C", "<i8"), ("D", "<i8")])],
     )
 
     tree = {"table_data": table}
@@ -381,11 +379,11 @@ def test_simple_table():
             (10.687610626220703, 41.270301818847656, 0.18, 0.14, 60.192),
         ],
         dtype=[
-            (str("ra"), str("<f4")),
-            (str("dec"), str("<f4")),
-            (str("err_maj"), str("<f8")),
-            (str("err_min"), str("<f8")),
-            (str("angle"), str("<f8")),
+            ("ra", "<f4"),
+            ("dec", "<f4"),
+            ("err_maj", "<f8"),
+            ("err_min", "<f8"),
+            ("angle", "<f8"),
         ],
     )
 
@@ -806,7 +804,7 @@ def test_fortran_order(tmpdir):
 def test_readonly(tmpdir):
 
     tmpfile = str(tmpdir.join("data.asdf"))
-    tree = dict(data=np.ndarray((100)))
+    tree = dict(data=np.ndarray(100))
 
     with asdf.AsdfFile(tree) as af:
         # Make sure we're actually writing to an internal array for this test
@@ -832,7 +830,7 @@ def test_readonly(tmpdir):
 
 def test_readonly_inline(tmpdir):
     tmpfile = str(tmpdir.join("data.asdf"))
-    tree = dict(data=np.ndarray((100)))
+    tree = dict(data=np.ndarray(100))
 
     with asdf.AsdfFile(tree) as af:
         af.write_to(tmpfile, all_array_storage="inline")

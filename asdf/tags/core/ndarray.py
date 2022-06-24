@@ -32,7 +32,7 @@ def asdf_byteorder_to_numpy_byteorder(byteorder):
         return ">"
     elif byteorder == "little":
         return "<"
-    raise ValueError("Invalid ASDF byteorder '{0}'".format(byteorder))
+    raise ValueError(f"Invalid ASDF byteorder '{byteorder}'")
 
 
 def asdf_datatype_to_numpy_dtype(datatype, byteorder=None):
@@ -55,7 +55,7 @@ def asdf_datatype_to_numpy_dtype(datatype, byteorder=None):
         return np.dtype(datatype)
     elif isinstance(datatype, dict):
         if "datatype" not in datatype:
-            raise ValueError("Field entry has no datatype: '{0}'".format(datatype))
+            raise ValueError(f"Field entry has no datatype: '{datatype}'")
         name = datatype.get("name", "")
         byteorder = datatype.get("byteorder", byteorder)
         shape = datatype.get("shape")
@@ -71,11 +71,11 @@ def asdf_datatype_to_numpy_dtype(datatype, byteorder=None):
             if isinstance(np_dtype, tuple):
                 datatype_list.append(np_dtype)
             elif isinstance(np_dtype, np.dtype):
-                datatype_list.append((str(""), np_dtype))
+                datatype_list.append(("", np_dtype))
             else:
                 raise RuntimeError("Error parsing asdf datatype")
         return np.dtype(datatype_list)
-    raise ValueError("Unknown datatype {0}".format(datatype))
+    raise ValueError(f"Unknown datatype {datatype}")
 
 
 def numpy_byteorder_to_asdf_byteorder(byteorder, override=None):
@@ -125,7 +125,7 @@ def numpy_dtype_to_asdf_datatype(dtype, include_byteorder=True, override_byteord
             numpy_byteorder_to_asdf_byteorder(dtype.byteorder, override=override_byteorder),
         )
 
-    raise ValueError("Unknown dtype {0}".format(dtype))
+    raise ValueError(f"Unknown dtype {dtype}")
 
 
 def inline_data_asarray(inline, dtype=None):
@@ -287,7 +287,7 @@ class NDArrayType(AsdfType):
     def __repr__(self):
         # repr alone should not force loading of the data
         if self._array is None:
-            return "<{0} (unloaded) shape: {1} dtype: {2}>".format(
+            return "<{} (unloaded) shape: {} dtype: {}>".format(
                 "array" if self._mask is None else "masked array", self._shape, self._dtype
             )
         return repr(self._make_array())
@@ -295,7 +295,7 @@ class NDArrayType(AsdfType):
     def __str__(self):
         # str alone should not force loading of the data
         if self._array is None:
-            return "<{0} (unloaded) shape: {1} dtype: {2}>".format(
+            return "<{} (unloaded) shape: {} dtype: {}>".format(
                 "array" if self._mask is None else "masked array", self._shape, self._dtype
             )
         return str(self._make_array())
@@ -317,7 +317,7 @@ class NDArrayType(AsdfType):
                 stride = np.product(shape[1:]) * dtype.itemsize
             missing = int(block_size / stride)
             return [missing] + shape[1:]
-        raise ValueError("Invalid shape '{0}'".format(shape))
+        raise ValueError(f"Invalid shape '{shape}'")
 
     @property
     def block(self):
@@ -646,9 +646,7 @@ def validate_ndim(validator, ndim, instance, schema):
     in_ndim = _get_ndim(instance)
 
     if in_ndim != ndim:
-        yield ValidationError(
-            "Wrong number of dimensions: Expected {0}, got {1}".format(ndim, in_ndim), instance=repr(instance)
-        )
+        yield ValidationError(f"Wrong number of dimensions: Expected {ndim}, got {in_ndim}", instance=repr(instance))
 
 
 def validate_max_ndim(validator, max_ndim, instance, schema):
@@ -656,7 +654,7 @@ def validate_max_ndim(validator, max_ndim, instance, schema):
 
     if in_ndim > max_ndim:
         yield ValidationError(
-            "Wrong number of dimensions: Expected max of {0}, got {1}".format(max_ndim, in_ndim),
+            f"Wrong number of dimensions: Expected max of {max_ndim}, got {in_ndim}",
             instance=repr(instance),
         )
 
@@ -682,25 +680,25 @@ def validate_datatype(validator, datatype, instance, schema):
         return
 
     if schema.get("exact_datatype", False):
-        yield ValidationError("Expected datatype '{0}', got '{1}'".format(datatype, in_datatype))
+        yield ValidationError(f"Expected datatype '{datatype}', got '{in_datatype}'")
 
     np_datatype = asdf_datatype_to_numpy_dtype(datatype)
     np_in_datatype = asdf_datatype_to_numpy_dtype(in_datatype)
 
     if not np_datatype.fields:
         if np_in_datatype.fields:
-            yield ValidationError("Expected scalar datatype '{0}', got '{1}'".format(datatype, in_datatype))
+            yield ValidationError(f"Expected scalar datatype '{datatype}', got '{in_datatype}'")
 
         if not np.can_cast(np_in_datatype, np_datatype, "safe"):
-            yield ValidationError("Can not safely cast from '{0}' to '{1}' ".format(in_datatype, datatype))
+            yield ValidationError(f"Can not safely cast from '{in_datatype}' to '{datatype}' ")
 
     else:
         if not np_in_datatype.fields:
-            yield ValidationError("Expected structured datatype '{0}', got '{1}'".format(datatype, in_datatype))
+            yield ValidationError(f"Expected structured datatype '{datatype}', got '{in_datatype}'")
 
         if len(np_in_datatype.fields) != len(np_datatype.fields):
             yield ValidationError(
-                "Mismatch in number of columns: " "Expected {0}, got {1}".format(len(datatype), len(in_datatype))
+                "Mismatch in number of columns: " "Expected {}, got {}".format(len(datatype), len(in_datatype))
             )
 
         for i in range(len(np_datatype.fields)):
@@ -709,7 +707,7 @@ def validate_datatype(validator, datatype, instance, schema):
             if not np.can_cast(in_type, out_type, "safe"):
                 yield ValidationError(
                     "Can not safely cast to expected datatype: "
-                    "Expected {0}, got {1}".format(
+                    "Expected {}, got {}".format(
                         numpy_dtype_to_asdf_datatype(out_type)[0], numpy_dtype_to_asdf_datatype(in_type)[0]
                     )
                 )
