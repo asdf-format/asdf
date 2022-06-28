@@ -82,7 +82,7 @@ Resources
   :maxdepth: 1
 
   asdf/contributing
-  asdf/code_of_conduct
+  asdf/CODE_OF_CONDUCT.md
   asdf/changes
   asdf/citation
 

@@ -35,6 +35,7 @@ docs = [
     'docutils',
     'graphviz',
     'matplotlib',
+    'myst-parser',
     'sphinx',
     'sphinx-asdf',
     'sphinx-astropy',
