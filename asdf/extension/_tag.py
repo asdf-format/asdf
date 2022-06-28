@@ -107,4 +107,4 @@ class TagDefinition:
         return self._description
 
     def __repr__(self):
-        return "<TagDefinition URI: {}>".format(self.tag_uri)
+        return f"<TagDefinition URI: {self.tag_uri}>"

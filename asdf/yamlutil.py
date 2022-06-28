@@ -40,7 +40,7 @@ class AsdfDumper(_yaml_base_dumper):
         super().__init__(*args, **kwargs)
 
     def represent_data(self, data):
-        node = super(AsdfDumper, self).represent_data(data)
+        node = super().represent_data(data)
 
         tag_name = getattr(data, "_tag", None)
         if tag_name is not None:
@@ -238,7 +238,7 @@ def custom_tree_to_tagged_tree(tree, ctx, _serialization_context=None):
             tagged_node = tagged.TaggedString(node)
             tagged_node._tag = tag
         else:
-            raise TypeError("Converter returned illegal node type: {}".format(util.get_class_name(node)))
+            raise TypeError(f"Converter returned illegal node type: {util.get_class_name(node)}")
 
         _serialization_context._mark_extension_used(converter.extension)
 

@@ -34,10 +34,10 @@ def make_argparser():
 
     subparsers = parser.add_subparsers(title="subcommands", description="valid subcommands")
 
-    help_parser = subparsers.add_parser(str("help"), help="Display usage information")
+    help_parser = subparsers.add_parser("help", help="Display usage information")
     help_parser.set_defaults(func=help)
 
-    commands = dict((x.__name__, x) for x in util.iter_subclasses(Command))
+    commands = {x.__name__: x for x in util.iter_subclasses(Command)}
 
     for command in command_order:
         commands[str(command)].setup_arguments(subparsers)
@@ -64,7 +64,7 @@ def main_from_args(args):
     except RuntimeError as e:
         logging.error(str(e))
         return 1
-    except IOError as e:
+    except OSError as e:
         logging.error(str(e))
         return e.errno
 

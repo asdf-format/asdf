@@ -90,7 +90,7 @@ def validate_tag(validator, tag_pattern, instance, schema):
         )
 
     if not util.uri_match(tag_pattern, instance_tag):
-        yield ValidationError("mismatched tags, wanted '{0}', got '{1}'".format(tag_pattern, instance_tag))
+        yield ValidationError(f"mismatched tags, wanted '{tag_pattern}', got '{instance_tag}'")
 
 
 def validate_propertyOrder(validator, order, instance, schema):
@@ -172,8 +172,7 @@ def validate_fill_default(validator, properties, instance, schema):
         if "default" in subschema:
             instance.setdefault(property, subschema["default"])
 
-    for err in mvalidators.Draft4Validator.VALIDATORS["properties"](validator, properties, instance, schema):
-        yield err
+    yield from mvalidators.Draft4Validator.VALIDATORS["properties"](validator, properties, instance, schema)
 
 
 FILL_DEFAULTS = util.HashableDict()
@@ -191,8 +190,7 @@ def validate_remove_default(validator, properties, instance, schema):
             if instance.get(property, None) == subschema["default"]:
                 del instance[property]
 
-    for err in mvalidators.Draft4Validator.VALIDATORS["properties"](validator, properties, instance, schema):
-        yield err
+    yield from mvalidators.Draft4Validator.VALIDATORS["properties"](validator, properties, instance, schema)
 
 
 REMOVE_DEFAULTS = util.HashableDict()
@@ -243,7 +241,7 @@ class _ValidationContext:
         return (id(instance), id(schema))
 
 
-@lru_cache()
+@lru_cache
 def _create_validator(validators=YAML_VALIDATORS, visit_repeat_nodes=False):
     meta_schema = _load_schema_cached(YAML_SCHEMA_METASCHEMA_ID, extension.get_default_resolver(), False, False)
 
@@ -304,20 +302,18 @@ def _create_validator(validators=YAML_VALIDATORS, visit_repeat_nodes=False):
 
                     if isinstance(instance, dict):
                         for val in instance.values():
-                            for x in self.iter_errors(val):
-                                yield x
+                            yield from self.iter_errors(val)
 
                     elif isinstance(instance, list):
                         for val in instance:
-                            for x in self.iter_errors(val):
-                                yield x
+                            yield from self.iter_errors(val)
                 else:
-                    yield from super(ASDFValidator, self).iter_errors(instance)
+                    yield from super().iter_errors(instance)
 
     return ASDFValidator
 
 
-@lru_cache()
+@lru_cache
 def _load_schema(url):
     if url.startswith("http://") or url.startswith("https://") or url.startswith("asdf://"):
         raise FileNotFoundError("Unable to fetch schema from non-file URL: " + url)
@@ -388,7 +384,7 @@ def _make_resolver(url_mapping):
     )
 
 
-@lru_cache()
+@lru_cache
 def load_custom_schema(url):
     warnings.warn(
         "The 'load_custom_schema(...)' function is deprecated. Use" "'load_schema' instead.", AsdfDeprecationWarning
@@ -476,7 +472,7 @@ def _safe_resolve(resolver, json_id, uri):
     return base, fragment
 
 
-@lru_cache()
+@lru_cache
 def _load_schema_cached(url, resolver, resolve_references, resolve_local_refs):
     loader = _make_schema_loader(resolver)
     schema, url = loader(url)

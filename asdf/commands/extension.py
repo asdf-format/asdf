@@ -52,7 +52,7 @@ def _format_type_name(typ):
     if isinstance(typ, str):
         return typ
     else:
-        return "{}.{}".format(typ.__module__, typ.__name__)
+        return f"{typ.__module__}.{typ.__name__}"
 
 
 def _print_extension_details(ext, tags_only):
@@ -80,7 +80,7 @@ def _print_extension_details(ext, tags_only):
         if len(types) > 0:
             print("types:")
             for typ in sorted(types, key=_format_type_name):
-                print("  - " + _format_type_name((typ)))
+                print("  - " + _format_type_name(typ))
 
 
 def find_extensions(summary, tags_only):

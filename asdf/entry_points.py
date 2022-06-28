@@ -35,7 +35,7 @@ def _list_entry_points(group, proxy_class):
     # at the end so that other packages can override them.
     asdf_entry_points = [e for e in entry_points if e.dist.project_name == "asdf"]
     other_entry_points = sorted(
-        [e for e in entry_points if e.dist.project_name != "asdf"], key=lambda e: e.dist.project_name
+        (e for e in entry_points if e.dist.project_name != "asdf"), key=lambda e: e.dist.project_name
     )
 
     for entry_point in other_entry_points + asdf_entry_points:

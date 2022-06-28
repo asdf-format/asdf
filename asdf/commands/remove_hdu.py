@@ -15,7 +15,7 @@ class FitsExtractor(Command):  # pragma: no cover
     @classmethod
     def setup_arguments(cls, subparsers):
         parser = subparsers.add_parser(
-            str("remove-hdu"),
+            "remove-hdu",
             help="Remove ASDF extension from ASDF-in-FITS file",
             description="Removes ASDF extensions from ASDF-in-FITS files.",
         )

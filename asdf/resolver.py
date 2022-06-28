@@ -83,7 +83,7 @@ class Resolver:
             ):
                 normalized.append(tuple(mapping))
             else:
-                raise ValueError("Invalid mapping '{0}'".format(mapping))
+                raise ValueError(f"Invalid mapping '{mapping}'")
 
         return tuple(normalized)
 

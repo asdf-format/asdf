@@ -19,7 +19,7 @@ def _assert_diffs_equal(filenames, result_file, minimal=False, ignore=None):
     iostream.seek(0)
 
     result_path = get_test_data_path(result_file)
-    with open(result_path, "r") as handle:
+    with open(result_path) as handle:
         assert handle.read() == iostream.read()
 
 

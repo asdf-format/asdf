@@ -123,8 +123,7 @@ class AsdfSchemaFile(pytest.File):
 
         for node in treeutil.iter_tree(schema_tree):
             if isinstance(node, dict) and "examples" in node and isinstance(node["examples"], list):
-                for example in node["examples"]:
-                    yield example
+                yield from node["examples"]
 
 
 class AsdfSchemaItem(pytest.Item):

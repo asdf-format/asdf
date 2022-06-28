@@ -354,7 +354,7 @@ class ConverterProxy(Converter):
         if self.package_name is None:
             package_description = "(none)"
         else:
-            package_description = "{}=={}".format(self.package_name, self.package_version)
+            package_description = f"{self.package_name}=={self.package_version}"
 
         return "<ConverterProxy class: {} package: {}>".format(
             self.class_name,

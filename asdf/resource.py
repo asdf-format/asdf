@@ -117,7 +117,7 @@ class ResourceMappingProxy(Mapping):
 
     def __repr__(self):
         if self.package_name is not None:
-            package_description = "{}=={}".format(self.package_name, self.package_version)
+            package_description = f"{self.package_name}=={self.package_version}"
         else:
             package_description = "(none)"
 
@@ -151,7 +151,7 @@ class ResourceManager(Mapping):
 
     def __getitem__(self, uri):
         if uri not in self._mappings_by_uri:
-            raise KeyError("Resource unavailable for URI: {}".format(uri))
+            raise KeyError(f"Resource unavailable for URI: {uri}")
 
         content = self._mappings_by_uri[uri][uri]
         if isinstance(content, str):
@@ -170,7 +170,7 @@ class ResourceManager(Mapping):
         return uri in self._mappings_by_uri
 
     def __repr__(self):
-        return "<ResourceManager len: {}>".format(self.__len__())
+        return f"<ResourceManager len: {self.__len__()}>"
 
 
 _JSONSCHEMA_URI_TO_FILENAME = {
@@ -186,7 +186,7 @@ class JsonschemaResourceMapping(Mapping):
 
     def __getitem__(self, uri):
         filename = _JSONSCHEMA_URI_TO_FILENAME[uri]
-        return pkgutil.get_data("jsonschema", "schemas/{}".format(filename))
+        return pkgutil.get_data("jsonschema", f"schemas/{filename}")
 
     def __len__(self):
         return len(_JSONSCHEMA_URI_TO_FILENAME)

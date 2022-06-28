@@ -75,13 +75,13 @@ class ManifestExtension(Extension):
         if version is None:
             return None
         elif isinstance(version, str):
-            return "=={}".format(version)
+            return f"=={version}"
         else:
             specifiers = []
             for prop, operator in [("gt", ">"), ("gte", ">="), ("lt", "<"), ("lte", "<=")]:
                 value = version.get(prop)
                 if value:
-                    specifiers.append("{}{}".format(operator, value))
+                    specifiers.append(f"{operator}{value}")
             return ",".join(specifiers)
 
     @property

@@ -119,9 +119,7 @@ def assert_tree_match(old_tree, new_tree, ctx=None, funcname="assert_equal", ign
                 getattr(old_type, funcname)(old, new)
 
         elif isinstance(old, dict) and isinstance(new, dict):
-            assert set(x for x in old.keys() if x not in ignore_keys) == set(
-                x for x in new.keys() if x not in ignore_keys
-            )
+            assert {x for x in old.keys() if x not in ignore_keys} == {x for x in new.keys() if x not in ignore_keys}
             for key in old.keys():
                 if key not in ignore_keys:
                     recurse(old[key], new[key])
@@ -183,7 +181,7 @@ def _assert_roundtrip_tree(
     write_options={},
     init_options={},
     extensions=None,
-    tree_match_func="assert_equal"
+    tree_match_func="assert_equal",
 ):
 
     fname = str(tmpdir.join("test.asdf"))
@@ -306,11 +304,11 @@ def yaml_to_asdf(yaml_content, yaml_headers=True, standard_version=None):
 
     if yaml_headers:
         buff.write(
-            """#ASDF {0}
-#ASDF_STANDARD {1}
-%YAML {2}
+            """#ASDF {}
+#ASDF_STANDARD {}
+%YAML {}
 %TAG ! tag:stsci.edu:asdf/
---- !core/asdf-{3}
+--- !core/asdf-{}
 """.format(
                 file_format_version, standard_version, yaml_version, tree_version
             ).encode(
@@ -366,7 +364,7 @@ def display_warnings(_warnings):
 
     msg = "Unexpected warning(s) occurred:\n"
     for warning in _warnings:
-        msg += "{}:{}: {}: {}\n".format(warning.filename, warning.lineno, warning.category.__name__, warning.message)
+        msg += f"{warning.filename}:{warning.lineno}: {warning.category.__name__}: {warning.message}\n"
     return msg
 
 
@@ -430,7 +428,7 @@ def _assert_extension_type_correctness(extension, extension_type, resolver):
         # but shares a tag with that class, so it isn't really a distinct type.
         return
 
-    assert extension_type.name is not None, "{} must set the 'name' class attribute".format(extension_type.__name__)
+    assert extension_type.name is not None, f"{extension_type.__name__} must set the 'name' class attribute"
 
     # Currently ExtensionType sets a default version of 1.0.0,
     # but we want to encourage an explicit version on the subclass.
@@ -442,9 +440,9 @@ def _assert_extension_type_correctness(extension, extension_type, resolver):
         schema_location = resolver(check_type.yaml_tag)
 
         assert schema_location is not None, (
-            "{} supports tag, {}, ".format(extension_type.__name__, check_type.yaml_tag)
+            f"{extension_type.__name__} supports tag, {check_type.yaml_tag}, "
             + "but tag does not resolve.  Check the tag_mapping and uri_mapping "
-            + "properties on the related extension ({}).".format(extension_type.__name__)
+            + f"properties on the related extension ({extension_type.__name__})."
         )
 
         if schema_location not in asdf.get_config().resource_manager:
@@ -453,7 +451,7 @@ def _assert_extension_type_correctness(extension, extension_type, resolver):
                     yaml.safe_load(f.read())
             except Exception:
                 assert False, (
-                    "{} supports tag, {}, ".format(extension_type.__name__, check_type.yaml_tag)
-                    + "which resolves to schema at {}, but ".format(schema_location)
+                    f"{extension_type.__name__} supports tag, {check_type.yaml_tag}, "
+                    + f"which resolves to schema at {schema_location}, but "
                     + "schema cannot be read."
                 )

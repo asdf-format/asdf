@@ -211,6 +211,6 @@ def get_cached_extension_manager(extensions):
     return _get_cached_extension_manager(extensions)
 
 
-@lru_cache()
+@lru_cache
 def _get_cached_extension_manager(extensions):
     return ExtensionManager(extensions)
