@@ -36,7 +36,7 @@ def resolve_fragment(tree, pointer):
         try:
             tree = tree[part]
         except (TypeError, LookupError):
-            raise ValueError("Unresolvable reference: '{0}'".format(pointer))
+            raise ValueError(f"Unresolvable reference: '{pointer}'")
 
     return tree
 
@@ -66,14 +66,14 @@ class Reference(AsdfType):
     def __repr__(self):
         # repr alone should not force loading of the reference
         if self._target is None:
-            return "<Reference (unloaded) to '{0}'>".format(self._uri)
+            return f"<Reference (unloaded) to '{self._uri}'>"
         else:
-            return "<Reference to {0}>".format(repr(self._target))
+            return f"<Reference to {repr(self._target)}>"
 
     def __str__(self):
         # str alone should not force loading of the reference
         if self._target is None:
-            return "<Reference (unloaded) to '{0}'>".format(self._uri)
+            return f"<Reference (unloaded) to '{self._uri}'>"
         else:
             return str(self._target)
 
@@ -86,7 +86,7 @@ class Reference(AsdfType):
         try:
             return getattr(self._get_target(), attr)
         except Exception:
-            raise AttributeError("No attribute '{0}'".format(attr))
+            raise AttributeError(f"No attribute '{attr}'")
 
     def __getitem__(self, item):
         return self._get_target()[item]

@@ -117,7 +117,7 @@ def test_open_fail(tmpdir):
 def test_open_fail2(tmpdir):
     path = os.path.join(str(tmpdir), "test.asdf")
 
-    with io.open(path, "w") as fd:
+    with open(path, "w") as fd:
         with pytest.raises(ValueError):
             generic_io.get_file(fd, mode="w")
 
@@ -128,7 +128,7 @@ def test_open_fail3(tmpdir):
     with open(path, "w") as fd:
         fd.write("\n\n\n")
 
-    with open(path, "r") as fd:
+    with open(path) as fd:
         with pytest.raises(ValueError):
             generic_io.get_file(fd, mode="r")
 
@@ -139,7 +139,7 @@ def test_open_fail4(tmpdir):
     with open(path, "w") as fd:
         fd.write("\n\n\n")
 
-    with io.open(path, "r") as fd:
+    with open(path) as fd:
         with pytest.raises(ValueError):
             generic_io.get_file(fd, mode="r")
 
@@ -148,13 +148,13 @@ def test_io_open(tree, tmpdir):
     path = os.path.join(str(tmpdir), "test.asdf")
 
     def get_write_fd():
-        f = generic_io.get_file(io.open(path, "wb"), mode="w", close=True)
+        f = generic_io.get_file(open(path, "wb"), mode="w", close=True)
         assert isinstance(f, generic_io.RealFile)
         assert f._uri == util.filepath_to_url(path)
         return f
 
     def get_read_fd():
-        f = generic_io.get_file(io.open(path, "r+b"), mode="rw", close=True)
+        f = generic_io.get_file(open(path, "r+b"), mode="rw", close=True)
         assert isinstance(f, generic_io.RealFile)
         assert f._uri == util.filepath_to_url(path)
         return f
@@ -354,7 +354,7 @@ def test_unicode_open(tmpdir, small_tree):
 
     ff.write_to(path)
 
-    with io.open(path, "rt", encoding="utf-8") as fd:
+    with open(path, encoding="utf-8") as fd:
         with pytest.raises(ValueError):
             with asdf.open(fd):
                 pass
@@ -379,7 +379,7 @@ def test_invalid_obj(tmpdir):
         with pytest.raises(ValueError):
             generic_io.get_file(fd, "w")
 
-    with io.open(path, "rb") as fd:
+    with open(path, "rb") as fd:
         with pytest.raises(ValueError):
             generic_io.get_file(fd, "w")
 
@@ -392,7 +392,7 @@ def test_nonseekable_file(tmpdir):
 
     class FileWrapper(base):
         def tell(self):
-            raise IOError()
+            raise OSError()
 
         def seekable(self):
             return False
@@ -422,13 +422,17 @@ def test_resolve_uri(protocol):
     Confirm that the patched urllib.parse is handling
     asdf:// URIs correctly.
     """
-    assert generic_io.resolve_uri(
-        "{}://somewhere.org/some-schema".format(protocol), "#/definitions/foo"
-    ) == "{}://somewhere.org/some-schema#/definitions/foo".format(protocol)
+    assert (
+        generic_io.resolve_uri(f"{protocol}://somewhere.org/some-schema", "#/definitions/foo")
+        == f"{protocol}://somewhere.org/some-schema#/definitions/foo"
+    )
 
-    assert generic_io.resolve_uri(
-        "{}://somewhere.org/path/to/some-schema".format(protocol), "../../some/other/path/to/some-other-schema"
-    ) == "{}://somewhere.org/some/other/path/to/some-other-schema".format(protocol)
+    assert (
+        generic_io.resolve_uri(
+            f"{protocol}://somewhere.org/path/to/some-schema", "../../some/other/path/to/some-other-schema"
+        )
+        == f"{protocol}://somewhere.org/some/other/path/to/some-other-schema"
+    )
 
 
 def test_arbitrary_file_object():
@@ -477,12 +481,12 @@ def test_arbitrary_file_object():
 
 
 def test_check_bytes(tmpdir):
-    with io.open(os.path.join(str(tmpdir), "test.asdf"), "w", encoding="utf-8") as fd:
+    with open(os.path.join(str(tmpdir), "test.asdf"), "w", encoding="utf-8") as fd:
         assert generic_io._check_bytes(fd, "r") is False
         assert generic_io._check_bytes(fd, "rw") is False
         assert generic_io._check_bytes(fd, "w") is False
 
-    with io.open(os.path.join(str(tmpdir), "test.asdf"), "wb") as fd:
+    with open(os.path.join(str(tmpdir), "test.asdf"), "wb") as fd:
         assert generic_io._check_bytes(fd, "r") is True
         assert generic_io._check_bytes(fd, "rw") is True
         assert generic_io._check_bytes(fd, "w") is True

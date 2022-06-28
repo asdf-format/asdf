@@ -16,7 +16,7 @@ class AsdfExtractor(Command):  # pragma: no cover
     @classmethod
     def setup_arguments(cls, subparsers):
         parser = subparsers.add_parser(
-            str("extract"),
+            "extract",
             help="Extract ASDF extensions in ASDF-in-FITS files into pure ASDF files",
             description="Extracts ASDF extensions into pure ASDF files.",
         )
@@ -49,5 +49,5 @@ def extract_file(input_file, output_file):
             with asdf.AsdfFile(ih.tree) as oh:
                 oh.write_to(output_file)
 
-    except (IOError, ValueError) as error:
+    except (OSError, ValueError) as error:
         raise RuntimeError(str(error))

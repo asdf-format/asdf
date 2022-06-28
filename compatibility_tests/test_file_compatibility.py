@@ -51,7 +51,7 @@ def fetch_package_versions(package_name):
     """
     Request a package's available versions from pypi.org metadata.
     """
-    content = urllib.request.urlopen("https://pypi.org/pypi/{}/json".format(package_name)).read()
+    content = urllib.request.urlopen(f"https://pypi.org/pypi/{package_name}/json").read()
     version_strings = json.loads(content)["releases"].keys()
     return [
         Version(v)
@@ -125,13 +125,13 @@ def env_path(asdf_version, tmp_path_factory):
     """
     Path to the virtualenv where the (old) asdf library is installed.
     """
-    path = tmp_path_factory.mktemp("asdf-{}-env".format(asdf_version), numbered=False)
+    path = tmp_path_factory.mktemp(f"asdf-{asdf_version}-env", numbered=False)
 
     virtualenv.cli_run([str(path)])
 
     assert env_run(
-        path, "pip", "install", "asdf=={}".format(asdf_version), capture_output=True
-    ), "Failed to install asdf version {}".format(asdf_version)
+        path, "pip", "install", f"asdf=={asdf_version}", capture_output=True
+    ), f"Failed to install asdf version {asdf_version}"
 
     return path
 
@@ -155,9 +155,10 @@ def test_file_compatibility(asdf_version, env_path, tmpdir):
     # Sanity check to ensure we're not accidentally comparing
     # the current code to itself.
     installed_version = get_installed_version(env_path)
-    assert installed_version == asdf_version, "The version of asdf in the virtualenv ({}) does ".format(
-        installed_version
-    ) + "not match the version being tested ({})".format(asdf_version)
+    assert installed_version == asdf_version, (
+        f"The version of asdf in the virtualenv ({installed_version}) does "
+        + f"not match the version being tested ({asdf_version})"
+    )
 
     # We can only test ASDF Standard versions that both library
     # versions support.
@@ -175,7 +176,7 @@ def test_file_compatibility(asdf_version, env_path, tmpdir):
             current_file_path = Path(str(tmpdir)) / "test-current.asdf"
             generate_file(current_file_path, standard_version)
             assert env_run(env_path, "python3", ASSERT_SCRIPT_PATH, current_file_path, capture_output=True), (
-                "asdf library version {} failed to read an ASDF Standard {} ".format(asdf_version, standard_version)
+                f"asdf library version {asdf_version} failed to read an ASDF Standard {standard_version} "
                 + "file produced by this code"
             )
 
@@ -189,6 +190,6 @@ def test_file_compatibility(asdf_version, env_path, tmpdir):
                 asdf_version, standard_version
             )
             assert_file_correct(old_file_path), (
-                "asdf library version {} produced an ASDF Standard {} ".format(asdf_version, standard_version)
+                f"asdf library version {asdf_version} produced an ASDF Standard {standard_version} "
                 + "that this code failed to read"
             )

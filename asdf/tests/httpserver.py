@@ -27,7 +27,7 @@ def run_server(tmpdir, handler_class, stop_event, queue):  # pragma: no cover
 
     server = socketserver.TCPServer(("127.0.0.1", 0), HTTPRequestHandler)
     domain, port = server.server_address
-    url = "http://{0}:{1}/".format(domain, port)
+    url = f"http://{domain}:{port}/"
 
     # Set a reasonable timeout so that invalid requests (which may occur during
     # testing) do not cause the entire test suite to hang indefinitely

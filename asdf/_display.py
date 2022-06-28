@@ -82,7 +82,7 @@ def format_italic(value):
 
 
 def _format_code(value, code):
-    return "\x1B[{}m{}\x1B[0m".format(code, value)
+    return f"\x1B[{code}m{value}\x1B[0m"
 
 
 def _get_schema_for_property(schema, attr):
@@ -347,7 +347,7 @@ class _TreeRenderer:
             hidden_count = len(info.children) - num_visible_children
             prefix = self._make_prefix(info.depth + 1, active_depths, True)
             message = format_faint(format_italic(str(hidden_count) + " not shown"))
-            lines.append("{}{}".format(prefix, message))
+            lines.append(f"{prefix}{message}")
 
         return lines, elided
 
@@ -356,9 +356,9 @@ class _TreeRenderer:
         value = self._render_node_value(info)
 
         if isinstance(info.parent_node, list) or isinstance(info.parent_node, tuple):
-            line = "{}[{}] {}".format(prefix, format_bold(info.identifier), value)
+            line = f"{prefix}[{format_bold(info.identifier)}] {value}"
         else:
-            line = "{}{} {}".format(prefix, format_bold(info.identifier), value)
+            line = f"{prefix}{format_bold(info.identifier)} {value}"
 
         if info.title is not None:
             line = line + format_faint(format_italic(" # " + info.title))
@@ -378,11 +378,11 @@ class _TreeRenderer:
     def _render_node_value(self, info):
         rendered_type = type(info.node).__name__
         if is_primitive(info.node) and self._show_values:
-            return "({}): {}".format(rendered_type, info.node)
+            return f"({rendered_type}): {info.node}"
         elif isinstance(info.node, NDArrayType) or isinstance(info.node, np.ndarray):
-            return "({}): shape={}, dtype={}".format(rendered_type, info.node.shape, info.node.dtype.name)
+            return f"({rendered_type}): shape={info.node.shape}, dtype={info.node.dtype.name}"
         else:
-            return "({})".format(rendered_type)
+            return f"({rendered_type})"
 
     def _make_prefix(self, depth, active_depths, is_tail):
         """

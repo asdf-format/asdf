@@ -263,7 +263,7 @@ def test_asdf_file_resolver_hashing():
 
 
 def test_load_schema_from_resource_mapping():
-    content = """
+    content = b"""
 id: http://somewhere.org/schemas/razmataz-1.0.0
 type: object
 properties:
@@ -271,9 +271,7 @@ properties:
     type: string
   bar:
     type: boolean
-""".encode(
-        "utf-8"
-    )
+"""
 
     get_config().add_resource_mapping({"http://somewhere.org/schemas/razmataz-1.0.0": content})
 

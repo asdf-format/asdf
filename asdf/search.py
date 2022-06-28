@@ -395,7 +395,7 @@ def _build_path(identifiers):
     if len(identifiers) == 0:
         return ""
     else:
-        return identifiers[0] + "".join("[{}]".format(repr(i)) for i in identifiers[1:])
+        return identifiers[0] + "".join(f"[{repr(i)}]" for i in identifiers[1:])
 
 
 def _wrap_filter(filter):

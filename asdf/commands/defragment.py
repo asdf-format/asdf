@@ -14,7 +14,7 @@ class Defragment(Command):
     @classmethod
     def setup_arguments(cls, subparsers):
         parser = subparsers.add_parser(
-            str("defragment"),
+            "defragment",
             help="Defragment an ASDF file..",
             description="""Removes any unused blocks and unused space.""",
         )

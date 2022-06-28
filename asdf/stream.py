@@ -56,7 +56,7 @@ class Stream(ndarray.NDArrayType):
         return result
 
     def __repr__(self):
-        return "Stream({}, {}, strides={})".format(self._shape, self._datatype, self._strides)
+        return f"Stream({self._shape}, {self._datatype}, strides={self._strides})"
 
     def __str__(self):
         return str(self.__repr__())

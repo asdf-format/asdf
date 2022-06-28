@@ -141,7 +141,7 @@ class _TruncatedReader:
 
         if content == b"":
             if self._exception:
-                raise DelimiterNotFoundError("{0} not found".format(self._delimiter_name))
+                raise DelimiterNotFoundError(f"{self._delimiter_name} not found")
             self._past_end = True
             return content
 
@@ -155,7 +155,7 @@ class _TruncatedReader:
             self._past_end = True
         elif nbytes is None and self._exception:
             # Read the whole file and didn't find the delimiter
-            raise DelimiterNotFoundError("{0} not found".format(self._delimiter_name))
+            raise DelimiterNotFoundError(f"{self._delimiter_name} not found")
         else:
             if nbytes:
                 content = content[: nbytes - len(self._initial_content)]
@@ -720,7 +720,7 @@ class RealFile(RandomAccessFile):
     """
 
     def __init__(self, fd, mode, close=False, uri=None):
-        super(RealFile, self).__init__(fd, mode, close=close, uri=uri)
+        super().__init__(fd, mode, close=close, uri=uri)
 
         stat = os.fstat(fd.fileno())
         self._size = stat.st_size
@@ -760,7 +760,7 @@ class MemoryIO(RandomAccessFile):
     """
 
     def __init__(self, fd, mode, uri=None):
-        super(MemoryIO, self).__init__(fd, mode, uri=uri)
+        super().__init__(fd, mode, uri=uri)
         tell = fd.tell()
         fd.seek(0, 2)
         self._size = fd.tell()
@@ -782,7 +782,7 @@ class InputStream(GenericFile):
     """
 
     def __init__(self, fd, mode="r", close=False, uri=None):
-        super(InputStream, self).__init__(fd, mode, close=close, uri=uri)
+        super().__init__(fd, mode, close=close, uri=uri)
         self._fd = fd
         self._buffer = b""
 
@@ -835,13 +835,13 @@ class InputStream(GenericFile):
 
     def fast_forward(self, size):
         if size >= 0 and len(self.read(size)) != size:
-            raise IOError("Read past end of file")
+            raise OSError("Read past end of file")
 
     def read_into_array(self, size):
         try:
             # See if Numpy can handle this as a real file first...
             return np.fromfile(self._fd, np.uint8, size)
-        except (IOError, AttributeError):
+        except (OSError, AttributeError):
             # Else, fall back to reading into memory and then
             # returning the Numpy array.
             data = self.read(size)
@@ -860,7 +860,7 @@ class OutputStream(GenericFile):
     """
 
     def __init__(self, fd, close=False, uri=None):
-        super(OutputStream, self).__init__(fd, "w", close=close, uri=uri)
+        super().__init__(fd, "w", close=close, uri=uri)
         self._fd = fd
 
     def fast_forward(self, size):
@@ -994,7 +994,7 @@ def get_file(init, mode="r", uri=None, close=False):
 
     if isinstance(init, (GenericFile, GenericWrapper)):
         if mode not in init.mode:
-            raise ValueError("File is opened as '{0}', but '{1}' was requested".format(init.mode, mode))
+            raise ValueError(f"File is opened as '{init.mode}', but '{mode}' was requested")
         return GenericWrapper(init)
 
     elif isinstance(init, (str, pathlib.Path)):
@@ -1031,7 +1031,7 @@ def get_file(init, mode="r", uri=None, close=False):
 
     elif isinstance(init, io.IOBase):
         if ("r" in mode and not init.readable()) or ("w" in mode and not init.writable()):
-            raise ValueError("File is opened as '{0}', but '{1}' was requested".format(init.mode, mode))
+            raise ValueError(f"File is opened as '{init.mode}', but '{mode}' was requested")
 
         if init.seekable():
             if isinstance(init, (io.BufferedReader, io.BufferedWriter, io.BufferedRandom)):
@@ -1050,7 +1050,7 @@ def get_file(init, mode="r", uri=None, close=False):
             elif mode == "r":
                 return InputStream(init, mode, uri=uri, close=close)
             else:
-                raise ValueError("File '{0}' could not be opened in 'rw' mode".format(init))
+                raise ValueError(f"File '{init}' could not be opened in 'rw' mode")
 
     elif mode == "w" and (hasattr(init, "write") and hasattr(init, "seek") and hasattr(init, "tell")):
         return MemoryIO(init, mode, uri=uri)
@@ -1069,4 +1069,4 @@ def get_file(init, mode="r", uri=None, close=False):
     elif mode == "r" and hasattr(init, "read"):
         return InputStream(init, mode, uri=uri, close=close)
 
-    raise ValueError("Can't handle '{0}' as a file for mode '{1}'".format(init, mode))
+    raise ValueError(f"Can't handle '{init}' as a file for mode '{mode}'")

@@ -17,7 +17,7 @@ class Implode(Command):
     @classmethod
     def setup_arguments(cls, subparsers):
         parser = subparsers.add_parser(
-            str("implode"),
+            "implode",
             help="Implode a ASDF file.",
             description="""Combine a ASDF file, where the data may be
             stored in multiple ASDF files, into a single ASDF
@@ -81,7 +81,7 @@ class Explode(Command):
     @classmethod
     def setup_arguments(cls, subparsers):
         parser = subparsers.add_parser(
-            str("explode"),
+            "explode",
             help="Explode a ASDF file.",
             description="""From a single ASDF file, create a set of
             ASDF files where each data block is stored in a separate

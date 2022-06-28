@@ -53,7 +53,7 @@ class _AsdfWriteTypeIndex:
             core_version_map = version_map["core"]
             standard_version_map = version_map["standard"]
         except ValueError:
-            raise ValueError("Don't know how to write out ASDF version {0}".format(self._version))
+            raise ValueError(f"Don't know how to write out ASDF version {self._version}")
 
         # Process all types defined in the ASDF version map. It is important to
         # make sure that tags that are associated with the core part of the

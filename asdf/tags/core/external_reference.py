@@ -49,7 +49,7 @@ class ExternalArrayReference(AsdfType):
         self.shape = tuple(shape)
 
     def __repr__(self):
-        return "<External array reference in {0} at {1} shape: {2} dtype: {3}>".format(
+        return "<External array reference in {} at {} shape: {} dtype: {}>".format(
             self.fileuri, self.target, self.shape, self.dtype
         )
 
