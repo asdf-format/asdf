@@ -142,7 +142,3 @@ man_pages = [("index", project.lower(), project + " Documentation", [author], 1)
 
 sys.path.insert(0, os.path.join(os.path.abspath(os.path.dirname("__file__")), "sphinxext"))
 extensions += ["sphinx_asdf", "sphinx_inline_tabs", "myst_parser"]
-
-
-def setup(app):
-    app.add_css_file("custom.css")
