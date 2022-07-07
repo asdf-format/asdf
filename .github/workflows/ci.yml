@@ -155,7 +155,7 @@ jobs:
           - name: Astropy Dev
             os: ubuntu-latest
             python-version: "3.9"
-            toxenv: py39-astropydev
+            toxenv: py39-astropydev-prerelease
 
           - name: ASDF-Astropy Dev
             os: ubuntu-latest
