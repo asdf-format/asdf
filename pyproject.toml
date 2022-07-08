@@ -31,17 +31,7 @@ all = [
     'lz4 >=0.10',
 ]
 docs = [
-    'astropy >=5.0.4',
-    'docutils',
-    'graphviz',
-    'matplotlib',
-    'myst-parser',
-    'sphinx',
-    'sphinx-asdf',
-    'sphinx-astropy',
-    'sphinx-rtd-theme',
-    'sphinx-inline-tabs',
-    'toml',
+    'sphinx-asdf >=0.1.4',
 ]
 tests = [
     'astropy >=5.0.4',
