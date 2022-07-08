@@ -204,8 +204,9 @@ that identifies the method as an ``asdf.resource_mappings`` entry point:
 
     .. code-block:: ini
 
-        [options.package_data]
-        * = *.yaml
+        [options.entry-points]
+        asdf.resource_mappings =
+            asdf_foo_schemas = asdf_foo_schemas.integration:get_resource_mappings
 
 After installing the package, it should be possible to load one of our schemas
 in a new session without any additional setup:
@@ -220,15 +221,22 @@ in a new session without any additional setup:
 
 Note that the package will need to be configured to include the
 YAML files.  There are multiple ways to accomplish this, but one easy option
-is to add a ``[tool.setuptools.package-data]`` section to ``pyproject.toml`` (or ``[options.package_data]`` in
-``setup.cfg``) requesting that all files with a ``.yaml`` extension be installed:
+is to add ``[tool.setuptools.package-data]`` and ``[tool.setuptools.package-dir]`` sections to ``pyproject.toml``
+(or ``[options.package_data]`` in ``setup.cfg``) requesting that all files with a ``.yaml`` extension be installed:
 
 .. tab:: pyproject.toml
 
     .. code-block:: toml
 
+        [tool.setuptools]
+        packages = ["asdf_foo_schemas", "asdf_foo_schemas.resources"]
+
         [tool.setuptools.package-data]
-        '*' = ['*.yaml']
+        "asdf_foo_schemas.resources" = ["resources/**/*.yaml"]
+
+        [tool.setuptools.package-dir]
+        "" = "src"
+        "asdf_foo_schemas.resources" = "resources"
 
 .. tab:: setup.cfg
 
