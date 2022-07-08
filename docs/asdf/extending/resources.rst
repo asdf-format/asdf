@@ -232,7 +232,7 @@ is to add ``[tool.setuptools.package-data]`` and ``[tool.setuptools.package-dir]
         packages = ["asdf_foo_schemas", "asdf_foo_schemas.resources"]
 
         [tool.setuptools.package-data]
-        "asdf_foo_schemas.resources" = ["**/*.yaml"]
+        "asdf_foo_schemas.resources" = ["resources/**/*.yaml"]
 
         [tool.setuptools.package-dir]
         "" = "src"
