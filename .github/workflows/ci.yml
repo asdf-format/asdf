@@ -15,143 +15,31 @@ on:
   pull_request:
 
 jobs:
-  tox:
-    name: ${{ matrix.name }}
-    runs-on: ${{ matrix.os }}
-    strategy:
-      fail-fast: false
-      matrix:
-        include:
-          - name: Python 3.10 Testing
-            os: ubuntu-latest
-            python-version: "3.10"
-            toxenv: py310
-
-          - name: Python 3.9 with Code Coverage
-            os: ubuntu-latest
-            python-version: "3.9"
-            toxenv: coverage
-
-          - name: Python 3.8 Testing
-            os: ubuntu-latest
-            python-version: "3.8"
-            toxenv: py38
-
-          - name: Python 3.8 with legacy packages
-            os: ubuntu-latest
-            python-version: "3.8"
-            toxenv: py38-legacy
-
-          - name: Mac OS Latest
-            os: macos-latest
-            python-version: "3.9"
-            toxenv: py39
-
-          - name: Compatibility
-            os: ubuntu-latest
-            python-version: "3.9"
-            toxenv: compatibility
-
-          - name: Code style checks
-            os: ubuntu-latest
-            python-version: "3.9"
-            toxenv: codestyle
-
-          - name: Build Documents
-            python-version: "3.9"
-            os: ubuntu-latest
-            toxenv: docbuild
-
-          - name: Twine
-            os: ubuntu-latest
-            python-version: "3.9"
-            toxenv: twine
-
-          - name: Astropy Dev
-            os: ubuntu-latest
-            python-version: "3.9"
-            toxenv: py39-astropydev
-
-          - name: ASDF-Astropy Dev
-            os: ubuntu-latest
-            python-version: "3.9"
-            toxenv: py39-asdfastropydev
-
-          - name: GWCS Dev
-            os: ubuntu-latest
-            python-version: "3.9"
-            toxenv: py39-gwcsdev
-
-          - name: Numpy Dev
-            os: ubuntu-latest
-            python-version: "3.9"
-            toxenv: py39-numpydev
-
-          - name: ASDF-Standard Dev
-            os: ubuntu-latest
-            python-version: "3.9"
-            toxenv: py39-asdfstandarddev
-
-          - name: ASDF-Transform-Schemas Dev
-            os: ubuntu-latest
-            python-version: "3.9"
-            toxenv: py39-asdftransformschemasdev
-
-          - name: ASDF-WCS-Schemas Dev
-            os: ubuntu-latest
-            python-version: "3.9"
-            toxenv: py39-asdfwcsschemasdev
-
-          - name: ASDF-Coordinates-Schemas Dev
-            os: ubuntu-latest
-            python-version: "3.9"
-            toxenv: py39-asdfcoordinatesschemasdev
-
-          - name: Pre-Release Dependencies
-            os: ubuntu-latest
-            python-version: "3.9"
-            toxenv: prerelease
-
-          - name: Test Against Installed Package
-            os: ubuntu-latest
-            python-version: "3.9"
-            toxenv: packaged
-
-          - name: Warnings Treated as Exceptions
-            os: ubuntu-latest
-            python-version: "3.10"
-            toxenv: warnings
-
-          - name: Windows
-            os: windows-latest
-            python-version: "3.9"
-            toxenv: py39
-    steps:
-      - name: Install System Packages
-        if: ${{ contains(matrix.toxenv,'docbuild') }}
-        run: |
-          sudo apt update -y
-          sudo apt-get install graphviz texlive-latex-extra dvipng
-      - name: Checkout code
-        uses: actions/checkout@v2
-        with:
-          fetch-depth: 0
-          submodules: true
-      - name: Set up Python ${{ matrix.python-version }}
-        uses: actions/setup-python@v2
-        with:
-          python-version: ${{ matrix.python-version }}
-      - name: Install tox
-        run: |
-          python -m pip install --upgrade pip
-          pip install tox
-      - name: Run tox
-        run: tox -e ${{ matrix.toxenv }}
-      - name: Upload coverage to codecov
-        if: ${{ contains(matrix.toxenv,'coverage') }}
-        uses: codecov/codecov-action@v2
-        with:
-          file: ./coverage.xml
+  test:
+    uses: OpenAstronomy/github-actions-workflows/.github/workflows/tox.yml@v1
+    with:
+      default_python: '3.9'
+      envs: |
+        - linux: py310
+        - linux: coverage
+        - linux: py38
+        - macos: py39
+        - linux: compatibility
+        - linux: codestyle
+        - linux: docbuild
+        - linux: twine
+        - linux: py39-astropydev
+        - linux: py39-asdfastropydev
+        - linux: py39-gwcsdev
+        - linux: py39-numpydev
+        - linux: py39-asdfstandarddev
+        - linux: py39-asdftransformschemasdev
+        - linux: py39-asdfwcsschemasdev
+        - linux: py39-asdfcoordinatesschemasdev
+        - linux: prerelease
+        - linux: packaged
+        - linux: warnings
+        - windows: py39
 
   asdf-standard:
     name: Run asdf-standard tests
