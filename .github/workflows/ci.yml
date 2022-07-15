@@ -15,13 +15,22 @@ on:
   pull_request:
 
 jobs:
+  setup:
+    runs-on: ubuntu-latest
+    outputs:
+      requirements-hash: ${{ steps.requirements-hash.outputs.hash }}
+    steps:
+      - uses: actions/checkout@v3
+      - id: requirements-hash
+        run: echo "::set-output name=hash::${{ hashFiles('**/pyproject.toml', '**/setup.*', 'tox.ini') }}"
   test:
+    needs: [setup]
     uses: OpenAstronomy/github-actions-workflows/.github/workflows/tox.yml@v1
     with:
       cache-path: ~/.cache/pip
-      cache-key: ${{ runner.os }}-pip-${{ hashFiles('**/pyproject.toml', '**/setup.*', 'tox.ini') }}
+      cache-key: pip-${{ needs.setup.outputs.requirements-hash }}
       cache-restore-keys: |
-        ${{ runner.os }}-pip-
+        pip-
       # Any env name which does not start with `pyXY` will use this Python version.
       default_python: '3.9'
       envs: |
