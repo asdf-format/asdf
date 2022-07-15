@@ -18,6 +18,7 @@ jobs:
   test:
     uses: OpenAstronomy/github-actions-workflows/.github/workflows/tox.yml@v1
     with:
+      # Any env name which does not start with `pyXY` will use this Python version.
       default_python: '3.9'
       envs: |
         - linux: py310
@@ -27,6 +28,9 @@ jobs:
         - linux: compatibility
         - linux: codestyle
         - linux: docbuild
+          libraries:
+            apt:
+              - graphviz
         - linux: twine
         - linux: py39-astropydev
         - linux: py39-asdfastropydev
