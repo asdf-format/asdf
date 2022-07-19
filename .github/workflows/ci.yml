@@ -33,9 +33,10 @@ jobs:
       cache-restore-keys: |
         pip-
       # Any env name which does not start with `pyXY` will use this Python version.
-      default_python: '3.9'
+      default_python: '3.10'
       envs: |
-        - linux: py310
+        - linux: coverage
+      coverage: codecov
 
   test:
     needs: [core, asdf-standard]
@@ -54,7 +55,7 @@ jobs:
         - windows: py39
 
   compatibility:
-    needs: [core]
+    needs: [core, asdf-standard]
     uses: OpenAstronomy/github-actions-workflows/.github/workflows/tox.yml@v1
     with:
       cache-path: ~/.cache/pip
