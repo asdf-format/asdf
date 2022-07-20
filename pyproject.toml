@@ -52,7 +52,6 @@ tests = [
     'pytest-doctestplus',
     'pytest-remotedata',
     'pytest-openfiles',
-    'pytest-sugar',
     'psutil',
     'lz4 >=0.10',
 ]
