@@ -11,9 +11,8 @@ import re
 
 import numpy as np
 
-from .schema import load_schema
+from ._node_data import NodeSchemaData
 from .tags.core.ndarray import NDArrayType
-from .treeutil import get_children
 from .util import is_primitive
 
 __all__ = [
@@ -46,7 +45,7 @@ def render_tree(
     """
     Render a tree as text with indents showing depth.
     """
-    info = _NodeInfo.from_root_node(identifier, node, refresh_extension_manager=refresh_extension_manager)
+    info = NodeSchemaData.from_root_node("title", identifier, node, refresh_extension_manager=refresh_extension_manager)
 
     if len(filters) > 0:
         if not _filter_tree(info, filters):
@@ -95,107 +94,6 @@ def _get_schema_for_property(schema, attr):
             if re.search(key, attr):
                 return subschema[key]
     return {}
-
-
-class _NodeInfo:
-    """
-    Container for a node, its state of visibility, and values used to display it.
-    """
-
-    @classmethod
-    def from_root_node(cls, root_identifier, root_node, schema=None, refresh_extension_manager=False):
-        """
-        Build a _NodeInfo tree from the given ASDF root node.
-        Intentionally processes the tree in breadth-first order so that recursively
-        referenced nodes are displayed at their shallowest reference point.
-        """
-        from .asdf import AsdfFile, get_config
-        from .extension import ExtensionManager
-
-        af = AsdfFile()
-        if refresh_extension_manager:
-            config = get_config()
-            af._extension_manager = ExtensionManager(config.extensions)
-        extmgr = af.extension_manager
-
-        current_nodes = [(None, root_identifier, root_node)]
-        seen = set()
-        root_info = None
-        current_depth = 0
-        while True:
-            next_nodes = []
-
-            for parent, identifier, node in current_nodes:
-                if (isinstance(node, dict) or isinstance(node, tuple) or cls.supports_info(node)) and id(node) in seen:
-                    info = _NodeInfo(parent, identifier, node, current_depth, recursive=True)
-                    parent.children.append(info)
-                else:
-                    info = _NodeInfo(parent, identifier, node, current_depth)
-                    if root_info is None:
-                        root_info = info
-                    if parent is not None:
-                        if parent.schema is not None and not cls.supports_info(node):
-                            # Extract subschema if it exists
-                            subschema = _get_schema_for_property(parent.schema, identifier)
-                            info.schema = subschema
-                            info.title = subschema.get("title", None)
-                        parent.children.append(info)
-                    seen.add(id(node))
-                    if cls.supports_info(node):
-                        tnode = node.__asdf_traverse__()
-                        # Look for a title for the attribute if it is a tagged object
-                        tag = node._tag
-                        tagdef = extmgr.get_tag_definition(tag)
-                        schema_uri = tagdef.schema_uris[0]
-                        schema = load_schema(schema_uri)
-                        info.schema = schema
-                        info.title = schema.get("title", None)
-                    else:
-                        tnode = node
-                    if parent is None:
-                        info.schema = schema
-                    for child_identifier, child_node in get_children(tnode):
-                        next_nodes.append((info, child_identifier, child_node))
-                        # extract subschema if appropriate
-
-            if len(next_nodes) == 0:
-                break
-
-            current_nodes = next_nodes
-            current_depth += 1
-
-        return root_info
-
-    def __init__(self, parent, identifier, node, depth, recursive=False, visible=True):
-        self.parent = parent
-        self.identifier = identifier
-        self.node = node
-        self.depth = depth
-        self.recursive = recursive
-        self.visible = visible
-        self.children = []
-        self.title = None
-        self.schema = None
-
-    @classmethod
-    def supports_info(cls, node):
-        """
-        This method determines if the node is an instance of a class that
-        supports introspection by the info machinery. This determined by
-        the presence of a __asdf_traverse__ method.
-        """
-        return hasattr(node, "__asdf_traverse__")
-
-    @property
-    def visible_children(self):
-        return [c for c in self.children if c.visible]
-
-    @property
-    def parent_node(self):
-        if self.parent is None:
-            return None
-        else:
-            return self.parent.node
 
 
 def _filter_tree(info, filters):
@@ -360,8 +258,8 @@ class _TreeRenderer:
         else:
             line = f"{prefix}{format_bold(info.identifier)} {value}"
 
-        if info.title is not None:
-            line = line + format_faint(format_italic(" # " + info.title))
+        if info.data is not None:
+            line = line + format_faint(format_italic(" # " + info.data))
         visible_children = info.visible_children
         if len(visible_children) == 0 and len(info.children) > 0:
             line = line + format_italic(" ...")
