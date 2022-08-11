@@ -4,6 +4,18 @@ from .schema import load_schema
 from .treeutil import get_children
 
 
+def collect_schema_data(key, node, identifier="root", refresh_extension_manager=False):
+    """
+    Collect from the underlying schemas any of the data stored under key.
+    """
+
+    schema_data = NodeSchemaData.from_root_node(
+        key, identifier, node, refresh_extension_manager=refresh_extension_manager
+    )
+
+    return schema_data.to_dict()
+
+
 class NodeSchemaData:
     """
     Container for a node, and the values of data from a schema
@@ -127,3 +139,15 @@ class NodeSchemaData:
             current_depth += 1
 
         return root_data
+
+    def to_dict(self):
+        if (isinstance(self.node, list) or isinstance(self.node, tuple)) and self.data is None:
+            data = [child.to_dict() for child in self.visible_children if len(child.to_dict()) > 0]
+        else:
+            data = {child.identifier: child.to_dict() for child in self.visible_children if len(child.to_dict()) > 0}
+
+            if self.data is not None:
+                data[self.key] = self.data
+                data["value"] = self.node
+
+        return data

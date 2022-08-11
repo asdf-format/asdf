@@ -1,7 +1,6 @@
 import os
 import pathlib
 import re
-import shutil
 import tempfile
 
 import numpy as np
@@ -60,20 +59,6 @@ def test_info_module(capsys, tmpdir):
             assert val in captured.out
         for val in tree["foo"][i - 1 :]:
             assert val not in captured.out
-
-
-# def test_info_asdf_file(capsys, tmpdir):
-#     tree = dict(
-#         foo=42, bar="hello", baz=np.arange(20),
-#         nested={"woo": "hoo", "yee": "haw"},
-#         long_line="a" * 100
-#     )
-#     af = asdf.AsdfFile(tree)
-#     af.info()
-#     captured = capsys.readouterr()
-#     assert "foo" in captured.out
-#     assert "bar" in captured.out
-#     assert "baz" in captured.out
 
 
 class ObjectWithInfoSupport:
@@ -320,14 +305,8 @@ properties:
     config.add_extension(proxy)
 
 
-def test_info_object_support(capsys):
-
-    tempdir = pathlib.Path(tempfile.mkdtemp())
-    manifest_extension(tempdir)
-    config = asdf.get_config()
-    af = asdf.AsdfFile()
-    af._extension_manager = ExtensionManager(config.extensions)
-    af.tree = {
+def create_tree():
+    return {
         "random": 3.14159,
         "object": ObjectWithInfoSupport(
             "Bozo",
@@ -343,6 +322,74 @@ def test_info_object_support(capsys):
             ObjectWithInfoSupport3("x1", "x2"),
         ],
     }
+
+
+def test_schema_data_support(tmpdir):
+    manifest_extension(tmpdir)
+    config = asdf.get_config()
+    af = asdf.AsdfFile()
+    af._extension_manager = ExtensionManager(config.extensions)
+    af.tree = create_tree()
+    data = af.schema_data("title", refresh_extension_manager=True)
+
+    assert data == {
+        "list_of_stuff": [
+            {
+                "attributeOne": {
+                    "title": "AttributeOne Title",
+                    "value": "v1",
+                },
+                "attributeTwo": {
+                    "title": "AttributeTwo Title",
+                    "value": "v2",
+                },
+                "title": "object with info support 3 title",
+                "value": af.tree["list_of_stuff"][0],
+            },
+            {
+                "attributeOne": {
+                    "title": "AttributeOne Title",
+                    "value": "x1",
+                },
+                "attributeTwo": {
+                    "title": "AttributeTwo Title",
+                    "value": "x2",
+                },
+                "title": "object with info support 3 title",
+                "value": af.tree["list_of_stuff"][1],
+            },
+        ],
+        "object": {
+            "I_example": {"title": "integer pattern property", "value": 1},
+            "S_example": {"title": "string pattern property", "value": "beep"},
+            "allof_attribute": {"title": "allOf example attribute", "value": "good"},
+            "anyof_attribute": {
+                "attribute1": {
+                    "title": "Attribute1 Title",
+                    "value": "VAL1",
+                },
+                "attribute2": {
+                    "title": "Attribute2 Title",
+                    "value": "VAL2",
+                },
+                "title": "object with info support 2 title",
+                "value": af.tree["object"].anyof,
+            },
+            "clown": {"title": "clown name", "value": "Bozo"},
+            "oneof_attribute": {"title": "oneOf example attribute", "value": 20},
+            "the_meaning_of_life_the_universe_and_everything": {"title": "Some silly title", "value": 42},
+            "title": "object with info support title",
+            "value": af.tree["object"],
+        },
+    }
+
+
+def test_info_object_support(capsys, tmpdir):
+    manifest_extension(tmpdir)
+    config = asdf.get_config()
+    af = asdf.AsdfFile()
+    af._extension_manager = ExtensionManager(config.extensions)
+    af.tree = create_tree()
     af.info(refresh_extension_manager=True)
 
     captured = capsys.readouterr()
@@ -361,8 +408,6 @@ def test_info_object_support(capsys):
     assert "integer pattern property" in captured.out
     assert "AttributeOne" in captured.out
     assert "AttributeTwo" in captured.out
-
-    shutil.rmtree(tempdir)
 
 
 class RecursiveObjectWithInfoSupport:
