@@ -7,8 +7,6 @@ by the converter mechanism has a __asdf_traverse__() method, then it will
 call that method expecting a dict or list to be returned. The method can
 return what it thinks is suitable for display.
 """
-import re
-
 import numpy as np
 
 from ._node_data import NodeSchemaData
@@ -82,18 +80,6 @@ def format_italic(value):
 
 def _format_code(value, code):
     return f"\x1B[{code}m{value}\x1B[0m"
-
-
-def _get_schema_for_property(schema, attr):
-    subschema = schema.get("properties", {}).get(attr, None)
-    if subschema is not None:
-        return subschema
-    subschema = schema.get("properties", {}).get("patternProperties", None)
-    if subschema:
-        for key in subschema:
-            if re.search(key, attr):
-                return subschema[key]
-    return {}
 
 
 def _filter_tree(info, filters):
