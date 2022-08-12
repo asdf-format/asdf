@@ -1506,7 +1506,7 @@ class AsdfFile:
 
         return []
 
-    def schema_data(self, key, refresh_extension_manager=False):
+    def schema_data(self, key, preserve_list=True, refresh_extension_manager=False):
         """
         Get a nested dictionary of the schema data for a given key.
 
@@ -1514,13 +1514,17 @@ class AsdfFile:
         ----------
         key : str
             The key to look up.
+        preserve_list : bool
+            If True, then lists are preserved. Otherwise, they are turned into dicts.
         refresh_extension_manager : bool
             If `True`, refresh the extension manager before looking up the
             key.  This is useful if you want to make sure that the schema
             data for a given key is up to date.
         """
 
-        return node_data.collect_schema_data(key, self.tree, refresh_extension_manager=refresh_extension_manager)
+        return node_data.collect_schema_data(
+            key, self.tree, preserve_list=preserve_list, refresh_extension_manager=refresh_extension_manager
+        )
 
     def info(
         self,

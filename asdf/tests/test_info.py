@@ -429,6 +429,44 @@ def test_schema_data_support(tmpdir):
         },
     }
 
+    data = af.schema_data("archive_catalog", preserve_list=False, refresh_extension_manager=True)
+    assert data == {
+        "list_of_stuff": {
+            0: {
+                "attributeOne": {
+                    "archive_catalog": ({"datatype": "str", "destination": ["ScienceCommon.attributeOne"]}, "v1"),
+                },
+                "attributeTwo": {
+                    "archive_catalog": ({"datatype": "str", "destination": ["ScienceCommon.attributeTwo"]}, "v2"),
+                },
+            },
+            1: {
+                "attributeOne": {
+                    "archive_catalog": ({"datatype": "str", "destination": ["ScienceCommon.attributeOne"]}, "x1"),
+                },
+                "attributeTwo": {
+                    "archive_catalog": ({"datatype": "str", "destination": ["ScienceCommon.attributeTwo"]}, "x2"),
+                },
+            },
+        },
+        "object": {
+            "anyof_attribute": {
+                "attribute1": {
+                    "archive_catalog": ({"datatype": "str", "destination": ["ScienceCommon.attribute1"]}, "VAL1"),
+                },
+                "attribute2": {
+                    "archive_catalog": ({"datatype": "str", "destination": ["ScienceCommon.attribute2"]}, "VAL2"),
+                },
+            },
+            "clown": {
+                "archive_catalog": ({"datatype": "str", "destination": ["ScienceCommon.clown"]}, "Bozo"),
+            },
+            "the_meaning_of_life_the_universe_and_everything": {
+                "archive_catalog": ({"datatype": "int", "destination": ["ScienceCommon.silly"]}, 42),
+            },
+        },
+    }
+
 
 def test_info_object_support(capsys, tmpdir):
     manifest_extension(tmpdir)

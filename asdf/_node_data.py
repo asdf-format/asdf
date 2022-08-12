@@ -5,7 +5,7 @@ from .schema import load_schema
 from .treeutil import get_children
 
 
-def collect_schema_data(key, node, identifier="root", refresh_extension_manager=False):
+def collect_schema_data(key, node, identifier="root", preserve_list=True, refresh_extension_manager=False):
     """
     Collect from the underlying schemas any of the data stored under key.
     """
@@ -14,7 +14,7 @@ def collect_schema_data(key, node, identifier="root", refresh_extension_manager=
         key, identifier, node, refresh_extension_manager=refresh_extension_manager
     )
 
-    return schema_data.collect_data()
+    return schema_data.collect_data(preserve_list=preserve_list)
 
 
 SchemaData = namedtuple("SchemaData", ["data", "value"])
@@ -76,7 +76,7 @@ class NodeSchemaData:
     @classmethod
     def from_root_node(cls, key, root_identifier, root_node, schema=None, refresh_extension_manager=False):
         """
-        Build a _NodeInfo tree from the given ASDF root node.
+        Build a NodeSchemaData tree from the given ASDF root node.
         Intentionally processes the tree in breadth-first order so that recursively
         referenced nodes are displayed at their shallowest reference point.
         """
@@ -144,12 +144,23 @@ class NodeSchemaData:
 
         return root_data
 
-    def collect_data(self):
-        if (isinstance(self.node, list) or isinstance(self.node, tuple)) and self.data is None:
-            data = [cdata for child in self.visible_children if len(cdata := child.collect_data()) > 0]
+    def collect_data(self, preserve_list=True):
+        """
+        Collect the data from the NodeSchemaData tree, and return it as nested dict.
+
+        Parameters
+        ----------
+
+        preserve_list : bool
+            If True, then lists are preserved. Otherwise, they are turned into dicts.
+        """
+        if preserve_list and (isinstance(self.node, list) or isinstance(self.node, tuple)) and self.data is None:
+            data = [cdata for child in self.visible_children if len(cdata := child.collect_data(preserve_list)) > 0]
         else:
             data = {
-                child.identifier: cdata for child in self.visible_children if len(cdata := child.collect_data()) > 0
+                child.identifier: cdata
+                for child in self.visible_children
+                if len(cdata := child.collect_data(preserve_list)) > 0
             }
 
             if self.data is not None:
