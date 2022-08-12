@@ -88,6 +88,7 @@ filterwarnings = [
     'ignore::asdf.exceptions.AsdfDeprecationWarning:asdf.asdftypes',
     'ignore:numpy.ndarray size changed:astropy.utils.exceptions.AstropyWarning',
     'ignore:numpy.ndarray size changed:RuntimeWarning',
+    'ignore:Module already imported so cannot be rewritten:pytest.PytestAssertRewriteWarning'
 ]
 # Configuration for pytest-doctestplus
 text_file_format = 'rst'
