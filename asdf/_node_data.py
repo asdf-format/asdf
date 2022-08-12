@@ -1,7 +1,6 @@
 import re
-import warnings
+from collections import namedtuple
 
-from .exceptions import AsdfWarning
 from .schema import load_schema
 from .treeutil import get_children
 
@@ -16,6 +15,9 @@ def collect_schema_data(key, node, identifier="root", refresh_extension_manager=
     )
 
     return schema_data.collect_data()
+
+
+SchemaData = namedtuple("SchemaData", ["data", "value"])
 
 
 class NodeSchemaData:
@@ -151,11 +153,6 @@ class NodeSchemaData:
             }
 
             if self.data is not None:
-                data[self.key] = self.data
-
-                if (key := f"{self.key}_data") in data:
-                    warnings.warn("{key} is already a key, file data is not stored under this key", AsdfWarning)
-                else:
-                    data[key] = self.node
+                data[self.key] = SchemaData(self.data, self.node)
 
         return data

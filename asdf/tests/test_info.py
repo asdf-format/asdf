@@ -354,50 +354,40 @@ def test_schema_data_support(tmpdir):
         "list_of_stuff": [
             {
                 "attributeOne": {
-                    "title": "AttributeOne Title",
-                    "title_data": "v1",
+                    "title": ("AttributeOne Title", "v1"),
                 },
                 "attributeTwo": {
-                    "title": "AttributeTwo Title",
-                    "title_data": "v2",
+                    "title": ("AttributeTwo Title", "v2"),
                 },
-                "title": "object with info support 3 title",
-                "title_data": af.tree["list_of_stuff"][0],
+                "title": ("object with info support 3 title", af.tree["list_of_stuff"][0]),
             },
             {
                 "attributeOne": {
-                    "title": "AttributeOne Title",
-                    "title_data": "x1",
+                    "title": ("AttributeOne Title", "x1"),
                 },
                 "attributeTwo": {
-                    "title": "AttributeTwo Title",
-                    "title_data": "x2",
+                    "title": ("AttributeTwo Title", "x2"),
                 },
-                "title": "object with info support 3 title",
-                "title_data": af.tree["list_of_stuff"][1],
+                "title": ("object with info support 3 title", af.tree["list_of_stuff"][1]),
             },
         ],
         "object": {
-            "I_example": {"title": "integer pattern property", "title_data": 1},
-            "S_example": {"title": "string pattern property", "title_data": "beep"},
-            "allof_attribute": {"title": "allOf example attribute", "title_data": "good"},
+            "I_example": {"title": ("integer pattern property", 1)},
+            "S_example": {"title": ("string pattern property", "beep")},
+            "allof_attribute": {"title": ("allOf example attribute", "good")},
             "anyof_attribute": {
                 "attribute1": {
-                    "title": "Attribute1 Title",
-                    "title_data": "VAL1",
+                    "title": ("Attribute1 Title", "VAL1"),
                 },
                 "attribute2": {
-                    "title": "Attribute2 Title",
-                    "title_data": "VAL2",
+                    "title": ("Attribute2 Title", "VAL2"),
                 },
-                "title": "object with info support 2 title",
-                "title_data": af.tree["object"].anyof,
+                "title": ("object with info support 2 title", af.tree["object"].anyof),
             },
-            "clown": {"title": "clown name", "title_data": "Bozo"},
-            "oneof_attribute": {"title": "oneOf example attribute", "title_data": 20},
-            "the_meaning_of_life_the_universe_and_everything": {"title": "Some silly title", "title_data": 42},
-            "title": "object with info support title",
-            "title_data": af.tree["object"],
+            "clown": {"title": ("clown name", "Bozo")},
+            "oneof_attribute": {"title": ("oneOf example attribute", 20)},
+            "the_meaning_of_life_the_universe_and_everything": {"title": ("Some silly title", 42)},
+            "title": ("object with info support title", af.tree["object"]),
         },
     }
 
@@ -406,43 +396,35 @@ def test_schema_data_support(tmpdir):
         "list_of_stuff": [
             {
                 "attributeOne": {
-                    "archive_catalog": {"datatype": "str", "destination": ["ScienceCommon.attributeOne"]},
-                    "archive_catalog_data": "v1",
+                    "archive_catalog": ({"datatype": "str", "destination": ["ScienceCommon.attributeOne"]}, "v1"),
                 },
                 "attributeTwo": {
-                    "archive_catalog": {"datatype": "str", "destination": ["ScienceCommon.attributeTwo"]},
-                    "archive_catalog_data": "v2",
+                    "archive_catalog": ({"datatype": "str", "destination": ["ScienceCommon.attributeTwo"]}, "v2"),
                 },
             },
             {
                 "attributeOne": {
-                    "archive_catalog": {"datatype": "str", "destination": ["ScienceCommon.attributeOne"]},
-                    "archive_catalog_data": "x1",
+                    "archive_catalog": ({"datatype": "str", "destination": ["ScienceCommon.attributeOne"]}, "x1"),
                 },
                 "attributeTwo": {
-                    "archive_catalog": {"datatype": "str", "destination": ["ScienceCommon.attributeTwo"]},
-                    "archive_catalog_data": "x2",
+                    "archive_catalog": ({"datatype": "str", "destination": ["ScienceCommon.attributeTwo"]}, "x2"),
                 },
             },
         ],
         "object": {
             "anyof_attribute": {
                 "attribute1": {
-                    "archive_catalog": {"datatype": "str", "destination": ["ScienceCommon.attribute1"]},
-                    "archive_catalog_data": "VAL1",
+                    "archive_catalog": ({"datatype": "str", "destination": ["ScienceCommon.attribute1"]}, "VAL1"),
                 },
                 "attribute2": {
-                    "archive_catalog": {"datatype": "str", "destination": ["ScienceCommon.attribute2"]},
-                    "archive_catalog_data": "VAL2",
+                    "archive_catalog": ({"datatype": "str", "destination": ["ScienceCommon.attribute2"]}, "VAL2"),
                 },
             },
             "clown": {
-                "archive_catalog": {"datatype": "str", "destination": ["ScienceCommon.clown"]},
-                "archive_catalog_data": "Bozo",
+                "archive_catalog": ({"datatype": "str", "destination": ["ScienceCommon.clown"]}, "Bozo"),
             },
             "the_meaning_of_life_the_universe_and_everything": {
-                "archive_catalog": {"datatype": "int", "destination": ["ScienceCommon.silly"]},
-                "archive_catalog_data": 42,
+                "archive_catalog": ({"datatype": "int", "destination": ["ScienceCommon.silly"]}, 42),
             },
         },
     }
