@@ -1,5 +1,7 @@
 import re
+import warnings
 
+from .exceptions import AsdfWarning
 from .schema import load_schema
 from .treeutil import get_children
 
@@ -13,7 +15,7 @@ def collect_schema_data(key, node, identifier="root", refresh_extension_manager=
         key, identifier, node, refresh_extension_manager=refresh_extension_manager
     )
 
-    return schema_data.to_dict()
+    return schema_data.collect_data()
 
 
 class NodeSchemaData:
@@ -140,14 +142,20 @@ class NodeSchemaData:
 
         return root_data
 
-    def to_dict(self):
+    def collect_data(self):
         if (isinstance(self.node, list) or isinstance(self.node, tuple)) and self.data is None:
-            data = [child.to_dict() for child in self.visible_children if len(child.to_dict()) > 0]
+            data = [cdata for child in self.visible_children if len(cdata := child.collect_data()) > 0]
         else:
-            data = {child.identifier: child.to_dict() for child in self.visible_children if len(child.to_dict()) > 0}
+            data = {
+                child.identifier: cdata for child in self.visible_children if len(cdata := child.collect_data()) > 0
+            }
 
             if self.data is not None:
                 data[self.key] = self.data
-                data["value"] = self.node
+
+                if (key := f"{self.key}_data") in data:
+                    warnings.warn("{key} is already a key, file data is not stored under this key", AsdfWarning)
+                else:
+                    data[key] = self.node
 
         return data

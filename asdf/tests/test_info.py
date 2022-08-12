@@ -154,9 +154,15 @@ properties:
   the_meaning_of_life_the_universe_and_everything:
     title: Some silly title
     type: integer
+    archive_catalog:
+        datatype: int
+        destination: [ScienceCommon.silly]
   clown:
     title: clown name
     type: string
+    archive_catalog:
+        datatype: str
+        destination: [ScienceCommon.clown]
   anyof_attribute:
     title: anyOf example attribute
     anyOf:
@@ -205,9 +211,15 @@ properties:
   attribute1:
     title: Attribute1 Title
     type: string
+    archive_catalog:
+        datatype: str
+        destination: [ScienceCommon.attribute1]
   attribute2:
     title: Attribute2 Title
     type: string
+    archive_catalog:
+        datatype: str
+        destination: [ScienceCommon.attribute2]
 ...
 """
 
@@ -223,9 +235,15 @@ properties:
   attributeOne:
     title: AttributeOne Title
     type: string
+    archive_catalog:
+        datatype: str
+        destination: [ScienceCommon.attributeOne]
   attributeTwo:
     title: AttributeTwo Title
     type: string
+    archive_catalog:
+        datatype: str
+        destination: [ScienceCommon.attributeTwo]
 ...
 """
     os.mkdir(tmpdir / "schemas")
@@ -330,56 +348,102 @@ def test_schema_data_support(tmpdir):
     af = asdf.AsdfFile()
     af._extension_manager = ExtensionManager(config.extensions)
     af.tree = create_tree()
-    data = af.schema_data("title", refresh_extension_manager=True)
 
+    data = af.schema_data("title", refresh_extension_manager=True)
     assert data == {
         "list_of_stuff": [
             {
                 "attributeOne": {
                     "title": "AttributeOne Title",
-                    "value": "v1",
+                    "title_data": "v1",
                 },
                 "attributeTwo": {
                     "title": "AttributeTwo Title",
-                    "value": "v2",
+                    "title_data": "v2",
                 },
                 "title": "object with info support 3 title",
-                "value": af.tree["list_of_stuff"][0],
+                "title_data": af.tree["list_of_stuff"][0],
             },
             {
                 "attributeOne": {
                     "title": "AttributeOne Title",
-                    "value": "x1",
+                    "title_data": "x1",
                 },
                 "attributeTwo": {
                     "title": "AttributeTwo Title",
-                    "value": "x2",
+                    "title_data": "x2",
                 },
                 "title": "object with info support 3 title",
-                "value": af.tree["list_of_stuff"][1],
+                "title_data": af.tree["list_of_stuff"][1],
             },
         ],
         "object": {
-            "I_example": {"title": "integer pattern property", "value": 1},
-            "S_example": {"title": "string pattern property", "value": "beep"},
-            "allof_attribute": {"title": "allOf example attribute", "value": "good"},
+            "I_example": {"title": "integer pattern property", "title_data": 1},
+            "S_example": {"title": "string pattern property", "title_data": "beep"},
+            "allof_attribute": {"title": "allOf example attribute", "title_data": "good"},
             "anyof_attribute": {
                 "attribute1": {
                     "title": "Attribute1 Title",
-                    "value": "VAL1",
+                    "title_data": "VAL1",
                 },
                 "attribute2": {
                     "title": "Attribute2 Title",
-                    "value": "VAL2",
+                    "title_data": "VAL2",
                 },
                 "title": "object with info support 2 title",
-                "value": af.tree["object"].anyof,
+                "title_data": af.tree["object"].anyof,
             },
-            "clown": {"title": "clown name", "value": "Bozo"},
-            "oneof_attribute": {"title": "oneOf example attribute", "value": 20},
-            "the_meaning_of_life_the_universe_and_everything": {"title": "Some silly title", "value": 42},
+            "clown": {"title": "clown name", "title_data": "Bozo"},
+            "oneof_attribute": {"title": "oneOf example attribute", "title_data": 20},
+            "the_meaning_of_life_the_universe_and_everything": {"title": "Some silly title", "title_data": 42},
             "title": "object with info support title",
-            "value": af.tree["object"],
+            "title_data": af.tree["object"],
+        },
+    }
+
+    data = af.schema_data("archive_catalog", refresh_extension_manager=True)
+    assert data == {
+        "list_of_stuff": [
+            {
+                "attributeOne": {
+                    "archive_catalog": {"datatype": "str", "destination": ["ScienceCommon.attributeOne"]},
+                    "archive_catalog_data": "v1",
+                },
+                "attributeTwo": {
+                    "archive_catalog": {"datatype": "str", "destination": ["ScienceCommon.attributeTwo"]},
+                    "archive_catalog_data": "v2",
+                },
+            },
+            {
+                "attributeOne": {
+                    "archive_catalog": {"datatype": "str", "destination": ["ScienceCommon.attributeOne"]},
+                    "archive_catalog_data": "x1",
+                },
+                "attributeTwo": {
+                    "archive_catalog": {"datatype": "str", "destination": ["ScienceCommon.attributeTwo"]},
+                    "archive_catalog_data": "x2",
+                },
+            },
+        ],
+        "object": {
+            "anyof_attribute": {
+                "attribute1": {
+                    "archive_catalog": {"datatype": "str", "destination": ["ScienceCommon.attribute1"]},
+                    "archive_catalog_data": "VAL1",
+                },
+                "attribute2": {
+                    "archive_catalog": {"datatype": "str", "destination": ["ScienceCommon.attribute2"]},
+                    "archive_catalog_data": "VAL2",
+                },
+            },
+            "clown": {
+                "archive_catalog": {"datatype": "str", "destination": ["ScienceCommon.clown"]},
+                "archive_catalog_data": "Bozo",
+            },
+            "the_meaning_of_life_the_universe_and_everything": {
+                "archive_catalog": {"datatype": "int", "destination": ["ScienceCommon.silly"]},
+                "archive_catalog_data": 42,
+            },
         },
     }
 
