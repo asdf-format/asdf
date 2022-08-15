@@ -26,7 +26,6 @@ class AsdfExtension(metaclass=abc.ABCMeta):
         A list of `asdf.CustomType` subclasses that describe how to store
         custom objects to and from ASDF.
         """
-        pass
 
     @property
     @abc.abstractmethod
@@ -60,7 +59,6 @@ class AsdfExtension(metaclass=abc.ABCMeta):
            return [('tag:nowhere.org:custom/',
                     'http://nowhere.org/schemas/custom/{tag_suffix}')]
         """
-        pass
 
     @property
     @abc.abstractmethod
@@ -98,7 +96,6 @@ class AsdfExtension(metaclass=abc.ABCMeta):
                     '/{url_suffix}.yaml'
                    )]
         """
-        pass
 
 
 class AsdfExtensionList:
