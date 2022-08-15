@@ -43,7 +43,6 @@ def test_config_context_threaded():
         thread_value = get_config().validate_on_read
         with asdf.config_context() as config:
             config.validate_on_read = False
-            pass
 
     with asdf.config_context() as config:
         config.validate_on_read = False
