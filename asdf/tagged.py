@@ -40,8 +40,6 @@ class Tagged:
     with it.
     """
 
-    pass
-
 
 class TaggedDict(Tagged, UserDict, dict):
     """

@@ -25,8 +25,6 @@ class DirectoryResourceMapping(_DirectoryResourceMapping):
     See :class:`~asdf_standard.resource.DirectoryResourceMapping` for details.
     """
 
-    pass
-
 
 class ResourceMappingProxy(Mapping):
     """
