@@ -6,6 +6,7 @@ The ASDF Standard is at v1.6.0
 - Overhaul of the ASDF documentation to make it more consistent and readable. [#1142, #1152]
 - Update deprecated instances of `abstractproperty` to `abstractmethod` [#1148]
 - Move build configuration into `pyproject.toml` [#1149, #1155]
+- Pin ``jsonschema`` to below `4.10.0`. [#1171]
 
 2.12.0 (2022-06-06)
 -------------------
