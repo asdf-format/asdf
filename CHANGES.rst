@@ -17,6 +17,11 @@ The ASDF Standard is at v1.6.0
   ``info()`` functionality. [#1138]
 - Add ability to set asdf-standard version for schema example items. [#1143]
 
+2.11.2 (2022-08-17)
+-------------------
+
+- Backport ``jsonschema`` pin to strictly less than 4.10.1. [#1175]
+
 2.11.1 (2022-04-15)
 -------------------
 
