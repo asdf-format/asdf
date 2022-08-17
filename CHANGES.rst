@@ -1,7 +1,7 @@
 2.11.2 (2022-08-17)
 -------------------
 
-- Backport ``jsonschema`` pin. [#1175]
+- Backport ``jsonschema`` pin to strictly than 4.10.1. [#1175]
 
 2.11.1 (2022-04-15)
 -------------------

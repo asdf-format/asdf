@@ -4,6 +4,15 @@
 Changes
 *******
 
+What's new in asdf 2.11.2?
+==========================
+
+The ASDF Standard is at v1.6.0.
+
+Changes include:
+
+- Backport ``jsonschema`` pin to strictly than 4.10.1.
+
 What's new in asdf 2.11.1?
 ==========================
 
