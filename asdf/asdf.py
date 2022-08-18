@@ -10,7 +10,7 @@ from jsonschema import ValidationError
 from pkg_resources import parse_version
 
 from . import _display as display
-from . import _node_data as node_data
+from . import _node_info as node_info
 from . import _version as version
 from . import block, constants, generic_io, reference, schema, treeutil, util, versioning, yamlutil
 from ._helpers import validate_version
@@ -1522,7 +1522,7 @@ class AsdfFile:
             data for a given key is up to date.
         """
 
-        return node_data.collect_schema_info(
+        return node_info.collect_schema_info(
             key, self.tree, preserve_list=preserve_list, refresh_extension_manager=refresh_extension_manager
         )
 

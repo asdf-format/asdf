@@ -9,7 +9,7 @@ return what it thinks is suitable for display.
 """
 import numpy as np
 
-from ._node_data import NodeSchemaInfo
+from ._node_info import NodeSchemaInfo
 from .tags.core.ndarray import NDArrayType
 from .util import is_primitive
 

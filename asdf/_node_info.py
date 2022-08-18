@@ -17,6 +17,18 @@ def collect_schema_info(key, node, identifier="root", preserve_list=True, refres
     return schema_info.collect_info(preserve_list=preserve_list)
 
 
+def _get_extension_manager(refresh_extension_manager):
+    from .asdf import AsdfFile, get_config
+    from .extension import ExtensionManager
+
+    af = AsdfFile()
+    if refresh_extension_manager:
+        config = get_config()
+        af._extension_manager = ExtensionManager(config.extensions)
+
+    return af.extension_manager
+
+
 SchemaInfo = namedtuple("SchemaInfo", ["info", "value"])
 
 
@@ -61,9 +73,6 @@ class NodeSchemaInfo:
     children : list
         List of the NodeSchemaInfo objects for the children of this node. This is a leaf node if this is empty.
 
-    info : any
-        The information stored in the underlying schema corresponding to the key.
-
     schema : dict
         The portion of the underlying schema corresponding to the node.
     """
@@ -77,7 +86,6 @@ class NodeSchemaInfo:
         self.recursive = recursive
         self.visible = visible
         self.children = []
-        self.info = None
         self.schema = None
 
     @classmethod
@@ -95,10 +103,13 @@ class NodeSchemaInfo:
 
     @property
     def parent_node(self):
-        if self.parent is None:
-            return None
-        else:
+        if self.parent is not None:
             return self.parent.node
+
+    @property
+    def info(self):
+        if self.schema is not None:
+            return self.schema.get(self.key, None)
 
     def get_schema_for_property(self, identifier):
         subschema = self.schema.get("properties", {}).get(identifier, None)
@@ -112,9 +123,19 @@ class NodeSchemaInfo:
                     return subschema[key]
         return {}
 
-    def extract_schema_info(self, schema):
+    def set_schema_for_property(self, parent, identifier):
+        """Extract a subschema from the parent for the identified property"""
+
+        self.schema = parent.get_schema_for_property(identifier)
+
+    def set_schema_from_node(self, node, extension_manager):
+        """Pull a tagged schema for the node"""
+
+        tag_def = extension_manager.get_tag_definition(node._tag)
+        schema_uri = tag_def.schema_uris[0]
+        schema = load_schema(schema_uri)
+
         self.schema = schema
-        self.info = schema.get(self.key, None)
 
     @classmethod
     def from_root_node(cls, key, root_identifier, root_node, schema=None, refresh_extension_manager=False):
@@ -123,14 +144,7 @@ class NodeSchemaInfo:
         Intentionally processes the tree in breadth-first order so that recursively
         referenced nodes are displayed at their shallowest reference point.
         """
-        from .asdf import AsdfFile, get_config
-        from .extension import ExtensionManager
-
-        af = AsdfFile()
-        if refresh_extension_manager:
-            config = get_config()
-            af._extension_manager = ExtensionManager(config.extensions)
-        extmgr = af.extension_manager
+        extension_manager = _get_extension_manager(refresh_extension_manager)
 
         current_nodes = [(None, root_identifier, root_node)]
         seen = set()
@@ -152,32 +166,24 @@ class NodeSchemaInfo:
 
                     if parent is not None:
                         if parent.schema is not None and not cls.traversable(node):
-                            # Extract subschema if it exists
-                            subschema = parent.get_schema_for_property(identifier)
-                            info.extract_schema_info(subschema)
+                            info.set_schema_for_property(parent, identifier)
 
                         parent.children.append(info)
 
                     seen.add(id(node))
 
                     if cls.traversable(node):
-                        tnode = node.__asdf_traverse__()
-                        # Look for a title for the attribute if it is a tagged object
-                        tag = node._tag
-                        tagdef = extmgr.get_tag_definition(tag)
-                        schema_uri = tagdef.schema_uris[0]
-                        schema = load_schema(schema_uri)
-                        info.extract_schema_info(schema)
+                        t_node = node.__asdf_traverse__()
+                        info.set_schema_from_node(node, extension_manager)
 
                     else:
-                        tnode = node
+                        t_node = node
 
                     if parent is None:
                         info.schema = schema
 
-                    for child_identifier, child_node in get_children(tnode):
+                    for child_identifier, child_node in get_children(t_node):
                         next_nodes.append((info, child_identifier, child_node))
-                        # extract subschema if appropriate
 
             if len(next_nodes) == 0:
                 break
@@ -189,7 +195,7 @@ class NodeSchemaInfo:
 
     def collect_info(self, preserve_list=True):
         """
-        Collect the information from the NodeSchemaData tree, and return it as nested dict.
+        Collect the information from the NodeSchemaInfo tree, and return it as nested dict.
 
         Parameters
         ----------
@@ -198,12 +204,12 @@ class NodeSchemaInfo:
             If True, then lists are preserved. Otherwise, they are turned into dicts.
         """
         if preserve_list and (isinstance(self.node, list) or isinstance(self.node, tuple)) and self.info is None:
-            info = [cinfo for child in self.visible_children if len(cinfo := child.collect_info(preserve_list)) > 0]
+            info = [c_info for child in self.visible_children if len(c_info := child.collect_info(preserve_list)) > 0]
         else:
             info = {
-                child.identifier: cinfo
+                child.identifier: c_info
                 for child in self.visible_children
-                if len(cinfo := child.collect_info(preserve_list)) > 0
+                if len(c_info := child.collect_info(preserve_list)) > 0
             }
 
             if self.info is not None:

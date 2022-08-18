@@ -7,7 +7,7 @@ import re
 import typing
 
 from ._display import DEFAULT_MAX_COLS, DEFAULT_MAX_ROWS, DEFAULT_SHOW_VALUES, format_faint, format_italic, render_tree
-from ._node_data import NodeSchemaInfo
+from ._node_info import NodeSchemaInfo
 from .treeutil import get_children, is_container
 from .util import NotSet
 
