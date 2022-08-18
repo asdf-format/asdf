@@ -10,6 +10,7 @@ from jsonschema import ValidationError
 from pkg_resources import parse_version
 
 from . import _display as display
+from . import _node_info as node_info
 from . import _version as version
 from . import block, constants, generic_io, reference, schema, treeutil, util, versioning, yamlutil
 from ._helpers import validate_version
@@ -1504,6 +1505,26 @@ class AsdfFile:
             return self.tree["history"]["entries"]
 
         return []
+
+    def schema_info(self, key, preserve_list=True, refresh_extension_manager=False):
+        """
+        Get a nested dictionary of the schema information for a given key.
+
+        Parameters
+        ----------
+        key : str
+            The key to look up.
+        preserve_list : bool
+            If True, then lists are preserved. Otherwise, they are turned into dicts.
+        refresh_extension_manager : bool
+            If `True`, refresh the extension manager before looking up the
+            key.  This is useful if you want to make sure that the schema
+            data for a given key is up to date.
+        """
+
+        return node_info.collect_schema_info(
+            key, self.tree, preserve_list=preserve_list, refresh_extension_manager=refresh_extension_manager
+        )
 
     def info(
         self,
