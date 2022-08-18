@@ -7,7 +7,7 @@ import re
 import typing
 
 from ._display import DEFAULT_MAX_COLS, DEFAULT_MAX_ROWS, DEFAULT_SHOW_VALUES, format_faint, format_italic, render_tree
-from ._node_data import NodeSchemaData
+from ._node_data import NodeSchemaInfo
 from .treeutil import get_children, is_container
 from .util import NotSet
 
@@ -328,9 +328,9 @@ class AsdfSearchResult:
             isinstance(self._node, dict)
             or isinstance(self._node, list)
             or isinstance(self._node, tuple)
-            or NodeSchemaData.traversable(self._node)
+            or NodeSchemaInfo.traversable(self._node)
         ):
-            if NodeSchemaData.traversable(self._node):
+            if NodeSchemaInfo.traversable(self._node):
                 child = self._node.__asdf_traverse__()[key]
             else:
                 child = self._node[key]
@@ -363,10 +363,10 @@ def _walk_tree_breadth_first(root_identifiers, root_node, callback):
                 isinstance(node, dict)
                 or isinstance(node, list)
                 or isinstance(node, tuple)
-                or NodeSchemaData.traversable(node)
+                or NodeSchemaInfo.traversable(node)
             ) and id(node) in seen:
                 continue
-            if NodeSchemaData.traversable(node):
+            if NodeSchemaInfo.traversable(node):
                 tnode = node.__asdf_traverse__()
             else:
                 tnode = node

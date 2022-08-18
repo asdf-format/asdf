@@ -342,15 +342,15 @@ def create_tree():
     }
 
 
-def test_schema_data_support(tmpdir):
+def test_schema_info_support(tmpdir):
     manifest_extension(tmpdir)
     config = asdf.get_config()
     af = asdf.AsdfFile()
     af._extension_manager = ExtensionManager(config.extensions)
     af.tree = create_tree()
 
-    data = af.schema_data("title", refresh_extension_manager=True)
-    assert data == {
+    info = af.schema_info("title", refresh_extension_manager=True)
+    assert info == {
         "list_of_stuff": [
             {
                 "attributeOne": {
@@ -391,8 +391,8 @@ def test_schema_data_support(tmpdir):
         },
     }
 
-    data = af.schema_data("archive_catalog", refresh_extension_manager=True)
-    assert data == {
+    info = af.schema_info("archive_catalog", refresh_extension_manager=True)
+    assert info == {
         "list_of_stuff": [
             {
                 "attributeOne": {
@@ -429,8 +429,8 @@ def test_schema_data_support(tmpdir):
         },
     }
 
-    data = af.schema_data("archive_catalog", preserve_list=False, refresh_extension_manager=True)
-    assert data == {
+    info = af.schema_info("archive_catalog", preserve_list=False, refresh_extension_manager=True)
+    assert info == {
         "list_of_stuff": {
             0: {
                 "attributeOne": {

@@ -1506,9 +1506,9 @@ class AsdfFile:
 
         return []
 
-    def schema_data(self, key, preserve_list=True, refresh_extension_manager=False):
+    def schema_info(self, key, preserve_list=True, refresh_extension_manager=False):
         """
-        Get a nested dictionary of the schema data for a given key.
+        Get a nested dictionary of the schema information for a given key.
 
         Parameters
         ----------
@@ -1522,7 +1522,7 @@ class AsdfFile:
             data for a given key is up to date.
         """
 
-        return node_data.collect_schema_data(
+        return node_data.collect_schema_info(
             key, self.tree, preserve_list=preserve_list, refresh_extension_manager=refresh_extension_manager
         )
 
