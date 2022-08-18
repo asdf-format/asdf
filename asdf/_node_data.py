@@ -22,7 +22,50 @@ SchemaInfo = namedtuple("SchemaInfo", ["info", "value"])
 
 class NodeSchemaInfo:
     """
-    Container for a node, and the values of information from a schema
+    Container for keyed information collected from a schema about a node of an ASDF file tree.
+
+        This contains node alongside the parent and child nodes of that node in the ASDF file tree.
+        Effectively this means that each of these "node" objects represents the a subtree of the file tree
+        rooted at the node in question alongside methods to access the underlying schemas for the portions
+        of the ASDF file in question.
+
+    This is used for a variety of general purposes, including:
+    - Providing the long descriptions for nodes as described in the schema.
+    - Assisting in traversing an ASDF file like trees, to search nodes.
+    - Providing a way to pull static information about an ASDF file which has
+      been stored within the schemas for that file.
+
+    Parameters
+    ----------
+    key : str
+        The key for the information to be collected from the underlying schema(s).
+
+    parent : NodeSchemaInfo
+        The parent node of this node. None if this is the root node.
+
+    identifier : str
+        The identifier for this node in the ASDF file tree.
+
+    node : any
+        The value of the node in the ASDF file tree.
+
+    depth : int
+        The depth of this node in the ASDF file tree.
+
+    recursive : bool
+        If this node has already been visited, then this is set to True. Default is False.
+
+    visible : bool
+        If this node will be made visible in the output. Default is True.
+
+    children : list
+        List of the NodeSchemaInfo objects for the children of this node. This is a leaf node if this is empty.
+
+    info : any
+        The information stored in the underlying schema corresponding to the key.
+
+    schema : dict
+        The portion of the underlying schema corresponding to the node.
     """
 
     def __init__(self, key, parent, identifier, node, depth, recursive=False, visible=True):
