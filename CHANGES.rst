@@ -3,7 +3,7 @@
 
 The ASDF Standard is at v1.6.0
 
-- Add ability to pull information from schema about asdf file data, using `schema_data`
+- Add ability to pull information from schema about asdf file data, using `schema_info`
   method. [#1167]
 
 2.12.1 (2022-08-17)
