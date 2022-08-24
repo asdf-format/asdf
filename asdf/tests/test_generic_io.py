@@ -171,14 +171,14 @@ def test_close_underlying(tmpdir):
     with generic_io.get_file(open(path, "wb"), mode="w", close=True) as ff:
         pass
 
-    assert ff.is_closed() == True
-    assert ff._fd.closed == True
+    assert ff.is_closed() is True
+    assert ff._fd.closed is True
 
     with generic_io.get_file(open(path, "rb"), close=True) as ff2:
         pass
 
-    assert ff2.is_closed() == True
-    assert ff2._fd.closed == True
+    assert ff2.is_closed() is True
+    assert ff2._fd.closed is True
 
 
 def test_bytes_io(tree):

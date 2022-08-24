@@ -317,10 +317,13 @@ def test_longest_match():
         def url_mapping(self):
             return [("http://stsci.edu/schemas/asdf/core/", "FOOBAR/{url_suffix}")]
 
-    l = extension.AsdfExtensionList([extension.BuiltinExtension(), FancyComplexExtension()])
+    extension_list = extension.AsdfExtensionList([extension.BuiltinExtension(), FancyComplexExtension()])
 
-    assert l.url_mapping("http://stsci.edu/schemas/asdf/core/asdf-1.0.0") == "FOOBAR/asdf-1.0.0"
-    assert l.url_mapping("http://stsci.edu/schemas/asdf/transform/transform-1.0.0") != "FOOBAR/transform-1.0.0"
+    assert extension_list.url_mapping("http://stsci.edu/schemas/asdf/core/asdf-1.0.0") == "FOOBAR/asdf-1.0.0"
+    assert (
+        extension_list.url_mapping("http://stsci.edu/schemas/asdf/transform/transform-1.0.0")
+        != "FOOBAR/transform-1.0.0"
+    )
 
 
 def test_module_versioning():
@@ -340,9 +343,9 @@ def test_module_versioning():
     # perhaps an unfortunate acroynm
     dhcp = DoesntHaveCorrectPytest()
 
-    assert nmt.has_required_modules == False
-    assert hcp.has_required_modules == True
-    assert dhcp.has_required_modules == False
+    assert nmt.has_required_modules is False
+    assert hcp.has_required_modules is True
+    assert dhcp.has_required_modules is False
 
 
 def test_undefined_tag():
@@ -449,47 +452,47 @@ def test_incompatible_version_check():
     class TestType0(types.CustomType):
         supported_versions = versioning.AsdfSpec(">=1.2.0")
 
-    assert TestType0.incompatible_version("1.1.0") == True
-    assert TestType0.incompatible_version("1.2.0") == False
-    assert TestType0.incompatible_version("2.0.1") == False
+    assert TestType0.incompatible_version("1.1.0") is True
+    assert TestType0.incompatible_version("1.2.0") is False
+    assert TestType0.incompatible_version("2.0.1") is False
 
     class TestType1(types.CustomType):
         supported_versions = versioning.AsdfVersion("1.0.0")
 
-    assert TestType1.incompatible_version("1.0.0") == False
-    assert TestType1.incompatible_version("1.1.0") == True
+    assert TestType1.incompatible_version("1.0.0") is False
+    assert TestType1.incompatible_version("1.1.0") is True
 
     class TestType2(types.CustomType):
         supported_versions = "1.0.0"
 
-    assert TestType2.incompatible_version("1.0.0") == False
-    assert TestType2.incompatible_version("1.1.0") == True
+    assert TestType2.incompatible_version("1.0.0") is False
+    assert TestType2.incompatible_version("1.1.0") is True
 
     class TestType3(types.CustomType):
         # This doesn't make much sense, but it's just for the sake of example
         supported_versions = ["1.0.0", versioning.AsdfSpec(">=2.0.0")]
 
-    assert TestType3.incompatible_version("1.0.0") == False
-    assert TestType3.incompatible_version("1.1.0") == True
-    assert TestType3.incompatible_version("2.0.0") == False
-    assert TestType3.incompatible_version("2.0.1") == False
+    assert TestType3.incompatible_version("1.0.0") is False
+    assert TestType3.incompatible_version("1.1.0") is True
+    assert TestType3.incompatible_version("2.0.0") is False
+    assert TestType3.incompatible_version("2.0.1") is False
 
     class TestType4(types.CustomType):
         supported_versions = ["1.0.0", versioning.AsdfVersion("1.1.0")]
 
-    assert TestType4.incompatible_version("1.0.0") == False
-    assert TestType4.incompatible_version("1.0.1") == True
-    assert TestType4.incompatible_version("1.1.0") == False
-    assert TestType4.incompatible_version("1.1.1") == True
+    assert TestType4.incompatible_version("1.0.0") is False
+    assert TestType4.incompatible_version("1.0.1") is True
+    assert TestType4.incompatible_version("1.1.0") is False
+    assert TestType4.incompatible_version("1.1.1") is True
 
     class TestType5(types.CustomType):
         supported_versions = [versioning.AsdfSpec("<1.0.0"), versioning.AsdfSpec(">=2.0.0")]
 
-    assert TestType5.incompatible_version("0.9.9") == False
-    assert TestType5.incompatible_version("2.0.0") == False
-    assert TestType5.incompatible_version("2.0.1") == False
-    assert TestType5.incompatible_version("1.0.0") == True
-    assert TestType5.incompatible_version("1.1.0") == True
+    assert TestType5.incompatible_version("0.9.9") is False
+    assert TestType5.incompatible_version("2.0.0") is False
+    assert TestType5.incompatible_version("2.0.1") is False
+    assert TestType5.incompatible_version("1.0.0") is True
+    assert TestType5.incompatible_version("1.1.0") is True
 
     with pytest.raises(ValueError):
 

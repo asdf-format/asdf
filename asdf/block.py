@@ -771,7 +771,7 @@ class BlockManager:
         ext = []
         for label in self.get_output_compressions():
             compressor = mcompression._get_compressor_from_extensions(label, return_extension=True)
-            if compressor != None:
+            if compressor is not None:
                 ext += [compressor[1]]  # second item is the extension
         return ext
 

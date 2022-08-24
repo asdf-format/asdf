@@ -73,10 +73,10 @@ def test_open_readonly(tmpdir):
         af.write_to(tmpfile, all_array_storage="internal")
 
     os.chmod(tmpfile, 0o440)
-    assert os.access(tmpfile, os.W_OK) == False
+    assert os.access(tmpfile, os.W_OK) is False
 
     with asdf.open(tmpfile) as af:
-        assert af["baz"].flags.writeable == False
+        assert af["baz"].flags.writeable is False
 
     with pytest.raises(PermissionError):
         with asdf.open(tmpfile, mode="rw"):

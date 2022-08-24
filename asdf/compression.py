@@ -200,7 +200,7 @@ def _get_all_compression_extension_labels():
 def _get_compressor(label):
     ext_comp = _get_compressor_from_extensions(label)
 
-    if ext_comp != None:
+    if ext_comp is not None:
         # Use an extension before builtins
         comp = ext_comp
     elif label == "zlib":

@@ -207,7 +207,7 @@ class _TreeRenderer:
         """
         lines = []
 
-        if info.visible == False:
+        if info.visible is False:
             return lines, True
 
         lines.append(self._render_node(info, active_depths, is_tail))

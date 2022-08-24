@@ -43,7 +43,7 @@ __all__ = [
 ]
 
 
-def human_list(l, separator="and"):
+def human_list(line, separator="and"):
     """
     Formats a list for human readability.
 
@@ -65,10 +65,10 @@ def human_list(l, separator="and"):
     >>> human_list(["vanilla", "strawberry", "chocolate"], "or")
     'vanilla, strawberry or chocolate'
     """
-    if len(l) == 1:
-        return l[0]
+    if len(line) == 1:
+        return line[0]
     else:
-        return ", ".join(l[:-1]) + " " + separator + " " + l[-1]
+        return ", ".join(line[:-1]) + " " + separator + " " + line[-1]
 
 
 def get_array_base(arr):

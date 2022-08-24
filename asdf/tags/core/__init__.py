@@ -1,10 +1,4 @@
 from ...types import AsdfType
-
-
-class AsdfObject(dict):
-    pass
-
-
 from .complex import ComplexType
 from .constant import ConstantType
 from .external_reference import ExternalArrayReference
@@ -23,6 +17,10 @@ __all__ = [
     "IntegerType",
     "ExternalArrayReference",
 ]
+
+
+class AsdfObject(dict):
+    pass
 
 
 class AsdfObjectType(AsdfType):

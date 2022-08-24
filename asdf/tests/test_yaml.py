@@ -204,10 +204,10 @@ def test_yaml_internal_reference(tmpdir):
     }
     d["bar"] = d
 
-    l = []
-    l.append(l)
+    _list = []
+    _list.append(_list)
 
-    tree = {"first": d, "second": d, "list": l}
+    tree = {"first": d, "second": d, "list": _list}
 
     def check_yaml(content):
         assert b"list:&id002-*id002" in b"".join(content.split())

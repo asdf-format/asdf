@@ -122,7 +122,7 @@ class PrintTree:
         for node in ["tree"] + node_list:
             if at_end:
                 print_list.append(node)
-            elif not node in current["children"]:
+            elif node not in current["children"]:
                 print_list.append(node)
                 at_end = True
             elif not current["children"][node]["visited"]:
@@ -138,7 +138,7 @@ class PrintTree:
             raise TypeError("node_list parameter must be an instance of list")
         current = self.__tree
         for node in ["tree"] + node_list:
-            if not node in current["children"]:
+            if node not in current["children"]:
                 current["children"][node] = dict(visited=True, children=dict())
             current = current["children"][node]
 
