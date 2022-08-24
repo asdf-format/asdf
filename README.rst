@@ -91,23 +91,23 @@ input to the constructor of `AsdfFile`:
 
     # Create some data
     sequence = np.arange(100)
-    squares  = sequence**2
+    squares = sequence**2
     random = np.random.random(100)
 
     # Store the data in an arbitrarily nested dictionary
     tree = {
-        'foo': 42,
-        'name': 'Monty',
-        'sequence': sequence,
-        'powers': { 'squares' : squares },
-        'random': random
+        "foo": 42,
+        "name": "Monty",
+        "sequence": sequence,
+        "powers": {"squares": squares},
+        "random": random,
     }
 
     # Create the ASDF file object from our data tree
     af = asdf.AsdfFile(tree)
 
     # Write the data to a new file
-    af.write_to('example.asdf')
+    af.write_to("example.asdf")
 
 If we open the newly created file's metadata section, we can see some of the key features
 of ASDF on display:
@@ -163,7 +163,7 @@ It is possible to compress the array data when writing the file:
 
 .. code:: python
 
-    af.write_to('compressed.asdf', all_array_compression='zlib')
+    af.write_to("compressed.asdf", all_array_compression="zlib")
 
 The built-in compression algorithms are ``'zlib'``, and ``'bzp2'``.  The
 ``'lz4'`` algorithm becomes available when the `lz4 <https://python-lz4.readthedocs.io/>`__ package
@@ -183,22 +183,22 @@ the `asdf` package:
 
     import asdf
 
-    af = asdf.open('example.asdf')
+    af = asdf.open("example.asdf")
 
 The `open` function also works as a context handler:
 
 .. code:: python
 
-    with asdf.open('example.asdf') as af:
+    with asdf.open("example.asdf") as af:
         ...
 
 To get a quick overview of the data stored in the file, use the top-level
 `AsdfFile.info()` method:
 
-.. code:: python
+.. code:: pycon
 
     >>> import asdf
-    >>> af = asdf.open('example.asdf')
+    >>> af = asdf.open("example.asdf")
     >>> af.info()
     root (AsdfObject)
     ├─asdf_library (Software)
@@ -223,18 +223,18 @@ To get a quick overview of the data stored in the file, use the top-level
 The `AsdfFile` behaves like a Python `dict`, and nodes are accessed like
 any other dictionary entry:
 
-.. code:: python
+.. code:: pycon
 
-    >>> af['name']
+    >>> af["name"]
     'Monty'
-    >>> af['powers']
+    >>> af["powers"]
     {'squares': <array (unloaded) shape: [100] dtype: int64>}
 
 Array data remains unloaded until it is explicitly accessed:
 
-.. code:: python
+.. code:: pycon
 
-    >>> af['powers']['squares']
+    >>> af["powers"]["squares"]
     array([   0,    1,    4,    9,   16,   25,   36,   49,   64,   81,  100,
             121,  144,  169,  196,  225,  256,  289,  324,  361,  400,  441,
             484,  529,  576,  625,  676,  729,  784,  841,  900,  961, 1024,
@@ -248,7 +248,7 @@ Array data remains unloaded until it is explicitly accessed:
 
     >>> import numpy as np
     >>> expected = [x**2 for x in range(100)]
-    >>> np.equal(af['powers']['squares'], expected).all()
+    >>> np.equal(af["powers"]["squares"], expected).all()
     True
 
 By default, uncompressed data blocks are memory mapped for efficient
@@ -257,7 +257,7 @@ option of `open` when reading:
 
 .. code:: python
 
-    af = asdf.open('example.asdf', copy_arrays=True)
+    af = asdf.open("example.asdf", copy_arrays=True)
 
 .. _end-read-file-text:
 

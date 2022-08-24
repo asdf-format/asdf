@@ -100,6 +100,8 @@ that can be used to validate a manifest document:
     import asdf
     import yaml
 
-    schema = asdf.schema.load_schema("asdf://asdf-format.org/core/schemas/extension_manifest-1.0.0")
+    schema = asdf.schema.load_schema(
+        "asdf://asdf-format.org/core/schemas/extension_manifest-1.0.0"
+    )
     manifest = yaml.safe_load(open("path/to/manifests/example-1.0.0.yaml").read())
     asdf.schema.validate(manifest, schema=schema)

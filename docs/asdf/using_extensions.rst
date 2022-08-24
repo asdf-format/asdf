@@ -187,10 +187,10 @@ any package, we will need to manually install it:
 
     asdf.get_config().add_extension(MyCustomExtension())
     af = asdf.AsdfFile()
-    af.tree = {'thing': MyCustomType('foo') }
+    af.tree = {"thing": MyCustomType("foo")}
     # This call would cause an error if the proper extension was not
     # provided to the constructor
-    af.write_to('custom.asdf')
+    af.write_to("custom.asdf")
 
 Note that the extension class must actually be instantiated when it is passed
 to `~asdf.config.AsdfConfig.add_extension`.
@@ -202,7 +202,7 @@ To read the file (in a new session) we again need to install the extension first
     import asdf
 
     asdf.get_config().add_extension(MyCustomExtension())
-    af = asdf.open('custom.asdf')
+    af = asdf.open("custom.asdf")
 
 .. _extension_checking:
 

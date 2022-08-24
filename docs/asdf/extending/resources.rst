@@ -43,16 +43,16 @@ custom_schema argument:
     ...
     """
 
-    asdf.get_config().add_resource_mapping({
-      "asdf://example.com/example-project/schemas/foo-1.0.0": content
-    })
+    asdf.get_config().add_resource_mapping(
+        {"asdf://example.com/example-project/schemas/foo-1.0.0": content}
+    )
 
 The schema will now be available for validating files:
 
 .. code-block:: python
 
     af = asdf.AsdfFile(custom_schema="asdf://example.com/example-project/schemas/foo-1.0.0")
-    af.validate() # Error, "foo" is missing
+    af.validate()  # Error, "foo" is missing
 
 The DirectoryResourceMapping class
 ==================================
@@ -108,7 +108,7 @@ We should configure `DirectoryResourceMapping` like this:
         "asdf://example.com/example-project/schemas/",
         recursive=True,
         filename_pattern="*.yaml",
-        stem_filename=True
+        stem_filename=True,
     )
 
     asdf.get_config().add_resource_mapping(mapping)
@@ -186,7 +186,7 @@ instance:
             "asdf://example.com/example-project/schemas/",
             recursive=True,
             filename_pattern="*.yaml",
-            stem_filename=True
+            stem_filename=True,
         )
         return [mapping]
 

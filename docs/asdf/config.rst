@@ -16,10 +16,10 @@ The `AsdfConfig` class provides properties that can be adjusted to change the
 behavior of the `asdf` library for all files.  For example, to disable schema validation
 on read:
 
-.. code-block:: python
+.. code-block:: pycon
 
     >>> import asdf
-    >>> asdf.get_config().validate_on_read = False # doctest: +SKIP
+    >>> asdf.get_config().validate_on_read = False  # doctest: +SKIP
 
 This will prevent validation on any subsequent call to `~asdf.open`.
 
@@ -30,7 +30,7 @@ There are two methods available that give access to an `AsdfConfig` instance:
 `~asdf.get_config` and `~asdf.config_context`.  The former simply returns
 the currently active config:
 
-.. code-block:: python
+.. code-block:: pycon
 
     >>> import asdf
     >>> asdf.get_config()
@@ -47,12 +47,12 @@ yields a copy of the currently active config.  The copy is also returned by
 subsequent calls to `~asdf.get_config`, but only until the context manager exits.
 This allows for short-lived configuration changes that do not impact other code:
 
-.. code-block:: python
+.. code-block:: pycon
 
     >>> import asdf
     >>> with asdf.config_context() as config:
-    ...   config.validate_on_read = False
-    ...   asdf.get_config()
+    ...     config.validate_on_read = False
+    ...     asdf.get_config()
     ...
     <AsdfConfig
       array_inline_threshold: None
@@ -140,7 +140,7 @@ Additional AsdfConfig features
 For example, the `AsdfConfig.add_resource_mapping` method can be used to register
 a schema, which can then be used to validate a file:
 
-.. code-block:: python
+.. code-block:: pycon
 
     >>> import asdf
     >>> content = b"""
@@ -155,7 +155,9 @@ a schema, which can then be used to validate a file:
     ... required: [foo]
     ... ...
     ... """
-    >>> asdf.get_config().add_resource_mapping({"http://example.com/example-project/schemas/foo-1.0.0": content})
+    >>> asdf.get_config().add_resource_mapping(
+    ...     {"http://example.com/example-project/schemas/foo-1.0.0": content}
+    ... )
     >>> af = asdf.AsdfFile(custom_schema="http://example.com/example-project/schemas/foo-1.0.0")
     >>> af.validate()
     Traceback (most recent call last):

@@ -555,7 +555,7 @@ first and last name:
 
 .. code-block:: python
 
-    person = Person('James', 'Webb')
+    person = Person("James", "Webb")
     print(person.first, person.last)
 
 Our version 1.0.0 YAML schema for ``Person`` might look like the following:
@@ -583,11 +583,12 @@ And our tag implementation would look something like this:
     import asdf
     from people import Person
 
+
     class PersonType(asdf.CustomType):
-        name = 'person'
-        organization = 'nowhere.org'
+        name = "person"
+        organization = "nowhere.org"
         version = (1, 0, 0)
-        standard = 'custom'
+        standard = "custom"
         types = [Person]
 
         @classmethod
@@ -603,9 +604,8 @@ constructor as well:
 
 .. code-block:: python
 
-    person = Person('James', 'Edwin', 'Webb')
+    person = Person("James", "Edwin", "Webb")
     print(person.first, person.middle, person.last)
-    James Edwin Webb
 
 So we update our YAML schema to version 1.1.0 in order to support newer
 versions of Person:
@@ -644,12 +644,13 @@ of ``version`` to determine which schema version should be used when reading:
     import asdf
     from people import Person
 
+
     class PersonType(asdf.CustomType):
-        name = 'person'
-        organization = 'nowhere.org'
+        name = "person"
+        organization = "nowhere.org"
         version = (1, 1, 0)
         supported_versions = [(1, 0, 0), (1, 1, 0)]
-        standard = 'custom'
+        standard = "custom"
         types = [Person]
 
         @classmethod
@@ -661,7 +662,7 @@ of ``version`` to determine which schema version should be used when reading:
             # Handle the older version of the person schema
             if cls.version == (1, 0, 0):
                 # Construct a Person object with an empty middle name field
-                return Person(tree[0], '', tree[1])
+                return Person(tree[0], "", tree[1])
             else:
                 # The newer version of the schema stores the middle name too
                 return person(tree[0], tree[1], tree[2])
@@ -743,14 +744,15 @@ asserts that the corresponding fraction is in simplified form:
 
     from asdf import ValidationError
 
+
     def validate_simplified(validator, simplified, instance, schema):
         if simplified:
             reduced = fraction.Fraction(instance[0], instance[1])
-            if (reduced.numerator != instance[0] or
-                reduced.denominator != instance[1]):
+            if reduced.numerator != instance[0] or reduced.denominator != instance[1]:
                 yield ValidationError("Fraction is not in simplified form.")
 
-    FractionType.validators = {'simplified': validate_simplified}
+
+    FractionType.validators = {"simplified": validate_simplified}
 
 .. _defining_extensions:
 
@@ -822,8 +824,8 @@ extension entry point that `asdf` will recognize. First, we create a dictionary:
 .. code:: python
 
     entry_points = {}
-    entry_points['asdf_extensions'] = [
-        'mypackage = mypackage.asdf.extensions:MyPackageExtension'
+    entry_points["asdf_extensions"] = [
+        "mypackage = mypackage.asdf.extensions:MyPackageExtension"
     ]
 
 The key used in the `entry_points` dictionary must be ``'asdf_extensions'``.
@@ -846,8 +848,8 @@ The entry points must be passed to the call to `setuptools.setup`:
     from setuptools import setup
 
     entry_points = {}
-    entry_points['asdf_extensions'] = [
-        'mypackage = mypackage.asdf.extensions:MyPackageExtension'
+    entry_points["asdf_extensions"] = [
+        "mypackage = mypackage.asdf.extensions:MyPackageExtension"
     ]
 
     setup(
