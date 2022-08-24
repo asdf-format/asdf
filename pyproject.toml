@@ -59,7 +59,7 @@ pytest11 = { asdf_schema_tester = 'pytest_asdf.plugin' }
 
 [build-system]
 requires = [
-    'setuptools >=42',
+    'setuptools >=60',
     'setuptools_scm[toml] >=3.4',
     'wheel',
 ]
