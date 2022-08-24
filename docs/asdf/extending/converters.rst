@@ -80,6 +80,7 @@ Here is a simple Converter implementation for this type and tag:
 
     from asdf.extension import Converter
 
+
     class RectangleConverter(Converter):
         tags = ["asdf://example.com/shapes/tags/rectangle-1.0.0"]
         types = ["example_package.shapes.Rectangle"]
@@ -107,10 +108,12 @@ around it and install that extension:
     import asdf
     from asdf.extension import Extension
 
+
     class ShapesExtension(Extension):
         extension_uri = "asdf://example.com/shapes/extensions/shapes-1.0.0"
         converters = [RectangleConverter()]
         tags = ["asdf://example.com/shapes/tags/rectangle-1.0.0"]
+
 
     asdf.get_config().add_extension(ShapesExtension())
 
@@ -140,6 +143,7 @@ the converter's list of tags and implement a ``select_tag`` method:
 
     RETANGLE_TAG = "asdf://example.com/shapes/tags/rectangle-1.0.0"
     SQUARE_TAG = "asdf://example.com/shapes/tags/square-1.0.0"
+
 
     class RectangleConverter(Converter):
         tags = [RECTANGLE_TAG, SQUARE_TAG]
@@ -226,10 +230,7 @@ when we define our ``from_yaml_tree`` method in a naive way:
         def from_yaml_tree(self, node, tag, ctx):
             from example_project.fractions import FractionWithInverse
 
-            obj = FractionWithInverse(
-                tree["numerator"],
-                tree["denominator"]
-            )
+            obj = FractionWithInverse(tree["numerator"], tree["denominator"])
             obj.inverse = tree["inverse"]
             return obj
 
@@ -260,10 +261,7 @@ at the time that we retrieved it.  We can handle this situation by making our
         def from_yaml_tree(self, node, tag, ctx):
             from example_project.fractions import FractionWithInverse
 
-            obj = FractionWithInverse(
-                tree["numerator"],
-                tree["denominator"]
-            )
+            obj = FractionWithInverse(tree["numerator"], tree["denominator"])
             yield obj
             obj.inverse = tree["inverse"]
 
@@ -278,7 +276,7 @@ With this modification we can successfully deserialize our ASDF file:
 .. code-block:: python
 
     with asdf.open("with_inverse.asdf") as af:
-            reconstituted_f1 = ff["fraction"]
+        reconstituted_f1 = ff["fraction"]
 
     assert reconstituted_f1.inverse.inverse is reconstituted_f1
 

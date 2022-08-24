@@ -30,6 +30,7 @@ provide its URI as a property:
 
     from asdf.extension import Extension
 
+
     class FooExtension(Extension):
         extension_uri = "asdf://example.com/example-project/extensions/foo-1.0.0"
 
@@ -50,8 +51,11 @@ are provided in the ``tags`` and ``converters`` properties, respectively:
 
     from asdf.extension import Extension, Converter
 
+
     class FooConverter(Converter):
         # ...
+        pass
+
 
     class FooExtension(Extension):
         extension_uri = "asdf://example.com/example-project/extensions/foo-1.0.0"
@@ -71,8 +75,11 @@ instead of just a string:
 
     from asdf.extension import Extension, Converter, TagDefinition
 
+
     class FooConverter(Converter):
         # ...
+        pass
+
 
     class FooExtension(Extension):
         extension_uri = "asdf://example.com/example-project/extensions/foo-1.0.0"
@@ -96,8 +103,11 @@ and are included in an extension via the ``compressors`` property:
 
     from asdf.extension import Extension, Compressor
 
+
     class FooCompressor(Compressor):
         # ...
+        pass
+
 
     class FooExtension(Extension):
         extension_uri = "asdf://example.com/example-project/extensions/foo-1.0.0"
@@ -139,11 +149,10 @@ Tag handles can be defined in the ``yaml_tag_handles`` property of an extension:
 
     from asdf.extension import Extension
 
+
     class FooExtension(Extension):
         extension_uri = "asdf://example.com/example-project/extensions/foo-1.0.0"
-        yaml_tag_handles = {
-            "!example!": "asdf://example.com/example-project/tags/"
-        }
+        yaml_tag_handles = {"!example!": "asdf://example.com/example-project/tags/"}
 
 ASDF Standard version requirement
 ---------------------------------
@@ -157,6 +166,7 @@ can be expressed as a PEP 440 version specifier in an Extension's
 .. code-block:: python
 
     from asdf.extension import Extension
+
 
     class FooExtension(Extension):
         extension_uri = "asdf://example.com/example-project/extensions/foo-1.0.0"
@@ -177,6 +187,7 @@ an additional list of class names that previously identified the extension:
 .. code-block:: python
 
     from asdf.extension import Extension
+
 
     class FooExtension(Extension):
         extension_uri = "asdf://example.com/example-project/extensions/foo-1.0.0"
@@ -219,8 +230,10 @@ For example, the following code defines and installs a minimal extension:
     import asdf
     from asdf.extension import Extension
 
+
     class FooExtension(Extension):
         extension_uri = "asdf://example.com/example-project/extensions/foo-1.0.0"
+
 
     asdf.get_config().add_extension(FooExtension())
 
@@ -302,7 +315,9 @@ instance can be created using the ``from_uri`` factory method:
 
     from asdf.extension import ManifestExtension
 
-    extension = ManifestExtension.from_uri("asdf://example.com/example-project/manifests/foo-1.0.0")
+    extension = ManifestExtension.from_uri(
+        "asdf://example.com/example-project/manifests/foo-1.0.0"
+    )
 
 Compressors and converters can be included in the extension by adding them as keyword arguments:
 
@@ -333,13 +348,20 @@ loaded:
     from asdf.extension import ManifestExtension
 
     RESOURCES = {
-        "asdf://example.com/example-project/manifests/foo-1.0.0": open("foo-1.0.0.yaml").read()
+        "asdf://example.com/example-project/manifests/foo-1.0.0": open(
+            "foo-1.0.0.yaml"
+        ).read()
     }
+
 
     def get_resource_mappings():
         return [RESOURCES]
 
-    EXTENSION = ManifestExtension.from_uri("asdf://example.com/example-project/manifests/foo-1.0.0")
+
+    EXTENSION = ManifestExtension.from_uri(
+        "asdf://example.com/example-project/manifests/foo-1.0.0"
+    )
+
 
     def get_extensions():
         return [EXTENSION]
@@ -354,7 +376,9 @@ The solution is to instantiate the ManifestExtension inside of its entry point m
 
     def get_extensions():
         return [
-            ManifestExtension.from_uri("asdf://example.com/example-project/manifests/foo-1.0.0")
+            ManifestExtension.from_uri(
+                "asdf://example.com/example-project/manifests/foo-1.0.0"
+            )
         ]
 
 This is not as inefficient as it might seem, since the `asdf` library only calls the method once

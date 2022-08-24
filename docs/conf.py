@@ -1,12 +1,12 @@
 from pathlib import Path
 
-import toml
+import tomli
 from pkg_resources import get_distribution
 from sphinx_asdf.conf import *  # noqa
 
 # Get configuration information from `pyproject.toml`
-with open(Path(__file__).parent.parent / "pyproject.toml") as configuration_file:
-    conf = toml.load(configuration_file)
+with open(Path(__file__).parent.parent / "pyproject.toml", "rb") as configuration_file:
+    conf = tomli.load(configuration_file)
 configuration = conf["project"]
 
 # -- Project information ------------------------------------------------------
