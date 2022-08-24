@@ -731,9 +731,9 @@ def test_structured_datatype_validation(tmpdir):
 
 def test_string_inline():
     x = np.array([b"a", b"b", b"c"])
-    l = ndarray.numpy_array_to_list(x)
+    line = ndarray.numpy_array_to_list(x)
 
-    for entry in l:
+    for entry in line:
         assert isinstance(entry, str)
 
 
@@ -812,19 +812,19 @@ def test_readonly(tmpdir):
 
     # Opening in read mode (the default) should mean array is readonly
     with asdf.open(tmpfile) as af:
-        assert af["data"].flags.writeable == False
+        assert af["data"].flags.writeable is False
         with pytest.raises(ValueError) as err:
             af["data"][0] = 41
             assert str(err) == "assignment destination is read-only"
 
     # This should be perfectly fine
     with asdf.open(tmpfile, mode="rw") as af:
-        assert af["data"].flags.writeable == True
+        assert af["data"].flags.writeable is True
         af["data"][0] = 40
 
     # Copying the arrays makes it safe to write to the underlying array
     with asdf.open(tmpfile, mode="r", copy_arrays=True) as af:
-        assert af["data"].flags.writeable == True
+        assert af["data"].flags.writeable is True
         af["data"][0] = 42
 
 
@@ -837,7 +837,7 @@ def test_readonly_inline(tmpdir):
 
     # This should be safe since it's an inline array
     with asdf.open(tmpfile, mode="r") as af:
-        assert af["data"].flags.writeable == True
+        assert af["data"].flags.writeable is True
         af["data"][0] = 42
 
 

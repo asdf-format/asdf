@@ -65,8 +65,8 @@ def test_version_and_version_inequality():
 
     assert ver0 < ver1 < ver2 < ver3 < ver4 < ver5 < ver6 < ver7
     assert ver7 > ver6 > ver5 > ver4 > ver3 > ver2 > ver1 > ver0
-    assert (ver0 < ver1 < ver2 < ver4 < ver3 < ver5 < ver6 < ver7) == False
-    assert (ver7 > ver6 > ver5 > ver3 > ver4 > ver2 > ver1 > ver0) == False
+    assert (ver0 < ver1 < ver2 < ver4 < ver3 < ver5 < ver6 < ver7) is False
+    assert (ver7 > ver6 > ver5 > ver3 > ver4 > ver2 > ver1 > ver0) is False
 
     assert ver0 <= ver1 <= ver2 <= ver3 <= ver4 <= ver5 <= ver6 <= ver7
     assert ver7 >= ver6 >= ver5 >= ver4 >= ver3 >= ver2 >= ver1 >= ver0
@@ -79,8 +79,8 @@ def test_version_and_string_inequality():
     assert version > "1.0.1"
     assert version > "1.1.0"
     assert version > "1.1.1"
-    assert (version > "2.0.0") == False
-    assert (version < "2.0.0") == False
+    assert (version > "2.0.0") is False
+    assert (version < "2.0.0") is False
     assert version < "2.0.1"
     assert version < "2.1.0"
     assert version < "2.1.1"
@@ -99,8 +99,8 @@ def test_version_and_string_inequality():
     assert "1.0.1" < version
     assert "1.1.0" < version
     assert "1.1.1" < version
-    assert ("2.0.0" < version) == False
-    assert ("2.0.0" > version) == False
+    assert ("2.0.0" < version) is False
+    assert ("2.0.0" > version) is False
     assert "2.0.1" > version
     assert "2.1.0" > version
     assert "2.1.1" > version
@@ -123,8 +123,8 @@ def test_version_and_tuple_inequality():
     assert version > (1, 0, 1)
     assert version > (1, 1, 0)
     assert version > (1, 1, 1)
-    assert (version > (2, 0, 0)) == False
-    assert (version < (2, 0, 0)) == False
+    assert (version > (2, 0, 0)) is False
+    assert (version < (2, 0, 0)) is False
     assert version < (2, 0, 1)
     assert version < (2, 1, 0)
     assert version < (2, 1, 1)
@@ -143,8 +143,8 @@ def test_version_and_tuple_inequality():
     assert (1, 0, 1) < version
     assert (1, 1, 0) < version
     assert (1, 1, 1) < version
-    assert ((2, 0, 0) < version) == False
-    assert ((2, 0, 0) > version) == False
+    assert ((2, 0, 0) < version) is False
+    assert ((2, 0, 0) > version) is False
     assert (2, 0, 1) > version
     assert (2, 1, 0) > version
     assert (2, 1, 1) > version
@@ -175,7 +175,7 @@ def test_spec_version_select():
     versions = [AsdfVersion(x) for x in ["1.0.0", "1.0.9", "1.1.0", "1.2.0"]]
     assert spec.select(versions) == "1.2.0"
     assert spec.select(versions[:-1]) == "1.1.0"
-    assert spec.select(versions[:-2]) == None
+    assert spec.select(versions[:-2]) is None
 
 
 def test_spec_version_filter():
@@ -201,7 +201,7 @@ def test_spec_string_select():
     versions = ["1.0.0", "1.0.9", "1.1.0", "1.2.0"]
     assert spec.select(versions) == "1.2.0"
     assert spec.select(versions[:-1]) == "1.1.0"
-    assert spec.select(versions[:-2]) == None
+    assert spec.select(versions[:-2]) is None
 
 
 def test_spec_string_filter():
@@ -227,7 +227,7 @@ def test_spec_tuple_select():
     versions = [(1, 0, 0), (1, 0, 9), (1, 1, 0), (1, 2, 0)]
     assert spec.select(versions) == "1.2.0"
     assert spec.select(versions[:-1]) == "1.1.0"
-    assert spec.select(versions[:-2]) == None
+    assert spec.select(versions[:-2]) is None
 
 
 def test_spec_tuple_filter():

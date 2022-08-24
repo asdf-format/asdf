@@ -15,7 +15,7 @@ def test_is_primitive():
 
 
 def test_not_set():
-    assert util.NotSet != None
+    assert util.NotSet is not None
 
     assert repr(util.NotSet) == "NotSet"
 

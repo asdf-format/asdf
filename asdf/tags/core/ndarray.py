@@ -140,23 +140,23 @@ def inline_data_asarray(inline, dtype=None):
     # there.
     if dtype is not None and dtype.fields is not None:
 
-        def find_innermost_match(l, depth=0):
-            if not isinstance(l, list) or not len(l):
+        def find_innermost_match(line, depth=0):
+            if not isinstance(line, list) or not len(line):
                 raise ValueError("data can not be converted to structured array")
             try:
-                np.asarray(tuple(l), dtype=dtype)
+                np.asarray(tuple(line), dtype=dtype)
             except ValueError:
-                return find_innermost_match(l[0], depth + 1)
+                return find_innermost_match(line[0], depth + 1)
             else:
                 return depth
 
         depth = find_innermost_match(inline)
 
-        def convert_to_tuples(l, data_depth, depth=0):
+        def convert_to_tuples(line, data_depth, depth=0):
             if data_depth == depth:
-                return tuple(l)
+                return tuple(line)
             else:
-                return [convert_to_tuples(x, data_depth, depth + 1) for x in l]
+                return [convert_to_tuples(x, data_depth, depth + 1) for x in line]
 
         inline = convert_to_tuples(inline, depth)
 

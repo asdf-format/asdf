@@ -1,9 +1,6 @@
 import os
 
 import numpy as np
-import pytest
-
-astropy = pytest.importorskip("astropy")
 from astropy.io.fits import HDUList, ImageHDU
 
 import asdf

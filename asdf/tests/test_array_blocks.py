@@ -733,13 +733,13 @@ def test_open_no_memmap(tmpdir):
         array = af.tree["array"]
         # Make sure to access the block so that it gets loaded
         array[0]
-        assert array.block._memmapped == True
+        assert array.block._memmapped is True
         assert isinstance(array.block._data, np.memmap)
 
     # Test that if we ask for copy, we do not get memmapped arrays
     with asdf.open(tmpfile, copy_arrays=True) as af:
         array = af.tree["array"]
-        assert array.block._memmapped == False
+        assert array.block._memmapped is False
         # We can't just check for isinstance(..., np.array) since this will
         # be true for np.memmap as well
         assert not isinstance(array.block._data, np.memmap)
