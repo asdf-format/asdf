@@ -14,7 +14,7 @@ version of ASDF.  The versions (and their BibTeX entries) can be found at:
 
         https://zenodo.org/badge/latestdoi/18112754
 
-We also recommend and encourage you to cite the general ASDF paper:
+We also recommend and encourage you to cite the general ASDF paper and/or its update:
 
 .. code:: bibtex
 
@@ -30,4 +30,14 @@ We also recommend and encourage you to cite the general ASDF paper:
     author = {P. Greenfield and M. Droettboom and E. Bray},
     keywords = {FITS, File formats, Standards, World coordinate system},
     abstract = {We present the case for developing a successor format for the immensely successful FITS format. We first review existing alternative formats and discuss why we do not believe they provide an adequate solution. The proposed format is called the Advanced Scientific Data Format (ASDF) and is based on an existing text format, YAML, that we believe removes most of the current problems with the FITS format. An overview of the capabilities of the new format is given along with specific examples. This format has the advantage that it does not limit the size of attribute names (akin to FITS keyword names) nor place restrictions on the size or type of values attributes have. Hierarchical relationships are explicit in the syntax and require no special conventions. Finally, it is capable of storing binary data within the file in its binary form. At its basic level, the format proposed has much greater applicability than for just astronomical data.}
+    }
+
+    @InProceedings{ 00_greenfield-proc-scipy-2022,
+    author    = { {P}erry {G}reenfield and {E}dward {S}lavich and {W}illiam {J}amieson and {N}adia {D}encheva },
+    title     = { {T}he {A}dvanced {S}cientific {D}ata {F}ormat ({A}{S}{D}{F}): {A}n {U}pdate },
+    booktitle = { {P}roceedings of the 21st {P}ython in {S}cience {C}onference },
+    pages     = { 1 - 6 },
+    year      = { 2022 },
+    editor    = { {M}eghann {A}garwal and {C}hris {C}alloway and {D}illon {N}iederhut and {D}avid {S}hupe },
+    doi       = { 10.25080/majora-212e5952-000 }
     }
