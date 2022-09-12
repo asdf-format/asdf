@@ -107,6 +107,39 @@ jobs:
         - linux: prerelease
         - linux: packaged
 
+  latest:
+    name: latest
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - name: Python 3.11 Testing
+            os: ubuntu-latest
+            python-version: "3.11.0-rc.1"
+            toxenv: py311-devdeps
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v2
+        with:
+          fetch-depth: 0
+          submodules: true
+      - name: Set up Python ${{ matrix.python-version }}
+        uses: actions/setup-python@v4
+        with:
+          python-version: ${{ matrix.python-version }}
+      - name: Install language-pack-fr and tzdata
+        run: |
+          sudo apt-get update
+          sudo apt-get install language-pack-fr tzdata
+      - name: Install tox
+        run: |
+          python -m pip install --upgrade pip
+          pip install tox
+      - name: Run tox
+        run: tox -e ${{ matrix.toxenv }}
+
   asdf-standard:
     name: Run asdf-standard tests
     runs-on: ubuntu-latest
