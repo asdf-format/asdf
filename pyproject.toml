@@ -182,3 +182,8 @@ profile = "black"
 filter_files = true
 line_length = 120
 extend_skip_glob = ["asdf/extern/*", ".eggs/*", ".tox/*"]
+
+[tool.autoflake]
+remove-all-unused-imports = true
+ignore-init-module-imports = true
+remove-unused-variables = true
