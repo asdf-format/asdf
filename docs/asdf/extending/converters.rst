@@ -21,8 +21,8 @@ Every Converter implementation must provide two required properties and
 two required methods:
 
 `Converter.tags` - a list of tag URIs or URI patterns handled by the converter.
-Patterns may include the wildcard character `*`, which matches any sequence of
-characters up to a `/`, or `**`, which matches any sequence of characters.
+Patterns may include the wildcard character ``*``, which matches any sequence of
+characters up to a ``/``, or ``**``, which matches any sequence of characters.
 The `~asdf.util.uri_match` method can be used to test URI patterns.
 
 `Converter.types` - a list of Python types or fully-qualified Python type names handled
@@ -251,7 +251,7 @@ But upon deserialization, we notice a problem:
 
     assert reconstituted_f1.inverse.inverse is asdf.treeutil.PendingValue
 
-The presence of `~asdf.treeutil.PendingValue` is asdf's way of telling us
+The presence of `~asdf.treeutil._PendingValue` is asdf's way of telling us
 that the value corresponding to the key ``inverse`` was not fully deserialized
 at the time that we retrieved it.  We can handle this situation by making our
 ``from_yaml_tree`` a generator function:

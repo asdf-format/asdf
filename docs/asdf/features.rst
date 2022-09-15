@@ -159,7 +159,7 @@ a top-level ``metadata`` property that contains information about the time the
 image was taken and the resolution of the image.
 
 In order to use this schema for a secondary validation pass, we pass the
-`custom_schema` argument to either `asdf.open` or the `AsdfFile` constructor.
+``custom_schema`` argument to either `asdf.open` or the `AsdfFile` constructor.
 Assume that the schema file lives in ``image_schema.yaml``, and we wish to
 open a file called ``image.asdf``. We would open the file with the following
 code:
@@ -216,7 +216,7 @@ In general, forward compatibility with newer versions of the ASDF Standard and
 ASDF file format is not supported by the software.
 
 When creating new ASDF files, it is possible to control the version of the file
-format that is used. This can be specified by passing the `version` argument to
+format that is used. This can be specified by passing the ``version`` argument to
 either the `AsdfFile` constructor when the file object is created, or to the
 `AsdfFile.write_to` method when it is written. By default, the latest version
 of the file format will be used. Note that this option has no effect on the
@@ -252,7 +252,7 @@ First, we'll create a ASDF file with a couple of arrays in it:
 
 Then we will reference those arrays in a couple of different ways.
 First, we'll load the source file in Python and use the
-`make_reference` method to generate a reference to array ``a``.
+``make_reference`` method to generate a reference to array ``a``.
 Second, we'll work at the lower level by manually writing a JSON
 Pointer to array ``b``, which doesn't require loading or having access
 to the target file.
@@ -418,7 +418,7 @@ Saving ASDF in FITS
     This section is about packaging entire ASDF files inside of
     `FITS data format <https://en.wikipedia.org/wiki/FITS>`_ files. This is
     probably only of interest to astronomers. Making use of this feature
-    requires the `astropy` package to be installed.
+    requires the :ref:`astropy:getting-started` package to be installed.
 
 Sometimes you may need to store the structured data supported by ASDF inside of
 a FITS file in order to be compatible with legacy tools that support only FITS.
@@ -457,7 +457,7 @@ data in the regular FITS extensions.
     }
 
 Now we take both the FITS `~astropy.io.fits.HDUList` and the ASDF tree and
-create an `AsdfInFits` object.
+create an `~asdf.fits_embed.AsdfInFits` object.
 
 .. runcode::
 
@@ -481,7 +481,7 @@ indicate that the data comes from a FITS extension:
 .. asdf:: content.asdf
 
 To load an ASDF-in-FITS file, simply open it using `asdf.open`. The returned
-value will be an `AsdfInFits` object, which can be used in the same way as any
+value will be an `~asdf.fits_embed.AsdfInFits` object, which can be used in the same way as any
 other `AsdfFile` object.
 
 .. runcode::

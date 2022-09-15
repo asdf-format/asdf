@@ -6,7 +6,8 @@ User API
     :include-all-objects:
     :inherited-members:
     :skip: ValidationError
-    :skip: AsdfExtension
+
+.. automodapi:: asdf.fits_embed
 
 .. automodapi:: asdf.search
 

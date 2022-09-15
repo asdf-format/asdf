@@ -30,8 +30,10 @@ latex_documents = [("index", project + ".tex", project + " Documentation", autho
 # -- Options for manual page output --------------------------------------------
 man_pages = [("index", project.lower(), project + " Documentation", [author], 1)]
 
-
 # Enable nitpicky mode - which ensures that all references in the docs
 # resolve.
 
 nitpicky = True
+
+# Add intersphinx mappings
+intersphinx_mapping["semantic_version"] = ("https://python-semanticversion.readthedocs.io/en/latest/", None)

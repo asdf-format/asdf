@@ -627,7 +627,7 @@ def validate(instance, ctx=None, schema={}, validators=None, reading=False, *arg
     tag on the instance.
 
     The additional *args and **kwargs are passed along to
-    `jsonschema.validate`.
+    ``jsonschema.validate``.
 
     Parameters
     ----------
@@ -709,7 +709,7 @@ def check_schema(schema, validate_default=True):
     Parameters
     ----------
     schema : dict
-        The schema object, as returned by `load_schema`.
+        The schema object, as returned by ``load_schema``.
     validate_default : bool, optional
         Set to `True` to validate the content of the default
         field against the schema.

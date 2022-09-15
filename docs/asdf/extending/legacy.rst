@@ -128,9 +128,9 @@ Note that the values of the `~asdf.CustomType.name`,
 `~asdf.CustomType.version` fields are all reflected in the ``id`` and ``tag``
 definitions in the schema.
 
-Note also that the base of the ``tag`` value (up to the `name` and `version`
+Note also that the base of the ``tag`` value (up to the ``name`` and ``version``
 components) is reflected in `~asdf.AsdfExtension.tag_mapping` property of the
-`FractionExtension` type, which is used to map tags to URLs. The
+``FractionExtension`` type, which is used to map tags to URLs. The
 `~asdf.AsdfExtension.url_mapping` is used to map URLs (of the same form as the
 ``id`` field in the schema) to the actual location of a schema file.
 
@@ -157,7 +157,7 @@ Custom type attributes
 **********************
 
 We overrode the following attributes of `~asdf.CustomType` in order to define
-`FractionType` (each bullet is also a link to the API documentation):
+``FractionType`` (each bullet is also a link to the API documentation):
 
 * `~asdf.CustomType.name`
 * `~asdf.CustomType.organization`
@@ -263,8 +263,8 @@ Serializing more complex types
 
 Sometimes the custom types that we wish to represent in ASDF themselves have
 attributes which are also custom types. As a somewhat contrived example,
-consider a 2D cartesian coordinate that uses `fraction.Fraction` to represent
-each of the components. We will call this type `Fractional2DCoordinate`.
+consider a 2D cartesian coordinate that uses ``fraction.Fraction`` to represent
+each of the components. We will call this type ``Fractional2DCoordinate``.
 
 First we need to define a schema to represent this new type::
 
@@ -326,15 +326,15 @@ We also need to define the custom tag type that corresponds to our new type:
             return coord
 
 In previous versions of this library, it was necessary for our
-`Fractional2DCoordinateType` class to call `~asdf.yamlutil` functions
+``Fractional2DCoordinateType`` class to call `~asdf.yamlutil` functions
 explicitly to convert the ``x`` and ``y`` components to and from
 their tree representations.  Now, the library will automatically
 convert nested custom types before calling `~asdf.CustomType.from_tree`,
 and after receiving the result from `~asdf.CustomType.to_tree`.
 
-Since `Fractional2DCoordinateType` shares the same
+Since ``Fractional2DCoordinateType`` shares the same
 `~asdf.CustomType.organization` and `~asdf.CustomType.standard` as
-`FractionType`, it can be added to the same extension class:
+``FractionType``, it can be added to the same extension class:
 
 .. runcode::
 
@@ -370,7 +370,7 @@ Now we can use this extension to create an ASDF file:
 .. asdf:: coord.asdf ignore_unrecognized_tag
 
 Note that in the resulting ASDF file, the ``x`` and ``y`` components of
-our new `fraction_2d_coord` type are tagged as `fraction-1.0.0`.
+our new ``fraction_2d_coord`` type are tagged as ``fraction-1.0.0``.
 
 Serializing reference cycles
 ****************************
@@ -457,7 +457,7 @@ But upon deserialization, we notice a problem:
 
     assert reconstituted_f1.inverse.inverse is asdf.treeutil.PendingValue
 
-The presence of `~asdf.treeutil.PendingValue` is `asdf`'s way of telling you
+The presence of `~asdf.treeutil._PendingValue` is `asdf`'s way of telling you
 that the value corresponding to the key ``inverse`` was not fully deserialized
 at the time that you retrieved it.  We can handle this situation by making our
 `~asdf.CustomType.from_tree` a generator function:
@@ -489,8 +489,8 @@ at the time that you retrieved it.  We can handle this situation by making our
             result.inverse = tree["inverse"]
 
 The generator version of `~asdf.CustomType.from_tree` yields the partially constructed
-`FractionWithInverse` object before setting its inverse property.  This allows
-asdf to proceed to constructing the inverse `FractionWithInverse` object,
+``FractionWithInverse`` object before setting its inverse property.  This allows
+asdf to proceed to constructing the inverse ``FractionWithInverse`` object,
 and resume the original `~asdf.CustomType.from_tree` execution only when the inverse
 is actually available.
 
@@ -721,7 +721,7 @@ validation keyword name and the values are validation functions.  The
 validation functions are of the same form as the validation functions in the
 underlying ``jsonschema`` library, and are passed the following arguments:
 
-  - ``validator``: A `jsonschema.Validator` instance.
+  - ``validator``: A ``jsonschema.Validator`` instance.
 
   - ``value``: The value of the schema keyword.
 
@@ -733,7 +733,7 @@ underlying ``jsonschema`` library, and are passed the following arguments:
     get other related schema keywords.
 
 The validation function should either return ``None`` if the instance
-is valid or ``yield`` one or more `asdf.ValidationError` objects if
+is valid or ``yield`` one or more ``jsonschema.ValidationError`` objects if
 the instance is invalid.
 
 To continue the example from above, for the ``FractionType`` say we
@@ -766,7 +766,7 @@ used.
 
 All extension classes must implement the `asdf.AsdfExtension` abstract base
 class. A custom extension will override each of the following properties of
-`AsdfExtension` (the text in each bullet is also a link to the corresponding
+`asdf.AsdfExtension` (the text in each bullet is also a link to the corresponding
 documentation):
 
 * `~asdf.AsdfExtension.types`
@@ -786,10 +786,10 @@ since the schema for the type to be overridden is already provided as part of
 the ASDF standard.
 
 Instead, the extension class may inherit from `asdf`'s
-`~asdf.extension.BuiltinExtension` and simply override the
+`asdf.extension.BuiltinExtension` and simply override the
 `~asdf.AsdfExtension.types` property to indicate the type that is being
 overridden.  Doing this preserves the `~asdf.AsdfExtension.tag_mapping` and
-`~asdf.AsdfExtension.url_mapping` that is used by the `BuiltinExtension`, which
+`~asdf.AsdfExtension.url_mapping` that is used by the ``BuiltinExtension``, which
 allows the schemas that are packaged by `asdf` to be located.
 
 `asdf` will give precedence to the type that is provided by the external
@@ -814,11 +814,11 @@ Registering entry points
 
 Packages that provide their own ASDF extensions can (and should!) install them
 so that they are automatically detectable by the `asdf` Python package. This is
-accomplished using Python's `setuptools` entry points. Entry points are
-registered in a package's `setup.py` file.
+accomplished using Python's `setuptools <https://setuptools.pypa.io/en/latest/index.html>`_
+entry points. Entry points are registered in a package's ``setup.py`` file.
 
-Consider a package that provides an extension class `MyPackageExtension` in the
-submodule `mypackage.asdf.extensions`. We need to register this class as an
+Consider a package that provides an extension class ``MyPackageExtension`` in the
+submodule ``mypackage.asdf.extensions``. We need to register this class as an
 extension entry point that `asdf` will recognize. First, we create a dictionary:
 
 .. code:: python
@@ -828,7 +828,7 @@ extension entry point that `asdf` will recognize. First, we create a dictionary:
         "mypackage = mypackage.asdf.extensions:MyPackageExtension"
     ]
 
-The key used in the `entry_points` dictionary must be ``'asdf_extensions'``.
+The key used in the ``entry_points`` dictionary must be ``'asdf_extensions'``.
 The value must be an array of one or more strings, each with the following
 format:
 
@@ -839,9 +839,9 @@ the package and the extension. In most cases the package itself name will
 suffice.
 
 Note that depending on individual package requirements, there may be other
-entries in the `entry_points` dictionary.
+entries in the ``entry_points`` dictionary.
 
-The entry points must be passed to the call to `setuptools.setup`:
+The entry points must be passed to the call to ``setuptools.setup``:
 
 .. code:: python
 
@@ -905,9 +905,9 @@ testing (see `asdf`'s own ``pyproject.toml`` for an example of this).
 .. note::
 
    Older versions of `asdf` (prior to 2.4.0) required the plugin to be registered
-   in your project's `conftest.py` file. As of 2.4.0, the plugin is now
+   in your project's ``conftest.py`` file. As of 2.4.0, the plugin is now
    registered automatically and so this line should be removed from your
-   `conftest.py` file, unless you need to retain compatibility with older
+   ``conftest.py`` file, unless you need to retain compatibility with older
    versions of `asdf`.
 
 The ``asdf_schema_skip_names`` configuration variable can be used to skip

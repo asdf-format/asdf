@@ -80,7 +80,7 @@ def assert_tree_match(old_tree, new_tree, ctx=None, funcname="assert_equal", ign
     funcname : `str` or `callable`
         The name of a method on members of old_tree and new_tree that
         will be used to compare custom objects.  The default of
-        `assert_equal` handles Numpy arrays.
+        ``assert_equal`` handles Numpy arrays.
 
     ignore_keys : list of str
         List of keys to ignore

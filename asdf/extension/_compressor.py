@@ -16,7 +16,7 @@ class Compressor(abc.ABC):
     """
     Abstract base class for plugins that compress binary data.
 
-    Implementing classes must provide the `labels` property, and
+    Implementing classes must provide the ``labels`` property, and
     at least one of the `compress()` and `decompress()` methods.
     May also provide a constructor.
     """
@@ -42,14 +42,14 @@ class Compressor(abc.ABC):
 
     def compress(self, data, **kwargs):
         """
-        Compress `data`, yielding the results.  The yield may be
+        Compress ``data``, yielding the results. The yield may be
         block-by-block, or all at once.
 
         Parameters
         ----------
         data : memoryview
             The data to compress. Must be contiguous and 1D, with
-            the underlying `itemsize` preserved.
+            the underlying ``itemsize`` preserved.
         **kwargs
             Keyword arguments to be passed to the underlying compression
             function
@@ -63,7 +63,7 @@ class Compressor(abc.ABC):
 
     def decompress(self, data, out, **kwargs):
         """
-        Decompress `data`, writing the result into `out`.
+        Decompress ``data``, writing the result into ``out``.
 
         Parameters
         ----------
@@ -80,6 +80,6 @@ class Compressor(abc.ABC):
         Returns
         -------
         nbytes : int
-            The number of bytes written to `out`
+            The number of bytes written to ``out``
         """
         raise NotImplementedError

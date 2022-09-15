@@ -197,11 +197,13 @@ an additional list of class names that previously identified the extension:
 
 .. _exposing_extension_object_internals:
 
-Making converted object's contents visible to `info` and `search`
------------------------------------------------------------------
+Making converted object's contents visible to ``info`` and ``search``
+---------------------------------------------------------------------
+
+When an object is converted to YAML, the resulting YAML tree is stored in the
 
 If the object produced by the extension supports a class method
-`.__asdf_traverse__` then it can be used by those tools to expose the contents
+``.__asdf_traverse__`` then it can be used by those tools to expose the contents
 of the object. That method should accept no arguments and return either a
 dict of attributes and their values, or a list if the object itself is
 list-like.

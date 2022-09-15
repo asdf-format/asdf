@@ -74,7 +74,7 @@ class AsdfFile:
             The URI for this ASDF file.  Used to resolve relative
             references against.  If not provided, will be
             automatically determined from the associated file object,
-            if possible and if created from `AsdfFile.open`.
+            if possible and if created from `asdf.AsdfFile.open`.
 
         extensions : object, optional
             Additional extensions to use when reading and writing the file.
@@ -111,7 +111,7 @@ class AsdfFile:
             open during the lifetime of the tree. Setting to False causes
             all data arrays to be loaded up front, which means that they
             can be accessed even after the underlying file is closed.
-            Note: even if `lazy_load` is `False`, `copy_arrays` is still taken
+            Note: even if ``lazy_load`` is `False`, ``copy_arrays`` is still taken
             into account.
 
         custom_schema : str, optional
@@ -462,7 +462,7 @@ class AsdfFile:
 
     def close(self):
         """
-        Close the file handles associated with the `AsdfFile`.
+        Close the file handles associated with the `asdf.AsdfFile`.
         """
         if self._fd and not self._closed:
             # This is ok to always do because GenericFile knows
@@ -525,7 +525,7 @@ class AsdfFile:
         """
         Resolve a (possibly relative) URI against the URI of this ASDF
         file.  May be overridden by base classes to change how URIs
-        are resolved.  This does not apply any `uri_mapping` that was
+        are resolved.  This does not apply any ``uri_mapping`` that was
         passed to the constructor.
 
         Parameters
@@ -641,7 +641,7 @@ class AsdfFile:
 
         Returns
         -------
-        reference : reference.Reference
+        reference :
             A reference object.
 
         Examples
@@ -1234,7 +1234,7 @@ class AsdfFile:
         Write the ASDF file to the given file-like object.
 
         `write_to` does not change the underlying file descriptor in
-        the `AsdfFile` object, but merely copies the content to a new
+        the `asdf.AsdfFile` object, but merely copies the content to a new
         file.
 
         Parameters
@@ -1320,7 +1320,7 @@ class AsdfFile:
     def find_references(self):
         """
         Finds all external "JSON References" in the tree and converts
-        them to `reference.Reference` objects.
+        them to ``reference.Reference`` objects.
         """
         # Set directly to self._tree, since it doesn't need to be re-validated.
         self._tree = reference.find_references(self._tree, self)
@@ -1343,7 +1343,7 @@ class AsdfFile:
         Parameters
         ----------
         hookname : str
-            The name of the hook.  If a `AsdfType` is found with a method
+            The name of the hook.  If a `asdf.types.AsdfType` is found with a method
             with this name, it will be called for every instance of the
             corresponding custom type in the tree.
         """
@@ -1366,7 +1366,7 @@ class AsdfFile:
         Parameters
         ----------
         hookname : str
-            The name of the hook.  If a `AsdfType` is found with a method
+            The name of the hook.  If a `asdf.types.AsdfType` is found with a method
             with this name, it will be called for every instance of the
             corresponding custom type in the tree.
 
@@ -1432,7 +1432,7 @@ class AsdfFile:
         software : dict or list of dict
             A description of the software used.  It should not include
             asdf itself, as that is automatically notated in the
-            `asdf_library` entry.
+            ``asdf_library`` entry.
 
             Each dict must have the following keys:
 
@@ -1632,10 +1632,6 @@ class AsdfFile:
         return SerializationContext(self.version_string, self.extension_manager, self.uri)
 
 
-# Inherit docstring from dictionary
-AsdfFile.keys.__doc__ = dict.keys.__doc__
-
-
 def _check_and_set_mode(fileobj, asdf_mode):
 
     if asdf_mode is not None and asdf_mode not in ["r", "rw"]:
@@ -1703,7 +1699,7 @@ def open_asdf(
 
     uri : string, optional
         The URI of the file.  Only required if the URI can not be
-        automatically determined from `fd`.
+        automatically determined from ``fd``.
 
     mode : string, optional
         The mode to open the file in.  Must be ``r`` (default) or
@@ -1738,7 +1734,7 @@ def open_asdf(
         open during the lifetime of the tree. Setting to False causes
         all data arrays to be loaded up front, which means that they
         can be accessed even after the underlying file is closed.
-        Note: even if `lazy_load` is `False`, `copy_arrays` is still taken
+        Note: even if ``lazy_load`` is `False`, ``copy_arrays`` is still taken
         into account.
 
     custom_schema : str, optional
