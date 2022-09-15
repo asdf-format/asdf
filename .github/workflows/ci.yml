@@ -54,6 +54,23 @@ jobs:
         - macos: py39
         - windows: py39
 
+  dev:
+    needs: [core, asdf-standard]
+    uses: OpenAstronomy/github-actions-workflows/.github/workflows/tox.yml@v1
+    with:
+      cache-path: ~/.cache/pip
+      cache-key: pip-${{ needs.setup.outputs.requirements-hash }}
+      cache-restore-keys: |
+        pip-
+      # Any env name which does not start with `pyXY` will use this Python version.
+      default_python: '3.9'
+      envs: |
+        - linux: py38-devdeps
+        - linux: py39-devdeps
+        - linux: py310-devdeps
+        - linux: py311-devdeps
+          python-version: 3.11.0-rc.2
+
   compatibility:
     needs: [core, asdf-standard]
     uses: OpenAstronomy/github-actions-workflows/.github/workflows/tox.yml@v1
@@ -73,7 +90,7 @@ jobs:
         - linux: warnings
 
   external:
-    needs: [test, compatibility]
+    needs: [core, asdf-standard]
     uses: OpenAstronomy/github-actions-workflows/.github/workflows/tox.yml@v1
     with:
       cache-path: ~/.cache/pip
@@ -93,7 +110,7 @@ jobs:
         - linux: py39-asdfcoordinatesschemasdev
 
   package:
-    needs: [external]
+    needs: [test, dev, compatibility, external]
     uses: OpenAstronomy/github-actions-workflows/.github/workflows/tox.yml@v1
     with:
       cache-path: ~/.cache/pip
@@ -106,39 +123,6 @@ jobs:
         - linux: twine
         - linux: prerelease
         - linux: packaged
-
-  latest:
-    name: latest
-    runs-on: ubuntu-latest
-    strategy:
-      fail-fast: false
-      matrix:
-        include:
-          - name: Python 3.11 Testing
-            os: ubuntu-latest
-            python-version: "3.11.0-rc.1"
-            toxenv: py311-devdeps
-
-    steps:
-      - name: Checkout code
-        uses: actions/checkout@v2
-        with:
-          fetch-depth: 0
-          submodules: true
-      - name: Set up Python ${{ matrix.python-version }}
-        uses: actions/setup-python@v4
-        with:
-          python-version: ${{ matrix.python-version }}
-      - name: Install language-pack-fr and tzdata
-        run: |
-          sudo apt-get update
-          sudo apt-get install language-pack-fr tzdata
-      - name: Install tox
-        run: |
-          python -m pip install --upgrade pip
-          pip install tox
-      - name: Run tox
-        run: tox -e ${{ matrix.toxenv }}
 
   asdf-standard:
     name: Run asdf-standard tests
