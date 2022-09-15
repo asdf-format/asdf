@@ -19,7 +19,6 @@ release = get_distribution(configuration["name"]).version
 version = ".".join(release.split(".")[:2])
 
 # -- Options for HTML output ---------------------------------------------------
-html_static_path = ["_static"]
 html_title = "{0} v{1}".format(project, release)
 
 # Output file base name for HTML help builder.
@@ -30,3 +29,9 @@ latex_documents = [("index", project + ".tex", project + " Documentation", autho
 
 # -- Options for manual page output --------------------------------------------
 man_pages = [("index", project.lower(), project + " Documentation", [author], 1)]
+
+
+# Enable nitpicky mode - which ensures that all references in the docs
+# resolve.
+
+nitpicky = True

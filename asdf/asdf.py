@@ -97,7 +97,7 @@ class AsdfFile:
         ignore_implicit_conversion : bool
             When `True`, do not raise warnings when types in the tree are
             implicitly converted into a serializable object. The motivating
-            case for this is currently `namedtuple`, which cannot be serialized
+            case for this is currently ``namedtuple``, which cannot be serialized
             as-is.
 
         copy_arrays : bool, optional
