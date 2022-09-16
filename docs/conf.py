@@ -37,3 +37,4 @@ nitpicky = True
 
 # Add intersphinx mappings
 intersphinx_mapping["semantic_version"] = ("https://python-semanticversion.readthedocs.io/en/latest/", None)
+intersphinx_mapping["jsonschema"] = ("https://python-jsonschema.readthedocs.io/en/stable/", None)
