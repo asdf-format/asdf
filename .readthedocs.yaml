@@ -8,6 +8,7 @@ build:
     python: "3.9"
 
 sphinx:
+  builder: html
   fail_on_warning: true
   configuration: docs/conf.py
 
@@ -18,4 +19,5 @@ python:
       extra_requirements:
         - docs
 
-formats: all
+# No extra formats
+formats: []
