@@ -519,7 +519,7 @@ def get_validator(
     Get a JSON schema validator object for the given schema.
 
     The additional *args and **kwargs are passed along to
-    `jsonschema.validate`.
+    `~jsonschema.Validator.validate`.
 
     Parameters
     ----------
@@ -626,8 +626,8 @@ def validate(instance, ctx=None, schema={}, validators=None, reading=False, *arg
     the appropriate schema.  The schema itself is located using the
     tag on the instance.
 
-    The additional *args and **kwargs are passed along to
-    `jsonschema.validate`.
+    The additional ``*args`` and ``**kwargs`` are passed along to
+    `~jsonschema.Validator.validate`.
 
     Parameters
     ----------
@@ -709,7 +709,7 @@ def check_schema(schema, validate_default=True):
     Parameters
     ----------
     schema : dict
-        The schema object, as returned by `load_schema`.
+        The schema object, as returned by ``load_schema``.
     validate_default : bool, optional
         Set to `True` to validate the content of the default
         field against the schema.

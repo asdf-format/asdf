@@ -8,6 +8,8 @@ User API
     :skip: ValidationError
     :skip: AsdfExtension
 
+.. automodapi:: asdf.fits_embed
+
 .. automodapi:: asdf.search
 
 .. automodapi:: asdf.config

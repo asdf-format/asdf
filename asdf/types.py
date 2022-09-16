@@ -5,7 +5,7 @@ from copy import copy
 from . import tagged, util
 from .versioning import AsdfSpec, AsdfVersion
 
-__all__ = ["format_tag", "CustomType"]
+__all__ = ["format_tag", "CustomType", "AsdfType", "ExtensionType"]
 
 
 # regex used to parse module name from optional version string
@@ -162,7 +162,7 @@ class ExtensionType:
     The base class of all custom types in the tree.
 
     Besides the attributes defined below, most subclasses will also
-    override `to_tree` and `from_tree`.
+    override ``to_tree`` and ``from_tree``.
     """
 
     name = None
@@ -243,7 +243,7 @@ class ExtensionType:
         types (dict, list, str, or number). However, the types can be nested
         and combined in order to represent more complex custom types.
 
-        This method is called as part of the process of writing an `AsdfFile`
+        This method is called as part of the process of writing an `asdf.AsdfFile`
         object. Whenever a custom type (or a subclass of that type) that is
         listed in the `types` attribute of this class is encountered, this
         method will be used to serialize that type.
@@ -258,8 +258,8 @@ class ExtensionType:
             an instance of a subclass) of one of the types listed in the
             `types` attribute of this class.
 
-        ctx : `AsdfFile`
-            An instance of the `AsdfFile` object that is being written out.
+        ctx : `asdf.AsdfFile`
+            An instance of the `asdf.AsdfFile` object that is being written out.
 
         Returns
         -------
@@ -286,8 +286,8 @@ class ExtensionType:
             an instance of a subclass) of one of the types listed in the
             `types` attribute of this class.
 
-        ctx : `AsdfFile`
-            An instance of the `AsdfFile` object that is being written out.
+        ctx : `asdf.AsdfFile`
+            An instance of the `asdf.AsdfFile` object that is being written out.
 
         Returns
         -------
@@ -310,7 +310,7 @@ class ExtensionType:
         when constructing objects that contain reference cycles.
 
         This method is called as part of the process of reading an ASDF file in
-        order to construct an `AsdfFile` object. Whenever a YAML subtree is
+        order to construct an `asdf.AsdfFile` object. Whenever a YAML subtree is
         encountered that has a tag that corresponds to the `yaml_tag` property
         of this class, this method will be used to deserialize that tree back
         into an instance of the original custom type.
@@ -321,8 +321,8 @@ class ExtensionType:
             An instance of a basic Python type (possibly nested) that
             corresponds to a YAML subtree.
 
-        ctx : `AsdfFile`
-            An instance of the `AsdfFile` object that is being constructed.
+        ctx : `asdf.AsdfFile`
+            An instance of the `asdf.AsdfFile` object that is being constructed.
 
         Returns
         -------
@@ -338,15 +338,15 @@ class ExtensionType:
 
         It is more common for extension classes to override `from_tree` instead
         of this method. This method should only be overridden if it is
-        necessary to access the `_tag` property of the `Tagged` object
+        necessary to access the `_tag` property of the `~asdf.tagged.Tagged` object
         directly.
 
         Parameters
         ----------
         tree : `asdf.tagged.Tagged` object representing YAML tree
 
-        ctx : `AsdfFile`
-            An instance of the `AsdfFile` object that is being constructed.
+        ctx : `asdf.AsdfFile`
+            An instance of the `asdf.AsdfFile` object that is being constructed.
 
         Returns
         -------
@@ -413,7 +413,8 @@ class CustomType(ExtensionType, metaclass=ExtensionTypeMeta):
 
     version = (1, 0, 0)
     """
-    `str`, `tuple`, `AsdfVersion`, or `AsdfSpec`: The version of the type.
+    `str`, `tuple`, `asdf.versioning.AsdfVersion`, or `asdf.versioning.AsdfSpec`:
+        The version of the type.
     """
 
     supported_versions = set()

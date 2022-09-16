@@ -85,7 +85,7 @@ class AsdfConfig:
         mapping : collections.abc.Mapping, optional
             Mapping to remove.
         package : str, optional
-            Remove only extensions provided by this package.  If the `mapping`
+            Remove only extensions provided by this package.  If the ``mapping``
             argument is omitted, then all mappings from this package will
             be removed.
         """
@@ -119,12 +119,12 @@ class AsdfConfig:
     @property
     def resource_manager(self):
         """
-        Get the `ResourceManager` instance.  Includes resources from
+        Get the `asdf.resource.ResourceManager` instance.  Includes resources from
         registered resource mappings and any mappings added at runtime.
 
         Returns
         -------
-        asdf.resource.ResourceManager
+        `asdf.resource.ResourceManager`
         """
         if self._resource_manager is None:
             with self._lock:
@@ -169,7 +169,7 @@ class AsdfConfig:
         extension : asdf.extension.AsdfExtension or asdf.extension.Extension or str, optional
             An extension instance or URI pattern to remove.
         package : str, optional
-            Remove only extensions provided by this package.  If the `extension`
+            Remove only extensions provided by this package.  If the ``extension``
             argument is omitted, then all extensions from this package will
             be removed.
         """

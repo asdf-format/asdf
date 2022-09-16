@@ -9,7 +9,7 @@ from contextlib import contextmanager
 from . import tagged
 from .exceptions import AsdfWarning
 
-__all__ = ["walk", "iter_tree", "walk_and_modify", "get_children", "is_container", "PendingValue"]
+__all__ = ["walk", "iter_tree", "walk_and_modify", "get_children", "is_container", "PendingValue", "RemoveNode"]
 
 
 def walk(top, callback):
@@ -235,7 +235,7 @@ def walk_and_modify(top, callback, ignore_implicit_conversion=False, postorder=T
         - a json id (optional)
 
         It may return a different instance in order to modify the
-        tree.  If the singleton instance `asdf.treeutil.RemoveNode`
+        tree.  If the singleton instance `~asdf.treeutil._RemoveNode`
         is returned, the node will be removed from the tree.
 
         The json id is the context under which any relative URLs
@@ -253,7 +253,7 @@ def walk_and_modify(top, callback, ignore_implicit_conversion=False, postorder=T
     ignore_implicit_conversion : bool
         Controls whether warnings should be issued when implicitly converting a
         given type instance in the tree into a serializable object. The primary
-        case for this is currently `namedtuple`.
+        case for this is currently ``namedtuple``.
 
         Defaults to `False`.
 

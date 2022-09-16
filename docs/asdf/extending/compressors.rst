@@ -55,6 +55,6 @@ compressor module or ``__init__`` method that lingers will introduce a delay
 to the initial call to `asdf.open`.  For that reason, we recommend that compressor
 authors minimize the number of imports that occur in the module containing the
 Compressor implementation, and defer imports of compression libraries to inside
-the `Comrpessor.compress` and `Compressor.decompress` methods.  This will
+the `Compressor.compress` and `Compressor.decompress` methods.  This will
 prevent the library from ever being imported when reading ASDF files that
 do not utilize the Compressor's algorithm.

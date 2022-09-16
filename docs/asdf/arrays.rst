@@ -160,7 +160,7 @@ file.  By definition, it must be the last block in the file.
 To use streaming, rather than including a Numpy array object in the
 tree, you include a `asdf.Stream` object which sets up the structure
 of the streamed data, but will not write out the actual content.  The
-file handle's `write` method is then used to manually write out the
+file handle's ``write`` method is then used to manually write out the
 binary data.
 
 .. runcode::
@@ -279,11 +279,11 @@ permitted:
 
     af.tree
 
-Specifically, if an ASDF file has been opened using a `with` context, it is not
+Specifically, if an ASDF file has been opened using a ``with`` context, it is not
 possible to access the file contents outside of the scope of that context,
 because any memory mapped arrays will no longer be available.
 
 It may sometimes be useful to copy array data into memory instead of using
-memory maps. This can be controlled by passing the `copy_arrays` parameter to
+memory maps. This can be controlled by passing the ``copy_arrays`` parameter to
 either the `AsdfFile` constructor or `asdf.open`. By default,
-`copy_arrays=False`.
+``copy_arrays=False``.

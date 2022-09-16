@@ -31,7 +31,7 @@ is not intended to be exposed to the end user.
 from collections import UserDict, UserList, UserString
 from copy import copy, deepcopy
 
-__all__ = ["tag_object", "get_tag"]
+__all__ = ["tag_object", "get_tag", "Tagged", "TaggedDict", "TaggedList", "TaggedString"]
 
 
 class Tagged:

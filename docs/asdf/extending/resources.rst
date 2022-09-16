@@ -141,7 +141,7 @@ The `asdf` package also offers an entry point for installing resource
 mapping plugins.  This installs a package's resources automatically
 without requiring calls to the AsdfConfig method.  The entry point is
 called ``asdf.resource_mappings`` and expects to receive
-a method that returns a list of `~abc.collections.Mapping` instances.
+a method that returns a list of `~collections.abc.Mapping` instances.
 
 For example, let's say we're creating a package named ``asdf-foo-schemas``
 that provides the same schemas described in the previous section.  Our
@@ -163,7 +163,8 @@ directory structure might look something like this::
                 └─ baz-8.1.1.yaml
 
 ``pyproject.toml`` is the preferred central configuration file for Python build and development systems.
-However, it is also possible to write configuration to a ``setup.cfg`` file (used by `setuptools`) placed in the root
+However, it is also possible to write configuration to a ``setup.cfg`` file (used by
+`setuptools <https://setuptools.pypa.io/en/latest/index.html>`_) placed in the root
 directory of the project. This documentation will cover both options.
 
 In ``integration.py``, we'll define the entry point method

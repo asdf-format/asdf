@@ -54,6 +54,23 @@ jobs:
         - macos: py39
         - windows: py39
 
+  dev:
+    needs: [core, asdf-standard]
+    uses: OpenAstronomy/github-actions-workflows/.github/workflows/tox.yml@v1
+    with:
+      cache-path: ~/.cache/pip
+      cache-key: pip-${{ needs.setup.outputs.requirements-hash }}
+      cache-restore-keys: |
+        pip-
+      # Any env name which does not start with `pyXY` will use this Python version.
+      default_python: '3.9'
+      envs: |
+        - linux: py38-devdeps
+        - linux: py39-devdeps
+        - linux: py310-devdeps
+        - linux: py311-devdeps
+          python-version: 3.11.0-rc.2
+
   compatibility:
     needs: [core, asdf-standard]
     uses: OpenAstronomy/github-actions-workflows/.github/workflows/tox.yml@v1
@@ -66,34 +83,10 @@ jobs:
       default_python: '3.9'
       envs: |
         - linux: compatibility
-        - linux: docbuild
-          libraries:
-            apt:
-              - graphviz
         - linux: warnings
 
-  external:
-    needs: [test, compatibility]
-    uses: OpenAstronomy/github-actions-workflows/.github/workflows/tox.yml@v1
-    with:
-      cache-path: ~/.cache/pip
-      cache-key: pip-${{ needs.setup.outputs.requirements-hash }}
-      cache-restore-keys: |
-        pip-
-      # Any env name which does not start with `pyXY` will use this Python version.
-      default_python: '3.9'
-      envs: |
-        - linux: py39-astropydev
-        - linux: py39-asdfastropydev
-        - linux: py39-gwcsdev
-        - linux: py39-numpydev
-        - linux: py39-asdfstandarddev
-        - linux: py39-asdftransformschemasdev
-        - linux: py39-asdfwcsschemasdev
-        - linux: py39-asdfcoordinatesschemasdev
-
   package:
-    needs: [external]
+    needs: [test, dev, compatibility]
     uses: OpenAstronomy/github-actions-workflows/.github/workflows/tox.yml@v1
     with:
       cache-path: ~/.cache/pip

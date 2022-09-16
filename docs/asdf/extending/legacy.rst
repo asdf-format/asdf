@@ -26,7 +26,7 @@ Supporting new types in ASDF is easy. Three components are required:
    ASDF serializes and deserializes the custom type.
 
 3. A Python class to define an "extension" to ASDF, which is a set of related
-   types. This class must implement the `asdf.AsdfExtension` abstract base
+   types. This class must implement the `asdf.extension.AsdfExtension` abstract base
    class. In general, a third-party library that defines multiple custom types
    can group them all in the same extension.
 
@@ -67,7 +67,7 @@ First, the YAML Schema, defining the type as a pair of integers:
     ...
 
 Then, the Python implementation of the tag class and extension class. See the
-`asdf.CustomType` and `asdf.AsdfExtension` documentation for more information:
+`asdf.CustomType` and `asdf.extension.AsdfExtension` documentation for more information:
 
 .. runcode:: hidden
 
@@ -128,10 +128,10 @@ Note that the values of the `~asdf.CustomType.name`,
 `~asdf.CustomType.version` fields are all reflected in the ``id`` and ``tag``
 definitions in the schema.
 
-Note also that the base of the ``tag`` value (up to the `name` and `version`
-components) is reflected in `~asdf.AsdfExtension.tag_mapping` property of the
-`FractionExtension` type, which is used to map tags to URLs. The
-`~asdf.AsdfExtension.url_mapping` is used to map URLs (of the same form as the
+Note also that the base of the ``tag`` value (up to the ``name`` and ``version``
+components) is reflected in `~asdf.extension.AsdfExtension.tag_mapping` property of the
+``FractionExtension`` type, which is used to map tags to URLs. The
+`~asdf.extension.AsdfExtension.url_mapping` is used to map URLs (of the same form as the
 ``id`` field in the schema) to the actual location of a schema file.
 
 Once these classes and the schema have been defined, we can save an ASDF file
@@ -157,7 +157,7 @@ Custom type attributes
 **********************
 
 We overrode the following attributes of `~asdf.CustomType` in order to define
-`FractionType` (each bullet is also a link to the API documentation):
+``FractionType`` (each bullet is also a link to the API documentation):
 
 * `~asdf.CustomType.name`
 * `~asdf.CustomType.organization`
@@ -177,7 +177,7 @@ types that are provided by the same package should be grouped into the same
 These three values, along with the `~asdf.CustomType.version`, are used to
 define the YAML tag that will mark the serialized type in ASDF files. In our
 example, the tag becomes ``tag:nowhere.org:custom/fraction-1.0.0``. The tag
-is important when defining the `asdf.AsdfExtension` subclass.
+is important when defining the `asdf.extension.AsdfExtension` subclass.
 
 Critically, these values must all be reflected in the associated schema.
 
@@ -263,8 +263,8 @@ Serializing more complex types
 
 Sometimes the custom types that we wish to represent in ASDF themselves have
 attributes which are also custom types. As a somewhat contrived example,
-consider a 2D cartesian coordinate that uses `fraction.Fraction` to represent
-each of the components. We will call this type `Fractional2DCoordinate`.
+consider a 2D cartesian coordinate that uses ``fraction.Fraction`` to represent
+each of the components. We will call this type ``Fractional2DCoordinate``.
 
 First we need to define a schema to represent this new type::
 
@@ -326,15 +326,15 @@ We also need to define the custom tag type that corresponds to our new type:
             return coord
 
 In previous versions of this library, it was necessary for our
-`Fractional2DCoordinateType` class to call `~asdf.yamlutil` functions
+``Fractional2DCoordinateType`` class to call `~asdf.yamlutil` functions
 explicitly to convert the ``x`` and ``y`` components to and from
 their tree representations.  Now, the library will automatically
 convert nested custom types before calling `~asdf.CustomType.from_tree`,
 and after receiving the result from `~asdf.CustomType.to_tree`.
 
-Since `Fractional2DCoordinateType` shares the same
+Since ``Fractional2DCoordinateType`` shares the same
 `~asdf.CustomType.organization` and `~asdf.CustomType.standard` as
-`FractionType`, it can be added to the same extension class:
+``FractionType``, it can be added to the same extension class:
 
 .. runcode::
 
@@ -370,7 +370,7 @@ Now we can use this extension to create an ASDF file:
 .. asdf:: coord.asdf ignore_unrecognized_tag
 
 Note that in the resulting ASDF file, the ``x`` and ``y`` components of
-our new `fraction_2d_coord` type are tagged as `fraction-1.0.0`.
+our new ``fraction_2d_coord`` type are tagged as ``fraction-1.0.0``.
 
 Serializing reference cycles
 ****************************
@@ -457,7 +457,7 @@ But upon deserialization, we notice a problem:
 
     assert reconstituted_f1.inverse.inverse is asdf.treeutil.PendingValue
 
-The presence of `~asdf.treeutil.PendingValue` is `asdf`'s way of telling you
+The presence of `~asdf.treeutil._PendingValue` is `asdf`'s way of telling you
 that the value corresponding to the key ``inverse`` was not fully deserialized
 at the time that you retrieved it.  We can handle this situation by making our
 `~asdf.CustomType.from_tree` a generator function:
@@ -489,8 +489,8 @@ at the time that you retrieved it.  We can handle this situation by making our
             result.inverse = tree["inverse"]
 
 The generator version of `~asdf.CustomType.from_tree` yields the partially constructed
-`FractionWithInverse` object before setting its inverse property.  This allows
-asdf to proceed to constructing the inverse `FractionWithInverse` object,
+``FractionWithInverse`` object before setting its inverse property.  This allows
+asdf to proceed to constructing the inverse ``FractionWithInverse`` object,
 and resume the original `~asdf.CustomType.from_tree` execution only when the inverse
 is actually available.
 
@@ -697,7 +697,7 @@ resource for creating ASDF schemas can be found in the :ref:`ASDF Standard
 
 In most cases, ASDF schemas will be included as part of a packaged software
 distribution. In these cases, it is important for the
-`~asdf.AsdfExtension.url_mapping` of the corresponding `~asdf.AsdfExtension`
+`~asdf.extension.AsdfExtension.url_mapping` of the corresponding `~asdf.extension.AsdfExtension`
 extension class to map the schema URL to an actual location on disk. However,
 it is possible for schemas to be hosted online as well, in which case the URL
 mapping can map (perhaps trivially) to an actual network location. See
@@ -719,7 +719,7 @@ To support custom validation keywords, set the `~asdf.CustomType.validators`
 member of a `~asdf.CustomType` subclass to a dictionary where the keys are the
 validation keyword name and the values are validation functions.  The
 validation functions are of the same form as the validation functions in the
-underlying ``jsonschema`` library, and are passed the following arguments:
+underlying `jsonschema` library, and are passed the following arguments:
 
   - ``validator``: A `jsonschema.Validator` instance.
 
@@ -733,7 +733,7 @@ underlying ``jsonschema`` library, and are passed the following arguments:
     get other related schema keywords.
 
 The validation function should either return ``None`` if the instance
-is valid or ``yield`` one or more `asdf.ValidationError` objects if
+is valid or ``yield`` one or more `jsonschema.ValidationError` objects if
 the instance is invalid.
 
 To continue the example from above, for the ``FractionType`` say we
@@ -764,14 +764,14 @@ so that they can be used when processing ASDF files. Packages that define their
 own custom tag types must also define extensions in order for those types to be
 used.
 
-All extension classes must implement the `asdf.AsdfExtension` abstract base
+All extension classes must implement the `asdf.extension.AsdfExtension` abstract base
 class. A custom extension will override each of the following properties of
-`AsdfExtension` (the text in each bullet is also a link to the corresponding
+`asdf.extension.AsdfExtension` (the text in each bullet is also a link to the corresponding
 documentation):
 
-* `~asdf.AsdfExtension.types`
-* `~asdf.AsdfExtension.tag_mapping`
-* `~asdf.AsdfExtension.url_mapping`
+* `~asdf.extension.AsdfExtension.types`
+* `~asdf.extension.AsdfExtension.tag_mapping`
+* `~asdf.extension.AsdfExtension.url_mapping`
 
 .. _packaging_extensions:
 
@@ -786,10 +786,10 @@ since the schema for the type to be overridden is already provided as part of
 the ASDF standard.
 
 Instead, the extension class may inherit from `asdf`'s
-`~asdf.extension.BuiltinExtension` and simply override the
-`~asdf.AsdfExtension.types` property to indicate the type that is being
-overridden.  Doing this preserves the `~asdf.AsdfExtension.tag_mapping` and
-`~asdf.AsdfExtension.url_mapping` that is used by the `BuiltinExtension`, which
+`asdf.extension.BuiltinExtension` and simply override the
+`~asdf.extension.AsdfExtension.types` property to indicate the type that is being
+overridden.  Doing this preserves the `~asdf.extension.AsdfExtension.tag_mapping` and
+`~asdf.extension.AsdfExtension.url_mapping` that is used by the ``BuiltinExtension``, which
 allows the schemas that are packaged by `asdf` to be located.
 
 `asdf` will give precedence to the type that is provided by the external
@@ -806,7 +806,7 @@ Packaging schemas
 If a package provides custom schemas, the schema files must be installed as
 part of that package distribution. In general, schema files must be installed
 into a subdirectory of the package distribution. The `asdf` extension class must
-supply a `~asdf.AsdfExtension.url_mapping` that maps to the installed location
+supply a `~asdf.extension.AsdfExtension.url_mapping` that maps to the installed location
 of the schemas. See :ref:`defining_extensions` for more details.
 
 Registering entry points
@@ -814,11 +814,11 @@ Registering entry points
 
 Packages that provide their own ASDF extensions can (and should!) install them
 so that they are automatically detectable by the `asdf` Python package. This is
-accomplished using Python's `setuptools` entry points. Entry points are
-registered in a package's `setup.py` file.
+accomplished using Python's `setuptools <https://setuptools.pypa.io/en/latest/index.html>`_
+entry points. Entry points are registered in a package's ``setup.py`` file.
 
-Consider a package that provides an extension class `MyPackageExtension` in the
-submodule `mypackage.asdf.extensions`. We need to register this class as an
+Consider a package that provides an extension class ``MyPackageExtension`` in the
+submodule ``mypackage.asdf.extensions``. We need to register this class as an
 extension entry point that `asdf` will recognize. First, we create a dictionary:
 
 .. code:: python
@@ -828,7 +828,7 @@ extension entry point that `asdf` will recognize. First, we create a dictionary:
         "mypackage = mypackage.asdf.extensions:MyPackageExtension"
     ]
 
-The key used in the `entry_points` dictionary must be ``'asdf_extensions'``.
+The key used in the ``entry_points`` dictionary must be ``'asdf_extensions'``.
 The value must be an array of one or more strings, each with the following
 format:
 
@@ -839,9 +839,9 @@ the package and the extension. In most cases the package itself name will
 suffice.
 
 Note that depending on individual package requirements, there may be other
-entries in the `entry_points` dictionary.
+entries in the ``entry_points`` dictionary.
 
-The entry points must be passed to the call to `setuptools.setup`:
+The entry points must be passed to the call to ``setuptools.setup``:
 
 .. code:: python
 
@@ -905,9 +905,9 @@ testing (see `asdf`'s own ``pyproject.toml`` for an example of this).
 .. note::
 
    Older versions of `asdf` (prior to 2.4.0) required the plugin to be registered
-   in your project's `conftest.py` file. As of 2.4.0, the plugin is now
+   in your project's ``conftest.py`` file. As of 2.4.0, the plugin is now
    registered automatically and so this line should be removed from your
-   `conftest.py` file, unless you need to retain compatibility with older
+   ``conftest.py`` file, unless you need to retain compatibility with older
    versions of `asdf`.
 
 The ``asdf_schema_skip_names`` configuration variable can be used to skip

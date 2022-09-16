@@ -6,6 +6,8 @@ from .. import resolver, types
 from ..exceptions import AsdfDeprecationWarning
 from ..type_index import AsdfTypeIndex
 
+__all__ = ["AsdfExtension"]
+
 
 class AsdfExtension(metaclass=abc.ABCMeta):
     """

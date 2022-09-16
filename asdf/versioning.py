@@ -14,7 +14,7 @@ else:  # pragma: no cover
 
 from semantic_version import SimpleSpec, Version
 
-__all__ = ["AsdfVersion", "AsdfSpec", "split_tag_version", "join_tag_version"]
+__all__ = ["AsdfVersion", "AsdfSpec", "AsdfVersionMixin", "split_tag_version", "join_tag_version"]
 
 
 def split_tag_version(tag):
