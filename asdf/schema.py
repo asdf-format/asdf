@@ -626,7 +626,7 @@ def validate(instance, ctx=None, schema={}, validators=None, reading=False, *arg
     the appropriate schema.  The schema itself is located using the
     tag on the instance.
 
-    The additional *args and **kwargs are passed along to
+    The additional ``*args`` and ``**kwargs`` are passed along to
     `~jsonschema.Validator.validate`.
 
     Parameters

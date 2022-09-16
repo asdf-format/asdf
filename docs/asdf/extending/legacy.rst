@@ -26,7 +26,7 @@ Supporting new types in ASDF is easy. Three components are required:
    ASDF serializes and deserializes the custom type.
 
 3. A Python class to define an "extension" to ASDF, which is a set of related
-   types. This class must implement the `asdf.AsdfExtension` abstract base
+   types. This class must implement the `asdf.extension.AsdfExtension` abstract base
    class. In general, a third-party library that defines multiple custom types
    can group them all in the same extension.
 
@@ -67,7 +67,7 @@ First, the YAML Schema, defining the type as a pair of integers:
     ...
 
 Then, the Python implementation of the tag class and extension class. See the
-`asdf.CustomType` and `asdf.AsdfExtension` documentation for more information:
+`asdf.CustomType` and `asdf.extension.AsdfExtension` documentation for more information:
 
 .. runcode:: hidden
 
@@ -129,9 +129,9 @@ Note that the values of the `~asdf.CustomType.name`,
 definitions in the schema.
 
 Note also that the base of the ``tag`` value (up to the ``name`` and ``version``
-components) is reflected in `~asdf.AsdfExtension.tag_mapping` property of the
+components) is reflected in `~asdf.extension.AsdfExtension.tag_mapping` property of the
 ``FractionExtension`` type, which is used to map tags to URLs. The
-`~asdf.AsdfExtension.url_mapping` is used to map URLs (of the same form as the
+`~asdf.extension.AsdfExtension.url_mapping` is used to map URLs (of the same form as the
 ``id`` field in the schema) to the actual location of a schema file.
 
 Once these classes and the schema have been defined, we can save an ASDF file
@@ -177,7 +177,7 @@ types that are provided by the same package should be grouped into the same
 These three values, along with the `~asdf.CustomType.version`, are used to
 define the YAML tag that will mark the serialized type in ASDF files. In our
 example, the tag becomes ``tag:nowhere.org:custom/fraction-1.0.0``. The tag
-is important when defining the `asdf.AsdfExtension` subclass.
+is important when defining the `asdf.extension.AsdfExtension` subclass.
 
 Critically, these values must all be reflected in the associated schema.
 
@@ -697,7 +697,7 @@ resource for creating ASDF schemas can be found in the :ref:`ASDF Standard
 
 In most cases, ASDF schemas will be included as part of a packaged software
 distribution. In these cases, it is important for the
-`~asdf.AsdfExtension.url_mapping` of the corresponding `~asdf.AsdfExtension`
+`~asdf.extension.AsdfExtension.url_mapping` of the corresponding `~asdf.extension.AsdfExtension`
 extension class to map the schema URL to an actual location on disk. However,
 it is possible for schemas to be hosted online as well, in which case the URL
 mapping can map (perhaps trivially) to an actual network location. See
@@ -764,14 +764,14 @@ so that they can be used when processing ASDF files. Packages that define their
 own custom tag types must also define extensions in order for those types to be
 used.
 
-All extension classes must implement the `asdf.AsdfExtension` abstract base
+All extension classes must implement the `asdf.extension.AsdfExtension` abstract base
 class. A custom extension will override each of the following properties of
-`asdf.AsdfExtension` (the text in each bullet is also a link to the corresponding
+`asdf.extension.AsdfExtension` (the text in each bullet is also a link to the corresponding
 documentation):
 
-* `~asdf.AsdfExtension.types`
-* `~asdf.AsdfExtension.tag_mapping`
-* `~asdf.AsdfExtension.url_mapping`
+* `~asdf.extension.AsdfExtension.types`
+* `~asdf.extension.AsdfExtension.tag_mapping`
+* `~asdf.extension.AsdfExtension.url_mapping`
 
 .. _packaging_extensions:
 
@@ -787,9 +787,9 @@ the ASDF standard.
 
 Instead, the extension class may inherit from `asdf`'s
 `asdf.extension.BuiltinExtension` and simply override the
-`~asdf.AsdfExtension.types` property to indicate the type that is being
-overridden.  Doing this preserves the `~asdf.AsdfExtension.tag_mapping` and
-`~asdf.AsdfExtension.url_mapping` that is used by the ``BuiltinExtension``, which
+`~asdf.extension.AsdfExtension.types` property to indicate the type that is being
+overridden.  Doing this preserves the `~asdf.extension.AsdfExtension.tag_mapping` and
+`~asdf.extension.AsdfExtension.url_mapping` that is used by the ``BuiltinExtension``, which
 allows the schemas that are packaged by `asdf` to be located.
 
 `asdf` will give precedence to the type that is provided by the external
@@ -806,7 +806,7 @@ Packaging schemas
 If a package provides custom schemas, the schema files must be installed as
 part of that package distribution. In general, schema files must be installed
 into a subdirectory of the package distribution. The `asdf` extension class must
-supply a `~asdf.AsdfExtension.url_mapping` that maps to the installed location
+supply a `~asdf.extension.AsdfExtension.url_mapping` that maps to the installed location
 of the schemas. See :ref:`defining_extensions` for more details.
 
 Registering entry points

@@ -24,5 +24,7 @@ to create their own custom ASDF types and extensions.
 .. automodapi:: asdf.schema
 
 .. automodapi:: asdf.tags.core
+    :skip: ExternalArrayReference
+    :skip: IntegerType
 
 .. automodapi:: asdf.tests.helpers
