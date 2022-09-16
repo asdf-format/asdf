@@ -108,7 +108,7 @@ class Converter(abc.ABC):
             be an instance of one of the types listed in the `types`
             property.
         tag : str
-            The tag identifying the YAML type that obj should be
+            The tag identifying the YAML type that ``obj`` should be
             converted into.  Selected by a call to this converter's
             select_tag method.
         ctx : asdf.asdf.SerializationContext
