@@ -14,14 +14,14 @@ repos:
       exclude: ".*fits"
 
 - repo: https://github.com/asottile/pyupgrade
-  rev: v2.37.3
+  rev: v2.38.0
   hooks:
     - id: pyupgrade
       args: ["--py38-plus"]
       exclude: "asdf/extern/.*|docs/.*"
 
 - repo: https://github.com/PyCQA/autoflake
-  rev: v1.5.3
+  rev: v1.6.0
   hooks:
   - id: autoflake
 
