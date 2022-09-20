@@ -2,7 +2,7 @@ from pathlib import Path
 
 import tomli
 from pkg_resources import get_distribution
-from sphinx_asdf.conf import *  # noqa
+from sphinx_asdf.conf import *  # noqa: F403, F401
 
 # Get configuration information from `pyproject.toml`
 with open(Path(__file__).parent.parent / "pyproject.toml", "rb") as configuration_file:
