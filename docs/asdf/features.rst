@@ -727,3 +727,39 @@ Like `AsdfSearchResult.search`, calls to format may be chained:
     >>> af.search("time").format(max_rows=10).search(type=str).format(
     ...     max_rows=None
     ... )  # doctest: +SKIP
+
+
+Searching Schema information
+============================
+
+In some cases, one may wish to include information and/or documentation about
+an object defined by a tagged schema within the schema itself. It can be useful
+to directly access this information relative to a given ASDF file. For example
+one may wish to examine:
+
+* The ``title`` of a value to get a short description of it.
+* The ``description`` of a value to get the longer description of it.
+
+In other cases, it maybe useful to store general descriptive information such as
+specific archival information about a given value in the file so that an archive
+can easily ingest the file into the archive, such as what is done with the ``archive_catalog``
+information in the `rad schemas <https://github.com/spacetelescope/rad>`_ for the
+Nancy Grace Roman Space Telescope.
+
+.. currentmodule:: asdf
+
+The `AsdfFile.schema_info` method provides a way to access this information. This
+method returns a nested tree of dictionaries which contains tuples consisting of
+the information from the schema requested together with the value stored in the
+ASDF file itself.
+
+One needs to provide a ``key``, which corresponds the to the keyword the information
+is stored under inside the schema, by default this is ``description``. Moreover,
+one can also provide a ``path`` which is a dot-separated string of the keys in the
+ASDF file that lead to the value(s) of interest. For example:
+
+.. code:: pycon
+
+    >>> af.schema_info("archive_catalog", "foo.bar")  # doctest: +SKIP
+    {'thing1': {'archive_catalog': 'Thing 1 Archive catalog information'},
+     'thing2': {'archive_catalog': 'Thing 2 Archive catalog information'}}

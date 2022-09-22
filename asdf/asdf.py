@@ -1506,14 +1506,18 @@ class AsdfFile:
 
         return []
 
-    def schema_info(self, key, preserve_list=True, refresh_extension_manager=False):
+    def schema_info(self, key="description", path=None, preserve_list=True, refresh_extension_manager=False):
         """
-        Get a nested dictionary of the schema information for a given key.
+        Get a nested dictionary of the schema information for a given key, relative to the path.
 
         Parameters
         ----------
         key : str
             The key to look up.
+            Default: "description"
+        path : str
+            A dot-separated path to the parameter to find the key information on.
+            Default = None (full dictionary).
         preserve_list : bool
             If True, then lists are preserved. Otherwise, they are turned into dicts.
         refresh_extension_manager : bool
@@ -1523,7 +1527,7 @@ class AsdfFile:
         """
 
         return node_info.collect_schema_info(
-            key, self.tree, preserve_list=preserve_list, refresh_extension_manager=refresh_extension_manager
+            key, path, self.tree, preserve_list=preserve_list, refresh_extension_manager=refresh_extension_manager
         )
 
     def info(

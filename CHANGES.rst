@@ -2,6 +2,7 @@
 -------------------
 
 - Update citation. [#1184]
+- Add search support to `~asdf.AsdfFile.schema_info`. [#1187]
 
 2.13.0 (2022-08-19)
 -------------------

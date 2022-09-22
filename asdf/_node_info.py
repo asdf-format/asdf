@@ -5,16 +5,41 @@ from .schema import load_schema
 from .treeutil import get_children
 
 
-def collect_schema_info(key, node, identifier="root", preserve_list=True, refresh_extension_manager=False):
+def collect_schema_info(key, path, node, identifier="root", preserve_list=True, refresh_extension_manager=False):
     """
-    Collect from the underlying schemas any of the info stored under key.
+    Collect from the underlying schemas any of the info stored under key, relative to the path
+
+    Parameters
+    ----------
+    key : str
+        The key to look up.
+    path : str or None
+        A dot-separated path to the parameter to find the key information on.
+        If None return full dictionary.
+    node : dict
+        The asdf tree to search.
+    preserve_list : bool
+        If True, then lists are preserved. Otherwise, they are turned into dicts.
+    refresh_extension_manager : bool
+        If `True`, refresh the extension manager before looking up the
+        key.  This is useful if you want to make sure that the schema
+        data for a given key is up to date.
     """
 
     schema_info = NodeSchemaInfo.from_root_node(
         key, identifier, node, refresh_extension_manager=refresh_extension_manager
     )
 
-    return schema_info.collect_info(preserve_list=preserve_list)
+    info = schema_info.collect_info(preserve_list=preserve_list)
+
+    if path is not None:
+        for path_key in path.split("."):
+            info = info.get(path_key, None)
+
+            if info is None:
+                return
+
+    return info
 
 
 def _get_extension_manager(refresh_extension_manager):
@@ -29,7 +54,23 @@ def _get_extension_manager(refresh_extension_manager):
     return af.extension_manager
 
 
-SchemaInfo = namedtuple("SchemaInfo", ["info", "value"])
+_SchemaInfo = namedtuple("SchemaInfo", ["info", "value"])
+
+
+class SchemaInfo(_SchemaInfo):
+    """
+    A class to hold the schema info and the value of the node.
+
+    Parameters
+    ----------
+    info : dict
+        The schema info.
+    value : object
+        The value of the node.
+    """
+
+    def __repr__(self):
+        return f"{self.info}"
 
 
 class NodeSchemaInfo:

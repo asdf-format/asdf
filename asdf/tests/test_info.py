@@ -150,21 +150,25 @@ id: "asdf://somewhere.org/asdf/schemas/foo-1.0.0"
 
 type: object
 title: object with info support title
+description: object with info support description
 properties:
   the_meaning_of_life_the_universe_and_everything:
     title: Some silly title
+    description: Some silly description
     type: integer
     archive_catalog:
         datatype: int
         destination: [ScienceCommon.silly]
   clown:
     title: clown name
+    description: clown description
     type: string
     archive_catalog:
         datatype: str
         destination: [ScienceCommon.clown]
   anyof_attribute:
     title: anyOf example attribute
+    description: anyOf description
     anyOf:
       - type: string
       - type: number
@@ -172,13 +176,16 @@ properties:
         properties:
           value:
             title: nested object in anyof example
+            description: nested object description
             type: integer
           comment:
             title: comment for property
+            description: comment description
             type: string
       - tag: asdf://somewhere.org/tags/bar-1.0.0
   oneof_attribute:
     title: oneOf example attribute
+    description: oneOf description
     oneOf:
       - type: integer
         multipleOf: 5
@@ -186,6 +193,7 @@ properties:
         multipleOf: 3
   allof_attribute:
     title: allOf example attribute
+    description: allOf description
     allOf:
       - type: string
       - maxLength: 5
@@ -231,15 +239,18 @@ id: "asdf://somewhere.org/asdf/schemas/drink-1.0.0"
 
 type: object
 title: object with info support 3 title
+description: object description
 properties:
   attributeOne:
     title: AttributeOne Title
+    description: AttributeOne description
     type: string
     archive_catalog:
         datatype: str
         destination: [ScienceCommon.attributeOne]
   attributeTwo:
     title: AttributeTwo Title
+    description: AttributeTwo description
     type: string
     archive_catalog:
         datatype: str
@@ -349,8 +360,7 @@ def test_schema_info_support(tmpdir):
     af._extension_manager = ExtensionManager(config.extensions)
     af.tree = create_tree()
 
-    info = af.schema_info("title", refresh_extension_manager=True)
-    assert info == {
+    assert af.schema_info("title", refresh_extension_manager=True) == {
         "list_of_stuff": [
             {
                 "attributeOne": {
@@ -391,8 +401,7 @@ def test_schema_info_support(tmpdir):
         },
     }
 
-    info = af.schema_info("archive_catalog", refresh_extension_manager=True)
-    assert info == {
+    assert af.schema_info("archive_catalog", refresh_extension_manager=True) == {
         "list_of_stuff": [
             {
                 "attributeOne": {
@@ -429,8 +438,7 @@ def test_schema_info_support(tmpdir):
         },
     }
 
-    info = af.schema_info("archive_catalog", preserve_list=False, refresh_extension_manager=True)
-    assert info == {
+    assert af.schema_info("archive_catalog", preserve_list=False, refresh_extension_manager=True) == {
         "list_of_stuff": {
             0: {
                 "attributeOne": {
@@ -463,6 +471,98 @@ def test_schema_info_support(tmpdir):
             },
             "the_meaning_of_life_the_universe_and_everything": {
                 "archive_catalog": ({"datatype": "int", "destination": ["ScienceCommon.silly"]}, 42),
+            },
+        },
+    }
+
+    assert af.schema_info("title", "list_of_stuff", refresh_extension_manager=True) == [
+        {
+            "attributeOne": {
+                "title": ("AttributeOne Title", "v1"),
+            },
+            "attributeTwo": {
+                "title": ("AttributeTwo Title", "v2"),
+            },
+            "title": ("object with info support 3 title", af.tree["list_of_stuff"][0]),
+        },
+        {
+            "attributeOne": {
+                "title": ("AttributeOne Title", "x1"),
+            },
+            "attributeTwo": {
+                "title": ("AttributeTwo Title", "x2"),
+            },
+            "title": ("object with info support 3 title", af.tree["list_of_stuff"][1]),
+        },
+    ]
+
+    assert af.schema_info("title", "object", refresh_extension_manager=True) == {
+        "I_example": {"title": ("integer pattern property", 1)},
+        "S_example": {"title": ("string pattern property", "beep")},
+        "allof_attribute": {"title": ("allOf example attribute", "good")},
+        "anyof_attribute": {
+            "attribute1": {
+                "title": ("Attribute1 Title", "VAL1"),
+            },
+            "attribute2": {
+                "title": ("Attribute2 Title", "VAL2"),
+            },
+            "title": ("object with info support 2 title", af.tree["object"].anyof),
+        },
+        "clown": {"title": ("clown name", "Bozo")},
+        "oneof_attribute": {"title": ("oneOf example attribute", 20)},
+        "the_meaning_of_life_the_universe_and_everything": {"title": ("Some silly title", 42)},
+        "title": ("object with info support title", af.tree["object"]),
+    }
+
+    assert af.schema_info("title", "object.anyof_attribute", refresh_extension_manager=True) == {
+        "attribute1": {
+            "title": ("Attribute1 Title", "VAL1"),
+        },
+        "attribute2": {
+            "title": ("Attribute2 Title", "VAL2"),
+        },
+        "title": ("object with info support 2 title", af.tree["object"].anyof),
+    }
+
+    assert af.schema_info("title", "object.anyof_attribute.attribute2", refresh_extension_manager=True) == {
+        "title": ("Attribute2 Title", "VAL2"),
+    }
+
+    # Test printing the schema_info
+    assert (
+        af.schema_info("title", "object.anyof_attribute.attribute2", refresh_extension_manager=True).__repr__()
+        == "{'title': Attribute2 Title}"
+    )
+
+    assert af.schema_info("title", "object.anyof_attribute.attribute2.foo", refresh_extension_manager=True) is None
+
+    assert af.schema_info(refresh_extension_manager=True) == {
+        "list_of_stuff": [
+            {
+                "attributeOne": {"description": ("AttributeOne description", "v1")},
+                "attributeTwo": {"description": ("AttributeTwo description", "v2")},
+                "description": ("object description", af.tree["list_of_stuff"][0]),
+            },
+            {
+                "attributeOne": {"description": ("AttributeOne description", "x1")},
+                "attributeTwo": {"description": ("AttributeTwo description", "x2")},
+                "description": ("object description", af.tree["list_of_stuff"][1]),
+            },
+        ],
+        "object": {
+            "allof_attribute": {
+                "description": ("allOf description", "good"),
+            },
+            "clown": {
+                "description": ("clown description", "Bozo"),
+            },
+            "description": ("object with info support description", af.tree["object"]),
+            "oneof_attribute": {
+                "description": ("oneOf description", 20),
+            },
+            "the_meaning_of_life_the_universe_and_everything": {
+                "description": ("Some silly description", 42),
             },
         },
     }
