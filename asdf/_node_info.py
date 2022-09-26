@@ -5,7 +5,36 @@ from .schema import load_schema
 from .treeutil import get_children
 
 
-def collect_schema_info(key, path, node, identifier="root", preserve_list=True, refresh_extension_manager=False):
+def _filter_tree(info, filters):
+    """
+    Remove nodes from the tree that get caught in the filters.
+    Mutates the tree.
+    """
+    filtered_children = []
+    for child in info.children:
+        if _filter_tree(child, filters):
+            filtered_children.append(child)
+    info.children = filtered_children
+
+    return len(info.children) > 0 or all(f(info.node, info.identifier) for f in filters)
+
+
+def create_tree(key, node, identifier="root", filters=[], refresh_extension_manager=False):
+
+    schema_info = NodeSchemaInfo.from_root_node(
+        key, identifier, node, refresh_extension_manager=refresh_extension_manager
+    )
+
+    if len(filters) > 0:
+        if not _filter_tree(schema_info, filters):
+            return
+
+    return schema_info
+
+
+def collect_schema_info(
+    key, path, node, identifier="root", filters=[], preserve_list=True, refresh_extension_manager=False
+):
     """
     Collect from the underlying schemas any of the info stored under key, relative to the path
 
@@ -18,6 +47,8 @@ def collect_schema_info(key, path, node, identifier="root", preserve_list=True, 
         If None return full dictionary.
     node : dict
         The asdf tree to search.
+    filters : list of functions
+        A list of functions that take a node and identifier and return True if the node should be included in the tree.
     preserve_list : bool
         If True, then lists are preserved. Otherwise, they are turned into dicts.
     refresh_extension_manager : bool
@@ -26,8 +57,8 @@ def collect_schema_info(key, path, node, identifier="root", preserve_list=True, 
         data for a given key is up to date.
     """
 
-    schema_info = NodeSchemaInfo.from_root_node(
-        key, identifier, node, refresh_extension_manager=refresh_extension_manager
+    schema_info = create_tree(
+        key, node, identifier=identifier, filters=filters, refresh_extension_manager=refresh_extension_manager
     )
 
     info = schema_info.collect_info(preserve_list=preserve_list)

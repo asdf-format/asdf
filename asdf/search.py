@@ -341,7 +341,12 @@ class AsdfSearchResult:
         """
 
         return collect_schema_info(
-            key, None, self._node, preserve_list=preserve_list, refresh_extension_manager=refresh_extension_manager
+            key,
+            None,
+            self._node,
+            filters=self._filters,
+            preserve_list=preserve_list,
+            refresh_extension_manager=refresh_extension_manager,
         )
 
     def __getitem__(self, key):
