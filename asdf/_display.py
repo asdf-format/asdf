@@ -51,7 +51,7 @@ def render_tree(
         refresh_extension_manager=refresh_extension_manager,
     )
     if info is None:
-        info = []
+        return []
 
     renderer = _TreeRenderer(
         max_rows,
