@@ -20,6 +20,24 @@ def _filter_tree(info, filters):
 
 
 def create_tree(key, node, identifier="root", filters=[], refresh_extension_manager=False):
+    """
+    Create a `NodeSchemaInfo` tree which can be filtered from a base node.
+
+    Parameters
+    ----------
+    key : str
+        The key to look up.
+    node : dict
+        The asdf tree to search.
+    filters : list of functions
+        A list of functions that take a node and identifier and return True if the node should be included in the tree.
+    preserve_list : bool
+        If True, then lists are preserved. Otherwise, they are turned into dicts.
+    refresh_extension_manager : bool
+        If `True`, refresh the extension manager before looking up the
+        key.  This is useful if you want to make sure that the schema
+        data for a given key is up to date.
+    """
 
     schema_info = NodeSchemaInfo.from_root_node(
         key, identifier, node, refresh_extension_manager=refresh_extension_manager

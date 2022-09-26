@@ -754,8 +754,8 @@ the information from the schema requested together with the value stored in the
 ASDF file itself.
 
 One needs to provide a ``key``, which corresponds the to the keyword the information
-is stored under inside the schema, by default this is ``description``. Moreover,
-one can also provide a ``path`` which is a dot-separated string of the keys in the
+is stored under inside the schema, by default this is ``description``. One can also
+provide a ``path`` in the form of a dot-separated string of the keys in the
 ASDF file that lead to the value(s) of interest. For example:
 
 .. code:: pycon
@@ -763,3 +763,17 @@ ASDF file that lead to the value(s) of interest. For example:
     >>> af.schema_info("archive_catalog", "foo.bar")  # doctest: +SKIP
     {'thing1': {'archive_catalog': 'Thing 1 Archive catalog information'},
      'thing2': {'archive_catalog': 'Thing 2 Archive catalog information'}}
+
+Or one can provide a ``path`` as an `asdf.search.AsdfSearchResult` object:
+
+.. code:: pycon
+
+    >>> af.schema_info("archive_catalog", af.search("bar"))  # doctest: +SKIP
+    {'thing1': {'archive_catalog': 'Thing 1 Archive catalog information'},
+     'thing2': {'archive_catalog': 'Thing 2 Archive catalog information'}}
+
+
+.. note::
+    The there is also the `asdf.search.AsdfSearchResult.schema_info` method,
+    which can be directly called on an `asdf.search.AsdfSearchResult` object.
+    instead of having to pass the search through `AsdfFile.schema_info`.
