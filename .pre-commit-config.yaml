@@ -13,8 +13,6 @@ repos:
     - id: check-symlinks
     - id: debug-statements
     - id: detect-private-key
-    - id: fix-encoding-pragma
-      args: ["--remove"]
     - id: end-of-file-fixer
       exclude: ".*fits"
     - id: trailing-whitespace
@@ -34,7 +32,7 @@ repos:
   hooks:
     - id: pyupgrade
       args: ["--py38-plus"]
-      exclude: "asdf/extern/.*|docs/.*"
+      exclude: "asdf/extern/.*"
 
 - repo: https://github.com/PyCQA/autoflake
   rev: v1.6.0

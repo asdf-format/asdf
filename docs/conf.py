@@ -19,7 +19,7 @@ release = get_distribution(configuration["name"]).version
 version = ".".join(release.split(".")[:2])
 
 # -- Options for HTML output ---------------------------------------------------
-html_title = "{0} v{1}".format(project, release)
+html_title = f"{project} v{release}"
 
 # Output file base name for HTML help builder.
 htmlhelp_basename = project + "doc"
