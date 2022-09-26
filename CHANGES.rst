@@ -3,6 +3,8 @@
 
 - Update citation. [#1184]
 - Add search support to `~asdf.AsdfFile.schema_info`. [#1187]
+- Add `asdf.search.AsdfSearchResult` support for `~asdf.AsdfFile.schema_info` and
+  `~asdf.search.AsdfSearchResult.schema_info` method. [#1197]
 
 2.13.0 (2022-08-19)
 -------------------
