@@ -1,6 +1,9 @@
 import warnings
 
-from pkg_resources import iter_entry_points
+try:
+    from importlib.metadata import entry_points
+except ImportError:
+    from importlib_metadata import entry_points
 
 from .exceptions import AsdfWarning
 from .extension import ExtensionProxy
@@ -25,7 +28,7 @@ def get_extensions():
 def _list_entry_points(group, proxy_class):
     results = []
 
-    entry_points = list(iter_entry_points(group=group))
+    points = entry_points().get(group, [])
 
     # The order of plugins may be significant, since in the case of
     # duplicate functionality the first plugin in the list takes
@@ -33,13 +36,11 @@ def _list_entry_points(group, proxy_class):
     # in a consistent way across systems so we explicitly sort
     # by package name.  Plugins from this package are placed
     # at the end so that other packages can override them.
-    asdf_entry_points = [e for e in entry_points if e.dist.project_name == "asdf"]
-    other_entry_points = sorted(
-        (e for e in entry_points if e.dist.project_name != "asdf"), key=lambda e: e.dist.project_name
-    )
+    asdf_entry_points = [e for e in points if e.dist.name == "asdf"]
+    other_entry_points = sorted((e for e in points if e.dist.name != "asdf"), key=lambda e: e.dist.name)
 
     for entry_point in other_entry_points + asdf_entry_points:
-        package_name = entry_point.dist.project_name
+        package_name = entry_point.dist.name
         package_version = entry_point.dist.version
 
         def _handle_error(e):
