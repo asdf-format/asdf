@@ -1,11 +1,13 @@
+import sys
 import unittest.mock as mk
+import warnings
 
 import pytest
 
-try:
-    import importlib.metadata as metadata
-except ImportError:
+if sys.version_info < (3, 10):
     import importlib_metadata as metadata
+else:
+    import importlib.metadata as metadata
 
 from asdf import entry_points
 from asdf._version import version as asdf_package_version
@@ -24,20 +26,17 @@ def monkeypatch_entry_points(monkeypatch, mock_entry_points):
     def _entry_points():
         points = mk.MagicMock()
 
-        def _get(group, default):
+        def _select(group):
             points = []
             for candidate_group, name, func_name in mock_entry_points:
                 if candidate_group == group:
                     point = metadata.EntryPoint(name=name, group="asdf.tests.test_entry_points", value=func_name)
-                    point.dist = metadata.distribution("asdf")
+                    vars(point).update(dist=metadata.distribution("asdf"))
                     points.append(point)
 
-            if len(points) > 0:
-                return points
-            else:
-                return default
+            return points
 
-        points.get = _get
+        points.select = _select
 
         return points
 
@@ -181,3 +180,14 @@ def test_get_extensions(mock_entry_points):
     with pytest.warns(AsdfWarning, match="TypeError"):
         extensions = entry_points.get_extensions()
     assert len(extensions) == 0
+
+
+def test_no_warnings_get_extensions():
+    """
+    Smoke test for changes to the `importlib.metadata` entry points API.
+    """
+
+    with warnings.catch_warnings():
+        warnings.simplefilter("error")
+
+        entry_points.get_extensions()
