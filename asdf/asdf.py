@@ -7,7 +7,7 @@ import warnings
 
 import numpy as np
 from jsonschema import ValidationError
-from pkg_resources import parse_version
+from packaging.version import Version
 
 from . import _display as display
 from . import _node_info as node_info
@@ -336,7 +336,7 @@ class AsdfFile:
                 if installed.package_version is None or installed.package_name != extension.software["name"]:
                     continue
                 # Compare version in file metadata with installed version
-                if parse_version(installed.package_version) < parse_version(extension.software["version"]):
+                if Version(installed.package_version) < Version(extension.software["version"]):
                     msg = ("File {}was created with extension {}, but older package ({}=={}) " "is installed.").format(
                         filename,
                         extension_description,
