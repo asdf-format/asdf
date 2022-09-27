@@ -1,4 +1,3 @@
-import collections
 import enum
 import importlib.util
 import inspect
@@ -16,20 +15,10 @@ from packaging.version import Version
 
 from . import constants
 
-if sys.version_info[:2] >= (3, 10):
-    from importlib.metadata import packages_distributions
+if sys.version_info < (3, 10):
+    from importlib_metadata import packages_distributions
 else:
-
-    def packages_distributions():
-        """
-        Return a mapping of top-level packages to their distributions.
-        Note: copied from https://github.com/python/importlib_metadata/pull/287
-        """
-        pkg_to_dist = collections.defaultdict(list)
-        for dist in metadata.distributions():
-            for pkg in (dist.read_text("top_level.txt") or "").split():
-                pkg_to_dist[pkg].append(dist.metadata["Name"])
-        return dict(pkg_to_dist)
+    from importlib.metadata import packages_distributions
 
 
 # We're importing our own copy of urllib.parse because

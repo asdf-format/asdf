@@ -1,11 +1,25 @@
+import warnings
+
 import pytest
 
 from asdf import config_context, get_config
 from asdf.asdf import AsdfFile, SerializationContext, open_asdf
+from asdf.entry_points import get_extensions
 from asdf.exceptions import AsdfWarning
 from asdf.extension import AsdfExtensionList, ExtensionManager, ExtensionProxy
 from asdf.tests.helpers import assert_no_warnings, yaml_to_asdf
 from asdf.versioning import AsdfVersion
+
+
+def test_no_warnings_get_extensions():
+    """
+    Smoke test for changes to the `importlib.metadata` entry points API.
+    """
+
+    with warnings.catch_warnings():
+        warnings.simplefilter("error")
+
+        get_extensions()
 
 
 class TestExtension:

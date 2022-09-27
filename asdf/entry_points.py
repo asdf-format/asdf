@@ -29,7 +29,7 @@ def get_extensions():
 def _list_entry_points(group, proxy_class):
     results = []
 
-    points = entry_points().select(group=group)
+    points = entry_points(group=group)
 
     # The order of plugins may be significant, since in the case of
     # duplicate functionality the first plugin in the list takes
