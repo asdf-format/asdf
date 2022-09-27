@@ -37,10 +37,7 @@ docs = [
 tests = [
     'astropy >=5.0.4',
     'gwcs',
-    # Necessary for Windows until https://github.com/pytest-dev/pytest/issues/9765
-    # is resolved:
-    'pytest !=7.1.0, !=7.1.1, !=7.1.2; sys_platform =="win32"',
-    'pytest >=6.0.0; sys_platform !="win32"',
+    'pytest >=6.0.0',
     'pytest-doctestplus',
     'pytest-remotedata',
     'pytest-openfiles',
