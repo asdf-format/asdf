@@ -1,8 +1,13 @@
 from pathlib import Path
 
 import tomli
-from pkg_resources import get_distribution
 from sphinx_asdf.conf import *  # noqa: F403, F401
+
+try:
+    from importlib.metadata import distribution
+except ImportError:
+    from importlib_metadata import distribution
+
 
 # Get configuration information from `pyproject.toml`
 with open(Path(__file__).parent.parent / "pyproject.toml", "rb") as configuration_file:
@@ -14,7 +19,7 @@ project = configuration["name"]
 author = f"{configuration['authors'][0]['name']} <{configuration['authors'][0]['email']}>"
 copyright = f"{datetime.datetime.now().year}, {configuration['authors'][0]['name']}"
 
-release = get_distribution(configuration["name"]).version
+release = distribution(configuration["name"]).version
 # for example take major/minor
 version = ".".join(release.split(".")[:2])
 
