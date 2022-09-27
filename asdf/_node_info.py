@@ -7,7 +7,8 @@ from .treeutil import get_children
 
 def _filter_tree(info, filters):
     """
-    Remove nodes from the tree that get caught in the filters.
+    Keep nodes in tree which pass the all of the filters.
+
     Mutates the tree.
     """
     filtered_children = []
