@@ -379,7 +379,7 @@ Contributing
 
 We welcome feedback and contributions to the project. Contributions of
 code, documentation, or general feedback are all appreciated. Please
-follow the `contributing guidelines <CONTRIBUTING.md>`__ to submit an
+follow the `contributing guidelines <CONTRIBUTING.rst>`__ to submit an
 issue or a pull request.
 
 We strive to provide a welcoming community to all of our users by
