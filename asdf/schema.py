@@ -6,6 +6,7 @@ from collections import OrderedDict
 from collections.abc import Mapping
 from functools import lru_cache
 from numbers import Integral
+from operator import methodcaller
 
 import numpy as np
 import yaml
@@ -749,6 +750,14 @@ def check_schema(schema, validate_default=True):
 
         validators.update({"default": _validate_default})
 
+        def applicable_validators(schema):
+            items = list(schema.items())
+            items.append(("default", ""))
+            return items
+
+    else:
+        applicable_validators = methodcaller("items")
+
     meta_schema_id = schema.get("$schema", YAML_SCHEMA_METASCHEMA_ID)
     meta_schema = _load_schema_cached(meta_schema_id, extension.get_default_resolver(), False, False)
 
@@ -759,6 +768,7 @@ def check_schema(schema, validate_default=True):
         validators=validators,
         type_checker=mvalidators.Draft4Validator.TYPE_CHECKER,
         id_of=mvalidators.Draft4Validator.ID_OF,
+        applicable_validators=applicable_validators,
     )
     validator = cls(meta_schema, resolver=resolver)
     validator.validate(schema)
