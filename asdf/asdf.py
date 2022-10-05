@@ -1515,8 +1515,9 @@ class AsdfFile:
         key : str
             The key to look up.
             Default: "description"
-        path : str
-            A dot-separated path to the parameter to find the key information on.
+        path : str or asdf.search.AsdfSearchResult
+            A dot-separated path to the parameter to find the key information on or
+            an `asdf.search.AsdfSearchResult` object.
             Default = None (full dictionary).
         preserve_list : bool
             If True, then lists are preserved. Otherwise, they are turned into dicts.
@@ -1526,9 +1527,14 @@ class AsdfFile:
             data for a given key is up to date.
         """
 
-        return node_info.collect_schema_info(
-            key, path, self.tree, preserve_list=preserve_list, refresh_extension_manager=refresh_extension_manager
-        )
+        if isinstance(path, AsdfSearchResult):
+            return path.schema_info(
+                key, preserve_list=preserve_list, refresh_extension_manager=refresh_extension_manager
+            )
+        else:
+            return node_info.collect_schema_info(
+                key, path, self.tree, preserve_list=preserve_list, refresh_extension_manager=refresh_extension_manager
+            )
 
     def info(
         self,

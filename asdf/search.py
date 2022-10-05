@@ -7,7 +7,7 @@ import re
 import typing
 
 from ._display import DEFAULT_MAX_COLS, DEFAULT_MAX_ROWS, DEFAULT_SHOW_VALUES, format_faint, format_italic, render_tree
-from ._node_info import NodeSchemaInfo
+from ._node_info import NodeSchemaInfo, collect_schema_info
 from .treeutil import get_children, is_container
 from .util import NotSet
 
@@ -322,6 +322,32 @@ class AsdfSearchResult:
             return format_faint(format_italic("No results found."))
         else:
             return "\n".join(lines)
+
+    def schema_info(self, key="description", preserve_list=True, refresh_extension_manager=False):
+        """
+        Get a nested dictionary of the schema information for a given key, relative to this search result.
+
+        Parameters
+        ----------
+        key : str
+            The key to look up.
+            Default: "description"
+        preserve_list : bool
+            If True, then lists are preserved. Otherwise, they are turned into dicts.
+        refresh_extension_manager : bool
+            If `True`, refresh the extension manager before looking up the
+            key.  This is useful if you want to make sure that the schema
+            data for a given key is up to date.
+        """
+
+        return collect_schema_info(
+            key,
+            None,
+            self._node,
+            filters=self._filters,
+            preserve_list=preserve_list,
+            refresh_extension_manager=refresh_extension_manager,
+        )
 
     def __getitem__(self, key):
         if (

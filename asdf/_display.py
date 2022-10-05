@@ -9,7 +9,7 @@ return what it thinks is suitable for display.
 """
 import numpy as np
 
-from ._node_info import NodeSchemaInfo
+from ._node_info import create_tree
 from .tags.core.ndarray import NDArrayType
 from .util import is_primitive
 
@@ -43,11 +43,15 @@ def render_tree(
     """
     Render a tree as text with indents showing depth.
     """
-    info = NodeSchemaInfo.from_root_node("title", identifier, node, refresh_extension_manager=refresh_extension_manager)
-
-    if len(filters) > 0:
-        if not _filter_tree(info, filters):
-            return []
+    info = create_tree(
+        key="title",
+        node=node,
+        identifier=identifier,
+        filters=filters,
+        refresh_extension_manager=refresh_extension_manager,
+    )
+    if info is None:
+        return []
 
     renderer = _TreeRenderer(
         max_rows,
@@ -80,20 +84,6 @@ def format_italic(value):
 
 def _format_code(value, code):
     return f"\x1B[{code}m{value}\x1B[0m"
-
-
-def _filter_tree(info, filters):
-    """
-    Remove nodes from the tree that get caught in the filters.
-    Mutates the tree.
-    """
-    filtered_children = []
-    for child in info.children:
-        if _filter_tree(child, filters):
-            filtered_children.append(child)
-    info.children = filtered_children
-
-    return len(info.children) > 0 or all(f(info.node, info.identifier) for f in filters)
 
 
 class _TreeRenderer:

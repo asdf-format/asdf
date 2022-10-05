@@ -567,6 +567,17 @@ def test_schema_info_support(tmpdir):
         },
     }
 
+    # Test using a search result
+    search = af.search("clown")
+    assert af.schema_info("description", search, refresh_extension_manager=True) == {
+        "object": {
+            "clown": {
+                "description": ("clown description", "Bozo"),
+            },
+            "description": ("object with info support description", af.tree["object"]),
+        },
+    }
+
 
 def test_info_object_support(capsys, tmpdir):
     manifest_extension(tmpdir)
