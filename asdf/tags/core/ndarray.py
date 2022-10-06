@@ -424,7 +424,7 @@ class NDArrayType(AsdfType):
         # is contiguous.  If not, we need to make a copy to avoid
         # writing a nonsense view.
         base = util.get_array_base(data)
-        if not base.flags.contiguous:
+        if not base.flags.forc:
             data = np.ascontiguousarray(data)
             base = util.get_array_base(data)
 

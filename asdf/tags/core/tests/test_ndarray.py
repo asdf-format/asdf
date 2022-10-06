@@ -798,7 +798,12 @@ def test_non_contiguous_base_array(tmpdir):
 def test_fortran_order(tmpdir):
     array = np.array([[11, 12, 13], [21, 22, 23]], order="F")
     tree = dict(data=array)
-    helpers.assert_roundtrip_tree(tree, tmpdir)
+
+    def check_f_order(t):
+        assert t["data"].flags.fortran
+        assert np.all(np.isclose(array, t["data"]))
+
+    helpers.assert_roundtrip_tree(tree, tmpdir, asdf_check_func=check_f_order)
 
 
 def test_readonly(tmpdir):
