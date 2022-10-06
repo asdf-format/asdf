@@ -794,3 +794,17 @@ def test_add_block_before_fully_loaded(tmp_path):
         assert_array_equal(af["arr0"], arr0)
         assert_array_equal(af["arr1"], arr1)
         assert_array_equal(af["arr2"], arr2)
+
+
+def test_block_allocation_on_validate():
+    """
+    Verify that no additional block is allocated when a tree
+    containing a fortran ordered array is validated
+
+    See https://github.com/asdf-format/asdf/issues/1205
+    """
+    array = np.array([[11, 12, 13], [21, 22, 23]], order="F")
+    af = asdf.AsdfFile({"array": array})
+    assert len(list(af.blocks.blocks)) == 1
+    af.validate()
+    assert len(list(af.blocks.blocks)) == 1
