@@ -796,7 +796,7 @@ def test_non_contiguous_base_array(tmpdir):
 
 
 def test_fortran_order(tmpdir):
-    array = np.array([[11, 12, 13], [21, 22, 23]], order="F")
+    array = np.array([[11, 12, 13], [21, 22, 23]], order="F", dtype=np.int64)
     tree = dict(data=array)
 
     def check_f_order(t):
