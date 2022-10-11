@@ -410,7 +410,6 @@ def test_defaults():
     assert t == {}
 
 
-@pytest.mark.xfail(reason="This will be fixed by #1203")
 def test_default_check_in_schema():
     s = {"type": "object", "properties": {"a": {"type": "integer", "default": "foo"}}}
 
@@ -420,7 +419,6 @@ def test_default_check_in_schema():
     schema.check_schema(s, validate_default=False)
 
 
-@pytest.mark.xfail(reason="This will be fixed by #1203")
 def test_check_complex_default():
     default_software = tagged.TaggedDict({"name": "asdf", "version": "2.7.0"}, "tag:stsci.edu/asdf/core/software-1.0.0")
 
