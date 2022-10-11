@@ -151,7 +151,7 @@ a schema, which can then be used to validate a file:
     ... type: object
     ... properties:
     ...   foo:
-    ...   type: string
+    ...     type: string
     ... required: [foo]
     ... ...
     ... """

@@ -6,6 +6,7 @@
 - Add `asdf.search.AsdfSearchResult` support for `~asdf.AsdfFile.schema_info` and
   `~asdf.search.AsdfSearchResult.schema_info` method. [#1197]
 - Use forc ndarray flag to correctly test for fortran array contiguity [#1206]
+- Unpin ``jsonschema`` version and fix ``jsonschema`` deprecation warnings. [#1185]
 
 2.13.0 (2022-08-19)
 -------------------

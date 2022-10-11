@@ -7,7 +7,6 @@ from collections.abc import Mapping
 from functools import lru_cache
 from numbers import Integral
 
-import attr
 import numpy as np
 import yaml
 from jsonschema import validators as mvalidators
@@ -253,15 +252,25 @@ def _create_validator(validators=YAML_VALIDATORS, visit_repeat_nodes=False):
         }
     )
     id_of = mvalidators.Draft4Validator.ID_OF
-    base_cls = mvalidators.create(
+    ASDFValidator = mvalidators.create(
         meta_schema=meta_schema, validators=validators, type_checker=type_checker, id_of=id_of
     )
 
-    @attr.s
-    class ASDFValidator(base_cls):
-        _context = attr.ib(factory=lambda: _ValidationContext())
-        ctx = attr.ib(default=None)
-        serialization_context = attr.ib(default=None)
+    def _patch_init(cls):
+        original_init = cls.__init__
+
+        def __init__(self, *args, **kwargs):
+            self.ctx = kwargs.pop("ctx", None)
+            self.serialization_context = kwargs.pop("serialization_context", None)
+
+            original_init(self, *args, **kwargs)
+
+        cls.__init__ = __init__
+
+    def _patch_iter_errors(cls):
+        original_iter_errors = cls.iter_errors
+
+        cls._context = _ValidationContext()
 
         def iter_errors(self, instance, *args, **kwargs):
             # We can't validate anything that looks like an external reference,
@@ -308,7 +317,12 @@ def _create_validator(validators=YAML_VALIDATORS, visit_repeat_nodes=False):
                         for val in instance:
                             yield from self.iter_errors(val)
                 else:
-                    yield from super().iter_errors(instance)
+                    yield from original_iter_errors(self, instance)
+
+        cls.iter_errors = iter_errors
+
+    _patch_init(ASDFValidator)
+    _patch_iter_errors(ASDFValidator)
 
     return ASDFValidator
 
