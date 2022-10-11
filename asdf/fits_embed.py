@@ -351,10 +351,3 @@ class AsdfInFits(asdf.AsdfFile):
 
     def update(self, all_array_storage=None, all_array_compression=None, pad_blocks=False, **kwargs):
         raise NotImplementedError("In-place update is not currently implemented for ASDF-in-FITS")
-
-        self._update_asdf_extension(
-            all_array_storage=all_array_storage,
-            all_array_compression=all_array_compression,
-            pad_blocks=pad_blocks,
-            **kwargs,
-        )

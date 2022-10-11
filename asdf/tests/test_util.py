@@ -99,3 +99,20 @@ def test_get_file_type(content, expected_type):
     fd = generic_io.get_file(OnlyHasAReadMethod(content))
     assert util.get_file_type(fd) == expected_type
     assert fd.read() == content
+
+
+def test_minversion():
+    import numpy
+    import yaml
+
+    good_versions = ["1.16", "1.16.1", "1.16.0.dev", "1.16dev"]
+    bad_versions = ["100000", "100000.2rc1"]
+    for version in good_versions:
+        assert util.minversion(numpy, version)
+        assert util.minversion("numpy", version)
+    for version in bad_versions:
+        assert not util.minversion(numpy, version)
+        assert not util.minversion("numpy", version)
+
+    assert util.minversion(yaml, "3.1")
+    assert util.minversion("yaml", "3.1")

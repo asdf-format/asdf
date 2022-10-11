@@ -4,13 +4,22 @@ import inspect
 import math
 import re
 import struct
+import sys
 import types
 from functools import lru_cache
+from importlib import metadata
 from urllib.request import pathname2url
 
 import numpy as np
+from packaging.version import Version
 
 from . import constants
+
+if sys.version_info < (3, 10):
+    from importlib_metadata import packages_distributions
+else:
+    from importlib.metadata import packages_distributions
+
 
 # We're importing our own copy of urllib.parse because
 # we need to patch it to support asdf:// URIs, but it'd
@@ -323,14 +332,12 @@ def get_class_name(obj, instance=True):
     return _CLASS_NAME_OVERRIDES.get(class_name, class_name)
 
 
-def minversion(module, version, inclusive=True, version_path="__version__"):
+def minversion(module, version, inclusive=True):
     """
     Returns `True` if the specified Python module satisfies a minimum version
     requirement, and `False` if not.
 
-    By default this uses `pkg_resources.parse_version` to do the version
-    comparison if available.  Otherwise it falls back on
-    `packaging.version.Version`.
+    Copied from astropy.utils.misc.minversion to avoid dependency on astropy.
 
     Parameters
     ----------
@@ -347,17 +354,14 @@ def minversion(module, version, inclusive=True, version_path="__version__"):
     inclusive : `bool`
         The specified version meets the requirement inclusively (i.e. ``>=``)
         as opposed to strictly greater than (default: `True`).
-
-    version_path : `str`
-        A dotted attribute path to follow in the module for the version.
-        Defaults to just ``'__version__'``, which should work for most Python
-        modules.
     """
 
     if isinstance(module, types.ModuleType):
         module_name = module.__name__
+        module_version = getattr(module, "__version__", None)
     elif isinstance(module, str):
         module_name = module
+        module_version = None
         try:
             module = resolve_name(module_name)
         except ImportError:
@@ -366,23 +370,24 @@ def minversion(module, version, inclusive=True, version_path="__version__"):
         raise ValueError(
             "module argument must be an actual imported "
             "module, or the import name of the module; "
-            "got {!r}".format(module)
+            f"got {repr(module)}"
         )
 
-    if "." not in version_path:
-        have_version = getattr(module, version_path)
-    else:
-        have_version = resolve_name(".".join([module.__name__, version_path]))
-
-    try:
-        from pkg_resources import parse_version
-    except ImportError:
-        from packaging.version import Version as parse_version
+    if module_version is None:
+        try:
+            module_version = metadata.version(module_name)
+        except metadata.PackageNotFoundError:
+            # Maybe the distribution name is different from package name.
+            # Calling packages_distributions is costly so we do it only
+            # if necessary, as only a few packages don't have the same
+            # distribution name.
+            dist_names = packages_distributions()
+            module_version = metadata.version(dist_names[module_name][0])
 
     if inclusive:
-        return parse_version(have_version) >= parse_version(version)
+        return Version(module_version) >= Version(version)
     else:
-        return parse_version(have_version) > parse_version(version)
+        return Version(module_version) > Version(version)
 
 
 class InheritDocstrings(type):
