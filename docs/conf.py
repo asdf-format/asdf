@@ -1,7 +1,7 @@
 from pathlib import Path
 
 import tomli
-from sphinx_asdf.conf import *  # noqa: F403, F401
+from sphinx_asdf.conf import *  # noqa: F403
 
 try:
     from importlib.metadata import distribution

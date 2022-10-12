@@ -27,6 +27,11 @@ repos:
     - id: rst-inline-touching-normal
     - id: text-unicode-replacement-char
 
+- repo: https://github.com/asottile/yesqa
+  rev: v1.4.0
+  hooks:
+    - id: yesqa
+
 - repo: https://github.com/asottile/pyupgrade
   rev: v3.1.0
   hooks:
