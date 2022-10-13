@@ -109,20 +109,20 @@ jobs:
             test_command: pytest
     steps:
       - name: Checkout asdf
-        uses: actions/checkout@v2
+        uses: actions/checkout@v3
         with:
           fetch-depth: 0
           submodules: true
           path: asdf
       - name: Checkout ${{ matrix.package_name }}
-        uses: actions/checkout@v2
+        uses: actions/checkout@v3
         with:
           fetch-depth: 0
           repository: ${{ matrix.repository }}
           ref: ${{ matrix.ref }}
           path: target
       - name: Set up Python 3.9
-        uses: actions/setup-python@v2
+        uses: actions/setup-python@v4
         with:
           python-version: 3.9
       - name: Install asdf
