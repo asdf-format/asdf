@@ -97,6 +97,11 @@ jobs:
             ref: main
             install_command: pip install -e .[test]
             test_command: pytest
+          - package_name: asdf-unit-schemas
+            repository: asdf-format/asdf-unit-schemas
+            ref: main
+            install_command: pip install -e .[test]
+            test_command: pytest
           - package_name: asdf-coordinates-schemas
             repository: asdf-format/asdf-coordinates-schemas
             ref: main
