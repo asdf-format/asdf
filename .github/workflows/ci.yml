@@ -47,7 +47,7 @@ jobs:
       coverage: codecov
 
   test:
-    needs: [core, asdf-standard]
+    needs: [core, asdf-schemas]
     uses: OpenAstronomy/github-actions-workflows/.github/workflows/tox.yml@v1
     with:
       cache-path: ~/.cache/pip
@@ -61,7 +61,7 @@ jobs:
         - windows: py39
 
   dev:
-    needs: [core, asdf-standard]
+    needs: [core, asdf-schemas]
     uses: OpenAstronomy/github-actions-workflows/.github/workflows/tox.yml@v1
     with:
       cache-path: ~/.cache/pip
@@ -78,7 +78,7 @@ jobs:
           python-version: 3.11.0-rc.2
 
   compatibility:
-    needs: [core, asdf-standard]
+    needs: [core, asdf-schemas]
     uses: OpenAstronomy/github-actions-workflows/.github/workflows/tox.yml@v1
     with:
       cache-path: ~/.cache/pip
@@ -106,31 +106,50 @@ jobs:
         - linux: prerelease
         - linux: packaged
 
-  asdf-standard:
-    name: Run asdf-standard tests
+  asdf-schemas:
+    name: ${{ matrix.name }}
     runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        include:
+          - package_name: asdf-standard
+            repository: asdf-format/asdf-standard
+            ref: master
+            install_command: pip install -e .[test]
+            test_command: pytest
+          - package_name: asdf-transform-schemas
+            repository: asdf-format/asdf-transform-schemas
+            ref: master
+            install_command: pip install -e .[test]
+            test_command: pytest
+          - package_name: asdf-unit-schemas
+            repository: asdf-format/asdf-unit-schemas
+            ref: main
+            install_command: pip install -e .[test]
+            test_command: pytest
     steps:
       - name: Checkout asdf
         uses: actions/checkout@v2
         with:
           fetch-depth: 0
+          submodules: true
           path: asdf
-      - name: Checkout asdf-standard
+      - name: Checkout ${{ matrix.package_name }}
         uses: actions/checkout@v2
         with:
           fetch-depth: 0
-          repository: asdf-format/asdf-standard
-          ref: master
-          path: asdf-standard
+          repository: ${{ matrix.repository }}
+          ref: ${{ matrix.ref }}
+          path: target
       - name: Set up Python 3.9
         uses: actions/setup-python@v2
         with:
           python-version: 3.9
       - name: Install asdf
         run: cd asdf && pip install .
-      - name: Install asdf-standard
-        run: cd asdf-standard && pip install -e .[test]
+      - name: Install remaining ${{ matrix.package_name }} dependencies
+        run: cd target && ${{ matrix.install_command }}
       - name: Pip Freeze
         run: pip freeze
-      - name: Run asdf-standard tests
-        run: cd asdf-standard && pytest
+      - name: Run ${{ matrix.package_name}} tests
+        run: cd target && ${{ matrix.test_command }}
