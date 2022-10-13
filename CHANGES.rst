@@ -9,6 +9,7 @@
 - Unpin ``jsonschema`` version and fix ``jsonschema`` deprecation warnings. [#1185]
 - Replace ``pkg_resources`` with ``importlib.metadata``. [#1199]
 - Fix default validation for jsonschema 4.10+ [#1203]
+- Add ``asdf-unit-schemas`` as a dependency, for backwards compatibility. [#1210]
 
 2.13.0 (2022-08-19)
 -------------------
