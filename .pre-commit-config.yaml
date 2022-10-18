@@ -40,7 +40,7 @@ repos:
       exclude: "asdf/extern/.*"
 
 - repo: https://github.com/PyCQA/autoflake
-  rev: v1.7.3
+  rev: v1.7.6
   hooks:
   - id: autoflake
 
