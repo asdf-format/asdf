@@ -69,6 +69,7 @@ build-backend = 'setuptools.build_meta'
 write_to = "asdf/_version.py"
 
 [tool.setuptools.packages.find]
+include = ['asdf*', 'pytest_asdf*']
 
 [tool.setuptools.package-data]
 'asdf.commands.tests.data' = ["*"]
