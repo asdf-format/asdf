@@ -48,12 +48,12 @@ class FooExtension:
     ]
 
 
-def test_serialize_custom_type(tmpdir):
+def test_serialize_custom_type(tmp_path):
     with asdf.config_context() as config:
         config.add_resource_mapping({FOO_SCHEMA_URI: FOO_SCHEMA})
         config.add_extension(FooExtension())
 
-        path = str(tmpdir / "test.asdf")
+        path = str(tmp_path / "test.asdf")
 
         af = asdf.AsdfFile()
         af["foo"] = Foo("bar")
@@ -111,12 +111,12 @@ class FooFooExtension:
     ]
 
 
-def test_serialize_with_multiple_schemas(tmpdir):
+def test_serialize_with_multiple_schemas(tmp_path):
     with asdf.config_context() as config:
         config.add_resource_mapping({FOO_SCHEMA_URI: FOO_SCHEMA, FOOFOO_SCHEMA_URI: FOOFOO_SCHEMA})
         config.add_extension(FooFooExtension())
 
-        path = str(tmpdir / "test.asdf")
+        path = str(tmp_path / "test.asdf")
 
         af = asdf.AsdfFile()
         af["foo_foo"] = FooFoo("bar", "bar_bar")
@@ -146,12 +146,12 @@ class FooFooConverterlessExtension:
     ]
 
 
-def test_converterless_serialize_with_multiple_schemas(tmpdir):
+def test_converterless_serialize_with_multiple_schemas(tmp_path):
     with asdf.config_context() as config:
         config.add_resource_mapping({FOO_SCHEMA_URI: FOO_SCHEMA, FOOFOO_SCHEMA_URI: FOOFOO_SCHEMA})
         config.add_extension(FooFooConverterlessExtension())
 
-        path = str(tmpdir / "test.asdf")
+        path = str(tmp_path / "test.asdf")
 
         af = asdf.AsdfFile()
         af["foo_foo"] = "asdf://somewhere.org/extensions/foo/tags/foo_foo-1.0 {bar: bar_bar}"

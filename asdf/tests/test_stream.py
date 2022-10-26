@@ -89,8 +89,8 @@ def test_stream_with_nonstream():
             assert np.all(row == i)
 
 
-def test_stream_real_file(tmpdir):
-    path = os.path.join(str(tmpdir), "test.asdf")
+def test_stream_real_file(tmp_path):
+    path = os.path.join(str(tmp_path), "test.asdf")
 
     tree = {"nonstream": np.array([1, 2, 3, 4], np.int64), "stream": stream.Stream([6, 2], np.float64)}
 
@@ -134,7 +134,7 @@ def test_stream_to_stream():
             assert np.all(row == i)
 
 
-def test_array_to_stream(tmpdir):
+def test_array_to_stream(tmp_path):
     tree = {
         "stream": np.array([1, 2, 3, 4], np.int64),
     }
@@ -153,13 +153,13 @@ def test_array_to_stream(tmpdir):
     ff2.write_to(buff)
     assert b"shape: ['*']" in buff.getvalue()
 
-    with open(os.path.join(str(tmpdir), "test.asdf"), "wb") as fd:
+    with open(os.path.join(str(tmp_path), "test.asdf"), "wb") as fd:
         ff = asdf.AsdfFile(tree)
         ff.set_array_storage(tree["stream"], "streamed")
         ff.write_to(fd)
         fd.write(np.array([5, 6, 7, 8], np.int64).tobytes())
 
-    with asdf.open(os.path.join(str(tmpdir), "test.asdf")) as ff:
+    with asdf.open(os.path.join(str(tmp_path), "test.asdf")) as ff:
         assert_array_equal(ff.tree["stream"], [1, 2, 3, 4, 5, 6, 7, 8])
         ff2 = asdf.AsdfFile(ff)
         ff2.write_to(buff)

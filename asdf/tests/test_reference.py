@@ -12,19 +12,19 @@ from asdf.tags.core import ndarray
 from .helpers import assert_tree_match
 
 
-def test_external_reference(tmpdir):
+def test_external_reference(tmp_path):
     exttree = {
         "cool_stuff": {"a": np.array([0, 1, 2], float), "b": np.array([3, 4, 5], float)},
         "list_of_stuff": ["foobar", 42, np.array([7, 8, 9], float)],
     }
-    external_path = os.path.join(str(tmpdir), "external.asdf")
+    external_path = os.path.join(str(tmp_path), "external.asdf")
     ext = asdf.AsdfFile(exttree)
     # Since we're testing with small arrays, force all arrays to be stored
     # in internal blocks rather than letting some of them be automatically put
     # inline.
     ext.write_to(external_path, all_array_storage="internal")
 
-    external_path = os.path.join(str(tmpdir), "external2.asdf")
+    external_path = os.path.join(str(tmp_path), "external2.asdf")
     ff = asdf.AsdfFile(exttree)
     ff.write_to(external_path, all_array_storage="internal")
 
@@ -78,10 +78,10 @@ def test_external_reference(tmpdir):
 
         assert_array_equal(ff.tree["internal"], exttree["cool_stuff"]["a"])
 
-    with asdf.AsdfFile(tree, uri=util.filepath_to_url(os.path.join(str(tmpdir), "main.asdf"))) as ff:
+    with asdf.AsdfFile(tree, uri=util.filepath_to_url(os.path.join(str(tmp_path), "main.asdf"))) as ff:
         do_asserts(ff)
 
-        internal_path = os.path.join(str(tmpdir), "main.asdf")
+        internal_path = os.path.join(str(tmp_path), "main.asdf")
         ff.write_to(internal_path)
 
     with asdf.open(internal_path) as ff:
@@ -112,7 +112,7 @@ def test_external_reference(tmpdir):
 
 
 @pytest.mark.remote_data
-def test_external_reference_invalid(tmpdir):
+def test_external_reference_invalid(tmp_path):
     tree = {"foo": {"$ref": "fail.asdf"}}
 
     ff = asdf.AsdfFile(tree)
@@ -123,37 +123,37 @@ def test_external_reference_invalid(tmpdir):
     with pytest.raises(IOError):
         ff.resolve_references()
 
-    ff = asdf.AsdfFile(tree, uri=util.filepath_to_url(os.path.join(str(tmpdir), "main.asdf")))
+    ff = asdf.AsdfFile(tree, uri=util.filepath_to_url(os.path.join(str(tmp_path), "main.asdf")))
     with pytest.raises(IOError):
         ff.resolve_references()
 
 
-def test_external_reference_invalid_fragment(tmpdir):
+def test_external_reference_invalid_fragment(tmp_path):
     exttree = {"list_of_stuff": ["foobar", 42, np.array([7, 8, 9], float)]}
-    external_path = os.path.join(str(tmpdir), "external.asdf")
+    external_path = os.path.join(str(tmp_path), "external.asdf")
     ff = asdf.AsdfFile(exttree)
     ff.write_to(external_path)
 
     tree = {"foo": {"$ref": "external.asdf#/list_of_stuff/a"}}
 
-    with asdf.AsdfFile(tree, uri=util.filepath_to_url(os.path.join(str(tmpdir), "main.asdf"))) as ff:
+    with asdf.AsdfFile(tree, uri=util.filepath_to_url(os.path.join(str(tmp_path), "main.asdf"))) as ff:
         with pytest.raises(ValueError):
             ff.resolve_references()
 
     tree = {"foo": {"$ref": "external.asdf#/list_of_stuff/3"}}
 
-    with asdf.AsdfFile(tree, uri=util.filepath_to_url(os.path.join(str(tmpdir), "main.asdf"))) as ff:
+    with asdf.AsdfFile(tree, uri=util.filepath_to_url(os.path.join(str(tmp_path), "main.asdf"))) as ff:
         with pytest.raises(ValueError):
             ff.resolve_references()
 
 
-def test_make_reference(tmpdir):
+def test_make_reference(tmp_path):
     exttree = {
         # Include some ~ and / in the name to make sure that escaping
         # is working correctly
         "f~o~o/": {"a": np.array([0, 1, 2], float), "b": np.array([3, 4, 5], float)}
     }
-    external_path = os.path.join(str(tmpdir), "external.asdf")
+    external_path = os.path.join(str(tmp_path), "external.asdf")
     ext = asdf.AsdfFile(exttree)
     ext.write_to(external_path)
 
@@ -162,14 +162,14 @@ def test_make_reference(tmpdir):
         ff.tree["ref"] = ext.make_reference(["f~o~o/", "a"])
         assert_array_equal(ff.tree["ref"], ext.tree["f~o~o/"]["a"])
 
-        ff.write_to(os.path.join(str(tmpdir), "source.asdf"))
+        ff.write_to(os.path.join(str(tmp_path), "source.asdf"))
 
-    with asdf.open(os.path.join(str(tmpdir), "source.asdf")) as ff:
+    with asdf.open(os.path.join(str(tmp_path), "source.asdf")) as ff:
         assert ff.tree["ref"]._uri == "external.asdf#f~0o~0o~1/a"
 
 
-def test_internal_reference(tmpdir):
-    testfile = os.path.join(str(tmpdir), "test.asdf")
+def test_internal_reference(tmp_path):
+    testfile = os.path.join(str(tmp_path), "test.asdf")
 
     tree = {"foo": 2, "bar": {"$ref": "#"}}
 
@@ -190,7 +190,7 @@ def test_internal_reference(tmpdir):
     assert b"{$ref: ''}" in content
 
 
-def test_implicit_internal_reference(tmpdir):
+def test_implicit_internal_reference(tmp_path):
     target = {"foo": "bar"}
     nested_in_dict = {"target": target}
     nested_in_list = [target]
@@ -204,7 +204,7 @@ def test_implicit_internal_reference(tmpdir):
     assert af["target"] is af["nested_in_dict"]["target"]
     assert af["target"] is af["nested_in_list"][0]
 
-    output_path = os.path.join(str(tmpdir), "test.asdf")
+    output_path = os.path.join(str(tmp_path), "test.asdf")
     af.write_to(output_path)
     with asdf.open(output_path) as af:
         assert af["target"] is af["nested_in_dict"]["target"]

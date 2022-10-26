@@ -1,5 +1,4 @@
 import io
-import os
 from fractions import Fraction
 
 import pytest
@@ -189,8 +188,8 @@ a: !core/complex-1.0.1
             assert isinstance(ff.tree["a"], complex)
 
 
-def test_version_mismatch_file(tmpdir):
-    testfile = os.path.join(str(tmpdir), "mismatch.asdf")
+def test_version_mismatch_file(tmp_path):
+    testfile = str(tmp_path / "mismatch.asdf")
     yaml = """
 a: !core/complex-42.0.0
   0j
@@ -591,9 +590,9 @@ flow_thing:
         asdf.open(buff, extensions=CustomFlowExtension())
 
 
-def test_tag_without_schema(tmpdir):
+def test_tag_without_schema(tmp_path):
 
-    tmpfile = str(tmpdir.join("foo.asdf"))
+    tmpfile = str(tmp_path / "foo.asdf")
 
     class FooType(types.CustomType):
         name = "foo"
@@ -639,14 +638,14 @@ def test_tag_without_schema(tmpdir):
             assert ff.tree["foo"] == tree["foo"]
 
 
-def test_custom_reference_cycle(tmpdir):
+def test_custom_reference_cycle(tmp_path):
     f1 = FractionWithInverse(3, 5)
     f2 = FractionWithInverse(5, 3)
     f1.inverse = f2
     f2.inverse = f1
     tree = {"fraction": f1}
 
-    path = str(tmpdir.join("with_inverse.asdf"))
+    path = str(tmp_path / "with_inverse.asdf")
 
     with asdf.AsdfFile(tree, extensions=FractionWithInverseExtension()) as af:
         af.write_to(path)
