@@ -86,6 +86,7 @@ open_files_ignore = ['test.fits', 'asdf.fits']
 # The asdf.asdftypes module emits a warning on import,
 # which pytest trips over during collection:
 filterwarnings = [
+    'error',
     'ignore::asdf.exceptions.AsdfDeprecationWarning:asdf.asdftypes',
     'ignore:numpy.ndarray size changed:astropy.utils.exceptions.AstropyWarning',
     'ignore:numpy.ndarray size changed:RuntimeWarning',

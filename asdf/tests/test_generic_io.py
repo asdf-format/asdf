@@ -360,6 +360,7 @@ def test_unicode_open(tmp_path, small_tree):
                 pass
 
 
+@pytest.mark.filterwarnings("ignore:unclosed file .*")
 def test_invalid_obj(tmp_path):
     with pytest.raises(ValueError):
         generic_io.get_file(42)
