@@ -184,7 +184,7 @@ def _assert_roundtrip_tree(
     tree_match_func="assert_equal",
 ):
 
-    fname = str(tmpdir.join("test.asdf"))
+    fname = os.path.join(tmpdir, "test.asdf")
 
     # First, test writing/reading a BytesIO buffer
     buff = io.BytesIO()
