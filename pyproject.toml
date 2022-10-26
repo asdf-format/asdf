@@ -185,7 +185,7 @@ extend_skip_glob = ["asdf/extern/*", ".eggs/*", ".tox/*"]
 
 [tool.ruff]
 line-length = 120
-exclude = ["asdf/extern", "docs"]
+extend-exclude = ["asdf/extern/*", "docs/*"]
 
 [tool.autoflake]
 remove-all-unused-imports = true

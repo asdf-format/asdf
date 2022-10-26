@@ -87,7 +87,8 @@ def test_decompress_too_long_short():
     compression.compress(fio, b"0" * 1024, "zlib")
     size = fio.tell()
     fio.seek(0)
-    fio.read_blocks = lambda us: [fio.read(us)]
+    blocks = lambda us: [fio.read(us)]  # noqa: E731
+    fio.read_blocks = blocks
     compression.decompress(fio, size, 1024, "zlib")
     fio.seek(0)
     with pytest.raises(ValueError):

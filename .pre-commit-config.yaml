@@ -58,6 +58,7 @@ repos:
   rev: v0.0.83
   hooks:
     - id: lint
+      args: ["--fix"]
 
 - repo: https://github.com/PyCQA/bandit
   rev: 1.7.4
