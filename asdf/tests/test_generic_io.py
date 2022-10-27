@@ -360,6 +360,13 @@ def test_unicode_open(tmp_path, small_tree):
                 pass
 
 
+@pytest.mark.filterwarnings("ignore:unclosed file .*")
+def test_open_stdout():
+    """Test ability to open/write stdout as an output stream"""
+    with generic_io.get_file(sys.__stdout__, "w"):
+        pass
+
+
 def test_invalid_obj(tmp_path):
     with pytest.raises(ValueError):
         generic_io.get_file(42)
@@ -382,9 +389,6 @@ def test_invalid_obj(tmp_path):
     with open(path, "rb") as fd:
         with pytest.raises(ValueError):
             generic_io.get_file(fd, "w")
-
-    with generic_io.get_file(sys.__stdout__, "w"):
-        pass
 
 
 def test_nonseekable_file(tmp_path):

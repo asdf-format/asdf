@@ -73,7 +73,6 @@ jobs:
       default_python: '3.9'
       envs: |
         - linux: compatibility
-        - linux: warnings
 
   package:
     needs: [test, dev, compatibility]

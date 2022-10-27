@@ -166,6 +166,7 @@ def test_asdf_file_version_requirement():
             af = AsdfFile(version="1.4.0", extensions=[extension_with_requirement])
 
 
+@pytest.mark.filterwarnings("ignore:unclosed file .*")
 def test_open_asdf_extensions(tmp_path):
     extension = TestExtension(extension_uri="asdf://somewhere.org/extensions/foo-1.0")
 
