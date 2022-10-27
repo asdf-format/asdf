@@ -61,7 +61,7 @@ def test_read_json_schema():
     schema.check_schema(schema_tree)
 
 
-def test_load_schema(tmpdir):
+def test_load_schema(tmp_path):
     schema_def = """
 %YAML 1.1
 ---
@@ -77,14 +77,14 @@ properties:
 required: [foobar]
 ...
     """
-    schema_path = tmpdir.join("nugatory.yaml")
-    schema_path.write(schema_def.encode())
+    schema_path = tmp_path / "nugatory.yaml"
+    schema_path.write_bytes(schema_def.encode())
 
     schema_tree = schema.load_schema(str(schema_path), resolve_references=True)
     schema.check_schema(schema_tree)
 
 
-def test_load_schema_with_full_tag(tmpdir):
+def test_load_schema_with_full_tag(tmp_path):
     schema_def = """
 %YAML 1.1
 ---
@@ -100,14 +100,14 @@ properties:
 required: [foobar]
 ...
     """
-    schema_path = tmpdir.join("nugatory.yaml")
-    schema_path.write(schema_def.encode())
+    schema_path = tmp_path / "nugatory.yaml"
+    schema_path.write_bytes(schema_def.encode())
 
     schema_tree = schema.load_schema(str(schema_path), resolve_references=True)
     schema.check_schema(schema_tree)
 
 
-def test_load_schema_with_tag_address(tmpdir):
+def test_load_schema_with_tag_address(tmp_path):
     schema_def = """
 %YAML 1.1
 %TAG !asdf! tag:stsci.edu:asdf/
@@ -124,14 +124,14 @@ properties:
 required: [foobar]
 ...
     """
-    schema_path = tmpdir.join("nugatory.yaml")
-    schema_path.write(schema_def.encode())
+    schema_path = tmp_path / "nugatory.yaml"
+    schema_path.write_bytes(schema_def.encode())
 
     schema_tree = schema.load_schema(str(schema_path), resolve_references=True)
     schema.check_schema(schema_tree)
 
 
-def test_load_schema_with_file_url(tmpdir):
+def test_load_schema_with_file_url(tmp_path):
     schema_def = """
 %YAML 1.1
 %TAG !asdf! tag:stsci.edu:asdf/
@@ -150,8 +150,8 @@ required: [foobar]
     """.format(
         extension.get_default_resolver()("tag:stsci.edu:asdf/core/ndarray-1.0.0")
     )
-    schema_path = tmpdir.join("nugatory.yaml")
-    schema_path.write(schema_def.encode())
+    schema_path = tmp_path / "nugatory.yaml"
+    schema_path.write_bytes(schema_def.encode())
 
     schema_tree = schema.load_schema(str(schema_path), resolve_references=True)
     schema.check_schema(schema_tree)
@@ -653,8 +653,8 @@ def test_max_min_literals(num):
 
 @pytest.mark.parametrize("num", [constants.MAX_NUMBER + 1, constants.MIN_NUMBER - 1])
 @pytest.mark.parametrize("ttype", ["val", "list", "key"])
-def test_max_min_literals_write(num, ttype, tmpdir):
-    outfile = tmpdir / "test.asdf"
+def test_max_min_literals_write(num, ttype, tmp_path):
+    outfile = tmp_path / "test.asdf"
     af = asdf.AsdfFile()
 
     # Validation doesn't occur here, so no warning/error will be raised.
@@ -758,7 +758,7 @@ def test_nested_array():
             schema.validate(b, schema=s)
 
 
-def test_nested_array_yaml(tmpdir):
+def test_nested_array_yaml(tmp_path):
     schema_def = """
 %YAML 1.1
 ---
@@ -776,8 +776,8 @@ properties:
       maxItems: 3
 ...
     """
-    schema_path = tmpdir.join("nested.yaml")
-    schema_path.write(schema_def.encode())
+    schema_path = tmp_path / "nested.yaml"
+    schema_path.write_bytes(schema_def.encode())
 
     schema_tree = schema.load_schema(str(schema_path))
     schema.check_schema(schema_tree)
@@ -824,7 +824,7 @@ custom: !<tag:nowhere.org:custom/missing-1.1.0>
             assert ff.tree["custom"]["b"]["foo"] == 42
 
 
-def test_assert_roundtrip_with_extension(tmpdir):
+def test_assert_roundtrip_with_extension(tmp_path):
     called_custom_assert_equal = [False]
 
     class CustomType(dict, types.CustomType):
@@ -848,14 +848,14 @@ def test_assert_roundtrip_with_extension(tmpdir):
         assert isinstance(ff.tree["custom"], CustomType)
 
     with helpers.assert_no_warnings():
-        helpers.assert_roundtrip_tree(tree, tmpdir, extensions=[CustomTypeExtension()])
+        helpers.assert_roundtrip_tree(tree, tmp_path, extensions=[CustomTypeExtension()])
 
     assert called_custom_assert_equal[0] is True
 
 
-def test_custom_validation_bad(tmpdir):
+def test_custom_validation_bad(tmp_path):
     custom_schema_path = helpers.get_test_data_path("custom_schema.yaml")
-    asdf_file = str(tmpdir.join("out.asdf"))
+    asdf_file = str(tmp_path / "out.asdf")
 
     # This tree does not conform to the custom schema
     tree = {"stuff": 42, "other_stuff": "hello"}
@@ -879,9 +879,9 @@ def test_custom_validation_bad(tmpdir):
             pass
 
 
-def test_custom_validation_good(tmpdir):
+def test_custom_validation_good(tmp_path):
     custom_schema_path = helpers.get_test_data_path("custom_schema.yaml")
-    asdf_file = str(tmpdir.join("out.asdf"))
+    asdf_file = str(tmp_path / "out.asdf")
 
     # This tree conforms to the custom schema
     tree = {"foo": {"x": 42, "y": 10}, "bar": {"a": "hello", "b": "banjo"}}
@@ -893,7 +893,7 @@ def test_custom_validation_good(tmpdir):
         pass
 
 
-def test_custom_validation_pathlib(tmpdir):
+def test_custom_validation_pathlib(tmp_path):
     """
     Make sure custom schema paths can be pathlib.Path objects
 
@@ -902,7 +902,7 @@ def test_custom_validation_pathlib(tmpdir):
     from pathlib import Path
 
     custom_schema_path = Path(helpers.get_test_data_path("custom_schema.yaml"))
-    asdf_file = str(tmpdir.join("out.asdf"))
+    asdf_file = str(tmp_path / "out.asdf")
 
     # This tree conforms to the custom schema
     tree = {"foo": {"x": 42, "y": 10}, "bar": {"a": "hello", "b": "banjo"}}
@@ -914,9 +914,9 @@ def test_custom_validation_pathlib(tmpdir):
         pass
 
 
-def test_custom_validation_with_definitions_good(tmpdir):
+def test_custom_validation_with_definitions_good(tmp_path):
     custom_schema_path = helpers.get_test_data_path("custom_schema_definitions.yaml")
-    asdf_file = str(tmpdir.join("out.asdf"))
+    asdf_file = str(tmp_path / "out.asdf")
 
     # This tree conforms to the custom schema
     tree = {"thing": {"biz": "hello", "baz": "world"}}
@@ -928,9 +928,9 @@ def test_custom_validation_with_definitions_good(tmpdir):
         pass
 
 
-def test_custom_validation_with_definitions_bad(tmpdir):
+def test_custom_validation_with_definitions_bad(tmp_path):
     custom_schema_path = helpers.get_test_data_path("custom_schema_definitions.yaml")
-    asdf_file = str(tmpdir.join("out.asdf"))
+    asdf_file = str(tmp_path / "out.asdf")
 
     # This tree does NOT conform to the custom schema
     tree = {"forb": {"biz": "hello", "baz": "world"}}
@@ -954,9 +954,9 @@ def test_custom_validation_with_definitions_bad(tmpdir):
             pass
 
 
-def test_custom_validation_with_external_ref_good(tmpdir):
+def test_custom_validation_with_external_ref_good(tmp_path):
     custom_schema_path = helpers.get_test_data_path("custom_schema_external_ref.yaml")
-    asdf_file = str(tmpdir.join("out.asdf"))
+    asdf_file = str(tmp_path / "out.asdf")
 
     # This tree conforms to the custom schema
     tree = {"foo": asdf.tags.core.Software(name="Microsoft Windows", version="95")}
@@ -968,9 +968,9 @@ def test_custom_validation_with_external_ref_good(tmpdir):
         pass
 
 
-def test_custom_validation_with_external_ref_bad(tmpdir):
+def test_custom_validation_with_external_ref_bad(tmp_path):
     custom_schema_path = helpers.get_test_data_path("custom_schema_external_ref.yaml")
-    asdf_file = str(tmpdir.join("out.asdf"))
+    asdf_file = str(tmp_path / "out.asdf")
 
     # This tree does not conform to the custom schema
     tree = {"foo": False}
@@ -1008,7 +1008,7 @@ def test_load_schema_resolve_local_refs_deprecated():
         schema.load_schema(custom_schema_path, resolve_local_refs=True)
 
 
-def test_nonexistent_tag(tmpdir):
+def test_nonexistent_tag(tmp_path):
     """
     This tests the case where a node is tagged with a type that apparently
     comes from an extension that is known, but the type itself can't be found.

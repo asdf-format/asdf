@@ -1,5 +1,4 @@
 import copy
-import os
 
 import numpy as np
 import pytest
@@ -40,9 +39,9 @@ def create_asdf_in_fits(dtype):
 # write files that use the old convention of ImageHDU to store the ASDF file.
 @pytest.mark.parametrize("backwards_compat", [False, True])
 @pytest.mark.parametrize("dtype", TEST_DTYPES)
-def test_embed_asdf_in_fits_file(tmpdir, backwards_compat, dtype):
-    fits_testfile = str(tmpdir.join("test.fits"))
-    asdf_testfile = str(tmpdir.join("test.asdf"))
+def test_embed_asdf_in_fits_file(tmp_path, backwards_compat, dtype):
+    fits_testfile = str(tmp_path / "test.fits")
+    asdf_testfile = str(tmp_path / "test.asdf")
 
     hdulist = fits.HDUList()
     hdulist.append(fits.ImageHDU(np.arange(512, dtype=dtype), name="SCI"))
@@ -86,15 +85,15 @@ def test_embed_asdf_in_fits_file(tmpdir, backwards_compat, dtype):
 
 
 @pytest.mark.parametrize("dtype", TEST_DTYPES)
-def test_embed_asdf_in_fits_file_anonymous_extensions(tmpdir, dtype):
+def test_embed_asdf_in_fits_file_anonymous_extensions(tmp_path, dtype):
     # Write the AsdfInFits object out as a FITS file with ASDF extension
     asdf_in_fits = create_asdf_in_fits(dtype)
-    asdf_in_fits.write_to(os.path.join(str(tmpdir), "test.fits"))
+    asdf_in_fits.write_to(str(tmp_path / "test.fits"))
 
     ff2 = asdf.AsdfFile(asdf_in_fits.tree)
-    ff2.write_to(os.path.join(str(tmpdir), "plain.asdf"))
+    ff2.write_to(str(tmp_path / "plain.asdf"))
 
-    with fits.open(os.path.join(str(tmpdir), "test.fits")) as hdulist:
+    with fits.open(str(tmp_path / "test.fits")) as hdulist:
         assert len(hdulist) == 4
         assert [x.name for x in hdulist] == ["PRIMARY", "", "", "ASDF"]
         asdf_hdu = hdulist["ASDF"]
@@ -105,16 +104,16 @@ def test_embed_asdf_in_fits_file_anonymous_extensions(tmpdir, dtype):
             assert_tree_match(asdf_in_fits.tree, ff2.tree)
 
             ff = asdf.AsdfFile(copy.deepcopy(ff2.tree))
-            ff.write_to(os.path.join(str(tmpdir), "test.asdf"))
+            ff.write_to(str(tmp_path / "test.asdf"))
 
-    with asdf.open(os.path.join(str(tmpdir), "test.asdf")) as ff:
+    with asdf.open(str(tmp_path / "test.asdf")) as ff:
         assert_tree_match(asdf_in_fits.tree, ff.tree)
 
 
 @pytest.mark.xfail(reason="In-place update for ASDF-in-FITS does not currently work")
 @pytest.mark.parametrize("dtype", TEST_DTYPES)
-def test_update_in_place(tmpdir, dtype):
-    tempfile = str(tmpdir.join("test.fits"))
+def test_update_in_place(tmp_path, dtype):
+    tempfile = str(tmp_path / "test.fits")
 
     # Create a file and write it out
     asdf_in_fits = create_asdf_in_fits(dtype)
@@ -132,9 +131,9 @@ def test_update_in_place(tmpdir, dtype):
 
 
 @pytest.mark.parametrize("dtype", TEST_DTYPES)
-def test_update_and_write_new(tmpdir, dtype):
-    tempfile = str(tmpdir.join("test.fits"))
-    newfile = str(tmpdir.join("new.fits"))
+def test_update_and_write_new(tmp_path, dtype):
+    tempfile = str(tmp_path / "test.fits")
+    newfile = str(tmp_path / "new.fits")
 
     # Create a file and write it out
     asdf_in_fits = create_asdf_in_fits(dtype)
@@ -153,11 +152,11 @@ def test_update_and_write_new(tmpdir, dtype):
 
 @pytest.mark.xfail(reason="ASDF HDU implementation does not currently reseek after writing")
 @pytest.mark.parametrize("dtype", TEST_DTYPES)
-def test_access_hdu_data_after_write(tmpdir, dtype):
+def test_access_hdu_data_after_write(tmp_path, dtype):
     # There is actually probably not a great reason to support this kind of
     # functionality, but I am adding a test here to record the failure for
     # posterity.
-    tempfile = str(tmpdir.join("test.fits"))
+    tempfile = str(tmp_path / "test.fits")
 
     asdf_in_fits = create_asdf_in_fits(dtype)
     asdf_in_fits.write_to(tempfile)
@@ -167,7 +166,7 @@ def test_access_hdu_data_after_write(tmpdir, dtype):
 
 
 @pytest.mark.parametrize("dtype", TEST_DTYPES)
-def test_create_in_tree_first(tmpdir, dtype):
+def test_create_in_tree_first(tmp_path, dtype):
     tree = {
         "model": {
             "sci": {"data": np.arange(512, dtype=dtype), "wcs": "WCS info"},
@@ -181,14 +180,14 @@ def test_create_in_tree_first(tmpdir, dtype):
     hdulist.append(fits.ImageHDU(tree["model"]["dq"]["data"]))
     hdulist.append(fits.ImageHDU(tree["model"]["err"]["data"]))
 
-    tmpfile = os.path.join(str(tmpdir), "test.fits")
+    tmpfile = str(tmp_path / "test.fits")
     with fits_embed.AsdfInFits(hdulist, tree) as ff:
         ff.write_to(tmpfile)
 
     with asdf.AsdfFile(tree) as ff:
-        ff.write_to(os.path.join(str(tmpdir), "plain.asdf"))
+        ff.write_to(str(tmp_path / "plain.asdf"))
 
-    with asdf.open(os.path.join(str(tmpdir), "plain.asdf")) as ff:
+    with asdf.open(str(tmp_path / "plain.asdf")) as ff:
         assert_array_equal(ff.tree["model"]["sci"]["data"], np.arange(512, dtype=dtype))
 
     # This tests the changes that allow FITS files with ASDF extensions to be
@@ -206,9 +205,9 @@ def compare_asdfs(asdf0, asdf1):
 
 
 @pytest.mark.parametrize("dtype", TEST_DTYPES)
-def test_asdf_in_fits_open(tmpdir, dtype):
+def test_asdf_in_fits_open(tmp_path, dtype):
     """Test the open method of AsdfInFits"""
-    tmpfile = os.path.join(str(tmpdir), "test.fits")
+    tmpfile = str(tmp_path / "test.fits")
     # Write the AsdfInFits object out as a FITS file with ASDF extension
     asdf_in_fits = create_asdf_in_fits(dtype)
     asdf_in_fits.write_to(tmpfile)
@@ -234,9 +233,9 @@ def test_asdf_in_fits_open(tmpdir, dtype):
 
 
 @pytest.mark.parametrize("dtype", TEST_DTYPES)
-def test_asdf_open(tmpdir, dtype):
+def test_asdf_open(tmp_path, dtype):
     """Test the top-level open method of the asdf module"""
-    tmpfile = os.path.join(str(tmpdir), "test.fits")
+    tmpfile = str(tmp_path / "test.fits")
     # Write the AsdfInFits object out as a FITS file with ASDF extension
     asdf_in_fits = create_asdf_in_fits(dtype)
     asdf_in_fits.write_to(tmpfile)
@@ -256,8 +255,8 @@ def test_asdf_open(tmpdir, dtype):
             compare_asdfs(asdf_in_fits, ff)
 
 
-def test_validate_on_read(tmpdir):
-    tmpfile = str(tmpdir.join("invalid.fits"))
+def test_validate_on_read(tmp_path):
+    tmpfile = str(tmp_path / "invalid.fits")
 
     content = """
 invalid_software: !core/software-1.0.0
@@ -293,9 +292,9 @@ def test_open_gzipped():
 
 
 @pytest.mark.filterwarnings("ignore::astropy.io.fits.verify.VerifyWarning")
-def test_bad_input(tmpdir):
+def test_bad_input(tmp_path):
     """Make sure these functions behave properly with bad input"""
-    text_file = os.path.join(str(tmpdir), "test.txt")
+    text_file = str(tmp_path / "test.txt")
 
     with open(text_file, "w") as fh:
         fh.write("I <3 ASDF!!!!!")
@@ -326,8 +325,8 @@ def test_version_mismatch_file():
             assert fits_handle.tree["a"] == complex(0j)
 
 
-def test_serialize_table(tmpdir):
-    tmpfile = str(tmpdir.join("table.fits"))
+def test_serialize_table(tmp_path):
+    tmpfile = str(tmp_path / "table.fits")
 
     data = np.random.random((10, 10))
     table = Table(data)
@@ -363,8 +362,8 @@ def test_extension_check():
 
 
 @pytest.mark.parametrize("dtype", TEST_DTYPES)
-def test_verify_with_astropy(tmpdir, dtype):
-    tmpfile = str(tmpdir.join("asdf.fits"))
+def test_verify_with_astropy(tmp_path, dtype):
+    tmpfile = str(tmp_path / "asdf.fits")
 
     with create_asdf_in_fits(dtype) as aif:
         aif.write_to(tmpfile)
@@ -373,14 +372,14 @@ def test_verify_with_astropy(tmpdir, dtype):
         hdu.verify("exception")
 
 
-def test_dangling_file_handle(tmpdir):
+def test_dangling_file_handle(tmp_path):
     """
     This tests the bug fix introduced in #533. Without the bug fix, this test
     will fail when running the test suite with pytest-openfiles.
     """
     import gc
 
-    fits_filename = str(tmpdir.join("dangling.fits"))
+    fits_filename = str(tmp_path / "dangling.fits")
 
     # Create FITS file to use for test
     hdulist = fits.HDUList()

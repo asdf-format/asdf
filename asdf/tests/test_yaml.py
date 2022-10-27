@@ -14,7 +14,7 @@ from asdf.exceptions import AsdfWarning
 from . import helpers
 
 
-def test_ordered_dict(tmpdir):
+def test_ordered_dict(tmp_path):
     # Test that we can write out and read in ordered dicts.
 
     tree = {
@@ -34,10 +34,10 @@ def test_ordered_dict(tmpdir):
     def check_raw_yaml(content):
         assert b"OrderedDict" not in content
 
-    helpers.assert_roundtrip_tree(tree, tmpdir, asdf_check_func=check_asdf, raw_yaml_check_func=check_raw_yaml)
+    helpers.assert_roundtrip_tree(tree, tmp_path, asdf_check_func=check_asdf, raw_yaml_check_func=check_raw_yaml)
 
 
-def test_unicode_write(tmpdir):
+def test_unicode_write(tmp_path):
     # We want to write unicode out as regular utf-8-encoded
     # characters, not as escape sequences
 
@@ -54,7 +54,7 @@ def test_unicode_write(tmpdir):
         # Ensure that the unicode "tag" is not used
         assert b"unicode" not in content
 
-    helpers.assert_roundtrip_tree(tree, tmpdir, asdf_check_func=check_asdf, raw_yaml_check_func=check_raw_yaml)
+    helpers.assert_roundtrip_tree(tree, tmp_path, asdf_check_func=check_asdf, raw_yaml_check_func=check_raw_yaml)
 
 
 def test_arbitrary_python_object():
@@ -72,7 +72,7 @@ def test_arbitrary_python_object():
         ff.write_to(buff)
 
 
-def run_tuple_test(tree, tmpdir):
+def run_tuple_test(tree, tmp_path):
     def check_asdf(asdf):
         assert isinstance(asdf.tree["val"], list)
 
@@ -83,40 +83,40 @@ def run_tuple_test(tree, tmpdir):
     init_options = dict(ignore_implicit_conversion=True)
 
     helpers.assert_roundtrip_tree(
-        tree, tmpdir, asdf_check_func=check_asdf, raw_yaml_check_func=check_raw_yaml, init_options=init_options
+        tree, tmp_path, asdf_check_func=check_asdf, raw_yaml_check_func=check_raw_yaml, init_options=init_options
     )
 
 
-def test_python_tuple(tmpdir):
+def test_python_tuple(tmp_path):
     # We don't want to store tuples as tuples, because that's not a
     # built-in YAML data type.  This test ensures that they are
     # converted to lists.
 
     tree = {"val": (1, 2, 3)}
 
-    run_tuple_test(tree, tmpdir)
+    run_tuple_test(tree, tmp_path)
 
 
-def test_named_tuple_collections(tmpdir):
+def test_named_tuple_collections(tmp_path):
     # Ensure that we are able to serialize a collections.namedtuple.
 
     nt = namedtuple("TestNamedTuple1", ("one", "two", "three"))
 
     tree = {"val": nt(1, 2, 3)}
 
-    run_tuple_test(tree, tmpdir)
+    run_tuple_test(tree, tmp_path)
 
 
-def test_named_tuple_typing(tmpdir):
+def test_named_tuple_typing(tmp_path):
     # Ensure that we are able to serialize a typing.NamedTuple.
 
     nt = NamedTuple("TestNamedTuple2", (("one", int), ("two", int), ("three", int)))
     tree = {"val": nt(1, 2, 3)}
 
-    run_tuple_test(tree, tmpdir)
+    run_tuple_test(tree, tmp_path)
 
 
-def test_named_tuple_collections_recursive(tmpdir):
+def test_named_tuple_collections_recursive(tmp_path):
     nt = namedtuple("TestNamedTuple3", ("one", "two", "three"))
 
     tree = {"val": nt(1, 2, np.ones(3))}
@@ -125,10 +125,10 @@ def test_named_tuple_collections_recursive(tmpdir):
         assert (asdf.tree["val"][2] == np.ones(3)).all()
 
     init_options = dict(ignore_implicit_conversion=True)
-    helpers.assert_roundtrip_tree(tree, tmpdir, asdf_check_func=check_asdf, init_options=init_options)
+    helpers.assert_roundtrip_tree(tree, tmp_path, asdf_check_func=check_asdf, init_options=init_options)
 
 
-def test_named_tuple_typing_recursive(tmpdir):
+def test_named_tuple_typing_recursive(tmp_path):
     nt = NamedTuple("TestNamedTuple4", (("one", int), ("two", int), ("three", np.ndarray)))
 
     tree = {"val": nt(1, 2, np.ones(3))}
@@ -137,7 +137,7 @@ def test_named_tuple_typing_recursive(tmpdir):
         assert (asdf.tree["val"][2] == np.ones(3)).all()
 
     init_options = dict(ignore_implicit_conversion=True)
-    helpers.assert_roundtrip_tree(tree, tmpdir, asdf_check_func=check_asdf, init_options=init_options)
+    helpers.assert_roundtrip_tree(tree, tmp_path, asdf_check_func=check_asdf, init_options=init_options)
 
 
 def test_implicit_conversion_warning():
@@ -155,7 +155,7 @@ def test_implicit_conversion_warning():
 
 
 @pytest.mark.xfail(reason="pyyaml has a bug and does not support tuple keys")
-def test_python_tuple_key(tmpdir):
+def test_python_tuple_key(tmp_path):
     """
     This tests whether tuple keys are round-tripped properly.
 
@@ -164,10 +164,10 @@ def test_python_tuple_key(tmpdir):
     pass.
     """
     tree = {(42, 1): "foo"}
-    helpers.assert_roundtrip_tree(tree, tmpdir)
+    helpers.assert_roundtrip_tree(tree, tmp_path)
 
 
-def test_tags_removed_after_load(tmpdir):
+def test_tags_removed_after_load(tmp_path):
     tree = {"foo": ["bar", (1, 2, None)]}
 
     def check_asdf(asdf):
@@ -175,7 +175,7 @@ def test_tags_removed_after_load(tmpdir):
             if node != asdf.tree:
                 assert not isinstance(node, tagged.Tagged)
 
-    helpers.assert_roundtrip_tree(tree, tmpdir, asdf_check_func=check_asdf)
+    helpers.assert_roundtrip_tree(tree, tmp_path, asdf_check_func=check_asdf)
 
 
 def test_explicit_tags():
@@ -195,7 +195,7 @@ foo: !<tag:stsci.edu:asdf/core/ndarray-1.0.0> [1, 2, 3]
         assert all(ff.tree["foo"] == [1, 2, 3])
 
 
-def test_yaml_internal_reference(tmpdir):
+def test_yaml_internal_reference(tmp_path):
     # Test that YAML internal references (anchors and aliases) work,
     # as well as recursive data structures.
 
@@ -212,7 +212,7 @@ def test_yaml_internal_reference(tmpdir):
     def check_yaml(content):
         assert b"list:&id002-*id002" in b"".join(content.split())
 
-    helpers.assert_roundtrip_tree(tree, tmpdir, raw_yaml_check_func=check_yaml)
+    helpers.assert_roundtrip_tree(tree, tmp_path, raw_yaml_check_func=check_yaml)
 
 
 def test_yaml_nan_inf():

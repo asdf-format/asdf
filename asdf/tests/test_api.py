@@ -18,9 +18,8 @@ from asdf.extension import ExtensionProxy
 from .helpers import assert_no_warnings, assert_roundtrip_tree, assert_tree_match, yaml_to_asdf
 
 
-def test_get_data_from_closed_file(tmpdir):
-    tmpdir = str(tmpdir)
-    path = os.path.join(tmpdir, "test.asdf")
+def test_get_data_from_closed_file(tmp_path):
+    path = str(tmp_path / "test.asdf")
 
     my_array = np.arange(0, 64).reshape((8, 8))
 
@@ -35,7 +34,7 @@ def test_get_data_from_closed_file(tmpdir):
         assert_array_equal(my_array, ff.tree["my_array"])
 
 
-def test_no_warning_nan_array(tmpdir):
+def test_no_warning_nan_array(tmp_path):
     """
     Tests for a regression that was introduced by
     https://github.com/asdf-format/asdf/pull/557
@@ -44,12 +43,12 @@ def test_no_warning_nan_array(tmpdir):
     tree = dict(array=np.array([1, 2, np.nan]))
 
     with assert_no_warnings():
-        assert_roundtrip_tree(tree, tmpdir)
+        assert_roundtrip_tree(tree, tmp_path)
 
 
-def test_warning_deprecated_open(tmpdir):
+def test_warning_deprecated_open(tmp_path):
 
-    tmpfile = str(tmpdir.join("foo.asdf"))
+    tmpfile = str(tmp_path / "foo.asdf")
 
     tree = dict(foo=42, bar="hello")
     with asdf.AsdfFile(tree) as af:
@@ -64,9 +63,9 @@ def test_warning_deprecated_open(tmpdir):
     not sys.platform.startswith("win") and getpass.getuser() == "root",
     reason="Cannot make file read-only if user is root",
 )
-def test_open_readonly(tmpdir):
+def test_open_readonly(tmp_path):
 
-    tmpfile = str(tmpdir.join("readonly.asdf"))
+    tmpfile = str(tmp_path / "readonly.asdf")
 
     tree = dict(foo=42, bar="hello", baz=np.arange(20))
     with asdf.AsdfFile(tree) as af:
@@ -83,7 +82,7 @@ def test_open_readonly(tmpdir):
             pass
 
 
-def test_open_validate_on_read(tmpdir):
+def test_open_validate_on_read(tmp_path):
     content = """
 invalid_software: !core/software-1.0.0
   name: Minesweeper
@@ -123,8 +122,8 @@ def test_open_stream(tmp_path):
             assert af["foo"] == "bar"
 
 
-def test_atomic_write(tmpdir, small_tree):
-    tmpfile = os.path.join(str(tmpdir), "test.asdf")
+def test_atomic_write(tmp_path, small_tree):
+    tmpfile = str(tmp_path / "test.asdf")
 
     ff = asdf.AsdfFile(small_tree)
     ff.write_to(tmpfile)
@@ -133,10 +132,10 @@ def test_atomic_write(tmpdir, small_tree):
         ff.write_to(tmpfile)
 
 
-def test_overwrite(tmpdir):
+def test_overwrite(tmp_path):
     # This is intended to reproduce the following issue:
     # https://github.com/asdf-format/asdf/issues/100
-    tmpfile = os.path.join(str(tmpdir), "test.asdf")
+    tmpfile = str(tmp_path / "test.asdf")
     aff = models.AffineTransformation2D(matrix=[[1, 2], [3, 4]])
     f = asdf.AsdfFile()
     f.tree["model"] = aff
@@ -157,9 +156,8 @@ def test_default_version():
     assert ff.file_format_version == version_map["FILE_FORMAT"]
 
 
-def test_update_exceptions(tmpdir):
-    tmpdir = str(tmpdir)
-    path = os.path.join(tmpdir, "test.asdf")
+def test_update_exceptions(tmp_path):
+    path = str(tmp_path / "test.asdf")
 
     my_array = np.random.rand(8, 8)
     tree = {"my_array": my_array}
@@ -237,15 +235,13 @@ def test_walk_and_modify_retain_none():
     assert tree2["bar"] is None
 
 
-def test_copy(tmpdir):
-    tmpdir = str(tmpdir)
-
+def test_copy(tmp_path):
     my_array = np.random.rand(8, 8)
     tree = {"my_array": my_array, "foo": {"bar": "baz"}}
     ff = asdf.AsdfFile(tree)
-    ff.write_to(os.path.join(tmpdir, "test.asdf"))
+    ff.write_to(str(tmp_path / "test.asdf"))
 
-    with asdf.open(os.path.join(tmpdir, "test.asdf")) as ff:
+    with asdf.open(str(tmp_path / "test.asdf")) as ff:
         ff2 = ff.copy()
         ff2.tree["my_array"] *= 2
         ff2.tree["foo"]["bar"] = "boo"
@@ -266,8 +262,8 @@ def test_tag_to_schema_resolver_deprecation():
         extension_list.tag_to_schema_resolver("foo")
 
 
-def test_access_tree_outside_handler(tmpdir):
-    tempname = str(tmpdir.join("test.asdf"))
+def test_access_tree_outside_handler(tmp_path):
+    tempname = str(tmp_path / "test.asdf")
 
     tree = {"random": np.random.random(10)}
 
@@ -286,10 +282,10 @@ def test_access_tree_outside_handler(tmpdir):
         repr(newf["random"])
 
 
-def test_context_handler_resolve_and_inline(tmpdir):
+def test_context_handler_resolve_and_inline(tmp_path):
     # This reproduces the issue reported in
     # https://github.com/asdf-format/asdf/issues/406
-    tempname = str(tmpdir.join("test.asdf"))
+    tempname = str(tmp_path / "test.asdf")
 
     tree = {"random": np.random.random(10)}
 
@@ -303,9 +299,9 @@ def test_context_handler_resolve_and_inline(tmpdir):
         newf.tree["random"][0]
 
 
-def test_open_pathlib_path(tmpdir):
+def test_open_pathlib_path(tmp_path):
 
-    filename = str(tmpdir.join("pathlib.asdf"))
+    filename = str(tmp_path / "pathlib.asdf")
     path = pathlib.Path(filename)
 
     tree = {"data": np.ones(10)}
@@ -365,8 +361,8 @@ def test_extension_version_check(installed, extension, warns):
 
 
 @pytest.mark.filterwarnings(AsdfDeprecationWarning)
-def test_auto_inline(tmpdir):
-    outfile = str(tmpdir.join("test.asdf"))
+def test_auto_inline(tmp_path):
+    outfile = str(tmp_path / "test.asdf")
     tree = {"small_array": np.arange(6), "large_array": np.arange(100)}
 
     # Use the same object for each write in order to make sure that there
@@ -484,8 +480,8 @@ def test_get_default_resolver():
     assert result == "http://stsci.edu/schemas/asdf/core/ndarray-1.0.0"
 
 
-def test_history_entries(tmpdir):
-    path = str(tmpdir.join("test.asdf"))
+def test_history_entries(tmp_path):
+    path = str(tmp_path / "test.asdf")
     message = "Twas brillig, and the slithy toves"
 
     af = asdf.AsdfFile()
@@ -501,8 +497,8 @@ def test_history_entries(tmpdir):
         assert af["history"]["entries"][0]["description"] == message
 
 
-def test_array_access_after_file_close(tmpdir):
-    path = str(tmpdir.join("test.asdf"))
+def test_array_access_after_file_close(tmp_path):
+    path = str(tmp_path / "test.asdf")
     data = np.arange(10)
     asdf.AsdfFile({"data": data}).write_to(path)
 
@@ -520,8 +516,8 @@ def test_array_access_after_file_close(tmpdir):
     assert_array_equal(tree["data"], data)
 
 
-def test_none_values(tmpdir):
-    path = str(tmpdir.join("test.asdf"))
+def test_none_values(tmp_path):
+    path = str(tmp_path / "test.asdf")
 
     af = asdf.AsdfFile({"foo": None})
     af.write_to(path)

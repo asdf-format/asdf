@@ -11,9 +11,9 @@ from ..extern.RangeHTTPServer import RangeHTTPRequestHandler
 __all__ = ["HTTPServer", "RangeHTTPServer"]
 
 
-def run_server(tmpdir, handler_class, stop_event, queue):  # pragma: no cover
+def run_server(tmp_path, handler_class, stop_event, queue):  # pragma: no cover
     """
-    Runs an HTTP server serving files from given tmpdir in a separate
+    Runs an HTTP server serving files from given tmp_path in a separate
     process.  When it's ready, it sends a URL to the server over a
     queue so the main process (the HTTP client) can start making
     requests of it.
@@ -22,7 +22,7 @@ def run_server(tmpdir, handler_class, stop_event, queue):  # pragma: no cover
     class HTTPRequestHandler(handler_class):
         def translate_path(self, path):
             path = handler_class.translate_path(self, path)
-            path = os.path.join(tmpdir, os.path.relpath(path, os.getcwd()))
+            path = os.path.join(tmp_path, os.path.relpath(path, os.getcwd()))
             return path
 
     server = socketserver.TCPServer(("127.0.0.1", 0), HTTPRequestHandler)

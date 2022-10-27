@@ -10,8 +10,8 @@ import asdf
 from asdf import block, constants, generic_io
 
 
-def test_external_block(tmpdir):
-    tmpdir = str(tmpdir)
+def test_external_block(tmp_path):
+    tmp_path = str(tmp_path)
 
     my_array = np.random.rand(8, 8)
     tree = {"my_array": my_array}
@@ -19,9 +19,9 @@ def test_external_block(tmpdir):
     ff.set_array_storage(my_array, "external")
     assert ff.get_array_storage(my_array) == "external"
 
-    ff.write_to(os.path.join(tmpdir, "test.asdf"))
+    ff.write_to(os.path.join(tmp_path, "test.asdf"))
 
-    assert "test0000.asdf" in os.listdir(tmpdir)
+    assert "test0000.asdf" in os.listdir(tmp_path)
 
 
 def test_external_block_non_url():
@@ -53,42 +53,42 @@ def test_invalid_array_storage():
         ff.blocks.remove(b)
 
 
-def test_transfer_array_sources(tmpdir):
-    tmpdir = str(tmpdir)
+def test_transfer_array_sources(tmp_path):
+    tmp_path = str(tmp_path)
 
     my_array = np.random.rand(8, 8)
     tree = {"my_array": my_array}
     ff = asdf.AsdfFile(tree)
-    ff.write_to(os.path.join(tmpdir, "test.asdf"))
+    ff.write_to(os.path.join(tmp_path, "test.asdf"))
 
-    with asdf.open(os.path.join(tmpdir, "test.asdf")) as ff:
+    with asdf.open(os.path.join(tmp_path, "test.asdf")) as ff:
         assert_array_equal(my_array, ff.tree["my_array"])
-        ff.write_to(os.path.join(tmpdir, "test2.asdf"))
+        ff.write_to(os.path.join(tmp_path, "test2.asdf"))
         # write_to should have no effect on getting the original data
         assert_array_equal(my_array, ff.tree["my_array"])
 
     assert ff._fd is None
 
 
-def test_write_to_same(tmpdir):
-    tmpdir = str(tmpdir)
+def test_write_to_same(tmp_path):
+    tmp_path = str(tmp_path)
 
     my_array = np.random.rand(8, 8)
     tree = {"my_array": my_array}
     ff = asdf.AsdfFile(tree)
-    ff.write_to(os.path.join(tmpdir, "test.asdf"))
+    ff.write_to(os.path.join(tmp_path, "test.asdf"))
 
-    with asdf.open(os.path.join(tmpdir, "test.asdf"), mode="rw") as ff:
+    with asdf.open(os.path.join(tmp_path, "test.asdf"), mode="rw") as ff:
         assert_array_equal(my_array, ff.tree["my_array"])
         ff.tree["extra"] = [0] * 1000
-        ff.write_to(os.path.join(tmpdir, "test2.asdf"))
+        ff.write_to(os.path.join(tmp_path, "test2.asdf"))
 
-    with asdf.open(os.path.join(tmpdir, "test2.asdf"), mode="rw") as ff:
+    with asdf.open(os.path.join(tmp_path, "test2.asdf"), mode="rw") as ff:
         assert_array_equal(my_array, ff.tree["my_array"])
 
 
-def test_pad_blocks(tmpdir):
-    tmpdir = str(tmpdir)
+def test_pad_blocks(tmp_path):
+    tmp_path = str(tmp_path)
 
     # This is the case where the new tree can't fit in the available space
     my_array = np.ones((8, 8)) * 1
@@ -96,16 +96,16 @@ def test_pad_blocks(tmpdir):
     tree = {"my_array": my_array, "my_array2": my_array2}
 
     ff = asdf.AsdfFile(tree)
-    ff.write_to(os.path.join(tmpdir, "test.asdf"), pad_blocks=True)
+    ff.write_to(os.path.join(tmp_path, "test.asdf"), pad_blocks=True)
 
-    with asdf.open(os.path.join(tmpdir, "test.asdf")) as ff:
+    with asdf.open(os.path.join(tmp_path, "test.asdf")) as ff:
         assert_array_equal(ff.tree["my_array"], my_array)
         assert_array_equal(ff.tree["my_array2"], my_array2)
 
 
-def test_update_expand_tree(tmpdir):
-    tmpdir = str(tmpdir)
-    testpath = os.path.join(tmpdir, "test.asdf")
+def test_update_expand_tree(tmp_path):
+    tmp_path = str(tmp_path)
+    testpath = os.path.join(tmp_path, "test.asdf")
 
     # This is the case where the new tree can't fit in the available space
     my_array = np.arange(64) * 1
@@ -131,13 +131,13 @@ def test_update_expand_tree(tmpdir):
     # Now, we expand the header only by a little bit
     ff = asdf.AsdfFile(tree)
     ff.set_array_storage(tree["arrays"][2], "inline")
-    ff.write_to(os.path.join(tmpdir, "test2.asdf"), pad_blocks=True)
-    with asdf.open(os.path.join(tmpdir, "test2.asdf"), mode="rw") as ff:
+    ff.write_to(os.path.join(tmp_path, "test2.asdf"), pad_blocks=True)
+    with asdf.open(os.path.join(tmp_path, "test2.asdf"), mode="rw") as ff:
         orig_offset = ff.blocks[ff.tree["arrays"][0]].offset
         ff.tree["extra"] = [0] * 2
         ff.update()
 
-    with asdf.open(os.path.join(tmpdir, "test2.asdf")) as ff:
+    with asdf.open(os.path.join(tmp_path, "test2.asdf")) as ff:
         assert orig_offset == ff.blocks[ff.tree["arrays"][0]].offset
         assert ff.blocks[ff.tree["arrays"][2]].array_storage == "inline"
         assert_array_equal(ff.tree["arrays"][0], my_array)
@@ -148,9 +148,9 @@ def _get_update_tree():
     return {"arrays": [np.arange(64) * 1, np.arange(64) * 2, np.arange(64) * 3]}
 
 
-def test_update_delete_first_array(tmpdir):
-    tmpdir = str(tmpdir)
-    path = os.path.join(tmpdir, "test.asdf")
+def test_update_delete_first_array(tmp_path):
+    tmp_path = str(tmp_path)
+    path = os.path.join(tmp_path, "test.asdf")
 
     # This is the case where the new tree can't fit in the available space
     tree = _get_update_tree()
@@ -160,20 +160,20 @@ def test_update_delete_first_array(tmpdir):
 
     original_size = os.stat(path).st_size
 
-    with asdf.open(os.path.join(tmpdir, "test.asdf"), mode="rw") as ff:
+    with asdf.open(os.path.join(tmp_path, "test.asdf"), mode="rw") as ff:
         del ff.tree["arrays"][0]
         ff.update()
 
     assert os.stat(path).st_size <= original_size
 
-    with asdf.open(os.path.join(tmpdir, "test.asdf")) as ff:
+    with asdf.open(os.path.join(tmp_path, "test.asdf")) as ff:
         assert_array_equal(ff.tree["arrays"][0], tree["arrays"][1])
         assert_array_equal(ff.tree["arrays"][1], tree["arrays"][2])
 
 
-def test_update_delete_last_array(tmpdir):
-    tmpdir = str(tmpdir)
-    path = os.path.join(tmpdir, "test.asdf")
+def test_update_delete_last_array(tmp_path):
+    tmp_path = str(tmp_path)
+    path = os.path.join(tmp_path, "test.asdf")
 
     # This is the case where the new tree can't fit in the available space
     tree = _get_update_tree()
@@ -183,20 +183,20 @@ def test_update_delete_last_array(tmpdir):
 
     original_size = os.stat(path).st_size
 
-    with asdf.open(os.path.join(tmpdir, "test.asdf"), mode="rw") as ff:
+    with asdf.open(os.path.join(tmp_path, "test.asdf"), mode="rw") as ff:
         del ff.tree["arrays"][-1]
         ff.update()
 
     assert os.stat(path).st_size <= original_size
 
-    with asdf.open(os.path.join(tmpdir, "test.asdf")) as ff:
+    with asdf.open(os.path.join(tmp_path, "test.asdf")) as ff:
         assert_array_equal(ff.tree["arrays"][0], tree["arrays"][0])
         assert_array_equal(ff.tree["arrays"][1], tree["arrays"][1])
 
 
-def test_update_delete_middle_array(tmpdir):
-    tmpdir = str(tmpdir)
-    path = os.path.join(tmpdir, "test.asdf")
+def test_update_delete_middle_array(tmp_path):
+    tmp_path = str(tmp_path)
+    path = os.path.join(tmp_path, "test.asdf")
 
     # This is the case where the new tree can't fit in the available space
     tree = _get_update_tree()
@@ -206,14 +206,14 @@ def test_update_delete_middle_array(tmpdir):
 
     original_size = os.stat(path).st_size
 
-    with asdf.open(os.path.join(tmpdir, "test.asdf"), mode="rw") as ff:
+    with asdf.open(os.path.join(tmp_path, "test.asdf"), mode="rw") as ff:
         del ff.tree["arrays"][1]
         ff.update()
         assert len(ff.blocks._internal_blocks) == 2
 
     assert os.stat(path).st_size <= original_size
 
-    with asdf.open(os.path.join(tmpdir, "test.asdf")) as ff:
+    with asdf.open(os.path.join(tmp_path, "test.asdf")) as ff:
         assert len(ff.tree["arrays"]) == 2
         assert ff.tree["arrays"][0]._source == 0
         assert ff.tree["arrays"][1]._source == 1
@@ -221,9 +221,9 @@ def test_update_delete_middle_array(tmpdir):
         assert_array_equal(ff.tree["arrays"][1], tree["arrays"][2])
 
 
-def test_update_replace_first_array(tmpdir):
-    tmpdir = str(tmpdir)
-    path = os.path.join(tmpdir, "test.asdf")
+def test_update_replace_first_array(tmp_path):
+    tmp_path = str(tmp_path)
+    path = os.path.join(tmp_path, "test.asdf")
 
     # This is the case where the new tree can't fit in the available space
     tree = _get_update_tree()
@@ -233,21 +233,21 @@ def test_update_replace_first_array(tmpdir):
 
     original_size = os.stat(path).st_size
 
-    with asdf.open(os.path.join(tmpdir, "test.asdf"), mode="rw") as ff:
+    with asdf.open(os.path.join(tmp_path, "test.asdf"), mode="rw") as ff:
         ff.tree["arrays"][0] = np.arange(32)
         ff.update()
 
     assert os.stat(path).st_size <= original_size
 
-    with asdf.open(os.path.join(tmpdir, "test.asdf")) as ff:
+    with asdf.open(os.path.join(tmp_path, "test.asdf")) as ff:
         assert_array_equal(ff.tree["arrays"][0], np.arange(32))
         assert_array_equal(ff.tree["arrays"][1], tree["arrays"][1])
         assert_array_equal(ff.tree["arrays"][2], tree["arrays"][2])
 
 
-def test_update_replace_last_array(tmpdir):
-    tmpdir = str(tmpdir)
-    path = os.path.join(tmpdir, "test.asdf")
+def test_update_replace_last_array(tmp_path):
+    tmp_path = str(tmp_path)
+    path = os.path.join(tmp_path, "test.asdf")
 
     # This is the case where the new tree can't fit in the available space
     tree = _get_update_tree()
@@ -257,21 +257,21 @@ def test_update_replace_last_array(tmpdir):
 
     original_size = os.stat(path).st_size
 
-    with asdf.open(os.path.join(tmpdir, "test.asdf"), mode="rw") as ff:
+    with asdf.open(os.path.join(tmp_path, "test.asdf"), mode="rw") as ff:
         ff.tree["arrays"][2] = np.arange(32)
         ff.update()
 
     assert os.stat(path).st_size <= original_size
 
-    with asdf.open(os.path.join(tmpdir, "test.asdf")) as ff:
+    with asdf.open(os.path.join(tmp_path, "test.asdf")) as ff:
         assert_array_equal(ff.tree["arrays"][0], tree["arrays"][0])
         assert_array_equal(ff.tree["arrays"][1], tree["arrays"][1])
         assert_array_equal(ff.tree["arrays"][2], np.arange(32))
 
 
-def test_update_replace_middle_array(tmpdir):
-    tmpdir = str(tmpdir)
-    path = os.path.join(tmpdir, "test.asdf")
+def test_update_replace_middle_array(tmp_path):
+    tmp_path = str(tmp_path)
+    path = os.path.join(tmp_path, "test.asdf")
 
     # This is the case where the new tree can't fit in the available space
     tree = _get_update_tree()
@@ -281,21 +281,21 @@ def test_update_replace_middle_array(tmpdir):
 
     original_size = os.stat(path).st_size
 
-    with asdf.open(os.path.join(tmpdir, "test.asdf"), mode="rw") as ff:
+    with asdf.open(os.path.join(tmp_path, "test.asdf"), mode="rw") as ff:
         ff.tree["arrays"][1] = np.arange(32)
         ff.update()
 
     assert os.stat(path).st_size <= original_size
 
-    with asdf.open(os.path.join(tmpdir, "test.asdf")) as ff:
+    with asdf.open(os.path.join(tmp_path, "test.asdf")) as ff:
         assert_array_equal(ff.tree["arrays"][0], tree["arrays"][0])
         assert_array_equal(ff.tree["arrays"][1], np.arange(32))
         assert_array_equal(ff.tree["arrays"][2], tree["arrays"][2])
 
 
-def test_update_add_array(tmpdir):
-    tmpdir = str(tmpdir)
-    path = os.path.join(tmpdir, "test.asdf")
+def test_update_add_array(tmp_path):
+    tmp_path = str(tmp_path)
+    path = os.path.join(tmp_path, "test.asdf")
 
     # This is the case where the new tree can't fit in the available space
     tree = _get_update_tree()
@@ -303,20 +303,20 @@ def test_update_add_array(tmpdir):
     ff = asdf.AsdfFile(tree)
     ff.write_to(path, pad_blocks=True)
 
-    with asdf.open(os.path.join(tmpdir, "test.asdf"), mode="rw") as ff:
+    with asdf.open(os.path.join(tmp_path, "test.asdf"), mode="rw") as ff:
         ff.tree["arrays"].append(np.arange(32))
         ff.update()
 
-    with asdf.open(os.path.join(tmpdir, "test.asdf")) as ff:
+    with asdf.open(os.path.join(tmp_path, "test.asdf")) as ff:
         assert_array_equal(ff.tree["arrays"][0], tree["arrays"][0])
         assert_array_equal(ff.tree["arrays"][1], tree["arrays"][1])
         assert_array_equal(ff.tree["arrays"][2], tree["arrays"][2])
         assert_array_equal(ff.tree["arrays"][3], np.arange(32))
 
 
-def test_update_add_array_at_end(tmpdir):
-    tmpdir = str(tmpdir)
-    path = os.path.join(tmpdir, "test.asdf")
+def test_update_add_array_at_end(tmp_path):
+    tmp_path = str(tmp_path)
+    path = os.path.join(tmp_path, "test.asdf")
 
     # This is the case where the new tree can't fit in the available space
     tree = _get_update_tree()
@@ -326,23 +326,23 @@ def test_update_add_array_at_end(tmpdir):
 
     original_size = os.stat(path).st_size
 
-    with asdf.open(os.path.join(tmpdir, "test.asdf"), mode="rw") as ff:
+    with asdf.open(os.path.join(tmp_path, "test.asdf"), mode="rw") as ff:
         ff.tree["arrays"].append(np.arange(65536, dtype="<i8"))
         ff.update()
         assert len(ff.blocks) == 4
 
     assert os.stat(path).st_size >= original_size
 
-    with asdf.open(os.path.join(tmpdir, "test.asdf")) as ff:
+    with asdf.open(os.path.join(tmp_path, "test.asdf")) as ff:
         assert_array_equal(ff.tree["arrays"][0], tree["arrays"][0])
         assert_array_equal(ff.tree["arrays"][1], tree["arrays"][1])
         assert_array_equal(ff.tree["arrays"][2], tree["arrays"][2])
         assert_array_equal(ff.tree["arrays"][3], np.arange(65536, dtype="<i8"))
 
 
-def test_update_replace_all_arrays(tmpdir):
-    tmpdir = str(tmpdir)
-    testpath = os.path.join(tmpdir, "test.asdf")
+def test_update_replace_all_arrays(tmp_path):
+    tmp_path = str(tmp_path)
+    testpath = os.path.join(tmp_path, "test.asdf")
 
     # This is the case where the new tree can't fit in the available space
     my_array = np.ones((64, 64)) * 1
@@ -361,9 +361,9 @@ def test_update_replace_all_arrays(tmpdir):
         assert_array_equal(ff.tree["my_array"], np.ones((64, 64)) * 2)
 
 
-def test_update_array_in_place(tmpdir):
-    tmpdir = str(tmpdir)
-    testpath = os.path.join(tmpdir, "test.asdf")
+def test_update_array_in_place(tmp_path):
+    tmp_path = str(tmp_path)
+    testpath = os.path.join(tmp_path, "test.asdf")
 
     # This is the case where the new tree can't fit in the available space
     my_array = np.ones((64, 64)) * 1
@@ -383,8 +383,8 @@ def test_update_array_in_place(tmpdir):
         assert_array_equal(ff.tree["my_array"], np.ones((64, 64)) * 2)
 
 
-def test_init_from_asdffile(tmpdir):
-    tmpdir = str(tmpdir)
+def test_init_from_asdffile(tmp_path):
+    tmp_path = str(tmp_path)
 
     my_array = np.random.rand(8, 8)
     tree = {"my_array": my_array}
@@ -397,9 +397,9 @@ def test_init_from_asdffile(tmpdir):
     ff2.tree["my_array"] = None
     assert_array_equal(ff.tree["my_array"], my_array)
 
-    ff.write_to(os.path.join(tmpdir, "test.asdf"))
+    ff.write_to(os.path.join(tmp_path, "test.asdf"))
 
-    with asdf.open(os.path.join(tmpdir, "test.asdf")) as ff:
+    with asdf.open(os.path.join(tmp_path, "test.asdf")) as ff:
         ff2 = asdf.AsdfFile(ff)
         assert ff.tree["my_array"] is not ff2.tree["my_array"]
         assert_array_equal(ff.tree["my_array"], ff2.tree["my_array"])
@@ -432,9 +432,9 @@ foo : bar
     assert len(ff.blocks) == 1
 
 
-def test_checksum(tmpdir):
-    tmpdir = str(tmpdir)
-    path = os.path.join(tmpdir, "test.asdf")
+def test_checksum(tmp_path):
+    tmp_path = str(tmp_path)
+    path = os.path.join(tmp_path, "test.asdf")
 
     my_array = np.arange(0, 64, dtype="<i8").reshape((8, 8))
     tree = {"my_array": my_array}
@@ -446,9 +446,9 @@ def test_checksum(tmpdir):
         assert ff.blocks._internal_blocks[0].checksum == b"\xcaM\\\xb8t_L|\x00\n+\x01\xf1\xcfP1"
 
 
-def test_checksum_update(tmpdir):
-    tmpdir = str(tmpdir)
-    path = os.path.join(tmpdir, "test.asdf")
+def test_checksum_update(tmp_path):
+    tmp_path = str(tmp_path)
+    path = os.path.join(tmp_path, "test.asdf")
 
     my_array = np.arange(0, 64, dtype="<i8").reshape((8, 8))
 
@@ -720,8 +720,8 @@ def test_dots_but_no_block_index():
         assert len(ff.blocks) == 1
 
 
-def test_open_no_memmap(tmpdir):
-    tmpfile = os.path.join(str(tmpdir), "random.asdf")
+def test_open_no_memmap(tmp_path):
+    tmpfile = os.path.join(str(tmp_path), "random.asdf")
 
     tree = {"array": np.random.random((20, 20))}
 

@@ -31,11 +31,11 @@ def _get_sparse_tree():
     return tree
 
 
-def _roundtrip(tmpdir, tree, compression=None, write_options={}, read_options={}):
+def _roundtrip(tmp_path, tree, compression=None, write_options={}, read_options={}):
     write_options = write_options.copy()
     write_options.update(all_array_compression=compression)
 
-    tmpfile = os.path.join(str(tmpdir), "test.asdf")
+    tmpfile = os.path.join(str(tmp_path), "test.asdf")
 
     ff = asdf.AsdfFile(tree)
     ff.write_to(tmpfile, **write_options)
@@ -98,33 +98,33 @@ def test_decompress_too_long_short():
         compression.decompress(fio, size, 1023, "zlib")
 
 
-def test_zlib(tmpdir):
+def test_zlib(tmp_path):
     tree = _get_large_tree()
 
-    _roundtrip(tmpdir, tree, "zlib")
+    _roundtrip(tmp_path, tree, "zlib")
 
 
-def test_bzp2(tmpdir):
+def test_bzp2(tmp_path):
     tree = _get_large_tree()
 
-    _roundtrip(tmpdir, tree, "bzp2")
+    _roundtrip(tmp_path, tree, "bzp2")
 
 
-def test_lz4(tmpdir):
+def test_lz4(tmp_path):
     pytest.importorskip("lz4")
     tree = _get_large_tree()
 
-    _roundtrip(tmpdir, tree, "lz4")
+    _roundtrip(tmp_path, tree, "lz4")
 
 
-def test_recompression(tmpdir):
+def test_recompression(tmp_path):
     tree = _get_large_tree()
-    tmpfile = os.path.join(str(tmpdir), "test1.asdf")
+    tmpfile = os.path.join(str(tmp_path), "test1.asdf")
     afile = asdf.AsdfFile(tree)
     afile.write_to(tmpfile, all_array_compression="zlib")
     afile.close()
     afile = asdf.open(tmpfile)
-    tmpfile = os.path.join(str(tmpdir), "test2.asdf")
+    tmpfile = os.path.join(str(tmp_path), "test2.asdf")
     afile.write_to(tmpfile, all_array_compression="bzp2")
     afile.close()
     afile = asdf.open(tmpfile)
@@ -132,14 +132,14 @@ def test_recompression(tmpdir):
     afile.close()
 
 
-def test_input(tmpdir):
+def test_input(tmp_path):
     tree = _get_large_tree()
-    tmpfile = os.path.join(str(tmpdir), "test1.asdf")
+    tmpfile = os.path.join(str(tmp_path), "test1.asdf")
     afile = asdf.AsdfFile(tree)
     afile.write_to(tmpfile, all_array_compression="zlib")
     afile.close()
     afile = asdf.open(tmpfile)
-    tmpfile = os.path.join(str(tmpdir), "test2.asdf")
+    tmpfile = os.path.join(str(tmp_path), "test2.asdf")
     afile.write_to(tmpfile)
     afile.close()
     afile = asdf.open(tmpfile)
@@ -148,15 +148,15 @@ def test_input(tmpdir):
     afile.close()
 
 
-def test_none(tmpdir):
+def test_none(tmp_path):
 
     tree = _get_large_tree()
 
-    tmpfile1 = os.path.join(str(tmpdir), "test1.asdf")
+    tmpfile1 = os.path.join(str(tmp_path), "test1.asdf")
     with asdf.AsdfFile(tree) as afile:
         afile.write_to(tmpfile1)
 
-    tmpfile2 = os.path.join(str(tmpdir), "test2.asdf")
+    tmpfile2 = os.path.join(str(tmp_path), "test2.asdf")
     with asdf.open(tmpfile1) as afile:
         assert afile.get_array_compression(afile.tree["science_data"]) is None
         afile.write_to(tmpfile2, all_array_compression="zlib")
@@ -170,9 +170,9 @@ def test_none(tmpdir):
         assert afile.get_array_compression(afile.tree["science_data"]) is None
 
 
-def test_set_array_compression(tmpdir):
+def test_set_array_compression(tmp_path):
 
-    tmpfile = os.path.join(str(tmpdir), "compressed.asdf")
+    tmpfile = os.path.join(str(tmp_path), "compressed.asdf")
 
     zlib_data = np.array([x for x in range(1000)])
     bzp2_data = np.array([x for x in range(1000)])
@@ -191,11 +191,11 @@ def test_set_array_compression(tmpdir):
         assert af_in.get_array_compression(af_in.tree["bzp2_data"]) == "bzp2"
 
 
-def test_nonnative_endian_compression(tmpdir):
+def test_nonnative_endian_compression(tmp_path):
     ledata = np.arange(1000, dtype="<i8")
     bedata = np.arange(1000, dtype=">i8")
 
-    _roundtrip(tmpdir, dict(ledata=ledata, bedata=bedata), "lz4")
+    _roundtrip(tmp_path, dict(ledata=ledata, bedata=bedata), "lz4")
 
 
 class LzmaCompressor(Compressor):
@@ -227,15 +227,15 @@ class LzmaExtension(Extension):
         return [LzmaCompressor()]
 
 
-def test_compression_with_extension(tmpdir):
+def test_compression_with_extension(tmp_path):
     tree = _get_large_tree()
 
     with config_context() as config:
         config.add_extension(LzmaExtension())
 
         with pytest.raises(lzma.LZMAError):
-            _roundtrip(tmpdir, tree, "lzma", write_options=dict(compression_kwargs={"preset": 9000}))
-        fn = _roundtrip(tmpdir, tree, "lzma", write_options=dict(compression_kwargs={"preset": 6}))
+            _roundtrip(tmp_path, tree, "lzma", write_options=dict(compression_kwargs={"preset": 9000}))
+        fn = _roundtrip(tmp_path, tree, "lzma", write_options=dict(compression_kwargs={"preset": 6}))
 
         hist = {
             "extension_class": "asdf.tests.test_compression.LzmaExtension",

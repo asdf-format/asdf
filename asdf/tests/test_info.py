@@ -10,7 +10,7 @@ from asdf.extension import ExtensionManager, ExtensionProxy, ManifestExtension
 from asdf.resource import DirectoryResourceMapping
 
 
-def test_info_module(capsys, tmpdir):
+def test_info_module(capsys, tmp_path):
     tree = dict(foo=42, bar="hello", baz=np.arange(20), nested={"woo": "hoo", "yee": "haw"}, long_line="a" * 100)
     af = asdf.AsdfFile(tree)
 
@@ -24,7 +24,7 @@ def test_info_module(capsys, tmpdir):
     _assert_correct_info(af)
     _assert_correct_info(af.tree)
 
-    tmpfile = str(tmpdir.join("written.asdf"))
+    tmpfile = str(tmp_path / "written.asdf")
     af.write_to(tmpfile)
     af.close()
 
@@ -118,7 +118,7 @@ class ObjectWithInfoSupport3:
         return returnval
 
 
-def manifest_extension(tmpdir):
+def manifest_extension(tmp_path):
 
     foo_manifest = """%YAML 1.1
 ---
@@ -257,25 +257,27 @@ properties:
         destination: [ScienceCommon.attributeTwo]
 ...
 """
-    os.mkdir(tmpdir / "schemas")
-    spath = tmpdir / "schemas" / "foo-1.0.0.yaml"
+    os.mkdir(tmp_path / "schemas")
+    spath = tmp_path / "schemas" / "foo-1.0.0.yaml"
     with open(spath, "w") as fschema:
         fschema.write(foo_schema)
-    spath = tmpdir / "schemas" / "bar-1.0.0.yaml"
+    spath = tmp_path / "schemas" / "bar-1.0.0.yaml"
     with open(spath, "w") as fschema:
         fschema.write(bar_schema)
-    spath = tmpdir / "schemas" / "drink-1.0.0.yaml"
+    spath = tmp_path / "schemas" / "drink-1.0.0.yaml"
     with open(spath, "w") as fschema:
         fschema.write(drink_schema)
-    os.mkdir(tmpdir / "manifests")
-    mpath = str(tmpdir / "manifests" / "foo_manifest-1.0.yaml")
+    os.mkdir(tmp_path / "manifests")
+    mpath = str(tmp_path / "manifests" / "foo_manifest-1.0.yaml")
     with open(mpath, "w") as fmanifest:
         fmanifest.write(foo_manifest)
     config = asdf.get_config()
     config.add_resource_mapping(
-        DirectoryResourceMapping(str(tmpdir / "manifests"), "asdf://somewhere.org/asdf/manifests/")
+        DirectoryResourceMapping(str(tmp_path / "manifests"), "asdf://somewhere.org/asdf/manifests/")
     )
-    config.add_resource_mapping(DirectoryResourceMapping(str(tmpdir / "schemas"), "asdf://somewhere.org/asdf/schemas/"))
+    config.add_resource_mapping(
+        DirectoryResourceMapping(str(tmp_path / "schemas"), "asdf://somewhere.org/asdf/schemas/")
+    )
 
     class FooConverter:
         tags = ["asdf://somewhere.org/asdf/tags/foo-1.0.0"]
@@ -353,8 +355,8 @@ def create_tree():
     }
 
 
-def test_schema_info_support(tmpdir):
-    manifest_extension(tmpdir)
+def test_schema_info_support(tmp_path):
+    manifest_extension(tmp_path)
     config = asdf.get_config()
     af = asdf.AsdfFile()
     af._extension_manager = ExtensionManager(config.extensions)
@@ -579,8 +581,8 @@ def test_schema_info_support(tmpdir):
     }
 
 
-def test_info_object_support(capsys, tmpdir):
-    manifest_extension(tmpdir)
+def test_info_object_support(capsys, tmp_path):
+    manifest_extension(tmp_path)
     config = asdf.get_config()
     af = asdf.AsdfFile()
     af._extension_manager = ExtensionManager(config.extensions)
@@ -616,7 +618,7 @@ class RecursiveObjectWithInfoSupport:
         return {"the_meaning": self.the_meaning, "clown": self.clown, "recursive": self.recursive}
 
 
-def test_recursive_info_object_support(capsys, tmpdir):
+def test_recursive_info_object_support(capsys, tmp_path):
     tempdir = pathlib.Path(tempfile.mkdtemp())
     manifest_extension(tempdir)
     config = asdf.get_config()

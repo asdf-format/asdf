@@ -7,7 +7,7 @@ import asdf
 from asdf import generic_io
 
 
-def test_no_yaml_end_marker(tmpdir):
+def test_no_yaml_end_marker(tmp_path):
     content = b"""#ASDF 1.0.0
 %YAML 1.1
 %TAG ! tag:stsci.edu:asdf/
@@ -15,7 +15,7 @@ def test_no_yaml_end_marker(tmpdir):
 foo: bar...baz
 baz: 42
     """
-    path = os.path.join(str(tmpdir), "test.asdf")
+    path = os.path.join(str(tmp_path), "test.asdf")
 
     buff = io.BytesIO(content)
     with pytest.raises(ValueError):
@@ -37,7 +37,7 @@ baz: 42
                 pass
 
 
-def test_no_final_newline(tmpdir):
+def test_no_final_newline(tmp_path):
     content = b"""#ASDF 1.0.0
 %YAML 1.1
 %TAG ! tag:stsci.edu:asdf/
@@ -45,7 +45,7 @@ def test_no_final_newline(tmpdir):
 foo: ...bar...
 baz: 42
 ..."""
-    path = os.path.join(str(tmpdir), "test.asdf")
+    path = os.path.join(str(tmp_path), "test.asdf")
 
     buff = io.BytesIO(content)
     with asdf.open(buff) as ff:
@@ -65,10 +65,10 @@ baz: 42
 
 
 @pytest.mark.filterwarnings("ignore::astropy.io.fits.verify.VerifyWarning")
-def test_no_asdf_header(tmpdir):
+def test_no_asdf_header(tmp_path):
     content = b"What? This ain't no ASDF file"
 
-    path = os.path.join(str(tmpdir), "test.asdf")
+    path = os.path.join(str(tmp_path), "test.asdf")
 
     buff = io.BytesIO(content)
     with pytest.raises(ValueError):
@@ -82,7 +82,7 @@ def test_no_asdf_header(tmpdir):
             asdf.open(fd)
 
 
-def test_no_asdf_blocks(tmpdir):
+def test_no_asdf_blocks(tmp_path):
     content = b"""#ASDF 1.0.0
 %YAML 1.1
 %TAG ! tag:stsci.edu:asdf/
@@ -92,7 +92,7 @@ foo: bar
 XXXXXXXX
     """
 
-    path = os.path.join(str(tmpdir), "test.asdf")
+    path = os.path.join(str(tmp_path), "test.asdf")
 
     buff = io.BytesIO(content)
     with asdf.open(buff) as ff:
@@ -208,7 +208,7 @@ def test_block_header_too_small():
             pass
 
 
-def test_invalid_version(tmpdir):
+def test_invalid_version(tmp_path):
     content = b"""#ASDF 0.1.0
 %YAML 1.1
 %TAG ! tag:stsci.edu:asdf/
@@ -221,7 +221,7 @@ foo : bar
             pass
 
 
-def test_valid_version(tmpdir):
+def test_valid_version(tmp_path):
     content = b"""#ASDF 1.0.0
 %YAML 1.1
 %TAG ! tag:stsci.edu:asdf/

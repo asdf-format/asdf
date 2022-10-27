@@ -40,17 +40,17 @@ def _roundtrip(tree, get_write_fd, get_read_fd, write_options={}, read_options={
     return ff
 
 
-def test_mode_fail(tmpdir):
-    path = os.path.join(str(tmpdir), "test.asdf")
+def test_mode_fail(tmp_path):
+    path = os.path.join(str(tmp_path), "test.asdf")
 
     with pytest.raises(ValueError):
         generic_io.get_file(path, mode="r+")
 
 
-def test_open(tmpdir, small_tree):
+def test_open(tmp_path, small_tree):
     from .. import open
 
-    path = os.path.join(str(tmpdir), "test.asdf")
+    path = os.path.join(str(tmp_path), "test.asdf")
 
     # Simply tests the high-level "open" function
     ff = asdf.AsdfFile(small_tree)
@@ -59,8 +59,8 @@ def test_open(tmpdir, small_tree):
         helpers.assert_tree_match(ff2.tree, ff.tree)
 
 
-def test_path(tree, tmpdir):
-    path = os.path.join(str(tmpdir), "test.asdf")
+def test_path(tree, tmp_path):
+    path = os.path.join(str(tmp_path), "test.asdf")
 
     def get_write_fd():
         f = generic_io.get_file(path, mode="w")
@@ -85,8 +85,8 @@ def test_path(tree, tmpdir):
         assert isinstance(next(ff.blocks.internal_blocks)._data, np.core.memmap)
 
 
-def test_open2(tree, tmpdir):
-    path = os.path.join(str(tmpdir), "test.asdf")
+def test_open2(tree, tmp_path):
+    path = os.path.join(str(tmp_path), "test.asdf")
 
     def get_write_fd():
         f = generic_io.get_file(open(path, "wb"), mode="w", close=True)
@@ -106,24 +106,24 @@ def test_open2(tree, tmpdir):
         assert isinstance(next(ff.blocks.internal_blocks)._data, np.core.memmap)
 
 
-def test_open_fail(tmpdir):
-    path = os.path.join(str(tmpdir), "test.asdf")
+def test_open_fail(tmp_path):
+    path = os.path.join(str(tmp_path), "test.asdf")
 
     with open(path, "w") as fd:
         with pytest.raises(ValueError):
             generic_io.get_file(fd, mode="w")
 
 
-def test_open_fail2(tmpdir):
-    path = os.path.join(str(tmpdir), "test.asdf")
+def test_open_fail2(tmp_path):
+    path = os.path.join(str(tmp_path), "test.asdf")
 
     with open(path, "w") as fd:
         with pytest.raises(ValueError):
             generic_io.get_file(fd, mode="w")
 
 
-def test_open_fail3(tmpdir):
-    path = os.path.join(str(tmpdir), "test.asdf")
+def test_open_fail3(tmp_path):
+    path = os.path.join(str(tmp_path), "test.asdf")
 
     with open(path, "w") as fd:
         fd.write("\n\n\n")
@@ -133,8 +133,8 @@ def test_open_fail3(tmpdir):
             generic_io.get_file(fd, mode="r")
 
 
-def test_open_fail4(tmpdir):
-    path = os.path.join(str(tmpdir), "test.asdf")
+def test_open_fail4(tmp_path):
+    path = os.path.join(str(tmp_path), "test.asdf")
 
     with open(path, "w") as fd:
         fd.write("\n\n\n")
@@ -144,8 +144,8 @@ def test_open_fail4(tmpdir):
             generic_io.get_file(fd, mode="r")
 
 
-def test_io_open(tree, tmpdir):
-    path = os.path.join(str(tmpdir), "test.asdf")
+def test_io_open(tree, tmp_path):
+    path = os.path.join(str(tmp_path), "test.asdf")
 
     def get_write_fd():
         f = generic_io.get_file(open(path, "wb"), mode="w", close=True)
@@ -165,8 +165,8 @@ def test_io_open(tree, tmpdir):
         ff.tree["science_data"][0] = 42
 
 
-def test_close_underlying(tmpdir):
-    path = os.path.join(str(tmpdir), "test.asdf")
+def test_close_underlying(tmp_path):
+    path = os.path.join(str(tmp_path), "test.asdf")
 
     with generic_io.get_file(open(path, "wb"), mode="w", close=True) as ff:
         pass
@@ -267,8 +267,8 @@ def test_http_connection(tree, httpserver):
         ff.tree["science_data"][0] == 42
 
 
-def test_exploded_filesystem(tree, tmpdir):
-    path = os.path.join(str(tmpdir), "test.asdf")
+def test_exploded_filesystem(tree, tmp_path):
+    path = os.path.join(str(tmp_path), "test.asdf")
 
     def get_write_fd():
         return generic_io.get_file(path, mode="w")
@@ -281,8 +281,8 @@ def test_exploded_filesystem(tree, tmpdir):
         assert len(list(ff.blocks.external_blocks)) == 2
 
 
-def test_exploded_filesystem_fail(tree, tmpdir):
-    path = os.path.join(str(tmpdir), "test.asdf")
+def test_exploded_filesystem_fail(tree, tmp_path):
+    path = os.path.join(str(tmp_path), "test.asdf")
 
     def get_write_fd():
         return generic_io.get_file(path, mode="w")
@@ -328,12 +328,12 @@ def test_exploded_stream_write(small_tree):
         ff.write_to(io.BytesIO(), all_array_storage="external")
 
 
-def test_exploded_stream_read(tmpdir, small_tree):
+def test_exploded_stream_read(tmp_path, small_tree):
     # Reading from an exploded input file should fail, but only once
     # the data block is accessed.  This behavior is important so that
     # the tree can still be accessed even if the data is missing.
 
-    path = os.path.join(str(tmpdir), "test.asdf")
+    path = os.path.join(str(tmp_path), "test.asdf")
 
     ff = asdf.AsdfFile(small_tree)
     ff.write_to(path, all_array_storage="external")
@@ -347,8 +347,8 @@ def test_exploded_stream_read(tmpdir, small_tree):
                 ff.tree["science_data"][:]
 
 
-def test_unicode_open(tmpdir, small_tree):
-    path = os.path.join(str(tmpdir), "test.asdf")
+def test_unicode_open(tmp_path, small_tree):
+    path = os.path.join(str(tmp_path), "test.asdf")
 
     ff = asdf.AsdfFile(small_tree)
 
@@ -360,11 +360,11 @@ def test_unicode_open(tmpdir, small_tree):
                 pass
 
 
-def test_invalid_obj(tmpdir):
+def test_invalid_obj(tmp_path):
     with pytest.raises(ValueError):
         generic_io.get_file(42)
 
-    path = os.path.join(str(tmpdir), "test.asdf")
+    path = os.path.join(str(tmp_path), "test.asdf")
     with generic_io.get_file(path, "w") as fd:
         with pytest.raises(ValueError):
             generic_io.get_file(fd, "r")
@@ -387,7 +387,7 @@ def test_invalid_obj(tmpdir):
         pass
 
 
-def test_nonseekable_file(tmpdir):
+def test_nonseekable_file(tmp_path):
     base = io.IOBase
 
     class FileWrapper(base):
@@ -403,12 +403,12 @@ def test_nonseekable_file(tmpdir):
         def writable(self):
             return True
 
-    with FileWrapper(os.path.join(str(tmpdir), "test.asdf"), "wb") as fd:
+    with FileWrapper(os.path.join(str(tmp_path), "test.asdf"), "wb") as fd:
         assert isinstance(generic_io.get_file(fd, "w"), generic_io.OutputStream)
         with pytest.raises(ValueError):
             generic_io.get_file(fd, "rw")
 
-    with FileWrapper(os.path.join(str(tmpdir), "test.asdf"), "rb") as fd:
+    with FileWrapper(os.path.join(str(tmp_path), "test.asdf"), "rb") as fd:
         assert isinstance(generic_io.get_file(fd, "r"), generic_io.InputStream)
 
 
@@ -480,13 +480,13 @@ def test_arbitrary_file_object():
         generic_io.get_file(Writer(buff), "r")
 
 
-def test_check_bytes(tmpdir):
-    with open(os.path.join(str(tmpdir), "test.asdf"), "w", encoding="utf-8") as fd:
+def test_check_bytes(tmp_path):
+    with open(os.path.join(str(tmp_path), "test.asdf"), "w", encoding="utf-8") as fd:
         assert generic_io._check_bytes(fd, "r") is False
         assert generic_io._check_bytes(fd, "rw") is False
         assert generic_io._check_bytes(fd, "w") is False
 
-    with open(os.path.join(str(tmpdir), "test.asdf"), "wb") as fd:
+    with open(os.path.join(str(tmp_path), "test.asdf"), "wb") as fd:
         assert generic_io._check_bytes(fd, "r") is True
         assert generic_io._check_bytes(fd, "rw") is True
         assert generic_io._check_bytes(fd, "w") is True
@@ -720,8 +720,8 @@ def test_truncated_reader():
     assert tr.read() == b""
 
 
-def test_blocksize(tree, tmpdir):
-    path = os.path.join(str(tmpdir), "test.asdf")
+def test_blocksize(tree, tmp_path):
+    path = os.path.join(str(tmp_path), "test.asdf")
 
     def get_write_fd():
         f = generic_io.get_file(open(path, "wb"), mode="w", close=True)

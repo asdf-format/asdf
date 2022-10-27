@@ -166,10 +166,10 @@ def test_asdf_file_version_requirement():
             af = AsdfFile(version="1.4.0", extensions=[extension_with_requirement])
 
 
-def test_open_asdf_extensions(tmpdir):
+def test_open_asdf_extensions(tmp_path):
     extension = TestExtension(extension_uri="asdf://somewhere.org/extensions/foo-1.0")
 
-    path = str(tmpdir / "test.asdf")
+    path = str(tmp_path / "test.asdf")
 
     with AsdfFile() as af:
         af.write_to(path)

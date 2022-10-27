@@ -152,7 +152,7 @@ def assert_roundtrip_tree(*args, **kwargs):
 
     tree : ASDF tree
 
-    tmpdir : str
+    tmp_path : `str` or `pathlib.Path`
         Path to temporary directory to save file
 
     tree_match_func : `str` or `callable`
@@ -174,7 +174,7 @@ def assert_roundtrip_tree(*args, **kwargs):
 
 def _assert_roundtrip_tree(
     tree,
-    tmpdir,
+    tmp_path,
     *,
     asdf_check_func=None,
     raw_yaml_check_func=None,
@@ -184,7 +184,7 @@ def _assert_roundtrip_tree(
     tree_match_func="assert_equal",
 ):
 
-    fname = str(tmpdir.join("test.asdf"))
+    fname = os.path.join(str(tmp_path), "test.asdf")
 
     # First, test writing/reading a BytesIO buffer
     buff = io.BytesIO()
