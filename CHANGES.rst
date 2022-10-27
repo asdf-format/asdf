@@ -11,6 +11,7 @@
 - Fix default validation for jsonschema 4.10+ [#1203]
 - Add ``asdf-unit-schemas`` as a dependency, for backwards compatibility. [#1210]
 - Remove stray toplevel packages ``docker`` ``docs`` and ``compatibility_tests`` from wheel [#1214]
+- Close files opened during a failed call to asdf.open [#1221]
 
 2.13.0 (2022-08-19)
 -------------------
