@@ -291,7 +291,6 @@ def test_open_gzipped():
         assert af.tree["stuff"].shape == (20, 20)
 
 
-@pytest.mark.filterwarnings("ignore:unclosed file .*")
 def test_bad_input(tmp_path):
     """Make sure these functions behave properly with bad input"""
     text_file = str(tmp_path / "test.txt")

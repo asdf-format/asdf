@@ -2,6 +2,7 @@ import copy
 import datetime
 import io
 import os
+import pathlib
 import time
 import warnings
 
@@ -908,51 +909,57 @@ class AsdfFile:
         **kwargs,
     ):
         """Attempt to open file-like object as either AsdfFile or AsdfInFits"""
+        close_on_fail = isinstance(fd, (str, pathlib.Path))
         generic_file = generic_io.get_file(fd, mode=mode, uri=uri)
-        file_type = util.get_file_type(generic_file)
+        try:
+            file_type = util.get_file_type(generic_file)
 
-        if file_type == util.FileType.FITS:
-            try:
-                # TODO: this feels a bit circular, try to clean up. Also
-                # this introduces another dependency on astropy which may
-                # not be desireable.
-                from . import fits_embed
+            if file_type == util.FileType.FITS:
+                try:
+                    # TODO: this feels a bit circular, try to clean up. Also
+                    # this introduces another dependency on astropy which may
+                    # not be desireable.
+                    from . import fits_embed
 
-                return fits_embed.AsdfInFits._open_impl(
+                    return fits_embed.AsdfInFits._open_impl(
+                        generic_file,
+                        uri=uri,
+                        validate_checksums=validate_checksums,
+                        extensions=extensions,
+                        ignore_version_mismatch=self._ignore_version_mismatch,
+                        strict_extension_check=strict_extension_check,
+                        ignore_missing_extensions=ignore_missing_extensions,
+                        ignore_unrecognized_tag=self._ignore_unrecognized_tag,
+                        **kwargs,
+                    )
+                except ValueError:
+                    raise ValueError(
+                        "Input object does not appear to be an ASDF file or a FITS with " + "ASDF extension"
+                    ) from None
+                except ImportError:
+                    raise ValueError(
+                        "Input object does not appear to be an ASDF file. Cannot check "
+                        + "if it is a FITS with ASDF extension because 'astropy' is not "
+                        + "installed"
+                    ) from None
+            elif file_type == util.FileType.ASDF:
+                return cls._open_asdf(
+                    self,
                     generic_file,
-                    uri=uri,
                     validate_checksums=validate_checksums,
                     extensions=extensions,
-                    ignore_version_mismatch=self._ignore_version_mismatch,
+                    _get_yaml_content=_get_yaml_content,
+                    _force_raw_types=_force_raw_types,
                     strict_extension_check=strict_extension_check,
                     ignore_missing_extensions=ignore_missing_extensions,
-                    ignore_unrecognized_tag=self._ignore_unrecognized_tag,
                     **kwargs,
                 )
-            except ValueError:
-                raise ValueError(
-                    "Input object does not appear to be an ASDF file or a FITS with " + "ASDF extension"
-                ) from None
-            except ImportError:
-                raise ValueError(
-                    "Input object does not appear to be an ASDF file. Cannot check "
-                    + "if it is a FITS with ASDF extension because 'astropy' is not "
-                    + "installed"
-                ) from None
-        elif file_type == util.FileType.ASDF:
-            return cls._open_asdf(
-                self,
-                generic_file,
-                validate_checksums=validate_checksums,
-                extensions=extensions,
-                _get_yaml_content=_get_yaml_content,
-                _force_raw_types=_force_raw_types,
-                strict_extension_check=strict_extension_check,
-                ignore_missing_extensions=ignore_missing_extensions,
-                **kwargs,
-            )
-        else:
-            raise ValueError("Input object does not appear to be an ASDF file or a FITS with " + "ASDF extension")
+            else:
+                raise ValueError("Input object does not appear to be an ASDF file or a FITS with " + "ASDF extension")
+        except Exception as e:
+            if close_on_fail:
+                generic_file.close()
+            raise e
 
     @classmethod
     def open(
