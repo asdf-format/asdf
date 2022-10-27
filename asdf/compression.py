@@ -82,7 +82,8 @@ class Lz4Compressor:
         bytesout = 0
 
         for block in blocks:
-            block = memoryview(block).cast("c")  # don't copy on slice
+            cast = "c"
+            block = memoryview(block).cast(cast)  # don't copy on slice
 
             while len(block):
                 if not _size:

@@ -401,7 +401,7 @@ def test_init_from_asdffile(tmpdir):
 
     with asdf.open(os.path.join(tmpdir, "test.asdf")) as ff:
         ff2 = asdf.AsdfFile(ff)
-        assert not ff.tree["my_array"] is ff2.tree["my_array"]
+        assert ff.tree["my_array"] is not ff2.tree["my_array"]
         assert_array_equal(ff.tree["my_array"], ff2.tree["my_array"])
         assert ff.blocks[my_array] != ff2.blocks[my_array]
 
@@ -749,10 +749,19 @@ def test_fd_not_seekable():
     data = np.ones(1024)
     b = block.Block(data=data)
     fd = io.BytesIO()
-    fd.seekable = lambda: False
-    fd.write_array = lambda arr: fd.write(arr.tobytes())
-    fd.read_blocks = lambda us: [fd.read(us)]
-    fd.fast_forward = lambda offset: fd.seek(offset, 1)
+
+    seekable = lambda: False  # noqa: E731
+    fd.seekable = seekable
+
+    write_array = lambda arr: fd.write(arr.tobytes())  # noqa: E731
+    fd.write_array = write_array
+
+    read_blocks = lambda us: [fd.read(us)]  # noqa: E731
+    fd.read_blocks = read_blocks
+
+    fast_forward = lambda offset: fd.seek(offset, 1)  # noqa: E731
+    fd.fast_forward = fast_forward
+
     b.output_compression = "zlib"
     b.write(fd)
     fd.seek(0)
