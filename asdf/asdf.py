@@ -2,6 +2,7 @@ import copy
 import datetime
 import io
 import os
+import pathlib
 import time
 import warnings
 
@@ -908,7 +909,41 @@ class AsdfFile:
         **kwargs,
     ):
         """Attempt to open file-like object as either AsdfFile or AsdfInFits"""
+        close_on_fail = isinstance(fd, (str, pathlib.Path))
         generic_file = generic_io.get_file(fd, mode=mode, uri=uri)
+        try:
+            return cls._open_generic_file(
+                self,
+                generic_file,
+                uri,
+                validate_checksums,
+                extensions,
+                _get_yaml_content,
+                _force_raw_types,
+                strict_extension_check,
+                ignore_missing_extensions,
+                **kwargs,
+            )
+        except Exception as e:
+            if close_on_fail:
+                generic_file.close()
+            raise e
+
+    @classmethod
+    def _open_generic_file(
+        cls,
+        self,
+        generic_file,
+        uri=None,
+        validate_checksums=False,
+        extensions=None,
+        _get_yaml_content=False,
+        _force_raw_types=False,
+        strict_extension_check=False,
+        ignore_missing_extensions=False,
+        **kwargs,
+    ):
+        """Attempt to open a generic_file instance as either AsdfFile or AsdfInFits"""
         file_type = util.get_file_type(generic_file)
 
         if file_type == util.FileType.FITS:

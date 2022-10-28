@@ -166,7 +166,6 @@ def test_asdf_file_version_requirement():
             af = AsdfFile(version="1.4.0", extensions=[extension_with_requirement])
 
 
-@pytest.mark.filterwarnings("ignore:unclosed file .*")
 def test_open_asdf_extensions(tmp_path):
     extension = TestExtension(extension_uri="asdf://somewhere.org/extensions/foo-1.0")
 
@@ -363,3 +362,27 @@ def test_reading_extension_metadata():
         buff = yaml_to_asdf(content)
         with assert_no_warnings():
             open_asdf(buff)
+
+
+def test_bad_input(tmp_path):
+    """Make sure these functions behave properly with bad input"""
+    text_file = str(tmp_path / "test.txt")
+
+    with open(text_file, "w") as fh:
+        fh.write("I <3 ASDF!!!!!")
+
+    with pytest.raises(ValueError):
+        open_asdf(text_file)
+
+
+def test_unclosed_file(tmp_path):
+    """
+    Issue #1006 reported an unclosed file when asdf.open fails
+    This is a regression test for the fix in PR #1221
+    """
+    path = tmp_path / "empty.asdf"
+    path.touch()
+
+    with pytest.raises(ValueError):
+        with open_asdf(path):
+            pass

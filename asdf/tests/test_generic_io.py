@@ -360,10 +360,9 @@ def test_unicode_open(tmp_path, small_tree):
                 pass
 
 
-@pytest.mark.filterwarnings("ignore:unclosed file .*")
 def test_open_stdout():
     """Test ability to open/write stdout as an output stream"""
-    with generic_io.get_file(sys.__stdout__, "w"):
+    with generic_io.get_file(sys.__stdout__, "w", close=True):
         pass
 
 
