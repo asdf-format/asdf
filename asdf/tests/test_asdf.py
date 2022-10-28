@@ -362,3 +362,16 @@ def test_reading_extension_metadata():
         buff = yaml_to_asdf(content)
         with assert_no_warnings():
             open_asdf(buff)
+
+
+def test_unclosed_file(tmp_path):
+    """
+    Issue #1006 reported an unclosed file when asdf.open fails
+    This is a regression test for the fix in PR #1221
+    """
+    path = tmp_path / "empty.asdf"
+    path.touch()
+
+    with pytest.raises(ValueError):
+        with open_asdf(path):
+            pass
