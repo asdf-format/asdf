@@ -284,6 +284,17 @@ invalid_software: !core/software-1.0.0
             assert af["invalid_software"]["version"] == 3
 
 
+def test_bad_fits_input(tmp_path):
+    path = tmp_path / "test.fits"
+    # create an empty fits file
+    with open(path, "wb") as f:
+        f.write(asdf.constants.FITS_MAGIC)
+
+    with pytest.raises(ValueError):
+        with asdf_open(path):
+            pass
+
+
 def test_open_gzipped():
     testfile = get_test_data_path("asdf.fits.gz")
 
