@@ -291,17 +291,6 @@ def test_open_gzipped():
         assert af.tree["stuff"].shape == (20, 20)
 
 
-def test_bad_input(tmp_path):
-    """Make sure these functions behave properly with bad input"""
-    text_file = str(tmp_path / "test.txt")
-
-    with open(text_file, "w") as fh:
-        fh.write("I <3 ASDF!!!!!")
-
-    with pytest.raises(ValueError):
-        asdf_open(text_file)
-
-
 def test_version_mismatch_file():
     testfile = str(get_test_data_path("version_mismatch.fits"))
 

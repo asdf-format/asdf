@@ -364,6 +364,17 @@ def test_reading_extension_metadata():
             open_asdf(buff)
 
 
+def test_bad_input(tmp_path):
+    """Make sure these functions behave properly with bad input"""
+    text_file = str(tmp_path / "test.txt")
+
+    with open(text_file, "w") as fh:
+        fh.write("I <3 ASDF!!!!!")
+
+    with pytest.raises(ValueError):
+        open_asdf(text_file)
+
+
 def test_unclosed_file(tmp_path):
     """
     Issue #1006 reported an unclosed file when asdf.open fails
