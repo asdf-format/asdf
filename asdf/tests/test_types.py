@@ -389,13 +389,16 @@ undefined_data:
 
 
 def test_newer_tag():
-    # This test simulates a scenario where newer versions of CustomFlow
-    # provides different keyword parameters that the older schema and tag class
-    # do not account for. We want to test whether ASDF can handle this problem
-    # gracefully and still provide meaningful data as output. The test case is
-    # fairly contrived but we want to test whether ASDF can handle backwards
-    # compatibility even when an explicit tag class for different versions of a
-    # schema is not available.
+    """
+    This test simulates a scenario where newer versions of CustomFlow
+    provides different keyword parameters that the older schema and tag class
+    do not account for. We want to test whether ASDF can handle this problem
+    gracefully and still provide meaningful data as output. The test case is
+    fairly contrived but we want to test whether ASDF can handle backwards
+    compatibility even when an explicit tag class for different versions of a
+    schema is not available.
+    """
+
     class CustomFlow:
         def __init__(self, c=None, d=None):
             self.c = c

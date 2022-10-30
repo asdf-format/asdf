@@ -517,11 +517,13 @@ def test_block_index():
 
 
 def test_large_block_index():
-    # This test is designed to test reading of a block index that is
-    # larger than a single file system block, which is why we create
-    # io.DEFAULT_BUFFER_SIZE / 4 arrays, and assuming each entry has more
-    # than one digit in its address, we're guaranteed to have an index
-    # larger than a filesystem block.
+    """
+    This test is designed to test reading of a block index that is
+    larger than a single file system block, which is why we create
+    io.DEFAULT_BUFFER_SIZE / 4 arrays, and assuming each entry has more
+    than one digit in its address, we're guaranteed to have an index
+    larger than a filesystem block.
+    """
 
     # TODO: It would be nice to find a way to make this test faster.  The
     # real bottleneck here is the enormous YAML section.
@@ -631,8 +633,10 @@ def test_invalid_block_index_values():
 
 
 def test_invalid_last_block_index():
-    # This adds a value in the block index that points to something
-    # that isn't a block
+    """
+    This adds a value in the block index that points to something
+    that isn't a block
+    """
 
     buff = io.BytesIO()
 
@@ -653,7 +657,9 @@ def test_invalid_last_block_index():
 
 
 def test_unordered_block_index():
-    # This creates a block index that isn't in increasing order
+    """
+    This creates a block index that isn't in increasing order
+    """
 
     buff = io.BytesIO()
 
@@ -674,9 +680,11 @@ def test_unordered_block_index():
 
 
 def test_invalid_block_index_first_block_value():
-    # This creates a bogus block index where the offset of the first
-    # block doesn't match what we already know it to be.  In this
-    # case, we should reject the whole block index.
+    """
+    This creates a bogus block index where the offset of the first
+    block doesn't match what we already know it to be.  In this
+    case, we should reject the whole block index.
+    """
     buff = io.BytesIO()
 
     arrays = []
@@ -702,9 +710,11 @@ def test_invalid_block_id():
 
 
 def test_dots_but_no_block_index():
-    # This puts `...` at the end of the file, so we sort of think
-    # we might have a block index, but as it turns out, we don't
-    # after reading a few chunks from the end of the file.
+    """
+    This puts `...` at the end of the file, so we sort of think
+    we might have a block index, but as it turns out, we don't
+    after reading a few chunks from the end of the file.
+    """
     buff = io.BytesIO()
 
     tree = {"array": np.ones((8, 8))}
