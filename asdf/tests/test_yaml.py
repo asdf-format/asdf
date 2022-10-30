@@ -157,7 +157,7 @@ def test_implicit_conversion_warning():
 
     tree = {"val": nt(1, 2, np.ones(3))}
 
-    with pytest.warns(AsdfWarning, match="Failed to serialize instance"):
+    with pytest.warns(AsdfWarning, match=r"Failed to serialize instance"):
         with asdf.AsdfFile(tree):
             pass
 

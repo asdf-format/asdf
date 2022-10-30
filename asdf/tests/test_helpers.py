@@ -41,5 +41,5 @@ def test_conversion_error(tmp_path):
     tree = dict(foo=foo)
 
     with pytest.raises(AsdfConversionWarning):
-        with pytest.warns(AsdfWarning, match="Unable to locate schema file"):
+        with pytest.warns(AsdfWarning, match=r"Unable to locate schema file"):
             assert_roundtrip_tree(tree, tmp_path, extensions=FooExtension())

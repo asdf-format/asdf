@@ -159,13 +159,13 @@ a: !core/complex-42.0.0
     """
 
     buff = helpers.yaml_to_asdf(yaml)
-    with pytest.warns(AsdfConversionWarning, match="tag:stsci.edu:asdf/core/complex"):
+    with pytest.warns(AsdfConversionWarning, match=r"tag:stsci.edu:asdf/core/complex"):
         with asdf.open(buff, ignore_version_mismatch=False) as ff:
             assert isinstance(ff.tree["a"], complex)
 
     # Make sure warning is repeatable
     buff.seek(0)
-    with pytest.warns(AsdfConversionWarning, match="tag:stsci.edu:asdf/core/complex"):
+    with pytest.warns(AsdfConversionWarning, match=r"tag:stsci.edu:asdf/core/complex"):
         with asdf.open(buff, ignore_version_mismatch=False) as ff:
             assert isinstance(ff.tree["a"], complex)
 
@@ -183,7 +183,7 @@ a: !core/complex-1.0.1
     """
 
     buff = helpers.yaml_to_asdf(yaml)
-    with pytest.warns(AsdfConversionWarning, match="tag:stsci.edu:asdf/core/complex"):
+    with pytest.warns(AsdfConversionWarning, match=r"tag:stsci.edu:asdf/core/complex"):
         with asdf.open(buff, ignore_version_mismatch=False) as ff:
             assert isinstance(ff.tree["a"], complex)
 
@@ -201,7 +201,7 @@ a: !core/complex-42.0.0
 
     expected_uri = util.filepath_to_url(str(testfile))
 
-    with pytest.warns(AsdfConversionWarning, match="tag:stsci.edu:asdf/core/complex"):
+    with pytest.warns(AsdfConversionWarning, match=r"tag:stsci.edu:asdf/core/complex"):
         with asdf.open(testfile, ignore_version_mismatch=False) as ff:
             assert ff._fname == expected_uri
             assert isinstance(ff.tree["a"], complex)
@@ -446,7 +446,7 @@ flow_thing:
     old_buff = helpers.yaml_to_asdf(old_yaml)
     # We expect this warning since it will not be possible to convert version
     # 1.0.0 of CustomFlow to a CustomType (by design, for testing purposes).
-    with pytest.warns(AsdfConversionWarning, match="Failed to convert tag:nowhere.org:custom/custom_flow-1.0.0"):
+    with pytest.warns(AsdfConversionWarning, match=r"Failed to convert tag:nowhere.org:custom/custom_flow-1.0.0"):
         asdf.open(old_buff, extensions=CustomFlowExtension())
 
 
@@ -588,7 +588,7 @@ flow_thing:
     buff = helpers.yaml_to_asdf(yaml)
 
     with pytest.warns(
-        AsdfConversionWarning, match="Version 1.1.0 of tag:nowhere.org:custom/custom_flow is not compatible"
+        AsdfConversionWarning, match=r"Version 1.1.0 of tag:nowhere.org:custom/custom_flow is not compatible"
     ):
         asdf.open(buff, extensions=CustomFlowExtension())
 
@@ -631,11 +631,11 @@ def test_tag_without_schema(tmp_path):
     foo = FooType("hello", 42)
     tree = dict(foo=foo)
 
-    with pytest.warns(AsdfWarning, match="Unable to locate schema file"):
+    with pytest.warns(AsdfWarning, match=r"Unable to locate schema file"):
         with asdf.AsdfFile(tree, extensions=FooExtension()) as af:
             af.write_to(tmpfile)
 
-    with pytest.warns(AsdfWarning, match="Unable to locate schema file"):
+    with pytest.warns(AsdfWarning, match=r"Unable to locate schema file"):
         with asdf.AsdfFile(tree, extensions=FooExtension()) as ff:
             assert isinstance(ff.tree["foo"], FooType)
             assert ff.tree["foo"] == tree["foo"]

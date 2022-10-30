@@ -356,7 +356,7 @@ def test_extension_version_check(installed, extension, warns):
     }
 
     if warns:
-        with pytest.warns(AsdfWarning, match="File 'test.asdf' was created with"):
+        with pytest.warns(AsdfWarning, match=r"File 'test.asdf' was created with"):
             af._check_extensions(tree)
 
         with pytest.raises(RuntimeError) as err:
@@ -512,7 +512,7 @@ def test_array_access_after_file_close(tmp_path):
     # the file has been closed:
     with asdf.open(path) as af:
         tree = af.tree
-    with pytest.raises(OSError, match="ASDF file has already been closed"):
+    with pytest.raises(OSError, match=r"ASDF file has already been closed"):
         tree["data"][0]
 
     # With memory mapping disabled and copying arrays enabled,

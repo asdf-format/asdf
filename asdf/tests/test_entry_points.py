@@ -70,7 +70,7 @@ def test_get_resource_mappings(mock_entry_points):
     mock_entry_points.append(
         ("asdf.resource_mappings", "failing", "asdf.tests.test_entry_points:resource_mappings_entry_point_failing")
     )
-    with pytest.warns(AsdfWarning, match="Exception: NOPE"):
+    with pytest.warns(AsdfWarning, match=r"Exception: NOPE"):
         mappings = entry_points.get_resource_mappings()
     assert len(mappings) == 0
 
@@ -82,7 +82,7 @@ def test_get_resource_mappings(mock_entry_points):
             "asdf.tests.test_entry_points:resource_mappings_entry_point_bad_element",
         )
     )
-    with pytest.warns(AsdfWarning, match="TypeError: Resource mapping must implement the Mapping interface"):
+    with pytest.warns(AsdfWarning, match=r"TypeError: Resource mapping must implement the Mapping interface"):
         mappings = entry_points.get_resource_mappings()
     assert len(mappings) == 2
 
@@ -140,7 +140,7 @@ def test_get_extensions(mock_entry_points):
     mock_entry_points.append(
         ("asdf.extensions", "failing", "asdf.tests.test_entry_points:extensions_entry_point_failing")
     )
-    with pytest.warns(AsdfWarning, match="Exception: NOPE"):
+    with pytest.warns(AsdfWarning, match=r"Exception: NOPE"):
         extensions = entry_points.get_extensions()
     assert len(extensions) == 0
 
@@ -149,7 +149,7 @@ def test_get_extensions(mock_entry_points):
         ("asdf.extensions", "bad_element", "asdf.tests.test_entry_points:extensions_entry_point_bad_element")
     )
     with pytest.warns(
-        AsdfWarning, match="TypeError: Extension must implement the Extension or AsdfExtension interface"
+        AsdfWarning, match=r"TypeError: Extension must implement the Extension or AsdfExtension interface"
     ):
         extensions = entry_points.get_extensions()
     assert len(extensions) == 2
@@ -166,6 +166,6 @@ def test_get_extensions(mock_entry_points):
 
     mock_entry_points.clear()
     mock_entry_points.append(("asdf_extensions", "failing", "asdf.tests.test_entry_points:FauxLegacyExtension"))
-    with pytest.warns(AsdfWarning, match="TypeError"):
+    with pytest.warns(AsdfWarning, match=r"TypeError"):
         extensions = entry_points.get_extensions()
     assert len(extensions) == 0

@@ -305,7 +305,7 @@ def test_open_gzipped():
 def test_version_mismatch_file():
     testfile = str(get_test_data_path("version_mismatch.fits"))
 
-    with pytest.warns(AsdfConversionWarning, match="tag:stsci.edu:asdf/core/complex"):
+    with pytest.warns(AsdfConversionWarning, match=r"tag:stsci.edu:asdf/core/complex"):
         with asdf.open(testfile, ignore_version_mismatch=False) as fits_handle:
             assert fits_handle.tree["a"] == complex(0j)
 
@@ -314,7 +314,7 @@ def test_version_mismatch_file():
         with asdf.open(testfile) as fits_handle:
             assert fits_handle.tree["a"] == complex(0j)
 
-    with pytest.warns(AsdfConversionWarning, match="tag:stsci.edu:asdf/core/complex"):
+    with pytest.warns(AsdfConversionWarning, match=r"tag:stsci.edu:asdf/core/complex"):
         with fits_embed.AsdfInFits.open(testfile, ignore_version_mismatch=False) as fits_handle:
             assert fits_handle.tree["a"] == complex(0j)
 
@@ -346,7 +346,7 @@ def test_serialize_table(tmp_path):
 def test_extension_check():
     testfile = get_test_data_path("extension_check.fits")
 
-    with pytest.warns(AsdfWarning, match="was created with extension class 'foo.bar.FooBar'"):
+    with pytest.warns(AsdfWarning, match=r"was created with extension class 'foo.bar.FooBar'"):
         with asdf.open(testfile):
             pass
 
@@ -456,7 +456,7 @@ def test_array_view_compatible_dtype(tmp_path):
     data = np.arange(100, dtype=np.float64)
     hdul = fits.HDUList([fits.PrimaryHDU(), fits.ImageHDU(data)])
     with pytest.raises(
-        ValueError, match="ASDF has only limited support for serializing views over arrays stored in FITS HDUs"
+        ValueError, match=r"ASDF has only limited support for serializing views over arrays stored in FITS HDUs"
     ):
         with asdf.fits_embed.AsdfInFits(hdulist=hdul) as af:
             af["view"] = hdul[-1].data.view(np.int64)
@@ -480,6 +480,6 @@ def test_array_view_different_layout(tmp_path):
         af["data"] = hdul[-1].data
         af["other"] = other_view
         with pytest.raises(
-            ValueError, match="ASDF has only limited support for serializing views over arrays stored in FITS HDUs"
+            ValueError, match=r"ASDF has only limited support for serializing views over arrays stored in FITS HDUs"
         ):
             af.write_to(file_path)

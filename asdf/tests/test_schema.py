@@ -360,7 +360,7 @@ custom: !<tag:nowhere.org:custom/custom-1.0.0>
     # This should cause a warning but not an error because without explicitly
     # providing an extension, our custom type will not be recognized and will
     # simply be converted to a raw type.
-    with pytest.warns(AsdfConversionWarning, match="tag:nowhere.org:custom/custom-1.0.0"):
+    with pytest.warns(AsdfConversionWarning, match=r"tag:nowhere.org:custom/custom-1.0.0"):
         with asdf.open(buff):
             pass
 
@@ -472,7 +472,7 @@ custom: !<tag:nowhere.org:custom/default-1.0.0>
         assert ff.tree["custom"]["j"]["l"] == 362
 
     buff.seek(0)
-    with pytest.warns(AsdfDeprecationWarning, match="do_not_fill_defaults"):
+    with pytest.warns(AsdfDeprecationWarning, match=r"do_not_fill_defaults"):
         with asdf.open(buff, extensions=[DefaultTypeExtension()], do_not_fill_defaults=True) as ff:
             assert "a" not in ff.tree["custom"]
             assert "c" not in ff.tree["custom"]["b"]
@@ -677,7 +677,7 @@ def test_read_large_literal(value):
 
     buff = helpers.yaml_to_asdf(yaml)
 
-    with pytest.warns(AsdfWarning, match="Invalid integer literal value"):
+    with pytest.warns(AsdfWarning, match=r"Invalid integer literal value"):
         with asdf.open(buff) as af:
             assert af["integer"] == value
 
@@ -685,7 +685,7 @@ def test_read_large_literal(value):
 
     buff = helpers.yaml_to_asdf(yaml)
 
-    with pytest.warns(AsdfWarning, match="Invalid integer literal value"):
+    with pytest.warns(AsdfWarning, match=r"Invalid integer literal value"):
         with asdf.open(buff) as af:
             assert af[value] == "foo"
 
@@ -716,7 +716,7 @@ def test_mapping_supported_key_types(keys, version):
 )
 def test_mapping_unsupported_key_types(keys, version):
     for key in keys:
-        with pytest.raises(ValidationError, match="Mapping key .* is not permitted"):
+        with pytest.raises(ValidationError, match=r"Mapping key .* is not permitted"):
             af = asdf.AsdfFile({key: "value"}, version=version)
             buff = io.BytesIO()
             af.write_to(buff)
@@ -819,7 +819,7 @@ custom: !<tag:nowhere.org:custom/missing-1.1.0>
   b: {foo: 42}
     """
     buff = helpers.yaml_to_asdf(yaml)
-    with pytest.warns(AsdfConversionWarning, match="Failed to convert tag:nowhere.org:custom/missing-1.1.0"):
+    with pytest.warns(AsdfConversionWarning, match=r"Failed to convert tag:nowhere.org:custom/missing-1.1.0"):
         with asdf.open(buff, extensions=[DefaultTypeExtension()]) as ff:
             assert ff.tree["custom"]["b"]["foo"] == 42
 
@@ -1029,7 +1029,7 @@ a: !core/doesnt_exist-1.0.0
     """
 
     buff = helpers.yaml_to_asdf(yaml)
-    with pytest.warns(AsdfWarning, match="Unable to locate schema file"):
+    with pytest.warns(AsdfWarning, match=r"Unable to locate schema file"):
         with asdf.open(buff) as af:
             assert str(af["a"]) == "hello"
 
@@ -1040,7 +1040,7 @@ a: !<tag:nowhere.org:custom/doesnt_exist-1.0.0>
   """
 
     buff = helpers.yaml_to_asdf(yaml)
-    with pytest.warns(AsdfWarning, match="Unable to locate schema file"):
+    with pytest.warns(AsdfWarning, match=r"Unable to locate schema file"):
         with asdf.open(buff, extensions=CustomExtension()) as af:
             assert str(af["a"]) == "hello"
 

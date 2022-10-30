@@ -142,7 +142,7 @@ def test_asdf_file_version_requirement():
 
     # Version doesn't match the requirement, so we should see a warning
     # and the extension should not be enabled:
-    with pytest.warns(AsdfWarning, match="does not support ASDF Standard 1.4.0"):
+    with pytest.warns(AsdfWarning, match=r"does not support ASDF Standard 1.4.0"):
         af = AsdfFile(version="1.4.0", extensions=[extension_with_requirement])
         assert ExtensionProxy(extension_with_requirement) not in af.extensions
 
@@ -150,7 +150,7 @@ def test_asdf_file_version_requirement():
     # the version on the AsdfFile invalidates it:
     af = AsdfFile(version="1.5.0", extensions=[extension_with_requirement])
     assert ExtensionProxy(extension_with_requirement) in af.extensions
-    with pytest.warns(AsdfWarning, match="does not support ASDF Standard 1.4.0"):
+    with pytest.warns(AsdfWarning, match=r"does not support ASDF Standard 1.4.0"):
         af.version = "1.4.0"
     assert ExtensionProxy(extension_with_requirement) not in af.extensions
 
@@ -162,7 +162,7 @@ def test_asdf_file_version_requirement():
             af = AsdfFile(version="1.4.0")
 
         # ... unless the user explicitly requested the invalid extension:
-        with pytest.warns(AsdfWarning, match="does not support ASDF Standard 1.4.0"):
+        with pytest.warns(AsdfWarning, match=r"does not support ASDF Standard 1.4.0"):
             af = AsdfFile(version="1.4.0", extensions=[extension_with_requirement])
 
 
@@ -303,7 +303,7 @@ def test_reading_extension_metadata():
             extension_with_uri.class_name
         )
         buff = yaml_to_asdf(content)
-        with pytest.warns(AsdfWarning, match="URI 'some-missing-URI'"):
+        with pytest.warns(AsdfWarning, match=r"URI 'some-missing-URI'"):
             open_asdf(buff)
 
         # Warn when the class name is missing:
@@ -314,7 +314,7 @@ def test_reading_extension_metadata():
               extension_class: some.missing.class.Name
         """
         buff = yaml_to_asdf(content)
-        with pytest.warns(AsdfWarning, match="class 'some.missing.class.Name'"):
+        with pytest.warns(AsdfWarning, match=r"class 'some.missing.class.Name'"):
             open_asdf(buff)
 
         # Warn when the package version is older:
@@ -329,7 +329,7 @@ def test_reading_extension_metadata():
                 version: 9.2.4
         """
         buff = yaml_to_asdf(content)
-        with pytest.warns(AsdfWarning, match="older package"):
+        with pytest.warns(AsdfWarning, match=r"older package"):
             open_asdf(buff)
 
         # Shouldn't warn when the package version is later:
