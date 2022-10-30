@@ -359,8 +359,7 @@ def walk_and_modify(top, callback, ignore_implicit_conversion=False, postorder=T
             # list representing the contents. Currently this is primarly
             # intended to handle namedtuple and NamedTuple instances.
             if not ignore_implicit_conversion:
-                msg = "Failed to serialize instance of {}, converting to list instead"
-                warnings.warn(msg.format(type(node)), AsdfWarning)
+                warnings.warn(f"Failed to serialize instance of {type(node)}, converting to list instead", AsdfWarning)
             result = contents
 
         return result

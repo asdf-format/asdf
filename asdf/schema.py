@@ -84,9 +84,7 @@ def validate_tag(validator, tag_pattern, instance, schema):
 
     if instance_tag is None:
         yield ValidationError(
-            "mismatched tags, wanted '{}', got unhandled object type '{}'".format(
-                tag_pattern, util.get_class_name(instance)
-            )
+            f"mismatched tags, wanted '{tag_pattern}', got unhandled object type '{util.get_class_name(instance)}'"
         )
 
     if not util.uri_match(tag_pattern, instance_tag):
@@ -307,8 +305,7 @@ def _create_validator(validators=YAML_VALIDATORS, visit_repeat_nodes=False):
                                 with self.resolver.resolving(schema_uri) as resolved:
                                     yield from self.descend(instance, resolved)
                             except RefResolutionError:
-                                msg = "Unable to locate schema file for '{}': '{}'"
-                                warnings.warn(msg.format(tag, schema_uri), AsdfWarning)
+                                warnings.warn(f"Unable to locate schema file for '{tag}': '{schema_uri}'", AsdfWarning)
 
                     if isinstance(instance, dict):
                         for val in instance.values():
@@ -331,7 +328,7 @@ def _create_validator(validators=YAML_VALIDATORS, visit_repeat_nodes=False):
 @lru_cache
 def _load_schema(url):
     if url.startswith("http://") or url.startswith("https://") or url.startswith("asdf://"):
-        raise FileNotFoundError("Unable to fetch schema from non-file URL: " + url)
+        raise FileNotFoundError(f"Unable to fetch schema from non-file URL: {url}")
 
     with generic_io.get_file(url) as fd:
         if isinstance(url, str) and url.endswith("json"):
@@ -402,7 +399,7 @@ def _make_resolver(url_mapping):
 @lru_cache
 def load_custom_schema(url):
     warnings.warn(
-        "The 'load_custom_schema(...)' function is deprecated. Use" "'load_schema' instead.", AsdfDeprecationWarning
+        "The 'load_custom_schema(...)' function is deprecated. Use 'load_schema' instead.", AsdfDeprecationWarning
     )
     return load_schema(url, resolve_references=True)
 
@@ -603,7 +600,7 @@ def _validate_large_literals(instance, reading):
                 AsdfWarning,
             )
         else:
-            raise ValidationError(f"Integer value {value} is too large to safely represent as a " "literal in ASDF")
+            raise ValidationError(f"Integer value {value} is too large to safely represent as a literal in ASDF")
 
     if isinstance(instance, Integral):
         _validate(instance)
@@ -632,7 +629,7 @@ def _validate_mapping_keys(instance, reading):
                     AsdfWarning,
                 )
             else:
-                raise ValidationError(f"Mapping key {key} is not permitted.  Valid types: " "str, int, bool.")
+                raise ValidationError(f"Mapping key {key} is not permitted.  Valid types: str, int, bool.")
 
 
 def validate(instance, ctx=None, schema={}, validators=None, reading=False, *args, **kwargs):

@@ -118,7 +118,7 @@ class BlockManager:
               appears at the end of the file.
         """
         if array_storage not in ["internal", "external", "streamed", "inline"]:
-            raise ValueError("array_storage must be one of 'internal', 'external', " "'streamed' or 'inline'")
+            raise ValueError("array_storage must be one of 'internal', 'external', 'streamed' or 'inline'")
 
         if block.array_storage != array_storage:
             if block in self.blocks:
@@ -354,7 +354,7 @@ class BlockManager:
 
         for i, block in enumerate(self.external_blocks):
             if uri is None:
-                raise ValueError("Can't write external blocks, since URI of main file is " "unknown.")
+                raise ValueError("Can't write external blocks, since URI of main file is unknown.")
             subfd = self.get_external_uri(uri, i)
             asdffile = asdf.AsdfFile()
             block = copy.copy(block)
@@ -696,7 +696,7 @@ class BlockManager:
         for i, external_block in enumerate(self.external_blocks):
             if block == external_block:
                 if self._asdffile().uri is None:
-                    raise ValueError("Can't write external blocks, since URI of main file is " "unknown.")
+                    raise ValueError("Can't write external blocks, since URI of main file is unknown.")
 
                 parts = list(patched_urllib_parse.urlparse(self._asdffile().uri))
                 path = parts[2]

@@ -43,9 +43,7 @@ def _format_extension(ext):
     else:
         uri = f"'{ext.extension_uri}'"
 
-    return "Extension URI: {} package: {} ({}) class: {}".format(
-        uri, ext.package_name, ext.package_version, ext.class_name
-    )
+    return f"Extension URI: {uri} package: {ext.package_name} ({ext.package_version}) class: {ext.class_name}"
 
 
 def _format_type_name(typ):
@@ -67,7 +65,7 @@ def _print_extension_details(ext, tags_only):
     if len(tag_uris) > 0:
         print("tags:")
         for tag_uri in sorted(tag_uris):
-            print("  - " + tag_uri)
+            print(f"  - {tag_uri}")
 
     if not tags_only:
         types = []
@@ -80,7 +78,7 @@ def _print_extension_details(ext, tags_only):
         if len(types) > 0:
             print("types:")
             for typ in sorted(types, key=_format_type_name):
-                print("  - " + _format_type_name(typ))
+                print(f"  - {_format_type_name(typ)}")
 
 
 def find_extensions(summary, tags_only):

@@ -287,16 +287,18 @@ class NDArrayType(AsdfType):
     def __repr__(self):
         # repr alone should not force loading of the data
         if self._array is None:
-            return "<{} (unloaded) shape: {} dtype: {}>".format(
-                "array" if self._mask is None else "masked array", self._shape, self._dtype
+            return (
+                f"<{'array' if self._mask is None else 'masked array'} "
+                f"(unloaded) shape: {self._shape} dtype: {self._dtype}>"
             )
         return repr(self._make_array())
 
     def __str__(self):
         # str alone should not force loading of the data
         if self._array is None:
-            return "<{} (unloaded) shape: {} dtype: {}>".format(
-                "array" if self._mask is None else "masked array", self._shape, self._dtype
+            return (
+                f"<{'array' if self._mask is None else 'masked array'} "
+                f"(unloaded) shape: {self._shape} dtype: {self._dtype}>"
             )
         return str(self._make_array())
 
@@ -383,7 +385,7 @@ class NDArrayType(AsdfType):
             source = node.get("source")
             data = node.get("data")
             if source and data:
-                raise ValueError("Both source and data may not be provided " "at the same time")
+                raise ValueError("Both source and data may not be provided at the same time")
             if data:
                 source = data
             shape = node.get("shape", None)
@@ -697,9 +699,7 @@ def validate_datatype(validator, datatype, instance, schema):
             yield ValidationError(f"Expected structured datatype '{datatype}', got '{in_datatype}'")
 
         if len(np_in_datatype.fields) != len(np_datatype.fields):
-            yield ValidationError(
-                "Mismatch in number of columns: " "Expected {}, got {}".format(len(datatype), len(in_datatype))
-            )
+            yield ValidationError(f"Mismatch in number of columns: Expected {len(datatype)}, got {len(in_datatype)}")
 
         for i in range(len(np_datatype.fields)):
             in_type = np_in_datatype[i]
@@ -707,9 +707,8 @@ def validate_datatype(validator, datatype, instance, schema):
             if not np.can_cast(in_type, out_type, "safe"):
                 yield ValidationError(
                     "Can not safely cast to expected datatype: "
-                    "Expected {}, got {}".format(
-                        numpy_dtype_to_asdf_datatype(out_type)[0], numpy_dtype_to_asdf_datatype(in_type)[0]
-                    )
+                    f"Expected {numpy_dtype_to_asdf_datatype(out_type)[0]}, "
+                    f"got {numpy_dtype_to_asdf_datatype(in_type)[0]}"
                 )
 
 
