@@ -186,14 +186,14 @@ class AsdfLoader(_yaml_base_loader):
                 raise yaml.ConstructorError(
                     "while constructing an ordered map",
                     node.start_mark,
-                    "expected a mapping of length 1, but found %s" % subnode.id,
+                    f"expected a mapping of length 1, but found {subnode.id}",
                     subnode.start_mark,
                 )
             if len(subnode.value) != 1:
                 raise yaml.ConstructorError(
                     "while constructing an ordered map",
                     node.start_mark,
-                    "expected a single mapping item, but found %d items" % len(subnode.value),
+                    f"expected a single mapping item, but found {len(subnode.value): %d} items",
                     subnode.start_mark,
                 )
             key_node, value_node = subnode.value[0]
@@ -298,7 +298,7 @@ def tagged_tree_to_custom_tree(tree, ctx, force_raw_types=False, _serialization_
         if tag_type is None:
             if not ctx._ignore_unrecognized_tag:
                 warnings.warn(
-                    "{} is not recognized, converting to raw Python " "data structure".format(tag),
+                    f"{tag} is not recognized, converting to raw Python data structure",
                     AsdfConversionWarning,
                 )
             return node
@@ -309,8 +309,7 @@ def tagged_tree_to_custom_tree(tree, ctx, force_raw_types=False, _serialization_
         # version we found does not fit that description.
         if tag_type.incompatible_version(tag_version):
             warnings.warn(
-                "Version {} of {} is not compatible with any "
-                "existing tag implementations".format(tag_version, tag_name),
+                f"Version {tag_version} of {tag_name} is not compatible with any existing tag implementations",
                 AsdfConversionWarning,
             )
             return node
@@ -324,8 +323,7 @@ def tagged_tree_to_custom_tree(tree, ctx, force_raw_types=False, _serialization_
             return tag_type.from_tree_tagged(node, ctx)
         except TypeError as err:
             warnings.warn(
-                "Failed to convert {} to custom type (detail: {}). "
-                "Using raw Python data structure instead".format(tag, err),
+                f"Failed to convert {tag} to custom type (detail: {err}). " "Using raw Python data structure instead",
                 AsdfConversionWarning,
             )
 

@@ -119,11 +119,7 @@ class ResourceMappingProxy(Mapping):
         else:
             package_description = "(none)"
 
-        return "<ResourceMappingProxy class: {} package: {} len: {}>".format(
-            self.class_name,
-            package_description,
-            len(self),
-        )
+        return f"<ResourceMappingProxy class: {self.class_name} package: {package_description} len: {len(self)}>"
 
 
 class ResourceManager(Mapping):

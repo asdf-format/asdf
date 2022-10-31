@@ -182,7 +182,7 @@ class ConverterProxy(Converter):
 
         if len(relevant_tags) > 1 and not hasattr(delegate, "select_tag"):
             raise RuntimeError(
-                "Converter handles multiple tags for this extension, " "but does not implement a select_tag method."
+                "Converter handles multiple tags for this extension, but does not implement a select_tag method."
             )
 
         self._tags = sorted(relevant_tags)
@@ -356,7 +356,4 @@ class ConverterProxy(Converter):
         else:
             package_description = f"{self.package_name}=={self.package_version}"
 
-        return "<ConverterProxy class: {} package: {}>".format(
-            self.class_name,
-            package_description,
-        )
+        return f"<ConverterProxy class: {self.class_name} package: {package_description}>"

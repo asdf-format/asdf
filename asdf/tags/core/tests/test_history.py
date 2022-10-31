@@ -152,7 +152,7 @@ history:
     """
 
     buff = yaml_to_asdf(yaml)
-    with pytest.warns(AsdfWarning, match="File was created with extension class 'foo.bar.FooBar'"):
+    with pytest.warns(AsdfWarning, match=r"File was created with extension class 'foo.bar.FooBar'"):
         with asdf.open(buff):
             pass
 
@@ -170,7 +170,7 @@ history:
     """
 
     buff = yaml_to_asdf(yaml)
-    with pytest.warns(AsdfWarning, match="File was created with extension class 'asdf.extension.BuiltinExtension'"):
+    with pytest.warns(AsdfWarning, match=r"File was created with extension class 'asdf.extension.BuiltinExtension'"):
         with asdf.open(buff):
             pass
 
@@ -237,7 +237,7 @@ def test_metadata_with_custom_extension(tmpdir):
     with asdf.open(tmpfile, extensions=FractionExtension()) as af:
         assert len(af["history"]["extensions"]) == 2
 
-    with pytest.warns(AsdfWarning, match="was created with extension"):
+    with pytest.warns(AsdfWarning, match=r"was created with extension"):
         with asdf.open(tmpfile, ignore_unrecognized_tag=True):
             pass
 

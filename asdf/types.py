@@ -34,13 +34,11 @@ def _from_tree_tagged_missing_requirements(cls, tree, ctx):
     # A special version of AsdfType.from_tree_tagged for when the
     # required dependencies for an AsdfType are missing.
     plural, verb = ("s", "are") if len(cls.requires) else ("", "is")
-    message = "{} package{} {} required to instantiate '{}'".format(
-        util.human_list(cls.requires), plural, verb, tree._tag
-    )
+
     # This error will be handled by yamlutil.tagged_tree_to_custom_tree, which
     # will cause a warning to be issued indicating that the tree failed to be
     # converted.
-    raise TypeError(message)
+    raise TypeError(f"{util.human_list(cls.requires)} package{plural} {verb} required to instantiate '{tree._tag}'")
 
 
 class ExtensionTypeMeta(type):

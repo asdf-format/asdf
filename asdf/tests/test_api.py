@@ -133,8 +133,10 @@ def test_atomic_write(tmp_path, small_tree):
 
 
 def test_overwrite(tmp_path):
-    # This is intended to reproduce the following issue:
-    # https://github.com/asdf-format/asdf/issues/100
+    """
+    This is intended to reproduce the following issue:
+    https://github.com/asdf-format/asdf/issues/100
+    """
     tmpfile = str(tmp_path / "test.asdf")
     aff = models.AffineTransformation2D(matrix=[[1, 2], [3, 4]])
     f = asdf.AsdfFile()
@@ -148,7 +150,9 @@ def test_overwrite(tmp_path):
 
 
 def test_default_version():
-    # See https://github.com/asdf-format/asdf/issues/364
+    """
+    See https://github.com/asdf-format/asdf/issues/364
+    """
 
     version_map = versioning.get_version_map(versioning.default_version)
 
@@ -283,8 +287,10 @@ def test_access_tree_outside_handler(tmp_path):
 
 
 def test_context_handler_resolve_and_inline(tmp_path):
-    # This reproduces the issue reported in
-    # https://github.com/asdf-format/asdf/issues/406
+    """
+    This reproduces the issue reported in
+    https://github.com/asdf-format/asdf/issues/406
+    """
     tempname = str(tmp_path / "test.asdf")
 
     tree = {"random": np.random.random(10)}
@@ -350,7 +356,7 @@ def test_extension_version_check(installed, extension, warns):
     }
 
     if warns:
-        with pytest.warns(AsdfWarning, match="File 'test.asdf' was created with"):
+        with pytest.warns(AsdfWarning, match=r"File 'test.asdf' was created with"):
             af._check_extensions(tree)
 
         with pytest.raises(RuntimeError) as err:
@@ -506,7 +512,7 @@ def test_array_access_after_file_close(tmp_path):
     # the file has been closed:
     with asdf.open(path) as af:
         tree = af.tree
-    with pytest.raises(OSError, match="ASDF file has already been closed"):
+    with pytest.raises(OSError, match=r"ASDF file has already been closed"):
         tree["data"][0]
 
     # With memory mapping disabled and copying arrays enabled,

@@ -317,14 +317,14 @@ class AsdfFile:
             else:
                 extension_description = f"class '{extension.extension_class}'"
             if extension.software is not None:
-                extension_description += " (from package {}=={})".format(
-                    extension.software["name"],
-                    extension.software["version"],
+                extension_description += (
+                    f" (from package {extension.software['name']}=={extension.software['version']})"
                 )
 
             if installed is None:
-                msg = ("File {}was created with extension {}, which is " "not currently installed").format(
-                    filename, extension_description
+                msg = (
+                    f"File {filename}was created with extension "
+                    f"{extension_description}, which is not currently installed"
                 )
                 if strict:
                     raise RuntimeError(msg)
@@ -338,11 +338,9 @@ class AsdfFile:
                     continue
                 # Compare version in file metadata with installed version
                 if Version(installed.package_version) < Version(extension.software["version"]):
-                    msg = ("File {}was created with extension {}, but older package ({}=={}) " "is installed.").format(
-                        filename,
-                        extension_description,
-                        installed.package_name,
-                        installed.package_version,
+                    msg = (
+                        f"File {filename}was created with extension {extension_description}, "
+                        f"but older package ({installed.package_name}=={installed.package_version}) is installed."
                     )
                     if strict:
                         raise RuntimeError(msg)
@@ -385,7 +383,7 @@ class AsdfFile:
 
         if not isinstance(extensions, list):
             raise TypeError(
-                "The extensions parameter must be an extension, list of extensions, or " "instance of AsdfExtensionList"
+                "The extensions parameter must be an extension, list of extensions, or instance of AsdfExtensionList"
             )
 
         extensions = [ExtensionProxy.maybe_wrap(e) for e in extensions]
@@ -394,9 +392,8 @@ class AsdfFile:
         for extension in extensions:
             if self.version_string not in extension.asdf_standard_requirement:
                 warnings.warn(
-                    "Extension {} does not support ASDF Standard {}.  It has been disabled.".format(
-                        extension, self.version_string
-                    ),
+                    f"Extension {extension} does not support ASDF Standard {self.version_string}.  "
+                    "It has been disabled.",
                     AsdfWarning,
                 )
             else:
@@ -502,7 +499,7 @@ class AsdfFile:
     @property
     def tag_to_schema_resolver(self):
         warnings.warn(
-            "The 'tag_to_schema_resolver' property is deprecated. Use " "'tag_mapping' instead.", AsdfDeprecationWarning
+            "The 'tag_to_schema_resolver' property is deprecated. Use 'tag_mapping' instead.", AsdfDeprecationWarning
         )
         return self.extension_list.tag_mapping
 
@@ -811,7 +808,7 @@ class AsdfFile:
         """Attempt to populate AsdfFile data from file-like object"""
 
         if strict_extension_check and ignore_missing_extensions:
-            raise ValueError("'strict_extension_check' and 'ignore_missing_extensions' are " "incompatible options")
+            raise ValueError("'strict_extension_check' and 'ignore_missing_extensions' are incompatible options")
 
         with config_context() as config:
             _handle_deprecated_kwargs(config, kwargs)
@@ -966,13 +963,13 @@ class AsdfFile:
                 )
             except ValueError:
                 raise ValueError(
-                    "Input object does not appear to be an ASDF file or a FITS with " + "ASDF extension"
+                    "Input object does not appear to be an ASDF file or a FITS with ASDF extension"
                 ) from None
             except ImportError:
                 raise ValueError(
                     "Input object does not appear to be an ASDF file. Cannot check "
-                    + "if it is a FITS with ASDF extension because 'astropy' is not "
-                    + "installed"
+                    "if it is a FITS with ASDF extension because 'astropy' is not "
+                    "installed"
                 ) from None
         elif file_type == util.FileType.ASDF:
             return cls._open_asdf(
@@ -987,7 +984,7 @@ class AsdfFile:
                 **kwargs,
             )
         else:
-            raise ValueError("Input object does not appear to be an ASDF file or a FITS with " + "ASDF extension")
+            raise ValueError("Input object does not appear to be an ASDF file or a FITS with ASDF extension")
 
     @classmethod
     def open(
@@ -1664,10 +1661,10 @@ class AsdfFile:
     def _warn_tag_mismatch(self, tag, best_tag):
         if not self._ignore_version_mismatch and (tag, best_tag) not in self._warned_tag_pairs:
             message = (
-                "No explicit ExtensionType support provided for tag '{}'. "
-                "The ExtensionType subclass for tag '{}' will be used instead. "
+                f"No explicit ExtensionType support provided for tag '{tag}'. "
+                f"The ExtensionType subclass for tag '{best_tag}' will be used instead. "
                 "This fallback behavior will be removed in asdf 3.0."
-            ).format(tag, best_tag)
+            )
             warnings.warn(message, AsdfConversionWarning)
             self._warned_tag_pairs.add((tag, best_tag))
 
@@ -1680,8 +1677,7 @@ class AsdfFile:
 def _check_and_set_mode(fileobj, asdf_mode):
 
     if asdf_mode is not None and asdf_mode not in ["r", "rw"]:
-        msg = "Unrecognized asdf mode '{}'. Must be either 'r' or 'rw'"
-        raise ValueError(msg.format(asdf_mode))
+        raise ValueError(f"Unrecognized asdf mode '{asdf_mode}'. Must be either 'r' or 'rw'")
 
     if asdf_mode is None:
         if isinstance(fileobj, io.IOBase):
@@ -1708,7 +1704,7 @@ def _handle_deprecated_kwargs(config, kwargs):
         if key in _DEPRECATED_KWARG_TO_CONFIG_PROPERTY:
             config_property, func = _DEPRECATED_KWARG_TO_CONFIG_PROPERTY[key]
             warnings.warn(
-                f"The '{key}' argument is deprecated, set " f"asdf.get_config().{config_property} instead.",
+                f"The '{key}' argument is deprecated, set asdf.get_config().{config_property} instead.",
                 AsdfDeprecationWarning,
             )
             setattr(config, config_property, func(value))

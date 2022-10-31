@@ -40,7 +40,7 @@ def test_resource_manager():
     assert "http://somewhere.org/schemas/foz-1.0.0" in manager
     assert manager["http://somewhere.org/schemas/foz-1.0.0"] == b"foz"
 
-    with pytest.raises(KeyError, match="http://somewhere.org/schemas/missing-1.0.0"):
+    with pytest.raises(KeyError, match=r"http://somewhere.org/schemas/missing-1.0.0"):
         manager["http://somewhere.org/schemas/missing-1.0.0"]
 
     # Confirm that the repr string is reasonable:

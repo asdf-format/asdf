@@ -15,7 +15,9 @@ from . import helpers
 
 
 def test_ordered_dict(tmp_path):
-    # Test that we can write out and read in ordered dicts.
+    """
+    Test that we can write out and read in ordered dicts.
+    """
 
     tree = {
         "ordered_dict": OrderedDict([("first", "foo"), ("second", "bar"), ("third", "baz")]),
@@ -38,8 +40,10 @@ def test_ordered_dict(tmp_path):
 
 
 def test_unicode_write(tmp_path):
-    # We want to write unicode out as regular utf-8-encoded
-    # characters, not as escape sequences
+    """
+    We want to write unicode out as regular utf-8-encoded
+    characters, not as escape sequences
+    """
 
     tree = {"ɐʇɐp‾ǝpoɔıun": 42, "ascii_only": "this is ascii"}
 
@@ -58,8 +62,10 @@ def test_unicode_write(tmp_path):
 
 
 def test_arbitrary_python_object():
-    # Putting "just any old" Python object in the tree should raise an
-    # exception.
+    """
+    Putting "just any old" Python object in the tree should raise an
+    exception.
+    """
 
     class Foo:
         pass
@@ -88,9 +94,11 @@ def run_tuple_test(tree, tmp_path):
 
 
 def test_python_tuple(tmp_path):
-    # We don't want to store tuples as tuples, because that's not a
-    # built-in YAML data type.  This test ensures that they are
-    # converted to lists.
+    """
+    We don't want to store tuples as tuples, because that's not a
+    built-in YAML data type.  This test ensures that they are
+    converted to lists.
+    """
 
     tree = {"val": (1, 2, 3)}
 
@@ -98,7 +106,9 @@ def test_python_tuple(tmp_path):
 
 
 def test_named_tuple_collections(tmp_path):
-    # Ensure that we are able to serialize a collections.namedtuple.
+    """
+    Ensure that we are able to serialize a collections.namedtuple.
+    """
 
     nt = namedtuple("TestNamedTuple1", ("one", "two", "three"))
 
@@ -108,7 +118,9 @@ def test_named_tuple_collections(tmp_path):
 
 
 def test_named_tuple_typing(tmp_path):
-    # Ensure that we are able to serialize a typing.NamedTuple.
+    """
+    Ensure that we are able to serialize a typing.NamedTuple.
+    """
 
     nt = NamedTuple("TestNamedTuple2", (("one", int), ("two", int), ("three", int)))
     tree = {"val": nt(1, 2, 3)}
@@ -145,7 +157,7 @@ def test_implicit_conversion_warning():
 
     tree = {"val": nt(1, 2, np.ones(3))}
 
-    with pytest.warns(AsdfWarning, match="Failed to serialize instance"):
+    with pytest.warns(AsdfWarning, match=r"Failed to serialize instance"):
         with asdf.AsdfFile(tree):
             pass
 
@@ -196,8 +208,10 @@ foo: !<tag:stsci.edu:asdf/core/ndarray-1.0.0> [1, 2, 3]
 
 
 def test_yaml_internal_reference(tmp_path):
-    # Test that YAML internal references (anchors and aliases) work,
-    # as well as recursive data structures.
+    """
+    Test that YAML internal references (anchors and aliases) work,
+    as well as recursive data structures.
+    """
 
     d = {
         "foo": "2",

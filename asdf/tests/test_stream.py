@@ -29,7 +29,9 @@ def test_stream():
 
 
 def test_stream_write_nothing():
-    # Test that if you write nothing, you get a zero-length array
+    """
+    Test that if you write nothing, you get a zero-length array
+    """
 
     buff = io.BytesIO()
 
@@ -46,7 +48,9 @@ def test_stream_write_nothing():
 
 
 def test_stream_twice():
-    # Test that if you write nothing, you get a zero-length array
+    """
+    Test that if you write nothing, you get a zero-length array
+    """
 
     buff = io.BytesIO()
 
