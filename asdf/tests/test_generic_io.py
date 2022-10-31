@@ -739,3 +739,39 @@ def test_blocksize(tree, tmp_path):
         config.io_block_size = 1233  # make sure everything works with a strange blocksize
         with _roundtrip(tree, get_write_fd, get_read_fd) as ff:
             assert ff._fd.block_size == 1233
+
+
+def test_io_subclasses(tmp_path):
+    ref = b"0123456789"
+
+    b = io.BytesIO(b"0123456789")
+    b.seek(0)
+    f = generic_io.get_file(b)
+    r = f.read(len(ref))
+    assert r == ref, (r, ref)
+    f.close()
+
+    b = io.BytesIO(b"0123456789")
+    b.seek(0)
+    br = io.BufferedReader(io.BytesIO(ref))
+    f = generic_io.get_file(b)
+    assert r == ref, (r, ref)
+    f.close()
+
+    b = io.BytesIO(b"")
+    bw = io.BufferedWriter(b)
+    f = generic_io.get_file(bw, mode="w")
+    f.write(ref)
+    b.seek(0)
+    r = b.read(len(ref))
+    assert r == ref, (r, ref)
+    f.close()
+
+    b = io.BytesIO(b"")
+    br = io.BufferedRandom(b)
+    f = generic_io.get_file(br, mode="rw")
+    f.write(ref)
+    f.seek(0)
+    r = f.read(len(ref))
+    assert r == ref, (r, ref)
+    f.close()
