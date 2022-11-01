@@ -3,6 +3,7 @@ import os
 import sys
 import urllib.request as urllib_request
 
+import fsspec
 import numpy as np
 import pytest
 
@@ -775,3 +776,19 @@ def test_io_subclasses(tmp_path):
     r = f.read(len(ref))
     assert r == ref, (r, ref)
     f.close()
+
+
+def test_fsspec(tmp_path):
+    """
+    Issue #1146 reported errors when opening a fsspec 'file'
+    This is a regression test for the fix in PR #1226
+    """
+    ref = b"01234567890"
+    fn = tmp_path / "test"
+
+    with fsspec.open(fn, mode="bw+") as f:
+        f.write(ref)
+        f.seek(0)
+        gf = generic_io.get_file(f)
+        r = gf.read(len(ref))
+        assert r == ref, (r, ref)

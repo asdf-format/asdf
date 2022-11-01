@@ -1,5 +1,6 @@
 import warnings
 
+import fsspec
 import pytest
 
 from asdf import config_context, get_config
@@ -7,7 +8,7 @@ from asdf.asdf import AsdfFile, SerializationContext, open_asdf
 from asdf.entry_points import get_extensions
 from asdf.exceptions import AsdfWarning
 from asdf.extension import AsdfExtensionList, ExtensionManager, ExtensionProxy
-from asdf.tests.helpers import assert_no_warnings, yaml_to_asdf
+from asdf.tests.helpers import assert_no_warnings, assert_tree_match, yaml_to_asdf
 from asdf.versioning import AsdfVersion
 
 
@@ -386,3 +387,18 @@ def test_unclosed_file(tmp_path):
     with pytest.raises(ValueError):
         with open_asdf(path):
             pass
+
+
+def test_fsspec(tmp_path):
+    """
+    Issue #1146 reported errors when opening a fsspec 'file'
+    This is a regression test for the fix in PR #1226
+    """
+    tree = {"a": 1}
+    af = AsdfFile({"a": 1})
+    fn = tmp_path / "test.asdf"
+    af.write_to(fn)
+
+    with fsspec.open(fn) as f:
+        af = open_asdf(f)
+        assert_tree_match(tree, af.tree)
