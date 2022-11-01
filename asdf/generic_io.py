@@ -1034,14 +1034,14 @@ def get_file(init, mode="r", uri=None, close=False):
             raise ValueError(f"File is opened as '{init.mode}', but '{mode}' was requested")
 
         if init.seekable():
-            if isinstance(init, (io.BufferedReader, io.BufferedWriter, io.BufferedRandom)):
+            if hasattr(init, "raw"):
                 init2 = init.raw
             else:
                 init2 = init
-            if isinstance(init2, io.RawIOBase):
-                result = RealFile(init2, mode, uri=uri, close=close)
-            else:
+            if hasattr(init2, "getvalue"):
                 result = MemoryIO(init2, mode, uri=uri)
+            else:
+                result = RealFile(init2, mode, uri=uri, close=close)
             result._secondary_fd = init
             return result
         else:
