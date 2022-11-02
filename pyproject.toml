@@ -45,7 +45,7 @@ tests = [
     'pytest-openfiles',
     'psutil',
     'lz4 >=0.10',
-    'fsspec >=2022.8.2',
+    'fsspec[http] >=2022.8.2',
 ]
 [project.urls]
 'tracker' = 'https://github.com/asdf-format/asdf/issues'
