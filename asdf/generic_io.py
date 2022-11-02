@@ -218,7 +218,6 @@ class GenericFile(metaclass=util.InheritDocstrings):
         self._fd = fd
         self._mode = mode
         self._close = close
-        self._size = None
         self._uri = uri
 
         self.block_size = get_config().io_block_size
@@ -722,9 +721,7 @@ class RealFile(RandomAccessFile):
     def __init__(self, fd, mode, close=False, uri=None):
         super().__init__(fd, mode, close=close, uri=uri)
 
-        stat = os.fstat(fd.fileno())
-        self._size = stat.st_size
-        if uri is None and isinstance(fd.name, str):
+        if uri is None and hasattr(fd, "name") and isinstance(fd.name, str):
             self._uri = util.filepath_to_url(os.path.abspath(fd.name))
 
     def write_array(self, arr):
@@ -761,10 +758,6 @@ class MemoryIO(RandomAccessFile):
 
     def __init__(self, fd, mode, uri=None):
         super().__init__(fd, mode, uri=uri)
-        tell = fd.tell()
-        fd.seek(0, 2)
-        self._size = fd.tell()
-        fd.seek(tell, 0)
 
     def read_into_array(self, size):
         buf = self._fd.getvalue()
