@@ -13,6 +13,7 @@
 - Remove stray toplevel packages ``docker`` ``docs`` and ``compatibility_tests`` from wheel [#1214]
 - Close files opened during a failed call to asdf.open [#1221]
 - Modify generic_file for fsspec compatibility [#1226]
+- Add fsspec http filesystem support [#1228]
 
 2.13.0 (2022-08-19)
 -------------------

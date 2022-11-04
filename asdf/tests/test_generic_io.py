@@ -792,3 +792,23 @@ def test_fsspec(tmp_path):
         gf = generic_io.get_file(f)
         r = gf.read(len(ref))
         assert r == ref, (r, ref)
+
+
+@pytest.mark.remote_data
+def test_fsspec_http(httpserver):
+    """
+    Issue #1146 reported errors when opening a fsspec url (using the http
+    filesystem)
+    This is a regression test for the fix in PR #1228
+    """
+    ref = b"01234567890"
+    path = os.path.join(httpserver.tmpdir, "test")
+
+    with open(path, "wb") as f:
+        f.write(ref)
+
+    fn = httpserver.url + "test"
+    with fsspec.open(fn) as f:
+        gf = generic_io.get_file(f)
+        r = gf.read(len(ref))
+        assert r == ref, (r, ref)

@@ -1,3 +1,4 @@
+import os
 import warnings
 
 import fsspec
@@ -395,10 +396,28 @@ def test_fsspec(tmp_path):
     This is a regression test for the fix in PR #1226
     """
     tree = {"a": 1}
-    af = AsdfFile({"a": 1})
+    af = AsdfFile(tree)
     fn = tmp_path / "test.asdf"
     af.write_to(fn)
 
+    with fsspec.open(fn) as f:
+        af = open_asdf(f)
+        assert_tree_match(tree, af.tree)
+
+
+@pytest.mark.remote_data
+def test_fsspec_http(httpserver):
+    """
+    Issue #1146 reported errors when opening a fsspec url (using the http
+    filesystem)
+    This is a regression test for the fix in PR #1228
+    """
+    tree = {"a": 1}
+    af = AsdfFile(tree)
+    path = os.path.join(httpserver.tmpdir, "test")
+    af.write_to(path)
+
+    fn = httpserver.url + "test"
     with fsspec.open(fn) as f:
         af = open_asdf(f)
         assert_tree_match(tree, af.tree)
