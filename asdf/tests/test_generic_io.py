@@ -797,8 +797,9 @@ def test_fsspec(tmp_path):
 @pytest.mark.remote_data
 def test_fsspec_http(httpserver):
     """
-    Issue #1146 reported errors when opening a fsspec 'file'
-    This is a regression test for the fix in PR #1226
+    Issue #1146 reported errors when opening a fsspec url (using the http
+    filesystem)
+    This is a regression test for the fix in PR #1228
     """
     ref = b"01234567890"
     path = os.path.join(httpserver.tmpdir, "test")
