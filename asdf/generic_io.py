@@ -8,6 +8,7 @@ instead, one should use the factory function `get_file`.
 """
 
 import io
+import mmap
 import os
 import pathlib
 import re
@@ -738,13 +739,23 @@ class RealFile(RandomAccessFile):
         return True
 
     def memmap_array(self, offset, size):
-        if "w" in self._mode:
-            mode = "r+"
-        else:
-            mode = "r"
-        mmap = np.memmap(self._fd, mode=mode, offset=offset, shape=size)
-        mmap.fd = self
-        return mmap
+        if not hasattr(self, '_mmap'):
+            if "w" in self._mode:
+                acc = mmap.ACCESS_READ | mmap.ACCESS_WRITE
+                self._fd.seek(0, 2)
+                flen = self._fd.tell()
+                nb = size + offset
+                if nb > flen:
+                    self._fd.seek(nb -1, 0)
+                    self._fd.write(b'\0')
+                    self._fd.flush()
+            else:
+                acc = mmap.ACCESS_READ
+            self._mmap = mmap.mmap(self._fd.fileno(), 0, access=acc)
+        arr = np.ndarray.__new__(
+            np.memmap, shape=size, offset=offset,
+            dtype='uint8', buffer=self._mmap)
+        return arr
 
     def read_into_array(self, size):
         return np.fromfile(self._fd, dtype=np.uint8, count=size)
