@@ -442,7 +442,6 @@ class NDArrayType(AsdfType):
             if (
                 block.data.shape != data.shape
                 or block.data.dtype != data.dtype
-                or block.data.ctypes.data != data.ctypes.data
                 or block.data.strides != data.strides
             ):
                 raise ValueError(
@@ -451,6 +450,16 @@ class NDArrayType(AsdfType):
                     "was found in the ASDF tree.  The slice can be decoupled from the FITS "
                     "array by calling copy() before assigning it to the tree."
                 )
+            if block.data.ctypes.data != data.ctypes.data:
+                # Don't give up yet. See if the arrays are exactly equal,
+                # in which case we are dealing with a copy that still can
+                # referenced in a FITS HDU
+                if not np.all(block.data == data):
+                    raise ValueError(
+                        "There is a mismatch betwen the array in the ASDF tree and"
+                        "that located in the FITS HDU. They do not share the same"
+                        "memory and the contents differ as well."
+                    )
 
             offset = 0
             strides = None

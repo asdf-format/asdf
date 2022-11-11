@@ -14,6 +14,7 @@
 - Close files opened during a failed call to asdf.open [#1221]
 - Modify generic_file for fsspec compatibility [#1226]
 - Add fsspec http filesystem support [#1228]
+- Fix problem with duplicate arrays with asdf embedded in FITS files [].
 
 2.13.0 (2022-08-19)
 -------------------
