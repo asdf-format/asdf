@@ -741,7 +741,7 @@ class RealFile(RandomAccessFile):
     def memmap_array(self, offset, size):
         if not hasattr(self, "_mmap"):
             if "w" in self._mode:
-                acc = mmap.ACCESS_READ | mmap.ACCESS_WRITE
+                acc = mmap.ACCESS_WRITE
                 self._fd.seek(0, 2)
                 flen = self._fd.tell()
                 nb = size + offset

@@ -810,6 +810,27 @@ def test_fortran_order(tmpdir):
     helpers.assert_roundtrip_tree(tree, tmpdir, asdf_check_func=check_f_order, raw_yaml_check_func=check_raw_yaml)
 
 
+def test_memmap_write(tmpdir):
+    tmpfile = str(tmpdir.join("data.asdf"))
+    tree = dict(data=np.zeros(100))
+
+    with asdf.AsdfFile(tree) as af:
+        # Make sure we're actually writing to an internal array for this test
+        af.write_to(tmpfile, all_array_storage="internal")
+
+    with asdf.open(tmpfile, mode="rw", copy_arrays=False) as af:
+        data = af["data"]
+        assert data.flags.writeable is True
+        data[0] = 42
+        assert data[0] == 42
+
+    with asdf.open(tmpfile, mode="rw", copy_arrays=False) as af:
+        assert af["data"][0] == 42
+
+    with asdf.open(tmpfile, mode="r", copy_arrays=False) as af:
+        assert af["data"][0] == 42
+
+
 def test_readonly(tmpdir):
 
     tmpfile = str(tmpdir.join("data.asdf"))
