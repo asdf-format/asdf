@@ -354,6 +354,7 @@ def test_update_replace_all_arrays(tmp_path):
     ff.write_to(testpath, pad_blocks=True)
 
     with asdf.open(testpath, mode="rw") as ff:
+        assert_array_equal(ff.tree["my_array"], np.ones((64, 64)) * 1)
         ff.tree["my_array"] = np.ones((64, 64)) * 2
         ff.update()
 
