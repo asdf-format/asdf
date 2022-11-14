@@ -12,7 +12,6 @@ import yaml
 
 from . import compression as mcompression
 from . import constants, generic_io, treeutil, util, yamlutil
-from .compat.numpycompat import NUMPY_LT_1_7
 from .config import get_config
 from .util import patched_urllib_parse
 
@@ -1224,16 +1223,6 @@ class Block:
         return self._data
 
     def close(self):
-        if self._memmapped and self._data is not None:
-            if NUMPY_LT_1_7:  # pragma: no cover
-                try:
-                    self._data.flush()
-                except ValueError:
-                    pass
-            else:
-                self._data.flush()
-            if self._data._mmap is not None:
-                self._data._mmap.close()
         self._data = None
 
 

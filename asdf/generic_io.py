@@ -739,26 +739,32 @@ class RealFile(RandomAccessFile):
         return True
 
     def memmap_array(self, offset, size):
-        if not hasattr(self, '_mmap'):
+        if not hasattr(self, "_mmap"):
             if "w" in self._mode:
                 acc = mmap.ACCESS_READ | mmap.ACCESS_WRITE
                 self._fd.seek(0, 2)
                 flen = self._fd.tell()
                 nb = size + offset
                 if nb > flen:
-                    self._fd.seek(nb -1, 0)
-                    self._fd.write(b'\0')
+                    self._fd.seek(nb - 1, 0)
+                    self._fd.write(b"\0")
                     self._fd.flush()
             else:
                 acc = mmap.ACCESS_READ
             self._mmap = mmap.mmap(self._fd.fileno(), 0, access=acc)
-        arr = np.ndarray.__new__(
-            np.memmap, shape=size, offset=offset,
-            dtype='uint8', buffer=self._mmap)
+        arr = np.ndarray.__new__(np.memmap, shape=size, offset=offset, dtype="uint8", buffer=self._mmap)
         return arr
 
     def read_into_array(self, size):
         return np.fromfile(self._fd, dtype=np.uint8, count=size)
+
+    def close(self):
+        super().close()
+        if self._close:
+            if hasattr(self, "_mmap") and not self._mmap.closed:
+                # import pdb; pdb.set_trace()
+                self._mmap.flush()
+                self._mmap.close()
 
 
 class MemoryIO(RandomAccessFile):

@@ -1,3 +1,4 @@
+import mmap
 import sys
 
 import numpy as np
@@ -248,7 +249,7 @@ class NDArrayType(AsdfType):
         # memory mapping.
         if self._array is not None:
             base = util.get_array_base(self._array)
-            if isinstance(base, np.memmap) and base._mmap is not None and base._mmap.closed:
+            if isinstance(base, np.memmap) and isinstance(base.base, mmap.mmap) and base.base.closed:
                 self._array = None
 
         if self._array is None:

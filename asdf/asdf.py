@@ -1210,6 +1210,10 @@ class AsdfFile:
 
             self.blocks.finish_reading_internal_blocks()
 
+            # flush all pending memmap writes
+            if hasattr(fd, "_mmap"):
+                fd._mmap.flush()
+
             self._pre_write(fd, all_array_storage, all_array_compression, compression_kwargs=compression_kwargs)
 
             try:
@@ -1220,6 +1224,11 @@ class AsdfFile:
                     # write out in a serial fashion.
                     self._serial_write(fd, pad_blocks, include_block_index)
                     fd.truncate()
+                    # if we have memmapped data close the memmap so it will
+                    # regenerate
+                    if hasattr(fd, "_mmap"):
+                        fd._mmap.close()
+                        del fd._mmap
                     return
 
                 # Estimate how big the tree will be on disk by writing the
@@ -1243,6 +1252,11 @@ class AsdfFile:
                     # write out in a serial fashion.
                     self._serial_write(fd, pad_blocks, include_block_index)
                     fd.truncate()
+                    # if we have memmapped data close the memmap so it will
+                    # regenerate
+                    if hasattr(fd, "_mmap"):
+                        fd._mmap.close()
+                        del fd._mmap
                     return
 
                 fd.seek(0)
@@ -1250,6 +1264,11 @@ class AsdfFile:
                 fd.flush()
             finally:
                 self._post_write(fd)
+            # if we have memmapped data close the memmap so it will
+            # regenerate
+            if hasattr(fd, "_mmap"):
+                fd._mmap.close()
+                del fd._mmap
 
     def write_to(
         self,
