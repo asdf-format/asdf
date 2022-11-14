@@ -743,13 +743,14 @@ class RealFile(RandomAccessFile):
             loc = self._fd.tell()
             if "w" in self._mode:
                 acc = mmap.ACCESS_WRITE
-                self._fd.seek(0, 2)
-                flen = self._fd.tell()
-                nb = size + offset
-                if nb > flen:
-                    self._fd.seek(nb - 1, 0)
-                    self._fd.write(b"\0")
-                    self._fd.flush()
+                # self._fd.seek(0, 2)
+                # flen = self._fd.tell()
+                # nb = size + offset
+                # import pdb; pdb.set_trace()
+                # if nb > flen:
+                #     self._fd.seek(nb - 1, 0)
+                #     self._fd.write(b"\0")
+                #     self._fd.flush()
             else:
                 acc = mmap.ACCESS_READ
             self._fd.seek(0, 2)
