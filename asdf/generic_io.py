@@ -740,6 +740,7 @@ class RealFile(RandomAccessFile):
 
     def memmap_array(self, offset, size):
         if not hasattr(self, "_mmap"):
+            loc = self._fd.tell()
             if "w" in self._mode:
                 acc = mmap.ACCESS_WRITE
                 self._fd.seek(0, 2)
@@ -751,7 +752,10 @@ class RealFile(RandomAccessFile):
                     self._fd.flush()
             else:
                 acc = mmap.ACCESS_READ
-            self._mmap = mmap.mmap(self._fd.fileno(), 0, access=acc)
+            self._fd.seek(0, 2)
+            nbytes = self._fd.tell()
+            self._fd.seek(loc, 0)
+            self._mmap = mmap.mmap(self._fd.fileno(), nbytes, access=acc)
         arr = np.ndarray.__new__(np.memmap, shape=size, offset=offset, dtype="uint8", buffer=self._mmap)
         return arr
 
@@ -762,7 +766,6 @@ class RealFile(RandomAccessFile):
         super().close()
         if self._close:
             if hasattr(self, "_mmap") and not self._mmap.closed:
-                # import pdb; pdb.set_trace()
                 self._mmap.flush()
                 self._mmap.close()
 
