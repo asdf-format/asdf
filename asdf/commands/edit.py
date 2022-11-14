@@ -144,6 +144,9 @@ def write_edited_yaml_larger(path, new_content, version):
                 blocks.write_block_index(fd, ctx)
                 blocks.close()
 
+            # the file needs to be closed here to release all memmaps
+            original_fd.close()
+
         # Swap in the new version of the file atomically:
         shutil.copy(temp_file.name, path)
     finally:
