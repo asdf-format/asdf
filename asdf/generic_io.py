@@ -614,20 +614,20 @@ class GenericFile(metaclass=util.InheritDocstrings):
         -------
         array : np.core.memmap
         """
-        raise NotImplementedError()
+        raise NotImplementedError(f"memmapping is not implemented for {self.__class__.__name__}")
 
     def close_memmap(self):
         """
         Close the memmapped file (if one was mapped with memmap_array)
         """
-        raise NotImplementedError()
+        raise NotImplementedError(f"memmapping is not implemented for {self.__class__.__name__}")
 
     def flush_memmap(self):
         """
         Flush any pending writes to the memmapped file (if one was mapped with
         memmap_array)
         """
-        raise NotImplementedError()
+        raise NotImplementedError(f"memmapping is not implemented for {self.__class__.__name__}")
 
     def read_into_array(self, size):
         """
