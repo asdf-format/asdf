@@ -439,11 +439,7 @@ class NDArrayType(AsdfType):
             # astropy.io.fits always writes arrays C-contiguous with big-endian
             # byte order, whereas asdf preserves the "contiguousity" and byte order
             # of the base array.
-            if (
-                block.data.shape != data.shape
-                or block.data.dtype != data.dtype
-                or block.data.strides != data.strides
-            ):
+            if block.data.shape != data.shape or block.data.dtype != data.dtype or block.data.strides != data.strides:
                 raise ValueError(
                     "ASDF has only limited support for serializing views over arrays stored "
                     "in FITS HDUs.  This error likely means that a slice of such an array "
