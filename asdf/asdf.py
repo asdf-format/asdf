@@ -1224,9 +1224,6 @@ class AsdfFile:
                     # write out in a serial fashion.
                     self._serial_write(fd, pad_blocks, include_block_index)
                     fd.truncate()
-                    # close memmaps so they will regenerate
-                    if fd.can_memmap():
-                        fd.close_memmap()
                     return
 
                 # Estimate how big the tree will be on disk by writing the
@@ -1250,9 +1247,6 @@ class AsdfFile:
                     # write out in a serial fashion.
                     self._serial_write(fd, pad_blocks, include_block_index)
                     fd.truncate()
-                    # close memmaps so they will regenerate
-                    if fd.can_memmap():
-                        fd.close_memmap()
                     return
 
                 fd.seek(0)
@@ -1260,9 +1254,9 @@ class AsdfFile:
                 fd.flush()
             finally:
                 self._post_write(fd)
-            # close memmaps so they will regenerate
-            if fd.can_memmap():
-                fd.close_memmap()
+                # close memmaps so they will regenerate
+                if fd.can_memmap():
+                    fd.close_memmap()
 
     def write_to(
         self,
