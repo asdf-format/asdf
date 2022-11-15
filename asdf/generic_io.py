@@ -616,6 +616,19 @@ class GenericFile(metaclass=util.InheritDocstrings):
         """
         raise NotImplementedError()
 
+    def close_memmap(self):
+        """
+        Close the memmapped file (if one was mapped with memmap_array)
+        """
+        raise NotImplementedError()
+
+    def flush_memmap(self):
+        """
+        Flush any pending writes to the memmapped file (if one was mapped with
+        memmap_array)
+        """
+        raise NotImplementedError()
+
     def read_into_array(self, size):
         """
         Read a chunk of the file into a uint8 array.
@@ -743,14 +756,6 @@ class RealFile(RandomAccessFile):
             loc = self._fd.tell()
             if "w" in self._mode:
                 acc = mmap.ACCESS_WRITE
-                # self._fd.seek(0, 2)
-                # flen = self._fd.tell()
-                # nb = size + offset
-                # import pdb; pdb.set_trace()
-                # if nb > flen:
-                #     self._fd.seek(nb - 1, 0)
-                #     self._fd.write(b"\0")
-                #     self._fd.flush()
             else:
                 acc = mmap.ACCESS_READ
             self._fd.seek(0, 2)
@@ -759,6 +764,16 @@ class RealFile(RandomAccessFile):
             self._mmap = mmap.mmap(self._fd.fileno(), nbytes, access=acc)
         arr = np.ndarray.__new__(np.memmap, shape=size, offset=offset, dtype="uint8", buffer=self._mmap)
         return arr
+
+    def close_memmap(self):
+        if hasattr(self, "_mmap"):
+            if not self._mmap.closed:
+                self._mmap.close()
+                del self._mmap
+
+    def flush_memmap(self):
+        if hasattr(self, "_mmap"):
+            self._mmap.flush()
 
     def read_into_array(self, size):
         return np.fromfile(self._fd, dtype=np.uint8, count=size)

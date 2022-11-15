@@ -1211,8 +1211,8 @@ class AsdfFile:
             self.blocks.finish_reading_internal_blocks()
 
             # flush all pending memmap writes
-            if hasattr(fd, "_mmap"):
-                fd._mmap.flush()
+            if fd.can_memmap():
+                fd.flush_memmap()
 
             self._pre_write(fd, all_array_storage, all_array_compression, compression_kwargs=compression_kwargs)
 
@@ -1224,11 +1224,9 @@ class AsdfFile:
                     # write out in a serial fashion.
                     self._serial_write(fd, pad_blocks, include_block_index)
                     fd.truncate()
-                    # if we have memmapped data close the memmap so it will
-                    # regenerate
-                    if hasattr(fd, "_mmap"):
-                        fd._mmap.close()
-                        del fd._mmap
+                    # close memmaps so they will regenerate
+                    if fd.can_memmap():
+                        fd.close_memmap()
                     return
 
                 # Estimate how big the tree will be on disk by writing the
@@ -1252,11 +1250,9 @@ class AsdfFile:
                     # write out in a serial fashion.
                     self._serial_write(fd, pad_blocks, include_block_index)
                     fd.truncate()
-                    # if we have memmapped data close the memmap so it will
-                    # regenerate
-                    if hasattr(fd, "_mmap"):
-                        fd._mmap.close()
-                        del fd._mmap
+                    # close memmaps so they will regenerate
+                    if fd.can_memmap():
+                        fd.close_memmap()
                     return
 
                 fd.seek(0)
@@ -1264,11 +1260,9 @@ class AsdfFile:
                 fd.flush()
             finally:
                 self._post_write(fd)
-            # if we have memmapped data close the memmap so it will
-            # regenerate
-            if hasattr(fd, "_mmap"):
-                fd._mmap.close()
-                del fd._mmap
+            # close memmaps so they will regenerate
+            if fd.can_memmap():
+                fd.close_memmap()
 
     def write_to(
         self,
