@@ -483,3 +483,32 @@ def test_array_view_different_layout(tmp_path):
             ValueError, match=r"ASDF has only limited support for serializing views over arrays stored in FITS HDUs"
         ):
             af.write_to(file_path)
+
+
+def test_resave_breaks_hdulist_tree_array_link(tmp_path):
+    """
+    Test that writing, reading and rewriting an AsdfInFits file
+    maintains links between hdus and arrays in the asdf tree
+
+    If the link is broken, data can be duplicated (exist both
+    as a hdu and as an internal block in the asdf tree).
+
+    See issues:
+        https://github.com/asdf-format/asdf/issues/1232
+        https://github.com/spacetelescope/jwst/issues/7354
+        https://github.com/spacetelescope/jwst/issues/7274
+    """
+    file_path_1 = tmp_path / "test1.fits"
+    file_path_2 = tmp_path / "test2.fits"
+
+    af = create_asdf_in_fits("f4")
+    af.write_to(file_path_1)
+
+    with asdf.open(file_path_1) as af1:
+        af1.write_to(file_path_2)
+
+    # check that af1 (original write) and af2 (rewrite) do not contain internal blocks
+    with fits.open(file_path_1) as af1, fits.open(file_path_2) as af2:
+        for f in (af1, af2):
+            block_bytes = f["ASDF"].data.tobytes().split(b"...")[1].strip()
+            assert len(block_bytes) == 0
