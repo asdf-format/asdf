@@ -85,8 +85,10 @@ def get_array_base(arr):
     For a given Numpy array, finds the base array that "owns" the
     actual data.
     """
+    from .tags.core import ndarray
+
     base = arr
-    while isinstance(base.base, np.ndarray):
+    while isinstance(base.base, (np.ndarray, ndarray.NDArrayType)):
         base = base.base
     return base
 
