@@ -482,8 +482,8 @@ def test_hdu_link_independence(tmp_path):
         aif["model"]["err"]["data"][:] = 3
 
         assert np.all(aif["model"]["sci"]["data"] == 1)
-        assert np.all(aif["model"]["dq"]["data"] == 1)
-        assert np.all(aif["model"]["err"]["data"] == 1)
+        assert np.all(aif["model"]["dq"]["data"] == 2)
+        assert np.all(aif["model"]["err"]["data"] == 3)
 
 
 def test_array_view_different_layout(tmp_path):
