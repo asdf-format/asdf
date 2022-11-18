@@ -463,6 +463,29 @@ def test_array_view_compatible_dtype(tmp_path):
             af.write_to(file_path)
 
 
+def test_hdu_link_independence(tmp_path):
+    asdf_in_fits = create_asdf_in_fits("f4")
+    # set all arrays to same values
+    asdf_in_fits["model"]["sci"]["data"][:] = 0
+    asdf_in_fits["model"]["dq"]["data"][:] = 0
+    asdf_in_fits["model"]["err"]["data"][:] = 0
+
+    fn0 = tmp_path / "test0.fits"
+
+    # write out the asdf in fits file
+    asdf_in_fits.write_to(str(fn0))
+
+    with asdf.open(fn0, mode="r") as aif:
+        # assign new values
+        aif["model"]["sci"]["data"][:] = 1
+        aif["model"]["dq"]["data"][:] = 2
+        aif["model"]["err"]["data"][:] = 3
+
+        assert np.all(aif["model"]["sci"]["data"] == 1)
+        assert np.all(aif["model"]["dq"]["data"] == 1)
+        assert np.all(aif["model"]["err"]["data"] == 1)
+
+
 def test_array_view_different_layout(tmp_path):
     """
     A view over the FITS array with a different memory layout
