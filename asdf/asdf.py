@@ -1210,6 +1210,10 @@ class AsdfFile:
 
             self.blocks.finish_reading_internal_blocks()
 
+            # flush all pending memmap writes
+            if fd.can_memmap():
+                fd.flush_memmap()
+
             self._pre_write(fd, all_array_storage, all_array_compression, compression_kwargs=compression_kwargs)
 
             try:
@@ -1250,6 +1254,9 @@ class AsdfFile:
                 fd.flush()
             finally:
                 self._post_write(fd)
+                # close memmaps so they will regenerate
+                if fd.can_memmap():
+                    fd.close_memmap()
 
     def write_to(
         self,

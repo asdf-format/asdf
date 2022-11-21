@@ -8,6 +8,7 @@ instead, one should use the factory function `get_file`.
 """
 
 import io
+import mmap
 import os
 import pathlib
 import re
@@ -613,7 +614,20 @@ class GenericFile(metaclass=util.InheritDocstrings):
         -------
         array : np.core.memmap
         """
-        raise NotImplementedError()
+        raise NotImplementedError(f"memmapping is not implemented for {self.__class__.__name__}")
+
+    def close_memmap(self):
+        """
+        Close the memmapped file (if one was mapped with memmap_array)
+        """
+        raise NotImplementedError(f"memmapping is not implemented for {self.__class__.__name__}")
+
+    def flush_memmap(self):
+        """
+        Flush any pending writes to the memmapped file (if one was mapped with
+        memmap_array)
+        """
+        raise NotImplementedError(f"memmapping is not implemented for {self.__class__.__name__}")
 
     def read_into_array(self, size):
         """
@@ -738,16 +752,38 @@ class RealFile(RandomAccessFile):
         return True
 
     def memmap_array(self, offset, size):
-        if "w" in self._mode:
-            mode = "r+"
-        else:
-            mode = "r"
-        mmap = np.memmap(self._fd, mode=mode, offset=offset, shape=size)
-        mmap.fd = self
-        return mmap
+        if not hasattr(self, "_mmap"):
+            loc = self._fd.tell()
+            if "w" in self._mode:
+                acc = mmap.ACCESS_WRITE
+            else:
+                acc = mmap.ACCESS_READ
+            self._fd.seek(0, 2)
+            nbytes = self._fd.tell()
+            self._fd.seek(loc, 0)
+            self._mmap = mmap.mmap(self._fd.fileno(), nbytes, access=acc)
+        arr = np.ndarray.__new__(np.memmap, shape=size, offset=offset, dtype="uint8", buffer=self._mmap)
+        return arr
+
+    def close_memmap(self):
+        if hasattr(self, "_mmap"):
+            if not self._mmap.closed:
+                self._mmap.close()
+                del self._mmap
+
+    def flush_memmap(self):
+        if hasattr(self, "_mmap"):
+            self._mmap.flush()
 
     def read_into_array(self, size):
         return np.fromfile(self._fd, dtype=np.uint8, count=size)
+
+    def close(self):
+        super().close()
+        if self._close:
+            if hasattr(self, "_mmap") and not self._mmap.closed:
+                self._mmap.flush()
+                self._mmap.close()
 
 
 class MemoryIO(RandomAccessFile):
