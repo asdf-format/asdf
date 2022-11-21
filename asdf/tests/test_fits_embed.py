@@ -464,6 +464,16 @@ def test_array_view_compatible_dtype(tmp_path):
 
 
 def test_hdu_link_independence(tmp_path):
+    """
+    As links between arrays and hdu items are made during
+    saving, it's possible that if this goes wrong links
+    might be made between multiple arrays and a single hdu.
+    In this case, modifying one array will change memory
+    shared with another array. This test creates a file
+    with multiple arrays, writes it to a fits file,
+    reads it back in and then modifies the contents of
+    each array to check for this possible errort.
+    """
     asdf_in_fits = create_asdf_in_fits("f4")
     # set all arrays to same values
     asdf_in_fits["model"]["sci"]["data"][:] = 0
