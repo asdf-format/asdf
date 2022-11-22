@@ -92,13 +92,12 @@ class _EmbeddedBlockManager(block.BlockManager):
     def find_or_create_block_for_array(self, arr, ctx):
         from .tags.core import ndarray
 
-        if not isinstance(arr, ndarray.NDArrayType):
-            base = util.get_array_base(arr)
-            for hdu in self._hdulist:
-                if hdu.data is None:
-                    continue
-                if base is util.get_array_base(hdu.data):
-                    return _FitsBlock(hdu)
+        base = util.get_array_base(arr)
+        for hdu in self._hdulist:
+            if hdu.data is None:
+                continue
+            if base is util.get_array_base(hdu.data):
+                return _FitsBlock(hdu)
 
         return super().find_or_create_block_for_array(arr, ctx)
 

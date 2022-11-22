@@ -463,6 +463,39 @@ def test_array_view_compatible_dtype(tmp_path):
             af.write_to(file_path)
 
 
+def test_hdu_link_independence(tmp_path):
+    """
+    As links between arrays and hdu items are made during
+    saving, it's possible that if this goes wrong links
+    might be made between multiple arrays and a single hdu.
+    In this case, modifying one array will change memory
+    shared with another array. This test creates a file
+    with multiple arrays, writes it to a fits file,
+    reads it back in and then modifies the contents of
+    each array to check for this possible errort.
+    """
+    asdf_in_fits = create_asdf_in_fits("f4")
+    # set all arrays to same values
+    asdf_in_fits["model"]["sci"]["data"][:] = 0
+    asdf_in_fits["model"]["dq"]["data"][:] = 0
+    asdf_in_fits["model"]["err"]["data"][:] = 0
+
+    fn0 = tmp_path / "test0.fits"
+
+    # write out the asdf in fits file
+    asdf_in_fits.write_to(str(fn0))
+
+    with asdf.open(fn0, mode="r") as aif:
+        # assign new values
+        aif["model"]["sci"]["data"][:] = 1
+        aif["model"]["dq"]["data"][:] = 2
+        aif["model"]["err"]["data"][:] = 3
+
+        assert np.all(aif["model"]["sci"]["data"] == 1)
+        assert np.all(aif["model"]["dq"]["data"] == 2)
+        assert np.all(aif["model"]["err"]["data"] == 3)
+
+
 def test_array_view_different_layout(tmp_path):
     """
     A view over the FITS array with a different memory layout
@@ -483,3 +516,32 @@ def test_array_view_different_layout(tmp_path):
             ValueError, match=r"ASDF has only limited support for serializing views over arrays stored in FITS HDUs"
         ):
             af.write_to(file_path)
+
+
+def test_resave_breaks_hdulist_tree_array_link(tmp_path):
+    """
+    Test that writing, reading and rewriting an AsdfInFits file
+    maintains links between hdus and arrays in the asdf tree
+
+    If the link is broken, data can be duplicated (exist both
+    as a hdu and as an internal block in the asdf tree).
+
+    See issues:
+        https://github.com/asdf-format/asdf/issues/1232
+        https://github.com/spacetelescope/jwst/issues/7354
+        https://github.com/spacetelescope/jwst/issues/7274
+    """
+    file_path_1 = tmp_path / "test1.fits"
+    file_path_2 = tmp_path / "test2.fits"
+
+    af = create_asdf_in_fits("f4")
+    af.write_to(file_path_1)
+
+    with asdf.open(file_path_1) as af1:
+        af1.write_to(file_path_2)
+
+    # check that af1 (original write) and af2 (rewrite) do not contain internal blocks
+    with fits.open(file_path_1) as af1, fits.open(file_path_2) as af2:
+        for f in (af1, af2):
+            block_bytes = f["ASDF"].data.tobytes().split(b"...")[1].strip()
+            assert len(block_bytes) == 0

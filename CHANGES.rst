@@ -15,6 +15,7 @@
 - Modify generic_file for fsspec compatibility [#1226]
 - Add fsspec http filesystem support [#1228]
 - Memmap whole file instead of each array [#1230]
+- Fix issue #1232 where array data was duplicated during resaving of a fits file [#1234]
 
 2.13.0 (2022-08-19)
 -------------------
