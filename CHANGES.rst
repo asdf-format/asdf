@@ -1,6 +1,8 @@
 2.14.0 (2022-11-22)
 -------------------
 
+The ASDF Standard is at v1.6.0
+
 - Update citation. [#1184]
 - Add search support to `~asdf.AsdfFile.schema_info`. [#1187]
 - Add `asdf.search.AsdfSearchResult` support for `~asdf.AsdfFile.schema_info` and
