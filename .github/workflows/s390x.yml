@@ -19,7 +19,7 @@ on:
 
 jobs:
   pytest:
-    name: Python 3.8
+    name: Run s390x Tests
     runs-on: ubuntu-18.04
     if: (github.repository == 'asdf-format/asdf' && (github.event_name == 'schedule' || github.event_name == 'push' || github.event_name == 'workflow_dispatch' || contains(github.event.pull_request.labels.*.name, 's390x')))
     steps:
@@ -56,6 +56,6 @@ jobs:
           run: |
             python3 -m venv --system-site-packages tests
             source tests/bin/activate
-            pip3 install --upgrade pip setuptools gwcs pytest pytest-doctestplus
+            pip3 install --upgrade pip setuptools gwcs pytest pytest-doctestplus pytest-remotedata
             pip3 install -e .[all,tests]
             python3 -m pytest --remote-data
