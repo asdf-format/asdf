@@ -779,11 +779,9 @@ class RealFile(RandomAccessFile):
         return np.fromfile(self._fd, dtype=np.uint8, count=size)
 
     def close(self):
+        self.flush_memmap()
         super().close()
-        if self._close:
-            if hasattr(self, "_mmap") and not self._mmap.closed:
-                self._mmap.flush()
-                self._mmap.close()
+        self.close_memmap()
 
 
 class MemoryIO(RandomAccessFile):
