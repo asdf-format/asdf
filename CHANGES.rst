@@ -1,4 +1,4 @@
-2.14.1 (unreleased)
+2.14.1 (2022-11-23)
 -------------------
 
 The ASDF Standard is at v1.6.0
