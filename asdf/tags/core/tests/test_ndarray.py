@@ -445,6 +445,37 @@ def test_masked_array_stay_open_bug(tmpdir):
     assert len(p.open_files()) <= len(orig_open)
 
 
+def test_memmap_stay_open_bug(tmpdir):
+    """
+    Regression test for issue #1239
+    memmapped arrays only closed at garbage collection when asdf.open given an open file
+
+    When asdf.open is called with an already opened file
+    it did not close any memmaps that it created (as the file
+    pointer was still valid). These lingered until garbage collection
+    and caused CI failures in astropy:
+    https://github.com/astropy/astropy/pull/14035#issuecomment-1325236928
+    """
+    psutil = pytest.importorskip("psutil")
+
+    tmppath = os.path.join(str(tmpdir), "arr.asdf")
+
+    tree = {"test": np.array([1, 2, 3])}
+
+    f = asdf.AsdfFile(tree)
+    f.write_to(tmppath)
+
+    p = psutil.Process()
+    orig_open = p.open_files()
+
+    for i in range(3):
+        with open(tmppath, mode="rb") as fp:
+            with asdf.open(fp) as f2:
+                np.sum(f2.tree["test"])
+
+    assert len(p.open_files()) <= len(orig_open)
+
+
 def test_masked_array_repr(tmpdir):
     tmppath = os.path.join(str(tmpdir), "masked.asdf")
 
