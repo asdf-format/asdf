@@ -1,3 +1,10 @@
+2.14.1 (unreleased)
+-------------------
+
+The ASDF Standard is at v1.6.0
+
+- Fix issue #1239, close memmap with asdf file context [#1241]
+
 2.14.0 (2022-11-22)
 -------------------
 
