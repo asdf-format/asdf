@@ -445,6 +445,27 @@ def test_masked_array_stay_open_bug(tmpdir):
     assert len(p.open_files()) <= len(orig_open)
 
 
+def test_memmap_stay_open_bug(tmpdir):
+    psutil = pytest.importorskip("psutil")
+
+    tmppath = os.path.join(str(tmpdir), "arr.asdf")
+
+    tree = {"test": np.array([1, 2, 3])}
+
+    f = asdf.AsdfFile(tree)
+    f.write_to(tmppath)
+
+    p = psutil.Process()
+    orig_open = p.open_files()
+
+    for i in range(3):
+        with open(tmppath, mode="rb") as fp:
+            with asdf.open(fp) as f2:
+                np.sum(f2.tree["test"])
+
+    assert len(p.open_files()) <= len(orig_open)
+
+
 def test_masked_array_repr(tmpdir):
     tmppath = os.path.join(str(tmpdir), "masked.asdf")
 
