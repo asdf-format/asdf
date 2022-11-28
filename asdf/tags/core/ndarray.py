@@ -373,10 +373,12 @@ class NDArrayType(AsdfType):
         # can cause problems when the array is passed to other
         # libraries.
         # See https://github.com/asdf-format/asdf/issues/1015
-        if name in ("name", "version"):
+        if name in ("name", "version", "supported_versions"):
             raise AttributeError(f"'{self.__class__.name}' object has no attribute '{name}'")
         else:
-            return super().__getattribute__(name)
+            # do not use super as it conflicts with ExtensionTypeMeta
+            # See https://github.com/asdf-format/asdf/issues/1245
+            return AsdfType.__getattribute__(self, name)
 
     @classmethod
     def from_tree(cls, node, ctx):
