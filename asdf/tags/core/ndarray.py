@@ -215,6 +215,7 @@ class NDArrayType(AsdfType):
     name = "core/ndarray"
     version = "1.0.0"
     types = [np.ndarray, ma.MaskedArray]
+    supported_versions = {"1.1.0", "1.0.0"}
 
     def __init__(self, source, shape, dtype, offset, strides, order, mask, asdffile):
         self._asdffile = asdffile
