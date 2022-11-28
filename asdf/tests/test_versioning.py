@@ -260,47 +260,96 @@ def test_spec_equal():
     assert (1, 3, 0) == spec
 
 
-@pytest.mark.parametrize("version", supported_versions)
-def test_version_map_core_support(version):
-    _test_version_map_support(version, "core")
+def _standard_versioned_tags():
+    versions = supported_versions
+    schema_types = ["core", "standard"]
+    for version in versions:
+        vm = get_version_map(version)
+        for schema_type in schema_types:
+            for tag_base, tag_version in vm[schema_type].items():
+                tag = join_tag_version(tag_base, tag_version)
+                value = (str(version), schema_type, tag)
+                yield value
 
 
-@pytest.mark.parametrize("version", supported_versions)
-@pytest.mark.xfail(reason="astropy does not yet explicitly support older schema versions", strict=True)
-def test_version_map_standard_support(version):
-    _test_version_map_support(version, "standard")
+@pytest.fixture
+def xfail_version_map_support_cases(request):
+    tag = request.getfixturevalue("tag")
+    version = request.getfixturevalue("version")
+    if (version, tag) in [
+        ("1.6.0", "tag:stsci.edu:asdf/time/time-1.2.0"),
+        ("1.6.0", "tag:stsci.edu:asdf/unit/defunit-1.0.0"),
+        ("1.5.0", "tag:stsci.edu:asdf/unit/defunit-1.0.0"),
+        ("1.4.0", "tag:stsci.edu:asdf/unit/defunit-1.0.0"),
+        ("1.4.0", "tag:stsci.edu:asdf/wcs/celestial_frame-1.1.0"),
+        ("1.4.0", "tag:stsci.edu:asdf/wcs/composite_frame-1.1.0"),
+        ("1.4.0", "tag:stsci.edu:asdf/wcs/icrs_coord-1.1.0"),
+        ("1.4.0", "tag:stsci.edu:asdf/wcs/spectral_frame-1.1.0"),
+        ("1.4.0", "tag:stsci.edu:asdf/wcs/step-1.2.0"),
+        ("1.4.0", "tag:stsci.edu:asdf/wcs/wcs-1.2.0"),
+        ("1.3.0", "tag:stsci.edu:asdf/unit/defunit-1.0.0"),
+        ("1.3.0", "tag:stsci.edu:asdf/wcs/celestial_frame-1.1.0"),
+        ("1.3.0", "tag:stsci.edu:asdf/wcs/composite_frame-1.1.0"),
+        ("1.3.0", "tag:stsci.edu:asdf/wcs/icrs_coord-1.1.0"),
+        ("1.3.0", "tag:stsci.edu:asdf/wcs/spectral_frame-1.1.0"),
+        ("1.3.0", "tag:stsci.edu:asdf/wcs/step-1.1.0"),
+        ("1.3.0", "tag:stsci.edu:asdf/wcs/wcs-1.1.0"),
+        ("1.2.0", "tag:stsci.edu:asdf/unit/defunit-1.0.0"),
+        ("1.2.0", "tag:stsci.edu:asdf/wcs/celestial_frame-1.1.0"),
+        ("1.2.0", "tag:stsci.edu:asdf/wcs/composite_frame-1.1.0"),
+        ("1.2.0", "tag:stsci.edu:asdf/wcs/icrs_coord-1.1.0"),
+        ("1.2.0", "tag:stsci.edu:asdf/wcs/spectral_frame-1.1.0"),
+        ("1.2.0", "tag:stsci.edu:asdf/wcs/step-1.1.0"),
+        ("1.2.0", "tag:stsci.edu:asdf/wcs/wcs-1.1.0"),
+        ("1.1.0", "tag:stsci.edu:asdf/unit/defunit-1.0.0"),
+        ("1.1.0", "tag:stsci.edu:asdf/wcs/celestial_frame-1.1.0"),
+        ("1.1.0", "tag:stsci.edu:asdf/wcs/composite_frame-1.1.0"),
+        ("1.1.0", "tag:stsci.edu:asdf/wcs/icrs_coord-1.1.0"),
+        ("1.1.0", "tag:stsci.edu:asdf/wcs/spectral_frame-1.1.0"),
+        ("1.1.0", "tag:stsci.edu:asdf/wcs/step-1.1.0"),
+        ("1.1.0", "tag:stsci.edu:asdf/wcs/wcs-1.0.0"),
+        ("1.0.0", "tag:stsci.edu:asdf/unit/defunit-1.0.0"),
+        ("1.0.0", "tag:stsci.edu:asdf/wcs/celestial_frame-1.0.0"),
+        ("1.0.0", "tag:stsci.edu:asdf/wcs/composite_frame-1.0.0"),
+        ("1.0.0", "tag:stsci.edu:asdf/wcs/spectral_frame-1.0.0"),
+        ("1.0.0", "tag:stsci.edu:asdf/wcs/step-1.0.0"),
+        ("1.0.0", "tag:stsci.edu:asdf/wcs/wcs-1.0.0"),
+    ]:
+        request.node.add_marker(
+            pytest.mark.xfail(reason="astropy does not yet explicitly support older schema versions", strict=True)
+        )
 
 
-def _test_version_map_support(version, schema_type):
-    vm = get_version_map(version)
-
+@pytest.mark.parametrize("version, schema_type, tag", list(_standard_versioned_tags()))
+@pytest.mark.usefixtures("xfail_version_map_support_cases")
+def test_version_map_support(version, schema_type, tag):
     type_index = default_extensions.extension_list.type_index
 
     class MockContext:
         def __init__(self):
             self._fname = None
 
+        def _warn_tag_mismatch(self, *args, **kwargs):
+            pass
+
     ctx = MockContext()
 
-    for tag_base, tag_version in vm[schema_type].items():
-        tag = join_tag_version(tag_base, tag_version)
-
-        try:
-            load_schema(tag)
-        except Exception:
-            assert False, (
-                f"ASDF Standard version {version} requires support for "
-                + f"{tag}, but the corresponding schema cannot be loaded."
-            )
-
-        extension_type = type_index.from_yaml_tag(ctx, tag)
-        assert extension_type is not None, (
+    try:
+        load_schema(tag)
+    except Exception:
+        assert False, (
             f"ASDF Standard version {version} requires support for "
-            + f"{tag}, but no ExtensionType exists to support that tag."
+            + f"{tag}, but the corresponding schema cannot be loaded."
         )
 
-        assert extension_type.yaml_tag == tag, (
-            f"ASDF Standard version {version} requires support for "
-            + f"{tag}, but no ExtensionType exists that explicitly "
-            + "supports that version."
-        )
+    extension_type = type_index.from_yaml_tag(ctx, tag)
+    assert extension_type is not None, (
+        f"ASDF Standard version {version} requires support for "
+        + f"{tag}, but no ExtensionType exists to support that tag."
+    )
+
+    assert extension_type.yaml_tag == tag, (
+        f"ASDF Standard version {version} requires support for "
+        + f"{tag}, but no ExtensionType exists that explicitly "
+        + "supports that version."
+    )
