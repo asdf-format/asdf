@@ -567,6 +567,9 @@ def _make_operation(name):
     return __operation__
 
 
+classes_to_modify = NDArrayType.__versioned_siblings + [
+    NDArrayType,
+]
 for op in [
     "__neg__",
     "__pos__",
@@ -631,7 +634,8 @@ for op in [
     "__delitem__",
     "__contains__",
 ]:
-    setattr(NDArrayType, op, _make_operation(op))
+    [setattr(cls, op, _make_operation(op)) for cls in classes_to_modify]
+del classes_to_modify
 
 
 def _get_ndim(instance):
