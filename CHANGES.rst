@@ -1,3 +1,10 @@
+2.14.2 (unreleased)
+-------------------
+
+The ASDF Standard is at v1.6.0
+
+- Remove uses of asdf-schema-1.0.0 metaschema [#1249]
+
 2.14.1 (2022-11-23)
 -------------------
 
