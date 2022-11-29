@@ -133,6 +133,15 @@ class ExtensionTypeMeta(type):
                     new_attrs["version"] = version
                     new_attrs["supported_versions"] = set()
                     new_attrs["_latest_version"] = cls.version
+                    if "__classcell__" in new_attrs:
+                        raise RuntimeError(
+                            "Subclasses of ExtensionTypeMeta that define "
+                            "supported_versions cannot used super() to call "
+                            "parent class functions. super() creates a "
+                            "__classcell__ closure that cannot be duplicated "
+                            "during creation of versioned siblings. "
+                            "See https://github.com/asdf-format/asdf/issues/1245"
+                        )
                     siblings.append(ExtensionTypeMeta.__new__(mcls, name, bases, new_attrs))
             setattr(cls, "__versioned_siblings", siblings)
 
