@@ -79,10 +79,6 @@ a *metaschema*.  ASDF comes with three built-in metaschemas:
   Includes everything in JSON Schema Draft 4, plus additional YAML-specific
   validators including ``tag`` and ``propertyOrder``.
 
-- ``http://stsci.edu/schemas/asdf/asdf-schema-1.0.0`` - The ASDF Schema metaschema.
-  Includes everything in YAML Schema, plus additional ASDF-specific validators
-  that check ndarray properties.
-
 Our schema makes use of the ``tag`` validator, so we're specifying the YAML Schema
 URI here.
 
