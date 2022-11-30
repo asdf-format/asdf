@@ -19,6 +19,7 @@ The ASDF Standard is at v1.6.0
 The ASDF Standard is at v1.6.0
 
 - Fix issue #1239, close memmap with asdf file context [#1241]
+- Add ndarray-1.1.0 and integer-1.1.0 support [#1250]
 
 2.14.0 (2022-11-22)
 -------------------
