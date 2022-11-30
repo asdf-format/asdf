@@ -31,7 +31,13 @@ from ..exceptions import AsdfConversionWarning
 from ..extension import default_extensions
 from ..resolver import Resolver, ResolverChain
 from ..tags.core import AsdfObject
-from ..versioning import AsdfVersion, get_version_map
+from ..versioning import (
+    AsdfVersion,
+    asdf_standard_development_version,
+    get_version_map,
+    split_tag_version,
+    supported_versions,
+)
 from .httpserver import RangeHTTPServer
 
 try:
@@ -436,7 +442,29 @@ def _assert_extension_type_correctness(extension, extension_type, resolver):
         extension_type.__name__
     )
 
-    for check_type in extension_type.versioned_siblings + [extension_type]:
+    # check the default version
+    types_to_check = [
+        extension_type,
+    ]
+
+    # Adding or updating a schema/type version might involve updating multiple
+    # packages. This can result in types without schema and schema without types
+    # for the development version of the asdf-standard. To account for this,
+    # don't include versioned siblings of types with versions that are not
+    # in one of the asdf-standard versions in supported_versions (excluding the
+    # current development version).
+    asdf_standard_versions = supported_versions.copy()
+    if asdf_standard_development_version in asdf_standard_versions:
+        asdf_standard_versions.remove(asdf_standard_development_version)
+    for sibling in extension_type.versioned_siblings:
+        tag_base, version = split_tag_version(sibling.yaml_tag)
+        for asdf_standard_version in asdf_standard_versions:
+            vm = get_version_map(asdf_standard_version)
+            if tag_base in vm["tags"] and AsdfVersion(vm["tags"][tag_base]) == version:
+                types_to_check.append(sibling)
+                break
+
+    for check_type in types_to_check:
         schema_location = resolver(check_type.yaml_tag)
 
         assert schema_location is not None, (

@@ -156,7 +156,12 @@ supported_versions = [
     AsdfVersion("1.6.0"),
 ]
 
+
 default_version = AsdfVersion("1.5.0")
+
+# This is the ASDF Standard version that is currently in development
+# it is possible that breaking changes will be made to this version.
+asdf_standard_development_version = AsdfVersion("1.6.0")
 
 
 # This is the ASDF Standard version at which the format of the history
