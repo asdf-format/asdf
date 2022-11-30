@@ -278,6 +278,8 @@ def xfail_version_map_support_cases(request):
     version = request.getfixturevalue("version")
     if (version, tag) in [
         ("1.6.0", "tag:stsci.edu:asdf/core/column-1.1.0"),
+        ("1.6.0", "tag:stsci.edu:asdf/core/integer-1.1.0"),
+        ("1.6.0", "tag:stsci.edu:asdf/core/ndarray-1.1.0"),
         ("1.6.0", "tag:stsci.edu:asdf/core/table-1.1.0"),
         ("1.6.0", "tag:stsci.edu:asdf/fits/fits-1.1.0"),
         ("1.6.0", "tag:stsci.edu:asdf/time/time-1.2.0"),
