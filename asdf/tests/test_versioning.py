@@ -298,6 +298,7 @@ def xfail_version_map_support_cases(request):
         ("1.6.0", "tag:stsci.edu:asdf/fits/fits-1.1.0"),
         ("1.6.0", "tag:stsci.edu:asdf/time/time-1.2.0"),
         ("1.6.0", "tag:stsci.edu:asdf/unit/defunit-1.1.0"),
+        ("1.6.0", "tag:stsci.edu:asdf/unit/defunit-1.0.0"),
         ("1.6.0", "tag:stsci.edu:asdf/unit/quantity-1.2.0"),
         ("1.6.0", "tag:stsci.edu:asdf/unit/unit-1.1.0"),
         ("1.5.0", "tag:stsci.edu:asdf/unit/defunit-1.0.0"),
