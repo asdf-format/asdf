@@ -443,9 +443,7 @@ def _assert_extension_type_correctness(extension, extension_type, resolver):
     )
 
     # check the default version
-    types_to_check = [
-        extension_type,
-    ]
+    types_to_check = [extension_type]
 
     # Adding or updating a schema/type version might involve updating multiple
     # packages. This can result in types without schema and schema without types
