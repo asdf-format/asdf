@@ -150,6 +150,17 @@ def validate_type(validator, types, instance, schema):
     return mvalidators.Draft4Validator.VALIDATORS["type"](validator, types, instance, schema)
 
 
+def validate_enum(validator, enums, instance, schema):
+    """
+    `asdf.tagged.Tagged` objects will fail in the default enum validator
+    """
+
+    if isinstance(instance, tagged.Tagged):
+        instance = instance.base
+
+    yield from mvalidators.Draft4Validator.VALIDATORS["enum"](validator, enums, instance, schema)
+
+
 YAML_VALIDATORS = util.HashableDict(mvalidators.Draft4Validator.VALIDATORS.copy())
 YAML_VALIDATORS.update(
     {
@@ -158,6 +169,7 @@ YAML_VALIDATORS.update(
         "flowStyle": validate_flowStyle,
         "style": validate_style,
         "type": validate_type,
+        "enum": validate_enum,
     }
 )
 

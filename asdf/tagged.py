@@ -40,11 +40,21 @@ class Tagged:
     with it.
     """
 
+    _base_type = None
+
+    @property
+    def base(self):
+        """Convert to base type"""
+
+        return self._base_type(self)
+
 
 class TaggedDict(Tagged, UserDict, dict):
     """
     A Python dict with a tag attached.
     """
+
+    _base_type = dict
 
     flow_style = None
     property_order = None
@@ -72,6 +82,8 @@ class TaggedList(Tagged, UserList, list):
     A Python list with a tag attached.
     """
 
+    _base_type = list
+
     flow_style = None
 
     def __init__(self, data=None, tag=None):
@@ -96,6 +108,8 @@ class TaggedString(Tagged, UserString, str):
     """
     A Python string with a tag attached.
     """
+
+    _base_type = str
 
     style = None
 
