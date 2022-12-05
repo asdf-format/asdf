@@ -1,5 +1,8 @@
 from copy import copy, deepcopy
 
+import pytest
+
+import asdf
 from asdf.tagged import TaggedDict, TaggedList, TaggedString
 
 
@@ -80,3 +83,49 @@ def test_tagged_string_copy():
 def test_tagged_string_isinstance():
     value = TaggedString("You're it!")
     assert isinstance(value, str)
+
+
+ASDF_UNIT_TAG = "stsci.edu:asdf/unit/unit-1.0.0"
+TAGGED_UNIT_URI = "asdf://stsci.edu/schemas/tagged_unit-1.0.0"
+TAGGED_UNIT_SCHEMA = f"""
+%YAML 1.1
+---
+$schema: http://stsci.edu/schemas/yaml-schema/draft-01
+id: {TAGGED_UNIT_URI}
+
+properties:
+  unit:
+    tag: {ASDF_UNIT_TAG}
+    enum: [m, kg]
+...
+"""
+
+
+def create_units():
+    meter = TaggedString("m")
+    meter._tag = ASDF_UNIT_TAG
+
+    kilogram = TaggedString("kg")
+    kilogram._tag = ASDF_UNIT_TAG
+
+    return meter, kilogram
+
+
+@pytest.mark.parametrize("unit", create_units())
+def test_check_valid_str_enum(unit):
+    """
+    Regression test for issue #1254
+        https://github.com/asdf-format/asdf/issues/1256
+
+    This ensures that tagged strings can be properly validated against ``enum`` lists.
+    """
+    with asdf.config_context() as conf:
+        conf.add_resource_mapping({TAGGED_UNIT_URI: TAGGED_UNIT_SCHEMA})
+
+        schema = asdf.schema.load_schema(TAGGED_UNIT_URI)
+
+        # This should not raise an exception (check_schema will raise error)
+        asdf.schema.check_schema(schema)
+
+        # This should not raise exception (validate will raise error)
+        asdf.schema.validate({"unit": unit}, schema=schema)
