@@ -1,3 +1,10 @@
+2.14.2 (unreleased)
+-------------------
+
+The ASDF Standard is at v1.6.0
+
+- Fix issue #1256, where ``enum`` could not be used on tagged objects. [#1257]
+
 2.14.1 (2022-11-23)
 -------------------
 
