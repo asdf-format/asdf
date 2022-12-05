@@ -35,6 +35,17 @@ def test_tagged_list_isinstance():
     assert isinstance(value, list)
 
 
+def test_tagged_list_base():
+    value = TaggedList([0, 1, 2, ["foo"]], "tag:nowhere.org:custom/foo-1.0.0")
+
+    assert not (value == value.base)  # base is not a tagged list
+    assert value.data == value.base  # but the data is
+
+    assert isinstance(value.base, list)
+    assert not isinstance(value.base, TaggedList)
+    assert value.base.__class__ == list
+
+
 def test_tagged_dict_deepcopy():
     original = TaggedDict({"a": 0, "b": 1, "c": 2, "nested": {"d": 3}}, "tag:nowhere.org:custom/foo-1.0.0")
     result = deepcopy(original)
@@ -64,6 +75,17 @@ def test_tagged_dict_isinstance():
     assert isinstance(value, dict)
 
 
+def test_tagged_dict_base():
+    value = TaggedDict({"a": 0, "b": 1, "c": 2, "nested": {"d": 3}}, "tag:nowhere.org:custom/foo-1.0.0")
+
+    assert not (value == value.base)  # base is not a tagged  dict
+    assert value.data == value.base  # but the data is
+
+    assert isinstance(value.base, dict)
+    assert not isinstance(value.base, TaggedDict)
+    assert value.base.__class__ == dict
+
+
 def test_tagged_string_deepcopy():
     original = TaggedString("You're it!")
     original._tag = "tag:nowhere.org:custom/foo-1.0.0"
@@ -83,6 +105,18 @@ def test_tagged_string_copy():
 def test_tagged_string_isinstance():
     value = TaggedString("You're it!")
     assert isinstance(value, str)
+
+
+def test_tagged_string_base():
+    value = TaggedString("You're it!")
+    value._tag = "tag:nowhere.org:custom/foo-1.0.0"
+
+    assert not (value == value.base)  # base is not a tagged  dict
+    assert value.data == value.base  # but the data is
+
+    assert isinstance(value.base, str)
+    assert not isinstance(value.base, TaggedString)
+    assert value.base.__class__ == str
 
 
 ASDF_UNIT_TAG = "stsci.edu:asdf/unit/unit-1.0.0"
@@ -121,7 +155,6 @@ def test_check_valid_str_enum(unit):
     """
     with asdf.config_context() as conf:
         conf.add_resource_mapping({TAGGED_UNIT_URI: TAGGED_UNIT_SCHEMA})
-
         schema = asdf.schema.load_schema(TAGGED_UNIT_URI)
 
         # This should not raise an exception (check_schema will raise error)
@@ -129,3 +162,21 @@ def test_check_valid_str_enum(unit):
 
         # This should not raise exception (validate will raise error)
         asdf.schema.validate({"unit": unit}, schema=schema)
+
+
+def test_check_invalid_str_enum():
+    """
+    Ensure that a tagged string that is not in the ``enum`` list is properly handled.
+    """
+    with asdf.config_context() as conf:
+        conf.add_resource_mapping({TAGGED_UNIT_URI: TAGGED_UNIT_SCHEMA})
+        schema = asdf.schema.load_schema(TAGGED_UNIT_URI)
+
+        # This should not raise an exception (check_schema will raise error)
+        asdf.schema.check_schema(schema)
+
+        unit = TaggedString("foo")
+        unit._tag = ASDF_UNIT_TAG
+
+        with pytest.raises(asdf.ValidationError, match=r"'foo' is not one of \['m', 'kg'\]"):
+            asdf.schema.validate({"unit": unit}, schema=schema)
