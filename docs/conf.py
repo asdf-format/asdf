@@ -5,6 +5,8 @@ import tomli
 # The standard library importlib.metadata returns duplicate entrypoints
 # for all python versions up to and including 3.11
 # https://github.com/python/importlib_metadata/issues/410#issuecomment-1304258228
+# see PR https://github.com/asdf-format/asdf/pull/1260
+# see issue https://github.com/asdf-format/asdf/issues/1254
 from importlib_metadata import distribution
 from sphinx_asdf.conf import *  # noqa: F403
 
