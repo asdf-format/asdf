@@ -90,7 +90,6 @@ class _EmbeddedBlockManager(block.BlockManager):
         return super().get_source(block)
 
     def find_or_create_block_for_array(self, arr, ctx):
-        from .tags.core import ndarray
 
         base = util.get_array_base(arr)
         for hdu in self._hdulist:
