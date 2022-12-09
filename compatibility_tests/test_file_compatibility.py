@@ -8,7 +8,6 @@ from pathlib import Path
 
 import pytest
 import pytest_remotedata
-import virtualenv
 from common import assert_file_correct, generate_file
 from packaging.version import Version
 
@@ -129,7 +128,7 @@ def env_path(asdf_version, tmp_path_factory):
     """
     path = tmp_path_factory.mktemp(f"asdf-{asdf_version}-env", numbered=False)
 
-    virtualenv.cli_run([str(path)])
+    assert subprocess.run(["virtualenv", str(path)]).returncode == 0
 
     assert env_run(
         path, "pip", "install", f"asdf=={asdf_version}", capture_output=True
