@@ -4,22 +4,20 @@ import inspect
 import math
 import re
 import struct
-import sys
 import types
 from functools import lru_cache
 from importlib import metadata
 from urllib.request import pathname2url
 
 import numpy as np
+
+# The standard library importlib.metadata returns duplicate entrypoints
+# for all python versions up to and including 3.11
+# https://github.com/python/importlib_metadata/issues/410#issuecomment-1304258228
+from importlib_metadata import packages_distributions
 from packaging.version import Version
 
 from . import constants
-
-if sys.version_info < (3, 10):
-    from importlib_metadata import packages_distributions
-else:
-    from importlib.metadata import packages_distributions
-
 
 # We're importing our own copy of urllib.parse because
 # we need to patch it to support asdf:// URIs, but it'd

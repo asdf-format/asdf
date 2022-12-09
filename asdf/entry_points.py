@@ -1,10 +1,9 @@
-import sys
 import warnings
 
-if sys.version_info < (3, 10):
-    from importlib_metadata import entry_points
-else:
-    from importlib.metadata import entry_points
+# The standard library importlib.metadata returns duplicate entrypoints
+# for all python versions up to and including 3.11
+# https://github.com/python/importlib_metadata/issues/410#issuecomment-1304258228
+from importlib_metadata import entry_points
 
 from .exceptions import AsdfWarning
 from .extension import ExtensionProxy
