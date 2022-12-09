@@ -19,7 +19,7 @@ jobs:
     uses: OpenAstronomy/github-actions-workflows/.github/workflows/tox.yml@v1
     with:
       submodules: false
-      toxdeps: tox-pypi-filter
+      toxdeps: "'tox<4'"
       # Any env name which does not start with `pyXY` will use this Python version.
       default_python: '3.10'
       envs: |
@@ -42,7 +42,7 @@ jobs:
     uses: OpenAstronomy/github-actions-workflows/.github/workflows/tox.yml@v1
     with:
       submodules: false
-      toxdeps: tox-pypi-filter
+      toxdeps: "'tox<4'"
       # Any env name which does not start with `pyXY` will use this Python version.
       default_python: '3.9'
       envs: |
@@ -54,7 +54,7 @@ jobs:
     uses: OpenAstronomy/github-actions-workflows/.github/workflows/tox.yml@v1
     with:
       submodules: false
-      toxdeps: tox-pypi-filter
+      toxdeps: "'tox<4'"
       # Any env name which does not start with `pyXY` will use this Python version.
       default_python: '3.9'
       envs: |
@@ -68,7 +68,7 @@ jobs:
     uses: OpenAstronomy/github-actions-workflows/.github/workflows/tox.yml@v1
     with:
       submodules: false
-      toxdeps: tox-pypi-filter
+      toxdeps: "'tox<4'"
       # Any env name which does not start with `pyXY` will use this Python version.
       default_python: '3.9'
       envs: |
@@ -79,7 +79,7 @@ jobs:
     uses: OpenAstronomy/github-actions-workflows/.github/workflows/tox.yml@v1
     with:
       submodules: false
-      toxdeps: tox-pypi-filter
+      toxdeps: "'tox<4'"
       # Any env name which does not start with `pyXY` will use this Python version.
       default_python: '3.9'
       envs: |
