@@ -27,13 +27,14 @@ repos:
     - id: rst-inline-touching-normal
     - id: text-unicode-replacement-char
 
-- repo: https://github.com/asottile/yesqa
-  rev: v1.4.0
+- repo: https://github.com/charliermarsh/ruff-pre-commit
+  rev: 'v0.0.170'
   hooks:
-    - id: yesqa
+    - id: ruff
+      args: ["--fix"]
 
 - repo: https://github.com/asottile/pyupgrade
-  rev: v3.3.0
+  rev: 'v3.3.1'
   hooks:
     - id: pyupgrade
       args: ["--py38-plus"]
@@ -50,15 +51,9 @@ repos:
     - id: black
 
 - repo: https://github.com/asottile/blacken-docs
-  rev: v1.12.1
+  rev: 'v1.12.1'
   hooks:
     - id: blacken-docs
-
-- repo: https://github.com/charliermarsh/ruff-pre-commit
-  rev: v0.0.83
-  hooks:
-    - id: lint
-      args: ["--fix"]
 
 - repo: https://github.com/PyCQA/bandit
   rev: 1.7.4
