@@ -27,6 +27,14 @@ repos:
     - id: rst-inline-touching-normal
     - id: text-unicode-replacement-char
 
+- repo: https://github.com/codespell-project/codespell
+  rev: v2.2.2
+  hooks:
+    - id: codespell
+      args: ["--write-changes"]
+      additional_dependencies:
+        - tomli
+
 - repo: https://github.com/charliermarsh/ruff-pre-commit
   rev: 'v0.0.170'
   hooks:

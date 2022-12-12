@@ -436,7 +436,7 @@ class NDArrayType(AsdfType):
         block = ctx.blocks.find_or_create_block_for_array(data, ctx)
 
         if block.array_storage == "fits":
-            # Views over arrays stored in FITS files have some idiosyncracies.
+            # Views over arrays stored in FITS files have some idiosyncrasies.
             # astropy.io.fits always writes arrays C-contiguous with big-endian
             # byte order, whereas asdf preserves the "contiguousity" and byte order
             # of the base array.

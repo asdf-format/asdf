@@ -168,7 +168,7 @@ line-length = 120
 extend-exclude = ["asdf/extern/*", "docs/*"]
 
 [tool.codespell]
-skip="*.pdf,*.fits,*.asdf,.tox,asdf/extern,build,tags,.git,docs/_build"
+skip="*.pdf,*.fits,*.asdf,.tox,asdf/extern,build,./tags,.git,docs/_build"
 ignore-words-list="""
 fo,
 """
