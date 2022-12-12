@@ -6,7 +6,7 @@ import re
 
 import numpy as np
 
-from . import asdf, block, generic_io, util
+from . import asdf, block_manager, generic_io, util
 
 try:
     from astropy.io import fits
@@ -52,7 +52,7 @@ class _FitsBlock:
         return True
 
 
-class _EmbeddedBlockManager(block.BlockManager):
+class _EmbeddedBlockManager(block_manager.BlockManager):
     def __init__(self, hdulist, asdffile):
         self._hdulist = hdulist
 

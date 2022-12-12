@@ -17,7 +17,7 @@ import yaml
 
 from .. import constants, generic_io, schema, util
 from ..asdf import AsdfFile, open_asdf
-from ..block import BlockManager
+from ..block_manager import BlockManager
 from .main import Command
 
 __all__ = ["edit"]
