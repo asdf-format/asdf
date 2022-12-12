@@ -757,7 +757,7 @@ class BlockManager:
 
     def get_output_compressions(self):
         """
-        Get the list of unqiue compressions used on blocks.
+        Get the list of unique compressions used on blocks.
         """
         return list({b.output_compression for b in self.blocks})
 
@@ -820,7 +820,7 @@ class Block:
         self._allocated = self._size
 
     def __repr__(self):
-        return "<Block {} off: {} alc: {} siz: {}>".format(
+        return "<Block {} off: {} alc: {} size: {}>".format(
             self._array_storage[:3], self._offset, self._allocated, self._size
         )
 
@@ -904,7 +904,7 @@ class Block:
     @property
     def output_compression_kwargs(self):
         """
-        The configuration options to the Compressor constructur
+        The configuration options to the Compressor constructor
         used to write the block.
         :return:
         """
