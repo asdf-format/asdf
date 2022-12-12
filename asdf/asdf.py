@@ -1257,6 +1257,11 @@ class AsdfFile:
                 # close memmaps so they will regenerate
                 if fd.can_memmap():
                     fd.close_memmap()
+                    # also clean any memmapped blocks
+                    for b in self.blocks._internal_blocks:
+                        if b._memmapped:
+                            b._memmapped = False
+                            b._data = None
 
     def write_to(
         self,
