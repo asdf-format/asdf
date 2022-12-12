@@ -166,3 +166,6 @@ extend_skip_glob = ["asdf/extern/*", ".eggs/*", ".tox/*"]
 [tool.ruff]
 line-length = 120
 extend-exclude = ["asdf/extern/*", "docs/*"]
+
+[tool.codespell]
+skip="*.pdf,*.fits,*.asdf,.tox,asdf/extern,build,tags,.git,docs/_build"
