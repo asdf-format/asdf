@@ -1,19 +1,9 @@
-import copy
 import hashlib
 import io
-import os
-import re
 import struct
-import weakref
-from collections import namedtuple
-
-import numpy as np
-import yaml
 
 from . import compression as mcompression
-from . import constants, generic_io, treeutil, util, yamlutil
-from .config import get_config
-from .util import patched_urllib_parse
+from . import constants, generic_io, util
 
 
 class Block:
