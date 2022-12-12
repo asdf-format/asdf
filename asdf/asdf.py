@@ -754,7 +754,7 @@ class AsdfFile:
         try:
             version = versioning.AsdfVersion(parts[1].decode("ascii"))
         except ValueError:
-            raise ValueError(f"Unparseable version in ASDF file: {parts[1]}")
+            raise ValueError(f"Unparsable version in ASDF file: {parts[1]}")
 
         return version
 
@@ -947,7 +947,7 @@ class AsdfFile:
             try:
                 # TODO: this feels a bit circular, try to clean up. Also
                 # this introduces another dependency on astropy which may
-                # not be desireable.
+                # not be desirable.
                 from . import fits_embed
 
                 return fits_embed.AsdfInFits._open_impl(

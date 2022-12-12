@@ -363,7 +363,7 @@ class ExtensionType:
         compatible.
 
         Child classes can override this method to affect how version
-        compatiblity for this type is determined.
+        compatibility for this type is determined.
 
         Parameters
         ----------

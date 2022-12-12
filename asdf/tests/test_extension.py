@@ -229,7 +229,7 @@ def test_extension_proxy():
     with pytest.raises(TypeError):
         ExtensionProxy(FullExtension(compressors=[object()]))
 
-    # Unparseable ASDF Standard requirement:
+    # Unparsable ASDF Standard requirement:
     with pytest.raises(ValueError):
         ExtensionProxy(FullExtension(asdf_standard_requirement="asdf-standard >= 1.4.0"))
 

@@ -191,7 +191,7 @@ When an ``AsdfFile`` class is instantiated, one thing that happens on the
 retrieves the extensions from the global config and selects those that
 are compatible with the ``AsdfFile``'s ASDF Standard version.  It returns the
 resulting list, which is assigned to the ``_plugin_extensions`` variable.  The
-term "plugin extensions" constrasts with "user extensions" which are additional
+term "plugin extensions" contrasts with "user extensions" which are additional
 extensions provided by the user as an argument to ``AsdfFile.__init__``.
 
 The extension lists are used by ``AsdfFile`` to create the file's ``ExtensionList``
@@ -298,7 +298,7 @@ tagged_tree is then returned to the ``af`` instance (still running the
 (This is the major reason that the tree isn't  directly converted to an object
 tree since jsonschema would not be able to use the  final object tree for
 validation, besides issues relate to the fact that things that don't validate
-may not be convertable to the designated object.)
+may not be convertible to the designated object.)
 
 The validate machinery is a bit confusing since there are essentially two basic
 approaches to how validation is done. One type of validation is for validation
