@@ -100,7 +100,7 @@ see :ref:`config_options_array_inline_threshold`.
 Saving external arrays
 ----------------------
 
-ASDF files may also be saved in "exploded form", which creats multiple files
+ASDF files may also be saved in "exploded form", which creates multiple files
 corresponding to the following data items:
 
 - One ASDF file containing only the header and tree.

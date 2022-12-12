@@ -356,7 +356,7 @@ def walk_and_modify(top, callback, ignore_implicit_conversion=False, postorder=T
                 result._tag = node._tag
         except TypeError:
             # The derived class signature is different, so simply store the
-            # list representing the contents. Currently this is primarly
+            # list representing the contents. Currently this is primarily
             # intended to handle namedtuple and NamedTuple instances.
             if not ignore_implicit_conversion:
                 warnings.warn(f"Failed to serialize instance of {type(node)}, converting to list instead", AsdfWarning)
@@ -384,7 +384,7 @@ def walk_and_modify(top, callback, ignore_implicit_conversion=False, postorder=T
             # to the same object id.
             return _context[node]
 
-        # Inform the context that we're going to start modifing
+        # Inform the context that we're going to start modifying
         # this node.
         with _context.pending(node):
             # Take note of the "id" field, in case we're modifying

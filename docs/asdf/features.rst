@@ -659,7 +659,7 @@ a child node of the current tree root:
 Regular expression searches
 ---------------------------
 
-Any string argument to search is interpeted as a regular expression.  For example,
+Any string argument to search is interpreted as a regular expression.  For example,
 we can search for nodes whose keys start with a particular string:
 
 .. code:: pycon

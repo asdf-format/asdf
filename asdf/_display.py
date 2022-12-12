@@ -191,7 +191,7 @@ class _TreeRenderer:
 
         is_tail indicates if the child is the last of the children,
         needed to indicate the proper connecting character in the tree
-        display. Likewise, active_depths is used to track which preceeding
+        display. Likewise, active_depths is used to track which preceding
         depths are incomplete thus need continuing lines preceding in
         the tree display.
         """
