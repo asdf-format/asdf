@@ -904,17 +904,22 @@ def test_readonly_inline(tmpdir):
 
 # Confirm that NDArrayType's internal array is regenerated
 # following an update.
-def test_block_data_change(tmpdir):
+@pytest.mark.parametrize("pad_blocks", [True, False])
+def test_block_data_change(pad_blocks, tmpdir):
     tmpfile = str(tmpdir.join("data.asdf"))
-    tree = {"data": np.ndarray(10)}
+    tree = {"data": np.zeros(10, dtype="uint8")}
     with asdf.AsdfFile(tree) as af:
-        af.write_to(tmpfile)
+        af.write_to(tmpfile, pad_blocks=pad_blocks)
 
     with asdf.open(tmpfile, mode="rw") as af:
+        assert np.all(af.tree["data"] == 0)
         array_before = af.tree["data"].__array__()
+        af.tree["data"][:5] = 1
         af.update()
         array_after = af.tree["data"].__array__()
         assert array_before is not array_after
+        assert np.all(af.tree["data"][:5] == 1)
+        assert np.all(af.tree["data"][5:] == 0)
 
 
 def test_problematic_class_attributes(tmp_path):
