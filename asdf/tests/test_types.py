@@ -655,3 +655,36 @@ def test_custom_reference_cycle(tmp_path):
 
     with asdf.open(path, extensions=FractionWithInverseExtension()) as af:
         assert af["fraction"].inverse.inverse is af["fraction"]
+
+
+def test_super_use_in_versioned_subclass():
+    """
+    Test fix for issue: https://github.com/asdf-format/asdf/issues/1245
+
+    Legacy extensions cannot use super in subclasses of CustomType
+    that define supported_versions due to the metaclasses inability
+    to create distinct __classcell__ closures.
+    """
+
+    class Foo:
+        def __init__(self, bar):
+            self.bar = bar
+
+    with pytest.raises(RuntimeError, match=r".* ExtensionTypeMeta .* __classcell__ .*"):
+
+        class FooType(asdf.CustomType):
+            name = "foo"
+            version = (1, 0, 0)
+            supported_versions = [(1, 1, 0), (1, 2, 0)]
+            types = [Foo]
+
+            @classmethod
+            def to_tree(cls, node, ctx):
+                return {"bar": node.bar}
+
+            @classmethod
+            def from_tree(cls, tree, ctx):
+                return Foo(tree["bar"])
+
+            def __getattribute__(self, name):
+                return super().__getattribute__(name)

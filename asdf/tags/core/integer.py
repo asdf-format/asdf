@@ -44,6 +44,7 @@ class IntegerType(AsdfType):
 
     name = "core/integer"
     version = "1.0.0"
+    supported_versions = {"1.0.0", "1.1.0"}
 
     _value_cache = dict()
 
@@ -96,7 +97,7 @@ class IntegerType(AsdfType):
         if tree["sign"] == "-":
             value = -value
 
-        return IntegerType(value)
+        return cls(value)
 
     def __int__(self):
         return int(self._value)

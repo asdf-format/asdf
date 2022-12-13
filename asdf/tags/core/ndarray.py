@@ -214,6 +214,7 @@ def numpy_array_to_list(array):
 class NDArrayType(AsdfType):
     name = "core/ndarray"
     version = "1.0.0"
+    supported_versions = {"1.0.0", "1.1.0"}
     types = [np.ndarray, ma.MaskedArray]
 
     def __init__(self, source, shape, dtype, offset, strides, order, mask, asdffile):
@@ -372,10 +373,10 @@ class NDArrayType(AsdfType):
         # can cause problems when the array is passed to other
         # libraries.
         # See https://github.com/asdf-format/asdf/issues/1015
-        if name in ("name", "version"):
+        if name in ("name", "version", "supported_versions"):
             raise AttributeError(f"'{self.__class__.name}' object has no attribute '{name}'")
         else:
-            return super().__getattribute__(name)
+            return AsdfType.__getattribute__(self, name)
 
     @classmethod
     def from_tree(cls, node, ctx):
@@ -564,6 +565,9 @@ def _make_operation(name):
     return __operation__
 
 
+classes_to_modify = NDArrayType.__versioned_siblings + [
+    NDArrayType,
+]
 for op in [
     "__neg__",
     "__pos__",
@@ -628,7 +632,8 @@ for op in [
     "__delitem__",
     "__contains__",
 ]:
-    setattr(NDArrayType, op, _make_operation(op))
+    [setattr(cls, op, _make_operation(op)) for cls in classes_to_modify]
+del classes_to_modify
 
 
 def _get_ndim(instance):
