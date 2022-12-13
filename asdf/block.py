@@ -24,7 +24,7 @@ class Block:
         ]
     )
 
-    def __init__(self, data=None, uri=None, array_storage="internal", memmap=True, lazy_load=True):
+    def __init__(self, data=None, uri=None, array_storage="internal", memmap=True, lazy_load=True, cache_data=True):
         self._data = data
         self._uri = uri
         self._array_storage = array_storage
@@ -39,6 +39,7 @@ class Block:
         self._memmapped = False
         self._lazy_load = lazy_load
         self._readonly = False
+        self._cache_data = cache_data
 
         self.update_size()
         self._allocated = self._size
@@ -284,8 +285,11 @@ class Block:
                     fd.fast_forward(-1)
                     self._data_size = self._size = self._allocated = (fd.tell() - self.data_offset) + 1
                 else:
-                    self._data = fd.read_into_array(-1)
-                    self._data_size = self._size = self._allocated = len(self._data)
+                    # self._data = fd.read_into_array(-1)
+                    d = fd.read_into_array(-1)
+                    if self._cache_data:
+                        self._data = d
+                    self._data_size = self._size = self._allocated = len(d)
             else:
                 self._allocated = header["allocated_size"]
                 self._size = header["used_size"]
@@ -297,7 +301,8 @@ class Block:
                     self._memmap_data()
                     fd.seek(curpos)
                     if not self._memmapped:
-                        self._data = self._read_data(fd, self._size, self._data_size)
+                        if self._cache_data:
+                            self._data = self._read_data(fd, self._size, self._data_size)
                         fd.fast_forward(self._allocated - self._size)
                     else:
                         fd.fast_forward(self._allocated)
@@ -330,6 +335,14 @@ class Block:
         else:
             return mcompression.decompress(fd, used_size, data_size, self.input_compression)
 
+    def read_data(self):
+        if self._fd is None:
+            raise Exception()
+        if not self._fd.seekable():
+            raise Exception()
+        self._fd.seek(self.data_offset)
+        return self._read_data(self._fd, self._size, self._data_size)
+
     def _memmap_data(self):
         """
         Memory map the block data from the file.
@@ -357,16 +370,11 @@ class Block:
         # negative strides and is an outstanding bug in this library.
         return data.ravel(order="K")
 
-    def write(self, fd):
+    def write_data(self, fd, data):
         """
         Write an internal block to the given Python file-like object.
         """
         self._header_size = self._header.size
-
-        if self._data is not None:
-            data = self._flattened_data
-        else:
-            data = None
 
         flags = 0
         data_size = used_size = allocated_size = 0
@@ -425,6 +433,13 @@ class Block:
                     raise RuntimeError(f"Block used size {used_size} is not equal to the data size {data_size}")
                 fd.write_array(data)
 
+    def write(self, fd):
+        if self._data is not None:
+            data = self._flattened_data
+        else:
+            data = None
+        self.write_data(fd, data)
+
     @property
     def data(self):
         """
@@ -440,7 +455,12 @@ class Block:
                 self._memmap_data()
                 if not self._memmapped:
                     self._fd.seek(self.data_offset)
-                    self._data = self._read_data(self._fd, self._size, self._data_size)
+                    # self._data = self._read_data(self._fd, self._size, self._data_size)
+                    d = self._read_data(self._fd, self._size, self._data_size)
+                    if self._cache_data:
+                        self._data = d
+                    else:
+                        return d
             finally:
                 self._fd.seek(curpos)
 
@@ -458,7 +478,7 @@ class UnloadedBlock:
     requested.
     """
 
-    def __init__(self, fd, offset, memmap=True, lazy_load=True, readonly=False):
+    def __init__(self, fd, offset, memmap=True, lazy_load=True, readonly=False, cache_data=True):
         self._fd = fd
         self._offset = offset
         self._data = None
@@ -472,6 +492,7 @@ class UnloadedBlock:
         self._memmapped = False
         self._lazy_load = lazy_load
         self._readonly = readonly
+        self._cache_data = cache_data
 
     def __len__(self):
         self.load()
