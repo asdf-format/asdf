@@ -36,7 +36,7 @@ repos:
         - tomli
 
 - repo: https://github.com/charliermarsh/ruff-pre-commit
-  rev: 'v0.0.170'
+  rev: 'v0.0.177'
   hooks:
     - id: ruff
       args: ["--fix"]
@@ -49,12 +49,12 @@ repos:
       exclude: "asdf/extern/.*"
 
 - repo: https://github.com/pycqa/isort
-  rev: 5.10.1
+  rev: 5.11.1
   hooks:
     - id: isort
 
 - repo: https://github.com/psf/black
-  rev: 22.10.0
+  rev: 22.12.0
   hooks:
     - id: black
 
