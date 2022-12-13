@@ -62,7 +62,7 @@ class BlockManager:
             # in the middle of the list.
             self.finish_reading_internal_blocks()
 
-        self._add(block)
+        return self._add(block)
 
     def _add(self, block):
         block_set = self._block_type_mapping.get(block.array_storage, None)
@@ -77,6 +77,7 @@ class BlockManager:
 
         if block._data is not None:
             self._data_to_block_mapping[id(block._data)] = block
+        return len(block_set) - 1
 
     def remove(self, block):
         """
