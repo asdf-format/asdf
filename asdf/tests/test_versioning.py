@@ -4,7 +4,23 @@ import pytest
 
 from asdf.extension import default_extensions
 from asdf.schema import load_schema
-from asdf.versioning import AsdfSpec, AsdfVersion, get_version_map, join_tag_version, supported_versions
+from asdf.versioning import (
+    AsdfSpec,
+    AsdfVersion,
+    asdf_standard_development_version,
+    default_version,
+    get_version_map,
+    join_tag_version,
+    supported_versions,
+)
+
+
+def test_default_in_supported_versions():
+    assert default_version in supported_versions
+
+
+def test_development_is_not_default():
+    assert default_version != asdf_standard_development_version
 
 
 def test_version_constructor():
