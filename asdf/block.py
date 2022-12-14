@@ -350,7 +350,7 @@ class Block:
             raise Exception()  # TODO make this more informative
         self._fd.seek(self.offset)
         # TODO verify data size matches block size
-        self.write_data(self._fd, data)
+        self._write_data(self._fd, data)
 
     def _memmap_data(self):
         """
@@ -379,9 +379,11 @@ class Block:
         # negative strides and is an outstanding bug in this library.
         return data.ravel(order="K")
 
-    def write_data(self, fd, data):
+    def _write_data(self, fd, data):
         """
         Write an internal block to the given Python file-like object.
+
+        Writing will begin at the current position for the file-like object.
         """
         self._header_size = self._header.size
 
@@ -447,7 +449,7 @@ class Block:
             data = self._flattened_data
         else:
             data = None
-        self.write_data(fd, data)
+        self._write_data(fd, data)
 
     @property
     def data(self):
