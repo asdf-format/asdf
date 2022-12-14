@@ -337,11 +337,20 @@ class Block:
 
     def read_data(self):
         if self._fd is None:
-            raise Exception()
+            raise Exception()  # TODO make this more informative
         if not self._fd.seekable():
-            raise Exception()
+            raise Exception()  # TODO make this more informative
         self._fd.seek(self.data_offset)
         return self._read_data(self._fd, self._size, self._data_size)
+
+    def rewrite_data(self, data):
+        if self._fd is None:
+            raise Exception()  # TODO make this more informative
+        if not self._fd.seekable():
+            raise Exception()  # TODO make this more informative
+        self._fd.seek(self.offset)
+        # TODO verify data size matches block size
+        self.write_data(self._fd, data)
 
     def _memmap_data(self):
         """
