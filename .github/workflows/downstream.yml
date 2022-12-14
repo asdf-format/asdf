@@ -17,119 +17,51 @@ on:
     tags:
       - '*'
 
-env:
-  CRDS_SERVER_URL: https://jwst-crds.stsci.edu
-  CRDS_PATH: $HOME/crds_cache
-  CRDS_CLIENT_RETRY_COUNT: 3
-  CRDS_CLIENT_RETRY_DELAY_SECONDS: 20
-
 jobs:
-  common:
-    name: ${{ matrix.package_name }}@${{ matrix.ref }} unit tests
-    runs-on: ubuntu-latest
+  asdf:
+    uses: OpenAstronomy/github-actions-workflows/.github/workflows/tox.yml@v1
     if: (github.repository == 'asdf-format/asdf' && (github.event_name == 'schedule' || github.event_name == 'push' || github.event_name == 'workflow_dispatch' || contains(github.event.pull_request.labels.*.name, 'Downstream CI')))
-    strategy:
-      fail-fast: false
-      matrix:
-        include:
-          - package_name: astropy
-            repository: astropy/astropy
-            ref: main
-            install_command: pip install -e .[test]
-            test_command: pytest
-          - package_name: gwcs
-            repository: spacetelescope/gwcs
-            ref: master
-            install_command: pip install -e .[test]
-            test_command: pytest
-          - package_name: jwst
-            repository: spacetelescope/jwst
-            ref: master
-            install_command: pip install -e .[test]
-            test_command: pytest
-          - package_name: stdatamodels
-            repository: spacetelescope/stdatamodels
-            ref: master
-            install_command: pip install -e .[test]
-            test_command: pytest
-          - package_name: roman_datamodels
-            repository: spacetelescope/roman_datamodels
-            ref: main
-            install_command: pip install -e .[test]
-            test_command: pytest
-          - package_name: specutils
-            repository: astropy/specutils
-            ref: main
-            install_command: pip install -e .[test]
-            test_command: pytest
-          - package_name: weldx
-            repository: BAMWelDX/weldx
-            ref: master
-            install_command: pip install -e .[test]
-            test_command: pytest weldx/tests/asdf_tests weldx/schemas --asdf-tests
-          - package_name: sunpy
-            repository: sunpy/sunpy
-            ref: main
-            install_command: pip install -e .[tests,all]
-            test_command: pytest sunpy/io/
-          - package_name: dkist
-            repository: DKISTDC/dkist
-            ref: main
-            install_command: pip install -e .[tests]
-            test_command: pytest
-          - package_name: asdf-astropy
-            repository: astropy/asdf-astropy
-            ref: main
-            install_command: pip install -e .[test]
-            test_command: pytest
-          - package_name: asdf-standard
-            repository: asdf-format/asdf-standard
-            ref: master
-            install_command: pip install -e .[test]
-            test_command: pytest
-          - package_name: asdf-transform-schemas
-            repository: asdf-format/asdf-transform-schemas
-            ref: master
-            install_command: pip install -e .[test]
-            test_command: pytest
-          - package_name: asdf-wcs-schemas
-            repository: asdf-format/asdf-wcs-schemas
-            ref: main
-            install_command: pip install -e .[test]
-            test_command: pytest
-          - package_name: asdf-unit-schemas
-            repository: asdf-format/asdf-unit-schemas
-            ref: main
-            install_command: pip install -e .[test]
-            test_command: pytest
-          - package_name: asdf-coordinates-schemas
-            repository: asdf-format/asdf-coordinates-schemas
-            ref: main
-            install_command: pip install -e .[test]
-            test_command: pytest
-    steps:
-      - name: Checkout asdf
-        uses: actions/checkout@v3
-        with:
-          fetch-depth: 0
-          submodules: true
-          path: asdf
-      - name: Checkout ${{ matrix.package_name }}
-        uses: actions/checkout@v3
-        with:
-          fetch-depth: 0
-          repository: ${{ matrix.repository }}
-          ref: ${{ matrix.ref }}
-          path: target
-      - name: Set up Python 3.9
-        uses: actions/setup-python@v4
-        with:
-          python-version: 3.9
-      - name: Install asdf
-        run: cd asdf && pip install .
-      - name: Install remaining ${{ matrix.package_name }} dependencies
-        run: cd target && ${{ matrix.install_command }}
-      - name: Pip Freeze
-        run: pip freeze
-      - name: Run ${{ matrix.package_name}} tests
-        run: cd target && ${{ matrix.test_command }}
+    with:
+      submodules: false
+      # Any env name which does not start with `pyXY` will use this Python version.
+      default_python: '3.10'
+      envs: |
+        - linux: asdf-wcs-schemas
+        - linux: asdf-coordinates-schemas
+
+  astropy:
+    uses: OpenAstronomy/github-actions-workflows/.github/workflows/tox.yml@v1
+    if: (github.repository == 'asdf-format/asdf' && (github.event_name == 'schedule' || github.event_name == 'push' || github.event_name == 'workflow_dispatch' || contains(github.event.pull_request.labels.*.name, 'Downstream CI')))
+    with:
+      submodules: false
+      # Any env name which does not start with `pyXY` will use this Python version.
+      default_python: '3.10'
+      envs: |
+        - linux: astropy
+        - linux: specutils
+        - linux: asdf-astropy
+
+  stsci:
+    uses: OpenAstronomy/github-actions-workflows/.github/workflows/tox.yml@v1
+    if: (github.repository == 'asdf-format/asdf' && (github.event_name == 'schedule' || github.event_name == 'push' || github.event_name == 'workflow_dispatch' || contains(github.event.pull_request.labels.*.name, 'Downstream CI')))
+    with:
+      submodules: false
+      # Any env name which does not start with `pyXY` will use this Python version.
+      default_python: '3.10'
+      envs: |
+        - linux: gwcs
+        - linux: jwst
+        - linux: stdatamodels
+        - linux: roman_datamodels
+
+  third-party:
+    uses: OpenAstronomy/github-actions-workflows/.github/workflows/tox.yml@v1
+    if: (github.repository == 'asdf-format/asdf' && (github.event_name == 'schedule' || github.event_name == 'push' || github.event_name == 'workflow_dispatch' || contains(github.event.pull_request.labels.*.name, 'Downstream CI')))
+    with:
+      submodules: false
+      # Any env name which does not start with `pyXY` will use this Python version.
+      default_python: '3.10'
+      envs: |
+        - linux: weldx
+        - linux: sunpy
+        - linux: dkist
