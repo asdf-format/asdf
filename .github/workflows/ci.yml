@@ -36,6 +36,17 @@ jobs:
           python-version: 3.8
       coverage: codecov
 
+  asdf-schemas:
+    uses: OpenAstronomy/github-actions-workflows/.github/workflows/tox.yml@v1
+    with:
+      submodules: false
+      # Any env name which does not start with `pyXY` will use this Python version.
+      default_python: '3.10'
+      envs: |
+        - linux: asdf-standard
+        - linux: asdf-transform-schemas
+        - linux: asdf-unit-schemas
+
   test:
     needs: [core, asdf-schemas]
     uses: OpenAstronomy/github-actions-workflows/.github/workflows/tox.yml@v1
@@ -78,52 +89,3 @@ jobs:
       upload_to_anaconda: false
       test_extras: tests
       test_command: pytest --pyargs asdf
-
-  asdf-schemas:
-    name: ${{ matrix.package_name }} tests
-    runs-on: ubuntu-latest
-    strategy:
-      fail-fast: false
-      matrix:
-        include:
-          - package_name: asdf-standard
-            repository: asdf-format/asdf-standard
-            ref: master
-            install_command: pip install -e .[test]
-            test_command: pytest
-          - package_name: asdf-transform-schemas
-            repository: asdf-format/asdf-transform-schemas
-            ref: master
-            install_command: pip install -e .[test]
-            test_command: pytest
-          - package_name: asdf-unit-schemas
-            repository: asdf-format/asdf-unit-schemas
-            ref: main
-            install_command: pip install -e .[test]
-            test_command: pytest
-    steps:
-      - name: Checkout asdf
-        uses: actions/checkout@v3
-        with:
-          fetch-depth: 0
-          submodules: true
-          path: asdf
-      - name: Checkout ${{ matrix.package_name }}
-        uses: actions/checkout@v3
-        with:
-          fetch-depth: 0
-          repository: ${{ matrix.repository }}
-          ref: ${{ matrix.ref }}
-          path: target
-      - name: Set up Python 3.9
-        uses: actions/setup-python@v4
-        with:
-          python-version: 3.9
-      - name: Install asdf
-        run: cd asdf && pip install .
-      - name: Install remaining ${{ matrix.package_name }} dependencies
-        run: cd target && ${{ matrix.install_command }}
-      - name: Pip Freeze
-        run: pip freeze
-      - name: Run ${{ matrix.package_name}} tests
-        run: cd target && ${{ matrix.test_command }}
