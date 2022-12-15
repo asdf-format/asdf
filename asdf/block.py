@@ -38,7 +38,6 @@ class Block:
         self._should_memmap = memmap
         self._memmapped = False
         self._lazy_load = lazy_load
-        self._readonly = False
         self._cache_data = cache_data
 
         self.update_size()
@@ -144,10 +143,6 @@ class Block:
     @property
     def checksum(self):
         return self._checksum
-
-    @property
-    def readonly(self):
-        return self._readonly
 
     def _set_checksum(self, checksum):
         if checksum == b"\0" * 16:
@@ -489,7 +484,7 @@ class UnloadedBlock:
     requested.
     """
 
-    def __init__(self, fd, offset, memmap=True, lazy_load=True, readonly=False, cache_data=True):
+    def __init__(self, fd, offset, memmap=True, lazy_load=True, cache_data=True):
         self._fd = fd
         self._offset = offset
         self._data = None
@@ -502,7 +497,6 @@ class UnloadedBlock:
         self._should_memmap = memmap
         self._memmapped = False
         self._lazy_load = lazy_load
-        self._readonly = readonly
         self._cache_data = cache_data
 
     def __len__(self):
