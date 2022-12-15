@@ -4,6 +4,7 @@
 The ASDF Standard is at v1.6.0
 
 - Use importlib_metadata for all python versions [#1260]
+- Fix issue #1268, where update could fail to clear memmaps for some files [#1269]
 - Bump asdf-transform-schemas version [#1278]
 
 2.14.2 (2022-12-05)
@@ -12,7 +13,6 @@ The ASDF Standard is at v1.6.0
 The ASDF Standard is at v1.6.0
 
 - Fix issue #1256, where ``enum`` could not be used on tagged objects. [#1257]
-- Fix issue #1268, where update could fail to clear memmaps for some files [#1269]
 
 2.14.1 (2022-11-23)
 -------------------
