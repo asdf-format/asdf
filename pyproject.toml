@@ -17,7 +17,7 @@ classifiers = [
 ]
 dependencies = [
     'asdf-standard >=1.0.1',
-    'asdf-transform-schemas >=0.2.2',
+    'asdf-transform-schemas >=0.3.0',
     'asdf-unit-schemas >= 0.1.0',
     'importlib_resources >=3; python_version <"3.9"',
     'importlib-metadata >=4.11.4',
