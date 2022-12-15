@@ -18,24 +18,37 @@ on:
       - '*'
 
 jobs:
-  pytest:
-    name: Run s390x Tests
-    runs-on: ubuntu-18.04
+  exotic_architechtures:
+    runs-on: ubuntu-20.04
+    name: Python 3.9
+
     if: (github.repository == 'asdf-format/asdf' && (github.event_name == 'schedule' || github.event_name == 'push' || github.event_name == 'workflow_dispatch' || contains(github.event.pull_request.labels.*.name, 's390x')))
+    env:
+      ARCH_ON_CI: ${{ matrix.arch }}
+
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - arch: aarch64
+          - arch: s390x
+
     steps:
       - uses: actions/checkout@v3
         with:
           fetch-depth: 0
           submodules: true
-      - uses: uraimo/run-on-arch-action@v2.2.1
+
+      - uses: uraimo/run-on-arch-action@v2
         name: Run tests
         id: build
         with:
-          arch: s390x
-          distro: bullseye
+          arch: ${{ matrix.arch }}
+          distro: ubuntu_latest
+
           shell: /bin/bash
+
           install: |
-            echo "deb http://deb.debian.org/debian bullseye-backports main" >> /etc/apt/sources.list
             apt-get update -q -y
             apt-get install -q -y git \
                                   g++ \
@@ -49,10 +62,11 @@ jobs:
                                   python3-venv \
                                   python3-wheel \
                                   cython3 \
-                                  libwcs7/bullseye-backports \
-                                  wcslib-dev/bullseye-backports \
+                                  libwcs7 \
+                                  wcslib-dev \
                                   libcfitsio-dev \
                                   liberfa1
+
           run: |
             python3 -m venv --system-site-packages tests
             source tests/bin/activate
