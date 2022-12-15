@@ -4,6 +4,7 @@
 The ASDF Standard is at v1.6.0
 
 - Use importlib_metadata for all python versions [#1260]
+- Bump asdf-transform-schemas version [#1278]
 
 2.14.2 (2022-12-05)
 -------------------
