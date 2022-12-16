@@ -3,7 +3,6 @@ import os
 import pathlib
 import warnings
 from dataclasses import dataclass
-from typing import Union
 
 import numpy as np
 import pytest
@@ -265,7 +264,7 @@ class AsdfSchemaExampleItem(pytest.Item):
         return self.fspath, 0, ""
 
 
-def _parse_test_list(content: Union[str, list]) -> dict[str, list]:
+def _parse_test_list(content):
     result = {}
 
     if isinstance(content, str):
