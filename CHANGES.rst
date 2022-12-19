@@ -1,3 +1,11 @@
+2.15.0 (unreleased)
+-------------------
+
+The ASDF Standard is at v1.6.0
+
+- Discard cache of lazy-loaded block data when it is no longer referenced
+  by the tree. [#1280]
+
 2.14.3 (2022-12-15)
 -------------------
 
