@@ -1,9 +1,243 @@
+import copy
 import hashlib
 import io
 import struct
+import weakref
 
 from . import compression as mcompression
 from . import constants, generic_io, util
+
+BLOCK_HEADER = util.BinaryStruct(
+    [
+        ("flags", "I"),
+        ("compression", "4s"),
+        ("allocated_size", "Q"),
+        ("used_size", "Q"),
+        ("data_size", "Q"),
+        ("checksum", "16s"),
+    ]
+)
+
+
+class BlockConfig:
+    """
+    Store defined configuration of a block. This configuration
+    is defined by the user (or defaults) and will be used when reading
+    and writing a block.
+    """
+
+    def __init__(
+        self,
+        lazy_load=True,
+        memmap=True,
+        cache_data=True,
+        stream=False,
+        validate_checksum=False,
+        output_compression=None,
+        output_compression_kwargs=None,
+    ):
+        self.lazy_load = lazy_load
+        self.memmap = memmap
+        self.cache_data = cache_data
+        self.stream = stream
+        self.validate_checksum = validate_checksum
+        self.output_compression = output_compression
+        if output_compression_kwargs is None:
+            self.output_compression_kwargs = {}
+        else:
+            self.output_compression_kwargs = output_compression_kwargs
+
+
+class BlockState:
+    def __init__(self, header, data, config):
+        self.header = header
+        self.config = config
+        self.data = data
+
+    @property
+    def data(self):
+        if callable(self._data):  # data is lazy loaded
+            if self.config.cache_data:
+                # cache the data here so it's only read once
+                self._data = self._data()
+                return self._data
+            else:
+                # do not cache the data
+                return self._data()
+        else:
+            # we have pre-cached or non-lazy loaded data
+            return self._data
+
+    @data.setter
+    def data(self, new_value):
+        self._data = new_value
+
+
+def calculate_block_checksum(data):
+    if data.ndim > 1:
+        data = data.ravel(order="K")
+    # The following line is safe because we're only using
+    # the MD5 as a checksum.
+    m = hashlib.new("md5")  # nosec
+    m.update(data)
+    return m.digest()
+
+
+def validate_block_header(header):
+    compression = mcompression.validate(header["compression"])
+    if header["flags"] & constants.BLOCK_FLAG_STREAMED:
+        if compression is not None:
+            raise ValueError("Compression set on a streamed block.")
+    else:
+        if compression is None:
+            if header["used_size"] != header["data_size"]:
+                raise ValueError("used_size and data_size must be equal when no compression is used.")
+    return header
+
+
+def read_block_header(fd, config, offset=None):
+    if offset is not None:
+        fd.seek(offset)
+
+    # first, see if we are at the BLOCK_MAGIC
+    buff = fd.read(2)
+    if buff == constants.BLOCK_MAGIC[:2]:
+        buff += fd.read(2)
+        if buff != constants.BLOCK_MAGIC:
+            raise ValueError(f"Invalid bytes {buff!r}, expected {constants.BLOCK_MAGIC!r}")
+        buff = fd.read(2)
+
+    # then read the header size
+    header_size = struct.unpack(b">H", buff)[0]
+    if header_size < BLOCK_HEADER.size:
+        raise ValueError(f"Header size must be >= {BLOCK_HEADER.size}")
+
+    header = BLOCK_HEADER.unpack(fd.read(header_size))
+    return validate_block_header(header)
+
+
+def read_block_data(fd, header, config, offset=None):
+    if offset is not None:
+        fd.seek(offset)
+    else:
+        offset = fd.tell()
+
+    # if we're 'lazy loading' data, return a function
+    # that when evaluated will return the data
+    # we need to add this here in to capture the offset and fd
+    if config.lazy_load:
+
+        def wrap_read(fd, header, config, offset):
+            # only keep a weak reference to the fd
+            fd_ref = weakref.proxy(fd)
+            # copy the header dictionary
+            header_copy = copy.deepcopy(header)
+            # copy and modify the config to keep all settings except lazy_load
+            config_copy = copy.deepcopy(config)
+            config_copy.lazy_load = False
+
+            def read():
+                return read_block_data(fd_ref, header_copy, config_copy, offset)
+
+            return read
+
+        return wrap_read(fd, header, config, offset)
+
+    # otherwise we need to load and possibly decompress the data
+    # read the raw bytes
+    if header["flags"] & constants.BLOCK_FLAG_STREAMED:
+        used_size = -1
+    else:
+        used_size = header["used_size"]
+
+    # if no compression, just read data
+    compression = mcompression.validate(header["compression"])
+    if compression:
+        # TODO the old code ignored memmapping for compressed data
+        # if config.memmap:
+        #    raise ValueError("Cannot memmap compressed block")
+        data = mcompression.decompress(fd, used_size, header["data_size"], compression)
+    else:
+        if config.memmap and fd.can_memmap:
+            data = fd.memmap_array(offset, used_size)
+        else:
+            data = fd.read_into_array(used_size)
+
+    if config.validate_checksum:
+        if calculate_block_checksum(data) != header["checksum"]:
+            raise ValueError(f"Block at {offset} does not match given checksum")
+
+    return data
+
+
+def read_block(fd, config, offset=None):
+    if offset is None:
+        offset = fd.tell()
+    header = read_block_header(fd, config, offset)
+    data = read_block_data(fd, header, config)
+    block_state = BlockState(header, data, config)
+    return block_state
+
+
+def write_block(fd, data, config, offset=None, **header_kwargs):
+    if config.stream:
+        if data is not None:
+            raise ValueError("Streaming data must be written after write_to")
+    else:
+        if data.ndim != 1 and data.dtype != "uint8":
+            raise ValueError("Data must be of ndim==1 and dtype==uint8")
+
+    # if this is a streamed block, set the streamed header flag
+    if config.stream:
+        header_kwargs["flags"] = header_kwargs.get("flags", 0) | constants.BLOCK_FLAG_STREAMED
+
+    # data size
+    header_kwargs["data_size"] = data.nbytes
+
+    # checksum
+    if config.stream:
+        header_kwargs["checksum"] = b"\0" * 16
+    else:
+        header_kwargs["checksum"] = calculate_block_checksum(data)
+
+    # compression
+    if config.output_compression is not None:
+        compression = config.output_compression
+    else:
+        compression = header_kwargs.get("compression", None)
+    header_kwargs["compression"] = mcompression.to_compression_header(compression)
+
+    # used size
+    if compression is None:
+        used_size = header_kwargs["data_size"]
+    else:
+        buff = io.BytesIO()
+        mcompression.compress(buff, data, compression, config=config.output_compression_kwargs)
+        used_size = buff.tell()
+    if config.stream:
+        header_kwargs["used_size"] = -1
+    else:
+        header_kwargs["used_size"] = used_size
+
+    # allocated size
+    header_kwargs["allocated_size"] = header_kwargs.get("allocated_size", used_size)
+    if header_kwargs["allocated_size"] < header_kwargs["used_size"]:
+        raise RuntimeError(
+            f"Block used size {header_kwargs['used_size']} larger than "
+            f"allocated size {header_kwargs['allocated_size']}"
+        )
+
+    fd.write(constants.BLOCK_MAGIC)
+    write_header = BLOCK_HEADER.pack(**header_kwargs)
+    fd.write(struct.pack(b">H", len(write_header)))
+    fd.write(write_header)
+    if not config.stream:
+        if compression:
+            fd.write(buff.getvalue())
+        else:
+            fd.write_array(data)
+    # TODO avoid packing/unpacking this
+    return BLOCK_HEADER.unpack(write_header)
 
 
 class Block:
