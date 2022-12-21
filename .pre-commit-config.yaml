@@ -36,10 +36,10 @@ repos:
         - tomli
 
 - repo: https://github.com/charliermarsh/ruff-pre-commit
-  rev: 'v0.0.177'
+  rev: 'v0.0.189'
   hooks:
     - id: ruff
-      args: ["--fix"]
+      args: ["--fix", "--force-exclude"]
 
 - repo: https://github.com/asottile/pyupgrade
   rev: 'v3.3.1'
@@ -49,7 +49,7 @@ repos:
       exclude: "asdf/extern/.*"
 
 - repo: https://github.com/pycqa/isort
-  rev: 5.11.1
+  rev: v5.11.3
   hooks:
     - id: isort
 
