@@ -267,7 +267,10 @@ class AsdfSchemaExampleItem(pytest.Item):
 def _parse_test_list(content):
     result = {}
 
-    for line in content.split("\n"):
+    if isinstance(content, str):
+        content = content.split("\n")
+
+    for line in content:
         line = line.strip()
         if len(line) > 0:
             parts = line.split("::", 1)
