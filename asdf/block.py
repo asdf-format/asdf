@@ -484,8 +484,8 @@ class Block:
         if data.dtype != "uint8":
             data = np.atleast_1d(data).view(dtype="uint8")
         header_kwargs = {}
-        # if self.allocated != 0:
-        #    header_kwargs['allocated_size'] = self.allocated
+        if self._allocated is not None:
+            header_kwargs["allocated_size"] = self._allocated
         if self._array_storage == "streamed":
             self._config.stream = True
         header_kwargs["compression"] = self.output_compression
