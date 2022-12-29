@@ -65,7 +65,7 @@ def test_sharing(tmpdir):
         assert tree["science_data"].ctypes.data == tree["skipping"].ctypes.data
 
         assert len(list(asdf.blocks.internal_blocks)) == 1
-        assert next(asdf.blocks.internal_blocks)._size == 80
+        assert len(next(asdf.blocks.internal_blocks)) == 80
 
         if "w" in asdf._mode:
             tree["science_data"][0] = 42

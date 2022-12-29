@@ -189,7 +189,6 @@ def _assert_roundtrip_tree(
     extensions=None,
     tree_match_func="assert_equal",
 ):
-
     fname = os.path.join(str(tmp_path), "test.asdf")
 
     # First, test writing/reading a BytesIO buffer
@@ -259,7 +258,7 @@ def _assert_roundtrip_tree(
         # Ensure that all the blocks are loaded
         for block in ff.blocks._internal_blocks:
             assert isinstance(block, Block)
-            assert block._data is not None
+            assert block._state._data is not None
     # The underlying file is closed at this time and everything should still work
     assert_tree_match(tree, ff.tree, ff, funcname=tree_match_func)
     if asdf_check_func:
@@ -270,7 +269,7 @@ def _assert_roundtrip_tree(
     with asdf.open(fname, mode="rw", extensions=extensions, copy_arrays=False, lazy_load=False) as ff:
         for block in ff.blocks._internal_blocks:
             assert isinstance(block, Block)
-            assert block._data is not None
+            assert block._state._data is not None
         assert_tree_match(tree, ff.tree, ff, funcname=tree_match_func)
         if asdf_check_func:
             asdf_check_func(ff)

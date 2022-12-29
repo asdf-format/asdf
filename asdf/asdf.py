@@ -1259,10 +1259,11 @@ class AsdfFile:
                 if fd.can_memmap():
                     fd.close_memmap()
                     # also clean any memmapped blocks
+                    from .block import read_block as _read_block
+
                     for b in self.blocks._internal_blocks:
-                        if b._memmapped:
-                            b._memmapped = False
-                            b._data = None
+                        if b._config.memmap:
+                            b._state = _read_block(fd, b._config, b.offset)
 
     def write_to(
         self,

@@ -4,6 +4,8 @@ import io
 import struct
 import weakref
 
+import numpy as np
+
 from . import compression as mcompression
 from . import constants, generic_io, util
 
@@ -35,12 +37,14 @@ class BlockConfig:
         validate_checksum=False,
         output_compression=None,
         output_compression_kwargs=None,
+        padding=False,
     ):
         self.lazy_load = lazy_load
         self.memmap = memmap
         self.cache_data = cache_data
         self.stream = stream
         self.validate_checksum = validate_checksum
+        self.padding = padding
         self.output_compression = output_compression
         if output_compression_kwargs is None:
             self.output_compression_kwargs = {}
@@ -95,17 +99,20 @@ def validate_block_header(header):
     return header
 
 
-def read_block_header(fd, config, offset=None):
+def read_block_header(fd, config, offset=None, past_magic=False):
     if offset is not None:
         fd.seek(offset)
 
     # first, see if we are at the BLOCK_MAGIC
-    buff = fd.read(2)
-    if buff == constants.BLOCK_MAGIC[:2]:
-        buff += fd.read(2)
+    if not past_magic:
+        buff = fd.read(4)
+        # TODO this would be better managed in the block manager but to match the old block
+        # behavior we will check the header and return None here
+        if len(buff) < 4 or buff == constants.INDEX_HEADER[:4]:
+            return None
         if buff != constants.BLOCK_MAGIC:
             raise ValueError(f"Invalid bytes {buff!r}, expected {constants.BLOCK_MAGIC!r}")
-        buff = fd.read(2)
+    buff = fd.read(2)
 
     # then read the header size
     header_size = struct.unpack(b">H", buff)[0]
@@ -125,7 +132,7 @@ def read_block_data(fd, header, config, offset=None):
     # if we're 'lazy loading' data, return a function
     # that when evaluated will return the data
     # we need to add this here in to capture the offset and fd
-    if config.lazy_load:
+    if config.lazy_load and fd.seekable():
 
         def wrap_read(fd, header, config, offset):
             # only keep a weak reference to the fd
@@ -137,10 +144,19 @@ def read_block_data(fd, header, config, offset=None):
             config_copy.lazy_load = False
 
             def read():
-                return read_block_data(fd_ref, header_copy, config_copy, offset)
+                # record and reset file position as this could occur during an update
+                previous_position = fd_ref.tell()
+                data = read_block_data(fd_ref, header_copy, config_copy, offset)
+                fd_ref.seek(previous_position)
+                return data
 
             return read
 
+        # if this is a streamed block, fast forward to the end of the file
+        if header["flags"] & constants.BLOCK_FLAG_STREAMED:
+            fd.fast_forward(-1)
+        else:
+            fd.fast_forward(header["allocated_size"])
         return wrap_read(fd, header, config, offset)
 
     # otherwise we need to load and possibly decompress the data
@@ -158,10 +174,12 @@ def read_block_data(fd, header, config, offset=None):
         #    raise ValueError("Cannot memmap compressed block")
         data = mcompression.decompress(fd, used_size, header["data_size"], compression)
     else:
-        if config.memmap and fd.can_memmap:
+        if config.memmap and fd.can_memmap():
             data = fd.memmap_array(offset, used_size)
+            fd.fast_forward(header["allocated_size"])
         else:
             data = fd.read_into_array(used_size)
+            fd.fast_forward(header["allocated_size"] - header["used_size"])
 
     if config.validate_checksum:
         if calculate_block_checksum(data) != header["checksum"]:
@@ -170,29 +188,35 @@ def read_block_data(fd, header, config, offset=None):
     return data
 
 
-def read_block(fd, config, offset=None):
+def read_block(fd, config, offset=None, past_magic=False):
     if offset is None:
         offset = fd.tell()
-    header = read_block_header(fd, config, offset)
+    header = read_block_header(fd, config, offset, past_magic)
+    if header is None:
+        return None
     data = read_block_data(fd, header, config)
     block_state = BlockState(header, data, config)
     return block_state
 
 
 def write_block(fd, data, config, offset=None, **header_kwargs):
-    if config.stream:
-        if data is not None:
-            raise ValueError("Streaming data must be written after write_to")
-    else:
-        if data.ndim != 1 and data.dtype != "uint8":
-            raise ValueError("Data must be of ndim==1 and dtype==uint8")
+    if offset is not None:
+        if fd.seekable():
+            fd.seek(offset)
+        else:
+            raise ValueError("write_block received offset for non-seekable file")
+    if data.ndim != 1 or data.dtype != "uint8":
+        raise ValueError("Data must be of ndim==1 and dtype==uint8")
 
     # if this is a streamed block, set the streamed header flag
     if config.stream:
         header_kwargs["flags"] = header_kwargs.get("flags", 0) | constants.BLOCK_FLAG_STREAMED
 
     # data size
-    header_kwargs["data_size"] = data.nbytes
+    if config.stream:
+        header_kwargs["data_size"] = 0
+    else:
+        header_kwargs["data_size"] = data.nbytes
 
     # checksum
     if config.stream:
@@ -204,7 +228,8 @@ def write_block(fd, data, config, offset=None, **header_kwargs):
     if config.output_compression is not None:
         compression = config.output_compression
     else:
-        compression = header_kwargs.get("compression", None)
+        compression = None
+    compression = header_kwargs.get("compression", compression)
     header_kwargs["compression"] = mcompression.to_compression_header(compression)
 
     # used size
@@ -212,15 +237,19 @@ def write_block(fd, data, config, offset=None, **header_kwargs):
         used_size = header_kwargs["data_size"]
     else:
         buff = io.BytesIO()
-        mcompression.compress(buff, data, compression, config=config.output_compression_kwargs)
+        mcompression.compress(buff, data, header_kwargs["compression"], config=config.output_compression_kwargs)
         used_size = buff.tell()
     if config.stream:
-        header_kwargs["used_size"] = -1
+        header_kwargs["used_size"] = 0
     else:
         header_kwargs["used_size"] = used_size
 
     # allocated size
-    header_kwargs["allocated_size"] = header_kwargs.get("allocated_size", used_size)
+    if config.stream:
+        header_kwargs["allocated_size"] = 0
+    else:
+        padding = util.calculate_padding(used_size, config.padding, fd.block_size)
+        header_kwargs["allocated_size"] = header_kwargs.get("allocated_size", used_size + padding)
     if header_kwargs["allocated_size"] < header_kwargs["used_size"]:
         raise RuntimeError(
             f"Block used size {header_kwargs['used_size']} larger than "
@@ -231,13 +260,14 @@ def write_block(fd, data, config, offset=None, **header_kwargs):
     write_header = BLOCK_HEADER.pack(**header_kwargs)
     fd.write(struct.pack(b">H", len(write_header)))
     fd.write(write_header)
-    if not config.stream:
-        if compression:
-            fd.write(buff.getvalue())
-        else:
-            fd.write_array(data)
+    if compression:
+        fd.write(buff.getvalue())
+    else:
+        fd.write_array(data)
     # TODO avoid packing/unpacking this
-    return BLOCK_HEADER.unpack(write_header)
+    write_header = BLOCK_HEADER.unpack(write_header)
+    fd.fast_forward(write_header["allocated_size"] - write_header["used_size"])
+    return write_header
 
 
 class Block:
@@ -247,43 +277,46 @@ class Block:
     Instead, should only be created through the `BlockManager`.
     """
 
-    _header = util.BinaryStruct(
-        [
-            ("flags", "I"),
-            ("compression", "4s"),
-            ("allocated_size", "Q"),
-            ("used_size", "Q"),
-            ("data_size", "Q"),
-            ("checksum", "16s"),
-        ]
-    )
-
     def __init__(self, data=None, uri=None, array_storage="internal", memmap=True, lazy_load=True, cache_data=True):
         self._data = data
         self._uri = uri
         self._array_storage = array_storage
 
-        self._fd = None
-        self._offset = None
-        self._input_compression = None
-        self._output_compression = "input"
-        self._output_compression_kwargs = {}
-        self._checksum = None
-        self._should_memmap = memmap
-        self._memmapped = False
-        self._lazy_load = lazy_load
-        self._cache_data = cache_data
+        self._config = BlockConfig(
+            lazy_load=lazy_load,
+            cache_data=cache_data,
+            memmap=memmap,
+            output_compression="input",
+            output_compression_kwargs={},
+        )
 
-        self.update_size()
-        self._allocated = self._size
+        self._state = None
+
+        # rather than holding onto the file descriptor, keep track of if it's 'closed'
+        self._is_closed = False
+
+        self._offset = None
+        self._allocated = None
 
     def __repr__(self):
         return "<Block {} off: {} alc: {} size: {}>".format(
-            self._array_storage[:3], self._offset, self._allocated, self._size
+            self._array_storage[:3], self.offset, self.allocated, len(self)
         )
 
+    @property
+    def checksum(self):
+        if self._state is None:
+            return None
+        return self._state.header["checksum"]
+
     def __len__(self):
-        return self._size
+        if self._state is None:
+            return self._measure_size()
+        # streamed blocks have undefined 'used_size'
+        if self._state.header["flags"] & constants.BLOCK_FLAG_STREAMED:
+            return len(self.data)
+        else:
+            return self._state.header["used_size"]
 
     @property
     def offset(self):
@@ -295,15 +328,24 @@ class Block:
 
     @property
     def allocated(self):
-        return self._allocated
+        if self._allocated is not None:
+            return self._allocated
+        if self._state is None:
+            return 0
+        if self._state.header["flags"] & constants.BLOCK_FLAG_STREAMED:
+            return len(self.data)
+        else:
+            return self._state.header["allocated_size"]
 
     @allocated.setter
     def allocated(self, allocated):
+        # block manager needs to set allocated when expanding blocks
+        # to fill space on an update
         self._allocated = allocated
 
     @property
     def header_size(self):
-        return self._header.size + constants.BLOCK_HEADER_BOILERPLATE_SIZE
+        return BLOCK_HEADER.size + constants.BLOCK_HEADER_BOILERPLATE_SIZE
 
     @property
     def data_offset(self):
@@ -311,7 +353,7 @@ class Block:
 
     @property
     def size(self):
-        return self._size + self.header_size
+        return len(self) + self.header_size
 
     @property
     def end_offset(self):
@@ -332,6 +374,8 @@ class Block:
 
     @property
     def array_storage(self):
+        # if self._state is not None and self._state.header['flags'] & constants.BLOCK_FLAG_STREAMED:
+        #    return "streamed"
         return self._array_storage
 
     @property
@@ -339,11 +383,9 @@ class Block:
         """
         The compression codec used to read the block.
         """
-        return self._input_compression
-
-    @input_compression.setter
-    def input_compression(self, compression):
-        self._input_compression = mcompression.validate(compression)
+        if self._state is None:
+            return None
+        return mcompression.validate(self._state.header["compression"])
 
     @property
     def output_compression(self):
@@ -351,13 +393,16 @@ class Block:
         The compression codec used to write the block.
         :return:
         """
-        if self._output_compression == "input":
-            return self._input_compression
-        return self._output_compression
+        c = self._config.output_compression
+        if c == "input":
+            c = self.input_compression
+        if isinstance(c, bytes):
+            c = c.decode("ascii")
+        return c
 
     @output_compression.setter
     def output_compression(self, compression):
-        self._output_compression = mcompression.validate(compression)
+        self._config.output_compression = mcompression.validate(compression)
 
     @property
     def output_compression_kwargs(self):
@@ -366,72 +411,28 @@ class Block:
         used to write the block.
         :return:
         """
-        return self._output_compression_kwargs
+        return self._config.output_compression_kwargs
 
     @output_compression_kwargs.setter
     def output_compression_kwargs(self, config):
         if config is None:
             config = {}
-        self._output_compression_kwargs = config.copy()
+        self._config.output_compression_kwargs = config.copy()
 
-    @property
-    def checksum(self):
-        return self._checksum
-
-    def _set_checksum(self, checksum):
-        if checksum == b"\0" * 16:
-            self._checksum = None
-        else:
-            self._checksum = checksum
-
-    def _calculate_checksum(self, array):
-        # The following line is safe because we're only using
-        # the MD5 as a checksum.
-        m = hashlib.new("md5")  # nosec
-        m.update(array)
-        return m.digest()
-
-    def validate_checksum(self):
+    def _measure_size(self):
         """
-        Validate the content of the block against the current checksum.
-
-        Returns
-        -------
-        valid : bool
-            `True` if the content is valid against the current
-            checksum or there is no current checksum.  Otherwise,
-            `False`.
-        """
-        if self._checksum:
-            checksum = self._calculate_checksum(self._flattened_data)
-            if checksum != self._checksum:
-                return False
-        return True
-
-    def update_checksum(self):
-        """
-        Update the checksum based on the current data contents.
-        """
-        self._checksum = self._calculate_checksum(self._flattened_data)
-
-    def update_size(self):
-        """
-        Recalculate the on-disk size of the block.  This causes any
+        Calculate the on-disk size of the block.  This causes any
         compression steps to run.  It should only be called when
         updating the file in-place, otherwise the work is redundant.
         """
-        if self._data is not None:
-            data = self._flattened_data
-            self._data_size = data.nbytes
-
-            if not self.output_compression:
-                self._size = self._data_size
-            else:
-                self._size = mcompression.get_compressed_size(
-                    data, self.output_compression, config=self.output_compression_kwargs
-                )
-        else:
-            self._data_size = self._size = 0
+        data = self._data
+        if data is None:
+            return 0
+        if not self.output_compression:
+            return data.nbytes
+        if data.ndim > 1:
+            data = data.ravel("K")
+        return mcompression.get_compressed_size(data, self.output_compression, config=self.output_compression_kwargs)
 
     def read(self, fd, past_magic=False, validate_checksum=False):
         """
@@ -456,258 +457,56 @@ class Block:
             If `True`, validate the data against the checksum, and
             raise a `ValueError` if the data doesn't match.
         """
-        offset = None
-        if fd.seekable():
-            offset = fd.tell()
-
-        if not past_magic:
-            buff = fd.read(len(constants.BLOCK_MAGIC))
-            if len(buff) < 4:
-                return None
-
-            if buff not in (constants.BLOCK_MAGIC, constants.INDEX_HEADER[: len(buff)]):
-                raise ValueError(
-                    "Bad magic number in block. "
-                    "This may indicate an internal inconsistency about the "
-                    "sizes of the blocks in the file."
-                )
-
-            if buff == constants.INDEX_HEADER[: len(buff)]:
-                return None
-
-        elif offset is not None:
+        config = copy.deepcopy(self._config)
+        config.validate_checksum = validate_checksum
+        offset = fd.tell()
+        if past_magic:
             offset -= 4
-
-        buff = fd.read(2)
-        (header_size,) = struct.unpack(b">H", buff)
-        if header_size < self._header.size:
-            raise ValueError(f"Header size must be >= {self._header.size}")
-
-        buff = fd.read(header_size)
-        header = self._header.unpack(buff)
-
-        # This is used by the documentation system, but nowhere else.
-        self._flags = header["flags"]
-        self._set_checksum(header["checksum"])
-
-        try:
-            self.input_compression = header["compression"]
-        except ValueError as v:
-            raise v  # TODO: hint extension?
-
-        if self.input_compression is None and header["used_size"] != header["data_size"]:
-            raise ValueError("used_size and data_size must be equal when no compression is used.")
-
-        if header["flags"] & constants.BLOCK_FLAG_STREAMED and self.input_compression is not None:
-            raise ValueError("Compression set on a streamed block.")
-
-        if fd.seekable():
-            # If the file is seekable, we can delay reading the actual
-            # data until later.
-            self._fd = fd
-            self._offset = offset
-            self._header_size = header_size
-            if header["flags"] & constants.BLOCK_FLAG_STREAMED:
-                # Support streaming blocks
-                self._array_storage = "streamed"
-                if self._lazy_load:
-                    fd.fast_forward(-1)
-                    self._data_size = self._size = self._allocated = (fd.tell() - self.data_offset) + 1
-                else:
-                    # self._data = fd.read_into_array(-1)
-                    d = fd.read_into_array(-1)
-                    if self._cache_data:
-                        self._data = d
-                    self._data_size = self._size = self._allocated = len(d)
-            else:
-                self._allocated = header["allocated_size"]
-                self._size = header["used_size"]
-                self._data_size = header["data_size"]
-                if self._lazy_load:
-                    fd.fast_forward(self._allocated)
-                else:
-                    curpos = fd.tell()
-                    self._memmap_data()
-                    fd.seek(curpos)
-                    if not self._memmapped:
-                        if self._cache_data:
-                            self._data = self._read_data(fd, self._size, self._data_size)
-                        fd.fast_forward(self._allocated - self._size)
-                    else:
-                        fd.fast_forward(self._allocated)
-        else:
-            # If the file is a stream, we need to get the data now.
-            if header["flags"] & constants.BLOCK_FLAG_STREAMED:
-                # Support streaming blocks
-                self._array_storage = "streamed"
-                self._data = fd.read_into_array(-1)
-                self._data_size = self._size = self._allocated = len(self._data)
-            else:
-                self._allocated = header["allocated_size"]
-                self._size = header["used_size"]
-                self._data_size = header["data_size"]
-                self._data = self._read_data(fd, self._size, self._data_size)
-                fd.fast_forward(self._allocated - self._size)
-            fd.close()
-
-        if validate_checksum and not self.validate_checksum():
-            raise ValueError(f"Block at {self._offset} does not match given checksum")
-
+        self._state = read_block(fd, self._config, past_magic=past_magic)
+        if self._state is None:
+            return None
+        if self._state.header["flags"] & constants.BLOCK_FLAG_STREAMED:
+            self._array_storage = "streamed"
+        self.offset = offset
         return self
 
-    def _read_data(self, fd, used_size, data_size):
-        """
-        Read the block data from a file.
-        """
-        if not self.input_compression:
-            return fd.read_into_array(used_size)
-        else:
-            return mcompression.decompress(fd, used_size, data_size, self.input_compression)
-
-    def read_data(self):
-        if self._fd is None:
-            raise Exception()  # TODO make this more informative
-        if not self._fd.seekable():
-            raise Exception()  # TODO make this more informative
-        self._fd.seek(self.data_offset)
-        return self._read_data(self._fd, self._size, self._data_size)
-
-    def rewrite_data(self, data):
-        if self._fd is None:
-            raise Exception()  # TODO make this more informative
-        if not self._fd.seekable():
-            raise Exception()  # TODO make this more informative
-        self._fd.seek(self.offset)
-        # TODO verify data size matches block size
-        self._write_data(self._fd, data)
-
-    def _memmap_data(self):
-        """
-        Memory map the block data from the file.
-        """
-        memmap = self._fd.can_memmap() and not self.input_compression
-        if self._should_memmap and memmap:
-            self._data = self._fd.memmap_array(self.data_offset, self._size)
-            self._memmapped = True
-
-    @property
-    def _flattened_data(self):
-        """
-        Retrieve flattened data suitable for writing.
-
-        Returns
-        -------
-        np.ndarray
-            1D contiguous array.
-        """
-        data = self.data
-
-        # 'K' order flattens the array in the order that elements
-        # occur in memory, except axes with negative strides which
-        # are reversed.  That is a problem for base arrays with
-        # negative strides and is an outstanding bug in this library.
-        return data.ravel(order="K")
-
-    def _write_data(self, fd, data):
-        """
-        Write an internal block to the given Python file-like object.
-
-        Writing will begin at the current position for the file-like object.
-        """
-        self._header_size = self._header.size
-
-        flags = 0
-        data_size = used_size = allocated_size = 0
-        if self._array_storage == "streamed":
-            flags |= constants.BLOCK_FLAG_STREAMED
-        elif data is not None:
-            self._checksum = self._calculate_checksum(data)
-            data_size = data.nbytes
-            if not fd.seekable() and self.output_compression:
-                buff = io.BytesIO()
-                mcompression.compress(buff, data, self.output_compression, config=self.output_compression_kwargs)
-                self.allocated = self._size = buff.tell()
-            allocated_size = self.allocated
-            used_size = self._size
-        self.input_compression = self.output_compression
-
-        if allocated_size < used_size:
-            raise RuntimeError(f"Block used size {used_size} larger than allocated size {allocated_size}")
-
-        if self.checksum is not None:
-            checksum = self.checksum
-        else:
-            checksum = b"\0" * 16
-
-        fd.write(constants.BLOCK_MAGIC)
-        fd.write(struct.pack(b">H", self._header_size))
-        fd.write(
-            self._header.pack(
-                flags=flags,
-                compression=mcompression.to_compression_header(self.output_compression),
-                allocated_size=allocated_size,
-                used_size=used_size,
-                data_size=data_size,
-                checksum=checksum,
-            )
-        )
-
-        if data is not None:
-            if self.output_compression:
-                if not fd.seekable():
-                    fd.write(buff.getvalue())
-                else:
-                    # If the file is seekable, we write the
-                    # compressed data directly to it, then go back
-                    # and write the resulting size in the block
-                    # header.
-                    start = fd.tell()
-                    mcompression.compress(fd, data, self.output_compression, config=self.output_compression_kwargs)
-                    end = fd.tell()
-                    self.allocated = self._size = end - start
-                    fd.seek(self.offset + 6)
-                    self._header.update(fd, allocated_size=self.allocated, used_size=self._size)
-                    fd.seek(end)
-            else:
-                if used_size != data_size:
-                    raise RuntimeError(f"Block used size {used_size} is not equal to the data size {data_size}")
-                fd.write_array(data)
-
     def write(self, fd):
-        if self._data is not None:
-            data = self._flattened_data
-        else:
-            data = None
-        self._write_data(fd, data)
+        # TODO the offset needs to be here because the block manager assumes the block
+        # will store the write offset
+        self.offset = fd.tell()
+        data = self.data
+        if data is None:
+            data = np.array([], dtype="uint8")
+        if data.ndim > 1:
+            data = data.ravel("K")
+        if data.dtype != "uint8":
+            data = np.atleast_1d(data).view(dtype="uint8")
+        header_kwargs = {}
+        # if self.allocated != 0:
+        #    header_kwargs['allocated_size'] = self.allocated
+        if self._array_storage == "streamed":
+            self._config.stream = True
+        header_kwargs["compression"] = self.output_compression
+        write_header = write_block(fd, data, self._config, **header_kwargs)
+        self.allocated = write_header["allocated_size"]
 
     @property
     def data(self):
         """
         Get the data for the block, as a numpy array.
         """
-        if self._data is None:
-            if self._fd.is_closed():
-                raise OSError("ASDF file has already been closed. " "Can not get the data.")
-
-            # Be nice and reset the file position after we're done
-            curpos = self._fd.tell()
-            try:
-                self._memmap_data()
-                if not self._memmapped:
-                    self._fd.seek(self.data_offset)
-                    # self._data = self._read_data(self._fd, self._size, self._data_size)
-                    d = self._read_data(self._fd, self._size, self._data_size)
-                    if self._cache_data:
-                        self._data = d
-                    else:
-                        return d
-            finally:
-                self._fd.seek(curpos)
-
-        return self._data
+        if self._data is not None:
+            return self._data
+        if self._is_closed:
+            raise OSError("ASDF file has already been closed. Can not get the data.")
+        if self._state is not None:
+            return self._state.data
+        return None
 
     def close(self):
         self._data = None
+        self._state = None
+        self._is_closed = True  # TODO probably better to track this in state
 
 
 class UnloadedBlock:
@@ -719,34 +518,29 @@ class UnloadedBlock:
     """
 
     def __init__(self, fd, offset, memmap=True, lazy_load=True, cache_data=True):
+        self._is_closed = False
         self._fd = fd
         self._offset = offset
-        self._data = None
+
         self._uri = None
+        self._data = None
         self._array_storage = "internal"
-        self._input_compression = None
-        self._output_compression = "input"
-        self._output_compression_kwargs = {}
-        self._checksum = None
-        self._should_memmap = memmap
-        self._memmapped = False
-        self._lazy_load = lazy_load
-        self._cache_data = cache_data
+        self._state = None
+        self._allocated = None
+        self._config = BlockConfig(
+            lazy_load=lazy_load,
+            cache_data=cache_data,
+            memmap=memmap,
+            output_compression=None,
+            output_compression_kwargs={},
+        )
 
     def __len__(self):
         self.load()
         return len(self)
 
     def close(self):
-        pass
-
-    @property
-    def array_storage(self):
-        return "internal"
-
-    @property
-    def offset(self):
-        return self._offset
+        self._is_closed = True
 
     def __getattr__(self, attr):
         self.load()

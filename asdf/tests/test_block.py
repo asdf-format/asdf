@@ -17,7 +17,7 @@ def test_checksum(tmp_path):
     config = block.BlockConfig()
     path = tmp_path / "test"
     with generic_io.get_file(path, mode="w") as fd:
-        block.write_block(fd, my_array, config)
+        block.write_block(fd, my_array.view(dtype="uint8"), config)
     with generic_io.get_file(path, mode="r") as fd:
         block_state = block.read_block(fd, config)
     assert block_state.header["checksum"] == target_checksum
@@ -47,7 +47,7 @@ def test_read_block_header(tmp_path):
     config = block.BlockConfig()
     path = tmp_path / "test"
     with generic_io.get_file(path, mode="w") as fd:
-        written_header = block.write_block(fd, my_array, config)
+        written_header = block.write_block(fd, my_array.view("uint8"), config)
 
     # try reading the block header at the start
     with generic_io.get_file(path, mode="r") as fd:
@@ -57,7 +57,7 @@ def test_read_block_header(tmp_path):
     # check that block can be read without the starting block magic bytes
     with generic_io.get_file(path, mode="r") as fd:
         fd.seek(4)
-        header = block.read_block_header(fd, config)
+        header = block.read_block_header(fd, config, past_magic=True)
     assert header == written_header
 
     # seek into the header, creating an invalid starting position
@@ -72,13 +72,27 @@ def test_read_block_header(tmp_path):
         with pytest.raises(ValueError):
             header = block.read_block_header(fd, config, offset=10)
     with generic_io.get_file(path, mode="r") as fd:
-        header = block.read_block_header(fd, config, offset=4)
+        header = block.read_block_header(fd, config, offset=4, past_magic=True)
     assert header == written_header
 
     bad_magic = io.BytesIO(b"\xd3BBB")
     with generic_io.get_file(bad_magic, mode="r") as fd:
         with pytest.raises(ValueError):
             header = block.read_block_header(fd, config)
+
+    # if when reading the magic, not enough bytes are returned
+    # the end-of-file is assumed and the header should return None
+    empty = io.BytesIO(b"")
+    with generic_io.get_file(empty, mode="r") as fd:
+        header = block.read_block_header(fd, config)
+        assert header is None
+
+    # if the block index is encountered, None should be returned
+    # to signify no more blocks are available
+    block_index = io.BytesIO(constants.INDEX_HEADER)
+    with generic_io.get_file(block_index, mode="r") as fd:
+        header = block.read_block_header(fd, config)
+        assert header is None
 
 
 def test_read_block_data(tmp_path):

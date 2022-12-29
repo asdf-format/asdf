@@ -9,7 +9,7 @@ import yaml
 
 from . import compression as mcompression
 from . import constants, generic_io, treeutil, util, yamlutil
-from .block import Block, UnloadedBlock
+from .block import BLOCK_HEADER, Block, UnloadedBlock
 from .config import get_config
 from .util import patched_urllib_parse
 
@@ -245,6 +245,7 @@ class BlockManager:
             If `True`, validate the blocks against their checksums.
 
         """
+        self._fd = fd
         self._validate_checksums = validate_checksums
 
         while True:
@@ -273,10 +274,12 @@ class BlockManager:
         last_block = self._internal_blocks[-1]
 
         # Read all of the remaining blocks in the file, if any
-        if last_block._fd is not None and last_block._fd.seekable():
-            last_block._fd.seek(last_block.end_offset)
+        # during an update last_block might not be in the file and instead be in
+        # memory
+        if hasattr(self, "_fd") and self._fd is not None and self._fd.seekable() and last_block._state is not None:
+            self._fd.seek(last_block.end_offset)
             while True:
-                last_block = self._read_next_internal_block(last_block._fd, False)
+                last_block = self._read_next_internal_block(self._fd, False)
                 if last_block is None:
                     break
 
@@ -293,17 +296,8 @@ class BlockManager:
             should be after the tree.
         """
         for block in self.internal_blocks:
-            if block.output_compression:
-                block.offset = fd.tell()
-                block.write(fd)
-            else:
-                if block.input_compression:
-                    block.update_size()
-                padding = util.calculate_padding(block.size, pad_blocks, fd.block_size)
-                block.allocated = block._size + padding
-                block.offset = fd.tell()
-                block.write(fd)
-                fd.fast_forward(block.allocated - block._size)
+            block._config.padding = pad_blocks
+            block.write(fd)
 
     def write_internal_blocks_random_access(self, fd):
         """
@@ -480,7 +474,7 @@ class BlockManager:
 
         last_offset = 0
         for x in offsets:
-            if not isinstance(x, int) or x > file_size or x < 0 or x <= last_offset + Block._header.size:
+            if not isinstance(x, int) or x > file_size or x < 0 or x <= last_offset + BLOCK_HEADER.size:
                 return
             last_offset = x
 
@@ -639,10 +633,10 @@ class BlockManager:
             # more internal blocks.  This is "deferred block loading".
             last_block = self._internal_blocks[-1]
 
-            if last_block._fd is not None and last_block._fd.seekable():
-                last_block._fd.seek(last_block.end_offset)
+            if self._fd is not None and self._fd.seekable():
+                self._fd.seek(last_block.end_offset)
                 while True:
-                    next_block = self._read_next_internal_block(last_block._fd, False)
+                    next_block = self._read_next_internal_block(self._fd, False)
                     if next_block is None:
                         break
                     if len(self._internal_blocks) - 1 == source:
@@ -821,7 +815,7 @@ def calculate_updated_layout(blocks, tree_size, pad_blocks, block_size):
     free = []
     for block in blocks._internal_blocks:
         if block.offset is not None:
-            block.update_size()
+            # size = block._measure_size() + block.header_size
             fixed.append(Entry(block.offset, block.offset + block.size, block))
         else:
             free.append(block)

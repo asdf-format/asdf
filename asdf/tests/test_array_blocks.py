@@ -1,4 +1,5 @@
 import io
+import mmap
 import os
 
 import numpy as np
@@ -744,16 +745,14 @@ def test_open_no_memmap(tmp_path):
         array = af.tree["array"]
         # Make sure to access the block so that it gets loaded
         array[0]
-        assert array.block._memmapped is True
-        assert isinstance(array.block._data, np.memmap)
+        assert array.block._config.memmap is True
+        assert isinstance(array.block.data.base, mmap.mmap)
 
     # Test that if we ask for copy, we do not get memmapped arrays
     with asdf.open(tmpfile, copy_arrays=True) as af:
         array = af.tree["array"]
-        assert array.block._memmapped is False
-        # We can't just check for isinstance(..., np.array) since this will
-        # be true for np.memmap as well
-        assert not isinstance(array.block._data, np.memmap)
+        assert array.block._config.memmap is False
+        assert not isinstance(array.block.data.base, mmap.mmap)
 
 
 def test_fd_not_seekable():
@@ -772,6 +771,8 @@ def test_fd_not_seekable():
 
     fast_forward = lambda offset: fd.seek(offset, 1)  # noqa: E731
     fd.fast_forward = fast_forward
+
+    fd.block_size = 0
 
     b.output_compression = "zlib"
     b.write(fd)

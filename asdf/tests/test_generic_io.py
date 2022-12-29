@@ -1,4 +1,5 @@
 import io
+import mmap
 import os
 import sys
 import urllib.request as urllib_request
@@ -83,7 +84,10 @@ def test_path(tree, tmp_path):
     with _roundtrip(tree, get_write_fd, get_read_fd) as ff:
         assert len(list(ff.blocks.internal_blocks)) == 2
         next(ff.blocks.internal_blocks).data
-        assert isinstance(next(ff.blocks.internal_blocks)._data, np.core.memmap)
+        b = next(ff.blocks.internal_blocks).data
+        while getattr(b, "base", None) is not None:
+            b = b.base
+        assert isinstance(b, mmap.mmap)
 
 
 def test_open2(tree, tmp_path):
@@ -104,7 +108,10 @@ def test_open2(tree, tmp_path):
 
     with _roundtrip(tree, get_write_fd, get_read_fd) as ff:
         assert len(list(ff.blocks.internal_blocks)) == 2
-        assert isinstance(next(ff.blocks.internal_blocks)._data, np.core.memmap)
+        b = next(ff.blocks.internal_blocks).data
+        while getattr(b, "base", None) is not None:
+            b = b.base
+        assert isinstance(b, mmap.mmap)
 
 
 def test_open_fail(tmp_path):
@@ -162,7 +169,10 @@ def test_io_open(tree, tmp_path):
 
     with _roundtrip(tree, get_write_fd, get_read_fd) as ff:
         assert len(list(ff.blocks.internal_blocks)) == 2
-        assert isinstance(next(ff.blocks.internal_blocks)._data, np.core.memmap)
+        b = next(ff.blocks.internal_blocks).data
+        while getattr(b, "base", None) is not None:
+            b = b.base
+        assert isinstance(b, mmap.mmap)
         ff.tree["science_data"][0] = 42
 
 
@@ -198,8 +208,11 @@ def test_bytes_io(tree):
 
     with _roundtrip(tree, get_write_fd, get_read_fd) as ff:
         assert len(list(ff.blocks.internal_blocks)) == 2
-        assert not isinstance(next(ff.blocks.internal_blocks)._data, np.core.memmap)
-        assert isinstance(next(ff.blocks.internal_blocks)._data, np.ndarray)
+        b = next(ff.blocks.internal_blocks).data
+        while getattr(b, "base", None) is not None:
+            b = b.base
+        assert not isinstance(b, mmap.mmap)
+        assert isinstance(next(ff.blocks.internal_blocks).data, np.ndarray)
         ff.tree["science_data"][0] = 42
 
 
@@ -215,8 +228,11 @@ def test_streams(tree):
 
     with _roundtrip(tree, get_write_fd, get_read_fd) as ff:
         assert len(ff.blocks) == 2
-        assert not isinstance(next(ff.blocks.internal_blocks)._data, np.core.memmap)
-        assert isinstance(next(ff.blocks.internal_blocks)._data, np.ndarray)
+        b = next(ff.blocks.internal_blocks).data
+        while getattr(b, "base", None) is not None:
+            b = b.base
+        assert not isinstance(b, mmap.mmap)
+        assert isinstance(next(ff.blocks.internal_blocks).data, np.ndarray)
         ff.tree["science_data"][0] = 42
 
 
@@ -243,7 +259,10 @@ def test_urlopen(tree, httpserver):
 
     with _roundtrip(tree, get_write_fd, get_read_fd) as ff:
         assert len(list(ff.blocks.internal_blocks)) == 2
-        assert not isinstance(next(ff.blocks.internal_blocks)._data, np.core.memmap)
+        b = next(ff.blocks.internal_blocks).data
+        while getattr(b, "base", None) is not None:
+            b = b.base
+        assert isinstance(b, mmap.mmap)
         assert isinstance(next(ff.blocks.internal_blocks)._data, np.ndarray)
 
 
