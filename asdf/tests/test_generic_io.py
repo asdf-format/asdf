@@ -262,8 +262,8 @@ def test_urlopen(tree, httpserver):
         b = next(ff.blocks.internal_blocks).data
         while getattr(b, "base", None) is not None:
             b = b.base
-        assert isinstance(b, mmap.mmap)
-        assert isinstance(next(ff.blocks.internal_blocks)._data, np.ndarray)
+        assert not isinstance(b, mmap.mmap)
+        assert isinstance(next(ff.blocks.internal_blocks).data, np.ndarray)
 
 
 @pytest.mark.remote_data
@@ -283,7 +283,7 @@ def test_http_connection(tree, httpserver):
 
     with _roundtrip(tree, get_write_fd, get_read_fd) as ff:
         assert len(list(ff.blocks.internal_blocks)) == 2
-        assert isinstance(next(ff.blocks.internal_blocks)._data, np.ndarray)
+        assert isinstance(next(ff.blocks.internal_blocks).data, np.ndarray)
         ff.tree["science_data"][0] == 42
 
 

@@ -124,10 +124,11 @@ def read_block_header(fd, config, offset=None, past_magic=False):
 
 
 def read_block_data(fd, header, config, offset=None):
-    if offset is not None:
-        fd.seek(offset)
-    else:
-        offset = fd.tell()
+    if fd.seekable():
+        if offset is not None:
+            fd.seek(offset)
+        else:
+            offset = fd.tell()
 
     # if we're 'lazy loading' data, return a function
     # that when evaluated will return the data
@@ -189,7 +190,7 @@ def read_block_data(fd, header, config, offset=None):
 
 
 def read_block(fd, config, offset=None, past_magic=False):
-    if offset is None:
+    if offset is None and fd.seekable():
         offset = fd.tell()
     header = read_block_header(fd, config, offset, past_magic)
     if header is None:
@@ -459,15 +460,16 @@ class Block:
         """
         config = copy.deepcopy(self._config)
         config.validate_checksum = validate_checksum
-        offset = fd.tell()
-        if past_magic:
-            offset -= 4
+        if fd.seekable():
+            offset = fd.tell()
+            if past_magic:
+                offset -= 4
+            self.offset = offset
         self._state = read_block(fd, self._config, past_magic=past_magic)
         if self._state is None:
             return None
         if self._state.header["flags"] & constants.BLOCK_FLAG_STREAMED:
             self._array_storage = "streamed"
-        self.offset = offset
         return self
 
     def write(self, fd):
