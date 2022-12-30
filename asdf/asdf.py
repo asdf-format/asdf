@@ -6,7 +6,6 @@ import pathlib
 import time
 import warnings
 
-import numpy as np
 from jsonschema import ValidationError
 from packaging.version import Version
 
@@ -1233,14 +1232,9 @@ class AsdfFile:
                 # possible there.
                 tree_serialized = io.BytesIO()
                 self._write_tree(self._tree, tree_serialized, pad_blocks=False)
-                array_ref_count = [0]
-                from .tags.core.ndarray import NDArrayType
+                n_internal_blocks = len(self.blocks._internal_blocks)
 
-                for node in treeutil.iter_tree(self._tree):
-                    if isinstance(node, (np.ndarray, NDArrayType)) and self.blocks[node].array_storage == "internal":
-                        array_ref_count[0] += 1
-
-                serialized_tree_size = tree_serialized.tell() + constants.MAX_BLOCKS_DIGITS * array_ref_count[0]
+                serialized_tree_size = tree_serialized.tell() + constants.MAX_BLOCKS_DIGITS * n_internal_blocks
 
                 if not block.calculate_updated_layout(self.blocks, serialized_tree_size, pad_blocks, fd.block_size):
                     # If we don't have any blocks that are being reused, just
