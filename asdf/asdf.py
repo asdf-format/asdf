@@ -61,7 +61,6 @@ class AsdfFile:
         copy_arrays=False,
         lazy_load=True,
         custom_schema=None,
-        _readonly=False,
     ):
         """
         Parameters
@@ -155,7 +154,7 @@ class AsdfFile:
         self._fd = None
         self._closed = False
         self._external_asdf_by_uri = {}
-        self._blocks = block.BlockManager(self, copy_arrays=copy_arrays, lazy_load=lazy_load, readonly=_readonly)
+        self._blocks = block.BlockManager(self, copy_arrays=copy_arrays, lazy_load=lazy_load)
         self._uri = None
         if tree is None:
             # Bypassing the tree property here, to avoid validating
@@ -1813,13 +1812,10 @@ def open_asdf(
         The new AsdfFile object.
     """
 
-    readonly = False
-
     # For now retain backwards compatibility with the old API behavior,
     # specifically when being called from AsdfFile.open
     if not _compat:
         mode = _check_and_set_mode(fd, mode)
-        readonly = mode == "r" and not copy_arrays
 
     instance = AsdfFile(
         ignore_version_mismatch=ignore_version_mismatch,
@@ -1827,7 +1823,6 @@ def open_asdf(
         copy_arrays=copy_arrays,
         lazy_load=lazy_load,
         custom_schema=custom_schema,
-        _readonly=readonly,
     )
 
     return AsdfFile._open_impl(
