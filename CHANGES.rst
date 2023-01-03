@@ -1,3 +1,10 @@
+2.15.0 (unreleased)
+-------------------
+
+The ASDF Standard is at v1.6.0
+
+- Allow Extensions to define custom validators  [#1287]
+
 2.14.3 (2022-12-15)
 -------------------
 

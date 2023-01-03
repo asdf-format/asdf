@@ -117,12 +117,17 @@ class AsdfExtensionList:
         for extension in extensions:
             tag_mapping.extend(extension.tag_mapping)
             url_mapping.extend(extension.url_mapping)
-            for typ in extension.types:
-                self._type_index.add_type(typ, extension)
-                validators.update(typ.validators)
-                for sibling in typ.versioned_siblings:
-                    self._type_index.add_type(sibling, extension)
-                    validators.update(sibling.validators)
+            if extension.legacy:
+                for typ in extension.types:
+                    self._type_index.add_type(typ, extension)
+                    validators.update(typ.validators)
+                    for sibling in typ.versioned_siblings:
+                        self._type_index.add_type(sibling, extension)
+                        validators.update(sibling.validators)
+            else:
+                # for non-legacy extensions, get validators from the extension
+                # not the types
+                validators.update(extension.validators)
         self._extensions = extensions
         self._tag_mapping = resolver.Resolver(tag_mapping, "tag")
         self._url_mapping = resolver.Resolver(url_mapping, "url")

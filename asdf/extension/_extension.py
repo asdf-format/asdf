@@ -117,6 +117,22 @@ class Extension(abc.ABC):
         """
         return {}
 
+    @property
+    def validators(self):
+        """
+        Get a dictionary of custom schema keyword validators.
+
+        The dictionary key is the keyword and value a validation function that
+        accepts 4 arguments: validator, value, instance, schema. These functions
+        will be passed to jsonschema as validators during the call to validate.
+
+        See validators https://python-jsonschema.readthedocs.io/en/latest/creating/
+
+        These validators operate in a global scope so careful keyword naming
+        is required to avoid collisions between extensions and with builtin keywords.
+        """
+        return {}
+
 
 class ExtensionProxy(Extension, AsdfExtension):
     """
@@ -369,6 +385,28 @@ class ExtensionProxy(Extension, AsdfExtension):
 
         """
         return self._yaml_tag_handles
+
+    @property
+    def validators(self):
+        """
+        Get a dictionary of custom schema keyword validators.
+
+        The dictionary key is the keyword and value a validation function that
+        accepts 4 arguments: validator, value, instance, schema. These functions
+        will be passed to jsonschema as validators during the call to validate.
+
+        See validators https://python-jsonschema.readthedocs.io/en/latest/creating/
+
+        These validators operate in a global scope so careful keyword naming
+        is required to avoid collisions between extensions and with builtin keywords.
+
+        For legacy extensions wrapped with this proxy, this property will not return
+        any custom validators defined by the types in the extension. Instead, the
+        validators must be accessed through the types.
+        """
+        if hasattr(self.delegate, "validators"):
+            return self.delegate.validators
+        return {}
 
     def __eq__(self, other):
         if isinstance(other, ExtensionProxy):

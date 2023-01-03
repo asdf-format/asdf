@@ -1,6 +1,8 @@
 import pytest
+from jsonschema import ValidationError
 from packaging.specifiers import SpecifierSet
 
+import asdf
 from asdf import config_context
 from asdf.exceptions import AsdfDeprecationWarning
 from asdf.extension import (
@@ -56,12 +58,14 @@ class FullExtension:
         asdf_standard_requirement=None,
         tags=None,
         legacy_class_names=None,
+        validators=None,
     ):
         self._converters = [] if converters is None else converters
         self._compressors = [] if compressors is None else compressors
         self._asdf_standard_requirement = asdf_standard_requirement
-        self._tags = tags
+        self._tags = [] if tags is None else tags
         self._legacy_class_names = [] if legacy_class_names is None else legacy_class_names
+        self._validators = [] if validators is None else validators
 
     @property
     def converters(self):
@@ -82,6 +86,10 @@ class FullExtension:
     @property
     def legacy_class_names(self):
         return self._legacy_class_names
+
+    @property
+    def validators(self):
+        return self._validators
 
 
 class MinimumConverter:
@@ -686,3 +694,72 @@ asdf_standard_requirement: 1.6.0
 
         proxy = ExtensionProxy(extension)
         assert proxy.asdf_standard_requirement == SpecifierSet("==1.6.0")
+
+
+def test_extension_validators():
+    """
+    Adding an extension with custom validators should automatically
+    register these validators so calls to validate will use the custom
+    validators
+    """
+
+    def multiple_of_validator(validator, value, instance, schema):
+        if instance % value != 0:
+            yield ValidationError(f"{instance} is not a multiple of {value}")
+
+    class MyClass:
+        def __init__(self, value):
+            self.value = value
+
+    class MyClassConverter(Converter):
+        tags = [
+            "asdf://example.com/tags/myclass-1.0.0",
+        ]
+        types = [
+            MyClass,
+        ]
+
+        def to_yaml_tree(self, obj, tag, ctx):
+            return {"value": obj.value}
+
+        def from_yaml_tree(self, obj, tag, ctx):
+            return MyClass(obj["value"])
+
+    class MyClassExtension(Extension):
+        extension_uri = "asdf://example.com/extensions/myclass-1.0.0"
+        converters = [
+            MyClassConverter(),
+        ]
+        validators = {"multiple_of": multiple_of_validator}
+        tags = [
+            TagDefinition(
+                "asdf://example.com/tags/myclass-1.0.0", schema_uris="asdf://example.com/schemas/myclass-1.0.0"
+            ),
+        ]
+
+    schema = """
+%YAML 1.1
+---
+$schema: "http://stsci.edu/schemas/asdf/asdf-schema-1.0.0"
+id: "asdf://example.com/schemas/myclass-1.0.0"
+
+type: object
+properties:
+  value:
+    type: integer
+    multiple_of: 21
+...
+    """
+
+    cfg = asdf.get_config()
+    cfg.add_resource_mapping({"asdf://example.com/schemas/myclass-1.0.0": schema})
+    cfg.add_extension(MyClassExtension())
+
+    tree = {"obj": MyClass(42)}
+
+    af = asdf.AsdfFile(tree)
+    af.validate()
+
+    af["obj"].value = 43
+    with pytest.raises(ValidationError):
+        af.validate()
