@@ -208,6 +208,40 @@ of the object. That method should accept no arguments and return either a
 dict of attributes and their values, or a list if the object itself is
 list-like.
 
+Adding custom validators
+------------------------
+
+An `Extension` may also add new validation keywords to the schema
+language. This can be used to impose restrictions on the
+values in an ASDF file.
+
+To support custom validation keywords, set the "validators"
+member of an `Extension` to a dictionary where the keys are the
+validation keyword names and the values are validation functions.  The
+validation functions are of the same form as the validation functions in the
+underlying `jsonschema` library, and are passed the following arguments:
+
+  - ``validator``: A `jsonschema.Validator` instance.
+
+  - ``value``: The value of the schema keyword.
+
+  - ``instance``: The instance to validate.  This will be made up of
+    basic datatypes as represented in the YAML file (list, dict,
+    number, strings), and not include any object types.
+
+  - ``schema``: The entire schema that applies to instance.  Useful to
+    get other related schema keywords.
+
+The validation function should either return ``None`` if the instance
+is valid or ``yield`` one or more `jsonschema.ValidationError` objects if
+the instance is invalid.
+
+Be warned that custom validators are not restricted to types/yaml from
+the defining extension and instead are applied globally to the entire tree.
+Careful selection of keywords is needed to avoid collisions
+with other extensions and built-in keywords. No checks are made to detect
+collisions.
+
 .. _extending_extensions_installing:
 
 Installing an extension
