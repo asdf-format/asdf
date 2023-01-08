@@ -1,4 +1,3 @@
-import enum
 import importlib.util
 import inspect
 import math
@@ -18,8 +17,6 @@ import numpy as np
 # see issue https://github.com/asdf-format/asdf/issues/1254
 from importlib_metadata import packages_distributions
 from packaging.version import Version
-
-from . import constants
 
 # We're importing our own copy of urllib.parse because
 # we need to patch it to support asdf:// URIs, but it'd
@@ -500,34 +497,3 @@ def _compile_uri_match_pattern(pattern):
     pattern = pattern.replace(r"\*\*", r".*")
     pattern = pattern.replace(r"\*", r"[^/]*")
     return re.compile(pattern)
-
-
-def get_file_type(fd):
-    """
-    Determine the file type of an open GenericFile instance.
-
-    Parameters
-    ----------
-    fd : GenericFile
-
-    Returns
-    -------
-    FileType
-    """
-    if fd.peek(5) == constants.ASDF_MAGIC:
-        return FileType.ASDF
-
-    if fd.peek(6) == constants.FITS_MAGIC:
-        return FileType.FITS
-
-    return FileType.UNKNOWN
-
-
-class FileType(enum.Enum):
-    """
-    Enum representing file types recognized by asdf.
-    """
-
-    ASDF = 1
-    FITS = 2
-    UNKNOWN = 3

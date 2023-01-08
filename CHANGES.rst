@@ -1,3 +1,10 @@
+3.0.0 (unreleased)
+------------------
+
+The ASDF Standard is at v1.6.0
+
+- Drop support for ASDF-in-FITS. [#1288]
+
 2.15.0 (unreleased)
 -------------------
 

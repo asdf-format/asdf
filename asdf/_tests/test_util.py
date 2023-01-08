@@ -1,9 +1,7 @@
-import io
-
 import pytest
 
-from asdf import generic_io, util
-from asdf.extension._legacy import BuiltinExtension
+from asdf import util
+from asdf.extension import BuiltinExtension
 
 
 def test_is_primitive():
@@ -71,35 +69,6 @@ def test_patched_urllib_parse():
 )
 def test_uri_match(pattern, uri, result):
     assert util.uri_match(pattern, uri) is result
-
-
-@pytest.mark.parametrize(
-    ("content", "expected_type"),
-    [
-        (b"#ASDF blahblahblah", util.FileType.ASDF),
-        (b"SIMPLE = T blah blah blah blah", util.FileType.FITS),
-        (b"SIMPLY NOT A FITS FILE", util.FileType.UNKNOWN),
-        (b"#ASDQ", util.FileType.UNKNOWN),
-    ],
-)
-def test_get_file_type(content, expected_type):
-    fd = generic_io.get_file(io.BytesIO(content))
-    assert util.get_file_type(fd) == expected_type
-    # Confirm that no content was lost
-    assert fd.read() == content
-
-    # We've historically had a problem detecting file type
-    # of generic_io.InputStream:
-    class OnlyHasAReadMethod:
-        def __init__(self, content):
-            self._fd = io.BytesIO(content)
-
-        def read(self, size=-1):
-            return self._fd.read(size)
-
-    fd = generic_io.get_file(OnlyHasAReadMethod(content))
-    assert util.get_file_type(fd) == expected_type
-    assert fd.read() == content
 
 
 def test_minversion():
