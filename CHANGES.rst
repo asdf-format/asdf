@@ -6,6 +6,9 @@ The ASDF Standard is at v1.6.0
 - Discard cache of lazy-loaded block data when it is no longer referenced
   by the tree. [#1280]
 
+- Add ``tree_mapper`` argument to ``asdf.open`` to permit arbitrary
+  transformations of the tagged tree prior to conversion.  [#1289]
+
 2.14.3 (2022-12-15)
 -------------------
 

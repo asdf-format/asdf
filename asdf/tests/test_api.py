@@ -522,3 +522,17 @@ def test_none_values(tmp_path):
     with asdf.open(path) as af:
         assert "foo" in af
         assert af["foo"] is None
+
+
+def test_tree_mapper(tmp_path):
+    path = str(tmp_path / "test.asdf")
+
+    af = asdf.AsdfFile({"foo": "bar"})
+    af.write_to(path)
+
+    def tree_mapper(tree):
+        tree["foo"] = "baz"
+        return tree
+
+    with asdf.open(path, tree_mapper=tree_mapper) as af:
+        assert af["foo"] == "baz"
