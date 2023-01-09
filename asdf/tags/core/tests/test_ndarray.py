@@ -874,9 +874,14 @@ def test_readonly(tmpdir):
     # Opening in read mode (the default) should mean array is readonly
     with asdf.open(tmpfile) as af:
         assert af["data"].flags.writeable is False
-        with pytest.raises(ValueError) as err:
+        with pytest.raises(ValueError, match=r"assignment destination is read-only"):
             af["data"][0] = 41
-            assert str(err) == "assignment destination is read-only"
+
+    # Forcing memmap, the array should still be readonly
+    with asdf.open(tmpfile, copy_arrays=False) as af:
+        assert af["data"].flags.writeable is False
+        with pytest.raises(ValueError, match=r"assignment destination is read-only"):
+            af["data"][0] = 41
 
     # This should be perfectly fine
     with asdf.open(tmpfile, mode="rw") as af:

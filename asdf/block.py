@@ -21,7 +21,7 @@ class BlockManager:
     Manages the `Block`s associated with a ASDF file.
     """
 
-    def __init__(self, asdffile, copy_arrays=False, lazy_load=True, readonly=False):
+    def __init__(self, asdffile, copy_arrays=False, lazy_load=True):
         self._asdffile = weakref.ref(asdffile)
 
         self._internal_blocks = []
@@ -40,7 +40,6 @@ class BlockManager:
         self._validate_checksums = False
         self._memmap = not copy_arrays
         self._lazy_load = lazy_load
-        self._readonly = readonly
         self._internal_blocks_mapped = False
 
     def __len__(self):
@@ -512,9 +511,7 @@ class BlockManager:
         # It seems we're good to go, so instantiate the UnloadedBlock
         # objects
         for offset in offsets[1:-1]:
-            self._internal_blocks.append(
-                UnloadedBlock(fd, offset, memmap=self.memmap, lazy_load=self.lazy_load, readonly=self._readonly)
-            )
+            self._internal_blocks.append(UnloadedBlock(fd, offset, memmap=self.memmap, lazy_load=self.lazy_load))
 
         # We already read the last block in the file -- no need to read it again
         self._internal_blocks.append(block)
@@ -814,7 +811,6 @@ class Block:
         self._should_memmap = memmap
         self._memmapped = False
         self._lazy_load = lazy_load
-        self._readonly = False
 
         self.update_size()
         self._allocated = self._size
@@ -919,10 +915,6 @@ class Block:
     @property
     def checksum(self):
         return self._checksum
-
-    @property
-    def readonly(self):
-        return self._readonly
 
     def _set_checksum(self, checksum):
         if checksum == b"\0" * 16:
@@ -1251,7 +1243,7 @@ class UnloadedBlock:
     requested.
     """
 
-    def __init__(self, fd, offset, memmap=True, lazy_load=True, readonly=False):
+    def __init__(self, fd, offset, memmap=True, lazy_load=True):
         self._fd = fd
         self._offset = offset
         self._data_ref = None
@@ -1264,7 +1256,6 @@ class UnloadedBlock:
         self._should_memmap = memmap
         self._memmapped = False
         self._lazy_load = lazy_load
-        self._readonly = readonly
 
     def __len__(self):
         self.load()
