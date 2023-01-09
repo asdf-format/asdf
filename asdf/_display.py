@@ -36,7 +36,7 @@ def render_tree(
     max_rows=DEFAULT_MAX_ROWS,
     max_cols=DEFAULT_MAX_COLS,
     show_values=DEFAULT_SHOW_VALUES,
-    filters=[],
+    filters=None,
     identifier="root",
     refresh_extension_manager=False,
 ):
@@ -47,7 +47,7 @@ def render_tree(
         key="title",
         node=node,
         identifier=identifier,
-        filters=filters,
+        filters=[] if filters is None else filters,
         refresh_extension_manager=refresh_extension_manager,
     )
     if info is None:

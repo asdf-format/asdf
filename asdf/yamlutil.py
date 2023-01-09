@@ -323,7 +323,7 @@ def tagged_tree_to_custom_tree(tree, ctx, force_raw_types=False, _serialization_
             return tag_type.from_tree_tagged(node, ctx)
         except TypeError as err:
             warnings.warn(
-                f"Failed to convert {tag} to custom type (detail: {err}). " "Using raw Python data structure instead",
+                f"Failed to convert {tag} to custom type (detail: {err}). Using raw Python data structure instead",
                 AsdfConversionWarning,
             )
 

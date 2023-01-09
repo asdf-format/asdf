@@ -47,7 +47,6 @@ def test_no_warning_nan_array(tmp_path):
 
 
 def test_warning_deprecated_open(tmp_path):
-
     tmpfile = str(tmp_path / "foo.asdf")
 
     tree = dict(foo=42, bar="hello")
@@ -64,7 +63,6 @@ def test_warning_deprecated_open(tmp_path):
     reason="Cannot make file read-only if user is root",
 )
 def test_open_readonly(tmp_path):
-
     tmpfile = str(tmp_path / "readonly.asdf")
 
     tree = dict(foo=42, bar="hello", baz=np.arange(20))
@@ -306,7 +304,6 @@ def test_context_handler_resolve_and_inline(tmp_path):
 
 
 def test_open_pathlib_path(tmp_path):
-
     filename = str(tmp_path / "pathlib.asdf")
     path = pathlib.Path(filename)
 

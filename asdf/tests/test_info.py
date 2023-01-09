@@ -119,7 +119,6 @@ class ObjectWithInfoSupport3:
 
 
 def manifest_extension(tmp_path):
-
     foo_manifest = """%YAML 1.1
 ---
 id: asdf://somewhere.org/asdf/manifests/foo_manifest-1.0

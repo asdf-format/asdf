@@ -90,7 +90,6 @@ class _EmbeddedBlockManager(block.BlockManager):
         return super().get_source(block)
 
     def find_or_create_block_for_array(self, arr, ctx):
-
         base = util.get_array_base(arr)
         for hdu in self._hdulist:
             if hdu.data is None:
@@ -245,7 +244,6 @@ class AsdfInFits(asdf.AsdfFile):
         ignore_missing_extensions=False,
         **kwargs,
     ):
-
         close_hdulist = False
         if isinstance(fd, fits.hdu.hdulist.HDUList):
             hdulist = fd

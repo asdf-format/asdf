@@ -229,7 +229,7 @@ class BinaryStruct:
         updates.sort()
 
         start = fd.tell()
-        for ((offset, datatype), val) in updates:
+        for (offset, datatype), val in updates:
             fd.seek(start + offset)
             fd.write(struct.pack(datatype, val))
 
@@ -370,9 +370,7 @@ def minversion(module, version, inclusive=True):
             return False
     else:
         raise ValueError(
-            "module argument must be an actual imported "
-            "module, or the import name of the module; "
-            f"got {repr(module)}"
+            f"module argument must be an actual imported module, or the import name of the module; got {repr(module)}"
         )
 
     if module_version is None:

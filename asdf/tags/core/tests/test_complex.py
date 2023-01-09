@@ -27,7 +27,7 @@ a: !core/complex-1.0.0
         "X3+4iX",
         "3+X4i",
         "3+4",
-        "3i+4" "3+4z",
+        "3i+43+4z",
         "3.+4i",
         "3+4.i",
         "3e-4.0+4i",
@@ -36,7 +36,6 @@ a: !core/complex-1.0.0
     ],
 )
 def test_invalid_complex(invalid):
-
     with pytest.raises(asdf.ValidationError):
         with asdf.open(make_complex_asdf(invalid)):
             pass
@@ -71,7 +70,6 @@ def test_invalid_complex(invalid):
     ],
 )
 def test_valid_complex(valid):
-
     with asdf.open(make_complex_asdf(valid)) as af:
         assert af.tree["a"] == complex(re.sub(r"[iI]$", r"j", valid))
 

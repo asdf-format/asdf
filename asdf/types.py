@@ -67,7 +67,7 @@ class ExtensionTypeMeta(type):
             finally:
                 cls._import_cache[modname] = has_module
                 if not has_module:
-                    return False
+                    return False  # noqa: B012
         return True
 
     @classmethod
@@ -81,7 +81,7 @@ class ExtensionTypeMeta(type):
 
     @property
     def versioned_siblings(cls):
-        return getattr(cls, "__versioned_siblings") or []
+        return getattr(cls, "__versioned_siblings") or []  # noqa: B009
 
     def __new__(cls, name, bases, attrs):
         requires = cls._find_in_bases(attrs, bases, "requires", [])
@@ -143,7 +143,7 @@ class ExtensionTypeMeta(type):
                             "See https://github.com/asdf-format/asdf/issues/1245"
                         )
                     siblings.append(ExtensionTypeMeta.__new__(cls, name, bases, new_attrs))
-            setattr(ncls, "__versioned_siblings", siblings)
+            setattr(ncls, "__versioned_siblings", siblings)  # noqa: B010
 
         return ncls
 

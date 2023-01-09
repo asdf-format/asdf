@@ -183,11 +183,14 @@ select = [
     "S", # flake8-bandit
     "BLE", # flake8-blind-except
     # "FBT", # flake8-boolean-trap
+    "B", # flake8-bugbear
     "RUF100", "T10", "PGH"
 ]
 extend-ignore = [
     "S101", # assert used
     "S506", # unsafe yaml load
+    "B904", # Within an except clause, raise exceptions with raise ... from err or raise ... from None to distinguish them from errors in exception handling
+    "B905", # Requires python 3.10 (use zip strict)
 ]
 extend-exclude = ["asdf/extern/*", "docs/*"]
 

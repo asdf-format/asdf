@@ -530,7 +530,7 @@ def _load_schema_cached(url, resolver, resolve_references, resolve_local_refs):
 
 
 def get_validator(
-    schema={},
+    schema=None,
     ctx=None,
     validators=None,
     url_mapping=None,
@@ -592,7 +592,7 @@ def get_validator(
     # test suite!!!).  Instead, we assume that the schemas are valid
     # through the running of the unit tests, not at run time.
     cls = _create_validator(validators=validators, visit_repeat_nodes=_visit_repeat_nodes)
-    return cls(schema, *args, ctx=ctx, serialization_context=_serialization_context, **kwargs)
+    return cls({} if schema is None else schema, *args, ctx=ctx, serialization_context=_serialization_context, **kwargs)
 
 
 def _validate_large_literals(instance, reading):
@@ -644,7 +644,7 @@ def _validate_mapping_keys(instance, reading):
                 raise ValidationError(f"Mapping key {key} is not permitted.  Valid types: str, int, bool.")
 
 
-def validate(instance, ctx=None, schema={}, validators=None, reading=False, *args, **kwargs):
+def validate(instance, ctx=None, schema=None, validators=None, reading=False, *args, **kwargs):
     """
     Validate the given instance (which must be a tagged tree) against
     the appropriate schema.  The schema itself is located using the
@@ -678,7 +678,7 @@ def validate(instance, ctx=None, schema={}, validators=None, reading=False, *arg
 
         ctx = AsdfFile()
 
-    validator = get_validator(schema, ctx, validators, ctx.resolver, *args, **kwargs)
+    validator = get_validator({} if schema is None else schema, ctx, validators, ctx.resolver, *args, **kwargs)
     validator.validate(instance)
 
     additional_validators = [_validate_large_literals]

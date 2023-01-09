@@ -31,8 +31,9 @@ def _get_sparse_tree():
     return tree
 
 
-def _roundtrip(tmp_path, tree, compression=None, write_options={}, read_options={}):
-    write_options = write_options.copy()
+def _roundtrip(tmp_path, tree, compression=None, write_options=None, read_options=None):
+    read_options = {} if read_options is None else read_options
+    write_options = {} if write_options is None else write_options.copy()
     write_options.update(all_array_compression=compression)
 
     tmpfile = os.path.join(str(tmp_path), "test.asdf")
@@ -149,7 +150,6 @@ def test_input(tmp_path):
 
 
 def test_none(tmp_path):
-
     tree = _get_large_tree()
 
     tmpfile1 = os.path.join(str(tmp_path), "test1.asdf")
@@ -171,7 +171,6 @@ def test_none(tmp_path):
 
 
 def test_set_array_compression(tmp_path):
-
     tmpfile = os.path.join(str(tmp_path), "compressed.asdf")
 
     zlib_data = np.array([x for x in range(1000)])

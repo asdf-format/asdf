@@ -84,7 +84,6 @@ def fractiontype_factory():
 
 
 def fractional2dcoordtype_factory():
-
     fraction_type = fractiontype_factory()
 
     class Fractional2dCoordType(types.CustomType):
@@ -111,7 +110,6 @@ def fractional2dcoordtype_factory():
 
 
 def test_custom_tag():
-
     fraction_type = fractiontype_factory()
 
     class FractionExtension(CustomExtension):
@@ -378,8 +376,9 @@ undefined_data:
     # There are two undefined tags, so we expect two warnings
     assert len(warning) == 2
     for i, tag in enumerate(["also_undefined-1.3.0", "undefined_tag-1.0.0"]):
-        assert str(warning[i].message) == (
-            "tag:nowhere.org:custom/{} is not recognized, converting to raw " "Python data structure".format(tag)
+        assert (
+            str(warning[i].message)
+            == f"tag:nowhere.org:custom/{tag} is not recognized, converting to raw Python data structure"
         )
 
     # Make sure no warning occurs if explicitly ignored
@@ -594,7 +593,6 @@ flow_thing:
 
 
 def test_tag_without_schema(tmp_path):
-
     tmpfile = str(tmp_path / "foo.asdf")
 
     class FooType(types.CustomType):

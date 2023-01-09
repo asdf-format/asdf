@@ -59,11 +59,10 @@ class AsdfSchemaFile(pytest.File):
         validate_default=True,
         ignore_unrecognized_tag=False,
         ignore_version_mismatch=False,
-        skip_tests=[],
-        xfail_tests=[],
+        skip_tests=None,
+        xfail_tests=None,
         **kwargs,
     ):
-
         # Fix for depreciation of fspath in pytest 7+
         from asdf.util import minversion
 
@@ -83,8 +82,8 @@ class AsdfSchemaFile(pytest.File):
         result.validate_default = validate_default
         result.ignore_unrecognized_tag = ignore_unrecognized_tag
         result.ignore_version_mismatch = ignore_version_mismatch
-        result.skip_tests = skip_tests
-        result.xfail_tests = xfail_tests
+        result.skip_tests = [] if skip_tests is None else skip_tests
+        result.xfail_tests = [] if xfail_tests is None else xfail_tests
 
         return result
 
@@ -237,7 +236,7 @@ class AsdfSchemaExampleItem(pytest.Item):
         ] = ff2
 
         # Add some dummy blocks so that the ndarray examples work
-        for i in range(3):
+        for _i in range(3):
             b = block.Block(np.zeros((1024 * 1024 * 8), dtype=np.uint8))
             b._used = True
             ff.blocks.add(b)

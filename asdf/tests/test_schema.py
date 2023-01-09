@@ -628,7 +628,6 @@ def test_schema_resolved_via_entry_points():
 
 @pytest.mark.parametrize("num", [constants.MAX_NUMBER + 1, constants.MIN_NUMBER - 1])
 def test_max_min_literals(num):
-
     tree = {
         "test_int": num,
     }
@@ -1081,8 +1080,10 @@ def test_numpy_scalar_type_validation(numpy_value, valid_types):
                 description = "valid"
             else:
                 description = "invalid"
-            assert False, "Expected numpy.{} to be {} against jsonschema type '{}'".format(
-                type(numpy_value).__name__, description, jsonschema_type
+            raise AssertionError(
+                "Expected numpy.{} to be {} against jsonschema type '{}'".format(
+                    type(numpy_value).__name__, description, jsonschema_type
+                )
             )
 
     for jsonschema_type in valid_types:

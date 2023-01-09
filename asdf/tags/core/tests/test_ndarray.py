@@ -438,7 +438,7 @@ def test_masked_array_stay_open_bug(tmpdir):
     p = psutil.Process()
     orig_open = p.open_files()
 
-    for i in range(3):
+    for _ in range(3):
         with asdf.open(tmppath) as f2:
             np.sum(f2.tree["test"])
 
@@ -468,7 +468,7 @@ def test_memmap_stay_open_bug(tmpdir):
     p = psutil.Process()
     orig_open = p.open_files()
 
-    for i in range(3):
+    for _i in range(3):
         with open(tmppath, mode="rb") as fp:
             with asdf.open(fp) as f2:
                 np.sum(f2.tree["test"])
@@ -863,7 +863,6 @@ def test_memmap_write(tmpdir):
 
 
 def test_readonly(tmpdir):
-
     tmpfile = str(tmpdir.join("data.asdf"))
     tree = dict(data=np.ndarray(100))
 

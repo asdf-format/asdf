@@ -267,7 +267,7 @@ class BlockManager:
         """
         if not self._internal_blocks:
             return
-        for i, block in enumerate(self._internal_blocks):
+        for block in self._internal_blocks:
             if isinstance(block, UnloadedBlock):
                 block.load()
 
@@ -1200,7 +1200,7 @@ class Block:
         """
         if self._data is None:
             if self._fd.is_closed():
-                raise OSError("ASDF file has already been closed. " "Can not get the data.")
+                raise OSError("ASDF file has already been closed. Can not get the data.")
 
             # Be nice and reset the file position after we're done
             curpos = self._fd.tell()
