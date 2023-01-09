@@ -7,7 +7,7 @@ import pytest
 from asdf import config_context, get_config
 from asdf.asdf import AsdfFile, SerializationContext, open_asdf
 from asdf.entry_points import get_extensions
-from asdf.exceptions import AsdfWarning
+from asdf.exceptions import AsdfProvisionalAPIWarning, AsdfWarning
 from asdf.extension import AsdfExtensionList, ExtensionManager, ExtensionProxy
 from asdf.tests.helpers import assert_no_warnings, assert_tree_match, yaml_to_asdf
 from asdf.versioning import AsdfVersion
@@ -190,7 +190,7 @@ def test_open_asdf_extensions(tmp_path):
 
 def test_serialization_context():
     extension_manager = ExtensionManager([])
-    context = SerializationContext("1.4.0", extension_manager, "file://test.asdf")
+    context = SerializationContext("1.4.0", extension_manager, "file://test.asdf", None)
     assert context.version == "1.4.0"
     assert context.extension_manager is extension_manager
     assert context._extensions_used == set()
@@ -209,7 +209,17 @@ def test_serialization_context():
         context._mark_extension_used(object())
 
     with pytest.raises(ValueError):
-        SerializationContext("0.5.4", extension_manager, None)
+        SerializationContext("0.5.4", extension_manager, None, None)
+
+
+def test_block_manager_from_serialization_context():
+    af = AsdfFile({})
+    ctx = af._create_serialization_context()
+    # accessing the block manager should issue a AsdfProvisionalAPIWarning
+    with pytest.warns(
+        AsdfProvisionalAPIWarning, match=r"The block_manager API within a SerializationContext  is not yet stable"
+    ):
+        assert ctx.block_manager == af.blocks
 
 
 def test_reading_extension_metadata():

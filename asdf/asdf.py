@@ -15,7 +15,7 @@ from . import _version as version
 from . import block, constants, generic_io, reference, schema, treeutil, util, versioning, yamlutil
 from ._helpers import validate_version
 from .config import config_context, get_config
-from .exceptions import AsdfConversionWarning, AsdfDeprecationWarning, AsdfWarning
+from .exceptions import AsdfConversionWarning, AsdfDeprecationWarning, AsdfProvisionalAPIWarning, AsdfWarning
 from .extension import (
     AsdfExtension,
     AsdfExtensionList,
@@ -1711,7 +1711,7 @@ class AsdfFile:
     # This function is called from within yamlutil methods to create
     # a context when one isn't explicitly passed in.
     def _create_serialization_context(self):
-        return SerializationContext(self.version_string, self.extension_manager, self.uri)
+        return SerializationContext(self.version_string, self.extension_manager, self.uri, self.blocks)
 
 
 def _check_and_set_mode(fileobj, asdf_mode):
@@ -1880,12 +1880,21 @@ class SerializationContext:
     Container for parameters of the current (de)serialization.
     """
 
-    def __init__(self, version, extension_manager, url):
+    def __init__(self, version, extension_manager, url, block_manager):
         self._version = validate_version(version)
         self._extension_manager = extension_manager
         self._url = url
 
         self.__extensions_used = set()
+
+        self._block_manager = block_manager
+
+    @property
+    def block_manager(self):
+        warnings.warn(
+            "The block_manager API within a SerializationContext  is not yet stable", AsdfProvisionalAPIWarning
+        )
+        return self._block_manager
 
     @property
     def url(self):
