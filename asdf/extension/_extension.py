@@ -18,9 +18,9 @@ class Extension(abc.ABC):
     """
 
     @classmethod
-    def __subclasshook__(cls, C):
+    def __subclasshook__(cls, c):
         if cls is Extension:
-            return hasattr(C, "extension_uri")
+            return hasattr(c, "extension_uri")
         return NotImplemented  # pragma: no cover
 
     @property
@@ -126,7 +126,7 @@ class ExtensionProxy(Extension, AsdfExtension):
     """
 
     @classmethod
-    def maybe_wrap(self, delegate):
+    def maybe_wrap(cls, delegate):
         if isinstance(delegate, ExtensionProxy):
             return delegate
         else:

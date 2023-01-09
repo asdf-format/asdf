@@ -91,7 +91,7 @@ def validate_tag(validator, tag_pattern, instance, schema):
         yield ValidationError(f"mismatched tags, wanted '{tag_pattern}', got '{instance_tag}'")
 
 
-def validate_propertyOrder(validator, order, instance, schema):
+def validate_propertyOrder(validator, order, instance, schema):  # noqa: N802
     """
     Stores a value on the `tagged.TaggedDict` instance so that
     properties can be written out in the preferred order.  In that
@@ -109,7 +109,7 @@ def validate_propertyOrder(validator, order, instance, schema):
     instance.property_order = order
 
 
-def validate_flowStyle(validator, flow_style, instance, schema):
+def validate_flowStyle(validator, flow_style, instance, schema):  # noqa: N802
     """
     Sets a flag on the `tagged.TaggedList` or `tagged.TaggedDict`
     object so that the YAML generator knows which style to use to
@@ -263,20 +263,20 @@ def _create_validator(validators=YAML_VALIDATORS, visit_repeat_nodes=False):
         }
     )
     id_of = mvalidators.Draft4Validator.ID_OF
-    ASDFValidator = mvalidators.create(
+    asdf_validator = mvalidators.create(
         meta_schema=meta_schema, validators=validators, type_checker=type_checker, id_of=id_of
     )
 
     def _patch_init(cls):
         original_init = cls.__init__
 
-        def __init__(self, *args, **kwargs):
+        def init(self, *args, **kwargs):
             self.ctx = kwargs.pop("ctx", None)
             self.serialization_context = kwargs.pop("serialization_context", None)
 
             original_init(self, *args, **kwargs)
 
-        cls.__init__ = __init__
+        cls.__init__ = init
 
     def _patch_iter_errors(cls):
         original_iter_errors = cls.iter_errors
@@ -331,10 +331,10 @@ def _create_validator(validators=YAML_VALIDATORS, visit_repeat_nodes=False):
 
         cls.iter_errors = iter_errors
 
-    _patch_init(ASDFValidator)
-    _patch_iter_errors(ASDFValidator)
+    _patch_init(asdf_validator)
+    _patch_iter_errors(asdf_validator)
 
-    return ASDFValidator
+    return asdf_validator
 
 
 @lru_cache

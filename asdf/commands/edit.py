@@ -222,7 +222,7 @@ def edit(path):
             try:
                 new_asdf_version = parse_asdf_version(new_content)
                 new_yaml_version = parse_yaml_version(new_content)
-            except Exception as e:
+            except Exception as e:  # noqa: BLE001
                 print(f"Error: failed to parse ASDF header: {str(e)}")
                 choice = request_input("(c)ontinue editing or (a)bort? ", ["c", "a"])
                 if choice == "a":
@@ -260,7 +260,7 @@ def edit(path):
                     return 1
                 elif choice == "c":
                     continue
-            except Exception as e:
+            except Exception as e:  # noqa: BLE001
                 print("Error: failed to read updated file as ASDF:")
                 print_exception(e)
                 choice = request_input("(c)ontinue editing or (a)bort? ", ["c", "a"])

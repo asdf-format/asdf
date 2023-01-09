@@ -85,7 +85,7 @@ def fractiontype_factory():
 
 def fractional2dcoordtype_factory():
 
-    FractionType = fractiontype_factory()
+    fraction_type = fractiontype_factory()
 
     class Fractional2dCoordType(types.CustomType):
         name = "fractional_2d_coord"
@@ -105,19 +105,19 @@ def fractional2dcoordtype_factory():
     class Fractional2dCoordExtension(CustomExtension):
         @property
         def types(self):
-            return [FractionType, Fractional2dCoordType]
+            return [fraction_type, Fractional2dCoordType]
 
-    return FractionType, Fractional2dCoordType, Fractional2dCoordExtension
+    return fraction_type, Fractional2dCoordType, Fractional2dCoordExtension
 
 
 def test_custom_tag():
 
-    FractionType = fractiontype_factory()
+    fraction_type = fractiontype_factory()
 
     class FractionExtension(CustomExtension):
         @property
         def types(self):
-            return [FractionType]
+            return [fraction_type]
 
     class FractionCallable(FractionExtension):
         @property

@@ -242,7 +242,7 @@ class GenericFile(metaclass=util.InheritDocstrings):
         if block_size == -1:
             try:
                 block_size = os.fstat(self._fd.fileno()).st_blksize
-            except Exception:
+            except Exception:  # noqa: BLE001
                 block_size = io.DEFAULT_BUFFER_SIZE
 
         if block_size <= 0:
@@ -925,7 +925,7 @@ def _http_to_temp(init, mode, uri=None):
     if block_size == -1:
         try:
             block_size = os.fstat(fd.fileno()).st_blksize
-        except Exception:
+        except Exception:  # noqa: BLE001
             block_size = io.DEFAULT_BUFFER_SIZE
 
     try:

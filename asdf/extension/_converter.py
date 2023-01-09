@@ -18,13 +18,13 @@ class Converter(abc.ABC):
     """
 
     @classmethod
-    def __subclasshook__(cls, C):
+    def __subclasshook__(cls, c):
         if cls is Converter:
             return (
-                hasattr(C, "tags")
-                and hasattr(C, "types")
-                and hasattr(C, "to_yaml_tree")
-                and hasattr(C, "from_yaml_tree")
+                hasattr(c, "tags")
+                and hasattr(c, "types")
+                and hasattr(c, "to_yaml_tree")
+                and hasattr(c, "from_yaml_tree")
             )
         return NotImplemented  # pragma: no cover
 

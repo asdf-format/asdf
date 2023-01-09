@@ -80,18 +80,18 @@ class ExtensionTypeMeta(type):
         return default
 
     @property
-    def versioned_siblings(mcls):
-        return getattr(mcls, "__versioned_siblings") or []
+    def versioned_siblings(cls):
+        return getattr(cls, "__versioned_siblings") or []
 
-    def __new__(mcls, name, bases, attrs):
-        requires = mcls._find_in_bases(attrs, bases, "requires", [])
-        if not mcls._has_required_modules(requires):
+    def __new__(cls, name, bases, attrs):
+        requires = cls._find_in_bases(attrs, bases, "requires", [])
+        if not cls._has_required_modules(requires):
             attrs["from_tree_tagged"] = classmethod(_from_tree_tagged_missing_requirements)
             attrs["types"] = []
             attrs["has_required_modules"] = False
         else:
             attrs["has_required_modules"] = True
-            types = mcls._find_in_bases(attrs, bases, "types", [])
+            types = cls._find_in_bases(attrs, bases, "types", [])
             new_types = []
             for typ in types:
                 if isinstance(typ, str):
@@ -99,40 +99,40 @@ class ExtensionTypeMeta(type):
                 new_types.append(typ)
             attrs["types"] = new_types
 
-        cls = super().__new__(mcls, name, bases, attrs)
+        ncls = super().__new__(cls, name, bases, attrs)
 
-        if hasattr(cls, "version"):
-            if not isinstance(cls.version, (AsdfVersion, AsdfSpec)):
-                cls.version = AsdfVersion(cls.version)
+        if hasattr(ncls, "version"):
+            if not isinstance(ncls.version, (AsdfVersion, AsdfSpec)):
+                ncls.version = AsdfVersion(ncls.version)
 
-        if hasattr(cls, "name"):
-            if isinstance(cls.name, str):
+        if hasattr(ncls, "name"):
+            if isinstance(ncls.name, str):
                 if "yaml_tag" not in attrs:
-                    cls.yaml_tag = cls.make_yaml_tag(cls.name)
-            elif isinstance(cls.name, list):
+                    ncls.yaml_tag = ncls.make_yaml_tag(ncls.name)
+            elif isinstance(ncls.name, list):
                 pass
-            elif cls.name is not None:
+            elif ncls.name is not None:
                 raise TypeError("name must be string or list")
 
-        if hasattr(cls, "supported_versions"):
-            if not isinstance(cls.supported_versions, (list, set)):
-                cls.supported_versions = [cls.supported_versions]
+        if hasattr(ncls, "supported_versions"):
+            if not isinstance(ncls.supported_versions, (list, set)):
+                ncls.supported_versions = [ncls.supported_versions]
             supported_versions = set()
-            for version in cls.supported_versions:
+            for version in ncls.supported_versions:
                 if not isinstance(version, (AsdfVersion, AsdfSpec)):
                     version = AsdfVersion(version)
                 # This should cause an exception for invalid input
                 supported_versions.add(version)
             # We need to convert back to a list here so that the 'in' operator
             # uses actual comparison instead of hash equality
-            cls.supported_versions = list(supported_versions)
+            ncls.supported_versions = list(supported_versions)
             siblings = list()
-            for version in cls.supported_versions:
-                if version != cls.version:
+            for version in ncls.supported_versions:
+                if version != ncls.version:
                     new_attrs = copy(attrs)
                     new_attrs["version"] = version
                     new_attrs["supported_versions"] = set()
-                    new_attrs["_latest_version"] = cls.version
+                    new_attrs["_latest_version"] = ncls.version
                     if "__classcell__" in new_attrs:
                         raise RuntimeError(
                             "Subclasses of ExtensionTypeMeta that define "
@@ -142,10 +142,10 @@ class ExtensionTypeMeta(type):
                             "during creation of versioned siblings. "
                             "See https://github.com/asdf-format/asdf/issues/1245"
                         )
-                    siblings.append(ExtensionTypeMeta.__new__(mcls, name, bases, new_attrs))
-            setattr(cls, "__versioned_siblings", siblings)
+                    siblings.append(ExtensionTypeMeta.__new__(cls, name, bases, new_attrs))
+            setattr(ncls, "__versioned_siblings", siblings)
 
-        return cls
+        return ncls
 
 
 class AsdfTypeMeta(ExtensionTypeMeta):
@@ -154,14 +154,14 @@ class AsdfTypeMeta(ExtensionTypeMeta):
     `AsdfTypeIndex`.
     """
 
-    def __new__(mcls, name, bases, attrs):
-        cls = super().__new__(mcls, name, bases, attrs)
+    def __new__(cls, name, bases, attrs):
+        ncls = super().__new__(cls, name, bases, attrs)
         # Classes using this metaclass get added to the list of built-in
         # extensions
         if name != "AsdfType":
-            _all_asdftypes.add(cls)
+            _all_asdftypes.add(ncls)
 
-        return cls
+        return ncls
 
 
 class ExtensionType:

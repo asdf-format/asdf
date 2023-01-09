@@ -101,7 +101,7 @@ class AsdfSearchResult:
                 return result
             else:
                 return False
-        except Exception:
+        except Exception:  # noqa: BLE001
             return False
 
     def _get_fully_qualified_type(self, value):

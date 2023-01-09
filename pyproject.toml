@@ -170,6 +170,25 @@ extend_skip_glob = ["asdf/extern/*", ".eggs/*", ".tox/*"]
 
 [tool.ruff]
 line-length = 120
+select = [
+    "F", # Pyflakes
+    "E", "W", # pycodestlye
+    # "C90", # mccabe complexity
+    "I", # isort
+    # "D", # pydocstyle
+    "UP", # pyupgrade
+    "N", # pep8-naming
+    "YTT", # flake8-2020
+    # "ANN", # flake8-annotations
+    "S", # flake8-bandit
+    "BLE", # flake8-blind-except
+    # "FBT", # flake8-boolean-trap
+    "RUF100", "T10", "PGH"
+]
+extend-ignore = [
+    "S101", # assert used
+    "S506", # unsafe yaml load
+]
 extend-exclude = ["asdf/extern/*", "docs/*"]
 
 [tool.codespell]
