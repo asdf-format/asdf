@@ -36,7 +36,6 @@ class Extension(abc.ABC):
         -------
         str
         """
-        pass  # pragma: no cover
 
     @property
     def legacy_class_names(self):

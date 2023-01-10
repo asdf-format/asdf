@@ -38,7 +38,6 @@ class Compressor(abc.ABC):
         label : bytes
             The compression label
         """
-        pass  # pragma: no cover
 
     def compress(self, data, **kwargs):
         """

@@ -202,6 +202,7 @@ select = [
     "PD", # pandas-vet
     "PGH", # pygrep-hooks
     "PLC", "PLE", "PLR", "PLW", # Pylint
+    "PIE", # flake8-pie
     "RUF100",
 ]
 extend-ignore = [

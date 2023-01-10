@@ -41,7 +41,6 @@ class Converter(abc.ABC):
         iterable of str
             Tag URIs or URI patterns.
         """
-        pass  # pragma: no cover
 
     @property
     @abc.abstractmethod
@@ -55,7 +54,6 @@ class Converter(abc.ABC):
         iterable of str or type
             If str, the fully qualified class name of the type.
         """
-        pass  # pragma: no cover
 
     def select_tag(self, obj, tags, ctx):
         """
@@ -119,7 +117,6 @@ class Converter(abc.ABC):
         dict or list or str
             The YAML node representation of the object.
         """
-        pass  # pragma: no cover
 
     @abc.abstractmethod
     def from_yaml_tree(self, node, tag, ctx):
@@ -152,7 +149,6 @@ class Converter(abc.ABC):
             An instance of one of the types listed in the `types` property,
             or a generator that yields such an instance.
         """
-        pass  # pragma: no cover
 
 
 class ConverterProxy(Converter):
