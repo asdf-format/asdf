@@ -54,14 +54,13 @@ class ExtensionTypeMeta(type):
             has_module = True
             match = MODULE_RE.match(string)
             modname, _, version = match.groups()
-            if modname in cls._import_cache:
-                if not cls._import_cache[modname]:
-                    return False
+            if modname in cls._import_cache and not cls._import_cache[modname]:
+                return False
             try:
                 module = importlib.import_module(modname)
-                if version and hasattr(module, "__version__"):
-                    if module.__version__ < version:
-                        has_module = False
+                if version and hasattr(module, "__version__") and module.__version__ < version:
+                    has_module = False
+
             except ImportError:
                 has_module = False
             finally:
@@ -101,9 +100,8 @@ class ExtensionTypeMeta(type):
 
         ncls = super().__new__(cls, name, bases, attrs)
 
-        if hasattr(ncls, "version"):
-            if not isinstance(ncls.version, (AsdfVersion, AsdfSpec)):
-                ncls.version = AsdfVersion(ncls.version)
+        if hasattr(ncls, "version") and not isinstance(ncls.version, (AsdfVersion, AsdfSpec)):
+            ncls.version = AsdfVersion(ncls.version)
 
         if hasattr(ncls, "name"):
             if isinstance(ncls.name, str):
@@ -379,9 +377,8 @@ class ExtensionType:
         version : `str` or `~asdf.versioning.AsdfVersion`
             The version to test for compatibility.
         """
-        if cls.supported_versions:
-            if version not in cls.supported_versions:
-                return True
+        if cls.supported_versions and version not in cls.supported_versions:
+            return True
         return False
 
 

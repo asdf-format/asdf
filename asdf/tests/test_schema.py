@@ -360,14 +360,12 @@ custom: !<tag:nowhere.org:custom/custom-1.0.0>
     # This should cause a warning but not an error because without explicitly
     # providing an extension, our custom type will not be recognized and will
     # simply be converted to a raw type.
-    with pytest.warns(AsdfConversionWarning, match=r"tag:nowhere.org:custom/custom-1.0.0"):
-        with asdf.open(buff):
-            pass
+    with pytest.warns(AsdfConversionWarning, match=r"tag:nowhere.org:custom/custom-1.0.0"), asdf.open(buff):
+        pass
 
     buff.seek(0)
-    with pytest.raises(ValidationError):
-        with asdf.open(buff, extensions=[CustomTypeExtension()]):
-            pass
+    with pytest.raises(ValidationError), asdf.open(buff, extensions=[CustomTypeExtension()]):
+        pass
 
     # Make sure tags get validated inside of other tags that know
     # nothing about them.
@@ -378,9 +376,8 @@ array: !core/ndarray-1.0.0
     foo
     """
     buff = helpers.yaml_to_asdf(yaml)
-    with pytest.raises(ValidationError):
-        with asdf.open(buff, extensions=[CustomTypeExtension()]):
-            pass
+    with pytest.raises(ValidationError), asdf.open(buff, extensions=[CustomTypeExtension()]):
+        pass
 
 
 def test_invalid_schema():
@@ -472,37 +469,38 @@ custom: !<tag:nowhere.org:custom/default-1.0.0>
         assert ff.tree["custom"]["j"]["l"] == 362
 
     buff.seek(0)
-    with pytest.warns(AsdfDeprecationWarning, match=r"do_not_fill_defaults"):
-        with asdf.open(buff, extensions=[DefaultTypeExtension()], do_not_fill_defaults=True) as ff:
-            assert "a" not in ff.tree["custom"]
-            assert "c" not in ff.tree["custom"]["b"]
-            assert "e" not in ff.tree["custom"]["d"]
-            assert "f" not in ff.tree["custom"]["d"]
-            assert "h" not in ff.tree["custom"]["g"]
-            assert "i" not in ff.tree["custom"]["g"]
-            assert "k" not in ff.tree["custom"]["j"]
-            assert ff.tree["custom"]["j"]["l"] == 362
-            ff.fill_defaults()
-            assert "a" in ff.tree["custom"]
-            assert ff.tree["custom"]["a"] == 42
-            assert "c" in ff.tree["custom"]["b"]
-            assert ff.tree["custom"]["b"]["c"] == 82
-            assert ff.tree["custom"]["b"]["c"] == 82
-            assert ff.tree["custom"]["d"]["e"] == 122
-            assert ff.tree["custom"]["d"]["f"] == 162
-            assert "h" not in ff.tree["custom"]["g"]
-            assert "i" not in ff.tree["custom"]["g"]
-            assert "k" not in ff.tree["custom"]["j"]
-            assert ff.tree["custom"]["j"]["l"] == 362
-            ff.remove_defaults()
-            assert "a" not in ff.tree["custom"]
-            assert "c" not in ff.tree["custom"]["b"]
-            assert "e" not in ff.tree["custom"]["d"]
-            assert "f" not in ff.tree["custom"]["d"]
-            assert "h" not in ff.tree["custom"]["g"]
-            assert "i" not in ff.tree["custom"]["g"]
-            assert "k" not in ff.tree["custom"]["j"]
-            assert ff.tree["custom"]["j"]["l"] == 362
+    with pytest.warns(AsdfDeprecationWarning, match=r"do_not_fill_defaults"), asdf.open(
+        buff, extensions=[DefaultTypeExtension()], do_not_fill_defaults=True
+    ) as ff:
+        assert "a" not in ff.tree["custom"]
+        assert "c" not in ff.tree["custom"]["b"]
+        assert "e" not in ff.tree["custom"]["d"]
+        assert "f" not in ff.tree["custom"]["d"]
+        assert "h" not in ff.tree["custom"]["g"]
+        assert "i" not in ff.tree["custom"]["g"]
+        assert "k" not in ff.tree["custom"]["j"]
+        assert ff.tree["custom"]["j"]["l"] == 362
+        ff.fill_defaults()
+        assert "a" in ff.tree["custom"]
+        assert ff.tree["custom"]["a"] == 42
+        assert "c" in ff.tree["custom"]["b"]
+        assert ff.tree["custom"]["b"]["c"] == 82
+        assert ff.tree["custom"]["b"]["c"] == 82
+        assert ff.tree["custom"]["d"]["e"] == 122
+        assert ff.tree["custom"]["d"]["f"] == 162
+        assert "h" not in ff.tree["custom"]["g"]
+        assert "i" not in ff.tree["custom"]["g"]
+        assert "k" not in ff.tree["custom"]["j"]
+        assert ff.tree["custom"]["j"]["l"] == 362
+        ff.remove_defaults()
+        assert "a" not in ff.tree["custom"]
+        assert "c" not in ff.tree["custom"]["b"]
+        assert "e" not in ff.tree["custom"]["d"]
+        assert "f" not in ff.tree["custom"]["d"]
+        assert "h" not in ff.tree["custom"]["g"]
+        assert "i" not in ff.tree["custom"]["g"]
+        assert "k" not in ff.tree["custom"]["j"]
+        assert ff.tree["custom"]["j"]["l"] == 362
 
     buff.seek(0)
     with config_context() as config:
@@ -676,17 +674,15 @@ def test_read_large_literal(value):
 
     buff = helpers.yaml_to_asdf(yaml)
 
-    with pytest.warns(AsdfWarning, match=r"Invalid integer literal value"):
-        with asdf.open(buff) as af:
-            assert af["integer"] == value
+    with pytest.warns(AsdfWarning, match=r"Invalid integer literal value"), asdf.open(buff) as af:
+        assert af["integer"] == value
 
     yaml = f"{value}: foo"
 
     buff = helpers.yaml_to_asdf(yaml)
 
-    with pytest.warns(AsdfWarning, match=r"Invalid integer literal value"):
-        with asdf.open(buff) as af:
-            assert af[value] == "foo"
+    with pytest.warns(AsdfWarning, match=r"Invalid integer literal value"), asdf.open(buff) as af:
+        assert af[value] == "foo"
 
 
 @pytest.mark.parametrize(
@@ -816,9 +812,10 @@ custom: !<tag:nowhere.org:custom/missing-1.1.0>
   b: {foo: 42}
     """
     buff = helpers.yaml_to_asdf(yaml)
-    with pytest.warns(AsdfConversionWarning, match=r"Failed to convert tag:nowhere.org:custom/missing-1.1.0"):
-        with asdf.open(buff, extensions=[DefaultTypeExtension()]) as ff:
-            assert ff.tree["custom"]["b"]["foo"] == 42
+    with pytest.warns(
+        AsdfConversionWarning, match=r"Failed to convert tag:nowhere.org:custom/missing-1.1.0"
+    ), asdf.open(buff, extensions=[DefaultTypeExtension()]) as ff:
+        assert ff.tree["custom"]["b"]["foo"] == 42
 
 
 def test_assert_roundtrip_with_extension(tmp_path):
@@ -862,18 +859,16 @@ def test_custom_validation_bad(tmp_path):
         ff.write_to(asdf_file)
 
     # Creating file using custom schema should fail
-    with pytest.raises(ValidationError):
-        with asdf.AsdfFile(tree, custom_schema=custom_schema_path):
-            pass
+    with pytest.raises(ValidationError), asdf.AsdfFile(tree, custom_schema=custom_schema_path):
+        pass
 
     # Opening file without custom schema should pass
     with asdf.open(asdf_file):
         pass
 
     # Opening file with custom schema should fail
-    with pytest.raises(ValidationError):
-        with asdf.open(asdf_file, custom_schema=custom_schema_path):
-            pass
+    with pytest.raises(ValidationError), asdf.open(asdf_file, custom_schema=custom_schema_path):
+        pass
 
 
 def test_custom_validation_good(tmp_path):
@@ -937,18 +932,16 @@ def test_custom_validation_with_definitions_bad(tmp_path):
         ff.write_to(asdf_file)
 
     # Creating file with custom schema should fail
-    with pytest.raises(ValidationError):
-        with asdf.AsdfFile(tree, custom_schema=custom_schema_path):
-            pass
+    with pytest.raises(ValidationError), asdf.AsdfFile(tree, custom_schema=custom_schema_path):
+        pass
 
     # Opening file without custom schema should pass
     with asdf.open(asdf_file):
         pass
 
     # Opening file with custom schema should fail
-    with pytest.raises(ValidationError):
-        with asdf.open(asdf_file, custom_schema=custom_schema_path):
-            pass
+    with pytest.raises(ValidationError), asdf.open(asdf_file, custom_schema=custom_schema_path):
+        pass
 
 
 def test_custom_validation_with_external_ref_good(tmp_path):
@@ -977,18 +970,16 @@ def test_custom_validation_with_external_ref_bad(tmp_path):
         ff.write_to(asdf_file)
 
     # Creating file with custom schema should fail
-    with pytest.raises(ValidationError):
-        with asdf.AsdfFile(tree, custom_schema=custom_schema_path):
-            pass
+    with pytest.raises(ValidationError), asdf.AsdfFile(tree, custom_schema=custom_schema_path):
+        pass
 
     # Opening file without custom schema should pass
     with asdf.open(asdf_file):
         pass
 
     # Opening file with custom schema should fail
-    with pytest.raises(ValidationError):
-        with asdf.open(asdf_file, custom_schema=custom_schema_path):
-            pass
+    with pytest.raises(ValidationError), asdf.open(asdf_file, custom_schema=custom_schema_path):
+        pass
 
 
 def test_load_custom_schema_deprecated():
@@ -1026,9 +1017,8 @@ a: !core/doesnt_exist-1.0.0
     """
 
     buff = helpers.yaml_to_asdf(yaml)
-    with pytest.warns(AsdfWarning, match=r"Unable to locate schema file"):
-        with asdf.open(buff) as af:
-            assert str(af["a"]) == "hello"
+    with pytest.warns(AsdfWarning, match=r"Unable to locate schema file"), asdf.open(buff) as af:
+        assert str(af["a"]) == "hello"
 
     # This is a more realistic case since we're using an external extension
     yaml = """
@@ -1037,9 +1027,10 @@ a: !<tag:nowhere.org:custom/doesnt_exist-1.0.0>
   """
 
     buff = helpers.yaml_to_asdf(yaml)
-    with pytest.warns(AsdfWarning, match=r"Unable to locate schema file"):
-        with asdf.open(buff, extensions=CustomExtension()) as af:
-            assert str(af["a"]) == "hello"
+    with pytest.warns(AsdfWarning, match=r"Unable to locate schema file"), asdf.open(
+        buff, extensions=CustomExtension()
+    ) as af:
+        assert str(af["a"]) == "hello"
 
 
 @pytest.mark.parametrize(
@@ -1074,10 +1065,7 @@ def test_numpy_scalar_type_validation(numpy_value, valid_types):
             valid = True
 
         if valid is not expected_valid:
-            if expected_valid:
-                description = "valid"
-            else:
-                description = "invalid"
+            description = "valid" if expected_valid else "invalid"
             raise AssertionError(
                 "Expected numpy.{} to be {} against jsonschema type '{}'".format(
                     type(numpy_value).__name__, description, jsonschema_type

@@ -310,10 +310,11 @@ class AsdfFile:
                     break
 
             filename = f"'{self._fname}' " if self._fname else ""
-            if extension.extension_uri is not None:
-                extension_description = f"URI '{extension.extension_uri}'"
-            else:
-                extension_description = f"class '{extension.extension_class}'"
+            extension_description = (
+                f"URI '{extension.extension_uri}'"
+                if extension.extension_uri is not None
+                else f"class '{extension.extension_class}'"
+            )
             if extension.software is not None:
                 extension_description += (
                     f" (from package {extension.software['name']}=={extension.software['version']})"
@@ -607,12 +608,7 @@ class AsdfFile:
         return self._comments
 
     def _validate(self, tree, custom=True, reading=False):
-        if reading:
-            # If we're validating on read then the tree
-            # is already guaranteed to be in tagged form.
-            tagged_tree = tree
-        else:
-            tagged_tree = yamlutil.custom_tree_to_tagged_tree(tree, self)
+        tagged_tree = tree if reading else yamlutil.custom_tree_to_tagged_tree(tree, self)
         schema.validate(tagged_tree, self, reading=reading)
         # Perform secondary validation pass if requested
         if custom and self._custom_schema:

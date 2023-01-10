@@ -114,10 +114,9 @@ class ResourceMappingProxy(Mapping):
         return hash(id(self.delegate))
 
     def __repr__(self):
-        if self.package_name is not None:
-            package_description = f"{self.package_name}=={self.package_version}"
-        else:
-            package_description = "(none)"
+        package_description = (
+            f"{self.package_name}=={self.package_version}" if self.package_name is not None else "(none)"
+        )
 
         return f"<ResourceMappingProxy class: {self.class_name} package: {package_description} len: {len(self)}>"
 

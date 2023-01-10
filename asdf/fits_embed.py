@@ -67,10 +67,7 @@ class _EmbeddedBlockManager(block.BlockManager):
             )
             if parts is not None:
                 ver = int(parts.group("ver"))
-                if parts.group("name"):
-                    pair = (parts.group("name"), ver)
-                else:
-                    pair = ver
+                pair = (parts.group("name"), ver) if parts.group("name") else ver
                 return _FitsBlock(self._hdulist[pair])
             else:
                 raise ValueError(f"Can not parse source '{source}'")
@@ -329,10 +326,7 @@ class AsdfInFits(asdf.AsdfFile):
         *args,
         **kwargs,
     ):
-        if "auto_inline" in kwargs:
-            asdf_kwargs = {"auto_inline": kwargs.pop("auto_inline")}
-        else:
-            asdf_kwargs = {}
+        asdf_kwargs = {"auto_inline": kwargs.pop("auto_inline")} if "auto_inline" in kwargs else {}
 
         self._update_asdf_extension(
             all_array_storage=all_array_storage,

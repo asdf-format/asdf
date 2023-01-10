@@ -36,9 +36,8 @@ a: !core/complex-1.0.0
     ],
 )
 def test_invalid_complex(invalid):
-    with pytest.raises(asdf.ValidationError):
-        with asdf.open(make_complex_asdf(invalid)):
-            pass
+    with pytest.raises(asdf.ValidationError), asdf.open(make_complex_asdf(invalid)):
+        pass
 
 
 @pytest.mark.parametrize(

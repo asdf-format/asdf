@@ -46,7 +46,7 @@ def info(node_or_path, max_rows=DEFAULT_MAX_ROWS, max_cols=DEFAULT_MAX_COLS, sho
 
 @contextmanager
 def _manage_node(node_or_path):
-    if isinstance(node_or_path, str) or isinstance(node_or_path, pathlib.Path):
+    if isinstance(node_or_path, (str, pathlib.Path)):
         with open_asdf(node_or_path) as af:
             yield af.tree
     else:

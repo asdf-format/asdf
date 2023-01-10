@@ -45,9 +45,8 @@ def create_tree(key, node, identifier="root", filters=None, refresh_extension_ma
         key, identifier, node, refresh_extension_manager=refresh_extension_manager
     )
 
-    if len(filters) > 0:
-        if not _filter_tree(schema_info, filters):
-            return None
+    if len(filters) > 0 and not _filter_tree(schema_info, filters):
+        return None
 
     return schema_info
 
@@ -254,7 +253,7 @@ class NodeSchemaInfo:
             next_nodes = []
 
             for parent, identifier, node in current_nodes:
-                if (isinstance(node, dict) or isinstance(node, tuple) or cls.traversable(node)) and id(node) in seen:
+                if (isinstance(node, (dict, tuple)) or cls.traversable(node)) and id(node) in seen:
                     info = NodeSchemaInfo(key, parent, identifier, node, current_depth, recursive=True)
                     parent.children.append(info)
 

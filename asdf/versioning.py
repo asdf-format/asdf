@@ -6,13 +6,9 @@ of the ASDF spec.
 from functools import total_ordering
 
 import yaml
-
-if getattr(yaml, "__with_libyaml__", None):  # pragma: no cover
-    _yaml_base_loader = yaml.CSafeLoader
-else:  # pragma: no cover
-    _yaml_base_loader = yaml.SafeLoader
-
 from semantic_version import SimpleSpec, Version
+
+_yaml_base_loader = yaml.CSafeLoader if getattr(yaml, "__with_libyaml__", None) else yaml.SafeLoader
 
 __all__ = ["AsdfVersion", "AsdfSpec", "AsdfVersionMixin", "split_tag_version", "join_tag_version"]
 

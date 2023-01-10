@@ -73,10 +73,9 @@ class AsdfSchemaFile(pytest.File):
             path = fspath
             kwargs["fspath"] = path
 
-        if hasattr(super(), "from_parent"):
-            result = super().from_parent(parent, **kwargs)
-        else:
-            result = AsdfSchemaFile(path, parent)
+        result = (
+            super().from_parent(parent, **kwargs) if hasattr(super(), "from_parent") else AsdfSchemaFile(path, parent)
+        )
 
         result.skip_examples = skip_examples
         result.validate_default = validate_default
@@ -275,10 +274,7 @@ def _parse_test_list(content):
             parts = line.split("::", 1)
             path_suffix = pathlib.Path(parts[0]).as_posix()
 
-            if len(parts) == 1:
-                name = "*"
-            else:
-                name = parts[-1]
+            name = "*" if len(parts) == 1 else parts[-1]
 
             if path_suffix not in result:
                 result[path_suffix] = []

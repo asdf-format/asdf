@@ -186,10 +186,7 @@ def inline_data_asarray(inline, dtype=None):
 def numpy_array_to_list(array):
     def tolist(x):
         if isinstance(x, (np.ndarray, NDArrayType)):
-            if x.dtype.char == "S":
-                x = x.astype("U").tolist()
-            else:
-                x = x.tolist()
+            x = x.astype("U").tolist() if x.dtype.char == "S" else x.tolist()
 
         if isinstance(x, (list, tuple)):
             return [tolist(y) for y in x]
@@ -228,11 +225,10 @@ class NDArrayType(AsdfType):
             self._array = inline_data_asarray(source, dtype)
             self._array = self._apply_mask(self._array, self._mask)
             self._block = asdffile.blocks.add_inline(self._array)
-            if shape is not None:
-                if (shape[0] == "*" and self._array.shape[1:] != tuple(shape[1:])) or (
-                    self._array.shape != tuple(shape)
-                ):
-                    raise ValueError("inline data doesn't match the given shape")
+            if shape is not None and (
+                (shape[0] == "*" and self._array.shape[1:] != tuple(shape[1:])) or (self._array.shape != tuple(shape))
+            ):
+                raise ValueError("inline data doesn't match the given shape")
 
         self._shape = shape
         self._dtype = dtype
@@ -257,10 +253,7 @@ class NDArrayType(AsdfType):
             block = self.block
             shape = self.get_actual_shape(self._shape, self._strides, self._dtype, len(block))
 
-            if block.trust_data_dtype:
-                dtype = block.data.dtype
-            else:
-                dtype = self._dtype
+            dtype = block.data.dtype if block.trust_data_dtype else self._dtype
 
             self._array = np.ndarray(shape, dtype, block.data, self._offset, self._strides, self._order)
             self._array = self._apply_mask(self._array, self._mask)
@@ -313,10 +306,7 @@ class NDArrayType(AsdfType):
         elif num_stars == 1:
             if shape[0] != "*":
                 raise ValueError("'*' may only be in first entry of shape")
-            if strides is not None:
-                stride = strides[0]
-            else:
-                stride = np.product(shape[1:]) * dtype.itemsize
+            stride = strides[0] if strides is not None else np.product(shape[1:]) * dtype.itemsize
             missing = int(block_size / stride)
             return [missing] + shape[1:]
         raise ValueError(f"Invalid shape '{shape}'")
@@ -389,14 +379,8 @@ class NDArrayType(AsdfType):
             if data:
                 source = data
             shape = node.get("shape", None)
-            if data is not None:
-                byteorder = sys.byteorder
-            else:
-                byteorder = node["byteorder"]
-            if "datatype" in node:
-                dtype = asdf_datatype_to_numpy_dtype(node["datatype"], byteorder)
-            else:
-                dtype = None
+            byteorder = sys.byteorder if data is not None else node["byteorder"]
+            dtype = asdf_datatype_to_numpy_dtype(node["datatype"], byteorder) if "datatype" in node else None
             offset = node.get("offset", 0)
             strides = node.get("strides", None)
             mask = node.get("mask", None)
@@ -464,10 +448,7 @@ class NDArrayType(AsdfType):
             # block data, in case the block is compressed.
             offset = data.ctypes.data - base.ctypes.data
 
-            if data.flags.c_contiguous:
-                strides = None
-            else:
-                strides = data.strides
+            strides = None if data.flags.c_contiguous else data.strides
 
             dtype, byteorder = numpy_dtype_to_asdf_datatype(
                 data.dtype,
@@ -499,11 +480,10 @@ class NDArrayType(AsdfType):
             if strides is not None:
                 result["strides"] = list(strides)
 
-        if isinstance(data, ma.MaskedArray):
-            if np.any(data.mask):
-                if block.array_storage == "inline":
-                    ctx.blocks.set_array_storage(ctx.blocks[data.mask], "inline")
-                result["mask"] = data.mask
+        if isinstance(data, ma.MaskedArray) and np.any(data.mask):
+            if block.array_storage == "inline":
+                ctx.blocks.set_array_storage(ctx.blocks[data.mask], "inline")
+            result["mask"] = data.mask
 
         return result
 

@@ -112,17 +112,15 @@ def test_open2(tree, tmp_path):
 def test_open_fail(tmp_path):
     path = os.path.join(str(tmp_path), "test.asdf")
 
-    with open(path, "w") as fd:
-        with pytest.raises(ValueError):
-            generic_io.get_file(fd, mode="w")
+    with open(path, "w") as fd, pytest.raises(ValueError):
+        generic_io.get_file(fd, mode="w")
 
 
 def test_open_fail2(tmp_path):
     path = os.path.join(str(tmp_path), "test.asdf")
 
-    with open(path, "w") as fd:
-        with pytest.raises(ValueError):
-            generic_io.get_file(fd, mode="w")
+    with open(path, "w") as fd, pytest.raises(ValueError):
+        generic_io.get_file(fd, mode="w")
 
 
 def test_open_fail3(tmp_path):
@@ -131,9 +129,8 @@ def test_open_fail3(tmp_path):
     with open(path, "w") as fd:
         fd.write("\n\n\n")
 
-    with open(path) as fd:
-        with pytest.raises(ValueError):
-            generic_io.get_file(fd, mode="r")
+    with open(path) as fd, pytest.raises(ValueError):
+        generic_io.get_file(fd, mode="r")
 
 
 def test_open_fail4(tmp_path):
@@ -142,9 +139,8 @@ def test_open_fail4(tmp_path):
     with open(path, "w") as fd:
         fd.write("\n\n\n")
 
-    with open(path) as fd:
-        with pytest.raises(ValueError):
-            generic_io.get_file(fd, mode="r")
+    with open(path) as fd, pytest.raises(ValueError):
+        generic_io.get_file(fd, mode="r")
 
 
 def test_io_open(tree, tmp_path):
@@ -300,10 +296,8 @@ def test_exploded_filesystem_fail(tree, tmp_path):
     with get_write_fd() as fd:
         asdf.AsdfFile(tree).write_to(fd, all_array_storage="external")
 
-    with get_read_fd() as fd:
-        with asdf.open(fd) as ff:
-            with pytest.raises(ValueError):
-                helpers.assert_tree_match(tree, ff.tree)
+    with get_read_fd() as fd, asdf.open(fd) as ff, pytest.raises(ValueError):
+        helpers.assert_tree_match(tree, ff.tree)
 
 
 @pytest.mark.remote_data()
@@ -344,10 +338,9 @@ def test_exploded_stream_read(tmp_path, small_tree):
     with open(path, "rb") as fd:
         # This should work, so we can get the tree content
         x = generic_io.InputStream(fd, "r")
-        with asdf.open(x) as ff:
-            # It's only when trying to access external data that an error occurs
-            with pytest.raises(ValueError):
-                ff.tree["science_data"][:]
+        # It's only when trying to access external data that an error occurs
+        with asdf.open(x) as ff, pytest.raises(ValueError):
+            ff.tree["science_data"][:]
 
 
 def test_unicode_open(tmp_path, small_tree):
@@ -357,10 +350,8 @@ def test_unicode_open(tmp_path, small_tree):
 
     ff.write_to(path)
 
-    with open(path, encoding="utf-8") as fd:
-        with pytest.raises(ValueError):
-            with asdf.open(fd):
-                pass
+    with open(path, encoding="utf-8") as fd, pytest.raises(ValueError), asdf.open(fd):
+        pass
 
 
 def test_open_stdout():
@@ -374,9 +365,8 @@ def test_invalid_obj(tmp_path):
         generic_io.get_file(42)
 
     path = os.path.join(str(tmp_path), "test.asdf")
-    with generic_io.get_file(path, "w") as fd:
-        with pytest.raises(ValueError):
-            generic_io.get_file(fd, "r")
+    with generic_io.get_file(path, "w") as fd, pytest.raises(ValueError):
+        generic_io.get_file(fd, "r")
 
     with pytest.raises(ValueError):
         generic_io.get_file("http://www.google.com", "w")
@@ -384,13 +374,11 @@ def test_invalid_obj(tmp_path):
     with pytest.raises(TypeError):
         generic_io.get_file(io.StringIO())
 
-    with open(path, "rb") as fd:
-        with pytest.raises(ValueError):
-            generic_io.get_file(fd, "w")
+    with open(path, "rb") as fd, pytest.raises(ValueError):
+        generic_io.get_file(fd, "w")
 
-    with open(path, "rb") as fd:
-        with pytest.raises(ValueError):
-            generic_io.get_file(fd, "w")
+    with open(path, "rb") as fd, pytest.raises(ValueError):
+        generic_io.get_file(fd, "w")
 
 
 def test_nonseekable_file(tmp_path):

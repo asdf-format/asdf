@@ -76,7 +76,7 @@ class ObjectWithInfoSupport:
         self.allof = allof
         self.oneof = oneof
         self.patt = {}
-        for key in kw.keys():
+        for key in kw:
             if re.search("^S_", key):
                 if type(kw[key]) != str:
                     raise ValueError("S_ pattern object must be a string")

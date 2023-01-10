@@ -23,10 +23,7 @@ from .main import Command
 __all__ = ["edit"]
 
 
-if sys.platform.startswith("win"):
-    DEFAULT_EDITOR = "notepad"
-else:
-    DEFAULT_EDITOR = "vi"
+DEFAULT_EDITOR = "notepad" if sys.platform.startswith("win") else "vi"
 
 
 class Edit(Command):

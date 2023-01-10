@@ -386,10 +386,7 @@ def config_context():
     The context yields an `asdf.config.AsdfConfig` instance that can be modified
     without affecting code outside of the context.
     """
-    if len(_local.config_stack) == 0:
-        base_config = _global_config
-    else:
-        base_config = _local.config_stack[-1]
+    base_config = _global_config if len(_local.config_stack) == 0 else _local.config_stack[-1]
 
     config = copy.copy(base_config)
     _local.config_stack.append(config)

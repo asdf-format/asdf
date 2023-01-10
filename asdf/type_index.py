@@ -97,15 +97,18 @@ class _AsdfWriteTypeIndex:
 
     def _add_subclasses(self, index, typ, asdftype):
         for subclass in util.iter_subclasses(typ):
-            # Do not overwrite the tag type for an existing subclass if the
-            # new tag serializes a class that is higher in the type
-            # hierarchy than the existing subclass.
-            if subclass in self._class_by_subclass:
-                if issubclass(self._class_by_subclass[subclass], typ):
-                    # Allow for cases where a subclass tag is being
-                    # overridden by a tag from another extension.
-                    if self._extension_by_cls[subclass] == index._extension_by_type[asdftype]:
-                        continue
+            if (
+                # Do not overwrite the tag type for an existing subclass if the
+                # new tag serializes a class that is higher in the type
+                # hierarchy than the existing subclass.
+                subclass in self._class_by_subclass
+                and issubclass(self._class_by_subclass[subclass], typ)
+                # Allow for cases where a subclass tag is being
+                # overridden by a tag from another extension.
+                and self._extension_by_cls[subclass] == index._extension_by_type[asdftype]
+            ):
+                continue
+
             self._class_by_subclass[subclass] = typ
             self._type_by_subclasses[subclass] = asdftype
             self._extension_by_cls[subclass] = index._extension_by_type[asdftype]
@@ -302,10 +305,7 @@ class AsdfTypeIndex:
         Returns `True` if the given hook name exists on any of the managed
         types.
         """
-        for cls in self._all_types:
-            if hasattr(cls, hook_name):
-                return True
-        return False
+        return any(hasattr(cls, hook_name) for cls in self._all_types)
 
     def get_hook_for_type(self, hookname, typ, version=default_version):
         """

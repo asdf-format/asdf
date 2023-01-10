@@ -89,10 +89,7 @@ def relative_uri(source, target):
         return target
 
     if relative is None:
-        if tu[2] == su[2]:
-            relative = ""
-        else:
-            relative = os.path.relpath(tu[2], os.path.dirname(su[2]))
+        relative = "" if tu[2] == su[2] else os.path.relpath(tu[2], os.path.dirname(su[2]))
     if relative == ".":
         relative = ""
     relative = patched_urllib_parse.urlunparse(["", "", relative] + extra)
@@ -148,10 +145,7 @@ class _TruncatedReader:
 
         index = re.search(self._delimiter, content)
         if index is not None:
-            if self._include:
-                index = index.end()
-            else:
-                index = index.start()
+            index = index.end() if self._include else index.start()
             content = content[:index]
             self._past_end = True
         elif nbytes is None and self._exception:
@@ -754,10 +748,7 @@ class RealFile(RandomAccessFile):
     def memmap_array(self, offset, size):
         if not hasattr(self, "_mmap"):
             loc = self._fd.tell()
-            if "w" in self._mode:
-                acc = mmap.ACCESS_WRITE
-            else:
-                acc = mmap.ACCESS_READ
+            acc = mmap.ACCESS_WRITE if "w" in self._mode else mmap.ACCESS_READ
             self._fd.seek(0, 2)
             nbytes = self._fd.tell()
             self._fd.seek(loc, 0)
@@ -766,10 +757,9 @@ class RealFile(RandomAccessFile):
         return arr
 
     def close_memmap(self):
-        if hasattr(self, "_mmap"):
-            if not self._mmap.closed:
-                self._mmap.close()
-                del self._mmap
+        if hasattr(self, "_mmap") and not self._mmap.closed:
+            self._mmap.close()
+            del self._mmap
 
     def flush_memmap(self):
         if hasattr(self, "_mmap"):
@@ -1031,22 +1021,17 @@ def get_file(init, mode="r", uri=None, close=False):
                 raise ValueError("HTTP connections can not be opened for writing")
             return _http_to_temp(init, mode, uri=uri)
         elif parsed.scheme in _local_file_schemes:
-            if mode == "rw":
-                realmode = "r+b"
-            else:
-                realmode = mode + "b"
+            realmode = "r+b" if mode == "rw" else mode + "b"
             # Windows paths are not URIs, and so they should not be parsed as
             # such. Otherwise, the drive component of the path can get lost.
             # This is not an ideal solution, but we can't use pathlib here
             # because it doesn't handle URIs properly.
-            if sys.platform.startswith("win") and parsed.scheme in string.ascii_letters:
-                realpath = str(init)
-            else:
-                realpath = url2pathname(parsed.path)
-            if mode == "w":
-                fd = atomicfile.atomic_open(realpath, realmode)
-            else:
-                fd = open(realpath, realmode)
+            realpath = (
+                str(init)
+                if sys.platform.startswith("win") and parsed.scheme in string.ascii_letters
+                else url2pathname(parsed.path)
+            )
+            fd = atomicfile.atomic_open(realpath, realmode) if mode == "w" else open(realpath, realmode)
             fd = fd.__enter__()
             return RealFile(fd, mode, close=True, uri=uri)
 
@@ -1061,14 +1046,12 @@ def get_file(init, mode="r", uri=None, close=False):
             raise ValueError(f"File is opened as '{init.mode}', but '{mode}' was requested")
 
         if init.seekable():
-            if hasattr(init, "raw"):
-                init2 = init.raw
-            else:
-                init2 = init
-            if hasattr(init2, "getvalue"):
-                result = MemoryIO(init2, mode, uri=uri)
-            else:
-                result = RealFile(init2, mode, uri=uri, close=close)
+            init2 = init.raw if hasattr(init, "raw") else init
+            result = (
+                MemoryIO(init2, mode, uri=uri)
+                if hasattr(init2, "getvalue")
+                else RealFile(init2, mode, uri=uri, close=close)
+            )
             result._secondary_fd = init
             return result
         else:

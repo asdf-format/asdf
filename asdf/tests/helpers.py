@@ -124,8 +124,8 @@ def assert_tree_match(old_tree, new_tree, ctx=None, funcname="assert_equal", ign
                 getattr(old_type, funcname)(old, new)
 
         elif isinstance(old, dict) and isinstance(new, dict):
-            assert {x for x in old.keys() if x not in ignore_keys} == {x for x in new.keys() if x not in ignore_keys}
-            for key in old.keys():
+            assert {x for x in old if x not in ignore_keys} == {x for x in new if x not in ignore_keys}
+            for key in old:
                 if key not in ignore_keys:
                     recurse(old[key], new[key])
         elif isinstance(old, (list, tuple)) and isinstance(new, (list, tuple)):

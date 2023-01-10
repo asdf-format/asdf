@@ -40,6 +40,5 @@ def test_conversion_error(tmp_path):
     foo = FooType(10, "hello")
     tree = {"foo": foo}
 
-    with pytest.raises(AsdfConversionWarning):  # noqa: PT012
-        with pytest.warns(AsdfWarning, match=r"Unable to locate schema file"):
-            assert_roundtrip_tree(tree, tmp_path, extensions=FooExtension())
+    with pytest.raises(AsdfConversionWarning), pytest.warns(AsdfWarning, match=r"Unable to locate schema file"):
+        assert_roundtrip_tree(tree, tmp_path, extensions=FooExtension())

@@ -21,10 +21,7 @@ from .util import patched_urllib_parse
 YAML_SCHEMA_METASCHEMA_ID = "http://stsci.edu/schemas/yaml-schema/draft-01"
 
 
-if getattr(yaml, "__with_libyaml__", None):  # pragma: no cover
-    _yaml_base_loader = yaml.CSafeLoader
-else:  # pragma: no cover
-    _yaml_base_loader = yaml.SafeLoader
+_yaml_base_loader = yaml.CSafeLoader if getattr(yaml, "__with_libyaml__", None) else yaml.SafeLoader
 
 
 __all__ = ["validate", "fill_defaults", "remove_defaults", "check_schema"]
@@ -76,11 +73,7 @@ def validate_tag(validator, tag_pattern, instance, schema):
     tag against a pattern that may include wildcards.  See
     `asdf.util.uri_match` for details on the matching behavior.
     """
-    if hasattr(instance, "_tag"):
-        instance_tag = instance._tag
-    else:
-        # Try tags for known Python builtins
-        instance_tag = _type_to_tag(type(instance))
+    instance_tag = instance._tag if hasattr(instance, "_tag") else _type_to_tag(type(instance))
 
     if instance_tag is None:
         yield ValidationError(
@@ -196,9 +189,8 @@ def validate_remove_default(validator, properties, instance, schema):
         return
 
     for property_, subschema in properties.items():
-        if subschema.get("default", None) is not None:
-            if instance.get(property_, None) == subschema["default"]:
-                del instance[property_]
+        if subschema.get("default", None) is not None and instance.get(property_, None) == subschema["default"]:
+            del instance[property_]
 
     yield from mvalidators.Draft4Validator.VALIDATORS["properties"](validator, properties, instance, schema)
 
@@ -257,7 +249,7 @@ def _create_validator(validators=YAML_VALIDATORS, visit_repeat_nodes=False):
 
     type_checker = mvalidators.Draft4Validator.TYPE_CHECKER.redefine_many(
         {
-            "array": lambda checker, instance: isinstance(instance, list) or isinstance(instance, tuple),
+            "array": lambda checker, instance: isinstance(instance, (list, tuple)),
             "integer": lambda checker, instance: not isinstance(instance, bool) and isinstance(instance, Integral),
             "string": lambda checker, instance: isinstance(instance, (str, np.str_)),
         }
@@ -473,10 +465,7 @@ def _safe_resolve(resolver, json_id, uri):
     # parse correctly.
     parts = uri.split("#")
     base = parts[0]
-    if len(parts) > 1:
-        fragment = parts[1]
-    else:
-        fragment = ""
+    fragment = parts[1] if len(parts) > 1 else ""
 
     # The generic_io.resolve_uri method cannot operate on tag: URIs.
     # New-style extensions don't support $ref with a tag URI target anyway,

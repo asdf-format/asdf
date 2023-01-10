@@ -229,10 +229,11 @@ class _TreeRenderer:
         prefix = self._make_prefix(info.depth, active_depths, is_tail)
         value = self._render_node_value(info)
 
-        if isinstance(info.parent_node, list) or isinstance(info.parent_node, tuple):
-            line = f"{prefix}[{format_bold(info.identifier)}] {value}"
-        else:
-            line = f"{prefix}{format_bold(info.identifier)} {value}"
+        line = (
+            f"{prefix}[{format_bold(info.identifier)}] {value}"
+            if isinstance(info.parent_node, list) or isinstance(info.parent_node, tuple)
+            else f"{prefix}{format_bold(info.identifier)} {value}"
+        )
 
         if info.info is not None:
             line = line + format_faint(format_italic(" # " + info.info))
@@ -270,14 +271,8 @@ class _TreeRenderer:
 
         if depth >= 2:
             for n in range(0, depth - 1):
-                if n in active_depths:
-                    prefix = prefix + "│ "
-                else:
-                    prefix = prefix + "  "
+                prefix = prefix + "│ " if n in active_depths else prefix + "  "
 
-        if is_tail:
-            prefix = prefix + "└─"
-        else:
-            prefix = prefix + "├─"
+        prefix = prefix + "└─" if is_tail else prefix + "├─"
 
         return format_faint(prefix)
