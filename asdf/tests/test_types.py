@@ -125,6 +125,8 @@ def test_custom_tag():
                 if tag.startswith(prefix):
                     return "http://nowhere.org/schemas/custom" + tag[len(prefix) :]
 
+                return None
+
             return [check]
 
     yaml = """

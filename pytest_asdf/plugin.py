@@ -290,11 +290,11 @@ def _parse_test_list(content):
 
 def pytest_collect_file(path, parent):
     if not (parent.config.getini("asdf_schema_tests_enabled") or parent.config.getoption("asdf_tests")):
-        return
+        return None
 
     schema_roots = parent.config.getini("asdf_schema_root").split()
     if not schema_roots:
-        return
+        return None
 
     skip_names = parent.config.getini("asdf_schema_skip_names")
     skip_examples = parent.config.getini("asdf_schema_skip_examples")

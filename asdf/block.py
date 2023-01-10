@@ -164,6 +164,8 @@ class BlockManager:
         if len(self._streamed_blocks):
             return self._streamed_blocks[0]
 
+        return None
+
     @property
     def external_blocks(self):
         """
@@ -448,7 +450,7 @@ class BlockManager:
         while True:
             # Look for the index header
             idx = content.rfind(constants.INDEX_HEADER)
-            if idx != -1:
+            if idx != -1:  # noqa: RET508
                 content = content[idx:]
                 index_start = block_start + idx
                 break
