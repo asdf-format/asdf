@@ -747,8 +747,8 @@ class AsdfFile:
 
         try:
             version = versioning.AsdfVersion(parts[1].decode("ascii"))
-        except ValueError:
-            raise ValueError(f"Unparsable version in ASDF file: {parts[1]}")
+        except ValueError as err:
+            raise ValueError(f"Unparsable version in ASDF file: {parts[1]}") from err
 
         return version
 

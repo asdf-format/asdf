@@ -10,8 +10,8 @@ from . import asdf, block, generic_io, util
 
 try:
     from astropy.io import fits
-except ImportError:
-    raise ImportError("AsdfInFits requires astropy")
+except ImportError as err:
+    raise ImportError("AsdfInFits requires astropy") from err
 
 
 ASDF_EXTENSION_NAME = "ASDF"
@@ -252,8 +252,8 @@ class AsdfInFits(asdf.AsdfFile):
                 # Since we created this HDUList object, we need to be
                 # responsible for cleaning up upon close() or __exit__
                 close_hdulist = True
-            except OSError:
-                raise ValueError(f"Failed to parse given file '{uri}'. Is it FITS?")
+            except OSError as err:
+                raise ValueError(f"Failed to parse given file '{uri}'. Is it FITS?") from err
 
         self = cls(
             hdulist,

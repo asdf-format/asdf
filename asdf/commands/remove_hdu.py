@@ -43,5 +43,6 @@ def remove_hdu(input_file, output_file):
             asdf_hdu = hdulist["ASDF"]
             hdulist.remove(asdf_hdu)
             hdulist.writeto(output_file)
-    except (ValueError, KeyError) as error:
-        raise RuntimeError(str(error))
+
+    except (ValueError, KeyError) as err:
+        raise RuntimeError(str(err)) from err

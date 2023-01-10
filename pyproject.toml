@@ -181,7 +181,6 @@ extend-ignore = [
     "ARG", # flake8-unused-arguments
     "DTZ", # flake8-datetimez
     # Individually ignored checks
-    "B904", # Within an except clause, raise exceptions with raise ... from err or raise ... from None to distinguish them from errors in exception handling
     "B905", # Requires python 3.10 (use zip strict)
     "PT011", # `pytest.raises(...)` is too broad, set the `match` parameter or use a more specific exception
 ]

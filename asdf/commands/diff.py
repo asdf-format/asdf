@@ -352,5 +352,5 @@ def diff(filenames, minimal, iostream=sys.stdout, ignore=None):
 
             diff_ctx = DiffContext(asdf0, asdf1, iostream, minimal=minimal, ignore_ids=ignore_ids)
             compare_trees(diff_ctx, asdf0.tree, asdf1.tree)
-    except ValueError as error:
-        raise RuntimeError(str(error))
+    except ValueError as err:
+        raise RuntimeError(str(err)) from err
