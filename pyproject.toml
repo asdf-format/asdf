@@ -170,42 +170,17 @@ extend_skip_glob = ["asdf/extern/*", ".eggs/*", ".tox/*"]
 
 [tool.ruff]
 line-length = 120
-select = [
-    "F", # Pyflakes
-    "E", "W", # pycodestlye
-    # "C90", # mccabe complexity
-    "I", # isort
-    # "D", # pydocstyle
-    "UP", # pyupgrade
-    "N", # pep8-naming
-    "YTT", # flake8-2020
-    # "ANN", # flake8-annotations
-    "S", # flake8-bandit
-    "BLE", # flake8-blind-except
-    # "FBT", # flake8-boolean-trap
-    "B", # flake8-bugbear
-    "A", # flake8-builtins
-    "C4", # flake8-comprehensions
-    "T10", # flake8-debugger
-    # "EM", # flake8-errmsg
-    "ISC", # flake8-implicit-str-concat
-    "ICN", # flake8-import-conventions
-    "T20", # flake8-print
-    "PT", # flake8-pytest-style
-    "Q", # flake8-quotes
-    "RET", # flake8-return
-    "SIM", # flake8-simplify
-    "TID", # flake8-tidy-imports
-    # "ARG", # flake8-unused-arguments
-    # "DTZ", # flake8-datetimez
-    "ERA", # eradicate
-    "PD", # pandas-vet
-    "PGH", # pygrep-hooks
-    "PLC", "PLE", "PLR", "PLW", # Pylint
-    "PIE", # flake8-pie
-    "RUF",
-]
+select = ["ALL"]
 extend-ignore = [
+    # Ignored check groups
+    "C90", # mccabe complexity
+    "D", # pydocstyle
+    "ANN", # flake8-annotations
+    "FBT", # flake8-boolean-trap
+    "EM", # flake8-errmsg
+    "ARG", # flake8-unused-arguments
+    "DTZ", # flake8-datetimez
+    # Individually ignored checks
     "S101", # assert used
     "S506", # unsafe yaml load
     "B904", # Within an except clause, raise exceptions with raise ... from err or raise ... from None to distinguish them from errors in exception handling
