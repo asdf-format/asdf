@@ -20,8 +20,8 @@ def httpserver(request):
     * ``url`` - the base url for the server
     """
     server = HTTPServer()
-    request.addfinalizer(server.finalize)
-    return server
+    yield server
+    server.finalize()
 
 
 @pytest.fixture()
@@ -36,5 +36,5 @@ def rhttpserver(request):
     * ``url`` - the base url for the server
     """
     server = RangeHTTPServer()
-    request.addfinalizer(server.finalize)
-    return server
+    yield server
+    server.finalize()
