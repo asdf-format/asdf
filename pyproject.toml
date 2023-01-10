@@ -196,6 +196,9 @@ select = [
     "RET", # flake8-return
     "SIM", # flake8-simplify
     "TID", # flake8-tidy-imports
+    # "ARG", # flake8-unused-arguments
+    # "DTZ", # flake8-datetimez
+    "ERA", # eradicate
     "RUF100", "PGH"
 ]
 extend-ignore = [
