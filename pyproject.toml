@@ -203,7 +203,7 @@ select = [
     "PGH", # pygrep-hooks
     "PLC", "PLE", "PLR", "PLW", # Pylint
     "PIE", # flake8-pie
-    "RUF100",
+    "RUF",
 ]
 extend-ignore = [
     "S101", # assert used
