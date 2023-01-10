@@ -185,6 +185,7 @@ select = [
     # "FBT", # flake8-boolean-trap
     "B", # flake8-bugbear
     "A", # flake8-builtins
+    "C4", # flake8-comprehensions
     "RUF100", "T10", "PGH"
 ]
 extend-ignore = [

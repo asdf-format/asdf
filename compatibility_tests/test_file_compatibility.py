@@ -165,7 +165,7 @@ def test_file_compatibility(asdf_version, env_path, tmpdir):
     # versions support.
     current_supported_versions = set(asdf.versioning.supported_versions)
     old_supported_versions = set(get_supported_versions(env_path))
-    standard_versions = [v for v in current_supported_versions.intersection(old_supported_versions)]
+    standard_versions = list(current_supported_versions.intersection(old_supported_versions))
 
     # Confirm that this test isn't giving us a false sense of security.
     assert len(standard_versions) > 0

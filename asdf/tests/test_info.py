@@ -11,7 +11,13 @@ from asdf.resource import DirectoryResourceMapping
 
 
 def test_info_module(capsys, tmp_path):
-    tree = dict(foo=42, bar="hello", baz=np.arange(20), nested={"woo": "hoo", "yee": "haw"}, long_line="a" * 100)
+    tree = {
+        "foo": 42,
+        "bar": "hello",
+        "baz": np.arange(20),
+        "nested": {"woo": "hoo", "yee": "haw"},
+        "long_line": "a" * 100,
+    }
     af = asdf.AsdfFile(tree)
 
     def _assert_correct_info(node_or_path):
@@ -626,7 +632,7 @@ def test_recursive_info_object_support(capsys, tmp_path):
 
     recursive_obj = RecursiveObjectWithInfoSupport()
     recursive_obj.recursive = recursive_obj
-    tree = dict(random=3.14159, rtest=recursive_obj)
+    tree = {"random": 3.14159, "rtest": recursive_obj}
     af = asdf.AsdfFile(tree)
     af.info(refresh_extension_manager=True)
     captured = capsys.readouterr()
@@ -634,7 +640,7 @@ def test_recursive_info_object_support(capsys, tmp_path):
 
 
 def test_search():
-    tree = dict(foo=42, bar="hello", baz=np.arange(20))
+    tree = {"foo": 42, "bar": "hello", "baz": np.arange(20)}
     af = asdf.AsdfFile(tree)
 
     result = af.search("foo")

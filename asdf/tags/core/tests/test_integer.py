@@ -27,7 +27,7 @@ def test_integer_value(tmpdir, value, sign):
         value = -value
 
     integer = IntegerType(value)
-    tree = dict(integer=integer)
+    tree = {"integer": integer}
     helpers.assert_roundtrip_tree(tree, tmpdir)
 
 
@@ -35,13 +35,13 @@ def test_integer_value(tmpdir, value, sign):
 def test_integer_storage(tmpdir, inline):
     tmpfile = str(tmpdir.join("integer.asdf"))
 
-    kwargs = dict()
+    kwargs = {}
     if inline:
         kwargs["storage_type"] = "inline"
 
     random.seed(0)
     value = random.getrandbits(1000)
-    tree = dict(integer=IntegerType(value, **kwargs))
+    tree = {"integer": IntegerType(value, **kwargs)}
 
     with asdf.AsdfFile(tree) as af:
         af.write_to(tmpfile)
@@ -63,7 +63,7 @@ def test_integer_storage_duplication(tmpdir):
 
     random.seed(0)
     value = random.getrandbits(1000)
-    tree = dict(integer1=IntegerType(value), integer2=IntegerType(value))
+    tree = {"integer1": IntegerType(value), "integer2": IntegerType(value)}
 
     with asdf.AsdfFile(tree) as af:
         af.write_to(tmpfile)

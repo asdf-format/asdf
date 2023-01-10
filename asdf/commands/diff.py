@@ -113,7 +113,7 @@ class PrintTree:
     """
 
     def __init__(self):
-        self.__tree = dict(visited=False, children=dict())
+        self.__tree = {"visited": False, "children": {}}
 
     def get_print_list(self, node_list):
         at_end = False
@@ -139,7 +139,7 @@ class PrintTree:
         current = self.__tree
         for node in ["tree"] + node_list:
             if node not in current["children"]:
-                current["children"][node] = dict(visited=True, children=dict())
+                current["children"][node] = {"visited": True, "children": {}}
             current = current["children"][node]
 
 

@@ -19,7 +19,7 @@ def test_get_children():
 
 
 def test_is_container():
-    for value in [[], {}, tuple()]:
+    for value in [[], {}, ()]:
         assert treeutil.is_container(value) is True
 
     for value in ["foo", 12, 13.9827]:

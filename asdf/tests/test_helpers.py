@@ -19,7 +19,7 @@ def test_conversion_error(tmp_path):
 
         @classmethod
         def to_tree(cls, node, ctx):
-            return dict(a=node.a, b=node.b)
+            return {"a": node.a, "b": node.b}
 
         def __eq__(self, other):
             return self.a == other.a and self.b == other.b
@@ -38,7 +38,7 @@ def test_conversion_error(tmp_path):
             return []
 
     foo = FooType(10, "hello")
-    tree = dict(foo=foo)
+    tree = {"foo": foo}
 
     with pytest.raises(AsdfConversionWarning):
         with pytest.warns(AsdfWarning, match=r"Unable to locate schema file"):

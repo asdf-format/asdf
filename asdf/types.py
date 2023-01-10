@@ -126,7 +126,7 @@ class ExtensionTypeMeta(type):
             # We need to convert back to a list here so that the 'in' operator
             # uses actual comparison instead of hash equality
             ncls.supported_versions = list(supported_versions)
-            siblings = list()
+            siblings = []
             for version in ncls.supported_versions:
                 if version != ncls.version:
                     new_attrs = copy(attrs)

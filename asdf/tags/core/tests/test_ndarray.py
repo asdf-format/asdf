@@ -828,7 +828,7 @@ def test_non_contiguous_base_array(tmpdir):
 
 def test_fortran_order(tmpdir):
     array = np.array([[11, 12, 13], [21, 22, 23]], order="F", dtype=np.int64)
-    tree = dict(data=array)
+    tree = {"data": array}
 
     def check_f_order(t):
         assert t["data"].flags.fortran
@@ -843,7 +843,7 @@ def test_fortran_order(tmpdir):
 
 def test_memmap_write(tmpdir):
     tmpfile = str(tmpdir.join("data.asdf"))
-    tree = dict(data=np.zeros(100))
+    tree = {"data": np.zeros(100)}
 
     with asdf.AsdfFile(tree) as af:
         # Make sure we're actually writing to an internal array for this test
@@ -864,7 +864,7 @@ def test_memmap_write(tmpdir):
 
 def test_readonly(tmpdir):
     tmpfile = str(tmpdir.join("data.asdf"))
-    tree = dict(data=np.ndarray(100))
+    tree = {"data": np.ndarray(100)}
 
     with asdf.AsdfFile(tree) as af:
         # Make sure we're actually writing to an internal array for this test
@@ -895,7 +895,7 @@ def test_readonly(tmpdir):
 
 def test_readonly_inline(tmpdir):
     tmpfile = str(tmpdir.join("data.asdf"))
-    tree = dict(data=np.ndarray(100))
+    tree = {"data": np.ndarray(100)}
 
     with asdf.AsdfFile(tree) as af:
         af.write_to(tmpfile, all_array_storage="inline")

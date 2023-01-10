@@ -419,7 +419,7 @@ def test_newer_tag():
 
         @classmethod
         def to_tree(cls, data, ctx):
-            return dict(c=data.c, d=data.d)
+            return {"c": data.c, "d": data.d}
 
     class CustomFlowExtension(CustomExtension):
         @property
@@ -531,9 +531,9 @@ def test_supported_versions():
         @classmethod
         def to_tree(cls, data, ctx):
             if cls.version == "1.0.0":
-                return dict(a=data.c, b=data.d)
+                return {"a": data.c, "b": data.d}
             else:
-                return dict(c=data.c, d=data.d)
+                return {"c": data.c, "d": data.d}
 
     class CustomFlowExtension(CustomExtension):
         @property
@@ -608,7 +608,7 @@ def test_tag_without_schema(tmp_path):
 
         @classmethod
         def to_tree(cls, node, ctx):
-            return dict(a=node.a, b=node.b)
+            return {"a": node.a, "b": node.b}
 
         def __eq__(self, other):
             return self.a == other.a and self.b == other.b
@@ -627,7 +627,7 @@ def test_tag_without_schema(tmp_path):
             return []
 
     foo = FooType("hello", 42)
-    tree = dict(foo=foo)
+    tree = {"foo": foo}
 
     with pytest.warns(AsdfWarning, match=r"Unable to locate schema file"):
         with asdf.AsdfFile(tree, extensions=FooExtension()) as af:

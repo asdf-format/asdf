@@ -413,11 +413,11 @@ class AsdfFile:
             return
 
         if "history" not in self.tree:
-            self.tree["history"] = dict(extensions=[])
+            self.tree["history"] = {"extensions": []}
         # Support clients who are still using the old history format
         elif isinstance(self.tree["history"], list):
             histlist = self.tree["history"]
-            self.tree["history"] = dict(entries=histlist, extensions=[])
+            self.tree["history"] = {"entries": histlist, "extensions": []}
             warnings.warn(
                 "The ASDF history format has changed in order to "
                 "support metadata about extensions. History entries "
@@ -1499,7 +1499,7 @@ class AsdfFile:
 
         if self.version >= versioning.NEW_HISTORY_FORMAT_MIN_VERSION:
             if "history" not in self.tree:
-                self.tree["history"] = dict(entries=[])
+                self.tree["history"] = {"entries": []}
             elif "entries" not in self.tree["history"]:
                 self.tree["history"]["entries"] = []
 
