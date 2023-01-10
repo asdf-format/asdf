@@ -5,8 +5,8 @@ import numpy as np
 from jsonschema import ValidationError
 from numpy import ma
 
-from ... import util
-from ...types import AsdfType
+from asdf import util
+from asdf.types import AsdfType
 
 _datatype_names = {
     "int8": "i1",

@@ -195,6 +195,7 @@ select = [
     "Q", # flake8-quotes
     "RET", # flake8-return
     "SIM", # flake8-simplify
+    "TID", # flake8-tidy-imports
     "RUF100", "PGH"
 ]
 extend-ignore = [

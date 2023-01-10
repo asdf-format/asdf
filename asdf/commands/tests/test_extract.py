@@ -4,10 +4,9 @@ import numpy as np
 from astropy.io.fits import HDUList, ImageHDU
 
 import asdf
+from asdf.commands import extract
 from asdf.fits_embed import AsdfInFits
 from asdf.tests.helpers import assert_tree_match
-
-from .. import extract
 
 
 def test_extract(tmpdir):

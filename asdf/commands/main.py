@@ -2,7 +2,7 @@ import argparse
 import logging
 import sys
 
-from .. import util
+from asdf import util
 
 # This list is ordered in order of average workflow
 command_order = ["Explode", "Implode"]

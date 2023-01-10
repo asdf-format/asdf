@@ -1,7 +1,8 @@
 """
 Implementation of command for reporting information about installed extensions.
 """
-from ..entry_points import get_extensions
+from asdf.entry_points import get_extensions
+
 from .main import Command
 
 __all__ = ["find_extensions"]

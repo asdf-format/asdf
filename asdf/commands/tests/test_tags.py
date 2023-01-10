@@ -2,8 +2,8 @@ import io
 
 import pytest
 
-from ... import AsdfFile
-from .. import list_tags
+from asdf import AsdfFile
+from asdf.commands import list_tags
 
 
 @pytest.mark.parametrize("display_classes", [True, False])

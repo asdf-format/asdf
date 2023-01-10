@@ -38,7 +38,7 @@ class ManifestExtension(Extension):
 
         See the class docstring for details on keyword parameters.
         """
-        from ..config import get_config
+        from asdf.config import get_config
 
         manifest = yaml.safe_load(get_config().resource_manager[manifest_uri])
         return cls(manifest, **kwargs)

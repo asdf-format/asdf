@@ -6,8 +6,8 @@ Contains commands for dealing with exploded and imploded forms.
 import os
 
 import asdf
+from asdf import AsdfFile
 
-from .. import AsdfFile
 from .main import Command
 
 __all__ = ["implode", "explode"]

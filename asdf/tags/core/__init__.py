@@ -1,4 +1,5 @@
-from ...types import AsdfType
+from asdf.types import AsdfType
+
 from .complex import ComplexType
 from .constant import ConstantType
 from .external_reference import ExternalArrayReference
