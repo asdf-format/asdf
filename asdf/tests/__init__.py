@@ -27,13 +27,13 @@ class CustomTestType(CustomType):
 
 def create_small_tree():
     x = np.arange(0, 10, dtype=float)
-    tree = {
+
+    return {
         "science_data": x,
         "subset": x[3:-3],
         "skipping": x[::2],
         "not_shared": np.arange(10, 0, -1, dtype=np.uint8),
     }
-    return tree
 
 
 def create_large_tree():
@@ -42,8 +42,11 @@ def create_large_tree():
     # is enormous.
     x = np.random.rand(256, 256)
     y = np.random.rand(16, 16, 16)
-    tree = {"science_data": x, "more": y}
-    return tree
+
+    return {
+        "science_data": x,
+        "more": y,
+    }
 
 
 class CustomExtension:

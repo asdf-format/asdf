@@ -184,7 +184,6 @@ extend-ignore = [
     "B904", # Within an except clause, raise exceptions with raise ... from err or raise ... from None to distinguish them from errors in exception handling
     "B905", # Requires python 3.10 (use zip strict)
     "PT011", # `pytest.raises(...)` is too broad, set the `match` parameter or use a more specific exception
-    "RET504", # Unnecessary variable assignment before `return` statement
     "RET505", # Unnecessary `elif` after `return` statement
     "RET506", # Unnecessary `else` after `raise` statement
 ]

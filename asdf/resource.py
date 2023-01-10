@@ -150,7 +150,7 @@ class ResourceManager(Mapping):
         if isinstance(content, str):
             content = content.encode("utf-8")
 
-        return content
+        return content  # noqa: RET504
 
     def __len__(self):
         return len(self._mappings_by_uri)
