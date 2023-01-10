@@ -91,16 +91,16 @@ class AsdfSearchResult:
     def _maybe_compile_pattern(self, query):
         if isinstance(query, str):
             return re.compile(query)
-        else:
-            return query
+
+        return query
 
     def _safe_equals(self, a, b):
         try:
             result = a == b
             if isinstance(result, bool):
                 return result
-            else:
-                return False
+
+            return False
         except Exception:  # noqa: BLE001
             return False
 
@@ -108,8 +108,8 @@ class AsdfSearchResult:
         value_type = type(value)
         if value_type.__module__ == "builtins":
             return value_type.__name__
-        else:
-            return ".".join([value_type.__module__, value_type.__name__])
+
+        return ".".join([value_type.__module__, value_type.__name__])
 
     def search(self, key=NotSet, type_=NotSet, value=NotSet, filter_=None):
         """
@@ -184,8 +184,10 @@ class AsdfSearchResult:
                     # include the child object values, but that's probably not
                     # what searchers want.
                     return False
-                elif value.search(str(node)) is None:
+
+                if value.search(str(node)) is None:
                     return False
+
             elif value is not NotSet and not self._safe_equals(node, value):
                 return False
 
@@ -238,10 +240,11 @@ class AsdfSearchResult:
         results = self.nodes
         if len(results) == 0:
             return None
-        elif len(results) == 1:
+
+        if len(results) == 1:
             return results[0]
-        else:
-            raise RuntimeError("More than one result")
+
+        raise RuntimeError("More than one result")
 
     @property
     def path(self):
@@ -256,10 +259,11 @@ class AsdfSearchResult:
         results = self.paths
         if len(results) == 0:
             return None
-        elif len(results) == 1:
+
+        if len(results) == 1:
             return results[0]
-        else:
-            raise RuntimeError("More than one result")
+
+        raise RuntimeError("More than one result")
 
     @property
     def nodes(self):
@@ -311,8 +315,8 @@ class AsdfSearchResult:
 
         if len(lines) == 0:
             return format_faint(format_italic("No results found."))
-        else:
-            return "\n".join(lines)
+
+        return "\n".join(lines)
 
     def schema_info(self, key="description", preserve_list=True, refresh_extension_manager=False):
         """
@@ -388,8 +392,8 @@ def _build_path(identifiers):
     """
     if len(identifiers) == 0:
         return ""
-    else:
-        return identifiers[0] + "".join(f"[{repr(i)}]" for i in identifiers[1:])
+
+    return identifiers[0] + "".join(f"[{repr(i)}]" for i in identifiers[1:])
 
 
 def _wrap_filter(filter_):
@@ -398,11 +402,12 @@ def _wrap_filter(filter_):
     """
     if filter_ is None:
         return None
-    else:
-        arity = len(inspect.signature(filter_).parameters)
-        if arity == 1:
-            return lambda n, i: filter_(n)
-        elif arity == 2:
-            return filter_
-        else:
-            raise ValueError("filter must accept 1 or 2 arguments")
+
+    arity = len(inspect.signature(filter_).parameters)
+    if arity == 1:
+        return lambda n, i: filter_(n)
+
+    if arity == 2:
+        return filter_
+
+    raise ValueError("filter must accept 1 or 2 arguments")

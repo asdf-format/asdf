@@ -106,10 +106,11 @@ class IntegerType(AsdfType):
     def __eq__(self, other):
         if isinstance(other, Integral):
             return self._value == other
-        elif isinstance(other, IntegerType):
+
+        if isinstance(other, IntegerType):
             return self._value == other._value
-        else:
-            raise ValueError(f"Can't compare IntegralType to unknown type: {type(other)}")
+
+        raise ValueError(f"Can't compare IntegralType to unknown type: {type(other)}")
 
     def __repr__(self):
         return f"IntegerType({self._value})"

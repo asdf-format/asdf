@@ -37,11 +37,11 @@ class TagLister(Command):  # pragma: no cover
         return list_tags(display_classes=args.display_classes)
 
 
-def _format_type(typ):
-    if isinstance(typ, str):
-        return typ
-    else:
-        return f"{typ.__module__}.{typ.__name__}"
+def _format_type(type_):
+    if isinstance(type_, str):
+        return type_
+
+    return f"{type_.__module__}.{type_.__name__}"
 
 
 def list_tags(display_classes=False, iostream=sys.stdout):

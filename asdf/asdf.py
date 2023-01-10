@@ -454,8 +454,8 @@ class AsdfFile:
     def file_format_version(self):
         if self._file_format_version is None:
             return versioning.AsdfVersion(self.version_map["FILE_FORMAT"])
-        else:
-            return self._file_format_version
+
+        return self._file_format_version
 
     def close(self):
         """
@@ -965,7 +965,8 @@ class AsdfFile:
                     "if it is a FITS with ASDF extension because 'astropy' is not "
                     "installed"
                 ) from None
-        elif file_type == util.FileType.ASDF:
+
+        if file_type == util.FileType.ASDF:
             return cls._open_asdf(
                 self,
                 generic_file,
@@ -977,8 +978,8 @@ class AsdfFile:
                 ignore_missing_extensions=ignore_missing_extensions,
                 **kwargs,
             )
-        else:
-            raise ValueError("Input object does not appear to be an ASDF file or a FITS with ASDF extension")
+
+        raise ValueError("Input object does not appear to be an ASDF file or a FITS with ASDF extension")
 
     @classmethod
     def open(  # noqa: A003
@@ -1564,10 +1565,10 @@ class AsdfFile:
             return path.schema_info(
                 key, preserve_list=preserve_list, refresh_extension_manager=refresh_extension_manager
             )
-        else:
-            return node_info.collect_schema_info(
-                key, path, self.tree, preserve_list=preserve_list, refresh_extension_manager=refresh_extension_manager
-            )
+
+        return node_info.collect_schema_info(
+            key, path, self.tree, preserve_list=preserve_list, refresh_extension_manager=refresh_extension_manager
+        )
 
     def info(
         self,

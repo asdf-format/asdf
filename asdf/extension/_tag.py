@@ -67,10 +67,11 @@ class TagDefinition:
 
         if len(self._schema_uris) == 0:
             return None
-        elif len(self._schema_uris) == 1:
+
+        if len(self._schema_uris) == 1:
             return self._schema_uris[0]
-        else:
-            raise RuntimeError("Cannot use TagDefinition.schema_uri when multiple schema URIs are present")
+
+        raise RuntimeError("Cannot use TagDefinition.schema_uri when multiple schema URIs are present")
 
     @property
     def schema_uris(self):

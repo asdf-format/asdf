@@ -438,10 +438,11 @@ def get_children(node):
     """
     if isinstance(node, dict):
         return list(node.items())
-    elif isinstance(node, (list, tuple)):
+
+    if isinstance(node, (list, tuple)):
         return list(enumerate(node))
-    else:
-        return []
+
+    return []
 
 
 def is_container(node):

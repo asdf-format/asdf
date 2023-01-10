@@ -44,11 +44,11 @@ def _format_extension(ext):
     return f"Extension URI: {uri} package: {ext.package_name} ({ext.package_version}) class: {ext.class_name}"
 
 
-def _format_type_name(typ):
-    if isinstance(typ, str):
-        return typ
-    else:
-        return f"{typ.__module__}.{typ.__name__}"
+def _format_type_name(type_):
+    if isinstance(type_, str):
+        return type_
+
+    return f"{type_.__module__}.{type_.__name__}"
 
 
 def _print_extension_details(ext, tags_only):

@@ -38,8 +38,8 @@ def test_walk_and_modify_shared_references():
     def _callback(node):
         if "foo" in node:
             return {"foo": "baz"}
-        else:
-            return node
+
+        return node
 
     result = treeutil.walk_and_modify(tree, _callback)
 

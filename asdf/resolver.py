@@ -56,19 +56,19 @@ class Resolver:
             output = mapping(input_)
             if output is not None:
                 return (sys.maxsize, mapping(input_))
-            else:
-                return None
-        else:
-            if input_.startswith(mapping[0]):
-                format_tokens = {
-                    self._prefix: input_,
-                    self._prefix + "_prefix": mapping[0],
-                    self._prefix + "_suffix": input_[len(mapping[0]) :],
-                }
 
-                return len(mapping[0]), mapping[1].format(**format_tokens)
-            else:
-                return None
+            return None
+
+        if input_.startswith(mapping[0]):
+            format_tokens = {
+                self._prefix: input_,
+                self._prefix + "_prefix": mapping[0],
+                self._prefix + "_suffix": input_[len(mapping[0]) :],
+            }
+
+            return len(mapping[0]), mapping[1].format(**format_tokens)
+
+        return None
 
     def _validate_mappings(self, mappings):
         normalized = []

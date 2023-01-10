@@ -376,8 +376,8 @@ def get_config():
     """
     if len(_local.config_stack) == 0:
         return _global_config
-    else:
-        return _local.config_stack[-1]
+
+    return _local.config_stack[-1]
 
 
 @contextmanager

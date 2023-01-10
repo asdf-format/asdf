@@ -76,8 +76,8 @@ def human_list(line, separator="and"):
     """
     if len(line) == 1:
         return line[0]
-    else:
-        return ", ".join(line[:-1]) + " " + separator + " " + line[-1]
+
+    return ", ".join(line[:-1]) + " " + separator + " " + line[-1]
 
 
 def get_array_base(arr):
@@ -386,8 +386,8 @@ def minversion(module, version, inclusive=True):
 
     if inclusive:
         return Version(module_version) >= Version(version)
-    else:
-        return Version(module_version) > Version(version)
+
+    return Version(module_version) > Version(version)
 
 
 class InheritDocstrings(type):
@@ -486,8 +486,8 @@ def uri_match(pattern, uri):
 
     if "*" in pattern:
         return _compile_uri_match_pattern(pattern).fullmatch(uri) is not None
-    else:
-        return pattern == uri
+
+    return pattern == uri
 
 
 @lru_cache(1024)
@@ -515,10 +515,11 @@ def get_file_type(fd):
     """
     if fd.peek(5) == constants.ASDF_MAGIC:
         return FileType.ASDF
-    elif fd.peek(6) == constants.FITS_MAGIC:
+
+    if fd.peek(6) == constants.FITS_MAGIC:
         return FileType.FITS
-    else:
-        return FileType.UNKNOWN
+
+    return FileType.UNKNOWN
 
 
 class FileType(enum.Enum):

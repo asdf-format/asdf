@@ -31,8 +31,10 @@ _string_datatype_names = {"ascii": "S", "ucs4": "U"}
 def asdf_byteorder_to_numpy_byteorder(byteorder):
     if byteorder == "big":
         return ">"
-    elif byteorder == "little":
+
+    if byteorder == "little":
         return "<"
+
     raise ValueError(f"Invalid ASDF byteorder '{byteorder}'")
 
 
@@ -43,7 +45,8 @@ def asdf_datatype_to_numpy_dtype(datatype, byteorder=None):
         datatype = _datatype_names[datatype]
         byteorder = asdf_byteorder_to_numpy_byteorder(byteorder)
         return np.dtype(str(byteorder + datatype))
-    elif (
+
+    if (
         isinstance(datatype, list)
         and len(datatype) == 2
         and isinstance(datatype[0], str)
@@ -53,8 +56,10 @@ def asdf_datatype_to_numpy_dtype(datatype, byteorder=None):
         length = datatype[1]
         byteorder = asdf_byteorder_to_numpy_byteorder(byteorder)
         datatype = str(byteorder) + str(_string_datatype_names[datatype[0]]) + str(length)
+
         return np.dtype(datatype)
-    elif isinstance(datatype, dict):
+
+    if isinstance(datatype, dict):
         if "datatype" not in datatype:
             raise ValueError(f"Field entry has no datatype: '{datatype}'")
         name = datatype.get("name", "")
@@ -63,9 +68,10 @@ def asdf_datatype_to_numpy_dtype(datatype, byteorder=None):
         datatype = asdf_datatype_to_numpy_dtype(datatype["datatype"], byteorder)
         if shape is None:
             return (str(name), datatype)
-        else:
-            return (str(name), datatype, tuple(shape))
-    elif isinstance(datatype, list):
+
+        return (str(name), datatype, tuple(shape))
+
+    if isinstance(datatype, list):
         datatype_list = []
         for subdatatype in datatype:
             np_dtype = asdf_datatype_to_numpy_dtype(subdatatype, byteorder)
@@ -85,10 +91,11 @@ def numpy_byteorder_to_asdf_byteorder(byteorder, override=None):
 
     if byteorder == "=":
         return sys.byteorder
-    elif byteorder == "<":
+
+    if byteorder == "<":
         return "little"
-    else:
-        return "big"
+
+    return "big"
 
 
 def numpy_dtype_to_asdf_datatype(dtype, include_byteorder=True, override_byteorder=None):
@@ -108,19 +115,19 @@ def numpy_dtype_to_asdf_datatype(dtype, include_byteorder=True, override_byteord
             fields.append(d)
         return fields, numpy_byteorder_to_asdf_byteorder(dtype.byteorder, override=override_byteorder)
 
-    elif dtype.subdtype is not None:
+    if dtype.subdtype is not None:
         return numpy_dtype_to_asdf_datatype(dtype.subdtype[0], override_byteorder=override_byteorder)
 
-    elif dtype.name in _datatype_names:
+    if dtype.name in _datatype_names:
         return dtype.name, numpy_byteorder_to_asdf_byteorder(dtype.byteorder, override=override_byteorder)
 
-    elif dtype.name == "bool":
+    if dtype.name == "bool":
         return "bool8", numpy_byteorder_to_asdf_byteorder(dtype.byteorder, override=override_byteorder)
 
-    elif dtype.name.startswith("string") or dtype.name.startswith("bytes"):
+    if dtype.name.startswith("string") or dtype.name.startswith("bytes"):
         return ["ascii", dtype.itemsize], "big"
 
-    elif dtype.name.startswith("unicode") or dtype.name.startswith("str"):
+    if dtype.name.startswith("unicode") or dtype.name.startswith("str"):
         return (
             ["ucs4", int(dtype.itemsize / 4)],
             numpy_byteorder_to_asdf_byteorder(dtype.byteorder, override=override_byteorder),
@@ -156,31 +163,31 @@ def inline_data_asarray(inline, dtype=None):
         def convert_to_tuples(line, data_depth, depth=0):
             if data_depth == depth:
                 return tuple(line)
-            else:
-                return [convert_to_tuples(x, data_depth, depth + 1) for x in line]
+
+            return [convert_to_tuples(x, data_depth, depth + 1) for x in line]
 
         inline = convert_to_tuples(inline, depth)
 
         return np.asarray(inline, dtype=dtype)
-    else:
 
-        def handle_mask(inline):
-            if isinstance(inline, list):
-                if None in inline:
-                    inline_array = np.asarray(inline)
-                    nones = np.equal(inline_array, None)
-                    return np.ma.array(np.where(nones, 0, inline), mask=nones)
-                else:
-                    return [handle_mask(x) for x in inline]
-            return inline
+    def handle_mask(inline):
+        if isinstance(inline, list):
+            if None in inline:
+                inline_array = np.asarray(inline)
+                nones = np.equal(inline_array, None)
 
-        inline = handle_mask(inline)
+                return np.ma.array(np.where(nones, 0, inline), mask=nones)
 
-        inline = np.ma.asarray(inline, dtype=dtype)
-        if not ma.is_masked(inline):
-            return inline.data
-        else:
-            return inline
+            return [handle_mask(x) for x in inline]
+        return inline
+
+    inline = handle_mask(inline)
+
+    inline = np.ma.asarray(inline, dtype=dtype)
+    if not ma.is_masked(inline):
+        return inline.data
+
+    return inline
 
 
 def numpy_array_to_list(array):
@@ -190,18 +197,19 @@ def numpy_array_to_list(array):
 
         if isinstance(x, (list, tuple)):
             return [tolist(y) for y in x]
-        else:
-            return x
+
+        return x
 
     def ascii_to_unicode(x):
         # Convert byte string arrays to unicode string arrays, since YAML
         # doesn't handle the former.
         if isinstance(x, list):
             return [ascii_to_unicode(y) for y in x]
-        elif isinstance(x, bytes):
+
+        if isinstance(x, bytes):
             return x.decode("ascii")
-        else:
-            return x
+
+        return x
 
     return ascii_to_unicode(tolist(array))
 
@@ -263,12 +271,15 @@ class NDArrayType(AsdfType):
             # memmapped mask array is freed properly when the masked
             # array goes away.
             array = ma.array(array, mask=mask.view())
+
             return array
-        elif np.isscalar(mask):
+
+        if np.isscalar(mask):
             if np.isnan(mask):
                 return ma.array(array, mask=np.isnan(array))
-            else:
-                return ma.masked_values(array, mask)
+
+            return ma.masked_values(array, mask)
+
         return array
 
     def __array__(self):
@@ -300,11 +311,14 @@ class NDArrayType(AsdfType):
         num_stars = shape.count("*")
         if num_stars == 0:
             return shape
-        elif num_stars == 1:
+
+        if num_stars == 1:
             if shape[0] != "*":
                 raise ValueError("'*' may only be in first entry of shape")
+
             stride = strides[0] if strides is not None else np.product(shape[1:]) * dtype.itemsize
             missing = int(block_size / stride)
+
             return [missing] + shape[1:]
         raise ValueError(f"Invalid shape '{shape}'")
 
@@ -326,14 +340,14 @@ class NDArrayType(AsdfType):
     def dtype(self):
         if self._array is None:
             return self._dtype
-        else:
-            return self._make_array().dtype
+
+        return self._make_array().dtype
 
     def __len__(self):
         if self._array is None:
             return self._shape[0]
-        else:
-            return len(self._make_array())
+
+        return len(self._make_array())
 
     def __getattr__(self, attr):
         # We need to ignore __array_struct__, or unicode arrays end up
@@ -368,7 +382,7 @@ class NDArrayType(AsdfType):
         if isinstance(node, list):
             return cls(node, None, None, None, None, None, None, ctx)
 
-        elif isinstance(node, dict):
+        if isinstance(node, dict):
             source = node.get("source")
             data = node.get("data")
             if source and data:
@@ -615,14 +629,19 @@ def _get_ndim(instance):
     if isinstance(instance, list):
         array = inline_data_asarray(instance)
         return array.ndim
-    elif isinstance(instance, dict):
+
+    if isinstance(instance, dict):
         if "shape" in instance:
             return len(instance["shape"])
-        elif "data" in instance:
+
+        if "data" in instance:
             array = inline_data_asarray(instance["data"])
             return array.ndim
-    elif isinstance(instance, (np.ndarray, NDArrayType)):
+
+    if isinstance(instance, (np.ndarray, NDArrayType)):
         return len(instance.shape)
+
+    return None
 
 
 def validate_ndim(validator, ndim, instance, schema):

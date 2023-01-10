@@ -233,8 +233,8 @@ class ConverterProxy(Converter):
         method = getattr(self._delegate, "select_tag", None)
         if method is None:
             return self._tags[0]
-        else:
-            return method(obj, self._tags, ctx)
+
+        return method(obj, self._tags, ctx)
 
     def to_yaml_tree(self, obj, tag, ctx):
         """
@@ -340,8 +340,8 @@ class ConverterProxy(Converter):
     def __eq__(self, other):
         if isinstance(other, ConverterProxy):
             return other.delegate is self.delegate and other.extension is self.extension
-        else:
-            return False
+
+        return False
 
     def __hash__(self):
         return hash((id(self.delegate), id(self.extension)))

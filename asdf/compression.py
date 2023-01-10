@@ -180,8 +180,8 @@ def _get_compressor_from_extensions(compression, return_extension=False):
             if compression == comp.label.decode("ascii"):
                 if return_extension:
                     return comp, ext
-                else:
-                    return comp
+
+                return comp
     return None
 
 

@@ -225,16 +225,16 @@ def edit(path):
                 choice = request_input("(c)ontinue editing or (a)bort? ", ["c", "a"])
                 if choice == "a":
                     return 1
-                else:
-                    continue
+
+                continue
 
             if new_asdf_version != original_asdf_version or new_yaml_version != original_yaml_version:
                 print("Error: cannot modify ASDF Standard or YAML version using this tool.")  # noqa: T201
                 choice = request_input("(c)ontinue editing or (a)bort? ", ["c", "a"])
                 if choice == "a":
                     return 1
-                else:
-                    continue
+
+                continue
 
             try:
                 # Blocks are not read during validation, so this will not raise
@@ -248,24 +248,27 @@ def edit(path):
                 choice = request_input("(c)ontinue editing or (a)bort? ", ["c", "a"])
                 if choice == "a":
                     return 1
-                else:
-                    continue
+
+                continue
+
             except schema.ValidationError as e:
                 print("Warning: updated ASDF tree failed validation:")  # noqa: T201
                 print_exception(e)
                 choice = request_input("(c)ontinue editing, (f)orce update, or (a)bort? ", ["c", "f", "a"])
                 if choice == "a":
                     return 1
-                elif choice == "c":
+
+                if choice == "c":
                     continue
+
             except Exception as e:  # noqa: BLE001
                 print("Error: failed to read updated file as ASDF:")  # noqa: T201
                 print_exception(e)
                 choice = request_input("(c)ontinue editing or (a)bort? ", ["c", "a"])
                 if choice == "a":
                     return 1
-                else:
-                    continue
+
+                continue
 
             # We've either opened the file without error, or
             # the user has agreed to ignore validation errors.
@@ -289,8 +292,10 @@ def edit(path):
         choice = request_input("(c)ontinue or (a)bort? ", ["c", "a"])
         if choice == "a":
             return 1
-        else:
-            write_edited_yaml_larger(path, new_content, new_asdf_version)
+
+        write_edited_yaml_larger(path, new_content, new_asdf_version)
+
+    return None
 
 
 def parse_asdf_version(content):
@@ -356,8 +361,8 @@ def request_input(message, choices):
 
         if choice in choices:
             return choice
-        else:
-            print(f"Invalid choice: {choice}")  # noqa: T201
+
+        print(f"Invalid choice: {choice}")  # noqa: T201
 
 
 def open_editor(path):

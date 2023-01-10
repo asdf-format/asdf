@@ -254,10 +254,11 @@ class _TreeRenderer:
         rendered_type = type(info.node).__name__
         if is_primitive(info.node) and self._show_values:
             return f"({rendered_type}): {info.node}"
-        elif isinstance(info.node, (NDArrayType, np.ndarray)):
+
+        if isinstance(info.node, (NDArrayType, np.ndarray)):
             return f"({rendered_type}): shape={info.node.shape}, dtype={info.node.dtype.name}"
-        else:
-            return f"({rendered_type})"
+
+        return f"({rendered_type})"
 
     def _make_prefix(self, depth, active_depths, is_tail):
         """
