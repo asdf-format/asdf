@@ -189,6 +189,7 @@ select = [
     "T10", # flake8-debugger
     # "EM", # flake8-errmsg
     "ISC", # flake8-implicit-str-concat
+    "ICN", # flake8-import-conventions
     "RUF100", "PGH"
 ]
 extend-ignore = [
