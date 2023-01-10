@@ -319,15 +319,15 @@ class BlockManager:
         """
         self._sort_blocks_by_offset()
 
-        iter = self.internal_blocks
-        last_block = next(iter)
+        iter_ = self.internal_blocks
+        last_block = next(iter_)
         # We need to explicitly clear anything between the tree
         # and the first block, otherwise there may be other block
         # markers left over which will throw off block indexing.
         # We don't need to do this between each block.
         fd.clear(last_block.offset - fd.tell())
 
-        for block in iter:
+        for block in iter_:
             last_block.allocated = (block.offset - last_block.offset) - last_block.header_size
             fd.seek(last_block.offset)
             last_block.write(fd)

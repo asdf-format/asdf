@@ -24,7 +24,7 @@ from jsonschema import ValidationError
 from ._convenience import info
 from ._version import version as __version__
 from .asdf import AsdfFile
-from .asdf import open_asdf as open
+from .asdf import open_asdf as open  # noqa: A001
 from .config import config_context, get_config
 from .extension import AsdfExtension
 from .stream import Stream

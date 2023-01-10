@@ -76,20 +76,20 @@ def test_by_key(asdf_file):
 
 
 def test_by_type(asdf_file):
-    result = asdf_file.search(type=str)
+    result = asdf_file.search(type_=str)
     assert sorted(result.nodes) == sorted(["hello", "whoops", "yup"])
 
-    result = asdf_file.search(type="int")
+    result = asdf_file.search(type_="int")
     assert result.nodes == [42, 24, 24, 0, 1, 2]
 
-    result = asdf_file.search(type="dict|list")
+    result = asdf_file.search(type_="dict|list")
     assert len(result.nodes) == 5
 
-    result = asdf_file.search(type=re.compile("^i.t$"))
+    result = asdf_file.search(type_=re.compile("^i.t$"))
     assert result.nodes == [42, 24, 24, 0, 1, 2]
 
     with pytest.raises(TypeError):
-        asdf_file.search(type=4)
+        asdf_file.search(type_=4)
 
 
 def test_by_value(asdf_file):
@@ -111,12 +111,12 @@ def test_by_value_with_ndarray():
 
 def test_by_filter(asdf_file):
     with pytest.raises(ValueError):
-        asdf_file.search(filter=lambda: True)
+        asdf_file.search(filter_=lambda: True)
 
-    result = asdf_file.search(filter=lambda n: isinstance(n, int) and n % 2 == 0)
+    result = asdf_file.search(filter_=lambda n: isinstance(n, int) and n % 2 == 0)
     assert result.nodes == [42, 24, 24, 0, 2]
 
-    result = asdf_file.search(filter=lambda n, k: k == "foo" and n > 30)
+    result = asdf_file.search(filter_=lambda n, k: k == "foo" and n > 30)
     assert result.node == 42
 
 
@@ -198,7 +198,7 @@ def test_search():
     result = af.search("foo")
     assert result.node == 42
 
-    result = af.search(type="ndarray")
+    result = af.search(type_="ndarray")
     assert (result.node == tree["baz"]).all()
 
     result = af.search(value="hello")

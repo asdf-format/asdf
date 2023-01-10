@@ -184,6 +184,7 @@ select = [
     "BLE", # flake8-blind-except
     # "FBT", # flake8-boolean-trap
     "B", # flake8-bugbear
+    "A", # flake8-builtins
     "RUF100", "T10", "PGH"
 ]
 extend-ignore = [

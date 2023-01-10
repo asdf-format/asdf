@@ -51,19 +51,19 @@ class Resolver:
 
         self._mappings = self._mappings + self._validate_mappings(mappings)
 
-    def _perform_mapping(self, mapping, input):
+    def _perform_mapping(self, mapping, input_):
         if callable(mapping):
-            output = mapping(input)
+            output = mapping(input_)
             if output is not None:
-                return (sys.maxsize, mapping(input))
+                return (sys.maxsize, mapping(input_))
             else:
                 return None
         else:
-            if input.startswith(mapping[0]):
+            if input_.startswith(mapping[0]):
                 format_tokens = {
-                    self._prefix: input,
+                    self._prefix: input_,
                     self._prefix + "_prefix": mapping[0],
-                    self._prefix + "_suffix": input[len(mapping[0]) :],
+                    self._prefix + "_suffix": input_[len(mapping[0]) :],
                 }
 
                 return len(mapping[0]), mapping[1].format(**format_tokens)
@@ -87,10 +87,10 @@ class Resolver:
 
         return tuple(normalized)
 
-    def __call__(self, input):
-        candidates = [(0, input)]
+    def __call__(self, input_):
+        candidates = [(0, input_)]
         for mapping in self._mappings:
-            output = self._perform_mapping(mapping, input)
+            output = self._perform_mapping(mapping, input_)
             if output is not None:
                 candidates.append(output)
 
@@ -122,10 +122,10 @@ class ResolverChain:
         """
         self._resolvers = tuple(resolvers)
 
-    def __call__(self, input):
+    def __call__(self, input_):
         for resolver in self._resolvers:
-            input = resolver(input)
-        return input
+            input_ = resolver(input_)
+        return input_
 
     def __hash__(self):
         return hash(self._resolvers)
