@@ -15,7 +15,7 @@ def version(request):
     return request.param
 
 
-@pytest.fixture
+@pytest.fixture()
 def create_editor(tmp_path):
     """
     Fixture providing a function that generates an editor script.
@@ -61,7 +61,7 @@ def file_not_modified(path):
     assert os.stat(path).st_mtime_ns == original_mtime
 
 
-@pytest.fixture
+@pytest.fixture()
 def mock_input(monkeypatch):
     """
     Fixture providing a function that mocks the edit module's
@@ -75,7 +75,8 @@ def mock_input(monkeypatch):
         def _input(prompt=None):
             nonlocal called
             called = True
-            assert prompt is not None and re.match(pattern, prompt)
+            assert prompt is not None
+            assert re.match(pattern, prompt)
             return response
 
         with monkeypatch.context() as m:
@@ -88,7 +89,7 @@ def mock_input(monkeypatch):
 
 
 @pytest.fixture(autouse=True)
-def default_mock_input(monkeypatch):
+def _default_mock_input(monkeypatch):
     """
     Fixture that raises an error when the program
     requests unexpected input.

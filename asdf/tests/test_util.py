@@ -50,7 +50,7 @@ def test_patched_urllib_parse():
 
 
 @pytest.mark.parametrize(
-    "pattern, uri, result",
+    ("pattern", "uri", "result"),
     [
         ("asdf://somewhere.org/tags/foo-1.0", "asdf://somewhere.org/tags/foo-1.0", True),
         ("asdf://somewhere.org/tags/foo-1.0", "asdf://somewhere.org/tags/bar-1.0", False),
@@ -73,7 +73,7 @@ def test_uri_match(pattern, uri, result):
 
 
 @pytest.mark.parametrize(
-    "content, expected_type",
+    ("content", "expected_type"),
     [
         (b"#ASDF blahblahblah", util.FileType.ASDF),
         (b"SIMPLE = T blah blah blah blah", util.FileType.FITS),

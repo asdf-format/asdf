@@ -62,8 +62,8 @@ def test_serialize_custom_type(tmp_path):
         with asdf.open(path) as af2:
             assert af2["foo"].value == "bar"
 
+        af["foo"] = Foo(12)
         with pytest.raises(asdf.ValidationError):
-            af["foo"] = Foo(12)
             af.write_to(path)
 
 
@@ -126,12 +126,12 @@ def test_serialize_with_multiple_schemas(tmp_path):
             assert af2["foo_foo"].value == "bar"
             assert af2["foo_foo"].value_value == "bar_bar"
 
+        af["foo_foo"] = FooFoo(12, "bar_bar")
         with pytest.raises(asdf.ValidationError):
-            af["foo_foo"] = FooFoo(12, "bar_bar")
             af.write_to(path)
 
+        af["foo_foo"] = FooFoo("bar", 34)
         with pytest.raises(asdf.ValidationError):
-            af["foo_foo"] = FooFoo("bar", 34)
             af.write_to(path)
 
 

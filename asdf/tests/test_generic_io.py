@@ -233,7 +233,7 @@ def test_streams2():
     assert len(x) == 60
 
 
-@pytest.mark.remote_data
+@pytest.mark.remote_data()
 def test_urlopen(tree, httpserver):
     path = os.path.join(httpserver.tmpdir, "test.asdf")
 
@@ -249,7 +249,7 @@ def test_urlopen(tree, httpserver):
         assert isinstance(next(ff.blocks.internal_blocks)._data, np.ndarray)
 
 
-@pytest.mark.remote_data
+@pytest.mark.remote_data()
 def test_http_connection(tree, httpserver):
     path = os.path.join(httpserver.tmpdir, "test.asdf")
 
@@ -306,7 +306,7 @@ def test_exploded_filesystem_fail(tree, tmp_path):
                 helpers.assert_tree_match(tree, ff.tree)
 
 
-@pytest.mark.remote_data
+@pytest.mark.remote_data()
 def test_exploded_http(tree, httpserver):
     path = os.path.join(httpserver.tmpdir, "test.asdf")
 
@@ -796,7 +796,7 @@ def test_fsspec(tmp_path):
         assert r == ref, (r, ref)
 
 
-@pytest.mark.remote_data
+@pytest.mark.remote_data()
 def test_fsspec_http(httpserver):
     """
     Issue #1146 reported errors when opening a fsspec url (using the http

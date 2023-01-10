@@ -405,7 +405,7 @@ def test_fsspec(tmp_path):
         assert_tree_match(tree, af.tree)
 
 
-@pytest.mark.remote_data
+@pytest.mark.remote_data()
 def test_fsspec_http(httpserver):
     """
     Issue #1146 reported errors when opening a fsspec url (using the http

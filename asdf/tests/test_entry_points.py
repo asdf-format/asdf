@@ -13,13 +13,13 @@ from asdf.extension import ExtensionProxy
 from asdf.resource import ResourceMappingProxy
 
 
-@pytest.fixture
+@pytest.fixture()
 def mock_entry_points():
     return []
 
 
 @pytest.fixture(autouse=True)
-def monkeypatch_entry_points(monkeypatch, mock_entry_points):
+def _monkeypatch_entry_points(monkeypatch, mock_entry_points):
     def _entry_points(*, group):
         for candidate_group, name, func_name in mock_entry_points:
             if candidate_group == group:

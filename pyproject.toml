@@ -191,6 +191,7 @@ select = [
     "ISC", # flake8-implicit-str-concat
     "ICN", # flake8-import-conventions
     "T20", # flake8-print
+    "PT", # flake8-pytest-style
     "RUF100", "PGH"
 ]
 extend-ignore = [
@@ -198,6 +199,8 @@ extend-ignore = [
     "S506", # unsafe yaml load
     "B904", # Within an except clause, raise exceptions with raise ... from err or raise ... from None to distinguish them from errors in exception handling
     "B905", # Requires python 3.10 (use zip strict)
+    "PT011", # `pytest.raises(...)` is too broad, set the `match` parameter or use a more specific exception
+    "PT021", # Use `yield` instead of `request.addfinalizer`
 ]
 extend-exclude = ["asdf/extern/*", "docs/*"]
 

@@ -88,8 +88,8 @@ invalid_software: !core/software-1.0.0
 """
     buff = yaml_to_asdf(content)
 
+    get_config().validate_on_read = True
     with pytest.raises(ValidationError):
-        get_config().validate_on_read = True
         with asdf.open(buff):
             pass
 
@@ -323,7 +323,7 @@ class FooExtension:
 
 
 @pytest.mark.parametrize(
-    "installed,extension,warns",
+    ("installed", "extension", "warns"),
     [
         ("1.2.3", "2.0.0", True),
         ("1.2.3", "2.0.dev10842", True),
@@ -396,7 +396,7 @@ def test_auto_inline(tmp_path):
 
 
 @pytest.mark.parametrize(
-    "array_inline_threshold, inline_blocks, internal_blocks",
+    ("array_inline_threshold", "inline_blocks", "internal_blocks"),
     [
         (None, 0, 2),
         (10, 1, 1),
@@ -420,7 +420,7 @@ def test_array_inline_threshold(array_inline_threshold, inline_blocks, internal_
 
 
 @pytest.mark.parametrize(
-    "array_inline_threshold, inline_blocks, internal_blocks",
+    ("array_inline_threshold", "inline_blocks", "internal_blocks"),
     [
         (None, 0, 2),
         (10, 2, 0),
@@ -443,7 +443,7 @@ def test_array_inline_threshold_masked_array(array_inline_threshold, inline_bloc
 
 
 @pytest.mark.parametrize(
-    "array_inline_threshold, inline_blocks, internal_blocks",
+    ("array_inline_threshold", "inline_blocks", "internal_blocks"),
     [
         (None, 0, 1),
         (10, 1, 0),

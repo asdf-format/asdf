@@ -273,8 +273,8 @@ invalid_software: !core/software-1.0.0
     hdul.writeto(tmpfile)
 
     for open_method in [asdf.open, fits_embed.AsdfInFits.open]:
+        get_config().validate_on_read = True
         with pytest.raises(ValidationError):
-            get_config().validate_on_read = True
             with open_method(tmpfile):
                 pass
 
@@ -455,11 +455,12 @@ def test_array_view_compatible_dtype(tmp_path):
 
     data = np.arange(100, dtype=np.float64)
     hdul = fits.HDUList([fits.PrimaryHDU(), fits.ImageHDU(data)])
-    with pytest.raises(
-        ValueError, match=r"ASDF has only limited support for serializing views over arrays stored in FITS HDUs"
-    ):
-        with asdf.fits_embed.AsdfInFits(hdulist=hdul) as af:
-            af["view"] = hdul[-1].data.view(np.int64)
+
+    with asdf.fits_embed.AsdfInFits(hdulist=hdul) as af:
+        af["view"] = hdul[-1].data.view(np.int64)
+        with pytest.raises(
+            ValueError, match=r"ASDF has only limited support for serializing views over arrays stored in FITS HDUs"
+        ):
             af.write_to(file_path)
 
 

@@ -111,7 +111,7 @@ def test_external_reference(tmp_path):
         assert_array_equal(ff.tree["internal"], exttree["cool_stuff"]["a"])
 
 
-@pytest.mark.remote_data
+@pytest.mark.remote_data()
 def test_external_reference_invalid(tmp_path):
     tree = {"foo": {"$ref": "fail.asdf"}}
 
