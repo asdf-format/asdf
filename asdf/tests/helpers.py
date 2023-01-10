@@ -468,8 +468,8 @@ def _assert_extension_type_correctness(extension, extension_type, resolver):
 
         assert schema_location is not None, (
             f"{extension_type.__name__} supports tag, {check_type.yaml_tag}, "
-            + "but tag does not resolve.  Check the tag_mapping and uri_mapping "
-            + f"properties on the related extension ({extension_type.__name__})."
+            "but tag does not resolve.  Check the tag_mapping and uri_mapping "
+            f"properties on the related extension ({extension_type.__name__})."
         )
 
         if schema_location not in asdf.get_config().resource_manager:

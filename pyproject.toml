@@ -186,7 +186,10 @@ select = [
     "B", # flake8-bugbear
     "A", # flake8-builtins
     "C4", # flake8-comprehensions
-    "RUF100", "T10", "PGH"
+    "T10", # flake8-debugger
+    # "EM", # flake8-errmsg
+    "ISC", # flake8-implicit-str-concat
+    "RUF100", "PGH"
 ]
 extend-ignore = [
     "S101", # assert used
