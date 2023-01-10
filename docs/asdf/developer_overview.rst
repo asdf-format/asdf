@@ -72,6 +72,12 @@ Support for ASDF core tags has not yet been moved to the new system.  Doing so
 would be a breaking change for users who subclass that code, so we'll need
 to wait until asdf 3.0 to do that.
 
+Some features working toward this goal are available for testing but will raise
+a ``AsdfProvisionalAPIWarning`` when used. This warning indicates that a feature
+may experience breaking API changes (even for minor ASDF releases) and should
+not be trusted in a production environment. It is likely that features that
+raise this warning will become stable and be added to a future ASDF version.
+
 Some terminology and definitions
 --------------------------------
 

@@ -5,6 +5,9 @@ The ASDF Standard is at v1.6.0
 
 - Discard cache of lazy-loaded block data when it is no longer referenced
   by the tree. [#1280]
+- Add AsdfProvisionalAPIWarning to warn developers of new features that
+  may undergo breaking changes but are likely to be included as stable
+  features (without this warning) in a future version of ASDF [#1295]
 
 2.14.3 (2022-12-15)
 -------------------
