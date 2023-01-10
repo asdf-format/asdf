@@ -351,7 +351,7 @@ def load_tree(stream):
     """
     # The following call to yaml.load is safe because we're
     # using a loader that inherits from pyyaml's SafeLoader.
-    return yaml.load(stream, Loader=AsdfLoader)  # nosec
+    return yaml.load(stream, Loader=AsdfLoader)  # nosec  # noqa: S506
 
 
 def dump_tree(tree, fd, ctx, tree_finalizer=None, _serialization_context=None):

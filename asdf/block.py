@@ -471,7 +471,7 @@ class BlockManager:
 
         # The following call to yaml.load is safe because we're
         # using pyyaml's SafeLoader.
-        offsets = yaml.load(yaml_content, Loader=yamlutil._yaml_base_loader)  # nosec
+        offsets = yaml.load(yaml_content, Loader=yamlutil._yaml_base_loader)  # nosec  # noqa: S506
 
         # Make sure the indices look sane
         if not isinstance(offsets, list) or len(offsets) == 0:
