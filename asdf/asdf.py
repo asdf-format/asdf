@@ -1612,7 +1612,7 @@ class AsdfFile:
             identifier="root",
             refresh_extension_manager=refresh_extension_manager,
         )
-        print("\n".join(lines))
+        print("\n".join(lines))  # noqa: T201
 
     def search(self, key=NotSet, type_=NotSet, value=NotSet, filter_=None):
         """

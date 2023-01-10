@@ -190,6 +190,7 @@ select = [
     # "EM", # flake8-errmsg
     "ISC", # flake8-implicit-str-concat
     "ICN", # flake8-import-conventions
+    "T20", # flake8-print
     "RUF100", "PGH"
 ]
 extend-ignore = [

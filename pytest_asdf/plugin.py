@@ -249,7 +249,7 @@ class AsdfSchemaExampleItem(pytest.Item):
 
                 ff._open_impl(ff, buff, mode="rw")
         except Exception:
-            print(f"Example: {self.example.description}\n From file: {self.filename}")
+            print(f"Example: {self.example.description}\n From file: {self.filename}")  # noqa: T201
             raise
 
         # Just test we can write it out.  A roundtrip test
