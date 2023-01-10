@@ -374,8 +374,8 @@ class NDArrayType(AsdfType):
         # See https://github.com/asdf-format/asdf/issues/1015
         if name in ("name", "version", "supported_versions"):
             raise AttributeError(f"'{self.__class__.name}' object has no attribute '{name}'")
-        else:
-            return AsdfType.__getattribute__(self, name)
+
+        return AsdfType.__getattribute__(self, name)
 
     @classmethod
     def from_tree(cls, node, ctx):

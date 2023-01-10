@@ -208,8 +208,8 @@ class BlockManager:
         def sorter(x):
             if x.offset is None:
                 raise ValueError("Block is missing offset")
-            else:
-                return x.offset
+
+            return x.offset
 
         self._internal_blocks.sort(key=sorter)
 
@@ -653,7 +653,7 @@ class BlockManager:
 
             raise ValueError(f"Block '{source}' not found.")
 
-        elif isinstance(source, str):
+        if isinstance(source, str):
             asdffile = self._asdffile().open_external(source)
             block = asdffile.blocks._internal_blocks[0]
             self.set_array_storage(block, "external")

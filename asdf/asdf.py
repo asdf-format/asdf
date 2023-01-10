@@ -327,8 +327,8 @@ class AsdfFile:
                 )
                 if strict:
                     raise RuntimeError(msg)
-                else:
-                    warnings.warn(msg, AsdfWarning)
+
+                warnings.warn(msg, AsdfWarning)
 
             elif extension.software:
                 # Local extensions may not have a real version.  If the package name changed,
@@ -343,8 +343,8 @@ class AsdfFile:
                     )
                     if strict:
                         raise RuntimeError(msg)
-                    else:
-                        warnings.warn(msg, AsdfWarning)
+
+                    warnings.warn(msg, AsdfWarning)
 
     def _process_plugin_extensions(self):
         """
