@@ -181,7 +181,6 @@ extend-ignore = [
     "ARG", # flake8-unused-arguments
     "DTZ", # flake8-datetimez
     # Individually ignored checks
-    "S101", # assert used
     "S506", # unsafe yaml load
     "B904", # Within an except clause, raise exceptions with raise ... from err or raise ... from None to distinguish them from errors in exception handling
     "B905", # Requires python 3.10 (use zip strict)
@@ -192,6 +191,11 @@ extend-ignore = [
     "RET506", # Unnecessary `else` after `raise` statement
 ]
 extend-exclude = ["asdf/extern/*", "docs/*"]
+
+[tool.ruff.per-file-ignores]
+"test_*.py" = ["S101"]
+"asdf/tests/helpers.py" = ["S101"]
+"compatibility_tests/common.py" = ["S101"]
 
 [tool.codespell]
 skip="*.pdf,*.fits,*.asdf,.tox,asdf/extern,build,./tags,.git,docs/_build"

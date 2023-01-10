@@ -507,7 +507,7 @@ class NDArrayType(AsdfType):
                 new = new.tolist()
                 # This line is safe because this is actually a piece of test
                 # code, even though it lives in this file:
-                assert old == new  # nosec
+                assert old == new  # nosec  # noqa: S101
             else:
                 func(old, new)
 
