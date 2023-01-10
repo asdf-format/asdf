@@ -341,12 +341,7 @@ class AsdfSearchResult:
         )
 
     def __getitem__(self, key):
-        if (
-            isinstance(self._node, dict)
-            or isinstance(self._node, list)
-            or isinstance(self._node, tuple)
-            or NodeSchemaInfo.traversable(self._node)
-        ):
+        if isinstance(self._node, (dict, list, tuple)) or NodeSchemaInfo.traversable(self._node):
             child = self._node.__asdf_traverse__()[key] if NodeSchemaInfo.traversable(self._node) else self._node[key]
         else:
             raise TypeError("This node cannot be indexed")

@@ -83,7 +83,7 @@ def test_validate_on_read():
 def test_default_version():
     with asdf.config_context() as config:
         assert config.default_version == asdf.config.DEFAULT_DEFAULT_VERSION
-        assert "1.2.0" != asdf.config.DEFAULT_DEFAULT_VERSION
+        assert asdf.config.DEFAULT_DEFAULT_VERSION != "1.2.0"
         config.default_version = "1.2.0"
         assert config.default_version == "1.2.0"
         with pytest.raises(ValueError):

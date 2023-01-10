@@ -199,7 +199,10 @@ select = [
     # "ARG", # flake8-unused-arguments
     # "DTZ", # flake8-datetimez
     "ERA", # eradicate
-    "RUF100", "PGH"
+    "PD", # pandas-vet
+    "PGH", # pygrep-hooks
+    "PLC", "PLE", "PLR", "PLW", # Pylint
+    "RUF100",
 ]
 extend-ignore = [
     "S101", # assert used

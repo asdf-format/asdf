@@ -111,25 +111,25 @@ def test_version_and_string_inequality():
     assert version <= "2.1.0"
     assert version <= "2.1.1"
 
-    assert "1.0.0" < version
-    assert "1.0.1" < version
-    assert "1.1.0" < version
-    assert "1.1.1" < version
-    assert ("2.0.0" < version) is False
-    assert ("2.0.0" > version) is False
-    assert "2.0.1" > version
-    assert "2.1.0" > version
-    assert "2.1.1" > version
+    assert "1.0.0" < version  # noqa: PLC2201
+    assert "1.0.1" < version  # noqa: PLC2201
+    assert "1.1.0" < version  # noqa: PLC2201
+    assert "1.1.1" < version  # noqa: PLC2201
+    assert ("2.0.0" < version) is False  # noqa: PLC2201
+    assert ("2.0.0" > version) is False  # noqa: PLC2201
+    assert "2.0.1" > version  # noqa: PLC2201
+    assert "2.1.0" > version  # noqa: PLC2201
+    assert "2.1.1" > version  # noqa: PLC2201
 
-    assert "1.0.0" <= version
-    assert "1.0.1" <= version
-    assert "1.1.0" <= version
-    assert "1.1.1" <= version
-    assert "2.0.0" <= version
-    assert "2.0.0" >= version
-    assert "2.0.1" >= version
-    assert "2.1.0" >= version
-    assert "2.1.1" >= version
+    assert "1.0.0" <= version  # noqa: PLC2201
+    assert "1.0.1" <= version  # noqa: PLC2201
+    assert "1.1.0" <= version  # noqa: PLC2201
+    assert "1.1.1" <= version  # noqa: PLC2201
+    assert "2.0.0" <= version  # noqa: PLC2201
+    assert "2.0.0" >= version  # noqa: PLC2201
+    assert "2.0.1" >= version  # noqa: PLC2201
+    assert "2.1.0" >= version  # noqa: PLC2201
+    assert "2.1.1" >= version  # noqa: PLC2201
 
 
 def test_version_and_tuple_inequality():
@@ -266,9 +266,9 @@ def test_spec_equal():
     assert version1 == spec
 
     assert spec != "1.1.0"
-    assert "1.1.0" != spec
+    assert "1.1.0" != spec  # noqa: PLC2201
     assert spec == "1.3.0"
-    assert "1.3.0" == spec  # noqa: SIM300
+    assert "1.3.0" == spec  # noqa: SIM300, PLC2201
 
     assert spec != (1, 1, 0)
     assert (1, 1, 0) != spec

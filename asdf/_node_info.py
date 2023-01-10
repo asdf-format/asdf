@@ -302,7 +302,7 @@ class NodeSchemaInfo:
         preserve_list : bool
             If True, then lists are preserved. Otherwise, they are turned into dicts.
         """
-        if preserve_list and (isinstance(self.node, list) or isinstance(self.node, tuple)) and self.info is None:
+        if preserve_list and isinstance(self.node, (list, tuple)) and self.info is None:
             info = [c_info for child in self.visible_children if len(c_info := child.collect_info(preserve_list)) > 0]
         else:
             info = {

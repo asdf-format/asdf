@@ -231,7 +231,7 @@ class _TreeRenderer:
 
         line = (
             f"{prefix}[{format_bold(info.identifier)}] {value}"
-            if isinstance(info.parent_node, list) or isinstance(info.parent_node, tuple)
+            if isinstance(info.parent_node, (list, tuple))
             else f"{prefix}{format_bold(info.identifier)} {value}"
         )
 
@@ -254,7 +254,7 @@ class _TreeRenderer:
         rendered_type = type(info.node).__name__
         if is_primitive(info.node) and self._show_values:
             return f"({rendered_type}): {info.node}"
-        elif isinstance(info.node, NDArrayType) or isinstance(info.node, np.ndarray):
+        elif isinstance(info.node, (NDArrayType, np.ndarray)):
             return f"({rendered_type}): shape={info.node.shape}, dtype={info.node.dtype.name}"
         else:
             return f"({rendered_type})"
