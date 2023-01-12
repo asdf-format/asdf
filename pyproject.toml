@@ -185,7 +185,6 @@ select = [
     "B", # flake8-bugbear
 ]
 extend-ignore = [
-    "B012", # `return` inside finally blocks cause exceptions to be silenced
     "B015", # Pointless comparison. This comparison does nothing but waste CPU instructions. Either prepend `assert` or remove it.
     "B019", # Use of `functools.lru_cache` or `functools.cache` on methods can lead to memory leaks
     "B023", # Function definition does not bind loop variable `package_name`

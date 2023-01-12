@@ -67,7 +67,7 @@ class ExtensionTypeMeta(type):
             finally:
                 cls._import_cache[modname] = has_module
                 if not has_module:
-                    return False
+                    return False  # noqa: B012
         return True
 
     @classmethod
