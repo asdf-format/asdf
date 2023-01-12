@@ -22,7 +22,8 @@ class TagDefinition:
 
     def __init__(self, tag_uri, *, schema_uris=None, title=None, description=None):
         if "*" in tag_uri:
-            raise ValueError("URI patterns are not permitted in TagDefinition")
+            msg = "URI patterns are not permitted in TagDefinition"
+            raise ValueError(msg)
 
         self._tag_uri = tag_uri
 
@@ -70,7 +71,8 @@ class TagDefinition:
         elif len(self._schema_uris) == 1:
             return self._schema_uris[0]
         else:
-            raise RuntimeError("Cannot use TagDefinition.schema_uri when multiple schema URIs are present")
+            msg = "Cannot use TagDefinition.schema_uri when multiple schema URIs are present"
+            raise RuntimeError(msg)
 
     @property
     def schema_uris(self):

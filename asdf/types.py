@@ -112,7 +112,8 @@ class ExtensionTypeMeta(type):
             elif isinstance(new_cls.name, list):
                 pass
             elif new_cls.name is not None:
-                raise TypeError("name must be string or list")
+                msg = "name must be string or list"
+                raise TypeError(msg)
 
         if hasattr(new_cls, "supported_versions"):
             if not isinstance(new_cls.supported_versions, (list, set)):
@@ -134,7 +135,7 @@ class ExtensionTypeMeta(type):
                     new_attrs["supported_versions"] = set()
                     new_attrs["_latest_version"] = new_cls.version
                     if "__classcell__" in new_attrs:
-                        raise RuntimeError(
+                        msg = (
                             "Subclasses of ExtensionTypeMeta that define "
                             "supported_versions cannot used super() to call "
                             "parent class functions. super() creates a "
@@ -142,6 +143,7 @@ class ExtensionTypeMeta(type):
                             "during creation of versioned siblings. "
                             "See https://github.com/asdf-format/asdf/issues/1245"
                         )
+                        raise RuntimeError(msg)
                     siblings.append(ExtensionTypeMeta.__new__(cls, name, bases, new_attrs))
             setattr(new_cls, "__versioned_siblings", siblings)  # noqa: B010
 

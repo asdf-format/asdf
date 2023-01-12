@@ -56,11 +56,12 @@ class Lz4Compressor:
         try:
             import lz4.block
         except ImportError as err:
-            raise ImportError(
+            msg = (
                 "lz4 library in not installed in your Python environment, "
                 "therefore the compressed block in this ASDF file "
                 "can not be decompressed."
-            ) from err
+            )
+            raise ImportError(msg) from err
 
         self._api = lz4.block
 
@@ -268,7 +269,8 @@ def decompress(fd, used_size, data_size, compression, config=None):
     len_decoded = decoder.decompress(blocks, out=buffer.data, **config)
 
     if len_decoded != data_size:
-        raise ValueError("Decompressed data wrong size")
+        msg = "Decompressed data wrong size"
+        raise ValueError(msg)
 
     return buffer
 

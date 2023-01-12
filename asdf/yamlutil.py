@@ -175,23 +175,26 @@ class AsdfLoader(_yaml_base_loader):
         omap = OrderedDict()
         yield omap
         if not isinstance(node, yaml.SequenceNode):
+            msg = "while constructing an ordered map"
             raise yaml.ConstructorError(
-                "while constructing an ordered map",
+                msg,
                 node.start_mark,
                 "expected a sequence, but found %s" % node.id,
                 node.start_mark,
             )
         for subnode in node.value:
             if not isinstance(subnode, yaml.MappingNode):
+                msg = "while constructing an ordered map"
                 raise yaml.ConstructorError(
-                    "while constructing an ordered map",
+                    msg,
                     node.start_mark,
                     f"expected a mapping of length 1, but found {subnode.id}",
                     subnode.start_mark,
                 )
             if len(subnode.value) != 1:
+                msg = "while constructing an ordered map"
                 raise yaml.ConstructorError(
-                    "while constructing an ordered map",
+                    msg,
                     node.start_mark,
                     f"expected a single mapping item, but found {len(subnode.value): %d} items",
                     subnode.start_mark,
@@ -380,7 +383,8 @@ def dump_tree(tree, fd, ctx, tree_finalizer=None, _serialization_context=None):
     # types.  In 3.0, it will be passed as the `ctx` instead of the
     # AsdfFile itself.
     if type(tree) is not AsdfObject:
-        raise TypeError("Root node of ASDF tree must be of type AsdfObject")
+        msg = "Root node of ASDF tree must be of type AsdfObject"
+        raise TypeError(msg)
 
     tags = {"!": STSCI_SCHEMA_TAG_BASE + "/"}
     tree = custom_tree_to_tagged_tree(tree, ctx, _serialization_context=_serialization_context)

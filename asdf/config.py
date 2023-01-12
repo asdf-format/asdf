@@ -90,7 +90,8 @@ class AsdfConfig:
             be removed.
         """
         if mapping is None and package is None:
-            raise ValueError("Must specify at least one of mapping or package")
+            msg = "Must specify at least one of mapping or package"
+            raise ValueError(msg)
 
         if mapping is not None:
             mapping = ResourceMappingProxy.maybe_wrap(mapping)
@@ -174,7 +175,8 @@ class AsdfConfig:
             be removed.
         """
         if extension is None and package is None:
-            raise ValueError("Must specify at least one of extension or package")
+            msg = "Must specify at least one of extension or package"
+            raise ValueError(msg)
 
         if extension is not None and not isinstance(extension, str):
             extension = ExtensionProxy.maybe_wrap(extension)

@@ -167,7 +167,8 @@ def make_reference(asdffile, path):
     target = resolve_fragment(asdffile.tree, path_str)
 
     if asdffile.uri is None:
-        raise ValueError("Can not make a reference to a AsdfFile without an associated URI.")
+        msg = "Can not make a reference to a AsdfFile without an associated URI."
+        raise ValueError(msg)
     base_uri = util.get_base_uri(asdffile.uri)
     uri = base_uri + "#" + path_str
     return Reference(uri, target=target)

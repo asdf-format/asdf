@@ -109,5 +109,6 @@ class ManifestExtension(Extension):
                     )
                 )
             else:
-                raise TypeError("Malformed manifest document")
+                msg = "Malformed manifest document"
+                raise TypeError(msg)
         return result

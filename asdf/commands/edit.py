@@ -327,7 +327,8 @@ def parse_yaml_version(content):
     """
     match = re.search(b"^%YAML (.*)$", content, flags=re.MULTILINE)
     if match is None:
-        raise ValueError("YAML version number not found")
+        msg = "YAML version number not found"
+        raise ValueError(msg)
     return match.group(1)
 
 

@@ -68,7 +68,8 @@ def resolve_uri(base, uri):
     resolved = patched_urllib_parse.urljoin(base, uri)
     parsed = patched_urllib_parse.urlparse(resolved)
     if parsed.path != "" and not parsed.path.startswith("/"):
-        raise ValueError("Resolved to relative URL")
+        msg = "Resolved to relative URL"
+        raise ValueError(msg)
     return resolved
 
 
@@ -209,7 +210,8 @@ class GenericFile(metaclass=util.InheritDocstrings):
             sources.
         """
         if not _check_bytes(fd, mode):
-            raise ValueError("File-like object must be opened in binary mode.")
+            msg = "File-like object must be opened in binary mode."
+            raise ValueError(msg)
 
         # can't import at the top level due to circular import
         from .config import get_config
@@ -320,7 +322,8 @@ class GenericFile(metaclass=util.InheritDocstrings):
             Must be 1D contiguous.
         """
         if len(array.shape) != 1 or not array.flags.contiguous:
-            raise ValueError("Requires 1D contiguous array.")
+            msg = "Requires 1D contiguous array."
+            raise ValueError(msg)
 
         self.write(array.data)
 
@@ -342,7 +345,8 @@ class GenericFile(metaclass=util.InheritDocstrings):
             self.seek(cursor, SEEK_SET)
             return content
         else:
-            raise RuntimeError("Non-seekable file")
+            msg = "Non-seekable file"
+            raise RuntimeError(msg)
 
     def seek(self, offset, whence=0):
         """
@@ -744,7 +748,8 @@ class RealFile(RandomAccessFile):
             self.fast_forward(len(arr.data))
         else:
             if len(arr.shape) != 1 or not arr.flags.contiguous:
-                raise ValueError("Requires 1D contiguous array.")
+                msg = "Requires 1D contiguous array."
+                raise ValueError(msg)
 
             self._fd.write(arr.data)
 
@@ -862,7 +867,8 @@ class InputStream(GenericFile):
 
     def fast_forward(self, size):
         if size >= 0 and len(self.read(size)) != size:
-            raise OSError("Read past end of file")
+            msg = "Read past end of file"
+            raise OSError(msg)
 
     def read_into_array(self, size):
         try:
@@ -1014,7 +1020,8 @@ def get_file(init, mode="r", uri=None, close=False):
     ValueError, TypeError, IOError
     """
     if mode not in ("r", "w", "rw"):
-        raise ValueError("mode must be 'r', 'w' or 'rw'")
+        msg = "mode must be 'r', 'w' or 'rw'"
+        raise ValueError(msg)
 
     if init in (sys.__stdout__, sys.__stdin__, sys.__stderr__):
         init = os.fdopen(init.fileno(), init.mode + "b")
@@ -1028,7 +1035,8 @@ def get_file(init, mode="r", uri=None, close=False):
         parsed = patched_urllib_parse.urlparse(str(init))
         if parsed.scheme in ["http", "https"]:
             if "w" in mode:
-                raise ValueError("HTTP connections can not be opened for writing")
+                msg = "HTTP connections can not be opened for writing"
+                raise ValueError(msg)
             return _http_to_temp(init, mode, uri=uri)
         elif parsed.scheme in _local_file_schemes:
             if mode == "rw":
@@ -1054,7 +1062,8 @@ def get_file(init, mode="r", uri=None, close=False):
         return MemoryIO(init, mode, uri=uri)
 
     elif isinstance(init, io.StringIO):
-        raise TypeError("io.StringIO objects are not supported.  Use io.BytesIO instead.")
+        msg = "io.StringIO objects are not supported.  Use io.BytesIO instead."
+        raise TypeError(msg)
 
     elif isinstance(init, io.IOBase):
         if ("r" in mode and not init.readable()) or ("w" in mode and not init.writable()):

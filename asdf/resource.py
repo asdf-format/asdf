@@ -42,7 +42,8 @@ class ResourceMappingProxy(Mapping):
 
     def __init__(self, delegate, package_name=None, package_version=None):
         if not isinstance(delegate, Mapping):
-            raise TypeError("Resource mapping must implement the Mapping interface")
+            msg = "Resource mapping must implement the Mapping interface"
+            raise TypeError(msg)
 
         self._delegate = delegate
         self._package_name = package_name

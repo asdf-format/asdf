@@ -123,11 +123,12 @@ class _TreeModificationContext:
         duration of the context.
         """
         if id(node) in self._pending:
-            raise RuntimeError(
+            msg = (
                 "Unhandled cycle in tree.  This is possibly a bug "
                 "in extension code, which should be yielding "
                 "nodes that may contain reference cycles."
             )
+            raise RuntimeError(msg)
 
         self._pending.add(id(node))
         try:
@@ -185,7 +186,8 @@ class _TreeModificationContext:
             # modified node is being replaced, which is an
             # error because it breaks references within the
             # tree.
-            raise RuntimeError("Node already has an associated result")
+            msg = "Node already has an associated result"
+            raise RuntimeError(msg)
 
         self._map[id(node)] = (node, result)
 
@@ -265,7 +267,8 @@ def walk_and_modify(top, callback, ignore_implicit_conversion=False, postorder=T
     """
     callback_arity = callback.__code__.co_argcount
     if callback_arity < 1 or callback_arity > 2:
-        raise ValueError("Expected callback to accept one or two arguments")
+        msg = "Expected callback to accept one or two arguments"
+        raise ValueError(msg)
 
     def _handle_generator(result):
         # If the result is a generator, generate one value to

@@ -219,7 +219,8 @@ class AsdfTypeIndex:
         elif asdftype.name is None:
             yaml_tags = []
         else:
-            raise TypeError("name must be a string, list or None")
+            msg = "name must be a string, list or None"
+            raise TypeError(msg)
 
         for yaml_tag in yaml_tags:
             self._type_by_tag[yaml_tag] = asdftype

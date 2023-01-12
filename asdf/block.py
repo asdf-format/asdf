@@ -74,7 +74,8 @@ class BlockManager:
             raise ValueError(f"Unknown array storage type {block.array_storage}")
 
         if block.array_storage == "streamed" and len(self._streamed_blocks) > 1:
-            raise ValueError("Can not add second streaming block")
+            msg = "Can not add second streaming block"
+            raise ValueError(msg)
 
         if block._data is not None:
             self._data_to_block_mapping[id(block._data)] = block
@@ -116,7 +117,8 @@ class BlockManager:
               appears at the end of the file.
         """
         if array_storage not in ["internal", "external", "streamed", "inline"]:
-            raise ValueError("array_storage must be one of 'internal', 'external', 'streamed' or 'inline'")
+            msg = "array_storage must be one of 'internal', 'external', 'streamed' or 'inline'"
+            raise ValueError(msg)
 
         if block.array_storage != array_storage:
             if block in self.blocks:
@@ -209,7 +211,8 @@ class BlockManager:
     def _sort_blocks_by_offset(self):
         def sorter(x):
             if x.offset is None:
-                raise ValueError("Block is missing offset")
+                msg = "Block is missing offset"
+                raise ValueError(msg)
             else:
                 return x.offset
 
@@ -352,7 +355,8 @@ class BlockManager:
 
         for i, block in enumerate(self.external_blocks):
             if uri is None:
-                raise ValueError("Can't write external blocks, since URI of main file is unknown.")
+                msg = "Can't write external blocks, since URI of main file is unknown."
+                raise ValueError(msg)
             subfd = self.get_external_uri(uri, i)
             asdffile = asdf.AsdfFile()
             block = copy.copy(block)
@@ -692,14 +696,16 @@ class BlockManager:
         for i, external_block in enumerate(self.external_blocks):
             if block == external_block:
                 if self._asdffile().uri is None:
-                    raise ValueError("Can't write external blocks, since URI of main file is unknown.")
+                    msg = "Can't write external blocks, since URI of main file is unknown."
+                    raise ValueError(msg)
 
                 parts = list(patched_urllib_parse.urlparse(self._asdffile().uri))
                 path = parts[2]
                 filename = os.path.basename(path)
                 return self.get_external_filename(filename, i)
 
-        raise ValueError("block not found.")
+        msg = "block not found."
+        raise ValueError(msg)
 
     def find_or_create_block_for_array(self, arr, ctx):
         """
@@ -1004,11 +1010,12 @@ class Block:
                 return None
 
             if buff not in (constants.BLOCK_MAGIC, constants.INDEX_HEADER[: len(buff)]):
-                raise ValueError(
+                msg = (
                     "Bad magic number in block. "
                     "This may indicate an internal inconsistency about the "
                     "sizes of the blocks in the file."
                 )
+                raise ValueError(msg)
 
             if buff == constants.INDEX_HEADER[: len(buff)]:
                 return None
@@ -1034,10 +1041,12 @@ class Block:
             raise v  # TODO: hint extension?
 
         if self.input_compression is None and header["used_size"] != header["data_size"]:
-            raise ValueError("used_size and data_size must be equal when no compression is used.")
+            msg = "used_size and data_size must be equal when no compression is used."
+            raise ValueError(msg)
 
         if header["flags"] & constants.BLOCK_FLAG_STREAMED and self.input_compression is not None:
-            raise ValueError("Compression set on a streamed block.")
+            msg = "Compression set on a streamed block."
+            raise ValueError(msg)
 
         if fd.seekable():
             # If the file is seekable, we can delay reading the actual
@@ -1200,7 +1209,8 @@ class Block:
         """
         if self._data is None:
             if self._fd.is_closed():
-                raise OSError("ASDF file has already been closed. " "Can not get the data.")
+                msg = "ASDF file has already been closed. " "Can not get the data."
+                raise OSError(msg)
 
             # Be nice and reset the file position after we're done
             curpos = self._fd.tell()

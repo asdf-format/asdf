@@ -159,7 +159,8 @@ class AsdfSearchResult:
             or isinstance(type_, typing.Pattern)
             or isinstance(type_, builtins.type)
         ):
-            raise TypeError("type must be NotSet, str, regular expression, or instance of builtins.type")
+            msg = "type must be NotSet, str, regular expression, or instance of builtins.type"
+            raise TypeError(msg)
 
         # value and key arguments can be anything, but pattern and str have special behavior
 
@@ -250,7 +251,8 @@ class AsdfSearchResult:
         elif len(results) == 1:
             return results[0]
         else:
-            raise RuntimeError("More than one result")
+            msg = "More than one result"
+            raise RuntimeError(msg)
 
     @property
     def path(self):
@@ -268,7 +270,8 @@ class AsdfSearchResult:
         elif len(results) == 1:
             return results[0]
         else:
-            raise RuntimeError("More than one result")
+            msg = "More than one result"
+            raise RuntimeError(msg)
 
     @property
     def nodes(self):
@@ -361,7 +364,8 @@ class AsdfSearchResult:
             else:
                 child = self._node[key]
         else:
-            raise TypeError("This node cannot be indexed")
+            msg = "This node cannot be indexed"
+            raise TypeError(msg)
 
         return AsdfSearchResult(
             self._identifiers + [key],
@@ -430,4 +434,5 @@ def _wrap_filter(filter_):
         elif arity == 2:
             return filter_
         else:
-            raise ValueError("filter must accept 1 or 2 arguments")
+            msg = "filter must accept 1 or 2 arguments"
+            raise ValueError(msg)

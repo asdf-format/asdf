@@ -134,7 +134,8 @@ class ExtensionProxy(Extension, AsdfExtension):
 
     def __init__(self, delegate, package_name=None, package_version=None):
         if not isinstance(delegate, (Extension, AsdfExtension)):
-            raise TypeError("Extension must implement the Extension or AsdfExtension interface")
+            msg = "Extension must implement the Extension or AsdfExtension interface"
+            raise TypeError(msg)
 
         self._delegate = delegate
         self._package_name = package_name
@@ -153,7 +154,8 @@ class ExtensionProxy(Extension, AsdfExtension):
             if isinstance(class_name, str):
                 self._legacy_class_names.add(class_name)
             else:
-                raise TypeError("Extension property 'legacy_class_names' must contain str values")
+                msg = "Extension property 'legacy_class_names' must contain str values"
+                raise TypeError(msg)
 
         if self._legacy:
             self._legacy_class_names.add(self._class_name)
@@ -164,7 +166,8 @@ class ExtensionProxy(Extension, AsdfExtension):
         elif value is None:
             self._asdf_standard_requirement = SpecifierSet()
         else:
-            raise TypeError("Extension property 'asdf_standard_requirement' must be str or None")
+            msg = "Extension property 'asdf_standard_requirement' must be str or None"
+            raise TypeError(msg)
 
         self._tags = []
         for tag in getattr(self._delegate, "tags", []):
@@ -173,7 +176,8 @@ class ExtensionProxy(Extension, AsdfExtension):
             elif isinstance(tag, TagDefinition):
                 self._tags.append(tag)
             else:
-                raise TypeError("Extension property 'tags' must contain str or asdf.extension.TagDefinition values")
+                msg = "Extension property 'tags' must contain str or asdf.extension.TagDefinition values"
+                raise TypeError(msg)
 
         self._yaml_tag_handles = getattr(delegate, "yaml_tag_handles", {})
 
@@ -185,9 +189,8 @@ class ExtensionProxy(Extension, AsdfExtension):
         if hasattr(self._delegate, "compressors"):
             for compressor in self._delegate.compressors:
                 if not isinstance(compressor, Compressor):
-                    raise TypeError(
-                        "Extension property 'compressors' must contain instances of asdf.extension.Compressor"
-                    )
+                    msg = "Extension property 'compressors' must contain instances of asdf.extension.Compressor"
+                    raise TypeError(msg)
                 self._compressors.append(compressor)
 
     @property

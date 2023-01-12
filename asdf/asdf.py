@@ -164,7 +164,8 @@ class AsdfFile:
             if self.extensions != tree.extensions:
                 # TODO(eslavich): Why not?  What if that's the goal
                 # of copying the file?
-                raise ValueError("Can not copy AsdfFile and change active extensions")
+                msg = "Can not copy AsdfFile and change active extensions"
+                raise ValueError(msg)
             self._uri = tree.uri
             # Set directly to self._tree (bypassing property), since
             # we can assume the other AsdfFile is already valid.
@@ -380,9 +381,8 @@ class AsdfFile:
             extensions = extensions.extensions
 
         if not isinstance(extensions, list):
-            raise TypeError(
-                "The extensions parameter must be an extension, list of extensions, or instance of AsdfExtensionList"
-            )
+            msg = "The extensions parameter must be an extension, list of extensions, or instance of AsdfExtensionList"
+            raise TypeError(msg)
 
         extensions = [ExtensionProxy.maybe_wrap(e) for e in extensions]
 
@@ -577,7 +577,8 @@ class AsdfFile:
         When set, the tree will be validated against the ASDF schema.
         """
         if self._closed:
-            raise OSError("Cannot access data from closed ASDF file")
+            msg = "Cannot access data from closed ASDF file"
+            raise OSError(msg)
         return self._tree
 
     @tree.setter
@@ -747,7 +748,8 @@ class AsdfFile:
         """
         parts = line.split()
         if len(parts) != 2 or parts[0] != constants.ASDF_MAGIC:
-            raise ValueError("Does not appear to be a ASDF file.")
+            msg = "Does not appear to be a ASDF file."
+            raise ValueError(msg)
 
         try:
             version = versioning.AsdfVersion(parts[1].decode("ascii"))
@@ -771,7 +773,8 @@ class AsdfFile:
         lines = content.splitlines()
         for line in lines:
             if not line.startswith(b"#"):
-                raise ValueError("Invalid content between header and tree")
+                msg = "Invalid content between header and tree"
+                raise ValueError(msg)
             comments.append(line[1:].strip())
 
         return comments
@@ -806,7 +809,8 @@ class AsdfFile:
         """Attempt to populate AsdfFile data from file-like object"""
 
         if strict_extension_check and ignore_missing_extensions:
-            raise ValueError("'strict_extension_check' and 'ignore_missing_extensions' are incompatible options")
+            msg = "'strict_extension_check' and 'ignore_missing_extensions' are incompatible options"
+            raise ValueError(msg)
 
         with config_context() as config:
             _handle_deprecated_kwargs(config, kwargs)
@@ -853,7 +857,8 @@ class AsdfFile:
             elif yaml_token == constants.BLOCK_MAGIC:
                 has_blocks = True
             elif yaml_token != b"":
-                raise OSError("ASDF file appears to contain garbage after header.")
+                msg = "ASDF file appears to contain garbage after header."
+                raise OSError(msg)
 
             if tree is None:
                 # At this point the tree should be tagged, but we want it to be
@@ -960,15 +965,15 @@ class AsdfFile:
                     **kwargs,
                 )
             except ValueError:
-                raise ValueError(
-                    "Input object does not appear to be an ASDF file or a FITS with ASDF extension"
-                ) from None
+                msg = "Input object does not appear to be an ASDF file or a FITS with ASDF extension"
+                raise ValueError(msg) from None
             except ImportError:
-                raise ValueError(
+                msg = (
                     "Input object does not appear to be an ASDF file. Cannot check "
                     "if it is a FITS with ASDF extension because 'astropy' is not "
                     "installed"
-                ) from None
+                )
+                raise ValueError() from None
         elif file_type == util.FileType.ASDF:
             return cls._open_asdf(
                 self,
@@ -982,7 +987,8 @@ class AsdfFile:
                 **kwargs,
             )
         else:
-            raise ValueError("Input object does not appear to be an ASDF file or a FITS with ASDF extension")
+            msg = "Input object does not appear to be an ASDF file or a FITS with ASDF extension"
+            raise ValueError(msg)
 
     @classmethod
     def open(  # noqa: A003
@@ -1184,14 +1190,16 @@ class AsdfFile:
             fd = self._fd
 
             if fd is None:
-                raise ValueError("Can not update, since there is no associated file")
+                msg = "Can not update, since there is no associated file"
+                raise ValueError(msg)
 
             if not fd.writable():
-                raise OSError(
+                msg = (
                     "Can not update, since associated file is read-only. Make "
                     "sure that the AsdfFile was opened with mode='rw' and the "
                     "underlying file handle is writable."
                 )
+                raise OSError(msg)
 
             if version is not None:
                 self.version = version
@@ -1204,7 +1212,8 @@ class AsdfFile:
                 return
 
             if not fd.seekable():
-                raise OSError("Can not update, since associated file is not seekable")
+                msg = "Can not update, since associated file is not seekable"
+                raise OSError(msg)
 
             self.blocks.finish_reading_internal_blocks()
 

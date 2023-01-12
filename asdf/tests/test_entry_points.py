@@ -39,7 +39,8 @@ def resource_mappings_entry_point_successful():
 
 
 def resource_mappings_entry_point_failing():
-    raise Exception("NOPE")
+    msg = "NOPE"
+    raise Exception(msg)
 
 
 def resource_mappings_entry_point_bad_element():
@@ -103,7 +104,8 @@ def extensions_entry_point_successful():
 
 
 def extensions_entry_point_failing():
-    raise Exception("NOPE")
+    msg = "NOPE"
+    raise Exception(msg)
 
 
 def extensions_entry_point_bad_element():
