@@ -985,7 +985,7 @@ class AsdfFile:
             raise ValueError("Input object does not appear to be an ASDF file or a FITS with ASDF extension")
 
     @classmethod
-    def open(
+    def open(  # noqa: A003
         cls,
         fd,
         uri=None,

@@ -37,7 +37,7 @@ class AsdfSearchResult:
         self._max_cols = max_cols
         self._show_values = show_values
 
-    def format(self, max_rows=NotSet, max_cols=NotSet, show_values=NotSet):
+    def format(self, max_rows=NotSet, max_cols=NotSet, show_values=NotSet):  # noqa: A003
         """
         Change formatting parameters of the rendered tree.
 

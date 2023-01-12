@@ -164,7 +164,7 @@ class AsdfInFits(asdf.AsdfFile):
         self._tree = {}
 
     @classmethod
-    def open(
+    def open(  # noqa: A003
         cls,
         fd,
         uri=None,
