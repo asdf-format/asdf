@@ -139,11 +139,16 @@ def assert_tree_match(old_tree, new_tree, ctx=None, funcname="assert_equal", ign
         # be necessary or useful to account for fields that are not currently
         # compared.
         elif CartesianRepresentation is not None and isinstance(old, CartesianRepresentation):
-            assert old.x == new.x and old.y == new.y and old.z == new.z
+            assert old.x == new.x
+            assert old.y == new.y
+            assert old.z == new.z
         elif CartesianDifferential is not None and isinstance(old, CartesianDifferential):
-            assert old.d_x == new.d_x and old.d_y == new.d_y and old.d_z == new.d_z
+            assert old.d_x == new.d_x
+            assert old.d_y == new.d_y
+            assert old.d_z == new.d_z
         elif ICRS is not None and isinstance(old, ICRS):
-            assert old.ra == new.ra and old.dec == new.dec
+            assert old.ra == new.ra
+            assert old.dec == new.dec
         else:
             assert old == new
 

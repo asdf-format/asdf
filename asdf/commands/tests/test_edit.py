@@ -75,7 +75,8 @@ def mock_input(monkeypatch):
         def _input(prompt=None):
             nonlocal called
             called = True
-            assert prompt is not None and re.match(pattern, prompt)
+            assert prompt is not None
+            assert re.match(pattern, prompt)
             return response
 
         with monkeypatch.context() as m:
