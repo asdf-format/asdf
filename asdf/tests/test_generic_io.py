@@ -267,7 +267,7 @@ def test_http_connection(tree, httpserver):
     with _roundtrip(tree, get_write_fd, get_read_fd) as ff:
         assert len(list(ff.blocks.internal_blocks)) == 2
         assert isinstance(next(ff.blocks.internal_blocks)._data, np.ndarray)
-        ff.tree["science_data"][0] == 42
+        assert (ff.tree["science_data"] == tree["science_data"]).all()
 
 
 def test_exploded_filesystem(tree, tmp_path):
