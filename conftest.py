@@ -4,7 +4,7 @@ import pytest
 
 
 @pytest.fixture(scope="session", autouse=True)
-def temp_cwd(tmpdir_factory):
+def _temp_cwd(tmpdir_factory):
     """
     This fixture creates a temporary current working directory
     for the test session, so that docstring tests that write files

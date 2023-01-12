@@ -16,14 +16,14 @@ def large_tree():
 
 
 @pytest.fixture(autouse=True)
-def restore_default_config():
+def _restore_default_config():
     yield
     config._global_config = config.AsdfConfig()
     config._local = config._ConfigLocal()
 
 
 @pytest.fixture(autouse=True)
-def clear_schema_cache():
+def _clear_schema_cache():
     """
     Fixture that clears schema caches to prevent issues
     when tests use same URI for different schema content.

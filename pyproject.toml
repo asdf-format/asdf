@@ -194,7 +194,6 @@ select = [
 ]
 extend-ignore = [
     "B905", # Requires python 3.10 (use zip strict)
-    "PT004", # Fixture `xfail_version_map_support_cases` does not return anything, add leading underscor
     "PT006", # Wrong name(s) type in `@pytest.mark.parametrize`, expected `tuple`
     "PT011", # `pytest.raises(...)` is too broad, set the `match` parameter or use a more specific exception
     "PT012", # `pytest.raises()` block should contain a single simple statement

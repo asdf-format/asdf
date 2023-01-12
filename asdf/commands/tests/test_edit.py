@@ -88,7 +88,7 @@ def mock_input(monkeypatch):
 
 
 @pytest.fixture(autouse=True)
-def default_mock_input(monkeypatch):
+def _default_mock_input(monkeypatch):
     """
     Fixture that raises an error when the program
     requests unexpected input.
