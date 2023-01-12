@@ -55,12 +55,12 @@ class Lz4Compressor:
     def __init__(self):
         try:
             import lz4.block
-        except ImportError:
+        except ImportError as err:
             raise ImportError(
                 "lz4 library in not installed in your Python environment, "
                 "therefore the compressed block in this ASDF file "
                 "can not be decompressed."
-            )
+            ) from err
 
         self._api = lz4.block
 
