@@ -184,6 +184,19 @@ select = [
     "BLE", # flake8-blind-except
     "B", # flake8-bugbear
 ]
+extend-ignore = [
+    "B006", # Do not use mutable data structures for argument defaults
+    "B007", # Loop control variable ... not used within the loop body. If this is intended, start the name with an underscore.
+    "B009", # Do not call `getattr` with a constant attribute value. It is not any safer than normal property access.
+    "B010", # Do not call `setattr` with a constant attribute value. It is not any safer than normal property access
+    "B011", # Do not `assert False` (`python -O` removes these calls), raise `AssertionError()`
+    "B012", # `return` inside finally blocks cause exceptions to be silenced
+    "B015", # Pointless comparison. This comparison does nothing but waste CPU instructions. Either prepend `assert` or remove it.
+    "B019", # Use of `functools.lru_cache` or `functools.cache` on methods can lead to memory leaks
+    "B023", # Function definition does not bind loop variable `package_name`
+    "B904", # Within an except clause, raise exceptions with raise ... from err or raise ... from None to distinguish them from errors in exception handling
+    "B905", # Requires python 3.10 (use zip strict)
+]
 extend-exclude = ["asdf/extern/*", "docs/*"]
 
 [tool.ruff.per-file-ignores]
