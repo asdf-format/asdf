@@ -182,9 +182,6 @@ select = [
     # "ANN", # flake8-annotations
     "S", # flake8-bandit
 ]
-extend-ignore = [
-    "S506", # unsafe yaml load
-]
 extend-exclude = ["asdf/extern/*", "docs/*"]
 
 [tool.ruff.per-file-ignores]
