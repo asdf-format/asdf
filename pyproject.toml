@@ -179,6 +179,12 @@ select = [
     "UP", # pyupgrade
     "N", # pep8-naming
     "YTT", # flake8-2020
+    # "ANN", # flake8-annotations
+    "S", # flake8-bandit
+]
+extend-ignore = [
+    "S101", # assert used
+    "S506", # unsafe yaml load
 ]
 extend-exclude = ["asdf/extern/*", "docs/*"]
 
