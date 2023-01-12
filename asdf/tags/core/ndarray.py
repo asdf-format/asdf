@@ -67,7 +67,7 @@ def asdf_datatype_to_numpy_dtype(datatype, byteorder=None):
             return (str(name), datatype, tuple(shape))
     elif isinstance(datatype, list):
         datatype_list = []
-        for i, subdatatype in enumerate(datatype):
+        for subdatatype in datatype:
             np_dtype = asdf_datatype_to_numpy_dtype(subdatatype, byteorder)
             if isinstance(np_dtype, tuple):
                 datatype_list.append(np_dtype)

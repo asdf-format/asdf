@@ -237,7 +237,7 @@ class AsdfSchemaExampleItem(pytest.Item):
         ] = ff2
 
         # Add some dummy blocks so that the ndarray examples work
-        for i in range(3):
+        for _ in range(3):
             b = block.Block(np.zeros((1024 * 1024 * 8), dtype=np.uint8))
             b._used = True
             ff.blocks.add(b)
