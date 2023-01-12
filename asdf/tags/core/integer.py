@@ -46,7 +46,7 @@ class IntegerType(AsdfType):
     version = "1.0.0"
     supported_versions = {"1.0.0", "1.1.0"}
 
-    _value_cache = dict()
+    _value_cache = {}
 
     def __init__(self, value, storage_type="internal"):
         if storage_type not in ["internal", "inline"]:
@@ -59,7 +59,7 @@ class IntegerType(AsdfType):
     def to_tree(cls, node, ctx):
 
         if ctx not in cls._value_cache:
-            cls._value_cache[ctx] = dict()
+            cls._value_cache[ctx] = {}
 
         abs_value = int(np.abs(node._value))
 
@@ -78,7 +78,7 @@ class IntegerType(AsdfType):
             if node._storage == "internal":
                 cls._value_cache[ctx][abs_value] = array
 
-        tree = dict()
+        tree = {}
         ctx.set_array_storage(array, node._storage)
         tree["words"] = array
         tree["sign"] = node._sign

@@ -188,7 +188,6 @@ select = [
 ]
 extend-ignore = [
     "B905", # Requires python 3.10 (use zip strict)
-    "C408", # Unnecessary `dict` call (rewrite as a literal)
     "C416", # Unnecessary `list` comprehension (rewrite using `list()`)
 ]
 extend-exclude = ["asdf/extern/*", "docs/*"]

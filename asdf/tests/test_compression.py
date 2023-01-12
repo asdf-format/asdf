@@ -178,7 +178,7 @@ def test_set_array_compression(tmp_path):
     zlib_data = np.array([x for x in range(1000)])
     bzp2_data = np.array([x for x in range(1000)])
 
-    tree = dict(zlib_data=zlib_data, bzp2_data=bzp2_data)
+    tree = {"zlib_data": zlib_data, "bzp2_data": bzp2_data}
     with asdf.AsdfFile(tree) as af_out:
         af_out.set_array_compression(zlib_data, "zlib", level=1)
         af_out.set_array_compression(bzp2_data, "bzp2", compresslevel=9000)
@@ -196,7 +196,7 @@ def test_nonnative_endian_compression(tmp_path):
     ledata = np.arange(1000, dtype="<i8")
     bedata = np.arange(1000, dtype=">i8")
 
-    _roundtrip(tmp_path, dict(ledata=ledata, bedata=bedata), "lz4")
+    _roundtrip(tmp_path, {"ledata": ledata, "bedata": bedata}, "lz4")
 
 
 class LzmaCompressor(Compressor):
@@ -235,8 +235,8 @@ def test_compression_with_extension(tmp_path):
         config.add_extension(LzmaExtension())
 
         with pytest.raises(lzma.LZMAError):
-            _roundtrip(tmp_path, tree, "lzma", write_options=dict(compression_kwargs={"preset": 9000}))
-        fn = _roundtrip(tmp_path, tree, "lzma", write_options=dict(compression_kwargs={"preset": 6}))
+            _roundtrip(tmp_path, tree, "lzma", write_options={"compression_kwargs": {"preset": 9000}})
+        fn = _roundtrip(tmp_path, tree, "lzma", write_options={"compression_kwargs": {"preset": 6}})
 
         hist = {
             "extension_class": "asdf.tests.test_compression.LzmaExtension",

@@ -86,7 +86,7 @@ def run_tuple_test(tree, tmp_path):
         assert b"tuple" not in content
 
     # Ignore these warnings for the tests that don't actually test the warning
-    init_options = dict(ignore_implicit_conversion=True)
+    init_options = {"ignore_implicit_conversion": True}
 
     helpers.assert_roundtrip_tree(
         tree, tmp_path, asdf_check_func=check_asdf, raw_yaml_check_func=check_raw_yaml, init_options=init_options
@@ -140,7 +140,7 @@ def test_named_tuple_collections_recursive(tmp_path):
     def check_asdf(asdf):
         assert (asdf.tree["val"][2] == np.ones(3)).all()
 
-    init_options = dict(ignore_implicit_conversion=True)
+    init_options = {"ignore_implicit_conversion": True}
     helpers.assert_roundtrip_tree(tree, tmp_path, asdf_check_func=check_asdf, init_options=init_options)
 
 
@@ -155,7 +155,7 @@ def test_named_tuple_typing_recursive(tmp_path):
     def check_asdf(asdf):
         assert (asdf.tree["val"][2] == np.ones(3)).all()
 
-    init_options = dict(ignore_implicit_conversion=True)
+    init_options = {"ignore_implicit_conversion": True}
     helpers.assert_roundtrip_tree(tree, tmp_path, asdf_check_func=check_asdf, init_options=init_options)
 
 
