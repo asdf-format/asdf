@@ -111,7 +111,7 @@ class AsdfSearchResult:
         else:
             return ".".join([value_type.__module__, value_type.__name__])
 
-    def search(self, key=NotSet, type=NotSet, value=NotSet, filter=None):
+    def search(self, key=NotSet, type_=NotSet, value=NotSet, filter_=None):
         """
         Further narrow the search.
 
@@ -124,7 +124,7 @@ class AsdfSearchResult:
             expression pattern.
             If any other object, node's key or index must equal the queried key.
 
-        type : NotSet, str, or builtins.type
+        type_ : NotSet, str, or builtins.type
             Search query that selects nodes by type.
             If NotSet, the node type is unconstrained.
             If str, the input is searched among (fully qualified) node type
@@ -138,7 +138,7 @@ class AsdfSearchResult:
             expression pattern.
             If any other object, node's value must equal the queried value.
 
-        filter : callable
+        filter_ : callable
             Callable that filters nodes by arbitrary criteria.
             The callable accepts one or two arguments:
 
@@ -154,20 +154,20 @@ class AsdfSearchResult:
             the subsequent search result
         """
         if not (
-            type is NotSet
-            or isinstance(type, str)
-            or isinstance(type, typing.Pattern)
-            or isinstance(type, builtins.type)
+            type_ is NotSet
+            or isinstance(type_, str)
+            or isinstance(type_, typing.Pattern)
+            or isinstance(type_, builtins.type)
         ):
             raise TypeError("type must be NotSet, str, regular expression, or instance of builtins.type")
 
         # value and key arguments can be anything, but pattern and str have special behavior
 
         key = self._maybe_compile_pattern(key)
-        type = self._maybe_compile_pattern(type)
+        type_ = self._maybe_compile_pattern(type_)
         value = self._maybe_compile_pattern(value)
 
-        filter = _wrap_filter(filter)
+        filter_ = _wrap_filter(filter_)
 
         def _filter(node, identifier):
             if isinstance(key, typing.Pattern):
@@ -177,12 +177,12 @@ class AsdfSearchResult:
                 if not self._safe_equals(identifier, key):
                     return False
 
-            if isinstance(type, typing.Pattern):
+            if isinstance(type_, typing.Pattern):
                 fully_qualified_node_type = self._get_fully_qualified_type(node)
-                if type.search(fully_qualified_node_type) is None:
+                if type_.search(fully_qualified_node_type) is None:
                     return False
-            elif isinstance(type, builtins.type):
-                if not isinstance(node, type):
+            elif isinstance(type_, builtins.type):
+                if not isinstance(node, type_):
                     return False
 
             if isinstance(value, typing.Pattern):
@@ -197,8 +197,8 @@ class AsdfSearchResult:
                 if not self._safe_equals(node, value):
                     return False
 
-            if filter is not None:
-                if not filter(node, identifier):
+            if filter_ is not None:
+                if not filter_(node, identifier):
                     return False
 
             return True

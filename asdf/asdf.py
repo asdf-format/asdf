@@ -1657,7 +1657,7 @@ class AsdfFile:
             the result of the search
         """
         result = AsdfSearchResult(["root"], self.tree)
-        return result.search(key=key, type=type, value=value, filter=filter)
+        return result.search(key=key, type_=type, value=value, filter_=filter)
 
     # This function is called from within TypeIndex when deserializing
     # the tree for this file.  It is kept here so that we can keep

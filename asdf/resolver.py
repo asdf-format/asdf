@@ -122,10 +122,10 @@ class ResolverChain:
         """
         self._resolvers = tuple(resolvers)
 
-    def __call__(self, input):
+    def __call__(self, input_):
         for resolver in self._resolvers:
-            input = resolver(input)
-        return input
+            input_ = resolver(input_)
+        return input_
 
     def __hash__(self):
         return hash(self._resolvers)

@@ -24,7 +24,7 @@ def make_argparser():
     commands subpackage.
     """
 
-    def help(args):
+    def help_(args):
         parser.print_help()
         return 0
 
@@ -35,7 +35,7 @@ def make_argparser():
     subparsers = parser.add_subparsers(title="subcommands", description="valid subcommands")
 
     help_parser = subparsers.add_parser("help", help="Display usage information")
-    help_parser.set_defaults(func=help)
+    help_parser.set_defaults(func=help_)
 
     commands = {x.__name__: x for x in util.iter_subclasses(Command)}
 
