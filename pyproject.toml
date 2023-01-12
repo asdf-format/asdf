@@ -185,7 +185,6 @@ select = [
     "B", # flake8-bugbear
 ]
 extend-ignore = [
-    "B019", # Use of `functools.lru_cache` or `functools.cache` on methods can lead to memory leaks
     "B023", # Function definition does not bind loop variable `package_name`
     "B904", # Within an except clause, raise exceptions with raise ... from err or raise ... from None to distinguish them from errors in exception handling
     "B905", # Requires python 3.10 (use zip strict)

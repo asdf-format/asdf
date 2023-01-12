@@ -296,7 +296,7 @@ class AsdfTypeIndex:
             _serialization_context._mark_extension_used(self._extension_by_type[asdftype])
         return asdftype
 
-    @lru_cache(5)
+    @lru_cache(5)  # noqa: B019
     def has_hook(self, hook_name):
         """
         Returns `True` if the given hook name exists on any of the managed
