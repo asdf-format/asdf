@@ -59,8 +59,8 @@ class AsdfSchemaFile(pytest.File):
         validate_default=True,
         ignore_unrecognized_tag=False,
         ignore_version_mismatch=False,
-        skip_tests=[],
-        xfail_tests=[],
+        skip_tests=None,
+        xfail_tests=None,
         **kwargs,
     ):
 
@@ -83,8 +83,8 @@ class AsdfSchemaFile(pytest.File):
         result.validate_default = validate_default
         result.ignore_unrecognized_tag = ignore_unrecognized_tag
         result.ignore_version_mismatch = ignore_version_mismatch
-        result.skip_tests = skip_tests
-        result.xfail_tests = xfail_tests
+        result.skip_tests = [] if skip_tests is None else skip_tests
+        result.xfail_tests = [] if xfail_tests is None else xfail_tests
 
         return result
 

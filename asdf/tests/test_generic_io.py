@@ -19,7 +19,9 @@ def tree(request):
     return request.param()
 
 
-def _roundtrip(tree, get_write_fd, get_read_fd, write_options={}, read_options={}):
+def _roundtrip(tree, get_write_fd, get_read_fd, write_options=None, read_options=None):
+    write_options = {} if write_options is None else write_options
+    read_options = {} if read_options is None else read_options
 
     # Since we're testing with small arrays, force all arrays to be stored
     # in internal blocks rather than letting some of them be automatically put

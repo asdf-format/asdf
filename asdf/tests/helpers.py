@@ -184,11 +184,13 @@ def _assert_roundtrip_tree(
     *,
     asdf_check_func=None,
     raw_yaml_check_func=None,
-    write_options={},
-    init_options={},
+    write_options=None,
+    init_options=None,
     extensions=None,
     tree_match_func="assert_equal",
 ):
+    write_options = {} if write_options is None else write_options
+    init_options = {} if init_options is None else init_options
 
     fname = os.path.join(str(tmp_path), "test.asdf")
 
