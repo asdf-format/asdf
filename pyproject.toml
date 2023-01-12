@@ -175,6 +175,8 @@ select = [
     "E", "W", # pycodestyle
     # "C90", # mccabe complexity
     "I", # isort
+    # "D", # pydocstyle
+    "UP", # pyupgrade
 ]
 extend-exclude = ["asdf/extern/*", "docs/*"]
 

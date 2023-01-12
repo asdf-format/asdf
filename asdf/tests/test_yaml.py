@@ -122,8 +122,12 @@ def test_named_tuple_typing(tmp_path):
     Ensure that we are able to serialize a typing.NamedTuple.
     """
 
-    nt = NamedTuple("TestNamedTuple2", (("one", int), ("two", int), ("three", int)))
-    tree = {"val": nt(1, 2, 3)}
+    class NT(NamedTuple):
+        one: int
+        two: int
+        three: int
+
+    tree = {"val": NT(1, 2, 3)}
 
     run_tuple_test(tree, tmp_path)
 
@@ -141,9 +145,12 @@ def test_named_tuple_collections_recursive(tmp_path):
 
 
 def test_named_tuple_typing_recursive(tmp_path):
-    nt = NamedTuple("TestNamedTuple4", (("one", int), ("two", int), ("three", np.ndarray)))
+    class NT(NamedTuple):
+        one: int
+        two: int
+        three: np.ndarray
 
-    tree = {"val": nt(1, 2, np.ones(3))}
+    tree = {"val": NT(1, 2, np.ones(3))}
 
     def check_asdf(asdf):
         assert (asdf.tree["val"][2] == np.ones(3)).all()
