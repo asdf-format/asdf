@@ -173,6 +173,8 @@ line-length = 120
 select = [
     "F", # Pyflakes
     "E", "W", # pycodestyle
+    # "C90", # mccabe complexity
+    "I", # isort
 ]
 extend-exclude = ["asdf/extern/*", "docs/*"]
 
