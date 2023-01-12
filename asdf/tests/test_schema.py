@@ -716,9 +716,7 @@ def test_mapping_supported_key_types(keys, version):
 def test_mapping_unsupported_key_types(keys, version):
     for key in keys:
         with pytest.raises(ValidationError, match=r"Mapping key .* is not permitted"):
-            af = asdf.AsdfFile({key: "value"}, version=version)
-            buff = io.BytesIO()
-            af.write_to(buff)
+            asdf.AsdfFile({key: "value"}, version=version)
 
 
 def test_nested_array():

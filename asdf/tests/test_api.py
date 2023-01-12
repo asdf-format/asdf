@@ -88,8 +88,8 @@ invalid_software: !core/software-1.0.0
 """
     buff = yaml_to_asdf(content)
 
+    get_config().validate_on_read = True
     with pytest.raises(ValidationError):
-        get_config().validate_on_read = True
         with asdf.open(buff):
             pass
 
