@@ -181,6 +181,7 @@ select = [
     "YTT", # flake8-2020
     # "ANN", # flake8-annotations
     "S", # flake8-bandit
+    "BLE", # flake8-blind-except
 ]
 extend-exclude = ["asdf/extern/*", "docs/*"]
 

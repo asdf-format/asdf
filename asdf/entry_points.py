@@ -61,8 +61,8 @@ def _list_entry_points(group, proxy_class):
             for element in elements:
                 try:
                     results.append(proxy_class(element, package_name=package_name, package_version=package_version))
-                except Exception as e:
+                except Exception as e:  # noqa: BLE001
                     _handle_error(e)
-        except Exception as e:
+        except Exception as e:  # noqa: BLE001
             _handle_error(e)
     return results
