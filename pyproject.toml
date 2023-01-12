@@ -185,9 +185,14 @@ select = [
     "B", # flake8-bugbear
     "A", # flake8-builtins
     "C4", # flake8-comprehensions
+    "T10", # flake8-debugger
+    "EM", # flake8-errmsg
 ]
 extend-ignore = [
     "B905", # Requires python 3.10 (use zip strict)
+    "EM101", # Exception must not use a string literal, assign to variable first
+    "EM102", # Exception must not use an f-string literal, assign to variable first
+    "EM103", #Exception must not use a `.format()` string directly, assign to variable first
 ]
 extend-exclude = ["asdf/extern/*", "docs/*"]
 
