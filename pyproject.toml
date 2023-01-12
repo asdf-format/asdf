@@ -183,10 +183,14 @@ select = [
     "S", # flake8-bandit
 ]
 extend-ignore = [
-    "S101", # assert used
     "S506", # unsafe yaml load
 ]
 extend-exclude = ["asdf/extern/*", "docs/*"]
+
+[tool.ruff.per-file-ignores]
+"test_*.py" = ["S101"]
+"asdf/tests/helpers.py" = ["S101"]
+"compatibility_tests/common.py" = ["S101"]
 
 [tool.codespell]
 skip="*.pdf,*.fits,*.asdf,.tox,asdf/extern,build,./tags,.git,docs/_build"
