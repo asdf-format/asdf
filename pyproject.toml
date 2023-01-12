@@ -191,7 +191,6 @@ select = [
 ]
 extend-ignore = [
     "B905", # Requires python 3.10 (use zip strict)
-    "ISC003", # Explicitly concatenated string should be implicitly concatenated
 ]
 extend-exclude = ["asdf/extern/*", "docs/*"]
 

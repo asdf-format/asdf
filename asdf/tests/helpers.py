@@ -469,8 +469,8 @@ def _assert_extension_type_correctness(extension, extension_type, resolver):
 
         assert schema_location is not None, (
             f"{extension_type.__name__} supports tag, {check_type.yaml_tag}, "
-            + "but tag does not resolve.  Check the tag_mapping and uri_mapping "
-            + f"properties on the related extension ({extension_type.__name__})."
+            "but tag does not resolve.  Check the tag_mapping and uri_mapping "
+            f"properties on the related extension ({extension_type.__name__})."
         )
 
         if schema_location not in asdf.get_config().resource_manager:
@@ -478,8 +478,9 @@ def _assert_extension_type_correctness(extension, extension_type, resolver):
                 with generic_io.get_file(schema_location) as f:
                     yaml.safe_load(f.read())
             except Exception as err:  # noqa: BLE001
-                raise AssertionError(
+                msg = (
                     f"{extension_type.__name__} supports tag, {check_type.yaml_tag}, "
-                    + f"which resolves to schema at {schema_location}, but "
-                    + "schema cannot be read."
-                ) from err
+                    f"which resolves to schema at {schema_location}, but "
+                    "schema cannot be read."
+                )
+                raise AssertionError(msg) from err
