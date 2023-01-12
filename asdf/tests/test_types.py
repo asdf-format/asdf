@@ -379,7 +379,7 @@ undefined_data:
     assert len(warning) == 2
     for i, tag in enumerate(["also_undefined-1.3.0", "undefined_tag-1.0.0"]):
         assert str(warning[i].message) == (
-            "tag:nowhere.org:custom/{} is not recognized, converting to raw " "Python data structure".format(tag)
+            f"tag:nowhere.org:custom/{tag} is not recognized, converting to raw Python data structure"
         )
 
     # Make sure no warning occurs if explicitly ignored
