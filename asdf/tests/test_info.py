@@ -641,7 +641,7 @@ def test_search():
     result = af.search("foo")
     assert result.node == 42
 
-    result = af.search(type="ndarray")
+    result = af.search(type_="ndarray")
     assert (result.node == tree["baz"]).all()
 
     result = af.search(value="hello")

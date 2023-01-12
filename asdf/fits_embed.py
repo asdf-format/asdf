@@ -151,8 +151,8 @@ class AsdfInFits(asdf.AsdfFile):
         self._hdulist = hdulist
         self._close_hdulist = False
 
-    def __exit__(self, type, value, traceback):
-        super().__exit__(type, value, traceback)
+    def __exit__(self, type_, value, traceback):
+        super().__exit__(type_, value, traceback)
         if self._close_hdulist:
             self._hdulist.close()
         self._tree = {}

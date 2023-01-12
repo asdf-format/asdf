@@ -277,7 +277,7 @@ class AsdfFile:
     def __enter__(self):
         return self
 
-    def __exit__(self, type, value, traceback):
+    def __exit__(self, type_, value, traceback):
         self.close()
 
     def _check_extensions(self, tree, strict=False):
@@ -1614,7 +1614,7 @@ class AsdfFile:
         )
         print("\n".join(lines))
 
-    def search(self, key=NotSet, type=NotSet, value=NotSet, filter=None):
+    def search(self, key=NotSet, type_=NotSet, value=NotSet, filter_=None):
         """
         Search this file's tree.
 
@@ -1627,7 +1627,7 @@ class AsdfFile:
             expression pattern.
             If any other object, node's key or index must equal the queried key.
 
-        type : NotSet, str, or builtins.type
+        type_ : NotSet, str, or builtins.type
             Search query that selects nodes by type.
             If NotSet, the node type is unconstrained.
             If str, the input is searched among (fully qualified) node type
@@ -1641,7 +1641,7 @@ class AsdfFile:
             expression pattern.
             If any other object, node's value must equal the queried value.
 
-        filter : callable
+        filter_ : callable
             Callable that filters nodes by arbitrary criteria.
             The callable accepts one or two arguments:
 
@@ -1657,7 +1657,7 @@ class AsdfFile:
             the result of the search
         """
         result = AsdfSearchResult(["root"], self.tree)
-        return result.search(key=key, type_=type, value=value, filter_=filter)
+        return result.search(key=key, type_=type_, value=value, filter_=filter_)
 
     # This function is called from within TypeIndex when deserializing
     # the tree for this file.  It is kept here so that we can keep

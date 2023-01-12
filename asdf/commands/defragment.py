@@ -46,13 +46,13 @@ class Defragment(Command):
         return defragment(args.filename[0], args.output, args.resolve_references, args.compress)
 
 
-def defragment(input, output=None, resolve_references=False, compress=None):
+def defragment(input_, output=None, resolve_references=False, compress=None):
     """
     Defragment a given ASDF file.
 
     Parameters
     ----------
-    input : str or file-like object
+    input_ : str or file-like object
         The input file.
 
     output : str of file-like object
@@ -64,7 +64,7 @@ def defragment(input, output=None, resolve_references=False, compress=None):
     compress : str, optional
         Compression to use.
     """
-    with asdf.open(input) as ff:
+    with asdf.open(input_) as ff:
         ff2 = AsdfFile(ff)
         if resolve_references:
             ff2.resolve_references()

@@ -417,17 +417,17 @@ def _build_path(identifiers):
         return identifiers[0] + "".join(f"[{repr(i)}]" for i in identifiers[1:])
 
 
-def _wrap_filter(filter):
+def _wrap_filter(filter_):
     """
     Ensure that filter callable accepts the expected number of arguments.
     """
-    if filter is None:
+    if filter_ is None:
         return None
     else:
-        arity = len(inspect.signature(filter).parameters)
+        arity = len(inspect.signature(filter_).parameters)
         if arity == 1:
-            return lambda n, i: filter(n)
+            return lambda n, i: filter_(n)
         elif arity == 2:
-            return filter
+            return filter_
         else:
             raise ValueError("filter must accept 1 or 2 arguments")
