@@ -37,7 +37,7 @@ all = [
 ]
 docs = [
   "sphinx-asdf>=0.1.4",
-  "tomli",
+  'tomli; python_version < "3.11"',
 ]
 tests = [
   "astropy>=5.0.4",
