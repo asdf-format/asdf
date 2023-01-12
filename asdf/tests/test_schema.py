@@ -1081,11 +1081,10 @@ def test_numpy_scalar_type_validation(numpy_value, valid_types):
                 description = "valid"
             else:
                 description = "invalid"
-            raise AssertionError(
-                "Expected numpy.{} to be {} against jsonschema type '{}'".format(
-                    type(numpy_value).__name__, description, jsonschema_type
-                )
+            msg = "Expected numpy.{} to be {} against jsonschema type '{}'".format(
+                type(numpy_value).__name__, description, jsonschema_type
             )
+            raise AssertionError(msg)
 
     for jsonschema_type in valid_types:
         _assert_validation(jsonschema_type, True)
