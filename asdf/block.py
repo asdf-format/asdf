@@ -71,7 +71,8 @@ class BlockManager:
             if block not in block_set:
                 block_set.append(block)
         else:
-            raise ValueError(f"Unknown array storage type {block.array_storage}")
+            msg = f"Unknown array storage type {block.array_storage}"
+            raise ValueError(msg)
 
         if block.array_storage == "streamed" and len(self._streamed_blocks) > 1:
             msg = "Can not add second streaming block"
@@ -92,7 +93,8 @@ class BlockManager:
                     if id(block._data) in self._data_to_block_mapping:
                         del self._data_to_block_mapping[id(block._data)]
         else:
-            raise ValueError(f"Unknown array storage type {block.array_storage}")
+            msg = f"Unknown array storage type {block.array_storage}"
+            raise ValueError(msg)
 
     def set_array_storage(self, block, array_storage):
         """
@@ -629,13 +631,15 @@ class BlockManager:
                 if source < len(self._internal_blocks):
                     return self._internal_blocks[source]
             else:
-                raise ValueError(f"Invalid source id {source}")
+                msg = f"Invalid source id {source}"
+                raise ValueError(msg)
 
             # If we have a streamed block or we already know we have
             # no blocks, reading any further isn't going to yield any
             # new blocks.
             if len(self._streamed_blocks) or len(self._internal_blocks) == 0:
-                raise ValueError(f"Block '{source}' not found.")
+                msg = f"Block '{source}' not found."
+                raise ValueError(msg)
 
             # If the desired block hasn't already been read, and the
             # file is seekable, and we have at least one internal
@@ -657,7 +661,8 @@ class BlockManager:
             if source == -1 and last_block.array_storage == "streamed":
                 return last_block
 
-            raise ValueError(f"Block '{source}' not found.")
+            msg = f"Block '{source}' not found."
+            raise ValueError(msg)
 
         elif isinstance(source, str):
             asdffile = self._asdffile().open_external(source)
@@ -669,7 +674,8 @@ class BlockManager:
             block = Block(data=np.array(source), array_storage="inline")
 
         else:
-            raise TypeError(f"Unknown source '{source}'")
+            msg = f"Unknown source '{source}'"
+            raise TypeError(msg)
 
         return block
 
@@ -1026,7 +1032,8 @@ class Block:
         buff = fd.read(2)
         (header_size,) = struct.unpack(b">H", buff)
         if header_size < self._header.size:
-            raise ValueError(f"Header size must be >= {self._header.size}")
+            msg = f"Header size must be >= {self._header.size}"
+            raise ValueError(msg)
 
         buff = fd.read(header_size)
         header = self._header.unpack(buff)
@@ -1094,7 +1101,8 @@ class Block:
             fd.close()
 
         if validate_checksum and not self.validate_checksum():
-            raise ValueError(f"Block at {self._offset} does not match given checksum")
+            msg = f"Block at {self._offset} does not match given checksum"
+            raise ValueError(msg)
 
         return self
 
@@ -1161,7 +1169,8 @@ class Block:
         self.input_compression = self.output_compression
 
         if allocated_size < used_size:
-            raise RuntimeError(f"Block used size {used_size} larger than allocated size {allocated_size}")
+            msg = f"Block used size {used_size} larger than allocated size {allocated_size}"
+            raise RuntimeError(msg)
 
         if self.checksum is not None:
             checksum = self.checksum
@@ -1199,7 +1208,8 @@ class Block:
                     fd.seek(end)
             else:
                 if used_size != data_size:
-                    raise RuntimeError(f"Block used size {used_size} is not equal to the data size {data_size}")
+                    msg = f"Block used size {used_size} is not equal to the data size {data_size}"
+                    raise RuntimeError(msg)
                 fd.write_array(data)
 
     @property

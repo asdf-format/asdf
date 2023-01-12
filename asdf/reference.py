@@ -36,7 +36,8 @@ def resolve_fragment(tree, pointer):
         try:
             tree = tree[part]
         except (TypeError, LookupError) as err:
-            raise ValueError(f"Unresolvable reference: '{pointer}'") from err
+            msg = f"Unresolvable reference: '{pointer}'"
+            raise ValueError(msg) from err
 
     return tree
 
@@ -86,7 +87,8 @@ class Reference(AsdfType):
         try:
             return getattr(self._get_target(), attr)
         except Exception as err:  # noqa: BLE001
-            raise AttributeError(f"No attribute '{attr}'") from err
+            msg = f"No attribute '{attr}'"
+            raise AttributeError(msg) from err
 
     def __getitem__(self, item):
         return self._get_target()[item]

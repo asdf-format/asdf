@@ -241,7 +241,8 @@ def custom_tree_to_tagged_tree(tree, ctx, _serialization_context=None):
             tagged_node = tagged.TaggedString(node)
             tagged_node._tag = tag
         else:
-            raise TypeError(f"Converter returned illegal node type: {util.get_class_name(node)}")
+            msg = f"Converter returned illegal node type: {util.get_class_name(node)}"
+            raise TypeError(msg)
 
         _serialization_context._mark_extension_used(converter.extension)
 

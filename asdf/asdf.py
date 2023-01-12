@@ -754,7 +754,8 @@ class AsdfFile:
         try:
             version = versioning.AsdfVersion(parts[1].decode("ascii"))
         except ValueError as err:
-            raise ValueError(f"Unparsable version in ASDF file: {parts[1]}") from err
+            msg = f"Unparsable version in ASDF file: {parts[1]}"
+            raise ValueError(msg) from err
 
         return version
 
@@ -1083,7 +1084,8 @@ class AsdfFile:
 
     def _pre_write(self, fd, all_array_storage, all_array_compression, compression_kwargs=None):
         if all_array_storage not in (None, "internal", "external", "inline"):
-            raise ValueError(f"Invalid value for all_array_storage: '{all_array_storage}'")
+            msg = f"Invalid value for all_array_storage: '{all_array_storage}'"
+            raise ValueError(msg)
 
         self._all_array_storage = all_array_storage
 
@@ -1691,7 +1693,8 @@ class AsdfFile:
 def _check_and_set_mode(fileobj, asdf_mode):
 
     if asdf_mode is not None and asdf_mode not in ["r", "rw"]:
-        raise ValueError(f"Unrecognized asdf mode '{asdf_mode}'. Must be either 'r' or 'rw'")
+        msg = f"Unrecognized asdf mode '{asdf_mode}'. Must be either 'r' or 'rw'"
+        raise ValueError(msg)
 
     if asdf_mode is None:
         if isinstance(fileobj, io.IOBase):
@@ -1723,7 +1726,8 @@ def _handle_deprecated_kwargs(config, kwargs):
             )
             setattr(config, config_property, func(value))
         else:
-            raise TypeError(f"Unexpected keyword argument '{key}'")
+            msg = f"Unexpected keyword argument '{key}'"
+            raise TypeError(msg)
 
 
 def open_asdf(

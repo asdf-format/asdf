@@ -33,7 +33,8 @@ def asdf_byteorder_to_numpy_byteorder(byteorder):
         return ">"
     elif byteorder == "little":
         return "<"
-    raise ValueError(f"Invalid ASDF byteorder '{byteorder}'")
+    msg = f"Invalid ASDF byteorder '{byteorder}'"
+    raise ValueError(msg)
 
 
 def asdf_datatype_to_numpy_dtype(datatype, byteorder=None):
@@ -56,7 +57,8 @@ def asdf_datatype_to_numpy_dtype(datatype, byteorder=None):
         return np.dtype(datatype)
     elif isinstance(datatype, dict):
         if "datatype" not in datatype:
-            raise ValueError(f"Field entry has no datatype: '{datatype}'")
+            msg = f"Field entry has no datatype: '{datatype}'"
+            raise ValueError(msg)
         name = datatype.get("name", "")
         byteorder = datatype.get("byteorder", byteorder)
         shape = datatype.get("shape")
@@ -77,7 +79,8 @@ def asdf_datatype_to_numpy_dtype(datatype, byteorder=None):
                 msg = "Error parsing asdf datatype"
                 raise RuntimeError(msg)
         return np.dtype(datatype_list)
-    raise ValueError(f"Unknown datatype {datatype}")
+    msg = f"Unknown datatype {datatype}"
+    raise ValueError(msg)
 
 
 def numpy_byteorder_to_asdf_byteorder(byteorder, override=None):
@@ -127,7 +130,8 @@ def numpy_dtype_to_asdf_datatype(dtype, include_byteorder=True, override_byteord
             numpy_byteorder_to_asdf_byteorder(dtype.byteorder, override=override_byteorder),
         )
 
-    raise ValueError(f"Unknown dtype {dtype}")
+    msg = f"Unknown dtype {dtype}"
+    raise ValueError(msg)
 
 
 def inline_data_asarray(inline, dtype=None):
@@ -323,7 +327,8 @@ class NDArrayType(AsdfType):
                 stride = np.product(shape[1:]) * dtype.itemsize
             missing = int(block_size / stride)
             return [missing] + shape[1:]
-        raise ValueError(f"Invalid shape '{shape}'")
+        msg = f"Invalid shape '{shape}'"
+        raise ValueError(msg)
 
     @property
     def block(self):
@@ -376,7 +381,8 @@ class NDArrayType(AsdfType):
         # libraries.
         # See https://github.com/asdf-format/asdf/issues/1015
         if name in ("name", "version", "supported_versions"):
-            raise AttributeError(f"'{self.__class__.name}' object has no attribute '{name}'")
+            msg = f"'{self.__class__.name}' object has no attribute '{name}'"
+            raise AttributeError(msg)
         else:
             return AsdfType.__getattribute__(self, name)
 

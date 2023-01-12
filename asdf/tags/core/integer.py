@@ -50,7 +50,8 @@ class IntegerType(AsdfType):
 
     def __init__(self, value, storage_type="internal"):
         if storage_type not in ["internal", "inline"]:
-            raise ValueError(f"storage_type '{storage_type}' is not a recognized storage type")
+            msg = f"storage_type '{storage_type}' is not a recognized storage type"
+            raise ValueError(msg)
         self._value = value
         self._sign = "-" if value < 0 else "+"
         self._storage = storage_type
@@ -111,7 +112,8 @@ class IntegerType(AsdfType):
         elif isinstance(other, IntegerType):
             return self._value == other._value
         else:
-            raise ValueError(f"Can't compare IntegralType to unknown type: {type(other)}")
+            msg = f"Can't compare IntegralType to unknown type: {type(other)}"
+            raise ValueError(msg)
 
     def __repr__(self):
         return f"IntegerType({self._value})"

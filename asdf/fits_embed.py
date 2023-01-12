@@ -74,7 +74,8 @@ class _EmbeddedBlockManager(block.BlockManager):
                     pair = ver
                 return _FitsBlock(self._hdulist[pair])
             else:
-                raise ValueError(f"Can not parse source '{source}'")
+                msg = f"Can not parse source '{source}'"
+                raise ValueError(msg)
 
         return super().get_block(source)
 
@@ -259,7 +260,8 @@ class AsdfInFits(asdf.AsdfFile):
                 # responsible for cleaning up upon close() or __exit__
                 close_hdulist = True
             except OSError as err:
-                raise ValueError(f"Failed to parse given file '{uri}'. Is it FITS?") from err
+                msg = f"Failed to parse given file '{uri}'. Is it FITS?"
+                raise ValueError(msg) from err
 
         self = cls(
             hdulist,

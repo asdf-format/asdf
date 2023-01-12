@@ -38,7 +38,8 @@ def _from_tree_tagged_missing_requirements(cls, tree, ctx):
     # This error will be handled by yamlutil.tagged_tree_to_custom_tree, which
     # will cause a warning to be issued indicating that the tree failed to be
     # converted.
-    raise TypeError(f"{util.human_list(cls.requires)} package{plural} {verb} required to instantiate '{tree._tag}'")
+    msg = f"{util.human_list(cls.requires)} package{plural} {verb} required to instantiate '{tree._tag}'"
+    raise TypeError(msg)
 
 
 class ExtensionTypeMeta(type):

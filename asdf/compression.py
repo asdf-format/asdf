@@ -46,7 +46,8 @@ def validate(compression):
             warnings.warn(f'Found more than one compressor for "{label}"', AsdfWarning)
 
     if compression not in all_labels:
-        raise ValueError(f"Supported compression types are: {all_labels}, not '{compression}'")
+        msg = f"Supported compression types are: {all_labels}, not '{compression}'"
+        raise ValueError(msg)
 
     return compression
 
@@ -212,7 +213,8 @@ def _get_compressor(label):
     elif label == "lz4":
         comp = Lz4Compressor()
     else:
-        raise ValueError(f"Unknown compression type: '{label}'")
+        msg = f"Unknown compression type: '{label}'"
+        raise ValueError(msg)
 
     return comp
 

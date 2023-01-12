@@ -124,9 +124,8 @@ class ExtensionManager:
         try:
             return self._tag_defs_by_tag[tag]
         except KeyError:
-            raise KeyError(
-                f"No support available for YAML tag '{tag}'.  You may need to install a missing extension."
-            ) from None
+            msg = f"No support available for YAML tag '{tag}'.  You may need to install a missing extension."
+            raise KeyError(msg) from None
 
     def get_converter_for_tag(self, tag):
         """
@@ -149,9 +148,8 @@ class ExtensionManager:
         try:
             return self._converters_by_tag[tag]
         except KeyError:
-            raise KeyError(
-                f"No support available for YAML tag '{tag}'.  You may need to install a missing extension."
-            ) from None
+            msg = f"No support available for YAML tag '{tag}'.  You may need to install a missing extension."
+            raise KeyError(msg) from None
 
     def get_converter_for_type(self, typ):
         """
@@ -177,10 +175,11 @@ class ExtensionManager:
             try:
                 return self._converters_by_type[class_name]
             except KeyError:
-                raise KeyError(
+                msg = (
                     f"No support available for Python type '{get_class_name(typ, instance=False)}'.  "
                     "You may need to install or enable an extension."
-                ) from None
+                )
+                raise KeyError(msg) from None
 
 
 def get_cached_extension_manager(extensions):

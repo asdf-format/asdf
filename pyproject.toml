@@ -190,7 +190,6 @@ select = [
 ]
 extend-ignore = [
     "B905", # Requires python 3.10 (use zip strict)
-    "EM102", # Exception must not use an f-string literal, assign to variable first
     "EM103", #Exception must not use a `.format()` string directly, assign to variable first
 ]
 extend-exclude = ["asdf/extern/*", "docs/*"]

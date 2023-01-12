@@ -146,7 +146,8 @@ class ResourceManager(Mapping):
 
     def __getitem__(self, uri):
         if uri not in self._mappings_by_uri:
-            raise KeyError(f"Resource unavailable for URI: {uri}")
+            msg = f"Resource unavailable for URI: {uri}"
+            raise KeyError(msg)
 
         content = self._mappings_by_uri[uri][uri]
         if isinstance(content, str):

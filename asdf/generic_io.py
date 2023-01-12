@@ -143,7 +143,8 @@ class _TruncatedReader:
 
         if content == b"":
             if self._exception:
-                raise DelimiterNotFoundError(f"{self._delimiter_name} not found")
+                msg = f"{self._delimiter_name} not found"
+                raise DelimiterNotFoundError(msg)
             self._past_end = True
             return content
 
@@ -157,7 +158,8 @@ class _TruncatedReader:
             self._past_end = True
         elif nbytes is None and self._exception:
             # Read the whole file and didn't find the delimiter
-            raise DelimiterNotFoundError(f"{self._delimiter_name} not found")
+            msg = f"{self._delimiter_name} not found"
+            raise DelimiterNotFoundError(msg)
         else:
             if nbytes:
                 content = content[: nbytes - len(self._initial_content)]
@@ -248,7 +250,8 @@ class GenericFile(metaclass=util.InheritDocstrings):
                 block_size = io.DEFAULT_BUFFER_SIZE
 
         if block_size <= 0:
-            raise ValueError(f"block_size ({block_size}) must be > 0")
+            msg = f"block_size ({block_size}) must be > 0"
+            raise ValueError(msg)
 
         self._blksize = block_size
 
@@ -618,20 +621,23 @@ class GenericFile(metaclass=util.InheritDocstrings):
         -------
         array : np.core.memmap
         """
-        raise NotImplementedError(f"memmapping is not implemented for {self.__class__.__name__}")
+        msg = f"memmapping is not implemented for {self.__class__.__name__}"
+        raise NotImplementedError(msg)
 
     def close_memmap(self):
         """
         Close the memmapped file (if one was mapped with memmap_array)
         """
-        raise NotImplementedError(f"memmapping is not implemented for {self.__class__.__name__}")
+        msg = f"memmapping is not implemented for {self.__class__.__name__}"
+        raise NotImplementedError(msg)
 
     def flush_memmap(self):
         """
         Flush any pending writes to the memmapped file (if one was mapped with
         memmap_array)
         """
-        raise NotImplementedError(f"memmapping is not implemented for {self.__class__.__name__}")
+        msg = f"memmapping is not implemented for {self.__class__.__name__}"
+        raise NotImplementedError(msg)
 
     def read_into_array(self, size):
         """
@@ -1028,7 +1034,8 @@ def get_file(init, mode="r", uri=None, close=False):
 
     if isinstance(init, (GenericFile, GenericWrapper)):
         if mode not in init.mode:
-            raise ValueError(f"File is opened as '{init.mode}', but '{mode}' was requested")
+            msg = f"File is opened as '{init.mode}', but '{mode}' was requested"
+            raise ValueError(msg)
         return GenericWrapper(init)
 
     elif isinstance(init, (str, pathlib.Path)):
@@ -1067,7 +1074,8 @@ def get_file(init, mode="r", uri=None, close=False):
 
     elif isinstance(init, io.IOBase):
         if ("r" in mode and not init.readable()) or ("w" in mode and not init.writable()):
-            raise ValueError(f"File is opened as '{init.mode}', but '{mode}' was requested")
+            msg = f"File is opened as '{init.mode}', but '{mode}' was requested"
+            raise ValueError(msg)
 
         if init.seekable():
             if hasattr(init, "raw"):
@@ -1086,7 +1094,8 @@ def get_file(init, mode="r", uri=None, close=False):
             elif mode == "r":
                 return InputStream(init, mode, uri=uri, close=close)
             else:
-                raise ValueError(f"File '{init}' could not be opened in 'rw' mode")
+                msg = f"File '{init}' could not be opened in 'rw' mode"
+                raise ValueError(msg)
 
     elif mode == "w" and (hasattr(init, "write") and hasattr(init, "seek") and hasattr(init, "tell")):
         return MemoryIO(init, mode, uri=uri)
@@ -1105,4 +1114,5 @@ def get_file(init, mode="r", uri=None, close=False):
     elif mode == "r" and hasattr(init, "read"):
         return InputStream(init, mode, uri=uri, close=close)
 
-    raise ValueError(f"Can't handle '{init}' as a file for mode '{mode}'")
+    msg = f"Can't handle '{init}' as a file for mode '{mode}'"
+    raise ValueError(msg)
