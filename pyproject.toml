@@ -184,9 +184,12 @@ select = [
     "BLE", # flake8-blind-except
     "B", # flake8-bugbear
     "A", # flake8-builtins
+    "C4", # flake8-comprehensions
 ]
 extend-ignore = [
     "B905", # Requires python 3.10 (use zip strict)
+    "C408", # Unnecessary `dict` call (rewrite as a literal)
+    "C416", # Unnecessary `list` comprehension (rewrite using `list()`)
 ]
 extend-exclude = ["asdf/extern/*", "docs/*"]
 
