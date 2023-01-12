@@ -175,8 +175,8 @@ def test_set_array_compression(tmp_path):
 
     tmpfile = os.path.join(str(tmp_path), "compressed.asdf")
 
-    zlib_data = np.array([x for x in range(1000)])
-    bzp2_data = np.array([x for x in range(1000)])
+    zlib_data = np.array(list(range(1000)))
+    bzp2_data = np.array(list(range(1000)))
 
     tree = {"zlib_data": zlib_data, "bzp2_data": bzp2_data}
     with asdf.AsdfFile(tree) as af_out:

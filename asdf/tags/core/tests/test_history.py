@@ -243,7 +243,7 @@ def test_metadata_with_custom_extension(tmpdir):
 
     # If we use the extension but we don't serialize any types that require it,
     # no metadata about this extension should be added to the file
-    tree2 = {"x": [x for x in range(10)]}
+    tree2 = {"x": list(range(10))}
     tmpfile2 = str(tmpdir.join("no_extension.asdf"))
     with asdf.AsdfFile(tree2, extensions=FractionExtension()) as ff:
         ff.write_to(tmpfile2)
