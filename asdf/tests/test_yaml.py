@@ -259,7 +259,7 @@ def test_tag_object():
 
 
 @pytest.mark.parametrize(
-    "numpy_value,expected_value",
+    ("numpy_value", "expected_value"),
     [
         (np.str_("foo"), "foo"),
         (np.bytes_("foo"), b"foo"),
