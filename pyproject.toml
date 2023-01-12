@@ -187,9 +187,12 @@ select = [
     "C4", # flake8-comprehensions
     "T10", # flake8-debugger
     "EM", # flake8-errmsg
+    "ISC", # flake8-implicit-str-concat
 ]
 extend-ignore = [
     "B905", # Requires python 3.10 (use zip strict)
+    "ISC001", # Implicitly concatenated string literals on one line
+    "ISC003", # Explicitly concatenated string should be implicitly concatenated
 ]
 extend-exclude = ["asdf/extern/*", "docs/*"]
 
