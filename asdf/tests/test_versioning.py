@@ -288,7 +288,7 @@ def _standard_versioned_tags():
                 yield value
 
 
-@pytest.fixture
+@pytest.fixture()
 def xfail_version_map_support_cases(request):
     tag = request.getfixturevalue("tag")
     version = request.getfixturevalue("version")

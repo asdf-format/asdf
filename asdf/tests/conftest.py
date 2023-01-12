@@ -5,12 +5,12 @@ from asdf import config, schema
 from . import create_large_tree, create_small_tree
 
 
-@pytest.fixture
+@pytest.fixture()
 def small_tree():
     return create_small_tree()
 
 
-@pytest.fixture
+@pytest.fixture()
 def large_tree():
     return create_large_tree()
 

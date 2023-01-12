@@ -6,7 +6,7 @@ import pytest
 from asdf import AsdfFile
 
 
-@pytest.fixture
+@pytest.fixture()
 def asdf_file():
     tree = {
         "foo": 42,

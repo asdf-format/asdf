@@ -13,7 +13,7 @@ from asdf.extension import ExtensionProxy
 from asdf.resource import ResourceMappingProxy
 
 
-@pytest.fixture
+@pytest.fixture()
 def mock_entry_points():
     return []
 

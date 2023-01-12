@@ -15,7 +15,7 @@ def version(request):
     return request.param
 
 
-@pytest.fixture
+@pytest.fixture()
 def create_editor(tmp_path):
     """
     Fixture providing a function that generates an editor script.
@@ -61,7 +61,7 @@ def file_not_modified(path):
     assert os.stat(path).st_mtime_ns == original_mtime
 
 
-@pytest.fixture
+@pytest.fixture()
 def mock_input(monkeypatch):
     """
     Fixture providing a function that mocks the edit module's
