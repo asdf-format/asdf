@@ -92,14 +92,16 @@ def test_open2(tree, tmp_path):
     path = os.path.join(str(tmp_path), "test.asdf")
 
     def get_write_fd():
-        f = generic_io.get_file(open(path, "wb"), mode="w", close=True)
+        # cannot use context manager here because it closes the file
+        f = generic_io.get_file(open(path, "wb"), mode="w", close=True)  # noqa: SIM115
         assert isinstance(f, generic_io.RealFile)
         assert f._uri == util.filepath_to_url(path)
         return f
 
     def get_read_fd():
         # Must open with mode=rw in order to get memmapped data
-        f = generic_io.get_file(open(path, "r+b"), mode="rw", close=True)
+        # cannot use context manager here because it closes the file
+        f = generic_io.get_file(open(path, "r+b"), mode="rw", close=True)  # noqa: SIM115
         assert isinstance(f, generic_io.RealFile)
         assert f._uri == util.filepath_to_url(path)
         return f
@@ -151,13 +153,15 @@ def test_io_open(tree, tmp_path):
     path = os.path.join(str(tmp_path), "test.asdf")
 
     def get_write_fd():
-        f = generic_io.get_file(open(path, "wb"), mode="w", close=True)
+        # cannot use context manager here because it closes the file
+        f = generic_io.get_file(open(path, "wb"), mode="w", close=True)  # noqa: SIM115
         assert isinstance(f, generic_io.RealFile)
         assert f._uri == util.filepath_to_url(path)
         return f
 
     def get_read_fd():
-        f = generic_io.get_file(open(path, "r+b"), mode="rw", close=True)
+        # cannot use context manager here because it closes the file
+        f = generic_io.get_file(open(path, "r+b"), mode="rw", close=True)  # noqa: SIM115
         assert isinstance(f, generic_io.RealFile)
         assert f._uri == util.filepath_to_url(path)
         return f
@@ -238,7 +242,8 @@ def test_urlopen(tree, httpserver):
     path = os.path.join(httpserver.tmpdir, "test.asdf")
 
     def get_write_fd():
-        return generic_io.get_file(open(path, "wb"), mode="w")
+        # cannot use context manager here because it closes the file
+        return generic_io.get_file(open(path, "wb"), mode="w")  # noqa: SIM115
 
     def get_read_fd():
         return generic_io.get_file(urllib_request.urlopen(httpserver.url + "test.asdf"))
@@ -254,7 +259,8 @@ def test_http_connection(tree, httpserver):
     path = os.path.join(httpserver.tmpdir, "test.asdf")
 
     def get_write_fd():
-        return generic_io.get_file(open(path, "wb"), mode="w")
+        # cannot use context manager here because it closes the file
+        return generic_io.get_file(open(path, "wb"), mode="w")  # noqa: SIM115
 
     def get_read_fd():
         fd = generic_io.get_file(httpserver.url + "test.asdf")
@@ -730,11 +736,13 @@ def test_blocksize(tree, tmp_path):
     path = os.path.join(str(tmp_path), "test.asdf")
 
     def get_write_fd():
-        return generic_io.get_file(open(path, "wb"), mode="w", close=True)
+        # cannot use context manager here because it closes the file
+        return generic_io.get_file(open(path, "wb"), mode="w", close=True)  # noqa: SIM115
 
     def get_read_fd():
         # Must open with mode=rw in order to get memmapped data
-        return generic_io.get_file(open(path, "r+b"), mode="rw", close=True)
+        # cannot use context manager here because it closes the file
+        return generic_io.get_file(open(path, "r+b"), mode="rw", close=True)  # noqa: SIM115
 
     with config_context() as config:
         config.io_block_size = 1233  # make sure everything works with a strange blocksize

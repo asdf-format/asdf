@@ -1056,11 +1056,12 @@ def get_file(init, mode="r", uri=None, close=False):
             # such. Otherwise, the drive component of the path can get lost.
             # This is not an ideal solution, but we can't use pathlib here
             # because it doesn't handle URIs properly.
-            if sys.platform.startswith("win") and parsed.scheme in string.ascii_letters:
-                realpath = str(init)
-            else:
-                realpath = url2pathname(parsed.path)
-            fd = atomicfile.atomic_open(realpath, realmode) if mode == "w" else open(realpath, realmode)
+            realpath = (
+                str(init)
+                if sys.platform.startswith("win") and parsed.scheme in string.ascii_letters
+                else url2pathname(parsed.path)
+            )
+            fd = atomicfile.atomic_open(realpath, realmode) if mode == "w" else open(realpath, realmode)  # noqa: SIM115
 
             fd = fd.__enter__()
             return RealFile(fd, mode, close=True, uri=uri)
@@ -1080,10 +1081,11 @@ def get_file(init, mode="r", uri=None, close=False):
         if init.seekable():
             init2 = init.raw if hasattr(init, "raw") else init
 
-            if hasattr(init2, "getvalue"):
-                result = MemoryIO(init2, mode, uri=uri)
-            else:
-                result = RealFile(init2, mode, uri=uri, close=close)
+            result = (
+                MemoryIO(init2, mode, uri=uri)
+                if hasattr(init2, "getvalue")
+                else RealFile(init2, mode, uri=uri, close=close)
+            )
 
             result._secondary_fd = init
             return result
