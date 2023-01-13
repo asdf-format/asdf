@@ -522,8 +522,8 @@ def _load_schema_cached(url, resolver, resolve_references, resolve_local_refs):
                     return node
 
                 return reference.resolve_fragment(subschema, suburl_fragment)
-            else:
-                return node
+
+            return node
 
         schema = treeutil.walk_and_modify(schema, resolve_refs)
 

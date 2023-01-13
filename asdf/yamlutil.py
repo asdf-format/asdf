@@ -149,12 +149,14 @@ class AsdfLoader(_yaml_base_loader):
     def construct_undefined(self, node):
         if isinstance(node, yaml.MappingNode):
             return self._construct_tagged_mapping(node)
-        elif isinstance(node, yaml.SequenceNode):
+
+        if isinstance(node, yaml.SequenceNode):
             return self._construct_tagged_sequence(node)
-        elif isinstance(node, yaml.ScalarNode):
+
+        if isinstance(node, yaml.ScalarNode):
             return self._construct_tagged_scalar(node)
-        else:
-            return super().construct_undefined(node)
+
+        return super().construct_undefined(node)
 
     def _construct_tagged_mapping(self, node):
         data = tagged.tag_object(node.tag, {})
@@ -253,14 +255,15 @@ def custom_tree_to_tagged_tree(tree, ctx, _serialization_context=None):
     def _walker(obj):
         if extension_manager.handles_type(type(obj)):
             return _convert_obj(obj)
-        else:
-            tag = ctx.type_index.from_custom_type(
-                type(obj), ctx.version_string, _serialization_context=_serialization_context
-            )
 
-            if tag is not None:
-                return tag.to_tree_tagged(obj, ctx)
-            return obj
+        tag = ctx.type_index.from_custom_type(
+            type(obj), ctx.version_string, _serialization_context=_serialization_context
+        )
+
+        if tag is not None:
+            return tag.to_tree_tagged(obj, ctx)
+
+        return obj
 
     return treeutil.walk_and_modify(
         tree,

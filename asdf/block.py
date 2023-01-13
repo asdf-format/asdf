@@ -734,16 +734,18 @@ class BlockManager:
         if isinstance(arr, ndarray.NDArrayType) and arr.block is not None:
             if arr.block in self.blocks:
                 return arr.block
-            else:
-                arr._block = None
+
+            arr._block = None
 
         base = util.get_array_base(arr)
         block = self._data_to_block_mapping.get(id(base))
         if block is not None:
             return block
+
         block = Block(base)
         self.add(block)
         self._handle_global_block_settings(ctx, block)
+
         return block
 
     def get_streamed_block(self):
@@ -1114,8 +1116,8 @@ class Block:
         """
         if not self.input_compression:
             return fd.read_into_array(used_size)
-        else:
-            return mcompression.decompress(fd, used_size, data_size, self.input_compression)
+
+        return mcompression.decompress(fd, used_size, data_size, self.input_compression)
 
     def _memmap_data(self):
         """
@@ -1246,8 +1248,8 @@ class Block:
     def _data(self):
         if isinstance(self._data_ref, weakref.ReferenceType):
             return self._data_ref()
-        else:
-            return self._data_ref
+
+        return self._data_ref
 
     @_data.setter
     def _data(self, value):

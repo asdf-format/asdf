@@ -346,10 +346,11 @@ class GenericFile(metaclass=util.InheritDocstrings):
             cursor = self.tell()
             content = self.read(size)
             self.seek(cursor, SEEK_SET)
+
             return content
-        else:
-            msg = "Non-seekable file"
-            raise RuntimeError(msg)
+
+        msg = "Non-seekable file"
+        raise RuntimeError(msg)
 
     def seek(self, offset, whence=0):
         """
@@ -841,21 +842,27 @@ class InputStream(GenericFile):
         len_buffer = len(self._buffer)
         if len_buffer == 0:
             return self._fd.read(size)
-        elif size < 0:
+
+        if size < 0:
             self._buffer += self._fd.read()
             buffer = self._buffer
             self._buffer = b""
+
             return buffer
-        elif len_buffer < size:
+
+        if len_buffer < size:
             if len_buffer < size:
                 self._buffer += self._fd.read(size - len(self._buffer))
+
             buffer = self._buffer
             self._buffer = b""
+
             return buffer
-        else:
-            buffer = self._buffer[:size]
-            self._buffer = self._buffer[size:]
-            return buffer
+
+        buffer = self._buffer[:size]
+        self._buffer = self._buffer[size:]
+
+        return buffer
 
     def reader_until(
         self, delimiter, readahead_bytes, delimiter_name=None, include=True, initial_content=b"", exception=True
@@ -1035,20 +1042,24 @@ def get_file(init, mode="r", uri=None, close=False):
         if mode not in init.mode:
             msg = f"File is opened as '{init.mode}', but '{mode}' was requested"
             raise ValueError(msg)
+
         return GenericWrapper(init)
 
-    elif isinstance(init, (str, pathlib.Path)):
+    if isinstance(init, (str, pathlib.Path)):
         parsed = patched_urllib_parse.urlparse(str(init))
         if parsed.scheme in ["http", "https"]:
             if "w" in mode:
                 msg = "HTTP connections can not be opened for writing"
                 raise ValueError(msg)
+
             return _http_to_temp(init, mode, uri=uri)
-        elif parsed.scheme in _local_file_schemes:
+
+        if parsed.scheme in _local_file_schemes:
             if mode == "rw":
                 realmode = "r+b"
             else:
                 realmode = mode + "b"
+
             # Windows paths are not URIs, and so they should not be parsed as
             # such. Otherwise, the drive component of the path can get lost.
             # This is not an ideal solution, but we can't use pathlib here
@@ -1061,13 +1072,14 @@ def get_file(init, mode="r", uri=None, close=False):
                 fd = atomicfile.atomic_open(realpath, realmode)
             else:
                 fd = open(realpath, realmode)
+
             fd = fd.__enter__()
             return RealFile(fd, mode, close=True, uri=uri)
 
-    elif isinstance(init, io.BytesIO):
+    if isinstance(init, io.BytesIO):
         return MemoryIO(init, mode, uri=uri)
 
-    elif isinstance(init, io.StringIO):
+    if isinstance(init, io.StringIO):
         msg = "io.StringIO objects are not supported.  Use io.BytesIO instead."
         raise TypeError(msg)
 
@@ -1081,17 +1093,21 @@ def get_file(init, mode="r", uri=None, close=False):
                 init2 = init.raw
             else:
                 init2 = init
+
             if hasattr(init2, "getvalue"):
                 result = MemoryIO(init2, mode, uri=uri)
             else:
                 result = RealFile(init2, mode, uri=uri, close=close)
+
             result._secondary_fd = init
             return result
         else:
             if mode == "w":
                 return OutputStream(init, uri=uri, close=close)
+
             elif mode == "r":
                 return InputStream(init, mode, uri=uri, close=close)
+
             else:
                 msg = f"File '{init}' could not be opened in 'rw' mode"
                 raise ValueError(msg)

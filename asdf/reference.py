@@ -68,15 +68,15 @@ class Reference(AsdfType):
         # repr alone should not force loading of the reference
         if self._target is None:
             return f"<Reference (unloaded) to '{self._uri}'>"
-        else:
-            return f"<Reference to {repr(self._target)}>"
+
+        return f"<Reference to {repr(self._target)}>"
 
     def __str__(self):
         # str alone should not force loading of the reference
         if self._target is None:
             return f"<Reference (unloaded) to '{self._uri}'>"
-        else:
-            return str(self._target)
+
+        return str(self._target)
 
     def __len__(self):
         return len(self._get_target())
