@@ -1424,7 +1424,7 @@ class AsdfFile:
         type_index = self.type_index
 
         if not type_index.has_hook(hookname):
-            return
+            return None
 
         def walker(node):
             hook = type_index.get_hook_for_type(hookname, type(node), self.version_string)

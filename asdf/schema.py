@@ -145,7 +145,7 @@ def validate_type(validator, types, instance, schema):
     an error, otherwise falling back to the default type checker.
     """
     if isinstance(instance, datetime.datetime) and schema.get("format") == "date-time" and "string" in types:
-        return
+        return None
 
     return mvalidators.Draft4Validator.VALIDATORS["type"](validator, types, instance, schema)
 
