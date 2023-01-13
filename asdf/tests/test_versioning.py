@@ -40,8 +40,8 @@ def test_version_and_version_equality():
     assert ver0 is not ver1
     assert ver0 == ver1
     assert ver1 == ver0
-    assert not (ver0 != ver1)
-    assert not (ver1 != ver0)
+    assert not (ver0 != ver1)  # noqa: SIM202
+    assert not (ver1 != ver0)  # noqa: SIM202
 
 
 def test_version_and_string_equality():
@@ -50,8 +50,8 @@ def test_version_and_string_equality():
 
     assert version == string_ver
     assert string_ver == version
-    assert not (version != string_ver)
-    assert not (string_ver != version)
+    assert not (version != string_ver)  # noqa: SIM202
+    assert not (string_ver != version)  # noqa: SIM202
 
 
 def test_version_and_tuple_equality():
@@ -60,8 +60,8 @@ def test_version_and_tuple_equality():
 
     assert version == tuple_ver
     assert tuple_ver == version
-    assert not (version != tuple_ver)
-    assert not (tuple_ver != version)
+    assert not (version != tuple_ver)  # noqa: SIM202
+    assert not (tuple_ver != version)  # noqa: SIM202
 
 
 def test_version_and_version_inequality():
