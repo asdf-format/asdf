@@ -168,6 +168,8 @@ class BlockManager:
         if len(self._streamed_blocks):
             return self._streamed_blocks[0]
 
+        return None
+
     @property
     def external_blocks(self):
         """

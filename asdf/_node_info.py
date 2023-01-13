@@ -202,10 +202,14 @@ class NodeSchemaInfo:
         if self.parent is not None:
             return self.parent.node
 
+        return None
+
     @property
     def info(self):
         if self.schema is not None:
             return self.schema.get(self.key, None)
+
+        return None
 
     def get_schema_for_property(self, identifier):
         subschema = self.schema.get("properties", {}).get(identifier, None)
