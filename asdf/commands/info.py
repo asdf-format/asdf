@@ -2,7 +2,8 @@
 Commands for displaying summaries of ASDF trees
 """
 
-from .. import _convenience as convenience
+from asdf import _convenience as convenience
+
 from .main import Command
 
 __all__ = ["info"]

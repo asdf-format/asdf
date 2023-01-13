@@ -2,9 +2,9 @@ import abc
 import warnings
 from functools import lru_cache
 
-from .. import resolver, types
-from ..exceptions import AsdfDeprecationWarning
-from ..type_index import AsdfTypeIndex
+from asdf import resolver, types
+from asdf.exceptions import AsdfDeprecationWarning
+from asdf.type_index import AsdfTypeIndex
 
 __all__ = ["AsdfExtension"]
 
@@ -221,7 +221,7 @@ class BuiltinExtension:
 class _DefaultExtensions:
     @property
     def extensions(self):
-        from ..config import get_config
+        from asdf.config import get_config
 
         return [e for e in get_config().extensions if e.legacy]
 
@@ -237,7 +237,7 @@ class _DefaultExtensions:
 
     def reset(self):
         """This will be used primarily for testing purposes."""
-        from ..config import get_config
+        from asdf.config import get_config
 
         get_config().reset_extensions()
 

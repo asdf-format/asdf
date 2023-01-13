@@ -3,8 +3,8 @@ Defragment command.
 """
 
 import asdf
+from asdf import AsdfFile
 
-from .. import AsdfFile
 from .main import Command
 
 __all__ = ["defragment"]

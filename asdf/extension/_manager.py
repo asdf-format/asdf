@@ -1,6 +1,7 @@
 from functools import lru_cache
 
-from ..util import get_class_name
+from asdf.util import get_class_name
+
 from ._extension import ExtensionProxy
 
 

@@ -15,9 +15,10 @@ import tempfile
 
 import yaml
 
-from .. import constants, generic_io, schema, util
-from ..asdf import AsdfFile, open_asdf
-from ..block import BlockManager
+from asdf import constants, generic_io, schema, util
+from asdf.asdf import AsdfFile, open_asdf
+from asdf.block import BlockManager
+
 from .main import Command
 
 __all__ = ["edit"]

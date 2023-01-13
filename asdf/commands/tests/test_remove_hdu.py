@@ -3,9 +3,8 @@ import os
 import numpy as np
 from astropy.io import fits
 
+from asdf.commands import remove_hdu
 from asdf.fits_embed import AsdfInFits
-
-from .. import remove_hdu
 
 
 def test_remove_hdu(tmpdir):

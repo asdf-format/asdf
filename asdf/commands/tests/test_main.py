@@ -1,6 +1,6 @@
 import pytest
 
-from .. import main
+from asdf.commands import main
 
 
 def test_help():

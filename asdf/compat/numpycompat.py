@@ -1,4 +1,4 @@
-from ..util import minversion
+from asdf.util import minversion
 
 __all__ = ["NUMPY_LT_1_7", "NUMPY_LT_1_14"]
 
