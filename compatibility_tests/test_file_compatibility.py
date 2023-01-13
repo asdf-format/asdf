@@ -151,7 +151,7 @@ def _pushd_tmpdir(tmpdir):
     os.chdir(original_cwd)
 
 
-@pytest.mark.remote_data
+@pytest.mark.remote_data()
 def test_file_compatibility(asdf_version, env_path, tmpdir):
     # Sanity check to ensure we're not accidentally comparing
     # the current code to itself.
