@@ -198,7 +198,6 @@ select = [
 extend-ignore = [
     "B905", # Requires python 3.10 (use zip strict)
     "PT011", # `pytest.raises(...)` is too broad, set the `match` parameter or use a more specific exception
-    "SIM201", # Use `value != value.base` instead of `not value == value.base`
     "SIM202", # Use `tuple_ver == version` instead of `not tuple_ver != version`
     "SIM300", # Yoda conditions are discouraged, use `"1.3.0" == spec` instead
 ]

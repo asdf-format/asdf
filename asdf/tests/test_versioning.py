@@ -76,7 +76,7 @@ def test_version_and_version_inequality():
 
     versions = [ver0, ver1, ver2, ver3, ver4, ver5, ver6, ver7]
     for x, y in combinations(versions, 2):
-        assert not (x == y)
+        assert not (x == y)  # noqa: SIM201
         assert x != y
 
     assert ver0 < ver1 < ver2 < ver3 < ver4 < ver5 < ver6 < ver7
