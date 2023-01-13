@@ -285,7 +285,6 @@ class NDArrayType(AsdfType):
             # memmapped mask array is freed properly when the masked
             # array goes away.
             array = ma.array(array, mask=mask.view())
-            # assert util.get_array_base(array.mask) is util.get_array_base(mask)
             return array
 
         if np.isscalar(mask):

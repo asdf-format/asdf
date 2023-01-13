@@ -195,6 +195,9 @@ select = [
     "RET", # flake8-return
     "SIM", # flake8-simplify
     "TID", # flake8-tidy-imports
+    # "ARG", # flake8-unused-arguments
+    # "DTZ", # flake8-datetimez
+    "ERA", # eradicate
 ]
 extend-ignore = [
     "B905", # Requires python 3.10 (use zip strict)
