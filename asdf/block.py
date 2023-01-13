@@ -460,11 +460,11 @@ class BlockManager:
                 content = content[idx:]
                 index_start = block_start + idx
                 break
-            else:
-                # If the rest of it starts to look like binary
-                # values, bail...
-                if not self._re_index_misc.match(buff):
-                    return
+
+            # If the rest of it starts to look like binary
+            # values, bail...
+            if not self._re_index_misc.match(buff):
+                return
 
             if block_start <= first_block_end:
                 return
