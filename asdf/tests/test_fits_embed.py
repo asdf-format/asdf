@@ -200,7 +200,7 @@ def compare_asdfs(asdf0, asdf1):
     # Make sure the trees match
     assert_tree_match(asdf0.tree, asdf1.tree)
     # Compare the data blocks
-    for key in asdf0.tree["model"].keys():
+    for key in asdf0.tree["model"]:
         assert_array_equal(asdf0.tree["model"][key]["data"], asdf1.tree["model"][key]["data"])
 
 
