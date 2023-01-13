@@ -134,18 +134,21 @@ class _TruncatedReader:
 
         if nbytes is None:
             content = self._fd.peek()
-        elif nbytes <= len(self._initial_content):
+        elif nbytes > len(self._initial_content):
+            content = self._fd.peek(nbytes - len(self._initial_content) + self._readahead_bytes)
+        else:
             content = self._initial_content[:nbytes]
             self._initial_content = self._initial_content[nbytes:]
+
             return content
-        else:
-            content = self._fd.peek(nbytes - len(self._initial_content) + self._readahead_bytes)
 
         if content == b"":
             if self._exception:
                 msg = f"{self._delimiter_name} not found"
                 raise DelimiterNotFoundError(msg)
+
             self._past_end = True
+
             return content
 
         index = re.search(self._delimiter, content)
@@ -154,15 +157,17 @@ class _TruncatedReader:
                 index = index.end()
             else:
                 index = index.start()
+
             content = content[:index]
             self._past_end = True
-        elif nbytes is None and self._exception:
+
+        elif not (nbytes is None and self._exception):
+            if nbytes:
+                content = content[: nbytes - len(self._initial_content)]
+        else:
             # Read the whole file and didn't find the delimiter
             msg = f"{self._delimiter_name} not found"
             raise DelimiterNotFoundError(msg)
-        else:
-            if nbytes:
-                content = content[: nbytes - len(self._initial_content)]
 
         self._fd.fast_forward(len(content))
 
@@ -174,7 +179,7 @@ class _TruncatedReader:
             self._trailing_content = content[nbytes:]
             content = content[:nbytes]
 
-        return content
+        return content  # noqa: RET504
 
 
 class GenericFile(metaclass=util.InheritDocstrings):
@@ -588,8 +593,8 @@ class GenericFile(metaclass=util.InheritDocstrings):
         except DelimiterNotFoundError as e:
             if exception:
                 raise e
-            else:
-                return False
+
+            return False
 
     def fast_forward(self, size):
         """
@@ -1083,7 +1088,7 @@ def get_file(init, mode="r", uri=None, close=False):
         msg = "io.StringIO objects are not supported.  Use io.BytesIO instead."
         raise TypeError(msg)
 
-    elif isinstance(init, io.IOBase):
+    if isinstance(init, io.IOBase):
         if ("r" in mode and not init.readable()) or ("w" in mode and not init.writable()):
             msg = f"File is opened as '{init.mode}', but '{mode}' was requested"
             raise ValueError(msg)
@@ -1101,32 +1106,31 @@ def get_file(init, mode="r", uri=None, close=False):
 
             result._secondary_fd = init
             return result
-        else:
-            if mode == "w":
-                return OutputStream(init, uri=uri, close=close)
 
-            elif mode == "r":
-                return InputStream(init, mode, uri=uri, close=close)
+        if mode == "w":
+            return OutputStream(init, uri=uri, close=close)
 
-            else:
-                msg = f"File '{init}' could not be opened in 'rw' mode"
-                raise ValueError(msg)
+        if mode == "r":
+            return InputStream(init, mode, uri=uri, close=close)
 
-    elif mode == "w" and (hasattr(init, "write") and hasattr(init, "seek") and hasattr(init, "tell")):
+        msg = f"File '{init}' could not be opened in 'rw' mode"
+        raise ValueError(msg)
+
+    if mode == "w" and (hasattr(init, "write") and hasattr(init, "seek") and hasattr(init, "tell")):
         return MemoryIO(init, mode, uri=uri)
 
-    elif mode == "r" and (hasattr(init, "read") and hasattr(init, "seek") and hasattr(init, "tell")):
+    if mode == "r" and (hasattr(init, "read") and hasattr(init, "seek") and hasattr(init, "tell")):
         return MemoryIO(init, mode, uri=uri)
 
-    elif mode == "rw" and (
+    if mode == "rw" and (
         hasattr(init, "read") and hasattr(init, "write") and hasattr(init, "seek") and hasattr(init, "tell")
     ):
         return MemoryIO(init, mode, uri=uri)
 
-    elif mode == "w" and hasattr(init, "write"):
+    if mode == "w" and hasattr(init, "write"):
         return OutputStream(init, uri=uri, close=close)
 
-    elif mode == "r" and hasattr(init, "read"):
+    if mode == "r" and hasattr(init, "read"):
         return InputStream(init, mode, uri=uri, close=close)
 
     msg = f"Can't handle '{init}' as a file for mode '{mode}'"

@@ -402,8 +402,8 @@ class NDArrayType(AsdfType):
         if name in ("name", "version", "supported_versions"):
             msg = f"'{self.__class__.name}' object has no attribute '{name}'"
             raise AttributeError(msg)
-        else:
-            return AsdfType.__getattribute__(self, name)
+
+        return AsdfType.__getattribute__(self, name)
 
     @classmethod
     def from_tree(cls, node, ctx):
