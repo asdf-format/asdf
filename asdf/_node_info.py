@@ -45,9 +45,8 @@ def create_tree(key, node, identifier="root", filters=None, refresh_extension_ma
         key, identifier, node, refresh_extension_manager=refresh_extension_manager
     )
 
-    if len(filters) > 0:
-        if not _filter_tree(schema_info, filters):
-            return None
+    if len(filters) > 0 and not _filter_tree(schema_info, filters):
+        return None
 
     return schema_info
 

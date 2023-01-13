@@ -196,9 +196,8 @@ def validate_remove_default(validator, properties, instance, schema):
         return
 
     for property_, subschema in properties.items():
-        if subschema.get("default", None) is not None:
-            if instance.get(property_, None) == subschema["default"]:
-                del instance[property_]
+        if subschema.get("default", None) is not None and instance.get(property_, None) == subschema["default"]:
+            del instance[property_]
 
     yield from mvalidators.Draft4Validator.VALIDATORS["properties"](validator, properties, instance, schema)
 

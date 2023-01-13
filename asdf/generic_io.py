@@ -782,10 +782,9 @@ class RealFile(RandomAccessFile):
         return np.ndarray.__new__(np.memmap, shape=size, offset=offset, dtype="uint8", buffer=self._mmap)
 
     def close_memmap(self):
-        if hasattr(self, "_mmap"):
-            if not self._mmap.closed:
-                self._mmap.close()
-                del self._mmap
+        if hasattr(self, "_mmap") and not self._mmap.closed:
+            self._mmap.close()
+            del self._mmap
 
     def flush_memmap(self):
         if hasattr(self, "_mmap"):

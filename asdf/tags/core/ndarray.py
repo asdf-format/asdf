@@ -247,12 +247,11 @@ class NDArrayType(AsdfType):
             self._array = inline_data_asarray(source, dtype)
             self._array = self._apply_mask(self._array, self._mask)
             self._block = asdffile.blocks.add_inline(self._array)
-            if shape is not None:
-                if (shape[0] == "*" and self._array.shape[1:] != tuple(shape[1:])) or (
-                    self._array.shape != tuple(shape)
-                ):
-                    msg = "inline data doesn't match the given shape"
-                    raise ValueError(msg)
+            if shape is not None and (
+                (shape[0] == "*" and self._array.shape[1:] != tuple(shape[1:])) or (self._array.shape != tuple(shape))
+            ):
+                msg = "inline data doesn't match the given shape"
+                raise ValueError(msg)
 
         self._shape = shape
         self._dtype = dtype
@@ -516,6 +515,7 @@ class NDArrayType(AsdfType):
             listdata = numpy_array_to_list(data)
             result["data"] = listdata
             result["datatype"] = dtype
+
         else:
             result["shape"] = list(shape)
             if block.array_storage == "streamed":
@@ -531,11 +531,11 @@ class NDArrayType(AsdfType):
             if strides is not None:
                 result["strides"] = list(strides)
 
-        if isinstance(data, ma.MaskedArray):
-            if np.any(data.mask):
-                if block.array_storage == "inline":
-                    ctx.blocks.set_array_storage(ctx.blocks[data.mask], "inline")
-                result["mask"] = data.mask
+        if isinstance(data, ma.MaskedArray) and np.any(data.mask):
+            if block.array_storage == "inline":
+                ctx.blocks.set_array_storage(ctx.blocks[data.mask], "inline")
+
+            result["mask"] = data.mask
 
         return result
 

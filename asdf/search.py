@@ -170,17 +170,17 @@ class AsdfSearchResult:
             if isinstance(key, typing.Pattern):
                 if key.search(str(identifier)) is None:
                     return False
-            elif key is not NotSet:
-                if not self._safe_equals(identifier, key):
-                    return False
+
+            elif key is not NotSet and not self._safe_equals(identifier, key):
+                return False
 
             if isinstance(type_, typing.Pattern):
                 fully_qualified_node_type = self._get_fully_qualified_type(node)
                 if type_.search(fully_qualified_node_type) is None:
                     return False
-            elif isinstance(type_, builtins.type):
-                if not isinstance(node, type_):
-                    return False
+
+            elif isinstance(type_, builtins.type) and not isinstance(node, type_):
+                return False
 
             if isinstance(value, typing.Pattern):
                 if is_container(node):
@@ -192,13 +192,11 @@ class AsdfSearchResult:
                 if value.search(str(node)) is None:
                     return False
 
-            elif value is not NotSet:
-                if not self._safe_equals(node, value):
-                    return False
+            elif value is not NotSet and not self._safe_equals(node, value):
+                return False
 
-            if filter_ is not None:
-                if not filter_(node, identifier):
-                    return False
+            if filter_ is not None and not filter_(node, identifier):
+                return False
 
             return True
 
