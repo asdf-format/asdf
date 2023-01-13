@@ -96,8 +96,8 @@ def relative_uri(source, target):
             relative = os.path.relpath(tu[2], os.path.dirname(su[2]))
     if relative == ".":
         relative = ""
-    relative = patched_urllib_parse.urlunparse(["", "", relative] + extra)
-    return relative
+
+    return patched_urllib_parse.urlunparse(["", "", relative] + extra)
 
 
 class _TruncatedReader:
@@ -773,8 +773,7 @@ class RealFile(RandomAccessFile):
             nbytes = self._fd.tell()
             self._fd.seek(loc, 0)
             self._mmap = mmap.mmap(self._fd.fileno(), nbytes, access=acc)
-        arr = np.ndarray.__new__(np.memmap, shape=size, offset=offset, dtype="uint8", buffer=self._mmap)
-        return arr
+        return np.ndarray.__new__(np.memmap, shape=size, offset=offset, dtype="uint8", buffer=self._mmap)
 
     def close_memmap(self):
         if hasattr(self, "_mmap"):

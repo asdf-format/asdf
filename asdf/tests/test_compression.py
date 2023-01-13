@@ -15,10 +15,7 @@ from ..tests import helpers
 def _get_large_tree():
     np.random.seed(0)
     x = np.random.rand(128, 128)
-    tree = {
-        "science_data": x,
-    }
-    return tree
+    return {"science_data": x}
 
 
 def _get_sparse_tree():
@@ -27,8 +24,7 @@ def _get_sparse_tree():
     for x, y, z in np.random.rand(64, 3):
         arr[int(x * 127), int(y * 127)] = z
     arr[0, 0] = 5.0
-    tree = {"science_data": arr}
-    return tree
+    return {"science_data": arr}
 
 
 def _roundtrip(tmp_path, tree, compression=None, write_options=None, read_options=None):

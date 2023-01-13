@@ -527,7 +527,7 @@ def _load_schema_cached(url, resolver, resolve_references, resolve_local_refs):
 
         schema = treeutil.walk_and_modify(schema, resolve_refs)
 
-    return schema
+    return schema  # noqa: RET504
 
 
 def get_validator(

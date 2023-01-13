@@ -212,9 +212,7 @@ def numpy_array_to_list(array):
         else:
             return x
 
-    result = ascii_to_unicode(tolist(array))
-
-    return result
+    return ascii_to_unicode(tolist(array))
 
 
 class NDArrayType(AsdfType):
