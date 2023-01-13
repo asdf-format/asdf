@@ -198,7 +198,6 @@ select = [
 extend-ignore = [
     "B905", # Requires python 3.10 (use zip strict)
     "PT011", # `pytest.raises(...)` is too broad, set the `match` parameter or use a more specific exception
-    "SIM110", # Use `return any(hasattr(cls, hook_name) for cls in self._all_types)` instead of `for` loop
     "SIM115", # Use context handler for opening files
     "SIM117", # Use a single `with` statement with multiple contexts instead of nested `with` statements
     "SIM118", # Use `key in old` instead of `key in old.keys()`

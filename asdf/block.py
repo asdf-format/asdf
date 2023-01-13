@@ -204,10 +204,7 @@ class BlockManager:
         Returns `True` if any of the internal blocks currently have an
         offset assigned.
         """
-        for block in self.internal_blocks:
-            if block.offset is not None:
-                return True
-        return False
+        return any(block.offset is not None for block in self.internal_blocks)
 
     def _new_block(self):
         return Block(memmap=self.memmap, lazy_load=self.lazy_load)

@@ -307,10 +307,7 @@ class AsdfTypeIndex:
         Returns `True` if the given hook name exists on any of the managed
         types.
         """
-        for cls in self._all_types:
-            if hasattr(cls, hook_name):
-                return True
-        return False
+        return any(hasattr(cls, hook_name) for cls in self._all_types)
 
     def get_hook_for_type(self, hookname, typ, version=default_version):
         """
