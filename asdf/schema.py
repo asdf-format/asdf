@@ -473,10 +473,7 @@ def _safe_resolve(resolver, json_id, uri):
     # parse correctly.
     parts = uri.split("#")
     base = parts[0]
-    if len(parts) > 1:
-        fragment = parts[1]
-    else:
-        fragment = ""
+    fragment = parts[1] if len(parts) > 1 else ""
 
     # The generic_io.resolve_uri method cannot operate on tag: URIs.
     # New-style extensions don't support $ref with a tag URI target anyway,

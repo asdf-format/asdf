@@ -353,9 +353,6 @@ class ConverterProxy(Converter):
         return hash((id(self.delegate), id(self.extension)))
 
     def __repr__(self):
-        if self.package_name is None:
-            package_description = "(none)"
-        else:
-            package_description = f"{self.package_name}=={self.package_version}"
+        package_description = "(none)" if self.package_name is None else f"{self.package_name}=={self.package_version}"
 
         return f"<ConverterProxy class: {self.class_name} package: {package_description}>"

@@ -271,14 +271,8 @@ class _TreeRenderer:
 
         if depth >= 2:
             for n in range(0, depth - 1):
-                if n in active_depths:
-                    prefix = prefix + "│ "
-                else:
-                    prefix = prefix + "  "
+                prefix = prefix + "│ " if n in active_depths else prefix + "  "
 
-        if is_tail:
-            prefix = prefix + "└─"
-        else:
-            prefix = prefix + "├─"
+        prefix = prefix + "└─" if is_tail else prefix + "├─"
 
         return format_faint(prefix)

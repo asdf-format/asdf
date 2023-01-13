@@ -1074,10 +1074,7 @@ def test_numpy_scalar_type_validation(numpy_value, valid_types):
             valid = True
 
         if valid is not expected_valid:
-            if expected_valid:
-                description = "valid"
-            else:
-                description = "invalid"
+            description = "valid" if expected_valid else "invalid"
             msg = "Expected numpy.{} to be {} against jsonschema type '{}'".format(
                 type(numpy_value).__name__, description, jsonschema_type
             )

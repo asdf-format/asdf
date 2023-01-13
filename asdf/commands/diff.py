@@ -332,10 +332,7 @@ def diff(filenames, minimal, iostream=sys.stdout, ignore=None):
         List of JMESPath expressions indicating tree nodes that
         should be ignored.
     """
-    if ignore is None:
-        ignore_expressions = []
-    else:
-        ignore_expressions = [jmespath.compile(e) for e in ignore]
+    ignore_expressions = [] if ignore is None else [jmespath.compile(e) for e in ignore]
 
     try:
         with asdf.open(filenames[0], _force_raw_types=True) as asdf0:

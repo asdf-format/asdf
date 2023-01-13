@@ -112,10 +112,7 @@ def test_all_dtypes(tmpdir):
             if dtype in ("c32", "f16"):
                 continue
 
-            if dtype == "b1":
-                arr = np.array([True, False])
-            else:
-                arr = np.arange(0, 10, dtype=str(byteorder + dtype))
+            arr = np.array([True, False]) if dtype == "b1" else np.arange(0, 10, dtype=str(byteorder + dtype))
 
             tree[byteorder + dtype] = arr
 

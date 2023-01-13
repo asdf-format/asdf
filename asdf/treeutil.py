@@ -282,10 +282,7 @@ def walk_and_modify(top, callback, ignore_implicit_conversion=False, postorder=T
         return result
 
     def _handle_callback(node, json_id):
-        if callback_arity == 1:
-            result = callback(node)
-        else:
-            result = callback(node, json_id)
+        result = callback(node) if callback_arity == 1 else callback(node, json_id)
 
         return _handle_generator(result)
 

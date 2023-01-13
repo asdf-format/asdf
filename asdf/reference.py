@@ -108,10 +108,7 @@ class Reference(AsdfType):
 
     @classmethod
     def to_tree(cls, data, ctx):
-        if ctx.uri is not None:
-            uri = generic_io.relative_uri(ctx.uri, data._uri)
-        else:
-            uri = data._uri
+        uri = generic_io.relative_uri(ctx.uri, data._uri) if ctx.uri is not None else data._uri
         return {"$ref": uri}
 
     @classmethod

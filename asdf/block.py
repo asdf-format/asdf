@@ -1152,10 +1152,7 @@ class Block:
         """
         self._header_size = self._header.size
 
-        if self._data is not None:
-            data = self._flattened_data
-        else:
-            data = None
+        data = self._flattened_data if self._data is not None else None
 
         flags = 0
         data_size = used_size = allocated_size = 0
@@ -1176,10 +1173,7 @@ class Block:
             msg = f"Block used size {used_size} larger than allocated size {allocated_size}"
             raise RuntimeError(msg)
 
-        if self.checksum is not None:
-            checksum = self.checksum
-        else:
-            checksum = b"\0" * 16
+        checksum = self.checksum if self.checksum is not None else b"\x00" * 16
 
         fd.write(constants.BLOCK_MAGIC)
         fd.write(struct.pack(b">H", self._header_size))

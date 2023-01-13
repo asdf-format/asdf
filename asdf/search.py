@@ -357,10 +357,7 @@ class AsdfSearchResult:
             or isinstance(self._node, tuple)
             or NodeSchemaInfo.traversable(self._node)
         ):
-            if NodeSchemaInfo.traversable(self._node):
-                child = self._node.__asdf_traverse__()[key]
-            else:
-                child = self._node[key]
+            child = self._node.__asdf_traverse__()[key] if NodeSchemaInfo.traversable(self._node) else self._node[key]
         else:
             msg = "This node cannot be indexed"
             raise TypeError(msg)
@@ -389,10 +386,7 @@ def _walk_tree_breadth_first(root_identifiers, root_node, callback):
         for identifiers, parent, node in current_nodes:
             if (isinstance(node, (dict, list, tuple)) or NodeSchemaInfo.traversable(node)) and id(node) in seen:
                 continue
-            if NodeSchemaInfo.traversable(node):
-                tnode = node.__asdf_traverse__()
-            else:
-                tnode = node
+            tnode = node.__asdf_traverse__() if NodeSchemaInfo.traversable(node) else node
             children = get_children(tnode)
             callback(identifiers, parent, node, [c for _, c in children])
             next_nodes.extend([(identifiers + [i], node, c) for i, c in children])
