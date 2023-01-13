@@ -198,7 +198,6 @@ select = [
 extend-ignore = [
     "B905", # Requires python 3.10 (use zip strict)
     "PT011", # `pytest.raises(...)` is too broad, set the `match` parameter or use a more specific exception
-    "SIM300", # Yoda conditions are discouraged, use `"1.3.0" == spec` instead
 ]
 extend-exclude = ["asdf/extern/*", "docs/*"]
 
