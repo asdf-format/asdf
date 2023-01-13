@@ -184,9 +184,8 @@ def test_open_asdf_extensions(tmp_path):
             assert af.extensions == [ExtensionProxy(extension)]
 
     for arg in (object(), [object()]):
-        with pytest.raises(TypeError):
-            with open_asdf(path, extensions=arg) as af:
-                pass
+        with pytest.raises(TypeError), open_asdf(path, extensions=arg) as af:
+            pass
 
 
 def test_serialization_context():
@@ -385,9 +384,8 @@ def test_unclosed_file(tmp_path):
     path = tmp_path / "empty.asdf"
     path.touch()
 
-    with pytest.raises(ValueError):
-        with open_asdf(path):
-            pass
+    with pytest.raises(ValueError), open_asdf(path):
+        pass
 
 
 def test_fsspec(tmp_path):

@@ -149,9 +149,8 @@ history:
     """
 
     buff = yaml_to_asdf(yaml)
-    with pytest.warns(AsdfWarning, match=r"File was created with extension class 'foo.bar.FooBar'"):
-        with asdf.open(buff):
-            pass
+    with pytest.warns(AsdfWarning, match=r"File was created with extension class 'foo.bar.FooBar'"), asdf.open(buff):
+        pass
 
 
 def test_extension_version_warning():
@@ -166,16 +165,16 @@ history:
     """
 
     buff = yaml_to_asdf(yaml)
-    with pytest.warns(AsdfWarning, match=r"File was created with extension class 'asdf.extension.BuiltinExtension'"):
-        with asdf.open(buff):
-            pass
+    with pytest.warns(
+        AsdfWarning, match=r"File was created with extension class 'asdf.extension.BuiltinExtension'"
+    ), asdf.open(buff):
+        pass
 
     buff.seek(0)
 
     # Make sure suppressing the warning works too
-    with assert_no_warnings():
-        with asdf.open(buff, ignore_missing_extensions=True):
-            pass
+    with assert_no_warnings(), asdf.open(buff, ignore_missing_extensions=True):
+        pass
 
 
 def test_strict_extension_check():
@@ -190,15 +189,13 @@ history:
     """
 
     buff = yaml_to_asdf(yaml)
-    with pytest.raises(RuntimeError):
-        with asdf.open(buff, strict_extension_check=True):
-            pass
+    with pytest.raises(RuntimeError), asdf.open(buff, strict_extension_check=True):
+        pass
 
     # Make sure to test for incompatibility with ignore_missing_extensions
     buff.seek(0)
-    with pytest.raises(ValueError):
-        with asdf.open(buff, strict_extension_check=True, ignore_missing_extensions=True):
-            pass
+    with pytest.raises(ValueError), asdf.open(buff, strict_extension_check=True, ignore_missing_extensions=True):
+        pass
 
 
 def test_metadata_with_custom_extension(tmpdir):
@@ -232,9 +229,10 @@ def test_metadata_with_custom_extension(tmpdir):
     with asdf.open(tmpfile, extensions=FractionExtension()) as af:
         assert len(af["history"]["extensions"]) == 2
 
-    with pytest.warns(AsdfWarning, match=r"was created with extension"):
-        with asdf.open(tmpfile, ignore_unrecognized_tag=True):
-            pass
+    with pytest.warns(AsdfWarning, match=r"was created with extension"), asdf.open(
+        tmpfile, ignore_unrecognized_tag=True
+    ):
+        pass
 
     # If we use the extension but we don't serialize any types that require it,
     # no metadata about this extension should be added to the file
@@ -246,9 +244,8 @@ def test_metadata_with_custom_extension(tmpdir):
     with asdf.open(tmpfile2) as af:
         assert len(af["history"]["extensions"]) == 1
 
-    with assert_no_warnings():
-        with asdf.open(tmpfile2):
-            pass
+    with assert_no_warnings(), asdf.open(tmpfile2):
+        pass
 
     # Make sure that this works even when constructing the tree on-the-fly
     tmpfile3 = str(tmpdir.join("custom_extension2.asdf"))

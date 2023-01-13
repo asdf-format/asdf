@@ -159,21 +159,22 @@ a: !core/complex-42.0.0
     """
 
     buff = helpers.yaml_to_asdf(yaml)
-    with pytest.warns(AsdfConversionWarning, match=r"tag:stsci.edu:asdf/core/complex"):
-        with asdf.open(buff, ignore_version_mismatch=False) as ff:
-            assert isinstance(ff.tree["a"], complex)
+    with pytest.warns(AsdfConversionWarning, match=r"tag:stsci.edu:asdf/core/complex"), asdf.open(
+        buff, ignore_version_mismatch=False
+    ) as ff:
+        assert isinstance(ff.tree["a"], complex)
 
     # Make sure warning is repeatable
     buff.seek(0)
-    with pytest.warns(AsdfConversionWarning, match=r"tag:stsci.edu:asdf/core/complex"):
-        with asdf.open(buff, ignore_version_mismatch=False) as ff:
-            assert isinstance(ff.tree["a"], complex)
+    with pytest.warns(AsdfConversionWarning, match=r"tag:stsci.edu:asdf/core/complex"), asdf.open(
+        buff, ignore_version_mismatch=False
+    ) as ff:
+        assert isinstance(ff.tree["a"], complex)
 
     # Make sure the warning does not occur if it is being ignored (default)
     buff.seek(0)
-    with helpers.assert_no_warnings(AsdfConversionWarning):
-        with asdf.open(buff) as ff:
-            assert isinstance(ff.tree["a"], complex)
+    with helpers.assert_no_warnings(AsdfConversionWarning), asdf.open(buff) as ff:
+        assert isinstance(ff.tree["a"], complex)
 
     # If the major and minor match, but the patch doesn't, there
     # should still be a warning.
@@ -183,9 +184,10 @@ a: !core/complex-1.0.1
     """
 
     buff = helpers.yaml_to_asdf(yaml)
-    with pytest.warns(AsdfConversionWarning, match=r"tag:stsci.edu:asdf/core/complex"):
-        with asdf.open(buff, ignore_version_mismatch=False) as ff:
-            assert isinstance(ff.tree["a"], complex)
+    with pytest.warns(AsdfConversionWarning, match=r"tag:stsci.edu:asdf/core/complex"), asdf.open(
+        buff, ignore_version_mismatch=False
+    ) as ff:
+        assert isinstance(ff.tree["a"], complex)
 
 
 def test_version_mismatch_file(tmp_path):
@@ -201,10 +203,11 @@ a: !core/complex-42.0.0
 
     expected_uri = util.filepath_to_url(str(testfile))
 
-    with pytest.warns(AsdfConversionWarning, match=r"tag:stsci.edu:asdf/core/complex"):
-        with asdf.open(testfile, ignore_version_mismatch=False) as ff:
-            assert ff._fname == expected_uri
-            assert isinstance(ff.tree["a"], complex)
+    with pytest.warns(AsdfConversionWarning, match=r"tag:stsci.edu:asdf/core/complex"), asdf.open(
+        testfile, ignore_version_mismatch=False
+    ) as ff:
+        assert ff._fname == expected_uri
+        assert isinstance(ff.tree["a"], complex)
 
 
 def test_version_mismatch_with_supported_versions():
@@ -631,14 +634,16 @@ def test_tag_without_schema(tmp_path):
     foo = FooType("hello", 42)
     tree = {"foo": foo}
 
-    with pytest.warns(AsdfWarning, match=r"Unable to locate schema file"):
-        with asdf.AsdfFile(tree, extensions=FooExtension()) as af:
-            af.write_to(tmpfile)
+    with pytest.warns(AsdfWarning, match=r"Unable to locate schema file"), asdf.AsdfFile(
+        tree, extensions=FooExtension()
+    ) as af:
+        af.write_to(tmpfile)
 
-    with pytest.warns(AsdfWarning, match=r"Unable to locate schema file"):
-        with asdf.AsdfFile(tree, extensions=FooExtension()) as ff:
-            assert isinstance(ff.tree["foo"], FooType)
-            assert ff.tree["foo"] == tree["foo"]
+    with pytest.warns(AsdfWarning, match=r"Unable to locate schema file"), asdf.AsdfFile(
+        tree, extensions=FooExtension()
+    ) as ff:
+        assert isinstance(ff.tree["foo"], FooType)
+        assert ff.tree["foo"] == tree["foo"]
 
 
 def test_custom_reference_cycle(tmp_path):

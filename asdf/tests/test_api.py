@@ -53,9 +53,8 @@ def test_warning_deprecated_open(tmp_path):
     with asdf.AsdfFile(tree) as af:
         af.write_to(tmpfile)
 
-    with pytest.warns(AsdfDeprecationWarning):
-        with asdf.AsdfFile.open(tmpfile) as af:
-            assert_tree_match(tree, af.tree)
+    with pytest.warns(AsdfDeprecationWarning), asdf.AsdfFile.open(tmpfile) as af:
+        assert_tree_match(tree, af.tree)
 
 
 @pytest.mark.skipif(
@@ -75,9 +74,8 @@ def test_open_readonly(tmp_path):
     with asdf.open(tmpfile) as af:
         assert af["baz"].flags.writeable is False
 
-    with pytest.raises(PermissionError):
-        with asdf.open(tmpfile, mode="rw"):
-            pass
+    with pytest.raises(PermissionError), asdf.open(tmpfile, mode="rw"):
+        pass
 
 
 def test_open_validate_on_read(tmp_path):
@@ -89,9 +87,8 @@ invalid_software: !core/software-1.0.0
     buff = yaml_to_asdf(content)
 
     get_config().validate_on_read = True
-    with pytest.raises(ValidationError):
-        with asdf.open(buff):
-            pass
+    with pytest.raises(ValidationError), asdf.open(buff):
+        pass
 
     buff.seek(0)
 
@@ -115,9 +112,8 @@ def test_open_stream(tmp_path):
         def read(self, size=-1):
             return self._fd.read(size)
 
-    with file_path.open("rb") as fd:
-        with asdf.open(StreamWrapper(fd)) as af:
-            assert af["foo"] == "bar"
+    with file_path.open("rb") as fd, asdf.open(StreamWrapper(fd)) as af:
+        assert af["foo"] == "bar"
 
 
 def test_atomic_write(tmp_path, small_tree):
@@ -166,9 +162,8 @@ def test_update_exceptions(tmp_path):
     ff = asdf.AsdfFile(tree)
     ff.write_to(path)
 
-    with asdf.open(path, mode="r", copy_arrays=True) as ff:
-        with pytest.raises(IOError):
-            ff.update()
+    with asdf.open(path, mode="r", copy_arrays=True) as ff, pytest.raises(IOError):
+        ff.update()
 
     ff = asdf.AsdfFile(tree)
     buff = io.BytesIO()

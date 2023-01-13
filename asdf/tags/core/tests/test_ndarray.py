@@ -187,11 +187,10 @@ x0: !core/ndarray-1.0.0
 
     buff = helpers.yaml_to_asdf(yaml)
 
-    with asdf.open(buff) as infile:
-        with asdf.AsdfFile() as f:
-            f.tree["a"] = infile.tree["x0"]
-            f.tree["b"] = f.tree["a"]
-            f.write_to(io.BytesIO())
+    with asdf.open(buff) as infile, asdf.AsdfFile() as f:
+        f.tree["a"] = infile.tree["x0"]
+        f.tree["b"] = f.tree["a"]
+        f.write_to(io.BytesIO())
 
 
 def test_table(tmpdir):
@@ -464,9 +463,8 @@ def test_memmap_stay_open_bug(tmpdir):
     orig_open = p.open_files()
 
     for _ in range(3):
-        with open(tmppath, mode="rb") as fp:
-            with asdf.open(fp) as f2:
-                np.sum(f2.tree["test"])
+        with open(tmppath, mode="rb") as fp, asdf.open(fp) as f2:
+            np.sum(f2.tree["test"])
 
     assert len(p.open_files()) <= len(orig_open)
 
@@ -528,9 +526,8 @@ def test_invalid_mask_datatype(tmpdir):
     """
     buff = helpers.yaml_to_asdf(content)
 
-    with pytest.raises(jsonschema.ValidationError):
-        with asdf.open(buff):
-            pass
+    with pytest.raises(jsonschema.ValidationError), asdf.open(buff):
+        pass
 
 
 def test_ndim_validation(tmpdir):
@@ -541,9 +538,8 @@ def test_ndim_validation(tmpdir):
     """
     buff = helpers.yaml_to_asdf(content)
 
-    with pytest.raises(jsonschema.ValidationError):
-        with asdf.open(buff, extensions=CustomExtension()):
-            pass
+    with pytest.raises(jsonschema.ValidationError), asdf.open(buff, extensions=CustomExtension()):
+        pass
 
     content = """
     obj: !<tag:nowhere.org:custom/ndim-1.0.0>
@@ -593,9 +589,8 @@ def test_ndim_validation(tmpdir):
     """
     buff = helpers.yaml_to_asdf(content)
 
-    with pytest.raises(jsonschema.ValidationError):
-        with asdf.open(buff, extensions=CustomExtension()):
-            pass
+    with pytest.raises(jsonschema.ValidationError), asdf.open(buff, extensions=CustomExtension()):
+        pass
 
 
 def test_datatype_validation(tmpdir):
@@ -618,9 +613,8 @@ def test_datatype_validation(tmpdir):
     """
     buff = helpers.yaml_to_asdf(content)
 
-    with pytest.raises(jsonschema.ValidationError):
-        with asdf.open(buff, extensions=CustomExtension()):
-            pass
+    with pytest.raises(jsonschema.ValidationError), asdf.open(buff, extensions=CustomExtension()):
+        pass
 
     content = """
     obj: !<tag:nowhere.org:custom/datatype-1.0.0>
@@ -641,9 +635,8 @@ def test_datatype_validation(tmpdir):
     """
     buff = helpers.yaml_to_asdf(content)
 
-    with pytest.raises(jsonschema.ValidationError):
-        with asdf.open(buff, extensions=CustomExtension()):
-            pass
+    with pytest.raises(jsonschema.ValidationError), asdf.open(buff, extensions=CustomExtension()):
+        pass
 
     content = """
     obj: !<tag:nowhere.org:custom/datatype-1.0.0>
@@ -657,9 +650,8 @@ def test_datatype_validation(tmpdir):
     """
     buff = helpers.yaml_to_asdf(content)
 
-    with pytest.raises(jsonschema.ValidationError):
-        with asdf.open(buff, extensions=CustomExtension()):
-            pass
+    with pytest.raises(jsonschema.ValidationError), asdf.open(buff, extensions=CustomExtension()):
+        pass
 
 
 def test_structured_datatype_validation(tmpdir):
@@ -690,9 +682,8 @@ def test_structured_datatype_validation(tmpdir):
     """
     buff = helpers.yaml_to_asdf(content)
 
-    with pytest.raises(jsonschema.ValidationError):
-        with asdf.open(buff, extensions=CustomExtension()):
-            pass
+    with pytest.raises(jsonschema.ValidationError), asdf.open(buff, extensions=CustomExtension()):
+        pass
 
     content = """
     obj: !<tag:nowhere.org:custom/datatype-1.0.0>
@@ -708,9 +699,8 @@ def test_structured_datatype_validation(tmpdir):
     """
     buff = helpers.yaml_to_asdf(content)
 
-    with pytest.raises(jsonschema.ValidationError):
-        with asdf.open(buff, extensions=CustomExtension()):
-            pass
+    with pytest.raises(jsonschema.ValidationError), asdf.open(buff, extensions=CustomExtension()):
+        pass
 
     content = """
     obj: !<tag:nowhere.org:custom/datatype-1.0.0>
@@ -719,9 +709,8 @@ def test_structured_datatype_validation(tmpdir):
     """
     buff = helpers.yaml_to_asdf(content)
 
-    with pytest.raises(jsonschema.ValidationError):
-        with asdf.open(buff, extensions=CustomExtension()):
-            pass
+    with pytest.raises(jsonschema.ValidationError), asdf.open(buff, extensions=CustomExtension()):
+        pass
 
     content = """
     obj: !<tag:nowhere.org:custom/datatype-1.0.0>
@@ -735,9 +724,8 @@ def test_structured_datatype_validation(tmpdir):
     """
     buff = helpers.yaml_to_asdf(content)
 
-    with pytest.raises(jsonschema.ValidationError):
-        with asdf.open(buff, extensions=CustomExtension()):
-            pass
+    with pytest.raises(jsonschema.ValidationError), asdf.open(buff, extensions=CustomExtension()):
+        pass
 
     content = """
     obj: !<tag:nowhere.org:custom/datatype-1.0.0>
@@ -771,9 +759,8 @@ def test_inline_shape_mismatch():
     """
 
     buff = helpers.yaml_to_asdf(content)
-    with pytest.raises(ValueError):
-        with asdf.open(buff):
-            pass
+    with pytest.raises(ValueError), asdf.open(buff):
+        pass
 
 
 @pytest.mark.xfail(reason="NDArrays with dtype=object are not currently supported")

@@ -18,23 +18,19 @@ baz: 42
     path = os.path.join(str(tmp_path), "test.asdf")
 
     buff = io.BytesIO(content)
-    with pytest.raises(ValueError):
-        with asdf.open(buff):
-            pass
+    with pytest.raises(ValueError), asdf.open(buff):
+        pass
 
     buff.seek(0)
     fd = generic_io.InputStream(buff, "r")
-    with pytest.raises(ValueError):
-        with asdf.open(fd):
-            pass
+    with pytest.raises(ValueError), asdf.open(fd):
+        pass
 
     with open(path, "wb") as fd:
         fd.write(content)
 
-    with open(path, "rb") as fd:
-        with pytest.raises(ValueError):
-            with asdf.open(fd):
-                pass
+    with open(path, "rb") as fd, pytest.raises(ValueError), asdf.open(fd):
+        pass
 
 
 def test_no_final_newline(tmp_path):
@@ -59,9 +55,8 @@ baz: 42
     with open(path, "wb") as fd:
         fd.write(content)
 
-    with open(path, "rb") as fd:
-        with asdf.open(fd) as ff:
-            assert len(ff.tree) == 2
+    with open(path, "rb") as fd, asdf.open(fd) as ff:
+        assert len(ff.tree) == 2
 
 
 @pytest.mark.filterwarnings("ignore::astropy.io.fits.verify.VerifyWarning")
@@ -77,9 +72,8 @@ def test_no_asdf_header(tmp_path):
     with open(path, "wb") as fd:
         fd.write(content)
 
-    with open(path, "rb") as fd:
-        with pytest.raises(ValueError):
-            asdf.open(fd)
+    with open(path, "rb") as fd, pytest.raises(ValueError):
+        asdf.open(fd)
 
 
 def test_no_asdf_blocks(tmp_path):
@@ -106,9 +100,8 @@ XXXXXXXX
     with open(path, "wb") as fd:
         fd.write(content)
 
-    with open(path, "rb") as fd:
-        with asdf.open(fd) as ff:
-            assert len(ff.blocks) == 0
+    with open(path, "rb") as fd, asdf.open(fd) as ff:
+        assert len(ff.blocks) == 0
 
 
 def test_invalid_source(small_tree):
@@ -161,25 +154,22 @@ def test_not_asdf_file():
     buff = io.BytesIO(b"SIMPLE")
     buff.seek(0)
 
-    with pytest.raises(ValueError):
-        with asdf.open(buff):
-            pass
+    with pytest.raises(ValueError), asdf.open(buff):
+        pass
 
     buff = io.BytesIO(b"SIMPLE\n")
     buff.seek(0)
 
-    with pytest.raises(ValueError):
-        with asdf.open(buff):
-            pass
+    with pytest.raises(ValueError), asdf.open(buff):
+        pass
 
 
 def test_junk_file():
     buff = io.BytesIO(b"#ASDF 1.0.0\nFOO")
     buff.seek(0)
 
-    with pytest.raises(ValueError):
-        with asdf.open(buff):
-            pass
+    with pytest.raises(ValueError), asdf.open(buff):
+        pass
 
 
 def test_block_mismatch():
@@ -192,9 +182,8 @@ def test_block_mismatch():
     )
 
     buff.seek(0)
-    with pytest.raises(ValueError):
-        with asdf.open(buff):
-            pass
+    with pytest.raises(ValueError), asdf.open(buff):
+        pass
 
 
 def test_block_header_too_small():
@@ -203,9 +192,8 @@ def test_block_header_too_small():
     buff = io.BytesIO(b"#ASDF 1.0.0\n\xd3BLK\0\0")
 
     buff.seek(0)
-    with pytest.raises(ValueError):
-        with asdf.open(buff):
-            pass
+    with pytest.raises(ValueError), asdf.open(buff):
+        pass
 
 
 def test_invalid_version(tmp_path):
@@ -216,9 +204,8 @@ def test_invalid_version(tmp_path):
 foo : bar
 ..."""
     buff = io.BytesIO(content)
-    with pytest.raises(ValueError):
-        with asdf.open(buff):
-            pass
+    with pytest.raises(ValueError), asdf.open(buff):
+        pass
 
 
 def test_valid_version(tmp_path):

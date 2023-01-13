@@ -198,7 +198,6 @@ select = [
 extend-ignore = [
     "B905", # Requires python 3.10 (use zip strict)
     "PT011", # `pytest.raises(...)` is too broad, set the `match` parameter or use a more specific exception
-    "SIM117", # Use a single `with` statement with multiple contexts instead of nested `with` statements
     "SIM118", # Use `key in old` instead of `key in old.keys()`
     "SIM201", # Use `value != value.base` instead of `not value == value.base`
     "SIM202", # Use `tuple_ver == version` instead of `not tuple_ver != version`
