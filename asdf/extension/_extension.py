@@ -62,7 +62,7 @@ class Extension(abc.ABC):
             If str, PEP 440 version specifier.
             If None, support all versions.
         """
-        return None
+        return
 
     @property
     def converters(self):
