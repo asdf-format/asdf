@@ -170,6 +170,14 @@ extend_skip_glob = ["asdf/extern/*", ".eggs/*", ".tox/*"]
 
 [tool.ruff]
 line-length = 120
+select = [
+    "F", # Pyflakes
+    "E", "W", # pycodestyle
+    # "C90", # mccabe complexity
+    "I", # isort
+    # "D", # pydocstyle
+    "UP", # pyupgrade
+]
 extend-exclude = ["asdf/extern/*", "docs/*"]
 
 [tool.codespell]
