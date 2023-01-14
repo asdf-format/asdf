@@ -810,7 +810,7 @@ class AsdfFile:
         _force_raw_types=False,
         strict_extension_check=False,
         ignore_missing_extensions=False,
-        tree_mapper=None,
+        _tagged_tree_transform=None,
         **kwargs,
     ):
         """Attempt to populate AsdfFile data from file-like object"""
@@ -882,8 +882,8 @@ class AsdfFile:
                 self._blocks.read_internal_blocks(fd, past_magic=True, validate_checksums=validate_checksums)
                 self._blocks.read_block_index(fd, self)
 
-            if tree_mapper is not None:
-                tree = tree_mapper(tree)
+            if _tagged_tree_transform is not None:
+                tree = _tagged_tree_transform(tree)
 
             tree = reference.find_references(tree, self)
 
@@ -920,7 +920,7 @@ class AsdfFile:
         _force_raw_types=False,
         strict_extension_check=False,
         ignore_missing_extensions=False,
-        tree_mapper=None,
+        _tagged_tree_transform=None,
         **kwargs,
     ):
         """Attempt to open file-like object as either AsdfFile or AsdfInFits"""
@@ -937,7 +937,7 @@ class AsdfFile:
                 _force_raw_types,
                 strict_extension_check,
                 ignore_missing_extensions,
-                tree_mapper=tree_mapper,
+                _tagged_tree_transform=_tagged_tree_transform,
                 **kwargs,
             )
         except Exception as e:
@@ -957,7 +957,7 @@ class AsdfFile:
         _force_raw_types=False,
         strict_extension_check=False,
         ignore_missing_extensions=False,
-        tree_mapper=None,
+        _tagged_tree_transform=None,
         **kwargs,
     ):
         """Attempt to open a generic_file instance as either AsdfFile or AsdfInFits"""
@@ -1004,7 +1004,7 @@ class AsdfFile:
                 _force_raw_types=_force_raw_types,
                 strict_extension_check=strict_extension_check,
                 ignore_missing_extensions=ignore_missing_extensions,
-                tree_mapper=tree_mapper,
+                _tagged_tree_transform=_tagged_tree_transform,
                 **kwargs,
             )
 
@@ -1776,7 +1776,7 @@ def open_asdf(
     strict_extension_check=False,
     ignore_missing_extensions=False,
     _compat=False,
-    tree_mapper=None,
+    _tagged_tree_transform=None,
     **kwargs,
 ):
     """
@@ -1851,9 +1851,10 @@ def open_asdf(
         and custom schemas.  Recommended unless the file is already known
         to be valid.
 
-    tree_mapper : callable, optional
+    _tagged_tree_transform : callable, optional
         Callable that accepts the tagged ASDF tree before conversion
-        and returns a modified tree.
+        and returns a modified tree.  This argument is provisional and
+        may change in future versions of asdf.
 
     Returns
     -------
@@ -1884,7 +1885,7 @@ def open_asdf(
         _force_raw_types=_force_raw_types,
         strict_extension_check=strict_extension_check,
         ignore_missing_extensions=ignore_missing_extensions,
-        tree_mapper=tree_mapper,
+        _tagged_tree_transform=_tagged_tree_transform,
         **kwargs,
     )
 
