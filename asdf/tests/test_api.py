@@ -40,7 +40,7 @@ def test_no_warning_nan_array(tmp_path):
     https://github.com/asdf-format/asdf/pull/557
     """
 
-    tree = dict(array=np.array([1, 2, np.nan]))
+    tree = {"array": np.array([1, 2, np.nan])}
 
     with assert_no_warnings():
         assert_roundtrip_tree(tree, tmp_path)
@@ -50,7 +50,7 @@ def test_warning_deprecated_open(tmp_path):
 
     tmpfile = str(tmp_path / "foo.asdf")
 
-    tree = dict(foo=42, bar="hello")
+    tree = {"foo": 42, "bar": "hello"}
     with asdf.AsdfFile(tree) as af:
         af.write_to(tmpfile)
 
@@ -67,7 +67,7 @@ def test_open_readonly(tmp_path):
 
     tmpfile = str(tmp_path / "readonly.asdf")
 
-    tree = dict(foo=42, bar="hello", baz=np.arange(20))
+    tree = {"foo": 42, "bar": "hello", "baz": np.arange(20)}
     with asdf.AsdfFile(tree) as af:
         af.write_to(tmpfile, all_array_storage="internal")
 

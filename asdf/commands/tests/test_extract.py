@@ -19,7 +19,7 @@ def test_extract(tmpdir):
     tree = {
         "some_words": "These are some words",
         "nested": {"a": 100, "b": 42},
-        "list": [x for x in range(10)],
+        "list": list(range(10)),
         "image": image.data,
     }
 

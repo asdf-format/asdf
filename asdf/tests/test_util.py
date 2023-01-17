@@ -10,7 +10,7 @@ def test_is_primitive():
     for value in [None, "foo", 1, 1.39, 1 + 1j, True]:
         assert util.is_primitive(value) is True
 
-    for value in [[], tuple(), {}, set()]:
+    for value in [[], (), {}, set()]:
         assert util.is_primitive(value) is False
 
 

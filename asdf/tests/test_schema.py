@@ -742,15 +742,15 @@ def test_nested_array():
         },
     }
 
-    good = dict(stuff=[[1, "hello", 2], [4, "world", 9.7]])
+    good = {"stuff": [[1, "hello", 2], [4, "world", 9.7]]}
     schema.validate(good, schema=s)
 
     bads = [
-        dict(stuff=[[1, 2, 3]]),
-        dict(stuff=[12, "dldl"]),
-        dict(stuff=[[12, "dldl"]]),
-        dict(stuff=[[1, "hello", 2], [4, 5]]),
-        dict(stuff=[[1, "hello", 2], [4, 5, 6]]),
+        {"stuff": [[1, 2, 3]]},
+        {"stuff": [12, "dldl"]},
+        {"stuff": [[12, "dldl"]]},
+        {"stuff": [[1, "hello", 2], [4, 5]]},
+        {"stuff": [[1, "hello", 2], [4, 5, 6]]},
     ]
 
     for b in bads:
@@ -782,15 +782,15 @@ properties:
     schema_tree = schema.load_schema(str(schema_path))
     schema.check_schema(schema_tree)
 
-    good = dict(stuff=[[1, "hello", 2], [4, "world", 9.7]])
+    good = {"stuff": [[1, "hello", 2], [4, "world", 9.7]]}
     schema.validate(good, schema=schema_tree)
 
     bads = [
-        dict(stuff=[[1, 2, 3]]),
-        dict(stuff=[12, "dldl"]),
-        dict(stuff=[[12, "dldl"]]),
-        dict(stuff=[[1, "hello", 2], [4, 5]]),
-        dict(stuff=[[1, "hello", 2], [4, 5, 6]]),
+        {"stuff": [[1, 2, 3]]},
+        {"stuff": [12, "dldl"]},
+        {"stuff": [[12, "dldl"]]},
+        {"stuff": [[1, "hello", 2], [4, 5]]},
+        {"stuff": [[1, "hello", 2], [4, 5, 6]]},
     ]
 
     for b in bads:
