@@ -288,8 +288,6 @@ def test_mask_roundtrip(tmpdir):
 
         m = tree["masked_array"]
 
-        print(m)
-        print(m.mask)
         assert np.all(m.mask[6:])
         assert len(asdf.blocks) == 2
 
