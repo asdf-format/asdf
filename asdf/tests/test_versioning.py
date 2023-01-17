@@ -366,10 +366,9 @@ def test_version_map_support(version, schema_type, tag):
         raise AssertionError(msg) from err
 
     extension_type = type_index.from_yaml_tag(ctx, tag)
-    assert extension_type is not None, (
-        f"ASDF Standard version {version} requires support for "
-        f"{tag}, but no ExtensionType exists to support that tag."
-    )
+    assert (
+        extension_type is not None
+    ), f"ASDF Standard version {version} requires support for {tag}, but no ExtensionType exists to support that tag."
 
     assert extension_type.yaml_tag == tag, (
         f"ASDF Standard version {version} requires support for "

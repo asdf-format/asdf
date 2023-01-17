@@ -1691,7 +1691,6 @@ class AsdfFile:
 
 
 def _check_and_set_mode(fileobj, asdf_mode):
-
     if asdf_mode is not None and asdf_mode not in ["r", "rw"]:
         msg = f"Unrecognized asdf mode '{asdf_mode}'. Must be either 'r' or 'rw'"
         raise ValueError(msg)

@@ -58,7 +58,6 @@ class IntegerType(AsdfType):
 
     @classmethod
     def to_tree(cls, node, ctx):
-
         if ctx not in cls._value_cache:
             cls._value_cache[ctx] = {}
 
@@ -89,7 +88,6 @@ class IntegerType(AsdfType):
 
     @classmethod
     def from_tree(cls, tree, ctx):
-
         value = 0
         for x in tree["words"][::-1]:
             value <<= 32

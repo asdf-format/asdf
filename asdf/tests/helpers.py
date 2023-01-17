@@ -118,7 +118,6 @@ def assert_tree_match(old_tree, new_tree, ctx=None, funcname="assert_equal", ign
             and old_type is new_type
             and (callable(funcname) or hasattr(old_type, funcname))
         ):
-
             if callable(funcname):
                 funcname(old, new)
             else:

@@ -191,6 +191,6 @@ def test_file_compatibility(asdf_version, env_path, tmpdir):
                 asdf_version, standard_version
             )
             assert_file_correct(old_file_path), (
-                f"asdf library version {asdf_version} produced an ASDF Standard {standard_version} "
+                f"asdf library version {asdf_version} produced an ASDF Standard {standard_version}"
                 "that this code failed to read"
             )

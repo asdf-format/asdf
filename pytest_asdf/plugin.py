@@ -63,7 +63,6 @@ class AsdfSchemaFile(pytest.File):
         xfail_tests=None,
         **kwargs,
     ):
-
         # Fix for depreciation of fspath in pytest 7+
         from asdf.util import minversion
 

@@ -863,7 +863,6 @@ def test_memmap_write(tmpdir):
 
 
 def test_readonly(tmpdir):
-
     tmpfile = str(tmpdir.join("data.asdf"))
     tree = {"data": np.ndarray(100)}
 
