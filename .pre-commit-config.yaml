@@ -72,9 +72,3 @@ repos:
   rev: "v0.10.1"
   hooks:
     - id: validate-pyproject
-
-- repo: https://github.com/PyCQA/bandit
-  rev: 1.7.4
-  hooks:
-    - id: bandit
-      args: ["-c", "bandit.yaml"]

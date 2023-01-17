@@ -473,7 +473,7 @@ class BlockManager:
 
         # The following call to yaml.load is safe because we're
         # using pyyaml's SafeLoader.
-        offsets = yaml.load(yaml_content, Loader=yamlutil._yaml_base_loader)  # nosec
+        offsets = yaml.load(yaml_content, Loader=yamlutil._yaml_base_loader)  # noqa: S506
 
         # Make sure the indices look sane
         if not isinstance(offsets, list) or len(offsets) == 0:
@@ -925,7 +925,7 @@ class Block:
     def _calculate_checksum(self, array):
         # The following line is safe because we're only using
         # the MD5 as a checksum.
-        m = hashlib.new("md5")  # nosec
+        m = hashlib.new("md5")  # noqa: S324
         m.update(array)
         return m.digest()
 

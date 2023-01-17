@@ -178,8 +178,16 @@ select = [
     # "D", # pydocstyle
     "UP", # pyupgrade
     "N", # pep8-naming
+    "YTT", # flake8-2020
+    # "ANN", # flake8-annotations
+    "S", # flake8-bandit
 ]
 extend-exclude = ["asdf/extern/*", "docs/*"]
+
+[tool.ruff.per-file-ignores]
+"test_*.py" = ["S101"]
+"asdf/tests/helpers.py" = ["S101"]
+"compatibility_tests/common.py" = ["S101"]
 
 [tool.codespell]
 skip="*.pdf,*.fits,*.asdf,.tox,asdf/extern,build,./tags,.git,docs/_build"

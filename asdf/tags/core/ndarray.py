@@ -513,7 +513,7 @@ class NDArrayType(AsdfType):
             if not new.dtype.fields:
                 # This line is safe because this is actually a piece of test
                 # code, even though it lives in this file:
-                assert False, "arrays not equal"  # nosec
+                assert False, "arrays not equal"  # noqa: S101
             for a, b in zip(old, new):
                 cls._assert_equality(a, b, func)
         else:
@@ -528,7 +528,7 @@ class NDArrayType(AsdfType):
                 new = new.tolist()
                 # This line is safe because this is actually a piece of test
                 # code, even though it lives in this file:
-                assert old == new  # nosec
+                assert old == new  # noqa: S101
             else:
                 func(old, new)
 
