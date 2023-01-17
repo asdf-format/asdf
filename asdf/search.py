@@ -23,7 +23,7 @@ class AsdfSearchResult:
         self,
         identifiers,
         node,
-        filters=[],
+        filters=None,
         parent_node=None,
         max_rows=DEFAULT_MAX_ROWS,
         max_cols=DEFAULT_MAX_COLS,
@@ -31,7 +31,7 @@ class AsdfSearchResult:
     ):
         self._identifiers = identifiers
         self._node = node
-        self._filters = filters
+        self._filters = [] if filters is None else filters
         self._parent_node = parent_node
         self._max_rows = max_rows
         self._max_cols = max_cols

@@ -67,7 +67,7 @@ def asdf_datatype_to_numpy_dtype(datatype, byteorder=None):
             return (str(name), datatype, tuple(shape))
     elif isinstance(datatype, list):
         datatype_list = []
-        for i, subdatatype in enumerate(datatype):
+        for subdatatype in datatype:
             np_dtype = asdf_datatype_to_numpy_dtype(subdatatype, byteorder)
             if isinstance(np_dtype, tuple):
                 datatype_list.append(np_dtype)
@@ -513,7 +513,7 @@ class NDArrayType(AsdfType):
             if not new.dtype.fields:
                 # This line is safe because this is actually a piece of test
                 # code, even though it lives in this file:
-                assert False, "arrays not equal"  # noqa: S101
+                raise AssertionError("arrays not equal")  # noqa: S101
             for a, b in zip(old, new):
                 cls._assert_equality(a, b, func)
         else:

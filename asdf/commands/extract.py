@@ -48,5 +48,5 @@ def extract_file(input_file, output_file):
             with asdf.AsdfFile(ih.tree) as oh:
                 oh.write_to(output_file)
 
-    except (OSError, ValueError) as error:
-        raise RuntimeError(str(error))
+    except (OSError, ValueError) as err:
+        raise RuntimeError(str(err)) from err

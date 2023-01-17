@@ -20,7 +20,7 @@ def _filter_tree(info, filters):
     return len(info.children) > 0 or all(f(info.node, info.identifier) for f in filters)
 
 
-def create_tree(key, node, identifier="root", filters=[], refresh_extension_manager=False):
+def create_tree(key, node, identifier="root", filters=None, refresh_extension_manager=False):
     """
     Create a `NodeSchemaInfo` tree which can be filtered from a base node.
 
@@ -39,6 +39,7 @@ def create_tree(key, node, identifier="root", filters=[], refresh_extension_mana
         key.  This is useful if you want to make sure that the schema
         data for a given key is up to date.
     """
+    filters = [] if filters is None else filters
 
     schema_info = NodeSchemaInfo.from_root_node(
         key, identifier, node, refresh_extension_manager=refresh_extension_manager
@@ -52,7 +53,7 @@ def create_tree(key, node, identifier="root", filters=[], refresh_extension_mana
 
 
 def collect_schema_info(
-    key, path, node, identifier="root", filters=[], preserve_list=True, refresh_extension_manager=False
+    key, path, node, identifier="root", filters=None, preserve_list=True, refresh_extension_manager=False
 ):
     """
     Collect from the underlying schemas any of the info stored under key, relative to the path
@@ -77,7 +78,11 @@ def collect_schema_info(
     """
 
     schema_info = create_tree(
-        key, node, identifier=identifier, filters=filters, refresh_extension_manager=refresh_extension_manager
+        key,
+        node,
+        identifier=identifier,
+        filters=[] if filters is None else filters,
+        refresh_extension_manager=refresh_extension_manager,
     )
 
     info = schema_info.collect_info(preserve_list=preserve_list)

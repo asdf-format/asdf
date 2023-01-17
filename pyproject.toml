@@ -182,6 +182,10 @@ select = [
     # "ANN", # flake8-annotations
     "S", # flake8-bandit
     "BLE", # flake8-blind-except
+    "B", # flake8-bugbear
+]
+extend-ignore = [
+    "B905", # Requires python 3.10 (use zip strict)
 ]
 extend-exclude = ["asdf/extern/*", "docs/*"]
 

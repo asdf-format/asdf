@@ -267,7 +267,7 @@ class BlockManager:
         """
         if not self._internal_blocks:
             return
-        for i, block in enumerate(self._internal_blocks):
+        for block in self._internal_blocks:
             if isinstance(block, UnloadedBlock):
                 block.load()
 

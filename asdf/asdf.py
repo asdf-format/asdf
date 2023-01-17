@@ -624,7 +624,7 @@ class AsdfFile:
         """
         self._validate(self._tree)
 
-    def make_reference(self, path=[]):
+    def make_reference(self, path=None):
         """
         Make a new reference to a part of this file's tree, that can be
         assigned as a reference to another tree.
@@ -649,7 +649,7 @@ class AsdfFile:
             >>> flat = asdf.open("http://stsci.edu/reference_files/flat.asdf")  # doctest: +SKIP
             >>> ff.tree['flat_field'] = flat.make_reference(['data'])  # doctest: +SKIP
         """
-        return reference.make_reference(self, path)
+        return reference.make_reference(self, [] if path is None else path)
 
     @property
     def blocks(self):
@@ -751,8 +751,8 @@ class AsdfFile:
 
         try:
             version = versioning.AsdfVersion(parts[1].decode("ascii"))
-        except ValueError:
-            raise ValueError(f"Unparsable version in ASDF file: {parts[1]}")
+        except ValueError as err:
+            raise ValueError(f"Unparsable version in ASDF file: {parts[1]}") from err
 
         return version
 

@@ -47,7 +47,7 @@ def _list_entry_points(group, proxy_class):
 
         def _handle_error(e):
             warnings.warn(
-                f"{group} plugin from package {package_name}=={package_version} failed to load:\n\n"
+                f"{group} plugin from package {package_name}=={package_version} failed to load:\n\n"  # noqa: B023
                 f"{e.__class__.__name__}: {e}",
                 AsdfWarning,
             )

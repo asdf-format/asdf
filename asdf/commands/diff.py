@@ -218,8 +218,10 @@ def print_in_tree(diff_ctx, node_list, thing, other, use_marker=False, last_was_
     return last_was_list
 
 
-def compare_objects(diff_ctx, obj0, obj1, keys=[]):
+def compare_objects(diff_ctx, obj0, obj1, keys=None):
     """Displays diff of two objects if they are not equal"""
+    keys = [] if keys is None else keys
+
     if obj0 != obj1:
         print_in_tree(diff_ctx, keys, obj0, False, ignore_lwl=True)
         print_in_tree(diff_ctx, keys, obj1, True, ignore_lwl=True)
@@ -273,8 +275,10 @@ def both_are_ndarrays(tree0, tree1):
     return True
 
 
-def compare_dicts(diff_ctx, dict0, dict1, keys, ignores=set()):
+def compare_dicts(diff_ctx, dict0, dict1, keys, ignores=None):
     """Recursively compares two dictionary objects"""
+    ignores = set() if ignores is None else ignores
+
     keys0 = set(dict0.keys()) - ignores
     keys1 = set(dict1.keys()) - ignores
     # Recurse into subtree elements that are shared by both trees
@@ -288,8 +292,10 @@ def compare_dicts(diff_ctx, dict0, dict1, keys, ignores=set()):
     print_dict_diff(diff_ctx, dict1, keys, sorted(keys1 - keys0), True)
 
 
-def compare_trees(diff_ctx, tree0, tree1, keys=[]):
+def compare_trees(diff_ctx, tree0, tree1, keys=None):
     """Recursively traverses two ASDF tree and compares them"""
+    keys = [] if keys is None else keys
+
     if id(tree0) in diff_ctx.ignore_ids and id(tree1) in diff_ctx.ignore_ids:
         return
 
@@ -348,5 +354,5 @@ def diff(filenames, minimal, iostream=sys.stdout, ignore=None):
 
                 diff_ctx = DiffContext(asdf0, asdf1, iostream, minimal=minimal, ignore_ids=ignore_ids)
                 compare_trees(diff_ctx, asdf0.tree, asdf1.tree)
-    except ValueError as error:
-        raise RuntimeError(str(error))
+    except ValueError as err:
+        raise RuntimeError(str(err)) from err

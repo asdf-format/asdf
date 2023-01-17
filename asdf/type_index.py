@@ -52,8 +52,8 @@ class _AsdfWriteTypeIndex:
             version_map = get_version_map(self._version)
             core_version_map = version_map["core"]
             standard_version_map = version_map["standard"]
-        except ValueError:
-            raise ValueError(f"Don't know how to write out ASDF version {self._version}")
+        except ValueError as err:
+            raise ValueError(f"Don't know how to write out ASDF version {self._version}") from err
 
         # Process all types defined in the ASDF version map. It is important to
         # make sure that tags that are associated with the core part of the
@@ -296,7 +296,7 @@ class AsdfTypeIndex:
             _serialization_context._mark_extension_used(self._extension_by_type[asdftype])
         return asdftype
 
-    @lru_cache(5)
+    @lru_cache(5)  # noqa: B019
     def has_hook(self, hook_name):
         """
         Returns `True` if the given hook name exists on any of the managed
