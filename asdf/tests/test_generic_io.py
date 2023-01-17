@@ -429,7 +429,8 @@ def test_resolve_uri(protocol):
 
     assert (
         generic_io.resolve_uri(
-            f"{protocol}://somewhere.org/path/to/some-schema", "../../some/other/path/to/some-other-schema"
+            f"{protocol}://somewhere.org/path/to/some-schema",
+            "../../some/other/path/to/some-other-schema",
         )
         == f"{protocol}://somewhere.org/some/other/path/to/some-other-schema"
     )

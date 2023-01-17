@@ -322,10 +322,13 @@ def yaml_to_asdf(yaml_content, yaml_headers=True, standard_version=None):
 %TAG ! tag:stsci.edu:asdf/
 --- !core/asdf-{}
 """.format(
-                file_format_version, standard_version, yaml_version, tree_version
+                file_format_version,
+                standard_version,
+                yaml_version,
+                tree_version,
             ).encode(
-                "ascii"
-            )
+                "ascii",
+            ),
         )
     buff.write(yaml_content)
     if yaml_headers:
@@ -404,7 +407,7 @@ def assert_no_warnings(warning_class=None):
             yield
 
         assert not any(isinstance(w.message, warning_class) for w in recorded_warnings), display_warnings(
-            recorded_warnings
+            recorded_warnings,
         )
 
 
@@ -445,7 +448,7 @@ def _assert_extension_type_correctness(extension, extension_type, resolver):
     # Currently ExtensionType sets a default version of 1.0.0,
     # but we want to encourage an explicit version on the subclass.
     assert "version" in extension_type.__dict__, "{} must set the 'version' class attribute".format(
-        extension_type.__name__
+        extension_type.__name__,
     )
 
     # check the default version

@@ -131,7 +131,11 @@ def env_path(asdf_version, tmp_path_factory):
     assert subprocess.run(["virtualenv", str(path)]).returncode == 0
 
     assert env_run(
-        path, "pip", "install", f"asdf=={asdf_version}", capture_output=True
+        path,
+        "pip",
+        "install",
+        f"asdf=={asdf_version}",
+        capture_output=True,
     ), f"Failed to install asdf version {asdf_version}"
 
     return path
@@ -186,9 +190,15 @@ def test_file_compatibility(asdf_version, env_path, tmpdir):
         if asdf_version >= MIN_VERSION_OLD_FILES:
             old_file_path = Path(str(tmpdir)) / "test-old.asdf"
             assert env_run(
-                env_path, "python3", GENERATE_SCRIPT_PATH, old_file_path, str(standard_version), capture_output=True
+                env_path,
+                "python3",
+                GENERATE_SCRIPT_PATH,
+                old_file_path,
+                str(standard_version),
+                capture_output=True,
             ), "asdf library version {} failed to generate an ASDF Standard {} file".format(
-                asdf_version, standard_version
+                asdf_version,
+                standard_version,
             )
             assert_file_correct(old_file_path), (
                 f"asdf library version {asdf_version} produced an ASDF Standard {standard_version}"

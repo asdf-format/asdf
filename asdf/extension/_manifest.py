@@ -107,7 +107,7 @@ class ManifestExtension(Extension):
                         schema_uris=tag.get("schema_uri"),
                         title=tag.get("title"),
                         description=tag.get("description"),
-                    )
+                    ),
                 )
             else:
                 msg = "Malformed manifest document"

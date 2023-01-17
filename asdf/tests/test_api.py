@@ -343,8 +343,8 @@ def test_extension_version_check(installed, extension, warns):
                     extension_class="asdf.tests.test_api.FooExtension",
                     software=asdf.tags.core.Software(name="foo", version=extension),
                 ),
-            ]
-        }
+            ],
+        },
     }
 
     if warns:

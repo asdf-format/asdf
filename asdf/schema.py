@@ -84,7 +84,7 @@ def validate_tag(validator, tag_pattern, instance, schema):
 
     if instance_tag is None:
         yield ValidationError(
-            f"mismatched tags, wanted '{tag_pattern}', got unhandled object type '{util.get_class_name(instance)}'"
+            f"mismatched tags, wanted '{tag_pattern}', got unhandled object type '{util.get_class_name(instance)}'",
         )
 
     if not util.uri_match(tag_pattern, instance_tag):
@@ -170,7 +170,7 @@ YAML_VALIDATORS.update(
         "style": validate_style,
         "type": validate_type,
         "enum": validate_enum,
-    }
+    },
 )
 
 
@@ -259,11 +259,14 @@ def _create_validator(validators=YAML_VALIDATORS, visit_repeat_nodes=False):
             "array": lambda checker, instance: isinstance(instance, (list, tuple)),
             "integer": lambda checker, instance: not isinstance(instance, bool) and isinstance(instance, Integral),
             "string": lambda checker, instance: isinstance(instance, (str, np.str_)),
-        }
+        },
     )
     id_of = mvalidators.Draft4Validator.ID_OF
     ASDFvalidator = mvalidators.create(  # noqa: N806
-        meta_schema=meta_schema, validators=validators, type_checker=type_checker, id_of=id_of
+        meta_schema=meta_schema,
+        validators=validators,
+        type_checker=type_checker,
+        id_of=id_of,
     )
 
     def _patch_init(cls):
@@ -411,7 +414,8 @@ def _make_resolver(url_mapping):
 @lru_cache
 def load_custom_schema(url):
     warnings.warn(
-        "The 'load_custom_schema(...)' function is deprecated. Use 'load_schema' instead.", AsdfDeprecationWarning
+        "The 'load_custom_schema(...)' function is deprecated. Use 'load_schema' instead.",
+        AsdfDeprecationWarning,
     )
     return load_schema(url, resolve_references=True)
 

@@ -305,7 +305,12 @@ class AsdfInFits(asdf.AsdfFile):
         return fits.BinTableHDU.from_columns([column], name=ASDF_EXTENSION_NAME)
 
     def _update_asdf_extension(
-        self, all_array_storage=None, all_array_compression=None, pad_blocks=False, use_image_hdu=False, **kwargs
+        self,
+        all_array_storage=None,
+        all_array_compression=None,
+        pad_blocks=False,
+        use_image_hdu=False,
+        **kwargs,
     ):
         if self.blocks.streamed_block is not None:
             msg = "Can not save streamed data to ASDF-in-FITS file."

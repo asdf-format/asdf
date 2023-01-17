@@ -338,7 +338,7 @@ def _xfail_version_map_support_cases(request):
         ("1.0.0", "tag:stsci.edu:asdf/wcs/wcs-1.0.0"),
     ]:
         request.node.add_marker(
-            pytest.mark.xfail(reason="astropy does not yet explicitly support older schema versions", strict=True)
+            pytest.mark.xfail(reason="astropy does not yet explicitly support older schema versions", strict=True),
         )
 
 

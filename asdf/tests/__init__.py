@@ -64,5 +64,5 @@ class CustomExtension:
     @property
     def url_mapping(self):
         return [
-            ("http://nowhere.org/schemas/custom/", util.filepath_to_url(get_test_data_path("")) + "/{url_suffix}.yaml")
+            ("http://nowhere.org/schemas/custom/", util.filepath_to_url(get_test_data_path("")) + "/{url_suffix}.yaml"),
         ]

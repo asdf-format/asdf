@@ -160,14 +160,16 @@ a: !core/complex-42.0.0
 
     buff = helpers.yaml_to_asdf(yaml)
     with pytest.warns(AsdfConversionWarning, match=r"tag:stsci.edu:asdf/core/complex"), asdf.open(
-        buff, ignore_version_mismatch=False
+        buff,
+        ignore_version_mismatch=False,
     ) as ff:
         assert isinstance(ff.tree["a"], complex)
 
     # Make sure warning is repeatable
     buff.seek(0)
     with pytest.warns(AsdfConversionWarning, match=r"tag:stsci.edu:asdf/core/complex"), asdf.open(
-        buff, ignore_version_mismatch=False
+        buff,
+        ignore_version_mismatch=False,
     ) as ff:
         assert isinstance(ff.tree["a"], complex)
 
@@ -185,7 +187,8 @@ a: !core/complex-1.0.1
 
     buff = helpers.yaml_to_asdf(yaml)
     with pytest.warns(AsdfConversionWarning, match=r"tag:stsci.edu:asdf/core/complex"), asdf.open(
-        buff, ignore_version_mismatch=False
+        buff,
+        ignore_version_mismatch=False,
     ) as ff:
         assert isinstance(ff.tree["a"], complex)
 
@@ -204,7 +207,8 @@ a: !core/complex-42.0.0
     expected_uri = util.filepath_to_url(str(testfile))
 
     with pytest.warns(AsdfConversionWarning, match=r"tag:stsci.edu:asdf/core/complex"), asdf.open(
-        testfile, ignore_version_mismatch=False
+        testfile,
+        ignore_version_mismatch=False,
     ) as ff:
         assert ff._fname == expected_uri
         assert isinstance(ff.tree["a"], complex)
@@ -260,7 +264,9 @@ def test_versioned_writing(monkeypatch):
 
     # Add bogus version to supported versions
     monkeypatch.setattr(
-        versioning, "supported_versions", versioning.supported_versions + [versioning.AsdfVersion("42.0.0")]
+        versioning,
+        "supported_versions",
+        versioning.supported_versions + [versioning.AsdfVersion("42.0.0")],
     )
 
     class FancyComplexType(types.CustomType):
@@ -293,7 +299,7 @@ def test_versioned_writing(monkeypatch):
                 (
                     "http://stsci.edu/schemas/asdf/core/complex-42.0.0",
                     util.filepath_to_url(TEST_DATA_PATH) + "/complex-42.0.0.yaml",
-                )
+                ),
             ]
 
     tree = {"a": complex(0, -1)}
@@ -592,7 +598,8 @@ flow_thing:
     buff = helpers.yaml_to_asdf(yaml)
 
     with pytest.warns(
-        AsdfConversionWarning, match=r"Version 1.1.0 of tag:nowhere.org:custom/custom_flow is not compatible"
+        AsdfConversionWarning,
+        match=r"Version 1.1.0 of tag:nowhere.org:custom/custom_flow is not compatible",
     ):
         asdf.open(buff, extensions=CustomFlowExtension())
 
@@ -635,12 +642,14 @@ def test_tag_without_schema(tmp_path):
     tree = {"foo": foo}
 
     with pytest.warns(AsdfWarning, match=r"Unable to locate schema file"), asdf.AsdfFile(
-        tree, extensions=FooExtension()
+        tree,
+        extensions=FooExtension(),
     ) as af:
         af.write_to(tmpfile)
 
     with pytest.warns(AsdfWarning, match=r"Unable to locate schema file"), asdf.AsdfFile(
-        tree, extensions=FooExtension()
+        tree,
+        extensions=FooExtension(),
     ) as ff:
         assert isinstance(ff.tree["foo"], FooType)
         assert ff.tree["foo"] == tree["foo"]

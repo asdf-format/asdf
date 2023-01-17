@@ -733,7 +733,7 @@ def validate_datatype(validator, datatype, instance, schema):
                 yield ValidationError(
                     "Can not safely cast to expected datatype: "
                     f"Expected {numpy_dtype_to_asdf_datatype(out_type)[0]}, "
-                    f"got {numpy_dtype_to_asdf_datatype(in_type)[0]}"
+                    f"got {numpy_dtype_to_asdf_datatype(in_type)[0]}",
                 )
 
 

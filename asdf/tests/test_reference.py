@@ -137,14 +137,14 @@ def test_external_reference_invalid_fragment(tmp_path):
     tree = {"foo": {"$ref": "external.asdf#/list_of_stuff/a"}}
 
     with asdf.AsdfFile(tree, uri=util.filepath_to_url(os.path.join(str(tmp_path), "main.asdf"))) as ff, pytest.raises(
-        ValueError
+        ValueError,
     ):
         ff.resolve_references()
 
     tree = {"foo": {"$ref": "external.asdf#/list_of_stuff/3"}}
 
     with asdf.AsdfFile(tree, uri=util.filepath_to_url(os.path.join(str(tmp_path), "main.asdf"))) as ff, pytest.raises(
-        ValueError
+        ValueError,
     ):
         ff.resolve_references()
 
@@ -153,7 +153,7 @@ def test_make_reference(tmp_path):
     exttree = {
         # Include some ~ and / in the name to make sure that escaping
         # is working correctly
-        "f~o~o/": {"a": np.array([0, 1, 2], float), "b": np.array([3, 4, 5], float)}
+        "f~o~o/": {"a": np.array([0, 1, 2], float), "b": np.array([3, 4, 5], float)},
     }
     external_path = os.path.join(str(tmp_path), "external.asdf")
     ext = asdf.AsdfFile(exttree)

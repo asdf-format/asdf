@@ -42,7 +42,10 @@ def create_tree(key, node, identifier="root", filters=None, refresh_extension_ma
     filters = [] if filters is None else filters
 
     schema_info = NodeSchemaInfo.from_root_node(
-        key, identifier, node, refresh_extension_manager=refresh_extension_manager
+        key,
+        identifier,
+        node,
+        refresh_extension_manager=refresh_extension_manager,
     )
 
     if len(filters) > 0 and not _filter_tree(schema_info, filters):
@@ -52,7 +55,13 @@ def create_tree(key, node, identifier="root", filters=None, refresh_extension_ma
 
 
 def collect_schema_info(
-    key, path, node, identifier="root", filters=None, preserve_list=True, refresh_extension_manager=False
+    key,
+    path,
+    node,
+    identifier="root",
+    filters=None,
+    preserve_list=True,
+    refresh_extension_manager=False,
 ):
     """
     Collect from the underlying schemas any of the info stored under key, relative to the path

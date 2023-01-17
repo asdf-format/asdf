@@ -539,7 +539,7 @@ def test_converter_proxy():
                 title="Bar tag title",
                 description="Bar tag description",
             ),
-        ]
+        ],
     )
 
     extension_proxy = ExtensionProxy(extension, package_name="foo", package_version="1.2.3")

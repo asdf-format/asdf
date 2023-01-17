@@ -38,7 +38,8 @@ def test_history():
     ff = asdf.AsdfFile()
     assert "history" not in ff.tree
     ff.add_history_entry(
-        "This happened", {"name": "my_tool", "homepage": "http://nowhere.org", "author": "John Doe", "version": "2.0"}
+        "This happened",
+        {"name": "my_tool", "homepage": "http://nowhere.org", "author": "John Doe", "version": "2.0"},
     )
     assert len(ff.tree["history"]["entries"]) == 1
 
@@ -166,7 +167,8 @@ history:
 
     buff = yaml_to_asdf(yaml)
     with pytest.warns(
-        AsdfWarning, match=r"File was created with extension class 'asdf.extension.BuiltinExtension'"
+        AsdfWarning,
+        match=r"File was created with extension class 'asdf.extension.BuiltinExtension'",
     ), asdf.open(buff):
         pass
 
@@ -230,7 +232,8 @@ def test_metadata_with_custom_extension(tmpdir):
         assert len(af["history"]["extensions"]) == 2
 
     with pytest.warns(AsdfWarning, match=r"was created with extension"), asdf.open(
-        tmpfile, ignore_unrecognized_tag=True
+        tmpfile,
+        ignore_unrecognized_tag=True,
     ):
         pass
 

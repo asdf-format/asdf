@@ -44,7 +44,7 @@ class FooExtension:
         TagDefinition(
             "asdf://somewhere.org/extensions/foo/tags/foo-1.0",
             schema_uris=FOO_SCHEMA_URI,
-        )
+        ),
     ]
 
 
@@ -107,7 +107,7 @@ class FooFooExtension:
         TagDefinition(
             "asdf://somewhere.org/extensions/foo/tags/foo_foo-1.0",
             schema_uris=[FOO_SCHEMA_URI, FOOFOO_SCHEMA_URI],
-        )
+        ),
     ]
 
 
@@ -142,7 +142,7 @@ class FooFooConverterlessExtension:
         TagDefinition(
             "asdf://somewhere.org/extensions/foo/tags/foo_foo-1.0",
             schema_uris=[FOO_SCHEMA_URI, FOOFOO_SCHEMA_URI],
-        )
+        ),
     ]
 
 

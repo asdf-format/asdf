@@ -105,7 +105,14 @@ class _TruncatedReader:
     """
 
     def __init__(
-        self, fd, delimiter, readahead_bytes, delimiter_name=None, include=False, initial_content=b"", exception=True
+        self,
+        fd,
+        delimiter,
+        readahead_bytes,
+        delimiter_name=None,
+        include=False,
+        initial_content=b"",
+        exception=True,
     ):
         self._fd = fd
         self._delimiter = delimiter
@@ -431,7 +438,13 @@ class GenericFile(metaclass=util.InheritDocstrings):
         return self._fd.closed
 
     def read_until(
-        self, delimiter, readahead_bytes, delimiter_name=None, include=True, initial_content=b"", exception=True
+        self,
+        delimiter,
+        readahead_bytes,
+        delimiter_name=None,
+        include=True,
+        initial_content=b"",
+        exception=True,
     ):
         """
         Reads until a match for a given regular expression is found.
@@ -490,7 +503,13 @@ class GenericFile(metaclass=util.InheritDocstrings):
         return buff.getvalue()
 
     def reader_until(
-        self, delimiter, readahead_bytes, delimiter_name=None, include=True, initial_content=b"", exception=True
+        self,
+        delimiter,
+        readahead_bytes,
+        delimiter_name=None,
+        include=True,
+        initial_content=b"",
+        exception=True,
     ):
         """
         Returns a readable file-like object that treats the given
@@ -529,7 +548,13 @@ class GenericFile(metaclass=util.InheritDocstrings):
         raise NotImplementedError()
 
     def seek_until(
-        self, delimiter, readahead_bytes, delimiter_name=None, include=True, initial_content=b"", exception=True
+        self,
+        delimiter,
+        readahead_bytes,
+        delimiter_name=None,
+        include=True,
+        initial_content=b"",
+        exception=True,
     ):
         """
         Seeks in the file until a match for a given regular expression
@@ -684,7 +709,13 @@ class RandomAccessFile(GenericFile):
         return True
 
     def reader_until(
-        self, delimiter, readahead_bytes, delimiter_name=None, include=True, initial_content=b"", exception=True
+        self,
+        delimiter,
+        readahead_bytes,
+        delimiter_name=None,
+        include=True,
+        initial_content=b"",
+        exception=True,
     ):
         return _TruncatedReader(
             self,
@@ -860,7 +891,13 @@ class InputStream(GenericFile):
         return buffer
 
     def reader_until(
-        self, delimiter, readahead_bytes, delimiter_name=None, include=True, initial_content=b"", exception=True
+        self,
+        delimiter,
+        readahead_bytes,
+        delimiter_name=None,
+        include=True,
+        initial_content=b"",
+        exception=True,
     ):
         return _TruncatedReader(
             self,

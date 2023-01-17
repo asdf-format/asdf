@@ -21,7 +21,10 @@ class QueryExtension(Command):  # pragma: no cover
 
         display_group = parser.add_mutually_exclusive_group()
         display_group.add_argument(
-            "-s", "--summary", action="store_true", help="Display only the installed extensions themselves"
+            "-s",
+            "--summary",
+            action="store_true",
+            help="Display only the installed extensions themselves",
         )
         display_group.add_argument(
             "-t",

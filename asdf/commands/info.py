@@ -13,7 +13,9 @@ class Info(Command):
     @classmethod
     def setup_arguments(cls, subparsers):
         parser = subparsers.add_parser(
-            "info", help="Print a rendering of an ASDF tree.", description="Print a rendering of an ASDF tree."
+            "info",
+            help="Print a rendering of an ASDF tree.",
+            description="Print a rendering of an ASDF tree.",
         )
 
         parser.add_argument("filename", help="ASDF file to render")

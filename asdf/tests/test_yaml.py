@@ -89,7 +89,11 @@ def run_tuple_test(tree, tmp_path):
     init_options = {"ignore_implicit_conversion": True}
 
     helpers.assert_roundtrip_tree(
-        tree, tmp_path, asdf_check_func=check_asdf, raw_yaml_check_func=check_raw_yaml, init_options=init_options
+        tree,
+        tmp_path,
+        asdf_check_func=check_asdf,
+        raw_yaml_check_func=check_raw_yaml,
+        init_options=init_options,
     )
 
 
@@ -202,7 +206,7 @@ def test_explicit_tags():
 foo: !<tag:stsci.edu:asdf/core/ndarray-1.0.0> [1, 2, 3]
 ...
     """.format(
-        asdf.versioning.default_version
+        asdf.versioning.default_version,
     )
 
     # Check that fully qualified explicit tags work

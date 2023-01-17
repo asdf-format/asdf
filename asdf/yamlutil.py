@@ -257,7 +257,9 @@ def custom_tree_to_tagged_tree(tree, ctx, _serialization_context=None):
             return _convert_obj(obj)
 
         tag = ctx.type_index.from_custom_type(
-            type(obj), ctx.version_string, _serialization_context=_serialization_context
+            type(obj),
+            ctx.version_string,
+            _serialization_context=_serialization_context,
         )
 
         if tag is not None:

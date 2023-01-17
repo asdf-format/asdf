@@ -148,7 +148,7 @@ properties:
 required: [foobar]
 ...
     """.format(
-        extension.get_default_resolver()("tag:stsci.edu:asdf/core/ndarray-1.0.0")
+        extension.get_default_resolver()("tag:stsci.edu:asdf/core/ndarray-1.0.0"),
     )
     schema_path = tmp_path / "nugatory.yaml"
     schema_path.write_bytes(schema_def.encode())
@@ -422,7 +422,7 @@ def test_check_complex_default():
     s = {
         "type": "object",
         "properties": {
-            "a": {"type": "object", "tag": "tag:stsci.edu/asdf/core/software-1.0.0", "default": default_software}
+            "a": {"type": "object", "tag": "tag:stsci.edu/asdf/core/software-1.0.0", "default": default_software},
         },
     }
 
@@ -470,7 +470,9 @@ custom: !<tag:nowhere.org:custom/default-1.0.0>
 
     buff.seek(0)
     with pytest.warns(AsdfDeprecationWarning, match=r"do_not_fill_defaults"), asdf.open(
-        buff, extensions=[DefaultTypeExtension()], do_not_fill_defaults=True
+        buff,
+        extensions=[DefaultTypeExtension()],
+        do_not_fill_defaults=True,
     ) as ff:
         assert "a" not in ff.tree["custom"]
         assert "c" not in ff.tree["custom"]["b"]
@@ -608,7 +610,9 @@ custom: !<tag:nowhere.org:custom/foreign_tag_reference-1.0.0>
 def test_self_reference_resolution():
     r = resolver.Resolver(CustomExtension().url_mapping, "url")
     s = schema.load_schema(
-        helpers.get_test_data_path("self_referencing-1.0.0.yaml"), resolver=r, resolve_references=True
+        helpers.get_test_data_path("self_referencing-1.0.0.yaml"),
+        resolver=r,
+        resolve_references=True,
     )
     assert "$ref" not in repr(s)
     assert s["anyOf"][1] == s["anyOf"][0]
@@ -731,7 +735,7 @@ def test_nested_array():
                     "minItems": 3,
                     "maxItems": 3,
                 },
-            }
+            },
         },
     }
 
@@ -813,7 +817,8 @@ custom: !<tag:nowhere.org:custom/missing-1.1.0>
     """
     buff = helpers.yaml_to_asdf(yaml)
     with pytest.warns(
-        AsdfConversionWarning, match=r"Failed to convert tag:nowhere.org:custom/missing-1.1.0"
+        AsdfConversionWarning,
+        match=r"Failed to convert tag:nowhere.org:custom/missing-1.1.0",
     ), asdf.open(buff, extensions=[DefaultTypeExtension()]) as ff:
         assert ff.tree["custom"]["b"]["foo"] == 42
 
@@ -1028,7 +1033,8 @@ a: !<tag:nowhere.org:custom/doesnt_exist-1.0.0>
 
     buff = helpers.yaml_to_asdf(yaml)
     with pytest.warns(AsdfWarning, match=r"Unable to locate schema file"), asdf.open(
-        buff, extensions=CustomExtension()
+        buff,
+        extensions=CustomExtension(),
     ) as af:
         assert str(af["a"]) == "hello"
 
@@ -1067,7 +1073,9 @@ def test_numpy_scalar_type_validation(numpy_value, valid_types):
         if valid is not expected_valid:
             description = "valid" if expected_valid else "invalid"
             msg = "Expected numpy.{} to be {} against jsonschema type '{}'".format(
-                type(numpy_value).__name__, description, jsonschema_type
+                type(numpy_value).__name__,
+                description,
+                jsonschema_type,
             )
             raise AssertionError(msg)
 

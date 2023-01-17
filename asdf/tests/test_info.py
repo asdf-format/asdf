@@ -284,10 +284,10 @@ properties:
         fmanifest.write(foo_manifest)
     config = asdf.get_config()
     config.add_resource_mapping(
-        DirectoryResourceMapping(str(tmp_path / "manifests"), "asdf://somewhere.org/asdf/manifests/")
+        DirectoryResourceMapping(str(tmp_path / "manifests"), "asdf://somewhere.org/asdf/manifests/"),
     )
     config.add_resource_mapping(
-        DirectoryResourceMapping(str(tmp_path / "schemas"), "asdf://somewhere.org/asdf/schemas/")
+        DirectoryResourceMapping(str(tmp_path / "schemas"), "asdf://somewhere.org/asdf/schemas/"),
     )
 
     class FooConverter:
@@ -309,7 +309,8 @@ properties:
 
         def from_yaml_tree(self, node, tag, ctx):
             return ObjectWithInfoSupport(
-                the_meaning=node["the_meaning_of_life_the_universe_and_everything"], clown=node["clown"]
+                the_meaning=node["the_meaning_of_life_the_universe_and_everything"],
+                clown=node["clown"],
             )
 
     class BarConverter:
