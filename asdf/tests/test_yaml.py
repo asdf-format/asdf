@@ -45,16 +45,16 @@ def test_unicode_write(tmp_path):
     characters, not as escape sequences
     """
 
-    tree = {"ɐʇɐp‾ǝpoɔıun": 42, "ascii_only": "this is ascii"}
+    tree = {"ɐʇɐp‾ǝpoɔıun": 42, "ascii_only": "this is ascii"}  # noqa: RUF001
 
     def check_asdf(asdf):
-        assert "ɐʇɐp‾ǝpoɔıun" in asdf.tree
+        assert "ɐʇɐp‾ǝpoɔıun" in asdf.tree  # noqa: RUF001
         assert isinstance(asdf.tree["ascii_only"], str)
 
     def check_raw_yaml(content):
         # Ensure that unicode is written out as UTF-8 without escape
         # sequences
-        assert "ɐʇɐp‾ǝpoɔıun".encode() in content
+        assert "ɐʇɐp‾ǝpoɔıun".encode() in content  # noqa: RUF001
         # Ensure that the unicode "tag" is not used
         assert b"unicode" not in content
 

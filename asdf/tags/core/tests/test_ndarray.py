@@ -326,7 +326,10 @@ def test_mask_nan():
 
 
 def test_string(tmpdir):
-    tree = {"ascii": np.array([b"foo", b"bar", b"baz"]), "unicode": np.array(["სამეცნიერო", "данные", "வடிவம்"])}
+    tree = {
+        "ascii": np.array([b"foo", b"bar", b"baz"]),
+        "unicode": np.array(["სამეცნიერო", "данные", "வடிவம்"]),  # noqa: RUF001
+    }
 
     helpers.assert_roundtrip_tree(tree, tmpdir)
 
