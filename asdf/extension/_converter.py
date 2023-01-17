@@ -163,7 +163,8 @@ class ConverterProxy(Converter):
 
     def __init__(self, delegate, extension):
         if not isinstance(delegate, Converter):
-            raise TypeError("Converter must implement the asdf.extension.Converter interface")
+            msg = "Converter must implement the asdf.extension.Converter interface"
+            raise TypeError(msg)
 
         self._delegate = delegate
         self._extension = extension
@@ -178,12 +179,12 @@ class ConverterProxy(Converter):
             if isinstance(tag, str):
                 relevant_tags.update(t.tag_uri for t in extension.tags if uri_match(tag, t.tag_uri))
             else:
-                raise TypeError("Converter property 'tags' must contain str values")
+                msg = "Converter property 'tags' must contain str values"
+                raise TypeError(msg)
 
         if len(relevant_tags) > 1 and not hasattr(delegate, "select_tag"):
-            raise RuntimeError(
-                "Converter handles multiple tags for this extension, but does not implement a select_tag method."
-            )
+            msg = "Converter handles multiple tags for this extension, but does not implement a select_tag method."
+            raise RuntimeError(msg)
 
         self._tags = sorted(relevant_tags)
 
@@ -192,7 +193,8 @@ class ConverterProxy(Converter):
             if isinstance(typ, (str, type)):
                 self._types.append(typ)
             else:
-                raise TypeError("Converter property 'types' must contain str or type values")
+                msg = "Converter property 'types' must contain str or type values"
+                raise TypeError(msg)
 
     @property
     def tags(self):

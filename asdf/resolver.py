@@ -47,7 +47,8 @@ class Resolver:
         warnings.warn("The 'add_mapping' method is deprecated.", AsdfDeprecationWarning)
 
         if prefix != self._prefix:
-            raise ValueError(f"Prefix '{prefix}' does not match the Resolver prefix '{self._prefix}'")
+            msg = f"Prefix '{prefix}' does not match the Resolver prefix '{self._prefix}'"
+            raise ValueError(msg)
 
         self._mappings = self._mappings + self._validate_mappings(mappings)
 
@@ -83,7 +84,8 @@ class Resolver:
             ):
                 normalized.append(tuple(mapping))
             else:
-                raise ValueError(f"Invalid mapping '{mapping}'")
+                msg = f"Invalid mapping '{mapping}'"
+                raise ValueError(msg)
 
         return tuple(normalized)
 

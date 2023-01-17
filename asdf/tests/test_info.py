@@ -79,11 +79,13 @@ class ObjectWithInfoSupport:
         for key in kw.keys():
             if re.search("^S_", key):
                 if type(kw[key]) != str:
-                    raise ValueError("S_ pattern object must be a string")
+                    msg = "S_ pattern object must be a string"
+                    raise ValueError(msg)
                 self.patt[key] = kw[key]
             if re.search("^I_", key):
                 if type(kw[key]) != int:
-                    raise ValueError("I_ pattern object must be an int")
+                    msg = "I_ pattern object must be an int"
+                    raise ValueError(msg)
                 self.patt[key] = kw[key]
 
     def __asdf_traverse__(self):

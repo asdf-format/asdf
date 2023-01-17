@@ -53,7 +53,8 @@ class _AsdfWriteTypeIndex:
             core_version_map = version_map["core"]
             standard_version_map = version_map["standard"]
         except ValueError as err:
-            raise ValueError(f"Don't know how to write out ASDF version {self._version}") from err
+            msg = f"Don't know how to write out ASDF version {self._version}"
+            raise ValueError(msg) from err
 
         # Process all types defined in the ASDF version map. It is important to
         # make sure that tags that are associated with the core part of the
@@ -219,7 +220,8 @@ class AsdfTypeIndex:
         elif asdftype.name is None:
             yaml_tags = []
         else:
-            raise TypeError("name must be a string, list or None")
+            msg = "name must be a string, list or None"
+            raise TypeError(msg)
 
         for yaml_tag in yaml_tags:
             self._type_by_tag[yaml_tag] = asdftype

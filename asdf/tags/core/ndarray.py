@@ -33,7 +33,8 @@ def asdf_byteorder_to_numpy_byteorder(byteorder):
         return ">"
     elif byteorder == "little":
         return "<"
-    raise ValueError(f"Invalid ASDF byteorder '{byteorder}'")
+    msg = f"Invalid ASDF byteorder '{byteorder}'"
+    raise ValueError(msg)
 
 
 def asdf_datatype_to_numpy_dtype(datatype, byteorder=None):
@@ -56,7 +57,8 @@ def asdf_datatype_to_numpy_dtype(datatype, byteorder=None):
         return np.dtype(datatype)
     elif isinstance(datatype, dict):
         if "datatype" not in datatype:
-            raise ValueError(f"Field entry has no datatype: '{datatype}'")
+            msg = f"Field entry has no datatype: '{datatype}'"
+            raise ValueError(msg)
         name = datatype.get("name", "")
         byteorder = datatype.get("byteorder", byteorder)
         shape = datatype.get("shape")
@@ -74,9 +76,11 @@ def asdf_datatype_to_numpy_dtype(datatype, byteorder=None):
             elif isinstance(np_dtype, np.dtype):
                 datatype_list.append(("", np_dtype))
             else:
-                raise RuntimeError("Error parsing asdf datatype")
+                msg = "Error parsing asdf datatype"
+                raise RuntimeError(msg)
         return np.dtype(datatype_list)
-    raise ValueError(f"Unknown datatype {datatype}")
+    msg = f"Unknown datatype {datatype}"
+    raise ValueError(msg)
 
 
 def numpy_byteorder_to_asdf_byteorder(byteorder, override=None):
@@ -126,7 +130,8 @@ def numpy_dtype_to_asdf_datatype(dtype, include_byteorder=True, override_byteord
             numpy_byteorder_to_asdf_byteorder(dtype.byteorder, override=override_byteorder),
         )
 
-    raise ValueError(f"Unknown dtype {dtype}")
+    msg = f"Unknown dtype {dtype}"
+    raise ValueError(msg)
 
 
 def inline_data_asarray(inline, dtype=None):
@@ -143,7 +148,8 @@ def inline_data_asarray(inline, dtype=None):
 
         def find_innermost_match(line, depth=0):
             if not isinstance(line, list) or not len(line):
-                raise ValueError("data can not be converted to structured array")
+                msg = "data can not be converted to structured array"
+                raise ValueError(msg)
             try:
                 np.asarray(tuple(line), dtype=dtype)
             except ValueError:
@@ -232,7 +238,8 @@ class NDArrayType(AsdfType):
                 if (shape[0] == "*" and self._array.shape[1:] != tuple(shape[1:])) or (
                     self._array.shape != tuple(shape)
                 ):
-                    raise ValueError("inline data doesn't match the given shape")
+                    msg = "inline data doesn't match the given shape"
+                    raise ValueError(msg)
 
         self._shape = shape
         self._dtype = dtype
@@ -312,14 +319,16 @@ class NDArrayType(AsdfType):
             return shape
         elif num_stars == 1:
             if shape[0] != "*":
-                raise ValueError("'*' may only be in first entry of shape")
+                msg = "'*' may only be in first entry of shape"
+                raise ValueError(msg)
             if strides is not None:
                 stride = strides[0]
             else:
                 stride = np.product(shape[1:]) * dtype.itemsize
             missing = int(block_size / stride)
             return [missing] + shape[1:]
-        raise ValueError(f"Invalid shape '{shape}'")
+        msg = f"Invalid shape '{shape}'"
+        raise ValueError(msg)
 
     @property
     def block(self):
@@ -372,7 +381,8 @@ class NDArrayType(AsdfType):
         # libraries.
         # See https://github.com/asdf-format/asdf/issues/1015
         if name in ("name", "version", "supported_versions"):
-            raise AttributeError(f"'{self.__class__.name}' object has no attribute '{name}'")
+            msg = f"'{self.__class__.name}' object has no attribute '{name}'"
+            raise AttributeError(msg)
         else:
             return AsdfType.__getattribute__(self, name)
 
@@ -385,7 +395,8 @@ class NDArrayType(AsdfType):
             source = node.get("source")
             data = node.get("data")
             if source and data:
-                raise ValueError("Both source and data may not be provided at the same time")
+                msg = "Both source and data may not be provided at the same time"
+                raise ValueError(msg)
             if data:
                 source = data
             shape = node.get("shape", None)
@@ -403,7 +414,8 @@ class NDArrayType(AsdfType):
 
             return cls(source, shape, dtype, offset, strides, "A", mask, ctx)
 
-        raise TypeError("Invalid ndarray description.")
+        msg = "Invalid ndarray description."
+        raise TypeError(msg)
 
     @classmethod
     def reserve_blocks(cls, data, ctx):
@@ -445,12 +457,13 @@ class NDArrayType(AsdfType):
                 or block.data.ctypes.data != data.ctypes.data
                 or block.data.strides != data.strides
             ):
-                raise ValueError(
+                msg = (
                     "ASDF has only limited support for serializing views over arrays stored "
                     "in FITS HDUs.  This error likely means that a slice of such an array "
                     "was found in the ASDF tree.  The slice can be decoupled from the FITS "
                     "array by calling copy() before assigning it to the tree."
                 )
+                raise ValueError(msg)
 
             offset = 0
             strides = None
@@ -513,7 +526,8 @@ class NDArrayType(AsdfType):
             if not new.dtype.fields:
                 # This line is safe because this is actually a piece of test
                 # code, even though it lives in this file:
-                raise AssertionError("arrays not equal")  # noqa: S101
+                msg = "arrays not equal"
+                raise AssertionError(msg)  # noqa: S101
             for a, b in zip(old, new):
                 cls._assert_equality(a, b, func)
         else:
@@ -676,11 +690,13 @@ def validate_datatype(validator, datatype, instance, schema):
             array = inline_data_asarray(instance["data"])
             in_datatype, _ = numpy_dtype_to_asdf_datatype(array.dtype)
         else:
-            raise ValidationError("Not an array")
+            msg = "Not an array"
+            raise ValidationError(msg)
     elif isinstance(instance, (np.ndarray, NDArrayType)):
         in_datatype, _ = numpy_dtype_to_asdf_datatype(instance.dtype)
     else:
-        raise ValidationError("Not an array")
+        msg = "Not an array"
+        raise ValidationError(msg)
 
     if datatype == in_datatype:
         return

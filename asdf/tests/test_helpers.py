@@ -15,7 +15,8 @@ def test_conversion_error(tmp_path):
 
         @classmethod
         def from_tree(cls, tree, ctx):
-            raise TypeError("This allows us to test the failure")
+            msg = "This allows us to test the failure"
+            raise TypeError(msg)
 
         @classmethod
         def to_tree(cls, node, ctx):

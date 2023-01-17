@@ -176,7 +176,8 @@ class SchemaExample:
             _version = example[1]
             _other = example[3:] if len(example) > 3 else None
         else:
-            raise RuntimeError("Invalid example")
+            msg = "Invalid example"
+            raise RuntimeError(msg)
 
         return cls(_description, _example, _version, _other)
 

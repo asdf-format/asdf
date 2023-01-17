@@ -138,7 +138,8 @@ def tag_object(tag, instance, ctx=None):
         try:
             instance = yamlutil.custom_tree_to_tagged_tree(instance, ctx)
         except TypeError as err:
-            raise TypeError(f"Don't know how to tag a {type(instance)}") from err
+            msg = f"Don't know how to tag a {type(instance)}"
+            raise TypeError(msg) from err
         instance._tag = tag
     return instance
 

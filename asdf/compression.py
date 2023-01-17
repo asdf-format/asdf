@@ -46,7 +46,8 @@ def validate(compression):
             warnings.warn(f'Found more than one compressor for "{label}"', AsdfWarning)
 
     if compression not in all_labels:
-        raise ValueError(f"Supported compression types are: {all_labels}, not '{compression}'")
+        msg = f"Supported compression types are: {all_labels}, not '{compression}'"
+        raise ValueError(msg)
 
     return compression
 
@@ -56,11 +57,12 @@ class Lz4Compressor:
         try:
             import lz4.block
         except ImportError as err:
-            raise ImportError(
+            msg = (
                 "lz4 library in not installed in your Python environment, "
                 "therefore the compressed block in this ASDF file "
                 "can not be decompressed."
-            ) from err
+            )
+            raise ImportError(msg) from err
 
         self._api = lz4.block
 
@@ -211,7 +213,8 @@ def _get_compressor(label):
     elif label == "lz4":
         comp = Lz4Compressor()
     else:
-        raise ValueError(f"Unknown compression type: '{label}'")
+        msg = f"Unknown compression type: '{label}'"
+        raise ValueError(msg)
 
     return comp
 
@@ -268,7 +271,8 @@ def decompress(fd, used_size, data_size, compression, config=None):
     len_decoded = decoder.decompress(blocks, out=buffer.data, **config)
 
     if len_decoded != data_size:
-        raise ValueError("Decompressed data wrong size")
+        msg = "Decompressed data wrong size"
+        raise ValueError(msg)
 
     return buffer
 

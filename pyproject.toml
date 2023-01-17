@@ -185,6 +185,8 @@ select = [
     "B", # flake8-bugbear
     "A", # flake8-builtins
     "C4", # flake8-comprehensions
+    "T10", # flake8-debugger
+    "EM", # flake8-errmsg
 ]
 extend-ignore = [
     "B905", # Requires python 3.10 (use zip strict)

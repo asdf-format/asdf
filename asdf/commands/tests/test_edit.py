@@ -95,7 +95,8 @@ def default_mock_input(monkeypatch):
     """
 
     def _input(prompt=None):
-        raise AssertionError(f"Received unexpected request for input: {prompt}")
+        msg = f"Received unexpected request for input: {prompt}"
+        raise AssertionError(msg)
 
     monkeypatch.setattr("builtins.input", _input)
 

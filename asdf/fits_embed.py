@@ -11,7 +11,8 @@ from . import asdf, block, generic_io, util
 try:
     from astropy.io import fits
 except ImportError as err:
-    raise ImportError("AsdfInFits requires astropy") from err
+    msg = "AsdfInFits requires astropy"
+    raise ImportError(msg) from err
 
 
 ASDF_EXTENSION_NAME = "ASDF"
@@ -73,7 +74,8 @@ class _EmbeddedBlockManager(block.BlockManager):
                     pair = ver
                 return _FitsBlock(self._hdulist[pair])
             else:
-                raise ValueError(f"Can not parse source '{source}'")
+                msg = f"Can not parse source '{source}'"
+                raise ValueError(msg)
 
         return super().get_block(source)
 
@@ -85,7 +87,8 @@ class _EmbeddedBlockManager(block.BlockManager):
                         return f"{FITS_SOURCE_PREFIX}{i}"
                     else:
                         return f"{FITS_SOURCE_PREFIX}{hdu.name},{hdu.ver}"
-            raise ValueError("FITS block seems to have been removed")
+            msg = "FITS block seems to have been removed"
+            raise ValueError(msg)
 
         return super().get_source(block)
 
@@ -257,7 +260,8 @@ class AsdfInFits(asdf.AsdfFile):
                 # responsible for cleaning up upon close() or __exit__
                 close_hdulist = True
             except OSError as err:
-                raise ValueError(f"Failed to parse given file '{uri}'. Is it FITS?") from err
+                msg = f"Failed to parse given file '{uri}'. Is it FITS?"
+                raise ValueError(msg) from err
 
         self = cls(
             hdulist,
@@ -305,7 +309,8 @@ class AsdfInFits(asdf.AsdfFile):
         self, all_array_storage=None, all_array_compression=None, pad_blocks=False, use_image_hdu=False, **kwargs
     ):
         if self.blocks.streamed_block is not None:
-            raise ValueError("Can not save streamed data to ASDF-in-FITS file.")
+            msg = "Can not save streamed data to ASDF-in-FITS file."
+            raise ValueError(msg)
 
         buff = io.BytesIO()
         super().write_to(
@@ -347,4 +352,5 @@ class AsdfInFits(asdf.AsdfFile):
         self._hdulist.writeto(filename, *args, **kwargs)
 
     def update(self, all_array_storage=None, all_array_compression=None, pad_blocks=False, **kwargs):
-        raise NotImplementedError("In-place update is not currently implemented for ASDF-in-FITS")
+        msg = "In-place update is not currently implemented for ASDF-in-FITS"
+        raise NotImplementedError(msg)

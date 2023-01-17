@@ -195,7 +195,8 @@ class BinaryStruct:
         fields = [0] * len(self._names)
         for key, val in kwargs.items():
             if key not in self._offsets:
-                raise KeyError(f"No header field '{key}'")
+                msg = f"No header field '{key}'"
+                raise KeyError(msg)
             i = self._names.index(key)
             fields[i] = val
         return struct.pack(self._fmt, *fields)
@@ -224,7 +225,8 @@ class BinaryStruct:
         updates = []
         for key, val in kwargs.items():
             if key not in self._offsets:
-                raise KeyError(f"No header field '{key}'")
+                msg = f"No header field '{key}'"
+                raise KeyError(msg)
             updates.append((self._offsets[key], val))
         updates.sort()
 
@@ -369,11 +371,12 @@ def minversion(module, version, inclusive=True):
         except ImportError:
             return False
     else:
-        raise ValueError(
+        msg = (
             "module argument must be an actual imported "
             "module, or the import name of the module; "
             f"got {repr(module)}"
         )
+        raise ValueError(msg)
 
     if module_version is None:
         try:

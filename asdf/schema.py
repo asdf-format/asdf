@@ -340,7 +340,8 @@ def _create_validator(validators=YAML_VALIDATORS, visit_repeat_nodes=False):
 @lru_cache
 def _load_schema(url):
     if url.startswith("http://") or url.startswith("https://") or url.startswith("asdf://"):
-        raise FileNotFoundError(f"Unable to fetch schema from non-file URL: {url}")
+        msg = f"Unable to fetch schema from non-file URL: {url}"
+        raise FileNotFoundError(msg)
 
     with generic_io.get_file(url) as fd:
         if isinstance(url, str) and url.endswith("json"):
@@ -612,7 +613,8 @@ def _validate_large_literals(instance, reading):
                 AsdfWarning,
             )
         else:
-            raise ValidationError(f"Integer value {value} is too large to safely represent as a literal in ASDF")
+            msg = f"Integer value {value} is too large to safely represent as a literal in ASDF"
+            raise ValidationError(msg)
 
     if isinstance(instance, Integral):
         _validate(instance)
@@ -641,7 +643,8 @@ def _validate_mapping_keys(instance, reading):
                     AsdfWarning,
                 )
             else:
-                raise ValidationError(f"Mapping key {key} is not permitted.  Valid types: str, int, bool.")
+                msg = f"Mapping key {key} is not permitted.  Valid types: str, int, bool."
+                raise ValidationError(msg)
 
 
 def validate(instance, ctx=None, schema=None, validators=None, reading=False, *args, **kwargs):
