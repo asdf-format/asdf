@@ -358,7 +358,7 @@ def test_version_map_support(version, schema_type, tag):
 
     try:
         load_schema(tag)
-    except Exception:
+    except Exception:  # noqa: BLE001
         assert False, (
             f"ASDF Standard version {version} requires support for "
             + f"{tag}, but the corresponding schema cannot be loaded."

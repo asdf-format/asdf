@@ -85,7 +85,7 @@ class Reference(AsdfType):
             return None
         try:
             return getattr(self._get_target(), attr)
-        except Exception:
+        except Exception:  # noqa: BLE001
             raise AttributeError(f"No attribute '{attr}'")
 
     def __getitem__(self, item):
