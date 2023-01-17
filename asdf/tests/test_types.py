@@ -85,7 +85,7 @@ def fractiontype_factory():
 
 def fractional2dcoordtype_factory():
 
-    FractionType = fractiontype_factory()
+    FractionType = fractiontype_factory()  # noqa: N806
 
     class Fractional2dCoordType(types.CustomType):
         name = "fractional_2d_coord"
@@ -112,7 +112,7 @@ def fractional2dcoordtype_factory():
 
 def test_custom_tag():
 
-    FractionType = fractiontype_factory()
+    FractionType = fractiontype_factory()  # noqa: N806
 
     class FractionExtension(CustomExtension):
         @property

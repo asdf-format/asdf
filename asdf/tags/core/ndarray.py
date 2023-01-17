@@ -557,10 +557,10 @@ class NDArrayType(AsdfType):
 
 
 def _make_operation(name):
-    def __operation__(self, *args):
+    def operation(self, *args):
         return getattr(self._make_array(), name)(*args)
 
-    return __operation__
+    return operation
 
 
 classes_to_modify = NDArrayType.__versioned_siblings + [

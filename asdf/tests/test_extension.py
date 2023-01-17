@@ -117,6 +117,7 @@ class FullConverter(MinimumConverter):
 
 
 class MinimalCompressor(Compressor):
+    @staticmethod
     def compress(data):
         return b""
 

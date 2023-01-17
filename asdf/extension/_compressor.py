@@ -22,9 +22,9 @@ class Compressor(abc.ABC):
     """
 
     @classmethod
-    def __subclasshook__(cls, C):
+    def __subclasshook__(cls, class_):
         if cls is Compressor:
-            return hasattr(C, "label") and (hasattr(C, "compress") or hasattr(C, "decompress"))
+            return hasattr(class_, "label") and (hasattr(class_, "compress") or hasattr(class_, "decompress"))
         return NotImplemented  # pragma: no cover
 
     @property
