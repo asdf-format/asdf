@@ -138,7 +138,7 @@ def env_path(asdf_version, tmp_path_factory):
 
 
 @pytest.fixture(autouse=True)
-def pushd_tmpdir(tmpdir):
+def _pushd_tmpdir(tmpdir):
     """
     Change the working directory, in case the user is running these
     tests from the repo root.  Python will import a module from the
@@ -151,7 +151,7 @@ def pushd_tmpdir(tmpdir):
     os.chdir(original_cwd)
 
 
-@pytest.mark.remote_data
+@pytest.mark.remote_data()
 def test_file_compatibility(asdf_version, env_path, tmpdir):
     # Sanity check to ensure we're not accidentally comparing
     # the current code to itself.

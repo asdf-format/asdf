@@ -36,7 +36,7 @@ def test_diff_minimal():
 
 
 @pytest.mark.parametrize(
-    "result_file, ignore",
+    ("result_file", "ignore"),
     [
         ("frames_ignore_asdf_library.diff", ["asdf_library"]),
         ("frames_ignore_reference_frame.diff", ["frames[*].reference_frame"]),

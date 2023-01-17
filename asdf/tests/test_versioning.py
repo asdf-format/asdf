@@ -288,8 +288,8 @@ def _standard_versioned_tags():
                 yield value
 
 
-@pytest.fixture
-def xfail_version_map_support_cases(request):
+@pytest.fixture()
+def _xfail_version_map_support_cases(request):
     tag = request.getfixturevalue("tag")
     version = request.getfixturevalue("version")
     if (version, tag) in [
@@ -342,8 +342,8 @@ def xfail_version_map_support_cases(request):
         )
 
 
-@pytest.mark.parametrize("version, schema_type, tag", list(_standard_versioned_tags()))
-@pytest.mark.usefixtures("xfail_version_map_support_cases")
+@pytest.mark.parametrize(("version", "schema_type", "tag"), list(_standard_versioned_tags()))
+@pytest.mark.usefixtures("_xfail_version_map_support_cases")
 def test_version_map_support(version, schema_type, tag):
     type_index = default_extensions.extension_list.type_index
 

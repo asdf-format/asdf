@@ -690,7 +690,7 @@ def test_read_large_literal(value):
 
 
 @pytest.mark.parametrize(
-    "version,keys",
+    ("version", "keys"),
     [
         ("1.6.0", ["foo", 42, True]),
         ("1.5.0", ["foo", 42, True, 3.14159, datetime.now(), b"foo", None]),
@@ -708,7 +708,7 @@ def test_mapping_supported_key_types(keys, version):
 
 
 @pytest.mark.parametrize(
-    "version,keys",
+    ("version", "keys"),
     [
         ("1.6.0", [3.14159, datetime.now(), b"foo", None, ("foo", "bar")]),
     ],
@@ -716,9 +716,7 @@ def test_mapping_supported_key_types(keys, version):
 def test_mapping_unsupported_key_types(keys, version):
     for key in keys:
         with pytest.raises(ValidationError, match=r"Mapping key .* is not permitted"):
-            af = asdf.AsdfFile({key: "value"}, version=version)
-            buff = io.BytesIO()
-            af.write_to(buff)
+            asdf.AsdfFile({key: "value"}, version=version)
 
 
 def test_nested_array():
@@ -1045,7 +1043,7 @@ a: !<tag:nowhere.org:custom/doesnt_exist-1.0.0>
 
 
 @pytest.mark.parametrize(
-    "numpy_value,valid_types",
+    ("numpy_value", "valid_types"),
     [
         (np.str_("foo"), {"string"}),
         (np.bytes_("foo"), set()),
