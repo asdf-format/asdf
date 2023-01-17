@@ -198,7 +198,6 @@ select = [
 extend-ignore = [
     "B905", # Requires python 3.10 (use zip strict)
     "PT011", # `pytest.raises(...)` is too broad, set the `match` parameter or use a more specific exception
-    "SIM101", # Multiple `isinstance` calls for `value`, merge into a single call
     "SIM102", # Use a single `if` statement instead of nested `if` statements
     "SIM105", # Use `contextlib.suppress(ValueError)` instead of try-except-pass
     "SIM108", # Use ternary operator `strides = None if data.flags.c_contiguous else data.strides` instead of if-else-block

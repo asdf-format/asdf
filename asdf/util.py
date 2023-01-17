@@ -458,14 +458,7 @@ def is_primitive(value):
     bool
         True if the value is primitive, False otherwise
     """
-    return (
-        value is None
-        or isinstance(value, bool)
-        or isinstance(value, int)
-        or isinstance(value, float)
-        or isinstance(value, complex)
-        or isinstance(value, str)
-    )
+    return isinstance(value, (bool, int, float, complex, str)) or value is None
 
 
 def uri_match(pattern, uri):

@@ -445,7 +445,7 @@ def get_children(node):
     if isinstance(node, dict):
         return list(node.items())
 
-    if isinstance(node, list) or isinstance(node, tuple):
+    if isinstance(node, (list, tuple)):
         return list(enumerate(node))
 
     return []
@@ -466,4 +466,4 @@ def is_container(node):
     bool
         True if node is a container, False otherwise
     """
-    return isinstance(node, dict) or isinstance(node, list) or isinstance(node, tuple)
+    return isinstance(node, (dict, list, tuple))

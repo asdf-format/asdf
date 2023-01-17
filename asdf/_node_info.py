@@ -254,7 +254,7 @@ class NodeSchemaInfo:
             next_nodes = []
 
             for parent, identifier, node in current_nodes:
-                if (isinstance(node, dict) or isinstance(node, tuple) or cls.traversable(node)) and id(node) in seen:
+                if (isinstance(node, (dict, tuple)) or cls.traversable(node)) and id(node) in seen:
                     info = NodeSchemaInfo(key, parent, identifier, node, current_depth, recursive=True)
                     parent.children.append(info)
 

@@ -257,7 +257,7 @@ def _create_validator(validators=YAML_VALIDATORS, visit_repeat_nodes=False):
 
     type_checker = mvalidators.Draft4Validator.TYPE_CHECKER.redefine_many(
         {
-            "array": lambda checker, instance: isinstance(instance, list) or isinstance(instance, tuple),
+            "array": lambda checker, instance: isinstance(instance, (list, tuple)),
             "integer": lambda checker, instance: not isinstance(instance, bool) and isinstance(instance, Integral),
             "string": lambda checker, instance: isinstance(instance, (str, np.str_)),
         }

@@ -154,12 +154,7 @@ class AsdfSearchResult:
         AsdfSearchResult
             the subsequent search result
         """
-        if not (
-            type_ is NotSet
-            or isinstance(type_, str)
-            or isinstance(type_, typing.Pattern)
-            or isinstance(type_, builtins.type)
-        ):
+        if not (isinstance(type_, (str, typing.Pattern, builtins.type)) or type_ is NotSet):
             msg = "type must be NotSet, str, regular expression, or instance of builtins.type"
             raise TypeError(msg)
 
@@ -394,12 +389,7 @@ def _walk_tree_breadth_first(root_identifiers, root_node, callback):
         next_nodes = []
 
         for identifiers, parent, node in current_nodes:
-            if (
-                isinstance(node, dict)
-                or isinstance(node, list)
-                or isinstance(node, tuple)
-                or NodeSchemaInfo.traversable(node)
-            ) and id(node) in seen:
+            if (isinstance(node, (dict, list, tuple)) or NodeSchemaInfo.traversable(node)) and id(node) in seen:
                 continue
             if NodeSchemaInfo.traversable(node):
                 tnode = node.__asdf_traverse__()
