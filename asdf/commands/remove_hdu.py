@@ -21,7 +21,10 @@ class FitsExtractor(Command):  # pragma: no cover
         )
 
         parser.add_argument(
-            "infile", action="store", type=str, help="Name of ASDF-in-FITS file containing extension to be removed"
+            "infile",
+            action="store",
+            type=str,
+            help="Name of ASDF-in-FITS file containing extension to be removed",
         )
         parser.add_argument("outfile", action="store", type=str, help="Name of new FITS output file")
 

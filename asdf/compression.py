@@ -110,7 +110,8 @@ class Lz4Compressor:
                     # If we have a partial block, or we're already filling a buffer, use the buffer
                     if _buffer is None:
                         _buffer = np.empty(
-                            _size, dtype=np.byte
+                            _size,
+                            dtype=np.byte,
                         )  # use numpy instead of bytearray so we can avoid zero initialization
                         _pos = 0
                     newbytes = min(_size - _pos, len(block))  # don't fill past the buffer len!

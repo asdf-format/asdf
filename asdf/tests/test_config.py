@@ -155,7 +155,7 @@ def test_resource_mappings():
         # ... and also by the name of the package the mappings came from:
         config.add_resource_mapping(ResourceMappingProxy(new_mapping, package_name="foo"))
         config.add_resource_mapping(
-            ResourceMappingProxy({"http://somewhere.org/schemas/bar-1.0.0": b"bar"}, package_name="foo")
+            ResourceMappingProxy({"http://somewhere.org/schemas/bar-1.0.0": b"bar"}, package_name="foo"),
         )
         config.remove_resource_mapping(package="foo")
         assert len(config.resource_mappings) == len(default_mappings)

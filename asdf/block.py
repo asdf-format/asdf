@@ -807,7 +807,7 @@ class Block:
             ("used_size", "Q"),
             ("data_size", "Q"),
             ("checksum", "16s"),
-        ]
+        ],
     )
 
     def __init__(self, data=None, uri=None, array_storage="internal", memmap=True, lazy_load=True):
@@ -830,7 +830,10 @@ class Block:
 
     def __repr__(self):
         return "<Block {} off: {} alc: {} size: {}>".format(
-            self._array_storage[:3], self._offset, self._allocated, self._size
+            self._array_storage[:3],
+            self._offset,
+            self._allocated,
+            self._size,
         )
 
     def __len__(self):
@@ -979,7 +982,9 @@ class Block:
                 self._size = self._data_size
             else:
                 self._size = mcompression.get_compressed_size(
-                    data, self.output_compression, config=self.output_compression_kwargs
+                    data,
+                    self.output_compression,
+                    config=self.output_compression_kwargs,
                 )
         else:
             self._data_size = self._size = 0
@@ -1182,7 +1187,7 @@ class Block:
                 used_size=used_size,
                 data_size=data_size,
                 checksum=checksum,
-            )
+            ),
         )
 
         if data is not None:

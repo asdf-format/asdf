@@ -40,7 +40,7 @@ def get_asdf_library_info():
             "version": version.version,
             "homepage": "http://github.com/asdf-format/asdf",
             "author": "The ASDF Developers",
-        }
+        },
     )
 
 
@@ -497,7 +497,8 @@ class AsdfFile:
     @property
     def tag_to_schema_resolver(self):
         warnings.warn(
-            "The 'tag_to_schema_resolver' property is deprecated. Use 'tag_mapping' instead.", AsdfDeprecationWarning
+            "The 'tag_to_schema_resolver' property is deprecated. Use 'tag_mapping' instead.",
+            AsdfDeprecationWarning,
         )
         return self.extension_list.tag_mapping
 
@@ -766,7 +767,11 @@ class AsdfFile:
         Tree or first block.
         """
         content = fd.read_until(
-            b"(%YAML)|(" + constants.BLOCK_MAGIC + b")", 5, "start of content", include=False, exception=False
+            b"(%YAML)|(" + constants.BLOCK_MAGIC + b")",
+            5,
+            "start of content",
+            include=False,
+            exception=False,
         )
 
         comments = []
@@ -841,7 +846,11 @@ class AsdfFile:
             tree = None
             if yaml_token == b"%YAM":
                 reader = fd.reader_until(
-                    constants.YAML_END_MARKER_REGEX, 7, "End of YAML marker", include=True, initial_content=yaml_token
+                    constants.YAML_END_MARKER_REGEX,
+                    7,
+                    "End of YAML marker",
+                    include=True,
+                    initial_content=yaml_token,
                 )
 
                 # For testing: just return the raw YAML content
@@ -1072,13 +1081,19 @@ class AsdfFile:
                 self._update_extension_history(serialization_context)
                 if "history" in self.tree:
                     tagged_tree["history"] = yamlutil.custom_tree_to_tagged_tree(
-                        self.tree["history"], self, _serialization_context=serialization_context
+                        self.tree["history"],
+                        self,
+                        _serialization_context=serialization_context,
                     )
                 else:
                     tagged_tree.pop("history", None)
 
             yamlutil.dump_tree(
-                tree, fd, self, tree_finalizer=_tree_finalizer, _serialization_context=serialization_context
+                tree,
+                fd,
+                self,
+                tree_finalizer=_tree_finalizer,
+                _serialization_context=serialization_context,
             )
 
         if pad_blocks:
@@ -1505,7 +1520,7 @@ class AsdfFile:
             {
                 "description": description,
                 "time": time_,
-            }
+            },
         )
 
         if software is not None:
@@ -1580,11 +1595,17 @@ class AsdfFile:
 
         if isinstance(path, AsdfSearchResult):
             return path.schema_info(
-                key, preserve_list=preserve_list, refresh_extension_manager=refresh_extension_manager
+                key,
+                preserve_list=preserve_list,
+                refresh_extension_manager=refresh_extension_manager,
             )
 
         return node_info.collect_schema_info(
-            key, path, self.tree, preserve_list=preserve_list, refresh_extension_manager=refresh_extension_manager
+            key,
+            path,
+            self.tree,
+            preserve_list=preserve_list,
+            refresh_extension_manager=refresh_extension_manager,
         )
 
     def info(

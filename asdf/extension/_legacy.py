@@ -133,7 +133,8 @@ class AsdfExtensionList:
     def tag_to_schema_resolver(self):
         """Deprecated. Use `tag_mapping` instead"""
         warnings.warn(
-            "The 'tag_to_schema_resolver' property is deprecated. Use 'tag_mapping' instead.", AsdfDeprecationWarning
+            "The 'tag_to_schema_resolver' property is deprecated. Use 'tag_mapping' instead.",
+            AsdfDeprecationWarning,
         )
         return self._tag_mapping
 

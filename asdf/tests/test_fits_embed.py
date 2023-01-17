@@ -29,7 +29,7 @@ def create_asdf_in_fits(dtype):
             "sci": {"data": hdulist[0].data, "wcs": "WCS info"},
             "dq": {"data": hdulist[1].data, "wcs": "WCS info"},
             "err": {"data": hdulist[2].data, "wcs": "WCS info"},
-        }
+        },
     }
 
     return fits_embed.AsdfInFits(hdulist, tree)
@@ -54,7 +54,7 @@ def test_embed_asdf_in_fits_file(tmp_path, backwards_compat, dtype):
             "sci": {"data": hdulist["SCI"].data, "wcs": "WCS info"},
             "dq": {"data": hdulist["DQ"].data, "wcs": "WCS info"},
             "with_underscore": {"data": hdulist["WITH_UNDERSCORE"].data, "wcs": "WCS info"},
-        }
+        },
     }
 
     ff = fits_embed.AsdfInFits(hdulist, tree)
@@ -172,7 +172,7 @@ def test_create_in_tree_first(tmp_path, dtype):
             "sci": {"data": np.arange(512, dtype=dtype), "wcs": "WCS info"},
             "dq": {"data": np.arange(512, dtype=dtype), "wcs": "WCS info"},
             "err": {"data": np.arange(512, dtype=dtype), "wcs": "WCS info"},
-        }
+        },
     }
 
     hdulist = fits.HDUList()
@@ -301,7 +301,8 @@ def test_version_mismatch_file():
     testfile = str(get_test_data_path("version_mismatch.fits"))
 
     with pytest.warns(AsdfConversionWarning, match=r"tag:stsci.edu:asdf/core/complex"), asdf.open(
-        testfile, ignore_version_mismatch=False
+        testfile,
+        ignore_version_mismatch=False,
     ) as fits_handle:
         assert fits_handle.tree["a"] == complex(0j)
 
@@ -310,7 +311,8 @@ def test_version_mismatch_file():
         assert fits_handle.tree["a"] == complex(0j)
 
     with pytest.warns(AsdfConversionWarning, match=r"tag:stsci.edu:asdf/core/complex"), fits_embed.AsdfInFits.open(
-        testfile, ignore_version_mismatch=False
+        testfile,
+        ignore_version_mismatch=False,
     ) as fits_handle:
         assert fits_handle.tree["a"] == complex(0j)
 
@@ -450,7 +452,8 @@ def test_array_view_compatible_dtype(tmp_path):
     with asdf.fits_embed.AsdfInFits(hdulist=hdul) as af:
         af["view"] = hdul[-1].data.view(np.int64)
         with pytest.raises(
-            ValueError, match=r"ASDF has only limited support for serializing views over arrays stored in FITS HDUs"
+            ValueError,
+            match=r"ASDF has only limited support for serializing views over arrays stored in FITS HDUs",
         ):
             af.write_to(file_path)
 
@@ -505,7 +508,8 @@ def test_array_view_different_layout(tmp_path):
         af["data"] = hdul[-1].data
         af["other"] = other_view
         with pytest.raises(
-            ValueError, match=r"ASDF has only limited support for serializing views over arrays stored in FITS HDUs"
+            ValueError,
+            match=r"ASDF has only limited support for serializing views over arrays stored in FITS HDUs",
         ):
             af.write_to(file_path)
 

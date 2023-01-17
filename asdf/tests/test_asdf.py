@@ -301,7 +301,7 @@ def test_reading_extension_metadata():
               extension_uri: some-missing-URI
               extension_class: {}
         """.format(
-            extension_with_uri.class_name
+            extension_with_uri.class_name,
         )
         buff = yaml_to_asdf(content)
         with pytest.warns(AsdfWarning, match=r"URI 'some-missing-URI'"):

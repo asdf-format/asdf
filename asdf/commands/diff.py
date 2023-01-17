@@ -75,7 +75,10 @@ JMESPath expressions.
         parser.add_argument("filenames", metavar="asdf_file", nargs=2, help="The ASDF files to compare.")
 
         parser.add_argument(
-            "-m", "--minimal", action="store_true", help="Show minimal differences between the two files."
+            "-m",
+            "--minimal",
+            action="store_true",
+            help="Show minimal differences between the two files.",
         )
 
         parser.add_argument(
@@ -336,7 +339,8 @@ def diff(filenames, minimal, iostream=sys.stdout, ignore=None):
 
     try:
         with asdf.open(filenames[0], _force_raw_types=True) as asdf0, asdf.open(
-            filenames[1], _force_raw_types=True
+            filenames[1],
+            _force_raw_types=True,
         ) as asdf1:
             ignore_ids = set()
             for expression in ignore_expressions:

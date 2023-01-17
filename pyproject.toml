@@ -183,7 +183,6 @@ extend-ignore = [
     "B905", # Requires python 3.10 (use zip strict)
     "PT011", # `pytest.raises(...)` is too broad, set the `match` parameter or use a more specific exception
     "PLR2004", # Magic value used in comparison
-    "COM812", # Trailing comma missing
 ]
 extend-exclude = ["asdf/extern/*", "docs/*"]
 

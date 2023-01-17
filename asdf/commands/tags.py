@@ -18,7 +18,9 @@ class TagLister(Command):  # pragma: no cover
     @classmethod
     def setup_arguments(cls, subparsers):
         parser = subparsers.add_parser(
-            "tags", help="List currently available tags", description="""Lists currently available tags."""
+            "tags",
+            help="List currently available tags",
+            description="""Lists currently available tags.""",
         )
 
         parser.add_argument(

@@ -22,10 +22,16 @@ class AsdfExtractor(Command):  # pragma: no cover
         )
 
         parser.add_argument(
-            "infile", action="store", type=str, help="Name of ASDF-in-FITS file containing extension to be extracted"
+            "infile",
+            action="store",
+            type=str,
+            help="Name of ASDF-in-FITS file containing extension to be extracted",
         )
         parser.add_argument(
-            "outfile", action="store", type=str, help="Name of new pure ASDF file containing extracted extension"
+            "outfile",
+            action="store",
+            type=str,
+            help="Name of new pure ASDF file containing extracted extension",
         )
 
         parser.set_defaults(func=cls.run)

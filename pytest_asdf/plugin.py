@@ -15,10 +15,12 @@ def pytest_addoption(parser):
     parser.addini("asdf_schema_root", "Root path indicating where schemas are stored")
     parser.addini("asdf_schema_skip_names", "Base names of files to skip in schema tests")
     parser.addini(
-        "asdf_schema_skip_tests", "List of tests to skip, one per line, in format <schema path suffix>::<test name>"
+        "asdf_schema_skip_tests",
+        "List of tests to skip, one per line, in format <schema path suffix>::<test name>",
     )
     parser.addini(
-        "asdf_schema_xfail_tests", "List of tests to xfail, one per line, in format <schema path suffix>::<test name>"
+        "asdf_schema_xfail_tests",
+        "List of tests to xfail, one per line, in format <schema path suffix>::<test name>",
     )
     parser.addini("asdf_schema_skip_examples", "Base names of schemas whose examples should not be tested")
     parser.addini(
@@ -144,7 +146,9 @@ class AsdfSchemaItem(pytest.Item):
 
         # Make sure that each schema itself is valid.
         schema_tree = schema.load_schema(
-            self.schema_path, resolver=default_extensions.resolver, resolve_references=True
+            self.schema_path,
+            resolver=default_extensions.resolver,
+            resolve_references=True,
         )
         schema.check_schema(schema_tree, validate_default=self.validate_default)
 

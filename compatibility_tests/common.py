@@ -7,7 +7,8 @@ from asdf.versioning import supported_versions
 def generate_file(path, version):
     if version not in supported_versions:
         msg = "ASDF Standard version {} is not supported by version {} of the asdf library".format(
-            version, asdf.__version__
+            version,
+            asdf.__version__,
         )
         raise ValueError(msg)
 
