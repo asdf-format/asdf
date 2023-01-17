@@ -316,17 +316,12 @@ def yaml_to_asdf(yaml_content, yaml_headers=True, standard_version=None):
 
     if yaml_headers:
         buff.write(
-            """#ASDF {}
-#ASDF_STANDARD {}
-%YAML {}
+            f"""#ASDF {file_format_version}
+#ASDF_STANDARD {standard_version}
+%YAML {yaml_version}
 %TAG ! tag:stsci.edu:asdf/
---- !core/asdf-{}
-""".format(
-                file_format_version,
-                standard_version,
-                yaml_version,
-                tree_version,
-            ).encode(
+--- !core/asdf-{tree_version}
+""".encode(
                 "ascii",
             ),
         )

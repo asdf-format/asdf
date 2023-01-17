@@ -200,14 +200,12 @@ def test_tags_removed_after_load(tmp_path):
 
 
 def test_explicit_tags():
-    yaml = """#ASDF {}
+    yaml = f"""#ASDF {asdf.versioning.default_version}
 %YAML 1.1
 --- !<tag:stsci.edu:asdf/core/asdf-1.0.0>
 foo: !<tag:stsci.edu:asdf/core/ndarray-1.0.0> [1, 2, 3]
 ...
-    """.format(
-        asdf.versioning.default_version,
-    )
+    """
 
     # Check that fully qualified explicit tags work
     buff = helpers.yaml_to_asdf(yaml, yaml_headers=False)

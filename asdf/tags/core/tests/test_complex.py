@@ -7,12 +7,10 @@ from asdf.tests import helpers
 
 
 def make_complex_asdf(string):
-    yaml = """
+    yaml = f"""
 a: !core/complex-1.0.0
-  {}
-    """.format(
-        string,
-    )
+  {string}
+    """
 
     return helpers.yaml_to_asdf(yaml)
 

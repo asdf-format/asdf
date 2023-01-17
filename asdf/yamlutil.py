@@ -181,7 +181,7 @@ class AsdfLoader(_yaml_base_loader):
             raise yaml.ConstructorError(
                 msg,
                 node.start_mark,
-                "expected a sequence, but found %s" % node.id,
+                f"expected a sequence, but found {node.id}",
                 node.start_mark,
             )
         for subnode in node.value:
