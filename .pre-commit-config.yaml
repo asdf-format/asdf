@@ -19,7 +19,7 @@ repos:
       exclude: ".*fits"
 
 - repo: https://github.com/pre-commit/pygrep-hooks
-  rev: v1.9.0
+  rev: v1.10.0
   hooks:
     - id: python-check-blanket-noqa
     - id: python-check-mock-methods
@@ -36,7 +36,7 @@ repos:
         - tomli
 
 - repo: https://github.com/charliermarsh/ruff-pre-commit
-  rev: 'v0.0.216'
+  rev: 'v0.0.223'
   hooks:
     - id: ruff
       args: ["--fix", "--force-exclude"]
@@ -59,7 +59,7 @@ repos:
     - id: black
 
 - repo: https://github.com/asottile/blacken-docs
-  rev: 'v1.12.1'
+  rev: '1.13.0'
   hooks:
     - id: blacken-docs
 
