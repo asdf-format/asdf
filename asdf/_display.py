@@ -229,10 +229,11 @@ class _TreeRenderer:
         prefix = self._make_prefix(info.depth, active_depths, is_tail)
         value = self._render_node_value(info)
 
-        if isinstance(info.parent_node, list) or isinstance(info.parent_node, tuple):
-            line = f"{prefix}[{format_bold(info.identifier)}] {value}"
-        else:
-            line = f"{prefix}{format_bold(info.identifier)} {value}"
+        line = (
+            f"{prefix}[{format_bold(info.identifier)}] {value}"
+            if isinstance(info.parent_node, (list, tuple))
+            else f"{prefix}{format_bold(info.identifier)} {value}"
+        )
 
         if info.info is not None:
             line = line + format_faint(format_italic(" # " + info.info))
@@ -254,7 +255,7 @@ class _TreeRenderer:
         if is_primitive(info.node) and self._show_values:
             return f"({rendered_type}): {info.node}"
 
-        if isinstance(info.node, NDArrayType) or isinstance(info.node, np.ndarray):
+        if isinstance(info.node, (NDArrayType, np.ndarray)):
             return f"({rendered_type}): shape={info.node.shape}, dtype={info.node.dtype.name}"
 
         return f"({rendered_type})"

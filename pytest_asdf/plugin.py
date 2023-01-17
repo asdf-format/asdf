@@ -182,7 +182,7 @@ class SchemaExample:
 
     @property
     def version(self):
-        import asdf.versioning as versioning
+        from asdf import versioning
 
         if self._version is None:
             return versioning.default_version
