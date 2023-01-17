@@ -51,14 +51,14 @@ class Implode(Command):
         return implode(args.filename[0], args.output, args.resolve_references)
 
 
-def implode(input, output=None, resolve_references=False):
+def implode(input_, output=None, resolve_references=False):
     """
     Implode a given ASDF file, which may reference external data, back
     into a single ASDF file.
 
     Parameters
     ----------
-    input : str or file-like object
+    input_ : str or file-like object
         The input file.
 
     output : str of file-like object
@@ -68,9 +68,9 @@ def implode(input, output=None, resolve_references=False):
         If `True` resolve all external references before saving.
     """
     if output is None:
-        base, ext = os.path.splitext(input)
+        base, ext = os.path.splitext(input_)
         output = base + "_all" + ".asdf"
-    with asdf.open(input) as ff:
+    with asdf.open(input_) as ff:
         ff2 = AsdfFile(ff)
         if resolve_references:
             ff2.resolve_references()
@@ -108,21 +108,21 @@ class Explode(Command):
         return explode(args.filename[0], args.output)
 
 
-def explode(input, output=None):
+def explode(input_, output=None):
     """
     Explode a given ASDF file so each data block is in a separate
     file.
 
     Parameters
     ----------
-    input : str or file-like object
+    input_ : str or file-like object
         The input file.
 
     output : str of file-like object
         The output file.
     """
     if output is None:
-        base, ext = os.path.splitext(input)
+        base, ext = os.path.splitext(input_)
         output = base + "_exploded" + ".asdf"
-    with asdf.open(input) as ff:
+    with asdf.open(input_) as ff:
         ff.write_to(output, all_array_storage="external")

@@ -226,10 +226,10 @@ class GenericFile(metaclass=util.InheritDocstrings):
     def __enter__(self):
         return self
 
-    def __exit__(self, type, value, traceback):
+    def __exit__(self, type_, value, traceback):
         if self._close:
             if hasattr(self._fd, "__exit__"):
-                self._fd.__exit__(type, value, traceback)
+                self._fd.__exit__(type_, value, traceback)
             else:
                 self._fd.close()
 
@@ -658,7 +658,7 @@ class GenericWrapper:
     def __enter__(self):
         return self
 
-    def __exit__(self, type, value, traceback):
+    def __exit__(self, type_, value, traceback):
         pass
 
     def __getattr__(self, attr):

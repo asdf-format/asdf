@@ -49,14 +49,14 @@ class ToYaml(Command):
         return to_yaml(args.filename[0], args.output, args.resolve_references)
 
 
-def to_yaml(input, output=None, resolve_references=False):
+def to_yaml(input_, output=None, resolve_references=False):
     """
     Implode a given ASDF file, which may reference external data, back
     into a single ASDF file.
 
     Parameters
     ----------
-    input : str or file-like object
+    input_ : str or file-like object
         The input file.
 
     output : str of file-like object
@@ -66,9 +66,9 @@ def to_yaml(input, output=None, resolve_references=False):
         If `True` resolve all external references before saving.
     """
     if output is None:
-        base, ext = os.path.splitext(input)
+        base, _ = os.path.splitext(input_)
         output = base + ".yaml"
-    with asdf.open(input) as ff:
+    with asdf.open(input_) as ff:
         ff2 = AsdfFile(ff)
         if resolve_references:
             ff2.resolve_references()
