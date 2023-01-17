@@ -243,7 +243,7 @@ def test_asdf_open(tmp_path, dtype):
         compare_asdfs(asdf_in_fits, ff)
 
     # Test open/close without context handler
-    ff = asdf_open(tmpfile)  # noqa: SIM115
+    ff = asdf_open(tmpfile)
     compare_asdfs(asdf_in_fits, ff)
     ff.close()
 
