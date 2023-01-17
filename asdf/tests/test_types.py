@@ -242,7 +242,7 @@ flow_thing:
 
 
 def test_versioned_writing(monkeypatch):
-    from ..tags.core.complex import ComplexType
+    from asdf.tags.core.complex import ComplexType
 
     # Create a bogus version map
     monkeypatch.setitem(

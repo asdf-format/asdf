@@ -4,7 +4,8 @@ This packages contains affiliated package tests.
 
 import numpy as np
 
-from .. import CustomType, util
+from asdf import CustomType, util
+
 from .helpers import get_test_data_path
 
 

@@ -8,8 +8,7 @@ import pytest
 import asdf
 from asdf import compression, config_context, generic_io
 from asdf.extension import Compressor, Extension
-
-from ..tests import helpers
+from asdf.tests import helpers
 
 
 def _get_large_tree():

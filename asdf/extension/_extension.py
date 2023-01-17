@@ -2,7 +2,8 @@ import abc
 
 from packaging.specifiers import SpecifierSet
 
-from ..util import get_class_name
+from asdf.util import get_class_name
+
 from ._compressor import Compressor
 from ._converter import ConverterProxy
 from ._legacy import AsdfExtension

@@ -1,6 +1,6 @@
 import pytest
 
-from .. import find_extensions
+from asdf.commands import find_extensions
 
 
 @pytest.mark.parametrize("summary", [True, False])

@@ -4,7 +4,7 @@ types.  Will eventually replace the `asdf.types` module.
 """
 import abc
 
-from ..util import get_class_name, uri_match
+from asdf.util import get_class_name, uri_match
 
 
 class Converter(abc.ABC):

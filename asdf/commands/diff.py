@@ -30,10 +30,10 @@ except ImportError:
         RESET = ""
 
 import asdf
+from asdf.tagged import Tagged
+from asdf.tags.core.ndarray import NDArrayType
+from asdf.util import human_list
 
-from ..tagged import Tagged
-from ..tags.core.ndarray import NDArrayType
-from ..util import human_list
 from .main import Command
 
 __all__ = ["diff"]

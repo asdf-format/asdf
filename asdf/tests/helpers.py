@@ -22,22 +22,22 @@ except ImportError:
 import yaml
 
 import asdf
-
-from .. import generic_io, versioning
-from ..asdf import AsdfFile, get_asdf_library_info
-from ..block import Block
-from ..constants import YAML_TAG_PREFIX
-from ..exceptions import AsdfConversionWarning
-from ..extension import default_extensions
-from ..resolver import Resolver, ResolverChain
-from ..tags.core import AsdfObject
-from ..versioning import (
+from asdf import generic_io, versioning
+from asdf.asdf import AsdfFile, get_asdf_library_info
+from asdf.block import Block
+from asdf.constants import YAML_TAG_PREFIX
+from asdf.exceptions import AsdfConversionWarning
+from asdf.extension import default_extensions
+from asdf.resolver import Resolver, ResolverChain
+from asdf.tags.core import AsdfObject
+from asdf.versioning import (
     AsdfVersion,
     asdf_standard_development_version,
     get_version_map,
     split_tag_version,
     supported_versions,
 )
+
 from .httpserver import RangeHTTPServer
 
 try:

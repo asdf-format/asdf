@@ -51,7 +51,7 @@ def test_mode_fail(tmp_path):
 
 
 def test_open(tmp_path, small_tree):
-    from .. import open
+    from asdf import open
 
     path = os.path.join(str(tmp_path), "test.asdf")
 

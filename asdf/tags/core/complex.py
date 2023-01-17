@@ -1,7 +1,7 @@
 import numpy as np
 
-from ... import util
-from ...types import AsdfType
+from asdf import util
+from asdf.types import AsdfType
 
 
 class ComplexType(AsdfType):
