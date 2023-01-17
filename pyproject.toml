@@ -191,6 +191,9 @@ extend-exclude = ["asdf/extern/*", "docs/*"]
 "asdf/tests/helpers.py" = ["S101"]
 "compatibility_tests/common.py" = ["S101"]
 
+[tool.flynt]
+exclude = ["asdf/extern/*"]
+
 [tool.codespell]
 skip="*.pdf,*.fits,*.asdf,.tox,asdf/extern,build,./tags,.git,docs/_build"
 ignore-words-list="""

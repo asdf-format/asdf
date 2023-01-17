@@ -294,15 +294,13 @@ def test_reading_extension_metadata():
 
         # Warn when the URI is missing, even if there's
         # a class name match:
-        content = """
+        content = f"""
         history:
           extensions:
             - !core/extension_metadata-1.0.0
               extension_uri: some-missing-URI
-              extension_class: {}
-        """.format(
-            extension_with_uri.class_name,
-        )
+              extension_class: {extension_with_uri.class_name}
+        """
         buff = yaml_to_asdf(content)
         with pytest.warns(AsdfWarning, match=r"URI 'some-missing-URI'"):
             open_asdf(buff)
