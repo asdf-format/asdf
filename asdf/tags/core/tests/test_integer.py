@@ -23,7 +23,6 @@ random.seed(0)
     ],
 )
 def test_integer_value(tmpdir, value, sign):
-
     if sign == "-":
         value = -value
 
@@ -34,7 +33,6 @@ def test_integer_value(tmpdir, value, sign):
 
 @pytest.mark.parametrize("inline", [False, True])
 def test_integer_storage(tmpdir, inline):
-
     tmpfile = str(tmpdir.join("integer.asdf"))
 
     kwargs = {}
@@ -61,7 +59,6 @@ def test_integer_storage(tmpdir, inline):
 
 
 def test_integer_storage_duplication(tmpdir):
-
     tmpfile = str(tmpdir.join("integer.asdf"))
 
     random.seed(0)
@@ -82,7 +79,6 @@ def test_integer_storage_duplication(tmpdir):
 
 
 def test_integer_conversion():
-
     random.seed(0)
     value = random.getrandbits(1000)
 

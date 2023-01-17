@@ -1219,7 +1219,7 @@ class Block:
         """
         if self._data is None:
             if self._fd.is_closed():
-                msg = "ASDF file has already been closed. " "Can not get the data."
+                msg = "ASDF file has already been closed. Can not get the data."
                 raise OSError(msg)
 
             # Be nice and reset the file position after we're done

@@ -53,7 +53,6 @@ def test_history():
 
 
 def test_history_to_file(tmpdir):
-
     tmpfile = str(tmpdir.join("history.asdf"))
 
     with asdf.AsdfFile() as ff:
@@ -124,7 +123,6 @@ def test_get_history_entries(tmpdir):
 
 
 def test_extension_metadata(tmpdir):
-
     ff = asdf.AsdfFile()
 
     tmpfile = str(tmpdir.join("extension.asdf"))
@@ -140,7 +138,6 @@ def test_extension_metadata(tmpdir):
 
 
 def test_missing_extension_warning():
-
     yaml = """
 history:
   extensions:
@@ -158,7 +155,6 @@ history:
 
 
 def test_extension_version_warning():
-
     yaml = """
 history:
   extensions:
@@ -183,7 +179,6 @@ history:
 
 
 def test_strict_extension_check():
-
     yaml = """
 history:
   extensions:

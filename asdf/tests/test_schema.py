@@ -628,7 +628,6 @@ def test_schema_resolved_via_entry_points():
 
 @pytest.mark.parametrize("num", [constants.MAX_NUMBER + 1, constants.MIN_NUMBER - 1])
 def test_max_min_literals(num):
-
     tree = {
         "test_int": num,
     }

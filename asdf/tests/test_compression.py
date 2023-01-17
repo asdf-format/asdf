@@ -150,7 +150,6 @@ def test_input(tmp_path):
 
 
 def test_none(tmp_path):
-
     tree = _get_large_tree()
 
     tmpfile1 = os.path.join(str(tmp_path), "test1.asdf")
@@ -172,7 +171,6 @@ def test_none(tmp_path):
 
 
 def test_set_array_compression(tmp_path):
-
     tmpfile = os.path.join(str(tmp_path), "compressed.asdf")
 
     zlib_data = np.array(list(range(1000)))

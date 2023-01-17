@@ -162,8 +162,7 @@ default_tag_to_url_mapping._resolver = Resolver(DEFAULT_TAG_TO_URL_MAPPING, "tag
 
 def default_resolver(uri):
     warnings.warn(
-        "The 'default_resolver(...)' function is deprecated. Use "
-        "'asdf.extension.get_default_resolver()(...)' instead.",
+        "The 'default_resolver(...)' function is deprecated. Use 'asdf.extension.get_default_resolver()(...)' instead.",
         AsdfDeprecationWarning,
     )
     return default_resolver._resolver(uri)
