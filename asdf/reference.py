@@ -7,6 +7,7 @@ and `JSON Pointer standard <http://tools.ietf.org/html/rfc6901>`__.
 
 import weakref
 from collections.abc import Sequence
+from contextlib import suppress
 
 import numpy as np
 
@@ -29,12 +30,12 @@ def resolve_fragment(tree, pointer):
 
         if isinstance(tree, Sequence):
             # Array indexes should be turned into integers
-            try:
+            with suppress(ValueError):
                 part = int(part)
-            except ValueError:
-                pass
+
         try:
             tree = tree[part]
+
         except (TypeError, LookupError) as err:
             msg = f"Unresolvable reference: '{pointer}'"
             raise ValueError(msg) from err
@@ -107,10 +108,7 @@ class Reference(AsdfType):
 
     @classmethod
     def to_tree(cls, data, ctx):
-        if ctx.uri is not None:
-            uri = generic_io.relative_uri(ctx.uri, data._uri)
-        else:
-            uri = data._uri
+        uri = generic_io.relative_uri(ctx.uri, data._uri) if ctx.uri is not None else data._uri
         return {"$ref": uri}
 
     @classmethod

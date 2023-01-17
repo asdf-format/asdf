@@ -136,15 +136,17 @@ def test_external_reference_invalid_fragment(tmp_path):
 
     tree = {"foo": {"$ref": "external.asdf#/list_of_stuff/a"}}
 
-    with asdf.AsdfFile(tree, uri=util.filepath_to_url(os.path.join(str(tmp_path), "main.asdf"))) as ff:
-        with pytest.raises(ValueError):
-            ff.resolve_references()
+    with asdf.AsdfFile(tree, uri=util.filepath_to_url(os.path.join(str(tmp_path), "main.asdf"))) as ff, pytest.raises(
+        ValueError
+    ):
+        ff.resolve_references()
 
     tree = {"foo": {"$ref": "external.asdf#/list_of_stuff/3"}}
 
-    with asdf.AsdfFile(tree, uri=util.filepath_to_url(os.path.join(str(tmp_path), "main.asdf"))) as ff:
-        with pytest.raises(ValueError):
-            ff.resolve_references()
+    with asdf.AsdfFile(tree, uri=util.filepath_to_url(os.path.join(str(tmp_path), "main.asdf"))) as ff, pytest.raises(
+        ValueError
+    ):
+        ff.resolve_references()
 
 
 def test_make_reference(tmp_path):

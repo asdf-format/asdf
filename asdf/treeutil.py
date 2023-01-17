@@ -282,10 +282,7 @@ def walk_and_modify(top, callback, ignore_implicit_conversion=False, postorder=T
         return result
 
     def _handle_callback(node, json_id):
-        if callback_arity == 1:
-            result = callback(node)
-        else:
-            result = callback(node, json_id)
+        result = callback(node) if callback_arity == 1 else callback(node, json_id)
 
         return _handle_generator(result)
 
@@ -445,7 +442,7 @@ def get_children(node):
     if isinstance(node, dict):
         return list(node.items())
 
-    if isinstance(node, list) or isinstance(node, tuple):
+    if isinstance(node, (list, tuple)):
         return list(enumerate(node))
 
     return []
@@ -466,4 +463,4 @@ def is_container(node):
     bool
         True if node is a container, False otherwise
     """
-    return isinstance(node, dict) or isinstance(node, list) or isinstance(node, tuple)
+    return isinstance(node, (dict, list, tuple))

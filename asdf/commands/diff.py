@@ -332,28 +332,27 @@ def diff(filenames, minimal, iostream=sys.stdout, ignore=None):
         List of JMESPath expressions indicating tree nodes that
         should be ignored.
     """
-    if ignore is None:
-        ignore_expressions = []
-    else:
-        ignore_expressions = [jmespath.compile(e) for e in ignore]
+    ignore_expressions = [] if ignore is None else [jmespath.compile(e) for e in ignore]
 
     try:
-        with asdf.open(filenames[0], _force_raw_types=True) as asdf0:
-            with asdf.open(filenames[1], _force_raw_types=True) as asdf1:
-                ignore_ids = set()
-                for expression in ignore_expressions:
-                    for tree in [asdf0.tree, asdf1.tree]:
-                        result = expression.search(tree)
-                        if result is not None:
-                            ignore_ids.add(id(result))
-                        if isinstance(result, list):
-                            for elem in result:
-                                ignore_ids.add(id(elem))
-                        elif isinstance(result, dict):
-                            for value in result.values():
-                                ignore_ids.add(id(value))
+        with asdf.open(filenames[0], _force_raw_types=True) as asdf0, asdf.open(
+            filenames[1], _force_raw_types=True
+        ) as asdf1:
+            ignore_ids = set()
+            for expression in ignore_expressions:
+                for tree in [asdf0.tree, asdf1.tree]:
+                    result = expression.search(tree)
+                    if result is not None:
+                        ignore_ids.add(id(result))
+                    if isinstance(result, list):
+                        for elem in result:
+                            ignore_ids.add(id(elem))
+                    elif isinstance(result, dict):
+                        for value in result.values():
+                            ignore_ids.add(id(value))
 
-                diff_ctx = DiffContext(asdf0, asdf1, iostream, minimal=minimal, ignore_ids=ignore_ids)
-                compare_trees(diff_ctx, asdf0.tree, asdf1.tree)
+            diff_ctx = DiffContext(asdf0, asdf1, iostream, minimal=minimal, ignore_ids=ignore_ids)
+            compare_trees(diff_ctx, asdf0.tree, asdf1.tree)
+
     except ValueError as err:
         raise RuntimeError(str(err)) from err

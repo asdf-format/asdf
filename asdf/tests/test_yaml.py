@@ -164,13 +164,11 @@ def test_implicit_conversion_warning():
 
     tree = {"val": nt(1, 2, np.ones(3))}
 
-    with pytest.warns(AsdfWarning, match=r"Failed to serialize instance"):
-        with asdf.AsdfFile(tree):
-            pass
+    with pytest.warns(AsdfWarning, match=r"Failed to serialize instance"), asdf.AsdfFile(tree):
+        pass
 
-    with helpers.assert_no_warnings():
-        with asdf.AsdfFile(tree, ignore_implicit_conversion=True):
-            pass
+    with helpers.assert_no_warnings(), asdf.AsdfFile(tree, ignore_implicit_conversion=True):
+        pass
 
 
 @pytest.mark.xfail(reason="pyyaml has a bug and does not support tuple keys")

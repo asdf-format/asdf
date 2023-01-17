@@ -38,10 +38,7 @@ class QueryExtension(Command):  # pragma: no cover
 
 
 def _format_extension(ext):
-    if ext.extension_uri is None:
-        uri = "(none)"
-    else:
-        uri = f"'{ext.extension_uri}'"
+    uri = "(none)" if ext.extension_uri is None else f"'{ext.extension_uri}'"
 
     return f"Extension URI: {uri} package: {ext.package_name} ({ext.package_version}) class: {ext.class_name}"
 

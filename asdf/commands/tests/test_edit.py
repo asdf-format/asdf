@@ -188,9 +188,8 @@ def test_with_blocks_increase_size(tmp_path, create_editor, version, mock_input)
     os.environ["EDITOR"] = create_editor(r"foo: bar", f"foo: {new_value}")
 
     # Abort without updating the file
-    with mock_input(r"\(c\)ontinue or \(a\)bort\?", "a"):
-        with file_not_modified(file_path):
-            assert main.main_from_args(["edit", file_path]) == 1
+    with mock_input(r"\(c\)ontinue or \(a\)bort\?", "a"), file_not_modified(file_path):
+        assert main.main_from_args(["edit", file_path]) == 1
 
     # Agree to allow the file to be rewritten
     with mock_input(r"\(c\)ontinue or \(a\)bort\?", "c"):
@@ -247,9 +246,8 @@ def test_update_asdf_standard_version(tmp_path, create_editor, version, mock_inp
 
     os.environ["EDITOR"] = create_editor(r"^#ASDF_STANDARD .*?$", "#ASDF_STANDARD 999.999.999")
 
-    with file_not_modified(file_path):
-        with mock_input(r"\(c\)ontinue editing or \(a\)bort\?", "a"):
-            assert main.main_from_args(["edit", file_path]) == 1
+    with file_not_modified(file_path), mock_input(r"\(c\)ontinue editing or \(a\)bort\?", "a"):
+        assert main.main_from_args(["edit", file_path]) == 1
 
 
 def test_update_yaml_version(tmp_path, create_editor, version, mock_input):
@@ -261,9 +259,8 @@ def test_update_yaml_version(tmp_path, create_editor, version, mock_input):
 
     os.environ["EDITOR"] = create_editor(r"^%YAML 1.1$", "%YAML 1.2")
 
-    with file_not_modified(file_path):
-        with mock_input(r"\(c\)ontinue editing or \(a\)bort\?", "a"):
-            assert main.main_from_args(["edit", file_path]) == 1
+    with file_not_modified(file_path), mock_input(r"\(c\)ontinue editing or \(a\)bort\?", "a"):
+        assert main.main_from_args(["edit", file_path]) == 1
 
 
 def test_bad_yaml(tmp_path, create_editor, version, mock_input):
@@ -275,9 +272,8 @@ def test_bad_yaml(tmp_path, create_editor, version, mock_input):
 
     os.environ["EDITOR"] = create_editor(r"foo: bar", "foo: [")
 
-    with file_not_modified(file_path):
-        with mock_input(r"\(c\)ontinue editing or \(a\)bort\?", "a"):
-            assert main.main_from_args(["edit", file_path]) == 1
+    with file_not_modified(file_path), mock_input(r"\(c\)ontinue editing or \(a\)bort\?", "a"):
+        assert main.main_from_args(["edit", file_path]) == 1
 
 
 def test_validation_failure(tmp_path, create_editor, version, mock_input):
@@ -289,9 +285,8 @@ def test_validation_failure(tmp_path, create_editor, version, mock_input):
 
     os.environ["EDITOR"] = create_editor(r"byteorder: .*?$", "byteorder: med")
 
-    with file_not_modified(file_path):
-        with mock_input(r"\(c\)ontinue editing, \(f\)orce update, or \(a\)bort\?", "a"):
-            assert main.main_from_args(["edit", file_path]) == 1
+    with file_not_modified(file_path), mock_input(r"\(c\)ontinue editing, \(f\)orce update, or \(a\)bort\?", "a"):
+        assert main.main_from_args(["edit", file_path]) == 1
 
     with mock_input(r"\(c\)ontinue editing, \(f\)orce update, or \(a\)bort\?", "f"):
         assert main.main_from_args(["edit", file_path]) == 0
@@ -310,9 +305,8 @@ def test_asdf_open_failure(tmp_path, create_editor, version, mock_input):
 
     os.environ["EDITOR"] = create_editor(r"^#ASDF .*?$", "#HJKL 1.0.0")
 
-    with file_not_modified(file_path):
-        with mock_input(r"\(c\)ontinue editing or \(a\)bort\?", "a"):
-            assert main.main_from_args(["edit", file_path]) == 1
+    with file_not_modified(file_path), mock_input(r"\(c\)ontinue editing or \(a\)bort\?", "a"):
+        assert main.main_from_args(["edit", file_path]) == 1
 
 
 def test_non_asdf_file(tmp_path):

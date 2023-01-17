@@ -200,7 +200,7 @@ def compare_asdfs(asdf0, asdf1):
     # Make sure the trees match
     assert_tree_match(asdf0.tree, asdf1.tree)
     # Compare the data blocks
-    for key in asdf0.tree["model"].keys():
+    for key in asdf0.tree["model"]:
         assert_array_equal(asdf0.tree["model"][key]["data"], asdf1.tree["model"][key]["data"])
 
 
@@ -222,14 +222,12 @@ def test_asdf_in_fits_open(tmp_path, dtype):
     ff.close()
 
     # Test reading in the file from an already-opened file handle
-    with open(tmpfile, "rb") as handle:
-        with fits_embed.AsdfInFits.open(handle) as ff:
-            compare_asdfs(asdf_in_fits, ff)
+    with open(tmpfile, "rb") as handle, fits_embed.AsdfInFits.open(handle) as ff:
+        compare_asdfs(asdf_in_fits, ff)
 
     # Test opening the file as a FITS file first and passing the HDUList
-    with fits.open(tmpfile) as hdulist:
-        with fits_embed.AsdfInFits.open(hdulist) as ff:
-            compare_asdfs(asdf_in_fits, ff)
+    with fits.open(tmpfile) as hdulist, fits_embed.AsdfInFits.open(hdulist) as ff:
+        compare_asdfs(asdf_in_fits, ff)
 
 
 @pytest.mark.parametrize("dtype", TEST_DTYPES)
@@ -245,14 +243,13 @@ def test_asdf_open(tmp_path, dtype):
         compare_asdfs(asdf_in_fits, ff)
 
     # Test open/close without context handler
-    ff = asdf_open(tmpfile)
+    ff = asdf_open(tmpfile)  # noqa: SIM115
     compare_asdfs(asdf_in_fits, ff)
     ff.close()
 
     # Test reading in the file from an already-opened file handle
-    with open(tmpfile, "rb") as handle:
-        with asdf_open(handle) as ff:
-            compare_asdfs(asdf_in_fits, ff)
+    with open(tmpfile, "rb") as handle, asdf_open(handle) as ff:
+        compare_asdfs(asdf_in_fits, ff)
 
 
 def test_validate_on_read(tmp_path):
@@ -274,9 +271,8 @@ invalid_software: !core/software-1.0.0
 
     for open_method in [asdf.open, fits_embed.AsdfInFits.open]:
         get_config().validate_on_read = True
-        with pytest.raises(ValidationError):
-            with open_method(tmpfile):
-                pass
+        with pytest.raises(ValidationError), open_method(tmpfile):
+            pass
 
         get_config().validate_on_read = False
         with open_method(tmpfile) as af:
@@ -290,9 +286,8 @@ def test_bad_fits_input(tmp_path):
     with open(path, "wb") as f:
         f.write(asdf.constants.FITS_MAGIC)
 
-    with pytest.raises(ValueError):
-        with asdf_open(path):
-            pass
+    with pytest.raises(ValueError), asdf_open(path):
+        pass
 
 
 def test_open_gzipped():
@@ -305,23 +300,23 @@ def test_open_gzipped():
 def test_version_mismatch_file():
     testfile = str(get_test_data_path("version_mismatch.fits"))
 
-    with pytest.warns(AsdfConversionWarning, match=r"tag:stsci.edu:asdf/core/complex"):
-        with asdf.open(testfile, ignore_version_mismatch=False) as fits_handle:
-            assert fits_handle.tree["a"] == complex(0j)
+    with pytest.warns(AsdfConversionWarning, match=r"tag:stsci.edu:asdf/core/complex"), asdf.open(
+        testfile, ignore_version_mismatch=False
+    ) as fits_handle:
+        assert fits_handle.tree["a"] == complex(0j)
 
     # Make sure warning does not occur when warning is ignored (default)
-    with assert_no_warnings(AsdfConversionWarning):
-        with asdf.open(testfile) as fits_handle:
-            assert fits_handle.tree["a"] == complex(0j)
+    with assert_no_warnings(AsdfConversionWarning), asdf.open(testfile) as fits_handle:
+        assert fits_handle.tree["a"] == complex(0j)
 
-    with pytest.warns(AsdfConversionWarning, match=r"tag:stsci.edu:asdf/core/complex"):
-        with fits_embed.AsdfInFits.open(testfile, ignore_version_mismatch=False) as fits_handle:
-            assert fits_handle.tree["a"] == complex(0j)
+    with pytest.warns(AsdfConversionWarning, match=r"tag:stsci.edu:asdf/core/complex"), fits_embed.AsdfInFits.open(
+        testfile, ignore_version_mismatch=False
+    ) as fits_handle:
+        assert fits_handle.tree["a"] == complex(0j)
 
     # Make sure warning does not occur when warning is ignored (default)
-    with assert_no_warnings(AsdfConversionWarning):
-        with fits_embed.AsdfInFits.open(testfile) as fits_handle:
-            assert fits_handle.tree["a"] == complex(0j)
+    with assert_no_warnings(AsdfConversionWarning), fits_embed.AsdfInFits.open(testfile) as fits_handle:
+        assert fits_handle.tree["a"] == complex(0j)
 
 
 def test_serialize_table(tmp_path):
@@ -346,18 +341,15 @@ def test_serialize_table(tmp_path):
 def test_extension_check():
     testfile = get_test_data_path("extension_check.fits")
 
-    with pytest.warns(AsdfWarning, match=r"was created with extension class 'foo.bar.FooBar'"):
-        with asdf.open(testfile):
-            pass
+    with pytest.warns(AsdfWarning, match=r"was created with extension class 'foo.bar.FooBar'"), asdf.open(testfile):
+        pass
 
     # Make sure that suppressing the warning works as well
-    with assert_no_warnings():
-        with asdf.open(testfile, ignore_missing_extensions=True):
-            pass
+    with assert_no_warnings(), asdf.open(testfile, ignore_missing_extensions=True):
+        pass
 
-    with pytest.raises(RuntimeError):
-        with asdf.open(testfile, strict_extension_check=True):
-            pass
+    with pytest.raises(RuntimeError), asdf.open(testfile, strict_extension_check=True):
+        pass
 
 
 @pytest.mark.parametrize("dtype", TEST_DTYPES)

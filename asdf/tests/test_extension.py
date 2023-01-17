@@ -452,9 +452,8 @@ def test_tag_definition():
         "asdf://somewhere.org/extensions/foo/schemas/foo-1.0",
         "asdf://somewhere.org/extensions/foo/schemas/base-1.0",
     ]
-    with pytest.warns(AsdfDeprecationWarning):
-        with pytest.raises(RuntimeError):
-            tag_def.schema_uri
+    with pytest.warns(AsdfDeprecationWarning), pytest.raises(RuntimeError):
+        tag_def.schema_uri
 
     with pytest.raises(ValueError):
         TagDefinition("asdf://somewhere.org/extensions/foo/tags/foo-*")

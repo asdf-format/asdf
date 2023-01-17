@@ -40,8 +40,8 @@ def test_version_and_version_equality():
     assert ver0 is not ver1
     assert ver0 == ver1
     assert ver1 == ver0
-    assert not (ver0 != ver1)
-    assert not (ver1 != ver0)
+    assert not (ver0 != ver1)  # noqa: SIM202
+    assert not (ver1 != ver0)  # noqa: SIM202
 
 
 def test_version_and_string_equality():
@@ -50,8 +50,8 @@ def test_version_and_string_equality():
 
     assert version == string_ver
     assert string_ver == version
-    assert not (version != string_ver)
-    assert not (string_ver != version)
+    assert not (version != string_ver)  # noqa: SIM202
+    assert not (string_ver != version)  # noqa: SIM202
 
 
 def test_version_and_tuple_equality():
@@ -60,8 +60,8 @@ def test_version_and_tuple_equality():
 
     assert version == tuple_ver
     assert tuple_ver == version
-    assert not (version != tuple_ver)
-    assert not (tuple_ver != version)
+    assert not (version != tuple_ver)  # noqa: SIM202
+    assert not (tuple_ver != version)  # noqa: SIM202
 
 
 def test_version_and_version_inequality():
@@ -76,7 +76,7 @@ def test_version_and_version_inequality():
 
     versions = [ver0, ver1, ver2, ver3, ver4, ver5, ver6, ver7]
     for x, y in combinations(versions, 2):
-        assert not (x == y)
+        assert not (x == y)  # noqa: SIM201
         assert x != y
 
     assert ver0 < ver1 < ver2 < ver3 < ver4 < ver5 < ver6 < ver7
@@ -268,7 +268,7 @@ def test_spec_equal():
     assert spec != "1.1.0"
     assert "1.1.0" != spec
     assert spec == "1.3.0"
-    assert "1.3.0" == spec
+    assert "1.3.0" == spec  # noqa: SIM300
 
     assert spec != (1, 1, 0)
     assert (1, 1, 0) != spec

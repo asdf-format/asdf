@@ -89,9 +89,9 @@ class BlockManager:
         if block_set is not None:
             if block in block_set:
                 block_set.remove(block)
-                if block._data is not None:
-                    if id(block._data) in self._data_to_block_mapping:
-                        del self._data_to_block_mapping[id(block._data)]
+                if block._data is not None and id(block._data) in self._data_to_block_mapping:
+                    del self._data_to_block_mapping[id(block._data)]
+
         else:
             msg = f"Unknown array storage type {block.array_storage}"
             raise ValueError(msg)
@@ -204,10 +204,7 @@ class BlockManager:
         Returns `True` if any of the internal blocks currently have an
         offset assigned.
         """
-        for block in self.internal_blocks:
-            if block.offset is not None:
-                return True
-        return False
+        return any(block.offset is not None for block in self.internal_blocks)
 
     def _new_block(self):
         return Block(memmap=self.memmap, lazy_load=self.lazy_load)
@@ -1152,10 +1149,7 @@ class Block:
         """
         self._header_size = self._header.size
 
-        if self._data is not None:
-            data = self._flattened_data
-        else:
-            data = None
+        data = self._flattened_data if self._data is not None else None
 
         flags = 0
         data_size = used_size = allocated_size = 0
@@ -1176,10 +1170,7 @@ class Block:
             msg = f"Block used size {used_size} larger than allocated size {allocated_size}"
             raise RuntimeError(msg)
 
-        if self.checksum is not None:
-            checksum = self.checksum
-        else:
-            checksum = b"\0" * 16
+        checksum = self.checksum if self.checksum is not None else b"\x00" * 16
 
         fd.write(constants.BLOCK_MAGIC)
         fd.write(struct.pack(b">H", self._header_size))

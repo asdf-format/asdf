@@ -154,12 +154,7 @@ class AsdfSearchResult:
         AsdfSearchResult
             the subsequent search result
         """
-        if not (
-            type_ is NotSet
-            or isinstance(type_, str)
-            or isinstance(type_, typing.Pattern)
-            or isinstance(type_, builtins.type)
-        ):
+        if not (isinstance(type_, (str, typing.Pattern, builtins.type)) or type_ is NotSet):
             msg = "type must be NotSet, str, regular expression, or instance of builtins.type"
             raise TypeError(msg)
 
@@ -175,17 +170,17 @@ class AsdfSearchResult:
             if isinstance(key, typing.Pattern):
                 if key.search(str(identifier)) is None:
                     return False
-            elif key is not NotSet:
-                if not self._safe_equals(identifier, key):
-                    return False
+
+            elif key is not NotSet and not self._safe_equals(identifier, key):
+                return False
 
             if isinstance(type_, typing.Pattern):
                 fully_qualified_node_type = self._get_fully_qualified_type(node)
                 if type_.search(fully_qualified_node_type) is None:
                     return False
-            elif isinstance(type_, builtins.type):
-                if not isinstance(node, type_):
-                    return False
+
+            elif isinstance(type_, builtins.type) and not isinstance(node, type_):
+                return False
 
             if isinstance(value, typing.Pattern):
                 if is_container(node):
@@ -197,13 +192,11 @@ class AsdfSearchResult:
                 if value.search(str(node)) is None:
                     return False
 
-            elif value is not NotSet:
-                if not self._safe_equals(node, value):
-                    return False
+            elif value is not NotSet and not self._safe_equals(node, value):
+                return False
 
-            if filter_ is not None:
-                if not filter_(node, identifier):
-                    return False
+            if filter_ is not None and not filter_(node, identifier):
+                return False
 
             return True
 
@@ -364,10 +357,7 @@ class AsdfSearchResult:
             or isinstance(self._node, tuple)
             or NodeSchemaInfo.traversable(self._node)
         ):
-            if NodeSchemaInfo.traversable(self._node):
-                child = self._node.__asdf_traverse__()[key]
-            else:
-                child = self._node[key]
+            child = self._node.__asdf_traverse__()[key] if NodeSchemaInfo.traversable(self._node) else self._node[key]
         else:
             msg = "This node cannot be indexed"
             raise TypeError(msg)
@@ -394,17 +384,9 @@ def _walk_tree_breadth_first(root_identifiers, root_node, callback):
         next_nodes = []
 
         for identifiers, parent, node in current_nodes:
-            if (
-                isinstance(node, dict)
-                or isinstance(node, list)
-                or isinstance(node, tuple)
-                or NodeSchemaInfo.traversable(node)
-            ) and id(node) in seen:
+            if (isinstance(node, (dict, list, tuple)) or NodeSchemaInfo.traversable(node)) and id(node) in seen:
                 continue
-            if NodeSchemaInfo.traversable(node):
-                tnode = node.__asdf_traverse__()
-            else:
-                tnode = node
+            tnode = node.__asdf_traverse__() if NodeSchemaInfo.traversable(node) else node
             children = get_children(tnode)
             callback(identifiers, parent, node, [c for _, c in children])
             next_nodes.extend([(identifiers + [i], node, c) for i, c in children])

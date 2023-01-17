@@ -196,9 +196,8 @@ def validate_remove_default(validator, properties, instance, schema):
         return
 
     for property_, subschema in properties.items():
-        if subschema.get("default", None) is not None:
-            if instance.get(property_, None) == subschema["default"]:
-                del instance[property_]
+        if subschema.get("default", None) is not None and instance.get(property_, None) == subschema["default"]:
+            del instance[property_]
 
     yield from mvalidators.Draft4Validator.VALIDATORS["properties"](validator, properties, instance, schema)
 
@@ -257,7 +256,7 @@ def _create_validator(validators=YAML_VALIDATORS, visit_repeat_nodes=False):
 
     type_checker = mvalidators.Draft4Validator.TYPE_CHECKER.redefine_many(
         {
-            "array": lambda checker, instance: isinstance(instance, list) or isinstance(instance, tuple),
+            "array": lambda checker, instance: isinstance(instance, (list, tuple)),
             "integer": lambda checker, instance: not isinstance(instance, bool) and isinstance(instance, Integral),
             "string": lambda checker, instance: isinstance(instance, (str, np.str_)),
         }
@@ -474,10 +473,7 @@ def _safe_resolve(resolver, json_id, uri):
     # parse correctly.
     parts = uri.split("#")
     base = parts[0]
-    if len(parts) > 1:
-        fragment = parts[1]
-    else:
-        fragment = ""
+    fragment = parts[1] if len(parts) > 1 else ""
 
     # The generic_io.resolve_uri method cannot operate on tag: URIs.
     # New-style extensions don't support $ref with a tag URI target anyway,
