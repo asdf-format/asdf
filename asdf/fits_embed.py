@@ -72,10 +72,11 @@ class _EmbeddedBlockManager(block.BlockManager):
                     pair = (parts.group("name"), ver)
                 else:
                     pair = ver
+
                 return _FitsBlock(self._hdulist[pair])
-            else:
-                msg = f"Can not parse source '{source}'"
-                raise ValueError(msg)
+
+            msg = f"Can not parse source '{source}'"
+            raise ValueError(msg)
 
         return super().get_block(source)
 
@@ -85,8 +86,9 @@ class _EmbeddedBlockManager(block.BlockManager):
                 if hdu is block._hdu:
                     if hdu.name == "":
                         return f"{FITS_SOURCE_PREFIX}{i}"
-                    else:
-                        return f"{FITS_SOURCE_PREFIX}{hdu.name},{hdu.ver}"
+
+                    return f"{FITS_SOURCE_PREFIX}{hdu.name},{hdu.ver}"
+
             msg = "FITS block seems to have been removed"
             raise ValueError(msg)
 
@@ -296,12 +298,14 @@ class AsdfInFits(asdf.AsdfFile):
         # Allow writing to old-style ImageHDU for backwards compatibility
         if use_image_hdu:
             array = np.frombuffer(buff.getvalue(), np.uint8)
+
             return fits.ImageHDU(array, name=ASDF_EXTENSION_NAME)
-        else:
-            data = np.array(buff.getbuffer(), dtype=np.uint8)[None, :]
-            fmt = f"{len(data[0])}B"
-            column = fits.Column(array=data, format=fmt, name="ASDF_METADATA")
-            return fits.BinTableHDU.from_columns([column], name=ASDF_EXTENSION_NAME)
+
+        data = np.array(buff.getbuffer(), dtype=np.uint8)[None, :]
+        fmt = f"{len(data[0])}B"
+        column = fits.Column(array=data, format=fmt, name="ASDF_METADATA")
+
+        return fits.BinTableHDU.from_columns([column], name=ASDF_EXTENSION_NAME)
 
     def _update_asdf_extension(
         self, all_array_storage=None, all_array_compression=None, pad_blocks=False, use_image_hdu=False, **kwargs

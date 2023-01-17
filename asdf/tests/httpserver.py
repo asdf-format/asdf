@@ -22,8 +22,7 @@ def run_server(tmp_path, handler_class, stop_event, queue):  # pragma: no cover
     class HTTPRequestHandler(handler_class):
         def translate_path(self, path):
             path = handler_class.translate_path(self, path)
-            path = os.path.join(tmp_path, os.path.relpath(path, os.getcwd()))
-            return path
+            return os.path.join(tmp_path, os.path.relpath(path, os.getcwd()))
 
     server = socketserver.TCPServer(("127.0.0.1", 0), HTTPRequestHandler)
     domain, port = server.server_address

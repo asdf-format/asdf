@@ -327,8 +327,8 @@ class AsdfFile:
                 )
                 if strict:
                     raise RuntimeError(msg)
-                else:
-                    warnings.warn(msg, AsdfWarning)
+
+                warnings.warn(msg, AsdfWarning)
 
             elif extension.software:
                 # Local extensions may not have a real version.  If the package name changed,
@@ -343,8 +343,8 @@ class AsdfFile:
                     )
                     if strict:
                         raise RuntimeError(msg)
-                    else:
-                        warnings.warn(msg, AsdfWarning)
+
+                    warnings.warn(msg, AsdfWarning)
 
     def _process_plugin_extensions(self):
         """
@@ -453,8 +453,8 @@ class AsdfFile:
     def file_format_version(self):
         if self._file_format_version is None:
             return versioning.AsdfVersion(self.version_map["FILE_FORMAT"])
-        else:
-            return self._file_format_version
+
+        return self._file_format_version
 
     def close(self):
         """
@@ -965,9 +965,11 @@ class AsdfFile:
                     ignore_unrecognized_tag=self._ignore_unrecognized_tag,
                     **kwargs,
                 )
+
             except ValueError:
                 msg = "Input object does not appear to be an ASDF file or a FITS with ASDF extension"
                 raise ValueError(msg) from None
+
             except ImportError:
                 msg = (
                     "Input object does not appear to be an ASDF file. Cannot check "
@@ -975,7 +977,8 @@ class AsdfFile:
                     "installed"
                 )
                 raise ValueError() from None
-        elif file_type == util.FileType.ASDF:
+
+        if file_type == util.FileType.ASDF:
             return cls._open_asdf(
                 self,
                 generic_file,
@@ -987,9 +990,9 @@ class AsdfFile:
                 ignore_missing_extensions=ignore_missing_extensions,
                 **kwargs,
             )
-        else:
-            msg = "Input object does not appear to be an ASDF file or a FITS with ASDF extension"
-            raise ValueError(msg)
+
+        msg = "Input object does not appear to be an ASDF file or a FITS with ASDF extension"
+        raise ValueError(msg)
 
     @classmethod
     def open(  # noqa: A003
@@ -1424,7 +1427,7 @@ class AsdfFile:
         type_index = self.type_index
 
         if not type_index.has_hook(hookname):
-            return
+            return None
 
         def walker(node):
             hook = type_index.get_hook_for_type(hookname, type(node), self.version_string)
@@ -1579,10 +1582,10 @@ class AsdfFile:
             return path.schema_info(
                 key, preserve_list=preserve_list, refresh_extension_manager=refresh_extension_manager
             )
-        else:
-            return node_info.collect_schema_info(
-                key, path, self.tree, preserve_list=preserve_list, refresh_extension_manager=refresh_extension_manager
-            )
+
+        return node_info.collect_schema_info(
+            key, path, self.tree, preserve_list=preserve_list, refresh_extension_manager=refresh_extension_manager
+        )
 
     def info(
         self,

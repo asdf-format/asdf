@@ -62,7 +62,7 @@ class Extension(abc.ABC):
             If str, PEP 440 version specifier.
             If None, support all versions.
         """
-        return None
+        return
 
     @property
     def converters(self):
@@ -129,8 +129,8 @@ class ExtensionProxy(Extension, AsdfExtension):
     def maybe_wrap(cls, delegate):
         if isinstance(delegate, ExtensionProxy):
             return delegate
-        else:
-            return ExtensionProxy(delegate)
+
+        return ExtensionProxy(delegate)
 
     def __init__(self, delegate, package_name=None, package_version=None):
         if not isinstance(delegate, (Extension, AsdfExtension)):
@@ -376,8 +376,8 @@ class ExtensionProxy(Extension, AsdfExtension):
     def __eq__(self, other):
         if isinstance(other, ExtensionProxy):
             return other.delegate is self.delegate
-        else:
-            return False
+
+        return False
 
     def __hash__(self):
         return hash(id(self.delegate))

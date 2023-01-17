@@ -111,8 +111,10 @@ class ObjectWithInfoSupport2:
         self.attribute2 = attribute2
 
     def __asdf_traverse__(self):
-        returnval = {"attribute1": self.attribute1, "attribute2": self.attribute2}
-        return returnval
+        return {
+            "attribute1": self.attribute1,
+            "attribute2": self.attribute2,
+        }
 
 
 class ObjectWithInfoSupport3:
@@ -122,8 +124,10 @@ class ObjectWithInfoSupport3:
         self.attribute_two = attribute_two
 
     def __asdf_traverse__(self):
-        returnval = {"attributeOne": self.attribute_one, "attributeTwo": self.attribute_two}
-        return returnval
+        return {
+            "attributeOne": self.attribute_one,
+            "attributeTwo": self.attribute_two,
+        }
 
 
 def manifest_extension(tmp_path):
@@ -313,8 +317,10 @@ properties:
         types = [ObjectWithInfoSupport2]
 
         def to_yaml_tree(self, obj, tag, ctx):
-            node = {"attribute1": obj.attribute1, "attribute2": obj.attribute2}
-            return node
+            return {
+                "attribute1": obj.attribute1,
+                "attribute2": obj.attribute2,
+            }
 
         def from_yaml_tree(self, node, tag, ctx):
             return ObjectWithInfoSupport(attribute1="value1", attribute2="value2")
@@ -324,8 +330,10 @@ properties:
         types = [ObjectWithInfoSupport3]
 
         def to_yaml_tree(self, obj, tag, ctx):
-            node = {"attributeOne": obj.attribute_one, "attributeTwo": obj.attribute_two}
-            return node
+            return {
+                "attributeOne": obj.attribute_one,
+                "attributeTwo": obj.attribute_two,
+            }
 
         def from_yaml_tree(self, node, tag, ctx):
             return ObjectWithInfoSupport(attribute_one="value1", attribute_two="value2")

@@ -125,6 +125,8 @@ def test_custom_tag():
                 if tag.startswith(prefix):
                     return "http://nowhere.org/schemas/custom" + tag[len(prefix) :]
 
+                return None
+
             return [check]
 
     yaml = """
@@ -525,15 +527,15 @@ def test_supported_versions():
             # Convert old schema to new CustomFlow type
             if cls.version == "1.0.0":
                 return CustomFlow(c=tree["a"], d=tree["b"])
-            else:
-                return CustomFlow(**tree)
+
+            return CustomFlow(**tree)
 
         @classmethod
         def to_tree(cls, data, ctx):
             if cls.version == "1.0.0":
                 return {"a": data.c, "b": data.d}
-            else:
-                return {"c": data.c, "d": data.d}
+
+            return {"c": data.c, "d": data.d}
 
     class CustomFlowExtension(CustomExtension):
         @property

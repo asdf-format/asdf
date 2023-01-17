@@ -102,7 +102,8 @@ class AsdfConfig:
                 result = result and m == mapping
             if package is not None:
                 result = result and m.package_name == package
-            return result
+
+            return result  # noqa: RET504
 
         with self._lock:
             self._resource_mappings = [m for m in self.resource_mappings if not _remove_condition(m)]
@@ -192,7 +193,7 @@ class AsdfConfig:
             if package is not None:
                 result = result and e.package_name == package
 
-            return result
+            return result  # noqa: RET504
 
         with self._lock:
             self._extensions = [e for e in self.extensions if not _remove_condition(e)]
@@ -377,8 +378,8 @@ def get_config():
     """
     if len(_local.config_stack) == 0:
         return _global_config
-    else:
-        return _local.config_stack[-1]
+
+    return _local.config_stack[-1]
 
 
 @contextmanager

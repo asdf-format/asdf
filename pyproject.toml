@@ -191,6 +191,8 @@ select = [
     "ICN", # flake8-import-conventions
     "T20", # flake8-print
     "PT", # flake8-pytest-style
+    "Q", # flake8-quotes
+    "RET", # flake8-return
 ]
 extend-ignore = [
     "B905", # Requires python 3.10 (use zip strict)

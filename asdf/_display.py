@@ -247,16 +247,17 @@ class _TreeRenderer:
             message = " (truncated)"
             line = line[0 : (self._max_cols - len(message))] + format_faint(format_italic(message))
 
-        return line
+        return line  # noqa: RET504
 
     def _render_node_value(self, info):
         rendered_type = type(info.node).__name__
         if is_primitive(info.node) and self._show_values:
             return f"({rendered_type}): {info.node}"
-        elif isinstance(info.node, NDArrayType) or isinstance(info.node, np.ndarray):
+
+        if isinstance(info.node, NDArrayType) or isinstance(info.node, np.ndarray):
             return f"({rendered_type}): shape={info.node.shape}, dtype={info.node.dtype.name}"
-        else:
-            return f"({rendered_type})"
+
+        return f"({rendered_type})"
 
     def _make_prefix(self, depth, active_depths, is_tail):
         """

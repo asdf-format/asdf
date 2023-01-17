@@ -37,8 +37,8 @@ class ResourceMappingProxy(Mapping):
     def maybe_wrap(cls, delegate):
         if isinstance(delegate, ResourceMappingProxy):
             return delegate
-        else:
-            return ResourceMappingProxy(delegate)
+
+        return ResourceMappingProxy(delegate)
 
     def __init__(self, delegate, package_name=None, package_version=None):
         if not isinstance(delegate, Mapping):
@@ -108,8 +108,8 @@ class ResourceMappingProxy(Mapping):
     def __eq__(self, other):
         if isinstance(other, ResourceMappingProxy):
             return other.delegate is self.delegate
-        else:
-            return False
+
+        return False
 
     def __hash__(self):
         return hash(id(self.delegate))
@@ -153,7 +153,7 @@ class ResourceManager(Mapping):
         if isinstance(content, str):
             content = content.encode("utf-8")
 
-        return content
+        return content  # noqa: RET504
 
     def __len__(self):
         return len(self._mappings_by_uri)

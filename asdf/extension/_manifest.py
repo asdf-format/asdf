@@ -74,15 +74,16 @@ class ManifestExtension(Extension):
         version = self._manifest.get("asdf_standard_requirement", None)
         if version is None:
             return None
-        elif isinstance(version, str):
+
+        if isinstance(version, str):
             return f"=={version}"
-        else:
-            specifiers = []
-            for prop, operator in [("gt", ">"), ("gte", ">="), ("lt", "<"), ("lte", "<=")]:
-                value = version.get(prop)
-                if value:
-                    specifiers.append(f"{operator}{value}")
-            return ",".join(specifiers)
+
+        specifiers = []
+        for prop, operator in [("gt", ">"), ("gte", ">="), ("lt", "<"), ("lte", "<=")]:
+            value = version.get(prop)
+            if value:
+                specifiers.append(f"{operator}{value}")
+        return ",".join(specifiers)
 
     @property
     def converters(self):

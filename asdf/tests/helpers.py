@@ -66,8 +66,8 @@ def get_test_data_path(name, module=None):
 
     if name is None or name == "":
         return str(module_root)
-    else:
-        return str(module_root / name)
+
+    return str(module_root / name)
 
 
 def assert_tree_match(old_tree, new_tree, ctx=None, funcname="assert_equal", ignore_keys=None):

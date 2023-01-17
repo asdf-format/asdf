@@ -96,8 +96,8 @@ def relative_uri(source, target):
             relative = os.path.relpath(tu[2], os.path.dirname(su[2]))
     if relative == ".":
         relative = ""
-    relative = patched_urllib_parse.urlunparse(["", "", relative] + extra)
-    return relative
+
+    return patched_urllib_parse.urlunparse(["", "", relative] + extra)
 
 
 class _TruncatedReader:
@@ -134,18 +134,21 @@ class _TruncatedReader:
 
         if nbytes is None:
             content = self._fd.peek()
-        elif nbytes <= len(self._initial_content):
+        elif nbytes > len(self._initial_content):
+            content = self._fd.peek(nbytes - len(self._initial_content) + self._readahead_bytes)
+        else:
             content = self._initial_content[:nbytes]
             self._initial_content = self._initial_content[nbytes:]
+
             return content
-        else:
-            content = self._fd.peek(nbytes - len(self._initial_content) + self._readahead_bytes)
 
         if content == b"":
             if self._exception:
                 msg = f"{self._delimiter_name} not found"
                 raise DelimiterNotFoundError(msg)
+
             self._past_end = True
+
             return content
 
         index = re.search(self._delimiter, content)
@@ -154,15 +157,17 @@ class _TruncatedReader:
                 index = index.end()
             else:
                 index = index.start()
+
             content = content[:index]
             self._past_end = True
-        elif nbytes is None and self._exception:
+
+        elif not (nbytes is None and self._exception):
+            if nbytes:
+                content = content[: nbytes - len(self._initial_content)]
+        else:
             # Read the whole file and didn't find the delimiter
             msg = f"{self._delimiter_name} not found"
             raise DelimiterNotFoundError(msg)
-        else:
-            if nbytes:
-                content = content[: nbytes - len(self._initial_content)]
 
         self._fd.fast_forward(len(content))
 
@@ -174,7 +179,7 @@ class _TruncatedReader:
             self._trailing_content = content[nbytes:]
             content = content[:nbytes]
 
-        return content
+        return content  # noqa: RET504
 
 
 class GenericFile(metaclass=util.InheritDocstrings):
@@ -346,10 +351,11 @@ class GenericFile(metaclass=util.InheritDocstrings):
             cursor = self.tell()
             content = self.read(size)
             self.seek(cursor, SEEK_SET)
+
             return content
-        else:
-            msg = "Non-seekable file"
-            raise RuntimeError(msg)
+
+        msg = "Non-seekable file"
+        raise RuntimeError(msg)
 
     def seek(self, offset, whence=0):
         """
@@ -587,8 +593,8 @@ class GenericFile(metaclass=util.InheritDocstrings):
         except DelimiterNotFoundError as e:
             if exception:
                 raise e
-            else:
-                return False
+
+            return False
 
     def fast_forward(self, size):
         """
@@ -773,8 +779,7 @@ class RealFile(RandomAccessFile):
             nbytes = self._fd.tell()
             self._fd.seek(loc, 0)
             self._mmap = mmap.mmap(self._fd.fileno(), nbytes, access=acc)
-        arr = np.ndarray.__new__(np.memmap, shape=size, offset=offset, dtype="uint8", buffer=self._mmap)
-        return arr
+        return np.ndarray.__new__(np.memmap, shape=size, offset=offset, dtype="uint8", buffer=self._mmap)
 
     def close_memmap(self):
         if hasattr(self, "_mmap"):
@@ -842,21 +847,27 @@ class InputStream(GenericFile):
         len_buffer = len(self._buffer)
         if len_buffer == 0:
             return self._fd.read(size)
-        elif size < 0:
+
+        if size < 0:
             self._buffer += self._fd.read()
             buffer = self._buffer
             self._buffer = b""
+
             return buffer
-        elif len_buffer < size:
+
+        if len_buffer < size:
             if len_buffer < size:
                 self._buffer += self._fd.read(size - len(self._buffer))
+
             buffer = self._buffer
             self._buffer = b""
+
             return buffer
-        else:
-            buffer = self._buffer[:size]
-            self._buffer = self._buffer[size:]
-            return buffer
+
+        buffer = self._buffer[:size]
+        self._buffer = self._buffer[size:]
+
+        return buffer
 
     def reader_until(
         self, delimiter, readahead_bytes, delimiter_name=None, include=True, initial_content=b"", exception=True
@@ -1036,20 +1047,24 @@ def get_file(init, mode="r", uri=None, close=False):
         if mode not in init.mode:
             msg = f"File is opened as '{init.mode}', but '{mode}' was requested"
             raise ValueError(msg)
+
         return GenericWrapper(init)
 
-    elif isinstance(init, (str, pathlib.Path)):
+    if isinstance(init, (str, pathlib.Path)):
         parsed = patched_urllib_parse.urlparse(str(init))
         if parsed.scheme in ["http", "https"]:
             if "w" in mode:
                 msg = "HTTP connections can not be opened for writing"
                 raise ValueError(msg)
+
             return _http_to_temp(init, mode, uri=uri)
-        elif parsed.scheme in _local_file_schemes:
+
+        if parsed.scheme in _local_file_schemes:
             if mode == "rw":
                 realmode = "r+b"
             else:
                 realmode = mode + "b"
+
             # Windows paths are not URIs, and so they should not be parsed as
             # such. Otherwise, the drive component of the path can get lost.
             # This is not an ideal solution, but we can't use pathlib here
@@ -1062,17 +1077,18 @@ def get_file(init, mode="r", uri=None, close=False):
                 fd = atomicfile.atomic_open(realpath, realmode)
             else:
                 fd = open(realpath, realmode)
+
             fd = fd.__enter__()
             return RealFile(fd, mode, close=True, uri=uri)
 
-    elif isinstance(init, io.BytesIO):
+    if isinstance(init, io.BytesIO):
         return MemoryIO(init, mode, uri=uri)
 
-    elif isinstance(init, io.StringIO):
+    if isinstance(init, io.StringIO):
         msg = "io.StringIO objects are not supported.  Use io.BytesIO instead."
         raise TypeError(msg)
 
-    elif isinstance(init, io.IOBase):
+    if isinstance(init, io.IOBase):
         if ("r" in mode and not init.readable()) or ("w" in mode and not init.writable()):
             msg = f"File is opened as '{init.mode}', but '{mode}' was requested"
             raise ValueError(msg)
@@ -1082,36 +1098,39 @@ def get_file(init, mode="r", uri=None, close=False):
                 init2 = init.raw
             else:
                 init2 = init
+
             if hasattr(init2, "getvalue"):
                 result = MemoryIO(init2, mode, uri=uri)
             else:
                 result = RealFile(init2, mode, uri=uri, close=close)
+
             result._secondary_fd = init
             return result
-        else:
-            if mode == "w":
-                return OutputStream(init, uri=uri, close=close)
-            elif mode == "r":
-                return InputStream(init, mode, uri=uri, close=close)
-            else:
-                msg = f"File '{init}' could not be opened in 'rw' mode"
-                raise ValueError(msg)
 
-    elif mode == "w" and (hasattr(init, "write") and hasattr(init, "seek") and hasattr(init, "tell")):
+        if mode == "w":
+            return OutputStream(init, uri=uri, close=close)
+
+        if mode == "r":
+            return InputStream(init, mode, uri=uri, close=close)
+
+        msg = f"File '{init}' could not be opened in 'rw' mode"
+        raise ValueError(msg)
+
+    if mode == "w" and (hasattr(init, "write") and hasattr(init, "seek") and hasattr(init, "tell")):
         return MemoryIO(init, mode, uri=uri)
 
-    elif mode == "r" and (hasattr(init, "read") and hasattr(init, "seek") and hasattr(init, "tell")):
+    if mode == "r" and (hasattr(init, "read") and hasattr(init, "seek") and hasattr(init, "tell")):
         return MemoryIO(init, mode, uri=uri)
 
-    elif mode == "rw" and (
+    if mode == "rw" and (
         hasattr(init, "read") and hasattr(init, "write") and hasattr(init, "seek") and hasattr(init, "tell")
     ):
         return MemoryIO(init, mode, uri=uri)
 
-    elif mode == "w" and hasattr(init, "write"):
+    if mode == "w" and hasattr(init, "write"):
         return OutputStream(init, uri=uri, close=close)
 
-    elif mode == "r" and hasattr(init, "read"):
+    if mode == "r" and hasattr(init, "read"):
         return InputStream(init, mode, uri=uri, close=close)
 
     msg = f"Can't handle '{init}' as a file for mode '{mode}'"

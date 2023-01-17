@@ -730,13 +730,11 @@ def test_blocksize(tree, tmp_path):
     path = os.path.join(str(tmp_path), "test.asdf")
 
     def get_write_fd():
-        f = generic_io.get_file(open(path, "wb"), mode="w", close=True)
-        return f
+        return generic_io.get_file(open(path, "wb"), mode="w", close=True)
 
     def get_read_fd():
         # Must open with mode=rw in order to get memmapped data
-        f = generic_io.get_file(open(path, "r+b"), mode="rw", close=True)
-        return f
+        return generic_io.get_file(open(path, "r+b"), mode="rw", close=True)
 
     with config_context() as config:
         config.io_block_size = 1233  # make sure everything works with a strange blocksize
