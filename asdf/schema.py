@@ -349,7 +349,7 @@ def _load_schema(url):
         else:
             # The following call to yaml.load is safe because we're
             # using a loader that inherits from pyyaml's SafeLoader.
-            result = yaml.load(fd, Loader=yamlutil.AsdfLoader)  # nosec  # noqa: S506
+            result = yaml.load(fd, Loader=yamlutil.AsdfLoader)  # noqa: S506
     return result, fd.uri
 
 
@@ -371,7 +371,7 @@ def _make_schema_loader(resolver):
             # doesn't mind.
             # The following call to yaml.load is safe because we're
             # using a loader that inherits from pyyaml's SafeLoader.
-            result = yaml.load(content, Loader=yamlutil.AsdfLoader)  # nosec  # noqa: S506
+            result = yaml.load(content, Loader=yamlutil.AsdfLoader)  # noqa: S506
             return result, url
 
         # If not, this must be a URL (or missing).  Fall back to fetching

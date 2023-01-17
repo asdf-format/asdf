@@ -45,7 +45,7 @@ def get_version_map(version):
         uri = f"http://stsci.edu/schemas/asdf/version_map-{version}"
         # The following call to yaml.load is safe because we're
         # using a loader that inherits from pyyaml's SafeLoader.
-        version_map = yaml.load(get_config().resource_manager[uri], Loader=_yaml_base_loader)  # nosec  # noqa: S506
+        version_map = yaml.load(get_config().resource_manager[uri], Loader=_yaml_base_loader)  # noqa: S506
 
         # Separate the core tags from the rest of the standard for convenience
         version_map["core"] = {}
