@@ -205,7 +205,6 @@ select = [
 extend-ignore = [
     "B905", # Requires python 3.10 (use zip strict)
     "PT011", # `pytest.raises(...)` is too broad, set the `match` parameter or use a more specific exception
-    "PLR1701", # Merge these isinstance calls
     "PLR2004", # Magic value used in comparison
     "PLC2201", # Comparison should be variable then constant
     "PLR0402", # Use from instead of alias
