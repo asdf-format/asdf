@@ -202,6 +202,7 @@ select = [
     "PGH", # pygrep-hooks
     "PLC", "PLE", "PLR", "PLW", # Pylint
     "PIE", # flake8-pie
+    "RUF",
 ]
 extend-ignore = [
     "B905", # Requires python 3.10 (use zip strict)

@@ -527,7 +527,7 @@ class NDArrayType(AsdfType):
                 # This line is safe because this is actually a piece of test
                 # code, even though it lives in this file:
                 msg = "arrays not equal"
-                raise AssertionError(msg)  # noqa: S101
+                raise AssertionError(msg)
             for a, b in zip(old, new):
                 cls._assert_equality(a, b, func)
         else:

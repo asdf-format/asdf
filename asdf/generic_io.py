@@ -366,7 +366,7 @@ class GenericFile(metaclass=util.InheritDocstrings):
             SEEK_SET or 0 (absolute file positioning); other values
             are SEEK_CUR or 1 (seek relative to the current
             position) and SEEK_END or 2 (seek relative to the
-            file’s end).
+            file`s end).
         """
         result = self._fd.seek(offset, whence)
         self.tell()
