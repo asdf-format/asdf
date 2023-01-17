@@ -16,9 +16,9 @@ class AsdfExtension(metaclass=abc.ABCMeta):
     """
 
     @classmethod
-    def __subclasshook__(cls, C):
+    def __subclasshook__(cls, class_):
         if cls is AsdfExtension:
-            return hasattr(C, "types") and hasattr(C, "tag_mapping")
+            return hasattr(class_, "types") and hasattr(class_, "tag_mapping")
         return NotImplemented
 
     @property

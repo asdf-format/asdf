@@ -63,7 +63,7 @@ class ExternalArrayReference(AsdfType):
         return all((uri, target, dtype, shape))
 
     @classmethod
-    def to_tree(self, data, ctx):
+    def to_tree(cls, data, ctx):
         node = {}
         node["fileuri"] = data.fileuri
         node["target"] = data.target

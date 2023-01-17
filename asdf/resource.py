@@ -34,7 +34,7 @@ class ResourceMappingProxy(Mapping):
     """
 
     @classmethod
-    def maybe_wrap(self, delegate):
+    def maybe_wrap(cls, delegate):
         if isinstance(delegate, ResourceMappingProxy):
             return delegate
         else:

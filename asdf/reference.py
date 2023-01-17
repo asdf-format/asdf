@@ -104,7 +104,7 @@ class Reference(AsdfType):
         return item in self._get_target()
 
     @classmethod
-    def to_tree(self, data, ctx):
+    def to_tree(cls, data, ctx):
         if ctx.uri is not None:
             uri = generic_io.relative_uri(ctx.uri, data._uri)
         else:
@@ -112,7 +112,7 @@ class Reference(AsdfType):
         return {"$ref": uri}
 
     @classmethod
-    def validate(self, data):
+    def validate(cls, data):
         pass
 
 
