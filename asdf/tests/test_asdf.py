@@ -217,7 +217,8 @@ def test_block_manager_from_serialization_context():
     ctx = af._create_serialization_context()
     # accessing the block manager should issue a AsdfProvisionalAPIWarning
     with pytest.warns(
-        AsdfProvisionalAPIWarning, match=r"The block_manager API within a SerializationContext  is not yet stable"
+        AsdfProvisionalAPIWarning,
+        match=r"The block_manager API within a SerializationContext  is not yet stable",
     ):
         assert ctx.block_manager == af.blocks
 

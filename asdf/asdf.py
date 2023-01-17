@@ -1892,7 +1892,8 @@ class SerializationContext:
     @property
     def block_manager(self):
         warnings.warn(
-            "The block_manager API within a SerializationContext  is not yet stable", AsdfProvisionalAPIWarning
+            "The block_manager API within a SerializationContext  is not yet stable",
+            AsdfProvisionalAPIWarning,
         )
         return self._block_manager
 
