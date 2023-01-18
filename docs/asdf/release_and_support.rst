@@ -81,3 +81,22 @@ CPython and Numpy Drop Schedule
   On Dec 18, 2024 drop support for NumPy 1.24 (initially released on Dec 18, 2022)
   On Apr 04, 2025 drop support for Python 3.10 (initially released on Oct 04, 2021)
   On Apr 24, 2026 drop support for Python 3.11 (initially released on Oct 24, 2022)
+
+.. _support_for_other_dependencies:
+
+Support for Other Dependencies
+------------------------------
+
+ASDF also depends on several other Python packages. We currently do not have a
+formal policy for how long we intend to support these dependencies. However, we
+will try to support as many versions of these dependencies as possible.
+
+In general, we will pin each of these dependencies from below with the oldest
+version that we guarantee will work with ASDF. We will also try to test against
+the latest version of each of these dependencies and release bugfixes to supported
+versions of ASDF on an as-needed basis. We will try our best to announce when we
+need to bump the support of these dependencies, and will always record doing so
+(and why) in the changelog.
+
+If you find any issues with ASDF dependencies which effects a currently supported
+version of ASDF please open an issue on ASDF.
