@@ -83,6 +83,7 @@ Resources
 
   asdf/contributing
   asdf/CODE_OF_CONDUCT.md
+  asdf/release_and_support
   asdf/changes
   asdf/citation
 
