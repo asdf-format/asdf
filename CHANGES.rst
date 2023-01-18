@@ -8,6 +8,8 @@ The ASDF Standard is at v1.6.0
   may undergo breaking changes but are likely to be included as stable
   features (without this warning) in a future version of ASDF [#1295]
 - Add AsdfDeprecationWarning to AsdfFile.blocks [#1336]
+- Document policy for ASDF release cycle including when support for ASDF versions
+  end. Also document dependency support policy. [#1323]
 
 2.14.3 (2022-12-15)
 -------------------
