@@ -42,6 +42,9 @@ class BlockManager:
         self._lazy_load = lazy_load
         self._internal_blocks_mapped = False
 
+        self._storage_settings = {}
+        self._compression_settings = {}
+
     def __len__(self):
         """
         Return the total number of blocks being managed.
@@ -558,8 +561,13 @@ class BlockManager:
         reserved_blocks = set()
 
         for node in treeutil.iter_tree(tree):
-            # check that this object will not be handled by a converter
-            if not ctx.extension_manager.handles_type(type(node)):
+            if ctx.extension_manager.handles_type(type(node)):
+                converter = ctx.extension_manager.get_converter_for_type(type(node))
+                tag = converter.select_tag(node, ctx)
+                sctx = ctx._create_serialization_context()
+                for blk in converter.reserve_blocks(node, tag, sctx):
+                    reserved_blocks.add(blk)
+            else:
                 hook = ctx._type_index.get_hook_for_type("reserve_blocks", type(node), ctx.version_string)
                 if hook is not None:
                     for block in hook(node, ctx):
@@ -747,7 +755,6 @@ class BlockManager:
         block = Block(base)
         self.add(block)
         self._handle_global_block_settings(block)
-
         return block
 
     def find_or_create_block(self, key):
@@ -773,6 +780,10 @@ class BlockManager:
         self._handle_global_block_settings(block)
 
         return block
+
+    def identify_block(self, source, key):
+        block = self.get_block(source)
+        self._data_to_block_mapping[key] = block
 
     def get_streamed_block(self):
         """

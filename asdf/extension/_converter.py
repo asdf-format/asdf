@@ -150,6 +150,60 @@ class Converter(abc.ABC):
             or a generator that yields such an instance.
         """
 
+    def reserve_blocks(self, obj, tag, ctx):
+        """
+        Reserve any number of blocks in which data (ndarrays) can be
+        stored.
+
+        For each block that will be used for this obj, first call
+        ctx.reserve_block(lookup_key, data_callback) with a hashable
+        unique lookup_key (for an ndarray, use the id of the base array)
+        and a data_callback that when called will return a ndarray
+        to write to the block. This function will return a asdf.block.Block
+        that should be included in the list returned by this method.
+        The index of this block can later (in to_yaml_tree) be retrieved
+        using ctx.find_block_index.
+
+        Parameters
+        ----------
+        obj : object
+            Instance of a custom type to be serialized.  Guaranteed to
+            be an instance of one of the types listed in the `types`
+            property.
+        tag : str
+            The tag identifying the YAML type that ``obj`` should be
+            converted into.  Selected by a call to this converter's
+            select_tag method.
+        ctx : asdf.asdf.SerializationContext
+            The context of the current serialization request.
+
+        Returns
+        ------
+        blocks : list of asdf.block.Block
+            The blocks that were reserved for obj
+        """
+        return []
+
+    def get_block_lookup_keys(self, obj, storage=None):
+        """
+        Fetch the list of block lookup keys for this object.  For
+        objects without a binary block, this should return an
+        empty list.
+
+        Parameters
+        ----------
+        obj : object
+            Instance of a custom type
+
+        storage : str
+            Block storage type to use for this object or None
+
+        Returns
+        -------
+        list of hashable
+        """
+        return []
+
 
 class ConverterProxy(Converter):
     """
@@ -277,6 +331,22 @@ class ConverterProxy(Converter):
         object
         """
         return self._delegate.from_yaml_tree(node, tag, ctx)
+
+    def reserve_blocks(self, obj, tag, ctx):
+        """
+        TODO
+        """
+        if hasattr(self._delegate, "reserve_blocks"):
+            return self._delegate.reserve_blocks(obj, tag, ctx)
+        return []
+
+    def get_block_lookup_keys(self, obj, storage=None):
+        """
+        TODO
+        """
+        if hasattr(self._delegate, "get_block_lookup_keys"):
+            return self._delegate.get_block_lookup_keys(obj, storage)
+        return []
 
     @property
     def delegate(self):

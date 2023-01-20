@@ -748,6 +748,54 @@ class AsdfFile:
         """
         return self._blocks[arr].array_storage
 
+    def set_block_storage(self, obj, storage):
+        """
+        Set the block storage type to use for the given binary object's data.
+
+        Parameters
+        ----------
+        obj : object
+            ASDF-serializable object.
+
+        storage : str
+            Must be one of:
+
+            - ``internal``: The default.  The data will be
+              stored in a binary block in the same ASDF file.
+
+            - ``external``: Store the data in a binary block in a
+              separate ASDF file.
+
+            - ``inline``: Store the data as YAML inline in the tree.  This option
+              may not be implemented for all object types.
+        """
+        self._blocks._storage_settings[id(obj)] = storage
+        # # TODO this doesn't have a serialization context because one
+        # # hasn't been created. It might be cleaner to move the actual block
+        # # creation to somewhere the serialization is available perhaps by
+        # # saving the storage setting in the serialization context
+        # if len(keys) == 0:
+
+        # for key in keys:
+
+    def get_block_storage(self, obj):
+        """
+        Get the block storage type for the given binary object's data.
+
+        Parameters
+        ----------
+        obj : object
+            ASDF-serializable object.
+
+        Returns
+        -------
+        str or None
+        """
+        return self._blocks._storage_settings.get(id(obj), None)
+        # if len(keys) == 0:
+
+        # # TODO remove assumption that all keys have same storage
+
     def set_array_compression(self, arr, compression, **compression_kwargs):
         """
         Set the compression to use for the given array data.
@@ -794,6 +842,54 @@ class AsdfFile:
     def get_array_compression_kwargs(self, arr):
         """ """
         return self._blocks[arr].output_compression_kwargs
+
+    def set_block_compression(self, obj, compression, **compression_kwargs):
+        """
+        Set the compression to use for the given object's block data.
+
+        Parameters
+        ----------
+        obj : object
+            ASDF-serializable object.
+
+        compression : str or None
+            Must be one of:
+
+            - ``''`` or `None`: no compression
+
+            - ``zlib``: Use zlib compression
+
+            - ``bzp2``: Use bzip2 compression
+
+            - ``lz4``: Use lz4 compression
+
+            - ``input``: Use the same compression as in the file read.
+              If there is no prior file, acts as None.
+
+        **kwargs
+            Additional compressor-specific arguments.
+
+        """
+        self._blocks._compression_settings[id(obj)] = (compression, compression_kwargs)
+        # if len(keys) == 0:
+
+        # for key in keys:
+
+    def get_block_compression(self, obj):
+        """
+        Get the compression type and arguments for the given object's block data.
+
+        Parameters
+        ----------
+        obj : object
+            ASDF-serializable object.
+
+        Returns
+        -------
+        (str, dict)
+        """
+        return self._blocks._compression_settings.get(id(obj), (None, {}))
+        # if len(keys) == 0:
 
     @classmethod
     def _parse_header_line(cls, line):
@@ -1721,7 +1817,7 @@ class AsdfFile:
     # This function is called from within yamlutil methods to create
     # a context when one isn't explicitly passed in.
     def _create_serialization_context(self):
-        return SerializationContext(self.version_string, self.extension_manager, self.uri)
+        return SerializationContext(self.version_string, self.extension_manager, self.uri, self._blocks)
 
 
 def _check_and_set_mode(fileobj, asdf_mode):
@@ -1890,10 +1986,11 @@ class SerializationContext:
     Container for parameters of the current (de)serialization.
     """
 
-    def __init__(self, version, extension_manager, url):
+    def __init__(self, version, extension_manager, url, block_manager):
         self._version = validate_version(version)
         self._extension_manager = extension_manager
         self._url = url
+        self._block_manager = block_manager
 
         self.__extensions_used = set()
 
@@ -1954,3 +2051,140 @@ class SerializationContext:
         set of asdf.extension.AsdfExtension or asdf.extension.Extension
         """
         return self.__extensions_used
+
+    def load_block(self, block_index):
+        """
+        Parameters
+        ----------
+        block_index : int
+
+        Returns
+        -------
+        block_data : ndarray
+        """
+        return self._block_manager.get_block(block_index).data
+
+    def _find_block(self, lookup_key, data_callback=None):
+        blk = self._block_manager.find_or_create_block(lookup_key)
+        if data_callback is not None:
+            blk._data_callback = data_callback
+        return blk
+
+    def reserve_block(self, lookup_key, data_callback):
+        """
+        Reserve a block that will at some point in the future contain
+        data returned when the data_callback is called. This is typically
+        used inside asdf.extension.Converter.reserve_blocks
+
+        Parameters
+        ----------
+        lookup_key : hashable
+            Unique key used to reserve and later retrieve the index
+            of a block. For ndarrays this is typically the id of the base
+            ndarray.
+
+        data_callback: callable
+            Callable that when called will return data (ndarray) that will
+            be written to a block
+
+        Returns
+        -------
+        block : asdf.block.Block
+            The block which has been reserved for use.
+        """
+        # as this is typically called in Converter.reserve_blocks, so
+        # prior to serializing the tree (prior to Converter.to_yaml_tree)
+        # note that this will not be called prior to AsdfFile.validate or
+        # AsdfFile.fill/remove_defaults
+
+        # find a block (if there is one). If not, add a block
+        return self._find_block(lookup_key, data_callback)
+
+    def identify_block(self, source, lookup_key):
+        """
+        Associate a block with a lookup key.  This is used to associate binary
+        blocks with their Python objects so that the same blocks can be reused
+        when the ASDF file is updated.
+
+        Parameters
+        ----------
+        source : str or int
+            Block source.
+
+        lookup_key : hashable
+            Unique key used to retrieve a block.  For ndarrays this is
+            typically the id of the base ndarray.
+        """
+        self._block_manager.identify_block(source, lookup_key)
+
+    def find_block_index(self, lookup_key, data_callback=None):
+        """
+        Find the index of a previously allocated or reserved block.
+        This is typically used inside asdf.extension.Converter.to_yaml_tree
+
+        Parameters
+        ----------
+        lookup_key : hashable
+            Unique key used to retrieve the index of a block that was
+            previously allocated or reserved. For ndarrays this is
+            typically the id of the base ndarray.
+
+        data_callback: callable, optional
+            Callable that when called will return data (ndarray) that will
+            be written to a block.
+
+        Returns
+        -------
+        block_index: int
+            Index of the block where data returned from data_callback
+            will be written.
+        """
+        # see notes in test_block_converter
+        #
+        # we want the index of a block but we can't write the block and shouldn't
+        # access the data.
+        #
+        # this could be called during write_to/update OR fill_defaults OR validate
+        #
+        # for write_to/update we need a valid index that at a later point will be used
+        # to write the data.
+        #
+        # if this is called from fill_defaults we need to generate an index that will point
+        # back to the correct block that was used when the file was read. I'm not sure how we
+        # would do this. Perhaps temporarily resolve the data callback to get id(data) and
+        # use block_manager._data_to_block_mapping to look up the block?
+        #
+        # on validate we may or may not have blocks, if we don't have a block, make one?
+        #
+        # for now, assuming we're writing a fresh file with write_to
+        blk = self._find_block(lookup_key, data_callback)
+        return self._block_manager.get_source(blk)
+
+    def get_block_storage_settings(self, lookup_key):
+        """
+        TODO
+        TODO add corresponding set
+        """
+        return self._block_manager._storage_settings.get(lookup_key, None)
+
+    def get_block_compression_settings(self, lookup_key):
+        """
+        TODO
+        TODO add corresponding set
+        """
+        return self._block_manager._compression_settings.get(lookup_key, None)
+
+    def set_block_storage_settings(self, lookup_key, storage):
+        """
+        TODO
+        TODO add corresponding set
+        """
+        self._block_manager._storage_settings[lookup_key] = storage
+
+    def set_block_compression_settings(self, lookup_key, compression, compression_kwargs=None):
+        """
+        TODO
+        TODO add corresponding set
+        """
+        compression_kwargs = compression_kwargs or {}
+        self._block_manager._compression_settings[lookup_key] = (compression, compression_kwargs)
