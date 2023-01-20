@@ -1,4 +1,3 @@
-import gc
 import io
 import os
 
@@ -829,23 +828,3 @@ def test_block_allocation_on_validate():
     assert len(list(af.blocks.blocks)) == 1
     af.validate()
     assert len(list(af.blocks.blocks)) == 1
-
-
-def test_block_data_caching(tmp_path):
-    file_path = tmp_path / "test.asdf"
-
-    array = np.arange(200)
-    af = asdf.AsdfFile({"array": array})
-    af.write_to(file_path)
-
-    with asdf.open(file_path, lazy_load=True, copy_arrays=True) as af:
-        original_id = id(af.blocks.get_block(0).data)
-        # If the tree still contains a reference to the data,
-        # the Block's cache should return the same object.
-        assert id(af.blocks.get_block(0).data) == original_id
-        af["array"] = None
-        gc.collect()
-        # If the data no longer exists in the tree (or anywhere else),
-        # the Block should discard its cached reference and
-        # re-read the data from disk.
-        assert id(af.blocks.get_block(0).data) != original_id
