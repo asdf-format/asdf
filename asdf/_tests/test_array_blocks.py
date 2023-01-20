@@ -830,3 +830,47 @@ def test_block_allocation_on_validate():
     assert len(list(af._blocks.blocks)) == 1
     af.validate()
     assert len(list(af._blocks.blocks)) == 1
+
+
+@pytest.mark.parametrize("memmap", [True, False])
+@pytest.mark.parametrize("lazy_load", [True, False])
+def test_data_callback(tmp_path, memmap, lazy_load):
+    class Callback:
+        def __init__(self, data):
+            self.n_calls = 0
+            self.data = data
+
+        def __call__(self):
+            self.n_calls += 1
+            return self.data
+
+    arr = np.array([1, 2, 3], dtype="uint8")
+    callback = Callback(arr)
+    b = block.Block(memmap=memmap, lazy_load=lazy_load, data_callback=callback)
+
+    assert callback.n_calls == 0
+    assert b.data is arr
+    assert callback.n_calls == 1
+    assert b._data is None
+    assert b.data is arr
+    assert callback.n_calls == 2
+
+    fn = tmp_path / "test.b"
+    with generic_io.get_file(fn, mode="w") as f:
+        b.write(f)
+    assert callback.n_calls == 3
+
+    with generic_io.get_file(fn, mode="r") as f:
+        rb = block.Block(memmap=memmap, lazy_load=lazy_load)
+        rb.read(f, past_magic=False)
+        assert_array_equal(rb.data, arr)
+
+    with pytest.raises(ValueError, match=r"Block.__init__ cannot contain non-None data and a non-None data_callback"):
+        b = block.Block(data=arr, memmap=memmap, lazy_load=lazy_load, data_callback=callback)
+
+    rb = block.Block(memmap=memmap, lazy_load=lazy_load, data_callback=callback)
+    with pytest.raises(RuntimeError, match=r"read called on a Block with a data_callback"), generic_io.get_file(
+        fn,
+        mode="r",
+    ) as f:
+        rb.read(f, past_magic=False)
