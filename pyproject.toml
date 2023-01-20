@@ -14,6 +14,7 @@ dependencies = [
   "jmespath>=0.6.2",
   "jsonschema>=4.0.1",
   "numpy>=1.18",
+  'numpy<1.25,>=1.18; python_version < "3.9"',
   "packaging>=16",
   "pyyaml>=3.10",
   "semantic_version>=2.8",
