@@ -53,7 +53,7 @@ class BlockManager:
         """
         return sum(len(x) for x in self._block_type_mapping.values())
 
-    def add(self, block):
+    def add(self, block, key=None):
         """
         Add an internal block to the manager.
         """
@@ -63,9 +63,9 @@ class BlockManager:
             # in the middle of the list.
             self.finish_reading_internal_blocks()
 
-        self._add(block)
+        self._add(block, key=key)
 
-    def _add(self, block):
+    def _add(self, block, key=None):
         block_set = self._block_type_mapping.get(block.array_storage, None)
         if block_set is not None:
             if block not in block_set:
@@ -78,8 +78,10 @@ class BlockManager:
             msg = "Can not add second streaming block"
             raise ValueError(msg)
 
-        if block._data is not None:
-            self._data_to_block_mapping[id(block._data)] = block
+        if block._data is not None or key is not None:
+            if key is None:
+                key = id(block._data)
+            self._data_to_block_mapping[key] = block
 
     def remove(self, block):
         """
