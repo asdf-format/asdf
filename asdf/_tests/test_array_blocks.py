@@ -964,8 +964,8 @@ def test_block_key():
     assert blk in bm._internal_blocks
 
     # make sure we can retrieve the block by the key
-    assert bm.find_or_create_block(key, af) is blk
-    assert isinstance(bm.find_or_create_block("bar", af), block.Block)
+    assert bm.find_or_create_block(key) is blk
+    assert isinstance(bm.find_or_create_block("bar"), block.Block)
 
     # now remove it, the original array block should remain
     bm.remove(blk)
