@@ -16,6 +16,7 @@ from ._legacy import (
 from ._manager import ExtensionManager, get_cached_extension_manager
 from ._manifest import ManifestExtension
 from ._tag import TagDefinition
+from ._validator import Validator
 
 __all__ = [
     # New API
@@ -28,6 +29,7 @@ __all__ = [
     "Converter",
     "ConverterProxy",
     "Compressor",
+    "Validator",
     # Legacy API
     "AsdfExtension",
     "AsdfExtensionList",

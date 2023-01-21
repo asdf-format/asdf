@@ -734,6 +734,3 @@ def validate_datatype(validator, datatype, instance, schema):
                     f"Expected {numpy_dtype_to_asdf_datatype(out_type)[0]}, "
                     f"got {numpy_dtype_to_asdf_datatype(in_type)[0]}",
                 )
-
-
-NDArrayType.validators = {"ndim": validate_ndim, "max_ndim": validate_max_ndim, "datatype": validate_datatype}

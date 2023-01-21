@@ -4,7 +4,8 @@ import asdf_standard.integration
 import pytest
 
 import asdf
-from asdf import get_config, resource
+from asdf import get_config
+from asdf.core._integration import get_json_schema_resource_mappings
 from asdf.extension import BuiltinExtension, ExtensionProxy
 from asdf.resource import ResourceMappingProxy
 
@@ -110,7 +111,7 @@ def test_array_inline_threshold():
 
 def test_resource_mappings():
     with asdf.config_context() as config:
-        core_mappings = resource.get_json_schema_resource_mappings() + asdf_standard.integration.get_resource_mappings()
+        core_mappings = get_json_schema_resource_mappings() + asdf_standard.integration.get_resource_mappings()
 
         default_mappings = config.resource_mappings
         assert len(default_mappings) >= len(core_mappings)

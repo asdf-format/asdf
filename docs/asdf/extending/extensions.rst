@@ -7,8 +7,8 @@ Extensions
 ==========
 
 An ASDF "extension" is a supplement to the core ASDF specification that
-describes additional YAML tags or binary block compressors which
-may be used when writing files.  In this library, extensions implement the
+describes additional YAML tags, binary block compressors, or schema validators which
+may be used when reading and writing files.  In this library, extensions implement the
 `Extension` interface and can be installed manually
 by the user or automatically by a package using Python's entry points
 mechanism.
@@ -36,8 +36,8 @@ provide its URI as a property:
 
 Note that this is an "empty" extension that does not extend the library in
 any meaningful way; other attributes must be implemented to actually
-support additional tags and/or compressors.  Read on for a description of the rest
-of the Extension interface.
+support additional tags, compressors and/or validators.  Read on for a description
+of the rest of the Extension interface.
 
 Additional tags
 ---------------
@@ -153,6 +153,26 @@ Tag handles can be defined in the ``yaml_tag_handles`` property of an extension:
     class FooExtension(Extension):
         extension_uri = "asdf://example.com/example-project/extensions/foo-1.0.0"
         yaml_tag_handles = {"!example!": "asdf://example.com/example-project/tags/"}
+
+Additional schema validators
+----------------------------
+
+Schema validators implement the `Validator` interface
+and are included in an extension via the ``validators`` property:
+
+.. code-block:: python
+
+    from asdf.extension import Extension, Validator
+
+
+    class FooValidator(Validator):
+        # ...
+        pass
+
+
+    class FooExtension(Extension):
+        extension_uri = "asdf://example.com/example-project/extensions/foo-1.0.0"
+        validators = [FooValidator()]
 
 ASDF Standard version requirement
 ---------------------------------
