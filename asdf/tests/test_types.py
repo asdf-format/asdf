@@ -266,7 +266,7 @@ def test_versioned_writing(monkeypatch):
     monkeypatch.setattr(
         versioning,
         "supported_versions",
-        versioning.supported_versions + [versioning.AsdfVersion("42.0.0")],
+        [*versioning.supported_versions, versioning.AsdfVersion("42.0.0")],
     )
 
     class FancyComplexType(types.CustomType):

@@ -94,7 +94,7 @@ def relative_uri(source, target):
     if relative == ".":
         relative = ""
 
-    return patched_urllib_parse.urlunparse(["", "", relative] + extra)
+    return patched_urllib_parse.urlunparse(["", "", relative, *extra])
 
 
 class _TruncatedReader:

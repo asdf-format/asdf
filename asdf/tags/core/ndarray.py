@@ -577,9 +577,7 @@ def _make_operation(name):
     return operation
 
 
-classes_to_modify = NDArrayType.__versioned_siblings + [
-    NDArrayType,
-]
+classes_to_modify = [*NDArrayType.__versioned_siblings, NDArrayType]
 for op in [
     "__neg__",
     "__pos__",

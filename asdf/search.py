@@ -203,7 +203,7 @@ class AsdfSearchResult:
         return AsdfSearchResult(
             self._identifiers,
             self._node,
-            filters=self._filters + [_filter],
+            filters=[*self._filters, _filter],
             parent_node=self._parent_node,
             max_rows=self._max_rows,
             max_cols=self._max_cols,
@@ -358,7 +358,7 @@ class AsdfSearchResult:
             raise TypeError(msg)
 
         return AsdfSearchResult(
-            self._identifiers + [key],
+            [*self._identifiers, key],
             child,
             filters=self._filters,
             parent_node=self._node,
@@ -384,7 +384,7 @@ def _walk_tree_breadth_first(root_identifiers, root_node, callback):
             tnode = node.__asdf_traverse__() if NodeSchemaInfo.traversable(node) else node
             children = get_children(tnode)
             callback(identifiers, parent, node, [c for _, c in children])
-            next_nodes.extend([(identifiers + [i], node, c) for i, c in children])
+            next_nodes.extend([([*identifiers, i], node, c) for i, c in children])
             seen.add(id(node))
 
         if len(next_nodes) == 0:

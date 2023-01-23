@@ -158,7 +158,7 @@ class _TreeRenderer:
         Select nodes to display, obeying the per-node max_rows value for
         each tree depth.
         """
-        max_rows = (None,) + self._max_rows
+        max_rows = (None, *self._max_rows)
 
         current_infos = [root_info]
         while True:
