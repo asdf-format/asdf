@@ -10,4 +10,4 @@ git+https://github.com/yaml/pyyaml.git
 git+https://github.com/python-jsonschema/jsonschema
 
 scipy>=0.0.dev0
-numpy>=0.0.dev0
+numpy>=0.0.dev0 ; python_version > "3.8"
