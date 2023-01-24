@@ -70,11 +70,11 @@ repos:
     - id: blacken-docs
 
 - repo: https://github.com/tox-dev/pyproject-fmt
-  rev: "0.4.1"
+  rev: "0.5.0"
   hooks:
     - id: pyproject-fmt
 
 - repo: https://github.com/abravalheri/validate-pyproject
-  rev: "v0.10.1"
+  rev: "v0.11"
   hooks:
     - id: validate-pyproject
