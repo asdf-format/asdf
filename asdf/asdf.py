@@ -1092,16 +1092,7 @@ class AsdfFile:
             padding = util.calculate_padding(fd.tell(), pad_blocks, fd.block_size)
             fd.fast_forward(padding)
 
-    def _pre_write(self, fd, all_array_storage, all_array_compression, compression_kwargs=None):
-        if all_array_storage not in (None, "internal", "external", "inline"):
-            msg = f"Invalid value for all_array_storage: '{all_array_storage}'"
-            raise ValueError(msg)
-
-        self._all_array_storage = all_array_storage
-
-        self._all_array_compression = all_array_compression
-        self._all_array_compression_kwargs = compression_kwargs
-
+    def _pre_write(self, fd):
         if len(self._tree):
             self._run_hook("pre_write")
 
@@ -1132,12 +1123,6 @@ class AsdfFile:
 
     def update(
         self,
-        all_array_storage=None,
-        all_array_compression="input",
-        pad_blocks=False,
-        include_block_index=True,
-        version=None,
-        compression_kwargs=None,
         **kwargs,
     ):
         """
@@ -1196,7 +1181,17 @@ class AsdfFile:
             in ``asdf.get_config().array_inline_threshold``.
         """
 
+        pad_blocks = kwargs.pop("pad_blocks", False)
+        include_block_index = kwargs.pop("include_block_index", True)
+        version = kwargs.pop("version", None)
+
         with config_context() as config:
+            if "all_array_storage" in kwargs:
+                config.all_array_storage = kwargs.pop("all_array_storage")
+            if "all_array_compression" in kwargs:
+                config.all_array_compression = kwargs.pop("all_array_compression")
+            if "compression_kwargs" in kwargs:
+                config.all_array_compression_kwargs = kwargs.pop("compression_kwargs")
             _handle_deprecated_kwargs(config, kwargs)
 
             fd = self._fd
@@ -1216,10 +1211,10 @@ class AsdfFile:
             if version is not None:
                 self.version = version
 
-            if all_array_storage == "external":
+            if config.all_array_storage == "external":
                 # If the file is fully exploded, there's no benefit to
                 # update, so just use write_to()
-                self.write_to(fd, all_array_storage=all_array_storage)
+                self.write_to(fd)
                 fd.truncate()
                 return
 
@@ -1233,7 +1228,7 @@ class AsdfFile:
             if fd.can_memmap():
                 fd.flush_memmap()
 
-            self._pre_write(fd, all_array_storage, all_array_compression, compression_kwargs=compression_kwargs)
+            self._pre_write(fd)
 
             try:
                 fd.seek(0)
@@ -1280,12 +1275,6 @@ class AsdfFile:
     def write_to(
         self,
         fd,
-        all_array_storage=None,
-        all_array_compression="input",
-        pad_blocks=False,
-        include_block_index=True,
-        version=None,
-        compression_kwargs=None,
         **kwargs,
     ):
         """
@@ -1355,7 +1344,18 @@ class AsdfFile:
             ``asdf.get_config().array_inline_threshold``.
 
         """
+
+        pad_blocks = kwargs.pop("pad_blocks", False)
+        include_block_index = kwargs.pop("include_block_index", True)
+        version = kwargs.pop("version", None)
+
         with config_context() as config:
+            if "all_array_storage" in kwargs:
+                config.all_array_storage = kwargs.pop("all_array_storage")
+            if "all_array_compression" in kwargs:
+                config.all_array_compression = kwargs.pop("all_array_compression")
+            if "compression_kwargs" in kwargs:
+                config.all_array_compression_kwargs = kwargs.pop("compression_kwargs")
             _handle_deprecated_kwargs(config, kwargs)
 
             if version is not None:
@@ -1367,7 +1367,7 @@ class AsdfFile:
                 # attribute of the AsdfFile.
                 if self._uri is None:
                     self._uri = fd.uri
-                self._pre_write(fd, all_array_storage, all_array_compression, compression_kwargs=compression_kwargs)
+                self._pre_write(fd)
 
                 try:
                     self._serial_write(fd, pad_blocks, include_block_index)

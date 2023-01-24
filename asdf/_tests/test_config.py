@@ -110,6 +110,39 @@ def test_array_inline_threshold():
         assert get_config().array_inline_threshold is None
 
 
+def test_all_array_storage():
+    with asdf.config_context() as config:
+        assert config.all_array_storage == asdf.config.DEFAULT_ALL_ARRAY_STORAGE
+        config.all_array_storage = "internal"
+        assert get_config().all_array_storage == "internal"
+        config.all_array_storage = None
+        assert get_config().all_array_storage is None
+        with pytest.raises(ValueError, match=r"Invalid value for all_array_storage"):
+            config.all_array_storage = "foo"
+
+
+def test_all_array_compression():
+    with asdf.config_context() as config:
+        assert config.all_array_compression == asdf.config.DEFAULT_ALL_ARRAY_COMPRESSION
+        config.all_array_compression = "zlib"
+        assert get_config().all_array_compression == "zlib"
+        config.all_array_compression = None
+        assert get_config().all_array_compression is None
+        with pytest.raises(ValueError, match=r"Supported compression types are"):
+            config.all_array_compression = "foo"
+
+
+def test_all_array_compression_kwargs():
+    with asdf.config_context() as config:
+        assert config.all_array_compression_kwargs == asdf.config.DEFAULT_ALL_ARRAY_COMPRESSION_KWARGS
+        config.all_array_compression_kwargs = {}
+        assert get_config().all_array_compression_kwargs == {}
+        config.all_array_compression_kwargs = None
+        assert get_config().all_array_compression_kwargs is None
+        with pytest.raises(ValueError, match=r"Invalid value for all_array_compression_kwargs"):
+            config.all_array_compression_kwargs = "foo"
+
+
 def test_resource_mappings():
     with asdf.config_context() as config:
         core_mappings = get_json_schema_resource_mappings() + asdf_standard.integration.get_resource_mappings()
