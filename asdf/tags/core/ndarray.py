@@ -88,7 +88,7 @@ def asdf_datatype_to_numpy_dtype(datatype, byteorder=None):
 
             else:
                 msg = "Error parsing asdf datatype"
-                raise RuntimeError(msg)
+                raise RuntimeError(msg)  # noqa: TRY004
 
         return np.dtype(datatype_list)
 

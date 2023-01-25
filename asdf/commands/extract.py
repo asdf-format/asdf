@@ -50,7 +50,7 @@ def extract_file(input_file, output_file):
         with asdf.open(input_file) as ih:
             if not isinstance(ih, AsdfInFits):
                 msg = f"Given input file '{input_file}' is not ASDF-in-FITS"
-                raise RuntimeError(msg)
+                raise RuntimeError(msg)  # noqa: TRY004
 
             with asdf.AsdfFile(ih.tree) as oh:
                 oh.write_to(output_file)

@@ -87,7 +87,7 @@ class _EmbeddedBlockManager(block.BlockManager):
                     return f"{FITS_SOURCE_PREFIX}{hdu.name},{hdu.ver}"
 
             msg = "FITS block seems to have been removed"
-            raise ValueError(msg)
+            raise ValueError(msg)  # noqa: TRY004
 
         return super().get_source(block)
 
