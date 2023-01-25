@@ -1228,28 +1228,11 @@ class Block:
                 self._memmap_data()
                 if not self._memmapped:
                     self._fd.seek(self.data_offset)
-                    # The data variable is important here, otherwise the weakref
-                    # won't last long enough to be returned from this method.
-                    data = self._read_data(self._fd, self._size, self._data_size)
-                    # We are using weakref for lazy-loaded data so that caching in the
-                    # Block class does not consume memory if the user does not retain
-                    # a reference to the array.
-                    self._data = weakref.ref(data)
+                    self._data = self._read_data(self._fd, self._size, self._data_size)
             finally:
                 self._fd.seek(curpos)
 
         return self._data
-
-    @property
-    def _data(self):
-        if isinstance(self._data_ref, weakref.ReferenceType):
-            return self._data_ref()
-
-        return self._data_ref
-
-    @_data.setter
-    def _data(self, value):
-        self._data_ref = value
 
     def close(self):
         self._data = None
@@ -1266,7 +1249,7 @@ class UnloadedBlock:
     def __init__(self, fd, offset, memmap=True, lazy_load=True):
         self._fd = fd
         self._offset = offset
-        self._data_ref = None
+        self._data = None
         self._uri = None
         self._array_storage = "internal"
         self._input_compression = None
