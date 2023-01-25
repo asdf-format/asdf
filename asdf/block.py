@@ -1050,8 +1050,8 @@ class Block:
 
         try:
             self.input_compression = header["compression"]
-        except ValueError as v:
-            raise v  # TODO: hint extension?
+        except ValueError:
+            raise  # TODO: hint extension?
 
         if self.input_compression is None and header["used_size"] != header["data_size"]:
             msg = "used_size and data_size must be equal when no compression is used."

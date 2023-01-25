@@ -608,9 +608,10 @@ class GenericFile(metaclass=util.InheritDocstrings):
         try:
             while reader.read(self.block_size) != b"":
                 pass
-        except DelimiterNotFoundError as e:
+        except DelimiterNotFoundError:
             if exception:
-                raise e
+                raise
+
             return False
 
         return True

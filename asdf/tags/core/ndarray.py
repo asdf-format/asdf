@@ -379,9 +379,10 @@ class NDArrayType(AsdfType):
         # originates from the call to __repr__ inside the traceback report.
         try:
             self._make_array().__setitem__(*args)
-        except Exception as e:
+        except Exception:
             self._array = None
-            raise e from None
+
+            raise
 
     def __getattribute__(self, name):
         # The presence of these attributes on an NDArrayType instance
