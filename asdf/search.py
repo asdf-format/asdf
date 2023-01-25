@@ -97,13 +97,14 @@ class AsdfSearchResult:
     def _safe_equals(self, a, b):
         try:
             result = a == b
-            if isinstance(result, bool):
-                return result
-
-            return False
 
         except Exception:  # noqa: BLE001
             return False
+
+        if isinstance(result, bool):
+            return result
+
+        return False
 
     def _get_fully_qualified_type(self, value):
         value_type = type(value)

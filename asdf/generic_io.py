@@ -608,12 +608,12 @@ class GenericFile(metaclass=util.InheritDocstrings):
         try:
             while reader.read(self.block_size) != b"":
                 pass
-            return True
         except DelimiterNotFoundError as e:
             if exception:
                 raise e
-
             return False
+
+        return True
 
     def fast_forward(self, size):
         """
@@ -986,10 +986,12 @@ def _http_to_temp(init, mode, uri=None):
                 fd.write(chunk)
                 chunk = response.read(block_size)
         fd.seek(0)
-        return RealFile(fd, mode, close=True, uri=uri or init)
+
     except Exception:
         fd.close()
         raise
+
+    return RealFile(fd, mode, close=True, uri=uri or init)
 
 
 def get_uri(file_obj):
