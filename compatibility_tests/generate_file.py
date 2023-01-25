@@ -1,3 +1,5 @@
+# noqa: INP001
+
 import argparse
 from pathlib import Path
 

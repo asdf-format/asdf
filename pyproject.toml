@@ -187,7 +187,6 @@ extend-ignore = [
     "PLR2004", # Magic value used in comparison
 
     "TRY201", # Use raise without specifying exception name
-    "INP001", # implicit-namespace-package
 ]
 extend-exclude = ["asdf/extern/*", "docs/*"]
 
