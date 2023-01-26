@@ -72,4 +72,4 @@ def test_diff_command():
     filenames = ["frames0.asdf", "frames1.asdf"]
     paths = [get_test_data_path(name) for name in filenames]
 
-    assert main.main_from_args(["diff"] + paths) == 0
+    assert main.main_from_args(["diff", *paths]) == 0

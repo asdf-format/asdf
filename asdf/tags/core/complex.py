@@ -7,7 +7,7 @@ from asdf.types import AsdfType
 class ComplexType(AsdfType):
     name = "core/complex"
     version = "1.0.0"
-    types = list(util.iter_subclasses(np.complexfloating)) + [complex]
+    types = [*list(util.iter_subclasses(np.complexfloating)), complex]
 
     @classmethod
     def to_tree(cls, node, ctx):

@@ -934,10 +934,10 @@ class AsdfFile:
                 ignore_missing_extensions,
                 **kwargs,
             )
-        except Exception as e:
+        except Exception:
             if close_on_fail:
                 generic_file.close()
-            raise e
+            raise
 
     @classmethod
     def _open_generic_file(
@@ -957,12 +957,23 @@ class AsdfFile:
         file_type = util.get_file_type(generic_file)
 
         if file_type == util.FileType.FITS:
+            # TODO: this feels a bit circular, try to clean up. Also
+            # this introduces another dependency on astropy which may
+            # not be desirable.
             try:
-                # TODO: this feels a bit circular, try to clean up. Also
-                # this introduces another dependency on astropy which may
-                # not be desirable.
+                # Try to import ASDF in FITS
                 from . import fits_embed
 
+            except ImportError:
+                msg = (
+                    "Input object does not appear to be an ASDF file. Cannot check "
+                    "if it is a FITS with ASDF extension because 'astropy' is not "
+                    "installed"
+                )
+                raise ValueError(msg) from None
+
+            try:
+                # Try to open as FITS with ASDF extension
                 return fits_embed.AsdfInFits._open_impl(
                     generic_file,
                     uri=uri,
@@ -978,14 +989,6 @@ class AsdfFile:
             except ValueError:
                 msg = "Input object does not appear to be an ASDF file or a FITS with ASDF extension"
                 raise ValueError(msg) from None
-
-            except ImportError:
-                msg = (
-                    "Input object does not appear to be an ASDF file. Cannot check "
-                    "if it is a FITS with ASDF extension because 'astropy' is not "
-                    "installed"
-                )
-                raise ValueError() from None
 
         if file_type == util.FileType.ASDF:
             return cls._open_asdf(

@@ -122,7 +122,7 @@ class PrintTree:
         at_end = False
         print_list = []
         current = self.__tree
-        for node in ["tree"] + node_list:
+        for node in ["tree", *node_list]:
             if at_end:
                 print_list.append(node)
             elif node not in current["children"]:
@@ -141,7 +141,7 @@ class PrintTree:
             msg = "node_list parameter must be an instance of list"
             raise TypeError(msg)
         current = self.__tree
-        for node in ["tree"] + node_list:
+        for node in ["tree", *node_list]:
             if node not in current["children"]:
                 current["children"][node] = {"visited": True, "children": {}}
             current = current["children"][node]
@@ -193,7 +193,7 @@ def print_in_tree(diff_ctx, node_list, thing, other, use_marker=False, last_was_
             key = ArrayNode(f"{node_list[-1]}_{i}")
             last_was_list = print_in_tree(
                 diff_ctx,
-                node_list + [key],
+                [*node_list, key],
                 subthing,
                 other,
                 use_marker=True,
@@ -205,7 +205,7 @@ def print_in_tree(diff_ctx, node_list, thing, other, use_marker=False, last_was_
         for key in sorted(thing.keys()):
             last_was_list = print_in_tree(
                 diff_ctx,
-                node_list + [key],
+                [*node_list, key],
                 thing[key],
                 other,
                 use_marker=True,
@@ -238,7 +238,7 @@ def print_dict_diff(diff_ctx, tree, node_list, keys, other):
             nodes = node_list
             key = key
         else:
-            nodes = node_list + [key]
+            nodes = [*node_list, key]
             key = tree[key]
         use_marker = not diff_ctx.minimal
         print_in_tree(diff_ctx, nodes, key, other, use_marker=use_marker)
@@ -289,7 +289,7 @@ def compare_dicts(diff_ctx, dict0, dict1, keys, ignores=None):
     for key in sorted(keys0 & keys1):
         obj0 = dict0[key]
         obj1 = dict1[key]
-        compare_trees(diff_ctx, obj0, obj1, keys=keys + [key])
+        compare_trees(diff_ctx, obj0, obj1, keys=[*keys, key])
     # Display subtree elements existing only in this tree
     print_dict_diff(diff_ctx, dict0, keys, sorted(keys0 - keys1), False)
     # Display subtree elements existing only in that tree
@@ -310,7 +310,7 @@ def compare_trees(diff_ctx, tree0, tree1, keys=None):
     elif isinstance(tree0, list) and isinstance(tree1, list):
         for i, (obj0, obj1) in enumerate(zip(tree0, tree1)):
             key = ArrayNode(f"item_{i}")
-            compare_trees(diff_ctx, obj0, obj1, keys + [key])
+            compare_trees(diff_ctx, obj0, obj1, [*keys, key])
     else:
         compare_objects(diff_ctx, tree0, tree1, keys)
 

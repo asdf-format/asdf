@@ -94,7 +94,7 @@ def relative_uri(source, target):
     if relative == ".":
         relative = ""
 
-    return patched_urllib_parse.urlunparse(["", "", relative] + extra)
+    return patched_urllib_parse.urlunparse(["", "", relative, *extra])
 
 
 class _TruncatedReader:
@@ -608,12 +608,13 @@ class GenericFile(metaclass=util.InheritDocstrings):
         try:
             while reader.read(self.block_size) != b"":
                 pass
-            return True
-        except DelimiterNotFoundError as e:
+        except DelimiterNotFoundError:
             if exception:
-                raise e
+                raise
 
             return False
+
+        return True
 
     def fast_forward(self, size):
         """
@@ -986,10 +987,12 @@ def _http_to_temp(init, mode, uri=None):
                 fd.write(chunk)
                 chunk = response.read(block_size)
         fd.seek(0)
-        return RealFile(fd, mode, close=True, uri=uri or init)
+
     except Exception:
         fd.close()
         raise
+
+    return RealFile(fd, mode, close=True, uri=uri or init)
 
 
 def get_uri(file_obj):
@@ -1134,7 +1137,7 @@ def get_file(init, mode="r", uri=None, close=False):
             return InputStream(init, mode, uri=uri, close=close)
 
         msg = f"File '{init}' could not be opened in 'rw' mode"
-        raise ValueError(msg)
+        raise ValueError(msg)  # noqa: TRY004
 
     if mode == "w" and (hasattr(init, "write") and hasattr(init, "seek") and hasattr(init, "tell")):
         return MemoryIO(init, mode, uri=uri)

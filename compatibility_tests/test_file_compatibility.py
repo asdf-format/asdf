@@ -1,3 +1,5 @@
+# noqa: INP001
+
 import json
 import os
 import subprocess
@@ -83,7 +85,7 @@ def env_run(env_path, command, *args, **kwargs):
     Run a command on the context of the virtual environment at
     the specified path.
     """
-    return subprocess.run([env_path / "bin" / command] + list(args), **kwargs).returncode == 0
+    return subprocess.run([env_path / "bin" / command, *list(args)], **kwargs).returncode == 0
 
 
 def env_check_output(env_path, command, *args):
@@ -91,7 +93,7 @@ def env_check_output(env_path, command, *args):
     Run a command on the context of the virtual environment at
     the specified path, and return the output.
     """
-    return subprocess.check_output([env_path / "bin" / command] + list(args)).decode("utf-8").strip()
+    return subprocess.check_output([env_path / "bin" / command, *list(args)]).decode("utf-8").strip()
 
 
 def get_supported_versions(env_path):

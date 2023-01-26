@@ -98,7 +98,7 @@ def get_base_uri(uri):
     For a given URI, return the part without any fragment.
     """
     parts = patched_urllib_parse.urlparse(uri)
-    return patched_urllib_parse.urlunparse(list(parts[:5]) + [""])
+    return patched_urllib_parse.urlunparse([*list(parts[:5]), ""])
 
 
 def filepath_to_url(path):
@@ -372,7 +372,7 @@ def minversion(module, version, inclusive=True):
             return False
     else:
         msg = f"module argument must be an actual imported module, or the import name of the module; got {repr(module)}"
-        raise ValueError(msg)
+        raise ValueError(msg)  # noqa: TRY004
 
     if module_version is None:
         try:

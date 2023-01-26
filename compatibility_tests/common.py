@@ -1,3 +1,5 @@
+# noqa: INP001
+
 import numpy as np
 
 import asdf

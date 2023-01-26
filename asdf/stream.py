@@ -48,7 +48,7 @@ class Stream(ndarray.NDArrayType):
 
         result = {}
         result["source"] = -1
-        result["shape"] = ["*"] + data._shape
+        result["shape"] = ["*", *data._shape]
         result["datatype"] = data._datatype
         result["byteorder"] = data._byteorder
         if data._strides is not None:

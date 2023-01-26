@@ -88,7 +88,7 @@ def asdf_datatype_to_numpy_dtype(datatype, byteorder=None):
 
             else:
                 msg = "Error parsing asdf datatype"
-                raise RuntimeError(msg)
+                raise RuntimeError(msg)  # noqa: TRY004
 
         return np.dtype(datatype_list)
 
@@ -379,9 +379,10 @@ class NDArrayType(AsdfType):
         # originates from the call to __repr__ inside the traceback report.
         try:
             self._make_array().__setitem__(*args)
-        except Exception as e:
+        except Exception:
             self._array = None
-            raise e from None
+
+            raise
 
     def __getattribute__(self, name):
         # The presence of these attributes on an NDArrayType instance
@@ -577,9 +578,7 @@ def _make_operation(name):
     return operation
 
 
-classes_to_modify = NDArrayType.__versioned_siblings + [
-    NDArrayType,
-]
+classes_to_modify = [*NDArrayType.__versioned_siblings, NDArrayType]
 for op in [
     "__neg__",
     "__pos__",

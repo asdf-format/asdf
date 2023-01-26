@@ -661,7 +661,7 @@ class BlockManager:
                 return last_block
 
             msg = f"Block '{source}' not found."
-            raise ValueError(msg)
+            raise ValueError(msg)  # noqa: TRY004
 
         if isinstance(source, str):
             asdffile = self._asdffile().open_external(source)
@@ -1050,8 +1050,8 @@ class Block:
 
         try:
             self.input_compression = header["compression"]
-        except ValueError as v:
-            raise v  # TODO: hint extension?
+        except ValueError:
+            raise  # TODO: hint extension?
 
         if self.input_compression is None and header["used_size"] != header["data_size"]:
             msg = "used_size and data_size must be equal when no compression is used."
