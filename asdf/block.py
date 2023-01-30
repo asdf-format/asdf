@@ -661,7 +661,7 @@ class BlockManager:
                 return last_block
 
             msg = f"Block '{source}' not found."
-            raise ValueError(msg)  # noqa: TRY004
+            raise ValueError(msg)
 
         if isinstance(source, str):
             asdffile = self._asdffile().open_external(source)

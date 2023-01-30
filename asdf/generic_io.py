@@ -1137,7 +1137,7 @@ def get_file(init, mode="r", uri=None, close=False):
             return InputStream(init, mode, uri=uri, close=close)
 
         msg = f"File '{init}' could not be opened in 'rw' mode"
-        raise ValueError(msg)  # noqa: TRY004
+        raise ValueError(msg)
 
     if mode == "w" and (hasattr(init, "write") and hasattr(init, "seek") and hasattr(init, "tell")):
         return MemoryIO(init, mode, uri=uri)
