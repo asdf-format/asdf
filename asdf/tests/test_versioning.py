@@ -155,25 +155,25 @@ def test_version_and_tuple_inequality():
     assert version <= (2, 1, 0)
     assert version <= (2, 1, 1)
 
-    assert (1, 0, 0) < version
-    assert (1, 0, 1) < version
-    assert (1, 1, 0) < version
-    assert (1, 1, 1) < version
-    assert ((2, 0, 0) < version) is False
-    assert ((2, 0, 0) > version) is False
-    assert (2, 0, 1) > version
-    assert (2, 1, 0) > version
-    assert (2, 1, 1) > version
+    assert (1, 0, 0) < version  # noqa: SIM300
+    assert (1, 0, 1) < version  # noqa: SIM300
+    assert (1, 1, 0) < version  # noqa: SIM300
+    assert (1, 1, 1) < version  # noqa: SIM300
+    assert ((2, 0, 0) < version) is False  # noqa: SIM300
+    assert ((2, 0, 0) > version) is False  # noqa: SIM300
+    assert (2, 0, 1) > version  # noqa: SIM300
+    assert (2, 1, 0) > version  # noqa: SIM300
+    assert (2, 1, 1) > version  # noqa: SIM300
 
-    assert (1, 0, 0) <= version
-    assert (1, 0, 1) <= version
-    assert (1, 1, 0) <= version
-    assert (1, 1, 1) <= version
-    assert (2, 0, 0) <= version
-    assert (2, 0, 0) >= version
-    assert (2, 0, 1) >= version
-    assert (2, 1, 0) >= version
-    assert (2, 1, 1) >= version
+    assert (1, 0, 0) <= version  # noqa: SIM300
+    assert (1, 0, 1) <= version  # noqa: SIM300
+    assert (1, 1, 0) <= version  # noqa: SIM300
+    assert (1, 1, 1) <= version  # noqa: SIM300
+    assert (2, 0, 0) <= version  # noqa: SIM300
+    assert (2, 0, 0) >= version  # noqa: SIM300
+    assert (2, 0, 1) >= version  # noqa: SIM300
+    assert (2, 1, 0) >= version  # noqa: SIM300
+    assert (2, 1, 1) >= version  # noqa: SIM300
 
 
 def test_spec_version_match():
@@ -271,9 +271,9 @@ def test_spec_equal():
     assert "1.3.0" == spec  # noqa: SIM300
 
     assert spec != (1, 1, 0)
-    assert (1, 1, 0) != spec
+    assert (1, 1, 0) != spec  # noqa: SIM300
     assert spec == (1, 3, 0)
-    assert (1, 3, 0) == spec
+    assert (1, 3, 0) == spec  # noqa: SIM300
 
 
 def _standard_versioned_tags():
