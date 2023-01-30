@@ -244,7 +244,7 @@ class AsdfSchemaExampleItem(pytest.Item):
         for _ in range(3):
             b = block.Block(np.zeros((1024 * 1024 * 8), dtype=np.uint8))
             b._used = True
-            ff.blocks.add(b)
+            ff._blocks.add(b)
         b._array_storage = "streamed"
 
         try:
