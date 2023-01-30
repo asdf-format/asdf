@@ -3,7 +3,6 @@ Implementation of command for converting ASDF-in-FITS to standalone ASDF file.
 """
 
 import asdf
-from asdf.fits_embed import AsdfInFits
 
 from .main import Command
 
@@ -45,6 +44,8 @@ class AsdfExtractor(Command):  # pragma: no cover
 
 def extract_file(input_file, output_file):
     """Function for performing extraction from ASDF-in-FITS to pure ASDF."""
+    # local import to avoid issuing Deprecation warning on every use of asdftool
+    from asdf.fits_embed import AsdfInFits
 
     try:
         with asdf.open(input_file) as ih:

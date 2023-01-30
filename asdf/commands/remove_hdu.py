@@ -39,6 +39,9 @@ class FitsExtractor(Command):  # pragma: no cover
 
 def remove_hdu(input_file, output_file):
     """Function for removing ASDF HDU from ASDF-in-FITS files"""
+    # local import to trigger the deprecation warning since this command
+    # relates to and mentions AsdfInFits
+    from asdf.fits_embed import AsdfInFits  # noqa: F401
 
     try:
         with fits.open(input_file) as hdulist:

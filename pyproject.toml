@@ -111,6 +111,7 @@ open_files_ignore = ['test.fits', 'asdf.fits']
 # which pytest trips over during collection:
 filterwarnings = [
     'error',
+    'ignore::asdf.exceptions.AsdfDeprecationWarning:asdf.fits_embed',
     'ignore::asdf.exceptions.AsdfDeprecationWarning:asdf.asdftypes',
     'ignore:numpy.ndarray size changed:RuntimeWarning',
     'ignore:.*from astropy.io.misc.asdf.*subclasses the deprecated CustomType.*:asdf.exceptions.AsdfDeprecationWarning',

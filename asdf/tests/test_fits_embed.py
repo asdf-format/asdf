@@ -1,4 +1,5 @@
 import copy
+import warnings
 
 import numpy as np
 import pytest
@@ -347,8 +348,13 @@ def test_extension_check():
         pass
 
     # Make sure that suppressing the warning works as well
-    with assert_no_warnings(), asdf.open(testfile, ignore_missing_extensions=True):
-        pass
+    with warnings.catch_warnings():
+        # modify the warnings filter to turn warnings into error but append
+        # the new filter so it doesn't override warnings filtered by decorators
+        # or globally
+        warnings.simplefilter("error", append=True)
+        with asdf.open(testfile, ignore_missing_extensions=True):
+            pass
 
     with pytest.raises(RuntimeError), asdf.open(testfile, strict_extension_check=True):
         pass
