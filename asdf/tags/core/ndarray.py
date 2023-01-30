@@ -243,7 +243,7 @@ class NDArrayType(AsdfType):
         if isinstance(source, list):
             self._array = inline_data_asarray(source, dtype)
             self._array = self._apply_mask(self._array, self._mask)
-            self._block = asdffile.blocks.add_inline(self._array)
+            self._block = asdffile._blocks.add_inline(self._array)
             if shape is not None and (
                 (shape[0] == "*" and self._array.shape[1:] != tuple(shape[1:])) or (self._array.shape != tuple(shape))
             ):
@@ -255,7 +255,7 @@ class NDArrayType(AsdfType):
         self._offset = offset
         self._strides = strides
         self._order = order
-        if not asdffile.blocks.lazy_load:
+        if not asdffile._blocks.lazy_load:
             self._make_array()
 
     def _make_array(self):
@@ -341,7 +341,7 @@ class NDArrayType(AsdfType):
     @property
     def block(self):
         if self._block is None:
-            self._block = self._asdffile.blocks.get_block(self._source)
+            self._block = self._asdffile._blocks.get_block(self._source)
         return self._block
 
     @property
@@ -425,7 +425,7 @@ class NDArrayType(AsdfType):
         # Find all of the used data buffers so we can add or rearrange
         # them if necessary
         if isinstance(data, np.ndarray):
-            yield ctx.blocks.find_or_create_block_for_array(data, ctx)
+            yield ctx._blocks.find_or_create_block_for_array(data, ctx)
         elif isinstance(data, NDArrayType):
             yield data.block
 
@@ -447,7 +447,7 @@ class NDArrayType(AsdfType):
 
         shape = data.shape
 
-        block = ctx.blocks.find_or_create_block_for_array(data, ctx)
+        block = ctx._blocks.find_or_create_block_for_array(data, ctx)
 
         if block.array_storage == "fits":
             # Views over arrays stored in FITS files have some idiosyncrasies.
@@ -503,7 +503,7 @@ class NDArrayType(AsdfType):
             if block.array_storage == "streamed":
                 result["shape"][0] = "*"
 
-            result["source"] = ctx.blocks.get_source(block)
+            result["source"] = ctx._blocks.get_source(block)
             result["datatype"] = dtype
             result["byteorder"] = byteorder
 
@@ -515,7 +515,7 @@ class NDArrayType(AsdfType):
 
         if isinstance(data, ma.MaskedArray) and np.any(data.mask):
             if block.array_storage == "inline":
-                ctx.blocks.set_array_storage(ctx.blocks[data.mask], "inline")
+                ctx._blocks.set_array_storage(ctx._blocks[data.mask], "inline")
 
             result["mask"] = data.mask
 
@@ -566,7 +566,7 @@ class NDArrayType(AsdfType):
     def copy_to_new_asdf(cls, node, asdffile):
         if isinstance(node, NDArrayType):
             array = node._make_array()
-            asdffile.blocks.set_array_storage(asdffile.blocks[array], node.block.array_storage)
+            asdffile._blocks.set_array_storage(asdffile._blocks[array], node.block.array_storage)
             return node._make_array()
         return node
 

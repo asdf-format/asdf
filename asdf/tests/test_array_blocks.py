@@ -47,10 +47,10 @@ def test_invalid_array_storage():
     b._array_storage = "foo"
 
     with pytest.raises(ValueError):
-        ff.blocks.add(b)
+        ff._blocks.add(b)
 
     with pytest.raises(ValueError):
-        ff.blocks.remove(b)
+        ff._blocks.remove(b)
 
 
 def test_transfer_array_sources(tmp_path):
@@ -114,17 +114,17 @@ def test_update_expand_tree(tmp_path):
 
     ff = asdf.AsdfFile(tree)
     ff.set_array_storage(tree["arrays"][2], "inline")
-    assert len(list(ff.blocks.inline_blocks)) == 1
+    assert len(list(ff._blocks.inline_blocks)) == 1
     ff.write_to(testpath, pad_blocks=True)
     with asdf.open(testpath, mode="rw") as ff:
         assert_array_equal(ff.tree["arrays"][0], my_array)
-        orig_offset = ff.blocks[ff.tree["arrays"][0]].offset
+        orig_offset = ff._blocks[ff.tree["arrays"][0]].offset
         ff.tree["extra"] = [0] * 6000
         ff.update()
 
     with asdf.open(testpath) as ff:
-        assert orig_offset <= ff.blocks[ff.tree["arrays"][0]].offset
-        assert ff.blocks[ff.tree["arrays"][2]].array_storage == "inline"
+        assert orig_offset <= ff._blocks[ff.tree["arrays"][0]].offset
+        assert ff._blocks[ff.tree["arrays"][2]].array_storage == "inline"
         assert_array_equal(ff.tree["arrays"][0], my_array)
         assert_array_equal(ff.tree["arrays"][1], my_array2)
 
@@ -133,13 +133,13 @@ def test_update_expand_tree(tmp_path):
     ff.set_array_storage(tree["arrays"][2], "inline")
     ff.write_to(os.path.join(tmp_path, "test2.asdf"), pad_blocks=True)
     with asdf.open(os.path.join(tmp_path, "test2.asdf"), mode="rw") as ff:
-        orig_offset = ff.blocks[ff.tree["arrays"][0]].offset
+        orig_offset = ff._blocks[ff.tree["arrays"][0]].offset
         ff.tree["extra"] = [0] * 2
         ff.update()
 
     with asdf.open(os.path.join(tmp_path, "test2.asdf")) as ff:
-        assert orig_offset == ff.blocks[ff.tree["arrays"][0]].offset
-        assert ff.blocks[ff.tree["arrays"][2]].array_storage == "inline"
+        assert orig_offset == ff._blocks[ff.tree["arrays"][0]].offset
+        assert ff._blocks[ff.tree["arrays"][2]].array_storage == "inline"
         assert_array_equal(ff.tree["arrays"][0], my_array)
         assert_array_equal(ff.tree["arrays"][1], my_array2)
 
@@ -209,7 +209,7 @@ def test_update_delete_middle_array(tmp_path):
     with asdf.open(os.path.join(tmp_path, "test.asdf"), mode="rw") as ff:
         del ff.tree["arrays"][1]
         ff.update()
-        assert len(ff.blocks._internal_blocks) == 2
+        assert len(ff._blocks._internal_blocks) == 2
 
     assert os.stat(path).st_size <= original_size
 
@@ -329,7 +329,7 @@ def test_update_add_array_at_end(tmp_path):
     with asdf.open(os.path.join(tmp_path, "test.asdf"), mode="rw") as ff:
         ff.tree["arrays"].append(np.arange(65536, dtype="<i8"))
         ff.update()
-        assert len(ff.blocks) == 4
+        assert len(ff._blocks) == 4
 
     assert os.stat(path).st_size >= original_size
 
@@ -393,7 +393,7 @@ def test_init_from_asdffile(tmp_path):
     ff2 = asdf.AsdfFile(ff)
     assert ff.tree["my_array"] is ff2.tree["my_array"]
     assert_array_equal(ff.tree["my_array"], ff2.tree["my_array"])
-    assert ff.blocks[my_array] != ff2.blocks[my_array]
+    assert ff._blocks[my_array] != ff2._blocks[my_array]
 
     ff2.tree["my_array"] = None
     assert_array_equal(ff.tree["my_array"], my_array)
@@ -404,7 +404,7 @@ def test_init_from_asdffile(tmp_path):
         ff2 = asdf.AsdfFile(ff)
         assert ff.tree["my_array"] is not ff2.tree["my_array"]
         assert_array_equal(ff.tree["my_array"], ff2.tree["my_array"])
-        assert ff.blocks[my_array] != ff2.blocks[my_array]
+        assert ff._blocks[my_array] != ff2._blocks[my_array]
 
         ff2.tree["my_array"] = None
         assert_array_equal(ff.tree["my_array"], my_array)
@@ -425,12 +425,12 @@ foo : bar
 
     buff = io.BytesIO(content)
     ff = asdf.open(buff)
-    assert len(ff.blocks) == 1
+    assert len(ff._blocks) == 1
 
     buff.seek(0)
     fd = generic_io.InputStream(buff, "r")
     ff = asdf.open(fd)
-    assert len(ff.blocks) == 1
+    assert len(ff._blocks) == 1
 
 
 def test_checksum(tmp_path):
@@ -443,8 +443,8 @@ def test_checksum(tmp_path):
     ff.write_to(path)
 
     with asdf.open(path, validate_checksums=True) as ff:
-        assert type(ff.blocks._internal_blocks[0].checksum) == bytes
-        assert ff.blocks._internal_blocks[0].checksum == b"\xcaM\\\xb8t_L|\x00\n+\x01\xf1\xcfP1"
+        assert type(ff._blocks._internal_blocks[0].checksum) == bytes
+        assert ff._blocks._internal_blocks[0].checksum == b"\xcaM\\\xb8t_L|\x00\n+\x01\xf1\xcfP1"
 
 
 def test_checksum_update(tmp_path):
@@ -464,7 +464,7 @@ def test_checksum_update(tmp_path):
         ff.update()
 
     with asdf.open(path, validate_checksums=True) as ff:
-        assert ff.blocks._internal_blocks[0].checksum == b"T\xaf~[\x90\x8a\x88^\xc2B\x96D,N\xadL"
+        assert ff._blocks._internal_blocks[0].checksum == b"T\xaf~[\x90\x8a\x88^\xc2B\x96D,N\xadL"
 
 
 def test_deferred_block_loading(small_tree):
@@ -478,13 +478,13 @@ def test_deferred_block_loading(small_tree):
 
     buff.seek(0)
     with asdf.open(buff) as ff2:
-        assert len([x for x in ff2.blocks.blocks if isinstance(x, block.Block)]) == 1
+        assert len([x for x in ff2._blocks.blocks if isinstance(x, block.Block)]) == 1
         ff2.tree["science_data"] * 2
         ff2.tree["not_shared"] * 2
-        assert len([x for x in ff2.blocks.blocks if isinstance(x, block.Block)]) == 2
+        assert len([x for x in ff2._blocks.blocks if isinstance(x, block.Block)]) == 2
 
         with pytest.raises(ValueError):
-            ff2.blocks.get_block(2)
+            ff2._blocks.get_block(2)
 
 
 def test_block_index():
@@ -501,20 +501,20 @@ def test_block_index():
 
     buff.seek(0)
     with asdf.open(buff) as ff2:
-        assert isinstance(ff2.blocks._internal_blocks[0], block.Block)
-        assert len(ff2.blocks._internal_blocks) == 100
+        assert isinstance(ff2._blocks._internal_blocks[0], block.Block)
+        assert len(ff2._blocks._internal_blocks) == 100
         for i in range(2, 99):
-            assert isinstance(ff2.blocks._internal_blocks[i], block.UnloadedBlock)
-        assert isinstance(ff2.blocks._internal_blocks[99], block.Block)
+            assert isinstance(ff2._blocks._internal_blocks[i], block.UnloadedBlock)
+        assert isinstance(ff2._blocks._internal_blocks[99], block.Block)
 
         # Force the loading of one array
         ff2.tree["arrays"][50] * 2
 
         for i in range(2, 99):
             if i == 50:
-                assert isinstance(ff2.blocks._internal_blocks[i], block.Block)
+                assert isinstance(ff2._blocks._internal_blocks[i], block.Block)
             else:
-                assert isinstance(ff2.blocks._internal_blocks[i], block.UnloadedBlock)
+                assert isinstance(ff2._blocks._internal_blocks[i], block.UnloadedBlock)
 
 
 def test_large_block_index():
@@ -547,8 +547,8 @@ def test_large_block_index():
 
     buff.seek(0)
     with asdf.open(buff) as ff2:
-        assert isinstance(ff2.blocks._internal_blocks[0], block.Block)
-        assert len(ff2.blocks._internal_blocks) == narrays
+        assert isinstance(ff2._blocks._internal_blocks[0], block.Block)
+        assert len(ff2._blocks._internal_blocks) == narrays
 
 
 def test_no_block_index():
@@ -586,7 +586,7 @@ def test_junk_after_index():
     # should fall back to the skip method, which
     # only loads the first block.
     with asdf.open(buff) as ff:
-        assert len(ff.blocks) == 1
+        assert len(ff._blocks) == 1
 
 
 def test_short_file_find_block_index():
@@ -607,7 +607,7 @@ def test_short_file_find_block_index():
 
     buff.seek(0)
     with asdf.open(buff) as ff:
-        assert len(ff.blocks) == 1
+        assert len(ff._blocks) == 1
 
 
 def test_invalid_block_index_values():
@@ -625,12 +625,12 @@ def test_invalid_block_index_values():
 
     ff = asdf.AsdfFile(tree)
     ff.write_to(buff, include_block_index=False)
-    ff.blocks._internal_blocks.append(block.UnloadedBlock(buff, 123456789))
-    ff.blocks.write_block_index(buff, ff)
+    ff._blocks._internal_blocks.append(block.UnloadedBlock(buff, 123456789))
+    ff._blocks.write_block_index(buff, ff)
 
     buff.seek(0)
     with asdf.open(buff) as ff:
-        assert len(ff.blocks) == 1
+        assert len(ff._blocks) == 1
 
 
 def test_invalid_last_block_index():
@@ -649,12 +649,12 @@ def test_invalid_last_block_index():
 
     ff = asdf.AsdfFile(tree)
     ff.write_to(buff, include_block_index=False)
-    ff.blocks._internal_blocks[-1]._offset -= 4
-    ff.blocks.write_block_index(buff, ff)
+    ff._blocks._internal_blocks[-1]._offset -= 4
+    ff._blocks.write_block_index(buff, ff)
 
     buff.seek(0)
     with asdf.open(buff) as ff:
-        assert len(ff.blocks) == 1
+        assert len(ff._blocks) == 1
 
 
 def test_unordered_block_index():
@@ -672,12 +672,12 @@ def test_unordered_block_index():
 
     ff = asdf.AsdfFile(tree)
     ff.write_to(buff, include_block_index=False)
-    ff.blocks._internal_blocks = ff.blocks._internal_blocks[::-1]
-    ff.blocks.write_block_index(buff, ff)
+    ff._blocks._internal_blocks = ff._blocks._internal_blocks[::-1]
+    ff._blocks.write_block_index(buff, ff)
 
     buff.seek(0)
     with asdf.open(buff) as ff:
-        assert len(ff.blocks) == 1
+        assert len(ff._blocks) == 1
 
 
 def test_invalid_block_index_first_block_value():
@@ -696,18 +696,18 @@ def test_invalid_block_index_first_block_value():
 
     ff = asdf.AsdfFile(tree)
     ff.write_to(buff, include_block_index=False)
-    ff.blocks._internal_blocks[0]._offset -= 4
-    ff.blocks.write_block_index(buff, ff)
+    ff._blocks._internal_blocks[0]._offset -= 4
+    ff._blocks.write_block_index(buff, ff)
 
     buff.seek(0)
     with asdf.open(buff) as ff:
-        assert len(ff.blocks) == 1
+        assert len(ff._blocks) == 1
 
 
 def test_invalid_block_id():
     ff = asdf.AsdfFile()
     with pytest.raises(ValueError):
-        ff.blocks.get_block(-2)
+        ff._blocks.get_block(-2)
 
 
 def test_dots_but_no_block_index():
@@ -728,7 +728,7 @@ def test_dots_but_no_block_index():
 
     buff.seek(0)
     with asdf.open(buff) as ff:
-        assert len(ff.blocks) == 1
+        assert len(ff._blocks) == 1
 
 
 def test_open_no_memmap(tmp_path):
@@ -825,6 +825,6 @@ def test_block_allocation_on_validate():
     """
     array = np.array([[11, 12, 13], [21, 22, 23]], order="F")
     af = asdf.AsdfFile({"array": array})
-    assert len(list(af.blocks.blocks)) == 1
+    assert len(list(af._blocks.blocks)) == 1
     af.validate()
-    assert len(list(af.blocks.blocks)) == 1
+    assert len(list(af._blocks.blocks)) == 1

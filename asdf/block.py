@@ -362,7 +362,7 @@ class BlockManager:
             asdffile = asdf.AsdfFile()
             block = copy.copy(block)
             block._array_storage = "internal"
-            asdffile.blocks.add(block)
+            asdffile._blocks.add(block)
             block._used = True
             asdffile.write_to(subfd, pad_blocks=pad_blocks)
 
@@ -667,7 +667,7 @@ class BlockManager:
 
         if isinstance(source, str):
             asdffile = self._asdffile().open_external(source)
-            block = asdffile.blocks._internal_blocks[0]
+            block = asdffile._blocks._internal_blocks[0]
             self.set_array_storage(block, "external")
 
         # Handle the case of inline data

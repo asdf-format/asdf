@@ -368,26 +368,26 @@ def test_auto_inline(tmp_path):
     with asdf.AsdfFile(tree) as af:
         # By default blocks are written internal.
         af.write_to(outfile)
-        assert len(list(af.blocks.inline_blocks)) == 0
-        assert len(list(af.blocks.internal_blocks)) == 2
+        assert len(list(af._blocks.inline_blocks)) == 0
+        assert len(list(af._blocks.internal_blocks)) == 2
 
         af.write_to(outfile, auto_inline=10)
-        assert len(list(af.blocks.inline_blocks)) == 1
-        assert len(list(af.blocks.internal_blocks)) == 1
+        assert len(list(af._blocks.inline_blocks)) == 1
+        assert len(list(af._blocks.internal_blocks)) == 1
 
         # The previous write modified the small array block's storage
         # to inline, and a subsequent write should maintain that setting.
         af.write_to(outfile)
-        assert len(list(af.blocks.inline_blocks)) == 1
-        assert len(list(af.blocks.internal_blocks)) == 1
+        assert len(list(af._blocks.inline_blocks)) == 1
+        assert len(list(af._blocks.internal_blocks)) == 1
 
         af.write_to(outfile, auto_inline=7)
-        assert len(list(af.blocks.inline_blocks)) == 1
-        assert len(list(af.blocks.internal_blocks)) == 1
+        assert len(list(af._blocks.inline_blocks)) == 1
+        assert len(list(af._blocks.internal_blocks)) == 1
 
         af.write_to(outfile, auto_inline=5)
-        assert len(list(af.blocks.inline_blocks)) == 0
-        assert len(list(af.blocks.internal_blocks)) == 2
+        assert len(list(af._blocks.inline_blocks)) == 0
+        assert len(list(af._blocks.internal_blocks)) == 2
 
 
 @pytest.mark.parametrize(
@@ -410,8 +410,8 @@ def test_array_inline_threshold(array_inline_threshold, inline_blocks, internal_
 
         with asdf.AsdfFile(tree) as af:
             af.write_to(file_path)
-            assert len(list(af.blocks.inline_blocks)) == inline_blocks
-            assert len(list(af.blocks.internal_blocks)) == internal_blocks
+            assert len(list(af._blocks.inline_blocks)) == inline_blocks
+            assert len(list(af._blocks.internal_blocks)) == internal_blocks
 
 
 @pytest.mark.parametrize(
@@ -433,8 +433,8 @@ def test_array_inline_threshold_masked_array(array_inline_threshold, inline_bloc
 
         with asdf.AsdfFile(tree) as af:
             af.write_to(file_path)
-            assert len(list(af.blocks.inline_blocks)) == inline_blocks
-            assert len(list(af.blocks.internal_blocks)) == internal_blocks
+            assert len(list(af._blocks.inline_blocks)) == inline_blocks
+            assert len(list(af._blocks.internal_blocks)) == internal_blocks
 
 
 @pytest.mark.parametrize(
@@ -455,8 +455,8 @@ def test_array_inline_threshold_string_array(array_inline_threshold, inline_bloc
 
         with asdf.AsdfFile(tree) as af:
             af.write_to(file_path)
-            assert len(list(af.blocks.inline_blocks)) == inline_blocks
-            assert len(list(af.blocks.internal_blocks)) == internal_blocks
+            assert len(list(af._blocks.inline_blocks)) == inline_blocks
+            assert len(list(af._blocks.internal_blocks)) == internal_blocks
 
 
 def test_resolver_deprecations():

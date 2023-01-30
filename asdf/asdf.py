@@ -658,6 +658,12 @@ class AsdfFile:
         """
         Get the block manager associated with the `AsdfFile`.
         """
+        warnings.warn(
+            "The property AsdfFile.blocks has been deprecated and will be removed "
+            "in asdf-3.0. Public use of the block manager is strongly discouraged "
+            "as there is no stable API",
+            AsdfDeprecationWarning,
+        )
         return self._blocks
 
     def set_array_storage(self, arr, array_storage):
@@ -682,8 +688,8 @@ class AsdfFile:
 
             - ``inline``: Store the data as YAML inline in the tree.
         """
-        block = self.blocks[arr]
-        self.blocks.set_array_storage(block, array_storage)
+        block = self._blocks[arr]
+        self._blocks.set_array_storage(block, array_storage)
 
     def get_array_storage(self, arr):
         """
@@ -693,7 +699,7 @@ class AsdfFile:
         ----------
         arr : numpy.ndarray
         """
-        return self.blocks[arr].array_storage
+        return self._blocks[arr].array_storage
 
     def set_array_compression(self, arr, compression, **compression_kwargs):
         """
@@ -721,8 +727,8 @@ class AsdfFile:
               If there is no prior file, acts as None.
 
         """
-        self.blocks[arr].output_compression = compression
-        self.blocks[arr].output_compression_kwargs = compression_kwargs
+        self._blocks[arr].output_compression = compression
+        self._blocks[arr].output_compression_kwargs = compression_kwargs
 
     def get_array_compression(self, arr):
         """
@@ -736,11 +742,11 @@ class AsdfFile:
         -------
         compression : str or None
         """
-        return self.blocks[arr].output_compression
+        return self._blocks[arr].output_compression
 
     def get_array_compression_kwargs(self, arr):
         """ """
-        return self.blocks[arr].output_compression_kwargs
+        return self._blocks[arr].output_compression_kwargs
 
     @classmethod
     def _parse_header_line(cls, line):
@@ -1070,7 +1076,7 @@ class AsdfFile:
         if len(tree):
             serialization_context = self._create_serialization_context()
 
-            compression_extensions = self.blocks.get_output_compression_extensions()
+            compression_extensions = self._blocks.get_output_compression_extensions()
             for ext in compression_extensions:
                 serialization_context._mark_extension_used(ext)
 
@@ -1124,17 +1130,17 @@ class AsdfFile:
 
     def _serial_write(self, fd, pad_blocks, include_block_index):
         self._write_tree(self._tree, fd, pad_blocks)
-        self.blocks.write_internal_blocks_serial(fd, pad_blocks)
-        self.blocks.write_external_blocks(fd.uri, pad_blocks)
+        self._blocks.write_internal_blocks_serial(fd, pad_blocks)
+        self._blocks.write_external_blocks(fd.uri, pad_blocks)
         if include_block_index:
-            self.blocks.write_block_index(fd, self)
+            self._blocks.write_block_index(fd, self)
 
     def _random_write(self, fd, pad_blocks, include_block_index):
         self._write_tree(self._tree, fd, False)
-        self.blocks.write_internal_blocks_random_access(fd)
-        self.blocks.write_external_blocks(fd.uri, pad_blocks)
+        self._blocks.write_internal_blocks_random_access(fd)
+        self._blocks.write_external_blocks(fd.uri, pad_blocks)
         if include_block_index:
-            self.blocks.write_block_index(fd, self)
+            self._blocks.write_block_index(fd, self)
         fd.truncate()
 
     def _post_write(self, fd):
@@ -1238,7 +1244,7 @@ class AsdfFile:
                 msg = "Can not update, since associated file is not seekable"
                 raise OSError(msg)
 
-            self.blocks.finish_reading_internal_blocks()
+            self._blocks.finish_reading_internal_blocks()
 
             # flush all pending memmap writes
             if fd.can_memmap():
@@ -1249,7 +1255,7 @@ class AsdfFile:
             try:
                 fd.seek(0)
 
-                if not self.blocks.has_blocks_with_offset():
+                if not self._blocks.has_blocks_with_offset():
                     # If we don't have any blocks that are being reused, just
                     # write out in a serial fashion.
                     self._serial_write(fd, pad_blocks, include_block_index)
@@ -1263,11 +1269,11 @@ class AsdfFile:
                 # possible there.
                 tree_serialized = io.BytesIO()
                 self._write_tree(self._tree, tree_serialized, pad_blocks=False)
-                n_internal_blocks = len(self.blocks._internal_blocks)
+                n_internal_blocks = len(self._blocks._internal_blocks)
 
                 serialized_tree_size = tree_serialized.tell() + constants.MAX_BLOCKS_DIGITS * n_internal_blocks
 
-                if not block.calculate_updated_layout(self.blocks, serialized_tree_size, pad_blocks, fd.block_size):
+                if not block.calculate_updated_layout(self._blocks, serialized_tree_size, pad_blocks, fd.block_size):
                     # If we don't have any blocks that are being reused, just
                     # write out in a serial fashion.
                     self._serial_write(fd, pad_blocks, include_block_index)
@@ -1283,7 +1289,7 @@ class AsdfFile:
                 if fd.can_memmap():
                     fd.close_memmap()
                     # also clean any memmapped blocks
-                    for b in self.blocks._internal_blocks:
+                    for b in self._blocks._internal_blocks:
                         if b._memmapped:
                             b._memmapped = False
                             b._data = None
@@ -1466,10 +1472,10 @@ class AsdfFile:
         produces something that, when saved, is a 100% valid YAML
         file.
         """
-        self.blocks.finish_reading_internal_blocks()
+        self._blocks.finish_reading_internal_blocks()
         self.resolve_references()
-        for b in list(self.blocks.blocks):
-            self.blocks.set_array_storage(b, "inline")
+        for b in list(self._blocks.blocks):
+            self._blocks.set_array_storage(b, "inline")
 
     def fill_defaults(self):
         """

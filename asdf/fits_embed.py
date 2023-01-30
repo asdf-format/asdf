@@ -312,7 +312,7 @@ class AsdfInFits(asdf.AsdfFile):
         use_image_hdu=False,
         **kwargs,
     ):
-        if self.blocks.streamed_block is not None:
+        if self._blocks.streamed_block is not None:
             msg = "Can not save streamed data to ASDF-in-FITS file."
             raise ValueError(msg)
 

@@ -36,7 +36,7 @@ class Stream(ndarray.NDArrayType):
     @classmethod
     def reserve_blocks(cls, data, ctx):
         if isinstance(data, Stream):
-            yield ctx.blocks.get_streamed_block()
+            yield ctx._blocks.get_streamed_block()
 
     @classmethod
     def from_tree(cls, data, ctx):
@@ -44,7 +44,7 @@ class Stream(ndarray.NDArrayType):
 
     @classmethod
     def to_tree(cls, data, ctx):
-        ctx.blocks.get_streamed_block()
+        ctx._blocks.get_streamed_block()
 
         result = {}
         result["source"] = -1

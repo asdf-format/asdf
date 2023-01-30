@@ -388,7 +388,7 @@ def test_dangling_file_handle(tmp_path):
     ctx = asdf.AsdfFile()
     gc.collect()
 
-    ctx.blocks.find_or_create_block_for_array(hdul[0].data, ctx)
+    ctx._blocks.find_or_create_block_for_array(hdul[0].data, ctx)
     gc.collect()
 
     hdul.close()

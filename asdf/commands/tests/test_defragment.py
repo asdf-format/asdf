@@ -23,7 +23,7 @@ def _test_defragment(tmpdir, codec):
     out_path = os.path.join(str(tmpdir), "original.defragment.asdf")
     ff = AsdfFile(tree)
     ff.write_to(path)
-    assert len(ff.blocks) == 2
+    assert len(ff._blocks) == 2
 
     result = main.main_from_args(["defragment", path, "-o", out_path, "-c", codec])
 
@@ -38,7 +38,7 @@ def _test_defragment(tmpdir, codec):
 
     with asdf.open(os.path.join(str(tmpdir), "original.defragment.asdf")) as ff:
         assert_tree_match(ff.tree, tree)
-        assert len(list(ff.blocks.internal_blocks)) == 2
+        assert len(list(ff._blocks.internal_blocks)) == 2
 
 
 def test_defragment_zlib(tmpdir):
