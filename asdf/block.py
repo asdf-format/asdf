@@ -556,10 +556,12 @@ class BlockManager:
         reserved_blocks = set()
 
         for node in treeutil.iter_tree(tree):
-            hook = ctx.type_index.get_hook_for_type("reserve_blocks", type(node), ctx.version_string)
-            if hook is not None:
-                for block in hook(node, ctx):
-                    reserved_blocks.add(block)
+            # check that this object will not be handled by a converter
+            if not ctx.extension_manager.handles_type(type(node)):
+                hook = ctx.type_index.get_hook_for_type("reserve_blocks", type(node), ctx.version_string)
+                if hook is not None:
+                    for block in hook(node, ctx):
+                        reserved_blocks.add(block)
 
         for block in list(self.blocks):
             if getattr(block, "_used", 0) == 0 and block not in reserved_blocks:
