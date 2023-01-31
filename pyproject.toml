@@ -188,6 +188,7 @@ extend-ignore = [
     "TRY002", # Create your own exception
     "TRY301", # Abstract raise to an inner function
     "TRY400", # Use logging.exception instead of logging.error
+    "PLR0913", # Too many arguments to function call
 ]
 extend-exclude = ["asdf/extern/*", "docs/*"]
 
