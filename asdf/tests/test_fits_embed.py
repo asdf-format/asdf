@@ -1,4 +1,5 @@
 import copy
+import importlib
 import warnings
 
 import numpy as np
@@ -547,3 +548,8 @@ def test_resave_breaks_hdulist_tree_array_link(tmp_path):
         for f in (af1, af2):
             block_bytes = f["ASDF"].data.tobytes().split(b"...")[1].strip()
             assert len(block_bytes) == 0
+
+
+def test_asdf_in_fits_deprecation():
+    with pytest.deprecated_call():
+        importlib.reload(asdf.fits_embed)
