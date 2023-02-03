@@ -6,9 +6,9 @@
 Release Cycle and Major Dependency Support Policy
 *************************************************
 
-This document describes the general plan for releases of the ASDF library, along
-with how long we intend to support each release. Moreover, it also describes our
-policy for how long we support versions of CPython and Numpy. Note that this is
+This document describes a general plan for releasing the ASDF library, along with
+how long we intend to support each release. Moreover, it also describes our policy
+for how long we plan to support versions of CPython and NumPy. Note that this is
 a living document, and may be updated at any time.
 
 .. _release_cycle:
@@ -16,8 +16,8 @@ a living document, and may be updated at any time.
 Release Cycle
 =============
 
-ASDF is and will continue to be developed on a rolling release cycle, as ASDF is
-still under active development. This means that ASDF will not have a fixed release
+As ASDF is still under active development, it will continue to be developed on a
+rolling release cycle. This means that ASDF will not have a fixed release
 schedule, but rather will be released as needed.
 
 However, we do intend to create and maintain designated "long-term support" (LTS)
@@ -34,8 +34,8 @@ for these rolling versions will end when the next non-LTS version of ASDF is rel
 
 .. note::
 
-    Since this policy has not yet been implemented, we do not yet formally declared
-    a LTS version for ASDF. Our plan is to declare ``2.15`` as an LTS version when it
+    Since this policy has not yet been implemented, we have not yet formally declared
+    an LTS version for ASDF. Our plan is to declare ``2.15`` as an LTS version when it
     is released and move forward to actively working on ASDF ``3.0`` as our main development.
     Once ``3.0`` is released, it will also become a second LTS version of ASDF and we
     will continue to release bugfixes for ASDF ``2.15`` and ``3.0`` for at least one
@@ -46,10 +46,10 @@ for these rolling versions will end when the next non-LTS version of ASDF is rel
 Dependency Support Policy
 =========================
 
-ASDF primarily depends on CPython and Numpy. As a scientific Python library, we
+ASDF primarily depends on CPython and NumPy. As a scientific Python library, we
 have chosen to abide by the policy laid out in
-`NEP 29 <https://numpy.org/neps/nep-0029-deprecation_policy.html>`_. In summary of
-``NEP 29`` the following table summarizes this policy:
+`NEP 29 <https://numpy.org/neps/nep-0029-deprecation_policy.html>`_.
+The following table summarizes this policy:
 
 ============ ====== =====
 Date         Python NumPy
@@ -67,7 +67,7 @@ Apr 24, 2026 3.12+  1.25+
 
 .. _drop_schedule:
 
-CPython and Numpy Drop Schedule
+CPython and NumPy Drop Schedule
 -------------------------------
 
 ::
@@ -98,5 +98,5 @@ versions of ASDF on an as-needed basis. We will try our best to announce when we
 need to bump the support of these dependencies, and will always record doing so
 (and why) in the changelog.
 
-If you find any issues with ASDF dependencies which effects a currently supported
-version of ASDF please open an issue on ASDF.
+If you find any issues with ASDF dependencies which affect a currently-supported
+version of ASDF, please open an issue in the ASDF repository.
