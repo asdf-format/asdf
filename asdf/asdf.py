@@ -1426,7 +1426,53 @@ class AsdfFile:
             ``asdf.get_config().array_inline_threshold``.
 
         """
+        with config_context() as config:
+            if "all_array_storage" in kwargs:
+                config.all_array_storage = kwargs["all_array_storage"]
+            if "all_array_compression" in kwargs:
+                config.all_array_compression = kwargs["all_array_compression"]
+            if "compression_kwargs" in kwargs:
+                config.all_array_compression_kwargs = kwargs["compression_kwargs"]
 
+            naf = AsdfFile(
+                {},
+                uri=self._uri,
+                extensions=self.extensions,
+                version=self.version,
+                ignore_version_mismatch=self._ignore_version_mismatch,
+                ignore_unrecognized_tag=self._ignore_unrecognized_tag,
+                ignore_implicit_conversion=self._ignore_implicit_conversion,
+            )
+            naf._tree = self.tree  # avoid an extra validate
+            # copy over block storage and other settings
+            naf._blocks._storage_settings = copy.deepcopy(self._blocks._storage_settings)
+            naf._blocks._compression_settings = copy.deepcopy(self._blocks._compression_settings)
+            for b in self._blocks.blocks:
+                # we know we are going to use all new blocks
+                b._used = True
+                if b in self._blocks._streamed_blocks and b._data is None:
+                    # streamed blocks might not have data
+                    # add a streamed block to naf
+                    blk = naf._blocks.get_streamed_block()
+                    # mark this block as used so it doesn't get removed
+                    blk._used = True
+                    continue
+                if b._data_callback is None:
+                    key = b.data
+                    blk = naf._blocks[key]
+                    blk._used = True
+                    naf.set_array_storage(key, b.array_storage)
+                    naf.set_array_compression(key, b.output_compression, **b.output_compression_kwargs)
+            naf._write_to(fd, **kwargs)
+            for b in self._blocks.blocks:
+                if hasattr(b, "_used"):
+                    del b._used
+
+    def _write_to(
+        self,
+        fd,
+        **kwargs,
+    ):
         pad_blocks = kwargs.pop("pad_blocks", False)
         include_block_index = kwargs.pop("include_block_index", True)
         version = kwargs.pop("version", None)

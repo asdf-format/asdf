@@ -3,6 +3,7 @@ import os
 
 import numpy as np
 import pytest
+import yaml
 from numpy.random import random
 from numpy.testing import assert_array_equal
 
@@ -655,7 +656,8 @@ def test_invalid_block_index_values():
         assert len(ff._blocks) == 1
 
 
-def test_invalid_last_block_index():
+@pytest.mark.parametrize("block_index_index", [0, -1])
+def test_invalid_block_index_offset(block_index_index):
     """
     This adds a value in the block index that points to something
     that isn't a block
@@ -670,13 +672,33 @@ def test_invalid_last_block_index():
     tree = {"arrays": arrays}
 
     ff = asdf.AsdfFile(tree)
-    ff.write_to(buff, include_block_index=False)
-    ff._blocks._internal_blocks[-1]._offset -= 4
-    ff._blocks.write_block_index(buff, ff)
+    ff.write_to(buff)
+
+    # now overwrite the block index with the first entry
+    # incorrectly pointing to a non-block offset
+    buff.seek(0)
+    bs = buff.read()
+    block_index_header_start = bs.index(constants.INDEX_HEADER)
+    block_index_start = block_index_header_start + len(constants.INDEX_HEADER)
+    block_index = yaml.load(bs[block_index_start:], yaml.SafeLoader)
+    block_index[block_index_index] -= 4
+    yaml_version = tuple(int(x) for x in ff.version_map["YAML_VERSION"].split("."))
+    buff.seek(block_index_start)
+    yaml.dump(
+        block_index,
+        stream=buff,
+        explicit_start=True,
+        explicit_end=True,
+        version=yaml_version,
+        allow_unicode=True,
+        encoding="utf-8",
+    )
 
     buff.seek(0)
     with asdf.open(buff) as ff:
         assert len(ff._blocks) == 1
+        for i, a in enumerate(arrays):
+            assert_array_equal(ff["arrays"][i], a)
 
 
 def test_unordered_block_index():
@@ -695,30 +717,6 @@ def test_unordered_block_index():
     ff = asdf.AsdfFile(tree)
     ff.write_to(buff, include_block_index=False)
     ff._blocks._internal_blocks = ff._blocks._internal_blocks[::-1]
-    ff._blocks.write_block_index(buff, ff)
-
-    buff.seek(0)
-    with asdf.open(buff) as ff:
-        assert len(ff._blocks) == 1
-
-
-def test_invalid_block_index_first_block_value():
-    """
-    This creates a bogus block index where the offset of the first
-    block doesn't match what we already know it to be.  In this
-    case, we should reject the whole block index.
-    """
-    buff = io.BytesIO()
-
-    arrays = []
-    for i in range(10):
-        arrays.append(np.ones((8, 8)) * i)
-
-    tree = {"arrays": arrays}
-
-    ff = asdf.AsdfFile(tree)
-    ff.write_to(buff, include_block_index=False)
-    ff._blocks._internal_blocks[0]._offset -= 4
     ff._blocks.write_block_index(buff, ff)
 
     buff.seek(0)
@@ -859,7 +857,7 @@ def test_write_to_update_storage_options(tmp_path, all_array_storage, all_array_
     if all_array_compression == "bzp2" and compression_kwargs is not None:
         compression_kwargs = {"compresslevel": 1}
 
-    def assert_result(ff, arr):
+    def assert_result(ff):
         if all_array_storage == "external":
             assert "test0000.asdf" in os.listdir(tmp_path)
         else:
@@ -868,13 +866,20 @@ def test_write_to_update_storage_options(tmp_path, all_array_storage, all_array_
             assert len(ff._blocks._internal_blocks) == 1
         else:
             assert len(ff._blocks._internal_blocks) == 0
-        blk = ff._blocks[arr]
+        blk = ff._blocks.find_or_create_block_for_array(ff["array"])
 
-        target_compression = all_array_compression or None
-        assert blk._output_compression == target_compression
+        if all_array_storage == "inline":
+            # for 'inline' storage, no compression will be used
+            assert blk.input_compression is None
+        else:
+            target_compression = all_array_compression or None
+            if target_compression == "input":
+                target_compression = None
+            assert blk.input_compression == target_compression
 
-        target_compression_kwargs = compression_kwargs or {}
-        assert blk._output_compression_kwargs == target_compression_kwargs
+        # with a new block manager on write, there is no way to check kwargs
+        # target_compression_kwargs = compression_kwargs or {}
+        # assert blk._output_compression_kwargs == target_compression_kwargs
 
     arr1 = np.ones((8, 8))
     tree = {"array": arr1}
@@ -888,7 +893,8 @@ def test_write_to_update_storage_options(tmp_path, all_array_storage, all_array_
         all_array_compression=all_array_compression,
         compression_kwargs=compression_kwargs,
     )
-    assert_result(ff1, arr1)
+    with asdf.open(fn) as raf:
+        assert_result(raf)
 
     # then reuse the file to check update
     with asdf.open(fn, mode="rw") as ff2:
@@ -899,7 +905,8 @@ def test_write_to_update_storage_options(tmp_path, all_array_storage, all_array_
             all_array_compression=all_array_compression,
             compression_kwargs=compression_kwargs,
         )
-        assert_result(ff2, arr2)
+        with asdf.open(fn) as raf:
+            assert_result(raf)
 
 
 def test_block_key():

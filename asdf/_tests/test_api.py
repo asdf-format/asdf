@@ -439,6 +439,7 @@ def test_array_inline_threshold_masked_array(array_inline_threshold, inline_bloc
 
         with asdf.AsdfFile(tree) as af:
             af.write_to(file_path)
+        with asdf.open(file_path) as af:
             assert len(list(af._blocks.inline_blocks)) == inline_blocks
             assert len(list(af._blocks.internal_blocks)) == internal_blocks
 

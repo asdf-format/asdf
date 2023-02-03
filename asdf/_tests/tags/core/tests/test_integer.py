@@ -67,7 +67,7 @@ def test_integer_storage_duplication(tmpdir):
 
     with asdf.AsdfFile(tree) as af:
         af.write_to(tmpfile)
-        assert len(af._blocks) == 1
+        # we can no longer check af.blocks as a new block manager was made
 
     with asdf.open(tmpfile, _force_raw_types=True) as rf:
         assert rf.tree["integer1"]["words"]["source"] == 0

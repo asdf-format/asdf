@@ -83,7 +83,7 @@ class BlockManager:
 
         if block._data is not None or key is not None:
             if key is None:
-                key = id(block._data)
+                key = id(util.get_array_base(block._data))
             self._data_to_block_mapping[key] = block
 
     def remove(self, block):
@@ -369,7 +369,8 @@ class BlockManager:
             blk._array_storage = "internal"
             asdffile._blocks.add(blk)
             blk._used = True
-            asdffile.write_to(subfd, pad_blocks=pad_blocks, all_array_storage="internal")
+            # skip the new block manager here
+            asdffile._write_to(subfd, pad_blocks=pad_blocks, all_array_storage="internal")
 
     def write_block_index(self, fd, ctx):
         """
