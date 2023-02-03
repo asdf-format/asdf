@@ -90,18 +90,18 @@ XXXXXXXX
 
     buff = io.BytesIO(content)
     with asdf.open(buff) as ff:
-        assert len(ff.blocks) == 0
+        assert len(ff._blocks) == 0
 
     buff.seek(0)
     fd = generic_io.InputStream(buff, "r")
     with asdf.open(fd) as ff:
-        assert len(ff.blocks) == 0
+        assert len(ff._blocks) == 0
 
     with open(path, "wb") as fd:
         fd.write(content)
 
     with open(path, "rb") as fd, asdf.open(fd) as ff:
-        assert len(ff.blocks) == 0
+        assert len(ff._blocks) == 0
 
 
 def test_invalid_source(small_tree):
@@ -115,22 +115,22 @@ def test_invalid_source(small_tree):
 
     buff.seek(0)
     with asdf.open(buff) as ff2:
-        ff2.blocks.get_block(0)
+        ff2._blocks.get_block(0)
 
         with pytest.raises(ValueError):
-            ff2.blocks.get_block(2)
+            ff2._blocks.get_block(2)
 
         with pytest.raises(IOError):
-            ff2.blocks.get_block("http://ABadUrl.verybad/test.asdf")
+            ff2._blocks.get_block("http://ABadUrl.verybad/test.asdf")
 
         with pytest.raises(TypeError):
-            ff2.blocks.get_block(42.0)
+            ff2._blocks.get_block(42.0)
 
         with pytest.raises(ValueError):
-            ff2.blocks.get_source(42.0)
+            ff2._blocks.get_source(42.0)
 
-        block = ff2.blocks.get_block(0)
-        assert ff2.blocks.get_source(block) == 0
+        block = ff2._blocks.get_block(0)
+        assert ff2._blocks.get_source(block) == 0
 
 
 def test_empty_file():
@@ -139,14 +139,14 @@ def test_empty_file():
 
     with asdf.open(buff) as ff:
         assert ff.tree == {}
-        assert len(ff.blocks) == 0
+        assert len(ff._blocks) == 0
 
     buff = io.BytesIO(b"#ASDF 1.0.0\n#ASDF_STANDARD 1.0.0")
     buff.seek(0)
 
     with asdf.open(buff) as ff:
         assert ff.tree == {}
-        assert len(ff.blocks) == 0
+        assert len(ff._blocks) == 0
 
 
 @pytest.mark.filterwarnings("ignore::astropy.io.fits.verify.VerifyWarning")

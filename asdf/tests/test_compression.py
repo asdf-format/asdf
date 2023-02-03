@@ -179,6 +179,7 @@ def test_set_array_compression(tmp_path):
             af_out.write_to(tmpfile)
         af_out.set_array_compression(bzp2_data, "bzp2", compresslevel=9)
         af_out.write_to(tmpfile)
+        assert af_out.get_array_compression_kwargs(bzp2_data)["compresslevel"] == 9
 
     with asdf.open(tmpfile) as af_in:
         assert af_in.get_array_compression(af_in.tree["zlib_data"]) == "zlib"

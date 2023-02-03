@@ -21,7 +21,7 @@ def test_to_yaml(tmpdir):
     path = os.path.join(str(tmpdir), "original.asdf")
     ff = AsdfFile(tree)
     ff.write_to(path)
-    assert len(ff.blocks) == 2
+    assert len(ff._blocks) == 2
 
     result = main.main_from_args(["to_yaml", path])
 
@@ -34,4 +34,4 @@ def test_to_yaml(tmpdir):
 
     with asdf.open(os.path.join(str(tmpdir), "original.yaml")) as ff:
         assert_tree_match(ff.tree, tree)
-        assert len(list(ff.blocks.internal_blocks)) == 0
+        assert len(list(ff._blocks.internal_blocks)) == 0

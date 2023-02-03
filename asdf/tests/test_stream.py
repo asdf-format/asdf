@@ -22,7 +22,7 @@ def test_stream():
     buff.seek(0)
 
     with asdf.open(buff) as ff:
-        assert len(ff.blocks) == 1
+        assert len(ff._blocks) == 1
         assert ff.tree["stream"].shape == (100, 6, 2)
         for i, row in enumerate(ff.tree["stream"]):
             assert np.all(row == i)
@@ -43,7 +43,7 @@ def test_stream_write_nothing():
     buff.seek(0)
 
     with asdf.open(buff) as ff:
-        assert len(ff.blocks) == 1
+        assert len(ff._blocks) == 1
         assert ff.tree["stream"].shape == (0, 6, 2)
 
 
@@ -64,7 +64,7 @@ def test_stream_twice():
     buff.seek(0)
 
     ff = asdf.open(buff)
-    assert len(ff.blocks) == 1
+    assert len(ff._blocks) == 1
     assert ff.tree["stream"].shape == (100, 6, 2)
     assert ff.tree["stream2"].shape == (50, 12, 2)
 
@@ -85,10 +85,10 @@ def test_stream_with_nonstream():
     buff.seek(0)
 
     with asdf.open(buff) as ff:
-        assert len(ff.blocks) == 1
+        assert len(ff._blocks) == 1
         assert_array_equal(ff.tree["nonstream"], np.array([1, 2, 3, 4], np.int64))
         assert ff.tree["stream"].shape == (100, 6, 2)
-        assert len(ff.blocks) == 2
+        assert len(ff._blocks) == 2
         for i, row in enumerate(ff.tree["stream"]):
             assert np.all(row == i)
 
@@ -109,10 +109,10 @@ def test_stream_real_file(tmp_path):
             fd.write(np.array([i] * 12, np.float64).tobytes())
 
     with asdf.open(path) as ff:
-        assert len(ff.blocks) == 1
+        assert len(ff._blocks) == 1
         assert_array_equal(ff.tree["nonstream"], np.array([1, 2, 3, 4], np.int64))
         assert ff.tree["stream"].shape == (100, 6, 2)
-        assert len(ff.blocks) == 2
+        assert len(ff._blocks) == 2
         for i, row in enumerate(ff.tree["stream"]):
             assert np.all(row == i)
 
@@ -131,7 +131,7 @@ def test_stream_to_stream():
     buff.seek(0)
 
     with asdf.open(generic_io.InputStream(buff, "r")) as ff:
-        assert len(ff.blocks) == 2
+        assert len(ff._blocks) == 2
         assert_array_equal(ff.tree["nonstream"], np.array([1, 2, 3, 4], np.int64))
         assert ff.tree["stream"].shape == (100, 6, 2)
         for i, row in enumerate(ff.tree["stream"]):

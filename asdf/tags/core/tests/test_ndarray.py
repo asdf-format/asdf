@@ -64,8 +64,8 @@ def test_sharing(tmpdir):
 
         assert tree["science_data"].ctypes.data == tree["skipping"].ctypes.data
 
-        assert len(list(asdf.blocks.internal_blocks)) == 1
-        assert next(asdf.blocks.internal_blocks)._size == 80
+        assert len(list(asdf._blocks.internal_blocks)) == 1
+        assert next(asdf._blocks.internal_blocks)._size == 80
 
         if "w" in asdf._mode:
             tree["science_data"][0] = 42
@@ -135,7 +135,7 @@ def test_dont_load_data():
         str(ff.tree["science_data"])
         repr(ff.tree)
 
-        for block in ff.blocks.internal_blocks:
+        for block in ff._blocks.internal_blocks:
             assert block._data is None
 
 
@@ -172,7 +172,7 @@ def test_array_inline_threshold_recursive(tmpdir):
     tree = {"test": aff}
 
     def check_asdf(asdf):
-        assert len(list(asdf.blocks.internal_blocks)) == 0
+        assert len(list(asdf._blocks.internal_blocks)) == 0
 
     with asdf.config_context() as config:
         config.array_inline_threshold = 100
@@ -253,13 +253,13 @@ def test_inline():
     buff = io.BytesIO()
 
     ff = asdf.AsdfFile(tree)
-    ff.blocks.set_array_storage(ff.blocks[tree["science_data"]], "inline")
+    ff._blocks.set_array_storage(ff._blocks[tree["science_data"]], "inline")
     ff.write_to(buff)
 
     buff.seek(0)
     with asdf.open(buff, mode="rw") as ff:
         helpers.assert_tree_match(tree, ff.tree)
-        assert len(list(ff.blocks.internal_blocks)) == 0
+        assert len(list(ff._blocks.internal_blocks)) == 0
         buff = io.BytesIO()
         ff.write_to(buff)
 
@@ -285,7 +285,7 @@ def test_mask_roundtrip(tmpdir):
         m = tree["masked_array"]
 
         assert np.all(m.mask[6:])
-        assert len(asdf.blocks) == 2
+        assert len(asdf._blocks) == 2
 
     helpers.assert_roundtrip_tree(tree, tmpdir, asdf_check_func=check_asdf)
 
@@ -415,7 +415,7 @@ def test_inline_masked_array(tmpdir):
     f.write_to(testfile)
 
     with asdf.open(testfile) as f2:
-        assert len(list(f2.blocks.internal_blocks)) == 0
+        assert len(list(f2._blocks.internal_blocks)) == 0
         assert_array_equal(f.tree["test"], f2.tree["test"])
 
     with open(testfile, "rb") as fd:

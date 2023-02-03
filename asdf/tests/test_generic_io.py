@@ -83,9 +83,9 @@ def test_path(tree, tmp_path):
         return f
 
     with _roundtrip(tree, get_write_fd, get_read_fd) as ff:
-        assert len(list(ff.blocks.internal_blocks)) == 2
-        next(ff.blocks.internal_blocks).data
-        assert isinstance(next(ff.blocks.internal_blocks)._data, np.core.memmap)
+        assert len(list(ff._blocks.internal_blocks)) == 2
+        next(ff._blocks.internal_blocks).data
+        assert isinstance(next(ff._blocks.internal_blocks)._data, np.core.memmap)
 
 
 def test_open2(tree, tmp_path):
@@ -107,8 +107,8 @@ def test_open2(tree, tmp_path):
         return f
 
     with _roundtrip(tree, get_write_fd, get_read_fd) as ff:
-        assert len(list(ff.blocks.internal_blocks)) == 2
-        assert isinstance(next(ff.blocks.internal_blocks)._data, np.core.memmap)
+        assert len(list(ff._blocks.internal_blocks)) == 2
+        assert isinstance(next(ff._blocks.internal_blocks)._data, np.core.memmap)
 
 
 def test_open_fail(tmp_path):
@@ -163,8 +163,8 @@ def test_io_open(tree, tmp_path):
         return f
 
     with _roundtrip(tree, get_write_fd, get_read_fd) as ff:
-        assert len(list(ff.blocks.internal_blocks)) == 2
-        assert isinstance(next(ff.blocks.internal_blocks)._data, np.core.memmap)
+        assert len(list(ff._blocks.internal_blocks)) == 2
+        assert isinstance(next(ff._blocks.internal_blocks)._data, np.core.memmap)
         ff.tree["science_data"][0] = 42
 
 
@@ -199,9 +199,9 @@ def test_bytes_io(tree):
         return f
 
     with _roundtrip(tree, get_write_fd, get_read_fd) as ff:
-        assert len(list(ff.blocks.internal_blocks)) == 2
-        assert not isinstance(next(ff.blocks.internal_blocks)._data, np.core.memmap)
-        assert isinstance(next(ff.blocks.internal_blocks)._data, np.ndarray)
+        assert len(list(ff._blocks.internal_blocks)) == 2
+        assert not isinstance(next(ff._blocks.internal_blocks)._data, np.core.memmap)
+        assert isinstance(next(ff._blocks.internal_blocks)._data, np.ndarray)
         ff.tree["science_data"][0] = 42
 
 
@@ -216,9 +216,9 @@ def test_streams(tree):
         return generic_io.InputStream(buff, "rw")
 
     with _roundtrip(tree, get_write_fd, get_read_fd) as ff:
-        assert len(ff.blocks) == 2
-        assert not isinstance(next(ff.blocks.internal_blocks)._data, np.core.memmap)
-        assert isinstance(next(ff.blocks.internal_blocks)._data, np.ndarray)
+        assert len(ff._blocks) == 2
+        assert not isinstance(next(ff._blocks.internal_blocks)._data, np.core.memmap)
+        assert isinstance(next(ff._blocks.internal_blocks)._data, np.ndarray)
         ff.tree["science_data"][0] = 42
 
 
@@ -245,9 +245,9 @@ def test_urlopen(tree, httpserver):
         return generic_io.get_file(urllib_request.urlopen(httpserver.url + "test.asdf"))
 
     with _roundtrip(tree, get_write_fd, get_read_fd) as ff:
-        assert len(list(ff.blocks.internal_blocks)) == 2
-        assert not isinstance(next(ff.blocks.internal_blocks)._data, np.core.memmap)
-        assert isinstance(next(ff.blocks.internal_blocks)._data, np.ndarray)
+        assert len(list(ff._blocks.internal_blocks)) == 2
+        assert not isinstance(next(ff._blocks.internal_blocks)._data, np.core.memmap)
+        assert isinstance(next(ff._blocks.internal_blocks)._data, np.ndarray)
 
 
 @pytest.mark.remote_data()
@@ -267,8 +267,8 @@ def test_http_connection(tree, httpserver):
         return fd
 
     with _roundtrip(tree, get_write_fd, get_read_fd) as ff:
-        assert len(list(ff.blocks.internal_blocks)) == 2
-        assert isinstance(next(ff.blocks.internal_blocks)._data, np.ndarray)
+        assert len(list(ff._blocks.internal_blocks)) == 2
+        assert isinstance(next(ff._blocks.internal_blocks)._data, np.ndarray)
         assert (ff.tree["science_data"] == tree["science_data"]).all()
 
 
@@ -282,8 +282,8 @@ def test_exploded_filesystem(tree, tmp_path):
         return generic_io.get_file(path, mode="r")
 
     with _roundtrip(tree, get_write_fd, get_read_fd, write_options={"all_array_storage": "external"}) as ff:
-        assert len(list(ff.blocks.internal_blocks)) == 0
-        assert len(list(ff.blocks.external_blocks)) == 2
+        assert len(list(ff._blocks.internal_blocks)) == 0
+        assert len(list(ff._blocks.external_blocks)) == 2
 
 
 def test_exploded_filesystem_fail(tree, tmp_path):
@@ -317,8 +317,8 @@ def test_exploded_http(tree, httpserver):
         return generic_io.get_file(httpserver.url + "test.asdf")
 
     with _roundtrip(tree, get_write_fd, get_read_fd, write_options={"all_array_storage": "external"}) as ff:
-        assert len(list(ff.blocks.internal_blocks)) == 0
-        assert len(list(ff.blocks.external_blocks)) == 2
+        assert len(list(ff._blocks.internal_blocks)) == 0
+        assert len(list(ff._blocks.external_blocks)) == 2
 
 
 def test_exploded_stream_write(small_tree):
