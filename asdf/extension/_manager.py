@@ -52,7 +52,7 @@ class ExtensionManager:
 
             validators.update(extension.validators)
 
-        self._validator_manager = ValidatorManager(validators)
+        self._validator_manager = _get_cached_validator_manager(tuple(validators))
 
     @property
     def extensions(self):
@@ -246,6 +246,12 @@ class ValidatorManager:
                 self._validators_by_schema_property[validator.schema_property] = set()
             self._validators_by_schema_property[validator.schema_property].add(validator)
 
+        self._jsonschema_validators_by_schema_property = {}
+        for schema_property in self._validators_by_schema_property:
+            self._jsonschema_validators_by_schema_property[schema_property] = self._get_jsonschema_validator(
+                schema_property
+            )
+
     def validate(self, schema_property, schema_property_value, node, schema):
         """
         Validate an ASDF tree node against custom validators for a schema property.
@@ -280,12 +286,7 @@ class ValidatorManager:
         -------
         dict of str: callable
         """
-        result = {}
-
-        for schema_property in self._validators_by_schema_property:
-            result[schema_property] = self._get_jsonschema_validator(schema_property)
-
-        return result
+        return dict(self._jsonschema_validators_by_schema_property)
 
     def _get_jsonschema_validator(self, schema_property):
         def _validator(_, schema_property_value, node, schema):
@@ -302,3 +303,8 @@ def _validator_matches(validator, node):
         return False
 
     return any(uri_match(t, node._tag) for t in validator.tags)
+
+
+@lru_cache
+def _get_cached_validator_manager(validators):
+    return ValidatorManager(validators)
