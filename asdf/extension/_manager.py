@@ -229,7 +229,7 @@ def _get_cached_extension_manager(extensions):
 
 class ValidatorManager:
     """
-    Wraps a list of validators and indexes them by schema property.
+    Wraps a list of custom validators and indexes them by schema property.
 
     Parameters
     ----------
