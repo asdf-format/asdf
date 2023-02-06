@@ -249,7 +249,7 @@ class ValidatorManager:
         self._jsonschema_validators_by_schema_property = {}
         for schema_property in self._validators_by_schema_property:
             self._jsonschema_validators_by_schema_property[schema_property] = self._get_jsonschema_validator(
-                schema_property
+                schema_property,
             )
 
     def validate(self, schema_property, schema_property_value, node, schema):
