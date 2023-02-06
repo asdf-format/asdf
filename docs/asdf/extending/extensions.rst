@@ -174,6 +174,8 @@ and are included in an extension via the ``validators`` property:
         extension_uri = "asdf://example.com/example-project/extensions/foo-1.0.0"
         validators = [FooValidator()]
 
+See :ref:`extending_validators` for details on implementing the Validator interface.
+
 ASDF Standard version requirement
 ---------------------------------
 
