@@ -248,7 +248,7 @@ class ValidatorManager:
 
     def validate(self, schema_property, schema_property_value, node, schema):
         """
-        Validate an ASDF tree node against a schema property.
+        Validate an ASDF tree node against custom validators for a schema property.
 
         Parameters
         ----------
