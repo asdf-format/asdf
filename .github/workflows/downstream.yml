@@ -1,5 +1,11 @@
 name: Downstream
 
+env:
+  CRDS_SERVER_URL: https://jwst-crds.stsci.edu
+  CRDS_PATH: /tmp/crds_cache
+  CRDS_CLIENT_RETRY_COUNT: 3
+  CRDS_CLIENT_RETRY_DELAY_SECONDS: 20
+
 on:
   workflow_dispatch:
   schedule:
@@ -41,10 +47,33 @@ jobs:
         - linux: specutils
         - linux: asdf-astropy
 
+  cache_crds:
+    runs-on: ubuntu-latest
+    outputs:
+      pmap: ${{ steps.crds-context.outputs.pmap }}
+      path: ${{ steps.crds-context.outputs.path }}
+    steps:
+      # Get default CRDS_CONTEXT without installing crds client
+      # See https://hst-crds.stsci.edu/static/users_guide/web_services.html#generic-request
+      - run: |
+          echo "pmap=$(
+          curl -s -X POST -d '{"jsonrpc": "1.0", "method": "get_default_context", "params": ["jwst"], "id": 1}' ${{ env.CRDS_SERVER_URL }}/json/ |
+          python -c "import sys, json; print(json.load(sys.stdin)['result'])"
+          )" >> $GITHUB_OUTPUT
+          echo "path=${{ env.CRDS_PATH }}" >> $GITHUB_OUTPUT
+        id: crds-context
+      - uses: actions/cache@v3
+        with:
+          path: ${{ env.CRDS_PATH }}
+          key: ${{ steps.crds-context.outputs.pmap }}
+
   stsci:
+    needs: [cache_crds]
     uses: OpenAstronomy/github-actions-workflows/.github/workflows/tox.yml@v1
     if: (github.repository == 'asdf-format/asdf' && (github.event_name == 'schedule' || github.event_name == 'push' || github.event_name == 'workflow_dispatch' || contains(github.event.pull_request.labels.*.name, 'Downstream CI')))
     with:
+      cache-path: ${{ needs.cache_crds.path }}
+      cache-key: ${{ needs.cache_crds.pmap }}
       submodules: false
       # Any env name which does not start with `pyXY` will use this Python version.
       default_python: '3.10'
