@@ -80,8 +80,8 @@ jobs:
     uses: OpenAstronomy/github-actions-workflows/.github/workflows/tox.yml@v1
     if: (github.repository == 'asdf-format/asdf' && (github.event_name == 'schedule' || github.event_name == 'push' || github.event_name == 'workflow_dispatch' || contains(github.event.pull_request.labels.*.name, 'Downstream CI')))
     with:
-      cache-path: ${{ needs.cache_crds.path }}
-      cache-key: ${{ needs.cache_crds.pmap }}
+      cache-path: ${{ needs.cache_crds.outputs.path }}
+      cache-key: ${{ needs.cache_crds.outputs.pmap }}
       submodules: false
       # Any env name which does not start with `pyXY` will use this Python version.
       default_python: '3.10'
