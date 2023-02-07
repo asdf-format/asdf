@@ -57,19 +57,22 @@ jobs:
         with:
           python-version: '3.x'
       - run: pip install crds
-      # Get default CRDS_CONTEXT without installing crds client
-      # See https://hst-crds.stsci.edu/static/users_guide/web_services.html#generic-request
-      - run: |
-          echo "pmap=$(
-          curl -s -X POST -d '{"jsonrpc": "1.0", "method": "get_default_context", "params": ["jwst"], "id": 1}' ${{ env.CRDS_SERVER_URL }}/json/ |
-          python -c "import sys, json; print(json.load(sys.stdin)['result'])"
-          )" >> $GITHUB_OUTPUT
-          echo "path=${{ env.CRDS_PATH }}" >> $GITHUB_OUTPUT
-        id: crds-context
+      # # Get default CRDS_CONTEXT without installing crds client
+      # # See https://hst-crds.stsci.edu/static/users_guide/web_services.html#generic-request
+      # - run: |
+      #     echo "pmap=$(
+      #     curl -s -X POST -d '{"jsonrpc": "1.0", "method": "get_default_context", "params": ["jwst"], "id": 1}' ${{ env.CRDS_SERVER_URL }}/json/ |
+      #     python -c "import sys, json; print(json.load(sys.stdin)['result'])"
+      #     )" >> $GITHUB_OUTPUT
+      #     echo "path=${{ env.CRDS_PATH }}" >> $GITHUB_OUTPUT
+      #   id: crds-context
       - uses: actions/cache@v3
         with:
           path: ${{ env.CRDS_PATH }}
           key: ${{ steps.crds-context.outputs.pmap }}
+      - run: >
+          echo "pmap=$(crds list --operational-context)" >> $GITHUB_OUTPUT
+        id: crds-context
       - run: crds sync --contexts ${{ steps.crds-context.outputs.pmap }}
         if: ${{ steps.crds-context.outputs.pmap != '' }}
 
