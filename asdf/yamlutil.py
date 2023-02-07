@@ -9,17 +9,12 @@ from . import schema, tagged, treeutil, util
 from .constants import STSCI_SCHEMA_TAG_BASE, YAML_TAG_PREFIX
 from .exceptions import AsdfConversionWarning
 from .tags.core import AsdfObject
-from .versioning import split_tag_version
+from .versioning import _yaml_base_loader, split_tag_version
 
 __all__ = ["custom_tree_to_tagged_tree", "tagged_tree_to_custom_tree"]
 
 
-if getattr(yaml, "__with_libyaml__", None):  # pragma: no cover
-    _yaml_base_dumper = yaml.CSafeDumper
-    _yaml_base_loader = yaml.CSafeLoader
-else:  # pragma: no cover
-    _yaml_base_dumper = yaml.SafeDumper
-    _yaml_base_loader = yaml.SafeLoader
+_yaml_base_dumper = yaml.CSafeDumper if getattr(yaml, "__with_libyaml__", None) else yaml.SafeDumper
 
 
 YAML_OMAP_TAG = YAML_TAG_PREFIX + "omap"

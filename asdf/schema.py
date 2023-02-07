@@ -21,12 +21,6 @@ from .util import patched_urllib_parse
 YAML_SCHEMA_METASCHEMA_ID = "http://stsci.edu/schemas/yaml-schema/draft-01"
 
 
-if getattr(yaml, "__with_libyaml__", None):  # pragma: no cover
-    _yaml_base_loader = yaml.CSafeLoader
-else:  # pragma: no cover
-    _yaml_base_loader = yaml.SafeLoader
-
-
 __all__ = ["validate", "fill_defaults", "remove_defaults", "check_schema"]
 
 
@@ -76,11 +70,7 @@ def validate_tag(validator, tag_pattern, instance, schema):
     tag against a pattern that may include wildcards.  See
     `asdf.util.uri_match` for details on the matching behavior.
     """
-    if hasattr(instance, "_tag"):
-        instance_tag = instance._tag
-    else:
-        # Try tags for known Python builtins
-        instance_tag = _type_to_tag(type(instance))
+    instance_tag = instance._tag if hasattr(instance, "_tag") else _type_to_tag(type(instance))
 
     if instance_tag is None:
         yield ValidationError(
