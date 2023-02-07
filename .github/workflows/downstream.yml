@@ -70,8 +70,6 @@ jobs:
         with:
           path: ${{ env.CRDS_PATH }}
           key: ${{ steps.crds-context.outputs.pmap }}
-      # re-fetch the context this time with the cache directory to store the file
-      - run: crds sync --files ${{ steps.crds-context.outputs.pmap }}
       - run: crds sync --contexts ${{ steps.crds-context.outputs.pmap }}
         if: ${{ steps.crds-context.outputs.pmap != '' }}
 
