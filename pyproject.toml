@@ -170,6 +170,7 @@ line_length = 120
 extend_skip_glob = ["asdf/extern/*", ".eggs/*", ".tox/*"]
 
 [tool.ruff]
+target-version = "py38"
 line-length = 120
 select = ["ALL"]
 extend-ignore = [
@@ -182,7 +183,6 @@ extend-ignore = [
     "DTZ", # flake8-datetimez
     "PTH", # flake8-use-pathlib
     # Individually ignored checks
-    "B905", # Requires python 3.10 (use zip strict)
     "PIE810", # Call `startswith` once with a `tuple`
     "PLR0911", # Too many return statements
     "PLR0912", # Too many branches
