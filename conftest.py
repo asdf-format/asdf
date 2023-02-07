@@ -1,5 +1,3 @@
-# noqa: INP001
-
 import os
 
 import pytest

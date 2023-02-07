@@ -392,7 +392,7 @@ def test_nonseekable_file(tmp_path):
 
     class FileWrapper(base):
         def tell(self):
-            raise OSError()
+            raise OSError
 
         def seekable(self):
             return False

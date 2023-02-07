@@ -370,7 +370,7 @@ class NDArrayType(AsdfType):
         # getting "double casted" and upsized.  This also reduces the
         # number of array creations in the general case.
         if attr == "__array_struct__":
-            raise AttributeError()
+            raise AttributeError
         return getattr(self._make_array(), attr)
 
     def __setitem__(self, *args):
