@@ -53,6 +53,10 @@ jobs:
       pmap: ${{ steps.crds-context.outputs.pmap }}
       path: ${{ steps.crds-context.outputs.path }}
     steps:
+      - uses: actions/setup-python@v4
+        with:
+          python-version: '3.x'
+      - run: pip install crds
       # Get default CRDS_CONTEXT without installing crds client
       # See https://hst-crds.stsci.edu/static/users_guide/web_services.html#generic-request
       - run: |
@@ -66,6 +70,8 @@ jobs:
         with:
           path: ${{ env.CRDS_PATH }}
           key: ${{ steps.crds-context.outputs.pmap }}
+      - run: crds sync --contexts ${{ steps.crds-context.outputs.pmap }}
+        if: ${{ steps.crds-context.outputs.pmap != '' }}
 
   stsci:
     needs: [cache_crds]
