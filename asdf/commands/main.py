@@ -11,11 +11,11 @@ command_order = ["Explode", "Implode"]
 class Command:
     @classmethod
     def setup_arguments(cls, subparsers):
-        raise NotImplementedError()
+        raise NotImplementedError
 
     @classmethod
     def run(cls, args):
-        raise NotImplementedError()
+        raise NotImplementedError
 
 
 def make_argparser():

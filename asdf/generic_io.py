@@ -404,7 +404,7 @@ class GenericFile(metaclass=util.InheritDocstrings):
         """
         Truncate the file to the given size.
         """
-        raise NotImplementedError()
+        raise NotImplementedError
 
     def writable(self):
         """
@@ -545,7 +545,7 @@ class GenericFile(metaclass=util.InheritDocstrings):
         DelimiterNotFoundError :
             If the delimiter is not found before the end of the file.
         """
-        raise NotImplementedError()
+        raise NotImplementedError
 
     def seek_until(
         self,
@@ -620,7 +620,7 @@ class GenericFile(metaclass=util.InheritDocstrings):
         """
         Move the file position forward by `size`.
         """
-        raise NotImplementedError()
+        raise NotImplementedError
 
     def clear(self, nbytes):
         """

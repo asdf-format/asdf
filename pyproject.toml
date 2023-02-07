@@ -194,7 +194,6 @@ extend-ignore = [
     "PLR0911", # Too many return statements
     "PLR0912", # Too many branches
     "PLR0915", # Too many statements
-    "RSE102", # Unnecessary parentheses on raised exception
     "SIM108", # Use ternary operator
     "PIE810", # Call `startswith` once with a `tuple`
 ]
