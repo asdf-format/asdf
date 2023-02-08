@@ -112,6 +112,7 @@ open_files_ignore = ['test.fits', 'asdf.fits']
 filterwarnings = [
     'error',
     'ignore::asdf.exceptions.AsdfDeprecationWarning:asdf.asdftypes',
+    'ignore:.*subclasses the deprecated CustomType:asdf.exceptions.AsdfDeprecationWarning:asdf.types',
     'ignore:numpy.ndarray size changed:RuntimeWarning',
 ]
 # Configuration for pytest-doctestplus

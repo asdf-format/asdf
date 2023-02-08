@@ -1,8 +1,10 @@
 import importlib
 import re
+import warnings
 from copy import copy
 
 from . import tagged, util
+from .exceptions import AsdfDeprecationWarning
 from .versioning import AsdfSpec, AsdfVersion
 
 __all__ = ["format_tag", "CustomType", "AsdfType", "ExtensionType"]
@@ -480,3 +482,12 @@ class CustomType(ExtensionType, metaclass=ExtensionTypeMeta):
     NOTE: This value is automatically generated. Do not set it in subclasses as
     it will be overwritten.
     """
+
+    def __init_subclass__(cls, **kwargs):
+        super().__init_subclass__(**kwargs)
+        warnings.warn(
+            f"{cls.__name__} subclasses the deprecated CustomType class. "
+            "Please see the new extension API "
+            "https://asdf.readthedocs.io/en/stable/asdf/extending/converters.html",
+            AsdfDeprecationWarning,
+        )
