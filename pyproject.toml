@@ -50,6 +50,7 @@ tests = [
   "pytest-doctestplus",
   "pytest-openfiles",
   "pytest-remotedata",
+  "requests>=2.22",
 ]
 
 [project.urls]
@@ -60,7 +61,7 @@ tests = [
 [project.entry-points]
 'asdf.resource_mappings' = {asdf = 'asdf.resource:get_json_schema_resource_mappings'}
 asdf_extensions = {builtin = 'asdf.extension:BuiltinExtension'}
-console_scripts = {asdftool = 'asdf.commands.main:main'}
+console_scripts = {asdftool = 'asdf.commands.main:main',minimum_deps = 'asdf.scripts.minimum_deps:main'}
 pytest11 = {asdf_schema_tester = 'pytest_asdf.plugin'}
 
 
