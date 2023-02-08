@@ -10,6 +10,8 @@ The ASDF Standard is at v1.6.0
 - Add AsdfDeprecationWarning to AsdfFile.blocks [#1336]
 - Document policy for ASDF release cycle including when support for ASDF versions
   end. Also document dependency support policy. [#1323]
+- Throw more useful error when provided with a path containing an
+  extra leading slash [#1354]
 
 2.14.3 (2022-12-15)
 -------------------

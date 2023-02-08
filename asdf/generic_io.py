@@ -1092,6 +1092,15 @@ def get_file(init, mode="r", uri=None, close=False):
         if parsed.scheme in _local_file_schemes:
             realmode = "r+b" if mode == "rw" else mode + "b"
 
+            # if paths have an extra leading '/' urlparse will
+            # parse them even though they violate rfc8089. On non-windows
+            # platforms this will create an issue and an unhelpful error
+            # when the invalid parsed.path is used below.
+            # Catch this and throw a more useful error here.
+            if not sys.platform.startswith("win") and parsed.netloc != "":
+                msg = f"Invalid path {init}"
+                raise ValueError(msg)
+
             # Windows paths are not URIs, and so they should not be parsed as
             # such. Otherwise, the drive component of the path can get lost.
             # This is not an ideal solution, but we can't use pathlib here
@@ -1101,6 +1110,8 @@ def get_file(init, mode="r", uri=None, close=False):
                 if sys.platform.startswith("win") and parsed.scheme in string.ascii_letters
                 else url2pathname(parsed.path)
             )
+
+            realpath = os.path.abspath(realpath)
             fd = atomicfile.atomic_open(realpath, realmode) if mode == "w" else open(realpath, realmode)  # noqa: SIM115
 
             fd = fd.__enter__()

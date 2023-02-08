@@ -50,6 +50,23 @@ def test_mode_fail(tmp_path):
         generic_io.get_file(path, mode="r+")
 
 
+@pytest.mark.parametrize("mode", ["r", "w", "rw"])
+def test_two_leading_slashes(mode):
+    """
+    Providing a path with two leading slashes '//' will be parsed
+    by urllib as having a netloc (unhandled by generic_io) and
+    an invalid path. This creates an unhelpful error message on
+    write (related to a missing atomic write file) and should be
+    cause beforehand and provided with a more helpful error message
+
+    Regression test for issue:
+    https://github.com/asdf-format/asdf/issues/1353
+    """
+    path = "//bad/two/slashes"
+    with pytest.raises(ValueError, match="Invalid path"):
+        generic_io.get_file(path, mode=mode)
+
+
 def test_open(tmp_path, small_tree):
     from asdf import open
 
