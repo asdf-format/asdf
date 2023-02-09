@@ -14,6 +14,7 @@ The ASDF Standard is at v1.6.0
   ones that we can successfully build and test against. [#1360]
 - Provide more informative filename when failing to open a file [#1357]
 - Add new plugin type for custom schema validators. [#1328]
+- Add AsdfDeprecationWarning to `~asdf.types.CustomType` [#1359]
 
 2.14.3 (2022-12-15)
 -------------------
