@@ -54,7 +54,8 @@ def test_mode_fail(tmp_path):
 @pytest.mark.parametrize("mode", ["r", "w", "rw"])
 def test_missing_directory(tmp_path, mode):
     path = str(tmp_path / "missing" / "test.asdf")
-    with pytest.raises(FileNotFoundError, match=f".*: '{re.escape(path)}'$"):
+    regex_path = re.escape(path.replace("\\", "\\\\"))
+    with pytest.raises(FileNotFoundError, match=f".*: '{regex_path}'$"):
         generic_io.get_file(path, mode=mode)
 
 
