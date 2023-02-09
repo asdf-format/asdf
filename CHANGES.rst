@@ -15,6 +15,8 @@ The ASDF Standard is at v1.6.0
 - Provide more informative filename when failing to open a file [#1357]
 - Add new plugin type for custom schema validators. [#1328]
 - Add AsdfDeprecationWarning to `~asdf.types.CustomType` [#1359]
+- Throw more useful error when provided with a path containing an
+  extra leading slash [#1356]
 
 2.14.3 (2022-12-15)
 -------------------
