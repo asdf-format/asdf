@@ -1101,9 +1101,20 @@ def get_file(init, mode="r", uri=None, close=False):
                 if sys.platform.startswith("win") and parsed.scheme in string.ascii_letters
                 else url2pathname(parsed.path)
             )
-            fd = atomicfile.atomic_open(realpath, realmode) if mode == "w" else open(realpath, realmode)  # noqa: SIM115
+            try:
+                fd = (
+                    atomicfile.atomic_open(realpath, realmode)
+                    if mode == "w"
+                    else open(realpath, realmode)  # noqa: SIM115
+                )
 
-            fd = fd.__enter__()
+                fd = fd.__enter__()
+            except FileNotFoundError as e:
+                # atomic_open will create an Exception with an odd looking path
+                # overwrite the error message to make it more informative
+                e.filename = realpath
+                raise e  # noqa: TRY201
+
             return RealFile(fd, mode, close=True, uri=uri)
 
     if isinstance(init, io.BytesIO):

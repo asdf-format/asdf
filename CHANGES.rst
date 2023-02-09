@@ -12,6 +12,7 @@ The ASDF Standard is at v1.6.0
   end. Also document dependency support policy. [#1323]
 - Update lower pins on ``numpy`` (per release policy), ``packaging``, and ``pyyaml`` to
   ones that we can successfully build and test against. [#1360]
+- Provide more informative filename when failing to open a file [#1357]
 
 2.14.3 (2022-12-15)
 -------------------

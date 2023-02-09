@@ -50,6 +50,13 @@ def test_mode_fail(tmp_path):
         generic_io.get_file(path, mode="r+")
 
 
+@pytest.mark.parametrize("mode", ["r", "w", "rw"])
+def test_missing_directory(tmp_path, mode):
+    path = tmp_path / "missing" / "test.asdf"
+    with pytest.raises(FileNotFoundError, match=f".*: '{path}'$"):
+        generic_io.get_file(path, mode=mode)
+
+
 def test_open(tmp_path, small_tree):
     from asdf import open
 
