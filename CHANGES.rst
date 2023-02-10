@@ -15,6 +15,7 @@ The ASDF Standard is at v1.6.0
   ones that we can successfully build and test against. [#1360]
 - Provide more informative filename when failing to open a file [#1357]
 - Add new plugin type for custom schema validators. [#1328]
+<<<<<<< HEAD
 - Add AsdfDeprecationWarning to `~asdf.types.CustomType` [#1359]
 - Throw more useful error when provided with a path containing an
   extra leading slash [#1356]
@@ -32,6 +33,7 @@ The ASDF Standard is at v1.6.0
   get_cached_asdf_extension_list in asdf.extension [#1409]
 - move asdf.types.format_tag to asdf.testing.helpers.format_tag [#1433]
 - Deprecate AsdfExtenion, AsdfExtensionList, BuiltinExtension [#1429]
+- Add AsdfDeprecationWarning to asdf_extensions entry point [#1361]
 
 2.14.3 (2022-12-15)
 -------------------

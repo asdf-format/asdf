@@ -23,6 +23,13 @@ def get_resource_mappings():
 def get_extensions():
     extensions = _list_entry_points(EXTENSIONS_GROUP, ExtensionProxy)
     legacy_extensions = _list_entry_points(LEGACY_EXTENSIONS_GROUP, ExtensionProxy)
+    for ext in legacy_extensions:
+        warnings.warn(
+            f"{ext._delegate} uses the deprecated entry point {LEGACY_EXTENSIONS_GROUP} "
+            f"use the new extension api and entry point {EXTENSIONS_GROUP}: "
+            "https://asdf.readthedocs.io/en/stable/asdf/extending/extensions.html",
+            AsdfDeprecationWarning,
+        )
 
     return extensions + legacy_extensions
 
