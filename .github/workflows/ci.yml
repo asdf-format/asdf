@@ -71,6 +71,17 @@ jobs:
         - linux: py310-devdeps
         - linux: py311-devdeps
 
+  oldest:
+    needs: [core, asdf-schemas]
+    uses: OpenAstronomy/github-actions-workflows/.github/workflows/tox.yml@v1
+    with:
+      submodules: false
+      # Any env name which does not start with `pyXY` will use this Python version.
+      default_python: '3.9'
+      envs: |
+        - linux: py38-oldestdeps
+        - linux: py39-oldestdeps
+
   compatibility:
     needs: [core, asdf-schemas]
     uses: OpenAstronomy/github-actions-workflows/.github/workflows/tox.yml@v1
@@ -82,7 +93,7 @@ jobs:
         - linux: compatibility
 
   package:
-    needs: [test, dev, compatibility]
+    needs: [core, asdf-schemas]
     uses: OpenAstronomy/github-actions-workflows/.github/workflows/publish_pure_python.yml@v1
     with:
       upload_to_pypi: false
