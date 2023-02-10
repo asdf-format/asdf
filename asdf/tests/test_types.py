@@ -7,7 +7,8 @@ import asdf
 from asdf import extension, types, util, versioning
 from asdf.exceptions import AsdfConversionWarning, AsdfWarning
 
-from . import CustomExtension, CustomTestType, helpers
+from . import helpers
+from .objects import CustomExtension, CustomTestType
 
 TEST_DATA_PATH = str(helpers.get_test_data_path(""))
 

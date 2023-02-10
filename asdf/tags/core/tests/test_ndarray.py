@@ -13,7 +13,8 @@ from numpy.testing import assert_array_equal
 import asdf
 from asdf import util
 from asdf.tags.core import ndarray
-from asdf.tests import CustomTestType, helpers
+from asdf.tests import helpers
+from asdf.tests.objects import CustomTestType
 
 from . import data as test_data
 
