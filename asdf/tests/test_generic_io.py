@@ -1,5 +1,6 @@
 import io
 import os
+import re
 import sys
 import urllib.request as urllib_request
 
@@ -48,6 +49,14 @@ def test_mode_fail(tmp_path):
 
     with pytest.raises(ValueError):
         generic_io.get_file(path, mode="r+")
+
+
+@pytest.mark.parametrize("mode", ["r", "w", "rw"])
+def test_missing_directory(tmp_path, mode):
+    path = str(tmp_path / "missing" / "test.asdf")
+    regex_path = re.escape(path.replace("\\", "\\\\"))
+    with pytest.raises(FileNotFoundError, match=f".*: '{regex_path}'$"):
+        generic_io.get_file(path, mode=mode)
 
 
 def test_open(tmp_path, small_tree):
