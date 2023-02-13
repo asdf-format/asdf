@@ -111,38 +111,16 @@ def test_open2(tree, tmp_path):
         assert isinstance(next(ff._blocks.internal_blocks)._data, np.core.memmap)
 
 
-def test_open_fail(tmp_path):
-    path = os.path.join(str(tmp_path), "test.asdf")
-
-    with open(path, "w") as fd, pytest.raises(ValueError):
-        generic_io.get_file(fd, mode="w")
-
-
-def test_open_fail2(tmp_path):
-    path = os.path.join(str(tmp_path), "test.asdf")
-
-    with open(path, "w") as fd, pytest.raises(ValueError):
-        generic_io.get_file(fd, mode="w")
-
-
-def test_open_fail3(tmp_path):
+@pytest.mark.parametrize("mode", ["r", "w", "rw"])
+def test_open_not_binary_fail(tmp_path, mode):
     path = os.path.join(str(tmp_path), "test.asdf")
 
     with open(path, "w") as fd:
         fd.write("\n\n\n")
 
-    with open(path) as fd, pytest.raises(ValueError):
-        generic_io.get_file(fd, mode="r")
-
-
-def test_open_fail4(tmp_path):
-    path = os.path.join(str(tmp_path), "test.asdf")
-
-    with open(path, "w") as fd:
-        fd.write("\n\n\n")
-
-    with open(path) as fd, pytest.raises(ValueError):
-        generic_io.get_file(fd, mode="r")
+    file_mode = mode if mode != "rw" else "r+"
+    with open(path, file_mode) as fd, pytest.raises(ValueError):
+        generic_io.get_file(fd, mode=mode)
 
 
 def test_io_open(tree, tmp_path):
@@ -379,9 +357,6 @@ def test_invalid_obj(tmp_path):
 
     with pytest.raises(TypeError):
         generic_io.get_file(io.StringIO())
-
-    with open(path, "rb") as fd, pytest.raises(ValueError):
-        generic_io.get_file(fd, "w")
 
     with open(path, "rb") as fd, pytest.raises(ValueError):
         generic_io.get_file(fd, "w")
