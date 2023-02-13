@@ -1,6 +1,7 @@
 from functools import lru_cache
 
-from asdf.util import get_class_name
+from asdf.tagged import Tagged
+from asdf.util import get_class_name, uri_match
 
 from ._extension import ExtensionProxy
 
@@ -25,6 +26,8 @@ class ExtensionManager:
         # This dict has both str and type keys:
         self._converters_by_type = {}
 
+        validators = set()
+
         for extension in self._extensions:
             for tag_def in extension.tags:
                 if tag_def.tag_uri not in self._tag_defs_by_tag:
@@ -46,6 +49,10 @@ class ExtensionManager:
                             if typ not in self._converters_by_type and type_class_name not in self._converters_by_type:
                                 self._converters_by_type[typ] = converter
                                 self._converters_by_type[type_class_name] = converter
+
+            validators.update(extension.validators)
+
+        self._validator_manager = _get_cached_validator_manager(tuple(validators))
 
     @property
     def extensions(self):
@@ -182,6 +189,10 @@ class ExtensionManager:
                 )
                 raise KeyError(msg) from None
 
+    @property
+    def validator_manager(self):
+        return self._validator_manager
+
 
 def get_cached_extension_manager(extensions):
     """
@@ -214,3 +225,86 @@ def get_cached_extension_manager(extensions):
 @lru_cache
 def _get_cached_extension_manager(extensions):
     return ExtensionManager(extensions)
+
+
+class ValidatorManager:
+    """
+    Wraps a list of custom validators and indexes them by schema property.
+
+    Parameters
+    ----------
+    validators : iterable of asdf.extension.Validator
+        List of validators to manage.
+    """
+
+    def __init__(self, validators):
+        self._validators = list(validators)
+
+        self._validators_by_schema_property = {}
+        for validator in self._validators:
+            if validator.schema_property not in self._validators_by_schema_property:
+                self._validators_by_schema_property[validator.schema_property] = set()
+            self._validators_by_schema_property[validator.schema_property].add(validator)
+
+        self._jsonschema_validators_by_schema_property = {}
+        for schema_property in self._validators_by_schema_property:
+            self._jsonschema_validators_by_schema_property[schema_property] = self._get_jsonschema_validator(
+                schema_property,
+            )
+
+    def validate(self, schema_property, schema_property_value, node, schema):
+        """
+        Validate an ASDF tree node against custom validators for a schema property.
+
+        Parameters
+        ----------
+        schema_property : str
+            Name of the schema property (identifies the validator(s) to use).
+        schema_property_value : object
+            Value of the schema property.
+        node : asdf.tagged.Tagged
+            The ASDF node to validate.
+        schema : dict
+            The schema object that contains the property that triggered
+            the validation.
+
+        Yields
+        ------
+        asdf.exceptions.ValidationError
+        """
+        if schema_property in self._validators_by_schema_property:
+            for validator in self._validators_by_schema_property[schema_property]:
+                if _validator_matches(validator, node):
+                    yield from validator.validate(schema_property_value, node, schema)
+
+    def get_jsonschema_validators(self):
+        """
+        Get a dictionary of validator methods suitable for use
+        with the jsonschema library.
+
+        Returns
+        -------
+        dict of str: callable
+        """
+        return dict(self._jsonschema_validators_by_schema_property)
+
+    def _get_jsonschema_validator(self, schema_property):
+        def _validator(_, schema_property_value, node, schema):
+            return self.validate(schema_property, schema_property_value, node, schema)
+
+        return _validator
+
+
+def _validator_matches(validator, node):
+    if any(t == "**" for t in validator.tags):
+        return True
+
+    if not isinstance(node, Tagged):
+        return False
+
+    return any(uri_match(t, node._tag) for t in validator.tags)
+
+
+@lru_cache
+def _get_cached_validator_manager(validators):
+    return ValidatorManager(validators)

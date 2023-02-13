@@ -2,12 +2,7 @@ from collections.abc import Mapping
 
 import pytest
 
-from asdf.resource import (
-    JsonschemaResourceMapping,
-    ResourceManager,
-    ResourceMappingProxy,
-    get_json_schema_resource_mappings,
-)
+from asdf.resource import JsonschemaResourceMapping, ResourceManager, ResourceMappingProxy
 
 
 def test_resource_manager():
@@ -57,21 +52,6 @@ def test_jsonschema_resource_mapping():
     assert b"http://json-schema.org/draft-04/schema" in mapping["http://json-schema.org/draft-04/schema"]
 
     assert repr(mapping) == "JsonschemaResourceMapping()"
-
-
-@pytest.mark.parametrize(
-    "uri",
-    [
-        "http://json-schema.org/draft-04/schema",
-    ],
-)
-def test_get_json_schema_resource_mappings(uri):
-    mappings = get_json_schema_resource_mappings()
-
-    mapping = next(m for m in mappings if uri in m)
-    assert mapping is not None
-
-    assert uri.encode("utf-8") in mapping[uri]
 
 
 def test_proxy_is_mapping():

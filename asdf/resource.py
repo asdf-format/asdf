@@ -14,7 +14,6 @@ __all__ = [
     "DirectoryResourceMapping",
     "ResourceManager",
     "JsonschemaResourceMapping",
-    "get_json_schema_resource_mappings",
 ]
 
 
@@ -192,9 +191,3 @@ class JsonschemaResourceMapping(Mapping):
 
     def __repr__(self):
         return "JsonschemaResourceMapping()"
-
-
-def get_json_schema_resource_mappings():
-    return [
-        JsonschemaResourceMapping(),
-    ]

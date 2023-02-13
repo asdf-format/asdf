@@ -1,8 +1,8 @@
 import pytest
 from packaging.specifiers import SpecifierSet
 
-from asdf import config_context
-from asdf.exceptions import AsdfDeprecationWarning
+from asdf import AsdfFile, config_context
+from asdf.exceptions import AsdfDeprecationWarning, ValidationError
 from asdf.extension import (
     AsdfExtension,
     BuiltinExtension,
@@ -14,6 +14,7 @@ from asdf.extension import (
     ExtensionProxy,
     ManifestExtension,
     TagDefinition,
+    Validator,
     get_cached_asdf_extension_list,
     get_cached_extension_manager,
 )
@@ -53,14 +54,16 @@ class FullExtension:
         self,
         converters=None,
         compressors=None,
+        validators=None,
         asdf_standard_requirement=None,
         tags=None,
         legacy_class_names=None,
     ):
         self._converters = [] if converters is None else converters
         self._compressors = [] if compressors is None else compressors
+        self._validators = [] if validators is None else validators
         self._asdf_standard_requirement = asdf_standard_requirement
-        self._tags = tags
+        self._tags = [] if tags is None else tags
         self._legacy_class_names = [] if legacy_class_names is None else legacy_class_names
 
     @property
@@ -70,6 +73,10 @@ class FullExtension:
     @property
     def compressors(self):
         return self._compressors
+
+    @property
+    def validators(self):
+        return self._validators
 
     @property
     def asdf_standard_requirement(self):
@@ -126,6 +133,15 @@ class MinimalCompressor(Compressor):
         return b"mini"
 
 
+class MinimalValidator(Validator):
+    schema_property = "fail"
+    tags = ["**"]
+
+    def validate(self, fail, node, schema):
+        if fail:
+            yield ValidationError("Node was doomed to fail")
+
+
 # Some dummy types for testing converters:
 class FooType:
     pass
@@ -162,6 +178,7 @@ def test_extension_proxy():
     assert proxy.asdf_standard_requirement == SpecifierSet()
     assert proxy.converters == []
     assert proxy.compressors == []
+    assert proxy.validators == []
     assert proxy.tags == []
     assert proxy.types == []
     assert proxy.tag_mapping == []
@@ -180,6 +197,7 @@ def test_extension_proxy():
     assert subclassed_proxy.asdf_standard_requirement == proxy.asdf_standard_requirement
     assert subclassed_proxy.converters == proxy.converters
     assert subclassed_proxy.compressors == proxy.compressors
+    assert subclassed_proxy.validators == proxy.validators
     assert subclassed_proxy.tags == proxy.tags
     assert subclassed_proxy.types == proxy.types
     assert subclassed_proxy.tag_mapping == proxy.tag_mapping
@@ -193,9 +211,11 @@ def test_extension_proxy():
     # Test with all properties present:
     converters = [MinimumConverter(tags=["asdf://somewhere.org/extensions/full/tags/foo-*"], types=[])]
     compressors = [MinimalCompressor()]
+    validators = [MinimalValidator()]
     extension = FullExtension(
         converters=converters,
         compressors=compressors,
+        validators=validators,
         asdf_standard_requirement=">=1.4.0",
         tags=["asdf://somewhere.org/extensions/full/tags/foo-1.0"],
         legacy_class_names=["foo.extensions.SomeOldExtensionClass"],
@@ -207,6 +227,7 @@ def test_extension_proxy():
     assert proxy.asdf_standard_requirement == SpecifierSet(">=1.4.0")
     assert proxy.converters == [ConverterProxy(c, proxy) for c in converters]
     assert proxy.compressors == compressors
+    assert proxy.validators == validators
     assert len(proxy.tags) == 1
     assert proxy.tags[0].tag_uri == "asdf://somewhere.org/extensions/full/tags/foo-1.0"
     assert proxy.types == []
@@ -229,6 +250,10 @@ def test_extension_proxy():
     # Should fail with a bad compressor:
     with pytest.raises(TypeError):
         ExtensionProxy(FullExtension(compressors=[object()]))
+
+    # Should fail with a bad validator
+    with pytest.raises(TypeError):
+        ExtensionProxy(FullExtension(validators=[object()]))
 
     # Unparsable ASDF Standard requirement:
     with pytest.raises(ValueError):
@@ -597,6 +622,7 @@ extension_uri: asdf://somewhere.org/extensions/foo
         assert extension.asdf_standard_requirement is None
         assert extension.converters == []
         assert extension.compressors == []
+        assert extension.validators == []
         assert extension.tags == []
 
         proxy = ExtensionProxy(extension)
@@ -605,6 +631,7 @@ extension_uri: asdf://somewhere.org/extensions/foo
         assert proxy.asdf_standard_requirement == SpecifierSet()
         assert proxy.converters == []
         assert proxy.compressors == []
+        assert proxy.validators == []
         assert proxy.tags == []
 
     with config_context() as config:
@@ -639,6 +666,7 @@ tags:
                 pass
 
         converter = FooConverter()
+        validator = MinimalValidator()
         compressor = MinimalCompressor()
 
         extension = ManifestExtension.from_uri(
@@ -646,12 +674,14 @@ tags:
             legacy_class_names=["foo.extension.LegacyExtension"],
             converters=[converter],
             compressors=[compressor],
+            validators=[validator],
         )
         assert extension.extension_uri == "asdf://somewhere.org/extensions/foo"
         assert extension.legacy_class_names == ["foo.extension.LegacyExtension"]
         assert extension.asdf_standard_requirement == SpecifierSet(">=1.6.0,<2.0.0")
         assert extension.converters == [converter]
         assert extension.compressors == [compressor]
+        assert extension.validators == [validator]
         assert len(extension.tags) == 2
         assert extension.tags[0] == "asdf://somewhere.org/tags/bar"
         assert extension.tags[1].tag_uri == "asdf://somewhere.org/tags/baz"
@@ -665,6 +695,7 @@ tags:
         assert proxy.asdf_standard_requirement == SpecifierSet(">=1.6.0,<2.0.0")
         assert proxy.converters == [ConverterProxy(converter, proxy)]
         assert proxy.compressors == [compressor]
+        assert proxy.validators == [validator]
         assert len(proxy.tags) == 2
         assert proxy.tags[0].tag_uri == "asdf://somewhere.org/tags/bar"
         assert proxy.tags[1].tag_uri == "asdf://somewhere.org/tags/baz"
@@ -686,3 +717,42 @@ asdf_standard_requirement: 1.6.0
 
         proxy = ExtensionProxy(extension)
         assert proxy.asdf_standard_requirement == SpecifierSet("==1.6.0")
+
+
+def test_validator():
+    validator = MinimalValidator()
+    extension = FullExtension(validators=[validator])
+
+    failing_schema = """
+        type: object
+        properties:
+          foo:
+            fail: true
+    """
+
+    passing_schema = """
+        type: object
+        properties:
+          foo:
+            fail: false
+    """  # noqa: S105
+
+    with config_context() as config:
+        config.add_extension(extension)
+        config.add_resource_mapping(
+            {
+                "asdf://somewhere.org/schemas/failing": failing_schema,
+                "asdf://somewhere.org/schemas/passing": passing_schema,
+            },
+        )
+
+        with AsdfFile(custom_schema="asdf://somewhere.org/schemas/passing") as af:
+            af["foo"] = "bar"
+            af.validate()
+
+        with AsdfFile(custom_schema="asdf://somewhere.org/schemas/failing") as af:
+            af.validate()
+
+            af["foo"] = "bar"
+            with pytest.raises(ValidationError):
+                af.validate()
