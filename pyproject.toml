@@ -51,19 +51,16 @@ tests = [
   "pytest-openfiles",
   "pytest-remotedata",
 ]
-
 [project.urls]
 'documentation' = 'https://asdf.readthedocs.io/en/stable'
 'repository' = 'https://github.com/asdf-format/asdf'
 'tracker' = 'https://github.com/asdf-format/asdf/issues'
-
 [project.entry-points]
 'asdf.extensions' = {asdf = 'asdf.core._integration:get_extensions'}
 'asdf.resource_mappings' = {asdf = 'asdf.core._integration:get_json_schema_resource_mappings'}
 asdf_extensions = {builtin = 'asdf.extension:BuiltinExtension'}
 console_scripts = {asdftool = 'asdf.commands.main:main'}
 pytest11 = {asdf_schema_tester = 'pytest_asdf.plugin'}
-
 
 [build-system]
 build-backend = 'setuptools.build_meta'
@@ -73,9 +70,6 @@ requires = [
   "wheel",
 ]
 
-[tool.setuptools_scm]
-write_to = "asdf/_version.py"
-
 [tool.setuptools.packages.find]
 include = ['asdf*', 'pytest_asdf*']
 
@@ -83,6 +77,28 @@ include = ['asdf*', 'pytest_asdf*']
 'asdf.commands.tests.data' = ["*"]
 'asdf.tags.core.tests.data' = ["*"]
 'asdf.tests.data' = ["*"]
+
+[tool.black]
+line-length = 120
+force-exclude = '''
+^/(
+  (
+      \.eggs
+    | \.git
+    | \.pytest_cache
+    | \.tox
+    | asdf/extern
+    | build
+    | dist
+  )/
+)
+'''
+
+[tool.isort]
+profile = "black"
+filter_files = true
+line_length = 120
+extend_skip_glob = ["asdf/extern/*", ".eggs/*", ".tox/*"]
 
 [tool.pytest.ini_options]
 testpaths = ['asdf', 'docs']
@@ -148,27 +164,8 @@ exclude_lines = [
     'pragma: py{ ignore_python_version }',
 ]
 
-[tool.black]
-line-length = 120
-force-exclude = '''
-^/(
-  (
-      \.eggs
-    | \.git
-    | \.pytest_cache
-    | \.tox
-    | asdf/extern
-    | build
-    | dist
-  )/
-)
-'''
-
-[tool.isort]
-profile = "black"
-filter_files = true
-line_length = 120
-extend_skip_glob = ["asdf/extern/*", ".eggs/*", ".tox/*"]
+[tool.setuptools_scm]
+write_to = "asdf/_version.py"
 
 [tool.ruff]
 target-version = "py38"
