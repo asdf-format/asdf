@@ -112,8 +112,8 @@ open_files_ignore = ['test.fits', 'asdf.fits']
 filterwarnings = [
     'error',
     'ignore::asdf.exceptions.AsdfDeprecationWarning:asdf.asdftypes',
-    'ignore:.*subclasses the deprecated CustomType:asdf.exceptions.AsdfDeprecationWarning:asdf.types',
     'ignore:numpy.ndarray size changed:RuntimeWarning',
+    'ignore:.*from astropy.io.misc.asdf.types subclasses the deprecated CustomType.*:asdf.exceptions.AsdfDeprecationWarning',
 ]
 # Configuration for pytest-doctestplus
 text_file_format = 'rst'

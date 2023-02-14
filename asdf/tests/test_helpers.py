@@ -1,29 +1,31 @@
 import pytest
 
 from asdf import types
-from asdf.exceptions import AsdfConversionWarning, AsdfWarning
+from asdf.exceptions import AsdfConversionWarning, AsdfDeprecationWarning, AsdfWarning
 from asdf.tests.helpers import assert_roundtrip_tree
 
 
 def test_conversion_error(tmp_path):
-    class FooType(types.CustomType):
-        name = "foo"
+    with pytest.warns(AsdfDeprecationWarning, match=".*subclasses the deprecated CustomType.*"):
 
-        def __init__(self, a, b):
-            self.a = a
-            self.b = b
+        class FooType(types.CustomType):
+            name = "foo"
 
-        @classmethod
-        def from_tree(cls, tree, ctx):
-            msg = "This allows us to test the failure"
-            raise TypeError(msg)
+            def __init__(self, a, b):
+                self.a = a
+                self.b = b
 
-        @classmethod
-        def to_tree(cls, node, ctx):
-            return {"a": node.a, "b": node.b}
+            @classmethod
+            def from_tree(cls, tree, ctx):
+                msg = "This allows us to test the failure"
+                raise TypeError(msg)
 
-        def __eq__(self, other):
-            return self.a == other.a and self.b == other.b
+            @classmethod
+            def to_tree(cls, node, ctx):
+                return {"a": node.a, "b": node.b}
+
+            def __eq__(self, other):
+                return self.a == other.a and self.b == other.b
 
     class FooExtension:
         @property

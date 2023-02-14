@@ -7,7 +7,7 @@ from jsonschema import ValidationError
 
 import asdf
 from asdf import types, util
-from asdf.exceptions import AsdfWarning
+from asdf.exceptions import AsdfDeprecationWarning, AsdfWarning
 from asdf.tags.core import HistoryEntry
 from asdf.tests import helpers
 from asdf.tests.helpers import assert_no_warnings, yaml_to_asdf
@@ -201,20 +201,22 @@ history:
 
 
 def test_metadata_with_custom_extension(tmpdir):
-    class FractionType(types.CustomType):
-        name = "fraction"
-        organization = "nowhere.org"
-        version = (1, 0, 0)
-        standard = "custom"
-        types = [fractions.Fraction]
+    with pytest.warns(AsdfDeprecationWarning, match=".*subclasses the deprecated CustomType.*"):
 
-        @classmethod
-        def to_tree(cls, node, ctx):
-            return [node.numerator, node.denominator]
+        class FractionType(types.CustomType):
+            name = "fraction"
+            organization = "nowhere.org"
+            version = (1, 0, 0)
+            standard = "custom"
+            types = [fractions.Fraction]
 
-        @classmethod
-        def from_tree(cls, tree, ctx):
-            return fractions.Fraction(tree[0], tree[1])
+            @classmethod
+            def to_tree(cls, node, ctx):
+                return [node.numerator, node.denominator]
+
+            @classmethod
+            def from_tree(cls, tree, ctx):
+                return fractions.Fraction(tree[0], tree[1])
 
     class FractionExtension(CustomExtension):
         @property
