@@ -44,6 +44,21 @@ def _from_tree_tagged_missing_requirements(cls, tree, ctx):
     raise TypeError(msg)
 
 
+def _find_first_child_class(sub_class, parent_class):
+    err = None
+    for b in sub_class.__bases__:
+        if b == parent_class:
+            return sub_class
+        try:
+            return _find_first_child_class(b, parent_class)
+        except ValueError as e:
+            err = e
+    if err:
+        raise err
+    msg = f"Failed to find {parent_class} in {sub_class}"
+    raise ValueError(msg)
+
+
 class ExtensionTypeMeta(type):
     """
     Custom class constructor for tag types.
@@ -485,8 +500,9 @@ class CustomType(ExtensionType, metaclass=ExtensionTypeMeta):
 
     def __init_subclass__(cls, **kwargs):
         super().__init_subclass__(**kwargs)
+        scls = _find_first_child_class(cls, CustomType)
         warnings.warn(
-            f"{cls.__name__} subclasses the deprecated CustomType class. "
+            f"{scls.__name__} from {scls.__module__} subclasses the deprecated CustomType class. "
             "Please see the new extension API "
             "https://asdf.readthedocs.io/en/stable/asdf/extending/converters.html",
             AsdfDeprecationWarning,
