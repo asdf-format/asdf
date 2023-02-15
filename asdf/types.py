@@ -500,10 +500,13 @@ class CustomType(ExtensionType, metaclass=ExtensionTypeMeta):
 
     def __init_subclass__(cls, **kwargs):
         super().__init_subclass__(**kwargs)
+
+        # Create a warning for the first subclass of a CustomType class
         scls = _find_first_child_class(cls, CustomType)
-        warnings.warn(
-            f"{scls.__name__} from {scls.__module__} subclasses the deprecated CustomType class. "
-            "Please see the new extension API "
-            "https://asdf.readthedocs.io/en/stable/asdf/extending/converters.html",
-            AsdfDeprecationWarning,
-        )
+        if scls.__name__ == cls.__name__:
+            warnings.warn(
+                f"{scls.__name__} from {scls.__module__} subclasses the deprecated CustomType class. "
+                "Please see the new extension API "
+                "https://asdf.readthedocs.io/en/stable/asdf/extending/converters.html",
+                AsdfDeprecationWarning,
+            )
