@@ -12,7 +12,6 @@ from numpy.testing import assert_array_equal
 
 import asdf
 from asdf import util
-from asdf.exceptions import AsdfDeprecationWarning
 from asdf.tags.core import ndarray
 from asdf.tests import helpers
 from asdf.tests.objects import CustomTestType
@@ -25,22 +24,18 @@ TEST_DATA_PATH = helpers.get_test_data_path("", module=test_data)
 # These custom types and the custom extension are here purely for the purpose
 # of testing NDArray objects and making sure that they can be validated as part
 # of a nested hierarchy, and not just top-level objects.
-with pytest.warns(AsdfDeprecationWarning, match=".*subclasses the deprecated CustomType.*"):
-
-    class CustomNdim(CustomTestType):
-        name = "ndim"
-        organization = "nowhere.org"
-        standard = "custom"
-        version = "1.0.0"
+class CustomNdim(CustomTestType):
+    name = "ndim"
+    organization = "nowhere.org"
+    standard = "custom"
+    version = "1.0.0"
 
 
-with pytest.warns(AsdfDeprecationWarning, match=".*subclasses the deprecated CustomType.*"):
-
-    class CustomDatatype(CustomTestType):
-        name = "datatype"
-        organization = "nowhere.org"
-        standard = "custom"
-        version = "1.0.0"
+class CustomDatatype(CustomTestType):
+    name = "datatype"
+    organization = "nowhere.org"
+    standard = "custom"
+    version = "1.0.0"
 
 
 class CustomExtension:
