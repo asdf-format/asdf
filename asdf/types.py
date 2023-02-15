@@ -1,8 +1,10 @@
 import importlib
 import re
+import warnings
 from copy import copy
 
 from . import tagged, util
+from .exceptions import AsdfDeprecationWarning
 from .versioning import AsdfSpec, AsdfVersion
 
 __all__ = ["format_tag", "CustomType", "AsdfType", "ExtensionType"]
@@ -40,6 +42,21 @@ def _from_tree_tagged_missing_requirements(cls, tree, ctx):
     # converted.
     msg = f"{util.human_list(cls.requires)} package{plural} {verb} required to instantiate '{tree._tag}'"
     raise TypeError(msg)
+
+
+def _find_first_child_class(sub_class, parent_class):
+    err = None
+    for b in sub_class.__bases__:
+        if b == parent_class:
+            return sub_class
+        try:
+            return _find_first_child_class(b, parent_class)
+        except ValueError as e:
+            err = e
+    if err:
+        raise err
+    msg = f"Failed to find {parent_class} in {sub_class}"
+    raise ValueError(msg)
 
 
 class ExtensionTypeMeta(type):
@@ -480,3 +497,13 @@ class CustomType(ExtensionType, metaclass=ExtensionTypeMeta):
     NOTE: This value is automatically generated. Do not set it in subclasses as
     it will be overwritten.
     """
+
+    def __init_subclass__(cls, **kwargs):
+        super().__init_subclass__(**kwargs)
+        scls = _find_first_child_class(cls, CustomType)
+        warnings.warn(
+            f"{scls.__name__} from {scls.__module__} subclasses the deprecated CustomType class. "
+            "Please see the new extension API "
+            "https://asdf.readthedocs.io/en/stable/asdf/extending/converters.html",
+            AsdfDeprecationWarning,
+        )

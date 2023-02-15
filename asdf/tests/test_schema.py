@@ -9,26 +9,28 @@ from numpy.testing import assert_array_equal
 import asdf
 from asdf import config_context, constants, extension, get_config, resolver, schema, tagged, types, util, yamlutil
 from asdf.exceptions import AsdfConversionWarning, AsdfDeprecationWarning, AsdfWarning
-from asdf.tests import CustomExtension, helpers
+from asdf.tests import helpers
+from asdf.tests.objects import CustomExtension
 
+with pytest.warns(AsdfDeprecationWarning, match=".*subclasses the deprecated CustomType.*"):
 
-class TagReferenceType(types.CustomType):
-    """
-    This class is used by several tests below for validating foreign type
-    references in schemas and ASDF files.
-    """
+    class TagReferenceType(types.CustomType):
+        """
+        This class is used by several tests below for validating foreign type
+        references in schemas and ASDF files.
+        """
 
-    name = "tag_reference"
-    organization = "nowhere.org"
-    version = (1, 0, 0)
-    standard = "custom"
+        name = "tag_reference"
+        organization = "nowhere.org"
+        version = (1, 0, 0)
+        standard = "custom"
 
-    @classmethod
-    def from_tree(cls, tree, ctx):
-        node = {}
-        node["name"] = tree["name"]
-        node["things"] = tree["things"]
-        return node
+        @classmethod
+        def from_tree(cls, tree, ctx):
+            node = {}
+            node["name"] = tree["name"]
+            node["things"] = tree["things"]
+            return node
 
 
 def test_tagging_scalars():
@@ -281,11 +283,13 @@ properties:
 
 
 def test_flow_style():
-    class CustomFlowStyleType(dict, types.CustomType):
-        name = "custom_flow"
-        organization = "nowhere.org"
-        version = (1, 0, 0)
-        standard = "custom"
+    with pytest.warns(AsdfDeprecationWarning, match=".*subclasses the deprecated CustomType.*"):
+
+        class CustomFlowStyleType(dict, types.CustomType):
+            name = "custom_flow"
+            organization = "nowhere.org"
+            version = (1, 0, 0)
+            standard = "custom"
 
     class CustomFlowStyleExtension(CustomExtension):
         @property
@@ -302,11 +306,13 @@ def test_flow_style():
 
 
 def test_style():
-    class CustomStyleType(str, types.CustomType):
-        name = "custom_style"
-        organization = "nowhere.org"
-        version = (1, 0, 0)
-        standard = "custom"
+    with pytest.warns(AsdfDeprecationWarning, match=".*subclasses the deprecated CustomType.*"):
+
+        class CustomStyleType(str, types.CustomType):
+            name = "custom_style"
+            organization = "nowhere.org"
+            version = (1, 0, 0)
+            standard = "custom"
 
     class CustomStyleExtension(CustomExtension):
         @property
@@ -341,11 +347,13 @@ def test_property_order():
 
 
 def test_invalid_nested():
-    class CustomType(str, types.CustomType):
-        name = "custom"
-        organization = "nowhere.org"
-        version = (1, 0, 0)
-        standard = "custom"
+    with pytest.warns(AsdfDeprecationWarning, match=".*subclasses the deprecated CustomType.*"):
+
+        class CustomType(str, types.CustomType):
+            name = "custom"
+            organization = "nowhere.org"
+            version = (1, 0, 0)
+            standard = "custom"
 
     class CustomTypeExtension(CustomExtension):
         @property
@@ -434,11 +442,13 @@ def test_check_complex_default():
 
 
 def test_fill_and_remove_defaults():
-    class DefaultType(dict, types.CustomType):
-        name = "default"
-        organization = "nowhere.org"
-        version = (1, 0, 0)
-        standard = "custom"
+    with pytest.warns(AsdfDeprecationWarning, match=".*subclasses the deprecated CustomType.*"):
+
+        class DefaultType(dict, types.CustomType):
+            name = "default"
+            organization = "nowhere.org"
+            version = (1, 0, 0)
+            standard = "custom"
 
     class DefaultTypeExtension(CustomExtension):
         @property
@@ -523,11 +533,13 @@ def test_one_of():
     Covers https://github.com/asdf-format/asdf/issues/809
     """
 
-    class OneOfType(dict, types.CustomType):
-        name = "one_of"
-        organization = "nowhere.org"
-        version = (1, 0, 0)
-        standard = "custom"
+    with pytest.warns(AsdfDeprecationWarning, match=".*subclasses the deprecated CustomType.*"):
+
+        class OneOfType(dict, types.CustomType):
+            name = "one_of"
+            organization = "nowhere.org"
+            version = (1, 0, 0)
+            standard = "custom"
 
     class OneOfTypeExtension(CustomExtension):
         @property
@@ -565,18 +577,20 @@ custom: !<tag:nowhere.org:custom/tag_reference-1.0.0>
 
 
 def test_foreign_tag_reference_validation():
-    class ForeignTagReferenceType(types.CustomType):
-        name = "foreign_tag_reference"
-        organization = "nowhere.org"
-        version = (1, 0, 0)
-        standard = "custom"
+    with pytest.warns(AsdfDeprecationWarning, match=".*subclasses the deprecated CustomType.*"):
 
-        @classmethod
-        def from_tree(cls, tree, ctx):
-            node = {}
-            node["a"] = tree["a"]
-            node["b"] = tree["b"]
-            return node
+        class ForeignTagReferenceType(types.CustomType):
+            name = "foreign_tag_reference"
+            organization = "nowhere.org"
+            version = (1, 0, 0)
+            standard = "custom"
+
+            @classmethod
+            def from_tree(cls, tree, ctx):
+                node = {}
+                node["a"] = tree["a"]
+                node["b"] = tree["b"]
+                return node
 
     class ForeignTypeExtension(CustomExtension):
         @property
@@ -798,13 +812,15 @@ properties:
 def test_type_missing_dependencies():
     pytest.importorskip("astropy", "3.0.0")
 
-    class MissingType(types.CustomType):
-        name = "missing"
-        organization = "nowhere.org"
-        version = (1, 1, 0)
-        standard = "custom"
-        types = ["asdfghjkl12345.foo"]
-        requires = ["ASDFGHJKL12345"]
+    with pytest.warns(AsdfDeprecationWarning, match=".*subclasses the deprecated CustomType.*"):
+
+        class MissingType(types.CustomType):
+            name = "missing"
+            organization = "nowhere.org"
+            version = (1, 1, 0)
+            standard = "custom"
+            types = ["asdfghjkl12345.foo"]
+            requires = ["ASDFGHJKL12345"]
 
     class DefaultTypeExtension(CustomExtension):
         @property
@@ -826,15 +842,17 @@ custom: !<tag:nowhere.org:custom/missing-1.1.0>
 def test_assert_roundtrip_with_extension(tmp_path):
     called_custom_assert_equal = [False]
 
-    class CustomType(dict, types.CustomType):
-        name = "custom_flow"
-        organization = "nowhere.org"
-        version = (1, 0, 0)
-        standard = "custom"
+    with pytest.warns(AsdfDeprecationWarning, match=".*subclasses the deprecated CustomType.*"):
 
-        @classmethod
-        def assert_equal(cls, old, new):
-            called_custom_assert_equal[0] = True
+        class CustomType(dict, types.CustomType):
+            name = "custom_flow"
+            organization = "nowhere.org"
+            version = (1, 0, 0)
+            standard = "custom"
+
+            @classmethod
+            def assert_equal(cls, old, new):
+                called_custom_assert_equal[0] = True
 
     class CustomTypeExtension(CustomExtension):
         @property

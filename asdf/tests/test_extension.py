@@ -27,10 +27,12 @@ def test_builtin_extension():
     assert_extension_correctness(extension)
 
 
-class LegacyType(dict, CustomType):
-    organization = "somewhere.org"
-    name = "test"
-    version = "1.0.0"
+with pytest.warns(AsdfDeprecationWarning, match=".*subclasses the deprecated CustomType.*"):
+
+    class LegacyType(dict, CustomType):
+        organization = "somewhere.org"
+        name = "test"
+        version = "1.0.0"
 
 
 class LegacyExtension:

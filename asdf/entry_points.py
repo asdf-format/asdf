@@ -7,7 +7,7 @@ import warnings
 # see issue https://github.com/asdf-format/asdf/issues/1254
 from importlib_metadata import entry_points
 
-from .exceptions import AsdfWarning
+from .exceptions import AsdfDeprecationWarning, AsdfWarning
 from .extension import ExtensionProxy
 from .resource import ResourceMappingProxy
 
@@ -52,17 +52,32 @@ def _list_entry_points(group, proxy_class):
                 AsdfWarning,
             )
 
+        # Catch errors loading entry points and warn instead of raising
         try:
-            elements = entry_point.load()()
+            # Filter out the legacy `CustomType` deprecation warnings from the deprecated astropy.io.misc.asdf
+            # Testing will turn these into errors
+            with warnings.catch_warnings():
+                # Most of the astropy.io.misc.asdf deprecation warnings fall under this category
+                warnings.filterwarnings(
+                    "ignore",
+                    category=AsdfDeprecationWarning,
+                    message=r".*from astropy.io.misc.asdf.* subclasses the deprecated CustomType .*",
+                )
+                elements = entry_point.load()()
 
-            if not isinstance(elements, list):
-                elements = [elements]
-
-            for element in elements:
-                try:
-                    results.append(proxy_class(element, package_name=package_name, package_version=package_version))
-                except Exception as e:  # noqa: BLE001
-                    _handle_error(e)
         except Exception as e:  # noqa: BLE001
             _handle_error(e)
+            continue
+
+        # Process the elements returned by the entry point
+        if not isinstance(elements, list):
+            elements = [elements]
+
+        for element in elements:
+            # Catch errors instantiating the proxy class and warn instead of raising
+            try:
+                results.append(proxy_class(element, package_name=package_name, package_version=package_version))
+            except Exception as e:  # noqa: BLE001
+                _handle_error(e)
+
     return results

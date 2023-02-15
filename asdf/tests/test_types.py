@@ -5,9 +5,10 @@ import pytest
 
 import asdf
 from asdf import extension, types, util, versioning
-from asdf.exceptions import AsdfConversionWarning, AsdfWarning
+from asdf.exceptions import AsdfConversionWarning, AsdfDeprecationWarning, AsdfWarning
 
-from . import CustomExtension, CustomTestType, helpers
+from . import helpers
+from .objects import CustomExtension, CustomTestType
 
 TEST_DATA_PATH = str(helpers.get_test_data_path(""))
 
@@ -31,22 +32,24 @@ class FractionWithInverse(Fraction):
         self._inverse = value
 
 
-class FractionWithInverseType(asdf.CustomType):
-    name = "fraction_with_inverse"
-    organization = "nowhere.org"
-    version = (1, 0, 0)
-    standard = "custom"
-    types = [FractionWithInverse]
+with pytest.warns(AsdfDeprecationWarning, match=".*subclasses the deprecated CustomType.*"):
 
-    @classmethod
-    def to_tree(cls, node, ctx):
-        return {"numerator": node.numerator, "denominator": node.denominator, "inverse": node.inverse}
+    class FractionWithInverseType(asdf.CustomType):
+        name = "fraction_with_inverse"
+        organization = "nowhere.org"
+        version = (1, 0, 0)
+        standard = "custom"
+        types = [FractionWithInverse]
 
-    @classmethod
-    def from_tree(cls, tree, ctx):
-        result = FractionWithInverse(tree["numerator"], tree["denominator"])
-        yield result
-        result.inverse = tree["inverse"]
+        @classmethod
+        def to_tree(cls, node, ctx):
+            return {"numerator": node.numerator, "denominator": node.denominator, "inverse": node.inverse}
+
+        @classmethod
+        def from_tree(cls, tree, ctx):
+            result = FractionWithInverse(tree["numerator"], tree["denominator"])
+            yield result
+            result.inverse = tree["inverse"]
 
 
 class FractionWithInverseExtension(CustomExtension):
@@ -64,21 +67,23 @@ class FractionWithInverseExtension(CustomExtension):
 
 
 def fractiontype_factory():
-    class FractionType(types.CustomType):
-        name = "fraction"
-        organization = "nowhere.org"
-        version = (1, 0, 0)
-        standard = "custom"
-        types = [Fraction]
-        handle_dynamic_subclasses = True
+    with pytest.warns(AsdfDeprecationWarning, match=".*subclasses the deprecated CustomType.*"):
 
-        @classmethod
-        def to_tree(cls, node, ctx):
-            return [node.numerator, node.denominator]
+        class FractionType(types.CustomType):
+            name = "fraction"
+            organization = "nowhere.org"
+            version = (1, 0, 0)
+            standard = "custom"
+            types = [Fraction]
+            handle_dynamic_subclasses = True
 
-        @classmethod
-        def from_tree(cls, tree, ctx):
-            return Fraction(tree[0], tree[1])
+            @classmethod
+            def to_tree(cls, node, ctx):
+                return [node.numerator, node.denominator]
+
+            @classmethod
+            def from_tree(cls, tree, ctx):
+                return Fraction(tree[0], tree[1])
 
     return FractionType
 
@@ -86,20 +91,22 @@ def fractiontype_factory():
 def fractional2dcoordtype_factory():
     FractionType = fractiontype_factory()  # noqa: N806
 
-    class Fractional2dCoordType(types.CustomType):
-        name = "fractional_2d_coord"
-        organization = "nowhere.org"
-        standard = "custom"
-        version = (1, 0, 0)
-        types = [Fractional2dCoord]
+    with pytest.warns(AsdfDeprecationWarning, match=".*subclasses the deprecated CustomType.*"):
 
-        @classmethod
-        def to_tree(cls, node, ctx):
-            return {"x": node.x, "y": node.y}
+        class Fractional2dCoordType(types.CustomType):
+            name = "fractional_2d_coord"
+            organization = "nowhere.org"
+            standard = "custom"
+            version = (1, 0, 0)
+            types = [Fractional2dCoord]
 
-        @classmethod
-        def from_tree(cls, tree, ctx):
-            return Fractional2dCoord(tree["x"], tree["y"])
+            @classmethod
+            def to_tree(cls, node, ctx):
+                return {"x": node.x, "y": node.y}
+
+            @classmethod
+            def from_tree(cls, tree, ctx):
+                return Fractional2dCoord(tree["x"], tree["y"])
 
     class Fractional2dCoordExtension(CustomExtension):
         @property
@@ -221,13 +228,15 @@ def test_version_mismatch_with_supported_versions():
     class CustomFlow:
         pass
 
-    class CustomFlowType(CustomTestType):
-        version = "1.1.0"
-        supported_versions = ["1.0.0", "1.1.0"]
-        name = "custom_flow"
-        organization = "nowhere.org"
-        standard = "custom"
-        types = [CustomFlow]
+    with pytest.warns(AsdfDeprecationWarning, match=".*subclasses the deprecated CustomType.*"):
+
+        class CustomFlowType(CustomTestType):
+            version = "1.1.0"
+            supported_versions = ["1.0.0", "1.1.0"]
+            name = "custom_flow"
+            organization = "nowhere.org"
+            standard = "custom"
+            types = [CustomFlow]
 
     class CustomFlowExtension(CustomExtension):
         @property
@@ -269,20 +278,22 @@ def test_versioned_writing(monkeypatch):
         [*versioning.supported_versions, versioning.AsdfVersion("42.0.0")],
     )
 
-    class FancyComplexType(types.CustomType):
-        name = "core/complex"
-        organization = "stsci.edu"
-        standard = "asdf"
-        version = (42, 0, 0)
-        types = [complex]
+    with pytest.warns(AsdfDeprecationWarning, match=".*subclasses the deprecated CustomType.*"):
 
-        @classmethod
-        def to_tree(cls, node, ctx):
-            return ComplexType.to_tree(node, ctx)
+        class FancyComplexType(types.CustomType):
+            name = "core/complex"
+            organization = "stsci.edu"
+            standard = "asdf"
+            version = (42, 0, 0)
+            types = [complex]
 
-        @classmethod
-        def from_tree(cls, tree, ctx):
-            return ComplexType.from_tree(tree, ctx)
+            @classmethod
+            def to_tree(cls, node, ctx):
+                return ComplexType.to_tree(node, ctx)
+
+            @classmethod
+            def from_tree(cls, tree, ctx):
+                return ComplexType.from_tree(tree, ctx)
 
     class FancyComplexExtension:
         @property
@@ -335,16 +346,22 @@ def test_longest_match():
 
 
 def test_module_versioning():
-    class NoModuleType(types.CustomType):
-        # It seems highly unlikely that this would be a real module
-        requires = ["qkjvqdja"]
+    with pytest.warns(AsdfDeprecationWarning, match=".*subclasses the deprecated CustomType.*"):
 
-    class HasCorrectPytest(types.CustomType):
-        # This means it requires 1.0.0 or greater, so it should succeed
-        requires = ["pytest-1.0.0"]
+        class NoModuleType(types.CustomType):
+            # It seems highly unlikely that this would be a real module
+            requires = ["qkjvqdja"]
 
-    class DoesntHaveCorrectPytest(types.CustomType):
-        requires = ["pytest-91984.1.7"]
+    with pytest.warns(AsdfDeprecationWarning, match=".*subclasses the deprecated CustomType.*"):
+
+        class HasCorrectPytest(types.CustomType):
+            # This means it requires 1.0.0 or greater, so it should succeed
+            requires = ["pytest-1.0.0"]
+
+    with pytest.warns(AsdfDeprecationWarning, match=".*subclasses the deprecated CustomType.*"):
+
+        class DoesntHaveCorrectPytest(types.CustomType):
+            requires = ["pytest-91984.1.7"]
 
     nmt = NoModuleType()
     hcp = HasCorrectPytest()
@@ -414,23 +431,25 @@ def test_newer_tag():
             self.c = c
             self.d = d
 
-    class CustomFlowType(types.CustomType):
-        version = "1.1.0"
-        name = "custom_flow"
-        organization = "nowhere.org"
-        standard = "custom"
-        types = [CustomFlow]
+    with pytest.warns(AsdfDeprecationWarning, match=".*subclasses the deprecated CustomType.*"):
 
-        @classmethod
-        def from_tree(cls, tree, ctx):
-            kwargs = {}
-            for name in tree:
-                kwargs[name] = tree[name]
-            return CustomFlow(**kwargs)
+        class CustomFlowType(types.CustomType):
+            version = "1.1.0"
+            name = "custom_flow"
+            organization = "nowhere.org"
+            standard = "custom"
+            types = [CustomFlow]
 
-        @classmethod
-        def to_tree(cls, data, ctx):
-            return {"c": data.c, "d": data.d}
+            @classmethod
+            def from_tree(cls, tree, ctx):
+                kwargs = {}
+                for name in tree:
+                    kwargs[name] = tree[name]
+                return CustomFlow(**kwargs)
+
+            @classmethod
+            def to_tree(cls, data, ctx):
+                return {"c": data.c, "d": data.d}
 
     class CustomFlowExtension(CustomExtension):
         @property
@@ -461,44 +480,56 @@ flow_thing:
 
 
 def test_incompatible_version_check():
-    class TestType0(types.CustomType):
-        supported_versions = versioning.AsdfSpec(">=1.2.0")
+    with pytest.warns(AsdfDeprecationWarning, match=".*subclasses the deprecated CustomType.*"):
+
+        class TestType0(types.CustomType):
+            supported_versions = versioning.AsdfSpec(">=1.2.0")
 
     assert TestType0.incompatible_version("1.1.0") is True
     assert TestType0.incompatible_version("1.2.0") is False
     assert TestType0.incompatible_version("2.0.1") is False
 
-    class TestType1(types.CustomType):
-        supported_versions = versioning.AsdfVersion("1.0.0")
+    with pytest.warns(AsdfDeprecationWarning, match=".*subclasses the deprecated CustomType.*"):
+
+        class TestType1(types.CustomType):
+            supported_versions = versioning.AsdfVersion("1.0.0")
 
     assert TestType1.incompatible_version("1.0.0") is False
     assert TestType1.incompatible_version("1.1.0") is True
 
-    class TestType2(types.CustomType):
-        supported_versions = "1.0.0"
+    with pytest.warns(AsdfDeprecationWarning, match=".*subclasses the deprecated CustomType.*"):
+
+        class TestType2(types.CustomType):
+            supported_versions = "1.0.0"
 
     assert TestType2.incompatible_version("1.0.0") is False
     assert TestType2.incompatible_version("1.1.0") is True
 
-    class TestType3(types.CustomType):
-        # This doesn't make much sense, but it's just for the sake of example
-        supported_versions = ["1.0.0", versioning.AsdfSpec(">=2.0.0")]
+    with pytest.warns(AsdfDeprecationWarning, match=".*subclasses the deprecated CustomType.*"):
+
+        class TestType3(types.CustomType):
+            # This doesn't make much sense, but it's just for the sake of example
+            supported_versions = ["1.0.0", versioning.AsdfSpec(">=2.0.0")]
 
     assert TestType3.incompatible_version("1.0.0") is False
     assert TestType3.incompatible_version("1.1.0") is True
     assert TestType3.incompatible_version("2.0.0") is False
     assert TestType3.incompatible_version("2.0.1") is False
 
-    class TestType4(types.CustomType):
-        supported_versions = ["1.0.0", versioning.AsdfVersion("1.1.0")]
+    with pytest.warns(AsdfDeprecationWarning, match=".*subclasses the deprecated CustomType.*"):
+
+        class TestType4(types.CustomType):
+            supported_versions = ["1.0.0", versioning.AsdfVersion("1.1.0")]
 
     assert TestType4.incompatible_version("1.0.0") is False
     assert TestType4.incompatible_version("1.0.1") is True
     assert TestType4.incompatible_version("1.1.0") is False
     assert TestType4.incompatible_version("1.1.1") is True
 
-    class TestType5(types.CustomType):
-        supported_versions = [versioning.AsdfSpec("<1.0.0"), versioning.AsdfSpec(">=2.0.0")]
+    with pytest.warns(AsdfDeprecationWarning, match=".*subclasses the deprecated CustomType.*"):
+
+        class TestType5(types.CustomType):
+            supported_versions = [versioning.AsdfSpec("<1.0.0"), versioning.AsdfSpec(">=2.0.0")]
 
     assert TestType5.incompatible_version("0.9.9") is False
     assert TestType5.incompatible_version("2.0.0") is False
@@ -506,12 +537,18 @@ def test_incompatible_version_check():
     assert TestType5.incompatible_version("1.0.0") is True
     assert TestType5.incompatible_version("1.1.0") is True
 
-    with pytest.raises(ValueError):
+    with pytest.raises(ValueError), pytest.warns(
+        AsdfDeprecationWarning,
+        match=".*subclasses the deprecated CustomType.*",
+    ):
 
         class TestType6(types.CustomType):
             supported_versions = "blue"
 
-    with pytest.raises(ValueError):
+    with pytest.raises(ValueError), pytest.warns(
+        AsdfDeprecationWarning,
+        match=".*subclasses the deprecated CustomType.*",
+    ):
 
         class TestType7(types.CustomType):
             supported_versions = ["1.1.0", "2.2.0", "blue"]
@@ -523,28 +560,30 @@ def test_supported_versions():
             self.c = c
             self.d = d
 
-    class CustomFlowType(types.CustomType):
-        version = "1.1.0"
-        supported_versions = [(1, 0, 0), versioning.AsdfSpec(">=1.1.0")]
-        name = "custom_flow"
-        organization = "nowhere.org"
-        standard = "custom"
-        types = [CustomFlow]
+    with pytest.warns(AsdfDeprecationWarning, match=".*subclasses the deprecated CustomType.*"):
 
-        @classmethod
-        def from_tree(cls, tree, ctx):
-            # Convert old schema to new CustomFlow type
-            if cls.version == "1.0.0":
-                return CustomFlow(c=tree["a"], d=tree["b"])
+        class CustomFlowType(types.CustomType):
+            version = "1.1.0"
+            supported_versions = [(1, 0, 0), versioning.AsdfSpec(">=1.1.0")]
+            name = "custom_flow"
+            organization = "nowhere.org"
+            standard = "custom"
+            types = [CustomFlow]
 
-            return CustomFlow(**tree)
+            @classmethod
+            def from_tree(cls, tree, ctx):
+                # Convert old schema to new CustomFlow type
+                if cls.version == "1.0.0":
+                    return CustomFlow(c=tree["a"], d=tree["b"])
 
-        @classmethod
-        def to_tree(cls, data, ctx):
-            if cls.version == "1.0.0":
-                return {"a": data.c, "b": data.d}
+                return CustomFlow(**tree)
 
-            return {"c": data.c, "d": data.d}
+            @classmethod
+            def to_tree(cls, data, ctx):
+                if cls.version == "1.0.0":
+                    return {"a": data.c, "b": data.d}
+
+                return {"c": data.c, "d": data.d}
 
     class CustomFlowExtension(CustomExtension):
         @property
@@ -576,13 +615,15 @@ def test_unsupported_version_warning():
     class CustomFlow:
         pass
 
-    class CustomFlowType(types.CustomType):
-        version = "1.0.0"
-        supported_versions = [(1, 0, 0)]
-        name = "custom_flow"
-        organization = "nowhere.org"
-        standard = "custom"
-        types = [CustomFlow]
+    with pytest.warns(AsdfDeprecationWarning, match=".*subclasses the deprecated CustomType.*"):
+
+        class CustomFlowType(types.CustomType):
+            version = "1.0.0"
+            supported_versions = [(1, 0, 0)]
+            name = "custom_flow"
+            organization = "nowhere.org"
+            standard = "custom"
+            types = [CustomFlow]
 
     class CustomFlowExtension(CustomExtension):
         @property
@@ -607,23 +648,25 @@ flow_thing:
 def test_tag_without_schema(tmp_path):
     tmpfile = str(tmp_path / "foo.asdf")
 
-    class FooType(types.CustomType):
-        name = "foo"
+    with pytest.warns(AsdfDeprecationWarning, match=".*subclasses the deprecated CustomType.*"):
 
-        def __init__(self, a, b):
-            self.a = a
-            self.b = b
+        class FooType(types.CustomType):
+            name = "foo"
 
-        @classmethod
-        def from_tree(cls, tree, ctx):
-            return cls(tree["a"], tree["b"])
+            def __init__(self, a, b):
+                self.a = a
+                self.b = b
 
-        @classmethod
-        def to_tree(cls, node, ctx):
-            return {"a": node.a, "b": node.b}
+            @classmethod
+            def from_tree(cls, tree, ctx):
+                return cls(tree["a"], tree["b"])
 
-        def __eq__(self, other):
-            return self.a == other.a and self.b == other.b
+            @classmethod
+            def to_tree(cls, node, ctx):
+                return {"a": node.a, "b": node.b}
+
+            def __eq__(self, other):
+                return self.a == other.a and self.b == other.b
 
     class FooExtension:
         @property
@@ -684,7 +727,10 @@ def test_super_use_in_versioned_subclass():
         def __init__(self, bar):
             self.bar = bar
 
-    with pytest.raises(RuntimeError, match=r".* ExtensionTypeMeta .* __classcell__ .*"):
+    with pytest.raises(RuntimeError, match=r".* ExtensionTypeMeta .* __classcell__ .*"), pytest.warns(
+        AsdfDeprecationWarning,
+        match=".*subclasses the deprecated CustomType.*",
+    ):
 
         class FooType(asdf.CustomType):
             name = "foo"
