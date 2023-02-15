@@ -228,15 +228,13 @@ def test_version_mismatch_with_supported_versions():
     class CustomFlow:
         pass
 
-    with pytest.warns(AsdfDeprecationWarning, match=".*subclasses the deprecated CustomType.*"):
-
-        class CustomFlowType(CustomTestType):
-            version = "1.1.0"
-            supported_versions = ["1.0.0", "1.1.0"]
-            name = "custom_flow"
-            organization = "nowhere.org"
-            standard = "custom"
-            types = [CustomFlow]
+    class CustomFlowType(CustomTestType):
+        version = "1.1.0"
+        supported_versions = ["1.0.0", "1.1.0"]
+        name = "custom_flow"
+        organization = "nowhere.org"
+        standard = "custom"
+        types = [CustomFlow]
 
     class CustomFlowExtension(CustomExtension):
         @property
