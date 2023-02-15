@@ -1092,6 +1092,14 @@ def get_file(init, mode="r", uri=None, close=False):
         if parsed.scheme in _local_file_schemes:
             realmode = "r+b" if mode == "rw" else mode + "b"
 
+            # if paths have an extra leading '/' urlparse will
+            # parse them even though they violate rfc8089. This will
+            # lead to errors or writing files to unexpected locations
+            # on non-windows systems
+            if not sys.platform.startswith("win") and parsed.scheme == "" and parsed.netloc != "":
+                msg = f"Invalid path {init}"
+                raise ValueError(msg)
+
             # Windows paths are not URIs, and so they should not be parsed as
             # such. Otherwise, the drive component of the path can get lost.
             # This is not an ideal solution, but we can't use pathlib here
