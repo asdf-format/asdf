@@ -114,6 +114,7 @@ filterwarnings = [
     'ignore::asdf.exceptions.AsdfDeprecationWarning:asdf.asdftypes',
     'ignore:numpy.ndarray size changed:RuntimeWarning',
     'ignore:.*from astropy.io.misc.asdf.*subclasses the deprecated CustomType.*:asdf.exceptions.AsdfDeprecationWarning',
+    'ignore::asdf.exceptions.AsdfDeprecationWarning:asdf.resolver:7'
 ]
 # Configuration for pytest-doctestplus
 text_file_format = 'rst'

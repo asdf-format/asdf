@@ -11,7 +11,8 @@ from jsonschema.exceptions import ValidationError
 from numpy.testing import assert_array_equal
 
 import asdf
-from asdf import config_context, extension, get_config, resolver, schema, treeutil, versioning
+from asdf import _resolver as resolver
+from asdf import config_context, extension, get_config, schema, treeutil, versioning
 from asdf.exceptions import AsdfDeprecationWarning, AsdfWarning
 from asdf.extension import ExtensionProxy
 
