@@ -1,10 +1,17 @@
 import os
+import sys
 
 import numpy as np
+import pytest
 from astropy.io import fits
 
 from asdf.commands import remove_hdu
-from asdf.fits_embed import AsdfInFits
+from asdf.exceptions import AsdfDeprecationWarning
+
+with pytest.warns(AsdfDeprecationWarning, match="AsdfInFits has been deprecated.*"):
+    if "asdf.fits_embed" in sys.modules:
+        del sys.modules["asdf.fits_embed"]
+    from asdf.fits_embed import AsdfInFits
 
 
 def test_remove_hdu(tmpdir):

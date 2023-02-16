@@ -1,11 +1,21 @@
 import os
+import sys
 
 import numpy as np
+import pytest
 from astropy.io.fits import HDUList, ImageHDU
 
 import asdf
 from asdf.commands import extract
-from asdf.fits_embed import AsdfInFits
+from asdf.exceptions import AsdfDeprecationWarning
+
+with pytest.warns(AsdfDeprecationWarning, match="AsdfInFits has been deprecated.*"):
+    # asdf.fits_embed is imported here
+    if "asdf.fits_embed" in sys.modules:
+        del sys.modules["asdf.fits_embed"]
+    import asdf.fits_embed
+    from asdf.fits_embed import AsdfInFits
+
 from asdf.tests.helpers import assert_tree_match
 
 

@@ -1,6 +1,5 @@
 import copy
-import importlib
-import warnings
+import sys
 
 import numpy as np
 import pytest
@@ -10,9 +9,15 @@ from jsonschema.exceptions import ValidationError
 from numpy.testing import assert_array_equal
 
 import asdf
-from asdf import fits_embed, get_config
+from asdf import get_config
 from asdf import open as asdf_open
-from asdf.exceptions import AsdfConversionWarning, AsdfWarning
+from asdf.exceptions import AsdfConversionWarning, AsdfDeprecationWarning, AsdfWarning
+
+with pytest.warns(AsdfDeprecationWarning, match="AsdfInFits has been deprecated.*"):
+    if "asdf.fits_embed" in sys.modules:
+        del sys.modules["asdf.fits_embed"]
+    import asdf.fits_embed
+    from asdf import fits_embed
 
 from .helpers import assert_no_warnings, assert_tree_match, get_test_data_path, yaml_to_asdf
 
@@ -349,13 +354,8 @@ def test_extension_check():
         pass
 
     # Make sure that suppressing the warning works as well
-    with warnings.catch_warnings():
-        # modify the warnings filter to turn warnings into error but append
-        # the new filter so it doesn't override warnings filtered by decorators
-        # or globally
-        warnings.simplefilter("error", append=True)
-        with asdf.open(testfile, ignore_missing_extensions=True):
-            pass
+    with assert_no_warnings(), asdf.open(testfile, ignore_missing_extensions=True):
+        pass
 
     with pytest.raises(RuntimeError), asdf.open(testfile, strict_extension_check=True):
         pass
@@ -548,8 +548,3 @@ def test_resave_breaks_hdulist_tree_array_link(tmp_path):
         for f in (af1, af2):
             block_bytes = f["ASDF"].data.tobytes().split(b"...")[1].strip()
             assert len(block_bytes) == 0
-
-
-def test_asdf_in_fits_deprecation():
-    with pytest.deprecated_call():
-        importlib.reload(asdf.fits_embed)
