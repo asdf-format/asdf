@@ -20,16 +20,12 @@ jobs:
           one_of: backport-2.15.x,development
           repo_token: ${{ secrets.GITHUB_TOKEN }}
 
-  changelog:
-    name: Confirm changelog entry
+  set_milestone:
+    name: Set milestone
     runs-on: ubuntu-latest
     needs: [check_labels]
     steps:
-      - name: Checkout code
-        uses: actions/checkout@v2
+      - uses: andrefcdias/add-to-milestone
         with:
-          fetch-depth: 0
-          submodules: true
-      - name: Grep for PR number in CHANGES.rst
-        run: grep -P '\[[^\]]*#${{github.event.number}}[,\]]' CHANGES.rst
-        if: ${{ !contains(github.event.pull_request.labels.*.name, 'no-changelog-entry-needed') }}
+          repo-token: "${{ secrets.GITHUB_TOKEN }}"
+          milestone: "2.15"
