@@ -57,3 +57,10 @@ to the maintainers, who are glad to assist you.
     * ``development`` for to mark as slated for the next release.
 
     The reviewer will add the label if you are unable to do so.
+
+.. note::
+    Backporting changes is done automatically using ``meeseeksdev``. If you are
+    a maintainer, you can comment ``@meeseeksdev backport to <branch>`` on a pull
+    request to manually trigger a backport if the correct labels were not applied.
+    Moreover, when merging a "backport" pull request, please use the "Rebase and merge"
+    option.
