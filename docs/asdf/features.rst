@@ -413,6 +413,15 @@ details).
 Saving ASDF in FITS
 ===================
 
+.. warning::
+
+    `~asdf.fits_embed.AsdfInFits` and `~asdf.fits_embed` are deprecated and
+    will be removed from an upcoming version of ASDF. Support for reading
+    and writing ASDF data within a FITS file has moved to the `stdatamodels`
+    package. Please see the the `stdatamodels`
+    :external+stdatamodels:doc:`asdf_in_fits` documentation for information
+    about migrating code from ASDF to `stdatamodels`.
+
 .. note::
 
     This section is about packaging entire ASDF files inside of
