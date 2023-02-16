@@ -47,3 +47,13 @@ to the maintainers, who are glad to assist you.
     code is automatically formatted before you commit. For those who do not run
     these tools regularly, the ``pre-commit-ci`` bot will attempt to fix the issues
     with your pull request when you submit it.
+
+.. note::
+    Pull requests now require a "backport" label to be added to the pull request
+    so that the milestone will be automatically set and the PR will be automatically
+    backported (if necessary) to the appropriate release branch. These labels are:
+
+    * ``backport-2.15.x`` for the ``2.15.x`` LTS releases.
+    * ``development`` for to mark as slated for the next release.
+
+    The reviewer will add the label if you are unable to do so.
