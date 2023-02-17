@@ -1,7 +1,7 @@
 import pytest
 
+from asdf._resolver import Resolver, ResolverChain
 from asdf.exceptions import AsdfDeprecationWarning
-from asdf.resolver import Resolver, ResolverChain
 
 
 def test_resolver_no_mappings():
