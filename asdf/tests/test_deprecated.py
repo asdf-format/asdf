@@ -3,6 +3,8 @@ import sys
 import pytest
 
 from asdf.exceptions import AsdfDeprecationWarning
+from asdf.tests.helpers import assert_extension_correctness
+from asdf.tests.objects import CustomExtension
 from asdf.types import CustomType
 
 
@@ -27,3 +29,9 @@ def test_resolver_module_deprecation():
         if "asdf.resolver" in sys.modules:
             del sys.modules["asdf.resolver"]
         import asdf.resolver  # noqa: F401
+
+
+def test_assert_extension_correctness_deprecation():
+    extension = CustomExtension()
+    with pytest.warns(AsdfDeprecationWarning, match="assert_extension_correctness is deprecated.*"):
+        assert_extension_correctness(extension)
