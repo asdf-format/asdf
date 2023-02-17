@@ -21,6 +21,7 @@ The ASDF Standard is at v1.6.0
   writing ASDF in fits files is being moved to `stdatamodels
   <https://github.com/spacetelescope/stdatamodels>`_. [#1337]
 - Add AsdfDeprecationWarning to asdf.resolver [#1362]
+- Add AsdfDeprecationWarning to asdf.tests.helpers.assert_extension_correctness [#1388]
 
 2.14.3 (2022-12-15)
 -------------------
