@@ -413,7 +413,7 @@ details).
 Saving ASDF in FITS
 ===================
 
-.. note::
+.. warning::
 
     `~asdf.fits_embed.AsdfInFits` and `~asdf.fits_embed` are deprecated and
     will be removed from an upcoming version of ASDF. Support for reading
