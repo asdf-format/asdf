@@ -28,7 +28,6 @@ from asdf.block import Block
 from asdf.constants import YAML_TAG_PREFIX
 from asdf.exceptions import AsdfConversionWarning
 from asdf.extension import default_extensions
-from asdf.resolver import Resolver, ResolverChain
 from asdf.tags.core import AsdfObject
 from asdf.versioning import (
     AsdfVersion,
@@ -417,6 +416,10 @@ def assert_extension_correctness(extension):
         The extension to validate
     """
     __tracebackhide__ = True
+
+    # locally import the deprecated Resolver and ResolverChain to avoid
+    # exposing it as asdf.tests.helpers.Resolver/ResolverChain
+    from asdf._resolver import Resolver, ResolverChain
 
     resolver = ResolverChain(
         Resolver(extension.tag_mapping, "tag"),
