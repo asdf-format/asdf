@@ -13,6 +13,9 @@ with pytest.warns(AsdfDeprecationWarning, match="AsdfInFits has been deprecated.
     # asdf.fits_embed is imported here
     if "asdf.fits_embed" in sys.modules:
         del sys.modules["asdf.fits_embed"]
+    # import of asdf.fits_embed is required here to allow for proper removal of
+    # the asdf.fits_embed module (see the above line of code) to trigger the
+    # deprecation warning on import for other tests
     import asdf.fits_embed
     from asdf.fits_embed import AsdfInFits
 
