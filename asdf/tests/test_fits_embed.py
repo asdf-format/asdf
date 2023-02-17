@@ -1,4 +1,5 @@
 import copy
+import sys
 
 import numpy as np
 import pytest
@@ -8,9 +9,14 @@ from jsonschema.exceptions import ValidationError
 from numpy.testing import assert_array_equal
 
 import asdf
-from asdf import fits_embed, get_config
+from asdf import get_config
 from asdf import open as asdf_open
-from asdf.exceptions import AsdfConversionWarning, AsdfWarning
+from asdf.exceptions import AsdfConversionWarning, AsdfDeprecationWarning, AsdfWarning
+
+with pytest.warns(AsdfDeprecationWarning, match="AsdfInFits has been deprecated.*"):
+    if "asdf.fits_embed" in sys.modules:
+        del sys.modules["asdf.fits_embed"]
+    import asdf.fits_embed
 
 from .helpers import assert_no_warnings, assert_tree_match, get_test_data_path, yaml_to_asdf
 
@@ -32,7 +38,7 @@ def create_asdf_in_fits(dtype):
         },
     }
 
-    return fits_embed.AsdfInFits(hdulist, tree)
+    return asdf.fits_embed.AsdfInFits(hdulist, tree)
 
 
 # Testing backwards compatibility ensures that we can continue to read and
@@ -57,7 +63,7 @@ def test_embed_asdf_in_fits_file(tmp_path, backwards_compat, dtype):
         },
     }
 
-    ff = fits_embed.AsdfInFits(hdulist, tree)
+    ff = asdf.fits_embed.AsdfInFits(hdulist, tree)
     ff.write_to(fits_testfile, use_image_hdu=backwards_compat)
 
     with fits.open(fits_testfile) as hdulist2:
@@ -74,7 +80,7 @@ def test_embed_asdf_in_fits_file(tmp_path, backwards_compat, dtype):
         else:
             assert isinstance(asdf_hdu, fits.BinTableHDU)
 
-        with fits_embed.AsdfInFits.open(hdulist2) as ff2:
+        with asdf.fits_embed.AsdfInFits.open(hdulist2) as ff2:
             assert_tree_match(tree, ff2.tree)
 
             ff = asdf.AsdfFile(copy.deepcopy(ff2.tree))
@@ -100,7 +106,7 @@ def test_embed_asdf_in_fits_file_anonymous_extensions(tmp_path, dtype):
         assert isinstance(asdf_hdu, fits.BinTableHDU)
         assert asdf_hdu.data.tobytes().startswith(b"#ASDF")
 
-        with fits_embed.AsdfInFits.open(hdulist) as ff2:
+        with asdf.fits_embed.AsdfInFits.open(hdulist) as ff2:
             assert_tree_match(asdf_in_fits.tree, ff2.tree)
 
             ff = asdf.AsdfFile(copy.deepcopy(ff2.tree))
@@ -120,12 +126,12 @@ def test_update_in_place(tmp_path, dtype):
     asdf_in_fits.write_to(tempfile)
 
     # Open the file and add data so it needs to be updated
-    with fits_embed.AsdfInFits.open(tempfile) as ff:
+    with asdf.fits_embed.AsdfInFits.open(tempfile) as ff:
         ff.tree["new_stuff"] = "A String"
         ff.update()
 
     # Open the updated file and make sure everything looks okay
-    with fits_embed.AsdfInFits.open(tempfile) as ff:
+    with asdf.fits_embed.AsdfInFits.open(tempfile) as ff:
         assert ff.tree["new_stuff"] == "A String"
         assert_tree_match(ff.tree["model"], asdf_in_fits.tree["model"])
 
@@ -140,12 +146,12 @@ def test_update_and_write_new(tmp_path, dtype):
     asdf_in_fits.write_to(tempfile)
 
     # Open the file and add data so it needs to be updated
-    with fits_embed.AsdfInFits.open(tempfile) as ff:
+    with asdf.fits_embed.AsdfInFits.open(tempfile) as ff:
         ff.tree["new_stuff"] = "A String"
         ff.write_to(newfile)
 
     # Open the updated file and make sure everything looks okay
-    with fits_embed.AsdfInFits.open(newfile) as ff:
+    with asdf.fits_embed.AsdfInFits.open(newfile) as ff:
         assert ff.tree["new_stuff"] == "A String"
         assert_tree_match(ff.tree["model"], asdf_in_fits.tree["model"])
 
@@ -181,7 +187,7 @@ def test_create_in_tree_first(tmp_path, dtype):
     hdulist.append(fits.ImageHDU(tree["model"]["err"]["data"]))
 
     tmpfile = str(tmp_path / "test.fits")
-    with fits_embed.AsdfInFits(hdulist, tree) as ff:
+    with asdf.fits_embed.AsdfInFits(hdulist, tree) as ff:
         ff.write_to(tmpfile)
 
     with asdf.AsdfFile(tree) as ff:
@@ -213,20 +219,20 @@ def test_asdf_in_fits_open(tmp_path, dtype):
     asdf_in_fits.write_to(tmpfile)
 
     # Test opening the file directly from the URI
-    with fits_embed.AsdfInFits.open(tmpfile) as ff:
+    with asdf.fits_embed.AsdfInFits.open(tmpfile) as ff:
         compare_asdfs(asdf_in_fits, ff)
 
     # Test open/close without context handler
-    ff = fits_embed.AsdfInFits.open(tmpfile)
+    ff = asdf.fits_embed.AsdfInFits.open(tmpfile)
     compare_asdfs(asdf_in_fits, ff)
     ff.close()
 
     # Test reading in the file from an already-opened file handle
-    with open(tmpfile, "rb") as handle, fits_embed.AsdfInFits.open(handle) as ff:
+    with open(tmpfile, "rb") as handle, asdf.fits_embed.AsdfInFits.open(handle) as ff:
         compare_asdfs(asdf_in_fits, ff)
 
     # Test opening the file as a FITS file first and passing the HDUList
-    with fits.open(tmpfile) as hdulist, fits_embed.AsdfInFits.open(hdulist) as ff:
+    with fits.open(tmpfile) as hdulist, asdf.fits_embed.AsdfInFits.open(hdulist) as ff:
         compare_asdfs(asdf_in_fits, ff)
 
 
@@ -269,7 +275,7 @@ invalid_software: !core/software-1.0.0
     hdul.append(hdu)
     hdul.writeto(tmpfile)
 
-    for open_method in [asdf.open, fits_embed.AsdfInFits.open]:
+    for open_method in [asdf.open, asdf.fits_embed.AsdfInFits.open]:
         get_config().validate_on_read = True
         with pytest.raises(ValidationError), open_method(tmpfile):
             pass
@@ -293,7 +299,7 @@ def test_bad_fits_input(tmp_path):
 def test_open_gzipped():
     testfile = get_test_data_path("asdf.fits.gz")
 
-    with fits_embed.AsdfInFits.open(testfile) as af:
+    with asdf.fits_embed.AsdfInFits.open(testfile) as af:
         assert af.tree["stuff"].shape == (20, 20)
 
 
@@ -310,14 +316,14 @@ def test_version_mismatch_file():
     with assert_no_warnings(AsdfConversionWarning), asdf.open(testfile) as fits_handle:
         assert fits_handle.tree["a"] == complex(0j)
 
-    with pytest.warns(AsdfConversionWarning, match=r"tag:stsci.edu:asdf/core/complex"), fits_embed.AsdfInFits.open(
+    with pytest.warns(AsdfConversionWarning, match=r"tag:stsci.edu:asdf/core/complex"), asdf.fits_embed.AsdfInFits.open(
         testfile,
         ignore_version_mismatch=False,
     ) as fits_handle:
         assert fits_handle.tree["a"] == complex(0j)
 
     # Make sure warning does not occur when warning is ignored (default)
-    with assert_no_warnings(AsdfConversionWarning), fits_embed.AsdfInFits.open(testfile) as fits_handle:
+    with assert_no_warnings(AsdfConversionWarning), asdf.fits_embed.AsdfInFits.open(testfile) as fits_handle:
         assert fits_handle.tree["a"] == complex(0j)
 
 
@@ -332,7 +338,7 @@ def test_serialize_table(tmp_path):
     hdulist.append(hdu)
 
     tree = {"my_table": hdulist[1].data}
-    with fits_embed.AsdfInFits(hdulist, tree) as ff:
+    with asdf.fits_embed.AsdfInFits(hdulist, tree) as ff:
         ff.write_to(tmpfile)
 
     with asdf.open(tmpfile) as ff:

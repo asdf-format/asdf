@@ -17,6 +17,9 @@ The ASDF Standard is at v1.6.0
 - Add AsdfDeprecationWarning to `~asdf.types.CustomType` [#1359]
 - Throw more useful error when provided with a path containing an
   extra leading slash [#1356]
+- Add AsdfDeprecationWarning to AsdfInFits. Support for reading and
+  writing ASDF in fits files is being moved to `stdatamodels
+  <https://github.com/spacetelescope/stdatamodels>`_. [#1337]
 
 2.14.3 (2022-12-15)
 -------------------

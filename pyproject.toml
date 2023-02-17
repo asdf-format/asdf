@@ -117,7 +117,7 @@ filterwarnings = [
 ]
 # Configuration for pytest-doctestplus
 text_file_format = 'rst'
-addopts = '--color=yes --doctest-rst'
+addopts = '--color=yes --doctest-rst --ignore=asdf/fits_embed.py'
 
 [tool.coverage.run]
 omit = [
