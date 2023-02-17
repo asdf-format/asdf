@@ -3,10 +3,12 @@ Utilities for embedded ADSF files in FITS.
 """
 import io
 import re
+import warnings
 
 import numpy as np
 
 from . import asdf, block, generic_io, util
+from .exceptions import AsdfDeprecationWarning
 
 try:
     from astropy.io import fits
@@ -20,6 +22,14 @@ FITS_SOURCE_PREFIX = "fits:"
 
 
 __all__ = ["AsdfInFits"]
+
+warnings.warn(
+    "AsdfInFits has been deprecated and will be removed in "
+    "asdf-3.0. Similar functionality has been added to stdatamodels "
+    "https://github.com/spacetelescope/stdatamodels to load and "
+    "save ASDF in fits files.",
+    AsdfDeprecationWarning,
+)
 
 
 class _FitsBlock:

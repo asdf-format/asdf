@@ -1,11 +1,19 @@
 import os
+import sys
 
 import numpy as np
+import pytest
 from astropy.io.fits import HDUList, ImageHDU
 
 import asdf
 from asdf.commands import extract
-from asdf.fits_embed import AsdfInFits
+from asdf.exceptions import AsdfDeprecationWarning
+
+with pytest.warns(AsdfDeprecationWarning, match="AsdfInFits has been deprecated.*"):
+    if "asdf.fits_embed" in sys.modules:
+        del sys.modules["asdf.fits_embed"]
+    import asdf.fits_embed
+
 from asdf.tests.helpers import assert_tree_match
 
 
@@ -23,7 +31,7 @@ def test_extract(tmpdir):
     }
 
     asdf_in_fits = str(tmpdir.join("asdf.fits"))
-    with AsdfInFits(hdulist, tree) as aif:
+    with asdf.fits_embed.AsdfInFits(hdulist, tree) as aif:
         aif.write_to(asdf_in_fits)
 
     pure_asdf = str(tmpdir.join("extract.asdf"))
@@ -32,5 +40,5 @@ def test_extract(tmpdir):
     assert os.path.exists(pure_asdf)
 
     with asdf.open(pure_asdf) as af:
-        assert not isinstance(af, AsdfInFits)
+        assert not isinstance(af, asdf.fits_embed.AsdfInFits)
         assert_tree_match(tree, af.tree)
