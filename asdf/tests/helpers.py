@@ -27,7 +27,7 @@ from asdf.asdf import AsdfFile, get_asdf_library_info
 from asdf.block import Block
 from asdf.constants import YAML_TAG_PREFIX
 from asdf.exceptions import AsdfConversionWarning, AsdfDeprecationWarning
-from asdf.extension import default_extensions
+from asdf.extension._legacy import _default_extensions as default_extensions
 from asdf.tags.core import AsdfObject
 from asdf.versioning import (
     AsdfVersion,
