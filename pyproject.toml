@@ -111,13 +111,11 @@ open_files_ignore = ['test.fits', 'asdf.fits']
 # which pytest trips over during collection:
 filterwarnings = [
     'error',
-    'ignore::asdf.exceptions.AsdfDeprecationWarning:asdf.asdftypes',
     'ignore:numpy.ndarray size changed:RuntimeWarning',
-    'ignore:.*from astropy.io.misc.asdf.*subclasses the deprecated CustomType.*:asdf.exceptions.AsdfDeprecationWarning',
 ]
 # Configuration for pytest-doctestplus
 text_file_format = 'rst'
-addopts = '--color=yes --doctest-rst --ignore=asdf/fits_embed.py --ignore=asdf/resolver.py'
+addopts = '--color=yes --doctest-rst'
 
 [tool.coverage.run]
 omit = [
