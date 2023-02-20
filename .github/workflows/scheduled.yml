@@ -11,6 +11,9 @@ on:
     #        │ │ │ │ ┌───────── day of the week (0 - 6 or SUN-SAT)
     - cron: '0 6 * * 1'  # Every Monday at 6am UTC
 
+  #TMP
+  pull_request:
+
 jobs:
   dispatch_workflows:
     runs-on: ubuntu-latest
