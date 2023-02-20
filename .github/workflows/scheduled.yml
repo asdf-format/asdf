@@ -15,17 +15,29 @@ on:
   pull_request:
 
 jobs:
-  dispatch_workflows:
-    runs-on: ubuntu-latest
-    strategy:
-      fail-fast: true
-      matrix:
-        branch:
-          - master
-          - 2.15.x
-        workflow:
-          - ci.yml
-          - downstream.yml
-          - s390x.yml
+  # dispatch_workflows:
+  #   runs-on: ubuntu-latest
+  #   strategy:
+  #     fail-fast: true
+  #     matrix:
+  #       branch:
+  #         - master
+  #         - 2.15.x
+  #       workflow:
+  #         - ci.yml
+  #         - downstream.yml
+  #         - s390x.yml
 
-    uses: asdf-format/asdf/.github/workflows/${{ matrix.workflows }}@${{ matrix.branch }}
+  #   uses: asdf-format/asdf/.github/workflows/${{ matrix.workflows }}@${{ matrix.branch }}
+  ci_master:
+    uses: asdf-format/asdf/.github/workflows/ci.yml@master
+  downstream_master:
+    uses: asdf-format/asdf/.github/workflows/downstream.yml@master
+  s390x_master:
+    uses: asdf-format/asdf/.github/workflows/s390x.yml@master
+  ci_2_15_x:
+    uses: asdf-format/asdf/.github/workflows/ci.yml@2.15.x
+  downstream_2_15_x:
+    uses: asdf-format/asdf/.github/workflows/downstream.yml@2.15.x
+  s390x_2_15_x:
+    uses: asdf-format/asdf/.github/workflows/s390x.yml@2.15.x
