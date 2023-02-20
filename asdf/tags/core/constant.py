@@ -1,4 +1,4 @@
-from asdf.types import AsdfType
+from asdf._types import AsdfType
 
 
 class Constant:

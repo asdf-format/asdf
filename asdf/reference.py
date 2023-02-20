@@ -12,7 +12,7 @@ from contextlib import suppress
 import numpy as np
 
 from . import generic_io, treeutil, util
-from .types import AsdfType
+from ._types import AsdfType
 from .util import patched_urllib_parse
 
 __all__ = ["resolve_fragment", "Reference", "find_references", "resolve_references", "make_reference"]

@@ -3,10 +3,10 @@ import sys
 import pytest
 
 import asdf
+from asdf._types import CustomType
 from asdf.exceptions import AsdfDeprecationWarning
 from asdf.tests.helpers import assert_extension_correctness
 from asdf.tests.objects import CustomExtension
-from asdf.types import CustomType
 
 
 def test_custom_type_warning():
@@ -61,3 +61,10 @@ def test_asdfile_run_hook_deprecation():
 def test_asdfile_run_modifying_hook_deprecation():
     with asdf.AsdfFile() as af, pytest.warns(AsdfDeprecationWarning, match="AsdfFile.run_modifying_hook is deprecated"):
         af.run_modifying_hook("foo")
+
+
+def test_types_module_deprecation():
+    with pytest.warns(AsdfDeprecationWarning, match="^asdf.types is deprecated.*$"):
+        if "asdf.types" in sys.modules:
+            del sys.modules["asdf.types"]
+        import asdf.types  # noqa: F401

@@ -27,6 +27,7 @@ The ASDF Standard is at v1.6.0
 - Add warning to use of asdftool extract and remove-hdu about deprecation
   and impending removal [#1411]
 - Deprecate AsdfFile attributes that use the legacy extension api [#1417]
+- Add AsdfDeprecationWarning to asdf.types [#1401]
 
 2.14.3 (2022-12-15)
 -------------------

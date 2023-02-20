@@ -2,7 +2,7 @@ from numbers import Integral
 
 import numpy as np
 
-from asdf.types import AsdfType
+from asdf._types import AsdfType
 
 
 class IntegerType(AsdfType):

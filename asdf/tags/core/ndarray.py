@@ -6,7 +6,7 @@ from jsonschema import ValidationError
 from numpy import ma
 
 from asdf import util
-from asdf.types import AsdfType
+from asdf._types import AsdfType
 
 _datatype_names = {
     "int8": "i1",

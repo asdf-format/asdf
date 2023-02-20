@@ -1,7 +1,7 @@
 import warnings
 
+from ._types import AsdfType, CustomType, ExtensionTypeMeta, format_tag
 from .exceptions import AsdfDeprecationWarning
-from .types import AsdfType, CustomType, ExtensionTypeMeta, format_tag
 
 # This is not exhaustive, but represents the public API
 from .versioning import join_tag_version, split_tag_version
