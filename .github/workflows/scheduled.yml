@@ -24,7 +24,5 @@ jobs:
           - ci.yml
           - downstream.yml
           - s390x.yml
-    steps:
-      - run: gh workflow run ${{ matrix.workflow }} --repo asdf-format/asdf --ref ${{ matrix.branch }}
-    env:
-      GITHUB_TOKEN: ${{ secrets.WORKFLOW_TOKEN }}
+
+    uses: asdf-format/asdf/.github/workflows/${{ matrix.workflows }}@${{ matrix.branch }}
