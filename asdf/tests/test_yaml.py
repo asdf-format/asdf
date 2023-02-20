@@ -8,7 +8,6 @@ import yaml
 
 import asdf
 from asdf import tagged, treeutil, yamlutil
-from asdf.compat.numpycompat import NUMPY_LT_1_14
 from asdf.exceptions import AsdfWarning
 
 from . import helpers
@@ -288,7 +287,4 @@ def test_numpy_scalar(numpy_value, expected_value):
     yamlutil.dump_tree(tree, buffer, ctx)
     buffer.seek(0)
 
-    if isinstance(expected_value, float) and NUMPY_LT_1_14:
-        assert yamlutil.load_tree(buffer)["value"] == pytest.approx(expected_value, rel=0.001)
-    else:
-        assert yamlutil.load_tree(buffer)["value"] == expected_value
+    assert yamlutil.load_tree(buffer)["value"] == expected_value
