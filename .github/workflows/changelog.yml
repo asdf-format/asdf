@@ -17,11 +17,8 @@ jobs:
     name: Confirm changelog entry
     runs-on: ubuntu-latest
     steps:
-      - name: Checkout code
-        uses: actions/checkout@v2
-        with:
-          fetch-depth: 0
-          submodules: true
-      - name: Grep for PR number in CHANGES.rst
-        run: grep -P '\[[^\]]*#${{github.event.number}}[,\]]' CHANGES.rst
-        if: ${{ !contains(github.event.pull_request.labels.*.name, 'no-changelog-entry-needed') }}
+    - name: Check change log entry
+      uses: pllim/action-check_astropy_changelog@main
+      env:
+        CHANGELOG_FILENAME: CHANGES.rst
+        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
