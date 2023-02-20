@@ -60,8 +60,8 @@ jobs:
       # Any env name which does not start with `pyXY` will use this Python version.
       default_python: '3.9'
       envs: |
-        - macos: py39
-        - windows: py39
+        - macos: py39-parallel
+        - windows: py39-parallel
 
   dev:
     needs: [core, asdf-schemas]
@@ -71,10 +71,10 @@ jobs:
       # Any env name which does not start with `pyXY` will use this Python version.
       default_python: '3.9'
       envs: |
-        - linux: py38-devdeps
-        - linux: py39-devdeps
-        - linux: py310-devdeps
-        - linux: py311-devdeps
+        - linux: py38-devdeps-parallel
+        - linux: py39-devdeps-parallel
+        - linux: py310-devdeps-parallel
+        - linux: py311-devdeps-parallel
 
   oldest:
     needs: [core, asdf-schemas]
@@ -84,8 +84,8 @@ jobs:
       # Any env name which does not start with `pyXY` will use this Python version.
       default_python: '3.9'
       envs: |
-        - linux: py38-oldestdeps
-        - linux: py39-oldestdeps
+        - linux: py38-oldestdeps-parallel
+        - linux: py39-oldestdeps-parallel
 
   compatibility:
     needs: [core, asdf-schemas]
