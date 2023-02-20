@@ -28,6 +28,8 @@ The ASDF Standard is at v1.6.0
   and impending removal [#1411]
 - Deprecate AsdfFile attributes that use the legacy extension api [#1417]
 - Add AsdfDeprecationWarning to asdf.types [#1401]
+- deprecate default_extensions, get_default_resolver and
+  get_cached_asdf_extension_list in asdf.extension [#1409]
 
 2.14.3 (2022-12-15)
 -------------------
