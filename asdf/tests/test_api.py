@@ -18,6 +18,8 @@ from asdf.extension import ExtensionProxy
 
 from .helpers import assert_no_warnings, assert_roundtrip_tree, assert_tree_match, yaml_to_asdf
 
+RNG = np.random.default_rng(97)
+
 
 def test_get_data_from_closed_file(tmp_path):
     path = str(tmp_path / "test.asdf")
@@ -158,7 +160,7 @@ def test_default_version():
 def test_update_exceptions(tmp_path):
     path = str(tmp_path / "test.asdf")
 
-    my_array = np.random.rand(8, 8)
+    my_array = RNG.normal(size=(8, 8))
     tree = {"my_array": my_array}
     ff = asdf.AsdfFile(tree)
     ff.write_to(path)
@@ -234,7 +236,7 @@ def test_walk_and_modify_retain_none():
 
 
 def test_copy(tmp_path):
-    my_array = np.random.rand(8, 8)
+    my_array = RNG.normal(size=(8, 8))
     tree = {"my_array": my_array, "foo": {"bar": "baz"}}
     ff = asdf.AsdfFile(tree)
     ff.write_to(str(tmp_path / "test.asdf"))
