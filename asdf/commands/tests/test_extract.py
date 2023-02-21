@@ -7,7 +7,7 @@ from astropy.io.fits import HDUList, ImageHDU
 
 import asdf
 from asdf.commands import extract
-from asdf.exceptions import AsdfDeprecationWarning
+from asdf.exceptions import AsdfDeprecationWarning, AsdfWarning
 
 with pytest.warns(AsdfDeprecationWarning, match="AsdfInFits has been deprecated.*"):
     if "asdf.fits_embed" in sys.modules:
@@ -35,7 +35,8 @@ def test_extract(tmpdir):
         aif.write_to(asdf_in_fits)
 
     pure_asdf = str(tmpdir.join("extract.asdf"))
-    extract.extract_file(asdf_in_fits, pure_asdf)
+    with pytest.warns(AsdfWarning, match="extract is deprecated"):
+        extract.extract_file(asdf_in_fits, pure_asdf)
 
     assert os.path.exists(pure_asdf)
 

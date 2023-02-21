@@ -2,7 +2,11 @@
 Implementation of command for removing ASDF HDU from ASDF-in-FITS file.
 """
 
+import warnings
+
 from astropy.io import fits
+
+from asdf.exceptions import AsdfWarning
 
 from .main import Command
 
@@ -39,6 +43,14 @@ class FitsExtractor(Command):  # pragma: no cover
 
 def remove_hdu(input_file, output_file):
     """Function for removing ASDF HDU from ASDF-in-FITS files"""
+    # issue a non-deprecation warning here so that any usage of this command
+    # displays a warning
+    warnings.warn(
+        "remove-hdu is deprecated and will be removed in asdf-3.0. "
+        "Support for AsdfInFits files has been added to stdatamodels "
+        "https://github.com/spacetelescope/stdatamodels",
+        AsdfWarning,
+    )
     # local import to trigger the deprecation warning since this command
     # relates to and mentions AsdfInFits
     from asdf.fits_embed import AsdfInFits  # noqa: F401
