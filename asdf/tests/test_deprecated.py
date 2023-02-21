@@ -35,3 +35,12 @@ def test_assert_extension_correctness_deprecation():
     extension = CustomExtension()
     with pytest.warns(AsdfDeprecationWarning, match="assert_extension_correctness is deprecated.*"):
         assert_extension_correctness(extension)
+
+
+def test_type_index_module_deprecation():
+    with pytest.warns(AsdfDeprecationWarning, match="^asdf.type_index is deprecated.*$"):
+        # importlib.reload doesn't appear to work here likely because of the
+        # sys.module and __file__ changes in asdf.type_index
+        if "asdf.type_index" in sys.modules:
+            del sys.modules["asdf.type_index"]
+        import asdf.type_index  # noqa: F401

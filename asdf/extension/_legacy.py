@@ -4,8 +4,8 @@ from functools import lru_cache
 
 from asdf import _resolver as resolver
 from asdf import types
+from asdf._type_index import AsdfTypeIndex
 from asdf.exceptions import AsdfDeprecationWarning
-from asdf.type_index import AsdfTypeIndex
 
 __all__ = ["AsdfExtension"]
 
