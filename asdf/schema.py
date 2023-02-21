@@ -299,7 +299,7 @@ def _create_validator(validators=YAML_VALIDATORS, visit_repeat_nodes=False):
                             tag_def = self.serialization_context.extension_manager.get_tag_definition(tag)
                             schema_uris = tag_def.schema_uris
                         else:
-                            schema_uris = [self.ctx.tag_mapping(tag)]
+                            schema_uris = [self.ctx._tag_mapping(tag)]
                             if schema_uris[0] == tag:
                                 schema_uris = []
 
@@ -573,8 +573,8 @@ def get_validator(
 
     if validators is None:
         validators = util.HashableDict(YAML_VALIDATORS.copy())
-        validators.update(ctx.extension_list.validators)
-        validators.update(ctx.extension_manager.validator_manager.get_jsonschema_validators())
+        validators.update(ctx._extension_list.validators)
+        validators.update(ctx._extension_manager.validator_manager.get_jsonschema_validators())
 
     kwargs["resolver"] = _make_resolver(url_mapping)
 
@@ -672,7 +672,7 @@ def validate(instance, ctx=None, schema=None, validators=None, reading=False, *a
 
         ctx = AsdfFile()
 
-    validator = get_validator({} if schema is None else schema, ctx, validators, ctx.resolver, *args, **kwargs)
+    validator = get_validator({} if schema is None else schema, ctx, validators, ctx._resolver, *args, **kwargs)
     validator.validate(instance)
 
     additional_validators = [_validate_large_literals]

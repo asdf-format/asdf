@@ -261,8 +261,9 @@ def test_asdf_file_resolver_hashing():
     a1 = asdf.AsdfFile()
     a2 = asdf.AsdfFile()
 
-    assert hash(a1.resolver) == hash(a2.resolver)
-    assert a1.resolver == a2.resolver
+    with pytest.warns(AsdfDeprecationWarning, match="AsdfFile.resolver is deprecated"):
+        assert hash(a1.resolver) == hash(a2.resolver)
+        assert a1.resolver == a2.resolver
 
 
 def test_load_schema_from_resource_mapping():
