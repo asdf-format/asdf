@@ -558,7 +558,7 @@ class BlockManager:
         for node in treeutil.iter_tree(tree):
             # check that this object will not be handled by a converter
             if not ctx.extension_manager.handles_type(type(node)):
-                hook = ctx.type_index.get_hook_for_type("reserve_blocks", type(node), ctx.version_string)
+                hook = ctx._type_index.get_hook_for_type("reserve_blocks", type(node), ctx.version_string)
                 if hook is not None:
                     for block in hook(node, ctx):
                         reserved_blocks.add(block)
