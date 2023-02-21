@@ -78,6 +78,9 @@ include = ['asdf*', 'pytest_asdf*']
 'asdf.tags.core.tests.data' = ["*"]
 'asdf.tests.data' = ["*"]
 
+[tool.setuptools_scm]
+write_to = "asdf/_version.py"
+
 [tool.black]
 line-length = 120
 force-exclude = '''
@@ -162,9 +165,6 @@ exclude_lines = [
     # Ignore branches that don't pertain to this version of Python
     'pragma: py{ ignore_python_version }',
 ]
-
-[tool.setuptools_scm]
-write_to = "asdf/_version.py"
 
 [tool.ruff]
 target-version = "py38"

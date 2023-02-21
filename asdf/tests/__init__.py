@@ -4,6 +4,8 @@ This packages contains affiliated package tests.
 
 import numpy as np
 
+RNG = np.random.default_rng(619)
+
 
 def create_small_tree():
     x = np.arange(0, 10, dtype=float)
@@ -19,8 +21,8 @@ def create_large_tree():
     # These are designed to be big enough so they don't fit in a
     # single block, but not so big that RAM/disk space for the tests
     # is enormous.
-    x = np.random.rand(256, 256)
-    y = np.random.rand(16, 16, 16)
+    x = RNG.normal(size=(256, 256))
+    y = RNG.normal(size=(16, 16, 16))
     return {
         "science_data": x,
         "more": y,
