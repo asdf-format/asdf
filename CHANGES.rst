@@ -827,14 +827,14 @@ The ASDF Standard is at v1.3.0
 - Allow the tree to be accessed using top-level ``__getitem__`` and
   ``__setitem__``. [#352]
 
-1.2.1(2016-11-07)
------------------
+1.2.1 (2016-11-07)
+------------------
 
 - Make asdf conditionally dependent on the version of astropy to allow
   running it with older versions of astropy. [#228]
 
-1.2.0(2016-10-04)
------------------
+1.2.0 (2016-10-04)
+------------------
 
 - Added Tabular model. [#214]
 
