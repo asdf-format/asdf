@@ -26,7 +26,7 @@ from asdf import generic_io, versioning
 from asdf.asdf import AsdfFile, get_asdf_library_info
 from asdf.block import Block
 from asdf.constants import YAML_TAG_PREFIX
-from asdf.exceptions import AsdfConversionWarning
+from asdf.exceptions import AsdfConversionWarning, AsdfDeprecationWarning
 from asdf.extension import default_extensions
 from asdf.tags.core import AsdfObject
 from asdf.versioning import (
@@ -420,6 +420,14 @@ def assert_extension_correctness(extension):
     # locally import the deprecated Resolver and ResolverChain to avoid
     # exposing it as asdf.tests.helpers.Resolver/ResolverChain
     from asdf._resolver import Resolver, ResolverChain
+
+    warnings.warn(
+        "assert_extension_correctness is deprecated and depends "
+        "on the deprecated type system. Please use the new "
+        "extension API: "
+        "https://asdf.readthedocs.io/en/stable/asdf/extending/converters.html",
+        AsdfDeprecationWarning,
+    )
 
     resolver = ResolverChain(
         Resolver(extension.tag_mapping, "tag"),
