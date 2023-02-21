@@ -10,17 +10,17 @@ from asdf import compression, config_context, generic_io
 from asdf.extension import Compressor, Extension
 from asdf.tests import helpers
 
+RNG = np.random.default_rng(0)
+
 
 def _get_large_tree():
-    np.random.seed(0)
-    x = np.random.rand(128, 128)
+    x = RNG.normal(size=(128, 128))
     return {"science_data": x}
 
 
 def _get_sparse_tree():
-    np.random.seed(0)
     arr = np.zeros((128, 128))
-    for x, y, z in np.random.rand(64, 3):
+    for x, y, z in RNG.normal(size=(64, 3)):
         arr[int(x * 127), int(y * 127)] = z
     arr[0, 0] = 5.0
     return {"science_data": arr}

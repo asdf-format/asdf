@@ -9,11 +9,13 @@ from numpy.testing import assert_array_equal
 import asdf
 from asdf import block, constants, generic_io
 
+RNG = np.random.default_rng(6)
+
 
 def test_external_block(tmp_path):
     tmp_path = str(tmp_path)
 
-    my_array = np.random.rand(8, 8)
+    my_array = RNG.normal(size=(8, 8))
     tree = {"my_array": my_array}
     ff = asdf.AsdfFile(tree)
     ff.set_array_storage(my_array, "external")
@@ -25,7 +27,7 @@ def test_external_block(tmp_path):
 
 
 def test_external_block_non_url():
-    my_array = np.random.rand(8, 8)
+    my_array = RNG.normal(size=(8, 8))
     tree = {"my_array": my_array}
     ff = asdf.AsdfFile(tree)
     ff.set_array_storage(my_array, "external")
@@ -37,7 +39,7 @@ def test_external_block_non_url():
 
 
 def test_invalid_array_storage():
-    my_array = np.random.rand(8, 8)
+    my_array = RNG.normal(size=(8, 8))
     tree = {"my_array": my_array}
     ff = asdf.AsdfFile(tree)
     with pytest.raises(ValueError):
@@ -56,7 +58,7 @@ def test_invalid_array_storage():
 def test_transfer_array_sources(tmp_path):
     tmp_path = str(tmp_path)
 
-    my_array = np.random.rand(8, 8)
+    my_array = RNG.normal(size=(8, 8))
     tree = {"my_array": my_array}
     ff = asdf.AsdfFile(tree)
     ff.write_to(os.path.join(tmp_path, "test.asdf"))
@@ -73,7 +75,7 @@ def test_transfer_array_sources(tmp_path):
 def test_write_to_same(tmp_path):
     tmp_path = str(tmp_path)
 
-    my_array = np.random.rand(8, 8)
+    my_array = RNG.normal(size=(8, 8))
     tree = {"my_array": my_array}
     ff = asdf.AsdfFile(tree)
     ff.write_to(os.path.join(tmp_path, "test.asdf"))
@@ -387,7 +389,7 @@ def test_update_array_in_place(tmp_path):
 def test_init_from_asdffile(tmp_path):
     tmp_path = str(tmp_path)
 
-    my_array = np.random.rand(8, 8)
+    my_array = RNG.normal(size=(8, 8))
     tree = {"my_array": my_array}
     ff = asdf.AsdfFile(tree)
     ff2 = asdf.AsdfFile(ff)
