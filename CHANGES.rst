@@ -2,6 +2,7 @@
 -------------------
 
 The ASDF Standard is at v1.6.0
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 - Require numpy<1.25 for python 3.8 [#1327]
 - Add AsdfProvisionalAPIWarning to warn developers of new features that
@@ -31,6 +32,7 @@ The ASDF Standard is at v1.6.0
 -------------------
 
 The ASDF Standard is at v1.6.0
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 - Use importlib_metadata for all python versions [#1260]
 - Fix issue #1268, where update could fail to clear memmaps for some files [#1269]
@@ -40,6 +42,7 @@ The ASDF Standard is at v1.6.0
 -------------------
 
 The ASDF Standard is at v1.6.0
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 - Fix issue #1256, where ``enum`` could not be used on tagged objects. [#1257]
 
@@ -47,6 +50,7 @@ The ASDF Standard is at v1.6.0
 -------------------
 
 The ASDF Standard is at v1.6.0
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 - Fix issue #1239, close memmap with asdf file context [#1241]
 - Add ndarray-1.1.0 and integer-1.1.0 support [#1250]
@@ -55,6 +59,7 @@ The ASDF Standard is at v1.6.0
 -------------------
 
 The ASDF Standard is at v1.6.0
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 - Update citation. [#1184]
 - Add search support to `~asdf.AsdfFile.schema_info`. [#1187]
@@ -76,6 +81,7 @@ The ASDF Standard is at v1.6.0
 -------------------
 
 The ASDF Standard is at v1.6.0
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 - Add ability to pull information from schema about asdf file data, using `~asdf.AsdfFile.schema_info`
   method. [#1167]
@@ -84,6 +90,7 @@ The ASDF Standard is at v1.6.0
 -------------------
 
 The ASDF Standard is at v1.6.0
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 - Overhaul of the ASDF documentation to make it more consistent and readable. [#1142, #1152]
 - Update deprecated instances of ``abstractproperty`` to ``abstractmethod`` [#1148]
@@ -94,6 +101,7 @@ The ASDF Standard is at v1.6.0
 -------------------
 
 The ASDF Standard is at v1.6.0
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 - Added ability to display title as a comment in using the
   ``info()`` functionality. [#1138]
@@ -108,6 +116,7 @@ The ASDF Standard is at v1.6.0
 -------------------
 
 The ASDF Standard is at v1.6.0
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 - Update minimum astropy version to 5.0.4. [#1133]
 
@@ -115,6 +124,7 @@ The ASDF Standard is at v1.6.0
 -------------------
 
 The ASDF Standard is at v1.6.0
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 - Update minimum jsonschema version to 4.0.1. [#1105]
 
@@ -122,6 +132,7 @@ The ASDF Standard is at v1.6.0
 -------------------
 
 The ASDF Standard is at v1.6.0
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 - Bugfix for circular build dependency for asdf. [#1094]
 
@@ -131,6 +142,7 @@ The ASDF Standard is at v1.6.0
 -------------------
 
 The ASDF Standard is at v1.6.0
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 - Replace asdf-standard submodule with pypi package. [#1079]
 
@@ -138,6 +150,7 @@ The ASDF Standard is at v1.6.0
 ------------------
 
 The ASDF Standard is at v1.6.0
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 - Fix deprecation warnings stemming from the release of pytest 7.0.0. [#1075]
 
@@ -147,6 +160,7 @@ The ASDF Standard is at v1.6.0
 ------------------
 
 The ASDF Standard is at v1.6.0
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 - Fix typo in testing module ``__init__.py`` name. [#1071]
 
@@ -154,6 +168,7 @@ The ASDF Standard is at v1.6.0
 ------------------
 
 The ASDF Standard is at v1.6.0
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 - Added the capability for tag classes to provide an interface
   to asdf info functionality to obtain information about the
@@ -181,6 +196,7 @@ The ASDF Standard is at v1.6.0
 ------------------
 
 The ASDF Standard is at v1.6.0
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 - Fix more use of 'python' where 'python3' is intended. [#1033]
 
@@ -188,6 +204,7 @@ The ASDF Standard is at v1.6.0
 ------------------
 
 The ASDF Standard is at v1.6.0
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 - Update documentation to reflect new 2.8 features. [#998]
 
@@ -211,6 +228,7 @@ The ASDF Standard is at v1.6.0
 ------------------
 
 The ASDF Standard is at v1.6.0
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 - Add ``yaml_tag_handles`` property to allow definition of custom yaml
   ``%TAG`` handles in the asdf file header. [#963]
@@ -290,6 +308,7 @@ The ASDF Standard is at v1.6.0
 ------------------
 
 The ASDF Standard is at v1.5.0
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 - Fix bug in ``asdf.schema.check_schema`` causing relative references in
   metaschemas to be resolved incorrectly. [#987]
@@ -301,6 +320,7 @@ The ASDF Standard is at v1.5.0
 ------------------
 
 The ASDF Standard is at v1.5.0
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 - Fix pytest plugin failure under older versions of pytest. [#934]
 
@@ -316,6 +336,7 @@ The ASDF Standard is at v1.5.0
 ------------------
 
 The ASDF Standard is at v1.5.0
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 - Add pytest plugin options to skip and xfail individual tests
   and xfail the unsupported ndarray-1.0.0 example. [#929]
@@ -327,6 +348,7 @@ The ASDF Standard is at v1.5.0
 ------------------
 
 The ASDF Standard is at v1.5.0
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 - Fix bug causing test collection failures in some environments. [#889]
 
@@ -336,6 +358,7 @@ The ASDF Standard is at v1.5.0
 ------------------
 
 The ASDF Standard is at v1.5.0
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 - Fix bug preventing access to copied array data after
   ``AsdfFile`` is closed. [#869]
@@ -344,6 +367,7 @@ The ASDF Standard is at v1.5.0
 ------------------
 
 The ASDF Standard is at v1.5.0
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 - Fix bug preventing diff of files containing ndarray-1.0.0
   objects in simplified form. [#786]
@@ -406,6 +430,7 @@ The ASDF Standard is at v1.5.0
 ------------------
 
 The ASDF Standard is at v1.5.0
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 - AsdfDeprecationWarning now subclasses DeprecationWarning. [#710]
 
@@ -441,6 +466,7 @@ The ASDF Standard is at v1.5.0
 ------------------
 
 The ASDF Standard is at v1.4.0
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 - Add a developer overview document to help understand how ASDF works
   internally. Still a work in progress. [#730]
@@ -460,6 +486,7 @@ The ASDF Standard is at v1.4.0
 ------------------
 
 The ASDF Standard is at v1.4.0
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 - Fix bug in test causing failure when test suite is run against
   an installed asdf package. [#732]
@@ -468,6 +495,7 @@ The ASDF Standard is at v1.4.0
 ------------------
 
 The ASDF Standard is at v1.4.0
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 - Added asdf-standard 1.4.0 to the list of supported versions. [#704]
 - Fix load_schema LRU cache memory usage issue [#682]
@@ -484,6 +512,7 @@ The ASDF Standard is at v1.4.0
 ------------------
 
 The ASDF Standard is at v1.3.0
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 - Limit the version of ``semantic_version`` to <=2.6.0 to work
   around a Deprecation warning. [#700]
@@ -492,6 +521,7 @@ The ASDF Standard is at v1.3.0
 ------------------
 
 The ASDF Standard is at v1.3.0
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 - Define the ``in`` operator for top-level ``AsdfFile`` objects. [#623]
 
@@ -513,6 +543,7 @@ The ASDF Standard is at v1.3.0
 ------------------
 
 The ASDF Standard is at v1.3.0
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 - Pass ``ignore_unrecognized_tag`` setting through to ASDF-in-FITS. [#650]
 
@@ -530,6 +561,7 @@ The ASDF Standard is at v1.3.0
 ------------------
 
 The ASDF Standard is at v1.3.0
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 - Fix bug that occurs when comparing installed extension version with that
   found in file. [#641]
@@ -538,6 +570,7 @@ The ASDF Standard is at v1.3.0
 ------------------
 
 The ASDF Standard is at v1.3.0
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 - Provide source information for ``AsdfDeprecationWarning`` that come from
   extensions from external packages. [#629]
@@ -554,6 +587,7 @@ The ASDF Standard is at v1.3.0
 ------------------
 
 The ASDF Standard is at v1.3.0
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 - Storage of arbitrary precision integers is now provided by
   ``asdf.IntegerType``.  Reading a file with integer literals that are too
