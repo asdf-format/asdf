@@ -2,7 +2,10 @@
 Implementation of command for converting ASDF-in-FITS to standalone ASDF file.
 """
 
+import warnings
+
 import asdf
+from asdf.exceptions import AsdfWarning
 
 from .main import Command
 
@@ -44,6 +47,14 @@ class AsdfExtractor(Command):  # pragma: no cover
 
 def extract_file(input_file, output_file):
     """Function for performing extraction from ASDF-in-FITS to pure ASDF."""
+    # issue a non-deprecation warning here so that any usage of this command
+    # displays a warning
+    warnings.warn(
+        "extract is deprecated and will be removed in asdf-3.0. "
+        "Support for AsdfInFits files has been added to stdatamodels "
+        "https://github.com/spacetelescope/stdatamodels",
+        AsdfWarning,
+    )
     # local import to avoid issuing Deprecation warning on every use of asdftool
     from asdf.fits_embed import AsdfInFits
 

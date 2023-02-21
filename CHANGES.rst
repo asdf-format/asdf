@@ -23,6 +23,8 @@ The ASDF Standard is at v1.6.0
 - Add AsdfDeprecationWarning to asdf.resolver [#1362]
 - Add AsdfDeprecationWarning to asdf.tests.helpers.assert_extension_correctness [#1388]
 - Add AsdfDeprecationWarning to asdf.type_index [#1403]
+- Add warning to use of asdftool extract and remove-hdu about deprecation
+  and impending removal [#1411]
 
 2.14.3 (2022-12-15)
 -------------------
