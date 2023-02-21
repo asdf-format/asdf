@@ -108,8 +108,8 @@ def assert_tree_match(old_tree, new_tree, ctx=None, funcname="assert_equal", ign
         seen.add(id(old))
         seen.add(id(new))
 
-        old_type = ctx.type_index.from_custom_type(type(old), version_string)
-        new_type = ctx.type_index.from_custom_type(type(new), version_string)
+        old_type = ctx._type_index.from_custom_type(type(old), version_string)
+        new_type = ctx._type_index.from_custom_type(type(new), version_string)
 
         if (
             old_type is not None

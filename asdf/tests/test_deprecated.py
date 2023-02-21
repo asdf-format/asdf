@@ -2,6 +2,7 @@ import sys
 
 import pytest
 
+import asdf
 from asdf.exceptions import AsdfDeprecationWarning
 from asdf.tests.helpers import assert_extension_correctness
 from asdf.tests.objects import CustomExtension
@@ -44,3 +45,19 @@ def test_type_index_module_deprecation():
         if "asdf.type_index" in sys.modules:
             del sys.modules["asdf.type_index"]
         import asdf.type_index  # noqa: F401
+
+
+@pytest.mark.parametrize("attr", ["url_mapping", "tag_mapping", "resolver", "extension_list", "type_index"])
+def test_asdffile_legacy_extension_api_attr_deprecations(attr):
+    with asdf.AsdfFile() as af, pytest.warns(AsdfDeprecationWarning, match=f"AsdfFile.{attr} is deprecated"):
+        getattr(af, attr)
+
+
+def test_asdfile_run_hook_deprecation():
+    with asdf.AsdfFile() as af, pytest.warns(AsdfDeprecationWarning, match="AsdfFile.run_hook is deprecated"):
+        af.run_hook("foo")
+
+
+def test_asdfile_run_modifying_hook_deprecation():
+    with asdf.AsdfFile() as af, pytest.warns(AsdfDeprecationWarning, match="AsdfFile.run_modifying_hook is deprecated"):
+        af.run_modifying_hook("foo")
