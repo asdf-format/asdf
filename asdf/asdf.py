@@ -129,7 +129,7 @@ class AsdfFile:
         self._user_extensions = self._process_user_extensions(extensions)
         self._plugin_extensions = self._process_plugin_extensions()
         self._extension_manager = None
-        self.__extension_list = None
+        self._extension_list_ = None
 
         if custom_schema is not None:
             self._custom_schema = schema._load_schema_cached(custom_schema, self._resolver, True, False)
@@ -206,7 +206,7 @@ class AsdfFile:
         self._user_extensions = self._process_user_extensions(self._user_extensions)
         self._plugin_extensions = self._process_plugin_extensions()
         self._extension_manager = None
-        self.__extension_list = None
+        self._extension_list_ = None
 
     @property
     def version_string(self):
@@ -247,7 +247,7 @@ class AsdfFile:
         """
         self._user_extensions = self._process_user_extensions(value)
         self._extension_manager = None
-        self.__extension_list = None
+        self._extension_list_ = None
 
     @property
     def extension_manager(self):
@@ -281,9 +281,9 @@ class AsdfFile:
 
     @property
     def _extension_list(self):
-        if self.__extension_list is None:
-            self.__extension_list = get_cached_asdf_extension_list(self._user_extensions + self._plugin_extensions)
-        return self.__extension_list
+        if self._extension_list_ is None:
+            self._extension_list_ = get_cached_asdf_extension_list(self._user_extensions + self._plugin_extensions)
+        return self._extension_list_
 
     def __enter__(self):
         return self
