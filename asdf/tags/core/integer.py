@@ -2,10 +2,10 @@ from numbers import Integral
 
 import numpy as np
 
-from asdf._types import AsdfType
+from asdf import _types
 
 
-class IntegerType(AsdfType):
+class IntegerType(_types.AsdfType):
     """
     Enables the storage of arbitrarily large integer values
 

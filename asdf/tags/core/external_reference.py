@@ -1,7 +1,7 @@
-from asdf._types import AsdfType
+from . import _types
 
 
-class ExternalArrayReference(AsdfType):
+class ExternalArrayReference(_types.AsdfType):
     """
     Store a reference to an array in an external File.
 

@@ -11,8 +11,7 @@ from contextlib import suppress
 
 import numpy as np
 
-from . import generic_io, treeutil, util
-from ._types import AsdfType
+from . import _types, generic_io, treeutil, util
 from .util import patched_urllib_parse
 
 __all__ = ["resolve_fragment", "Reference", "find_references", "resolve_references", "make_reference"]
@@ -43,7 +42,7 @@ def resolve_fragment(tree, pointer):
     return tree
 
 
-class Reference(AsdfType):
+class Reference(_types.AsdfType):
     yaml_tag = "tag:yaml.org,2002:map"
 
     def __init__(self, uri, base_uri=None, asdffile=None, target=None):

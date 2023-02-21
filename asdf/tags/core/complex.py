@@ -1,10 +1,9 @@
 import numpy as np
 
-from asdf import util
-from asdf._types import AsdfType
+from asdf import _types, util
 
 
-class ComplexType(AsdfType):
+class ComplexType(_types.AsdfType):
     name = "core/complex"
     version = "1.0.0"
     types = [*list(util.iter_subclasses(np.complexfloating)), complex]

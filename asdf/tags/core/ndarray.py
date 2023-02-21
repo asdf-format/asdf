@@ -5,8 +5,7 @@ import numpy as np
 from jsonschema import ValidationError
 from numpy import ma
 
-from asdf import util
-from asdf._types import AsdfType
+from asdf import _types, util
 
 _datatype_names = {
     "int8": "i1",
@@ -227,7 +226,7 @@ def numpy_array_to_list(array):
     return ascii_to_unicode(tolist(array))
 
 
-class NDArrayType(AsdfType):
+class NDArrayType(_types.AsdfType):
     name = "core/ndarray"
     version = "1.0.0"
     supported_versions = {"1.0.0", "1.1.0"}
@@ -393,7 +392,7 @@ class NDArrayType(AsdfType):
             msg = f"'{self.__class__.name}' object has no attribute '{name}'"
             raise AttributeError(msg)
 
-        return AsdfType.__getattribute__(self, name)
+        return _types.AsdfType.__getattribute__(self, name)
 
     @classmethod
     def from_tree(cls, node, ctx):

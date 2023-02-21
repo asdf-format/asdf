@@ -1,4 +1,4 @@
-from asdf._types import AsdfType
+from asdf import _types
 
 
 class Constant:
@@ -10,7 +10,7 @@ class Constant:
         return self._value
 
 
-class ConstantType(AsdfType):
+class ConstantType(_types.AsdfType):
     name = "core/constant"
     version = "1.0.0"
     types = [Constant]
