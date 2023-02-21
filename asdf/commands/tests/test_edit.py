@@ -9,6 +9,8 @@ from numpy.testing import assert_array_equal
 import asdf
 from asdf.commands import main
 
+RNG = np.random.default_rng(42)
+
 
 @pytest.fixture(params=asdf.versioning.supported_versions)
 def version(request):
@@ -155,8 +157,8 @@ def test_no_blocks_decrease_size(tmp_path, create_editor, version):
 def test_with_blocks(tmp_path, create_editor, version):
     file_path = str(tmp_path / "test.asdf")
 
-    array1 = np.random.rand(100)
-    array2 = np.random.rand(100)
+    array1 = RNG.normal(size=100)
+    array2 = RNG.normal(size=100)
     with asdf.AsdfFile(version=version) as af:
         af["array1"] = array1
         af["array2"] = array2
@@ -176,8 +178,8 @@ def test_with_blocks(tmp_path, create_editor, version):
 def test_with_blocks_increase_size(tmp_path, create_editor, version, mock_input):
     file_path = str(tmp_path / "test.asdf")
 
-    array1 = np.random.rand(100)
-    array2 = np.random.rand(100)
+    array1 = RNG.normal(size=100)
+    array2 = RNG.normal(size=100)
     with asdf.AsdfFile(version=version) as af:
         af["array1"] = array1
         af["array2"] = array2
@@ -206,8 +208,8 @@ def test_with_blocks_decrease_size(tmp_path, create_editor, version):
 
     original_value = "a" * 32768
 
-    array1 = np.random.rand(100)
-    array2 = np.random.rand(100)
+    array1 = RNG.normal(size=100)
+    array2 = RNG.normal(size=100)
     with asdf.AsdfFile(version=version) as af:
         af["array1"] = array1
         af["array2"] = array2
