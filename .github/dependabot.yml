@@ -1,0 +1,30 @@
+version: 2
+updates:
+
+  # Maintain dependencies for GitHub Actions (master)
+  - package-ecosystem: "github-actions"
+    directory: "/"
+    target-branch: "master"
+    schedule:
+      interval: "weekly"
+
+  # Maintain dependencies for pip (master)
+  - package-ecosystem: "pip"
+    directory: "/"
+    target-branch: "master"
+    schedule:
+      interval: "weekly"
+
+  # Maintain dependencies for GitHub Actions (2.15.x)
+  - package-ecosystem: "github-actions"
+    directory: "/"
+    target-branch: "2.15.x"
+    schedule:
+      interval: "weekly"
+
+  # Maintain dependencies for pip (2.15.x)
+  - package-ecosystem: "pip"
+    directory: "/"
+    target-branch: "2.15.x"
+    schedule:
+      interval: "weekly"
