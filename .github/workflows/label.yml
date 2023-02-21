@@ -34,3 +34,16 @@ jobs:
         with:
           repo-token: "${{ secrets.GITHUB_TOKEN }}"
           milestone: "3.0.0"
+
+  enable_auto_merge:
+    name: Enable automerge
+    runs-on: ubuntu-latest
+    needs: [set_milestone]
+
+    # Specifically check that meeseeksmachine is opening the PR
+    if: github.event.pull_request.user.login == 'meeseeksmachine'
+    steps:
+    - uses: alexwilson/enable-github-automerge-action@main
+      with:
+        github-token: "${{ secrets.GITHUB_TOKEN }}"
+        merge-method: "REBASE"
