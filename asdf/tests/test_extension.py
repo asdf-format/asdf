@@ -24,7 +24,8 @@ from asdf.types import CustomType
 
 def test_builtin_extension():
     extension = BuiltinExtension()
-    assert_extension_correctness(extension)
+    with pytest.warns(AsdfDeprecationWarning, match="assert_extension_correctness is deprecated.*"):
+        assert_extension_correctness(extension)
 
 
 with pytest.warns(AsdfDeprecationWarning, match=".*subclasses the deprecated CustomType.*"):
