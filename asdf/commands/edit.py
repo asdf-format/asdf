@@ -368,6 +368,8 @@ def request_input(message, choices):
 
         print(f"Invalid choice: {choice}")  # noqa: T201
 
+    return None
+
 
 def open_editor(path):
     """
