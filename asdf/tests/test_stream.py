@@ -175,7 +175,7 @@ def test_too_many_streams():
 
     ff = asdf.AsdfFile(tree)
     ff.set_array_storage(tree["stream1"], "streamed")
-    with pytest.raises(ValueError):
+    with pytest.raises(ValueError, match=r"Can not add second streaming block"):
         ff.set_array_storage(tree["stream2"], "streamed")
 
 

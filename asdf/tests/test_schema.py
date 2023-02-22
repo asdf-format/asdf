@@ -197,7 +197,7 @@ properties:
         schema_tree = schema.load_schema("asdf://somewhere.org/schemas/foo")
         instance = {"bar": "baz", "local_bar": "foz"}
         schema.validate(instance, schema=schema_tree)
-        with pytest.raises(ValidationError):
+        with pytest.raises(ValidationError, match=r".* is not of type .*"):
             schema.validate({"bar": 12}, schema=schema_tree)
 
 
@@ -244,7 +244,7 @@ properties:
         schema_tree = schema.load_schema("http://stsci.edu/schemas/foo", resolve_references=True)
         instance = {"bar": "baz", "local_bar": "foz"}
         schema.validate(instance, schema=schema_tree)
-        with pytest.raises(ValidationError):
+        with pytest.raises(ValidationError, match=r".* is not of type .*"):
             schema.validate({"bar": 12}, schema=schema_tree)
 
 
@@ -377,7 +377,10 @@ custom: !<tag:nowhere.org:custom/custom-1.0.0>
         pass
 
     buff.seek(0)
-    with pytest.raises(ValidationError), asdf.open(buff, extensions=[CustomTypeExtension()]):
+    with pytest.raises(ValidationError, match=r".* is not of type .*"), asdf.open(
+        buff,
+        extensions=[CustomTypeExtension()],
+    ):
         pass
 
     # Make sure tags get validated inside of other tags that know
@@ -389,7 +392,10 @@ array: !core/ndarray-1.0.0
     foo
     """
     buff = helpers.yaml_to_asdf(yaml)
-    with pytest.raises(ValidationError), asdf.open(buff, extensions=[CustomTypeExtension()]):
+    with pytest.raises(ValidationError, match=r".* is not of type .*"), asdf.open(
+        buff,
+        extensions=[CustomTypeExtension()],
+    ):
         pass
 
 
@@ -398,7 +404,7 @@ def test_invalid_schema():
     schema.check_schema(s)
 
     s = {"type": "foobar"}
-    with pytest.raises(ValidationError):
+    with pytest.raises(ValidationError, match=r".* is not valid under any of the given schemas.*"):
         schema.check_schema(s)
 
 
@@ -423,7 +429,7 @@ def test_defaults():
 def test_default_check_in_schema():
     s = {"type": "object", "properties": {"a": {"type": "integer", "default": "foo"}}}
 
-    with pytest.raises(ValidationError):
+    with pytest.raises(ValidationError, match=r".* is not of type .*"):
         schema.check_schema(s)
 
     schema.check_schema(s, validate_default=False)
@@ -442,7 +448,7 @@ def test_check_complex_default():
     schema.check_schema(s)
 
     s["properties"]["a"]["tag"] = "tag:stsci.edu/asdf/core/ndarray-1.0.0"
-    with pytest.raises(ValidationError):
+    with pytest.raises(ValidationError, match=r"mismatched tags, wanted .*, got .*"):
         schema.check_schema(s)
 
 
@@ -651,25 +657,27 @@ def test_schema_resolved_via_entry_points():
 
 @pytest.mark.parametrize("num", [constants.MAX_NUMBER + 1, constants.MIN_NUMBER - 1])
 def test_max_min_literals(num):
+    msg = r"Integer value .* is too large to safely represent as a literal in ASDF"
+
     tree = {
         "test_int": num,
     }
 
-    with pytest.raises(ValidationError):
+    with pytest.raises(ValidationError, match=msg):
         asdf.AsdfFile(tree)
 
     tree = {
         "test_list": [num],
     }
 
-    with pytest.raises(ValidationError):
+    with pytest.raises(ValidationError, match=msg):
         asdf.AsdfFile(tree)
 
     tree = {
         num: "test_key",
     }
 
-    with pytest.raises(ValidationError):
+    with pytest.raises(ValidationError, match=msg):
         asdf.AsdfFile(tree)
 
 
@@ -688,7 +696,8 @@ def test_max_min_literals_write(num, ttype, tmp_path):
         af.tree[num] = "test_key"
 
     # Validation will occur on write, though, so detect it.
-    with pytest.raises(ValidationError):
+    msg = r"Integer value .* is too large to safely represent as a literal in ASDF"
+    with pytest.raises(ValidationError, match=msg):
         af.write_to(outfile)
     af.close()
 
@@ -772,7 +781,7 @@ def test_nested_array():
     ]
 
     for b in bads:
-        with pytest.raises(ValidationError):
+        with pytest.raises(ValidationError, match=r"[.* is not of type .*, .* is too short]"):
             schema.validate(b, schema=s)
 
 
@@ -812,7 +821,7 @@ properties:
     ]
 
     for b in bads:
-        with pytest.raises(ValidationError):
+        with pytest.raises(ValidationError, match=r"[.* is not of type .*, .* is too short]"):
             schema.validate(b, schema=schema_tree)
 
 
@@ -889,7 +898,10 @@ def test_custom_validation_bad(tmp_path):
         ff.write_to(asdf_file)
 
     # Creating file using custom schema should fail
-    with pytest.raises(ValidationError), asdf.AsdfFile(tree, custom_schema=custom_schema_path):
+    with pytest.raises(ValidationError, match=r".* is a required property"), asdf.AsdfFile(
+        tree,
+        custom_schema=custom_schema_path,
+    ):
         pass
 
     # Opening file without custom schema should pass
@@ -897,7 +909,10 @@ def test_custom_validation_bad(tmp_path):
         pass
 
     # Opening file with custom schema should fail
-    with pytest.raises(ValidationError), asdf.open(asdf_file, custom_schema=custom_schema_path):
+    with pytest.raises(ValidationError, match=r".* is a required property"), asdf.open(
+        asdf_file,
+        custom_schema=custom_schema_path,
+    ):
         pass
 
 
@@ -962,7 +977,10 @@ def test_custom_validation_with_definitions_bad(tmp_path):
         ff.write_to(asdf_file)
 
     # Creating file with custom schema should fail
-    with pytest.raises(ValidationError), asdf.AsdfFile(tree, custom_schema=custom_schema_path):
+    with pytest.raises(ValidationError, match=r".* is a required property"), asdf.AsdfFile(
+        tree,
+        custom_schema=custom_schema_path,
+    ):
         pass
 
     # Opening file without custom schema should pass
@@ -970,7 +988,10 @@ def test_custom_validation_with_definitions_bad(tmp_path):
         pass
 
     # Opening file with custom schema should fail
-    with pytest.raises(ValidationError), asdf.open(asdf_file, custom_schema=custom_schema_path):
+    with pytest.raises(ValidationError, match=r".* is a required property"), asdf.open(
+        asdf_file,
+        custom_schema=custom_schema_path,
+    ):
         pass
 
 
@@ -1000,7 +1021,10 @@ def test_custom_validation_with_external_ref_bad(tmp_path):
         ff.write_to(asdf_file)
 
     # Creating file with custom schema should fail
-    with pytest.raises(ValidationError), asdf.AsdfFile(tree, custom_schema=custom_schema_path):
+    with pytest.raises(ValidationError, match=r"False is not valid under any of the given schemas"), asdf.AsdfFile(
+        tree,
+        custom_schema=custom_schema_path,
+    ):
         pass
 
     # Opening file without custom schema should pass
@@ -1008,7 +1032,10 @@ def test_custom_validation_with_external_ref_bad(tmp_path):
         pass
 
     # Opening file with custom schema should fail
-    with pytest.raises(ValidationError), asdf.open(asdf_file, custom_schema=custom_schema_path):
+    with pytest.raises(ValidationError, match=r"False is not valid under any of the given schemas"), asdf.open(
+        asdf_file,
+        custom_schema=custom_schema_path,
+    ):
         pass
 
 
@@ -1146,7 +1173,7 @@ tag: asdf://somewhere.org/tags/foo
         schema_tree = schema.load_schema("asdf://somewhere.org/schemas/foo")
         instance = tagged.TaggedDict(tag="asdf://somewhere.org/tags/foo")
         schema.validate(instance, schema=schema_tree)
-        with pytest.raises(ValidationError):
+        with pytest.raises(ValidationError, match=r"mismatched tags, wanted .*, got .*"):
             schema.validate(tagged.TaggedDict(tag="asdf://somewhere.org/tags/bar"), schema=schema_tree)
 
     content = """%YAML 1.1
@@ -1162,5 +1189,5 @@ tag: asdf://somewhere.org/tags/bar-*
         schema_tree = schema.load_schema("asdf://somewhere.org/schemas/bar")
         instance = tagged.TaggedDict(tag="asdf://somewhere.org/tags/bar-2.5")
         schema.validate(instance, schema=schema_tree)
-        with pytest.raises(ValidationError):
+        with pytest.raises(ValidationError, match=r"mismatched tags, wanted .*, got .*"):
             schema.validate(tagged.TaggedDict(tag="asdf://somewhere.org/tags/foo-1.0"), schema=schema_tree)
