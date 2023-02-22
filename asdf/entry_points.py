@@ -54,15 +54,21 @@ def _list_entry_points(group, proxy_class):
 
         # Catch errors loading entry points and warn instead of raising
         try:
-            # Filter out the legacy `CustomType` deprecation warnings from the deprecated astropy.io.misc.asdf
-            # Testing will turn these into errors
             with warnings.catch_warnings():
-                # Most of the astropy.io.misc.asdf deprecation warnings fall under this category
-                warnings.filterwarnings(
-                    "ignore",
-                    category=AsdfDeprecationWarning,
-                    message=r".*from astropy.io.misc.asdf.* subclasses the deprecated CustomType .*",
-                )
+                if entry_point.name == "astropy" and entry_point.group == LEGACY_EXTENSIONS_GROUP:
+                    # Filter out the legacy `CustomType` deprecation warnings from the deprecated astropy.io.misc.asdf
+                    # Testing will turn these into errors
+                    # Most of the astropy.io.misc.asdf deprecation warnings fall under this category
+                    warnings.filterwarnings(
+                        "ignore",
+                        category=AsdfDeprecationWarning,
+                        message=r".*from astropy.io.misc.asdf.* subclasses the deprecated CustomType .*",
+                    )
+                    warnings.filterwarnings(
+                        "ignore",
+                        category=AsdfDeprecationWarning,
+                        message="asdf.types is deprecated",
+                    )
                 elements = entry_point.load()()
 
         except Exception as e:  # noqa: BLE001

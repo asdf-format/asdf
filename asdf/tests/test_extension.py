@@ -2,6 +2,7 @@ import pytest
 from packaging.specifiers import SpecifierSet
 
 from asdf import AsdfFile, config_context
+from asdf._types import CustomType
 from asdf.exceptions import AsdfDeprecationWarning, ValidationError
 from asdf.extension import (
     AsdfExtension,
@@ -19,7 +20,6 @@ from asdf.extension import (
     get_cached_extension_manager,
 )
 from asdf.tests.helpers import assert_extension_correctness
-from asdf.types import CustomType
 
 
 def test_builtin_extension():
