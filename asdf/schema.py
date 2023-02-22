@@ -16,7 +16,7 @@ from jsonschema.exceptions import RefResolutionError, ValidationError
 from . import constants, extension, generic_io, reference, tagged, treeutil, util, versioning, yamlutil
 from .config import get_config
 from .exceptions import AsdfDeprecationWarning, AsdfWarning
-from .extension._legacy import _get_default_resolver
+from .extension import _legacy
 from .util import patched_urllib_parse
 
 YAML_SCHEMA_METASCHEMA_ID = "http://stsci.edu/schemas/yaml-schema/draft-01"
@@ -243,7 +243,7 @@ class _ValidationContext:
 
 @lru_cache
 def _create_validator(validators=YAML_VALIDATORS, visit_repeat_nodes=False):
-    meta_schema = _load_schema_cached(YAML_SCHEMA_METASCHEMA_ID, _get_default_resolver(), False, False)
+    meta_schema = _load_schema_cached(YAML_SCHEMA_METASCHEMA_ID, _legacy.get_default_resolver(), False, False)
 
     type_checker = mvalidators.Draft4Validator.TYPE_CHECKER.redefine_many(
         {
@@ -442,7 +442,7 @@ def load_schema(url, resolver=None, resolve_references=False, resolve_local_refs
     if resolver is None:
         # We can't just set this as the default in load_schema's definition
         # because invoking get_default_resolver at import time leads to a circular import.
-        resolver = _get_default_resolver()
+        resolver = _legacy.get_default_resolver()
 
     # We want to cache the work that went into constructing the schema, but returning
     # the same object is treacherous, because users who mutate the result will not
@@ -763,9 +763,9 @@ def check_schema(schema, validate_default=True):
         applicable_validators = methodcaller("items")
 
     meta_schema_id = schema.get("$schema", YAML_SCHEMA_METASCHEMA_ID)
-    meta_schema = _load_schema_cached(meta_schema_id, _get_default_resolver(), False, False)
+    meta_schema = _load_schema_cached(meta_schema_id, _legacy.get_default_resolver(), False, False)
 
-    resolver = _make_resolver(_get_default_resolver())
+    resolver = _make_resolver(_legacy.get_default_resolver())
 
     cls = mvalidators.create(
         meta_schema=meta_schema,

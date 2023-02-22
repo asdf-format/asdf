@@ -17,7 +17,7 @@ from ._helpers import validate_version
 from .config import config_context, get_config
 from .exceptions import AsdfConversionWarning, AsdfDeprecationWarning, AsdfWarning
 from .extension import AsdfExtension, AsdfExtensionList, Extension, ExtensionProxy, get_cached_extension_manager
-from .extension._legacy import _get_cached_asdf_extension_list as get_cached_asdf_extension_list
+from .extension._legacy import get_cached_asdf_extension_list
 from .search import AsdfSearchResult
 from .tags.core import AsdfObject, ExtensionMetadata, HistoryEntry, Software
 from .util import NotSet

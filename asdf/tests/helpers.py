@@ -27,7 +27,7 @@ from asdf.asdf import AsdfFile, get_asdf_library_info
 from asdf.block import Block
 from asdf.constants import YAML_TAG_PREFIX
 from asdf.exceptions import AsdfConversionWarning, AsdfDeprecationWarning
-from asdf.extension._legacy import _default_extensions as default_extensions
+from asdf.extension import _legacy
 from asdf.tags.core import AsdfObject
 from asdf.versioning import (
     AsdfVersion,
@@ -98,7 +98,7 @@ def assert_tree_match(old_tree, new_tree, ctx=None, funcname="assert_equal", ign
 
     if ctx is None:
         version_string = str(versioning.default_version)
-        ctx = default_extensions.extension_list
+        ctx = _legacy.default_extensions.extension_list
     else:
         version_string = ctx.version_string
 

@@ -179,16 +179,6 @@ def get_cached_asdf_extension_list(extensions):
     -------
     asdf.extension.AsdfExtensionList
     """
-    warnings.warn(
-        "get_cached_asdf_extension_list is deprecated. "
-        "Please see the new extension API "
-        "https://asdf.readthedocs.io/en/stable/asdf/extending/converters.html",
-        AsdfDeprecationWarning,
-    )
-    return _get_cached_asdf_extension_list(extensions)
-
-
-def _get_cached_asdf_extension_list(extensions):
     from ._extension import ExtensionProxy
 
     # The tuple makes the extensions hashable so that we
@@ -199,11 +189,11 @@ def _get_cached_asdf_extension_list(extensions):
     # instances in identical order.
     extensions = tuple(ExtensionProxy.maybe_wrap(e) for e in extensions)
 
-    return __get_cached_asdf_extension_list(extensions)
+    return _get_cached_asdf_extension_list(extensions)
 
 
 @lru_cache
-def __get_cached_asdf_extension_list(extensions):
+def _get_cached_asdf_extension_list(extensions):
     return AsdfExtensionList(extensions)
 
 
@@ -239,7 +229,7 @@ class _DefaultExtensions:
 
     @property
     def extension_list(self):
-        return _get_cached_asdf_extension_list(self.extensions)
+        return get_cached_asdf_extension_list(self.extensions)
 
     @property
     def package_metadata(self):
@@ -258,35 +248,11 @@ class _DefaultExtensions:
         return self.extension_list.resolver
 
 
-_default_extensions = _DefaultExtensions()
-
-
-def __getattr__(name):
-    if name == "default_extensions":
-        warnings.warn(
-            "default_extensions is deprecated. "
-            "Please see the new extension API "
-            "https://asdf.readthedocs.io/en/stable/asdf/extending/converters.html",
-            AsdfDeprecationWarning,
-        )
-        return _default_extensions
-    msg = f"module {__name__!r} has no attribute {name!r}"
-    raise AttributeError(msg)
+default_extensions = _DefaultExtensions()
 
 
 def get_default_resolver():
     """
     Get the resolver that includes mappings from all installed extensions.
     """
-    warnings.warn(
-        "get_default_resolver is deprecated. "
-        "Please see the new extension API "
-        "https://asdf.readthedocs.io/en/stable/asdf/extending/converters.html",
-        AsdfDeprecationWarning,
-    )
-
-    return _get_default_resolver()
-
-
-def _get_default_resolver():
-    return _default_extensions.resolver
+    return default_extensions.resolver
