@@ -537,17 +537,17 @@ def test_incompatible_version_check():
     assert TestType5.incompatible_version("1.0.0") is True
     assert TestType5.incompatible_version("1.1.0") is True
 
-    with pytest.raises(ValueError), pytest.warns(
+    with pytest.raises(ValueError, match=r"Invalid version string: .*"), pytest.warns(
         AsdfDeprecationWarning,
-        match=".*subclasses the deprecated CustomType.*",
+        match=r".*subclasses the deprecated CustomType.*",
     ):
 
         class TestType6(types.CustomType):
             supported_versions = "blue"
 
-    with pytest.raises(ValueError), pytest.warns(
+    with pytest.raises(ValueError, match=r"Invalid version string: .*"), pytest.warns(
         AsdfDeprecationWarning,
-        match=".*subclasses the deprecated CustomType.*",
+        match=r".*subclasses the deprecated CustomType.*",
     ):
 
         class TestType7(types.CustomType):
