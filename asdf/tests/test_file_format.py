@@ -150,6 +150,7 @@ def test_empty_file():
 
 
 @pytest.mark.filterwarnings("ignore::astropy.io.fits.verify.VerifyWarning")
+@pytest.mark.filterwarnings("ignore::asdf.exceptions.AsdfDeprecationWarning")
 def test_not_asdf_file():
     buff = io.BytesIO(b"SIMPLE")
     buff.seek(0)
