@@ -7,6 +7,7 @@ from jsonschema import ValidationError
 from numpy.testing import assert_array_equal
 
 import asdf
+import asdf.testing.helpers
 from asdf import _resolver as resolver
 from asdf import _types as types
 from asdf import config_context, constants, extension, get_config, schema, tagged, util, yamlutil
@@ -640,7 +641,7 @@ def test_schema_resolved_via_entry_points():
     """Test that entry points mappings to core schema works"""
     with pytest.warns(AsdfDeprecationWarning, match="get_default_resolver is deprecated"):
         r = extension.get_default_resolver()
-    tag = types.format_tag("stsci.edu", "asdf", "1.0.0", "fits/fits")
+    tag = asdf.testing.helpers.format_tag("stsci.edu", "asdf", "1.0.0", "fits/fits")
     with pytest.warns(AsdfDeprecationWarning, match="default_extensions is deprecated"):
         url = extension.default_extensions.extension_list.tag_mapping(tag)
 

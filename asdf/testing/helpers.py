@@ -5,6 +5,22 @@ Helpers for writing unit tests of ASDF support.
 from io import BytesIO
 
 import asdf
+from asdf.versioning import AsdfSpec
+
+
+def format_tag(organization, standard, version, tag_name):
+    """
+    Format a YAML tag.
+    """
+    tag = f"tag:{organization}:{standard}/{tag_name}"
+
+    if version is None:
+        return tag
+
+    if isinstance(version, AsdfSpec):
+        version = str(version.spec)
+
+    return f"{tag}-{version}"
 
 
 def roundtrip_object(obj, version=None):
