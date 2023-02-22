@@ -10,7 +10,6 @@ from . import _legacy
 from ._compressor import Compressor
 from ._converter import Converter, ConverterProxy
 from ._extension import Extension, ExtensionProxy
-from ._legacy import AsdfExtension, AsdfExtensionList, BuiltinExtension
 from ._manager import ExtensionManager, get_cached_extension_manager
 from ._manifest import ManifestExtension
 from ._tag import TagDefinition
@@ -77,14 +76,22 @@ def get_default_resolver():
     return get_default_resolver()
 
 
+_deprecated_legacy = {
+    "default_extensions",
+    "AsdfExtension",
+    "AsdfExtensionList",
+    "BuiltinExtension",
+}
+
+
 def __getattr__(name):
-    if name == "default_extensions":
+    if name in _deprecated_legacy:
         warnings.warn(
-            "default_extensions is deprecated. "
+            f"{name} is deprecated. "
             "Please see the new extension API "
             "https://asdf.readthedocs.io/en/stable/asdf/extending/converters.html",
             AsdfDeprecationWarning,
         )
-        return _legacy.default_extensions
+        return getattr(_legacy, name)
     msg = f"module {__name__!r} has no attribute {name!r}"
     raise AttributeError(msg)
