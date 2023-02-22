@@ -115,7 +115,6 @@ open_files_ignore = ['test.fits', 'asdf.fits']
 filterwarnings = [
     'error',
     'ignore:numpy.ndarray size changed:RuntimeWarning',
-    'ignore::asdf.exceptions.AsdfDeprecationWarning:asdf.entry_points:27',
 ]
 # Configuration for pytest-doctestplus
 text_file_format = 'rst'

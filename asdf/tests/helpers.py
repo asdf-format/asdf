@@ -392,16 +392,9 @@ def assert_no_warnings(warning_class=None):
     import pytest
 
     if warning_class is None:
-        # check if warnings already produce errors
-        for f in warnings.filters:
-            if f[0] == "error":
-                yield
-                break
-        else:
-            with warnings.catch_warnings():
-                warnings.simplefilter("error")
-
-                yield
+        with warnings.catch_warnings():
+            warnings.simplefilter("error")
+            yield
     else:
         with pytest.warns(Warning) as recorded_warnings:
             yield
