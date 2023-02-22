@@ -126,7 +126,9 @@ def test_invalid_source(small_tree):
         with pytest.raises(ValueError, match=r"Block .* not found."):
             ff2._blocks.get_block(2)
 
-        with pytest.raises(IOError, match=r"<.* nodename nor servname provided, or not known>"):
+        # This error message changes depending on how remote-data is configured
+        # for the CI run.
+        with pytest.raises(IOError):  # noqa: PT011
             ff2._blocks.get_block("http://ABadUrl.verybad/test.asdf")
 
         with pytest.raises(TypeError, match=r"Unknown source .*"):
