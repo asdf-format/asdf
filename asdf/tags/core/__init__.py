@@ -1,4 +1,4 @@
-from asdf.types import AsdfType
+from asdf import _types
 
 from .complex import ComplexType
 from .constant import ConstantType
@@ -24,7 +24,7 @@ class AsdfObject(dict):
     pass
 
 
-class AsdfObjectType(AsdfType):
+class AsdfObjectType(_types.AsdfType):
     name = "core/asdf"
     version = "1.1.0"
     supported_versions = {"1.0.0", "1.1.0"}
@@ -39,17 +39,17 @@ class AsdfObjectType(AsdfType):
         return dict(data)
 
 
-class Software(dict, AsdfType):
+class Software(dict, _types.AsdfType):
     name = "core/software"
     version = "1.0.0"
 
 
-class HistoryEntry(dict, AsdfType):
+class HistoryEntry(dict, _types.AsdfType):
     name = "core/history_entry"
     version = "1.0.0"
 
 
-class ExtensionMetadata(dict, AsdfType):
+class ExtensionMetadata(dict, _types.AsdfType):
     name = "core/extension_metadata"
     version = "1.0.0"
 
@@ -66,7 +66,7 @@ class ExtensionMetadata(dict, AsdfType):
         return self.get("software")
 
 
-class SubclassMetadata(dict, AsdfType):
+class SubclassMetadata(dict, _types.AsdfType):
     """
     The tagged object supported by this class is part of
     an experimental feature that has since been dropped

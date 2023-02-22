@@ -4,7 +4,8 @@ from fractions import Fraction
 import pytest
 
 import asdf
-from asdf import extension, types, util, versioning
+from asdf import _types as types
+from asdf import extension, util, versioning
 from asdf.exceptions import AsdfConversionWarning, AsdfDeprecationWarning, AsdfWarning
 
 from . import helpers
