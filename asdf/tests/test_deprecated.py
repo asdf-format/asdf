@@ -3,8 +3,8 @@ import sys
 import pytest
 
 import asdf
-from asdf._types import CustomType
 import asdf.extension
+from asdf._types import CustomType
 from asdf.exceptions import AsdfDeprecationWarning
 from asdf.tests.helpers import assert_extension_correctness
 from asdf.tests.objects import CustomExtension
