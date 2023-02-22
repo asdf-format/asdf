@@ -3,30 +3,28 @@ import re
 import warnings
 from copy import copy
 
+import asdf.testing.helpers
+
 from . import tagged, util
 from .exceptions import AsdfDeprecationWarning
 from .versioning import AsdfSpec, AsdfVersion
 
-__all__ = ["format_tag", "CustomType", "AsdfType", "ExtensionType"]
+__all__ = ["format_tag", "CustomType", "AsdfType", "ExtensionType"]  # noqa: F822
 
 
 # regex used to parse module name from optional version string
 MODULE_RE = re.compile(r"([a-zA-Z]+)(-(\d+\.\d+\.\d+))?")
 
 
-def format_tag(organization, standard, version, tag_name):
-    """
-    Format a YAML tag.
-    """
-    tag = f"tag:{organization}:{standard}/{tag_name}"
-
-    if version is None:
-        return tag
-
-    if isinstance(version, AsdfSpec):
-        version = str(version.spec)
-
-    return f"{tag}-{version}"
+def __getattr__(name):
+    if name == "format_tag":
+        warnings.warn(
+            "asdf.types.format_tag is deprecated. Please use asdf.testing.helpers.format_tag",
+            AsdfDeprecationWarning,
+        )
+        return asdf.testing.helpers.format_tag
+    msg = f"module {__name__!r} has no attribute {name!r}"
+    raise AttributeError(msg)
 
 
 _all_asdftypes = set()
@@ -229,7 +227,7 @@ class ExtensionType:
         -------
             `str` representing the YAML tag
         """
-        return format_tag(cls.organization, cls.standard, cls.version if versioned else None, name)
+        return asdf.testing.helpers.format_tag(cls.organization, cls.standard, cls.version if versioned else None, name)
 
     @classmethod
     def tag_base(cls):
