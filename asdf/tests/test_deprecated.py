@@ -3,7 +3,9 @@ import sys
 import pytest
 
 import asdf
+import asdf._types
 import asdf.extension
+import asdf.testing.helpers
 from asdf._types import CustomType
 from asdf.exceptions import AsdfDeprecationWarning
 from asdf.tests.helpers import assert_extension_correctness
@@ -84,3 +86,9 @@ def test_default_resolver():
 def test_get_cached_asdf_extension_list_deprecation():
     with pytest.warns(AsdfDeprecationWarning, match="get_cached_asdf_extension_list is deprecated"):
         asdf.extension.get_cached_asdf_extension_list([])
+
+
+def test_asdf_type_format_tag():
+    with pytest.warns(AsdfDeprecationWarning, match="asdf.types.format_tag is deprecated"):
+        asdf._types.format_tag
+    asdf.testing.helpers.format_tag
