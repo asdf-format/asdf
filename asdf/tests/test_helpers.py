@@ -1,6 +1,6 @@
 import pytest
 
-from asdf import types
+from asdf import _types as types
 from asdf.exceptions import AsdfConversionWarning, AsdfDeprecationWarning, AsdfWarning
 from asdf.tests.helpers import assert_roundtrip_tree
 

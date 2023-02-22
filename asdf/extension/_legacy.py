@@ -3,7 +3,7 @@ import warnings
 from functools import lru_cache
 
 from asdf import _resolver as resolver
-from asdf import types
+from asdf import _types as types
 from asdf._type_index import AsdfTypeIndex
 from asdf.exceptions import AsdfDeprecationWarning
 

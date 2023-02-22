@@ -22,6 +22,7 @@ __all__ = [
 from jsonschema import ValidationError
 
 from ._convenience import info
+from ._types import CustomType
 from ._version import version as __version__
 from .asdf import AsdfFile
 from .asdf import open_asdf as open  # noqa: A001
@@ -30,4 +31,3 @@ from .extension import AsdfExtension
 from .stream import Stream
 from .tags.core import IntegerType
 from .tags.core.external_reference import ExternalArrayReference
-from .types import CustomType

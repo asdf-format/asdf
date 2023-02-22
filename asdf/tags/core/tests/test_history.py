@@ -6,7 +6,8 @@ import pytest
 from jsonschema import ValidationError
 
 import asdf
-from asdf import types, util
+from asdf import _types as types
+from asdf import util
 from asdf.exceptions import AsdfDeprecationWarning, AsdfWarning
 from asdf.tags.core import HistoryEntry
 from asdf.tests import helpers

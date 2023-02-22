@@ -7,7 +7,7 @@ import pytest
 
 from asdf.tests.httpserver import HTTPServer, RangeHTTPServer
 
-collect_ignore = ["asdftypes.py", "fits_embed.py", "resolver.py", "type_index.py"]
+collect_ignore = ["asdftypes.py", "fits_embed.py", "resolver.py", "type_index.py", "types.py"]
 
 
 @pytest.fixture()
