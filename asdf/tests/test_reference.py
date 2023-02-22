@@ -56,7 +56,7 @@ def test_external_reference(tmp_path):
 
         assert_array_equal(ff.tree["science_data"], exttree["cool_stuff"]["a"])
         assert len(ff._external_asdf_by_uri) == 1
-        with pytest.raises((ValueError, RuntimeError)):
+        with pytest.raises((ValueError, RuntimeError), match=r"assignment destination is read-only"):
             # Assignment destination is readonly
             ff.tree["science_data"][0] = 42
 
@@ -116,15 +116,15 @@ def test_external_reference_invalid(tmp_path):
     tree = {"foo": {"$ref": "fail.asdf"}}
 
     ff = asdf.AsdfFile(tree)
-    with pytest.raises(ValueError):
+    with pytest.raises(ValueError, match=r"Resolved to relative URL"):
         ff.resolve_references()
 
     ff = asdf.AsdfFile(tree, uri="http://httpstat.us/404")
-    with pytest.raises(IOError):
+    with pytest.raises(IOError, match=r"HTTP Error 404: Not Found"):
         ff.resolve_references()
 
     ff = asdf.AsdfFile(tree, uri=util.filepath_to_url(os.path.join(str(tmp_path), "main.asdf")))
-    with pytest.raises(IOError):
+    with pytest.raises(IOError, match=r"No such file or directory: .*"):
         ff.resolve_references()
 
 
@@ -138,6 +138,7 @@ def test_external_reference_invalid_fragment(tmp_path):
 
     with asdf.AsdfFile(tree, uri=util.filepath_to_url(os.path.join(str(tmp_path), "main.asdf"))) as ff, pytest.raises(
         ValueError,
+        match=r"Unresolvable reference: .*",
     ):
         ff.resolve_references()
 
@@ -145,6 +146,7 @@ def test_external_reference_invalid_fragment(tmp_path):
 
     with asdf.AsdfFile(tree, uri=util.filepath_to_url(os.path.join(str(tmp_path), "main.asdf"))) as ff, pytest.raises(
         ValueError,
+        match=r"Unresolvable reference: .*",
     ):
         ff.resolve_references()
 

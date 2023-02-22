@@ -18,18 +18,18 @@ baz: 42
     path = os.path.join(str(tmp_path), "test.asdf")
 
     buff = io.BytesIO(content)
-    with pytest.raises(ValueError), asdf.open(buff):
+    with pytest.raises(ValueError, match=r"End of YAML marker not found"), asdf.open(buff):
         pass
 
     buff.seek(0)
     fd = generic_io.InputStream(buff, "r")
-    with pytest.raises(ValueError), asdf.open(fd):
+    with pytest.raises(ValueError, match=r"End of YAML marker not found"), asdf.open(buff):
         pass
 
     with open(path, "wb") as fd:
         fd.write(content)
 
-    with open(path, "rb") as fd, pytest.raises(ValueError), asdf.open(fd):
+    with open(path, "rb") as fd, pytest.raises(ValueError, match=r"End of YAML marker not found"), asdf.open(fd):
         pass
 
 
@@ -66,13 +66,19 @@ def test_no_asdf_header(tmp_path):
     path = os.path.join(str(tmp_path), "test.asdf")
 
     buff = io.BytesIO(content)
-    with pytest.raises(ValueError):
+    with pytest.raises(
+        ValueError,
+        match=r"Input object does not appear to be an ASDF file or a FITS with ASDF extension",
+    ):
         asdf.open(buff)
 
     with open(path, "wb") as fd:
         fd.write(content)
 
-    with open(path, "rb") as fd, pytest.raises(ValueError):
+    with open(path, "rb") as fd, pytest.raises(
+        ValueError,
+        match=r"Input object does not appear to be an ASDF file or a FITS with ASDF extension",
+    ):
         asdf.open(fd)
 
 
@@ -117,16 +123,18 @@ def test_invalid_source(small_tree):
     with asdf.open(buff) as ff2:
         ff2._blocks.get_block(0)
 
-        with pytest.raises(ValueError):
+        with pytest.raises(ValueError, match=r"Block .* not found."):
             ff2._blocks.get_block(2)
 
-        with pytest.raises(IOError):
+        # This error message changes depending on how remote-data is configured
+        # for the CI run.
+        with pytest.raises(IOError):  # noqa: PT011
             ff2._blocks.get_block("http://ABadUrl.verybad/test.asdf")
 
-        with pytest.raises(TypeError):
+        with pytest.raises(TypeError, match=r"Unknown source .*"):
             ff2._blocks.get_block(42.0)
 
-        with pytest.raises(ValueError):
+        with pytest.raises(ValueError, match=r"block not found."):
             ff2._blocks.get_source(42.0)
 
         block = ff2._blocks.get_block(0)
@@ -155,13 +163,19 @@ def test_not_asdf_file():
     buff = io.BytesIO(b"SIMPLE")
     buff.seek(0)
 
-    with pytest.raises(ValueError), asdf.open(buff):
+    with pytest.raises(
+        ValueError,
+        match=r"Input object does not appear to be an ASDF file or a FITS with ASDF extension",
+    ), asdf.open(buff):
         pass
 
     buff = io.BytesIO(b"SIMPLE\n")
     buff.seek(0)
 
-    with pytest.raises(ValueError), asdf.open(buff):
+    with pytest.raises(
+        ValueError,
+        match=r"Input object does not appear to be an ASDF file or a FITS with ASDF extension",
+    ), asdf.open(buff):
         pass
 
 
@@ -169,7 +183,7 @@ def test_junk_file():
     buff = io.BytesIO(b"#ASDF 1.0.0\nFOO")
     buff.seek(0)
 
-    with pytest.raises(ValueError), asdf.open(buff):
+    with pytest.raises(ValueError, match=r"Invalid content between header and tree"), asdf.open(buff):
         pass
 
 
@@ -183,7 +197,7 @@ def test_block_mismatch():
     )
 
     buff.seek(0)
-    with pytest.raises(ValueError), asdf.open(buff):
+    with pytest.raises(ValueError, match=r"Header size must be >= 48"), asdf.open(buff):
         pass
 
 
@@ -193,7 +207,7 @@ def test_block_header_too_small():
     buff = io.BytesIO(b"#ASDF 1.0.0\n\xd3BLK\0\0")
 
     buff.seek(0)
-    with pytest.raises(ValueError), asdf.open(buff):
+    with pytest.raises(ValueError, match=r"Header size must be >= 48"), asdf.open(buff):
         pass
 
 
@@ -205,7 +219,7 @@ def test_invalid_version(tmp_path):
 foo : bar
 ..."""
     buff = io.BytesIO(content)
-    with pytest.raises(ValueError), asdf.open(buff):
+    with pytest.raises(ValueError, match=r"ASDF Standard version .* is not supported by asdf==.*"), asdf.open(buff):
         pass
 
 

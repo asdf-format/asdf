@@ -44,7 +44,7 @@ def test_history():
     )
     assert len(ff.tree["history"]["entries"]) == 1
 
-    with pytest.raises(ValidationError):
+    with pytest.raises(ValidationError, match=r".* is not valid under any of the given schemas"):
         ff.add_history_entry("That happened", {"author": "John Doe", "version": "2.0"})
     assert len(ff.tree["history"]["entries"]) == 1
 
@@ -192,12 +192,18 @@ history:
     """
 
     buff = yaml_to_asdf(yaml)
-    with pytest.raises(RuntimeError), asdf.open(buff, strict_extension_check=True):
+    with pytest.raises(
+        RuntimeError,
+        match=r"File was created with extension class .*, which is not currently installed",
+    ), asdf.open(buff, strict_extension_check=True):
         pass
 
     # Make sure to test for incompatibility with ignore_missing_extensions
     buff.seek(0)
-    with pytest.raises(ValueError), asdf.open(buff, strict_extension_check=True, ignore_missing_extensions=True):
+    with pytest.raises(
+        ValueError,
+        match=r"'strict_extension_check' and 'ignore_missing_extensions' are incompatible options",
+    ), asdf.open(buff, strict_extension_check=True, ignore_missing_extensions=True):
         pass
 
 

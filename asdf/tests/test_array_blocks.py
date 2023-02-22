@@ -34,7 +34,7 @@ def test_external_block_non_url():
     assert ff.get_array_storage(my_array) == "external"
 
     buff = io.BytesIO()
-    with pytest.raises(ValueError):
+    with pytest.raises(ValueError, match=r"Can't write external blocks, since URI of main file is unknown."):
         ff.write_to(buff)
 
 
@@ -42,16 +42,16 @@ def test_invalid_array_storage():
     my_array = RNG.normal(size=(8, 8))
     tree = {"my_array": my_array}
     ff = asdf.AsdfFile(tree)
-    with pytest.raises(ValueError):
+    with pytest.raises(ValueError, match=r"array_storage must be one of.*"):
         ff.set_array_storage(my_array, "foo")
 
     b = block.Block()
     b._array_storage = "foo"
 
-    with pytest.raises(ValueError):
+    with pytest.raises(ValueError, match=r"Unknown array storage type foo"):
         ff._blocks.add(b)
 
-    with pytest.raises(ValueError):
+    with pytest.raises(ValueError, match=r"Unknown array storage type foo"):
         ff._blocks.remove(b)
 
 
@@ -485,7 +485,7 @@ def test_deferred_block_loading(small_tree):
         ff2.tree["not_shared"] * 2
         assert len([x for x in ff2._blocks.blocks if isinstance(x, block.Block)]) == 2
 
-        with pytest.raises(ValueError):
+        with pytest.raises(ValueError, match=r"Block .* not found."):
             ff2._blocks.get_block(2)
 
 
@@ -708,7 +708,7 @@ def test_invalid_block_index_first_block_value():
 
 def test_invalid_block_id():
     ff = asdf.AsdfFile()
-    with pytest.raises(ValueError):
+    with pytest.raises(ValueError, match=r"Invalid source id .*"):
         ff._blocks.get_block(-2)
 
 

@@ -84,10 +84,10 @@ def test_asdf_file_version():
         assert af.version == AsdfVersion("1.3.0")
         assert af.version_string == "1.3.0"
 
-        with pytest.raises(ValueError):
+        with pytest.raises(ValueError, match=r"ASDF Standard version .* is not supported by asdf==.*"):
             AsdfFile(version="0.5.4")
 
-        with pytest.raises(ValueError):
+        with pytest.raises(ValueError, match=r"ASDF Standard version .* is not supported by asdf==.*"):
             AsdfFile(version=AsdfVersion("0.5.4"))
 
         af = AsdfFile()
@@ -100,10 +100,10 @@ def test_asdf_file_version():
         assert af.version == AsdfVersion("1.4.0")
         assert af.version_string == "1.4.0"
 
-        with pytest.raises(ValueError):
+        with pytest.raises(ValueError, match=r"ASDF Standard version .* is not supported by asdf==.*"):
             af.version = "0.5.4"
 
-        with pytest.raises(ValueError):
+        with pytest.raises(ValueError, match=r"ASDF Standard version .* is not supported by asdf==.*"):
             af.version = AsdfVersion("2.5.4")
 
         af.version = "1.0.0"
@@ -127,8 +127,12 @@ def test_asdf_file_extensions():
         af.extensions = arg
         assert af.extensions == [ExtensionProxy(extension)]
 
+    msg = (
+        r"[The extensions parameter must be an extension.*, "
+        r"Extension must implement the Extension or AsdfExtension interface]"
+    )
     for arg in (object(), [object()]):
-        with pytest.raises(TypeError):
+        with pytest.raises(TypeError, match=msg):
             AsdfFile(extensions=arg)
 
 
@@ -183,8 +187,12 @@ def test_open_asdf_extensions(tmp_path):
         with open_asdf(path, extensions=arg) as af:
             assert af.extensions == [ExtensionProxy(extension)]
 
+    msg = (
+        r"[The extensions parameter must be an extension.*, "
+        r"Extension must implement the Extension or AsdfExtension interface]"
+    )
     for arg in (object(), [object()]):
-        with pytest.raises(TypeError), open_asdf(path, extensions=arg) as af:
+        with pytest.raises(TypeError, match=msg), open_asdf(path, extensions=arg) as af:
             pass
 
 
@@ -205,10 +213,10 @@ def test_serialization_context():
 
     assert context.url == context._url == "file://test.asdf"
 
-    with pytest.raises(TypeError):
+    with pytest.raises(TypeError, match=r"Extension must implement the Extension or AsdfExtension interface"):
         context._mark_extension_used(object())
 
-    with pytest.raises(ValueError):
+    with pytest.raises(ValueError, match=r"ASDF Standard version .* is not supported by asdf==.*"):
         SerializationContext("0.5.4", extension_manager, None)
 
 
@@ -370,7 +378,10 @@ def test_bad_input(tmp_path):
     with open(text_file, "w") as fh:
         fh.write("I <3 ASDF!!!!!")
 
-    with pytest.raises(ValueError):
+    with pytest.raises(
+        ValueError,
+        match=r"Input object does not appear to be an ASDF file or a FITS with ASDF extension",
+    ):
         open_asdf(text_file)
 
 
@@ -382,7 +393,10 @@ def test_unclosed_file(tmp_path):
     path = tmp_path / "empty.asdf"
     path.touch()
 
-    with pytest.raises(ValueError), open_asdf(path):
+    with pytest.raises(
+        ValueError,
+        match=r"Input object does not appear to be an ASDF file or a FITS with ASDF extension",
+    ), open_asdf(path):
         pass
 
 

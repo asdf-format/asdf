@@ -43,5 +43,8 @@ def test_conversion_error(tmp_path):
     foo = FooType(10, "hello")
     tree = {"foo": foo}
 
-    with pytest.raises(AsdfConversionWarning), pytest.warns(AsdfWarning, match=r"Unable to locate schema file"):
+    with pytest.raises(
+        AsdfConversionWarning,
+        match=r"Failed to convert .* to custom type .* Using raw Python data structure instead",
+    ), pytest.warns(AsdfWarning, match=r"Unable to locate schema file"):
         assert_roundtrip_tree(tree, tmp_path, extensions=FooExtension())

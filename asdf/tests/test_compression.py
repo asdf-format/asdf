@@ -68,9 +68,9 @@ def _roundtrip(tmp_path, tree, compression=None, write_options=None, read_option
 def test_invalid_compression():
     tree = _get_large_tree()
     ff = asdf.AsdfFile(tree)
-    with pytest.raises(ValueError):
+    with pytest.raises(ValueError, match=r"Supported compression types are: .*, not 'foo'"):
         ff.set_array_compression(tree["science_data"], "foo")
-    with pytest.raises(ValueError):
+    with pytest.raises(ValueError, match=r"Unknown compression type: .*"):
         compression._get_compressor("foo")
 
 
@@ -87,10 +87,10 @@ def test_decompress_too_long_short():
     fio.read_blocks = blocks
     compression.decompress(fio, size, 1024, "zlib")
     fio.seek(0)
-    with pytest.raises(ValueError):
+    with pytest.raises(ValueError, match=r"Decompressed data wrong size"):
         compression.decompress(fio, size, 1025, "zlib")
     fio.seek(0)
-    with pytest.raises(ValueError):
+    with pytest.raises(ValueError, match=r"memoryview assignment: lvalue and rvalue have different structures"):
         compression.decompress(fio, size, 1023, "zlib")
 
 
@@ -175,7 +175,7 @@ def test_set_array_compression(tmp_path):
     with asdf.AsdfFile(tree) as af_out:
         af_out.set_array_compression(zlib_data, "zlib", level=1)
         af_out.set_array_compression(bzp2_data, "bzp2", compresslevel=9000)
-        with pytest.raises(ValueError):
+        with pytest.raises(ValueError, match=r"compresslevel must be between 1 and 9"):
             af_out.write_to(tmpfile)
         af_out.set_array_compression(bzp2_data, "bzp2", compresslevel=9)
         af_out.write_to(tmpfile)
@@ -228,7 +228,7 @@ def test_compression_with_extension(tmp_path):
     with config_context() as config:
         config.add_extension(LzmaExtension())
 
-        with pytest.raises(lzma.LZMAError):
+        with pytest.raises(lzma.LZMAError, match=r"Invalid or unsupported options"):
             _roundtrip(tmp_path, tree, "lzma", write_options={"compression_kwargs": {"preset": 9000}})
         fn = _roundtrip(tmp_path, tree, "lzma", write_options={"compression_kwargs": {"preset": 6}})
 

@@ -532,7 +532,9 @@ def test_invalid_mask_datatype(tmpdir):
     """
     buff = helpers.yaml_to_asdf(content)
 
-    with pytest.raises(jsonschema.ValidationError), asdf.open(buff):
+    with pytest.raises(jsonschema.ValidationError, match=r".* is not valid under any of the given schemas"), asdf.open(
+        buff,
+    ):
         pass
 
 
@@ -544,7 +546,10 @@ def test_ndim_validation(tmpdir):
     """
     buff = helpers.yaml_to_asdf(content)
 
-    with pytest.raises(jsonschema.ValidationError), asdf.open(buff, extensions=CustomExtension()):
+    with pytest.raises(jsonschema.ValidationError, match=r"Wrong number of dimensions:.*"), asdf.open(
+        buff,
+        extensions=CustomExtension(),
+    ):
         pass
 
     content = """
@@ -595,7 +600,10 @@ def test_ndim_validation(tmpdir):
     """
     buff = helpers.yaml_to_asdf(content)
 
-    with pytest.raises(jsonschema.ValidationError), asdf.open(buff, extensions=CustomExtension()):
+    with pytest.raises(jsonschema.ValidationError, match=r"Wrong number of dimensions:.*"), asdf.open(
+        buff,
+        extensions=CustomExtension(),
+    ):
         pass
 
 
@@ -619,7 +627,10 @@ def test_datatype_validation(tmpdir):
     """
     buff = helpers.yaml_to_asdf(content)
 
-    with pytest.raises(jsonschema.ValidationError), asdf.open(buff, extensions=CustomExtension()):
+    with pytest.raises(jsonschema.ValidationError, match=r"Can not safely cast from .* to .*"), asdf.open(
+        buff,
+        extensions=CustomExtension(),
+    ):
         pass
 
     content = """
@@ -641,7 +652,10 @@ def test_datatype_validation(tmpdir):
     """
     buff = helpers.yaml_to_asdf(content)
 
-    with pytest.raises(jsonschema.ValidationError), asdf.open(buff, extensions=CustomExtension()):
+    with pytest.raises(jsonschema.ValidationError, match=r"Expected datatype .*, got .*"), asdf.open(
+        buff,
+        extensions=CustomExtension(),
+    ):
         pass
 
     content = """
@@ -656,7 +670,10 @@ def test_datatype_validation(tmpdir):
     """
     buff = helpers.yaml_to_asdf(content)
 
-    with pytest.raises(jsonschema.ValidationError), asdf.open(buff, extensions=CustomExtension()):
+    with pytest.raises(jsonschema.ValidationError, match=r"Expected scalar datatype .*, got .*"), asdf.open(
+        buff,
+        extensions=CustomExtension(),
+    ):
         pass
 
 
@@ -688,7 +705,10 @@ def test_structured_datatype_validation(tmpdir):
     """
     buff = helpers.yaml_to_asdf(content)
 
-    with pytest.raises(jsonschema.ValidationError), asdf.open(buff, extensions=CustomExtension()):
+    with pytest.raises(jsonschema.ValidationError, match=r"Can not safely cast to expected datatype.*"), asdf.open(
+        buff,
+        extensions=CustomExtension(),
+    ):
         pass
 
     content = """
@@ -705,7 +725,10 @@ def test_structured_datatype_validation(tmpdir):
     """
     buff = helpers.yaml_to_asdf(content)
 
-    with pytest.raises(jsonschema.ValidationError), asdf.open(buff, extensions=CustomExtension()):
+    with pytest.raises(jsonschema.ValidationError, match=r"Mismatch in number of columns:.*"), asdf.open(
+        buff,
+        extensions=CustomExtension(),
+    ):
         pass
 
     content = """
@@ -715,7 +738,10 @@ def test_structured_datatype_validation(tmpdir):
     """
     buff = helpers.yaml_to_asdf(content)
 
-    with pytest.raises(jsonschema.ValidationError), asdf.open(buff, extensions=CustomExtension()):
+    with pytest.raises(jsonschema.ValidationError, match=r"Expected structured datatype.*"), asdf.open(
+        buff,
+        extensions=CustomExtension(),
+    ):
         pass
 
     content = """
@@ -730,7 +756,10 @@ def test_structured_datatype_validation(tmpdir):
     """
     buff = helpers.yaml_to_asdf(content)
 
-    with pytest.raises(jsonschema.ValidationError), asdf.open(buff, extensions=CustomExtension()):
+    with pytest.raises(jsonschema.ValidationError, match=r"Expected datatype .*, got .*"), asdf.open(
+        buff,
+        extensions=CustomExtension(),
+    ):
         pass
 
     content = """
@@ -765,7 +794,7 @@ def test_inline_shape_mismatch():
     """
 
     buff = helpers.yaml_to_asdf(content)
-    with pytest.raises(ValueError), asdf.open(buff):
+    with pytest.raises(ValueError, match=r"inline data doesn't match the given shape"), asdf.open(buff):
         pass
 
 
@@ -930,8 +959,8 @@ def test_problematic_class_attributes(tmp_path):
     with asdf.open(file_path) as af:
         assert isinstance(af["arr"], ndarray.NDArrayType)
 
-        with pytest.raises(AttributeError):
+        with pytest.raises(AttributeError, match=r".* object has no attribute 'name'"):
             af["arr"].name
 
-        with pytest.raises(AttributeError):
+        with pytest.raises(AttributeError, match=r".* object has no attribute 'version'"):
             af["arr"].version

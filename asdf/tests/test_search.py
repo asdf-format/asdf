@@ -50,10 +50,10 @@ def test_multiple_results(asdf_file):
     assert "root['foo']" in result.paths
     assert "root['nested']['foo']" in result.paths
 
-    with pytest.raises(RuntimeError):
+    with pytest.raises(RuntimeError, match=r"More than one result"):
         result.path
 
-    with pytest.raises(RuntimeError):
+    with pytest.raises(RuntimeError, match=r"More than one result"):
         result.node
 
     result.replace(54)
@@ -88,7 +88,7 @@ def test_by_type(asdf_file):
     result = asdf_file.search(type_=re.compile("^i.t$"))
     assert result.nodes == [42, 24, 24, 0, 1, 2]
 
-    with pytest.raises(TypeError):
+    with pytest.raises(TypeError, match=r"type must be .*"):
         asdf_file.search(type_=4)
 
 
@@ -110,7 +110,7 @@ def test_by_value_with_ndarray():
 
 
 def test_by_filter(asdf_file):
-    with pytest.raises(ValueError):
+    with pytest.raises(ValueError, match=r"filter must accept 1 or 2 arguments"):
         asdf_file.search(filter_=lambda: True)
 
     result = asdf_file.search(filter_=lambda n: isinstance(n, int) and n % 2 == 0)
@@ -145,7 +145,7 @@ def test_index_operator(asdf_file):
     assert len(result.nodes) == 1
     assert result.node == 24
 
-    with pytest.raises(TypeError):
+    with pytest.raises(TypeError, match=r"This node cannot be indexed"):
         asdf_file.search()["foo"][0]
 
 
