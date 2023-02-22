@@ -58,7 +58,7 @@ tests = [
 [project.entry-points]
 'asdf.extensions' = {asdf = 'asdf.core._integration:get_extensions'}
 'asdf.resource_mappings' = {asdf = 'asdf.core._integration:get_json_schema_resource_mappings'}
-asdf_extensions = {builtin = 'asdf.extension:BuiltinExtension'}
+asdf_extensions = {builtin = 'asdf.extension._legacy:BuiltinExtension'}
 console_scripts = {asdftool = 'asdf.commands.main:main'}
 pytest11 = {asdf_schema_tester = 'pytest_asdf.plugin'}
 

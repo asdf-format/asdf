@@ -31,6 +31,7 @@ The ASDF Standard is at v1.6.0
 - deprecate default_extensions, get_default_resolver and
   get_cached_asdf_extension_list in asdf.extension [#1409]
 - move asdf.types.format_tag to asdf.testing.helpers.format_tag [#1433]
+- Deprecate AsdfExtenion, AsdfExtensionList, BuiltinExtension [#1429]
 
 2.14.3 (2022-12-15)
 -------------------
