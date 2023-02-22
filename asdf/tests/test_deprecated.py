@@ -92,3 +92,14 @@ def test_asdf_type_format_tag():
     with pytest.warns(AsdfDeprecationWarning, match="asdf.types.format_tag is deprecated"):
         asdf._types.format_tag
     asdf.testing.helpers.format_tag
+
+
+@pytest.mark.parametrize("name", ["AsdfExtension", "AsdfExtensionList", "BuiltinExtension"])
+def test_extension_class_deprecation(name):
+    with pytest.warns(AsdfDeprecationWarning, match=f"{name} is deprecated"):
+        getattr(asdf.extension, name)
+
+
+def test_top_level_asdf_extension_deprecation():
+    with pytest.warns(AsdfDeprecationWarning, match="AsdfExtension is deprecated"):
+        asdf.AsdfExtension

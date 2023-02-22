@@ -5,8 +5,6 @@ from asdf import AsdfFile, config_context
 from asdf._types import CustomType
 from asdf.exceptions import AsdfDeprecationWarning, ValidationError
 from asdf.extension import (
-    AsdfExtension,
-    BuiltinExtension,
     Compressor,
     Converter,
     ConverterProxy,
@@ -19,6 +17,7 @@ from asdf.extension import (
     get_cached_asdf_extension_list,
     get_cached_extension_manager,
 )
+from asdf.extension._legacy import AsdfExtension, BuiltinExtension
 from asdf.tests.helpers import assert_extension_correctness
 
 
