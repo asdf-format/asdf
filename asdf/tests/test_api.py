@@ -33,7 +33,7 @@ def test_get_data_from_closed_file(tmp_path):
     with asdf.open(path) as ff:
         pass
 
-    with pytest.raises(IOError):
+    with pytest.raises(IOError, match=r"Cannot access data from closed ASDF file"):
         assert_array_equal(my_array, ff.tree["my_array"])
 
 
@@ -77,7 +77,7 @@ def test_open_readonly(tmp_path):
     with asdf.open(tmpfile) as af:
         assert af["baz"].flags.writeable is False
 
-    with pytest.raises(PermissionError), asdf.open(tmpfile, mode="rw"):
+    with pytest.raises(PermissionError, match=r".* Permission denied: .*"), asdf.open(tmpfile, mode="rw"):
         pass
 
 
@@ -90,7 +90,7 @@ invalid_software: !core/software-1.0.0
     buff = yaml_to_asdf(content)
 
     get_config().validate_on_read = True
-    with pytest.raises(ValidationError), asdf.open(buff):
+    with pytest.raises(ValidationError, match=r".* is not of type .*"), asdf.open(buff):
         pass
 
     buff.seek(0)
@@ -165,7 +165,10 @@ def test_update_exceptions(tmp_path):
     ff = asdf.AsdfFile(tree)
     ff.write_to(path)
 
-    with asdf.open(path, mode="r", copy_arrays=True) as ff, pytest.raises(IOError):
+    with asdf.open(path, mode="r", copy_arrays=True) as ff, pytest.raises(
+        IOError,
+        match=r"Can not update, since associated file is read-only.*",
+    ):
         ff.update()
 
     ff = asdf.AsdfFile(tree)
@@ -176,7 +179,7 @@ def test_update_exceptions(tmp_path):
     with asdf.open(buff, mode="rw") as ff:
         ff.update()
 
-    with pytest.raises(ValueError):
+    with pytest.raises(ValueError, match=r"Can not update, since there is no associated file"):
         asdf.AsdfFile().update()
 
 
@@ -274,11 +277,11 @@ def test_access_tree_outside_handler(tmp_path):
         pass
 
     # Accessing array data outside of handler should fail
-    with pytest.raises(OSError):
+    with pytest.raises(OSError, match=r"Cannot access data from closed ASDF file"):
         repr(newf.tree["random"])
 
     # Using the top-level getattr should also fail
-    with pytest.raises(OSError):
+    with pytest.raises(OSError, match=r"Cannot access data from closed ASDF file"):
         repr(newf["random"])
 
 
@@ -297,7 +300,7 @@ def test_context_handler_resolve_and_inline(tmp_path):
     with asdf.open(tempname) as newf:
         newf.resolve_and_inline()
 
-    with pytest.raises(OSError):
+    with pytest.raises(OSError, match=r"Cannot access data from closed ASDF file"):
         newf.tree["random"][0]
 
 
@@ -354,9 +357,9 @@ def test_extension_version_check(installed, extension, warns):
         with pytest.warns(AsdfWarning, match=r"File 'test.asdf' was created with"):
             af._check_extensions(tree)
 
-        with pytest.raises(RuntimeError) as err:
+        with pytest.raises(RuntimeError, match=r"^File 'test.asdf' was created with"):
             af._check_extensions(tree, strict=True)
-        err.match("^File 'test.asdf' was created with")
+
     else:
         af._check_extensions(tree)
 

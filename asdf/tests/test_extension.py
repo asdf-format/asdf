@@ -164,7 +164,7 @@ def test_extension_proxy_maybe_wrap():
     assert proxy.delegate is extension
     assert ExtensionProxy.maybe_wrap(proxy) is proxy
 
-    with pytest.raises(TypeError):
+    with pytest.raises(TypeError, match=r"Extension must implement the Extension or AsdfExtension interface"):
         ExtensionProxy.maybe_wrap(object())
 
 
@@ -243,35 +243,35 @@ def test_extension_proxy():
     assert proxy.class_name == "asdf.tests.test_extension.FullExtension"
 
     # Should fail when the input is not one of the two extension interfaces:
-    with pytest.raises(TypeError):
+    with pytest.raises(TypeError, match=r"Extension must implement the Extension or AsdfExtension interface"):
         ExtensionProxy(object)
 
     # Should fail with a bad converter:
-    with pytest.raises(TypeError):
+    with pytest.raises(TypeError, match=r"Converter must implement the .* interface"):
         ExtensionProxy(FullExtension(converters=[object()]))
 
     # Should fail with a bad compressor:
-    with pytest.raises(TypeError):
+    with pytest.raises(TypeError, match=r"Extension property 'compressors' must contain instances of .*"):
         ExtensionProxy(FullExtension(compressors=[object()]))
 
     # Should fail with a bad validator
-    with pytest.raises(TypeError):
+    with pytest.raises(TypeError, match=r"Extension property 'validators' must contain instances of .*"):
         ExtensionProxy(FullExtension(validators=[object()]))
 
     # Unparsable ASDF Standard requirement:
-    with pytest.raises(ValueError):
+    with pytest.raises(ValueError, match=r"Invalid specifier:.*"):
         ExtensionProxy(FullExtension(asdf_standard_requirement="asdf-standard >= 1.4.0"))
 
     # Unrecognized ASDF Standard requirement type:
-    with pytest.raises(TypeError):
+    with pytest.raises(TypeError, match=r"Extension property 'asdf_standard_requirement' must be str or None"):
         ExtensionProxy(FullExtension(asdf_standard_requirement=object()))
 
     # Bad tag:
-    with pytest.raises(TypeError):
+    with pytest.raises(TypeError, match=r"Extension property 'tags' must contain str or .* values"):
         ExtensionProxy(FullExtension(tags=[object()]))
 
     # Bad legacy class names:
-    with pytest.raises(TypeError):
+    with pytest.raises(TypeError, match=r"Extension property 'legacy_class_names' must contain str values"):
         ExtensionProxy(FullExtension(legacy_class_names=[object]))
 
 
@@ -426,18 +426,18 @@ def test_extension_manager():
         manager.get_tag_definition("asdf://somewhere.org/extensions/full/tags/baz-1.0").tag_uri
         == "asdf://somewhere.org/extensions/full/tags/baz-1.0"
     )
-    with pytest.raises(KeyError):
+    with pytest.raises(KeyError, match=r"No support available for YAML tag.*"):
         manager.get_tag_definition("asdf://somewhere.org/extensions/full/tags/bar-1.0")
 
     assert manager.get_converter_for_tag("asdf://somewhere.org/extensions/full/tags/foo-1.0").delegate is converter1
     assert manager.get_converter_for_tag("asdf://somewhere.org/extensions/full/tags/baz-1.0").delegate is converter2
-    with pytest.raises(KeyError):
+    with pytest.raises(KeyError, match=r"No support available for YAML tag.*"):
         manager.get_converter_for_tag("asdf://somewhere.org/extensions/full/tags/bar-1.0")
 
     assert manager.get_converter_for_type(FooType).delegate is converter1
     assert manager.get_converter_for_type(BarType).delegate is converter1
     assert manager.get_converter_for_type(BazType).delegate is converter2
-    with pytest.raises(KeyError):
+    with pytest.raises(KeyError, match=r"\"No support available for Python type .*\""):
         manager.get_converter_for_type(object)
 
 
@@ -463,7 +463,7 @@ def test_tag_definition():
 
     assert "URI: asdf://somewhere.org/extensions/foo/tags/foo-1.0" in repr(tag_def)
 
-    with pytest.warns(AsdfDeprecationWarning):
+    with pytest.warns(AsdfDeprecationWarning, match=r"The .* property is deprecated.*"):
         assert tag_def.schema_uri == "asdf://somewhere.org/extensions/foo/schemas/foo-1.0"
 
     tag_def = TagDefinition(
@@ -480,10 +480,13 @@ def test_tag_definition():
         "asdf://somewhere.org/extensions/foo/schemas/foo-1.0",
         "asdf://somewhere.org/extensions/foo/schemas/base-1.0",
     ]
-    with pytest.warns(AsdfDeprecationWarning), pytest.raises(RuntimeError):
+    with pytest.warns(AsdfDeprecationWarning, match=r"The .* property is deprecated.*"), pytest.raises(
+        RuntimeError,
+        match=r"Cannot use .* when multiple schema URIs are present",
+    ):
         tag_def.schema_uri
 
-    with pytest.raises(ValueError):
+    with pytest.raises(ValueError, match=r"URI patterns are not permitted in TagDefinition"):
         TagDefinition("asdf://somewhere.org/extensions/foo/tags/foo-*")
 
 
@@ -590,15 +593,15 @@ def test_converter_proxy():
     assert "package: foo==1.2.3" in repr(proxy)
 
     # Should error because object() does fulfill the Converter interface:
-    with pytest.raises(TypeError):
+    with pytest.raises(TypeError, match=r"Converter must implement the .*"):
         ConverterProxy(object(), extension)
 
     # Should fail because tags must be str:
-    with pytest.raises(TypeError):
+    with pytest.raises(TypeError, match=r"Converter property .* must contain str values"):
         ConverterProxy(MinimumConverter(tags=[object()]), extension)
 
     # Should fail because types must instances of type:
-    with pytest.raises(TypeError):
+    with pytest.raises(TypeError, match=r"Converter property .* must contain str or type values"):
         ConverterProxy(MinimumConverter(types=[object()]), extension)
 
 
@@ -760,5 +763,5 @@ def test_validator():
             af.validate()
 
             af["foo"] = "bar"
-            with pytest.raises(ValidationError):
+            with pytest.raises(ValidationError, match=r"Node was doomed to fail"):
                 af.validate()

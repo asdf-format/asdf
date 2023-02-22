@@ -64,7 +64,10 @@ def test_diff_simple_inline_array():
 def test_file_not_found():
     # Try to open files that exist but are not valid asdf
     filenames = ["frames.diff", "blocks.diff"]
-    with pytest.raises(RuntimeError):
+    with pytest.raises(
+        RuntimeError,
+        match=r"Input object does not appear to be an ASDF file or a FITS with ASDF extension",
+    ):
         diff([get_test_data_path(name) for name in filenames], False)
 
 

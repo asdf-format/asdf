@@ -87,7 +87,7 @@ def test_default_version():
         assert asdf.config.DEFAULT_DEFAULT_VERSION != "1.2.0"
         config.default_version = "1.2.0"
         assert config.default_version == "1.2.0"
-        with pytest.raises(ValueError):
+        with pytest.raises(ValueError, match=r"ASDF Standard version .* is not supported by asdf==.*"):
             config.default_version = "0.1.5"
 
 
@@ -167,7 +167,7 @@ def test_resource_mappings():
         assert len(config.resource_mappings) == len(default_mappings)
 
         # But not omit both:
-        with pytest.raises(ValueError):
+        with pytest.raises(ValueError, match=r"Must specify at least one of mapping or package"):
             config.remove_resource_mapping()
 
         # Removing a mapping should be idempotent:
@@ -283,7 +283,7 @@ def test_extensions():
         assert len(config.extensions) == len(original_extensions) + 1
 
         # ... but not omit both:
-        with pytest.raises(ValueError):
+        with pytest.raises(ValueError, match=r"Must specify at least one of extension or package"):
             config.remove_extension()
 
         # Removing an extension should be idempotent:

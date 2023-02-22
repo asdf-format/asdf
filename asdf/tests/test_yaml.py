@@ -73,7 +73,7 @@ def test_arbitrary_python_object():
 
     buff = io.BytesIO()
     ff = asdf.AsdfFile(tree)
-    with pytest.raises(yaml.YAMLError):
+    with pytest.raises(yaml.YAMLError, match=r"\('cannot represent an object', .*\)"):
         ff.write_to(buff)
 
 

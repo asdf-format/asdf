@@ -47,7 +47,7 @@ def _roundtrip(tree, get_write_fd, get_read_fd, write_options=None, read_options
 def test_mode_fail(tmp_path):
     path = os.path.join(str(tmp_path), "test.asdf")
 
-    with pytest.raises(ValueError):
+    with pytest.raises(ValueError, match=r"mode must be 'r', 'w' or 'rw'"):
         generic_io.get_file(path, mode="r+")
 
 
@@ -146,7 +146,10 @@ def test_open_not_binary_fail(tmp_path, mode):
         fd.write("\n\n\n")
 
     file_mode = mode if mode != "rw" else "r+"
-    with open(path, file_mode) as fd, pytest.raises(ValueError):
+    with open(path, file_mode) as fd, pytest.raises(
+        ValueError,
+        match=r"File-like object must be opened in binary mode.",
+    ):
         generic_io.get_file(fd, mode=mode)
 
 
@@ -307,7 +310,7 @@ def test_exploded_filesystem_fail(tree, tmp_path):
     with get_write_fd() as fd:
         asdf.AsdfFile(tree).write_to(fd, all_array_storage="external")
 
-    with get_read_fd() as fd, asdf.open(fd) as ff, pytest.raises(ValueError):
+    with get_read_fd() as fd, asdf.open(fd) as ff, pytest.raises(ValueError, match=r"Resolved to relative URL"):
         helpers.assert_tree_match(tree, ff.tree)
 
 
@@ -332,7 +335,7 @@ def test_exploded_stream_write(small_tree):
 
     ff = asdf.AsdfFile(small_tree)
 
-    with pytest.raises(ValueError):
+    with pytest.raises(ValueError, match=r"Can't write external blocks, since URI of main file is unknown."):
         ff.write_to(io.BytesIO(), all_array_storage="external")
 
 
@@ -350,7 +353,7 @@ def test_exploded_stream_read(tmp_path, small_tree):
         # This should work, so we can get the tree content
         x = generic_io.InputStream(fd, "r")
         # It's only when trying to access external data that an error occurs
-        with asdf.open(x) as ff, pytest.raises(ValueError):
+        with asdf.open(x) as ff, pytest.raises(ValueError, match=r"Resolved to relative URL"):
             ff.tree["science_data"][:]
 
 
@@ -361,7 +364,10 @@ def test_unicode_open(tmp_path, small_tree):
 
     ff.write_to(path)
 
-    with open(path, encoding="utf-8") as fd, pytest.raises(ValueError), asdf.open(fd):
+    with open(path, encoding="utf-8") as fd, pytest.raises(
+        ValueError,
+        match=r"File-like object must be opened in binary mode.",
+    ), asdf.open(fd):
         pass
 
 
@@ -372,20 +378,23 @@ def test_open_stdout():
 
 
 def test_invalid_obj(tmp_path):
-    with pytest.raises(ValueError):
+    with pytest.raises(ValueError, match=r"Can't handle .* as a file for mode 'r'"):
         generic_io.get_file(42)
 
     path = os.path.join(str(tmp_path), "test.asdf")
-    with generic_io.get_file(path, "w") as fd, pytest.raises(ValueError):
+    with generic_io.get_file(path, "w") as fd, pytest.raises(
+        ValueError,
+        match=r"File is opened as 'w', but 'r' was requested",
+    ):
         generic_io.get_file(fd, "r")
 
-    with pytest.raises(ValueError):
+    with pytest.raises(ValueError, match=r"HTTP connections can not be opened for writing"):
         generic_io.get_file("http://www.google.com", "w")
 
-    with pytest.raises(TypeError):
+    with pytest.raises(TypeError, match=r"io.StringIO objects are not supported.  Use io.BytesIO instead."):
         generic_io.get_file(io.StringIO())
 
-    with open(path, "rb") as fd, pytest.raises(ValueError):
+    with open(path, "rb") as fd, pytest.raises(ValueError, match=r"File is opened as 'rb', but 'w' was requested"):
         generic_io.get_file(fd, "w")
 
 
@@ -407,7 +416,7 @@ def test_nonseekable_file(tmp_path):
 
     with FileWrapper(os.path.join(str(tmp_path), "test.asdf"), "wb") as fd:
         assert isinstance(generic_io.get_file(fd, "w"), generic_io.OutputStream)
-        with pytest.raises(ValueError):
+        with pytest.raises(ValueError, match=r"File .* could not be opened in 'rw' mode"):
             generic_io.get_file(fd, "rw")
 
     with FileWrapper(os.path.join(str(tmp_path), "test.asdf"), "rb") as fd:
@@ -476,10 +485,10 @@ def test_arbitrary_file_object():
     assert isinstance(generic_io.get_file(All(buff), "r"), generic_io.MemoryIO)
     assert isinstance(generic_io.get_file(All(buff), "w"), generic_io.MemoryIO)
 
-    with pytest.raises(ValueError):
+    with pytest.raises(ValueError, match=r"Can't handle .* as a file for mode 'w'"):
         generic_io.get_file(Reader(buff), "w")
 
-    with pytest.raises(ValueError):
+    with pytest.raises(ValueError, match=r"Can't handle .* as a file for mode 'r'"):
         generic_io.get_file(Writer(buff), "r")
 
 
@@ -512,14 +521,14 @@ def test_truncated_reader():
 
     # Simple cases where the delimiter is not found at all
     tr = generic_io._TruncatedReader(fd, b"x", 1)
-    with pytest.raises(exceptions.DelimiterNotFoundError):
+    with pytest.raises(exceptions.DelimiterNotFoundError, match=r"b'x' not found"):
         tr.read()
 
     fd.seek(0)
     tr = generic_io._TruncatedReader(fd, b"x", 1)
     assert tr.read(100) == content[:100]
     assert tr.read(1) == content[100:]
-    with pytest.raises(exceptions.DelimiterNotFoundError):
+    with pytest.raises(exceptions.DelimiterNotFoundError, match=r"b'x' not found"):
         tr.read()
 
     fd.seek(0)

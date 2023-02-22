@@ -277,7 +277,7 @@ invalid_software: !core/software-1.0.0
 
     for open_method in [asdf.open, asdf.fits_embed.AsdfInFits.open]:
         get_config().validate_on_read = True
-        with pytest.raises(ValidationError), open_method(tmpfile):
+        with pytest.raises(ValidationError, match=r".* is not of type .*"), open_method(tmpfile):
             pass
 
         get_config().validate_on_read = False
@@ -292,7 +292,10 @@ def test_bad_fits_input(tmp_path):
     with open(path, "wb") as f:
         f.write(asdf.constants.FITS_MAGIC)
 
-    with pytest.raises(ValueError), asdf_open(path):
+    with pytest.raises(
+        ValueError,
+        match=r"Input object does not appear to be an ASDF file or a FITS with ASDF extension",
+    ), asdf_open(path):
         pass
 
 
@@ -356,7 +359,10 @@ def test_extension_check():
     with assert_no_warnings(), asdf.open(testfile, ignore_missing_extensions=True):
         pass
 
-    with pytest.raises(RuntimeError), asdf.open(testfile, strict_extension_check=True):
+    with pytest.raises(
+        RuntimeError,
+        match=r"File.* was created with extension class .*, which is not currently installed",
+    ), asdf.open(testfile, strict_extension_check=True):
         pass
 
 

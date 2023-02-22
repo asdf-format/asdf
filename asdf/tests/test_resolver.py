@@ -66,10 +66,10 @@ def test_resolver_non_prefix():
 
 
 def test_resolver_invalid_mapping():
-    with pytest.raises(ValueError):
+    with pytest.raises(ValueError, match=r"Invalid mapping .*"):
         Resolver([("foo",)], "test")
 
-    with pytest.raises(ValueError):
+    with pytest.raises(ValueError, match=r"Invalid mapping .*"):
         Resolver([12], "test")
 
 

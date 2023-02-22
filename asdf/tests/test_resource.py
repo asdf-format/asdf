@@ -68,7 +68,7 @@ def test_proxy_maybe_wrap():
     assert proxy.delegate is mapping
     assert ResourceMappingProxy.maybe_wrap(proxy) is proxy
 
-    with pytest.raises(TypeError):
+    with pytest.raises(TypeError, match=r"Resource mapping must implement the Mapping interface"):
         ResourceMappingProxy.maybe_wrap([])
 
 
