@@ -9,7 +9,7 @@ from asdf import util, versioning
 from asdf.exceptions import AsdfConversionWarning, AsdfDeprecationWarning, AsdfWarning
 from asdf.extension import _legacy
 
-from . import helpers
+from . import _helpers as helpers
 from .objects import CustomExtension, CustomTestType
 
 TEST_DATA_PATH = str(helpers.get_test_data_path(""))

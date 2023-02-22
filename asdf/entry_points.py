@@ -87,7 +87,6 @@ def _list_entry_points(group, proxy_class):
                             "https://asdf.readthedocs.io/en/stable/asdf/extending/extensions.html",
                             AsdfDeprecationWarning,
                         )
-
                 elements = entry_point.load()()
 
         except Exception as e:  # noqa: BLE001

@@ -1,5 +1,5 @@
 from asdf.tags.core.external_reference import ExternalArrayReference
-from asdf.tests import helpers
+from asdf.tests import _helpers as helpers
 
 
 def test_roundtrip_external_array(tmpdir):

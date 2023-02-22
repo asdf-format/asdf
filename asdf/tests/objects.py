@@ -3,7 +3,7 @@ import pytest
 from asdf import CustomType, util
 from asdf.exceptions import AsdfDeprecationWarning
 
-from .helpers import get_test_data_path
+from ._helpers import get_test_data_path
 
 with pytest.warns(AsdfDeprecationWarning, match=".*subclasses the deprecated CustomType.*"):
 

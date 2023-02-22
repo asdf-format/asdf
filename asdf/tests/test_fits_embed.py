@@ -18,7 +18,7 @@ with pytest.warns(AsdfDeprecationWarning, match="AsdfInFits has been deprecated.
         del sys.modules["asdf.fits_embed"]
     import asdf.fits_embed
 
-from .helpers import assert_no_warnings, assert_tree_match, get_test_data_path, yaml_to_asdf
+from ._helpers import assert_no_warnings, assert_tree_match, get_test_data_path, yaml_to_asdf
 
 TEST_DTYPES = ["<f8", ">f8", "<u4", ">u4", "<i4", ">i4"]
 

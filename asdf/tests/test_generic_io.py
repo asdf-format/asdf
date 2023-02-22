@@ -12,7 +12,8 @@ import asdf
 from asdf import exceptions, generic_io, util
 from asdf.config import config_context
 
-from . import create_large_tree, create_small_tree, helpers
+from . import _helpers as helpers
+from . import create_large_tree, create_small_tree
 
 
 @pytest.fixture(params=[create_small_tree, create_large_tree])

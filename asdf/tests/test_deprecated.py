@@ -9,7 +9,7 @@ import asdf.testing.helpers
 from asdf import entry_points
 from asdf._types import CustomType
 from asdf.exceptions import AsdfDeprecationWarning
-from asdf.tests.helpers import assert_extension_correctness
+from asdf.tests._helpers import assert_extension_correctness
 from asdf.tests.objects import CustomExtension
 
 from .test_entry_points import _monkeypatch_entry_points, mock_entry_points  # noqa: F401

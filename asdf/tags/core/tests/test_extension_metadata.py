@@ -1,5 +1,5 @@
 import asdf
-from asdf.tests import helpers
+from asdf.tests import _helpers as helpers
 
 
 def test_extra_properties():
