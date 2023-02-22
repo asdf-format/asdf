@@ -474,7 +474,8 @@ def test_resolver_deprecations():
 
 
 def test_get_default_resolver():
-    resolver = extension.get_default_resolver()
+    with pytest.warns(AsdfDeprecationWarning, match="get_default_resolver is deprecated"):
+        resolver = extension.get_default_resolver()
 
     result = resolver("tag:stsci.edu:asdf/core/ndarray-1.0.0")
 

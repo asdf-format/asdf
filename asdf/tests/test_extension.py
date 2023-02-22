@@ -604,9 +604,12 @@ def test_converter_proxy():
 
 def test_get_cached_asdf_extension_list():
     extension = LegacyExtension()
-    extension_list = get_cached_asdf_extension_list([extension])
-    assert get_cached_asdf_extension_list([extension]) is extension_list
-    assert get_cached_asdf_extension_list([LegacyExtension()]) is not extension_list
+    with pytest.warns(AsdfDeprecationWarning, match="get_cached_asdf_extension_list is deprecated"):
+        extension_list = get_cached_asdf_extension_list([extension])
+    with pytest.warns(AsdfDeprecationWarning, match="get_cached_asdf_extension_list is deprecated"):
+        assert get_cached_asdf_extension_list([extension]) is extension_list
+    with pytest.warns(AsdfDeprecationWarning, match="get_cached_asdf_extension_list is deprecated"):
+        assert get_cached_asdf_extension_list([LegacyExtension()]) is not extension_list
 
 
 def test_manifest_extension():

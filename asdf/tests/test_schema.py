@@ -136,7 +136,8 @@ required: [foobar]
 
 
 def test_load_schema_with_file_url(tmp_path):
-    schema_def = """
+    with pytest.warns(AsdfDeprecationWarning, match="get_default_resolver is deprecated"):
+        schema_def = """
 %YAML 1.1
 %TAG !asdf! tag:stsci.edu:asdf/
 ---
@@ -151,9 +152,9 @@ properties:
 
 required: [foobar]
 ...
-    """.format(
-        extension.get_default_resolver()("tag:stsci.edu:asdf/core/ndarray-1.0.0"),
-    )
+        """.format(
+            extension.get_default_resolver()("tag:stsci.edu:asdf/core/ndarray-1.0.0"),
+        )
     schema_path = tmp_path / "nugatory.yaml"
     schema_path.write_bytes(schema_def.encode())
 
@@ -637,9 +638,11 @@ def test_self_reference_resolution():
 
 def test_schema_resolved_via_entry_points():
     """Test that entry points mappings to core schema works"""
-    r = extension.get_default_resolver()
+    with pytest.warns(AsdfDeprecationWarning, match="get_default_resolver is deprecated"):
+        r = extension.get_default_resolver()
     tag = types.format_tag("stsci.edu", "asdf", "1.0.0", "fits/fits")
-    url = extension.default_extensions.extension_list.tag_mapping(tag)
+    with pytest.warns(AsdfDeprecationWarning, match="default_extensions is deprecated"):
+        url = extension.default_extensions.extension_list.tag_mapping(tag)
 
     s = schema.load_schema(url, resolver=r, resolve_references=True)
     assert tag in repr(s)
