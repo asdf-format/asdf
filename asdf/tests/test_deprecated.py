@@ -112,3 +112,10 @@ def test_deprecated_entry_point(mock_entry_points):  # noqa: F811
     mock_entry_points.append(("asdf_extensions", "legacy", "asdf.tests.test_entry_points:LegacyExtension"))
     with pytest.warns(AsdfDeprecationWarning, match=".* uses the deprecated entry point asdf_extensions"):
         entry_points.get_extensions()
+
+
+def test_asdf_tests_helpers_deprecation():
+    with pytest.warns(AsdfDeprecationWarning, match="asdf.tests.helpers is deprecated"):
+        if "asdf.tests.helpers" in sys.modules:
+            del sys.modules["asdf.tests.helpers"]
+        import asdf.tests.helpers  # noqa: F401
