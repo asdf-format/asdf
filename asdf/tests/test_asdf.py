@@ -8,7 +8,8 @@ from asdf import config_context, get_config
 from asdf.asdf import AsdfFile, SerializationContext, open_asdf
 from asdf.entry_points import get_extensions
 from asdf.exceptions import AsdfWarning
-from asdf.extension import AsdfExtensionList, ExtensionManager, ExtensionProxy
+from asdf.extension import ExtensionManager, ExtensionProxy
+from asdf.extension._legacy import AsdfExtensionList
 from asdf.tests.helpers import assert_no_warnings, assert_tree_match, yaml_to_asdf
 from asdf.versioning import AsdfVersion
 

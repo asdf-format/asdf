@@ -16,8 +16,7 @@ from . import block, constants, generic_io, reference, schema, treeutil, util, v
 from ._helpers import validate_version
 from .config import config_context, get_config
 from .exceptions import AsdfConversionWarning, AsdfDeprecationWarning, AsdfWarning
-from .extension import AsdfExtension, AsdfExtensionList, Extension, ExtensionProxy, get_cached_extension_manager
-from .extension._legacy import get_cached_asdf_extension_list
+from .extension import Extension, ExtensionProxy, _legacy, get_cached_extension_manager
 from .search import AsdfSearchResult
 from .tags.core import AsdfObject, ExtensionMetadata, HistoryEntry, Software
 from .util import NotSet
@@ -276,7 +275,9 @@ class AsdfFile:
     @property
     def _extension_list(self):
         if self._extension_list_ is None:
-            self._extension_list_ = get_cached_asdf_extension_list(self._user_extensions + self._plugin_extensions)
+            self._extension_list_ = _legacy.get_cached_asdf_extension_list(
+                self._user_extensions + self._plugin_extensions,
+            )
         return self._extension_list_
 
     def __enter__(self):
@@ -379,9 +380,9 @@ class AsdfFile:
         """
         if extensions is None:
             extensions = []
-        elif isinstance(extensions, (AsdfExtension, Extension, ExtensionProxy)):
+        elif isinstance(extensions, (_legacy.AsdfExtension, Extension, ExtensionProxy)):
             extensions = [extensions]
-        elif isinstance(extensions, AsdfExtensionList):
+        elif isinstance(extensions, _legacy.AsdfExtensionList):
             extensions = extensions.extensions
 
         if not isinstance(extensions, list):

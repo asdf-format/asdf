@@ -5,8 +5,9 @@ import pytest
 
 import asdf
 from asdf import _types as types
-from asdf import extension, util, versioning
+from asdf import util, versioning
 from asdf.exceptions import AsdfConversionWarning, AsdfDeprecationWarning, AsdfWarning
+from asdf.extension import _legacy
 
 from . import helpers
 from .objects import CustomExtension, CustomTestType
@@ -335,7 +336,7 @@ def test_longest_match():
         def url_mapping(self):
             return [("http://stsci.edu/schemas/asdf/core/", "FOOBAR/{url_suffix}")]
 
-    extension_list = extension.AsdfExtensionList([extension.BuiltinExtension(), FancyComplexExtension()])
+    extension_list = _legacy.AsdfExtensionList([_legacy.BuiltinExtension(), FancyComplexExtension()])
 
     assert extension_list.url_mapping("http://stsci.edu/schemas/asdf/core/asdf-1.0.0") == "FOOBAR/asdf-1.0.0"
     assert (

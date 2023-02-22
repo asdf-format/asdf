@@ -69,6 +69,17 @@ def _list_entry_points(group, proxy_class):
                         category=AsdfDeprecationWarning,
                         message="asdf.types is deprecated",
                     )
+                    warnings.filterwarnings(
+                        "ignore",
+                        category=AsdfDeprecationWarning,
+                        message="AsdfExtension is deprecated",
+                    )
+                    warnings.filterwarnings(
+                        "ignore",
+                        category=AsdfDeprecationWarning,
+                        message="BuiltinExtension is deprecated",
+                    )
+
                 elements = entry_point.load()()
 
         except Exception as e:  # noqa: BLE001
