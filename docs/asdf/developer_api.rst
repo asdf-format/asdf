@@ -27,4 +27,6 @@ to create their own custom ASDF types and extensions.
     :skip: ExternalArrayReference
     :skip: IntegerType
 
+.. automodapi:: asdf.testing.helpers
+
 .. automodapi:: asdf.tests.helpers
