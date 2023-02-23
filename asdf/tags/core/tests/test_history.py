@@ -10,8 +10,8 @@ from asdf import _types as types
 from asdf import util
 from asdf.exceptions import AsdfDeprecationWarning, AsdfWarning
 from asdf.tags.core import HistoryEntry
-from asdf.tests import helpers
-from asdf.tests.helpers import assert_no_warnings, yaml_to_asdf
+from asdf.tests import _helpers as helpers
+from asdf.tests._helpers import assert_no_warnings, yaml_to_asdf
 
 SCHEMA_PATH = os.path.join(os.path.dirname(helpers.__file__), "data")
 

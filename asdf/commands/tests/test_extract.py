@@ -14,7 +14,7 @@ with pytest.warns(AsdfDeprecationWarning, match="AsdfInFits has been deprecated.
         del sys.modules["asdf.fits_embed"]
     import asdf.fits_embed
 
-from asdf.tests.helpers import assert_tree_match
+from asdf.tests._helpers import assert_tree_match
 
 
 def test_extract(tmpdir):

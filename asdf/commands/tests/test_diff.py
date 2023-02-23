@@ -4,7 +4,7 @@ from functools import partial
 import pytest
 
 from asdf.commands import diff, main
-from asdf.tests import helpers
+from asdf.tests import _helpers as helpers
 
 from . import data as test_data
 

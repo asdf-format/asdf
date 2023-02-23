@@ -9,7 +9,7 @@ import asdf
 from asdf import reference, util
 from asdf.tags.core import ndarray
 
-from .helpers import assert_tree_match
+from ._helpers import assert_tree_match
 
 
 def test_external_reference(tmp_path):
