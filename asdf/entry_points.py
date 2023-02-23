@@ -23,7 +23,6 @@ def get_resource_mappings():
 def get_extensions():
     extensions = _list_entry_points(EXTENSIONS_GROUP, ExtensionProxy)
     legacy_extensions = _list_entry_points(LEGACY_EXTENSIONS_GROUP, ExtensionProxy)
-
     return extensions + legacy_extensions
 
 
@@ -55,30 +54,39 @@ def _list_entry_points(group, proxy_class):
         # Catch errors loading entry points and warn instead of raising
         try:
             with warnings.catch_warnings():
-                if entry_point.name == "astropy" and entry_point.group == LEGACY_EXTENSIONS_GROUP:
-                    # Filter out the legacy `CustomType` deprecation warnings from the deprecated astropy.io.misc.asdf
-                    # Testing will turn these into errors
-                    # Most of the astropy.io.misc.asdf deprecation warnings fall under this category
-                    warnings.filterwarnings(
-                        "ignore",
-                        category=AsdfDeprecationWarning,
-                        message=r".*from astropy.io.misc.asdf.* subclasses the deprecated CustomType .*",
-                    )
-                    warnings.filterwarnings(
-                        "ignore",
-                        category=AsdfDeprecationWarning,
-                        message="asdf.types is deprecated",
-                    )
-                    warnings.filterwarnings(
-                        "ignore",
-                        category=AsdfDeprecationWarning,
-                        message="AsdfExtension is deprecated",
-                    )
-                    warnings.filterwarnings(
-                        "ignore",
-                        category=AsdfDeprecationWarning,
-                        message="BuiltinExtension is deprecated",
-                    )
+                if entry_point.group == LEGACY_EXTENSIONS_GROUP:
+                    if entry_point.name in ("astropy", "astropy-asdf"):
+                        # Filter out the legacy `CustomType` deprecation warnings from the
+                        # deprecated astropy.io.misc.asdf
+                        # Testing will turn these into errors
+                        # Most of the astropy.io.misc.asdf deprecation warnings fall under this category
+                        warnings.filterwarnings(
+                            "ignore",
+                            category=AsdfDeprecationWarning,
+                            message=r".*from astropy.io.misc.asdf.* subclasses the deprecated CustomType .*",
+                        )
+                        warnings.filterwarnings(
+                            "ignore",
+                            category=AsdfDeprecationWarning,
+                            message="asdf.types is deprecated",
+                        )
+                        warnings.filterwarnings(
+                            "ignore",
+                            category=AsdfDeprecationWarning,
+                            message="AsdfExtension is deprecated",
+                        )
+                        warnings.filterwarnings(
+                            "ignore",
+                            category=AsdfDeprecationWarning,
+                            message="BuiltinExtension is deprecated",
+                        )
+                    elif entry_point.name != "builtin":
+                        warnings.warn(
+                            f"{package_name} uses the deprecated entry point {LEGACY_EXTENSIONS_GROUP}. "
+                            f"Please use the new extension api and entry point {EXTENSIONS_GROUP}: "
+                            "https://asdf.readthedocs.io/en/stable/asdf/extending/extensions.html",
+                            AsdfDeprecationWarning,
+                        )
 
                 elements = entry_point.load()()
 
