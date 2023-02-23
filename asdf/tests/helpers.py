@@ -1,4 +1,3 @@
-import sys
 import warnings
 
 from asdf.exceptions import AsdfDeprecationWarning
@@ -10,6 +9,10 @@ warnings.warn(
     AsdfDeprecationWarning,
 )
 
-# overwrite the hidden module __file__ so pytest doesn't throw an ImportPathMismatchError
-_helpers.__file__ = __file__
-sys.modules[__name__] = _helpers
+
+def __getattr__(name):
+    warnings.warn(
+        "asdf.tests.helpers is deprecated. Please see asdf.testing.helpers",
+        AsdfDeprecationWarning,
+    )
+    return getattr(_helpers, name)

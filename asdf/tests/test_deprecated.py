@@ -118,4 +118,9 @@ def test_asdf_tests_helpers_deprecation():
     with pytest.warns(AsdfDeprecationWarning, match="asdf.tests.helpers is deprecated"):
         if "asdf.tests.helpers" in sys.modules:
             del sys.modules["asdf.tests.helpers"]
-        import asdf.tests.helpers  # noqa: F401
+        import asdf.tests.helpers
+    from asdf.tests import _helpers
+
+    for attr in _helpers.__all__:
+        with pytest.warns(AsdfDeprecationWarning, match="asdf.tests.helpers is deprecated"):
+            getattr(asdf.tests.helpers, attr)
