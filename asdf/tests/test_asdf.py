@@ -1,5 +1,4 @@
 import os
-import warnings
 
 import fsspec
 import pytest
@@ -19,9 +18,7 @@ def test_no_warnings_get_extensions():
     Smoke test for changes to the `importlib.metadata` entry points API.
     """
 
-    with warnings.catch_warnings():
-        warnings.simplefilter("error")
-
+    with assert_no_warnings():
         get_extensions()
 
 

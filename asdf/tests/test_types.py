@@ -402,6 +402,8 @@ undefined_data:
     assert missing[3][1] == 3.14j
 
     # There are two undefined tags, so we expect two warnings
+    # filter out only AsdfConversionWarning
+    warning = [w for w in warning if w.category == AsdfConversionWarning]
     assert len(warning) == 2
     for i, tag in enumerate(["also_undefined-1.3.0", "undefined_tag-1.0.0"]):
         assert (

@@ -8,7 +8,7 @@ import pytest
 
 from asdf import entry_points
 from asdf._version import version as asdf_package_version
-from asdf.exceptions import AsdfWarning
+from asdf.exceptions import AsdfDeprecationWarning, AsdfWarning
 from asdf.extension import ExtensionProxy
 from asdf.resource import ResourceMappingProxy
 
@@ -23,7 +23,7 @@ def _monkeypatch_entry_points(monkeypatch, mock_entry_points):
     def _entry_points(*, group):
         for candidate_group, name, func_name in mock_entry_points:
             if candidate_group == group:
-                point = metadata.EntryPoint(name=name, group="asdf.tests.test_entry_points", value=func_name)
+                point = metadata.EntryPoint(name=name, group=group, value=func_name)
                 vars(point).update(dist=metadata.distribution("asdf"))
 
                 yield point
@@ -158,7 +158,8 @@ def test_get_extensions(mock_entry_points):
 
     mock_entry_points.clear()
     mock_entry_points.append(("asdf_extensions", "legacy", "asdf.tests.test_entry_points:LegacyExtension"))
-    extensions = entry_points.get_extensions()
+    with pytest.warns(AsdfDeprecationWarning, match=".* uses the deprecated entry point asdf_extensions"):
+        extensions = entry_points.get_extensions()
     assert len(extensions) == 1
     for e in extensions:
         assert isinstance(e, ExtensionProxy)
