@@ -33,6 +33,7 @@ The ASDF Standard is at v1.6.0
 - move asdf.types.format_tag to asdf.testing.helpers.format_tag [#1433]
 - Deprecate AsdfExtenion, AsdfExtensionList, BuiltinExtension [#1429]
 - Add AsdfDeprecationWarning to asdf_extensions entry point [#1361]
+- Deprecate asdf.tests.helpers [#1440]
 
 2.14.3 (2022-12-15)
 -------------------
