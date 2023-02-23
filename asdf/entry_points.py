@@ -80,6 +80,11 @@ def _list_entry_points(group, proxy_class):
                             category=AsdfDeprecationWarning,
                             message="BuiltinExtension is deprecated",
                         )
+                        warnings.filterwarnings(
+                            "ignore",
+                            category=AsdfDeprecationWarning,
+                            message="asdf.tests.helpers is deprecated",
+                        )
                     elif entry_point.name != "builtin":
                         warnings.warn(
                             f"{package_name} uses the deprecated entry point {LEGACY_EXTENSIONS_GROUP}. "
@@ -87,7 +92,6 @@ def _list_entry_points(group, proxy_class):
                             "https://asdf.readthedocs.io/en/stable/asdf/extending/extensions.html",
                             AsdfDeprecationWarning,
                         )
-
                 elements = entry_point.load()()
 
         except Exception as e:  # noqa: BLE001

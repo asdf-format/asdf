@@ -18,7 +18,7 @@ from asdf.extension import (
     get_cached_extension_manager,
 )
 from asdf.extension._legacy import AsdfExtension, BuiltinExtension
-from asdf.tests.helpers import assert_extension_correctness
+from asdf.tests._helpers import assert_extension_correctness
 
 
 def test_builtin_extension():

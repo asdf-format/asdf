@@ -8,7 +8,7 @@ import pytest
 import asdf
 from asdf import compression, config_context, generic_io
 from asdf.extension import Compressor, Extension
-from asdf.tests import helpers
+from asdf.tests import _helpers as helpers
 
 RNG = np.random.default_rng(0)
 

@@ -10,7 +10,7 @@ import asdf
 from asdf import tagged, treeutil, yamlutil
 from asdf.exceptions import AsdfWarning
 
-from . import helpers
+from . import _helpers as helpers
 
 
 def test_ordered_dict(tmp_path):
