@@ -12,7 +12,7 @@ from asdf import _resolver as resolver
 from asdf import _types as types
 from asdf import config_context, constants, extension, get_config, schema, tagged, util, yamlutil
 from asdf.exceptions import AsdfConversionWarning, AsdfDeprecationWarning, AsdfWarning
-from asdf.tests import helpers
+from asdf.tests import _helpers as helpers
 from asdf.tests.objects import CustomExtension
 
 with pytest.warns(AsdfDeprecationWarning, match=".*subclasses the deprecated CustomType.*"):

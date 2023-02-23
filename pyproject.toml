@@ -195,7 +195,7 @@ extend-exclude = ["asdf/extern/*", "docs/*"]
 
 [tool.ruff.per-file-ignores]
 "test_*.py" = ["S101"]
-"asdf/tests/helpers.py" = ["S101"]
+"asdf/tests/_helpers.py" = ["S101"]
 "compatibility_tests/common.py" = ["S101"]
 
 [tool.flynt]
