@@ -20,5 +20,6 @@ __all__ = _type_index.__all__  # noqa: PLE0605
 def __getattr__(name):
     attr = getattr(_type_index, name)
     _warn()
-    attr.__module__ = __name__
+    if hasattr(attr, "__module__"):
+        attr.__module__ = __name__
     return attr

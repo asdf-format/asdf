@@ -19,7 +19,8 @@ _warn()
 def __getattr__(name):
     attr = getattr(_resolver, name)
     _warn()
-    attr.__module__ = __name__
+    if hasattr(attr, "__module__"):
+        attr.__module__ = __name__
     return attr
 
 
