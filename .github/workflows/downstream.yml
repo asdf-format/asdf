@@ -55,6 +55,7 @@ jobs:
         - linux: gwcs
         - linux: jwst
         - linux: stdatamodels
+        - linux: stpipe
         - linux: roman_datamodels
 
   third-party:
