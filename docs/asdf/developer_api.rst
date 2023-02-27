@@ -28,6 +28,5 @@ to create their own custom ASDF types and extensions.
     :skip: IntegerType
 
 .. automodapi:: asdf.testing.helpers
-    :include: format_tag
 
 .. automodapi:: asdf.tests.helpers

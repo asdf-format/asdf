@@ -20,6 +20,6 @@ __all__ = _types.__all__  # noqa: PLE0605
 def __getattr__(name):
     attr = getattr(_types, name)
     _warn()
-    if hasattr(attr, "__module__"):
+    if hasattr(attr, "__module__") and name != "format_tag":
         attr.__module__ = __name__
     return attr
