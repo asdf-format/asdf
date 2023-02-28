@@ -46,9 +46,8 @@ tests = [
   "gwcs>=0.18.3",
   "lz4>=0.10",
   "psutil",
-  "pytest>=6",
+  "pytest>=7",
   "pytest-doctestplus",
-  "pytest-openfiles",
   "pytest-remotedata",
 ]
 [project.urls]
@@ -109,7 +108,6 @@ minversion = 4.6
 norecursedirs = ['build', 'docs/_build', 'docs/sphinxext']
 doctest_plus = 'enabled'
 remote_data_strict = true
-open_files_ignore = ['test.fits', 'asdf.fits']
 # The asdf.asdftypes module emits a warning on import,
 # which pytest trips over during collection:
 filterwarnings = [

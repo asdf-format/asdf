@@ -380,7 +380,7 @@ def test_verify_with_astropy(tmp_path, dtype):
 def test_dangling_file_handle(tmp_path):
     """
     This tests the bug fix introduced in #533. Without the bug fix, this test
-    will fail when running the test suite with pytest-openfiles.
+    will fail with a ResourceWarning about unclosed file handles with pytest >= 7.
     """
     import gc
 
