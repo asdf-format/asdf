@@ -49,8 +49,9 @@ def _manage_node(node_or_path):
     if isinstance(node_or_path, (str, pathlib.Path)):
         with open_asdf(node_or_path) as af:
             yield af.tree
+
+    elif isinstance(node_or_path, AsdfFile):
+        yield node_or_path.tree
+
     else:
-        if isinstance(node_or_path, AsdfFile):
-            yield node_or_path.tree
-        else:
-            yield node_or_path
+        yield node_or_path

@@ -29,11 +29,12 @@ class TagDefinition:
 
         if schema_uris is None:
             self._schema_uris = []
+
+        elif isinstance(schema_uris, list):
+            self._schema_uris = schema_uris
+
         else:
-            if isinstance(schema_uris, list):
-                self._schema_uris = schema_uris
-            else:
-                self._schema_uris = [schema_uris]
+            self._schema_uris = [schema_uris]
 
         self._title = title
         self._description = description
