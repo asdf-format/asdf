@@ -300,10 +300,9 @@ def walk_and_modify(top, callback, ignore_implicit_conversion=False, postorder=T
                 # need to fill in the real value later.
                 pending_items[key] = value
                 result[key] = PendingValue
-            else:
-                value = _recurse(value, json_id)
-                if value is not RemoveNode:
-                    result[key] = value
+
+            elif (val := _recurse(value, json_id)) is not RemoveNode:
+                result[key] = val
 
         yield result
 
@@ -311,9 +310,8 @@ def walk_and_modify(top, callback, ignore_implicit_conversion=False, postorder=T
             # Now that we've yielded, the pending children should
             # be available.
             for key, value in pending_items.items():
-                value = _recurse(value, json_id)
-                if value is not RemoveNode:
-                    result[key] = value
+                if (val := _recurse(value, json_id)) is not RemoveNode:
+                    result[key] = val
                 else:
                     # The callback may have decided to delete
                     # this node after all.

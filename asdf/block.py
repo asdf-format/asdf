@@ -360,10 +360,10 @@ class BlockManager:
                 raise ValueError(msg)
             subfd = self.get_external_uri(uri, i)
             asdffile = asdf.AsdfFile()
-            block = copy.copy(block)
-            block._array_storage = "internal"
-            asdffile._blocks.add(block)
-            block._used = True
+            blk = copy.copy(block)
+            blk._array_storage = "internal"
+            asdffile._blocks.add(blk)
+            blk._used = True
             asdffile.write_to(subfd, pad_blocks=pad_blocks)
 
     def write_block_index(self, fd, ctx):
