@@ -743,7 +743,7 @@ def test_validator():
         properties:
           foo:
             fail: false
-    """  # noqa: S105
+    """
 
     with config_context() as config:
         config.add_extension(extension)
