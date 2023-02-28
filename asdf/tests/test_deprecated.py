@@ -36,8 +36,19 @@ def test_resolver_module_deprecation():
         if "asdf.resolver" in sys.modules:
             del sys.modules["asdf.resolver"]
         import asdf.resolver
+    # resolver does not define an __all__ so we will define one here
+    # for testing purposes
+    resolver_all = [
+        "Resolver",
+        "ResolverChain",
+        "DEFAULT_URL_MAPPING",
+        "DEFAULT_TAG_TO_URL_MAPPING",
+        "default_url_mapping",
+        "default_tag_to_url_mapping",
+        "default_resolver",
+    ]
     for attr in dir(asdf.resolver):
-        if attr in ("warnings", "AsdfDeprecationWarning") or attr[0] == "_":
+        if attr not in resolver_all:
             continue
         with pytest.warns(AsdfDeprecationWarning, match="^asdf.resolver is deprecated.*$"):
             getattr(asdf.resolver, attr)
