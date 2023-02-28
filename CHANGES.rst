@@ -35,6 +35,8 @@ The ASDF Standard is at v1.6.0
 - Add AsdfDeprecationWarning to asdf_extensions entry point [#1361]
 - Deprecate asdf.tests.helpers [#1440]
 - respect umask when determining file permissions for written files [#1451]
+- Remove the retired ``pytest-openfiles`` dependency and replace it with ``pytest>=7``
+  instead. [#1454]
 
 2.14.3 (2022-12-15)
 -------------------
