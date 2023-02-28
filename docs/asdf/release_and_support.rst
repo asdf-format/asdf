@@ -11,6 +11,17 @@ how long we intend to support each release. Moreover, it also describes our poli
 for how long we plan to support versions of CPython and NumPy. Note that this is
 a living document, and may be updated at any time.
 
+.. _backwards_compatibility:
+
+Backwards Compatibility and Semantic Versioning
+===============================================
+
+ASDF will maintain a backwards compatible API for all minor and patch versions.
+Any breaking API changes will only be included in major releases (where the
+major version number will be increased). We follow
+`Semantic Versioning <https://semver.org/>`_ with one exception (LTS versions,
+described below).
+
 .. _release_cycle:
 
 Release Cycle
