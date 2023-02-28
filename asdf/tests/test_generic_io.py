@@ -1,6 +1,7 @@
 import io
 import os
 import re
+import stat
 import sys
 import urllib.request as urllib_request
 
@@ -821,3 +822,19 @@ def test_fsspec_http(httpserver):
         gf = generic_io.get_file(f)
         r = gf.read(len(ref))
         assert r == ref, (r, ref)
+
+
+@pytest.mark.skipif(
+    sys.platform.startswith("win"),
+    reason="Cannot test write file permissions on windows",
+)
+@pytest.mark.parametrize("umask", range(512))
+def test_write_file_permissions(tmp_path, umask):
+    previous_umask = os.umask(umask)
+    fn = tmp_path / "foo"
+    with generic_io.get_file(fn, mode="w"):
+        pass
+    permissions = os.stat(fn)[stat.ST_MODE] & 0o777
+    os.umask(previous_umask)
+    target_permissions = generic_io._FILE_PERMISSIONS_NO_EXECUTE & ~umask
+    assert permissions == target_permissions
