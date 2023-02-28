@@ -35,7 +35,23 @@ def test_resolver_module_deprecation():
         # sys.module and __file__ changes in asdf.resolver
         if "asdf.resolver" in sys.modules:
             del sys.modules["asdf.resolver"]
-        import asdf.resolver  # noqa: F401
+        import asdf.resolver
+    # resolver does not define an __all__ so we will define one here
+    # for testing purposes
+    resolver_all = [
+        "Resolver",
+        "ResolverChain",
+        "DEFAULT_URL_MAPPING",
+        "DEFAULT_TAG_TO_URL_MAPPING",
+        "default_url_mapping",
+        "default_tag_to_url_mapping",
+        "default_resolver",
+    ]
+    for attr in dir(asdf.resolver):
+        if attr not in resolver_all:
+            continue
+        with pytest.warns(AsdfDeprecationWarning, match="^asdf.resolver is deprecated.*$"):
+            getattr(asdf.resolver, attr)
 
 
 def test_assert_extension_correctness_deprecation():
@@ -50,7 +66,10 @@ def test_type_index_module_deprecation():
         # sys.module and __file__ changes in asdf.type_index
         if "asdf.type_index" in sys.modules:
             del sys.modules["asdf.type_index"]
-        import asdf.type_index  # noqa: F401
+        import asdf.type_index
+    for attr in asdf.type_index.__all__:
+        with pytest.warns(AsdfDeprecationWarning, match="^asdf.type_index is deprecated.*$"):
+            getattr(asdf.type_index, attr)
 
 
 @pytest.mark.parametrize("attr", ["url_mapping", "tag_mapping", "resolver", "extension_list", "type_index"])
@@ -73,7 +92,10 @@ def test_types_module_deprecation():
     with pytest.warns(AsdfDeprecationWarning, match="^asdf.types is deprecated.*$"):
         if "asdf.types" in sys.modules:
             del sys.modules["asdf.types"]
-        import asdf.types  # noqa: F401
+        import asdf.types
+    for attr in asdf.types.__all__:
+        with pytest.warns(AsdfDeprecationWarning, match="^asdf.types is deprecated.*$"):
+            getattr(asdf.types, attr)
 
 
 def test_default_extensions_deprecation():

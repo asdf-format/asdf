@@ -219,6 +219,7 @@ class AsdfSchemaExampleItem(pytest.Item):
 
     def runtest(self):
         from asdf import AsdfFile, block, util
+        from asdf.exceptions import AsdfDeprecationWarning
         from asdf.tests import _helpers as helpers
 
         # Make sure that the examples in the schema files (and thus the
@@ -249,6 +250,7 @@ class AsdfSchemaExampleItem(pytest.Item):
             # Do not tolerate any warnings that occur during schema validation
             with warnings.catch_warnings():
                 warnings.simplefilter("error")
+                warnings.simplefilter("default", category=AsdfDeprecationWarning)
 
                 ff._open_impl(ff, buff, mode="rw")
         except Exception:
