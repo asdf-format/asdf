@@ -96,10 +96,9 @@ class ExtensionTypeMeta(type):
             attrs["has_required_modules"] = True
             types = cls._find_in_bases(attrs, bases, "types", [])
             new_types = []
-            for typ in types:
-                if isinstance(typ, str):
-                    typ = util.resolve_name(typ)
-                new_types.append(typ)
+            for type_ in types:
+                new_types.append(util.resolve_name(type_) if isinstance(type_, str) else type_)
+
             attrs["types"] = new_types
 
         new_cls = super().__new__(cls, name, bases, attrs)
@@ -122,10 +121,10 @@ class ExtensionTypeMeta(type):
                 new_cls.supported_versions = [new_cls.supported_versions]
             supported_versions = set()
             for version in new_cls.supported_versions:
-                if not isinstance(version, (AsdfVersion, AsdfSpec)):
-                    version = AsdfVersion(version)
                 # This should cause an exception for invalid input
-                supported_versions.add(version)
+                supported_versions.add(
+                    version if isinstance(version, (AsdfVersion, AsdfSpec)) else AsdfVersion(version),
+                )
             # We need to convert back to a list here so that the 'in' operator
             # uses actual comparison instead of hash equality
             new_cls.supported_versions = list(supported_versions)

@@ -186,7 +186,6 @@ extend-ignore = [
     "PLR0913", # Too many arguments to function call
     "PLR0915", # Too many statements
     "PLR2004", # Magic value used in comparison
-    "PLW2901", # Outer for loop variable overwritten by inner loop assignment
     "SLF001", # Private member accessed
     "TRY002", # Create your own exception
     "TRY301", # Abstract raise to an inner function

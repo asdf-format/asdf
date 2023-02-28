@@ -25,15 +25,15 @@ def resolve_fragment(tree, pointer):
     parts = patched_urllib_parse.unquote(pointer).split("/") if pointer else []
 
     for part in parts:
-        part = part.replace("~1", "/").replace("~0", "~")
+        part_ = part.replace("~1", "/").replace("~0", "~")
 
         if isinstance(tree, Sequence):
             # Array indexes should be turned into integers
             with suppress(ValueError):
-                part = int(part)
+                part_ = int(part_)
 
         try:
-            tree = tree[part]
+            tree = tree[part_]
 
         except (TypeError, LookupError) as err:
             msg = f"Unresolvable reference: '{pointer}'"
