@@ -27,6 +27,10 @@ from .util import patched_urllib_parse
 __all__ = ["get_file", "get_uri", "resolve_uri", "relative_uri"]
 
 
+_FILE_PERMISSIONS_DEFAULT_UMASK = 0o22
+_FILE_PERMISSIONS_ALL = 0o777
+_FILE_PERMISSIONS_NO_EXECUTE = 0o666
+
 _local_file_schemes = ["", "file"]
 if sys.platform.startswith("win"):  # pragma: no cover
     import string
@@ -399,6 +403,7 @@ class GenericFile(metaclass=util.InheritDocstrings):
         """
         if self._close:
             self._fd.close()
+            self._fix_permissions()
 
     def truncate(self, size=None):
         """
@@ -816,10 +821,42 @@ class RealFile(RandomAccessFile):
     def read_into_array(self, size):
         return np.fromfile(self._fd, dtype=np.uint8, count=size)
 
+    def _fix_permissions(self):
+        """
+        atomicfile internally uses tempfile.NamedTemporaryFile
+        which uses tempfile.mkstemp which makes a file that is
+
+        "readable and writable only by the creating user ID."
+
+        this creates files with mode 0o600 regardless of umask
+        Rather than modify atomicfile, this will use
+        the umask to determine the file permissions and modify
+        the resulting file permission bits
+        """
+        if isinstance(self._fd, atomicfile._AtomicWFile):
+            fn = self._fd._filename
+            if not os.path.exists(fn):
+                return
+            # there is no way to read the umask without setting it
+            # so set it to the typical default 0o22
+            umask = os.umask(_FILE_PERMISSIONS_DEFAULT_UMASK)
+            if umask != _FILE_PERMISSIONS_DEFAULT_UMASK:
+                # restore the read value if it differs from the default
+                os.umask(umask)
+            permissions = _FILE_PERMISSIONS_ALL if os.path.isdir(fn) else _FILE_PERMISSIONS_NO_EXECUTE
+            os.chmod(self._fd._filename, permissions & ~umask)
+
+    def __exit__(self, type_, value, traceback):
+        super().__exit__(type_, value, traceback)
+        if self._close:
+            self._fix_permissions()
+
     def close(self):
         self.flush_memmap()
         super().close()
         self.close_memmap()
+        if self._close:
+            self._fix_permissions()
 
 
 class MemoryIO(RandomAccessFile):
