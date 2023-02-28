@@ -122,9 +122,7 @@ class AsdfSpec(SimpleSpec):
 
     def __iterate_versions(self, versions):
         for v in versions:
-            if isinstance(v, (str, tuple, list)):
-                v = AsdfVersion(v)
-            yield v
+            yield AsdfVersion(v) if isinstance(v, (str, tuple, list)) else v
 
     def select(self, versions):
         return super().select(self.__iterate_versions(versions))

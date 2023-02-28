@@ -169,16 +169,16 @@ def print_tree_context(diff_ctx, node_list, other, use_marker, last_was_list):
     marker = THAT_MARKER if other else THIS_MARKER
     for node in diff_ctx.print_tree.get_print_list(node_list):
         if node is not None:
-            node = LIST_MARKER if isinstance(node, ArrayNode) else node + ":"
+            node_ = LIST_MARKER if isinstance(node, ArrayNode) else node + ":"
             # All of this logic is just to make the display of arrays prettier
             if use_marker:
                 line_prefix = " " if last_was_list else marker + prefix[2:]
-                line_suffix = "" if node == LIST_MARKER else RESET_NEWLINE
+                line_suffix = "" if node_ == LIST_MARKER else RESET_NEWLINE
             else:
                 line_prefix = prefix
                 line_suffix = RESET_NEWLINE
-            diff_ctx.iostream.write(line_prefix + node + line_suffix)
-            last_was_list = node == LIST_MARKER
+            diff_ctx.iostream.write(line_prefix + node_ + line_suffix)
+            last_was_list = node_ == LIST_MARKER
         prefix += "  "
     diff_ctx.print_tree[node_list] = True
     return last_was_list
@@ -236,12 +236,12 @@ def print_dict_diff(diff_ctx, tree, node_list, keys, other):
     for key in keys:
         if diff_ctx.minimal:
             nodes = node_list
-            key = key
+            key_ = key
         else:
             nodes = [*node_list, key]
-            key = tree[key]
+            key_ = tree[key]
         use_marker = not diff_ctx.minimal
-        print_in_tree(diff_ctx, nodes, key, other, use_marker=use_marker)
+        print_in_tree(diff_ctx, nodes, key_, other, use_marker=use_marker)
 
 
 def compare_ndarrays(diff_ctx, array0, array1, keys):

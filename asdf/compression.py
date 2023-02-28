@@ -85,28 +85,28 @@ class Lz4Compressor:
 
         for block in blocks:
             cast = "c"
-            block = memoryview(block).cast(cast)  # don't copy on slice
+            blk = memoryview(block).cast(cast)  # don't copy on slice
 
-            while len(block):
+            while len(blk):
                 if not _size:
                     # Don't know the (compressed) length of this block yet
-                    if len(_partial_len) + len(block) < 4:
-                        _partial_len += block
+                    if len(_partial_len) + len(blk) < 4:
+                        _partial_len += blk
                         break  # we've exhausted the block
                     if _partial_len:
                         # If we started to fill a len key, finish filling it
                         remaining = 4 - len(_partial_len)
                         if remaining:
-                            _partial_len += block[:remaining]
-                            block = block[remaining:]
+                            _partial_len += blk[:remaining]
+                            blk = blk[remaining:]
                         _size = struct.unpack("!I", _partial_len)[0]
                         _partial_len = b""
                     else:
                         # Otherwise just read the len key directly
-                        _size = struct.unpack("!I", block[:4])[0]
-                        block = block[4:]
+                        _size = struct.unpack("!I", blk[:4])[0]
+                        blk = blk[4:]
 
-                if len(block) < _size or _buffer is not None:
+                if len(blk) < _size or _buffer is not None:
                     # If we have a partial block, or we're already filling a buffer, use the buffer
                     if _buffer is None:
                         _buffer = np.empty(
@@ -114,10 +114,10 @@ class Lz4Compressor:
                             dtype=np.byte,
                         )  # use numpy instead of bytearray so we can avoid zero initialization
                         _pos = 0
-                    newbytes = min(_size - _pos, len(block))  # don't fill past the buffer len!
-                    _buffer[_pos : _pos + newbytes] = np.frombuffer(block[:newbytes], dtype=np.byte)
+                    newbytes = min(_size - _pos, len(blk))  # don't fill past the buffer len!
+                    _buffer[_pos : _pos + newbytes] = np.frombuffer(blk[:newbytes], dtype=np.byte)
                     _pos += newbytes
-                    block = block[newbytes:]
+                    blk = blk[newbytes:]
 
                     if _pos == _size:
                         _out = self._api.decompress(_buffer, return_bytearray=True, **kwargs)
@@ -127,10 +127,10 @@ class Lz4Compressor:
                         _size = 0
                 else:
                     # We have at least one full block
-                    _out = self._api.decompress(memoryview(block[:_size]), return_bytearray=True, **kwargs)
+                    _out = self._api.decompress(memoryview(blk[:_size]), return_bytearray=True, **kwargs)
                     out[bytesout : bytesout + len(_out)] = _out
                     bytesout += len(_out)
-                    block = block[_size:]
+                    blk = blk[_size:]
                     _size = 0
 
         return bytesout

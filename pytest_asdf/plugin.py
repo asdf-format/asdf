@@ -273,9 +273,9 @@ def _parse_test_list(content):
         content = content.split("\n")
 
     for line in content:
-        line = line.strip()
-        if len(line) > 0:
-            parts = line.split("::", 1)
+        line_ = line.strip()
+        if len(line_) > 0:
+            parts = line_.split("::", 1)
             path_suffix = pathlib.Path(parts[0]).as_posix()
 
             name = "*" if len(parts) == 1 else parts[-1]
