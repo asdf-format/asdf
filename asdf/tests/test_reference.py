@@ -120,7 +120,8 @@ def test_external_reference_invalid(tmp_path):
         ff.resolve_references()
 
     ff = asdf.AsdfFile(tree, uri="http://httpstat.us/404")
-    with pytest.raises(IOError, match=r"HTTP Error 404: Not Found"):
+    msg = r"[HTTP Error 404: Not Found, HTTP Error 502: Bad Gateway]"  # if httpstat.us is down 502 is returned.
+    with pytest.raises(IOError, match=msg):
         ff.resolve_references()
 
     ff = asdf.AsdfFile(tree, uri=util.filepath_to_url(os.path.join(str(tmp_path), "main.asdf")))
