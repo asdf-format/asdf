@@ -63,7 +63,7 @@ contains functions to read and write AsdfInFits files
 (see :external+stdatamodels:doc:`asdf_in_fits` for migration information).
 
 Without support for `~asdf.fits_embed.AsdfInFits` the ``extract`` and
-``remove_hdu`` commands for :ref:`asdftool <asdf_tool>` are no longer usable and are
+``remove-hdu`` commands for :ref:`asdftool <asdf_tool>` are no longer usable and are
 deprecated.
 
 .. _asdffile_blocks_deprecation:
