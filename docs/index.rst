@@ -85,6 +85,7 @@ Resources
   asdf/contributing
   asdf/CODE_OF_CONDUCT.md
   asdf/release_and_support
+  asdf/deprecations
   asdf/changes
   asdf/citation
 

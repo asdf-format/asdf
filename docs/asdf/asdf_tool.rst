@@ -1,4 +1,4 @@
-.. asdf_tool:
+.. _asdf_tool:
 
 Command line tool
 -----------------
