@@ -1,3 +1,6 @@
+"""
+This module is deprecated. Please see :ref:`extending_converters`
+"""
 import warnings
 
 from . import _types
