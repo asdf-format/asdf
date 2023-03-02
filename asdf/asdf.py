@@ -986,10 +986,10 @@ class AsdfFile:
                 ignore_missing_extensions=ignore_missing_extensions,
                 **kwargs,
             )
-        except Exception as e:
+        except Exception:
             if close_on_fail:
                 generic_file.close()
-            raise e
+            raise
 
     @classmethod
     def open(  # noqa: A003
