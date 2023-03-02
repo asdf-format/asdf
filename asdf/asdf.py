@@ -15,7 +15,7 @@ from . import _version as version
 from . import block, constants, generic_io, reference, schema, treeutil, util, versioning, yamlutil
 from ._helpers import validate_version
 from .config import config_context, get_config
-from .exceptions import AsdfConversionWarning, AsdfDeprecationWarning, AsdfWarning
+from .exceptions import AsdfConversionWarning, AsdfDeprecationWarning, AsdfWarning, DelimiterNotFoundError
 from .extension import Extension, ExtensionProxy, _legacy, get_cached_extension_manager
 from .search import AsdfSearchResult
 from .tags.core import AsdfObject, ExtensionMetadata, HistoryEntry, Software
@@ -807,9 +807,9 @@ class AsdfFile:
 
         try:
             version = versioning.AsdfVersion(parts[1].decode("ascii"))
-        except ValueError as err:
+        except ValueError:
             msg = f"Unparsable version in ASDF file: {parts[1]}"
-            raise ValueError(msg) from err
+            raise ValueError(msg) from None
 
         return version
 
@@ -878,7 +878,11 @@ class AsdfFile:
             self._fd = fd
             # The filename is currently only used for tracing warning information
             self._fname = self._fd._uri if self._fd._uri else ""
-            header_line = fd.read_until(b"\r?\n", 2, "newline", include=True)
+            try:
+                header_line = fd.read_until(b"\r?\n", 2, "newline", include=True)
+            except DelimiterNotFoundError as e:
+                msg = "Does not appear to be a ASDF file."
+                raise ValueError(msg) from e
             self._file_format_version = cls._parse_header_line(header_line)
             self.version = self._file_format_version
 

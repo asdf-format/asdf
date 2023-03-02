@@ -1,7 +1,7 @@
 import pytest
 
 from asdf import util
-from asdf.extension import BuiltinExtension
+from asdf.extension._legacy import BuiltinExtension
 
 
 def test_is_primitive():

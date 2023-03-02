@@ -22,13 +22,6 @@ def test_custom_type_warning():
             pass
 
 
-def test_asdf_in_fits_import_warning():
-    if "asdf.fits_embed" in sys.modules:
-        del sys.modules["asdf.fits_embed"]
-    with pytest.warns(AsdfDeprecationWarning, match="AsdfInFits has been deprecated.*"):
-        import asdf.fits_embed  # noqa: F401
-
-
 def test_resolver_module_deprecation():
     with pytest.warns(AsdfDeprecationWarning, match="^asdf.resolver is deprecated.*$"):
         # importlib.reload doesn't appear to work here likely because of the
