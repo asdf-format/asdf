@@ -5,7 +5,7 @@
 
 import pytest
 
-from asdf.tests.httpserver import HTTPServer, RangeHTTPServer
+from asdf._tests.httpserver import HTTPServer, RangeHTTPServer
 
 collect_ignore = ["asdftypes.py", "fits_embed.py", "resolver.py", "type_index.py", "types.py", "tests/helpers.py"]
 

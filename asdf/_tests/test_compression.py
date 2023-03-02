@@ -7,8 +7,8 @@ import pytest
 
 import asdf
 from asdf import compression, config_context, generic_io
+from asdf._tests import _helpers as helpers
 from asdf.extension import Compressor, Extension
-from asdf.tests import _helpers as helpers
 
 RNG = np.random.default_rng(0)
 
@@ -233,7 +233,7 @@ def test_compression_with_extension(tmp_path):
         fn = _roundtrip(tmp_path, tree, "lzma", write_options={"compression_kwargs": {"preset": 6}})
 
         hist = {
-            "extension_class": "asdf.tests.test_compression.LzmaExtension",
+            "extension_class": "asdf._tests.test_compression.LzmaExtension",
             "extension_uri": "asdf://somewhere.org/extensions/lzma-1.0",
             "supported_compression": ["lzma"],
         }

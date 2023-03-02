@@ -4,12 +4,12 @@ import fsspec
 import pytest
 
 from asdf import config_context, get_config
+from asdf._tests._helpers import assert_no_warnings, assert_tree_match, yaml_to_asdf
 from asdf.asdf import AsdfFile, SerializationContext, open_asdf
 from asdf.entry_points import get_extensions
 from asdf.exceptions import AsdfWarning
 from asdf.extension import ExtensionManager, ExtensionProxy
 from asdf.extension._legacy import AsdfExtensionList
-from asdf.tests._helpers import assert_no_warnings, assert_tree_match, yaml_to_asdf
 from asdf.versioning import AsdfVersion
 
 
@@ -269,7 +269,7 @@ def test_reading_extension_metadata():
         history:
           extensions:
             - !core/extension_metadata-1.0.0
-              extension_class: asdf.tests.test_asdf.TestExtension
+              extension_class: asdf._tests.test_asdf.TestExtension
         """
         buff = yaml_to_asdf(content)
         with assert_no_warnings():

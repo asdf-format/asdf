@@ -4,8 +4,8 @@ import numpy as np
 
 import asdf
 from asdf import AsdfFile
+from asdf._tests._helpers import assert_tree_match, get_file_sizes
 from asdf.commands import main
-from asdf.tests._helpers import assert_tree_match, get_file_sizes
 
 
 def test_to_yaml(tmpdir):
