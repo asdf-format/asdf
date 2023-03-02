@@ -219,8 +219,8 @@ class AsdfSchemaExampleItem(pytest.Item):
 
     def runtest(self):
         from asdf import AsdfFile, block, util
+        from asdf._tests import _helpers as helpers
         from asdf.exceptions import AsdfDeprecationWarning
-        from asdf.tests import _helpers as helpers
 
         # Make sure that the examples in the schema files (and thus the
         # ASDF standard document) are valid.
