@@ -346,7 +346,7 @@ def test_extension_version_check(installed, extension, warns):
         "history": {
             "extensions": [
                 asdf.tags.core.ExtensionMetadata(
-                    extension_class="asdf.tests.test_api.FooExtension",
+                    extension_class="asdf._tests.test_api.FooExtension",
                     software=asdf.tags.core.Software(name="foo", version=extension),
                 ),
             ],

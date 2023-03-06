@@ -12,10 +12,10 @@ from numpy.testing import assert_array_equal
 
 import asdf
 from asdf import util
+from asdf._tests import _helpers as helpers
+from asdf._tests.objects import CustomTestType
 from asdf.exceptions import AsdfDeprecationWarning
 from asdf.tags.core import ndarray
-from asdf.tests import _helpers as helpers
-from asdf.tests.objects import CustomTestType
 
 from . import data as test_data
 

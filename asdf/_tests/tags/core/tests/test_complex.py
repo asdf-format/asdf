@@ -3,7 +3,7 @@ import re
 import pytest
 
 import asdf
-from asdf.tests import _helpers as helpers
+from asdf._tests import _helpers as helpers
 
 
 def make_complex_asdf(string):

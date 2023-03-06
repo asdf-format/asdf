@@ -56,7 +56,7 @@ def test_get_resource_mappings(mock_entry_points):
         (
             "asdf.resource_mappings",
             "successful",
-            "asdf.tests.test_entry_points:resource_mappings_entry_point_successful",
+            "asdf._tests.test_entry_points:resource_mappings_entry_point_successful",
         ),
     )
     mappings = entry_points.get_resource_mappings()
@@ -68,7 +68,7 @@ def test_get_resource_mappings(mock_entry_points):
 
     mock_entry_points.clear()
     mock_entry_points.append(
-        ("asdf.resource_mappings", "failing", "asdf.tests.test_entry_points:resource_mappings_entry_point_failing"),
+        ("asdf.resource_mappings", "failing", "asdf._tests.test_entry_points:resource_mappings_entry_point_failing"),
     )
     with pytest.warns(AsdfWarning, match=r"Exception: NOPE"):
         mappings = entry_points.get_resource_mappings()
@@ -79,7 +79,7 @@ def test_get_resource_mappings(mock_entry_points):
         (
             "asdf.resource_mappings",
             "bad_element",
-            "asdf.tests.test_entry_points:resource_mappings_entry_point_bad_element",
+            "asdf._tests.test_entry_points:resource_mappings_entry_point_bad_element",
         ),
     )
     with pytest.warns(AsdfWarning, match=r"TypeError: Resource mapping must implement the Mapping interface"):
@@ -128,7 +128,7 @@ class FauxLegacyExtension:
 
 def test_get_extensions(mock_entry_points):
     mock_entry_points.append(
-        ("asdf.extensions", "successful", "asdf.tests.test_entry_points:extensions_entry_point_successful"),
+        ("asdf.extensions", "successful", "asdf._tests.test_entry_points:extensions_entry_point_successful"),
     )
     extensions = entry_points.get_extensions()
     assert len(extensions) == 2
@@ -139,7 +139,7 @@ def test_get_extensions(mock_entry_points):
 
     mock_entry_points.clear()
     mock_entry_points.append(
-        ("asdf.extensions", "failing", "asdf.tests.test_entry_points:extensions_entry_point_failing"),
+        ("asdf.extensions", "failing", "asdf._tests.test_entry_points:extensions_entry_point_failing"),
     )
     with pytest.warns(AsdfWarning, match=r"Exception: NOPE"):
         extensions = entry_points.get_extensions()
@@ -147,7 +147,7 @@ def test_get_extensions(mock_entry_points):
 
     mock_entry_points.clear()
     mock_entry_points.append(
-        ("asdf.extensions", "bad_element", "asdf.tests.test_entry_points:extensions_entry_point_bad_element"),
+        ("asdf.extensions", "bad_element", "asdf._tests.test_entry_points:extensions_entry_point_bad_element"),
     )
     with pytest.warns(
         AsdfWarning,
@@ -157,7 +157,7 @@ def test_get_extensions(mock_entry_points):
     assert len(extensions) == 2
 
     mock_entry_points.clear()
-    mock_entry_points.append(("asdf_extensions", "legacy", "asdf.tests.test_entry_points:LegacyExtension"))
+    mock_entry_points.append(("asdf_extensions", "legacy", "asdf._tests.test_entry_points:LegacyExtension"))
     with pytest.warns(AsdfDeprecationWarning, match=".* uses the deprecated entry point asdf_extensions"):
         extensions = entry_points.get_extensions()
     assert len(extensions) == 1
@@ -168,7 +168,7 @@ def test_get_extensions(mock_entry_points):
         assert e.legacy is True
 
     mock_entry_points.clear()
-    mock_entry_points.append(("asdf_extensions", "failing", "asdf.tests.test_entry_points:FauxLegacyExtension"))
+    mock_entry_points.append(("asdf_extensions", "failing", "asdf._tests.test_entry_points:FauxLegacyExtension"))
     with pytest.warns(AsdfWarning, match=r"TypeError"):
         extensions = entry_points.get_extensions()
     assert len(extensions) == 0

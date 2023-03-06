@@ -4,7 +4,7 @@ import pytest
 
 import asdf
 from asdf import IntegerType
-from asdf.tests import _helpers as helpers
+from asdf._tests import _helpers as helpers
 
 # Make sure tests are deterministic
 random.seed(0)
