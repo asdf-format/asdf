@@ -10,10 +10,11 @@ import asdf
 import asdf.testing.helpers
 from asdf import _resolver as resolver
 from asdf import _types as types
-from asdf import config_context, constants, extension, get_config, schema, tagged, util, yamlutil
+from asdf import config_context, constants, get_config, schema, tagged, util, yamlutil
 from asdf._tests import _helpers as helpers
 from asdf._tests.objects import CustomExtension
 from asdf.exceptions import AsdfConversionWarning, AsdfDeprecationWarning, AsdfWarning
+from asdf.extension import _legacy as _legacy_extension
 
 with pytest.warns(AsdfDeprecationWarning, match=".*subclasses the deprecated CustomType.*"):
 
@@ -137,8 +138,7 @@ required: [foobar]
 
 
 def test_load_schema_with_file_url(tmp_path):
-    with pytest.warns(AsdfDeprecationWarning, match="get_default_resolver is deprecated"):
-        schema_def = """
+    schema_def = """
 %YAML 1.1
 %TAG !asdf! tag:stsci.edu:asdf/
 ---
@@ -153,9 +153,9 @@ properties:
 
 required: [foobar]
 ...
-        """.format(
-            extension.get_default_resolver()("tag:stsci.edu:asdf/core/ndarray-1.0.0"),
-        )
+    """.format(
+        _legacy_extension.get_default_resolver()("tag:stsci.edu:asdf/core/ndarray-1.0.0"),
+    )
     schema_path = tmp_path / "nugatory.yaml"
     schema_path.write_bytes(schema_def.encode())
 
@@ -645,11 +645,9 @@ def test_self_reference_resolution():
 
 def test_schema_resolved_via_entry_points():
     """Test that entry points mappings to core schema works"""
-    with pytest.warns(AsdfDeprecationWarning, match="get_default_resolver is deprecated"):
-        r = extension.get_default_resolver()
+    r = _legacy_extension.get_default_resolver()
     tag = asdf.testing.helpers.format_tag("stsci.edu", "asdf", "1.0.0", "fits/fits")
-    with pytest.warns(AsdfDeprecationWarning, match="default_extensions is deprecated"):
-        url = extension.default_extensions.extension_list.tag_mapping(tag)
+    url = _legacy_extension.default_extensions.extension_list.tag_mapping(tag)
 
     s = schema.load_schema(url, resolver=r, resolve_references=True)
     assert tag in repr(s)

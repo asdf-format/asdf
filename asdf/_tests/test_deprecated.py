@@ -43,36 +43,10 @@ def test_asdfile_run_modifying_hook_deprecation():
         af.run_modifying_hook("foo")
 
 
-def test_default_extensions_deprecation():
-    with pytest.warns(AsdfDeprecationWarning, match="default_extensions is deprecated"):
-        asdf.extension.default_extensions
-
-
-def test_default_resolver():
-    with pytest.warns(AsdfDeprecationWarning, match="get_default_resolver is deprecated"):
-        asdf.extension.get_default_resolver()
-
-
-def test_get_cached_asdf_extension_list_deprecation():
-    with pytest.warns(AsdfDeprecationWarning, match="get_cached_asdf_extension_list is deprecated"):
-        asdf.extension.get_cached_asdf_extension_list([])
-
-
 def test_asdf_type_format_tag():
     with pytest.warns(AsdfDeprecationWarning, match="asdf.types.format_tag is deprecated"):
         asdf._types.format_tag
     asdf.testing.helpers.format_tag
-
-
-@pytest.mark.parametrize("name", ["AsdfExtension", "AsdfExtensionList", "BuiltinExtension"])
-def test_extension_class_deprecation(name):
-    with pytest.warns(AsdfDeprecationWarning, match=f"{name} is deprecated"):
-        getattr(asdf.extension, name)
-
-
-def test_top_level_asdf_extension_deprecation():
-    with pytest.warns(AsdfDeprecationWarning, match="AsdfExtension is deprecated"):
-        asdf.AsdfExtension
 
 
 def test_asdf_tests_helpers_deprecation():

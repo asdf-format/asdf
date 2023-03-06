@@ -12,8 +12,9 @@ from jsonschema.exceptions import ValidationError
 from numpy.testing import assert_array_equal
 
 import asdf
+import asdf.extension._legacy as _legacy_extension
 from asdf import _resolver as resolver
-from asdf import config_context, extension, get_config, schema, treeutil, versioning
+from asdf import config_context, get_config, treeutil, versioning
 from asdf.exceptions import AsdfDeprecationWarning, AsdfWarning
 from asdf.extension import ExtensionProxy
 
@@ -262,7 +263,7 @@ def test_tag_to_schema_resolver_deprecation():
         ff.tag_to_schema_resolver("foo")
 
     with pytest.warns(AsdfDeprecationWarning):
-        extension_list = extension.default_extensions.extension_list
+        extension_list = _legacy_extension.default_extensions.extension_list
         extension_list.tag_to_schema_resolver("foo")
 
 
@@ -472,15 +473,13 @@ def test_resolver_deprecations():
         resolver.default_resolver,
         resolver.default_tag_to_url_mapping,
         resolver.default_url_mapping,
-        schema.default_ext_resolver,
     ]:
         with pytest.warns(AsdfDeprecationWarning):
             resolver_method("foo")
 
 
 def test_get_default_resolver():
-    with pytest.warns(AsdfDeprecationWarning, match="get_default_resolver is deprecated"):
-        resolver = extension.get_default_resolver()
+    resolver = _legacy_extension.get_default_resolver()
 
     result = resolver("tag:stsci.edu:asdf/core/ndarray-1.0.0")
 

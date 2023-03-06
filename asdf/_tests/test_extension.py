@@ -15,10 +15,9 @@ from asdf.extension import (
     ManifestExtension,
     TagDefinition,
     Validator,
-    get_cached_asdf_extension_list,
     get_cached_extension_manager,
 )
-from asdf.extension._legacy import AsdfExtension, BuiltinExtension
+from asdf.extension._legacy import AsdfExtension, BuiltinExtension, get_cached_asdf_extension_list
 
 
 def test_builtin_extension():
@@ -606,12 +605,9 @@ def test_converter_proxy():
 
 def test_get_cached_asdf_extension_list():
     extension = LegacyExtension()
-    with pytest.warns(AsdfDeprecationWarning, match="get_cached_asdf_extension_list is deprecated"):
-        extension_list = get_cached_asdf_extension_list([extension])
-    with pytest.warns(AsdfDeprecationWarning, match="get_cached_asdf_extension_list is deprecated"):
-        assert get_cached_asdf_extension_list([extension]) is extension_list
-    with pytest.warns(AsdfDeprecationWarning, match="get_cached_asdf_extension_list is deprecated"):
-        assert get_cached_asdf_extension_list([LegacyExtension()]) is not extension_list
+    extension_list = get_cached_asdf_extension_list([extension])
+    assert get_cached_asdf_extension_list([extension]) is extension_list
+    assert get_cached_asdf_extension_list([LegacyExtension()]) is not extension_list
 
 
 def test_manifest_extension():
