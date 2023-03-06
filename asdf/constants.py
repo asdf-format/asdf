@@ -2,6 +2,7 @@ import numpy as np
 
 ASDF_MAGIC = b"#ASDF"
 BLOCK_MAGIC = b"\xd3BLK"
+FITS_MAGIC = b"SIMPLE"
 
 BLOCK_HEADER_BOILERPLATE_SIZE = 6
 
