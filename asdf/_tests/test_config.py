@@ -70,7 +70,7 @@ def test_global_config():
     assert get_config().validate_on_read is False
 
     # Global config is reset to defaults by autouse
-    # fixture in asdf/tests/conftest.py.
+    # fixture in asdf/_tests/conftest.py.
 
 
 def test_validate_on_read():

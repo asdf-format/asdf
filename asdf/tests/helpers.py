@@ -3,9 +3,8 @@ This module is deprecated. Please see `asdf.testing.helpers`
 """
 import warnings
 
+from asdf._tests import _helpers
 from asdf.exceptions import AsdfDeprecationWarning
-
-from . import _helpers
 
 
 def _warn():
