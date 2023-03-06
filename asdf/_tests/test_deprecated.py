@@ -27,22 +27,6 @@ def test_assert_extension_correctness_deprecation():
         assert_extension_correctness(extension)
 
 
-@pytest.mark.parametrize("attr", ["url_mapping", "tag_mapping", "resolver", "extension_list", "type_index"])
-def test_asdffile_legacy_extension_api_attr_deprecations(attr):
-    with asdf.AsdfFile() as af, pytest.warns(AsdfDeprecationWarning, match=f"AsdfFile.{attr} is deprecated"):
-        getattr(af, attr)
-
-
-def test_asdfile_run_hook_deprecation():
-    with asdf.AsdfFile() as af, pytest.warns(AsdfDeprecationWarning, match="AsdfFile.run_hook is deprecated"):
-        af.run_hook("foo")
-
-
-def test_asdfile_run_modifying_hook_deprecation():
-    with asdf.AsdfFile() as af, pytest.warns(AsdfDeprecationWarning, match="AsdfFile.run_modifying_hook is deprecated"):
-        af.run_modifying_hook("foo")
-
-
 def test_asdf_type_format_tag():
     with pytest.warns(AsdfDeprecationWarning, match="asdf.types.format_tag is deprecated"):
         asdf._types.format_tag
