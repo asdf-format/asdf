@@ -146,3 +146,9 @@ def test_asdf_tests_helpers_deprecation():
     for attr in _helpers.__all__:
         with pytest.warns(AsdfDeprecationWarning, match="asdf.tests.helpers is deprecated"):
             getattr(asdf.tests.helpers, attr)
+
+
+def test_blocks_deprecated():
+    af = asdf.AsdfFile()
+    with pytest.warns(AsdfDeprecationWarning, match="The property AsdfFile.blocks has been deprecated"):
+        af.blocks
