@@ -1,42 +1,4 @@
-# This contains pytest fixtures used in asdf tests.
-# by importing them here in conftest.py they are discoverable by pytest
-# no matter how it is invoked within the source tree.
-
-
-import pytest
-
-from asdf.tests.httpserver import HTTPServer, RangeHTTPServer
-
+# We ignore these files because these modules create deprecation warnings on
+# import. When warnings are turned into errors this will completely prevent
+# test collection
 collect_ignore = ["asdftypes.py", "fits_embed.py", "resolver.py", "type_index.py", "types.py", "tests/helpers.py"]
-
-
-@pytest.fixture()
-def httpserver(request):
-    """
-    The returned ``httpserver`` provides a threaded HTTP server
-    instance.  It serves content from a temporary directory (available
-    as the attribute tmpdir) at randomly assigned URL (available as
-    the attribute url).
-
-    * ``tmpdir`` - path to the tmpdir that it's serving from (str)
-    * ``url`` - the base url for the server
-    """
-    server = HTTPServer()
-    yield server
-    server.finalize()
-
-
-@pytest.fixture()
-def rhttpserver(request):
-    """
-    The returned ``httpserver`` provides a threaded HTTP server
-    instance.  It serves content from a temporary directory (available
-    as the attribute tmpdir) at randomly assigned URL (available as
-    the attribute url).  The server supports HTTP Range headers.
-
-    * ``tmpdir`` - path to the tmpdir that it's serving from (str)
-    * ``url`` - the base url for the server
-    """
-    server = RangeHTTPServer()
-    yield server
-    server.finalize()

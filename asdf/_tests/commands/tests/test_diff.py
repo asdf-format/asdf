@@ -3,8 +3,8 @@ from functools import partial
 
 import pytest
 
+from asdf._tests import _helpers as helpers
 from asdf.commands import diff, main
-from asdf.tests import _helpers as helpers
 
 from . import data as test_data
 

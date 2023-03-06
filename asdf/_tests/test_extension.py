@@ -2,6 +2,7 @@ import pytest
 from packaging.specifiers import SpecifierSet
 
 from asdf import AsdfFile, config_context
+from asdf._tests._helpers import assert_extension_correctness
 from asdf._types import CustomType
 from asdf.exceptions import AsdfDeprecationWarning, ValidationError
 from asdf.extension import (
@@ -18,7 +19,6 @@ from asdf.extension import (
     get_cached_extension_manager,
 )
 from asdf.extension._legacy import AsdfExtension, BuiltinExtension
-from asdf.tests._helpers import assert_extension_correctness
 
 
 def test_builtin_extension():
@@ -189,7 +189,7 @@ def test_extension_proxy():
     assert proxy.legacy is False
     assert proxy.package_name is None
     assert proxy.package_version is None
-    assert proxy.class_name == "asdf.tests.test_extension.MinimumExtension"
+    assert proxy.class_name == "asdf._tests.test_extension.MinimumExtension"
 
     # The subclassed version should have the same defaults:
     extension = MinimumExtensionSubclassed()
@@ -208,7 +208,7 @@ def test_extension_proxy():
     assert subclassed_proxy.legacy == proxy.legacy
     assert subclassed_proxy.package_name == proxy.package_name
     assert subclassed_proxy.package_version == proxy.package_name
-    assert subclassed_proxy.class_name == "asdf.tests.test_extension.MinimumExtensionSubclassed"
+    assert subclassed_proxy.class_name == "asdf._tests.test_extension.MinimumExtensionSubclassed"
 
     # Test with all properties present:
     converters = [MinimumConverter(tags=["asdf://somewhere.org/extensions/full/tags/foo-*"], types=[])]
@@ -239,7 +239,7 @@ def test_extension_proxy():
     assert proxy.legacy is False
     assert proxy.package_name == "foo"
     assert proxy.package_version == "1.2.3"
-    assert proxy.class_name == "asdf.tests.test_extension.FullExtension"
+    assert proxy.class_name == "asdf._tests.test_extension.FullExtension"
 
     # Should fail when the input is not one of the two extension interfaces:
     with pytest.raises(TypeError, match=r"Extension must implement the Extension or AsdfExtension interface"):
@@ -321,7 +321,7 @@ def test_extension_proxy_legacy():
     proxy = ExtensionProxy(extension, package_name="foo", package_version="1.2.3")
 
     assert proxy.extension_uri is None
-    assert proxy.legacy_class_names == {"asdf.tests.test_extension.LegacyExtension"}
+    assert proxy.legacy_class_names == {"asdf._tests.test_extension.LegacyExtension"}
     assert proxy.asdf_standard_requirement == SpecifierSet()
     assert proxy.converters == []
     assert proxy.tags == []
@@ -332,7 +332,7 @@ def test_extension_proxy_legacy():
     assert proxy.legacy is True
     assert proxy.package_name == "foo"
     assert proxy.package_version == "1.2.3"
-    assert proxy.class_name == "asdf.tests.test_extension.LegacyExtension"
+    assert proxy.class_name == "asdf._tests.test_extension.LegacyExtension"
 
 
 def test_extension_proxy_hash_and_eq():
@@ -348,17 +348,17 @@ def test_extension_proxy_hash_and_eq():
 
 def test_extension_proxy_repr():
     proxy = ExtensionProxy(MinimumExtension(), package_name="foo", package_version="1.2.3")
-    assert "class: asdf.tests.test_extension.MinimumExtension" in repr(proxy)
+    assert "class: asdf._tests.test_extension.MinimumExtension" in repr(proxy)
     assert "package: foo==1.2.3" in repr(proxy)
     assert "legacy: False" in repr(proxy)
 
     proxy = ExtensionProxy(MinimumExtension())
-    assert "class: asdf.tests.test_extension.MinimumExtension" in repr(proxy)
+    assert "class: asdf._tests.test_extension.MinimumExtension" in repr(proxy)
     assert "package: (none)" in repr(proxy)
     assert "legacy: False" in repr(proxy)
 
     proxy = ExtensionProxy(LegacyExtension(), package_name="foo", package_version="1.2.3")
-    assert "class: asdf.tests.test_extension.LegacyExtension" in repr(proxy)
+    assert "class: asdf._tests.test_extension.LegacyExtension" in repr(proxy)
     assert "package: foo==1.2.3" in repr(proxy)
     assert "legacy: True" in repr(proxy)
 
@@ -371,7 +371,7 @@ def test_extension_manager():
         ],
         types=[
             FooType,
-            "asdf.tests.test_extension.BarType",
+            "asdf._tests.test_extension.BarType",
         ],
     )
     converter2 = FullConverter(
@@ -533,7 +533,7 @@ def test_converter_proxy():
     assert proxy.extension == extension
     assert proxy.package_name is None
     assert proxy.package_version is None
-    assert proxy.class_name == "asdf.tests.test_extension.MinimumConverter"
+    assert proxy.class_name == "asdf._tests.test_extension.MinimumConverter"
 
     # Check the __eq__ and __hash__ behavior:
     assert proxy == ConverterProxy(converter, extension)
@@ -543,7 +543,7 @@ def test_converter_proxy():
     assert proxy not in {ConverterProxy(MinimumConverter(), extension), ConverterProxy(converter, MinimumExtension())}
 
     # Check the __repr__:
-    assert "class: asdf.tests.test_extension.MinimumConverter" in repr(proxy)
+    assert "class: asdf._tests.test_extension.MinimumConverter" in repr(proxy)
     assert "package: (none)" in repr(proxy)
 
     # Test the full set of converter methods:
@@ -585,10 +585,10 @@ def test_converter_proxy():
     assert proxy.extension == extension_proxy
     assert proxy.package_name == "foo"
     assert proxy.package_version == "1.2.3"
-    assert proxy.class_name == "asdf.tests.test_extension.FullConverter"
+    assert proxy.class_name == "asdf._tests.test_extension.FullConverter"
 
     # Check the __repr__ since it will contain package info now:
-    assert "class: asdf.tests.test_extension.FullConverter" in repr(proxy)
+    assert "class: asdf._tests.test_extension.FullConverter" in repr(proxy)
     assert "package: foo==1.2.3" in repr(proxy)
 
     # Should error because object() does fulfill the Converter interface:

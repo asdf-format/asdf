@@ -7,10 +7,10 @@ import asdf._types
 import asdf.extension
 import asdf.testing.helpers
 from asdf import entry_points
+from asdf._tests._helpers import assert_extension_correctness
+from asdf._tests.objects import CustomExtension
 from asdf._types import CustomType
 from asdf.exceptions import AsdfDeprecationWarning
-from asdf.tests._helpers import assert_extension_correctness
-from asdf.tests.objects import CustomExtension
 
 from .test_entry_points import _monkeypatch_entry_points, mock_entry_points  # noqa: F401
 
@@ -141,7 +141,7 @@ def test_asdf_tests_helpers_deprecation():
         if "asdf.tests.helpers" in sys.modules:
             del sys.modules["asdf.tests.helpers"]
         import asdf.tests.helpers
-    from asdf.tests import _helpers
+    from asdf._tests import _helpers
 
     for attr in _helpers.__all__:
         with pytest.warns(AsdfDeprecationWarning, match="asdf.tests.helpers is deprecated"):
