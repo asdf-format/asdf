@@ -1,4 +1,6 @@
 """
+This module is deprecated. Please see :ref:`asdf-in-fits`
+
 Utilities for embedded ADSF files in FITS.
 """
 import io

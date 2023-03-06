@@ -24,6 +24,12 @@ Format (ASDF) files.
     **A**\ daptable **S**\ eismic **D**\ ata **F**\ ormat,
     go here: http://seismic-data.org/
 
+.. note::
+
+   ASDF 2.15 introduced a number of deprecation warnings in preparation
+   for changes planned for ASDF 3.0. Please see the :ref:`deprecations`
+   page for more information.
+
 Getting Started
 ===============
 
@@ -85,6 +91,7 @@ Resources
   asdf/contributing
   asdf/CODE_OF_CONDUCT.md
   asdf/release_and_support
+  asdf/deprecations
   asdf/changes
   asdf/citation
 
