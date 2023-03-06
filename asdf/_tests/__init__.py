@@ -1,7 +1,3 @@
-"""
-This packages contains affiliated package tests.
-"""
-
 import numpy as np
 
 RNG = np.random.default_rng(619)
