@@ -187,6 +187,14 @@ def test_junk_file():
         pass
 
 
+def test_invalid_header_version():
+    buff = io.BytesIO(b"#ASDF foo\n")
+    buff.seek(0)
+
+    with pytest.raises(ValueError, match=r"Unparsable version in ASDF file"), asdf.open(buff):
+        pass
+
+
 def test_block_mismatch():
     # This is a file with a single small block, followed by something
     # that has an invalid block magic number.
