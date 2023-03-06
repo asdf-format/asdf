@@ -57,12 +57,12 @@ package that uses these new-style extension api.
 ASDF-in-FITS Deprecation
 ========================
 
-Support for `~asdf.fits_embed.AsdfInFits` (including the `~asdf.fits_embed` module) is
+Support for ``AsdfInFits`` (including the ``asdf.fits_embed`` module) is
 deprecated. Code using this format can migrate to using `stdatamodels` which
 contains functions to read and write AsdfInFits files
 (see :external+stdatamodels:doc:`asdf_in_fits` for migration information).
 
-Without support for `~asdf.fits_embed.AsdfInFits` the ``extract`` and
+Without support for ``fits_embed.AsdfInFits`` the ``extract`` and
 ``remove-hdu`` commands for :ref:`asdftool <asdf_tool>` are no longer usable and are
 deprecated.
 
