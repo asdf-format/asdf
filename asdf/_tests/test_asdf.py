@@ -429,9 +429,3 @@ def test_fsspec_http(httpserver):
     with fsspec.open(fn) as f:
         af = open_asdf(f)
         assert_tree_match(tree, af.tree)
-
-
-def test_blocks_deprecated():
-    af = AsdfFile()
-    with pytest.deprecated_call():
-        af.blocks
