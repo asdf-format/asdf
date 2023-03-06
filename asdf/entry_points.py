@@ -7,7 +7,7 @@ import warnings
 # see issue https://github.com/asdf-format/asdf/issues/1254
 from importlib_metadata import entry_points
 
-from .exceptions import AsdfDeprecationWarning, AsdfWarning
+from .exceptions import AsdfWarning
 from .extension import ExtensionProxy
 from .resource import ResourceMappingProxy
 
@@ -54,44 +54,10 @@ def _list_entry_points(group, proxy_class):
         # Catch errors loading entry points and warn instead of raising
         try:
             with warnings.catch_warnings():
-                if entry_point.group == LEGACY_EXTENSIONS_GROUP:
-                    if entry_point.name in ("astropy", "astropy-asdf"):
-                        # Filter out the legacy `CustomType` deprecation warnings from the
-                        # deprecated astropy.io.misc.asdf
-                        # Testing will turn these into errors
-                        # Most of the astropy.io.misc.asdf deprecation warnings fall under this category
-                        warnings.filterwarnings(
-                            "ignore",
-                            category=AsdfDeprecationWarning,
-                            message=r".*from astropy.io.misc.asdf.* subclasses the deprecated CustomType .*",
-                        )
-                        warnings.filterwarnings(
-                            "ignore",
-                            category=AsdfDeprecationWarning,
-                            message="asdf.types is deprecated",
-                        )
-                        warnings.filterwarnings(
-                            "ignore",
-                            category=AsdfDeprecationWarning,
-                            message="AsdfExtension is deprecated",
-                        )
-                        warnings.filterwarnings(
-                            "ignore",
-                            category=AsdfDeprecationWarning,
-                            message="BuiltinExtension is deprecated",
-                        )
-                        warnings.filterwarnings(
-                            "ignore",
-                            category=AsdfDeprecationWarning,
-                            message="asdf.tests.helpers is deprecated",
-                        )
-                    elif entry_point.name != "builtin":
-                        warnings.warn(
-                            f"{package_name} uses the deprecated entry point {LEGACY_EXTENSIONS_GROUP}. "
-                            f"Please use the new extension api and entry point {EXTENSIONS_GROUP}: "
-                            "https://asdf.readthedocs.io/en/stable/asdf/extending/extensions.html",
-                            AsdfDeprecationWarning,
-                        )
+                if entry_point.group == LEGACY_EXTENSIONS_GROUP and entry_point.name != "builtin":
+                    # for now, the builtin extension is still registered via asdf_extensions
+                    # so we only load this legacy extension and ignore all non-builtin extensions
+                    continue
                 elements = entry_point.load()()
 
         except Exception as e:

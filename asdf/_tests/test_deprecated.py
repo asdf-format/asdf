@@ -6,7 +6,6 @@ import asdf
 import asdf._types
 import asdf.extension
 import asdf.testing.helpers
-from asdf import entry_points
 from asdf._tests._helpers import assert_extension_correctness
 from asdf._tests.objects import CustomExtension
 from asdf._types import CustomType
@@ -121,12 +120,6 @@ def test_extension_class_deprecation(name):
 def test_top_level_asdf_extension_deprecation():
     with pytest.warns(AsdfDeprecationWarning, match="AsdfExtension is deprecated"):
         asdf.AsdfExtension
-
-
-def test_deprecated_entry_point(mock_entry_points):  # noqa: F811
-    mock_entry_points.append(("asdf_extensions", "legacy", "asdf.tests.test_entry_points:LegacyExtension"))
-    with pytest.warns(AsdfDeprecationWarning, match=".* uses the deprecated entry point asdf_extensions"):
-        entry_points.get_extensions()
 
 
 def test_asdf_tests_helpers_deprecation():

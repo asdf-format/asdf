@@ -8,7 +8,7 @@ import pytest
 
 from asdf import entry_points
 from asdf._version import version as asdf_package_version
-from asdf.exceptions import AsdfDeprecationWarning, AsdfWarning
+from asdf.exceptions import AsdfWarning
 from asdf.extension import ExtensionProxy
 from asdf.resource import ResourceMappingProxy
 
@@ -158,17 +158,11 @@ def test_get_extensions(mock_entry_points):
 
     mock_entry_points.clear()
     mock_entry_points.append(("asdf_extensions", "legacy", "asdf._tests.test_entry_points:LegacyExtension"))
-    with pytest.warns(AsdfDeprecationWarning, match=".* uses the deprecated entry point asdf_extensions"):
-        extensions = entry_points.get_extensions()
-    assert len(extensions) == 1
-    for e in extensions:
-        assert isinstance(e, ExtensionProxy)
-        assert e.package_name == "asdf"
-        assert e.package_version == asdf_package_version
-        assert e.legacy is True
+    extensions = entry_points.get_extensions()
+    assert len(extensions) == 0  # asdf_extensions is no longer supported
 
     mock_entry_points.clear()
-    mock_entry_points.append(("asdf_extensions", "failing", "asdf._tests.test_entry_points:FauxLegacyExtension"))
+    mock_entry_points.append(("asdf.extensions", "failing", "asdf._tests.test_entry_points:FauxLegacyExtension"))
     with pytest.warns(AsdfWarning, match=r"TypeError"):
         extensions = entry_points.get_extensions()
     assert len(extensions) == 0
