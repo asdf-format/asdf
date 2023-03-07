@@ -151,7 +151,7 @@ def test_get_extensions(mock_entry_points):
     )
     with pytest.warns(
         AsdfWarning,
-        match=r"TypeError: Extension must implement the Extension or AsdfExtension interface",
+        match=r"TypeError: Extension must implement the Extension interface",
     ):
         extensions = entry_points.get_extensions()
     assert len(extensions) == 2

@@ -162,7 +162,7 @@ def test_extension_proxy_maybe_wrap():
     assert proxy.delegate is extension
     assert ExtensionProxy.maybe_wrap(proxy) is proxy
 
-    with pytest.raises(TypeError, match=r"Extension must implement the Extension or AsdfExtension interface"):
+    with pytest.raises(TypeError, match=r"Extension must implement the Extension interface"):
         ExtensionProxy.maybe_wrap(object())
 
 
@@ -241,7 +241,7 @@ def test_extension_proxy():
     assert proxy.class_name == "asdf._tests.test_extension.FullExtension"
 
     # Should fail when the input is not one of the two extension interfaces:
-    with pytest.raises(TypeError, match=r"Extension must implement the Extension or AsdfExtension interface"):
+    with pytest.raises(TypeError, match=r"Extension must implement the Extension interface"):
         ExtensionProxy(object)
 
     # Should fail with a bad converter:

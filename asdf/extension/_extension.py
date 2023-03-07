@@ -147,7 +147,7 @@ class ExtensionProxy(Extension, _AsdfExtension):
 
     def __init__(self, delegate, package_name=None, package_version=None):
         if not isinstance(delegate, (Extension, _AsdfExtension)):
-            msg = "Extension must implement the Extension or AsdfExtension interface"
+            msg = "Extension must implement the Extension interface"
             raise TypeError(msg)
 
         self._delegate = delegate
