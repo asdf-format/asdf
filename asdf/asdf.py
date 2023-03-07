@@ -358,7 +358,7 @@ class AsdfFile:
         """
         if extensions is None:
             extensions = []
-        elif isinstance(extensions, (_legacy.AsdfExtension, Extension, ExtensionProxy)):
+        elif isinstance(extensions, (_legacy._AsdfExtension, Extension, ExtensionProxy)):
             extensions = [extensions]
         elif isinstance(extensions, _legacy.AsdfExtensionList):
             extensions = extensions.extensions

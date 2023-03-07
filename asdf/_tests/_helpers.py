@@ -412,7 +412,7 @@ def assert_extension_correctness(extension):
 
     Parameters
     ----------
-    extension : asdf.AsdfExtension
+    extension : asdf._AsdfExtension
         The extension to validate
     """
     __tracebackhide__ = True

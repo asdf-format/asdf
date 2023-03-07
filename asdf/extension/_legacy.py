@@ -7,10 +7,10 @@ from asdf import _types as types
 from asdf._type_index import AsdfTypeIndex
 from asdf.exceptions import AsdfDeprecationWarning
 
-__all__ = ["AsdfExtension"]
+__all__ = ["_AsdfExtension"]
 
 
-class AsdfExtension(metaclass=abc.ABCMeta):
+class _AsdfExtension(metaclass=abc.ABCMeta):
     """
     Abstract base class defining a (legacy) extension to ASDF.
     New code should use `asdf.extension.Extension` instead.
@@ -18,7 +18,7 @@ class AsdfExtension(metaclass=abc.ABCMeta):
 
     @classmethod
     def __subclasshook__(cls, class_):
-        if cls is AsdfExtension:
+        if cls is _AsdfExtension:
             return hasattr(class_, "types") and hasattr(class_, "tag_mapping")
         return NotImplemented
 
@@ -173,7 +173,7 @@ def get_cached_asdf_extension_list(extensions):
 
     Parameters
     ----------
-    extensions : list of asdf.extension.AsdfExtension
+    extensions : list of asdf.extension._AsdfExtension
 
     Returns
     -------

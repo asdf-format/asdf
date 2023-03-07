@@ -17,7 +17,7 @@ from asdf.extension import (
     Validator,
     get_cached_extension_manager,
 )
-from asdf.extension._legacy import AsdfExtension, BuiltinExtension, get_cached_asdf_extension_list
+from asdf.extension._legacy import BuiltinExtension, _AsdfExtension, get_cached_asdf_extension_list
 
 
 def test_builtin_extension():
@@ -172,7 +172,7 @@ def test_extension_proxy():
     proxy = ExtensionProxy(extension)
 
     assert isinstance(proxy, Extension)
-    assert isinstance(proxy, AsdfExtension)
+    assert isinstance(proxy, _AsdfExtension)
 
     assert proxy.extension_uri == "asdf://somewhere.org/extensions/minimum-1.0"
     assert proxy.legacy_class_names == set()

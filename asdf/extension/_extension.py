@@ -6,7 +6,7 @@ from asdf.util import get_class_name
 
 from ._compressor import Compressor
 from ._converter import ConverterProxy
-from ._legacy import AsdfExtension
+from ._legacy import _AsdfExtension
 from ._tag import TagDefinition
 from ._validator import Validator
 
@@ -131,7 +131,7 @@ class Extension(abc.ABC):
         return []
 
 
-class ExtensionProxy(Extension, AsdfExtension):
+class ExtensionProxy(Extension, _AsdfExtension):
     """
     Proxy that wraps an extension, provides default implementations
     of optional methods, and carries additional information on the
@@ -146,7 +146,7 @@ class ExtensionProxy(Extension, AsdfExtension):
         return ExtensionProxy(delegate)
 
     def __init__(self, delegate, package_name=None, package_version=None):
-        if not isinstance(delegate, (Extension, AsdfExtension)):
+        if not isinstance(delegate, (Extension, _AsdfExtension)):
             msg = "Extension must implement the Extension or AsdfExtension interface"
             raise TypeError(msg)
 
@@ -156,7 +156,7 @@ class ExtensionProxy(Extension, AsdfExtension):
 
         self._class_name = get_class_name(delegate)
 
-        self._legacy = isinstance(delegate, AsdfExtension)
+        self._legacy = isinstance(delegate, _AsdfExtension)
 
         # Sort these out up-front so that errors are raised when the extension is loaded
         # and not in the middle of the user's session.  The extension will fail to load
@@ -367,7 +367,7 @@ class ExtensionProxy(Extension, AsdfExtension):
     @property
     def legacy(self):
         """
-        Get the extension's legacy flag.  Subclasses of ``asdf.extension.AsdfExtension``
+        Get the extension's legacy flag.  Subclasses of ``asdf.extension._AsdfExtension``
         are marked `True`.
 
         Returns
