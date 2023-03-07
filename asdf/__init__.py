@@ -5,7 +5,6 @@ Data Format (ASDF) files
 
 __all__ = [
     "AsdfFile",
-    "CustomType",
     "Stream",
     "open",
     "IntegerType",
@@ -21,7 +20,6 @@ __all__ = [
 from jsonschema import ValidationError
 
 from ._convenience import info
-from ._types import CustomType
 from ._version import version as __version__
 from .asdf import AsdfFile
 from .asdf import open_asdf as open

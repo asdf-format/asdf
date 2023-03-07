@@ -70,9 +70,7 @@ class AsdfFile:
 
         extensions : object, optional
             Additional extensions to use when reading and writing the file.
-            May be any of the following: `asdf.extension.AsdfExtension`,
-            `asdf.extension.Extension`, `asdf.extension.AsdfExtensionList`
-            or a `list` of extensions.
+            May be an `asdf.extension.Extension` or a `list` of extensions.
 
         version : str, optional
             The ASDF Standard version.  If not provided, defaults to the
@@ -235,7 +233,7 @@ class AsdfFile:
 
         Parameters
         ----------
-        value : list of asdf.extension.AsdfExtension or asdf.extension.Extension
+        value : list of asdf.extension.Extension
         """
         self._user_extensions = self._process_user_extensions(value)
         self._extension_manager = None
@@ -352,9 +350,7 @@ class AsdfFile:
         Parameters
         ----------
         extensions : object
-            May be any of the following: `asdf.extension.AsdfExtension`,
-            `asdf.extension.Extension`, `asdf.extension.AsdfExtensionList`
-            or a `list` of extensions.
+            May be an `asdf.extension.Extension` or a `list` of extensions.
 
         Returns
         -------
@@ -368,7 +364,7 @@ class AsdfFile:
             extensions = extensions.extensions
 
         if not isinstance(extensions, list):
-            msg = "The extensions parameter must be an extension, list of extensions, or instance of AsdfExtensionList"
+            msg = "The extensions parameter must be an extension or list of extensions"
             raise TypeError(msg)
 
         extensions = [ExtensionProxy.maybe_wrap(e) for e in extensions]
@@ -1751,9 +1747,7 @@ def open_asdf(
 
     extensions : object, optional
         Additional extensions to use when reading and writing the file.
-        May be any of the following: `asdf.extension.AsdfExtension`,
-        `asdf.extension.Extension`, `asdf.extension.AsdfExtensionList`
-        or a `list` of extensions.
+        May be an `asdf.extension.Extension` or a `list` of extensions.
 
     ignore_version_mismatch : bool, optional
         When `True`, do not raise warnings for mismatched schema versions.
@@ -1889,7 +1883,7 @@ class SerializationContext:
 
         Parameters
         ----------
-        extension : asdf.extension.AsdfExtension or asdf.extension.Extension
+        extension : asdf.extension.Extension
         """
         self.__extensions_used.add(ExtensionProxy.maybe_wrap(extension))
 
@@ -1900,7 +1894,7 @@ class SerializationContext:
 
         Returns
         -------
-        set of asdf.extension.AsdfExtension or asdf.extension.Extension
+        set of asdf.extension.Extension
         """
         return self.__extensions_used
 

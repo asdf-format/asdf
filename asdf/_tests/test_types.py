@@ -36,7 +36,7 @@ class FractionWithInverse(Fraction):
 
 with pytest.warns(AsdfDeprecationWarning, match=".*subclasses the deprecated CustomType.*"):
 
-    class FractionWithInverseType(asdf.CustomType):
+    class FractionWithInverseType(types.CustomType):
         name = "fraction_with_inverse"
         organization = "nowhere.org"
         version = (1, 0, 0)
@@ -604,7 +604,7 @@ def test_super_use_in_versioned_subclass():
         match=".*subclasses the deprecated CustomType.*",
     ):
 
-        class FooType(asdf.CustomType):
+        class FooType(types.CustomType):
             name = "foo"
             version = (1, 0, 0)
             supported_versions = [(1, 1, 0), (1, 2, 0)]

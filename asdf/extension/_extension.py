@@ -325,7 +325,7 @@ class ExtensionProxy(Extension, AsdfExtension):
 
         Returns
         -------
-        asdf.extension.Extension or asdf.extension.AsdfExtension
+        asdf.extension.Extension
         """
         return self._delegate
 
@@ -367,7 +367,7 @@ class ExtensionProxy(Extension, AsdfExtension):
     @property
     def legacy(self):
         """
-        Get the extension's legacy flag.  Subclasses of `asdf.extension.AsdfExtension`
+        Get the extension's legacy flag.  Subclasses of ``asdf.extension.AsdfExtension``
         are marked `True`.
 
         Returns
