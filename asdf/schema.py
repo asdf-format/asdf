@@ -534,8 +534,9 @@ def get_validator(
         A dictionary mapping properties to validators to use (instead
         of the built-in ones and ones provided by extension types).
 
-    url_mapping : resolver.Resolver, optional
-        A resolver to convert remote URLs into local ones.
+    url_mapping : callable, optional
+        A callable that takes one string argument and returns a string
+        to convert remote URLs into local ones.
 
     _visit_repeat_nodes : bool, optional
         Force the validator to visit nodes that it has already
