@@ -12,10 +12,6 @@ to create their own custom ASDF types and extensions.
 .. automodapi:: asdf.exceptions
     :skip: ValidationError
 
-..
-        .. automodule:: asdf.extension
-            :members: Extension, ExtensionProxy, ManifestExtension, ExtensionManager, get_cached_extension_manager, TagDefinition, Converter, ConverterProxy, Compressor, Validator
-
 .. automodapi:: asdf.extension
 
 .. automodapi:: asdf.resource
