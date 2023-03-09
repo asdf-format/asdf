@@ -329,7 +329,7 @@ class NDArrayType(_types.AsdfType):
                 msg = "'*' may only be in first entry of shape"
                 raise ValueError(msg)
 
-            stride = strides[0] if strides is not None else np.product(shape[1:]) * dtype.itemsize
+            stride = strides[0] if strides is not None else np.prod(shape[1:]) * dtype.itemsize
 
             missing = int(block_size / stride)
             return [missing] + shape[1:]
