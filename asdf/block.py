@@ -583,7 +583,7 @@ class BlockManager:
         if all_array_storage is None:
             threshold = get_config().array_inline_threshold
             if threshold is not None and block.array_storage in ["internal", "inline"]:
-                if np.product(block.data.shape) < threshold:
+                if np.prod(block.data.shape) < threshold:
                     self.set_array_storage(block, "inline")
                 else:
                     self.set_array_storage(block, "internal")
