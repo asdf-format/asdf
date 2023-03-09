@@ -909,7 +909,7 @@ def test_block_key():
 
     # add a block for an array
     arr = np.array([1, 2, 3], dtype="uint8")
-    arr_blk = bm.find_or_create_block_for_array(arr, af)
+    arr_blk = bm.find_or_create_block_for_array(arr)
     assert arr_blk in bm._internal_blocks
 
     # now make a new block, add it using a key
@@ -918,6 +918,10 @@ def test_block_key():
     bm.add(blk, key)
     assert arr_blk in bm._internal_blocks
     assert blk in bm._internal_blocks
+
+    # make sure we can retrieve the block by the key
+    assert bm.find_or_create_block(key) is blk
+    assert isinstance(bm.find_or_create_block("bar"), block.Block)
 
     # now remove it, the original array block should remain
     bm.remove(blk)
