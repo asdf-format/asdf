@@ -830,3 +830,26 @@ def test_block_allocation_on_validate():
     assert len(list(af._blocks.blocks)) == 1
     af.validate()
     assert len(list(af._blocks.blocks)) == 1
+
+
+def test_block_key():
+    # make an AsdfFile to get a BlockManager
+    af = asdf.AsdfFile()
+    bm = af._blocks
+
+    # add a block for an array
+    arr = np.array([1, 2, 3], dtype="uint8")
+    arr_blk = bm.find_or_create_block_for_array(arr, af)
+    assert arr_blk in bm._internal_blocks
+
+    # now make a new block, add it using a key
+    blk = block.Block(arr)
+    key = "foo"
+    bm.add(blk, key)
+    assert arr_blk in bm._internal_blocks
+    assert blk in bm._internal_blocks
+
+    # now remove it, the original array block should remain
+    bm.remove(blk)
+    assert arr_blk in bm._internal_blocks
+    assert blk not in bm._internal_blocks

@@ -91,9 +91,9 @@ class BlockManager:
         if block_set is not None:
             if block in block_set:
                 block_set.remove(block)
-                if block._data is not None and id(block._data) in self._data_to_block_mapping:
-                    del self._data_to_block_mapping[id(block._data)]
-
+                for key, blk in list(self._data_to_block_mapping.items()):
+                    if blk is block:
+                        del self._data_to_block_mapping[key]
         else:
             msg = f"Unknown array storage type {block.array_storage}"
             raise ValueError(msg)
