@@ -749,6 +749,30 @@ class BlockManager:
 
         return block
 
+    def find_or_create_block(self, key, ctx):
+        """
+        For a given hashable key, looks for an existing block. If not
+        found, adds a new block to the block list. Returns the index
+        in the block list to the array.
+
+        Parameters
+        ----------
+        key : hashable
+
+        Returns
+        -------
+        block : Block
+        """
+        block = self._data_to_block_mapping.get(key)
+        if block is not None:
+            return block
+
+        block = Block()
+        self.add(block, key=key)
+        self._handle_global_block_settings(ctx, block)
+
+        return block
+
     def get_streamed_block(self):
         """
         Get the streamed block, which is always the last one.  A
