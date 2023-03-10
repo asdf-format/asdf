@@ -505,11 +505,9 @@ def _compile_uri_match_pattern(pattern):
 def get_file_type(fd):
     """
     Determine the file type of an open GenericFile instance.
-
     Parameters
     ----------
     fd : GenericFile
-
     Returns
     -------
     FileType

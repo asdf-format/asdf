@@ -68,7 +68,7 @@ def test_no_asdf_header(tmp_path):
     buff = io.BytesIO(content)
     with pytest.raises(
         ValueError,
-        match=r"Input object does not appear to be an ASDF file or a FITS with ASDF extension",
+        match=r"Does not appear to be a ASDF file.",
     ):
         asdf.open(buff)
 
@@ -77,7 +77,7 @@ def test_no_asdf_header(tmp_path):
 
     with open(path, "rb") as fd, pytest.raises(
         ValueError,
-        match=r"Input object does not appear to be an ASDF file or a FITS with ASDF extension",
+        match=r"Does not appear to be a ASDF file.",
     ):
         asdf.open(fd)
 
@@ -165,7 +165,7 @@ def test_not_asdf_file():
 
     with pytest.raises(
         ValueError,
-        match=r"Input object does not appear to be an ASDF file or a FITS with ASDF extension",
+        match=r"Does not appear to be a ASDF file.",
     ), asdf.open(buff):
         pass
 
@@ -174,7 +174,7 @@ def test_not_asdf_file():
 
     with pytest.raises(
         ValueError,
-        match=r"Input object does not appear to be an ASDF file or a FITS with ASDF extension",
+        match=r"Does not appear to be a ASDF file.",
     ), asdf.open(buff):
         pass
 
@@ -184,6 +184,14 @@ def test_junk_file():
     buff.seek(0)
 
     with pytest.raises(ValueError, match=r"Invalid content between header and tree"), asdf.open(buff):
+        pass
+
+
+def test_invalid_header_version():
+    buff = io.BytesIO(b"#ASDF foo\n")
+    buff.seek(0)
+
+    with pytest.raises(ValueError, match=r"Unparsable version in ASDF file"), asdf.open(buff):
         pass
 
 

@@ -109,7 +109,6 @@ minversion = 4.6
 norecursedirs = ['build', 'docs/_build', 'docs/sphinxext']
 doctest_plus = 'enabled'
 remote_data_strict = true
-open_files_ignore = ['test.fits', 'asdf.fits']
 # The asdf.asdftypes module emits a warning on import,
 # which pytest trips over during collection:
 filterwarnings = [
@@ -202,7 +201,7 @@ extend-exclude = ["asdf/extern/*", "docs/*"]
 exclude = ["asdf/extern/*"]
 
 [tool.codespell]
-skip="*.pdf,*.fits,*.asdf,.tox,asdf/extern,build,./tags,.git,docs/_build"
+skip="*.pdf,*.asdf,.tox,asdf/extern,build,./tags,.git,docs/_build"
 ignore-words-list="""
 fo,
 """

@@ -18,11 +18,6 @@ useful operations:
 
   - ``edit``: Edit the YAML portion of an ASDF file.
 
-  - ``remove-hdu``: Remove ASDF extension from ASDF-in-FITS file (requires
-    :ref:`astropy:getting-started`, see :ref:`asdf-in-fits`).
-    This command is deprecated as part of ASDF dropping support for
-    ASDF-in-FITS. See :ref:`asdf-in-fits` for migration information.
-
   - ``info``: Print a rendering of an ASDF tree.
 
   - ``extensions``: Show information about installed extensions (see

@@ -272,9 +272,7 @@ class NDArrayType(_types.AsdfType):
             block = self.block
             shape = self.get_actual_shape(self._shape, self._strides, self._dtype, len(block))
 
-            dtype = block.data.dtype if block.trust_data_dtype else self._dtype
-
-            self._array = np.ndarray(shape, dtype, block.data, self._offset, self._strides, self._order)
+            self._array = np.ndarray(shape, self._dtype, block.data, self._offset, self._strides, self._order)
             self._array = self._apply_mask(self._array, self._mask)
         return self._array
 
@@ -448,43 +446,15 @@ class NDArrayType(_types.AsdfType):
 
         block = ctx._blocks.find_or_create_block_for_array(data, ctx)
 
-        if block.array_storage == "fits":
-            # Views over arrays stored in FITS files have some idiosyncrasies.
-            # astropy.io.fits always writes arrays C-contiguous with big-endian
-            # byte order, whereas asdf preserves the "contiguousity" and byte order
-            # of the base array.
-            if (
-                block.data.shape != data.shape
-                or block.data.dtype != data.dtype
-                or block.data.ctypes.data != data.ctypes.data
-                or block.data.strides != data.strides
-            ):
-                msg = (
-                    "ASDF has only limited support for serializing views over arrays stored "
-                    "in FITS HDUs.  This error likely means that a slice of such an array "
-                    "was found in the ASDF tree.  The slice can be decoupled from the FITS "
-                    "array by calling copy() before assigning it to the tree."
-                )
-                raise ValueError(msg)
+        # Compute the offset relative to the base array and not the
+        # block data, in case the block is compressed.
+        offset = data.ctypes.data - base.ctypes.data
 
-            offset = 0
-            strides = None
-            dtype, byteorder = numpy_dtype_to_asdf_datatype(
-                data.dtype,
-                include_byteorder=(block.array_storage != "inline"),
-                override_byteorder="big",
-            )
-        else:
-            # Compute the offset relative to the base array and not the
-            # block data, in case the block is compressed.
-            offset = data.ctypes.data - base.ctypes.data
-
-            strides = None if data.flags.c_contiguous else data.strides
-
-            dtype, byteorder = numpy_dtype_to_asdf_datatype(
-                data.dtype,
-                include_byteorder=(block.array_storage != "inline"),
-            )
+        strides = None if data.flags.c_contiguous else data.strides
+        dtype, byteorder = numpy_dtype_to_asdf_datatype(
+            data.dtype,
+            include_byteorder=(block.array_storage != "inline"),
+        )
 
         result = {}
 

@@ -15,7 +15,7 @@ from . import _version as version
 from . import block, constants, generic_io, reference, schema, treeutil, util, versioning, yamlutil
 from ._helpers import validate_version
 from .config import config_context, get_config
-from .exceptions import AsdfConversionWarning, AsdfDeprecationWarning, AsdfWarning
+from .exceptions import AsdfConversionWarning, AsdfDeprecationWarning, AsdfWarning, DelimiterNotFoundError
 from .extension import Extension, ExtensionProxy, _legacy, get_cached_extension_manager
 from .search import AsdfSearchResult
 from .tags.core import AsdfObject, ExtensionMetadata, HistoryEntry, Software
@@ -878,7 +878,11 @@ class AsdfFile:
             self._fd = fd
             # The filename is currently only used for tracing warning information
             self._fname = self._fd._uri if self._fd._uri else ""
-            header_line = fd.read_until(b"\r?\n", 2, "newline", include=True)
+            try:
+                header_line = fd.read_until(b"\r?\n", 2, "newline", include=True)
+            except DelimiterNotFoundError as e:
+                msg = "Does not appear to be a ASDF file."
+                raise ValueError(msg) from e
             self._file_format_version = cls._parse_header_line(header_line)
             self.version = self._file_format_version
 
@@ -971,79 +975,10 @@ class AsdfFile:
         ignore_missing_extensions=False,
         **kwargs,
     ):
-        """Attempt to open file-like object as either AsdfFile or AsdfInFits"""
+        """Attempt to open file-like object as an AsdfFile"""
         close_on_fail = isinstance(fd, (str, pathlib.Path))
         generic_file = generic_io.get_file(fd, mode=mode, uri=uri)
         try:
-            return cls._open_generic_file(
-                self,
-                generic_file,
-                uri,
-                validate_checksums,
-                extensions,
-                _get_yaml_content,
-                _force_raw_types,
-                strict_extension_check,
-                ignore_missing_extensions,
-                **kwargs,
-            )
-        except Exception:
-            if close_on_fail:
-                generic_file.close()
-            raise
-
-    @classmethod
-    def _open_generic_file(
-        cls,
-        self,
-        generic_file,
-        uri=None,
-        validate_checksums=False,
-        extensions=None,
-        _get_yaml_content=False,
-        _force_raw_types=False,
-        strict_extension_check=False,
-        ignore_missing_extensions=False,
-        **kwargs,
-    ):
-        """Attempt to open a generic_file instance as either AsdfFile or AsdfInFits"""
-        file_type = util.get_file_type(generic_file)
-
-        if file_type == util.FileType.FITS:
-            # TODO: this feels a bit circular, try to clean up. Also
-            # this introduces another dependency on astropy which may
-            # not be desirable.
-            try:
-                # Try to import ASDF in FITS
-                from . import fits_embed
-
-            except ImportError:
-                msg = (
-                    "Input object does not appear to be an ASDF file. Cannot check "
-                    "if it is a FITS with ASDF extension because 'astropy' is not "
-                    "installed"
-                )
-                raise ValueError(msg) from None
-
-            try:
-                # Try to open as FITS with ASDF extension
-                return fits_embed.AsdfInFits._open_impl(
-                    generic_file,
-                    uri=uri,
-                    validate_checksums=validate_checksums,
-                    extensions=extensions,
-                    ignore_version_mismatch=self._ignore_version_mismatch,
-                    strict_extension_check=strict_extension_check,
-                    ignore_missing_extensions=ignore_missing_extensions,
-                    ignore_unrecognized_tag=self._ignore_unrecognized_tag,
-                    **kwargs,
-                )
-
-            except ValueError:
-                msg = "Input object does not appear to be an ASDF file or a FITS with ASDF extension"
-                raise ValueError(msg) from None
-
-        if file_type == util.FileType.ASDF:
             return cls._open_asdf(
                 self,
                 generic_file,
@@ -1055,9 +990,10 @@ class AsdfFile:
                 ignore_missing_extensions=ignore_missing_extensions,
                 **kwargs,
             )
-
-        msg = "Input object does not appear to be an ASDF file or a FITS with ASDF extension"
-        raise ValueError(msg)
+        except Exception:
+            if close_on_fail:
+                generic_file.close()
+            raise
 
     @classmethod
     def open(  # noqa: A003

@@ -66,7 +66,7 @@ def test_file_not_found():
     filenames = ["frames.diff", "blocks.diff"]
     with pytest.raises(
         RuntimeError,
-        match=r"Input object does not appear to be an ASDF file or a FITS with ASDF extension",
+        match=r"Does not appear to be a ASDF file.",
     ):
         diff([get_test_data_path(name) for name in filenames], False)
 

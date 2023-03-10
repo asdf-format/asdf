@@ -378,7 +378,7 @@ def test_bad_input(tmp_path):
 
     with pytest.raises(
         ValueError,
-        match=r"Input object does not appear to be an ASDF file or a FITS with ASDF extension",
+        match=r"Does not appear to be a ASDF file.",
     ):
         open_asdf(text_file)
 
@@ -393,7 +393,7 @@ def test_unclosed_file(tmp_path):
 
     with pytest.raises(
         ValueError,
-        match=r"Input object does not appear to be an ASDF file or a FITS with ASDF extension",
+        match=r"Does not appear to be a ASDF file.",
     ), open_asdf(path):
         pass
 

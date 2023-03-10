@@ -878,15 +878,6 @@ class Block:
         return self.offset + self.header_size + self.allocated
 
     @property
-    def trust_data_dtype(self):
-        """
-        If True, ignore the datatype and byteorder fields from the
-        tree and take the data array's dtype at face value.  This
-        is used to support blocks stored in FITS files.
-        """
-        return False
-
-    @property
     def array_storage(self):
         return self._array_storage
 

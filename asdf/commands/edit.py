@@ -190,7 +190,7 @@ def edit(path):
     """
     # Extract the YAML portion of the original file:
     with generic_io.get_file(path, mode="r") as fd:
-        if util.get_file_type(fd) != util.FileType.ASDF:
+        if fd.peek(len(constants.ASDF_MAGIC)) != constants.ASDF_MAGIC:
             print(f"Error: '{path}' is not an ASDF file.")  # noqa: T201
             return 1
 
