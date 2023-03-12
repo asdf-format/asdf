@@ -29,8 +29,8 @@ class IntegerConverter(Converter):
     def select_tag(self, obj, tags, ctx):
         if isinstance(obj, IntegerType) or obj < constants.MIN_NUMBER or obj > constants.MAX_NUMBER:
             return tags[0]
-        else:
-            return None
+
+        return None
 
     def to_yaml_tree(self, obj, tag, ctx):
         if tag is None:
