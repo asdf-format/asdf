@@ -1,7 +1,4 @@
-from . import _types
-
-
-class ExternalArrayReference(_types.AsdfType):
+class ExternalArrayReference:
     """
     Store a reference to an array in an external File.
 
@@ -39,9 +36,6 @@ class ExternalArrayReference(_types.AsdfType):
 
     """
 
-    name = "core/externalarray"
-    version = (1, 0, 0)
-
     def __init__(self, fileuri, target, dtype, shape):
         self.fileuri = str(fileuri)
         self.target = target
@@ -61,17 +55,3 @@ class ExternalArrayReference(_types.AsdfType):
         shape = self.shape == other.shape
 
         return all((uri, target, dtype, shape))
-
-    @classmethod
-    def to_tree(cls, data, ctx):
-        node = {}
-        node["fileuri"] = data.fileuri
-        node["target"] = data.target
-        node["datatype"] = data.dtype
-        node["shape"] = data.shape
-
-        return node
-
-    @classmethod
-    def from_tree(cls, tree, ctx):
-        return cls(tree["fileuri"], tree["target"], tree["datatype"], tree["shape"])

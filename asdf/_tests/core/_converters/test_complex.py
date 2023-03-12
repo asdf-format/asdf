@@ -3,14 +3,16 @@ import re
 import pytest
 
 import asdf
-from asdf._tests import _helpers as helpers
+from asdf.testing import helpers
 
 
 def make_complex_asdf(string):
-    yaml = f"""
+    yaml = """
 a: !core/complex-1.0.0
-  {string}
-    """
+  {}
+    """.format(
+        string
+    )
 
     return helpers.yaml_to_asdf(yaml)
 
@@ -34,8 +36,9 @@ a: !core/complex-1.0.0
     ],
 )
 def test_invalid_complex(invalid):
-    with pytest.raises(asdf.ValidationError, match=r".* does not match.*"), asdf.open(make_complex_asdf(invalid)):
-        pass
+    with pytest.raises(asdf.ValidationError):
+        with asdf.open(make_complex_asdf(invalid)):
+            pass
 
 
 @pytest.mark.parametrize(
@@ -71,13 +74,25 @@ def test_valid_complex(valid):
         assert af.tree["a"] == complex(re.sub(r"[iI]$", r"j", valid))
 
 
-@pytest.mark.parametrize("valid", ["nan", "nan+nanj", "nan+nani", "nanj", "nani", "NANi", "NANI", "3+nanj", "nan+4j"])
+@pytest.mark.parametrize(
+    "valid",
+    ["nan", "nan+nanj", "nan+nani", "nanj", "nani", "NANi", "NANI", "3+nanj", "nan+4j"],
+)
 def test_valid_nan_complex(valid):
     with asdf.open(make_complex_asdf(valid)):
         pass
 
 
-def test_roundtrip(tmpdir):
-    tree = {"a": 0 + 0j, "b": 1 + 1j, "c": -1 + 1j, "d": -1 - 1j}
+def test_roundtrip():
+    values = {
+        "a": 0 + 0j,
+        "b": 1 + 1j,
+        "c": -1 + 1j,
+        "d": -1 - 1j,
+    }
 
-    helpers.assert_roundtrip_tree(tree, tmpdir)
+    result = helpers.roundtrip_object(values)
+
+    assert len(values) == len(result)
+    for key, value in values.items():
+        assert result[key] == value
