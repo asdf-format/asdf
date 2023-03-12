@@ -40,10 +40,7 @@ class IntegerConverter(Converter):
             obj = int(obj)
 
         abs_value = int(np.abs(obj))
-        if obj < 0:
-            sign = "-"
-        else:
-            sign = "+"
+        sign = "-" if obj < 0 else "+"
 
         # Pack integer value into 32-bit words:
         words = []

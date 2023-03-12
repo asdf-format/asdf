@@ -11,7 +11,7 @@ from asdf.testing import helpers
 
 
 @pytest.fixture(autouse=True)
-def set_random_seed(): # noqa: PT004
+def set_random_seed():  # noqa: PT004
     # Make sure tests are deterministic
     random.seed(0)
 

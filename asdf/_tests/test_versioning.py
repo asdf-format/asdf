@@ -1,16 +1,10 @@
 from itertools import combinations
 
-import pytest
-
-from asdf.extension._legacy import default_extensions
-from asdf.schema import load_schema
 from asdf.versioning import (
     AsdfSpec,
     AsdfVersion,
     asdf_standard_development_version,
     default_version,
-    get_version_map,
-    join_tag_version,
     supported_versions,
 )
 
