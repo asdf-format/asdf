@@ -7,12 +7,10 @@ from asdf.testing import helpers
 
 
 def make_complex_asdf(string):
-    yaml = """
+    yaml = f"""
 a: !core/complex-1.0.0
-  {}
-    """.format(
-        string
-    )
+  {string}
+    """
 
     return helpers.yaml_to_asdf(yaml)
 
@@ -36,9 +34,8 @@ a: !core/complex-1.0.0
     ],
 )
 def test_invalid_complex(invalid):
-    with pytest.raises(asdf.ValidationError):
-        with asdf.open(make_complex_asdf(invalid)):
-            pass
+    with pytest.raises(asdf.ValidationError), asdf.open(make_complex_asdf(invalid)):
+        pass
 
 
 @pytest.mark.parametrize(

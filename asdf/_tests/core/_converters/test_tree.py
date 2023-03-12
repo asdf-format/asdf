@@ -48,7 +48,11 @@ metadata: !core/extension_metadata-1.0.0
 
 def test_software():
     software = Software(
-        name="FooSoft", version="1.5.0", author="The Foo Developers", homepage="http://nowhere.org", extra="property"
+        name="FooSoft",
+        version="1.5.0",
+        author="The Foo Developers",
+        homepage="http://nowhere.org",
+        extra="property",
     )
 
     result = helpers.roundtrip_object(software)
