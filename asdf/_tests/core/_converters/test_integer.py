@@ -20,12 +20,12 @@ def set_random_seed(): # noqa: PT004
 @pytest.mark.parametrize(
     "value",
     [
-        random.getrandbits(64),
-        random.getrandbits(65),
-        random.getrandbits(100),
-        random.getrandbits(128),
-        random.getrandbits(129),
-        random.getrandbits(200),
+        12354295463861780261,
+        34350970557135724229,
+        111486802101863275720740618121,
+        120141276809567679697787158724268622606,
+        87364497025259279754758976379453629691,
+        537931524073525845224042128940663068627838630773304450902654,
     ],
 )
 def test_integer_roundtrip(sign, value):
