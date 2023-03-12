@@ -238,7 +238,7 @@ def test_metadata_with_custom_extension(tmpdir):
 
     # We expect metadata about both the Builtin extension and the custom one
     with asdf.open(tmpfile, extensions=FractionExtension()) as af:
-        assert len(af["history"]["extensions"]) == 2
+        assert len(af["history"]["extensions"]) == 3
 
     with pytest.warns(AsdfWarning, match=r"was created with extension"), asdf.open(
         tmpfile,
@@ -254,7 +254,7 @@ def test_metadata_with_custom_extension(tmpdir):
         ff.write_to(tmpfile2)
 
     with asdf.open(tmpfile2) as af:
-        assert len(af["history"]["extensions"]) == 1
+        assert len(af["history"]["extensions"]) == 2
 
     with assert_no_warnings(), asdf.open(tmpfile2):
         pass
@@ -266,4 +266,4 @@ def test_metadata_with_custom_extension(tmpdir):
         ff.write_to(tmpfile3)
 
     with asdf.open(tmpfile3, extensions=FractionExtension()) as af:
-        assert len(af["history"]["extensions"]) == 2
+        assert len(af["history"]["extensions"]) == 3

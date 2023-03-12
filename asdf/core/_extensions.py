@@ -1,5 +1,6 @@
 from asdf.extension import ManifestExtension
 
+from ._converters.integer import IntegerConverter
 from ._validators import ndarray
 
 VALIDATORS = [
@@ -8,6 +9,9 @@ VALIDATORS = [
     ndarray.DatatypeValidator(),
 ]
 
+CONVERTERS = [
+    IntegerConverter(),
+]
 
 MANIFEST_URIS = [
     "asdf://asdf-format.org/core/manifests/core-1.0.0",
@@ -20,4 +24,4 @@ MANIFEST_URIS = [
 ]
 
 
-EXTENSIONS = [ManifestExtension.from_uri(u, validators=VALIDATORS) for u in MANIFEST_URIS]
+EXTENSIONS = [ManifestExtension.from_uri(u, converters=CONVERTERS, validators=VALIDATORS) for u in MANIFEST_URIS]

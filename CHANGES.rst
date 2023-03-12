@@ -7,6 +7,7 @@ The ASDF Standard is at v1.6.0
 - Drop support for ASDF-in-FITS. [#1288]
 - Add ``all_array_storage``, ``all_array_compression`` and
   ``all_array_compression_kwargs`` to ``asdf.config.AsdfConfig`` [#1468]
+- Move large integer support to Converter and deprecate IntegerType. [#1475]
 
 2.15.0 (2023-03-28)
 -------------------

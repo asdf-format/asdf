@@ -588,34 +588,6 @@ def get_validator(
     return cls({} if schema is None else schema, *args, ctx=ctx, serialization_context=_serialization_context, **kwargs)
 
 
-def _validate_large_literals(instance, reading):
-    """
-    Validate that the tree has no large numeric literals.
-    """
-
-    def _validate(value):
-        if value <= constants.MAX_NUMBER and value >= constants.MIN_NUMBER:
-            return
-
-        if reading:
-            warnings.warn(
-                f"Invalid integer literal value {value} detected while reading file. "
-                "The value has been read safely, but the file should be "
-                "fixed.",
-                AsdfWarning,
-            )
-        else:
-            msg = f"Integer value {value} is too large to safely represent as a literal in ASDF"
-            raise ValidationError(msg)
-
-    if isinstance(instance, Integral):
-        _validate(instance)
-    elif isinstance(instance, Mapping):
-        for key in instance:
-            if isinstance(key, Integral):
-                _validate(key)
-
-
 def _validate_mapping_keys(instance, reading):
     """
     Validate that mappings do not contain illegal key types
@@ -676,7 +648,7 @@ def validate(instance, ctx=None, schema=None, validators=None, reading=False, *a
     validator = get_validator({} if schema is None else schema, ctx, validators, ctx._resolver, *args, **kwargs)
     validator.validate(instance)
 
-    additional_validators = [_validate_large_literals]
+    additional_validators = []
     if ctx.version >= versioning.RESTRICTED_KEYS_MIN_VERSION:
         additional_validators.append(_validate_mapping_keys)
 

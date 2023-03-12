@@ -237,6 +237,10 @@ def custom_tree_to_tagged_tree(tree, ctx, _serialization_context=None):
         elif isinstance(node, str):
             tagged_node = tagged.TaggedString(node)
             tagged_node._tag = tag
+        elif tag is None:
+            # Converters are permitted to return non-taggable node types
+            # if they also specify that no tag is to be applied.
+            tagged_node = node
         else:
             msg = f"Converter returned illegal node type: {util.get_class_name(node)}"
             raise TypeError(msg)
