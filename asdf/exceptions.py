@@ -22,6 +22,13 @@ class AsdfDeprecationWarning(AsdfWarning, DeprecationWarning):
     """
 
 
+class AsdfMissingExtensionWarning(Warning):
+    """
+    Warning class issued when an ASDF file's metadata specifies
+    an extension that is not enabled in the current environment.
+    """
+
+
 class AsdfConversionWarning(AsdfWarning):
     """
     Warning class used for failures to convert data into custom types.

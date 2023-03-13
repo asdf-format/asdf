@@ -10,7 +10,7 @@ from asdf import _types as types
 from asdf import util
 from asdf._tests import _helpers as helpers
 from asdf._tests._helpers import assert_no_warnings, yaml_to_asdf
-from asdf.exceptions import AsdfDeprecationWarning, AsdfWarning
+from asdf.exceptions import AsdfDeprecationWarning, AsdfMissingExtensionWarning, AsdfWarning
 from asdf.tags.core import HistoryEntry
 
 SCHEMA_PATH = os.path.join(os.path.dirname(helpers.__file__), "data")
@@ -151,7 +151,9 @@ history:
     """
 
     buff = yaml_to_asdf(yaml)
-    with pytest.warns(AsdfWarning, match=r"File was created with extension class 'foo.bar.FooBar'"), asdf.open(buff):
+    with pytest.warns(
+        AsdfMissingExtensionWarning, match=r"File was created with extension class 'foo.bar.FooBar'"
+    ), asdf.open(buff):
         pass
 
 
@@ -176,8 +178,10 @@ history:
     buff.seek(0)
 
     # Make sure suppressing the warning works too
-    with assert_no_warnings(), asdf.open(buff, ignore_missing_extensions=True):
-        pass
+    with assert_no_warnings():
+        with pytest.warns(AsdfDeprecationWarning, match=".*ignore_missing_extensions.*"):
+            with asdf.open(buff, ignore_missing_extensions=True):
+                pass
 
 
 def test_strict_extension_check():
@@ -194,17 +198,21 @@ history:
     buff = yaml_to_asdf(yaml)
     with pytest.raises(
         RuntimeError,
-        match=r"File was created with extension class .*, which is not currently installed",
-    ), asdf.open(buff, strict_extension_check=True):
-        pass
+        match=r"File was created with extension class .*, which is not currently enabled",
+    ):
+        with pytest.warns(AsdfDeprecationWarning, match=".*strict_extension_check.*"):
+            with asdf.open(buff, strict_extension_check=True):
+                pass
 
     # Make sure to test for incompatibility with ignore_missing_extensions
     buff.seek(0)
     with pytest.raises(
         ValueError,
         match=r"'strict_extension_check' and 'ignore_missing_extensions' are incompatible options",
-    ), asdf.open(buff, strict_extension_check=True, ignore_missing_extensions=True):
-        pass
+    ):
+        with pytest.warns(AsdfDeprecationWarning):
+            with asdf.open(buff, strict_extension_check=True, ignore_missing_extensions=True):
+                pass
 
 
 def test_metadata_with_custom_extension(tmpdir):
@@ -240,7 +248,7 @@ def test_metadata_with_custom_extension(tmpdir):
     with asdf.open(tmpfile, extensions=FractionExtension()) as af:
         assert len(af["history"]["extensions"]) == 2
 
-    with pytest.warns(AsdfWarning, match=r"was created with extension"), asdf.open(
+    with pytest.warns(AsdfMissingExtensionWarning, match=r"was created with extension"), asdf.open(
         tmpfile,
         ignore_unrecognized_tag=True,
     ):

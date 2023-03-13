@@ -15,7 +15,13 @@ from . import _version as version
 from . import block, constants, generic_io, reference, schema, treeutil, util, versioning, yamlutil
 from ._helpers import validate_version
 from .config import config_context, get_config
-from .exceptions import AsdfConversionWarning, AsdfDeprecationWarning, AsdfWarning, DelimiterNotFoundError
+from .exceptions import (
+    AsdfConversionWarning,
+    AsdfDeprecationWarning,
+    AsdfMissingExtensionWarning,
+    AsdfWarning,
+    DelimiterNotFoundError,
+)
 from .extension import Extension, ExtensionProxy, _legacy, get_cached_extension_manager
 from .search import AsdfSearchResult
 from .tags.core import AsdfObject, ExtensionMetadata, HistoryEntry, Software
@@ -48,9 +54,9 @@ class AsdfFile:
         uri=None,
         extensions=None,
         version=None,
-        ignore_version_mismatch=True,
-        ignore_unrecognized_tag=False,
-        ignore_implicit_conversion=False,
+        ignore_version_mismatch=None,
+        ignore_unrecognized_tag=None,
+        ignore_implicit_conversion=None,
         copy_arrays=False,
         lazy_load=True,
         custom_schema=None,
@@ -79,14 +85,17 @@ class AsdfFile:
             configured default version.  See `asdf.config.AsdfConfig.default_version`.
 
         ignore_version_mismatch : bool, optional
+            DEPRECATED
             When `True`, do not raise warnings for mismatched schema versions.
             Set to `True` by default.
 
         ignore_unrecognized_tag : bool, optional
+            DEPRECATED
             When `True`, do not raise warnings for unrecognized tags. Set to
             `False` by default.
 
         ignore_implicit_conversion : bool
+            DEPRECATED
             When `True`, do not raise warnings when types in the tree are
             implicitly converted into a serializable object. The motivating
             case for this is currently ``namedtuple``, which cannot be serialized
@@ -112,6 +121,27 @@ class AsdfFile:
             files follow custom conventions beyond those enforced by the
             standard.
         """
+        if ignore_version_mismatch is not None:
+            warnings.warn(
+                "The ignore_version_mismatch argument to AsdfFile will be removed in 3.0.", AsdfDeprecationWarning
+            )
+        else:
+            ignore_version_mismatch = True
+
+        if ignore_unrecognized_tag is not None:
+            warnings.warn(
+                "The ignore_unrecognized_tag argument to AsdfFile will be removed in 3.0. "
+                "Use a warning filter to ignore asdf.exceptions.AsdfConversionWarning instead.",
+                AsdfDeprecationWarning,
+            )
+        else:
+            ignore_unrecognized_tag = False
+
+        if ignore_implicit_conversion is not None:
+            warnings.warn(
+                "The ignore_implicit_conversion argument to AsdfFile will be removed in 3.0.", AsdfDeprecationWarning
+            )
+
         # Don't use the version setter here; it tries to access
         # the extensions, which haven't been assigned yet.
         if version is None:
@@ -328,12 +358,12 @@ class AsdfFile:
             if installed is None:
                 msg = (
                     f"File {filename}was created with extension "
-                    f"{extension_description}, which is not currently installed"
+                    f"{extension_description}, which is not currently enabled"
                 )
                 if strict:
                     raise RuntimeError(msg)
 
-                warnings.warn(msg, AsdfWarning)
+                warnings.warn(msg, AsdfMissingExtensionWarning)
 
             elif extension.software:
                 # Local extensions may not have a real version.  If the package name changed,
@@ -344,7 +374,8 @@ class AsdfFile:
                 if Version(installed.package_version) < Version(extension.software["version"]):
                     msg = (
                         f"File {filename}was created with extension {extension_description}, "
-                        f"but older package ({installed.package_name}=={installed.package_version}) is installed."
+                        f"but older package ({installed.package_name}=={installed.package_version}) is installed. "
+                        "This warning will be removed in 3.0."
                     )
                     if strict:
                         raise RuntimeError(msg)
@@ -861,11 +892,29 @@ class AsdfFile:
         extensions=None,
         _get_yaml_content=False,
         _force_raw_types=False,
-        strict_extension_check=False,
-        ignore_missing_extensions=False,
+        strict_extension_check=None,
+        ignore_missing_extensions=None,
         **kwargs,
     ):
         """Attempt to populate AsdfFile data from file-like object"""
+        if strict_extension_check is not None:
+            warnings.warn(
+                "The strict_extension_check argument to asdf.open will be removed in 3.0. "
+                "To raise an exception when an extension is missing, use a warning filter "
+                "to convert asdf.exceptions.AsdfMissingExtensionWarning to an error.",
+                AsdfDeprecationWarning,
+            )
+        else:
+            strict_extension_check = False
+
+        if ignore_missing_extensions is not None:
+            warnings.warn(
+                "The ignore_missing_extensions argument to asdf.open will be removed in 3.0. "
+                "Use a warning filter to ignore asdf.exceptions.AsdfMissingExtensionWarning instead.",
+                AsdfDeprecationWarning,
+            )
+        else:
+            ignore_missing_extensions = False
 
         if strict_extension_check and ignore_missing_extensions:
             msg = "'strict_extension_check' and 'ignore_missing_extensions' are incompatible options"
@@ -971,8 +1020,8 @@ class AsdfFile:
         extensions=None,
         _get_yaml_content=False,
         _force_raw_types=False,
-        strict_extension_check=False,
-        ignore_missing_extensions=False,
+        strict_extension_check=None,
+        ignore_missing_extensions=None,
         **kwargs,
     ):
         """Attempt to open file-like object as an AsdfFile"""
@@ -1003,14 +1052,14 @@ class AsdfFile:
         mode="r",
         validate_checksums=False,
         extensions=None,
-        ignore_version_mismatch=True,
-        ignore_unrecognized_tag=False,
+        ignore_version_mismatch=None,
+        ignore_unrecognized_tag=None,
         _force_raw_types=False,
         copy_arrays=False,
         lazy_load=True,
         custom_schema=None,
-        strict_extension_check=False,
-        ignore_missing_extensions=False,
+        strict_extension_check=None,
+        ignore_missing_extensions=None,
         **kwargs,
     ):
         """
@@ -1769,14 +1818,14 @@ def open_asdf(
     mode=None,
     validate_checksums=False,
     extensions=None,
-    ignore_version_mismatch=True,
-    ignore_unrecognized_tag=False,
+    ignore_version_mismatch=None,
+    ignore_unrecognized_tag=None,
     _force_raw_types=False,
     copy_arrays=False,
     lazy_load=True,
     custom_schema=None,
-    strict_extension_check=False,
-    ignore_missing_extensions=False,
+    strict_extension_check=None,
+    ignore_missing_extensions=None,
     _compat=False,
     **kwargs,
 ):
@@ -1808,10 +1857,12 @@ def open_asdf(
         or a `list` of extensions.
 
     ignore_version_mismatch : bool, optional
+        DEPRECATED
         When `True`, do not raise warnings for mismatched schema versions.
         Set to `True` by default.
 
     ignore_unrecognized_tag : bool, optional
+        DEPRECATED
         When `True`, do not raise warnings for unrecognized tags. Set to
         `False` by default.
 
@@ -1843,6 +1894,7 @@ def open_asdf(
         `False`.
 
     ignore_missing_extensions : bool, optional
+        DEPRECATED
         When `True`, do not raise warnings when a file is read that
         contains metadata about extensions that are not available. Defaults
         to `False`.

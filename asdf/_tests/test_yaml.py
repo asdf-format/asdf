@@ -1,4 +1,5 @@
 import io
+import warnings
 from collections import OrderedDict, namedtuple
 from typing import NamedTuple
 
@@ -8,7 +9,7 @@ import yaml
 
 import asdf
 from asdf import tagged, treeutil, yamlutil
-from asdf.exceptions import AsdfWarning
+from asdf.exceptions import AsdfDeprecationWarning, AsdfWarning
 
 from . import _helpers as helpers
 
@@ -84,16 +85,14 @@ def run_tuple_test(tree, tmp_path):
     def check_raw_yaml(content):
         assert b"tuple" not in content
 
-    # Ignore these warnings for the tests that don't actually test the warning
-    init_options = {"ignore_implicit_conversion": True}
-
-    helpers.assert_roundtrip_tree(
-        tree,
-        tmp_path,
-        asdf_check_func=check_asdf,
-        raw_yaml_check_func=check_raw_yaml,
-        init_options=init_options,
-    )
+    with warnings.catch_warnings():
+        warnings.filterwarnings("ignore", ".*converting to list instead.*", AsdfWarning)
+        helpers.assert_roundtrip_tree(
+            tree,
+            tmp_path,
+            asdf_check_func=check_asdf,
+            raw_yaml_check_func=check_raw_yaml,
+        )
 
 
 def test_python_tuple(tmp_path):
@@ -143,8 +142,9 @@ def test_named_tuple_collections_recursive(tmp_path):
     def check_asdf(asdf):
         assert (asdf.tree["val"][2] == np.ones(3)).all()
 
-    init_options = {"ignore_implicit_conversion": True}
-    helpers.assert_roundtrip_tree(tree, tmp_path, asdf_check_func=check_asdf, init_options=init_options)
+    with warnings.catch_warnings():
+        warnings.filterwarnings("ignore", ".*converting to list instead.*", AsdfWarning)
+        helpers.assert_roundtrip_tree(tree, tmp_path, asdf_check_func=check_asdf)
 
 
 def test_named_tuple_typing_recursive(tmp_path):
@@ -158,8 +158,9 @@ def test_named_tuple_typing_recursive(tmp_path):
     def check_asdf(asdf):
         assert (asdf.tree["val"][2] == np.ones(3)).all()
 
-    init_options = {"ignore_implicit_conversion": True}
-    helpers.assert_roundtrip_tree(tree, tmp_path, asdf_check_func=check_asdf, init_options=init_options)
+    with warnings.catch_warnings():
+        warnings.filterwarnings("ignore", ".*converting to list instead.*", AsdfWarning)
+        helpers.assert_roundtrip_tree(tree, tmp_path, asdf_check_func=check_asdf)
 
 
 def test_implicit_conversion_warning():
@@ -170,8 +171,9 @@ def test_implicit_conversion_warning():
     with pytest.warns(AsdfWarning, match=r"Failed to serialize instance"), asdf.AsdfFile(tree):
         pass
 
-    with helpers.assert_no_warnings(), asdf.AsdfFile(tree, ignore_implicit_conversion=True):
-        pass
+    with helpers.assert_no_warnings():
+        with pytest.warns(AsdfDeprecationWarning, match="ignore_implicit_conversion"):
+            asdf.AsdfFile(tree, ignore_implicit_conversion=True)
 
 
 @pytest.mark.xfail(reason="pyyaml has a bug and does not support tuple keys")

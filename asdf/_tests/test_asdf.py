@@ -7,7 +7,7 @@ from asdf import config_context, get_config
 from asdf._tests._helpers import assert_no_warnings, assert_tree_match, yaml_to_asdf
 from asdf.asdf import AsdfFile, SerializationContext, open_asdf
 from asdf.entry_points import get_extensions
-from asdf.exceptions import AsdfWarning
+from asdf.exceptions import AsdfMissingExtensionWarning, AsdfWarning
 from asdf.extension import ExtensionManager, ExtensionProxy
 from asdf.extension._legacy import AsdfExtensionList
 from asdf.versioning import AsdfVersion
@@ -308,7 +308,7 @@ def test_reading_extension_metadata():
               extension_class: {extension_with_uri.class_name}
         """
         buff = yaml_to_asdf(content)
-        with pytest.warns(AsdfWarning, match=r"URI 'some-missing-URI'"):
+        with pytest.warns(AsdfMissingExtensionWarning, match=r"URI 'some-missing-URI'"):
             open_asdf(buff)
 
         # Warn when the class name is missing:
@@ -319,7 +319,7 @@ def test_reading_extension_metadata():
               extension_class: some.missing.class.Name
         """
         buff = yaml_to_asdf(content)
-        with pytest.warns(AsdfWarning, match=r"class 'some.missing.class.Name'"):
+        with pytest.warns(AsdfMissingExtensionWarning, match=r"class 'some.missing.class.Name'"):
             open_asdf(buff)
 
         # Warn when the package version is older:
