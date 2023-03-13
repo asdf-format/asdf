@@ -881,7 +881,8 @@ def test_assert_roundtrip_with_extension(tmp_path):
         assert isinstance(ff.tree["custom"], CustomType)
 
     with helpers.assert_no_warnings():
-        helpers.assert_roundtrip_tree(tree, tmp_path, extensions=[CustomTypeExtension()])
+        with pytest.warns(AsdfDeprecationWarning, match=".*extensions.*deprecated"):
+            helpers.assert_roundtrip_tree(tree, tmp_path, extensions=[CustomTypeExtension()])
 
     assert called_custom_assert_equal[0] is True
 

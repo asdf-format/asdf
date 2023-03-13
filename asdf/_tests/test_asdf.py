@@ -8,7 +8,7 @@ from asdf._tests._helpers import assert_no_warnings, assert_tree_match, yaml_to_
 from asdf.asdf import AsdfFile, SerializationContext, open_asdf
 from asdf.entry_points import get_extensions
 from asdf.exceptions import AsdfWarning
-from asdf.extension import ExtensionManager, ExtensionProxy
+from asdf.extension import AsdfDeprecationWarning, ExtensionManager, ExtensionProxy
 from asdf.extension._legacy import AsdfExtensionList
 from asdf.versioning import AsdfVersion
 
@@ -142,7 +142,8 @@ def test_asdf_file_version_requirement():
 
     # No warnings if the requirement is fulfilled:
     with assert_no_warnings():
-        AsdfFile(version="1.5.0", extensions=[extension_with_requirement])
+        with pytest.warns(AsdfDeprecationWarning, match=".*extensions.*deprecated"):
+            AsdfFile(version="1.5.0", extensions=[extension_with_requirement])
 
     # Version doesn't match the requirement, so we should see a warning
     # and the extension should not be enabled:

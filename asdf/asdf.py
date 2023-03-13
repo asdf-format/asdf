@@ -69,6 +69,7 @@ class AsdfFile:
             if possible and if created from `asdf.AsdfFile.open`.
 
         extensions : object, optional
+            DEPRECATED
             Additional extensions to use when reading and writing the file.
             May be any of the following: `asdf.extension.AsdfExtension`,
             `asdf.extension.Extension`, `asdf.extension.AsdfExtensionList`
@@ -119,6 +120,13 @@ class AsdfFile:
         else:
             self._version = versioning.AsdfVersion(validate_version(version))
 
+        if extensions is not None:
+            warnings.warn(
+                "The 'extensions' argument to AsdfFile is deprecated.  Use asdf.get_config().add_extension to "
+                "add an extension at runtime.",
+                AsdfDeprecationWarning,
+            )
+
         self._user_extensions = self._process_user_extensions(extensions)
         self._plugin_extensions = self._process_plugin_extensions()
         self._extension_manager = None
@@ -154,7 +162,7 @@ class AsdfFile:
             # an empty tree.
             self._tree = AsdfObject()
         elif isinstance(tree, AsdfFile):
-            if self.extensions != tree.extensions:
+            if self._extensions != tree._extensions:
                 # TODO(eslavich): Why not?  What if that's the goal
                 # of copying the file?
                 msg = "Can not copy AsdfFile and change active extensions"
@@ -226,6 +234,15 @@ class AsdfFile:
         -------
         list of asdf.extension.ExtensionProxy
         """
+        warnings.warn(
+            "AsdfFile.extensions is deprecated.  Use asdf.get_config().extensions to "
+            "get a list of enabled extensions.",
+            AsdfDeprecationWarning,
+        )
+        return self._extensions
+
+    @property
+    def _extensions(self):
         return self._user_extensions
 
     @extensions.setter
@@ -238,6 +255,15 @@ class AsdfFile:
         ----------
         value : list of asdf.extension.AsdfExtension or asdf.extension.Extension
         """
+        warnings.warn(
+            "AsdfFile.extensions is deprecated.  Use asdf.get_config().add_extension to "
+            "add an extension at runtime.",
+            AsdfDeprecationWarning,
+        )
+        self._extensions = value
+
+    @_extensions.setter
+    def _extensions(self, value):
         self._user_extensions = self._process_user_extensions(value)
         self._extension_manager = None
         self._extension_list_ = None
@@ -478,9 +504,7 @@ class AsdfFile:
 
     def copy(self):
         return self.__class__(
-            copy.deepcopy(self._tree),
-            self._uri,
-            self._user_extensions,
+            copy.deepcopy(self._tree), self._uri, self._user_extensions if len(self._user_extensions) > 0 else None
         )
 
     __copy__ = __deepcopy__ = copy
@@ -896,7 +920,7 @@ class AsdfFile:
             # extensions, which may have narrow ASDF Standard version
             # requirements.
             if extensions:
-                self.extensions = extensions
+                self._extensions = extensions
 
             yaml_token = fd.read(4)
             has_blocks = False
@@ -1802,6 +1826,7 @@ def open_asdf(
         Requires reading the entire file, so disabled by default.
 
     extensions : object, optional
+        DEPRECATED
         Additional extensions to use when reading and writing the file.
         May be any of the following: `asdf.extension.AsdfExtension`,
         `asdf.extension.Extension`, `asdf.extension.AsdfExtensionList`
@@ -1862,6 +1887,13 @@ def open_asdf(
     # specifically when being called from AsdfFile.open
     if not _compat:
         mode = _check_and_set_mode(fd, mode)
+
+    if extensions is not None:
+        warnings.warn(
+            "The 'extensions' argument to asdf.open is deprecated.  Use asdf.get_config().add_extension to "
+            "add an extension at runtime.",
+            AsdfDeprecationWarning,
+        )
 
     instance = AsdfFile(
         ignore_version_mismatch=ignore_version_mismatch,

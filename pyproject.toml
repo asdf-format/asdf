@@ -114,6 +114,7 @@ remote_data_strict = true
 filterwarnings = [
     'error',
     'ignore:numpy.ndarray size changed:RuntimeWarning',
+    'ignore:.*extensions.*deprecated:asdf.exceptions.AsdfDeprecationWarning',
 ]
 # Configuration for pytest-doctestplus
 text_file_format = 'rst'
