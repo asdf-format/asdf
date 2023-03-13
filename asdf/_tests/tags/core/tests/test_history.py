@@ -152,7 +152,8 @@ history:
 
     buff = yaml_to_asdf(yaml)
     with pytest.warns(
-        AsdfMissingExtensionWarning, match=r"File was created with extension class 'foo.bar.FooBar'"
+        AsdfMissingExtensionWarning,
+        match=r"File was created with extension class 'foo.bar.FooBar'",
     ), asdf.open(buff):
         pass
 
@@ -178,11 +179,11 @@ history:
     buff.seek(0)
 
     # Make sure suppressing the warning works too
-    with assert_no_warnings():
-        with pytest.warns(AsdfDeprecationWarning, match=".*ignore_missing_extensions.*"), asdf.open(
-            buff, ignore_missing_extensions=True
-        ):
-            pass
+    with assert_no_warnings(), pytest.warns(AsdfDeprecationWarning, match=".*ignore_missing_extensions.*"), asdf.open(
+        buff,
+        ignore_missing_extensions=True,
+    ):
+        pass
 
 
 def test_strict_extension_check():
@@ -201,7 +202,8 @@ history:
         RuntimeError,
         match=r"File was created with extension class .*, which is not currently enabled",
     ), pytest.warns(AsdfDeprecationWarning, match=".*strict_extension_check.*"), asdf.open(
-        buff, strict_extension_check=True
+        buff,
+        strict_extension_check=True,
     ):
         pass
 
@@ -211,7 +213,9 @@ history:
         ValueError,
         match=r"'strict_extension_check' and 'ignore_missing_extensions' are incompatible options",
     ), pytest.warns(AsdfDeprecationWarning), asdf.open(
-        buff, strict_extension_check=True, ignore_missing_extensions=True
+        buff,
+        strict_extension_check=True,
+        ignore_missing_extensions=True,
     ):
         pass
 

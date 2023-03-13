@@ -123,7 +123,8 @@ class AsdfFile:
         """
         if ignore_version_mismatch is not None:
             warnings.warn(
-                "The ignore_version_mismatch argument to AsdfFile will be removed in 3.0.", AsdfDeprecationWarning
+                "The ignore_version_mismatch argument to AsdfFile will be removed in 3.0.",
+                AsdfDeprecationWarning,
             )
         else:
             ignore_version_mismatch = True
@@ -139,7 +140,8 @@ class AsdfFile:
 
         if ignore_implicit_conversion is not None:
             warnings.warn(
-                "The ignore_implicit_conversion argument to AsdfFile will be removed in 3.0.", AsdfDeprecationWarning
+                "The ignore_implicit_conversion argument to AsdfFile will be removed in 3.0.",
+                AsdfDeprecationWarning,
             )
 
         # Don't use the version setter here; it tries to access

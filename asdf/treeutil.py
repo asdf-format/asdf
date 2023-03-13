@@ -268,7 +268,8 @@ def walk_and_modify(top, callback, ignore_implicit_conversion=None, postorder=Tr
     """
     if ignore_implicit_conversion is not None:
         warnings.warn(
-            "The ignore_implicit_conversion argument to AsdfFile will be removed in 3.0.", AsdfDeprecationWarning
+            "The ignore_implicit_conversion argument to AsdfFile will be removed in 3.0.",
+            AsdfDeprecationWarning,
         )
     else:
         ignore_implicit_conversion = False

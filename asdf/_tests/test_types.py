@@ -250,9 +250,8 @@ flow_thing:
     d: 3.14
 """
     buff = helpers.yaml_to_asdf(yaml)
-    with helpers.assert_no_warnings():
-        with pytest.warns(AsdfDeprecationWarning, match=".*ignore_version_mismatch.*"):
-            asdf.open(buff, ignore_version_mismatch=False, extensions=CustomFlowExtension())
+    with helpers.assert_no_warnings(), pytest.warns(AsdfDeprecationWarning, match=".*ignore_version_mismatch.*"):
+        asdf.open(buff, ignore_version_mismatch=False, extensions=CustomFlowExtension())
 
 
 def test_versioned_writing(monkeypatch):
@@ -414,9 +413,8 @@ undefined_data:
 
     # Make sure no warning occurs if explicitly ignored
     buff.seek(0)
-    with helpers.assert_no_warnings():
-        with pytest.warns(AsdfDeprecationWarning, match=".*ignore_unrecognized_tag.*"):
-            afile = asdf.open(buff, ignore_unrecognized_tag=True)
+    with helpers.assert_no_warnings(), pytest.warns(AsdfDeprecationWarning, match=".*ignore_unrecognized_tag.*"):
+        afile = asdf.open(buff, ignore_unrecognized_tag=True)
 
 
 def test_newer_tag():
