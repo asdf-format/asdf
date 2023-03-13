@@ -250,9 +250,8 @@ flow_thing:
     d: 3.14
 """
     buff = helpers.yaml_to_asdf(yaml)
-    with helpers.assert_no_warnings():
-        with pytest.warns(AsdfDeprecationWarning, match=".*extensions.*deprecated"):
-            asdf.open(buff, ignore_version_mismatch=False, extensions=CustomFlowExtension())
+    with helpers.assert_no_warnings(), pytest.warns(AsdfDeprecationWarning, match=".*extensions.*deprecated"):
+        asdf.open(buff, ignore_version_mismatch=False, extensions=CustomFlowExtension())
 
 
 def test_versioned_writing(monkeypatch):

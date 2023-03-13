@@ -141,9 +141,8 @@ def test_asdf_file_version_requirement():
     )
 
     # No warnings if the requirement is fulfilled:
-    with assert_no_warnings():
-        with pytest.warns(AsdfDeprecationWarning, match=".*extensions.*deprecated"):
-            AsdfFile(version="1.5.0", extensions=[extension_with_requirement])
+    with assert_no_warnings(), pytest.warns(AsdfDeprecationWarning, match=".*extensions.*deprecated"):
+        AsdfFile(version="1.5.0", extensions=[extension_with_requirement])
 
     # Version doesn't match the requirement, so we should see a warning
     # and the extension should not be enabled:

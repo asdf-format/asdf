@@ -504,7 +504,9 @@ class AsdfFile:
 
     def copy(self):
         return self.__class__(
-            copy.deepcopy(self._tree), self._uri, self._user_extensions if len(self._user_extensions) > 0 else None
+            copy.deepcopy(self._tree),
+            self._uri,
+            self._user_extensions if len(self._user_extensions) > 0 else None,
         )
 
     __copy__ = __deepcopy__ = copy
