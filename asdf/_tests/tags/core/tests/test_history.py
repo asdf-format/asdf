@@ -179,9 +179,10 @@ history:
 
     # Make sure suppressing the warning works too
     with assert_no_warnings():
-        with pytest.warns(AsdfDeprecationWarning, match=".*ignore_missing_extensions.*"):
-            with asdf.open(buff, ignore_missing_extensions=True):
-                pass
+        with pytest.warns(AsdfDeprecationWarning, match=".*ignore_missing_extensions.*"), asdf.open(
+            buff, ignore_missing_extensions=True
+        ):
+            pass
 
 
 def test_strict_extension_check():
@@ -199,20 +200,20 @@ history:
     with pytest.raises(
         RuntimeError,
         match=r"File was created with extension class .*, which is not currently enabled",
+    ), pytest.warns(AsdfDeprecationWarning, match=".*strict_extension_check.*"), asdf.open(
+        buff, strict_extension_check=True
     ):
-        with pytest.warns(AsdfDeprecationWarning, match=".*strict_extension_check.*"):
-            with asdf.open(buff, strict_extension_check=True):
-                pass
+        pass
 
     # Make sure to test for incompatibility with ignore_missing_extensions
     buff.seek(0)
     with pytest.raises(
         ValueError,
         match=r"'strict_extension_check' and 'ignore_missing_extensions' are incompatible options",
+    ), pytest.warns(AsdfDeprecationWarning), asdf.open(
+        buff, strict_extension_check=True, ignore_missing_extensions=True
     ):
-        with pytest.warns(AsdfDeprecationWarning):
-            with asdf.open(buff, strict_extension_check=True, ignore_missing_extensions=True):
-                pass
+        pass
 
 
 def test_metadata_with_custom_extension(tmpdir):
