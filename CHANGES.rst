@@ -42,6 +42,7 @@ The ASDF Standard is at v1.6.0
 - Add AsdfDeprecationWarning to asdf_extensions entry point [#1361]
 - Deprecate asdf.tests.helpers [#1440]
 - respect umask when determining file permissions for written files [#1451]
+- rename master branch to main [#1479]
 
 2.14.3 (2022-12-15)
 -------------------
