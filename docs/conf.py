@@ -1,6 +1,10 @@
+import sys
 from pathlib import Path
 
-import tomli
+if sys.version_info < (3, 11):
+    import tomli as tomllib
+else:
+    import tomllib
 
 # The standard library importlib.metadata returns duplicate entrypoints
 # for all python versions up to and including 3.11
@@ -12,7 +16,8 @@ from sphinx_asdf.conf import *  # noqa: F403
 
 # Get configuration information from `pyproject.toml`
 with open(Path(__file__).parent.parent / "pyproject.toml", "rb") as configuration_file:
-    conf = tomli.load(configuration_file)
+    conf = tomllib.load(configuration_file)
+
 configuration = conf["project"]
 
 # -- Project information ------------------------------------------------------
