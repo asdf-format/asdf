@@ -37,15 +37,15 @@ def pytest_addoption(parser):
     )
     parser.addini(
         "asdf_schema_ignore_unrecognized_tag",
-        "Set to true to disable warnings when tag serializers are missing",
+        "DEPRECATED. Set to true to disable warnings when tag serializers are missing",
         type="bool",
-        default=False,
+        default=None,
     )
     parser.addini(
         "asdf_schema_ignore_version_mismatch",
-        "Set to true to disable warnings when missing explicit support for a tag",
+        "DEPRECATED. Set to true to disable warnings when missing explicit support for a tag",
         type="bool",
-        default=True,
+        default=None,
     )
     parser.addoption("--asdf-tests", action="store_true", help="Enable ASDF schema tests")
 
@@ -59,8 +59,8 @@ class AsdfSchemaFile(pytest.File):
         fspath,
         skip_examples=False,
         validate_default=True,
-        ignore_unrecognized_tag=False,
-        ignore_version_mismatch=False,
+        ignore_unrecognized_tag=None,
+        ignore_version_mismatch=None,
         skip_tests=None,
         xfail_tests=None,
         **kwargs,
@@ -201,8 +201,8 @@ class AsdfSchemaExampleItem(pytest.Item):
         schema_path,
         example,
         example_index,
-        ignore_unrecognized_tag=False,
-        ignore_version_mismatch=False,
+        ignore_unrecognized_tag=None,
+        ignore_version_mismatch=None,
         **kwargs,
     ):
         if hasattr(super(), "from_parent"):
@@ -302,7 +302,12 @@ def pytest_collect_file(path, parent):
     skip_examples = parent.config.getini("asdf_schema_skip_examples")
     validate_default = parent.config.getini("asdf_schema_validate_default")
     ignore_unrecognized_tag = parent.config.getini("asdf_schema_ignore_unrecognized_tag")
+    if ignore_unrecognized_tag == []:
+        ignore_unrecognized_tag = None
+
     ignore_version_mismatch = parent.config.getini("asdf_schema_ignore_version_mismatch")
+    if ignore_version_mismatch == []:
+        ignore_version_mismatch = None
 
     skip_tests = _parse_test_list(parent.config.getini("asdf_schema_skip_tests"))
     xfail_tests = _parse_test_list(parent.config.getini("asdf_schema_xfail_tests"))
