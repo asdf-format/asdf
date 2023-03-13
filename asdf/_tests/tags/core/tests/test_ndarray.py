@@ -631,7 +631,7 @@ def test_datatype_validation(tmpdir):
     buff = helpers.yaml_to_asdf(content)
 
     with pytest.raises(jsonschema.ValidationError, match=r"Can not safely cast from .* to .*"), asdf.open(
-        buff
+        buff,
     ):
         pass
 
@@ -655,7 +655,7 @@ def test_datatype_validation(tmpdir):
     buff = helpers.yaml_to_asdf(content)
 
     with pytest.raises(jsonschema.ValidationError, match=r"Expected datatype .*, got .*"), asdf.open(
-        buff
+        buff,
     ):
         pass
 
@@ -672,7 +672,7 @@ def test_datatype_validation(tmpdir):
     buff = helpers.yaml_to_asdf(content)
 
     with pytest.raises(jsonschema.ValidationError, match=r"Expected scalar datatype .*, got .*"), asdf.open(
-        buff
+        buff,
     ):
         pass
 
@@ -725,7 +725,7 @@ def test_structured_datatype_validation(tmpdir):
     buff = helpers.yaml_to_asdf(content)
 
     with pytest.raises(jsonschema.ValidationError, match=r"Mismatch in number of columns:.*"), asdf.open(
-        buff
+        buff,
     ):
         pass
 
@@ -737,7 +737,7 @@ def test_structured_datatype_validation(tmpdir):
     buff = helpers.yaml_to_asdf(content)
 
     with pytest.raises(jsonschema.ValidationError, match=r"Expected structured datatype.*"), asdf.open(
-        buff
+        buff,
     ):
         pass
 

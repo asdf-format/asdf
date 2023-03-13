@@ -1107,7 +1107,7 @@ a: !<tag:nowhere.org:custom/doesnt_exist-1.0.0>
     with asdf.config_context() as config:
         config.add_extension(CustomExtension())
         with pytest.warns(AsdfWarning, match=r"Unable to locate schema file"), asdf.open(
-            buff
+            buff,
         ) as af:
             assert str(af["a"]) == "hello"
 
