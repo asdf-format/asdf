@@ -53,6 +53,13 @@ class CustomExtension:
         return [("http://nowhere.org/schemas/custom/", util.filepath_to_url(TEST_DATA_PATH) + "/{url_suffix}.yaml")]
 
 
+@pytest.fixture(autouse=True)
+def configure_custom_extension():
+    with asdf.config_context() as config:
+        config.add_extension(CustomExtension())
+        yield
+
+
 def test_sharing(tmpdir):
     x = np.arange(0, 10, dtype=float)
     tree = {"science_data": x, "subset": x[3:-3], "skipping": x[::2]}
@@ -546,10 +553,7 @@ def test_ndim_validation(tmpdir):
     """
     buff = helpers.yaml_to_asdf(content)
 
-    with pytest.raises(jsonschema.ValidationError, match=r"Wrong number of dimensions:.*"), asdf.open(
-        buff,
-        extensions=CustomExtension(),
-    ):
+    with pytest.raises(jsonschema.ValidationError, match=r"Wrong number of dimensions:.*"), asdf.open(buff):
         pass
 
     content = """
@@ -559,7 +563,7 @@ def test_ndim_validation(tmpdir):
     """
     buff = helpers.yaml_to_asdf(content)
 
-    with asdf.open(buff, extensions=CustomExtension()):
+    with asdf.open(buff):
         pass
 
     content = """
@@ -570,7 +574,7 @@ def test_ndim_validation(tmpdir):
     """
     buff = helpers.yaml_to_asdf(content)
 
-    with asdf.open(buff, extensions=CustomExtension()):
+    with asdf.open(buff):
         pass
 
     content = """
@@ -580,7 +584,7 @@ def test_ndim_validation(tmpdir):
     """
     buff = helpers.yaml_to_asdf(content)
 
-    with asdf.open(buff, extensions=CustomExtension()):
+    with asdf.open(buff):
         pass
 
     content = """
@@ -590,7 +594,7 @@ def test_ndim_validation(tmpdir):
     """
     buff = helpers.yaml_to_asdf(content)
 
-    with asdf.open(buff, extensions=CustomExtension()):
+    with asdf.open(buff):
         pass
 
     content = """
@@ -602,7 +606,6 @@ def test_ndim_validation(tmpdir):
 
     with pytest.raises(jsonschema.ValidationError, match=r"Wrong number of dimensions:.*"), asdf.open(
         buff,
-        extensions=CustomExtension(),
     ):
         pass
 
@@ -616,7 +619,7 @@ def test_datatype_validation(tmpdir):
     """
     buff = helpers.yaml_to_asdf(content)
 
-    with asdf.open(buff, extensions=CustomExtension()):
+    with asdf.open(buff):
         pass
 
     content = """
@@ -628,8 +631,7 @@ def test_datatype_validation(tmpdir):
     buff = helpers.yaml_to_asdf(content)
 
     with pytest.raises(jsonschema.ValidationError, match=r"Can not safely cast from .* to .*"), asdf.open(
-        buff,
-        extensions=CustomExtension(),
+        buff
     ):
         pass
 
@@ -641,7 +643,7 @@ def test_datatype_validation(tmpdir):
     """
     buff = helpers.yaml_to_asdf(content)
 
-    with asdf.open(buff, extensions=CustomExtension()):
+    with asdf.open(buff):
         pass
 
     content = """
@@ -653,8 +655,7 @@ def test_datatype_validation(tmpdir):
     buff = helpers.yaml_to_asdf(content)
 
     with pytest.raises(jsonschema.ValidationError, match=r"Expected datatype .*, got .*"), asdf.open(
-        buff,
-        extensions=CustomExtension(),
+        buff
     ):
         pass
 
@@ -671,8 +672,7 @@ def test_datatype_validation(tmpdir):
     buff = helpers.yaml_to_asdf(content)
 
     with pytest.raises(jsonschema.ValidationError, match=r"Expected scalar datatype .*, got .*"), asdf.open(
-        buff,
-        extensions=CustomExtension(),
+        buff
     ):
         pass
 
@@ -690,7 +690,7 @@ def test_structured_datatype_validation(tmpdir):
     """
     buff = helpers.yaml_to_asdf(content)
 
-    with asdf.open(buff, extensions=CustomExtension()):
+    with asdf.open(buff):
         pass
 
     content = """
@@ -707,7 +707,6 @@ def test_structured_datatype_validation(tmpdir):
 
     with pytest.raises(jsonschema.ValidationError, match=r"Can not safely cast to expected datatype.*"), asdf.open(
         buff,
-        extensions=CustomExtension(),
     ):
         pass
 
@@ -726,8 +725,7 @@ def test_structured_datatype_validation(tmpdir):
     buff = helpers.yaml_to_asdf(content)
 
     with pytest.raises(jsonschema.ValidationError, match=r"Mismatch in number of columns:.*"), asdf.open(
-        buff,
-        extensions=CustomExtension(),
+        buff
     ):
         pass
 
@@ -739,8 +737,7 @@ def test_structured_datatype_validation(tmpdir):
     buff = helpers.yaml_to_asdf(content)
 
     with pytest.raises(jsonschema.ValidationError, match=r"Expected structured datatype.*"), asdf.open(
-        buff,
-        extensions=CustomExtension(),
+        buff
     ):
         pass
 
@@ -758,7 +755,6 @@ def test_structured_datatype_validation(tmpdir):
 
     with pytest.raises(jsonschema.ValidationError, match=r"Expected datatype .*, got .*"), asdf.open(
         buff,
-        extensions=CustomExtension(),
     ):
         pass
 
@@ -774,7 +770,7 @@ def test_structured_datatype_validation(tmpdir):
     """
     buff = helpers.yaml_to_asdf(content)
 
-    with asdf.open(buff, extensions=CustomExtension()):
+    with asdf.open(buff):
         pass
 
 

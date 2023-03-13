@@ -118,6 +118,7 @@ def fractional2dcoordtype_factory():
     return FractionType, Fractional2dCoordType, Fractional2dCoordExtension
 
 
+@pytest.mark.filterwarnings("ignore:.*extensions.*deprecated:asdf.exceptions.AsdfDeprecationWarning")
 def test_custom_tag():
     FractionType = fractiontype_factory()  # noqa: N806
 
@@ -254,6 +255,7 @@ flow_thing:
         asdf.open(buff, ignore_version_mismatch=False, extensions=CustomFlowExtension())
 
 
+@pytest.mark.filterwarnings("ignore:.*extensions.*deprecated:asdf.exceptions.AsdfDeprecationWarning")
 def test_versioned_writing(monkeypatch):
     from asdf.tags.core.complex import ComplexType
 
@@ -417,6 +419,7 @@ undefined_data:
         afile = asdf.open(buff, ignore_unrecognized_tag=True)
 
 
+@pytest.mark.filterwarnings("ignore:.*extensions.*deprecated:asdf.exceptions.AsdfDeprecationWarning")
 def test_newer_tag():
     """
     This test simulates a scenario where newer versions of CustomFlow
@@ -556,6 +559,7 @@ def test_incompatible_version_check():
             supported_versions = ["1.1.0", "2.2.0", "blue"]
 
 
+@pytest.mark.filterwarnings("ignore:.*extensions.*deprecated:asdf.exceptions.AsdfDeprecationWarning")
 def test_supported_versions():
     class CustomFlow:
         def __init__(self, c=None, d=None):
@@ -613,6 +617,7 @@ flow_thing:
     assert type(old_data.tree["flow_thing"]) == CustomFlow
 
 
+@pytest.mark.filterwarnings("ignore:.*extensions.*deprecated:asdf.exceptions.AsdfDeprecationWarning")
 def test_unsupported_version_warning():
     class CustomFlow:
         pass
@@ -700,6 +705,7 @@ def test_tag_without_schema(tmp_path):
         assert ff.tree["foo"] == tree["foo"]
 
 
+@pytest.mark.filterwarnings("ignore:.*extensions.*deprecated:asdf.exceptions.AsdfDeprecationWarning")
 def test_custom_reference_cycle(tmp_path):
     f1 = FractionWithInverse(3, 5)
     f2 = FractionWithInverse(5, 3)

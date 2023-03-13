@@ -233,12 +233,15 @@ def test_metadata_with_custom_extension(tmpdir):
     tree = {"fraction": fractions.Fraction(2, 3)}
 
     tmpfile = str(tmpdir.join("custom_extension.asdf"))
-    with asdf.AsdfFile(tree, extensions=FractionExtension()) as ff:
-        ff.write_to(tmpfile)
 
-    # We expect metadata about both the Builtin extension and the custom one
-    with asdf.open(tmpfile, extensions=FractionExtension()) as af:
-        assert len(af["history"]["extensions"]) == 2
+    with asdf.config_context() as config:
+        config.add_extension(FractionExtension())
+        with asdf.AsdfFile(tree) as ff:
+            ff.write_to(tmpfile)
+
+        # We expect metadata about both the Builtin extension and the custom one
+        with asdf.open(tmpfile) as af:
+            assert len(af["history"]["extensions"]) == 2
 
     with pytest.warns(AsdfWarning, match=r"was created with extension"), asdf.open(
         tmpfile,
@@ -250,8 +253,10 @@ def test_metadata_with_custom_extension(tmpdir):
     # no metadata about this extension should be added to the file
     tree2 = {"x": list(range(10))}
     tmpfile2 = str(tmpdir.join("no_extension.asdf"))
-    with asdf.AsdfFile(tree2, extensions=FractionExtension()) as ff:
-        ff.write_to(tmpfile2)
+    with asdf.config_context() as config:
+        config.add_extension(FractionExtension())
+        with asdf.AsdfFile(tree2) as ff:
+            ff.write_to(tmpfile2)
 
     with asdf.open(tmpfile2) as af:
         assert len(af["history"]["extensions"]) == 1
@@ -261,9 +266,11 @@ def test_metadata_with_custom_extension(tmpdir):
 
     # Make sure that this works even when constructing the tree on-the-fly
     tmpfile3 = str(tmpdir.join("custom_extension2.asdf"))
-    with asdf.AsdfFile(extensions=FractionExtension()) as ff:
-        ff.tree["fraction"] = fractions.Fraction(4, 5)
-        ff.write_to(tmpfile3)
+    with asdf.config_context() as config:
+        config.add_extension(FractionExtension())
+        with asdf.AsdfFile() as ff:
+            ff.tree["fraction"] = fractions.Fraction(4, 5)
+            ff.write_to(tmpfile3)
 
-    with asdf.open(tmpfile3, extensions=FractionExtension()) as af:
-        assert len(af["history"]["extensions"]) == 2
+        with asdf.open(tmpfile3) as af:
+            assert len(af["history"]["extensions"]) == 2
