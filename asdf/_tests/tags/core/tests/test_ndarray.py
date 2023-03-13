@@ -54,7 +54,7 @@ class CustomExtension:
 
 
 @pytest.fixture(autouse=True)
-def configure_custom_extension():
+def configure_custom_extension():  # noqa: PT004
     with asdf.config_context() as config:
         config.add_extension(CustomExtension())
         yield

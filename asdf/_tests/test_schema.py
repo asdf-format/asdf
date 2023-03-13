@@ -535,8 +535,8 @@ custom: !<tag:nowhere.org:custom/default-1.0.0>
             assert ff.tree["custom"]["j"]["l"] == 362
 
         buff.seek(0)
-        with config_context() as config:
-            config.legacy_fill_schema_defaults = False
+        with config_context() as config2:
+            config2.legacy_fill_schema_defaults = False
             with asdf.open(buff) as ff:
                 assert "a" not in ff.tree["custom"]
                 assert "c" not in ff.tree["custom"]["b"]
