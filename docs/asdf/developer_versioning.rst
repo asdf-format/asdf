@@ -169,14 +169,14 @@ Update the asdf-standard submodule commit pointer
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 The asdf-standard repository is integrated into the asdf repository
-as a submodule.  To pull in new commits from the remote master (
+as a submodule.  To pull in new commits from the remote main (
 assumed to be named ``origin``:
 
 .. code-block:: console
 
     $ cd asdf-standard
     $ git fetch origin
-    $ git checkout origin/master
+    $ git checkout origin/main
 
 Support the new standard version
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~

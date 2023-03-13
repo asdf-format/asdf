@@ -18,7 +18,7 @@ ASDF - Advanced Scientific Data Format
 .. image:: https://readthedocs.org/projects/asdf/badge/?version=latest
     :target: https://asdf.readthedocs.io/en/latest/
 
-.. image:: https://codecov.io/gh/asdf-format/asdf/branch/master/graphs/badge.svg
+.. image:: https://codecov.io/gh/asdf-format/asdf/branch/main/graphs/badge.svg
     :target: https://codecov.io/gh/asdf-format/asdf
 
 .. _begin-zenodo:
@@ -288,7 +288,7 @@ can be installed using ``pip``:
 
 .. _begin-source-install-text:
 
-The latest development version of ASDF is available from the ``master`` branch
+The latest development version of ASDF is available from the ``main`` branch
 `on github <https://github.com/asdf-format/asdf>`__. To clone the project:
 
 ::
