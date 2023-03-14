@@ -28,7 +28,7 @@ repos:
     - id: text-unicode-replacement-char
 
 - repo: https://github.com/codespell-project/codespell
-  rev: v2.2.2
+  rev: v2.2.4
   hooks:
     - id: codespell
       args: ["--write-changes"]
@@ -42,7 +42,7 @@ repos:
       exclude: "asdf/extern/.*"
 
 - repo: https://github.com/charliermarsh/ruff-pre-commit
-  rev: 'v0.0.254'
+  rev: 'v0.0.255'
   hooks:
     - id: ruff
       args: ["--fix"]
