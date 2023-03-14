@@ -25,9 +25,9 @@ Contributing Code and Bug Fixes
 
 To contribute code to ASDF please fork ASDF first and then open a pull request
 from your fork to ASDF. Typically, the main development work is done on the
-"master" branch.  The rest of the branches are for release maintenance and should
+"main" branch.  The rest of the branches are for release maintenance and should
 not be used normally. Unless otherwise told by a maintainer, pull request should
-be made and submitted to the "master" branch.
+be made and submitted to the "main" branch.
 
 .. note::
     The "stable" branch is protected and used for official releases.

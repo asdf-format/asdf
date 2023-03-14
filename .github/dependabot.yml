@@ -1,17 +1,17 @@
 version: 2
 updates:
 
-  # Maintain dependencies for GitHub Actions (master)
+  # Maintain dependencies for GitHub Actions (main)
   - package-ecosystem: "github-actions"
     directory: "/"
-    target-branch: "master"
+    target-branch: "main"
     schedule:
       interval: "weekly"
 
-  # Maintain dependencies for pip (master)
+  # Maintain dependencies for pip (main)
   - package-ecosystem: "pip"
     directory: "/"
-    target-branch: "master"
+    target-branch: "main"
     schedule:
       interval: "weekly"
 
