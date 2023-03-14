@@ -248,7 +248,7 @@ class _TreeRenderer:
             message = " (truncated)"
             line = line[0 : (self._max_cols - len(message))] + format_faint(format_italic(message))
 
-        return line  # noqa: RET504
+        return line
 
     def _render_node_value(self, info):
         rendered_type = type(info.node).__name__
