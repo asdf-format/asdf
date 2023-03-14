@@ -180,6 +180,7 @@ extend-ignore = [
     "PTH", # flake8-use-pathlib
     # Individually ignored checks
     "PIE810", # Call `startswith` once with a `tuple`
+    "PLC1901", # compare-to-empty-string
     "PLR0911", # Too many return statements
     "PLR0912", # Too many branches
     "PLR0913", # Too many arguments to function call
