@@ -103,7 +103,7 @@ class AsdfConfig:
             if package is not None:
                 result = result and m.package_name == package
 
-            return result  # noqa: RET504
+            return result
 
         with self._lock:
             self._resource_mappings = [m for m in self.resource_mappings if not _remove_condition(m)]
@@ -193,7 +193,7 @@ class AsdfConfig:
             if package is not None:
                 result = result and e.package_name == package
 
-            return result  # noqa: RET504
+            return result
 
         with self._lock:
             self._extensions = [e for e in self.extensions if not _remove_condition(e)]

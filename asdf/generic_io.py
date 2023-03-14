@@ -184,7 +184,7 @@ class _TruncatedReader:
             self._trailing_content = content[nbytes:]
             content = content[:nbytes]
 
-        return content  # noqa: RET504
+        return content
 
 
 class GenericFile(metaclass=util.InheritDocstrings):
