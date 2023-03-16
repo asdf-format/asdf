@@ -36,6 +36,7 @@ The ASDF Standard is at v1.6.0
 - Deprecate asdf.tests.helpers [#1440]
 - respect umask when determining file permissions for written files [#1451]
 - rename master branch to main [#1479]
+- require jsonschema<4.18 [#1487]
 
 2.14.3 (2022-12-15)
 -------------------
