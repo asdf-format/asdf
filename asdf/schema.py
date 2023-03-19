@@ -203,6 +203,11 @@ class _JsonSchemaValidatorFactory:
 
 
 class _CycleCheckingValidatorProxy:
+    """
+    This class wraps the jsonschema Validator and ignores calls to descend
+    if the instance + schema pair have already been seen in this validation
+    session.
+    """
     def __init__(self, delegate, seen_id_pairs):
         self._delegate = delegate
         self._seen_id_pairs = seen_id_pairs
@@ -218,6 +223,11 @@ class _CycleCheckingValidatorProxy:
 
 
 def _create_cycle_checking_validator_method(validator_method, seen_id_pairs):
+    """
+    Wrap a jsonschema validator method so that the validator instance
+    can then be wrapped in _CycleCheckingValidatorProxy before being
+    passed to the original method.
+    """
     def _cycle_checking_validator_method(validator, properties, instance, schema):
         if isinstance(validator, _CycleCheckingValidatorProxy):
             validator_proxy = validator
@@ -230,6 +240,14 @@ def _create_cycle_checking_validator_method(validator_method, seen_id_pairs):
 
 @lru_cache
 def _create_json_schema_validator_factory(validators=YAML_VALIDATORS, visit_repeat_nodes=False):
+    """
+    Create an instance of _JsonSchemaValidatorFactory for the given set of validators
+    and visit_repeat_nodes setting.  When visit_repeat_nodes is set to False, the
+    validator methods will be wrapped to prevent re-validating the same instance + schema
+    pair twice.  This is done to break reference cycles in the instance object.  The
+    jsonschema library doesn't handle this because JSON documents do not support anything
+    like YAML's anchor/alias feature.
+    """
     type_checker = mvalidators.Draft4Validator.TYPE_CHECKER.redefine_many(
         {
             "array": lambda checker, instance: isinstance(instance, (list, tuple)),
@@ -255,6 +273,30 @@ def _create_json_schema_validator_factory(validators=YAML_VALIDATORS, visit_repe
     return _JsonSchemaValidatorFactory(validator_class, seen_id_pairs)
 
 
+def _repair_and_warn_root_ref(schema):
+    """
+    The $ref property is supposed to wipe out all other content within
+    the object that it resides which was clarified in draft 5 of the JSON
+    Schema spec:
+
+    https://datatracker.ietf.org/doc/html/draft-wright-json-schema-00#section-7
+
+    but this library has historically permitted it to coexist with other properties.
+    The code that was accidentally facilitating this has been fixed, but in order
+    to give users a chance to update their schemas we're deliberately patching
+    them here, with a warning.
+    """
+    if "$ref" in schema:
+        schema_id = schema.get("id", "(unknown)")
+        warnings.warn(
+            f"Schema with id '{schema_id}' has a $ref at the root level. "
+            "Please ask the schema maintainer to move the $ref to an allOf "
+            "combiner.  This will be an error in asdf 3.0",
+            AsdfDeprecationWarning
+        )
+        schema.setdefault("allOf", []).append({"$ref": schema.pop("$ref")})
+
+
 @lru_cache
 def _load_schema(url):
     if url.startswith("http://") or url.startswith("https://") or url.startswith("asdf://"):
@@ -269,6 +311,9 @@ def _load_schema(url):
             # The following call to yaml.load is safe because we're
             # using a loader that inherits from pyyaml's SafeLoader.
             result = yaml.load(fd, Loader=yamlutil.AsdfLoader)  # noqa: S506
+
+    _repair_and_warn_root_ref(result)
+
     return result, fd.uri
 
 
@@ -291,6 +336,9 @@ def _make_schema_loader(resolver):
             # The following call to yaml.load is safe because we're
             # using a loader that inherits from pyyaml's SafeLoader.
             result = yaml.load(content, Loader=yamlutil.AsdfLoader)  # noqa: S506
+
+            _repair_and_warn_root_ref(result)
+
             return result, url
 
         # If not, this must be a URL (or missing).  Fall back to fetching
@@ -447,6 +495,34 @@ def _load_schema_cached(url, resolver, resolve_references, resolve_local_refs):
 
 
 class _Validator:
+    """
+    ASDF schema validator.  The validate method quacks like jsonschema.Validator.validate, but
+    all other jsonschema.Validator methods are unavailable.
+
+    Parameters
+    ----------
+    ctx : asdf.AsdfFile
+        Used to obtain schema URIs for tags handled by an old-style extension.
+
+    serialization_context : asdf.asdf.SerializationContext
+        Used to obtain schema URIs for tags handled by a new-style extension.
+
+    json_schema_validator_factory : asdf.schema._JsonSchemaValidatorFactory
+        Creates instances of jsonschema.Validator and manages the context that
+        tracks nodes that have already been validated.
+
+    schema : dict
+        A schema to validate against in addition to the tag schemas.  One example
+        is the custom schema passed to AsdfFile.__init__.
+
+    visit_repeat_nodes : bool
+        Flag that indicates (node, schema) pairs should be re-validated even if
+        the validator factory's context indicates that they've already been
+        seen.
+
+    resolver : jsonschema.RefResolver
+        jsonschema component that provides access to referenced schemas.
+    """
     def __init__(self, ctx, serialization_context, json_schema_validator_factory, schema, visit_repeat_nodes, resolver):
         self._ctx = ctx
         self._serialization_context = serialization_context
@@ -482,6 +558,11 @@ class _Validator:
                         warnings.warn(f"Unable to locate schema file for '{tag}': '{schema_uri}'", AsdfWarning)
 
     def validate(self, instance, _schema=None):
+        """
+        Validate an instance of a tagged ASDF tree against the
+        schemas associated with its tags, as well as any custom
+        schema that was requested.
+        """
         with self._json_schema_validator_factory.validation_context():
             for error in self._iter_errors(instance, _schema):
                 raise error
@@ -496,10 +577,8 @@ def get_validator(
     _serialization_context=None,
 ):
     """
-    Get a JSON schema validator object for the given schema.
-
-    The additional *args and **kwargs are passed along to
-    `~jsonschema.protocols.Validator.validate`.
+    Get a validator object for the given schema.  This method is not
+    intended for use outside this package.
 
     Parameters
     ----------
@@ -527,7 +606,7 @@ def get_validator(
 
     Returns
     -------
-    validator : jsonschema.Validator
+    validator : asdf.schema._Validator
     """
     if ctx is None:
         from .asdf import AsdfFile

@@ -592,10 +592,10 @@ class AsdfFile:
         # is already guaranteed to be in tagged form.
         tagged_tree = tree if reading else yamlutil.custom_tree_to_tagged_tree(tree, self)
 
-        schema.validate(tagged_tree, self, reading=reading)
-        # Perform secondary validation pass if requested
         if custom and self._custom_schema:
             schema.validate(tagged_tree, self, self._custom_schema, reading=reading)
+        else:
+            schema.validate(tagged_tree, self, reading=reading)
 
     def validate(self):
         """
