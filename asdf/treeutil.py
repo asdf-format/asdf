@@ -37,7 +37,7 @@ def walk(top, callback):
         callback(x)
 
 
-def iter_tree(top):
+def iter_tree(top, _visit_repeat_nodes=True):
     """
     Iterate over all nodes in a tree, in depth-first order.
 
@@ -69,12 +69,14 @@ def iter_tree(top):
             seen.add(tree_id)
             for val in tree:
                 yield from recurse(val)
-            seen.remove(tree_id)
+            if _visit_repeat_nodes:
+                seen.remove(tree_id)
         elif isinstance(tree, dict):
             seen.add(tree_id)
             for val in tree.values():
                 yield from recurse(val)
-            seen.remove(tree_id)
+            if _visit_repeat_nodes:
+                seen.remove(tree_id)
 
         yield tree
 

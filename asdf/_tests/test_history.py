@@ -21,7 +21,7 @@ def test_history():
     )
     assert len(ff.tree["history"]["entries"]) == 1
 
-    with pytest.raises(ValidationError, match=r".* is not valid under any of the given schemas"):
+    with pytest.raises(ValidationError, match=r".*'name' is a required property.*"):
         ff.add_history_entry("That happened", {"author": "John Doe", "version": "2.0"})
     assert len(ff.tree["history"]["entries"]) == 1
 

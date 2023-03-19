@@ -59,6 +59,7 @@ The ASDF Standard is at v1.6.0
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 - require jsonschema<4.18 [#1487]
+- Rework asdf.schema innards to use only public jsonschema interfaces. [#1490]
 
 2.14.3 (2022-12-15)
 -------------------
