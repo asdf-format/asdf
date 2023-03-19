@@ -1,10 +1,10 @@
-from contextlib import contextmanager
 import copy
 import datetime
 import json
 import warnings
 from collections import OrderedDict
 from collections.abc import Mapping
+from contextlib import contextmanager
 from functools import lru_cache
 from numbers import Integral
 from operator import methodcaller
@@ -208,6 +208,7 @@ class _CycleCheckingValidatorProxy:
     if the instance + schema pair have already been seen in this validation
     session.
     """
+
     def __init__(self, delegate, seen_id_pairs):
         self._delegate = delegate
         self._seen_id_pairs = seen_id_pairs
@@ -228,6 +229,7 @@ def _create_cycle_checking_validator_method(validator_method, seen_id_pairs):
     can then be wrapped in _CycleCheckingValidatorProxy before being
     passed to the original method.
     """
+
     def _cycle_checking_validator_method(validator, properties, instance, schema):
         if isinstance(validator, _CycleCheckingValidatorProxy):
             validator_proxy = validator
@@ -292,7 +294,7 @@ def _repair_and_warn_root_ref(schema):
             f"Schema with id '{schema_id}' has a $ref at the root level. "
             "Please ask the schema maintainer to move the $ref to an allOf "
             "combiner.  This will be an error in asdf 3.0",
-            AsdfDeprecationWarning
+            AsdfDeprecationWarning,
         )
         schema.setdefault("allOf", []).append({"$ref": schema.pop("$ref")})
 
@@ -523,6 +525,7 @@ class _Validator:
     resolver : jsonschema.RefResolver
         jsonschema component that provides access to referenced schemas.
     """
+
     def __init__(self, ctx, serialization_context, json_schema_validator_factory, schema, visit_repeat_nodes, resolver):
         self._ctx = ctx
         self._serialization_context = serialization_context
@@ -552,7 +555,7 @@ class _Validator:
                     try:
                         tag_schema = self._resolver.resolve(schema_uri)[1]
                         yield from self._json_schema_validator_factory.create(tag_schema, self._resolver).iter_errors(
-                            node
+                            node,
                         )
                     except RefResolutionError:
                         warnings.warn(f"Unable to locate schema file for '{tag}': '{schema_uri}'", AsdfWarning)
@@ -624,7 +627,8 @@ def get_validator(
     resolver = _make_resolver(url_mapping)
 
     json_schema_validator_factory = _create_json_schema_validator_factory(
-        validators=validators, visit_repeat_nodes=_visit_repeat_nodes
+        validators=validators,
+        visit_repeat_nodes=_visit_repeat_nodes,
     )
     return _Validator(
         ctx=ctx,

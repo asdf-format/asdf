@@ -413,14 +413,16 @@ def test_defaults():
     t = {}
 
     validator = schema._create_json_schema_validator_factory(schema.FILL_DEFAULTS).create(
-        s, schema._make_resolver(None)
+        s,
+        schema._make_resolver(None),
     )
     validator.validate(t)
 
     assert t["a"] == 42
 
     validator = schema._create_json_schema_validator_factory(schema.REMOVE_DEFAULTS).create(
-        s, schema._make_resolver(None)
+        s,
+        schema._make_resolver(None),
     )
     validator.validate(t)
 
