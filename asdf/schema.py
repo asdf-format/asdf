@@ -264,13 +264,19 @@ def _create_json_schema_validator_factory(validators=YAML_VALIDATORS, visit_repe
     if not visit_repeat_nodes:
         validators = {k: _create_cycle_checking_validator_method(v, seen_id_pairs) for k, v in validators.items()}
 
-    validator_class = mvalidators.create(
-        meta_schema=meta_schema,
-        validators=validators,
-        type_checker=type_checker,
-        format_checker=mvalidators.Draft4Validator.FORMAT_CHECKER,
-        id_of=mvalidators.Draft4Validator.ID_OF,
-    )
+    create_kwargs = {
+        "meta_schema": meta_schema,
+        "validators": validators,
+        "type_checker": type_checker,
+        "id_of": mvalidators.Draft4Validator.ID_OF,
+    }
+
+    # We still support versions of jsonschema prior to the advent
+    # of format checker.
+    if hasattr(mvalidators.Draft4Validator, "FORMAT_CHECKER"):
+        create_kwargs["format_checker"] = mvalidators.Draft4Validator.FORMAT_CHECKER
+
+    validator_class = mvalidators.create(**create_kwargs)
 
     return _JsonSchemaValidatorFactory(validator_class, seen_id_pairs)
 
