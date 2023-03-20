@@ -834,11 +834,6 @@ def check_schema(schema, validate_default=True):
     validators = util.HashableDict(mvalidators.Draft4Validator.VALIDATORS.copy())
 
     if validate_default:
-        # The jsonschema library doesn't validate defaults
-        # on its own.
-        instance_validator = _create_json_schema_validator_factory().create(schema, _make_resolver(None))
-        instance_scope = schema.get("id", "")
-
         def _validate_default(validator, default, instance, schema):
             if not validator.is_type(instance, "object"):
                 return
@@ -846,11 +841,6 @@ def check_schema(schema, validate_default=True):
             if "default" in instance:
                 get_validator(instance).validate(instance['default'])
                 return
-                instance_validator.resolver.push_scope(instance_scope)
-                try:
-                    yield from instance_validator.descend(instance["default"], instance)
-                finally:
-                    instance_validator.resolver.pop_scope()
 
         validators.update({"default": _validate_default})
 
@@ -876,8 +866,6 @@ def check_schema(schema, validate_default=True):
     )
     if USE_REFERENCING:
         validator = cls(meta_schema, registry=resolver)
-        resource = referencing.Resource(meta_schema, specification=referencing.jsonschema.DRAFT4)
-        #validator._resolver = resolver.resolver_with_root(resource)
     else:
         validator = cls(meta_schema, resolver=resolver)
     validator.validate(schema)
