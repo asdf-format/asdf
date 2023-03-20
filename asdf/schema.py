@@ -11,8 +11,16 @@ from operator import methodcaller
 
 import numpy as np
 import yaml
+import importlib_metadata
+if importlib_metadata.version('jsonschema') >= "4.18":
+    USE_REFERENCING = True
+    import referencing
+    from referencing.exceptions import Unretrievable as RefError
+else:
+    from jsonschema.exceptions import RefResolutionError as RefError
+    USE_REFERENCING = False
 from jsonschema import validators as mvalidators
-from jsonschema.exceptions import RefResolutionError, ValidationError
+from jsonschema.exceptions import ValidationError
 
 from . import constants, generic_io, reference, tagged, treeutil, util, versioning, yamlutil
 from .config import get_config
@@ -199,7 +207,10 @@ class _JsonSchemaValidatorFactory:
         return (id(schema), id(instance)) in self._seen_id_pairs
 
     def create(self, schema, resolver):
-        return self._validator_class(schema, resolver=resolver)
+        if USE_REFERENCING:
+            return self._validator_class(schema, registry=resolver)
+        else:
+            return self._validator_class(schema, resolver=resolver)
 
 
 class _CycleCheckingValidatorProxy:
@@ -374,13 +385,20 @@ def _make_resolver(url_mapping):
     # remote schemas here in `load_schema`, so we don't need
     # jsonschema to do it on our behalf.  Setting it to `True`
     # counterintuitively makes things slower.
-    return mvalidators.RefResolver(
-        "",
-        {},
-        cache_remote=False,
-        handlers=handlers,
-        urljoin_cache=urljoin_cache,
-    )
+    if USE_REFERENCING:
+        def retrieve_schema(url):
+            schema = get_schema(url)
+            resource = referencing.Resource(schema, specification=referencing.jsonschema.DRAFT4)
+            return resource
+        return referencing.Registry({}, retrieve=retrieve_schema)
+    else:
+        return mvalidators.RefResolver(
+            "",
+            {},
+            cache_remote=False,
+            handlers=handlers,
+            urljoin_cache=urljoin_cache,
+        )
 
 
 @lru_cache
@@ -559,11 +577,18 @@ class _Validator:
 
                 for schema_uri in schema_uris:
                     try:
-                        tag_schema = self._resolver.resolve(schema_uri)[1]
-                        yield from self._json_schema_validator_factory.create(tag_schema, self._resolver).iter_errors(
-                            node,
-                        )
-                    except RefResolutionError:
+                        if USE_REFERENCING:
+                            tag_resource = self._resolver.get_or_retrieve(schema_uri)
+                            resolver = tag_resource.value @ self._resolver
+                            v = self._json_schema_validator_factory.create(tag_resource.value.contents, resolver)
+                            v._resolver = resolver.resolver_with_root(tag_resource.value)
+                            yield from v.iter_errors(node)
+                        else:
+                            tag_schema = self._resolver.resolve(schema_uri)[1]
+                            yield from self._json_schema_validator_factory.create(tag_schema, self._resolver).iter_errors(
+                                node,
+                            )
+                    except RefError:
                         warnings.warn(f"Unable to locate schema file for '{tag}': '{schema_uri}'", AsdfWarning)
 
     def validate(self, instance, _schema=None):
