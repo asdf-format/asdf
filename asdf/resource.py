@@ -179,7 +179,6 @@ else:
     _JSONSCHEMA_URI_TO_FILENAME = {
         "http://json-schema.org/draft-04/schema": "draft4.json",
     }
-    jsonschema_specifications/schemas/draft4
 
 
 class JsonschemaResourceMapping(Mapping):
