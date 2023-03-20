@@ -857,5 +857,10 @@ def check_schema(schema, validate_default=True):
         id_of=mvalidators.Draft4Validator.ID_OF,
         applicable_validators=applicable_validators,
     )
-    validator = cls(meta_schema, resolver=resolver)
+    if USE_REFERENCING:
+        validator = cls(meta_schema, registry=resolver)
+        resource = referencing.Resource(meta_schema, specification=referencing.jsonschema.DRAFT4)
+        validator._resolver = resolver.resolver_with_root(resource)
+    else:
+        validator = cls(meta_schema, resolver=resolver)
     validator.validate(schema)
