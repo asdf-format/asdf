@@ -4,6 +4,7 @@ as schemas.
 """
 import pkgutil
 from collections.abc import Mapping
+import importlib_metadata
 
 from asdf_standard import DirectoryResourceMapping as _DirectoryResourceMapping
 
@@ -168,9 +169,17 @@ class ResourceManager(Mapping):
         return f"<ResourceManager len: {self.__len__()}>"
 
 
-_JSONSCHEMA_URI_TO_FILENAME = {
-    "http://json-schema.org/draft-04/schema": "draft4.json",
-}
+if importlib_metadata.version('jsonschema') >= '4.18':
+    USE_JSONSCHEMA_SPECIFICATIONS = True
+    _JSONSCHEMA_URI_TO_FILENAME = {
+        "http://json-schema.org/draft-04/schema": "metaschema.json",
+    }
+else:
+    USE_JSONSCHEMA_SPECIFICATIONS = False
+    _JSONSCHEMA_URI_TO_FILENAME = {
+        "http://json-schema.org/draft-04/schema": "draft4.json",
+    }
+    jsonschema_specifications/schemas/draft4
 
 
 class JsonschemaResourceMapping(Mapping):
@@ -181,7 +190,10 @@ class JsonschemaResourceMapping(Mapping):
 
     def __getitem__(self, uri):
         filename = _JSONSCHEMA_URI_TO_FILENAME[uri]
-        return pkgutil.get_data("jsonschema", f"schemas/{filename}")
+        if USE_JSONSCHEMA_SPECIFICATIONS:
+            return pkgutil.get_data("jsonschema_specifications", f"schemas/draft4/{filename}")
+        else:
+            return pkgutil.get_data("jsonschema", f"schemas/{filename}")
 
     def __len__(self):
         return len(_JSONSCHEMA_URI_TO_FILENAME)
