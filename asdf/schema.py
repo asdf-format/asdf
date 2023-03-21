@@ -1,6 +1,7 @@
 import copy
 import datetime
 import json
+import threading
 import warnings
 from collections import OrderedDict
 from collections.abc import Mapping
@@ -8,22 +9,22 @@ from contextlib import contextmanager
 from functools import lru_cache
 from numbers import Integral
 from operator import methodcaller
-import threading
 
 import importlib_metadata
-import packaging.version
 import numpy as np
+import packaging.version
 import yaml
-
 
 if packaging.version.parse(importlib_metadata.version("jsonschema")) >= packaging.version.parse("4.18.0dev"):
     _USE_REFERENCING = True
     import referencing
-    from referencing.exceptions import Unretrievable, Unresolvable
+    from referencing.exceptions import Unresolvable, Unretrievable
+
     _REF_RESOLUTION_EXCEPTIONS = (Unretrievable, Unresolvable)
 else:
     _USE_REFERENCING = False
     from jsonschema.exceptions import RefResolutionError
+
     _REF_RESOLUTION_EXCEPTIONS = (RefResolutionError,)
 
 from jsonschema import validators as mvalidators
@@ -45,6 +46,7 @@ class _ErrorCacheLocal(threading.local):
     This class caches errors from instance + schema pairs that have already
     begun validating.  This allows us to handle reference cycles gracefully.
     """
+
     def __init__(self):
         self._cache = {}
 
@@ -421,6 +423,7 @@ def _make_jsonschema_resolver_or_registry(url_mapping):
     schema_loader = _make_schema_loader(url_mapping)
 
     if _USE_REFERENCING:
+
         def retrieve_schema(url):
             schema = schema_loader(url)[0]
             resource = referencing.Resource(schema, specification=referencing.jsonschema.DRAFT4)
@@ -428,6 +431,7 @@ def _make_jsonschema_resolver_or_registry(url_mapping):
 
         return {"registry": referencing.Registry({}, retrieve=retrieve_schema)}
     else:
+
         def get_schema(url):
             return schema_loader(url)[0]
 
@@ -443,13 +447,15 @@ def _make_jsonschema_resolver_or_registry(url_mapping):
         # remote schemas here in `load_schema`, so we don't need
         # jsonschema to do it on our behalf.  Setting it to `True`
         # counterintuitively makes things slower.
-        return {"resolver": mvalidators.RefResolver(
-            "",
-            {},
-            cache_remote=False,
-            handlers=handlers,
-            urljoin_cache=urljoin_cache,
-        )}
+        return {
+            "resolver": mvalidators.RefResolver(
+                "",
+                {},
+                cache_remote=False,
+                handlers=handlers,
+                urljoin_cache=urljoin_cache,
+            )
+        }
 
 
 @lru_cache
@@ -600,7 +606,9 @@ class _Validator:
         jsonschema component that provides access to referenced schemas.
     """
 
-    def __init__(self, ctx, serialization_context, validator_class, schema, visit_repeat_nodes, resolver=None, registry=None):
+    def __init__(
+        self, ctx, serialization_context, validator_class, schema, visit_repeat_nodes, resolver=None, registry=None
+    ):
         self._ctx = ctx
         self._serialization_context = serialization_context
         self._validator_class = validator_class
@@ -721,7 +729,7 @@ def get_validator(
         validator_class=validator_class,
         schema=schema,
         visit_repeat_nodes=_visit_repeat_nodes,
-        **resolver_kwargs
+        **resolver_kwargs,
     )
 
 
