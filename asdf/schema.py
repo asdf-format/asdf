@@ -454,7 +454,7 @@ def _make_jsonschema_resolver_or_registry(url_mapping):
                 cache_remote=False,
                 handlers=handlers,
                 urljoin_cache=urljoin_cache,
-            )
+            ),
         }
 
 
@@ -607,7 +607,14 @@ class _Validator:
     """
 
     def __init__(
-        self, ctx, serialization_context, validator_class, schema, visit_repeat_nodes, resolver=None, registry=None
+        self,
+        ctx,
+        serialization_context,
+        validator_class,
+        schema,
+        visit_repeat_nodes,
+        resolver=None,
+        registry=None,
     ):
         self._ctx = ctx
         self._serialization_context = serialization_context
