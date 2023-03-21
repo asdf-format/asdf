@@ -4,8 +4,8 @@ as schemas.
 """
 import pkgutil
 from collections.abc import Mapping
-import importlib_metadata
 
+import importlib_metadata
 from asdf_standard import DirectoryResourceMapping as _DirectoryResourceMapping
 
 from .util import get_class_name
@@ -169,7 +169,7 @@ class ResourceManager(Mapping):
         return f"<ResourceManager len: {self.__len__()}>"
 
 
-if importlib_metadata.version('jsonschema') >= '4.18':
+if importlib_metadata.version("jsonschema") >= "4.18":
     USE_JSONSCHEMA_SPECIFICATIONS = True
     _JSONSCHEMA_URI_TO_FILENAME = {
         "http://json-schema.org/draft-04/schema": "metaschema.json",
