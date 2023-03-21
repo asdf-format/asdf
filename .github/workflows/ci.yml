@@ -27,6 +27,8 @@ jobs:
       # Any env name which does not start with `pyXY` will use this Python version.
       default_python: '3.10'
       envs: |
+        - linux: coverage-devdeps
+          name: Python devdeps coverage
         - linux: coverage
           name: Python 3.11 coverage
           python-version: 3.11
