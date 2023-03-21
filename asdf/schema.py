@@ -8,19 +8,24 @@ from contextlib import contextmanager
 from functools import lru_cache
 from numbers import Integral
 from operator import methodcaller
+import threading
 
 import importlib_metadata
+import packaging.version
 import numpy as np
 import yaml
 
-if importlib_metadata.version("jsonschema") >= "4.18":
-    USE_REFERENCING = True
-    import referencing
-    from referencing.exceptions import Unretrievable as RefError
-else:
-    from jsonschema.exceptions import RefResolutionError as RefError
 
-    USE_REFERENCING = False
+if packaging.version.parse(importlib_metadata.version("jsonschema")) >= packaging.version.parse("4.18.0dev"):
+    _USE_REFERENCING = True
+    import referencing
+    from referencing.exceptions import Unretrievable, Unresolvable
+    _REF_RESOLUTION_EXCEPTIONS = (Unretrievable, Unresolvable)
+else:
+    _USE_REFERENCING = False
+    from jsonschema.exceptions import RefResolutionError
+    _REF_RESOLUTION_EXCEPTIONS = (RefResolutionError,)
+
 from jsonschema import validators as mvalidators
 from jsonschema.exceptions import ValidationError
 
@@ -33,6 +38,65 @@ from .util import patched_urllib_parse
 YAML_SCHEMA_METASCHEMA_ID = "http://stsci.edu/schemas/yaml-schema/draft-01"
 
 __all__ = ["validate", "fill_defaults", "remove_defaults", "check_schema"]
+
+
+class _ErrorCacheLocal(threading.local):
+    """
+    This class caches errors from instance + schema pairs that have already
+    begun validating.  This allows us to handle reference cycles gracefully.
+    """
+    def __init__(self):
+        self._cache = {}
+
+    def contains(self, instance, schema):
+        """
+        Check if the cache contains errors for an instance and schema.
+        """
+        return (id(instance), id(schema)) in self._cache
+
+    @contextmanager
+    def validation_context(self):
+        """
+        Context manager that clears the cache on exit.
+        """
+        try:
+            yield
+        finally:
+            self._cache.clear()
+
+    def get_errors(self, instance, schema):
+        """
+        Get a list of previously cached errors for this instance and schema.
+        """
+        # Important to copy the list, otherwise each error read
+        # will eventually be appended to the list again.
+        return list(self._cache[(id(instance), id(schema))])
+
+    def initialize_errors(self, instance, schema):
+        """
+        Create an empty error list and store it in the cache.
+        """
+        errors = []
+        self._cache[(id(instance), id(schema))] = errors
+        return errors
+
+
+_ERROR_CACHE = _ErrorCacheLocal()
+
+
+def default_ext_resolver(uri):
+    """
+    Resolver that uses tag/url mappings from all installed extensions
+    """
+    # Deprecating this because it doesn't play nicely with the caching on
+    # load_schema(...).
+    warnings.warn(
+        "The 'default_ext_resolver(...)' function is deprecated. Use "
+        "'asdf.extension.get_default_resolver()(...)' instead.",
+        AsdfDeprecationWarning,
+    )
+    return extension.get_default_resolver()(uri)
+
 
 PYTHON_TYPE_TO_YAML_TAG = {
     None: "null",
@@ -194,27 +258,6 @@ for key in ("allOf", "items"):
 REMOVE_DEFAULTS["properties"] = validate_remove_default
 
 
-class _JsonSchemaValidatorFactory:
-    def __init__(self, validator_class, seen_id_pairs):
-        self._validator_class = validator_class
-        self._seen_id_pairs = seen_id_pairs
-
-    @contextmanager
-    def validation_context(self):
-        self._seen_id_pairs.clear()
-        yield
-        self._seen_id_pairs.clear()
-
-    def has_seen_pair(self, schema, instance):
-        return (id(schema), id(instance)) in self._seen_id_pairs
-
-    def create(self, schema, resolver):
-        if USE_REFERENCING:
-            return self._validator_class(schema, registry=resolver)
-        else:
-            return self._validator_class(schema, resolver=resolver)
-
-
 class _CycleCheckingValidatorProxy:
     """
     This class wraps the jsonschema Validator and ignores calls to descend
@@ -222,21 +265,23 @@ class _CycleCheckingValidatorProxy:
     session.
     """
 
-    def __init__(self, delegate, seen_id_pairs):
+    def __init__(self, delegate):
         self._delegate = delegate
-        self._seen_id_pairs = seen_id_pairs
 
     def descend(self, instance, schema, *args, **kwargs):
-        seen_id_pair = (id(instance), id(schema))
-        if seen_id_pair not in self._seen_id_pairs:
-            self._seen_id_pairs.add(seen_id_pair)
-            yield from self._delegate.descend(instance, schema, *args, **kwargs)
+        if _ERROR_CACHE.contains(instance, schema):
+            yield from _ERROR_CACHE.get_errors(instance, schema)
+        else:
+            errors = _ERROR_CACHE.initialize_errors(instance, schema)
+            for error in self._delegate.descend(instance, schema, *args, **kwargs):
+                errors.append(error)
+                yield error
 
     def __getattr__(self, name):
         return getattr(self._delegate, name)
 
 
-def _create_cycle_checking_validator_method(validator_method, seen_id_pairs):
+def _create_cycle_checking_validator_method(validator_method):
     """
     Wrap a jsonschema validator method so that the validator instance
     can then be wrapped in _CycleCheckingValidatorProxy before being
@@ -247,16 +292,17 @@ def _create_cycle_checking_validator_method(validator_method, seen_id_pairs):
         if isinstance(validator, _CycleCheckingValidatorProxy):
             validator_proxy = validator
         else:
-            validator_proxy = _CycleCheckingValidatorProxy(validator, seen_id_pairs)
+            validator_proxy = _CycleCheckingValidatorProxy(validator)
+
         return validator_method(validator_proxy, properties, instance, schema)
 
     return _cycle_checking_validator_method
 
 
 @lru_cache
-def _create_json_schema_validator_factory(validators=YAML_VALIDATORS, visit_repeat_nodes=False):
+def _create_validator(validators=YAML_VALIDATORS, visit_repeat_nodes=False):
     """
-    Create an instance of _JsonSchemaValidatorFactory for the given set of validators
+    Create a jsonschema Validator class for the given set of validators
     and visit_repeat_nodes setting.  When visit_repeat_nodes is set to False, the
     validator methods will be wrapped to prevent re-validating the same instance + schema
     pair twice.  This is done to break reference cycles in the instance object.  The
@@ -273,9 +319,8 @@ def _create_json_schema_validator_factory(validators=YAML_VALIDATORS, visit_repe
 
     meta_schema = _load_schema_cached(YAML_SCHEMA_METASCHEMA_ID, _legacy.get_default_resolver(), False, False)
 
-    seen_id_pairs = set()
     if not visit_repeat_nodes:
-        validators = {k: _create_cycle_checking_validator_method(v, seen_id_pairs) for k, v in validators.items()}
+        validators = {k: _create_cycle_checking_validator_method(v) for k, v in validators.items()}
 
     create_kwargs = {
         "meta_schema": meta_schema,
@@ -289,9 +334,7 @@ def _create_json_schema_validator_factory(validators=YAML_VALIDATORS, visit_repe
     if hasattr(mvalidators.Draft4Validator, "FORMAT_CHECKER"):
         create_kwargs["format_checker"] = mvalidators.Draft4Validator.FORMAT_CHECKER
 
-    validator_class = mvalidators.create(**create_kwargs)
-
-    return _JsonSchemaValidatorFactory(validator_class, seen_id_pairs)
+    return mvalidators.create(**create_kwargs)
 
 
 def _repair_and_warn_root_ref(schema):
@@ -369,40 +412,44 @@ def _make_schema_loader(resolver):
     return load_schema
 
 
-def _make_resolver(url_mapping):
-    handlers = {}
+def _make_jsonschema_resolver_or_registry(url_mapping):
+    """
+    Create a jsonschema resolver/registry object.  Returns a dict
+    with key "resolver" for jsonschema < 4.18 and key "registry"
+    for jsonschema >= 4.18.
+    """
     schema_loader = _make_schema_loader(url_mapping)
 
-    def get_schema(url):
-        return schema_loader(url)[0]
-
-    for x in ["http", "https", "file", "tag", "asdf"]:
-        handlers[x] = get_schema
-
-    # Supplying our own implementation of urljoin_cache
-    # allows asdf:// URIs to be resolved correctly.
-    urljoin_cache = lru_cache(1024)(patched_urllib_parse.urljoin)
-
-    # We set cache_remote=False here because we do the caching of
-    # remote schemas here in `load_schema`, so we don't need
-    # jsonschema to do it on our behalf.  Setting it to `True`
-    # counterintuitively makes things slower.
-    if USE_REFERENCING:
-
+    if _USE_REFERENCING:
         def retrieve_schema(url):
-            schema = get_schema(url)
+            schema = schema_loader(url)[0]
             resource = referencing.Resource(schema, specification=referencing.jsonschema.DRAFT4)
             return resource
 
-        return referencing.Registry({}, retrieve=retrieve_schema)
+        return {"registry": referencing.Registry({}, retrieve=retrieve_schema)}
     else:
-        return mvalidators.RefResolver(
+        def get_schema(url):
+            return schema_loader(url)[0]
+
+        handlers = {}
+        for x in ["http", "https", "file", "tag", "asdf"]:
+            handlers[x] = get_schema
+
+        # Supplying our own implementation of urljoin_cache
+        # allows asdf:// URIs to be resolved correctly.
+        urljoin_cache = lru_cache(1024)(patched_urllib_parse.urljoin)
+
+        # We set cache_remote=False here because we do the caching of
+        # remote schemas here in `load_schema`, so we don't need
+        # jsonschema to do it on our behalf.  Setting it to `True`
+        # counterintuitively makes things slower.
+        return {"resolver": mvalidators.RefResolver(
             "",
             {},
             cache_remote=False,
             handlers=handlers,
             urljoin_cache=urljoin_cache,
-        )
+        )}
 
 
 @lru_cache
@@ -537,9 +584,8 @@ class _Validator:
     serialization_context : asdf.asdf.SerializationContext
         Used to obtain schema URIs for tags handled by a new-style extension.
 
-    json_schema_validator_factory : asdf.schema._JsonSchemaValidatorFactory
-        Creates instances of jsonschema.Validator and manages the context that
-        tracks nodes that have already been validated.
+    validator_class : jsonschema.Validator
+        Class used to create Validator instances.
 
     schema : dict
         A schema to validate against in addition to the tag schemas.  One example
@@ -554,19 +600,26 @@ class _Validator:
         jsonschema component that provides access to referenced schemas.
     """
 
-    def __init__(self, ctx, serialization_context, json_schema_validator_factory, schema, visit_repeat_nodes, resolver):
+    def __init__(self, ctx, serialization_context, validator_class, schema, visit_repeat_nodes, resolver=None, registry=None):
         self._ctx = ctx
         self._serialization_context = serialization_context
-        self._json_schema_validator_factory = json_schema_validator_factory
+        self._validator_class = validator_class
         self._schema = schema
         self._visit_repeat_nodes = visit_repeat_nodes
         self._resolver = resolver
+        self._registry = registry
+
+    def _create_validator(self, schema):
+        if _USE_REFERENCING:
+            return self._validator_class(schema, registry=self._registry)
+        else:
+            return self._validator_class(schema, resolver=self._resolver)
 
     def _iter_errors(self, instance, _schema=None):
         if _schema is not None:
-            yield from self._json_schema_validator_factory.create(_schema, self._resolver).iter_errors(instance)
+            yield from self._create_validator(_schema).iter_errors(instance)
         elif self._schema is not None:
-            yield from self._json_schema_validator_factory.create(self._schema, self._resolver).iter_errors(instance)
+            yield from self._create_validator(self._schema).iter_errors(instance)
 
         for node in treeutil.iter_tree(instance, _visit_repeat_nodes=self._visit_repeat_nodes):
             tag = getattr(node, "_tag", None)
@@ -581,20 +634,15 @@ class _Validator:
 
                 for schema_uri in schema_uris:
                     try:
-                        if USE_REFERENCING:
-                            tag_resource = self._resolver.get_or_retrieve(schema_uri)
-                            resolver = tag_resource.value @ self._resolver
-                            v = self._json_schema_validator_factory.create(tag_resource.value.contents, resolver)
-                            v._resolver = resolver.resolver_with_root(tag_resource.value)
+                        if _USE_REFERENCING:
+                            tag_schema_resource = self._registry.get_or_retrieve(schema_uri).value
+                            v = self._create_validator(tag_schema_resource.contents)
+                            v._resolver = self._registry.resolver_with_root(tag_schema_resource)
                             yield from v.iter_errors(node)
                         else:
                             tag_schema = self._resolver.resolve(schema_uri)[1]
-                            yield from self._json_schema_validator_factory.create(
-                                tag_schema, self._resolver
-                            ).iter_errors(
-                                node,
-                            )
-                    except RefError:
+                            yield from self._create_validator(tag_schema).iter_errors(node)
+                    except _REF_RESOLUTION_EXCEPTIONS:
                         warnings.warn(f"Unable to locate schema file for '{tag}': '{schema_uri}'", AsdfWarning)
 
     def validate(self, instance, _schema=None):
@@ -603,7 +651,7 @@ class _Validator:
         schemas associated with its tags, as well as any custom
         schema that was requested.
         """
-        with self._json_schema_validator_factory.validation_context():
+        with _ERROR_CACHE.validation_context():
             for error in self._iter_errors(instance, _schema):
                 raise error
 
@@ -661,19 +709,19 @@ def get_validator(
         validators.update(ctx._extension_list.validators)
         validators.update(ctx._extension_manager.validator_manager.get_jsonschema_validators())
 
-    resolver = _make_resolver(url_mapping)
+    resolver_kwargs = _make_jsonschema_resolver_or_registry(url_mapping)
 
-    json_schema_validator_factory = _create_json_schema_validator_factory(
+    validator_class = _create_validator(
         validators=validators,
         visit_repeat_nodes=_visit_repeat_nodes,
     )
     return _Validator(
         ctx=ctx,
         serialization_context=_serialization_context,
-        json_schema_validator_factory=json_schema_validator_factory,
+        validator_class=validator_class,
         schema=schema,
         visit_repeat_nodes=_visit_repeat_nodes,
-        resolver=resolver,
+        **resolver_kwargs
     )
 
 
@@ -847,7 +895,7 @@ def check_schema(schema, validate_default=True):
     meta_schema_id = schema.get("$schema", YAML_SCHEMA_METASCHEMA_ID)
     meta_schema = _load_schema_cached(meta_schema_id, _legacy.get_default_resolver(), False, False)
 
-    resolver = _make_resolver(_legacy.get_default_resolver())
+    resolver_kwargs = _make_jsonschema_resolver_or_registry(_legacy.get_default_resolver())
 
     cls = mvalidators.create(
         meta_schema=meta_schema,
@@ -856,5 +904,6 @@ def check_schema(schema, validate_default=True):
         id_of=mvalidators.Draft4Validator.ID_OF,
         applicable_validators=applicable_validators,
     )
-    validator = cls(meta_schema, registry=resolver) if USE_REFERENCING else cls(meta_schema, resolver=resolver)
+    validator = cls(meta_schema, **resolver_kwargs)
+
     validator.validate(schema)
