@@ -426,11 +426,10 @@ def _make_jsonschema_resolver_or_registry(url_mapping):
 
         def retrieve_schema(url):
             schema = schema_loader(url)[0]
-            resource = referencing.Resource(schema, specification=referencing.jsonschema.DRAFT4)
-            return resource
+            return referencing.Resource(schema, specification=referencing.jsonschema.DRAFT4)
 
         return {"registry": referencing.Registry({}, retrieve=retrieve_schema)}
-    else:
+    else:  # noqa: RET505
 
         def get_schema(url):
             return schema_loader(url)[0]
@@ -627,7 +626,7 @@ class _Validator:
     def _create_validator(self, schema):
         if _USE_REFERENCING:
             return self._validator_class(schema, registry=self._registry)
-        else:
+        else:  # noqa: RET505
             return self._validator_class(schema, resolver=self._resolver)
 
     def _iter_errors(self, instance, _schema=None):
@@ -651,6 +650,7 @@ class _Validator:
                     try:
                         if _USE_REFERENCING:
                             tag_schema_resource = self._registry.get_or_retrieve(schema_uri).value
+                            self._registry = tag_schema_resource @ self._registry
                             v = self._create_validator(tag_schema_resource.contents)
                             v._resolver = self._registry.resolver_with_root(tag_schema_resource)
                             yield from v.iter_errors(node)
