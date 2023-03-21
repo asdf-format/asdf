@@ -179,6 +179,7 @@ extend-ignore = [
     "DTZ", # flake8-datetimez
     "PTH", # flake8-use-pathlib
     # Individually ignored checks
+    "B028",  # No explicit stacklevel argument
     "PIE810", # Call `startswith` once with a `tuple`
     "PLC1901", # compare-to-empty-string
     "PLR0911", # Too many return statements
