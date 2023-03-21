@@ -9,15 +9,17 @@ from functools import lru_cache
 from numbers import Integral
 from operator import methodcaller
 
+import importlib_metadata
 import numpy as np
 import yaml
-import importlib_metadata
-if importlib_metadata.version('jsonschema') >= "4.18":
+
+if importlib_metadata.version("jsonschema") >= "4.18":
     USE_REFERENCING = True
     import referencing
     from referencing.exceptions import Unretrievable as RefError
 else:
     from jsonschema.exceptions import RefResolutionError as RefError
+
     USE_REFERENCING = False
 from jsonschema import validators as mvalidators
 from jsonschema.exceptions import ValidationError
@@ -402,10 +404,12 @@ def _make_resolver(url_mapping):
     # jsonschema to do it on our behalf.  Setting it to `True`
     # counterintuitively makes things slower.
     if USE_REFERENCING:
+
         def retrieve_schema(url):
             schema = get_schema(url)
             resource = referencing.Resource(schema, specification=referencing.jsonschema.DRAFT4)
             return resource
+
         return referencing.Registry({}, retrieve=retrieve_schema)
     else:
         return mvalidators.RefResolver(
@@ -601,7 +605,9 @@ class _Validator:
                             yield from v.iter_errors(node)
                         else:
                             tag_schema = self._resolver.resolve(schema_uri)[1]
-                            yield from self._json_schema_validator_factory.create(tag_schema, self._resolver).iter_errors(
+                            yield from self._json_schema_validator_factory.create(
+                                tag_schema, self._resolver
+                            ).iter_errors(
                                 node,
                             )
                     except RefError:
@@ -834,12 +840,13 @@ def check_schema(schema, validate_default=True):
     validators = util.HashableDict(mvalidators.Draft4Validator.VALIDATORS.copy())
 
     if validate_default:
+
         def _validate_default(validator, default, instance, schema):
             if not validator.is_type(instance, "object"):
                 return
 
             if "default" in instance:
-                get_validator(instance).validate(instance['default'])
+                get_validator(instance).validate(instance["default"])
                 return
 
         validators.update({"default": _validate_default})
@@ -864,8 +871,5 @@ def check_schema(schema, validate_default=True):
         id_of=mvalidators.Draft4Validator.ID_OF,
         applicable_validators=applicable_validators,
     )
-    if USE_REFERENCING:
-        validator = cls(meta_schema, registry=resolver)
-    else:
-        validator = cls(meta_schema, resolver=resolver)
+    validator = cls(meta_schema, registry=resolver) if USE_REFERENCING else cls(meta_schema, resolver=resolver)
     validator.validate(schema)
