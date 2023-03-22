@@ -97,12 +97,6 @@ force-exclude = '''
 )
 '''
 
-[tool.isort]
-profile = "black"
-filter_files = true
-line_length = 120
-extend_skip_glob = ["asdf/extern/*", ".eggs/*", ".tox/*"]
-
 [tool.pytest.ini_options]
 testpaths = ['asdf', 'docs']
 minversion = 4.6
