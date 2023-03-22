@@ -146,6 +146,26 @@ def test_update_expand_tree(tmp_path):
         assert_array_equal(ff.tree["arrays"][1], my_array2)
 
 
+def test_update_all_external(tmp_path):
+    fn = tmp_path / "test.asdf"
+
+    my_array = np.arange(64) * 1
+    my_array2 = np.arange(64) * 2
+    tree = {"arrays": [my_array, my_array2]}
+
+    af = asdf.AsdfFile(tree)
+    af.write_to(fn)
+
+    with asdf.config.config_context() as cfg:
+        cfg.array_inline_threshold = 10
+        cfg.all_array_storage = "external"
+        with asdf.open(fn, mode="rw") as af:
+            af.update()
+
+    assert "test0000.asdf" in os.listdir(tmp_path)
+    assert "test0001.asdf" in os.listdir(tmp_path)
+
+
 def _get_update_tree():
     return {"arrays": [np.arange(64) * 1, np.arange(64) * 2, np.arange(64) * 3]}
 
@@ -830,3 +850,53 @@ def test_block_allocation_on_validate():
     assert len(list(af._blocks.blocks)) == 1
     af.validate()
     assert len(list(af._blocks.blocks)) == 1
+
+
+@pytest.mark.parametrize("all_array_storage", ["internal", "external", "inline"])
+@pytest.mark.parametrize("all_array_compression", [None, "", "zlib", "bzp2", "lz4", "input"])
+@pytest.mark.parametrize("compression_kwargs", [None, {}])
+def test_write_to_update_storage_options(tmp_path, all_array_storage, all_array_compression, compression_kwargs):
+    if all_array_compression == "bzp2" and compression_kwargs is not None:
+        compression_kwargs = {"compresslevel": 1}
+
+    def assert_result(ff, arr):
+        if all_array_storage == "external":
+            assert "test0000.asdf" in os.listdir(tmp_path)
+        else:
+            assert "test0000.asdf" not in os.listdir(tmp_path)
+        if all_array_storage == "internal":
+            assert len(ff._blocks._internal_blocks) == 1
+        else:
+            assert len(ff._blocks._internal_blocks) == 0
+        blk = ff._blocks[arr]
+
+        target_compression = all_array_compression or None
+        assert blk._output_compression == target_compression
+
+        target_compression_kwargs = compression_kwargs or {}
+        assert blk._output_compression_kwargs == target_compression_kwargs
+
+    arr1 = np.ones((8, 8))
+    tree = {"array": arr1}
+    fn = tmp_path / "test.asdf"
+
+    ff1 = asdf.AsdfFile(tree)
+    # first check write_to
+    ff1.write_to(
+        fn,
+        all_array_storage=all_array_storage,
+        all_array_compression=all_array_compression,
+        compression_kwargs=compression_kwargs,
+    )
+    assert_result(ff1, arr1)
+
+    # then reuse the file to check update
+    with asdf.open(fn, mode="rw") as ff2:
+        arr2 = np.ones((8, 8)) * 42
+        ff2["array"] = arr2
+        ff2.update(
+            all_array_storage=all_array_storage,
+            all_array_compression=all_array_compression,
+            compression_kwargs=compression_kwargs,
+        )
+        assert_result(ff2, arr2)

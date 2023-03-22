@@ -2,6 +2,7 @@
 Methods for getting and setting asdf global configuration
 options.
 """
+import collections
 import copy
 import threading
 from contextlib import contextmanager
@@ -19,6 +20,9 @@ DEFAULT_DEFAULT_VERSION = str(versioning.default_version)
 DEFAULT_LEGACY_FILL_SCHEMA_DEFAULTS = True
 DEFAULT_IO_BLOCK_SIZE = -1  # auto
 DEFAULT_ARRAY_INLINE_THRESHOLD = None
+DEFAULT_ALL_ARRAY_STORAGE = None
+DEFAULT_ALL_ARRAY_COMPRESSION = "input"
+DEFAULT_ALL_ARRAY_COMPRESSION_KWARGS = None
 
 
 class AsdfConfig:
@@ -37,6 +41,9 @@ class AsdfConfig:
         self._legacy_fill_schema_defaults = DEFAULT_LEGACY_FILL_SCHEMA_DEFAULTS
         self._io_block_size = DEFAULT_IO_BLOCK_SIZE
         self._array_inline_threshold = DEFAULT_ARRAY_INLINE_THRESHOLD
+        self._all_array_storage = DEFAULT_ALL_ARRAY_STORAGE
+        self._all_array_compression = DEFAULT_ALL_ARRAY_COMPRESSION
+        self._all_array_compression_kwargs = DEFAULT_ALL_ARRAY_COMPRESSION_KWARGS
 
         self._lock = threading.RLock()
 
@@ -316,6 +323,72 @@ class AsdfConfig:
         self._array_inline_threshold = value
 
     @property
+    def all_array_storage(self):
+        """
+        Override the array storage type of all blocks
+        in the file immediately before writing.  Must be one of the
+        following strings or `None`:
+
+        - ``internal``: The default.  The array data will be
+          stored in a binary block in the same ASDF file.
+
+        - ``external``: Store the data in a binary block in a
+          separate ASDF file.
+
+        - ``inline``: Store the data as YAML inline in the tree.
+        """
+        return self._all_array_storage
+
+    @all_array_storage.setter
+    def all_array_storage(self, value):
+        if value not in (None, "internal", "external", "inline"):
+            msg = f"Invalid value for all_array_storage: '{value}'"
+            raise ValueError(msg)
+        self._all_array_storage = value
+
+    @property
+    def all_array_compression(self):
+        """
+        Override the compression type on all binary blocks in the
+        file.  Must be one of the following strings, `None` or a
+        label supported by a `asdf.extension.Compressor`:
+
+        - ``''`` or `None`: No compression.
+
+        - ``zlib``: Use zlib compression.
+
+        - ``bzp2``: Use bzip2 compression.
+
+        - ``lz4``: Use lz4 compression.
+
+        - ``input``: Use the same compression as in the file read.
+          If there is no prior file, acts as None
+        """
+        return self._all_array_compression
+
+    @all_array_compression.setter
+    def all_array_compression(self, value):
+        # local to avoid circular import
+        from asdf.compression import validate
+
+        self._all_array_compression = validate(value)
+
+    @property
+    def all_array_compression_kwargs(self):
+        """
+        Dictionary of keyword arguments provided to the compressor during
+        block compression (or `None` for no keyword arguments)
+        """
+        return self._all_array_compression_kwargs
+
+    @all_array_compression_kwargs.setter
+    def all_array_compression_kwargs(self, value):
+        if value is not None and not isinstance(value, collections.abc.Mapping):
+            msg = f"Invalid value for all_array_compression_kwargs: '{value}'"
+            raise ValueError(msg)
+        self._all_array_compression_kwargs = value
+
+    @property
     def validate_on_read(self):
         """
         Get configuration that controls schema validation of
@@ -344,6 +417,9 @@ class AsdfConfig:
         return (
             "<AsdfConfig\n"
             "  array_inline_threshold: {}\n"
+            "  all_array_storage: {}\n"
+            "  all_array_compression: {}\n"
+            "  all_array_compression_kwargs: {}\n"
             "  default_version: {}\n"
             "  io_block_size: {}\n"
             "  legacy_fill_schema_defaults: {}\n"
@@ -351,6 +427,9 @@ class AsdfConfig:
             ">"
         ).format(
             self.array_inline_threshold,
+            self.all_array_storage,
+            self.all_array_compression,
+            self.all_array_compression_kwargs,
             self.default_version,
             self.io_block_size,
             self.legacy_fill_schema_defaults,

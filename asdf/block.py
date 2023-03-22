@@ -364,7 +364,7 @@ class BlockManager:
             blk._array_storage = "internal"
             asdffile._blocks.add(blk)
             blk._used = True
-            asdffile.write_to(subfd, pad_blocks=pad_blocks)
+            asdffile.write_to(subfd, pad_blocks=pad_blocks, all_array_storage="internal")
 
     def write_block_index(self, fd, ctx):
         """
@@ -567,13 +567,14 @@ class BlockManager:
             if getattr(block, "_used", 0) == 0 and block not in reserved_blocks:
                 self.remove(block)
 
-    def _handle_global_block_settings(self, ctx, block):
-        all_array_storage = getattr(ctx, "_all_array_storage", None)
+    def _handle_global_block_settings(self, block):
+        cfg = get_config()
+        all_array_storage = cfg.all_array_storage
         if all_array_storage:
             self.set_array_storage(block, all_array_storage)
 
-        all_array_compression = getattr(ctx, "_all_array_compression", "input")
-        all_array_compression_kwargs = getattr(ctx, "_all_array_compression_kwargs", {})
+        all_array_compression = cfg.all_array_compression
+        all_array_compression_kwargs = cfg.all_array_compression_kwargs
         # Only override block compression algorithm if it wasn't explicitly set
         # by AsdfFile.set_array_compression.
         if all_array_compression != "input":
@@ -601,7 +602,7 @@ class BlockManager:
         self._find_used_blocks(ctx.tree, ctx)
 
         for block in list(self.blocks):
-            self._handle_global_block_settings(ctx, block)
+            self._handle_global_block_settings(block)
 
     def get_block(self, source):
         """
@@ -714,7 +715,7 @@ class BlockManager:
         msg = "block not found."
         raise ValueError(msg)
 
-    def find_or_create_block_for_array(self, arr, ctx):
+    def find_or_create_block_for_array(self, arr):
         """
         For a given array, looks for an existing block containing its
         underlying data.  If not found, adds a new block to the block
@@ -743,7 +744,7 @@ class BlockManager:
 
         block = Block(base)
         self.add(block)
-        self._handle_global_block_settings(ctx, block)
+        self._handle_global_block_settings(block)
 
         return block
 
@@ -787,7 +788,7 @@ class BlockManager:
         return ext
 
     def __getitem__(self, arr):
-        return self.find_or_create_block_for_array(arr, object())
+        return self.find_or_create_block_for_array(arr)
 
     def close(self):
         for block in self.blocks:
