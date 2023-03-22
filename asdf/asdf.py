@@ -770,13 +770,6 @@ class AsdfFile:
               may not be implemented for all object types.
         """
         self._blocks._storage_settings[id(obj)] = storage
-        # # TODO this doesn't have a serialization context because one
-        # # hasn't been created. It might be cleaner to move the actual block
-        # # creation to somewhere the serialization is available perhaps by
-        # # saving the storage setting in the serialization context
-        # if len(keys) == 0:
-
-        # for key in keys:
 
     def get_block_storage(self, obj):
         """
@@ -792,9 +785,6 @@ class AsdfFile:
         str or None
         """
         return self._blocks._storage_settings.get(id(obj), None)
-        # if len(keys) == 0:
-
-        # # TODO remove assumption that all keys have same storage
 
     def set_array_compression(self, arr, compression, **compression_kwargs):
         """
@@ -2099,23 +2089,6 @@ class SerializationContext:
 
         # find a block (if there is one). If not, add a block
         return self._find_block(lookup_key, data_callback)
-
-    def identify_block(self, source, lookup_key):
-        """
-        Associate a block with a lookup key.  This is used to associate binary
-        blocks with their Python objects so that the same blocks can be reused
-        when the ASDF file is updated.
-
-        Parameters
-        ----------
-        source : str or int
-            Block source.
-
-        lookup_key : hashable
-            Unique key used to retrieve a block.  For ndarrays this is
-            typically the id of the base ndarray.
-        """
-        self._block_manager.identify_block(source, lookup_key)
 
     def find_block_index(self, lookup_key, data_callback=None):
         """

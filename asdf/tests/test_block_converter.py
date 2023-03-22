@@ -81,9 +81,6 @@ class BlockConverter(Converter):
         # that will eventually be written to the block.
         return [ctx.reserve_block(id(obj), lambda: np.ndarray(len(obj.payload), dtype="uint8", buffer=obj.payload))]
 
-    # def from_blocks(self, obj, tag, ctx):
-    #    # do I even need this?
-
 
 class BlockExtension(Extension):
     tags = ["asdf://somewhere.org/tags/block_data-1.0.0"]
