@@ -218,7 +218,7 @@ class AsdfSchemaExampleItem(pytest.Item):
         return result
 
     def runtest(self):
-        from asdf import AsdfFile, block, util
+        from asdf import AsdfFile, _block, util
         from asdf._tests import _helpers as helpers
         from asdf.exceptions import AsdfDeprecationWarning
 
@@ -241,7 +241,7 @@ class AsdfSchemaExampleItem(pytest.Item):
 
         # Add some dummy blocks so that the ndarray examples work
         for _ in range(3):
-            b = block.Block(np.zeros((1024 * 1024 * 8), dtype=np.uint8))
+            b = _block.Block(np.zeros((1024 * 1024 * 8), dtype=np.uint8))
             b._used = True
             ff._blocks.add(b)
         b._array_storage = "streamed"
