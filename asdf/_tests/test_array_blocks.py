@@ -944,3 +944,30 @@ def test_data_callback(tmp_path, memmap, lazy_load):
         mode="r",
     ) as f:
         rb.read(f, past_magic=False)
+
+
+def test_block_key():
+    # make an AsdfFile to get a BlockManager
+    af = asdf.AsdfFile()
+    bm = af._blocks
+
+    # add a block for an array
+    arr = np.array([1, 2, 3], dtype="uint8")
+    arr_blk = bm.find_or_create_block_for_array(arr)
+    assert arr_blk in bm._internal_blocks
+
+    # now make a new block, add it using a key
+    blk = block.Block(arr)
+    key = "foo"
+    bm.add(blk, key)
+    assert arr_blk in bm._internal_blocks
+    assert blk in bm._internal_blocks
+
+    # make sure we can retrieve the block by the key
+    assert bm.find_or_create_block(key, af) is blk
+    assert isinstance(bm.find_or_create_block("bar", af), block.Block)
+
+    # now remove it, the original array block should remain
+    bm.remove(blk)
+    assert arr_blk in bm._internal_blocks
+    assert blk not in bm._internal_blocks
