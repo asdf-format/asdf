@@ -38,7 +38,7 @@ If you have difficulties with tests failing or writing new tests please reach ou
 to the maintainers, who are glad to assist you.
 
 .. note::
-    ASDF uses both ``black`` and ``isort`` to format your code, so we ask that
+    ASDF uses both ``black`` and ``ruff`` to format your code, so we ask that
     you run these tools regularly on your code to ensure that it is formatted
     correctly.
 
