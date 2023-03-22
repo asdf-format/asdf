@@ -23,8 +23,8 @@ import yaml
 
 import asdf
 from asdf import generic_io, versioning
+from asdf._block import Block
 from asdf.asdf import AsdfFile, get_asdf_library_info
-from asdf.block import Block
 from asdf.constants import YAML_TAG_PREFIX
 from asdf.exceptions import AsdfConversionWarning, AsdfDeprecationWarning
 from asdf.extension import _legacy

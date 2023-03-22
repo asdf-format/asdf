@@ -44,6 +44,7 @@ The ASDF Standard is at v1.6.0
 - Deprecate asdf.tests.helpers [#1440]
 - respect umask when determining file permissions for written files [#1451]
 - rename master branch to main [#1479]
+- Deprecate asdf.block [#1496]
 
 2.14.4 (2022-03-17)
 -------------------

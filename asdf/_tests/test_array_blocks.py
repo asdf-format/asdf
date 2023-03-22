@@ -7,7 +7,7 @@ from numpy.random import random
 from numpy.testing import assert_array_equal
 
 import asdf
-from asdf import block, constants, generic_io
+from asdf import _block, constants, generic_io
 
 RNG = np.random.default_rng(6)
 
@@ -45,7 +45,7 @@ def test_invalid_array_storage():
     with pytest.raises(ValueError, match=r"array_storage must be one of.*"):
         ff.set_array_storage(my_array, "foo")
 
-    b = block.Block()
+    b = _block.Block()
     b._array_storage = "foo"
 
     with pytest.raises(ValueError, match=r"Unknown array storage type foo"):
@@ -480,10 +480,10 @@ def test_deferred_block_loading(small_tree):
 
     buff.seek(0)
     with asdf.open(buff) as ff2:
-        assert len([x for x in ff2._blocks.blocks if isinstance(x, block.Block)]) == 1
+        assert len([x for x in ff2._blocks.blocks if isinstance(x, _block.Block)]) == 1
         ff2.tree["science_data"] * 2
         ff2.tree["not_shared"] * 2
-        assert len([x for x in ff2._blocks.blocks if isinstance(x, block.Block)]) == 2
+        assert len([x for x in ff2._blocks.blocks if isinstance(x, _block.Block)]) == 2
 
         with pytest.raises(ValueError, match=r"Block .* not found."):
             ff2._blocks.get_block(2)
@@ -503,20 +503,20 @@ def test_block_index():
 
     buff.seek(0)
     with asdf.open(buff) as ff2:
-        assert isinstance(ff2._blocks._internal_blocks[0], block.Block)
+        assert isinstance(ff2._blocks._internal_blocks[0], _block.Block)
         assert len(ff2._blocks._internal_blocks) == 100
         for i in range(2, 99):
-            assert isinstance(ff2._blocks._internal_blocks[i], block.UnloadedBlock)
-        assert isinstance(ff2._blocks._internal_blocks[99], block.Block)
+            assert isinstance(ff2._blocks._internal_blocks[i], _block.UnloadedBlock)
+        assert isinstance(ff2._blocks._internal_blocks[99], _block.Block)
 
         # Force the loading of one array
         ff2.tree["arrays"][50] * 2
 
         for i in range(2, 99):
             if i == 50:
-                assert isinstance(ff2._blocks._internal_blocks[i], block.Block)
+                assert isinstance(ff2._blocks._internal_blocks[i], _block.Block)
             else:
-                assert isinstance(ff2._blocks._internal_blocks[i], block.UnloadedBlock)
+                assert isinstance(ff2._blocks._internal_blocks[i], _block.UnloadedBlock)
 
 
 def test_large_block_index():
@@ -549,7 +549,7 @@ def test_large_block_index():
 
     buff.seek(0)
     with asdf.open(buff) as ff2:
-        assert isinstance(ff2._blocks._internal_blocks[0], block.Block)
+        assert isinstance(ff2._blocks._internal_blocks[0], _block.Block)
         assert len(ff2._blocks._internal_blocks) == narrays
 
 
@@ -627,7 +627,7 @@ def test_invalid_block_index_values():
 
     ff = asdf.AsdfFile(tree)
     ff.write_to(buff, include_block_index=False)
-    ff._blocks._internal_blocks.append(block.UnloadedBlock(buff, 123456789))
+    ff._blocks._internal_blocks.append(_block.UnloadedBlock(buff, 123456789))
     ff._blocks.write_block_index(buff, ff)
 
     buff.seek(0)
@@ -760,7 +760,7 @@ def test_open_no_memmap(tmp_path):
 
 def test_fd_not_seekable():
     data = np.ones(1024)
-    b = block.Block(data=data)
+    b = _block.Block(data=data)
     fd = io.BytesIO()
 
     seekable = lambda: False  # noqa: E731
@@ -778,7 +778,7 @@ def test_fd_not_seekable():
     b.output_compression = "zlib"
     b.write(fd)
     fd.seek(0)
-    b = block.Block()
+    b = _block.Block()
     b.read(fd)
     # We lost the information about the underlying array type,
     # but still can compare the bytes.

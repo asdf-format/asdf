@@ -22,6 +22,28 @@ def test_custom_type_warning():
             pass
 
 
+def test_block_module_deprecation():
+    with pytest.warns(AsdfDeprecationWarning, match="^asdf.block is deprecated.*$"):
+        # importlib.reload doesn't appear to work here likely because of the
+        # sys.module and __file__ changes in asdf.block
+        if "asdf.block" in sys.modules:
+            del sys.modules["asdf.block"]
+        import asdf.block
+    # block does not define an __all__ so we will define one here
+    # for testing purposes
+    block_all = [
+        "BlockManager",
+        "Block",
+        "UnloadedBlock",
+        "calculate_updated_layout",
+    ]
+    for attr in dir(asdf.block):
+        if attr not in block_all:
+            continue
+        with pytest.warns(AsdfDeprecationWarning, match="^asdf.block is deprecated.*$"):
+            getattr(asdf.block, attr)
+
+
 def test_resolver_module_deprecation():
     with pytest.warns(AsdfDeprecationWarning, match="^asdf.resolver is deprecated.*$"):
         # importlib.reload doesn't appear to work here likely because of the
