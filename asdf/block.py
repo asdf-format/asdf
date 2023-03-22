@@ -781,10 +781,6 @@ class BlockManager:
 
         return block
 
-    def identify_block(self, source, key):
-        block = self.get_block(source)
-        self._data_to_block_mapping[key] = block
-
     def get_streamed_block(self):
         """
         Get the streamed block, which is always the last one.  A

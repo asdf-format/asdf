@@ -184,26 +184,6 @@ class Converter(abc.ABC):
         """
         return []
 
-    def get_block_lookup_keys(self, obj, storage=None):
-        """
-        Fetch the list of block lookup keys for this object.  For
-        objects without a binary block, this should return an
-        empty list.
-
-        Parameters
-        ----------
-        obj : object
-            Instance of a custom type
-
-        storage : str
-            Block storage type to use for this object or None
-
-        Returns
-        -------
-        list of hashable
-        """
-        return []
-
 
 class ConverterProxy(Converter):
     """
@@ -338,14 +318,6 @@ class ConverterProxy(Converter):
         """
         if hasattr(self._delegate, "reserve_blocks"):
             return self._delegate.reserve_blocks(obj, tag, ctx)
-        return []
-
-    def get_block_lookup_keys(self, obj, storage=None):
-        """
-        TODO
-        """
-        if hasattr(self._delegate, "get_block_lookup_keys"):
-            return self._delegate.get_block_lookup_keys(obj, storage)
         return []
 
     @property
