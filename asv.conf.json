@@ -1,0 +1,21 @@
+{
+    "version": 1,
+    "project": "asdf",
+    "project_url": "https://github.com/asdf-format/asdf",
+    "repo": ".",
+    "branches": [
+        "main"
+    ],
+    "environment_type": "virtualenv",
+
+    "install_command": [
+        "pip install ."
+    ],
+    "build_command": [
+        "pip install ."
+    ],
+
+    "env_dir": ".asv/env",
+    "results_dir": ".asv/results",
+    "html_dir": ".asv/html"
+}

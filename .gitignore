@@ -57,3 +57,6 @@ pip-wheel-metadata
 
 # setuptools-scm generated version file
 asdf/_version.py
+
+# airspeed velocity files
+.asv
