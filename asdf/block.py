@@ -1022,6 +1022,14 @@ class Block:
         requests it.  If the file is a stream or lazy_load is False,
         the data will be read into memory immediately.
 
+        As Block is used for reading, writing, configuring and
+        managing data there are circumstances where read should
+        not be used. For instance, if a data_callback is defined
+        a call to read would override the data corresponding to a
+        block and conflict with the use of the data_callback. To
+        signify this conflict, a RuntimeError is raised if read
+        is called on a block with a defined data_callback.
+
         Parameters
         ----------
         fd : GenericFile
@@ -1035,6 +1043,15 @@ class Block:
         validate_checksum : bool, optional
             If `True`, validate the data against the checksum, and
             raise a `ValueError` if the data doesn't match.
+
+        Raises
+        ------
+
+        RuntimeError
+            Read was called on a block with a defined data_callback.
+
+        ValueError
+            The read file contains invalid data.
         """
         if self._data_callback is not None:
             msg = "read called on a Block with a data_callback"
