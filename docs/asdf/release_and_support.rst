@@ -19,8 +19,15 @@ Backwards Compatibility and Semantic Versioning
 ASDF will maintain a backwards compatible API for all minor and patch versions.
 Any breaking API changes will only be included in major releases (where the
 major version number will be increased). We follow
-`Semantic Versioning <https://semver.org/>`_ with one exception (LTS versions,
-described below).
+`Semantic Versioning <https://semver.org/>`_.
+
+.. note::
+
+   We are planning to clean up the public API following the 2.15 release. We
+   will attempt to do so with the smallest number of major version changes. If
+   there are portions of the ASDF API that you are using that are not documented
+   in the :ref:`user_api` or :ref:`developer_api` please
+   `open an issue <https://github.com/asdf-format/asdf/issues/new>`_.
 
 .. _release_cycle:
 
@@ -31,26 +38,26 @@ As ASDF is still under active development, it will continue to be developed on a
 rolling release cycle. This means that ASDF will not have a fixed release
 schedule, but rather will be released as needed.
 
-However, we do intend to create and maintain designated "long-term support" (LTS)
-branches for at least major version of ASDF in a similar way as what is described
-for ``astropy`` in `APE 2 <https://github.com/astropy/astropy-APEs/blob/main/APE2.rst>`_.
-This means that for every new major version of ASDF, say version ``a.0`` we will
-designate and maintain ``a.0.x`` as the LTS branch of ASDF for at least one year.
-During this time we will try to ensure that the LTS branch receives bugfixes and
-has regular releases. After one year, we may decide to designate a new LTS branch
-for ASDF if no new major versions of ASDF have been released; otherwise, we will
-cease to maintain the old LTS branch in favor of the newer one(s). Aside from the
-LTS version(s), we will also maintain a rolling current version of ASDF. This support
-for these rolling versions will end when the next non-LTS version of ASDF is released.
+..  However, we do intend to create and maintain designated "long-term support" (LTS)
+    branches for at least major version of ASDF in a similar way as what is described
+    for ``astropy`` in `APE 2 <https://github.com/astropy/astropy-APEs/blob/main/APE2.rst>`_.
+    This means that for every new major version of ASDF, say version ``a.0`` we will
+    designate and maintain ``a.0.x`` as the LTS branch of ASDF for at least one year.
+    During this time we will try to ensure that the LTS branch receives bugfixes and
+    has regular releases. After one year, we may decide to designate a new LTS branch
+    for ASDF if no new major versions of ASDF have been released; otherwise, we will
+    cease to maintain the old LTS branch in favor of the newer one(s). Aside from the
+    LTS version(s), we will also maintain a rolling current version of ASDF. This support
+    for these rolling versions will end when the next non-LTS version of ASDF is released.
 
-.. note::
+    .. note::
 
-    Since this policy has not yet been implemented, we have not yet formally declared
-    an LTS version for ASDF. Our plan is to declare ``2.15`` as an LTS version when it
-    is released and move forward to actively working on ASDF ``3.0`` as our main development.
-    Once ``3.0`` is released, it will also become a second LTS version of ASDF and we
-    will continue to release bugfixes for ASDF ``2.15`` and ``3.0`` for at least one
-    year past their release dates.
+        Since this policy has not yet been implemented, we have not yet formally declared
+        an LTS version for ASDF. Our plan is to declare ``2.15`` as an LTS version when it
+        is released and move forward to actively working on ASDF ``3.0`` as our main development.
+        Once ``3.0`` is released, it will also become a second LTS version of ASDF and we
+        will continue to release bugfixes for ASDF ``2.15`` and ``3.0`` for at least one
+        year past their release dates.
 
 .. _dependency_support_policy:
 
