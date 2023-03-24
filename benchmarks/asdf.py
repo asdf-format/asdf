@@ -66,6 +66,7 @@ class AsdfFileOpenSuite:
         self.byte_file = _utils.write_to_bytes(asdf.AsdfFile(_utils.build_tree(*key.split("_"))))
 
     def time_open(self, key):
+        self.byte_file.seek(0)
         with asdf.open(self.byte_file):
             pass
 
@@ -74,5 +75,6 @@ class AsdfFileOpenSuite:
         pass
 
     def peakmem_open(self, key):
+        self.byte_file.seek(0)
         with asdf.open(self.byte_file):
             pass
