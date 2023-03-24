@@ -13,7 +13,7 @@ def data_function(size):
     if not size:
         return ord
     dims = [int(d) for d in size.split("x")]
-    # assuming double: 2 * 512 * 512 * 26 * 26 = 338M
+    # assuming double: 8 * 256 * 256 * 26 * 26 = 1.4G
     return lambda k: np.zeros(dims) * ord(k)
 
 
