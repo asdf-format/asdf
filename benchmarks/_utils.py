@@ -1,10 +1,9 @@
 import io
 import string
 
-import numpy
+import numpy as np
 
 import asdf
-
 
 tree_sizes = ["small", "flat", "deep", "large"]
 data_sizes = ["0", "3x3", "512x512"]
@@ -13,9 +12,9 @@ data_sizes = ["0", "3x3", "512x512"]
 def data_function(size):
     if not size:
         return ord
-    dims = [int(d) for d in size.split('x')]
+    dims = [int(d) for d in size.split("x")]
     # assuming double: 2 * 512 * 512 * 26 * 26 = 338M
-    return lambda k: numpy.zeros(dims) * ord(k)
+    return lambda k: np.zeros(dims) * ord(k)
 
 
 def build_tree(size, value_function=None):
@@ -30,7 +29,7 @@ def build_tree(size, value_function=None):
     if size == "deep":
         tree = {}
         for k in string.ascii_lowercase[:26]:
-            tree[k] = {'value': value_function(k)}
+            tree[k] = {"value": value_function(k)}
             tree = tree[k]
         return tree
     if size == "large":
@@ -52,15 +51,3 @@ def write_to_bytes(af):
 
 def build_tree_keys():
     return {f"{k}_{dk}" for k in tree_sizes for dk in data_sizes}
-
-
-def build_trees():
-    return {f"{k}_{dk}": build_tree(k, data_function(dk)) for k in tree_sizes for dk in data_sizes}
-
-
-def build_asdf_files():
-    return {k: asdf.AsdfFile(tree) for key, tree in build_trees().items()}
-
-
-def build_written_asdf_files():
-    return {k: write_to_bytes(af) for key, af in build_asdf_files().items()}
