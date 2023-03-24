@@ -36,6 +36,9 @@ the currently active config:
     >>> asdf.get_config()
     <AsdfConfig
       array_inline_threshold: None
+      all_array_storage: None
+      all_array_compression: input
+      all_array_compression_kwargs: None
       default_version: 1.5.0
       io_block_size: -1
       legacy_fill_schema_defaults: True
@@ -56,6 +59,9 @@ This allows for short-lived configuration changes that do not impact other code:
     ...
     <AsdfConfig
       array_inline_threshold: None
+      all_array_storage: None
+      all_array_compression: input
+      all_array_compression_kwargs: None
       default_version: 1.5.0
       io_block_size: -1
       legacy_fill_schema_defaults: True
@@ -64,6 +70,9 @@ This allows for short-lived configuration changes that do not impact other code:
     >>> asdf.get_config()
     <AsdfConfig
       array_inline_threshold: None
+      all_array_storage: None
+      all_array_compression: input
+      all_array_compression_kwargs: None
       default_version: 1.5.0
       io_block_size: -1
       legacy_fill_schema_defaults: True

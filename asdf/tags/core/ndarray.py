@@ -422,7 +422,7 @@ class NDArrayType(_types.AsdfType):
         # Find all of the used data buffers so we can add or rearrange
         # them if necessary
         if isinstance(data, np.ndarray):
-            yield ctx._blocks.find_or_create_block_for_array(data, ctx)
+            yield ctx._blocks.find_or_create_block_for_array(data)
         elif isinstance(data, NDArrayType):
             yield data.block
 
@@ -444,7 +444,7 @@ class NDArrayType(_types.AsdfType):
 
         shape = data.shape
 
-        block = ctx._blocks.find_or_create_block_for_array(data, ctx)
+        block = ctx._blocks.find_or_create_block_for_array(data)
 
         # Compute the offset relative to the base array and not the
         # block data, in case the block is compressed.

@@ -225,8 +225,14 @@ class LzmaExtension(Extension):
 def test_compression_with_extension(tmp_path):
     tree = _get_large_tree()
 
+    with pytest.raises(ValueError, match="Supported compression types are"), config_context() as cfg:
+        cfg.all_array_compression = "lzma"
+
     with config_context() as config:
         config.add_extension(LzmaExtension())
+
+        with config_context() as cfg:
+            cfg.all_array_compression = "lzma"
 
         with pytest.raises(lzma.LZMAError, match=r"Invalid or unsupported options"):
             _roundtrip(tmp_path, tree, "lzma", write_options={"compression_kwargs": {"preset": 9000}})
