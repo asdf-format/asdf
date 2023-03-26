@@ -529,3 +529,21 @@ def test_none_values(tmp_path):
     with asdf.open(path) as af:
         assert "foo" in af
         assert af["foo"] is None
+
+
+def test_asdf_standard_version_tag_selection():
+    buff = io.BytesIO()
+
+    af = asdf.AsdfFile()
+    af.write_to(buff, version="1.0.0")
+    buff.seek(0)
+    content = buff.read()
+    assert b"!core/asdf-1.0.0" in content
+    assert b"!core/asdf-1.1.0" not in content
+
+    buff.seek(0)
+    af.write_to(buff, version="1.2.0")
+    buff.seek(0)
+    content = buff.read()
+    assert b"!core/asdf-1.0.0" not in content
+    assert b"!core/asdf-1.1.0" in content
