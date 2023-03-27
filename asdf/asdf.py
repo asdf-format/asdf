@@ -861,9 +861,6 @@ class AsdfFile:
 
         """
         self._blocks._compression_settings[id(obj)] = (compression, compression_kwargs)
-        # if len(keys) == 0:
-
-        # for key in keys:
 
     def get_block_compression(self, obj):
         """
@@ -879,7 +876,6 @@ class AsdfFile:
         (str, dict)
         """
         return self._blocks._compression_settings.get(id(obj), (None, {}))
-        # if len(keys) == 0:
 
     @classmethod
     def _parse_header_line(cls, line):
@@ -2042,17 +2038,29 @@ class SerializationContext:
         """
         return self.__extensions_used
 
-    def load_block(self, block_index):
+    def load_block(self, block_index, key=None):
         """
         Parameters
         ----------
         block_index : int
 
+        key : hashable (optional)
+
         Returns
         -------
         block_data : ndarray
         """
-        return self._block_manager.get_block(block_index).data
+        data = self._block_manager.get_block(block_index).data
+        if key is not None:
+            self.claim_block(block_index, key)
+        return data
+
+    def claim_block(self, block_index, key):
+        """
+        TODO
+        """
+        blk = self._block_manager.get_block(block_index)
+        self._block_manager._data_to_block_mapping[key] = blk
 
     def _find_block(self, lookup_key, data_callback=None):
         blk = self._block_manager.find_or_create_block(lookup_key)

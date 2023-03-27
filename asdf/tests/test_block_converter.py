@@ -1,7 +1,11 @@
+import contextlib
+
 import numpy as np
+import pytest
 
 import asdf
 from asdf.extension import Converter, Extension
+from asdf.testing import helpers
 
 
 class BlockData:
@@ -72,8 +76,29 @@ class BlockConverter(Converter):
         # Another complication is memmapping. It should not matter that
         # zarr receives a memmap I'm not sure I've fully thought this
         # though.
-        data = ctx.load_block(node["block_index"])
-        return BlockData(data.tobytes())
+        block_index = node["block_index"]
+        data = ctx.load_block(block_index)
+        obj = BlockData(data.tobytes())
+        ctx.claim_block(block_index, id(obj))
+
+        # -- alternatively, if data is not required to make the object --
+        # obj = BlockData(b"")
+        # obj.payload = ctx.load_block(block_index, id(obj))
+
+        # so I think this might need to 'claim' blocks so subsequent 'validate'/'write_to'/etc use
+        # the read block (and don't create a new one). This can create a catch 22 when
+        # the data is used to make the object (like here), since the id(obj) key is not known
+        # until the object is created. What about something like
+        # ctx.load_block(index) : loads block data WITHOUT claiming it
+        # ctx.attach_block(index, key) : load and claim block
+        # ctx.claim_block(key) : just claim/associate the block
+        # this is pretty messy and I think could be cleaned up by a new block manager on write
+        # there, the blocks would always be claimed and the 'read' block manager would be responsible
+        # for only that... Update might still need an association
+        # so maybe instead use
+        # ctx.load_block(index, key=None) and ctx.claim_block(index, key)
+        # ctx._block_manager._data_to_block_mapping[id(obj)] = ctx._block_manager._internal_blocks[0]
+        return obj
 
     def reserve_blocks(self, obj, tag, ctx):  # Is there a ctx or tag at this point?
         # Reserve a block using a unique key (this will be used in to_yaml_tree
@@ -88,14 +113,149 @@ class BlockExtension(Extension):
     extension_uri = "asdf://somewhere.org/extensions/block_data-1.0.0"
 
 
-def test_block_converter(tmp_path):
+@contextlib.contextmanager
+def with_extension(ext_class):
     with asdf.config_context() as cfg:
-        cfg.add_extension(BlockExtension())
+        cfg.add_extension(ext_class())
+        yield
 
-        tree = {"b": BlockData(b"abcdefg")}
-        af = asdf.AsdfFile(tree)
-        fn = tmp_path / "test.asdf"
-        af.write_to(fn)
 
-        with asdf.open(fn) as af:
-            assert af["b"].payload == tree["b"].payload
+@with_extension(BlockExtension)
+def test_roundtrip_block_data():
+    a = BlockData(b"abcdefg")
+    b = helpers.roundtrip_object(a)
+    assert a.payload == b.payload
+
+
+@with_extension(BlockExtension)
+def test_block_converter_block_allocation(tmp_path):
+    a = BlockData(b"abcdefg")
+
+    # make a tree without the BlockData instance to avoid
+    # the initial validate which will trigger block allocation
+    af = asdf.AsdfFile({"a": None})
+    # now assign to the tree item (avoiding validation)
+    af["a"] = a
+    # the AsdfFile instance should have no blocks
+    assert len(af._blocks._internal_blocks) == 0
+    # until validate is called
+    af.validate()
+    assert len(af._blocks._internal_blocks) == 1
+    assert af._blocks._internal_blocks[0].data.tobytes() == a.payload
+    # a second validate shouldn't result in more blocks
+    af.validate()
+    assert len(af._blocks._internal_blocks) == 1
+    fn = tmp_path / "test.asdf"
+    # nor should write_to
+    af.write_to(fn)
+    assert len(af._blocks._internal_blocks) == 1
+
+    # if we read a file
+    with asdf.open(fn, mode="rw") as af:
+        fn2 = tmp_path / "test2.asdf"
+        # there should be 1 block
+        assert len(af._blocks._internal_blocks) == 1
+        # validate should use that block
+        af.validate()
+        assert len(af._blocks._internal_blocks) == 1
+        # as should write_to
+        af.write_to(fn2)
+        assert len(af._blocks._internal_blocks) == 1
+        # and update
+        af.update()
+        assert len(af._blocks._internal_blocks) == 1
+
+
+@with_extension(BlockExtension)
+def test_invalid_block_data():
+    pass
+
+
+class BlockDataCallback:
+    """An example object that uses the data callback to read block data"""
+
+    def __init__(self, callback):
+        self.callback = callback
+
+    @property
+    def data(self):
+        return self.callback()
+
+
+class BlockDataCallbackConverter(Converter):
+    tags = ["asdf://somewhere.org/tags/block_data_callback-1.0.0"]
+    types = [BlockDataCallback]
+
+    def to_yaml_tree(self, obj, tag, ctx):
+        # lookup source for obj
+        block_index = ctx.find_block_index(id(obj), obj.callback)
+        return {
+            "block_index": block_index,
+        }
+
+    def from_yaml_tree(self, node, tag, ctx):
+        block_index = node["block_index"]
+        obj = BlockDataCallback(lambda: ctx.load_block(block_index))
+        ctx.claim_block(block_index, id(obj))
+        return obj
+
+    def reserve_blocks(self, obj, tag, ctx):
+        return [ctx.reserve_block(id(obj), obj.callback)]
+
+
+class BlockDataCallbackExtension(Extension):
+    tags = ["asdf://somewhere.org/tags/block_data_callback-1.0.0"]
+    converters = [BlockDataCallbackConverter()]
+    extension_uri = "asdf://somewhere.org/extensions/block_data_callback-1.0.0"
+
+
+@pytest.mark.xfail(reason="callback use in a converter requires a new block manager on write")
+@with_extension(BlockDataCallbackExtension)
+def test_block_data_callback_converter(tmp_path):
+    # use a callback that every time generates a new array
+    # this would cause issues for the old block management as the
+    # id(arr) would change every time
+    a = BlockDataCallback(lambda: np.zeros(3, dtype="uint8"))
+
+    b = helpers.roundtrip_object(a)
+    assert np.all(a.data == b.data)
+
+    # make a tree without the BlockData instance to avoid
+    # the initial validate which will trigger block allocation
+    af = asdf.AsdfFile({"a": None})
+    # now assign to the tree item (avoiding validation)
+    af["a"] = a
+    # the AsdfFile instance should have no blocks
+    assert len(af._blocks._internal_blocks) == 0
+    # until validate is called
+    af.validate()
+    assert len(af._blocks._internal_blocks) == 1
+    assert np.all(af._blocks._internal_blocks[0].data == a.data)
+    # a second validate shouldn't result in more blocks
+    af.validate()
+    assert len(af._blocks._internal_blocks) == 1
+    fn = tmp_path / "test.asdf"
+    # nor should write_to
+    af.write_to(fn)
+    assert len(af._blocks._internal_blocks) == 1
+
+    # if we read a file
+    with asdf.open(fn, mode="rw") as af:
+        fn2 = tmp_path / "test2.asdf"
+        # there should be 1 block
+        assert len(af._blocks._internal_blocks) == 1
+        # validate should use that block
+        af.validate()
+        assert len(af._blocks._internal_blocks) == 1
+        # as should write_to
+        af.write_to(fn2)  # TODO this will NOT work without a new block manager on write
+        assert len(af._blocks._internal_blocks) == 1
+        # and update
+        af.update()
+        assert len(af._blocks._internal_blocks) == 1
+
+
+# TODO tests to add
+# - memmap/lazy_load other open options
+# - block storage settings
+# - error cases when data is not of the correct type (not an ndarray, an invalid ndarray, etc)
