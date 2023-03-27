@@ -53,7 +53,7 @@ class BlockManager:
         """
         return sum(len(x) for x in self._block_type_mapping.values())
 
-    def add(self, block):
+    def add(self, block, key=None):
         """
         Add an internal block to the manager.
         """
@@ -63,9 +63,9 @@ class BlockManager:
             # in the middle of the list.
             self.finish_reading_internal_blocks()
 
-        self._add(block)
+        self._add(block, key=key)
 
-    def _add(self, block):
+    def _add(self, block, key=None):
         block_set = self._block_type_mapping.get(block.array_storage, None)
         if block_set is not None:
             if block not in block_set:
@@ -78,8 +78,10 @@ class BlockManager:
             msg = "Can not add second streaming block"
             raise ValueError(msg)
 
-        if block._data is not None:
-            self._data_to_block_mapping[id(block._data)] = block
+        if block._data is not None or key is not None:
+            if key is None:
+                key = id(block._data)
+            self._data_to_block_mapping[key] = block
 
     def remove(self, block):
         """
@@ -89,9 +91,9 @@ class BlockManager:
         if block_set is not None:
             if block in block_set:
                 block_set.remove(block)
-                if block._data is not None and id(block._data) in self._data_to_block_mapping:
-                    del self._data_to_block_mapping[id(block._data)]
-
+                for key, blk in list(self._data_to_block_mapping.items()):
+                    if blk is block:
+                        del self._data_to_block_mapping[key]
         else:
             msg = f"Unknown array storage type {block.array_storage}"
             raise ValueError(msg)
@@ -744,6 +746,30 @@ class BlockManager:
 
         block = Block(base)
         self.add(block)
+        self._handle_global_block_settings(block)
+
+        return block
+
+    def find_or_create_block(self, key):
+        """
+        For a given hashable key, looks for an existing block. If not
+        found, adds a new block to the block list. Returns the index
+        in the block list to the array.
+
+        Parameters
+        ----------
+        key : hashable
+
+        Returns
+        -------
+        block : Block
+        """
+        block = self._data_to_block_mapping.get(key)
+        if block is not None:
+            return block
+
+        block = Block()
+        self.add(block, key=key)
         self._handle_global_block_settings(block)
 
         return block
