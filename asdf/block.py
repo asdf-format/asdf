@@ -839,7 +839,11 @@ class Block:
         ],
     )
 
-    def __init__(self, data=None, uri=None, array_storage="internal", memmap=True, lazy_load=True):
+    def __init__(self, data=None, uri=None, array_storage="internal", memmap=True, lazy_load=True, data_callback=None):
+        self._data_callback = data_callback
+        if self._data_callback is not None and data is not None:
+            msg = "Block.__init__ cannot contain non-None data and a non-None data_callback"
+            raise ValueError(msg)
         self._data = data
         self._uri = uri
         self._array_storage = array_storage
@@ -1018,6 +1022,14 @@ class Block:
         requests it.  If the file is a stream or lazy_load is False,
         the data will be read into memory immediately.
 
+        As Block is used for reading, writing, configuring and
+        managing data there are circumstances where read should
+        not be used. For instance, if a data_callback is defined
+        a call to read would override the data corresponding to a
+        block and conflict with the use of the data_callback. To
+        signify this conflict, a RuntimeError is raised if read
+        is called on a block with a defined data_callback.
+
         Parameters
         ----------
         fd : GenericFile
@@ -1031,7 +1043,19 @@ class Block:
         validate_checksum : bool, optional
             If `True`, validate the data against the checksum, and
             raise a `ValueError` if the data doesn't match.
+
+        Raises
+        ------
+
+        RuntimeError
+            Read was called on a block with a defined data_callback.
+
+        ValueError
+            The read file contains invalid data.
         """
+        if self._data_callback is not None:
+            msg = "read called on a Block with a data_callback"
+            raise RuntimeError(msg)
         offset = None
         if fd.seekable():
             offset = fd.tell()
@@ -1174,7 +1198,14 @@ class Block:
         """
         self._header_size = self._header.size
 
-        data = self._flattened_data if self._data is not None else None
+        if self._data_callback is not None:
+            self._data = self._data_callback()
+            data = self._flattened_data
+            self.update_size()
+            self._data = None
+            self._allocated = self._size
+        else:
+            data = self._flattened_data if self._data is not None else None
 
         flags = 0
         data_size = used_size = allocated_size = 0
@@ -1237,21 +1268,23 @@ class Block:
         """
         Get the data for the block, as a numpy array.
         """
-        if self._data is None:
-            if self._fd.is_closed():
-                msg = "ASDF file has already been closed. Can not get the data."
-                raise OSError(msg)
+        if self._data is not None:
+            return self._data
+        if self._data_callback is not None:
+            return self._data_callback()
+        if self._fd.is_closed():
+            msg = "ASDF file has already been closed. Can not get the data."
+            raise OSError(msg)
 
-            # Be nice and reset the file position after we're done
-            curpos = self._fd.tell()
-            try:
-                self._memmap_data()
-                if not self._memmapped:
-                    self._fd.seek(self.data_offset)
-                    self._data = self._read_data(self._fd, self._size, self._data_size)
-            finally:
-                self._fd.seek(curpos)
-
+        # Be nice and reset the file position after we're done
+        curpos = self._fd.tell()
+        try:
+            self._memmap_data()
+            if not self._memmapped:
+                self._fd.seek(self.data_offset)
+                self._data = self._read_data(self._fd, self._size, self._data_size)
+        finally:
+            self._fd.seek(curpos)
         return self._data
 
     def close(self):
@@ -1279,6 +1312,7 @@ class UnloadedBlock:
         self._should_memmap = memmap
         self._memmapped = False
         self._lazy_load = lazy_load
+        self._data_callback = None
 
     def __len__(self):
         self.load()
