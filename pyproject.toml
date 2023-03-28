@@ -185,6 +185,7 @@ extend-ignore = [
     "TRY002", # Create your own exception
     "TRY301", # Abstract raise to an inner function
     "TRY400", # Use logging.exception instead of logging.error
+    "S310", # URL open for permitted schemes
 ]
 extend-exclude = ["asdf/extern/*", "docs/*"]
 
