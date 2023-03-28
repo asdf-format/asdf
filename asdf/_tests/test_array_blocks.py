@@ -978,3 +978,30 @@ def test_data_callback(tmp_path, memmap, lazy_load):
         mode="r",
     ) as f:
         rb.read(f, past_magic=False)
+
+
+def test_remove_blocks(tmp_path):
+    """Test that writing to a new file"""
+    fn1 = tmp_path / "test.asdf"
+    fn2 = tmp_path / "test2.asdf"
+
+    tree = {"a": np.zeros(3), "b": np.ones(1)}
+    af = asdf.AsdfFile(tree)
+    af.write_to(fn1)
+
+    with asdf.open(fn1, mode="rw") as af:
+        assert len(af._blocks._internal_blocks) == 2
+        af["a"] = None
+        # issue: https://github.com/asdf-format/asdf/issues/1505
+        # prevents us from calling write_to then update
+        af.write_to(fn2)
+        # af.update()
+
+    with asdf.open(fn1, mode="rw") as af:
+        assert len(af._blocks._internal_blocks) == 2
+        af["a"] = None
+        af.update()
+
+    for fn in (fn1, fn2):
+        with asdf.open(fn) as af:
+            assert len(af._blocks._internal_blocks) == 1

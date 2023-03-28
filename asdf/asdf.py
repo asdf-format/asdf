@@ -1434,6 +1434,8 @@ class AsdfFile:
             if "compression_kwargs" in kwargs:
                 config.all_array_compression_kwargs = kwargs["compression_kwargs"]
 
+            self._blocks.finalize(self)
+
             naf = AsdfFile(
                 {},
                 uri=self._uri,
@@ -1447,26 +1449,44 @@ class AsdfFile:
             # copy over block storage and other settings
             naf._blocks._storage_settings = copy.deepcopy(self._blocks._storage_settings)
             naf._blocks._compression_settings = copy.deepcopy(self._blocks._compression_settings)
+            block_to_key_mapping = {v: k for k, v in self._blocks._data_to_block_mapping.items()}
+            # this creates blocks in the new block manager that correspond to blocks
+            # in the original file
             for b in self._blocks.blocks:
-                # we know we are going to use all new blocks
-                b._used = True
                 if b in self._blocks._streamed_blocks and b._data is None:
                     # streamed blocks might not have data
                     # add a streamed block to naf
                     blk = naf._blocks.get_streamed_block()
                     # mark this block as used so it doesn't get removed
                     blk._used = True
-                    continue
-                if b._data_callback is None:
-                    key = b.data
-                    blk = naf._blocks[key]
+                elif b._data is not None or b._fd is not None:  # this block has data
+                    arr = b.data
+                    blk = naf._blocks[arr]
                     blk._used = True
-                    naf.set_array_storage(key, b.array_storage)
-                    naf.set_array_compression(key, b.output_compression, **b.output_compression_kwargs)
+                    naf.set_array_storage(arr, b.array_storage)
+                    naf.set_array_compression(arr, b.output_compression, **b.output_compression_kwargs)
+                else:  # this block does not have data
+                    key = block_to_key_mapping[b]
+                    blk = naf._blocks.find_or_create_block(key)
+                    blk._used = True
+                    blk._data_callback = b._data_callback
+                    naf._blocks._storage_settings[key] = self._blocks._storage_settings.get(key, b.array_storage)
+                    naf._blocks._compression_settings[key] = self._blocks._compression_settings.get(
+                        key,
+                        (b.output_compression, b.output_compression_kwargs),
+                    )
+                # if b in block_to_key_mapping:  # this block is mapped by key, not array data
+                #     key = block_to_key_mapping[b]
+                #     breakpoint()
+                # else:
+                #     key = b.data
+                # if b._data_callback is None:
+                #     key = block_to_key_mapping.get(blk, b.data)
+                #     blk = naf._blocks[key]
+                #     blk._used = True
+                #     naf.set_array_storage(key, b.array_storage)
+                #     naf.set_array_compression(key, b.output_compression, **b.output_compression_kwargs)
             naf._write_to(fd, **kwargs)
-            for b in self._blocks.blocks:
-                if hasattr(b, "_used"):
-                    del b._used
 
     def _write_to(
         self,
@@ -2109,8 +2129,10 @@ class SerializationContext:
         self._block_manager._data_to_block_mapping[key] = blk
 
     def _find_block(self, lookup_key, data_callback=None):
+        new_block = lookup_key not in self._block_manager._data_to_block_mapping
         blk = self._block_manager.find_or_create_block(lookup_key)
-        if data_callback is not None:
+        # if we're not creating a block, don't update the data callback
+        if data_callback is not None and (new_block or (blk._data_callback is None and blk._fd is None)):
             blk._data_callback = data_callback
         return blk
 

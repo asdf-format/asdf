@@ -1,7 +1,7 @@
 import contextlib
 
 import numpy as np
-import pytest
+from numpy.testing import assert_array_equal
 
 import asdf
 from asdf.extension import Converter, Extension
@@ -104,7 +104,8 @@ class BlockConverter(Converter):
         # Reserve a block using a unique key (this will be used in to_yaml_tree
         # to find the block index) and a callable that will return the data/bytes
         # that will eventually be written to the block.
-        return [ctx.reserve_block(id(obj), lambda: np.ndarray(len(obj.payload), dtype="uint8", buffer=obj.payload))]
+        return [id(obj)]
+        # return [ctx.reserve_block(id(obj), lambda: np.ndarray(len(obj.payload), dtype="uint8", buffer=obj.payload))]
 
 
 class BlockExtension(Extension):
@@ -187,6 +188,7 @@ class BlockDataCallbackConverter(Converter):
     types = [BlockDataCallback]
 
     def to_yaml_tree(self, obj, tag, ctx):
+        # this will be called during validate and might overwrite the callback
         # lookup source for obj
         block_index = ctx.find_block_index(id(obj), obj.callback)
         return {
@@ -195,12 +197,17 @@ class BlockDataCallbackConverter(Converter):
 
     def from_yaml_tree(self, node, tag, ctx):
         block_index = node["block_index"]
-        obj = BlockDataCallback(lambda: ctx.load_block(block_index))
+
+        def callback(_ctx=ctx, _index=block_index):
+            return _ctx.load_block(_index)
+
+        obj = BlockDataCallback(callback)
         ctx.claim_block(block_index, id(obj))
         return obj
 
     def reserve_blocks(self, obj, tag, ctx):
-        return [ctx.reserve_block(id(obj), obj.callback)]
+        return [id(obj)]
+        # return [ctx.reserve_block(id(obj), obj.callback)]
 
 
 class BlockDataCallbackExtension(Extension):
@@ -209,7 +216,6 @@ class BlockDataCallbackExtension(Extension):
     extension_uri = "asdf://somewhere.org/extensions/block_data_callback-1.0.0"
 
 
-@pytest.mark.xfail(reason="callback use in a converter requires a new block manager on write")
 @with_extension(BlockDataCallbackExtension)
 def test_block_data_callback_converter(tmp_path):
     # use a callback that every time generates a new array
@@ -218,7 +224,7 @@ def test_block_data_callback_converter(tmp_path):
     a = BlockDataCallback(lambda: np.zeros(3, dtype="uint8"))
 
     b = helpers.roundtrip_object(a)
-    assert np.all(a.data == b.data)
+    assert_array_equal(a.data, b.data)
 
     # make a tree without the BlockData instance to avoid
     # the initial validate which will trigger block allocation
@@ -245,14 +251,16 @@ def test_block_data_callback_converter(tmp_path):
         # there should be 1 block
         assert len(af._blocks._internal_blocks) == 1
         # validate should use that block
-        af.validate()
+        af.validate()  # FIXME this validate screws up the block data/callback relationship
         assert len(af._blocks._internal_blocks) == 1
         # as should write_to
-        af.write_to(fn2)  # TODO this will NOT work without a new block manager on write
+        af.write_to(fn2)
         assert len(af._blocks._internal_blocks) == 1
         # and update
         af.update()
         assert len(af._blocks._internal_blocks) == 1
+
+    # TODO check that data was preserved
 
 
 # TODO tests to add

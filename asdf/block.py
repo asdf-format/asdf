@@ -566,8 +566,8 @@ class BlockManager:
                 converter = ctx.extension_manager.get_converter_for_type(type(node))
                 tag = converter.select_tag(node, ctx)
                 sctx = ctx._create_serialization_context()
-                for blk in converter.reserve_blocks(node, tag, sctx):
-                    reserved_blocks.add(blk)
+                for key in converter.reserve_blocks(node, tag, sctx):
+                    reserved_blocks.add(self.find_or_create_block(key))
             else:
                 hook = ctx._type_index.get_hook_for_type("reserve_blocks", type(node), ctx.version_string)
                 if hook is not None:
