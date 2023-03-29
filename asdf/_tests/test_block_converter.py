@@ -77,7 +77,7 @@ class BlockConverter(Converter):
         # zarr receives a memmap I'm not sure I've fully thought this
         # though.
         block_index = node["block_index"]
-        data = ctx.load_block(block_index)
+        data = ctx.load_block(block_index, by_index=True)
         obj = BlockData(data.tobytes())
         ctx.claim_block(block_index, id(obj))
 
@@ -198,16 +198,21 @@ class BlockDataCallbackConverter(Converter):
     def from_yaml_tree(self, node, tag, ctx):
         block_index = node["block_index"]
 
-        def callback(_ctx=ctx, _index=block_index):
-            return _ctx.load_block(_index)
+        obj = BlockDataCallback(lambda: None)
+        # now that we have an object we use it's memory location
+        # to generate a key
+        key = id(obj)
 
-        obj = BlockDataCallback(callback)
-        ctx.claim_block(block_index, id(obj))
+        def callback(_ctx=ctx, _key=key):
+            return _ctx.load_block(_key)
+
+        obj.callback = callback
+
+        ctx.claim_block(block_index, key)
         return obj
 
     def reserve_blocks(self, obj, tag, ctx):
         return [id(obj)]
-        # return [ctx.reserve_block(id(obj), obj.callback)]
 
 
 class BlockDataCallbackExtension(Extension):
@@ -240,13 +245,13 @@ def test_block_data_callback_converter(tmp_path):
     # a second validate shouldn't result in more blocks
     af.validate()
     assert len(af._blocks._internal_blocks) == 1
-    fn = tmp_path / "test.asdf"
+    fn1 = tmp_path / "test.asdf"
     # nor should write_to
-    af.write_to(fn)
+    af.write_to(fn1)
     assert len(af._blocks._internal_blocks) == 1
 
     # if we read a file
-    with asdf.open(fn, mode="rw") as af:
+    with asdf.open(fn1, mode="rw") as af:
         fn2 = tmp_path / "test2.asdf"
         # there should be 1 block
         assert len(af._blocks._internal_blocks) == 1
@@ -260,7 +265,37 @@ def test_block_data_callback_converter(tmp_path):
         af.update()
         assert len(af._blocks._internal_blocks) == 1
 
-    # TODO check that data was preserved
+    # check that data was preserved
+    for fn in (fn1, fn2):
+        with asdf.open(fn) as af:
+            assert_array_equal(af["a"].data, a.data)
+
+
+@with_extension(BlockDataCallbackExtension)
+def test_block_with_callback_removal(tmp_path):
+    fn1 = tmp_path / "test1.asdf"
+    fn2 = tmp_path / "test2.asdf"
+
+    a = BlockDataCallback(lambda: np.zeros(3, dtype="uint8"))
+    b = BlockDataCallback(lambda: np.ones(3, dtype="uint8"))
+    base_af = asdf.AsdfFile({"a": a, "b": b})
+    base_af.write_to(fn1)
+
+    for remove_key, check_key in [("a", "b"), ("b", "a")]:
+        # check that removing one does not interfere with the other
+        with asdf.open(fn1) as af:
+            af[remove_key] = None
+            af.write_to(fn2)
+        with asdf.open(fn2) as af:
+            af[check_key] = b.data
+        # also test update
+        # first copy fn1 to fn2
+        with asdf.open(fn1) as af:
+            af.write_to(fn2)
+        with asdf.open(fn2, mode="rw") as af:
+            af[remove_key] = None
+            af.update()
+            af[check_key] = b.data
 
 
 # TODO tests to add

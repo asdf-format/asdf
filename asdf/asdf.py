@@ -1434,7 +1434,7 @@ class AsdfFile:
             if "compression_kwargs" in kwargs:
                 config.all_array_compression_kwargs = kwargs["compression_kwargs"]
 
-            self._blocks.finalize(self)
+            used_blocks = self._blocks._find_used_blocks(self.tree, self, remove=False)
 
             naf = AsdfFile(
                 {},
@@ -1453,6 +1453,8 @@ class AsdfFile:
             # this creates blocks in the new block manager that correspond to blocks
             # in the original file
             for b in self._blocks.blocks:
+                if b not in used_blocks:
+                    continue
                 if b in self._blocks._streamed_blocks and b._data is None:
                     # streamed blocks might not have data
                     # add a streamed block to naf
@@ -2104,22 +2106,28 @@ class SerializationContext:
         """
         return self.__extensions_used
 
-    def load_block(self, block_index, key=None):
+    def load_block(self, index_or_key, by_index=False):
         """
         Parameters
         ----------
-        block_index : int
+        index_or_key : int or hashable
 
-        key : hashable (optional)
+        by_index : bool, optional
+            if True, treat index_or_key as a block index
+            if False (default), treat index_or_key as a key
 
         Returns
         -------
         block_data : ndarray
         """
-        data = self._block_manager.get_block(block_index).data
-        if key is not None:
-            self.claim_block(block_index, key)
-        return data
+        if by_index:
+            # index_or_key is a block index
+            blk = self._block_manager.get_block(index_or_key)
+        else:
+            # index_or_key is a block key
+            blk = self._block_manager.get_block_by_key(index_or_key)
+
+        return blk.data
 
     def claim_block(self, block_index, key):
         """

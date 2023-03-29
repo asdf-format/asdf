@@ -558,7 +558,7 @@ class BlockManager:
         parts[2] = path
         return patched_urllib_parse.urlunparse(parts)
 
-    def _find_used_blocks(self, tree, ctx):
+    def _find_used_blocks(self, tree, ctx, remove=True):
         reserved_blocks = set()
 
         for node in treeutil.iter_tree(tree):
@@ -574,9 +574,15 @@ class BlockManager:
                     for block in hook(node, ctx):
                         reserved_blocks.add(block)
 
+        if remove:
+            for block in list(self.blocks):
+                if getattr(block, "_used", 0) == 0 and block not in reserved_blocks:
+                    self.remove(block)
+            return None
         for block in list(self.blocks):
-            if getattr(block, "_used", 0) == 0 and block not in reserved_blocks:
-                self.remove(block)
+            if getattr(block, "_used", 0):
+                reserved_blocks.add(block)
+        return reserved_blocks
 
     def _handle_global_block_settings(self, block):
         cfg = get_config()
@@ -614,6 +620,12 @@ class BlockManager:
 
         for block in list(self.blocks):
             self._handle_global_block_settings(block)
+
+    def get_block_by_key(self, key):
+        if key not in self._data_to_block_mapping:
+            msg = f"Unknown block key {key}"
+            raise KeyError(msg)
+        return self._data_to_block_mapping[key]
 
     def get_block(self, source):
         """
