@@ -870,14 +870,13 @@ def test_write_to_update_storage_options(tmp_path, all_array_storage, all_array_
             assert len(ff._blocks._internal_blocks) == 1
         else:
             assert len(ff._blocks._internal_blocks) == 0
-        blk = ff._blocks.find_or_create_block_for_array(ff["array"])
+        blk = ff._blocks[ff["array"]]
 
         target_compression = all_array_compression or None
         if target_compression == "input":
             target_compression = None
         assert blk.output_compression == target_compression
 
-        # with a new block manager on write, there is no way to check kwargs
         target_compression_kwargs = compression_kwargs or {}
         assert blk._output_compression_kwargs == target_compression_kwargs
 
@@ -887,6 +886,10 @@ def test_write_to_update_storage_options(tmp_path, all_array_storage, all_array_
 
     ff1 = asdf.AsdfFile(tree)
 
+    # as a new AsdfFile is used for write_to and we want
+    # to check blocks here, we patch _write_to to allow us
+    # to inspect the blocks in the new AsdfFile before
+    # it falls out of scope
     original = asdf.AsdfFile._write_to
 
     def patched(self, *args, **kwargs):

@@ -788,6 +788,7 @@ class BlockManager:
         block = Block()
         self.add(block, key=key)
         self._handle_global_block_settings(block)
+        self._data_to_block_mapping[key] = block
 
         return block
 

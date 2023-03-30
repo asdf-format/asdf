@@ -148,7 +148,7 @@ class AsdfFile:
         self._closed = False
         self._external_asdf_by_uri = {}
         self._blocks = block.BlockManager(self, copy_arrays=copy_arrays, lazy_load=lazy_load)
-        self._uri = None
+        self._uri = uri
         if tree is None:
             # Bypassing the tree property here, to avoid validating
             # an empty tree.

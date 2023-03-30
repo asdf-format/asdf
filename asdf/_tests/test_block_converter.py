@@ -190,7 +190,7 @@ def test_block_data_callback_converter(tmp_path):
         # there should be 1 block
         assert len(af._blocks._internal_blocks) == 1
         # validate should use that block
-        af.validate()  # FIXME this validate screws up the block data/callback relationship
+        af.validate()
         assert len(af._blocks._internal_blocks) == 1
         # as should write_to
         af.write_to(fn2)
@@ -234,5 +234,5 @@ def test_block_with_callback_removal(tmp_path):
 
 # TODO tests to add
 # - memmap/lazy_load other open options
-# - block storage settings
+# - block storage settings: compression, etc
 # - error cases when data is not of the correct type (not an ndarray, an invalid ndarray, etc)
