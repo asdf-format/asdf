@@ -2059,14 +2059,6 @@ class SerializationContext:
         blk = self._block_manager.get_block(block_index)
         self._block_manager._data_to_block_mapping[key] = blk
 
-    def _find_block(self, lookup_key, data_callback=None):
-        new_block = lookup_key not in self._block_manager._data_to_block_mapping
-        blk = self._block_manager.find_or_create_block(lookup_key)
-        # if we're not creating a block, don't update the data callback
-        if data_callback is not None and (new_block or (blk._data_callback is None and blk._fd is None)):
-            blk._data_callback = data_callback
-        return blk
-
     def find_block_index(self, lookup_key, data_callback=None):
         """
         Find the index of a previously allocated or reserved block.
@@ -2083,6 +2075,8 @@ class SerializationContext:
         data_callback: callable, optional
             Callable that when called will return data (ndarray) that will
             be written to a block.
+            At the moment, this is only assigned if a new block
+            is created to avoid circular references during AsdfFile.update.
 
         Returns
         -------
@@ -2090,5 +2084,9 @@ class SerializationContext:
             Index of the block where data returned from data_callback
             will be written.
         """
-        blk = self._find_block(lookup_key, data_callback)
+        new_block = lookup_key not in self._block_manager._data_to_block_mapping
+        blk = self._block_manager.find_or_create_block(lookup_key)
+        # if we're not creating a block, don't update the data callback
+        if data_callback is not None and (new_block or (blk._data_callback is None and blk._fd is None)):
+            blk._data_callback = data_callback
         return self._block_manager.get_source(blk)

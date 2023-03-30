@@ -1,6 +1,7 @@
 import contextlib
 
 import numpy as np
+import pytest
 from numpy.testing import assert_array_equal
 
 import asdf
@@ -16,6 +17,7 @@ class BlockData:
 class BlockConverter(Converter):
     tags = ["asdf://somewhere.org/tags/block_data-1.0.0"]
     types = [BlockData]
+    _return_invalid_keys = False
 
     def to_yaml_tree(self, obj, tag, ctx):
         # lookup source for obj
@@ -39,6 +41,10 @@ class BlockConverter(Converter):
         return obj
 
     def reserve_blocks(self, obj, tag, ctx):  # Is there a ctx or tag at this point?
+        if self._return_invalid_keys:
+            # return something unhashable
+            self._return_invalid_keys = False
+            return [[]]
         return [id(obj)]
 
 
@@ -73,15 +79,16 @@ def test_block_converter_block_allocation(tmp_path):
     af["a"] = a
     # the AsdfFile instance should have no blocks
     assert len(af._blocks._internal_blocks) == 0
-    # until validate is called
+    # validate will make a block
     af.validate()
     assert len(af._blocks._internal_blocks) == 1
-    assert af._blocks._internal_blocks[0].data.tobytes() == a.payload
+    assert np.all(af._blocks._internal_blocks[0].data.tobytes() == a.payload)
     # a second validate shouldn't result in more blocks
     af.validate()
     assert len(af._blocks._internal_blocks) == 1
+    # write_to will create blocks here because
+    # they currently hold storage settings
     fn = tmp_path / "test.asdf"
-    # nor should write_to
     af.write_to(fn)
     assert len(af._blocks._internal_blocks) == 1
 
@@ -102,8 +109,13 @@ def test_block_converter_block_allocation(tmp_path):
 
 
 @with_extension(BlockExtension)
-def test_invalid_block_data():
-    pass
+def test_invalid_reserve_block_keys(tmp_path):
+    a = BlockData(b"abcdefg")
+    af = asdf.AsdfFile({"a": a})
+    fn = tmp_path / "test.asdf"
+    BlockExtension.converters[0]._return_invalid_keys = True
+    with pytest.raises(TypeError, match="unhashable type: .*"):
+        af.write_to(fn)
 
 
 class BlockDataCallback:
@@ -137,8 +149,8 @@ class BlockDataCallbackConverter(Converter):
         # to generate a key
         key = id(obj)
 
-        def callback(_ctx=ctx, _key=key):
-            return _ctx.load_block(_key)
+        def callback():
+            return ctx.load_block(key)
 
         obj.callback = callback
 
@@ -172,15 +184,15 @@ def test_block_data_callback_converter(tmp_path):
     af["a"] = a
     # the AsdfFile instance should have no blocks
     assert len(af._blocks._internal_blocks) == 0
-    # until validate is called
+    # validate will make a block
     af.validate()
     assert len(af._blocks._internal_blocks) == 1
     assert np.all(af._blocks._internal_blocks[0].data == a.data)
     # a second validate shouldn't result in more blocks
     af.validate()
     assert len(af._blocks._internal_blocks) == 1
+    # write_to will use the block
     fn1 = tmp_path / "test.asdf"
-    # nor should write_to
     af.write_to(fn1)
     assert len(af._blocks._internal_blocks) == 1
 
@@ -232,8 +244,31 @@ def test_block_with_callback_removal(tmp_path):
             af[check_key] = b.data
 
 
-# - error cases when data is not of the correct type (not an ndarray, an invalid ndarray, etc)
-# - reserve_blocks returns non-hashable type
-# - sctx.load_block
-# - sctx.assign_block_key
-# - sctx.find_block_index
+def test_seralization_context_block_access():
+    af = asdf.AsdfFile()
+    sctx = af._create_serialization_context()
+
+    # finding an index for an unknown block should
+    # create one
+    key = 42
+    arr = np.ones(3, dtype="uint8")
+    index = sctx.find_block_index(key, lambda: arr)
+    assert len(af._blocks) == 1
+    assert id(arr) == id(sctx.load_block(key))
+    assert id(arr) == id(sctx.load_block(index, by_index=True))
+    # finding the same block should not create a new one
+    index = sctx.find_block_index(key, lambda: arr)
+    assert len(af._blocks) == 1
+
+    new_key = 26
+    sctx.assign_block_key(index, new_key)
+    assert len(af._blocks) == 1
+    # both old and new keys work
+    assert id(arr) == id(sctx.load_block(key))
+    assert id(arr) == id(sctx.load_block(new_key))
+
+    arr2 = np.zeros(3, dtype="uint8")
+    # test that providing a new callback won't overwrite
+    # the first one
+    index = sctx.find_block_index(key, lambda: arr2)
+    assert id(arr2) != id(sctx.load_block(key))
