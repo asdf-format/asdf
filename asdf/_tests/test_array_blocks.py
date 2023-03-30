@@ -858,6 +858,10 @@ def test_write_to_update_storage_options(tmp_path, all_array_storage, all_array_
         compression_kwargs = {"compresslevel": 1}
 
     def assert_result(ff):
+        if "array" not in ff:
+            # this was called from _write_to while making an external block
+            # so don't check the result
+            return
         if all_array_storage == "external":
             assert "test0000.asdf" in os.listdir(tmp_path)
         else:
@@ -868,24 +872,29 @@ def test_write_to_update_storage_options(tmp_path, all_array_storage, all_array_
             assert len(ff._blocks._internal_blocks) == 0
         blk = ff._blocks.find_or_create_block_for_array(ff["array"])
 
-        if all_array_storage == "inline":
-            # for 'inline' storage, no compression will be used
-            assert blk.input_compression is None
-        else:
-            target_compression = all_array_compression or None
-            if target_compression == "input":
-                target_compression = None
-            assert blk.input_compression == target_compression
+        target_compression = all_array_compression or None
+        if target_compression == "input":
+            target_compression = None
+        assert blk.output_compression == target_compression
 
         # with a new block manager on write, there is no way to check kwargs
-        # target_compression_kwargs = compression_kwargs or {}
-        # assert blk._output_compression_kwargs == target_compression_kwargs
+        target_compression_kwargs = compression_kwargs or {}
+        assert blk._output_compression_kwargs == target_compression_kwargs
 
     arr1 = np.ones((8, 8))
     tree = {"array": arr1}
     fn = tmp_path / "test.asdf"
 
     ff1 = asdf.AsdfFile(tree)
+
+    original = asdf.AsdfFile._write_to
+
+    def patched(self, *args, **kwargs):
+        original(self, *args, **kwargs)
+        assert_result(self)
+
+    asdf.AsdfFile._write_to = patched
+
     # first check write_to
     ff1.write_to(
         fn,
@@ -893,8 +902,8 @@ def test_write_to_update_storage_options(tmp_path, all_array_storage, all_array_
         all_array_compression=all_array_compression,
         compression_kwargs=compression_kwargs,
     )
-    with asdf.open(fn) as raf:
-        assert_result(raf)
+
+    asdf.AsdfFile._write_to = original
 
     # then reuse the file to check update
     with asdf.open(fn, mode="rw") as ff2:
@@ -905,8 +914,7 @@ def test_write_to_update_storage_options(tmp_path, all_array_storage, all_array_
             all_array_compression=all_array_compression,
             compression_kwargs=compression_kwargs,
         )
-        with asdf.open(fn) as raf:
-            assert_result(raf)
+        assert_result(ff2)
 
 
 def test_block_key():

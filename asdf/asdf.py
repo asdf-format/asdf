@@ -1477,17 +1477,6 @@ class AsdfFile:
                         key,
                         (b.output_compression, b.output_compression_kwargs),
                     )
-                # if b in block_to_key_mapping:  # this block is mapped by key, not array data
-                #     key = block_to_key_mapping[b]
-                #     breakpoint()
-                # else:
-                #     key = b.data
-                # if b._data_callback is None:
-                #     key = block_to_key_mapping.get(blk, b.data)
-                #     blk = naf._blocks[key]
-                #     blk._used = True
-                #     naf.set_array_storage(key, b.array_storage)
-                #     naf.set_array_compression(key, b.output_compression, **b.output_compression_kwargs)
             naf._write_to(fd, **kwargs)
 
     def _write_to(

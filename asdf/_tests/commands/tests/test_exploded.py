@@ -24,7 +24,8 @@ def test_explode_then_implode(tmpdir):
     # in internal blocks rather than letting some of them be automatically put
     # inline.
     ff.write_to(path, all_array_storage="internal")
-    # calling write_to no longer modifies blocks
+    with asdf.open(path) as af:
+        assert len(af._blocks._internal_blocks) == 2
 
     result = main.main_from_args(["explode", path])
 
