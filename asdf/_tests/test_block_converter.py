@@ -31,7 +31,7 @@ class BlockConverter(Converter):
         block_index = node["block_index"]
         data = ctx.load_block(block_index, by_index=True)
         obj = BlockData(data.tobytes())
-        ctx.claim_block(block_index, id(obj))
+        ctx.assign_block_key(block_index, id(obj))
 
         # -- alternatively, if data is not required to make the object --
         # obj = BlockData(b"")
@@ -142,7 +142,7 @@ class BlockDataCallbackConverter(Converter):
 
         obj.callback = callback
 
-        ctx.claim_block(block_index, key)
+        ctx.assign_block_key(block_index, key)
         return obj
 
     def reserve_blocks(self, obj, tag, ctx):
@@ -232,7 +232,8 @@ def test_block_with_callback_removal(tmp_path):
             af[check_key] = b.data
 
 
-# TODO tests to add
-# - memmap/lazy_load other open options
-# - block storage settings: compression, etc
 # - error cases when data is not of the correct type (not an ndarray, an invalid ndarray, etc)
+# - reserve_blocks returns non-hashable type
+# - sctx.load_block
+# - sctx.assign_block_key
+# - sctx.find_block_index

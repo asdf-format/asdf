@@ -2033,7 +2033,7 @@ class SerializationContext:
 
         return blk.data
 
-    def claim_block(self, block_index, key):
+    def assign_block_key(self, block_index, key):
         """
         Associate a unique hashable key with a block.
 
