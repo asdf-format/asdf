@@ -561,8 +561,8 @@ class BlockManager:
         for node in treeutil.iter_tree(tree):
             if ctx.extension_manager.handles_type(type(node)):
                 converter = ctx.extension_manager.get_converter_for_type(type(node))
-                tag = converter.select_tag(node, ctx)
                 sctx = ctx._create_serialization_context()
+                tag = converter.select_tag(node, sctx)
                 for key in converter.reserve_blocks(node, tag, sctx):
                     reserved_blocks.add(self.find_or_create_block(key))
             else:
