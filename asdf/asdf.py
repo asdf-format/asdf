@@ -2097,6 +2097,9 @@ class SerializationContext:
 
     def load_block(self, index_or_key, by_index=False):
         """
+        Return data from a block using either the block index
+        or block key.
+
         Parameters
         ----------
         index_or_key : int or hashable
@@ -2108,6 +2111,7 @@ class SerializationContext:
         Returns
         -------
         block_data : ndarray
+            The ndarray block data (one dimension, uint8 dtype)
         """
         if by_index:
             # index_or_key is a block index
@@ -2120,7 +2124,26 @@ class SerializationContext:
 
     def claim_block(self, block_index, key):
         """
-        TODO
+        Associate a unique hashable key with a block.
+
+        This is used during Converter.from_yaml_tree and allows
+        the AsdfFile to be aware of which blocks belong to the
+        object handled by the converter and allows load_block
+        to locate the block using the key instead of the index
+        (which might change if a file undergoes an AsdfFile.update).
+
+        If the block index is later needed (like during to_yaml_tree)
+        the key can be used with find_block_index to lookup the
+        block index.
+
+        Parameters
+        ----------
+
+        block_index : int
+            The index of the block to associate with the key
+
+        key : hashable
+            A unique hashable key to associate with a block
         """
         blk = self._block_manager.get_block(block_index)
         self._block_manager._data_to_block_mapping[key] = blk
@@ -2133,39 +2156,10 @@ class SerializationContext:
             blk._data_callback = data_callback
         return blk
 
-    def reserve_block(self, lookup_key, data_callback):
-        """
-        Reserve a block that will at some point in the future contain
-        data returned when the data_callback is called. This is typically
-        used inside asdf.extension.Converter.reserve_blocks
-
-        Parameters
-        ----------
-        lookup_key : hashable
-            Unique key used to reserve and later retrieve the index
-            of a block. For ndarrays this is typically the id of the base
-            ndarray.
-
-        data_callback: callable
-            Callable that when called will return data (ndarray) that will
-            be written to a block
-
-        Returns
-        -------
-        block : asdf.block.Block
-            The block which has been reserved for use.
-        """
-        # as this is typically called in Converter.reserve_blocks, so
-        # prior to serializing the tree (prior to Converter.to_yaml_tree)
-        # note that this will not be called prior to AsdfFile.validate or
-        # AsdfFile.fill/remove_defaults
-
-        # find a block (if there is one). If not, add a block
-        return self._find_block(lookup_key, data_callback)
-
     def find_block_index(self, lookup_key, data_callback=None):
         """
         Find the index of a previously allocated or reserved block.
+
         This is typically used inside asdf.extension.Converter.to_yaml_tree
 
         Parameters
@@ -2185,24 +2179,6 @@ class SerializationContext:
             Index of the block where data returned from data_callback
             will be written.
         """
-        # see notes in test_block_converter
-        #
-        # we want the index of a block but we can't write the block and shouldn't
-        # access the data.
-        #
-        # this could be called during write_to/update OR fill_defaults OR validate
-        #
-        # for write_to/update we need a valid index that at a later point will be used
-        # to write the data.
-        #
-        # if this is called from fill_defaults we need to generate an index that will point
-        # back to the correct block that was used when the file was read. I'm not sure how we
-        # would do this. Perhaps temporarily resolve the data callback to get id(data) and
-        # use block_manager._data_to_block_mapping to look up the block?
-        #
-        # on validate we may or may not have blocks, if we don't have a block, make one?
-        #
-        # for now, assuming we're writing a fresh file with write_to
         blk = self._find_block(lookup_key, data_callback)
         return self._block_manager.get_source(blk)
 

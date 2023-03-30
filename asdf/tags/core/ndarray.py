@@ -444,8 +444,6 @@ class NDArrayType(_types.AsdfType):
 
         shape = data.shape
 
-        # if getattr(data, '_block', None) is not None:
-        #    breakpoint()
         block = ctx._blocks.find_or_create_block_for_array(data)
 
         # Compute the offset relative to the base array and not the

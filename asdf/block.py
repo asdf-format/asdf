@@ -757,8 +757,6 @@ class BlockManager:
         if isinstance(arr, ndarray.NDArrayType) and arr.block is not None and arr.block in self.blocks:
             return arr.block
 
-            # arr._block = None
-
         base = util.get_array_base(arr)
         block = self._data_to_block_mapping.get(id(base))
         if block is not None:

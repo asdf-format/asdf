@@ -155,15 +155,6 @@ class Converter(abc.ABC):
         Reserve any number of blocks in which data (ndarrays) can be
         stored.
 
-        For each block that will be used for this obj, first call
-        ctx.reserve_block(lookup_key, data_callback) with a hashable
-        unique lookup_key (for an ndarray, use the id of the base array)
-        and a data_callback that when called will return a ndarray
-        to write to the block. This function will return a asdf.block.Block
-        that should be included in the list returned by this method.
-        The index of this block can later (in to_yaml_tree) be retrieved
-        using ctx.find_block_index.
-
         Parameters
         ----------
         obj : object
@@ -179,8 +170,8 @@ class Converter(abc.ABC):
 
         Returns
         ------
-        blocks : list of asdf.block.Block
-            The blocks that were reserved for obj
+        keys : list of unique hashable keys
+            These keys will be used to reserve blocks for later use
         """
         return []
 
@@ -314,7 +305,26 @@ class ConverterProxy(Converter):
 
     def reserve_blocks(self, obj, tag, ctx):
         """
-        TODO
+        Reserve blocks to be used during conversion of this object
+
+        Parameters
+        ----------
+        obj : object
+            Instance of a custom type to be serialized.  Guaranteed to
+            be an instance of one of the types listed in the `types`
+            property.
+        tag : str
+            The tag identifying the YAML type that ``obj`` should be
+            converted into.  Selected by a call to this converter's
+            select_tag method.
+        ctx : asdf.asdf.SerializationContext
+            The context of the current serialization request.
+
+        Returns
+        ------
+        keys : list of unique hashable keys
+            These keys will be used to reserve blocks for later use
+
         """
         if hasattr(self._delegate, "reserve_blocks"):
             return self._delegate.reserve_blocks(obj, tag, ctx)
