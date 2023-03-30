@@ -748,44 +748,6 @@ class AsdfFile:
         """
         return self._blocks[arr].array_storage
 
-    def set_block_storage(self, obj, storage):
-        """
-        Set the block storage type to use for the given binary object's data.
-
-        Parameters
-        ----------
-        obj : object
-            ASDF-serializable object.
-
-        storage : str
-            Must be one of:
-
-            - ``internal``: The default.  The data will be
-              stored in a binary block in the same ASDF file.
-
-            - ``external``: Store the data in a binary block in a
-              separate ASDF file.
-
-            - ``inline``: Store the data as YAML inline in the tree.  This option
-              may not be implemented for all object types.
-        """
-        self._blocks._storage_settings[id(obj)] = storage
-
-    def get_block_storage(self, obj):
-        """
-        Get the block storage type for the given binary object's data.
-
-        Parameters
-        ----------
-        obj : object
-            ASDF-serializable object.
-
-        Returns
-        -------
-        str or None
-        """
-        return self._blocks._storage_settings.get(id(obj), None)
-
     def set_array_compression(self, arr, compression, **compression_kwargs):
         """
         Set the compression to use for the given array data.
@@ -832,50 +794,6 @@ class AsdfFile:
     def get_array_compression_kwargs(self, arr):
         """ """
         return self._blocks[arr].output_compression_kwargs
-
-    def set_block_compression(self, obj, compression, **compression_kwargs):
-        """
-        Set the compression to use for the given object's block data.
-
-        Parameters
-        ----------
-        obj : object
-            ASDF-serializable object.
-
-        compression : str or None
-            Must be one of:
-
-            - ``''`` or `None`: no compression
-
-            - ``zlib``: Use zlib compression
-
-            - ``bzp2``: Use bzip2 compression
-
-            - ``lz4``: Use lz4 compression
-
-            - ``input``: Use the same compression as in the file read.
-              If there is no prior file, acts as None.
-
-        **kwargs
-            Additional compressor-specific arguments.
-
-        """
-        self._blocks._compression_settings[id(obj)] = (compression, compression_kwargs)
-
-    def get_block_compression(self, obj):
-        """
-        Get the compression type and arguments for the given object's block data.
-
-        Parameters
-        ----------
-        obj : object
-            ASDF-serializable object.
-
-        Returns
-        -------
-        (str, dict)
-        """
-        return self._blocks._compression_settings.get(id(obj), (None, {}))
 
     @classmethod
     def _parse_header_line(cls, line):
@@ -1447,8 +1365,6 @@ class AsdfFile:
             )
             naf._tree = self.tree  # avoid an extra validate
             # copy over block storage and other settings
-            naf._blocks._storage_settings = copy.deepcopy(self._blocks._storage_settings)
-            naf._blocks._compression_settings = copy.deepcopy(self._blocks._compression_settings)
             block_to_key_mapping = {v: k for k, v in self._blocks._data_to_block_mapping.items()}
             # this creates blocks in the new block manager that correspond to blocks
             # in the original file
@@ -1472,11 +1388,6 @@ class AsdfFile:
                     blk = naf._blocks.find_or_create_block(key)
                     blk._used = True
                     blk._data_callback = b._data_callback
-                    naf._blocks._storage_settings[key] = self._blocks._storage_settings.get(key, b.array_storage)
-                    naf._blocks._compression_settings[key] = self._blocks._compression_settings.get(
-                        key,
-                        (b.output_compression, b.output_compression_kwargs),
-                    )
             naf._write_to(fd, **kwargs)
 
     def _write_to(
@@ -2181,32 +2092,3 @@ class SerializationContext:
         """
         blk = self._find_block(lookup_key, data_callback)
         return self._block_manager.get_source(blk)
-
-    def get_block_storage_settings(self, lookup_key):
-        """
-        TODO
-        TODO add corresponding set
-        """
-        return self._block_manager._storage_settings.get(lookup_key, None)
-
-    def get_block_compression_settings(self, lookup_key):
-        """
-        TODO
-        TODO add corresponding set
-        """
-        return self._block_manager._compression_settings.get(lookup_key, None)
-
-    def set_block_storage_settings(self, lookup_key, storage):
-        """
-        TODO
-        TODO add corresponding set
-        """
-        self._block_manager._storage_settings[lookup_key] = storage
-
-    def set_block_compression_settings(self, lookup_key, compression, compression_kwargs=None):
-        """
-        TODO
-        TODO add corresponding set
-        """
-        compression_kwargs = compression_kwargs or {}
-        self._block_manager._compression_settings[lookup_key] = (compression, compression_kwargs)

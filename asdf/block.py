@@ -42,9 +42,6 @@ class BlockManager:
         self._lazy_load = lazy_load
         self._internal_blocks_mapped = False
 
-        self._storage_settings = {}
-        self._compression_settings = {}
-
     def __len__(self):
         """
         Return the total number of blocks being managed.
