@@ -1003,10 +1003,7 @@ def test_remove_blocks(tmp_path):
     with asdf.open(fn1, mode="rw") as af:
         assert len(af._blocks._internal_blocks) == 2
         af["a"] = None
-        # issue: https://github.com/asdf-format/asdf/issues/1505
-        # prevents us from calling write_to then update
         af.write_to(fn2)
-        # af.update()
 
     with asdf.open(fn1, mode="rw") as af:
         assert len(af._blocks._internal_blocks) == 2
