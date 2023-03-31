@@ -1305,6 +1305,14 @@ class Block:
     def close(self):
         self._data = None
 
+    def generate_read_data_callback(self):
+        """Used in SerializationContext.get_block_data_callback"""
+
+        def callback():
+            return self.data
+
+        return callback
+
 
 class UnloadedBlock:
     """

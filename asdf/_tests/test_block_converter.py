@@ -31,13 +31,9 @@ class BlockConverter(Converter):
 
     def from_yaml_tree(self, node, tag, ctx):
         block_index = node["block_index"]
-        data = ctx.load_block(block_index, by_index=True)
+        data = ctx.get_block_data_callback(block_index)()
         obj = BlockData(data.tobytes())
         ctx.assign_block_key(block_index, id(obj))
-
-        # -- alternatively, if data is not required to make the object --
-        # obj = BlockData(b"")
-        # obj.payload = ctx.load_block(block_index, id(obj))
         return obj
 
     def reserve_blocks(self, obj, tag, ctx):  # Is there a ctx or tag at this point?
@@ -142,16 +138,8 @@ class BlockDataCallbackConverter(Converter):
     def from_yaml_tree(self, node, tag, ctx):
         block_index = node["block_index"]
 
-        obj = BlockDataCallback(lambda: None)
-        # now that we have an object we use it's memory location
-        # to generate a key
+        obj = BlockDataCallback(ctx.get_block_data_callback(block_index))
         key = id(obj)
-
-        def callback():
-            return ctx.load_block(key)
-
-        obj.callback = callback
-
         ctx.assign_block_key(block_index, key)
         return obj
 
@@ -252,8 +240,7 @@ def test_seralization_context_block_access():
     arr = np.ones(3, dtype="uint8")
     index = sctx.find_block_index(key, lambda: arr)
     assert len(af._blocks) == 1
-    assert id(arr) == id(sctx.load_block(key))
-    assert id(arr) == id(sctx.load_block(index, by_index=True))
+    assert id(arr) == id(sctx.get_block_data_callback(index)())
     # finding the same block should not create a new one
     index = sctx.find_block_index(key, lambda: arr)
     assert len(af._blocks) == 1
@@ -261,15 +248,9 @@ def test_seralization_context_block_access():
     new_key = 26
     sctx.assign_block_key(index, new_key)
     assert len(af._blocks) == 1
-    # both old and new keys work
-    assert id(arr) == id(sctx.load_block(key))
-    assert id(arr) == id(sctx.load_block(new_key))
-    # an unknown key should fail
-    with pytest.raises(KeyError, match="Unknown block key .*"):
-        sctx.load_block(-1)
 
     arr2 = np.zeros(3, dtype="uint8")
     # test that providing a new callback won't overwrite
     # the first one
     index = sctx.find_block_index(key, lambda: arr2)
-    assert id(arr2) != id(sctx.load_block(key))
+    assert id(arr2) != id(sctx.get_block_data_callback(index)())

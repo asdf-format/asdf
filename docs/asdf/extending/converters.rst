@@ -334,7 +334,7 @@ A simple example of a Converter using block storage to store the ``payload`` for
             obj = BlockData(b"")
             key = id(obj)
             ctx.assign_block_key(block_index, key)
-            obj.payload = ctx.load_block(key)
+            obj.payload = ctx.get_block_data_callback(block_index)()
             return obj
 
         def reserve_blocks(self, obj, tag, ctx):
@@ -354,8 +354,11 @@ A simple example of a Converter using block storage to store the ``payload`` for
 
 During read, ``Converter.from_yaml_tree`` will be called. Within this method
 the Converter should associate any used blocks with unique hashable keys by calling
-``SerializationContext.assign_block_key`` and can load block data using
-``SerializationContext.load_block``.
+``SerializationContext.assign_block_key`` and can generate (and use) a callable
+function that will return block data using ``SerializationContext.get_block_data_callback``.
+A callback for reading the data is provided to support lazy loading without
+keeping a reference to the ``SerializationContext`` (which is meant to be
+a short lived and lightweight object).
 
 During write, ``Converter.to_yaml_tree`` will be called. The Converter should
 use ``SerializationContext.find_block_index`` to find the location of an

@@ -2006,32 +2006,24 @@ class SerializationContext:
         """
         return self.__extensions_used
 
-    def load_block(self, index_or_key, by_index=False):
+    def get_block_data_callback(self, index):
         """
-        Return data from a block using either the block index
-        or block key.
+        Generate a callable that when called will read data
+        from a block at the provided index
 
         Parameters
         ----------
-        index_or_key : int or hashable
-
-        by_index : bool, optional
-            if True, treat index_or_key as a block index
-            if False (default), treat index_or_key as a key
+        index : int
+            Block index
 
         Returns
         -------
-        block_data : ndarray
-            The ndarray block data (one dimension, uint8 dtype)
+        callback : callable
+            A callable that when called (with no arguments) returns
+            the block data as a one dimensional array of uint8
         """
-        if by_index:
-            # index_or_key is a block index
-            blk = self._block_manager.get_block(index_or_key)
-        else:
-            # index_or_key is a block key
-            blk = self._block_manager.get_block_by_key(index_or_key)
-
-        return blk.data
+        blk = self._block_manager.get_block(index)
+        return blk.generate_read_data_callback()
 
     def assign_block_key(self, block_index, key):
         """
