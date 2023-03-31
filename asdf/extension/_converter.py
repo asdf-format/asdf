@@ -169,7 +169,7 @@ class Converter(abc.ABC):
             The context of the current serialization request.
 
         Returns
-        ------
+        -------
         keys : list of unique hashable keys
             These keys will be used to reserve blocks for later use
         """
