@@ -8,7 +8,7 @@ The ASDF Standard is at v1.6.0
 - Add ``all_array_storage``, ``all_array_compression`` and
   ``all_array_compression_kwargs`` to ``asdf.config.AsdfConfig`` [#1468]
 
-2.15.0 (unreleased)
+2.15.0 (2023-03-28)
 -------------------
 
 The ASDF Standard is at v1.6.0
