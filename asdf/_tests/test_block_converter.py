@@ -134,8 +134,6 @@ class BlockDataCallbackConverter(Converter):
     types = [BlockDataCallback]
 
     def to_yaml_tree(self, obj, tag, ctx):
-        # this will be called during validate and might overwrite the callback
-        # lookup source for obj
         block_index = ctx.find_block_index(id(obj), obj.callback)
         return {
             "block_index": block_index,
@@ -266,6 +264,9 @@ def test_seralization_context_block_access():
     # both old and new keys work
     assert id(arr) == id(sctx.load_block(key))
     assert id(arr) == id(sctx.load_block(new_key))
+    # an unknown key should fail
+    with pytest.raises(KeyError, match="Unknown block key .*"):
+        sctx.load_block(-1)
 
     arr2 = np.zeros(3, dtype="uint8")
     # test that providing a new callback won't overwrite
