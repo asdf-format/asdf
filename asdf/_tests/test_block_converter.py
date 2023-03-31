@@ -9,9 +9,22 @@ from asdf.extension import Converter, Extension
 from asdf.testing import helpers
 
 
+class AsdfKey:
+    _next = 0
+
+    def __init__(self):
+        self._key = AsdfKey._next
+        AsdfKey._next += 1
+
+    def __hash__(self):
+        return self._key
+
+
 class BlockData:
     def __init__(self, payload):
         self.payload = payload
+        # generate a unique id
+        self._asdf_key = AsdfKey()
 
 
 class BlockConverter(Converter):
@@ -22,7 +35,7 @@ class BlockConverter(Converter):
     def to_yaml_tree(self, obj, tag, ctx):
         # lookup source for obj
         block_index = ctx.find_block_index(
-            id(obj),
+            obj._asdf_key,
             lambda: np.ndarray(len(obj.payload), dtype="uint8", buffer=obj.payload),
         )
         return {
@@ -33,7 +46,7 @@ class BlockConverter(Converter):
         block_index = node["block_index"]
         data = ctx.get_block_data_callback(block_index)()
         obj = BlockData(data.tobytes())
-        ctx.assign_block_key(block_index, id(obj))
+        ctx.assign_block_key(block_index, obj._asdf_key)
         return obj
 
     def reserve_blocks(self, obj, tag, ctx):  # Is there a ctx or tag at this point?
@@ -41,7 +54,7 @@ class BlockConverter(Converter):
             # return something unhashable
             self._return_invalid_keys = False
             return [[]]
-        return [id(obj)]
+        return [obj._asdf_key]
 
 
 class BlockExtension(Extension):
@@ -119,6 +132,7 @@ class BlockDataCallback:
 
     def __init__(self, callback):
         self.callback = callback
+        self._asdf_key = AsdfKey()
 
     @property
     def data(self):
@@ -130,7 +144,7 @@ class BlockDataCallbackConverter(Converter):
     types = [BlockDataCallback]
 
     def to_yaml_tree(self, obj, tag, ctx):
-        block_index = ctx.find_block_index(id(obj), obj.callback)
+        block_index = ctx.find_block_index(obj._asdf_key, obj.callback)
         return {
             "block_index": block_index,
         }
@@ -139,12 +153,11 @@ class BlockDataCallbackConverter(Converter):
         block_index = node["block_index"]
 
         obj = BlockDataCallback(ctx.get_block_data_callback(block_index))
-        key = id(obj)
-        ctx.assign_block_key(block_index, key)
+        ctx.assign_block_key(block_index, obj._asdf_key)
         return obj
 
     def reserve_blocks(self, obj, tag, ctx):
-        return [id(obj)]
+        return [obj._asdf_key]
 
 
 class BlockDataCallbackExtension(Extension):

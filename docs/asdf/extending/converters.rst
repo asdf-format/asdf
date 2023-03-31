@@ -304,6 +304,10 @@ ASDF to track the relationship between blocks and objects, Converters will need
 to generate unique hashable keys for each block used and associate these keys with
 block indices during read and write (more on this below).
 
+.. note::
+   Use of ``id(obj)`` will not generate a unique key as it returns the memory address
+   which might be reused after the object is garbage collected.
+
 A simple example of a Converter using block storage to store the ``payload`` for
 ``BlockData`` object instances is as follows:
 
@@ -314,8 +318,11 @@ A simple example of a Converter using block storage to store the ``payload`` for
     from asdf.extension import Converter, Extension
 
     class BlockData:
+        _next_key = 0
         def __init__(self, payload):
             self.payload = payload
+            self._asdf_key = BlockData._next_key
+            BlockData._next_key += 1
 
 
     class BlockConverter(Converter):
@@ -324,7 +331,7 @@ A simple example of a Converter using block storage to store the ``payload`` for
 
         def to_yaml_tree(self, obj, tag, ctx):
             block_index = ctx.find_block_index(
-                id(obj),
+                obj._asdf_key,
                 lambda: np.ndarray(len(obj.payload), dtype="uint8", buffer=obj.payload),
             )
             return {"block_index": block_index}
@@ -332,13 +339,12 @@ A simple example of a Converter using block storage to store the ``payload`` for
         def from_yaml_tree(self, node, tag, ctx):
             block_index = node["block_index"]
             obj = BlockData(b"")
-            key = id(obj)
-            ctx.assign_block_key(block_index, key)
+            ctx.assign_block_key(block_index, obj._asdf_key)
             obj.payload = ctx.get_block_data_callback(block_index)()
             return obj
 
         def reserve_blocks(self, obj, tag, ctx):
-            return [id(obj)]
+            return [obj._asdf_key]
 
     class BlockExtension(Extension):
         tags = ["asdf://somewhere.org/tags/block_data-1.0.0"]
