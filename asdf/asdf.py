@@ -1,4 +1,3 @@
-from collections.abc import MutableMapping
 import copy
 import datetime
 import io
@@ -6,6 +5,7 @@ import os
 import pathlib
 import time
 import warnings
+from collections.abc import MutableMapping
 
 from jsonschema import ValidationError
 from packaging.version import Version
@@ -18,7 +18,7 @@ from ._helpers import validate_version
 from .config import config_context, get_config
 from .exceptions import AsdfConversionWarning, AsdfDeprecationWarning, AsdfWarning, DelimiterNotFoundError
 from .extension import Extension, ExtensionProxy, _legacy, get_cached_extension_manager
-from .node import AsdfNode, AsdfDictNode, AsdfListNode
+from .node import AsdfDictNode, AsdfListNode, AsdfNode
 from .search import AsdfSearchResult
 from .tags.core import AsdfObject, ExtensionMetadata, HistoryEntry, Software
 from .util import NotSet

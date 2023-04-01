@@ -6,7 +6,7 @@ import pathlib
 from contextlib import contextmanager
 
 from ._display import DEFAULT_MAX_COLS, DEFAULT_MAX_ROWS, DEFAULT_SHOW_VALUES, render_tree
-from .asdf import AsdfFile, open_asdf
+from .asdf import open_asdf
 from .node import AsdfNode
 
 __all__ = ["info"]
