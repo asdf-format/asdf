@@ -53,18 +53,6 @@ class ExtensionMetadata(dict, _types.AsdfType):
     name = "core/extension_metadata"
     version = "1.0.0"
 
-    @property
-    def extension_uri(self):
-        return self.get("extension_uri")
-
-    @property
-    def extension_class(self):
-        return self["extension_class"]
-
-    @property
-    def software(self):
-        return self.get("software")
-
 
 class SubclassMetadata(dict, _types.AsdfType):
     """

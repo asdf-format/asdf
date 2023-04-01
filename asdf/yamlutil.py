@@ -8,6 +8,7 @@ import yaml
 from . import schema, tagged, treeutil, util
 from .constants import STSCI_SCHEMA_TAG_BASE, YAML_TAG_PREFIX
 from .exceptions import AsdfConversionWarning
+from .node import AsdfNode
 from .tags.core import AsdfObject
 from .versioning import _yaml_base_loader, split_tag_version
 
@@ -379,6 +380,9 @@ def dump_tree(tree, fd, ctx, tree_finalizer=None, _serialization_context=None):
         extension metadata on the tagged tree before it is fully
         serialized to YAML.
     """
+    if isinstance(tree, AsdfNode):
+        tree = tree._data
+
     # The _serialization_context parameter allows AsdfFile to track
     # what extensions were used when converting the tree's custom
     # types.  In 3.0, it will be passed as the `ctx` instead of the

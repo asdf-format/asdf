@@ -206,11 +206,11 @@ def test_implicit_internal_reference(tmp_path):
 
     af = asdf.AsdfFile(tree)
 
-    assert af["target"] is af["nested_in_dict"]["target"]
-    assert af["target"] is af["nested_in_list"][0]
+    assert af["target"]._data is af["nested_in_dict"]["target"]._data
+    assert af["target"]._data is af["nested_in_list"][0]._data
 
     output_path = os.path.join(str(tmp_path), "test.asdf")
     af.write_to(output_path)
     with asdf.open(output_path) as af:
-        assert af["target"] is af["nested_in_dict"]["target"]
-        assert af["target"] is af["nested_in_list"][0]
+        assert af["target"]._data is af["nested_in_dict"]["target"]._data
+        assert af["target"]._data is af["nested_in_list"][0]._data

@@ -7,6 +7,7 @@ from contextlib import contextmanager
 
 from ._display import DEFAULT_MAX_COLS, DEFAULT_MAX_ROWS, DEFAULT_SHOW_VALUES, render_tree
 from .asdf import AsdfFile, open_asdf
+from .node import AsdfNode
 
 __all__ = ["info"]
 
@@ -48,10 +49,10 @@ def info(node_or_path, max_rows=DEFAULT_MAX_ROWS, max_cols=DEFAULT_MAX_COLS, sho
 def _manage_node(node_or_path):
     if isinstance(node_or_path, (str, pathlib.Path)):
         with open_asdf(node_or_path) as af:
-            yield af.tree
+            yield af._data
 
-    elif isinstance(node_or_path, AsdfFile):
-        yield node_or_path.tree
+    elif isinstance(node_or_path, AsdfNode):
+        yield node_or_path._data
 
     else:
         yield node_or_path

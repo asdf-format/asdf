@@ -344,7 +344,7 @@ def diff(filenames, minimal, iostream=sys.stdout, ignore=None):
         ) as asdf1:
             ignore_ids = set()
             for expression in ignore_expressions:
-                for tree in [asdf0.tree, asdf1.tree]:
+                for tree in [asdf0._data, asdf1._data]:
                     result = expression.search(tree)
                     if result is not None:
                         ignore_ids.add(id(result))
@@ -356,7 +356,7 @@ def diff(filenames, minimal, iostream=sys.stdout, ignore=None):
                             ignore_ids.add(id(value))
 
             diff_ctx = DiffContext(asdf0, asdf1, iostream, minimal=minimal, ignore_ids=ignore_ids)
-            compare_trees(diff_ctx, asdf0.tree, asdf1.tree)
+            compare_trees(diff_ctx, asdf0._data, asdf1._data)
 
     except ValueError as err:
         raise RuntimeError(str(err)) from err

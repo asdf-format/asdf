@@ -601,7 +601,7 @@ class BlockManager:
         # TODO: Should this reset the state (what's external and what
         # isn't) afterword?
 
-        self._find_used_blocks(ctx.tree, ctx)
+        self._find_used_blocks(ctx._data, ctx)
 
         for block in list(self.blocks):
             self._handle_global_block_settings(block)

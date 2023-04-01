@@ -133,10 +133,10 @@ def test_extension_metadata(tmpdir):
     with asdf.open(tmpfile) as af:
         assert len(af.tree["history"]["extensions"]) == 1
         metadata = af.tree["history"]["extensions"][0]
-        assert metadata.extension_class == "asdf.extension.BuiltinExtension"
+        assert metadata["extension_class"] == "asdf.extension.BuiltinExtension"
         # Don't bother with testing the version here since it will depend on
         # how recently the package was built (version is auto-generated)
-        assert metadata.software["name"] == "asdf"
+        assert metadata["software"]["name"] == "asdf"
 
 
 def test_missing_extension_warning():

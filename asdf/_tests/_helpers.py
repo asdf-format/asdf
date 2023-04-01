@@ -26,9 +26,9 @@ from asdf import generic_io, versioning
 from asdf.asdf import AsdfFile, get_asdf_library_info
 from asdf.block import Block
 from asdf.constants import YAML_TAG_PREFIX
+from asdf.node import AsdfNode
 from asdf.exceptions import AsdfConversionWarning, AsdfDeprecationWarning
 from asdf.extension import _legacy
-from asdf.tags.core import AsdfObject
 from asdf.versioning import (
     AsdfVersion,
     asdf_standard_development_version,
@@ -90,6 +90,12 @@ def assert_tree_match(old_tree, new_tree, ctx=None, funcname="assert_equal", ign
     ignore_keys : list of str
         List of keys to ignore
     """
+    if isinstance(old_tree, AsdfNode):
+        old_tree = old_tree._data
+
+    if isinstance(new_tree, AsdfNode):
+        new_tree = new_tree._data
+
     seen = set()
 
     if ignore_keys is None:
@@ -204,7 +210,6 @@ def _assert_roundtrip_tree(
     buff.seek(0)
     with asdf.open(buff, mode="rw", extensions=extensions) as ff:
         assert not buff.closed
-        assert isinstance(ff.tree, AsdfObject)
         assert "asdf_library" in ff.tree
         assert ff.tree["asdf_library"] == get_asdf_library_info()
         assert_tree_match(tree, ff.tree, ff, funcname=tree_match_func)
@@ -238,7 +243,6 @@ def _assert_roundtrip_tree(
     buff.seek(0)
     with asdf.open(buff, mode="rw", extensions=extensions) as ff:
         assert not buff.closed
-        assert isinstance(ff.tree, AsdfObject)
         assert_tree_match(tree, ff.tree, ff, funcname=tree_match_func)
         if asdf_check_func:
             asdf_check_func(ff)

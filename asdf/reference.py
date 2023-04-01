@@ -61,7 +61,7 @@ class Reference(_types.AsdfType):
             asdffile = self._asdffile().open_external(uri, **kwargs)
             parts = patched_urllib_parse.urlparse(self._uri)
             fragment = parts.fragment
-            self._target = resolve_fragment(asdffile.tree, fragment)
+            self._target = resolve_fragment(asdffile._data, fragment)
         return self._target
 
     def __repr__(self):
@@ -163,7 +163,7 @@ def make_reference(asdffile, path):
         A reference object.
     """
     path_str = "/".join(x.replace("~", "~0").replace("/", "~1") for x in path)
-    target = resolve_fragment(asdffile.tree, path_str)
+    target = resolve_fragment(asdffile._data, path_str)
 
     if asdffile.uri is None:
         msg = "Can not make a reference to a AsdfFile without an associated URI."

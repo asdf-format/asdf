@@ -1,3 +1,4 @@
+from collections.abc import MutableMapping
 import copy
 import datetime
 import io
@@ -17,6 +18,7 @@ from ._helpers import validate_version
 from .config import config_context, get_config
 from .exceptions import AsdfConversionWarning, AsdfDeprecationWarning, AsdfWarning, DelimiterNotFoundError
 from .extension import Extension, ExtensionProxy, _legacy, get_cached_extension_manager
+from .node import AsdfNode, AsdfDictNode, AsdfListNode
 from .search import AsdfSearchResult
 from .tags.core import AsdfObject, ExtensionMetadata, HistoryEntry, Software
 from .util import NotSet
@@ -37,7 +39,7 @@ def get_asdf_library_info():
     )
 
 
-class AsdfFile:
+class AsdfFile(AsdfNode, MutableMapping):
     """
     The main class that represents an ASDF file object.
     """
@@ -152,7 +154,7 @@ class AsdfFile:
         if tree is None:
             # Bypassing the tree property here, to avoid validating
             # an empty tree.
-            self._tree = AsdfObject()
+            self._data = AsdfObject()
         elif isinstance(tree, AsdfFile):
             if self.extensions != tree.extensions:
                 # TODO(eslavich): Why not?  What if that's the goal
@@ -160,11 +162,13 @@ class AsdfFile:
                 msg = "Can not copy AsdfFile and change active extensions"
                 raise ValueError(msg)
             self._uri = tree.uri
-            # Set directly to self._tree (bypassing property), since
+            # Set directly to self._data (bypassing property), since
             # we can assume the other AsdfFile is already valid.
-            self._tree = tree.tree
+            self._data = tree._data
             self._run_modifying_hook("copy_to_new_asdf", validate=False)
             self.find_references()
+        elif isinstance(tree, AsdfNode):
+            self.tree = tree._data
         else:
             self.tree = tree
             self.find_references()
@@ -307,22 +311,22 @@ class AsdfFile:
             installed = None
             for ext in self._user_extensions + self._plugin_extensions:
                 if (
-                    extension.extension_uri is not None
-                    and extension.extension_uri == ext.extension_uri
-                    or extension.extension_uri is None
-                    and extension.extension_class in ext.legacy_class_names
+                    extension.get("extension_uri") is not None
+                    and extension["extension_uri"] == ext.extension_uri
+                    or extension.get("extension_uri") is None
+                    and extension.get("extension_class") in ext.legacy_class_names
                 ):
                     installed = ext
                     break
 
             filename = f"'{self._fname}' " if self._fname else ""
-            if extension.extension_uri is not None:
-                extension_description = f"URI '{extension.extension_uri}'"
+            if extension.get("extension_uri") is not None:
+                extension_description = f"URI '{extension['extension_uri']}'"
             else:
-                extension_description = f"class '{extension.extension_class}'"
-            if extension.software is not None:
+                extension_description = f"class '{extension['extension_class']}'"
+            if extension.get("software") is not None:
                 extension_description += (
-                    f" (from package {extension.software['name']}=={extension.software['version']})"
+                    f" (from package {extension['software']['name']}=={extension['software']['version']})"
                 )
 
             if installed is None:
@@ -335,13 +339,13 @@ class AsdfFile:
 
                 warnings.warn(msg, AsdfWarning)
 
-            elif extension.software:
+            elif extension.get("software") is not None:
                 # Local extensions may not have a real version.  If the package name changed,
                 # then the version sequence may have been reset.
-                if installed.package_version is None or installed.package_name != extension.software["name"]:
+                if installed.package_version is None or installed.package_name != extension["software"]["name"]:
                     continue
                 # Compare version in file metadata with installed version
-                if Version(installed.package_version) < Version(extension.software["version"]):
+                if Version(installed.package_version) < Version(extension["software"]["version"]):
                     msg = (
                         f"File {filename}was created with extension {extension_description}, "
                         f"but older package ({installed.package_name}=={installed.package_version}) is installed."
@@ -417,20 +421,20 @@ class AsdfFile:
         if serialization_context.version < versioning.NEW_HISTORY_FORMAT_MIN_VERSION:
             return
 
-        if "history" not in self.tree:
-            self.tree["history"] = {"extensions": []}
+        if "history" not in self._data:
+            self._data["history"] = {"extensions": []}
         # Support clients who are still using the old history format
-        elif isinstance(self.tree["history"], list):
-            histlist = self.tree["history"]
-            self.tree["history"] = {"entries": histlist, "extensions": []}
+        elif isinstance(self._data["history"], list):
+            histlist = self._data["history"]
+            self._data["history"] = {"entries": histlist, "extensions": []}
             warnings.warn(
                 "The ASDF history format has changed in order to "
                 "support metadata about extensions. History entries "
                 "should now be stored under tree['history']['entries'].",
                 AsdfWarning,
             )
-        elif "extensions" not in self.tree["history"]:
-            self.tree["history"]["extensions"] = []
+        elif "extensions" not in self._data["history"]:
+            self._data["history"]["extensions"] = []
 
         for extension in serialization_context._extensions_used:
             ext_name = extension.class_name
@@ -442,17 +446,17 @@ class AsdfFile:
             if extension.compressors:
                 ext_meta["supported_compression"] = [comp.label.decode("ascii") for comp in extension.compressors]
 
-            for i, entry in enumerate(self.tree["history"]["extensions"]):
+            for i, entry in enumerate(self._data["history"]["extensions"]):
                 # Update metadata about this extension if it already exists
                 if (
-                    entry.extension_uri is not None
-                    and entry.extension_uri == extension.extension_uri
-                    or entry.extension_class in extension.legacy_class_names
+                    entry.get("extension_uri") is not None
+                    and entry["extension_uri"] == extension.extension_uri
+                    or entry.get("extension_class") in extension.legacy_class_names
                 ):
-                    self.tree["history"]["extensions"][i] = ext_meta
+                    self._data["history"]["extensions"][i] = ext_meta
                     break
             else:
-                self.tree["history"]["extensions"].append(ext_meta)
+                self._data["history"]["extensions"].append(ext_meta)
 
     @property
     def file_format_version(self):
@@ -478,7 +482,7 @@ class AsdfFile:
 
     def copy(self):
         return self.__class__(
-            copy.deepcopy(self._tree),
+            copy.deepcopy(self._data),
             self._uri,
             self._user_extensions,
         )
@@ -626,29 +630,48 @@ class AsdfFile:
 
         When set, the tree will be validated against the ASDF schema.
         """
-        if self._closed:
-            msg = "Cannot access data from closed ASDF file"
-            raise OSError(msg)
-        return self._tree
+        self._check_open()
+        return AsdfDictNode(self._data)
 
     @tree.setter
     def tree(self, tree):
+        if isinstance(tree, AsdfNode):
+            tree = tree._data
         asdf_object = AsdfObject(tree)
         # Only perform custom validation if the tree is not empty
         self._validate(asdf_object, custom=bool(tree))
-        self._tree = asdf_object
+        self._data = asdf_object
 
-    def keys(self):
-        return self.tree.keys()
+    # MutableMapping method implementations:
+
+    def __iter__(self):
+        return iter(self._data)
 
     def __getitem__(self, key):
-        return self.tree[key]
+        self._check_open()
+
+        value = self._data[key]
+        if isinstance(value, dict):
+            return AsdfDictNode(value)
+        elif isinstance(value, list):
+            return AsdfListNode(value)
+        else:
+            return value
 
     def __setitem__(self, key, value):
-        self.tree[key] = value
+        if isinstance(value, AsdfNode):
+            self._data[key] = value._data
+        else:
+            self._data[key] = value
 
-    def __contains__(self, item):
-        return item in self.tree
+    def __delitem__(self, key):
+        del self._data[key]
+
+    def __len__(self):
+        return len(self._data)
+
+    def to_dict(self):
+        return copy.deepcopy(self._data)
 
     @property
     def comments(self):
@@ -671,7 +694,7 @@ class AsdfFile:
         """
         Validate the current state of the tree against the ASDF schema.
         """
-        self._validate(self._tree)
+        self._validate(self._data)
 
     def make_reference(self, path=None):
         """
@@ -955,7 +978,7 @@ class AsdfFile:
             if not (ignore_missing_extensions or _force_raw_types):
                 self._check_extensions(tree, strict=strict_extension_check)
 
-            self._tree = tree
+            self._data = tree
             self._run_hook("post_read")
 
             return self
@@ -1071,9 +1094,9 @@ class AsdfFile:
                 after the tree has been converted to tagged objects.
                 """
                 self._update_extension_history(serialization_context)
-                if "history" in self.tree:
+                if "history" in self._data:
                     tagged_tree["history"] = yamlutil.custom_tree_to_tagged_tree(
-                        self.tree["history"],
+                        self._data["history"],
                         self,
                         _serialization_context=serialization_context,
                     )
@@ -1093,24 +1116,24 @@ class AsdfFile:
             fd.fast_forward(padding)
 
     def _pre_write(self, fd):
-        if len(self._tree):
+        if len(self._data):
             self._run_hook("pre_write")
 
         # This is where we'd do some more sophisticated block
         # reorganization, if necessary
         self._blocks.finalize(self)
 
-        self._tree["asdf_library"] = get_asdf_library_info()
+        self._data["asdf_library"] = get_asdf_library_info()
 
     def _serial_write(self, fd, pad_blocks, include_block_index):
-        self._write_tree(self._tree, fd, pad_blocks)
+        self._write_tree(self._data, fd, pad_blocks)
         self._blocks.write_internal_blocks_serial(fd, pad_blocks)
         self._blocks.write_external_blocks(fd.uri, pad_blocks)
         if include_block_index:
             self._blocks.write_block_index(fd, self)
 
     def _random_write(self, fd, pad_blocks, include_block_index):
-        self._write_tree(self._tree, fd, False)
+        self._write_tree(self._data, fd, False)
         self._blocks.write_internal_blocks_random_access(fd)
         self._blocks.write_external_blocks(fd.uri, pad_blocks)
         if include_block_index:
@@ -1118,7 +1141,7 @@ class AsdfFile:
         fd.truncate()
 
     def _post_write(self, fd):
-        if len(self._tree):
+        if len(self._data):
             self._run_hook("post_write")
 
     def update(
@@ -1246,7 +1269,7 @@ class AsdfFile:
                 # add enough space to accommodate the largest block number
                 # possible there.
                 tree_serialized = io.BytesIO()
-                self._write_tree(self._tree, tree_serialized, pad_blocks=False)
+                self._write_tree(self._data, tree_serialized, pad_blocks=False)
                 n_internal_blocks = len(self._blocks._internal_blocks)
 
                 serialized_tree_size = tree_serialized.tell() + constants.MAX_BLOCKS_DIGITS * n_internal_blocks
@@ -1380,8 +1403,8 @@ class AsdfFile:
         Finds all external "JSON References" in the tree and converts
         them to ``reference.Reference`` objects.
         """
-        # Set directly to self._tree, since it doesn't need to be re-validated.
-        self._tree = reference.find_references(self._tree, self)
+        # Set directly to self._data, since it doesn't need to be re-validated.
+        self._data = reference.find_references(self._data, self)
 
     def resolve_references(self, **kwargs):
         """
@@ -1392,7 +1415,7 @@ class AsdfFile:
         """
         # Set to the property self.tree so the resulting "complete"
         # tree will be validated.
-        self.tree = reference.resolve_references(self._tree, self)
+        self.tree = reference.resolve_references(self._data, self)
 
     def run_hook(self, hookname):
         """
@@ -1419,7 +1442,7 @@ class AsdfFile:
         if not type_index.has_hook(hookname):
             return
 
-        for node in treeutil.iter_tree(self._tree):
+        for node in treeutil.iter_tree(self._data):
             hook = type_index.get_hook_for_type(hookname, type(node), self.version_string)
             if hook is not None:
                 hook(node, self)
@@ -1460,12 +1483,12 @@ class AsdfFile:
                 return hook(node, self)
             return node
 
-        tree = treeutil.walk_and_modify(self.tree, walker, ignore_implicit_conversion=self._ignore_implicit_conversion)
+        tree = treeutil.walk_and_modify(self._data, walker, ignore_implicit_conversion=self._ignore_implicit_conversion)
 
         if validate:
             self._validate(tree)
-        self._tree = tree
-        return self._tree
+        self._data = tree
+        return self._data
 
     def resolve_and_inline(self):
         """
@@ -1483,18 +1506,18 @@ class AsdfFile:
         Fill in any values that are missing in the tree using default
         values from the schema.
         """
-        tree = yamlutil.custom_tree_to_tagged_tree(self._tree, self)
+        tree = yamlutil.custom_tree_to_tagged_tree(self._data, self)
         schema.fill_defaults(tree, self)
-        self._tree = yamlutil.tagged_tree_to_custom_tree(tree, self)
+        self._data = yamlutil.tagged_tree_to_custom_tree(tree, self)
 
     def remove_defaults(self):
         """
         Remove any values in the tree that are the same as the default
         values in the schema
         """
-        tree = yamlutil.custom_tree_to_tagged_tree(self._tree, self)
+        tree = yamlutil.custom_tree_to_tagged_tree(self._data, self)
         schema.remove_defaults(tree, self)
-        self._tree = yamlutil.tagged_tree_to_custom_tree(tree, self)
+        self._data = yamlutil.tagged_tree_to_custom_tree(tree, self)
 
     def add_history_entry(self, description, software=None):
         """
@@ -1537,28 +1560,28 @@ class AsdfFile:
             entry["software"] = software
 
         if self.version >= versioning.NEW_HISTORY_FORMAT_MIN_VERSION:
-            if "history" not in self.tree:
-                self.tree["history"] = {"entries": []}
-            elif "entries" not in self.tree["history"]:
-                self.tree["history"]["entries"] = []
+            if "history" not in self._data:
+                self._data["history"] = {"entries": []}
+            elif "entries" not in self._data["history"]:
+                self._data["history"]["entries"] = []
 
-            self.tree["history"]["entries"].append(entry)
+            self._data["history"]["entries"].append(entry)
 
             try:
                 self.validate()
             except Exception:
-                self.tree["history"]["entries"].pop()
+                self._data["history"]["entries"].pop()
                 raise
         else:
-            if "history" not in self.tree:
-                self.tree["history"] = []
+            if "history" not in self._data:
+                self._data["history"] = []
 
-            self.tree["history"].append(entry)
+            self._data["history"].append(entry)
 
             try:
                 self.validate()
             except Exception:
-                self.tree["history"].pop()
+                self._data["history"].pop()
                 raise
 
     def get_history_entries(self):
@@ -1571,14 +1594,14 @@ class AsdfFile:
             A list of history entries.
         """
 
-        if "history" not in self.tree:
+        if "history" not in self._data:
             return []
 
-        if isinstance(self.tree["history"], list):
-            return self.tree["history"]
+        if isinstance(self._data["history"], list):
+            return self._data["history"]
 
-        if "entries" in self.tree["history"]:
-            return self.tree["history"]["entries"]
+        if "entries" in self._data["history"]:
+            return self._data["history"]["entries"]
 
         return []
 
@@ -1613,7 +1636,7 @@ class AsdfFile:
         return node_info.collect_schema_info(
             key,
             path,
-            self.tree,
+            self._data,
             preserve_list=preserve_list,
             refresh_extension_manager=refresh_extension_manager,
         )
@@ -1650,7 +1673,7 @@ class AsdfFile:
         """
 
         lines = display.render_tree(
-            self.tree,
+            self._data,
             max_rows=max_rows,
             max_cols=max_cols,
             show_values=show_values,
@@ -1701,7 +1724,7 @@ class AsdfFile:
         asdf.search.AsdfSearchResult
             the result of the search
         """
-        result = AsdfSearchResult(["root"], self.tree)
+        result = AsdfSearchResult(["root"], self._data)
         return result.search(key=key, type_=type_, value=value, filter_=filter_)
 
     # This function is called from within TypeIndex when deserializing
@@ -1722,6 +1745,11 @@ class AsdfFile:
     # a context when one isn't explicitly passed in.
     def _create_serialization_context(self):
         return SerializationContext(self.version_string, self.extension_manager, self.uri)
+
+    def _check_open(self):
+        if self._closed:
+            msg = "Cannot access data from closed ASDF file"
+            raise OSError(msg)
 
 
 def _check_and_set_mode(fileobj, asdf_mode):

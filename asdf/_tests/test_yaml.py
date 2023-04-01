@@ -9,6 +9,7 @@ import yaml
 import asdf
 from asdf import tagged, treeutil, yamlutil
 from asdf.exceptions import AsdfWarning
+from asdf.node import AsdfDictNode, AsdfListNode
 
 from . import _helpers as helpers
 
@@ -26,11 +27,13 @@ def test_ordered_dict(tmp_path):
     def check_asdf(asdf):
         tree = asdf.tree
 
-        assert isinstance(tree["ordered_dict"], OrderedDict)
+        assert isinstance(tree["ordered_dict"], AsdfDictNode)
+        assert isinstance(tree["ordered_dict"]._data, OrderedDict)
         assert list(tree["ordered_dict"].keys()) == ["first", "second", "third"]
 
-        assert not isinstance(tree["unordered_dict"], OrderedDict)
-        assert isinstance(tree["unordered_dict"], dict)
+        assert isinstance(tree["unordered_dict"], AsdfDictNode)
+        assert not isinstance(tree["unordered_dict"]._data, OrderedDict)
+        assert isinstance(tree["unordered_dict"]._data, dict)
 
     def check_raw_yaml(content):
         assert b"OrderedDict" not in content
@@ -79,7 +82,7 @@ def test_arbitrary_python_object():
 
 def run_tuple_test(tree, tmp_path):
     def check_asdf(asdf):
-        assert isinstance(asdf.tree["val"], list)
+        assert isinstance(asdf.tree["val"], AsdfListNode)
 
     def check_raw_yaml(content):
         assert b"tuple" not in content
