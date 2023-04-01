@@ -318,11 +318,9 @@ A simple example of a Converter using block storage to store the ``payload`` for
     from asdf.extension import Converter, Extension
 
     class BlockData:
-        _next_key = 0
         def __init__(self, payload):
             self.payload = payload
-            self._asdf_key = BlockData._next_key
-            BlockData._next_key += 1
+            self._asdf_key = asdf.util.BlockKey()
 
 
     class BlockConverter(Converter):

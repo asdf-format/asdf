@@ -9,22 +9,11 @@ from asdf.extension import Converter, Extension
 from asdf.testing import helpers
 
 
-class AsdfKey:
-    _next = 0
-
-    def __init__(self):
-        self._key = AsdfKey._next
-        AsdfKey._next += 1
-
-    def __hash__(self):
-        return self._key
-
-
 class BlockData:
     def __init__(self, payload):
         self.payload = payload
         # generate a unique id
-        self._asdf_key = AsdfKey()
+        self._asdf_key = asdf.util.BlockKey()
 
 
 class BlockConverter(Converter):
@@ -132,7 +121,7 @@ class BlockDataCallback:
 
     def __init__(self, callback):
         self.callback = callback
-        self._asdf_key = AsdfKey()
+        self._asdf_key = asdf.util.BlockKey()
 
     @property
     def data(self):
