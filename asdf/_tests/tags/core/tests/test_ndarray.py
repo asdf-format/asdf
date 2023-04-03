@@ -960,7 +960,7 @@ def test_problematic_class_attributes(tmp_path):
         assert isinstance(af["arr"], ndarray.NDArrayType)
 
         with pytest.raises(AttributeError, match=r".* object has no attribute 'name'"):
-            af["arr"].name
+            af["arr"].name  # noqa: B018
 
         with pytest.raises(AttributeError, match=r".* object has no attribute 'version'"):
-            af["arr"].version
+            af["arr"].version  # noqa: B018

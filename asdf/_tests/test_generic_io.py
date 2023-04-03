@@ -113,7 +113,7 @@ def test_path(tree, tmp_path):
 
     with _roundtrip(tree, get_write_fd, get_read_fd) as ff:
         assert len(list(ff._blocks.internal_blocks)) == 2
-        next(ff._blocks.internal_blocks).data
+        next(ff._blocks.internal_blocks).data  # noqa: B018
         assert isinstance(next(ff._blocks.internal_blocks)._data, np.core.memmap)
 
 
