@@ -36,13 +36,13 @@ repos:
         - tomli
 
 - repo: https://github.com/ikamensh/flynt/
-  rev: '0.77'
+  rev: '0.78'
   hooks:
     - id: flynt
       exclude: "asdf/extern/.*"
 
 - repo: https://github.com/charliermarsh/ruff-pre-commit
-  rev: 'v0.0.257'
+  rev: 'v0.0.260'
   hooks:
     - id: ruff
       args: ["--fix"]
@@ -63,6 +63,6 @@ repos:
     - id: pyproject-fmt
 
 - repo: https://github.com/abravalheri/validate-pyproject
-  rev: "v0.12.1"
+  rev: "v0.12.2"
   hooks:
     - id: validate-pyproject
