@@ -29,9 +29,3 @@ def test_asdf_type_format_tag():
     with pytest.warns(AsdfDeprecationWarning, match="asdf.types.format_tag is deprecated"):
         asdf._types.format_tag
     asdf.testing.helpers.format_tag
-
-
-def test_blocks_deprecated():
-    af = asdf.AsdfFile()
-    with pytest.warns(AsdfDeprecationWarning, match="The property AsdfFile.blocks has been deprecated"):
-        af.blocks

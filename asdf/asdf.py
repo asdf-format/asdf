@@ -638,19 +638,6 @@ class AsdfFile:
         """
         return reference.make_reference(self, [] if path is None else path)
 
-    @property
-    def blocks(self):
-        """
-        Get the block manager associated with the `AsdfFile`.
-        """
-        warnings.warn(
-            "The property AsdfFile.blocks has been deprecated and will be removed "
-            "in asdf-3.0. Public use of the block manager is strongly discouraged "
-            "as there is no stable API",
-            AsdfDeprecationWarning,
-        )
-        return self._blocks
-
     def set_array_storage(self, arr, array_storage):
         """
         Set the block type to use for the given array data.
