@@ -8,7 +8,8 @@ from numpy.random import random
 from numpy.testing import assert_array_equal
 
 import asdf
-from asdf import block, constants, generic_io
+from asdf import _block as block
+from asdf import constants, generic_io
 
 RNG = np.random.default_rng(6)
 

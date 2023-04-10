@@ -16,8 +16,8 @@ import tempfile
 import yaml
 
 from asdf import constants, generic_io, schema, util
+from asdf._block import BlockManager
 from asdf.asdf import AsdfFile, open_asdf
-from asdf.block import BlockManager
 
 from .main import Command
 

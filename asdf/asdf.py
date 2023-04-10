@@ -11,7 +11,8 @@ from packaging.version import Version
 from . import _display as display
 from . import _node_info as node_info
 from . import _version as version
-from . import block, constants, generic_io, reference, schema, treeutil, util, versioning, yamlutil
+from . import constants, generic_io, reference, schema, treeutil, util, versioning, yamlutil
+from ._block import BlockManager, calculate_updated_layout
 from ._helpers import validate_version
 from .config import config_context, get_config
 from .exceptions import (
@@ -150,8 +151,7 @@ class AsdfFile:
         self._fd = None
         self._closed = False
         self._external_asdf_by_uri = {}
-        self._blocks = block.BlockManager(self, copy_arrays=copy_arrays, lazy_load=lazy_load)
-        # set the uri here so validation can generate any required external blocks
+        self._blocks = BlockManager(self, copy_arrays=copy_arrays, lazy_load=lazy_load)
         self._uri = uri
         if tree is None:
             # Bypassing the tree property here, to avoid validating
@@ -1132,7 +1132,7 @@ class AsdfFile:
 
                 serialized_tree_size = tree_serialized.tell() + constants.MAX_BLOCKS_DIGITS * n_internal_blocks
 
-                if not block.calculate_updated_layout(self._blocks, serialized_tree_size, pad_blocks, fd.block_size):
+                if not calculate_updated_layout(self._blocks, serialized_tree_size, pad_blocks, fd.block_size):
                     # If we don't have any blocks that are being reused, just
                     # write out in a serial fashion.
                     self._serial_write(fd, pad_blocks, include_block_index)
