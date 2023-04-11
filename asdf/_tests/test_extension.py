@@ -483,7 +483,7 @@ def test_tag_definition():
         RuntimeError,
         match=r"Cannot use .* when multiple schema URIs are present",
     ):
-        tag_def.schema_uri  # noqa: B018
+        tag_def.schema_uri
 
     with pytest.raises(ValueError, match=r"URI patterns are not permitted in TagDefinition"):
         TagDefinition("asdf://somewhere.org/extensions/foo/tags/foo-*")

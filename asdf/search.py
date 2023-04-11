@@ -37,7 +37,7 @@ class AsdfSearchResult:
         self._max_cols = max_cols
         self._show_values = show_values
 
-    def format(self, max_rows=NotSet, max_cols=NotSet, show_values=NotSet):  # noqa: A003
+    def format(self, max_rows=NotSet, max_cols=NotSet, show_values=NotSet):
         """
         Change formatting parameters of the rendered tree.
 
@@ -98,7 +98,7 @@ class AsdfSearchResult:
         try:
             result = a == b
 
-        except Exception:  # noqa: BLE001
+        except Exception:
             return False
 
         if isinstance(result, bool):

@@ -25,7 +25,7 @@ from ._convenience import info
 from ._types import CustomType
 from ._version import version as __version__
 from .asdf import AsdfFile
-from .asdf import open_asdf as open  # noqa: A001
+from .asdf import open_asdf as open
 from .config import config_context, get_config
 from .stream import Stream
 from .tags.core import IntegerType

@@ -38,7 +38,7 @@ def test_tagged_list_isinstance():
 def test_tagged_list_base():
     value = TaggedList([0, 1, 2, ["foo"]], "tag:nowhere.org:custom/foo-1.0.0")
 
-    assert not (value == value.base)  # base is not a tagged list  # noqa: SIM201
+    assert not (value == value.base)  # base is not a tagged list
     assert value.data == value.base  # but the data is
 
     assert isinstance(value.base, list)
@@ -78,7 +78,7 @@ def test_tagged_dict_isinstance():
 def test_tagged_dict_base():
     value = TaggedDict({"a": 0, "b": 1, "c": 2, "nested": {"d": 3}}, "tag:nowhere.org:custom/foo-1.0.0")
 
-    assert not (value == value.base)  # base is not a tagged  dict  # noqa: SIM201
+    assert not (value == value.base)  # base is not a tagged  dict
     assert value.data == value.base  # but the data is
 
     assert isinstance(value.base, dict)
@@ -111,7 +111,7 @@ def test_tagged_string_base():
     value = TaggedString("You're it!")
     value._tag = "tag:nowhere.org:custom/foo-1.0.0"
 
-    assert not (value == value.base)  # base is not a tagged  dict  # noqa: SIM201
+    assert not (value == value.base)  # base is not a tagged  dict
     assert value.data == value.base  # but the data is
 
     assert isinstance(value.base, str)

@@ -16,7 +16,7 @@ def _warn():
 
 _warn()
 
-__all__ = _helpers.__all__  # noqa: PLE0605
+__all__ = _helpers.__all__
 
 
 def __getattr__(name):

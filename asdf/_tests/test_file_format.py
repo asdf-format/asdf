@@ -128,7 +128,7 @@ def test_invalid_source(small_tree):
 
         # This error message changes depending on how remote-data is configured
         # for the CI run.
-        with pytest.raises(IOError):  # noqa: PT011
+        with pytest.raises(IOError):
             ff2._blocks.get_block("http://ABadUrl.verybad/test.asdf")
 
         with pytest.raises(TypeError, match=r"Unknown source .*"):

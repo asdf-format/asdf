@@ -996,7 +996,7 @@ class AsdfFile:
             raise
 
     @classmethod
-    def open(  # noqa: A003
+    def open(
         cls,
         fd,
         uri=None,

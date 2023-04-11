@@ -113,7 +113,7 @@ def test_path(tree, tmp_path):
 
     with _roundtrip(tree, get_write_fd, get_read_fd) as ff:
         assert len(list(ff._blocks.internal_blocks)) == 2
-        next(ff._blocks.internal_blocks).data  # noqa: B018
+        next(ff._blocks.internal_blocks).data
         assert isinstance(next(ff._blocks.internal_blocks)._data, np.core.memmap)
 
 
@@ -122,7 +122,7 @@ def test_open2(tree, tmp_path):
 
     def get_write_fd():
         # cannot use context manager here because it closes the file
-        f = generic_io.get_file(open(path, "wb"), mode="w", close=True)  # noqa: SIM115
+        f = generic_io.get_file(open(path, "wb"), mode="w", close=True)
         assert isinstance(f, generic_io.RealFile)
         assert f._uri == util.filepath_to_url(path)
         return f
@@ -130,7 +130,7 @@ def test_open2(tree, tmp_path):
     def get_read_fd():
         # Must open with mode=rw in order to get memmapped data
         # cannot use context manager here because it closes the file
-        f = generic_io.get_file(open(path, "r+b"), mode="rw", close=True)  # noqa: SIM115
+        f = generic_io.get_file(open(path, "r+b"), mode="rw", close=True)
         assert isinstance(f, generic_io.RealFile)
         assert f._uri == util.filepath_to_url(path)
         return f
@@ -160,14 +160,14 @@ def test_io_open(tree, tmp_path):
 
     def get_write_fd():
         # cannot use context manager here because it closes the file
-        f = generic_io.get_file(open(path, "wb"), mode="w", close=True)  # noqa: SIM115
+        f = generic_io.get_file(open(path, "wb"), mode="w", close=True)
         assert isinstance(f, generic_io.RealFile)
         assert f._uri == util.filepath_to_url(path)
         return f
 
     def get_read_fd():
         # cannot use context manager here because it closes the file
-        f = generic_io.get_file(open(path, "r+b"), mode="rw", close=True)  # noqa: SIM115
+        f = generic_io.get_file(open(path, "r+b"), mode="rw", close=True)
         assert isinstance(f, generic_io.RealFile)
         assert f._uri == util.filepath_to_url(path)
         return f
@@ -249,7 +249,7 @@ def test_urlopen(tree, httpserver):
 
     def get_write_fd():
         # cannot use context manager here because it closes the file
-        return generic_io.get_file(open(path, "wb"), mode="w")  # noqa: SIM115
+        return generic_io.get_file(open(path, "wb"), mode="w")
 
     def get_read_fd():
         return generic_io.get_file(urllib_request.urlopen(httpserver.url + "test.asdf"))
@@ -266,7 +266,7 @@ def test_http_connection(tree, httpserver):
 
     def get_write_fd():
         # cannot use context manager here because it closes the file
-        return generic_io.get_file(open(path, "wb"), mode="w")  # noqa: SIM115
+        return generic_io.get_file(open(path, "wb"), mode="w")
 
     def get_read_fd():
         fd = generic_io.get_file(httpserver.url + "test.asdf")
@@ -739,12 +739,12 @@ def test_blocksize(tree, tmp_path):
 
     def get_write_fd():
         # cannot use context manager here because it closes the file
-        return generic_io.get_file(open(path, "wb"), mode="w", close=True)  # noqa: SIM115
+        return generic_io.get_file(open(path, "wb"), mode="w", close=True)
 
     def get_read_fd():
         # Must open with mode=rw in order to get memmapped data
         # cannot use context manager here because it closes the file
-        return generic_io.get_file(open(path, "r+b"), mode="rw", close=True)  # noqa: SIM115
+        return generic_io.get_file(open(path, "r+b"), mode="rw", close=True)
 
     with config_context() as config:
         config.io_block_size = 1233  # make sure everything works with a strange blocksize

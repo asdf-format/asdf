@@ -86,7 +86,7 @@ class Reference(_types.AsdfType):
             return None
         try:
             return getattr(self._get_target(), attr)
-        except Exception as err:  # noqa: BLE001
+        except Exception as err:
             msg = f"No attribute '{attr}'"
             raise AttributeError(msg) from err
 
