@@ -227,7 +227,7 @@ def to_compression_header(compression):
     header.
     """
     if not compression:
-        return b""
+        return b"\0\0\0\0"
 
     if isinstance(compression, str):
         return compression.encode("ascii")
