@@ -28,7 +28,7 @@ jobs:
         if: ${{ contains(github.event.pull_request.labels.*.name, 'backport-2.15.x') }}
         with:
           repo-token: "${{ secrets.GITHUB_TOKEN }}"
-          milestone: "2.15.0"
+          milestone: "2.15.1"
       - uses: andrefcdias/add-to-milestone@v1.3.0
         if: ${{ contains(github.event.pull_request.labels.*.name, 'development') && !contains(github.event.pull_request.labels.*.name, 'backport-2.15.x')}}
         with:
