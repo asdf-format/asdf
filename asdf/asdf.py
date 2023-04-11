@@ -1060,7 +1060,7 @@ class AsdfFile:
         raise ValueError(msg)
 
     @classmethod
-    def open(  # noqa: A003
+    def open(
         cls,
         fd,
         uri=None,
@@ -1721,7 +1721,7 @@ class AsdfFile:
             identifier="root",
             refresh_extension_manager=refresh_extension_manager,
         )
-        print("\n".join(lines))  # noqa: T201
+        print("\n".join(lines))
 
     def search(self, key=NotSet, type_=NotSet, value=NotSet, filter_=None):
         """

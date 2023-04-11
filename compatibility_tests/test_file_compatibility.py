@@ -1,5 +1,3 @@
-# noqa: INP001
-
 import json
 import os
 import subprocess

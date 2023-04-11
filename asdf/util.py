@@ -372,7 +372,7 @@ def minversion(module, version, inclusive=True):
             return False
     else:
         msg = f"module argument must be an actual imported module, or the import name of the module; got {repr(module)}"
-        raise ValueError(msg)  # noqa: TRY004
+        raise ValueError(msg)
 
     if module_version is None:
         try:

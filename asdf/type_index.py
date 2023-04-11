@@ -17,7 +17,7 @@ def _warn():
 
 
 _warn()
-__all__ = _type_index.__all__  # noqa: PLE0605
+__all__ = _type_index.__all__
 
 
 def __getattr__(name):

@@ -127,7 +127,7 @@ class AsdfSpec(SimpleSpec):
     def select(self, versions):
         return super().select(self.__iterate_versions(versions))
 
-    def filter(self, versions):  # noqa: A003
+    def filter(self, versions):
         return super().filter(self.__iterate_versions(versions))
 
     def __eq__(self, other):

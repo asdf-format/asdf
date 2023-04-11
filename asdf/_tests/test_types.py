@@ -91,7 +91,7 @@ def fractiontype_factory():
 
 
 def fractional2dcoordtype_factory():
-    FractionType = fractiontype_factory()  # noqa: N806
+    FractionType = fractiontype_factory()
 
     with pytest.warns(AsdfDeprecationWarning, match=".*subclasses the deprecated CustomType.*"):
 
@@ -119,7 +119,7 @@ def fractional2dcoordtype_factory():
 
 
 def test_custom_tag():
-    FractionType = fractiontype_factory()  # noqa: N806
+    FractionType = fractiontype_factory()
 
     class FractionExtension(CustomExtension):
         @property

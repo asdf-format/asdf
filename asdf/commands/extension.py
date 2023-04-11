@@ -64,9 +64,9 @@ def _print_extension_details(ext, tags_only):
             tag_uris.append(typ.make_yaml_tag(typ.name))
 
     if len(tag_uris) > 0:
-        print("tags:")  # noqa: T201
+        print("tags:")
         for tag_uri in sorted(tag_uris):
-            print(f"  - {tag_uri}")  # noqa: T201
+            print(f"  - {tag_uri}")
 
     if not tags_only:
         types = []
@@ -77,14 +77,14 @@ def _print_extension_details(ext, tags_only):
             types.extend(typ.types)
 
         if len(types) > 0:
-            print("types:")  # noqa: T201
+            print("types:")
             for typ in sorted(types, key=_format_type_name):
-                print(f"  - {_format_type_name(typ)}")  # noqa: T201
+                print(f"  - {_format_type_name(typ)}")
 
 
 def find_extensions(summary, tags_only):
     for ext in get_extensions():
-        print(_format_extension(ext))  # noqa: T201
+        print(_format_extension(ext))
         if not summary:
             _print_extension_details(ext, tags_only)
-            print()  # noqa: T201
+            print()
