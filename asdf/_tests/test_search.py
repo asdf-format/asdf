@@ -51,10 +51,10 @@ def test_multiple_results(asdf_file):
     assert "root['nested']['foo']" in result.paths
 
     with pytest.raises(RuntimeError, match=r"More than one result"):
-        result.path  # noqa: B018
+        result.path
 
     with pytest.raises(RuntimeError, match=r"More than one result"):
-        result.node  # noqa: B018
+        result.node
 
     result.replace(54)
     assert asdf_file["foo"] == 54

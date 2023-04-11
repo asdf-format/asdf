@@ -490,7 +490,7 @@ def _assert_extension_type_correctness(extension, extension_type, resolver):
             try:
                 with generic_io.get_file(schema_location) as f:
                     yaml.safe_load(f.read())
-            except Exception as err:  # noqa: BLE001
+            except Exception as err:
                 msg = (
                     f"{extension_type.__name__} supports tag, {check_type.yaml_tag}, "
                     f"which resolves to schema at {schema_location}, but "

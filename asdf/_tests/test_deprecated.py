@@ -93,7 +93,7 @@ def test_types_module_deprecation():
 
 def test_default_extensions_deprecation():
     with pytest.warns(AsdfDeprecationWarning, match="default_extensions is deprecated"):
-        asdf.extension.default_extensions  # noqa: B018
+        asdf.extension.default_extensions
 
 
 def test_default_resolver():
@@ -108,8 +108,8 @@ def test_get_cached_asdf_extension_list_deprecation():
 
 def test_asdf_type_format_tag():
     with pytest.warns(AsdfDeprecationWarning, match="asdf.types.format_tag is deprecated"):
-        asdf._types.format_tag  # noqa: B018
-    asdf.testing.helpers.format_tag  # noqa: B018
+        asdf._types.format_tag
+    asdf.testing.helpers.format_tag
 
 
 @pytest.mark.parametrize("name", ["AsdfExtension", "AsdfExtensionList", "BuiltinExtension"])
@@ -120,7 +120,7 @@ def test_extension_class_deprecation(name):
 
 def test_top_level_asdf_extension_deprecation():
     with pytest.warns(AsdfDeprecationWarning, match="AsdfExtension is deprecated"):
-        asdf.AsdfExtension  # noqa: B018
+        asdf.AsdfExtension
 
 
 def test_deprecated_entry_point(mock_entry_points):  # noqa: F811
@@ -144,4 +144,4 @@ def test_asdf_tests_helpers_deprecation():
 def test_blocks_deprecated():
     af = asdf.AsdfFile()
     with pytest.warns(AsdfDeprecationWarning, match="The property AsdfFile.blocks has been deprecated"):
-        af.blocks  # noqa: B018
+        af.blocks
