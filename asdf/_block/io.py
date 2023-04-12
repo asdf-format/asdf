@@ -1,7 +1,10 @@
 import hashlib
 import io
+import os
 import struct
 import weakref
+
+import yaml
 
 from asdf import compression as mcompression
 from asdf import constants, util
@@ -91,7 +94,7 @@ def read_block(fd, offset=None, memmap=False, lazy_load=False):
         offset = fd.tell()
     header = read_block_header(fd, offset)
     data_offset = fd.tell()
-    if lazy_load:
+    if lazy_load and fd.seekable():
         # setup a callback to later load the data
         fd_ref = weakref.ref(fd)
 
@@ -170,3 +173,69 @@ def write_block(fd, data, offset=None, stream=False, compression_kwargs=None, pa
         fd.write(buff.getvalue())
     fd.fast_forward(padding_bytes)
     return BLOCK_HEADER.unpack(header)
+
+
+def candidate_offsets(min_offset, max_offset, block_size):
+    offset = (max_offset // block_size) * block_size
+    if offset == max_offset:
+        # don't include the max_offset
+        offset -= block_size
+    while offset > min_offset:
+        yield offset
+        offset -= block_size
+    if offset <= min_offset:
+        yield min_offset
+
+
+def find_block_index(fd, min_offset=None, max_offset=None):
+    if min_offset is None:
+        min_offset = fd.tell()
+    if max_offset is None:
+        fd.seek(0, os.SEEK_END)
+        max_offset = fd.tell()
+    block_size = fd.block_size
+    block_index_offset = None
+    buff = b""
+    pattern = constants.INDEX_HEADER
+    for offset in candidate_offsets(min_offset, max_offset, block_size):
+        fd.seek(offset)
+        buff = fd.read(block_size) + buff
+        index = buff.find(pattern)
+        if index != -1:
+            block_index_offset = offset + index
+            if block_index_offset >= max_offset:
+                return None
+            break
+        buff = buff[: len(pattern)]
+    if block_index_offset is not None and block_index_offset < max_offset:
+        return block_index_offset
+    return None
+
+
+def read_block_index(fd, offset=None):
+    if offset is not None:
+        fd.seek(offset)
+    buff = fd.read(len(constants.INDEX_HEADER))
+    if buff != constants.INDEX_HEADER:
+        msg = "Failed to read block index header at offset {offset}"
+        raise OSError(msg)
+    return yaml.load(fd.read(-1), yaml.SafeLoader)
+
+
+def write_block_index(fd, offsets, offset=None, yaml_version=None):
+    if yaml_version is None:
+        yaml_version = (1, 1)
+    if offset is not None:
+        fd.seek(offset)
+    fd.write(constants.INDEX_HEADER)
+    fd.write(b"\n")
+    yaml.dump(
+        offsets,
+        stream=fd,
+        Dumper=yaml.SafeDumper,
+        explicit_start=True,
+        explicit_end=True,
+        allow_unicode=True,
+        encoding="utf-8",
+        version=yaml_version,
+    )
