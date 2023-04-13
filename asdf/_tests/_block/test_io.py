@@ -349,3 +349,7 @@ def test_write_block_index_with_offset(tmp_path):
         bio.write_block_index(fd, [1, 2, 3], offset=offset)
     with generic_io.get_file(fn, "r") as fd:
         assert bio.find_block_index(fd) == offset
+
+
+# TODO test that file pointer is always at the end of a block after a read
+# for all possible block types
