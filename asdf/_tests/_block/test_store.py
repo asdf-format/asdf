@@ -1,5 +1,7 @@
+import pytest
+
 from asdf._block.key import Key
-from asdf._block.store import Store
+from asdf._block.store import LinearStore, Store
 
 
 # a blank class for testing
@@ -11,14 +13,14 @@ def test_store_by_obj():
     f = Foo()
     v = 42
     s = Store()
-    s.set(f, v)
-    assert s.get(f) == v
+    s.assign_object(f, v)
+    assert s.lookup_by_object(f) == v
 
 
 def test_get_missing_by_obj():
     f = Foo()
     s = Store()
-    assert s.get(f) is None
+    assert s.lookup_by_object(f) is None
 
 
 def test_store_by_key():
@@ -26,8 +28,8 @@ def test_store_by_key():
     v = 42
     s = Store()
     k = Key(f)
-    s.set(k, v)
-    assert s.get(k) == v
+    s.assign_object(k, v)
+    assert s.lookup_by_object(k) == v
 
 
 def test_get_by_key():
@@ -35,15 +37,15 @@ def test_get_by_key():
     v = 42
     s = Store()
     k = Key(f)
-    s.set(k, v)
-    assert s.get(f) == v
+    s.assign_object(k, v)
+    assert s.lookup_by_object(f) == v
 
 
 def test_get_missing_key():
     f = Foo()
     s = Store()
     k = Key(f)
-    assert s.get(k) is None
+    assert s.lookup_by_object(k) is None
 
 
 def test_get_missing_key_same_obj():
@@ -51,33 +53,33 @@ def test_get_missing_key_same_obj():
     v = 42
     s = Store()
     k = Key(f)
-    s.set(k, v)
+    s.assign_object(k, v)
     k2 = Key(f)
-    assert s.get(k2) is None
+    assert s.lookup_by_object(k2) is None
 
 
 def test_get_existing_default():
     f = Foo()
     v = 42
     s = Store()
-    s.set(f, v)
-    assert s.get(f, 26) == v
+    s.assign_object(f, v)
+    assert s.lookup_by_object(f, 26) == v
 
 
 def test_get_missing_default():
     f = Foo()
     v = 42
     s = Store()
-    assert s.get(f, v) == v
+    assert s.lookup_by_object(f, v) == v
 
 
 def test_set_same_object():
     f = Foo()
     v = 42
     s = Store()
-    s.set(f, 26)
-    s.set(f, v)
-    assert s.get(f) == v
+    s.assign_object(f, 26)
+    s.assign_object(f, v)
+    assert s.lookup_by_object(f) == v
 
 
 def test_set_same_key():
@@ -85,16 +87,16 @@ def test_set_same_key():
     s = Store()
     k = Key(f)
     v = 42
-    s.set(k, 26)
-    s.set(k, v)
-    assert s.get(k) == v
+    s.assign_object(k, 26)
+    s.assign_object(k, v)
+    assert s.lookup_by_object(k) == v
 
 
 def test_get_memory_reused():
     f = Foo()
     s = Store()
     v = 42
-    s.set(f, v)
+    s.assign_object(f, v)
     fid = id(f)
     del f
     for _ in range(100):
@@ -103,14 +105,14 @@ def test_get_memory_reused():
             break
     else:
         raise AssertionError("Failed to trigger memory reuse")
-    assert s.get(f) is None
+    assert s.lookup_by_object(f) is None
 
 
 def test_set_memory_reused():
     f = Foo()
     s = Store()
     v = 42
-    s.set(f, v)
+    s.assign_object(f, v)
     fid = id(f)
     del f
     for _ in range(100):
@@ -120,16 +122,38 @@ def test_set_memory_reused():
     else:
         raise AssertionError("Failed to trigger memory reuse")
     nv = 26
-    s.set(f, nv)
-    assert s.get(f) is nv
+    s.assign_object(f, nv)
+    assert s.lookup_by_object(f) is nv
 
 
 def test_cleanup():
     f = Foo()
     s = Store()
     k = Key(f)
-    s.set(s, 42)
-    s.set(k, 26)
+    s.assign_object(s, 42)
+    s.assign_object(k, 26)
     del f
     s._cleanup()
-    assert s.get(k, None) is None
+    assert s.lookup_by_object(k, None) is None
+
+
+def test_linear_store():
+    foos = [Foo(), Foo(), Foo()]
+    values = ["a", "b", "c"]
+    s = LinearStore(values)
+    assert len(s) == len(values)
+    for f, v in zip(foos, values):
+        s.assign_object(f, v)
+    for f, v in zip(foos, values):
+        assert s.lookup_by_object(f) == v
+
+
+def test_linear_store_missing_value():
+    s = LinearStore()
+    with pytest.raises(ValueError, match=".*is not in list.*"):
+        s.assign_object(Foo(), "missing")
+
+
+def test_linear_store_lookup_unknown_object():
+    s = LinearStore()
+    assert s.lookup_by_object(Foo()) is None

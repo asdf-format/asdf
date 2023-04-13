@@ -1,3 +1,5 @@
+import collections.abc
+
 from .key import Key
 
 
@@ -6,7 +8,7 @@ class Store:
         # store contains 2 layers of lookup: id(obj), Key
         self._by_id = {}
 
-    def get(self, obj, default=None):
+    def lookup_by_object(self, obj, default=None):
         if isinstance(obj, Key):
             obj_id = id(obj._ref())
             obj_key = obj
@@ -33,7 +35,7 @@ class Store:
         # no match, return default
         return default
 
-    def set(self, obj, value):
+    def assign_object(self, obj, value):
         if isinstance(obj, Key):
             obj_id = id(obj._ref())
             obj_key = obj
@@ -79,3 +81,27 @@ class Store:
             del by_key[key]
         if not len(by_key):
             del self._by_id[object_id]
+
+
+class LinearStore(Store, collections.abc.Sequence):
+    def __init__(self, init=None):
+        super().__init__()
+        if init is None:
+            init = []
+        self._items = init
+
+    def lookup_by_object(self, obj):
+        index = super().lookup_by_object(obj)
+        if index is None:
+            return None
+        return self[index]
+
+    def assign_object(self, obj, value):
+        index = self._items.index(value)
+        super().assign_object(obj, index)
+
+    def __getitem__(self, index):
+        return self._items.__getitem__(index)
+
+    def __len__(self, index):
+        return self._items.__len__()
