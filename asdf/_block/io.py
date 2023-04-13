@@ -78,6 +78,7 @@ def read_block_data(fd, header, offset=None, memmap=False):
     if compression:
         # the old code ignored memmapping for compressed data
         data = mcompression.decompress(fd, used_size, header["data_size"], compression)
+        fd.fast_forward(header["allocated_size"] - header["used_size"])
     else:
         if memmap and fd.can_memmap():
             data = fd.memmap_array(offset, used_size)
@@ -85,6 +86,8 @@ def read_block_data(fd, header, offset=None, memmap=False):
         else:
             data = fd.read_into_array(used_size)
             fd.fast_forward(header["allocated_size"] - header["used_size"])
+        if (header["flags"] & constants.BLOCK_FLAG_STREAMED) and fd.seekable():
+            fd.seek(0, os.SEEK_END)
     return data
 
 
@@ -106,6 +109,7 @@ def read_block(fd, offset=None, memmap=False, lazy_load=False):
             return read_block_data(fd, header, offset=data_offset, memmap=memmap)
 
         data = callback
+        fd.fast_forward(header["allocated_size"])
     else:
         data = read_block_data(fd, header, offset=None, memmap=memmap)
     return offset, header, data_offset, data
