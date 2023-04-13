@@ -27,7 +27,8 @@ class ReadBlock:
             return
         fd = self._fd()
         if fd is None or fd.is_closed():
-            raise OSError("Attempt to load block from closed file")
+            msg = "Attempt to load block from closed file"
+            raise OSError(msg)
         _, self.header, self.data_offset, self._data = bio.read_block(
             fd, offset=self.offset, memmap=self.memmap, lazy_load=self.lazy_load
         )
@@ -109,7 +110,8 @@ def read_blocks(fd, memmap=False, lazy_load=False):
             fd.seek(block_index[index])
             buff = fd.read(4)
             if buff != constants.BLOCK_MAGIC:
-                raise OSError("Invalid block magic")
+                msg = "Invalid block magic"
+                raise OSError(msg)
             blocks[index].load()
     except (OSError, ValueError):
         fd.seek(starting_offset)
