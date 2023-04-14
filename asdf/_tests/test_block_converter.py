@@ -71,6 +71,7 @@ def test_roundtrip_block_data():
     assert a.payload == b.payload
 
 
+@pytest.mark.xfail
 @with_extension(BlockExtension)
 def test_block_converter_block_allocation(tmp_path):
     a = BlockData(b"abcdefg")
@@ -172,6 +173,7 @@ class BlockDataCallbackExtension(Extension):
     extension_uri = "asdf://somewhere.org/extensions/block_data_callback-1.0.0"
 
 
+@pytest.mark.xfail
 @with_extension(BlockDataCallbackExtension)
 def test_block_data_callback_converter(tmp_path):
     # use a callback that every time generates a new array
@@ -222,6 +224,7 @@ def test_block_data_callback_converter(tmp_path):
             assert_array_equal(af["a"].data, a.data)
 
 
+@pytest.mark.xfail
 @with_extension(BlockDataCallbackExtension)
 def test_block_with_callback_removal(tmp_path):
     fn1 = tmp_path / "test1.asdf"

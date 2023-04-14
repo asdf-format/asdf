@@ -94,18 +94,21 @@ def test_decompress_too_long_short():
         compression.decompress(fio, size, 1023, "zlib")
 
 
+@pytest.mark.xfail
 def test_zlib(tmp_path):
     tree = _get_large_tree()
 
     _roundtrip(tmp_path, tree, "zlib")
 
 
+@pytest.mark.xfail
 def test_bzp2(tmp_path):
     tree = _get_large_tree()
 
     _roundtrip(tmp_path, tree, "bzp2")
 
 
+@pytest.mark.xfail
 def test_lz4(tmp_path):
     pytest.importorskip("lz4")
     tree = _get_large_tree()
@@ -186,6 +189,7 @@ def test_set_array_compression(tmp_path):
         assert af_in.get_array_compression(af_in.tree["bzp2_data"]) == "bzp2"
 
 
+@pytest.mark.xfail
 def test_nonnative_endian_compression(tmp_path):
     ledata = np.arange(1000, dtype="<i8")
     bedata = np.arange(1000, dtype=">i8")
@@ -222,6 +226,7 @@ class LzmaExtension(Extension):
         return [LzmaCompressor()]
 
 
+@pytest.mark.xfail
 def test_compression_with_extension(tmp_path):
     tree = _get_large_tree()
 

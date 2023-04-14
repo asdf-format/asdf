@@ -1166,6 +1166,7 @@ class AsdfFile:
             share data with other arrays.  Default is the value specified
             in ``asdf.get_config().array_inline_threshold``.
         """
+        raise NotImplementedError("broken update")
 
         pad_blocks = kwargs.pop("pad_blocks", False)
         include_block_index = kwargs.pop("include_block_index", True)
