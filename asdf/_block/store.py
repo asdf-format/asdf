@@ -103,5 +103,5 @@ class LinearStore(Store, collections.abc.Sequence):
     def __getitem__(self, index):
         return self._items.__getitem__(index)
 
-    def __len__(self, index):
+    def __len__(self):
         return self._items.__len__()
