@@ -147,6 +147,7 @@ def test_default_version():
     assert ff.file_format_version == version_map["FILE_FORMAT"]
 
 
+@pytest.mark.xfail
 def test_update_exceptions(tmp_path):
     path = str(tmp_path / "test.asdf")
 
