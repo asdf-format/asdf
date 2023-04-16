@@ -1,6 +1,10 @@
 import re
 
+import numpy as np
+
 from asdf.extension import Converter
+from asdf import util
+
 
 _REPLACEMENTS = {
     re.compile("i(?!nf)"): "j",
@@ -10,7 +14,8 @@ _REPLACEMENTS = {
 
 class ComplexConverter(Converter):
     tags = ["tag:stsci.edu:asdf/core/complex-1.0.0"]
-    types = ["builtins.complex", "numpy.complex64", "numpy.complex128", "numpy.complex256"]
+
+    types = [*list(util.iter_subclasses(np.complexfloating)), complex]
 
     def to_yaml_tree(self, obj, tag, ctx):
         return str(obj)
