@@ -2,9 +2,8 @@ import re
 
 import numpy as np
 
-from asdf.extension import Converter
 from asdf import util
-
+from asdf.extension import Converter
 
 _REPLACEMENTS = {
     re.compile("i(?!nf)"): "j",

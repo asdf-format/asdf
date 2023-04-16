@@ -267,4 +267,4 @@ def test_spec_equal():
     assert spec != (1, 1, 0)
     assert (1, 1, 0) != spec
     assert spec == (1, 3, 0)
-    assert (1, 3, 0) == spec  # noqa: SIM300
+    assert (1, 3, 0) == spec
