@@ -29,6 +29,8 @@ MIN_VERSION_OLD_FILES = Version("2.5.0")
 
 # Minimum library version that is capable of correctly writing
 # files that follow ASDF Standard 1.0.0.
+# ASDF library versions older than this version would sometimes write newer
+# tags that were not listed in the supported standard
 MIN_VERSION_1_0_0_STANDARD = Version("2.7.0")
 
 GENERATE_SCRIPT_PATH = Path(__file__).parent / "generate_file.py"
