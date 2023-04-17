@@ -546,3 +546,6 @@ class BlockKey:
 
     def __hash__(self):
         return self._key
+
+    def __eq__(self, other):
+        return self._key == other._key

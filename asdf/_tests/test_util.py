@@ -1,3 +1,4 @@
+import copy
 import io
 
 import pytest
@@ -128,3 +129,5 @@ def test_block_key():
     bk2 = util.BlockKey()
     d[bk2] = 2
     assert len(d) == 2
+    # check that equality and copying a key works
+    assert copy.copy(bk) == bk
