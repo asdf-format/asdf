@@ -579,11 +579,11 @@ class BlockManager:
 
         if remove:
             for block in list(self.blocks):
-                if getattr(block, "_used", 0) == 0 and block not in reserved_blocks:
+                if not getattr(block, "_used", False) and block not in reserved_blocks:
                     self.remove(block)
             return None
         for block in list(self.blocks):
-            if getattr(block, "_used", 0):
+            if getattr(block, "_used", False):
                 reserved_blocks.add(block)
         return reserved_blocks
 
