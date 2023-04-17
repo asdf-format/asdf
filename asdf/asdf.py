@@ -148,6 +148,7 @@ class AsdfFile:
         self._closed = False
         self._external_asdf_by_uri = {}
         self._blocks = block.BlockManager(self, copy_arrays=copy_arrays, lazy_load=lazy_load)
+        # set the uri here so validation can generate any required external blocks
         self._uri = uri
         if tree is None:
             # Bypassing the tree property here, to avoid validating
@@ -168,8 +169,6 @@ class AsdfFile:
         else:
             self.tree = tree
             self.find_references()
-        if uri is not None:
-            self._uri = uri
 
         self._comments = []
 

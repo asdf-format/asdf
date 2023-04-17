@@ -27,6 +27,15 @@ def test_external_block(tmp_path):
     assert "test0000.asdf" in os.listdir(tmp_path)
 
 
+def test_external_block_url():
+    uri = "asdf://foo"
+    my_array = RNG.normal(size=(8, 8))
+    tree = {"my_array": my_array}
+    asdf.get_config().all_array_storage = "external"
+    # this should not raise a ValueError since uri is provided
+    asdf.AsdfFile(tree, uri=uri)
+
+
 def test_external_block_non_url():
     my_array = RNG.normal(size=(8, 8))
     tree = {"my_array": my_array}
