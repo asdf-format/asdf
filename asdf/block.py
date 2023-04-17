@@ -37,6 +37,7 @@ class BlockManager:
         }
 
         self._data_to_block_mapping = {}
+        self._key_to_block_mapping = {}
         self._validate_checksums = False
         self._memmap = not copy_arrays
         self._lazy_load = lazy_load
@@ -81,7 +82,9 @@ class BlockManager:
         if block._data is not None or key is not None:
             if key is None:
                 key = id(util.get_array_base(block._data))
-            self._data_to_block_mapping[key] = block
+                self._data_to_block_mapping[key] = block
+            else:
+                self._key_to_block_mapping[key] = block
 
     def remove(self, block):
         """
@@ -94,6 +97,9 @@ class BlockManager:
                 for key, blk in list(self._data_to_block_mapping.items()):
                     if blk is block:
                         del self._data_to_block_mapping[key]
+                for key, blk in list(self._key_to_block_mapping.items()):
+                    if blk is block:
+                        del self._key_to_block_mapping[key]
         else:
             msg = f"Unknown array storage type {block.array_storage}"
             raise ValueError(msg)
@@ -619,10 +625,10 @@ class BlockManager:
             self._handle_global_block_settings(block)
 
     def get_block_by_key(self, key):
-        if key not in self._data_to_block_mapping:
+        if key not in self._key_to_block_mapping:
             msg = f"Unknown block key {key}"
             raise KeyError(msg)
-        return self._data_to_block_mapping[key]
+        return self._key_to_block_mapping[key]
 
     def get_block(self, source):
         """
@@ -778,14 +784,13 @@ class BlockManager:
         -------
         block : Block
         """
-        block = self._data_to_block_mapping.get(key)
+        block = self._key_to_block_mapping.get(key)
         if block is not None:
             return block
 
         block = Block()
         self.add(block, key=key)
         self._handle_global_block_settings(block)
-        self._data_to_block_mapping[key] = block
 
         return block
 

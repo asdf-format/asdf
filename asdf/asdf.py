@@ -1364,7 +1364,7 @@ class AsdfFile:
             )
             naf._tree = self.tree  # avoid an extra validate
             # copy over block storage and other settings
-            block_to_key_mapping = {v: k for k, v in self._blocks._data_to_block_mapping.items()}
+            block_to_key_mapping = {v: k for k, v in self._blocks._key_to_block_mapping.items()}
             # this creates blocks in the new block manager that correspond to blocks
             # in the original file
             for b in self._blocks.blocks:
@@ -2048,7 +2048,13 @@ class SerializationContext:
             A unique hashable key to associate with a block
         """
         blk = self._block_manager.get_block(block_index)
-        self._block_manager._data_to_block_mapping[key] = blk
+        if self._block_manager._key_to_block_mapping.get(key, blk) is not blk:
+            msg = f"key {key} is already assigned to a block"
+            raise ValueError(msg)
+        if blk in self._block_manager._key_to_block_mapping.values():
+            msg = f"block {block_index} is already assigned to a key"
+            raise ValueError(msg)
+        self._block_manager._key_to_block_mapping[key] = blk
 
     def find_block_index(self, lookup_key, data_callback=None):
         """
@@ -2075,7 +2081,7 @@ class SerializationContext:
             Index of the block where data returned from data_callback
             will be written.
         """
-        new_block = lookup_key not in self._block_manager._data_to_block_mapping
+        new_block = lookup_key not in self._block_manager._key_to_block_mapping
         blk = self._block_manager.find_or_create_block(lookup_key)
         # if we're not creating a block, don't update the data callback
         if data_callback is not None and (new_block or (blk._data_callback is None and blk._fd is None)):

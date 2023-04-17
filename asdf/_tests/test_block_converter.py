@@ -20,6 +20,7 @@ class BlockConverter(Converter):
     tags = ["asdf://somewhere.org/tags/block_data-1.0.0"]
     types = [BlockData]
     _return_invalid_keys = False
+    _double_assign_block = False
 
     def to_yaml_tree(self, obj, tag, ctx):
         # lookup source for obj
@@ -36,6 +37,10 @@ class BlockConverter(Converter):
         data = ctx.get_block_data_callback(block_index)()
         obj = BlockData(data.tobytes())
         ctx.assign_block_key(block_index, obj._asdf_key)
+        if self._double_assign_block:
+            self._double_assign_block = False
+            key2 = asdf.util.BlockKey()
+            ctx.assign_block_key(block_index, key2)
         return obj
 
     def reserve_blocks(self, obj, tag, ctx):  # Is there a ctx or tag at this point?
@@ -114,6 +119,18 @@ def test_invalid_reserve_block_keys(tmp_path):
     BlockExtension.converters[0]._return_invalid_keys = True
     with pytest.raises(TypeError, match="unhashable type: .*"):
         af.write_to(fn)
+
+
+@with_extension(BlockExtension)
+def test_double_assign_block(tmp_path):
+    a = BlockData(b"abcdefg")
+    af = asdf.AsdfFile({"a": a})
+    fn = tmp_path / "test.asdf"
+    af.write_to(fn)
+    BlockExtension.converters[0]._double_assign_block = True
+    with pytest.raises(ValueError, match="block 0 is already assigned to a key"):
+        with asdf.open(fn):
+            pass
 
 
 class BlockDataCallback:
@@ -248,7 +265,8 @@ def test_seralization_context_block_access():
     assert len(af._blocks) == 1
 
     new_key = 26
-    sctx.assign_block_key(index, new_key)
+    with pytest.raises(ValueError, match="block 0 is already assigned to a key"):
+        sctx.assign_block_key(index, new_key)
     assert len(af._blocks) == 1
 
     arr2 = np.zeros(3, dtype="uint8")
