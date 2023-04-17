@@ -1363,6 +1363,11 @@ class AsdfFile:
                 ignore_implicit_conversion=self._ignore_implicit_conversion,
             )
             naf._tree = self.tree  # avoid an extra validate
+            pre_write_tree = {}
+            modified_keys = ["history", "asdf_library"]
+            for k in modified_keys:
+                if k in self.tree:
+                    pre_write_tree[k] = copy.deepcopy(self.tree[k])
             # copy over block storage and other settings
             block_to_key_mapping = {v: k for k, v in self._blocks._key_to_block_mapping.items()}
             # this creates blocks in the new block manager that correspond to blocks
@@ -1388,6 +1393,10 @@ class AsdfFile:
                     blk._used = True
                     blk._data_callback = b._data_callback
             naf._write_to(fd, **kwargs)
+            for k in modified_keys:
+                if k in self._tree:
+                    del self._tree[k]
+            self._tree.update(pre_write_tree)
 
     def _write_to(
         self,
