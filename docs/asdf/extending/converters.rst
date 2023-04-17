@@ -371,6 +371,10 @@ be the same key used during reading to allow ASDF to associate blocks and object
 during in-place updates). The second argument to ``SerializationContext.find_block_index``
 must be a callable function (returning a ndarray) that ASDF will call when it
 is time to write data to the portion of the file corresponding to this block.
+Note that it's possible this callback will be called multiple times during a
+write and ASDF will not cache the result. If the data is coming from a non-repeatable
+source (such as a non-seekable stream of bytes) the data should be cached prior
+to providing it to ASDF to allow ASDF to call the callback multiple times.
 
 A Converter that uses block storage must also define ``Converter.reserve_blocks``.
 ``Converter.reserve_blocks`` will be called during memory management to free
