@@ -81,7 +81,7 @@ class BlockManager:
 
         if block._data is not None or key is not None:
             if key is None:
-                key = id(util.get_array_base(block._data))
+                key = id(block._data)
                 self._data_to_block_mapping[key] = block
             else:
                 self._key_to_block_mapping[key] = block
