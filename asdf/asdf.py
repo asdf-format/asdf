@@ -1313,10 +1313,9 @@ class AsdfFile:
         produces something that, when saved, is a 100% valid YAML
         file.
         """
-        self._blocks.finish_reading_internal_blocks()
         self.resolve_references()
-        for b in list(self._blocks.blocks):
-            self._blocks.set_array_storage(b, "inline")
+        for b in self._blocks.blocks:
+            self.set_array_storage(b.data, "inline")
 
     def fill_defaults(self):
         """

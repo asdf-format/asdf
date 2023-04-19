@@ -397,7 +397,6 @@ def test_simple_table():
     ff.write_to(io.BytesIO())
 
 
-@pytest.mark.xfail(reason="resolve and inline is broken")
 def test_unicode_to_list(tmpdir):
     arr = np.array(["", "𐀠"], dtype="<U")
     tree = {"unicode": arr}

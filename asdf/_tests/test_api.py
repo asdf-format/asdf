@@ -266,7 +266,6 @@ def test_access_tree_outside_handler(tmp_path):
         repr(newf["random"])
 
 
-@pytest.mark.xfail(reason="resolve and inline is broken")
 def test_context_handler_resolve_and_inline(tmp_path):
     """
     This reproduces the issue reported in
