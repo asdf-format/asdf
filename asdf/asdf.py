@@ -12,7 +12,10 @@ from . import _display as display
 from . import _node_info as node_info
 from . import _version as version
 from . import constants, generic_io, reference, schema, treeutil, util, versioning, yamlutil
-from ._block import BlockManager, calculate_updated_layout
+from ._block import reader as block_reader
+from ._block import writer as block_writer
+from ._block.manager import Manager as BlockManager
+from ._block.options import Options as BlockOptions
 from ._helpers import validate_version
 from .config import config_context, get_config
 from .exceptions import (
@@ -151,7 +154,9 @@ class AsdfFile:
         self._fd = None
         self._closed = False
         self._external_asdf_by_uri = {}
-        self._blocks = BlockManager(self, copy_arrays=copy_arrays, lazy_load=lazy_load)
+        self._blocks = BlockManager()
+        self._blocks.lazy_load = lazy_load
+        self._blocks.memmap = not copy_arrays
         self._uri = uri
         if tree is None:
             # Bypassing the tree property here, to avoid validating
@@ -460,7 +465,6 @@ class AsdfFile:
         for external in self._external_asdf_by_uri.values():
             external.close()
         self._external_asdf_by_uri.clear()
-        self._blocks.close()
 
     def copy(self):
         return self.__class__(
@@ -660,8 +664,9 @@ class AsdfFile:
 
             - ``inline``: Store the data as YAML inline in the tree.
         """
-        block = self._blocks[arr]
-        self._blocks.set_array_storage(block, array_storage)
+        options = self._blocks.options.get_options(arr)
+        options.storage_type = array_storage
+        self._blocks.options.set_options(arr, options)
 
     def get_array_storage(self, arr):
         """
@@ -671,7 +676,7 @@ class AsdfFile:
         ----------
         arr : numpy.ndarray
         """
-        return self._blocks[arr].array_storage
+        return self._blocks.options.get_options(arr).storage_type
 
     def set_array_compression(self, arr, compression, **compression_kwargs):
         """
@@ -699,8 +704,9 @@ class AsdfFile:
               If there is no prior file, acts as None.
 
         """
-        self._blocks[arr].output_compression = compression
-        self._blocks[arr].output_compression_kwargs = compression_kwargs
+        options = self._blocks.options.get_options(arr)
+        options.compression = compression
+        options.compression_kwargs = compression_kwargs
 
     def get_array_compression(self, arr):
         """
@@ -714,11 +720,11 @@ class AsdfFile:
         -------
         compression : str or None
         """
-        return self._blocks[arr].output_compression
+        return self._blocks.options.get_options(arr).compression
 
     def get_array_compression_kwargs(self, arr):
         """ """
-        return self._blocks[arr].output_compression_kwargs
+        return self._blocks.options.get_options(arr).compression_kwargs
 
     @classmethod
     def _parse_header_line(cls, line):
@@ -821,8 +827,8 @@ class AsdfFile:
                 self.extensions = extensions
 
             yaml_token = fd.read(4)
-            has_blocks = False
             tree = None
+            read_blocks = []
             if yaml_token == b"%YAM":
                 reader = fd.reader_until(
                     constants.YAML_END_MARKER_REGEX,
@@ -842,12 +848,18 @@ class AsdfFile:
                 # now, but we don't do anything special with it until
                 # after the blocks have been read
                 tree = yamlutil.load_tree(reader)
-                has_blocks = fd.seek_until(constants.BLOCK_MAGIC, 4, include=True, exception=False)
+                # has_blocks = fd.seek_until(constants.BLOCK_MAGIC, 4, include=True, exception=False)
+                read_blocks = block_reader.read_blocks(fd, self._blocks.memmap, self._blocks.lazy_load)
             elif yaml_token == constants.BLOCK_MAGIC:
-                has_blocks = True
+                # this file has only blocks
+                raise NotImplementedError("Support for block only file does not yet exist")
+                # since we're after the magic, if seekable, just reset
+                # if not seekable, read first block, then read the reset serially, add them all up
             elif yaml_token != b"":
                 msg = "ASDF file appears to contain garbage after header."
                 raise OSError(msg)
+
+            self._blocks.blocks._items = read_blocks
 
             if tree is None:
                 # At this point the tree should be tagged, but we want it to be
@@ -855,10 +867,6 @@ class AsdfFile:
                 # ASDF Standard version.  We're using custom_tree_to_tagged_tree
                 # to select the correct tag for us.
                 tree = yamlutil.custom_tree_to_tagged_tree(AsdfObject(), self)
-
-            if has_blocks:
-                self._blocks.read_internal_blocks(fd, past_magic=True, validate_checksums=validate_checksums)
-                self._blocks.read_block_index(fd, self)
 
             tree = reference.find_references(tree, self)
 
@@ -930,7 +938,9 @@ class AsdfFile:
         if len(tree):
             serialization_context = self._create_serialization_context()
 
-            compression_extensions = self._blocks.get_output_compression_extensions()
+            # TODO fix output compression extensions
+            # compression_extensions = self._blocks.get_output_compression_extensions()
+            compression_extensions = []
             for ext in compression_extensions:
                 serialization_context._mark_extension_used(ext)
 
@@ -969,16 +979,26 @@ class AsdfFile:
 
         # This is where we'd do some more sophisticated block
         # reorganization, if necessary
-        self._blocks.finalize(self)
+        # self._blocks.finalize(self)
 
         self._tree["asdf_library"] = get_asdf_library_info()
 
     def _serial_write(self, fd, pad_blocks, include_block_index):
+        self._blocks._write_blocks = []
         self._write_tree(self._tree, fd, pad_blocks)
-        self._blocks.write_internal_blocks_serial(fd, pad_blocks)
-        self._blocks.write_external_blocks(fd.uri, pad_blocks)
-        if include_block_index:
-            self._blocks.write_block_index(fd, self)
+        if len(self._blocks._write_blocks):
+            block_writer.write_blocks(
+                fd,
+                self._blocks._write_blocks,
+                pad_blocks,
+                streamed_block=None,  # TODO streamed block
+                write_index=include_block_index,
+            )
+        # TODO external blocks
+        # self._blocks.write_internal_blocks_serial(fd, pad_blocks)
+        # self._blocks.write_external_blocks(fd.uri, pad_blocks)
+        # if include_block_index:
+        #    self._blocks.write_block_index(fd, self)
 
     def _random_write(self, fd, pad_blocks, include_block_index):
         self._write_tree(self._tree, fd, False)
@@ -1055,91 +1075,91 @@ class AsdfFile:
         """
         raise NotImplementedError("broken update")
 
-        with config_context() as config:
-            if all_array_storage is not NotSet:
-                config.all_array_storage = all_array_storage
-            if all_array_compression is not NotSet:
-                config.all_array_compression = all_array_compression
-            if compression_kwargs is not NotSet:
-                config.all_array_compression_kwargs = compression_kwargs
+        # with config_context() as config:
+        #     if all_array_storage is not NotSet:
+        #         config.all_array_storage = all_array_storage
+        #     if all_array_compression is not NotSet:
+        #         config.all_array_compression = all_array_compression
+        #     if compression_kwargs is not NotSet:
+        #         config.all_array_compression_kwargs = compression_kwargs
 
-            fd = self._fd
+        #     fd = self._fd
 
-            if fd is None:
-                msg = "Can not update, since there is no associated file"
-                raise ValueError(msg)
+        #     if fd is None:
+        #         msg = "Can not update, since there is no associated file"
+        #         raise ValueError(msg)
 
-            if not fd.writable():
-                msg = (
-                    "Can not update, since associated file is read-only. Make "
-                    "sure that the AsdfFile was opened with mode='rw' and the "
-                    "underlying file handle is writable."
-                )
-                raise OSError(msg)
+        #     if not fd.writable():
+        #         msg = (
+        #             "Can not update, since associated file is read-only. Make "
+        #             "sure that the AsdfFile was opened with mode='rw' and the "
+        #             "underlying file handle is writable."
+        #         )
+        #         raise OSError(msg)
 
-            if version is not None:
-                self.version = version
+        #     if version is not None:
+        #         self.version = version
 
-            if config.all_array_storage == "external":
-                # If the file is fully exploded, there's no benefit to
-                # update, so just use write_to()
-                self.write_to(fd)
-                fd.truncate()
-                return
+        #     if config.all_array_storage == "external":
+        #         # If the file is fully exploded, there's no benefit to
+        #         # update, so just use write_to()
+        #         self.write_to(fd)
+        #         fd.truncate()
+        #         return
 
-            if not fd.seekable():
-                msg = "Can not update, since associated file is not seekable"
-                raise OSError(msg)
+        #     if not fd.seekable():
+        #         msg = "Can not update, since associated file is not seekable"
+        #         raise OSError(msg)
 
-            self._blocks.finish_reading_internal_blocks()
+        #     self._blocks.finish_reading_internal_blocks()
 
-            # flush all pending memmap writes
-            if fd.can_memmap():
-                fd.flush_memmap()
+        #     # flush all pending memmap writes
+        #     if fd.can_memmap():
+        #         fd.flush_memmap()
 
-            self._pre_write(fd)
+        #     self._pre_write(fd)
 
-            try:
-                fd.seek(0)
+        #     try:
+        #         fd.seek(0)
 
-                if not self._blocks.has_blocks_with_offset():
-                    # If we don't have any blocks that are being reused, just
-                    # write out in a serial fashion.
-                    self._serial_write(fd, pad_blocks, include_block_index)
-                    fd.truncate()
-                    return
+        #         if not self._blocks.has_blocks_with_offset():
+        #             # If we don't have any blocks that are being reused, just
+        #             # write out in a serial fashion.
+        #             self._serial_write(fd, pad_blocks, include_block_index)
+        #             fd.truncate()
+        #             return
 
-                # Estimate how big the tree will be on disk by writing the
-                # YAML out in memory.  Since the block indices aren't yet
-                # known, we have to count the number of block references and
-                # add enough space to accommodate the largest block number
-                # possible there.
-                tree_serialized = io.BytesIO()
-                self._write_tree(self._tree, tree_serialized, pad_blocks=False)
-                n_internal_blocks = len(self._blocks._internal_blocks)
+        #         # Estimate how big the tree will be on disk by writing the
+        #         # YAML out in memory.  Since the block indices aren't yet
+        #         # known, we have to count the number of block references and
+        #         # add enough space to accommodate the largest block number
+        #         # possible there.
+        #         tree_serialized = io.BytesIO()
+        #         self._write_tree(self._tree, tree_serialized, pad_blocks=False)
+        #         n_internal_blocks = len(self._blocks._internal_blocks)
 
-                serialized_tree_size = tree_serialized.tell() + constants.MAX_BLOCKS_DIGITS * n_internal_blocks
+        #         serialized_tree_size = tree_serialized.tell() + constants.MAX_BLOCKS_DIGITS * n_internal_blocks
 
-                if not calculate_updated_layout(self._blocks, serialized_tree_size, pad_blocks, fd.block_size):
-                    # If we don't have any blocks that are being reused, just
-                    # write out in a serial fashion.
-                    self._serial_write(fd, pad_blocks, include_block_index)
-                    fd.truncate()
-                    return
+        #         if not calculate_updated_layout(self._blocks, serialized_tree_size, pad_blocks, fd.block_size):
+        #             # If we don't have any blocks that are being reused, just
+        #             # write out in a serial fashion.
+        #             self._serial_write(fd, pad_blocks, include_block_index)
+        #             fd.truncate()
+        #             return
 
-                fd.seek(0)
-                self._random_write(fd, pad_blocks, include_block_index)
-                fd.flush()
-            finally:
-                self._post_write(fd)
-                # close memmaps so they will regenerate
-                if fd.can_memmap():
-                    fd.close_memmap()
-                    # also clean any memmapped blocks
-                    for b in self._blocks._internal_blocks:
-                        if b._memmapped:
-                            b._memmapped = False
-                            b._data = None
+        #         fd.seek(0)
+        #         self._random_write(fd, pad_blocks, include_block_index)
+        #         fd.flush()
+        #     finally:
+        #         self._post_write(fd)
+        #         # close memmaps so they will regenerate
+        #         if fd.can_memmap():
+        #             fd.close_memmap()
+        #             # also clean any memmapped blocks
+        #             for b in self._blocks._internal_blocks:
+        #                 if b._memmapped:
+        #                     b._memmapped = False
+        #                     b._data = None
 
     def write_to(
         self,
@@ -1213,77 +1233,6 @@ class AsdfFile:
             Update the ASDF Standard version of this AsdfFile before
             writing.
         """
-        with config_context() as config:
-            if all_array_storage is not NotSet:
-                config.all_array_storage = all_array_storage
-            if all_array_compression is not NotSet:
-                config.all_array_compression = all_array_compression
-            if compression_kwargs is not NotSet:
-                config.all_array_compression_kwargs = compression_kwargs
-
-            used_blocks = self._blocks._find_used_blocks(self.tree, self, remove=False)
-
-            naf = AsdfFile(
-                {},
-                uri=self._uri,
-                extensions=self.extensions,
-                version=self.version,
-                ignore_version_mismatch=self._ignore_version_mismatch,
-                ignore_unrecognized_tag=self._ignore_unrecognized_tag,
-                ignore_implicit_conversion=self._ignore_implicit_conversion,
-            )
-            naf._tree = copy.copy(self.tree)  # avoid an extra validate
-
-            # deep copy keys that will be modified during write
-            modified_keys = ["history", "asdf_library"]
-            for k in modified_keys:
-                if k in self.tree:
-                    naf._tree[k] = copy.deepcopy(self.tree[k])
-
-            # copy over block storage and other settings
-            block_to_key_mapping = {v: k for k, v in self._blocks._key_to_block_mapping.items()}
-            # this creates blocks in the new block manager that correspond to blocks
-            # in the original file
-            for b in self._blocks.blocks:
-                if b not in used_blocks:
-                    continue
-                if b in self._blocks._streamed_blocks and b._data is None:
-                    # streamed blocks might not have data
-                    # add a streamed block to naf
-                    blk = naf._blocks.get_streamed_block()
-                    # mark this block as used so it doesn't get removed
-                    blk._used = True
-                elif b._data is not None or b._fd is not None:  # this block has data
-                    arr = b.data
-                    blk = naf._blocks[arr]
-                    blk._used = True
-                    naf.set_array_storage(arr, b.array_storage)
-                    naf.set_array_compression(arr, b.output_compression, **b.output_compression_kwargs)
-                else:  # this block does not have data
-                    key = block_to_key_mapping[b]
-                    blk = naf._blocks.find_or_create_block(key)
-                    blk._used = True
-                    blk._data_callback = b._data_callback
-            naf._write_to(
-                fd,
-                all_array_storage=all_array_storage,
-                all_array_compression=all_array_compression,
-                compression_kwargs=compression_kwargs,
-                pad_blocks=pad_blocks,
-                include_block_index=include_block_index,
-                version=version,
-            )
-
-    def _write_to(
-        self,
-        fd,
-        all_array_storage=NotSet,
-        all_array_compression=NotSet,
-        compression_kwargs=NotSet,
-        pad_blocks=False,
-        include_block_index=True,
-        version=None,
-    ):
         with config_context() as config:
             if all_array_storage is not NotSet:
                 config.all_array_storage = all_array_storage

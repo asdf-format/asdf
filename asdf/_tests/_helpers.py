@@ -23,7 +23,6 @@ import yaml
 
 import asdf
 from asdf import generic_io, versioning
-from asdf._block import Block
 from asdf._resolver import Resolver, ResolverChain
 from asdf.asdf import AsdfFile, get_asdf_library_info
 from asdf.constants import YAML_TAG_PREFIX
@@ -264,8 +263,8 @@ def _assert_roundtrip_tree(
         ff = asdf.open(buff, extensions=extensions, copy_arrays=True, lazy_load=False)
         # Ensure that all the blocks are loaded
         for block in ff._blocks._internal_blocks:
-            assert isinstance(block, Block)
-            assert block._data is not None
+            # assert isinstance(block, Block)
+            assert block._data is not None and not callable(block._data)
     # The underlying file is closed at this time and everything should still work
     assert_tree_match(tree, ff.tree, ff, funcname=tree_match_func)
     if asdf_check_func:
@@ -275,8 +274,8 @@ def _assert_roundtrip_tree(
     AsdfFile(tree, extensions=extensions, **init_options).write_to(fname, **write_options)
     with asdf.open(fname, mode="rw", extensions=extensions, copy_arrays=False, lazy_load=False) as ff:
         for block in ff._blocks._internal_blocks:
-            assert isinstance(block, Block)
-            assert block._data is not None
+            # assert isinstance(block, Block)
+            assert block._data is not None and not callable(block._data)
         assert_tree_match(tree, ff.tree, ff, funcname=tree_match_func)
         if asdf_check_func:
             asdf_check_func(ff)

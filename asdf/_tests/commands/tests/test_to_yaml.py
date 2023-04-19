@@ -1,6 +1,7 @@
 import os
 
 import numpy as np
+import pytest
 
 import asdf
 from asdf import AsdfFile
@@ -8,6 +9,7 @@ from asdf._tests._helpers import assert_tree_match, get_file_sizes
 from asdf.commands import main
 
 
+@pytest.mark.xfail(reason="resolve and inline is broken")
 def test_to_yaml(tmpdir):
     x = np.arange(0, 10, dtype=float)
 

@@ -1,4 +1,3 @@
-import mmap
 import sys
 
 import numpy as np
@@ -6,6 +5,7 @@ from numpy import ma
 
 from asdf import _types, util
 from asdf._jsonschema import ValidationError
+from asdf.config import config_context
 
 _datatype_names = {
     "int8": "i1",
@@ -242,7 +242,8 @@ class NDArrayType(_types._AsdfType):
         if isinstance(source, list):
             self._array = inline_data_asarray(source, dtype)
             self._array = self._apply_mask(self._array, self._mask)
-            self._block = asdffile._blocks.add_inline(self._array)
+            # self._block = asdffile._blocks.add_inline(self._array)
+            asdffile.set_array_storage(self._array, "inline")
             if shape is not None and (
                 (shape[0] == "*" and self._array.shape[1:] != tuple(shape[1:])) or (self._array.shape != tuple(shape))
             ):
@@ -263,15 +264,19 @@ class NDArrayType(_types._AsdfType):
         # closed and replaced.  We need to check here and re-generate
         # the array if necessary, otherwise we risk segfaults when
         # memory mapping.
-        if self._array is not None:
-            base = util.get_array_base(self._array)
-            if isinstance(base, np.memmap) and isinstance(base.base, mmap.mmap) and base.base.closed:
-                self._array = None
+        # if self._array is not None:
+        #     base = util.get_array_base(self._array)
+        #     if isinstance(base, np.memmap) and isinstance(base.base, mmap.mmap) and base.base.closed:
+        #         self._array = None
 
         if self._array is None:
             block = self.block
-            shape = self.get_actual_shape(self._shape, self._strides, self._dtype, len(block))
+            # shape = self.get_actual_shape(self._shape, self._strides, self._dtype, len(block))
+            # TODO streaming blocks have 0 data size
+            shape = self.get_actual_shape(self._shape, self._strides, self._dtype, block.header["data_size"])
 
+            if callable(block._data):
+                block._data = block.data
             self._array = np.ndarray(shape, self._dtype, block.data, self._offset, self._strides, self._order)
             self._array = self._apply_mask(self._array, self._mask)
         return self._array
@@ -338,7 +343,8 @@ class NDArrayType(_types._AsdfType):
     @property
     def block(self):
         if self._block is None:
-            self._block = self._asdffile._blocks.get_block(self._source)
+            self._block = self._asdffile._blocks.blocks[self._source]
+            # self._block = self._asdffile._blocks.get_block(self._source)
         return self._block
 
     @property
@@ -346,7 +352,8 @@ class NDArrayType(_types._AsdfType):
         if self._shape is None:
             return self.__array__().shape
         if "*" in self._shape:
-            return tuple(self.get_actual_shape(self._shape, self._strides, self._dtype, len(self.block)))
+            # return tuple(self.get_actual_shape(self._shape, self._strides, self._dtype, len(self.block)))
+            return tuple(self.get_actual_shape(self._shape, self._strides, self._dtype, self.block.header["data_size"]))
         return tuple(self._shape)
 
     @property
@@ -451,7 +458,23 @@ class NDArrayType(_types._AsdfType):
 
         shape = data.shape
 
-        block = ctx._blocks.find_or_create_block_for_array(data)
+        options = ctx._blocks.options.get_options(data)
+        with config_context() as cfg:
+            if cfg.all_array_storage is not None:
+                options.storage_type = cfg.all_array_storage
+            if cfg.all_array_compression != "input":
+                options.compression = cfg.all_array_compression
+                options.compression_kwargs = cfg.all_array_compression_kwargs
+            inline_threshold = cfg.array_inline_threshold
+
+        # block = ctx._blocks.find_or_create_block_for_array(data)
+        # foo
+        if inline_threshold is not None and options.storage_type in ("inline", "internal"):
+            if data.size < inline_threshold:
+                options.storage_type = "inline"
+            else:
+                options.storage_type = "internal"
+        ctx._blocks.options.set_options(data, options)
 
         # Compute the offset relative to the base array and not the
         # block data, in case the block is compressed.
@@ -460,26 +483,31 @@ class NDArrayType(_types._AsdfType):
         strides = None if data.flags.c_contiguous else data.strides
         dtype, byteorder = numpy_dtype_to_asdf_datatype(
             data.dtype,
-            include_byteorder=(block.array_storage != "inline"),
+            # include_byteorder=(block.array_storage != "inline"),
+            include_byteorder=(options.storage_type != "inline"),
         )
 
         result = {}
 
         result["shape"] = list(shape)
-        if block.array_storage == "streamed":
+        # if block.array_storage == "streamed":
+        if options.storage_type == "streamed":
             result["shape"][0] = "*"
 
-        if block.array_storage == "inline":
+        # if block.array_storage == "inline":
+        if options.storage_type == "inline":
             listdata = numpy_array_to_list(data)
             result["data"] = listdata
             result["datatype"] = dtype
 
         else:
             result["shape"] = list(shape)
-            if block.array_storage == "streamed":
+            if options.storage_type == "streamed":
                 result["shape"][0] = "*"
 
-            result["source"] = ctx._blocks.get_source(block)
+            # result["source"] = ctx._blocks.get_source(block)
+            # convert data to byte array
+            result["source"] = ctx._blocks.make_write_block(base, options)
             result["datatype"] = dtype
             result["byteorder"] = byteorder
 
@@ -490,8 +518,10 @@ class NDArrayType(_types._AsdfType):
                 result["strides"] = list(strides)
 
         if isinstance(data, ma.MaskedArray) and np.any(data.mask):
-            if block.array_storage == "inline":
-                ctx._blocks.set_array_storage(ctx._blocks[data.mask], "inline")
+            # if block.array_storage == "inline":
+            if options.storage_type == "inline":
+                # ctx._blocks.set_array_storage(ctx._blocks[data.mask], "inline")
+                ctx.set_array_storage(data.mask, "inline")
 
             result["mask"] = data.mask
 
@@ -538,13 +568,13 @@ class NDArrayType(_types._AsdfType):
         else:
             cls._assert_equality(old, new, assert_allclose)
 
-    @classmethod
-    def copy_to_new_asdf(cls, node, asdffile):
-        if isinstance(node, NDArrayType):
-            array = node._make_array()
-            asdffile._blocks.set_array_storage(asdffile._blocks[array], node.block.array_storage)
-            return node._make_array()
-        return node
+    # @classmethod
+    # def copy_to_new_asdf(cls, node, asdffile):
+    #    if isinstance(node, NDArrayType):
+    #        array = node._make_array()
+    #        asdffile._blocks.set_array_storage(asdffile._blocks[array], node.block.array_storage)
+    #        return node._make_array()
+    #    return node
 
 
 def _make_operation(name):

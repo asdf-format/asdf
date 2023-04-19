@@ -223,7 +223,17 @@ def read_block_index(fd, offset=None):
     if buff != constants.INDEX_HEADER:
         msg = "Failed to read block index header at offset {offset}"
         raise OSError(msg)
-    return yaml.load(fd.read(-1), yaml.SafeLoader)
+    try:
+        block_index = yaml.load(fd.read(-1), yaml.SafeLoader)
+    except yaml.parser.ParserError:
+        raise OSError("Failed to parse block index as yaml")
+    if (
+        not isinstance(block_index, list)
+        or any(not isinstance(v, int) for v in block_index)
+        or block_index != sorted(block_index)
+    ):
+        raise OSError("Invalid block index")
+    return block_index
 
 
 def write_block_index(fd, offsets, offset=None, yaml_version=None):

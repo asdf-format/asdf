@@ -1,8 +1,12 @@
 from asdf import compression as mcompression
+from asdf.config import config_context
 
 
 class Options:
-    def __init__(self, storage_type, compression_type=None, compression_kwargs=None):
+    def __init__(self, storage_type=None, compression_type=None, compression_kwargs=None):
+        if storage_type is None:
+            with config_context() as cfg:
+                storage_type = cfg.all_array_storage or "internal"
         self._storage_type = None
         self._compression = None
         self._compression_kwargs = None
@@ -31,7 +35,7 @@ class Options:
 
     @compression.setter
     def compression(self, compression):
-        msg = f"Invalid compression {compression}"
+        msg = f"Invalid compression type: {compression}"
         if compression == "input":
             # "input" compression will validate as the ASDF compression module made
             # some assumptions about availability of information (that the input block
