@@ -68,7 +68,7 @@ def _roundtrip(tmp_path, tree, compression=None, write_options=None, read_option
 def test_invalid_compression():
     tree = _get_large_tree()
     ff = asdf.AsdfFile(tree)
-    with pytest.raises(ValueError, match=r"Supported compression types are: .*, not 'foo'"):
+    with pytest.raises(ValueError, match=r"Invalid compression type: foo"):
         ff.set_array_compression(tree["science_data"], "foo")
     with pytest.raises(ValueError, match=r"Unknown compression type: .*"):
         compression._get_compressor("foo")

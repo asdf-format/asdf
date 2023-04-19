@@ -3,11 +3,13 @@ import copy
 import pytest
 
 from asdf._block.options import Options
+from asdf.config import config_context
 
 valid_storage_types = ["internal", "external", "streamed", "inline"]
+valid_default_storage_types = [st for st in valid_storage_types if st != "streamed"]
 valid_compression_types = [None, "zlib", "bzp2", "lz4", ""]
 
-invalid_storage_types = ["foo", None]
+invalid_storage_types = ["foo", "bar"]
 invalid_compression_types = ["input", "foo"]
 
 
@@ -15,6 +17,14 @@ invalid_compression_types = ["input", "foo"]
 def test_set_storage_init(storage):
     o = Options(storage)
     assert o.storage_type == storage
+
+
+@pytest.mark.parametrize("storage", valid_default_storage_types)
+def test_default_storage_init(storage):
+    with config_context() as cfg:
+        cfg.all_array_storage = storage
+        o = Options()
+        assert o.storage_type == storage
 
 
 @pytest.mark.parametrize("storage", valid_storage_types)

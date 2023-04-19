@@ -9,7 +9,7 @@ class ReadBlock:
     def __init__(self, offset, fd, memmap, lazy_load, header=None, data_offset=None, data=None):
         self.offset = offset
         self._fd = weakref.ref(fd)
-        self.header = header
+        self._header = header
         self.data_offset = data_offset
         self._data = data
         # TODO alternative to passing these down?
@@ -29,7 +29,7 @@ class ReadBlock:
         if fd is None or fd.is_closed():
             msg = "Attempt to load block from closed file"
             raise OSError(msg)
-        _, self.header, self.data_offset, self._data = bio.read_block(
+        _, self._header, self.data_offset, self._data = bio.read_block(
             fd, offset=self.offset, memmap=self.memmap, lazy_load=self.lazy_load
         )
 
@@ -40,6 +40,12 @@ class ReadBlock:
         if callable(self._data):
             return self._data()
         return self._data
+
+    @property
+    def header(self):
+        if not self.loaded:
+            self.load()
+        return self._header
 
     def reset(self, fd, offset):
         self._fd = weakref.ref(fd)
@@ -101,7 +107,12 @@ def read_blocks(fd, memmap=False, lazy_load=False):
         return read_blocks_serially(fd, memmap, lazy_load)
 
     # setup empty blocks
-    block_index = bio.read_block_index(fd, index_offset)
+    try:
+        block_index = bio.read_block_index(fd, index_offset)
+    except OSError:
+        # failed to read block index, fall back to serial reading
+        fd.seek(starting_offset)
+        return read_blocks_serially(fd, memmap, lazy_load)
     # skip magic for each block
     blocks = [ReadBlock(offset + 4, fd, memmap, lazy_load) for offset in block_index]
     try:
