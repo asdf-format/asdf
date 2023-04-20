@@ -40,11 +40,13 @@ class Stream(ndarray.NDArrayType):
 
     @classmethod
     def from_tree(cls, data, ctx):
-        return ndarray.NDArrayType.from_tree(data, ctx)
+        # this is never called because tags always trigger loading with NDArrayType
+        raise NotImplementedError("never called")
 
     @classmethod
     def to_tree(cls, data, ctx):
-        ctx._blocks.get_streamed_block()
+        # TODO previously, stream never passed on data?
+        ctx._blocks.set_streamed_block(data._array)
 
         result = {}
         result["source"] = -1

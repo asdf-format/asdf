@@ -81,6 +81,13 @@ class BlockOptions(store.Store):
         return options
 
     def set_options(self, array, options):
+        if options.storage_type == "streamed":
+            for d in self._by_id.values():
+                for opt in d.values():
+                    if opt.storage_type == "streamed":
+                        if opt is options:
+                            continue
+                        raise ValueError("Can not add second streaming block")
         base = util.get_array_base(array)
         self.assign_object(base, options)
 
@@ -95,8 +102,9 @@ class Manager:
             self.blocks = self.options._read_blocks
         else:
             self.blocks = read_blocks
-        self._write_blocks = []
         # TODO copy options and read_blocks on start of write
+        self._write_blocks = []
+        self._streamed_block = None
 
     def make_write_block(self, data, options):
         # first, look for an existing block
@@ -108,6 +116,11 @@ class Manager:
         # data_bytes = np.ndarray(-1, np.uint8, data.ravel(order='K').data)
         # self._write_blocks.append(WriteBlock(data_bytes, options.compression, options.compression_kwargs))
         return len(self._write_blocks) - 1
+
+    def set_streamed_block(self, data):
+        if self._streamed_block is not None and data is not self._streamed_block.data:
+            raise ValueError("Can not add second streaming block")
+        self._streamed_block = WriteBlock(data)
 
     # cludges for tests
     @property
