@@ -985,15 +985,18 @@ class AsdfFile:
 
     def _serial_write(self, fd, pad_blocks, include_block_index):
         self._blocks._write_blocks = []
+        self._blocks._streamed_block = None
         self._write_tree(self._tree, fd, pad_blocks)
-        if len(self._blocks._write_blocks):
+        if len(self._blocks._write_blocks) or self._blocks._streamed_block:
             block_writer.write_blocks(
                 fd,
                 self._blocks._write_blocks,
                 pad_blocks,
-                streamed_block=None,  # TODO streamed block
+                streamed_block=self._blocks._streamed_block,
                 write_index=include_block_index,
             )
+        self._blocks._write_blocks = []
+        self._blocks._streamed_block = None
         # TODO external blocks
         # self._blocks.write_internal_blocks_serial(fd, pad_blocks)
         # self._blocks.write_external_blocks(fd.uri, pad_blocks)

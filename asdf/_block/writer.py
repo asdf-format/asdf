@@ -19,7 +19,10 @@ class WriteBlock:
 
     @property
     def data_bytes(self):
-        return np.ndarray(-1, np.uint8, self.data.ravel(order="K").data)
+        data = self.data
+        if data is not None:
+            return np.ndarray(-1, np.uint8, data.ravel(order="K").data)
+        return np.ndarray(0, np.uint8)
 
 
 def write_blocks(fd, blocks, padding=False, streamed_block=None, write_index=True):

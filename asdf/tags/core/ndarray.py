@@ -271,12 +271,17 @@ class NDArrayType(_types._AsdfType):
 
         if self._array is None:
             block = self.block
-            # shape = self.get_actual_shape(self._shape, self._strides, self._dtype, len(block))
-            # TODO streaming blocks have 0 data size
-            shape = self.get_actual_shape(self._shape, self._strides, self._dtype, block.header["data_size"])
 
             if callable(block._data):
                 block._data = block.data
+
+            # streaming blocks have 0 data size
+            shape = self.get_actual_shape(
+                self._shape,
+                self._strides,
+                self._dtype,
+                block.header["data_size"] or block._data.size,
+            )
             self._array = np.ndarray(shape, self._dtype, block.data, self._offset, self._strides, self._order)
             self._array = self._apply_mask(self._array, self._mask)
         return self._array
@@ -344,6 +349,11 @@ class NDArrayType(_types._AsdfType):
     def block(self):
         if self._block is None:
             self._block = self._asdffile._blocks.blocks[self._source]
+            if self._source == -1:
+                if callable(self._block._data):
+                    self._block._data = self._block.data
+                if self._asdffile.get_array_storage(self._block.data) != "streamed":
+                    self._asdffile.set_array_storage(self._block.data, "streamed")
             # self._block = self._asdffile._blocks.get_block(self._source)
         return self._block
 
@@ -353,7 +363,16 @@ class NDArrayType(_types._AsdfType):
             return self.__array__().shape
         if "*" in self._shape:
             # return tuple(self.get_actual_shape(self._shape, self._strides, self._dtype, len(self.block)))
-            return tuple(self.get_actual_shape(self._shape, self._strides, self._dtype, self.block.header["data_size"]))
+            if not self.block.header["data_size"]:
+                self._make_array()
+            return tuple(
+                self.get_actual_shape(
+                    self._shape,
+                    self._strides,
+                    self._dtype,
+                    self.block.header["data_size"] or self.block._data.size,
+                )
+            )
         return tuple(self._shape)
 
     @property
@@ -490,7 +509,6 @@ class NDArrayType(_types._AsdfType):
         result = {}
 
         result["shape"] = list(shape)
-        # if block.array_storage == "streamed":
         if options.storage_type == "streamed":
             result["shape"][0] = "*"
 
@@ -507,7 +525,11 @@ class NDArrayType(_types._AsdfType):
 
             # result["source"] = ctx._blocks.get_source(block)
             # convert data to byte array
-            result["source"] = ctx._blocks.make_write_block(base, options)
+            if options.storage_type == "streamed":
+                ctx._blocks.set_streamed_block(base)
+                result["source"] = -1
+            else:
+                result["source"] = ctx._blocks.make_write_block(base, options)
             result["datatype"] = dtype
             result["byteorder"] = byteorder
 
