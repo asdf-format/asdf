@@ -1,8 +1,10 @@
-from asdf import constants, util
+import os
+
+from asdf import constants, generic_io, util
 
 from . import store
 from .options import Options
-from .writer import WriteBlock
+from .writer import WriteBlock, write_blocks
 
 
 class ReadBlocks(store.LinearStore):
@@ -95,6 +97,30 @@ class BlockOptions(store.Store):
     # TODO make an 'update_options'
 
 
+def make_external_uri(uri, index):
+    if uri is None:
+        uri = ""
+    parts = list(util.patched_urllib_parse.urlparse(uri))
+    path = parts[2]
+    dirname, filename = os.path.split(path)
+    filename = os.path.splitext(filename)[0] + f"{index:04d}.asdf"
+    return filename
+    # path = os.path.join(dirname, filename)
+    # parts[2] = path
+    # return util.patched_urllib_parse.urlunparse(parts)
+
+
+def resolve_external_uri(uri, relative):
+    if uri is None:
+        uri = ""
+    parts = list(util.patched_urllib_parse.urlparse(uri))
+    path = parts[2]
+    dirname, filename = os.path.split(path)
+    path = os.path.join(dirname, relative)
+    parts[2] = path
+    return util.patched_urllib_parse.urlunparse(parts)
+
+
 class Manager:
     def __init__(self, read_blocks=None):
         self.options = BlockOptions(read_blocks)
@@ -104,9 +130,38 @@ class Manager:
             self.blocks = read_blocks
         # TODO copy options and read_blocks on start of write
         self._write_blocks = []
+        self._external_write_blocks = []
         self._streamed_block = None
+        self._write_fd = None
+
+    def _write_external_blocks(self):
+        from asdf import AsdfFile
+
+        if not len(self._external_write_blocks):
+            return
+
+        if self._write_fd.uri is None:
+            raise ValueError("Can't write external blocks, since URI of main file is unknown.")
+
+        for blk in self._external_write_blocks:
+            uri = resolve_external_uri(self._write_fd.uri, blk._uri)
+            af = AsdfFile()
+            with generic_io.get_file(uri, mode="w") as f:
+                af.write_to(f, include_block_index=False)
+                write_blocks(f, [blk])
 
     def make_write_block(self, data, options):
+        if options.storage_type == "external":
+            for index, blk in enumerate(self._external_write_blocks):
+                if blk._data is data:
+                    # this external uri is already ready to go
+                    return blk._uri
+            # need to set up new external block
+            index = len(self._external_write_blocks)
+            blk = WriteBlock(data, options.compression, options.compression_kwargs)
+            blk._uri = make_external_uri(self._write_fd.uri, index)
+            self._external_write_blocks.append(blk)
+            return blk._uri
         # first, look for an existing block
         for index, blk in enumerate(self._write_blocks):
             if blk._data is data:

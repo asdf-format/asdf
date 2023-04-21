@@ -1100,6 +1100,7 @@ class AsdfFile:
 
     def _serial_write(self, fd, pad_blocks, include_block_index):
         self._blocks._write_blocks = []
+        self._blocks._external_write_blocks = []
         self._blocks._streamed_block = None
         self._write_tree(self._tree, fd, pad_blocks)
         if len(self._blocks._write_blocks) or self._blocks._streamed_block:
@@ -1110,7 +1111,10 @@ class AsdfFile:
                 streamed_block=self._blocks._streamed_block,
                 write_index=include_block_index,
             )
+        if len(self._blocks._external_write_blocks):
+            self._blocks._write_external_blocks()
         self._blocks._write_blocks = []
+        self._blocks._external_write_blocks = []
         self._blocks._streamed_block = None
         # TODO external blocks
         # self._blocks.write_internal_blocks_serial(fd, pad_blocks)
@@ -1371,11 +1375,7 @@ class AsdfFile:
                 self.version = version
 
             with generic_io.get_file(fd, mode="w") as fd:
-                # TODO: This is not ideal: we really should pass the URI through
-                # explicitly to wherever it is required instead of making it an
-                # attribute of the AsdfFile.
-                if self._uri is None:
-                    self._uri = fd.uri
+                self._blocks._write_fd = fd
                 self._pre_write(fd)
 
                 try:
@@ -1383,6 +1383,7 @@ class AsdfFile:
                     fd.flush()
                 finally:
                     self._post_write(fd)
+                self._blocks._write_fd = None
 
     def find_references(self):
         """
