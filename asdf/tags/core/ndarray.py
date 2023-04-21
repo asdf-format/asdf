@@ -348,13 +348,15 @@ class NDArrayType(_types._AsdfType):
     @property
     def block(self):
         if self._block is None:
-            self._block = self._asdffile._blocks.blocks[self._source]
-            if self._source == -1:
-                if callable(self._block._data):
-                    self._block._data = self._block.data
-                if self._asdffile.get_array_storage(self._block.data) != "streamed":
-                    self._asdffile.set_array_storage(self._block.data, "streamed")
-            # self._block = self._asdffile._blocks.get_block(self._source)
+            if isinstance(self._source, str):
+                self._block = self._asdffile.open_external(self._source)._blocks.blocks[0]
+            else:
+                self._block = self._asdffile._blocks.blocks[self._source]
+                if self._source == -1:
+                    if callable(self._block._data):
+                        self._block._data = self._block.data
+                    if self._asdffile.get_array_storage(self._block.data) != "streamed":
+                        self._asdffile.set_array_storage(self._block.data, "streamed")
         return self._block
 
     @property

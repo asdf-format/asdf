@@ -15,7 +15,6 @@ from asdf._block import io as bio
 RNG = np.random.default_rng(6)
 
 
-@pytest.mark.xfail(reason="external blocks are broken")
 def test_external_block(tmp_path):
     tmp_path = str(tmp_path)
 
