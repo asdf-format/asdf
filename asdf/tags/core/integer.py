@@ -1,11 +1,7 @@
 from numbers import Integral
 
-import numpy as np
 
-from asdf import _types
-
-
-class IntegerType(_types._AsdfType):
+class IntegerType:
     """
     Enables the storage of arbitrarily large integer values
 
@@ -42,12 +38,6 @@ class IntegerType(_types._AsdfType):
     ...     assert aa['largeval'] == largeval
     """
 
-    name = "core/integer"
-    version = "1.0.0"
-    supported_versions = {"1.0.0", "1.1.0"}
-
-    _value_cache = {}
-
     def __init__(self, value, storage_type="internal"):
         if storage_type not in ["internal", "inline"]:
             msg = f"storage_type '{storage_type}' is not a recognized storage type"
@@ -55,45 +45,6 @@ class IntegerType(_types._AsdfType):
         self._value = value
         self._sign = "-" if value < 0 else "+"
         self._storage = storage_type
-
-    @classmethod
-    def to_tree(cls, node, ctx):
-        abs_value = int(np.abs(node._value))
-
-        # If the same value has already been stored, reuse the array
-        if abs_value in cls._value_cache:
-            array = cls._value_cache[abs_value]
-        else:
-            # pack integer value into 32-bit words
-            words = []
-            value = abs_value
-            while value > 0:
-                words.append(value & 0xFFFFFFFF)
-                value >>= 32
-
-            array = np.array(words, dtype=np.uint32)
-            if node._storage == "internal":
-                cls._value_cache[abs_value] = array
-
-        tree = {}
-        ctx.set_array_storage(array, node._storage)
-        tree["words"] = array
-        tree["sign"] = node._sign
-        tree["string"] = str(int(node._value))
-
-        return tree
-
-    @classmethod
-    def from_tree(cls, tree, ctx):
-        value = 0
-        for x in tree["words"][::-1]:
-            value <<= 32
-            value |= int(x)
-
-        if tree["sign"] == "-":
-            value = -value
-
-        return cls(value)
 
     def __int__(self):
         return int(self._value)

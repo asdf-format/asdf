@@ -33,6 +33,7 @@ The ASDF Standard is at v1.6.0
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 - Add support for python 3.12 [#1641]
+- Move IntegerType to converter and drop cache of converted values. [#1527]
 
 2.15.1 (2023-08-07)
 -------------------

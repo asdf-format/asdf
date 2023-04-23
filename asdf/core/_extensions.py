@@ -3,6 +3,7 @@ from asdf.extension import ManifestExtension
 from ._converters.complex import ComplexConverter
 from ._converters.constant import ConstantConverter
 from ._converters.external_reference import ExternalArrayReferenceConverter
+from ._converters.integer import IntegerConverter
 from ._converters.ndarray import NDArrayConverter
 from ._converters.reference import ReferenceConverter
 from ._converters.tree import (
@@ -21,6 +22,7 @@ CONVERTERS = [
     AsdfObjectConverter(),
     ExtensionMetadataConverter(),
     HistoryEntryConverter(),
+    IntegerConverter(),
     SoftwareConverter(),
     SubclassMetadataConverter(),
     ReferenceConverter(),
