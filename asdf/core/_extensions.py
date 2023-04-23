@@ -1,6 +1,28 @@
 from asdf.extension import ManifestExtension
 
+from ._converters.complex import ComplexConverter
+from ._converters.constant import ConstantConverter
+from ._converters.external_reference import ExternalArrayReferenceConverter
+from ._converters.tree import (
+    AsdfObjectConverter,
+    ExtensionMetadataConverter,
+    HistoryEntryConverter,
+    SoftwareConverter,
+    SubclassMetadataConverter,
+)
 from ._validators import ndarray
+
+CONVERTERS = [
+    ComplexConverter(),
+    ConstantConverter(),
+    ExternalArrayReferenceConverter(),
+    AsdfObjectConverter(),
+    ExtensionMetadataConverter(),
+    HistoryEntryConverter(),
+    SoftwareConverter(),
+    SubclassMetadataConverter(),
+]
+
 
 VALIDATORS = [
     ndarray.NdimValidator(),
@@ -20,4 +42,4 @@ MANIFEST_URIS = [
 ]
 
 
-EXTENSIONS = [ManifestExtension.from_uri(u, validators=VALIDATORS) for u in MANIFEST_URIS]
+EXTENSIONS = [ManifestExtension.from_uri(u, converters=CONVERTERS, validators=VALIDATORS) for u in MANIFEST_URIS]
