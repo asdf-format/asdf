@@ -1,10 +1,5 @@
 from itertools import combinations
 
-import pytest
-
-import asdf
-from asdf.extension._legacy import default_extensions
-from asdf.schema import load_schema
 from asdf.versioning import (
     AsdfSpec,
     AsdfVersion,
