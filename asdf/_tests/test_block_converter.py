@@ -43,7 +43,7 @@ class BlockConverter(Converter):
             ctx.assign_block_key(block_index, key2)
         return obj
 
-    def reserve_blocks(self, obj, tag, ctx):  # Is there a ctx or tag at this point?
+    def reserve_blocks(self, obj, tag):
         if self._return_invalid_keys:
             # return something unhashable
             self._return_invalid_keys = False
@@ -162,7 +162,7 @@ class BlockDataCallbackConverter(Converter):
         ctx.assign_block_key(block_index, obj._asdf_key)
         return obj
 
-    def reserve_blocks(self, obj, tag, ctx):
+    def reserve_blocks(self, obj, tag):
         return [obj._asdf_key]
 
 

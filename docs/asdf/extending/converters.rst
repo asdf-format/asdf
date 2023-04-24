@@ -341,7 +341,7 @@ A simple example of a Converter using block storage to store the ``payload`` for
             obj.payload = ctx.get_block_data_callback(block_index)()
             return obj
 
-        def reserve_blocks(self, obj, tag, ctx):
+        def reserve_blocks(self, obj, tag):
             return [obj._asdf_key]
 
     class BlockExtension(Extension):
