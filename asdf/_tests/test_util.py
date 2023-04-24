@@ -131,3 +131,4 @@ def test_block_key():
     assert len(d) == 2
     # check that equality and copying a key works
     assert copy.copy(bk) == bk
+    assert bk != hash(bk)

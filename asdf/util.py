@@ -548,4 +548,6 @@ class BlockKey:
         return self._key
 
     def __eq__(self, other):
+        if not isinstance(other, BlockKey):
+            return NotImplemented
         return self._key == other._key
