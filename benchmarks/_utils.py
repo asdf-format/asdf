@@ -6,14 +6,13 @@ import numpy as np
 import asdf
 
 tree_sizes = ["small", "flat", "deep", "large"]
-data_sizes = ["0", "3x3", "512x512"]
+data_sizes = ["0", "3x3", "128x128"]
 
 
 def data_function(size):
     if not size:
         return ord
     dims = [int(d) for d in size.split("x")]
-    # assuming double: 8 * 256 * 256 * 26 * 26 = 1.4G
     return lambda k: np.zeros(dims) * ord(k)
 
 

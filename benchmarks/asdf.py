@@ -15,11 +15,14 @@ class AsdfFileInitSuite:
     def setup(self, key):
         self.tree = _utils.build_tree(*key.split("_"))
 
+    def _init(self, key):
+        return asdf.AsdfFile(self.tree)
+
     def time_init(self, key):
-        asdf.AsdfFile(self.tree)
+        self._init(key)
 
     def mem_init(self, key):
-        return asdf.AsdfFile(self.tree)
+        return self._init(key)
 
 
 class AsdfFileValidateSuite:
@@ -28,8 +31,11 @@ class AsdfFileValidateSuite:
     def setup(self, key):
         self.asdf_file = asdf.AsdfFile(_utils.build_tree(*key.split("_")))
 
-    def time_validate(self, key):
+    def _validate(self, key):
         self.asdf_file.validate()
+
+    def time_validate(self, key):
+        self._validate(key)
 
     def peakmem_pass(self, key):
         # peakmem includes setup, this is for comparison
@@ -37,7 +43,7 @@ class AsdfFileValidateSuite:
 
     def peakmem_validate(self, key):
         # peakmem includes setup
-        self.asdf_file.validate()
+        self._validate(key)
 
 
 class AsdfFileWriteToSuite:
@@ -46,17 +52,19 @@ class AsdfFileWriteToSuite:
     def setup(self, key):
         self.asdf_file = asdf.AsdfFile(_utils.build_tree(*key.split("_")))
 
-    def time_write_to(self, key):
+    def _write_to(self, key):
         with asdf.generic_io.get_file(io.BytesIO(), "w") as f:
             self.asdf_file.write_to(f)
+
+    def time_write_to(self, key):
+        self._write_to(key)
 
     def peakmem_pass(self, key):
         # peakmem includes setup, this is for comparison
         pass
 
-    def peakmem_write_to(self, size):
-        with asdf.generic_io.get_file(io.BytesIO(), "w") as f:
-            self.asdf_file.write_to(f)
+    def peakmem_write_to(self, key):
+        self._write_to(key)
 
 
 class AsdfFileOpenSuite:
@@ -65,16 +73,48 @@ class AsdfFileOpenSuite:
     def setup(self, key):
         self.byte_file = _utils.write_to_bytes(asdf.AsdfFile(_utils.build_tree(*key.split("_"))))
 
-    def time_open(self, key):
+    def _open(self, key):
         self.byte_file.seek(0)
         with asdf.open(self.byte_file):
             pass
+
+    def time_open(self, key):
+        self._open(key)
 
     def peakmem_pass(self, key):
         # peakmem includes setup, this is for comparison
         pass
 
     def peakmem_open(self, key):
+        self._open(key)
+
+
+class AsdfFileUpdateSuite:
+    params = build_tree_keys()
+
+    def setup(self, key):
+        self.byte_file = _utils.write_to_bytes(asdf.AsdfFile(_utils.build_tree(*key.split("_"))))
+
+    def _update(self, key):
         self.byte_file.seek(0)
-        with asdf.open(self.byte_file):
-            pass
+        with asdf.open(self.byte_file, mode="rw") as af:
+            af.update()
+
+    def time_update(self, key):
+        self._update(key)
+
+    def peakmem_pass(self, key):
+        # peakmem includes setup, this is for comparison
+        pass
+
+    def peakmem_update(self, key):
+        self._update(key)
+
+
+def timeraw_first_asdf_file():
+    # Time creation of first AsdfFile which will trigger extension loading
+    # and other one time operations
+    return """
+    import asdf
+    af = asdf.AsdfFile()
+    """
