@@ -57,11 +57,6 @@ repos:
   hooks:
     - id: blacken-docs
 
-- repo: https://github.com/tox-dev/pyproject-fmt
-  rev: "0.10.0"
-  hooks:
-    - id: pyproject-fmt
-
 - repo: https://github.com/abravalheri/validate-pyproject
   rev: "v0.12.2"
   hooks:
