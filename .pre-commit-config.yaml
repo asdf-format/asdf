@@ -42,7 +42,7 @@ repos:
       exclude: "asdf/extern/.*"
 
 - repo: https://github.com/charliermarsh/ruff-pre-commit
-  rev: 'v0.0.257'
+  rev: 'v0.0.262'
   hooks:
     - id: ruff
       args: ["--fix"]
@@ -56,11 +56,6 @@ repos:
   rev: '1.13.0'
   hooks:
     - id: blacken-docs
-
-- repo: https://github.com/tox-dev/pyproject-fmt
-  rev: "0.9.2"
-  hooks:
-    - id: pyproject-fmt
 
 - repo: https://github.com/abravalheri/validate-pyproject
   rev: "v0.12.1"

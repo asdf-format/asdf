@@ -378,4 +378,4 @@ def open_editor(path):
     editor = os.environ.get("EDITOR", DEFAULT_EDITOR)
     # Marked safe because the editor command is specified by an
     # environment variable that the user controls.
-    subprocess.run(f"{editor} {path}", check=True, shell=True)  # nosec
+    subprocess.run(f"{editor} {path}", check=True, shell=True)  # noqa: S602
