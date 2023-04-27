@@ -182,19 +182,21 @@ class Manager:
     def _get_data_callback(self, index):
         return DataCallback(index, self.blocks)
 
-    # cludges for tests
-    @property
-    def internal_blocks(self):
-        return self.blocks
-
-    @property
-    def _internal_blocks(self):
-        return self.blocks
-
-    def set_array_storage(self, data, storage):
+    def _set_array_storage(self, data, storage):
         options = self.options.get_options(data)
         options.storage_type = storage
         self.options.set_options(data, options)
 
-    def __len__(self):
-        return len(self.blocks)
+    def _get_array_storage(self, data):
+        return self.options.get_options(data).storage_type
+
+    def _set_array_compression(self, arr, compression, **compression_kwargs):
+        options = self.options.get_options(arr)
+        options.compression = compression
+        options.compression_kwargs = compression_kwargs
+
+    def _get_array_compression(self, arr):
+        return self.options.get_options(arr).compression
+
+    def _get_array_compression_kwargs(self, arr):
+        return self.options.get_options(arr).compression_kwargs

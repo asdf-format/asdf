@@ -88,14 +88,14 @@ def test_empty_file():
 
     with asdf.open(buff) as ff:
         assert ff.tree == {}
-        assert len(ff._blocks) == 0
+        assert len(ff._blocks.blocks) == 0
 
     buff = io.BytesIO(b"#ASDF 1.0.0\n#ASDF_STANDARD 1.0.0")
     buff.seek(0)
 
     with asdf.open(buff) as ff:
         assert ff.tree == {}
-        assert len(ff._blocks) == 0
+        assert len(ff._blocks.blocks) == 0
 
 
 @pytest.mark.filterwarnings("ignore::astropy.io.fits.verify.VerifyWarning")

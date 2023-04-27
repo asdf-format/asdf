@@ -136,7 +136,7 @@ def test_dont_load_data():
         str(ff.tree["science_data"])
         repr(ff.tree)
 
-        for block in ff._blocks.internal_blocks:
+        for block in ff._blocks.blocks:
             assert callable(block._data)
 
 
@@ -266,7 +266,7 @@ def test_inline():
     buff.seek(0)
     with asdf.open(buff, mode="rw") as ff:
         helpers.assert_tree_match(tree, ff.tree)
-        assert len(list(ff._blocks.internal_blocks)) == 0
+        assert len(list(ff._blocks.blocks)) == 0
         buff = io.BytesIO()
         ff.write_to(buff)
 
@@ -292,7 +292,7 @@ def test_mask_roundtrip(tmpdir):
         m = tree["masked_array"]
 
         assert np.all(m.mask[6:])
-        assert len(asdf._blocks) == 2
+        assert len(asdf._blocks.blocks) == 2
 
     helpers.assert_roundtrip_tree(tree, tmpdir, asdf_check_func=check_asdf)
 
@@ -422,7 +422,7 @@ def test_inline_masked_array(tmpdir):
     f.write_to(testfile)
 
     with asdf.open(testfile) as f2:
-        assert len(list(f2._blocks.internal_blocks)) == 0
+        assert len(list(f2._blocks.blocks)) == 0
         assert_array_equal(f.tree["test"], f2.tree["test"])
 
     with open(testfile, "rb") as fd:

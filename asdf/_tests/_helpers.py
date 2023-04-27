@@ -262,7 +262,7 @@ def _assert_roundtrip_tree(
         buff.seek(0)
         ff = asdf.open(buff, extensions=extensions, copy_arrays=True, lazy_load=False)
         # Ensure that all the blocks are loaded
-        for block in ff._blocks._internal_blocks:
+        for block in ff._blocks.blocks:
             # assert isinstance(block, Block)
             assert block._data is not None and not callable(block._data)
     # The underlying file is closed at this time and everything should still work
@@ -273,7 +273,7 @@ def _assert_roundtrip_tree(
     # Now repeat with copy_arrays=False and a real file to test mmap()
     AsdfFile(tree, extensions=extensions, **init_options).write_to(fname, **write_options)
     with asdf.open(fname, mode="rw", extensions=extensions, copy_arrays=False, lazy_load=False) as ff:
-        for block in ff._blocks._internal_blocks:
+        for block in ff._blocks.blocks:
             # assert isinstance(block, Block)
             assert block._data is not None and not callable(block._data)
         assert_tree_match(tree, ff.tree, ff, funcname=tree_match_func)

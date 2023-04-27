@@ -69,7 +69,7 @@ def test_integer_storage_duplication(tmpdir):
         af.write_to(tmpfile)
 
     with asdf.open(tmpfile, _force_raw_types=True) as rf:
-        assert len(rf._blocks) == 1
+        assert len(rf._blocks.blocks) == 1
         assert rf.tree["integer1"]["words"]["source"] == 0
         assert rf.tree["integer2"]["words"]["source"] == 0
 

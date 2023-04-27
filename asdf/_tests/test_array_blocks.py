@@ -460,12 +460,12 @@ foo : bar
 
     buff = io.BytesIO(content)
     ff = asdf.open(buff)
-    assert len(ff._blocks) == 1
+    assert len(ff._blocks.blocks) == 1
 
     buff.seek(0)
     fd = generic_io.InputStream(buff, "r")
     ff = asdf.open(fd)
-    assert len(ff._blocks) == 1
+    assert len(ff._blocks.blocks) == 1
 
 
 def test_checksum(tmp_path):
@@ -621,7 +621,7 @@ def test_short_file_find_block_index():
 
     buff.seek(0)
     with asdf.open(buff) as ff:
-        assert len(ff._blocks) == 2
+        assert len(ff._blocks.blocks) == 2
         assert ff._blocks.blocks[1].loaded
 
 
@@ -650,7 +650,7 @@ def test_invalid_block_index_values():
 
     buff.seek(0)
     with asdf.open(buff) as ff:
-        assert len(ff._blocks) == 10
+        assert len(ff._blocks.blocks) == 10
         assert ff._blocks.blocks[1].loaded
 
 
@@ -694,7 +694,7 @@ def test_invalid_block_index_offset(block_index_index):
 
     buff.seek(0)
     with asdf.open(buff) as ff:
-        assert len(ff._blocks) == 10
+        assert len(ff._blocks.blocks) == 10
         for i, a in enumerate(arrays):
             assert ff._blocks.blocks[i].loaded
             assert_array_equal(ff["arrays"][i], a)
@@ -725,7 +725,7 @@ def test_unordered_block_index():
 
     buff.seek(0)
     with asdf.open(buff) as ff:
-        assert len(ff._blocks) == 10
+        assert len(ff._blocks.blocks) == 10
         assert ff._blocks.blocks[1].loaded
 
 
