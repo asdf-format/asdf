@@ -113,7 +113,7 @@ def test_path(tree, tmp_path):
 
     with _roundtrip(tree, get_write_fd, get_read_fd) as ff:
         assert len(ff._blocks.blocks) == 2
-        assert isinstance(ff._blocks.blocks[0].data, np.core.memmap)
+        assert isinstance(ff._blocks.blocks[0].cached_data, np.core.memmap)
 
 
 def test_open2(tree, tmp_path):
@@ -136,7 +136,7 @@ def test_open2(tree, tmp_path):
 
     with _roundtrip(tree, get_write_fd, get_read_fd) as ff:
         assert len(ff._blocks.blocks) == 2
-        assert isinstance(ff._blocks.blocks[0].data, np.core.memmap)
+        assert isinstance(ff._blocks.blocks[0].cached_data, np.core.memmap)
 
 
 @pytest.mark.parametrize("mode", ["r", "w", "rw"])
@@ -173,7 +173,7 @@ def test_io_open(tree, tmp_path):
 
     with _roundtrip(tree, get_write_fd, get_read_fd) as ff:
         assert len(ff._blocks.blocks) == 2
-        assert isinstance(ff._blocks.blocks[0].data, np.core.memmap)
+        assert isinstance(ff._blocks.blocks[0].cached_data, np.core.memmap)
         ff.tree["science_data"][0] = 42
 
 
@@ -209,7 +209,7 @@ def test_bytes_io(tree):
 
     with _roundtrip(tree, get_write_fd, get_read_fd) as ff:
         assert len(ff._blocks.blocks) == 2
-        assert not isinstance(ff._blocks.blocks[0].data, np.core.memmap)
+        assert not isinstance(ff._blocks.blocks[0].cached_data, np.core.memmap)
         ff.tree["science_data"][0] = 42
 
 
@@ -225,7 +225,7 @@ def test_streams(tree):
 
     with _roundtrip(tree, get_write_fd, get_read_fd) as ff:
         assert len(ff._blocks.blocks) == 2
-        assert not isinstance(ff._blocks.blocks[0].data, np.core.memmap)
+        assert not isinstance(ff._blocks.blocks[0].cached_data, np.core.memmap)
         ff.tree["science_data"][0] = 42
 
 
@@ -253,7 +253,7 @@ def test_urlopen(tree, httpserver):
 
     with _roundtrip(tree, get_write_fd, get_read_fd) as ff:
         assert len(ff._blocks.blocks) == 2
-        assert not isinstance(ff._blocks.blocks[0].data, np.core.memmap)
+        assert not isinstance(ff._blocks.blocks[0].cached_data, np.core.memmap)
 
 
 @pytest.mark.remote_data()

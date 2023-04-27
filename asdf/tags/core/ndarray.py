@@ -1,3 +1,4 @@
+import mmap
 import sys
 
 import numpy as np
@@ -264,25 +265,29 @@ class NDArrayType(_types._AsdfType):
         # closed and replaced.  We need to check here and re-generate
         # the array if necessary, otherwise we risk segfaults when
         # memory mapping.
-        # if self._array is not None:
-        #     base = util.get_array_base(self._array)
-        #     if isinstance(base, np.memmap) and isinstance(base.base, mmap.mmap) and base.base.closed:
-        #         self._array = None
+        if self._array is not None:
+            base = util.get_array_base(self._array)
+            if isinstance(base, np.memmap) and isinstance(base.base, mmap.mmap) and base.base.closed:
+                self._array = None
 
         if self._array is None:
             block = self.block
 
-            if callable(block._data):
-                block._data = block.data
+            # cached data is used here so that multiple NDArrayTypes will all use
+            # the same base array
+            data = block.cached_data
+
+            if hasattr(data, "base") and isinstance(data.base, mmap.mmap) and data.base.closed:
+                raise OSError("Attempt to read data from a closed file")
 
             # streaming blocks have 0 data size
             shape = self.get_actual_shape(
                 self._shape,
                 self._strides,
                 self._dtype,
-                block.header["data_size"] or block._data.size,
+                block.header["data_size"] or data.size,
             )
-            self._array = np.ndarray(shape, self._dtype, block.data, self._offset, self._strides, self._order)
+            self._array = np.ndarray(shape, self._dtype, data, self._offset, self._strides, self._order)
             self._array = self._apply_mask(self._array, self._mask)
         return self._array
 
@@ -353,10 +358,9 @@ class NDArrayType(_types._AsdfType):
             else:
                 self._block = self._asdffile._blocks.blocks[self._source]
                 if self._source == -1:
-                    if callable(self._block._data):
-                        self._block._data = self._block.data
-                    if self._asdffile.get_array_storage(self._block.data) != "streamed":
-                        self._asdffile.set_array_storage(self._block.data, "streamed")
+                    arr = self._make_array()
+                    if self._asdffile.get_array_storage(arr) != "streamed":
+                        self._asdffile.set_array_storage(arr, "streamed")
         return self._block
 
     @property
@@ -366,13 +370,13 @@ class NDArrayType(_types._AsdfType):
         if "*" in self._shape:
             # return tuple(self.get_actual_shape(self._shape, self._strides, self._dtype, len(self.block)))
             if not self.block.header["data_size"]:
-                self._make_array()
+                return self._make_array().shape
             return tuple(
                 self.get_actual_shape(
                     self._shape,
                     self._strides,
                     self._dtype,
-                    self.block.header["data_size"] or self.block._data.size,
+                    self.block.header["data_size"],
                 )
             )
         return tuple(self._shape)
@@ -447,7 +451,10 @@ class NDArrayType(_types._AsdfType):
             strides = node.get("strides", None)
             mask = node.get("mask", None)
 
-            return cls(source, shape, dtype, offset, strides, "A", mask, ctx)
+            instance = cls(source, shape, dtype, offset, strides, "A", mask, ctx)
+            if isinstance(source, int):
+                ctx._blocks.blocks.assign_object(instance, ctx._blocks.blocks[source])
+            return instance
 
         msg = "Invalid ndarray description."
         raise TypeError(msg)

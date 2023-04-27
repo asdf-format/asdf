@@ -12,6 +12,7 @@ class ReadBlock:
         self._header = header
         self.data_offset = data_offset
         self._data = data
+        self._cached_data = None
         # TODO alternative to passing these down?
         self.memmap = memmap
         self.lazy_load = lazy_load
@@ -40,6 +41,12 @@ class ReadBlock:
         if callable(self._data):
             return self._data()
         return self._data
+
+    @property
+    def cached_data(self):
+        if self._cached_data is None:
+            self._cached_data = self.data
+        return self._cached_data
 
     @property
     def header(self):
