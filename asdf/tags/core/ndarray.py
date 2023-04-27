@@ -235,15 +235,17 @@ class NDArrayType(_types._AsdfType):
 
     def __init__(self, source, shape, dtype, offset, strides, order, mask, asdffile):
         self._asdffile = asdffile
+        # source can be a:
+        # - list of numbers for an inline block
+        # - string for an external block
+        # - a data callback for an internal block
         self._source = source
-        self._block = None
         self._array = None
         self._mask = mask
 
         if isinstance(source, list):
             self._array = inline_data_asarray(source, dtype)
             self._array = self._apply_mask(self._array, self._mask)
-            # self._block = asdffile._blocks.add_inline(self._array)
             asdffile.set_array_storage(self._array, "inline")
             if shape is not None and (
                 (shape[0] == "*" and self._array.shape[1:] != tuple(shape[1:])) or (self._array.shape != tuple(shape))
@@ -271,11 +273,14 @@ class NDArrayType(_types._AsdfType):
                 self._array = None
 
         if self._array is None:
-            block = self.block
-
-            # cached data is used here so that multiple NDArrayTypes will all use
-            # the same base array
-            data = block.cached_data
+            if isinstance(self._source, str):
+                data = (
+                    self._asdffile.open_external(self._source, lazy_load=False, copy_arrays=True)._blocks.blocks[0].data
+                )
+            else:
+                # cached data is used here so that multiple NDArrayTypes will all use
+                # the same base array
+                data = self._source(_attr="cached_data")
 
             if hasattr(data, "base") and isinstance(data.base, mmap.mmap) and data.base.closed:
                 raise OSError("Attempt to read data from a closed file")
@@ -285,7 +290,7 @@ class NDArrayType(_types._AsdfType):
                 self._shape,
                 self._strides,
                 self._dtype,
-                block.header["data_size"] or data.size,
+                data.size,
             )
             self._array = np.ndarray(shape, self._dtype, data, self._offset, self._strides, self._order)
             self._array = self._apply_mask(self._array, self._mask)
@@ -351,32 +356,21 @@ class NDArrayType(_types._AsdfType):
         raise ValueError(msg)
 
     @property
-    def block(self):
-        if self._block is None:
-            if isinstance(self._source, str):
-                self._block = self._asdffile.open_external(self._source)._blocks.blocks[0]
-            else:
-                self._block = self._asdffile._blocks.blocks[self._source]
-                if self._source == -1:
-                    arr = self._make_array()
-                    if self._asdffile.get_array_storage(arr) != "streamed":
-                        self._asdffile.set_array_storage(arr, "streamed")
-        return self._block
-
-    @property
     def shape(self):
-        if self._shape is None:
+        if self._shape is None or self._array is not None:
             return self.__array__().shape
         if "*" in self._shape:
-            # return tuple(self.get_actual_shape(self._shape, self._strides, self._dtype, len(self.block)))
-            if not self.block.header["data_size"]:
+            if isinstance(self._source, str):
+                return self._make_array().shape
+            data_size = self._source(_attr="header")["data_size"]
+            if not data_size:
                 return self._make_array().shape
             return tuple(
                 self.get_actual_shape(
                     self._shape,
                     self._strides,
                     self._dtype,
-                    self.block.header["data_size"],
+                    data_size,
                 )
             )
         return tuple(self._shape)
@@ -451,22 +445,19 @@ class NDArrayType(_types._AsdfType):
             strides = node.get("strides", None)
             mask = node.get("mask", None)
 
-            instance = cls(source, shape, dtype, offset, strides, "A", mask, ctx)
             if isinstance(source, int):
-                ctx._blocks.blocks.assign_object(instance, ctx._blocks.blocks[source])
+                block_index = source
+                source = ctx._blocks._get_data_callback(source)
+            else:
+                block_index = None
+            instance = cls(source, shape, dtype, offset, strides, "A", mask, ctx)
+            if block_index is not None:
+                ctx._blocks.blocks.assign_object(instance, ctx._blocks.blocks[block_index])
+                ctx._blocks._data_callbacks.assign_object(instance, source)
             return instance
 
         msg = "Invalid ndarray description."
         raise TypeError(msg)
-
-    @classmethod
-    def reserve_blocks(cls, data, ctx):
-        # Find all of the used data buffers so we can add or rearrange
-        # them if necessary
-        if isinstance(data, np.ndarray):
-            yield ctx._blocks.find_or_create_block_for_array(data)
-        elif isinstance(data, NDArrayType):
-            yield data.block
 
     @classmethod
     def to_tree(cls, data, ctx):
