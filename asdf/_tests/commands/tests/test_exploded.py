@@ -25,7 +25,7 @@ def test_explode_then_implode(tmpdir):
     # inline.
     ff.write_to(path, all_array_storage="internal")
     with asdf.open(path) as af:
-        assert len(af._blocks._internal_blocks) == 2
+        assert len(af._blocks.blocks) == 2
 
     result = main.main_from_args(["explode", path])
 
@@ -48,7 +48,7 @@ def test_explode_then_implode(tmpdir):
 
     with asdf.open(str(tmpdir.join("original_exploded_all.asdf"))) as af:
         assert_tree_match(af.tree, tree)
-        assert len(af._blocks) == 2
+        assert len(af._blocks.blocks) == 2
 
 
 def test_file_not_found(tmpdir):
