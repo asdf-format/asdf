@@ -67,7 +67,7 @@ class BlockOptions(store.Store):
         if options is None:
             # look up by block with matching _data
             for block in self._read_blocks:
-                if block._data is base:
+                if block._cached_data is base or block._data is base:
                     # init options
                     if block.header["flags"] & constants.BLOCK_FLAG_STREAMED:
                         storage_type = "streamed"
