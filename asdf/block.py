@@ -343,8 +343,6 @@ class BlockManager:
         fd.seek(last_block.offset)
         last_block.write(fd)
 
-        fd.truncate(last_block.end_offset)
-
     def write_external_blocks(self, uri, pad_blocks=False):
         """
         Write all blocks to disk serially.

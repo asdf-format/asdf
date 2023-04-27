@@ -1115,7 +1115,6 @@ class AsdfFile:
         self._blocks.write_external_blocks(fd.uri, pad_blocks)
         if include_block_index:
             self._blocks.write_block_index(fd, self)
-        fd.truncate()
 
     def _post_write(self, fd):
         if len(self._tree):
@@ -1237,7 +1236,6 @@ class AsdfFile:
                     # If we don't have any blocks that are being reused, just
                     # write out in a serial fashion.
                     self._serial_write(fd, pad_blocks, include_block_index)
-                    fd.truncate()
                     return
 
                 # Estimate how big the tree will be on disk by writing the
@@ -1255,7 +1253,6 @@ class AsdfFile:
                     # If we don't have any blocks that are being reused, just
                     # write out in a serial fashion.
                     self._serial_write(fd, pad_blocks, include_block_index)
-                    fd.truncate()
                     return
 
                 fd.seek(0)
@@ -1271,6 +1268,7 @@ class AsdfFile:
                         if b._memmapped:
                             b._memmapped = False
                             b._data = None
+                fd.truncate()
 
     def write_to(
         self,
