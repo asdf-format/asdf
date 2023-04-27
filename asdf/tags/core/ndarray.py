@@ -246,7 +246,6 @@ class NDArrayType(_types._AsdfType):
         if isinstance(source, list):
             self._array = inline_data_asarray(source, dtype)
             self._array = self._apply_mask(self._array, self._mask)
-            asdffile.set_array_storage(self._array, "inline")
             if shape is not None and (
                 (shape[0] == "*" and self._array.shape[1:] != tuple(shape[1:])) or (self._array.shape != tuple(shape))
             ):
@@ -428,7 +427,9 @@ class NDArrayType(_types._AsdfType):
     @classmethod
     def from_tree(cls, node, ctx):
         if isinstance(node, list):
-            return cls(node, None, None, None, None, None, None, ctx)
+            instance = cls(node, None, None, None, None, None, None, ctx)
+            ctx._blocks._set_array_storage(instance, "inline")
+            return instance
 
         if isinstance(node, dict):
             source = node.get("source")
@@ -454,6 +455,9 @@ class NDArrayType(_types._AsdfType):
             if block_index is not None:
                 ctx._blocks.blocks.assign_object(instance, ctx._blocks.blocks[block_index])
                 ctx._blocks._data_callbacks.assign_object(instance, source)
+            else:
+                if not isinstance(source, str):
+                    ctx._blocks._set_array_storage(instance, "inline")
             return instance
 
         msg = "Invalid ndarray description."
@@ -486,8 +490,6 @@ class NDArrayType(_types._AsdfType):
                 options.compression_kwargs = cfg.all_array_compression_kwargs
             inline_threshold = cfg.array_inline_threshold
 
-        # block = ctx._blocks.find_or_create_block_for_array(data)
-        # foo
         if inline_threshold is not None and options.storage_type in ("inline", "internal"):
             if data.size < inline_threshold:
                 options.storage_type = "inline"
@@ -543,7 +545,7 @@ class NDArrayType(_types._AsdfType):
             # if block.array_storage == "inline":
             if options.storage_type == "inline":
                 # ctx._blocks.set_array_storage(ctx._blocks[data.mask], "inline")
-                ctx.set_array_storage(data.mask, "inline")
+                ctx._blocks._set_array_storage(data.mask, "inline")
 
             result["mask"] = data.mask
 
