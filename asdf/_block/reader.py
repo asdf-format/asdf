@@ -7,7 +7,7 @@ from . import io as bio
 
 class ReadBlock:
     def __init__(self, offset, fd, memmap, lazy_load, header=None, data_offset=None, data=None):
-        self.offset = offset
+        self.offset = offset  # after magic
         self._fd = weakref.ref(fd)
         self._header = header
         self.data_offset = data_offset

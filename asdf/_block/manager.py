@@ -3,6 +3,7 @@ import os
 from asdf import constants, generic_io, util
 
 from . import store
+from .callback import DataCallback
 from .options import Options
 from .writer import WriteBlock, write_blocks
 
@@ -128,6 +129,7 @@ class Manager:
             self.blocks = self.options._read_blocks
         else:
             self.blocks = read_blocks
+        self._data_callbacks = store.Store()
         # TODO copy options and read_blocks on start of write
         self._write_blocks = []
         self._external_write_blocks = []
@@ -176,6 +178,9 @@ class Manager:
         if self._streamed_block is not None and data is not self._streamed_block.data:
             raise ValueError("Can not add second streaming block")
         self._streamed_block = WriteBlock(data)
+
+    def _get_data_callback(self, index):
+        return DataCallback(index, self.blocks)
 
     # cludges for tests
     @property
