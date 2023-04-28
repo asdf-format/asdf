@@ -119,17 +119,15 @@ def test_update_expand_tree(tmp_path):
 
     ff = asdf.AsdfFile(tree)
     ff.set_array_storage(tree["arrays"][2], "inline")
-    assert len(list(ff._blocks.inline_blocks)) == 1
     ff.write_to(testpath, pad_blocks=True)
     with asdf.open(testpath, mode="rw") as ff:
+        assert len(list(ff._blocks.blocks)) == 2
         assert_array_equal(ff.tree["arrays"][0], my_array)
-        orig_offset = ff._blocks[ff.tree["arrays"][0]].offset
         ff.tree["extra"] = [0] * 6000
         ff.update()
 
     with asdf.open(testpath) as ff:
-        assert orig_offset <= ff._blocks[ff.tree["arrays"][0]].offset
-        assert ff._blocks[ff.tree["arrays"][2]].array_storage == "inline"
+        assert ff.get_array_storage(ff.tree["arrays"][2]) == "inline"
         assert_array_equal(ff.tree["arrays"][0], my_array)
         assert_array_equal(ff.tree["arrays"][1], my_array2)
 
@@ -138,13 +136,11 @@ def test_update_expand_tree(tmp_path):
     ff.set_array_storage(tree["arrays"][2], "inline")
     ff.write_to(os.path.join(tmp_path, "test2.asdf"), pad_blocks=True)
     with asdf.open(os.path.join(tmp_path, "test2.asdf"), mode="rw") as ff:
-        orig_offset = ff._blocks[ff.tree["arrays"][0]].offset
         ff.tree["extra"] = [0] * 2
         ff.update()
 
     with asdf.open(os.path.join(tmp_path, "test2.asdf")) as ff:
-        assert orig_offset == ff._blocks[ff.tree["arrays"][0]].offset
-        assert ff._blocks[ff.tree["arrays"][2]].array_storage == "inline"
+        assert ff.get_array_storage(ff.tree["arrays"][2]) == "inline"
         assert_array_equal(ff.tree["arrays"][0], my_array)
         assert_array_equal(ff.tree["arrays"][1], my_array2)
 
@@ -234,14 +230,12 @@ def test_update_delete_middle_array(tmp_path):
     with asdf.open(os.path.join(tmp_path, "test.asdf"), mode="rw") as ff:
         del ff.tree["arrays"][1]
         ff.update()
-        assert len(ff._blocks._internal_blocks) == 2
+        assert len(ff._blocks.blocks) == 2
 
     assert os.stat(path).st_size <= original_size
 
     with asdf.open(os.path.join(tmp_path, "test.asdf")) as ff:
         assert len(ff.tree["arrays"]) == 2
-        assert ff.tree["arrays"][0]._source == 0
-        assert ff.tree["arrays"][1]._source == 1
         assert_array_equal(ff.tree["arrays"][0], tree["arrays"][0])
         assert_array_equal(ff.tree["arrays"][1], tree["arrays"][2])
 
@@ -354,7 +348,7 @@ def test_update_add_array_at_end(tmp_path):
     with asdf.open(os.path.join(tmp_path, "test.asdf"), mode="rw") as ff:
         ff.tree["arrays"].append(np.arange(65536, dtype="<i8"))
         ff.update()
-        assert len(ff._blocks) == 4
+        assert len(ff._blocks.blocks) == 4
 
     assert os.stat(path).st_size >= original_size
 
@@ -486,7 +480,7 @@ def test_checksum_update(tmp_path):
         ff.update()
 
     with asdf.open(path, validate_checksums=True) as ff:
-        assert ff._blocks._internal_blocks[0].checksum == b"T\xaf~[\x90\x8a\x88^\xc2B\x96D,N\xadL"
+        assert ff._blocks.blocks[0].header["checksum"] == b"T\xaf~[\x90\x8a\x88^\xc2B\x96D,N\xadL"
 
 
 def test_block_index():
@@ -808,45 +802,26 @@ def test_write_to_update_storage_options(tmp_path, all_array_storage, all_array_
         compression_kwargs = {"compresslevel": 1}
 
     def assert_result(ff):
-        if "array" not in ff:
-            # this was called from _write_to while making an external block
-            # so don't check the result
-            return
         if all_array_storage == "external":
             assert "test0000.asdf" in os.listdir(tmp_path)
         else:
             assert "test0000.asdf" not in os.listdir(tmp_path)
         if all_array_storage == "internal":
-            assert len(ff._blocks._internal_blocks) == 1
+            assert len(ff._blocks.blocks) == 1
         else:
-            assert len(ff._blocks._internal_blocks) == 0
-        blk = ff._blocks[ff["array"]]
+            assert len(ff._blocks.blocks) == 0
 
-        target_compression = all_array_compression or None
-        if target_compression == "input":
-            target_compression = None
-        assert blk.output_compression == target_compression
-
-        target_compression_kwargs = compression_kwargs or {}
-        assert blk._output_compression_kwargs == target_compression_kwargs
+        if all_array_storage == "internal":
+            target_compression = all_array_compression or None
+            if target_compression == "input":
+                target_compression = None
+            assert ff.get_array_compression(ff["array"]) == target_compression
 
     arr1 = np.ones((8, 8))
     tree = {"array": arr1}
     fn = tmp_path / "test.asdf"
 
     ff1 = asdf.AsdfFile(tree)
-
-    # as a new AsdfFile is used for write_to and we want
-    # to check blocks here, we patch _write_to to allow us
-    # to inspect the blocks in the new AsdfFile before
-    # it falls out of scope
-    original = asdf.AsdfFile._write_to
-
-    def patched(self, *args, **kwargs):
-        original(self, *args, **kwargs)
-        assert_result(self)
-
-    asdf.AsdfFile._write_to = patched
 
     # first check write_to
     ff1.write_to(
@@ -856,10 +831,9 @@ def test_write_to_update_storage_options(tmp_path, all_array_storage, all_array_
         compression_kwargs=compression_kwargs,
     )
 
-    asdf.AsdfFile._write_to = original
-
     # then reuse the file to check update
     with asdf.open(fn, mode="rw") as ff2:
+        assert_result(ff2)
         arr2 = np.ones((8, 8)) * 42
         ff2["array"] = arr2
         ff2.update(
@@ -924,18 +898,18 @@ def test_remove_blocks(tmp_path):
     af.write_to(fn1)
 
     with asdf.open(fn1, mode="rw") as af:
-        assert len(af._blocks._internal_blocks) == 2
+        assert len(af._blocks.blocks) == 2
         af["a"] = None
         af.write_to(fn2)
 
     with asdf.open(fn1, mode="rw") as af:
-        assert len(af._blocks._internal_blocks) == 2
+        assert len(af._blocks.blocks) == 2
         af["a"] = None
         af.update()
 
     for fn in (fn1, fn2):
         with asdf.open(fn) as af:
-            assert len(af._blocks._internal_blocks) == 1
+            assert len(af._blocks.blocks) == 1
 
 
 def test_write_to_before_update(tmp_path):

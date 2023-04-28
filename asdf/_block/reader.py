@@ -30,9 +30,11 @@ class ReadBlock:
         if fd is None or fd.is_closed():
             msg = "Attempt to load block from closed file"
             raise OSError(msg)
+        position = fd.tell()
         _, self._header, self.data_offset, self._data = bio.read_block(
             fd, offset=self.offset, memmap=self.memmap, lazy_load=self.lazy_load
         )
+        fd.seek(position)
 
     @property
     def data(self):
