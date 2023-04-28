@@ -457,7 +457,8 @@ class NDArrayType(_types.AsdfType):
         raise TypeError(msg)
 
     @classmethod
-    def to_tree(cls, data, ctx):
+    def to_tree(cls, obj, ctx):
+        data = obj
         # The ndarray-1.0.0 schema does not permit 0 valued strides.
         # Perhaps we'll want to allow this someday, to efficiently
         # represent an array of all the same value.
@@ -524,7 +525,7 @@ class NDArrayType(_types.AsdfType):
                 ctx._blocks.set_streamed_block(base, data)
                 result["source"] = -1
             else:
-                result["source"] = ctx._blocks.make_write_block(base, options, data)
+                result["source"] = ctx._blocks.make_write_block(base, options, obj)
             result["datatype"] = dtype
             result["byteorder"] = byteorder
 
