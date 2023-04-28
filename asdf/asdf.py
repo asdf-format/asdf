@@ -5,6 +5,7 @@ import os
 import pathlib
 import time
 import warnings
+import weakref
 
 from packaging.version import Version
 
@@ -12,7 +13,9 @@ from . import _display as display
 from . import _node_info as node_info
 from . import _version as version
 from . import constants, generic_io, reference, schema, treeutil, util, versioning, yamlutil
+from ._block import io as bio
 from ._block import reader as block_reader
+from ._block import store as block_store
 from ._block import writer as block_writer
 from ._block.manager import Manager as BlockManager
 from ._block.options import Options as BlockOptions
@@ -1068,91 +1071,178 @@ class AsdfFile:
             writing.
         """
 
-        # with config_context() as config:
-        #     if all_array_storage is not NotSet:
-        #         config.all_array_storage = all_array_storage
-        #     if all_array_compression is not NotSet:
-        #         config.all_array_compression = all_array_compression
-        #     if compression_kwargs is not NotSet:
-        #         config.all_array_compression_kwargs = compression_kwargs
+        with config_context() as config:
+            if all_array_storage is not NotSet:
+                config.all_array_storage = all_array_storage
+            if all_array_compression is not NotSet:
+                config.all_array_compression = all_array_compression
+            if compression_kwargs is not NotSet:
+                config.all_array_compression_kwargs = compression_kwargs
 
-        #     fd = self._fd
+            fd = self._fd
 
-        #     if fd is None:
-        #         msg = "Can not update, since there is no associated file"
-        #         raise ValueError(msg)
+            if fd is None:
+                msg = "Can not update, since there is no associated file"
+                raise ValueError(msg)
 
-        #     if not fd.writable():
-        #         msg = (
-        #             "Can not update, since associated file is read-only. Make "
-        #             "sure that the AsdfFile was opened with mode='rw' and the "
-        #             "underlying file handle is writable."
-        #         )
-        #         raise OSError(msg)
+            if not fd.writable():
+                msg = (
+                    "Can not update, since associated file is read-only. Make "
+                    "sure that the AsdfFile was opened with mode='rw' and the "
+                    "underlying file handle is writable."
+                )
+                raise OSError(msg)
 
-        #     if version is not None:
-        #         self.version = version
+            if not fd.seekable():
+                msg = "Can not update, since associated file is not seekable"
+                raise OSError(msg)
 
-        #     if config.all_array_storage == "external":
-        #         # If the file is fully exploded, there's no benefit to
-        #         # update, so just use write_to()
-        #         self.write_to(fd)
-        #         fd.truncate()
-        #         return
+            if version is not None:
+                self.version = version
 
-        #     if not fd.seekable():
-        #         msg = "Can not update, since associated file is not seekable"
-        #         raise OSError(msg)
+            # flush all pending memmap writes
+            if fd.can_memmap():
+                fd.flush_memmap()
 
-        #     self._blocks.finish_reading_internal_blocks()
+            # TODO shortcuts for
+            # - no read blocks
+            if len(self._blocks.blocks) == 0 and self._blocks._streamed_block is None:
+                self.write_to(self._fd)
+                if self._fd.can_memmap():
+                    self._fd.close_memmap()
+                self._fd.truncate()
+                return
+            # - all external
+            if config.all_array_storage == "external":
+                self.write_to(self._fd)
+                if self._fd.can_memmap():
+                    self._fd.close_memmap()
+                self._fd.truncate()
+                return
+            # - no write blocks
 
-        #     # flush all pending memmap writes
-        #     if fd.can_memmap():
-        #         fd.flush_memmap()
+            self._pre_write(fd)
 
-        #     self._pre_write(fd)
+            # TODO wrap a sensible try/finally
+            # prepare block manager for writing
+            self._blocks._clear_write()
 
-        #     try:
-        #         fd.seek(0)
+            # write out tree to temporary buffer
+            tree_fd = generic_io.get_file(io.BytesIO(), mode="rw")
+            self._write_tree(self._tree, tree_fd, False)
+            new_tree_size = tree_fd.tell()
+            end_of_file = new_tree_size
 
-        #         if not self._blocks.has_blocks_with_offset():
-        #             # If we don't have any blocks that are being reused, just
-        #             # write out in a serial fashion.
-        #             self._serial_write(fd, pad_blocks, include_block_index)
-        #             fd.truncate()
-        #             return
+            # TODO short circuit here if no blocks are used
 
-        #         # Estimate how big the tree will be on disk by writing the
-        #         # YAML out in memory.  Since the block indices aren't yet
-        #         # known, we have to count the number of block references and
-        #         # add enough space to accommodate the largest block number
-        #         # possible there.
-        #         tree_serialized = io.BytesIO()
-        #         self._write_tree(self._tree, tree_serialized, pad_blocks=False)
-        #         n_internal_blocks = len(self._blocks._internal_blocks)
+            # find where to start writing blocks (either end of new tree or end of last 'free' block)
+            last_block = None
+            for blk in self._blocks.blocks[::-1]:
+                if not blk.memmap and (blk._cached_data is not None or not callable(blk._data)):
+                    continue
+                last_block = blk
+                break
+            if last_block is None:
+                new_block_start = new_tree_size
+            else:
+                new_block_start = max(
+                    last_block.data_offset + last_block.header["allocated_size"],
+                    new_tree_size,
+                )
 
-        #         serialized_tree_size = tree_serialized.tell() + constants.MAX_BLOCKS_DIGITS * n_internal_blocks
+            if len(self._blocks._external_write_blocks):
+                self._blocks._write_external_blocks()
 
-        #         if not calculate_updated_layout(self._blocks, serialized_tree_size, pad_blocks, fd.block_size):
-        #             # If we don't have any blocks that are being reused, just
-        #             # write out in a serial fashion.
-        #             self._serial_write(fd, pad_blocks, include_block_index)
-        #             fd.truncate()
-        #             return
+            # do we have any blocks to write?
+            if len(self._blocks._write_blocks) or self._blocks._streamed_block:
+                self._fd.seek(new_block_start)
+                offsets, headers = block_writer.write_blocks(
+                    self._fd,
+                    self._blocks._write_blocks,
+                    pad_blocks,
+                    streamed_block=self._blocks._streamed_block,
+                    write_index=False,  # don't write an index as we will modify the offsets
+                )
+                new_block_end = self._fd.tell()
+                end_of_file = new_block_end
 
-        #         fd.seek(0)
-        #         self._random_write(fd, pad_blocks, include_block_index)
-        #         fd.flush()
-        #     finally:
-        #         self._post_write(fd)
-        #         # close memmaps so they will regenerate
-        #         if fd.can_memmap():
-        #             fd.close_memmap()
-        #             # also clean any memmapped blocks
-        #             for b in self._blocks._internal_blocks:
-        #                 if b._memmapped:
-        #                     b._memmapped = False
-        #                     b._data = None
+                # move blocks to start TODO as 'chunks'
+                self._fd.seek(new_block_start)
+                block_data = self._fd.read(new_block_end - new_block_start)
+                self._fd.seek(new_tree_size)
+                self._fd.write(block_data)
+                # update offset to point at correct locations
+                offsets = [o - (new_block_start - new_tree_size) for o in offsets]
+
+                # write index if no streamed block
+                if include_block_index and self._blocks._streamed_block is None:
+                    bio.write_block_index(self._fd, offsets)
+                    end_of_file = self._fd.tell()
+
+                # map new blocks to old blocks
+                new_read_blocks = block_store.LinearStore()
+                for i, (offset, header) in enumerate(zip(offsets, headers)):
+                    if i == len(self._blocks._write_blocks):  # this is a streamed block
+                        obj = self._blocks._streamed_obj()
+                        wblk = self._blocks._streamed_block
+                    else:
+                        wblk = self._blocks._write_blocks[i]
+                        # find object associated with wblk
+                        obj = None
+                        for oid, by_key in self._blocks._write_blocks._by_id.items():
+                            for key, index in by_key.items():
+                                if self._blocks._write_blocks[index] is wblk:
+                                    obj = key._ref()
+                                    break
+                        if obj is None:
+                            msg = "Update failed to associate blocks"
+                            raise OSError(msg)
+
+                    # does the obj have an old read block?
+                    rblk = self._blocks.blocks.lookup_by_object(obj)
+                    if rblk is not None:
+                        memmap = rblk.memmap
+                        data = None
+                        if not rblk.memmap:
+                            if rblk._cached_data is not None:
+                                data = rblk._cached_data
+                            elif not callable(rblk._data):
+                                data = rblk._data
+                    else:
+                        memmap = self._blocks.memmap
+                        data = None
+
+                    # we have to be lazy here as the current memmap is invalid
+                    new_read_block = block_reader.ReadBlock(
+                        offset + 4, self._fd, memmap, True, header=header, data=data
+                    )
+                    new_read_blocks._items.append(new_read_block)
+                    new_index = len(new_read_blocks) - 1
+                    new_read_blocks.assign_object(obj, new_read_block)
+
+                    # update data callbacks to point to new blocks
+                    cb = self._blocks._data_callbacks.lookup_by_object(obj)
+                    if cb is not None:
+                        cb._index = new_index
+                        cb._read_blocks_ref = weakref.ref(new_read_blocks)
+
+                # update read blocks to reflect new state
+                self._blocks.blocks = new_read_blocks
+                self._blocks.options._read_blocks = new_read_blocks
+
+            # now write the tree
+            self._fd.seek(0)
+            tree_fd.seek(0)
+            self._fd.write(tree_fd.read())
+
+            # TODO post_write
+            # close memmap to trigger arrays to reload themselves
+            if self._fd.can_memmap():
+                self._fd.close_memmap()
+            self._fd.seek(end_of_file)
+            self._fd.truncate()
+
+            self._blocks._clear_write()
 
     def write_to(
         self,

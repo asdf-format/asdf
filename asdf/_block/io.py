@@ -106,7 +106,10 @@ def read_block(fd, offset=None, memmap=False, lazy_load=False):
             if fd is None or fd.is_closed():
                 msg = "Attempt to read data from closed file"
                 raise OSError(msg)
-            return read_block_data(fd, header, offset=data_offset, memmap=memmap)
+            position = fd.tell()
+            data = read_block_data(fd, header, offset=data_offset, memmap=memmap)
+            fd.seek(position)
+            return data
 
         data = callback
         fd.fast_forward(header["allocated_size"])
