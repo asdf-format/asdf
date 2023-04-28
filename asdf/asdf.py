@@ -1067,7 +1067,6 @@ class AsdfFile:
             Update the ASDF Standard version of this AsdfFile before
             writing.
         """
-        raise NotImplementedError("broken update")
 
         # with config_context() as config:
         #     if all_array_storage is not NotSet:

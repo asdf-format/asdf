@@ -930,7 +930,6 @@ def test_readonly_inline(tmpdir):
 # Confirm that NDArrayType's internal array is regenerated
 # following an update.
 @pytest.mark.parametrize("pad_blocks", [True, False])
-@pytest.mark.xfail
 def test_block_data_change(pad_blocks, tmpdir):
     tmpfile = str(tmpdir.join("data.asdf"))
     tree = {"data": np.zeros(10, dtype="uint8")}
