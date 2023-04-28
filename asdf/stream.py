@@ -46,7 +46,7 @@ class Stream(ndarray.NDArrayType):
     @classmethod
     def to_tree(cls, data, ctx):
         # TODO previously, stream never passed on data?
-        ctx._blocks.set_streamed_block(data._array)
+        ctx._blocks.set_streamed_block(data._array, data)
 
         result = {}
         result["source"] = -1
