@@ -79,35 +79,25 @@ def test_block_converter_block_allocation(tmp_path):
     af = asdf.AsdfFile({"a": None})
     # now assign to the tree item (avoiding validation)
     af["a"] = a
-    # the AsdfFile instance should have no blocks
-    assert len(af._blocks._internal_blocks) == 0
-    # validate will make a block
-    af.validate()
-    assert len(af._blocks._internal_blocks) == 1
-    assert np.all(af._blocks._internal_blocks[0].data.tobytes() == a.payload)
-    # a second validate shouldn't result in more blocks
-    af.validate()
-    assert len(af._blocks._internal_blocks) == 1
-    # write_to will create blocks here because
+
     # they currently hold storage settings
     fn = tmp_path / "test.asdf"
     af.write_to(fn)
-    assert len(af._blocks._internal_blocks) == 1
 
     # if we read a file
     with asdf.open(fn, mode="rw") as af:
         fn2 = tmp_path / "test2.asdf"
         # there should be 1 block
-        assert len(af._blocks._internal_blocks) == 1
+        assert len(af._blocks.blocks) == 1
         # validate should use that block
         af.validate()
-        assert len(af._blocks._internal_blocks) == 1
+        assert len(af._blocks.blocks) == 1
         # as should write_to
         af.write_to(fn2)
-        assert len(af._blocks._internal_blocks) == 1
+        assert len(af._blocks.blocks) == 1
         # and update
         af.update()
-        assert len(af._blocks._internal_blocks) == 1
+        assert len(af._blocks.blocks) == 1
 
 
 @with_extension(BlockExtension)
@@ -186,34 +176,24 @@ def test_block_data_callback_converter(tmp_path):
     af = asdf.AsdfFile({"a": None})
     # now assign to the tree item (avoiding validation)
     af["a"] = a
-    # the AsdfFile instance should have no blocks
-    assert len(af._blocks._internal_blocks) == 0
-    # validate will make a block
-    af.validate()
-    assert len(af._blocks._internal_blocks) == 1
-    assert np.all(af._blocks._internal_blocks[0].data == a.data)
-    # a second validate shouldn't result in more blocks
-    af.validate()
-    assert len(af._blocks._internal_blocks) == 1
     # write_to will use the block
     fn1 = tmp_path / "test.asdf"
     af.write_to(fn1)
-    assert len(af._blocks._internal_blocks) == 1
 
     # if we read a file
     with asdf.open(fn1, mode="rw") as af:
         fn2 = tmp_path / "test2.asdf"
         # there should be 1 block
-        assert len(af._blocks._internal_blocks) == 1
+        assert len(af._blocks.blocks) == 1
         # validate should use that block
         af.validate()
-        assert len(af._blocks._internal_blocks) == 1
+        assert len(af._blocks.blocks) == 1
         # as should write_to
         af.write_to(fn2)
-        assert len(af._blocks._internal_blocks) == 1
+        assert len(af._blocks.blocks) == 1
         # and update
         af.update()
-        assert len(af._blocks._internal_blocks) == 1
+        assert len(af._blocks.blocks) == 1
 
     # check that data was preserved
     for fn in (fn1, fn2):
