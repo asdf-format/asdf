@@ -1,4 +1,5 @@
 import os
+import weakref
 
 from asdf import constants, generic_io, util
 
@@ -85,8 +86,10 @@ class BlockOptions(store.Store):
 
     def set_options(self, array, options):
         if options.storage_type == "streamed":
-            for d in self._by_id.values():
-                for opt in d.values():
+            for oid, by_key in self._by_id.items():
+                for key, opt in by_key.items():
+                    if not key.is_valid():
+                        continue
                     if opt.storage_type == "streamed":
                         if opt is options:
                             continue
@@ -130,16 +133,17 @@ class Manager:
         else:
             self.blocks = read_blocks
         self._data_callbacks = store.Store()
-        # TODO copy options and read_blocks on start of write
         self._write_blocks = store.LinearStore()
         self._external_write_blocks = []
         self._streamed_block = None
+        self._streamed_obj = None
         self._write_fd = None
 
     def _clear_write(self):
         self._write_blocks = store.LinearStore()
         self._external_write_blocks = []
         self._streamed_block = None
+        self._streamed_obj = None
         # self._write_fd = None
 
     def _write_external_blocks(self):
@@ -185,7 +189,7 @@ class Manager:
         if self._streamed_block is not None and data is not self._streamed_block.data:
             raise ValueError("Can not add second streaming block")
         self._streamed_block = WriteBlock(data)
-        # TODO associate object with streamed block
+        self._streamed_obj = weakref.ref(obj)
 
     def _get_data_callback(self, index):
         return DataCallback(index, self.blocks)
