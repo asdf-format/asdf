@@ -11,11 +11,11 @@ class SerializationContext:
     classes (like Converters) via method arguments.
     """
 
-    def __init__(self, version, extension_manager, url, block_manager):
+    def __init__(self, version, extension_manager, url, blocks):
         self._version = validate_version(version)
         self._extension_manager = extension_manager
         self._url = url
-        self._block_manager = block_manager
+        self._blocks = blocks
 
         self.__extensions_used = set()
 
@@ -93,8 +93,12 @@ class SerializationContext:
             A callable that when called (with no arguments) returns
             the block data as a one dimensional array of uint8
         """
-        blk = self._block_manager.get_block(index)
-        return blk.generate_read_data_callback()
+        blk = self._blocks.blocks[index]
+
+        def callback(blk=blk):
+            return blk.data
+
+        return callback
 
     def assign_block_key(self, block_index, key):
         """
@@ -119,14 +123,7 @@ class SerializationContext:
         key : hashable
             A unique hashable key to associate with a block
         """
-        blk = self._block_manager.get_block(block_index)
-        if self._block_manager._key_to_block_mapping.get(key, blk) is not blk:
-            msg = f"key {key} is already assigned to a block"
-            raise ValueError(msg)
-        if blk in self._block_manager._key_to_block_mapping.values():
-            msg = f"block {block_index} is already assigned to a key"
-            raise ValueError(msg)
-        self._block_manager._key_to_block_mapping[key] = blk
+        self._blocks.blocks.assign_object(key, self._blocks.blocks[block_index])
 
     def find_block_index(self, lookup_key, data_callback=None):
         """
@@ -153,9 +150,7 @@ class SerializationContext:
             Index of the block where data returned from data_callback
             will be written.
         """
-        new_block = lookup_key not in self._block_manager._key_to_block_mapping
-        blk = self._block_manager.find_or_create_block(lookup_key)
-        # if we're not creating a block, don't update the data callback
-        if data_callback is not None and (new_block or (blk._data_callback is None and blk._fd is None)):
-            blk._data_callback = data_callback
-        return self._block_manager.get_source(blk)
+
+        # TODO eventually this will need to map memmap blocks to not rewrite data
+        # TODO lookup options from previous block
+        return self._blocks.make_write_block(data_callback, BlockOptions(), lookup_key)

@@ -131,10 +131,16 @@ class Manager:
             self.blocks = read_blocks
         self._data_callbacks = store.Store()
         # TODO copy options and read_blocks on start of write
-        self._write_blocks = []
+        self._write_blocks = store.LinearStore()
         self._external_write_blocks = []
         self._streamed_block = None
         self._write_fd = None
+
+    def _clear_write(self):
+        self._write_blocks = store.LinearStore()
+        self._external_write_blocks = []
+        self._streamed_block = None
+        # self._write_fd = None
 
     def _write_external_blocks(self):
         from asdf import AsdfFile
@@ -152,7 +158,7 @@ class Manager:
                 af.write_to(f, include_block_index=False)
                 write_blocks(f, [blk])
 
-    def make_write_block(self, data, options):
+    def make_write_block(self, data, options, obj):
         if options.storage_type == "external":
             for index, blk in enumerate(self._external_write_blocks):
                 if blk._data is data:
@@ -167,17 +173,19 @@ class Manager:
         # first, look for an existing block
         for index, blk in enumerate(self._write_blocks):
             if blk._data is data:
+                self._write_blocks.assign_object(obj, blk)
                 return index
         # if no block is found, make a new block
-        self._write_blocks.append(WriteBlock(data, options.compression, options.compression_kwargs))
-        # data_bytes = np.ndarray(-1, np.uint8, data.ravel(order='K').data)
-        # self._write_blocks.append(WriteBlock(data_bytes, options.compression, options.compression_kwargs))
+        blk = WriteBlock(data, options.compression, options.compression_kwargs)
+        self._write_blocks._items.append(blk)
+        self._write_blocks.assign_object(obj, blk)
         return len(self._write_blocks) - 1
 
-    def set_streamed_block(self, data):
+    def set_streamed_block(self, data, obj):
         if self._streamed_block is not None and data is not self._streamed_block.data:
             raise ValueError("Can not add second streaming block")
         self._streamed_block = WriteBlock(data)
+        # TODO associate object with streamed block
 
     def _get_data_callback(self, index):
         return DataCallback(index, self.blocks)

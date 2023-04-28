@@ -528,10 +528,10 @@ class NDArrayType(_types._AsdfType):
             # result["source"] = ctx._blocks.get_source(block)
             # convert data to byte array
             if options.storage_type == "streamed":
-                ctx._blocks.set_streamed_block(base)
+                ctx._blocks.set_streamed_block(base, data)
                 result["source"] = -1
             else:
-                result["source"] = ctx._blocks.make_write_block(base, options)
+                result["source"] = ctx._blocks.make_write_block(base, options, data)
             result["datatype"] = dtype
             result["byteorder"] = byteorder
 

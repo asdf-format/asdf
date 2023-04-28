@@ -980,9 +980,7 @@ class AsdfFile:
         self._tree["asdf_library"] = get_asdf_library_info()
 
     def _serial_write(self, fd, pad_blocks, include_block_index):
-        self._blocks._write_blocks = []
-        self._blocks._external_write_blocks = []
-        self._blocks._streamed_block = None
+        self._blocks._clear_write()
         self._write_tree(self._tree, fd, pad_blocks)
         if len(self._blocks._write_blocks) or self._blocks._streamed_block:
             block_writer.write_blocks(
@@ -994,14 +992,7 @@ class AsdfFile:
             )
         if len(self._blocks._external_write_blocks):
             self._blocks._write_external_blocks()
-        self._blocks._write_blocks = []
-        self._blocks._external_write_blocks = []
-        self._blocks._streamed_block = None
-        # TODO external blocks
-        # self._blocks.write_internal_blocks_serial(fd, pad_blocks)
-        # self._blocks.write_external_blocks(fd.uri, pad_blocks)
-        # if include_block_index:
-        #    self._blocks.write_block_index(fd, self)
+        self._blocks._clear_write()
 
     def _random_write(self, fd, pad_blocks, include_block_index):
         self._write_tree(self._tree, fd, False)
