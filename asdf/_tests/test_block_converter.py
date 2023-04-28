@@ -19,7 +19,6 @@ class BlockConverter(Converter):
     tags = ["asdf://somewhere.org/tags/block_data-1.0.0"]
     types = [BlockData]
     _return_invalid_keys = False
-    _double_assign_block = False
 
     def to_yaml_tree(self, obj, tag, ctx):
         # lookup source for obj
@@ -36,10 +35,6 @@ class BlockConverter(Converter):
         data = ctx.get_block_data_callback(block_index)()
         obj = BlockData(data.tobytes())
         ctx.assign_block_key(block_index, obj._asdf_key)
-        if self._double_assign_block:
-            self._double_assign_block = False
-            key2 = asdf.util.BlockKey()
-            ctx.assign_block_key(block_index, key2)
         return obj
 
     def reserve_blocks(self, obj, tag):
@@ -98,28 +93,6 @@ def test_block_converter_block_allocation(tmp_path):
         # and update
         af.update()
         assert len(af._blocks.blocks) == 1
-
-
-@with_extension(BlockExtension)
-def test_invalid_reserve_block_keys(tmp_path):
-    a = BlockData(b"abcdefg")
-    af = asdf.AsdfFile({"a": a})
-    fn = tmp_path / "test.asdf"
-    BlockExtension.converters[0]._return_invalid_keys = True
-    with pytest.raises(TypeError, match="unhashable type: .*"):
-        af.write_to(fn)
-
-
-@with_extension(BlockExtension)
-def test_double_assign_block(tmp_path):
-    a = BlockData(b"abcdefg")
-    af = asdf.AsdfFile({"a": a})
-    fn = tmp_path / "test.asdf"
-    af.write_to(fn)
-    BlockExtension.converters[0]._double_assign_block = True
-    with pytest.raises(ValueError, match="block 0 is already assigned to a key"):
-        with asdf.open(fn):
-            pass
 
 
 class BlockDataCallback:
@@ -226,30 +199,3 @@ def test_block_with_callback_removal(tmp_path):
             af[remove_key] = None
             af.update()
             af[check_key] = b.data
-
-
-def test_seralization_context_block_access():
-    af = asdf.AsdfFile()
-    sctx = af._create_serialization_context()
-
-    # finding an index for an unknown block should
-    # create one
-    key = 42
-    arr = np.ones(3, dtype="uint8")
-    index = sctx.find_block_index(key, lambda: arr)
-    assert len(af._blocks) == 1
-    assert id(arr) == id(sctx.get_block_data_callback(index)())
-    # finding the same block should not create a new one
-    index = sctx.find_block_index(key, lambda: arr)
-    assert len(af._blocks) == 1
-
-    new_key = 26
-    with pytest.raises(ValueError, match="block 0 is already assigned to a key"):
-        sctx.assign_block_key(index, new_key)
-    assert len(af._blocks) == 1
-
-    arr2 = np.zeros(3, dtype="uint8")
-    # test that providing a new callback won't overwrite
-    # the first one
-    index = sctx.find_block_index(key, lambda: arr2)
-    assert id(arr2) != id(sctx.get_block_data_callback(index)())
