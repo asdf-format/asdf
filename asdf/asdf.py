@@ -12,6 +12,7 @@ from packaging.version import Version
 from . import _display as display
 from . import _node_info as node_info
 from . import _version as version
+from . import compression as mcompression
 from . import constants, generic_io, reference, schema, treeutil, util, versioning, yamlutil
 from ._block import io as bio
 from ._block import reader as block_reader
@@ -937,11 +938,12 @@ class AsdfFile:
         if len(tree):
             serialization_context = self._create_serialization_context()
 
-            # TODO fix output compression extensions
-            # compression_extensions = self._blocks.get_output_compression_extensions()
-            compression_extensions = []
-            for ext in compression_extensions:
-                serialization_context._mark_extension_used(ext)
+            for compression in self._blocks.get_output_compressions():
+                # lookup extension
+                compressor = mcompression._get_compressor_from_extensions(compression, return_extension=True)
+                if compressor is not None:
+                    # mark it as used
+                    serialization_context._mark_extension_used(compressor[1])
 
             def _tree_finalizer(tagged_tree):
                 """

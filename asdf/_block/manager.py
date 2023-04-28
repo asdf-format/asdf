@@ -1,7 +1,7 @@
 import os
 import weakref
 
-from asdf import constants, generic_io, util
+from asdf import config, constants, generic_io, util
 
 from . import store
 from .callback import DataCallback
@@ -99,6 +99,23 @@ class BlockOptions(store.Store):
 
     # TODO copy to allow for changing settings on write
     # TODO make an 'update_options'
+
+    def get_output_compressions(self):
+        compressions = set()
+        cfg = config.get_config()
+        if cfg.all_array_compression == "input":
+            for blk in self._read_blocks:
+                if blk.header["compression"]:
+                    compressions.add(blk.header["compression"])
+        else:
+            compressions.add(cfg.all_array_compression)
+        for _, by_key in self._by_id.items():
+            for key, opts in by_key.items():
+                if not key.is_valid():
+                    continue
+                if opts.compression:
+                    compressions.add(opts.compression)
+        return compressions
 
 
 def make_external_uri(uri, index):
@@ -212,3 +229,6 @@ class Manager:
 
     def _get_array_compression_kwargs(self, arr):
         return self.options.get_options(arr).compression_kwargs
+
+    def get_output_compressions(self):
+        return self.options.get_output_compressions()
