@@ -33,11 +33,11 @@ def test_1013(tmp_path):
         for shape in [3, (3, 3)]:
             arr = np.zeros(shape)
             n_blocks = 0 if arr.ndim == 1 else 1
-            af = asdf.AsdfFile()
-            # avoid a call to validate that will set the storage type
+            af = asdf.AsdfFile({"foo": FooType(arr)})
             assert af.get_array_storage(arr) == "internal"
-            af.tree = {"foo": FooType(arr)}
             af.write_to(fn)
+            # make sure write_to doesn't change the settings outside of the
+            # writing context
             assert af.get_array_storage(arr) == "internal"
 
             with asdf.open(fn) as af:
