@@ -158,7 +158,7 @@ class AsdfFile:
         self._fd = None
         self._closed = False
         self._external_asdf_by_uri = {}
-        self._blocks = BlockManager()
+        self._blocks = BlockManager(uri=uri)
         self._blocks.lazy_load = lazy_load
         self._blocks.memmap = not copy_arrays
         self._uri = uri

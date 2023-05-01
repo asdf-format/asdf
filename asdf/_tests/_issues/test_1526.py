@@ -28,7 +28,8 @@ def test_1526(tmp_path):
 
     with asdf.open(fns[0]) as af2:
         af2["arrs"][0] = 42
+        # write to d1
         af2.write_to(fns[1])
 
-    for dn in dns:
-        assert len(os.listdir(dn)) == 4
+    assert len(os.listdir(dns[0])) == 4
+    assert len(os.listdir(dns[1])) == 3

@@ -6,6 +6,7 @@ from numpy import ma
 
 from asdf import _types, util
 from asdf._jsonschema import ValidationError
+from asdf._block.options import Options
 from asdf.config import config_context
 
 _datatype_names = {
@@ -482,7 +483,14 @@ class NDArrayType(_types._AsdfType):
 
         shape = data.shape
 
-        options = ctx._blocks.options.get_options(data)
+        if isinstance(obj, NDArrayType) and isinstance(obj._source, str):
+            # this is an external block, if we have no other settings, keep it as external
+            options = ctx._blocks.options.lookup_by_object(data)
+            if options is None:
+                options = Options("external")
+        else:
+            options = ctx._blocks.options.get_options(data)
+
         with config_context() as cfg:
             if cfg.all_array_storage is not None:
                 options.storage_type = cfg.all_array_storage
