@@ -143,7 +143,7 @@ def resolve_external_uri(uri, relative):
 
 
 class Manager:
-    def __init__(self, read_blocks=None):
+    def __init__(self, read_blocks=None, uri=None):
         self.options = BlockOptions(read_blocks)
         if read_blocks is None:
             self.blocks = self.options._read_blocks
@@ -155,6 +155,7 @@ class Manager:
         self._streamed_block = None
         self._streamed_obj = None
         self._write_fd = None
+        self._uri = uri
 
     def _clear_write(self):
         self._write_blocks = store.LinearStore()
@@ -191,7 +192,8 @@ class Manager:
             # need to set up new external block
             index = len(self._external_write_blocks)
             blk = WriteBlock(data, options.compression, options.compression_kwargs)
-            blk._uri = make_external_uri(self._write_fd.uri, index)
+            base_uri = self._uri or self._write_fd.uri
+            blk._uri = make_external_uri(base_uri, index)
             self._external_write_blocks.append(blk)
             return blk._uri
         # first, look for an existing block
