@@ -396,7 +396,7 @@ class AsdfFile:
 
         return result
 
-    def _update_extension_history(self, serialization_context):
+    def _update_extension_history(self, tree, serialization_context):
         """
         Update the extension metadata on this file's tree to reflect
         extensions used during serialization.
@@ -409,20 +409,20 @@ class AsdfFile:
         if serialization_context.version < versioning.NEW_HISTORY_FORMAT_MIN_VERSION:
             return
 
-        if "history" not in self.tree:
-            self.tree["history"] = {"extensions": []}
+        if "history" not in tree:
+            tree["history"] = {"extensions": []}
         # Support clients who are still using the old history format
-        elif isinstance(self.tree["history"], list):
-            histlist = self.tree["history"]
-            self.tree["history"] = {"entries": histlist, "extensions": []}
+        elif isinstance(tree["history"], list):
+            histlist = tree["history"]
+            tree["history"] = {"entries": histlist, "extensions": []}
             warnings.warn(
                 "The ASDF history format has changed in order to "
                 "support metadata about extensions. History entries "
                 "should now be stored under tree['history']['entries'].",
                 AsdfWarning,
             )
-        elif "extensions" not in self.tree["history"]:
-            self.tree["history"]["extensions"] = []
+        elif "extensions" not in tree["history"]:
+            tree["history"]["extensions"] = []
 
         for extension in serialization_context._extensions_used:
             ext_name = extension.class_name
@@ -434,17 +434,17 @@ class AsdfFile:
             if extension.compressors:
                 ext_meta["supported_compression"] = [comp.label.decode("ascii") for comp in extension.compressors]
 
-            for i, entry in enumerate(self.tree["history"]["extensions"]):
+            for i, entry in enumerate(tree["history"]["extensions"]):
                 # Update metadata about this extension if it already exists
                 if (
                     entry.extension_uri is not None
                     and entry.extension_uri == extension.extension_uri
                     or entry.extension_class in extension.legacy_class_names
                 ):
-                    self.tree["history"]["extensions"][i] = ext_meta
+                    tree["history"]["extensions"][i] = ext_meta
                     break
             else:
-                self.tree["history"]["extensions"].append(ext_meta)
+                tree["history"]["extensions"].append(ext_meta)
 
     @property
     def file_format_version(self):
@@ -604,6 +604,8 @@ class AsdfFile:
         return self._comments
 
     def _validate(self, tree, custom=True, reading=False):
+        previous_options = copy.deepcopy(self._blocks.options)
+
         # If we're validating on read then the tree
         # is already guaranteed to be in tagged form.
         tagged_tree = tree if reading else yamlutil.custom_tree_to_tagged_tree(tree, self)
@@ -612,6 +614,9 @@ class AsdfFile:
         # Perform secondary validation pass if requested
         if custom and self._custom_schema:
             schema.validate(tagged_tree, self, self._custom_schema, reading=reading)
+
+        self._blocks.options = previous_options
+        self._blocks.options._read_blocks = self._blocks.blocks
 
     def validate(self):
         """
@@ -952,10 +957,10 @@ class AsdfFile:
                 yamlutil.dump_tree to update extension metadata
                 after the tree has been converted to tagged objects.
                 """
-                self._update_extension_history(serialization_context)
-                if "history" in self.tree:
+                self._update_extension_history(tree, serialization_context)
+                if "history" in tree:
                     tagged_tree["history"] = yamlutil.custom_tree_to_tagged_tree(
-                        self.tree["history"],
+                        tree["history"],
                         self,
                         _serialization_context=serialization_context,
                     )
@@ -982,11 +987,21 @@ class AsdfFile:
         # reorganization, if necessary
         # self._blocks.finalize(self)
 
-        self._tree["asdf_library"] = get_asdf_library_info()
+        # self._tree["asdf_library"] = get_asdf_library_info()
 
     def _serial_write(self, fd, pad_blocks, include_block_index):
         self._blocks._clear_write()
-        self._write_tree(self._tree, fd, pad_blocks)
+
+        # prep a tree for a writing
+        tree = copy.copy(self._tree)
+        tree["asdf_library"] = get_asdf_library_info()
+        if "history" in self._tree:
+            tree["history"] = copy.deepcopy(self._tree["history"])
+
+        # TODO copy block options
+        previous_options = copy.deepcopy(self._blocks.options)
+
+        self._write_tree(tree, fd, pad_blocks)
         if len(self._blocks._write_blocks) or self._blocks._streamed_block:
             block_writer.write_blocks(
                 fd,
@@ -998,6 +1013,8 @@ class AsdfFile:
         if len(self._blocks._external_write_blocks):
             self._blocks._write_external_blocks()
         self._blocks._clear_write()
+        self._blocks.options = previous_options
+        self._blocks.options._read_blocks = self._blocks.blocks
 
     def _random_write(self, fd, pad_blocks, include_block_index):
         self._write_tree(self._tree, fd, False)
@@ -1124,6 +1141,7 @@ class AsdfFile:
             # - no write blocks
 
             self._pre_write(fd)
+            self._tree["asdf_library"] = get_asdf_library_info()
 
             # TODO wrap a sensible try/finally
             # prepare block manager for writing
@@ -1243,6 +1261,7 @@ class AsdfFile:
                 self._fd.close_memmap()
             self._fd.seek(end_of_file)
             self._fd.truncate()
+            self._post_write(fd)
 
             self._blocks._clear_write()
 
