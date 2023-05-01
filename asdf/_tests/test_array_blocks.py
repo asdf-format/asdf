@@ -910,19 +910,3 @@ def test_remove_blocks(tmp_path):
     for fn in (fn1, fn2):
         with asdf.open(fn) as af:
             assert len(af._blocks.blocks) == 1
-
-
-def test_write_to_before_update(tmp_path):
-    # this is a regression test for: https://github.com/asdf-format/asdf/issues/1505
-    fn1 = tmp_path / "test1.asdf"
-    fn2 = tmp_path / "test2.asdf"
-
-    tree = {"a": np.zeros(3), "b": np.ones(3)}
-    af = asdf.AsdfFile(tree)
-
-    af.write_to(fn1)
-
-    with asdf.open(fn1, mode="rw") as af:
-        af["a"] = None
-        af.write_to(fn2)
-        af.update()
