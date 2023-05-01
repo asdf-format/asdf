@@ -33,8 +33,12 @@ def test_1013(tmp_path):
         for shape in [3, (3, 3)]:
             arr = np.zeros(shape)
             n_blocks = 0 if arr.ndim == 1 else 1
-            af = asdf.AsdfFile({"foo": FooType(arr)})
+            af = asdf.AsdfFile()
+            # avoid a call to validate that will set the storage type
+            assert af.get_array_storage(arr) == "internal"
+            af.tree = {"foo": FooType(arr)}
             af.write_to(fn)
+            assert af.get_array_storage(arr) == "internal"
 
             with asdf.open(fn) as af:
                 np.testing.assert_array_equal(af["foo"].data, arr)
