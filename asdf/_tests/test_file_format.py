@@ -136,7 +136,6 @@ def test_invalid_header_version():
         pass
 
 
-@pytest.mark.xfail(reason="block only file support is broken")
 def test_block_mismatch():
     # This is a file with a single small block, followed by something
     # that has an invalid block magic number.
@@ -151,7 +150,6 @@ def test_block_mismatch():
         pass
 
 
-@pytest.mark.xfail(reason="block only file support is broken")
 def test_block_header_too_small():
     # The block header size must be at least 40
 

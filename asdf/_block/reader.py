@@ -57,23 +57,24 @@ class ReadBlock:
         return self._header
 
 
-def read_blocks_serially(fd, memmap=False, lazy_load=False):
+def read_blocks_serially(fd, memmap=False, lazy_load=False, after_magic=False):
     blocks = []
     buff = b""
     while True:
         # the expectation is that this will begin PRIOR to the block magic
         # read 4 bytes
-        buff += fd.read(4 - len(buff))
-        if len(buff) < 4:
-            # we are done, there are no more blocks and no index
-            # TODO error? we shouldn't have extra bytes, the old code allows this
-            break
+        if not after_magic:
+            buff += fd.read(4 - len(buff))
+            if len(buff) < 4:
+                # we are done, there are no more blocks and no index
+                # TODO error? we shouldn't have extra bytes, the old code allows this
+                break
 
         if buff == constants.INDEX_HEADER[:4]:
             # we hit the block index, which is not useful here
             break
 
-        if buff == constants.BLOCK_MAGIC:
+        if after_magic or buff == constants.BLOCK_MAGIC:
             # this is another block
             offset, header, data_offset, data = bio.read_block(fd, memmap=memmap, lazy_load=lazy_load)
             blocks.append(ReadBlock(offset, fd, memmap, lazy_load, header=header, data_offset=data_offset, data=data))
@@ -82,6 +83,7 @@ def read_blocks_serially(fd, memmap=False, lazy_load=False):
                 # can stop looking for more blocks
                 break
             buff = b""
+            after_magic = False
         else:
             if len(blocks) or buff[0] != 0:
                 # if this is not the first block or we haven't found any
@@ -93,10 +95,10 @@ def read_blocks_serially(fd, memmap=False, lazy_load=False):
     return blocks
 
 
-def read_blocks(fd, memmap=False, lazy_load=False):
+def read_blocks(fd, memmap=False, lazy_load=False, after_magic=False):
     if not lazy_load or not fd.seekable():
         # load all blocks serially
-        return read_blocks_serially(fd, memmap, lazy_load)
+        return read_blocks_serially(fd, memmap, lazy_load, after_magic)
 
     # try to find block index
     starting_offset = fd.tell()
@@ -104,7 +106,7 @@ def read_blocks(fd, memmap=False, lazy_load=False):
     if index_offset is None:
         # if failed, load all blocks serially
         fd.seek(starting_offset)
-        return read_blocks_serially(fd, memmap, lazy_load)
+        return read_blocks_serially(fd, memmap, lazy_load, after_magic)
 
     # setup empty blocks
     try:
@@ -112,7 +114,7 @@ def read_blocks(fd, memmap=False, lazy_load=False):
     except OSError:
         # failed to read block index, fall back to serial reading
         fd.seek(starting_offset)
-        return read_blocks_serially(fd, memmap, lazy_load)
+        return read_blocks_serially(fd, memmap, lazy_load, after_magic)
     # skip magic for each block
     blocks = [ReadBlock(offset + 4, fd, memmap, lazy_load) for offset in block_index]
     try:
@@ -126,5 +128,5 @@ def read_blocks(fd, memmap=False, lazy_load=False):
             blocks[index].load()
     except (OSError, ValueError):
         fd.seek(starting_offset)
-        return read_blocks_serially(fd, memmap, lazy_load)
+        return read_blocks_serially(fd, memmap, lazy_load, after_magic)
     return blocks
