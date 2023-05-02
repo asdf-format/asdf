@@ -16,9 +16,9 @@ from . import compression as mcompression
 from . import constants, generic_io, reference, schema, treeutil, util, versioning, yamlutil
 from ._block import io as bio
 from ._block import reader as block_reader
-from ._block import store as block_store
 from ._block import writer as block_writer
 from ._block.manager import Manager as BlockManager
+from ._block.manager import ReadBlocks
 from ._block.options import Options as BlockOptions
 from ._helpers import validate_version
 from .config import config_context, get_config
@@ -664,19 +664,15 @@ class AsdfFile:
         return self._comments
 
     def _validate(self, tree, custom=True, reading=False):
-        previous_options = copy.deepcopy(self._blocks.options)
+        with self._blocks.options_context():
+            # If we're validating on read then the tree
+            # is already guaranteed to be in tagged form.
+            tagged_tree = tree if reading else yamlutil.custom_tree_to_tagged_tree(tree, self)
 
-        # If we're validating on read then the tree
-        # is already guaranteed to be in tagged form.
-        tagged_tree = tree if reading else yamlutil.custom_tree_to_tagged_tree(tree, self)
-
-        schema.validate(tagged_tree, self, reading=reading)
-        # Perform secondary validation pass if requested
-        if custom and self._custom_schema:
-            schema.validate(tagged_tree, self, self._custom_schema, reading=reading)
-
-        self._blocks.options = previous_options
-        self._blocks.options._read_blocks = self._blocks.blocks
+            schema.validate(tagged_tree, self, reading=reading)
+            # Perform secondary validation pass if requested
+            if custom and self._custom_schema:
+                schema.validate(tagged_tree, self, self._custom_schema, reading=reading)
 
     def validate(self):
         """
@@ -927,7 +923,7 @@ class AsdfFile:
                 msg = "ASDF file appears to contain garbage after header."
                 raise OSError(msg)
 
-            self._blocks.blocks._items = read_blocks
+            self._blocks.blocks.set_blocks(read_blocks)
 
             if tree is None:
                 # At this point the tree should be tagged, but we want it to be
@@ -1097,46 +1093,15 @@ class AsdfFile:
         if len(self._tree):
             self._run_hook("pre_write")
 
-        # This is where we'd do some more sophisticated block
-        # reorganization, if necessary
-        # self._blocks.finalize(self)
-
-        # self._tree["asdf_library"] = get_asdf_library_info()
-
     def _serial_write(self, fd, pad_blocks, include_block_index):
-        self._blocks._clear_write()
-
         # prep a tree for a writing
         tree = copy.copy(self._tree)
         tree["asdf_library"] = get_asdf_library_info()
         if "history" in self._tree:
             tree["history"] = copy.deepcopy(self._tree["history"])
 
-        # TODO copy block options
-        previous_options = copy.deepcopy(self._blocks.options)
-
         self._write_tree(tree, fd, pad_blocks)
-        if len(self._blocks._write_blocks) or self._blocks._streamed_block:
-            block_writer.write_blocks(
-                fd,
-                self._blocks._write_blocks,
-                pad_blocks,
-                streamed_block=self._blocks._streamed_block,
-                write_index=include_block_index,
-            )
-        if len(self._blocks._external_write_blocks):
-            self._blocks._write_external_blocks()
-        self._blocks._clear_write()
-        self._blocks.options = previous_options
-        self._blocks.options._read_blocks = self._blocks.blocks
-
-    def _random_write(self, fd, pad_blocks, include_block_index):
-        self._write_tree(self._tree, fd, False)
-        self._blocks.write_internal_blocks_random_access(fd)
-        self._blocks.write_external_blocks(fd.uri, pad_blocks)
-        if include_block_index:
-            self._blocks.write_block_index(fd, self)
-        fd.truncate()
+        self._blocks.write(fd, pad_blocks, include_block_index)
 
     def _post_write(self, fd):
         if len(self._tree):
@@ -1317,7 +1282,7 @@ class AsdfFile:
                     end_of_file = self._fd.tell()
 
                 # map new blocks to old blocks
-                new_read_blocks = block_store.LinearStore()
+                new_read_blocks = ReadBlocks()
                 for i, (offset, header) in enumerate(zip(offsets, headers)):
                     if i == len(self._blocks._write_blocks):  # this is a streamed block
                         obj = self._blocks._streamed_obj()
@@ -1353,7 +1318,7 @@ class AsdfFile:
                     new_read_block = block_reader.ReadBlock(
                         offset + 4, self._fd, memmap, True, header=header, data=data
                     )
-                    new_read_blocks._items.append(new_read_block)
+                    new_read_blocks.append_block(new_read_block)
                     new_index = len(new_read_blocks) - 1
                     new_read_blocks.assign_object(obj, new_read_block)
 
@@ -1470,15 +1435,13 @@ class AsdfFile:
                 self.version = version
 
             with generic_io.get_file(fd, mode="w") as fd:
-                self._blocks._write_fd = fd
-                self._pre_write(fd)
-
-                try:
-                    self._serial_write(fd, pad_blocks, include_block_index)
-                    fd.flush()
-                finally:
-                    self._post_write(fd)
-                self._blocks._write_fd = None
+                with self._blocks.write_context(fd):
+                    self._pre_write(fd)
+                    try:
+                        self._serial_write(fd, pad_blocks, include_block_index)
+                        fd.flush()
+                    finally:
+                        self._post_write(fd)
 
     def find_references(self):
         """

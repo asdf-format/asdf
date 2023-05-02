@@ -1,3 +1,5 @@
+import contextlib
+import copy
 import os
 import weakref
 
@@ -14,6 +16,13 @@ class ReadBlocks(store.LinearStore):
     {obj: block_index} : where obj is NDArrayType or other high level object
     [block_0, block_1, ...]
     """
+
+    def set_blocks(self, blocks):
+        self._items = blocks
+        # TODO should this invalidate the associations?
+
+    def append_block(self, block):
+        self._items.append(block)
 
     # def get_block_for_array(self, array):
     #     base = util.get_array_base(array)
@@ -231,3 +240,37 @@ class Manager:
 
     def get_output_compressions(self):
         return self.options.get_output_compressions()
+
+    @contextlib.contextmanager
+    def options_context(self):
+        previous_options = copy.deepcopy(self.options)
+        yield
+        self.options = previous_options
+        self.options._read_blocks = self.blocks
+
+    @contextlib.contextmanager
+    def write_context(self, fd, copy_options=True):
+        self._write_fd = fd
+        self._clear_write()
+        if copy_options:
+            with self.options_context():
+                yield
+        else:
+            yield
+        self._clear_write()
+        self._write_fd = None
+
+    def write(self, fd, pad_blocks, include_block_index):
+        if self._write_fd is None or fd is not self._write_fd:
+            msg = "Write called outside of valid write_context"
+            raise OSError(msg)
+        if len(self._write_blocks) or self._streamed_block:
+            write_blocks(
+                fd,
+                self._write_blocks,
+                pad_blocks,
+                streamed_block=self._streamed_block,
+                write_index=include_block_index,
+            )
+        if len(self._external_write_blocks):
+            self._write_external_blocks()
