@@ -56,12 +56,7 @@ class BlockOptions(store.Store):
 
     def __init__(self, read_blocks=None):
         super().__init__()
-        if read_blocks is None:
-            self._read_blocks = ReadBlocks([])
-        elif isinstance(read_blocks, ReadBlocks):
-            self._read_blocks = read_blocks
-        else:
-            self._read_blocks = ReadBlocks(read_blocks)
+        self._read_blocks = read_blocks
 
     def get_options(self, array):
         base = util.get_array_base(array)
@@ -144,11 +139,10 @@ def resolve_external_uri(uri, relative):
 
 class Manager:
     def __init__(self, read_blocks=None, uri=None):
-        self.options = BlockOptions(read_blocks)
         if read_blocks is None:
-            self.blocks = self.options._read_blocks
-        else:
-            self.blocks = read_blocks
+            read_blocks = ReadBlocks([])
+        self.options = BlockOptions(read_blocks)
+        self.blocks = read_blocks
         self._data_callbacks = store.Store()
         self._write_blocks = store.LinearStore()
         self._external_write_blocks = []

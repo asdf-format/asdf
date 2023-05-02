@@ -56,15 +56,6 @@ class ReadBlock:
             self.load()
         return self._header
 
-    def reset(self, fd, offset):
-        self._fd = weakref.ref(fd)
-        self.offset = offset
-        self.header = None
-        self.data_offset = None
-        self._data = None
-        if not self.lazy_load:
-            self.load()
-
 
 def read_blocks_serially(fd, memmap=False, lazy_load=False):
     blocks = []
