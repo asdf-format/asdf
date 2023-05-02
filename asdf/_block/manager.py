@@ -24,38 +24,6 @@ class ReadBlocks(store.LinearStore):
     def append_block(self, block):
         self._items.append(block)
 
-    # def get_block_for_array(self, array):
-    #     base = util.get_array_base(array)
-    #     block_index = self.lookup_by_object(base)
-    #     if block_index is None:
-    #         return self.get_block_with_data(base)
-    #     return self[block_index]
-
-    # def get_block_with_data(self, array):
-    #     base = util.get_array_base(array)
-    #     for (block_index, block) in enumerate(self):
-    #         if block._data is not None and not callable(block._data):
-    #             if block._data is base:
-    #                 if self.lookup_by_object(base) is None:
-    #                     self.assign_array_to_block_index(base, block_index)
-    #                 return block
-    #     return None
-
-    # def assign_read_blocks(self):
-    #     for (block_index, block) in enumerate(self):
-    #         if block._data is not None and not callabale(block._data):
-    #             self.assign_array_to_block_index(block._data, block_index)
-    #             base = util.get_array_base(block._data)
-
-    # def assign_array_to_block_index(self, array, block_index):
-    #     base = util.get_array_base(array)
-    #     self.assign_object(base, block_index)
-
-    # def assign_array_to_block(self, array, block):
-    #     block_index = self.index(block)
-    #     self.assign_array_to_block_index(array, block_index)
-    pass
-
 
 class BlockOptions(store.Store):
     """
@@ -101,9 +69,6 @@ class BlockOptions(store.Store):
         base = util.get_array_base(array)
         self.assign_object(base, options)
 
-    # TODO copy to allow for changing settings on write
-    # TODO make an 'update_options'
-
     def get_output_compressions(self):
         compressions = set()
         cfg = config.get_config()
@@ -130,9 +95,6 @@ def make_external_uri(uri, index):
     dirname, filename = os.path.split(path)
     filename = os.path.splitext(filename)[0] + f"{index:04d}.asdf"
     return filename
-    # path = os.path.join(dirname, filename)
-    # parts[2] = path
-    # return util.patched_urllib_parse.urlunparse(parts)
 
 
 def resolve_external_uri(uri, relative):

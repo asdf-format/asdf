@@ -238,8 +238,7 @@ class NDArrayType(_types._AsdfType):
     def __init__(self, source, shape, dtype, offset, strides, order, mask):
         # source can be a:
         # - list of numbers for an inline block
-        # - string for an external block
-        # - a data callback for an internal block
+        # - a data callback for an internal or externalblock
         self._source = source
         self._array = None
         self._mask = mask
@@ -521,7 +520,6 @@ class NDArrayType(_types._AsdfType):
         strides = None if data.flags.c_contiguous else data.strides
         dtype, byteorder = numpy_dtype_to_asdf_datatype(
             data.dtype,
-            # include_byteorder=(block.array_storage != "inline"),
             include_byteorder=(options.storage_type != "inline"),
         )
 
@@ -531,7 +529,6 @@ class NDArrayType(_types._AsdfType):
         if options.storage_type == "streamed":
             result["shape"][0] = "*"
 
-        # if block.array_storage == "inline":
         if options.storage_type == "inline":
             listdata = numpy_array_to_list(data)
             result["data"] = listdata
@@ -542,8 +539,6 @@ class NDArrayType(_types._AsdfType):
             if options.storage_type == "streamed":
                 result["shape"][0] = "*"
 
-            # result["source"] = ctx._blocks.get_source(block)
-            # convert data to byte array
             if options.storage_type == "streamed":
                 ctx._blocks.set_streamed_block(base, data)
                 result["source"] = -1
@@ -559,9 +554,7 @@ class NDArrayType(_types._AsdfType):
                 result["strides"] = list(strides)
 
         if isinstance(data, ma.MaskedArray) and np.any(data.mask):
-            # if block.array_storage == "inline":
             if options.storage_type == "inline":
-                # ctx._blocks.set_array_storage(ctx._blocks[data.mask], "inline")
                 ctx._blocks._set_array_storage(data.mask, "inline")
 
             result["mask"] = data.mask
