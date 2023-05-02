@@ -5,7 +5,6 @@ import os
 import pathlib
 import time
 import warnings
-import weakref
 
 from jsonschema import ValidationError
 from packaging.version import Version
@@ -1361,8 +1360,7 @@ class AsdfFile:
                     # update data callbacks to point to new blocks
                     cb = self._blocks._data_callbacks.lookup_by_object(obj)
                     if cb is not None:
-                        cb._index = new_index
-                        cb._read_blocks_ref = weakref.ref(new_read_blocks)
+                        cb.reassign(new_index, new_read_blocks)
 
                 # update read blocks to reflect new state
                 self._blocks.blocks = new_read_blocks
