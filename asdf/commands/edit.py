@@ -16,7 +16,6 @@ import tempfile
 import yaml
 
 from asdf import constants, generic_io, schema, util
-from asdf._block import BlockManager
 from asdf.asdf import AsdfFile, open_asdf
 
 from .main import Command
@@ -130,20 +129,14 @@ def write_edited_yaml_larger(path, new_content, version):
             pad_length = util.calculate_padding(len(new_content), True, fd.block_size)
             fd.fast_forward(pad_length)
 
+            # copy blocks from original_fd to fd
+            fd.tell()
             with generic_io.get_file(path) as original_fd:
-                # Consume the file up to the first block, which must exist
-                # as a precondition to using this method.
-                original_fd.seek_until(
-                    constants.BLOCK_MAGIC,
-                    len(constants.BLOCK_MAGIC),
-                )
-                ctx = AsdfFile(version=version)
-                blocks = BlockManager(ctx, copy_arrays=False, lazy_load=False)
-                blocks.read_internal_blocks(original_fd, past_magic=True, validate_checksums=False)
-                blocks.finish_reading_internal_blocks()
-                blocks.write_internal_blocks_serial(fd)
-                blocks.write_block_index(fd, ctx)
-                blocks.close()
+                original_fd.seek_until(constants.BLOCK_MAGIC, len(constants.BLOCK_MAGIC))
+                fd.write(constants.BLOCK_MAGIC)
+                block_size = min(fd.block_size, original_fd.block_size)
+                while bs := original_fd.read(block_size):
+                    fd.write(bs)
 
             # the file needs to be closed here to release all memmaps
             original_fd.close()
