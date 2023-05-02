@@ -852,9 +852,9 @@ class AsdfFile:
                 read_blocks = block_reader.read_blocks(fd, self._blocks.memmap, self._blocks.lazy_load)
             elif yaml_token == constants.BLOCK_MAGIC:
                 # this file has only blocks
-                raise NotImplementedError("Support for block only file does not yet exist")
-                # since we're after the magic, if seekable, just reset
-                # if not seekable, read first block, then read the reset serially, add them all up
+                read_blocks = block_reader.read_blocks(
+                    fd, self._blocks.memmap, self._blocks.lazy_load, after_magic=True
+                )
             elif yaml_token != b"":
                 msg = "ASDF file appears to contain garbage after header."
                 raise OSError(msg)
