@@ -19,6 +19,7 @@ try:
 except ImportError:
     CartesianDifferential = None
 
+import numpy as np
 import yaml
 
 import asdf
@@ -147,6 +148,8 @@ def assert_tree_match(old_tree, new_tree, ctx=None, funcname="assert_equal", ign
         elif ICRS is not None and isinstance(old, ICRS):
             assert old.ra == new.ra
             assert old.dec == new.dec
+        elif all([isinstance(obj, (np.ndarray, asdf.tags.core.NDArrayType)) for obj in (old, new)]):
+            np.testing.assert_array_equal(old, new)
         else:
             assert old == new
 
@@ -443,7 +446,7 @@ def _assert_extension_type_correctness(extension, extension_type, resolver):
     if extension_type.yaml_tag is not None and extension_type.yaml_tag.startswith(YAML_TAG_PREFIX):
         return
 
-    if extension_type == asdf.stream.Stream:
+    if extension_type == asdf.Stream:
         # Stream is a special case.  It was implemented as a subclass of NDArrayType,
         # but shares a tag with that class, so it isn't really a distinct type.
         return
