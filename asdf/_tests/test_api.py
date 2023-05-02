@@ -1,3 +1,4 @@
+import copy
 import getpass
 import io
 import os
@@ -439,6 +440,7 @@ def test_array_inline_threshold_masked_array(array_inline_threshold, inline_bloc
 
         with asdf.AsdfFile(tree) as af:
             af.write_to(file_path)
+        with asdf.open(file_path) as af:
             assert len(list(af._blocks.inline_blocks)) == inline_blocks
             assert len(list(af._blocks.internal_blocks)) == internal_blocks
 
@@ -547,3 +549,18 @@ def test_asdf_standard_version_tag_selection():
     content = buff.read()
     assert b"!core/asdf-1.0.0" not in content
     assert b"!core/asdf-1.1.0" in content
+
+
+def test_write_to_no_tree_modification(tmp_path):
+    fn = tmp_path / "test.asdf"
+    fn2 = tmp_path / "test2.asdf"
+    tree = {"foo": None}
+    af = asdf.AsdfFile(tree.copy())
+    af.write_to(fn)
+    assert tree == af.tree
+    with asdf.open(fn) as af:
+        af["history"]["extensions"][0]["software"]["version"] = "0.0.0.dev+abcdefg"
+        af["asdf_library"]["author"] = "foo"
+        tree = copy.deepcopy(af.tree)
+        af.write_to(fn2)
+        assert af.tree == tree

@@ -155,9 +155,9 @@ def test_none(tmp_path):
     with asdf.open(tmpfile1) as afile:
         assert afile.get_array_compression(afile.tree["science_data"]) is None
         afile.write_to(tmpfile2, all_array_compression="zlib")
-        assert afile.get_array_compression(afile.tree["science_data"]) == "zlib"
 
     with asdf.open(tmpfile2) as afile:
+        assert afile.get_array_compression(afile.tree["science_data"]) == "zlib"
         afile.write_to(tmpfile1, all_array_compression=None)
 
     with asdf.open(tmpfile1) as afile:

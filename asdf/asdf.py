@@ -148,7 +148,8 @@ class AsdfFile:
         self._closed = False
         self._external_asdf_by_uri = {}
         self._blocks = block.BlockManager(self, copy_arrays=copy_arrays, lazy_load=lazy_load)
-        self._uri = None
+        # set the uri here so validation can generate any required external blocks
+        self._uri = uri
         if tree is None:
             # Bypassing the tree property here, to avoid validating
             # an empty tree.
@@ -168,8 +169,6 @@ class AsdfFile:
         else:
             self.tree = tree
             self.find_references()
-        if uri is not None:
-            self._uri = uri
 
         self._comments = []
 
@@ -1344,7 +1343,64 @@ class AsdfFile:
             ``asdf.get_config().array_inline_threshold``.
 
         """
+        with config_context() as config:
+            if "all_array_storage" in kwargs:
+                config.all_array_storage = kwargs["all_array_storage"]
+            if "all_array_compression" in kwargs:
+                config.all_array_compression = kwargs["all_array_compression"]
+            if "compression_kwargs" in kwargs:
+                config.all_array_compression_kwargs = kwargs["compression_kwargs"]
 
+            used_blocks = self._blocks._find_used_blocks(self.tree, self, remove=False)
+
+            naf = AsdfFile(
+                {},
+                uri=self._uri,
+                extensions=self.extensions,
+                version=self.version,
+                ignore_version_mismatch=self._ignore_version_mismatch,
+                ignore_unrecognized_tag=self._ignore_unrecognized_tag,
+                ignore_implicit_conversion=self._ignore_implicit_conversion,
+            )
+            naf._tree = copy.copy(self.tree)  # avoid an extra validate
+
+            # deep copy keys that will be modified during write
+            modified_keys = ["history", "asdf_library"]
+            for k in modified_keys:
+                if k in self.tree:
+                    naf._tree[k] = copy.deepcopy(self.tree[k])
+
+            # copy over block storage and other settings
+            block_to_key_mapping = {v: k for k, v in self._blocks._key_to_block_mapping.items()}
+            # this creates blocks in the new block manager that correspond to blocks
+            # in the original file
+            for b in self._blocks.blocks:
+                if b not in used_blocks:
+                    continue
+                if b in self._blocks._streamed_blocks and b._data is None:
+                    # streamed blocks might not have data
+                    # add a streamed block to naf
+                    blk = naf._blocks.get_streamed_block()
+                    # mark this block as used so it doesn't get removed
+                    blk._used = True
+                elif b._data is not None or b._fd is not None:  # this block has data
+                    arr = b.data
+                    blk = naf._blocks[arr]
+                    blk._used = True
+                    naf.set_array_storage(arr, b.array_storage)
+                    naf.set_array_compression(arr, b.output_compression, **b.output_compression_kwargs)
+                else:  # this block does not have data
+                    key = block_to_key_mapping[b]
+                    blk = naf._blocks.find_or_create_block(key)
+                    blk._used = True
+                    blk._data_callback = b._data_callback
+            naf._write_to(fd, **kwargs)
+
+    def _write_to(
+        self,
+        fd,
+        **kwargs,
+    ):
         pad_blocks = kwargs.pop("pad_blocks", False)
         include_block_index = kwargs.pop("include_block_index", True)
         version = kwargs.pop("version", None)
@@ -1721,7 +1777,7 @@ class AsdfFile:
     # This function is called from within yamlutil methods to create
     # a context when one isn't explicitly passed in.
     def _create_serialization_context(self):
-        return SerializationContext(self.version_string, self.extension_manager, self.uri)
+        return SerializationContext(self.version_string, self.extension_manager, self.uri, self._blocks)
 
 
 def _check_and_set_mode(fileobj, asdf_mode):
@@ -1890,10 +1946,11 @@ class SerializationContext:
     Container for parameters of the current (de)serialization.
     """
 
-    def __init__(self, version, extension_manager, url):
+    def __init__(self, version, extension_manager, url, block_manager):
         self._version = validate_version(version)
         self._extension_manager = extension_manager
         self._url = url
+        self._block_manager = block_manager
 
         self.__extensions_used = set()
 
@@ -1954,3 +2011,86 @@ class SerializationContext:
         set of asdf.extension.AsdfExtension or asdf.extension.Extension
         """
         return self.__extensions_used
+
+    def get_block_data_callback(self, index):
+        """
+        Generate a callable that when called will read data
+        from a block at the provided index
+
+        Parameters
+        ----------
+        index : int
+            Block index
+
+        Returns
+        -------
+        callback : callable
+            A callable that when called (with no arguments) returns
+            the block data as a one dimensional array of uint8
+        """
+        blk = self._block_manager.get_block(index)
+        return blk.generate_read_data_callback()
+
+    def assign_block_key(self, block_index, key):
+        """
+        Associate a unique hashable key with a block.
+
+        This is used during Converter.from_yaml_tree and allows
+        the AsdfFile to be aware of which blocks belong to the
+        object handled by the converter and allows load_block
+        to locate the block using the key instead of the index
+        (which might change if a file undergoes an AsdfFile.update).
+
+        If the block index is later needed (like during to_yaml_tree)
+        the key can be used with find_block_index to lookup the
+        block index.
+
+        Parameters
+        ----------
+
+        block_index : int
+            The index of the block to associate with the key
+
+        key : hashable
+            A unique hashable key to associate with a block
+        """
+        blk = self._block_manager.get_block(block_index)
+        if self._block_manager._key_to_block_mapping.get(key, blk) is not blk:
+            msg = f"key {key} is already assigned to a block"
+            raise ValueError(msg)
+        if blk in self._block_manager._key_to_block_mapping.values():
+            msg = f"block {block_index} is already assigned to a key"
+            raise ValueError(msg)
+        self._block_manager._key_to_block_mapping[key] = blk
+
+    def find_block_index(self, lookup_key, data_callback=None):
+        """
+        Find the index of a previously allocated or reserved block.
+
+        This is typically used inside asdf.extension.Converter.to_yaml_tree
+
+        Parameters
+        ----------
+        lookup_key : hashable
+            Unique key used to retrieve the index of a block that was
+            previously allocated or reserved. For ndarrays this is
+            typically the id of the base ndarray.
+
+        data_callback: callable, optional
+            Callable that when called will return data (ndarray) that will
+            be written to a block.
+            At the moment, this is only assigned if a new block
+            is created to avoid circular references during AsdfFile.update.
+
+        Returns
+        -------
+        block_index: int
+            Index of the block where data returned from data_callback
+            will be written.
+        """
+        new_block = lookup_key not in self._block_manager._key_to_block_mapping
+        blk = self._block_manager.find_or_create_block(lookup_key)
+        # if we're not creating a block, don't update the data callback
+        if data_callback is not None and (new_block or (blk._data_callback is None and blk._fd is None)):
+            blk._data_callback = data_callback
+        return self._block_manager.get_source(blk)

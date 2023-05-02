@@ -3,6 +3,7 @@ import os
 
 import numpy as np
 import pytest
+import yaml
 from numpy.random import random
 from numpy.testing import assert_array_equal
 
@@ -24,6 +25,15 @@ def test_external_block(tmp_path):
     ff.write_to(os.path.join(tmp_path, "test.asdf"))
 
     assert "test0000.asdf" in os.listdir(tmp_path)
+
+
+def test_external_block_url():
+    uri = "asdf://foo"
+    my_array = RNG.normal(size=(8, 8))
+    tree = {"my_array": my_array}
+    asdf.get_config().all_array_storage = "external"
+    # this should not raise a ValueError since uri is provided
+    asdf.AsdfFile(tree, uri=uri)
 
 
 def test_external_block_non_url():
@@ -655,7 +665,8 @@ def test_invalid_block_index_values():
         assert len(ff._blocks) == 1
 
 
-def test_invalid_last_block_index():
+@pytest.mark.parametrize("block_index_index", [0, -1])
+def test_invalid_block_index_offset(block_index_index):
     """
     This adds a value in the block index that points to something
     that isn't a block
@@ -670,13 +681,33 @@ def test_invalid_last_block_index():
     tree = {"arrays": arrays}
 
     ff = asdf.AsdfFile(tree)
-    ff.write_to(buff, include_block_index=False)
-    ff._blocks._internal_blocks[-1]._offset -= 4
-    ff._blocks.write_block_index(buff, ff)
+    ff.write_to(buff)
+
+    # now overwrite the block index with the first entry
+    # incorrectly pointing to a non-block offset
+    buff.seek(0)
+    bs = buff.read()
+    block_index_header_start = bs.index(constants.INDEX_HEADER)
+    block_index_start = block_index_header_start + len(constants.INDEX_HEADER)
+    block_index = yaml.load(bs[block_index_start:], yaml.SafeLoader)
+    block_index[block_index_index] -= 4
+    yaml_version = tuple(int(x) for x in ff.version_map["YAML_VERSION"].split("."))
+    buff.seek(block_index_start)
+    yaml.dump(
+        block_index,
+        stream=buff,
+        explicit_start=True,
+        explicit_end=True,
+        version=yaml_version,
+        allow_unicode=True,
+        encoding="utf-8",
+    )
 
     buff.seek(0)
     with asdf.open(buff) as ff:
         assert len(ff._blocks) == 1
+        for i, a in enumerate(arrays):
+            assert_array_equal(ff["arrays"][i], a)
 
 
 def test_unordered_block_index():
@@ -695,30 +726,6 @@ def test_unordered_block_index():
     ff = asdf.AsdfFile(tree)
     ff.write_to(buff, include_block_index=False)
     ff._blocks._internal_blocks = ff._blocks._internal_blocks[::-1]
-    ff._blocks.write_block_index(buff, ff)
-
-    buff.seek(0)
-    with asdf.open(buff) as ff:
-        assert len(ff._blocks) == 1
-
-
-def test_invalid_block_index_first_block_value():
-    """
-    This creates a bogus block index where the offset of the first
-    block doesn't match what we already know it to be.  In this
-    case, we should reject the whole block index.
-    """
-    buff = io.BytesIO()
-
-    arrays = []
-    for i in range(10):
-        arrays.append(np.ones((8, 8)) * i)
-
-    tree = {"arrays": arrays}
-
-    ff = asdf.AsdfFile(tree)
-    ff.write_to(buff, include_block_index=False)
-    ff._blocks._internal_blocks[0]._offset -= 4
     ff._blocks.write_block_index(buff, ff)
 
     buff.seek(0)
@@ -859,7 +866,11 @@ def test_write_to_update_storage_options(tmp_path, all_array_storage, all_array_
     if all_array_compression == "bzp2" and compression_kwargs is not None:
         compression_kwargs = {"compresslevel": 1}
 
-    def assert_result(ff, arr):
+    def assert_result(ff):
+        if "array" not in ff:
+            # this was called from _write_to while making an external block
+            # so don't check the result
+            return
         if all_array_storage == "external":
             assert "test0000.asdf" in os.listdir(tmp_path)
         else:
@@ -868,10 +879,12 @@ def test_write_to_update_storage_options(tmp_path, all_array_storage, all_array_
             assert len(ff._blocks._internal_blocks) == 1
         else:
             assert len(ff._blocks._internal_blocks) == 0
-        blk = ff._blocks[arr]
+        blk = ff._blocks[ff["array"]]
 
         target_compression = all_array_compression or None
-        assert blk._output_compression == target_compression
+        if target_compression == "input":
+            target_compression = None
+        assert blk.output_compression == target_compression
 
         target_compression_kwargs = compression_kwargs or {}
         assert blk._output_compression_kwargs == target_compression_kwargs
@@ -881,6 +894,19 @@ def test_write_to_update_storage_options(tmp_path, all_array_storage, all_array_
     fn = tmp_path / "test.asdf"
 
     ff1 = asdf.AsdfFile(tree)
+
+    # as a new AsdfFile is used for write_to and we want
+    # to check blocks here, we patch _write_to to allow us
+    # to inspect the blocks in the new AsdfFile before
+    # it falls out of scope
+    original = asdf.AsdfFile._write_to
+
+    def patched(self, *args, **kwargs):
+        original(self, *args, **kwargs)
+        assert_result(self)
+
+    asdf.AsdfFile._write_to = patched
+
     # first check write_to
     ff1.write_to(
         fn,
@@ -888,7 +914,8 @@ def test_write_to_update_storage_options(tmp_path, all_array_storage, all_array_
         all_array_compression=all_array_compression,
         compression_kwargs=compression_kwargs,
     )
-    assert_result(ff1, arr1)
+
+    asdf.AsdfFile._write_to = original
 
     # then reuse the file to check update
     with asdf.open(fn, mode="rw") as ff2:
@@ -899,7 +926,7 @@ def test_write_to_update_storage_options(tmp_path, all_array_storage, all_array_
             all_array_compression=all_array_compression,
             compression_kwargs=compression_kwargs,
         )
-        assert_result(ff2, arr2)
+        assert_result(ff2)
 
 
 def test_block_key():
@@ -971,3 +998,43 @@ def test_data_callback(tmp_path, memmap, lazy_load):
         mode="r",
     ) as f:
         rb.read(f, past_magic=False)
+
+
+def test_remove_blocks(tmp_path):
+    """Test that writing to a new file"""
+    fn1 = tmp_path / "test.asdf"
+    fn2 = tmp_path / "test2.asdf"
+
+    tree = {"a": np.zeros(3), "b": np.ones(1)}
+    af = asdf.AsdfFile(tree)
+    af.write_to(fn1)
+
+    with asdf.open(fn1, mode="rw") as af:
+        assert len(af._blocks._internal_blocks) == 2
+        af["a"] = None
+        af.write_to(fn2)
+
+    with asdf.open(fn1, mode="rw") as af:
+        assert len(af._blocks._internal_blocks) == 2
+        af["a"] = None
+        af.update()
+
+    for fn in (fn1, fn2):
+        with asdf.open(fn) as af:
+            assert len(af._blocks._internal_blocks) == 1
+
+
+def test_write_to_before_update(tmp_path):
+    # this is a regression test for: https://github.com/asdf-format/asdf/issues/1505
+    fn1 = tmp_path / "test1.asdf"
+    fn2 = tmp_path / "test2.asdf"
+
+    tree = {"a": np.zeros(3), "b": np.ones(3)}
+    af = asdf.AsdfFile(tree)
+
+    af.write_to(fn1)
+
+    with asdf.open(fn1, mode="rw") as af:
+        af["a"] = None
+        af.write_to(fn2)
+        af.update()

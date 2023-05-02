@@ -58,14 +58,11 @@ class IntegerType(_types.AsdfType):
 
     @classmethod
     def to_tree(cls, node, ctx):
-        if ctx not in cls._value_cache:
-            cls._value_cache[ctx] = {}
-
         abs_value = int(np.abs(node._value))
 
         # If the same value has already been stored, reuse the array
-        if abs_value in cls._value_cache[ctx]:
-            array = cls._value_cache[ctx][abs_value]
+        if abs_value in cls._value_cache:
+            array = cls._value_cache[abs_value]
         else:
             # pack integer value into 32-bit words
             words = []
@@ -76,7 +73,7 @@ class IntegerType(_types.AsdfType):
 
             array = np.array(words, dtype=np.uint32)
             if node._storage == "internal":
-                cls._value_cache[ctx][abs_value] = array
+                cls._value_cache[abs_value] = array
 
         tree = {}
         ctx.set_array_storage(array, node._storage)

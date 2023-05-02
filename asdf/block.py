@@ -37,6 +37,7 @@ class BlockManager:
         }
 
         self._data_to_block_mapping = {}
+        self._key_to_block_mapping = {}
         self._validate_checksums = False
         self._memmap = not copy_arrays
         self._lazy_load = lazy_load
@@ -81,7 +82,9 @@ class BlockManager:
         if block._data is not None or key is not None:
             if key is None:
                 key = id(block._data)
-            self._data_to_block_mapping[key] = block
+                self._data_to_block_mapping[key] = block
+            else:
+                self._key_to_block_mapping[key] = block
 
     def remove(self, block):
         """
@@ -94,6 +97,9 @@ class BlockManager:
                 for key, blk in list(self._data_to_block_mapping.items()):
                     if blk is block:
                         del self._data_to_block_mapping[key]
+                for key, blk in list(self._key_to_block_mapping.items()):
+                    if blk is block:
+                        del self._key_to_block_mapping[key]
         else:
             msg = f"Unknown array storage type {block.array_storage}"
             raise ValueError(msg)
@@ -366,7 +372,8 @@ class BlockManager:
             blk._array_storage = "internal"
             asdffile._blocks.add(blk)
             blk._used = True
-            asdffile.write_to(subfd, pad_blocks=pad_blocks, all_array_storage="internal")
+            # skip the new block manager here
+            asdffile._write_to(subfd, pad_blocks=pad_blocks, all_array_storage="internal")
 
     def write_block_index(self, fd, ctx):
         """
@@ -554,20 +561,31 @@ class BlockManager:
         parts[2] = path
         return patched_urllib_parse.urlunparse(parts)
 
-    def _find_used_blocks(self, tree, ctx):
+    def _find_used_blocks(self, tree, ctx, remove=True):
         reserved_blocks = set()
 
         for node in treeutil.iter_tree(tree):
-            # check that this object will not be handled by a converter
-            if not ctx.extension_manager.handles_type(type(node)):
+            if ctx.extension_manager.handles_type(type(node)):
+                converter = ctx.extension_manager.get_converter_for_type(type(node))
+                sctx = ctx._create_serialization_context()
+                tag = converter.select_tag(node, sctx)
+                for key in converter.reserve_blocks(node, tag):
+                    reserved_blocks.add(self.find_or_create_block(key))
+            else:
                 hook = ctx._type_index.get_hook_for_type("reserve_blocks", type(node), ctx.version_string)
                 if hook is not None:
                     for block in hook(node, ctx):
                         reserved_blocks.add(block)
 
+        if remove:
+            for block in list(self.blocks):
+                if not getattr(block, "_used", False) and block not in reserved_blocks:
+                    self.remove(block)
+            return None
         for block in list(self.blocks):
-            if getattr(block, "_used", 0) == 0 and block not in reserved_blocks:
-                self.remove(block)
+            if getattr(block, "_used", False):
+                reserved_blocks.add(block)
+        return reserved_blocks
 
     def _handle_global_block_settings(self, block):
         cfg = get_config()
@@ -605,6 +623,12 @@ class BlockManager:
 
         for block in list(self.blocks):
             self._handle_global_block_settings(block)
+
+    def get_block_by_key(self, key):
+        if key not in self._key_to_block_mapping:
+            msg = f"Unknown block key {key}"
+            raise KeyError(msg)
+        return self._key_to_block_mapping[key]
 
     def get_block(self, source):
         """
@@ -733,11 +757,8 @@ class BlockManager:
         """
         from .tags.core import ndarray
 
-        if isinstance(arr, ndarray.NDArrayType) and arr.block is not None:
-            if arr.block in self.blocks:
-                return arr.block
-
-            arr._block = None
+        if isinstance(arr, ndarray.NDArrayType) and arr.block is not None and arr.block in self.blocks:
+            return arr.block
 
         base = util.get_array_base(arr)
         block = self._data_to_block_mapping.get(id(base))
@@ -747,7 +768,6 @@ class BlockManager:
         block = Block(base)
         self.add(block)
         self._handle_global_block_settings(block)
-
         return block
 
     def find_or_create_block(self, key):
@@ -764,7 +784,7 @@ class BlockManager:
         -------
         block : Block
         """
-        block = self._data_to_block_mapping.get(key)
+        block = self._key_to_block_mapping.get(key)
         if block is not None:
             return block
 
@@ -1289,6 +1309,14 @@ class Block:
 
     def close(self):
         self._data = None
+
+    def generate_read_data_callback(self):
+        """Used in SerializationContext.get_block_data_callback"""
+
+        def callback():
+            return self.data
+
+        return callback
 
 
 class UnloadedBlock:

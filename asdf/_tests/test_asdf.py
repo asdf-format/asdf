@@ -196,7 +196,7 @@ def test_open_asdf_extensions(tmp_path):
 
 def test_serialization_context():
     extension_manager = ExtensionManager([])
-    context = SerializationContext("1.4.0", extension_manager, "file://test.asdf")
+    context = SerializationContext("1.4.0", extension_manager, "file://test.asdf", None)
     assert context.version == "1.4.0"
     assert context.extension_manager is extension_manager
     assert context._extensions_used == set()
@@ -215,7 +215,7 @@ def test_serialization_context():
         context._mark_extension_used(object())
 
     with pytest.raises(ValueError, match=r"ASDF Standard version .* is not supported by asdf==.*"):
-        SerializationContext("0.5.4", extension_manager, None)
+        SerializationContext("0.5.4", extension_manager, None, None)
 
 
 def test_reading_extension_metadata():

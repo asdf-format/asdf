@@ -280,6 +280,107 @@ With this modification we can successfully deserialize our ASDF file:
 
     assert reconstituted_f1.inverse.inverse is reconstituted_f1
 
+.. _extending_converter_block_storage:
+
+Block storage
+=============
+
+As described above :ref:`extending_converters` can return complex objects that will
+be passed to other Converters. If a Converter returns a ndarray, ASDF will recognize this
+array and store it in an ASDF block. This is the easiest and preferred means of
+storing data in ASDF blocks.
+
+For applications that require more flexibility,
+Converters can control block storage through use of the ``SerializationContext``
+provided as an argument to `Converter.to_yaml_tree` `Converter.from_yaml_tree` and `Converter.select_tag`.
+
+It is helpful to first review some details of how ASDF
+:ref:`stores block <asdf-standard:block>`. Blocks are stored sequentially within a
+ASDF file following the YAML tree. During reads and writes, ASDF will need to know
+the index of the block a Converter would like to use to read or write the correct
+block. However, the index used for reading might not be the same index for writing
+if the tree was modified or the file is being written to a new location. To allow
+ASDF to track the relationship between blocks and objects, Converters will need
+to generate unique hashable keys for each block used and associate these keys with
+block indices during read and write (more on this below).
+
+.. note::
+   Use of ``id(obj)`` will not generate a unique key as it returns the memory address
+   which might be reused after the object is garbage collected.
+
+A simple example of a Converter using block storage to store the ``payload`` for
+``BlockData`` object instances is as follows:
+
+.. runcode::
+
+    import asdf
+    import numpy as np
+    from asdf.extension import Converter, Extension
+
+    class BlockData:
+        def __init__(self, payload):
+            self.payload = payload
+            self._asdf_key = asdf.util.BlockKey()
+
+
+    class BlockConverter(Converter):
+        tags = ["asdf://somewhere.org/tags/block_data-1.0.0"]
+        types = [BlockData]
+
+        def to_yaml_tree(self, obj, tag, ctx):
+            block_index = ctx.find_block_index(
+                obj._asdf_key,
+                lambda: np.ndarray(len(obj.payload), dtype="uint8", buffer=obj.payload),
+            )
+            return {"block_index": block_index}
+
+        def from_yaml_tree(self, node, tag, ctx):
+            block_index = node["block_index"]
+            obj = BlockData(b"")
+            ctx.assign_block_key(block_index, obj._asdf_key)
+            obj.payload = ctx.get_block_data_callback(block_index)()
+            return obj
+
+        def reserve_blocks(self, obj, tag):
+            return [obj._asdf_key]
+
+    class BlockExtension(Extension):
+        tags = ["asdf://somewhere.org/tags/block_data-1.0.0"]
+        converters = [BlockConverter()]
+        extension_uri = "asdf://somewhere.org/extensions/block_data-1.0.0"
+
+    with asdf.config_context() as cfg:
+        cfg.add_extension(BlockExtension())
+        ff = asdf.AsdfFile({"example": BlockData(b"abcdefg")})
+        ff.write_to("block_converter_example.asdf")
+
+.. asdf:: block_converter_example.asdf
+
+During read, ``Converter.from_yaml_tree`` will be called. Within this method
+the Converter should associate any used blocks with unique hashable keys by calling
+``SerializationContext.assign_block_key`` and can generate (and use) a callable
+function that will return block data using ``SerializationContext.get_block_data_callback``.
+A callback for reading the data is provided to support lazy loading without
+keeping a reference to the ``SerializationContext`` (which is meant to be
+a short lived and lightweight object).
+
+During write, ``Converter.to_yaml_tree`` will be called. The Converter should
+use ``SerializationContext.find_block_index`` to find the location of an
+available block by providing a hashable key unique to this object (this should
+be the same key used during reading to allow ASDF to associate blocks and objects
+during in-place updates). The second argument to ``SerializationContext.find_block_index``
+must be a callable function (returning a ndarray) that ASDF will call when it
+is time to write data to the portion of the file corresponding to this block.
+Note that it's possible this callback will be called multiple times during a
+write and ASDF will not cache the result. If the data is coming from a non-repeatable
+source (such as a non-seekable stream of bytes) the data should be cached prior
+to providing it to ASDF to allow ASDF to call the callback multiple times.
+
+A Converter that uses block storage must also define ``Converter.reserve_blocks``.
+``Converter.reserve_blocks`` will be called during memory management to free
+resources for unused blocks. ``Converter.reserve_blocks`` must
+return a list of keys associated with an object.
+
 .. _extending_converters_performance:
 
 Entry point performance considerations
