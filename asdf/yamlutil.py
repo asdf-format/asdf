@@ -222,7 +222,8 @@ def custom_tree_to_tagged_tree(tree, ctx, _serialization_context=None):
     def _convert_obj(obj):
         converter = extension_manager.get_converter_for_type(type(obj))
         tag = converter.select_tag(obj, _serialization_context)
-        node = converter.to_yaml_tree(obj, tag, _serialization_context)
+        with _serialization_context._serialization(obj):
+            node = converter.to_yaml_tree(obj, tag, _serialization_context)
 
         if isinstance(node, GeneratorType):
             generator = node
@@ -293,7 +294,9 @@ def tagged_tree_to_custom_tree(tree, ctx, force_raw_types=False, _serialization_
 
         if extension_manager.handles_tag(tag):
             converter = extension_manager.get_converter_for_tag(tag)
-            obj = converter.from_yaml_tree(node.data, tag, _serialization_context)
+            with _serialization_context._deserialization() as sctx:
+                obj = converter.from_yaml_tree(node.data, tag, sctx)
+                sctx._obj = obj
             _serialization_context._mark_extension_used(converter.extension)
             return obj
 

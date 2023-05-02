@@ -11,8 +11,6 @@ from asdf.testing import helpers
 class BlockData:
     def __init__(self, payload):
         self.payload = payload
-        # generate a unique id
-        self._asdf_key = asdf.util.BlockKey()
 
 
 class BlockConverter(Converter):
@@ -22,8 +20,7 @@ class BlockConverter(Converter):
 
     def to_yaml_tree(self, obj, tag, ctx):
         # lookup source for obj
-        block_index = ctx.find_block_index(
-            obj._asdf_key,
+        block_index = ctx.find_available_block_index(
             lambda: np.ndarray(len(obj.payload), dtype="uint8", buffer=obj.payload),
         )
         return {
@@ -34,15 +31,7 @@ class BlockConverter(Converter):
         block_index = node["block_index"]
         data = ctx.get_block_data_callback(block_index)()
         obj = BlockData(data.tobytes())
-        ctx.assign_block_key(block_index, obj._asdf_key)
         return obj
-
-    def reserve_blocks(self, obj, tag):
-        if self._return_invalid_keys:
-            # return something unhashable
-            self._return_invalid_keys = False
-            return [[]]
-        return [obj._asdf_key]
 
 
 class BlockExtension(Extension):
@@ -100,7 +89,6 @@ class BlockDataCallback:
 
     def __init__(self, callback):
         self.callback = callback
-        self._asdf_key = asdf.util.BlockKey()
 
     @property
     def data(self):
@@ -112,7 +100,7 @@ class BlockDataCallbackConverter(Converter):
     types = [BlockDataCallback]
 
     def to_yaml_tree(self, obj, tag, ctx):
-        block_index = ctx.find_block_index(obj._asdf_key, obj.callback)
+        block_index = ctx.find_available_block_index(obj.callback)
         return {
             "block_index": block_index,
         }
@@ -121,11 +109,7 @@ class BlockDataCallbackConverter(Converter):
         block_index = node["block_index"]
 
         obj = BlockDataCallback(ctx.get_block_data_callback(block_index))
-        ctx.assign_block_key(block_index, obj._asdf_key)
         return obj
-
-    def reserve_blocks(self, obj, tag):
-        return [obj._asdf_key]
 
 
 class BlockDataCallbackExtension(Extension):

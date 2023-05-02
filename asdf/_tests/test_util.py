@@ -1,4 +1,3 @@
-import copy
 import io
 
 import pytest
@@ -118,17 +117,3 @@ def test_minversion():
 
     assert util.minversion(yaml, "3.1")
     assert util.minversion("yaml", "3.1")
-
-
-def test_block_key():
-    bk = util.BlockKey()
-    # make sure block key is hashable and can serve as a dictionary key
-    hash(bk)
-    d = {bk: 1}
-    # a new key should produce a different hash than the first
-    bk2 = util.BlockKey()
-    d[bk2] = 2
-    assert len(d) == 2
-    # check that equality and copying a key works
-    assert copy.copy(bk) == bk
-    assert bk != hash(bk)
