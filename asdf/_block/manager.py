@@ -127,7 +127,7 @@ class Manager:
         self._external_write_blocks = []
         self._streamed_block = None
         self._streamed_obj = None
-        # self._write_fd = None
+        self._write_fd = None
 
     def _write_external_blocks(self):
         from asdf import AsdfFile
@@ -212,15 +212,14 @@ class Manager:
 
     @contextlib.contextmanager
     def write_context(self, fd, copy_options=True):
-        self._write_fd = fd
         self._clear_write()
+        self._write_fd = fd
         if copy_options:
             with self.options_context():
                 yield
         else:
             yield
         self._clear_write()
-        self._write_fd = None
 
     def write(self, fd, pad_blocks, include_block_index):
         if self._write_fd is None or fd is not self._write_fd:
