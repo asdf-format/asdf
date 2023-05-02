@@ -4,6 +4,7 @@ from ._converters.complex import ComplexConverter
 from ._converters.constant import ConstantConverter
 from ._converters.external_reference import ExternalArrayReferenceConverter
 from ._converters.reference import ReferenceConverter
+from ._converters.ndarray import NDArrayConverter
 from ._converters.tree import (
     AsdfObjectConverter,
     ExtensionMetadataConverter,
@@ -23,6 +24,7 @@ CONVERTERS = [
     SoftwareConverter(),
     SubclassMetadataConverter(),
     ReferenceConverter(),
+    NDArrayConverter(),
 ]
 
 

@@ -1,7 +1,7 @@
-from .tags.core import ndarray
+from .ndarray import NDArrayType, numpy_dtype_to_asdf_datatype
 
 
-class Stream(ndarray.NDArrayType):
+class Stream(NDArrayType):
     """
     Used to put a streamed array into the tree.
 
@@ -26,36 +26,12 @@ class Stream(ndarray.NDArrayType):
 
     def __init__(self, shape, dtype, strides=None):
         self._shape = shape
-        self._datatype, self._byteorder = ndarray.numpy_dtype_to_asdf_datatype(dtype)
+        self._datatype, self._byteorder = numpy_dtype_to_asdf_datatype(dtype)
         self._strides = strides
         self._array = None
 
     def _make_array(self):
         self._array = None
-
-    @classmethod
-    def reserve_blocks(cls, data, ctx):
-        if isinstance(data, Stream):
-            yield ctx._blocks.get_streamed_block()
-
-    @classmethod
-    def from_tree(cls, data, ctx):
-        # this is never called because tags always trigger loading with NDArrayType
-        raise NotImplementedError("never called")
-
-    @classmethod
-    def to_tree(cls, data, ctx):
-        # TODO previously, stream never passed on data?
-        ctx._blocks.set_streamed_block(data._array, data)
-
-        result = {}
-        result["source"] = -1
-        result["shape"] = ["*", *data._shape]
-        result["datatype"] = data._datatype
-        result["byteorder"] = data._byteorder
-        if data._strides is not None:
-            result["strides"] = data._strides
-        return result
 
     def __repr__(self):
         return f"Stream({self._shape}, {self._datatype}, strides={self._strides})"

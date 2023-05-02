@@ -1,6 +1,5 @@
 import mmap
 import sys
-import weakref
 
 import numpy as np
 from numpy import ma
@@ -229,7 +228,7 @@ def numpy_array_to_list(array):
     return ascii_to_unicode(tolist(array))
 
 
-class NDArrayType(_types._AsdfType):
+class NDArrayType:
     name = "core/ndarray"
     version = "1.0.0"
     supported_versions = {"1.0.0", "1.1.0"}
@@ -420,188 +419,6 @@ class NDArrayType(_types._AsdfType):
 
         return _types._AsdfType.__getattribute__(self, name)
 
-    @classmethod
-    def from_tree(cls, node, ctx):
-        if isinstance(node, list):
-            instance = cls(node, None, None, None, None, None, None)
-            ctx._blocks._set_array_storage(instance, "inline")
-            return instance
-
-        if isinstance(node, dict):
-            source = node.get("source")
-            data = node.get("data")
-            if source and data:
-                msg = "Both source and data may not be provided at the same time"
-                raise ValueError(msg)
-            if data:
-                source = data
-            shape = node.get("shape", None)
-            byteorder = sys.byteorder if data is not None else node["byteorder"]
-            dtype = asdf_datatype_to_numpy_dtype(node["datatype"], byteorder) if "datatype" in node else None
-            offset = node.get("offset", 0)
-            strides = node.get("strides", None)
-            mask = node.get("mask", None)
-
-            if isinstance(source, int):
-                data = ctx._blocks._get_data_callback(source)
-                instance = cls(data, shape, dtype, offset, strides, "A", mask)
-                ctx._blocks.blocks.assign_object(instance, ctx._blocks.blocks[source])
-                ctx._blocks._data_callbacks.assign_object(instance, data)
-            elif isinstance(source, str):
-                # external
-                def data(_attr=None, _ref=weakref.ref(ctx)):
-                    ctx = _ref()
-                    if ctx is None:
-                        msg = "Failed to resolve reference to AsdfFile to read external block"
-                        raise OSError(msg)
-                    array = ctx.open_external(source)._blocks.blocks[0].cached_data
-                    ctx._blocks._set_array_storage(array, "external")
-                    return array
-
-                instance = cls(data, shape, dtype, offset, strides, "A", mask)
-            else:
-                # inline
-                instance = cls(source, shape, dtype, offset, strides, "A", mask)
-                ctx._blocks._set_array_storage(instance, "inline")
-
-            if not ctx._blocks.lazy_load:
-                instance._make_array()
-            return instance
-
-        msg = "Invalid ndarray description."
-        raise TypeError(msg)
-
-    @classmethod
-    def to_tree(cls, obj, ctx):
-        data = obj
-        # The ndarray-1.0.0 schema does not permit 0 valued strides.
-        # Perhaps we'll want to allow this someday, to efficiently
-        # represent an array of all the same value.
-        if any(stride == 0 for stride in data.strides):
-            data = np.ascontiguousarray(data)
-
-        # The view computations that follow assume that the base array
-        # is contiguous.  If not, we need to make a copy to avoid
-        # writing a nonsense view.
-        base = util.get_array_base(data)
-        if not base.flags.forc:
-            data = np.ascontiguousarray(data)
-            base = util.get_array_base(data)
-
-        shape = data.shape
-
-        if isinstance(obj, NDArrayType) and isinstance(obj._source, str):
-            # this is an external block, if we have no other settings, keep it as external
-            options = ctx._blocks.options.lookup_by_object(data)
-            if options is None:
-                options = Options("external")
-        else:
-            options = ctx._blocks.options.get_options(data)
-
-        with config_context() as cfg:
-            if cfg.all_array_storage is not None:
-                options.storage_type = cfg.all_array_storage
-            if cfg.all_array_compression != "input":
-                options.compression = cfg.all_array_compression
-                options.compression_kwargs = cfg.all_array_compression_kwargs
-            inline_threshold = cfg.array_inline_threshold
-
-        if inline_threshold is not None and options.storage_type in ("inline", "internal"):
-            if data.size < inline_threshold:
-                options.storage_type = "inline"
-            else:
-                options.storage_type = "internal"
-        ctx._blocks.options.set_options(data, options)
-
-        # Compute the offset relative to the base array and not the
-        # block data, in case the block is compressed.
-        offset = data.ctypes.data - base.ctypes.data
-
-        strides = None if data.flags.c_contiguous else data.strides
-        dtype, byteorder = numpy_dtype_to_asdf_datatype(
-            data.dtype,
-            include_byteorder=(options.storage_type != "inline"),
-        )
-
-        result = {}
-
-        result["shape"] = list(shape)
-        if options.storage_type == "streamed":
-            result["shape"][0] = "*"
-
-        if options.storage_type == "inline":
-            listdata = numpy_array_to_list(data)
-            result["data"] = listdata
-            result["datatype"] = dtype
-
-        else:
-            result["shape"] = list(shape)
-            if options.storage_type == "streamed":
-                result["shape"][0] = "*"
-
-            if options.storage_type == "streamed":
-                ctx._blocks.set_streamed_block(base, data)
-                result["source"] = -1
-            else:
-                result["source"] = ctx._blocks.make_write_block(base, options, obj)
-            result["datatype"] = dtype
-            result["byteorder"] = byteorder
-
-            if offset > 0:
-                result["offset"] = offset
-
-            if strides is not None:
-                result["strides"] = list(strides)
-
-        if isinstance(data, ma.MaskedArray) and np.any(data.mask):
-            if options.storage_type == "inline":
-                ctx._blocks._set_array_storage(data.mask, "inline")
-
-            result["mask"] = data.mask
-
-        return result
-
-    @classmethod
-    def _assert_equality(cls, old, new, func):
-        if old.dtype.fields:
-            if not new.dtype.fields:
-                # This line is safe because this is actually a piece of test
-                # code, even though it lives in this file:
-                msg = "arrays not equal"
-                raise AssertionError(msg)
-            for a, b in zip(old, new):
-                cls._assert_equality(a, b, func)
-        else:
-            old = old.__array__()
-            new = new.__array__()
-            if old.dtype.char in "SU":
-                if old.dtype.char == "S":
-                    old = old.astype("U")
-                if new.dtype.char == "S":
-                    new = new.astype("U")
-                old = old.tolist()
-                new = new.tolist()
-                # This line is safe because this is actually a piece of test
-                # code, even though it lives in this file:
-                assert old == new  # noqa: S101
-            else:
-                func(old, new)
-
-    @classmethod
-    def assert_equal(cls, old, new):
-        from numpy.testing import assert_array_equal
-
-        cls._assert_equality(old, new, assert_array_equal)
-
-    @classmethod
-    def assert_allclose(cls, old, new):
-        from numpy.testing import assert_allclose, assert_array_equal
-
-        if old.dtype.kind in "iu" and new.dtype.kind in "iu":
-            cls._assert_equality(old, new, assert_array_equal)
-        else:
-            cls._assert_equality(old, new, assert_allclose)
-
 
 def _make_operation(name):
     def operation(self, *args):
@@ -610,7 +427,8 @@ def _make_operation(name):
     return operation
 
 
-classes_to_modify = [*NDArrayType.__versioned_siblings, NDArrayType]
+# classes_to_modify = [*NDArrayType.__versioned_siblings, NDArrayType]
+classes_to_modify = [NDArrayType]
 for op in [
     "__neg__",
     "__pos__",

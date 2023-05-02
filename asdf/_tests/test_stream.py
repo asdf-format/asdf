@@ -6,13 +6,13 @@ import pytest
 from numpy.testing import assert_array_equal
 
 import asdf
-from asdf import generic_io, stream
+from asdf import Stream, generic_io
 
 
 def test_stream():
     buff = io.BytesIO()
 
-    tree = {"stream": stream.Stream([6, 2], np.float64)}
+    tree = {"stream": Stream([6, 2], np.float64)}
 
     ff = asdf.AsdfFile(tree)
     ff.write_to(buff)
@@ -35,7 +35,7 @@ def test_stream_write_nothing():
 
     buff = io.BytesIO()
 
-    tree = {"stream": stream.Stream([6, 2], np.float64)}
+    tree = {"stream": Stream([6, 2], np.float64)}
 
     ff = asdf.AsdfFile(tree)
     ff.write_to(buff)
@@ -54,7 +54,7 @@ def test_stream_twice():
 
     buff = io.BytesIO()
 
-    tree = {"stream": stream.Stream([6, 2], np.uint8), "stream2": stream.Stream([12, 2], np.uint8)}
+    tree = {"stream": Stream([6, 2], np.uint8), "stream2": Stream([12, 2], np.uint8)}
 
     ff = asdf.AsdfFile(tree)
     ff.write_to(buff)
@@ -72,7 +72,7 @@ def test_stream_twice():
 def test_stream_with_nonstream():
     buff = io.BytesIO()
 
-    tree = {"nonstream": np.array([1, 2, 3, 4], np.int64), "stream": stream.Stream([6, 2], np.float64)}
+    tree = {"nonstream": np.array([1, 2, 3, 4], np.int64), "stream": Stream([6, 2], np.float64)}
 
     ff = asdf.AsdfFile(tree)
     # Since we're testing with small arrays, force this array to be stored in
@@ -95,7 +95,7 @@ def test_stream_with_nonstream():
 def test_stream_real_file(tmp_path):
     path = os.path.join(str(tmp_path), "test.asdf")
 
-    tree = {"nonstream": np.array([1, 2, 3, 4], np.int64), "stream": stream.Stream([6, 2], np.float64)}
+    tree = {"nonstream": np.array([1, 2, 3, 4], np.int64), "stream": Stream([6, 2], np.float64)}
 
     with open(path, "wb") as fd:
         ff = asdf.AsdfFile(tree)
@@ -116,7 +116,7 @@ def test_stream_real_file(tmp_path):
 
 
 def test_stream_to_stream():
-    tree = {"nonstream": np.array([1, 2, 3, 4], np.int64), "stream": stream.Stream([6, 2], np.float64)}
+    tree = {"nonstream": np.array([1, 2, 3, 4], np.int64), "stream": Stream([6, 2], np.float64)}
 
     buff = io.BytesIO()
     fd = generic_io.OutputStream(buff)
@@ -179,7 +179,7 @@ def test_too_many_streams():
 
 
 def test_stream_repr_and_str():
-    tree = {"stream": stream.Stream([16], np.int64)}
+    tree = {"stream": Stream([16], np.int64)}
 
     ff = asdf.AsdfFile(tree)
     repr(ff.tree["stream"])
