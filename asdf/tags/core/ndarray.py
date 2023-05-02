@@ -1,5 +1,6 @@
 import mmap
 import sys
+import weakref
 
 import numpy as np
 from numpy import ma
@@ -234,8 +235,7 @@ class NDArrayType(_types._AsdfType):
     supported_versions = {"1.0.0", "1.1.0"}
     types = [np.ndarray, ma.MaskedArray]
 
-    def __init__(self, source, shape, dtype, offset, strides, order, mask, asdffile):
-        self._asdffile = asdffile
+    def __init__(self, source, shape, dtype, offset, strides, order, mask):
         # source can be a:
         # - list of numbers for an inline block
         # - string for an external block
@@ -258,8 +258,6 @@ class NDArrayType(_types._AsdfType):
         self._offset = offset
         self._strides = strides
         self._order = order
-        if not asdffile._blocks.lazy_load:
-            self._make_array()
 
     def _make_array(self):
         # If the ASDF file has been updated in-place, then there's
@@ -273,14 +271,12 @@ class NDArrayType(_types._AsdfType):
                 self._array = None
 
         if self._array is None:
-            if isinstance(self._source, str):
-                data = (
-                    self._asdffile.open_external(self._source, lazy_load=False, copy_arrays=True)._blocks.blocks[0].data
-                )
-            else:
+            if callable(self._source):
                 # cached data is used here so that multiple NDArrayTypes will all use
                 # the same base array
                 data = self._source(_attr="cached_data")
+            else:
+                data = self._source
 
             if hasattr(data, "base") and isinstance(data.base, mmap.mmap) and data.base.closed:
                 raise OSError("Attempt to read data from a closed file")
@@ -428,7 +424,7 @@ class NDArrayType(_types._AsdfType):
     @classmethod
     def from_tree(cls, node, ctx):
         if isinstance(node, list):
-            instance = cls(node, None, None, None, None, None, None, ctx)
+            instance = cls(node, None, None, None, None, None, None)
             ctx._blocks._set_array_storage(instance, "inline")
             return instance
 
@@ -448,17 +444,29 @@ class NDArrayType(_types._AsdfType):
             mask = node.get("mask", None)
 
             if isinstance(source, int):
-                block_index = source
-                source = ctx._blocks._get_data_callback(source)
+                data = ctx._blocks._get_data_callback(source)
+                instance = cls(data, shape, dtype, offset, strides, "A", mask)
+                ctx._blocks.blocks.assign_object(instance, ctx._blocks.blocks[source])
+                ctx._blocks._data_callbacks.assign_object(instance, data)
+            elif isinstance(source, str):
+                # external
+                def data(_attr=None, _ref=weakref.ref(ctx)):
+                    ctx = _ref()
+                    if ctx is None:
+                        msg = "Failed to resolve reference to AsdfFile to read external block"
+                        raise OSError(msg)
+                    array = ctx.open_external(source)._blocks.blocks[0].cached_data
+                    ctx._blocks._set_array_storage(array, "external")
+                    return array
+
+                instance = cls(data, shape, dtype, offset, strides, "A", mask)
             else:
-                block_index = None
-            instance = cls(source, shape, dtype, offset, strides, "A", mask, ctx)
-            if block_index is not None:
-                ctx._blocks.blocks.assign_object(instance, ctx._blocks.blocks[block_index])
-                ctx._blocks._data_callbacks.assign_object(instance, source)
-            else:
-                if not isinstance(source, str):
-                    ctx._blocks._set_array_storage(instance, "inline")
+                # inline
+                instance = cls(source, shape, dtype, offset, strides, "A", mask)
+                ctx._blocks._set_array_storage(instance, "inline")
+
+            if not ctx._blocks.lazy_load:
+                instance._make_array()
             return instance
 
         msg = "Invalid ndarray description."
@@ -600,14 +608,6 @@ class NDArrayType(_types._AsdfType):
             cls._assert_equality(old, new, assert_array_equal)
         else:
             cls._assert_equality(old, new, assert_allclose)
-
-    # @classmethod
-    # def copy_to_new_asdf(cls, node, asdffile):
-    #    if isinstance(node, NDArrayType):
-    #        array = node._make_array()
-    #        asdffile._blocks.set_array_storage(asdffile._blocks[array], node.block.array_storage)
-    #        return node._make_array()
-    #    return node
 
 
 def _make_operation(name):
