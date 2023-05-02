@@ -15,6 +15,7 @@ class Options:
         # set kwargs first to avoid overwrite when compression type changes
         self.compression_kwargs = compression_kwargs
         self.compression = compression_type
+
         # set storage type last to possibly overwrite compression/compression_kwargs
         self.storage_type = storage_type
 
