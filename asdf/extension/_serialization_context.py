@@ -1,3 +1,5 @@
+import contextlib
+
 from asdf._helpers import validate_version
 from asdf.extension import ExtensionProxy
 
@@ -77,7 +79,22 @@ class SerializationContext:
         """
         return self.__extensions_used
 
-    def get_block_data_callback(self, index):
+    @contextlib.contextmanager
+    def _deserialization(self):
+        self._obj = None
+        self._blk = None
+        self._cb = None
+        yield self
+        if self._blk is not None:
+            self._blocks.blocks.assign_object(self._obj, self._blk)
+            self._blocks._data_callbacks.assign_object(self._obj, self._cb)
+
+    @contextlib.contextmanager
+    def _serialization(self, obj):
+        self._obj = obj
+        yield self
+
+    def get_block_data_callback(self, index, key=None):
         """
         Generate a callable that when called will read data
         from a block at the provided index
@@ -87,6 +104,9 @@ class SerializationContext:
         index : int
             Block index
 
+        key : BlockKey
+            TODO
+
         Returns
         -------
         callback : callable
@@ -94,55 +114,38 @@ class SerializationContext:
             the block data as a one dimensional array of uint8
         """
         blk = self._blocks.blocks[index]
+        cb = self._blocks._get_data_callback(index)
 
-        def callback(blk=blk):
-            return blk.data
+        if key is None:
+            if self._blk is not None:
+                msg = "Converters accessing >1 block must provide a key for each block"
+                raise OSError(msg)
+            self._blk = blk
+            self._cb = cb
+        else:
+            self._blocks.blocks.assign_object(key, blk)
+            self._blocks._data_callbacks.assign_object(key, cb)
 
-        return callback
+        return cb
 
-    def assign_block_key(self, block_index, key):
+    def find_available_block_index(self, data_callback, lookup_key=None):
         """
-        Associate a unique hashable key with a block.
-
-        This is used during Converter.from_yaml_tree and allows
-        the AsdfFile to be aware of which blocks belong to the
-        object handled by the converter and allows load_block
-        to locate the block using the key instead of the index
-        (which might change if a file undergoes an AsdfFile.update).
-
-        If the block index is later needed (like during to_yaml_tree)
-        the key can be used with find_block_index to lookup the
-        block index.
-
-        Parameters
-        ----------
-
-        block_index : int
-            The index of the block to associate with the key
-
-        key : hashable
-            A unique hashable key to associate with a block
-        """
-        self._blocks.blocks.assign_object(key, self._blocks.blocks[block_index])
-
-    def find_block_index(self, lookup_key, data_callback=None):
-        """
-        Find the index of a previously allocated or reserved block.
+        Find the index of an available block to write data.
 
         This is typically used inside asdf.extension.Converter.to_yaml_tree
 
         Parameters
         ----------
-        lookup_key : hashable
-            Unique key used to retrieve the index of a block that was
-            previously allocated or reserved. For ndarrays this is
-            typically the id of the base ndarray.
-
-        data_callback: callable, optional
+        data_callback: callable
             Callable that when called will return data (ndarray) that will
             be written to a block.
             At the moment, this is only assigned if a new block
             is created to avoid circular references during AsdfFile.update.
+
+        lookup_key : hashable, optional
+            Unique key used to retrieve the index of a block that was
+            previously allocated or reserved. For ndarrays this is
+            typically the id of the base ndarray.
 
         Returns
         -------
@@ -151,6 +154,6 @@ class SerializationContext:
             will be written.
         """
 
-        # TODO eventually this will need to map memmap blocks to not rewrite data
-        # TODO lookup options from previous block
+        if lookup_key is None:
+            lookup_key = self._obj
         return self._blocks.make_write_block(data_callback, BlockOptions(), lookup_key)
