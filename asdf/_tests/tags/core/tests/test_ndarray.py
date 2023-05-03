@@ -183,7 +183,7 @@ def test_array_inline_threshold_recursive(tmpdir):
         af = asdf.AsdfFile(tree)
         af.write_to(fn)
         with asdf.open(fn) as af:
-            assert len(list(af._blocks.internal_blocks)) == 0
+            assert len(list(af._blocks.blocks)) == 0
 
 
 def test_copy_inline():
