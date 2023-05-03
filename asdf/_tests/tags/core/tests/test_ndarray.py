@@ -174,12 +174,18 @@ def test_array_inline_threshold_recursive(tmpdir):
     aff = models.AffineTransformation2D(matrix=[[1, 2], [3, 4]])
     tree = {"test": aff}
 
-    def check_asdf(asdf):
-        assert len(list(asdf._blocks.internal_blocks)) == 0
-
     with asdf.config_context() as config:
         config.array_inline_threshold = 100
-        helpers.assert_roundtrip_tree(tree, tmpdir, asdf_check_func=check_asdf)
+        # we can no longer use _helpers.assert_roundtrip_tree here because
+        # the model no longer has a CustomType which results in equality testing
+        # using == which will fail
+        # this test appears to be designed to test the inline threshold so we can
+        # just look at the number of blocks
+        fn = str(tmpdir / "test.asdf")
+        af = asdf.AsdfFile(tree)
+        af.write_to(fn)
+        with asdf.open(fn) as af:
+            assert len(list(af._blocks.internal_blocks)) == 0
 
 
 def test_copy_inline():
