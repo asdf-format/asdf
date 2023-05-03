@@ -96,7 +96,10 @@ def read_block(fd, offset=None, memmap=False, lazy_load=False):
     if offset is None and fd.seekable():
         offset = fd.tell()
     header = read_block_header(fd, offset)
-    data_offset = fd.tell()
+    if fd.seekable():
+        data_offset = fd.tell()
+    else:
+        data_offset = None
     if lazy_load and fd.seekable():
         # setup a callback to later load the data
         fd_ref = weakref.ref(fd)
