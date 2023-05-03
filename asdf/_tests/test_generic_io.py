@@ -274,7 +274,6 @@ def test_http_connection(tree, httpserver):
 
     with _roundtrip(tree, get_write_fd, get_read_fd) as ff:
         assert len(ff._blocks.blocks) == 2
-        assert isinstance(ff._blocks.blocks[0]._data, np.ndarray)
         assert (ff.tree["science_data"] == tree["science_data"]).all()
 
 
@@ -322,8 +321,7 @@ def test_exploded_http(tree, httpserver):
         return generic_io.get_file(httpserver.url + "test.asdf")
 
     with _roundtrip(tree, get_write_fd, get_read_fd, write_options={"all_array_storage": "external"}) as ff:
-        assert len(list(ff._blocks.internal_blocks)) == 0
-        assert len(list(ff._blocks.external_blocks)) == 2
+        assert len(list(ff._blocks.blocks)) == 0
 
 
 def test_exploded_stream_write(small_tree):
