@@ -156,18 +156,18 @@ class NDArrayConverter(Converter):
                 data = ctx.get_block_data_callback(source)
                 instance = NDArrayType(data, shape, dtype, offset, strides, "A", mask)
             elif isinstance(source, str):
-                raise NotImplementedError("external blocks broken... again")
-
                 # external
-                def data(_attr=None, _ref=weakref.ref(ctx)):
-                    ctx = _ref()
-                    if ctx is None:
+                def data(_attr=None, _ref=weakref.ref(ctx._blocks)):
+                    blks = _ref()
+                    if blks is None:
                         msg = "Failed to resolve reference to AsdfFile to read external block"
                         raise OSError(msg)
-                    array = ctx.open_external(source)._blocks.blocks[0].cached_data
-                    ctx._blocks._set_array_storage(array, "external")
+                    array = blks._load_external(source)
+                    blks._set_array_storage(array, "external")
                     return array
 
+                # data = ctx._blocks._load_external(source)
+                # ctx._blocks._set_array_storage(data, "external")
                 instance = NDArrayType(data, shape, dtype, offset, strides, "A", mask)
             else:
                 # inline

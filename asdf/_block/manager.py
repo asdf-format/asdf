@@ -7,6 +7,7 @@ from asdf import config, constants, generic_io, util
 
 from . import store
 from .callback import DataCallback
+from .external import ExternalBlockCache, UseInternal
 from .options import Options
 from .writer import WriteBlock, write_blocks
 
@@ -97,7 +98,9 @@ def make_external_uri(uri, index):
     return filename
 
 
-def resolve_external_uri(uri, relative):
+def relative_uri_to_full(uri, relative):
+    # file://foo/bar, bam -> file://foo/bam
+    # TODO replace with generic_io.resolve_uri
     if uri is None:
         uri = ""
     parts = list(util.patched_urllib_parse.urlparse(uri))
@@ -121,6 +124,13 @@ class Manager:
         self._streamed_obj = None
         self._write_fd = None
         self._uri = uri
+        self._external_block_cache = ExternalBlockCache()
+
+    def _load_external(self, uri):
+        value = self._external_block_cache.load(self._uri, uri)
+        if value is UseInternal:
+            return self._blocks.blocks[0].data
+        return value
 
     def _clear_write(self):
         self._write_blocks = store.LinearStore()
@@ -139,7 +149,7 @@ class Manager:
             raise ValueError("Can't write external blocks, since URI of main file is unknown.")
 
         for blk in self._external_write_blocks:
-            uri = resolve_external_uri(self._write_fd.uri, blk._uri)
+            uri = relative_uri_to_full(self._write_fd.uri, blk._uri)
             af = AsdfFile()
             with generic_io.get_file(uri, mode="w") as f:
                 af.write_to(f, include_block_index=False)
@@ -157,7 +167,10 @@ class Manager:
             # need to set up new external block
             index = len(self._external_write_blocks)
             blk = WriteBlock(data, options.compression, options.compression_kwargs)
-            base_uri = self._uri or self._write_fd.uri
+            if self._write_fd is not None:
+                base_uri = self._write_fd.uri or self._uri
+            else:
+                base_uri = self._uri
             blk._uri = make_external_uri(base_uri, index)
             self._external_write_blocks.append(blk)
             return blk._uri

@@ -172,6 +172,7 @@ class AsdfFile:
                 msg = "Can not copy AsdfFile and change active extensions"
                 raise ValueError(msg)
             self._uri = tree.uri
+            self._blocks._uri = self._uri
             # Set directly to self._tree (bypassing property), since
             # we can assume the other AsdfFile is already valid.
             self._tree = tree.tree
@@ -804,6 +805,9 @@ class AsdfFile:
         with config_context():
             self._mode = fd.mode
             self._fd = fd
+            if self._fd._uri:
+                self._uri = self._fd._uri
+                self._blocks._uri = self._fd._uri
             # The filename is currently only used for tracing warning information
             self._fname = self._fd._uri if self._fd._uri else ""
             try:
