@@ -251,6 +251,8 @@ def custom_tree_to_tagged_tree(tree, ctx, _serialization_context=None):
     def _walker(obj):
         if extension_manager.handles_type(type(obj)):
             return _convert_obj(obj)
+        if extension_manager.handles_subtype(type(obj)):
+            return _convert_obj(obj)
 
         tag = ctx._type_index.from_custom_type(
             type(obj),
