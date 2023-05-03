@@ -229,11 +229,12 @@ def numpy_array_to_list(array):
 
 
 class NDArrayType:
-    def __init__(self, source, shape, dtype, offset, strides, order, mask):
+    def __init__(self, source, shape, dtype, offset, strides, order, mask, data_callback=None):
         # source can be a:
         # - list of numbers for an inline block
         # - a data callback for an internal or externalblock
         self._source = source
+        self._data_callback = data_callback
         self._array = None
         self._mask = mask
 
@@ -264,11 +265,16 @@ class NDArrayType:
                 self._array = None
 
         if self._array is None:
-            if callable(self._source):
+            if isinstance(self._source, str):
+                # we need to keep _source as a str to allow stdatamodels to
+                # support AsdfInFits
+                data = self._data_callback()
+            elif isinstance(self._source, int):
                 # cached data is used here so that multiple NDArrayTypes will all use
                 # the same base array
-                data = self._source(_attr="cached_data")
+                data = self._data_callback(_attr="cached_data")
             else:
+                # inline data
                 data = self._source
 
             if hasattr(data, "base") and isinstance(data.base, mmap.mmap) and data.base.closed:
@@ -351,7 +357,7 @@ class NDArrayType:
         if "*" in self._shape:
             if isinstance(self._source, str):
                 return self._make_array().shape
-            data_size = self._source(_attr="header")["data_size"]
+            data_size = self._data_callback(_attr="header")["data_size"]
             if not data_size:
                 return self._make_array().shape
             return tuple(

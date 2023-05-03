@@ -1,3 +1,5 @@
+import numpy as np
+
 from asdf.extension import Converter
 
 
@@ -7,7 +9,7 @@ class NDArrayConverter(Converter):
         "tag:stsci.edu:asdf/core/ndarray-1.1.0",
     ]
     types = [
-        "numpy.ndarray",
+        np.ndarray,  # we use the type here so the extension can find the sub-classes
         "numpy.ma.core.MaskedArray",
         "asdf.tags.core.ndarray.NDArrayType",
         "asdf.tags.core.stream.Stream",
@@ -153,11 +155,11 @@ class NDArrayConverter(Converter):
             mask = node.get("mask", None)
 
             if isinstance(source, int):
-                data = ctx.get_block_data_callback(source)
-                instance = NDArrayType(data, shape, dtype, offset, strides, "A", mask)
+                data_callback = ctx.get_block_data_callback(source)
+                instance = NDArrayType(source, shape, dtype, offset, strides, "A", mask, data_callback)
             elif isinstance(source, str):
                 # external
-                def data(_attr=None, _ref=weakref.ref(ctx._blocks)):
+                def data_callback(_attr=None, _ref=weakref.ref(ctx._blocks)):
                     blks = _ref()
                     if blks is None:
                         msg = "Failed to resolve reference to AsdfFile to read external block"
@@ -166,9 +168,7 @@ class NDArrayConverter(Converter):
                     blks._set_array_storage(array, "external")
                     return array
 
-                # data = ctx._blocks._load_external(source)
-                # ctx._blocks._set_array_storage(data, "external")
-                instance = NDArrayType(data, shape, dtype, offset, strides, "A", mask)
+                instance = NDArrayType(source, shape, dtype, offset, strides, "A", mask, data_callback)
             else:
                 # inline
                 instance = NDArrayType(source, shape, dtype, offset, strides, "A", mask)
