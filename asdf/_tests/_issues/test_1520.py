@@ -27,7 +27,6 @@ def test_1520(tmp_path):
             af[i][:] = np.random.randint(255, size=array_size)
             af[i][0] = i + 1
         # this no longer causes update to fail
-        assert False
         af.update()
 
     with asdf.open(fn, mode="r") as af:

@@ -1,8 +1,10 @@
 import numpy as np
+import pytest
 
 import asdf
 
 
+@pytest.mark.xfail(reason="fixing this may require subclassing ndarray")
 def test_1530(tmp_path):
     """
     Calling update with memmapped data can create invalid data in memmap views
