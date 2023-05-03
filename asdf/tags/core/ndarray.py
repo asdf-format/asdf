@@ -5,7 +5,7 @@ import numpy as np
 from jsonschema import ValidationError
 from numpy import ma
 
-from asdf import _types, util
+from asdf import util
 
 _datatype_names = {
     "int8": "i1",
@@ -226,13 +226,7 @@ def numpy_array_to_list(array):
     return ascii_to_unicode(tolist(array))
 
 
-# class NDArrayType(_types.AsdfType):
 class NDArrayType:
-    name = "core/ndarray"
-    version = "1.0.0"
-    supported_versions = {"1.0.0", "1.1.0"}
-    types = [np.ndarray, ma.MaskedArray]
-
     def __init__(self, source, shape, dtype, offset, strides, order, mask):
         # source can be a:
         # - list of numbers for an inline block
@@ -400,17 +394,6 @@ class NDArrayType:
 
             raise
 
-    def __getattribute__(self, name):
-        # The presence of these attributes on an NDArrayType instance
-        # can cause problems when the array is passed to other
-        # libraries.
-        # See https://github.com/asdf-format/asdf/issues/1015
-        if name in ("name", "version", "supported_versions"):
-            msg = f"'{self.__class__.name}' object has no attribute '{name}'"
-            raise AttributeError(msg)
-
-        return _types.AsdfType.__getattribute__(self, name)
-
 
 def _make_operation(name):
     def operation(self, *args):
@@ -419,8 +402,6 @@ def _make_operation(name):
     return operation
 
 
-# classes_to_modify = [*NDArrayType.__versioned_siblings, NDArrayType]
-classes_to_modify = [NDArrayType]
 for op in [
     "__neg__",
     "__pos__",
@@ -485,8 +466,7 @@ for op in [
     "__delitem__",
     "__contains__",
 ]:
-    [setattr(cls, op, _make_operation(op)) for cls in classes_to_modify]
-del classes_to_modify
+    setattr(NDArrayType, op, _make_operation(op))
 
 
 def _get_ndim(instance):
