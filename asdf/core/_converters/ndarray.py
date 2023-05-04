@@ -140,15 +140,16 @@ class NDArrayConverter(Converter):
             return instance
 
         if isinstance(node, dict):
-            source = node.get("source")
-            data = node.get("data")
-            if source and data:
+            shape = node.get("shape", None)
+            if "source" in node and "data" in node:
                 msg = "Both source and data may not be provided at the same time"
                 raise ValueError(msg)
-            if data:
-                source = data
-            shape = node.get("shape", None)
-            byteorder = sys.byteorder if data is not None else node["byteorder"]
+            if "source" in node:
+                source = node["source"]
+                byteorder = node["byteorder"]
+            else:
+                source = node["data"]
+                byteorder = sys.byteorder
             dtype = asdf_datatype_to_numpy_dtype(node["datatype"], byteorder) if "datatype" in node else None
             offset = node.get("offset", 0)
             strides = node.get("strides", None)
