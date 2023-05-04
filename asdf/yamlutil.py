@@ -5,7 +5,7 @@ from types import GeneratorType
 import numpy as np
 import yaml
 
-from . import schema, tagged, treeutil, util
+from . import config, schema, tagged, treeutil, util
 from .constants import STSCI_SCHEMA_TAG_BASE, YAML_TAG_PREFIX
 from .exceptions import AsdfConversionWarning
 from .tags.core import AsdfObject
@@ -219,8 +219,11 @@ def custom_tree_to_tagged_tree(tree, ctx, _serialization_context=None):
 
     extension_manager = _serialization_context.extension_manager
 
-    def _convert_obj(obj):
-        converter = extension_manager.get_converter_for_type(type(obj))
+    def _convert_obj(obj, subtype=False):
+        if subtype:
+            converter = extension_manager._get_converter_for_subtype(type(obj))
+        else:
+            converter = extension_manager.get_converter_for_type(type(obj))
         tag = converter.select_tag(obj, _serialization_context)
         with _serialization_context._serialization(obj):
             node = converter.to_yaml_tree(obj, tag, _serialization_context)
@@ -248,11 +251,20 @@ def custom_tree_to_tagged_tree(tree, ctx, _serialization_context=None):
         if generator is not None:
             yield from generator
 
+    cfg = config.get_config()
+    convert_ndarray_subclasses = cfg.convert_unknown_ndarray_subclasses
+
     def _walker(obj):
         if extension_manager.handles_type(type(obj)):
             return _convert_obj(obj)
-        if extension_manager.handles_subtype(type(obj)):
-            return _convert_obj(obj)
+        if convert_ndarray_subclasses and isinstance(obj, np.ndarray) and extension_manager._handles_subtype(type(obj)):
+            warnings.warn(
+                f"A ndarray subclass ({type(obj)}) was converted as a ndarray. "
+                "This behavior will be removed from a future version of ASDF. "
+                "See TODO some link",
+                AsdfConversionWarning,
+            )
+            return _convert_obj(obj, subtype=True)
 
         tag = ctx._type_index.from_custom_type(
             type(obj),
