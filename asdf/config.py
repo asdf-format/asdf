@@ -23,6 +23,7 @@ DEFAULT_ARRAY_INLINE_THRESHOLD = None
 DEFAULT_ALL_ARRAY_STORAGE = None
 DEFAULT_ALL_ARRAY_COMPRESSION = "input"
 DEFAULT_ALL_ARRAY_COMPRESSION_KWARGS = None
+DEFAULT_CONVERT_UNKNOWN_NDARRAY_SUBCLASSES = True
 
 
 class AsdfConfig:
@@ -44,6 +45,7 @@ class AsdfConfig:
         self._all_array_storage = DEFAULT_ALL_ARRAY_STORAGE
         self._all_array_compression = DEFAULT_ALL_ARRAY_COMPRESSION
         self._all_array_compression_kwargs = DEFAULT_ALL_ARRAY_COMPRESSION_KWARGS
+        self._convert_unknown_ndarray_subclasses = DEFAULT_CONVERT_UNKNOWN_NDARRAY_SUBCLASSES
 
         self._lock = threading.RLock()
 
@@ -413,6 +415,30 @@ class AsdfConfig:
         """
         self._validate_on_read = value
 
+    @property
+    def convert_unknown_ndarray_subclasses(self):
+        """
+        Get configuration that controls if ndarray subclasses
+        (subclasses that aren't otherwise handled by a specific
+        converter) are serialized as ndarray. If `True`, instances
+        of these subclasses will appear in ASDF files as ndarrays
+        and when loaded, will load as ndarrays.
+
+        Note that these conversions will result in an
+        AsdfConversionWarning being issued as this support for
+        converting subclasses will be removed in a future version
+        of ASDF.
+
+        Returns
+        -------
+        bool
+        """
+        return self._convert_unknown_ndarray_subclasses
+
+    @convert_unknown_ndarray_subclasses.setter
+    def convert_unknown_ndarray_subclasses(self, value):
+        self._convert_unknown_ndarray_subclasses = value
+
     def __repr__(self):
         return (
             "<AsdfConfig\n"
@@ -424,6 +450,7 @@ class AsdfConfig:
             "  io_block_size: {}\n"
             "  legacy_fill_schema_defaults: {}\n"
             "  validate_on_read: {}\n"
+            "  convert_unknown_ndarray_subclasses: {}\n"
             ">"
         ).format(
             self.array_inline_threshold,
@@ -434,6 +461,7 @@ class AsdfConfig:
             self.io_block_size,
             self.legacy_fill_schema_defaults,
             self.validate_on_read,
+            self.convert_unknown_ndarray_subclasses,
         )
 
 

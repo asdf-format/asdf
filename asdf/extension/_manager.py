@@ -92,12 +92,11 @@ class ExtensionManager:
         """
         return typ in self._converters_by_type or get_class_name(typ, instance=False) in self._converters_by_type
 
-    def handles_subtype(self, typ):
+    def _handles_subtype(self, typ):
         for ctyp in self._converters_by_type:
             if isinstance(ctyp, str):
                 continue
             if issubclass(typ, ctyp):
-                self._converters_by_type[typ] = self._converters_by_type[ctyp]
                 return True
         return False
 
@@ -193,6 +192,18 @@ class ExtensionManager:
                     "You may need to install or enable an extension."
                 )
                 raise KeyError(msg) from None
+
+    def _get_converter_for_subtype(self, typ):
+        for ctyp in self._converters_by_type:
+            if isinstance(ctyp, str):
+                continue
+            if issubclass(typ, ctyp):
+                return self._converters_by_type[ctyp]
+        msg = (
+            f"No support available for Python type '{get_class_name(typ, instance=False)}'.  "
+            "You may need to install or enable an extension."
+        )
+        raise KeyError(msg) from None
 
     @property
     def validator_manager(self):
