@@ -150,7 +150,12 @@ def assert_tree_match(old_tree, new_tree, ctx=None, funcname="assert_equal", ign
             assert old.ra == new.ra
             assert old.dec == new.dec
         elif all([isinstance(obj, (np.ndarray, asdf.tags.core.NDArrayType)) for obj in (old, new)]):
-            np.testing.assert_array_equal(old, new)
+            with warnings.catch_warnings():
+                # The oldest deps job tests against versions of numpy where this
+                # testing function raised a FutureWarning but still functioned
+                # as expected
+                warnings.filterwarnings("ignore", category=FutureWarning)
+                np.testing.assert_array_equal(old, new)
         else:
             assert old == new
 
