@@ -446,22 +446,22 @@ class AsdfConfig:
             "  all_array_storage: {}\n"
             "  all_array_compression: {}\n"
             "  all_array_compression_kwargs: {}\n"
+            "  convert_unknown_ndarray_subclasses: {}\n"
             "  default_version: {}\n"
             "  io_block_size: {}\n"
             "  legacy_fill_schema_defaults: {}\n"
             "  validate_on_read: {}\n"
-            "  convert_unknown_ndarray_subclasses: {}\n"
             ">"
         ).format(
             self.array_inline_threshold,
             self.all_array_storage,
             self.all_array_compression,
             self.all_array_compression_kwargs,
+            self.convert_unknown_ndarray_subclasses,
             self.default_version,
             self.io_block_size,
             self.legacy_fill_schema_defaults,
             self.validate_on_read,
-            self.convert_unknown_ndarray_subclasses,
         )
 
 
