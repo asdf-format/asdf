@@ -1094,6 +1094,7 @@ class AsdfFile:
             # TODO shortcuts for
             # - no read blocks
             if len(self._blocks.blocks) == 0 and self._blocks._streamed_block is None:
+                self._fd.seek(0)
                 self.write_to(self._fd)
                 if self._fd.can_memmap():
                     self._fd.close_memmap()
@@ -1101,6 +1102,7 @@ class AsdfFile:
                 return
             # - all external
             if config.all_array_storage == "external":
+                self._fd.seek(0)
                 self.write_to(self._fd)
                 if self._fd.can_memmap():
                     self._fd.close_memmap()

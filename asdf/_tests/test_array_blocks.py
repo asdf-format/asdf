@@ -804,9 +804,10 @@ def test_write_to_update_storage_options(tmp_path, all_array_storage, all_array_
     )
 
     # then reuse the file to check update
+    arr2 = np.ones((8, 8)) * 42
     with asdf.open(fn, mode="rw") as ff2:
         assert_result(ff2)
-        arr2 = np.ones((8, 8)) * 42
+        np.testing.assert_array_equal(arr1, ff2["array"])
         ff2["array"] = arr2
         ff2.update(
             all_array_storage=all_array_storage,
@@ -814,6 +815,9 @@ def test_write_to_update_storage_options(tmp_path, all_array_storage, all_array_
             compression_kwargs=compression_kwargs,
         )
         assert_result(ff2)
+    with asdf.open(fn) as ff3:
+        assert_result(ff3)
+        np.testing.assert_array_equal(arr2, ff3["array"])
 
 
 def test_remove_blocks(tmp_path):
