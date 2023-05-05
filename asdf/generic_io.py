@@ -777,8 +777,10 @@ class RealFile(RandomAccessFile):
             acc = mmap.ACCESS_WRITE if "w" in self._mode else mmap.ACCESS_READ
             self._fd.seek(0, 2)
             nbytes = self._fd.tell()
-            self._fd.seek(loc, 0)
             self._mmap = mmap.mmap(self._fd.fileno(), nbytes, access=acc)
+            # on windows mmap seeks to the start of the file so return the file
+            # pointer to this previous location
+            self._fd.seek(loc, 0)
         return np.ndarray.__new__(np.memmap, shape=size, offset=offset, dtype="uint8", buffer=self._mmap)
 
     def close_memmap(self):
