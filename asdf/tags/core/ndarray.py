@@ -242,7 +242,8 @@ class NDArrayType:
             self._array = inline_data_asarray(source, dtype)
             self._array = self._apply_mask(self._array, self._mask)
             if shape is not None and (
-                (shape[0] == "*" and self._array.shape[1:] != tuple(shape[1:])) or (self._array.shape != tuple(shape))
+                self._array.shape != tuple(shape)
+                or (len(shape) and shape[0] == "*" and self._array.shape[1:] != tuple(shape[1:]))
             ):
                 msg = "inline data doesn't match the given shape"
                 raise ValueError(msg)
