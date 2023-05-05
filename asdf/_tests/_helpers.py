@@ -159,10 +159,10 @@ def assert_tree_match(old_tree, new_tree, ctx=None, funcname="assert_equal", ign
                     if not new.dtype.fields:
                         msg = "arrays not equal"
                         raise AssertionError(msg)
-                    for a, b in zip(old, new):
-                        np.testing.assert_array_equal(a, b)
+                    for f in old.dtype.fields:
+                        np.testing.assert_array_equal(old[f], new[f])
                 else:
-                    np.testing.assert_array_equal(old, new)
+                    np.testing.assert_array_equal(old.__array__(), new.__array__())
         else:
             assert old == new
 
