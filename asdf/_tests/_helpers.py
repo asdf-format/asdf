@@ -155,7 +155,14 @@ def assert_tree_match(old_tree, new_tree, ctx=None, funcname="assert_equal", ign
                 # testing function raised a FutureWarning but still functioned
                 # as expected
                 warnings.filterwarnings("ignore", category=FutureWarning)
-                np.testing.assert_array_equal(old, new)
+                if old.dtype.fields:
+                    if not new.dtype.fields:
+                        msg = "arrays not equal"
+                        raise AssertionError(msg)
+                    for a, b in zip(old, new):
+                        np.testing.assert_array_equal(a, b)
+                else:
+                    np.testing.assert_array_equal(old, new)
         else:
             assert old == new
 
