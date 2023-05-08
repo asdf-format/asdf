@@ -70,17 +70,18 @@ class ReadBlock:
 def read_blocks_serially(fd, memmap=False, lazy_load=False, validate_checksums=False, after_magic=False):
     blocks = []
     buff = b""
+    magic_len = len(constants.BLOCK_MAGIC)
     while True:
         # the expectation is that this will begin PRIOR to the block magic
         # read 4 bytes
         if not after_magic:
-            buff += fd.read(4 - len(buff))
-            if len(buff) < 4:
+            buff += fd.read(magic_len - len(buff))
+            if len(buff) < magic_len:
                 # we are done, there are no more blocks and no index
                 # TODO error? we shouldn't have extra bytes, the old code allows this
                 break
 
-        if buff == constants.INDEX_HEADER[:4]:
+        if buff == constants.INDEX_HEADER[:magic_len]:
             # we hit the block index, which is not useful here
             break
 
@@ -130,12 +131,13 @@ def read_blocks(fd, memmap=False, lazy_load=False, validate_checksums=False, aft
         fd.seek(starting_offset)
         return read_blocks_serially(fd, memmap, lazy_load, validate_checksums, after_magic)
     # skip magic for each block
-    blocks = [ReadBlock(offset + 4, fd, memmap, lazy_load, validate_checksums) for offset in block_index]
+    magic_len = len(constants.BLOCK_MAGIC)
+    blocks = [ReadBlock(offset + magic_len, fd, memmap, lazy_load, validate_checksums) for offset in block_index]
     try:
         # load first and last blocks to check if the index looks correct
         for index in (0, -1):
             fd.seek(block_index[index])
-            buff = fd.read(4)
+            buff = fd.read(magic_len)
             if buff != constants.BLOCK_MAGIC:
                 msg = "Invalid block magic"
                 raise OSError(msg)

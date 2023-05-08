@@ -20,7 +20,6 @@ class Key:
         r = self._ref()
         if r is None:
             return False
-        del r
         return True
 
     def __hash__(self):

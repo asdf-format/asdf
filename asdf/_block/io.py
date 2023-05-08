@@ -188,7 +188,6 @@ def write_block(fd, data, offset=None, stream=False, compression_kwargs=None, pa
 def candidate_offsets(min_offset, max_offset, block_size):
     offset = (max_offset // block_size) * block_size
     if offset == max_offset:
-        # don't include the max_offset
         offset -= block_size
     while offset > min_offset:
         yield offset
@@ -217,9 +216,7 @@ def find_block_index(fd, min_offset=None, max_offset=None):
                 return None
             break
         buff = buff[: len(pattern)]
-    if block_index_offset is not None and block_index_offset < max_offset:
-        return block_index_offset
-    return None
+    return block_index_offset
 
 
 def read_block_index(fd, offset=None):
