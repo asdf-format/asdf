@@ -8,6 +8,7 @@ import yaml
 
 from asdf import compression as mcompression
 from asdf import constants, util
+from asdf.config import get_config
 
 BLOCK_HEADER = util.BinaryStruct(
     [
@@ -66,8 +67,6 @@ def read_block_data(fd, header, offset=None, memmap=False):
         else:
             offset = fd.tell()
 
-    # load and possibly decompress the data
-    # read the raw bytes
     if header["flags"] & constants.BLOCK_FLAG_STREAMED:
         used_size = -1
     else:
@@ -76,7 +75,7 @@ def read_block_data(fd, header, offset=None, memmap=False):
     # if no compression, just read data
     compression = mcompression.validate(header["compression"])
     if compression:
-        # the old code ignored memmapping for compressed data
+        # compressed data will not be memmapped
         data = mcompression.decompress(fd, used_size, header["data_size"], compression)
         fd.fast_forward(header["allocated_size"] - header["used_size"])
     else:
@@ -121,14 +120,12 @@ def read_block(fd, offset=None, memmap=False, lazy_load=False):
     return offset, header, data_offset, data
 
 
-def validate_write_data(data):
+def generate_write_header(
+    data, stream=False, compression_kwargs=None, padding=False, fs_block_size=None, **header_kwargs
+):
     if data.ndim != 1 or data.dtype != "uint8":
         msg = "Data must be of ndim==1 and dtype==uint8"
         raise ValueError(msg)
-
-
-def generate_write_header(fd, data, stream=False, compression_kwargs=None, padding=False, **header_kwargs):
-    validate_write_data(data)
     if stream:
         header_kwargs["flags"] = header_kwargs.get("flags", 0) | constants.BLOCK_FLAG_STREAMED
         header_kwargs["data_size"] = 0
@@ -151,7 +148,9 @@ def generate_write_header(fd, data, stream=False, compression_kwargs=None, paddi
         header_kwargs["allocated_size"] = 0
     else:
         header_kwargs["used_size"] = used_size
-        padding = util.calculate_padding(used_size, padding, fd.block_size)
+        if fs_block_size is None:
+            fs_block_size = get_config().io_block_size
+        padding = util.calculate_padding(used_size, padding, fs_block_size)
         header_kwargs["allocated_size"] = header_kwargs.get("allocated_size", used_size + padding)
 
     if header_kwargs["allocated_size"] < header_kwargs["used_size"]:
@@ -166,8 +165,9 @@ def generate_write_header(fd, data, stream=False, compression_kwargs=None, paddi
 
 
 def write_block(fd, data, offset=None, stream=False, compression_kwargs=None, padding=False, **header_kwargs):
-    # TODO fd is only used for padding calculation, bring this out
-    header, buff, padding_bytes = generate_write_header(fd, data, stream, compression_kwargs, padding, **header_kwargs)
+    header, buff, padding_bytes = generate_write_header(
+        data, stream, compression_kwargs, padding, fd.block_size, **header_kwargs
+    )
 
     if offset is not None:
         if fd.seekable():
