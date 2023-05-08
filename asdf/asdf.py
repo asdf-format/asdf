@@ -853,11 +853,13 @@ class AsdfFile:
                 # after the blocks have been read
                 tree = yamlutil.load_tree(reader)
                 # has_blocks = fd.seek_until(constants.BLOCK_MAGIC, 4, include=True, exception=False)
-                read_blocks = block_reader.read_blocks(fd, self._blocks.memmap, self._blocks.lazy_load)
+                read_blocks = block_reader.read_blocks(
+                    fd, self._blocks.memmap, self._blocks.lazy_load, validate_checksums
+                )
             elif yaml_token == constants.BLOCK_MAGIC:
                 # this file has only blocks
                 read_blocks = block_reader.read_blocks(
-                    fd, self._blocks.memmap, self._blocks.lazy_load, after_magic=True
+                    fd, self._blocks.memmap, self._blocks.lazy_load, validate_checksums, after_magic=True
                 )
             elif yaml_token != b"":
                 msg = "ASDF file appears to contain garbage after header."
@@ -1204,7 +1206,7 @@ class AsdfFile:
 
                     # we have to be lazy here as the current memmap is invalid
                     new_read_block = block_reader.ReadBlock(
-                        offset + 4, self._fd, memmap, True, header=header, data=data
+                        offset + 4, self._fd, memmap, True, False, header=header, data=data
                     )
                     new_read_blocks.append_block(new_read_block)
                     new_index = len(new_read_blocks) - 1

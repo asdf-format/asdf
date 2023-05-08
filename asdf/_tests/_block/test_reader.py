@@ -41,13 +41,14 @@ def gen_blocks(fn=None, n=5, size=10, padding=0, padding_byte=b"\0", with_index=
 @pytest.mark.parametrize("lazy_load", [True, False])
 @pytest.mark.parametrize("memmap", [True, False])
 @pytest.mark.parametrize("with_index", [True, False])
+@pytest.mark.parametrize("validate_checksums", [True, False])
 @pytest.mark.parametrize("padding", [0, 3, 4, 5])
-def test_read(tmp_path, lazy_load, memmap, with_index, padding):
+def test_read(tmp_path, lazy_load, memmap, with_index, validate_checksums, padding):
     fn = tmp_path / "test.bin"
     n = 5
     size = 10
     with gen_blocks(fn=fn, n=n, size=size, padding=padding, with_index=with_index) as (fd, check):
-        r = read_blocks(fd, memmap=memmap, lazy_load=lazy_load)
+        r = read_blocks(fd, memmap=memmap, lazy_load=lazy_load, validate_checksums=validate_checksums)
         if lazy_load and with_index:
             assert r[0].loaded
             assert r[-1].loaded

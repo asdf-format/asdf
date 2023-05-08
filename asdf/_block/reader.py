@@ -6,7 +6,7 @@ from . import io as bio
 
 
 class ReadBlock:
-    def __init__(self, offset, fd, memmap, lazy_load, header=None, data_offset=None, data=None):
+    def __init__(self, offset, fd, memmap, lazy_load, validate_checksum, header=None, data_offset=None, data=None):
         self.offset = offset  # after magic
         self._fd = weakref.ref(fd)
         self._header = header
@@ -16,6 +16,7 @@ class ReadBlock:
         # TODO alternative to passing these down?
         self.memmap = memmap
         self.lazy_load = lazy_load
+        self.validate_checksum = validate_checksum
         if not lazy_load:
             self.load()
 
@@ -41,8 +42,17 @@ class ReadBlock:
         if not self.loaded:
             self.load()
         if callable(self._data):
-            return self._data()
-        return self._data
+            data = self._data()
+        else:
+            data = self._data
+        if self.validate_checksum:
+            checksum = bio.calculate_block_checksum(data)
+            if checksum != self._header["checksum"]:
+                msg = f"Block at {self.offset} does not match given checksum"
+                raise ValueError(msg)
+            # only validate data the first time it's read
+            self.validate_checksum = False
+        return data
 
     @property
     def cached_data(self):
@@ -57,7 +67,7 @@ class ReadBlock:
         return self._header
 
 
-def read_blocks_serially(fd, memmap=False, lazy_load=False, after_magic=False):
+def read_blocks_serially(fd, memmap=False, lazy_load=False, validate_checksums=False, after_magic=False):
     blocks = []
     buff = b""
     while True:
@@ -77,7 +87,11 @@ def read_blocks_serially(fd, memmap=False, lazy_load=False, after_magic=False):
         if after_magic or buff == constants.BLOCK_MAGIC:
             # this is another block
             offset, header, data_offset, data = bio.read_block(fd, memmap=memmap, lazy_load=lazy_load)
-            blocks.append(ReadBlock(offset, fd, memmap, lazy_load, header=header, data_offset=data_offset, data=data))
+            blocks.append(
+                ReadBlock(
+                    offset, fd, memmap, lazy_load, validate_checksums, header=header, data_offset=data_offset, data=data
+                )
+            )
             if blocks[-1].header["flags"] & constants.BLOCK_FLAG_STREAMED:
                 # a file can only have 1 streamed block and it must be at the end so we
                 # can stop looking for more blocks
@@ -95,10 +109,10 @@ def read_blocks_serially(fd, memmap=False, lazy_load=False, after_magic=False):
     return blocks
 
 
-def read_blocks(fd, memmap=False, lazy_load=False, after_magic=False):
+def read_blocks(fd, memmap=False, lazy_load=False, validate_checksums=False, after_magic=False):
     if not lazy_load or not fd.seekable():
         # load all blocks serially
-        return read_blocks_serially(fd, memmap, lazy_load, after_magic)
+        return read_blocks_serially(fd, memmap, lazy_load, validate_checksums, after_magic)
 
     # try to find block index
     starting_offset = fd.tell()
@@ -106,7 +120,7 @@ def read_blocks(fd, memmap=False, lazy_load=False, after_magic=False):
     if index_offset is None:
         # if failed, load all blocks serially
         fd.seek(starting_offset)
-        return read_blocks_serially(fd, memmap, lazy_load, after_magic)
+        return read_blocks_serially(fd, memmap, lazy_load, validate_checksums, after_magic)
 
     # setup empty blocks
     try:
@@ -114,9 +128,9 @@ def read_blocks(fd, memmap=False, lazy_load=False, after_magic=False):
     except OSError:
         # failed to read block index, fall back to serial reading
         fd.seek(starting_offset)
-        return read_blocks_serially(fd, memmap, lazy_load, after_magic)
+        return read_blocks_serially(fd, memmap, lazy_load, validate_checksums, after_magic)
     # skip magic for each block
-    blocks = [ReadBlock(offset + 4, fd, memmap, lazy_load) for offset in block_index]
+    blocks = [ReadBlock(offset + 4, fd, memmap, lazy_load, validate_checksums) for offset in block_index]
     try:
         # load first and last blocks to check if the index looks correct
         for index in (0, -1):
