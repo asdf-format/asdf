@@ -9,7 +9,7 @@ from . import tagged, util
 from .exceptions import AsdfDeprecationWarning
 from .versioning import AsdfSpec, AsdfVersion
 
-__all__ = ["format_tag", "CustomType", "AsdfType", "ExtensionType"]  # noqa: F822
+__all__ = ["format_tag", "CustomType", "ExtensionType"]  # noqa: F822
 
 
 # regex used to parse module name from optional version string
@@ -161,7 +161,7 @@ class AsdfTypeMeta(ExtensionTypeMeta):
         new_cls = super().__new__(cls, name, bases, attrs)
         # Classes using this metaclass get added to the list of built-in
         # extensions
-        if name != "AsdfType":
+        if name != "_AsdfType":
             _all_asdftypes.add(new_cls)
 
         return new_cls
@@ -388,7 +388,7 @@ class ExtensionType:
         return False
 
 
-class AsdfType(ExtensionType, metaclass=AsdfTypeMeta):
+class _AsdfType(ExtensionType, metaclass=AsdfTypeMeta):
     """
     Base class for all built-in ASDF types. Types that inherit this class will
     be automatically added to the list of built-ins. This should *not* be used

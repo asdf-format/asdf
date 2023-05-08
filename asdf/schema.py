@@ -13,7 +13,7 @@ import yaml
 from jsonschema import validators as mvalidators
 from jsonschema.exceptions import RefResolutionError, ValidationError
 
-from . import constants, extension, generic_io, reference, tagged, treeutil, util, versioning, yamlutil
+from . import constants, generic_io, reference, tagged, treeutil, util, versioning, yamlutil
 from .config import get_config
 from .exceptions import AsdfDeprecationWarning, AsdfWarning
 from .extension import _legacy
@@ -21,23 +21,7 @@ from .util import patched_urllib_parse
 
 YAML_SCHEMA_METASCHEMA_ID = "http://stsci.edu/schemas/yaml-schema/draft-01"
 
-
 __all__ = ["validate", "fill_defaults", "remove_defaults", "check_schema"]
-
-
-def default_ext_resolver(uri):
-    """
-    Resolver that uses tag/url mappings from all installed extensions
-    """
-    # Deprecating this because it doesn't play nicely with the caching on
-    # load_schema(...).
-    warnings.warn(
-        "The 'default_ext_resolver(...)' function is deprecated. Use "
-        "'asdf.extension.get_default_resolver()(...)' instead.",
-        AsdfDeprecationWarning,
-    )
-    return extension.get_default_resolver()(uri)
-
 
 PYTHON_TYPE_TO_YAML_TAG = {
     None: "null",
@@ -550,8 +534,9 @@ def get_validator(
         A dictionary mapping properties to validators to use (instead
         of the built-in ones and ones provided by extension types).
 
-    url_mapping : resolver.Resolver, optional
-        A resolver to convert remote URLs into local ones.
+    url_mapping : callable, optional
+        A callable that takes one string argument and returns a string
+        to convert remote URLs into local ones.
 
     _visit_repeat_nodes : bool, optional
         Force the validator to visit nodes that it has already

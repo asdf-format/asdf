@@ -203,7 +203,7 @@ def get_cached_extension_manager(extensions):
 
     Parameters
     ----------
-    extensions : list of asdf.extension.AsdfExtension or asdf.extension.Extension
+    extensions : list of asdf.extension.Extension
 
     Returns
     -------

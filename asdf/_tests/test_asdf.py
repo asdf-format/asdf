@@ -125,10 +125,7 @@ def test_asdf_file_extensions():
         af.extensions = arg
         assert af.extensions == [ExtensionProxy(extension)]
 
-    msg = (
-        r"[The extensions parameter must be an extension.*, "
-        r"Extension must implement the Extension or AsdfExtension interface]"
-    )
+    msg = r"[The extensions parameter must be an extension.*, Extension must implement the Extension interface]"
     for arg in (object(), [object()]):
         with pytest.raises(TypeError, match=msg):
             AsdfFile(extensions=arg)
@@ -185,10 +182,7 @@ def test_open_asdf_extensions(tmp_path):
         with open_asdf(path, extensions=arg) as af:
             assert af.extensions == [ExtensionProxy(extension)]
 
-    msg = (
-        r"[The extensions parameter must be an extension.*, "
-        r"Extension must implement the Extension or AsdfExtension interface]"
-    )
+    msg = r"[The extensions parameter must be an extension.*, Extension must implement the Extension interface]"
     for arg in (object(), [object()]):
         with pytest.raises(TypeError, match=msg), open_asdf(path, extensions=arg) as af:
             pass
@@ -211,7 +205,7 @@ def test_serialization_context():
 
     assert context.url == context._url == "file://test.asdf"
 
-    with pytest.raises(TypeError, match=r"Extension must implement the Extension or AsdfExtension interface"):
+    with pytest.raises(TypeError, match=r"Extension must implement the Extension interface"):
         context._mark_extension_used(object())
 
     with pytest.raises(ValueError, match=r"ASDF Standard version .* is not supported by asdf==.*"):

@@ -5,7 +5,7 @@ import numpy as np
 from asdf import _types
 
 
-class IntegerType(_types.AsdfType):
+class IntegerType(_types._AsdfType):
     """
     Enables the storage of arbitrarily large integer values
 
