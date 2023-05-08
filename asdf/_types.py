@@ -9,7 +9,7 @@ from . import tagged, util
 from .exceptions import AsdfDeprecationWarning
 from .versioning import AsdfSpec, AsdfVersion
 
-__all__ = ["format_tag", "CustomType", "_AsdfType", "ExtensionType"]  # noqa: F822
+__all__ = ["format_tag", "CustomType", "ExtensionType"]  # noqa: F822
 
 
 # regex used to parse module name from optional version string
