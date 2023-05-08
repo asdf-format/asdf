@@ -99,7 +99,7 @@ def test_get_memory_reused():
     s.assign_object(f, v)
     fid = id(f)
     del f
-    for _ in range(100):
+    for _ in range(1000):
         f = Foo()
         if id(f) == fid:
             break
@@ -115,7 +115,7 @@ def test_set_memory_reused():
     s.assign_object(f, v)
     fid = id(f)
     del f
-    for _ in range(100):
+    for _ in range(1000):
         f = Foo()
         if id(f) == fid:
             break
