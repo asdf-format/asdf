@@ -29,7 +29,11 @@ def write_blocks(fd, blocks, padding=False, streamed_block=None, write_index=Tru
     offsets = []
     headers = []
     for blk in blocks:
-        offsets.append(fd.tell())
+        if fd.seekable():
+            offset = fd.tell()
+        else:
+            offset = None
+        offsets.append(offset)
         fd.write(constants.BLOCK_MAGIC)
         headers.append(
             bio.write_block(
@@ -41,9 +45,13 @@ def write_blocks(fd, blocks, padding=False, streamed_block=None, write_index=Tru
             )
         )
     if streamed_block is not None:
-        offsets.append(fd.tell())
+        if fd.seekable():
+            offset = fd.tell()
+        else:
+            offset = None
+        offsets.append(offset)
         fd.write(constants.BLOCK_MAGIC)
         headers.append(bio.write_block(fd, streamed_block.data_bytes, stream=True))
-    elif len(blocks) and write_index:
+    elif len(offsets) and write_index and fd.seekable():
         bio.write_block_index(fd, offsets)
     return offsets, headers
