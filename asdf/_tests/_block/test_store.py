@@ -1,3 +1,5 @@
+from unittest.mock import patch
+
 import pytest
 
 from asdf._block.key import Key
@@ -99,13 +101,15 @@ def test_get_memory_reused():
     s.assign_object(f, v)
     fid = id(f)
     del f
-    for _ in range(1000):
-        f = Foo()
-        if id(f) == fid:
-            break
-    else:
-        raise AssertionError("Failed to trigger memory reuse")
-    assert s.lookup_by_object(f) is None
+    f2 = Foo()
+
+    def mock_id(obj):
+        if obj is f2:
+            return fid
+        return id(obj)
+
+    with patch("asdf._block.store.id", mock_id):
+        assert s.lookup_by_object(f2) is None
 
 
 def test_set_memory_reused():
@@ -115,15 +119,17 @@ def test_set_memory_reused():
     s.assign_object(f, v)
     fid = id(f)
     del f
-    for _ in range(1000):
-        f = Foo()
-        if id(f) == fid:
-            break
-    else:
-        raise AssertionError("Failed to trigger memory reuse")
-    nv = 26
-    s.assign_object(f, nv)
-    assert s.lookup_by_object(f) is nv
+    f2 = Foo()
+
+    def mock_id(obj):
+        if obj is f2:
+            return fid
+        return id(obj)
+
+    with patch("asdf._block.store.id", mock_id):
+        nv = 26
+        s.assign_object(f2, nv)
+        assert s.lookup_by_object(f2) is nv
 
 
 def test_cleanup():

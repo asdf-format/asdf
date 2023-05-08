@@ -37,20 +37,10 @@ def test_is_valid():
     assert not bk.is_valid()
 
 
-def test_memory_reuse():
+def test_same_class():
     f = Foo()
     bk = Key(f)
-    fid = id(f)
     del f
-    objs = []
-    for _ in range(100):
-        f = Foo()
-        objs.append(f)
-        if fid == id(f):
-            break
-    else:
-        raise AssertionError("Failed to find reused memory address")
-
-    assert fid == id(f)
+    f2 = Foo()
     assert not bk.is_valid()
-    assert not bk.matches(f)
+    assert not bk.matches(f2)
