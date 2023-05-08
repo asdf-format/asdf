@@ -9,8 +9,6 @@ from asdf._tests.objects import CustomExtension
 from asdf._types import CustomType
 from asdf.exceptions import AsdfDeprecationWarning
 
-from .test_entry_points import _monkeypatch_entry_points, mock_entry_points  # noqa: F401
-
 
 def test_custom_type_warning():
     with pytest.warns(AsdfDeprecationWarning, match=r"^.* subclasses the deprecated CustomType .*$"):
@@ -29,3 +27,10 @@ def test_asdf_type_format_tag():
     with pytest.warns(AsdfDeprecationWarning, match="asdf.types.format_tag is deprecated"):
         asdf._types.format_tag
     asdf.testing.helpers.format_tag
+
+
+def test_asdf_stream_deprecation():
+    with pytest.warns(AsdfDeprecationWarning, match="asdf.stream is deprecated"):
+        if "asdf.stream" in sys.modules:
+            del sys.modules["asdf.stream"]
+        import asdf.stream  # noqa: F401
