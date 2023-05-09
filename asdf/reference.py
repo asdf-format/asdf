@@ -42,7 +42,7 @@ def resolve_fragment(tree, pointer):
     return tree
 
 
-class Reference(_types._AsdfType):
+class Reference(_types.AsdfType):
     yaml_tag = "tag:yaml.org,2002:map"
 
     def __init__(self, uri, base_uri=None, asdffile=None, target=None):

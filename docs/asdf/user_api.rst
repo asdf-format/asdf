@@ -7,8 +7,8 @@ User API
 .. automodapi:: asdf
     :include-all-objects:
     :inherited-members:
-    :no-inheritance-diagram:
     :skip: ValidationError
+    :skip: AsdfExtension
 
 .. automodapi:: asdf.search
 

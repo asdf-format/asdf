@@ -241,61 +241,6 @@ function will validate a Python object against a schema:
 The validate function will return successfully if the object is valid, or raise
 an error if not.
 
-.. _testing_custom_schemas:
-
-Testing custom schemas
-----------------------
-
-Packages that provide their own schemas can test them using `asdf`'s
-:ref:`pytest <pytest:toc>` plugin for schema testing.
-Schemas are tested for overall validity, and any examples given within the
-schemas are also tested.
-
-The schema tester plugin is automatically registered when the `asdf` package is
-installed. In order to enable testing, it is necessary to add the directory
-containing your schema files to the pytest section of your project's build configuration
-(``pyproject.toml`` or ``setup.cfg``). If you do not already have such a file, creating
-one with the following should be sufficient:
-
-.. tab:: pyproject.toml
-
-    .. code-block:: toml
-
-        [tool.pytest.ini_options]
-        asdf_schema_root = 'path/to/schemas another/path/to/schemas'
-
-.. tab:: setup.cfg
-
-    .. code-block:: ini
-
-        [tool:pytest]
-        asdf_schema_root = path/to/schemas another/path/to/schemas
-
-The schema directory paths should be paths that are relative to the top of the
-package directory **when it is installed**. If this is different from the path
-in the source directory, then both paths can be used to facilitate in-place
-testing (see `asdf`'s own ``pyproject.toml`` for an example of this).
-
-.. note::
-
-   Older versions of `asdf` (prior to 2.4.0) required the plugin to be registered
-   in your project's ``conftest.py`` file. As of 2.4.0, the plugin is now
-   registered automatically and so this line should be removed from your
-   ``conftest.py`` file, unless you need to retain compatibility with older
-   versions of `asdf`.
-
-The ``asdf_schema_skip_names`` configuration variable can be used to skip
-schema files that live within one of the ``asdf_schema_root`` directories but
-should not be tested. The names should be given as simple base file names
-(without directory paths or extensions). Again, see `asdf`'s own ``pyproject.toml`` file
-for an example.
-
-The schema tests do **not** run by default. In order to enable the tests by
-default for your package, add ``asdf_schema_tests_enabled = 'true'`` to the
-``[tool.pytest.ini_options]`` section of your ``pyproject.toml`` file (or ``[tool:pytest]`` in ``setup.cfg``).
-If you do not wish to enable the schema tests by default, you can add the ``--asdf-tests`` option to
-the ``pytest`` command line to enable tests on a per-run basis.
-
 See also:
 =========
 

@@ -1,7 +1,6 @@
 import pytest
 
-from asdf import util
-from asdf._types import CustomType
+from asdf import CustomType, util
 from asdf.exceptions import AsdfDeprecationWarning
 
 from ._helpers import get_test_data_path

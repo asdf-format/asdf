@@ -14,35 +14,6 @@ The ASDF Standard document provides a helpful :ref:`overview <asdf-standard:vers
 of the various ASDF versioning conventions.  We will be concerned with the *standard version*
 and individual *tag versions*.
 
-Authors of new tags and schemas should strive to use the conventions described
-by `semantic versioning <https://semver.org/>`_. Tags and schemas for types
-that have not been serialized before should begin at ``1.0.0``. Versions for a
-particular tag type need not move in lock-step with other tag types in the same
-extension.
-
-The patch version should be bumped for bug fixes and other minor,
-backwards-compatible changes. New features can be indicated with increments to
-the minor version, as long as they remain backwards compatible with older
-versions of the schema. Any changes that break backwards compatibility must be
-indicated by a major version update.
-
-Since ASDF is intended to be an archival file format, authors of tags and
-schemas should work to ensure that ASDF files created with older extensions can
-continue to be processed. This means that every time a schema version is bumped
-(with the possible exception of patch updates), a **new** schema file should be
-created.
-
-For example, if we currently have a schema for ``xyz-1.0.0``, and we wish to
-make changes and bump the version to ``xyz-1.1.0``, we should leave the
-original schema intact. A **new** schema file should be created for
-``xyz-1.1.0``, which can exist in parallel with the old file. The version of
-the corresponding tag type should be bumped to ``1.1.0``.
-
-For more details on the behavior of schema and tag versioning from a user
-perspective, see :ref:`version_and_compat`, and also
-:ref:`custom_type_versions`.
-
-
 Overview
 --------
 

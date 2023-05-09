@@ -163,7 +163,7 @@ class AsdfConfig:
 
         Parameters
         ----------
-        extension : asdf.extension.Extension
+        extension : asdf.extension.AsdfExtension or asdf.extension.Extension
         """
         with self._lock:
             extension = ExtensionProxy.maybe_wrap(extension)
@@ -175,7 +175,7 @@ class AsdfConfig:
 
         Parameters
         ----------
-        extension : asdf.extension.Extension or str, optional
+        extension : asdf.extension.AsdfExtension or asdf.extension.Extension or str, optional
             An extension instance or URI pattern to remove.
         package : str, optional
             Remove only extensions provided by this package.  If the ``extension``

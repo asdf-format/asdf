@@ -226,7 +226,7 @@ def numpy_array_to_list(array):
     return ascii_to_unicode(tolist(array))
 
 
-class NDArrayType(_types._AsdfType):
+class NDArrayType(_types.AsdfType):
     name = "core/ndarray"
     version = "1.0.0"
     supported_versions = {"1.0.0", "1.1.0"}
@@ -390,7 +390,7 @@ class NDArrayType(_types._AsdfType):
             msg = f"'{self.__class__.name}' object has no attribute '{name}'"
             raise AttributeError(msg)
 
-        return _types._AsdfType.__getattribute__(self, name)
+        return _types.AsdfType.__getattribute__(self, name)
 
     @classmethod
     def from_tree(cls, node, ctx):

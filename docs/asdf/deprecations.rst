@@ -21,31 +21,31 @@ Legacy Extension API Deprecation
 ================================
 
 A large number of `asdf.exceptions.AsdfDeprecationWarning` messages appear related to
-use of the ``legacy extension api``. Some examples include:
+use of the :ref:`legacy extension api <extending_legacy>`. Some examples include:
 
-* ``asdf.types``
-* ``asdf.types.CustomType``
+* `asdf.types`
+* `asdf.types.CustomType`
 * ``asdf.type_index``
 * ``asdf.resolver``
 * the ``asdf_extensions`` entry point
 * portions of asdf.extension including:
 
-  * ``asdf.extension.AsdfExtension``
-  * ``asdf.extension.AsdfExtensionList``
-  * ``asdf.extension.BuiltinExtension``
+  * `asdf.extension.AsdfExtension`
+  * `asdf.extension.AsdfExtensionList`
+  * `asdf.extension.BuiltinExtension`
   * ``asdf.extension.default_extensions``
   * ``asdf.extension.get_cached_asdf_extensions``
-  * ``asdf.extension.get_default_resolver``
+  * `asdf.extension.get_default_resolver`
 
 * attributes to asdf.AsdfFile including:
 
-  * ``asdf.AsdfFile.run_hook``
-  * ``asdf.AsdfFile.run_modifying_hook``
-  * ``asdf.AsdfFile.url_mapping``
-  * ``asdf.AsdfFile.tag_mapping``
-  * ``asdf.AsdfFile.type_index``
-  * ``asdf.AsdfFile.resolver``
-  * ``asdf.AsdfFile.extension_list``
+  * `asdf.AsdfFile.run_hook`
+  * `asdf.AsdfFile.run_modifying_hook`
+  * `asdf.AsdfFile.url_mapping`
+  * `asdf.AsdfFile.tag_mapping`
+  * `asdf.AsdfFile.type_index`
+  * `asdf.AsdfFile.resolver`
+  * `asdf.AsdfFile.extension_list`
 
 This deprecated api is replaced by new-style :ref:`converters <extending_converters>`,
 :ref:`extensions <extending_extensions>` and :ref:`validators <extending_validators>`.

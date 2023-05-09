@@ -9,7 +9,6 @@ The ASDF Standard is at v1.6.0
   ``all_array_compression_kwargs`` to ``asdf.config.AsdfConfig`` [#1468]
 - Move built-in tags to converters (except ndarray and integer). [#1474]
 - Add block storage support to Converter [#1508]
-- Remove deprecated legacy extension API [#1464]
 
 2.15.0 (2023-03-28)
 -------------------
@@ -28,7 +27,7 @@ The ASDF Standard is at v1.6.0
   ones that we can successfully build and test against. [#1360]
 - Provide more informative filename when failing to open a file [#1357]
 - Add new plugin type for custom schema validators. [#1328]
-- Add AsdfDeprecationWarning to ``asdf.types.CustomType`` [#1359]
+- Add AsdfDeprecationWarning to `~asdf.types.CustomType` [#1359]
 - Throw more useful error when provided with a path containing an
   extra leading slash [#1356]
 - Add AsdfDeprecationWarning to AsdfInFits. Support for reading and

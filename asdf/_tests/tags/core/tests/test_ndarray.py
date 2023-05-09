@@ -14,6 +14,7 @@ import asdf
 from asdf import util
 from asdf._tests import _helpers as helpers
 from asdf._tests.objects import CustomTestType
+from asdf.exceptions import AsdfDeprecationWarning
 from asdf.tags.core import ndarray
 
 from . import data as test_data
@@ -130,7 +131,8 @@ def test_dont_load_data():
 
     buff.seek(0)
     with asdf.open(buff) as ff:
-        ff._run_hook("reserve_blocks")
+        with pytest.warns(AsdfDeprecationWarning, match="AsdfFile.run_hook is deprecated"):
+            ff.run_hook("reserve_blocks")
 
         # repr and str shouldn't load data
         str(ff.tree["science_data"])

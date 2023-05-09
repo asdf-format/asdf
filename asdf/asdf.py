@@ -70,7 +70,9 @@ class AsdfFile:
 
         extensions : object, optional
             Additional extensions to use when reading and writing the file.
-            May be an `asdf.extension.Extension` or a `list` of extensions.
+            May be any of the following: `asdf.extension.AsdfExtension`,
+            `asdf.extension.Extension`, `asdf.extension.AsdfExtensionList`
+            or a `list` of extensions.
 
         version : str, optional
             The ASDF Standard version.  If not provided, defaults to the
@@ -233,7 +235,7 @@ class AsdfFile:
 
         Parameters
         ----------
-        value : list of asdf.extension.Extension
+        value : list of asdf.extension.AsdfExtension or asdf.extension.Extension
         """
         self._user_extensions = self._process_user_extensions(value)
         self._extension_manager = None
@@ -251,6 +253,23 @@ class AsdfFile:
         if self._extension_manager is None:
             self._extension_manager = get_cached_extension_manager(self._user_extensions + self._plugin_extensions)
         return self._extension_manager
+
+    @property
+    def extension_list(self):
+        """
+        Get the AsdfExtensionList for this AsdfFile.
+
+        Returns
+        -------
+        asdf.extension.AsdfExtensionList
+        """
+        warnings.warn(
+            "AsdfFile.extension_list is deprecated. "
+            "Please see the new extension API "
+            "https://asdf.readthedocs.io/en/stable/asdf/extending/converters.html",
+            AsdfDeprecationWarning,
+        )
+        return self._extension_list
 
     @property
     def _extension_list(self):
@@ -350,7 +369,9 @@ class AsdfFile:
         Parameters
         ----------
         extensions : object
-            May be an `asdf.extension.Extension` or a `list` of extensions.
+            May be any of the following: `asdf.extension.AsdfExtension`,
+            `asdf.extension.Extension`, `asdf.extension.AsdfExtensionList`
+            or a `list` of extensions.
 
         Returns
         -------
@@ -358,13 +379,13 @@ class AsdfFile:
         """
         if extensions is None:
             extensions = []
-        elif isinstance(extensions, (_legacy._AsdfExtension, Extension, ExtensionProxy)):
+        elif isinstance(extensions, (_legacy.AsdfExtension, Extension, ExtensionProxy)):
             extensions = [extensions]
         elif isinstance(extensions, _legacy.AsdfExtensionList):
             extensions = extensions.extensions
 
         if not isinstance(extensions, list):
-            msg = "The extensions parameter must be an extension or list of extensions"
+            msg = "The extensions parameter must be an extension, list of extensions, or instance of AsdfExtensionList"
             raise TypeError(msg)
 
         extensions = [ExtensionProxy.maybe_wrap(e) for e in extensions]
@@ -478,20 +499,68 @@ class AsdfFile:
         return None
 
     @property
+    def tag_to_schema_resolver(self):
+        warnings.warn(
+            "The 'tag_to_schema_resolver' property is deprecated. Use 'tag_mapping' instead.",
+            AsdfDeprecationWarning,
+        )
+        return self._tag_to_schema_resolver
+
+    @property
     def _tag_to_schema_resolver(self):
         return self._extension_list.tag_mapping
+
+    @property
+    def tag_mapping(self):
+        warnings.warn(
+            "AsdfFile.tag_mapping is deprecated. "
+            "Please see Manifests "
+            "https://asdf.readthedocs.io/en/stable/asdf/extending/manifests.html",
+            AsdfDeprecationWarning,
+        )
+        return self._tag_mapping
 
     @property
     def _tag_mapping(self):
         return self._extension_list.tag_mapping
 
     @property
+    def url_mapping(self):
+        warnings.warn(
+            "AsdfFile.url_mapping is deprecated. "
+            "Please see Resources "
+            "https://asdf.readthedocs.io/en/stable/asdf/extending/resources.html",
+            AsdfDeprecationWarning,
+        )
+        return self._url_mapping
+
+    @property
     def _url_mapping(self):
         return self._extension_list.url_mapping
 
     @property
+    def resolver(self):
+        warnings.warn(
+            "AsdfFile.resolver is deprecated. "
+            "Please see Resources "
+            "https://asdf.readthedocs.io/en/stable/asdf/extending/resources.html",
+            AsdfDeprecationWarning,
+        )
+        return self._resolver
+
+    @property
     def _resolver(self):
         return self._extension_list.resolver
+
+    @property
+    def type_index(self):
+        warnings.warn(
+            "AsdfFile.type_index is deprecated. "
+            "Please see the new extension API "
+            "https://asdf.readthedocs.io/en/stable/asdf/extending/converters.html",
+            AsdfDeprecationWarning,
+        )
+        return self._type_index
 
     @property
     def _type_index(self):
@@ -1381,6 +1450,25 @@ class AsdfFile:
         # tree will be validated.
         self.tree = reference.resolve_references(self._tree, self)
 
+    def run_hook(self, hookname):
+        """
+        Run a "hook" for each custom type found in the tree.
+
+        Parameters
+        ----------
+        hookname : str
+            The name of the hook.  If a `asdf.types.AsdfType` is found with a method
+            with this name, it will be called for every instance of the
+            corresponding custom type in the tree.
+        """
+        warnings.warn(
+            "AsdfFile.run_hook is deprecated. "
+            "Please see the new extension API "
+            "https://asdf.readthedocs.io/en/stable/asdf/extending/converters.html",
+            AsdfDeprecationWarning,
+        )
+        self._run_hook(hookname)
+
     def _run_hook(self, hookname):
         type_index = self._type_index
 
@@ -1391,6 +1479,30 @@ class AsdfFile:
             hook = type_index.get_hook_for_type(hookname, type(node), self.version_string)
             if hook is not None:
                 hook(node, self)
+
+    def run_modifying_hook(self, hookname, validate=True):
+        """
+        Run a "hook" for each custom type found in the tree.  The hook
+        is free to return a different object in order to modify the
+        tree.
+
+        Parameters
+        ----------
+        hookname : str
+            The name of the hook.  If a `asdf.types.AsdfType` is found with a method
+            with this name, it will be called for every instance of the
+            corresponding custom type in the tree.
+
+        validate : bool
+            When `True` (default) validate the resulting tree.
+        """
+        warnings.warn(
+            "AsdfFile.run_modifying_hook is deprecated. "
+            "Please see the new extension API "
+            "https://asdf.readthedocs.io/en/stable/asdf/extending/converters.html",
+            AsdfDeprecationWarning,
+        )
+        return self._run_modifying_hook(hookname, validate=validate)
 
     def _run_modifying_hook(self, hookname, validate=True):
         type_index = self._type_index
@@ -1747,7 +1859,9 @@ def open_asdf(
 
     extensions : object, optional
         Additional extensions to use when reading and writing the file.
-        May be an `asdf.extension.Extension` or a `list` of extensions.
+        May be any of the following: `asdf.extension.AsdfExtension`,
+        `asdf.extension.Extension`, `asdf.extension.AsdfExtensionList`
+        or a `list` of extensions.
 
     ignore_version_mismatch : bool, optional
         When `True`, do not raise warnings for mismatched schema versions.
@@ -1883,7 +1997,7 @@ class SerializationContext:
 
         Parameters
         ----------
-        extension : asdf.extension.Extension
+        extension : asdf.extension.AsdfExtension or asdf.extension.Extension
         """
         self.__extensions_used.add(ExtensionProxy.maybe_wrap(extension))
 
@@ -1894,7 +2008,7 @@ class SerializationContext:
 
         Returns
         -------
-        set of asdf.extension.Extension
+        set of asdf.extension.AsdfExtension or asdf.extension.Extension
         """
         return self.__extensions_used
 

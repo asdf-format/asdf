@@ -15,9 +15,10 @@ from asdf.extension import (
     ManifestExtension,
     TagDefinition,
     Validator,
+    get_cached_asdf_extension_list,
     get_cached_extension_manager,
 )
-from asdf.extension._legacy import BuiltinExtension, _AsdfExtension, get_cached_asdf_extension_list
+from asdf.extension._legacy import AsdfExtension, BuiltinExtension
 
 
 def test_builtin_extension():
@@ -162,7 +163,7 @@ def test_extension_proxy_maybe_wrap():
     assert proxy.delegate is extension
     assert ExtensionProxy.maybe_wrap(proxy) is proxy
 
-    with pytest.raises(TypeError, match=r"Extension must implement the Extension interface"):
+    with pytest.raises(TypeError, match=r"Extension must implement the Extension or AsdfExtension interface"):
         ExtensionProxy.maybe_wrap(object())
 
 
@@ -172,7 +173,7 @@ def test_extension_proxy():
     proxy = ExtensionProxy(extension)
 
     assert isinstance(proxy, Extension)
-    assert isinstance(proxy, _AsdfExtension)
+    assert isinstance(proxy, AsdfExtension)
 
     assert proxy.extension_uri == "asdf://somewhere.org/extensions/minimum-1.0"
     assert proxy.legacy_class_names == set()
@@ -241,7 +242,7 @@ def test_extension_proxy():
     assert proxy.class_name == "asdf._tests.test_extension.FullExtension"
 
     # Should fail when the input is not one of the two extension interfaces:
-    with pytest.raises(TypeError, match=r"Extension must implement the Extension interface"):
+    with pytest.raises(TypeError, match=r"Extension must implement the Extension or AsdfExtension interface"):
         ExtensionProxy(object)
 
     # Should fail with a bad converter:
@@ -605,9 +606,12 @@ def test_converter_proxy():
 
 def test_get_cached_asdf_extension_list():
     extension = LegacyExtension()
-    extension_list = get_cached_asdf_extension_list([extension])
-    assert get_cached_asdf_extension_list([extension]) is extension_list
-    assert get_cached_asdf_extension_list([LegacyExtension()]) is not extension_list
+    with pytest.warns(AsdfDeprecationWarning, match="get_cached_asdf_extension_list is deprecated"):
+        extension_list = get_cached_asdf_extension_list([extension])
+    with pytest.warns(AsdfDeprecationWarning, match="get_cached_asdf_extension_list is deprecated"):
+        assert get_cached_asdf_extension_list([extension]) is extension_list
+    with pytest.warns(AsdfDeprecationWarning, match="get_cached_asdf_extension_list is deprecated"):
+        assert get_cached_asdf_extension_list([LegacyExtension()]) is not extension_list
 
 
 def test_manifest_extension():

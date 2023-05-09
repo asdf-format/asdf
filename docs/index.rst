@@ -59,6 +59,7 @@ Extending ASDF
   asdf/extending/manifests
   asdf/extending/compressors
   asdf/extending/validators
+  asdf/extending/legacy
 
 API Documentation
 =================
