@@ -28,7 +28,7 @@ class NDArrayConverter(Converter):
         data = obj
 
         if isinstance(obj, Stream):
-            # TODO previously, stream never passed on data?
+            # previously, stream never passed on data, we can do that here
             ctx._blocks.set_streamed_block(data._array, data)
 
             result = {}
@@ -56,6 +56,7 @@ class NDArrayConverter(Converter):
 
         shape = data.shape
 
+        # sort out block writing options
         if isinstance(obj, NDArrayType) and isinstance(obj._source, str):
             # this is an external block, if we have no other settings, keep it as external
             options = ctx._blocks.options.lookup_by_object(data)
@@ -64,6 +65,7 @@ class NDArrayConverter(Converter):
         else:
             options = ctx._blocks.options.get_options(data)
 
+        # possibly override options based on config settings
         with config_context() as cfg:
             if cfg.all_array_storage is not None:
                 options.storage_type = cfg.all_array_storage
@@ -104,10 +106,8 @@ class NDArrayConverter(Converter):
             result["shape"] = list(shape)
             if options.storage_type == "streamed":
                 result["shape"][0] = "*"
-
-            if options.storage_type == "streamed":
-                ctx._blocks.set_streamed_block(base, data)
                 result["source"] = -1
+                ctx._blocks.set_streamed_block(base, data)
             else:
                 result["source"] = ctx._blocks.make_write_block(base, options, obj)
             result["datatype"] = dtype
@@ -156,6 +156,7 @@ class NDArrayConverter(Converter):
             mask = node.get("mask", None)
 
             if isinstance(source, int):
+                # internal block
                 data_callback = ctx.get_block_data_callback(source)
                 instance = NDArrayType(source, shape, dtype, offset, strides, "A", mask, data_callback)
             elif isinstance(source, str):

@@ -230,9 +230,6 @@ def numpy_array_to_list(array):
 
 class NDArrayType:
     def __init__(self, source, shape, dtype, offset, strides, order, mask, data_callback=None):
-        # source can be a:
-        # - list of numbers for an inline block
-        # - a data callback for an internal or externalblock
         self._source = source
         self._data_callback = data_callback
         self._array = None
@@ -241,6 +238,8 @@ class NDArrayType:
         if isinstance(source, list):
             self._array = inline_data_asarray(source, dtype)
             self._array = self._apply_mask(self._array, self._mask)
+            # single element structured arrays can have shape == ()
+            # https://github.com/asdf-format/asdf/issues/1540
             if shape is not None and (
                 self._array.shape != tuple(shape)
                 or (len(shape) and shape[0] == "*" and self._array.shape[1:] != tuple(shape[1:]))
@@ -281,7 +280,7 @@ class NDArrayType:
             if hasattr(data, "base") and isinstance(data.base, mmap.mmap) and data.base.closed:
                 raise OSError("Attempt to read data from a closed file")
 
-            # streaming blocks have 0 data size
+            # compute shape (streaming blocks have '0' data size in the block header)
             shape = self.get_actual_shape(
                 self._shape,
                 self._strides,
@@ -360,6 +359,8 @@ class NDArrayType:
                 return self._make_array().shape
             data_size = self._data_callback(_attr="header")["data_size"]
             if not data_size:
+                # streamed blocks have a '0' data_size in the header so we
+                # need to make the array to get the shape
                 return self._make_array().shape
             return tuple(
                 self.get_actual_shape(
