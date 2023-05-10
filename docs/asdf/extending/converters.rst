@@ -443,6 +443,7 @@ and must be stored by the extension code. These keys must be resupplied to the c
 when writing an object that was read from an ASDF file.
 
 .. runcode::
+
     import asdf
     import numpy as np
     from asdf.extension import Converter, Extension
@@ -485,7 +486,7 @@ when writing an object that was read from an ASDF file.
         ff = asdf.AsdfFile({"example": obj})
         ff.write_to("multi_block_converter_example.asdf")
 
-.. asdf:: block_converter_example.asdf
+.. asdf:: multi_block_converter_example.asdf
 
 .. _extending_converters_performance:
 
