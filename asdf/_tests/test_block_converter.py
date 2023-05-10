@@ -183,3 +183,44 @@ def test_block_with_callback_removal(tmp_path):
             af[remove_key] = None
             af.update()
             af[check_key] = b.data
+
+
+class MultiBlockData:
+    def __init__(self, data):
+        self.data = data
+        self.keys = []
+
+
+class MultiBlockConverter(Converter):
+    tags = ["asdf://somewhere.org/tags/multi_block_data-1.0.0"]
+    types = [MultiBlockData]
+
+    def to_yaml_tree(self, obj, tag, ctx):
+        if not len(obj.keys):
+            obj.keys = [ctx.generate_block_key() for _ in obj.data]
+        indices = [ctx.find_available_block_index(d, k) for d, k in zip(obj.data, obj.keys)]
+        return {
+            "indices": indices,
+        }
+
+    def from_yaml_tree(self, node, tag, ctx):
+        indices = node["indices"]
+        keys = [ctx.generate_block_key() for _ in indices]
+        cbs = [ctx.get_block_data_callback(i, k) for i, k in zip(indices, keys)]
+        obj = MultiBlockData([cb() for cb in cbs])
+        obj.keys = keys
+        return obj
+
+
+class MultiBlockExtension(Extension):
+    tags = ["asdf://somewhere.org/tags/multi_block_data-1.0.0"]
+    converters = [MultiBlockConverter()]
+    extension_uri = "asdf://somewhere.org/extensions/multi_block_data-1.0.0"
+
+
+@with_extension(MultiBlockExtension)
+def test_mutli_block():
+    a = MultiBlockData([np.arange(3, dtype="uint8") for i in range(3)])
+    b = helpers.roundtrip_object(a)
+    assert len(a.data) == len(b.data)
+    assert [np.testing.assert_array_equal(aa, ab) for aa, ab in zip(a.data, b.data)]
