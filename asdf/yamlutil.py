@@ -231,8 +231,8 @@ def custom_tree_to_tagged_tree(tree, ctx, _serialization_context=None):
         # object which will be handled by a different converter
         while tag is None:
             converters.add(converter)
-            with _serialization_context._serialization(obj):
-                obj = converter.to_yaml_tree(obj, tag, _serialization_context)
+            with _serialization_context._serialization(obj) as sctx:
+                obj = converter.to_yaml_tree(obj, tag, sctx)
             try:
                 converter = extension_manager.get_converter_for_type(type(obj))
             except KeyError:
@@ -243,8 +243,6 @@ def custom_tree_to_tagged_tree(tree, ctx, _serialization_context=None):
                 msg = "Conversion cycle detected"
                 raise TypeError(msg)
             tag = converter.select_tag(obj, _serialization_context)
-        with _serialization_context._serialization(obj):
-            node = converter.to_yaml_tree(obj, tag, _serialization_context)
 
         if isinstance(node, GeneratorType):
             generator = node

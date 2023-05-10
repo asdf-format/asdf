@@ -20,7 +20,6 @@ class ReadBlocks(store.LinearStore):
 
     def set_blocks(self, blocks):
         self._items = blocks
-        # TODO should this invalidate the associations?
 
     def append_block(self, block):
         self._items.append(block)
@@ -142,9 +141,6 @@ class Manager:
     def _write_external_blocks(self):
         from asdf import AsdfFile
 
-        if not len(self._external_write_blocks):
-            return
-
         if self._write_fd.uri is None:
             raise ValueError("Can't write external blocks, since URI of main file is unknown.")
 
@@ -156,9 +152,6 @@ class Manager:
                 write_blocks(f, [blk])
 
     def make_write_block(self, data, options, obj):
-        # if we're not actually writing just return a junk index
-        # if self._write_fd is None:
-        #    return constants.MAX_BLOCKS + 1
         if options.storage_type == "external":
             for index, blk in enumerate(self._external_write_blocks):
                 if blk._data is data:

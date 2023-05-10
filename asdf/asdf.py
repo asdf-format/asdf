@@ -18,8 +18,8 @@ from ._block import reader as block_reader
 from ._block import writer as block_writer
 from ._block.manager import Manager as BlockManager
 from ._block.manager import ReadBlocks
-from ._block.options import Options as BlockOptions
 from ._helpers import validate_version
+from ._serialization_context import SerializationContext
 from .config import config_context, get_config
 from .exceptions import (
     AsdfConversionWarning,
