@@ -170,7 +170,8 @@ class _Deserialization(_Operation):
         self._keys = set()
 
     def __exit__(self, exc_type, exc_value, traceback):
-        # TODO check exception here
+        if exc_type is not None:
+            return
         if self._blk is not None:
             self._blocks.blocks.assign_object(self._obj, self._blk)
             self._blocks._data_callbacks.assign_object(self._obj, self._cb)
