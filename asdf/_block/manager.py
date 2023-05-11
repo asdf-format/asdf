@@ -5,11 +5,11 @@ import weakref
 
 from asdf import config, constants, generic_io, util
 
-from . import reader, store
+from . import io as bio
+from . import reader, store, writer
 from .callback import DataCallback
 from .external import ExternalBlockCache, UseInternal
 from .options import Options
-from .writer import WriteBlock, write_blocks
 
 
 class ReadBlocks(store.LinearStore):
@@ -157,7 +157,7 @@ class Manager:
             af = AsdfFile()
             with generic_io.get_file(uri, mode="w") as f:
                 af.write_to(f, include_block_index=False)
-                write_blocks(f, [blk])
+                writer.write_blocks(f, [blk])
 
     def make_write_block(self, data, options, obj):
         if options.storage_type == "external":
@@ -167,7 +167,7 @@ class Manager:
                     return blk._uri
             # need to set up new external block
             index = len(self._external_write_blocks)
-            blk = WriteBlock(data, options.compression, options.compression_kwargs)
+            blk = writer.WriteBlock(data, options.compression, options.compression_kwargs)
             if self._write_fd is not None:
                 base_uri = self._write_fd.uri or self._uri
             else:
@@ -181,7 +181,7 @@ class Manager:
                 self._write_blocks.assign_object(obj, blk)
                 return index
         # if no block is found, make a new block
-        blk = WriteBlock(data, options.compression, options.compression_kwargs)
+        blk = writer.WriteBlock(data, options.compression, options.compression_kwargs)
         self._write_blocks._items.append(blk)
         self._write_blocks.assign_object(obj, blk)
         return len(self._write_blocks) - 1
@@ -189,7 +189,7 @@ class Manager:
     def set_streamed_block(self, data, obj):
         if self._streamed_block is not None and data is not self._streamed_block.data:
             raise ValueError("Can not add second streaming block")
-        self._streamed_block = WriteBlock(data)
+        self._streamed_block = writer.WriteBlock(data)
         self._streamed_obj = weakref.ref(obj)
 
     def _get_data_callback(self, index):
@@ -227,6 +227,10 @@ class Manager:
     @contextlib.contextmanager
     def write_context(self, fd, copy_options=True):
         self._clear_write()
+        # this is required for setting up external blocks
+        # during serialization we will need to know the uri of
+        # the file being written to (unless a different uri was
+        # supplied).
         self._write_fd = fd
         if copy_options:
             with self.options_context():
@@ -235,13 +239,13 @@ class Manager:
             yield
         self._clear_write()
 
-    def write(self, fd, pad_blocks, include_block_index):
-        if self._write_fd is None or fd is not self._write_fd:
-            msg = "Write called outside of valid write_context"
+    def write(self, pad_blocks, include_block_index):
+        if self._write_fd is None:
+            msg = "write called outside of valid write_context"
             raise OSError(msg)
         if len(self._write_blocks) or self._streamed_block:
-            write_blocks(
-                fd,
+            writer.write_blocks(
+                self._write_fd,
                 self._write_blocks,
                 pad_blocks,
                 streamed_block=self._streamed_block,
@@ -249,3 +253,108 @@ class Manager:
             )
         if len(self._external_write_blocks):
             self._write_external_blocks()
+
+    def update(self, new_tree_size, pad_blocks, include_block_index):
+        if self._write_fd is None:
+            msg = "update called outside of valid write_context"
+            raise OSError(msg)
+        # find where to start writing blocks (either end of new tree or end of last 'free' block)
+        last_block = None
+        for blk in self.blocks[::-1]:
+            if not blk.memmap and (blk._cached_data is not None or not callable(blk._data)):
+                continue
+            last_block = blk
+            break
+        if last_block is None:
+            new_block_start = new_tree_size
+        else:
+            new_block_start = max(
+                last_block.data_offset + last_block.header["allocated_size"],
+                new_tree_size,
+            )
+
+        if len(self._external_write_blocks):
+            self._write_external_blocks()
+
+        # do we have any blocks to write?
+        if len(self._write_blocks) or self._streamed_block:
+            self._write_fd.seek(new_block_start)
+            offsets, headers = writer.write_blocks(
+                self._write_fd,
+                self._write_blocks,
+                pad_blocks,
+                streamed_block=self._streamed_block,
+                write_index=False,  # don't write an index as we will modify the offsets
+            )
+            new_block_end = self._write_fd.tell()
+
+            # move blocks to start in increments of block_size
+            n_bytes = new_block_end - new_block_start
+            src, dst = new_block_start, new_tree_size
+            block_size = self._write_fd.block_size
+            while n_bytes > 0:
+                self._write_fd.seek(src)
+                bs = self._write_fd.read(min(n_bytes, block_size))
+                self._write_fd.seek(dst)
+                self._write_fd.write(bs)
+                n = len(bs)
+                n_bytes -= n
+                src += n
+                dst += n
+
+            # update offset to point at correct locations
+            offsets = [o - (new_block_start - new_tree_size) for o in offsets]
+
+            # write index if no streamed block
+            if include_block_index and self._streamed_block is None:
+                bio.write_block_index(self._write_fd, offsets)
+
+            # map new blocks to old blocks
+            new_read_blocks = ReadBlocks()
+            for i, (offset, header) in enumerate(zip(offsets, headers)):
+                if i == len(self._write_blocks):  # this is a streamed block
+                    obj = self._streamed_obj()
+                    wblk = self._streamed_block
+                else:
+                    wblk = self._write_blocks[i]
+                    # find object associated with wblk
+                    obj = None
+                    for oid, by_key in self._write_blocks._by_id.items():
+                        for key, index in by_key.items():
+                            if self._write_blocks[index] is wblk:
+                                obj = key._ref()
+                                break
+                    if obj is None:
+                        msg = "Update failed to associate blocks"
+                        raise OSError(msg)
+
+                # does the obj have an old read block?
+                rblk = self.blocks.lookup_by_object(obj)
+                if rblk is not None:
+                    memmap = rblk.memmap
+                    data = None
+                    if not rblk.memmap:
+                        if rblk._cached_data is not None:
+                            data = rblk._cached_data
+                        elif not callable(rblk._data):
+                            data = rblk._data
+                else:
+                    memmap = self._memmap
+                    data = None
+
+                # we have to be lazy here as the current memmap is invalid
+                new_read_block = reader.ReadBlock(
+                    offset + 4, self._write_fd, memmap, True, False, header=header, data=data
+                )
+                new_read_blocks.append_block(new_read_block)
+                new_index = len(new_read_blocks) - 1
+                new_read_blocks.assign_object(obj, new_read_block)
+
+                # update data callbacks to point to new blocks
+                cb = self._data_callbacks.lookup_by_object(obj)
+                if cb is not None:
+                    cb.reassign(new_index, new_read_blocks)
+
+            # update read blocks to reflect new state
+            self.blocks = new_read_blocks
+            self.options._read_blocks = new_read_blocks
