@@ -157,9 +157,7 @@ class AsdfFile:
         self._fd = None
         self._closed = False
         self._external_asdf_by_uri = {}
-        self._blocks = BlockManager(uri=uri)
-        self._blocks.lazy_load = lazy_load
-        self._blocks.memmap = not copy_arrays
+        self._blocks = BlockManager(uri=uri, lazy_load=lazy_load, memmap=not copy_arrays)
         self._uri = uri
         if tree is None:
             # Bypassing the tree property here, to avoid validating
@@ -803,6 +801,10 @@ class AsdfFile:
             raise ValueError(msg)
 
         with config_context():
+
+            # validate_checksums (unlike memmap and lazy_load) is provided
+            # here instead of in __init__
+            self._blocks._validate_checksums = validate_checksums
             self._mode = fd.mode
             self._fd = fd
             if self._fd._uri:
@@ -832,7 +834,6 @@ class AsdfFile:
 
             yaml_token = fd.read(4)
             tree = None
-            read_blocks = []
             if yaml_token == b"%YAM":
                 reader = fd.reader_until(
                     constants.YAML_END_MARKER_REGEX,
@@ -852,20 +853,13 @@ class AsdfFile:
                 # now, but we don't do anything special with it until
                 # after the blocks have been read
                 tree = yamlutil.load_tree(reader)
-                # has_blocks = fd.seek_until(constants.BLOCK_MAGIC, 4, include=True, exception=False)
-                read_blocks = block_reader.read_blocks(
-                    fd, self._blocks.memmap, self._blocks.lazy_load, validate_checksums
-                )
+                self._blocks.read(fd)
             elif yaml_token == constants.BLOCK_MAGIC:
-                # this file has only blocks
-                read_blocks = block_reader.read_blocks(
-                    fd, self._blocks.memmap, self._blocks.lazy_load, validate_checksums, after_magic=True
-                )
+                # this file has only blocks and we're already read the first block magic
+                self._blocks.read(fd, after_magic=True)
             elif yaml_token != b"":
                 msg = "ASDF file appears to contain garbage after header."
                 raise OSError(msg)
-
-            self._blocks.blocks.set_blocks(read_blocks)
 
             if tree is None:
                 # At this point the tree should be tagged, but we want it to be
@@ -1206,7 +1200,7 @@ class AsdfFile:
                                 elif not callable(rblk._data):
                                     data = rblk._data
                         else:
-                            memmap = self._blocks.memmap
+                            memmap = self._blocks._memmap
                             data = None
 
                         # we have to be lazy here as the current memmap is invalid

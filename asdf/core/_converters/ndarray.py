@@ -176,7 +176,7 @@ class NDArrayConverter(Converter):
                 instance = NDArrayType(source, shape, dtype, offset, strides, "A", mask)
                 ctx._blocks._set_array_storage(instance, "inline")
 
-            if not ctx._blocks.lazy_load:
+            if not ctx._blocks._lazy_load:
                 instance._make_array()
             return instance
 

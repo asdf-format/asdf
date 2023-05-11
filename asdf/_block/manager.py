@@ -5,7 +5,7 @@ import weakref
 
 from asdf import config, constants, generic_io, util
 
-from . import store
+from . import reader, store
 from .callback import DataCallback
 from .external import ExternalBlockCache, UseInternal
 from .options import Options
@@ -111,7 +111,7 @@ def relative_uri_to_full(uri, relative):
 
 
 class Manager:
-    def __init__(self, read_blocks=None, uri=None):
+    def __init__(self, read_blocks=None, uri=None, lazy_load=False, memmap=False, validate_checksums=False):
         if read_blocks is None:
             read_blocks = ReadBlocks([])
         self.options = BlockOptions(read_blocks)
@@ -124,6 +124,14 @@ class Manager:
         self._write_fd = None
         self._uri = uri
         self._external_block_cache = ExternalBlockCache()
+        self._lazy_load = lazy_load
+        self._memmap = memmap
+        self._validate_checksums = validate_checksums
+
+    def read(self, fd, after_magic=False):
+        self.blocks.set_blocks(
+            reader.read_blocks(fd, self._memmap, self._lazy_load, self._validate_checksums, after_magic=after_magic)
+        )
 
     def _load_external(self, uri):
         value = self._external_block_cache.load(self._uri, uri)
