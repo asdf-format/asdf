@@ -152,29 +152,6 @@ class Converter(abc.ABC):
             or a generator that yields such an instance.
         """
 
-    def reserve_blocks(self, obj, tag):
-        """
-        Reserve any number of blocks in which data (ndarrays) can be
-        stored.
-
-        Parameters
-        ----------
-        obj : object
-            Instance of a custom type to be serialized.  Guaranteed to
-            be an instance of one of the types listed in the `types`
-            property.
-        tag : str
-            The tag identifying the YAML type that ``obj`` should be
-            converted into.  Selected by a call to this converter's
-            select_tag method.
-
-        Returns
-        -------
-        keys : list of unique hashable keys
-            These keys will be used to reserve blocks for later use
-        """
-        return []
-
 
 class ConverterProxy(Converter):
     """
@@ -307,31 +284,6 @@ class ConverterProxy(Converter):
         object
         """
         return self._delegate.from_yaml_tree(node, tag, ctx)
-
-    def reserve_blocks(self, obj, tag):
-        """
-        Reserve blocks to be used during conversion of this object
-
-        Parameters
-        ----------
-        obj : object
-            Instance of a custom type to be serialized.  Guaranteed to
-            be an instance of one of the types listed in the `types`
-            property.
-        tag : str
-            The tag identifying the YAML type that ``obj`` should be
-            converted into.  Selected by a call to this converter's
-            select_tag method.
-
-        Returns
-        -------
-        keys : list of unique hashable keys
-            These keys will be used to reserve blocks for later use
-
-        """
-        if hasattr(self._delegate, "reserve_blocks"):
-            return self._delegate.reserve_blocks(obj, tag)
-        return []
 
     @property
     def delegate(self):

@@ -130,8 +130,6 @@ def test_dont_load_data():
 
     buff.seek(0)
     with asdf.open(buff) as ff:
-        ff._run_hook("reserve_blocks")
-
         # repr and str shouldn't load data
         str(ff.tree["science_data"])
         repr(ff.tree)
