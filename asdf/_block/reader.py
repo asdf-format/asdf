@@ -13,7 +13,6 @@ class ReadBlock:
         self.data_offset = data_offset
         self._data = data
         self._cached_data = None
-        # TODO alternative to passing these down?
         self.memmap = memmap
         self.lazy_load = lazy_load
         self.validate_checksum = validate_checksum
@@ -47,7 +46,7 @@ class ReadBlock:
             data = self._data
         if self.validate_checksum:
             checksum = bio.calculate_block_checksum(data)
-            if checksum != self._header["checksum"]:
+            if not self._header["flags"] & constants.BLOCK_FLAG_STREAMED and checksum != self._header["checksum"]:
                 msg = f"Block at {self.offset} does not match given checksum"
                 raise ValueError(msg)
             # only validate data the first time it's read

@@ -12,7 +12,9 @@ from asdf._block.reader import read_blocks
 
 
 @contextlib.contextmanager
-def gen_blocks(fn=None, n=5, size=10, padding=0, padding_byte=b"\0", with_index=False, block_padding=False):
+def gen_blocks(
+    fn=None, n=5, size=10, padding=0, padding_byte=b"\0", with_index=False, block_padding=False, streamed=False
+):
     offsets = []
     if fn is not None:
         with generic_io.get_file(fn, mode="w") as fd:
@@ -30,8 +32,8 @@ def gen_blocks(fn=None, n=5, size=10, padding=0, padding_byte=b"\0", with_index=
             offsets.append(fd.tell())
             fd.write(constants.BLOCK_MAGIC)
             data = np.ones(size, dtype="uint8") * i
-            bio.write_block(fd, data, padding=block_padding)
-        if with_index:
+            bio.write_block(fd, data, stream=streamed and (i == n - 1), padding=block_padding)
+        if with_index and not streamed:
             bio.write_block_index(fd, offsets)
         fd.seek(0)
         yield fd, check
@@ -43,17 +45,21 @@ def gen_blocks(fn=None, n=5, size=10, padding=0, padding_byte=b"\0", with_index=
 @pytest.mark.parametrize("with_index", [True, False])
 @pytest.mark.parametrize("validate_checksums", [True, False])
 @pytest.mark.parametrize("padding", [0, 3, 4, 5])
-def test_read(tmp_path, lazy_load, memmap, with_index, validate_checksums, padding):
+@pytest.mark.parametrize("streamed", [True, False])
+def test_read(tmp_path, lazy_load, memmap, with_index, validate_checksums, padding, streamed):
     fn = tmp_path / "test.bin"
     n = 5
     size = 10
-    with gen_blocks(fn=fn, n=n, size=size, padding=padding, with_index=with_index) as (fd, check):
+    with gen_blocks(fn=fn, n=n, size=size, padding=padding, with_index=with_index, streamed=streamed) as (fd, check):
         r = read_blocks(fd, memmap=memmap, lazy_load=lazy_load, validate_checksums=validate_checksums)
-        if lazy_load and with_index:
+        if lazy_load and with_index and not streamed:
             assert r[0].loaded
             assert r[-1].loaded
             for blk in r[1:-1]:
                 assert not blk.loaded
+                # getting the header should load the block
+                blk.header
+                assert blk.loaded
         else:
             for blk in r:
                 assert blk.loaded
@@ -62,6 +68,13 @@ def test_read(tmp_path, lazy_load, memmap, with_index, validate_checksums, paddi
                 base = util.get_array_base(blk.data)
                 assert isinstance(base.base, mmap.mmap)
         check(r)
+        if lazy_load:
+            # if lazy loaded, each call to data should re-read the data
+            assert r[0].data is not r[0].data
+        else:
+            assert r[0].data is r[0].data
+        # getting cached_data should always return the same array
+        assert r[0].cached_data is r[0].cached_data
 
 
 def test_read_invalid_padding():
@@ -79,23 +92,30 @@ def test_read_post_padding():
         check(read_blocks(fd))
 
 
-# TODO non-seekable
-
-
-@pytest.mark.parametrize("invalid_block_index", [0, 1, -1])
+@pytest.mark.parametrize("invalid_block_index", [0, 1, -1, "junk"])
 def test_invalid_block_index(tmp_path, invalid_block_index):
     fn = tmp_path / "test.bin"
     with gen_blocks(fn=fn, with_index=True) as (fd, check):
+        # trash the block index
         offset = bio.find_block_index(fd)
         assert offset is not None
-        block_index = bio.read_block_index(fd, offset)
-        block_index[invalid_block_index] += 4
-        fd.seek(offset)
-        bio.write_block_index(fd, block_index)
+        if invalid_block_index == "junk":
+            # trash the whole index
+            fd.seek(-4, 2)
+            fd.write(b"junk")
+        else:  # mess up one entry of the index
+            block_index = bio.read_block_index(fd, offset)
+            block_index[invalid_block_index] += 4
+            fd.seek(offset)
+            bio.write_block_index(fd, block_index)
         fd.seek(0)
+
         # when the block index is read, only the first and last blocks
         # are check, so any other invalid entry should result in failure
         if invalid_block_index in (0, -1):
+            check(read_blocks(fd, lazy_load=True))
+        elif invalid_block_index == "junk":
+            # read_blocks should fall back to reading serially
             check(read_blocks(fd, lazy_load=True))
         else:
             with pytest.raises(ValueError, match="Header size.*"):
@@ -130,3 +150,24 @@ def test_closed_file(tmp_path):
         blk = blocks[1]
     with pytest.raises(OSError, match="Attempt to load block from closed file"):
         blk.load()
+
+
+@pytest.mark.parametrize("validate_checksums", [True, False])
+def test_bad_checksum(validate_checksums):
+    buff = io.BytesIO(
+        constants.BLOCK_MAGIC
+        + b"\x000"  # header size = 2
+        + b"\0\0\0\0"  # flags = 4
+        + b"\0\0\0\0"  # compression = 4
+        + b"\0\0\0\0\0\0\0\0"  # allocated size = 8
+        + b"\0\0\0\0\0\0\0\0"  # used size = 8
+        + b"\0\0\0\0\0\0\0\0"  # data size = 8
+        + b"\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0"  # invalid checksum = 16
+    )
+
+    with generic_io.get_file(buff, mode="r") as fd:
+        if validate_checksums:
+            with pytest.raises(ValueError, match=".* does not match given checksum"):
+                read_blocks(fd, lazy_load=False, validate_checksums=validate_checksums)[0].data
+        else:
+            read_blocks(fd, lazy_load=False, validate_checksums=validate_checksums)[0].data

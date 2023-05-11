@@ -5,17 +5,15 @@ import asdf._block.io as bio
 from asdf import constants, generic_io
 from asdf._block import reader, writer
 
-# TODO write blocks, with compression_kwargs: how to check this worked?
-# TODO invalid inputs
-
 
 @pytest.mark.parametrize("lazy", [True, False])
 @pytest.mark.parametrize("index", [True, False])
 @pytest.mark.parametrize("padding", [True, False, 0.1, 0.9])
 @pytest.mark.parametrize("compression", [None, b"zlib"])
 @pytest.mark.parametrize("stream", [True, False])
-def test_write_blocks(tmp_path, lazy, index, padding, compression, stream):
-    data = [np.ones(10, dtype=np.uint8), np.zeros(5, dtype=np.uint8)]
+@pytest.mark.parametrize("seekable", [True, False])
+def test_write_blocks(tmp_path, lazy, index, padding, compression, stream, seekable):
+    data = [np.ones(10, dtype=np.uint8), np.zeros(5, dtype=np.uint8), None]
     if lazy:
         blocks = [writer.WriteBlock(lambda bd=d: bd, compression=compression) for d in data]
     else:
@@ -26,9 +24,11 @@ def test_write_blocks(tmp_path, lazy, index, padding, compression, stream):
         streamed_block = None
     fn = tmp_path / "test.bin"
     with generic_io.get_file(fn, mode="w") as fd:
+        if not seekable:
+            fd.seekable = lambda: False
         writer.write_blocks(fd, blocks, padding=padding, streamed_block=streamed_block, write_index=index)
     with generic_io.get_file(fn, mode="r") as fd:
-        if index and not stream:
+        if index and not stream and seekable:
             assert bio.find_block_index(fd) is not None
         else:
             assert bio.find_block_index(fd) is None
@@ -39,7 +39,10 @@ def test_write_blocks(tmp_path, lazy, index, padding, compression, stream):
         else:
             assert len(read_blocks) == len(data)
         for r, d in zip(read_blocks, data):
-            np.testing.assert_array_equal(r.data, d)
+            if d is None:
+                assert r.data.size == 0
+            else:
+                np.testing.assert_array_equal(r.data, d)
             if compression is not None:
                 assert r.header["compression"] == compression
             if padding:

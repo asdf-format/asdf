@@ -223,7 +223,7 @@ def read_block_index(fd, offset=None):
         raise OSError(msg)
     try:
         block_index = yaml.load(fd.read(-1), yaml.SafeLoader)
-    except yaml.parser.ParserError:
+    except yaml.error.YAMLError:
         raise OSError("Failed to parse block index as yaml")
     if (
         not isinstance(block_index, list)
