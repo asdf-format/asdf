@@ -22,9 +22,6 @@ class Key:
         if obj is not None:
             self.assign_object(obj)
 
-    def assign_object(self, obj):
-        self._ref = weakref.ref(obj)
-
     def is_valid(self):
         if self._ref is UndefinedRef:
             return False
@@ -36,7 +33,10 @@ class Key:
     def __hash__(self):
         return self._key
 
-    def matches(self, obj):
+    def assign_object(self, obj):
+        self._ref = weakref.ref(obj)
+
+    def matches_object(self, obj):
         if self._ref is UndefinedRef:
             return False
         r = self._ref()
@@ -51,7 +51,7 @@ class Key:
             return False
         if not self.is_valid():
             return False
-        return other.matches(self._ref())
+        return other.matches_object(self._ref())
 
     def __copy__(self):
         return self.__class__(self._ref(), self._key)

@@ -29,7 +29,7 @@ class Store:
 
         # look for a matching key: O(N)
         for key, value in by_key.items():
-            if key.matches(obj):
+            if key.matches_object(obj):
                 return value
 
         # no match, return default
@@ -56,7 +56,7 @@ class Store:
         # look for a matching matching key
         if obj_key is None:
             for key in by_key:
-                if key.matches(obj):
+                if key.matches_object(obj):
                     by_key[key] = value
                     return
             # we didn't find a matching key, so make one
