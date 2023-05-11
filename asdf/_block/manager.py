@@ -1,14 +1,12 @@
 import contextlib
 import copy
-import os
 import weakref
 
 from asdf import config, constants, generic_io, util
 
+from . import external, reader, store, writer
 from . import io as bio
-from . import reader, store, writer
 from .callback import DataCallback
-from .external import ExternalBlockCache, UseInternal
 from .options import Options
 
 
@@ -87,29 +85,6 @@ class BlockOptions(store.Store):
         return compressions
 
 
-def make_external_uri(uri, index):
-    if uri is None:
-        uri = ""
-    parts = list(util.patched_urllib_parse.urlparse(uri))
-    path = parts[2]
-    dirname, filename = os.path.split(path)
-    filename = os.path.splitext(filename)[0] + f"{index:04d}.asdf"
-    return filename
-
-
-def relative_uri_to_full(uri, relative):
-    # file://foo/bar, bam -> file://foo/bam
-    # TODO replace with generic_io.resolve_uri
-    if uri is None:
-        uri = ""
-    parts = list(util.patched_urllib_parse.urlparse(uri))
-    path = parts[2]
-    dirname, filename = os.path.split(path)
-    path = os.path.join(dirname, relative)
-    parts[2] = path
-    return util.patched_urllib_parse.urlunparse(parts)
-
-
 class Manager:
     def __init__(self, read_blocks=None, uri=None, lazy_load=False, memmap=False, validate_checksums=False):
         if read_blocks is None:
@@ -123,7 +98,7 @@ class Manager:
         self._streamed_obj = None
         self._write_fd = None
         self._uri = uri
-        self._external_block_cache = ExternalBlockCache()
+        self._external_block_cache = external.ExternalBlockCache()
         self._lazy_load = lazy_load
         self._memmap = memmap
         self._validate_checksums = validate_checksums
@@ -135,7 +110,7 @@ class Manager:
 
     def _load_external(self, uri):
         value = self._external_block_cache.load(self._uri, uri)
-        if value is UseInternal:
+        if value is external.UseInternal:
             return self._blocks.blocks[0].data
         return value
 
@@ -153,7 +128,7 @@ class Manager:
             raise ValueError("Can't write external blocks, since URI of main file is unknown.")
 
         for blk in self._external_write_blocks:
-            uri = relative_uri_to_full(self._write_fd.uri, blk._uri)
+            uri = generic_io.resolve_uri(self._write_fd.uri, blk._uri)
             af = AsdfFile()
             with generic_io.get_file(uri, mode="w") as f:
                 af.write_to(f, include_block_index=False)
@@ -172,7 +147,7 @@ class Manager:
                 base_uri = self._write_fd.uri or self._uri
             else:
                 base_uri = self._uri
-            blk._uri = make_external_uri(base_uri, index)
+            blk._uri = external.uri_for_index(base_uri, index)
             self._external_write_blocks.append(blk)
             return blk._uri
         # first, look for an existing block

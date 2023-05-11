@@ -1,3 +1,5 @@
+import os
+
 from asdf import generic_io, util
 
 
@@ -21,3 +23,11 @@ class ExternalBlockCache:
             with asdf_open(resolved_uri, lazy_load=False, copy_arrays=True) as af:
                 self._cache[key] = af._blocks.blocks[0].cached_data
         return self._cache[key]
+
+
+def uri_for_index(uri, index):
+    parts = list(util.patched_urllib_parse.urlparse(uri))
+    path = parts[2]
+    dirname, filename = os.path.split(path)
+    filename = os.path.splitext(filename)[0] + f"{index:04d}.asdf"
+    return filename

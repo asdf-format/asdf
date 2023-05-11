@@ -1,4 +1,5 @@
 import numpy as np
+import pytest
 
 import asdf
 from asdf._block import external
@@ -16,3 +17,10 @@ def test_cache(tmp_path):
     assert cache.load(base_uri, "test.asdf") is data
     assert cache.load(base_uri, "#") is external.UseInternal
     assert cache.load(base_uri, "") is external.UseInternal
+
+
+@pytest.mark.parametrize("uri", ["test.asdf", "foo/test.asdf"])
+@pytest.mark.parametrize("index", [0, 1, 100])
+def test_uri_for_index(uri, index):
+    match = f"test{index:04d}.asdf"
+    assert external.uri_for_index(uri, index) == match
