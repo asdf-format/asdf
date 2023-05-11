@@ -43,3 +43,15 @@ class Key:
         if r is None:
             return False
         return r is obj
+
+    def __eq__(self, other):
+        if not isinstance(other, Key):
+            return NotImplemented
+        if self._key != other._key:
+            return False
+        if not self.is_valid():
+            return False
+        return other.matches(self._ref())
+
+    def __copy__(self):
+        return self.__class__(self._ref(), self._key)
