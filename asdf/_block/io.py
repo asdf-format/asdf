@@ -8,7 +8,6 @@ import yaml
 
 from asdf import compression as mcompression
 from asdf import constants, util
-from asdf.config import get_config
 
 BLOCK_HEADER = util.BinaryStruct(
     [
@@ -120,9 +119,7 @@ def read_block(fd, offset=None, memmap=False, lazy_load=False):
     return offset, header, data_offset, data
 
 
-def generate_write_header(
-    data, stream=False, compression_kwargs=None, padding=False, fs_block_size=None, **header_kwargs
-):
+def generate_write_header(data, stream=False, compression_kwargs=None, padding=False, fs_block_size=1, **header_kwargs):
     if data.ndim != 1 or data.dtype != "uint8":
         msg = "Data must be of ndim==1 and dtype==uint8"
         raise ValueError(msg)
@@ -148,8 +145,6 @@ def generate_write_header(
         header_kwargs["allocated_size"] = 0
     else:
         header_kwargs["used_size"] = used_size
-        if fs_block_size is None:
-            fs_block_size = get_config().io_block_size
         padding = util.calculate_padding(used_size, padding, fs_block_size)
         header_kwargs["allocated_size"] = header_kwargs.get("allocated_size", used_size + padding)
 

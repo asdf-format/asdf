@@ -340,6 +340,20 @@ def test_read_block_index_no_header(tmp_path):
             assert bio.read_block_index(fd) == values
 
 
+def test_read_block_index_invalid_yaml():
+    bs = io.BytesIO(constants.INDEX_HEADER + b"][")
+    with generic_io.get_file(bs, "r") as fd:
+        with pytest.raises(OSError, match="Failed to parse block index as yaml"):
+            bio.read_block_index(fd)
+
+
+def test_read_block_index_valid_yaml_invalid_contents():
+    bs = io.BytesIO(constants.INDEX_HEADER + b"['a', 'b']")
+    with generic_io.get_file(bs, "r") as fd:
+        with pytest.raises(OSError, match="Invalid block index"):
+            bio.read_block_index(fd)
+
+
 def test_write_block_index_with_offset(tmp_path):
     fn = tmp_path / "test"
     offset = 50
@@ -349,7 +363,3 @@ def test_write_block_index_with_offset(tmp_path):
         bio.write_block_index(fd, [1, 2, 3], offset=offset)
     with generic_io.get_file(fn, "r") as fd:
         assert bio.find_block_index(fd) == offset
-
-
-# TODO test that file pointer is always at the end of a block after a read
-# for all possible block types
