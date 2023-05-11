@@ -972,14 +972,19 @@ class AsdfFile:
             self._run_hook("pre_write")
 
     def _serial_write(self, fd, pad_blocks, include_block_index):
-        # prep a tree for a writing
-        tree = copy.copy(self._tree)
-        tree["asdf_library"] = get_asdf_library_info()
-        if "history" in self._tree:
-            tree["history"] = copy.deepcopy(self._tree["history"])
+        with self._blocks.write_context(fd):
+            self._pre_write(fd)
+            try:
+                # prep a tree for a writing
+                tree = copy.copy(self._tree)
+                tree["asdf_library"] = get_asdf_library_info()
+                if "history" in self._tree:
+                    tree["history"] = copy.deepcopy(self._tree["history"])
 
-        self._write_tree(tree, fd, pad_blocks)
-        self._blocks.write(fd, pad_blocks, include_block_index)
+                self._write_tree(tree, fd, pad_blocks)
+                self._blocks.write(fd, pad_blocks, include_block_index)
+            finally:
+                self._post_write(fd)
 
     def _post_write(self, fd):
         if len(self._tree):
@@ -1080,21 +1085,21 @@ class AsdfFile:
             if fd.can_memmap():
                 fd.flush_memmap()
 
-            # if we have no read blocks, we can just call write_to as no intrnal blocks are reused
-            if len(self._blocks.blocks) == 0 and self._blocks._streamed_block is None:
+            def rewrite():
                 self._fd.seek(0)
-                self.write_to(self._fd)
+                self._serial_write(self._fd, pad_blocks, include_block_index)
                 if self._fd.can_memmap():
                     self._fd.close_memmap()
                 self._fd.truncate()
+
+            # if we have no read blocks, we can just call write_to as no internal blocks are reused
+            if len(self._blocks.blocks) == 0 and self._blocks._streamed_block is None:
+                rewrite()
                 return
+
             # if we have all external blocks, we can just call write_to as no internal blocks are reused
             if config.all_array_storage == "external":
-                self._fd.seek(0)
-                self.write_to(self._fd)
-                if self._fd.can_memmap():
-                    self._fd.close_memmap()
-                self._fd.truncate()
+                rewrite()
                 return
 
             self._pre_write(fd)
@@ -1312,13 +1317,7 @@ class AsdfFile:
                 self.version = version
 
             with generic_io.get_file(fd, mode="w") as fd:
-                with self._blocks.write_context(fd):
-                    self._pre_write(fd)
-                    try:
-                        self._serial_write(fd, pad_blocks, include_block_index)
-                        fd.flush()
-                    finally:
-                        self._post_write(fd)
+                self._serial_write(fd, pad_blocks, include_block_index)
 
     def find_references(self):
         """
