@@ -119,7 +119,7 @@ class Manager:
         self._data_callbacks = store.Store()
         self._write_blocks = store.LinearStore()
         self._external_write_blocks = []
-        self._streamed_block = None
+        self._streamed_write_block = None
         self._streamed_obj = None
         self._write_fd = None
         self._uri = uri
@@ -142,7 +142,7 @@ class Manager:
     def _clear_write(self):
         self._write_blocks = store.LinearStore()
         self._external_write_blocks = []
-        self._streamed_block = None
+        self._streamed_write_block = None
         self._streamed_obj = None
         self._write_fd = None
 
@@ -186,10 +186,10 @@ class Manager:
         self._write_blocks.assign_object(obj, blk)
         return len(self._write_blocks) - 1
 
-    def set_streamed_block(self, data, obj):
-        if self._streamed_block is not None and data is not self._streamed_block.data:
+    def set_streamed_write_block(self, data, obj):
+        if self._streamed_write_block is not None and data is not self._streamed_write_block.data:
             raise ValueError("Can not add second streaming block")
-        self._streamed_block = writer.WriteBlock(data)
+        self._streamed_write_block = writer.WriteBlock(data)
         self._streamed_obj = weakref.ref(obj)
 
     def _get_data_callback(self, index):
@@ -243,12 +243,12 @@ class Manager:
         if self._write_fd is None:
             msg = "write called outside of valid write_context"
             raise OSError(msg)
-        if len(self._write_blocks) or self._streamed_block:
+        if len(self._write_blocks) or self._streamed_write_block:
             writer.write_blocks(
                 self._write_fd,
                 self._write_blocks,
                 pad_blocks,
-                streamed_block=self._streamed_block,
+                streamed_block=self._streamed_write_block,
                 write_index=include_block_index,
             )
         if len(self._external_write_blocks):
@@ -277,13 +277,13 @@ class Manager:
             self._write_external_blocks()
 
         # do we have any blocks to write?
-        if len(self._write_blocks) or self._streamed_block:
+        if len(self._write_blocks) or self._streamed_write_block:
             self._write_fd.seek(new_block_start)
             offsets, headers = writer.write_blocks(
                 self._write_fd,
                 self._write_blocks,
                 pad_blocks,
-                streamed_block=self._streamed_block,
+                streamed_block=self._streamed_write_block,
                 write_index=False,  # don't write an index as we will modify the offsets
             )
             new_block_end = self._write_fd.tell()
@@ -306,7 +306,7 @@ class Manager:
             offsets = [o - (new_block_start - new_tree_size) for o in offsets]
 
             # write index if no streamed block
-            if include_block_index and self._streamed_block is None:
+            if include_block_index and self._streamed_write_block is None:
                 bio.write_block_index(self._write_fd, offsets)
 
             # map new blocks to old blocks
@@ -314,7 +314,7 @@ class Manager:
             for i, (offset, header) in enumerate(zip(offsets, headers)):
                 if i == len(self._write_blocks):  # this is a streamed block
                     obj = self._streamed_obj()
-                    wblk = self._streamed_block
+                    wblk = self._streamed_write_block
                 else:
                     wblk = self._write_blocks[i]
                     # find object associated with wblk

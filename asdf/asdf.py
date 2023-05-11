@@ -1089,7 +1089,7 @@ class AsdfFile:
                 self._fd.truncate()
 
             # if we have no read blocks, we can just call write_to as no internal blocks are reused
-            if len(self._blocks.blocks) == 0 and self._blocks._streamed_block is None:
+            if len(self._blocks.blocks) == 0:
                 rewrite()
                 return
 

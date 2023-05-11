@@ -29,7 +29,7 @@ class NDArrayConverter(Converter):
 
         if isinstance(obj, Stream):
             # previously, stream never passed on data, we can do that here
-            ctx._blocks.set_streamed_block(data._array, data)
+            ctx._blocks.set_streamed_write_block(data._array, data)
 
             result = {}
             result["source"] = -1
@@ -107,7 +107,7 @@ class NDArrayConverter(Converter):
             if options.storage_type == "streamed":
                 result["shape"][0] = "*"
                 result["source"] = -1
-                ctx._blocks.set_streamed_block(base, data)
+                ctx._blocks.set_streamed_write_block(base, data)
             else:
                 result["source"] = ctx._blocks.make_write_block(base, options, obj)
             result["datatype"] = dtype
