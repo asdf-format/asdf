@@ -147,6 +147,8 @@ class Manager:
                 base_uri = self._write_fd.uri or self._uri
             else:
                 base_uri = self._uri
+            if base_uri is None:
+                raise ValueError("Can't write external blocks, since URI of main file is unknown.")
             blk._uri = external.uri_for_index(base_uri, index)
             self._external_write_blocks.append(blk)
             return blk._uri
