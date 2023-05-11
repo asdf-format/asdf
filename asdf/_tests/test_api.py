@@ -508,3 +508,13 @@ def test_write_to_no_tree_modification(tmp_path):
         tree = copy.deepcopy(af.tree)
         af.write_to(fn2)
         assert af.tree == tree
+
+
+def test_write_to_no_version_modification(tmp_path):
+    fn = tmp_path / "test.asdf"
+    tree = {"foo": None}
+    af = asdf.AsdfFile(tree.copy(), version="1.0.0")
+    af.write_to(fn, version="1.1.0")
+    assert af.version_string == "1.0.0"
+    with asdf.open(fn) as af:
+        assert af.version_string == "1.1.0"

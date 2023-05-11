@@ -1209,10 +1209,14 @@ class AsdfFile:
                 config.all_array_compression_kwargs = compression_kwargs
 
             if version is not None:
+                previous_version = self.version
                 self.version = version
 
             with generic_io.get_file(fd, mode="w") as fd:
                 self._serial_write(fd, pad_blocks, include_block_index)
+
+            if version is not None:
+                self.version = previous_version
 
     def find_references(self):
         """
