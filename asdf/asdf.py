@@ -158,7 +158,6 @@ class AsdfFile:
         self._closed = False
         self._external_asdf_by_uri = {}
         self._blocks = BlockManager(uri=uri, lazy_load=lazy_load, memmap=not copy_arrays)
-        self._uri = uri
         if tree is None:
             # Bypassing the tree property here, to avoid validating
             # an empty tree.
@@ -169,8 +168,7 @@ class AsdfFile:
                 # of copying the file?
                 msg = "Can not copy AsdfFile and change active extensions"
                 raise ValueError(msg)
-            self._uri = tree.uri
-            self._blocks._uri = self._uri
+            self._blocks._uri = tree.uri
             # Set directly to self._tree (bypassing property), since
             # we can assume the other AsdfFile is already valid.
             self._tree = tree.tree
@@ -471,7 +469,7 @@ class AsdfFile:
     def copy(self):
         return self.__class__(
             copy.deepcopy(self._tree),
-            self._uri,
+            self._blocks._uri,
             self._user_extensions,
         )
 
@@ -485,11 +483,7 @@ class AsdfFile:
         In many cases, it is automatically determined from the file
         handle used to read or write the file.
         """
-        if self._uri is not None:
-            return self._uri
-        if self._fd is not None:
-            return self._fd._uri
-        return None
+        return self._blocks._uri
 
     @property
     def _tag_to_schema_resolver(self):
@@ -808,7 +802,6 @@ class AsdfFile:
             self._mode = fd.mode
             self._fd = fd
             if self._fd._uri:
-                self._uri = self._fd._uri
                 self._blocks._uri = self._fd._uri
             # The filename is currently only used for tracing warning information
             self._fname = self._fd._uri if self._fd._uri else ""
