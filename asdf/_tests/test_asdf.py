@@ -3,12 +3,12 @@ import os
 import fsspec
 import pytest
 
-from asdf import config_context, get_config
+from asdf import config_context
 from asdf._tests._helpers import assert_no_warnings, assert_tree_match, yaml_to_asdf
 from asdf.asdf import AsdfFile, open_asdf
 from asdf.entry_points import get_extensions
 from asdf.exceptions import AsdfWarning
-from asdf.extension import ExtensionManager, ExtensionProxy, SerializationContext
+from asdf.extension import ExtensionProxy, SerializationContext
 from asdf.extension._legacy import AsdfExtensionList
 from asdf.versioning import AsdfVersion
 
@@ -186,30 +186,6 @@ def test_open_asdf_extensions(tmp_path):
     for arg in (object(), [object()]):
         with pytest.raises(TypeError, match=msg), open_asdf(path, extensions=arg) as af:
             pass
-
-
-def test_serialization_context():
-    extension_manager = ExtensionManager([])
-    context = SerializationContext("1.4.0", extension_manager, "file://test.asdf", None)
-    assert context.version == "1.4.0"
-    assert context.extension_manager is extension_manager
-    assert context._extensions_used == set()
-
-    extension = get_config().extensions[0]
-    context._mark_extension_used(extension)
-    assert context._extensions_used == {extension}
-    context._mark_extension_used(extension)
-    assert context._extensions_used == {extension}
-    context._mark_extension_used(extension.delegate)
-    assert context._extensions_used == {extension}
-
-    assert context.url == context._url == "file://test.asdf"
-
-    with pytest.raises(TypeError, match=r"Extension must implement the Extension interface"):
-        context._mark_extension_used(object())
-
-    with pytest.raises(ValueError, match=r"ASDF Standard version .* is not supported by asdf==.*"):
-        SerializationContext("0.5.4", extension_manager, None, None)
 
 
 def test_reading_extension_metadata():
