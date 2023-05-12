@@ -135,10 +135,11 @@ def test_generate_block_key():
         assert key.matches_object(obj)
 
     obj = Foo()
-    with context._deserialization() as op_ctx:
-        key = op_ctx.generate_block_key()
-        # the key does not yet have an assigned object
-        assert not key.is_valid()
-        op_ctx._obj = obj
-    assert key.is_valid()
-    assert key.matches_object(obj)
+    # because this test generates but does not assign a key
+    # it should raise an exception
+    with pytest.raises(OSError, match=r"Converter generated a key.*"):
+        with context._deserialization() as op_ctx:
+            key = op_ctx.generate_block_key()
+            # the key does not yet have an assigned object
+            assert not key.is_valid()
+            op_ctx._obj = obj

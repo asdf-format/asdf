@@ -167,7 +167,7 @@ class _Deserialization(_Operation):
         self._obj = None
         self._blk = None
         self._cb = None
-        self._keys = set()
+        self._keys_to_assign = {}
 
     def __exit__(self, exc_type, exc_value, traceback):
         if exc_type is not None:
@@ -175,8 +175,19 @@ class _Deserialization(_Operation):
         if self._blk is not None:
             self._blocks.blocks.assign_object(self._obj, self._blk)
             self._blocks._data_callbacks.assign_object(self._obj, self._cb)
-        for k in self._keys:
-            k.assign_object(self._obj)
+        for key, cb in self._keys_to_assign.items():
+            if cb is None:
+                msg = "Converter generated a key that was never used"
+                raise OSError(msg)
+            # now that we have an object, make the key valid
+            key.assign_object(self._obj)
+
+            # assign the key to the callback
+            self._blocks._data_callbacks.assign_object(key, cb)
+
+            # and the block
+            blk = self._blocks.blocks[cb._index]
+            self._blocks.blocks.assign_object(key, blk)
 
     def get_block_data_callback(self, index, key=None):
         blk = self._blocks.blocks[index]
@@ -192,17 +203,17 @@ class _Deserialization(_Operation):
             self._cb = self._blocks._get_data_callback(index)
             return self._cb
 
-        # for key accesses try to find a previous use of this key
-        cb = self._blocks._data_callbacks.lookup_by_object(key)
-        if cb is None:
-            self._blocks.blocks.assign_object(key, blk)
-            cb = self._blocks._get_data_callback(index)
-            self._blocks._data_callbacks.assign_object(key, cb)
+        if self._keys_to_assign.get(key, None) is not None:
+            return self._keys_to_assign[key]
+
+        cb = self._blocks._get_data_callback(index)
+        # mark this as a key to later assign
+        self._keys_to_assign[key] = cb
         return cb
 
     def generate_block_key(self):
         key = BlockKey()
-        self._keys.add(key)
+        self._keys_to_assign[key] = None
         return key
 
 
