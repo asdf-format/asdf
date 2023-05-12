@@ -1,12 +1,12 @@
 import contextlib
 import copy
-import weakref
 
 from asdf import config, constants, generic_io, util
 
 from . import external, reader, store, writer
 from . import io as bio
 from .callback import DataCallback
+from .key import Key as BlockKey
 from .options import Options
 
 
@@ -23,7 +23,7 @@ class ReadBlocks(store.LinearStore):
         self._items.append(block)
 
 
-class BlockOptions(store.Store):
+class OptionsStore(store.Store):
     """
     {array_base: options}
     read_blocks (instance of ReadBlocks)
@@ -63,7 +63,8 @@ class BlockOptions(store.Store):
                     if opt.storage_type == "streamed":
                         if opt is options:
                             continue
-                        raise ValueError("Can not add second streaming block")
+                        msg = "Can not add second streaming block"
+                        raise ValueError(msg)
         base = util.get_array_base(array)
         self.assign_object(base, options)
 
@@ -89,13 +90,13 @@ class Manager:
     def __init__(self, read_blocks=None, uri=None, lazy_load=False, memmap=False, validate_checksums=False):
         if read_blocks is None:
             read_blocks = ReadBlocks([])
-        self.options = BlockOptions(read_blocks)
+        self.options = OptionsStore(read_blocks)
         self.blocks = read_blocks
         self._data_callbacks = store.Store()
         self._write_blocks = store.LinearStore()
         self._external_write_blocks = []
         self._streamed_write_block = None
-        self._streamed_obj = None
+        self._streamed_obj_keys = set()
         self._write_fd = None
         self._uri = uri
         self._external_block_cache = external.ExternalBlockCache()
@@ -111,21 +112,22 @@ class Manager:
     def _load_external(self, uri):
         value = self._external_block_cache.load(self._uri, uri)
         if value is external.UseInternal:
-            return self._blocks.blocks[0].data
+            return self.blocks[0].data
         return value
 
     def _clear_write(self):
         self._write_blocks = store.LinearStore()
         self._external_write_blocks = []
         self._streamed_write_block = None
-        self._streamed_obj = None
+        self._streamed_obj_keys = set()
         self._write_fd = None
 
     def _write_external_blocks(self):
         from asdf import AsdfFile
 
-        if self._write_fd.uri is None:
-            raise ValueError("Can't write external blocks, since URI of main file is unknown.")
+        if self._write_fd is None or self._write_fd.uri is None:
+            msg = "Can't write external blocks, since URI of main file is unknown."
+            raise ValueError(msg)
 
         for blk in self._external_write_blocks:
             uri = generic_io.resolve_uri(self._write_fd.uri, blk._uri)
@@ -148,7 +150,8 @@ class Manager:
             else:
                 base_uri = self._uri
             if base_uri is None:
-                raise ValueError("Can't write external blocks, since URI of main file is unknown.")
+                msg = "Can't write external blocks, since URI of main file is unknown."
+                raise ValueError(msg)
             blk._uri = external.uri_for_index(base_uri, index)
             self._external_write_blocks.append(blk)
             return blk._uri
@@ -165,9 +168,11 @@ class Manager:
 
     def set_streamed_write_block(self, data, obj):
         if self._streamed_write_block is not None and data is not self._streamed_write_block.data:
-            raise ValueError("Can not add second streaming block")
-        self._streamed_write_block = writer.WriteBlock(data)
-        self._streamed_obj = weakref.ref(obj)
+            msg = "Can not add second streaming block"
+            raise ValueError(msg)
+        if self._streamed_write_block is None:
+            self._streamed_write_block = writer.WriteBlock(data)
+        self._streamed_obj_keys.add(BlockKey(obj))
 
     def _get_data_callback(self, index):
         return DataCallback(index, self.blocks)
@@ -289,48 +294,37 @@ class Manager:
             # map new blocks to old blocks
             new_read_blocks = ReadBlocks()
             for i, (offset, header) in enumerate(zip(offsets, headers)):
+                # find all objects that assigned themselves to
+                # the write block (wblk) at index i
                 if i == len(self._write_blocks):  # this is a streamed block
-                    obj = self._streamed_obj()
+                    obj_keys = self._streamed_obj_keys
                     wblk = self._streamed_write_block
                 else:
                     wblk = self._write_blocks[i]
                     # find object associated with wblk
-                    obj = None
+                    obj_keys = set()
                     for oid, by_key in self._write_blocks._by_id.items():
                         for key, index in by_key.items():
                             if self._write_blocks[index] is wblk:
-                                obj = key._ref()
-                                break
-                    if obj is None:
-                        msg = "Update failed to associate blocks"
-                        raise OSError(msg)
+                                obj_keys.add(key)
 
-                # does the obj have an old read block?
-                rblk = self.blocks.lookup_by_object(obj)
-                if rblk is not None:
-                    memmap = rblk.memmap
-                    data = None
-                    if not rblk.memmap:
-                        if rblk._cached_data is not None:
-                            data = rblk._cached_data
-                        elif not callable(rblk._data):
-                            data = rblk._data
-                else:
-                    memmap = self._memmap
-                    data = None
-
-                # we have to be lazy here as the current memmap is invalid
-                new_read_block = reader.ReadBlock(
-                    offset + 4, self._write_fd, memmap, True, False, header=header, data=data
-                )
+                # we have to be lazy here as any current memmap is invalid
+                new_read_block = reader.ReadBlock(offset + 4, self._write_fd, self._memmap, True, False, header=header)
                 new_read_blocks.append_block(new_read_block)
                 new_index = len(new_read_blocks) - 1
-                new_read_blocks.assign_object(obj, new_read_block)
 
-                # update data callbacks to point to new blocks
-                cb = self._data_callbacks.lookup_by_object(obj)
-                if cb is not None:
-                    cb.reassign(new_index, new_read_blocks)
+                # update all callbacks
+                for obj_key in obj_keys:
+                    obj = obj_key._ref()
+                    if obj is None:
+                        # this object no longer exists so don't both assigning it
+                        continue
+                    new_read_blocks.assign_object(obj, new_read_block)
+
+                    # update data callbacks to point to new block
+                    cb = self._data_callbacks.lookup_by_object(obj)
+                    if cb is not None:
+                        cb.reassign(new_index, new_read_blocks)
 
             # update read blocks to reflect new state
             self.blocks = new_read_blocks

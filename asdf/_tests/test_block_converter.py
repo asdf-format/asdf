@@ -224,3 +224,71 @@ def test_mutli_block():
     b = helpers.roundtrip_object(a)
     assert len(a.data) == len(b.data)
     assert [np.testing.assert_array_equal(aa, ab) for aa, ab in zip(a.data, b.data)]
+
+
+class SharedBlockData:
+    def __init__(self, callback):
+        self.callback = callback
+
+    @property
+    def data(self):
+        return self.callback()
+
+
+class SharedBlockConverter(Converter):
+    tags = ["asdf://somewhere.org/tags/shared_block_data-1.0.0"]
+    types = [SharedBlockData]
+    _return_invalid_keys = False
+
+    def to_yaml_tree(self, obj, tag, ctx):
+        # lookup source for obj
+        block_index = ctx.find_available_block_index(
+            lambda: obj.data,
+        )
+        return {
+            "block_index": block_index,
+        }
+
+    def from_yaml_tree(self, node, tag, ctx):
+        block_index = node["block_index"]
+        callback = ctx.get_block_data_callback(block_index)
+        obj = SharedBlockData(callback)
+        return obj
+
+
+class SharedBlockExtension(Extension):
+    tags = ["asdf://somewhere.org/tags/shared_block_data-1.0.0"]
+    converters = [SharedBlockConverter()]
+    extension_uri = "asdf://somewhere.org/extensions/shared_block_data-1.0.0"
+
+
+@with_extension(SharedBlockExtension)
+def test_shared_block_reassignment(tmp_path):
+    fn = tmp_path / "test.asdf"
+    arr1 = np.arange(10, dtype="uint8")
+    arr2 = np.arange(5, dtype="uint8")
+    a = SharedBlockData(lambda: arr1)
+    b = SharedBlockData(lambda: arr1)
+    asdf.AsdfFile({"a": a, "b": b}).write_to(fn)
+    with asdf.open(fn, mode="rw") as af:
+        af["b"].callback = lambda: arr2
+        af.update()
+    with asdf.open(fn) as af:
+        np.testing.assert_array_equal(af["a"].data, arr1)
+        np.testing.assert_array_equal(af["b"].data, arr2)
+
+
+@with_extension(SharedBlockExtension)
+def test_shared_block_obj_removal(tmp_path):
+    fn = tmp_path / "test.asdf"
+    arr1 = np.arange(10, dtype="uint8")
+    a = SharedBlockData(lambda: arr1)
+    b = SharedBlockData(lambda: arr1)
+    asdf.AsdfFile({"a": a, "b": b}).write_to(fn)
+    with asdf.open(fn, mode="rw") as af:
+        af["b"] = None
+        del b
+        af.update()
+    with asdf.open(fn) as af:
+        np.testing.assert_array_equal(af["a"].data, arr1)
+        assert af["b"] is None
