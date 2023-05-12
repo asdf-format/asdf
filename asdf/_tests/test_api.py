@@ -488,11 +488,26 @@ def test_asdf_standard_version_tag_selection():
     assert b"!core/asdf-1.1.0" not in content
 
     buff.seek(0)
-    af.write_to(buff, version="1.2.0")
+    af.write_to(buff, version="1.2.0")  # asdf-standard 1.2 uses asdf-object 1.1 tag
     buff.seek(0)
     content = buff.read()
     assert b"!core/asdf-1.0.0" not in content
     assert b"!core/asdf-1.1.0" in content
+
+
+def test_update_asdf_standard_version_tag_selection():
+    buff = io.BytesIO()
+
+    af = asdf.AsdfFile()
+    af.write_to(buff, version="1.0.0")
+
+    buff.seek(0)
+    with asdf.open(buff, mode="rw") as af:
+        af.update(version="1.2.0")  # asdf-standard 1.2 uses asdf-object 1.1 tag
+    buff.seek(0)
+    content = buff.read()
+    assert b"!core/asdf-1.1.0" in content
+    assert b"!core/asdf-1.0.0" not in content
 
 
 def test_write_to_no_tree_modification(tmp_path):

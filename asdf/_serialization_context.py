@@ -180,18 +180,24 @@ class _Deserialization(_Operation):
 
     def get_block_data_callback(self, index, key=None):
         blk = self._blocks.blocks[index]
-        cb = self._blocks._get_data_callback(index)
-
         if key is None:
+            if blk is self._blk:
+                # return callback for a previously access block
+                return self._cb
             if self._blk is not None:
+                # for attempts to access a second block without a key
                 msg = "Converters accessing >1 block must provide a key for each block"
                 raise OSError(msg)
             self._blk = blk
-            self._cb = cb
-        else:
-            self._blocks.blocks.assign_object(key, blk)
-            self._blocks._data_callbacks.assign_object(key, cb)
+            self._cb = self._blocks._get_data_callback(index)
+            return self._cb
 
+        # for key accesses try to find a previous use of this key
+        cb = self._blocks._data_callbacks.lookup_by_object(key)
+        if cb is None:
+            self._blocks.blocks.assign_object(key, blk)
+            cb = self._blocks._get_data_callback(index)
+            self._blocks._data_callbacks.assign_object(key, cb)
         return cb
 
     def generate_block_key(self):
@@ -212,7 +218,3 @@ class _Serialization(_Operation):
 
     def generate_block_key(self):
         return BlockKey(self._obj)
-
-
-class _IgnoreBlocks(_Operation):
-    pass
