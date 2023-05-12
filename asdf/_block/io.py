@@ -105,7 +105,7 @@ def read_block(fd, offset=None, memmap=False, lazy_load=False):
         def callback():
             fd = fd_ref()
             if fd is None or fd.is_closed():
-                msg = "Attempt to read data from closed file"
+                msg = "ASDF file has already been closed. Can not get the data."
                 raise OSError(msg)
             position = fd.tell()
             data = read_block_data(fd, header, offset=data_offset, memmap=memmap)

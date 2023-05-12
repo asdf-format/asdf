@@ -842,3 +842,26 @@ def test_remove_blocks(tmp_path):
     for fn in (fn1, fn2):
         with asdf.open(fn) as af:
             assert len(af._blocks.blocks) == 1
+
+
+def test_open_memmap_from_closed_file(tmp_path):
+    fn = tmp_path / "test.asdf"
+    arr = np.zeros(100)
+    arr2 = np.ones(100)
+    tree = {"base": arr, "view": arr[:50], "base2": arr2}
+    af = asdf.AsdfFile(tree)
+    af.write_to(fn)
+
+    with asdf.open(fn, lazy_load=True, copy_arrays=False) as af:
+        # load the base so we can test if accessing the view after the
+        # file is closed will trigger an error
+        af["base"][:]
+        view = af["view"]
+        base2 = af["base2"]
+
+    msg = r"ASDF file has already been closed. Can not get the data."
+    with pytest.raises(OSError, match=msg):
+        view[:]
+
+    with pytest.raises(OSError, match=msg):
+        base2[:]

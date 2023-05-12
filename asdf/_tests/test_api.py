@@ -457,7 +457,7 @@ def test_array_access_after_file_close(tmp_path):
     # the file has been closed:
     with asdf.open(path) as af:
         tree = af.tree
-    with pytest.raises(OSError, match=r"Attempt to read data from closed file"):
+    with pytest.raises(OSError, match=r"ASDF file has already been closed. Can not get the data."):
         tree["data"][0]
 
     # With memory mapping disabled and copying arrays enabled,

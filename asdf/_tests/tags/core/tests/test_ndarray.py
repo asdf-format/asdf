@@ -966,3 +966,15 @@ def test_problematic_class_attributes(tmp_path):
 
         with pytest.raises(AttributeError, match=r".* object has no attribute 'version'"):
             af["arr"].version
+
+
+def test_shape_does_not_load_array(tmp_path):
+    file_path = tmp_path / "test.asdf"
+    with asdf.AsdfFile() as af:
+        af["arr"] = np.arange(100)
+        af.write_to(file_path)
+
+    with asdf.open(file_path, lazy_load=True) as af:
+        assert af["arr"]._array is None
+        assert af["arr"].shape == (100,)
+        assert af["arr"]._array is None

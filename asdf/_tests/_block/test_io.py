@@ -222,7 +222,7 @@ def test_read_from_closed(tmp_path):
         bio.write_block(fd, data, stream=True)
     with generic_io.get_file(fn, mode="rw") as fd:
         _, _, _, callback = bio.read_block(fd, offset=0, lazy_load=True)
-    with pytest.raises(OSError, match="Attempt to read data from closed file"):
+    with pytest.raises(OSError, match="ASDF file has already been closed. Can not get the data."):
         callback()
 
 

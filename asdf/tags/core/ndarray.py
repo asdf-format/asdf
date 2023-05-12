@@ -269,16 +269,14 @@ class NDArrayType:
                 # we need to keep _source as a str to allow stdatamodels to
                 # support AsdfInFits
                 data = self._data_callback()
-            elif isinstance(self._source, int):
+            else:
                 # cached data is used here so that multiple NDArrayTypes will all use
                 # the same base array
                 data = self._data_callback(_attr="cached_data")
-            else:
-                # inline data
-                data = self._source
 
             if hasattr(data, "base") and isinstance(data.base, mmap.mmap) and data.base.closed:
-                raise OSError("Attempt to read data from a closed file")
+                msg = "ASDF file has already been closed. Can not get the data."
+                raise OSError(msg)
 
             # compute shape (streaming blocks have '0' data size in the block header)
             shape = self.get_actual_shape(
@@ -352,24 +350,10 @@ class NDArrayType:
 
     @property
     def shape(self):
-        if self._shape is None or self._array is not None:
+        if self._shape is None or self._array is not None or "*" in self._shape:
+            # streamed blocks have a '0' data_size in the header so we
+            # need to make the array to get the shape
             return self.__array__().shape
-        if "*" in self._shape:
-            if isinstance(self._source, str):
-                return self._make_array().shape
-            data_size = self._data_callback(_attr="header")["data_size"]
-            if not data_size:
-                # streamed blocks have a '0' data_size in the header so we
-                # need to make the array to get the shape
-                return self._make_array().shape
-            return tuple(
-                self.get_actual_shape(
-                    self._shape,
-                    self._strides,
-                    self._dtype,
-                    data_size,
-                )
-            )
         return tuple(self._shape)
 
     @property
