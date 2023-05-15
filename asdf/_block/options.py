@@ -46,7 +46,8 @@ class Options:
             # some assumptions about availability of information (that the input block
             # is known). The Options here do not have the same assumption.
             # For a block read from a file, it's options will be initialized with
-            # the compression value read from the block header
+            # the compression value read from the block header so we should never
+            # see 'input' at this point.
             raise ValueError(msg)
         try:
             compression = mcompression.validate(compression)
