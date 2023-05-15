@@ -324,7 +324,7 @@ class Manager:
                     # update data callbacks to point to new block
                     cb = self._data_callbacks.lookup_by_object(obj)
                     if cb is not None:
-                        cb.reassign(new_index, new_read_blocks)
+                        cb._reassign(new_index, new_read_blocks)
 
             # update read blocks to reflect new state
             self.blocks = new_read_blocks

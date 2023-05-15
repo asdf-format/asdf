@@ -51,6 +51,6 @@ def test_reassign():
     assert cb() == "a"
 
     blks2 = LinearStore([Data("c"), Data("d")])
-    cb.reassign(1, blks2)
+    cb._reassign(1, blks2)
 
     assert cb() == "d"

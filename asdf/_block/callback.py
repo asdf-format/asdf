@@ -2,8 +2,13 @@ import weakref
 
 
 class DataCallback:
+    """
+    A callable object used to read data from an ASDF block
+    read from an ASDF file.
+    """
+
     def __init__(self, index, read_blocks):
-        self.reassign(index, read_blocks)
+        self._reassign(index, read_blocks)
 
     def __call__(self, _attr=None):
         read_blocks = self._read_blocks_ref()
@@ -17,6 +22,6 @@ class DataCallback:
             # like reading the header and cached_data
             return getattr(read_blocks[self._index], _attr)
 
-    def reassign(self, index, read_blocks):
+    def _reassign(self, index, read_blocks):
         self._index = index
         self._read_blocks_ref = weakref.ref(read_blocks)

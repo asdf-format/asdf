@@ -81,15 +81,16 @@ class SerializationContext:
     def get_block_data_callback(self, index, key=None):
         """
         Generate a callable that when called will read data
-        from a block at the provided index
+        from an ASDF block at the provided index.
 
         Parameters
         ----------
         index : int
-            Block index
+            Index of ASDF block.
 
-        key : BlockKey
-            TODO
+        key : BlockKey, optional
+            BlockKey generated using self.generate_block_key. Only
+            needed for a Converter that uses multiple blocks.
 
         Returns
         -------
@@ -99,34 +100,42 @@ class SerializationContext:
         """
         raise NotImplementedError("abstract")
 
-    def find_available_block_index(self, data_callback, lookup_key=None):
+    def find_available_block_index(self, data_callback, key=None):
         """
-        Find the index of an available block to write data.
+        Find the index of an available ASDF block to write data.
 
-        This is typically used inside asdf.extension.Converter.to_yaml_tree
+        This is typically used inside asdf.extension.Converter.to_yaml_tree.
 
         Parameters
         ----------
         data_callback: callable
             Callable that when called will return data (ndarray) that will
             be written to a block.
-            At the moment, this is only assigned if a new block
-            is created to avoid circular references during AsdfFile.update.
 
-        lookup_key : hashable, optional
-            Unique key used to retrieve the index of a block that was
-            previously allocated or reserved. For ndarrays this is
-            typically the id of the base ndarray.
+        key : BlockKey, optional
+            BlockKey generated using self.generate_block_key. Only
+            needed for a Converter that uses multiple blocks.
 
         Returns
         -------
         block_index: int
-            Index of the block where data returned from data_callback
-            will be written.
+            Index of the ASDF block where data returned from
+            data_callback will be written.
         """
         raise NotImplementedError("abstract")
 
     def generate_block_key(self):
+        """
+        Generate a BlockKey used for Converters that wish to use
+        multiple blocks
+
+        Returns
+        -------
+        key : BlockKey
+            A hashable object that will be associated with the
+            serialized/deserialized object and can be used to
+            access multiple blocks within a Converter
+        """
         raise NotImplementedError("abstract")
 
     @contextlib.contextmanager
@@ -141,6 +150,23 @@ class SerializationContext:
 
 
 class _Operation(SerializationContext):
+    """
+    `SerializationContext` is used for multiple operations
+    including serialization and deserialization. The `_Operation` class
+    allows the SerializationContext to have different behavior during these
+    operations (for example allowing block reading during deserialization)
+    and allows the context to be used with a python ``with`` statement to
+    allow setup and teardown operations (such as associating a
+    deserialized object with the blocks accessed during deserialization).
+
+    `_Operation` subclasses should not be instantiated directly but instead
+    should be accessible via private methods on a `SerializationContext`.
+    This allows the `SerializationContext` to provide itself to the `_Operation`
+    which can chose to implement abstract methods in `SerializationContext`
+    (such as `SerializationContext.find_available_block_index` during
+    `_Serialization` created via `SerializationContext._serialization`).
+    """
+
     def __init__(self, ctx):
         self._ctx = weakref.ref(ctx)
         super().__init__(ctx.version, ctx.extension_manager, ctx.url, ctx._blocks)
@@ -162,6 +188,22 @@ class _Operation(SerializationContext):
 
 
 class _Deserialization(_Operation):
+    """
+    Perform deserialization (reading) with a `SerializationContext`.
+
+    To allow for block access, `_Deserialization` implements:
+        - `SerializationContext.generate_block_key`
+        - `SerializationContext.get_block_data_callback`
+    and tracks which blocks (and keys) are accessed, assigning them
+    to the deserialized object at the end of the
+    `SerializationContext._deserialization`.
+
+    Code that uses `_Deserialization` and accesses any blocks
+    or generates keys must assign an object to
+    `_Deserialization._obj` prior to exiting the `_Deserialization`
+    context manager.
+    """
+
     def __init__(self, ctx):
         super().__init__(ctx)
         self._obj = None
@@ -218,14 +260,24 @@ class _Deserialization(_Operation):
 
 
 class _Serialization(_Operation):
+    """
+    Perform serialization (writing) with a `SerializationContext`.
+
+    To allow for block access, `_Serialization` implements:
+        - `SerializationContext.generate_block_key`
+        - `SerializationContext.find_available_block_index`
+    and assigns any accessed blocks (and keys) to the object
+    being serialized.
+    """
+
     def __init__(self, ctx, obj):
         super().__init__(ctx)
         self._obj = obj
 
-    def find_available_block_index(self, data_callback, lookup_key=None):
-        if lookup_key is None:
-            lookup_key = self._obj
-        return self._blocks.make_write_block(data_callback, BlockOptions(), lookup_key)
+    def find_available_block_index(self, data_callback, key=None):
+        if key is None:
+            key = self._obj
+        return self._blocks.make_write_block(data_callback, BlockOptions(), key)
 
     def generate_block_key(self):
         return BlockKey(self._obj)
