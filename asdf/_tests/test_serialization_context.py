@@ -131,8 +131,8 @@ def test_generate_block_key():
     obj = Foo()
     with context._serialization(obj) as op_ctx:
         key = op_ctx.generate_block_key()
-        assert key.is_valid()
-        assert key.matches_object(obj)
+        assert key._is_valid()
+        assert key._matches_object(obj)
 
     obj = Foo()
     # because this test generates but does not assign a key
@@ -141,5 +141,5 @@ def test_generate_block_key():
         with context._deserialization() as op_ctx:
             key = op_ctx.generate_block_key()
             # the key does not yet have an assigned object
-            assert not key.is_valid()
+            assert not key._is_valid()
             op_ctx._obj = obj

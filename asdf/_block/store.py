@@ -29,7 +29,7 @@ class Store:
 
         # look for a matching key: O(N)
         for key, value in by_key.items():
-            if key.matches_object(obj):
+            if key._matches_object(obj):
                 return value
 
         # no match, return default
@@ -56,7 +56,7 @@ class Store:
         # look for a matching matching key
         if obj_key is None:
             for key in by_key:
-                if key.matches_object(obj):
+                if key._matches_object(obj):
                     by_key[key] = value
                     return
             # we didn't find a matching key, so make one
@@ -76,7 +76,7 @@ class Store:
                 self._cleanup(oid)
             return
         by_key = self._by_id[object_id]
-        keys_to_remove = [k for k in by_key if not k.is_valid()]
+        keys_to_remove = [k for k in by_key if not k._is_valid()]
         for key in keys_to_remove:
             del by_key[key]
         if not len(by_key):

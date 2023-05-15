@@ -222,7 +222,7 @@ class _Deserialization(_Operation):
                 msg = "Converter generated a key that was never used"
                 raise OSError(msg)
             # now that we have an object, make the key valid
-            key.assign_object(self._obj)
+            key._assign_object(self._obj)
 
             # assign the key to the callback
             self._blocks._data_callbacks.assign_object(key, cb)

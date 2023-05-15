@@ -28,20 +28,20 @@ def test_unique_same_object():
 def test_matches_obj():
     f = Foo()
     bk = Key(f)
-    assert bk.matches_object(f)
+    assert bk._matches_object(f)
 
 
 def test_undefined_no_match():
     bk = Key()
-    assert not bk.matches_object(Foo())
+    assert not bk._matches_object(Foo())
 
 
 def test_is_valid():
     f = Foo()
     bk = Key(f)
-    assert bk.is_valid()
+    assert bk._is_valid()
     del f
-    assert not bk.is_valid()
+    assert not bk._is_valid()
 
 
 def test_same_class():
@@ -49,13 +49,13 @@ def test_same_class():
     bk = Key(f)
     del f
     f2 = Foo()
-    assert not bk.is_valid()
-    assert not bk.matches_object(f2)
+    assert not bk._is_valid()
+    assert not bk._matches_object(f2)
 
 
 def test_undefined():
     k = Key()
-    assert not k.is_valid()
+    assert not k._is_valid()
 
 
 def test_equal():

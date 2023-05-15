@@ -58,7 +58,7 @@ class OptionsStore(store.Store):
         if options.storage_type == "streamed":
             for oid, by_key in self._by_id.items():
                 for key, opt in by_key.items():
-                    if not key.is_valid():
+                    if not key._is_valid():
                         continue
                     if opt.storage_type == "streamed":
                         if opt is options:
@@ -79,7 +79,7 @@ class OptionsStore(store.Store):
             compressions.add(cfg.all_array_compression)
         for _, by_key in self._by_id.items():
             for key, opts in by_key.items():
-                if not key.is_valid():
+                if not key._is_valid():
                     continue
                 if opts.compression:
                     compressions.add(opts.compression)
