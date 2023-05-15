@@ -4,13 +4,23 @@ from .key import Key
 
 
 class Store:
+    """
+    A key-value store that uses ``asdf._block.key.Key``
+    to allow use of keys that:
+        - are not hashable (so any object can be used)
+        - when the key is garbage collected, the value
+          will be unretrievable
+    """
+
     def __init__(self):
         # store contains 2 layers of lookup: id(obj), Key
         self._by_id = {}
 
     def lookup_by_object(self, obj, default=None):
         if isinstance(obj, Key):
+            # if obj is a Key, look up the object
             obj_id = id(obj._ref())
+            # and use the Key
             obj_key = obj
         else:
             obj_id = id(obj)
@@ -23,10 +33,13 @@ class Store:
         # first, lookup by id: O(1)
         by_key = self._by_id[obj_id]
 
-        # if we have a key, use it
+        # if we have a key
         if obj_key:
+            # use the key to get an existing value
+            # or default if this Key is unknown
             return by_key.get(obj_key, default)
 
+        # we have seen this id(obj) before
         # look for a matching key: O(N)
         for key, value in by_key.items():
             if key._matches_object(obj):
@@ -84,6 +97,11 @@ class Store:
 
 
 class LinearStore(Store, collections.abc.Sequence):
+    """
+    A collections.abc.Sequence that can also be accessed
+    like a Store (by using any object as a key).
+    """
+
     def __init__(self, init=None):
         super().__init__()
         if init is None:

@@ -81,8 +81,8 @@ def test_obj_not_equal():
 
 def test_undefined_not_equal():
     key_value = 42
-    k1 = Key(key=key_value)
-    k2 = Key(key=key_value)
+    k1 = Key(_key=key_value)
+    k2 = Key(_key=key_value)
     assert k1 != k2
 
 

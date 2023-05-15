@@ -33,22 +33,31 @@ class OptionsStore(store.Store):
         super().__init__()
         self._read_blocks = read_blocks
 
+    def has_options(self, array):
+        base = util.get_array_base(array)
+        return self.lookup_by_object(base) is not None
+
+    def get_options_from_block(self, array):
+        base = util.get_array_base(array)
+        # look up by block with matching _data
+        for block in self._read_blocks:
+            if block._cached_data is base or block._data is base:
+                # init options
+                if block.header["flags"] & constants.BLOCK_FLAG_STREAMED:
+                    storage_type = "streamed"
+                else:
+                    storage_type = "internal"
+                options = Options(storage_type, block.header["compression"])
+                return options
+        return None
+
     def get_options(self, array):
         base = util.get_array_base(array)
         options = self.lookup_by_object(base)
         if options is None:
-            # look up by block with matching _data
-            for block in self._read_blocks:
-                if block._cached_data is base or block._data is base:
-                    # init options
-                    if block.header["flags"] & constants.BLOCK_FLAG_STREAMED:
-                        storage_type = "streamed"
-                    else:
-                        storage_type = "internal"
-                    options = Options(storage_type, block.header["compression"])
-                    # set options
-                    self.set_options(base, options)
-                    break
+            options = self.get_options_from_block(base)
+            if options is not None:
+                self.set_options(base, options)
         if options is None:
             options = Options()
             self.set_options(base, options)
@@ -186,6 +195,12 @@ class Manager:
         return self.options.get_options(data).storage_type
 
     def _set_array_compression(self, arr, compression, **compression_kwargs):
+        # if this is input compression but we already have defined options
+        # we need to re-lookup the options based off the block
+        if compression == "input" and self.options.has_options(arr):
+            from_block_options = self.options.get_options_from_block(arr)
+            if from_block_options is not None:
+                compression = from_block_options.compression
         options = self.options.get_options(arr)
         options.compression = compression
         options.compression_kwargs = compression_kwargs

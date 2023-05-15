@@ -6,8 +6,12 @@ from . import io as bio
 
 
 class ReadBlock:
+    """
+    Represents an ASDF block read from a file.
+    """
+
     def __init__(self, offset, fd, memmap, lazy_load, validate_checksum, header=None, data_offset=None, data=None):
-        self.offset = offset  # after magic
+        self.offset = offset  # after block magic bytes
         self._fd = weakref.ref(fd)
         self._header = header
         self.data_offset = data_offset
@@ -24,6 +28,14 @@ class ReadBlock:
         return self._data is not None
 
     def load(self):
+        """
+        Load the block data (if it is not already loaded).
+
+        Raises
+        ------
+        OSError
+            If attempting to load from a closed file.
+        """
         if self.loaded:
             return
         fd = self._fd()
@@ -38,6 +50,20 @@ class ReadBlock:
 
     @property
     def data(self):
+        """
+        Read, parse and return data for an ASDF block.
+
+        Returns
+        -------
+        data : ndarray
+            A one-dimensional ndarray of dypte uint8 read from an ASDF block
+
+        Raises
+        ------
+        ValueError
+            If the header checksum does not match the checksum of the data
+            and validate_checksums was set to True.
+        """
         if not self.loaded:
             self.load()
         if callable(self._data):
@@ -55,18 +81,40 @@ class ReadBlock:
 
     @property
     def cached_data(self):
+        """
+        Return cached data for an ASDF block.
+
+        The first time this is called it may read data from the file
+        (if lazy loaded). Subsequent calls will return the same
+        ndarray.
+        """
         if self._cached_data is None:
             self._cached_data = self.data
         return self._cached_data
 
     @property
     def header(self):
+        """
+        Get the block header. For a lazy loaded block the first time
+        this is called the header will be read from the file and
+        cached.
+
+        Returns
+        -------
+        header : dict
+            Dictionary containing the read ASDF header.
+        """
         if not self.loaded:
             self.load()
         return self._header
 
 
-def read_blocks_serially(fd, memmap=False, lazy_load=False, validate_checksums=False, after_magic=False):
+def _read_blocks_serially(fd, memmap=False, lazy_load=False, validate_checksums=False, after_magic=False):
+    """
+    Read blocks serially from a file without looking for a block index.
+
+    For parameter and return value descriptions see `read_blocks`.
+    """
     blocks = []
     buff = b""
     magic_len = len(constants.BLOCK_MAGIC)
@@ -110,9 +158,56 @@ def read_blocks_serially(fd, memmap=False, lazy_load=False, validate_checksums=F
 
 
 def read_blocks(fd, memmap=False, lazy_load=False, validate_checksums=False, after_magic=False):
+    """
+    Read a sequence of ASDF blocks from a file.
+
+    If the file is seekable (and lazy_load is False) an attempt will
+    made to find, read and parse a block index. If this fails, the
+    blocks will be read serially. If parsing the block index
+    succeeds, the first first and last blocks will be read (to
+    confirm that those portions of the index are correct). All
+    other blocks will not be read until they are accessed.
+
+    Parameters
+    ----------
+    fd : file or generic_io.GenericIO
+        File to read. Reading will start at the current position.
+
+    memmap : bool, optional, default False
+        If true, memory map block data.
+
+    lazy_load : bool, optional, default False
+        If true, block data will be a callable that when executed
+        will return the block data. See the ``lazy_load`` argument
+        to ``asdf._block.io.read_block`` for more details.
+
+    validate_checksums : bool, optional, default False
+        When reading blocks compute the block data checksum and
+        compare it to the checksum read from the block header.
+        Note that this comparison will occur when the data is
+        accessed if ``lazy_load`` was set to True.
+
+    after_magic : bool, optional, default False
+        If True don't expect block magic bytes for the first block
+        read from the file.
+
+    Returns
+    -------
+
+    read_blocks : list of ReadBlock
+        A list of ReadBlock instances.
+
+    Raises
+    ------
+    OSError
+        Invalid bytes encountered while reading blocks.
+
+    ValueError
+        A read block has an invalid checksum.
+    """
     if not lazy_load or not fd.seekable():
         # load all blocks serially
-        return read_blocks_serially(fd, memmap, lazy_load, validate_checksums, after_magic)
+        return _read_blocks_serially(fd, memmap, lazy_load, validate_checksums, after_magic)
 
     # try to find block index
     starting_offset = fd.tell()
@@ -120,7 +215,7 @@ def read_blocks(fd, memmap=False, lazy_load=False, validate_checksums=False, aft
     if index_offset is None:
         # if failed, load all blocks serially
         fd.seek(starting_offset)
-        return read_blocks_serially(fd, memmap, lazy_load, validate_checksums, after_magic)
+        return _read_blocks_serially(fd, memmap, lazy_load, validate_checksums, after_magic)
 
     # setup empty blocks
     try:
@@ -128,7 +223,7 @@ def read_blocks(fd, memmap=False, lazy_load=False, validate_checksums=False, aft
     except OSError:
         # failed to read block index, fall back to serial reading
         fd.seek(starting_offset)
-        return read_blocks_serially(fd, memmap, lazy_load, validate_checksums, after_magic)
+        return _read_blocks_serially(fd, memmap, lazy_load, validate_checksums, after_magic)
     # skip magic for each block
     magic_len = len(constants.BLOCK_MAGIC)
     blocks = [ReadBlock(offset + magic_len, fd, memmap, lazy_load, validate_checksums) for offset in block_index]
@@ -143,5 +238,5 @@ def read_blocks(fd, memmap=False, lazy_load=False, validate_checksums=False, aft
             blocks[index].load()
     except (OSError, ValueError):
         fd.seek(starting_offset)
-        return read_blocks_serially(fd, memmap, lazy_load, after_magic)
+        return _read_blocks_serially(fd, memmap, lazy_load, after_magic)
     return blocks

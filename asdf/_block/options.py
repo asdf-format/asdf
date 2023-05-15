@@ -3,6 +3,10 @@ from asdf.config import config_context
 
 
 class Options:
+    """
+    Storage and compression options useful when reading or writing ASDF blocks.
+    """
+
     def __init__(self, storage_type=None, compression_type=None, compression_kwargs=None):
         if storage_type is None:
             with config_context() as cfg:
@@ -41,6 +45,8 @@ class Options:
             # "input" compression will validate as the ASDF compression module made
             # some assumptions about availability of information (that the input block
             # is known). The Options here do not have the same assumption.
+            # For a block read from a file, it's options will be initialized with
+            # the compression value read from the block header
             raise ValueError(msg)
         try:
             compression = mcompression.validate(compression)
