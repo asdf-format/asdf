@@ -207,15 +207,13 @@ class _Deserialization(_Operation):
     def __init__(self, ctx):
         super().__init__(ctx)
         self._obj = None
-        self._blk = None
         self._cb = None
         self._keys_to_assign = {}
 
     def __exit__(self, exc_type, exc_value, traceback):
         if exc_type is not None:
             return
-        if self._blk is not None:
-            self._blocks.blocks.assign_object(self._obj, self._blk)
+        if self._cb is not None:
             self._blocks._data_callbacks.assign_object(self._obj, self._cb)
         for key, cb in self._keys_to_assign.items():
             if cb is None:
@@ -227,21 +225,15 @@ class _Deserialization(_Operation):
             # assign the key to the callback
             self._blocks._data_callbacks.assign_object(key, cb)
 
-            # and the block
-            blk = self._blocks.blocks[cb._index]
-            self._blocks.blocks.assign_object(key, blk)
-
     def get_block_data_callback(self, index, key=None):
-        blk = self._blocks.blocks[index]
         if key is None:
-            if blk is self._blk:
-                # return callback for a previously access block
-                return self._cb
-            if self._blk is not None:
-                # for attempts to access a second block without a key
+            if self._cb is not None:
+                # this operation has already accessed a block without using
+                # a key so check if the same index was accessed
+                if self._cb._index == index:
+                    return self._cb
                 msg = "Converters accessing >1 block must provide a key for each block"
                 raise OSError(msg)
-            self._blk = blk
             self._cb = self._blocks._get_data_callback(index)
             return self._cb
 
