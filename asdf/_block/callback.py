@@ -1,3 +1,19 @@
+"""
+A `DataCallback` class is implemented here to allow
+for reassignment of the index of an ASDF block corresponding
+to a callback.
+
+This is needed so that extension code can generate a callback
+during deserialization of an ASDF file that will continue
+to be valid even after an `AsdfFile.update` which might
+reorder blocks.
+
+To allow for 'low-level' block access needed for ndarray
+`DataCallback` can be called with an optional ``_attr``
+argument to cache data, access the block header and other
+operations that we generally do not want to expose to
+extension code.
+"""
 import weakref
 
 

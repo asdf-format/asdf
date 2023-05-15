@@ -246,7 +246,7 @@ def test_invalid_data(data):
 )
 def test_candidate_offsets(options):
     min_offset, max_offset, size, targets = options
-    for offset, target in zip(bio.candidate_offsets(min_offset, max_offset, size), targets):
+    for offset, target in zip(bio._candidate_offsets(min_offset, max_offset, size), targets):
         assert offset == target
 
 

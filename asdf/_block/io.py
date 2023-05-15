@@ -1,3 +1,7 @@
+"""
+Low-level functions for reading and writing ASDF blocks
+and other block related file contents (like the block index).
+"""
 import hashlib
 import io
 import os
@@ -32,6 +36,21 @@ def calculate_block_checksum(data):
 
 
 def validate_block_header(header):
+    """
+    Check that they key value pairs in header contain consistent
+    information about the ASDF block ``compression``, ``flags``,
+    ``used_size`` and ``data_size`` (otherwise raise an exception).
+
+    Parameters
+    ----------
+    header : dict
+        ASDF block header information.
+
+    Raises
+    ------
+    ValueError
+        If the key value pairs in header contain inconsistent information
+    """
     compression = mcompression.validate(header["compression"])
     if header["flags"] & constants.BLOCK_FLAG_STREAMED:
         if compression is not None:
@@ -45,6 +64,30 @@ def validate_block_header(header):
 
 
 def read_block_header(fd, offset=None):
+    """
+    Read an ASDF block header
+
+    Parameters
+    ----------
+    fd : file or generic_io.GenericIO
+        File to read.
+
+    offset : int, optional
+        Offset within the file where the start of the ASDF block
+        header is located. If provided, the file will be seeked prior
+        to reading.
+
+    Returns
+    -------
+    header : dict
+        Dictionary containing the read ASDF header as parsed by the
+        `BLOCK_HEADER` `asdf.util.BinaryStruct`.
+
+    Raises
+    ------
+    ValueError
+        If the read header is inconsistent (see `validate_block_header`).
+    """
     if offset is not None:
         fd.seek(offset)
 
@@ -60,6 +103,33 @@ def read_block_header(fd, offset=None):
 
 
 def read_block_data(fd, header, offset=None, memmap=False):
+    """
+    Read (or memory map) data for an ASDF block.
+
+    Parameters
+    ----------
+    fd : file or generic_io.GenericIO
+        File to read.
+
+    header : dict
+        ASDF block header dictionary (as read from `read_block_header`).
+
+    offset : int, optional
+        Offset within the file where the start of the ASDF block data
+        is located. If provided, the file will be seeked prior to reading.
+
+    memmap : bool, optional, default False
+        Memory map the block data using `generic_io.GenericIO.memmap_array`.
+        A compressed block will never be memmapped and if the file ``fd``
+        does not support memmapping the data will not be memmapped (and
+        no error will be raised).
+
+    Returns
+    -------
+    data : ndarray or memmap
+        A one-dimensional ndarray of dtype uint8
+    """
+
     if fd.seekable():
         if offset is not None:
             fd.seek(offset)
@@ -90,6 +160,45 @@ def read_block_data(fd, header, offset=None, memmap=False):
 
 
 def read_block(fd, offset=None, memmap=False, lazy_load=False):
+    """
+    Read a block (header and data) from an ASDF file.
+
+    Parameters
+    ----------
+    fd : file or generic_io.GenericIO
+        File to read.
+
+    offset : int, optional
+        Offset within the file where the start of the ASDF block header
+        is located. If provided, the file will be seeked prior to reading.
+        Note this is the start of the block header not the start of the
+        block magic.
+
+    memmap : bool, optional, default False
+        Memory map the block data see `read_block_data` for more
+        details.
+
+    lazy_load : bool, optional, default False
+        Return a callable that when called will read the block data. This
+        option is ignored for a non-seekable file.
+
+    Returns
+    -------
+    offset : int
+        The offset within the file where the block was read (equal to offset
+        argument if it was provided).
+
+    header : dict
+        ASDF block header as read with `read_block_header`.
+
+    data_offset : int
+        The offset within the file where the block data begins.
+
+    data : ndarray, memmap or callable
+        ASDF block data (one-dimensional ndarray of dtype uint8). If lazy_load
+        (and the file is seekable) data will be a callable that when executed
+        will seek the file and read the block data.
+    """
     # expects the fd or offset is past the block magic
     if offset is None and fd.seekable():
         offset = fd.tell()
@@ -120,6 +229,56 @@ def read_block(fd, offset=None, memmap=False, lazy_load=False):
 
 
 def generate_write_header(data, stream=False, compression_kwargs=None, padding=False, fs_block_size=1, **header_kwargs):
+    """
+    Generate a binary representation of a ASDF block header that can be
+    used for writing a block.
+
+    Note that if a compression key is provided in ``header_kwargs`` this
+    function will compress ``data`` to determine the used_size (the
+    compressed data will be returned via the ``buff`` result to avoid
+    needing to re-compress the data before writing).
+
+    Parameters
+    ----------
+
+    data : ndarray
+        A one-dimensional ndarray of dtype uint8.
+
+    stream : bool, optional, default False
+        If True, generate a header for a streamed block.
+
+    compression_kwargs : dict, optional
+        If provided, these will be passed on to `asdf.compression.compress`
+        if the data is compressed (see header_kwargs).
+
+    padding : bool or float, optional, default False
+        If the block should contain additional padding bytes. See the
+        `asdf.util.calculate_padding` argument ``pad_blocks`` for more
+        details.
+
+    fs_block_size : int, optional, default 1
+        The filesystem block size. See the `asdf.util.calculate_padding`
+        ``block_size`` argument for more details.
+
+    **header_kwargs : dict, optional
+        Block header settings that will be read, updated, and used
+        to generate the binary block header representation by packing
+        with `BLOCK_HEADER`.
+
+    Returns
+    -------
+
+    header : bytes
+        Packed binary representation of the ASDF block header.
+
+    buff : bytes or None
+        If this block is compressed buff will contained the compressed
+        representation of data or None if the data is uncompressed.
+
+    padding_bytes: int
+        The number of padding bytes that must be written after
+        the block data.
+    """
     if data.ndim != 1 or data.dtype != "uint8":
         msg = "Data must be of ndim==1 and dtype==uint8"
         raise ValueError(msg)
@@ -160,6 +319,37 @@ def generate_write_header(data, stream=False, compression_kwargs=None, padding=F
 
 
 def write_block(fd, data, offset=None, stream=False, compression_kwargs=None, padding=False, **header_kwargs):
+    """
+    Write an ASDF block.
+
+    Parameters
+    ----------
+    fd : file or generic_io.GenericIO
+        File to write to.
+
+    offset : int, optional
+        If provided, seek to this offset before writing.
+
+    stream : bool, optional, default False
+        If True, write this as a streamed block.
+
+    compression_kwargs : dict, optional
+        If block is compressed, use these additional arguments during
+        compression. See `generate_write_header`.
+
+    padding : bool, optional, default False
+        Optionally pad the block data. See `generate_write_header`.
+
+    **header_kwargs : dict
+        Block header settings. See `generate_write_header`.
+
+    Returns
+    -------
+
+    header : dict
+        The ASDF block header as unpacked from the `BLOCK_HEADER` used
+        for writing.
+    """
     header, buff, padding_bytes = generate_write_header(
         data, stream, compression_kwargs, padding, fd.block_size, **header_kwargs
     )
@@ -180,7 +370,7 @@ def write_block(fd, data, offset=None, stream=False, compression_kwargs=None, pa
     return BLOCK_HEADER.unpack(header)
 
 
-def candidate_offsets(min_offset, max_offset, block_size):
+def _candidate_offsets(min_offset, max_offset, block_size):
     offset = (max_offset // block_size) * block_size
     if offset == max_offset:
         offset -= block_size
@@ -192,6 +382,35 @@ def candidate_offsets(min_offset, max_offset, block_size):
 
 
 def find_block_index(fd, min_offset=None, max_offset=None):
+    """
+    Find the location of an ASDF block index within a seekable file.
+
+    Searching will begin at the end of the file (or max_offset
+    if it is provided).
+
+    Parameters
+    ----------
+
+    fd : file or generic_io.GenericIO
+        A seekable file that will be searched to try and find
+        the start of an ASDF block index within the file.
+
+    min_offset : int, optional
+        The minimum search offset. A block index will not be
+        found before this point.
+
+    max_offset : int, optional
+        The maximum search offset. A block index will not be
+        found after this point.
+
+    Returns
+    -------
+
+    offset : int or None
+        Index of start of ASDF block index. This is the location of the
+        ASDF block index header.
+
+    """
     if min_offset is None:
         min_offset = fd.tell()
     if max_offset is None:
@@ -201,7 +420,7 @@ def find_block_index(fd, min_offset=None, max_offset=None):
     block_index_offset = None
     buff = b""
     pattern = constants.INDEX_HEADER
-    for offset in candidate_offsets(min_offset, max_offset, block_size):
+    for offset in _candidate_offsets(min_offset, max_offset, block_size):
         fd.seek(offset)
         buff = fd.read(block_size) + buff
         index = buff.find(pattern)
@@ -215,6 +434,35 @@ def find_block_index(fd, min_offset=None, max_offset=None):
 
 
 def read_block_index(fd, offset=None):
+    """
+    Read an ASDF block index from a file.
+
+    Parameters
+    ----------
+
+    fd : file or generic_io.GenericIO
+        File to read the block index from.
+
+    offset : int, optional
+        Offset within the file where the block index starts
+        (the start of the ASDF block index header). If not provided
+        reading will start at the current position of the file
+        pointer. See `find_block_index` to locate the block
+        index prior to calling this function.
+
+    Returns
+    -------
+
+    block_index : list of ints
+        A list of ASDF block offsets read and parsed from the
+        block index.
+
+    Raises
+    ------
+    OSError
+        The data read from the file did not contain a valid
+        block index.
+    """
     if offset is not None:
         fd.seek(offset)
     buff = fd.read(len(constants.INDEX_HEADER))
@@ -235,6 +483,26 @@ def read_block_index(fd, offset=None):
 
 
 def write_block_index(fd, offsets, offset=None, yaml_version=None):
+    """
+    Write a list of ASDF block offsets to a file in the form
+    of an ASDF block index.
+
+    Parameters
+    ----------
+    fd : file or generic_io.GenericIO
+        File to write to.
+
+    offsets : list of ints
+        List of byte offsets (from the start of the file) where
+        ASDF blocks are located.
+
+    offset : int, optional
+        If provided, seek to this offset before writing.
+
+    yaml_version : tuple, optional, default (1, 1)
+        YAML version to use when writing the block index. This
+        will be passed to ``yaml.dump`` as the version argument.
+    """
     if yaml_version is None:
         yaml_version = (1, 1)
     if offset is not None:

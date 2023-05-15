@@ -1,3 +1,12 @@
+"""
+For external blocks, the previous block management
+would cache data opened from external files (to return the
+same underlying ndarray if the same external block
+was referenced more than once). `ExternalBlockCache` is
+used here to allow for the same behavior without requiring
+the block manager to have a reference to the `AsdfFile`
+(that references the block manager).
+"""
 import os
 
 from asdf import generic_io, util
