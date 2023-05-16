@@ -220,6 +220,18 @@ class Manager:
         self.options._read_blocks = new_blocks
 
     def read(self, fd, after_magic=False):
+        """
+        Read blocks from an ASDF file and update the manager read_blocks.
+
+        Parameters
+        ----------
+        fd : file or generic_io.GenericIO
+            File to read from. Reading starts at the current file position.
+
+        after_magic : bool, optional, default False
+            If True, the file pointer is past the block magic bytes of the
+            first block.
+        """
         self.blocks = reader.read_blocks(
             fd, self._memmap, self._lazy_load, self._validate_checksums, after_magic=after_magic
         )
@@ -252,6 +264,37 @@ class Manager:
                 writer.write_blocks(f, [blk])
 
     def make_write_block(self, data, options, obj):
+        """
+        Make a WriteBlock with data and options and
+        associate it with an object (obj).
+
+        Parameters
+        ----------
+        data : npdarray or callable
+            Data to be written to an ASDF block. Can be provided as
+            a callable function that when evaluated will return the
+            data.
+        options : Options
+            Options instance used to define the ASDF block compression
+            and storage type.
+        obj : object
+            An object in the ASDF tree that will be associated
+            with the new WriteBlock so that `AsdfFile.update` can
+            map newly created blocks to blocks read from the original
+            file.
+
+        Returns
+        -------
+        block_source : int or str
+            The relative uri (str) if an external block was created
+            or the index of the block (int) for an internal block.
+
+        Raises
+        ------
+        ValueError
+            If a external block was created without a URI for the main
+            file.
+        """
         if options.storage_type == "external":
             for index, blk in enumerate(self._external_write_blocks):
                 if blk._data is data:
@@ -282,6 +325,22 @@ class Manager:
         return len(self._write_blocks) - 1
 
     def set_streamed_write_block(self, data, obj):
+        """
+        Create a WriteBlock that will be written as an ASDF
+        streamed block.
+
+        Parameters
+        ----------
+        data : ndarray or callable
+            Data to be written to an ASDF block. Can be provided as
+            a callable function that when evaluated will return the
+            data.
+        obj : object
+            An object in the ASDF tree that will be associated
+            with the new WriteBlock so that `AsdfFile.update` can
+            map newly created blocks to blocks read from the original
+            file.
+        """
         if self._streamed_write_block is not None and data is not self._streamed_write_block.data:
             msg = "Can not add second streaming block"
             raise ValueError(msg)
@@ -322,6 +381,10 @@ class Manager:
 
     @contextlib.contextmanager
     def options_context(self):
+        """
+        Context manager that copies block options on
+        entrance and restores the options when exited.
+        """
         previous_options = copy.deepcopy(self.options)
         yield
         self.options = previous_options
@@ -329,11 +392,22 @@ class Manager:
 
     @contextlib.contextmanager
     def write_context(self, fd, copy_options=True):
+        """
+        Context manager that copies block options on
+        entrance and restores the options when exited.
+
+        Parameters
+        ----------
+        fd : file or generic_io.GenericIO
+            File to be written to. This is required on
+            entrance to this context so that any external
+            blocks can resolve relative uris.
+
+        copy_options : bool, optional, default True
+            Copy options on entrance and restore them on
+            exit (See `options_context`).
+        """
         self._clear_write()
-        # this is required for setting up external blocks
-        # during serialization we will need to know the uri of
-        # the file being written to (unless a different uri was
-        # supplied).
         self._write_fd = fd
         if copy_options:
             with self.options_context():
@@ -343,6 +417,28 @@ class Manager:
         self._clear_write()
 
     def write(self, pad_blocks, include_block_index):
+        """
+        Write blocks that were set up during the current
+        `write_context`.
+
+        Parameters
+        ----------
+        pad_blocks : bool, None or float
+            If False, add no padding bytes between blocks. If True
+            add some default amount of padding. If a float, add
+            a number of padding bytes based off a ratio of the data
+            size.
+
+        include_block_index : bool
+            If True, include a block index at the end of the file.
+            If a streamed_block is provided (or the file is not
+            seekable) no block index will be written.
+
+        Raises
+        ------
+        OSError
+            If called outside a `write_context`.
+        """
         if self._write_fd is None:
             msg = "write called outside of valid write_context"
             raise OSError(msg)
@@ -358,6 +454,34 @@ class Manager:
             self._write_external_blocks()
 
     def update(self, new_tree_size, pad_blocks, include_block_index):
+        """
+        Perform an update-in-place of ASDF blocks set up during
+        a `write_context`.
+
+        Parameters
+        ----------
+        new_tree_size : int
+            Size (in bytes) of the serialized ASDF tree (and any
+            header bytes) that will be written at the start of the
+            file being updated.
+
+        pad_blocks : bool, None or float
+            If False, add no padding bytes between blocks. If True
+            add some default amount of padding. If a float, add
+            a number of padding bytes based off a ratio of the data
+            size.
+
+        include_block_index : bool
+            If True, include a block index at the end of the file.
+            If a streamed_block is provided (or the file is not
+            seekable) no block index will be written.
+
+
+        Raises
+        ------
+        OSError
+            If called outside a `write_context`.
+        """
         if self._write_fd is None:
             msg = "update called outside of valid write_context"
             raise OSError(msg)
