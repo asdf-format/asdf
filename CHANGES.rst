@@ -22,7 +22,8 @@ The ASDF Standard is at v1.6.0
 - Blank out AsdfFile.tree on close [#1575]
 - Move ndarray to a converter, add ``convert_unknown_ndarray_subclasses``
   to ``asdf.config.AsdfConfig``, move ``asdf.Stream`` to
-  ``asdf.tags.core.Stream``, update internal block API [#1537]
+  ``asdf.tags.core.Stream``, update block storage support for
+  Converter and update internal block API [#1537]
 
 2.15.1 (2023-08-07)
 -------------------
