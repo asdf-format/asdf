@@ -277,7 +277,7 @@ def custom_tree_to_tagged_tree(tree, ctx, _serialization_context=None):
             warnings.warn(
                 f"A ndarray subclass ({type(obj)}) was converted as a ndarray. "
                 "This behavior will be removed from a future version of ASDF. "
-                "See TODO some link",
+                "See https://asdf.readthedocs.io/en/latest/asdf/config.html#convert-unknown-ndarray-subclasses",
                 AsdfConversionWarning,
             )
             return _convert_obj(obj, subtype=True)
