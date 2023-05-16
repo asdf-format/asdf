@@ -158,14 +158,15 @@ implicitly determined to include all of the remaining contents of the
 file.  By definition, it must be the last block in the file.
 
 To use streaming, rather than including a Numpy array object in the
-tree, you include a `asdf.Stream` object which sets up the structure
+tree, you include a `asdf.tags.core.Stream` object which sets up the structure
 of the streamed data, but will not write out the actual content.  The
 file handle's ``write`` method is then used to manually write out the
 binary data.
 
 .. runcode::
 
-   from asdf import AsdfFile, Stream
+   from asdf import AsdfFile
+   from asdf.tags.core import Stream
    import numpy as np
 
    tree = {
@@ -194,7 +195,8 @@ to numpy arrays stored in ASDF:
 
     import csv
     import numpy as np
-    from asdf import AsdfFile, Stream
+    from asdf import AsdfFile
+    from asdf.tags.core import Stream
 
     tree = {
         # We happen to know in advance that each row in the CSV has 100 ints

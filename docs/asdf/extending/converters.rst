@@ -366,7 +366,7 @@ the index of the block a Converter would like to use to read or write the correc
 block. However, the index used for reading might not be the same index for writing
 if the tree was modified or the file is being written to a new location. During
 serialization and deserialization, asdf will associate each object with the
-accessed block during `from_yaml_tree` and `to_yaml_tree`.
+accessed block during `Converter.from_yaml_tree` and `Converter.to_yaml_tree`.
 
 .. note::
    Converters using multiple blocks are slightly more complicated.

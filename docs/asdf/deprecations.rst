@@ -66,16 +66,6 @@ Without support for ``fits_embed.AsdfInFits`` the ``extract`` and
 ``remove-hdu`` commands for :ref:`asdftool <asdf_tool>` are no longer usable and are
 deprecated.
 
-.. _asdffile_blocks_deprecation:
-
-AsdfFile.blocks Deprecation
-===========================
-
-Direct usage of the ASDF block manager through `asdf.AsdfFile.blocks` is deprecated.
-The BlockManager api was not previously included in the documentation and
-was unused by the legacy and new style extensions. Planned features for ASDF 3.0
-include adding block storage support to :ref:`converters <extending_converters>`.
-
 .. _tests_helpers_deprecation:
 
 asdf.tests.helpers Deprecation
