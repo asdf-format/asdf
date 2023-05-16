@@ -401,7 +401,7 @@ def _build_path(identifiers):
     if len(identifiers) == 0:
         return ""
 
-    return identifiers[0] + "".join(f"[{repr(i)}]" for i in identifiers[1:])
+    return identifiers[0] + "".join(f"[{i!r}]" for i in identifiers[1:])
 
 
 def _wrap_filter(filter_):
