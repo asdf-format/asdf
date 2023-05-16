@@ -224,7 +224,7 @@ def edit(path):
                 new_asdf_version = parse_asdf_version(new_content)
                 new_yaml_version = parse_yaml_version(new_content)
             except Exception as e:
-                print(f"Error: failed to parse ASDF header: {str(e)}")
+                print(f"Error: failed to parse ASDF header: {e!s}")
                 choice = request_input("(c)ontinue editing or (a)bort? ", ["c", "a"])
                 if choice == "a":
                     return 1

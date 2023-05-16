@@ -69,7 +69,7 @@ class Reference(_types.AsdfType):
         if self._target is None:
             return f"<Reference (unloaded) to '{self._uri}'>"
 
-        return f"<Reference to {repr(self._target)}>"
+        return f"<Reference to {self._target!r}>"
 
     def __str__(self):
         # str alone should not force loading of the reference
