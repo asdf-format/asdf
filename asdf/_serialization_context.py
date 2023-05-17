@@ -1,4 +1,3 @@
-import contextlib
 import weakref
 
 from ._block.key import Key as BlockKey
@@ -138,37 +137,18 @@ class SerializationContext:
         """
         raise NotImplementedError("abstract")
 
-    @contextlib.contextmanager
-    def _serialization(self, obj):
-        with _Serialization(self, obj) as op:
-            yield op
-
-    @contextlib.contextmanager
-    def _deserialization(self):
-        with _Deserialization(self) as op:
-            yield op
-
 
 class _Operation(SerializationContext):
     """
     `SerializationContext` is used for multiple operations
     including serialization and deserialization. The `_Operation` class
     allows the SerializationContext to have different behavior during these
-    operations (for example allowing block reading during deserialization)
-    and allows the context to be used with a python ``with`` statement to
-    allow setup and teardown operations (such as associating a
-    deserialized object with the blocks accessed during deserialization).
-
-    `_Operation` subclasses should not be instantiated directly but instead
-    should be accessible via private methods on a `SerializationContext`.
-    This allows the `SerializationContext` to provide itself to the `_Operation`
-    which can chose to implement abstract methods in `SerializationContext`
-    (such as `SerializationContext.find_available_block_index` during
-    `_Serialization` created via `SerializationContext._serialization`).
+    operations (for example allowing block reading during deserialization).
     """
 
     def __init__(self, ctx):
         self._ctx = weakref.ref(ctx)
+        self._obj = None
         super().__init__(ctx.version, ctx.extension_manager, ctx.url, ctx._blocks)
 
     def _mark_extension_used(self, extension):
@@ -180,10 +160,10 @@ class _Operation(SerializationContext):
         ctx = self._ctx()
         return ctx._extensions_used
 
-    def __enter__(self):
-        return self
+    def assign_object(self, obj):
+        self._obj = obj
 
-    def __exit__(self, exc_type, exc_value, traceback):
+    def assign_blocks(self):
         pass
 
 
@@ -195,24 +175,21 @@ class _Deserialization(_Operation):
         - `SerializationContext.generate_block_key`
         - `SerializationContext.get_block_data_callback`
     and tracks which blocks (and keys) are accessed, assigning them
-    to the deserialized object at the end of the
-    `SerializationContext._deserialization`.
-
-    Code that uses `_Deserialization` and accesses any blocks
-    or generates keys must assign an object to
-    `_Deserialization._obj` prior to exiting the `_Deserialization`
-    context manager.
+    to the deserialized object after `assign_object` and
+    `assign_blocks` are called.
     """
 
     def __init__(self, ctx):
         super().__init__(ctx)
-        self._obj = None
-        self._cb = None
-        self._keys_to_assign = {}
+        self.assign_object(None)
 
-    def __exit__(self, exc_type, exc_value, traceback):
-        if exc_type is not None:
-            return
+    def assign_object(self, obj):
+        super().assign_object(obj)
+        if obj is None:
+            self._cb = None
+            self._keys_to_assign = {}
+
+    def assign_blocks(self):
         if self._cb is not None:
             self._blocks._data_callbacks.assign_object(self._obj, self._cb)
         for key, cb in self._keys_to_assign.items():
@@ -262,9 +239,8 @@ class _Serialization(_Operation):
     being serialized.
     """
 
-    def __init__(self, ctx, obj):
+    def __init__(self, ctx):
         super().__init__(ctx)
-        self._obj = obj
 
     def find_available_block_index(self, data_callback, key=None):
         if key is None:

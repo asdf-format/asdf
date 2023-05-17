@@ -6,6 +6,7 @@ import numpy as np
 import yaml
 
 from . import config, schema, tagged, treeutil, util
+from ._serialization_context import _Deserialization, _Serialization
 from .constants import STSCI_SCHEMA_TAG_BASE, YAML_TAG_PREFIX
 from .exceptions import AsdfConversionWarning
 from .tags.core import AsdfObject
@@ -218,21 +219,18 @@ def custom_tree_to_tagged_tree(tree, ctx, _serialization_context=None):
     if _serialization_context is None:
         _serialization_context = ctx._create_serialization_context()
 
-    extension_manager = _serialization_context.extension_manager
+    sctx = _Serialization(_serialization_context)
 
-    def _convert_obj(obj, subtype=False):
-        if subtype:
-            converter = extension_manager._get_converter_for_subtype(type(obj))
-        else:
-            converter = extension_manager.get_converter_for_type(type(obj))
-        tag = converter.select_tag(obj, _serialization_context)
-        converters = set()
+    extension_manager = sctx.extension_manager
+    version_string = ctx.version_string
+
+    def _convert_obj(obj, converter):
+        tag = converter.select_tag(obj, sctx)
         # if select_tag returns None, converter.to_yaml_tree should return a new
         # object which will be handled by a different converter
         while tag is None:
             converters.add(converter)
-            with _serialization_context._serialization(obj) as sctx:
-                obj = converter.to_yaml_tree(obj, tag, sctx)
+            obj = converter.to_yaml_tree(obj, tag, sctx)
             try:
                 converter = extension_manager.get_converter_for_type(type(obj))
             except KeyError:
@@ -242,7 +240,10 @@ def custom_tree_to_tagged_tree(tree, ctx, _serialization_context=None):
             if converter in converters:
                 msg = "Conversion cycle detected"
                 raise TypeError(msg)
-            tag = converter.select_tag(obj, _serialization_context)
+            tag = converter.select_tag(obj, sctx)
+        sctx.assign_object(obj)
+        node = converter.to_yaml_tree(obj, tag, sctx)
+        sctx.assign_blocks()
 
         if isinstance(node, GeneratorType):
             generator = node
@@ -261,7 +262,7 @@ def custom_tree_to_tagged_tree(tree, ctx, _serialization_context=None):
             msg = f"Converter returned illegal node type: {util.get_class_name(node)}"
             raise TypeError(msg)
 
-        _serialization_context._mark_extension_used(converter.extension)
+        sctx._mark_extension_used(converter.extension)
 
         yield tagged_node
         if generator is not None:
@@ -269,28 +270,38 @@ def custom_tree_to_tagged_tree(tree, ctx, _serialization_context=None):
 
     cfg = config.get_config()
     convert_ndarray_subclasses = cfg.convert_unknown_ndarray_subclasses
+    converters = {}
 
     def _walker(obj):
-        if extension_manager.handles_type(type(obj)):
-            return _convert_obj(obj)
-        if convert_ndarray_subclasses and isinstance(obj, np.ndarray) and extension_manager._handles_subtype(type(obj)):
+        typ = type(obj)
+        if typ in converters:
+            return converters[typ](obj)
+        if extension_manager.handles_type(typ):
+            converter = extension_manager.get_converter_for_type(typ)
+            converters[typ] = lambda obj, _converter=converter: _convert_obj(obj, _converter)
+            return _convert_obj(obj, converter)
+        if convert_ndarray_subclasses and isinstance(obj, np.ndarray) and extension_manager._handles_subtype(typ):
             warnings.warn(
                 f"A ndarray subclass ({type(obj)}) was converted as a ndarray. "
                 "This behavior will be removed from a future version of ASDF. "
                 "See https://asdf.readthedocs.io/en/latest/asdf/config.html#convert-unknown-ndarray-subclasses",
                 AsdfConversionWarning,
             )
-            return _convert_obj(obj, subtype=True)
+            converter = extension_manager._get_converter_for_subtype(typ)
+            converters[typ] = lambda obj, _converter=converter: _convert_obj(obj, _converter)
+            return _convert_obj(obj, converter)
 
         tag = ctx._type_index.from_custom_type(
-            type(obj),
-            ctx.version_string,
-            _serialization_context=_serialization_context,
+            typ,
+            version_string,
+            _serialization_context=sctx,
         )
 
         if tag is not None:
+            converters[typ] = lambda obj, _tag=tag: _tag.to_tree_tagged(obj, ctx)
             return tag.to_tree_tagged(obj, ctx)
 
+        converters[typ] = lambda obj: obj
         return obj
 
     return treeutil.walk_and_modify(
@@ -313,6 +324,7 @@ def tagged_tree_to_custom_tree(tree, ctx, force_raw_types=False, _serialization_
         _serialization_context = ctx._create_serialization_context()
 
     extension_manager = _serialization_context.extension_manager
+    dctx = _Deserialization(_serialization_context)
 
     def _walker(node):
         if force_raw_types:
@@ -324,13 +336,14 @@ def tagged_tree_to_custom_tree(tree, ctx, force_raw_types=False, _serialization_
 
         if extension_manager.handles_tag(tag):
             converter = extension_manager.get_converter_for_tag(tag)
-            with _serialization_context._deserialization() as sctx:
-                obj = converter.from_yaml_tree(node.data, tag, sctx)
-                sctx._obj = obj
-            _serialization_context._mark_extension_used(converter.extension)
+            dctx.assign_object(None)
+            obj = converter.from_yaml_tree(node.data, tag, dctx)
+            dctx.assign_object(obj)
+            dctx.assign_blocks()
+            dctx._mark_extension_used(converter.extension)
             return obj
 
-        tag_type = ctx._type_index.from_yaml_tag(ctx, tag, _serialization_context=_serialization_context)
+        tag_type = ctx._type_index.from_yaml_tag(ctx, tag, _serialization_context=dctx)
         # This means the tag did not correspond to any type in our type index.
         if tag_type is None:
             if not ctx._ignore_unrecognized_tag:
