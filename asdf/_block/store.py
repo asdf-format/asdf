@@ -118,6 +118,9 @@ class LinearStore(Store, collections.abc.Sequence):
         index = self._items.index(value)
         super().assign_object(obj, index)
 
+    def assign_object_by_index(self, obj, index):
+        super().assign_object(obj, index)
+
     def __getitem__(self, index):
         return self._items.__getitem__(index)
 

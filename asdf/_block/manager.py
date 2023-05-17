@@ -16,6 +16,22 @@ class ReadBlocks(collections.UserList):
     pass
 
 
+class WriteBlocks(store.LinearStore):
+    def __init__(self, init=None):
+        super().__init__(init)
+        self._by_data = store.Store()
+
+    def lookup_by_data(self, data):
+        return self._by_data.lookup_by_object(data)
+
+    def add_block(self, blk, obj):
+        index = len(self._items)
+        self._items.append(blk)
+        self._by_data.assign_object(blk._data, index)
+        self.assign_object_by_index(obj, index)
+        return index
+
+
 class OptionsStore(store.Store):
     """
     A Store of Options that can be accessed by Key
@@ -184,7 +200,7 @@ class Manager:
         self._external_block_cache = external.ExternalBlockCache()
         self._data_callbacks = store.Store()
 
-        self._write_blocks = store.LinearStore()
+        self._write_blocks = WriteBlocks()
         self._external_write_blocks = []
         self._streamed_write_block = None
         self._streamed_obj_keys = set()
@@ -243,7 +259,7 @@ class Manager:
         return value
 
     def _clear_write(self):
-        self._write_blocks = store.LinearStore()
+        self._write_blocks = WriteBlocks()
         self._external_write_blocks = []
         self._streamed_write_block = None
         self._streamed_obj_keys = set()
@@ -314,15 +330,14 @@ class Manager:
             self._external_write_blocks.append(blk)
             return blk._uri
         # first, look for an existing block
-        for index, blk in enumerate(self._write_blocks):
-            if blk._data is data:
-                self._write_blocks.assign_object(obj, blk)
-                return index
+        index = self._write_blocks.lookup_by_data(data)
+        if index is not None:
+            self._write_blocks.assign_object_by_index(obj, index)
+            return index
         # if no block is found, make a new block
         blk = writer.WriteBlock(data, options.compression, options.compression_kwargs)
-        self._write_blocks._items.append(blk)
-        self._write_blocks.assign_object(obj, blk)
-        return len(self._write_blocks) - 1
+        index = self._write_blocks.add_block(blk, obj)
+        return index
 
     def set_streamed_write_block(self, data, obj):
         """
