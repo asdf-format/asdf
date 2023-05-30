@@ -84,6 +84,13 @@ def test_set_same_object():
     assert s.lookup_by_object(f) == v
 
 
+def test_invalid_key_assign_object():
+    s = Store()
+    k = Key()
+    with pytest.raises(ValueError, match="Invalid key used for assign_object"):
+        s.assign_object(k, 42)
+
+
 def test_set_same_key():
     f = Foo()
     s = Store()

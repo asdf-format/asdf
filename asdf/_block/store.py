@@ -50,6 +50,9 @@ class Store:
 
     def assign_object(self, obj, value):
         if isinstance(obj, Key):
+            if not obj._is_valid():
+                msg = "Invalid key used for assign_object"
+                raise ValueError(msg)
             obj_id = id(obj._ref())
             obj_key = obj
         else:
@@ -74,11 +77,6 @@ class Store:
                     return
             # we didn't find a matching key, so make one
             obj_key = Key(obj)
-        else:
-            # we already have a key, check if it's already in the store
-            if obj_key in by_key:
-                by_key[obj_key] = value
-                return
 
         # if no match was found, add using the key
         self._by_id[obj_id][obj_key] = value
