@@ -380,7 +380,6 @@ class GenericFile(metaclass=util.InheritDocstrings):
             file`s end).
         """
         result = self._fd.seek(offset, whence)
-        self.tell()
         return result
 
     def tell(self):

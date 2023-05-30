@@ -74,14 +74,25 @@ def write_blocks(fd, blocks, padding=False, streamed_block=None, write_index=Tru
         Headers written for each block (including the streamed_block
         if it was provided).
     """
+    # some non-seekable files return a valid `tell` result
+    # others can raise an exception, others might always
+    # return 0. See relevant issues:
+    # https://github.com/asdf-format/asdf/issues/1545
+    # https://github.com/asdf-format/asdf/issues/1552
+    # https://github.com/asdf-format/asdf/issues/1542
+    # to enable writing a block index for all valid files
+    # we will wrap tell to return None on an error
+
+    def tell():
+        try:
+            return fd.tell()
+        except OSError:
+            return None
+
     offsets = []
     headers = []
     for blk in blocks:
-        if fd.seekable():
-            offset = fd.tell()
-        else:
-            offset = None
-        offsets.append(offset)
+        offsets.append(tell())
         fd.write(constants.BLOCK_MAGIC)
         headers.append(
             bio.write_block(
@@ -93,13 +104,18 @@ def write_blocks(fd, blocks, padding=False, streamed_block=None, write_index=Tru
             )
         )
     if streamed_block is not None:
-        if fd.seekable():
-            offset = fd.tell()
-        else:
-            offset = None
-        offsets.append(offset)
+        offsets.append(tell())
         fd.write(constants.BLOCK_MAGIC)
         headers.append(bio.write_block(fd, streamed_block.data_bytes, stream=True))
-    elif len(offsets) and write_index and fd.seekable():
+
+    # os.pipe on windows returns a file-like object
+    # that reports as seekable but tell always returns 0
+    # https://github.com/asdf-format/asdf/issues/1545
+    # when all offsets are 0 replace them with all Nones
+    if all(o == 0 for o in offsets):
+        offsets = [None for _ in offsets]
+
+    # only write a block index if all conditions are met
+    if streamed_block is None and write_index and len(offsets) and all(o is not None for o in offsets):
         bio.write_block_index(fd, offsets)
     return offsets, headers
