@@ -21,9 +21,6 @@ class Stream(NDArrayType):
          ...                      np.array([i] * 1024, np.float64).tobytes())
     """
 
-    name = None
-    types = []
-
     def __init__(self, shape, dtype, strides=None):
         self._shape = shape
         self._datatype, self._byteorder = numpy_dtype_to_asdf_datatype(dtype)
