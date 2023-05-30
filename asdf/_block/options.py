@@ -1,5 +1,5 @@
 from asdf import compression as mcompression
-from asdf.config import config_context
+from asdf.config import get_config
 
 
 class Options:
@@ -9,8 +9,7 @@ class Options:
 
     def __init__(self, storage_type=None, compression_type=None, compression_kwargs=None):
         if storage_type is None:
-            with config_context() as cfg:
-                storage_type = cfg.all_array_storage or "internal"
+            storage_type = get_config().all_array_storage or "internal"
         self._storage_type = None
         self._compression = None
         self._compression_kwargs = None
