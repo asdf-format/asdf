@@ -326,7 +326,7 @@ class Manager:
             if base_uri is None:
                 msg = "Can't write external blocks, since URI of main file is unknown."
                 raise ValueError(msg)
-            blk._uri = external.uri_for_index(base_uri, index)
+            blk._uri = external.relative_uri_for_index(base_uri, index)
             self._external_write_blocks.append(blk)
             return blk._uri
         # first, look for an existing block

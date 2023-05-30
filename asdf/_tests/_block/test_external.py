@@ -21,6 +21,6 @@ def test_cache(tmp_path):
 
 @pytest.mark.parametrize("uri", ["test.asdf", "foo/test.asdf"])
 @pytest.mark.parametrize("index", [0, 1, 100])
-def test_uri_for_index(uri, index):
+def test_relative_uri_for_index(uri, index):
     match = f"test{index:04d}.asdf"
-    assert external.uri_for_index(uri, index) == match
+    assert external.relative_uri_for_index(uri, index) == match

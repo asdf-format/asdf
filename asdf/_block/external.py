@@ -37,9 +37,9 @@ class ExternalBlockCache:
         return self._cache[key]
 
 
-def uri_for_index(uri, index):
-    parts = list(util.patched_urllib_parse.urlparse(uri))
-    path = parts[2]
+def relative_uri_for_index(uri, index):
+    # get the os-native separated path for this uri
+    path = util.patched_urllib_parse.urlparse(uri).path
     dirname, filename = os.path.split(path)
     filename = os.path.splitext(filename)[0] + f"{index:04d}.asdf"
     return filename
