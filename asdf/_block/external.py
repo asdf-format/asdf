@@ -12,8 +12,11 @@ import os
 from asdf import generic_io, util
 
 
-class UseInternal:
+class UseInternalType:
     pass
+
+
+UseInternal = UseInternalType()
 
 
 class ExternalBlockCache:
