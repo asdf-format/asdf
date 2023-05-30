@@ -79,4 +79,4 @@ class Key:
 
     def __copy__(self):
         obj = self._ref if self._ref is None else self._ref()
-        return self.__class__(obj, self._key)
+        return type(self)(obj, self._key)
