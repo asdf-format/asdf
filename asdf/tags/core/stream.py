@@ -1,7 +1,7 @@
-from .ndarray import NDArrayType, numpy_dtype_to_asdf_datatype
+from .ndarray import numpy_dtype_to_asdf_datatype
 
 
-class Stream(NDArrayType):
+class Stream:
     """
     Used to put a streamed array into the tree.
 
