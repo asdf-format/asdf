@@ -7,7 +7,7 @@ from . import io as bio
 
 class WriteBlock:
     """
-    Data and compression options needed to write and ASDF block.
+    Data and compression options needed to write an ASDF block.
     """
 
     def __init__(self, data, compression=None, compression_kwargs=None):

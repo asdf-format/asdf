@@ -150,12 +150,14 @@ def read_block_data(fd, header, offset=None, memmap=False):
     else:
         if memmap and fd.can_memmap():
             data = fd.memmap_array(offset, used_size)
-            fd.fast_forward(header["allocated_size"])
+            ff_bytes = header["allocated_size"]
         else:
             data = fd.read_into_array(used_size)
-            fd.fast_forward(header["allocated_size"] - header["used_size"])
+            ff_bytes = header["allocated_size"] - header["used_size"]
         if (header["flags"] & constants.BLOCK_FLAG_STREAMED) and fd.seekable():
             fd.seek(0, os.SEEK_END)
+        else:
+            fd.fast_forward(ff_bytes)
     return data
 
 
@@ -222,7 +224,10 @@ def read_block(fd, offset=None, memmap=False, lazy_load=False):
             return data
 
         data = callback
-        fd.fast_forward(header["allocated_size"])
+        if header["flags"] & constants.BLOCK_FLAG_STREAMED:
+            fd.seek(0, os.SEEK_END)
+        else:
+            fd.fast_forward(header["allocated_size"])
     else:
         data = read_block_data(fd, header, offset=None, memmap=memmap)
     return offset, header, data_offset, data
