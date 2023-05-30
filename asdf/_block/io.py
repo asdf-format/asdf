@@ -235,7 +235,7 @@ def read_block(fd, offset=None, memmap=False, lazy_load=False):
 
 def generate_write_header(data, stream=False, compression_kwargs=None, padding=False, fs_block_size=1, **header_kwargs):
     """
-    Generate a binary representation of a ASDF block header that can be
+    Generate a dict representation of a ASDF block header that can be
     used for writing a block.
 
     Note that if a compression key is provided in ``header_kwargs`` this
@@ -273,8 +273,8 @@ def generate_write_header(data, stream=False, compression_kwargs=None, padding=F
     Returns
     -------
 
-    header : bytes
-        Packed binary representation of the ASDF block header.
+    header : dict
+        Dictionary representation of an ASDF block header.
 
     buff : bytes or None
         If this block is compressed buff will contained the compressed
@@ -292,6 +292,7 @@ def generate_write_header(data, stream=False, compression_kwargs=None, padding=F
         header_kwargs["data_size"] = 0
         header_kwargs["checksum"] = b"\0" * 16
     else:
+        header_kwargs["flags"] = 0
         header_kwargs["data_size"] = data.nbytes
         header_kwargs["checksum"] = calculate_block_checksum(data)
 
@@ -318,9 +319,8 @@ def generate_write_header(data, stream=False, compression_kwargs=None, padding=F
             f"allocated size {header_kwargs['allocated_size']}",
         )
         raise RuntimeError(msg)
-    header = BLOCK_HEADER.pack(**header_kwargs)
     padding_bytes = header_kwargs["allocated_size"] - header_kwargs["used_size"]
-    return header, buff, padding_bytes
+    return header_kwargs, buff, padding_bytes
 
 
 def write_block(fd, data, offset=None, stream=False, compression_kwargs=None, padding=False, **header_kwargs):
@@ -355,9 +355,10 @@ def write_block(fd, data, offset=None, stream=False, compression_kwargs=None, pa
         The ASDF block header as unpacked from the `BLOCK_HEADER` used
         for writing.
     """
-    header, buff, padding_bytes = generate_write_header(
+    header_dict, buff, padding_bytes = generate_write_header(
         data, stream, compression_kwargs, padding, fd.block_size, **header_kwargs
     )
+    header_bytes = BLOCK_HEADER.pack(**header_dict)
 
     if offset is not None:
         if fd.seekable():
@@ -365,14 +366,14 @@ def write_block(fd, data, offset=None, stream=False, compression_kwargs=None, pa
         else:
             msg = "write_block received offset for non-seekable file"
             raise ValueError(msg)
-    fd.write(struct.pack(b">H", len(header)))
-    fd.write(header)
+    fd.write(struct.pack(b">H", len(header_bytes)))
+    fd.write(header_bytes)
     if buff is None:  # data is uncompressed
         fd.write_array(data)
     else:
         fd.write(buff.getvalue())
     fd.fast_forward(padding_bytes)
-    return BLOCK_HEADER.unpack(header)
+    return header_dict
 
 
 def _candidate_offsets(min_offset, max_offset, block_size):
