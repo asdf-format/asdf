@@ -3,6 +3,7 @@ import weakref
 from asdf import constants
 
 from . import io as bio
+from .exceptions import BlockIndexError
 
 
 class ReadBlock:
@@ -220,7 +221,7 @@ def read_blocks(fd, memmap=False, lazy_load=False, validate_checksums=False, aft
     # setup empty blocks
     try:
         block_index = bio.read_block_index(fd, index_offset)
-    except OSError:
+    except BlockIndexError:
         # failed to read block index, fall back to serial reading
         fd.seek(starting_offset)
         return _read_blocks_serially(fd, memmap, lazy_load, validate_checksums, after_magic)

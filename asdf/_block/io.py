@@ -13,6 +13,8 @@ import yaml
 from asdf import compression as mcompression
 from asdf import constants, util
 
+from .exceptions import BlockIndexError
+
 BLOCK_HEADER = util.BinaryStruct(
     [
         ("flags", "I"),
@@ -465,7 +467,7 @@ def read_block_index(fd, offset=None):
 
     Raises
     ------
-    OSError
+    BlockIndexError
         The data read from the file did not contain a valid
         block index.
     """
@@ -474,17 +476,17 @@ def read_block_index(fd, offset=None):
     buff = fd.read(len(constants.INDEX_HEADER))
     if buff != constants.INDEX_HEADER:
         msg = "Failed to read block index header at offset {offset}"
-        raise OSError(msg)
+        raise BlockIndexError(msg)
     try:
         block_index = yaml.load(fd.read(-1), yaml.SafeLoader)
     except yaml.error.YAMLError:
-        raise OSError("Failed to parse block index as yaml")
+        raise BlockIndexError("Failed to parse block index as yaml")
     if (
         not isinstance(block_index, list)
         or any(not isinstance(v, int) for v in block_index)
         or block_index != sorted(block_index)
     ):
-        raise OSError("Invalid block index")
+        raise BlockIndexError("Invalid block index")
     return block_index
 
 

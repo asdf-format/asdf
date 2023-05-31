@@ -6,6 +6,7 @@ import pytest
 
 from asdf import constants, generic_io
 from asdf._block import io as bio
+from asdf._block.exceptions import BlockIndexError
 
 
 def test_checksum(tmp_path):
@@ -336,21 +337,21 @@ def test_read_block_index_no_header(tmp_path):
     generate_block_index_file(fn, values=values, offset=0)
     with generic_io.get_file(fn, "r") as fd:
         fd.seek(len(constants.INDEX_HEADER))
-        with pytest.raises(OSError, match="Failed to read block index.*"):
+        with pytest.raises(BlockIndexError, match="Failed to read block index.*"):
             assert bio.read_block_index(fd) == values
 
 
 def test_read_block_index_invalid_yaml():
     bs = io.BytesIO(constants.INDEX_HEADER + b"][")
     with generic_io.get_file(bs, "r") as fd:
-        with pytest.raises(OSError, match="Failed to parse block index as yaml"):
+        with pytest.raises(BlockIndexError, match="Failed to parse block index as yaml"):
             bio.read_block_index(fd)
 
 
 def test_read_block_index_valid_yaml_invalid_contents():
     bs = io.BytesIO(constants.INDEX_HEADER + b"['a', 'b']")
     with generic_io.get_file(bs, "r") as fd:
-        with pytest.raises(OSError, match="Invalid block index"):
+        with pytest.raises(BlockIndexError, match="Invalid block index"):
             bio.read_block_index(fd)
 
 
