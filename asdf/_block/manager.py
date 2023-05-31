@@ -12,16 +12,23 @@ from .options import Options
 
 
 class ReadBlocks(collections.UserList):
-    # workaround inability to weakref a list
+    """
+    A list of ReadBlock instances.
+
+    A simple list can't be used as other code will need
+    to genearate a weakref to instances of this class
+    (and it is not possible to generate a weakref to a list).
+    """
+
     pass
 
 
 class WriteBlocks(collections.abc.Sequence):
     """
-    A collection of WriteBlock objects that can be accessed by:
-        - numerical index
+    A collection of ``WriteBlock`` instances that can be accessed by:
+        - numerical index (see ``collections.abc.Sequence``)
         - the object or objects in the tree that created or
-          are associated with this object
+          are associated with this block
         - the block data
     Access by object and data is via a Store which generates
     Keys to allow use of non-hashable objects (and to not hold
@@ -39,45 +46,54 @@ class WriteBlocks(collections.abc.Sequence):
         self._data_store = store.Store()
         self._object_store = store.Store()
 
-    # -- access by index --
-
     def __getitem__(self, index):
         return self._blocks.__getitem__(index)
 
     def __len__(self):
         return self._blocks.__len__()
 
-    def lookup_by_data(self, data):
+    def index_for_data(self, data):
         return self._data_store.lookup_by_object(data)
 
-    def assign_data(self, data, index):
-        self._data_store.assign_object(data, index)
-
-    def lookup_by_object(self, obj):
-        return self._object_store.lookup_by_object(obj)
-
-    def assign_object(self, obj, index):
+    def assign_object_to_index(self, obj, index):
         self._object_store.assign_object(obj, index)
 
     def object_keys_for_index(self, index):
         yield from self._object_store.keys_for_value(index)
 
-    def add_block(self, blk, obj):
+    def append_block(self, blk, obj):
+        """
+        Append a ``WriteBlock`` instance to this collection
+        assign an object, obj, to the block and return
+        the index of the block within the collection.
+        """
         index = len(self._blocks)
         self._blocks.append(blk)
+
+        # assign the block data to this block to allow
+        # fast lookup of blocks based on data
         self._data_store.assign_object(blk._data, index)
+
+        # assign the object that created/uses this block
         self._object_store.assign_object(obj, index)
         return index
 
 
 class OptionsStore(store.Store):
     """
-    A Store of Options that can be accessed by Key
+    A ``Store`` of ``Options`` that can be accessed by the base
+    array that corresponds to a block. A ``Store`` is used
+    to avoid holding references to the array data
     (see ``asdf._block.store.Store``).
+
+    When ``Options`` are not found within the ``Store``, the
+    ``OptionsStore`` will look for any available matching
+    ``ReadBlock`` to determine default Options.
     """
 
-    def __init__(self, read_blocks=None):
+    def __init__(self, read_blocks):
         super().__init__()
+        # ReadBlocks are needed to look up default options
         self._read_blocks = read_blocks
 
     def has_options(self, array):
@@ -226,7 +242,43 @@ class OptionsStore(store.Store):
 
 class Manager:
     """
-    Manager for reading, writing and storing options for ASDF blocks.
+    ``Manager`` for reading, writing and storing options for ASDF blocks.
+
+    This class does the heavy lifting of allowing ``asdf.AsdfFile`` instances
+    to control ASDF blocks. It is responsible for reading and writing blocks
+    primarily to maintain some consistency with the previous BlockManager.
+
+    Block ``Options`` control the compression and type of storage for an
+    ASDF block (see `asdf.AsdfFile.set_array_storage`,
+    `asdf.AsdfFile.set_array_compression`
+    `asdf.AsdfFile.set_array_compression` for relevant usage and information).
+    These ``Options`` instances are stored and retrieved using the base
+    of the array containing the data for an ASDF block. This allows arrays
+    that share the same base array (ie views of the same array) to use
+    the same ASDF block.
+
+    Reading blocks occurs through use of ``Manager.read`` which will
+    create ``ReadBlock`` instances for each read ASDF block. These ``ReadBlock``
+    will be used as the source for default ``Options`` for each block
+    and ASDF block data can be read using ``DataCallback`` instances.
+    These callbacks are used (instead of just accessing blocks by index)
+    to allow block reorganization during ``update``.(Note that reading
+    of external blocks is special as these are not stored within the
+    block section of the ASDF file. These must be explicitly loaded
+    using ``Manager._load_external``).
+
+    Writing ASDF blocks occurs through use of ``Manager.write`` which will
+    take any queued ``WriteBlocks`` (created via ``Manager.make_write_block``
+    and ``Manager.set_streamed_write_block``) and write them out to a file.
+    This writing must occur within a ``Manager.write_context`` to allow the
+    ``Manager`` to reset any ``Options`` changes that occur during write
+    and to clean up the write queue.
+
+    Update-in-place occurs through use of ``Manager.update`` which, like
+    ``Manager.write`` must occur within a ``Manager.write_context``. Following
+    a ``Manager.update`` the ``ReadBlock`` instances will be replaced with
+    the newly written ASDF blocks and any ``DataCallbacks`` will be updated
+    to reference the appropriate new ``ReadBlock``.
     """
 
     def __init__(self, read_blocks=None, uri=None, lazy_load=False, memmap=False, validate_checksums=False):
@@ -244,6 +296,9 @@ class Manager:
         self._streamed_obj_keys = set()
         self._write_fd = None
 
+        # store the uri of the ASDF file here so that the Manager can
+        # resolve and load external blocks without requiring a reference
+        # to the AsdfFile instance
         self._uri = uri
 
         # general block settings
@@ -368,13 +423,13 @@ class Manager:
             self._external_write_blocks.append(blk)
             return blk._uri
         # first, look for an existing block
-        index = self._write_blocks.lookup_by_data(data)
+        index = self._write_blocks.index_for_data(data)
         if index is not None:
-            self._write_blocks.assign_object(obj, index)
+            self._write_blocks.assign_object_to_index(obj, index)
             return index
         # if no block is found, make a new block
         blk = writer.WriteBlock(data, options.compression, options.compression_kwargs)
-        index = self._write_blocks.add_block(blk, obj)
+        index = self._write_blocks.append_block(blk, obj)
         return index
 
     def set_streamed_write_block(self, data, obj):
