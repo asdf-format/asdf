@@ -148,3 +148,27 @@ def test_cleanup():
     del f
     s._cleanup()
     assert s.lookup_by_object(k, None) is None
+
+
+def test_keys_for_value():
+    s = Store()
+    data = {
+        Foo(): 42,
+        Foo(): 26,
+        Foo(): 42,
+        Foo(): 11,
+    }
+    data_by_value = {}
+    for o, v in data.items():
+        s.assign_object(o, v)
+        data_by_value[v] = [*data_by_value.get(v, []), o]
+
+    for v, objs in data_by_value.items():
+        objs = set(objs)
+        returned_objects = set()
+        for k in s.keys_for_value(v):
+            assert k._is_valid()
+            obj = k._ref()
+            returned_objects.add(obj)
+        assert objs == returned_objects
+        del returned_objects, objs
