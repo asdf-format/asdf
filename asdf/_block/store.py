@@ -1,5 +1,3 @@
-import collections.abc
-
 from .key import Key
 
 
@@ -81,6 +79,12 @@ class Store:
         # if no match was found, add using the key
         self._by_id[obj_id][obj_key] = value
 
+    def keys_for_value(self, value):
+        for oid, by_key in self._by_id.items():
+            for key, stored_value in by_key.items():
+                if stored_value == value and key._is_valid():
+                    yield key
+
     def _cleanup(self, object_id=None):
         if object_id is None:
             for oid in set(self._by_id):
@@ -92,35 +96,3 @@ class Store:
             del by_key[key]
         if not len(by_key):
             del self._by_id[object_id]
-
-
-class LinearStore(Store, collections.abc.Sequence):
-    """
-    A collections.abc.Sequence that can also be accessed
-    like a Store (by using any object as a key).
-    """
-
-    def __init__(self, init=None):
-        super().__init__()
-        if init is None:
-            init = []
-        self._items = init
-
-    def lookup_by_object(self, obj):
-        index = super().lookup_by_object(obj)
-        if index is None:
-            return None
-        return self[index]
-
-    def assign_object(self, obj, value):
-        index = self._items.index(value)
-        super().assign_object(obj, index)
-
-    def assign_object_by_index(self, obj, index):
-        super().assign_object(obj, index)
-
-    def __getitem__(self, index):
-        return self._items.__getitem__(index)
-
-    def __len__(self):
-        return self._items.__len__()

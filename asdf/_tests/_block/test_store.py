@@ -3,7 +3,7 @@ from unittest.mock import patch
 import pytest
 
 from asdf._block.key import Key
-from asdf._block.store import LinearStore, Store
+from asdf._block.store import Store
 
 
 # a blank class for testing
@@ -148,25 +148,3 @@ def test_cleanup():
     del f
     s._cleanup()
     assert s.lookup_by_object(k, None) is None
-
-
-def test_linear_store():
-    foos = [Foo(), Foo(), Foo()]
-    values = ["a", "b", "c"]
-    s = LinearStore(values)
-    assert len(s) == len(values)
-    for f, v in zip(foos, values):
-        s.assign_object(f, v)
-    for f, v in zip(foos, values):
-        assert s.lookup_by_object(f) == v
-
-
-def test_linear_store_missing_value():
-    s = LinearStore()
-    with pytest.raises(ValueError, match=".*is not in list.*"):
-        s.assign_object(Foo(), "missing")
-
-
-def test_linear_store_lookup_unknown_object():
-    s = LinearStore()
-    assert s.lookup_by_object(Foo()) is None

@@ -16,19 +16,57 @@ class ReadBlocks(collections.UserList):
     pass
 
 
-class WriteBlocks(store.LinearStore):
-    def __init__(self, init=None):
-        super().__init__(init)
-        self._by_data = store.Store()
+class WriteBlocks(collections.abc.Sequence):
+    """
+    A collection of WriteBlock objects that can be accessed by:
+        - numerical index
+        - the object or objects in the tree that created or
+          are associated with this object
+        - the block data
+    Access by object and data is via a Store which generates
+    Keys to allow use of non-hashable objects (and to not hold
+    a reference to the block data).
+    """
+
+    def __init__(self, blocks=None):
+        super().__init__()
+        if blocks is None:
+            blocks = []
+        self._blocks = blocks
+
+        # both stores contain values that are indices of
+        # WriteBlock instances in _blocks
+        self._data_store = store.Store()
+        self._object_store = store.Store()
+
+    # -- access by index --
+
+    def __getitem__(self, index):
+        return self._blocks.__getitem__(index)
+
+    def __len__(self):
+        return self._blocks.__len__()
 
     def lookup_by_data(self, data):
-        return self._by_data.lookup_by_object(data)
+        return self._data_store.lookup_by_object(data)
+
+    def assign_data(self, data, index):
+        self._data_store.assign_object(data, index)
+
+    def lookup_by_object(self, obj):
+        return self._object_store.lookup_by_object(obj)
+
+    def assign_object(self, obj, index):
+        self._object_store.assign_object(obj, index)
+
+    def object_keys_for_index(self, index):
+        yield from self._object_store.keys_for_value(index)
 
     def add_block(self, blk, obj):
-        index = len(self._items)
-        self._items.append(blk)
-        self._by_data.assign_object(blk._data, index)
-        self.assign_object_by_index(obj, index)
+        index = len(self._blocks)
+        self._blocks.append(blk)
+        self._data_store.assign_object(blk._data, index)
+        self._object_store.assign_object(obj, index)
         return index
 
 
@@ -332,7 +370,7 @@ class Manager:
         # first, look for an existing block
         index = self._write_blocks.lookup_by_data(data)
         if index is not None:
-            self._write_blocks.assign_object_by_index(obj, index)
+            self._write_blocks.assign_object(obj, index)
             return index
         # if no block is found, make a new block
         blk = writer.WriteBlock(data, options.compression, options.compression_kwargs)
@@ -554,19 +592,12 @@ class Manager:
             # map new blocks to old blocks
             new_read_blocks = ReadBlocks()
             for i, (offset, header) in enumerate(zip(offsets, headers)):
-                # find all objects that assigned themselves to
-                # the write block (wblk) at index i
+                # find all objects that assigned themselves to the write block at index i
                 if i == len(self._write_blocks):  # this is a streamed block
                     obj_keys = self._streamed_obj_keys
-                    wblk = self._streamed_write_block
                 else:
-                    wblk = self._write_blocks[i]
-                    # find object associated with wblk
-                    obj_keys = set()
-                    for oid, by_key in self._write_blocks._by_id.items():
-                        for key, index in by_key.items():
-                            if self._write_blocks[index] is wblk:
-                                obj_keys.add(key)
+                    # find object associated with this write block
+                    obj_keys = set(self._write_blocks.object_keys_for_index(i))
 
                 # we have to be lazy here as any current memmap is invalid
                 new_read_block = reader.ReadBlock(offset + 4, self._write_fd, self._memmap, True, False, header=header)

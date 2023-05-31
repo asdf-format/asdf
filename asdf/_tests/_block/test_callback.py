@@ -1,7 +1,7 @@
 import pytest
 
 from asdf._block.callback import DataCallback
-from asdf._block.store import LinearStore
+from asdf._block.manager import ReadBlocks
 
 
 def test_default_attribute():
@@ -9,7 +9,7 @@ def test_default_attribute():
         def __init__(self, value):
             self.data = value
 
-    blks = LinearStore([Data("a"), Data("b")])
+    blks = ReadBlocks([Data("a"), Data("b")])
     cbs = [DataCallback(0, blks), DataCallback(1, blks)]
 
     assert cbs[0]() == "a"
@@ -21,7 +21,7 @@ def test_attribute_access():
         def __init__(self, attr, value):
             setattr(self, attr, value)
 
-    blks = LinearStore([Foo("a", "foo"), Foo("a", "bar")])
+    blks = ReadBlocks([Foo("a", "foo"), Foo("a", "bar")])
     cb = DataCallback(0, blks)
 
     assert cb(_attr="a") == "foo"
@@ -32,7 +32,7 @@ def test_weakref():
         def __init__(self, value):
             self.data = value
 
-    blks = LinearStore([Data("a"), Data("b")])
+    blks = ReadBlocks([Data("a"), Data("b")])
     cb = DataCallback(0, blks)
     del blks
 
@@ -45,12 +45,12 @@ def test_reassign():
         def __init__(self, value):
             self.data = value
 
-    blks = LinearStore([Data("a"), Data("b")])
+    blks = ReadBlocks([Data("a"), Data("b")])
     cb = DataCallback(0, blks)
 
     assert cb() == "a"
 
-    blks2 = LinearStore([Data("c"), Data("d")])
+    blks2 = ReadBlocks([Data("c"), Data("d")])
     cb._reassign(1, blks2)
 
     assert cb() == "d"
