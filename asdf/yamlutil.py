@@ -222,7 +222,7 @@ def custom_tree_to_tagged_tree(tree, ctx, _serialization_context=None):
     sctx = _Serialization(_serialization_context)
 
     extension_manager = sctx.extension_manager
-    version_string = ctx.version_string
+    version_string = str(sctx.version)
 
     def _convert_obj(obj, converter):
         tag = converter.select_tag(obj, sctx)
