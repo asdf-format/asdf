@@ -36,7 +36,6 @@ class WriteBlocks(collections.abc.Sequence):
     """
 
     def __init__(self, blocks=None):
-        super().__init__()
         if blocks is None:
             blocks = []
         self._blocks = blocks
