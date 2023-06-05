@@ -10,12 +10,11 @@ from packaging.version import Version
 
 from . import _display as display
 from . import _node_info as node_info
+from . import _serialization_context, constants, generic_io, reference, schema, treeutil, util, versioning, yamlutil
 from . import _version as version
 from . import compression as mcompression
-from . import constants, generic_io, reference, schema, treeutil, util, versioning, yamlutil
 from ._block.manager import Manager as BlockManager
 from ._helpers import validate_version
-from ._serialization_context import SerializationContext
 from .config import config_context, get_config
 from .exceptions import (
     AsdfConversionWarning,
@@ -925,7 +924,7 @@ class AsdfFile:
         fd.write(b"\n")
 
         if len(tree):
-            serialization_context = self._create_serialization_context()
+            serialization_context = self._create_serialization_context(_serialization_context.BlockAccess.WRITE)
 
             for compression in self._blocks.get_output_compressions():
                 # lookup extension
@@ -1519,8 +1518,8 @@ class AsdfFile:
 
     # This function is called from within yamlutil methods to create
     # a context when one isn't explicitly passed in.
-    def _create_serialization_context(self):
-        return SerializationContext(self.version_string, self.extension_manager, self.uri, self._blocks)
+    def _create_serialization_context(self, operation=_serialization_context.BlockAccess.NONE):
+        return _serialization_context.create(self, operation)
 
 
 def open_asdf(

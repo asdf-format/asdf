@@ -1,4 +1,4 @@
-import weakref
+import enum
 
 from ._block.key import Key as BlockKey
 from ._block.options import Options as BlockOptions
@@ -16,6 +16,7 @@ class SerializationContext:
         self._extension_manager = extension_manager
         self._url = url
         self._blocks = blocks
+        self._obj = None
 
         self.__extensions_used = set()
 
@@ -137,29 +138,6 @@ class SerializationContext:
         """
         raise NotImplementedError("abstract")
 
-
-class _Operation(SerializationContext):
-    """
-    `SerializationContext` is used for multiple operations
-    including serialization and deserialization. The `_Operation` class
-    allows the SerializationContext to have different behavior during these
-    operations (for example allowing block reading during deserialization).
-    """
-
-    def __init__(self, ctx):
-        self._ctx = weakref.ref(ctx)
-        self._obj = None
-        super().__init__(ctx.version, ctx.extension_manager, ctx.url, ctx._blocks)
-
-    def _mark_extension_used(self, extension):
-        ctx = self._ctx()
-        ctx._mark_extension_used(extension)
-
-    @property
-    def _extensions_used(self):
-        ctx = self._ctx()
-        return ctx._extensions_used
-
     def assign_object(self, obj):
         self._obj = obj
 
@@ -167,11 +145,11 @@ class _Operation(SerializationContext):
         pass
 
 
-class _Deserialization(_Operation):
+class ReadBlocksContext(SerializationContext):
     """
     Perform deserialization (reading) with a `SerializationContext`.
 
-    To allow for block access, `_Deserialization` implements:
+    To allow for block access, `ReadBlocksContext` implements:
         - `SerializationContext.generate_block_key`
         - `SerializationContext.get_block_data_callback`
     and tracks which blocks (and keys) are accessed, assigning them
@@ -179,8 +157,8 @@ class _Deserialization(_Operation):
     `assign_blocks` are called.
     """
 
-    def __init__(self, ctx):
-        super().__init__(ctx)
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
         self.assign_object(None)
 
     def assign_object(self, obj):
@@ -190,6 +168,7 @@ class _Deserialization(_Operation):
             self._keys_to_assign = {}
 
     def assign_blocks(self):
+        super().assign_blocks()
         if self._cb is not None:
             self._blocks._data_callbacks.assign_object(self._obj, self._cb)
         for key, cb in self._keys_to_assign.items():
@@ -228,19 +207,16 @@ class _Deserialization(_Operation):
         return key
 
 
-class _Serialization(_Operation):
+class WriteBlocksContext(SerializationContext):
     """
     Perform serialization (writing) with a `SerializationContext`.
 
-    To allow for block access, `_Serialization` implements:
+    To allow for block access, `WriteBlocksContext` implements:
         - `SerializationContext.generate_block_key`
         - `SerializationContext.find_available_block_index`
     and assigns any accessed blocks (and keys) to the object
     being serialized.
     """
-
-    def __init__(self, ctx):
-        super().__init__(ctx)
 
     def find_available_block_index(self, data_callback, key=None):
         if key is None:
@@ -249,3 +225,26 @@ class _Serialization(_Operation):
 
     def generate_block_key(self):
         return BlockKey(self._obj)
+
+
+class BlockAccess(enum.Enum):
+    """ """
+
+    NONE = SerializationContext
+    WRITE = WriteBlocksContext
+    READ = ReadBlocksContext
+
+
+def create(asdf_file, block_access=BlockAccess.NONE):
+    """
+    Create a SerializationContext instance (or subclass) using
+    an AsdfFile instance, asdf_file.
+
+    Parameters
+    ----------
+    asdf_file : asdf.AsdfFile
+
+    block_access : BlockAccess, optional
+        Defaults to BlockAccess.NONE
+    """
+    return block_access.value(asdf_file.version_string, asdf_file.extension_manager, asdf_file.uri, asdf_file._blocks)

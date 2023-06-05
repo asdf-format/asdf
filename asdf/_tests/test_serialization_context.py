@@ -3,7 +3,7 @@ import pytest
 
 import asdf
 from asdf import get_config
-from asdf._serialization_context import SerializationContext, _Deserialization, _Serialization
+from asdf._serialization_context import BlockAccess, SerializationContext
 from asdf.extension import ExtensionManager
 
 
@@ -31,20 +31,6 @@ def test_serialization_context():
         SerializationContext("0.5.4", extension_manager, None, None)
 
 
-@pytest.mark.parametrize("operation", ["_Deserialization", "_Serialization"])
-def test_extension_used_in_operation(operation):
-    extension_manager = ExtensionManager([])
-    context = SerializationContext("1.4.0", extension_manager, "file://test.asdf", None)
-
-    op_ctx = getattr(asdf._serialization_context, operation)(context)
-    extension = get_config().extensions[0]
-    op_ctx._mark_extension_used(extension)
-    op_ctx._mark_extension_used(extension)
-    assert extension in op_ctx._extensions_used
-    # check this persists in the parent context
-    assert extension in context._extensions_used
-
-
 def test_get_block_data_callback(tmp_path):
     fn = tmp_path / "test.asdf"
 
@@ -58,7 +44,7 @@ def test_get_block_data_callback(tmp_path):
         with pytest.raises(NotImplementedError, match="abstract"):
             context.get_block_data_callback(0)
 
-        op_ctx = _Deserialization(context)
+        op_ctx = af._create_serialization_context(BlockAccess.READ)
         cb0 = op_ctx.get_block_data_callback(0)
 
         # getting the same callback should pass and return the same object
@@ -82,9 +68,10 @@ def test_get_block_data_callback(tmp_path):
         np.testing.assert_array_equal(d0, arr0)
         np.testing.assert_array_equal(d1, arr1)
 
-        op_ctx = _Serialization(context)
-        with pytest.raises(NotImplementedError, match="abstract"):
-            op_ctx.get_block_data_callback(0)
+        for access in (BlockAccess.NONE, BlockAccess.WRITE):
+            op_ctx = af._create_serialization_context(access)
+            with pytest.raises(NotImplementedError, match="abstract"):
+                op_ctx.get_block_data_callback(0)
 
 
 def test_find_available_block_index():
@@ -100,13 +87,14 @@ def test_find_available_block_index():
     class Foo:
         pass
 
-    op_ctx = _Serialization(context)
+    op_ctx = af._create_serialization_context(BlockAccess.WRITE)
     op_ctx.assign_object(Foo())
     assert op_ctx.find_available_block_index(cb) == 0
 
-    op_ctx = _Deserialization(context)
-    with pytest.raises(NotImplementedError, match="abstract"):
-        op_ctx.find_available_block_index(cb)
+    for access in (BlockAccess.NONE, BlockAccess.READ):
+        op_ctx = af._create_serialization_context(access)
+        with pytest.raises(NotImplementedError, match="abstract"):
+            op_ctx.find_available_block_index(cb)
 
 
 def test_generate_block_key():
@@ -120,14 +108,14 @@ def test_generate_block_key():
         pass
 
     obj = Foo()
-    op_ctx = _Serialization(context)
+    op_ctx = af._create_serialization_context(BlockAccess.WRITE)
     op_ctx.assign_object(obj)
     key = op_ctx.generate_block_key()
     assert key._is_valid()
     assert key._matches_object(obj)
 
     obj = Foo()
-    op_ctx = _Deserialization(context)
+    op_ctx = af._create_serialization_context(BlockAccess.READ)
     # because this test generates but does not assign a key
     # it should raise an exception
     with pytest.raises(OSError, match=r"Converter generated a key.*"):
