@@ -1,6 +1,8 @@
+import warnings
 import weakref
 
 from asdf import constants
+from asdf.exceptions import AsdfWarning
 
 from . import io as bio
 from .exceptions import BlockIndexError
@@ -124,9 +126,20 @@ def _read_blocks_serially(fd, memmap=False, lazy_load=False, validate_checksums=
         # read 4 bytes
         if not after_magic:
             buff += fd.read(magic_len - len(buff))
-            if len(buff) < magic_len:
+            if len(buff) == 0:
                 # we are done, there are no more blocks and no index
-                # TODO error? we shouldn't have extra bytes, the old code allows this
+                break
+            elif len(buff) < magic_len:
+                # we have less than magic_len bytes, this is likely an error
+                # in the input file/bytes
+                if all([b == 0 for b in buff]):
+                    # if these are all 0, assume this was a 'truncated' file
+                    # so don't issue a warning
+                    break
+                # if these are non-0 bytes issue a warning that the file
+                # is likely corrupt
+                msg = f"Read invalid bytes {buff!r} after blocks, your file might be corrupt"
+                warnings.warn(msg, AsdfWarning)
                 break
 
         if buff == constants.INDEX_HEADER[:magic_len]:

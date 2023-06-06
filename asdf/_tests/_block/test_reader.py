@@ -9,6 +9,7 @@ import pytest
 from asdf import constants, generic_io, util
 from asdf._block import io as bio
 from asdf._block.reader import read_blocks
+from asdf.exceptions import AsdfWarning
 
 
 @contextlib.contextmanager
@@ -83,13 +84,23 @@ def test_read_invalid_padding():
             check(read_blocks(fd))
 
 
-def test_read_post_padding():
+def test_read_post_padding_null_bytes():
     with gen_blocks(padding=1) as (fd, check):
         fd.seek(0, os.SEEK_END)
         # acceptable to have <4 bytes after the last block
-        fd.write(b"\0" * 3)
+        fd.write(b"\x00" * 3)
         fd.seek(0)
         check(read_blocks(fd))
+
+
+def test_read_post_padding_non_null_bytes():
+    with gen_blocks(padding=1) as (fd, check):
+        fd.seek(0, os.SEEK_END)
+        # acceptable to have <4 bytes after the last block
+        fd.write(b"\x01" * 3)
+        fd.seek(0)
+        with pytest.warns(AsdfWarning, match=r"Read invalid bytes.*"):
+            check(read_blocks(fd))
 
 
 @pytest.mark.parametrize("invalid_block_index", [0, 1, -1, "junk"])

@@ -481,7 +481,7 @@ def test_seek_until_on_block_boundary():
 foo : bar
 ...
 """
-    content += b"\0" * (io.DEFAULT_BUFFER_SIZE - 2) + constants.BLOCK_MAGIC + b"\0\x30" + b"\0" * 50
+    content += b"\0" * (io.DEFAULT_BUFFER_SIZE - 2) + constants.BLOCK_MAGIC + b"\0\x30" + b"\0" * 48
 
     buff = io.BytesIO(content)
     ff = asdf.open(buff)
