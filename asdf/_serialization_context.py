@@ -180,6 +180,9 @@ class ReadBlocksContext(SerializationContext):
 
             # assign the key to the callback
             self._blocks._data_callbacks.assign_object(key, cb)
+        # now that we've assigned blocks, remove the reference to the
+        # assigned object
+        self.assign_object(None)
 
     def get_block_data_callback(self, index, key=None):
         if key is None:
