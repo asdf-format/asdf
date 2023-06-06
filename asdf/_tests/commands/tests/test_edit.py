@@ -7,6 +7,8 @@ import pytest
 from numpy.testing import assert_array_equal
 
 import asdf
+from asdf import constants
+from asdf._block import io as bio
 from asdf.commands import main
 
 RNG = np.random.default_rng(42)
@@ -154,6 +156,17 @@ def test_no_blocks_decrease_size(tmp_path, create_editor, version):
         assert af["foo"] == "bar"
 
 
+def confirm_valid_block_index(file_path):
+    # make sure the block index is valid
+    with asdf.generic_io.get_file(file_path, "r") as f:
+        block_index_offset = bio.find_block_index(f)
+        assert block_index_offset is not None
+        block_index = bio.read_block_index(f, block_index_offset)
+        for block_offset in block_index:
+            f.seek(block_offset)
+            assert f.read(len(constants.BLOCK_MAGIC)) == constants.BLOCK_MAGIC
+
+
 def test_with_blocks(tmp_path, create_editor, version):
     file_path = str(tmp_path / "test.asdf")
 
@@ -173,6 +186,8 @@ def test_with_blocks(tmp_path, create_editor, version):
         assert af["foo"] == "baz"
         assert_array_equal(af["array1"], array1)
         assert_array_equal(af["array2"], array2)
+
+    confirm_valid_block_index(file_path)
 
 
 def test_with_blocks_increase_size(tmp_path, create_editor, version, mock_input):
@@ -202,6 +217,8 @@ def test_with_blocks_increase_size(tmp_path, create_editor, version, mock_input)
         assert_array_equal(af["array1"], array1)
         assert_array_equal(af["array2"], array2)
 
+    confirm_valid_block_index(file_path)
+
 
 def test_with_blocks_decrease_size(tmp_path, create_editor, version):
     file_path = str(tmp_path / "test.asdf")
@@ -224,6 +241,8 @@ def test_with_blocks_decrease_size(tmp_path, create_editor, version):
         assert af["foo"] == "bar"
         assert_array_equal(af["array1"], array1)
         assert_array_equal(af["array2"], array2)
+
+    confirm_valid_block_index(file_path)
 
 
 def test_no_changes(tmp_path, create_editor, version):
