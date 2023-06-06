@@ -1173,11 +1173,16 @@ def get_file(init, mode="r", uri=None, close=False):
         if init.seekable():
             init2 = init.raw if hasattr(init, "raw") else init
 
-            result = (
-                MemoryIO(init2, mode, uri=uri)
-                if hasattr(init2, "getvalue")
-                else RealFile(init2, mode, uri=uri, close=close)
-            )
+            if hasattr(init2, "getvalue"):
+                result = MemoryIO(init2, mode, uri=uri)
+            else:
+                # can we call 'fileno'? if not, we can't memmap so don't
+                # make a RealFile
+                try:
+                    init2.fileno()
+                    result = RealFile(init2, mode, uri=uri, close=close)
+                except io.UnsupportedOperation:
+                    result = RandomAccessFile(init2, mode, uri=uri, close=close)
 
             result._secondary_fd = init
             return result

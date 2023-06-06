@@ -803,6 +803,11 @@ def test_fsspec(tmp_path):
         r = gf.read(len(ref))
         assert r == ref, (r, ref)
 
+        gf.seek(0)
+        arr = gf.read_into_array(len(ref))
+        for ai, i in zip(arr, ref):
+            assert ai == i
+
 
 @pytest.mark.remote_data()
 def test_fsspec_http(httpserver):
@@ -822,6 +827,11 @@ def test_fsspec_http(httpserver):
         gf = generic_io.get_file(f)
         r = gf.read(len(ref))
         assert r == ref, (r, ref)
+
+        gf.seek(0)
+        arr = gf.read_into_array(len(ref))
+        for ai, i in zip(arr, ref):
+            assert ai == i
 
 
 @pytest.mark.skipif(
