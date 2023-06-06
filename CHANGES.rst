@@ -12,6 +12,7 @@ The ASDF Standard is at v1.6.0
 - Remove deprecated legacy extension API [#1464]
 - Drop Python 3.8 support [#1556]
 - Drop NumPy 1.20, 1.21 support [#1568]
+- Fix issue opening files that don't support ``fileno`` [#1557]
 
 2.15.0 (2023-03-28)
 -------------------
