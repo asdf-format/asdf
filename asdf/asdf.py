@@ -461,7 +461,7 @@ class AsdfFile:
         for external in self._external_asdf_by_uri.values():
             external.close()
         self._external_asdf_by_uri.clear()
-        self._blocks.clear_external_cache()
+        self._blocks.close()
 
     def copy(self):
         return self.__class__(

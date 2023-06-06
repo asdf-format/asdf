@@ -305,8 +305,12 @@ class Manager:
         self._memmap = memmap
         self._validate_checksums = validate_checksums
 
-    def clear_external_cache(self):
+    def close(self):
         self._external_block_cache.clear()
+        self._clear_write()
+        for blk in self.blocks:
+            blk.close()
+        self.options = OptionsStore(self.blocks)
 
     @property
     def blocks(self):

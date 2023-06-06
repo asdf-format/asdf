@@ -26,6 +26,9 @@ class ReadBlock:
         if not lazy_load:
             self.load()
 
+    def close(self):
+        self._cached_data = None
+
     @property
     def loaded(self):
         return self._data is not None
