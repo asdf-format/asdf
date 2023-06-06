@@ -15,6 +15,7 @@ from . import _version as version
 from . import compression as mcompression
 from ._block.manager import Manager as BlockManager
 from ._helpers import validate_version
+from ._serialization_context import SerializationContext  # noqa: F401
 from .config import config_context, get_config
 from .exceptions import (
     AsdfConversionWarning,
