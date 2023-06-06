@@ -305,6 +305,9 @@ class Manager:
         self._memmap = memmap
         self._validate_checksums = validate_checksums
 
+    def clear_external_cache(self):
+        self._external_block_cache.clear()
+
     @property
     def blocks(self):
         """
@@ -345,7 +348,7 @@ class Manager:
         )
 
     def _load_external(self, uri):
-        value = self._external_block_cache.load(self._uri, uri)
+        value = self._external_block_cache.load(self._uri, uri, self._memmap, self._validate_checksums)
         if value is external.UseInternal:
             return self.blocks[0].data
         return value
