@@ -38,6 +38,8 @@ class ExtensionManager:
                 # use it.
                 if len(converter.tags) > 0:
                     for tag in converter.tags:
+                        if tag == "*":
+                            continue
                         if tag not in self._converters_by_tag:
                             self._converters_by_tag[tag] = converter
                     for typ in converter.types:

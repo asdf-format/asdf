@@ -195,6 +195,9 @@ class ConverterProxy(Converter):
 
         relevant_tags = set()
         for tag in delegate.tags:
+            if tag == "*":
+                relevant_tags.add(tag)
+                break
             if isinstance(tag, str):
                 relevant_tags.update(t.tag_uri for t in extension.tags if uri_match(tag, t.tag_uri))
             else:
