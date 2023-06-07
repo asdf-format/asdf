@@ -8,6 +8,7 @@ the block manager to have a reference to the `AsdfFile`
 (that references the block manager).
 """
 import os
+import urllib
 
 import numpy as np
 
@@ -41,7 +42,9 @@ class ExternalBlockCache:
                 if memmap and blk.header["compression"] == b"\0\0\0\0":
                     parsed_url = util.patched_urllib_parse.urlparse(resolved_uri)
                     if parsed_url.scheme == "file":
-                        arr = np.memmap(parsed_url.path, np.uint8, "r", blk.data_offset, blk.cached_data.nbytes)
+                        # deal with leading slash for windows file://
+                        filename = urllib.request.url2pathname(parsed_url.path)
+                        arr = np.memmap(filename, np.uint8, "r", blk.data_offset, blk.cached_data.nbytes)
                     else:
                         arr = blk.cached_data
                 else:
