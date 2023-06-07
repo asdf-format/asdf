@@ -208,6 +208,11 @@ class ConverterProxy(Converter):
         self._tags = sorted(relevant_tags)
 
         self._types = []
+        if not len(self._tags) and not hasattr(delegate, "select_tag"):
+            # the wrapped Converter supports no tags relevant to this extension
+            # and doesn't implement select_tag (which might return a supported
+            # tag) so we don't need to process it's types
+            return
         for typ in delegate.types:
             if isinstance(typ, (str, type)):
                 self._types.append(typ)
@@ -400,3 +405,14 @@ class ConverterProxy(Converter):
         package_description = "(none)" if self.package_name is None else f"{self.package_name}=={self.package_version}"
 
         return f"<ConverterProxy class: {self.class_name} package: {package_description}>"
+
+
+class Reconvert:
+    """
+    A special return type for `select_tag` to tell asdf
+    that this object has been converted to a new type
+    and should be handled by a different converter
+    """
+
+    def __init__(self, obj):
+        self.obj = obj

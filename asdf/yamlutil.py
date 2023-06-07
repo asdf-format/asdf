@@ -8,6 +8,7 @@ import yaml
 from . import schema, tagged, treeutil, util
 from .constants import STSCI_SCHEMA_TAG_BASE, YAML_TAG_PREFIX
 from .exceptions import AsdfConversionWarning
+from .extension import Reconvert
 from .tags.core import AsdfObject
 from .versioning import _yaml_base_loader, split_tag_version
 
@@ -222,6 +223,19 @@ def custom_tree_to_tagged_tree(tree, ctx, _serialization_context=None):
     def _convert_obj(obj):
         converter = extension_manager.get_converter_for_type(type(obj))
         tag = converter.select_tag(obj, _serialization_context)
+        converters = set()
+        while isinstance(tag, Reconvert):
+            converters.add(converter)
+            obj = tag.obj
+            try:
+                converter = extension_manager.get_converter_for_type(type(obj))
+            except KeyError:
+                yield obj
+                return
+            if converter in converters:
+                msg = "Conversion cycle detected"
+                raise TypeError(msg)
+            tag = converter.select_tag(obj, _serialization_context)
         node = converter.to_yaml_tree(obj, tag, _serialization_context)
 
         if isinstance(node, GeneratorType):
