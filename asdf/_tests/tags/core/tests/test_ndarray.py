@@ -1,3 +1,4 @@
+import contextlib
 import io
 import os
 import re
@@ -10,72 +11,145 @@ from numpy import ma
 from numpy.testing import assert_array_equal
 
 import asdf
-from asdf import util
-from asdf._tests import _helpers as helpers
-from asdf._tests.objects import CustomTestType
 from asdf.exceptions import ValidationError
+from asdf.extension import Converter, Extension, TagDefinition
 from asdf.tags.core import ndarray
-
-from . import data as test_data
-
-TEST_DATA_PATH = helpers.get_test_data_path("", module=test_data)
+from asdf.testing import helpers
 
 
 # These custom types and the custom extension are here purely for the purpose
 # of testing NDArray objects and making sure that they can be validated as part
 # of a nested hierarchy, and not just top-level objects.
-class CustomNdim(CustomTestType):
-    name = "ndim"
-    organization = "nowhere.org"
-    standard = "custom"
-    version = "1.0.0"
+class CustomData:
+    def __init__(self, value):
+        self.value = value
 
 
-class CustomDatatype(CustomTestType):
-    name = "datatype"
-    organization = "nowhere.org"
-    standard = "custom"
-    version = "1.0.0"
+class CustomNDim:
+    def __init__(self, value):
+        self.value = value
 
 
-class CustomExtension:
-    @property
-    def types(self):
-        return [CustomNdim, CustomDatatype]
+class CustomNDimConverter(Converter):
+    tags = ["tag:nowhere.org:custom/ndim-1.0.0"]
+    types = [CustomNDim]
 
-    @property
-    def tag_mapping(self):
-        return [("tag:nowhere.org:custom", "http://nowhere.org/schemas/custom{tag_suffix}")]
+    def to_yaml_tree(self, obj, tag, ctx):
+        return obj.value
 
-    @property
-    def url_mapping(self):
-        return [("http://nowhere.org/schemas/custom/", util.filepath_to_url(TEST_DATA_PATH) + "/{url_suffix}.yaml")]
+    def from_yaml_tree(self, node, tag, ctx):
+        return CustomNDim(node)
 
 
-def test_sharing(tmpdir):
+class CustomDataConverter(Converter):
+    tags = ["tag:nowhere.org:custom/datatype-1.0.0"]
+    types = [CustomData]
+
+    def to_yaml_tree(self, obj, tag, ctx):
+        return obj.value
+
+    def from_yaml_tree(self, node, tag, ctx):
+        return CustomData(node)
+
+
+class CustomExtension(Extension):
+    tags = [
+        TagDefinition(
+            tag_uri="tag:nowhere.org:custom/datatype-1.0.0",
+            schema_uris=["http://nowhere.org/schemas/custom/datatype-1.0.0"],
+        ),
+        TagDefinition(
+            tag_uri="tag:nowhere.org:custom/ndim-1.0.0",
+            schema_uris=["http://nowhere.org/schemas/custom/ndim-1.0.0"],
+        ),
+    ]
+    extension_uri = "asdf://nowhere.org/extensions/custom-1.0.0"
+    converters = [CustomDataConverter(), CustomNDimConverter()]
+
+
+@contextlib.contextmanager
+def with_custom_extension():
+    with asdf.config_context() as cfg:
+        cfg.add_extension(CustomExtension())
+        cfg.add_resource_mapping(
+            {
+                "http://nowhere.org/schemas/custom/datatype-1.0.0": """%YAML 1.1
+---
+$schema: "http://stsci.edu/schemas/asdf/asdf-schema-1.0.0"
+id: "http://nowhere.org/schemas/custom/datatype-1.0.0"
+type: object
+properties:
+  a:
+    datatype: float32
+
+  b:
+    datatype: float32
+    exact_datatype: true
+
+  c:
+    datatype:
+      - name: a
+        datatype: int16
+      - name: b
+        datatype: ['ascii', 16]
+
+  d:
+    datatype:
+      - name: a
+        datatype: int16
+      - name: b
+        datatype: ['ascii', 16]
+    exact_datatype: true""",
+                "http://nowhere.org/schemas/custom/ndim-1.0.0": """%YAML 1.1
+---
+$schema: "http://stsci.edu/schemas/asdf/asdf-schema-1.0.0"
+id: "http://nowhere.org/schemas/custom/ndim-1.0.0"
+type: object
+properties:
+  a:
+    ndim: 2
+
+  b:
+    max_ndim: 2""",
+            }
+        )
+        yield
+
+
+@contextlib.contextmanager
+def roundtrip(af, raw=False):
+    if not isinstance(af, asdf.AsdfFile):
+        af = asdf.AsdfFile(af)
+    b = io.BytesIO()
+    af.write_to(b)
+    b.seek(0)
+    if raw:
+        bs = b.read()
+        if asdf.constants.BLOCK_MAGIC in bs:
+            bs, *_ = bs.split(asdf.constants.BLOCK_MAGIC)
+        yield bs
+    else:
+        with asdf.open(b) as af:
+            yield af
+
+
+def test_sharing():
     x = np.arange(0, 10, dtype=float)
     tree = {"science_data": x, "subset": x[3:-3], "skipping": x[::2]}
 
-    def check_asdf(asdf):
-        tree = asdf.tree
-
+    with roundtrip(tree) as af:
+        tree = af.tree
         assert_array_equal(tree["science_data"], x)
         assert_array_equal(tree["subset"], x[3:-3])
         assert_array_equal(tree["skipping"], x[::2])
 
         assert tree["science_data"].ctypes.data == tree["skipping"].ctypes.data
 
-        assert len(asdf._blocks.blocks) == 1
-        assert asdf._blocks.blocks[0].header["data_size"] == 80
+        assert len(af._blocks.blocks) == 1
+        assert af._blocks.blocks[0].header["data_size"] == 80
 
-        if "w" in asdf._mode:
-            tree["science_data"][0] = 42
-            assert tree["skipping"][0] == 42
-
-    def check_raw_yaml(content):
-        assert b"!core/ndarray" in content
-
-    helpers.assert_roundtrip_tree(tree, tmpdir, asdf_check_func=check_asdf, raw_yaml_check_func=check_raw_yaml)
+        tree["science_data"][0] = 42
+        assert tree["skipping"][0] == 42
 
 
 def test_byteorder(tmpdir):
@@ -84,8 +158,8 @@ def test_byteorder(tmpdir):
         "little": np.arange(0, 10, dtype="<f8"),
     }
 
-    def check_asdf(asdf):
-        my_tree = asdf.tree
+    with roundtrip(tree) as af:
+        my_tree = af.tree
         for endian in ("bigendian", "little"):
             assert my_tree[endian].dtype == tree[endian].dtype
 
@@ -95,12 +169,6 @@ def test_byteorder(tmpdir):
         else:
             assert my_tree["bigendian"].dtype.byteorder == "="
             assert my_tree["little"].dtype.byteorder == "<"
-
-    def check_raw_yaml(content):
-        assert b"byteorder: little" in content
-        assert b"byteorder: big" in content
-
-    helpers.assert_roundtrip_tree(tree, tmpdir, asdf_check_func=check_asdf, raw_yaml_check_func=check_raw_yaml)
 
 
 def test_all_dtypes(tmpdir):
@@ -117,7 +185,11 @@ def test_all_dtypes(tmpdir):
 
             tree[byteorder + dtype] = arr
 
-    helpers.assert_roundtrip_tree(tree, tmpdir)
+    with roundtrip(tree) as af:
+        for k in tree:
+            pre = tree[k]
+            post = af[k]
+            assert_array_equal(pre, post)
 
 
 def test_dont_load_data():
@@ -146,22 +218,24 @@ def test_table_inline(tmpdir):
 
     tree = {"table_data": table}
 
-    def check_raw_yaml(content):
-        tree = yaml.safe_load(re.sub(rb"!core/\S+", b"", content))
-
-        assert tree["table_data"] == {
-            "datatype": [
-                {"datatype": "int8", "name": "MINE"},
-                {"datatype": "float64", "name": "f1"},
-                {"datatype": "int32", "name": "arr", "shape": [2]},
-            ],
-            "data": [[0, 1.0, [2, 3]], [4, 5.0, [6, 7]]],
-            "shape": [2],
-        }
-
     with asdf.config_context() as config:
         config.array_inline_threshold = 100
-        helpers.assert_roundtrip_tree(tree, tmpdir, raw_yaml_check_func=check_raw_yaml)
+
+        with roundtrip(tree) as af:
+            assert_array_equal(table, af["table_data"])
+
+        with roundtrip(tree, raw=True) as content:
+            tree = yaml.safe_load(re.sub(rb"!core/\S+", b"", content))
+
+            assert tree["table_data"] == {
+                "datatype": [
+                    {"datatype": "int8", "name": "MINE"},
+                    {"datatype": "float64", "name": "f1"},
+                    {"datatype": "int32", "name": "arr", "shape": [2]},
+                ],
+                "data": [[0, 1.0, [2, 3]], [4, 5.0, [6, 7]]],
+                "shape": [2],
+            }
 
 
 def test_array_inline_threshold_recursive(tmpdir):
@@ -203,7 +277,10 @@ def test_table(tmpdir):
 
     tree = {"table_data": table}
 
-    def check_raw_yaml(content):
+    with roundtrip(tree) as af:
+        assert_array_equal(af["table_data"], table)
+
+    with roundtrip(tree, raw=True) as content:
         tree = yaml.safe_load(re.sub(rb"!core/\S+", b"", content))
 
         assert tree["table_data"] == {
@@ -217,8 +294,6 @@ def test_table(tmpdir):
             "byteorder": "big",
         }
 
-    helpers.assert_roundtrip_tree(tree, tmpdir, raw_yaml_check_func=check_raw_yaml)
-
 
 def test_table_nested_fields(tmpdir):
     table = np.array(
@@ -228,7 +303,10 @@ def test_table_nested_fields(tmpdir):
 
     tree = {"table_data": table}
 
-    def check_raw_yaml(content):
+    with roundtrip(tree) as af:
+        assert_array_equal(af["table_data"], table)
+
+    with roundtrip(tree, raw=True) as content:
         tree = yaml.safe_load(re.sub(rb"!core/\S+", b"", content))
 
         assert tree["table_data"] == {
@@ -248,8 +326,6 @@ def test_table_nested_fields(tmpdir):
             "byteorder": "big",
         }
 
-    helpers.assert_roundtrip_tree(tree, tmpdir, raw_yaml_check_func=check_raw_yaml)
-
 
 def test_inline():
     x = np.arange(0, 10, dtype=float)
@@ -263,7 +339,8 @@ def test_inline():
 
     buff.seek(0)
     with asdf.open(buff, mode="rw") as ff:
-        helpers.assert_tree_match(tree, ff.tree)
+        for k in tree:
+            assert_array_equal(tree[k], ff.tree[k])
         assert len(list(ff._blocks.blocks)) == 0
         buff = io.BytesIO()
         ff.write_to(buff)
@@ -284,33 +361,29 @@ def test_mask_roundtrip(tmpdir):
     m = ma.array(x, mask=x > 5)
     tree = {"masked_array": m, "unmasked_array": x}
 
-    def check_asdf(asdf):
-        tree = asdf.tree
+    with roundtrip(tree) as af:
+        tree = af.tree
 
         m = tree["masked_array"]
 
         assert np.all(m.mask[6:])
-        assert len(asdf._blocks.blocks) == 2
-
-    helpers.assert_roundtrip_tree(tree, tmpdir, asdf_check_func=check_asdf)
+        assert len(af._blocks.blocks) == 2
 
 
 def test_len_roundtrip(tmpdir):
     sequence = np.arange(0, 10, dtype=int)
     tree = {"sequence": sequence}
 
-    def check_len(asdf):
-        s = asdf.tree["sequence"]
+    with roundtrip(tree) as af:
+        s = af.tree["sequence"]
         assert len(s) == 10
-
-    helpers.assert_roundtrip_tree(tree, tmpdir, asdf_check_func=check_len)
 
 
 def test_mask_arbitrary():
     content = """
-    arr: !core/ndarray-1.0.0
-      data: [[1, 2, 3, 1234], [5, 6, 7, 8]]
-      mask: 1234
+arr: !core/ndarray-1.0.0
+  data: [[1, 2, 3, 1234], [5, 6, 7, 8]]
+  mask: 1234
     """
 
     buff = helpers.yaml_to_asdf(content)
@@ -320,9 +393,9 @@ def test_mask_arbitrary():
 
 def test_mask_nan():
     content = """
-    arr: !core/ndarray-1.0.0
-      data: [[1, 2, 3, .NaN], [5, 6, 7, 8]]
-      mask: .NaN
+arr: !core/ndarray-1.0.0
+  data: [[1, 2, 3, .NaN], [5, 6, 7, 8]]
+  mask: .NaN
     """
 
     buff = helpers.yaml_to_asdf(content)
@@ -336,13 +409,17 @@ def test_string(tmpdir):
         "unicode": np.array(["სამეცნიერო", "данные", "வடிவம்"]),
     }
 
-    helpers.assert_roundtrip_tree(tree, tmpdir)
+    with roundtrip(tree) as af:
+        for k in tree:
+            assert_array_equal(tree[k], af[k])
 
 
 def test_string_table(tmpdir):
     tree = {"table": np.array([(b"foo", "სამეცნიერო", "42", "53.0")])}
 
-    helpers.assert_roundtrip_tree(tree, tmpdir)
+    with roundtrip(tree) as af:
+        for k in tree:
+            assert_array_equal(tree[k], af[k])
 
 
 def test_inline_string():
@@ -355,12 +432,12 @@ def test_inline_string():
 
 def test_inline_structured():
     content = """
-    arr: !core/ndarray-1.0.0
-        datatype: [['ascii', 4], uint16, uint16, ['ascii', 4]]
-        data: [[M110, 110, 205, And],
-               [ M31,  31, 224, And],
-               [ M32,  32, 221, And],
-               [M103, 103, 581, Cas]]"""
+arr: !core/ndarray-1.0.0
+    datatype: [['ascii', 4], uint16, uint16, ['ascii', 4]]
+    data: [[M110, 110, 205, And],
+           [ M31,  31, 224, And],
+           [ M32,  32, 221, And],
+           [M103, 103, 581, Cas]]"""
 
     buff = helpers.yaml_to_asdf(content)
 
@@ -512,11 +589,11 @@ def test_operations_on_ndarray_proxies(tmpdir):
 
 def test_mask_datatype(tmpdir):
     content = """
-        arr: !core/ndarray-1.0.0
-            data: [1, 2, 3]
-            dtype: int32
-            mask: !core/ndarray-1.0.0
-                data: [true, true, false]
+arr: !core/ndarray-1.0.0
+    data: [1, 2, 3]
+    dtype: int32
+    mask: !core/ndarray-1.0.0
+        data: [true, true, false]
     """
     buff = helpers.yaml_to_asdf(content)
 
@@ -526,11 +603,11 @@ def test_mask_datatype(tmpdir):
 
 def test_invalid_mask_datatype(tmpdir):
     content = """
-        arr: !core/ndarray-1.0.0
-            data: [1, 2, 3]
-            dtype: int32
-            mask: !core/ndarray-1.0.0
-                data: ['a', 'b', 'c']
+arr: !core/ndarray-1.0.0
+    data: [1, 2, 3]
+    dtype: int32
+    mask: !core/ndarray-1.0.0
+        data: ['a', 'b', 'c']
     """
     buff = helpers.yaml_to_asdf(content)
 
@@ -540,243 +617,237 @@ def test_invalid_mask_datatype(tmpdir):
         pass
 
 
+@with_custom_extension()
 def test_ndim_validation(tmpdir):
     content = """
-    obj: !<tag:nowhere.org:custom/ndim-1.0.0>
-        a: !core/ndarray-1.0.0
-           data: [1, 2, 3]
+obj: !<tag:nowhere.org:custom/ndim-1.0.0>
+    a: !core/ndarray-1.0.0
+       data: [1, 2, 3]
     """
     buff = helpers.yaml_to_asdf(content)
 
     with pytest.raises(ValidationError, match=r"Wrong number of dimensions:.*"), asdf.open(
         buff,
-        extensions=CustomExtension(),
     ):
         pass
 
     content = """
-    obj: !<tag:nowhere.org:custom/ndim-1.0.0>
-        a: !core/ndarray-1.0.0
-           data: [[1, 2, 3]]
+obj: !<tag:nowhere.org:custom/ndim-1.0.0>
+    a: !core/ndarray-1.0.0
+       data: [[1, 2, 3]]
     """
     buff = helpers.yaml_to_asdf(content)
 
-    with asdf.open(buff, extensions=CustomExtension()):
+    with asdf.open(buff):
         pass
 
     content = """
-    obj: !<tag:nowhere.org:custom/ndim-1.0.0>
-        a: !core/ndarray-1.0.0
-           shape: [1, 3]
-           data: [[1, 2, 3]]
+obj: !<tag:nowhere.org:custom/ndim-1.0.0>
+    a: !core/ndarray-1.0.0
+       shape: [1, 3]
+       data: [[1, 2, 3]]
     """
     buff = helpers.yaml_to_asdf(content)
 
-    with asdf.open(buff, extensions=CustomExtension()):
+    with asdf.open(buff):
         pass
 
     content = """
-    obj: !<tag:nowhere.org:custom/ndim-1.0.0>
-        b: !core/ndarray-1.0.0
-           data: [1, 2, 3]
+obj: !<tag:nowhere.org:custom/ndim-1.0.0>
+    b: !core/ndarray-1.0.0
+       data: [1, 2, 3]
     """
     buff = helpers.yaml_to_asdf(content)
 
-    with asdf.open(buff, extensions=CustomExtension()):
+    with asdf.open(buff):
         pass
 
     content = """
-    obj: !<tag:nowhere.org:custom/ndim-1.0.0>
-        b: !core/ndarray-1.0.0
-           data: [[1, 2, 3]]
+obj: !<tag:nowhere.org:custom/ndim-1.0.0>
+    b: !core/ndarray-1.0.0
+       data: [[1, 2, 3]]
     """
     buff = helpers.yaml_to_asdf(content)
 
-    with asdf.open(buff, extensions=CustomExtension()):
+    with asdf.open(buff):
         pass
 
     content = """
-    obj: !<tag:nowhere.org:custom/ndim-1.0.0>
-        b: !core/ndarray-1.0.0
-           data: [[[1, 2, 3]]]
+obj: !<tag:nowhere.org:custom/ndim-1.0.0>
+    b: !core/ndarray-1.0.0
+       data: [[[1, 2, 3]]]
     """
     buff = helpers.yaml_to_asdf(content)
 
     with pytest.raises(ValidationError, match=r"Wrong number of dimensions:.*"), asdf.open(
         buff,
-        extensions=CustomExtension(),
     ):
         pass
 
 
+@with_custom_extension()
 def test_datatype_validation(tmpdir):
     content = """
-    obj: !<tag:nowhere.org:custom/datatype-1.0.0>
-        a: !core/ndarray-1.0.0
-           data: [1, 2, 3]
-           datatype: float32
+obj: !<tag:nowhere.org:custom/datatype-1.0.0>
+    a: !core/ndarray-1.0.0
+       data: [1, 2, 3]
+       datatype: float32
     """
     buff = helpers.yaml_to_asdf(content)
 
-    with asdf.open(buff, extensions=CustomExtension()):
+    with asdf.open(buff):
         pass
 
     content = """
-    obj: !<tag:nowhere.org:custom/datatype-1.0.0>
-        a: !core/ndarray-1.0.0
-           data: [1, 2, 3]
-           datatype: float64
+obj: !<tag:nowhere.org:custom/datatype-1.0.0>
+    a: !core/ndarray-1.0.0
+       data: [1, 2, 3]
+       datatype: float64
     """
     buff = helpers.yaml_to_asdf(content)
 
     with pytest.raises(ValidationError, match=r"Can not safely cast from .* to .*"), asdf.open(
         buff,
-        extensions=CustomExtension(),
     ):
         pass
 
     content = """
-    obj: !<tag:nowhere.org:custom/datatype-1.0.0>
-        a: !core/ndarray-1.0.0
-           data: [1, 2, 3]
-           datatype: int16
+obj: !<tag:nowhere.org:custom/datatype-1.0.0>
+    a: !core/ndarray-1.0.0
+       data: [1, 2, 3]
+       datatype: int16
     """
     buff = helpers.yaml_to_asdf(content)
 
-    with asdf.open(buff, extensions=CustomExtension()):
+    with asdf.open(buff):
         pass
 
     content = """
-    obj: !<tag:nowhere.org:custom/datatype-1.0.0>
-        b: !core/ndarray-1.0.0
-           data: [1, 2, 3]
-           datatype: int16
+obj: !<tag:nowhere.org:custom/datatype-1.0.0>
+    b: !core/ndarray-1.0.0
+       data: [1, 2, 3]
+       datatype: int16
     """
     buff = helpers.yaml_to_asdf(content)
 
     with pytest.raises(ValidationError, match=r"Expected datatype .*, got .*"), asdf.open(
         buff,
-        extensions=CustomExtension(),
     ):
         pass
 
     content = """
-    obj: !<tag:nowhere.org:custom/datatype-1.0.0>
-        a: !core/ndarray-1.0.0
-           data: [[1, 'a'], [2, 'b'], [3, 'c']]
-           datatype:
-             - name: a
-               datatype: int8
-             - name: b
-               datatype: ['ascii', 8]
+obj: !<tag:nowhere.org:custom/datatype-1.0.0>
+    a: !core/ndarray-1.0.0
+       data: [[1, 'a'], [2, 'b'], [3, 'c']]
+       datatype:
+         - name: a
+           datatype: int8
+         - name: b
+           datatype: ['ascii', 8]
     """
     buff = helpers.yaml_to_asdf(content)
 
     with pytest.raises(ValidationError, match=r"Expected scalar datatype .*, got .*"), asdf.open(
         buff,
-        extensions=CustomExtension(),
     ):
         pass
 
 
+@with_custom_extension()
 def test_structured_datatype_validation(tmpdir):
     content = """
-    obj: !<tag:nowhere.org:custom/datatype-1.0.0>
-        c: !core/ndarray-1.0.0
-           data: [[1, 'a'], [2, 'b'], [3, 'c']]
-           datatype:
-             - name: a
-               datatype: int8
-             - name: b
-               datatype: ['ascii', 8]
+obj: !<tag:nowhere.org:custom/datatype-1.0.0>
+    c: !core/ndarray-1.0.0
+       data: [[1, 'a'], [2, 'b'], [3, 'c']]
+       datatype:
+         - name: a
+           datatype: int8
+         - name: b
+           datatype: ['ascii', 8]
     """
     buff = helpers.yaml_to_asdf(content)
 
-    with asdf.open(buff, extensions=CustomExtension()):
+    with asdf.open(buff):
         pass
 
     content = """
-    obj: !<tag:nowhere.org:custom/datatype-1.0.0>
-        c: !core/ndarray-1.0.0
-           data: [[1, 'a'], [2, 'b'], [3, 'c']]
-           datatype:
-             - name: a
-               datatype: int64
-             - name: b
-               datatype: ['ascii', 8]
+obj: !<tag:nowhere.org:custom/datatype-1.0.0>
+    c: !core/ndarray-1.0.0
+       data: [[1, 'a'], [2, 'b'], [3, 'c']]
+       datatype:
+         - name: a
+           datatype: int64
+         - name: b
+           datatype: ['ascii', 8]
     """
     buff = helpers.yaml_to_asdf(content)
 
     with pytest.raises(ValidationError, match=r"Can not safely cast to expected datatype.*"), asdf.open(
         buff,
-        extensions=CustomExtension(),
     ):
         pass
 
     content = """
-    obj: !<tag:nowhere.org:custom/datatype-1.0.0>
-        c: !core/ndarray-1.0.0
-           data: [[1, 'a', 0], [2, 'b', 1], [3, 'c', 2]]
-           datatype:
-             - name: a
-               datatype: int8
-             - name: b
-               datatype: ['ascii', 8]
-             - name: c
-               datatype: float64
+obj: !<tag:nowhere.org:custom/datatype-1.0.0>
+    c: !core/ndarray-1.0.0
+       data: [[1, 'a', 0], [2, 'b', 1], [3, 'c', 2]]
+       datatype:
+         - name: a
+           datatype: int8
+         - name: b
+           datatype: ['ascii', 8]
+         - name: c
+           datatype: float64
     """
     buff = helpers.yaml_to_asdf(content)
 
     with pytest.raises(ValidationError, match=r"Mismatch in number of columns:.*"), asdf.open(
         buff,
-        extensions=CustomExtension(),
     ):
         pass
 
     content = """
-    obj: !<tag:nowhere.org:custom/datatype-1.0.0>
-        c: !core/ndarray-1.0.0
-           data: [1, 2, 3]
+obj: !<tag:nowhere.org:custom/datatype-1.0.0>
+    c: !core/ndarray-1.0.0
+       data: [1, 2, 3]
     """
     buff = helpers.yaml_to_asdf(content)
 
     with pytest.raises(ValidationError, match=r"Expected structured datatype.*"), asdf.open(
         buff,
-        extensions=CustomExtension(),
     ):
         pass
 
     content = """
-    obj: !<tag:nowhere.org:custom/datatype-1.0.0>
-        d: !core/ndarray-1.0.0
-           data: [[1, 'a'], [2, 'b'], [3, 'c']]
-           datatype:
-             - name: a
-               datatype: int8
-             - name: b
-               datatype: ['ascii', 8]
+obj: !<tag:nowhere.org:custom/datatype-1.0.0>
+    d: !core/ndarray-1.0.0
+       data: [[1, 'a'], [2, 'b'], [3, 'c']]
+       datatype:
+         - name: a
+           datatype: int8
+         - name: b
+           datatype: ['ascii', 8]
     """
     buff = helpers.yaml_to_asdf(content)
 
     with pytest.raises(ValidationError, match=r"Expected datatype .*, got .*"), asdf.open(
         buff,
-        extensions=CustomExtension(),
     ):
         pass
 
     content = """
-    obj: !<tag:nowhere.org:custom/datatype-1.0.0>
-        d: !core/ndarray-1.0.0
-           data: [[1, 'a'], [2, 'b'], [3, 'c']]
-           datatype:
-             - name: a
-               datatype: int16
-             - name: b
-               datatype: ['ascii', 16]
+obj: !<tag:nowhere.org:custom/datatype-1.0.0>
+    d: !core/ndarray-1.0.0
+       data: [[1, 'a'], [2, 'b'], [3, 'c']]
+       datatype:
+         - name: a
+           datatype: int16
+         - name: b
+           datatype: ['ascii', 16]
     """
     buff = helpers.yaml_to_asdf(content)
 
-    with asdf.open(buff, extensions=CustomExtension()):
+    with asdf.open(buff):
         pass
 
 
@@ -790,9 +861,9 @@ def test_string_inline():
 
 def test_inline_shape_mismatch():
     content = """
-    arr: !core/ndarray-1.0.0
-      data: [1, 2, 3]
-      shape: [2]
+arr: !core/ndarray-1.0.0
+  data: [1, 2, 3]
+  shape: [2]
     """
 
     buff = helpers.yaml_to_asdf(content)
@@ -800,34 +871,11 @@ def test_inline_shape_mismatch():
         pass
 
 
-@pytest.mark.xfail(reason="NDArrays with dtype=object are not currently supported")
-def test_simple_object_array(tmpdir):
-    # See https://github.com/asdf-format/asdf/issues/383 for feature
-    # request
-    dictdata = np.empty((3, 3), dtype=object)
-    for i, _ in enumerate(dictdata.flat):
-        dictdata.flat[i] = {"foo": i * 42, "bar": i**2}
-
-    helpers.assert_roundtrip_tree({"bizbaz": dictdata}, tmpdir)
-
-
-@pytest.mark.xfail(reason="NDArrays with dtype=object are not currently supported")
-def test_tagged_object_array(tmpdir):
-    # See https://github.com/asdf-format/asdf/issues/383 for feature
-    # request
-    quantity = pytest.importorskip("astropy.units.quantity")
-
-    objdata = np.empty((3, 3), dtype=object)
-    for i, _ in enumerate(objdata.flat):
-        objdata.flat[i] = quantity.Quantity(i, "angstrom")
-
-    helpers.assert_roundtrip_tree({"bizbaz": objdata}, tmpdir)
-
-
 def test_broadcasted_array(tmpdir):
     attrs = np.broadcast_arrays(np.array([10, 20]), np.array(10), np.array(10))
     tree = {"one": attrs[1]}  # , 'two': attrs[1], 'three': attrs[2]}
-    helpers.assert_roundtrip_tree(tree, tmpdir)
+    with roundtrip(tree) as af:
+        assert_array_equal(tree["one"], af["one"])
 
 
 def test_broadcasted_offset_array(tmpdir):
@@ -835,29 +883,29 @@ def test_broadcasted_offset_array(tmpdir):
     offset = base[5:]
     broadcasted = np.broadcast_to(offset, (4, 5))
     tree = {"broadcasted": broadcasted}
-    helpers.assert_roundtrip_tree(tree, tmpdir)
+    with roundtrip(tree) as af:
+        assert_array_equal(tree["broadcasted"], af["broadcasted"])
 
 
 def test_non_contiguous_base_array(tmpdir):
     base = np.arange(60).reshape(5, 4, 3).transpose(2, 0, 1) * 1
     contiguous = base.transpose(1, 2, 0)
     tree = {"contiguous": contiguous}
-    helpers.assert_roundtrip_tree(tree, tmpdir)
+    with roundtrip(tree) as af:
+        assert_array_equal(tree["contiguous"], af["contiguous"])
 
 
 def test_fortran_order(tmpdir):
     array = np.array([[11, 12, 13], [21, 22, 23]], order="F", dtype=np.int64)
     tree = {"data": array}
 
-    def check_f_order(t):
-        assert t["data"].flags.fortran
-        assert np.all(np.isclose(array, t["data"]))
+    with roundtrip(tree) as af:
+        assert af["data"].flags.fortran
+        assert np.all(np.isclose(array, af["data"]))
 
-    def check_raw_yaml(content):
+    with roundtrip(tree, raw=True) as content:
         tree = yaml.safe_load(re.sub(rb"!core/\S+", b"", content))
         assert tree["data"]["strides"] == [8, 16]
-
-    helpers.assert_roundtrip_tree(tree, tmpdir, asdf_check_func=check_f_order, raw_yaml_check_func=check_raw_yaml)
 
 
 def test_memmap_write(tmpdir):
