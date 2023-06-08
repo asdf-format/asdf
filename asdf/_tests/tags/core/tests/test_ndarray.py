@@ -222,7 +222,9 @@ def test_table_inline(tmpdir):
         config.array_inline_threshold = 100
 
         with roundtrip(tree) as af:
-            assert_array_equal(table, af["table_data"])
+            assert table.dtype.names == af["table_data"].dtype.names
+            for n in table.dtype.names:
+                assert_array_equal(table[n], af["table_data"][n])
 
         with roundtrip(tree, raw=True) as content:
             tree = yaml.safe_load(re.sub(rb"!core/\S+", b"", content))
