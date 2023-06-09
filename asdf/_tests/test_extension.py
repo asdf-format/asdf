@@ -600,7 +600,10 @@ def test_converter_proxy():
 
     # Should fail because types must instances of type:
     with pytest.raises(TypeError, match=r"Converter property .* must contain str or type values"):
-        ConverterProxy(MinimumConverter(types=[object()]), extension)
+        # as the code will ignore types if no relevant tags are found
+        # include a tag from this extension to make sure the proxy considers
+        # the types
+        ConverterProxy(MinimumConverter(tags=[extension.tags[0].tag_uri], types=[object()]), extension)
 
 
 def test_get_cached_asdf_extension_list():
