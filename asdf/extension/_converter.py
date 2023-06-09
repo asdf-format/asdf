@@ -208,6 +208,11 @@ class ConverterProxy(Converter):
         self._tags = sorted(relevant_tags)
 
         self._types = []
+
+        if not len(self._tags) and not hasattr(delegate, "select_tag"):
+            # this converter supports no tags so don't inspect the types
+            return
+
         for typ in delegate.types:
             if isinstance(typ, (str, type)):
                 self._types.append(typ)

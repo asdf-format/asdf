@@ -11,7 +11,7 @@ from contextlib import suppress
 
 import numpy as np
 
-from . import _types, generic_io, treeutil, util
+from . import generic_io, treeutil, util
 from .util import patched_urllib_parse
 
 __all__ = ["resolve_fragment", "Reference", "find_references", "resolve_references", "make_reference"]
@@ -42,9 +42,7 @@ def resolve_fragment(tree, pointer):
     return tree
 
 
-class Reference(_types._AsdfType):
-    yaml_tag = "tag:yaml.org,2002:map"
-
+class Reference:
     def __init__(self, uri, base_uri=None, asdffile=None, target=None):
         self._uri = uri
         if asdffile is not None:
@@ -104,15 +102,6 @@ class Reference(_types._AsdfType):
 
     def __contains__(self, item):
         return item in self._get_target()
-
-    @classmethod
-    def to_tree(cls, data, ctx):
-        uri = generic_io.relative_uri(ctx.uri, data._uri) if ctx.uri is not None else data._uri
-        return {"$ref": uri}
-
-    @classmethod
-    def validate(cls, data):
-        pass
 
 
 def find_references(tree, ctx):
