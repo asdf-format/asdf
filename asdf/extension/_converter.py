@@ -76,9 +76,11 @@ class Converter(abc.ABC):
 
         Returns
         -------
-        str
+        str or None
             The selected tag.  Should be one of the tags passed
-            to this method in the `tags` parameter.
+            to this method in the `tags` parameter.  If `None`
+            the result of ``to_yaml_tree`` will be used to look
+            up the next converter for this object.
         """
         return tags[0]
 
@@ -257,8 +259,8 @@ class ConverterProxy(Converter):
 
         Returns
         -------
-        str
-            Selected tag.
+        str or None
+            Selected tag or `None` to defer conversion.
         """
         method = getattr(self._delegate, "select_tag", None)
         if method is None:
