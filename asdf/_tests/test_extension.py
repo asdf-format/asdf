@@ -774,6 +774,9 @@ def test_converter_deferral():
     class Foo(Bar):
         pass
 
+    class Baz(Bar):
+        pass
+
     class FooConverter:
         tags = []
         types = [Foo]
@@ -798,12 +801,26 @@ def test_converter_deferral():
         def from_yaml_tree(self, node, tag, ctx):
             return Bar(node["value"])
 
-    extension = FullExtension(converters=[FooConverter(), BarConverter()], tags=BarConverter.tags)
+    class BazConverter:
+        tags = []
+        types = [Baz]
+
+        def select_tag(self, *args):
+            return None
+
+        def to_yaml_tree(self, obj, tag, ctx):
+            return Foo(obj.value)
+
+        def from_yaml_tree(self, node, tag, ctx):
+            raise NotImplementedError()
+
+    extension = FullExtension(converters=[FooConverter(), BarConverter(), BazConverter()], tags=BarConverter.tags)
     with config_context() as config:
         config.add_extension(extension)
 
         foo = Foo(26)
         bar = Bar(42)
+        baz = Baz(720)
 
         bar_rt = roundtrip_object(bar)
         assert isinstance(bar_rt, Bar)
@@ -812,3 +829,67 @@ def test_converter_deferral():
         foo_rt = roundtrip_object(foo)
         assert isinstance(foo_rt, Bar)
         assert foo_rt.value == foo.value
+
+        baz_rt = roundtrip_object(baz)
+        assert isinstance(baz_rt, Bar)
+        assert baz_rt.value == baz.value
+
+
+def test_converter_loop():
+    class Bar:
+        def __init__(self, value):
+            self.value = value
+
+    class Foo(Bar):
+        pass
+
+    class Baz(Bar):
+        pass
+
+    class FooConverter:
+        tags = []
+        types = [Foo]
+
+        def select_tag(self, *args):
+            return None
+
+        def to_yaml_tree(self, obj, tag, ctx):
+            return Bar(obj.value)
+
+        def from_yaml_tree(self, node, tag, ctx):
+            raise NotImplementedError()
+
+    class BarConverter:
+        tags = []
+        types = [Bar]
+
+        def select_tag(self, *args):
+            return None
+
+        def to_yaml_tree(self, obj, tag, ctx):
+            return Baz(obj.value)
+
+        def from_yaml_tree(self, node, tag, ctx):
+            raise NotImplementedError()
+
+    class BazConverter:
+        tags = []
+        types = [Baz]
+
+        def select_tag(self, *args):
+            return None
+
+        def to_yaml_tree(self, obj, tag, ctx):
+            return Foo(obj.value)
+
+        def from_yaml_tree(self, node, tag, ctx):
+            raise NotImplementedError()
+
+    extension = FullExtension(converters=[FooConverter(), BarConverter(), BazConverter()])
+    with config_context() as config:
+        config.add_extension(extension)
+
+        for typ in (Foo, Bar, Baz):
+            obj = typ(42)
+            with pytest.raises(TypeError, match=r"Conversion cycle detected"):
+                roundtrip_object(obj)
