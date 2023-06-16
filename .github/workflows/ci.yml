@@ -36,9 +36,6 @@ jobs:
         - linux: coverage
           name: Python 3.9 coverage
           python-version: 3.9
-        - linux: coverage
-          name: Python 3.8 coverage
-          python-version: 3.8
       coverage: codecov
 
   asdf-schemas:
@@ -71,7 +68,6 @@ jobs:
       # Any env name which does not start with `pyXY` will use this Python version.
       default_python: '3.9'
       envs: |
-        - linux: py38-devdeps-parallel
         - linux: py39-devdeps-parallel
         - linux: py310-devdeps-parallel
         - linux: py311-devdeps-parallel
@@ -84,7 +80,6 @@ jobs:
       # Any env name which does not start with `pyXY` will use this Python version.
       default_python: '3.9'
       envs: |
-        - linux: py38-oldestdeps-parallel
         - linux: py39-oldestdeps-parallel
 
   compatibility:
