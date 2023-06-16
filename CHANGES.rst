@@ -10,6 +10,7 @@ The ASDF Standard is at v1.6.0
 - Move built-in tags to converters (except ndarray and integer). [#1474]
 - Add block storage support to Converter [#1508]
 - Remove deprecated legacy extension API [#1464]
+- Drop Python 3.8 support [#1556]
 
 2.15.0 (2023-03-28)
 -------------------
