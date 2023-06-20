@@ -184,5 +184,5 @@ exclude = ["asdf/extern/*"]
 [tool.codespell]
 skip="*.pdf,*.asdf,.tox,asdf/extern,build,./tags,.git,docs/_build"
 ignore-words-list="""
-fo,
+fo,afile,
 """
