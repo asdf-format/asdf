@@ -368,6 +368,13 @@ class NDArrayType(_types._AsdfType):
         # number of array creations in the general case.
         if attr == "__array_struct__":
             raise AttributeError
+        # AsdfFile.info will call hasattr(obj, "__asdf_traverse__") which
+        # will trigger this method, making the array, and loading the array
+        # data. Intercept this and raise AttributeError as this class does
+        # not support that method
+        # see: https://github.com/asdf-format/asdf/issues/1553
+        if attr == "__asdf_traverse__":
+            raise AttributeError
         return getattr(self._make_array(), attr)
 
     def __setitem__(self, *args):
