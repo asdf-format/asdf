@@ -58,9 +58,8 @@ class Lz4Compressor:
             import lz4.block
         except ImportError as err:
             msg = (
-                "lz4 library in not installed in your Python environment, "
-                "therefore the compressed block in this ASDF file "
-                "can not be decompressed."
+                "The `lz4` library is not installed in your Python environment, "
+                "therefore the compressed block in this ASDF file cannot be decompressed."
             )
             raise ImportError(msg) from err
 
@@ -107,15 +106,15 @@ class Lz4Compressor:
                         blk = blk[4:]
 
                 if len(blk) < _size or _buffer is not None:
-                    # If we have a partial block, or we're already filling a buffer, use the buffer
+                    # If we have a partial block, or we're already filling a buffer,
+                    # use the buffer
                     if _buffer is None:
-                        _buffer = np.empty(
-                            _size,
-                            dtype=np.byte,
-                        )  # use numpy instead of bytearray so we can avoid zero initialization
+                        # use np.empty instead of bytearray so we can avoid zero fill:
+                        _buffer = np.empty(_size, dtype=np.byte)
                         _pos = 0
                     newbytes = min(_size - _pos, len(blk))  # don't fill past the buffer len!
-                    _buffer[_pos : _pos + newbytes] = np.frombuffer(blk[:newbytes], dtype=np.byte)
+                    _buffer[_pos : _pos + newbytes] = np.frombuffer(blk[:newbytes],
+                                                                    dtype=np.byte)
                     _pos += newbytes
                     blk = blk[newbytes:]
 
@@ -127,7 +126,8 @@ class Lz4Compressor:
                         _size = 0
                 else:
                     # We have at least one full block
-                    _out = self._api.decompress(memoryview(blk[:_size]), return_bytearray=True, **kwargs)
+                    _out = self._api.decompress(memoryview(blk[:_size]),
+                                                return_bytearray=True, **kwargs)
                     out[bytesout : bytesout + len(_out)] = _out
                     bytesout += len(_out)
                     blk = blk[_size:]
