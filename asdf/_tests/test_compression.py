@@ -113,6 +113,13 @@ def test_lz4(tmp_path):
     _roundtrip(tmp_path, tree, "lz4")
 
 
+def test_zstd(tmp_path):
+    pytest.importorskip("zstandard")
+    tree = _get_large_tree()
+
+    _roundtrip(tmp_path, tree, "zstd")
+
+
 def test_recompression(tmp_path):
     tree = _get_large_tree()
     tmpfile = os.path.join(str(tmp_path), "test1.asdf")

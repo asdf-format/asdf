@@ -73,6 +73,6 @@ jobs:
           run: |
             python3 -m venv --system-site-packages tests
             source tests/bin/activate
-            pip3 install --upgrade pip setuptools gwcs pytest pytest-doctestplus pytest-remotedata
+            pip3 install --upgrade pip setuptools gwcs pytest pytest-doctestplus pytest-remotedata zstandard
             pip3 install -e .[all,tests]
             python3 -m pytest --remote-data

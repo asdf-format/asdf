@@ -162,9 +162,12 @@ It is possible to compress the array data when writing the file:
 
     af.write_to("compressed.asdf", all_array_compression="zlib")
 
-The built-in compression algorithms are ``'zlib'``, and ``'bzp2'``.  The
-``'lz4'`` algorithm becomes available when the `lz4 <https://python-lz4.readthedocs.io/>`__ package
-is installed.  Other compression algorithms may be available via extensions.
+The built-in compression algorithms are ``'zlib'``, and ``'bzp2'``.
+The ``'lz4'`` algorithm becomes available when the
+`lz4 <https://python-lz4.readthedocs.io/>`__ package is installed.
+The ``'zstd'`` algorithm becomes available when the
+`zstandard <https://python-zstandard.readthedocs.io//>`__ package is installed.
+Other compression algorithms may be available via extensions.
 
 .. _end-compress-file:
 

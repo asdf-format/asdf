@@ -20,6 +20,10 @@ types.  One recommended option is the `astropy <https://www.astropy.org/>`__ pac
 Optional support for `lz4 <https://en.wikipedia.org/wiki/LZ4_(compression_algorithm)>`__
 compression is provided by the `lz4 <https://python-lz4.readthedocs.io/>`__ package.
 
+Optional support for `zstd <https://en.wikipedia.org/wiki/Zstd>`__
+compression is provided by the `zstandard <https://python-zstandard.readthedocs.io/>`__
+package.
+
 Installing with pip
 ===================
 

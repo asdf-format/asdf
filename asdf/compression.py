@@ -34,7 +34,7 @@ def validate(compression):
 
     compression = compression.strip("\0")
 
-    builtin_labels = ["zlib", "bzp2", "lz4", "input"]
+    builtin_labels = ["zlib", "bzp2", "lz4", "zstd", "input"]
     ext_labels = _get_all_compression_extension_labels()
     all_labels = ext_labels + builtin_labels
 
@@ -136,6 +136,82 @@ class Lz4Compressor:
         return bytesout
 
 
+class ZstdCompressor:
+    def __init__(self):
+        try:
+            import zstandard
+        except ImportError as err:
+            msg = (
+                "The `zstandard` library is not installed in your Python environment, "
+                "therefore the compressed block in this ASDF file cannot be decompressed."
+            )
+            raise ImportError(msg) from err
+
+        self._api = zstandard
+
+    def compress(self, data, **kwargs):
+        """
+        Compress ``data``, yielding the results. The yield may be
+        block-by-block, or all at once.
+
+        Parameters
+        ----------
+        data : memoryview
+            The data to compress. Must be contiguous and 1D, with
+            the underlying ``itemsize`` preserved.
+        **kwargs
+            Keyword arguments to be passed to the underlying compression
+            function
+
+        Yields
+        ------
+        compressed : bytes-like
+            A block of compressed data
+        """
+        level = kwargs.get('level', 3) # zstd default compression level
+        threads = kwargs.get('threads', -1) # default to using max hardware threads
+        compressed = self._api.ZstdCompressor(level=level, threads=threads).compress(data)
+        yield compressed
+
+    def decompress(self, blocks, out, **kwargs):
+        """
+        Decompress ``blocks`` of compressed data, writing the result into ``out``.
+
+        Parameters
+        ----------
+        blocks : Iterable of bytes-like
+            An Iterable of bytes-like objects containing blocks
+            of compressed data.
+        out : read-write bytes-like
+            A contiguous, 1D output array, of equal or greater length
+            than the decompressed data.
+        **kwargs
+            Keyword arguments to be passed to the underlying decompression
+            function
+
+        Returns
+        -------
+        nbytes : int
+            The number of bytes written to ``out``
+        """
+        # Conforms to the same streaming API as the standard library's zlib and bz2
+        # decompressors. See:
+        # https://python-zstandard.readthedocs.io/en/latest/decompressor.html
+        # #zstddecompressionobj
+
+        decompressor = self._api.ZstdDecompressor(**kwargs)
+        dobj = decompressor.decompressobj()
+
+        i = 0
+        for block in blocks:
+            decomp = dobj.decompress(block)
+            nbytes = len(decomp)
+            # write all blocks of decompressed data contiguously into `out` array:
+            out[i : i + nbytes] = decomp
+            i += nbytes
+        return i
+
+
 class ZlibCompressor:
     def compress(self, data, **kwargs):
         comp = zlib.compress(data, **kwargs)
@@ -214,6 +290,8 @@ def _get_compressor(label):
         comp = Bzp2Compressor()
     elif label == "lz4":
         comp = Lz4Compressor()
+    elif label == "zstd":
+        comp = ZstdCompressor()
     else:
         msg = f"Unknown compression type: '{label}'"
         raise ValueError(msg)

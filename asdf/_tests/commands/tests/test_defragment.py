@@ -52,3 +52,8 @@ def test_defragment_bzp2(tmpdir):
 def test_defragment_lz4(tmpdir):
     pytest.importorskip("lz4")
     _test_defragment(tmpdir, "lz4")
+
+
+def test_defragment_zstd(tmpdir):
+    pytest.importorskip("zstandard")
+    _test_defragment(tmpdir, "zstd")
