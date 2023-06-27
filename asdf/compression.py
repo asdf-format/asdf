@@ -113,8 +113,7 @@ class Lz4Compressor:
                         _buffer = np.empty(_size, dtype=np.byte)
                         _pos = 0
                     newbytes = min(_size - _pos, len(blk))  # don't fill past the buffer len!
-                    _buffer[_pos : _pos + newbytes] = np.frombuffer(blk[:newbytes],
-                                                                    dtype=np.byte)
+                    _buffer[_pos : _pos + newbytes] = np.frombuffer(blk[:newbytes], dtype=np.byte)
                     _pos += newbytes
                     blk = blk[newbytes:]
 
@@ -126,8 +125,7 @@ class Lz4Compressor:
                         _size = 0
                 else:
                     # We have at least one full block
-                    _out = self._api.decompress(memoryview(blk[:_size]),
-                                                return_bytearray=True, **kwargs)
+                    _out = self._api.decompress(memoryview(blk[:_size]), return_bytearray=True, **kwargs)
                     out[bytesout : bytesout + len(_out)] = _out
                     bytesout += len(_out)
                     blk = blk[_size:]
@@ -168,8 +166,8 @@ class ZstdCompressor:
         compressed : bytes-like
             A block of compressed data
         """
-        level = kwargs.get('level', 3) # zstd default compression level
-        threads = kwargs.get('threads', -1) # default to using max hardware threads
+        level = kwargs.get("level", 3)  # zstd default compression level
+        threads = kwargs.get("threads", -1)  # default to using max hardware threads
         compressed = self._api.ZstdCompressor(level=level, threads=threads).compress(data)
         yield compressed
 
