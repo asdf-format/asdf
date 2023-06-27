@@ -223,8 +223,9 @@ class ZlibCompressor:
         i = 0
         for block in blocks:
             decomp = decompressor.decompress(block)
-            out[i : i + len(decomp)] = decomp
-            i += len(decomp)
+            nbytes = len(decomp)
+            out[i : i + nbytes] = decomp
+            i += nbytes
         return i
 
 
@@ -239,8 +240,9 @@ class Bzp2Compressor:
         i = 0
         for block in blocks:
             decomp = decompressor.decompress(block)
-            out[i : i + len(decomp)] = decomp
-            i += len(decomp)
+            nbytes = len(decomp)
+            out[i : i + nbytes] = decomp
+            i += nbytes
         return i
 
 
