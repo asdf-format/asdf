@@ -243,7 +243,7 @@ The `lz4 <https://en.wikipedia.org/wiki/LZ_4>`__ compression algorithm is also
 supported, but requires the optional
 `lz4 <https://python-lz4.readthedocs.io/>`__ package in order to work.
 
-The `zstd <https://en.wikipedia.org/wiki/LZ_4>`__ compression algorithm is also
+The `zstd <https://en.wikipedia.org/wiki/Zstd>`__ compression algorithm is also
 supported, but requires the optional
 `zstandard <https://python-zstandard.readthedocs.io/>`__ package in order to work.
 
