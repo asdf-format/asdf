@@ -170,6 +170,7 @@ select = [
 ]
 extend-ignore = [
     "S310", # URL open for permitted schemes
+    "RUF012",  # mutable-class-default (typing related)
 ]
 extend-exclude = ["asdf/extern/*", "docs/*"]
 
