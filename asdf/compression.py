@@ -52,7 +52,7 @@ def validate(compression):
     return compression
 
 
-class Lz4Compressor:
+class Lz4BlockCompressor:
     def __init__(self):
         try:
             import lz4.block
@@ -134,6 +134,85 @@ class Lz4Compressor:
                     _size = 0
 
         return bytesout
+
+
+class Lz4Compressor:
+    def __init__(self):
+        try:
+            import lz4.frame
+        except ImportError as err:
+            msg = (
+                "The `lz4` library is not installed in your Python environment, "
+                "therefore the compressed block in this ASDF file cannot be decompressed."
+            )
+            raise ImportError(msg) from err
+
+        self._api = lz4.frame
+
+    def compress(self, data, **kwargs):
+        """
+        Compress ``data``, yielding the results. The yield may be
+        block-by-block, or all at once.
+
+        Parameters
+        ----------
+        data : memoryview
+            The data to compress. Must be contiguous and 1D, with
+            the underlying ``itemsize`` preserved.
+        **kwargs
+            Keyword arguments to be passed to the underlying compression
+            function
+
+        Yields
+        ------
+        compressed : bytes-like
+            A block of compressed data
+        """
+        if "mode" in kwargs:
+            raise ValueError("Deprecated compression kwarg `mode`, use integer "
+                             "`compression_level` instead (fast: 0--2, high: 3--16, "
+                             "default: 0")
+        if "compression_block_size" in kwargs:
+            raise ValueError("Deprecated compression kwarg `compression_block_size`, "
+                             "`block_size` instead")
+
+        # override default 64 KiB block size:
+        block_size = kwargs.pop("block_size", self._api.BLOCKSIZE_MAX4MB)
+
+        compressed = self._api.compress(data, block_size=block_size, **kwargs)
+        yield compressed
+
+    def decompress(self, blocks, out, **kwargs):
+        """
+        Decompress ``blocks`` of compressed data, writing the result into ``out``.
+
+        Parameters
+        ----------
+        blocks : Iterable of bytes-like
+            An Iterable of bytes-like objects containing blocks
+            of compressed data.
+        out : read-write bytes-like
+            A contiguous, 1D output array, of equal or greater length
+            than the decompressed data.
+        **kwargs
+            Keyword arguments to be passed to the underlying decompression
+            function
+
+        Returns
+        -------
+        nbytes : int
+            The number of bytes written to ``out``
+        """
+        decompressor = self._api.LZ4FrameDecompressor(**kwargs)
+
+        i = 0
+        for block in blocks:
+            decomp = decompressor.decompress(block)
+            nbytes = len(decomp)
+            # write all blocks of decompressed data contiguously into `out` array:
+            out[i : i + nbytes] = decomp
+            i += nbytes
+        return i
 
 
 class ZlibCompressor:
