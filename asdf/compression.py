@@ -169,12 +169,13 @@ class Lz4Compressor:
             A block of compressed data
         """
         if "mode" in kwargs:
-            raise ValueError("Deprecated compression kwarg `mode`, use integer "
-                             "`compression_level` instead (fast: 0--2, high: 3--16, "
-                             "default: 0")
+            raise ValueError(
+                "Deprecated compression kwarg `mode`, use integer "
+                "`compression_level` instead (fast: 0--2, high: 3--16, "
+                "default: 0"
+            )
         if "compression_block_size" in kwargs:
-            raise ValueError("Deprecated compression kwarg `compression_block_size`, "
-                             "`block_size` instead")
+            raise ValueError("Deprecated compression kwarg `compression_block_size`, " "`block_size` instead")
 
         # override default 64 KiB block size:
         block_size = kwargs.pop("block_size", self._api.BLOCKSIZE_MAX4MB)
