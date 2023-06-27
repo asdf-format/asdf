@@ -1830,6 +1830,10 @@ def open_asdf(
 class SerializationContext:
     """
     Container for parameters of the current (de)serialization.
+
+    This class should not be instantiated directly and instead
+    will be created by the AsdfFile object and provided to extension
+    classes (like Converters) via method arguments.
     """
 
     def __init__(self, version, extension_manager, url, block_manager):
@@ -1850,7 +1854,7 @@ class SerializationContext:
         written to an `io.BytesIO`).
 
         Returns
-        --------
+        -------
         str or None
         """
         return self._url
