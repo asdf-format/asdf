@@ -11,6 +11,7 @@ The ASDF Standard is at v1.6.0
 - Add block storage support to Converter [#1508]
 - Remove deprecated legacy extension API [#1464]
 - Drop Python 3.8 support [#1556]
+- Add ``zstd`` as a built-in compression algorithm [#1570]
 
 2.15.0 (2023-03-28)
 -------------------
