@@ -19,6 +19,7 @@ The ASDF Standard is at v1.6.0
 - Removed deprecated AsdfFile.open and deprecated asdf.open
   AsdfFile.write_to and AsdfFile.update kwargs [#1592]
 - Fix ``AsdfFile.info`` loading all array data [#1572]
+- Blank out AsdfFile.tree on close [#1575]
 
 2.15.1 (2023-08-07)
 -------------------
