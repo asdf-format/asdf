@@ -454,6 +454,9 @@ class AsdfFile:
             self._fd.close()
             self._fd = None
             self._closed = True
+            # as we're closing the file, also empty out the
+            # tree so that references to array data can be released
+            self._tree = AsdfObject()
         for external in self._external_asdf_by_uri.values():
             external.close()
         self._external_asdf_by_uri.clear()
