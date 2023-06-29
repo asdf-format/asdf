@@ -88,7 +88,7 @@ Resources
   :maxdepth: 1
 
   asdf/contributing
-  asdf/CODE_OF_CONDUCT.rst
+  asdf/CODE_OF_CONDUCT
   asdf/release_and_support
   asdf/deprecations
   asdf/changes

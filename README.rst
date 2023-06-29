@@ -380,4 +380,4 @@ follow the `contributing guidelines <CONTRIBUTING.rst>`__ to submit an
 issue or a pull request.
 
 We strive to provide a welcoming community to all of our users by
-abiding to the `Code of Conduct <CODE_OF_CONDUCT.rst>`__.
+abiding to the `Code of Conduct <CODE_OF_CONDUCT.md>`__.

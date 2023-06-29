@@ -1,5 +1,3 @@
-.. _code-of-conduct:
-
 ASDF-format Open Source Code of Conduct
 =======================================
 
@@ -61,6 +59,6 @@ offline, including mailing lists, forums, social media, conferences,
 meetings, associated social events, and one-to-one interactions.
 
 Parts of this code of conduct have been adapted from the
-`Astropy <http://www.astropy.org/code_of_conduct.html>`__ and
-`Numfocus <https://www.numfocus.org/about/code-of-conduct/>`__ codes of
+Astropy: http://www.astropy.org/code_of_conduct.html and
+Numfocus: https://www.numfocus.org/about/code-of-conduct codes of
 conduct.
