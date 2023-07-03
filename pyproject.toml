@@ -20,7 +20,6 @@ dynamic = [
 dependencies = [
   "asdf-standard>=1.0.1",
   "asdf-transform-schemas>=0.3",
-  "asdf-unit-schemas>=0.1",
   "importlib-metadata>=4.11.4",
   "jmespath>=0.6.2",
   "jsonschema<4.18,>=4.0.1", # jsonschema 4.18 contains incompatible changes: https://github.com/asdf-format/asdf/issues/1485
