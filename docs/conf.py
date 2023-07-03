@@ -51,3 +51,5 @@ intersphinx_mapping["semantic_version"] = ("https://python-semanticversion.readt
 intersphinx_mapping["jsonschema"] = ("https://python-jsonschema.readthedocs.io/en/stable/", None)
 intersphinx_mapping["stdatamodels"] = ("https://stdatamodels.readthedocs.io/en/latest/", None)
 intersphinx_mapping["pytest"] = ("https://docs.pytest.org/en/latest/", None)
+
+extensions += ["sphinx_inline_tabs"]
