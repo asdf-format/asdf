@@ -35,6 +35,8 @@ all = [
 ]
 docs = [
   "sphinx-asdf>=0.1.4",
+  "graphviz",
+  "sphinx-inline-tabs",
   'tomli; python_version < "3.11"',
 ]
 tests = [
