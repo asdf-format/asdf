@@ -86,20 +86,6 @@ class _ErrorCacheLocal(threading.local):
 _ERROR_CACHE = _ErrorCacheLocal()
 
 
-def default_ext_resolver(uri):
-    """
-    Resolver that uses tag/url mappings from all installed extensions
-    """
-    # Deprecating this because it doesn't play nicely with the caching on
-    # load_schema(...).
-    warnings.warn(
-        "The 'default_ext_resolver(...)' function is deprecated. Use "
-        "'asdf.extension.get_default_resolver()(...)' instead.",
-        AsdfDeprecationWarning,
-    )
-    return extension.get_default_resolver()(uri)
-
-
 PYTHON_TYPE_TO_YAML_TAG = {
     None: "null",
     str: "str",
@@ -812,7 +798,7 @@ def validate(instance, ctx=None, schema=None, validators=None, reading=False, *a
     tag on the instance.
 
     The additional ``*args`` and ``**kwargs`` are passed along to
-    `~jsonschema.protocols.Validator.validate`.
+    the Validator.
 
     Parameters
     ----------
