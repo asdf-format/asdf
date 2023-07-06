@@ -7,7 +7,7 @@ from pyrsistent import pmap
 from pyrsistent.typing import PMap
 import attr
 
-from jsonschema.exceptions import UndefinedTypeCheck
+from asdf._jsonschema.exceptions import UndefinedTypeCheck
 
 
 # unfortunately, the type of pmap is generic, and if used as the attr.ib
@@ -109,7 +109,7 @@ class TypeChecker:
 
         Raises:
 
-            `jsonschema.exceptions.UndefinedTypeCheck`:
+            `asdf._jsonschema.exceptions.UndefinedTypeCheck`:
 
                 if ``type`` is unknown to this object.
         """
@@ -164,7 +164,7 @@ class TypeChecker:
 
         Raises:
 
-            `jsonschema.exceptions.UndefinedTypeCheck`:
+            `asdf._jsonschema.exceptions.UndefinedTypeCheck`:
 
                 if any given type is unknown to this object
         """

@@ -11,7 +11,7 @@ import itertools
 
 import attr
 
-from jsonschema import _utils
+from asdf._jsonschema import _utils
 
 WEAK_MATCHES: frozenset[str] = frozenset(["anyOf", "oneOf"])
 STRONG_MATCHES: frozenset[str] = frozenset()

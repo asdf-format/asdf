@@ -8,7 +8,7 @@ import sys
 import numpy as np
 import pytest
 from astropy.modeling import models
-from jsonschema.exceptions import ValidationError
+from asdf._jsonschema.exceptions import ValidationError
 from numpy.testing import assert_array_equal
 
 import asdf

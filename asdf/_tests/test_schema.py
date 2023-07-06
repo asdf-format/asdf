@@ -3,7 +3,7 @@ from datetime import datetime
 
 import numpy as np
 import pytest
-from jsonschema import ValidationError
+from asdf._jsonschema import ValidationError
 from numpy.testing import assert_array_equal
 
 import asdf

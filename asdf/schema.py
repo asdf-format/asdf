@@ -10,8 +10,8 @@ from operator import methodcaller
 
 import numpy as np
 import yaml
-from jsonschema import validators as mvalidators
-from jsonschema.exceptions import RefResolutionError, ValidationError
+from asdf._jsonschema import validators as mvalidators
+from asdf._jsonschema.exceptions import RefResolutionError, ValidationError
 
 from . import constants, generic_io, reference, tagged, treeutil, util, versioning, yamlutil
 from .config import get_config
@@ -70,7 +70,7 @@ def validate_propertyOrder(validator, order, instance, schema):
     """
     Stores a value on the `tagged.TaggedDict` instance so that
     properties can be written out in the preferred order.  In that
-    sense this isn't really a "validator", but using the `jsonschema`
+    sense this isn't really a "validator", but using the `asdf._jsonschema`
     library's extensible validation system is the easiest way to get
     this property assigned.
     """
@@ -89,7 +89,7 @@ def validate_flowStyle(validator, flow_style, instance, schema):
     Sets a flag on the `tagged.TaggedList` or `tagged.TaggedDict`
     object so that the YAML generator knows which style to use to
     write the element.  In that sense this isn't really a "validator",
-    but using the `jsonschema` library's extensible validation system
+    but using the `asdf._jsonschema` library's extensible validation system
     is the easiest way to get this property assigned.
     """
     if not (validator.is_type(instance, "object") or validator.is_type(instance, "array")):
@@ -102,7 +102,7 @@ def validate_style(validator, style, instance, schema):
     """
     Sets a flag on the `tagged.TaggedString` object so that the YAML
     generator knows which style to use to write the string.  In that
-    sense this isn't really a "validator", but using the `jsonschema`
+    sense this isn't really a "validator", but using the `asdf._jsonschema`
     library's extensible validation system is the easiest way to get
     this property assigned.
     """
@@ -519,7 +519,7 @@ def get_validator(
     Get a JSON schema validator object for the given schema.
 
     The additional *args and **kwargs are passed along to
-    `~jsonschema.Validator.validate`.
+    `~asdf._jsonschema.Validator.validate`.
 
     Parameters
     ----------
@@ -547,7 +547,7 @@ def get_validator(
 
     Returns
     -------
-    validator : jsonschema.Validator
+    validator : asdf._jsonschema.Validator
     """
     if ctx is None:
         from .asdf import AsdfFile
@@ -631,7 +631,7 @@ def validate(instance, ctx=None, schema=None, validators=None, reading=False, *a
     tag on the instance.
 
     The additional ``*args`` and ``**kwargs`` are passed along to
-    `~jsonschema.Validator.validate`.
+    `~asdf._jsonschema.Validator.validate`.
 
     Parameters
     ----------
@@ -721,7 +721,7 @@ def check_schema(schema, validate_default=True):
     validators = util.HashableDict(mvalidators.Draft4Validator.VALIDATORS.copy())
 
     if validate_default:
-        # The jsonschema library doesn't validate defaults
+        # The asdf._jsonschema library doesn't validate defaults
         # on its own.
         instance_validator = get_validator(schema)
         instance_scope = schema.get("id", "")

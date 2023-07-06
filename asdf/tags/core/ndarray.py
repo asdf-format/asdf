@@ -2,7 +2,7 @@ import mmap
 import sys
 
 import numpy as np
-from jsonschema import ValidationError
+from asdf._jsonschema import ValidationError
 from numpy import ma
 
 from asdf import _types, util
