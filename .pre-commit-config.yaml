@@ -39,7 +39,7 @@ repos:
   rev: '0.78'
   hooks:
     - id: flynt
-      exclude: "asdf/extern/.*"
+      exclude: "asdf/(extern||_jsonschema)/.*"
 
 - repo: https://github.com/astral-sh/ruff-pre-commit
   rev: 'v0.0.276'

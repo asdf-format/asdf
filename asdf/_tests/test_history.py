@@ -3,9 +3,9 @@ import fractions
 import warnings
 
 import pytest
-from asdf._jsonschema import ValidationError
 
 import asdf
+from asdf._jsonschema import ValidationError
 from asdf.exceptions import AsdfWarning
 from asdf.extension import Converter, Extension
 from asdf.tags.core import HistoryEntry

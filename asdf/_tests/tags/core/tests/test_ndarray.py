@@ -3,7 +3,6 @@ import os
 import re
 import sys
 
-import asdf._jsonschema
 import numpy as np
 import pytest
 import yaml
@@ -11,6 +10,7 @@ from numpy import ma
 from numpy.testing import assert_array_equal
 
 import asdf
+import asdf._jsonschema
 from asdf import util
 from asdf._tests import _helpers as helpers
 from asdf._tests.objects import CustomTestType
@@ -536,7 +536,9 @@ def test_invalid_mask_datatype(tmpdir):
     """
     buff = helpers.yaml_to_asdf(content)
 
-    with pytest.raises(asdf._jsonschema.ValidationError, match=r".* is not valid under any of the given schemas"), asdf.open(
+    with pytest.raises(
+        asdf._jsonschema.ValidationError, match=r".* is not valid under any of the given schemas"
+    ), asdf.open(
         buff,
     ):
         pass
@@ -709,7 +711,9 @@ def test_structured_datatype_validation(tmpdir):
     """
     buff = helpers.yaml_to_asdf(content)
 
-    with pytest.raises(asdf._jsonschema.ValidationError, match=r"Can not safely cast to expected datatype.*"), asdf.open(
+    with pytest.raises(
+        asdf._jsonschema.ValidationError, match=r"Can not safely cast to expected datatype.*"
+    ), asdf.open(
         buff,
         extensions=CustomExtension(),
     ):
