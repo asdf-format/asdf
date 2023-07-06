@@ -18,7 +18,8 @@ dynamic = [
   'version',
 ]
 dependencies = [
-  "asdf-standard>=1.0.1",
+  #"asdf-standard>=1.0.1",
+  "asdf-standard @ git+https://github.com/asdf-format/asdf-standard.git@main",
   "asdf-transform-schemas>=0.3",
   "asdf-unit-schemas>=0.1",
   "importlib-metadata>=4.11.4",
