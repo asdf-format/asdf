@@ -2,10 +2,10 @@ import mmap
 import sys
 
 import numpy as np
-from asdf._jsonschema import ValidationError
 from numpy import ma
 
 from asdf import _types, util
+from asdf._jsonschema import ValidationError
 
 _datatype_names = {
     "int8": "i1",

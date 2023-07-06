@@ -3,7 +3,6 @@ from datetime import datetime
 
 import numpy as np
 import pytest
-from asdf._jsonschema import ValidationError
 from numpy.testing import assert_array_equal
 
 import asdf
@@ -11,6 +10,7 @@ import asdf.testing.helpers
 from asdf import _resolver as resolver
 from asdf import _types as types
 from asdf import config_context, constants, get_config, schema, tagged, util, yamlutil
+from asdf._jsonschema import ValidationError
 from asdf._tests import _helpers as helpers
 from asdf._tests.objects import CustomExtension
 from asdf.exceptions import AsdfConversionWarning, AsdfDeprecationWarning, AsdfWarning

@@ -10,6 +10,7 @@ from operator import methodcaller
 
 import numpy as np
 import yaml
+
 from asdf._jsonschema import validators as mvalidators
 from asdf._jsonschema.exceptions import RefResolutionError, ValidationError
 
