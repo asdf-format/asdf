@@ -17,7 +17,7 @@ __all__ = [
 ]
 
 
-from jsonschema import ValidationError
+from asdf._jsonschema import ValidationError
 
 from ._convenience import info
 from ._version import version as __version__

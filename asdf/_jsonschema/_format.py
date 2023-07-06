@@ -8,7 +8,7 @@ import re
 import typing
 import warnings
 
-from jsonschema.exceptions import FormatError
+from asdf._jsonschema.exceptions import FormatError
 
 _FormatCheckCallable = typing.Callable[[object], bool]
 _F = typing.TypeVar("_F", bound=_FormatCheckCallable)
@@ -70,7 +70,7 @@ class FormatChecker:
                 invalid instance is found.
 
                 The exception object will be accessible as the
-                `jsonschema.exceptions.ValidationError.cause` attribute of the
+                `asdf._jsonschema.exceptions.ValidationError.cause` attribute of the
                 resulting validation error.
         """
 

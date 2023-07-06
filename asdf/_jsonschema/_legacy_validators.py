@@ -1,5 +1,5 @@
-from jsonschema import _utils
-from jsonschema.exceptions import ValidationError
+from asdf._jsonschema import _utils
+from asdf._jsonschema.exceptions import ValidationError
 
 
 def id_of_ignore_ref(property="$id"):

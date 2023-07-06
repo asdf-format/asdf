@@ -1,4 +1,4 @@
-from jsonschema import ValidationError
+from asdf._jsonschema import ValidationError
 
 __all__ = [
     "AsdfConversionWarning",

@@ -3,7 +3,7 @@ import os
 import re
 import sys
 
-import jsonschema
+import asdf._jsonschema
 import numpy as np
 import pytest
 import yaml
@@ -536,7 +536,7 @@ def test_invalid_mask_datatype(tmpdir):
     """
     buff = helpers.yaml_to_asdf(content)
 
-    with pytest.raises(jsonschema.ValidationError, match=r".* is not valid under any of the given schemas"), asdf.open(
+    with pytest.raises(asdf._jsonschema.ValidationError, match=r".* is not valid under any of the given schemas"), asdf.open(
         buff,
     ):
         pass
@@ -550,7 +550,7 @@ def test_ndim_validation(tmpdir):
     """
     buff = helpers.yaml_to_asdf(content)
 
-    with pytest.raises(jsonschema.ValidationError, match=r"Wrong number of dimensions:.*"), asdf.open(
+    with pytest.raises(asdf._jsonschema.ValidationError, match=r"Wrong number of dimensions:.*"), asdf.open(
         buff,
         extensions=CustomExtension(),
     ):
@@ -604,7 +604,7 @@ def test_ndim_validation(tmpdir):
     """
     buff = helpers.yaml_to_asdf(content)
 
-    with pytest.raises(jsonschema.ValidationError, match=r"Wrong number of dimensions:.*"), asdf.open(
+    with pytest.raises(asdf._jsonschema.ValidationError, match=r"Wrong number of dimensions:.*"), asdf.open(
         buff,
         extensions=CustomExtension(),
     ):
@@ -631,7 +631,7 @@ def test_datatype_validation(tmpdir):
     """
     buff = helpers.yaml_to_asdf(content)
 
-    with pytest.raises(jsonschema.ValidationError, match=r"Can not safely cast from .* to .*"), asdf.open(
+    with pytest.raises(asdf._jsonschema.ValidationError, match=r"Can not safely cast from .* to .*"), asdf.open(
         buff,
         extensions=CustomExtension(),
     ):
@@ -656,7 +656,7 @@ def test_datatype_validation(tmpdir):
     """
     buff = helpers.yaml_to_asdf(content)
 
-    with pytest.raises(jsonschema.ValidationError, match=r"Expected datatype .*, got .*"), asdf.open(
+    with pytest.raises(asdf._jsonschema.ValidationError, match=r"Expected datatype .*, got .*"), asdf.open(
         buff,
         extensions=CustomExtension(),
     ):
@@ -674,7 +674,7 @@ def test_datatype_validation(tmpdir):
     """
     buff = helpers.yaml_to_asdf(content)
 
-    with pytest.raises(jsonschema.ValidationError, match=r"Expected scalar datatype .*, got .*"), asdf.open(
+    with pytest.raises(asdf._jsonschema.ValidationError, match=r"Expected scalar datatype .*, got .*"), asdf.open(
         buff,
         extensions=CustomExtension(),
     ):
@@ -709,7 +709,7 @@ def test_structured_datatype_validation(tmpdir):
     """
     buff = helpers.yaml_to_asdf(content)
 
-    with pytest.raises(jsonschema.ValidationError, match=r"Can not safely cast to expected datatype.*"), asdf.open(
+    with pytest.raises(asdf._jsonschema.ValidationError, match=r"Can not safely cast to expected datatype.*"), asdf.open(
         buff,
         extensions=CustomExtension(),
     ):
@@ -729,7 +729,7 @@ def test_structured_datatype_validation(tmpdir):
     """
     buff = helpers.yaml_to_asdf(content)
 
-    with pytest.raises(jsonschema.ValidationError, match=r"Mismatch in number of columns:.*"), asdf.open(
+    with pytest.raises(asdf._jsonschema.ValidationError, match=r"Mismatch in number of columns:.*"), asdf.open(
         buff,
         extensions=CustomExtension(),
     ):
@@ -742,7 +742,7 @@ def test_structured_datatype_validation(tmpdir):
     """
     buff = helpers.yaml_to_asdf(content)
 
-    with pytest.raises(jsonschema.ValidationError, match=r"Expected structured datatype.*"), asdf.open(
+    with pytest.raises(asdf._jsonschema.ValidationError, match=r"Expected structured datatype.*"), asdf.open(
         buff,
         extensions=CustomExtension(),
     ):
@@ -760,7 +760,7 @@ def test_structured_datatype_validation(tmpdir):
     """
     buff = helpers.yaml_to_asdf(content)
 
-    with pytest.raises(jsonschema.ValidationError, match=r"Expected datatype .*, got .*"), asdf.open(
+    with pytest.raises(asdf._jsonschema.ValidationError, match=r"Expected datatype .*, got .*"), asdf.open(
         buff,
         extensions=CustomExtension(),
     ):

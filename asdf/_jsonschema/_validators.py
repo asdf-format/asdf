@@ -2,7 +2,7 @@ from fractions import Fraction
 from urllib.parse import urldefrag, urljoin
 import re
 
-from jsonschema._utils import (
+from asdf._jsonschema._utils import (
     ensure_list,
     equal,
     extras_msg,
@@ -12,7 +12,7 @@ from jsonschema._utils import (
     unbool,
     uniq,
 )
-from jsonschema.exceptions import FormatError, ValidationError
+from asdf._jsonschema.exceptions import FormatError, ValidationError
 
 
 def patternProperties(validator, patternProperties, instance, schema):

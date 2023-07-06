@@ -19,7 +19,7 @@ import warnings
 from pyrsistent import m
 import attr
 
-from jsonschema import (
+from asdf._jsonschema import (
     _format,
     _legacy_validators,
     _types,
@@ -38,25 +38,25 @@ _VOCABULARIES: list[tuple[str, typing.Any]] = []
 def __getattr__(name):
     if name == "ErrorTree":
         warnings.warn(
-            "Importing ErrorTree from jsonschema.validators is deprecated. "
-            "Instead import it from jsonschema.exceptions.",
+            "Importing ErrorTree from asdf._jsonschema.validators is deprecated. "
+            "Instead import it from asdf._jsonschema.exceptions.",
             DeprecationWarning,
             stacklevel=2,
         )
-        from jsonschema.exceptions import ErrorTree
+        from asdf._jsonschema.exceptions import ErrorTree
         return ErrorTree
     elif name == "validators":
         warnings.warn(
-            "Accessing jsonschema.validators.validators is deprecated. "
-            "Use jsonschema.validators.validator_for with a given schema.",
+            "Accessing asdf._jsonschema.validators.validators is deprecated. "
+            "Use asdf._jsonschema.validators.validator_for with a given schema.",
             DeprecationWarning,
             stacklevel=2,
         )
         return _VALIDATORS
     elif name == "meta_schemas":
         warnings.warn(
-            "Accessing jsonschema.validators.meta_schemas is deprecated. "
-            "Use jsonschema.validators.validator_for with a given schema.",
+            "Accessing asdf._jsonschema.validators.meta_schemas is deprecated. "
+            "Use asdf._jsonschema.validators.validator_for with a given schema.",
             DeprecationWarning,
             stacklevel=2,
         )
@@ -149,21 +149,21 @@ def create(
             an identifier for the version that this validator class will
             validate. If provided, the returned validator class will
             have its ``__name__`` set to include the version, and also
-            will have `jsonschema.validators.validates` automatically
+            will have `asdf._jsonschema.validators.validates` automatically
             called for the given version.
 
-        type_checker (jsonschema.TypeChecker):
+        type_checker (asdf._jsonschema.TypeChecker):
 
             a type checker, used when applying the :kw:`type` keyword.
 
-            If unprovided, a `jsonschema.TypeChecker` will be created
+            If unprovided, a `asdf._jsonschema.TypeChecker` will be created
             with a set of default types typical of JSON Schema drafts.
 
-        format_checker (jsonschema.FormatChecker):
+        format_checker (asdf._jsonschema.FormatChecker):
 
             a format checker, used when applying the :kw:`format` keyword.
 
-            If unprovided, a `jsonschema.FormatChecker` will be created
+            If unprovided, a `asdf._jsonschema.FormatChecker` will be created
             with a set of default formats typical of JSON Schema drafts.
 
         id_of (collections.abc.Callable):
@@ -178,7 +178,7 @@ def create(
 
     Returns:
 
-        a new `jsonschema.protocols.Validator` class
+        a new `asdf._jsonschema.protocols.Validator` class
     """
     # preemptively don't shadow the `Validator.format_checker` local
     format_checker_arg = format_checker
@@ -203,7 +203,7 @@ def create(
                     "be part of their public API. A future version "
                     "will make doing so an error, as the behavior of "
                     "subclasses isn't guaranteed to stay the same "
-                    "between releases of jsonschema. Instead, prefer "
+                    "between releases of asdf._jsonschema. Instead, prefer "
                     "composition of validators, wrapping them in an object "
                     "owned entirely by the downstream library."
                 ),
@@ -356,7 +356,7 @@ def extend(
 
     Arguments:
 
-        validator (jsonschema.protocols.Validator):
+        validator (asdf._jsonschema.protocols.Validator):
 
             an existing validator class
 
@@ -381,23 +381,23 @@ def extend(
 
             a version for the new validator class
 
-        type_checker (jsonschema.TypeChecker):
+        type_checker (asdf._jsonschema.TypeChecker):
 
             a type checker, used when applying the :kw:`type` keyword.
 
             If unprovided, the type checker of the extended
-            `jsonschema.protocols.Validator` will be carried along.
+            `asdf._jsonschema.protocols.Validator` will be carried along.
 
-        format_checker (jsonschema.FormatChecker):
+        format_checker (asdf._jsonschema.FormatChecker):
 
             a format checker, used when applying the :kw:`format` keyword.
 
             If unprovided, the format checker of the extended
-            `jsonschema.protocols.Validator` will be carried along.
+            `asdf._jsonschema.protocols.Validator` will be carried along.
 
     Returns:
 
-        a new `jsonschema.protocols.Validator` class extending the one
+        a new `asdf._jsonschema.protocols.Validator` class extending the one
         provided
 
     .. note:: Meta Schemas
@@ -824,7 +824,7 @@ class RefResolver:
         .. deprecated:: v4.0.0
         """
         warnings.warn(
-            "jsonschema.RefResolver.in_scope is deprecated and will be "
+            "asdf._jsonschema.RefResolver.in_scope is deprecated and will be "
             "removed in a future release.",
             DeprecationWarning,
             stacklevel=3,
@@ -981,7 +981,7 @@ class RefResolver:
 
         .. note::
 
-            If the requests_ library is present, ``jsonschema`` will use it to
+            If the requests_ library is present, ``asdf._jsonschema`` will use it to
             request the remote ``uri``, so that the correct encoding is
             detected and used.
 
@@ -1061,14 +1061,14 @@ def validate(instance, schema, cls=None, *args, **kwargs):
             ...
         ValidationError: [2, 3, 4] is too long
 
-    :func:`~jsonschema.validators.validate` will first verify that the
+    :func:`~asdf._jsonschema.validators.validate` will first verify that the
     provided schema is itself valid, since not doing so can lead to less
     obvious error messages and fail in less obvious or consistent ways.
 
     If you know you have a valid schema already, especially
     if you intend to validate multiple instances with
     the same schema, you likely would prefer using the
-    `jsonschema.protocols.Validator.validate` method directly on a
+    `asdf._jsonschema.protocols.Validator.validate` method directly on a
     specific validator (e.g. ``Draft20212Validator.validate``).
 
 
@@ -1082,7 +1082,7 @@ def validate(instance, schema, cls=None, *args, **kwargs):
 
             The schema to validate with
 
-        cls (jsonschema.protocols.Validator):
+        cls (asdf._jsonschema.protocols.Validator):
 
             The class that will be used to validate the instance.
 
@@ -1099,17 +1099,17 @@ def validate(instance, schema, cls=None, *args, **kwargs):
 
     Raises:
 
-        `jsonschema.exceptions.ValidationError`:
+        `asdf._jsonschema.exceptions.ValidationError`:
 
             if the instance is invalid
 
-        `jsonschema.exceptions.SchemaError`:
+        `asdf._jsonschema.exceptions.SchemaError`:
 
             if the schema itself is invalid
 
     .. rubric:: Footnotes
     .. [#] known by a validator registered with
-        `jsonschema.validators.validates`
+        `asdf._jsonschema.validators.validates`
     """
     if cls is None:
         cls = validator_for(schema)

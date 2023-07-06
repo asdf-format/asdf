@@ -6,7 +6,7 @@ import pathlib
 import time
 import warnings
 
-from jsonschema import ValidationError
+from asdf._jsonschema import ValidationError
 from packaging.version import Version
 
 from . import _display as display

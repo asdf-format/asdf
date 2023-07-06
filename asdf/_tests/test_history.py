@@ -3,7 +3,7 @@ import fractions
 import warnings
 
 import pytest
-from jsonschema import ValidationError
+from asdf._jsonschema import ValidationError
 
 import asdf
 from asdf.exceptions import AsdfWarning

@@ -28,10 +28,10 @@ else:
 # therefore, only import at type-checking time (to avoid circular references),
 # but use `jsonschema` for any types which will otherwise not be resolvable
 if TYPE_CHECKING:
-    import jsonschema
-    import jsonschema.validators
+    import asdf._jsonschema
+    import asdf._jsonschema.validators
 
-from jsonschema.exceptions import ValidationError
+from asdf._jsonschema.exceptions import ValidationError
 
 # For code authors working on the validator protocol, these are the three
 # use-cases which should be kept in mind:
@@ -72,7 +72,7 @@ class Validator(Protocol):
             *no* format validation is done, and the presence of format
             within schemas is strictly informational. Certain formats
             require additional packages to be installed in order to assert
-            against instances. Ensure you've installed `jsonschema` with
+            against instances. Ensure you've installed `asdf._jsonschema` with
             its `extra (optional) dependencies <index:extras>` when
             invoking ``pip``.
 
@@ -91,13 +91,13 @@ class Validator(Protocol):
     #: `creating-validators`.
     VALIDATORS: ClassVar[Mapping]
 
-    #: A `jsonschema.TypeChecker` that will be used when validating
+    #: A `asdf._jsonschema.TypeChecker` that will be used when validating
     #: :kw:`type` keywords in JSON schemas.
-    TYPE_CHECKER: ClassVar[jsonschema.TypeChecker]
+    TYPE_CHECKER: ClassVar[asdf._jsonschema.TypeChecker]
 
-    #: A `jsonschema.FormatChecker` that will be used when validating
+    #: A `asdf._jsonschema.FormatChecker` that will be used when validating
     #: :kw:`format` keywords in JSON schemas.
-    FORMAT_CHECKER: ClassVar[jsonschema.FormatChecker]
+    FORMAT_CHECKER: ClassVar[asdf._jsonschema.FormatChecker]
 
     #: A function which given a schema returns its ID.
     ID_OF: Callable[[Any], str | None]
@@ -108,8 +108,8 @@ class Validator(Protocol):
     def __init__(
         self,
         schema: Mapping | bool,
-        resolver: jsonschema.validators.RefResolver | None = None,
-        format_checker: jsonschema.FormatChecker | None = None,
+        resolver: asdf._jsonschema.validators.RefResolver | None = None,
+        format_checker: asdf._jsonschema.FormatChecker | None = None,
     ) -> None:
         ...
 
@@ -120,7 +120,7 @@ class Validator(Protocol):
 
         Raises:
 
-            `jsonschema.exceptions.SchemaError`:
+            `asdf._jsonschema.exceptions.SchemaError`:
 
                 if the schema is invalid
         """
@@ -145,7 +145,7 @@ class Validator(Protocol):
 
         Raises:
 
-            `jsonschema.exceptions.UnknownType`:
+            `asdf._jsonschema.exceptions.UnknownType`:
 
                 if ``type`` is not a known type
         """
@@ -190,7 +190,7 @@ class Validator(Protocol):
 
         Raises:
 
-            `jsonschema.exceptions.ValidationError`:
+            `asdf._jsonschema.exceptions.ValidationError`:
 
                 if the instance is invalid
 

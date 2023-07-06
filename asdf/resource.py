@@ -176,12 +176,12 @@ _JSONSCHEMA_URI_TO_FILENAME = {
 class JsonschemaResourceMapping(Mapping):
     """
     Resource mapping that fetches metaschemas from
-    the jsonschema package.
+    the asdf._jsonschema package.
     """
 
     def __getitem__(self, uri):
         filename = _JSONSCHEMA_URI_TO_FILENAME[uri]
-        return pkgutil.get_data("jsonschema", f"schemas/{filename}")
+        return pkgutil.get_data("asdf._jsonschema", f"schemas/{filename}")
 
     def __len__(self):
         return len(_JSONSCHEMA_URI_TO_FILENAME)
