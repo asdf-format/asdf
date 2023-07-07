@@ -157,13 +157,16 @@ class _Error(Exception):
         )
 
 
-class ValidationError(_Error):
-    """
-    An instance was invalid under a provided schema.
-    """
+try:
+    from jsonschema import ValidationError
+except ImportError:
+    class ValidationError(_Error):
+        """
+        An instance was invalid under a provided schema.
+        """
 
-    _word_for_schema_in_error_message = "schema"
-    _word_for_instance_in_error_message = "instance"
+        _word_for_schema_in_error_message = "schema"
+        _word_for_instance_in_error_message = "instance"
 
 
 class SchemaError(_Error):

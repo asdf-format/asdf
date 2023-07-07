@@ -1,6 +1,7 @@
 import io
 from datetime import datetime
 
+import jsonschema
 import numpy as np
 import pytest
 from numpy.testing import assert_array_equal
@@ -1188,3 +1189,12 @@ tag: asdf://somewhere.org/tags/bar-*
         schema.validate(instance, schema=schema_tree)
         with pytest.raises(ValidationError, match=r"mismatched tags, wanted .*, got .*"):
             schema.validate(tagged.TaggedDict(tag="asdf://somewhere.org/tags/foo-1.0"), schema=schema_tree)
+
+
+def test_catch_jsonschema_error():
+    s = {"type": "integer"}
+    schema.check_schema(s)
+
+    s = {"type": "foobar"}
+    with pytest.raises(jsonschema.ValidationError, match=r".* is not valid under any of the given schemas.*"):
+        schema.check_schema(s)

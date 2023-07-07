@@ -46,6 +46,7 @@ tests = [
   "astropy>=5.0.4",
   "fsspec[http]>=2022.8.2",
   "gwcs>=0.18.3",
+  "jsonschema",
   "lz4>=0.10",
   "psutil",
   "pytest>=6",
