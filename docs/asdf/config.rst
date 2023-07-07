@@ -171,7 +171,7 @@ a schema, which can then be used to validate a file:
     >>> af.validate()
     Traceback (most recent call last):
     ...
-    jsonschema.ValidationError: 'foo' is a required property
+    jsonschema.exceptions.ValidationError: 'foo' is a required property
     ...
     >>> af["foo"] = "bar"
     >>> af.validate()
