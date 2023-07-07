@@ -520,7 +520,7 @@ def get_validator(
     Get a JSON schema validator object for the given schema.
 
     The additional *args and **kwargs are passed along to
-    `~asdf._jsonschema.Validator.validate`.
+    the Validator.
 
     Parameters
     ----------
@@ -548,7 +548,8 @@ def get_validator(
 
     Returns
     -------
-    validator : asdf._jsonschema.Validator
+    validator : Validator
+        A class that behaves similarly to a ``jsonschema.Validator``
     """
     if ctx is None:
         from .asdf import AsdfFile
