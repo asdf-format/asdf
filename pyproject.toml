@@ -31,6 +31,8 @@ dependencies = [
   "attrs>=17.4.0",
   "pyrsistent>=0.14.0,!=0.17.0,!=0.17.1,!=0.17.2",
   # end of vendorized jsonschema deps
+  # include jsonschema for all the downstream packages expecting us to provide this
+  "jsonschema>=4.0.1",
 ]
 [project.optional-dependencies]
 all = [
