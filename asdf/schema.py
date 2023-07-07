@@ -633,7 +633,7 @@ def validate(instance, ctx=None, schema=None, validators=None, reading=False, *a
     tag on the instance.
 
     The additional ``*args`` and ``**kwargs`` are passed along to
-    `~asdf._jsonschema.Validator.validate`.
+    ``Validator.validate``.
 
     Parameters
     ----------
