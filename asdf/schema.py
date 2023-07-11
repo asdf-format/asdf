@@ -194,6 +194,8 @@ class _ValidationContext:
     when exiting the outermost context.
     """
 
+    __slots__ = ["_depth", "_seen"]
+
     def __init__(self):
         self._depth = 0
         self._seen = set()
