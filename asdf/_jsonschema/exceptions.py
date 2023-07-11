@@ -8,6 +8,7 @@ from pprint import pformat
 from textwrap import dedent, indent
 import heapq
 import itertools
+import warnings
 
 import attr
 
@@ -182,7 +183,9 @@ class SchemaError(_Error):
 
 
 try:
-    from jsonschema import RefResolutionError
+    with warnings.catch_warnings():
+        warnings.simplefilter("ignore", DeprecationWarning)
+        from jsonschema import RefResolutionError
 except ImportError:
     @attr.s(hash=True)
     class RefResolutionError(Exception):
