@@ -36,24 +36,24 @@ repos:
         - tomli
 
 - repo: https://github.com/ikamensh/flynt/
-  rev: '0.77'
+  rev: '1.0.0'
   hooks:
     - id: flynt
       exclude: "asdf/extern/.*"
 
 - repo: https://github.com/astral-sh/ruff-pre-commit
-  rev: 'v0.0.276'
+  rev: 'v0.0.277'
   hooks:
     - id: ruff
       args: ["--fix"]
 
 - repo: https://github.com/psf/black
-  rev: 23.3.0
+  rev: 23.7.0
   hooks:
     - id: black
 
 - repo: https://github.com/asottile/blacken-docs
-  rev: '1.14.0'
+  rev: '1.15.0'
   hooks:
     - id: blacken-docs
 
