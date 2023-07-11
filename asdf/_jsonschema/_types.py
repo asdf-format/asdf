@@ -3,24 +3,14 @@ from __future__ import annotations
 import numbers
 import typing
 
-from pyrsistent import pmap
-from pyrsistent.typing import PMap
 import attr
 
 from asdf._jsonschema.exceptions import UndefinedTypeCheck
 
 
-# unfortunately, the type of pmap is generic, and if used as the attr.ib
-# converter, the generic type is presented to mypy, which then fails to match
-# the concrete type of a type checker mapping
-# this "do nothing" wrapper presents the correct information to mypy
-def _typed_pmap_converter(
-    init_val: typing.Mapping[
-        str,
-        typing.Callable[["TypeChecker", typing.Any], bool],
-    ],
-) -> PMap[str, typing.Callable[["TypeChecker", typing.Any], bool]]:
-    return pmap(init_val)
+def _as_dict(init):
+    init = init or {}
+    return dict(init)
 
 
 def is_array(checker, instance):
@@ -82,12 +72,7 @@ class TypeChecker:
             The initial mapping of types to their checking functions.
     """
 
-    _type_checkers: PMap[
-        str, typing.Callable[["TypeChecker", typing.Any], bool],
-    ] = attr.ib(
-        default=pmap(),
-        converter=_typed_pmap_converter,
-    )
+    _type_checkers = attr.ib(default={}, converter=_as_dict)
 
     def __repr__(self):
         types = ", ".join(repr(k) for k in sorted(self._type_checkers))
@@ -149,7 +134,8 @@ class TypeChecker:
 
                 A dictionary mapping types to their checking functions.
         """
-        type_checkers = self._type_checkers.update(definitions)
+        type_checkers = self._type_checkers.copy()
+        type_checkers.update(definitions)
         return attr.evolve(self, type_checkers=type_checkers)
 
     def remove(self, *types) -> "TypeChecker":
@@ -169,18 +155,17 @@ class TypeChecker:
                 if any given type is unknown to this object
         """
 
-        type_checkers = self._type_checkers
+        type_checkers = self._type_checkers.copy()
         for each in types:
             try:
-                type_checkers = type_checkers.remove(each)
+                del type_checkers[each]
             except KeyError:
                 raise UndefinedTypeCheck(each)
         return attr.evolve(self, type_checkers=type_checkers)
 
 
-draft3_type_checker = TypeChecker(
+draft4_type_checker = TypeChecker(
     {
-        "any": is_any,
         "array": is_array,
         "boolean": is_bool,
         "integer": is_integer,
@@ -190,14 +175,3 @@ draft3_type_checker = TypeChecker(
         "string": is_string,
     },
 )
-draft4_type_checker = draft3_type_checker.remove("any")
-draft6_type_checker = draft4_type_checker.redefine(
-    "integer",
-    lambda checker, instance: (
-        is_integer(checker, instance)
-        or isinstance(instance, float) and instance.is_integer()
-    ),
-)
-draft7_type_checker = draft6_type_checker
-draft201909_type_checker = draft7_type_checker
-draft202012_type_checker = draft201909_type_checker

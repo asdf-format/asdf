@@ -8,7 +8,6 @@ from collections.abc import Mapping, Sequence
 from functools import lru_cache
 from operator import methodcaller
 from urllib.parse import unquote, urldefrag, urljoin, urlsplit
-from urllib.request import urlopen
 from warnings import warn
 import contextlib
 import json
@@ -16,7 +15,6 @@ import reprlib
 import typing
 import warnings
 
-from pyrsistent import m
 import attr
 
 from asdf._jsonschema import (
@@ -32,7 +30,6 @@ _UNSET = _utils.Unset()
 
 _VALIDATORS: dict[str, typing.Any] = {}
 _META_SCHEMAS = _utils.URIDict()
-_VOCABULARIES: list[tuple[str, typing.Any]] = []
 
 
 def __getattr__(name):
@@ -87,7 +84,7 @@ def validates(version):
     def _validates(cls):
         _VALIDATORS[version] = cls
         meta_schema_id = cls.ID_OF(cls.META_SCHEMA)
-        _META_SCHEMAS[meta_schema_id] = cls
+        _META_SCHEMAS[urlsplit(meta_schema_id).geturl()] = cls
         return cls
     return _validates
 
@@ -102,23 +99,17 @@ def _id_of(schema):
 
 
 def _store_schema_list():
-    if not _VOCABULARIES:
-        package = _utils.resources.files(__package__)
-        for version in package.joinpath("schemas", "vocabularies").iterdir():
-            for path in version.iterdir():
-                vocabulary = json.loads(path.read_text())
-                _VOCABULARIES.append((vocabulary["$id"], vocabulary))
     return [
         (id, validator.META_SCHEMA) for id, validator in _META_SCHEMAS.items()
-    ] + _VOCABULARIES
+    ]
 
 
 def create(
     meta_schema,
     validators=(),
     version=None,
-    type_checker=_types.draft202012_type_checker,
-    format_checker=_format.draft202012_format_checker,
+    type_checker=_types.draft4_type_checker,
+    format_checker=_format.draft4_format_checker,
     id_of=_id_of,
     applicable_validators=methodcaller("items"),
 ):
@@ -428,38 +419,6 @@ def extend(
     )
 
 
-Draft3Validator = create(
-    meta_schema=_utils.load_schema("draft3"),
-    validators={
-        "$ref": _validators.ref,
-        "additionalItems": _validators.additionalItems,
-        "additionalProperties": _validators.additionalProperties,
-        "dependencies": _legacy_validators.dependencies_draft3,
-        "disallow": _legacy_validators.disallow_draft3,
-        "divisibleBy": _validators.multipleOf,
-        "enum": _validators.enum,
-        "extends": _legacy_validators.extends_draft3,
-        "format": _validators.format,
-        "items": _legacy_validators.items_draft3_draft4,
-        "maxItems": _validators.maxItems,
-        "maxLength": _validators.maxLength,
-        "maximum": _legacy_validators.maximum_draft3_draft4,
-        "minItems": _validators.minItems,
-        "minLength": _validators.minLength,
-        "minimum": _legacy_validators.minimum_draft3_draft4,
-        "pattern": _validators.pattern,
-        "patternProperties": _validators.patternProperties,
-        "properties": _legacy_validators.properties_draft3,
-        "type": _legacy_validators.type_draft3,
-        "uniqueItems": _validators.uniqueItems,
-    },
-    type_checker=_types.draft3_type_checker,
-    format_checker=_format.draft3_format_checker,
-    version="draft3",
-    id_of=_legacy_validators.id_of_ignore_ref(property="id"),
-    applicable_validators=_legacy_validators.ignore_ref_siblings,
-)
-
 Draft4Validator = create(
     meta_schema=_utils.load_schema("draft4"),
     validators={
@@ -497,183 +456,8 @@ Draft4Validator = create(
     applicable_validators=_legacy_validators.ignore_ref_siblings,
 )
 
-Draft6Validator = create(
-    meta_schema=_utils.load_schema("draft6"),
-    validators={
-        "$ref": _validators.ref,
-        "additionalItems": _validators.additionalItems,
-        "additionalProperties": _validators.additionalProperties,
-        "allOf": _validators.allOf,
-        "anyOf": _validators.anyOf,
-        "const": _validators.const,
-        "contains": _legacy_validators.contains_draft6_draft7,
-        "dependencies": _legacy_validators.dependencies_draft4_draft6_draft7,
-        "enum": _validators.enum,
-        "exclusiveMaximum": _validators.exclusiveMaximum,
-        "exclusiveMinimum": _validators.exclusiveMinimum,
-        "format": _validators.format,
-        "items": _legacy_validators.items_draft6_draft7_draft201909,
-        "maxItems": _validators.maxItems,
-        "maxLength": _validators.maxLength,
-        "maxProperties": _validators.maxProperties,
-        "maximum": _validators.maximum,
-        "minItems": _validators.minItems,
-        "minLength": _validators.minLength,
-        "minProperties": _validators.minProperties,
-        "minimum": _validators.minimum,
-        "multipleOf": _validators.multipleOf,
-        "not": _validators.not_,
-        "oneOf": _validators.oneOf,
-        "pattern": _validators.pattern,
-        "patternProperties": _validators.patternProperties,
-        "properties": _validators.properties,
-        "propertyNames": _validators.propertyNames,
-        "required": _validators.required,
-        "type": _validators.type,
-        "uniqueItems": _validators.uniqueItems,
-    },
-    type_checker=_types.draft6_type_checker,
-    format_checker=_format.draft6_format_checker,
-    version="draft6",
-    id_of=_legacy_validators.id_of_ignore_ref(),
-    applicable_validators=_legacy_validators.ignore_ref_siblings,
-)
 
-Draft7Validator = create(
-    meta_schema=_utils.load_schema("draft7"),
-    validators={
-        "$ref": _validators.ref,
-        "additionalItems": _validators.additionalItems,
-        "additionalProperties": _validators.additionalProperties,
-        "allOf": _validators.allOf,
-        "anyOf": _validators.anyOf,
-        "const": _validators.const,
-        "contains": _legacy_validators.contains_draft6_draft7,
-        "dependencies": _legacy_validators.dependencies_draft4_draft6_draft7,
-        "enum": _validators.enum,
-        "exclusiveMaximum": _validators.exclusiveMaximum,
-        "exclusiveMinimum": _validators.exclusiveMinimum,
-        "format": _validators.format,
-        "if": _validators.if_,
-        "items": _legacy_validators.items_draft6_draft7_draft201909,
-        "maxItems": _validators.maxItems,
-        "maxLength": _validators.maxLength,
-        "maxProperties": _validators.maxProperties,
-        "maximum": _validators.maximum,
-        "minItems": _validators.minItems,
-        "minLength": _validators.minLength,
-        "minProperties": _validators.minProperties,
-        "minimum": _validators.minimum,
-        "multipleOf": _validators.multipleOf,
-        "not": _validators.not_,
-        "oneOf": _validators.oneOf,
-        "pattern": _validators.pattern,
-        "patternProperties": _validators.patternProperties,
-        "properties": _validators.properties,
-        "propertyNames": _validators.propertyNames,
-        "required": _validators.required,
-        "type": _validators.type,
-        "uniqueItems": _validators.uniqueItems,
-    },
-    type_checker=_types.draft7_type_checker,
-    format_checker=_format.draft7_format_checker,
-    version="draft7",
-    id_of=_legacy_validators.id_of_ignore_ref(),
-    applicable_validators=_legacy_validators.ignore_ref_siblings,
-)
-
-Draft201909Validator = create(
-    meta_schema=_utils.load_schema("draft2019-09"),
-    validators={
-        "$recursiveRef": _legacy_validators.recursiveRef,
-        "$ref": _validators.ref,
-        "additionalItems": _validators.additionalItems,
-        "additionalProperties": _validators.additionalProperties,
-        "allOf": _validators.allOf,
-        "anyOf": _validators.anyOf,
-        "const": _validators.const,
-        "contains": _validators.contains,
-        "dependentRequired": _validators.dependentRequired,
-        "dependentSchemas": _validators.dependentSchemas,
-        "enum": _validators.enum,
-        "exclusiveMaximum": _validators.exclusiveMaximum,
-        "exclusiveMinimum": _validators.exclusiveMinimum,
-        "format": _validators.format,
-        "if": _validators.if_,
-        "items": _legacy_validators.items_draft6_draft7_draft201909,
-        "maxItems": _validators.maxItems,
-        "maxLength": _validators.maxLength,
-        "maxProperties": _validators.maxProperties,
-        "maximum": _validators.maximum,
-        "minItems": _validators.minItems,
-        "minLength": _validators.minLength,
-        "minProperties": _validators.minProperties,
-        "minimum": _validators.minimum,
-        "multipleOf": _validators.multipleOf,
-        "not": _validators.not_,
-        "oneOf": _validators.oneOf,
-        "pattern": _validators.pattern,
-        "patternProperties": _validators.patternProperties,
-        "properties": _validators.properties,
-        "propertyNames": _validators.propertyNames,
-        "required": _validators.required,
-        "type": _validators.type,
-        "unevaluatedItems": _legacy_validators.unevaluatedItems_draft2019,
-        "unevaluatedProperties": _validators.unevaluatedProperties,
-        "uniqueItems": _validators.uniqueItems,
-    },
-    type_checker=_types.draft201909_type_checker,
-    format_checker=_format.draft201909_format_checker,
-    version="draft2019-09",
-)
-
-Draft202012Validator = create(
-    meta_schema=_utils.load_schema("draft2020-12"),
-    validators={
-        "$dynamicRef": _validators.dynamicRef,
-        "$ref": _validators.ref,
-        "additionalItems": _validators.additionalItems,
-        "additionalProperties": _validators.additionalProperties,
-        "allOf": _validators.allOf,
-        "anyOf": _validators.anyOf,
-        "const": _validators.const,
-        "contains": _validators.contains,
-        "dependentRequired": _validators.dependentRequired,
-        "dependentSchemas": _validators.dependentSchemas,
-        "enum": _validators.enum,
-        "exclusiveMaximum": _validators.exclusiveMaximum,
-        "exclusiveMinimum": _validators.exclusiveMinimum,
-        "format": _validators.format,
-        "if": _validators.if_,
-        "items": _validators.items,
-        "maxItems": _validators.maxItems,
-        "maxLength": _validators.maxLength,
-        "maxProperties": _validators.maxProperties,
-        "maximum": _validators.maximum,
-        "minItems": _validators.minItems,
-        "minLength": _validators.minLength,
-        "minProperties": _validators.minProperties,
-        "minimum": _validators.minimum,
-        "multipleOf": _validators.multipleOf,
-        "not": _validators.not_,
-        "oneOf": _validators.oneOf,
-        "pattern": _validators.pattern,
-        "patternProperties": _validators.patternProperties,
-        "prefixItems": _validators.prefixItems,
-        "properties": _validators.properties,
-        "propertyNames": _validators.propertyNames,
-        "required": _validators.required,
-        "type": _validators.type,
-        "unevaluatedItems": _validators.unevaluatedItems,
-        "unevaluatedProperties": _validators.unevaluatedProperties,
-        "uniqueItems": _validators.uniqueItems,
-    },
-    type_checker=_types.draft202012_type_checker,
-    format_checker=_format.draft202012_format_checker,
-    version="draft2020-12",
-)
-
-_LATEST_VERSION = Draft202012Validator
+_LATEST_VERSION = Draft4Validator
 
 
 class RefResolver:
@@ -724,12 +508,14 @@ class RefResolver:
         self,
         base_uri,
         referrer,
-        store=m(),
+        store=None,
         cache_remote=True,
         handlers=(),
         urljoin_cache=None,
         remote_cache=None,
     ):
+        store = store or {}
+
         if urljoin_cache is None:
             urljoin_cache = lru_cache(1024)(urljoin)
         if remote_cache is None:
@@ -979,15 +765,6 @@ class RefResolver:
         retrieving the document at the specified URI it will be saved in
         the store if :attr:`cache_remote` is True.
 
-        .. note::
-
-            If the requests_ library is present, ``asdf._jsonschema`` will use it to
-            request the remote ``uri``, so that the correct encoding is
-            detected and used.
-
-            If it isn't, or if the scheme of the ``uri`` is not ``http`` or
-            ``https``, UTF-8 is assumed.
-
         Arguments:
 
             uri (str):
@@ -1000,23 +777,9 @@ class RefResolver:
 
         .. _requests: https://pypi.org/project/requests/
         """
-        try:
-            import requests
-        except ImportError:
-            requests = None
-
         scheme = urlsplit(uri).scheme
 
-        if scheme in self.handlers:
-            result = self.handlers[scheme](uri)
-        elif scheme in ["http", "https"] and requests:
-            # Requests has support for detecting the correct encoding of
-            # json over http
-            result = requests.get(uri).json()
-        else:
-            # Otherwise, pass off to urllib and assume utf-8
-            with urlopen(uri) as url:
-                result = json.loads(url.read().decode("utf-8"))
+        result = self.handlers[scheme](uri)
 
         if self.cache_remote:
             self.store[uri] = result
@@ -1056,7 +819,7 @@ def validate(instance, schema, cls=None, *args, **kwargs):
     """
     Validate an instance under the given schema.
 
-        >>> validate([2, 3, 4], {"maxItems": 2})
+        >>> validate([2, 3, 4], {"maxItems": 2})  # doctest: +IGNORE_EXCEPTION_DETAIL
         Traceback (most recent call last):
             ...
         ValidationError: [2, 3, 4] is too long
@@ -1069,7 +832,7 @@ def validate(instance, schema, cls=None, *args, **kwargs):
     if you intend to validate multiple instances with
     the same schema, you likely would prefer using the
     `asdf._jsonschema.protocols.Validator.validate` method directly on a
-    specific validator (e.g. ``Draft20212Validator.validate``).
+    specific validator (e.g. ``Draft4Validator.validate``).
 
 
     Arguments:

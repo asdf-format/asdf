@@ -1,5 +1,5 @@
 """
-typing.Protocol classes for jsonschema interfaces.
+typing.Protocol classes for asdf._jsonschema interfaces.
 """
 
 # for reference material on Protocols, see
@@ -24,9 +24,9 @@ else:
     from typing_extensions import Protocol, runtime_checkable
 
 # in order for Sphinx to resolve references accurately from type annotations,
-# it needs to see names like `jsonschema.TypeChecker`
+# it needs to see names like `asdf._jsonschema.TypeChecker`
 # therefore, only import at type-checking time (to avoid circular references),
-# but use `jsonschema` for any types which will otherwise not be resolvable
+# but use `asdf._jsonschema` for any types which will otherwise not be resolvable
 if TYPE_CHECKING:
     import asdf._jsonschema
     import asdf._jsonschema.validators
@@ -158,8 +158,9 @@ class Validator(Protocol):
 
             whether the instance is valid or not
 
+        >>> from asdf._jsonschema import Draft4Validator
         >>> schema = {"maxItems" : 2}
-        >>> Draft202012Validator(schema).is_valid([2, 3, 4])
+        >>> Draft4Validator(schema).is_valid([2, 3, 4])
         False
         """
 
@@ -167,12 +168,13 @@ class Validator(Protocol):
         r"""
         Lazily yield each of the validation errors in the given instance.
 
+        >>> from asdf._jsonschema import Draft4Validator
         >>> schema = {
         ...     "type" : "array",
         ...     "items" : {"enum" : [1, 2, 3]},
         ...     "maxItems" : 2,
         ... }
-        >>> v = Draft202012Validator(schema)
+        >>> v = Draft4Validator(schema)
         >>> for error in sorted(v.iter_errors([2, 3, 4]), key=str):
         ...     print(error.message)
         4 is not one of [1, 2, 3]
@@ -194,10 +196,11 @@ class Validator(Protocol):
 
                 if the instance is invalid
 
+        >>> from asdf._jsonschema import Draft4Validator
         >>> schema = {"maxItems" : 2}
-        >>> Draft202012Validator(schema).validate([2, 3, 4])
+        >>> Draft4Validator(schema).validate([2, 3, 4])  # doctest: +IGNORE_EXCEPTION_DETAIL
         Traceback (most recent call last):
-            ...
+          ...
         ValidationError: [2, 3, 4] is too long
         """
 
@@ -209,9 +212,10 @@ class Validator(Protocol):
         validator with a different schema but with the same :kw:`$ref`
         resolution behavior.
 
-        >>> validator = Draft202012Validator({})
+        >>> from asdf._jsonschema import Draft4Validator
+        >>> validator = Draft4Validator({})
         >>> validator.evolve(schema={"type": "number"})
-        Draft202012Validator(schema={'type': 'number'}, format_checker=None)
+        Draft4Validator(schema={'type': 'number'}, format_checker=None)
 
         The returned object satisfies the validator protocol, but may not
         be of the same concrete class! In particular this occurs
@@ -219,7 +223,7 @@ class Validator(Protocol):
         :kw:`$schema` than this one (i.e. for a different draft).
 
         >>> validator.evolve(
-        ...     schema={"$schema": Draft7Validator.META_SCHEMA["$id"]}
+        ...     schema={"$schema": Draft4Validator.META_SCHEMA["id"]}
         ... )
-        Draft7Validator(schema=..., format_checker=None)
+        Draft4Validator(schema=..., format_checker=None)
         """

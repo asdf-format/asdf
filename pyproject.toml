@@ -29,9 +29,6 @@ dependencies = [
   "semantic_version>=2.8",
   # for vendorized jsonschema
   "attrs>=17.4.0",
-  # prior versions compatible with jsonschema raise deprecation
-  # warnings for collections.abc
-  "pyrsistent>0.17.2",
   # end of vendorized jsonschema deps
   # include jsonschema for all the downstream packages expecting us to provide this
   "jsonschema>=4.7",
@@ -79,6 +76,7 @@ requires = [
 
 [tool.setuptools.packages.find]
 include = ['asdf*', 'pytest_asdf*']
+exclude = ['asdf/_jsonschema/json/*']
 
 [tool.setuptools.package-data]
 'asdf.commands.tests.data' = ["*"]
@@ -119,7 +117,7 @@ filterwarnings = [
 ]
 # Configuration for pytest-doctestplus
 text_file_format = 'rst'
-addopts = '--color=yes --doctest-rst'
+addopts = '--color=yes --doctest-rst --jsonschema'
 
 [tool.coverage.run]
 omit = [

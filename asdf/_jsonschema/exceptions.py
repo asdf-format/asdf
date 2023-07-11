@@ -16,7 +16,10 @@ from asdf._jsonschema import _utils
 WEAK_MATCHES: frozenset[str] = frozenset(["anyOf", "oneOf"])
 STRONG_MATCHES: frozenset[str] = frozenset()
 
-_unset = _utils.Unset()
+try:
+    from jsonschema.exceptions import _unset
+except ImportError:
+    _unset = _utils.Unset()
 
 
 class _Error(Exception):
