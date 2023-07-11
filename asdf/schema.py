@@ -535,7 +535,7 @@ def get_validator(
     Get a JSON schema validator object for the given schema.
 
     The additional *args and **kwargs are passed along to
-    `~jsonschema.Validator.validate`.
+    `~jsonschema.protocols.Validator.validate`.
 
     Parameters
     ----------
@@ -646,7 +646,7 @@ def validate(instance, ctx=None, schema=None, validators=None, reading=False, *a
     tag on the instance.
 
     The additional ``*args`` and ``**kwargs`` are passed along to
-    `~jsonschema.Validator.validate`.
+    `~jsonschema.protocols.Validator.validate`.
 
     Parameters
     ----------
