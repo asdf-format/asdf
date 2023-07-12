@@ -134,7 +134,7 @@ omit = [
     'asdf/version.*',
     'asdf/compat*',
     'asdf/extern*',
-    'asdf/_jsonschema*',
+    'asdf/_jsonschema/**',
     # And again for running against installed version
     '*/asdf/_astropy_init*',
     '*/asdf/conftest*',
@@ -149,7 +149,7 @@ omit = [
     '*/asdf/version.*',
     '*/asdf/compat*',
     '*/asdf/extern*',
-    '*/asdf/_jsonschema*',
+    '*/asdf/_jsonschema/**',
 ]
 
 [tool.coverage.report]
