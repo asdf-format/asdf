@@ -22,15 +22,16 @@ dependencies = [
   "asdf-standard>=1.0.1",
   "asdf-transform-schemas>=0.3",
   "asdf-unit-schemas>=0.1",
+  "attrs>=20.1", # end of vendorized jsonschema deps include jsonschema for all the downstream packages expecting us to provide this
   "importlib-metadata>=4.11.4",
   'importlib_resources>=3; python_version < "3.9"',
   "jmespath>=0.6.2",
-  "jsonschema<4.18,>=4.0.1", # jsonschema 4.18 contains incompatible changes: https://github.com/asdf-format/asdf/issues/1485
-  "numpy>=1.20",
-  'numpy<1.25,>=1.20; python_version < "3.9"',
+  "jsonschema>=4.8",
+  "numpy>=1.22",
+  'numpy<1.25,>=1.22; python_version < "3.9"',
   "packaging>=19",
   "pyyaml>=5.4.1",
-  "semantic_version>=2.8",
+  "semantic_version>=2.8", # for vendorized jsonschema
 ]
 [project.optional-dependencies]
 all = [
@@ -44,6 +45,7 @@ tests = [
   "astropy>=5.0.4",
   "fsspec[http]>=2022.8.2",
   "gwcs>=0.18.3",
+  "jsonschema",
   "lz4>=0.10",
   "psutil",
   "pytest>=6",
@@ -72,6 +74,7 @@ requires = [
 
 [tool.setuptools.packages.find]
 include = ['asdf*', 'pytest_asdf*']
+exclude = ['asdf/_jsonschema/json/*']
 
 [tool.setuptools.package-data]
 'asdf.commands.tests.data' = ["*"]
@@ -91,6 +94,7 @@ force-exclude = '''
     | \.pytest_cache
     | \.tox
     | asdf/extern
+    | asdf/_jsonschema
     | build
     | dist
   )/
@@ -112,7 +116,7 @@ filterwarnings = [
 ]
 # Configuration for pytest-doctestplus
 text_file_format = 'rst'
-addopts = '--color=yes --doctest-rst'
+addopts = '--color=yes --doctest-rst --jsonschema'
 
 [tool.coverage.run]
 omit = [
@@ -129,6 +133,7 @@ omit = [
     'asdf/version.*',
     'asdf/compat*',
     'asdf/extern*',
+    'asdf/_jsonschema/**',
     # And again for running against installed version
     '*/asdf/_astropy_init*',
     '*/asdf/conftest*',
@@ -143,6 +148,7 @@ omit = [
     '*/asdf/version.*',
     '*/asdf/compat*',
     '*/asdf/extern*',
+    '*/asdf/_jsonschema/**',
 ]
 
 [tool.coverage.report]
@@ -187,7 +193,7 @@ extend-ignore = [
     "TRY301", # Abstract raise to an inner function
     "TRY400", # Use logging.exception instead of logging.error
 ]
-extend-exclude = ["asdf/extern/*", "docs/*"]
+extend-exclude = ["asdf/extern/*", "asdf/_jsonschema/*", "docs/*"]
 
 [tool.ruff.per-file-ignores]
 "test_*.py" = ["S101"]
@@ -195,10 +201,10 @@ extend-exclude = ["asdf/extern/*", "docs/*"]
 "compatibility_tests/common.py" = ["S101"]
 
 [tool.flynt]
-exclude = ["asdf/extern/*"]
+exclude = ["asdf/extern/*", "asdf/_jsonschema/*"]
 
 [tool.codespell]
-skip="*.pdf,*.fits,*.asdf,.tox,asdf/extern,build,./tags,.git,docs/_build"
+skip="*.pdf,*.asdf,.tox,asdf/extern,asdf/_jsonschema,build,./tags,.git,docs/_build"
 ignore-words-list="""
 fo,
 """

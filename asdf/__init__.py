@@ -19,7 +19,7 @@ __all__ = [
 ]
 
 
-from jsonschema import ValidationError
+from asdf._jsonschema import ValidationError
 
 from ._convenience import info
 from ._types import CustomType

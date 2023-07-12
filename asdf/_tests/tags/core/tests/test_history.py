@@ -3,11 +3,11 @@ import fractions
 import os
 
 import pytest
-from jsonschema import ValidationError
 
 import asdf
 from asdf import _types as types
 from asdf import util
+from asdf._jsonschema import ValidationError
 from asdf._tests import _helpers as helpers
 from asdf._tests._helpers import assert_no_warnings, yaml_to_asdf
 from asdf.exceptions import AsdfDeprecationWarning, AsdfWarning

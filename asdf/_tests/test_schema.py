@@ -1,9 +1,9 @@
 import io
 from datetime import datetime
 
+import jsonschema
 import numpy as np
 import pytest
-from jsonschema import ValidationError
 from numpy.testing import assert_array_equal
 
 import asdf
@@ -11,6 +11,7 @@ import asdf.testing.helpers
 from asdf import _resolver as resolver
 from asdf import _types as types
 from asdf import config_context, constants, extension, get_config, schema, tagged, util, yamlutil
+from asdf._jsonschema import ValidationError
 from asdf._tests import _helpers as helpers
 from asdf._tests.objects import CustomExtension
 from asdf.exceptions import AsdfConversionWarning, AsdfDeprecationWarning, AsdfWarning
@@ -1191,3 +1192,12 @@ tag: asdf://somewhere.org/tags/bar-*
         schema.validate(instance, schema=schema_tree)
         with pytest.raises(ValidationError, match=r"mismatched tags, wanted .*, got .*"):
             schema.validate(tagged.TaggedDict(tag="asdf://somewhere.org/tags/foo-1.0"), schema=schema_tree)
+
+
+def test_catch_jsonschema_error():
+    s = {"type": "integer"}
+    schema.check_schema(s)
+
+    s = {"type": "foobar"}
+    with pytest.raises(jsonschema.ValidationError, match=r".* is not valid under any of the given schemas.*"):
+        schema.check_schema(s)
