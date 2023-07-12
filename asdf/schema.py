@@ -563,6 +563,19 @@ def _load_schema_cached(url, resolver, resolve_references, resolve_local_refs):
     return schema
 
 
+def _register_meta_schema(meta_schema_id):
+    if not _USE_REFERENCING:
+        return
+    meta_schema_id = meta_schema_id.rstrip("#")
+    if meta_schema_id in referencing.jsonschema._SPECIFICATIONS:
+        return
+    referencing.jsonschema._SPECIFICATIONS = referencing.jsonschema._SPECIFICATIONS.combine(
+        referencing.jsonschema.Registry(
+            {meta_schema_id: referencing.jsonschema.Resource.opaque(referencing.jsonschema.DRAFT4)}
+        )
+    )
+
+
 class _Validator:
     """
     ASDF schema validator.  The validate method quacks like jsonschema.Validator.validate, but
@@ -649,6 +662,11 @@ class _Validator:
                         if _USE_REFERENCING:
                             tag_schema_resource = self._registry.get_or_retrieve(schema_uri).value
                             self._registry = tag_schema_resource @ self._registry
+                            meta_schema_id = tag_schema_resource.contents.get("$schema")
+                            if meta_schema_id is not None:
+                                _register_meta_schema(meta_schema_id)
+
+                            # if tag_schema_resource.content
                             v = self._create_validator(tag_schema_resource.contents)
                             v._resolver = self._registry.resolver_with_root(tag_schema_resource)
                             yield from v.iter_errors(node)
