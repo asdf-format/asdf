@@ -1,3 +1,13 @@
+2.15.1 (unreleased)
+-------------------
+
+The ASDF Standard is at v1.6.0
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+- Include jsonschema validator in asdf package. Remove jsonschema
+  python library upper pin. The external jsonschema will be dropped
+  as a dependency in an upcoming asdf release. [#1587]
+
 2.15.0 (2023-03-28)
 -------------------
 
