@@ -28,7 +28,7 @@ dependencies = [
   "pyyaml>=5.4.1",
   "semantic_version>=2.8",
   # for vendorized jsonschema
-  "attrs>=18.1.0",
+  "attrs>=20.1.0",
   # end of vendorized jsonschema deps
   # include jsonschema for all the downstream packages expecting us to provide this
   "jsonschema>=4.8",
