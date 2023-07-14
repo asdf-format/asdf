@@ -3,9 +3,9 @@ import numpy as np
 import asdf
 
 
-def test_1553(tmp_path):
+def test_asdf_info_should_not_load_arrays(tmp_path):
     """
-    AsdfFile.info loads array data
+    AsdfFile.info should not load array data
 
     https://github.com/asdf-format/asdf/issues/1553
     """
