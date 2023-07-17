@@ -2149,50 +2149,6 @@ class TestRefResolver(TestCase):
         with self.resolver.resolving("cached_ref#/foo") as resolved:
             self.assertEqual(resolved, 12)
 
-    def test_it_retrieves_unstored_refs_via_requests(self):
-        ref = "http://bar#baz"
-        schema = {"baz": 12}
-
-        if "requests" in sys.modules:
-            self.addCleanup(
-                sys.modules.__setitem__, "requests", sys.modules["requests"],
-            )
-        sys.modules["requests"] = ReallyFakeRequests({"http://bar": schema})
-
-        with self.resolver.resolving(ref) as resolved:
-            self.assertEqual(resolved, 12)
-
-    def test_it_retrieves_unstored_refs_via_urlopen(self):
-        ref = "http://bar#baz"
-        schema = {"baz": 12}
-
-        if "requests" in sys.modules:
-            self.addCleanup(
-                sys.modules.__setitem__, "requests", sys.modules["requests"],
-            )
-        sys.modules["requests"] = None
-
-        @contextmanager
-        def fake_urlopen(url):
-            self.assertEqual(url, "http://bar")
-            yield BytesIO(json.dumps(schema).encode("utf8"))
-
-        self.addCleanup(setattr, validators, "urlopen", validators.urlopen)
-        validators.urlopen = fake_urlopen
-
-        with self.resolver.resolving(ref) as resolved:
-            pass
-        self.assertEqual(resolved, 12)
-
-    def test_it_retrieves_local_refs_via_urlopen(self):
-        with tempfile.NamedTemporaryFile(delete=False, mode="wt") as tempf:
-            self.addCleanup(os.remove, tempf.name)
-            json.dump({"foo": "bar"}, tempf)
-
-        ref = "file://{}#foo".format(pathname2url(tempf.name))
-        with self.resolver.resolving(ref) as resolved:
-            self.assertEqual(resolved, "bar")
-
     def test_it_can_construct_a_base_uri_from_a_schema(self):
         schema = {"id": "foo"}
         resolver = validators.RefResolver.from_schema(

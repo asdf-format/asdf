@@ -8,7 +8,6 @@ from collections.abc import Mapping, Sequence
 from functools import lru_cache
 from operator import methodcaller
 from urllib.parse import unquote, urldefrag, urljoin, urlsplit
-from urllib.request import urlopen
 from warnings import warn
 import contextlib
 import json
@@ -980,15 +979,6 @@ class RefResolver:
         retrieving the document at the specified URI it will be saved in
         the store if :attr:`cache_remote` is True.
 
-        .. note::
-
-            If the requests_ library is present, ``asdf._jsonschema`` will use it to
-            request the remote ``uri``, so that the correct encoding is
-            detected and used.
-
-            If it isn't, or if the scheme of the ``uri`` is not ``http`` or
-            ``https``, UTF-8 is assumed.
-
         Arguments:
 
             uri (str):
@@ -1001,23 +991,9 @@ class RefResolver:
 
         .. _requests: https://pypi.org/project/requests/
         """
-        try:
-            import requests
-        except ImportError:
-            requests = None
-
         scheme = urlsplit(uri).scheme
 
-        if scheme in self.handlers:
-            result = self.handlers[scheme](uri)
-        elif scheme in ["http", "https"] and requests:
-            # Requests has support for detecting the correct encoding of
-            # json over http
-            result = requests.get(uri).json()
-        else:
-            # Otherwise, pass off to urllib and assume utf-8
-            with urlopen(uri) as url:
-                result = json.loads(url.read().decode("utf-8"))
+        result = self.handlers[scheme](uri)
 
         if self.cache_remote:
             self.store[uri] = result
