@@ -50,17 +50,6 @@ def test_no_warning_nan_array(tmp_path):
         assert_roundtrip_tree(tree, tmp_path)
 
 
-def test_warning_deprecated_open(tmp_path):
-    tmpfile = str(tmp_path / "foo.asdf")
-
-    tree = {"foo": 42, "bar": "hello"}
-    with asdf.AsdfFile(tree) as af:
-        af.write_to(tmpfile)
-
-    with pytest.warns(AsdfDeprecationWarning), asdf.AsdfFile.open(tmpfile) as af:
-        assert_tree_match(tree, af.tree)
-
-
 @pytest.mark.skipif(
     not sys.platform.startswith("win") and getpass.getuser() == "root",
     reason="Cannot make file read-only if user is root",

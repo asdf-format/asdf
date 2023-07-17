@@ -930,55 +930,6 @@ class AsdfFile:
                 generic_file.close()
             raise
 
-    @classmethod
-    def open(
-        cls,
-        fd,
-        uri=None,
-        mode="r",
-        validate_checksums=False,
-        extensions=None,
-        ignore_version_mismatch=True,
-        ignore_unrecognized_tag=False,
-        _force_raw_types=False,
-        copy_arrays=False,
-        lazy_load=True,
-        custom_schema=None,
-        strict_extension_check=False,
-        ignore_missing_extensions=False,
-        **kwargs,
-    ):
-        """
-        Open an existing ASDF file.
-
-        .. deprecated:: 2.2
-            Use `asdf.open` instead.
-        """
-
-        warnings.warn(
-            "The method AsdfFile.open has been deprecated and will be removed "
-            "in asdf-3.0. Use the top-level asdf.open function instead.",
-            AsdfDeprecationWarning,
-        )
-
-        return open_asdf(
-            fd,
-            uri=uri,
-            mode=mode,
-            validate_checksums=validate_checksums,
-            extensions=extensions,
-            ignore_version_mismatch=ignore_version_mismatch,
-            ignore_unrecognized_tag=ignore_unrecognized_tag,
-            _force_raw_types=_force_raw_types,
-            copy_arrays=copy_arrays,
-            lazy_load=lazy_load,
-            custom_schema=custom_schema,
-            strict_extension_check=strict_extension_check,
-            ignore_missing_extensions=ignore_missing_extensions,
-            _compat=True,
-            **kwargs,
-        )
-
     def _write_tree(self, tree, fd, pad_blocks):
         fd.write(constants.ASDF_MAGIC)
         fd.write(b" ")
