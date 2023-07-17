@@ -33,22 +33,18 @@ class ExtensionManager:
                 if tag_def.tag_uri not in self._tag_defs_by_tag:
                     self._tag_defs_by_tag[tag_def.tag_uri] = tag_def
             for converter in extension.converters:
-                # If a converter's tags do not actually overlap with
-                # the extension tag list, then there's no reason to
-                # use it.
-                if len(converter.tags) > 0:
-                    for tag in converter.tags:
-                        if tag not in self._converters_by_tag:
-                            self._converters_by_tag[tag] = converter
-                    for typ in converter.types:
-                        if isinstance(typ, str):
-                            if typ not in self._converters_by_type:
-                                self._converters_by_type[typ] = converter
-                        else:
-                            type_class_name = get_class_name(typ, instance=False)
-                            if typ not in self._converters_by_type and type_class_name not in self._converters_by_type:
-                                self._converters_by_type[typ] = converter
-                                self._converters_by_type[type_class_name] = converter
+                for tag in converter.tags:
+                    if tag not in self._converters_by_tag:
+                        self._converters_by_tag[tag] = converter
+                for typ in converter.types:
+                    if isinstance(typ, str):
+                        if typ not in self._converters_by_type:
+                            self._converters_by_type[typ] = converter
+                    else:
+                        type_class_name = get_class_name(typ, instance=False)
+                        if typ not in self._converters_by_type and type_class_name not in self._converters_by_type:
+                            self._converters_by_type[typ] = converter
+                            self._converters_by_type[type_class_name] = converter
 
             validators.update(extension.validators)
 

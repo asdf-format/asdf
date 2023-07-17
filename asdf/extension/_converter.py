@@ -76,9 +76,11 @@ class Converter(abc.ABC):
 
         Returns
         -------
-        str
+        str or None
             The selected tag.  Should be one of the tags passed
-            to this method in the `tags` parameter.
+            to this method in the `tags` parameter.  If `None`
+            the result of ``to_yaml_tree`` will be used to look
+            up the next converter for this object.
         """
         return tags[0]
 
@@ -208,6 +210,11 @@ class ConverterProxy(Converter):
         self._tags = sorted(relevant_tags)
 
         self._types = []
+
+        if not len(self._tags) and not hasattr(delegate, "select_tag"):
+            # this converter supports no tags so don't inspect the types
+            return
+
         for typ in delegate.types:
             if isinstance(typ, (str, type)):
                 self._types.append(typ)
@@ -252,8 +259,8 @@ class ConverterProxy(Converter):
 
         Returns
         -------
-        str
-            Selected tag.
+        str or None
+            Selected tag or `None` to defer conversion.
         """
         method = getattr(self._delegate, "select_tag", None)
         if method is None:

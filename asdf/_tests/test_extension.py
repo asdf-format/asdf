@@ -18,6 +18,7 @@ from asdf.extension import (
     get_cached_extension_manager,
 )
 from asdf.extension._legacy import BuiltinExtension, _AsdfExtension, get_cached_asdf_extension_list
+from asdf.testing.helpers import roundtrip_object
 
 
 def test_builtin_extension():
@@ -600,7 +601,10 @@ def test_converter_proxy():
 
     # Should fail because types must instances of type:
     with pytest.raises(TypeError, match=r"Converter property .* must contain str or type values"):
-        ConverterProxy(MinimumConverter(types=[object()]), extension)
+        # as the code will ignore types if no relevant tags are found
+        # include a tag from this extension to make sure the proxy considers
+        # the types
+        ConverterProxy(MinimumConverter(tags=[extension.tags[0].tag_uri], types=[object()]), extension)
 
 
 def test_get_cached_asdf_extension_list():
@@ -760,3 +764,132 @@ def test_validator():
             af["foo"] = "bar"
             with pytest.raises(ValidationError, match=r"Node was doomed to fail"):
                 af.validate()
+
+
+def test_converter_deferral():
+    class Bar:
+        def __init__(self, value):
+            self.value = value
+
+    class Foo(Bar):
+        pass
+
+    class Baz(Bar):
+        pass
+
+    class FooConverter:
+        tags = []
+        types = [Foo]
+
+        def select_tag(self, *args):
+            return None
+
+        def to_yaml_tree(self, obj, tag, ctx):
+            # convert Foo instance to Bar
+            return Bar(obj.value)
+
+        def from_yaml_tree(self, node, tag, ctx):
+            raise NotImplementedError()
+
+    class BarConverter:
+        tags = ["asdf://somewhere.org/tags/bar"]
+        types = [Bar]
+
+        def to_yaml_tree(self, obj, tag, ctx):
+            return {"value": obj.value}
+
+        def from_yaml_tree(self, node, tag, ctx):
+            return Bar(node["value"])
+
+    class BazConverter:
+        tags = []
+        types = [Baz]
+
+        def select_tag(self, *args):
+            return None
+
+        def to_yaml_tree(self, obj, tag, ctx):
+            return Foo(obj.value)
+
+        def from_yaml_tree(self, node, tag, ctx):
+            raise NotImplementedError()
+
+    extension = FullExtension(converters=[FooConverter(), BarConverter(), BazConverter()], tags=BarConverter.tags)
+    with config_context() as config:
+        config.add_extension(extension)
+
+        foo = Foo(26)
+        bar = Bar(42)
+        baz = Baz(720)
+
+        bar_rt = roundtrip_object(bar)
+        assert isinstance(bar_rt, Bar)
+        assert bar_rt.value == bar.value
+
+        foo_rt = roundtrip_object(foo)
+        assert isinstance(foo_rt, Bar)
+        assert foo_rt.value == foo.value
+
+        baz_rt = roundtrip_object(baz)
+        assert isinstance(baz_rt, Bar)
+        assert baz_rt.value == baz.value
+
+
+def test_converter_loop():
+    class Bar:
+        def __init__(self, value):
+            self.value = value
+
+    class Foo(Bar):
+        pass
+
+    class Baz(Bar):
+        pass
+
+    class FooConverter:
+        tags = []
+        types = [Foo]
+
+        def select_tag(self, *args):
+            return None
+
+        def to_yaml_tree(self, obj, tag, ctx):
+            return Bar(obj.value)
+
+        def from_yaml_tree(self, node, tag, ctx):
+            raise NotImplementedError()
+
+    class BarConverter:
+        tags = []
+        types = [Bar]
+
+        def select_tag(self, *args):
+            return None
+
+        def to_yaml_tree(self, obj, tag, ctx):
+            return Baz(obj.value)
+
+        def from_yaml_tree(self, node, tag, ctx):
+            raise NotImplementedError()
+
+    class BazConverter:
+        tags = []
+        types = [Baz]
+
+        def select_tag(self, *args):
+            return None
+
+        def to_yaml_tree(self, obj, tag, ctx):
+            return Foo(obj.value)
+
+        def from_yaml_tree(self, node, tag, ctx):
+            raise NotImplementedError()
+
+    extension = FullExtension(converters=[FooConverter(), BarConverter(), BazConverter()])
+    with config_context() as config:
+        config.add_extension(extension)
+
+        for typ in (Foo, Bar, Baz):
+            obj = typ(42)
+            with pytest.raises(TypeError, match=r"Conversion cycle detected"):
+                roundtrip_object(obj)

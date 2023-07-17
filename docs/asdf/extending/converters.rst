@@ -174,6 +174,71 @@ the converter's list of tags and implement a ``select_tag`` method:
             else:
                 return Rectangle(node["width"], node["height"])
 
+.. _extending_converters_deferral:
+
+Deferring to another converter
+==============================
+
+Converters only support the exact types listed in ``Converter.types``. When a
+supported type is subclassed the extension will need to be updated to support
+the new subclass. There are a few options for supporting subclasses.
+
+If serialization of the subclass needs to differ from the superclass a new
+Converter, tag and schema should be defined.
+
+If the subclass can be treated the same as the superclass (specifically if
+subclass instances can be serialized as the superclass) then the subclass
+can be added to the existing ``Converter.types``. Note that adding the
+subclass to the supported types (without making other changes to the Converter)
+will result in subclass instances using the same tag as the superclass. This
+means that any instances created during deserialization will always
+be of the superclass (subclass instances will never be read from an ASDF file).
+
+Another option (useful when modifying the existing Converter is not
+convenient) is to define a Converter that does not tag the subclass instance
+being serialized and instead defers to the existing Converter. Deferral
+is triggered by returning ``None`` from ``Converter.select_tag`` and
+implementing ``Converter.to_yaml_tree`` to convert the subclass instance
+into an instance of the (supported) superclass.
+
+For example, using the example ``Rectangle`` class above, let's say we
+have another class, ``AspectRectangle``, that represents a rectangle as
+a height and aspect ratio. We know we never need to deserialize this
+class for our uses and are ok with always reading ``Rectangle`` instances
+after saving ``AspectRectangle`` instances. In this case we can
+define a Converter for ``AspectRectangle`` that converts instances
+to ``Rectangle`` and defers to the ``RectangleConverter``.
+
+.. code-block:: python
+
+    class AspectRectangle(Rectangle):
+        def __init__(self, height, ratio):
+            self.height = height
+            self.ratio = ratio
+
+        def get_area(self):
+            width = self.height * self.ratio
+            return width * self.height
+
+
+    class AspectRectangleConverter(Converter):
+        tags = []
+        types = [AspectRectangle]
+
+        def select_tag(self, obj, tags, ctx):
+            return None  # defer to a different Converter
+
+        def to_yaml_tree(self, obj, tag, ctx):
+            # convert the instance of AspectRectangle (obj) to
+            # a supported type (Rectangle)
+            return Rectangle(obj.height * obj.ratio, obj.height)
+
+        def from_yaml_tree(self, node, tag, ctx):
+            raise NotImplementedError()
+
+Just like a non-deferring Converter this Converter will need to be
+added to an Extension and registered with asdf.
+
 .. _extending_converters_reference_cycles:
 
 Reference cycles
