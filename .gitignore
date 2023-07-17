@@ -41,6 +41,7 @@ eggs
 .eggs
 parts
 bin
+!asdf/json/bin
 var
 sdist
 develop-eggs
