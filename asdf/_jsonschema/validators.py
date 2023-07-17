@@ -16,7 +16,6 @@ import reprlib
 import typing
 import warnings
 
-from pyrsistent import m
 import attr
 
 from asdf._jsonschema import (
@@ -724,12 +723,14 @@ class RefResolver:
         self,
         base_uri,
         referrer,
-        store=m(),
+        store=None,
         cache_remote=True,
         handlers=(),
         urljoin_cache=None,
         remote_cache=None,
     ):
+        store = store or {}
+
         if urljoin_cache is None:
             urljoin_cache = lru_cache(1024)(urljoin)
         if remote_cache is None:
