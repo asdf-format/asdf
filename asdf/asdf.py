@@ -71,7 +71,7 @@ class AsdfFile:
             The URI for this ASDF file.  Used to resolve relative
             references against.  If not provided, will be
             automatically determined from the associated file object,
-            if possible and if created from `asdf.AsdfFile.open`.
+            if possible and if created from `asdf.open`.
 
         extensions : object, optional
             Additional extensions to use when reading and writing the file.
@@ -1624,24 +1624,6 @@ class AsdfFile:
         return SerializationContext(self.version_string, self.extension_manager, self.uri, self._blocks)
 
 
-def _check_and_set_mode(fileobj, asdf_mode):
-    if asdf_mode is not None and asdf_mode not in ["r", "rw"]:
-        msg = f"Unrecognized asdf mode '{asdf_mode}'. Must be either 'r' or 'rw'"
-        raise ValueError(msg)
-
-    if asdf_mode is None:
-        if isinstance(fileobj, io.IOBase):
-            return "rw" if fileobj.writable() else "r"
-
-        if isinstance(fileobj, generic_io.GenericFile):
-            return fileobj.mode
-
-        # This is the safest assumption for the default fallback
-        return "r"
-
-    return asdf_mode
-
-
 _DEPRECATED_KWARG_TO_CONFIG_PROPERTY = {
     "auto_inline": ("array_inline_threshold", lambda v: v),
     "validate_on_read": ("validate_on_read", lambda v: v),
@@ -1677,7 +1659,6 @@ def open_asdf(
     custom_schema=None,
     strict_extension_check=False,
     ignore_missing_extensions=False,
-    _compat=False,
     **kwargs,
 ):
     """
@@ -1756,10 +1737,18 @@ def open_asdf(
         The new AsdfFile object.
     """
 
-    # For now retain backwards compatibility with the old API behavior,
-    # specifically when being called from AsdfFile.open
-    if not _compat:
-        mode = _check_and_set_mode(fd, mode)
+    if mode is not None and mode not in ["r", "rw"]:
+        msg = f"Unrecognized asdf mode '{mode}'. Must be either 'r' or 'rw'"
+        raise ValueError(msg)
+
+    if mode is None:
+        if isinstance(fd, io.IOBase):
+            mode = "rw" if fd.writable() else "r"
+        elif isinstance(fd, generic_io.GenericFile):
+            mode = fd.mode
+        else:
+            # This is the safest assumption for the default fallback
+            mode = "r"
 
     instance = AsdfFile(
         ignore_version_mismatch=ignore_version_mismatch,
