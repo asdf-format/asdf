@@ -1035,13 +1035,6 @@ def test_custom_validation_with_external_ref_bad(tmp_path):
         pass
 
 
-def test_load_custom_schema_deprecated():
-    custom_schema_path = helpers.get_test_data_path("custom_schema.yaml")
-
-    with pytest.deprecated_call():
-        schema.load_custom_schema(custom_schema_path)
-
-
 def test_load_schema_resolve_local_refs_deprecated():
     custom_schema_path = helpers.get_test_data_path("custom_schema_definitions.yaml")
 

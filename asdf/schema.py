@@ -389,15 +389,6 @@ def _make_resolver(url_mapping):
     )
 
 
-@lru_cache
-def load_custom_schema(url):
-    warnings.warn(
-        "The 'load_custom_schema(...)' function is deprecated. Use 'load_schema' instead.",
-        AsdfDeprecationWarning,
-    )
-    return load_schema(url, resolve_references=True)
-
-
 def load_schema(url, resolver=None, resolve_references=False, resolve_local_refs=False):
     """
     Load a schema from the given URL.
