@@ -15,6 +15,7 @@ The ASDF Standard is at v1.6.0
   by returning ``None`` in ``Converter.select_tag`` [#1561]
 - Remove deprecated tests.helpers [#1597]
 - Remove deprecated load_custom_schema [#1596]
+- Remove deprecated TagDefinition.schema_uri [#1593]
 
 2.15.1 (2023-08-07)
 -------------------

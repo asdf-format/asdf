@@ -462,9 +462,6 @@ def test_tag_definition():
 
     assert "URI: asdf://somewhere.org/extensions/foo/tags/foo-1.0" in repr(tag_def)
 
-    with pytest.warns(AsdfDeprecationWarning, match=r"The .* property is deprecated.*"):
-        assert tag_def.schema_uri == "asdf://somewhere.org/extensions/foo/schemas/foo-1.0"
-
     tag_def = TagDefinition(
         "asdf://somewhere.org/extensions/foo/tags/foo-1.0",
         schema_uris=[
@@ -479,11 +476,6 @@ def test_tag_definition():
         "asdf://somewhere.org/extensions/foo/schemas/foo-1.0",
         "asdf://somewhere.org/extensions/foo/schemas/base-1.0",
     ]
-    with pytest.warns(AsdfDeprecationWarning, match=r"The .* property is deprecated.*"), pytest.raises(
-        RuntimeError,
-        match=r"Cannot use .* when multiple schema URIs are present",
-    ):
-        tag_def.schema_uri
 
     with pytest.raises(ValueError, match=r"URI patterns are not permitted in TagDefinition"):
         TagDefinition("asdf://somewhere.org/extensions/foo/tags/foo-*")
