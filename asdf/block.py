@@ -882,12 +882,7 @@ class Block:
         self._allocated = self._size
 
     def __repr__(self):
-        return "<Block {} off: {} alc: {} size: {}>".format(
-            self._array_storage[:3],
-            self._offset,
-            self._allocated,
-            self._size,
-        )
+        return f"<Block {self._array_storage[:3]} off: {self._offset} alc: {self._allocated} size: {self._size}>"
 
     def __len__(self):
         return self._size
