@@ -1004,7 +1004,15 @@ class AsdfFile:
         if len(self._tree):
             self._run_hook("post_write")
 
-    def update(self, **kwargs):
+    def update(
+        self,
+        all_array_storage=NotSet,
+        all_array_compression=NotSet,
+        compression_kwargs=NotSet,
+        pad_blocks=False,
+        include_block_index=True,
+        version=None,
+    ):
         """
         Update the file on disk in place.
 
@@ -1037,6 +1045,10 @@ class AsdfFile:
             - ``input``: Use the same compression as in the file read.
               If there is no prior file, acts as None
 
+        compression_kwargs : dict, optional
+            If provided, set this as the compression keyword arguments
+            for all binary blocks in the file.
+
         pad_blocks : float or bool, optional
             Add extra space between blocks to allow for updating of
             the file.  If `False` (default), add no padding (always
@@ -1054,17 +1066,13 @@ class AsdfFile:
             writing.
         """
 
-        pad_blocks = kwargs.pop("pad_blocks", False)
-        include_block_index = kwargs.pop("include_block_index", True)
-        version = kwargs.pop("version", None)
-
         with config_context() as config:
-            if "all_array_storage" in kwargs:
-                config.all_array_storage = kwargs.pop("all_array_storage")
-            if "all_array_compression" in kwargs:
-                config.all_array_compression = kwargs.pop("all_array_compression")
-            if "compression_kwargs" in kwargs:
-                config.all_array_compression_kwargs = kwargs.pop("compression_kwargs")
+            if all_array_storage is not NotSet:
+                config.all_array_storage = all_array_storage
+            if all_array_compression is not NotSet:
+                config.all_array_compression = all_array_compression
+            if compression_kwargs is not NotSet:
+                config.all_array_compression_kwargs = compression_kwargs
 
             fd = self._fd
 
@@ -1147,7 +1155,12 @@ class AsdfFile:
     def write_to(
         self,
         fd,
-        **kwargs,
+        all_array_storage=NotSet,
+        all_array_compression=NotSet,
+        compression_kwargs=NotSet,
+        pad_blocks=False,
+        include_block_index=True,
+        version=None,
     ):
         """
         Write the ASDF file to the given file-like object.
@@ -1191,6 +1204,10 @@ class AsdfFile:
             - ``input``: Use the same compression as in the file read.
               If there is no prior file, acts as None.
 
+        compression_kwargs : dict, optional
+            If provided, set this as the compression keyword arguments
+            for all binary blocks in the file.
+
         pad_blocks : float or bool, optional
             Add extra space between blocks to allow for updating of
             the file.  If `False` (default), add no padding (always
@@ -1208,12 +1225,12 @@ class AsdfFile:
             writing.
         """
         with config_context() as config:
-            if "all_array_storage" in kwargs:
-                config.all_array_storage = kwargs["all_array_storage"]
-            if "all_array_compression" in kwargs:
-                config.all_array_compression = kwargs["all_array_compression"]
-            if "compression_kwargs" in kwargs:
-                config.all_array_compression_kwargs = kwargs["compression_kwargs"]
+            if all_array_storage is not NotSet:
+                config.all_array_storage = all_array_storage
+            if all_array_compression is not NotSet:
+                config.all_array_compression = all_array_compression
+            if compression_kwargs is not NotSet:
+                config.all_array_compression_kwargs = compression_kwargs
 
             used_blocks = self._blocks._find_used_blocks(self.tree, self, remove=False)
 
@@ -1258,24 +1275,33 @@ class AsdfFile:
                     blk = naf._blocks.find_or_create_block(key)
                     blk._used = True
                     blk._data_callback = b._data_callback
-            naf._write_to(fd, **kwargs)
+            naf._write_to(
+                fd,
+                all_array_storage=all_array_storage,
+                all_array_compression=all_array_compression,
+                compression_kwargs=compression_kwargs,
+                pad_blocks=pad_blocks,
+                include_block_index=include_block_index,
+                version=version,
+            )
 
     def _write_to(
         self,
         fd,
-        **kwargs,
+        all_array_storage=NotSet,
+        all_array_compression=NotSet,
+        compression_kwargs=NotSet,
+        pad_blocks=False,
+        include_block_index=True,
+        version=None,
     ):
-        pad_blocks = kwargs.pop("pad_blocks", False)
-        include_block_index = kwargs.pop("include_block_index", True)
-        version = kwargs.pop("version", None)
-
         with config_context() as config:
-            if "all_array_storage" in kwargs:
-                config.all_array_storage = kwargs.pop("all_array_storage")
-            if "all_array_compression" in kwargs:
-                config.all_array_compression = kwargs.pop("all_array_compression")
-            if "compression_kwargs" in kwargs:
-                config.all_array_compression_kwargs = kwargs.pop("compression_kwargs")
+            if all_array_storage is not NotSet:
+                config.all_array_storage = all_array_storage
+            if all_array_compression is not NotSet:
+                config.all_array_compression = all_array_compression
+            if compression_kwargs is not NotSet:
+                config.all_array_compression_kwargs = compression_kwargs
 
             if version is not None:
                 self.version = version
