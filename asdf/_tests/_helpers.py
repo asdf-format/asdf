@@ -453,9 +453,7 @@ def _assert_extension_type_correctness(extension, extension_type, resolver):
 
     # Currently ExtensionType sets a default version of 1.0.0,
     # but we want to encourage an explicit version on the subclass.
-    assert "version" in extension_type.__dict__, "{} must set the 'version' class attribute".format(
-        extension_type.__name__,
-    )
+    assert "version" in extension_type.__dict__, f"{extension_type.__name__} must set the 'version' class attribute"
 
     # check the default version
     types_to_check = [extension_type]
