@@ -905,7 +905,6 @@ class AsdfFile:
         _force_raw_types=False,
         strict_extension_check=False,
         ignore_missing_extensions=False,
-        **kwargs,
     ):
         """Attempt to open file-like object as an AsdfFile"""
         close_on_fail = isinstance(fd, (str, pathlib.Path))
@@ -920,7 +919,6 @@ class AsdfFile:
                 _force_raw_types=_force_raw_types,
                 strict_extension_check=strict_extension_check,
                 ignore_missing_extensions=ignore_missing_extensions,
-                **kwargs,
             )
         except Exception:
             if close_on_fail:
@@ -1640,7 +1638,7 @@ def open_asdf(
     custom_schema=None,
     strict_extension_check=False,
     ignore_missing_extensions=False,
-    **kwargs,
+    _get_yaml_content=False,
 ):
     """
     Open an existing ASDF file.
@@ -1741,8 +1739,8 @@ def open_asdf(
         mode=mode,
         validate_checksums=validate_checksums,
         extensions=extensions,
+        _get_yaml_content=_get_yaml_content,
         _force_raw_types=_force_raw_types,
         strict_extension_check=strict_extension_check,
         ignore_missing_extensions=ignore_missing_extensions,
-        **kwargs,
     )
