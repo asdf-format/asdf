@@ -798,7 +798,6 @@ class AsdfFile:
         _force_raw_types=False,
         strict_extension_check=False,
         ignore_missing_extensions=False,
-        **kwargs,
     ):
         """Attempt to populate AsdfFile data from file-like object"""
 
@@ -806,9 +805,7 @@ class AsdfFile:
             msg = "'strict_extension_check' and 'ignore_missing_extensions' are incompatible options"
             raise ValueError(msg)
 
-        with config_context() as config:
-            _handle_deprecated_kwargs(config, kwargs)
-
+        with config_context():
             self._mode = fd.mode
             self._fd = fd
             # The filename is currently only used for tracing warning information
@@ -1007,10 +1004,7 @@ class AsdfFile:
         if len(self._tree):
             self._run_hook("post_write")
 
-    def update(
-        self,
-        **kwargs,
-    ):
+    def update(self, **kwargs):
         """
         Update the file on disk in place.
 
@@ -1058,13 +1052,6 @@ class AsdfFile:
         version : str, optional
             Update the ASDF Standard version of this AsdfFile before
             writing.
-
-        auto_inline : int, optional
-            DEPRECATED.  When the number of elements in an array is less
-            than this threshold, store the array as inline YAML, rather
-            than a binary block.  This only works on arrays that do not
-            share data with other arrays.  Default is the value specified
-            in ``asdf.get_config().array_inline_threshold``.
         """
 
         pad_blocks = kwargs.pop("pad_blocks", False)
@@ -1078,7 +1065,6 @@ class AsdfFile:
                 config.all_array_compression = kwargs.pop("all_array_compression")
             if "compression_kwargs" in kwargs:
                 config.all_array_compression_kwargs = kwargs.pop("compression_kwargs")
-            _handle_deprecated_kwargs(config, kwargs)
 
             fd = self._fd
 
@@ -1220,15 +1206,6 @@ class AsdfFile:
         version : str, optional
             Update the ASDF Standard version of this AsdfFile before
             writing.
-
-        auto_inline : int, optional
-            DEPRECATED.
-            When the number of elements in an array is less than this
-            threshold, store the array as inline YAML, rather than a
-            binary block.  This only works on arrays that do not share
-            data with other arrays.  Default is the value specified in
-            ``asdf.get_config().array_inline_threshold``.
-
         """
         with config_context() as config:
             if "all_array_storage" in kwargs:
@@ -1299,7 +1276,6 @@ class AsdfFile:
                 config.all_array_compression = kwargs.pop("all_array_compression")
             if "compression_kwargs" in kwargs:
                 config.all_array_compression_kwargs = kwargs.pop("compression_kwargs")
-            _handle_deprecated_kwargs(config, kwargs)
 
             if version is not None:
                 self.version = version
@@ -1624,27 +1600,6 @@ class AsdfFile:
         return SerializationContext(self.version_string, self.extension_manager, self.uri, self._blocks)
 
 
-_DEPRECATED_KWARG_TO_CONFIG_PROPERTY = {
-    "auto_inline": ("array_inline_threshold", lambda v: v),
-    "validate_on_read": ("validate_on_read", lambda v: v),
-    "do_not_fill_defaults": ("legacy_fill_schema_defaults", lambda v: not v),
-}
-
-
-def _handle_deprecated_kwargs(config, kwargs):
-    for key, value in kwargs.items():
-        if key in _DEPRECATED_KWARG_TO_CONFIG_PROPERTY:
-            config_property, func = _DEPRECATED_KWARG_TO_CONFIG_PROPERTY[key]
-            warnings.warn(
-                f"The '{key}' argument is deprecated, set asdf.get_config().{config_property} instead.",
-                AsdfDeprecationWarning,
-            )
-            setattr(config, config_property, func(value))
-        else:
-            msg = f"Unexpected keyword argument '{key}'"
-            raise TypeError(msg)
-
-
 def open_asdf(
     fd,
     uri=None,
@@ -1725,11 +1680,6 @@ def open_asdf(
         When `True`, do not raise warnings when a file is read that
         contains metadata about extensions that are not available. Defaults
         to `False`.
-
-    validate_on_read : bool, optional
-        DEPRECATED. When `True`, validate the newly opened file against tag
-        and custom schemas.  Recommended unless the file is already known
-        to be valid.
 
     Returns
     -------
