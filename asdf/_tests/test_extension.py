@@ -1,5 +1,6 @@
 import pytest
 from packaging.specifiers import SpecifierSet
+from yaml.representer import RepresenterError
 
 from asdf import AsdfFile, config_context
 from asdf._tests._helpers import assert_extension_correctness
@@ -604,6 +605,38 @@ def test_converter_proxy():
         # include a tag from this extension to make sure the proxy considers
         # the types
         ConverterProxy(MinimumConverter(tags=[extension.tags[0].tag_uri], types=[object()]), extension)
+
+
+def test_converter_subclass_with_no_supported_tags():
+    """
+    Adding a Converter to an Extension that doesn't list support for the tags
+    associated with the Converter should not index the types listed for the
+    Converter.
+    """
+
+    class Foo:
+        pass
+
+    class FooConverterWithSubclass(Converter):
+        tags = ["asdf://somewhere.org/tags/foo-1.0.0"]
+        types = [Foo]
+
+        def to_yaml_tree(self, *args):
+            pass
+
+        def from_yaml_tree(self, *args):
+            pass
+
+    class FooExtension(Extension):
+        tags = []
+        converters = [FooConverterWithSubclass()]
+        extension_uri = "asdf://somewhere.org/extensions/foo-1.0.0"
+
+    tree = {"obj": Foo()}
+    with config_context() as cfg:
+        cfg.add_extension(FooExtension())
+        with pytest.raises(RepresenterError, match=r"cannot represent an object"):
+            roundtrip_object(tree)
 
 
 def test_get_cached_asdf_extension_list():

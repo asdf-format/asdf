@@ -3,6 +3,7 @@ Support for Converter, the new API for serializing custom
 types.  Will eventually replace the `asdf.types` module.
 """
 import abc
+import inspect
 
 from asdf.util import get_class_name, uri_match
 
@@ -188,9 +189,25 @@ class ConverterProxy(Converter):
 
         self._types = []
 
-        if not len(self._tags) and not hasattr(delegate, "select_tag"):
-            # this converter supports no tags so don't inspect the types
-            return
+        if not len(self._tags):
+            # this converter supports no tags supported by the extension
+            # before indexing it's types we need to check select_tag
+
+            # check if it implements select_tag (and not just because it
+            # subclasses Converter)
+            if not hasattr(delegate, "select_tag"):
+                return
+
+            # find which class implements select_tag
+            for class_ in inspect.getmro(delegate.__class__):
+                if "select_tag" in class_.__dict__:
+                    if class_ is not Converter:
+                        # a non-Converter class implements select_tag so consider the types for this Converter
+                        break
+                    else:
+                        # this converter implements select_tag only because it inherits from Converter
+                        # don't index it's types
+                        return
 
         for typ in delegate.types:
             if isinstance(typ, (str, type)):
