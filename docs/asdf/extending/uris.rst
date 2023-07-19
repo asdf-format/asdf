@@ -4,7 +4,7 @@
 URIs in ASDF
 ============
 
-The ASDF format uses **U**\ niform **R**\ esource **I**\ identifiers to refer to various
+The ASDF format uses `Uniform Resource Identifiers <https://en.wikipedia.org/wiki/Uniform_Resource_Identifier>`__ to refer to various
 entities such as schemas or tags.  These are string identifiers that often resemble
 web addresses that uniquely identify the associated entity.  Here are some examples
 of URIs that might be encountered in an ASDF file:

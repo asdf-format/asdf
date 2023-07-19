@@ -389,7 +389,7 @@ file and retrieve the associated array data.
 Saving history entries
 ======================
 
-asdf has a convenience method for notating the history of transformations
+`asdf` has a convenience method for notating the history of transformations
 that have been performed on a file.
 
 Given a `~asdf.AsdfFile` object, call `~asdf.AsdfFile.add_history_entry`, given
@@ -416,7 +416,7 @@ your software, not asdf) that performed the operation.
 
 .. asdf:: example.asdf
 
-asdf automatically saves history metadata about the extensions that were used
+`asdf` automatically saves history metadata about the extensions that were used
 to create the file. This information is used when opening files to determine if
 the proper extensions are installed (see :ref:`extension_checking` for more
 details).
