@@ -394,7 +394,7 @@ that have been performed on a file.
 
 Given a `~asdf.AsdfFile` object, call `~asdf.AsdfFile.add_history_entry`, given
 a description of the change and optionally a description of the software (i.e.
-your software, not asdf) that performed the operation.
+your software, not `asdf`) that performed the operation.
 
 .. runcode::
 

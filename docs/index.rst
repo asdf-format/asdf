@@ -80,7 +80,6 @@ parts of ASDF interact and which modules do what and how.
   :maxdepth: 1
 
   asdf/developer_overview
-  asdf/developer_versioning
 
 Resources
 =========
