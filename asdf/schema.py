@@ -21,7 +21,7 @@ from .util import patched_urllib_parse
 
 YAML_SCHEMA_METASCHEMA_ID = "http://stsci.edu/schemas/yaml-schema/draft-01"
 
-__all__ = ["validate", "fill_defaults", "remove_defaults", "check_schema"]
+__all__ = ["validate", "fill_defaults", "remove_defaults", "check_schema", "load_schema"]
 
 PYTHON_TYPE_TO_YAML_TAG = {
     None: "null",
@@ -411,12 +411,12 @@ def load_schema(url, resolver=None, resolve_references=False, resolve_local_refs
         mirror on the local filesystem that you wish to use.
 
     resolve_references : bool, optional
-        If `True`, resolve all `$ref` references.
+        If ``True``, resolve all ``$ref`` references.
 
     resolve_local_refs : bool, optional
-        If `True`, resolve all `$ref` references that refer to other objects
+        If ``True``, resolve all ``$ref`` references that refer to other objects
         within the same schema. This will automatically be handled when passing
-        `resolve_references=True`, but it may be desirable in some cases to
+        ``resolve_references=True``, but it may be desirable in some cases to
         control local reference resolution separately.
         This parameter is deprecated.
     """
