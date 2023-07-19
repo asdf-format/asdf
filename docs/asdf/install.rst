@@ -11,11 +11,11 @@ Requirements
 ============
 
 The `asdf` package has several dependencies which are listed in the project's
-build configuration (``setup.cfg`` / ``pyproject.toml``).  All dependencies are available on pypi and will be automatically
+build configuration ``pyproject.toml``.  All dependencies are available on pypi and will be automatically
 installed along with `asdf`.
 
 Support for units, time, and transform tags requires an implementation of these
-types.  One recommended option is the `astropy <https://www.astropy.org/>`__ package.
+types.  One recommended option is the asdf-`astropy <https://asdf-astropy.readthedocs.io/en/latest/>`__ package.
 
 Optional support for `lz4 <https://en.wikipedia.org/wiki/LZ4_(compression_algorithm)>`__
 compression is provided by the `lz4 <https://python-lz4.readthedocs.io/>`__ package.

@@ -102,8 +102,13 @@ Schema validation
 Schema validation is used to determine whether an ASDF file is well formed. All
 ASDF files must conform to the schemas defined by the :ref:`ASDF Standard
 <asdf-standard:asdf-standard>`. Schema validation occurs
-when reading ASDF files (using `asdf.open`), and also when writing them out
-(using `AsdfFile.write_to` or `AsdfFile.update`).
+when reading ASDF files (using `asdf.open`), writing them out
+(using `AsdfFile.write_to` or `AsdfFile.update`) and when assigning to the
+root of the ASDF tree (assigning to `AsdfFile.tree`).
+
+.. note::
+   Schema validation does not occur when a leaf/branch of the tree is
+   assigned but can be manually triggered by using `AsdfFile.validate`.
 
 Schema validation also plays a role when using custom extensions (see
 :ref:`using_extensions` and :ref:`extending_extensions`). Extensions must provide schemas
@@ -384,12 +389,12 @@ file and retrieve the associated array data.
 Saving history entries
 ======================
 
-`asdf` has a convenience method for notating the history of transformations
+asdf has a convenience method for notating the history of transformations
 that have been performed on a file.
 
 Given a `~asdf.AsdfFile` object, call `~asdf.AsdfFile.add_history_entry`, given
 a description of the change and optionally a description of the software (i.e.
-your software, not `asdf`) that performed the operation.
+your software, not asdf) that performed the operation.
 
 .. runcode::
 
@@ -411,7 +416,7 @@ your software, not `asdf`) that performed the operation.
 
 .. asdf:: example.asdf
 
-`asdf` automatically saves history metadata about the extensions that were used
+asdf automatically saves history metadata about the extensions that were used
 to create the file. This information is used when opening files to determine if
 the proper extensions are installed (see :ref:`extension_checking` for more
 details).
