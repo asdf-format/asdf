@@ -81,5 +81,5 @@ include adding block storage support to :ref:`converters <extending_converters>`
 asdf.tests.helpers Deprecation
 ==============================
 
-Use of `asdf.tests.helpers` is deprecated. Please see `asdf.testing.helpers`
+Use of ``asdf.tests.helpers`` is deprecated. Please see `asdf.testing.helpers`
 for alternative functions to aid in testing.
