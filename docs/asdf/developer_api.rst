@@ -7,11 +7,6 @@ Developer API
 The classes and functions documented here will be of use to developers who wish
 to create their own custom ASDF types and extensions.
 
-.. automodapi:: asdf.asdf
-    :no-inheritance-diagram:
-    :include: SerializationContext
-    :skip: AsdfConversionWarning, AsdfDeprecationWarning, AsdfObject, AsdfSearchResult, AsdfWarning, DelimiterNotFoundError, Extension, ExtensionMetadata, ExtensionProxy, HistoryEntry, Software, ValidationError, Version
-
 .. automodapi:: asdf.tagged
 
 .. automodapi:: asdf.exceptions
