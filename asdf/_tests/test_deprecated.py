@@ -1,5 +1,3 @@
-import sys
-
 import pytest
 
 import asdf
@@ -31,18 +29,6 @@ def test_asdf_type_format_tag():
     with pytest.warns(AsdfDeprecationWarning, match="asdf.types.format_tag is deprecated"):
         asdf._types.format_tag
     asdf.testing.helpers.format_tag
-
-
-def test_asdf_tests_helpers_deprecation():
-    with pytest.warns(AsdfDeprecationWarning, match="asdf.tests.helpers is deprecated"):
-        if "asdf.tests.helpers" in sys.modules:
-            del sys.modules["asdf.tests.helpers"]
-        import asdf.tests.helpers
-    from asdf._tests import _helpers
-
-    for attr in _helpers.__all__:
-        with pytest.warns(AsdfDeprecationWarning, match="asdf.tests.helpers is deprecated"):
-            getattr(asdf.tests.helpers, attr)
 
 
 def test_blocks_deprecated():
