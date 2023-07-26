@@ -15,6 +15,8 @@ The ASDF Standard is at v1.6.0
 - Fix issue opening files that don't support ``fileno`` [#1557]
 - Allow Converters to defer conversion to other Converters
   by returning ``None`` in ``Converter.select_tag`` [#1561]
+- Convert numpy scalars to python types during yaml encoding
+  to handle NEP51 changes for numpy 2.0 [#1605]
 
 2.15.0 (2023-03-28)
 -------------------
