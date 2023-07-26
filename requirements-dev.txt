@@ -6,7 +6,7 @@ git+https://github.com/asdf-format/asdf-unit-schemas.git
 git+https://github.com/asdf-format/asdf-wcs-schemas
 git+https://github.com/astropy/astropy
 git+https://github.com/spacetelescope/gwcs
-git+https://github.com/yaml/pyyaml.git
+#git+https://github.com/yaml/pyyaml.git
 # jsonschema 4.18 contains incompatible changes: https://github.com/asdf-format/asdf/issues/1485
 #git+https://github.com/python-jsonschema/jsonschema
 
