@@ -6,7 +6,8 @@ The ASDF Standard is at v1.6.0
 
 - Drop Python 3.8 support [#1556]
 - Drop NumPy 1.20, 1.21 support [#1568]
-
+- Convert numpy scalars to python types during yaml encoding
+  to handle NEP51 changes for numpy 2.0 [#1605]
 
 2.15.0 (2023-03-28)
 -------------------
