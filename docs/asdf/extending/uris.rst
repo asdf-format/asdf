@@ -5,13 +5,13 @@ URIs in ASDF
 ============
 
 The ASDF format uses `Uniform Resource Identifiers <https://en.wikipedia.org/wiki/Uniform_Resource_Identifier>`__ to refer to various
-entities such as schemas or tags.  These are string identifiers that often resemble
-web addresses that uniquely identify the associated entity.  Here are some examples
+entities such as schemas or tags.  These are string identifiers used to
+uniquely identify the associated entity.  Here are some examples
 of URIs that might be encountered in an ASDF file:
 
-- ``http://stsci.edu/schemas/asdf/core/ndarray-1.0.0`` (URI of the ndarray-1.0.0 schema)
-- ``tag:stsci.edu:asdf/core/asdf-1.1.0`` (URI of the asdf-1.0.0 YAML tag)
 - ``asdf://example.com/schemas/foo-1.0.0`` (URI of the foo-1.0.0 schema)
+- ``tag:stsci.edu:asdf/core/asdf-1.1.0`` (URI of the asdf-1.0.0 YAML tag)
+- ``http://stsci.edu/schemas/asdf/core/ndarray-1.0.0`` (URI of the ndarray-1.0.0 schema)
 
 Each of these uses a different URI *scheme*, and each is a valid URI format in ASDF.
 
