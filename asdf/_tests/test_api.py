@@ -344,38 +344,6 @@ def test_extension_version_check(installed, extension, warns):
         af._check_extensions(tree)
 
 
-@pytest.mark.filterwarnings(AsdfDeprecationWarning)
-def test_auto_inline(tmp_path):
-    outfile = str(tmp_path / "test.asdf")
-    tree = {"small_array": np.arange(6), "large_array": np.arange(100)}
-
-    # Use the same object for each write in order to make sure that there
-    # aren't unanticipated side effects
-    with asdf.AsdfFile(tree) as af:
-        # By default blocks are written internal.
-        af.write_to(outfile)
-        assert len(list(af._blocks.inline_blocks)) == 0
-        assert len(list(af._blocks.internal_blocks)) == 2
-
-        af.write_to(outfile, auto_inline=10)
-        assert len(list(af._blocks.inline_blocks)) == 1
-        assert len(list(af._blocks.internal_blocks)) == 1
-
-        # The previous write modified the small array block's storage
-        # to inline, and a subsequent write should maintain that setting.
-        af.write_to(outfile)
-        assert len(list(af._blocks.inline_blocks)) == 1
-        assert len(list(af._blocks.internal_blocks)) == 1
-
-        af.write_to(outfile, auto_inline=7)
-        assert len(list(af._blocks.inline_blocks)) == 1
-        assert len(list(af._blocks.internal_blocks)) == 1
-
-        af.write_to(outfile, auto_inline=5)
-        assert len(list(af._blocks.inline_blocks)) == 0
-        assert len(list(af._blocks.internal_blocks)) == 2
-
-
 @pytest.mark.parametrize(
     ("array_inline_threshold", "inline_blocks", "internal_blocks"),
     [
