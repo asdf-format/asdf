@@ -441,8 +441,6 @@ schema loader.
 
 **_load_draft4_metaschema:**
 
-**load_custom_schema:** Deals with custom schemas.
-
 **load_schema:** Loads a schema from the specified location (this is cached).
 Called for every tag encountered (uses resolver machinery). Most of the
 complexity is in resolving json references. Calls ``_make_schema_loader,
