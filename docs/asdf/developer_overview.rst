@@ -711,9 +711,9 @@ the code (or users themselves) to create an empty dummy ``AsdfFile`` just
 to use the method.
 
 The new ``Converter`` interface also accepts a ``ctx`` variable, but
-instead of an ``AsdfFile`` it's an instance of ``SerializationContext``.  This
+instead of an ``AsdfFile`` it's an instance of `asdf.extension.SerializationContext`.  This
 new object will serve the purpose of configuring serialization parameters
 and keeping necessary state, which means that the ``AsdfFile`` can go
-unmodified.  The ``SerializationContext`` will be relatively lightweight and
+unmodified.  The `asdf.extension.SerializationContext` will be relatively lightweight and
 creating it will not incur as much of a performance penalty as creating an
 ``AsdfFile``.

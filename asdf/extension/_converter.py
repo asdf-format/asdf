@@ -71,7 +71,7 @@ class Converter(abc.ABC):
         tags : list of str
             List of active tags to choose from.  Guaranteed to match
             one of the tag patterns listed in the 'tags' property.
-        ctx : asdf.asdf.SerializationContext
+        ctx : asdf.extension.SerializationContext
             Context of the current serialization request.
 
         Returns
@@ -111,7 +111,7 @@ class Converter(abc.ABC):
             The tag identifying the YAML type that ``obj`` should be
             converted into.  Selected by a call to this converter's
             select_tag method.
-        ctx : asdf.asdf.SerializationContext
+        ctx : asdf.extension.SerializationContext
             The context of the current serialization request.
 
         Returns
@@ -142,7 +142,7 @@ class Converter(abc.ABC):
             The YAML node to convert.
         tag : str
             The YAML tag of the object being converted.
-        ctx : asdf.asdf.SerializationContext
+        ctx : asdf.extension.SerializationContext
             The context of the current deserialization request.
 
         Returns
@@ -254,7 +254,7 @@ class ConverterProxy(Converter):
         ----------
         obj : object
             Instance of the custom type being converted.
-        ctx : asdf.asdf.SerializationContext
+        ctx : asdf.extension.SerializationContext
             Serialization parameters.
 
         Returns
@@ -279,7 +279,7 @@ class ConverterProxy(Converter):
         tag : str
             The tag identifying the YAML type that ``obj`` should be
             converted into.
-        ctx : asdf.asdf.SerializationContext
+        ctx : asdf.extension.SerializationContext
             Serialization parameters.
 
         Returns
@@ -299,7 +299,7 @@ class ConverterProxy(Converter):
             The YAML node to convert.
         tag : str
             The YAML tag of the object being converted.
-        ctx : asdf.asdf.SerializationContext
+        ctx : asdf.extension.SerializationContext
             Serialization parameters.
 
         Returns

@@ -356,7 +356,7 @@ array and store it in an ASDF block. This is the easiest and preferred means of
 storing data in ASDF blocks.
 
 For applications that require more flexibility,
-Converters can control block storage through use of the ``SerializationContext``
+Converters can control block storage through use of the `asdf.extension.SerializationContext`
 provided as an argument to `Converter.to_yaml_tree` `Converter.from_yaml_tree` and `Converter.select_tag`.
 
 It is helpful to first review some details of how ASDF
@@ -423,17 +423,17 @@ A simple example of a Converter using block storage to store the ``payload`` for
 
 During read, ``Converter.from_yaml_tree`` will be called. Within this method
 the Converter should associate any used blocks with unique hashable keys by calling
-``SerializationContext.assign_block_key`` and can generate (and use) a callable
-function that will return block data using ``SerializationContext.get_block_data_callback``.
+`asdf.extension.SerializationContext.assign_block_key` and can generate (and use) a callable
+function that will return block data using `asdf.extension.SerializationContext.get_block_data_callback`.
 A callback for reading the data is provided to support lazy loading without
-keeping a reference to the ``SerializationContext`` (which is meant to be
+keeping a reference to the `asdf.extension.SerializationContext` (which is meant to be
 a short lived and lightweight object).
 
 During write, ``Converter.to_yaml_tree`` will be called. The Converter should
-use ``SerializationContext.find_block_index`` to find the location of an
+use `asdf.extension.SerializationContext.find_block_index` to find the location of an
 available block by providing a hashable key unique to this object (this should
 be the same key used during reading to allow ASDF to associate blocks and objects
-during in-place updates). The second argument to ``SerializationContext.find_block_index``
+during in-place updates). The second argument to `asdf.extension.SerializationContext.find_block_index`
 must be a callable function (returning a ndarray) that ASDF will call when it
 is time to write data to the portion of the file corresponding to this block.
 Note that it's possible this callback will be called multiple times during a
