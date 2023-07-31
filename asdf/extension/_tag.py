@@ -6,7 +6,7 @@ class TagDefinition:
     ----------
     tag_uri : str
         Tag URI.
-    schema_uri : str, optional
+    schema_uris : str, optional
         URI of the schema that should be used to validate objects
         with this tag.
     title : str, optional

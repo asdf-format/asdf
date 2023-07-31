@@ -86,7 +86,7 @@ instead of just a string:
         tags = [
             TagDefinition(
                 "asdf://example.com/example-project/tags/foo-1.0.0",
-                schema_uri="asdf://example.com/example-project/schemas/foo-1.0.0",
+                schema_uris=["asdf://example.com/example-project/schemas/foo-1.0.0"],
             )
         ]
         converters = [FooConverter()]
