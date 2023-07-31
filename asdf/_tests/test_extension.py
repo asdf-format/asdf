@@ -1,6 +1,5 @@
 import pytest
 from packaging.specifiers import SpecifierSet
-from yaml.representer import RepresenterError
 
 from asdf import AsdfFile, config_context
 from asdf._tests._helpers import assert_extension_correctness
@@ -610,8 +609,7 @@ def test_converter_proxy():
 def test_converter_subclass_with_no_supported_tags():
     """
     Adding a Converter to an Extension that doesn't list support for the tags
-    associated with the Converter should not index the types listed for the
-    Converter.
+    associated with the Converter should result in a failure to convert.
     """
 
     class Foo:
@@ -635,7 +633,7 @@ def test_converter_subclass_with_no_supported_tags():
     tree = {"obj": Foo()}
     with config_context() as cfg:
         cfg.add_extension(FooExtension())
-        with pytest.raises(RepresenterError, match=r"cannot represent an object"):
+        with pytest.raises(RuntimeError, match=r"Converter.select_tag was called with no supported tags.*"):
             roundtrip_object(tree)
 
 
