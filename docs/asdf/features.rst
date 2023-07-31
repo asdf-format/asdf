@@ -32,6 +32,14 @@ and reading trees, see :ref:`overview`.
    Integers and floats of up to 64 bits can be stored inside of :mod:`numpy`
    arrays (see below).
 
+.. note::
+
+   The ASDF standard does not have an immutable sequence type that maps directly
+   to Python's :class:`tuple`. Following the behavior of
+   pyyaml, asdf writes tuples as YAML sequences, which when loaded
+   are converted to lists. If round-tripping of tuples is important
+   to your application see the :ref:`extending` to write a custom extension
+   to save and load tuples.
 
 One of the key features of `asdf` is its ability to serialize :mod:`numpy`
 arrays. This is discussed in detail in :ref:`array-data`.
