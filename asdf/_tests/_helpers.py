@@ -23,6 +23,7 @@ import yaml
 
 import asdf
 from asdf import generic_io, versioning
+from asdf._resolver import Resolver, ResolverChain
 from asdf.asdf import AsdfFile, get_asdf_library_info
 from asdf.block import Block
 from asdf.constants import YAML_TAG_PREFIX
@@ -416,10 +417,6 @@ def assert_extension_correctness(extension):
         The extension to validate
     """
     __tracebackhide__ = True
-
-    # locally import the deprecated Resolver and ResolverChain to avoid
-    # exposing it as asdf.tests.helpers.Resolver/ResolverChain
-    from asdf._resolver import Resolver, ResolverChain
 
     warnings.warn(
         "assert_extension_correctness is deprecated and depends "
