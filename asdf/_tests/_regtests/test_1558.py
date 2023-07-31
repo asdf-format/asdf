@@ -6,7 +6,7 @@ import pytest
 import asdf
 
 
-def test_1558(tmp_path):
+def test_asdffile_tree_cleared_on_close(tmp_path):
     """
     closed AsdfFile instances hold private reference to tree
 
