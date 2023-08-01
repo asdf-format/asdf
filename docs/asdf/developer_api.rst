@@ -10,7 +10,6 @@ to create their own custom ASDF types and extensions.
 .. automodapi:: asdf.tagged
 
 .. automodapi:: asdf.exceptions
-    :skip: ValidationError
 
 .. automodapi:: asdf.extension
 
