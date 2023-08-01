@@ -49,18 +49,7 @@ to the maintainers, who are glad to assist you.
     with your pull request when you submit it.
 
 .. note::
-    Pull requests now require a "backport" label to be added to the pull request
-    so that the milestone will be automatically set and the PR will be automatically
-    backported (if necessary) to the appropriate release branch. These labels are:
-
-    * ``backport-2.15.x`` for the ``2.15.x`` LTS releases.
-    * ``development`` for to mark as slated for the next release.
-
-    The reviewer will add the label if you are unable to do so.
-
-.. note::
     Backporting changes is done automatically using ``meeseeksdev``. If you are
     a maintainer, you can comment ``@meeseeksdev backport to <branch>`` on a pull
-    request to manually trigger a backport if the correct labels were not applied.
-    Moreover, when merging a "backport" pull request, please use the "Rebase and merge"
-    option.
+    request to manually trigger a backport. Moreover, when merging a "backport"
+    pull request, please use the "Rebase and merge" option.
