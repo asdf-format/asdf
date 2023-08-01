@@ -371,6 +371,13 @@ There are two mailing lists for ASDF:
     **F**\ ormat, information can be found
     `here <https://seismic-data.org/>`__.
 
+License
+-------
+
+ASDF is licensed under a BSD 3-clause style license. See `LICENSE.rst <LICENSE.rst>`_
+for the `licenses folder <https://github.com/asdf-format/asdf/tree/main/licenses>`_ for
+licenses for any included software.
+
 Contributing
 ------------
 
