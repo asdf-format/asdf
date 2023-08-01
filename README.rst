@@ -375,7 +375,7 @@ License
 -------
 
 ASDF is licensed under a BSD 3-clause style license. See `LICENSE.rst <LICENSE.rst>`_
-for the `licenses folder <https://github.com/asdf-format/asdf/tree/main/licenses>`_ for
+for the `licenses folder <licenses>`_ for
 licenses for any included software.
 
 Contributing
