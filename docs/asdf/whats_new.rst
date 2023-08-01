@@ -3,7 +3,7 @@
 .. _whats_new:
 
 **********
-What's new
+What's New
 **********
 
 jsonschema
