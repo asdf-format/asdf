@@ -724,7 +724,7 @@ validation keyword name and the values are validation functions.  The
 validation functions are of the same form as the validation functions in the
 underlying `jsonschema` library, and are passed the following arguments:
 
-  - ``validator``: A `jsonschema.Validator` instance.
+  - ``validator``: A ``jsonschema.Validator`` instance.
 
   - ``value``: The value of the schema keyword.
 
@@ -736,7 +736,7 @@ underlying `jsonschema` library, and are passed the following arguments:
     get other related schema keywords.
 
 The validation function should either return ``None`` if the instance
-is valid or ``yield`` one or more `jsonschema.ValidationError` objects if
+is valid or ``yield`` one or more ``jsonschema.ValidationError`` objects if
 the instance is invalid.
 
 To continue the example from above, for the ``FractionType`` say we
