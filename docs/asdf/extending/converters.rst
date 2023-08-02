@@ -51,7 +51,7 @@ situation.
 Additionally, the Converter interface includes a method that must be implemented
 when some logic is required to select the tag to assign to a ``to_yaml_tree`` result:
 
-`Converter.select_tag` - a method that accepts a complex Python object and a list
+``Converter.select_tag`` - an optional method that accepts a complex Python object and a list
 candidate tags and returns the tag that should be used to serialize the object.
 
 A simple example
@@ -357,7 +357,7 @@ storing data in ASDF blocks.
 
 For applications that require more flexibility,
 Converters can control block storage through use of the `asdf.extension.SerializationContext`
-provided as an argument to `Converter.to_yaml_tree` `Converter.from_yaml_tree` and `Converter.select_tag`.
+provided as an argument to `Converter.to_yaml_tree` `Converter.from_yaml_tree` and ``Converter.select_tag``.
 
 It is helpful to first review some details of how asdf
 :ref:`stores block <asdf-standard:block>`. Blocks are stored sequentially within a

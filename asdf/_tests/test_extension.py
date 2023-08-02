@@ -1,5 +1,6 @@
 import pytest
 from packaging.specifiers import SpecifierSet
+from yaml.representer import RepresenterError
 
 from asdf import AsdfFile, config_context
 from asdf._tests._helpers import assert_extension_correctness
@@ -501,19 +502,6 @@ def test_converter():
 
     assert issubclass(ConverterNoSubclass, Converter)
 
-    class ConverterWithSubclass(Converter):
-        tags = []
-        types = []
-
-        def to_yaml_tree(self, *args):
-            pass
-
-        def from_yaml_tree(self, *args):
-            pass
-
-    # Confirm the behavior of the default select_tag implementation
-    assert ConverterWithSubclass().select_tag(object(), ["tag1", "tag2"], object()) == "tag1"
-
 
 def test_converter_proxy():
     # Test the minimum set of converter methods:
@@ -633,7 +621,7 @@ def test_converter_subclass_with_no_supported_tags():
     tree = {"obj": Foo()}
     with config_context() as cfg:
         cfg.add_extension(FooExtension())
-        with pytest.raises(RuntimeError, match=r"Converter.select_tag was called with no supported tags.*"):
+        with pytest.raises(RepresenterError, match=r"cannot represent an object"):
             roundtrip_object(tree)
 
 
