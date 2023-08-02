@@ -16,3 +16,12 @@ def _temp_cwd(tmpdir_factory):
         yield
     finally:
         os.chdir(original_cwd)
+
+
+def pytest_addoption(parser):
+    parser.addoption(
+        "--jsonschema",
+        action="store_true",
+        default=False,
+        help="Run jsonschema test suite tests",
+    )

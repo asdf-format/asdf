@@ -3,7 +3,6 @@ from datetime import datetime
 
 import numpy as np
 import pytest
-from jsonschema import ValidationError
 from numpy.testing import assert_array_equal
 
 import asdf
@@ -13,7 +12,7 @@ from asdf import _types as types
 from asdf import config_context, constants, extension, get_config, schema, tagged, util, yamlutil
 from asdf._tests import _helpers as helpers
 from asdf._tests.objects import CustomExtension
-from asdf.exceptions import AsdfConversionWarning, AsdfDeprecationWarning, AsdfWarning
+from asdf.exceptions import AsdfConversionWarning, AsdfDeprecationWarning, AsdfWarning, ValidationError
 
 with pytest.warns(AsdfDeprecationWarning, match=".*subclasses the deprecated CustomType.*"):
 

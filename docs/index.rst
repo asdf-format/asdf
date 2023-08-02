@@ -28,7 +28,8 @@ Format (ASDF) files.
 
    ASDF 2.15 introduced a number of deprecation warnings in preparation
    for changes planned for ASDF 3.0. Please see the :ref:`deprecations`
-   page for more information.
+   page for more information. Also see :ref:`whats_new` for a description
+   of other major changes.
 
 Getting Started
 ===============
@@ -91,6 +92,7 @@ Resources
   asdf/contributing
   asdf/CODE_OF_CONDUCT
   asdf/release_and_support
+  asdf/whats_new
   asdf/deprecations
   asdf/changes
   asdf/citation

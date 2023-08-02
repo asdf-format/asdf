@@ -6,7 +6,6 @@ import pathlib
 import time
 import warnings
 
-from jsonschema import ValidationError
 from packaging.version import Version
 
 from . import _display as display
@@ -15,7 +14,7 @@ from . import _version as version
 from . import block, constants, generic_io, reference, schema, treeutil, util, versioning, yamlutil
 from ._helpers import validate_version
 from .config import config_context, get_config
-from .exceptions import AsdfConversionWarning, AsdfDeprecationWarning, AsdfWarning
+from .exceptions import AsdfConversionWarning, AsdfDeprecationWarning, AsdfWarning, ValidationError
 from .extension import Extension, ExtensionProxy, _legacy, get_cached_extension_manager
 from .search import AsdfSearchResult
 from .tags.core import AsdfObject, ExtensionMetadata, HistoryEntry, Software

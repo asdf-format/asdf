@@ -23,11 +23,15 @@ dependencies = [
   "asdf-unit-schemas>=0.1",
   "importlib-metadata>=4.11.4",
   "jmespath>=0.6.2",
-  "jsonschema<4.18,>=4.0.1", # jsonschema 4.18 contains incompatible changes: https://github.com/asdf-format/asdf/issues/1485
   "numpy>=1.22",
   "packaging>=19",
   "pyyaml>=5.4.1",
   "semantic_version>=2.8",
+  # for vendorized jsonschema
+  "attrs>=20.1.0",
+  # end of vendorized jsonschema deps
+  # include jsonschema for all the downstream packages expecting us to provide this
+  "jsonschema>=4.8",
 ]
 [project.optional-dependencies]
 all = [
@@ -71,6 +75,7 @@ requires = [
 
 [tool.setuptools.packages.find]
 include = ['asdf*', 'pytest_asdf*']
+exclude = ['asdf/_jsonschema/json/*']
 
 [tool.setuptools.package-data]
 'asdf.commands.tests.data' = ["*"]
@@ -90,6 +95,7 @@ force-exclude = '''
     | \.pytest_cache
     | \.tox
     | asdf/extern
+    | asdf/_jsonschema
     | build
     | dist
   )/
@@ -128,6 +134,7 @@ omit = [
     'asdf/version.*',
     'asdf/compat*',
     'asdf/extern*',
+    'asdf/_jsonschema/**',
     # And again for running against installed version
     '*/asdf/_astropy_init*',
     '*/asdf/conftest*',
@@ -142,6 +149,7 @@ omit = [
     '*/asdf/version.*',
     '*/asdf/compat*',
     '*/asdf/extern*',
+    '*/asdf/_jsonschema/**',
 ]
 
 [tool.coverage.report]
@@ -175,7 +183,7 @@ extend-ignore = [
     "S310", # URL open for permitted schemes
     "RUF012",  # mutable-class-default (typing related)
 ]
-extend-exclude = ["asdf/extern/*", "docs/*"]
+extend-exclude = ["asdf/extern/*", "asdf/_jsonschema/*", "docs/*"]
 
 [tool.ruff.per-file-ignores]
 "test_*.py" = ["S101"]
@@ -183,10 +191,10 @@ extend-exclude = ["asdf/extern/*", "docs/*"]
 "compatibility_tests/common.py" = ["S101"]
 
 [tool.flynt]
-exclude = ["asdf/extern/*"]
+exclude = ["asdf/extern/*", "asdf/_jsonschema/*"]
 
 [tool.codespell]
-skip="*.pdf,*.fits,*.asdf,.tox,asdf/extern,build,./tags,.git,docs/_build"
+skip="*.pdf,*.fits,*.asdf,.tox,asdf/extern,asdf/_jsonschema,build,./tags,.git,docs/_build"
 ignore-words-list="""
 fo,afile,
 """
