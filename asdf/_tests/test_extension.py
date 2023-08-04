@@ -5,7 +5,7 @@ from yaml.representer import RepresenterError
 from asdf import AsdfFile, config_context
 from asdf._tests._helpers import assert_extension_correctness
 from asdf._types import CustomType
-from asdf.exceptions import AsdfDeprecationWarning, ValidationError
+from asdf.exceptions import AsdfDeprecationWarning, AsdfWarning, ValidationError
 from asdf.extension import (
     Compressor,
     Converter,
@@ -911,3 +911,27 @@ def test_converter_loop():
             obj = typ(42)
             with pytest.raises(TypeError, match=r"Conversion cycle detected"):
                 roundtrip_object(obj)
+
+
+def test_warning_for_default_select_tag():
+    class Foo:
+        pass
+
+    class FooConverter(Converter):
+        tags = ["asdf://somewhere.org/tags/foo-*"]
+        types = [Foo]
+
+        def to_yaml_tree(self, obj, tag, ctx):
+            return {}
+
+        def from_yaml_tree(self, node, tag, ctx):
+            return Foo()
+
+    tags = [
+        "asdf://somewhere.org/tags/foo-1.0.0",
+        "asdf://somewhere.org/tags/foo-2.0.0",
+    ]
+    extension = FullExtension(converters=[FooConverter()], tags=tags)
+    with config_context() as config:
+        with pytest.warns(AsdfWarning, match="Converter handles multiple tags"):
+            config.add_extension(extension)

@@ -3,7 +3,9 @@ Support for Converter, the new API for serializing custom
 types.  Will eventually replace the `asdf.types` module.
 """
 import abc
+import warnings
 
+from asdf.exceptions import AsdfWarning
 from asdf.util import get_class_name, uri_match
 
 
@@ -166,6 +168,23 @@ class ConverterProxy(Converter):
             else:
                 msg = "Converter property 'tags' must contain str values"
                 raise TypeError(msg)
+
+        if len(relevant_tags) > 1 and not hasattr(delegate, "select_tag"):
+            if isinstance(delegate, Converter):
+                # prior to asdf 3.0 Converter provided a default select_tag
+                # to provide backwards compatibility allow Converter subclasses
+                # to be registered with >1 tag but produce a warning
+                msg = (
+                    "Converter handles multiple tags for this extension, "
+                    "but does not implement a select_tag method. "
+                    "This previously worked because Converter subclasses inherited "
+                    "the now removed select_tag. This will be an error in a future "
+                    "version of asdf"
+                )
+                warnings.warn(msg, AsdfWarning)
+            else:
+                msg = "Converter handles multiple tags for this extension, but does not implement a select_tag method."
+                raise RuntimeError(msg)
 
         self._tags = sorted(relevant_tags)
 

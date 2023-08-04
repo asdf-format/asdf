@@ -114,6 +114,12 @@ remote_data_strict = true
 filterwarnings = [
     'error',
     'ignore:numpy.ndarray size changed:RuntimeWarning',
+    # gwcs 0.18.3 contains a bug, new asdf versions will correctly raise
+    # a warning for this bug. We're ignoring the warning to allow the extension
+    # to be loaded and used. This warning filter (and similar ones in tox.ini)
+    # can be removed when the bug is fixed in gwcs/asdf-wcs-schemas.
+    # See: https://github.com/spacetelescope/gwcs/pull/469
+    'ignore:asdf.extensions plugin from package gwcs==0.18.3:asdf.exceptions.AsdfWarning',
 ]
 # Configuration for pytest-doctestplus
 text_file_format = 'rst'
