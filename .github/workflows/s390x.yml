@@ -47,7 +47,7 @@ jobs:
         id: build
         with:
           arch: ${{ matrix.arch }}
-          distro: ubuntu_latest
+          distro: ubuntu_rolling
 
           shell: /bin/bash
 
