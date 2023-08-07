@@ -17,10 +17,7 @@ from asdf._jsonschema import _utils
 WEAK_MATCHES: frozenset[str] = frozenset(["anyOf", "oneOf"])
 STRONG_MATCHES: frozenset[str] = frozenset()
 
-try:
-    from jsonschema.exceptions import _unset
-except ImportError:
-    _unset = _utils.Unset()
+_unset = _utils.Unset()
 
 
 class _Error(Exception):
@@ -161,16 +158,13 @@ class _Error(Exception):
         )
 
 
-try:
-    from jsonschema import ValidationError
-except ImportError:
-    class ValidationError(_Error):
-        """
-        An instance was invalid under a provided schema.
-        """
+class ValidationError(_Error):
+    """
+    An instance was invalid under a provided schema.
+    """
 
-        _word_for_schema_in_error_message = "schema"
-        _word_for_instance_in_error_message = "instance"
+    _word_for_schema_in_error_message = "schema"
+    _word_for_instance_in_error_message = "instance"
 
 
 class SchemaError(_Error):
@@ -182,21 +176,16 @@ class SchemaError(_Error):
     _word_for_instance_in_error_message = "schema"
 
 
-try:
-    with warnings.catch_warnings():
-        warnings.simplefilter("ignore", DeprecationWarning)
-        from jsonschema import RefResolutionError
-except ImportError:
-    @attr.s(hash=True)
-    class RefResolutionError(Exception):
-        """
-        A ref could not be resolved.
-        """
+@attr.s(hash=True)
+class RefResolutionError(Exception):
+    """
+    A ref could not be resolved.
+    """
 
-        _cause = attr.ib()
+    _cause = attr.ib()
 
-        def __str__(self):
-            return str(self._cause)
+    def __str__(self):
+        return str(self._cause)
 
 
 class UndefinedTypeCheck(Exception):

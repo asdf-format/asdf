@@ -31,8 +31,6 @@ dependencies = [
   # for vendorized jsonschema
   "attrs>=20.1.0",
   # end of vendorized jsonschema deps
-  # include jsonschema for all the downstream packages expecting us to provide this
-  "jsonschema>=4.8",
 ]
 [project.optional-dependencies]
 all = [
