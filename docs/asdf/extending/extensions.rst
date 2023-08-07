@@ -407,3 +407,41 @@ The solution is to instantiate the ManifestExtension inside of its entry point m
 
 This is not as inefficient as it might seem, since the `asdf` library only calls the method once
 and reuses a cached result thereafter.
+
+.. _extending_versioning_extensions:
+
+Versioning extensions
+=====================
+
+As asdf relies on extensions to provide support for serializing and deserializing
+many custom objects it is important that extension authors consider backwards
+compatibility when making changes to schemas, converters and extensions. Breaking
+backwards compatibility without providing support for previous versions can result
+in unreadable files.
+
+Extension authors should strive to use conventions described
+by `semantic versioning <https://semver.org/>`_ for versioning tags,
+schemas and extensions. Versions for tags and schemas need not move in lock-step
+with other tags and schemas in the same extension.
+
+The patch version should be increased for bug fixes and other minor,
+backwards-compatible changes. New features can be indicated with increments to
+the minor version, as long as they remain backwards compatible with older
+versions of the schema. Any changes that break backwards compatibility must be
+indicated by a new major version.
+
+Since ASDF is intended to be an archival file format, authors of tags and
+schemas should work to ensure that ASDF files created with older extensions can
+continue to be processed. This means that every time a schema version is increased
+(with the possible exception of patch updates), a **new** schema file should be
+created.
+
+For example, if we currently have a schema for ``xyz-1.0.0``, and we wish to
+make changes and bump the version to ``xyz-1.1.0``, we should leave the
+original schema intact. A **new** schema file should be created for
+``xyz-1.1.0``, which can exist in parallel with the old file. The version of
+the corresponding tag type should be bumped to ``1.1.0``.
+
+For more details on the behavior of schema and tag versioning from a user
+perspective, see :ref:`version_and_compat`, and also
+:ref:`custom_type_versions`.
