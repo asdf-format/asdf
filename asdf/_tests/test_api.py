@@ -8,14 +8,13 @@ import sys
 import numpy as np
 import pytest
 from astropy.modeling import models
-from jsonschema.exceptions import ValidationError
 from numpy.testing import assert_array_equal
 
 import asdf
 import asdf.extension._legacy as _legacy_extension
 from asdf import _resolver as resolver
 from asdf import config_context, get_config, treeutil, versioning
-from asdf.exceptions import AsdfDeprecationWarning, AsdfWarning
+from asdf.exceptions import AsdfDeprecationWarning, AsdfWarning, ValidationError
 from asdf.extension import ExtensionProxy
 
 from ._helpers import assert_no_warnings, assert_roundtrip_tree, assert_tree_match, yaml_to_asdf

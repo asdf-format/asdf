@@ -10,8 +10,9 @@ from operator import methodcaller
 
 import numpy as np
 import yaml
-from jsonschema import validators as mvalidators
-from jsonschema.exceptions import RefResolutionError, ValidationError
+
+from asdf._jsonschema import validators as mvalidators
+from asdf._jsonschema.exceptions import RefResolutionError, ValidationError
 
 from . import constants, generic_io, reference, tagged, treeutil, util, versioning, yamlutil
 from .config import get_config
@@ -192,6 +193,8 @@ class _ValidationContext:
     how many times they have been entered, and only reset themselves
     when exiting the outermost context.
     """
+
+    __slots__ = ["_depth", "_seen"]
 
     def __init__(self):
         self._depth = 0

@@ -181,7 +181,7 @@ class JsonschemaResourceMapping(Mapping):
 
     def __getitem__(self, uri):
         filename = _JSONSCHEMA_URI_TO_FILENAME[uri]
-        return pkgutil.get_data("jsonschema", f"schemas/{filename}")
+        return pkgutil.get_data("asdf._jsonschema", f"schemas/{filename}")
 
     def __len__(self):
         return len(_JSONSCHEMA_URI_TO_FILENAME)

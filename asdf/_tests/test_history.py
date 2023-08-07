@@ -3,10 +3,9 @@ import fractions
 import warnings
 
 import pytest
-from jsonschema import ValidationError
 
 import asdf
-from asdf.exceptions import AsdfWarning
+from asdf.exceptions import AsdfWarning, ValidationError
 from asdf.extension import Converter, Extension
 from asdf.tags.core import HistoryEntry
 from asdf.testing import helpers
