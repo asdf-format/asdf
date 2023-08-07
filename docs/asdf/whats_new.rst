@@ -9,7 +9,7 @@ What's New
 jsonschema
 ----------
 
-Asdf 3.0.0 includes internally a version of jsonschema 4.17.3. This inclusion
+Asdf 2.15.1 includes internally a version of jsonschema 4.17.3. This inclusion
 was done to deal with incompatible changes in jsonschema 4.18.
 
 Many libraries that use asdf import jsonschema to allow catching of ``ValidationError``
@@ -28,5 +28,5 @@ compatibility with future installed jsonschema versions and users are encouraged
 to update their code to import ``ValidationError`` from `asdf.exceptions`.
 
 Finally, asdf is temporarily keeping jsonschema as a dependency as many libraries
-expected this to be installed by asdf. We expect to drop this requirement soon and
-this change might occur in a minor or even patch version.
+expected this to be installed by asdf. We expect to drop this requirement soon (likely
+in 3.0.0) and this change might occur in a minor or even patch version.
