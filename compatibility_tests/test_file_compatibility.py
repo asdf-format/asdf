@@ -1,5 +1,3 @@
-# noqa: INP001
-
 import json
 import os
 import subprocess
@@ -85,7 +83,7 @@ def env_run(env_path, command, *args, **kwargs):
     Run a command on the context of the virtual environment at
     the specified path.
     """
-    return subprocess.run([env_path / "bin" / command, *list(args)], **kwargs).returncode == 0
+    return subprocess.run([env_path / "bin" / command, *list(args)], **kwargs).returncode == 0  # noqa: S603
 
 
 def env_check_output(env_path, command, *args):
@@ -93,7 +91,7 @@ def env_check_output(env_path, command, *args):
     Run a command on the context of the virtual environment at
     the specified path, and return the output.
     """
-    return subprocess.check_output([env_path / "bin" / command, *list(args)]).decode("utf-8").strip()
+    return subprocess.check_output([env_path / "bin" / command, *list(args)]).decode("utf-8").strip()  # noqa: S603
 
 
 def get_supported_versions(env_path):
@@ -130,7 +128,7 @@ def env_path(asdf_version, tmp_path_factory):
     """
     path = tmp_path_factory.mktemp(f"asdf-{asdf_version}-env", numbered=False)
 
-    assert subprocess.run(["virtualenv", str(path)]).returncode == 0
+    assert subprocess.run(["virtualenv", str(path)]).returncode == 0  # noqa: S603,S607
 
     assert env_run(
         path,
@@ -198,10 +196,7 @@ def test_file_compatibility(asdf_version, env_path, tmpdir):
                 old_file_path,
                 str(standard_version),
                 capture_output=True,
-            ), "asdf library version {} failed to generate an ASDF Standard {} file".format(
-                asdf_version,
-                standard_version,
-            )
+            ), f"asdf library version {asdf_version} failed to generate an ASDF Standard {standard_version} file"
             assert_file_correct(old_file_path), (
                 f"asdf library version {asdf_version} produced an ASDF Standard {standard_version}"
                 "that this code failed to read"

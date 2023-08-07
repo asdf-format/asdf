@@ -12,7 +12,7 @@ to create their own custom ASDF types and extensions.
 .. automodapi:: asdf.tagged
 
 .. automodapi:: asdf.exceptions
-    :skip: ValidationError
+    :allowed-package-names: jsonschema, asdf
 
 .. automodapi:: asdf.extension
 

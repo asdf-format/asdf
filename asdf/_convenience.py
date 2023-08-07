@@ -41,7 +41,7 @@ def info(node_or_path, max_rows=DEFAULT_MAX_ROWS, max_cols=DEFAULT_MAX_COLS, sho
     """
     with _manage_node(node_or_path) as node:
         lines = render_tree(node, max_rows=max_rows, max_cols=max_cols, show_values=show_values, identifier="root")
-        print("\n".join(lines))  # noqa: T201
+        print("\n".join(lines))
 
 
 @contextmanager

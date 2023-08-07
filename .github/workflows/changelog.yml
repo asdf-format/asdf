@@ -18,7 +18,7 @@ jobs:
     runs-on: ubuntu-latest
     steps:
     - name: Check change log entry
-      uses: pllim/action-check_astropy_changelog@main
+      uses: scientific-python/action-check-changelogfile@6087eddce1d684b0132be651a4dad97699513113  # 0.2
       env:
         CHANGELOG_FILENAME: CHANGES.rst
         GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}

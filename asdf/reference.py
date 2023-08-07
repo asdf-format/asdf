@@ -69,7 +69,7 @@ class Reference(_types.AsdfType):
         if self._target is None:
             return f"<Reference (unloaded) to '{self._uri}'>"
 
-        return f"<Reference to {repr(self._target)}>"
+        return f"<Reference to {self._target!r}>"
 
     def __str__(self):
         # str alone should not force loading of the reference
@@ -86,7 +86,7 @@ class Reference(_types.AsdfType):
             return None
         try:
             return getattr(self._get_target(), attr)
-        except Exception as err:  # noqa: BLE001
+        except Exception as err:
             msg = f"No attribute '{attr}'"
             raise AttributeError(msg) from err
 

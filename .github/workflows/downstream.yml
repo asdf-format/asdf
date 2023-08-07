@@ -40,8 +40,6 @@ jobs:
       # Any env name which does not start with `pyXY` will use this Python version.
       default_python: '3.10'
       envs: |
-        - linux: astropy
-        - linux: specutils
         - linux: asdf-astropy
 
   stsci:

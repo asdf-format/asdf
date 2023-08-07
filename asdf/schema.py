@@ -10,8 +10,9 @@ from operator import methodcaller
 
 import numpy as np
 import yaml
-from jsonschema import validators as mvalidators
-from jsonschema.exceptions import RefResolutionError, ValidationError
+
+from asdf._jsonschema import validators as mvalidators
+from asdf._jsonschema.exceptions import RefResolutionError, ValidationError
 
 from . import constants, extension, generic_io, reference, tagged, treeutil, util, versioning, yamlutil
 from .config import get_config
@@ -82,7 +83,7 @@ def validate_tag(validator, tag_pattern, instance, schema):
         yield ValidationError(f"mismatched tags, wanted '{tag_pattern}', got '{instance_tag}'")
 
 
-def validate_propertyOrder(validator, order, instance, schema):  # noqa: N802
+def validate_propertyOrder(validator, order, instance, schema):
     """
     Stores a value on the `tagged.TaggedDict` instance so that
     properties can be written out in the preferred order.  In that
@@ -100,7 +101,7 @@ def validate_propertyOrder(validator, order, instance, schema):  # noqa: N802
     instance.property_order = order
 
 
-def validate_flowStyle(validator, flow_style, instance, schema):  # noqa: N802
+def validate_flowStyle(validator, flow_style, instance, schema):
     """
     Sets a flag on the `tagged.TaggedList` or `tagged.TaggedDict`
     object so that the YAML generator knows which style to use to
@@ -209,6 +210,8 @@ class _ValidationContext:
     when exiting the outermost context.
     """
 
+    __slots__ = ["_depth", "_seen"]
+
     def __init__(self):
         self._depth = 0
         self._seen = set()
@@ -253,7 +256,7 @@ def _create_validator(validators=YAML_VALIDATORS, visit_repeat_nodes=False):
         },
     )
     id_of = mvalidators.Draft4Validator.ID_OF
-    ASDFvalidator = mvalidators.create(  # noqa: N806
+    ASDFvalidator = mvalidators.create(
         meta_schema=meta_schema,
         validators=validators,
         type_checker=type_checker,
@@ -518,7 +521,7 @@ def _load_schema_cached(url, resolver, resolve_references, resolve_local_refs):
 
         schema = treeutil.walk_and_modify(schema, resolve_refs)
 
-    return schema  # noqa: RET504
+    return schema
 
 
 def get_validator(
@@ -535,7 +538,7 @@ def get_validator(
     Get a JSON schema validator object for the given schema.
 
     The additional *args and **kwargs are passed along to
-    `~jsonschema.Validator.validate`.
+    `~jsonschema.protocols.Validator.validate`.
 
     Parameters
     ----------
@@ -646,7 +649,7 @@ def validate(instance, ctx=None, schema=None, validators=None, reading=False, *a
     tag on the instance.
 
     The additional ``*args`` and ``**kwargs`` are passed along to
-    `~jsonschema.Validator.validate`.
+    `~jsonschema.protocols.Validator.validate`.
 
     Parameters
     ----------

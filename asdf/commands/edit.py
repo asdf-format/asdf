@@ -190,8 +190,8 @@ def edit(path):
     """
     # Extract the YAML portion of the original file:
     with generic_io.get_file(path, mode="r") as fd:
-        if util.get_file_type(fd) != util.FileType.ASDF:
-            print(f"Error: '{path}' is not an ASDF file.")  # noqa: T201
+        if fd.peek(len(constants.ASDF_MAGIC)) != constants.ASDF_MAGIC:
+            print(f"Error: '{path}' is not an ASDF file.")
             return 1
 
         original_content, available_bytes, contains_blocks = read_yaml(fd)
@@ -217,14 +217,14 @@ def edit(path):
                 new_content = f.read()
 
             if new_content == original_content:
-                print("No changes made to file")  # noqa: T201
+                print("No changes made to file")
                 return 0
 
             try:
                 new_asdf_version = parse_asdf_version(new_content)
                 new_yaml_version = parse_yaml_version(new_content)
-            except Exception as e:  # noqa: BLE001
-                print(f"Error: failed to parse ASDF header: {str(e)}")  # noqa: T201
+            except Exception as e:
+                print(f"Error: failed to parse ASDF header: {e!s}")
                 choice = request_input("(c)ontinue editing or (a)bort? ", ["c", "a"])
                 if choice == "a":
                     return 1
@@ -232,7 +232,7 @@ def edit(path):
                 continue
 
             if new_asdf_version != original_asdf_version or new_yaml_version != original_yaml_version:
-                print("Error: cannot modify ASDF Standard or YAML version using this tool.")  # noqa: T201
+                print("Error: cannot modify ASDF Standard or YAML version using this tool.")
                 choice = request_input("(c)ontinue editing or (a)bort? ", ["c", "a"])
                 if choice == "a":
                     return 1
@@ -246,7 +246,7 @@ def edit(path):
                 with open_asdf(io.BytesIO(new_content), _force_raw_types=True):
                     pass
             except yaml.YAMLError as e:
-                print("Error: failed to parse updated YAML:")  # noqa: T201
+                print("Error: failed to parse updated YAML:")
                 print_exception(e)
                 choice = request_input("(c)ontinue editing or (a)bort? ", ["c", "a"])
                 if choice == "a":
@@ -255,7 +255,7 @@ def edit(path):
                 continue
 
             except schema.ValidationError as e:
-                print("Warning: updated ASDF tree failed validation:")  # noqa: T201
+                print("Warning: updated ASDF tree failed validation:")
                 print_exception(e)
                 choice = request_input("(c)ontinue editing, (f)orce update, or (a)bort? ", ["c", "f", "a"])
                 if choice == "a":
@@ -264,8 +264,8 @@ def edit(path):
                 if choice == "c":
                     continue
 
-            except Exception as e:  # noqa: BLE001
-                print("Error: failed to read updated file as ASDF:")  # noqa: T201
+            except Exception as e:
+                print("Error: failed to read updated file as ASDF:")
                 print_exception(e)
                 choice = request_input("(c)ontinue editing or (a)bort? ", ["c", "a"])
                 if choice == "a":
@@ -291,7 +291,7 @@ def edit(path):
     else:
         # File does not have sufficient space, and binary blocks
         # are present.
-        print("Warning: updated YAML larger than allocated space.  File must be rewritten.")  # noqa: T201
+        print("Warning: updated YAML larger than allocated space.  File must be rewritten.")
         choice = request_input("(c)ontinue or (a)bort? ", ["c", "a"])
         if choice == "a":
             return 1
@@ -346,7 +346,7 @@ def print_exception(e):
     if len(lines) > 20:
         lines = lines[0:20] + ["..."]
     for line in lines:
-        print(f"    {line}")  # noqa: T201
+        print(f"    {line}")
 
 
 def request_input(message, choices):
@@ -366,7 +366,7 @@ def request_input(message, choices):
         if choice in choices:
             return choice
 
-        print(f"Invalid choice: {choice}")  # noqa: T201
+        print(f"Invalid choice: {choice}")
 
     return None
 
@@ -378,4 +378,4 @@ def open_editor(path):
     editor = os.environ.get("EDITOR", DEFAULT_EDITOR)
     # Marked safe because the editor command is specified by an
     # environment variable that the user controls.
-    subprocess.run(f"{editor} {path}", check=True, shell=True)  # nosec
+    subprocess.run(f"{editor} {path}", check=True, shell=True)  # noqa: S602

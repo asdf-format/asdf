@@ -36,10 +36,17 @@ jobs:
         - linux: coverage
           name: Python 3.9 coverage
           python-version: 3.9
-        - linux: coverage
-          name: Python 3.8 coverage
-          python-version: 3.8
       coverage: codecov
+
+  jsonschema:
+    uses: OpenAstronomy/github-actions-workflows/.github/workflows/tox.yml@v1
+    if: (github.repository == 'asdf-format/asdf' && (github.event_name == 'schedule' || github.event_name == 'push' || github.event_name == 'workflow_dispatch' || contains(github.event.pull_request.labels.*.name, 'jsonschema')))
+    with:
+      submodules: false
+      # Any env name which does not start with `pyXY` will use this Python version.
+      default_python: '3.10'
+      envs: |
+        - linux: jsonschema
 
   asdf-schemas:
     uses: OpenAstronomy/github-actions-workflows/.github/workflows/tox.yml@v1
@@ -71,7 +78,6 @@ jobs:
       # Any env name which does not start with `pyXY` will use this Python version.
       default_python: '3.9'
       envs: |
-        - linux: py38-devdeps-parallel
         - linux: py39-devdeps-parallel
         - linux: py310-devdeps-parallel
         - linux: py311-devdeps-parallel
@@ -84,7 +90,6 @@ jobs:
       # Any env name which does not start with `pyXY` will use this Python version.
       default_python: '3.9'
       envs: |
-        - linux: py38-oldestdeps-parallel
         - linux: py39-oldestdeps-parallel
 
   compatibility:

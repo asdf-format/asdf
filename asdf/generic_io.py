@@ -256,7 +256,7 @@ class GenericFile(metaclass=util.InheritDocstrings):
         if block_size == -1:
             try:
                 block_size = os.fstat(self._fd.fileno()).st_blksize
-            except Exception:  # noqa: BLE001
+            except Exception:
                 block_size = io.DEFAULT_BUFFER_SIZE
 
         if block_size <= 0:
@@ -1013,7 +1013,7 @@ def _http_to_temp(init, mode, uri=None):
     if block_size == -1:
         try:
             block_size = os.fstat(fd.fileno()).st_blksize
-        except Exception:  # noqa: BLE001
+        except Exception:
             block_size = io.DEFAULT_BUFFER_SIZE
 
     try:
@@ -1147,18 +1147,14 @@ def get_file(init, mode="r", uri=None, close=False):
                 else url2pathname(parsed.path)
             )
             try:
-                fd = (
-                    atomicfile.atomic_open(realpath, realmode)
-                    if mode == "w"
-                    else open(realpath, realmode)  # noqa: SIM115
-                )
+                fd = atomicfile.atomic_open(realpath, realmode) if mode == "w" else open(realpath, realmode)
 
                 fd = fd.__enter__()
             except FileNotFoundError as e:
                 # atomic_open will create an Exception with an odd looking path
                 # overwrite the error message to make it more informative
                 e.filename = realpath
-                raise e  # noqa: TRY201
+                raise e
 
             return RealFile(fd, mode, close=True, uri=uri)
 

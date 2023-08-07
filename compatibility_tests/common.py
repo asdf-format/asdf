@@ -1,5 +1,3 @@
-# noqa: INP001
-
 import numpy as np
 
 import asdf
@@ -8,10 +6,7 @@ from asdf.versioning import supported_versions
 
 def generate_file(path, version):
     if version not in supported_versions:
-        msg = "ASDF Standard version {} is not supported by version {} of the asdf library".format(
-            version,
-            asdf.__version__,
-        )
+        msg = f"ASDF Standard version {version} is not supported by version {asdf.__version__} of the asdf library"
         raise ValueError(msg)
 
     af = asdf.AsdfFile({"array": np.ones((8, 16))}, version=version)

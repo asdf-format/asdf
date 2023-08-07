@@ -4,16 +4,15 @@ description = "Python implementation of the ASDF Standard"
 readme = 'README.rst'
 license = { file = 'LICENSE' }
 authors = [{ name = 'The ASDF Developers', email = 'help@stsci.edu' }]
-requires-python = '>=3.8'
+requires-python = '>=3.9'
 classifiers = [
-    "License :: OSI Approved :: BSD License",
-    'Programming Language :: Python',
-    'Programming Language :: Python :: 3',
-    'Programming Language :: Python :: 3.8',
-    'Programming Language :: Python :: 3.9',
-    'Programming Language :: Python :: 3.10',
-    'Programming Language :: Python :: 3.11',
-    'Development Status :: 5 - Production/Stable',
+  'Development Status :: 5 - Production/Stable',
+  "License :: OSI Approved :: BSD License",
+  'Programming Language :: Python',
+  'Programming Language :: Python :: 3',
+  'Programming Language :: Python :: 3.9',
+  'Programming Language :: Python :: 3.10',
+  'Programming Language :: Python :: 3.11',
 ]
 dynamic = [
   'version',
@@ -23,14 +22,16 @@ dependencies = [
   "asdf-transform-schemas>=0.3",
   "asdf-unit-schemas>=0.1",
   "importlib-metadata>=4.11.4",
-  'importlib_resources>=3; python_version < "3.9"',
   "jmespath>=0.6.2",
-  "jsonschema<4.18,>=4.0.1", # jsonschema 4.18 contains incompatible changes: https://github.com/asdf-format/asdf/issues/1485
-  "numpy>=1.20",
-  'numpy<1.25,>=1.20; python_version < "3.9"',
+  "numpy>=1.22",
   "packaging>=19",
   "pyyaml>=5.4.1",
   "semantic_version>=2.8",
+  # for vendorized jsonschema
+  "attrs>=20.1.0",
+  # end of vendorized jsonschema deps
+  # include jsonschema for all the downstream packages expecting us to provide this
+  "jsonschema>=4.8",
 ]
 [project.optional-dependencies]
 all = [
@@ -38,6 +39,8 @@ all = [
 ]
 docs = [
   "sphinx-asdf>=0.1.4",
+  "graphviz",
+  "sphinx-inline-tabs",
   'tomli; python_version < "3.11"',
 ]
 tests = [
@@ -72,6 +75,7 @@ requires = [
 
 [tool.setuptools.packages.find]
 include = ['asdf*', 'pytest_asdf*']
+exclude = ['asdf/_jsonschema/json/*']
 
 [tool.setuptools.package-data]
 'asdf.commands.tests.data' = ["*"]
@@ -91,6 +95,7 @@ force-exclude = '''
     | \.pytest_cache
     | \.tox
     | asdf/extern
+    | asdf/_jsonschema
     | build
     | dist
   )/
@@ -129,6 +134,7 @@ omit = [
     'asdf/version.*',
     'asdf/compat*',
     'asdf/extern*',
+    'asdf/_jsonschema/**',
     # And again for running against installed version
     '*/asdf/_astropy_init*',
     '*/asdf/conftest*',
@@ -143,6 +149,7 @@ omit = [
     '*/asdf/version.*',
     '*/asdf/compat*',
     '*/asdf/extern*',
+    '*/asdf/_jsonschema/**',
 ]
 
 [tool.coverage.report]
@@ -163,31 +170,20 @@ exclude_lines = [
 [tool.ruff]
 target-version = "py38"
 line-length = 120
-select = ["ALL"]
-extend-ignore = [
-    # Ignored check groups
-    "C90", # mccabe complexity
-    "D", # pydocstyle
-    "ANN", # flake8-annotations
-    "FBT", # flake8-boolean-trap
-    "ARG", # flake8-unused-arguments
-    "DTZ", # flake8-datetimez
-    "PTH", # flake8-use-pathlib
-    # Individually ignored checks
-    "B028",  # No explicit stacklevel argument
-    "PIE810", # Call `startswith` once with a `tuple`
-    "PLC1901", # compare-to-empty-string
-    "PLR0911", # Too many return statements
-    "PLR0912", # Too many branches
-    "PLR0913", # Too many arguments to function call
-    "PLR0915", # Too many statements
-    "PLR2004", # Magic value used in comparison
-    "SLF001", # Private member accessed
-    "TRY002", # Create your own exception
-    "TRY301", # Abstract raise to an inner function
-    "TRY400", # Use logging.exception instead of logging.error
+select = [
+    # minimal set to match pre-ruff behavior
+    "E", # pycodestyle
+    "F", # pyflakes, autoflake
+    "I", # isort
+    "S", # bandit
+    "UP", # pyupgrade
+    "RUF",  # ruff specific, includes yesqa
 ]
-extend-exclude = ["asdf/extern/*", "docs/*"]
+extend-ignore = [
+    "S310", # URL open for permitted schemes
+    "RUF012",  # mutable-class-default (typing related)
+]
+extend-exclude = ["asdf/extern/*", "asdf/_jsonschema/*", "docs/*"]
 
 [tool.ruff.per-file-ignores]
 "test_*.py" = ["S101"]
@@ -195,10 +191,10 @@ extend-exclude = ["asdf/extern/*", "docs/*"]
 "compatibility_tests/common.py" = ["S101"]
 
 [tool.flynt]
-exclude = ["asdf/extern/*"]
+exclude = ["asdf/extern/*", "asdf/_jsonschema/*"]
 
 [tool.codespell]
-skip="*.pdf,*.fits,*.asdf,.tox,asdf/extern,build,./tags,.git,docs/_build"
+skip="*.pdf,*.fits,*.asdf,.tox,asdf/extern,asdf/_jsonschema,build,./tags,.git,docs/_build"
 ignore-words-list="""
-fo,
+fo,afile,
 """

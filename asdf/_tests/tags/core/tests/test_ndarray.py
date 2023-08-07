@@ -3,7 +3,6 @@ import os
 import re
 import sys
 
-import jsonschema
 import numpy as np
 import pytest
 import yaml
@@ -14,7 +13,7 @@ import asdf
 from asdf import util
 from asdf._tests import _helpers as helpers
 from asdf._tests.objects import CustomTestType
-from asdf.exceptions import AsdfDeprecationWarning
+from asdf.exceptions import AsdfDeprecationWarning, ValidationError
 from asdf.tags.core import ndarray
 
 from . import data as test_data
@@ -174,12 +173,18 @@ def test_array_inline_threshold_recursive(tmpdir):
     aff = models.AffineTransformation2D(matrix=[[1, 2], [3, 4]])
     tree = {"test": aff}
 
-    def check_asdf(asdf):
-        assert len(list(asdf._blocks.internal_blocks)) == 0
-
     with asdf.config_context() as config:
         config.array_inline_threshold = 100
-        helpers.assert_roundtrip_tree(tree, tmpdir, asdf_check_func=check_asdf)
+        # we can no longer use _helpers.assert_roundtrip_tree here because
+        # the model no longer has a CustomType which results in equality testing
+        # using == which will fail
+        # this test appears to be designed to test the inline threshold so we can
+        # just look at the number of blocks
+        fn = str(tmpdir / "test.asdf")
+        af = asdf.AsdfFile(tree)
+        af.write_to(fn)
+        with asdf.open(fn) as af:
+            assert len(list(af._blocks.internal_blocks)) == 0
 
 
 def test_copy_inline():
@@ -331,7 +336,7 @@ def test_mask_nan():
 def test_string(tmpdir):
     tree = {
         "ascii": np.array([b"foo", b"bar", b"baz"]),
-        "unicode": np.array(["სამეცნიერო", "данные", "வடிவம்"]),  # noqa: RUF001
+        "unicode": np.array(["სამეცნიერო", "данные", "வடிவம்"]),
     }
 
     helpers.assert_roundtrip_tree(tree, tmpdir)
@@ -532,7 +537,7 @@ def test_invalid_mask_datatype(tmpdir):
     """
     buff = helpers.yaml_to_asdf(content)
 
-    with pytest.raises(jsonschema.ValidationError, match=r".* is not valid under any of the given schemas"), asdf.open(
+    with pytest.raises(ValidationError, match=r".* is not valid under any of the given schemas"), asdf.open(
         buff,
     ):
         pass
@@ -546,7 +551,7 @@ def test_ndim_validation(tmpdir):
     """
     buff = helpers.yaml_to_asdf(content)
 
-    with pytest.raises(jsonschema.ValidationError, match=r"Wrong number of dimensions:.*"), asdf.open(
+    with pytest.raises(ValidationError, match=r"Wrong number of dimensions:.*"), asdf.open(
         buff,
         extensions=CustomExtension(),
     ):
@@ -600,7 +605,7 @@ def test_ndim_validation(tmpdir):
     """
     buff = helpers.yaml_to_asdf(content)
 
-    with pytest.raises(jsonschema.ValidationError, match=r"Wrong number of dimensions:.*"), asdf.open(
+    with pytest.raises(ValidationError, match=r"Wrong number of dimensions:.*"), asdf.open(
         buff,
         extensions=CustomExtension(),
     ):
@@ -627,7 +632,7 @@ def test_datatype_validation(tmpdir):
     """
     buff = helpers.yaml_to_asdf(content)
 
-    with pytest.raises(jsonschema.ValidationError, match=r"Can not safely cast from .* to .*"), asdf.open(
+    with pytest.raises(ValidationError, match=r"Can not safely cast from .* to .*"), asdf.open(
         buff,
         extensions=CustomExtension(),
     ):
@@ -652,7 +657,7 @@ def test_datatype_validation(tmpdir):
     """
     buff = helpers.yaml_to_asdf(content)
 
-    with pytest.raises(jsonschema.ValidationError, match=r"Expected datatype .*, got .*"), asdf.open(
+    with pytest.raises(ValidationError, match=r"Expected datatype .*, got .*"), asdf.open(
         buff,
         extensions=CustomExtension(),
     ):
@@ -670,7 +675,7 @@ def test_datatype_validation(tmpdir):
     """
     buff = helpers.yaml_to_asdf(content)
 
-    with pytest.raises(jsonschema.ValidationError, match=r"Expected scalar datatype .*, got .*"), asdf.open(
+    with pytest.raises(ValidationError, match=r"Expected scalar datatype .*, got .*"), asdf.open(
         buff,
         extensions=CustomExtension(),
     ):
@@ -705,7 +710,7 @@ def test_structured_datatype_validation(tmpdir):
     """
     buff = helpers.yaml_to_asdf(content)
 
-    with pytest.raises(jsonschema.ValidationError, match=r"Can not safely cast to expected datatype.*"), asdf.open(
+    with pytest.raises(ValidationError, match=r"Can not safely cast to expected datatype.*"), asdf.open(
         buff,
         extensions=CustomExtension(),
     ):
@@ -725,7 +730,7 @@ def test_structured_datatype_validation(tmpdir):
     """
     buff = helpers.yaml_to_asdf(content)
 
-    with pytest.raises(jsonschema.ValidationError, match=r"Mismatch in number of columns:.*"), asdf.open(
+    with pytest.raises(ValidationError, match=r"Mismatch in number of columns:.*"), asdf.open(
         buff,
         extensions=CustomExtension(),
     ):
@@ -738,7 +743,7 @@ def test_structured_datatype_validation(tmpdir):
     """
     buff = helpers.yaml_to_asdf(content)
 
-    with pytest.raises(jsonschema.ValidationError, match=r"Expected structured datatype.*"), asdf.open(
+    with pytest.raises(ValidationError, match=r"Expected structured datatype.*"), asdf.open(
         buff,
         extensions=CustomExtension(),
     ):
@@ -756,7 +761,7 @@ def test_structured_datatype_validation(tmpdir):
     """
     buff = helpers.yaml_to_asdf(content)
 
-    with pytest.raises(jsonschema.ValidationError, match=r"Expected datatype .*, got .*"), asdf.open(
+    with pytest.raises(ValidationError, match=r"Expected datatype .*, got .*"), asdf.open(
         buff,
         extensions=CustomExtension(),
     ):

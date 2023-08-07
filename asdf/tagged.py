@@ -15,7 +15,7 @@ schema, which only understands basic Python data types, not the
 However, basic Python data types do not preserve the tag information
 from the YAML file that we need later to convert elements to custom
 data types.  Therefore, the approach here is to wrap those basic types
-inside of `Tagged` objects long enough to run through the jsonschema
+inside of `Tagged` objects long enough to run through the asdf._jsonschema
 validator, and then convert to custom data types and throwing away the
 tag annotations in the process.
 

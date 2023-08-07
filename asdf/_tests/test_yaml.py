@@ -287,4 +287,10 @@ def test_numpy_scalar(numpy_value, expected_value):
     yamlutil.dump_tree(tree, buffer, ctx)
     buffer.seek(0)
 
-    assert yamlutil.load_tree(buffer)["value"] == expected_value
+    loaded_value = yamlutil.load_tree(buffer)["value"]
+    if isinstance(numpy_value, np.floating):
+        abs_diff = abs(expected_value - loaded_value)
+        eps = np.finfo(numpy_value.dtype).eps
+        assert abs_diff < eps, abs_diff
+    else:
+        assert loaded_value == expected_value
