@@ -17,8 +17,10 @@ jobs:
     name: Confirm changelog entry
     runs-on: ubuntu-latest
     steps:
-    - name: Check change log entry
-      uses: scientific-python/action-check-changelogfile@6087eddce1d684b0132be651a4dad97699513113  # 0.2
-      env:
-        CHANGELOG_FILENAME: CHANGES.rst
-        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      - name: Checkout code
+        uses: actions/checkout@v3
+        with:
+          fetch-depth: 0
+      - name: Grep for PR number in CHANGES.rst
+        run: grep -P '\[[^\]]*#${{github.event.number}}[,\]]' CHANGES.rst
+        if: ${{ !contains(github.event.pull_request.labels.*.name, 'no-changelog-entry-needed') }}
