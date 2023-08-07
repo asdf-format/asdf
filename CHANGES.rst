@@ -10,15 +10,22 @@ The ASDF Standard is at v1.6.0
 - Move built-in tags to converters (except ndarray and integer). [#1474]
 - Add block storage support to Converter [#1508]
 - Remove deprecated legacy extension API [#1464]
-- Drop Python 3.8 support [#1556]
-- Drop NumPy 1.20, 1.21 support [#1568]
 - Fix issue opening files that don't support ``fileno`` [#1557]
 - Allow Converters to defer conversion to other Converters
   by returning ``None`` in ``Converter.select_tag`` [#1561]
+- Remove deprecated tests.helpers [#1597]
+
+2.15.1 (2023-08-07)
+-------------------
+
+The ASDF Standard is at v1.6.0
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+- Drop Python 3.8 support [#1556]
+- Drop NumPy 1.20, 1.21 support [#1568]
 - Convert numpy scalars to python types during yaml encoding
   to handle NEP51 changes for numpy 2.0 [#1605]
 - Vendorize jsonschema 4.17.3 [#1591]
-- Remove deprecated tests.helpers [#1597]
 
 2.15.0 (2023-03-28)
 -------------------
