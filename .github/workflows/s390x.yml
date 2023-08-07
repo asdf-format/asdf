@@ -61,6 +61,7 @@ jobs:
                                   python3-astropy \
                                   python3-lz4 \
                                   python3-numpy \
+                                  python3-scipy \
                                   python3-ply \
                                   python3-venv \
                                   python3-wheel \
@@ -75,4 +76,5 @@ jobs:
             source tests/bin/activate
             pip3 install --upgrade pip setuptools gwcs pytest pytest-doctestplus pytest-remotedata
             pip3 install -e .[all,tests]
+            pip3 list
             python3 -m pytest --remote-data
