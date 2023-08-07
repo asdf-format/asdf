@@ -71,7 +71,7 @@ class AsdfFile:
             The URI for this ASDF file.  Used to resolve relative
             references against.  If not provided, will be
             automatically determined from the associated file object,
-            if possible and if created from `asdf.AsdfFile.open`.
+            if possible and if created from `asdf.open`.
 
         extensions : object, optional
             Additional extensions to use when reading and writing the file.
@@ -798,7 +798,6 @@ class AsdfFile:
         _force_raw_types=False,
         strict_extension_check=False,
         ignore_missing_extensions=False,
-        **kwargs,
     ):
         """Attempt to populate AsdfFile data from file-like object"""
 
@@ -806,9 +805,7 @@ class AsdfFile:
             msg = "'strict_extension_check' and 'ignore_missing_extensions' are incompatible options"
             raise ValueError(msg)
 
-        with config_context() as config:
-            _handle_deprecated_kwargs(config, kwargs)
-
+        with config_context():
             self._mode = fd.mode
             self._fd = fd
             # The filename is currently only used for tracing warning information
@@ -908,7 +905,6 @@ class AsdfFile:
         _force_raw_types=False,
         strict_extension_check=False,
         ignore_missing_extensions=False,
-        **kwargs,
     ):
         """Attempt to open file-like object as an AsdfFile"""
         close_on_fail = isinstance(fd, (str, pathlib.Path))
@@ -923,61 +919,11 @@ class AsdfFile:
                 _force_raw_types=_force_raw_types,
                 strict_extension_check=strict_extension_check,
                 ignore_missing_extensions=ignore_missing_extensions,
-                **kwargs,
             )
         except Exception:
             if close_on_fail:
                 generic_file.close()
             raise
-
-    @classmethod
-    def open(
-        cls,
-        fd,
-        uri=None,
-        mode="r",
-        validate_checksums=False,
-        extensions=None,
-        ignore_version_mismatch=True,
-        ignore_unrecognized_tag=False,
-        _force_raw_types=False,
-        copy_arrays=False,
-        lazy_load=True,
-        custom_schema=None,
-        strict_extension_check=False,
-        ignore_missing_extensions=False,
-        **kwargs,
-    ):
-        """
-        Open an existing ASDF file.
-
-        .. deprecated:: 2.2
-            Use `asdf.open` instead.
-        """
-
-        warnings.warn(
-            "The method AsdfFile.open has been deprecated and will be removed "
-            "in asdf-3.0. Use the top-level asdf.open function instead.",
-            AsdfDeprecationWarning,
-        )
-
-        return open_asdf(
-            fd,
-            uri=uri,
-            mode=mode,
-            validate_checksums=validate_checksums,
-            extensions=extensions,
-            ignore_version_mismatch=ignore_version_mismatch,
-            ignore_unrecognized_tag=ignore_unrecognized_tag,
-            _force_raw_types=_force_raw_types,
-            copy_arrays=copy_arrays,
-            lazy_load=lazy_load,
-            custom_schema=custom_schema,
-            strict_extension_check=strict_extension_check,
-            ignore_missing_extensions=ignore_missing_extensions,
-            _compat=True,
-            **kwargs,
-        )
 
     def _write_tree(self, tree, fd, pad_blocks):
         fd.write(constants.ASDF_MAGIC)
@@ -1058,7 +1004,12 @@ class AsdfFile:
 
     def update(
         self,
-        **kwargs,
+        all_array_storage=NotSet,
+        all_array_compression=NotSet,
+        compression_kwargs=NotSet,
+        pad_blocks=False,
+        include_block_index=True,
+        version=None,
     ):
         """
         Update the file on disk in place.
@@ -1092,6 +1043,10 @@ class AsdfFile:
             - ``input``: Use the same compression as in the file read.
               If there is no prior file, acts as None
 
+        compression_kwargs : dict, optional
+            If provided, set this as the compression keyword arguments
+            for all binary blocks in the file.
+
         pad_blocks : float or bool, optional
             Add extra space between blocks to allow for updating of
             the file.  If `False` (default), add no padding (always
@@ -1107,27 +1062,15 @@ class AsdfFile:
         version : str, optional
             Update the ASDF Standard version of this AsdfFile before
             writing.
-
-        auto_inline : int, optional
-            DEPRECATED.  When the number of elements in an array is less
-            than this threshold, store the array as inline YAML, rather
-            than a binary block.  This only works on arrays that do not
-            share data with other arrays.  Default is the value specified
-            in ``asdf.get_config().array_inline_threshold``.
         """
 
-        pad_blocks = kwargs.pop("pad_blocks", False)
-        include_block_index = kwargs.pop("include_block_index", True)
-        version = kwargs.pop("version", None)
-
         with config_context() as config:
-            if "all_array_storage" in kwargs:
-                config.all_array_storage = kwargs.pop("all_array_storage")
-            if "all_array_compression" in kwargs:
-                config.all_array_compression = kwargs.pop("all_array_compression")
-            if "compression_kwargs" in kwargs:
-                config.all_array_compression_kwargs = kwargs.pop("compression_kwargs")
-            _handle_deprecated_kwargs(config, kwargs)
+            if all_array_storage is not NotSet:
+                config.all_array_storage = all_array_storage
+            if all_array_compression is not NotSet:
+                config.all_array_compression = all_array_compression
+            if compression_kwargs is not NotSet:
+                config.all_array_compression_kwargs = compression_kwargs
 
             fd = self._fd
 
@@ -1210,7 +1153,12 @@ class AsdfFile:
     def write_to(
         self,
         fd,
-        **kwargs,
+        all_array_storage=NotSet,
+        all_array_compression=NotSet,
+        compression_kwargs=NotSet,
+        pad_blocks=False,
+        include_block_index=True,
+        version=None,
     ):
         """
         Write the ASDF file to the given file-like object.
@@ -1254,6 +1202,10 @@ class AsdfFile:
             - ``input``: Use the same compression as in the file read.
               If there is no prior file, acts as None.
 
+        compression_kwargs : dict, optional
+            If provided, set this as the compression keyword arguments
+            for all binary blocks in the file.
+
         pad_blocks : float or bool, optional
             Add extra space between blocks to allow for updating of
             the file.  If `False` (default), add no padding (always
@@ -1269,23 +1221,14 @@ class AsdfFile:
         version : str, optional
             Update the ASDF Standard version of this AsdfFile before
             writing.
-
-        auto_inline : int, optional
-            DEPRECATED.
-            When the number of elements in an array is less than this
-            threshold, store the array as inline YAML, rather than a
-            binary block.  This only works on arrays that do not share
-            data with other arrays.  Default is the value specified in
-            ``asdf.get_config().array_inline_threshold``.
-
         """
         with config_context() as config:
-            if "all_array_storage" in kwargs:
-                config.all_array_storage = kwargs["all_array_storage"]
-            if "all_array_compression" in kwargs:
-                config.all_array_compression = kwargs["all_array_compression"]
-            if "compression_kwargs" in kwargs:
-                config.all_array_compression_kwargs = kwargs["compression_kwargs"]
+            if all_array_storage is not NotSet:
+                config.all_array_storage = all_array_storage
+            if all_array_compression is not NotSet:
+                config.all_array_compression = all_array_compression
+            if compression_kwargs is not NotSet:
+                config.all_array_compression_kwargs = compression_kwargs
 
             used_blocks = self._blocks._find_used_blocks(self.tree, self, remove=False)
 
@@ -1330,25 +1273,33 @@ class AsdfFile:
                     blk = naf._blocks.find_or_create_block(key)
                     blk._used = True
                     blk._data_callback = b._data_callback
-            naf._write_to(fd, **kwargs)
+            naf._write_to(
+                fd,
+                all_array_storage=all_array_storage,
+                all_array_compression=all_array_compression,
+                compression_kwargs=compression_kwargs,
+                pad_blocks=pad_blocks,
+                include_block_index=include_block_index,
+                version=version,
+            )
 
     def _write_to(
         self,
         fd,
-        **kwargs,
+        all_array_storage=NotSet,
+        all_array_compression=NotSet,
+        compression_kwargs=NotSet,
+        pad_blocks=False,
+        include_block_index=True,
+        version=None,
     ):
-        pad_blocks = kwargs.pop("pad_blocks", False)
-        include_block_index = kwargs.pop("include_block_index", True)
-        version = kwargs.pop("version", None)
-
         with config_context() as config:
-            if "all_array_storage" in kwargs:
-                config.all_array_storage = kwargs.pop("all_array_storage")
-            if "all_array_compression" in kwargs:
-                config.all_array_compression = kwargs.pop("all_array_compression")
-            if "compression_kwargs" in kwargs:
-                config.all_array_compression_kwargs = kwargs.pop("compression_kwargs")
-            _handle_deprecated_kwargs(config, kwargs)
+            if all_array_storage is not NotSet:
+                config.all_array_storage = all_array_storage
+            if all_array_compression is not NotSet:
+                config.all_array_compression = all_array_compression
+            if compression_kwargs is not NotSet:
+                config.all_array_compression_kwargs = compression_kwargs
 
             if version is not None:
                 self.version = version
@@ -1673,45 +1624,6 @@ class AsdfFile:
         return SerializationContext(self.version_string, self.extension_manager, self.uri, self._blocks)
 
 
-def _check_and_set_mode(fileobj, asdf_mode):
-    if asdf_mode is not None and asdf_mode not in ["r", "rw"]:
-        msg = f"Unrecognized asdf mode '{asdf_mode}'. Must be either 'r' or 'rw'"
-        raise ValueError(msg)
-
-    if asdf_mode is None:
-        if isinstance(fileobj, io.IOBase):
-            return "rw" if fileobj.writable() else "r"
-
-        if isinstance(fileobj, generic_io.GenericFile):
-            return fileobj.mode
-
-        # This is the safest assumption for the default fallback
-        return "r"
-
-    return asdf_mode
-
-
-_DEPRECATED_KWARG_TO_CONFIG_PROPERTY = {
-    "auto_inline": ("array_inline_threshold", lambda v: v),
-    "validate_on_read": ("validate_on_read", lambda v: v),
-    "do_not_fill_defaults": ("legacy_fill_schema_defaults", lambda v: not v),
-}
-
-
-def _handle_deprecated_kwargs(config, kwargs):
-    for key, value in kwargs.items():
-        if key in _DEPRECATED_KWARG_TO_CONFIG_PROPERTY:
-            config_property, func = _DEPRECATED_KWARG_TO_CONFIG_PROPERTY[key]
-            warnings.warn(
-                f"The '{key}' argument is deprecated, set asdf.get_config().{config_property} instead.",
-                AsdfDeprecationWarning,
-            )
-            setattr(config, config_property, func(value))
-        else:
-            msg = f"Unexpected keyword argument '{key}'"
-            raise TypeError(msg)
-
-
 def open_asdf(
     fd,
     uri=None,
@@ -1726,8 +1638,7 @@ def open_asdf(
     custom_schema=None,
     strict_extension_check=False,
     ignore_missing_extensions=False,
-    _compat=False,
-    **kwargs,
+    _get_yaml_content=False,
 ):
     """
     Open an existing ASDF file.
@@ -1794,21 +1705,24 @@ def open_asdf(
         contains metadata about extensions that are not available. Defaults
         to `False`.
 
-    validate_on_read : bool, optional
-        DEPRECATED. When `True`, validate the newly opened file against tag
-        and custom schemas.  Recommended unless the file is already known
-        to be valid.
-
     Returns
     -------
     asdffile : AsdfFile
         The new AsdfFile object.
     """
 
-    # For now retain backwards compatibility with the old API behavior,
-    # specifically when being called from AsdfFile.open
-    if not _compat:
-        mode = _check_and_set_mode(fd, mode)
+    if mode is not None and mode not in ["r", "rw"]:
+        msg = f"Unrecognized asdf mode '{mode}'. Must be either 'r' or 'rw'"
+        raise ValueError(msg)
+
+    if mode is None:
+        if isinstance(fd, io.IOBase):
+            mode = "rw" if fd.writable() else "r"
+        elif isinstance(fd, generic_io.GenericFile):
+            mode = fd.mode
+        else:
+            # This is the safest assumption for the default fallback
+            mode = "r"
 
     instance = AsdfFile(
         ignore_version_mismatch=ignore_version_mismatch,
@@ -1825,8 +1739,8 @@ def open_asdf(
         mode=mode,
         validate_checksums=validate_checksums,
         extensions=extensions,
+        _get_yaml_content=_get_yaml_content,
         _force_raw_types=_force_raw_types,
         strict_extension_check=strict_extension_check,
         ignore_missing_extensions=ignore_missing_extensions,
-        **kwargs,
     )

@@ -50,17 +50,6 @@ def test_no_warning_nan_array(tmp_path):
         assert_roundtrip_tree(tree, tmp_path)
 
 
-def test_warning_deprecated_open(tmp_path):
-    tmpfile = str(tmp_path / "foo.asdf")
-
-    tree = {"foo": 42, "bar": "hello"}
-    with asdf.AsdfFile(tree) as af:
-        af.write_to(tmpfile)
-
-    with pytest.warns(AsdfDeprecationWarning), asdf.AsdfFile.open(tmpfile) as af:
-        assert_tree_match(tree, af.tree)
-
-
 @pytest.mark.skipif(
     not sys.platform.startswith("win") and getpass.getuser() == "root",
     reason="Cannot make file read-only if user is root",
@@ -353,38 +342,6 @@ def test_extension_version_check(installed, extension, warns):
 
     else:
         af._check_extensions(tree)
-
-
-@pytest.mark.filterwarnings(AsdfDeprecationWarning)
-def test_auto_inline(tmp_path):
-    outfile = str(tmp_path / "test.asdf")
-    tree = {"small_array": np.arange(6), "large_array": np.arange(100)}
-
-    # Use the same object for each write in order to make sure that there
-    # aren't unanticipated side effects
-    with asdf.AsdfFile(tree) as af:
-        # By default blocks are written internal.
-        af.write_to(outfile)
-        assert len(list(af._blocks.inline_blocks)) == 0
-        assert len(list(af._blocks.internal_blocks)) == 2
-
-        af.write_to(outfile, auto_inline=10)
-        assert len(list(af._blocks.inline_blocks)) == 1
-        assert len(list(af._blocks.internal_blocks)) == 1
-
-        # The previous write modified the small array block's storage
-        # to inline, and a subsequent write should maintain that setting.
-        af.write_to(outfile)
-        assert len(list(af._blocks.inline_blocks)) == 1
-        assert len(list(af._blocks.internal_blocks)) == 1
-
-        af.write_to(outfile, auto_inline=7)
-        assert len(list(af._blocks.inline_blocks)) == 1
-        assert len(list(af._blocks.internal_blocks)) == 1
-
-        af.write_to(outfile, auto_inline=5)
-        assert len(list(af._blocks.inline_blocks)) == 0
-        assert len(list(af._blocks.internal_blocks)) == 2
 
 
 @pytest.mark.parametrize(

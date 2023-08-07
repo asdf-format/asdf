@@ -488,45 +488,30 @@ custom: !<tag:nowhere.org:custom/default-1.0.0>
         assert ff.tree["custom"]["j"]["l"] == 362
 
     buff.seek(0)
-    with pytest.warns(AsdfDeprecationWarning, match=r"do_not_fill_defaults"), asdf.open(
-        buff,
-        extensions=[DefaultTypeExtension()],
-        do_not_fill_defaults=True,
-    ) as ff:
-        assert "a" not in ff.tree["custom"]
-        assert "c" not in ff.tree["custom"]["b"]
-        assert "e" not in ff.tree["custom"]["d"]
-        assert "f" not in ff.tree["custom"]["d"]
-        assert "h" not in ff.tree["custom"]["g"]
-        assert "i" not in ff.tree["custom"]["g"]
-        assert "k" not in ff.tree["custom"]["j"]
-        assert ff.tree["custom"]["j"]["l"] == 362
-        ff.fill_defaults()
-        assert "a" in ff.tree["custom"]
-        assert ff.tree["custom"]["a"] == 42
-        assert "c" in ff.tree["custom"]["b"]
-        assert ff.tree["custom"]["b"]["c"] == 82
-        assert ff.tree["custom"]["b"]["c"] == 82
-        assert ff.tree["custom"]["d"]["e"] == 122
-        assert ff.tree["custom"]["d"]["f"] == 162
-        assert "h" not in ff.tree["custom"]["g"]
-        assert "i" not in ff.tree["custom"]["g"]
-        assert "k" not in ff.tree["custom"]["j"]
-        assert ff.tree["custom"]["j"]["l"] == 362
-        ff.remove_defaults()
-        assert "a" not in ff.tree["custom"]
-        assert "c" not in ff.tree["custom"]["b"]
-        assert "e" not in ff.tree["custom"]["d"]
-        assert "f" not in ff.tree["custom"]["d"]
-        assert "h" not in ff.tree["custom"]["g"]
-        assert "i" not in ff.tree["custom"]["g"]
-        assert "k" not in ff.tree["custom"]["j"]
-        assert ff.tree["custom"]["j"]["l"] == 362
-
-    buff.seek(0)
     with config_context() as config:
         config.legacy_fill_schema_defaults = False
         with asdf.open(buff, extensions=[DefaultTypeExtension()]) as ff:
+            assert "a" not in ff.tree["custom"]
+            assert "c" not in ff.tree["custom"]["b"]
+            assert "e" not in ff.tree["custom"]["d"]
+            assert "f" not in ff.tree["custom"]["d"]
+            assert "h" not in ff.tree["custom"]["g"]
+            assert "i" not in ff.tree["custom"]["g"]
+            assert "k" not in ff.tree["custom"]["j"]
+            assert ff.tree["custom"]["j"]["l"] == 362
+            ff.fill_defaults()
+            assert "a" in ff.tree["custom"]
+            assert ff.tree["custom"]["a"] == 42
+            assert "c" in ff.tree["custom"]["b"]
+            assert ff.tree["custom"]["b"]["c"] == 82
+            assert ff.tree["custom"]["b"]["c"] == 82
+            assert ff.tree["custom"]["d"]["e"] == 122
+            assert ff.tree["custom"]["d"]["f"] == 162
+            assert "h" not in ff.tree["custom"]["g"]
+            assert "i" not in ff.tree["custom"]["g"]
+            assert "k" not in ff.tree["custom"]["j"]
+            assert ff.tree["custom"]["j"]["l"] == 362
+            ff.remove_defaults()
             assert "a" not in ff.tree["custom"]
             assert "c" not in ff.tree["custom"]["b"]
             assert "e" not in ff.tree["custom"]["d"]
