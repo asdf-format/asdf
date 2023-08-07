@@ -32,7 +32,6 @@ def _clear_schema_cache():
     yield
     schema._load_schema.cache_clear()
     schema._load_schema_cached.cache_clear()
-    schema.load_custom_schema.cache_clear()
 
 
 @pytest.fixture()
