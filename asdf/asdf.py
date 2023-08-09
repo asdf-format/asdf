@@ -1226,11 +1226,12 @@ class AsdfFile:
                 previous_version = self.version
                 self.version = version
 
-            with generic_io.get_file(fd, mode="w") as fd:
-                self._serial_write(fd, pad_blocks, include_block_index)
-
-            if version is not None:
-                self.version = previous_version
+            try:
+                with generic_io.get_file(fd, mode="w") as fd:
+                    self._serial_write(fd, pad_blocks, include_block_index)
+            finally:
+                if version is not None:
+                    self.version = previous_version
 
     def find_references(self):
         """

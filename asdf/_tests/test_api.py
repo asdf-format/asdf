@@ -510,13 +510,23 @@ def test_update_asdf_standard_version_tag_selection():
     assert b"!core/asdf-1.0.0" not in content
 
 
-def test_write_to_no_tree_modification(tmp_path):
-    fn = tmp_path / "test.asdf"
+@pytest.mark.parametrize("valid_filename", [True, False], ids=["valid_filename", "invalid_filename"])
+def test_write_to_no_tree_modification(tmp_path, valid_filename):
+    if valid_filename:
+        fn = tmp_path / "test.asdf"
+    else:
+        fn = "invalid/missing.asdf"
     fn2 = tmp_path / "test2.asdf"
     tree = {"foo": None}
     af = asdf.AsdfFile(tree.copy())
-    af.write_to(fn)
+    try:
+        af.write_to(fn)
+    except Exception:
+        if valid_filename:
+            raise
     assert tree == af.tree
+    if not valid_filename:
+        return
     with asdf.open(fn) as af:
         af["history"]["extensions"][0]["software"]["version"] = "0.0.0.dev+abcdefg"
         af["asdf_library"]["author"] = "foo"
@@ -525,11 +535,21 @@ def test_write_to_no_tree_modification(tmp_path):
         assert af.tree == tree
 
 
-def test_write_to_no_version_modification(tmp_path):
-    fn = tmp_path / "test.asdf"
+@pytest.mark.parametrize("valid_filename", [True, False], ids=["valid_filename", "invalid_filename"])
+def test_write_to_no_version_modification(tmp_path, valid_filename):
+    if valid_filename:
+        fn = tmp_path / "test.asdf"
+    else:
+        fn = "invalid/missing.asdf"
     tree = {"foo": None}
     af = asdf.AsdfFile(tree.copy(), version="1.0.0")
-    af.write_to(fn, version="1.1.0")
+    try:
+        af.write_to(fn, version="1.1.0")
+    except Exception:
+        if valid_filename:
+            raise
     assert af.version_string == "1.0.0"
+    if not valid_filename:
+        return
     with asdf.open(fn) as af:
         assert af.version_string == "1.1.0"
