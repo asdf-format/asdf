@@ -226,8 +226,9 @@ def custom_tree_to_tagged_tree(tree, ctx, _serialization_context=None):
         tag = converter.select_tag(obj, _serialization_context)
         # if select_tag returns None, converter.to_yaml_tree should return a new
         # object which will be handled by a different converter
+        converters_used = set()
         while tag is None:
-            converters.add(converter)
+            converters_used.add(converter)
             obj = converter.to_yaml_tree(obj, tag, _serialization_context)
             try:
                 converter = extension_manager.get_converter_for_type(type(obj))
@@ -235,7 +236,7 @@ def custom_tree_to_tagged_tree(tree, ctx, _serialization_context=None):
                 # no converter supports this type, return it as-is
                 yield obj
                 return
-            if converter in converters:
+            if converter in converters_used:
                 msg = "Conversion cycle detected"
                 raise TypeError(msg)
             tag = converter.select_tag(obj, _serialization_context)
@@ -268,15 +269,15 @@ def custom_tree_to_tagged_tree(tree, ctx, _serialization_context=None):
 
     cfg = config.get_config()
     convert_ndarray_subclasses = cfg.convert_unknown_ndarray_subclasses
-    converters = {}
+    converters_cache = {}
 
     def _walker(obj):
         typ = type(obj)
-        if typ in converters:
-            return converters[typ](obj)
+        if typ in converters_cache:
+            return converters_cache[typ](obj)
         if extension_manager.handles_type(typ):
             converter = extension_manager.get_converter_for_type(typ)
-            converters[typ] = lambda obj, _converter=converter: _convert_obj(obj, _converter)
+            converters_cache[typ] = lambda obj, _converter=converter: _convert_obj(obj, _converter)
             return _convert_obj(obj, converter)
         if convert_ndarray_subclasses and isinstance(obj, np.ndarray) and extension_manager._handles_subtype(typ):
             warnings.warn(
@@ -286,7 +287,7 @@ def custom_tree_to_tagged_tree(tree, ctx, _serialization_context=None):
                 AsdfConversionWarning,
             )
             converter = extension_manager._get_converter_for_subtype(typ)
-            converters[typ] = lambda obj, _converter=converter: _convert_obj(obj, _converter)
+            converters_cache[typ] = lambda obj, _converter=converter: _convert_obj(obj, _converter)
             return _convert_obj(obj, converter)
 
         tag = ctx._type_index.from_custom_type(
@@ -296,10 +297,10 @@ def custom_tree_to_tagged_tree(tree, ctx, _serialization_context=None):
         )
 
         if tag is not None:
-            converters[typ] = lambda obj, _tag=tag: _tag.to_tree_tagged(obj, ctx)
+            converters_cache[typ] = lambda obj, _tag=tag: _tag.to_tree_tagged(obj, ctx)
             return tag.to_tree_tagged(obj, ctx)
 
-        converters[typ] = lambda obj: obj
+        converters_cache[typ] = lambda obj: obj
         return obj
 
     return treeutil.walk_and_modify(
