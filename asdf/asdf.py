@@ -10,12 +10,11 @@ from packaging.version import Version
 
 from . import _display as display
 from . import _node_info as node_info
-from . import _serialization_context, constants, generic_io, reference, schema, treeutil, util, versioning, yamlutil
 from . import _version as version
 from . import compression as mcompression
+from . import constants, generic_io, reference, schema, treeutil, util, versioning, yamlutil
 from ._block.manager import Manager as BlockManager
 from ._helpers import validate_version
-from ._serialization_context import SerializationContext  # noqa: F401
 from .config import config_context, get_config
 from .exceptions import (
     AsdfConversionWarning,
@@ -23,7 +22,8 @@ from .exceptions import (
     DelimiterNotFoundError,
     ValidationError,
 )
-from .extension import Extension, ExtensionProxy, _legacy, get_cached_extension_manager
+from .extension import Extension, ExtensionProxy, _legacy, _serialization_context, get_cached_extension_manager
+from .extension._serialization_context import SerializationContext  # noqa: F401
 from .search import AsdfSearchResult
 from .tags.core import AsdfObject, ExtensionMetadata, HistoryEntry, Software
 from .util import NotSet

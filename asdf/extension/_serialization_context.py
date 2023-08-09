@@ -1,9 +1,8 @@
 import enum
 
-from ._block.key import Key as BlockKey
-from ._block.options import Options as BlockOptions
-from ._helpers import validate_version
-from .extension._extension import ExtensionProxy
+from asdf._block.key import Key as BlockKey
+from asdf._helpers import validate_version
+from asdf.extension._extension import ExtensionProxy
 
 
 class SerializationContext:
@@ -228,7 +227,7 @@ class WriteBlocksContext(SerializationContext):
     def find_available_block_index(self, data_callback, key=None):
         if key is None:
             key = self._obj
-        return self._blocks.make_write_block(data_callback, BlockOptions(), key)
+        return self._blocks.make_write_block(data_callback, None, key)
 
     def generate_block_key(self):
         return BlockKey(self._obj)

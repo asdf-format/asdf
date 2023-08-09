@@ -6,9 +6,9 @@ import numpy as np
 import yaml
 
 from . import config, schema, tagged, treeutil, util
-from ._serialization_context import BlockAccess
 from .constants import STSCI_SCHEMA_TAG_BASE, YAML_TAG_PREFIX
 from .exceptions import AsdfConversionWarning
+from .extension._serialization_context import BlockAccess
 from .tags.core import AsdfObject
 from .versioning import _yaml_base_loader, split_tag_version
 

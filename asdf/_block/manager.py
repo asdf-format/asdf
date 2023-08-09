@@ -389,9 +389,10 @@ class Manager:
             Data to be written to an ASDF block. Can be provided as
             a callable function that when evaluated will return the
             data.
-        options : Options
+        options : Options or None
             Options instance used to define the ASDF block compression
-            and storage type.
+            and storage type. If None, a new Options instance will
+            be created.
         obj : object
             An object in the ASDF tree that will be associated
             with the new WriteBlock so that `AsdfFile.update` can
@@ -410,6 +411,8 @@ class Manager:
             If a external block was created without a URI for the main
             file.
         """
+        if options is None:
+            options = Options()
         if options.storage_type == "external":
             for index, blk in enumerate(self._external_write_blocks):
                 if blk._data is data:

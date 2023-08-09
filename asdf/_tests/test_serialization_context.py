@@ -3,8 +3,8 @@ import pytest
 
 import asdf
 from asdf import get_config
-from asdf._serialization_context import BlockAccess, SerializationContext
 from asdf.extension import ExtensionManager
+from asdf.extension._serialization_context import BlockAccess, SerializationContext
 
 
 def test_serialization_context():
