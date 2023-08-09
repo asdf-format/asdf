@@ -3,12 +3,16 @@ import enum
 from ._block.key import Key as BlockKey
 from ._block.options import Options as BlockOptions
 from ._helpers import validate_version
-from .extension import ExtensionProxy
+from .extension._extension import ExtensionProxy
 
 
 class SerializationContext:
     """
     Container for parameters of the current (de)serialization.
+
+    This class should not be instantiated directly and instead
+    will be created by the AsdfFile object and provided to extension
+    classes (like Converters) via method arguments.
     """
 
     def __init__(self, version, extension_manager, url, blocks):
@@ -30,7 +34,7 @@ class SerializationContext:
         written to an `io.BytesIO`).
 
         Returns
-        --------
+        -------
         str or None
         """
         return self._url
