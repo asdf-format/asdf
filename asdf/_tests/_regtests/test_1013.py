@@ -3,7 +3,13 @@ import numpy as np
 import asdf
 
 
-def test_1013(tmp_path):
+def test_control_array_storage_in_to_yaml_tree_methods(tmp_path):
+    """
+    controlling array storage in to_yaml_tree methods
+
+    https://github.com/asdf-format/asdf/issues/1013
+    """
+
     class FooType:
         def __init__(self, data):
             self.data = data

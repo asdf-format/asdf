@@ -3,7 +3,7 @@ import numpy as np
 import asdf
 
 
-def test_1520(tmp_path):
+def test_failed_update_corrupts_file(tmp_path):
     """
     A failed update can corrupt the file
 

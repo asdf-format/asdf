@@ -5,7 +5,7 @@ import numpy as np
 import asdf
 
 
-def test_1526(tmp_path):
+def test_rewrite_file_with_unaccessed_external_blocks_fails(tmp_path):
     """
     Rewriting a file with external blocks fails if arrays are not first accessed
 

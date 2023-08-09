@@ -6,7 +6,7 @@ import asdf
 
 
 @pytest.mark.xfail(reason="Fix will require more major changes to generic_io")
-def test_1539():
+def test_invalid_seek_and_read_from_closed_memoryio():
     """
     Seek and read from closed MemoryIO
 

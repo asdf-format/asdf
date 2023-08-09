@@ -3,7 +3,7 @@ import numpy as np
 import asdf
 
 
-def test_1523(tmp_path):
+def test_update_corrupts_stream_data(tmp_path):
     """
     update corrupts stream data
     https://github.com/asdf-format/asdf/issues/1523

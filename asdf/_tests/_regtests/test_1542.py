@@ -10,7 +10,7 @@ import asdf
 @pytest.mark.skipif(
     sys.platform.startswith("win"), reason="os.pipe.seek noop on windows: https://bugs.python.org/issue42602"
 )
-def test_1542():
+def test_failure_to_write_blocks_to_non_seekable_file():
     """
     ASDF fails to write blocks to non-seekable file
 

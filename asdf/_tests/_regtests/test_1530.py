@@ -5,7 +5,7 @@ import asdf
 
 
 @pytest.mark.xfail(reason="fixing this may require subclassing ndarray")
-def test_1530(tmp_path):
+def test_update_with_memmapped_data_can_make_view_data_invalid(tmp_path):
     """
     Calling update with memmapped data can create invalid data in memmap views
 

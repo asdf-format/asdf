@@ -7,7 +7,7 @@ import asdf
 @pytest.mark.parametrize("lazy_load", [True, False])
 @pytest.mark.parametrize("include_block_index", [True, False])
 @pytest.mark.parametrize("index", [0, 1, 2])
-def test_1541(tmp_path, index, include_block_index, lazy_load):
+def test_block_checksums_only_checked_for_first_block_if_index_exists(tmp_path, index, include_block_index, lazy_load):
     """
     Block checksums are only checked for first block if a block index is present
 

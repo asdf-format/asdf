@@ -3,7 +3,7 @@ import numpy as np
 import asdf
 
 
-def test_1538(tmp_path):
+def test_unable_to_read_empty_inline_array(tmp_path):
     """
     ASDF unable to read empty inline array
 

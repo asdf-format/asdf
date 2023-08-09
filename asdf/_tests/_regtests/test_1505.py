@@ -3,7 +3,7 @@ import numpy as np
 import asdf
 
 
-def test_1505(tmp_path):
+def test_update_fails_after_write_to(tmp_path):
     """
     Calling update after write_to fails
 

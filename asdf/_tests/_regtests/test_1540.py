@@ -3,7 +3,7 @@ import numpy as np
 import asdf
 
 
-def test_1540(tmp_path):
+def test_writes_but_fails_to_read_inline_structured_array(tmp_path):
     """
     ASDF writes but fails to read inline structured array
 

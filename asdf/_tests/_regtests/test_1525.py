@@ -3,7 +3,7 @@ import numpy as np
 import asdf
 
 
-def test_1525(tmp_path):
+def test_external_blocks_always_lazy_loaded_and_memmapped(tmp_path):
     """
     External blocks are always lazy loaded and memmapped
 
