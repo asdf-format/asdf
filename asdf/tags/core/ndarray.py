@@ -6,8 +6,6 @@ from numpy import ma
 
 from asdf import util
 from asdf._jsonschema import ValidationError
-from asdf._block.options import Options
-from asdf.config import config_context
 
 _datatype_names = {
     "int8": "i1",

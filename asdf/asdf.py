@@ -15,16 +15,14 @@ from . import _version as version
 from . import compression as mcompression
 from ._block.manager import Manager as BlockManager
 from ._helpers import validate_version
-from ._serialization_context import SerializationContext  # noqa: F401
 from .config import config_context, get_config
 from .exceptions import (
     AsdfConversionWarning,
-    AsdfDeprecationWarning,
     AsdfWarning,
     DelimiterNotFoundError,
     ValidationError,
 )
-from .extension import Extension, ExtensionProxy, SerializationContext, _legacy, get_cached_extension_manager
+from .extension import Extension, ExtensionProxy, _legacy, get_cached_extension_manager
 from .search import AsdfSearchResult
 from .tags.core import AsdfObject, ExtensionMetadata, HistoryEntry, Software
 from .util import NotSet
@@ -792,7 +790,6 @@ class AsdfFile:
             raise ValueError(msg)
 
         with config_context():
-
             # validate_checksums (unlike memmap and lazy_load) is provided
             # here instead of in __init__
             self._blocks._validate_checksums = validate_checksums
