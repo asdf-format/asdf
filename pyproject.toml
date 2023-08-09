@@ -38,7 +38,7 @@ all = [
   "lz4>=0.10",
 ]
 docs = [
-  "sphinx-asdf @ git+https://github.com/braingram/sphinx_asdf.git@immutable_block_manager",
+  "sphinx-asdf @ git+https://github.com/braingram/sphinx-asdf.git@immutable_block_manager",
   "graphviz",
   "sphinx-inline-tabs",
   'tomli; python_version < "3.11"',
