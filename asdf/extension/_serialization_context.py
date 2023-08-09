@@ -234,7 +234,10 @@ class WriteBlocksContext(SerializationContext):
 
 
 class BlockAccess(enum.Enum):
-    """ """
+    """
+    Block access enumerated values that define
+    how a SerializationContext can access ASDF blocks.
+    """
 
     NONE = SerializationContext
     WRITE = WriteBlocksContext
