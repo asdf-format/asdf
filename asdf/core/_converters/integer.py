@@ -24,8 +24,7 @@ class IntegerConverter(Converter):
         array = np.array(words, dtype=np.uint32)
 
         tree = {}
-        # TODO: No support for this yet in SerializationContext
-        # ctx.set_array_storage(array, node._storage)
+        ctx._blocks._set_array_storage(array, obj._storage)
         tree["words"] = array
         tree["sign"] = obj._sign
         tree["string"] = str(int(obj._value))
