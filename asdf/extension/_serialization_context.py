@@ -147,6 +147,86 @@ class SerializationContext:
     def assign_blocks(self):
         pass
 
+    def set_array_storage(self, arr, array_storage):
+        """
+        Set the block type to use for the given array data.
+
+        Parameters
+        ----------
+        arr : numpy.ndarray
+            The array to set.  If multiple views of the array are in
+            the tree, only the most recent block type setting will be
+            used, since all views share a single block.
+
+        array_storage : str
+            Must be one of:
+
+            - ``internal``: The default.  The array data will be
+              stored in a binary block in the same ASDF file.
+
+            - ``external``: Store the data in a binary block in a
+              separate ASDF file.
+
+            - ``inline``: Store the data as YAML inline in the tree.
+        """
+        self._blocks._set_array_storage(arr, array_storage)
+
+    def get_array_storage(self, arr):
+        """
+        Get the block type for the given array data.
+
+        Parameters
+        ----------
+        arr : numpy.ndarray
+        """
+        return self._blocks._get_array_storage(arr)
+
+    def set_array_compression(self, arr, compression, **compression_kwargs):
+        """
+        Set the compression to use for the given array data.
+
+        Parameters
+        ----------
+        arr : numpy.ndarray
+            The array to set.  If multiple views of the array are in
+            the tree, only the most recent compression setting will be
+            used, since all views share a single block.
+
+        compression : str or None
+            Must be one of:
+
+            - ``''`` or `None`: no compression
+
+            - ``zlib``: Use zlib compression
+
+            - ``bzp2``: Use bzip2 compression
+
+            - ``lz4``: Use lz4 compression
+
+            - ``input``: Use the same compression as in the file read.
+              If there is no prior file, acts as None.
+
+        """
+        self._blocks._set_array_compression(arr, compression, **compression_kwargs)
+
+    def get_array_compression(self, arr):
+        """
+        Get the compression type for the given array data.
+
+        Parameters
+        ----------
+        arr : numpy.ndarray
+
+        Returns
+        -------
+        compression : str or None
+        """
+        return self._blocks._get_array_compression(arr)
+
+    def get_array_compression_kwargs(self, arr):
+        """ """
+        return self._blocks._get_array_compression_kwargs(arr)
+
 
 class ReadBlocksContext(SerializationContext):
     """

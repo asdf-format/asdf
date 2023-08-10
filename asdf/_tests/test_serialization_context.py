@@ -123,3 +123,37 @@ def test_generate_block_key():
         # the key does not yet have an assigned object
         assert not key._is_valid()
         op_ctx.assign_blocks()
+
+
+@pytest.mark.parametrize("block_access", [None, *list(BlockAccess)])
+def test_get_set_array_storage(block_access):
+    af = asdf.AsdfFile()
+    if block_access is None:
+        context = af._create_serialization_context()
+    else:
+        context = af._create_serialization_context(block_access)
+    arr = np.zeros(3)
+    storage = "external"
+    assert af.get_array_storage(arr) != storage
+    context.set_array_storage(arr, storage)
+    assert af.get_array_storage(arr) == storage
+    assert context.get_array_storage(arr) == storage
+
+
+@pytest.mark.parametrize("block_access", [None, *list(BlockAccess)])
+def test_get_set_array_compression(block_access):
+    af = asdf.AsdfFile()
+    if block_access is None:
+        context = af._create_serialization_context()
+    else:
+        context = af._create_serialization_context(block_access)
+    arr = np.zeros(3)
+    compression = "bzp2"
+    kwargs = {"a": 1}
+    assert af.get_array_compression(arr) != compression
+    assert af.get_array_compression_kwargs(arr) != kwargs
+    context.set_array_compression(arr, compression, **kwargs)
+    assert af.get_array_compression(arr) == compression
+    assert af.get_array_compression_kwargs(arr) == kwargs
+    assert context.get_array_compression(arr) == compression
+    assert context.get_array_compression_kwargs(arr) == kwargs
