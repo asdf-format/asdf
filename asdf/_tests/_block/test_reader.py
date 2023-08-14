@@ -9,7 +9,7 @@ import pytest
 from asdf import constants, generic_io, util
 from asdf._block import io as bio
 from asdf._block.reader import read_blocks
-from asdf.exceptions import AsdfWarning
+from asdf.exceptions import AsdfBlockIndexWarning, AsdfWarning
 
 
 @contextlib.contextmanager
@@ -124,11 +124,11 @@ def test_invalid_block_index(tmp_path, invalid_block_index):
         # when the block index is read, only the first and last blocks
         # are check, so any other invalid entry should result in failure
         if invalid_block_index in (0, -1):
-            with pytest.warns(AsdfWarning, match="Invalid block index contents"):
+            with pytest.warns(AsdfBlockIndexWarning, match="Invalid block index contents"):
                 check(read_blocks(fd, lazy_load=True))
         elif invalid_block_index == "junk":
             # read_blocks should fall back to reading serially
-            with pytest.warns(AsdfWarning, match="Failed to read block index"):
+            with pytest.warns(AsdfBlockIndexWarning, match="Failed to read block index"):
                 check(read_blocks(fd, lazy_load=True))
         else:
             with pytest.raises(ValueError, match="Header size.*"):
@@ -153,7 +153,7 @@ def test_invalid_block_in_index_with_valid_magic(tmp_path):
         bio.write_block_index(fd, block_index)
 
         fd.seek(0)
-        with pytest.warns(AsdfWarning, match="Invalid block index contents"):
+        with pytest.warns(AsdfBlockIndexWarning, match="Invalid block index contents"):
             check(read_blocks(fd, lazy_load=True))
 
 

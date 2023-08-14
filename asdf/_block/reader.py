@@ -2,7 +2,7 @@ import warnings
 import weakref
 
 from asdf import constants
-from asdf.exceptions import AsdfWarning
+from asdf.exceptions import AsdfBlockIndexWarning, AsdfWarning
 
 from . import io as bio
 from .exceptions import BlockIndexError
@@ -240,7 +240,7 @@ def read_blocks(fd, memmap=False, lazy_load=False, validate_checksums=False, aft
     except BlockIndexError as e:
         # failed to read block index, fall back to serial reading
         msg = f"Failed to read block index, falling back to serial reading: {e!s}"
-        warnings.warn(msg, AsdfWarning)
+        warnings.warn(msg, AsdfBlockIndexWarning)
         fd.seek(starting_offset)
         return _read_blocks_serially(fd, memmap, lazy_load, validate_checksums, after_magic)
     # skip magic for each block
@@ -257,7 +257,7 @@ def read_blocks(fd, memmap=False, lazy_load=False, validate_checksums=False, aft
             blocks[index].load()
     except (OSError, ValueError) as e:
         msg = f"Invalid block index contents for block {index}, falling back to serial reading: {e!s}"
-        warnings.warn(msg, AsdfWarning)
+        warnings.warn(msg, AsdfBlockIndexWarning)
         fd.seek(starting_offset)
         return _read_blocks_serially(fd, memmap, lazy_load, after_magic)
     return blocks

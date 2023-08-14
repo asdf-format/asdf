@@ -10,7 +10,7 @@ from numpy.testing import assert_array_equal
 import asdf
 from asdf import constants, generic_io
 from asdf._block import io as bio
-from asdf.exceptions import AsdfWarning
+from asdf.exceptions import AsdfBlockIndexWarning
 
 RNG = np.random.default_rng(6)
 
@@ -665,7 +665,7 @@ def test_junk_after_index():
 
     # This has junk after the block index, so it
     # should fall back to reading serially
-    with pytest.warns(AsdfWarning, match="Failed to read block index"):
+    with pytest.warns(AsdfBlockIndexWarning, match="Failed to read block index"):
         with asdf.open(buff) as ff:
             assert ff._blocks.blocks[1].loaded
 
@@ -687,7 +687,7 @@ def test_short_file_find_block_index():
     buff.write(b"0" * (io.DEFAULT_BUFFER_SIZE * 4))
 
     buff.seek(0)
-    with pytest.warns(AsdfWarning, match="Failed to read block index"):
+    with pytest.warns(AsdfBlockIndexWarning, match="Failed to read block index"):
         with asdf.open(buff) as ff:
             assert len(ff._blocks.blocks) == 2
             assert ff._blocks.blocks[1].loaded
@@ -717,7 +717,7 @@ def test_invalid_block_index_values():
     bio.write_block_index(buff, block_index)
 
     buff.seek(0)
-    with pytest.warns(AsdfWarning, match="Invalid block index contents"):
+    with pytest.warns(AsdfBlockIndexWarning, match="Invalid block index contents"):
         with asdf.open(buff) as ff:
             assert len(ff._blocks.blocks) == 10
             assert ff._blocks.blocks[1].loaded
@@ -762,7 +762,7 @@ def test_invalid_block_index_offset(block_index_index):
     )
 
     buff.seek(0)
-    with pytest.warns(AsdfWarning, match="Invalid block index contents"):
+    with pytest.warns(AsdfBlockIndexWarning, match="Invalid block index contents"):
         with asdf.open(buff) as ff:
             assert len(ff._blocks.blocks) == 10
             for i, a in enumerate(arrays):
@@ -794,7 +794,7 @@ def test_unordered_block_index():
     buff.seek(0)
 
     buff.seek(0)
-    with pytest.warns(AsdfWarning, match="Failed to read block index"):
+    with pytest.warns(AsdfBlockIndexWarning, match="Failed to read block index"):
         with asdf.open(buff) as ff:
             assert len(ff._blocks.blocks) == 10
             assert ff._blocks.blocks[1].loaded
