@@ -19,9 +19,8 @@ class NDArrayConverter(Converter):
         import numpy as np
         from numpy import ma
 
-        from asdf import util
+        from asdf import config, util
         from asdf._block.options import Options
-        from asdf.config import config_context
         from asdf.tags.core.ndarray import NDArrayType, numpy_array_to_list, numpy_dtype_to_asdf_datatype
         from asdf.tags.core.stream import Stream
 
@@ -66,13 +65,13 @@ class NDArrayConverter(Converter):
             options = ctx._blocks.options.get_options(data)
 
         # possibly override options based on config settings
-        with config_context() as cfg:
-            if cfg.all_array_storage is not None:
-                options.storage_type = cfg.all_array_storage
-            if cfg.all_array_compression != "input":
-                options.compression = cfg.all_array_compression
-                options.compression_kwargs = cfg.all_array_compression_kwargs
-            inline_threshold = cfg.array_inline_threshold
+        cfg = config.get_config()
+        if cfg.all_array_storage is not None:
+            options.storage_type = cfg.all_array_storage
+        if cfg.all_array_compression != "input":
+            options.compression = cfg.all_array_compression
+            options.compression_kwargs = cfg.all_array_compression_kwargs
+        inline_threshold = cfg.array_inline_threshold
 
         if inline_threshold is not None and options.storage_type in ("inline", "internal"):
             if data.size < inline_threshold:
