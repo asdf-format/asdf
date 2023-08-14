@@ -1,9 +1,11 @@
 import numpy as np
+import pytest
 
 import asdf
 
 
-def test_external_blocks_always_lazy_loaded_and_memmapped(tmp_path):
+@pytest.mark.parametrize("copy_arrays", [True, False])
+def test_external_blocks_always_lazy_loaded_and_memmapped(tmp_path, copy_arrays):
     """
     External blocks are always lazy loaded and memmapped
 
@@ -16,14 +18,13 @@ def test_external_blocks_always_lazy_loaded_and_memmapped(tmp_path):
     af.set_array_storage(arr, "external")
     af.write_to(fn)
 
-    for copy_arrays in (True, False):
-        with asdf.open(fn, copy_arrays=copy_arrays) as af:
-            # check that block is external
-            source = af["arr"]._source
-            assert isinstance(source, str)
+    with asdf.open(fn, copy_arrays=copy_arrays) as af:
+        # check that block is external
+        source = af["arr"]._source
+        assert isinstance(source, str)
 
-            # check if block is memmapped
-            if copy_arrays:
-                assert not isinstance(af["arr"].base, np.memmap)
-            else:
-                assert isinstance(af["arr"].base, np.memmap)
+        # check if block is memmapped
+        if copy_arrays:
+            assert not isinstance(af["arr"].base, np.memmap)
+        else:
+            assert isinstance(af["arr"].base, np.memmap)
