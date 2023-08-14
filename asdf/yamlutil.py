@@ -279,14 +279,14 @@ def custom_tree_to_tagged_tree(tree, ctx, _serialization_context=None):
             converter = extension_manager.get_converter_for_type(typ)
             converters_cache[typ] = lambda obj, _converter=converter: _convert_obj(obj, _converter)
             return _convert_obj(obj, converter)
-        if convert_ndarray_subclasses and isinstance(obj, np.ndarray) and extension_manager._handles_subtype(typ):
+        if convert_ndarray_subclasses and isinstance(obj, np.ndarray):
             warnings.warn(
                 f"A ndarray subclass ({type(obj)}) was converted as a ndarray. "
                 "This behavior will be removed from a future version of ASDF. "
                 "See https://asdf.readthedocs.io/en/latest/asdf/config.html#convert-unknown-ndarray-subclasses",
                 AsdfConversionWarning,
             )
-            converter = extension_manager._get_converter_for_subtype(typ)
+            converter = extension_manager.get_converter_for_type(np.ndarray)
             converters_cache[typ] = lambda obj, _converter=converter: _convert_obj(obj, _converter)
             return _convert_obj(obj, converter)
 
