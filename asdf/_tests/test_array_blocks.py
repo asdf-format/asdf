@@ -447,6 +447,45 @@ def test_update_array_in_place(tmp_path, lazy_load, copy_arrays):
         assert_array_equal(ff.tree["my_array"], np.ones((64, 64)) * 2)
 
 
+@pytest.mark.parametrize("lazy_load", [True, False])
+@pytest.mark.parametrize("copy_arrays", [True, False])
+def test_update_compressed_blocks(tmp_path, lazy_load, copy_arrays):
+    """
+    This test was originally constructed to test an issue where
+    a failed update left a corrupt file. The issue that resulted in
+    the failed update (a compressed block growing in size) was fixed
+    so this is no longer a good test for a failed update.
+
+    See: https://github.com/asdf-format/asdf/issues/1520
+
+    However, the test does serve to make sure that updating the
+    contents of compressed blocks in a way that causes them to grow
+    in size on disk does not result in a failed update.
+    """
+    fn = tmp_path / "test.asdf"
+    n_arrays = 10
+    array_size = 10000
+
+    # make a tree with many arrays that will compress well
+    af = asdf.AsdfFile()
+    for i in range(n_arrays):
+        af[i] = np.zeros(array_size, dtype="uint8") + i
+        af.set_array_compression(af[i], "zlib")
+    af.write_to(fn)
+
+    with asdf.open(fn, lazy_load=lazy_load, copy_arrays=copy_arrays, mode="rw") as af:
+        # now make the data are difficult to compress
+        for i in range(n_arrays):
+            assert np.all(af[i] == i)
+            af[i][:] = np.random.randint(255, size=array_size)
+            af[i][0] = i + 1
+        af.update()
+
+    with asdf.open(fn, mode="r") as af:
+        for i in range(n_arrays):
+            assert af[i][0] == i + 1
+
+
 def test_init_from_asdffile(tmp_path):
     tmp_path = str(tmp_path)
 
