@@ -334,7 +334,6 @@ def tagged_tree_to_custom_tree(tree, ctx, force_raw_types=False, _serialization_
 
         if extension_manager.handles_tag(tag):
             converter = extension_manager.get_converter_for_tag(tag)
-            _serialization_context.assign_object(None)
             obj = converter.from_yaml_tree(node.data, tag, _serialization_context)
             _serialization_context.assign_object(obj)
             _serialization_context.assign_blocks()
