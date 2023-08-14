@@ -124,10 +124,12 @@ def test_invalid_block_index(tmp_path, invalid_block_index):
         # when the block index is read, only the first and last blocks
         # are check, so any other invalid entry should result in failure
         if invalid_block_index in (0, -1):
-            check(read_blocks(fd, lazy_load=True))
+            with pytest.warns(AsdfWarning, match="Invalid block index contents"):
+                check(read_blocks(fd, lazy_load=True))
         elif invalid_block_index == "junk":
             # read_blocks should fall back to reading serially
-            check(read_blocks(fd, lazy_load=True))
+            with pytest.warns(AsdfWarning, match="Failed to read block index"):
+                check(read_blocks(fd, lazy_load=True))
         else:
             with pytest.raises(ValueError, match="Header size.*"):
                 check(read_blocks(fd, lazy_load=True))
@@ -151,7 +153,8 @@ def test_invalid_block_in_index_with_valid_magic(tmp_path):
         bio.write_block_index(fd, block_index)
 
         fd.seek(0)
-        check(read_blocks(fd, lazy_load=True))
+        with pytest.warns(AsdfWarning, match="Invalid block index contents"):
+            check(read_blocks(fd, lazy_load=True))
 
 
 def test_closed_file(tmp_path):

@@ -237,8 +237,10 @@ def read_blocks(fd, memmap=False, lazy_load=False, validate_checksums=False, aft
     # setup empty blocks
     try:
         block_index = bio.read_block_index(fd, index_offset)
-    except BlockIndexError:
+    except BlockIndexError as e:
         # failed to read block index, fall back to serial reading
+        msg = f"Failed to read block index, falling back to serial reading: {e!s}"
+        warnings.warn(msg, AsdfWarning)
         fd.seek(starting_offset)
         return _read_blocks_serially(fd, memmap, lazy_load, validate_checksums, after_magic)
     # skip magic for each block
@@ -253,7 +255,9 @@ def read_blocks(fd, memmap=False, lazy_load=False, validate_checksums=False, aft
                 msg = "Invalid block magic"
                 raise OSError(msg)
             blocks[index].load()
-    except (OSError, ValueError):
+    except (OSError, ValueError) as e:
+        msg = f"Invalid block index contents for block {index}, falling back to serial reading: {e!s}"
+        warnings.warn(msg, AsdfWarning)
         fd.seek(starting_offset)
         return _read_blocks_serially(fd, memmap, lazy_load, after_magic)
     return blocks
