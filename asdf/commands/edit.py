@@ -155,7 +155,6 @@ def write_edited_yaml_larger(path, new_content, version):
 
                 # copy over blocks byte-for-byte from old_first_block_offset to block_index_offset
                 original_fd.seek(old_first_block_offset)
-                block_index_offset
                 block_size = min(fd.block_size, original_fd.block_size)
                 n_bytes = blocks_end - old_first_block_offset
                 for offset in range(0, n_bytes, block_size):
