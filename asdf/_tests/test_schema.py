@@ -68,7 +68,8 @@ def test_tagging_scalars():
         def __init__(self, value):
             self.value = value
 
-    scalar_tag = 'http://somewhere.org/tags/scalar-1.0.0'
+    scalar_tag = "http://somewhere.org/tags/scalar-1.0.0"
+
     class ScalarConverter:
         tags = [scalar_tag]
         types = [Scalar]
@@ -82,7 +83,7 @@ def test_tagging_scalars():
     class ScalarExtension:
         tags = [scalar_tag]
         converters = [ScalarConverter()]
-        extension_uri = 'http://somewhere.org/extensions/scalar-1.0.0'
+        extension_uri = "http://somewhere.org/extensions/scalar-1.0.0"
 
     yaml = f"""
 tagged: !<{scalar_tag}>

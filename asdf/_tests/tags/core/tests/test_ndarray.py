@@ -254,23 +254,20 @@ def test_array_inline_threshold_recursive(tmpdir):
         def array(self):
             return np.array(self._array)
 
-
     class NDArrayContainerConverter:
         tags = ["http://somewhere.org/tags/foo-1.0.0"]
         types = [NDArrayContainer]
 
         def to_yaml_tree(self, obj, tag, ctx):
-            return {'array': obj.array}
+            return {"array": obj.array}
 
         def from_yaml_tree(self, node, tag, ctx):
-            return NDArrayContainer(node['array'])
-
+            return NDArrayContainer(node["array"])
 
     class NDArrayContainerExtension:
         tags = NDArrayContainerConverter.tags
         converters = [NDArrayContainerConverter()]
         extension_uri = "http://somewhere.org/extensions/foo-1.0.0"
-
 
     container = NDArrayContainer([[1, 2], [3, 4]])
     tree = {"test": container}
