@@ -241,12 +241,42 @@ def test_table_inline(tmpdir):
 
 
 def test_array_inline_threshold_recursive(tmpdir):
-    models = pytest.importorskip("astropy.modeling.models")
+    """
+    Test that setting the inline threshold works for objects
+    that contain (and when serialized produce a ndarray)
+    """
 
-    aff = models.AffineTransformation2D(matrix=[[1, 2], [3, 4]])
-    tree = {"test": aff}
+    class NDArrayContainer:
+        def __init__(self, array):
+            self._array = array
+
+        @property
+        def array(self):
+            return np.array(self._array)
+
+
+    class NDArrayContainerConverter:
+        tags = ["http://somewhere.org/tags/foo-1.0.0"]
+        types = [NDArrayContainer]
+
+        def to_yaml_tree(self, obj, tag, ctx):
+            return {'array': obj.array}
+
+        def from_yaml_tree(self, node, tag, ctx):
+            return NDArrayContainer(node['array'])
+
+
+    class NDArrayContainerExtension:
+        tags = NDArrayContainerConverter.tags
+        converters = [NDArrayContainerConverter()]
+        extension_uri = "http://somewhere.org/extensions/foo-1.0.0"
+
+
+    container = NDArrayContainer([[1, 2], [3, 4]])
+    tree = {"test": container}
 
     with asdf.config_context() as config:
+        config.add_extension(NDArrayContainerExtension())
         config.array_inline_threshold = 100
         # we can no longer use _helpers.assert_roundtrip_tree here because
         # the model no longer has a CustomType which results in equality testing

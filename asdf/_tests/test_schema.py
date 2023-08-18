@@ -64,22 +64,42 @@ required: [name, things]
 
 
 def test_tagging_scalars():
-    pytest.importorskip("astropy", "3.0.0")
-    from astropy import units as u
+    class Scalar:
+        def __init__(self, value):
+            self.value = value
 
-    yaml = """
-unit: !unit/unit-1.0.0
+    scalar_tag = 'http://somewhere.org/tags/scalar-1.0.0'
+    class ScalarConverter:
+        tags = [scalar_tag]
+        types = [Scalar]
+
+        def to_yaml_tree(self, obj, tag, ctx):
+            return obj.value
+
+        def from_yaml_tree(self, node, tag, ctx):
+            return Scalar(node)
+
+    class ScalarExtension:
+        tags = [scalar_tag]
+        converters = [ScalarConverter()]
+        extension_uri = 'http://somewhere.org/extensions/scalar-1.0.0'
+
+    yaml = f"""
+tagged: !<{scalar_tag}>
   m
-not_unit:
+not_tagged:
   m
     """
-    buff = helpers.yaml_to_asdf(yaml)
-    with asdf.open(buff) as ff:
-        assert isinstance(ff.tree["unit"], u.UnitBase)
-        assert not isinstance(ff.tree["not_unit"], u.UnitBase)
-        assert isinstance(ff.tree["not_unit"], str)
+    with asdf.config_context() as cfg:
+        cfg.add_extension(ScalarExtension())
+        buff = helpers.yaml_to_asdf(yaml)
+        with asdf.open(buff) as ff:
+            assert isinstance(ff.tree["tagged"], Scalar)
+            assert not isinstance(ff.tree["not_tagged"], Scalar)
+            assert isinstance(ff.tree["not_tagged"], str)
 
-        assert ff.tree == {"unit": u.m, "not_unit": "m"}
+            assert ff.tree["tagged"].value == "m"
+            assert ff.tree["not_tagged"] == "m"
 
 
 def test_read_json_schema():
