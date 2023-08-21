@@ -5,7 +5,6 @@ import stat
 import sys
 import urllib.request as urllib_request
 
-import fsspec
 import numpy as np
 import pytest
 
@@ -786,6 +785,8 @@ def test_fsspec(tmp_path):
     Issue #1146 reported errors when opening a fsspec 'file'
     This is a regression test for the fix in PR #1226
     """
+    fsspec = pytest.importorskip("fsspec")
+
     ref = b"01234567890"
     fn = tmp_path / "test"
 
@@ -809,6 +810,8 @@ def test_fsspec_http(httpserver):
     filesystem)
     This is a regression test for the fix in PR #1228
     """
+    fsspec = pytest.importorskip("fsspec")
+
     ref = b"01234567890"
     path = os.path.join(httpserver.tmpdir, "test")
 

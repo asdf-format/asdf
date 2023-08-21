@@ -43,8 +43,7 @@ docs = [
   'tomli; python_version < "3.11"',
 ]
 tests = [
-  "fsspec[http]>=2022.8.2",
-  "asdf-astropy>=0.4.0",
+  #"fsspec[http]>=2022.8.2",
   "lz4>=0.10",
   "psutil",
   "pytest>=6",
