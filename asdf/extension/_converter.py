@@ -170,7 +170,9 @@ class ConverterProxy(Converter):
                 raise TypeError(msg)
 
         if len(relevant_tags) > 1 and not hasattr(delegate, "select_tag"):
-            if isinstance(delegate, Converter):
+            # we cannot use isinstance here because Converter supports
+            # virtual subclasses
+            if Converter in delegate.__class__.__bases__:
                 # prior to asdf 3.0 Converter provided a default select_tag
                 # to provide backwards compatibility allow Converter subclasses
                 # to be registered with >1 tag but produce a warning

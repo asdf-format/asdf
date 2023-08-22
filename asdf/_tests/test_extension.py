@@ -913,11 +913,14 @@ def test_converter_loop():
                 roundtrip_object(obj)
 
 
-def test_warning_for_default_select_tag():
+@pytest.mark.parametrize("is_subclass", [True, False])
+def test_warning_or_error_for_default_select_tag(is_subclass):
     class Foo:
         pass
 
-    class FooConverter(Converter):
+    ParentClass = Converter if is_subclass else object
+
+    class FooConverter(ParentClass):
         tags = ["asdf://somewhere.org/tags/foo-*"]
         types = [Foo]
 
@@ -932,6 +935,8 @@ def test_warning_for_default_select_tag():
         "asdf://somewhere.org/tags/foo-2.0.0",
     ]
     extension = FullExtension(converters=[FooConverter()], tags=tags)
+    ctx_type = pytest.warns if is_subclass else pytest.raises
+    exception_class = AsdfWarning if is_subclass else RuntimeError
     with config_context() as config:
-        with pytest.warns(AsdfWarning, match="Converter handles multiple tags"):
+        with ctx_type(exception_class, match="Converter handles multiple tags"):
             config.add_extension(extension)
