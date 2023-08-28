@@ -1,3 +1,4 @@
+import contextlib
 import io
 from datetime import datetime
 
@@ -13,27 +14,55 @@ from asdf import config_context, constants, get_config, schema, tagged, util, ya
 from asdf._tests import _helpers as helpers
 from asdf._tests.objects import CustomExtension
 from asdf.exceptions import AsdfConversionWarning, AsdfDeprecationWarning, AsdfWarning, ValidationError
-from asdf.extension import _legacy as _legacy_extension
 
-with pytest.warns(AsdfDeprecationWarning, match=".*subclasses the deprecated CustomType.*"):
 
-    class TagReferenceType(types.CustomType):
-        """
-        This class is used by several tests below for validating foreign type
-        references in schemas and ASDF files.
-        """
+@contextlib.contextmanager
+def tag_reference_extension():
+    class TagReference:
+        def __init__(self, name, things):
+            self.name = name
+            self.things = things
 
-        name = "tag_reference"
-        organization = "nowhere.org"
-        version = (1, 0, 0)
-        standard = "custom"
+    tag_uri = "tag:nowhere.org:custom/tag_reference-1.0.0"
+    schema_uri = "http://nowhere.org/schemas/custom/tag_reference-1.0.0"
+    tag_def = asdf.extension.TagDefinition(tag_uri, schema_uris=schema_uri)
 
-        @classmethod
-        def from_tree(cls, tree, ctx):
-            node = {}
-            node["name"] = tree["name"]
-            node["things"] = tree["things"]
-            return node
+    class TagReferenceConverter:
+        tags = [tag_uri]
+        types = [TagReference]
+
+        def to_yaml_tree(self, obj, tag, ctx):
+            return {"name": obj.name, "things": obj.things}
+
+        def from_yaml_tree(self, node, tag, ctx):
+            return TagReference(node["name"], node["things"])
+
+    class TagReferenceExtension:
+        tags = [tag_def]
+        extension_uri = "asdf://nowhere.org/extensions/tag_reference-1.0.0"
+        converters = [TagReferenceConverter()]
+
+    tag_schema = f"""
+%YAML 1.1
+---
+$schema: "http://stsci.edu/schemas/yaml-schema/draft-01"
+id: {schema_uri}
+title: An example custom type for testing tag references
+
+type: object
+properties:
+  name:
+    type: string
+  things:
+    $ref: "http://stsci.edu/schemas/asdf/core/ndarray-1.0.0"
+required: [name, things]
+...
+    """
+
+    with config_context() as cfg:
+        cfg.add_resource_mapping({schema_uri: tag_schema})
+        cfg.add_extension(TagReferenceExtension())
+        yield
 
 
 def test_tagging_scalars():
@@ -108,11 +137,12 @@ required: [foobar]
     schema_path = tmp_path / "nugatory.yaml"
     schema_path.write_bytes(schema_def.encode())
 
-    schema_tree = schema.load_schema(str(schema_path), resolve_references=True)
+    with pytest.warns(AsdfDeprecationWarning, match="Resolving by tag is deprecated"):
+        schema_tree = schema.load_schema(str(schema_path), resolve_references=True)
     schema.check_schema(schema_tree)
 
 
-def test_load_schema_with_tag_address(tmp_path):
+def test_load_schema_with_file_url(tmp_path):
     schema_def = """
 %YAML 1.1
 %TAG !asdf! tag:stsci.edu:asdf/
@@ -129,32 +159,6 @@ properties:
 required: [foobar]
 ...
     """
-    schema_path = tmp_path / "nugatory.yaml"
-    schema_path.write_bytes(schema_def.encode())
-
-    schema_tree = schema.load_schema(str(schema_path), resolve_references=True)
-    schema.check_schema(schema_tree)
-
-
-def test_load_schema_with_file_url(tmp_path):
-    schema_def = """
-%YAML 1.1
-%TAG !asdf! tag:stsci.edu:asdf/
----
-$schema: "http://stsci.edu/schemas/asdf/asdf-schema-1.0.0"
-id: "http://stsci.edu/schemas/asdf/nugatory/nugatory-1.0.0"
-tag: "tag:stsci.edu:asdf/nugatory/nugatory-1.0.0"
-
-type: object
-properties:
-  foobar:
-      $ref: "{}"
-
-required: [foobar]
-...
-    """.format(
-        _legacy_extension.get_default_resolver()("tag:stsci.edu:asdf/core/ndarray-1.0.0"),
-    )
     schema_path = tmp_path / "nugatory.yaml"
     schema_path.write_bytes(schema_def.encode())
 
@@ -550,11 +554,6 @@ one_of: !<tag:nowhere.org:custom/one_of-1.0.0>
 
 
 def test_tag_reference_validation():
-    class DefaultTypeExtension(CustomExtension):
-        @property
-        def types(self):
-            return [TagReferenceType]
-
     yaml = """
 custom: !<tag:nowhere.org:custom/tag_reference-1.0.0>
   name:
@@ -563,33 +562,53 @@ custom: !<tag:nowhere.org:custom/tag_reference-1.0.0>
     data: [1, 2, 3]
     """
 
-    buff = helpers.yaml_to_asdf(yaml)
-    with asdf.open(buff, extensions=[DefaultTypeExtension()]) as ff:
-        custom = ff.tree["custom"]
-        assert custom["name"] == "Something"
-        assert_array_equal(custom["things"], [1, 2, 3])
+    with tag_reference_extension():
+        buff = helpers.yaml_to_asdf(yaml)
+        with asdf.open(buff) as ff:
+            custom = ff.tree["custom"]
+            assert custom.name == "Something"
+            assert_array_equal(custom.things, [1, 2, 3])
 
 
 def test_foreign_tag_reference_validation():
-    with pytest.warns(AsdfDeprecationWarning, match=".*subclasses the deprecated CustomType.*"):
+    class ForeignTagReference:
+        def __init__(self, a):
+            self.a = a
 
-        class ForeignTagReferenceType(types.CustomType):
-            name = "foreign_tag_reference"
-            organization = "nowhere.org"
-            version = (1, 0, 0)
-            standard = "custom"
+    tag_uri = "tag:nowhere.org:custom/foreign_tag_reference-1.0.0"
+    schema_uri = "http://nowhere.org/schemas/custom/foreign_tag_reference-1.0.0"
+    tag_def = asdf.extension.TagDefinition(tag_uri, schema_uris=schema_uri)
 
-            @classmethod
-            def from_tree(cls, tree, ctx):
-                node = {}
-                node["a"] = tree["a"]
-                node["b"] = tree["b"]
-                return node
+    class ForeignTagReferenceConverter:
+        tags = [tag_uri]
+        types = [ForeignTagReference]
 
-    class ForeignTypeExtension(CustomExtension):
-        @property
-        def types(self):
-            return [TagReferenceType, ForeignTagReferenceType]
+        def to_yaml_tree(self, obj, tag, ctx):
+            return {"a": obj.a}
+
+        def from_yaml_tree(self, node, tag, ctx):
+            return ForeignTagReference(node["a"])
+
+    class ForeignTagReferenceExtension:
+        tags = [tag_def]
+        extension_uri = "asdf://nowhere.org/extensions/foreign_tag_reference-1.0.0"
+        converters = [ForeignTagReferenceConverter()]
+
+    tag_schema = f"""
+%YAML 1.1
+---
+$schema: "http://stsci.edu/schemas/yaml-schema/draft-01"
+id: {schema_uri}
+title: An example custom type for testing tag references
+
+type: object
+properties:
+  a:
+    # Test foreign tag reference using tag URI
+    $ref: "http://nowhere.org/schemas/custom/tag_reference-1.0.0"
+required: [a]
+...
+    """
 
     yaml = """
 custom: !<tag:nowhere.org:custom/foreign_tag_reference-1.0.0>
@@ -598,21 +617,18 @@ custom: !<tag:nowhere.org:custom/foreign_tag_reference-1.0.0>
       "Something"
     things: !core/ndarray-1.0.0
       data: [1, 2, 3]
-  b: !<tag:nowhere.org:custom/tag_reference-1.0.0>
-    name:
-      "Anything"
-    things: !core/ndarray-1.0.0
-      data: [4, 5, 6]
     """
 
-    buff = helpers.yaml_to_asdf(yaml)
-    with asdf.open(buff, extensions=ForeignTypeExtension()) as ff:
-        a = ff.tree["custom"]["a"]
-        b = ff.tree["custom"]["b"]
-        assert a["name"] == "Something"
-        assert_array_equal(a["things"], [1, 2, 3])
-        assert b["name"] == "Anything"
-        assert_array_equal(b["things"], [4, 5, 6])
+    with tag_reference_extension():
+        cfg = asdf.get_config()
+        cfg.add_resource_mapping({schema_uri: tag_schema})
+        cfg.add_extension(ForeignTagReferenceExtension())
+
+        buff = helpers.yaml_to_asdf(yaml)
+        with asdf.open(buff) as ff:
+            a = ff.tree["custom"].a
+            assert a.name == "Something"
+            assert_array_equal(a.things, [1, 2, 3])
 
 
 def test_self_reference_resolution():

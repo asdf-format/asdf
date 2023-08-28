@@ -16,8 +16,7 @@ from asdf._jsonschema.exceptions import RefResolutionError, ValidationError
 
 from . import constants, generic_io, reference, tagged, treeutil, util, versioning, yamlutil
 from .config import get_config
-from .exceptions import AsdfWarning
-from .extension import _legacy
+from .exceptions import AsdfDeprecationWarning, AsdfWarning
 from .util import patched_urllib_parse
 
 YAML_SCHEMA_METASCHEMA_ID = "http://stsci.edu/schemas/yaml-schema/draft-01"
@@ -48,6 +47,16 @@ def _type_to_tag(type_):
         if base in PYTHON_TYPE_TO_YAML_TAG:
             return PYTHON_TYPE_TO_YAML_TAG[base]
     return None
+
+
+def _tag_to_uri(input_str):
+    if not input_str.startswith(constants.STSCI_SCHEMA_TAG_BASE):
+        return input_str
+    warnings.warn(
+        "Resolving by tag is deprecated. Use uris instead of tags",
+        AsdfDeprecationWarning,
+    )
+    return f"http://stsci.edu/schemas/asdf{input_str[len(constants.STSCI_SCHEMA_TAG_BASE):]}"
 
 
 def validate_tag(validator, tag_pattern, instance, schema):
@@ -230,7 +239,7 @@ class _ValidationContext:
 
 @lru_cache
 def _create_validator(validators=YAML_VALIDATORS, visit_repeat_nodes=False):
-    meta_schema = _load_schema_cached(YAML_SCHEMA_METASCHEMA_ID, _legacy.get_default_resolver(), False)
+    meta_schema = _load_schema_cached(YAML_SCHEMA_METASCHEMA_ID, _tag_to_uri, False, False)
 
     type_checker = mvalidators.Draft4Validator.TYPE_CHECKER.redefine_many(
         {
@@ -362,7 +371,7 @@ def _make_schema_loader(resolver):
     return load_schema
 
 
-def _make_resolver(url_mapping):
+def _make_jsonschema_refresolver(url_mapping):
     handlers = {}
     schema_loader = _make_schema_loader(url_mapping)
 
@@ -409,9 +418,7 @@ def load_schema(url, resolver=None, resolve_references=False):
 
     """
     if resolver is None:
-        # We can't just set this as the default in load_schema's definition
-        # because invoking get_default_resolver at import time leads to a circular import.
-        resolver = _legacy.get_default_resolver()
+        resolver = _tag_to_uri
 
     # We want to cache the work that went into constructing the schema, but returning
     # the same object is treacherous, because users who mutate the result will not
@@ -543,7 +550,7 @@ def get_validator(
         validators.update(ctx._extension_list.validators)
         validators.update(ctx._extension_manager.validator_manager.get_jsonschema_validators())
 
-    kwargs["resolver"] = _make_resolver(url_mapping)
+    kwargs["resolver"] = _make_jsonschema_refresolver(url_mapping)
 
     # We don't just call validators.validate() directly here, because
     # that validates the schema itself, wasting a lot of time (at the
@@ -729,9 +736,9 @@ def check_schema(schema, validate_default=True):
         applicable_validators = methodcaller("items")
 
     meta_schema_id = schema.get("$schema", YAML_SCHEMA_METASCHEMA_ID)
-    meta_schema = _load_schema_cached(meta_schema_id, _legacy.get_default_resolver(), False)
+    meta_schema = _load_schema_cached(meta_schema_id, _tag_to_uri, False, False)
 
-    resolver = _make_resolver(_legacy.get_default_resolver())
+    resolver = _make_jsonschema_refresolver(_tag_to_uri)
 
     cls = mvalidators.create(
         meta_schema=meta_schema,

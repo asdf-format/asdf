@@ -13,7 +13,6 @@ from .resource import ResourceMappingProxy
 
 RESOURCE_MAPPINGS_GROUP = "asdf.resource_mappings"
 EXTENSIONS_GROUP = "asdf.extensions"
-LEGACY_EXTENSIONS_GROUP = "asdf_extensions"
 
 
 def get_resource_mappings():
@@ -22,8 +21,7 @@ def get_resource_mappings():
 
 def get_extensions():
     extensions = _list_entry_points(EXTENSIONS_GROUP, ExtensionProxy)
-    legacy_extensions = _list_entry_points(LEGACY_EXTENSIONS_GROUP, ExtensionProxy)
-    return extensions + legacy_extensions
+    return extensions
 
 
 def _list_entry_points(group, proxy_class):
@@ -54,10 +52,6 @@ def _list_entry_points(group, proxy_class):
         # Catch errors loading entry points and warn instead of raising
         try:
             with warnings.catch_warnings():
-                if entry_point.group == LEGACY_EXTENSIONS_GROUP and entry_point.name != "builtin":
-                    # for now, the builtin extension is still registered via asdf_extensions
-                    # so we only load this legacy extension and ignore all non-builtin extensions
-                    continue
                 elements = entry_point.load()()
 
         except Exception as e:

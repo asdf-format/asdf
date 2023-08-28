@@ -434,7 +434,7 @@ that.)
 **_make_schema_loader:** Defines the function load_schema using the provided
 resolver and _load_schema.
 
-**_make_resolver:** Sets the schema loader for http, https, file, tag using a
+**_make_jsonschema_refresolver:** Sets the schema loader for http, https, file, tag using a
 dictionary where these access methods are the keys and the schema loader
 returning only the schema (and not the uri). These all appear to use the same
 schema loader.
