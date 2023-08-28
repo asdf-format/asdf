@@ -7,7 +7,6 @@ import asdf
 from asdf import get_config
 from asdf.core._integration import get_json_schema_resource_mappings
 from asdf.extension import ExtensionProxy
-from asdf.extension._legacy import BuiltinExtension
 from asdf.resource import ResourceMappingProxy
 
 
@@ -255,7 +254,6 @@ def test_resource_manager():
 def test_extensions():
     with asdf.config_context() as config:
         original_extensions = config.extensions
-        assert any(isinstance(e.delegate, BuiltinExtension) for e in original_extensions)
 
         class FooExtension:
             types = []
