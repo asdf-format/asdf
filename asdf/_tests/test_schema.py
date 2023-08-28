@@ -628,11 +628,11 @@ def test_self_reference_resolution():
 
 def test_schema_resolved_via_entry_points():
     """Test that entry points mappings to core schema works"""
-    r = _legacy_extension.get_default_resolver()
     tag = asdf.testing.helpers.format_tag("stsci.edu", "asdf", "1.0.0", "fits/fits")
-    url = _legacy_extension.default_extensions.extension_list.tag_mapping(tag)
-
-    s = schema.load_schema(url, resolver=r, resolve_references=True)
+    extension_manager = asdf.extension.get_cached_extension_manager(get_config().extensions)
+    schema_uris = extension_manager.get_tag_definition(tag).schema_uris
+    assert len(schema_uris) > 0
+    s = schema.load_schema(schema_uris[0], resolve_references=True)
     assert tag in repr(s)
 
 
