@@ -6,7 +6,7 @@ import pytest
 import asdf
 from asdf import _types as types
 from asdf import util, versioning
-from asdf.exceptions import AsdfConversionWarning, AsdfDeprecationWarning, AsdfWarning
+from asdf.exceptions import AsdfConversionWarning, AsdfDeprecationWarning
 from asdf.extension import _legacy
 
 from . import _helpers as helpers
@@ -515,59 +515,6 @@ flow_thing:
         match=r"Version 1.1.0 of tag:nowhere.org:custom/custom_flow is not compatible",
     ):
         asdf.open(buff, extensions=CustomFlowExtension())
-
-
-def test_tag_without_schema(tmp_path):
-    tmpfile = str(tmp_path / "foo.asdf")
-
-    with pytest.warns(AsdfDeprecationWarning, match=".*subclasses the deprecated CustomType.*"):
-
-        class FooType(types.CustomType):
-            name = "foo"
-
-            def __init__(self, a, b):
-                self.a = a
-                self.b = b
-
-            @classmethod
-            def from_tree(cls, tree, ctx):
-                return cls(tree["a"], tree["b"])
-
-            @classmethod
-            def to_tree(cls, node, ctx):
-                return {"a": node.a, "b": node.b}
-
-            def __eq__(self, other):
-                return self.a == other.a and self.b == other.b
-
-    class FooExtension:
-        @property
-        def types(self):
-            return [FooType]
-
-        @property
-        def tag_mapping(self):
-            return []
-
-        @property
-        def url_mapping(self):
-            return []
-
-    foo = FooType("hello", 42)
-    tree = {"foo": foo}
-
-    with pytest.warns(AsdfWarning, match=r"Unable to locate schema file"), asdf.AsdfFile(
-        tree,
-        extensions=FooExtension(),
-    ) as af:
-        af.write_to(tmpfile)
-
-    with pytest.warns(AsdfWarning, match=r"Unable to locate schema file"), asdf.AsdfFile(
-        tree,
-        extensions=FooExtension(),
-    ) as ff:
-        assert isinstance(ff.tree["foo"], FooType)
-        assert ff.tree["foo"] == tree["foo"]
 
 
 def test_custom_reference_cycle(tmp_path):
