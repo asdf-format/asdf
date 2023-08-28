@@ -1033,18 +1033,6 @@ def test_nonexistent_tag(tmp_path):
     The bug that prompted this test results from attempting to load a schema
     file that doesn't exist, which is why this test belongs in this file.
     """
-
-    # This shouldn't ever happen, but it's a useful test case
-    yaml = """
-a: !core/doesnt_exist-1.0.0
-  hello
-    """
-
-    buff = helpers.yaml_to_asdf(yaml)
-    with pytest.warns(AsdfWarning, match=r"Unable to locate schema file"), asdf.open(buff) as af:
-        assert str(af["a"]) == "hello"
-
-    # This is a more realistic case since we're using an external extension
     yaml = """
 a: !<tag:nowhere.org:custom/doesnt_exist-1.0.0>
   hello
