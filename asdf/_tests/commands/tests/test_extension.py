@@ -1,6 +1,7 @@
 import pytest
 
 from asdf.commands import find_extensions
+from asdf.versioning import supported_versions
 
 
 @pytest.mark.parametrize("summary", [True, False])
@@ -10,7 +11,8 @@ def test_parameter_combinations(summary, tags_only):
     find_extensions(summary, tags_only)
 
 
-def test_builtin_extension_included(capsys):
+@pytest.mark.parametrize("standard_version", supported_versions)
+def test_builtin_extension_included(capsys, standard_version):
     find_extensions(True, False)
     captured = capsys.readouterr()
-    assert "asdf.extension.BuiltinExtension" in captured.out
+    assert f"core-{standard_version}" in captured.out
