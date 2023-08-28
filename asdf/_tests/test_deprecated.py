@@ -6,8 +6,6 @@ import asdf
 import asdf._types
 import asdf.extension
 import asdf.testing.helpers
-from asdf._tests._helpers import assert_extension_correctness
-from asdf._tests.objects import CustomExtension
 from asdf._types import CustomType
 from asdf.exceptions import AsdfDeprecationWarning
 
@@ -17,12 +15,6 @@ def test_custom_type_warning():
 
         class NewCustomType(CustomType):
             pass
-
-
-def test_assert_extension_correctness_deprecation():
-    extension = CustomExtension()
-    with pytest.warns(AsdfDeprecationWarning, match="assert_extension_correctness is deprecated.*"):
-        assert_extension_correctness(extension)
 
 
 def test_asdf_type_format_tag():

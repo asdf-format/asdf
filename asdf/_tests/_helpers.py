@@ -24,10 +24,9 @@ import yaml
 
 import asdf
 from asdf import generic_io, versioning
-from asdf._resolver import Resolver, ResolverChain
 from asdf.asdf import AsdfFile, get_asdf_library_info
 from asdf.constants import YAML_TAG_PREFIX
-from asdf.exceptions import AsdfConversionWarning, AsdfDeprecationWarning
+from asdf.exceptions import AsdfConversionWarning
 from asdf.extension import _legacy
 from asdf.tags.core import AsdfObject
 from asdf.versioning import (
@@ -416,35 +415,6 @@ def assert_no_warnings(warning_class=None):
         assert not any(isinstance(w.message, warning_class) for w in recorded_warnings), display_warnings(
             recorded_warnings,
         )
-
-
-def assert_extension_correctness(extension):
-    """
-    Assert that an ASDF extension's types are all correctly formed and
-    that the extension provides all of the required schemas.
-
-    Parameters
-    ----------
-    extension : asdf._AsdfExtension
-        The extension to validate
-    """
-    __tracebackhide__ = True
-
-    warnings.warn(
-        "assert_extension_correctness is deprecated and depends "
-        "on the deprecated type system. Please use the new "
-        "extension API: "
-        "https://asdf.readthedocs.io/en/stable/asdf/extending/converters.html",
-        AsdfDeprecationWarning,
-    )
-
-    resolver = ResolverChain(
-        Resolver(extension.tag_mapping, "tag"),
-        Resolver(extension.url_mapping, "url"),
-    )
-
-    for extension_type in extension.types:
-        _assert_extension_type_correctness(extension, extension_type, resolver)
 
 
 def _assert_extension_type_correctness(extension, extension_type, resolver):
