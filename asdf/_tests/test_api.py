@@ -11,9 +11,8 @@ from astropy.modeling import models
 from numpy.testing import assert_array_equal
 
 import asdf
-from asdf import _resolver as resolver
 from asdf import config_context, get_config, treeutil, versioning
-from asdf.exceptions import AsdfDeprecationWarning, AsdfWarning, ValidationError
+from asdf.exceptions import AsdfWarning, ValidationError
 from asdf.extension import ExtensionProxy
 
 from ._helpers import assert_no_warnings, assert_roundtrip_tree, assert_tree_match, yaml_to_asdf
@@ -410,16 +409,6 @@ def test_array_inline_threshold_string_array(array_inline_threshold, inline_bloc
             af.write_to(file_path)
         with asdf.open(file_path) as af:
             assert len(af._blocks.blocks) == internal_blocks
-
-
-def test_resolver_deprecations():
-    for resolver_method in [
-        resolver.default_resolver,
-        resolver.default_tag_to_url_mapping,
-        resolver.default_url_mapping,
-    ]:
-        with pytest.warns(AsdfDeprecationWarning):
-            resolver_method("foo")
 
 
 def test_history_entries(tmp_path):

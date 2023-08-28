@@ -3,7 +3,6 @@ from packaging.specifiers import SpecifierSet
 from yaml.representer import RepresenterError
 
 from asdf import AsdfFile, config_context
-from asdf._tests._helpers import assert_extension_correctness
 from asdf._types import CustomType
 from asdf.exceptions import AsdfDeprecationWarning, AsdfWarning, ValidationError
 from asdf.extension import (
@@ -18,15 +17,8 @@ from asdf.extension import (
     Validator,
     get_cached_extension_manager,
 )
-from asdf.extension._legacy import BuiltinExtension, _AsdfExtension, get_cached_asdf_extension_list
+from asdf.extension._legacy import _AsdfExtension, get_cached_asdf_extension_list
 from asdf.testing.helpers import roundtrip_object
-
-
-def test_builtin_extension():
-    extension = BuiltinExtension()
-    with pytest.warns(AsdfDeprecationWarning, match="assert_extension_correctness is deprecated.*"):
-        assert_extension_correctness(extension)
-
 
 with pytest.warns(AsdfDeprecationWarning, match=".*subclasses the deprecated CustomType.*"):
 
