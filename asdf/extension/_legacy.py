@@ -2,7 +2,6 @@ import abc
 import warnings
 
 from asdf import _resolver as resolver
-from asdf import _types as types
 from asdf._type_index import AsdfTypeIndex
 from asdf.exceptions import AsdfDeprecationWarning
 
@@ -161,26 +160,3 @@ class AsdfExtensionList:
     @property
     def validators(self):
         return self._validators
-
-
-# A kludge in asdf.util.get_class_name allows this class to retain
-# its original name, despite being moved from extension.py to
-# this file.
-class BuiltinExtension:
-    """
-    This is the "extension" to ASDF that includes all the built-in
-    tags.  Even though it's not really an extension and it's always
-    available, it's built in the same way as an extension.
-    """
-
-    @property
-    def types(self):
-        return types._all_asdftypes
-
-    @property
-    def tag_mapping(self):
-        return resolver.DEFAULT_TAG_TO_URL_MAPPING
-
-    @property
-    def url_mapping(self):
-        return resolver.DEFAULT_URL_MAPPING

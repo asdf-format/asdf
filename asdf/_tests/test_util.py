@@ -3,7 +3,6 @@ import io
 import pytest
 
 from asdf import generic_io, util
-from asdf.extension._legacy import BuiltinExtension
 
 
 def test_is_primitive():
@@ -33,10 +32,6 @@ def test_get_class_name():
         util.get_class_name(SomeClass.SomeInnerClass, instance=False)
         == "asdf._tests.test_util.SomeClass.SomeInnerClass"
     )
-
-
-def test_get_class_name_override():
-    assert util.get_class_name(BuiltinExtension, instance=False) == "asdf.extension.BuiltinExtension"
 
 
 def test_patched_urllib_parse():
