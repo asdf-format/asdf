@@ -27,7 +27,6 @@ from asdf import generic_io, versioning
 from asdf.asdf import AsdfFile, get_asdf_library_info
 from asdf.constants import YAML_TAG_PREFIX
 from asdf.exceptions import AsdfConversionWarning
-from asdf.extension import _legacy
 from asdf.tags.core import AsdfObject
 from asdf.versioning import (
     AsdfVersion,
@@ -95,9 +94,6 @@ def assert_tree_match(old_tree, new_tree, ctx=None, funcname="assert_equal", ign
     if ignore_keys is None:
         ignore_keys = ["asdf_library", "history"]
     ignore_keys = set(ignore_keys)
-
-    if ctx is None:
-        ctx = _legacy.default_extensions.extension_list
 
     def recurse(old, new):
         if id(old) in seen or id(new) in seen:

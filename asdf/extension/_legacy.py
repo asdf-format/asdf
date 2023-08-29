@@ -1,6 +1,5 @@
 import abc
 import warnings
-from functools import lru_cache
 
 from asdf import _resolver as resolver
 from asdf import _types as types
@@ -164,39 +163,6 @@ class AsdfExtensionList:
         return self._validators
 
 
-def get_cached_asdf_extension_list(extensions):
-    """
-    Get a previously created AsdfExtensionList for the specified
-    extensions, or create and cache one if necessary.  Building
-    the type index is expensive, so it helps performance to reuse
-    the index when possible.
-
-    Parameters
-    ----------
-    extensions : list of asdf.extension._AsdfExtension
-
-    Returns
-    -------
-    asdf.extension.AsdfExtensionList
-    """
-    from ._extension import ExtensionProxy
-
-    # The tuple makes the extensions hashable so that we
-    # can pass them to the lru_cache method.  The ExtensionProxy
-    # overrides __hash__ to return the hashed object id of the wrapped
-    # extension, so this will method will only return the same
-    # AsdfExtensionList if the list contains identical extension
-    # instances in identical order.
-    extensions = tuple(ExtensionProxy.maybe_wrap(e) for e in extensions)
-
-    return _get_cached_asdf_extension_list(extensions)
-
-
-@lru_cache
-def _get_cached_asdf_extension_list(extensions):
-    return AsdfExtensionList(extensions)
-
-
 # A kludge in asdf.util.get_class_name allows this class to retain
 # its original name, despite being moved from extension.py to
 # this file.
@@ -218,41 +184,3 @@ class BuiltinExtension:
     @property
     def url_mapping(self):
         return resolver.DEFAULT_URL_MAPPING
-
-
-class _DefaultExtensions:
-    @property
-    def extensions(self):
-        from asdf.config import get_config
-
-        return [e for e in get_config().extensions if e.legacy]
-
-    @property
-    def extension_list(self):
-        return get_cached_asdf_extension_list(self.extensions)
-
-    @property
-    def package_metadata(self):
-        return {
-            e.class_name: (e.package_name, e.package_version) for e in self.extensions if e.package_name is not None
-        }
-
-    def reset(self):
-        """This will be used primarily for testing purposes."""
-        from asdf.config import get_config
-
-        get_config().reset_extensions()
-
-    @property
-    def resolver(self):
-        return self.extension_list.resolver
-
-
-default_extensions = _DefaultExtensions()
-
-
-def get_default_resolver():
-    """
-    Get the resolver that includes mappings from all installed extensions.
-    """
-    return default_extensions.resolver
