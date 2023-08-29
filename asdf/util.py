@@ -310,14 +310,6 @@ def resolve_name(name):
     return ret
 
 
-# Kludge to cover up the fact that BuiltinExtension was moved from extension.py
-# to extension/_legacy.py.  Can be removed once BuiltinExtension is dropped
-# in asdf 3.0.
-_CLASS_NAME_OVERRIDES = {
-    "asdf.extension._legacy.BuiltinExtension": "asdf.extension.BuiltinExtension",
-}
-
-
 def get_class_name(obj, instance=True):
     """
     Given a class or instance of a class, returns a string representing the
@@ -332,8 +324,7 @@ def get_class_name(obj, instance=True):
         Indicates whether given object is an instance of the class to be named
     """
     typ = type(obj) if instance else obj
-    class_name = f"{typ.__module__}.{typ.__qualname__}"
-    return _CLASS_NAME_OVERRIDES.get(class_name, class_name)
+    return f"{typ.__module__}.{typ.__qualname__}"
 
 
 def minversion(module, version, inclusive=True):
