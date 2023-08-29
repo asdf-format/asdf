@@ -8,10 +8,8 @@ from numpy.testing import assert_array_equal
 
 import asdf
 import asdf.testing.helpers
-from asdf import _resolver as resolver
 from asdf import config_context, constants, get_config, schema, tagged, util, yamlutil
 from asdf._tests import _helpers as helpers
-from asdf._tests.objects import CustomExtension
 from asdf.exceptions import AsdfConversionWarning, AsdfDeprecationWarning, AsdfWarning, ValidationError
 from asdf.extension import TagDefinition
 
@@ -803,10 +801,8 @@ custom: !<tag:nowhere.org:custom/foreign_tag_reference-1.0.0>
 
 
 def test_self_reference_resolution():
-    r = resolver.Resolver(CustomExtension().url_mapping, "url")
     s = schema.load_schema(
         helpers.get_test_data_path("self_referencing-1.0.0.yaml"),
-        resolver=r,
         resolve_references=True,
     )
     assert "$ref" not in repr(s)
