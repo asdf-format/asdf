@@ -1,38 +1,9 @@
 import pytest
 
 import asdf
-from asdf import _types as types
-from asdf.exceptions import AsdfConversionWarning, AsdfDeprecationWarning
+from asdf.exceptions import AsdfConversionWarning
 
 from . import _helpers as helpers
-
-
-def test_module_versioning():
-    with pytest.warns(AsdfDeprecationWarning, match=".*subclasses the deprecated CustomType.*"):
-
-        class NoModuleType(types.CustomType):
-            # It seems highly unlikely that this would be a real module
-            requires = ["qkjvqdja"]
-
-    with pytest.warns(AsdfDeprecationWarning, match=".*subclasses the deprecated CustomType.*"):
-
-        class HasCorrectPytest(types.CustomType):
-            # This means it requires 1.0.0 or greater, so it should succeed
-            requires = ["pytest-1.0.0"]
-
-    with pytest.warns(AsdfDeprecationWarning, match=".*subclasses the deprecated CustomType.*"):
-
-        class DoesntHaveCorrectPytest(types.CustomType):
-            requires = ["pytest-91984.1.7"]
-
-    nmt = NoModuleType()
-    hcp = HasCorrectPytest()
-    # perhaps an unfortunate acroynm
-    dhcp = DoesntHaveCorrectPytest()
-
-    assert nmt.has_required_modules is False
-    assert hcp.has_required_modules is True
-    assert dhcp.has_required_modules is False
 
 
 def test_undefined_tag():

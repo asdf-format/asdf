@@ -5,8 +5,7 @@ from packaging.specifiers import SpecifierSet
 from yaml.representer import RepresenterError
 
 from asdf import AsdfFile, config_context
-from asdf._types import CustomType
-from asdf.exceptions import AsdfDeprecationWarning, AsdfWarning, ValidationError
+from asdf.exceptions import ValidationError
 from asdf.extension import (
     Compressor,
     Converter,
@@ -20,19 +19,6 @@ from asdf.extension import (
     get_cached_extension_manager,
 )
 from asdf.testing.helpers import roundtrip_object
-
-with pytest.warns(AsdfDeprecationWarning, match=".*subclasses the deprecated CustomType.*"):
-
-    class LegacyType(dict, CustomType):
-        organization = "somewhere.org"
-        name = "test"
-        version = "1.0.0"
-
-
-class LegacyExtension:
-    types = [LegacyType]
-    tag_mapping = [("tag:somewhere.org/", "http://somewhere.org/{tag_suffix}")]
-    url_mapping = [("http://somewhere.org/", "http://somewhere.org/{url_suffix}.yaml")]
 
 
 class MinimumExtension:
