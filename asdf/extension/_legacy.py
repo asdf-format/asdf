@@ -1,9 +1,4 @@
 import abc
-import warnings
-
-from asdf import _resolver as resolver
-from asdf._type_index import AsdfTypeIndex
-from asdf.exceptions import AsdfDeprecationWarning
 
 __all__ = ["_AsdfExtension"]
 
@@ -97,66 +92,3 @@ class _AsdfExtension(metaclass=abc.ABCMeta):
                     '/{url_suffix}.yaml'
                    )]
         """
-
-
-class AsdfExtensionList:
-    """
-    Manage a set of extensions that are in effect.
-    """
-
-    def __init__(self, extensions):
-        from ._extension import ExtensionProxy
-
-        extensions = [ExtensionProxy.maybe_wrap(e) for e in extensions]
-
-        tag_mapping = []
-        url_mapping = []
-        validators = {}
-        self._type_index = AsdfTypeIndex()
-        for extension in extensions:
-            tag_mapping.extend(extension.tag_mapping)
-            url_mapping.extend(extension.url_mapping)
-            for typ in extension.types:
-                self._type_index.add_type(typ, extension)
-                validators.update(typ.validators)
-                for sibling in typ.versioned_siblings:
-                    self._type_index.add_type(sibling, extension)
-                    validators.update(sibling.validators)
-        self._extensions = extensions
-        self._tag_mapping = resolver.Resolver(tag_mapping, "tag")
-        self._url_mapping = resolver.Resolver(url_mapping, "url")
-        self._resolver = resolver.ResolverChain(self._tag_mapping, self._url_mapping)
-        self._validators = validators
-
-    @property
-    def tag_to_schema_resolver(self):
-        """Deprecated. Use `tag_mapping` instead"""
-        warnings.warn(
-            "The 'tag_to_schema_resolver' property is deprecated. Use 'tag_mapping' instead.",
-            AsdfDeprecationWarning,
-        )
-        return self._tag_mapping
-
-    @property
-    def extensions(self):
-        return self._extensions
-
-    @property
-    def tag_mapping(self):
-        return self._tag_mapping
-
-    @property
-    def url_mapping(self):
-        return self._url_mapping
-
-    @property
-    def resolver(self):
-        return self._resolver
-
-    @property
-    def type_index(self):
-        return self._type_index
-
-    @property
-    def validators(self):
-        return self._validators
