@@ -9,7 +9,6 @@ from asdf.asdf import AsdfFile, open_asdf
 from asdf.entry_points import get_extensions
 from asdf.exceptions import AsdfWarning
 from asdf.extension import ExtensionProxy
-from asdf.extension._legacy import AsdfExtensionList
 from asdf.versioning import AsdfVersion
 
 
@@ -117,7 +116,7 @@ def test_asdf_file_extensions():
 
     extension = TestExtension(extension_uri="asdf://somewhere.org/extensions/foo-1.0")
 
-    for arg in ([extension], extension, AsdfExtensionList([extension])):
+    for arg in ([extension], extension):
         af = AsdfFile(extensions=arg)
         assert af.extensions == [ExtensionProxy(extension)]
 
@@ -178,7 +177,7 @@ def test_open_asdf_extensions(tmp_path):
     with open_asdf(path) as af:
         assert af.extensions == []
 
-    for arg in ([extension], extension, AsdfExtensionList([extension])):
+    for arg in ([extension], extension):
         with open_asdf(path, extensions=arg) as af:
             assert af.extensions == [ExtensionProxy(extension)]
 
@@ -231,17 +230,6 @@ def test_reading_extension_metadata():
         foo: bar
         """
         buff = yaml_to_asdf(content, standard_version="1.0.0")
-        with assert_no_warnings():
-            open_asdf(buff)
-
-        # Test legacy extension matching by actual class name:
-        content = """
-        history:
-          extensions:
-            - !core/extension_metadata-1.0.0
-              extension_class: asdf._tests.test_asdf.TestExtension
-        """
-        buff = yaml_to_asdf(content)
         with assert_no_warnings():
             open_asdf(buff)
 

@@ -239,7 +239,7 @@ class _ValidationContext:
 
 @lru_cache
 def _create_validator(validators=YAML_VALIDATORS, visit_repeat_nodes=False):
-    meta_schema = _load_schema_cached(YAML_SCHEMA_METASCHEMA_ID, _tag_to_uri, False, False)
+    meta_schema = _load_schema_cached(YAML_SCHEMA_METASCHEMA_ID, _tag_to_uri, False)
 
     type_checker = mvalidators.Draft4Validator.TYPE_CHECKER.redefine_many(
         {
@@ -291,14 +291,9 @@ def _create_validator(validators=YAML_VALIDATORS, visit_repeat_nodes=False):
 
                 if not self.schema:
                     tag = getattr(instance, "_tag", None)
-                    if tag is not None:
-                        if self.serialization_context.extension_manager.handles_tag_definition(tag):
-                            tag_def = self.serialization_context.extension_manager.get_tag_definition(tag)
-                            schema_uris = tag_def.schema_uris
-                        else:
-                            schema_uris = [self.ctx._tag_mapping(tag)]
-                            if schema_uris[0] == tag:
-                                schema_uris = []
+                    if tag is not None and self.serialization_context.extension_manager.handles_tag_definition(tag):
+                        tag_def = self.serialization_context.extension_manager.get_tag_definition(tag)
+                        schema_uris = tag_def.schema_uris
 
                         # Must validate against all schema_uris
                         for schema_uri in schema_uris:
@@ -344,6 +339,9 @@ def _load_schema(url):
 
 
 def _make_schema_loader(resolver):
+    if resolver is None:
+        resolver = _tag_to_uri
+
     def load_schema(url):
         # Check if this is a URI provided by the new
         # Mapping API:
@@ -466,6 +464,8 @@ def _safe_resolve(resolver, json_id, uri):
 
 @lru_cache
 def _load_schema_cached(url, resolver, resolve_references):
+    if resolver is None:
+        resolver = _tag_to_uri
     loader = _make_schema_loader(resolver)
     schema, url = loader(url)
 
@@ -547,7 +547,6 @@ def get_validator(
 
     if validators is None:
         validators = util.HashableDict(YAML_VALIDATORS.copy())
-        validators.update(ctx._extension_list.validators)
         validators.update(ctx._extension_manager.validator_manager.get_jsonschema_validators())
 
     kwargs["resolver"] = _make_jsonschema_refresolver(url_mapping)
@@ -646,7 +645,7 @@ def validate(instance, ctx=None, schema=None, validators=None, reading=False, *a
 
         ctx = AsdfFile()
 
-    validator = get_validator({} if schema is None else schema, ctx, validators, ctx._resolver, *args, **kwargs)
+    validator = get_validator({} if schema is None else schema, ctx, validators, None, *args, **kwargs)
     validator.validate(instance)
 
     additional_validators = [_validate_large_literals]
@@ -736,7 +735,7 @@ def check_schema(schema, validate_default=True):
         applicable_validators = methodcaller("items")
 
     meta_schema_id = schema.get("$schema", YAML_SCHEMA_METASCHEMA_ID)
-    meta_schema = _load_schema_cached(meta_schema_id, _tag_to_uri, False, False)
+    meta_schema = _load_schema_cached(meta_schema_id, _tag_to_uri, False)
 
     resolver = _make_jsonschema_refresolver(_tag_to_uri)
 

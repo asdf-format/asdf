@@ -295,12 +295,6 @@ def test_open_pathlib_path(tmp_path):
         assert (af["data"] == tree["data"]).all()
 
 
-class FooExtension:
-    types = []
-    tag_mapping = []
-    url_mapping = []
-
-
 @pytest.mark.parametrize(
     ("installed", "extension", "warns"),
     [
@@ -312,6 +306,9 @@ class FooExtension:
     ],
 )
 def test_extension_version_check(installed, extension, warns):
+    class FooExtension:
+        extension_uri = "asdf://somewhere.org/extensions/foo-1.0.0"
+
     proxy = ExtensionProxy(FooExtension(), package_name="foo", package_version=installed)
 
     with config_context() as config:
@@ -324,7 +321,7 @@ def test_extension_version_check(installed, extension, warns):
         "history": {
             "extensions": [
                 asdf.tags.core.ExtensionMetadata(
-                    extension_class="asdf._tests.test_api.FooExtension",
+                    extension_uri=FooExtension.extension_uri,
                     software=asdf.tags.core.Software(name="foo", version=extension),
                 ),
             ],

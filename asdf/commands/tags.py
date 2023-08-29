@@ -53,8 +53,6 @@ def list_tags(display_classes=False, iostream=sys.stdout):
     tag_pairs = []
     for tag in af.extension_manager._converters_by_tag:
         tag_pairs.append((tag, af.extension_manager.get_converter_for_tag(tag).types))
-    for tag in af._type_index._type_by_tag:
-        tag_pairs.append((tag, [af._type_index._type_by_tag[tag]]))
 
     for tag, types in sorted(tag_pairs, key=lambda pair: pair[0]):
         string = str(tag)

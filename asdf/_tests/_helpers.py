@@ -97,10 +97,7 @@ def assert_tree_match(old_tree, new_tree, ctx=None, funcname="assert_equal", ign
     ignore_keys = set(ignore_keys)
 
     if ctx is None:
-        version_string = str(versioning.default_version)
         ctx = _legacy.default_extensions.extension_list
-    else:
-        version_string = ctx.version_string
 
     def recurse(old, new):
         if id(old) in seen or id(new) in seen:
@@ -108,8 +105,8 @@ def assert_tree_match(old_tree, new_tree, ctx=None, funcname="assert_equal", ign
         seen.add(id(old))
         seen.add(id(new))
 
-        old_type = ctx._type_index.from_custom_type(type(old), version_string)
-        new_type = ctx._type_index.from_custom_type(type(new), version_string)
+        old_type = None
+        new_type = None
 
         if (
             old_type is not None

@@ -23,7 +23,7 @@ from .exceptions import (
     DelimiterNotFoundError,
     ValidationError,
 )
-from .extension import Extension, ExtensionProxy, _legacy, _serialization_context, get_cached_extension_manager
+from .extension import Extension, ExtensionProxy, _serialization_context, get_cached_extension_manager
 from .search import AsdfSearchResult
 from .tags.core import AsdfObject, ExtensionMetadata, HistoryEntry, Software
 from .util import NotSet
@@ -142,10 +142,9 @@ class AsdfFile:
         self._user_extensions = self._process_user_extensions(extensions)
         self._plugin_extensions = self._process_plugin_extensions()
         self._extension_manager = None
-        self._extension_list_ = None
 
         if custom_schema is not None:
-            self._custom_schema = schema._load_schema_cached(custom_schema, self._resolver, True)
+            self._custom_schema = schema._load_schema_cached(custom_schema, None, True)
         else:
             self._custom_schema = None
 
@@ -182,7 +181,6 @@ class AsdfFile:
             # Set directly to self._tree (bypassing property), since
             # we can assume the other AsdfFile is already valid.
             self._tree = tree.tree
-            self._run_modifying_hook("copy_to_new_asdf", validate=False)
             self.find_references()
         else:
             self.tree = tree
@@ -216,7 +214,6 @@ class AsdfFile:
         self._user_extensions = self._process_user_extensions(self._user_extensions)
         self._plugin_extensions = self._process_plugin_extensions()
         self._extension_manager = None
-        self._extension_list_ = None
 
     @property
     def version_string(self):
@@ -257,7 +254,6 @@ class AsdfFile:
         """
         self._user_extensions = self._process_user_extensions(value)
         self._extension_manager = None
-        self._extension_list_ = None
 
     @property
     def extension_manager(self):
@@ -271,14 +267,6 @@ class AsdfFile:
         if self._extension_manager is None:
             self._extension_manager = get_cached_extension_manager(self._user_extensions + self._plugin_extensions)
         return self._extension_manager
-
-    @property
-    def _extension_list(self):
-        if self._extension_list_ is None:
-            self._extension_list_ = _legacy.get_cached_asdf_extension_list(
-                self._user_extensions + self._plugin_extensions,
-            )
-        return self._extension_list_
 
     def __enter__(self):
         return self
@@ -378,10 +366,8 @@ class AsdfFile:
         """
         if extensions is None:
             extensions = []
-        elif isinstance(extensions, (_legacy._AsdfExtension, Extension, ExtensionProxy)):
+        elif isinstance(extensions, (Extension, ExtensionProxy)):
             extensions = [extensions]
-        elif isinstance(extensions, _legacy.AsdfExtensionList):
-            extensions = extensions.extensions
 
         if not isinstance(extensions, list):
             msg = "The extensions parameter must be an extension or list of extensions"
@@ -495,26 +481,6 @@ class AsdfFile:
         handle used to read or write the file.
         """
         return self._blocks._uri
-
-    @property
-    def _tag_to_schema_resolver(self):
-        return self._extension_list.tag_mapping
-
-    @property
-    def _tag_mapping(self):
-        return self._extension_list.tag_mapping
-
-    @property
-    def _url_mapping(self):
-        return self._extension_list.url_mapping
-
-    @property
-    def _resolver(self):
-        return self._extension_list.resolver
-
-    @property
-    def _type_index(self):
-        return self._extension_list.type_index
 
     def resolve_uri(self, uri):
         """
@@ -889,7 +855,6 @@ class AsdfFile:
                 self._check_extensions(tree, strict=strict_extension_check)
 
             self._tree = tree
-            self._run_hook("post_read")
 
             return self
 
@@ -978,8 +943,10 @@ class AsdfFile:
             fd.fast_forward(padding)
 
     def _pre_write(self, fd):
-        if len(self._tree):
-            self._run_hook("pre_write")
+        pass
+
+    def _post_write(self, fd):
+        pass
 
     def _serial_write(self, fd, pad_blocks, include_block_index):
         with self._blocks.write_context(fd):
@@ -995,10 +962,6 @@ class AsdfFile:
                 self._blocks.write(pad_blocks, include_block_index)
             finally:
                 self._post_write(fd)
-
-    def _post_write(self, fd):
-        if len(self._tree):
-            self._run_hook("post_write")
 
     def update(
         self,
@@ -1251,36 +1214,6 @@ class AsdfFile:
         # Set to the property self.tree so the resulting "complete"
         # tree will be validated.
         self.tree = reference.resolve_references(self._tree, self)
-
-    def _run_hook(self, hookname):
-        type_index = self._type_index
-
-        if not type_index.has_hook(hookname):
-            return
-
-        for node in treeutil.iter_tree(self._tree):
-            hook = type_index.get_hook_for_type(hookname, type(node), self.version_string)
-            if hook is not None:
-                hook(node, self)
-
-    def _run_modifying_hook(self, hookname, validate=True):
-        type_index = self._type_index
-
-        if not type_index.has_hook(hookname):
-            return None
-
-        def walker(node):
-            hook = type_index.get_hook_for_type(hookname, type(node), self.version_string)
-            if hook is not None:
-                return hook(node, self)
-            return node
-
-        tree = treeutil.walk_and_modify(self.tree, walker, ignore_implicit_conversion=self._ignore_implicit_conversion)
-
-        if validate:
-            self._validate(tree)
-        self._tree = tree
-        return self._tree
 
     def resolve_and_inline(self):
         """

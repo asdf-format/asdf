@@ -10,7 +10,7 @@ from .constants import STSCI_SCHEMA_TAG_BASE, YAML_TAG_PREFIX
 from .exceptions import AsdfConversionWarning
 from .extension._serialization_context import BlockAccess
 from .tags.core import AsdfObject
-from .versioning import _yaml_base_loader, split_tag_version
+from .versioning import _yaml_base_loader
 
 __all__ = ["custom_tree_to_tagged_tree", "tagged_tree_to_custom_tree"]
 
@@ -220,7 +220,6 @@ def custom_tree_to_tagged_tree(tree, ctx, _serialization_context=None):
         _serialization_context = ctx._create_serialization_context(BlockAccess.WRITE)
 
     extension_manager = _serialization_context.extension_manager
-    version_string = str(_serialization_context.version)
 
     def _convert_obj(obj, converter):
         tag = converter.select_tag(obj, _serialization_context)
@@ -290,16 +289,6 @@ def custom_tree_to_tagged_tree(tree, ctx, _serialization_context=None):
             converters_cache[typ] = lambda obj, _converter=converter: _convert_obj(obj, _converter)
             return _convert_obj(obj, converter)
 
-        tag = ctx._type_index.from_custom_type(
-            typ,
-            version_string,
-            _serialization_context=_serialization_context,
-        )
-
-        if tag is not None:
-            converters_cache[typ] = lambda obj, _tag=tag: _tag.to_tree_tagged(obj, ctx)
-            return tag.to_tree_tagged(obj, ctx)
-
         converters_cache[typ] = lambda obj: obj
         return obj
 
@@ -340,40 +329,11 @@ def tagged_tree_to_custom_tree(tree, ctx, force_raw_types=False, _serialization_
             _serialization_context._mark_extension_used(converter.extension)
             return obj
 
-        tag_type = ctx._type_index.from_yaml_tag(ctx, tag, _serialization_context=_serialization_context)
-        # This means the tag did not correspond to any type in our type index.
-        if tag_type is None:
-            if not ctx._ignore_unrecognized_tag:
-                warnings.warn(
-                    f"{tag} is not recognized, converting to raw Python data structure",
-                    AsdfConversionWarning,
-                )
-            return node
-
-        tag_name, tag_version = split_tag_version(tag)
-        # This means that there is an explicit description of versions that are
-        # compatible with the associated tag class implementation, but the
-        # version we found does not fit that description.
-        if tag_type.incompatible_version(tag_version):
+        if not ctx._ignore_unrecognized_tag:
             warnings.warn(
-                f"Version {tag_version} of {tag_name} is not compatible with any existing tag implementations",
+                f"{tag} is not recognized, converting to raw Python data structure",
                 AsdfConversionWarning,
             )
-            return node
-
-        # If a tag class does not explicitly list compatible versions, then all
-        # versions of the corresponding schema are assumed to be compatible.
-        # Therefore we need to check to make sure whether the conversion is
-        # actually successful, and just return a raw Python data type if it is
-        # not.
-        try:
-            return tag_type.from_tree_tagged(node, ctx)
-        except TypeError as err:
-            warnings.warn(
-                f"Failed to convert {tag} to custom type (detail: {err}). Using raw Python data structure instead",
-                AsdfConversionWarning,
-            )
-
         return node
 
     return treeutil.walk_and_modify(

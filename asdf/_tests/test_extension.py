@@ -1,3 +1,5 @@
+import fractions
+
 import pytest
 from packaging.specifiers import SpecifierSet
 from yaml.representer import RepresenterError
@@ -17,7 +19,6 @@ from asdf.extension import (
     Validator,
     get_cached_extension_manager,
 )
-from asdf.extension._legacy import _AsdfExtension, get_cached_asdf_extension_list
 from asdf.testing.helpers import roundtrip_object
 
 with pytest.warns(AsdfDeprecationWarning, match=".*subclasses the deprecated CustomType.*"):
@@ -170,7 +171,6 @@ def test_extension_proxy():
     proxy = ExtensionProxy(extension)
 
     assert isinstance(proxy, Extension)
-    assert isinstance(proxy, _AsdfExtension)
 
     assert proxy.extension_uri == "asdf://somewhere.org/extensions/minimum-1.0"
     assert proxy.legacy_class_names == set()
@@ -313,25 +313,6 @@ def test_extension_proxy_tags():
     assert proxy.converters[0].tags == [foo_tag_uri]
 
 
-def test_extension_proxy_legacy():
-    extension = LegacyExtension()
-    proxy = ExtensionProxy(extension, package_name="foo", package_version="1.2.3")
-
-    assert proxy.extension_uri is None
-    assert proxy.legacy_class_names == {"asdf._tests.test_extension.LegacyExtension"}
-    assert proxy.asdf_standard_requirement == SpecifierSet()
-    assert proxy.converters == []
-    assert proxy.tags == []
-    assert proxy.types == [LegacyType]
-    assert proxy.tag_mapping == LegacyExtension.tag_mapping
-    assert proxy.url_mapping == LegacyExtension.url_mapping
-    assert proxy.delegate is extension
-    assert proxy.legacy is True
-    assert proxy.package_name == "foo"
-    assert proxy.package_version == "1.2.3"
-    assert proxy.class_name == "asdf._tests.test_extension.LegacyExtension"
-
-
 def test_extension_proxy_hash_and_eq():
     extension = MinimumExtension()
     proxy1 = ExtensionProxy(extension)
@@ -353,11 +334,6 @@ def test_extension_proxy_repr():
     assert "class: asdf._tests.test_extension.MinimumExtension" in repr(proxy)
     assert "package: (none)" in repr(proxy)
     assert "legacy: False" in repr(proxy)
-
-    proxy = ExtensionProxy(LegacyExtension(), package_name="foo", package_version="1.2.3")
-    assert "class: asdf._tests.test_extension.LegacyExtension" in repr(proxy)
-    assert "package: foo==1.2.3" in repr(proxy)
-    assert "legacy: True" in repr(proxy)
 
 
 def test_extension_manager():
@@ -940,3 +916,49 @@ def test_warning_or_error_for_default_select_tag(is_subclass, indirect):
     with config_context() as config:
         with ctx_type(exception_class, match="Converter handles multiple tags"):
             config.add_extension(extension)
+
+
+def test_reference_cycle():
+    class FractionWithInverse(fractions.Fraction):
+        def __init__(self, *args, **kwargs):
+            self._inverse = None
+
+        @property
+        def inverse(self):
+            return self._inverse
+
+        @inverse.setter
+        def inverse(self, value):
+            self._inverse = value
+
+    class FractionWithInverseConverter:
+        tags = ["asdf://example.com/fractions/tags/fraction-1.0.0"]
+        types = [FractionWithInverse]
+
+        def to_yaml_tree(self, obj, tag, ctx):
+            return {
+                "numerator": obj.numerator,
+                "denominator": obj.denominator,
+                "inverse": obj.inverse,
+            }
+
+        def from_yaml_tree(self, node, tag, ctx):
+            obj = FractionWithInverse(node["numerator"], node["denominator"])
+            yield obj
+            obj.inverse = node["inverse"]
+
+    class FractionWithInverseExtension:
+        tags = FractionWithInverseConverter.tags
+        converters = [FractionWithInverseConverter()]
+        extension_uri = "asdf://example.com/fractions/extensions/fraction-1.0.0"
+
+    with config_context() as cfg:
+        cfg.add_extension(FractionWithInverseExtension())
+
+        f1 = FractionWithInverse(3, 5)
+        f2 = FractionWithInverse(5, 3)
+        f1.inverse = f2
+        f2.inverse = f1
+
+        read_f1 = roundtrip_object(f1)
+        assert read_f1.inverse.inverse is read_f1
