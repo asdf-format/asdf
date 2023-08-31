@@ -6,7 +6,7 @@ import pytest
 
 import asdf
 from asdf.exceptions import AsdfWarning, ValidationError
-from asdf.extension import Converter, Extension
+from asdf.extension import Converter, Extension, ExtensionProxy
 from asdf.tags.core import HistoryEntry
 from asdf.testing import helpers
 
@@ -131,30 +131,41 @@ history:
 
 
 def test_extension_version_warning():
-    yaml = """
+    uri = "asdf://somewhere.org/extensions/foo-1.0.0"
+    package_name = "foo"
+    file_package_version = "2.0.0"
+    installed_package_version = "1.0.0"
+
+    class FooExtension:
+        extension_uri = uri
+
+    yaml = f"""
 history:
   extensions:
     - !core/extension_metadata-1.0.0
-      extension_class: asdf.extension.BuiltinExtension
+      extension_class: {FooExtension.__qualname__}
+      extension_uri: {uri}
       software: !core/software-1.0.0
-        name: asdf
-        version: 100.0.3
+        name: {package_name}
+        version: {file_package_version}
     """
 
     buff = helpers.yaml_to_asdf(yaml)
-    with pytest.warns(
-        AsdfWarning,
-        match=r"File was created with extension class 'asdf.extension.BuiltinExtension'",
-    ), asdf.open(buff):
-        pass
-
-    buff.seek(0)
-
-    # Make sure suppressing the warning works too
-    with warnings.catch_warnings():
-        warnings.simplefilter("error")
-        with asdf.open(buff, ignore_missing_extensions=True):
+    with asdf.config_context() as cfg:
+        cfg.add_extension(ExtensionProxy(FooExtension(), package_name, installed_package_version))
+        with pytest.warns(
+            AsdfWarning,
+            match=f"older package \\({package_name}=={installed_package_version}\\)",
+        ), asdf.open(buff):
             pass
+
+        buff.seek(0)
+
+        # Make sure suppressing the warning works too
+        with warnings.catch_warnings():
+            warnings.simplefilter("error")
+            with asdf.open(buff, ignore_missing_extensions=True):
+                pass
 
 
 def test_strict_extension_check():

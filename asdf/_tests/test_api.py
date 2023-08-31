@@ -339,6 +339,29 @@ def test_extension_version_check(installed, extension, warns):
         af._check_extensions(tree)
 
 
+def test_extension_check_no_warning_on_builtin():
+    """
+    Prior to asdf 3.0 files were written using the asdf.extension.BuiltinExtension
+    (which used the legacy extension api). This extension was removed in
+    asdf 3.0. We don't want to warn that this extension is missing for every
+    file that is opened so make sure _check_extensions doesn't warn
+    that BuiltinExtension is missing.
+    """
+    af = asdf.AsdfFile()
+    tree = {
+        "history": {
+            "extensions": [
+                asdf.tags.core.ExtensionMetadata(
+                    extension_class="asdf.extension.BuiltinExtension",
+                    software=asdf.tags.core.Software(name="asdf", version="2.15.1"),
+                ),
+            ],
+        },
+    }
+    with assert_no_warnings():
+        af._check_extensions(tree)
+
+
 @pytest.mark.parametrize(
     ("array_inline_threshold", "inline_blocks", "internal_blocks"),
     [
