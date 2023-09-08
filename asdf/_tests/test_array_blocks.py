@@ -445,7 +445,7 @@ def test_checksum(tmp_path):
     ff.write_to(path)
 
     with asdf.open(path, validate_checksums=True) as ff:
-        assert type(ff._blocks._internal_blocks[0].checksum) == bytes
+        assert isinstance(ff._blocks._internal_blocks[0].checksum, bytes)
         assert ff._blocks._internal_blocks[0].checksum == b"\xcaM\\\xb8t_L|\x00\n+\x01\xf1\xcfP1"
 
 
