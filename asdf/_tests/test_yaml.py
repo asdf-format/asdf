@@ -8,7 +8,7 @@ import yaml
 
 import asdf
 from asdf import tagged, treeutil, yamlutil
-from asdf.exceptions import AsdfWarning
+from asdf.exceptions import AsdfConversionWarning, AsdfWarning
 
 from . import _helpers as helpers
 
@@ -203,8 +203,7 @@ def test_explicit_tags():
 %YAML 1.1
 --- !<tag:stsci.edu:asdf/core/asdf-1.1.0>
 foo: !<tag:stsci.edu:asdf/core/ndarray-1.0.0> [1, 2, 3]
-...
-    """
+..."""
 
     # Check that fully qualified explicit tags work
     buff = helpers.yaml_to_asdf(yaml, yaml_headers=False)
@@ -294,3 +293,19 @@ def test_numpy_scalar(numpy_value, expected_value):
         assert abs_diff < eps, abs_diff
     else:
         assert loaded_value == expected_value
+
+
+def test_ndarray_subclass_conversion(tmp_path):
+    class MyNDArray(np.ndarray):
+        pass
+
+    fn = tmp_path / "test.asdf"
+    af = asdf.AsdfFile()
+    af["a"] = MyNDArray([1, 2, 3])
+    with pytest.warns(AsdfConversionWarning, match=r"A ndarray subclass .*"):
+        af.write_to(fn)
+
+    with asdf.config.config_context() as cfg:
+        cfg.convert_unknown_ndarray_subclasses = False
+        with pytest.raises(yaml.representer.RepresenterError, match=r".*cannot represent.*"):
+            af.write_to(fn)

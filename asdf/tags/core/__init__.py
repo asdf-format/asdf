@@ -2,6 +2,7 @@ from .constant import Constant
 from .external_reference import ExternalArrayReference
 from .integer import IntegerType
 from .ndarray import NDArrayType
+from .stream import Stream
 
 __all__ = [
     "AsdfObject",
@@ -13,6 +14,7 @@ __all__ = [
     "NDArrayType",
     "IntegerType",
     "ExternalArrayReference",
+    "Stream",
 ]
 
 

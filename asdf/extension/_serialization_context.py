@@ -1,5 +1,8 @@
+import enum
+
+from asdf._block.key import Key as BlockKey
 from asdf._helpers import validate_version
-from asdf.extension import ExtensionProxy
+from asdf.extension._extension import ExtensionProxy
 
 
 class SerializationContext:
@@ -11,11 +14,12 @@ class SerializationContext:
     classes (like Converters) via method arguments.
     """
 
-    def __init__(self, version, extension_manager, url, block_manager):
+    def __init__(self, version, extension_manager, url, blocks):
         self._version = validate_version(version)
         self._extension_manager = extension_manager
         self._url = url
-        self._block_manager = block_manager
+        self._blocks = blocks
+        self._obj = None
 
         self.__extensions_used = set()
 
@@ -77,15 +81,19 @@ class SerializationContext:
         """
         return self.__extensions_used
 
-    def get_block_data_callback(self, index):
+    def get_block_data_callback(self, index, key=None):
         """
         Generate a callable that when called will read data
-        from a block at the provided index
+        from an ASDF block at the provided index.
 
         Parameters
         ----------
         index : int
-            Block index
+            Index of ASDF block.
+
+        key : BlockKey, optional
+            BlockKey generated using self.generate_block_key. Only
+            needed for a Converter that uses multiple blocks.
 
         Returns
         -------
@@ -93,69 +101,159 @@ class SerializationContext:
             A callable that when called (with no arguments) returns
             the block data as a one dimensional array of uint8
         """
-        blk = self._block_manager.get_block(index)
-        return blk.generate_read_data_callback()
+        raise NotImplementedError("abstract")
 
-    def assign_block_key(self, block_index, key):
+    def find_available_block_index(self, data_callback, key=None):
         """
-        Associate a unique hashable key with a block.
+        Find the index of an available ASDF block to write data.
 
-        This is used during Converter.from_yaml_tree and allows
-        the AsdfFile to be aware of which blocks belong to the
-        object handled by the converter and allows load_block
-        to locate the block using the key instead of the index
-        (which might change if a file undergoes an AsdfFile.update).
-
-        If the block index is later needed (like during to_yaml_tree)
-        the key can be used with find_block_index to lookup the
-        block index.
+        This is typically used inside asdf.extension.Converter.to_yaml_tree.
 
         Parameters
         ----------
-
-        block_index : int
-            The index of the block to associate with the key
-
-        key : hashable
-            A unique hashable key to associate with a block
-        """
-        blk = self._block_manager.get_block(block_index)
-        if self._block_manager._key_to_block_mapping.get(key, blk) is not blk:
-            msg = f"key {key} is already assigned to a block"
-            raise ValueError(msg)
-        if blk in self._block_manager._key_to_block_mapping.values():
-            msg = f"block {block_index} is already assigned to a key"
-            raise ValueError(msg)
-        self._block_manager._key_to_block_mapping[key] = blk
-
-    def find_block_index(self, lookup_key, data_callback=None):
-        """
-        Find the index of a previously allocated or reserved block.
-
-        This is typically used inside asdf.extension.Converter.to_yaml_tree
-
-        Parameters
-        ----------
-        lookup_key : hashable
-            Unique key used to retrieve the index of a block that was
-            previously allocated or reserved. For ndarrays this is
-            typically the id of the base ndarray.
-
-        data_callback: callable, optional
+        data_callback: callable
             Callable that when called will return data (ndarray) that will
             be written to a block.
-            At the moment, this is only assigned if a new block
-            is created to avoid circular references during AsdfFile.update.
+
+        key : BlockKey, optional
+            BlockKey generated using self.generate_block_key. Only
+            needed for a Converter that uses multiple blocks.
 
         Returns
         -------
         block_index: int
-            Index of the block where data returned from data_callback
-            will be written.
+            Index of the ASDF block where data returned from
+            data_callback will be written.
         """
-        new_block = lookup_key not in self._block_manager._key_to_block_mapping
-        blk = self._block_manager.find_or_create_block(lookup_key)
-        # if we're not creating a block, don't update the data callback
-        if data_callback is not None and (new_block or (blk._data_callback is None and blk._fd is None)):
-            blk._data_callback = data_callback
-        return self._block_manager.get_source(blk)
+        raise NotImplementedError("abstract")
+
+    def generate_block_key(self):
+        """
+        Generate a BlockKey used for Converters that wish to use
+        multiple blocks
+
+        Returns
+        -------
+        key : BlockKey
+            A hashable object that will be associated with the
+            serialized/deserialized object and can be used to
+            access multiple blocks within a Converter
+        """
+        raise NotImplementedError("abstract")
+
+    def assign_object(self, obj):
+        self._obj = obj
+
+    def assign_blocks(self):
+        pass
+
+
+class ReadBlocksContext(SerializationContext):
+    """
+    Perform deserialization (reading) with a `SerializationContext`.
+
+    To allow for block access, `ReadBlocksContext` implements:
+        - `SerializationContext.generate_block_key`
+        - `SerializationContext.get_block_data_callback`
+    and tracks which blocks (and keys) are accessed, assigning them
+    to the deserialized object after `assign_object` and
+    `assign_blocks` are called.
+    """
+
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        self.assign_object(None)
+
+    def assign_object(self, obj):
+        super().assign_object(obj)
+        if obj is None:
+            self._cb = None
+            self._keys_to_assign = {}
+
+    def assign_blocks(self):
+        super().assign_blocks()
+        if self._cb is not None:
+            self._blocks._data_callbacks.assign_object(self._obj, self._cb)
+        for key, cb in self._keys_to_assign.items():
+            if cb is None:
+                msg = "Converter generated a key that was never used"
+                raise OSError(msg)
+            # now that we have an object, make the key valid
+            key._assign_object(self._obj)
+
+            # assign the key to the callback
+            self._blocks._data_callbacks.assign_object(key, cb)
+        # now that we've assigned blocks, remove the reference to the
+        # assigned object
+        self.assign_object(None)
+
+    def get_block_data_callback(self, index, key=None):
+        if key is None:
+            if self._cb is not None:
+                # this operation has already accessed a block without using
+                # a key so check if the same index was accessed
+                if self._cb._index == index:
+                    return self._cb
+                msg = "Converters accessing >1 block must provide a key for each block"
+                raise OSError(msg)
+            self._cb = self._blocks._get_data_callback(index)
+            return self._cb
+
+        if self._keys_to_assign.get(key, None) is not None:
+            return self._keys_to_assign[key]
+
+        cb = self._blocks._get_data_callback(index)
+        # mark this as a key to later assign
+        self._keys_to_assign[key] = cb
+        return cb
+
+    def generate_block_key(self):
+        key = BlockKey()
+        self._keys_to_assign[key] = None
+        return key
+
+
+class WriteBlocksContext(SerializationContext):
+    """
+    Perform serialization (writing) with a `SerializationContext`.
+
+    To allow for block access, `WriteBlocksContext` implements:
+        - `SerializationContext.generate_block_key`
+        - `SerializationContext.find_available_block_index`
+    and assigns any accessed blocks (and keys) to the object
+    being serialized.
+    """
+
+    def find_available_block_index(self, data_callback, key=None):
+        if key is None:
+            key = self._obj
+        return self._blocks.make_write_block(data_callback, None, key)
+
+    def generate_block_key(self):
+        return BlockKey(self._obj)
+
+
+class BlockAccess(enum.Enum):
+    """
+    Block access enumerated values that define
+    how a SerializationContext can access ASDF blocks.
+    """
+
+    NONE = SerializationContext
+    WRITE = WriteBlocksContext
+    READ = ReadBlocksContext
+
+
+def create(asdf_file, block_access=BlockAccess.NONE):
+    """
+    Create a SerializationContext instance (or subclass) using
+    an AsdfFile instance, asdf_file.
+
+    Parameters
+    ----------
+    asdf_file : asdf.AsdfFile
+
+    block_access : BlockAccess, optional
+        Defaults to BlockAccess.NONE
+    """
+    return block_access.value(asdf_file.version_string, asdf_file.extension_manager, asdf_file.uri, asdf_file._blocks)

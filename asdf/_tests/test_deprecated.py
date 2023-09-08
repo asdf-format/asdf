@@ -1,3 +1,5 @@
+import sys
+
 import pytest
 
 import asdf
@@ -8,8 +10,6 @@ from asdf._tests._helpers import assert_extension_correctness
 from asdf._tests.objects import CustomExtension
 from asdf._types import CustomType
 from asdf.exceptions import AsdfDeprecationWarning
-
-from .test_entry_points import _monkeypatch_entry_points, mock_entry_points  # noqa: F401
 
 
 def test_custom_type_warning():
@@ -31,7 +31,13 @@ def test_asdf_type_format_tag():
     asdf.testing.helpers.format_tag
 
 
-def test_blocks_deprecated():
-    af = asdf.AsdfFile()
-    with pytest.warns(AsdfDeprecationWarning, match="The property AsdfFile.blocks has been deprecated"):
-        af.blocks
+def test_asdf_stream_deprecation():
+    with pytest.warns(AsdfDeprecationWarning, match="asdf.stream is deprecated"):
+        if "asdf.stream" in sys.modules:
+            del sys.modules["asdf.stream"]
+        import asdf.stream  # noqa: F401
+
+
+def test_asdf_asdf_SerializationContext_import_deprecation():
+    with pytest.warns(AsdfDeprecationWarning, match="importing SerializationContext from asdf.asdf"):
+        from asdf.asdf import SerializationContext  # noqa: F401

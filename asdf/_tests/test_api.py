@@ -364,8 +364,8 @@ def test_array_inline_threshold(array_inline_threshold, inline_blocks, internal_
 
         with asdf.AsdfFile(tree) as af:
             af.write_to(file_path)
-            assert len(list(af._blocks.inline_blocks)) == inline_blocks
-            assert len(list(af._blocks.internal_blocks)) == internal_blocks
+        with asdf.open(file_path) as af:
+            assert len(af._blocks.blocks) == internal_blocks
 
 
 @pytest.mark.parametrize(
@@ -388,8 +388,7 @@ def test_array_inline_threshold_masked_array(array_inline_threshold, inline_bloc
         with asdf.AsdfFile(tree) as af:
             af.write_to(file_path)
         with asdf.open(file_path) as af:
-            assert len(list(af._blocks.inline_blocks)) == inline_blocks
-            assert len(list(af._blocks.internal_blocks)) == internal_blocks
+            assert len(af._blocks.blocks) == internal_blocks
 
 
 @pytest.mark.parametrize(
@@ -410,8 +409,8 @@ def test_array_inline_threshold_string_array(array_inline_threshold, inline_bloc
 
         with asdf.AsdfFile(tree) as af:
             af.write_to(file_path)
-            assert len(list(af._blocks.inline_blocks)) == inline_blocks
-            assert len(list(af._blocks.internal_blocks)) == internal_blocks
+        with asdf.open(file_path) as af:
+            assert len(af._blocks.blocks) == internal_blocks
 
 
 def test_resolver_deprecations():
@@ -458,7 +457,7 @@ def test_array_access_after_file_close(tmp_path):
     # the file has been closed:
     with asdf.open(path) as af:
         tree = af.tree
-    with pytest.raises(OSError, match=r"ASDF file has already been closed"):
+    with pytest.raises(OSError, match=r"ASDF file has already been closed. Can not get the data."):
         tree["data"][0]
 
     # With memory mapping disabled and copying arrays enabled,
@@ -489,23 +488,68 @@ def test_asdf_standard_version_tag_selection():
     assert b"!core/asdf-1.1.0" not in content
 
     buff.seek(0)
-    af.write_to(buff, version="1.2.0")
+    af.write_to(buff, version="1.2.0")  # asdf-standard 1.2 uses asdf-object 1.1 tag
     buff.seek(0)
     content = buff.read()
     assert b"!core/asdf-1.0.0" not in content
     assert b"!core/asdf-1.1.0" in content
 
 
-def test_write_to_no_tree_modification(tmp_path):
-    fn = tmp_path / "test.asdf"
+def test_update_asdf_standard_version_tag_selection():
+    buff = io.BytesIO()
+
+    af = asdf.AsdfFile()
+    af.write_to(buff, version="1.0.0")
+
+    buff.seek(0)
+    with asdf.open(buff, mode="rw") as af:
+        af.update(version="1.2.0")  # asdf-standard 1.2 uses asdf-object 1.1 tag
+    buff.seek(0)
+    content = buff.read()
+    assert b"!core/asdf-1.1.0" in content
+    assert b"!core/asdf-1.0.0" not in content
+
+
+@pytest.mark.parametrize("valid_filename", [True, False], ids=["valid_filename", "invalid_filename"])
+def test_write_to_no_tree_modification(tmp_path, valid_filename):
+    if valid_filename:
+        fn = tmp_path / "test.asdf"
+    else:
+        fn = "invalid/missing.asdf"
     fn2 = tmp_path / "test2.asdf"
     tree = {"foo": None}
     af = asdf.AsdfFile(tree.copy())
-    af.write_to(fn)
+    try:
+        af.write_to(fn)
+    except Exception:
+        if valid_filename:
+            raise
     assert tree == af.tree
+    if not valid_filename:
+        return
     with asdf.open(fn) as af:
         af["history"]["extensions"][0]["software"]["version"] = "0.0.0.dev+abcdefg"
         af["asdf_library"]["author"] = "foo"
         tree = copy.deepcopy(af.tree)
         af.write_to(fn2)
         assert af.tree == tree
+
+
+@pytest.mark.parametrize("valid_filename", [True, False], ids=["valid_filename", "invalid_filename"])
+def test_write_to_no_version_modification(tmp_path, valid_filename):
+    if valid_filename:
+        fn = tmp_path / "test.asdf"
+    else:
+        fn = "invalid/missing.asdf"
+    tree = {"foo": None}
+    af = asdf.AsdfFile(tree.copy(), version="1.0.0")
+    try:
+        af.write_to(fn, version="1.1.0")
+    except Exception:
+        if valid_filename:
+            raise
+    assert af.version_string == "1.0.0"
+    if not valid_filename:
+        return
+    with asdf.open(fn) as af:
+        assert af.version_string == "1.1.0"

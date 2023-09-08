@@ -149,6 +149,10 @@ class FooType:
     pass
 
 
+class SubFooType(FooType):
+    pass
+
+
 class BarType:
     pass
 
@@ -412,6 +416,7 @@ def test_extension_manager():
     assert manager.handles_tag("asdf://somewhere.org/extensions/full/tags/baz-1.0") is True
 
     assert manager.handles_type(FooType) is True
+    assert manager.handles_type(SubFooType) is False
     # This should return True even though BarType was listed
     # as string class name:
     assert manager.handles_type(BarType) is True
@@ -438,6 +443,8 @@ def test_extension_manager():
     assert manager.get_converter_for_type(BazType).delegate is converter2
     with pytest.raises(KeyError, match=r"\"No support available for Python type .*\""):
         manager.get_converter_for_type(object)
+    with pytest.raises(KeyError, match=r"\"No support available for Python type .*\""):
+        manager.get_converter_for_type(SubFooType)
 
 
 def test_get_cached_extension_manager():

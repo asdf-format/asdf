@@ -218,7 +218,7 @@ class AsdfSchemaExampleItem(pytest.Item):
         return result
 
     def runtest(self):
-        from asdf import AsdfFile, block, util
+        from asdf import AsdfFile, _block, generic_io, util
         from asdf._tests import _helpers as helpers
         from asdf.exceptions import AsdfDeprecationWarning
 
@@ -239,12 +239,11 @@ class AsdfSchemaExampleItem(pytest.Item):
             util.filepath_to_url(os.path.abspath(os.path.join(os.path.dirname(self.filename), "external.asdf")))
         ] = ff2
 
-        # Add some dummy blocks so that the ndarray examples work
-        for _ in range(3):
-            b = block.Block(np.zeros((1024 * 1024 * 8), dtype=np.uint8))
-            b._used = True
-            ff._blocks.add(b)
-        b._array_storage = "streamed"
+        wb = _block.writer.WriteBlock(np.zeros(1024 * 1024 * 8, dtype=np.uint8))
+        with generic_io.get_file(buff, mode="rw") as f:
+            f.seek(0, 2)
+            _block.writer.write_blocks(f, [wb, wb], streamed_block=wb)
+            f.seek(0)
 
         try:
             # Do not tolerate any warnings that occur during schema validation

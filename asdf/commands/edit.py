@@ -16,8 +16,9 @@ import tempfile
 import yaml
 
 from asdf import constants, generic_io, schema, util
+from asdf._block import io as bio
+from asdf._block.exceptions import BlockIndexError
 from asdf.asdf import AsdfFile, open_asdf
-from asdf.block import BlockManager
 
 from .main import Command
 
@@ -130,23 +131,41 @@ def write_edited_yaml_larger(path, new_content, version):
             pad_length = util.calculate_padding(len(new_content), True, fd.block_size)
             fd.fast_forward(pad_length)
 
-            with generic_io.get_file(path) as original_fd:
-                # Consume the file up to the first block, which must exist
-                # as a precondition to using this method.
-                original_fd.seek_until(
-                    constants.BLOCK_MAGIC,
-                    len(constants.BLOCK_MAGIC),
-                )
-                ctx = AsdfFile(version=version)
-                blocks = BlockManager(ctx, copy_arrays=False, lazy_load=False)
-                blocks.read_internal_blocks(original_fd, past_magic=True, validate_checksums=False)
-                blocks.finish_reading_internal_blocks()
-                blocks.write_internal_blocks_serial(fd)
-                blocks.write_block_index(fd, ctx)
-                blocks.close()
+            # now copy over ASDF block contents
 
-            # the file needs to be closed here to release all memmaps
-            original_fd.close()
+            with generic_io.get_file(path) as original_fd:
+                original_fd.seek_until(constants.BLOCK_MAGIC, len(constants.BLOCK_MAGIC))
+                old_first_block_offset = original_fd.tell() - len(constants.BLOCK_MAGIC)
+                new_first_block_offset = fd.tell()
+
+                # check if the original file has a block index which we will need to update
+                # as we're moving the blocks
+                block_index_offset = bio.find_block_index(original_fd)
+                if block_index_offset is None:
+                    block_index = None
+                    original_fd.seek(0, generic_io.SEEK_END)
+                    blocks_end = original_fd.tell()
+                else:
+                    blocks_end = block_index_offset
+                    try:
+                        block_index = bio.read_block_index(original_fd, block_index_offset)
+                    except BlockIndexError:
+                        # the original index was invalid
+                        block_index = None
+
+                # copy over blocks byte-for-byte from old_first_block_offset to block_index_offset
+                original_fd.seek(old_first_block_offset)
+                block_size = min(fd.block_size, original_fd.block_size)
+                n_bytes = blocks_end - old_first_block_offset
+                for offset in range(0, n_bytes, block_size):
+                    this_size = min(block_size, n_bytes - offset)
+                    fd.write(original_fd.read(this_size))
+
+                # update index
+                if block_index is not None:
+                    offset = new_first_block_offset - old_first_block_offset
+                    updated_block_index = [i + offset for i in block_index]
+                    bio.write_block_index(fd, updated_block_index)
 
         # Swap in the new version of the file atomically:
         shutil.copy(temp_file.name, path)

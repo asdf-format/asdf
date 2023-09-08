@@ -4,7 +4,7 @@ import sys
 import numpy as np
 from numpy import ma
 
-from asdf import _types, util
+from asdf import util
 from asdf._jsonschema import ValidationError
 
 _datatype_names = {
@@ -226,25 +226,21 @@ def numpy_array_to_list(array):
     return ascii_to_unicode(tolist(array))
 
 
-class NDArrayType(_types._AsdfType):
-    name = "core/ndarray"
-    version = "1.0.0"
-    supported_versions = {"1.0.0", "1.1.0"}
-    types = [np.ndarray, ma.MaskedArray]
-
-    def __init__(self, source, shape, dtype, offset, strides, order, mask, asdffile):
-        self._asdffile = asdffile
+class NDArrayType:
+    def __init__(self, source, shape, dtype, offset, strides, order, mask, data_callback=None):
         self._source = source
-        self._block = None
+        self._data_callback = data_callback
         self._array = None
         self._mask = mask
 
         if isinstance(source, list):
             self._array = inline_data_asarray(source, dtype)
             self._array = self._apply_mask(self._array, self._mask)
-            self._block = asdffile._blocks.add_inline(self._array)
+            # single element structured arrays can have shape == ()
+            # https://github.com/asdf-format/asdf/issues/1540
             if shape is not None and (
-                (shape[0] == "*" and self._array.shape[1:] != tuple(shape[1:])) or (self._array.shape != tuple(shape))
+                self._array.shape != tuple(shape)
+                or (len(shape) and shape[0] == "*" and self._array.shape[1:] != tuple(shape[1:]))
             ):
                 msg = "inline data doesn't match the given shape"
                 raise ValueError(msg)
@@ -254,8 +250,6 @@ class NDArrayType(_types._AsdfType):
         self._offset = offset
         self._strides = strides
         self._order = order
-        if not asdffile._blocks.lazy_load:
-            self._make_array()
 
     def _make_array(self):
         # If the ASDF file has been updated in-place, then there's
@@ -269,10 +263,27 @@ class NDArrayType(_types._AsdfType):
                 self._array = None
 
         if self._array is None:
-            block = self.block
-            shape = self.get_actual_shape(self._shape, self._strides, self._dtype, len(block))
+            if isinstance(self._source, str):
+                # we need to keep _source as a str to allow stdatamodels to
+                # support AsdfInFits
+                data = self._data_callback()
+            else:
+                # cached data is used here so that multiple NDArrayTypes will all use
+                # the same base array
+                data = self._data_callback(_attr="cached_data")
 
-            self._array = np.ndarray(shape, self._dtype, block.data, self._offset, self._strides, self._order)
+            if hasattr(data, "base") and isinstance(data.base, mmap.mmap) and data.base.closed:
+                msg = "ASDF file has already been closed. Can not get the data."
+                raise OSError(msg)
+
+            # compute shape (streaming blocks have '0' data size in the block header)
+            shape = self.get_actual_shape(
+                self._shape,
+                self._strides,
+                self._dtype,
+                data.size,
+            )
+            self._array = np.ndarray(shape, self._dtype, data, self._offset, self._strides, self._order)
             self._array = self._apply_mask(self._array, self._mask)
         return self._array
 
@@ -336,17 +347,11 @@ class NDArrayType(_types._AsdfType):
         raise ValueError(msg)
 
     @property
-    def block(self):
-        if self._block is None:
-            self._block = self._asdffile._blocks.get_block(self._source)
-        return self._block
-
-    @property
     def shape(self):
-        if self._shape is None:
+        if self._shape is None or self._array is not None or "*" in self._shape:
+            # streamed blocks have a '0' data_size in the header so we
+            # need to make the array to get the shape
             return self.__array__().shape
-        if "*" in self._shape:
-            return tuple(self.get_actual_shape(self._shape, self._strides, self._dtype, len(self.block)))
         return tuple(self._shape)
 
     @property
@@ -388,164 +393,6 @@ class NDArrayType(_types._AsdfType):
 
             raise
 
-    def __getattribute__(self, name):
-        # The presence of these attributes on an NDArrayType instance
-        # can cause problems when the array is passed to other
-        # libraries.
-        # See https://github.com/asdf-format/asdf/issues/1015
-        if name in ("name", "version", "supported_versions"):
-            msg = f"'{self.__class__.name}' object has no attribute '{name}'"
-            raise AttributeError(msg)
-
-        return _types._AsdfType.__getattribute__(self, name)
-
-    @classmethod
-    def from_tree(cls, node, ctx):
-        if isinstance(node, list):
-            return cls(node, None, None, None, None, None, None, ctx)
-
-        if isinstance(node, dict):
-            source = node.get("source")
-            data = node.get("data")
-            if source and data:
-                msg = "Both source and data may not be provided at the same time"
-                raise ValueError(msg)
-            if data:
-                source = data
-            shape = node.get("shape", None)
-            byteorder = sys.byteorder if data is not None else node["byteorder"]
-            dtype = asdf_datatype_to_numpy_dtype(node["datatype"], byteorder) if "datatype" in node else None
-            offset = node.get("offset", 0)
-            strides = node.get("strides", None)
-            mask = node.get("mask", None)
-
-            return cls(source, shape, dtype, offset, strides, "A", mask, ctx)
-
-        msg = "Invalid ndarray description."
-        raise TypeError(msg)
-
-    @classmethod
-    def reserve_blocks(cls, data, ctx):
-        # Find all of the used data buffers so we can add or rearrange
-        # them if necessary
-        if isinstance(data, np.ndarray):
-            yield ctx._blocks.find_or_create_block_for_array(data)
-        elif isinstance(data, NDArrayType):
-            yield data.block
-
-    @classmethod
-    def to_tree(cls, data, ctx):
-        # The ndarray-1.0.0 schema does not permit 0 valued strides.
-        # Perhaps we'll want to allow this someday, to efficiently
-        # represent an array of all the same value.
-        if any(stride == 0 for stride in data.strides):
-            data = np.ascontiguousarray(data)
-
-        # The view computations that follow assume that the base array
-        # is contiguous.  If not, we need to make a copy to avoid
-        # writing a nonsense view.
-        base = util.get_array_base(data)
-        if not base.flags.forc:
-            data = np.ascontiguousarray(data)
-            base = util.get_array_base(data)
-
-        shape = data.shape
-
-        block = ctx._blocks.find_or_create_block_for_array(data)
-
-        # Compute the offset relative to the base array and not the
-        # block data, in case the block is compressed.
-        offset = data.ctypes.data - base.ctypes.data
-
-        strides = None if data.flags.c_contiguous else data.strides
-        dtype, byteorder = numpy_dtype_to_asdf_datatype(
-            data.dtype,
-            include_byteorder=(block.array_storage != "inline"),
-        )
-
-        result = {}
-
-        result["shape"] = list(shape)
-        if block.array_storage == "streamed":
-            result["shape"][0] = "*"
-
-        if block.array_storage == "inline":
-            listdata = numpy_array_to_list(data)
-            result["data"] = listdata
-            result["datatype"] = dtype
-
-        else:
-            result["shape"] = list(shape)
-            if block.array_storage == "streamed":
-                result["shape"][0] = "*"
-
-            result["source"] = ctx._blocks.get_source(block)
-            result["datatype"] = dtype
-            result["byteorder"] = byteorder
-
-            if offset > 0:
-                result["offset"] = offset
-
-            if strides is not None:
-                result["strides"] = list(strides)
-
-        if isinstance(data, ma.MaskedArray) and np.any(data.mask):
-            if block.array_storage == "inline":
-                ctx._blocks.set_array_storage(ctx._blocks[data.mask], "inline")
-
-            result["mask"] = data.mask
-
-        return result
-
-    @classmethod
-    def _assert_equality(cls, old, new, func):
-        if old.dtype.fields:
-            if not new.dtype.fields:
-                # This line is safe because this is actually a piece of test
-                # code, even though it lives in this file:
-                msg = "arrays not equal"
-                raise AssertionError(msg)
-            for a, b in zip(old, new):
-                cls._assert_equality(a, b, func)
-        else:
-            old = old.__array__()
-            new = new.__array__()
-            if old.dtype.char in "SU":
-                if old.dtype.char == "S":
-                    old = old.astype("U")
-                if new.dtype.char == "S":
-                    new = new.astype("U")
-                old = old.tolist()
-                new = new.tolist()
-                # This line is safe because this is actually a piece of test
-                # code, even though it lives in this file:
-                assert old == new  # noqa: S101
-            else:
-                func(old, new)
-
-    @classmethod
-    def assert_equal(cls, old, new):
-        from numpy.testing import assert_array_equal
-
-        cls._assert_equality(old, new, assert_array_equal)
-
-    @classmethod
-    def assert_allclose(cls, old, new):
-        from numpy.testing import assert_allclose, assert_array_equal
-
-        if old.dtype.kind in "iu" and new.dtype.kind in "iu":
-            cls._assert_equality(old, new, assert_array_equal)
-        else:
-            cls._assert_equality(old, new, assert_allclose)
-
-    @classmethod
-    def copy_to_new_asdf(cls, node, asdffile):
-        if isinstance(node, NDArrayType):
-            array = node._make_array()
-            asdffile._blocks.set_array_storage(asdffile._blocks[array], node.block.array_storage)
-            return node._make_array()
-        return node
-
 
 def _make_operation(name):
     def operation(self, *args):
@@ -554,7 +401,6 @@ def _make_operation(name):
     return operation
 
 
-classes_to_modify = [*NDArrayType.__versioned_siblings, NDArrayType]
 for op in [
     "__neg__",
     "__pos__",
@@ -619,8 +465,7 @@ for op in [
     "__delitem__",
     "__contains__",
 ]:
-    [setattr(cls, op, _make_operation(op)) for cls in classes_to_modify]
-del classes_to_modify
+    setattr(NDArrayType, op, _make_operation(op))
 
 
 def _get_ndim(instance):

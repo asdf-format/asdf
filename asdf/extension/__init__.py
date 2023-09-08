@@ -15,15 +15,15 @@ from ._validator import Validator
 
 __all__ = [
     # New API
-    "Extension",
-    "ExtensionProxy",
-    "ManifestExtension",
-    "ExtensionManager",
-    "get_cached_extension_manager",
-    "TagDefinition",
+    "Compressor",
     "Converter",
     "ConverterProxy",
-    "Compressor",
-    "Validator",
+    "Extension",
+    "ExtensionManager",
+    "ExtensionProxy",
+    "ManifestExtension",
     "SerializationContext",
+    "TagDefinition",
+    "Validator",
+    "get_cached_extension_manager",
 ]

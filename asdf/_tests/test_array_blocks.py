@@ -8,7 +8,9 @@ from numpy.random import random
 from numpy.testing import assert_array_equal
 
 import asdf
-from asdf import block, constants, generic_io
+from asdf import constants, generic_io
+from asdf._block import io as bio
+from asdf.exceptions import AsdfBlockIndexWarning
 
 RNG = np.random.default_rng(6)
 
@@ -54,15 +56,6 @@ def test_invalid_array_storage():
     ff = asdf.AsdfFile(tree)
     with pytest.raises(ValueError, match=r"array_storage must be one of.*"):
         ff.set_array_storage(my_array, "foo")
-
-    b = block.Block()
-    b._array_storage = "foo"
-
-    with pytest.raises(ValueError, match=r"Unknown array storage type foo"):
-        ff._blocks.add(b)
-
-    with pytest.raises(ValueError, match=r"Unknown array storage type foo"):
-        ff._blocks.remove(b)
 
 
 def test_transfer_array_sources(tmp_path):
@@ -115,7 +108,9 @@ def test_pad_blocks(tmp_path):
         assert_array_equal(ff.tree["my_array2"], my_array2)
 
 
-def test_update_expand_tree(tmp_path):
+@pytest.mark.parametrize("lazy_load", [True, False])
+@pytest.mark.parametrize("copy_arrays", [True, False])
+def test_update_expand_tree(tmp_path, lazy_load, copy_arrays):
     tmp_path = str(tmp_path)
     testpath = os.path.join(tmp_path, "test.asdf")
 
@@ -126,17 +121,15 @@ def test_update_expand_tree(tmp_path):
 
     ff = asdf.AsdfFile(tree)
     ff.set_array_storage(tree["arrays"][2], "inline")
-    assert len(list(ff._blocks.inline_blocks)) == 1
     ff.write_to(testpath, pad_blocks=True)
-    with asdf.open(testpath, mode="rw") as ff:
+    with asdf.open(testpath, lazy_load=lazy_load, copy_arrays=copy_arrays, mode="rw") as ff:
+        assert len(list(ff._blocks.blocks)) == 2
         assert_array_equal(ff.tree["arrays"][0], my_array)
-        orig_offset = ff._blocks[ff.tree["arrays"][0]].offset
         ff.tree["extra"] = [0] * 6000
         ff.update()
 
     with asdf.open(testpath) as ff:
-        assert orig_offset <= ff._blocks[ff.tree["arrays"][0]].offset
-        assert ff._blocks[ff.tree["arrays"][2]].array_storage == "inline"
+        assert ff.get_array_storage(ff.tree["arrays"][2]) == "inline"
         assert_array_equal(ff.tree["arrays"][0], my_array)
         assert_array_equal(ff.tree["arrays"][1], my_array2)
 
@@ -144,19 +137,19 @@ def test_update_expand_tree(tmp_path):
     ff = asdf.AsdfFile(tree)
     ff.set_array_storage(tree["arrays"][2], "inline")
     ff.write_to(os.path.join(tmp_path, "test2.asdf"), pad_blocks=True)
-    with asdf.open(os.path.join(tmp_path, "test2.asdf"), mode="rw") as ff:
-        orig_offset = ff._blocks[ff.tree["arrays"][0]].offset
+    with asdf.open(os.path.join(tmp_path, "test2.asdf"), lazy_load=lazy_load, copy_arrays=copy_arrays, mode="rw") as ff:
         ff.tree["extra"] = [0] * 2
         ff.update()
 
     with asdf.open(os.path.join(tmp_path, "test2.asdf")) as ff:
-        assert orig_offset == ff._blocks[ff.tree["arrays"][0]].offset
-        assert ff._blocks[ff.tree["arrays"][2]].array_storage == "inline"
+        assert ff.get_array_storage(ff.tree["arrays"][2]) == "inline"
         assert_array_equal(ff.tree["arrays"][0], my_array)
         assert_array_equal(ff.tree["arrays"][1], my_array2)
 
 
-def test_update_all_external(tmp_path):
+@pytest.mark.parametrize("lazy_load", [True, False])
+@pytest.mark.parametrize("copy_arrays", [True, False])
+def test_update_all_external(tmp_path, lazy_load, copy_arrays):
     fn = tmp_path / "test.asdf"
 
     my_array = np.arange(64) * 1
@@ -169,18 +162,40 @@ def test_update_all_external(tmp_path):
     with asdf.config.config_context() as cfg:
         cfg.array_inline_threshold = 10
         cfg.all_array_storage = "external"
-        with asdf.open(fn, mode="rw") as af:
+        with asdf.open(fn, lazy_load=lazy_load, copy_arrays=copy_arrays, mode="rw") as af:
             af.update()
 
     assert "test0000.asdf" in os.listdir(tmp_path)
     assert "test0001.asdf" in os.listdir(tmp_path)
 
 
+@pytest.mark.parametrize("lazy_load", [True, False])
+@pytest.mark.parametrize("copy_arrays", [True, False])
+def test_update_some_external(tmp_path, lazy_load, copy_arrays):
+    fn = tmp_path / "test.asdf"
+
+    my_array = np.arange(64) * 1
+    my_array2 = np.arange(64) * 2
+    tree = {"arrays": [my_array, my_array2]}
+
+    af = asdf.AsdfFile(tree)
+    af.write_to(fn)
+
+    with asdf.open(fn, lazy_load=lazy_load, copy_arrays=copy_arrays, mode="rw") as af:
+        af.set_array_storage(af["arrays"][0], "external")
+        af.update()
+
+    assert "test0000.asdf" in os.listdir(tmp_path)
+    assert "test0001.asdf" not in os.listdir(tmp_path)
+
+
 def _get_update_tree():
     return {"arrays": [np.arange(64) * 1, np.arange(64) * 2, np.arange(64) * 3]}
 
 
-def test_update_delete_first_array(tmp_path):
+@pytest.mark.parametrize("lazy_load", [True, False])
+@pytest.mark.parametrize("copy_arrays", [True, False])
+def test_update_delete_first_array(tmp_path, lazy_load, copy_arrays):
     tmp_path = str(tmp_path)
     path = os.path.join(tmp_path, "test.asdf")
 
@@ -192,7 +207,7 @@ def test_update_delete_first_array(tmp_path):
 
     original_size = os.stat(path).st_size
 
-    with asdf.open(os.path.join(tmp_path, "test.asdf"), mode="rw") as ff:
+    with asdf.open(os.path.join(tmp_path, "test.asdf"), lazy_load=lazy_load, copy_arrays=copy_arrays, mode="rw") as ff:
         del ff.tree["arrays"][0]
         ff.update()
 
@@ -203,7 +218,9 @@ def test_update_delete_first_array(tmp_path):
         assert_array_equal(ff.tree["arrays"][1], tree["arrays"][2])
 
 
-def test_update_delete_last_array(tmp_path):
+@pytest.mark.parametrize("lazy_load", [True, False])
+@pytest.mark.parametrize("copy_arrays", [True, False])
+def test_update_delete_last_array(tmp_path, lazy_load, copy_arrays):
     tmp_path = str(tmp_path)
     path = os.path.join(tmp_path, "test.asdf")
 
@@ -215,7 +232,7 @@ def test_update_delete_last_array(tmp_path):
 
     original_size = os.stat(path).st_size
 
-    with asdf.open(os.path.join(tmp_path, "test.asdf"), mode="rw") as ff:
+    with asdf.open(os.path.join(tmp_path, "test.asdf"), lazy_load=lazy_load, copy_arrays=copy_arrays, mode="rw") as ff:
         del ff.tree["arrays"][-1]
         ff.update()
 
@@ -226,7 +243,9 @@ def test_update_delete_last_array(tmp_path):
         assert_array_equal(ff.tree["arrays"][1], tree["arrays"][1])
 
 
-def test_update_delete_middle_array(tmp_path):
+@pytest.mark.parametrize("lazy_load", [True, False])
+@pytest.mark.parametrize("copy_arrays", [True, False])
+def test_update_delete_middle_array(tmp_path, lazy_load, copy_arrays):
     tmp_path = str(tmp_path)
     path = os.path.join(tmp_path, "test.asdf")
 
@@ -238,22 +257,22 @@ def test_update_delete_middle_array(tmp_path):
 
     original_size = os.stat(path).st_size
 
-    with asdf.open(os.path.join(tmp_path, "test.asdf"), mode="rw") as ff:
+    with asdf.open(os.path.join(tmp_path, "test.asdf"), lazy_load=lazy_load, copy_arrays=copy_arrays, mode="rw") as ff:
         del ff.tree["arrays"][1]
         ff.update()
-        assert len(ff._blocks._internal_blocks) == 2
+        assert len(ff._blocks.blocks) == 2
 
     assert os.stat(path).st_size <= original_size
 
     with asdf.open(os.path.join(tmp_path, "test.asdf")) as ff:
         assert len(ff.tree["arrays"]) == 2
-        assert ff.tree["arrays"][0]._source == 0
-        assert ff.tree["arrays"][1]._source == 1
         assert_array_equal(ff.tree["arrays"][0], tree["arrays"][0])
         assert_array_equal(ff.tree["arrays"][1], tree["arrays"][2])
 
 
-def test_update_replace_first_array(tmp_path):
+@pytest.mark.parametrize("lazy_load", [True, False])
+@pytest.mark.parametrize("copy_arrays", [True, False])
+def test_update_replace_first_array(tmp_path, lazy_load, copy_arrays):
     tmp_path = str(tmp_path)
     path = os.path.join(tmp_path, "test.asdf")
 
@@ -265,7 +284,7 @@ def test_update_replace_first_array(tmp_path):
 
     original_size = os.stat(path).st_size
 
-    with asdf.open(os.path.join(tmp_path, "test.asdf"), mode="rw") as ff:
+    with asdf.open(os.path.join(tmp_path, "test.asdf"), lazy_load=lazy_load, copy_arrays=copy_arrays, mode="rw") as ff:
         ff.tree["arrays"][0] = np.arange(32)
         ff.update()
 
@@ -277,7 +296,9 @@ def test_update_replace_first_array(tmp_path):
         assert_array_equal(ff.tree["arrays"][2], tree["arrays"][2])
 
 
-def test_update_replace_last_array(tmp_path):
+@pytest.mark.parametrize("lazy_load", [True, False])
+@pytest.mark.parametrize("copy_arrays", [True, False])
+def test_update_replace_last_array(tmp_path, lazy_load, copy_arrays):
     tmp_path = str(tmp_path)
     path = os.path.join(tmp_path, "test.asdf")
 
@@ -289,7 +310,7 @@ def test_update_replace_last_array(tmp_path):
 
     original_size = os.stat(path).st_size
 
-    with asdf.open(os.path.join(tmp_path, "test.asdf"), mode="rw") as ff:
+    with asdf.open(os.path.join(tmp_path, "test.asdf"), lazy_load=lazy_load, copy_arrays=copy_arrays, mode="rw") as ff:
         ff.tree["arrays"][2] = np.arange(32)
         ff.update()
 
@@ -301,7 +322,9 @@ def test_update_replace_last_array(tmp_path):
         assert_array_equal(ff.tree["arrays"][2], np.arange(32))
 
 
-def test_update_replace_middle_array(tmp_path):
+@pytest.mark.parametrize("lazy_load", [True, False])
+@pytest.mark.parametrize("copy_arrays", [True, False])
+def test_update_replace_middle_array(tmp_path, lazy_load, copy_arrays):
     tmp_path = str(tmp_path)
     path = os.path.join(tmp_path, "test.asdf")
 
@@ -313,7 +336,7 @@ def test_update_replace_middle_array(tmp_path):
 
     original_size = os.stat(path).st_size
 
-    with asdf.open(os.path.join(tmp_path, "test.asdf"), mode="rw") as ff:
+    with asdf.open(os.path.join(tmp_path, "test.asdf"), lazy_load=lazy_load, copy_arrays=copy_arrays, mode="rw") as ff:
         ff.tree["arrays"][1] = np.arange(32)
         ff.update()
 
@@ -325,7 +348,9 @@ def test_update_replace_middle_array(tmp_path):
         assert_array_equal(ff.tree["arrays"][2], tree["arrays"][2])
 
 
-def test_update_add_array(tmp_path):
+@pytest.mark.parametrize("lazy_load", [True, False])
+@pytest.mark.parametrize("copy_arrays", [True, False])
+def test_update_add_array(tmp_path, lazy_load, copy_arrays):
     tmp_path = str(tmp_path)
     path = os.path.join(tmp_path, "test.asdf")
 
@@ -335,7 +360,7 @@ def test_update_add_array(tmp_path):
     ff = asdf.AsdfFile(tree)
     ff.write_to(path, pad_blocks=True)
 
-    with asdf.open(os.path.join(tmp_path, "test.asdf"), mode="rw") as ff:
+    with asdf.open(os.path.join(tmp_path, "test.asdf"), lazy_load=lazy_load, copy_arrays=copy_arrays, mode="rw") as ff:
         ff.tree["arrays"].append(np.arange(32))
         ff.update()
 
@@ -346,7 +371,9 @@ def test_update_add_array(tmp_path):
         assert_array_equal(ff.tree["arrays"][3], np.arange(32))
 
 
-def test_update_add_array_at_end(tmp_path):
+@pytest.mark.parametrize("lazy_load", [True, False])
+@pytest.mark.parametrize("copy_arrays", [True, False])
+def test_update_add_array_at_end(tmp_path, lazy_load, copy_arrays):
     tmp_path = str(tmp_path)
     path = os.path.join(tmp_path, "test.asdf")
 
@@ -358,10 +385,10 @@ def test_update_add_array_at_end(tmp_path):
 
     original_size = os.stat(path).st_size
 
-    with asdf.open(os.path.join(tmp_path, "test.asdf"), mode="rw") as ff:
+    with asdf.open(os.path.join(tmp_path, "test.asdf"), lazy_load=lazy_load, copy_arrays=copy_arrays, mode="rw") as ff:
         ff.tree["arrays"].append(np.arange(65536, dtype="<i8"))
         ff.update()
-        assert len(ff._blocks) == 4
+        assert len(ff._blocks.blocks) == 4
 
     assert os.stat(path).st_size >= original_size
 
@@ -372,7 +399,9 @@ def test_update_add_array_at_end(tmp_path):
         assert_array_equal(ff.tree["arrays"][3], np.arange(65536, dtype="<i8"))
 
 
-def test_update_replace_all_arrays(tmp_path):
+@pytest.mark.parametrize("lazy_load", [True, False])
+@pytest.mark.parametrize("copy_arrays", [True, False])
+def test_update_replace_all_arrays(tmp_path, lazy_load, copy_arrays):
     tmp_path = str(tmp_path)
     testpath = os.path.join(tmp_path, "test.asdf")
 
@@ -385,7 +414,7 @@ def test_update_replace_all_arrays(tmp_path):
     ff = asdf.AsdfFile(tree)
     ff.write_to(testpath, pad_blocks=True)
 
-    with asdf.open(testpath, mode="rw") as ff:
+    with asdf.open(os.path.join(tmp_path, "test.asdf"), lazy_load=lazy_load, copy_arrays=copy_arrays, mode="rw") as ff:
         assert_array_equal(ff.tree["my_array"], np.ones((64, 64)) * 1)
         ff.tree["my_array"] = np.ones((64, 64)) * 2
         ff.update()
@@ -394,7 +423,9 @@ def test_update_replace_all_arrays(tmp_path):
         assert_array_equal(ff.tree["my_array"], np.ones((64, 64)) * 2)
 
 
-def test_update_array_in_place(tmp_path):
+@pytest.mark.parametrize("lazy_load", [True, False])
+@pytest.mark.parametrize("copy_arrays", [True, False])
+def test_update_array_in_place(tmp_path, lazy_load, copy_arrays):
     tmp_path = str(tmp_path)
     testpath = os.path.join(tmp_path, "test.asdf")
 
@@ -407,13 +438,52 @@ def test_update_array_in_place(tmp_path):
     ff = asdf.AsdfFile(tree)
     ff.write_to(testpath, pad_blocks=True)
 
-    with asdf.open(testpath, mode="rw") as ff:
+    with asdf.open(testpath, lazy_load=lazy_load, copy_arrays=copy_arrays, mode="rw") as ff:
         array = np.asarray(ff.tree["my_array"])
         array *= 2
         ff.update()
 
     with asdf.open(testpath) as ff:
         assert_array_equal(ff.tree["my_array"], np.ones((64, 64)) * 2)
+
+
+@pytest.mark.parametrize("lazy_load", [True, False])
+@pytest.mark.parametrize("copy_arrays", [True, False])
+def test_update_compressed_blocks(tmp_path, lazy_load, copy_arrays):
+    """
+    This test was originally constructed to test an issue where
+    a failed update left a corrupt file. The issue that resulted in
+    the failed update (a compressed block growing in size) was fixed
+    so this is no longer a good test for a failed update.
+
+    See: https://github.com/asdf-format/asdf/issues/1520
+
+    However, the test does serve to make sure that updating the
+    contents of compressed blocks in a way that causes them to grow
+    in size on disk does not result in a failed update.
+    """
+    fn = tmp_path / "test.asdf"
+    n_arrays = 10
+    array_size = 10000
+
+    # make a tree with many arrays that will compress well
+    af = asdf.AsdfFile()
+    for i in range(n_arrays):
+        af[i] = np.zeros(array_size, dtype="uint8") + i
+        af.set_array_compression(af[i], "zlib")
+    af.write_to(fn)
+
+    with asdf.open(fn, lazy_load=lazy_load, copy_arrays=copy_arrays, mode="rw") as af:
+        # now make the data are difficult to compress
+        for i in range(n_arrays):
+            assert np.all(af[i] == i)
+            af[i][:] = np.random.randint(255, size=array_size)
+            af[i][0] = i + 1
+        af.update()
+
+    with asdf.open(fn, mode="r") as af:
+        for i in range(n_arrays):
+            assert af[i][0] == i + 1
 
 
 def test_init_from_asdffile(tmp_path):
@@ -425,7 +495,6 @@ def test_init_from_asdffile(tmp_path):
     ff2 = asdf.AsdfFile(ff)
     assert ff.tree["my_array"] is ff2.tree["my_array"]
     assert_array_equal(ff.tree["my_array"], ff2.tree["my_array"])
-    assert ff._blocks[my_array] != ff2._blocks[my_array]
 
     ff2.tree["my_array"] = None
     assert_array_equal(ff.tree["my_array"], my_array)
@@ -434,9 +503,8 @@ def test_init_from_asdffile(tmp_path):
 
     with asdf.open(os.path.join(tmp_path, "test.asdf")) as ff:
         ff2 = asdf.AsdfFile(ff)
-        assert ff.tree["my_array"] is not ff2.tree["my_array"]
+        # assert ff.tree["my_array"] is not ff2.tree["my_array"]
         assert_array_equal(ff.tree["my_array"], ff2.tree["my_array"])
-        assert ff._blocks[my_array] != ff2._blocks[my_array]
 
         ff2.tree["my_array"] = None
         assert_array_equal(ff.tree["my_array"], my_array)
@@ -453,16 +521,16 @@ def test_seek_until_on_block_boundary():
 foo : bar
 ...
 """
-    content += b"\0" * (io.DEFAULT_BUFFER_SIZE - 2) + constants.BLOCK_MAGIC + b"\0\x30" + b"\0" * 50
+    content += b"\0" * (io.DEFAULT_BUFFER_SIZE - 2) + constants.BLOCK_MAGIC + b"\0\x30" + b"\0" * 48
 
     buff = io.BytesIO(content)
     ff = asdf.open(buff)
-    assert len(ff._blocks) == 1
+    assert len(ff._blocks.blocks) == 1
 
     buff.seek(0)
     fd = generic_io.InputStream(buff, "r")
     ff = asdf.open(fd)
-    assert len(ff._blocks) == 1
+    assert len(ff._blocks.blocks) == 1
 
 
 def test_checksum(tmp_path):
@@ -475,11 +543,12 @@ def test_checksum(tmp_path):
     ff.write_to(path)
 
     with asdf.open(path, validate_checksums=True) as ff:
-        assert type(ff._blocks._internal_blocks[0].checksum) == bytes
-        assert ff._blocks._internal_blocks[0].checksum == b"\xcaM\\\xb8t_L|\x00\n+\x01\xf1\xcfP1"
+        assert ff._blocks.blocks[0].header["checksum"] == b"\xcaM\\\xb8t_L|\x00\n+\x01\xf1\xcfP1"
 
 
-def test_checksum_update(tmp_path):
+@pytest.mark.parametrize("lazy_load", [True, False])
+@pytest.mark.parametrize("copy_arrays", [True, False])
+def test_checksum_update(tmp_path, lazy_load, copy_arrays):
     tmp_path = str(tmp_path)
     path = os.path.join(tmp_path, "test.asdf")
 
@@ -489,34 +558,14 @@ def test_checksum_update(tmp_path):
     ff = asdf.AsdfFile(tree)
     ff.write_to(path)
 
-    with asdf.open(path, mode="rw") as ff:
+    with asdf.open(path, lazy_load=lazy_load, copy_arrays=copy_arrays, mode="rw") as ff:
         ff.tree["my_array"][7, 7] = 0.0
         # update() should update the checksum, even if the data itself
         # is memmapped and isn't expressly re-written.
         ff.update()
 
     with asdf.open(path, validate_checksums=True) as ff:
-        assert ff._blocks._internal_blocks[0].checksum == b"T\xaf~[\x90\x8a\x88^\xc2B\x96D,N\xadL"
-
-
-def test_deferred_block_loading(small_tree):
-    buff = io.BytesIO()
-
-    ff = asdf.AsdfFile(small_tree)
-    # Since we're testing with small arrays, force all arrays to be stored
-    # in internal blocks rather than letting some of them be automatically put
-    # inline.
-    ff.write_to(buff, include_block_index=False, all_array_storage="internal")
-
-    buff.seek(0)
-    with asdf.open(buff) as ff2:
-        assert len([x for x in ff2._blocks.blocks if isinstance(x, block.Block)]) == 1
-        ff2.tree["science_data"] * 2
-        ff2.tree["not_shared"] * 2
-        assert len([x for x in ff2._blocks.blocks if isinstance(x, block.Block)]) == 2
-
-        with pytest.raises(ValueError, match=r"Block .* not found."):
-            ff2._blocks.get_block(2)
+        assert ff._blocks.blocks[0].header["checksum"] == b"T\xaf~[\x90\x8a\x88^\xc2B\x96D,N\xadL"
 
 
 def test_block_index():
@@ -533,20 +582,20 @@ def test_block_index():
 
     buff.seek(0)
     with asdf.open(buff) as ff2:
-        assert isinstance(ff2._blocks._internal_blocks[0], block.Block)
-        assert len(ff2._blocks._internal_blocks) == 100
+        assert len(ff2._blocks.blocks) == 100
+        assert ff2._blocks.blocks[0].loaded
         for i in range(2, 99):
-            assert isinstance(ff2._blocks._internal_blocks[i], block.UnloadedBlock)
-        assert isinstance(ff2._blocks._internal_blocks[99], block.Block)
+            assert not ff2._blocks.blocks[i].loaded
+        assert ff2._blocks.blocks[99].loaded
 
         # Force the loading of one array
         ff2.tree["arrays"][50] * 2
 
         for i in range(2, 99):
             if i == 50:
-                assert isinstance(ff2._blocks._internal_blocks[i], block.Block)
+                assert ff2._blocks.blocks[i].loaded
             else:
-                assert isinstance(ff2._blocks._internal_blocks[i], block.UnloadedBlock)
+                assert not ff2._blocks.blocks[i].loaded
 
 
 def test_large_block_index():
@@ -579,8 +628,8 @@ def test_large_block_index():
 
     buff.seek(0)
     with asdf.open(buff) as ff2:
-        assert isinstance(ff2._blocks._internal_blocks[0], block.Block)
-        assert len(ff2._blocks._internal_blocks) == narrays
+        assert ff2._blocks.blocks[0].loaded
+        assert len(ff2._blocks.blocks) == narrays
 
 
 def test_no_block_index():
@@ -615,10 +664,10 @@ def test_junk_after_index():
     buff.seek(0)
 
     # This has junk after the block index, so it
-    # should fall back to the skip method, which
-    # only loads the first block.
-    with asdf.open(buff) as ff:
-        assert len(ff._blocks) == 1
+    # should fall back to reading serially
+    with pytest.warns(AsdfBlockIndexWarning, match="Failed to read block index"):
+        with asdf.open(buff) as ff:
+            assert ff._blocks.blocks[1].loaded
 
 
 def test_short_file_find_block_index():
@@ -638,8 +687,10 @@ def test_short_file_find_block_index():
     buff.write(b"0" * (io.DEFAULT_BUFFER_SIZE * 4))
 
     buff.seek(0)
-    with asdf.open(buff) as ff:
-        assert len(ff._blocks) == 1
+    with pytest.warns(AsdfBlockIndexWarning, match="Failed to read block index"):
+        with asdf.open(buff) as ff:
+            assert len(ff._blocks.blocks) == 2
+            assert ff._blocks.blocks[1].loaded
 
 
 def test_invalid_block_index_values():
@@ -647,7 +698,7 @@ def test_invalid_block_index_values():
     # past the end of the file.  In that case, we should just reject
     # the index altogether.
 
-    buff = io.BytesIO()
+    buff = generic_io.get_file(io.BytesIO(), mode="w")
 
     arrays = []
     for i in range(10):
@@ -656,13 +707,20 @@ def test_invalid_block_index_values():
     tree = {"arrays": arrays}
 
     ff = asdf.AsdfFile(tree)
-    ff.write_to(buff, include_block_index=False)
-    ff._blocks._internal_blocks.append(block.UnloadedBlock(buff, 123456789))
-    ff._blocks.write_block_index(buff, ff)
+    ff.write_to(buff, include_block_index=True)
+    buff.seek(0)
+    offset = bio.find_block_index(buff)
+    buff.seek(offset)
+    block_index = bio.read_block_index(buff)
+    block_index.append(123456789)
+    buff.seek(offset)
+    bio.write_block_index(buff, block_index)
 
     buff.seek(0)
-    with asdf.open(buff) as ff:
-        assert len(ff._blocks) == 1
+    with pytest.warns(AsdfBlockIndexWarning, match="Invalid block index contents"):
+        with asdf.open(buff) as ff:
+            assert len(ff._blocks.blocks) == 10
+            assert ff._blocks.blocks[1].loaded
 
 
 @pytest.mark.parametrize("block_index_index", [0, -1])
@@ -704,10 +762,12 @@ def test_invalid_block_index_offset(block_index_index):
     )
 
     buff.seek(0)
-    with asdf.open(buff) as ff:
-        assert len(ff._blocks) == 1
-        for i, a in enumerate(arrays):
-            assert_array_equal(ff["arrays"][i], a)
+    with pytest.warns(AsdfBlockIndexWarning, match="Invalid block index contents"):
+        with asdf.open(buff) as ff:
+            assert len(ff._blocks.blocks) == 10
+            for i, a in enumerate(arrays):
+                assert ff._blocks.blocks[i].loaded
+                assert_array_equal(ff["arrays"][i], a)
 
 
 def test_unordered_block_index():
@@ -715,7 +775,7 @@ def test_unordered_block_index():
     This creates a block index that isn't in increasing order
     """
 
-    buff = io.BytesIO()
+    buff = generic_io.get_file(io.BytesIO(), mode="w")
 
     arrays = []
     for i in range(10):
@@ -724,40 +784,20 @@ def test_unordered_block_index():
     tree = {"arrays": arrays}
 
     ff = asdf.AsdfFile(tree)
-    ff.write_to(buff, include_block_index=False)
-    ff._blocks._internal_blocks = ff._blocks._internal_blocks[::-1]
-    ff._blocks.write_block_index(buff, ff)
+    ff.write_to(buff, include_block_index=True)
+    buff.seek(0)
+    offset = bio.find_block_index(buff)
+    buff.seek(offset)
+    block_index = bio.read_block_index(buff)
+    buff.seek(offset)
+    bio.write_block_index(buff, block_index[::-1])
+    buff.seek(0)
 
     buff.seek(0)
-    with asdf.open(buff) as ff:
-        assert len(ff._blocks) == 1
-
-
-def test_invalid_block_id():
-    ff = asdf.AsdfFile()
-    with pytest.raises(ValueError, match=r"Invalid source id .*"):
-        ff._blocks.get_block(-2)
-
-
-def test_dots_but_no_block_index():
-    """
-    This puts `...` at the end of the file, so we sort of think
-    we might have a block index, but as it turns out, we don't
-    after reading a few chunks from the end of the file.
-    """
-    buff = io.BytesIO()
-
-    tree = {"array": np.ones((8, 8))}
-
-    ff = asdf.AsdfFile(tree)
-    ff.write_to(buff, include_block_index=False)
-
-    buff.write(b"A" * 64000)
-    buff.write(b"...\n")
-
-    buff.seek(0)
-    with asdf.open(buff) as ff:
-        assert len(ff._blocks) == 1
+    with pytest.warns(AsdfBlockIndexWarning, match="Failed to read block index"):
+        with asdf.open(buff) as ff:
+            assert len(ff._blocks.blocks) == 10
+            assert ff._blocks.blocks[1].loaded
 
 
 def test_open_no_memmap(tmp_path):
@@ -772,44 +812,16 @@ def test_open_no_memmap(tmp_path):
     with asdf.open(tmpfile) as af:
         array = af.tree["array"]
         # Make sure to access the block so that it gets loaded
-        array[0]
-        assert array.block._memmapped is True
-        assert isinstance(array.block._data, np.memmap)
+        assert af._blocks.blocks[0].memmap
+        assert isinstance(array.base, np.memmap)
 
     # Test that if we ask for copy, we do not get memmapped arrays
     with asdf.open(tmpfile, copy_arrays=True) as af:
         array = af.tree["array"]
-        assert array.block._memmapped is False
+        assert not af._blocks.blocks[0].memmap
         # We can't just check for isinstance(..., np.array) since this will
         # be true for np.memmap as well
-        assert not isinstance(array.block._data, np.memmap)
-
-
-def test_fd_not_seekable():
-    data = np.ones(1024)
-    b = block.Block(data=data)
-    fd = io.BytesIO()
-
-    seekable = lambda: False  # noqa: E731
-    fd.seekable = seekable
-
-    write_array = lambda arr: fd.write(arr.tobytes())  # noqa: E731
-    fd.write_array = write_array
-
-    read_blocks = lambda us: [fd.read(us)]  # noqa: E731
-    fd.read_blocks = read_blocks
-
-    fast_forward = lambda offset: fd.seek(offset, 1)  # noqa: E731
-    fd.fast_forward = fast_forward
-
-    b.output_compression = "zlib"
-    b.write(fd)
-    fd.seek(0)
-    b = block.Block()
-    b.read(fd)
-    # We lost the information about the underlying array type,
-    # but still can compare the bytes.
-    assert b.data.tobytes() == data.tobytes()
+        assert not isinstance(array.base, np.memmap)
 
 
 def test_add_block_before_fully_loaded(tmp_path):
@@ -845,20 +857,6 @@ def test_add_block_before_fully_loaded(tmp_path):
         assert_array_equal(af["arr2"], arr2)
 
 
-def test_block_allocation_on_validate():
-    """
-    Verify that no additional block is allocated when a tree
-    containing a fortran ordered array is validated
-
-    See https://github.com/asdf-format/asdf/issues/1205
-    """
-    array = np.array([[11, 12, 13], [21, 22, 23]], order="F")
-    af = asdf.AsdfFile({"array": array})
-    assert len(list(af._blocks.blocks)) == 1
-    af.validate()
-    assert len(list(af._blocks.blocks)) == 1
-
-
 @pytest.mark.parametrize("all_array_storage", ["internal", "external", "inline"])
 @pytest.mark.parametrize("all_array_compression", [None, "", "zlib", "bzp2", "lz4", "input"])
 @pytest.mark.parametrize("compression_kwargs", [None, {}])
@@ -867,45 +865,26 @@ def test_write_to_update_storage_options(tmp_path, all_array_storage, all_array_
         compression_kwargs = {"compresslevel": 1}
 
     def assert_result(ff):
-        if "array" not in ff:
-            # this was called from _write_to while making an external block
-            # so don't check the result
-            return
         if all_array_storage == "external":
             assert "test0000.asdf" in os.listdir(tmp_path)
         else:
             assert "test0000.asdf" not in os.listdir(tmp_path)
         if all_array_storage == "internal":
-            assert len(ff._blocks._internal_blocks) == 1
+            assert len(ff._blocks.blocks) == 1
         else:
-            assert len(ff._blocks._internal_blocks) == 0
-        blk = ff._blocks[ff["array"]]
+            assert len(ff._blocks.blocks) == 0
 
-        target_compression = all_array_compression or None
-        if target_compression == "input":
-            target_compression = None
-        assert blk.output_compression == target_compression
-
-        target_compression_kwargs = compression_kwargs or {}
-        assert blk._output_compression_kwargs == target_compression_kwargs
+        if all_array_storage == "internal":
+            target_compression = all_array_compression or None
+            if target_compression == "input":
+                target_compression = None
+            assert ff.get_array_compression(ff["array"]) == target_compression
 
     arr1 = np.ones((8, 8))
     tree = {"array": arr1}
     fn = tmp_path / "test.asdf"
 
     ff1 = asdf.AsdfFile(tree)
-
-    # as a new AsdfFile is used for write_to and we want
-    # to check blocks here, we patch _write_to to allow us
-    # to inspect the blocks in the new AsdfFile before
-    # it falls out of scope
-    original = asdf.AsdfFile._write_to
-
-    def patched(self, *args, **kwargs):
-        original(self, *args, **kwargs)
-        assert_result(self)
-
-    asdf.AsdfFile._write_to = patched
 
     # first check write_to
     ff1.write_to(
@@ -915,11 +894,11 @@ def test_write_to_update_storage_options(tmp_path, all_array_storage, all_array_
         compression_kwargs=compression_kwargs,
     )
 
-    asdf.AsdfFile._write_to = original
-
     # then reuse the file to check update
+    arr2 = np.ones((8, 8)) * 42
     with asdf.open(fn, mode="rw") as ff2:
-        arr2 = np.ones((8, 8)) * 42
+        assert_result(ff2)
+        np.testing.assert_array_equal(arr1, ff2["array"])
         ff2["array"] = arr2
         ff2.update(
             all_array_storage=all_array_storage,
@@ -927,114 +906,64 @@ def test_write_to_update_storage_options(tmp_path, all_array_storage, all_array_
             compression_kwargs=compression_kwargs,
         )
         assert_result(ff2)
+    with asdf.open(fn) as ff3:
+        assert_result(ff3)
+        np.testing.assert_array_equal(arr2, ff3["array"])
 
 
-def test_block_key():
-    # make an AsdfFile to get a BlockManager
-    af = asdf.AsdfFile()
-    bm = af._blocks
-
-    # add a block for an array
-    arr = np.array([1, 2, 3], dtype="uint8")
-    arr_blk = bm.find_or_create_block_for_array(arr)
-    assert arr_blk in bm._internal_blocks
-
-    # now make a new block, add it using a key
-    blk = block.Block(arr)
-    key = "foo"
-    bm.add(blk, key)
-    assert arr_blk in bm._internal_blocks
-    assert blk in bm._internal_blocks
-
-    # make sure we can retrieve the block by the key
-    assert bm.find_or_create_block(key) is blk
-    assert isinstance(bm.find_or_create_block("bar"), block.Block)
-
-    # now remove it, the original array block should remain
-    bm.remove(blk)
-    assert arr_blk in bm._internal_blocks
-    assert blk not in bm._internal_blocks
-
-
-@pytest.mark.parametrize("memmap", [True, False])
 @pytest.mark.parametrize("lazy_load", [True, False])
-def test_data_callback(tmp_path, memmap, lazy_load):
-    class Callback:
-        def __init__(self, data):
-            self.n_calls = 0
-            self.data = data
-
-        def __call__(self):
-            self.n_calls += 1
-            return self.data
-
-    arr = np.array([1, 2, 3], dtype="uint8")
-    callback = Callback(arr)
-    b = block.Block(memmap=memmap, lazy_load=lazy_load, data_callback=callback)
-
-    assert callback.n_calls == 0
-    assert b.data is arr
-    assert callback.n_calls == 1
-    assert b._data is None
-    assert b.data is arr
-    assert callback.n_calls == 2
-
-    fn = tmp_path / "test.b"
-    with generic_io.get_file(fn, mode="w") as f:
-        b.write(f)
-    assert callback.n_calls == 3
-
-    with generic_io.get_file(fn, mode="r") as f:
-        rb = block.Block(memmap=memmap, lazy_load=lazy_load)
-        rb.read(f, past_magic=False)
-        assert_array_equal(rb.data, arr)
-
-    with pytest.raises(ValueError, match=r"Block.__init__ cannot contain non-None data and a non-None data_callback"):
-        b = block.Block(data=arr, memmap=memmap, lazy_load=lazy_load, data_callback=callback)
-
-    rb = block.Block(memmap=memmap, lazy_load=lazy_load, data_callback=callback)
-    with pytest.raises(RuntimeError, match=r"read called on a Block with a data_callback"), generic_io.get_file(
-        fn,
-        mode="r",
-    ) as f:
-        rb.read(f, past_magic=False)
-
-
-def test_remove_blocks(tmp_path):
-    """Test that writing to a new file"""
+@pytest.mark.parametrize("copy_arrays", [True, False])
+def test_remove_blocks(tmp_path, lazy_load, copy_arrays):
     fn1 = tmp_path / "test.asdf"
     fn2 = tmp_path / "test2.asdf"
 
-    tree = {"a": np.zeros(3), "b": np.ones(1)}
+    tree = {"a": np.zeros(3), "b": np.ones(10)}
+    tree["c"] = tree["b"][:5]
+
+    for key in tree:
+        af = asdf.AsdfFile(tree)
+        af.write_to(fn1)
+
+        with asdf.open(fn1, lazy_load=lazy_load, copy_arrays=copy_arrays, mode="rw") as af:
+            assert len(af._blocks.blocks) == 2
+            af[key] = None
+            af.write_to(fn2)
+
+        with asdf.open(fn1, lazy_load=lazy_load, copy_arrays=copy_arrays, mode="rw") as af:
+            assert len(af._blocks.blocks) == 2
+            af[key] = None
+            af.update()
+
+        for fn in (fn1, fn2):
+            with asdf.open(fn) as af:
+                if key == "a":
+                    assert len(af._blocks.blocks) == 1
+                else:
+                    assert len(af._blocks.blocks) == 2
+                for key2 in tree:
+                    if key == key2:
+                        continue
+                    np.testing.assert_array_equal(af[key2], tree[key2])
+
+
+def test_open_memmap_from_closed_file(tmp_path):
+    fn = tmp_path / "test.asdf"
+    arr = np.zeros(100)
+    arr2 = np.ones(100)
+    tree = {"base": arr, "view": arr[:50], "base2": arr2}
     af = asdf.AsdfFile(tree)
-    af.write_to(fn1)
+    af.write_to(fn)
 
-    with asdf.open(fn1, mode="rw") as af:
-        assert len(af._blocks._internal_blocks) == 2
-        af["a"] = None
-        af.write_to(fn2)
+    with asdf.open(fn, lazy_load=True, copy_arrays=False) as af:
+        # load the base so we can test if accessing the view after the
+        # file is closed will trigger an error
+        af["base"][:]
+        view = af["view"]
+        base2 = af["base2"]
 
-    with asdf.open(fn1, mode="rw") as af:
-        assert len(af._blocks._internal_blocks) == 2
-        af["a"] = None
-        af.update()
+    msg = r"ASDF file has already been closed. Can not get the data."
+    with pytest.raises(OSError, match=msg):
+        view[:]
 
-    for fn in (fn1, fn2):
-        with asdf.open(fn) as af:
-            assert len(af._blocks._internal_blocks) == 1
-
-
-def test_write_to_before_update(tmp_path):
-    # this is a regression test for: https://github.com/asdf-format/asdf/issues/1505
-    fn1 = tmp_path / "test1.asdf"
-    fn2 = tmp_path / "test2.asdf"
-
-    tree = {"a": np.zeros(3), "b": np.ones(3)}
-    af = asdf.AsdfFile(tree)
-
-    af.write_to(fn1)
-
-    with asdf.open(fn1, mode="rw") as af:
-        af["a"] = None
-        af.write_to(fn2)
-        af.update()
+    with pytest.raises(OSError, match=msg):
+        base2[:]

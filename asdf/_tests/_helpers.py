@@ -19,13 +19,13 @@ try:
 except ImportError:
     CartesianDifferential = None
 
+import numpy as np
 import yaml
 
 import asdf
 from asdf import generic_io, versioning
 from asdf._resolver import Resolver, ResolverChain
 from asdf.asdf import AsdfFile, get_asdf_library_info
-from asdf.block import Block
 from asdf.constants import YAML_TAG_PREFIX
 from asdf.exceptions import AsdfConversionWarning, AsdfDeprecationWarning
 from asdf.extension import _legacy
@@ -149,6 +149,20 @@ def assert_tree_match(old_tree, new_tree, ctx=None, funcname="assert_equal", ign
         elif ICRS is not None and isinstance(old, ICRS):
             assert old.ra == new.ra
             assert old.dec == new.dec
+        elif all([isinstance(obj, (np.ndarray, asdf.tags.core.NDArrayType)) for obj in (old, new)]):
+            with warnings.catch_warnings():
+                # The oldest deps job tests against versions of numpy where this
+                # testing function raised a FutureWarning but still functioned
+                # as expected
+                warnings.filterwarnings("ignore", category=FutureWarning)
+                if old.dtype.fields:
+                    if not new.dtype.fields:
+                        msg = "arrays not equal"
+                        raise AssertionError(msg)
+                    for f in old.dtype.fields:
+                        np.testing.assert_array_equal(old[f], new[f])
+                else:
+                    np.testing.assert_array_equal(old.__array__(), new.__array__())
         else:
             assert old == new
 
@@ -263,9 +277,8 @@ def _assert_roundtrip_tree(
         buff.seek(0)
         ff = asdf.open(buff, extensions=extensions, copy_arrays=True, lazy_load=False)
         # Ensure that all the blocks are loaded
-        for block in ff._blocks._internal_blocks:
-            assert isinstance(block, Block)
-            assert block._data is not None
+        for block in ff._blocks.blocks:
+            assert block._data is not None and not callable(block._data)
     # The underlying file is closed at this time and everything should still work
     assert_tree_match(tree, ff.tree, ff, funcname=tree_match_func)
     if asdf_check_func:
@@ -274,9 +287,8 @@ def _assert_roundtrip_tree(
     # Now repeat with copy_arrays=False and a real file to test mmap()
     AsdfFile(tree, extensions=extensions, **init_options).write_to(fname, **write_options)
     with asdf.open(fname, mode="rw", extensions=extensions, copy_arrays=False, lazy_load=False) as ff:
-        for block in ff._blocks._internal_blocks:
-            assert isinstance(block, Block)
-            assert block._data is not None
+        for block in ff._blocks.blocks:
+            assert block._data is not None and not callable(block._data)
         assert_tree_match(tree, ff.tree, ff, funcname=tree_match_func)
         if asdf_check_func:
             asdf_check_func(ff)
@@ -441,7 +453,7 @@ def _assert_extension_type_correctness(extension, extension_type, resolver):
     if extension_type.yaml_tag is not None and extension_type.yaml_tag.startswith(YAML_TAG_PREFIX):
         return
 
-    if extension_type == asdf.stream.Stream:
+    if extension_type == asdf.Stream:
         # Stream is a special case.  It was implemented as a subclass of NDArrayType,
         # but shares a tag with that class, so it isn't really a distinct type.
         return

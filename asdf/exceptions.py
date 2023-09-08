@@ -28,6 +28,12 @@ class AsdfConversionWarning(AsdfWarning):
     """
 
 
+class AsdfBlockIndexWarning(AsdfWarning):
+    """
+    Warning class to indicate that a file was read with an invalid block index
+    """
+
+
 class DelimiterNotFoundError(ValueError):
     """
     Indicates that a delimiter was not found when reading or

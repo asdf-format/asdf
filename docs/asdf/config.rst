@@ -39,6 +39,7 @@ the currently active config:
       all_array_storage: None
       all_array_compression: input
       all_array_compression_kwargs: None
+      convert_unknown_ndarray_subclasses: True
       default_version: 1.5.0
       io_block_size: -1
       legacy_fill_schema_defaults: True
@@ -62,6 +63,7 @@ This allows for short-lived configuration changes that do not impact other code:
       all_array_storage: None
       all_array_compression: input
       all_array_compression_kwargs: None
+      convert_unknown_ndarray_subclasses: True
       default_version: 1.5.0
       io_block_size: -1
       legacy_fill_schema_defaults: True
@@ -73,6 +75,7 @@ This allows for short-lived configuration changes that do not impact other code:
       all_array_storage: None
       all_array_compression: input
       all_array_compression_kwargs: None
+      convert_unknown_ndarray_subclasses: True
       default_version: 1.5.0
       io_block_size: -1
       legacy_fill_schema_defaults: True
@@ -100,6 +103,64 @@ inline in the ASDF tree instead of in binary blocks.  If ``None``, array storage
 type is not managed automatically.
 
 Defaults to ``None``.
+
+all_array_storage
+-----------------
+
+Use this storage type for all arrays within an ASDF file. Must be one of
+
+- ``"internal"``
+- ``"external"``
+- ``"inline"``
+- ``None``
+
+If ``None`` a different storage type can be used for each array.
+See ``AsdfFile.set_array_storage`` for more details.
+
+Defaults to ``None``.
+
+all_array_compression
+---------------------
+
+Use this compression type for all arrays within an ASDF file.
+If ``"input"`` a different compression type can be used for each
+array. See ``AsdfFile.set_array_compression`` for more details.
+
+Defaults to ``"input"``.
+
+all_array_compression_kwargs
+----------------------------
+
+Use these additional compression keyword arguments for all arrays
+within an ASDF file. If ``None`` diffeerent keyword arguments
+can be set for each array. See ``AsdfFile.set_array_compression`` for more details.
+
+Defaults to ``None``.
+
+.. _convert_unknown_ndarray_subclasses:
+
+convert_unknown_ndarray_subclasses
+----------------------------------
+
+Convert otherwise unhandled instances of subclasses of ndarray into
+ndarrays prior to serialization.
+
+Previous extension code allowed AsdfTypes to convert instances of subclasses
+of supported types. Internally, the handling of ndarrays has been moved
+from an AsdfType to a Converter which does not support converting
+instances of subclasses unless they are explicitly listed. This means
+that code that previously relied on asdf converting instances of subclasses
+of ndarray into an ndarray will need to be updated to define a Converter
+for the ndarray subclass or to request that support be added directly
+in asdf (for subclasses in existing asdf dependencies).
+
+With this setting enabled, asdf will continue to convert instances
+of subclasses of ndarray but will issue a warning when an instance is
+converted. In a future version of asdf this default will change
+to ``False``, a deprecation warning will be issued and finally
+the conversion of instances of subclasses will be removed.
+
+Defaults to ``True``.
 
 default_version
 ---------------

@@ -5,9 +5,10 @@ from types import GeneratorType
 import numpy as np
 import yaml
 
-from . import schema, tagged, treeutil, util
+from . import config, schema, tagged, treeutil, util
 from .constants import STSCI_SCHEMA_TAG_BASE, YAML_TAG_PREFIX
 from .exceptions import AsdfConversionWarning
+from .extension._serialization_context import BlockAccess
 from .tags.core import AsdfObject
 from .versioning import _yaml_base_loader, split_tag_version
 
@@ -216,18 +217,18 @@ def custom_tree_to_tagged_tree(tree, ctx, _serialization_context=None):
     annotated with tags.
     """
     if _serialization_context is None:
-        _serialization_context = ctx._create_serialization_context()
+        _serialization_context = ctx._create_serialization_context(BlockAccess.WRITE)
 
     extension_manager = _serialization_context.extension_manager
+    version_string = str(_serialization_context.version)
 
-    def _convert_obj(obj):
-        converter = extension_manager.get_converter_for_type(type(obj))
+    def _convert_obj(obj, converter):
         tag = converter.select_tag(obj, _serialization_context)
-        converters = set()
         # if select_tag returns None, converter.to_yaml_tree should return a new
         # object which will be handled by a different converter
+        converters_used = set()
         while tag is None:
-            converters.add(converter)
+            converters_used.add(converter)
             obj = converter.to_yaml_tree(obj, tag, _serialization_context)
             try:
                 converter = extension_manager.get_converter_for_type(type(obj))
@@ -235,11 +236,13 @@ def custom_tree_to_tagged_tree(tree, ctx, _serialization_context=None):
                 # no converter supports this type, return it as-is
                 yield obj
                 return
-            if converter in converters:
+            if converter in converters_used:
                 msg = "Conversion cycle detected"
                 raise TypeError(msg)
             tag = converter.select_tag(obj, _serialization_context)
+        _serialization_context.assign_object(obj)
         node = converter.to_yaml_tree(obj, tag, _serialization_context)
+        _serialization_context.assign_blocks()
 
         if isinstance(node, GeneratorType):
             generator = node
@@ -264,19 +267,40 @@ def custom_tree_to_tagged_tree(tree, ctx, _serialization_context=None):
         if generator is not None:
             yield from generator
 
+    cfg = config.get_config()
+    convert_ndarray_subclasses = cfg.convert_unknown_ndarray_subclasses
+    converters_cache = {}
+
     def _walker(obj):
-        if extension_manager.handles_type(type(obj)):
-            return _convert_obj(obj)
+        typ = type(obj)
+        if typ in converters_cache:
+            return converters_cache[typ](obj)
+        if extension_manager.handles_type(typ):
+            converter = extension_manager.get_converter_for_type(typ)
+            converters_cache[typ] = lambda obj, _converter=converter: _convert_obj(obj, _converter)
+            return _convert_obj(obj, converter)
+        if convert_ndarray_subclasses and isinstance(obj, np.ndarray):
+            warnings.warn(
+                f"A ndarray subclass ({type(obj)}) was converted as a ndarray. "
+                "This behavior will be removed from a future version of ASDF. "
+                "See https://asdf.readthedocs.io/en/latest/asdf/config.html#convert-unknown-ndarray-subclasses",
+                AsdfConversionWarning,
+            )
+            converter = extension_manager.get_converter_for_type(np.ndarray)
+            converters_cache[typ] = lambda obj, _converter=converter: _convert_obj(obj, _converter)
+            return _convert_obj(obj, converter)
 
         tag = ctx._type_index.from_custom_type(
-            type(obj),
-            ctx.version_string,
+            typ,
+            version_string,
             _serialization_context=_serialization_context,
         )
 
         if tag is not None:
+            converters_cache[typ] = lambda obj, _tag=tag: _tag.to_tree_tagged(obj, ctx)
             return tag.to_tree_tagged(obj, ctx)
 
+        converters_cache[typ] = lambda obj: obj
         return obj
 
     return treeutil.walk_and_modify(
@@ -296,7 +320,7 @@ def tagged_tree_to_custom_tree(tree, ctx, force_raw_types=False, _serialization_
     tags, to a tree containing custom data types.
     """
     if _serialization_context is None:
-        _serialization_context = ctx._create_serialization_context()
+        _serialization_context = ctx._create_serialization_context(BlockAccess.READ)
 
     extension_manager = _serialization_context.extension_manager
 
@@ -311,6 +335,8 @@ def tagged_tree_to_custom_tree(tree, ctx, force_raw_types=False, _serialization_
         if extension_manager.handles_tag(tag):
             converter = extension_manager.get_converter_for_tag(tag)
             obj = converter.from_yaml_tree(node.data, tag, _serialization_context)
+            _serialization_context.assign_object(obj)
+            _serialization_context.assign_blocks()
             _serialization_context._mark_extension_used(converter.extension)
             return obj
 

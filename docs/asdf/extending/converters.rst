@@ -351,7 +351,7 @@ Block storage
 =============
 
 As described above :ref:`extending_converters` can return complex objects that will
-be passed to other Converters. If a Converter returns a ndarray, ASDF will recognize this
+be passed to other Converters. If a Converter returns a ndarray, asdf will recognize this
 array and store it in an ASDF block. This is the easiest and preferred means of
 storing data in ASDF blocks.
 
@@ -359,19 +359,18 @@ For applications that require more flexibility,
 Converters can control block storage through use of the `asdf.extension.SerializationContext`
 provided as an argument to `Converter.to_yaml_tree` `Converter.from_yaml_tree` and `Converter.select_tag`.
 
-It is helpful to first review some details of how ASDF
+It is helpful to first review some details of how asdf
 :ref:`stores block <asdf-standard:block>`. Blocks are stored sequentially within a
-ASDF file following the YAML tree. During reads and writes, ASDF will need to know
+ASDF file following the YAML tree. During reads and writes, asdf will need to know
 the index of the block a Converter would like to use to read or write the correct
 block. However, the index used for reading might not be the same index for writing
-if the tree was modified or the file is being written to a new location. To allow
-ASDF to track the relationship between blocks and objects, Converters will need
-to generate unique hashable keys for each block used and associate these keys with
-block indices during read and write (more on this below).
+if the tree was modified or the file is being written to a new location. During
+serialization and deserialization, asdf will associate each object with the
+accessed block during `Converter.from_yaml_tree` and `Converter.to_yaml_tree`.
 
 .. note::
-   Use of ``id(obj)`` will not generate a unique key as it returns the memory address
-   which might be reused after the object is garbage collected.
+   Converters using multiple blocks are slightly more complicated.
+   See: :ref:`extending_converter_multiple_block_storage`
 
 A simple example of a Converter using block storage to store the ``payload`` for
 ``BlockData`` object instances is as follows:
@@ -385,7 +384,6 @@ A simple example of a Converter using block storage to store the ``payload`` for
     class BlockData:
         def __init__(self, payload):
             self.payload = payload
-            self._asdf_key = asdf.util.BlockKey()
 
 
     class BlockConverter(Converter):
@@ -393,21 +391,16 @@ A simple example of a Converter using block storage to store the ``payload`` for
         types = [BlockData]
 
         def to_yaml_tree(self, obj, tag, ctx):
-            block_index = ctx.find_block_index(
-                obj._asdf_key,
+            block_index = ctx.find_available_block_index(
                 lambda: np.ndarray(len(obj.payload), dtype="uint8", buffer=obj.payload),
             )
             return {"block_index": block_index}
 
         def from_yaml_tree(self, node, tag, ctx):
             block_index = node["block_index"]
-            obj = BlockData(b"")
-            ctx.assign_block_key(block_index, obj._asdf_key)
-            obj.payload = ctx.get_block_data_callback(block_index)()
+            data_callback = ctx.get_block_data_callback(block_index)
+            obj = BlockData(data_callback())
             return obj
-
-        def reserve_blocks(self, obj, tag):
-            return [obj._asdf_key]
 
     class BlockExtension(Extension):
         tags = ["asdf://somewhere.org/tags/block_data-1.0.0"]
@@ -422,29 +415,78 @@ A simple example of a Converter using block storage to store the ``payload`` for
 .. asdf:: block_converter_example.asdf
 
 During read, ``Converter.from_yaml_tree`` will be called. Within this method
-the Converter should associate any used blocks with unique hashable keys by calling
-`asdf.extension.SerializationContext.assign_block_key` and can generate (and use) a callable
-function that will return block data using `asdf.extension.SerializationContext.get_block_data_callback`.
-A callback for reading the data is provided to support lazy loading without
-keeping a reference to the `asdf.extension.SerializationContext` (which is meant to be
-a short lived and lightweight object).
+the Converter can prepare to access a block by calling
+``SerializationContext.get_block_data_callback``. This will return a function
+that when called will return the contents of the block (to support lazy
+loading without keeping a reference to the ``SerializationContext`` (which is meant
+to be a short lived and lightweight object).
 
-During write, ``Converter.to_yaml_tree`` will be called. The Converter should
-use `asdf.extension.SerializationContext.find_block_index` to find the location of an
-available block by providing a hashable key unique to this object (this should
-be the same key used during reading to allow ASDF to associate blocks and objects
-during in-place updates). The second argument to `asdf.extension.SerializationContext.find_block_index`
-must be a callable function (returning a ndarray) that ASDF will call when it
-is time to write data to the portion of the file corresponding to this block.
-Note that it's possible this callback will be called multiple times during a
-write and ASDF will not cache the result. If the data is coming from a non-repeatable
-source (such as a non-seekable stream of bytes) the data should be cached prior
-to providing it to ASDF to allow ASDF to call the callback multiple times.
+During write, ``Converter.to_yaml_tree`` will be called. The Converter can
+use ``SerializationContext.find_available_block_index`` to find the location of an
+available block for writing. The data to be written to the block can be provided
+as an ``ndarray`` or a callable function that will return a ``ndarray`` (note that
+it is possible this callable function will be called multiple times and the
+developer should cache results from any non-repeatable sources).
 
-A Converter that uses block storage must also define ``Converter.reserve_blocks``.
-``Converter.reserve_blocks`` will be called during memory management to free
-resources for unused blocks. ``Converter.reserve_blocks`` must
-return a list of keys associated with an object.
+.. _extending_converter_multiple_block_storage:
+
+Converters using multiple blocks
+--------------------------------
+
+As discussed above, while serializing and deserializing objects that use
+one block, asdf will watch which block is accessed by ``find_available_block_index``
+and ``get_block_data_callback`` and associate the block with the converted object.
+This association allows asdf to map read and write blocks during updates of ASDF
+files. An object that uses multiple blocks must provide a unique key for each
+block it uses. These keys are generated using ``SerializationContext.generate_block_key``
+and must be stored by the extension code. These keys must be resupplied to the converter
+when writing an object that was read from an ASDF file.
+
+.. runcode::
+
+    import asdf
+    import numpy as np
+    from asdf.extension import Converter, Extension
+
+    class MultiBlockData:
+        def __init__(self, data):
+            self.data = data
+            self.keys = []
+
+
+    class MultiBlockConverter(Converter):
+        tags = ["asdf://somewhere.org/tags/multi_block_data-1.0.0"]
+        types = [MultiBlockData]
+
+        def to_yaml_tree(self, obj, tag, ctx):
+            if not len(obj.keys):
+                obj.keys = [ctx.generate_block_key() for _ in obj.data]
+            indices = [ctx.find_available_block_index(d, k) for d, k in zip(obj.data, obj.keys)]
+            return {
+                "indices": indices,
+            }
+
+        def from_yaml_tree(self, node, tag, ctx):
+            indices = node["indices"]
+            keys = [ctx.generate_block_key() for _ in indices]
+            cbs = [ctx.get_block_data_callback(i, k) for i, k in zip(indices, keys)]
+            obj = MultiBlockData([cb() for cb in cbs])
+            obj.keys = keys
+            return obj
+
+
+    class MultiBlockExtension(Extension):
+        tags = ["asdf://somewhere.org/tags/multi_block_data-1.0.0"]
+        converters = [MultiBlockConverter()]
+        extension_uri = "asdf://somewhere.org/extensions/multi_block_data-1.0.0"
+
+    with asdf.config_context() as cfg:
+        cfg.add_extension(MultiBlockExtension())
+        obj = MultiBlockData([np.arange(3, dtype="uint8") + i for i in range(3)])
+        ff = asdf.AsdfFile({"example": obj})
+        ff.write_to("multi_block_converter_example.asdf")
+
+.. asdf:: multi_block_converter_example.asdf
 
 .. _extending_converters_performance:
 

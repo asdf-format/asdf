@@ -9,6 +9,7 @@ User API
     :inherited-members:
     :no-inheritance-diagram:
     :skip: ValidationError
+    :skip: Stream
 
 .. automodapi:: asdf.search
 

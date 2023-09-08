@@ -38,7 +38,7 @@ all = [
   "lz4>=0.10",
 ]
 docs = [
-  "sphinx-asdf>=0.1.4",
+  "sphinx-asdf>=0.2.2",
   "graphviz",
   "sphinx-inline-tabs",
   'tomli; python_version < "3.11"',

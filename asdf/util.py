@@ -529,25 +529,3 @@ class FileType(enum.Enum):
     ASDF = 1
     FITS = 2
     UNKNOWN = 3
-
-
-class BlockKey:
-    """
-    Helper class that generates a unique hashable value for every instance
-    useful for associates blocks and objects during serialization and
-    deserialization
-    """
-
-    _next = 0
-
-    def __init__(self):
-        self._key = BlockKey._next
-        BlockKey._next += 1
-
-    def __hash__(self):
-        return self._key
-
-    def __eq__(self, other):
-        if not isinstance(other, BlockKey):
-            return NotImplemented
-        return self._key == other._key

@@ -31,7 +31,6 @@ except ImportError:
 
 import asdf
 from asdf.tagged import Tagged
-from asdf.tags.core.ndarray import NDArrayType
 from asdf.util import human_list
 
 from .main import Command
@@ -259,8 +258,13 @@ def compare_ndarrays(diff_ctx, array0, array1, keys):
         if array0.get(field) != array1.get(field):
             differences.append(field)
 
-    array0 = NDArrayType.from_tree(array0, diff_ctx.asdf0)
-    array1 = NDArrayType.from_tree(array1, diff_ctx.asdf1)
+    def get_flat(af, keys):
+        for k in keys:
+            af = af[k]
+        return af
+
+    array0 = get_flat(diff_ctx.asdf0, keys)
+    array1 = get_flat(diff_ctx.asdf1, keys)
     if not array_equal(array0, array1):
         differences.append("contents")
 

@@ -380,7 +380,6 @@ class GenericFile(metaclass=util.InheritDocstrings):
             file`s end).
         """
         result = self._fd.seek(offset, whence)
-        self.tell()
         return result
 
     def tell(self):
@@ -738,40 +737,15 @@ class RandomAccessFile(GenericFile):
             self.seek(0, SEEK_END)
         self.seek(size, SEEK_CUR)
 
-    if sys.platform.startswith("win"):  # pragma: no cover
-
-        def truncate(self, size=None):
-            # ftruncate doesn't work on an open file in Windows.  The
-            # best we can do is clear the extra bytes or add extra
-            # bytes to the end.
-            if size is None:
-                size = self.tell()
-
-            self.seek(0, SEEK_END)
-            file_size = self.tell()
-            if size < file_size:
-                self.seek(size, SEEK_SET)
-                nbytes = file_size - size
-            elif size > file_size:
-                nbytes = size - file_size
-            else:
-                nbytes = 0
-
-            block = b"\0" * self.block_size
-            while nbytes > 0:
-                self.write(block[: min(nbytes, self.block_size)])
-                nbytes -= self.block_size
-
+    def truncate(self, size=None):
+        # windows supports truncating as long as the file not opened
+        # more than once. So this must be called after closing all
+        # memmaps
+        if size is None:
+            self._fd.truncate()
+        else:
+            self._fd.truncate(size)
             self.seek(size, SEEK_SET)
-
-    else:
-
-        def truncate(self, size=None):
-            if size is None:
-                self._fd.truncate()
-            else:
-                self._fd.truncate(size)
-                self.seek(size, SEEK_SET)
 
 
 class RealFile(RandomAccessFile):
@@ -805,8 +779,10 @@ class RealFile(RandomAccessFile):
             acc = mmap.ACCESS_WRITE if "w" in self._mode else mmap.ACCESS_READ
             self._fd.seek(0, 2)
             nbytes = self._fd.tell()
-            self._fd.seek(loc, 0)
             self._mmap = mmap.mmap(self._fd.fileno(), nbytes, access=acc)
+            # on windows mmap seeks to the start of the file so return the file
+            # pointer to this previous location
+            self._fd.seek(loc, 0)
         return np.ndarray.__new__(np.memmap, shape=size, offset=offset, dtype="uint8", buffer=self._mmap)
 
     def close_memmap(self):

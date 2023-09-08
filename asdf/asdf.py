@@ -11,7 +11,9 @@ from packaging.version import Version
 from . import _display as display
 from . import _node_info as node_info
 from . import _version as version
-from . import block, constants, generic_io, reference, schema, treeutil, util, versioning, yamlutil
+from . import compression as mcompression
+from . import constants, generic_io, reference, schema, treeutil, util, versioning, yamlutil
+from ._block.manager import Manager as BlockManager
 from ._helpers import validate_version
 from .config import config_context, get_config
 from .exceptions import (
@@ -21,10 +23,25 @@ from .exceptions import (
     DelimiterNotFoundError,
     ValidationError,
 )
-from .extension import Extension, ExtensionProxy, SerializationContext, _legacy, get_cached_extension_manager
+from .extension import Extension, ExtensionProxy, _legacy, _serialization_context, get_cached_extension_manager
 from .search import AsdfSearchResult
 from .tags.core import AsdfObject, ExtensionMetadata, HistoryEntry, Software
 from .util import NotSet
+
+
+def __getattr__(name):
+    if name == "SerializationContext":
+        warnings.warn(
+            "importing SerializationContext from asdf.asdf is deprecated. "
+            "Please import SerializationContext from asdf.extension",
+            AsdfDeprecationWarning,
+        )
+        from .extension._serialization_context import SerializationContext
+
+        return SerializationContext
+
+    msg = f"module {__name__!r} has no attribute {name!r}"
+    raise AttributeError(msg)
 
 
 def get_asdf_library_info():
@@ -150,9 +167,7 @@ class AsdfFile:
         self._fd = None
         self._closed = False
         self._external_asdf_by_uri = {}
-        self._blocks = block.BlockManager(self, copy_arrays=copy_arrays, lazy_load=lazy_load)
-        # set the uri here so validation can generate any required external blocks
-        self._uri = uri
+        self._blocks = BlockManager(uri=uri, lazy_load=lazy_load, memmap=not copy_arrays)
         if tree is None:
             # Bypassing the tree property here, to avoid validating
             # an empty tree.
@@ -163,7 +178,7 @@ class AsdfFile:
                 # of copying the file?
                 msg = "Can not copy AsdfFile and change active extensions"
                 raise ValueError(msg)
-            self._uri = tree.uri
+            self._blocks._uri = tree.uri
             # Set directly to self._tree (bypassing property), since
             # we can assume the other AsdfFile is already valid.
             self._tree = tree.tree
@@ -387,7 +402,7 @@ class AsdfFile:
 
         return result
 
-    def _update_extension_history(self, serialization_context):
+    def _update_extension_history(self, tree, serialization_context):
         """
         Update the extension metadata on this file's tree to reflect
         extensions used during serialization.
@@ -400,20 +415,20 @@ class AsdfFile:
         if serialization_context.version < versioning.NEW_HISTORY_FORMAT_MIN_VERSION:
             return
 
-        if "history" not in self.tree:
-            self.tree["history"] = {"extensions": []}
+        if "history" not in tree:
+            tree["history"] = {"extensions": []}
         # Support clients who are still using the old history format
-        elif isinstance(self.tree["history"], list):
-            histlist = self.tree["history"]
-            self.tree["history"] = {"entries": histlist, "extensions": []}
+        elif isinstance(tree["history"], list):
+            histlist = tree["history"]
+            tree["history"] = {"entries": histlist, "extensions": []}
             warnings.warn(
                 "The ASDF history format has changed in order to "
                 "support metadata about extensions. History entries "
                 "should now be stored under tree['history']['entries'].",
                 AsdfWarning,
             )
-        elif "extensions" not in self.tree["history"]:
-            self.tree["history"]["extensions"] = []
+        elif "extensions" not in tree["history"]:
+            tree["history"]["extensions"] = []
 
         for extension in serialization_context._extensions_used:
             ext_name = extension.class_name
@@ -425,17 +440,17 @@ class AsdfFile:
             if extension.compressors:
                 ext_meta["supported_compression"] = [comp.label.decode("ascii") for comp in extension.compressors]
 
-            for i, entry in enumerate(self.tree["history"]["extensions"]):
+            for i, entry in enumerate(tree["history"]["extensions"]):
                 # Update metadata about this extension if it already exists
                 if (
                     entry.extension_uri is not None
                     and entry.extension_uri == extension.extension_uri
                     or entry.extension_class in extension.legacy_class_names
                 ):
-                    self.tree["history"]["extensions"][i] = ext_meta
+                    tree["history"]["extensions"][i] = ext_meta
                     break
             else:
-                self.tree["history"]["extensions"].append(ext_meta)
+                tree["history"]["extensions"].append(ext_meta)
 
     @property
     def file_format_version(self):
@@ -465,7 +480,7 @@ class AsdfFile:
     def copy(self):
         return self.__class__(
             copy.deepcopy(self._tree),
-            self._uri,
+            self._blocks._uri,
             self._user_extensions,
         )
 
@@ -479,11 +494,7 @@ class AsdfFile:
         In many cases, it is automatically determined from the file
         handle used to read or write the file.
         """
-        if self._uri is not None:
-            return self._uri
-        if self._fd is not None:
-            return self._fd._uri
-        return None
+        return self._blocks._uri
 
     @property
     def _tag_to_schema_resolver(self):
@@ -596,14 +607,15 @@ class AsdfFile:
         return self._comments
 
     def _validate(self, tree, custom=True, reading=False):
-        # If we're validating on read then the tree
-        # is already guaranteed to be in tagged form.
-        tagged_tree = tree if reading else yamlutil.custom_tree_to_tagged_tree(tree, self)
+        with self._blocks.options_context():
+            # If we're validating on read then the tree
+            # is already guaranteed to be in tagged form.
+            tagged_tree = tree if reading else yamlutil.custom_tree_to_tagged_tree(tree, self)
 
-        schema.validate(tagged_tree, self, reading=reading)
-        # Perform secondary validation pass if requested
-        if custom and self._custom_schema:
-            schema.validate(tagged_tree, self, self._custom_schema, reading=reading)
+            schema.validate(tagged_tree, self, reading=reading)
+            # Perform secondary validation pass if requested
+            if custom and self._custom_schema:
+                schema.validate(tagged_tree, self, self._custom_schema, reading=reading)
 
     def validate(self):
         """
@@ -638,19 +650,6 @@ class AsdfFile:
         """
         return reference.make_reference(self, [] if path is None else path)
 
-    @property
-    def blocks(self):
-        """
-        Get the block manager associated with the `AsdfFile`.
-        """
-        warnings.warn(
-            "The property AsdfFile.blocks has been deprecated and will be removed "
-            "in asdf-3.0. Public use of the block manager is strongly discouraged "
-            "as there is no stable API",
-            AsdfDeprecationWarning,
-        )
-        return self._blocks
-
     def set_array_storage(self, arr, array_storage):
         """
         Set the block type to use for the given array data.
@@ -673,8 +672,7 @@ class AsdfFile:
 
             - ``inline``: Store the data as YAML inline in the tree.
         """
-        block = self._blocks[arr]
-        self._blocks.set_array_storage(block, array_storage)
+        self._blocks._set_array_storage(arr, array_storage)
 
     def get_array_storage(self, arr):
         """
@@ -684,7 +682,7 @@ class AsdfFile:
         ----------
         arr : numpy.ndarray
         """
-        return self._blocks[arr].array_storage
+        return self._blocks._get_array_storage(arr)
 
     def set_array_compression(self, arr, compression, **compression_kwargs):
         """
@@ -712,8 +710,7 @@ class AsdfFile:
               If there is no prior file, acts as None.
 
         """
-        self._blocks[arr].output_compression = compression
-        self._blocks[arr].output_compression_kwargs = compression_kwargs
+        self._blocks._set_array_compression(arr, compression, **compression_kwargs)
 
     def get_array_compression(self, arr):
         """
@@ -727,11 +724,11 @@ class AsdfFile:
         -------
         compression : str or None
         """
-        return self._blocks[arr].output_compression
+        return self._blocks._get_array_compression(arr)
 
     def get_array_compression_kwargs(self, arr):
         """ """
-        return self._blocks[arr].output_compression_kwargs
+        return self._blocks._get_array_compression_kwargs(arr)
 
     @classmethod
     def _parse_header_line(cls, line):
@@ -809,8 +806,13 @@ class AsdfFile:
             raise ValueError(msg)
 
         with config_context():
+            # validate_checksums (unlike memmap and lazy_load) is provided
+            # here instead of in __init__
+            self._blocks._validate_checksums = validate_checksums
             self._mode = fd.mode
             self._fd = fd
+            if self._fd._uri:
+                self._blocks._uri = self._fd._uri
             # The filename is currently only used for tracing warning information
             self._fname = self._fd._uri if self._fd._uri else ""
             try:
@@ -834,7 +836,6 @@ class AsdfFile:
                 self.extensions = extensions
 
             yaml_token = fd.read(4)
-            has_blocks = False
             tree = None
             if yaml_token == b"%YAM":
                 reader = fd.reader_until(
@@ -855,9 +856,10 @@ class AsdfFile:
                 # now, but we don't do anything special with it until
                 # after the blocks have been read
                 tree = yamlutil.load_tree(reader)
-                has_blocks = fd.seek_until(constants.BLOCK_MAGIC, 4, include=True, exception=False)
+                self._blocks.read(fd)
             elif yaml_token == constants.BLOCK_MAGIC:
-                has_blocks = True
+                # this file has only blocks and we're already read the first block magic
+                self._blocks.read(fd, after_magic=True)
             elif yaml_token != b"":
                 msg = "ASDF file appears to contain garbage after header."
                 raise OSError(msg)
@@ -868,10 +870,6 @@ class AsdfFile:
                 # ASDF Standard version.  We're using custom_tree_to_tagged_tree
                 # to select the correct tag for us.
                 tree = yamlutil.custom_tree_to_tagged_tree(AsdfObject(), self)
-
-            if has_blocks:
-                self._blocks.read_internal_blocks(fd, past_magic=True, validate_checksums=validate_checksums)
-                self._blocks.read_block_index(fd, self)
 
             tree = reference.find_references(tree, self)
 
@@ -941,11 +939,14 @@ class AsdfFile:
         fd.write(b"\n")
 
         if len(tree):
-            serialization_context = self._create_serialization_context()
+            serialization_context = self._create_serialization_context(_serialization_context.BlockAccess.WRITE)
 
-            compression_extensions = self._blocks.get_output_compression_extensions()
-            for ext in compression_extensions:
-                serialization_context._mark_extension_used(ext)
+            for compression in self._blocks.get_output_compressions():
+                # lookup extension
+                compressor = mcompression._get_compressor_from_extensions(compression, return_extension=True)
+                if compressor is not None:
+                    # mark it as used
+                    serialization_context._mark_extension_used(compressor[1])
 
             def _tree_finalizer(tagged_tree):
                 """
@@ -954,10 +955,10 @@ class AsdfFile:
                 yamlutil.dump_tree to update extension metadata
                 after the tree has been converted to tagged objects.
                 """
-                self._update_extension_history(serialization_context)
-                if "history" in self.tree:
+                self._update_extension_history(tree, serialization_context)
+                if "history" in tree:
                     tagged_tree["history"] = yamlutil.custom_tree_to_tagged_tree(
-                        self.tree["history"],
+                        tree["history"],
                         self,
                         _serialization_context=serialization_context,
                     )
@@ -980,26 +981,20 @@ class AsdfFile:
         if len(self._tree):
             self._run_hook("pre_write")
 
-        # This is where we'd do some more sophisticated block
-        # reorganization, if necessary
-        self._blocks.finalize(self)
-
-        self._tree["asdf_library"] = get_asdf_library_info()
-
     def _serial_write(self, fd, pad_blocks, include_block_index):
-        self._write_tree(self._tree, fd, pad_blocks)
-        self._blocks.write_internal_blocks_serial(fd, pad_blocks)
-        self._blocks.write_external_blocks(fd.uri, pad_blocks)
-        if include_block_index:
-            self._blocks.write_block_index(fd, self)
+        with self._blocks.write_context(fd):
+            self._pre_write(fd)
+            try:
+                # prep a tree for a writing
+                tree = copy.copy(self._tree)
+                tree["asdf_library"] = get_asdf_library_info()
+                if "history" in self._tree:
+                    tree["history"] = copy.deepcopy(self._tree["history"])
 
-    def _random_write(self, fd, pad_blocks, include_block_index):
-        self._write_tree(self._tree, fd, False)
-        self._blocks.write_internal_blocks_random_access(fd)
-        self._blocks.write_external_blocks(fd.uri, pad_blocks)
-        if include_block_index:
-            self._blocks.write_block_index(fd, self)
-        fd.truncate()
+                self._write_tree(tree, fd, pad_blocks)
+                self._blocks.write(pad_blocks, include_block_index)
+            finally:
+                self._post_write(fd)
 
     def _post_write(self, fd):
         if len(self._tree):
@@ -1089,69 +1084,63 @@ class AsdfFile:
                 )
                 raise OSError(msg)
 
-            if version is not None:
-                self.version = version
-
-            if config.all_array_storage == "external":
-                # If the file is fully exploded, there's no benefit to
-                # update, so just use write_to()
-                self.write_to(fd)
-                fd.truncate()
-                return
-
             if not fd.seekable():
                 msg = "Can not update, since associated file is not seekable"
                 raise OSError(msg)
 
-            self._blocks.finish_reading_internal_blocks()
+            if version is not None:
+                self.version = version
 
             # flush all pending memmap writes
             if fd.can_memmap():
                 fd.flush_memmap()
 
+            def rewrite():
+                self._fd.seek(0)
+                self._serial_write(self._fd, pad_blocks, include_block_index)
+                if self._fd.can_memmap():
+                    self._fd.close_memmap()
+                self._fd.truncate()
+
+            # if we have no read blocks, we can just call write_to as no internal blocks are reused
+            if len(self._blocks.blocks) == 0:
+                rewrite()
+                return
+
+            # if we have all external blocks, we can just call write_to as no internal blocks are reused
+            if config.all_array_storage == "external":
+                rewrite()
+                return
+
             self._pre_write(fd)
-
             try:
-                fd.seek(0)
+                self._tree["asdf_library"] = get_asdf_library_info()
 
-                if not self._blocks.has_blocks_with_offset():
-                    # If we don't have any blocks that are being reused, just
-                    # write out in a serial fashion.
-                    self._serial_write(fd, pad_blocks, include_block_index)
-                    fd.truncate()
-                    return
+                # prepare block manager for writing
+                with self._blocks.write_context(self._fd, copy_options=False):
+                    # write out tree to temporary buffer
+                    tree_fd = generic_io.get_file(io.BytesIO(), mode="rw")
+                    self._write_tree(self._tree, tree_fd, False)
+                    new_tree_size = tree_fd.tell()
 
-                # Estimate how big the tree will be on disk by writing the
-                # YAML out in memory.  Since the block indices aren't yet
-                # known, we have to count the number of block references and
-                # add enough space to accommodate the largest block number
-                # possible there.
-                tree_serialized = io.BytesIO()
-                self._write_tree(self._tree, tree_serialized, pad_blocks=False)
-                n_internal_blocks = len(self._blocks._internal_blocks)
+                    # update blocks
+                    self._blocks.update(new_tree_size, pad_blocks, include_block_index)
+                    end_of_file = self._fd.tell()
 
-                serialized_tree_size = tree_serialized.tell() + constants.MAX_BLOCKS_DIGITS * n_internal_blocks
+                # now write the tree
+                self._fd.seek(0)
+                tree_fd.seek(0)
+                self._fd.write(tree_fd.read())
+                self._fd.flush()
 
-                if not block.calculate_updated_layout(self._blocks, serialized_tree_size, pad_blocks, fd.block_size):
-                    # If we don't have any blocks that are being reused, just
-                    # write out in a serial fashion.
-                    self._serial_write(fd, pad_blocks, include_block_index)
-                    fd.truncate()
-                    return
+                # close memmap to trigger arrays to reload themselves
+                self._fd.seek(end_of_file)
+                if self._fd.can_memmap():
+                    self._fd.close_memmap()
+                self._fd.truncate()
 
-                fd.seek(0)
-                self._random_write(fd, pad_blocks, include_block_index)
-                fd.flush()
             finally:
                 self._post_write(fd)
-                # close memmaps so they will regenerate
-                if fd.can_memmap():
-                    fd.close_memmap()
-                    # also clean any memmapped blocks
-                    for b in self._blocks._internal_blocks:
-                        if b._memmapped:
-                            b._memmapped = False
-                            b._data = None
 
     def write_to(
         self,
@@ -1233,93 +1222,16 @@ class AsdfFile:
             if compression_kwargs is not NotSet:
                 config.all_array_compression_kwargs = compression_kwargs
 
-            used_blocks = self._blocks._find_used_blocks(self.tree, self, remove=False)
-
-            naf = AsdfFile(
-                {},
-                uri=self._uri,
-                extensions=self.extensions,
-                version=self.version,
-                ignore_version_mismatch=self._ignore_version_mismatch,
-                ignore_unrecognized_tag=self._ignore_unrecognized_tag,
-                ignore_implicit_conversion=self._ignore_implicit_conversion,
-            )
-            naf._tree = copy.copy(self.tree)  # avoid an extra validate
-
-            # deep copy keys that will be modified during write
-            modified_keys = ["history", "asdf_library"]
-            for k in modified_keys:
-                if k in self.tree:
-                    naf._tree[k] = copy.deepcopy(self.tree[k])
-
-            # copy over block storage and other settings
-            block_to_key_mapping = {v: k for k, v in self._blocks._key_to_block_mapping.items()}
-            # this creates blocks in the new block manager that correspond to blocks
-            # in the original file
-            for b in self._blocks.blocks:
-                if b not in used_blocks:
-                    continue
-                if b in self._blocks._streamed_blocks and b._data is None:
-                    # streamed blocks might not have data
-                    # add a streamed block to naf
-                    blk = naf._blocks.get_streamed_block()
-                    # mark this block as used so it doesn't get removed
-                    blk._used = True
-                elif b._data is not None or b._fd is not None:  # this block has data
-                    arr = b.data
-                    blk = naf._blocks[arr]
-                    blk._used = True
-                    naf.set_array_storage(arr, b.array_storage)
-                    naf.set_array_compression(arr, b.output_compression, **b.output_compression_kwargs)
-                else:  # this block does not have data
-                    key = block_to_key_mapping[b]
-                    blk = naf._blocks.find_or_create_block(key)
-                    blk._used = True
-                    blk._data_callback = b._data_callback
-            naf._write_to(
-                fd,
-                all_array_storage=all_array_storage,
-                all_array_compression=all_array_compression,
-                compression_kwargs=compression_kwargs,
-                pad_blocks=pad_blocks,
-                include_block_index=include_block_index,
-                version=version,
-            )
-
-    def _write_to(
-        self,
-        fd,
-        all_array_storage=NotSet,
-        all_array_compression=NotSet,
-        compression_kwargs=NotSet,
-        pad_blocks=False,
-        include_block_index=True,
-        version=None,
-    ):
-        with config_context() as config:
-            if all_array_storage is not NotSet:
-                config.all_array_storage = all_array_storage
-            if all_array_compression is not NotSet:
-                config.all_array_compression = all_array_compression
-            if compression_kwargs is not NotSet:
-                config.all_array_compression_kwargs = compression_kwargs
-
             if version is not None:
+                previous_version = self.version
                 self.version = version
 
-            with generic_io.get_file(fd, mode="w") as fd:
-                # TODO: This is not ideal: we really should pass the URI through
-                # explicitly to wherever it is required instead of making it an
-                # attribute of the AsdfFile.
-                if self._uri is None:
-                    self._uri = fd.uri
-                self._pre_write(fd)
-
-                try:
+            try:
+                with generic_io.get_file(fd, mode="w") as fd:
                     self._serial_write(fd, pad_blocks, include_block_index)
-                    fd.flush()
-                finally:
-                    self._post_write(fd)
+            finally:
+                if version is not None:
+                    self.version = previous_version
 
     def find_references(self):
         """
@@ -1376,10 +1288,9 @@ class AsdfFile:
         produces something that, when saved, is a 100% valid YAML
         file.
         """
-        self._blocks.finish_reading_internal_blocks()
         self.resolve_references()
-        for b in list(self._blocks.blocks):
-            self._blocks.set_array_storage(b, "inline")
+        for b in self._blocks.blocks:
+            self.set_array_storage(b.data, "inline")
 
     def fill_defaults(self):
         """
@@ -1623,8 +1534,8 @@ class AsdfFile:
 
     # This function is called from within yamlutil methods to create
     # a context when one isn't explicitly passed in.
-    def _create_serialization_context(self):
-        return SerializationContext(self.version_string, self.extension_manager, self.uri, self._blocks)
+    def _create_serialization_context(self, operation=_serialization_context.BlockAccess.NONE):
+        return _serialization_context.create(self, operation)
 
 
 def open_asdf(

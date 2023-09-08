@@ -6,6 +6,16 @@
 Deprecations
 ************
 
+Version 3.0
+===========
+
+SerializationContext was previously importable from ``asdf.asdf.SerializationContext``.
+Although not part of the public API, this import path has been deprecated and users
+should instead import ``SerializationContext`` from `asdf.extension`.
+
+Version 2.15
+============
+
 ASDF 2.15 introduced many new `asdf.exceptions.AsdfDeprecationWarning` messages. These
 warnings are subclasses of the built-in python `DeprecationWarning` and will by
 default be ignored except in `__main__` and with testing tools such as
@@ -18,7 +28,7 @@ versioning, compatibility and support policy).
 .. _legacy_extension_api_deprecation:
 
 Legacy Extension API Deprecation
-================================
+--------------------------------
 
 A large number of `asdf.exceptions.AsdfDeprecationWarning` messages appear related to
 use of the ``legacy extension api``. Some examples include:
@@ -55,7 +65,7 @@ package that uses these new-style extension api.
 .. _asdf_in_fits_deprecation:
 
 ASDF-in-FITS Deprecation
-========================
+------------------------
 
 Support for ``AsdfInFits`` (including the ``asdf.fits_embed`` module) is
 deprecated. Code using this format can migrate to using `stdatamodels` which
@@ -66,20 +76,10 @@ Without support for ``fits_embed.AsdfInFits`` the ``extract`` and
 ``remove-hdu`` commands for :ref:`asdftool <asdf_tool>` are no longer usable and are
 deprecated.
 
-.. _asdffile_blocks_deprecation:
-
-AsdfFile.blocks Deprecation
-===========================
-
-Direct usage of the ASDF block manager through `asdf.AsdfFile.blocks` is deprecated.
-The BlockManager api was not previously included in the documentation and
-was unused by the legacy and new style extensions. Planned features for ASDF 3.0
-include adding block storage support to :ref:`converters <extending_converters>`.
-
 .. _tests_helpers_deprecation:
 
 asdf.tests.helpers Deprecation
-==============================
+------------------------------
 
 Use of ``asdf.tests.helpers`` is deprecated. Please see `asdf.testing.helpers`
 for alternative functions to aid in testing.

@@ -1,7 +1,6 @@
 import contextlib
 
 import numpy as np
-import pytest
 from numpy.testing import assert_array_equal
 
 import asdf
@@ -12,20 +11,16 @@ from asdf.testing import helpers
 class BlockData:
     def __init__(self, payload):
         self.payload = payload
-        # generate a unique id
-        self._asdf_key = asdf.util.BlockKey()
 
 
 class BlockConverter(Converter):
     tags = ["asdf://somewhere.org/tags/block_data-1.0.0"]
     types = [BlockData]
     _return_invalid_keys = False
-    _double_assign_block = False
 
     def to_yaml_tree(self, obj, tag, ctx):
         # lookup source for obj
-        block_index = ctx.find_block_index(
-            obj._asdf_key,
+        block_index = ctx.find_available_block_index(
             lambda: np.ndarray(len(obj.payload), dtype="uint8", buffer=obj.payload),
         )
         return {
@@ -36,19 +31,7 @@ class BlockConverter(Converter):
         block_index = node["block_index"]
         data = ctx.get_block_data_callback(block_index)()
         obj = BlockData(data.tobytes())
-        ctx.assign_block_key(block_index, obj._asdf_key)
-        if self._double_assign_block:
-            self._double_assign_block = False
-            key2 = asdf.util.BlockKey()
-            ctx.assign_block_key(block_index, key2)
         return obj
-
-    def reserve_blocks(self, obj, tag):
-        if self._return_invalid_keys:
-            # return something unhashable
-            self._return_invalid_keys = False
-            return [[]]
-        return [obj._asdf_key]
 
 
 class BlockExtension(Extension):
@@ -80,57 +63,25 @@ def test_block_converter_block_allocation(tmp_path):
     af = asdf.AsdfFile({"a": None})
     # now assign to the tree item (avoiding validation)
     af["a"] = a
-    # the AsdfFile instance should have no blocks
-    assert len(af._blocks._internal_blocks) == 0
-    # validate will make a block
-    af.validate()
-    assert len(af._blocks._internal_blocks) == 1
-    assert np.all(af._blocks._internal_blocks[0].data.tobytes() == a.payload)
-    # a second validate shouldn't result in more blocks
-    af.validate()
-    assert len(af._blocks._internal_blocks) == 1
-    # write_to will create blocks here because
+
     # they currently hold storage settings
     fn = tmp_path / "test.asdf"
     af.write_to(fn)
-    assert len(af._blocks._internal_blocks) == 1
 
     # if we read a file
     with asdf.open(fn, mode="rw") as af:
         fn2 = tmp_path / "test2.asdf"
         # there should be 1 block
-        assert len(af._blocks._internal_blocks) == 1
+        assert len(af._blocks.blocks) == 1
         # validate should use that block
         af.validate()
-        assert len(af._blocks._internal_blocks) == 1
+        assert len(af._blocks.blocks) == 1
         # as should write_to
         af.write_to(fn2)
-        assert len(af._blocks._internal_blocks) == 1
+        assert len(af._blocks.blocks) == 1
         # and update
         af.update()
-        assert len(af._blocks._internal_blocks) == 1
-
-
-@with_extension(BlockExtension)
-def test_invalid_reserve_block_keys(tmp_path):
-    a = BlockData(b"abcdefg")
-    af = asdf.AsdfFile({"a": a})
-    fn = tmp_path / "test.asdf"
-    BlockExtension.converters[0]._return_invalid_keys = True
-    with pytest.raises(TypeError, match="unhashable type: .*"):
-        af.write_to(fn)
-
-
-@with_extension(BlockExtension)
-def test_double_assign_block(tmp_path):
-    a = BlockData(b"abcdefg")
-    af = asdf.AsdfFile({"a": a})
-    fn = tmp_path / "test.asdf"
-    af.write_to(fn)
-    BlockExtension.converters[0]._double_assign_block = True
-    with pytest.raises(ValueError, match="block 0 is already assigned to a key"):
-        with asdf.open(fn):
-            pass
+        assert len(af._blocks.blocks) == 1
 
 
 class BlockDataCallback:
@@ -138,7 +89,6 @@ class BlockDataCallback:
 
     def __init__(self, callback):
         self.callback = callback
-        self._asdf_key = asdf.util.BlockKey()
 
     @property
     def data(self):
@@ -150,7 +100,7 @@ class BlockDataCallbackConverter(Converter):
     types = [BlockDataCallback]
 
     def to_yaml_tree(self, obj, tag, ctx):
-        block_index = ctx.find_block_index(obj._asdf_key, obj.callback)
+        block_index = ctx.find_available_block_index(obj.callback)
         return {
             "block_index": block_index,
         }
@@ -159,11 +109,7 @@ class BlockDataCallbackConverter(Converter):
         block_index = node["block_index"]
 
         obj = BlockDataCallback(ctx.get_block_data_callback(block_index))
-        ctx.assign_block_key(block_index, obj._asdf_key)
         return obj
-
-    def reserve_blocks(self, obj, tag):
-        return [obj._asdf_key]
 
 
 class BlockDataCallbackExtension(Extension):
@@ -187,34 +133,24 @@ def test_block_data_callback_converter(tmp_path):
     af = asdf.AsdfFile({"a": None})
     # now assign to the tree item (avoiding validation)
     af["a"] = a
-    # the AsdfFile instance should have no blocks
-    assert len(af._blocks._internal_blocks) == 0
-    # validate will make a block
-    af.validate()
-    assert len(af._blocks._internal_blocks) == 1
-    assert np.all(af._blocks._internal_blocks[0].data == a.data)
-    # a second validate shouldn't result in more blocks
-    af.validate()
-    assert len(af._blocks._internal_blocks) == 1
     # write_to will use the block
     fn1 = tmp_path / "test.asdf"
     af.write_to(fn1)
-    assert len(af._blocks._internal_blocks) == 1
 
     # if we read a file
     with asdf.open(fn1, mode="rw") as af:
         fn2 = tmp_path / "test2.asdf"
         # there should be 1 block
-        assert len(af._blocks._internal_blocks) == 1
+        assert len(af._blocks.blocks) == 1
         # validate should use that block
         af.validate()
-        assert len(af._blocks._internal_blocks) == 1
+        assert len(af._blocks.blocks) == 1
         # as should write_to
         af.write_to(fn2)
-        assert len(af._blocks._internal_blocks) == 1
+        assert len(af._blocks.blocks) == 1
         # and update
         af.update()
-        assert len(af._blocks._internal_blocks) == 1
+        assert len(af._blocks.blocks) == 1
 
     # check that data was preserved
     for fn in (fn1, fn2):
@@ -249,28 +185,110 @@ def test_block_with_callback_removal(tmp_path):
             af[check_key] = b.data
 
 
-def test_seralization_context_block_access():
-    af = asdf.AsdfFile()
-    sctx = af._create_serialization_context()
+class MultiBlockData:
+    def __init__(self, data):
+        self.data = data
+        self.keys = []
 
-    # finding an index for an unknown block should
-    # create one
-    key = 42
-    arr = np.ones(3, dtype="uint8")
-    index = sctx.find_block_index(key, lambda: arr)
-    assert len(af._blocks) == 1
-    assert id(arr) == id(sctx.get_block_data_callback(index)())
-    # finding the same block should not create a new one
-    index = sctx.find_block_index(key, lambda: arr)
-    assert len(af._blocks) == 1
 
-    new_key = 26
-    with pytest.raises(ValueError, match="block 0 is already assigned to a key"):
-        sctx.assign_block_key(index, new_key)
-    assert len(af._blocks) == 1
+class MultiBlockConverter(Converter):
+    tags = ["asdf://somewhere.org/tags/multi_block_data-1.0.0"]
+    types = [MultiBlockData]
 
-    arr2 = np.zeros(3, dtype="uint8")
-    # test that providing a new callback won't overwrite
-    # the first one
-    index = sctx.find_block_index(key, lambda: arr2)
-    assert id(arr2) != id(sctx.get_block_data_callback(index)())
+    def to_yaml_tree(self, obj, tag, ctx):
+        if not len(obj.keys):
+            obj.keys = [ctx.generate_block_key() for _ in obj.data]
+        indices = [ctx.find_available_block_index(d, k) for d, k in zip(obj.data, obj.keys)]
+        return {
+            "indices": indices,
+        }
+
+    def from_yaml_tree(self, node, tag, ctx):
+        indices = node["indices"]
+        keys = [ctx.generate_block_key() for _ in indices]
+        cbs = [ctx.get_block_data_callback(i, k) for i, k in zip(indices, keys)]
+        obj = MultiBlockData([cb() for cb in cbs])
+        obj.keys = keys
+        return obj
+
+
+class MultiBlockExtension(Extension):
+    tags = ["asdf://somewhere.org/tags/multi_block_data-1.0.0"]
+    converters = [MultiBlockConverter()]
+    extension_uri = "asdf://somewhere.org/extensions/multi_block_data-1.0.0"
+
+
+@with_extension(MultiBlockExtension)
+def test_mutli_block():
+    a = MultiBlockData([np.arange(3, dtype="uint8") for i in range(3)])
+    b = helpers.roundtrip_object(a)
+    assert len(a.data) == len(b.data)
+    assert [np.testing.assert_array_equal(aa, ab) for aa, ab in zip(a.data, b.data)]
+
+
+class SharedBlockData:
+    def __init__(self, callback):
+        self.callback = callback
+
+    @property
+    def data(self):
+        return self.callback()
+
+
+class SharedBlockConverter(Converter):
+    tags = ["asdf://somewhere.org/tags/shared_block_data-1.0.0"]
+    types = [SharedBlockData]
+    _return_invalid_keys = False
+
+    def to_yaml_tree(self, obj, tag, ctx):
+        # lookup source for obj
+        block_index = ctx.find_available_block_index(
+            lambda: obj.data,
+        )
+        return {
+            "block_index": block_index,
+        }
+
+    def from_yaml_tree(self, node, tag, ctx):
+        block_index = node["block_index"]
+        callback = ctx.get_block_data_callback(block_index)
+        obj = SharedBlockData(callback)
+        return obj
+
+
+class SharedBlockExtension(Extension):
+    tags = ["asdf://somewhere.org/tags/shared_block_data-1.0.0"]
+    converters = [SharedBlockConverter()]
+    extension_uri = "asdf://somewhere.org/extensions/shared_block_data-1.0.0"
+
+
+@with_extension(SharedBlockExtension)
+def test_shared_block_reassignment(tmp_path):
+    fn = tmp_path / "test.asdf"
+    arr1 = np.arange(10, dtype="uint8")
+    arr2 = np.arange(5, dtype="uint8")
+    a = SharedBlockData(lambda: arr1)
+    b = SharedBlockData(lambda: arr1)
+    asdf.AsdfFile({"a": a, "b": b}).write_to(fn)
+    with asdf.open(fn, mode="rw") as af:
+        af["b"].callback = lambda: arr2
+        af.update()
+    with asdf.open(fn) as af:
+        np.testing.assert_array_equal(af["a"].data, arr1)
+        np.testing.assert_array_equal(af["b"].data, arr2)
+
+
+@with_extension(SharedBlockExtension)
+def test_shared_block_obj_removal(tmp_path):
+    fn = tmp_path / "test.asdf"
+    arr1 = np.arange(10, dtype="uint8")
+    a = SharedBlockData(lambda: arr1)
+    b = SharedBlockData(lambda: arr1)
+    asdf.AsdfFile({"a": a, "b": b}).write_to(fn)
+    with asdf.open(fn, mode="rw") as af:
+        af["b"] = None
+        del b
+        af.update()
+    with asdf.open(fn) as af:
+        np.testing.assert_array_equal(af["a"].data, arr1)
+        assert af["b"] is None
