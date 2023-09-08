@@ -24,6 +24,7 @@ The ASDF Standard is at v1.6.0
   to ``asdf.config.AsdfConfig``, move ``asdf.Stream`` to
   ``asdf.tags.core.Stream``, update block storage support for
   Converter and update internal block API [#1537]
+- Remove deprecated resolve_local_refs argument to load_schema [#1623]
 
 2.15.1 (2023-08-07)
 -------------------
