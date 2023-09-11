@@ -914,11 +914,19 @@ def test_converter_loop():
 
 
 @pytest.mark.parametrize("is_subclass", [True, False])
-def test_warning_or_error_for_default_select_tag(is_subclass):
+@pytest.mark.parametrize("indirect", [True, False])
+def test_warning_or_error_for_default_select_tag(is_subclass, indirect):
     class Foo:
         pass
 
     ParentClass = Converter if is_subclass else object
+
+    if indirect:
+
+        class IntermediateClass(ParentClass):
+            pass
+
+        ParentClass = IntermediateClass
 
     class FooConverter(ParentClass):
         tags = ["asdf://somewhere.org/tags/foo-*"]
