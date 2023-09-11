@@ -1590,8 +1590,8 @@ class AsdfFile:
         elif software is not None:
             software = Software(software)
 
-        time_ = datetime.datetime.utcfromtimestamp(
-            int(os.environ.get("SOURCE_DATE_EPOCH", time.time())),
+        time_ = datetime.datetime.fromtimestamp(
+            int(os.environ.get("SOURCE_DATE_EPOCH", time.time())), datetime.timezone.utc
         )
 
         entry = HistoryEntry(

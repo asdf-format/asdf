@@ -343,18 +343,12 @@ class AsdfConfig:
     def __repr__(self):
         return (
             "<AsdfConfig\n"
-            "  array_inline_threshold: {}\n"
-            "  default_version: {}\n"
-            "  io_block_size: {}\n"
-            "  legacy_fill_schema_defaults: {}\n"
-            "  validate_on_read: {}\n"
+            f"  array_inline_threshold: {self.array_inline_threshold}\n"
+            f"  default_version: {self.default_version}\n"
+            f"  io_block_size: {self.io_block_size}\n"
+            f"  legacy_fill_schema_defaults: {self.legacy_fill_schema_defaults}\n"
+            f"  validate_on_read: {self.validate_on_read}\n"
             ">"
-        ).format(
-            self.array_inline_threshold,
-            self.default_version,
-            self.io_block_size,
-            self.legacy_fill_schema_defaults,
-            self.validate_on_read,
         )
 
 

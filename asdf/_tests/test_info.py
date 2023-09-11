@@ -78,12 +78,12 @@ class ObjectWithInfoSupport:
         self.patt = {}
         for key in kw:
             if re.search("^S_", key):
-                if type(kw[key]) != str:
+                if not isinstance(kw[key], str):
                     msg = "S_ pattern object must be a string"
                     raise ValueError(msg)
                 self.patt[key] = kw[key]
             if re.search("^I_", key):
-                if type(kw[key]) != int:
+                if not isinstance(kw[key], int):
                     msg = "I_ pattern object must be an int"
                     raise ValueError(msg)
                 self.patt[key] = kw[key]
