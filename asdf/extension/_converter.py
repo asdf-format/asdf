@@ -3,7 +3,9 @@ Support for Converter, the new API for serializing custom
 types.  Will eventually replace the `asdf.types` module.
 """
 import abc
+import warnings
 
+from asdf.exceptions import AsdfWarning
 from asdf.util import get_class_name, uri_match
 
 
@@ -14,7 +16,23 @@ class Converter(abc.ABC):
 
     Implementing classes must provide the `tags` and `types`
     properties and `to_yaml_tree` and `from_yaml_tree` methods.
-    The `select_tag` method is optional.
+    The ``select_tag`` method is optional.
+
+    If implemented, ``select_tag`` should accept 3 parameters
+
+        obj : object
+            Instance of the custom type being converted.  Guaranteed
+            to be an instance of one of the types listed in the
+            `types` property.
+        tags : list of str
+            List of active tags to choose from.  Guaranteed to match
+            one of the tag patterns listed in the 'tags' property.
+        ctx : asdf.asdf.SerializationContext
+            Context of the current serialization request.
+
+    and return a str, the selected tag (should be one of tags) or
+    `None` which will trigger the result of ``to_yaml_tree`` to be
+    used to look up the next converter for this object.
     """
 
     @classmethod
@@ -54,35 +72,6 @@ class Converter(abc.ABC):
         iterable of str or type
             If str, the fully qualified class name of the type.
         """
-
-    def select_tag(self, obj, tags, ctx):
-        """
-        Select the tag to use when converting an object to YAML.
-        Typically only one tag will be active in a given context, but
-        converters that map one type to many tags must provide logic
-        to choose the appropriate tag.
-
-        Parameters
-        ----------
-        obj : object
-            Instance of the custom type being converted.  Guaranteed
-            to be an instance of one of the types listed in the
-            `types` property.
-        tags : list of str
-            List of active tags to choose from.  Guaranteed to match
-            one of the tag patterns listed in the 'tags' property.
-        ctx : asdf.extension.SerializationContext
-            Context of the current serialization request.
-
-        Returns
-        -------
-        str or None
-            The selected tag.  Should be one of the tags passed
-            to this method in the `tags` parameter.  If `None`
-            the result of ``to_yaml_tree`` will be used to look
-            up the next converter for this object.
-        """
-        return tags[0]
 
     @abc.abstractmethod
     def to_yaml_tree(self, obj, tag, ctx):
@@ -181,8 +170,23 @@ class ConverterProxy(Converter):
                 raise TypeError(msg)
 
         if len(relevant_tags) > 1 and not hasattr(delegate, "select_tag"):
-            msg = "Converter handles multiple tags for this extension, but does not implement a select_tag method."
-            raise RuntimeError(msg)
+            # we cannot use isinstance here because Converter supports
+            # virtual subclasses
+            if Converter in delegate.__class__.__mro__:
+                # prior to asdf 3.0 Converter provided a default select_tag
+                # to provide backwards compatibility allow Converter subclasses
+                # to be registered with >1 tag but produce a warning
+                msg = (
+                    "Converter handles multiple tags for this extension, "
+                    "but does not implement a select_tag method. "
+                    "This previously worked because Converter subclasses inherited "
+                    "the now removed select_tag. This will be an error in a future "
+                    "version of asdf"
+                )
+                warnings.warn(msg, AsdfWarning)
+            else:
+                msg = "Converter handles multiple tags for this extension, but does not implement a select_tag method."
+                raise RuntimeError(msg)
 
         self._tags = sorted(relevant_tags)
 

@@ -1,10 +1,11 @@
 import pytest
 from packaging.specifiers import SpecifierSet
+from yaml.representer import RepresenterError
 
 from asdf import AsdfFile, config_context
 from asdf._tests._helpers import assert_extension_correctness
 from asdf._types import CustomType
-from asdf.exceptions import AsdfDeprecationWarning, ValidationError
+from asdf.exceptions import AsdfDeprecationWarning, AsdfWarning, ValidationError
 from asdf.extension import (
     Compressor,
     Converter,
@@ -501,19 +502,6 @@ def test_converter():
 
     assert issubclass(ConverterNoSubclass, Converter)
 
-    class ConverterWithSubclass(Converter):
-        tags = []
-        types = []
-
-        def to_yaml_tree(self, *args):
-            pass
-
-        def from_yaml_tree(self, *args):
-            pass
-
-    # Confirm the behavior of the default select_tag implementation
-    assert ConverterWithSubclass().select_tag(object(), ["tag1", "tag2"], object()) == "tag1"
-
 
 def test_converter_proxy():
     # Test the minimum set of converter methods:
@@ -604,6 +592,37 @@ def test_converter_proxy():
         # include a tag from this extension to make sure the proxy considers
         # the types
         ConverterProxy(MinimumConverter(tags=[extension.tags[0].tag_uri], types=[object()]), extension)
+
+
+def test_converter_subclass_with_no_supported_tags():
+    """
+    Adding a Converter to an Extension that doesn't list support for the tags
+    associated with the Converter should result in a failure to convert.
+    """
+
+    class Foo:
+        pass
+
+    class FooConverterWithSubclass(Converter):
+        tags = ["asdf://somewhere.org/tags/foo-1.0.0"]
+        types = [Foo]
+
+        def to_yaml_tree(self, *args):
+            pass
+
+        def from_yaml_tree(self, *args):
+            pass
+
+    class FooExtension(Extension):
+        tags = []
+        converters = [FooConverterWithSubclass()]
+        extension_uri = "asdf://somewhere.org/extensions/foo-1.0.0"
+
+    tree = {"obj": Foo()}
+    with config_context() as cfg:
+        cfg.add_extension(FooExtension())
+        with pytest.raises(RepresenterError, match=r"cannot represent an object"):
+            roundtrip_object(tree)
 
 
 def test_get_cached_asdf_extension_list():
@@ -892,3 +911,40 @@ def test_converter_loop():
             obj = typ(42)
             with pytest.raises(TypeError, match=r"Conversion cycle detected"):
                 roundtrip_object(obj)
+
+
+@pytest.mark.parametrize("is_subclass", [True, False])
+@pytest.mark.parametrize("indirect", [True, False])
+def test_warning_or_error_for_default_select_tag(is_subclass, indirect):
+    class Foo:
+        pass
+
+    ParentClass = Converter if is_subclass else object
+
+    if indirect:
+
+        class IntermediateClass(ParentClass):
+            pass
+
+        ParentClass = IntermediateClass
+
+    class FooConverter(ParentClass):
+        tags = ["asdf://somewhere.org/tags/foo-*"]
+        types = [Foo]
+
+        def to_yaml_tree(self, obj, tag, ctx):
+            return {}
+
+        def from_yaml_tree(self, node, tag, ctx):
+            return Foo()
+
+    tags = [
+        "asdf://somewhere.org/tags/foo-1.0.0",
+        "asdf://somewhere.org/tags/foo-2.0.0",
+    ]
+    extension = FullExtension(converters=[FooConverter()], tags=tags)
+    ctx_type = pytest.warns if is_subclass else pytest.raises
+    exception_class = AsdfWarning if is_subclass else RuntimeError
+    with config_context() as config:
+        with ctx_type(exception_class, match="Converter handles multiple tags"):
+            config.add_extension(extension)

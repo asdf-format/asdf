@@ -51,7 +51,7 @@ situation.
 Additionally, the Converter interface includes a method that must be implemented
 when some logic is required to select the tag to assign to a ``to_yaml_tree`` result:
 
-`Converter.select_tag` - a method that accepts a complex Python object and a list
+`Converter.select_tag<Converter>` - an optional method that accepts a complex Python object and a list
 candidate tags and returns the tag that should be used to serialize the object.
 
 A simple example
@@ -137,7 +137,7 @@ Multiple tags
 
 Now say we want to map our one Rectangle class to one of two tags, either
 rectangle-1.0.0 or square-1.0.0.  We'll need to add square-1.0.0 to
-the converter's list of tags and implement a ``select_tag`` method:
+the converter's list of tags and implement a `select_tag<Converter>` method:
 
 .. code-block:: python
 
@@ -179,7 +179,7 @@ the converter's list of tags and implement a ``select_tag`` method:
 Deferring to another converter
 ==============================
 
-Converters only support the exact types listed in ``Converter.types``. When a
+Converters only support the exact types listed in `Converter.types`. When a
 supported type is subclassed the extension will need to be updated to support
 the new subclass. There are a few options for supporting subclasses.
 
@@ -188,7 +188,7 @@ Converter, tag and schema should be defined.
 
 If the subclass can be treated the same as the superclass (specifically if
 subclass instances can be serialized as the superclass) then the subclass
-can be added to the existing ``Converter.types``. Note that adding the
+can be added to the existing `Converter.types`. Note that adding the
 subclass to the supported types (without making other changes to the Converter)
 will result in subclass instances using the same tag as the superclass. This
 means that any instances created during deserialization will always
@@ -197,8 +197,8 @@ be of the superclass (subclass instances will never be read from an ASDF file).
 Another option (useful when modifying the existing Converter is not
 convenient) is to define a Converter that does not tag the subclass instance
 being serialized and instead defers to the existing Converter. Deferral
-is triggered by returning ``None`` from ``Converter.select_tag`` and
-implementing ``Converter.to_yaml_tree`` to convert the subclass instance
+is triggered by returning ``None`` from `Converter.select_tag<Converter>` and
+implementing `Converter.to_yaml_tree` to convert the subclass instance
 into an instance of the (supported) superclass.
 
 For example, using the example ``Rectangle`` class above, let's say we
@@ -357,7 +357,7 @@ storing data in ASDF blocks.
 
 For applications that require more flexibility,
 Converters can control block storage through use of the `asdf.extension.SerializationContext`
-provided as an argument to `Converter.to_yaml_tree` `Converter.from_yaml_tree` and `Converter.select_tag`.
+provided as an argument to `Converter.to_yaml_tree` `Converter.from_yaml_tree` and ``Converter.select_tag``.
 
 It is helpful to first review some details of how asdf
 :ref:`stores block <asdf-standard:block>`. Blocks are stored sequentially within a
@@ -414,14 +414,14 @@ A simple example of a Converter using block storage to store the ``payload`` for
 
 .. asdf:: block_converter_example.asdf
 
-During read, ``Converter.from_yaml_tree`` will be called. Within this method
+During read, `Converter.from_yaml_tree` will be called. Within this method
 the Converter can prepare to access a block by calling
 ``SerializationContext.get_block_data_callback``. This will return a function
 that when called will return the contents of the block (to support lazy
 loading without keeping a reference to the ``SerializationContext`` (which is meant
 to be a short lived and lightweight object).
 
-During write, ``Converter.to_yaml_tree`` will be called. The Converter can
+During write, `Converter.to_yaml_tree` will be called. The Converter can
 use ``SerializationContext.find_available_block_index`` to find the location of an
 available block for writing. The data to be written to the block can be provided
 as an ``ndarray`` or a callable function that will return a ``ndarray`` (note that
