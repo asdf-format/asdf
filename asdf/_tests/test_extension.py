@@ -5,7 +5,7 @@ from packaging.specifiers import SpecifierSet
 from yaml.representer import RepresenterError
 
 from asdf import AsdfFile, config_context
-from asdf.exceptions import ValidationError
+from asdf.exceptions import AsdfWarning, ValidationError
 from asdf.extension import (
     Compressor,
     Converter,
@@ -577,13 +577,6 @@ def test_converter_subclass_with_no_supported_tags():
         cfg.add_extension(FooExtension())
         with pytest.raises(RepresenterError, match=r"cannot represent an object"):
             roundtrip_object(tree)
-
-
-def test_get_cached_asdf_extension_list():
-    extension = LegacyExtension()
-    extension_list = get_cached_asdf_extension_list([extension])
-    assert get_cached_asdf_extension_list([extension]) is extension_list
-    assert get_cached_asdf_extension_list([LegacyExtension()]) is not extension_list
 
 
 def test_manifest_extension():
