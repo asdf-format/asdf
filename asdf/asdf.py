@@ -294,12 +294,6 @@ class AsdfFile:
             return
 
         for extension in tree["history"]["extensions"]:
-            # asdf 3.0 removed the BuiltinExtension and handles all
-            # core objects with a ManifestExtension so don't warn if
-            # a file is opened that was created with an older asdf
-            # which used the BuiltinExtension (which is no longer installed)
-            if extension.get("extension_class", None) == "asdf.extension.BuiltinExtension":
-                continue
             installed = None
             for ext in self._user_extensions + self._plugin_extensions:
                 if (
