@@ -6,6 +6,7 @@ import argparse
 import sys
 
 import jmespath
+import numpy as np
 from numpy import array_equal
 
 try:
@@ -30,6 +31,7 @@ except ImportError:
         RESET = ""
 
 import asdf
+from asdf.extension._serialization_context import BlockAccess
 from asdf.tagged import Tagged
 from asdf.util import human_list
 
@@ -243,6 +245,16 @@ def print_dict_diff(diff_ctx, tree, node_list, keys, other):
         print_in_tree(diff_ctx, nodes, key_, other, use_marker=use_marker)
 
 
+def _load_array(asdf_file, array_dict):
+    # the array_dict may not be tagged if the array is inline
+    # in this case just use what's in "data"
+    if not hasattr(array_dict, "_tag"):
+        return array_dict["data"]
+    conv = asdf_file.extension_manager.get_converter_for_type(np.ndarray)
+    sctx = asdf_file._create_serialization_context(BlockAccess.READ)
+    return conv.from_yaml_tree(array_dict, array_dict._tag, sctx)
+
+
 def compare_ndarrays(diff_ctx, array0, array1, keys):
     """Compares two ndarray objects"""
     if isinstance(array0, list):
@@ -258,19 +270,15 @@ def compare_ndarrays(diff_ctx, array0, array1, keys):
         if array0.get(field) != array1.get(field):
             differences.append(field)
 
-    def get_flat(af, keys):
-        for k in keys:
-            af = af[k]
-        return af
+    value0 = _load_array(diff_ctx.asdf0, array0)
+    value1 = _load_array(diff_ctx.asdf1, array1)
 
-    array0 = get_flat(diff_ctx.asdf0, keys)
-    array1 = get_flat(diff_ctx.asdf1, keys)
-    if not array_equal(array0, array1):
+    if not array_equal(value0, value1):
         differences.append("contents")
 
     if differences:
         prefix = "  " * (len(keys) + 1)
-        msg = f"ndarrays differ by {human_list(differences)}"
+        msg = f"ndarrays at \"{'.'.join(keys)}\" differ by {human_list(differences)}"
         diff_ctx.iostream.write(prefix + RED + msg + RESET_NEWLINE)
 
 
