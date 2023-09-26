@@ -25,6 +25,10 @@ The ASDF Standard is at v1.6.0
   ``asdf.tags.core.Stream``, update block storage support for
   Converter and update internal block API [#1537]
 - Remove deprecated resolve_local_refs argument to load_schema [#1623]
+- Move IntegerType to converter and drop cache of converted values. [#1527]
+- Remove legacy extension API [#1637]
+- Fix bug that left out the name of the arrays that differed
+  for ``asdftool diff`` comparisons [#1652]
 
 2.15.2 (2023-09-29)
 -------------------
@@ -33,8 +37,6 @@ The ASDF Standard is at v1.6.0
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 - Add support for python 3.12 [#1641]
-- Move IntegerType to converter and drop cache of converted values. [#1527]
-- Remove legacy extension API [#1637]
 
 2.15.1 (2023-08-07)
 -------------------
