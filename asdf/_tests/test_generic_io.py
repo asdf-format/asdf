@@ -401,7 +401,7 @@ def test_invalid_obj(tmp_path):
 
 
 def test_nonseekable_file(tmp_path):
-    base = io.IOBase
+    base = io.FileIO
 
     class FileWrapper(base):
         def tell(self):
