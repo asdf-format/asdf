@@ -43,14 +43,11 @@ docs = [
   'tomli; python_version < "3.11"',
 ]
 tests = [
-  "astropy>=5.0.4",
   "fsspec[http]>=2022.8.2",
-  "asdf-astropy>=0.4.0",
   "lz4>=0.10",
   "psutil",
   "pytest>=6",
   "pytest-doctestplus",
-  "pytest-openfiles",
   "pytest-remotedata",
 ]
 [project.urls]
@@ -107,15 +104,13 @@ minversion = 4.6
 norecursedirs = ['build', 'docs/_build', 'docs/sphinxext']
 doctest_plus = 'enabled'
 remote_data_strict = true
-# The asdf.asdftypes module emits a warning on import,
-# which pytest trips over during collection:
 filterwarnings = [
     'error',
     'ignore:numpy.ndarray size changed:RuntimeWarning',
 ]
 # Configuration for pytest-doctestplus
 text_file_format = 'rst'
-addopts = '--color=yes --doctest-rst'
+addopts = '--color=yes --doctest-rst -rsx'
 
 [tool.coverage.run]
 omit = [

@@ -1,6 +1,5 @@
 import os
 
-import fsspec
 import pytest
 
 from asdf import config_context
@@ -361,6 +360,8 @@ def test_fsspec(tmp_path):
     Issue #1146 reported errors when opening a fsspec 'file'
     This is a regression test for the fix in PR #1226
     """
+    fsspec = pytest.importorskip("fsspec")
+
     tree = {"a": 1}
     af = AsdfFile(tree)
     fn = tmp_path / "test.asdf"
@@ -378,6 +379,8 @@ def test_fsspec_http(httpserver):
     filesystem)
     This is a regression test for the fix in PR #1228
     """
+    fsspec = pytest.importorskip("fsspec")
+
     tree = {"a": 1}
     af = AsdfFile(tree)
     path = os.path.join(httpserver.tmpdir, "test")

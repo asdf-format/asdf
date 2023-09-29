@@ -59,7 +59,6 @@ baz: 42
         assert len(ff.tree) == 2
 
 
-@pytest.mark.filterwarnings("ignore::astropy.io.fits.verify.VerifyWarning")
 def test_no_asdf_header(tmp_path):
     content = b"What? This ain't no ASDF file"
 
@@ -98,7 +97,6 @@ def test_empty_file():
         assert len(ff._blocks.blocks) == 0
 
 
-@pytest.mark.filterwarnings("ignore::astropy.io.fits.verify.VerifyWarning")
 @pytest.mark.filterwarnings("ignore::asdf.exceptions.AsdfDeprecationWarning")
 def test_not_asdf_file():
     buff = io.BytesIO(b"SIMPLE")

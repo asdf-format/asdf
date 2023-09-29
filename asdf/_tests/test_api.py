@@ -7,7 +7,6 @@ import sys
 
 import numpy as np
 import pytest
-from astropy.modeling import models
 from numpy.testing import assert_array_equal
 
 import asdf
@@ -115,23 +114,6 @@ def test_atomic_write(tmp_path, small_tree):
 
     with asdf.open(tmpfile, mode="r") as ff:
         ff.write_to(tmpfile)
-
-
-def test_overwrite(tmp_path):
-    """
-    This is intended to reproduce the following issue:
-    https://github.com/asdf-format/asdf/issues/100
-    """
-    tmpfile = str(tmp_path / "test.asdf")
-    aff = models.AffineTransformation2D(matrix=[[1, 2], [3, 4]])
-    f = asdf.AsdfFile()
-    f.tree["model"] = aff
-    f.write_to(tmpfile)
-    model = f.tree["model"]
-
-    ff = asdf.AsdfFile()
-    ff.tree["model"] = model
-    ff.write_to(tmpfile)
 
 
 def test_default_version():
