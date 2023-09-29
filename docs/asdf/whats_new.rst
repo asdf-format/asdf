@@ -43,7 +43,7 @@ subclass instance can be safely converted to a superclass during serialization.
 See :ref:`extending_converters_deferral` for an example and more information.
 
 Converters can now access :ref:`ASDF block storage <extending_converter_block_storage>`.
-during serialization and deserializtion. See :ref:`extending_converter_block_storage`
+during serialization and deserialization. See :ref:`extending_converter_block_storage`
 for examples and more information.
 
 Converters have always been "strict" about tag version mismatches
