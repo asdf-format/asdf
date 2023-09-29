@@ -24,11 +24,9 @@ import yaml
 
 import asdf
 from asdf import generic_io, versioning
-from asdf._resolver import Resolver, ResolverChain
 from asdf.asdf import AsdfFile, get_asdf_library_info
 from asdf.constants import YAML_TAG_PREFIX
-from asdf.exceptions import AsdfConversionWarning, AsdfDeprecationWarning
-from asdf.extension import _legacy
+from asdf.exceptions import AsdfConversionWarning
 from asdf.tags.core import AsdfObject
 from asdf.versioning import (
     AsdfVersion,
@@ -97,20 +95,14 @@ def assert_tree_match(old_tree, new_tree, ctx=None, funcname="assert_equal", ign
         ignore_keys = ["asdf_library", "history"]
     ignore_keys = set(ignore_keys)
 
-    if ctx is None:
-        version_string = str(versioning.default_version)
-        ctx = _legacy.default_extensions.extension_list
-    else:
-        version_string = ctx.version_string
-
     def recurse(old, new):
         if id(old) in seen or id(new) in seen:
             return
         seen.add(id(old))
         seen.add(id(new))
 
-        old_type = ctx._type_index.from_custom_type(type(old), version_string)
-        new_type = ctx._type_index.from_custom_type(type(new), version_string)
+        old_type = None
+        new_type = None
 
         if (
             old_type is not None
@@ -416,35 +408,6 @@ def assert_no_warnings(warning_class=None):
         assert not any(isinstance(w.message, warning_class) for w in recorded_warnings), display_warnings(
             recorded_warnings,
         )
-
-
-def assert_extension_correctness(extension):
-    """
-    Assert that an ASDF extension's types are all correctly formed and
-    that the extension provides all of the required schemas.
-
-    Parameters
-    ----------
-    extension : asdf._AsdfExtension
-        The extension to validate
-    """
-    __tracebackhide__ = True
-
-    warnings.warn(
-        "assert_extension_correctness is deprecated and depends "
-        "on the deprecated type system. Please use the new "
-        "extension API: "
-        "https://asdf.readthedocs.io/en/stable/asdf/extending/converters.html",
-        AsdfDeprecationWarning,
-    )
-
-    resolver = ResolverChain(
-        Resolver(extension.tag_mapping, "tag"),
-        Resolver(extension.url_mapping, "url"),
-    )
-
-    for extension_type in extension.types:
-        _assert_extension_type_correctness(extension, extension_type, resolver)
 
 
 def _assert_extension_type_correctness(extension, extension_type, resolver):

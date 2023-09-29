@@ -11,10 +11,8 @@ from astropy.modeling import models
 from numpy.testing import assert_array_equal
 
 import asdf
-import asdf.extension._legacy as _legacy_extension
-from asdf import _resolver as resolver
 from asdf import config_context, get_config, treeutil, versioning
-from asdf.exceptions import AsdfDeprecationWarning, AsdfWarning, ValidationError
+from asdf.exceptions import AsdfWarning, ValidationError
 from asdf.extension import ExtensionProxy
 
 from ._helpers import assert_no_warnings, assert_roundtrip_tree, assert_tree_match, yaml_to_asdf
@@ -297,12 +295,6 @@ def test_open_pathlib_path(tmp_path):
         assert (af["data"] == tree["data"]).all()
 
 
-class FooExtension:
-    types = []
-    tag_mapping = []
-    url_mapping = []
-
-
 @pytest.mark.parametrize(
     ("installed", "extension", "warns"),
     [
@@ -314,6 +306,9 @@ class FooExtension:
     ],
 )
 def test_extension_version_check(installed, extension, warns):
+    class FooExtension:
+        extension_uri = "asdf://somewhere.org/extensions/foo-1.0.0"
+
     proxy = ExtensionProxy(FooExtension(), package_name="foo", package_version=installed)
 
     with config_context() as config:
@@ -326,7 +321,7 @@ def test_extension_version_check(installed, extension, warns):
         "history": {
             "extensions": [
                 asdf.tags.core.ExtensionMetadata(
-                    extension_class="asdf._tests.test_api.FooExtension",
+                    extension_uri=FooExtension.extension_uri,
                     software=asdf.tags.core.Software(name="foo", version=extension),
                 ),
             ],
@@ -341,6 +336,29 @@ def test_extension_version_check(installed, extension, warns):
             af._check_extensions(tree, strict=True)
 
     else:
+        af._check_extensions(tree)
+
+
+def test_extension_check_no_warning_on_builtin():
+    """
+    Prior to asdf 3.0 files were written using the asdf.extension.BuiltinExtension
+    (which used the legacy extension api). This extension was removed in
+    asdf 3.0. We don't want to warn that this extension is missing for every
+    file that is opened so make sure _check_extensions doesn't warn
+    that BuiltinExtension is missing.
+    """
+    af = asdf.AsdfFile()
+    tree = {
+        "history": {
+            "extensions": [
+                asdf.tags.core.ExtensionMetadata(
+                    extension_class="asdf.extension.BuiltinExtension",
+                    software=asdf.tags.core.Software(name="asdf", version="2.15.1"),
+                ),
+            ],
+        },
+    }
+    with assert_no_warnings():
         af._check_extensions(tree)
 
 
@@ -411,24 +429,6 @@ def test_array_inline_threshold_string_array(array_inline_threshold, inline_bloc
             af.write_to(file_path)
         with asdf.open(file_path) as af:
             assert len(af._blocks.blocks) == internal_blocks
-
-
-def test_resolver_deprecations():
-    for resolver_method in [
-        resolver.default_resolver,
-        resolver.default_tag_to_url_mapping,
-        resolver.default_url_mapping,
-    ]:
-        with pytest.warns(AsdfDeprecationWarning):
-            resolver_method("foo")
-
-
-def test_get_default_resolver():
-    resolver = _legacy_extension.get_default_resolver()
-
-    result = resolver("tag:stsci.edu:asdf/core/ndarray-1.0.0")
-
-    assert result == "http://stsci.edu/schemas/asdf/core/ndarray-1.0.0"
 
 
 def test_history_entries(tmp_path):

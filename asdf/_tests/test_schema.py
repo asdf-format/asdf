@@ -1,3 +1,4 @@
+import contextlib
 import io
 from datetime import datetime
 
@@ -7,33 +8,59 @@ from numpy.testing import assert_array_equal
 
 import asdf
 import asdf.testing.helpers
-from asdf import _resolver as resolver
-from asdf import _types as types
 from asdf import config_context, constants, get_config, schema, tagged, util, yamlutil
 from asdf._tests import _helpers as helpers
-from asdf._tests.objects import CustomExtension
 from asdf.exceptions import AsdfConversionWarning, AsdfDeprecationWarning, AsdfWarning, ValidationError
-from asdf.extension import _legacy as _legacy_extension
+from asdf.extension import TagDefinition
 
-with pytest.warns(AsdfDeprecationWarning, match=".*subclasses the deprecated CustomType.*"):
 
-    class TagReferenceType(types.CustomType):
-        """
-        This class is used by several tests below for validating foreign type
-        references in schemas and ASDF files.
-        """
+@contextlib.contextmanager
+def tag_reference_extension():
+    class TagReference:
+        def __init__(self, name, things):
+            self.name = name
+            self.things = things
 
-        name = "tag_reference"
-        organization = "nowhere.org"
-        version = (1, 0, 0)
-        standard = "custom"
+    tag_uri = "tag:nowhere.org:custom/tag_reference-1.0.0"
+    schema_uri = "http://nowhere.org/schemas/custom/tag_reference-1.0.0"
+    tag_def = asdf.extension.TagDefinition(tag_uri, schema_uris=schema_uri)
 
-        @classmethod
-        def from_tree(cls, tree, ctx):
-            node = {}
-            node["name"] = tree["name"]
-            node["things"] = tree["things"]
-            return node
+    class TagReferenceConverter:
+        tags = [tag_uri]
+        types = [TagReference]
+
+        def to_yaml_tree(self, obj, tag, ctx):
+            return {"name": obj.name, "things": obj.things}
+
+        def from_yaml_tree(self, node, tag, ctx):
+            return TagReference(node["name"], node["things"])
+
+    class TagReferenceExtension:
+        tags = [tag_def]
+        extension_uri = "asdf://nowhere.org/extensions/tag_reference-1.0.0"
+        converters = [TagReferenceConverter()]
+
+    tag_schema = f"""
+%YAML 1.1
+---
+$schema: "http://stsci.edu/schemas/yaml-schema/draft-01"
+id: {schema_uri}
+title: An example custom type for testing tag references
+
+type: object
+properties:
+  name:
+    type: string
+  things:
+    $ref: "http://stsci.edu/schemas/asdf/core/ndarray-1.0.0"
+required: [name, things]
+...
+    """
+
+    with config_context() as cfg:
+        cfg.add_resource_mapping({schema_uri: tag_schema})
+        cfg.add_extension(TagReferenceExtension())
+        yield
 
 
 def test_tagging_scalars():
@@ -108,11 +135,12 @@ required: [foobar]
     schema_path = tmp_path / "nugatory.yaml"
     schema_path.write_bytes(schema_def.encode())
 
-    schema_tree = schema.load_schema(str(schema_path), resolve_references=True)
+    with pytest.warns(AsdfDeprecationWarning, match="Resolving by tag is deprecated"):
+        schema_tree = schema.load_schema(str(schema_path), resolve_references=True)
     schema.check_schema(schema_tree)
 
 
-def test_load_schema_with_tag_address(tmp_path):
+def test_load_schema_with_file_url(tmp_path):
     schema_def = """
 %YAML 1.1
 %TAG !asdf! tag:stsci.edu:asdf/
@@ -129,32 +157,6 @@ properties:
 required: [foobar]
 ...
     """
-    schema_path = tmp_path / "nugatory.yaml"
-    schema_path.write_bytes(schema_def.encode())
-
-    schema_tree = schema.load_schema(str(schema_path), resolve_references=True)
-    schema.check_schema(schema_tree)
-
-
-def test_load_schema_with_file_url(tmp_path):
-    schema_def = """
-%YAML 1.1
-%TAG !asdf! tag:stsci.edu:asdf/
----
-$schema: "http://stsci.edu/schemas/asdf/asdf-schema-1.0.0"
-id: "http://stsci.edu/schemas/asdf/nugatory/nugatory-1.0.0"
-tag: "tag:stsci.edu:asdf/nugatory/nugatory-1.0.0"
-
-type: object
-properties:
-  foobar:
-      $ref: "{}"
-
-required: [foobar]
-...
-    """.format(
-        _legacy_extension.get_default_resolver()("tag:stsci.edu:asdf/core/ndarray-1.0.0"),
-    )
     schema_path = tmp_path / "nugatory.yaml"
     schema_path.write_bytes(schema_def.encode())
 
@@ -257,16 +259,6 @@ def test_schema_caching():
     assert s1 is not s2
 
 
-def test_asdf_file_resolver_hashing():
-    # Confirm that resolvers from distinct AsdfFile instances
-    # hash to the same value (this allows schema caching to function).
-    a1 = asdf.AsdfFile()
-    a2 = asdf.AsdfFile()
-
-    assert hash(a1._resolver) == hash(a2._resolver)
-    assert a1._resolver == a2._resolver
-
-
 def test_load_schema_from_resource_mapping():
     content = b"""
 id: http://somewhere.org/schemas/razmataz-1.0.0
@@ -286,49 +278,100 @@ properties:
 
 
 def test_flow_style():
-    with pytest.warns(AsdfDeprecationWarning, match=".*subclasses the deprecated CustomType.*"):
+    class CustomFlow:
+        def __init__(self, a, b):
+            self.a = a
+            self.b = b
 
-        class CustomFlowStyleType(dict, types.CustomType):
-            name = "custom_flow"
-            organization = "nowhere.org"
-            version = (1, 0, 0)
-            standard = "custom"
+    tag_uri = "http://nowhere.org/tags/custom/custom_flow-1.0.0"
 
-    class CustomFlowStyleExtension(CustomExtension):
-        @property
-        def types(self):
-            return [CustomFlowStyleType]
+    class CustomFlowConverter:
+        tags = [tag_uri]
+        types = [CustomFlow]
 
-    tree = {"custom_flow": CustomFlowStyleType({"a": 42, "b": 43})}
+        def to_yaml_tree(self, obj, tag, ctx):
+            return {"a": obj.a, "b": obj.b}
 
-    buff = io.BytesIO()
-    ff = asdf.AsdfFile(tree, extensions=CustomFlowStyleExtension())
-    ff.write_to(buff)
+        def from_yaml_tree(self, node, tag, ctx):
+            return CustomFlow(node["a"], node["b"])
 
-    assert b"  a: 42\n  b: 43" in buff.getvalue()
+    schema_uri = "http://nowhere.org/schemas/custom/custom_flow-1.0.0"
+    tag_schema = f"""
+%YAML 1.1
+---
+$schema: "http://stsci.edu/schemas/yaml-schema/draft-01"
+id: "{schema_uri}"
+type: object
+properties:
+  a:
+    type: number
+  b:
+    type: number
+flowStyle: block
+    """
+
+    tag_def = TagDefinition(tag_uri, schema_uris=[schema_uri])
+
+    class CustomFlowExtension:
+        extension_uri = "http://nowhere.org/extensions/custom/custom_flow-1.0.0"
+        tags = [tag_def]
+        converters = [CustomFlowConverter()]
+
+    with config_context() as cfg:
+        cfg.add_extension(CustomFlowExtension())
+        cfg.add_resource_mapping({schema_uri: tag_schema})
+        buff = io.BytesIO()
+        ff = asdf.AsdfFile({"custom_flow": CustomFlow(42, 43)})
+        ff.write_to(buff)
+
+        assert b"  a: 42\n  b: 43" in buff.getvalue()
 
 
 def test_style():
-    with pytest.warns(AsdfDeprecationWarning, match=".*subclasses the deprecated CustomType.*"):
+    class CustomStyle:
+        def __init__(self, message):
+            self.message = message
 
-        class CustomStyleType(str, types.CustomType):
-            name = "custom_style"
-            organization = "nowhere.org"
-            version = (1, 0, 0)
-            standard = "custom"
+    tag_uri = "http://nowhere.org/tags/custom/custom_style-1.0.0"
 
-    class CustomStyleExtension(CustomExtension):
-        @property
-        def types(self):
-            return [CustomStyleType]
+    class CustomStyleConverter:
+        tags = [tag_uri]
+        types = [CustomStyle]
 
-    tree = {"custom_style": CustomStyleType("short")}
+        def to_yaml_tree(self, obj, tag, ctx):
+            return obj.message
 
-    buff = io.BytesIO()
-    ff = asdf.AsdfFile(tree, extensions=CustomStyleExtension())
-    ff.write_to(buff)
+        def from_yaml_tree(self, node, tag, ctx):
+            return CustomStyle(node)
 
-    assert b"|-\n  short\n" in buff.getvalue()
+    schema_uri = "http://nowhere.org/schemas/custom/custom_style-1.0.0"
+    tag_schema = f"""
+%YAML 1.1
+---
+$schema: "http://stsci.edu/schemas/yaml-schema/draft-01"
+id: "{schema_uri}"
+type: string
+style: literal
+    """
+
+    tag_def = TagDefinition(tag_uri, schema_uris=[schema_uri])
+
+    class CustomStyleExtension:
+        extension_uri = "http://nowhere.org/extensions/custom/custom_style-1.0.0"
+        tags = [tag_def]
+        converters = [CustomStyleConverter()]
+
+    with config_context() as cfg:
+        cfg.add_extension(CustomStyleExtension())
+        cfg.add_resource_mapping({schema_uri: tag_schema})
+
+        tree = {"custom_style": CustomStyle("short")}
+
+        buff = io.BytesIO()
+        ff = asdf.AsdfFile(tree)
+        ff.write_to(buff)
+
+        assert b"|-\n  short\n" in buff.getvalue()
 
 
 def test_property_order():
@@ -350,51 +393,71 @@ def test_property_order():
 
 
 def test_invalid_nested():
-    with pytest.warns(AsdfDeprecationWarning, match=".*subclasses the deprecated CustomType.*"):
+    tag_uri = "http://nowhere.org/tags/custom/custom-1.0.0"
+    schema_uri = "http://nowhere.org/schemas/custom/custom-1.0.0"
+    tag_schema = f"""
+%YAML 1.1
+---
+$schema: "http://stsci.edu/schemas/yaml-schema/draft-01"
+id: "{schema_uri}"
+type: integer
+default: 42
+    """
 
-        class CustomType(str, types.CustomType):
-            name = "custom"
-            organization = "nowhere.org"
-            version = (1, 0, 0)
-            standard = "custom"
+    class Custom:
+        def __init__(self, value):
+            self.value = value
 
-    class CustomTypeExtension(CustomExtension):
-        @property
-        def types(self):
-            return [CustomType]
+    class CustomConverter:
+        tags = [tag_uri]
+        types = [Custom]
 
-    yaml = """
-custom: !<tag:nowhere.org:custom/custom-1.0.0>
+        def to_yaml_tree(self, obj, tag, ctx):
+            return obj.value
+
+        def from_yaml_tree(self, node, tag, ctx):
+            return Custom(node)
+
+    tag_def = TagDefinition(tag_uri, schema_uris=[schema_uri])
+
+    class CustomExtension:
+        extension_uri = "http://nowhere.org/extensions/custom/custom-1.0.0"
+        tags = [tag_def]
+        converters = [CustomConverter()]
+
+    yaml = f"""
+custom: !<{tag_uri}>
   foo
     """
     buff = helpers.yaml_to_asdf(yaml)
     # This should cause a warning but not an error because without explicitly
     # providing an extension, our custom type will not be recognized and will
     # simply be converted to a raw type.
-    with pytest.warns(AsdfConversionWarning, match=r"tag:nowhere.org:custom/custom-1.0.0"), asdf.open(buff):
+    with pytest.warns(AsdfConversionWarning, match=tag_uri), asdf.open(buff):
         pass
 
     buff.seek(0)
-    with pytest.raises(ValidationError, match=r".* is not of type .*"), asdf.open(
-        buff,
-        extensions=[CustomTypeExtension()],
-    ):
-        pass
+    with config_context() as cfg:
+        cfg.add_extension(CustomExtension())
+        cfg.add_resource_mapping({schema_uri: tag_schema})
+        with pytest.raises(ValidationError, match=r".* is not of type .*"), asdf.open(
+            buff,
+        ):
+            pass
 
-    # Make sure tags get validated inside of other tags that know
-    # nothing about them.
-    yaml = """
-array: !core/ndarray-1.0.0
-  data: [0, 1, 2]
-  custom: !<tag:nowhere.org:custom/custom-1.0.0>
-    foo
-    """
-    buff = helpers.yaml_to_asdf(yaml)
-    with pytest.raises(ValidationError, match=r".* is not of type .*"), asdf.open(
-        buff,
-        extensions=[CustomTypeExtension()],
-    ):
-        pass
+        # Make sure tags get validated inside of other tags that know
+        # nothing about them.
+        yaml = f"""
+    array: !core/ndarray-1.0.0
+      data: [0, 1, 2]
+      custom: !<{tag_uri}>
+        foo
+        """
+        buff = helpers.yaml_to_asdf(yaml)
+        with pytest.raises(ValidationError, match=r".* is not of type .*"), asdf.open(
+            buff,
+        ):
+            pass
 
 
 def test_invalid_schema():
@@ -451,75 +514,145 @@ def test_check_complex_default():
 
 
 def test_fill_and_remove_defaults():
-    with pytest.warns(AsdfDeprecationWarning, match=".*subclasses the deprecated CustomType.*"):
+    tag_uri = "http://nowhere.org/tags/custom/default-1.0.0"
+    schema_uri = "http://nowhere.org/schemas/custom/default-1.0.0"
+    tag_schema = f"""
+%YAML 1.1
+---
+$schema: "http://stsci.edu/schemas/yaml-schema/draft-01"
+id: "{schema_uri}"
+type: object
+properties:
+  a:
+    type: integer
+    default: 42
+  b:
+    type: object
+    properties:
+      c:
+        type: integer
+        default: 82
+  d:
+    allOf:
+      - type: object
+        properties:
+          e:
+            type: integer
+            default: 122
+      - type: object
+        properties:
+          f:
+            type: integer
+            default: 162
+  g:
+    anyOf:
+      - type: object
+        properties:
+          h:
+            type: integer
+            default: 202
+      - type: object
+        properties:
+          i:
+            type: integer
+            default: 242
+  j:
+    oneOf:
+      - type: object
+        properties:
+          k:
+            type: integer
+            default: 282
+        required: [k]
+        additionalProperties: false
+      - type: object
+        properties:
+          l:
+            type: integer
+            default: 322
+        required: [l]
+        additionalProperties: false
+    """
 
-        class DefaultType(dict, types.CustomType):
-            name = "default"
-            organization = "nowhere.org"
-            version = (1, 0, 0)
-            standard = "custom"
+    class Default(dict):
+        pass
 
-    class DefaultTypeExtension(CustomExtension):
-        @property
-        def types(self):
-            return [DefaultType]
+    class DefaultConverter:
+        tags = [tag_uri]
+        types = [Default]
 
-    yaml = """
-custom: !<tag:nowhere.org:custom/default-1.0.0>
+        def to_yaml_tree(self, obj, tag, ctx):
+            return dict(obj)
+
+        def from_yaml_tree(self, node, tag, ctx):
+            return Default(**node)
+
+    tag_def = TagDefinition(tag_uri, schema_uris=[schema_uri])
+
+    class DefaultExtension:
+        tags = [tag_def]
+        converters = [DefaultConverter()]
+        extension_uri = "http://nowhere.org/extensions/custom/default-1.0.0"
+
+    with config_context() as cfg:
+        cfg.add_extension(DefaultExtension())
+        cfg.add_resource_mapping({schema_uri: tag_schema})
+        yaml = """
+custom: !<http://nowhere.org/tags/custom/default-1.0.0>
   b: {}
   d: {}
   g: {}
   j:
     l: 362
-    """
-    buff = helpers.yaml_to_asdf(yaml)
-    with asdf.open(buff, extensions=[DefaultTypeExtension()]) as ff:
-        assert "a" in ff.tree["custom"]
-        assert ff.tree["custom"]["a"] == 42
-        assert ff.tree["custom"]["b"]["c"] == 82
-        # allOf combiner should fill defaults from all subschemas:
-        assert ff.tree["custom"]["d"]["e"] == 122
-        assert ff.tree["custom"]["d"]["f"] == 162
-        # anyOf combiners should be ignored:
-        assert "h" not in ff.tree["custom"]["g"]
-        assert "i" not in ff.tree["custom"]["g"]
-        # oneOf combiners should be ignored:
-        assert "k" not in ff.tree["custom"]["j"]
-        assert ff.tree["custom"]["j"]["l"] == 362
-
-    buff.seek(0)
-    with config_context() as config:
-        config.legacy_fill_schema_defaults = False
-        with asdf.open(buff, extensions=[DefaultTypeExtension()]) as ff:
-            assert "a" not in ff.tree["custom"]
-            assert "c" not in ff.tree["custom"]["b"]
-            assert "e" not in ff.tree["custom"]["d"]
-            assert "f" not in ff.tree["custom"]["d"]
-            assert "h" not in ff.tree["custom"]["g"]
-            assert "i" not in ff.tree["custom"]["g"]
-            assert "k" not in ff.tree["custom"]["j"]
-            assert ff.tree["custom"]["j"]["l"] == 362
-            ff.fill_defaults()
+        """
+        buff = helpers.yaml_to_asdf(yaml)
+        with asdf.open(buff) as ff:
             assert "a" in ff.tree["custom"]
             assert ff.tree["custom"]["a"] == 42
-            assert "c" in ff.tree["custom"]["b"]
             assert ff.tree["custom"]["b"]["c"] == 82
-            assert ff.tree["custom"]["b"]["c"] == 82
+            # allOf combiner should fill defaults from all subschemas:
             assert ff.tree["custom"]["d"]["e"] == 122
             assert ff.tree["custom"]["d"]["f"] == 162
+            # anyOf combiners should be ignored:
             assert "h" not in ff.tree["custom"]["g"]
             assert "i" not in ff.tree["custom"]["g"]
+            # oneOf combiners should be ignored:
             assert "k" not in ff.tree["custom"]["j"]
             assert ff.tree["custom"]["j"]["l"] == 362
-            ff.remove_defaults()
-            assert "a" not in ff.tree["custom"]
-            assert "c" not in ff.tree["custom"]["b"]
-            assert "e" not in ff.tree["custom"]["d"]
-            assert "f" not in ff.tree["custom"]["d"]
-            assert "h" not in ff.tree["custom"]["g"]
-            assert "i" not in ff.tree["custom"]["g"]
-            assert "k" not in ff.tree["custom"]["j"]
-            assert ff.tree["custom"]["j"]["l"] == 362
+
+        buff.seek(0)
+        with config_context() as config:
+            config.legacy_fill_schema_defaults = False
+            with asdf.open(buff) as ff:
+                assert "a" not in ff.tree["custom"]
+                assert "c" not in ff.tree["custom"]["b"]
+                assert "e" not in ff.tree["custom"]["d"]
+                assert "f" not in ff.tree["custom"]["d"]
+                assert "h" not in ff.tree["custom"]["g"]
+                assert "i" not in ff.tree["custom"]["g"]
+                assert "k" not in ff.tree["custom"]["j"]
+                assert ff.tree["custom"]["j"]["l"] == 362
+                ff.fill_defaults()
+                assert "a" in ff.tree["custom"]
+                assert ff.tree["custom"]["a"] == 42
+                assert "c" in ff.tree["custom"]["b"]
+                assert ff.tree["custom"]["b"]["c"] == 82
+                assert ff.tree["custom"]["b"]["c"] == 82
+                assert ff.tree["custom"]["d"]["e"] == 122
+                assert ff.tree["custom"]["d"]["f"] == 162
+                assert "h" not in ff.tree["custom"]["g"]
+                assert "i" not in ff.tree["custom"]["g"]
+                assert "k" not in ff.tree["custom"]["j"]
+                assert ff.tree["custom"]["j"]["l"] == 362
+                ff.remove_defaults()
+                assert "a" not in ff.tree["custom"]
+                assert "c" not in ff.tree["custom"]["b"]
+                assert "e" not in ff.tree["custom"]["d"]
+                assert "f" not in ff.tree["custom"]["d"]
+                assert "h" not in ff.tree["custom"]["g"]
+                assert "i" not in ff.tree["custom"]["g"]
+                assert "k" not in ff.tree["custom"]["j"]
+                assert ff.tree["custom"]["j"]["l"] == 362
 
 
 def test_one_of():
@@ -527,34 +660,69 @@ def test_one_of():
     Covers https://github.com/asdf-format/asdf/issues/809
     """
 
-    with pytest.warns(AsdfDeprecationWarning, match=".*subclasses the deprecated CustomType.*"):
+    class OneOf:
+        def __init__(self, value):
+            self.value = value
 
-        class OneOfType(dict, types.CustomType):
-            name = "one_of"
-            organization = "nowhere.org"
-            version = (1, 0, 0)
-            standard = "custom"
+    tag_uri = "http://nowhere.org/custom/one_of-1.0.0"
 
-    class OneOfTypeExtension(CustomExtension):
-        @property
-        def types(self):
-            return [OneOfType]
+    class OneOfConverter:
+        tags = [tag_uri]
+        types = [OneOf]
 
-    yaml = """
-one_of: !<tag:nowhere.org:custom/one_of-1.0.0>
+        def to_yaml_tree(self, obj, tag, ctx):
+            return {"value": obj.value}
+
+        def from_yaml_tree(self, node, tag, ctx):
+            return OneOf(node["value"])
+
+    schema_uri = "http://nowhere.org/schemas/custom/one_of-1.0.0"
+    tag_schema = f"""
+%YAML 1.1
+---
+$schema: "http://stsci.edu/schemas/yaml-schema/draft-01"
+id: "{schema_uri}"
+title: |
+  oneOf test schema
+oneOf:
+  - type: object
+    properties:
+      value:
+        type: number
+    required: [value]
+    additionalProperties: false
+
+  - type: object
+    properties:
+      value:
+        type: string
+    required: [value]
+    additionalProperties: false
+...
+    """
+
+    tag_def = TagDefinition(tag_uri, schema_uris=[schema_uri])
+
+    class OneOfExtension:
+        extension_uri = "http://nowhere.org/extensions/custom/one_of-1.0.0"
+        tags = [tag_def]
+        converters = [OneOfConverter()]
+
+    yaml = f"""
+one_of: !<{tag_uri}>
   value: foo
     """
-    buff = helpers.yaml_to_asdf(yaml)
-    with asdf.open(buff, extensions=[OneOfTypeExtension()]) as ff:
-        assert ff["one_of"]["value"] == "foo"
+
+    with config_context() as cfg:
+        cfg.add_extension(OneOfExtension())
+        cfg.add_resource_mapping({schema_uri: tag_schema})
+
+        buff = helpers.yaml_to_asdf(yaml)
+        with asdf.open(buff) as ff:
+            assert ff["one_of"].value == "foo"
 
 
 def test_tag_reference_validation():
-    class DefaultTypeExtension(CustomExtension):
-        @property
-        def types(self):
-            return [TagReferenceType]
-
     yaml = """
 custom: !<tag:nowhere.org:custom/tag_reference-1.0.0>
   name:
@@ -563,33 +731,53 @@ custom: !<tag:nowhere.org:custom/tag_reference-1.0.0>
     data: [1, 2, 3]
     """
 
-    buff = helpers.yaml_to_asdf(yaml)
-    with asdf.open(buff, extensions=[DefaultTypeExtension()]) as ff:
-        custom = ff.tree["custom"]
-        assert custom["name"] == "Something"
-        assert_array_equal(custom["things"], [1, 2, 3])
+    with tag_reference_extension():
+        buff = helpers.yaml_to_asdf(yaml)
+        with asdf.open(buff) as ff:
+            custom = ff.tree["custom"]
+            assert custom.name == "Something"
+            assert_array_equal(custom.things, [1, 2, 3])
 
 
 def test_foreign_tag_reference_validation():
-    with pytest.warns(AsdfDeprecationWarning, match=".*subclasses the deprecated CustomType.*"):
+    class ForeignTagReference:
+        def __init__(self, a):
+            self.a = a
 
-        class ForeignTagReferenceType(types.CustomType):
-            name = "foreign_tag_reference"
-            organization = "nowhere.org"
-            version = (1, 0, 0)
-            standard = "custom"
+    tag_uri = "tag:nowhere.org:custom/foreign_tag_reference-1.0.0"
+    schema_uri = "http://nowhere.org/schemas/custom/foreign_tag_reference-1.0.0"
+    tag_def = asdf.extension.TagDefinition(tag_uri, schema_uris=schema_uri)
 
-            @classmethod
-            def from_tree(cls, tree, ctx):
-                node = {}
-                node["a"] = tree["a"]
-                node["b"] = tree["b"]
-                return node
+    class ForeignTagReferenceConverter:
+        tags = [tag_uri]
+        types = [ForeignTagReference]
 
-    class ForeignTypeExtension(CustomExtension):
-        @property
-        def types(self):
-            return [TagReferenceType, ForeignTagReferenceType]
+        def to_yaml_tree(self, obj, tag, ctx):
+            return {"a": obj.a}
+
+        def from_yaml_tree(self, node, tag, ctx):
+            return ForeignTagReference(node["a"])
+
+    class ForeignTagReferenceExtension:
+        tags = [tag_def]
+        extension_uri = "asdf://nowhere.org/extensions/foreign_tag_reference-1.0.0"
+        converters = [ForeignTagReferenceConverter()]
+
+    tag_schema = f"""
+%YAML 1.1
+---
+$schema: "http://stsci.edu/schemas/yaml-schema/draft-01"
+id: {schema_uri}
+title: An example custom type for testing tag references
+
+type: object
+properties:
+  a:
+    # Test foreign tag reference using tag URI
+    $ref: "http://nowhere.org/schemas/custom/tag_reference-1.0.0"
+required: [a]
+...
+    """
 
     yaml = """
 custom: !<tag:nowhere.org:custom/foreign_tag_reference-1.0.0>
@@ -598,28 +786,23 @@ custom: !<tag:nowhere.org:custom/foreign_tag_reference-1.0.0>
       "Something"
     things: !core/ndarray-1.0.0
       data: [1, 2, 3]
-  b: !<tag:nowhere.org:custom/tag_reference-1.0.0>
-    name:
-      "Anything"
-    things: !core/ndarray-1.0.0
-      data: [4, 5, 6]
     """
 
-    buff = helpers.yaml_to_asdf(yaml)
-    with asdf.open(buff, extensions=ForeignTypeExtension()) as ff:
-        a = ff.tree["custom"]["a"]
-        b = ff.tree["custom"]["b"]
-        assert a["name"] == "Something"
-        assert_array_equal(a["things"], [1, 2, 3])
-        assert b["name"] == "Anything"
-        assert_array_equal(b["things"], [4, 5, 6])
+    with tag_reference_extension():
+        cfg = asdf.get_config()
+        cfg.add_resource_mapping({schema_uri: tag_schema})
+        cfg.add_extension(ForeignTagReferenceExtension())
+
+        buff = helpers.yaml_to_asdf(yaml)
+        with asdf.open(buff) as ff:
+            a = ff.tree["custom"].a
+            assert a.name == "Something"
+            assert_array_equal(a.things, [1, 2, 3])
 
 
 def test_self_reference_resolution():
-    r = resolver.Resolver(CustomExtension().url_mapping, "url")
     s = schema.load_schema(
         helpers.get_test_data_path("self_referencing-1.0.0.yaml"),
-        resolver=r,
         resolve_references=True,
     )
     assert "$ref" not in repr(s)
@@ -628,11 +811,11 @@ def test_self_reference_resolution():
 
 def test_schema_resolved_via_entry_points():
     """Test that entry points mappings to core schema works"""
-    r = _legacy_extension.get_default_resolver()
     tag = asdf.testing.helpers.format_tag("stsci.edu", "asdf", "1.0.0", "fits/fits")
-    url = _legacy_extension.default_extensions.extension_list.tag_mapping(tag)
-
-    s = schema.load_schema(url, resolver=r, resolve_references=True)
+    extension_manager = asdf.extension.get_cached_extension_manager(get_config().extensions)
+    schema_uris = extension_manager.get_tag_definition(tag).schema_uris
+    assert len(schema_uris) > 0
+    s = schema.load_schema(schema_uris[0], resolve_references=True)
     assert tag in repr(s)
 
 
@@ -806,67 +989,6 @@ properties:
             schema.validate(b, schema=schema_tree)
 
 
-def test_type_missing_dependencies():
-    pytest.importorskip("astropy", "3.0.0")
-
-    with pytest.warns(AsdfDeprecationWarning, match=".*subclasses the deprecated CustomType.*"):
-
-        class MissingType(types.CustomType):
-            name = "missing"
-            organization = "nowhere.org"
-            version = (1, 1, 0)
-            standard = "custom"
-            types = ["asdfghjkl12345.foo"]
-            requires = ["ASDFGHJKL12345"]
-
-    class DefaultTypeExtension(CustomExtension):
-        @property
-        def types(self):
-            return [MissingType]
-
-    yaml = """
-custom: !<tag:nowhere.org:custom/missing-1.1.0>
-  b: {foo: 42}
-    """
-    buff = helpers.yaml_to_asdf(yaml)
-    with pytest.warns(
-        AsdfConversionWarning,
-        match=r"Failed to convert tag:nowhere.org:custom/missing-1.1.0",
-    ), asdf.open(buff, extensions=[DefaultTypeExtension()]) as ff:
-        assert ff.tree["custom"]["b"]["foo"] == 42
-
-
-def test_assert_roundtrip_with_extension(tmp_path):
-    called_custom_assert_equal = [False]
-
-    with pytest.warns(AsdfDeprecationWarning, match=".*subclasses the deprecated CustomType.*"):
-
-        class CustomType(dict, types.CustomType):
-            name = "custom_flow"
-            organization = "nowhere.org"
-            version = (1, 0, 0)
-            standard = "custom"
-
-            @classmethod
-            def assert_equal(cls, old, new):
-                called_custom_assert_equal[0] = True
-
-    class CustomTypeExtension(CustomExtension):
-        @property
-        def types(self):
-            return [CustomType]
-
-    tree = {"custom": CustomType({"a": 42, "b": 43})}
-
-    def check(ff):
-        assert isinstance(ff.tree["custom"], CustomType)
-
-    with helpers.assert_no_warnings():
-        helpers.assert_roundtrip_tree(tree, tmp_path, extensions=[CustomTypeExtension()])
-
-    assert called_custom_assert_equal[0] is True
-
-
 def test_custom_validation_bad(tmp_path):
     custom_schema_path = helpers.get_test_data_path("custom_schema.yaml")
     asdf_file = str(tmp_path / "out.asdf")
@@ -1018,44 +1140,6 @@ def test_custom_validation_with_external_ref_bad(tmp_path):
         custom_schema=custom_schema_path,
     ):
         pass
-
-
-def test_nonexistent_tag(tmp_path):
-    """
-    This tests the case where a node is tagged with a type that apparently
-    comes from an extension that is known, but the type itself can't be found.
-
-    This could occur when a more recent version of an installed package
-    provides the new type, but an older version of the package is installed.
-    ASDF should still be able to open the file in this case, but it won't be
-    able to restore the type.
-
-    The bug that prompted this test results from attempting to load a schema
-    file that doesn't exist, which is why this test belongs in this file.
-    """
-
-    # This shouldn't ever happen, but it's a useful test case
-    yaml = """
-a: !core/doesnt_exist-1.0.0
-  hello
-    """
-
-    buff = helpers.yaml_to_asdf(yaml)
-    with pytest.warns(AsdfWarning, match=r"Unable to locate schema file"), asdf.open(buff) as af:
-        assert str(af["a"]) == "hello"
-
-    # This is a more realistic case since we're using an external extension
-    yaml = """
-a: !<tag:nowhere.org:custom/doesnt_exist-1.0.0>
-  hello
-  """
-
-    buff = helpers.yaml_to_asdf(yaml)
-    with pytest.warns(AsdfWarning, match=r"Unable to locate schema file"), asdf.open(
-        buff,
-        extensions=CustomExtension(),
-    ) as af:
-        assert str(af["a"]) == "hello"
 
 
 @pytest.mark.parametrize(

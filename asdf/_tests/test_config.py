@@ -7,7 +7,6 @@ import asdf
 from asdf import get_config
 from asdf.core._integration import get_json_schema_resource_mappings
 from asdf.extension import ExtensionProxy
-from asdf.extension._legacy import BuiltinExtension
 from asdf.resource import ResourceMappingProxy
 
 
@@ -255,14 +254,6 @@ def test_resource_manager():
 def test_extensions():
     with asdf.config_context() as config:
         original_extensions = config.extensions
-        assert any(isinstance(e.delegate, BuiltinExtension) for e in original_extensions)
-
-        class FooExtension:
-            types = []
-            tag_mapping = []
-            url_mapping = []
-
-        new_extension = FooExtension()
 
         class BarExtension:
             extension_uri = "asdf://somewhere.org/extensions/bar-1.0"
@@ -273,25 +264,25 @@ def test_extensions():
         uri_extension = BarExtension()
 
         # Add an extension:
-        config.add_extension(new_extension)
+        config.add_extension(uri_extension)
         assert len(config.extensions) == len(original_extensions) + 1
-        assert any(e for e in config.extensions if e.delegate is new_extension)
+        assert any(e for e in config.extensions if e.delegate is uri_extension)
 
         # Adding an extension should be idempotent:
-        config.add_extension(new_extension)
+        config.add_extension(uri_extension)
         assert len(config.extensions) == len(original_extensions) + 1
 
         # Even when wrapped:
-        config.add_extension(ExtensionProxy(new_extension))
+        config.add_extension(ExtensionProxy(uri_extension))
         assert len(config.extensions) == len(original_extensions) + 1
 
         # Remove an extension:
-        config.remove_extension(new_extension)
+        config.remove_extension(uri_extension)
         assert len(config.extensions) == len(original_extensions)
 
         # Removing should work when wrapped:
-        config.add_extension(new_extension)
-        config.remove_extension(ExtensionProxy(new_extension))
+        config.add_extension(uri_extension)
+        config.remove_extension(ExtensionProxy(uri_extension))
         assert len(config.extensions) == len(original_extensions)
 
         # And also by URI:
@@ -305,14 +296,13 @@ def test_extensions():
         assert len(config.extensions) == len(original_extensions)
 
         # Remove by the name of the extension's package:
-        config.add_extension(ExtensionProxy(new_extension, package_name="foo"))
         config.add_extension(ExtensionProxy(uri_extension, package_name="foo"))
         config.remove_extension(package="foo")
         assert len(config.extensions) == len(original_extensions)
 
         # Can combine remove filters:
-        config.add_extension(ExtensionProxy(new_extension, package_name="foo"))
         config.add_extension(ExtensionProxy(uri_extension, package_name="foo"))
+        config.add_extension(ExtensionProxy(uri_extension, package_name="bar"))
         config.remove_extension(uri_extension.extension_uri, package="foo")
         assert len(config.extensions) == len(original_extensions) + 1
 
@@ -321,14 +311,13 @@ def test_extensions():
             config.remove_extension()
 
         # Removing an extension should be idempotent:
-        config.add_extension(new_extension)
-        config.remove_extension(new_extension)
-        config.remove_extension(new_extension)
+        config.add_extension(uri_extension)
+        config.remove_extension(uri_extension)
+        config.remove_extension(uri_extension)
         assert len(config.extensions) == len(original_extensions)
 
         # Resetting should get rid of any additions:
-        config.add_extension(new_extension)
-        config.add_extension(FooExtension())
+        config.add_extension(uri_extension)
         config.reset_extensions()
         assert len(config.extensions) == len(original_extensions)
 

@@ -19,7 +19,5 @@ def test_all_tags_present():
     tags = {line.strip() for line in iostream.readlines()}
 
     af = AsdfFile()
-    for tag in af._type_index._type_by_tag:
-        assert tag in tags
     for tag in af.extension_manager._converters_by_tag:
         assert tag in tags

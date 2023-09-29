@@ -48,4 +48,9 @@ MANIFEST_URIS = [
 ]
 
 
-EXTENSIONS = [ManifestExtension.from_uri(u, converters=CONVERTERS, validators=VALIDATORS) for u in MANIFEST_URIS]
+EXTENSIONS = [
+    ManifestExtension.from_uri(
+        u, converters=CONVERTERS, validators=VALIDATORS, legacy_class_names=["asdf.extension.BuiltinExtension"]
+    )
+    for u in MANIFEST_URIS
+]
