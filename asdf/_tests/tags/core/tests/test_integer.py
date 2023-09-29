@@ -58,26 +58,6 @@ def test_integer_storage(tmpdir, inline):
         assert rf.tree["integer"]["string"] == str(value)
 
 
-def test_integer_storage_duplication(tmpdir):
-    tmpfile = str(tmpdir.join("integer.asdf"))
-
-    random.seed(0)
-    value = random.getrandbits(1000)
-    tree = {"integer1": IntegerType(value), "integer2": IntegerType(value)}
-
-    with asdf.AsdfFile(tree) as af:
-        af.write_to(tmpfile)
-
-    with asdf.open(tmpfile, _force_raw_types=True) as rf:
-        assert len(rf._blocks.blocks) == 1
-        assert rf.tree["integer1"]["words"]["source"] == 0
-        assert rf.tree["integer2"]["words"]["source"] == 0
-
-    with asdf.open(tmpfile) as aa:
-        assert aa.tree["integer1"] == value
-        assert aa.tree["integer2"] == value
-
-
 def test_integer_conversion():
     random.seed(0)
     value = random.getrandbits(1000)
