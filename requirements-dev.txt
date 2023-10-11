@@ -13,3 +13,4 @@ scipy>=0.0.dev0
 
 # attempt to get fsspec working with python 3.12
 aiohttp==3.9.0b0
+fsspec[http]>=2022.8.2
