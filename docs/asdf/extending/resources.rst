@@ -23,7 +23,7 @@ Installing resources via AsdfConfig
 
 The simplest way to install a resource into `asdf` is to add it at runtime using the
 `AsdfConfig.add_resource_mapping <asdf.config.AsdfConfig.add_resource_mapping>` method.
-For example, the following code istalls a schema for use with the `asdf.AsdfFile`
+For example, the following code installs a schema for use with the `asdf.AsdfFile`
 custom_schema argument:
 
 .. code-block:: python

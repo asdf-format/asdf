@@ -16,7 +16,7 @@ class ReadBlocks(collections.UserList):
     A list of ReadBlock instances.
 
     A simple list can't be used as other code will need
-    to genearate a weakref to instances of this class
+    to generate a weakref to instances of this class
     (and it is not possible to generate a weakref to a list).
     """
 
