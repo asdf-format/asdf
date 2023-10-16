@@ -42,9 +42,12 @@ The ASDF Standard is at v1.6.0
   from working. If you want these warnings to produce errors you can
   now add your own warning filter [#1757]
 
-
 - Only show ``str`` representation during ``info`` and ``search``
   if it contains a single line (and does not fail)  [#1748]
+
+- Allow converters to provide types as strings that can
+  resolve to public classes (even if the class is implemented
+  in a private module). [#1654]
 
 3.0.1 (2023-10-30)
 ------------------
