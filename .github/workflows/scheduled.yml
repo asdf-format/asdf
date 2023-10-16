@@ -19,7 +19,6 @@ jobs:
       matrix:
         branch:
           - main
-          - 2.15.x
         workflow:
           - ci.yml
           - downstream.yml

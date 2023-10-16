@@ -1,4 +1,12 @@
-3.0.0 (unreleased)
+3.0.1 (unreleased)
+------------------
+
+The ASDF Standard is at v1.6.0
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+-
+
+3.0.0 (2023-10-16)
 ------------------
 
 The ASDF Standard is at v1.6.0
