@@ -57,24 +57,17 @@ jobs:
                                   g++ \
                                   pkg-config \
                                   python3 \
-                                  python3-configobj \
                                   python3-astropy \
                                   python3-lz4 \
                                   python3-numpy \
                                   python3-scipy \
-                                  python3-ply \
                                   python3-venv \
-                                  python3-wheel \
-                                  cython3 \
-                                  libwcs7 \
-                                  wcslib-dev \
-                                  libcfitsio-dev \
-                                  liberfa1
+                                  python3-wheel
 
           run: |
             python3 -m venv --system-site-packages tests
             source tests/bin/activate
-            pip3 install --upgrade pip setuptools gwcs pytest pytest-doctestplus pytest-remotedata
+            pip3 install --upgrade pip setuptools pytest pytest-doctestplus pytest-remotedata
             pip3 install -e .[all,tests]
             pip3 list
             python3 -m pytest --remote-data
