@@ -20,6 +20,10 @@
   extension was created from a manifest registered with a uri that
   does not match the id in the manifest [#1785]
 
+- Allow converters to provide types as strings that can
+  resolve to public classes (even if the class is implemented
+  in a private module). [#1654]
+
 
 3.2.0 (2024-04-05)
 ------------------
