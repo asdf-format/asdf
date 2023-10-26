@@ -12,6 +12,9 @@ The ASDF Standard is at v1.6.0
 - Deprecate automatic calling of ``AsdfFile.find_references`` during
   ``AsdfFile.__init__`` and ``asdf.open`` [#1708]
 
+- Allow views of memmapped arrays to keep the backing mmap
+  open to avoid segfaults [#1668]
+
 3.0.1 (2023-10-30)
 ------------------
 
