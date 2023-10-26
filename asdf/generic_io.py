@@ -738,9 +738,6 @@ class RandomAccessFile(GenericFile):
         self.seek(size, SEEK_CUR)
 
     def truncate(self, size=None):
-        # windows supports truncating as long as the file not opened
-        # more than once. So this must be called after closing all
-        # memmaps
         if size is None:
             self._fd.truncate()
         else:
@@ -836,6 +833,15 @@ class RealFile(RandomAccessFile):
         self.close_memmap()
         if self._close:
             self._fix_permissions()
+
+    def truncate(self, size=None):
+        # windows supports truncating as long as the file not opened
+        # more than once. So this must be called after closing all
+        # memmaps
+        if sys.platform.startswith("win") and hasattr(self, "_mmap"):
+            self._mmap.close()
+            self.close_memmap()
+        super().truncate(size=size)
 
 
 class MemoryIO(RandomAccessFile):

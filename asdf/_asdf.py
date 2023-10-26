@@ -1070,9 +1070,9 @@ class AsdfFile:
             def rewrite():
                 self._fd.seek(0)
                 self._serial_write(self._fd, pad_blocks, include_block_index)
+                self._fd.truncate()
                 if self._fd.can_memmap():
                     self._fd.close_memmap()
-                self._fd.truncate()
 
             # if we have no read blocks, we can just call write_to as no internal blocks are reused
             if len(self._blocks.blocks) == 0:
@@ -1107,9 +1107,9 @@ class AsdfFile:
 
                 # close memmap to trigger arrays to reload themselves
                 self._fd.seek(end_of_file)
+                self._fd.truncate()
                 if self._fd.can_memmap():
                     self._fd.close_memmap()
-                self._fd.truncate()
 
             finally:
                 self._post_write(fd)
