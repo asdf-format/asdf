@@ -1,10 +1,8 @@
 import numpy as np
-import pytest
 
 import asdf
 
 
-@pytest.mark.xfail(reason="fixing this may require subclassing ndarray")
 def test_update_with_memmapped_data_can_make_view_data_invalid(tmp_path):
     """
     Calling update with memmapped data can create invalid data in memmap views
@@ -31,5 +29,7 @@ def test_update_with_memmapped_data_can_make_view_data_invalid(tmp_path):
         af.update()
         np.testing.assert_array_equal(a, af["a"])
         np.testing.assert_array_equal(b, af["b"])
-        assert False
-        # np.testing.assert_array_equal(va, ov)  # segfault
+        # the view of 'a' taken above ('va') keeps the original memmap open
+        # and is not a valid view of af['a'] (as this now differs from the
+        # af['a'] used to generate the view).
+        assert not np.all(va == ov)

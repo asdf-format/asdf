@@ -23,8 +23,7 @@ def test_update_corrupts_stream_data(tmp_path):
     with asdf.open(fn, mode="rw") as af:
         af["a"] = np.arange(1000)
         af.update()
-        # print(af['s'])  # segmentation fault
+        np.testing.assert_array_equal(af["s"], [[1, 2, 3]])
 
     with asdf.open(fn) as af:
-        # fails as af['s'] == [[116, 101, 111]]
         np.testing.assert_array_equal(af["s"], [[1, 2, 3]])
