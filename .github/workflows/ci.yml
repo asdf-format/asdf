@@ -108,6 +108,7 @@ jobs:
     needs: [core, asdf-schemas]
     uses: OpenAstronomy/github-actions-workflows/.github/workflows/publish_pure_python.yml@v1
     with:
+      python-version: "3.11"
       upload_to_pypi: false
       upload_to_anaconda: false
       test_extras: tests
