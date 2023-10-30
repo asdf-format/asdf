@@ -41,6 +41,7 @@ jobs:
       default_python: '3.10'
       envs: |
         - linux: asdf-astropy
+        - linux: specutils
 
   stsci:
     uses: OpenAstronomy/github-actions-workflows/.github/workflows/tox.yml@v1

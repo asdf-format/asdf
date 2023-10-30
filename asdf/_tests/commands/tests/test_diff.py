@@ -54,6 +54,12 @@ def test_diff_ndarray():
     _assert_diffs_equal(filenames, result_file, minimal=False)
 
 
+def test_diff_ndarray_in_list():
+    filenames = ["ndarray_in_list0.asdf", "ndarray_in_list1.asdf"]
+    result_file = "ndarray_in_list.diff"
+    _assert_diffs_equal(filenames, result_file, minimal=False)
+
+
 def test_diff_block():
     filenames = ["block0.asdf", "block1.asdf"]
     result_file = "blocks.diff"

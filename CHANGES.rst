@@ -1,10 +1,10 @@
-3.0.1 (unreleased)
+3.0.1 (2023-10-30)
 ------------------
 
 The ASDF Standard is at v1.6.0
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
--
+- Fix bug in ``asdftool diff`` for arrays within a list [#1672]
 
 3.0.0 (2023-10-16)
 ------------------

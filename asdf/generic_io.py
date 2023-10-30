@@ -637,7 +637,7 @@ class GenericFile(metaclass=util.InheritDocstrings):
 
     def memmap_array(self, offset, size):
         """
-        Memmap a chunk of the file into a `np.core.memmap` object.
+        Memmap a chunk of the file into a `np.memmap` object.
 
         Parameters
         ----------
@@ -649,7 +649,7 @@ class GenericFile(metaclass=util.InheritDocstrings):
 
         Returns
         -------
-        array : np.core.memmap
+        array : np.memmap
         """
         msg = f"memmapping is not implemented for {self.__class__.__name__}"
         raise NotImplementedError(msg)
@@ -680,7 +680,7 @@ class GenericFile(metaclass=util.InheritDocstrings):
 
         Returns
         -------
-        array : np.core.memmap
+        array : np.memmap
         """
         buff = self.read(size)
         return np.frombuffer(buff, np.uint8, size, 0)
