@@ -1,0 +1,9 @@
+[31m< tree:[0m
+[31m< list:[0m
+[31m<   - a:[0m
+[31m<       offset:[0m
+[31m<         16[0m
+[31m<       strides:[0m
+[31m<         - -8[0m
+[32m>       ndarrays differ by contents[0m
+[31m<       ndarrays differ by contents[0m
