@@ -10,4 +10,5 @@ tree:[0m
       -[0m
 [32m>       9000[0m
 [31m<       10000[0m
-    [31mndarrays at "foobar" differ by shape, datatype and contents[0m
+[32m>   ndarrays differ by shape, datatype and contents[0m
+[31m<   ndarrays differ by shape, datatype and contents[0m
