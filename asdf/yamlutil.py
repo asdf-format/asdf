@@ -7,7 +7,7 @@ import yaml
 
 from . import config, schema, tagged, treeutil, util
 from .constants import STSCI_SCHEMA_TAG_BASE, YAML_TAG_PREFIX
-from .exceptions import AsdfConversionWarning
+from .exceptions import AsdfConversionWarning, AsdfDeprecationWarning
 from .extension._serialization_context import BlockAccess
 from .tags.core import AsdfObject
 from .versioning import _yaml_base_loader
@@ -303,11 +303,20 @@ def custom_tree_to_tagged_tree(tree, ctx, _serialization_context=None):
     )
 
 
-def tagged_tree_to_custom_tree(tree, ctx, force_raw_types=False, _serialization_context=None):
+def tagged_tree_to_custom_tree(tree, ctx, force_raw_types=util.NotSet, _serialization_context=None):
     """
     Convert a tree containing only basic data types, annotated with
     tags, to a tree containing custom data types.
     """
+    if force_raw_types is not util.NotSet:
+        warnings.warn(
+            "force_raw_types is deprecated. Once removed tagged_tree_to_custom_tree will "
+            "always behave as if force_raw_types was False, for uses where force_raw_types "
+            "was True calling of tagged_tree_to_custom_tree can be skipped",
+            AsdfDeprecationWarning,
+        )
+    else:
+        force_raw_types = False
     if _serialization_context is None:
         _serialization_context = ctx._create_serialization_context(BlockAccess.READ)
 

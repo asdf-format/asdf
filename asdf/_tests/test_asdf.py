@@ -1,7 +1,9 @@
 import os
 
+import numpy as np
 import pytest
 
+import asdf
 from asdf import config_context
 from asdf._asdf import AsdfFile, open_asdf
 from asdf._entry_points import get_extensions
@@ -390,3 +392,15 @@ def test_fsspec_http(httpserver):
     with fsspec.open(fn) as f:
         af = open_asdf(f)
         assert_tree_match(tree, af.tree)
+
+
+@pytest.mark.parametrize("as_tagged", [True, False])
+def test_asdf_open_as_tagged(tmp_path, as_tagged):
+    fn = tmp_path / "test.asdf"
+    asdf.AsdfFile({"a": np.zeros(3)}).write_to(fn)
+
+    with asdf.open(fn, as_tagged=as_tagged) as af:
+        if as_tagged:
+            assert isinstance(af["a"], asdf.tagged.TaggedDict)
+        else:
+            assert isinstance(af["a"], asdf.tags.core.ndarray.NDArrayType)

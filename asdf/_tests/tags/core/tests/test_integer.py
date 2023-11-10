@@ -46,7 +46,7 @@ def test_integer_storage(tmpdir, inline):
     with asdf.AsdfFile(tree) as af:
         af.write_to(tmpfile)
 
-    with asdf.open(tmpfile, _force_raw_types=True) as rf:
+    with asdf.open(tmpfile, as_tagged=True) as rf:
         if inline:
             assert "source" not in rf.tree["integer"]["words"]
             assert "data" in rf.tree["integer"]["words"]

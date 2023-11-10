@@ -50,3 +50,26 @@ def test_resolve_and_inline_deprecation():
     with pytest.warns(AsdfDeprecationWarning, match="resolve_and_inline is deprecated"):
         af = asdf.AsdfFile({"arr": np.arange(42)})
         af.resolve_and_inline()
+
+
+@pytest.mark.parametrize("force_raw_types", [True, False])
+def test_tagged_tree_to_custom_tree_force_raw_types_deprecation(tmp_path, force_raw_types):
+    fn = tmp_path / "test.asdf"
+    asdf.AsdfFile({"a": np.zeros(3)}).write_to(fn)
+
+    with asdf.open(fn, as_tagged=True) as af:
+        with pytest.warns(AsdfDeprecationWarning, match="force_raw_types is deprecated"):
+            asdf.yamlutil.tagged_tree_to_custom_tree(af.tree, af, force_raw_types)
+
+
+@pytest.mark.parametrize("force_raw_types", [True, False])
+def test_asdf_open_force_raw_types_deprecation(tmp_path, force_raw_types):
+    fn = tmp_path / "test.asdf"
+    asdf.AsdfFile({"a": np.zeros(3)}).write_to(fn)
+
+    with pytest.warns(AsdfDeprecationWarning, match="_force_raw_types is deprecated"):
+        with asdf.open(fn, _force_raw_types=force_raw_types) as af:
+            if force_raw_types:
+                assert isinstance(af["a"], asdf.tagged.TaggedDict)
+            else:
+                assert isinstance(af["a"], asdf.tags.core.ndarray.NDArrayType)
