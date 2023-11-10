@@ -9,6 +9,10 @@ The ASDF Standard is at v1.6.0
 
 - Deprecate ``asdf.asdf`` and ``AsdfFile.resolve_and_inline`` [#1690]
 
+- Deprecate ``_force_raw_types`` argument to ``asdf.open`` and replace
+  with ``as_tagged`` (also deprecate ``force_raw_types`` argument
+  to ``yamlutil.tagged_tree_to_custom_tree`` with no replacement) [#1677]
+
 3.0.1 (2023-10-30)
 ------------------
 
