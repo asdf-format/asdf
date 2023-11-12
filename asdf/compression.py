@@ -154,7 +154,7 @@ class BloscCompressor:
 
     def compress(self, data, **kwargs):
         # Coded name, could also use e.g. `lz4` or `zlib` instead
-        cname = 'blosclz'
+        cname = "blosclz"
         # Shuffle filter, could also use `SHUFFLE` or `NOSHUFFLE` instead
         shuffle = self._api.BITSHUFFLE
         _output = self._api.compress(data, cname=cname, shuffle=shuffle, typesize=data.itemsize, **kwargs)
