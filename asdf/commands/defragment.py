@@ -33,8 +33,8 @@ class Defragment(Command):
             "-c",
             type=str,
             nargs="?",
-            choices=["zlib", "bzp2", "lz4"],
-            help="""Compress blocks using one of "zlib", "bzp2" or "lz4".""",
+            choices=["zlib", "bzp2", "lz4", "blosc"],
+            help="""Compress blocks using one of "zlib", "bzp2", "lz4", or "blosc".""",
         )
 
         parser.set_defaults(func=cls.run)

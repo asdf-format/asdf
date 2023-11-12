@@ -34,7 +34,7 @@ def validate(compression):
 
     compression = compression.strip("\0")
 
-    builtin_labels = ["zlib", "bzp2", "lz4", "input"]
+    builtin_labels = ["zlib", "bzp2", "lz4", "blosc", "input"]
     ext_labels = _get_all_compression_extension_labels()
     all_labels = ext_labels + builtin_labels
 
@@ -136,6 +136,37 @@ class Lz4Compressor:
         return bytesout
 
 
+class BloscCompressor:
+    # Note that blosc supports only inputs of up to about 2 GByte.
+    # blosc2, which is not yet available as Python package, supports larger inputs.
+    def __init__(self):
+        try:
+            import blosc
+        except ImportError as err:
+            msg = (
+                "blosc library in not installed in your Python environment, "
+                "therefore the compressed block in this ASDF file "
+                "can not be decompressed."
+            )
+            raise ImportError(msg) from err
+
+        self._api = blosc
+
+    def compress(self, data, **kwargs):
+        # Coded name, could also use e.g. `lz4` or `zlib` instead
+        cname = 'blosclz'
+        # Shuffle filter, could also use `SHUFFLE` or `NOSHUFFLE` instead
+        shuffle = self._api.BITSHUFFLE
+        _output = self._api.compress(data, cname=cname, shuffle=shuffle, typesize=data.itemsize, **kwargs)
+        yield _output
+
+    def decompress(self, blocks, out, **kwargs):
+        _out = self._api.decompress(blocks, **kwargs)
+        out[0 : len(_out)] = _out
+        bytesout = len(_out)
+        return bytesout
+
+
 class ZlibCompressor:
     def compress(self, data, **kwargs):
         comp = zlib.compress(data, **kwargs)
@@ -214,6 +245,8 @@ def _get_compressor(label):
         comp = Bzp2Compressor()
     elif label == "lz4":
         comp = Lz4Compressor()
+    elif label == "blosc":
+        comp = BloscCompressor()
     else:
         msg = f"Unknown compression type: '{label}'"
         raise ValueError(msg)

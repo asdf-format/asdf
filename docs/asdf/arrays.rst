@@ -245,6 +245,10 @@ The `lz4 <https://en.wikipedia.org/wiki/LZ_4>`__ compression algorithm is also
 supported, but requires the optional
 `lz4 <https://python-lz4.readthedocs.io/>`__ package in order to work.
 
+A `bitshuffle <https://arxiv.org/abs/1503.00638>`__ compression algorithm is also
+supported, but requires the optional
+`blosc <https://www.blosc.org/>`__ package in order to work.
+
 When reading a file with compressed blocks, the blocks will be automatically
 decompressed when accessed. If a file with compressed blocks is read and then
 written out again, by default the new file will use the same compression as the

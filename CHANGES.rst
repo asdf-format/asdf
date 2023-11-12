@@ -1,3 +1,8 @@
+Upcoming:
+---------
+
+- Added support for ``blosc`` compression algorithm [#???].
+
 3.0.1 (2023-10-30)
 ------------------
 

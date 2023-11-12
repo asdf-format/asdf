@@ -113,6 +113,13 @@ def test_lz4(tmp_path):
     _roundtrip(tmp_path, tree, "lz4")
 
 
+def test_blosc(tmp_path):
+    pytest.importorskip("blosc")
+    tree = _get_large_tree()
+
+    _roundtrip(tmp_path, tree, "blosc")
+
+
 def test_recompression(tmp_path):
     tree = _get_large_tree()
     tmpfile = os.path.join(str(tmp_path), "test1.asdf")
@@ -191,6 +198,7 @@ def test_nonnative_endian_compression(tmp_path):
     bedata = np.arange(1000, dtype=">i8")
 
     _roundtrip(tmp_path, {"ledata": ledata, "bedata": bedata}, "lz4")
+    _roundtrip(tmp_path, {"ledata": ledata, "bedata": bedata}, "blosc")
 
 
 class LzmaCompressor(Compressor):

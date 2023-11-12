@@ -20,6 +20,9 @@ types.  One recommended option is the `asdf-astropy <https://asdf-astropy.readth
 Optional support for `lz4 <https://en.wikipedia.org/wiki/LZ4_(compression_algorithm)>`__
 compression is provided by the `lz4 <https://python-lz4.readthedocs.io/>`__ package.
 
+Optional support for `bitshuffle <https://arxiv.org/abs/1503.00638>`__
+compression is provided by the `blosc <https://www.blosc.org/>`__ package.
+
 Installing with pip
 ===================
 

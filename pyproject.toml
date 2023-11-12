@@ -35,6 +35,7 @@ dependencies = [
 [project.optional-dependencies]
 all = [
   "lz4>=0.10",
+  "blosc>=1.11.1",
 ]
 docs = [
   "sphinx-asdf>=0.2.2",
@@ -45,6 +46,7 @@ docs = [
 tests = [
   "fsspec[http]>=2022.8.2",
   "lz4>=0.10",
+  "blosc>=1.11.1",
   "psutil",
   "pytest>=6",
   "pytest-doctestplus",
