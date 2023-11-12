@@ -7,7 +7,7 @@ from asdf.config import config_context
 
 valid_storage_types = ["internal", "external", "streamed", "inline"]
 valid_default_storage_types = [st for st in valid_storage_types if st != "streamed"]
-valid_compression_types = [None, "zlib", "bzp2", "lz4", "blosc", ""]
+valid_compression_types = [None, "zlib", "bzp2", "lz4", "blsc", ""]
 
 invalid_storage_types = ["foo", "bar"]
 invalid_compression_types = ["input", "foo"]

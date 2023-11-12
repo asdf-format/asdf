@@ -34,7 +34,7 @@ def validate(compression):
 
     compression = compression.strip("\0")
 
-    builtin_labels = ["zlib", "bzp2", "lz4", "blosc", "input"]
+    builtin_labels = ["zlib", "bzp2", "lz4", "blsc", "input"]
     ext_labels = _get_all_compression_extension_labels()
     all_labels = ext_labels + builtin_labels
 
@@ -245,7 +245,7 @@ def _get_compressor(label):
         comp = Bzp2Compressor()
     elif label == "lz4":
         comp = Lz4Compressor()
-    elif label == "blosc":
+    elif label == "blsc":
         comp = BloscCompressor()
     else:
         msg = f"Unknown compression type: '{label}'"

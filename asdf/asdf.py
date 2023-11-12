@@ -674,7 +674,7 @@ class AsdfFile:
 
             - ``lz4``: Use lz4 compression
 
-            - ``blosc``: Use lz4 compression
+            - ``blsc``: Use blosc compression
 
             - ``input``: Use the same compression as in the file read.
               If there is no prior file, acts as None.
@@ -1005,7 +1005,7 @@ class AsdfFile:
 
             - ``lz4``: Use lz4 compression.
 
-            - ``blosc``: Use blosc compression.
+            - ``blsc``: Use blosc compression.
 
             - ``input``: Use the same compression as in the file read.
               If there is no prior file, acts as None
@@ -1160,7 +1160,7 @@ class AsdfFile:
 
             - ``lz4``: Use lz4 compression.
 
-            - ``blosc``: Use blosc compression.
+            - ``blsc``: Use blosc compression.
 
             - ``input``: Use the same compression as in the file read.
               If there is no prior file, acts as None.

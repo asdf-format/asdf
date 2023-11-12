@@ -57,4 +57,4 @@ def test_defragment_lz4(tmpdir):
 
 def test_defragment_blosc(tmpdir):
     pytest.importorskip("blosc")
-    _test_defragment(tmpdir, "blosc")
+    _test_defragment(tmpdir, "blsc")
