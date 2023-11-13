@@ -153,18 +153,37 @@ class BloscCompressor:
         self._api = blosc
 
     def compress(self, data, **kwargs):
-        # Coded name, could also use e.g. `lz4` or `zlib` instead
+        typesize = data.itemsize
+        clevel = 9
+        # Coded name (‘blosclz’, ‘lz4’, ‘lz4hc’, ‘snappy’, ‘zlib’, ‘zstd’)
         cname = "blosclz"
-        # Shuffle filter, could also use `SHUFFLE` or `NOSHUFFLE` instead
+        # Shuffle filter (`SHUFFLE`, `NOSHUFFLE`, `BITSHUFFLE`)
         shuffle = self._api.BITSHUFFLE
-        _output = self._api.compress(data, cname=cname, shuffle=shuffle, typesize=data.itemsize, **kwargs)
+        nthreads = 1
+        # nthreads = self._api.ncores)
+        self._api.set_nthreads(nthreads)
+        _output = self._api.compress(data, typesize=typesize, clevel=clevel, shuffle=shuffle, cname=cname)
         yield _output
 
     def decompress(self, blocks, out, **kwargs):
-        _out = self._api.decompress(blocks, **kwargs)
-        out[0 : len(_out)] = _out
-        bytesout = len(_out)
-        return bytesout
+        # There is no Python API for piecewise decompression. We need to collect all data first.
+        # TODO: Read all data at once instead of piecewise.
+        blocks = [block for block in blocks]
+        size = sum(len(block) for block in blocks)
+        buffer = np.empty(size, dtype=np.uint8)
+        base = 0
+        for block in blocks:
+            buffer[base:base+len(block)] = np.frombuffer(memoryview(block), dtype=buffer.dtype)
+            base += len(block)
+        assert base == len(buffer)
+        nthreads = 1
+        # nthreads = self._api.ncores)
+        self._api.set_nthreads(nthreads)
+        _out = self._api.decompress(buffer)
+        nbytes = len(out)
+        # TODO: call `self._api.decompress_ptr` instead to avoid copying the output
+        np.frombuffer(out, dtype=np.uint8)[0:nbytes] = np.frombuffer(_out, dtype=np.uint8)
+        return nbytes
 
 
 class ZlibCompressor:

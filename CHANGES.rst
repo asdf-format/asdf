@@ -1,7 +1,7 @@
 Upcoming:
 ---------
 
-- Added support for ``blosc`` compression algorithm [#???].
+- Added support for ``blosc`` compression algorithm [#1678].
 
 3.0.1 (2023-10-30)
 ------------------
