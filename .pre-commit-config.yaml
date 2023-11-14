@@ -62,3 +62,6 @@ repos:
   rev: "v0.15"
   hooks:
     - id: validate-pyproject
+
+ci:
+  autofix_prs: false

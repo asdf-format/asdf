@@ -2,7 +2,7 @@ name: Downstream
 
 on:
   workflow_dispatch:
-  pull_request:
+  pull_request_target:
     # We also want this workflow triggered if the `Downstream CI` label is
     # added or present when PR is updated
     types:
@@ -23,7 +23,7 @@ concurrency:
 jobs:
   asdf:
     uses: OpenAstronomy/github-actions-workflows/.github/workflows/tox.yml@v1
-    if: (github.repository == 'asdf-format/asdf' && (github.event_name == 'schedule' || github.event_name == 'push' || github.event_name == 'workflow_dispatch' || contains(github.event.pull_request.labels.*.name, 'Downstream CI')))
+    if: (github.repository == 'asdf-format/asdf' && (github.event_name == 'schedule' || github.event_name == 'push' || github.event_name == 'workflow_dispatch' || contains(github.event.pull_request.labels.*.name, 'Downstream CI'))) && (github.actor != 'pre-commit-ci[bot]')
     with:
       submodules: false
       # Any env name which does not start with `pyXY` will use this Python version.

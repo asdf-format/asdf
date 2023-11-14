@@ -1,7 +1,7 @@
 name: Changelog
 
 on:
-  pull_request:
+  pull_request_target:
     types: [labeled, unlabeled, opened, synchronize, reopened]
 
 # Only cancel in-progress jobs or runs for the current workflow
@@ -14,6 +14,7 @@ concurrency:
 
 jobs:
   changelog:
+    if: github.actor != 'pre-commit-ci[bot]'
     name: Confirm changelog entry
     runs-on: ubuntu-latest
     steps:

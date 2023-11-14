@@ -9,7 +9,7 @@ on:
       - '*.x'
     tags:
       - '*'
-  pull_request:
+  pull_request_target:
 
 # Only cancel in-progress jobs or runs for the current workflow
 #   This cancels the already triggered workflows for a specific PR without canceling
@@ -21,6 +21,7 @@ concurrency:
 
 jobs:
   core:
+    if: github.actor != 'pre-commit-ci[bot]'
     uses: OpenAstronomy/github-actions-workflows/.github/workflows/tox.yml@v1
     with:
       submodules: false
@@ -40,7 +41,7 @@ jobs:
 
   jsonschema:
     uses: OpenAstronomy/github-actions-workflows/.github/workflows/tox.yml@v1
-    if: (github.repository == 'asdf-format/asdf' && (github.event_name == 'schedule' || github.event_name == 'push' || github.event_name == 'workflow_dispatch' || contains(github.event.pull_request.labels.*.name, 'jsonschema')))
+    if: (github.repository == 'asdf-format/asdf' && (github.event_name == 'schedule' || github.event_name == 'push' || github.event_name == 'workflow_dispatch' || contains(github.event.pull_request.labels.*.name, 'jsonschema'))) && (github.actor != 'pre-commit-ci[bot]')
     with:
       submodules: false
       # Any env name which does not start with `pyXY` will use this Python version.
@@ -49,6 +50,7 @@ jobs:
         - linux: jsonschema
 
   asdf-schemas:
+    if: github.actor != 'pre-commit-ci[bot]'
     uses: OpenAstronomy/github-actions-workflows/.github/workflows/tox.yml@v1
     with:
       submodules: false
