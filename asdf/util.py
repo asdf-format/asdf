@@ -20,8 +20,7 @@ import numpy as np
 from importlib_metadata import packages_distributions
 from packaging.version import Version
 
-from . import constants
-from .exceptions import AsdfDeprecationWarning
+from . import constants, exceptions
 
 # We're importing our own copy of urllib.parse because
 # we need to patch it to support asdf:// URIs, but it'd
@@ -78,7 +77,7 @@ def human_list(line, separator="and"):
     >>> human_list(["vanilla", "strawberry", "chocolate"], "or")  # doctest: +SKIP
     'vanilla, strawberry or chocolate'
     """
-    warnings.warn("asdf.util.human_list is deprecated", AsdfDeprecationWarning)
+    warnings.warn("asdf.util.human_list is deprecated", exceptions.AsdfDeprecationWarning)
     if len(line) == 1:
         return line[0]
 
@@ -126,7 +125,7 @@ def iter_subclasses(cls):
     """
     Returns all subclasses of a class.
     """
-    warnings.warn("asdf.util.iter_subclasses is deprecated", AsdfDeprecationWarning)
+    warnings.warn("asdf.util.iter_subclasses is deprecated", exceptions.AsdfDeprecationWarning)
     yield from _iter_subclasses(cls)
 
 
@@ -289,7 +288,7 @@ def resolve_name(name):
         If the module or named object is not found.
     """
 
-    warnings.warn("asdf.util.resolve_name is deprecated, see astropy.utils.resolve_name", AsdfDeprecationWarning)
+    warnings.warn("asdf.util.resolve_name is deprecated, see astropy.utils.resolve_name", exceptions.AsdfDeprecationWarning)
 
     # Note: On python 2 these must be str objects and not unicode
     parts = [str(part) for part in name.split(".")]
@@ -366,7 +365,7 @@ def minversion(module, version, inclusive=True):
         as opposed to strictly greater than (default: `True`).
     """
 
-    warnings.warn("asdf.util.minversion is deprecated, see astropy.utils.minversion", AsdfDeprecationWarning)
+    warnings.warn("asdf.util.minversion is deprecated, see astropy.utils.minversion", exceptions.AsdfDeprecationWarning)
 
     if isinstance(module, types.ModuleType):
         module_name = module.__name__
@@ -376,7 +375,7 @@ def minversion(module, version, inclusive=True):
         module_version = None
         try:
             with warnings.catch_warnings():
-                warnings.filterwarnings("ignore", "asdf.util.resolve_name", AsdfDeprecationWarning)
+                warnings.filterwarnings("ignore", "asdf.util.resolve_name", exceptions.AsdfDeprecationWarning)
                 module = resolve_name(module_name)
         except ImportError:
             return False
@@ -468,6 +467,7 @@ def is_primitive(value):
     bool
         True if the value is primitive, False otherwise
     """
+    warnings.warn("asdf.util.is_primitive is deprecated", exceptions.AsdfDeprecationWarning)
     return isinstance(value, (bool, int, float, complex, str)) or value is None
 
 
