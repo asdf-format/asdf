@@ -633,6 +633,9 @@ class RecursiveObjectWithInfoSupport:
     def __asdf_traverse__(self):
         return {"the_meaning": self.the_meaning, "clown": self.clown, "recursive": self.recursive}
 
+    def __str__(self):
+        return "rec ref"
+
 
 def test_recursive_info_object_support(capsys, tmp_path):
     tempdir = pathlib.Path(tempfile.mkdtemp())
