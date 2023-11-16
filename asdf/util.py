@@ -270,7 +270,7 @@ def resolve_name(name):
     Examples
     --------
 
-    >>> resolve_name('asdf.util.resolve_name')
+    >>> resolve_name('asdf.util.resolve_name')  # doctest: +SKIP
     <function resolve_name at 0x...>
 
     Raises
@@ -278,6 +278,8 @@ def resolve_name(name):
     `ImportError`
         If the module or named object is not found.
     """
+
+    warnings.warn("asdf.util.resolve_name is deprecated, see astropy.utils.resolve_name", AsdfDeprecationWarning)
 
     # Note: On python 2 these must be str objects and not unicode
     parts = [str(part) for part in name.split(".")]
@@ -354,6 +356,8 @@ def minversion(module, version, inclusive=True):
         as opposed to strictly greater than (default: `True`).
     """
 
+    warnings.warn("asdf.util.minversion is deprecated, see astropy.utils.minversion", AsdfDeprecationWarning)
+
     if isinstance(module, types.ModuleType):
         module_name = module.__name__
         module_version = getattr(module, "__version__", None)
@@ -361,7 +365,9 @@ def minversion(module, version, inclusive=True):
         module_name = module
         module_version = None
         try:
-            module = resolve_name(module_name)
+            with warnings.catch_warnings():
+                warnings.filterwarnings("ignore", "asdf.util.resolve_name", AsdfDeprecationWarning)
+                module = resolve_name(module_name)
         except ImportError:
             return False
     else:

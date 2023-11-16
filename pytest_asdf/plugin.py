@@ -66,9 +66,7 @@ class AsdfSchemaFile(pytest.File):
         **kwargs,
     ):
         # Fix for depreciation of fspath in pytest 7+
-        from asdf.util import minversion
-
-        if minversion("pytest", "7.0.0"):
+        if pytest.__version__ >= "7.0.0":
             path = pathlib.Path(fspath)
             kwargs["path"] = path
         else:
