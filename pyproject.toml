@@ -90,7 +90,7 @@ force-exclude = '''
     | \.git
     | \.pytest_cache
     | \.tox
-    | asdf/extern
+    | asdf/_extern
     | asdf/_jsonschema
     | build
     | dist
@@ -126,7 +126,7 @@ omit = [
     'asdf/*/*/tests/*',
     'asdf/version.*',
     'asdf/compat*',
-    'asdf/extern*',
+    'asdf/_extern*',
     'asdf/_jsonschema/**',
     # And again for running against installed version
     '*/asdf/_astropy_init*',
@@ -141,7 +141,7 @@ omit = [
     '*/asdf/*/*/tests/*',
     '*/asdf/version.*',
     '*/asdf/compat*',
-    '*/asdf/extern*',
+    '*/asdf/_extern*',
     '*/asdf/_jsonschema/**',
 ]
 
@@ -176,7 +176,7 @@ extend-ignore = [
     "S310", # URL open for permitted schemes
     "RUF012",  # mutable-class-default (typing related)
 ]
-extend-exclude = ["asdf/extern/*", "asdf/_jsonschema/*", "docs/*"]
+extend-exclude = ["asdf/_extern/*", "asdf/_jsonschema/*", "docs/*"]
 
 [tool.ruff.per-file-ignores]
 "test_*.py" = ["S101"]
@@ -184,10 +184,10 @@ extend-exclude = ["asdf/extern/*", "asdf/_jsonschema/*", "docs/*"]
 "compatibility_tests/common.py" = ["S101"]
 
 [tool.flynt]
-exclude = ["asdf/extern/*", "asdf/_jsonschema/*"]
+exclude = ["asdf/_extern/*", "asdf/_jsonschema/*"]
 
 [tool.codespell]
-skip="*.pdf,*.asdf,.tox,asdf/extern,asdf/_jsonschema,build,./tags,.git,docs/_build"
+skip="*.pdf,*.asdf,.tox,asdf/_extern,asdf/_jsonschema,build,./tags,.git,docs/_build"
 ignore-words-list="""
 fo,afile,
 """

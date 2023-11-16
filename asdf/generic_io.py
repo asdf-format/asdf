@@ -20,8 +20,8 @@ from urllib.request import url2pathname, urlopen
 import numpy as np
 
 from . import util
+from ._extern import atomicfile
 from .exceptions import DelimiterNotFoundError
-from .extern import atomicfile
 from .util import _patched_urllib_parse
 
 __all__ = ["get_file", "get_uri", "resolve_uri", "relative_uri"]
