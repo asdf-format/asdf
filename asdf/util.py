@@ -51,6 +51,8 @@ __all__ = [
     "is_primitive",
     "uri_match",
     "get_class_name",
+    "get_file_type",
+    "FileType",
 ]
 
 
