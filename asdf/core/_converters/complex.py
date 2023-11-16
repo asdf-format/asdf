@@ -14,7 +14,7 @@ _REPLACEMENTS = {
 class ComplexConverter(Converter):
     tags = ["tag:stsci.edu:asdf/core/complex-1.0.0"]
 
-    types = [*list(util.iter_subclasses(np.complexfloating)), complex]
+    types = [*list(util._iter_subclasses(np.complexfloating)), complex]
 
     def to_yaml_tree(self, obj, tag, ctx):
         return str(obj)

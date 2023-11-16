@@ -119,10 +119,10 @@ AsdfDumper.add_representer(OrderedDict, represent_ordereddict)
 # Handle numpy scalars
 
 
-for scalar_type in util.iter_subclasses(np.floating):
+for scalar_type in util._iter_subclasses(np.floating):
     AsdfDumper.add_representer(scalar_type, lambda dumper, data: dumper.represent_float(float(data)))
 
-for scalar_type in util.iter_subclasses(np.integer):
+for scalar_type in util._iter_subclasses(np.integer):
     AsdfDumper.add_representer(scalar_type, lambda dumper, data: dumper.represent_int(int(data)))
 
 

@@ -31,3 +31,8 @@ def test_asdf_util_resolve_name_deprecation():
 def test_asdf_util_minversion_deprecation():
     with pytest.warns(AsdfDeprecationWarning, match="asdf.util.minversion is deprecated"):
         asdf.util.minversion("yaml", "3.1")
+
+
+def test_asdf_util_iter_subclasses_deprecation():
+    with pytest.warns(AsdfDeprecationWarning, match="asdf.util.iter_subclasses is deprecated"):
+        list(asdf.util.iter_subclasses(asdf.AsdfFile))

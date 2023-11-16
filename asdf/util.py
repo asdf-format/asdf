@@ -113,13 +113,21 @@ def filepath_to_url(path):
     return _patched_urllib_parse.urljoin("file:", pathname2url(path))
 
 
-def iter_subclasses(cls):
+def _iter_subclasses(cls):
     """
     Returns all subclasses of a class.
     """
     for x in cls.__subclasses__():
         yield x
-        yield from iter_subclasses(x)
+        yield from _iter_subclasses(x)
+
+
+def iter_subclasses(cls):
+    """
+    Returns all subclasses of a class.
+    """
+    warnings.warn("asdf.util.iter_subclasses is deprecated", AsdfDeprecationWarning)
+    yield from _iter_subclasses(cls)
 
 
 def calculate_padding(content_size, pad_blocks, block_size):
