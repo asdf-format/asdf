@@ -1,4 +1,4 @@
-from asdf import compression as mcompression
+from asdf import _compression as mcompression
 from asdf.config import get_config
 
 

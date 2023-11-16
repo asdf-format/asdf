@@ -371,7 +371,7 @@ class AsdfConfig:
     @all_array_compression.setter
     def all_array_compression(self, value):
         # local to avoid circular import
-        from asdf.compression import validate
+        from asdf._compression import validate
 
         self._all_array_compression = validate(value)
 

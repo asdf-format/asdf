@@ -10,7 +10,7 @@ import weakref
 
 import yaml
 
-from asdf import compression as mcompression
+from asdf import _compression as mcompression
 from asdf import constants, util
 
 from .exceptions import BlockIndexError

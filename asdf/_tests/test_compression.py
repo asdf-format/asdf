@@ -6,7 +6,7 @@ import numpy as np
 import pytest
 
 import asdf
-from asdf import compression, config_context, generic_io
+from asdf import _compression, config_context, generic_io
 from asdf._tests import _helpers as helpers
 from asdf.extension import Compressor, Extension
 
@@ -71,27 +71,27 @@ def test_invalid_compression():
     with pytest.raises(ValueError, match=r"Invalid compression type: foo"):
         ff.set_array_compression(tree["science_data"], "foo")
     with pytest.raises(ValueError, match=r"Unknown compression type: .*"):
-        compression._get_compressor("foo")
+        _compression._get_compressor("foo")
 
 
 def test_get_compressed_size():
-    assert compression.get_compressed_size(b"0" * 1024, "zlib") < 1024
+    assert _compression.get_compressed_size(b"0" * 1024, "zlib") < 1024
 
 
 def test_decompress_too_long_short():
     fio = io.BytesIO()
-    compression.compress(fio, b"0" * 1024, "zlib")
+    _compression.compress(fio, b"0" * 1024, "zlib")
     size = fio.tell()
     fio.seek(0)
     blocks = lambda us: [fio.read(us)]  # noqa: E731
     fio.read_blocks = blocks
-    compression.decompress(fio, size, 1024, "zlib")
+    _compression.decompress(fio, size, 1024, "zlib")
     fio.seek(0)
     with pytest.raises(ValueError, match=r"Decompressed data wrong size"):
-        compression.decompress(fio, size, 1025, "zlib")
+        _compression.decompress(fio, size, 1025, "zlib")
     fio.seek(0)
     with pytest.raises(ValueError, match=r"memoryview assignment: lvalue and rvalue have different structures"):
-        compression.decompress(fio, size, 1023, "zlib")
+        _compression.decompress(fio, size, 1023, "zlib")
 
 
 def test_zlib(tmp_path):
