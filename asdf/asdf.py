@@ -5,7 +5,7 @@ from .exceptions import AsdfDeprecationWarning
 
 
 warnings.warn(
-    "asdf.asdf is deprecated",
+    "asdf.asdf is deprecated. Please use asdf.AsdfFile and asdf.open",
     AsdfDeprecationWarning,
 )
 

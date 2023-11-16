@@ -6,6 +6,12 @@
 Deprecations
 ************
 
+Version 3.1
+===========
+
+``asdf.asdf`` is deprecated. Please use the top-level ``asdf`` module for
+``AsdfFile`` and ``open`` (same as ``asdf.asdf.open_asdf``).
+
 Version 3.0
 ===========
 
