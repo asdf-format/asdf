@@ -154,7 +154,7 @@ def calculate_padding(content_size, pad_blocks, block_size):
     return max(new_size - content_size, 0)
 
 
-class BinaryStruct:
+class _BinaryStruct:
     """
     A wrapper around the Python stdlib struct module to define a
     binary struct more like a dictionary than a tuple.

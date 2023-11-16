@@ -15,7 +15,7 @@ from asdf import constants, util
 
 from .exceptions import BlockIndexError
 
-BLOCK_HEADER = util.BinaryStruct(
+BLOCK_HEADER = util._BinaryStruct(
     [
         ("flags", "I"),
         ("compression", "4s"),
@@ -83,7 +83,7 @@ def read_block_header(fd, offset=None):
     -------
     header : dict
         Dictionary containing the read ASDF header as parsed by the
-        `BLOCK_HEADER` `asdf.util.BinaryStruct`.
+        `BLOCK_HEADER` `asdf.util._BinaryStruct`.
 
     Raises
     ------
