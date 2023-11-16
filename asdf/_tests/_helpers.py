@@ -24,7 +24,7 @@ import yaml
 
 import asdf
 from asdf import generic_io, versioning
-from asdf.asdf import AsdfFile, _get_asdf_library_info
+from asdf._asdf import AsdfFile, _get_asdf_library_info
 from asdf.constants import YAML_TAG_PREFIX
 from asdf.exceptions import AsdfConversionWarning
 from asdf.tags.core import AsdfObject

@@ -106,7 +106,7 @@ def collect_schema_info(
 
 
 def _get_extension_manager(refresh_extension_manager):
-    from .asdf import AsdfFile, get_config
+    from ._asdf import AsdfFile, get_config
     from .extension import ExtensionManager
 
     af = AsdfFile()

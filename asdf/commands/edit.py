@@ -16,9 +16,9 @@ import tempfile
 import yaml
 
 from asdf import constants, generic_io, schema, util
+from asdf._asdf import AsdfFile, open_asdf
 from asdf._block import io as bio
 from asdf._block.exceptions import BlockIndexError
-from asdf.asdf import AsdfFile, open_asdf
 
 from .main import Command
 

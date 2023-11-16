@@ -17,10 +17,10 @@ __all__ = [
 ]
 
 
+from ._asdf import AsdfFile
+from ._asdf import open_asdf as open
 from ._convenience import info
 from ._version import version as __version__
-from .asdf import AsdfFile
-from .asdf import open_asdf as open
 from .config import config_context, get_config
 from .exceptions import ValidationError
 from .tags.core import IntegerType, Stream
