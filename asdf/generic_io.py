@@ -22,7 +22,7 @@ import numpy as np
 from . import util
 from .exceptions import DelimiterNotFoundError
 from .extern import atomicfile
-from .util import patched_urllib_parse
+from .util import _patched_urllib_parse
 
 __all__ = ["get_file", "get_uri", "resolve_uri", "relative_uri"]
 
@@ -69,8 +69,8 @@ def resolve_uri(base, uri):
     """
     if base is None:
         base = ""
-    resolved = patched_urllib_parse.urljoin(base, uri)
-    parsed = patched_urllib_parse.urlparse(resolved)
+    resolved = _patched_urllib_parse.urljoin(base, uri)
+    parsed = _patched_urllib_parse.urlparse(resolved)
     if parsed.path != "" and not parsed.path.startswith("/"):
         msg = "Resolved to relative URL"
         raise ValueError(msg)
@@ -81,8 +81,8 @@ def relative_uri(source, target):
     """
     Make a relative URI from source to target.
     """
-    su = patched_urllib_parse.urlparse(source)
-    tu = patched_urllib_parse.urlparse(target)
+    su = _patched_urllib_parse.urlparse(source)
+    tu = _patched_urllib_parse.urlparse(target)
     extra = list(tu[3:])
     relative = None
     if tu[0] == "" and tu[1] == "":
@@ -98,7 +98,7 @@ def relative_uri(source, target):
     if relative == ".":
         relative = ""
 
-    return patched_urllib_parse.urlunparse(["", "", relative, *extra])
+    return _patched_urllib_parse.urlunparse(["", "", relative, *extra])
 
 
 class _TruncatedReader:
@@ -1094,7 +1094,7 @@ def get_file(init, mode="r", uri=None, close=False):
         return GenericWrapper(init)
 
     if isinstance(init, (str, pathlib.Path)):
-        parsed = patched_urllib_parse.urlparse(str(init))
+        parsed = _patched_urllib_parse.urlparse(str(init))
         if parsed.scheme in ["http", "https"]:
             if "w" in mode:
                 msg = "HTTP connections can not be opened for writing"

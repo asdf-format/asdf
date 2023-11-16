@@ -17,7 +17,7 @@ from asdf._jsonschema.exceptions import RefResolutionError, ValidationError
 from . import constants, generic_io, reference, tagged, treeutil, util, versioning, yamlutil
 from .config import get_config
 from .exceptions import AsdfDeprecationWarning, AsdfWarning
-from .util import patched_urllib_parse
+from .util import _patched_urllib_parse
 
 YAML_SCHEMA_METASCHEMA_ID = "http://stsci.edu/schemas/yaml-schema/draft-01"
 
@@ -381,7 +381,7 @@ def _make_jsonschema_refresolver(url_mapping):
 
     # Supplying our own implementation of urljoin_cache
     # allows asdf:// URIs to be resolved correctly.
-    urljoin_cache = lru_cache(1024)(patched_urllib_parse.urljoin)
+    urljoin_cache = lru_cache(1024)(_patched_urllib_parse.urljoin)
 
     # We set cache_remote=False here because we do the caching of
     # remote schemas here in `load_schema`, so we don't need

@@ -37,12 +37,12 @@ def test_get_class_name():
 
 
 def test_patched_urllib_parse():
-    assert "asdf" in util.patched_urllib_parse.uses_relative
-    assert "asdf" in util.patched_urllib_parse.uses_netloc
+    assert "asdf" in util._patched_urllib_parse.uses_relative
+    assert "asdf" in util._patched_urllib_parse.uses_netloc
 
     import urllib.parse
 
-    assert urllib.parse is not util.patched_urllib_parse
+    assert urllib.parse is not util._patched_urllib_parse
     assert "asdf" not in urllib.parse.uses_relative
     assert "asdf" not in urllib.parse.uses_netloc
 

@@ -12,7 +12,7 @@ from contextlib import suppress
 import numpy as np
 
 from . import generic_io, treeutil, util
-from .util import patched_urllib_parse
+from .util import _patched_urllib_parse
 
 __all__ = ["resolve_fragment", "Reference", "find_references", "resolve_references", "make_reference"]
 
@@ -22,7 +22,7 @@ def resolve_fragment(tree, pointer):
     Resolve a JSON Pointer within the tree.
     """
     pointer = pointer.lstrip("/")
-    parts = patched_urllib_parse.unquote(pointer).split("/") if pointer else []
+    parts = _patched_urllib_parse.unquote(pointer).split("/") if pointer else []
 
     for part in parts:
         part_ = part.replace("~1", "/").replace("~0", "~")
@@ -57,7 +57,7 @@ class Reference:
                 base_uri = self._asdffile().uri
             uri = generic_io.resolve_uri(base_uri, self._uri)
             asdffile = self._asdffile().open_external(uri, **kwargs)
-            parts = patched_urllib_parse.urlparse(self._uri)
+            parts = _patched_urllib_parse.urlparse(self._uri)
             fragment = parts.fragment
             self._target = resolve_fragment(asdffile.tree, fragment)
         return self._target
