@@ -5,6 +5,7 @@ import math
 import re
 import struct
 import types
+import warnings
 from functools import lru_cache
 from importlib import metadata
 from urllib.request import pathname2url
@@ -20,6 +21,7 @@ from importlib_metadata import packages_distributions
 from packaging.version import Version
 
 from . import constants
+from .exceptions import AsdfDeprecationWarning
 
 # We're importing our own copy of urllib.parse because
 # we need to patch it to support asdf:// URIs, but it'd
@@ -71,9 +73,10 @@ def human_list(line, separator="and"):
 
     Examples
     --------
-    >>> human_list(["vanilla", "strawberry", "chocolate"], "or")
+    >>> human_list(["vanilla", "strawberry", "chocolate"], "or")  # doctest: +SKIP
     'vanilla, strawberry or chocolate'
     """
+    warnings.warn("asdf.util.human_list is deprecated", AsdfDeprecationWarning)
     if len(line) == 1:
         return line[0]
 
