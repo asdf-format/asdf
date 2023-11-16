@@ -117,7 +117,7 @@ around it and install that extension:
 
     asdf.get_config().add_extension(ShapesExtension())
 
-Now we can include a Rectangle object in an `~asdf.asdf.AsdfFile` tree
+Now we can include a Rectangle object in an `~asdf.AsdfFile` tree
 and write out a file:
 
 .. code-block:: python
