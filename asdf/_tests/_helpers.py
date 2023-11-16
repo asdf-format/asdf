@@ -24,7 +24,7 @@ import yaml
 
 import asdf
 from asdf import generic_io, versioning
-from asdf.asdf import AsdfFile, get_asdf_library_info
+from asdf.asdf import AsdfFile, _get_asdf_library_info
 from asdf.constants import YAML_TAG_PREFIX
 from asdf.exceptions import AsdfConversionWarning
 from asdf.tags.core import AsdfObject
@@ -213,7 +213,7 @@ def _assert_roundtrip_tree(
         assert not buff.closed
         assert isinstance(ff.tree, AsdfObject)
         assert "asdf_library" in ff.tree
-        assert ff.tree["asdf_library"] == get_asdf_library_info()
+        assert ff.tree["asdf_library"] == _get_asdf_library_info()
         assert_tree_match(tree, ff.tree, ff, funcname=tree_match_func)
         if asdf_check_func:
             asdf_check_func(ff)

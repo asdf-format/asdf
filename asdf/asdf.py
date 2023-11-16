@@ -44,7 +44,7 @@ def __getattr__(name):
     raise AttributeError(msg)
 
 
-def get_asdf_library_info():
+def _get_asdf_library_info():
     """
     Get information about asdf to include in the asdf_library entry
     in the Tree.
@@ -956,7 +956,7 @@ class AsdfFile:
             try:
                 # prep a tree for a writing
                 tree = copy.copy(self._tree)
-                tree["asdf_library"] = get_asdf_library_info()
+                tree["asdf_library"] = _get_asdf_library_info()
                 if "history" in self._tree:
                     tree["history"] = copy.deepcopy(self._tree["history"])
 
@@ -1079,7 +1079,7 @@ class AsdfFile:
 
             self._pre_write(fd)
             try:
-                self._tree["asdf_library"] = get_asdf_library_info()
+                self._tree["asdf_library"] = _get_asdf_library_info()
 
                 # prepare block manager for writing
                 with self._blocks.write_context(self._fd, copy_options=False):
