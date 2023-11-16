@@ -515,12 +515,16 @@ def _compile_uri_match_pattern(pattern):
 def get_file_type(fd):
     """
     Determine the file type of an open GenericFile instance.
+
     Parameters
     ----------
-    fd : GenericFile
+
+    fd : ``asdf.generic_io.GenericFile``
+
     Returns
     -------
-    FileType
+
+    `asdf.util.FileType`
     """
     if fd.peek(5) == constants.ASDF_MAGIC:
         return FileType.ASDF
@@ -533,7 +537,7 @@ def get_file_type(fd):
 
 class FileType(enum.Enum):
     """
-    Enum representing file types recognized by asdf.
+    Enum representing if a file is ASDF, FITS or UNKNOWN.
     """
 
     ASDF = 1
