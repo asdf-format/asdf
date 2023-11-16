@@ -187,7 +187,7 @@ class _TruncatedReader:
         return content
 
 
-class GenericFile(metaclass=util.InheritDocstrings):
+class GenericFile(metaclass=util._InheritDocstrings):
     """
     Base class for an abstraction layer around a number of different
     file-like types.  Each of its subclasses handles a particular kind

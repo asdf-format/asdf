@@ -391,7 +391,7 @@ def minversion(module, version, inclusive=True):
     return Version(module_version) > Version(version)
 
 
-class InheritDocstrings(type):
+class _InheritDocstrings(type):
     """
     This metaclass makes methods of a class automatically have their
     docstrings filled in from the methods they override in the base
@@ -405,8 +405,8 @@ class InheritDocstrings(type):
 
     For example::
 
-        >>> from asdf.util import InheritDocstrings
-        >>> class A(metaclass=InheritDocstrings):
+        >>> from asdf.util import _InheritDocstrings
+        >>> class A(metaclass=_InheritDocstrings):
         ...     def wiggle(self):
         ...         "Wiggle the thingamajig"
         ...         pass
