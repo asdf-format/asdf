@@ -203,7 +203,8 @@ class AsdfFile:
             self._tree = tree.tree
             self.find_references(_warning_msg=find_ref_warning_msg)
         else:
-            self.tree = tree
+            self._tree = AsdfObject(tree)
+            self.validate()
             self.find_references(_warning_msg=find_ref_warning_msg)
 
         self._comments = []
@@ -570,7 +571,13 @@ class AsdfFile:
     def tree(self, tree):
         asdf_object = AsdfObject(tree)
         # Only perform custom validation if the tree is not empty
-        self._validate(asdf_object, custom=bool(tree))
+        try:
+            self._validate(asdf_object, custom=bool(tree))
+        except ValidationError:
+            warnings.warn(
+                "Validation on tree assignment is deprecated. Please use AsdfFile.validate", AsdfDeprecationWarning
+            )
+            raise
         self._tree = asdf_object
 
     def keys(self):
@@ -1234,7 +1241,8 @@ class AsdfFile:
         """
         # Set to the property self.tree so the resulting "complete"
         # tree will be validated.
-        self.tree = reference.resolve_references(self._tree, self)
+        self._tree = reference.resolve_references(self._tree, self)
+        self.validate()
 
     def resolve_and_inline(self):
         """

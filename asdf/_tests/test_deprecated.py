@@ -5,7 +5,7 @@ import numpy as np
 import pytest
 
 import asdf
-from asdf.exceptions import AsdfDeprecationWarning
+from asdf.exceptions import AsdfDeprecationWarning, ValidationError
 
 
 def test_asdf_stream_deprecation():
@@ -84,3 +84,11 @@ def test_find_references_during_open_deprecation(tmp_path):
 def test_asdf_util_is_primitive_deprecation():
     with pytest.warns(AsdfDeprecationWarning, match="asdf.util.is_primitive is deprecated"):
         asdf.util.is_primitive(1)
+
+
+def test_AsdfFile_tree_assignment_validation_deprecation():
+    af = asdf.AsdfFile()
+    with pytest.warns(AsdfDeprecationWarning, match="Validation on tree assignment is deprecated"), pytest.raises(
+        ValidationError
+    ):
+        af.tree = {"history": 42}

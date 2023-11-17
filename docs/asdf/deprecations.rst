@@ -20,6 +20,12 @@ Automatic calling of ``AsdfFile.find_references`` during calls to
 ``AsdfFile.__init__`` and ``asdf.open``. Call ``AsdfFile.find_references`` to
 find references.
 
+Automatic validation on assignment to the top-level ``AsdfFile.tree`` attribute is
+deprecated and will be disabled in a future version of asdf. Please call
+``AsdfFile.validate`` to validate the tree. As this is difficult to deprecate without
+triggering warnings for every tree assignment the warning will only be shown
+if the validation triggered by tree assignment fails.
+
 Version 3.0
 ===========
 
