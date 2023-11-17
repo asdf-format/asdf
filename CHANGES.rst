@@ -7,6 +7,12 @@ The ASDF Standard is at v1.6.0
 - Cleanup ``asdf.util`` including deprecating: ``human_list``
   ``resolve_name`` ``minversion`` and ``iter_subclasses`` [#1688]
 
+- Deprecate validation on ``AsdfFile.tree`` assignment. Please
+  use ``AsdfFile.validate`` to validate the tree [#1691]
+
+- Deprecate validation during ``AsdfFile.resolve_references``. Please
+  use ``AsdfFile.validate`` to validate the tree [#1691]
+
 - Deprecate ``asdf.asdf`` and ``AsdfFile.resolve_and_inline`` [#1690]
 
 - Deprecate automatic calling of ``AsdfFile.find_references`` during
