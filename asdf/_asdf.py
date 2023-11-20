@@ -1223,6 +1223,12 @@ class AsdfFile:
         produces something that, when saved, is a 100% valid YAML
         file.
         """
+        warnings.warn(
+            "resolve_and_inline is deprecated. "
+            "Use AsdfFile.resolve_references and all_array_storage=inline "
+            "during AsdfFile.write_to",
+            AsdfDeprecationWarning,
+        )
         self.resolve_references()
         for b in self._blocks.blocks:
             self.set_array_storage(b.data, "inline")

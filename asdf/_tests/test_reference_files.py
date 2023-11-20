@@ -35,7 +35,7 @@ def _compare_trees(name_without_ext, expect_warnings=False):
     yaml_path = name_without_ext + ".yaml"
 
     with asdf_open(asdf_path) as af_handle:
-        af_handle.resolve_and_inline()
+        af_handle.resolve_references()
 
         with asdf_open(yaml_path) as ref:
 
