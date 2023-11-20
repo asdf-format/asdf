@@ -117,9 +117,9 @@ properties:
 
 
 @contextlib.contextmanager
-def roundtrip(af, raw=False):
+def roundtrip(af, raw=False, standard_version=None):
     if not isinstance(af, asdf.AsdfFile):
-        af = asdf.AsdfFile(af)
+        af = asdf.AsdfFile(af, version=standard_version)
     b = io.BytesIO()
     af.write_to(b)
     b.seek(0)
@@ -171,21 +171,14 @@ def test_byteorder(tmp_path):
             assert my_tree["little"].dtype.byteorder == "<"
 
 
-def test_all_dtypes(tmp_path):
+@pytest.mark.parametrize("dtype", ndarray._datatype_names.values())
+def test_all_dtypes(dtype):
+    standard_version = "1.6.0" if dtype == "f2" else None
     tree = {}
     for byteorder in (">", "<"):
-        for dtype in ndarray._datatype_names.values():
-            # Python 3 can't expose these dtypes in non-native byte
-            # order, because it's using the new Python buffer
-            # interface.
-            if dtype in ("c32", "f16"):
-                continue
-
-            arr = np.array([True, False]) if dtype == "b1" else np.arange(0, 10, dtype=str(byteorder + dtype))
-
-            tree[byteorder + dtype] = arr
-
-    with roundtrip(tree) as af:
+        arr = np.array([True, False]) if dtype == "b1" else np.arange(0, 10, dtype=str(byteorder + dtype))
+        tree[byteorder + dtype] = arr
+    with roundtrip(tree, standard_version=standard_version) as af:
         for k in tree:
             pre = tree[k]
             post = af[k]
