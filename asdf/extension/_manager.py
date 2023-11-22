@@ -7,6 +7,27 @@ from asdf.util import get_class_name, uri_match
 from ._extension import ExtensionProxy
 
 
+def _resolve_type(path):
+    if "." not in path:
+        # this path does not appear to include a module
+        if path in globals():
+            return globals()[path]
+        elif path in sys.modules:
+            return sys.modules[path]
+        return None
+    # this type is part of a module
+    module_name, type_name = path.rsplit(".", maxsplit=1)
+    # if the module is not imported, don't index it
+    if module_name not in sys.modules:
+        return None
+    module = sys.modules[module_name]
+    if not hasattr(module, type_name):
+        # the imported module does not have this class, perhaps
+        # it is dynamically created so do not index it yet
+        return None
+    return getattr(module, type_name)
+
+
 class ExtensionManager:
     """
     Wraps a list of extensions and indexes their converters
@@ -33,9 +54,9 @@ class ExtensionManager:
         # the class paths into proper classes). Using class paths can be
         # complicated by packages that have private implementations of
         # classes that are exposed at a different 'public' location.
-        # These private classes are may change between minor versions
+        # These private classes may change between minor versions
         # and would break converters that are registered using the private
-        # class path. However, often libraries to not modify the module
+        # class path. However, often libraries do not modify the module
         # of the 'public' class (so inspecting the class path returns
         # the private class path). One example of this in asdf is
         # Converter (exposed as ``asdf.extension.Converter`` but with
@@ -51,9 +72,10 @@ class ExtensionManager:
         # when attempting to serialize an object in memory (so the
         # public class path will already be imported at the time
         # the converter is needed).
-        self._converters_by_type = {}
-        self._converters_by_class_path = {}
 
+        # first we store the converters in the order they are discovered
+        # the key here can either be a class path (str) or class (type)
+        converters_by_type = {}
         validators = set()
 
         for extension in self._extensions:
@@ -65,19 +87,26 @@ class ExtensionManager:
                     if tag not in self._converters_by_tag:
                         self._converters_by_tag[tag] = converter
                 for typ in converter.types:
-                    if isinstance(typ, str):
-                        if typ not in self._converters_by_class_path:
-                            self._converters_by_class_path[typ] = converter
-                    else:
-                        type_class_name = get_class_name(typ, instance=False)
-                        if (
-                            typ not in self._converters_by_type
-                            and type_class_name not in self._converters_by_class_path
-                        ):
-                            self._converters_by_type[typ] = converter
-                            self._converters_by_class_path[type_class_name] = converter
+                    if typ not in converters_by_type:
+                        converters_by_type[typ] = converter
 
             validators.update(extension.validators)
+
+        self._converters_by_class_path = {}
+        self._converters_by_type = {}
+
+        for type_or_path, converter in converters_by_type.items():
+            if isinstance(type_or_path, str):
+                path = type_or_path
+                typ = _resolve_type(path)
+                if typ is None:
+                    if path not in self._converters_by_class_path:
+                        self._converters_by_class_path[path] = converter
+                        continue
+            else:
+                typ = type_or_path
+            if typ not in self._converters_by_type:
+                self._converters_by_type[typ] = converter
 
         self._validator_manager = _get_cached_validator_manager(tuple(validators))
 
@@ -226,31 +255,12 @@ class ExtensionManager:
         """
         # search class paths to find ones that are imported
         for class_path in list(self._converters_by_class_path):
-            class_ = None
-            if "." not in class_path:
-                # this class path does not appear to include a module
-                if class_path in globals():
-                    class_ = globals()[class_path]
-                elif class_path in sys.modules:
-                    class_ = sys.modules[class_path]
-                else:
-                    continue
-            else:
-                # this class is part of a module
-                module_name, class_name = class_path.rsplit(".", maxsplit=1)
-                # if the module is not imported, don't index it
-                if module_name not in sys.modules:
-                    continue
-                module = sys.modules[module_name]
-                if not hasattr(module, class_name):
-                    # the imported module does not have this class, perhaps
-                    # it is dynamically created so do not index it yet
-                    continue
-                class_ = getattr(module, class_name)
-            if class_ is not None:
-                if class_ not in self._converters_by_type:
-                    self._converters_by_type[class_] = self._converters_by_class_path[class_path]
-                del self._converters_by_class_path[class_path]
+            typ = _resolve_type(class_path)
+            if typ is None:
+                continue
+            if typ not in self._converters_by_type:
+                self._converters_by_type[typ] = self._converters_by_class_path[class_path]
+            del self._converters_by_class_path[class_path]
 
     @property
     def validator_manager(self):
