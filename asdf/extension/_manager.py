@@ -8,11 +8,26 @@ from ._extension import ExtensionProxy
 
 
 def _resolve_type(path):
+    """
+    Convert a class path (like the string "asdf.AsdfFile") to a
+    class (``asdf.AsdfFile``) only if the module implementing the
+    class has already been imported.
+
+    Parameters
+    ----------
+
+    path : str
+        Path/name of class (for example, "asdf.AsdfFile")
+
+    Returns
+    -------
+
+    typ : class or None
+        The class (if it's already been imported) or None
+    """
     if "." not in path:
-        # this path does not appear to include a module
-        if path in globals():
-            return globals()[path]
-        elif path in sys.modules:
+        # check if this path is a module
+        if path in sys.modules:
             return sys.modules[path]
         return None
     # this type is part of a module

@@ -1,4 +1,5 @@
 import fractions
+import sys
 
 import pytest
 from packaging.specifiers import SpecifierSet
@@ -18,6 +19,7 @@ from asdf.extension import (
     Validator,
     get_cached_extension_manager,
 )
+from asdf.extension._manager import _resolve_type
 from asdf.testing.helpers import roundtrip_object
 
 
@@ -982,3 +984,66 @@ tags:
         fn = tmp_path / "foo.asdf"
         with pytest.warns(AsdfManifestURIMismatchWarning):
             af.write_to(fn)
+
+
+def test_resolve_type_not_imported():
+    path = "mailbox.Mailbox"
+
+    if "mailbox" in sys.modules:
+        del sys.modules["mailbox"]
+
+    assert _resolve_type(path) is None
+
+    import mailbox
+
+    assert _resolve_type(path) is mailbox.Mailbox
+
+
+@pytest.mark.parametrize(
+    "path, obj", (("sys", sys), ("asdf.AsdfFile", AsdfFile), ("asdf.Missing", None), ("not_a_module", None))
+)
+def test_resolve_type(path, obj):
+    assert _resolve_type(path) is obj
+
+
+def test_extension_converter_by_class_path():
+    class MailboxConverter:
+        tags = ["asdf://example.com/tags/mailbox-1.0.0"]
+        types = ["mailbox.Mailbox"]
+
+        def to_yaml_tree(self, obj, tag, ctx):
+            return {}
+
+        def from_yaml_tree(self, node, tag, ctx):
+            return None
+
+    class MailboxExtension:
+        tags = MailboxConverter.tags
+        converters = [MailboxConverter()]
+        extension_uri = "asdf://example.com/extensions/mailbox-1.0.0"
+
+    # grab the type so we can use it for extension_manager.get_converter_for_type
+    import mailbox
+
+    typ = mailbox.Mailbox
+    del sys.modules["mailbox"], mailbox
+
+    with config_context() as cfg:
+        cfg.add_extension(MailboxExtension())
+        extension_manager = AsdfFile().extension_manager
+
+        # make sure that registering the extension did not load the module
+        assert "mailbox" not in sys.modules
+
+        # as the module hasn't been loaded, the converter shouldn't be found
+        with pytest.raises(KeyError, match="No support available for Python type 'mailbox.Mailbox'"):
+            extension_manager.get_converter_for_type(typ)
+
+        # make sure inspecting the type didn't import the module
+        assert "mailbox" not in sys.modules
+
+        # finally, import the module and check that the converter can now be found
+        import mailbox
+
+        converter = extension_manager.get_converter_for_type(mailbox.Mailbox)
+        assert isinstance(converter.delegate, MailboxConverter)
