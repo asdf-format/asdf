@@ -21,15 +21,10 @@ import numpy as np
 
 from . import util
 from .exceptions import DelimiterNotFoundError
-from .extern import atomicfile
 from .util import patched_urllib_parse
 
 __all__ = ["get_file", "get_uri", "resolve_uri", "relative_uri"]
 
-
-_FILE_PERMISSIONS_DEFAULT_UMASK = 0o22
-_FILE_PERMISSIONS_ALL = 0o777
-_FILE_PERMISSIONS_NO_EXECUTE = 0o666
 
 _local_file_schemes = ["", "file"]
 if sys.platform.startswith("win"):  # pragma: no cover
@@ -402,7 +397,6 @@ class GenericFile(metaclass=util.InheritDocstrings):
         """
         if self._close:
             self._fd.close()
-            self._fix_permissions()
 
     def truncate(self, size=None):
         """
@@ -797,42 +791,53 @@ class RealFile(RandomAccessFile):
     def read_into_array(self, size):
         return np.fromfile(self._fd, dtype=np.uint8, count=size)
 
-    def _fix_permissions(self):
-        """
-        atomicfile internally uses tempfile.NamedTemporaryFile
-        which uses tempfile.mkstemp which makes a file that is
-
-        "readable and writable only by the creating user ID."
-
-        this creates files with mode 0o600 regardless of umask
-        Rather than modify atomicfile, this will use
-        the umask to determine the file permissions and modify
-        the resulting file permission bits
-        """
-        if isinstance(self._fd, atomicfile._AtomicWFile):
-            fn = self._fd._filename
-            if not os.path.exists(fn):
-                return
-            # there is no way to read the umask without setting it
-            # so set it to the typical default 0o22
-            umask = os.umask(_FILE_PERMISSIONS_DEFAULT_UMASK)
-            if umask != _FILE_PERMISSIONS_DEFAULT_UMASK:
-                # restore the read value if it differs from the default
-                os.umask(umask)
-            permissions = _FILE_PERMISSIONS_ALL if os.path.isdir(fn) else _FILE_PERMISSIONS_NO_EXECUTE
-            os.chmod(self._fd._filename, permissions & ~umask)
-
     def __exit__(self, type_, value, traceback):
         super().__exit__(type_, value, traceback)
-        if self._close:
-            self._fix_permissions()
 
     def close(self):
         self.flush_memmap()
         super().close()
         self.close_memmap()
-        if self._close:
-            self._fix_permissions()
+
+
+class _ReplaceOnWriteFile:
+    def __init__(self, filename, mode):
+        # check if directory exists
+        dirname, basename = os.path.split(filename)
+        self._tmp_filename = os.path.join(dirname, f"._asdf.{basename}")
+        try:
+            self._tmp_file = open(self._tmp_filename, mode)
+        except FileNotFoundError as e:
+            # raise the exception with the non-temporary filename
+            e.filename = filename
+            raise e
+        self._filename = filename
+
+    def __getattr__(self, attr):
+        return getattr(self._tmp_file, attr)
+
+    def __enter__(self):
+        return self
+
+    @property
+    def name(self):
+        return self._filename
+
+    def close(self):
+        if self._tmp_file.closed:
+            return
+        self._tmp_file.close()
+        os.replace(self._tmp_filename, self._filename)
+
+    def __exit__(self, exc_type, exc_value, tb):
+        if exc_type is None:
+            self.close()
+        else:
+            self._tmp_file.close()
+            try:
+                os.remove(self._tmp_filename)
+            except OSError:
+                pass
 
 
 class MemoryIO(RandomAccessFile):
@@ -1122,16 +1127,8 @@ def get_file(init, mode="r", uri=None, close=False):
                 if sys.platform.startswith("win") and parsed.scheme in string.ascii_letters
                 else url2pathname(parsed.path)
             )
-            try:
-                fd = atomicfile.atomic_open(realpath, realmode) if mode == "w" else open(realpath, realmode)
 
-                fd = fd.__enter__()
-            except FileNotFoundError as e:
-                # atomic_open will create an Exception with an odd looking path
-                # overwrite the error message to make it more informative
-                e.filename = realpath
-                raise e
-
+            fd = _ReplaceOnWriteFile(realpath, realmode) if mode == "w" else open(realpath, realmode)
             return RealFile(fd, mode, close=True, uri=uri)
 
     if isinstance(init, io.BytesIO):

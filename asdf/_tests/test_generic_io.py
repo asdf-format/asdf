@@ -834,13 +834,22 @@ def test_fsspec_http(httpserver):
     sys.platform.startswith("win"),
     reason="Cannot test write file permissions on windows",
 )
-@pytest.mark.parametrize("umask", range(512))
+@pytest.mark.parametrize("umask", (0o22, 0o2, 0o0, 0o44, 0o66))
 def test_write_file_permissions(tmp_path, umask):
+    # This test was originally added to test an issue with a
+    # bundled/vendorized atomicwrite library. As this library is
+    # removed the number of umask options tested was reduced
+    # from all 512 possible options to a limited and representative set
+    # in case a future change re-introduces a file permission bug.
     previous_umask = os.umask(umask)
     fn = tmp_path / "foo"
+    # write out a file
     with generic_io.get_file(fn, mode="w"):
         pass
+    # get it's permission bits
     permissions = os.stat(fn)[stat.ST_MODE] & 0o777
+    # restore previous umask
     os.umask(previous_umask)
-    target_permissions = generic_io._FILE_PERMISSIONS_NO_EXECUTE & ~umask
+    # check that file respected the umask (combined with the default 0o666)
+    target_permissions = 0o666 & ~umask
     assert permissions == target_permissions
