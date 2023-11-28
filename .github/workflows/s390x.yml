@@ -2,6 +2,8 @@ name: s390x
 
 on:
   workflow_dispatch:
+  schedule:
+    - cron: '0 8 * * 1'  # Every Monday at 6am UTC
   pull_request:
     # We also want this workflow triggered if the `s390x` label is
     # added or present when PR is updated
