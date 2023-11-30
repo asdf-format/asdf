@@ -2,6 +2,8 @@ name: Downstream
 
 on:
   workflow_dispatch:
+  schedule:
+    - cron: '0 7 * * 1'  # Every Monday at 6am UTC
   pull_request:
     # We also want this workflow triggered if the `Downstream CI` label is
     # added or present when PR is updated
