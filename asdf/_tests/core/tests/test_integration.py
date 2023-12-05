@@ -2,7 +2,7 @@ import pytest
 import yaml
 
 import asdf
-from asdf.core._integration import get_extensions, get_json_schema_resource_mappings
+from asdf._core._integration import get_extensions, get_json_schema_resource_mappings
 
 
 @pytest.mark.parametrize(

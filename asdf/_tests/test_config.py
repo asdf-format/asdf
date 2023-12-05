@@ -5,7 +5,7 @@ import pytest
 
 import asdf
 from asdf import get_config
-from asdf.core._integration import get_json_schema_resource_mappings
+from asdf._core._integration import get_json_schema_resource_mappings
 from asdf.extension import ExtensionProxy
 from asdf.resource import ResourceMappingProxy
 

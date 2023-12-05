@@ -7,7 +7,7 @@ import copy
 import threading
 from contextlib import contextmanager
 
-from . import entry_points, util, versioning
+from . import _entry_points, util, versioning
 from ._helpers import validate_version
 from .extension import ExtensionProxy
 from .resource import ResourceManager, ResourceMappingProxy
@@ -63,7 +63,7 @@ class AsdfConfig:
         if self._resource_mappings is None:
             with self._lock:
                 if self._resource_mappings is None:
-                    self._resource_mappings = entry_points.get_resource_mappings()
+                    self._resource_mappings = _entry_points.get_resource_mappings()
         return self._resource_mappings
 
     def add_resource_mapping(self, mapping):
@@ -155,7 +155,7 @@ class AsdfConfig:
         if self._extensions is None:
             with self._lock:
                 if self._extensions is None:
-                    self._extensions = entry_points.get_extensions()
+                    self._extensions = _entry_points.get_extensions()
         return self._extensions
 
     def add_extension(self, extension):
@@ -371,7 +371,7 @@ class AsdfConfig:
     @all_array_compression.setter
     def all_array_compression(self, value):
         # local to avoid circular import
-        from asdf.compression import validate
+        from asdf._compression import validate
 
         self._all_array_compression = validate(value)
 

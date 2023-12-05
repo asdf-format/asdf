@@ -6,7 +6,7 @@ import socketserver
 import tempfile
 import threading
 
-from asdf.extern.RangeHTTPServer import RangeHTTPRequestHandler
+from asdf._extern.RangeHTTPServer import RangeHTTPRequestHandler
 
 __all__ = ["HTTPServer", "RangeHTTPServer"]
 
