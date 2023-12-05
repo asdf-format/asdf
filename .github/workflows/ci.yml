@@ -37,6 +37,9 @@ jobs:
       default_python: '3.10'
       envs: |
         - linux: coverage
+          name: Python 3.12 coverage
+          python-version: 3.12
+        - linux: coverage
           name: Python 3.11 coverage
           python-version: 3.11
         - linux: coverage
@@ -92,7 +95,6 @@ jobs:
         - linux: py310-devdeps-parallel
         - linux: py311-devdeps-parallel
         - linux: py312-devdeps-parallel
-          python-version: '3.12-dev'
 
   oldest:
     needs: [core, asdf-schemas]
