@@ -110,7 +110,7 @@ filterwarnings = [
 ]
 # Configuration for pytest-doctestplus
 text_file_format = 'rst'
-addopts = '--color=yes --doctest-rst -rsx'
+addopts = '--color=yes --doctest-rst -rsxfE'
 
 [tool.coverage.run]
 omit = [
