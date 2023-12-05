@@ -8,10 +8,10 @@ import warnings
 
 from packaging.version import Version
 
+from . import _compression as mcompression
 from . import _display as display
 from . import _node_info as node_info
 from . import _version as version
-from . import compression as mcompression
 from . import constants, generic_io, reference, schema, treeutil, util, versioning, yamlutil
 from ._block.manager import Manager as BlockManager
 from ._helpers import validate_version
