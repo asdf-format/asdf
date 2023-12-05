@@ -5,6 +5,7 @@ import math
 import re
 import struct
 import types
+import warnings
 from functools import lru_cache
 from importlib import metadata
 from urllib.request import pathname2url
@@ -20,21 +21,22 @@ from importlib_metadata import packages_distributions
 from packaging.version import Version
 
 from . import constants
+from .exceptions import AsdfDeprecationWarning
 
 # We're importing our own copy of urllib.parse because
 # we need to patch it to support asdf:// URIs, but it'd
 # be irresponsible to do this for all users of a
 # standard library.
 urllib_parse_spec = importlib.util.find_spec("urllib.parse")
-patched_urllib_parse = importlib.util.module_from_spec(urllib_parse_spec)
-urllib_parse_spec.loader.exec_module(patched_urllib_parse)
+_patched_urllib_parse = importlib.util.module_from_spec(urllib_parse_spec)
+urllib_parse_spec.loader.exec_module(_patched_urllib_parse)
 del urllib_parse_spec
 
 # urllib.parse needs to know that it should treat asdf://
 # URIs like http:// URIs for the purposes of joining
 # a relative path to a base URI.
-patched_urllib_parse.uses_relative.append("asdf")
-patched_urllib_parse.uses_netloc.append("asdf")
+_patched_urllib_parse.uses_relative.append("asdf")
+_patched_urllib_parse.uses_netloc.append("asdf")
 
 
 __all__ = [
@@ -49,6 +51,8 @@ __all__ = [
     "is_primitive",
     "uri_match",
     "get_class_name",
+    "get_file_type",
+    "FileType",
 ]
 
 
@@ -71,9 +75,10 @@ def human_list(line, separator="and"):
 
     Examples
     --------
-    >>> human_list(["vanilla", "strawberry", "chocolate"], "or")
+    >>> human_list(["vanilla", "strawberry", "chocolate"], "or")  # doctest: +SKIP
     'vanilla, strawberry or chocolate'
     """
+    warnings.warn("asdf.util.human_list is deprecated", AsdfDeprecationWarning)
     if len(line) == 1:
         return line[0]
 
@@ -97,24 +102,32 @@ def get_base_uri(uri):
     """
     For a given URI, return the part without any fragment.
     """
-    parts = patched_urllib_parse.urlparse(uri)
-    return patched_urllib_parse.urlunparse([*list(parts[:5]), ""])
+    parts = _patched_urllib_parse.urlparse(uri)
+    return _patched_urllib_parse.urlunparse([*list(parts[:5]), ""])
 
 
 def filepath_to_url(path):
     """
     For a given local file path, return a file:// url.
     """
-    return patched_urllib_parse.urljoin("file:", pathname2url(path))
+    return _patched_urllib_parse.urljoin("file:", pathname2url(path))
+
+
+def _iter_subclasses(cls):
+    """
+    Returns all subclasses of a class.
+    """
+    for x in cls.__subclasses__():
+        yield x
+        yield from _iter_subclasses(x)
 
 
 def iter_subclasses(cls):
     """
     Returns all subclasses of a class.
     """
-    for x in cls.__subclasses__():
-        yield x
-        yield from iter_subclasses(x)
+    warnings.warn("asdf.util.iter_subclasses is deprecated", AsdfDeprecationWarning)
+    yield from _iter_subclasses(cls)
 
 
 def calculate_padding(content_size, pad_blocks, block_size):
@@ -151,7 +164,7 @@ def calculate_padding(content_size, pad_blocks, block_size):
     return max(new_size - content_size, 0)
 
 
-class BinaryStruct:
+class _BinaryStruct:
     """
     A wrapper around the Python stdlib struct module to define a
     binary struct more like a dictionary than a tuple.
@@ -267,7 +280,7 @@ def resolve_name(name):
     Examples
     --------
 
-    >>> resolve_name('asdf.util.resolve_name')
+    >>> resolve_name('asdf.util.resolve_name')  # doctest: +SKIP
     <function resolve_name at 0x...>
 
     Raises
@@ -275,6 +288,8 @@ def resolve_name(name):
     `ImportError`
         If the module or named object is not found.
     """
+
+    warnings.warn("asdf.util.resolve_name is deprecated, see astropy.utils.resolve_name", AsdfDeprecationWarning)
 
     # Note: On python 2 these must be str objects and not unicode
     parts = [str(part) for part in name.split(".")]
@@ -351,6 +366,8 @@ def minversion(module, version, inclusive=True):
         as opposed to strictly greater than (default: `True`).
     """
 
+    warnings.warn("asdf.util.minversion is deprecated, see astropy.utils.minversion", AsdfDeprecationWarning)
+
     if isinstance(module, types.ModuleType):
         module_name = module.__name__
         module_version = getattr(module, "__version__", None)
@@ -358,7 +375,9 @@ def minversion(module, version, inclusive=True):
         module_name = module
         module_version = None
         try:
-            module = resolve_name(module_name)
+            with warnings.catch_warnings():
+                warnings.filterwarnings("ignore", "asdf.util.resolve_name", AsdfDeprecationWarning)
+                module = resolve_name(module_name)
         except ImportError:
             return False
     else:
@@ -382,7 +401,7 @@ def minversion(module, version, inclusive=True):
     return Version(module_version) > Version(version)
 
 
-class InheritDocstrings(type):
+class _InheritDocstrings(type):
     """
     This metaclass makes methods of a class automatically have their
     docstrings filled in from the methods they override in the base
@@ -396,8 +415,8 @@ class InheritDocstrings(type):
 
     For example::
 
-        >>> from asdf.util import InheritDocstrings
-        >>> class A(metaclass=InheritDocstrings):
+        >>> from asdf.util import _InheritDocstrings
+        >>> class A(metaclass=_InheritDocstrings):
         ...     def wiggle(self):
         ...         "Wiggle the thingamajig"
         ...         pass
@@ -496,12 +515,16 @@ def _compile_uri_match_pattern(pattern):
 def get_file_type(fd):
     """
     Determine the file type of an open GenericFile instance.
+
     Parameters
     ----------
-    fd : GenericFile
+
+    fd : ``asdf.generic_io.GenericFile``
+
     Returns
     -------
-    FileType
+
+    `asdf.util.FileType`
     """
     if fd.peek(5) == constants.ASDF_MAGIC:
         return FileType.ASDF
@@ -514,7 +537,7 @@ def get_file_type(fd):
 
 class FileType(enum.Enum):
     """
-    Enum representing file types recognized by asdf.
+    Enum representing if a file is ASDF, FITS or UNKNOWN.
     """
 
     ASDF = 1

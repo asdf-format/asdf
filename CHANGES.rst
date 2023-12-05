@@ -1,3 +1,12 @@
+3.1.0 (unreleased)
+------------------
+
+The ASDF Standard is at v1.6.0
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+- Cleanup ``asdf.util`` including deprecating: ``human_list``
+  ``resolve_name`` ``minversion`` and ``iter_subclasses`` [#1688]
+
 3.0.1 (2023-10-30)
 ------------------
 

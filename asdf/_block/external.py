@@ -40,7 +40,7 @@ class ExternalBlockCache:
             ) as af:
                 blk = af._blocks.blocks[0]
                 if memmap and blk.header["compression"] == b"\0\0\0\0":
-                    parsed_url = util.patched_urllib_parse.urlparse(resolved_uri)
+                    parsed_url = util._patched_urllib_parse.urlparse(resolved_uri)
                     if parsed_url.scheme == "file":
                         # deal with leading slash for windows file://
                         filename = urllib.request.url2pathname(parsed_url.path)
@@ -58,7 +58,7 @@ class ExternalBlockCache:
 
 def relative_uri_for_index(uri, index):
     # get the os-native separated path for this uri
-    path = util.patched_urllib_parse.urlparse(uri).path
+    path = util._patched_urllib_parse.urlparse(uri).path
     dirname, filename = os.path.split(path)
     filename = os.path.splitext(filename)[0] + f"{index:04d}.asdf"
     return filename

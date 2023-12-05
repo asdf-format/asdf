@@ -1,8 +1,10 @@
 import io
+import warnings
 
 import pytest
 
 from asdf import generic_io, util
+from asdf.exceptions import AsdfDeprecationWarning
 
 
 def test_is_primitive():
@@ -35,12 +37,12 @@ def test_get_class_name():
 
 
 def test_patched_urllib_parse():
-    assert "asdf" in util.patched_urllib_parse.uses_relative
-    assert "asdf" in util.patched_urllib_parse.uses_netloc
+    assert "asdf" in util._patched_urllib_parse.uses_relative
+    assert "asdf" in util._patched_urllib_parse.uses_netloc
 
     import urllib.parse
 
-    assert urllib.parse is not util.patched_urllib_parse
+    assert urllib.parse is not util._patched_urllib_parse
     assert "asdf" not in urllib.parse.uses_relative
     assert "asdf" not in urllib.parse.uses_netloc
 
@@ -103,12 +105,14 @@ def test_minversion():
 
     good_versions = ["1.16", "1.16.1", "1.16.0.dev", "1.16dev"]
     bad_versions = ["100000", "100000.2rc1"]
-    for version in good_versions:
-        assert util.minversion(np, version)
-        assert util.minversion("numpy", version)
-    for version in bad_versions:
-        assert not util.minversion(np, version)
-        assert not util.minversion("numpy", version)
+    with warnings.catch_warnings():
+        warnings.filterwarnings("ignore", "asdf.util.minversion", AsdfDeprecationWarning)
+        for version in good_versions:
+            assert util.minversion(np, version)
+            assert util.minversion("numpy", version)
+        for version in bad_versions:
+            assert not util.minversion(np, version)
+            assert not util.minversion("numpy", version)
 
-    assert util.minversion(yaml, "3.1")
-    assert util.minversion("yaml", "3.1")
+        assert util.minversion(yaml, "3.1")
+        assert util.minversion("yaml", "3.1")

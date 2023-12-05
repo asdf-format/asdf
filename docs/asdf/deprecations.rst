@@ -9,6 +9,16 @@ Deprecations
 Version 3.0
 ===========
 
+The following functions in ``asdf.util`` are deprecated:
+
+* ``human_list`` this is no longer part of the public API
+* ``resolve_name`` see ``astropy.utils.resolve_name``
+* ``minversion`` see ``astropy.utils.minversion``
+* ``iter_subclasses`` this is no longer part of the public API
+
+Version 3.0
+===========
+
 SerializationContext was previously importable from ``asdf.asdf.SerializationContext``.
 Although not part of the public API, this import path has been deprecated and users
 should instead import ``SerializationContext`` from `asdf.extension`.

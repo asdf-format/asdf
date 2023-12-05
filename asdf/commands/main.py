@@ -37,7 +37,7 @@ def make_argparser():
     help_parser = subparsers.add_parser("help", help="Display usage information")
     help_parser.set_defaults(func=help_)
 
-    commands = {x.__name__: x for x in util.iter_subclasses(Command)}
+    commands = {x.__name__: x for x in util._iter_subclasses(Command)}
 
     for command in command_order:
         commands[str(command)].setup_arguments(subparsers)

@@ -33,7 +33,6 @@ except ImportError:
 import asdf
 from asdf.extension._serialization_context import BlockAccess
 from asdf.tagged import Tagged
-from asdf.util import human_list
 
 from .main import Command
 
@@ -256,6 +255,34 @@ def _load_array(asdf_file, array_dict):
     return conv.from_yaml_tree(array_dict, array_dict._tag, sctx)
 
 
+def _human_list(line, separator="and"):
+    """
+    Formats a list for human readability.
+
+    Parameters
+    ----------
+    line : sequence
+        A sequence of strings
+
+    separator : string, optional
+        The word to use between the last two entries.  Default:
+        ``"and"``.
+
+    Returns
+    -------
+    formatted_list : string
+
+    Examples
+    --------
+    >>> _human_list(["vanilla", "strawberry", "chocolate"], "or")
+    'vanilla, strawberry or chocolate'
+    """
+    if len(line) == 1:
+        return line[0]
+
+    return ", ".join(line[:-1]) + " " + separator + " " + line[-1]
+
+
 def compare_ndarrays(diff_ctx, array0, array1, keys):
     """Compares two ndarray objects"""
     if isinstance(array0, list):
@@ -278,7 +305,7 @@ def compare_ndarrays(diff_ctx, array0, array1, keys):
         differences.append("contents")
 
     if differences:
-        msg = f"ndarrays differ by {human_list(differences)}"
+        msg = f"ndarrays differ by {_human_list(differences)}"
         print_in_tree(diff_ctx, keys, msg, False, ignore_lwl=True)
         print_in_tree(diff_ctx, keys, msg, True, ignore_lwl=True)
 
