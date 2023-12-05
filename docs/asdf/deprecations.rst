@@ -6,6 +6,16 @@
 Deprecations
 ************
 
+Version 3.1
+===========
+
+``asdf.asdf`` is deprecated. Please use the top-level ``asdf`` module for
+``AsdfFile`` and ``open`` (same as ``asdf.asdf.open_asdf``).
+
+``AsdfFile.resolve_and_inline`` is deprecated. Please use
+``AsdfFile.resolve_references`` and provide ``all_array_storage='inline'`` to
+``AdsfFile.write_to`` (or ``AsdfFile.update``).
+
 Version 3.0
 ===========
 

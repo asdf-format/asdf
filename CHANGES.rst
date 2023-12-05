@@ -13,6 +13,14 @@ The ASDF Standard is at v1.6.0
 The ASDF Standard is at v1.6.0
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
+- Deprecate ``asdf.asdf`` and ``AsdfFile.resolve_and_inline`` [#1690]
+
+3.0.1 (2023-10-30)
+------------------
+
+The ASDF Standard is at v1.6.0
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
 - Fix bug in ``asdftool diff`` for arrays within a list [#1672]
 
 3.0.0 (2023-10-16)

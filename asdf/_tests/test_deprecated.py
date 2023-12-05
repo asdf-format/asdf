@@ -1,5 +1,6 @@
 import sys
 
+import numpy as np
 import pytest
 
 import asdf
@@ -36,3 +37,16 @@ def test_asdf_util_minversion_deprecation():
 def test_asdf_util_iter_subclasses_deprecation():
     with pytest.warns(AsdfDeprecationWarning, match="asdf.util.iter_subclasses is deprecated"):
         list(asdf.util.iter_subclasses(asdf.AsdfFile))
+
+
+def test_asdf_asdf_deprecation():
+    with pytest.warns(AsdfDeprecationWarning, match="asdf.asdf is deprecated"):
+        if "asdf.asdf" in sys.modules:
+            del sys.modules["asdf.asdf"]
+        import asdf.asdf  # noqa: F401
+
+
+def test_resolve_and_inline_deprecation():
+    with pytest.warns(AsdfDeprecationWarning, match="resolve_and_inline is deprecated"):
+        af = asdf.AsdfFile({"arr": np.arange(42)})
+        af.resolve_and_inline()

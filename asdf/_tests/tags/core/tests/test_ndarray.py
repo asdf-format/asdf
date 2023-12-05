@@ -512,8 +512,8 @@ def test_unicode_to_list(tmpdir):
     fd.seek(0)
 
     with asdf.open(fd) as ff:
-        ff.resolve_and_inline()
-        ff.write_to(io.BytesIO())
+        ff.resolve_references()
+        ff.write_to(io.BytesIO(), all_array_storage="inline")
 
 
 def test_inline_masked_array(tmpdir):

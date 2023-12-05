@@ -538,7 +538,7 @@ def get_validator(
     validator : jsonschema.Validator
     """
     if ctx is None:
-        from .asdf import AsdfFile
+        from ._asdf import AsdfFile
 
         ctx = AsdfFile()
 
@@ -641,7 +641,7 @@ def validate(instance, ctx=None, schema=None, validators=None, reading=False, *a
         reading vs writing files.
     """
     if ctx is None:
-        from .asdf import AsdfFile
+        from ._asdf import AsdfFile
 
         ctx = AsdfFile()
 
