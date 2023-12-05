@@ -844,26 +844,20 @@ def test_schema_resolved_via_entry_points():
 def test_max_min_literals(num):
     msg = r"Integer value .* is too large to safely represent as a literal in ASDF"
 
-    tree = {
-        "test_int": num,
-    }
-
+    af = asdf.AsdfFile()
+    af["test_int"] = num
     with pytest.raises(ValidationError, match=msg):
-        asdf.AsdfFile(tree)
+        af.validate()
 
-    tree = {
-        "test_list": [num],
-    }
-
+    af = asdf.AsdfFile()
+    af["test_list"] = [num]
     with pytest.raises(ValidationError, match=msg):
-        asdf.AsdfFile(tree)
+        af.validate()
 
-    tree = {
-        num: "test_key",
-    }
-
+    af = asdf.AsdfFile()
+    af[num] = "test_key"
     with pytest.raises(ValidationError, match=msg):
-        asdf.AsdfFile(tree)
+        af.validate()
 
 
 @pytest.mark.parametrize("num", [constants.MAX_NUMBER + 1, constants.MIN_NUMBER - 1])
@@ -930,8 +924,10 @@ def test_mapping_supported_key_types(keys, version):
 )
 def test_mapping_unsupported_key_types(keys, version):
     for key in keys:
+        af = asdf.AsdfFile(version=version)
+        af[key] = "value"
         with pytest.raises(ValidationError, match=r"Mapping key .* is not permitted"):
-            asdf.AsdfFile({key: "value"}, version=version)
+            af.validate()
 
 
 def test_nested_array():
@@ -1022,10 +1018,10 @@ def test_custom_validation_bad(tmp_path):
         ff.write_to(asdf_file)
 
     # Creating file using custom schema should fail
-    with pytest.raises(ValidationError, match=r".* is a required property"), asdf.AsdfFile(
-        tree,
-        custom_schema=custom_schema_path,
-    ):
+    af = asdf.AsdfFile(custom_schema=custom_schema_path)
+    af._tree = asdf.tags.core.AsdfObject(tree)
+    with pytest.raises(ValidationError, match=r".* is a required property"):
+        af.validate()
         pass
 
     # Opening file without custom schema should pass
@@ -1101,11 +1097,10 @@ def test_custom_validation_with_definitions_bad(tmp_path):
         ff.write_to(asdf_file)
 
     # Creating file with custom schema should fail
-    with pytest.raises(ValidationError, match=r".* is a required property"), asdf.AsdfFile(
-        tree,
-        custom_schema=custom_schema_path,
-    ):
-        pass
+    af = asdf.AsdfFile(custom_schema=custom_schema_path)
+    af._tree = asdf.tags.core.AsdfObject(tree)
+    with pytest.raises(ValidationError, match=r".* is a required property"):
+        af.validate()
 
     # Opening file without custom schema should pass
     with asdf.open(asdf_file):
@@ -1145,11 +1140,10 @@ def test_custom_validation_with_external_ref_bad(tmp_path):
         ff.write_to(asdf_file)
 
     # Creating file with custom schema should fail
-    with pytest.raises(ValidationError, match=r"False is not valid under any of the given schemas"), asdf.AsdfFile(
-        tree,
-        custom_schema=custom_schema_path,
-    ):
-        pass
+    af = asdf.AsdfFile(custom_schema=custom_schema_path)
+    af["foo"] = False
+    with pytest.raises(ValidationError, match=r"False is not valid under any of the given schemas"):
+        af.validate()
 
     # Opening file without custom schema should pass
     with asdf.open(asdf_file):

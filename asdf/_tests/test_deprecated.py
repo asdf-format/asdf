@@ -107,3 +107,10 @@ def test_AsdfFile_resolve_references_kwargs_deprecation():
     af = asdf.AsdfFile()
     with pytest.warns(AsdfDeprecationWarning, match="Passing kwargs to resolve_references is deprecated"):
         af.resolve_references(foo=42)
+
+
+def test_AsdfFile_init_validation_deprecation():
+    with pytest.warns(AsdfDeprecationWarning, match="Validation during AsdfFile.__init__ is deprecated"), pytest.raises(
+        ValidationError
+    ):
+        asdf.AsdfFile({"history": 42})

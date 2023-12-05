@@ -204,7 +204,16 @@ class AsdfFile:
             self.find_references(_warning_msg=find_ref_warning_msg)
         else:
             self._tree = AsdfObject(tree)
-            self.validate()
+            try:
+                self.validate()
+            except ValidationError:
+                warnings.warn(
+                    "Validation during AsdfFile.__init__ is deprecated. "
+                    "Please use AsdfFile.validate to validate the tree",
+                    AsdfDeprecationWarning,
+                )
+                raise
+
             self.find_references(_warning_msg=find_ref_warning_msg)
 
         self._comments = []
