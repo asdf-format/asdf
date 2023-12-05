@@ -1239,10 +1239,18 @@ class AsdfFile:
         a ASDF file after this operation means it will have no
         external references, and will be completely self-contained.
         """
-        # Set to the property self.tree so the resulting "complete"
-        # tree will be validated.
+        if len(kwargs):
+            warnings.warn("Passing kwargs to resolve_references is deprecated and does nothing", AsdfDeprecationWarning)
         self._tree = reference.resolve_references(self._tree, self)
-        self.validate()
+        try:
+            self.validate()
+        except ValidationError:
+            warnings.warn(
+                "Validation during resolve_references is deprecated. "
+                "Please use AsdfFile.validate after resolve_references to validate the resolved tree",
+                AsdfDeprecationWarning,
+            )
+            raise
 
     def resolve_and_inline(self):
         """

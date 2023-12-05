@@ -26,6 +26,11 @@ deprecated and will be disabled in a future version of asdf. Please call
 triggering warnings for every tree assignment the warning will only be shown
 if the validation triggered by tree assignment fails.
 
+Similarly, validation during ``AsdfFile.resolve_references`` is deprecated (with the
+warning only appearing for a failed validation).
+
+Providing ``kwargs`` to ``AsdfFile.resolve_references`` does nothing and is deprecated.
+
 Version 3.0
 ===========
 

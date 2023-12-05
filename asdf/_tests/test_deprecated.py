@@ -92,3 +92,18 @@ def test_AsdfFile_tree_assignment_validation_deprecation():
         ValidationError
     ):
         af.tree = {"history": 42}
+
+
+def test_AsdfFile_resolve_references_validation_deprecation():
+    af = asdf.AsdfFile()
+    af._tree["history"] = 42
+    with pytest.warns(
+        AsdfDeprecationWarning, match="Validation during resolve_references is deprecated"
+    ), pytest.raises(ValidationError):
+        af.resolve_references()
+
+
+def test_AsdfFile_resolve_references_kwargs_deprecation():
+    af = asdf.AsdfFile()
+    with pytest.warns(AsdfDeprecationWarning, match="Passing kwargs to resolve_references is deprecated"):
+        af.resolve_references(foo=42)
