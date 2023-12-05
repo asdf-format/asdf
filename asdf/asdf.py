@@ -3,7 +3,6 @@ import warnings
 from . import _asdf
 from .exceptions import AsdfDeprecationWarning
 
-
 warnings.warn(
     "asdf.asdf is deprecated. Please use asdf.AsdfFile and asdf.open",
     AsdfDeprecationWarning,

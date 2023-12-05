@@ -3,9 +3,9 @@ import os
 import pytest
 
 from asdf import config_context
+from asdf._asdf import AsdfFile, open_asdf
 from asdf._entry_points import get_extensions
 from asdf._tests._helpers import assert_no_warnings, assert_tree_match, yaml_to_asdf
-from asdf._asdf import AsdfFile, open_asdf
 from asdf.exceptions import AsdfWarning
 from asdf.extension import ExtensionProxy
 from asdf.versioning import AsdfVersion
