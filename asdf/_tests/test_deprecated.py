@@ -57,7 +57,7 @@ def test_tagged_tree_to_custom_tree_force_raw_types_deprecation(tmp_path, force_
     fn = tmp_path / "test.asdf"
     asdf.AsdfFile({"a": np.zeros(3)}).write_to(fn)
 
-    with asdf.open(fn, as_tagged=True) as af:
+    with asdf.open(fn, tree_type="tagged") as af:
         with pytest.warns(AsdfDeprecationWarning, match="force_raw_types is deprecated"):
             asdf.yamlutil.tagged_tree_to_custom_tree(af.tree, af, force_raw_types)
 

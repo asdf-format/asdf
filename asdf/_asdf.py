@@ -762,6 +762,7 @@ class AsdfFile:
         fd,
         validate_checksums=False,
         extensions=None,
+        tree_type="custom",
         _get_yaml_content=False,
         _force_raw_types=NotSet,
         strict_extension_check=False,
@@ -853,14 +854,21 @@ class AsdfFile:
 
             if _force_raw_types is not NotSet:
                 warnings.warn(
-                    "_force_raw_types is deprecated and will be replaced by as_tagged", AsdfDeprecationWarning
+                    "_force_raw_types is deprecated and will be replaced by tree_type", AsdfDeprecationWarning
                 )
-                as_tagged = _force_raw_types
+                tree_type = "tagged" if _force_raw_types else "custom"
 
-            if not as_tagged:
+            if tree_type is None:
+                tree_type = "custom"
+
+            if tree_type not in ("custom", "tagged"):
+                msg = f"Unsupported tree type {tree_type}"
+                raise ValueError(msg)
+
+            if tree_type == "custom":
                 tree = yamlutil.tagged_tree_to_custom_tree(tree, self)
 
-            if not (ignore_missing_extensions or as_tagged):
+            if tree_type == "custom" and not ignore_missing_extensions:
                 self._check_extensions(tree, strict=strict_extension_check)
 
             self._tree = tree
@@ -876,6 +884,7 @@ class AsdfFile:
         mode="r",
         validate_checksums=False,
         extensions=None,
+        tree_type=None,
         _get_yaml_content=False,
         _force_raw_types=NotSet,
         strict_extension_check=False,
@@ -890,7 +899,7 @@ class AsdfFile:
                 generic_file,
                 validate_checksums=validate_checksums,
                 extensions=extensions,
-                as_tagged=as_tagged,
+                tree_type=tree_type,
                 _get_yaml_content=_get_yaml_content,
                 _force_raw_types=_force_raw_types,
                 strict_extension_check=strict_extension_check,
@@ -1495,7 +1504,7 @@ def open_asdf(
     extensions=None,
     ignore_version_mismatch=True,
     ignore_unrecognized_tag=False,
-    as_tagged=False,
+    tree_type=None,
     _force_raw_types=NotSet,
     copy_arrays=False,
     lazy_load=True,
@@ -1569,9 +1578,11 @@ def open_asdf(
         contains metadata about extensions that are not available. Defaults
         to `False`.
 
-    as_tagged : bool, optional
-        When `True` do not convert the ASDF tree to custom types and instead
-        returned `asdf.tagged` objects.
+    tree_type : str, optional
+        Controls the tree type for the returned AsdfFile instance. Supported
+        values are:
+            "custom" (default), for a tree with custom objects
+            "tagged", for a tree with `asdf.tagged` objects
 
     Returns
     -------
@@ -1607,7 +1618,7 @@ def open_asdf(
         mode=mode,
         validate_checksums=validate_checksums,
         extensions=extensions,
-        as_tagged=as_tagged,
+        tree_type=tree_type,
         _get_yaml_content=_get_yaml_content,
         _force_raw_types=_force_raw_types,
         strict_extension_check=strict_extension_check,

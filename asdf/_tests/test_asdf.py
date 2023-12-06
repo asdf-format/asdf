@@ -394,13 +394,18 @@ def test_fsspec_http(httpserver):
         assert_tree_match(tree, af.tree)
 
 
-@pytest.mark.parametrize("as_tagged", [True, False])
-def test_asdf_open_as_tagged(tmp_path, as_tagged):
+@pytest.mark.parametrize("tree_type", [None, "custom", "tagged", "unknown"])
+def test_asdf_open_tree_type(tmp_path, tree_type):
     fn = tmp_path / "test.asdf"
     asdf.AsdfFile({"a": np.zeros(3)}).write_to(fn)
 
-    with asdf.open(fn, as_tagged=as_tagged) as af:
-        if as_tagged:
+    if tree_type == "unknown":
+        with pytest.raises(ValueError, match=f"Unsupported tree type {tree_type}"), asdf.open(fn, tree_type=tree_type):
+            pass
+        return
+
+    with asdf.open(fn, tree_type=tree_type) as af:
+        if tree_type == "tagged":
             assert isinstance(af["a"], asdf.tagged.TaggedDict)
         else:
             assert isinstance(af["a"], asdf.tags.core.ndarray.NDArrayType)

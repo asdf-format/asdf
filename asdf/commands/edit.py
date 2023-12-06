@@ -262,7 +262,7 @@ def edit(path):
                 # Blocks are not read during validation, so this will not raise
                 # an error even though we're only opening the YAML portion of
                 # the file.
-                with open_asdf(io.BytesIO(new_content), as_tagged=True):
+                with open_asdf(io.BytesIO(new_content), tree_type="tagged"):
                     pass
             except yaml.YAMLError as e:
                 print("Error: failed to parse updated YAML:")
