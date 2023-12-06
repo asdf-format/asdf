@@ -288,7 +288,9 @@ def resolve_name(name):
         If the module or named object is not found.
     """
 
-    warnings.warn("asdf.util.resolve_name is deprecated, see astropy.utils.resolve_name", exceptions.AsdfDeprecationWarning)
+    warnings.warn(
+        "asdf.util.resolve_name is deprecated, see astropy.utils.resolve_name", exceptions.AsdfDeprecationWarning
+    )
 
     # Note: On python 2 these must be str objects and not unicode
     parts = [str(part) for part in name.split(".")]
