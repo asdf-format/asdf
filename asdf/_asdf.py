@@ -1581,8 +1581,9 @@ def open_asdf(
     tree_type : str, optional
         Controls the tree type for the returned AsdfFile instance. Supported
         values are:
-            "custom" (default), for a tree with custom objects
-            "tagged", for a tree with `asdf.tagged` objects
+
+            - "custom" (default) for a tree with custom objects
+            - "tagged" for a tree with `asdf.tagged` objects
 
     Returns
     -------
