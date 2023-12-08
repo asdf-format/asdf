@@ -190,9 +190,7 @@ def test_internal_reference(tmp_path):
     buff = io.BytesIO()
     ff.write_to(buff)
     buff.seek(0)
-    ff = asdf.AsdfFile()
-    content = asdf.AsdfFile()._open_impl(ff, buff, _get_yaml_content=True)
-    assert b"{$ref: ''}" in content
+    assert b"{$ref: ''}" in buff.read()
 
 
 def test_implicit_internal_reference(tmp_path):

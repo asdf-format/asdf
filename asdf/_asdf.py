@@ -6,6 +6,7 @@ import pathlib
 import time
 import warnings
 
+import yaml
 from packaging.version import Version
 
 from . import _compression as mcompression
@@ -27,6 +28,8 @@ from .extension import Extension, ExtensionProxy, _serialization_context, get_ca
 from .search import AsdfSearchResult
 from .tags.core import AsdfObject, ExtensionMetadata, HistoryEntry, Software
 from .util import NotSet
+
+_yaml_base_loader = yaml.CBaseLoader if getattr(yaml, "__with_libyaml__", None) else yaml.BaseLoader
 
 
 def __getattr__(name):
@@ -762,13 +765,22 @@ class AsdfFile:
         fd,
         validate_checksums=False,
         extensions=None,
-        tree_type="custom",
-        _get_yaml_content=False,
+        tree_type=None,
         _force_raw_types=NotSet,
         strict_extension_check=False,
         ignore_missing_extensions=False,
     ):
         """Attempt to populate AsdfFile data from file-like object"""
+        if tree_type is None:
+            tree_type = "custom"
+
+        if _force_raw_types is not NotSet:
+            warnings.warn("_force_raw_types is deprecated and will be replaced by tree_type", AsdfDeprecationWarning)
+            tree_type = "tagged" if _force_raw_types else tree_type
+
+        if tree_type not in ("custom", "tagged", "yaml"):
+            msg = f"Unsupported tree type {tree_type}"
+            raise ValueError(msg)
 
         if strict_extension_check and ignore_missing_extensions:
             msg = "'strict_extension_check' and 'ignore_missing_extensions' are incompatible options"
@@ -815,11 +827,10 @@ class AsdfFile:
                     initial_content=yaml_token,
                 )
 
-                # For testing: just return the raw YAML content
-                if _get_yaml_content:
-                    yaml_content = reader.read()
-                    fd.close()
-                    return yaml_content
+                # just return the raw YAML content
+                if tree_type == "yaml":
+                    self._tree = yaml.load(reader.read(), Loader=_yaml_base_loader)  # noqa: S506
+                    return self
 
                 # We parse the YAML content into basic data structures
                 # now, but we don't do anything special with it until
@@ -852,19 +863,6 @@ class AsdfFile:
                     self.close()
                     raise
 
-            if _force_raw_types is not NotSet:
-                warnings.warn(
-                    "_force_raw_types is deprecated and will be replaced by tree_type", AsdfDeprecationWarning
-                )
-                tree_type = "tagged" if _force_raw_types else "custom"
-
-            if tree_type is None:
-                tree_type = "custom"
-
-            if tree_type not in ("custom", "tagged"):
-                msg = f"Unsupported tree type {tree_type}"
-                raise ValueError(msg)
-
             if tree_type == "custom":
                 tree = yamlutil.tagged_tree_to_custom_tree(tree, self)
 
@@ -885,7 +883,6 @@ class AsdfFile:
         validate_checksums=False,
         extensions=None,
         tree_type=None,
-        _get_yaml_content=False,
         _force_raw_types=NotSet,
         strict_extension_check=False,
         ignore_missing_extensions=False,
@@ -900,7 +897,6 @@ class AsdfFile:
                 validate_checksums=validate_checksums,
                 extensions=extensions,
                 tree_type=tree_type,
-                _get_yaml_content=_get_yaml_content,
                 _force_raw_types=_force_raw_types,
                 strict_extension_check=strict_extension_check,
                 ignore_missing_extensions=ignore_missing_extensions,
@@ -1511,7 +1507,6 @@ def open_asdf(
     custom_schema=None,
     strict_extension_check=False,
     ignore_missing_extensions=False,
-    _get_yaml_content=False,
 ):
     """
     Open an existing ASDF file.
@@ -1584,6 +1579,7 @@ def open_asdf(
 
             - "custom" (default) for a tree with custom objects
             - "tagged" for a tree with `asdf.tagged` objects
+            - "yaml" return the raw yaml contents of just file
 
     Returns
     -------
@@ -1620,7 +1616,6 @@ def open_asdf(
         validate_checksums=validate_checksums,
         extensions=extensions,
         tree_type=tree_type,
-        _get_yaml_content=_get_yaml_content,
         _force_raw_types=_force_raw_types,
         strict_extension_check=strict_extension_check,
         ignore_missing_extensions=ignore_missing_extensions,

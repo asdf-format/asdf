@@ -394,7 +394,7 @@ def test_fsspec_http(httpserver):
         assert_tree_match(tree, af.tree)
 
 
-@pytest.mark.parametrize("tree_type", [None, "custom", "tagged", "unknown"])
+@pytest.mark.parametrize("tree_type", [None, "custom", "tagged", "yaml", "unknown"])
 def test_asdf_open_tree_type(tmp_path, tree_type):
     fn = tmp_path / "test.asdf"
     asdf.AsdfFile({"a": np.zeros(3)}).write_to(fn)
@@ -407,5 +407,7 @@ def test_asdf_open_tree_type(tmp_path, tree_type):
     with asdf.open(fn, tree_type=tree_type) as af:
         if tree_type == "tagged":
             assert isinstance(af["a"], asdf.tagged.TaggedDict)
+        elif tree_type == "yaml":
+            assert isinstance(af["a"], dict)
         else:
             assert isinstance(af["a"], asdf.tags.core.ndarray.NDArrayType)

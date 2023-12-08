@@ -25,7 +25,7 @@ import yaml
 import asdf
 from asdf import generic_io, versioning
 from asdf._asdf import AsdfFile, _get_asdf_library_info
-from asdf.constants import YAML_TAG_PREFIX
+from asdf.constants import YAML_END_MARKER_REGEX, YAML_TAG_PREFIX
 from asdf.exceptions import AsdfConversionWarning
 from asdf.tags.core import AsdfObject
 from asdf.versioning import (
@@ -219,13 +219,13 @@ def _assert_roundtrip_tree(
             asdf_check_func(ff)
 
     buff.seek(0)
-    ff = AsdfFile(extensions=extensions, **init_options)
-    content = AsdfFile._open_impl(ff, buff, mode="r", _get_yaml_content=True)
+    gf = generic_io.get_file(buff)
+    content = gf.reader_until(YAML_END_MARKER_REGEX, 7, "End of YAML marker", include=True).read()
     buff.close()
     # We *never* want to get any raw python objects out
     assert b"!!python" not in content
     assert b"!core/asdf" in content
-    assert content.startswith(b"%YAML 1.1")
+    assert b"%YAML 1.1" in content
     if raw_yaml_check_func:
         raw_yaml_check_func(content)
 
