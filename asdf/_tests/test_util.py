@@ -124,8 +124,8 @@ def test_minversion():
 
 
 @pytest.mark.parametrize("input_type", ["filename", "binary_file", "generic_file"])
-@pytest.mark.parametrize("as_tagged", [True, False])
-def test_load_yaml(tmp_path, input_type, as_tagged):
+@pytest.mark.parametrize("tagged", [True, False])
+def test_load_yaml(tmp_path, input_type, tagged):
     fn = tmp_path / "test.asdf"
     asdf.AsdfFile({"a": np.zeros(3)}).write_to(fn)
 
@@ -140,8 +140,8 @@ def test_load_yaml(tmp_path, input_type, as_tagged):
         ctx = init
 
     with ctx:
-        tree = util.load_yaml(init, as_tagged=as_tagged)
-    if as_tagged:
+        tree = util.load_yaml(init, tagged=tagged)
+    if tagged:
         assert isinstance(tree["a"], asdf.tagged.TaggedDict)
     else:
         assert not isinstance(tree["a"], asdf.tagged.TaggedDict)

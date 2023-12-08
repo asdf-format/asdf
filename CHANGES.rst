@@ -22,7 +22,7 @@ The ASDF Standard is at v1.6.0
   asdf will no longer by-default memory map arrays. [#1667]
 
 - Introduce ``asdf.util.load_yaml`` to load just the YAML contents
-  of an ASDF file (with the option ``as_tagged`` to load the contents
+  of an ASDF file (with the option ``tagged`` to load the contents
   as a tree of ``asdf.tagged.Tagged`` instances to preserve tags) [#1700]
 
 3.0.1 (2023-10-30)

@@ -57,7 +57,7 @@ __all__ = [
 ]
 
 
-def load_yaml(init, as_tagged=False):
+def load_yaml(init, tagged=False):
     """
     Load just the yaml portion of an ASDF file
 
@@ -67,7 +67,7 @@ def load_yaml(init, as_tagged=False):
     init : filename or file-like
         If file-like this must be opened in binary mode.
 
-    as_tagged: bool, optional
+    tagged: bool, optional
         Return tree with instances of `asdf.tagged.Tagged` this
         can be helpful if the yaml tags are of interest.
         If False, the tree will only contain basic python types
@@ -83,7 +83,7 @@ def load_yaml(init, as_tagged=False):
     from .generic_io import get_file
     from .yamlutil import AsdfLoader
 
-    if as_tagged:
+    if tagged:
         loader = AsdfLoader
     else:
         loader = yaml.CBaseLoader if getattr(yaml, "__with_libyaml__", None) else yaml.BaseLoader
