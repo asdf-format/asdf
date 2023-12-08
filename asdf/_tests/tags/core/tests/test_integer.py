@@ -46,16 +46,16 @@ def test_integer_storage(tmpdir, inline):
     with asdf.AsdfFile(tree) as af:
         af.write_to(tmpfile)
 
-    with asdf.open(tmpfile, _force_raw_types=True) as rf:
-        if inline:
-            assert "source" not in rf.tree["integer"]["words"]
-            assert "data" in rf.tree["integer"]["words"]
-        else:
-            assert "source" in rf.tree["integer"]["words"]
-            assert "data" not in rf.tree["integer"]["words"]
+    tree = asdf.util.load_yaml(tmpfile, as_tagged=True)
+    if inline:
+        assert "source" not in tree["integer"]["words"]
+        assert "data" in tree["integer"]["words"]
+    else:
+        assert "source" in tree["integer"]["words"]
+        assert "data" not in tree["integer"]["words"]
 
-        assert "string" in rf.tree["integer"]
-        assert rf.tree["integer"]["string"] == str(value)
+    assert "string" in tree["integer"]
+    assert tree["integer"]["string"] == str(value)
 
 
 def test_integer_conversion():
