@@ -267,7 +267,7 @@ def _assert_roundtrip_tree(
     with io.BytesIO() as buff:
         AsdfFile(tree, extensions=extensions, **init_options).write_to(buff, **write_options)
         buff.seek(0)
-        ff = asdf.open(buff, extensions=extensions, memmap_arrays=False, lazy_load=False)
+        ff = asdf.open(buff, extensions=extensions, memmap=False, lazy_load=False)
         # Ensure that all the blocks are loaded
         for block in ff._blocks.blocks:
             assert block._data is not None and not callable(block._data)
@@ -276,9 +276,9 @@ def _assert_roundtrip_tree(
     if asdf_check_func:
         asdf_check_func(ff)
 
-    # Now repeat with memmap_arrays=True and a real file to test mmap()
+    # Now repeat with memmap=True and a real file to test mmap()
     AsdfFile(tree, extensions=extensions, **init_options).write_to(fname, **write_options)
-    with asdf.open(fname, mode="rw", extensions=extensions, memmap_arrays=True, lazy_load=False) as ff:
+    with asdf.open(fname, mode="rw", extensions=extensions, memmap=True, lazy_load=False) as ff:
         for block in ff._blocks.blocks:
             assert block._data is not None and not callable(block._data)
         assert_tree_match(tree, ff.tree, ff, funcname=tree_match_func)

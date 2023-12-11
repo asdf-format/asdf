@@ -815,12 +815,12 @@ def filename_with_array(tmp_path_factory):
         ({}, True),
         ({"copy_arrays": True}, False),
         ({"copy_arrays": False}, True),
-        ({"memmap_arrays": True}, True),
-        ({"memmap_arrays": False}, False),
-        ({"copy_arrays": True, "memmap_arrays": True}, True),
-        ({"copy_arrays": False, "memmap_arrays": True}, True),
-        ({"copy_arrays": True, "memmap_arrays": False}, False),
-        ({"copy_arrays": False, "memmap_arrays": False}, False),
+        ({"memmap": True}, True),
+        ({"memmap": False}, False),
+        ({"copy_arrays": True, "memmap": True}, True),
+        ({"copy_arrays": False, "memmap": True}, True),
+        ({"copy_arrays": True, "memmap": False}, False),
+        ({"copy_arrays": False, "memmap": False}, False),
     ],
 )
 def test_open_no_memmap(filename_with_array, open_kwargs, should_memmap):
@@ -829,7 +829,7 @@ def test_open_no_memmap(filename_with_array, open_kwargs, should_memmap):
     depending on a number of arguments including:
         default (no kwargs)
         copy_arrays
-        memmap_arrays (overwrites copy_arrays)
+        memmap (overwrites copy_arrays)
     """
     with asdf.open(filename_with_array, lazy_load=False, **open_kwargs) as af:
         array = af.tree["array"]

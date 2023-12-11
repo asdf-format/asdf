@@ -74,7 +74,7 @@ class AsdfFile:
         ignore_unrecognized_tag=False,
         ignore_implicit_conversion=False,
         copy_arrays=False,
-        memmap_arrays=NotSet,
+        memmap=NotSet,
         lazy_load=True,
         custom_schema=None,
     ):
@@ -117,7 +117,7 @@ class AsdfFile:
             When `False`, when reading files, attempt to memmap underlying data
             arrays when possible.
 
-        memmap_arrays : bool, optional
+        memmap : bool, optional
             When `True`, when reading files, attempt to memmap underlying data
             arrays when possible. When set, this argument will override
             ``copy_arrays``.  When not set, the ``copy_arrays`` will determine
@@ -177,9 +177,9 @@ class AsdfFile:
         self._fd = None
         self._closed = False
         self._external_asdf_by_uri = {}
-        # if memmap_arrays is set, it overrides copy_arrays
-        if memmap_arrays is not NotSet:
-            copy_arrays = not memmap_arrays
+        # if memmap is set, it overrides copy_arrays
+        if memmap is not NotSet:
+            copy_arrays = not memmap
         self._blocks = BlockManager(uri=uri, lazy_load=lazy_load, memmap=not copy_arrays)
         # this message is passed into find_references to only warn if
         # a reference was found
@@ -1508,7 +1508,7 @@ def open_asdf(
     ignore_unrecognized_tag=False,
     _force_raw_types=False,
     copy_arrays=False,
-    memmap_arrays=NotSet,
+    memmap=NotSet,
     lazy_load=True,
     custom_schema=None,
     strict_extension_check=False,
@@ -1552,7 +1552,7 @@ def open_asdf(
         When `False`, when reading files, attempt to memmap underlying data
         arrays when possible.
 
-    memmap_arrays : bool, optional
+    memmap : bool, optional
         When `True`, when reading files, attempt to memmap underlying data
         arrays when possible. When set, this argument will override
         ``copy_arrays``.  When not set, the ``copy_arrays`` will determine
@@ -1567,7 +1567,7 @@ def open_asdf(
         open during the lifetime of the tree. Setting to False causes
         all data arrays to be loaded up front, which means that they
         can be accessed even after the underlying file is closed.
-        Note: even if ``lazy_load`` is `False`, ``memmap_arrays`` is still taken
+        Note: even if ``lazy_load`` is `False`, ``memmap`` is still taken
         into account.
 
     custom_schema : str, optional
@@ -1611,7 +1611,7 @@ def open_asdf(
         ignore_version_mismatch=ignore_version_mismatch,
         ignore_unrecognized_tag=ignore_unrecognized_tag,
         copy_arrays=copy_arrays,
-        memmap_arrays=memmap_arrays,
+        memmap=memmap,
         lazy_load=lazy_load,
         custom_schema=custom_schema,
     )

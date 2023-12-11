@@ -46,7 +46,7 @@ def roundtrip_object(obj, version=None):
         af.write_to(buff)
 
     buff.seek(0)
-    with asdf.open(buff, lazy_load=False, memmap_arrays=False) as af:
+    with asdf.open(buff, lazy_load=False, memmap=False) as af:
         return af["obj"]
 
 

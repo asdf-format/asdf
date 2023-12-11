@@ -36,7 +36,7 @@ class ExternalBlockCache:
             from asdf import open as asdf_open
 
             with asdf_open(
-                resolved_uri, "r", lazy_load=False, memmap_arrays=False, validate_checksums=validate_checksums
+                resolved_uri, "r", lazy_load=False, memmap=False, validate_checksums=validate_checksums
             ) as af:
                 blk = af._blocks.blocks[0]
                 if memmap and blk.header["compression"] == b"\0\0\0\0":
