@@ -3,6 +3,7 @@ This module deals with things that change between different versions
 of the ASDF spec.
 """
 
+import importlib.resources
 from functools import total_ordering
 
 import yaml
@@ -143,15 +144,19 @@ class AsdfSpec(SimpleSpec):
         return super().__hash__()
 
 
-supported_versions = [
-    AsdfVersion("1.0.0"),
-    AsdfVersion("1.1.0"),
-    AsdfVersion("1.2.0"),
-    AsdfVersion("1.3.0"),
-    AsdfVersion("1.4.0"),
-    AsdfVersion("1.5.0"),
-    AsdfVersion("1.6.0"),
-]
+def _find_asdf_standard_version_map_versions():
+    # each version has a map
+    version_map_filenames = (
+        importlib.resources.files("asdf_standard") / "resources" / "schemas" / "stsci.edu" / "asdf"
+    ).glob("version_map-*.yaml")
+    versions = []
+    for version_map_filename in version_map_filenames:
+        _, version_string = version_map_filename.with_suffix("").name.split("-", 1)
+        versions.append(AsdfVersion(version_string))
+    return sorted(versions)
+
+
+supported_versions = _find_asdf_standard_version_map_versions()
 
 
 default_version = AsdfVersion("1.5.0")
