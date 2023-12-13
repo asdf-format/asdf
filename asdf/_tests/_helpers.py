@@ -1,7 +1,6 @@
 import io
 import os
 import warnings
-from contextlib import contextmanager
 from pathlib import Path
 
 try:
@@ -23,7 +22,7 @@ import numpy as np
 import yaml
 
 import asdf
-from asdf import generic_io, versioning
+from asdf import generic_io
 from asdf._asdf import AsdfFile, _get_asdf_library_info
 from asdf.constants import YAML_TAG_PREFIX
 from asdf.exceptions import AsdfConversionWarning
@@ -48,7 +47,6 @@ __all__ = [
     "get_test_data_path",
     "assert_tree_match",
     "assert_roundtrip_tree",
-    "yaml_to_asdf",
     "get_file_sizes",
     "display_warnings",
 ]
@@ -286,57 +284,6 @@ def _assert_roundtrip_tree(
             asdf_check_func(ff)
 
 
-def yaml_to_asdf(yaml_content, yaml_headers=True, standard_version=None):
-    """
-    Given a string of YAML content, adds the extra pre-
-    and post-amble to make it an ASDF file.
-
-    Parameters
-    ----------
-    yaml_content : string
-
-    yaml_headers : bool, optional
-        When True (default) add the standard ASDF YAML headers.
-
-    Returns
-    -------
-    buff : io.BytesIO()
-        A file-like object containing the ASDF-like content.
-    """
-    if isinstance(yaml_content, str):
-        yaml_content = yaml_content.encode("utf-8")
-
-    buff = io.BytesIO()
-
-    if standard_version is None:
-        standard_version = versioning.default_version
-
-    standard_version = AsdfVersion(standard_version)
-
-    vm = get_version_map(standard_version)
-    file_format_version = vm["FILE_FORMAT"]
-    yaml_version = vm["YAML_VERSION"]
-    tree_version = vm["tags"]["tag:stsci.edu:asdf/core/asdf"]
-
-    if yaml_headers:
-        buff.write(
-            f"""#ASDF {file_format_version}
-#ASDF_STANDARD {standard_version}
-%YAML {yaml_version}
-%TAG ! tag:stsci.edu:asdf/
---- !core/asdf-{tree_version}
-""".encode(
-                "ascii",
-            ),
-        )
-    buff.write(yaml_content)
-    if yaml_headers:
-        buff.write(b"\n...\n")
-
-    buff.seek(0)
-    return buff
-
-
 def get_file_sizes(dirname):
     """
     Get the file sizes in a directory.
@@ -380,34 +327,6 @@ def display_warnings(_warnings):
     for warning in _warnings:
         msg += f"{warning.filename}:{warning.lineno}: {warning.category.__name__}: {warning.message}\n"
     return msg
-
-
-@contextmanager
-def assert_no_warnings(warning_class=None):
-    """
-    Assert that no warnings were emitted within the context.
-    Requires that pytest be installed.
-
-    Parameters
-    ----------
-    warning_class : type, optional
-        Assert only that no warnings of the specified class were
-        emitted.
-    """
-    import pytest
-
-    if warning_class is None:
-        with warnings.catch_warnings():
-            warnings.simplefilter("error")
-
-            yield
-    else:
-        with pytest.warns(Warning) as recorded_warnings:
-            yield
-
-        assert not any(isinstance(w.message, warning_class) for w in recorded_warnings), display_warnings(
-            recorded_warnings,
-        )
 
 
 def _assert_extension_type_correctness(extension, extension_type, resolver):
