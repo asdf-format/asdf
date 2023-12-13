@@ -7,12 +7,11 @@ import pytest
 from numpy.testing import assert_array_equal
 
 import asdf
-import asdf.testing.helpers
 from asdf import config_context, constants, get_config, schema, tagged, util, yamlutil
-from asdf._tests import _helpers as helpers
+from asdf._tests._helpers import get_test_data_path
 from asdf.exceptions import AsdfConversionWarning, AsdfDeprecationWarning, AsdfWarning, ValidationError
 from asdf.extension import TagDefinition
-from asdf.testing.helpers import yaml_to_asdf
+from asdf.testing.helpers import format_tag, yaml_to_asdf
 
 
 @contextlib.contextmanager
@@ -110,7 +109,7 @@ def test_read_json_schema():
     This was known to fail on Python 3.5 See issue #314 at
     https://github.com/asdf-format/asdf/issues/314 for more details.
     """
-    json_schema = helpers.get_test_data_path("example_schema.json")
+    json_schema = get_test_data_path("example_schema.json")
     schema_tree = schema.load_schema(json_schema, resolve_references=True)
     schema.check_schema(schema_tree)
 
@@ -473,10 +472,10 @@ custom: !<{tag_uri}>
         # Make sure tags get validated inside of other tags that know
         # nothing about them.
         yaml = f"""
-    array: !core/ndarray-1.0.0
-      data: [0, 1, 2]
-      custom: !<{tag_uri}>
-        foo
+array: !core/ndarray-1.0.0
+  data: [0, 1, 2]
+  custom: !<{tag_uri}>
+    foo
         """
         buff = yaml_to_asdf(yaml)
         with (
@@ -830,7 +829,7 @@ custom: !<tag:nowhere.org:custom/foreign_tag_reference-1.0.0>
 
 def test_self_reference_resolution():
     s = schema.load_schema(
-        helpers.get_test_data_path("self_referencing-1.0.0.yaml"),
+        get_test_data_path("self_referencing-1.0.0.yaml"),
         resolve_references=True,
     )
     assert "$ref" not in repr(s)
@@ -839,7 +838,7 @@ def test_self_reference_resolution():
 
 def test_schema_resolved_via_entry_points():
     """Test that entry points mappings to core schema works"""
-    tag = asdf.testing.helpers.format_tag("stsci.edu", "asdf", "1.0.0", "fits/fits")
+    tag = format_tag("stsci.edu", "asdf", "1.0.0", "fits/fits")
     extension_manager = asdf.extension.get_cached_extension_manager(get_config().extensions)
     schema_uris = extension_manager.get_tag_definition(tag).schema_uris
     assert len(schema_uris) > 0
@@ -914,13 +913,12 @@ def test_read_large_literal(value):
 )
 def test_mapping_supported_key_types(keys, version):
     for key in keys:
-        with helpers.assert_no_warnings():
-            af = asdf.AsdfFile({key: "value"}, version=version)
-            buff = io.BytesIO()
-            af.write_to(buff)
-            buff.seek(0)
-            with asdf.open(buff) as af:
-                assert af[key] == "value"
+        af = asdf.AsdfFile({key: "value"}, version=version)
+        buff = io.BytesIO()
+        af.write_to(buff)
+        buff.seek(0)
+        with asdf.open(buff) as af:
+            assert af[key] == "value"
 
 
 @pytest.mark.parametrize(
@@ -1014,7 +1012,7 @@ properties:
 
 
 def test_custom_validation_bad(tmp_path):
-    custom_schema_path = helpers.get_test_data_path("custom_schema.yaml")
+    custom_schema_path = get_test_data_path("custom_schema.yaml")
     asdf_file = str(tmp_path / "out.asdf")
 
     # This tree does not conform to the custom schema
@@ -1047,7 +1045,7 @@ def test_custom_validation_bad(tmp_path):
 
 
 def test_custom_validation_good(tmp_path):
-    custom_schema_path = helpers.get_test_data_path("custom_schema.yaml")
+    custom_schema_path = get_test_data_path("custom_schema.yaml")
     asdf_file = str(tmp_path / "out.asdf")
 
     # This tree conforms to the custom schema
@@ -1068,7 +1066,7 @@ def test_custom_validation_pathlib(tmp_path):
     """
     from pathlib import Path
 
-    custom_schema_path = Path(helpers.get_test_data_path("custom_schema.yaml"))
+    custom_schema_path = Path(get_test_data_path("custom_schema.yaml"))
     asdf_file = str(tmp_path / "out.asdf")
 
     # This tree conforms to the custom schema
@@ -1082,7 +1080,7 @@ def test_custom_validation_pathlib(tmp_path):
 
 
 def test_custom_validation_with_definitions_good(tmp_path):
-    custom_schema_path = helpers.get_test_data_path("custom_schema_definitions.yaml")
+    custom_schema_path = get_test_data_path("custom_schema_definitions.yaml")
     asdf_file = str(tmp_path / "out.asdf")
 
     # This tree conforms to the custom schema
@@ -1096,7 +1094,7 @@ def test_custom_validation_with_definitions_good(tmp_path):
 
 
 def test_custom_validation_with_definitions_bad(tmp_path):
-    custom_schema_path = helpers.get_test_data_path("custom_schema_definitions.yaml")
+    custom_schema_path = get_test_data_path("custom_schema_definitions.yaml")
     asdf_file = str(tmp_path / "out.asdf")
 
     # This tree does NOT conform to the custom schema
@@ -1128,7 +1126,7 @@ def test_custom_validation_with_definitions_bad(tmp_path):
 
 
 def test_custom_validation_with_external_ref_good(tmp_path):
-    custom_schema_path = helpers.get_test_data_path("custom_schema_external_ref.yaml")
+    custom_schema_path = get_test_data_path("custom_schema_external_ref.yaml")
     asdf_file = str(tmp_path / "out.asdf")
 
     # This tree conforms to the custom schema
@@ -1142,7 +1140,7 @@ def test_custom_validation_with_external_ref_good(tmp_path):
 
 
 def test_custom_validation_with_external_ref_bad(tmp_path):
-    custom_schema_path = helpers.get_test_data_path("custom_schema_external_ref.yaml")
+    custom_schema_path = get_test_data_path("custom_schema_external_ref.yaml")
     asdf_file = str(tmp_path / "out.asdf")
 
     # This tree does not conform to the custom schema

@@ -211,11 +211,11 @@ class AsdfSchemaExampleItem(pytest.Item):
 
     def runtest(self):
         from asdf import AsdfFile, _block, generic_io, util
-        from asdf.testing.helpers import yaml_to_asdf
+        from asdf.testing import helpers
 
         # Make sure that the examples in the schema files (and thus the
         # ASDF standard document) are valid.
-        buff = yaml_to_asdf("example: " + self.example.example.strip(), version=self.example.version)
+        buff = helpers.yaml_to_asdf("example: " + self.example.example.strip(), version=self.example.version)
 
         ff = AsdfFile(
             uri=util.filepath_to_url(os.path.abspath(self.filename)),

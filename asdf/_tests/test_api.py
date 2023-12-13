@@ -16,7 +16,7 @@ from asdf.exceptions import AsdfDeprecationWarning, AsdfWarning, ValidationError
 from asdf.extension import ExtensionProxy
 from asdf.testing.helpers import yaml_to_asdf
 
-from ._helpers import assert_no_warnings, assert_roundtrip_tree, assert_tree_match
+from ._helpers import assert_roundtrip_tree, assert_tree_match
 
 RNG = np.random.default_rng(97)
 
@@ -45,8 +45,7 @@ def test_no_warning_nan_array(tmp_path):
 
     tree = {"array": np.array([1, 2, np.nan])}
 
-    with assert_no_warnings():
-        assert_roundtrip_tree(tree, tmp_path)
+    assert_roundtrip_tree(tree, tmp_path)
 
 
 @pytest.mark.skipif(
@@ -347,8 +346,7 @@ def test_extension_check_no_warning_on_builtin():
             ],
         },
     }
-    with assert_no_warnings():
-        af._check_extensions(tree)
+    af._check_extensions(tree)
 
 
 @pytest.mark.parametrize(

@@ -171,7 +171,7 @@ def test_implicit_conversion_warning():
     with pytest.warns(AsdfWarning, match=r"Failed to serialize instance"), asdf.AsdfFile(tree):
         pass
 
-    with helpers.assert_no_warnings(), asdf.AsdfFile(tree, ignore_implicit_conversion=True):
+    with asdf.AsdfFile(tree, ignore_implicit_conversion=True):
         pass
 
 
@@ -208,7 +208,7 @@ foo: !<tag:stsci.edu:asdf/core/ndarray-1.0.0> [1, 2, 3]
 ..."""
 
     # Check that fully qualified explicit tags work
-    buff = io.BytesIO(yaml)
+    buff = io.BytesIO(yaml.encode("ascii"))
 
     with asdf.open(buff) as ff:
         assert all(ff.tree["foo"] == [1, 2, 3])

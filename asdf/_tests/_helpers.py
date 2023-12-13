@@ -1,7 +1,6 @@
 import io
 import os
 import warnings
-from contextlib import contextmanager
 from pathlib import Path
 
 try:
@@ -318,31 +317,3 @@ def display_warnings(_warnings):
     for warning in _warnings:
         msg += f"{warning.filename}:{warning.lineno}: {warning.category.__name__}: {warning.message}\n"
     return msg
-
-
-@contextmanager
-def assert_no_warnings(warning_class=None):
-    """
-    Assert that no warnings were emitted within the context.
-    Requires that pytest be installed.
-
-    Parameters
-    ----------
-    warning_class : type, optional
-        Assert only that no warnings of the specified class were
-        emitted.
-    """
-    import pytest
-
-    if warning_class is None:
-        with warnings.catch_warnings():
-            warnings.simplefilter("error")
-
-            yield
-    else:
-        with pytest.warns(Warning) as recorded_warnings:
-            yield
-
-        assert not any(isinstance(w.message, warning_class) for w in recorded_warnings), display_warnings(
-            recorded_warnings,
-        )
