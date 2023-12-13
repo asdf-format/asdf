@@ -19,21 +19,11 @@ except ImportError:
     CartesianDifferential = None
 
 import numpy as np
-import yaml
 
 import asdf
-from asdf import generic_io
 from asdf._asdf import AsdfFile, _get_asdf_library_info
-from asdf.constants import YAML_TAG_PREFIX
 from asdf.exceptions import AsdfConversionWarning
 from asdf.tags.core import AsdfObject
-from asdf.versioning import (
-    AsdfVersion,
-    asdf_standard_development_version,
-    get_version_map,
-    split_tag_version,
-    supported_versions,
-)
 
 from .httpserver import RangeHTTPServer
 
@@ -48,7 +38,6 @@ __all__ = [
     "assert_tree_match",
     "assert_roundtrip_tree",
     "get_file_sizes",
-    "display_warnings",
 ]
 
 
@@ -304,85 +293,3 @@ def get_file_sizes(dirname):
         if os.path.isfile(path):
             files[filename] = os.stat(path).st_size
     return files
-
-
-def display_warnings(_warnings):
-    """
-    Return a string that displays a list of unexpected warnings
-
-    Parameters
-    ----------
-    _warnings : iterable
-        List of warnings to be displayed
-
-    Returns
-    -------
-    msg : str
-        String containing the warning messages to be displayed
-    """
-    if len(_warnings) == 0:
-        return "No warnings occurred (was one expected?)"
-
-    msg = "Unexpected warning(s) occurred:\n"
-    for warning in _warnings:
-        msg += f"{warning.filename}:{warning.lineno}: {warning.category.__name__}: {warning.message}\n"
-    return msg
-
-
-def _assert_extension_type_correctness(extension, extension_type, resolver):
-    __tracebackhide__ = True
-
-    if extension_type.yaml_tag is not None and extension_type.yaml_tag.startswith(YAML_TAG_PREFIX):
-        return
-
-    if extension_type == asdf.Stream:
-        # Stream is a special case.  It was implemented as a subclass of NDArrayType,
-        # but shares a tag with that class, so it isn't really a distinct type.
-        return
-
-    assert extension_type.name is not None, f"{extension_type.__name__} must set the 'name' class attribute"
-
-    # Currently ExtensionType sets a default version of 1.0.0,
-    # but we want to encourage an explicit version on the subclass.
-    assert "version" in extension_type.__dict__, f"{extension_type.__name__} must set the 'version' class attribute"
-
-    # check the default version
-    types_to_check = [extension_type]
-
-    # Adding or updating a schema/type version might involve updating multiple
-    # packages. This can result in types without schema and schema without types
-    # for the development version of the asdf-standard. To account for this,
-    # don't include versioned siblings of types with versions that are not
-    # in one of the asdf-standard versions in supported_versions (excluding the
-    # current development version).
-    asdf_standard_versions = supported_versions.copy()
-    if asdf_standard_development_version in asdf_standard_versions:
-        asdf_standard_versions.remove(asdf_standard_development_version)
-    for sibling in extension_type.versioned_siblings:
-        tag_base, version = split_tag_version(sibling.yaml_tag)
-        for asdf_standard_version in asdf_standard_versions:
-            vm = get_version_map(asdf_standard_version)
-            if tag_base in vm["tags"] and AsdfVersion(vm["tags"][tag_base]) == version:
-                types_to_check.append(sibling)
-                break
-
-    for check_type in types_to_check:
-        schema_location = resolver(check_type.yaml_tag)
-
-        assert schema_location is not None, (
-            f"{extension_type.__name__} supports tag, {check_type.yaml_tag}, "
-            "but tag does not resolve.  Check the tag_mapping and uri_mapping "
-            f"properties on the related extension ({extension_type.__name__})."
-        )
-
-        if schema_location not in asdf.get_config().resource_manager:
-            try:
-                with generic_io.get_file(schema_location) as f:
-                    yaml.safe_load(f.read())
-            except Exception as err:
-                msg = (
-                    f"{extension_type.__name__} supports tag, {check_type.yaml_tag}, "
-                    f"which resolves to schema at {schema_location}, but "
-                    "schema cannot be read."
-                )
-                raise AssertionError(msg) from err
