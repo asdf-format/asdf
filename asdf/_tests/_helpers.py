@@ -38,7 +38,6 @@ __all__ = [
     "assert_tree_match",
     "assert_roundtrip_tree",
     "get_file_sizes",
-    "display_warnings",
 ]
 
 
@@ -294,26 +293,3 @@ def get_file_sizes(dirname):
         if os.path.isfile(path):
             files[filename] = os.stat(path).st_size
     return files
-
-
-def display_warnings(_warnings):
-    """
-    Return a string that displays a list of unexpected warnings
-
-    Parameters
-    ----------
-    _warnings : iterable
-        List of warnings to be displayed
-
-    Returns
-    -------
-    msg : str
-        String containing the warning messages to be displayed
-    """
-    if len(_warnings) == 0:
-        return "No warnings occurred (was one expected?)"
-
-    msg = "Unexpected warning(s) occurred:\n"
-    for warning in _warnings:
-        msg += f"{warning.filename}:{warning.lineno}: {warning.category.__name__}: {warning.message}\n"
-    return msg
