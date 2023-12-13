@@ -11,54 +11,78 @@ from asdf import tagged, treeutil, yamlutil
 from asdf.exceptions import AsdfConversionWarning, AsdfWarning
 from asdf.testing.helpers import yaml_to_asdf
 
-from . import _helpers as helpers
+
+def _roundtrip(obj):
+    """
+    Parameters
+    ----------
+
+    obj : object
+        object to write to ASDF file (under key 'obj')
+
+    Returns
+    -------
+
+    file_contents: bytes
+        contents of written file
+
+    read_tree : object
+        object read back from ASDF file
+    """
+    buff = io.BytesIO()
+    asdf.AsdfFile({"obj": obj}).write_to(buff)
+    buff.seek(0)
+
+    open_kwargs = {
+        "lazy_load": False,
+        "copy_arrays": True,
+    }
+
+    with asdf.open(buff, **open_kwargs) as af:
+        return buff.getvalue(), af["obj"]
 
 
-def test_ordered_dict(tmp_path):
+def test_ordered_dict():
     """
     Test that we can write out and read in ordered dicts.
     """
 
-    tree = {
+    input_tree = {
         "ordered_dict": OrderedDict([("first", "foo"), ("second", "bar"), ("third", "baz")]),
         "unordered_dict": {"first": "foo", "second": "bar", "third": "baz"},
     }
 
-    def check_asdf(asdf):
-        tree = asdf.tree
+    content, tree = _roundtrip(input_tree)
 
-        assert isinstance(tree["ordered_dict"], OrderedDict)
-        assert list(tree["ordered_dict"].keys()) == ["first", "second", "third"]
+    assert b"OrderedDict" not in content
 
-        assert not isinstance(tree["unordered_dict"], OrderedDict)
-        assert isinstance(tree["unordered_dict"], dict)
+    assert isinstance(tree["ordered_dict"], OrderedDict)
+    assert tree["ordered_dict"] == input_tree["ordered_dict"]
 
-    def check_raw_yaml(content):
-        assert b"OrderedDict" not in content
-
-    helpers.assert_roundtrip_tree(tree, tmp_path, asdf_check_func=check_asdf, raw_yaml_check_func=check_raw_yaml)
+    assert not isinstance(tree["unordered_dict"], OrderedDict)
+    assert isinstance(tree["unordered_dict"], dict)
+    assert tree["unordered_dict"] == input_tree["unordered_dict"]
 
 
-def test_unicode_write(tmp_path):
+def test_unicode_write():
     """
     We want to write unicode out as regular utf-8-encoded
     characters, not as escape sequences
     """
 
-    tree = {"ɐʇɐp‾ǝpoɔıun": 42, "ascii_only": "this is ascii"}  # noqa: RUF001
+    input_tree = {"ɐʇɐp‾ǝpoɔıun": 42, "ascii_only": "this is ascii"}  # noqa: RUF001
 
-    def check_asdf(asdf):
-        assert "ɐʇɐp‾ǝpoɔıun" in asdf.tree  # noqa: RUF001
-        assert isinstance(asdf.tree["ascii_only"], str)
+    content, tree = _roundtrip(input_tree)
 
-    def check_raw_yaml(content):
-        # Ensure that unicode is written out as UTF-8 without escape
-        # sequences
-        assert "ɐʇɐp‾ǝpoɔıun".encode() in content  # noqa: RUF001
-        # Ensure that the unicode "tag" is not used
-        assert b"unicode" not in content
+    # Ensure that unicode is written out as UTF-8 without escape
+    # sequences
+    assert "ɐʇɐp‾ǝpoɔıun".encode() in content  # noqa: RUF001
+    # Ensure that the unicode "tag" is not used
+    assert b"unicode" not in content
 
-    helpers.assert_roundtrip_tree(tree, tmp_path, asdf_check_func=check_asdf, raw_yaml_check_func=check_raw_yaml)
+    assert tree["ɐʇɐp‾ǝpoɔıun"] == input_tree["ɐʇɐp‾ǝpoɔıun"]  # noqa: RUF001
+    assert isinstance(tree["ascii_only"], str)
+    assert tree["ascii_only"] == input_tree["ascii_only"]
 
 
 def test_arbitrary_python_object():
@@ -78,50 +102,39 @@ def test_arbitrary_python_object():
         ff.write_to(buff)
 
 
-def run_tuple_test(tree, tmp_path):
-    def check_asdf(asdf):
-        assert isinstance(asdf.tree["val"], list)
+def run_tuple_test(input_tree):
+    content, tree = _roundtrip(input_tree)
 
-    def check_raw_yaml(content):
-        assert b"tuple" not in content
-
-    # Ignore these warnings for the tests that don't actually test the warning
-    init_options = {"ignore_implicit_conversion": True}
-
-    helpers.assert_roundtrip_tree(
-        tree,
-        tmp_path,
-        asdf_check_func=check_asdf,
-        raw_yaml_check_func=check_raw_yaml,
-        init_options=init_options,
-    )
+    assert b"tuple" not in content
+    assert isinstance(tree["val"], list)
 
 
-def test_python_tuple(tmp_path):
+def test_python_tuple():
     """
     We don't want to store tuples as tuples, because that's not a
     built-in YAML data type.  This test ensures that they are
     converted to lists.
     """
 
-    tree = {"val": (1, 2, 3)}
+    input_tree = {"val": (1, 2, 3)}
 
-    run_tuple_test(tree, tmp_path)
+    run_tuple_test(input_tree)
 
 
-def test_named_tuple_collections(tmp_path):
+def test_named_tuple_collections():
     """
     Ensure that we are able to serialize a collections.namedtuple.
     """
 
     nt = namedtuple("TestNamedTuple1", ("one", "two", "three"))
 
-    tree = {"val": nt(1, 2, 3)}
+    input_tree = {"val": nt(1, 2, 3)}
 
-    run_tuple_test(tree, tmp_path)
+    with pytest.warns(AsdfWarning, match="converting to list"):
+        run_tuple_test(input_tree)
 
 
-def test_named_tuple_typing(tmp_path):
+def test_named_tuple_typing():
     """
     Ensure that we are able to serialize a typing.NamedTuple.
     """
@@ -133,19 +146,18 @@ def test_named_tuple_typing(tmp_path):
 
     tree = {"val": NT(1, 2, 3)}
 
-    run_tuple_test(tree, tmp_path)
+    with pytest.warns(AsdfWarning, match="converting to list"):
+        run_tuple_test(tree)
 
 
-def test_named_tuple_collections_recursive(tmp_path):
+def test_named_tuple_collections_recursive():
     nt = namedtuple("TestNamedTuple3", ("one", "two", "three"))
 
-    tree = {"val": nt(1, 2, np.ones(3))}
+    input_tree = {"val": nt(1, 2, np.ones(3))}
 
-    def check_asdf(asdf):
-        assert (asdf.tree["val"][2] == np.ones(3)).all()
-
-    init_options = {"ignore_implicit_conversion": True}
-    helpers.assert_roundtrip_tree(tree, tmp_path, asdf_check_func=check_asdf, init_options=init_options)
+    with pytest.warns(AsdfWarning, match="converting to list"):
+        _, tree = _roundtrip(input_tree)
+    assert (tree["val"][2] == np.ones(3)).all()
 
 
 def test_named_tuple_typing_recursive(tmp_path):
@@ -154,13 +166,11 @@ def test_named_tuple_typing_recursive(tmp_path):
         two: int
         three: np.ndarray
 
-    tree = {"val": NT(1, 2, np.ones(3))}
+    input_tree = {"val": NT(1, 2, np.ones(3))}
 
-    def check_asdf(asdf):
-        assert (asdf.tree["val"][2] == np.ones(3)).all()
-
-    init_options = {"ignore_implicit_conversion": True}
-    helpers.assert_roundtrip_tree(tree, tmp_path, asdf_check_func=check_asdf, init_options=init_options)
+    with pytest.warns(AsdfWarning, match="converting to list"):
+        _, tree = _roundtrip(input_tree)
+    assert (tree["val"][2] == np.ones(3)).all()
 
 
 def test_implicit_conversion_warning():
@@ -176,7 +186,7 @@ def test_implicit_conversion_warning():
 
 
 @pytest.mark.xfail(reason="pyyaml has a bug and does not support tuple keys")
-def test_python_tuple_key(tmp_path):
+def test_python_tuple_key():
     """
     This tests whether tuple keys are round-tripped properly.
 
@@ -184,19 +194,20 @@ def test_python_tuple_key(tmp_path):
     ruamel.yaml. If/when we decide to switch to ruamel.yaml, this test should
     pass.
     """
-    tree = {(42, 1): "foo"}
-    helpers.assert_roundtrip_tree(tree, tmp_path)
+    input_tree = {(42, 1): "foo"}
+
+    _, tree = _roundtrip(input_tree)
+    assert tree[(42, 1)] == "foo"
 
 
 def test_tags_removed_after_load(tmp_path):
-    tree = {"foo": ["bar", (1, 2, None)]}
+    input_tree = {"foo": ["bar", (1, 2, None)]}
 
-    def check_asdf(asdf):
-        for node in treeutil.iter_tree(asdf.tree):
-            if node != asdf.tree:
-                assert not isinstance(node, tagged.Tagged)
+    _, tree = _roundtrip(input_tree)
 
-    helpers.assert_roundtrip_tree(tree, tmp_path, asdf_check_func=check_asdf)
+    for node in treeutil.iter_tree(tree):
+        if node != tree:
+            assert not isinstance(node, tagged.Tagged)
 
 
 def test_explicit_tags():
@@ -228,12 +239,15 @@ def test_yaml_internal_reference(tmp_path):
     _list = []
     _list.append(_list)
 
-    tree = {"first": d, "second": d, "list": _list}
+    input_tree = {"first": d, "second": d, "list": _list}
 
-    def check_yaml(content):
-        assert b"list:&id002-*id002" in b"".join(content.split())
+    content, tree = _roundtrip(input_tree)
 
-    helpers.assert_roundtrip_tree(tree, tmp_path, raw_yaml_check_func=check_yaml)
+    assert b"list:&id002-*id002" in b"".join(content.split())
+    assert tree["list"][0] == tree["list"]
+    for k in ("first", "second"):
+        assert tree[k]["foo"] == input_tree[k]["foo"]
+        assert tree[k]["bar"] is tree[k]
 
 
 def test_yaml_nan_inf():

@@ -4,7 +4,7 @@ import pytest
 
 import asdf
 from asdf import IntegerType
-from asdf._tests import _helpers as helpers
+from asdf.testing.helpers import roundtrip_object
 
 # Make sure tests are deterministic
 random.seed(0)
@@ -22,13 +22,12 @@ random.seed(0)
         random.getrandbits(200),
     ],
 )
-def test_integer_value(tmp_path, value, sign):
+def test_integer_value(value, sign):
     if sign == "-":
         value = -value
 
     integer = IntegerType(value)
-    tree = {"integer": integer}
-    helpers.assert_roundtrip_tree(tree, tmp_path)
+    assert integer == roundtrip_object(integer)
 
 
 @pytest.mark.parametrize("inline", [False, True])
