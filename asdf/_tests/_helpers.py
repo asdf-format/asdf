@@ -37,7 +37,6 @@ __all__ = [
     "get_test_data_path",
     "assert_tree_match",
     "assert_roundtrip_tree",
-    "get_file_sizes",
 ]
 
 
@@ -271,25 +270,3 @@ def _assert_roundtrip_tree(
         assert_tree_match(tree, ff.tree, ff, funcname=tree_match_func)
         if asdf_check_func:
             asdf_check_func(ff)
-
-
-def get_file_sizes(dirname):
-    """
-    Get the file sizes in a directory.
-
-    Parameters
-    ----------
-    dirname : string
-        Path to a directory
-
-    Returns
-    -------
-    sizes : dict
-        Dictionary of (file, size) pairs.
-    """
-    files = {}
-    for filename in os.listdir(dirname):
-        path = os.path.join(dirname, filename)
-        if os.path.isfile(path):
-            files[filename] = os.stat(path).st_size
-    return files

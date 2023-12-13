@@ -1,10 +1,8 @@
-import os
-
 import numpy as np
 
 import asdf
 from asdf import AsdfFile
-from asdf._tests._helpers import assert_tree_match, get_file_sizes
+from asdf._tests._helpers import assert_tree_match
 from asdf.commands import main
 
 
@@ -18,7 +16,7 @@ def test_explode_then_implode(tmp_path):
         "not_shared": np.arange(10, 0, -1, dtype=np.uint8),
     }
 
-    path = os.path.join(str(tmp_path), "original.asdf")
+    path = tmp_path / "original.asdf"
     ff = AsdfFile(tree)
     # Since we're testing with small arrays, force all arrays to be stored
     # in internal blocks rather than letting some of them be automatically put
@@ -27,11 +25,11 @@ def test_explode_then_implode(tmp_path):
     with asdf.open(path) as af:
         assert len(af._blocks.blocks) == 2
 
-    result = main.main_from_args(["explode", path])
+    result = main.main_from_args(["explode", str(path)])
 
     assert result == 0
 
-    files = get_file_sizes(str(tmp_path))
+    files = [p.name for p in tmp_path.iterdir()]
 
     assert "original.asdf" in files
     assert "original_exploded.asdf" in files
@@ -39,18 +37,21 @@ def test_explode_then_implode(tmp_path):
     assert "original_exploded0001.asdf" in files
     assert "original_exploded0002.asdf" not in files
 
-    assert files["original.asdf"] > files["original_exploded.asdf"]
+    # compare file sizes of original and exploded files
+    original_size = (tmp_path / "original.asdf").stat().st_size
+    exploded_size = (tmp_path / "original_exploded.asdf").stat().st_size
+    assert original_size > exploded_size
 
-    path = os.path.join(str(tmp_path), "original_exploded.asdf")
-    result = main.main_from_args(["implode", path])
+    path = tmp_path / "original_exploded.asdf"
+    result = main.main_from_args(["implode", str(path)])
 
     assert result == 0
 
-    with asdf.open(str(tmp_path / "original_exploded_all.asdf")) as af:
+    with asdf.open(tmp_path / "original_exploded_all.asdf") as af:
         assert_tree_match(af.tree, tree)
         assert len(af._blocks.blocks) == 2
 
 
 def test_file_not_found(tmp_path):
-    path = os.path.join(str(tmp_path), "original.asdf")
-    assert main.main_from_args(["explode", path]) == 2
+    path = tmp_path / "original.asdf"
+    assert main.main_from_args(["explode", str(path)]) == 2
