@@ -1,3 +1,5 @@
+import importlib.resources
+
 import pytest
 
 from asdf import config, schema
@@ -64,3 +66,8 @@ def rhttpserver(request):
     server = RangeHTTPServer()
     yield server
     server.finalize()
+
+
+@pytest.fixture()
+def test_data_path():
+    return importlib.resources.files("asdf") / "_tests" / "data"

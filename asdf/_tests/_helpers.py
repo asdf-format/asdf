@@ -1,7 +1,6 @@
 import io
 import os
 import warnings
-from pathlib import Path
 
 try:
     from astropy.coordinates import ICRS
@@ -34,24 +33,9 @@ except ImportError:
 
 
 __all__ = [
-    "get_test_data_path",
     "assert_tree_match",
     "assert_roundtrip_tree",
 ]
-
-
-def get_test_data_path(name, module=None):
-    if module is None:
-        from . import data as test_data
-
-        module = test_data
-
-    module_root = Path(module.__file__).parent
-
-    if name is None or name == "":
-        return str(module_root)
-
-    return str(module_root / name)
 
 
 def assert_tree_match(old_tree, new_tree, ctx=None, funcname="assert_equal", ignore_keys=None):
