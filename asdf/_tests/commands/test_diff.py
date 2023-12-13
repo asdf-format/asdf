@@ -1,38 +1,32 @@
 import io
-from functools import partial
 
 import pytest
 
-from asdf._tests import _helpers as helpers
 from asdf.commands import diff, main
 
-from . import data as test_data
 
-get_test_data_path = partial(helpers.get_test_data_path, module=test_data)
-
-
-def _assert_diffs_equal(filenames, result_file, minimal=False, ignore=None):
+def _assert_diffs_equal(test_data_path, filenames, result_file, minimal=False, ignore=None):
     iostream = io.StringIO()
 
-    file_paths = [get_test_data_path(name) for name in filenames]
+    file_paths = [test_data_path / name for name in filenames]
     diff(file_paths, minimal=minimal, iostream=iostream, ignore=ignore)
     iostream.seek(0)
 
-    result_path = get_test_data_path(result_file)
+    result_path = test_data_path / result_file
     with open(result_path) as handle:
         assert handle.read() == iostream.read()
 
 
-def test_diff():
+def test_diff(test_data_path):
     filenames = ["frames0.asdf", "frames1.asdf"]
     result_file = "frames.diff"
-    _assert_diffs_equal(filenames, result_file, minimal=False)
+    _assert_diffs_equal(test_data_path, filenames, result_file, minimal=False)
 
 
-def test_diff_minimal():
+def test_diff_minimal(test_data_path):
     filenames = ["frames0.asdf", "frames1.asdf"]
     result_file = "frames_minimal.diff"
-    _assert_diffs_equal(filenames, result_file, minimal=True)
+    _assert_diffs_equal(test_data_path, filenames, result_file, minimal=True)
 
 
 @pytest.mark.parametrize(
@@ -43,48 +37,48 @@ def test_diff_minimal():
         ("frames_ignore_both.diff", ["asdf_library", "frames[*].reference_frame"]),
     ],
 )
-def test_diff_ignore(result_file, ignore):
+def test_diff_ignore(test_data_path, result_file, ignore):
     filenames = ["frames0.asdf", "frames1.asdf"]
-    _assert_diffs_equal(filenames, result_file, minimal=False, ignore=ignore)
+    _assert_diffs_equal(test_data_path, filenames, result_file, minimal=False, ignore=ignore)
 
 
-def test_diff_ndarray():
+def test_diff_ndarray(test_data_path):
     filenames = ["ndarray0.asdf", "ndarray1.asdf"]
     result_file = "ndarrays.diff"
-    _assert_diffs_equal(filenames, result_file, minimal=False)
+    _assert_diffs_equal(test_data_path, filenames, result_file, minimal=False)
 
 
-def test_diff_ndarray_in_list():
+def test_diff_ndarray_in_list(test_data_path):
     filenames = ["ndarray_in_list0.asdf", "ndarray_in_list1.asdf"]
     result_file = "ndarray_in_list.diff"
-    _assert_diffs_equal(filenames, result_file, minimal=False)
+    _assert_diffs_equal(test_data_path, filenames, result_file, minimal=False)
 
 
-def test_diff_block():
+def test_diff_block(test_data_path):
     filenames = ["block0.asdf", "block1.asdf"]
     result_file = "blocks.diff"
-    _assert_diffs_equal(filenames, result_file, minimal=False)
+    _assert_diffs_equal(test_data_path, filenames, result_file, minimal=False)
 
 
-def test_diff_simple_inline_array():
+def test_diff_simple_inline_array(test_data_path):
     filenames = ["simple_inline_array0.asdf", "simple_inline_array1.asdf"]
     result_file = "simple_inline_array.diff"
-    _assert_diffs_equal(filenames, result_file, minimal=False)
+    _assert_diffs_equal(test_data_path, filenames, result_file, minimal=False)
 
 
 @pytest.mark.filterwarnings("ignore:unclosed file .*")
-def test_file_not_found():
+def test_file_not_found(test_data_path):
     # Try to open files that exist but are not valid asdf
     filenames = ["frames.diff", "blocks.diff"]
     with pytest.raises(
         RuntimeError,
         match=r"Does not appear to be a ASDF file.",
     ):
-        diff([get_test_data_path(name) for name in filenames], False)
+        diff([test_data_path / name for name in filenames], False)
 
 
-def test_diff_command():
+def test_diff_command(test_data_path):
     filenames = ["frames0.asdf", "frames1.asdf"]
-    paths = [get_test_data_path(name) for name in filenames]
+    path_strings = [str(test_data_path / name) for name in filenames]
 
-    assert main.main_from_args(["diff", *paths]) == 0
+    assert main.main_from_args(["diff", *path_strings]) == 0
