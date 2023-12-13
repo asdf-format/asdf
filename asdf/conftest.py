@@ -8,6 +8,14 @@ import pytest
 collect_ignore = ["asdf.py", "stream.py"]
 
 
+def pytest_collection_modifyitems(items):
+    # Turn warnings into errors for all tests, this is needed
+    # as running tests through pyargs will not use settings
+    # defined in pyproject.toml
+    for item in items:
+        item.add_marker(pytest.mark.filterwarnings("error"), False)
+
+
 @pytest.fixture(scope="session", autouse=True)
 def _temp_cwd(tmp_path_factory):
     """
