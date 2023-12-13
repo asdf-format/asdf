@@ -1,5 +1,3 @@
-import io
-import os
 import warnings
 
 try:
@@ -20,11 +18,6 @@ except ImportError:
 import numpy as np
 
 import asdf
-from asdf._asdf import AsdfFile, _get_asdf_library_info
-from asdf.exceptions import AsdfConversionWarning
-from asdf.tags.core import AsdfObject
-
-from .httpserver import RangeHTTPServer
 
 try:
     from pytest_remotedata.disable_internet import INTERNET_OFF
@@ -34,7 +27,6 @@ except ImportError:
 
 __all__ = [
     "assert_tree_match",
-    "assert_roundtrip_tree",
 ]
 
 
@@ -129,128 +121,3 @@ def assert_tree_match(old_tree, new_tree, ctx=None, funcname="assert_equal", ign
             assert old == new
 
     recurse(old_tree, new_tree)
-
-
-def assert_roundtrip_tree(*args, **kwargs):
-    """
-    Assert that a given tree saves to ASDF and, when loaded back,
-    the tree matches the original tree.
-
-    tree : ASDF tree
-
-    tmp_path : `str` or `pathlib.Path`
-        Path to temporary directory to save file
-
-    tree_match_func : `str` or `callable`
-        Passed to `assert_tree_match` and used to compare two objects in the
-        tree.
-
-    raw_yaml_check_func : callable, optional
-        Will be called with the raw YAML content as a string to
-        perform any additional checks.
-
-    asdf_check_func : callable, optional
-        Will be called with the reloaded ASDF file to perform any
-        additional checks.
-    """
-    with warnings.catch_warnings():
-        warnings.filterwarnings("error", category=AsdfConversionWarning)
-        _assert_roundtrip_tree(*args, **kwargs)
-
-
-def _assert_roundtrip_tree(
-    tree,
-    tmp_path,
-    *,
-    asdf_check_func=None,
-    raw_yaml_check_func=None,
-    write_options=None,
-    init_options=None,
-    extensions=None,
-    tree_match_func="assert_equal",
-):
-    write_options = {} if write_options is None else write_options
-    init_options = {} if init_options is None else init_options
-
-    fname = os.path.join(str(tmp_path), "test.asdf")
-
-    # First, test writing/reading a BytesIO buffer
-    buff = io.BytesIO()
-    AsdfFile(tree, extensions=extensions, **init_options).write_to(buff, **write_options)
-    assert not buff.closed
-    buff.seek(0)
-    with asdf.open(buff, mode="rw", extensions=extensions) as ff:
-        assert not buff.closed
-        assert isinstance(ff.tree, AsdfObject)
-        assert "asdf_library" in ff.tree
-        assert ff.tree["asdf_library"] == _get_asdf_library_info()
-        assert_tree_match(tree, ff.tree, ff, funcname=tree_match_func)
-        if asdf_check_func:
-            asdf_check_func(ff)
-
-    buff.seek(0)
-    ff = AsdfFile(extensions=extensions, **init_options)
-    content = AsdfFile._open_impl(ff, buff, mode="r", _get_yaml_content=True)
-    buff.close()
-    # We *never* want to get any raw python objects out
-    assert b"!!python" not in content
-    assert b"!core/asdf" in content
-    assert content.startswith(b"%YAML 1.1")
-    if raw_yaml_check_func:
-        raw_yaml_check_func(content)
-
-    # Then, test writing/reading to a real file
-    ff = AsdfFile(tree, extensions=extensions, **init_options)
-    ff.write_to(fname, **write_options)
-    with asdf.open(fname, mode="rw", extensions=extensions) as ff:
-        assert_tree_match(tree, ff.tree, ff, funcname=tree_match_func)
-        if asdf_check_func:
-            asdf_check_func(ff)
-
-    # Make sure everything works without a block index
-    write_options["include_block_index"] = False
-    buff = io.BytesIO()
-    AsdfFile(tree, extensions=extensions, **init_options).write_to(buff, **write_options)
-    assert not buff.closed
-    buff.seek(0)
-    with asdf.open(buff, mode="rw", extensions=extensions) as ff:
-        assert not buff.closed
-        assert isinstance(ff.tree, AsdfObject)
-        assert_tree_match(tree, ff.tree, ff, funcname=tree_match_func)
-        if asdf_check_func:
-            asdf_check_func(ff)
-
-    # Now try everything on an HTTP range server
-    if not INTERNET_OFF:
-        server = RangeHTTPServer()
-        try:
-            ff = AsdfFile(tree, extensions=extensions, **init_options)
-            ff.write_to(os.path.join(server.tmpdir, "test.asdf"), **write_options)
-            with asdf.open(server.url + "test.asdf", mode="r", extensions=extensions) as ff:
-                assert_tree_match(tree, ff.tree, ff, funcname=tree_match_func)
-                if asdf_check_func:
-                    asdf_check_func(ff)
-        finally:
-            server.finalize()
-
-    # Now don't be lazy and check that nothing breaks
-    with io.BytesIO() as buff:
-        AsdfFile(tree, extensions=extensions, **init_options).write_to(buff, **write_options)
-        buff.seek(0)
-        ff = asdf.open(buff, extensions=extensions, memmap=False, lazy_load=False)
-        # Ensure that all the blocks are loaded
-        for block in ff._blocks.blocks:
-            assert block._data is not None and not callable(block._data)
-    # The underlying file is closed at this time and everything should still work
-    assert_tree_match(tree, ff.tree, ff, funcname=tree_match_func)
-    if asdf_check_func:
-        asdf_check_func(ff)
-
-    # Now repeat with memmap=True and a real file to test mmap()
-    AsdfFile(tree, extensions=extensions, **init_options).write_to(fname, **write_options)
-    with asdf.open(fname, mode="rw", extensions=extensions, memmap=True, lazy_load=False) as ff:
-        for block in ff._blocks.blocks:
-            assert block._data is not None and not callable(block._data)
-        assert_tree_match(tree, ff.tree, ff, funcname=tree_match_func)
-        if asdf_check_func:
-            asdf_check_func(ff)

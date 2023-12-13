@@ -14,9 +14,9 @@ import asdf
 from asdf import config_context, get_config, treeutil, versioning
 from asdf.exceptions import AsdfDeprecationWarning, AsdfWarning, ValidationError
 from asdf.extension import ExtensionProxy
-from asdf.testing.helpers import yaml_to_asdf
+from asdf.testing.helpers import roundtrip_object, yaml_to_asdf
 
-from ._helpers import assert_roundtrip_tree, assert_tree_match
+from ._helpers import assert_tree_match
 
 RNG = np.random.default_rng(97)
 
@@ -41,11 +41,9 @@ def test_no_warning_nan_array(tmp_path):
     """
     Tests for a regression that was introduced by
     https://github.com/asdf-format/asdf/pull/557
+    where saving an array with a nan resulted in a warning
     """
-
-    tree = {"array": np.array([1, 2, np.nan])}
-
-    assert_roundtrip_tree(tree, tmp_path)
+    roundtrip_object(np.array([1, 2, np.nan]))
 
 
 @pytest.mark.skipif(
