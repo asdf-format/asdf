@@ -33,6 +33,8 @@ jobs:
       envs: |
         - linux: asdf-wcs-schemas
         - linux: asdf-coordinates-schemas
+        - linux: asdf-zarr
+        - linux: asdf-compression
 
   astropy:
     uses: OpenAstronomy/github-actions-workflows/.github/workflows/tox.yml@v1
