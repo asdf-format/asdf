@@ -266,7 +266,8 @@ def edit(path):
                 # read the tagged tree (which also checks if the YAML is valid)
                 tagged_tree = util.load_yaml(io.BytesIO(new_content), tagged=True)
                 # validate the tagged tree
-                schema.validate(tagged_tree, reading=True)
+                ctx = AsdfFile(version=new_asdf_version)
+                schema.validate(tagged_tree, ctx=ctx, reading=True)
             except yaml.YAMLError as e:
                 print("Error: failed to parse updated YAML:")
                 print_exception(e)
