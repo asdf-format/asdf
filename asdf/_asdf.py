@@ -169,12 +169,6 @@ class AsdfFile:
         self._closed = False
         self._external_asdf_by_uri = {}
         self._blocks = BlockManager(uri=uri, lazy_load=lazy_load, memmap=not copy_arrays)
-        # this message is passed into find_references to only warn if
-        # a reference was found
-        find_ref_warning_msg = (
-            "find_references during AsdfFile.__init__ is deprecated. "
-            "call AsdfFile.find_references after AsdfFile.__init__"
-        )
         if tree is None:
             # Bypassing the tree property here, to avoid validating
             # an empty tree.
@@ -188,11 +182,9 @@ class AsdfFile:
             self._blocks._uri = tree.uri
             # Set directly to self._tree (bypassing property), since
             # we can assume the other AsdfFile is already valid.
-            self._tree = tree.tree
-            self.find_references(_warning_msg=find_ref_warning_msg)
+            self._tree = copy.copy(tree.tree)
         else:
             self.tree = tree
-            self.find_references(_warning_msg=find_ref_warning_msg)
 
         self._comments = []
 
@@ -844,9 +836,6 @@ class AsdfFile:
                 # ASDF Standard version.  We're using custom_tree_to_tagged_tree
                 # to select the correct tag for us.
                 tree = yamlutil.custom_tree_to_tagged_tree(AsdfObject(), self)
-
-            find_ref_warning_msg = "find_references during open is deprecated. call AsdfFile.find_references after open"
-            tree = reference.find_references(tree, self, _warning_msg=find_ref_warning_msg)
 
             if self.version <= versioning.FILL_DEFAULTS_MAX_VERSION and get_config().legacy_fill_schema_defaults:
                 schema.fill_defaults(tree, self, reading=True)

@@ -7,7 +7,6 @@ from numpy.testing import assert_array_equal
 
 import asdf
 from asdf import reference, util
-from asdf.exceptions import AsdfDeprecationWarning
 from asdf.tags.core import ndarray
 
 from ._helpers import assert_tree_match
@@ -79,24 +78,19 @@ def test_external_reference(tmp_path):
 
         assert_array_equal(ff.tree["internal"], exttree["cool_stuff"]["a"])
 
-    with asdf.AsdfFile({}, uri=util.filepath_to_url(os.path.join(str(tmp_path), "main.asdf"))) as ff:
-        # avoid passing tree to AsdfFile to avoid the deprecation warning, this can be updated
-        # when automatic find_references on AsdfFile.__init__ is removed
-        ff.tree = tree
+    with asdf.AsdfFile(tree, uri=util.filepath_to_url(os.path.join(str(tmp_path), "main.asdf"))) as ff:
         ff.find_references()
         do_asserts(ff)
 
         internal_path = os.path.join(str(tmp_path), "main.asdf")
         ff.write_to(internal_path)
 
-    with pytest.warns(AsdfDeprecationWarning, match="find_references during open"), asdf.open(internal_path) as ff:
-        # this can be updated to add a find_references call when the deprecated automatic
-        # find_references on open is removed
+    with asdf.open(internal_path) as ff:
+        ff.find_references()
         do_asserts(ff)
 
-    with pytest.warns(AsdfDeprecationWarning, match="find_references during open"), asdf.open(internal_path) as ff:
-        # this can be updated to add a find_references call when the deprecated automatic
-        # find_references on open is removed
+    with asdf.open(internal_path) as ff:
+        ff.find_references()
         assert len(ff._external_asdf_by_uri) == 0
         ff.resolve_references()
         assert len(ff._external_asdf_by_uri) == 2
@@ -194,11 +188,8 @@ def test_make_reference(tmp_path):
 
         ff.write_to(os.path.join(str(tmp_path), "source.asdf"))
 
-    with pytest.warns(AsdfDeprecationWarning, match="find_references during open"), asdf.open(
-        os.path.join(str(tmp_path), "source.asdf")
-    ) as ff:
-        # this can be updated to add a find_references call when the deprecated automatic
-        # find_references on open is removed
+    with asdf.open(os.path.join(str(tmp_path), "source.asdf")) as ff:
+        ff.find_references()
         assert ff.tree["ref"]._uri == "external.asdf#f~0o~0o~1/a"
 
 
@@ -207,8 +198,7 @@ def test_internal_reference(tmp_path):
 
     tree = {"foo": 2, "bar": {"$ref": "#"}}
 
-    with pytest.warns(AsdfDeprecationWarning, match="find_references during AsdfFile.__init__"):
-        ff = asdf.AsdfFile(tree)
+    ff = asdf.AsdfFile(tree)
     ff.find_references()
     assert isinstance(ff.tree["bar"], reference.Reference)
     ff.resolve_references()
