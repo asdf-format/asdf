@@ -9,6 +9,9 @@ The ASDF Standard is at v1.6.0
 
 - Deprecate ``asdf.asdf`` and ``AsdfFile.resolve_and_inline`` [#1690]
 
+- Deprecate automatic calling of ``AsdfFile.find_references`` during
+  ``AsdfFile.__init__`` and ``asdf.open`` [#1708]
+
 3.0.1 (2023-10-30)
 ------------------
 
