@@ -5,6 +5,7 @@ and `JSON Pointer standard <http://tools.ietf.org/html/rfc6901>`__.
 """
 
 
+import warnings
 import weakref
 from collections.abc import Sequence
 from contextlib import suppress
@@ -12,6 +13,7 @@ from contextlib import suppress
 import numpy as np
 
 from . import generic_io, treeutil, util
+from .exceptions import AsdfDeprecationWarning
 from .util import _patched_urllib_parse
 
 __all__ = ["resolve_fragment", "Reference", "find_references", "resolve_references", "make_reference"]
@@ -104,7 +106,7 @@ class Reference:
         return item in self._get_target()
 
 
-def find_references(tree, ctx):
+def find_references(tree, ctx, _warning_msg=False):
     """
     Find all of the JSON references in the tree, and convert them into
     `Reference` objects.
@@ -112,6 +114,8 @@ def find_references(tree, ctx):
 
     def do_find(tree, json_id):
         if isinstance(tree, dict) and "$ref" in tree:
+            if _warning_msg:
+                warnings.warn(_warning_msg, AsdfDeprecationWarning)
             return Reference(tree["$ref"], json_id, asdffile=ctx)
         return tree
 
