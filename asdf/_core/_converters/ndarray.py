@@ -161,6 +161,8 @@ class NDArrayConverter(Converter):
             elif isinstance(source, str):
                 # external
                 def data_callback(_attr=None, _ref=weakref.ref(ctx._blocks)):
+                    if _attr not in (None, "cached_data", "data"):
+                        raise AttributeError(f"_attr {_attr} is not supported")
                     blks = _ref()
                     if blks is None:
                         msg = "Failed to resolve reference to AsdfFile to read external block"
