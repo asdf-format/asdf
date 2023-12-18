@@ -102,9 +102,8 @@ Schema validation
 Schema validation is used to determine whether an ASDF file is well formed. All
 ASDF files must conform to the schemas defined by the :ref:`ASDF Standard
 <asdf-standard:asdf-standard>`. Schema validation can be run using `AsdfFile.validate`
-and occurs when reading ASDF files (using `asdf.open`), writing them out
-(using `AsdfFile.write_to` or `AsdfFile.update`) and when constructing
-a new `AsdfFile` object from a tree/dictionary (as in ``AsdfFile(tree)``).
+and occurs when reading ASDF files (using `asdf.open`) and writing them out
+(using `AsdfFile.write_to` or `AsdfFile.update`).
 
 Schema validation also plays a role when using custom extensions (see
 :ref:`using_extensions` and :ref:`extending_extensions`). Extensions must provide schemas
