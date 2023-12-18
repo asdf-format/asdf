@@ -16,6 +16,10 @@ Version 3.1
 ``AsdfFile.resolve_references`` and provide ``all_array_storage='inline'`` to
 ``AdsfFile.write_to`` (or ``AsdfFile.update``).
 
+Automatic calling of ``AsdfFile.find_references`` during calls to
+``AsdfFile.__init__`` and ``asdf.open``. Call ``AsdfFile.find_references`` to
+find references.
+
 Version 3.0
 ===========
 

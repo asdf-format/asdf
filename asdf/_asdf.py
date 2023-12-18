@@ -169,6 +169,12 @@ class AsdfFile:
         self._closed = False
         self._external_asdf_by_uri = {}
         self._blocks = BlockManager(uri=uri, lazy_load=lazy_load, memmap=not copy_arrays)
+        # this message is passed into find_references to only warn if
+        # a reference was found
+        find_ref_warning_msg = (
+            "find_references during AsdfFile.__init__ is deprecated. "
+            "call AsdfFile.find_references after AsdfFile.__init__"
+        )
         if tree is None:
             # Bypassing the tree property here, to avoid validating
             # an empty tree.
@@ -183,10 +189,10 @@ class AsdfFile:
             # Set directly to self._tree (bypassing property), since
             # we can assume the other AsdfFile is already valid.
             self._tree = tree.tree
-            self.find_references()
+            self.find_references(_warning_msg=find_ref_warning_msg)
         else:
             self.tree = tree
-            self.find_references()
+            self.find_references(_warning_msg=find_ref_warning_msg)
 
         self._comments = []
 
@@ -839,7 +845,8 @@ class AsdfFile:
                 # to select the correct tag for us.
                 tree = yamlutil.custom_tree_to_tagged_tree(AsdfObject(), self)
 
-            tree = reference.find_references(tree, self)
+            find_ref_warning_msg = "find_references during open is deprecated. call AsdfFile.find_references after open"
+            tree = reference.find_references(tree, self, _warning_msg=find_ref_warning_msg)
 
             if self.version <= versioning.FILL_DEFAULTS_MAX_VERSION and get_config().legacy_fill_schema_defaults:
                 schema.fill_defaults(tree, self, reading=True)
@@ -1198,13 +1205,13 @@ class AsdfFile:
                 if version is not None:
                     self.version = previous_version
 
-    def find_references(self):
+    def find_references(self, _warning_msg=False):
         """
         Finds all external "JSON References" in the tree and converts
         them to ``reference.Reference`` objects.
         """
         # Set directly to self._tree, since it doesn't need to be re-validated.
-        self._tree = reference.find_references(self._tree, self)
+        self._tree = reference.find_references(self._tree, self, _warning_msg=_warning_msg)
 
     def resolve_references(self, **kwargs):
         """
