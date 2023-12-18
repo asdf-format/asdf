@@ -15,6 +15,12 @@ The ASDF Standard is at v1.6.0
 - Allow views of memmapped arrays to keep the backing mmap
   open to avoid segfaults [#1668]
 
+- Introduce ``memmap`` argument to ``asdf.open`` that
+  overrides ``copy_arrays`` with documentation that describes
+  that the default for ``memmap`` when ``copy_arrays``
+  is removed in an upcoming asdf release will be ``False`` and
+  asdf will no longer by-default memory map arrays. [#1667]
+
 3.0.1 (2023-10-30)
 ------------------
 

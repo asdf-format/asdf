@@ -800,28 +800,43 @@ def test_unordered_block_index():
             assert ff._blocks.blocks[1].loaded
 
 
-def test_open_no_memmap(tmp_path):
-    tmpfile = os.path.join(str(tmp_path), "random.asdf")
-
+@pytest.fixture(scope="module")
+def filename_with_array(tmp_path_factory):
+    fn = tmp_path_factory.mktemp("data") / "filename_with_array.asdf"
     tree = {"array": np.random.random((20, 20))}
-
     ff = asdf.AsdfFile(tree)
-    ff.write_to(tmpfile)
+    ff.write_to(fn)
+    return fn
 
-    # Test that by default we use memmapped arrays when possible
-    with asdf.open(tmpfile) as af:
-        array = af.tree["array"]
-        # Make sure to access the block so that it gets loaded
-        assert af._blocks.blocks[0].memmap
-        assert isinstance(array.base, np.memmap)
 
-    # Test that if we ask for copy, we do not get memmapped arrays
-    with asdf.open(tmpfile, copy_arrays=True) as af:
+@pytest.mark.parametrize(
+    "open_kwargs,should_memmap",
+    [
+        ({}, True),
+        ({"copy_arrays": True}, False),
+        ({"copy_arrays": False}, True),
+        ({"memmap": True}, True),
+        ({"memmap": False}, False),
+        ({"copy_arrays": True, "memmap": True}, True),
+        ({"copy_arrays": False, "memmap": True}, True),
+        ({"copy_arrays": True, "memmap": False}, False),
+        ({"copy_arrays": False, "memmap": False}, False),
+    ],
+)
+def test_open_no_memmap(filename_with_array, open_kwargs, should_memmap):
+    """
+    Test that asdf.open does not (or does) return memmaps for arrays
+    depending on a number of arguments including:
+        default (no kwargs)
+        copy_arrays
+        memmap (overwrites copy_arrays)
+    """
+    with asdf.open(filename_with_array, lazy_load=False, **open_kwargs) as af:
         array = af.tree["array"]
-        assert not af._blocks.blocks[0].memmap
-        # We can't just check for isinstance(..., np.array) since this will
-        # be true for np.memmap as well
-        assert not isinstance(array.base, np.memmap)
+        if should_memmap:
+            assert isinstance(array.base, np.memmap)
+        else:
+            assert not isinstance(array.base, np.memmap)
 
 
 def test_add_block_before_fully_loaded(tmp_path):

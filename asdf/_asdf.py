@@ -74,6 +74,7 @@ class AsdfFile:
         ignore_unrecognized_tag=False,
         ignore_implicit_conversion=False,
         copy_arrays=False,
+        memmap=NotSet,
         lazy_load=True,
         custom_schema=None,
     ):
@@ -115,6 +116,14 @@ class AsdfFile:
         copy_arrays : bool, optional
             When `False`, when reading files, attempt to memmap underlying data
             arrays when possible.
+
+        memmap : bool, optional
+            When `True`, when reading files, attempt to memmap underlying data
+            arrays when possible. When set, this argument will override
+            ``copy_arrays``.  When not set, the ``copy_arrays`` will determine
+            if arrays are memory mapped or copied. ``copy_arrays`` will be
+            deprecated and the default will change in an upcoming asdf version
+            which by default will not memory map arrays.
 
         lazy_load : bool, optional
             When `True` and the underlying file handle is seekable, data
@@ -168,6 +177,9 @@ class AsdfFile:
         self._fd = None
         self._closed = False
         self._external_asdf_by_uri = {}
+        # if memmap is set, it overrides copy_arrays
+        if memmap is not NotSet:
+            copy_arrays = not memmap
         self._blocks = BlockManager(uri=uri, lazy_load=lazy_load, memmap=not copy_arrays)
         # this message is passed into find_references to only warn if
         # a reference was found
@@ -1496,6 +1508,7 @@ def open_asdf(
     ignore_unrecognized_tag=False,
     _force_raw_types=False,
     copy_arrays=False,
+    memmap=NotSet,
     lazy_load=True,
     custom_schema=None,
     strict_extension_check=False,
@@ -1539,6 +1552,14 @@ def open_asdf(
         When `False`, when reading files, attempt to memmap underlying data
         arrays when possible.
 
+    memmap : bool, optional
+        When `True`, when reading files, attempt to memmap underlying data
+        arrays when possible. When set, this argument will override
+        ``copy_arrays``.  When not set, the ``copy_arrays`` will determine
+        if arrays are memory mapped or copied. ``copy_arrays`` will be
+        deprecated and the default will change in an upcoming asdf version
+        which by default will not memory map arrays.
+
     lazy_load : bool, optional
         When `True` and the underlying file handle is seekable, data
         arrays will only be loaded lazily: i.e. when they are accessed
@@ -1546,7 +1567,7 @@ def open_asdf(
         open during the lifetime of the tree. Setting to False causes
         all data arrays to be loaded up front, which means that they
         can be accessed even after the underlying file is closed.
-        Note: even if ``lazy_load`` is `False`, ``copy_arrays`` is still taken
+        Note: even if ``lazy_load`` is `False`, ``memmap`` is still taken
         into account.
 
     custom_schema : str, optional
@@ -1590,6 +1611,7 @@ def open_asdf(
         ignore_version_mismatch=ignore_version_mismatch,
         ignore_unrecognized_tag=ignore_unrecognized_tag,
         copy_arrays=copy_arrays,
+        memmap=memmap,
         lazy_load=lazy_load,
         custom_schema=custom_schema,
     )
