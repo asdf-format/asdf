@@ -21,6 +21,9 @@ The ASDF Standard is at v1.6.0
   is removed in an upcoming asdf release will be ``False`` and
   asdf will no longer by-default memory map arrays. [#1667]
 
+- Fix bug where a dictionary containing a key ``id`` caused
+  any contained references to fail to resolve [#1716]
+
 3.0.1 (2023-10-30)
 ------------------
 
