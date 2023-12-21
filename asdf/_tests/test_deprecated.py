@@ -77,3 +77,11 @@ def test_get_children_deprecation():
 def test_is_container_deprecation():
     with pytest.warns(AsdfDeprecationWarning, match="is_container is deprecated"):
         asdf.treeutil.is_container({})
+
+
+def test_json_id_deprecation():
+    def callback(obj, json_id):
+        return obj
+
+    with pytest.warns(AsdfDeprecationWarning, match="the json_id callback argument is deprecated"):
+        asdf.treeutil.walk_and_modify({"a": 1}, callback)
