@@ -488,7 +488,7 @@ def _load_schema_cached(url, resolver, resolve_references):
 
             return node
 
-        schema = treeutil.walk_and_modify(schema, resolve_refs)
+        schema = treeutil.walk_and_modify(schema, resolve_refs, _track_id=True)
 
     return schema
 
