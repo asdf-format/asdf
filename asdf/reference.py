@@ -112,11 +112,11 @@ def find_references(tree, ctx, _warning_msg=False):
     `Reference` objects.
     """
 
-    def do_find(tree, json_id):
+    def do_find(tree):
         if isinstance(tree, dict) and "$ref" in tree:
             if _warning_msg:
                 warnings.warn(_warning_msg, AsdfDeprecationWarning)
-            return Reference(tree["$ref"], json_id, asdffile=ctx)
+            return Reference(tree["$ref"], asdffile=ctx)
         return tree
 
     return treeutil.walk_and_modify(tree, do_find, ignore_implicit_conversion=ctx._ignore_implicit_conversion)
