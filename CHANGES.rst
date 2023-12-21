@@ -42,9 +42,11 @@ The ASDF Standard is at v1.6.0
   from working. If you want these warnings to produce errors you can
   now add your own warning filter [#1757]
 
-
 - Only show ``str`` representation during ``info`` and ``search``
   if it contains a single line (and does not fail)  [#1748]
+
+- Fix bug where a dictionary containing a key ``id`` caused
+  any contained references to fail to resolve [#1716]
 
 3.0.1 (2023-10-30)
 ------------------
