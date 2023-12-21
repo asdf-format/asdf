@@ -24,6 +24,10 @@ The ASDF Standard is at v1.6.0
 - Fix bug where a dictionary containing a key ``id`` caused
   any contained references to fail to resolve [#1716]
 
+- Deprecate the following in ``asdf.treeutil``.
+  ``get_children``, ``is_container``, the ``json_id`` argument to
+  callbacks provided to ``walk_and_modify`` [#1719]
+
 3.0.1 (2023-10-30)
 ------------------
 
