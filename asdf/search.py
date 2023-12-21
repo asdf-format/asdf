@@ -8,7 +8,7 @@ import typing
 
 from ._display import DEFAULT_MAX_COLS, DEFAULT_MAX_ROWS, DEFAULT_SHOW_VALUES, format_faint, format_italic, render_tree
 from ._node_info import NodeSchemaInfo, collect_schema_info
-from .treeutil import get_children, is_container
+from .treeutil import _get_children, _is_container
 from .util import NotSet
 
 __all__ = ["AsdfSearchResult"]
@@ -184,7 +184,7 @@ class AsdfSearchResult:
                 return False
 
             if isinstance(value, typing.Pattern):
-                if is_container(node):
+                if _is_container(node):
                     # The string representation of a container object tends to
                     # include the child object values, but that's probably not
                     # what searchers want.
@@ -383,7 +383,7 @@ def _walk_tree_breadth_first(root_identifiers, root_node, callback):
             if (isinstance(node, (dict, list, tuple)) or NodeSchemaInfo.traversable(node)) and id(node) in seen:
                 continue
             tnode = node.__asdf_traverse__() if NodeSchemaInfo.traversable(node) else node
-            children = get_children(tnode)
+            children = _get_children(tnode)
             callback(identifiers, parent, node, [c for _, c in children])
             next_nodes.extend([([*identifiers, i], node, c) for i, c in children])
             seen.add(id(node))

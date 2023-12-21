@@ -7,7 +7,7 @@ import warnings
 from contextlib import contextmanager
 
 from . import tagged
-from .exceptions import AsdfWarning
+from .exceptions import AsdfDeprecationWarning, AsdfWarning
 
 __all__ = ["walk", "iter_tree", "walk_and_modify", "get_children", "is_container", "PendingValue", "RemoveNode"]
 
@@ -420,7 +420,7 @@ def walk_and_modify(top, callback, ignore_implicit_conversion=False, postorder=T
         # call to walk_and_modify.
 
 
-def get_children(node):
+def _get_children(node):
     """
     Retrieve the children (and their dict keys or list/tuple indices) of
     an ASDF tree node.
@@ -446,7 +446,15 @@ def get_children(node):
     return []
 
 
-def is_container(node):
+def get_children(node):
+    warnings.warn("asdf.treeutil.get_children is deprecated", AsdfDeprecationWarning)
+    return _get_children(node)
+
+
+get_children.__doc__ = _get_children.__doc__
+
+
+def _is_container(node):
     """
     Determine if an ASDF tree node is an instance of a "container" type
     (i.e., value may contain child nodes).
@@ -462,3 +470,11 @@ def is_container(node):
         True if node is a container, False otherwise
     """
     return isinstance(node, (dict, list, tuple))
+
+
+def is_container(node):
+    warnings.warn("asdf.treeutil.is_container is deprecated", AsdfDeprecationWarning)
+    return _is_container(node)
+
+
+is_container.__doc__ = _is_container.__doc__
