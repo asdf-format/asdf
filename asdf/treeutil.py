@@ -194,8 +194,11 @@ def _get_json_id(top, edge):
     while edge and edge.key is not None:
         keys.append(edge.key)
         edge = edge.parent
-    json_id = None
     node = top
+    if hasattr(node, "get") and isinstance(node.get("id", None), str):
+        json_id = node["id"]
+    else:
+        json_id = None
     for key in keys[::-1]:
         if hasattr(node, "get") and isinstance(node.get("id", None), str):
             json_id = node["id"]
