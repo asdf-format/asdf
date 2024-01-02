@@ -257,7 +257,8 @@ def leaf_first_modify(d, callback, get_children=None, setitem=None, delitem=None
 
 def _default_container_factory(obj):
     if isinstance(obj, dict):
-        return dict()
+        # init with keys to retain order
+        return dict({k: None for k in obj})
     elif isinstance(obj, (list, tuple)):
         return [None] * len(obj)
     raise NotImplementedError()

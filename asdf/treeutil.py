@@ -205,13 +205,13 @@ def _get_json_id(top, edge):
 
 def _container_factory(obj):
     if isinstance(obj, tagged.TaggedDict):
-        result = tagged.TaggedDict()
+        result = tagged.TaggedDict({k: None for k in obj})
         result._tag = obj._tag
     elif isinstance(obj, tagged.TaggedList):
         result = tagged.TaggedList([None] * len(obj))
         result._tag = obj._tag
     elif isinstance(obj, dict):
-        result = obj.__class__()
+        result = obj.__class__({k: None for k in obj})
     elif isinstance(obj, list):
         result = obj.__class__([None] * len(obj))
     elif isinstance(obj, tuple):
