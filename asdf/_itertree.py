@@ -80,46 +80,47 @@ def _default_get_children(obj):
         return None
 
 
-def breadth_first(d, get_children=None, skip_ids=None):
+def breadth_first(d, get_children=None):
     get_children = get_children or _default_get_children
-    skip_ids = skip_ids or set()
+    seen = set()
     dq = collections.deque()
     dq.append(_Edge(None, None, d))
     while dq:
         edge = dq.popleft()
         obj = edge.node
-        if id(obj) in skip_ids:
+        obj_id = id(obj)
+        if obj_id in seen:
             continue
         yield obj, edge
         children = get_children(obj)
         if children:
-            skip_ids.add(id(obj))
+            seen.add(obj_id)
             for key, value in children:
                 dq.append(_Edge(edge, key, value))
 
 
-def depth_first(d, get_children=None, skip_ids=None):
+def depth_first(d, get_children=None):
     get_children = get_children or _default_get_children
-    skip_ids = skip_ids or set()
+    seen = set()
     dq = collections.deque()
     dq.append(_Edge(None, None, d))
     while dq:
         edge = dq.pop()
         obj = edge.node
         obj_id = id(obj)
-        if obj_id in skip_ids:
+        if obj_id in seen:
             continue
         yield obj, edge
         children = get_children(obj)
         if children:
-            skip_ids.add(obj_id)
+            seen.add(obj_id)
             for key, value in children:
                 dq.append(_Edge(edge, key, value))
 
 
-def leaf_first(d, get_children=None, skip_ids=None):
+def leaf_first(d, get_children=None):
     get_children = get_children or _default_get_children
-    skip_ids = skip_ids or set()
+    seen = set()
     dq = collections.deque()
     dq.append(_Edge(None, None, d))
     while dq:
@@ -131,11 +132,11 @@ def leaf_first(d, get_children=None, skip_ids=None):
             continue
         obj = edge.node
         obj_id = id(obj)
-        if obj_id in skip_ids:
+        if obj_id in seen:
             continue
         children = get_children(obj)
         if children:
-            skip_ids.add(obj_id)
+            seen.add(obj_id)
             dq.append(_ShowValue(edge, obj_id))
             for key, value in children:
                 dq.append(_Edge(edge, key, value))
@@ -152,10 +153,9 @@ def _default_delitem(obj, key):
         obj.__delitem__(key)
 
 
-def breadth_first_modify(d, callback, get_children=None, setitem=None, delitem=None, skip_ids=None):
+def breadth_first_modify(d, callback, get_children=None, setitem=None, delitem=None):
     get_children = get_children or _default_get_children
-    skip_ids = skip_ids or set()
-    cache = {}  # TODO fix
+    cache = {}
     setitem = setitem or _default_setitem
     delitem = delitem or _default_delitem
     dq = collections.deque()
@@ -164,11 +164,9 @@ def breadth_first_modify(d, callback, get_children=None, setitem=None, delitem=N
         edge = dq.popleft()
         obj = edge.node
         obj_id = id(obj)
-        if obj_id in skip_ids:
-            continue
         if obj_id not in cache:
-            cache[obj_id] = callback(obj, edge)
-        obj = cache[obj_id]
+            cache[obj_id] = (obj, callback(obj, edge))
+        obj = cache[obj_id][1]
         if edge.parent is not None:
             if obj is RemoveNode:
                 delitem(edge.parent.node, edge.key)
@@ -176,15 +174,13 @@ def breadth_first_modify(d, callback, get_children=None, setitem=None, delitem=N
             setitem(edge.parent.node, edge.key, obj)
         children = get_children(obj)
         if children:
-            skip_ids.add(obj_id)
             for key, value in children:
                 dq.append(_Edge(edge, key, value))
 
 
-def depth_first_modify(d, callback, get_children=None, setitem=None, delitem=None, skip_ids=None):
+def depth_first_modify(d, callback, get_children=None, setitem=None, delitem=None):
     get_children = get_children or _default_get_children
-    skip_ids = skip_ids or set()
-    cache = {}  # TODO fix
+    cache = {}
     setitem = setitem or _default_setitem
     delitem = delitem or _default_delitem
     dq = collections.deque()
@@ -193,11 +189,9 @@ def depth_first_modify(d, callback, get_children=None, setitem=None, delitem=Non
         edge = dq.pop()
         obj = edge.node
         obj_id = id(obj)
-        if obj_id in skip_ids:
-            continue
         if obj_id not in cache:
-            cache[obj_id] = callback(obj, edge)
-        obj = cache[obj_id]
+            cache[obj_id] = (obj, callback(obj, edge))
+        obj = cache[obj_id][1]
         if edge.parent is not None:
             if obj is RemoveNode:
                 delitem(edge.parent.node, edge.key)
@@ -205,15 +199,13 @@ def depth_first_modify(d, callback, get_children=None, setitem=None, delitem=Non
             setitem(edge.parent.node, edge.key, obj)
         children = get_children(obj)
         if children:
-            skip_ids.add(obj_id)
             for key, value in children:
                 dq.append(_Edge(edge, key, value))
 
 
-def leaf_first_modify(d, callback, get_children=None, setitem=None, delitem=None, skip_ids=None):
+def leaf_first_modify(d, callback, get_children=None, setitem=None, delitem=None):
     get_children = get_children or _default_get_children
-    skip_ids = skip_ids or set()
-    cache = {}  # TODO fix
+    cache = {}
     setitem = setitem or _default_setitem
     delitem = delitem or _default_delitem
     dq = collections.deque()
@@ -225,8 +217,8 @@ def leaf_first_modify(d, callback, get_children=None, setitem=None, delitem=None
             obj = edge.node
             obj_id = id(obj)
             if obj_id not in cache:
-                cache[obj_id] = callback(obj, edge)
-            obj = cache[obj_id]
+                cache[obj_id] = (obj, callback(obj, edge))
+            obj = cache[obj_id][1]
             if edge.parent is not None:
                 if obj is RemoveNode:
                     delitem(edge.parent.node, edge.key)
@@ -235,19 +227,16 @@ def leaf_first_modify(d, callback, get_children=None, setitem=None, delitem=None
             continue
         obj = edge.node
         obj_id = id(obj)
-        if obj_id in skip_ids:
-            continue
         children = get_children(obj)
         if children:
-            skip_ids.add(obj_id)
             dq.append(_ShowValue(edge, obj_id))
             for key, value in children:
                 dq.append(_Edge(edge, key, value))
             continue
 
         if obj_id not in cache:
-            cache[obj_id] = callback(obj, edge)
-        obj = cache[obj_id]
+            cache[obj_id] = (obj, callback(obj, edge))
+        obj = cache[obj_id][1]
         if edge.parent is not None:
             if obj is RemoveNode:
                 delitem(edge.parent.node, edge.key)
@@ -264,12 +253,9 @@ def _default_container_factory(obj):
     raise NotImplementedError()
 
 
-def breadth_first_modify_and_copy(
-    d, callback, get_children=None, setitem=None, delitem=None, container_factory=None, skip_ids=None
-):
+def breadth_first_modify_and_copy(d, callback, get_children=None, setitem=None, delitem=None, container_factory=None):
     get_children = get_children or _default_get_children
-    skip_ids = skip_ids or set()
-    cache = {}  # TODO fix
+    cache = {}
     setitem = setitem or _default_setitem
     delitem = delitem or _default_delitem
     container_factory = container_factory or _default_container_factory
@@ -280,24 +266,23 @@ def breadth_first_modify_and_copy(
         edge = dq.popleft()
         obj = edge.node
         obj_id = id(obj)
-        if obj_id in skip_ids:
-            continue
         if False and obj_id in cache:
             obj = cache[obj_id]
         else:
-            obj = callback(obj, edge)
-            if edge.parent is not None and obj is RemoveNode:
+            cobj = callback(obj, edge)
+            if edge.parent is not None and cobj is RemoveNode:
                 # TODO handle multiple list key deletion
                 delitem(edge.parent.node, edge.key)
                 continue
-            children = get_children(obj)
+            children = get_children(cobj)
             if children:
-                obj = container_factory(obj)
-                edge.node = obj
-                skip_ids.add(obj_id)
+                container = container_factory(cobj)
+                edge.node = container
                 for key, value in children:
                     dq.append(_Edge(edge, key, value))
-            # cache[obj_id] = obj
+                cobj = container
+            cache[obj_id] = (obj, cobj)
+            obj = cobj
         if result is None:
             result = obj
         if edge.parent is not None:
@@ -305,11 +290,8 @@ def breadth_first_modify_and_copy(
     return result
 
 
-def depth_first_modify_and_copy(
-    d, callback, get_children=None, setitem=None, delitem=None, container_factory=None, skip_ids=None
-):
+def depth_first_modify_and_copy(d, callback, get_children=None, setitem=None, delitem=None, container_factory=None):
     get_children = get_children or _default_get_children
-    skip_ids = skip_ids or set()
     cache = {}
     setitem = setitem or _default_setitem
     delitem = delitem or _default_delitem
@@ -320,16 +302,10 @@ def depth_first_modify_and_copy(
     while dq:
         edge = dq.pop()
         obj = edge.node
-        # print(obj)
         obj_id = id(obj)
-        # if obj_id in skip_ids:
-        #    #print(f"\tskip because of id {obj_id}")
-        #    continue
         if obj_id in cache:
-            # print("\tfrom cache")
             new_obj = cache[obj_id][1]
         else:
-            # print("\tstepping in")
             new_obj = callback(obj, edge)
             if edge.parent is not None and new_obj is RemoveNode:
                 # TODO handle multiple list key deletion
@@ -339,8 +315,6 @@ def depth_first_modify_and_copy(
             if children:
                 container = container_factory(new_obj)
                 edge.node = container
-                # print(f"\tadding id {obj_id} to skips")
-                # skip_ids.add(obj_id)
                 for key, value in children:
                     dq.append(_Edge(edge, key, value))
                 new_obj = container
@@ -349,15 +323,11 @@ def depth_first_modify_and_copy(
             result = new_obj
         if edge.parent is not None:
             setitem(edge.parent.node, edge.key, new_obj)
-        # print(result)
     return result
 
 
-def leaf_first_modify_and_copy(
-    d, callback, get_children=None, setitem=None, delitem=None, container_factory=None, skip_ids=None
-):
+def leaf_first_modify_and_copy(d, callback, get_children=None, setitem=None, delitem=None, container_factory=None):
     get_children = get_children or _default_get_children
-    skip_ids = skip_ids or set()
     pending = {}
     cache = {}
     setitem = setitem or _default_setitem
@@ -365,14 +335,9 @@ def leaf_first_modify_and_copy(
     container_factory = container_factory or _default_container_factory
     result = None
     dq = collections.deque()
-    # print(f"Input obj id: {id(d['obj'])}")
-    # print(f"Input inverse id: {id(d['obj']['inverse'])}")
     dq.append(_Edge(None, None, d))
     while dq:
         edge = dq.pop()
-        # print(f"Processing {edge}")
-        # print(f"\tdq={dq}")
-        # print(f"\tcache={cache}")
         if isinstance(edge, _ShowValue):
             obj_id = edge.obj_id
             edge = edge.obj
@@ -401,19 +366,13 @@ def leaf_first_modify_and_copy(
                         setitem(edge.parent.node, edge.key, new_obj)
                 del pending[obj_id]
             continue
-        # print(f"\tNode id {id(edge.node)} at {edge.key} of {edge.parent}")
         obj = edge.node
         obj_id = id(obj)
-        # if obj_id in skip_ids:
-        #    print("\tskipping")
-        #    continue
         if obj_id in cache:
-            # print("\tfrom cache")
             new_obj = cache[obj_id][1]
         else:
             children = get_children(obj)
             if children:
-                skip_ids.add(obj_id)
                 container = container_factory(obj)
                 pending[obj_id] = []
                 if result is None:
@@ -425,10 +384,7 @@ def leaf_first_modify_and_copy(
                         pending[id(value)].append(_Edge(edge, key, value))
                     else:
                         dq.append(_Edge(edge, key, value))
-                    # if id(value) not in pending:
                 continue
-            # cache[obj_id] = callback(obj, edge)
-            # obj = cache[obj_id]
             new_obj = callback(obj, edge)
             cache[obj_id] = (obj, new_obj)
         if result is None:
