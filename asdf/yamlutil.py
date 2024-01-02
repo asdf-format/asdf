@@ -296,7 +296,6 @@ def custom_tree_to_tagged_tree(tree, ctx, _serialization_context=None):
         # Walk the tree in preorder, so that extensions can return
         # container nodes with unserialized children.
         postorder=False,
-        _context=ctx._tree_modification_context,
     )
     for generator in generators:
         for _ in generator:
@@ -348,7 +347,6 @@ def tagged_tree_to_custom_tree(tree, ctx, force_raw_types=False, _serialization_
         # Walk the tree in postorder, so that extensions receive
         # container nodes with children already deserialized.
         postorder=True,
-        _context=ctx._tree_modification_context,
     )
     for generator in generators:
         for _ in generator:
