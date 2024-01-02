@@ -6,7 +6,7 @@ import types
 import warnings
 from contextlib import contextmanager
 
-from . import tagged
+from . import _itertree, tagged
 from .exceptions import AsdfDeprecationWarning, AsdfWarning
 
 __all__ = ["walk", "iter_tree", "walk_and_modify", "get_children", "is_container", "PendingValue", "RemoveNode"]
@@ -57,28 +57,8 @@ def iter_tree(top):
     tree : object
         The modified tree.
     """
-    seen = set()
-
-    def recurse(tree):
-        tree_id = id(tree)
-
-        if tree_id in seen:
-            return
-
-        if isinstance(tree, (list, tuple)):
-            seen.add(tree_id)
-            for val in tree:
-                yield from recurse(val)
-            seen.remove(tree_id)
-        elif isinstance(tree, dict):
-            seen.add(tree_id)
-            for val in tree.values():
-                yield from recurse(val)
-            seen.remove(tree_id)
-
-        yield tree
-
-    return recurse(top)
+    for node, edge in _itertree.depth_first(top):
+        yield node
 
 
 class _TreeModificationContext:
@@ -206,21 +186,77 @@ class _PendingValue:
 PendingValue = _PendingValue()
 
 
-class _RemoveNode:
-    """
-    Class of the RemoveNode singleton instance.  This instance is used
-    as a signal for `asdf.treeutil.walk_and_modify` to remove the
-    node received by the callback.
-    """
-
-    def __repr__(self):
-        return "RemoveNode"
+RemoveNode = _itertree.RemoveNode
 
 
-RemoveNode = _RemoveNode()
+def _get_json_id(top, edge):
+    keys = []
+    while edge and edge.key is not None:
+        keys.append(edge.key)
+        edge = edge.parent
+    json_id = None
+    node = top
+    for key in keys[::-1]:
+        if hasattr(node, "get") and isinstance(node.get("id", None), str):
+            json_id = node["id"]
+        node = node[key]
+    return json_id
+
+
+def _container_factory(obj):
+    if isinstance(obj, tagged.TaggedDict):
+        result = tagged.TaggedDict()
+        result._tag = obj._tag
+    elif isinstance(obj, tagged.TaggedList):
+        result = tagged.TaggedList([None] * len(obj))
+        result._tag = obj._tag
+    elif isinstance(obj, dict):
+        result = obj.__class__()
+    elif isinstance(obj, list):
+        result = obj.__class__([None] * len(obj))
+    elif isinstance(obj, tuple):
+        result = [None] * len(obj)
+    else:
+        raise NotImplementedError()
+    return result
 
 
 def walk_and_modify(top, callback, ignore_implicit_conversion=False, postorder=True, _context=None, _track_id=False):
+    if postorder:
+        modify = _itertree.leaf_first_modify_and_copy
+    else:
+        modify = _itertree.depth_first_modify_and_copy
+
+    if callback.__code__.co_argcount == 2 and not _track_id:
+        _track_id = True
+        warnings.warn("the json_id callback argument is deprecated", AsdfDeprecationWarning)
+
+    if _track_id:
+
+        def wrapped_callback(obj, edge):
+            json_id = _get_json_id(top, edge)
+            return callback(obj, json_id)
+
+    else:
+
+        def wrapped_callback(obj, edge):
+            return callback(obj)
+
+    if ignore_implicit_conversion:
+        container_factory = _container_factory
+    else:
+
+        def container_factory(obj):
+            if isinstance(obj, tuple) and type(obj) != tuple:
+                warnings.warn(f"Failed to serialize instance of {type(obj)}, converting to list instead", AsdfWarning)
+            return _container_factory(obj)
+
+    return modify(top, wrapped_callback, container_factory=container_factory)
+
+
+def old_walk_and_modify(
+    top, callback, ignore_implicit_conversion=False, postorder=True, _context=None, _track_id=False
+):
     """Modify a tree by walking it with a callback function.  It also has
     the effect of doing a deep copy.
 

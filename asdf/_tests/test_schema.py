@@ -1216,6 +1216,8 @@ def test_validator_visit_repeat_nodes():
     node = asdf.tags.core.Software(name="Minesweeper")
     tree = yamlutil.custom_tree_to_tagged_tree({"node": node, "other_node": node, "nested": {"node": node}}, ctx)
 
+    assert tree["node"] is tree["other_node"]
+    assert tree["node"] is tree["nested"]["node"]
     visited_nodes = []
 
     def _test_validator(validator, value, instance, schema):

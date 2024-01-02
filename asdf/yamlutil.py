@@ -1,5 +1,5 @@
 import warnings
-from collections import OrderedDict
+from collections import OrderedDict, deque
 from types import GeneratorType
 
 import numpy as np
@@ -221,6 +221,8 @@ def custom_tree_to_tagged_tree(tree, ctx, _serialization_context=None):
 
     extension_manager = _serialization_context.extension_manager
 
+    generators = deque()
+
     def _convert_obj(obj, converter):
         tag = converter.select_tag(obj, _serialization_context)
         # if select_tag returns None, converter.to_yaml_tree should return a new
@@ -233,8 +235,7 @@ def custom_tree_to_tagged_tree(tree, ctx, _serialization_context=None):
                 converter = extension_manager.get_converter_for_type(type(obj))
             except KeyError:
                 # no converter supports this type, return it as-is
-                yield obj
-                return
+                return obj
             if converter in converters_used:
                 msg = "Conversion cycle detected"
                 raise TypeError(msg)
@@ -244,10 +245,8 @@ def custom_tree_to_tagged_tree(tree, ctx, _serialization_context=None):
         _serialization_context.assign_blocks()
 
         if isinstance(node, GeneratorType):
-            generator = node
+            generators.append(generator)
             node = next(generator)
-        else:
-            generator = None
 
         if isinstance(node, dict):
             tagged_node = tagged.TaggedDict(node, tag)
@@ -262,9 +261,7 @@ def custom_tree_to_tagged_tree(tree, ctx, _serialization_context=None):
 
         _serialization_context._mark_extension_used(converter.extension)
 
-        yield tagged_node
-        if generator is not None:
-            yield from generator
+        return tagged_node
 
     cfg = config.get_config()
     convert_ndarray_subclasses = cfg.convert_unknown_ndarray_subclasses
@@ -292,7 +289,7 @@ def custom_tree_to_tagged_tree(tree, ctx, _serialization_context=None):
         converters_cache[typ] = lambda obj: obj
         return obj
 
-    return treeutil.walk_and_modify(
+    new_tree = treeutil.walk_and_modify(
         tree,
         _walker,
         ignore_implicit_conversion=ctx._ignore_implicit_conversion,
@@ -301,6 +298,10 @@ def custom_tree_to_tagged_tree(tree, ctx, _serialization_context=None):
         postorder=False,
         _context=ctx._tree_modification_context,
     )
+    for generator in generators:
+        for _ in generator:
+            pass
+    return new_tree
 
 
 def tagged_tree_to_custom_tree(tree, ctx, force_raw_types=False, _serialization_context=None):
@@ -312,6 +313,7 @@ def tagged_tree_to_custom_tree(tree, ctx, force_raw_types=False, _serialization_
         _serialization_context = ctx._create_serialization_context(BlockAccess.READ)
 
     extension_manager = _serialization_context.extension_manager
+    generators = deque()
 
     def _walker(node):
         if force_raw_types:
@@ -327,6 +329,9 @@ def tagged_tree_to_custom_tree(tree, ctx, force_raw_types=False, _serialization_
             _serialization_context.assign_object(obj)
             _serialization_context.assign_blocks()
             _serialization_context._mark_extension_used(converter.extension)
+            if isinstance(obj, GeneratorType):
+                generators.append(obj)
+                obj = next(obj)
             return obj
 
         if not ctx._ignore_unrecognized_tag:
@@ -336,7 +341,7 @@ def tagged_tree_to_custom_tree(tree, ctx, force_raw_types=False, _serialization_
             )
         return node
 
-    return treeutil.walk_and_modify(
+    new_tree = treeutil.walk_and_modify(
         tree,
         _walker,
         ignore_implicit_conversion=ctx._ignore_implicit_conversion,
@@ -345,6 +350,10 @@ def tagged_tree_to_custom_tree(tree, ctx, force_raw_types=False, _serialization_
         postorder=True,
         _context=ctx._tree_modification_context,
     )
+    for generator in generators:
+        for _ in generator:
+            pass
+    return new_tree
 
 
 def load_tree(stream):

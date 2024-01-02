@@ -1,0 +1,376 @@
+"""
+Reorganize these tests into a fixture that generates test trees
+Each test tree returns:
+    - the tree
+    - the breadth-first order (need to account for multiple valid paths)
+    - the depth-first order (need to account for multiple valid paths)
+The orderings above need to be reversible to allow postorder tests
+to also check the path.
+
+For modification tests the callbacks can also check the order
+and can modify the tree in a way that should impact later callbacks.
+"""
+import copy
+
+from asdf import _itertree
+
+
+def test_breadth_first_traversal():
+    tree = {
+        "a": {
+            "b": [1, 2, {"c": 3}],
+            "d": 4,
+        },
+        "e": [5, 6, [7, 8, {"f": 9}]],
+    }
+    # It is ok for results to come in any order as long as
+    # all nodes closer to the root come before any more distant
+    # node. Track those here by ordering expected results by 'layer'
+    expected_results = [
+        [
+            tree,
+        ],
+        [tree["a"], tree["e"]],
+        [tree["a"]["b"], tree["a"]["d"], tree["e"][0], tree["e"][1], tree["e"][2]],
+        [tree["a"]["b"][0], tree["a"]["b"][1], tree["a"]["b"][2], tree["e"][2][0], tree["e"][2][1], tree["e"][2][2]],
+        [tree["a"]["b"][2]["c"], tree["e"][2][2]["f"]],
+    ]
+
+    expected = []
+    for node, edge in _itertree.breadth_first(tree):
+        if not len(expected):
+            expected = expected_results.pop(0)
+        assert node in expected
+        expected.remove(node)
+    assert not expected_results
+
+
+def test_recursive_breadth_first_traversal():
+    tree = {
+        "a": {},
+        "b": {},
+    }
+    tree["a"]["b"] = tree["b"]
+    tree["b"]["a"] = tree["a"]
+
+    expected_results = [
+        [
+            tree,
+        ],
+        [tree["a"], tree["b"]],
+    ]
+
+    expected = []
+    for node, edge in _itertree.breadth_first(tree):
+        if not len(expected):
+            expected = expected_results.pop(0)
+        assert node in expected
+        expected.remove(node)
+    assert not expected_results
+
+
+def test_leaf_first_traversal():
+    tree = {
+        "a": {
+            "b": [1, 2, {"c": 3}],
+            "d": 4,
+        },
+        "e": [5, 6, [7, 8, {"f": 9}]],
+    }
+    seen_keys = set()
+    reverse_paths = {
+        ("e", 2, 2, "f"): [("e", 2, 2), ("e", 2, 1), ("e", 2, 0)],
+        ("e", 2, 2): [("e", 0), ("e", 1), ("e", 2)],
+        ("e", 2, 1): [("e", 0), ("e", 1), ("e", 2)],
+        ("e", 2, 0): [("e", 0), ("e", 1), ("e", 2)],
+        ("e", 2): [("e",), ("a",)],
+        ("e", 1): [("e",), ("a",)],
+        ("e", 0): [("e",), ("a",)],
+        ("e",): [()],
+        ("a", "b", 2, "c"): [("a", "b", 0), ("a", "b", 1), ("a", "b", 2)],
+        ("a", "b", 2): [("a", "b"), ("a", "d")],
+        ("a", "b", 1): [("a", "b"), ("a", "d")],
+        ("a", "b", 0): [("a", "b"), ("a", "d")],
+        ("a", "b"): [("a",), ("e",)],
+        ("a", "d"): [("a",), ("e",)],
+        ("a",): [()],
+        (): [],
+    }
+    expected = {
+        ("e", 2, 2, "f"),
+        ("a", "b", 2, "c"),
+        ("a", "d"),
+    }
+    for node, edge in _itertree.leaf_first(tree):
+        keys = _itertree.edge_to_keys(edge)
+        assert keys in expected
+        obj = tree
+        for key in keys:
+            obj = obj[key]
+        assert obj is node
+
+        # updated expected
+        seen_keys.add(keys)
+        expected.remove(keys)
+        for new_keys in reverse_paths[keys]:
+            if new_keys in seen_keys:
+                continue
+            expected.add(new_keys)
+    assert not expected
+
+
+def test_recursive_leaf_first_traversal():
+    tree = {
+        "a": {},
+        "b": {},
+    }
+    tree["a"]["b"] = tree["b"]
+    tree["b"]["a"] = tree["a"]
+
+    seen_keys = set()
+    visit_ids = {
+        id(tree),
+        id(tree["a"]),
+        id(tree["b"]),
+    }
+    reverse_paths = {
+        ("a", "b"): [("a",), ("b",)],
+        ("b", "a"): [("a",), ("b",)],
+        ("a",): [()],
+        ("b",): [()],
+        (): [],
+    }
+    expected = {
+        ("a", "b"),
+        ("b", "a"),
+    }
+    for node, edge in _itertree.leaf_first(tree):
+        keys = _itertree.edge_to_keys(edge)
+        assert keys in expected
+        obj = tree
+        for key in keys:
+            obj = obj[key]
+        assert obj is node
+        visit_ids.remove(id(node))
+
+        # updated expected
+        seen_keys.add(keys)
+        expected.remove(keys)
+        for new_keys in reverse_paths[keys]:
+            if new_keys in seen_keys:
+                continue
+            expected.add(new_keys)
+    assert not visit_ids
+
+
+def test_depth_first_traversal():
+    tree = {
+        "a": {
+            "b": [1, 2, {"c": 3}],
+            "d": 4,
+        },
+        "e": [5, 6, [7, 8, {"f": 9}]],
+    }
+    forward_paths = {
+        (): [("a",), ("e",)],
+        ("a",): [("a", "b"), ("a", "d")],
+        ("a", "b"): [("a", "b", 0), ("a", "b", 1), ("a", "b", 2)],
+        ("a", "b", 0): [],
+        ("a", "b", 1): [],
+        ("a", "b", 2): [("a", "b", 2, "c")],
+        ("a", "b", 2, "c"): [],
+        ("a", "d"): [],
+        ("e",): [("e", 0), ("e", 1), ("e", 2)],
+        ("e", 0): [],
+        ("e", 1): [],
+        ("e", 2): [("e", 2, 0), ("e", 2, 1), ("e", 2, 2)],
+        ("e", 2, 0): [],
+        ("e", 2, 1): [],
+        ("e", 2, 2): [("e", 2, 2, "f")],
+        ("e", 2, 2, "f"): [],
+    }
+    expected = {()}
+    seen_keys = set()
+
+    for node, edge in _itertree.depth_first(tree):
+        keys = _itertree.edge_to_keys(edge)
+        assert keys in expected
+        obj = tree
+        for key in keys:
+            obj = obj[key]
+        assert obj is node
+
+        # updated expected
+        seen_keys.add(keys)
+        expected.remove(keys)
+        for new_keys in forward_paths[keys]:
+            if new_keys in seen_keys:
+                continue
+            expected.add(new_keys)
+    assert not expected
+
+
+def test_recursive_depth_first_traversal():
+    tree = {
+        "a": {},
+        "b": {},
+    }
+    tree["a"]["b"] = tree["b"]
+    tree["b"]["a"] = tree["a"]
+
+    seen_keys = set()
+    visit_ids = {
+        id(tree),
+        id(tree["a"]),
+        id(tree["b"]),
+    }
+    forward_paths = {
+        (): [("a",), ("b",)],
+        ("a",): [("a", "b")],
+        ("b",): [("b", "a")],
+        ("a", "b"): [],
+        ("b", "a"): [],
+    }
+    expected = {
+        (),
+    }
+    for node, edge in _itertree.depth_first(tree):
+        keys = _itertree.edge_to_keys(edge)
+        assert keys in expected
+        obj = tree
+        for key in keys:
+            obj = obj[key]
+        assert obj is node
+        visit_ids.remove(id(node))
+
+        # updated expected
+        seen_keys.add(keys)
+        expected.remove(keys)
+        for new_keys in forward_paths[keys]:
+            if new_keys in seen_keys:
+                continue
+            expected.add(new_keys)
+    assert not visit_ids
+
+
+def test_breadth_first_modify():
+    tree = {
+        "a": [1, 2, {"b": 3}],
+        "c": {
+            "d": [4, 5, 6],
+        },
+    }
+
+    def callback(obj, keys):
+        if isinstance(obj, list) and 1 in obj:
+            return [1, 2, 3]
+        if isinstance(obj, dict):
+            assert "b" not in obj
+        return obj
+
+    _itertree.breadth_first_modify(tree, callback)
+    assert tree["a"] == [1, 2, 3]
+
+
+def test_depth_first_modify():
+    tree = {
+        "a": [1, 2, {"b": 3}],
+        "c": {
+            "d": [4, 5, 6],
+        },
+    }
+
+    def callback(obj, keys):
+        if isinstance(obj, dict) and "d" in obj:
+            obj["d"] = [42]
+        if isinstance(obj, list) and 42 in obj:
+            assert len(obj) == 1
+        return obj
+
+    _itertree.depth_first_modify(tree, callback)
+    assert tree["c"]["d"] == [42]
+
+
+def test_leaf_first_modify():
+    tree = {
+        "a": [1, 2, {"b": 3}],
+        "c": {
+            "d": [4, 5, 6],
+        },
+    }
+
+    def callback(obj, keys):
+        if isinstance(obj, list) and 1 in obj:
+            assert 42 in obj
+        if isinstance(obj, dict) and "b" in obj:
+            return 42
+        return obj
+
+    _itertree.leaf_first_modify(tree, callback)
+    assert tree["a"] == [1, 2, 42]
+
+
+def test_breadth_first_modify_and_copy():
+    tree = {
+        "a": [1, 2, {"b": 3}],
+        "c": {
+            "d": [4, 5, 6],
+        },
+    }
+
+    def callback(obj, keys):
+        if isinstance(obj, list) and 1 in obj:
+            assert 42 not in obj
+        if isinstance(obj, dict) and "b" in obj:
+            return 42
+        return obj
+
+    # copy the tree to make sure it's not modified
+    copied_tree = copy.deepcopy(tree)
+    result = _itertree.breadth_first_modify_and_copy(copied_tree, callback)
+    assert result["a"] == [1, 2, 42]
+    assert copied_tree == tree
+
+
+def test_depth_first_modify_and_copy():
+    tree = {
+        "a": [1, 2, {"b": 3}],
+        "c": {
+            "d": [4, 5, 6],
+        },
+    }
+
+    def callback(obj, keys):
+        if isinstance(obj, list) and 1 in obj:
+            assert 42 not in obj
+        if isinstance(obj, dict) and "b" in obj:
+            return 42
+        return obj
+
+    # copy the tree to make sure it's not modified
+    copied_tree = copy.deepcopy(tree)
+    result = _itertree.depth_first_modify_and_copy(copied_tree, callback)
+    assert result["a"] == [1, 2, 42]
+    assert copied_tree == tree
+
+
+def test_leaf_first_modify_and_copy():
+    tree = {
+        "a": [1, 2, {"b": 3}],
+        "c": {
+            "d": [4, 5, 6],
+        },
+    }
+
+    def callback(obj, keys):
+        if isinstance(obj, list) and 1 in obj:
+            assert 42 in obj
+        if isinstance(obj, dict) and "b" in obj:
+            return 42
+        return obj
+
+    # copy the tree to make sure it's not modified
+    copied_tree = copy.deepcopy(tree)
+    result = _itertree.leaf_first_modify_and_copy(copied_tree, callback)
+    assert result["a"] == [1, 2, 42]
+    assert copied_tree == tree
