@@ -1,4 +1,6 @@
+import contextlib
 import io
+import re
 from collections import OrderedDict, namedtuple
 from typing import NamedTuple
 
@@ -8,7 +10,7 @@ import yaml
 
 import asdf
 from asdf import tagged, treeutil, yamlutil
-from asdf.exceptions import AsdfConversionWarning, AsdfWarning
+from asdf.exceptions import AsdfConversionWarning, AsdfDeprecationWarning, AsdfWarning
 
 from . import _helpers as helpers
 
@@ -105,7 +107,23 @@ def test_python_tuple(tmp_path):
 
     tree = {"val": (1, 2, 3)}
 
-    run_tuple_test(tree, tmp_path)
+    with pytest.warns(AsdfDeprecationWarning, match="ignore_implicit_conversion"):
+        run_tuple_test(tree, tmp_path)
+
+
+@contextlib.contextmanager
+def multi_warn(category, matches):
+    with pytest.warns(category) as record:
+        yield
+
+    for match in matches:
+        found = False
+        for r in record:
+            msg = str(r.message)
+            if re.match(match, msg):
+                found = True
+                break
+        assert found, f"Did not raise {category} with message matching {match}"
 
 
 def test_named_tuple_collections(tmp_path):
@@ -117,7 +135,8 @@ def test_named_tuple_collections(tmp_path):
 
     tree = {"val": nt(1, 2, 3)}
 
-    run_tuple_test(tree, tmp_path)
+    with multi_warn(AsdfDeprecationWarning, ["ignore_implicit_conversion", "implicit conversion is deprecated"]):
+        run_tuple_test(tree, tmp_path)
 
 
 def test_named_tuple_typing(tmp_path):
@@ -132,7 +151,8 @@ def test_named_tuple_typing(tmp_path):
 
     tree = {"val": NT(1, 2, 3)}
 
-    run_tuple_test(tree, tmp_path)
+    with multi_warn(AsdfDeprecationWarning, ["ignore_implicit_conversion", "implicit conversion is deprecated"]):
+        run_tuple_test(tree, tmp_path)
 
 
 def test_named_tuple_collections_recursive(tmp_path):
@@ -144,7 +164,8 @@ def test_named_tuple_collections_recursive(tmp_path):
         assert (asdf.tree["val"][2] == np.ones(3)).all()
 
     init_options = {"ignore_implicit_conversion": True}
-    helpers.assert_roundtrip_tree(tree, tmp_path, asdf_check_func=check_asdf, init_options=init_options)
+    with multi_warn(AsdfDeprecationWarning, ["ignore_implicit_conversion", "implicit conversion is deprecated"]):
+        helpers.assert_roundtrip_tree(tree, tmp_path, asdf_check_func=check_asdf, init_options=init_options)
 
 
 def test_named_tuple_typing_recursive(tmp_path):
@@ -159,7 +180,8 @@ def test_named_tuple_typing_recursive(tmp_path):
         assert (asdf.tree["val"][2] == np.ones(3)).all()
 
     init_options = {"ignore_implicit_conversion": True}
-    helpers.assert_roundtrip_tree(tree, tmp_path, asdf_check_func=check_asdf, init_options=init_options)
+    with multi_warn(AsdfDeprecationWarning, ["ignore_implicit_conversion", "implicit conversion is deprecated"]):
+        helpers.assert_roundtrip_tree(tree, tmp_path, asdf_check_func=check_asdf, init_options=init_options)
 
 
 def test_implicit_conversion_warning():
@@ -170,8 +192,8 @@ def test_implicit_conversion_warning():
     with pytest.warns(AsdfWarning, match=r"Failed to serialize instance"), asdf.AsdfFile(tree):
         pass
 
-    with helpers.assert_no_warnings(), asdf.AsdfFile(tree, ignore_implicit_conversion=True):
-        pass
+    with multi_warn(AsdfDeprecationWarning, ["ignore_implicit_conversion", "implicit conversion is deprecated"]):
+        asdf.AsdfFile(tree, ignore_implicit_conversion=True)
 
 
 @pytest.mark.xfail(reason="pyyaml has a bug and does not support tuple keys")
