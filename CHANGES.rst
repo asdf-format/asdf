@@ -29,6 +29,8 @@
   ``AsdfFile.set_array_save_base`` and
   ``SerializationContext.set_array_save_base`` [#1753]
 
+- Deprecate ``ignore_implicit_conversion`` and "implicit conversion" [#1724]
+
 
 3.2.0 (2024-04-05)
 ------------------
