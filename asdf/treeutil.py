@@ -7,7 +7,8 @@ import warnings
 from contextlib import contextmanager
 
 from . import tagged
-from .exceptions import AsdfWarning
+from .exceptions import AsdfDeprecationWarning, AsdfWarning
+from .util import NotSet
 
 __all__ = ["walk", "iter_tree", "walk_and_modify", "get_children", "is_container", "PendingValue", "RemoveNode"]
 
@@ -220,7 +221,7 @@ class _RemoveNode:
 RemoveNode = _RemoveNode()
 
 
-def walk_and_modify(top, callback, ignore_implicit_conversion=False, postorder=True, _context=None):
+def walk_and_modify(top, callback, ignore_implicit_conversion=NotSet, postorder=True, _context=None):
     """Modify a tree by walking it with a callback function.  It also has
     the effect of doing a deep copy.
 
@@ -253,6 +254,7 @@ def walk_and_modify(top, callback, ignore_implicit_conversion=False, postorder=T
         parents first.  Defaults to `True`.
 
     ignore_implicit_conversion : bool
+        DEPRECATED
         Controls whether warnings should be issued when implicitly converting a
         given type instance in the tree into a serializable object. The primary
         case for this is currently ``namedtuple``.
@@ -265,6 +267,10 @@ def walk_and_modify(top, callback, ignore_implicit_conversion=False, postorder=T
         The modified tree.
 
     """
+    if ignore_implicit_conversion is NotSet:
+        ignore_implicit_conversion = False
+    else:
+        warnings.warn("ignore_implicit_conversion is deprecated", AsdfDeprecationWarning)
     callback_arity = callback.__code__.co_argcount
     if callback_arity < 1 or callback_arity > 2:
         msg = "Expected callback to accept one or two arguments"
@@ -359,6 +365,7 @@ def walk_and_modify(top, callback, ignore_implicit_conversion=False, postorder=T
             if not ignore_implicit_conversion:
                 warnings.warn(f"Failed to serialize instance of {type(node)}, converting to list instead", AsdfWarning)
             result = contents
+            warnings.warn("implicit conversion is deprecated. Please instead use a Converter.", AsdfDeprecationWarning)
 
         return result
 

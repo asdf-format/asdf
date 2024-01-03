@@ -6,6 +6,19 @@
 Deprecations
 ************
 
+Version 3.3
+===========
+
+``asdf.util.filepath_to_url`` is deprecated. Please use ``pathlib.Path.to_uri``.
+
+The ``ignore_implicit_conversion`` argument for ``AsdfFile`` and
+``treeutil.walk_and_modify`` is deprecated. "implicit conversion" is also
+deprecated. This referred to the behavior where certain types (namedtuple)
+were silently (or with a warning depending on the ``ignore_implicit_conversion``
+setting) converted to a list when added to an asdf tree. As these types
+(namedtuple) can be supported by a ``Converter`` this "implicit conversion"
+will be removed.
+
 Version 3.1
 ===========
 
@@ -32,8 +45,6 @@ be issued on a failed validation during the following methods:
 * ``AsdfFile.__init__`` (when the ``tree`` argument is provided)
 
 Providing ``kwargs`` to ``AsdfFile.resolve_references`` does nothing and is deprecated.
-
-``asdf.util.filepath_to_url`` is deprecated. Please use ``pathlib.Path.to_uri``.
 
 Version 3.0
 ===========

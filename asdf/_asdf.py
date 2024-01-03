@@ -74,7 +74,7 @@ class AsdfFile:
         version=None,
         ignore_version_mismatch=True,
         ignore_unrecognized_tag=False,
-        ignore_implicit_conversion=False,
+        ignore_implicit_conversion=NotSet,
         copy_arrays=False,
         memmap=NotSet,
         lazy_load=True,
@@ -110,6 +110,7 @@ class AsdfFile:
             `False` by default.
 
         ignore_implicit_conversion : bool
+            DEPRECATED
             When `True`, do not raise warnings when types in the tree are
             implicitly converted into a serializable object. The motivating
             case for this is currently ``namedtuple``, which cannot be serialized
