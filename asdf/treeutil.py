@@ -113,7 +113,8 @@ def _container_factory(obj):
 
 def walk_and_modify(top, callback, ignore_implicit_conversion=False, postorder=True, _track_id=False):
     """Modify a tree by walking it with a callback function.  It also has
-    the effect of doing a deep copy.
+    the effect of doing a copy. Only "containers" (dict, list, etc) will be
+    copied, all "leaf" nodes will not be copied.
 
     Parameters
     ----------
