@@ -17,7 +17,27 @@ import pytest
 from asdf import _itertree
 
 
-def test_breadth_first_traversal():
+def _traversal_to_generator(tree, traversal):
+    if "modify" not in traversal.__name__:
+        return traversal(tree)
+
+    def make_generator(tree):
+        values = []
+
+        def callback(obj, edge):
+            values.append((obj, edge))
+            return obj
+
+        traversal(tree, callback)
+        yield from values
+
+    return make_generator(tree)
+
+
+@pytest.mark.parametrize(
+    "traversal", [_itertree.breadth_first, _itertree.breadth_first_modify, _itertree.breadth_first_modify_and_copy]
+)
+def test_breadth_first_traversal(traversal):
     tree = {
         "a": {
             "b": [1, 2, {"c": 3}],
@@ -39,7 +59,8 @@ def test_breadth_first_traversal():
     ]
 
     expected = []
-    for node, edge in _itertree.breadth_first(tree):
+
+    for node, edge in _traversal_to_generator(tree, traversal):
         if not len(expected):
             expected = expected_results.pop(0)
         assert node in expected
@@ -71,7 +92,10 @@ def test_recursive_breadth_first_traversal():
     assert not expected_results
 
 
-def test_leaf_first_traversal():
+@pytest.mark.parametrize(
+    "traversal", [_itertree.leaf_first, _itertree.leaf_first_modify, _itertree.leaf_first_modify_and_copy]
+)
+def test_leaf_first_traversal(traversal):
     tree = {
         "a": {
             "b": [1, 2, {"c": 3}],
@@ -103,13 +127,13 @@ def test_leaf_first_traversal():
         ("a", "b", 2, "c"),
         ("a", "d"),
     }
-    for node, edge in _itertree.leaf_first(tree):
+    for node, edge in _traversal_to_generator(tree, traversal):
         keys = _itertree.edge_to_keys(edge)
         assert keys in expected
         obj = tree
         for key in keys:
             obj = obj[key]
-        assert obj is node
+        assert obj == node
 
         # updated expected
         seen_keys.add(keys)
@@ -165,7 +189,10 @@ def test_recursive_leaf_first_traversal():
     assert not visit_ids
 
 
-def test_depth_first_traversal():
+@pytest.mark.parametrize(
+    "traversal", [_itertree.depth_first, _itertree.depth_first_modify, _itertree.depth_first_modify_and_copy]
+)
+def test_depth_first_traversal(traversal):
     tree = {
         "a": {
             "b": [1, 2, {"c": 3}],
@@ -194,13 +221,13 @@ def test_depth_first_traversal():
     expected = {()}
     seen_keys = set()
 
-    for node, edge in _itertree.depth_first(tree):
+    for node, edge in _traversal_to_generator(tree, traversal):
         keys = _itertree.edge_to_keys(edge)
         assert keys in expected
         obj = tree
         for key in keys:
             obj = obj[key]
-        assert obj is node
+        assert obj == node
 
         # updated expected
         seen_keys.add(keys)
@@ -449,3 +476,71 @@ def test_key_order(traversal):
     assert list(result["c"].keys()) == ["d", "e"]
     assert result["c"]["d"] == [5, 6]
     assert result["c"]["e"] == [7, 8]
+
+
+@pytest.mark.parametrize(
+    "traversal",
+    [
+        _itertree.breadth_first_modify,
+        _itertree.depth_first_modify,
+        _itertree.leaf_first_modify,
+        _itertree.breadth_first_modify_and_copy,
+        _itertree.depth_first_modify_and_copy,
+        _itertree.leaf_first_modify_and_copy,
+    ],
+)
+def test_cache_callback(traversal):
+    class Foo:
+        pass
+
+    obj = Foo()
+    obj.count = 0
+
+    tree = {}
+    tree["a"] = obj
+    tree["b"] = obj
+    tree["c"] = {"d": obj}
+
+    def callback(obj, edge):
+        if isinstance(obj, Foo):
+            obj.count += 1
+        return obj
+
+    result = traversal(tree, callback)
+    if result is None:
+        result = tree
+
+    assert result["a"].count == 1
+    assert result["b"].count == 1
+    assert result["c"]["d"].count == 1
+
+
+@pytest.mark.parametrize(
+    "traversal",
+    [
+        _itertree.breadth_first_modify,
+        _itertree.depth_first_modify,
+        _itertree.leaf_first_modify,
+        _itertree.breadth_first_modify_and_copy,
+        _itertree.depth_first_modify_and_copy,
+        _itertree.leaf_first_modify_and_copy,
+    ],
+)
+def test_recursive_object(traversal):
+    tree = {}
+    tree["a"] = {"count": 0}
+    tree["b"] = {"a": tree["a"]}
+    tree["a"]["b"] = tree["b"]
+
+    def callback(obj, edge):
+        if isinstance(obj, dict) and "count" in obj:
+            obj["count"] += 1
+        return obj
+
+    result = traversal(tree, callback)
+    if result is None:
+        result = tree
+
+    assert result["a"]["count"] == 1
+    assert result["b"]["a"]["count"] == 1
+    assert result["a"] is result["b"]["a"]
