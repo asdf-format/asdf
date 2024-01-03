@@ -7,7 +7,7 @@ import warnings
 from contextlib import contextmanager
 
 from . import tagged
-from .exceptions import AsdfDeprecationWarning, AsdfWarning
+from .exceptions import AsdfDeprecationWarning
 from .util import NotSet
 
 __all__ = ["walk", "iter_tree", "walk_and_modify", "get_children", "is_container", "PendingValue", "RemoveNode"]
@@ -354,19 +354,9 @@ def walk_and_modify(top, callback, ignore_implicit_conversion=NotSet, postorder=
         # to yield here.
         contents = [_recurse(value, json_id) for value in node]
 
-        try:
-            result = node.__class__(contents)
-            if isinstance(node, tagged.Tagged):
-                result._tag = node._tag
-        except TypeError:
-            # The derived class signature is different, so simply store the
-            # list representing the contents. Currently this is primarily
-            # intended to handle namedtuple and NamedTuple instances.
-            if not ignore_implicit_conversion:
-                warnings.warn(f"Failed to serialize instance of {type(node)}, converting to list instead", AsdfWarning)
-            result = contents
-            warnings.warn("implicit conversion is deprecated. Please instead use a Converter.", AsdfDeprecationWarning)
-
+        result = node.__class__(contents)
+        if isinstance(node, tagged.Tagged):
+            result._tag = node._tag
         return result
 
     def _handle_children(node, json_id):
