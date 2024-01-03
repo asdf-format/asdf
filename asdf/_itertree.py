@@ -149,13 +149,27 @@ def _default_setitem(obj, key, value):
 
 
 def _default_delitem(obj, key):
-    if key in obj:
-        obj.__delitem__(key)
+    obj.__delitem__(key)
+
+
+def _delete_items(edges, delitem):
+    # index all deletions by the parent node id
+    by_parent_id = {}
+    for edge in edges:
+        parent_id = id(edge.parent.node)
+        if parent_id not in by_parent_id:
+            by_parent_id[parent_id] = []
+        by_parent_id[parent_id].append(edge)
+    for parent_id in by_parent_id:
+        # delete with highest/last key first
+        for edge in sorted(by_parent_id[parent_id], key=lambda edge: edge.key, reverse=True):
+            delitem(edge.parent.node, edge.key)
 
 
 def breadth_first_modify(d, callback, get_children=None, setitem=None, delitem=None):
     get_children = get_children or _default_get_children
     cache = {}
+    to_delete = collections.deque()
     setitem = setitem or _default_setitem
     delitem = delitem or _default_delitem
     dq = collections.deque()
@@ -169,18 +183,20 @@ def breadth_first_modify(d, callback, get_children=None, setitem=None, delitem=N
         obj = cache[obj_id][1]
         if edge.parent is not None:
             if obj is RemoveNode:
-                delitem(edge.parent.node, edge.key)
+                to_delete.append(edge)
                 continue
             setitem(edge.parent.node, edge.key, obj)
         children = get_children(obj)
         if children:
             for key, value in children:
                 dq.append(_Edge(edge, key, value))
+    _delete_items(to_delete, delitem)
 
 
 def depth_first_modify(d, callback, get_children=None, setitem=None, delitem=None):
     get_children = get_children or _default_get_children
     cache = {}
+    to_delete = collections.deque()
     setitem = setitem or _default_setitem
     delitem = delitem or _default_delitem
     dq = collections.deque()
@@ -194,18 +210,20 @@ def depth_first_modify(d, callback, get_children=None, setitem=None, delitem=Non
         obj = cache[obj_id][1]
         if edge.parent is not None:
             if obj is RemoveNode:
-                delitem(edge.parent.node, edge.key)
+                to_delete.append(edge)
                 continue
             setitem(edge.parent.node, edge.key, obj)
         children = get_children(obj)
         if children:
             for key, value in children:
                 dq.append(_Edge(edge, key, value))
+    _delete_items(to_delete, delitem)
 
 
 def leaf_first_modify(d, callback, get_children=None, setitem=None, delitem=None):
     get_children = get_children or _default_get_children
     cache = {}
+    to_delete = collections.deque()
     setitem = setitem or _default_setitem
     delitem = delitem or _default_delitem
     dq = collections.deque()
@@ -221,7 +239,7 @@ def leaf_first_modify(d, callback, get_children=None, setitem=None, delitem=None
             obj = cache[obj_id][1]
             if edge.parent is not None:
                 if obj is RemoveNode:
-                    delitem(edge.parent.node, edge.key)
+                    to_delete.append(edge)
                 else:
                     setitem(edge.parent.node, edge.key, obj)
             continue
@@ -239,9 +257,10 @@ def leaf_first_modify(d, callback, get_children=None, setitem=None, delitem=None
         obj = cache[obj_id][1]
         if edge.parent is not None:
             if obj is RemoveNode:
-                delitem(edge.parent.node, edge.key)
+                to_delete.append(edge)
             else:
                 setitem(edge.parent.node, edge.key, obj)
+    _delete_items(to_delete, delitem)
 
 
 def _default_container_factory(obj):
@@ -256,6 +275,7 @@ def _default_container_factory(obj):
 def breadth_first_modify_and_copy(d, callback, get_children=None, setitem=None, delitem=None, container_factory=None):
     get_children = get_children or _default_get_children
     cache = {}
+    to_delete = collections.deque()
     setitem = setitem or _default_setitem
     delitem = delitem or _default_delitem
     container_factory = container_factory or _default_container_factory
@@ -271,8 +291,7 @@ def breadth_first_modify_and_copy(d, callback, get_children=None, setitem=None, 
         else:
             cobj = callback(obj, edge)
             if edge.parent is not None and cobj is RemoveNode:
-                # TODO handle multiple list key deletion
-                delitem(edge.parent.node, edge.key)
+                to_delete.append(edge)
                 continue
             children = get_children(cobj)
             if children:
@@ -287,12 +306,14 @@ def breadth_first_modify_and_copy(d, callback, get_children=None, setitem=None, 
             result = obj
         if edge.parent is not None:
             setitem(edge.parent.node, edge.key, obj)
+    _delete_items(to_delete, delitem)
     return result
 
 
 def depth_first_modify_and_copy(d, callback, get_children=None, setitem=None, delitem=None, container_factory=None):
     get_children = get_children or _default_get_children
     cache = {}
+    to_delete = collections.deque()
     setitem = setitem or _default_setitem
     delitem = delitem or _default_delitem
     container_factory = container_factory or _default_container_factory
@@ -308,8 +329,7 @@ def depth_first_modify_and_copy(d, callback, get_children=None, setitem=None, de
         else:
             new_obj = callback(obj, edge)
             if edge.parent is not None and new_obj is RemoveNode:
-                # TODO handle multiple list key deletion
-                delitem(edge.parent.node, edge.key)
+                to_delete.append(edge)
                 continue
             children = get_children(new_obj)
             if children:
@@ -323,6 +343,7 @@ def depth_first_modify_and_copy(d, callback, get_children=None, setitem=None, de
             result = new_obj
         if edge.parent is not None:
             setitem(edge.parent.node, edge.key, new_obj)
+    _delete_items(to_delete, delitem)
     return result
 
 
@@ -330,6 +351,7 @@ def leaf_first_modify_and_copy(d, callback, get_children=None, setitem=None, del
     get_children = get_children or _default_get_children
     pending = {}
     cache = {}
+    to_delete = collections.deque()
     setitem = setitem or _default_setitem
     delitem = delitem or _default_delitem
     container_factory = container_factory or _default_container_factory
@@ -353,15 +375,13 @@ def leaf_first_modify_and_copy(d, callback, get_children=None, setitem=None, del
                 result = new_obj
             if edge.parent is not None:
                 if new_obj is RemoveNode:
-                    # TODO handle multiple list key deletion
-                    delitem(edge.parent.node, edge.key)
+                    to_delete.append(edge)
                 else:
                     setitem(edge.parent.node, edge.key, new_obj)
             if obj_id in pending:
                 for edge in pending[obj_id]:
                     if new_obj is RemoveNode:
-                        # TODO handle multiple list key deletion
-                        delitem(edge.parent.node, edge.key)
+                        to_delete.append(edge)
                     else:
                         setitem(edge.parent.node, edge.key, new_obj)
                 del pending[obj_id]
@@ -391,8 +411,8 @@ def leaf_first_modify_and_copy(d, callback, get_children=None, setitem=None, del
             result = new_obj
         if edge.parent is not None:
             if new_obj is RemoveNode:
-                # TODO handle multiple list key deletion
-                delitem(edge.parent.node, edge.key)
+                to_delete.append(edge)
             else:
                 setitem(edge.parent.node, edge.key, new_obj)
+    _delete_items(to_delete, delitem)
     return result

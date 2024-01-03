@@ -12,6 +12,8 @@ and can modify the tree in a way that should impact later callbacks.
 """
 import copy
 
+import pytest
+
 from asdf import _itertree
 
 
@@ -374,3 +376,76 @@ def test_leaf_first_modify_and_copy():
     result = _itertree.leaf_first_modify_and_copy(copied_tree, callback)
     assert result["a"] == [1, 2, 42]
     assert copied_tree == tree
+
+
+@pytest.mark.parametrize(
+    "traversal",
+    [
+        _itertree.breadth_first_modify,
+        _itertree.depth_first_modify,
+        _itertree.leaf_first_modify,
+        _itertree.breadth_first_modify_and_copy,
+        _itertree.depth_first_modify_and_copy,
+        _itertree.leaf_first_modify_and_copy,
+    ],
+)
+def test_node_removal(traversal):
+    tree = {
+        "a": [1, 2, 3],
+        "b": 4,
+    }
+
+    def callback(obj, edge):
+        if obj in (1, 3, 4):
+            return _itertree.RemoveNode
+        return obj
+
+    result = traversal(tree, callback)
+    if result is not None:  # this is a copy
+        original = tree
+    else:
+        original = None
+        result = tree
+    assert result["a"] == [
+        2,
+    ]
+    assert "b" not in result
+    if original is not None:
+        assert original["a"] == [1, 2, 3]
+        assert original["b"] == 4
+        assert set(original.keys()) == {"a", "b"}
+
+
+@pytest.mark.parametrize(
+    "traversal",
+    [
+        _itertree.breadth_first_modify,
+        _itertree.depth_first_modify,
+        _itertree.leaf_first_modify,
+        _itertree.breadth_first_modify_and_copy,
+        _itertree.depth_first_modify_and_copy,
+        _itertree.leaf_first_modify_and_copy,
+    ],
+)
+def test_key_order(traversal):
+    """
+    All traversal and modification functions should preserve
+    the order of keys in a dictionary
+    """
+    tree = {}
+    tree["a"] = [1, 2]
+    tree["b"] = [3, 4]
+    tree["c"] = {}
+    tree["c"]["d"] = [5, 6]
+    tree["c"]["e"] = [7, 8]
+
+    result = traversal(tree, lambda obj, edge: obj)
+    if result is None:
+        result = tree
+
+    assert list(result.keys()) == ["a", "b", "c"]
+    assert result["a"] == [1, 2]
+    assert result["b"] == [3, 4]
+    assert list(result["c"].keys()) == ["d", "e"]
+    assert result["c"]["d"] == [5, 6]
+    assert result["c"]["e"] == [7, 8]
