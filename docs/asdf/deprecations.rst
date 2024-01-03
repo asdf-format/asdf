@@ -20,6 +20,14 @@ Automatic calling of ``AsdfFile.find_references`` during calls to
 ``AsdfFile.__init__`` and ``asdf.open``. Call ``AsdfFile.find_references`` to
 find references.
 
+The ``ignore_implicit_conversion`` argument for ``AsdfFile`` and
+``treeutil.walk_and_modify`` is deprecated. "implicit conversion" is also
+deprecated. This referred to the behavior where certain types (namedtuple)
+were silently (or with a warning depending on the ``ignore_implicit_conversion``
+setting) converted to a list when added to an asdf tree. As these types
+(namedtuple) can be supported by a ``Converter`` this "implicit conversion"
+will be removed.
+
 Version 3.0
 ===========
 
