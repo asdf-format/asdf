@@ -55,6 +55,7 @@ jobs:
       # Any env name which does not start with `pyXY` will use this Python version.
       default_python: '3.10'
       envs: |
+        - linux: astrocut
         - linux: gwcs
         - linux: jwst
         - linux: stdatamodels
