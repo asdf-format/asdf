@@ -81,6 +81,7 @@ def test_find_references_during_open_deprecation(tmp_path):
             pass
 
 
+<<<<<<< HEAD
 def test_asdf_util_is_primitive_deprecation():
     with pytest.warns(AsdfDeprecationWarning, match="asdf.util.is_primitive is deprecated"):
         asdf.util.is_primitive(1)
@@ -117,3 +118,15 @@ def test_AsdfFile_init_validation_deprecation():
         pytest.raises(ValidationError),
     ):
         asdf.AsdfFile({"history": 42})
+
+
+@pytest.mark.parametrize("value", [True, False])
+def test_AsdfFile_ignore_implicit_conversion_deprecation(value):
+    with pytest.warns(AsdfDeprecationWarning, match="ignore_implicit_conversion is deprecated"):
+        asdf.AsdfFile({"a": 1}, ignore_implicit_conversion=value)
+
+
+@pytest.mark.parametrize("value", [True, False])
+def test_walk_and_modify_ignore_implicit_conversion_deprecation(value):
+    with pytest.warns(AsdfDeprecationWarning, match="ignore_implicit_conversion is deprecated"):
+        asdf.treeutil.walk_and_modify({}, lambda obj: obj, ignore_implicit_conversion=value)
