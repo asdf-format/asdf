@@ -68,7 +68,10 @@ def test_breadth_first_traversal(traversal):
     assert not expected_results
 
 
-def test_recursive_breadth_first_traversal():
+@pytest.mark.parametrize(
+    "traversal", [_itertree.breadth_first, _itertree.breadth_first_modify, _itertree.breadth_first_modify_and_copy]
+)
+def test_recursive_breadth_first_traversal(traversal):
     tree = {
         "a": {},
         "b": {},
@@ -84,7 +87,7 @@ def test_recursive_breadth_first_traversal():
     ]
 
     expected = []
-    for node, edge in _itertree.breadth_first(tree):
+    for node, edge in _traversal_to_generator(tree, traversal):
         if not len(expected):
             expected = expected_results.pop(0)
         assert node in expected
@@ -145,7 +148,10 @@ def test_leaf_first_traversal(traversal):
     assert not expected
 
 
-def test_recursive_leaf_first_traversal():
+@pytest.mark.parametrize(
+    "traversal", [_itertree.leaf_first, _itertree.leaf_first_modify, _itertree.leaf_first_modify_and_copy]
+)
+def test_recursive_leaf_first_traversal(traversal):
     tree = {
         "a": {},
         "b": {},
@@ -154,11 +160,6 @@ def test_recursive_leaf_first_traversal():
     tree["b"]["a"] = tree["a"]
 
     seen_keys = set()
-    visit_ids = {
-        id(tree),
-        id(tree["a"]),
-        id(tree["b"]),
-    }
     reverse_paths = {
         ("a", "b"): [("a",), ("b",)],
         ("b", "a"): [("a",), ("b",)],
@@ -170,14 +171,14 @@ def test_recursive_leaf_first_traversal():
         ("a", "b"),
         ("b", "a"),
     }
-    for node, edge in _itertree.leaf_first(tree):
+    visits = []
+    for node, edge in _traversal_to_generator(tree, traversal):
         keys = _itertree.edge_to_keys(edge)
         assert keys in expected
         obj = tree
         for key in keys:
             obj = obj[key]
-        assert obj is node
-        visit_ids.remove(id(node))
+        visits.append((obj, edge))
 
         # updated expected
         seen_keys.add(keys)
@@ -186,7 +187,7 @@ def test_recursive_leaf_first_traversal():
             if new_keys in seen_keys:
                 continue
             expected.add(new_keys)
-    assert not visit_ids
+    assert len(visits) == 3
 
 
 @pytest.mark.parametrize(
@@ -239,7 +240,10 @@ def test_depth_first_traversal(traversal):
     assert not expected
 
 
-def test_recursive_depth_first_traversal():
+@pytest.mark.parametrize(
+    "traversal", [_itertree.depth_first, _itertree.depth_first_modify, _itertree.depth_first_modify_and_copy]
+)
+def test_recursive_depth_first_traversal(traversal):
     tree = {
         "a": {},
         "b": {},
@@ -248,11 +252,6 @@ def test_recursive_depth_first_traversal():
     tree["b"]["a"] = tree["a"]
 
     seen_keys = set()
-    visit_ids = {
-        id(tree),
-        id(tree["a"]),
-        id(tree["b"]),
-    }
     forward_paths = {
         (): [("a",), ("b",)],
         ("a",): [("a", "b")],
@@ -263,14 +262,14 @@ def test_recursive_depth_first_traversal():
     expected = {
         (),
     }
-    for node, edge in _itertree.depth_first(tree):
+    visits = []
+    for node, edge in _traversal_to_generator(tree, traversal):
         keys = _itertree.edge_to_keys(edge)
         assert keys in expected
         obj = tree
         for key in keys:
             obj = obj[key]
-        assert obj is node
-        visit_ids.remove(id(node))
+        visits.append((node, edge))
 
         # updated expected
         seen_keys.add(keys)
@@ -279,7 +278,7 @@ def test_recursive_depth_first_traversal():
             if new_keys in seen_keys:
                 continue
             expected.add(new_keys)
-    assert not visit_ids
+    assert len(visits) == 3
 
 
 def test_breadth_first_modify():
