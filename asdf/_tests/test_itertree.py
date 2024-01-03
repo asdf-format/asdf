@@ -1,15 +1,3 @@
-"""
-Reorganize these tests into a fixture that generates test trees
-Each test tree returns:
-    - the tree
-    - the breadth-first order (need to account for multiple valid paths)
-    - the depth-first order (need to account for multiple valid paths)
-The orderings above need to be reversible to allow postorder tests
-to also check the path.
-
-For modification tests the callbacks can also check the order
-and can modify the tree in a way that should impact later callbacks.
-"""
 import copy
 
 import pytest

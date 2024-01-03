@@ -27,7 +27,6 @@ when walking leaf-first up the tree, modify:
 - c, b (any order)
 - a
 (note that this is the inverse of depth-first)
-
 """
 import collections
 
