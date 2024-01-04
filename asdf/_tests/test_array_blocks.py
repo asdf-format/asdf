@@ -589,10 +589,11 @@ def test_block_index():
         assert ff2._blocks.blocks[99].loaded
 
         # Force the loading of one array
-        ff2.tree["arrays"][50] * 2
+        arr = ff2.tree["arrays"][50]
+        arr * 2
 
         for i in range(2, 99):
-            if i == 50:
+            if i == arr._source:
                 assert ff2._blocks.blocks[i].loaded
             else:
                 assert not ff2._blocks.blocks[i].loaded

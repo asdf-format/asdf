@@ -20,6 +20,13 @@ Automatic calling of ``AsdfFile.find_references`` during calls to
 ``AsdfFile.__init__`` and ``asdf.open``. Call ``AsdfFile.find_references`` to
 find references.
 
+``asdf.treeutil.get_children`` and ``asdf.treeutil.is_container`` are deprecated.
+These were never intended to be public.
+
+The support for callbacks with a ``json_id`` to ``asdf.treeutil.walk_and_modify``
+is deprecated. Please use a different library or your own code to track ids during
+tree modifications.
+
 Version 3.0
 ===========
 

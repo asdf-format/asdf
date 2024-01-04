@@ -1,4 +1,5 @@
 import contextlib
+from io import BytesIO
 
 import numpy as np
 from numpy.testing import assert_array_equal
@@ -125,8 +126,12 @@ def test_block_data_callback_converter(tmp_path):
     # id(arr) would change every time
     a = BlockDataCallback(lambda: np.zeros(3, dtype="uint8"))
 
-    b = helpers.roundtrip_object(a)
-    assert_array_equal(a.data, b.data)
+    bs = BytesIO()
+    af = asdf.AsdfFile({"obj": a})
+    af.write_to(bs)
+    bs.seek(0)
+    with asdf.open(bs, lazy_load=False, memmap=False) as af:
+        assert_array_equal(a.data, af["obj"].data)
 
     # make a tree without the BlockData instance to avoid
     # the initial validate which will trigger block allocation

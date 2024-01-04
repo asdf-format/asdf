@@ -67,3 +67,21 @@ def test_find_references_during_open_deprecation(tmp_path):
     with pytest.warns(AsdfDeprecationWarning, match="find_references during open"):
         with asdf.open(fn) as af:
             pass
+
+
+def test_get_children_deprecation():
+    with pytest.warns(AsdfDeprecationWarning, match="get_children is deprecated"):
+        asdf.treeutil.get_children({})
+
+
+def test_is_container_deprecation():
+    with pytest.warns(AsdfDeprecationWarning, match="is_container is deprecated"):
+        asdf.treeutil.is_container({})
+
+
+def test_json_id_deprecation():
+    def callback(obj, json_id):
+        return obj
+
+    with pytest.warns(AsdfDeprecationWarning, match="the json_id callback argument is deprecated"):
+        asdf.treeutil.walk_and_modify({"a": 1}, callback)

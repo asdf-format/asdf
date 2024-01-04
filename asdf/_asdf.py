@@ -12,7 +12,7 @@ from . import _compression as mcompression
 from . import _display as display
 from . import _node_info as node_info
 from . import _version as version
-from . import constants, generic_io, reference, schema, treeutil, util, versioning, yamlutil
+from . import constants, generic_io, reference, schema, util, versioning, yamlutil
 from ._block.manager import Manager as BlockManager
 from ._helpers import validate_version
 from .config import config_context, get_config
@@ -168,11 +168,6 @@ class AsdfFile:
         self._warned_tag_pairs = set()
 
         self._file_format_version = None
-
-        # Context of a call to treeutil.walk_and_modify, needed in the AsdfFile
-        # in case walk_and_modify is re-entered by extension code (via
-        # custom_tree_to_tagged_tree or tagged_tree_to_custom_tree).
-        self._tree_modification_context = treeutil._TreeModificationContext()
 
         self._fd = None
         self._closed = False
