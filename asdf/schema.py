@@ -14,7 +14,7 @@ import yaml
 from asdf._jsonschema import validators as mvalidators
 from asdf._jsonschema.exceptions import RefResolutionError, ValidationError
 
-from . import constants, generic_io, reference, tagged, treeutil, util, versioning, yamlutil
+from . import _itertree, constants, generic_io, reference, tagged, treeutil, util, versioning, yamlutil
 from .config import get_config
 from .exceptions import AsdfDeprecationWarning, AsdfWarning
 from .util import _patched_urllib_parse
@@ -471,11 +471,10 @@ def _load_schema_cached(url, resolver, resolve_references):
 
     if resolve_references:
 
-        def resolve_refs(node, json_id):
-            if json_id is None:
-                json_id = url
-
+        def resolve_refs(node, edge):
             if isinstance(node, dict) and "$ref" in node:
+                json_id = treeutil._get_json_id(schema, edge) or url
+
                 suburl_base, suburl_fragment = _safe_resolve(resolver, json_id, node["$ref"])
 
                 if suburl_base == url or suburl_base == schema.get("id"):
@@ -485,10 +484,13 @@ def _load_schema_cached(url, resolver, resolve_references):
                     subschema = load_schema(suburl_base, resolver, True)
 
                 return reference.resolve_fragment(subschema, suburl_fragment)
-
             return node
 
-        schema = treeutil.walk_and_modify(schema, resolve_refs, _track_id=True)
+        # We need to copy here so that we don't end up with a recursive tree.
+        # When full resolution results in a recursive tree the returned recursive
+        # schema would cause check_schema to fail. This means some local $ref
+        # instances are not resolved.
+        schema = _itertree.leaf_first_modify_and_copy(schema, resolve_refs)
 
     return schema
 

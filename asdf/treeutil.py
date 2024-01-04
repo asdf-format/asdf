@@ -111,7 +111,7 @@ def _container_factory(obj):
     return result
 
 
-def walk_and_modify(top, callback, ignore_implicit_conversion=False, postorder=True, _track_id=False):
+def walk_and_modify(top, callback, ignore_implicit_conversion=False, postorder=True):
     """Modify a tree by walking it with a callback function.  It also has
     the effect of doing a copy. Only "containers" (dict, list, etc) will be
     copied, all "leaf" nodes will not be copied.
@@ -165,11 +165,8 @@ def walk_and_modify(top, callback, ignore_implicit_conversion=False, postorder=T
     else:
         modify = _itertree.depth_first_modify_and_copy
 
-    if callback.__code__.co_argcount == 2 and not _track_id:
-        _track_id = True
+    if callback.__code__.co_argcount == 2:
         warnings.warn("the json_id callback argument is deprecated", AsdfDeprecationWarning)
-
-    if _track_id:
 
         def wrapped_callback(obj, edge):
             json_id = _get_json_id(top, edge)
