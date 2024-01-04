@@ -1,3 +1,5 @@
+import collections
+
 from .constant import Constant
 from .external_reference import ExternalArrayReference
 from .integer import IntegerType
@@ -18,7 +20,7 @@ __all__ = [
 ]
 
 
-class AsdfObject(dict):
+class AsdfObject(collections.UserDict, dict):
     pass
 
 

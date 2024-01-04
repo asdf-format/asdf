@@ -5,14 +5,15 @@ import os
 import pathlib
 import time
 import warnings
+import weakref
 
 from packaging.version import Version
 
 from . import _compression as mcompression
 from . import _display as display
+from . import _lazy_nodes, constants, generic_io, reference, schema, treeutil, util, versioning, yamlutil
 from . import _node_info as node_info
 from . import _version as version
-from . import constants, generic_io, reference, schema, treeutil, util, versioning, yamlutil
 from ._block.manager import Manager as BlockManager
 from ._helpers import validate_version
 from .config import config_context, get_config
@@ -173,6 +174,8 @@ class AsdfFile:
         # in case walk_and_modify is re-entered by extension code (via
         # custom_tree_to_tagged_tree or tagged_tree_to_custom_tree).
         self._tree_modification_context = treeutil._TreeModificationContext()
+
+        self._tagged_object_cache = {}
 
         self._fd = None
         self._closed = False
@@ -478,6 +481,7 @@ class AsdfFile:
             # as we're closing the file, also empty out the
             # tree so that references to array data can be released
             self._tree = AsdfObject()
+            self._tagged_object_cache = {}
         for external in self._external_asdf_by_uri.values():
             external.close()
         self._external_asdf_by_uri.clear()
@@ -780,6 +784,7 @@ class AsdfFile:
         fd,
         validate_checksums=False,
         extensions=None,
+        _lazy_tree=False,
         _get_yaml_content=False,
         _force_raw_types=False,
         strict_extension_check=False,
@@ -870,7 +875,12 @@ class AsdfFile:
                     self.close()
                     raise
 
-            tree = yamlutil.tagged_tree_to_custom_tree(tree, self, _force_raw_types)
+            if _lazy_tree and not _force_raw_types:
+                obj = AsdfObject()
+                obj.data = _lazy_nodes.AsdfDictNode(tree, weakref.ref(self))
+                tree = obj
+            else:
+                tree = yamlutil.tagged_tree_to_custom_tree(tree, self, _force_raw_types)
 
             if not (ignore_missing_extensions or _force_raw_types):
                 self._check_extensions(tree, strict=strict_extension_check)
@@ -888,6 +898,7 @@ class AsdfFile:
         mode="r",
         validate_checksums=False,
         extensions=None,
+        _lazy_tree=False,
         _get_yaml_content=False,
         _force_raw_types=False,
         strict_extension_check=False,
@@ -902,6 +913,7 @@ class AsdfFile:
                 generic_file,
                 validate_checksums=validate_checksums,
                 extensions=extensions,
+                _lazy_tree=_lazy_tree,
                 _get_yaml_content=_get_yaml_content,
                 _force_raw_types=_force_raw_types,
                 strict_extension_check=strict_extension_check,
@@ -1513,6 +1525,7 @@ def open_asdf(
     custom_schema=None,
     strict_extension_check=False,
     ignore_missing_extensions=False,
+    _lazy_tree=False,
     _get_yaml_content=False,
 ):
     """
@@ -1623,6 +1636,7 @@ def open_asdf(
         mode=mode,
         validate_checksums=validate_checksums,
         extensions=extensions,
+        _lazy_tree=_lazy_tree,
         _get_yaml_content=_get_yaml_content,
         _force_raw_types=_force_raw_types,
         strict_extension_check=strict_extension_check,
