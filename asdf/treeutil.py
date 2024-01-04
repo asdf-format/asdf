@@ -6,7 +6,7 @@ import types
 import warnings
 from contextlib import contextmanager
 
-from . import tagged
+from . import _lazy_nodes, tagged
 from .exceptions import AsdfDeprecationWarning, AsdfWarning
 from .util import NotSet
 
@@ -293,7 +293,10 @@ def walk_and_modify(top, callback, ignore_implicit_conversion=NotSet, postorder=
         return _handle_generator(result)
 
     def _handle_mapping(node, json_id):
-        result = node.__class__()
+        if isinstance(node, _lazy_nodes.AsdfDictNode):
+            result = {}
+        else:
+            result = node.__class__()
         if isinstance(node, tagged.Tagged):
             result._tag = node._tag
 
@@ -324,7 +327,10 @@ def walk_and_modify(top, callback, ignore_implicit_conversion=NotSet, postorder=
                     del result[key]
 
     def _handle_mutable_sequence(node, json_id):
-        result = node.__class__()
+        if isinstance(node, _lazy_nodes.AsdfListNode):
+            result = []
+        else:
+            result = node.__class__()
         if isinstance(node, tagged.Tagged):
             result._tag = node._tag
 
