@@ -882,7 +882,7 @@ class AsdfFile:
         fd,
         validate_checksums=False,
         extensions=None,
-        lazy_tree=False,
+        lazy_tree=NotSet,
         _get_yaml_content=False,
         _force_raw_types=False,
         strict_extension_check=False,
@@ -894,7 +894,7 @@ class AsdfFile:
             msg = "'strict_extension_check' and 'ignore_missing_extensions' are incompatible options"
             raise ValueError(msg)
 
-        with config_context():
+        with config_context() as cfg:
             # validate_checksums (unlike memmap and lazy_load) is provided
             # here instead of in __init__
             self._blocks._validate_checksums = validate_checksums
@@ -975,6 +975,8 @@ class AsdfFile:
                     self.close()
                     raise
 
+            if lazy_tree is NotSet:
+                lazy_tree = cfg.lazy_tree
             if lazy_tree and not _force_raw_types:
                 obj = AsdfObject()
                 obj.data = _lazy_nodes.AsdfDictNode(tree, weakref.ref(self))
@@ -998,7 +1000,7 @@ class AsdfFile:
         mode="r",
         validate_checksums=False,
         extensions=None,
-        lazy_tree=False,
+        lazy_tree=NotSet,
         _get_yaml_content=False,
         _force_raw_types=False,
         strict_extension_check=False,
@@ -1616,7 +1618,7 @@ def open_asdf(
     _force_raw_types=False,
     copy_arrays=False,
     memmap=NotSet,
-    lazy_tree=False,
+    lazy_tree=NotSet,
     lazy_load=True,
     custom_schema=None,
     strict_extension_check=False,

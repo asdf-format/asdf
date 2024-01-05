@@ -919,8 +919,9 @@ arr: !core/ndarray-1.0.0
     """
 
     buff = helpers.yaml_to_asdf(content)
-    with pytest.raises(ValueError, match=r"inline data doesn't match the given shape"), asdf.open(buff):
-        pass
+    with pytest.raises(ValueError, match=r"inline data doesn't match the given shape"):
+        with asdf.open(buff) as af:
+            af["arr"]
 
 
 def test_broadcasted_array(tmp_path):
