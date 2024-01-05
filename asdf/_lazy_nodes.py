@@ -76,7 +76,8 @@ class AsdfListNode(AsdfNode, collections.UserList, list):
         # key might be an int or slice
         value = super().__getitem__(key)
         if isinstance(key, slice):
-            return AsdfListNode(value)
+            value._af_ref = self._af_ref
+            return value
         if isinstance(value, tagged.Tagged):
             value = _convert(value, self._af_ref)
             self[key] = value
@@ -96,7 +97,7 @@ class AsdfListNode(AsdfNode, collections.UserList, list):
                 af._tagged_object_cache[value_id] = (value, obj)
                 value = obj
             self[key] = value
-        elif type(value) == dict:  # noqa: E721
+        elif type(value) in (dict, collections.OrderedDict):
             if not self._af_ref:
                 raise Exception("no ASDF for you!")
             af = self._af_ref()
@@ -144,7 +145,7 @@ class AsdfDictNode(AsdfNode, collections.UserDict, dict):
                 af._tagged_object_cache[value_id] = (value, obj)
                 value = obj
             self[key] = value
-        elif type(value) == dict:  # noqa: E721
+        elif type(value) in (dict, collections.OrderedDict):
             if not self._af_ref:
                 raise Exception("no ASDF for you!")
             af = self._af_ref()
