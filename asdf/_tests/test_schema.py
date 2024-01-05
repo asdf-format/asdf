@@ -454,8 +454,9 @@ custom: !<{tag_uri}>
     # This should cause a warning but not an error because without explicitly
     # providing an extension, our custom type will not be recognized and will
     # simply be converted to a raw type.
-    with pytest.warns(AsdfConversionWarning, match=tag_uri), asdf.open(buff):
-        pass
+    with pytest.warns(AsdfConversionWarning, match=tag_uri):
+        with asdf.open(buff) as af:
+            af["custom"]
 
     buff.seek(0)
     with config_context() as cfg:
