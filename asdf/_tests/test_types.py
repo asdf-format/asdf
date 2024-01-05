@@ -26,6 +26,7 @@ undefined_data:
     with pytest.warns(Warning) as warning:
         afile = asdf.open(buff)
         missing = afile.tree["undefined_data"]
+        missing[3]
 
     assert missing[0] == 5
     assert missing[1] == {"message": "there is no tag"}
@@ -37,7 +38,7 @@ undefined_data:
     # filter out only AsdfConversionWarning
     warning = [w for w in warning if w.category == AsdfConversionWarning]
     assert len(warning) == 2
-    for i, tag in enumerate(["also_undefined-1.3.0", "undefined_tag-1.0.0"]):
+    for i, tag in enumerate(["undefined_tag-1.0.0", "also_undefined-1.3.0"]):
         assert (
             str(warning[i].message)
             == f"tag:nowhere.org:custom/{tag} is not recognized, converting to raw Python data structure"

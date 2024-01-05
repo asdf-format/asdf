@@ -4,6 +4,7 @@ import pytest
 from packaging.specifiers import SpecifierSet
 from yaml.representer import RepresenterError
 
+import asdf
 from asdf import AsdfFile, config_context
 from asdf.exceptions import AsdfWarning, ValidationError
 from asdf.extension import (
@@ -897,7 +898,7 @@ def test_warning_or_error_for_default_select_tag(is_subclass, indirect):
             config.add_extension(extension)
 
 
-def test_reference_cycle():
+def test_reference_cycle(tmp_path):
     class FractionWithInverse(fractions.Fraction):
         def __init__(self, *args, **kwargs):
             self._inverse = None
@@ -939,5 +940,8 @@ def test_reference_cycle():
         f1.inverse = f2
         f2.inverse = f1
 
-        read_f1 = roundtrip_object(f1)
-        assert read_f1.inverse.inverse is read_f1
+        fn = tmp_path / "test.asdf"
+        asdf.AsdfFile({"obj": f1}).write_to(fn)
+        with asdf.open(fn, lazy_tree=False) as af:
+            read_f1 = af["obj"]
+            assert read_f1.inverse.inverse is read_f1

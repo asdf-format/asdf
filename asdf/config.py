@@ -25,6 +25,7 @@ DEFAULT_ALL_ARRAY_STORAGE = None
 DEFAULT_ALL_ARRAY_COMPRESSION = "input"
 DEFAULT_ALL_ARRAY_COMPRESSION_KWARGS = None
 DEFAULT_CONVERT_UNKNOWN_NDARRAY_SUBCLASSES = True
+DEFAULT_LAZY_TREE = True
 
 
 class AsdfConfig:
@@ -47,6 +48,7 @@ class AsdfConfig:
         self._all_array_compression = DEFAULT_ALL_ARRAY_COMPRESSION
         self._all_array_compression_kwargs = DEFAULT_ALL_ARRAY_COMPRESSION_KWARGS
         self._convert_unknown_ndarray_subclasses = DEFAULT_CONVERT_UNKNOWN_NDARRAY_SUBCLASSES
+        self._lazy_tree = DEFAULT_LAZY_TREE
 
         self._lock = threading.RLock()
 
@@ -440,6 +442,23 @@ class AsdfConfig:
     def convert_unknown_ndarray_subclasses(self, value):
         self._convert_unknown_ndarray_subclasses = value
 
+    @property
+    def lazy_tree(self):
+        """
+        Get configuration that controls if ASDF tree contents
+        are lazily converted to custom objects or if all custom
+        objects are created when the file is opened.
+
+        Returns
+        -------
+        bool
+        """
+        return self._lazy_tree
+
+    @lazy_tree.setter
+    def lazy_tree(self, value):
+        self._lazy_tree = value
+
     def __repr__(self):
         return (
             "<AsdfConfig\n"
@@ -452,6 +471,7 @@ class AsdfConfig:
             f"  io_block_size: {self.io_block_size}\n"
             f"  legacy_fill_schema_defaults: {self.legacy_fill_schema_defaults}\n"
             f"  validate_on_read: {self.validate_on_read}\n"
+            f"  lazy_tree: {self.lazy_tree}\n"
             ">"
         )
 
