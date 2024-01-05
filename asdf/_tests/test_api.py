@@ -512,7 +512,7 @@ def test_write_to_no_tree_modification(tmp_path, valid_filename):
     assert tree == af.tree
     if not valid_filename:
         return
-    with asdf.open(fn, lazy_tree=False) as af:
+    with asdf.open(fn) as af:
         af["history"]["extensions"][0]["software"]["version"] = "0.0.0.dev+abcdefg"
         af["asdf_library"]["author"] = "foo"
         tree = copy.deepcopy(af.tree)
