@@ -882,7 +882,7 @@ class AsdfFile:
         fd,
         validate_checksums=False,
         extensions=None,
-        _lazy_tree=False,
+        lazy_tree=False,
         _get_yaml_content=False,
         _force_raw_types=False,
         strict_extension_check=False,
@@ -975,7 +975,7 @@ class AsdfFile:
                     self.close()
                     raise
 
-            if _lazy_tree and not _force_raw_types:
+            if lazy_tree and not _force_raw_types:
                 obj = AsdfObject()
                 obj.data = _lazy_nodes.AsdfDictNode(tree, weakref.ref(self))
                 tree = obj
@@ -998,7 +998,7 @@ class AsdfFile:
         mode="r",
         validate_checksums=False,
         extensions=None,
-        _lazy_tree=False,
+        lazy_tree=False,
         _get_yaml_content=False,
         _force_raw_types=False,
         strict_extension_check=False,
@@ -1013,7 +1013,7 @@ class AsdfFile:
                 generic_file,
                 validate_checksums=validate_checksums,
                 extensions=extensions,
-                _lazy_tree=_lazy_tree,
+                lazy_tree=lazy_tree,
                 _get_yaml_content=_get_yaml_content,
                 _force_raw_types=_force_raw_types,
                 strict_extension_check=strict_extension_check,
@@ -1616,11 +1616,11 @@ def open_asdf(
     _force_raw_types=False,
     copy_arrays=False,
     memmap=NotSet,
+    lazy_tree=False,
     lazy_load=True,
     custom_schema=None,
     strict_extension_check=False,
     ignore_missing_extensions=False,
-    _lazy_tree=False,
     _get_yaml_content=False,
 ):
     """
@@ -1678,6 +1678,11 @@ def open_asdf(
         Note: even if ``lazy_load`` is `False`, ``memmap`` is still taken
         into account.
 
+    lazy_tree : bool, optional
+        When `True` the ASDF tree will not be converted to custom objects
+        when the file is loaded. Instead, objects will be "lazily" converted
+        only when they are accessed.
+
     custom_schema : str, optional
         Path to a custom schema file that will be used for a secondary
         validation pass. This can be used to ensure that particular ASDF
@@ -1731,7 +1736,7 @@ def open_asdf(
         mode=mode,
         validate_checksums=validate_checksums,
         extensions=extensions,
-        _lazy_tree=_lazy_tree,
+        lazy_tree=lazy_tree,
         _get_yaml_content=_get_yaml_content,
         _force_raw_types=_force_raw_types,
         strict_extension_check=strict_extension_check,
