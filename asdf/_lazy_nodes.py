@@ -1,5 +1,6 @@
 import collections
 import warnings
+from types import GeneratorType
 
 from . import tagged
 from .exceptions import AsdfConversionWarning
@@ -39,7 +40,12 @@ def _convert(value, af_ref):
     elif isinstance(data, list):
         data = AsdfListNode(data, af_ref)
     obj = converter.from_yaml_tree(data, tag, sctx)
-    # TODO generator?
+    if isinstance(obj, GeneratorType):
+        # TODO we can't quite do this for every instance
+        generator = obj
+        obj = next(generator)
+        for _ in generator:
+            pass
     sctx.assign_object(obj)
     sctx.assign_blocks()
     sctx._mark_extension_used(converter.extension)
