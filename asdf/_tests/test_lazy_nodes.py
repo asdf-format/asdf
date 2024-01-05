@@ -8,7 +8,8 @@ from asdf import _lazy_nodes
 
 
 def test_slice_access():
-    node = _lazy_nodes.AsdfListNode([0, 1, 2])
+    af = asdf.AsdfFile()
+    node = _lazy_nodes.AsdfListNode([0, 1, 2], weakref.ref(af))
     assert node[0] == 0
     assert node[1] == 1
     assert node[2] == 2
@@ -42,7 +43,8 @@ def test_nested_node_conversion():
         "ddl": {"a": {"a": [0]}},
         "ddd": {"a": {"a": {"a": 0}}},
     }
-    node = _lazy_nodes.AsdfDictNode(tree)
+    af = asdf.AsdfFile()
+    node = _lazy_nodes.AsdfDictNode(tree, weakref.ref(af))
     for key in node:
         obj = node[key]
         for code in key:
@@ -69,7 +71,7 @@ def test_lazy_tree_ref(tmp_path):
     af = asdf.AsdfFile(tree)
     af.write_to(fn)
 
-    with asdf.open(fn, _lazy_tree=True) as af:
+    with asdf.open(fn, lazy_tree=True) as af:
         assert isinstance(af.tree.data.data["a"], asdf.tagged.Tagged)
         assert isinstance(af.tree.data.data["b"]["c"], asdf.tagged.Tagged)
         assert isinstance(af.tree.data.data["d"][0], asdf.tagged.Tagged)
@@ -87,7 +89,7 @@ def test_cache_clear_on_close(tmp_path):
     tree = {"a": arr}
     asdf.AsdfFile(tree).write_to(fn)
 
-    with asdf.open(fn, _lazy_tree=True) as af:
+    with asdf.open(fn, lazy_tree=True) as af:
         # grab a weakref to this array, it should fail
         # to resolve after the with exits
         ref = weakref.ref(af["a"])
@@ -102,7 +104,7 @@ def test_access_after_del(tmp_path):
     tree = {"a": {"b": arr}}
     asdf.AsdfFile(tree).write_to(fn)
 
-    with asdf.open(fn, _lazy_tree=True) as af:
+    with asdf.open(fn, lazy_tree=True) as af:
         d = af["a"]
 
     del af
