@@ -60,7 +60,7 @@ def test_software():
     assert result == software
 
 
-def test_history_entry():
+def test_history_entry(tmp_path):
     history_entry = HistoryEntry(
         description="Some history happened here",
         time=datetime.datetime.now(),
@@ -68,9 +68,10 @@ def test_history_entry():
         extra="property",
     )
 
-    result = helpers.roundtrip_object(history_entry)
-
-    assert result == history_entry
+    fn = tmp_path / "test.asdf"
+    asdf.AsdfFile({"obj": history_entry}).write_to(fn)
+    with asdf.open(fn) as af:
+        assert af["obj"] == history_entry
 
 
 def test_subclass_metadata():

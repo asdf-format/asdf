@@ -69,6 +69,14 @@ class AsdfListNode(AsdfNode, collections.UserList, list):
             data = []
         super().__init__(data, af_ref)
 
+    def __eq__(self, other):
+        if self is other:
+            return True
+        return list(self) == list(other)
+
+    def __ne__(self, other):
+        return not self.__eq__(other)
+
     def __reduce__(self):
         return collections.UserList.__reduce__(self)
 
@@ -120,6 +128,14 @@ class AsdfDictNode(AsdfNode, collections.UserDict, dict):
         if data is None:
             data = {}
         super().__init__(data, af_ref)
+
+    def __eq__(self, other):
+        if self is other:
+            return True
+        return dict(self) == dict(other)
+
+    def __ne__(self, other):
+        return not self.__eq__(other)
 
     def __reduce__(self):
         return collections.UserDict.__reduce__(self)
