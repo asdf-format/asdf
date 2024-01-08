@@ -68,6 +68,7 @@ class AsdfListNode(AsdfNode, collections.UserList, list):
         if data is None:
             data = []
         super().__init__(data, af_ref)
+        list.__init__(self, data)
 
     def __eq__(self, other):
         if self is other:
@@ -128,6 +129,7 @@ class AsdfDictNode(AsdfNode, collections.UserDict, dict):
         if data is None:
             data = {}
         super().__init__(data, af_ref)
+        dict.__init__(self, data)
 
     def __eq__(self, other):
         if self is other:
