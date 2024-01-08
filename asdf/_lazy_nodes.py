@@ -37,6 +37,8 @@ def _convert(value, af_ref):
     data = value.data
     if isinstance(data, dict):
         data = AsdfDictNode(data, af_ref)
+    elif isinstance(data, collections.OrderedDict):
+        data = AsdfOrderedDictNode(data, af_ref)
     elif isinstance(data, list):
         data = AsdfListNode(data, af_ref)
     obj = converter.from_yaml_tree(data, tag, sctx)
@@ -116,7 +118,10 @@ class AsdfListNode(AsdfNode, collections.UserList, list):
             if value_id in af._tagged_object_cache:
                 value = af._tagged_object_cache[value_id][1]
             else:
-                obj = AsdfDictNode(value, self._af_ref)
+                if type(value) == collections.OrderedDict:
+                    obj = AsdfOrderedDictNode(value, self._af_ref)
+                else:
+                    obj = AsdfDictNode(value, self._af_ref)
                 af._tagged_object_cache[value_id] = (value, obj)
                 value = obj
             self[key] = value
@@ -173,8 +178,15 @@ class AsdfDictNode(AsdfNode, collections.UserDict, dict):
             if value_id in af._tagged_object_cache:
                 value = af._tagged_object_cache[value_id][1]
             else:
-                obj = AsdfDictNode(value, self._af_ref)
+                if type(value) == collections.OrderedDict:
+                    obj = AsdfOrderedDictNode(value, self._af_ref)
+                else:
+                    obj = AsdfDictNode(value, self._af_ref)
                 af._tagged_object_cache[value_id] = (value, obj)
                 value = obj
             self[key] = value
         return value
+
+
+class AsdfOrderedDictNode(AsdfDictNode, collections.OrderedDict):
+    pass
