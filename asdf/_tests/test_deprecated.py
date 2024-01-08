@@ -1,4 +1,5 @@
 import sys
+import warnings
 
 import numpy as np
 import pytest
@@ -15,8 +16,19 @@ def test_asdf_stream_deprecation():
 
 
 def test_asdf_asdf_SerializationContext_import_deprecation():
-    with pytest.warns(AsdfDeprecationWarning, match="importing SerializationContext from asdf.asdf"):
-        from asdf.asdf import SerializationContext  # noqa: F401
+    with warnings.catch_warnings():
+        warnings.filterwarnings(
+            "ignore",
+            category=AsdfDeprecationWarning,
+            message="asdf.asdf is deprecated. Please use asdf.AsdfFile and asdf.open",
+        )
+        warnings.filterwarnings(
+            "ignore",
+            category=AsdfDeprecationWarning,
+            message="asdf.asdf is deprecated",
+        )
+        with pytest.warns(AsdfDeprecationWarning, match="importing SerializationContext from asdf.asdf"):
+            from asdf.asdf import SerializationContext  # noqa: F401
 
 
 def test_asdf_util_human_list_deprecation():
