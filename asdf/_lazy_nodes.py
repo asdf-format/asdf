@@ -71,7 +71,8 @@ class AsdfListNode(AsdfNode, collections.UserList, list):
     def __init__(self, data=None, af_ref=None):
         if data is None:
             data = []
-        super().__init__(data, af_ref)
+        AsdfNode.__init__(self, data, af_ref)
+        collections.UserList.__init__(self, data)
         list.__init__(self, data)
 
     def __eq__(self, other):
@@ -136,7 +137,8 @@ class AsdfDictNode(AsdfNode, collections.UserDict, dict):
     def __init__(self, data=None, af_ref=None):
         if data is None:
             data = {}
-        super().__init__(data, af_ref)
+        AsdfNode.__init__(self, data, af_ref)
+        collections.UserDict.__init__(self, data)
         dict.__init__(self, data)
 
     def __eq__(self, other):
@@ -192,4 +194,8 @@ class AsdfDictNode(AsdfNode, collections.UserDict, dict):
 
 
 class AsdfOrderedDictNode(AsdfDictNode, collections.OrderedDict):
-    pass
+    def __init__(self, data=None, af_ref=None):
+        if data is None:
+            data = collections.OrderedDict()
+        AsdfDictNode.__init__(self, data, af_ref)
+        collections.OrderedDict.__init__(self, data)
