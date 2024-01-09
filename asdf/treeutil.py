@@ -7,7 +7,7 @@ import warnings
 from contextlib import contextmanager
 
 from . import tagged
-from .exceptions import AsdfWarning
+from .exceptions import AsdfDeprecationWarning, AsdfWarning
 
 __all__ = ["walk", "iter_tree", "walk_and_modify", "get_children", "is_container", "PendingValue", "RemoveNode"]
 
@@ -220,7 +220,7 @@ class _RemoveNode:
 RemoveNode = _RemoveNode()
 
 
-def walk_and_modify(top, callback, ignore_implicit_conversion=False, postorder=True, _context=None):
+def walk_and_modify(top, callback, ignore_implicit_conversion=False, postorder=True, _context=None, _track_id=False):
     """Modify a tree by walking it with a callback function.  It also has
     the effect of doing a deep copy.
 
@@ -234,14 +234,16 @@ def walk_and_modify(top, callback, ignore_implicit_conversion=False, postorder=T
         one or two arguments:
 
         - an instance from the tree
-        - a json id (optional)
+        - a json id (optional) DEPRECATED
 
         It may return a different instance in order to modify the
         tree.  If the singleton instance `~asdf.treeutil._RemoveNode`
         is returned, the node will be removed from the tree.
 
-        The json id is the context under which any relative URLs
-        should be resolved.  It may be `None` if no ids are in the file
+        The json id optional argument is deprecated. This function
+        will no longer track ids. The json id is the context under which
+        any relative URLs should be resolved.  It may be `None` if no
+        ids are in the file
 
         The tree is traversed depth-first, with order specified by the
         ``postorder`` argument.
@@ -266,7 +268,10 @@ def walk_and_modify(top, callback, ignore_implicit_conversion=False, postorder=T
 
     """
     callback_arity = callback.__code__.co_argcount
-    if callback_arity < 1 or callback_arity > 2:
+    if callback_arity == 2:
+        if not _track_id:
+            warnings.warn("the json_id callback argument is deprecated", AsdfDeprecationWarning)
+    elif callback_arity != 1:
         msg = "Expected callback to accept one or two arguments"
         raise ValueError(msg)
 
@@ -420,7 +425,7 @@ def walk_and_modify(top, callback, ignore_implicit_conversion=False, postorder=T
         # call to walk_and_modify.
 
 
-def get_children(node):
+def _get_children(node):
     """
     Retrieve the children (and their dict keys or list/tuple indices) of
     an ASDF tree node.
@@ -446,7 +451,15 @@ def get_children(node):
     return []
 
 
-def is_container(node):
+def get_children(node):
+    warnings.warn("asdf.treeutil.get_children is deprecated", AsdfDeprecationWarning)
+    return _get_children(node)
+
+
+get_children.__doc__ = _get_children.__doc__
+
+
+def _is_container(node):
     """
     Determine if an ASDF tree node is an instance of a "container" type
     (i.e., value may contain child nodes).
@@ -462,3 +475,11 @@ def is_container(node):
         True if node is a container, False otherwise
     """
     return isinstance(node, (dict, list, tuple))
+
+
+def is_container(node):
+    warnings.warn("asdf.treeutil.is_container is deprecated", AsdfDeprecationWarning)
+    return _is_container(node)
+
+
+is_container.__doc__ = _is_container.__doc__

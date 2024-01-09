@@ -2,7 +2,7 @@ import re
 from collections import namedtuple
 
 from .schema import load_schema
-from .treeutil import get_children
+from .treeutil import _get_children
 
 
 def _filter_tree(info, filters):
@@ -290,7 +290,7 @@ class NodeSchemaInfo:
                     if parent is None:
                         info.schema = schema
 
-                    for child_identifier, child_node in get_children(t_node):
+                    for child_identifier, child_node in _get_children(t_node):
                         next_nodes.append((info, child_identifier, child_node))
 
             if len(next_nodes) == 0:
