@@ -369,11 +369,11 @@ def walk_and_modify(top, callback, ignore_implicit_conversion=False, postorder=T
         return result
 
     def _handle_children(node, json_id):
-        if isinstance(node, dict):
+        if isinstance(node, (dict, _lazy_nodes.AsdfDictNode)):
             result = _handle_mapping(node, json_id)
         elif isinstance(node, tuple):
             result = _handle_immutable_sequence(node, json_id)
-        elif isinstance(node, list):
+        elif isinstance(node, (list, _lazy_nodes.AsdfListNode)):
             result = _handle_mutable_sequence(node, json_id)
         else:
             result = node

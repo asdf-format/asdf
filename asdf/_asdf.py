@@ -1,3 +1,4 @@
+import collections.abc
 import copy
 import datetime
 import io
@@ -321,7 +322,11 @@ class AsdfFile:
         strict : bool, optional
             Set to `True` to convert warnings to exceptions.
         """
-        if "history" not in tree or not isinstance(tree["history"], dict) or "extensions" not in tree["history"]:
+        if (
+            "history" not in tree
+            or not isinstance(tree["history"], collections.abc.Mapping)
+            or "extensions" not in tree["history"]
+        ):
             return
 
         for extension in tree["history"]["extensions"]:
@@ -437,7 +442,7 @@ class AsdfFile:
         if "history" not in tree:
             tree["history"] = {"extensions": []}
         # Support clients who are still using the old history format
-        elif isinstance(tree["history"], list):
+        elif isinstance(tree["history"], collections.abc.Sequence):
             histlist = tree["history"]
             tree["history"] = {"entries": histlist, "extensions": []}
             warnings.warn(
@@ -1330,7 +1335,7 @@ class AsdfFile:
             - ``homepage``: A URI to the homepage of the software
             - ``version``: The version of the software
         """
-        if isinstance(software, list):
+        if isinstance(software, collections.abc.Sequence) and not isinstance(software, str):
             software = [Software(x) for x in software]
         elif software is not None:
             software = Software(software)
@@ -1387,7 +1392,7 @@ class AsdfFile:
         if "history" not in self.tree:
             return []
 
-        if isinstance(self.tree["history"], list):
+        if isinstance(self.tree["history"], collections.abc.Sequence) and not isinstance(self.tree["history"], str):
             return self.tree["history"]
 
         if "entries" in self.tree["history"]:
