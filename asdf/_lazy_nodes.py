@@ -1,4 +1,6 @@
 import collections
+import collections.abc
+import copy
 import warnings
 from types import GeneratorType
 
@@ -66,32 +68,46 @@ class AsdfNode:
     def tagged(self):
         return self.data
 
+    def copy(self):
+        return self.__class__(copy.copy(self.data), self._af_ref)
 
-class AsdfListNode(AsdfNode, collections.UserList, list):
+    def __asdf_traverse__(self):
+        return self.data
+
+
+class AsdfListNode(AsdfNode, collections.abc.MutableSequence):
     def __init__(self, data=None, af_ref=None):
         if data is None:
             data = []
         AsdfNode.__init__(self, data, af_ref)
-        collections.UserList.__init__(self, data)
-        list.__init__(self, data)
+
+    def __setitem__(self, index, value):
+        self.data.__setitem__(index, value)
+
+    def __delitem__(self, index):
+        self.data.__delitem__(index)
+
+    def __len__(self):
+        return self.data.__len__()
+
+    def insert(self, index, value):
+        self.data.insert(index, value)
 
     def __eq__(self, other):
         if self is other:
             return True
+        if not isinstance(other, collections.abc.Sequence):
+            return False
         return list(self) == list(other)
 
     def __ne__(self, other):
         return not self.__eq__(other)
 
-    def __reduce__(self):
-        return collections.UserList.__reduce__(self)
-
     def __getitem__(self, key):
         # key might be an int or slice
-        value = super().__getitem__(key)
+        value = self.data.__getitem__(key)
         if isinstance(key, slice):
-            value._af_ref = self._af_ref
-            return value
+            return AsdfListNode(value, self._af_ref)
         if isinstance(value, tagged.Tagged):
             value = _convert(value, self._af_ref)
             self[key] = value
@@ -131,29 +147,36 @@ class AsdfListNode(AsdfNode, collections.UserList, list):
         return value
 
 
-# dict is required here so TaggedDict doesn't convert this to a dict
-# and so that json.dumps will work for this node TODO add test
-class AsdfDictNode(AsdfNode, collections.UserDict, dict):
+class AsdfDictNode(AsdfNode, collections.abc.MutableMapping):
     def __init__(self, data=None, af_ref=None):
         if data is None:
             data = {}
         AsdfNode.__init__(self, data, af_ref)
-        collections.UserDict.__init__(self, data)
-        dict.__init__(self, data)
+
+    def __setitem__(self, index, value):
+        self.data.__setitem__(index, value)
+
+    def __delitem__(self, index):
+        self.data.__delitem__(index)
+
+    def __len__(self):
+        return self.data.__len__()
+
+    def __iter__(self):
+        return self.data.__iter__()
 
     def __eq__(self, other):
         if self is other:
             return True
+        if not isinstance(other, collections.abc.Mapping):
+            return False
         return dict(self) == dict(other)
 
     def __ne__(self, other):
         return not self.__eq__(other)
 
-    def __reduce__(self):
-        return collections.UserDict.__reduce__(self)
-
     def __getitem__(self, key):
-        value = super().__getitem__(key)
+        value = self.data.__getitem__(key)
         if isinstance(value, tagged.Tagged):
             value = _convert(value, self._af_ref)
             self[key] = value
@@ -198,4 +221,3 @@ class AsdfOrderedDictNode(AsdfDictNode, collections.OrderedDict):
         if data is None:
             data = collections.OrderedDict()
         AsdfDictNode.__init__(self, data, af_ref)
-        collections.OrderedDict.__init__(self, data)
