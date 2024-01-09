@@ -1,3 +1,4 @@
+import collections.abc
 import mmap
 import sys
 
@@ -49,7 +50,8 @@ def asdf_datatype_to_numpy_dtype(datatype, byteorder=None):
         return np.dtype(str(byteorder + datatype))
 
     if (
-        isinstance(datatype, list)
+        isinstance(datatype, collections.abc.Sequence)
+        and not isinstance(datatype, str)
         and len(datatype) == 2
         and isinstance(datatype[0], str)
         and isinstance(datatype[1], int)
@@ -61,7 +63,7 @@ def asdf_datatype_to_numpy_dtype(datatype, byteorder=None):
 
         return np.dtype(datatype)
 
-    if isinstance(datatype, dict):
+    if isinstance(datatype, collections.abc.Mapping):
         if "datatype" not in datatype:
             msg = f"Field entry has no datatype: '{datatype}'"
             raise ValueError(msg)
@@ -76,7 +78,7 @@ def asdf_datatype_to_numpy_dtype(datatype, byteorder=None):
 
         return (str(name), datatype, tuple(shape))
 
-    if isinstance(datatype, list):
+    if isinstance(datatype, collections.abc.Sequence) and not isinstance(datatype, str):
         datatype_list = []
         for subdatatype in datatype:
             np_dtype = asdf_datatype_to_numpy_dtype(subdatatype, byteorder)
@@ -161,7 +163,7 @@ def inline_data_asarray(inline, dtype=None):
     if dtype is not None and dtype.fields is not None:
 
         def find_innermost_match(line, depth=0):
-            if not isinstance(line, list) or not len(line):
+            if not isinstance(line, collections.abc.Sequence) or not len(line):
                 msg = "data can not be converted to structured array"
                 raise ValueError(msg)
             try:
@@ -184,7 +186,7 @@ def inline_data_asarray(inline, dtype=None):
         return np.asarray(inline, dtype=dtype)
 
     def handle_mask(inline):
-        if isinstance(inline, list):
+        if isinstance(inline, collections.abc.Sequence) and not isinstance(inline, str):
             if None in inline:
                 inline_array = np.asarray(inline)
                 nones = np.equal(inline_array, None)
@@ -208,7 +210,7 @@ def numpy_array_to_list(array):
         if isinstance(x, (np.ndarray, NDArrayType)):
             x = x.astype("U").tolist() if x.dtype.char == "S" else x.tolist()
 
-        if isinstance(x, (list, tuple)):
+        if isinstance(x, collections.abc.Sequence) and not isinstance(x, str):
             return [tolist(y) for y in x]
 
         return x
@@ -234,7 +236,7 @@ class NDArrayType:
         self._array = None
         self._mask = mask
 
-        if isinstance(source, list):
+        if isinstance(source, collections.abc.Sequence) and not isinstance(source, str):
             self._array = inline_data_asarray(source, dtype)
             self._array = self._apply_mask(self._array, self._mask)
             # single element structured arrays can have shape == ()
@@ -339,6 +341,8 @@ class NDArrayType:
         Get the actual shape of an array, by computing it against the
         block_size if it contains a ``*``.
         """
+        if hasattr(shape, "data"):
+            shape = shape.data
         num_stars = shape.count("*")
         if num_stars == 0:
             return shape
@@ -479,11 +483,11 @@ for op in [
 
 
 def _get_ndim(instance):
-    if isinstance(instance, list):
+    if isinstance(instance, collections.abc.Sequence) and not isinstance(instance, str):
         array = inline_data_asarray(instance)
         return array.ndim
 
-    if isinstance(instance, dict):
+    if isinstance(instance, collections.abc.Mapping):
         if "shape" in instance:
             return len(instance["shape"])
 
@@ -515,10 +519,10 @@ def validate_max_ndim(validator, max_ndim, instance, schema):
 
 
 def validate_datatype(validator, datatype, instance, schema):
-    if isinstance(instance, list):
+    if isinstance(instance, collections.abc.Sequence):
         array = inline_data_asarray(instance)
         in_datatype, _ = numpy_dtype_to_asdf_datatype(array.dtype)
-    elif isinstance(instance, dict):
+    elif isinstance(instance, collections.abc.Mapping):
         if "datatype" in instance:
             in_datatype = instance["datatype"]
         elif "data" in instance:

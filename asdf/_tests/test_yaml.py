@@ -7,7 +7,7 @@ import pytest
 import yaml
 
 import asdf
-from asdf import tagged, treeutil, yamlutil
+from asdf import _lazy_nodes, tagged, treeutil, yamlutil
 from asdf.exceptions import AsdfConversionWarning, AsdfWarning
 from asdf.testing.helpers import yaml_to_asdf
 
@@ -31,7 +31,7 @@ def test_ordered_dict(tmp_path):
         assert list(tree["ordered_dict"].keys()) == ["first", "second", "third"]
 
         assert not isinstance(tree["unordered_dict"], OrderedDict)
-        assert isinstance(tree["unordered_dict"], dict)
+        assert isinstance(tree["unordered_dict"], (dict, _lazy_nodes.AsdfDictNode))
 
     def check_raw_yaml(content):
         assert b"OrderedDict" not in content
@@ -80,7 +80,7 @@ def test_arbitrary_python_object():
 
 def run_tuple_test(tree, tmp_path):
     def check_asdf(asdf):
-        assert isinstance(asdf.tree["val"], list)
+        assert isinstance(asdf.tree["val"], (list, _lazy_nodes.AsdfListNode))
 
     def check_raw_yaml(content):
         assert b"tuple" not in content

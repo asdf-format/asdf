@@ -239,6 +239,8 @@ class NodeSchemaInfo:
     def set_schema_from_node(self, node, extension_manager):
         """Pull a tagged schema for the node"""
 
+        if not hasattr(node, "_tag"):
+            return
         tag_def = extension_manager.get_tag_definition(node._tag)
         schema_uri = tag_def.schema_uris[0]
         schema = load_schema(schema_uri)

@@ -1,3 +1,5 @@
+import collections.abc
+
 import numpy as np
 
 from asdf.extension import Converter
@@ -134,12 +136,12 @@ class NDArrayConverter(Converter):
         from asdf.tags.core import NDArrayType
         from asdf.tags.core.ndarray import asdf_datatype_to_numpy_dtype
 
-        if isinstance(node, list):
+        if isinstance(node, collections.abc.Sequence) and not isinstance(node, str):
             instance = NDArrayType(node, None, None, None, None, None, None)
             ctx._blocks._set_array_storage(instance, "inline")
             return instance
 
-        if isinstance(node, dict):
+        if isinstance(node, collections.abc.Mapping):
             shape = node.get("shape", None)
             if "source" in node and "data" in node:
                 msg = "Both source and data may not be provided at the same time"

@@ -1,3 +1,4 @@
+import collections.abc
 import datetime
 import fractions
 import warnings
@@ -53,7 +54,7 @@ def test_history_to_file(tmp_path):
         # Test the history entry retrieval API
         entries = ff.get_history_entries()
         assert len(entries) == 1
-        assert isinstance(entries, list)
+        assert isinstance(entries, collections.abc.Sequence) and not isinstance(entries, str)
         assert isinstance(entries[0], HistoryEntry)
         assert entries[0]["description"] == "This happened"
         assert entries[0]["software"]["name"] == "my_tool"
@@ -78,7 +79,7 @@ history:
         # Test the history entry retrieval API
         entries = af.get_history_entries()
         assert len(entries) == 1
-        assert isinstance(entries, list)
+        assert isinstance(entries, collections.abc.Sequence) and not isinstance(entries, str)
         assert isinstance(entries[0], HistoryEntry)
         assert entries[0]["description"] == "Here's a test of old history entries"
         assert entries[0]["software"]["name"] == "foo"
