@@ -27,6 +27,8 @@ def _convert(value, af_ref):
             )
         if isinstance(value, list):
             obj = AsdfListNode(value, af_ref)
+        elif isinstance(value, collections.OrderedDict):
+            obj = AsdfOrderedDictNode(value, af_ref)
         elif isinstance(value, dict):
             obj = AsdfDictNode(value, af_ref)
         else:
@@ -129,6 +131,7 @@ class AsdfListNode(AsdfNode, collections.UserList, list):
 
 
 # dict is required here so TaggedDict doesn't convert this to a dict
+# and so that json.dumps will work for this node TODO add test
 class AsdfDictNode(AsdfNode, collections.UserDict, dict):
     def __init__(self, data=None, af_ref=None):
         if data is None:
