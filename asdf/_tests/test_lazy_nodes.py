@@ -1,3 +1,4 @@
+import collections
 import weakref
 
 import numpy as np
@@ -80,6 +81,17 @@ def test_lazy_tree_ref(tmp_path):
         np.testing.assert_array_equal(af["a"], arr)
         assert af["a"] is af["b"]["c"]
         assert af["a"] is af["d"][0]
+
+
+def test_ordered_dict():
+    tree = {"a": collections.OrderedDict({"b": [1, 2, collections.OrderedDict({"c": 3})]})}
+
+    af = asdf.AsdfFile()
+
+    node = _lazy_nodes.AsdfDictNode(tree, weakref.ref(af))
+    assert isinstance(node["a"], _lazy_nodes.AsdfOrderedDictNode)
+    assert isinstance(node["a"]["b"], _lazy_nodes.AsdfListNode)
+    assert isinstance(node["a"]["b"][2], _lazy_nodes.AsdfOrderedDictNode)
 
 
 def test_cache_clear_on_close(tmp_path):
