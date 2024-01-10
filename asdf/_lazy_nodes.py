@@ -67,13 +67,19 @@ class AsdfNode:
         return self.data
 
 
-class AsdfListNode(AsdfNode, collections.UserList, list):
+class AsdfListNode(AsdfNode, collections.UserList):
     def __init__(self, data=None, af_ref=None):
         if data is None:
             data = []
         AsdfNode.__init__(self, data, af_ref)
         collections.UserList.__init__(self, data)
-        list.__init__(self, data)
+
+    @property
+    def __class__(self):
+        return list
+
+    def __copy__(self):
+        return AsdfListNode(self.data.copy(), self._af_ref)
 
     def __eq__(self, other):
         if self is other:
@@ -83,15 +89,11 @@ class AsdfListNode(AsdfNode, collections.UserList, list):
     def __ne__(self, other):
         return not self.__eq__(other)
 
-    def __reduce__(self):
-        return collections.UserList.__reduce__(self)
-
     def __getitem__(self, key):
         # key might be an int or slice
         value = super().__getitem__(key)
         if isinstance(key, slice):
-            value._af_ref = self._af_ref
-            return value
+            return AsdfListNode(value, self._af_ref)
         if isinstance(value, tagged.Tagged):
             value = _convert(value, self._af_ref)
             self[key] = value
@@ -133,13 +135,19 @@ class AsdfListNode(AsdfNode, collections.UserList, list):
 
 # dict is required here so TaggedDict doesn't convert this to a dict
 # and so that json.dumps will work for this node TODO add test
-class AsdfDictNode(AsdfNode, collections.UserDict, dict):
+class AsdfDictNode(AsdfNode, collections.UserDict):
     def __init__(self, data=None, af_ref=None):
         if data is None:
             data = {}
         AsdfNode.__init__(self, data, af_ref)
         collections.UserDict.__init__(self, data)
-        dict.__init__(self, data)
+
+    @property
+    def __class__(self):
+        return dict
+
+    def __copy__(self):
+        return AsdfDictNode(self.data.copy(), self._af_ref)
 
     def __eq__(self, other):
         if self is other:
@@ -148,9 +156,6 @@ class AsdfDictNode(AsdfNode, collections.UserDict, dict):
 
     def __ne__(self, other):
         return not self.__eq__(other)
-
-    def __reduce__(self):
-        return collections.UserDict.__reduce__(self)
 
     def __getitem__(self, key):
         value = super().__getitem__(key)
@@ -199,3 +204,10 @@ class AsdfOrderedDictNode(AsdfDictNode, collections.OrderedDict):
             data = collections.OrderedDict()
         AsdfDictNode.__init__(self, data, af_ref)
         collections.OrderedDict.__init__(self, data)
+
+    @property
+    def __class__(self):
+        return collections.OrderedDict
+
+    def __copy__(self):
+        return AsdfOrderedDictNode(self.data.copy(), self._af_ref)
