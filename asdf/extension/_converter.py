@@ -116,7 +116,10 @@ class Converter(abc.ABC):
 
         For container types received by this method (dict or list),
         the children of the container will have already been converted
-        by prior calls to from_yaml_tree implementations.
+        by prior calls to from_yaml_tree implementations unless
+        ``lazy_tree`` was set to ``True`` for `asdf.open`. With a lazy
+        tree the container types will be `asdf.lazy_nodes` (which act
+        like dict or list but convert child objects when accessed).
 
         Note on circular references: trees that reference themselves
         among their descendants must be handled with care.  Most
