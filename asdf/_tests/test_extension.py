@@ -942,6 +942,6 @@ def test_reference_cycle(tmp_path):
 
         fn = tmp_path / "test.asdf"
         asdf.AsdfFile({"obj": f1}).write_to(fn)
-        with asdf.open(fn, lazy_tree=False) as af:
+        with asdf.open(fn) as af:
             read_f1 = af["obj"]
             assert read_f1.inverse.inverse is read_f1
