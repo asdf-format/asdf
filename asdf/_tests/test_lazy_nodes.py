@@ -7,31 +7,31 @@ import numpy as np
 import pytest
 
 import asdf
-from asdf import _lazy_nodes
+from asdf._lazy_nodes import AsdfDictNode, AsdfListNode, AsdfOrderedDictNode
 
 
 def test_slice_access():
     af = asdf.AsdfFile()
-    node = _lazy_nodes.AsdfListNode([0, 1, 2], weakref.ref(af))
+    node = AsdfListNode([0, 1, 2], weakref.ref(af))
     assert node[0] == 0
     assert node[1] == 1
     assert node[2] == 2
     assert node[:2] == [0, 1]
-    assert isinstance(node[:2], _lazy_nodes.AsdfListNode)
+    assert isinstance(node[:2], AsdfListNode)
     assert node[1:2] == [
         1,
     ]
-    assert isinstance(node[1:2], _lazy_nodes.AsdfListNode)
+    assert isinstance(node[1:2], AsdfListNode)
     assert node[:-1] == [0, 1]
-    assert isinstance(node[:-1], _lazy_nodes.AsdfListNode)
+    assert isinstance(node[:-1], AsdfListNode)
     assert node[::-1] == [2, 1, 0]
-    assert isinstance(node[::-1], _lazy_nodes.AsdfListNode)
+    assert isinstance(node[::-1], AsdfListNode)
     assert node[::2] == [0, 2]
-    assert isinstance(node[::2], _lazy_nodes.AsdfListNode)
+    assert isinstance(node[::2], AsdfListNode)
     assert node[1::2] == [
         1,
     ]
-    assert isinstance(node[1::2], _lazy_nodes.AsdfListNode)
+    assert isinstance(node[1::2], AsdfListNode)
 
 
 def test_nested_node_conversion():
@@ -47,15 +47,15 @@ def test_nested_node_conversion():
         "ddd": {"a": {"a": {"a": 0}}},
     }
     af = asdf.AsdfFile()
-    node = _lazy_nodes.AsdfDictNode(tree, weakref.ref(af))
+    node = AsdfDictNode(tree, weakref.ref(af))
     for key in node:
         obj = node[key]
         for code in key:
             if code == "l":
-                assert isinstance(obj, _lazy_nodes.AsdfListNode)
+                assert isinstance(obj, AsdfListNode)
                 obj = obj[0]
             else:
-                assert isinstance(obj, _lazy_nodes.AsdfDictNode)
+                assert isinstance(obj, AsdfDictNode)
                 obj = obj["a"]
 
 
@@ -78,8 +78,8 @@ def test_lazy_tree_ref(tmp_path):
         assert isinstance(af.tree.data.data["a"], asdf.tagged.Tagged)
         assert isinstance(af.tree.data.data["b"]["c"], asdf.tagged.Tagged)
         assert isinstance(af.tree.data.data["d"][0], asdf.tagged.Tagged)
-        assert isinstance(af["b"], _lazy_nodes.AsdfDictNode)
-        assert isinstance(af["d"], _lazy_nodes.AsdfListNode)
+        assert isinstance(af["b"], AsdfDictNode)
+        assert isinstance(af["d"], AsdfListNode)
         np.testing.assert_array_equal(af["a"], arr)
         assert af["a"] is af["b"]["c"]
         assert af["a"] is af["d"][0]
@@ -90,18 +90,18 @@ def test_ordered_dict():
 
     af = asdf.AsdfFile()
 
-    node = _lazy_nodes.AsdfDictNode(tree, weakref.ref(af))
-    assert isinstance(node["a"], _lazy_nodes.AsdfOrderedDictNode)
-    assert isinstance(node["a"]["b"], _lazy_nodes.AsdfListNode)
-    assert isinstance(node["a"]["b"][2], _lazy_nodes.AsdfOrderedDictNode)
+    node = AsdfDictNode(tree, weakref.ref(af))
+    assert isinstance(node["a"], AsdfOrderedDictNode)
+    assert isinstance(node["a"]["b"], AsdfListNode)
+    assert isinstance(node["a"]["b"][2], AsdfOrderedDictNode)
 
 
 @pytest.mark.parametrize(
     "NodeClass,data,base",
     [
-        (_lazy_nodes.AsdfDictNode, {"a": 1}, dict),
-        (_lazy_nodes.AsdfListNode, [1, 2], list),
-        (_lazy_nodes.AsdfOrderedDictNode, {"a": 1}, collections.OrderedDict),
+        (AsdfDictNode, {"a": 1}, dict),
+        (AsdfListNode, [1, 2], list),
+        (AsdfOrderedDictNode, {"a": 1}, collections.OrderedDict),
     ],
 )
 def test_node_inheritance(NodeClass, data, base):
@@ -112,9 +112,9 @@ def test_node_inheritance(NodeClass, data, base):
 @pytest.mark.parametrize(
     "node",
     [
-        _lazy_nodes.AsdfDictNode({"a": 1, "b": 2}),
-        _lazy_nodes.AsdfListNode([1, 2, 3]),
-        _lazy_nodes.AsdfOrderedDictNode({"a": 1, "b": 2}),
+        AsdfDictNode({"a": 1, "b": 2}),
+        AsdfListNode([1, 2, 3]),
+        AsdfOrderedDictNode({"a": 1, "b": 2}),
     ],
 )
 @pytest.mark.parametrize("copy_operation", [copy.copy, copy.deepcopy])
@@ -127,9 +127,9 @@ def test_copy(node, copy_operation):
 @pytest.mark.parametrize(
     "node",
     [
-        _lazy_nodes.AsdfDictNode({"a": 1, "b": 2}),
-        _lazy_nodes.AsdfListNode([1, 2, 3]),
-        _lazy_nodes.AsdfOrderedDictNode({"a": 1, "b": 2}),
+        AsdfDictNode({"a": 1, "b": 2}),
+        AsdfListNode([1, 2, 3]),
+        AsdfOrderedDictNode({"a": 1, "b": 2}),
     ],
 )
 def test_json_serialization(node):
