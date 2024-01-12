@@ -198,12 +198,11 @@ class AsdfDictNode(AsdfNode, collections.UserDict):
         return value
 
 
-class AsdfOrderedDictNode(AsdfDictNode, collections.OrderedDict):
+class AsdfOrderedDictNode(AsdfDictNode):
     def __init__(self, data=None, af_ref=None):
         if data is None:
             data = collections.OrderedDict()
         AsdfDictNode.__init__(self, data, af_ref)
-        collections.OrderedDict.__init__(self, data)
 
     @property
     def __class__(self):
