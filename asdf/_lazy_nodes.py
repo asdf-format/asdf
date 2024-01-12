@@ -7,6 +7,8 @@ from . import tagged, yamlutil
 from .exceptions import AsdfConversionWarning
 from .extension._serialization_context import BlockAccess
 
+__all__ = ["AsdfDictNode", "AsdfListNode", "AsdfOrderedDictNode"]
+
 
 def _convert(value, af_ref):
     if af_ref is None:
