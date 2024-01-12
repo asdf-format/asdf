@@ -1,8 +1,9 @@
 import collections
+import inspect
 import warnings
 from types import GeneratorType
 
-from . import tagged
+from . import tagged, yamlutil
 from .exceptions import AsdfConversionWarning
 from .extension._serialization_context import BlockAccess
 
@@ -17,7 +18,6 @@ def _convert(value, af_ref):
     if value_id in af._tagged_object_cache:
         return af._tagged_object_cache[value_id][1]
     extension_manager = af.extension_manager
-    sctx = af._create_serialization_context(BlockAccess.READ)
     tag = value._tag
     if not extension_manager.handles_tag(tag):
         if not af._ignore_unrecognized_tag:
@@ -36,23 +36,28 @@ def _convert(value, af_ref):
         af._tagged_object_cache[value_id] = (value, obj)
         return obj
     converter = extension_manager.get_converter_for_tag(tag)
-    data = value.data
-    if isinstance(data, dict):
-        data = AsdfDictNode(data, af_ref)
-    elif isinstance(data, collections.OrderedDict):
-        data = AsdfOrderedDictNode(data, af_ref)
-    elif isinstance(data, list):
-        data = AsdfListNode(data, af_ref)
-    obj = converter.from_yaml_tree(data, tag, sctx)
-    if isinstance(obj, GeneratorType):
-        # TODO we can't quite do this for every instance
-        generator = obj
-        obj = next(generator)
-        for _ in generator:
-            pass
-    sctx.assign_object(obj)
-    sctx.assign_blocks()
-    sctx._mark_extension_used(converter.extension)
+    if inspect.isgeneratorfunction(converter._delegate.from_yaml_tree):
+        obj = yamlutil.tagged_tree_to_custom_tree(value, af)
+    else:
+        data = value.data
+        if isinstance(data, dict):
+            data = AsdfDictNode(data, af_ref)
+        elif isinstance(data, collections.OrderedDict):
+            data = AsdfOrderedDictNode(data, af_ref)
+        elif isinstance(data, list):
+            data = AsdfListNode(data, af_ref)
+        sctx = af._create_serialization_context(BlockAccess.READ)
+        obj = converter.from_yaml_tree(data, tag, sctx)
+
+        if isinstance(obj, GeneratorType):
+            # TODO we can't quite do this for every instance
+            generator = obj
+            obj = next(generator)
+            for _ in generator:
+                pass
+        sctx.assign_object(obj)
+        sctx.assign_blocks()
+        sctx._mark_extension_used(converter.extension)
     af._tagged_object_cache[value_id] = (value, obj)
     return obj
 
