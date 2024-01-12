@@ -293,7 +293,7 @@ def walk_and_modify(top, callback, ignore_implicit_conversion=NotSet, postorder=
         return _handle_generator(result)
 
     def _handle_mapping(node, json_id):
-        if isinstance(node, _lazy_nodes.AsdfDictNode):
+        if isinstance(node, lazy_nodes.AsdfDictNode):
             result = {}
         else:
             result = node.__class__()
@@ -327,7 +327,7 @@ def walk_and_modify(top, callback, ignore_implicit_conversion=NotSet, postorder=
                     del result[key]
 
     def _handle_mutable_sequence(node, json_id):
-        if isinstance(node, _lazy_nodes.AsdfListNode):
+        if isinstance(node, lazy_nodes.AsdfListNode):
             result = []
         else:
             result = node.__class__()

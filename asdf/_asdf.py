@@ -11,9 +11,9 @@ from packaging.version import Version
 
 from . import _compression as mcompression
 from . import _display as display
-from . import _lazy_nodes, constants, generic_io, reference, schema, treeutil, util, versioning, yamlutil
 from . import _node_info as node_info
 from . import _version as version
+from . import constants, generic_io, lazy_nodes, reference, schema, treeutil, util, versioning, yamlutil
 from ._block.manager import Manager as BlockManager
 from ._helpers import validate_version
 from .config import config_context, get_config
@@ -979,7 +979,7 @@ class AsdfFile:
                 lazy_tree = cfg.lazy_tree
             if lazy_tree and not _force_raw_types:
                 obj = AsdfObject()
-                obj.data = _lazy_nodes.AsdfDictNode(tree, weakref.ref(self))
+                obj.data = lazy_nodes.AsdfDictNode(tree, weakref.ref(self))
                 tree = obj
             else:
                 tree = yamlutil.tagged_tree_to_custom_tree(tree, self, _force_raw_types)
