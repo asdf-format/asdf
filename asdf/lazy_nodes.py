@@ -1,3 +1,7 @@
+"""
+Objects that act like dict, list, OrderedDict but allow
+lazy conversion of tagged ASDF tree nodes to custom objects.
+"""
 import collections
 import inspect
 import warnings
@@ -7,7 +11,7 @@ from . import tagged, yamlutil
 from .exceptions import AsdfConversionWarning
 from .extension._serialization_context import BlockAccess
 
-__all__ = ["AsdfDictNode", "AsdfListNode", "AsdfOrderedDictNode"]
+__all__ = ["AsdfNode", "AsdfDictNode", "AsdfListNode", "AsdfOrderedDictNode"]
 
 
 def _convert(value, af_ref):
@@ -52,7 +56,13 @@ def _convert(value, af_ref):
         obj = converter.from_yaml_tree(data, tag, sctx)
 
         if isinstance(obj, GeneratorType):
-            # TODO we can't quite do this for every instance
+            # We can't quite do this for every instance (hence the
+            # isgeneratorfunction check above). However it appears
+            # to work for most instances (it was only failing for
+            # the FractionWithInverse test which is covered by the
+            # above code). The code here should only be hit if the
+            # Converter.from_yaml_tree calls another function which
+            # is a generator.
             generator = obj
             obj = next(generator)
             for _ in generator:
@@ -71,10 +81,17 @@ class AsdfNode:
 
     @property
     def tagged(self):
+        """
+        Return the tagged tree backing this node
+        """
         return self.data
 
 
 class AsdfListNode(AsdfNode, collections.UserList):
+    """
+    An `AsdfNode` subclass that acts like a ``list``.
+    """
+
     def __init__(self, data=None, af_ref=None):
         if data is None:
             data = []
@@ -83,6 +100,8 @@ class AsdfListNode(AsdfNode, collections.UserList):
 
     @property
     def __class__(self):
+        # this is necessary to allow this class to pass
+        # an isinstance(list) check without inheriting from list.
         return list
 
     def __copy__(self):
@@ -140,9 +159,11 @@ class AsdfListNode(AsdfNode, collections.UserList):
         return value
 
 
-# dict is required here so TaggedDict doesn't convert this to a dict
-# and so that json.dumps will work for this node TODO add test
 class AsdfDictNode(AsdfNode, collections.UserDict):
+    """
+    An `AsdfNode` subclass that acts like a ``dict``.
+    """
+
     def __init__(self, data=None, af_ref=None):
         if data is None:
             data = {}
@@ -151,6 +172,8 @@ class AsdfDictNode(AsdfNode, collections.UserDict):
 
     @property
     def __class__(self):
+        # this is necessary to allow this class to pass
+        # an isinstance(dict) check without inheriting from dict.
         return dict
 
     def __copy__(self):
@@ -206,6 +229,10 @@ class AsdfDictNode(AsdfNode, collections.UserDict):
 
 
 class AsdfOrderedDictNode(AsdfDictNode):
+    """
+    An `AsdfNode` subclass that acts like a ``collections.OrderedDict``.
+    """
+
     def __init__(self, data=None, af_ref=None):
         if data is None:
             data = collections.OrderedDict()
