@@ -42,11 +42,13 @@ node is permitted to contain nested complex objects; these will in turn
 be passed to other ``to_yaml_tree`` methods in other Converters.
 
 `Converter.from_yaml_tree` - a method that accepts a simple node object from parsed YAML and
-returns the appropriate complex Python object.  Nested nodes in the received node
-will have already been converted to complex objects by other calls to ``from_yaml_tree``
-methods, except where reference cycles are present -- see
+returns the appropriate complex Python object.  For a non-lazy-tree, nested
+nodes in the received node will have already been converted to complex objects
+by other calls to ``from_yaml_tree`` methods, except where reference cycles are present -- see
 :ref:`extending_converters_reference_cycles` for information on how to handle that
-situation.
+situation. For a ``lazy_tree`` (see `asdf.open`) the node will contain `asdf.lazy_nodes`
+instances which act like dicts and lists but convert child objects only when they are
+accessed.
 
 Additionally, the Converter interface includes a method that must be implemented
 when some logic is required to select the tag to assign to a ``to_yaml_tree`` result:
