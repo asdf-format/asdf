@@ -25,6 +25,10 @@ The ASDF Standard is at v1.6.0
   of an ASDF file (with the option ``tagged`` to load the contents
   as a tree of ``asdf.tagged.Tagged`` instances to preserve tags) [#1700]
 
+- Add ``lazy_tree`` option to ``asdf.open`` and ``asdf.config``
+  to allow lazy deserialization of ASDF tagged tree nodes to
+  custom objects. [#1733]
+
 3.0.1 (2023-10-30)
 ------------------
 
