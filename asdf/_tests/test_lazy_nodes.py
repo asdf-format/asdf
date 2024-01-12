@@ -97,6 +97,19 @@ def test_ordered_dict():
 
 
 @pytest.mark.parametrize(
+    "NodeClass,data,base",
+    [
+        (_lazy_nodes.AsdfDictNode, {"a": 1}, dict),
+        (_lazy_nodes.AsdfListNode, [1, 2], list),
+        (_lazy_nodes.AsdfOrderedDictNode, {"a": 1}, collections.OrderedDict),
+    ],
+)
+def test_node_inheritance(NodeClass, data, base):
+    node = NodeClass(data)
+    assert isinstance(node, base)
+
+
+@pytest.mark.parametrize(
     "node",
     [
         _lazy_nodes.AsdfDictNode({"a": 1, "b": 2}),
