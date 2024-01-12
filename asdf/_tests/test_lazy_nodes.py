@@ -1,5 +1,6 @@
 import collections
 import copy
+import json
 import weakref
 
 import numpy as np
@@ -108,6 +109,19 @@ def test_copy(node, copy_operation):
     copied_node = copy_operation(node)
     assert isinstance(copied_node, type(node))
     assert copied_node == node
+
+
+@pytest.mark.parametrize(
+    "node",
+    [
+        _lazy_nodes.AsdfDictNode({"a": 1, "b": 2}),
+        _lazy_nodes.AsdfListNode([1, 2, 3]),
+        _lazy_nodes.AsdfOrderedDictNode({"a": 1, "b": 2}),
+    ],
+)
+def test_json_serialization(node):
+    with pytest.raises(TypeError, match="is not JSON serializable"):
+        json.dumps(node)
 
 
 def test_cache_clear_on_close(tmp_path):
