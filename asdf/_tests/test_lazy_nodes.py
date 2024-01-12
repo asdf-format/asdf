@@ -7,7 +7,7 @@ import numpy as np
 import pytest
 
 import asdf
-from asdf._lazy_nodes import AsdfDictNode, AsdfListNode, AsdfOrderedDictNode
+from asdf.lazy_nodes import AsdfDictNode, AsdfListNode, AsdfOrderedDictNode
 
 
 def test_slice_access():
