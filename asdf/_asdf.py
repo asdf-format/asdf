@@ -1588,7 +1588,9 @@ def open_asdf(
     lazy_tree : bool, optional
         When `True` the ASDF tree will not be converted to custom objects
         when the file is loaded. Instead, objects will be "lazily" converted
-        only when they are accessed.
+        only when they are accessed. Note that the tree will not contain dict
+        and list instances for containers and instead return instances of classes
+        defined in `asdf.lazy_nodes`.
 
     custom_schema : str, optional
         Path to a custom schema file that will be used for a secondary

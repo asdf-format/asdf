@@ -446,7 +446,8 @@ class AsdfConfig:
         """
         Get configuration that controls if ASDF tree contents
         are lazily converted to custom objects or if all custom
-        objects are created when the file is opened.
+        objects are created when the file is opened. See the
+        ``lazy_tree`` argument for `asdf.open`.
 
         Returns
         -------
