@@ -16,7 +16,7 @@ import tempfile
 import yaml
 
 from asdf import constants, generic_io, schema, util
-from asdf._asdf import AsdfFile, open_asdf
+from asdf._asdf import AsdfFile
 from asdf._block import io as bio
 from asdf._block.exceptions import BlockIndexError
 
@@ -259,11 +259,15 @@ def edit(path):
                 continue
 
             try:
-                # Blocks are not read during validation, so this will not raise
-                # an error even though we're only opening the YAML portion of
-                # the file.
-                with open_asdf(io.BytesIO(new_content), _force_raw_types=True):
-                    pass
+                # check this is an ASDF file
+                if new_content[: len(constants.ASDF_MAGIC)] != constants.ASDF_MAGIC:
+                    msg = "Does not appear to be a ASDF file."
+                    raise ValueError(msg)
+                # read the tagged tree (which also checks if the YAML is valid)
+                tagged_tree = util.load_yaml(io.BytesIO(new_content), tagged=True)
+                # validate the tagged tree
+                ctx = AsdfFile(version=new_asdf_version)
+                schema.validate(tagged_tree, ctx=ctx, reading=True)
             except yaml.YAMLError as e:
                 print("Error: failed to parse updated YAML:")
                 print_exception(e)

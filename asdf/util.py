@@ -11,6 +11,7 @@ from importlib import metadata
 from urllib.request import pathname2url
 
 import numpy as np
+import yaml
 
 # The standard library importlib.metadata returns duplicate entrypoints
 # for all python versions up to and including 3.11
@@ -39,6 +40,7 @@ _patched_urllib_parse.uses_netloc.append("asdf")
 
 
 __all__ = [
+    "load_yaml",
     "human_list",
     "get_array_base",
     "get_base_uri",
@@ -53,6 +55,50 @@ __all__ = [
     "get_file_type",
     "FileType",
 ]
+
+
+def load_yaml(init, tagged=False):
+    """
+    Load just the yaml portion of an ASDF file
+
+    Parameters
+    ----------
+
+    init : filename or file-like
+        If file-like this must be opened in binary mode.
+
+    tagged: bool, optional
+        Return tree with instances of `asdf.tagged.Tagged` this
+        can be helpful if the yaml tags are of interest.
+        If False, the tree will only contain basic python types
+        (see the pyyaml ``BaseLoader`` documentation).
+
+    Returns
+    -------
+
+    tree : dict
+        Dictionary representing the ASDF tree
+    """
+
+    from .generic_io import get_file
+    from .yamlutil import AsdfLoader
+
+    if tagged:
+        loader = AsdfLoader
+    else:
+        loader = yaml.CBaseLoader if getattr(yaml, "__with_libyaml__", None) else yaml.BaseLoader
+
+    with get_file(init, "r") as gf:
+        reader = gf.reader_until(
+            constants.YAML_END_MARKER_REGEX,
+            7,
+            "End of YAML marker",
+            include=True,
+        )
+        # The following call to yaml.load is safe because we're
+        # using only loaders that don't create custom python objects
+        content = yaml.load(reader, Loader=loader)  # noqa: S506
+    return content
 
 
 def human_list(line, separator="and"):

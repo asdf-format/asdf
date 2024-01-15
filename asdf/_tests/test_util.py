@@ -1,8 +1,11 @@
+import contextlib
 import io
 import warnings
 
+import numpy as np
 import pytest
 
+import asdf
 from asdf import generic_io, util
 from asdf.exceptions import AsdfDeprecationWarning
 
@@ -118,3 +121,27 @@ def test_minversion():
 
         assert util.minversion(yaml, "3.1")
         assert util.minversion("yaml", "3.1")
+
+
+@pytest.mark.parametrize("input_type", ["filename", "binary_file", "generic_file"])
+@pytest.mark.parametrize("tagged", [True, False])
+def test_load_yaml(tmp_path, input_type, tagged):
+    fn = tmp_path / "test.asdf"
+    asdf.AsdfFile({"a": np.zeros(3)}).write_to(fn)
+
+    if input_type == "filename":
+        init = fn
+        ctx = contextlib.nullcontext()
+    elif input_type == "binary_file":
+        init = open(fn, "rb")
+        ctx = init
+    elif input_type == "generic_file":
+        init = generic_io.get_file(fn, "r")
+        ctx = init
+
+    with ctx:
+        tree = util.load_yaml(init, tagged=tagged)
+    if tagged:
+        assert isinstance(tree["a"], asdf.tagged.TaggedDict)
+    else:
+        assert not isinstance(tree["a"], asdf.tagged.TaggedDict)
