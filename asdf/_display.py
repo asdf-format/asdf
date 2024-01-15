@@ -11,7 +11,6 @@ import numpy as np
 
 from ._node_info import create_tree
 from .tags.core.ndarray import NDArrayType
-from .util import is_primitive
 
 __all__ = [
     "DEFAULT_MAX_ROWS",
@@ -252,11 +251,12 @@ class _TreeRenderer:
 
     def _render_node_value(self, info):
         rendered_type = type(info.node).__name__
-        if is_primitive(info.node) and self._show_values:
-            return f"({rendered_type}): {info.node}"
 
         if isinstance(info.node, (NDArrayType, np.ndarray)):
             return f"({rendered_type}): shape={info.node.shape}, dtype={info.node.dtype.name}"
+
+        if not info.children and self._show_values:
+            return f"({rendered_type}): {info.node}"
 
         return f"({rendered_type})"
 

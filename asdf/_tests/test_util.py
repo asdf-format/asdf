@@ -8,11 +8,13 @@ from asdf.exceptions import AsdfDeprecationWarning
 
 
 def test_is_primitive():
-    for value in [None, "foo", 1, 1.39, 1 + 1j, True]:
-        assert util.is_primitive(value) is True
+    with warnings.catch_warnings():
+        warnings.filterwarnings("ignore", "asdf.util.is_primitive is deprecated", AsdfDeprecationWarning)
+        for value in [None, "foo", 1, 1.39, 1 + 1j, True]:
+            assert util.is_primitive(value) is True
 
-    for value in [[], (), {}, set()]:
-        assert util.is_primitive(value) is False
+        for value in [[], (), {}, set()]:
+            assert util.is_primitive(value) is False
 
 
 def test_not_set():

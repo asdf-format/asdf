@@ -28,6 +28,9 @@ The ASDF Standard is at v1.6.0
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 - Fix bug in ``asdftool diff`` for arrays within a list [#1672]
+- For ``info`` and ``search`` show ``str`` representation of childless
+  (leaf) nodes if ``show_values`` is enabled  [#1687]
+- Deprecate ``asdf.util.is_primitive`` [#1687]
 
 3.0.0 (2023-10-16)
 ------------------
