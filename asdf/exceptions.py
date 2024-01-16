@@ -48,3 +48,12 @@ class AsdfProvisionalAPIWarning(AsdfWarning, FutureWarning):
     are likely to be added in a future ASDF version. However, Use of
     provisional features is highly discouraged for production code.
     """
+
+
+class AsdfLazyReferenceError(ReferenceError):
+    """
+    Indicates that the lazy tree node failed to resolve a reference
+    to an AsdfFile instance. This likely means the AsdfFile was garbage
+    collected and you may need to update your code to keep the AsdfFile
+    in memory (by keeping a reference).
+    """
