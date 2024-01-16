@@ -75,9 +75,9 @@ def test_lazy_tree_ref(tmp_path):
     af.write_to(fn)
 
     with asdf.open(fn, lazy_tree=True) as af:
-        assert isinstance(af.tree.data.data["a"], asdf.tagged.Tagged)
-        assert isinstance(af.tree.data.data["b"]["c"], asdf.tagged.Tagged)
-        assert isinstance(af.tree.data.data["d"][0], asdf.tagged.Tagged)
+        assert isinstance(af.tree.data.tagged["a"], asdf.tagged.Tagged)
+        assert isinstance(af.tree.data.tagged["b"]["c"], asdf.tagged.Tagged)
+        assert isinstance(af.tree.data.tagged["d"][0], asdf.tagged.Tagged)
         assert isinstance(af["b"], AsdfDictNode)
         assert isinstance(af["d"], AsdfListNode)
         np.testing.assert_array_equal(af["a"], arr)
@@ -119,7 +119,7 @@ def test_node_inheritance(NodeClass, data, base):
 )
 def test_node_empty_init(NodeClass, base):
     node = NodeClass()
-    assert type(node.data) == base
+    assert type(node.tagged) == base
 
 
 @pytest.mark.parametrize(
