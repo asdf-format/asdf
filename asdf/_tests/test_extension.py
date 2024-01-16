@@ -898,7 +898,7 @@ def test_warning_or_error_for_default_select_tag(is_subclass, indirect):
             config.add_extension(extension)
 
 
-def test_reference_cycle(tmp_path):
+def test_reference_cycle(tmp_path, with_lazy_tree):
     class FractionWithInverse(fractions.Fraction):
         def __init__(self, *args, **kwargs):
             self._inverse = None

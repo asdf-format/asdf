@@ -13,7 +13,7 @@ from asdf.exceptions import AsdfConversionWarning, AsdfWarning
 from . import _helpers as helpers
 
 
-def test_ordered_dict(tmp_path):
+def test_ordered_dict(tmp_path, with_lazy_tree):
     """
     Test that we can write out and read in ordered dicts.
     """

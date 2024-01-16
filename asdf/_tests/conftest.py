@@ -64,3 +64,10 @@ def rhttpserver(request):
     server = RangeHTTPServer()
     yield server
     server.finalize()
+
+
+@pytest.fixture(params=[True, False], ids=["lazy", "not-lazy"])
+def with_lazy_tree(request):
+    with config.config_context() as cfg:
+        cfg.lazy_tree = request.param
+        yield
