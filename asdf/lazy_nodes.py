@@ -8,18 +8,24 @@ import warnings
 from types import GeneratorType
 
 from . import tagged, yamlutil
-from .exceptions import AsdfConversionWarning
+from .exceptions import AsdfConversionWarning, AsdfLazyReferenceError
 from .extension._serialization_context import BlockAccess
 
 __all__ = ["AsdfNode", "AsdfDictNode", "AsdfListNode", "AsdfOrderedDictNode"]
 
 
-def _convert(value, af_ref):
+def _resolve_af_ref(af_ref):
+    msg = "Failed to resolve AsdfFile reference"
     if af_ref is None:
-        raise Exception("no ASDF for you!")
+        raise AsdfLazyReferenceError(msg)
     af = af_ref()
     if af is None:
-        raise Exception("no ASDF for you!")
+        raise AsdfLazyReferenceError(msg)
+    return af
+
+
+def _convert(value, af_ref):
+    af = _resolve_af_ref(af_ref)
     value_id = id(value)
     if value_id in af._tagged_object_cache:
         return af._tagged_object_cache[value_id][1]
@@ -126,11 +132,7 @@ class AsdfListNode(AsdfNode, collections.UserList):
         elif isinstance(value, AsdfNode):
             pass
         elif type(value) == list:  # noqa: E721
-            if not self._af_ref:
-                raise Exception("no ASDF for you!")
-            af = self._af_ref()
-            if not af:
-                raise Exception("no ASDF for you!")
+            af = _resolve_af_ref(self._af_ref)
             value_id = id(value)
             if value_id in af._tagged_object_cache:
                 value = af._tagged_object_cache[value_id][1]
@@ -140,11 +142,7 @@ class AsdfListNode(AsdfNode, collections.UserList):
                 value = obj
             self[key] = value
         elif type(value) in (dict, collections.OrderedDict):
-            if not self._af_ref:
-                raise Exception("no ASDF for you!")
-            af = self._af_ref()
-            if not af:
-                raise Exception("no ASDF for you!")
+            af = _resolve_af_ref(self._af_ref)
             value_id = id(value)
             if value_id in af._tagged_object_cache:
                 value = af._tagged_object_cache[value_id][1]
@@ -195,11 +193,7 @@ class AsdfDictNode(AsdfNode, collections.UserDict):
         elif isinstance(value, AsdfNode):
             pass
         elif type(value) == list:  # noqa: E721
-            if not self._af_ref:
-                raise Exception("no ASDF for you!")
-            af = self._af_ref()
-            if not af:
-                raise Exception("no ASDF for you!")
+            af = _resolve_af_ref(self._af_ref)
             value_id = id(value)
             if value_id in af._tagged_object_cache:
                 value = af._tagged_object_cache[value_id][1]
@@ -209,11 +203,7 @@ class AsdfDictNode(AsdfNode, collections.UserDict):
                 value = obj
             self[key] = value
         elif type(value) in (dict, collections.OrderedDict):
-            if not self._af_ref:
-                raise Exception("no ASDF for you!")
-            af = self._af_ref()
-            if not af:
-                raise Exception("no ASDF for you!")
+            af = _resolve_af_ref(self._af_ref)
             value_id = id(value)
             if value_id in af._tagged_object_cache:
                 value = af._tagged_object_cache[value_id][1]

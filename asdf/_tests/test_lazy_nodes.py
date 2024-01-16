@@ -7,7 +7,7 @@ import numpy as np
 import pytest
 
 import asdf
-from asdf.lazy_nodes import AsdfDictNode, AsdfListNode, AsdfOrderedDictNode
+from asdf.lazy_nodes import AsdfDictNode, AsdfListNode, AsdfOrderedDictNode, _resolve_af_ref
 
 
 def test_slice_access():
@@ -164,5 +164,42 @@ def test_access_after_del(tmp_path):
 
     del af
 
-    with pytest.raises(Exception, match="no ASDF for you!"):
+    with pytest.raises(asdf.exceptions.AsdfLazyReferenceError, match="Failed to resolve"):
         d["b"]
+
+
+def test_lazy_tree_option(tmp_path):
+    fn = tmp_path / "test.asdf"
+
+    arr = np.arange(42)
+    tree = {"a": {"b": arr}}
+    asdf.AsdfFile(tree).write_to(fn)
+
+    with asdf.open(fn, lazy_tree=True) as af:
+        assert isinstance(af["a"], AsdfDictNode)
+
+    with asdf.open(fn, lazy_tree=False) as af:
+        assert not isinstance(af["a"], AsdfDictNode)
+
+    # test default (False)
+    with asdf.open(fn) as af:
+        assert not isinstance(af["a"], AsdfDictNode)
+
+    with asdf.config_context() as cfg:
+        cfg.lazy_tree = True
+        with asdf.open(fn) as af:
+            assert isinstance(af["a"], AsdfDictNode)
+        cfg.lazy_tree = False
+        with asdf.open(fn) as af:
+            assert not isinstance(af["a"], AsdfDictNode)
+
+
+def test_resolve_af_ref():
+    with pytest.raises(asdf.exceptions.AsdfLazyReferenceError, match="Failed to resolve"):
+        _resolve_af_ref(None)
+    af = asdf.AsdfFile()
+    af_ref = weakref.ref(af)
+    assert _resolve_af_ref(af_ref) is af
+    del af
+    with pytest.raises(asdf.exceptions.AsdfLazyReferenceError, match="Failed to resolve"):
+        _resolve_af_ref(af_ref)
