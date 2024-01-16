@@ -24,6 +24,21 @@ def _resolve_af_ref(af_ref):
     return af
 
 
+def _to_lazy_node(node, af_ref):
+    """
+    Convert an object to a AsdfNode subclass.
+    If the object does not have a corresponding subclass
+    it will be returned unchanged.
+    """
+    if isinstance(node, list):
+        return AsdfListNode(node, af_ref)
+    elif isinstance(node, collections.OrderedDict):
+        return AsdfOrderedDictNode(node, af_ref)
+    elif isinstance(node, dict):
+        return AsdfDictNode(node, af_ref)
+    return node
+
+
 def _convert(value, af_ref):
     af = _resolve_af_ref(af_ref)
     value_id = id(value)
@@ -37,27 +52,14 @@ def _convert(value, af_ref):
                 f"{tag} is not recognized, converting to raw Python data structure",
                 AsdfConversionWarning,
             )
-        if isinstance(value, list):
-            obj = AsdfListNode(value, af_ref)
-        elif isinstance(value, collections.OrderedDict):
-            obj = AsdfOrderedDictNode(value, af_ref)
-        elif isinstance(value, dict):
-            obj = AsdfDictNode(value, af_ref)
-        else:
-            obj = value
+        obj = _to_lazy_node(value, af_ref)
         af._tagged_object_cache[value_id] = (value, obj)
         return obj
     converter = extension_manager.get_converter_for_tag(tag)
     if inspect.isgeneratorfunction(converter._delegate.from_yaml_tree):
         obj = yamlutil.tagged_tree_to_custom_tree(value, af)
     else:
-        data = value.data
-        if isinstance(data, dict):
-            data = AsdfDictNode(data, af_ref)
-        elif isinstance(data, collections.OrderedDict):
-            data = AsdfOrderedDictNode(data, af_ref)
-        elif isinstance(data, list):
-            data = AsdfListNode(data, af_ref)
+        data = _to_lazy_node(value.data, af_ref)
         sctx = af._create_serialization_context(BlockAccess.READ)
         obj = converter.from_yaml_tree(data, tag, sctx)
 
