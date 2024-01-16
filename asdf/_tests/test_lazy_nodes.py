@@ -7,7 +7,7 @@ import numpy as np
 import pytest
 
 import asdf
-from asdf.lazy_nodes import AsdfDictNode, AsdfListNode, AsdfOrderedDictNode, _resolve_af_ref
+from asdf.lazy_nodes import AsdfDictNode, AsdfListNode, AsdfOrderedDictNode, _resolve_af_ref, _to_lazy_node
 
 
 def test_slice_access():
@@ -233,3 +233,17 @@ def test_resolve_af_ref():
     del af
     with pytest.raises(asdf.exceptions.AsdfLazyReferenceError, match="Failed to resolve"):
         _resolve_af_ref(af_ref)
+
+
+@pytest.mark.parametrize(
+    "NodeClass,data",
+    [
+        (AsdfDictNode, {1: "a", 2: "b"}),
+        (AsdfListNode, [1, 2]),
+        (AsdfOrderedDictNode, collections.OrderedDict({1: "a", 2: "b"})),
+        (int, 1),  # a non-wrappable class
+    ],
+)
+def test_to_lazy_node(NodeClass, data):
+    node = _to_lazy_node(data, None)
+    assert isinstance(node, NodeClass)
