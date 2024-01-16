@@ -138,6 +138,23 @@ def test_copy(node, copy_operation):
 
 
 @pytest.mark.parametrize(
+    "NodeClass,data",
+    [
+        (AsdfDictNode, {1: "a", 2: "b"}),
+        (AsdfListNode, [1, 2]),
+        (AsdfOrderedDictNode, collections.OrderedDict({1: "a", 2: "b"})),
+    ],
+)
+def test_node_equality(NodeClass, data):
+    node = NodeClass(data)
+    assert node == node
+    assert not node != node
+    assert node == data
+    data.pop(1)
+    assert node != data
+
+
+@pytest.mark.parametrize(
     "node",
     [
         AsdfDictNode({"a": 1, "b": 2}),
