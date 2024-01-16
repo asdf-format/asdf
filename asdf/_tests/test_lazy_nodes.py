@@ -110,6 +110,19 @@ def test_node_inheritance(NodeClass, data, base):
 
 
 @pytest.mark.parametrize(
+    "NodeClass,base",
+    [
+        (AsdfDictNode, dict),
+        (AsdfListNode, list),
+        (AsdfOrderedDictNode, dict),
+    ],
+)
+def test_node_empty_init(NodeClass, base):
+    node = NodeClass()
+    assert type(node.data) == base
+
+
+@pytest.mark.parametrize(
     "node",
     [
         AsdfDictNode({"a": 1, "b": 2}),
