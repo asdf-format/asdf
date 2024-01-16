@@ -55,3 +55,10 @@ def httpserver(request):
 @pytest.fixture()
 def test_data_path():
     return importlib.resources.files("asdf") / "_tests" / "data"
+
+
+@pytest.fixture(params=[True, False], ids=["lazy", "not-lazy"])
+def with_lazy_tree(request):
+    with config.config_context() as cfg:
+        cfg.lazy_tree = request.param
+        yield

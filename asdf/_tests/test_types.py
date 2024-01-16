@@ -5,7 +5,7 @@ from asdf.exceptions import AsdfConversionWarning
 from asdf.testing.helpers import yaml_to_asdf
 
 
-def test_undefined_tag():
+def test_undefined_tag(with_lazy_tree):
     # This tests makes sure that ASDF still returns meaningful structured data
     # even when it encounters a schema tag that it does not specifically
     # implement as an extension
