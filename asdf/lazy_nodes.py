@@ -94,6 +94,26 @@ class AsdfNode:
         """
         return self.data
 
+    def _convert(self, value, key):
+        if isinstance(value, tagged.Tagged):
+            value = _convert(value, self._af_ref)
+            self[key] = value
+            return value
+        if isinstance(value, AsdfNode):
+            return value
+        node_type = _base_type_to_node_map.get(type(value), None)
+        if node_type is None:
+            return value
+        af = _resolve_af_ref(self._af_ref)
+        value_id = id(value)
+        if value_id in af._tagged_object_cache:
+            obj = af._tagged_object_cache[value_id][1]
+        else:
+            obj = node_type(value, self._af_ref)
+            af._tagged_object_cache[value_id] = (value, obj)
+        self[key] = obj
+        return obj
+
 
 class AsdfListNode(AsdfNode, collections.UserList):
     """
@@ -128,35 +148,7 @@ class AsdfListNode(AsdfNode, collections.UserList):
         value = super().__getitem__(key)
         if isinstance(key, slice):
             return AsdfListNode(value, self._af_ref)
-        if isinstance(value, tagged.Tagged):
-            value = _convert(value, self._af_ref)
-            self[key] = value
-        elif isinstance(value, AsdfNode):
-            pass
-        elif type(value) == list:  # noqa: E721
-            af = _resolve_af_ref(self._af_ref)
-            value_id = id(value)
-            if value_id in af._tagged_object_cache:
-                value = af._tagged_object_cache[value_id][1]
-            else:
-                obj = AsdfListNode(value, self._af_ref)
-                af._tagged_object_cache[value_id] = (value, obj)
-                value = obj
-            self[key] = value
-        elif type(value) in (dict, collections.OrderedDict):
-            af = _resolve_af_ref(self._af_ref)
-            value_id = id(value)
-            if value_id in af._tagged_object_cache:
-                value = af._tagged_object_cache[value_id][1]
-            else:
-                if type(value) == collections.OrderedDict:
-                    obj = AsdfOrderedDictNode(value, self._af_ref)
-                else:
-                    obj = AsdfDictNode(value, self._af_ref)
-                af._tagged_object_cache[value_id] = (value, obj)
-                value = obj
-            self[key] = value
-        return value
+        return self._convert(value, key)
 
 
 class AsdfDictNode(AsdfNode, collections.UserDict):
@@ -188,36 +180,7 @@ class AsdfDictNode(AsdfNode, collections.UserDict):
         return not self.__eq__(other)
 
     def __getitem__(self, key):
-        value = super().__getitem__(key)
-        if isinstance(value, tagged.Tagged):
-            value = _convert(value, self._af_ref)
-            self[key] = value
-        elif isinstance(value, AsdfNode):
-            pass
-        elif type(value) == list:  # noqa: E721
-            af = _resolve_af_ref(self._af_ref)
-            value_id = id(value)
-            if value_id in af._tagged_object_cache:
-                value = af._tagged_object_cache[value_id][1]
-            else:
-                obj = AsdfListNode(value, self._af_ref)
-                af._tagged_object_cache[value_id] = (value, obj)
-                value = obj
-            self[key] = value
-        elif type(value) in (dict, collections.OrderedDict):
-            af = _resolve_af_ref(self._af_ref)
-            value_id = id(value)
-            if value_id in af._tagged_object_cache:
-                value = af._tagged_object_cache[value_id][1]
-            else:
-                if type(value) == collections.OrderedDict:
-                    obj = AsdfOrderedDictNode(value, self._af_ref)
-                else:
-                    obj = AsdfDictNode(value, self._af_ref)
-                af._tagged_object_cache[value_id] = (value, obj)
-                value = obj
-            self[key] = value
-        return value
+        return self._convert(super().__getitem__(key), key)
 
 
 class AsdfOrderedDictNode(AsdfDictNode):
@@ -236,3 +199,10 @@ class AsdfOrderedDictNode(AsdfDictNode):
 
     def __copy__(self):
         return AsdfOrderedDictNode(self.data.copy(), self._af_ref)
+
+
+_base_type_to_node_map = {
+    dict: AsdfDictNode,
+    list: AsdfListNode,
+    collections.OrderedDict: AsdfOrderedDictNode,
+}
