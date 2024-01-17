@@ -40,6 +40,13 @@ def _to_lazy_node(node, af_ref):
 
 
 class AsdfNode:
+    """
+    The "lazy node" base class that handles object
+    conversion and wrapping and contains a weak reference
+    to the `asdf.AsdfFile` that triggered the creation of this
+    node (when the "lazy tree" was loaded).
+    """
+
     def __init__(self, data=None, af_ref=None):
         self._af_ref = af_ref
         self.data = data
@@ -52,14 +59,52 @@ class AsdfNode:
         return self.data
 
     def _convert_and_cache(self, value, key):
+        """
+        Convert ``value`` to either:
+
+            - a custom object if ``value`` is `asdf.tagged.Tagged`
+            - an `asdf.lazy_nodes.AsdfNode` subclass if ``value``
+              is a ``list``, ``dict``, ``OrderedDict``
+            - otherwise return ``value`` unmodified
+
+        After conversion the result (``obj``) will be stored in this
+        `asdf.lazy_nodes.AsdfNode` using the provided key and cached
+        in the corresponding `asdf.AsdfFile` instance (so other
+        references to ``value`` in the tree will return the same
+        ``obj``).
+
+        Parameters
+        ----------
+        value :
+            The object to convert from a Tagged to custom object
+            or wrap with an AsdfNode or return unmodified.
+
+        key :
+            The key under which the converted/wrapped object will
+            be stored.
+
+
+        Returns
+        -------
+        obj :
+            The converted or wrapped (or the value if no conversion
+            or wrapping is required).
+        """
+        # if the value has already been wrapped, return it
+        if isinstance(value, AsdfNode):
+            return value
+        if not isinstance(value, tagged.Tagged) and type(value) not in _base_type_to_node_map:
+            return value
+        af = _resolve_af_ref(self._af_ref)
+        value_id = id(value)
+        # if the obj that will be returned from this value
+        # is already cached, use the cached obj
+        if value_id in af._tagged_object_cache:
+            obj = af._tagged_object_cache[value_id][1]
+            self[key] = obj
+            return obj
+        # for Tagged instances, convert them to their custom obj
         if isinstance(value, tagged.Tagged):
-            af = _resolve_af_ref(self._af_ref)
-            value_id = id(value)
-            if value_id in af._tagged_object_cache:
-                # use the value already converted elsewhere
-                obj = af._tagged_object_cache[value_id][1]
-                self[key] = obj
-                return obj
             extension_manager = af.extension_manager
             tag = value._tag
             if not extension_manager.handles_tag(tag):
@@ -93,24 +138,14 @@ class AsdfNode:
                     sctx.assign_object(obj)
                     sctx.assign_blocks()
                     sctx._mark_extension_used(converter.extension)
-            # cache the converted obj with the AsdfFile so other
-            # references to the same Tagged value will result in the
-            # same obj
-            af._tagged_object_cache[value_id] = (value, obj)
-            self[key] = obj
-            return obj
-        if isinstance(value, AsdfNode):
-            return value
-        node_type = _base_type_to_node_map.get(type(value), None)
-        if node_type is None:
-            return value
-        af = _resolve_af_ref(self._af_ref)
-        value_id = id(value)
-        if value_id in af._tagged_object_cache:
-            obj = af._tagged_object_cache[value_id][1]
         else:
+            # for non-tagged objects, wrap in an AsdfNode
+            node_type = _base_type_to_node_map[type(value)]
             obj = node_type(value, self._af_ref)
-            af._tagged_object_cache[value_id] = (value, obj)
+        # cache the converted/wrapped obj with the AsdfFile so other
+        # references to the same Tagged value will result in the
+        # same obj
+        af._tagged_object_cache[value_id] = (value, obj)
         self[key] = obj
         return obj
 
