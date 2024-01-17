@@ -33,6 +33,8 @@ be issued on a failed validation during the following methods:
 
 Providing ``kwargs`` to ``AsdfFile.resolve_references`` does nothing and is deprecated.
 
+``asdf.util.filepath_to_url`` is deprecated. Please use ``pathlib.Path.to_uri``.
+
 Version 3.0
 ===========
 

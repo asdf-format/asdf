@@ -117,3 +117,8 @@ def test_AsdfFile_init_validation_deprecation():
         pytest.raises(ValidationError),
     ):
         asdf.AsdfFile({"history": 42})
+
+
+def test_asdf_util_filepath_to_url_deprecation(tmp_path):
+    with pytest.warns(AsdfDeprecationWarning, match="asdf.util.filepath_to_url is deprecated"):
+        asdf.util.filepath_to_url(str(tmp_path))

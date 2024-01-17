@@ -9,7 +9,7 @@ import numpy as np
 import pytest
 
 import asdf
-from asdf import exceptions, generic_io, util
+from asdf import exceptions, generic_io
 from asdf.config import config_context
 
 from . import _helpers as helpers
@@ -91,19 +91,19 @@ def test_open(tmp_path, small_tree):
 
 
 def test_path(tree, tmp_path):
-    path = os.path.join(str(tmp_path), "test.asdf")
+    path = tmp_path / "test.asdf"
 
     def get_write_fd():
         f = generic_io.get_file(path, mode="w")
         assert isinstance(f, generic_io.RealFile)
-        assert f._uri == util.filepath_to_url(path)
+        assert f._uri == path.as_uri()
         return f
 
     def get_read_fd():
         # Must open with mode=rw in order to get memmapped data
         f = generic_io.get_file(path, mode="rw")
         assert isinstance(f, generic_io.RealFile)
-        assert f._uri == util.filepath_to_url(path)
+        assert f._uri == path.as_uri()
         # This is to check for a "feature" in Python 3.x that reading zero
         # bytes from a socket causes it to stop.  We have code in generic_io.py
         # to workaround it.
@@ -116,13 +116,13 @@ def test_path(tree, tmp_path):
 
 
 def test_open2(tree, tmp_path):
-    path = os.path.join(str(tmp_path), "test.asdf")
+    path = tmp_path / "test.asdf"
 
     def get_write_fd():
         # cannot use context manager here because it closes the file
         f = generic_io.get_file(open(path, "wb"), mode="w", close=True)
         assert isinstance(f, generic_io.RealFile)
-        assert f._uri == util.filepath_to_url(path)
+        assert f._uri == path.as_uri()
         return f
 
     def get_read_fd():
@@ -130,7 +130,7 @@ def test_open2(tree, tmp_path):
         # cannot use context manager here because it closes the file
         f = generic_io.get_file(open(path, "r+b"), mode="rw", close=True)
         assert isinstance(f, generic_io.RealFile)
-        assert f._uri == util.filepath_to_url(path)
+        assert f._uri == path.as_uri()
         return f
 
     with _roundtrip(tree, get_write_fd, get_read_fd) as ff:
@@ -140,7 +140,7 @@ def test_open2(tree, tmp_path):
 
 @pytest.mark.parametrize("mode", ["r", "w", "rw"])
 def test_open_not_binary_fail(tmp_path, mode):
-    path = os.path.join(str(tmp_path), "test.asdf")
+    path = tmp_path / "test.asdf"
 
     with open(path, "w") as fd:
         fd.write("\n\n\n")
@@ -157,20 +157,20 @@ def test_open_not_binary_fail(tmp_path, mode):
 
 
 def test_io_open(tree, tmp_path):
-    path = os.path.join(str(tmp_path), "test.asdf")
+    path = tmp_path / "test.asdf"
 
     def get_write_fd():
         # cannot use context manager here because it closes the file
         f = generic_io.get_file(open(path, "wb"), mode="w", close=True)
         assert isinstance(f, generic_io.RealFile)
-        assert f._uri == util.filepath_to_url(path)
+        assert f._uri == path.as_uri()
         return f
 
     def get_read_fd():
         # cannot use context manager here because it closes the file
         f = generic_io.get_file(open(path, "r+b"), mode="rw", close=True)
         assert isinstance(f, generic_io.RealFile)
-        assert f._uri == util.filepath_to_url(path)
+        assert f._uri == path.as_uri()
         return f
 
     with _roundtrip(tree, get_write_fd, get_read_fd) as ff:
