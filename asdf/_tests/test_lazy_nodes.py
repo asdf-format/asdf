@@ -247,3 +247,22 @@ def test_resolve_af_ref():
 def test_to_lazy_node(NodeClass, data):
     node = _to_lazy_node(data, None)
     assert isinstance(node, NodeClass)
+
+
+def test_lazy_node_treeutil_support():
+    af = asdf.AsdfFile()
+    af_ref = weakref.ref(af)
+    tree = {
+        "ordered_dict": AsdfOrderedDictNode({"a": 1}, af_ref),
+        "dict": AsdfDictNode({"b": 2}, af_ref),
+        "list": AsdfListNode([3, 4], af_ref),
+    }
+    seen_ints = set()
+
+    def callback(node):
+        if isinstance(node, int):
+            seen_ints.add(node)
+
+    asdf.treeutil.walk_and_modify(tree, callback)
+
+    assert seen_ints == set([1, 2, 3, 4])
