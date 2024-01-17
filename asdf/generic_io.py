@@ -754,7 +754,7 @@ class RealFile(RandomAccessFile):
         super().__init__(fd, mode, close=close, uri=uri)
 
         if uri is None and hasattr(fd, "name") and isinstance(fd.name, str):
-            self._uri = util.filepath_to_url(os.path.abspath(fd.name))
+            self._uri = pathlib.Path(fd.name).absolute().as_uri()
 
     def write_array(self, arr):
         if isinstance(arr, np.memmap) and getattr(arr, "fd", None) is self:

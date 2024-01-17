@@ -155,6 +155,8 @@ def filepath_to_url(path):
     """
     For a given local file path, return a file:// url.
     """
+    msg = "asdf.util.filepath_to_url is deprecated. Please use pathlib.Path.as_uri"
+    warnings.warn(msg, exceptions.AsdfDeprecationWarning)
     return _patched_urllib_parse.urljoin("file:", pathname2url(path))
 
 
