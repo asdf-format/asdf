@@ -1268,3 +1268,30 @@ tag: asdf://somewhere.org/tags/bar-*
         schema.validate(instance, schema=schema_tree)
         with pytest.raises(ValidationError, match=r"mismatched tags, wanted .*, got .*"):
             schema.validate(tagged.TaggedDict(tag="asdf://somewhere.org/tags/foo-1.0"), schema=schema_tree)
+
+
+def test_tagged_object_validation():
+    """
+    Passing a tagged object to the asdf validator
+    should validate the object using the schema for the tag
+    """
+    tag = "tag:stsci.edu:asdf/core/ndarray-1.0.0"
+    t = asdf.tagged.TaggedDict({"shape": "a"}, tag=tag)
+
+    schema = {
+        "$schema": "http://stsci.edu/schemas/asdf-schema/0.1.0/asdf-schema",
+        "tag": tag,
+    }
+
+    with pytest.raises(ValidationError, match=r"is not valid under any of the given schema"):
+        asdf.schema.validate(t, schema=schema)
+
+    # and the custom schema should be validated
+    schema = {
+        "$schema": "http://stsci.edu/schemas/asdf-schema/0.1.0/asdf-schema",
+        "tag": "tag:stsci.edu:asdf/core/time-1.0.0",
+    }
+
+    t = asdf.tagged.TaggedDict({"data": [1, 2, 3]}, tag=tag)
+    with pytest.raises(ValidationError, match=r"mismatched tags"):
+        asdf.schema.validate(t, schema=schema)

@@ -238,7 +238,7 @@ class _ValidationContext:
 
 
 @lru_cache
-def _create_validator(validators=YAML_VALIDATORS, visit_repeat_nodes=False):
+def _create_validator(validators=YAML_VALIDATORS, visit_repeat_nodes=False, ctx=None, serialization_context=None):
     meta_schema = _load_schema_cached(YAML_SCHEMA_METASCHEMA_ID, _tag_to_uri, False)
 
     type_checker = mvalidators.Draft4Validator.TYPE_CHECKER.redefine_many(
@@ -255,17 +255,8 @@ def _create_validator(validators=YAML_VALIDATORS, visit_repeat_nodes=False):
         type_checker=type_checker,
         id_of=id_of,
     )
-
-    def _patch_init(cls):
-        original_init = cls.__init__
-
-        def init(self, *args, **kwargs):
-            self.ctx = kwargs.pop("ctx", None)
-            self.serialization_context = kwargs.pop("serialization_context", None)
-
-            original_init(self, *args, **kwargs)
-
-        cls.__init__ = init
+    ASDFvalidator.ctx = ctx
+    ASDFvalidator.serialization_context = serialization_context
 
     def _patch_iter_errors(cls):
         original_iter_errors = cls.iter_errors
@@ -289,8 +280,8 @@ def _create_validator(validators=YAML_VALIDATORS, visit_repeat_nodes=False):
                 if (isinstance(instance, dict) and "$ref" in instance) or isinstance(instance, reference.Reference):
                     return
 
-                if not self.schema:
-                    tag = getattr(instance, "_tag", None)
+                if hasattr(instance, "_tag") and self.serialization_context is not None:
+                    tag = instance._tag
                     if tag is not None and self.serialization_context.extension_manager.handles_tag_definition(tag):
                         tag_def = self.serialization_context.extension_manager.get_tag_definition(tag)
                         schema_uris = tag_def.schema_uris
@@ -299,10 +290,14 @@ def _create_validator(validators=YAML_VALIDATORS, visit_repeat_nodes=False):
                         for schema_uri in schema_uris:
                             try:
                                 with self.resolver.resolving(schema_uri) as resolved:
-                                    yield from self.descend(instance, resolved)
+                                    if id(resolved) != id(self.schema):
+                                        yield from self.descend(instance, resolved)
                             except RefResolutionError:
                                 warnings.warn(f"Unable to locate schema file for '{tag}': '{schema_uri}'", AsdfWarning)
 
+                if self.schema:
+                    yield from original_iter_errors(self, instance)
+                else:
                     if isinstance(instance, dict):
                         for val in instance.values():
                             yield from self.iter_errors(val)
@@ -310,12 +305,9 @@ def _create_validator(validators=YAML_VALIDATORS, visit_repeat_nodes=False):
                     elif isinstance(instance, list):
                         for val in instance:
                             yield from self.iter_errors(val)
-                else:
-                    yield from original_iter_errors(self, instance)
 
         cls.iter_errors = iter_errors
 
-    _patch_init(ASDFvalidator)
     _patch_iter_errors(ASDFvalidator)
 
     return ASDFvalidator
@@ -556,8 +548,13 @@ def get_validator(
     # time of this writing, it was half of the runtime of the unit
     # test suite!!!).  Instead, we assume that the schemas are valid
     # through the running of the unit tests, not at run time.
-    cls = _create_validator(validators=validators, visit_repeat_nodes=_visit_repeat_nodes)
-    return cls({} if schema is None else schema, *args, ctx=ctx, serialization_context=_serialization_context, **kwargs)
+    cls = _create_validator(
+        validators=validators,
+        visit_repeat_nodes=_visit_repeat_nodes,
+        ctx=ctx,
+        serialization_context=_serialization_context,
+    )
+    return cls({} if schema is None else schema, *args, **kwargs)
 
 
 def _validate_large_literals(instance, reading):
