@@ -29,6 +29,8 @@ def test_info_on_non_tagged_asdf_traverse_object():
 
     # this should work even if _tag exists (and is not a tag)
     c._tag = {}
+    af.info()
     assert af.search(type_=int).paths == ["root['c'][0]", "root['c'][1]", "root['c'][2]"]
     c._tag = "a"
+    af.info()
     assert af.search(type_=int).paths == ["root['c'][0]", "root['c'][1]", "root['c'][2]"]
