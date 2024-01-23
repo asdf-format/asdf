@@ -65,13 +65,8 @@ class AsdfSchemaFile(pytest.File):
         xfail_tests=None,
         **kwargs,
     ):
-        # Fix for depreciation of fspath in pytest 7+
-        if pytest.__version__ >= "7.0.0":
-            path = pathlib.Path(fspath)
-            kwargs["path"] = path
-        else:
-            path = fspath
-            kwargs["fspath"] = path
+        path = pathlib.Path(fspath)
+        kwargs["path"] = path
 
         if hasattr(super(), "from_parent"):
             result = super().from_parent(parent, **kwargs)
@@ -287,7 +282,7 @@ def _parse_test_list(content):
     return result
 
 
-def pytest_collect_file(path, parent):
+def pytest_collect_file(file_path, parent):
     if not (parent.config.getini("asdf_schema_tests_enabled") or parent.config.getoption("asdf_tests")):
         return None
 
@@ -306,12 +301,12 @@ def pytest_collect_file(path, parent):
 
     schema_roots = [os.path.join(str(parent.config.rootdir), os.path.normpath(root)) for root in schema_roots]
 
-    if path.ext != ".yaml":
+    if file_path.suffix != ".yaml":
         return None
 
     for root in schema_roots:
-        if str(path).startswith(root) and path.purebasename not in skip_names:
-            posix_path = pathlib.Path(path).as_posix()
+        if str(file_path).startswith(root) and file_path.stem not in skip_names:
+            posix_path = pathlib.Path(file_path).as_posix()
             schema_skip_tests = []
             for suffix, names in skip_tests.items():
                 if posix_path.endswith(suffix):
@@ -323,8 +318,8 @@ def pytest_collect_file(path, parent):
 
             return AsdfSchemaFile.from_parent(
                 parent,
-                fspath=path,
-                skip_examples=(path.purebasename in skip_examples),
+                fspath=file_path,
+                skip_examples=(file_path.stem in skip_examples),
                 validate_default=validate_default,
                 ignore_unrecognized_tag=ignore_unrecognized_tag,
                 ignore_version_mismatch=ignore_version_mismatch,

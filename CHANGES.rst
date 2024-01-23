@@ -25,6 +25,9 @@ The ASDF Standard is at v1.6.0
   of an ASDF file (with the option ``tagged`` to load the contents
   as a tree of ``asdf.tagged.Tagged`` instances to preserve tags) [#1700]
 
+- Require pytest 7+ and update asdf pytest plugin to be compatible
+  with the current development version of pytest (8.1) [#1731]
+
 3.0.1 (2023-10-30)
 ------------------
 
