@@ -396,7 +396,8 @@ def dump_tree(tree, fd, ctx, tree_finalizer=None, _serialization_context=None):
         tree_finalizer(tree)
     schema.validate(tree, ctx)
 
-    yaml_version = tuple(int(x) for x in ctx.version_map["YAML_VERSION"].split("."))
+    # only 1 yaml version is supported
+    yaml_version = (1, 1)
 
     # add yaml %TAG definitions from extensions
     if _serialization_context:
