@@ -144,7 +144,7 @@ class AsdfFile:
         self._fname = ""
 
         # only 1 version of the file format exists
-        self.file_format_version = versioning.AsdfVersion("1.0.0")
+        self._file_format_version = versioning.AsdfVersion("1.0.0")
 
         # Don't use the version setter here; it tries to access
         # the extensions, which haven't been assigned yet.
@@ -468,6 +468,10 @@ class AsdfFile:
                     break
             else:
                 tree["history"]["extensions"].append(ext_meta)
+
+    @property
+    def file_format_version(self):
+        return self._file_format_version
 
     def close(self):
         """
@@ -816,7 +820,7 @@ class AsdfFile:
             except DelimiterNotFoundError as e:
                 msg = "Does not appear to be a ASDF file."
                 raise ValueError(msg) from e
-            self.file_format_version = cls._parse_header_line(header_line)
+            self._file_format_version = cls._parse_header_line(header_line)
             self.version = self.file_format_version
 
             self._comments = cls._read_comment_section(fd)
