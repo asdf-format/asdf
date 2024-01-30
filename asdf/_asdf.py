@@ -143,8 +143,8 @@ class AsdfFile:
         """
         self._fname = ""
 
-        # only 1 version of the file format exists
-        self._file_format_version = versioning.AsdfVersion("1.0.0")
+        # make a new AsdfVersion instance here so files don't share the same instance
+        self._file_format_version = versioning.AsdfVersion(versioning._FILE_FORMAT_VERSION)
 
         # Don't use the version setter here; it tries to access
         # the extensions, which haven't been assigned yet.

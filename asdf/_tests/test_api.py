@@ -122,7 +122,10 @@ def test_default_version():
     See https://github.com/asdf-format/asdf/issues/364
     """
     ff = asdf.AsdfFile()
-    assert ff.file_format_version == versioning.AsdfVersion("1.0.0")
+    assert ff.file_format_version == versioning._FILE_FORMAT_VERSION
+
+    # make sure these are different AsdfVersion instances
+    assert ff.file_format_version is not versioning._FILE_FORMAT_VERSION
 
 
 def test_update_exceptions(tmp_path):

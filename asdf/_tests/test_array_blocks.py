@@ -755,7 +755,7 @@ def test_invalid_block_index_offset(block_index_index):
         stream=buff,
         explicit_start=True,
         explicit_end=True,
-        version=(1, 1),
+        version=asdf.versioning._YAML_VERSION,
         allow_unicode=True,
         encoding="utf-8",
     )

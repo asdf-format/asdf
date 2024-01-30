@@ -10,7 +10,7 @@ from .constants import STSCI_SCHEMA_TAG_BASE, YAML_TAG_PREFIX
 from .exceptions import AsdfConversionWarning
 from .extension._serialization_context import BlockAccess
 from .tags.core import AsdfObject
-from .versioning import _yaml_base_loader
+from .versioning import _YAML_VERSION, _yaml_base_loader
 
 __all__ = ["custom_tree_to_tagged_tree", "tagged_tree_to_custom_tree"]
 
@@ -396,9 +396,6 @@ def dump_tree(tree, fd, ctx, tree_finalizer=None, _serialization_context=None):
         tree_finalizer(tree)
     schema.validate(tree, ctx)
 
-    # only 1 yaml version is supported
-    yaml_version = (1, 1)
-
     # add yaml %TAG definitions from extensions
     if _serialization_context:
         for ext in _serialization_context._extensions_used:
@@ -412,7 +409,7 @@ def dump_tree(tree, fd, ctx, tree_finalizer=None, _serialization_context=None):
         Dumper=AsdfDumper,
         explicit_start=True,
         explicit_end=True,
-        version=yaml_version,
+        version=_YAML_VERSION,
         allow_unicode=True,
         encoding="utf-8",
         tags=tags,
