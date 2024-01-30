@@ -79,7 +79,7 @@ exclude = ['asdf/_jsonschema/json/*']
 'asdf.tests.data' = ["*"]
 
 [tool.setuptools_scm]
-write_to = "asdf/_version.py"
+version_file = "asdf/_version.py"
 
 [tool.black]
 line-length = 120
