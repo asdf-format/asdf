@@ -258,7 +258,7 @@ class AsdfFile:
 
     @property
     def version_map(self):
-        return versioning.get_version_map(self.version_string)
+        return versioning._get_version_map(self.version_string)
 
     @property
     def extensions(self):

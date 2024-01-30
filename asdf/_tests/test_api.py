@@ -122,7 +122,7 @@ def test_default_version():
     See https://github.com/asdf-format/asdf/issues/364
     """
 
-    version_map = versioning.get_version_map(versioning.default_version)
+    version_map = versioning._get_version_map(versioning.default_version)
 
     ff = asdf.AsdfFile()
     assert ff.file_format_version == version_map["FILE_FORMAT"]

@@ -30,8 +30,8 @@ from asdf.exceptions import AsdfConversionWarning
 from asdf.tags.core import AsdfObject
 from asdf.versioning import (
     AsdfVersion,
+    _get_version_map,
     asdf_standard_development_version,
-    get_version_map,
     split_tag_version,
     supported_versions,
 )
@@ -313,7 +313,7 @@ def yaml_to_asdf(yaml_content, yaml_headers=True, standard_version=None):
 
     standard_version = AsdfVersion(standard_version)
 
-    vm = get_version_map(standard_version)
+    vm = _get_version_map(standard_version)
     file_format_version = vm["FILE_FORMAT"]
     yaml_version = vm["YAML_VERSION"]
     tree_version = vm["tags"]["tag:stsci.edu:asdf/core/asdf"]
@@ -442,7 +442,7 @@ def _assert_extension_type_correctness(extension, extension_type, resolver):
     for sibling in extension_type.versioned_siblings:
         tag_base, version = split_tag_version(sibling.yaml_tag)
         for asdf_standard_version in asdf_standard_versions:
-            vm = get_version_map(asdf_standard_version)
+            vm = _get_version_map(asdf_standard_version)
             if tag_base in vm["tags"] and AsdfVersion(vm["tags"][tag_base]) == version:
                 types_to_check.append(sibling)
                 break

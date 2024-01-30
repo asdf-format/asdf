@@ -33,7 +33,7 @@ def join_tag_version(name, version):
 _version_map = {}
 
 
-def get_version_map(version):
+def _get_version_map(version):
     version_map = _version_map.get(version)
 
     if version_map is None:
