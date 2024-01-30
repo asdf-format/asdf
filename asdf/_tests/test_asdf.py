@@ -6,7 +6,7 @@ from asdf import config_context
 from asdf._asdf import AsdfFile, open_asdf
 from asdf._entry_points import get_extensions
 from asdf._tests._helpers import assert_no_warnings, assert_tree_match, yaml_to_asdf
-from asdf.exceptions import AsdfWarning
+from asdf.exceptions import AsdfDeprecationWarning, AsdfWarning
 from asdf.extension import ExtensionProxy
 from asdf.versioning import AsdfVersion
 
@@ -103,10 +103,12 @@ def test_asdf_file_version():
             af.version = AsdfVersion("2.5.4")
 
         af.version = "1.0.0"
-        assert af.version_map["tags"]["tag:stsci.edu:asdf/core/asdf"] == "1.0.0"
+        with pytest.warns(AsdfDeprecationWarning, match="AsdfFile.version_map is deprecated"):
+            assert af.version_map["tags"]["tag:stsci.edu:asdf/core/asdf"] == "1.0.0"
 
         af.version = "1.2.0"
-        assert af.version_map["tags"]["tag:stsci.edu:asdf/core/asdf"] == "1.1.0"
+        with pytest.warns(AsdfDeprecationWarning, match="AsdfFile.version_map is deprecated"):
+            assert af.version_map["tags"]["tag:stsci.edu:asdf/core/asdf"] == "1.1.0"
 
 
 def test_asdf_file_extensions():
