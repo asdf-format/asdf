@@ -925,7 +925,7 @@ class AsdfFile:
     def _write_tree(self, tree, fd, pad_blocks):
         fd.write(constants.ASDF_MAGIC)
         fd.write(b" ")
-        fd.write(self.version_map["FILE_FORMAT"].encode("ascii"))
+        fd.write(f"{self.file_format_version}".encode("ascii"))
         fd.write(b"\n")
 
         fd.write(b"#")
