@@ -750,6 +750,10 @@ class AsdfFile:
             msg = f"Unparsable version in ASDF file: {parts[1]}"
             raise ValueError(msg) from err
 
+        if version != versioning._FILE_FORMAT_VERSION:
+            msg = f"Unsupported ASDF file format version {version}"
+            raise ValueError(msg)
+
         return version
 
     @classmethod
@@ -825,13 +829,15 @@ class AsdfFile:
                 msg = "Does not appear to be a ASDF file."
                 raise ValueError(msg) from e
             self._file_format_version = cls._parse_header_line(header_line)
-            self.version = self.file_format_version
 
             self._comments = cls._read_comment_section(fd)
 
             version = cls._find_asdf_version_in_comments(self._comments)
             if version is not None:
                 self.version = version
+            else:
+                # If no ASDF_STANDARD comment is found...
+                self.version = versioning.AsdfVersion("1.0.0")
 
             # Now that version is set for good, we can add any additional
             # extensions, which may have narrow ASDF Standard version

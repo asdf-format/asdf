@@ -199,7 +199,8 @@ def test_tags_removed_after_load(tmp_path):
 
 
 def test_explicit_tags():
-    yaml = f"""#ASDF {asdf.versioning.default_version}
+    yaml = """#ASDF 1.0.0
+#ASDF_STANDARD 1.5.0
 %YAML 1.1
 --- !<tag:stsci.edu:asdf/core/asdf-1.1.0>
 foo: !<tag:stsci.edu:asdf/core/ndarray-1.0.0> [1, 2, 3]
