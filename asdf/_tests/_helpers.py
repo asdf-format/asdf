@@ -22,13 +22,9 @@ except ImportError:
 import numpy as np
 
 import asdf
-from asdf import versioning
 from asdf._asdf import AsdfFile, _get_asdf_library_info
 from asdf.exceptions import AsdfConversionWarning
 from asdf.tags.core import AsdfObject
-from asdf.versioning import (
-    AsdfVersion,
-)
 
 from .httpserver import RangeHTTPServer
 
@@ -42,7 +38,6 @@ __all__ = [
     "get_test_data_path",
     "assert_tree_match",
     "assert_roundtrip_tree",
-    "yaml_to_asdf",
     "get_file_sizes",
     "display_warnings",
 ]
@@ -278,57 +273,6 @@ def _assert_roundtrip_tree(
         assert_tree_match(tree, ff.tree, ff, funcname=tree_match_func)
         if asdf_check_func:
             asdf_check_func(ff)
-
-
-def yaml_to_asdf(yaml_content, yaml_headers=True, standard_version=None):
-    """
-    Given a string of YAML content, adds the extra pre-
-    and post-amble to make it an ASDF file.
-
-    Parameters
-    ----------
-    yaml_content : string
-
-    yaml_headers : bool, optional
-        When True (default) add the standard ASDF YAML headers.
-
-    Returns
-    -------
-    buff : io.BytesIO()
-        A file-like object containing the ASDF-like content.
-    """
-    if isinstance(yaml_content, str):
-        yaml_content = yaml_content.encode("utf-8")
-
-    buff = io.BytesIO()
-
-    if standard_version is None:
-        standard_version = versioning.default_version
-
-    standard_version = AsdfVersion(standard_version)
-
-    yaml_version = ".".join([str(v) for v in versioning._YAML_VERSION])
-    af = asdf.AsdfFile(version=standard_version)
-    tree_converter = af.extension_manager.get_converter_for_type(asdf.tags.core.AsdfObject)
-    tree_version = asdf.versioning.split_tag_version(tree_converter.tags[0])[1]
-
-    if yaml_headers:
-        buff.write(
-            f"""#ASDF {versioning._FILE_FORMAT_VERSION}
-#ASDF_STANDARD {standard_version}
-%YAML {yaml_version}
-%TAG ! tag:stsci.edu:asdf/
---- !core/asdf-{tree_version}
-""".encode(
-                "ascii",
-            ),
-        )
-    buff.write(yaml_content)
-    if yaml_headers:
-        buff.write(b"\n...\n")
-
-    buff.seek(0)
-    return buff
 
 
 def get_file_sizes(dirname):

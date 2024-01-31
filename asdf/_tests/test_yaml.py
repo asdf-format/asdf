@@ -199,7 +199,7 @@ def test_tags_removed_after_load(tmp_path):
 
 
 def test_explicit_tags():
-    yaml = """#ASDF 1.0.0
+    yaml = b"""#ASDF 1.0.0
 #ASDF_STANDARD 1.5.0
 %YAML 1.1
 --- !<tag:stsci.edu:asdf/core/asdf-1.1.0>
@@ -207,7 +207,7 @@ foo: !<tag:stsci.edu:asdf/core/ndarray-1.0.0> [1, 2, 3]
 ..."""
 
     # Check that fully qualified explicit tags work
-    buff = helpers.yaml_to_asdf(yaml, yaml_headers=False)
+    buff = io.BytesIO(yaml)
 
     with asdf.open(buff) as ff:
         assert all(ff.tree["foo"] == [1, 2, 3])

@@ -14,8 +14,9 @@ import asdf
 from asdf import config_context, get_config, treeutil, versioning
 from asdf.exceptions import AsdfDeprecationWarning, AsdfWarning, ValidationError
 from asdf.extension import ExtensionProxy
+from asdf.testing.helpers import yaml_to_asdf
 
-from ._helpers import assert_no_warnings, assert_roundtrip_tree, assert_tree_match, yaml_to_asdf
+from ._helpers import assert_no_warnings, assert_roundtrip_tree, assert_tree_match
 
 RNG = np.random.default_rng(97)
 

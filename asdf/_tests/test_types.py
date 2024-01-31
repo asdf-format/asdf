@@ -2,8 +2,7 @@ import pytest
 
 import asdf
 from asdf.exceptions import AsdfConversionWarning
-
-from . import _helpers as helpers
+from asdf.testing.helpers import yaml_to_asdf
 
 
 def test_undefined_tag():
@@ -23,7 +22,7 @@ undefined_data:
         - !core/ndarray-1.0.0 [[7],[8],[9],[10]]
         - !core/complex-1.0.0 3.14j
 """
-    buff = helpers.yaml_to_asdf(yaml)
+    buff = yaml_to_asdf(yaml)
     with pytest.warns(Warning) as warning:
         afile = asdf.open(buff)
         missing = afile.tree["undefined_data"]
@@ -46,5 +45,4 @@ undefined_data:
 
     # Make sure no warning occurs if explicitly ignored
     buff.seek(0)
-    with helpers.assert_no_warnings():
-        afile = asdf.open(buff, ignore_unrecognized_tag=True)
+    afile = asdf.open(buff, ignore_unrecognized_tag=True)

@@ -5,9 +5,10 @@ import pytest
 from asdf import config_context
 from asdf._asdf import AsdfFile, open_asdf
 from asdf._entry_points import get_extensions
-from asdf._tests._helpers import assert_no_warnings, assert_tree_match, yaml_to_asdf
+from asdf._tests._helpers import assert_no_warnings, assert_tree_match
 from asdf.exceptions import AsdfDeprecationWarning, AsdfWarning
 from asdf.extension import ExtensionProxy
+from asdf.testing.helpers import yaml_to_asdf
 from asdf.versioning import AsdfVersion
 
 
@@ -215,7 +216,7 @@ def test_reading_extension_metadata():
 
         # Test missing history:
         content = """
-        foo: bar
+foo: bar
         """
         buff = yaml_to_asdf(content)
         with assert_no_warnings():
@@ -223,24 +224,24 @@ def test_reading_extension_metadata():
 
         # Test the old history format:
         content = """
-        history:
-          - !core/history_entry-1.0.0
-            description: Once upon a time, there was a carnivorous panda.
-          - !core/history_entry-1.0.0
-            description: This entry intentionally left blank.
-        foo: bar
+history:
+  - !core/history_entry-1.0.0
+    description: Once upon a time, there was a carnivorous panda.
+  - !core/history_entry-1.0.0
+    description: This entry intentionally left blank.
+foo: bar
         """
-        buff = yaml_to_asdf(content, standard_version="1.0.0")
+        buff = yaml_to_asdf(content, version="1.0.0")
         with assert_no_warnings():
             open_asdf(buff)
 
         # Test matching by URI:
         content = """
-        history:
-          extensions:
-            - !core/extension_metadata-1.0.0
-              extension_uri: asdf://somewhere.org/extensions/foo-1.0
-              extension_class: some.unrecognized.extension.class.Name
+history:
+  extensions:
+    - !core/extension_metadata-1.0.0
+      extension_uri: asdf://somewhere.org/extensions/foo-1.0
+      extension_class: some.unrecognized.extension.class.Name
         """
         buff = yaml_to_asdf(content)
         with assert_no_warnings():
@@ -248,10 +249,10 @@ def test_reading_extension_metadata():
 
         # Test matching by legacy class name:
         content = """
-        history:
-          extensions:
-            - !core/extension_metadata-1.0.0
-              extension_class: some.legacy.class.Name
+history:
+  extensions:
+    - !core/extension_metadata-1.0.0
+      extension_class: some.legacy.class.Name
         """
         buff = yaml_to_asdf(content)
         with assert_no_warnings():
@@ -260,11 +261,11 @@ def test_reading_extension_metadata():
         # Warn when the URI is missing, even if there's
         # a class name match:
         content = f"""
-        history:
-          extensions:
-            - !core/extension_metadata-1.0.0
-              extension_uri: some-missing-URI
-              extension_class: {extension_with_uri.class_name}
+history:
+  extensions:
+    - !core/extension_metadata-1.0.0
+      extension_uri: some-missing-URI
+      extension_class: {extension_with_uri.class_name}
         """
         buff = yaml_to_asdf(content)
         with pytest.warns(AsdfWarning, match=r"URI 'some-missing-URI'"):
@@ -272,10 +273,10 @@ def test_reading_extension_metadata():
 
         # Warn when the class name is missing:
         content = """
-        history:
-          extensions:
-            - !core/extension_metadata-1.0.0
-              extension_class: some.missing.class.Name
+history:
+  extensions:
+    - !core/extension_metadata-1.0.0
+      extension_class: some.missing.class.Name
         """
         buff = yaml_to_asdf(content)
         with pytest.warns(AsdfWarning, match=r"class 'some.missing.class.Name'"):
@@ -283,14 +284,14 @@ def test_reading_extension_metadata():
 
         # Warn when the package version is older:
         content = """
-        history:
-          extensions:
-            - !core/extension_metadata-1.0.0
-              extension_uri: asdf://somewhere.org/extensions/foo-1.0
-              extension_class: some.class.Name
-              software: !core/software-1.0.0
-                name: foo
-                version: 9.2.4
+history:
+  extensions:
+    - !core/extension_metadata-1.0.0
+      extension_uri: asdf://somewhere.org/extensions/foo-1.0
+      extension_class: some.class.Name
+      software: !core/software-1.0.0
+        name: foo
+        version: 9.2.4
         """
         buff = yaml_to_asdf(content)
         with pytest.warns(AsdfWarning, match=r"older package"):
@@ -298,14 +299,14 @@ def test_reading_extension_metadata():
 
         # Shouldn't warn when the package version is later:
         content = """
-        history:
-          extensions:
-            - !core/extension_metadata-1.0.0
-              extension_uri: asdf://somewhere.org/extensions/foo-1.0
-              extension_class: some.class.Name
-              software: !core/software-1.0.0
-                name: foo
-                version: 0.1.2
+history:
+  extensions:
+    - !core/extension_metadata-1.0.0
+      extension_uri: asdf://somewhere.org/extensions/foo-1.0
+      extension_class: some.class.Name
+      software: !core/software-1.0.0
+        name: foo
+        version: 0.1.2
         """
         buff = yaml_to_asdf(content)
         with assert_no_warnings():
@@ -314,14 +315,14 @@ def test_reading_extension_metadata():
         # Shouldn't receive a warning when the package
         # name changes, even if the version is later:
         content = """
-        history:
-          extensions:
-            - !core/extension_metadata-1.0.0
-              extension_uri: asdf://somewhere.org/extensions/foo-1.0
-              extension_class: some.class.Name
-              software: !core/software-1.0.0
-                name: bar
-                version: 9.4.5
+history:
+  extensions:
+    - !core/extension_metadata-1.0.0
+      extension_uri: asdf://somewhere.org/extensions/foo-1.0
+      extension_class: some.class.Name
+      software: !core/software-1.0.0
+        name: bar
+        version: 9.4.5
         """
         buff = yaml_to_asdf(content)
         with assert_no_warnings():
