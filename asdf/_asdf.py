@@ -460,6 +460,15 @@ class AsdfFile:
                 ext_meta["extension_uri"] = extension.extension_uri
             if extension.compressors:
                 ext_meta["supported_compression"] = [comp.label.decode("ascii") for comp in extension.compressors]
+            manifest = getattr(extension._delegate, "_manifest", None)
+            if manifest is not None:
+                # check if this extension was built from a manifest is a different package
+                resource_mapping = get_config().resource_manager._mappings_by_uri.get(manifest["id"])
+                if resource_mapping.package_name != extension.package_name:
+                    ext_meta["manifest_software"] = Software(
+                        name=resource_mapping.package_name,
+                        version=resource_mapping.package_version,
+                    )
 
             for i, entry in enumerate(tree["history"]["extensions"]):
                 # Update metadata about this extension if it already exists
