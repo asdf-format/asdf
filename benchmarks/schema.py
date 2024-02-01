@@ -1,4 +1,3 @@
-import jsonschema
 import numpy
 
 import asdf
@@ -19,9 +18,6 @@ class SoftwareValidateSuite:
     def time_validate(self):
         self.af.validate()
 
-    def time_jsonschema_validate(self):
-        jsonschema.validators.Draft4Validator(self.schema).validate(self.obj)
-
 
 class NDArrayValidateSuite:
     def setup(self):
@@ -37,6 +33,3 @@ class NDArrayValidateSuite:
 
     def time_validate(self):
         self.af.validate()
-
-    def time_jsonschema_validate(self):
-        jsonschema.validators.Draft4Validator(self.schema).validate(self.obj)
