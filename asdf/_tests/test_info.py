@@ -691,7 +691,7 @@ def test_info_str(capsys):
     af["d"] = NiceStr()
     af.info()
     captured = capsys.readouterr()
-    assert f"(BadStr){os.linesep}" in captured.out
-    assert f"(NewlineStr){os.linesep}" in captured.out
-    assert f"(CarriageReturnStr){os.linesep}" in captured.out
-    assert f"(NiceStr): nice{os.linesep}" in captured.out
+    assert "(BadStr)\n" in captured.out
+    assert "(NewlineStr)\n" in captured.out
+    assert "(CarriageReturnStr)\n" in captured.out
+    assert "(NiceStr): nice\n" in captured.out
