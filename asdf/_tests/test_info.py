@@ -665,3 +665,33 @@ def test_search():
 
     result = af.search(value="hello")
     assert result.node == "hello"
+
+
+def test_info_str(capsys):
+    class BadStr:
+        def __str__(self):
+            raise Exception()
+
+    class NewlineStr:
+        def __str__(self):
+            return "a\nb"
+
+    class CarriageReturnStr:
+        def __str__(self):
+            return "a\rb"
+
+    class NiceStr:
+        def __str__(self):
+            return "nice"
+
+    af = asdf.AsdfFile()
+    af["a"] = BadStr()
+    af["b"] = NewlineStr()
+    af["c"] = CarriageReturnStr()
+    af["d"] = NiceStr()
+    af.info()
+    captured = capsys.readouterr()
+    assert f"(BadStr){os.linesep}" in captured.out
+    assert f"(NewlineStr){os.linesep}" in captured.out
+    assert f"(CarriageReturnStr){os.linesep}" in captured.out
+    assert f"(NiceStr): nice{os.linesep}" in captured.out
