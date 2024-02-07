@@ -282,7 +282,7 @@ def test_array_inline_threshold_recursive(tmp_path):
 
 def test_copy_inline():
     yaml = """
-x0: !core/ndarray-1.0.0
+x0: !core/ndarray-1.1.0
   data: [-1.0, 1.0]
     """
 
@@ -371,7 +371,7 @@ def test_inline():
 
 
 def test_inline_bare():
-    content = "arr: !core/ndarray-1.0.0 [[1, 2, 3, 4], [5, 6, 7, 8]]"
+    content = "arr: !core/ndarray-1.1.0 [[1, 2, 3, 4], [5, 6, 7, 8]]"
     buff = helpers.yaml_to_asdf(content)
 
     with asdf.open(buff) as ff:
@@ -403,7 +403,7 @@ def test_len_roundtrip(tmp_path):
 
 def test_mask_arbitrary():
     content = """
-arr: !core/ndarray-1.0.0
+arr: !core/ndarray-1.1.0
   data: [[1, 2, 3, 1234], [5, 6, 7, 8]]
   mask: 1234
     """
@@ -415,7 +415,7 @@ arr: !core/ndarray-1.0.0
 
 def test_mask_nan():
     content = """
-arr: !core/ndarray-1.0.0
+arr: !core/ndarray-1.1.0
   data: [[1, 2, 3, .NaN], [5, 6, 7, 8]]
   mask: .NaN
     """
@@ -445,7 +445,7 @@ def test_string_table(tmp_path):
 
 
 def test_inline_string():
-    content = "arr: !core/ndarray-1.0.0 ['a', 'b', 'c']"
+    content = "arr: !core/ndarray-1.1.0 ['a', 'b', 'c']"
     buff = helpers.yaml_to_asdf(content)
 
     with asdf.open(buff) as ff:
@@ -454,7 +454,7 @@ def test_inline_string():
 
 def test_inline_structured():
     content = """
-arr: !core/ndarray-1.0.0
+arr: !core/ndarray-1.1.0
     datatype: [['ascii', 4], uint16, uint16, ['ascii', 4]]
     data: [[M110, 110, 205, And],
            [ M31,  31, 224, And],
@@ -611,10 +611,10 @@ def test_operations_on_ndarray_proxies(tmp_path):
 
 def test_mask_datatype(tmp_path):
     content = """
-arr: !core/ndarray-1.0.0
+arr: !core/ndarray-1.1.0
     data: [1, 2, 3]
     dtype: int32
-    mask: !core/ndarray-1.0.0
+    mask: !core/ndarray-1.1.0
         data: [true, true, false]
     """
     buff = helpers.yaml_to_asdf(content)
@@ -625,10 +625,10 @@ arr: !core/ndarray-1.0.0
 
 def test_invalid_mask_datatype(tmp_path):
     content = """
-arr: !core/ndarray-1.0.0
+arr: !core/ndarray-1.1.0
     data: [1, 2, 3]
     dtype: int32
-    mask: !core/ndarray-1.0.0
+    mask: !core/ndarray-1.1.0
         data: ['a', 'b', 'c']
     """
     buff = helpers.yaml_to_asdf(content)
@@ -646,7 +646,7 @@ arr: !core/ndarray-1.0.0
 def test_ndim_validation(tmp_path):
     content = """
 obj: !<tag:nowhere.org:custom/ndim-1.0.0>
-    a: !core/ndarray-1.0.0
+    a: !core/ndarray-1.1.0
        data: [1, 2, 3]
     """
     buff = helpers.yaml_to_asdf(content)
@@ -661,7 +661,7 @@ obj: !<tag:nowhere.org:custom/ndim-1.0.0>
 
     content = """
 obj: !<tag:nowhere.org:custom/ndim-1.0.0>
-    a: !core/ndarray-1.0.0
+    a: !core/ndarray-1.1.0
        data: [[1, 2, 3]]
     """
     buff = helpers.yaml_to_asdf(content)
@@ -671,7 +671,7 @@ obj: !<tag:nowhere.org:custom/ndim-1.0.0>
 
     content = """
 obj: !<tag:nowhere.org:custom/ndim-1.0.0>
-    a: !core/ndarray-1.0.0
+    a: !core/ndarray-1.1.0
        shape: [1, 3]
        data: [[1, 2, 3]]
     """
@@ -682,7 +682,7 @@ obj: !<tag:nowhere.org:custom/ndim-1.0.0>
 
     content = """
 obj: !<tag:nowhere.org:custom/ndim-1.0.0>
-    b: !core/ndarray-1.0.0
+    b: !core/ndarray-1.1.0
        data: [1, 2, 3]
     """
     buff = helpers.yaml_to_asdf(content)
@@ -692,7 +692,7 @@ obj: !<tag:nowhere.org:custom/ndim-1.0.0>
 
     content = """
 obj: !<tag:nowhere.org:custom/ndim-1.0.0>
-    b: !core/ndarray-1.0.0
+    b: !core/ndarray-1.1.0
        data: [[1, 2, 3]]
     """
     buff = helpers.yaml_to_asdf(content)
@@ -702,7 +702,7 @@ obj: !<tag:nowhere.org:custom/ndim-1.0.0>
 
     content = """
 obj: !<tag:nowhere.org:custom/ndim-1.0.0>
-    b: !core/ndarray-1.0.0
+    b: !core/ndarray-1.1.0
        data: [[[1, 2, 3]]]
     """
     buff = helpers.yaml_to_asdf(content)
@@ -720,7 +720,7 @@ obj: !<tag:nowhere.org:custom/ndim-1.0.0>
 def test_datatype_validation(tmp_path):
     content = """
 obj: !<tag:nowhere.org:custom/datatype-1.0.0>
-    a: !core/ndarray-1.0.0
+    a: !core/ndarray-1.1.0
        data: [1, 2, 3]
        datatype: float32
     """
@@ -731,7 +731,7 @@ obj: !<tag:nowhere.org:custom/datatype-1.0.0>
 
     content = """
 obj: !<tag:nowhere.org:custom/datatype-1.0.0>
-    a: !core/ndarray-1.0.0
+    a: !core/ndarray-1.1.0
        data: [1, 2, 3]
        datatype: float64
     """
@@ -747,7 +747,7 @@ obj: !<tag:nowhere.org:custom/datatype-1.0.0>
 
     content = """
 obj: !<tag:nowhere.org:custom/datatype-1.0.0>
-    a: !core/ndarray-1.0.0
+    a: !core/ndarray-1.1.0
        data: [1, 2, 3]
        datatype: int16
     """
@@ -758,7 +758,7 @@ obj: !<tag:nowhere.org:custom/datatype-1.0.0>
 
     content = """
 obj: !<tag:nowhere.org:custom/datatype-1.0.0>
-    b: !core/ndarray-1.0.0
+    b: !core/ndarray-1.1.0
        data: [1, 2, 3]
        datatype: int16
     """
@@ -774,7 +774,7 @@ obj: !<tag:nowhere.org:custom/datatype-1.0.0>
 
     content = """
 obj: !<tag:nowhere.org:custom/datatype-1.0.0>
-    a: !core/ndarray-1.0.0
+    a: !core/ndarray-1.1.0
        data: [[1, 'a'], [2, 'b'], [3, 'c']]
        datatype:
          - name: a
@@ -797,7 +797,7 @@ obj: !<tag:nowhere.org:custom/datatype-1.0.0>
 def test_structured_datatype_validation(tmp_path):
     content = """
 obj: !<tag:nowhere.org:custom/datatype-1.0.0>
-    c: !core/ndarray-1.0.0
+    c: !core/ndarray-1.1.0
        data: [[1, 'a'], [2, 'b'], [3, 'c']]
        datatype:
          - name: a
@@ -812,7 +812,7 @@ obj: !<tag:nowhere.org:custom/datatype-1.0.0>
 
     content = """
 obj: !<tag:nowhere.org:custom/datatype-1.0.0>
-    c: !core/ndarray-1.0.0
+    c: !core/ndarray-1.1.0
        data: [[1, 'a'], [2, 'b'], [3, 'c']]
        datatype:
          - name: a
@@ -832,7 +832,7 @@ obj: !<tag:nowhere.org:custom/datatype-1.0.0>
 
     content = """
 obj: !<tag:nowhere.org:custom/datatype-1.0.0>
-    c: !core/ndarray-1.0.0
+    c: !core/ndarray-1.1.0
        data: [[1, 'a', 0], [2, 'b', 1], [3, 'c', 2]]
        datatype:
          - name: a
@@ -854,7 +854,7 @@ obj: !<tag:nowhere.org:custom/datatype-1.0.0>
 
     content = """
 obj: !<tag:nowhere.org:custom/datatype-1.0.0>
-    c: !core/ndarray-1.0.0
+    c: !core/ndarray-1.1.0
        data: [1, 2, 3]
     """
     buff = helpers.yaml_to_asdf(content)
@@ -869,7 +869,7 @@ obj: !<tag:nowhere.org:custom/datatype-1.0.0>
 
     content = """
 obj: !<tag:nowhere.org:custom/datatype-1.0.0>
-    d: !core/ndarray-1.0.0
+    d: !core/ndarray-1.1.0
        data: [[1, 'a'], [2, 'b'], [3, 'c']]
        datatype:
          - name: a
@@ -889,7 +889,7 @@ obj: !<tag:nowhere.org:custom/datatype-1.0.0>
 
     content = """
 obj: !<tag:nowhere.org:custom/datatype-1.0.0>
-    d: !core/ndarray-1.0.0
+    d: !core/ndarray-1.1.0
        data: [[1, 'a'], [2, 'b'], [3, 'c']]
        datatype:
          - name: a
@@ -913,7 +913,7 @@ def test_string_inline():
 
 def test_inline_shape_mismatch():
     content = """
-arr: !core/ndarray-1.0.0
+arr: !core/ndarray-1.1.0
   data: [1, 2, 3]
   shape: [2]
     """
