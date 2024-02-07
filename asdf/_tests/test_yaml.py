@@ -167,7 +167,7 @@ def test_explicit_tags():
 #ASDF_STANDARD 1.5.0
 %YAML 1.1
 --- !<tag:stsci.edu:asdf/core/asdf-1.1.0>
-foo: !<tag:stsci.edu:asdf/core/ndarray-1.0.0> [1, 2, 3]
+foo: !<tag:stsci.edu:asdf/core/ndarray-1.1.0> [1, 2, 3]
 ..."""
 
     # Check that fully qualified explicit tags work

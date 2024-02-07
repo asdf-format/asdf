@@ -16,10 +16,10 @@ undefined_data:
   !<tag:nowhere.org:custom/undefined_tag-1.0.0>
     - 5
     - {'message': 'there is no tag'}
-    - !core/ndarray-1.0.0
+    - !core/ndarray-1.1.0
       [[1, 2, 3], [4, 5, 6]]
     - !<tag:nowhere.org:custom/also_undefined-1.3.0>
-        - !core/ndarray-1.0.0 [[7],[8],[9],[10]]
+        - !core/ndarray-1.1.0 [[7],[8],[9],[10]]
         - !core/complex-1.0.0 3.14j
 """
     buff = yaml_to_asdf(yaml)

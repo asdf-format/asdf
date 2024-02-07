@@ -51,7 +51,7 @@ properties:
   name:
     type: string
   things:
-    $ref: "http://stsci.edu/schemas/asdf/core/ndarray-1.0.0"
+    $ref: "http://stsci.edu/schemas/asdf/core/ndarray-1.1.0"
 required: [name, things]
 ...
     """
@@ -124,7 +124,7 @@ tag: "tag:stsci.edu:asdf/nugatory/nugatory-1.0.0"
 type: object
 properties:
   foobar:
-      $ref: "../core/ndarray-1.0.0"
+      $ref: "../core/ndarray-1.1.0"
 
 required: [foobar]
 ...
@@ -148,7 +148,7 @@ tag: "tag:stsci.edu:asdf/nugatory/nugatory-1.0.0"
 type: object
 properties:
   foobar:
-      $ref: "http://stsci.edu/schemas/asdf/core/ndarray-1.0.0"
+      $ref: "http://stsci.edu/schemas/asdf/core/ndarray-1.1.0"
 
 required: [foobar]
 ...
@@ -377,7 +377,7 @@ def test_property_order():
     ff = asdf.AsdfFile(tree)
     ff.write_to(buff)
 
-    ndarray_schema = schema.load_schema("http://stsci.edu/schemas/asdf/core/ndarray-1.0.0")
+    ndarray_schema = schema.load_schema("http://stsci.edu/schemas/asdf/core/ndarray-1.1.0")
     property_order = ndarray_schema["anyOf"][1]["propertyOrder"]
 
     last_index = 0
@@ -448,7 +448,7 @@ custom: !<{tag_uri}>
         # Make sure tags get validated inside of other tags that know
         # nothing about them.
         yaml = f"""
-array: !core/ndarray-1.0.0
+array: !core/ndarray-1.1.0
   data: [0, 1, 2]
   custom: !<{tag_uri}>
     foo
@@ -511,7 +511,7 @@ def test_check_complex_default():
 
     schema.check_schema(s)
 
-    s["properties"]["a"]["tag"] = "tag:stsci.edu/asdf/core/ndarray-1.0.0"
+    s["properties"]["a"]["tag"] = "tag:stsci.edu/asdf/core/ndarray-1.1.0"
     with pytest.raises(ValidationError, match=r"mismatched tags, wanted .*, got .*"):
         schema.check_schema(s)
 
@@ -598,6 +598,8 @@ properties:
         extension_uri = "http://nowhere.org/extensions/custom/default-1.0.0"
 
     with config_context() as cfg:
+        # later versions do not fill defaults
+        cfg.default_version = "1.5.0"
         cfg.add_extension(DefaultExtension())
         cfg.add_resource_mapping({schema_uri: tag_schema})
         yaml = """
@@ -608,7 +610,7 @@ custom: !<http://nowhere.org/tags/custom/default-1.0.0>
   j:
     l: 362
         """
-        buff = yaml_to_asdf(yaml)
+        buff = yaml_to_asdf(yaml, standard_version="1.5.0")
         with asdf.open(buff) as ff:
             assert "a" in ff.tree["custom"]
             assert ff.tree["custom"]["a"] == 42
@@ -730,7 +732,7 @@ def test_tag_reference_validation():
 custom: !<tag:nowhere.org:custom/tag_reference-1.0.0>
   name:
     "Something"
-  things: !core/ndarray-1.0.0
+  things: !core/ndarray-1.1.0
     data: [1, 2, 3]
     """
 
@@ -787,7 +789,7 @@ custom: !<tag:nowhere.org:custom/foreign_tag_reference-1.0.0>
   a: !<tag:nowhere.org:custom/tag_reference-1.0.0>
     name:
       "Something"
-    things: !core/ndarray-1.0.0
+    things: !core/ndarray-1.1.0
       data: [1, 2, 3]
     """
 

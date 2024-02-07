@@ -647,7 +647,14 @@ def test_recursive_info_object_support(capsys, tmp_path):
     recursive_obj = RecursiveObjectWithInfoSupport()
     recursive_obj.recursive = recursive_obj
     tree = {"random": 3.14159, "rtest": recursive_obj}
-    af = asdf.AsdfFile(tree)
+    af = asdf.AsdfFile()
+    # we need to do this to avoid validation against the
+    # manifest (generated in manifest_extension) which is
+    # now supported with the default asdf standard 1.6.0
+    # I'm not sure why the manifest has this restriction
+    # and prior to switching to the default 1.6.0 was ignored
+    # which allowed this test to pass.
+    af._tree = tree
     af.info(refresh_extension_manager=True)
     captured = capsys.readouterr()
     assert "recursive reference" in captured.out
