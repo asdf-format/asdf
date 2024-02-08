@@ -117,7 +117,7 @@ def test_load_schema(tmp_path):
     schema_def = """
 %YAML 1.1
 ---
-$schema: "http://stsci.edu/schemas/asdf/asdf-schema-1.0.0"
+$schema: "http://stsci.edu/schemas/asdf/asdf-schema-1.1.0"
 id: "http://stsci.edu/schemas/asdf/nugatory/nugatory-1.0.0"
 tag: "tag:stsci.edu:asdf/nugatory/nugatory-1.0.0"
 
@@ -141,7 +141,7 @@ def test_load_schema_with_file_url(tmp_path):
 %YAML 1.1
 %TAG !asdf! tag:stsci.edu:asdf/
 ---
-$schema: "http://stsci.edu/schemas/asdf/asdf-schema-1.0.0"
+$schema: "http://stsci.edu/schemas/asdf/asdf-schema-1.1.0"
 id: "http://stsci.edu/schemas/asdf/nugatory/nugatory-1.0.0"
 tag: "tag:stsci.edu:asdf/nugatory/nugatory-1.0.0"
 
@@ -163,7 +163,7 @@ required: [foobar]
 def test_load_schema_with_asdf_uri_scheme():
     subschema_content = """%YAML 1.1
 ---
-$schema: http://stsci.edu/schemas/asdf/asdf-schema-1.0.0
+$schema: http://stsci.edu/schemas/asdf/asdf-schema-1.1.0
 id: asdf://somewhere.org/schemas/bar
 
 bar:
@@ -172,7 +172,7 @@ bar:
 """
     content = """%YAML 1.1
 ---
-$schema: http://stsci.edu/schemas/asdf/asdf-schema-1.0.0
+$schema: http://stsci.edu/schemas/asdf/asdf-schema-1.1.0
 id: asdf://somewhere.org/schemas/foo
 
 definitions:
@@ -210,7 +210,7 @@ def test_load_schema_with_stsci_id():
     """
     subschema_content = """%YAML 1.1
 ---
-$schema: http://stsci.edu/schemas/asdf/asdf-schema-1.0.0
+$schema: http://stsci.edu/schemas/asdf/asdf-schema-1.1.0
 id: http://stsci.edu/schemas/bar
 
 bar:
@@ -219,7 +219,7 @@ bar:
 """
     content = """%YAML 1.1
 ---
-$schema: http://stsci.edu/schemas/asdf/asdf-schema-1.0.0
+$schema: http://stsci.edu/schemas/asdf/asdf-schema-1.1.0
 id: http://stsci.edu/schemas/foo
 
 definitions:
@@ -1218,7 +1218,7 @@ def test_validator_visit_repeat_nodes():
 def test_tag_validator():
     content = """%YAML 1.1
 ---
-$schema: http://stsci.edu/schemas/asdf/asdf-schema-1.0.0
+$schema: http://stsci.edu/schemas/asdf/asdf-schema-1.1.0
 id: asdf://somewhere.org/schemas/foo
 tag: asdf://somewhere.org/tags/foo
 ...
@@ -1234,7 +1234,7 @@ tag: asdf://somewhere.org/tags/foo
 
     content = """%YAML 1.1
 ---
-$schema: http://stsci.edu/schemas/asdf/asdf-schema-1.0.0
+$schema: http://stsci.edu/schemas/asdf/asdf-schema-1.1.0
 id: asdf://somewhere.org/schemas/bar
 tag: asdf://somewhere.org/tags/bar-*
 ...

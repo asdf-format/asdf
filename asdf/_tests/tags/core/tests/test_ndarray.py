@@ -75,7 +75,7 @@ def with_custom_extension():
             {
                 "http://nowhere.org/schemas/custom/datatype-1.0.0": """%YAML 1.1
 ---
-$schema: "http://stsci.edu/schemas/asdf/asdf-schema-1.0.0"
+$schema: "http://stsci.edu/schemas/asdf/asdf-schema-1.1.0"
 id: "http://nowhere.org/schemas/custom/datatype-1.0.0"
 type: object
 properties:
@@ -102,7 +102,7 @@ properties:
     exact_datatype: true""",
                 "http://nowhere.org/schemas/custom/ndim-1.0.0": """%YAML 1.1
 ---
-$schema: "http://stsci.edu/schemas/asdf/asdf-schema-1.0.0"
+$schema: "http://stsci.edu/schemas/asdf/asdf-schema-1.1.0"
 id: "http://nowhere.org/schemas/custom/ndim-1.0.0"
 type: object
 properties:
