@@ -156,7 +156,7 @@ tags:
     foo_schema = """
 %YAML 1.1
 ---
-$schema: "asdf://stsci.edu/schemas/asdf/asdf-schema-1.0.0"
+$schema: "asdf://stsci.edu/schemas/asdf/asdf-schema-1.1.0"
 id: "asdf://somewhere.org/asdf/schemas/foo-1.0.0"
 
 type: object
@@ -221,7 +221,7 @@ properties:
     bar_schema = """
 %YAML 1.1
 ---
-$schema: "asdf://stsci.edu/schemas/asdf/asdf-schema-1.0.0"
+$schema: "asdf://stsci.edu/schemas/asdf/asdf-schema-1.1.0"
 id: "asdf://somewhere.org/asdf/schemas/bar-1.0.0"
 
 type: object
@@ -245,7 +245,7 @@ properties:
     drink_schema = """
 %YAML 1.1
 ---
-$schema: "asdf://stsci.edu/schemas/asdf/asdf-schema-1.0.0"
+$schema: "asdf://stsci.edu/schemas/asdf/asdf-schema-1.1.0"
 id: "asdf://somewhere.org/asdf/schemas/drink-1.0.0"
 
 type: object
