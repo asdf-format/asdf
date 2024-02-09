@@ -203,7 +203,17 @@ class AsdfFile:
             self._tree = tree.tree
             self.find_references(_warning_msg=find_ref_warning_msg)
         else:
-            self.tree = tree
+            self._tree = AsdfObject(tree)
+            try:
+                self.validate()
+            except ValidationError:
+                warnings.warn(
+                    "Validation during AsdfFile.__init__ is deprecated. "
+                    "Please use AsdfFile.validate to validate the tree",
+                    AsdfDeprecationWarning,
+                )
+                raise
+
             self.find_references(_warning_msg=find_ref_warning_msg)
 
         self._comments = []
@@ -570,7 +580,13 @@ class AsdfFile:
     def tree(self, tree):
         asdf_object = AsdfObject(tree)
         # Only perform custom validation if the tree is not empty
-        self._validate(asdf_object, custom=bool(tree))
+        try:
+            self._validate(asdf_object, custom=bool(tree))
+        except ValidationError:
+            warnings.warn(
+                "Validation on tree assignment is deprecated. Please use AsdfFile.validate", AsdfDeprecationWarning
+            )
+            raise
         self._tree = asdf_object
 
     def keys(self):
@@ -1232,9 +1248,18 @@ class AsdfFile:
         a ASDF file after this operation means it will have no
         external references, and will be completely self-contained.
         """
-        # Set to the property self.tree so the resulting "complete"
-        # tree will be validated.
-        self.tree = reference.resolve_references(self._tree, self)
+        if len(kwargs):
+            warnings.warn("Passing kwargs to resolve_references is deprecated and does nothing", AsdfDeprecationWarning)
+        self._tree = reference.resolve_references(self._tree, self)
+        try:
+            self.validate()
+        except ValidationError:
+            warnings.warn(
+                "Validation during resolve_references is deprecated. "
+                "Please use AsdfFile.validate after resolve_references to validate the resolved tree",
+                AsdfDeprecationWarning,
+            )
+            raise
 
     def resolve_and_inline(self):
         """
