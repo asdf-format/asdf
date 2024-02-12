@@ -227,6 +227,41 @@ class SerializationContext:
         """ """
         return self._blocks._get_array_compression_kwargs(arr)
 
+    def set_array_save_base(self, arr, save_base):
+        """
+        Set the ``save_base`` option for ``arr``. When ``arr`` is
+        written to a file, if ``save_base`` is ``True`` the base array
+        for ``arr`` will be saved.
+
+        Note that similar to other array options this setting is linked
+        to the base array if ``arr`` is a view.
+
+        Parameters
+        ----------
+        arr : numpy.ndarray
+
+        save_base : bool or None
+            if ``None`` the ``default_array_save_base`` value from asdf
+            config will be used
+        """
+        self._blocks._set_array_save_base(arr, save_base)
+
+    def get_array_save_base(self, arr):
+        """
+        Returns the ``save_base`` option for ``arr``. When ``arr`` is
+        written to a file, if ``save_base`` is ``True`` the base array
+        for ``arr`` will be saved.
+
+        Parameters
+        ----------
+        arr : numpy.ndarray
+
+        Returns
+        -------
+        save_base : bool
+        """
+        return self._blocks._get_array_save_base(arr)
+
 
 class ReadBlocksContext(SerializationContext):
     """

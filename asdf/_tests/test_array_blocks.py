@@ -981,3 +981,24 @@ def test_open_memmap_from_closed_file(tmp_path):
 
     with pytest.raises(OSError, match=msg):
         base2[:]
+
+
+@pytest.mark.parametrize("default_array_save_base", [True, False])
+@pytest.mark.parametrize("save_base", [True, False, None])
+def test_views_save_base(tmp_path, default_array_save_base, save_base):
+    fn = tmp_path / "test.asdf"
+    arr = np.zeros(100, dtype="uint8")
+    tree = {"v": arr[:10]}
+    with asdf.config_context() as cfg:
+        cfg.default_array_save_base = default_array_save_base
+        af = asdf.AsdfFile(tree)
+        if save_base is not None:
+            af.set_array_save_base(af["v"], save_base)
+        af.write_to(fn)
+
+    with asdf.open(fn, copy_arrays=True) as af:
+        base = af["v"].base
+        if save_base or (save_base is None and default_array_save_base):
+            assert len(base) == 100
+        else:
+            assert len(base) == 10

@@ -51,6 +51,12 @@ data being saved.
    ff = AsdfFile(tree)
    ff.write_to("test.asdf")
 
+For circumstances where this is undesirable (such as saving
+a small view of a large array) this can be disabled by setting
+`asdf.config.AsdfConfig.default_array_save_base` (to set the default behavior)
+or `asdf.AsdfFile.set_array_save_base` to control the behavior for
+a specific array.
+
 .. asdf:: test.asdf
 
 Saving inline arrays
