@@ -2,6 +2,7 @@
 Support for Converter, the new API for serializing custom
 types.  Will eventually replace the `asdf.types` module.
 """
+
 import abc
 import warnings
 

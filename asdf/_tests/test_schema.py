@@ -461,8 +461,11 @@ custom: !<{tag_uri}>
     with config_context() as cfg:
         cfg.add_extension(CustomExtension())
         cfg.add_resource_mapping({schema_uri: tag_schema})
-        with pytest.raises(ValidationError, match=r".* is not of type .*"), asdf.open(
-            buff,
+        with (
+            pytest.raises(ValidationError, match=r".* is not of type .*"),
+            asdf.open(
+                buff,
+            ),
         ):
             pass
 
@@ -475,8 +478,11 @@ custom: !<{tag_uri}>
         foo
         """
         buff = helpers.yaml_to_asdf(yaml)
-        with pytest.raises(ValidationError, match=r".* is not of type .*"), asdf.open(
-            buff,
+        with (
+            pytest.raises(ValidationError, match=r".* is not of type .*"),
+            asdf.open(
+                buff,
+            ),
         ):
             pass
 
@@ -1029,9 +1035,12 @@ def test_custom_validation_bad(tmp_path):
         pass
 
     # Opening file with custom schema should fail
-    with pytest.raises(ValidationError, match=r".* is a required property"), asdf.open(
-        asdf_file,
-        custom_schema=custom_schema_path,
+    with (
+        pytest.raises(ValidationError, match=r".* is a required property"),
+        asdf.open(
+            asdf_file,
+            custom_schema=custom_schema_path,
+        ),
     ):
         pass
 
@@ -1107,9 +1116,12 @@ def test_custom_validation_with_definitions_bad(tmp_path):
         pass
 
     # Opening file with custom schema should fail
-    with pytest.raises(ValidationError, match=r".* is a required property"), asdf.open(
-        asdf_file,
-        custom_schema=custom_schema_path,
+    with (
+        pytest.raises(ValidationError, match=r".* is a required property"),
+        asdf.open(
+            asdf_file,
+            custom_schema=custom_schema_path,
+        ),
     ):
         pass
 
@@ -1150,9 +1162,12 @@ def test_custom_validation_with_external_ref_bad(tmp_path):
         pass
 
     # Opening file with custom schema should fail
-    with pytest.raises(ValidationError, match=r"False is not valid under any of the given schemas"), asdf.open(
-        asdf_file,
-        custom_schema=custom_schema_path,
+    with (
+        pytest.raises(ValidationError, match=r"False is not valid under any of the given schemas"),
+        asdf.open(
+            asdf_file,
+            custom_schema=custom_schema_path,
+        ),
     ):
         pass
 

@@ -2,6 +2,7 @@
 Methods for getting and setting asdf global configuration
 options.
 """
+
 import collections
 import copy
 import threading

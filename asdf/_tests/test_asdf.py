@@ -348,10 +348,13 @@ def test_unclosed_file(tmp_path):
     path = tmp_path / "empty.asdf"
     path.touch()
 
-    with pytest.raises(
-        ValueError,
-        match=r"Does not appear to be a ASDF file.",
-    ), open_asdf(path):
+    with (
+        pytest.raises(
+            ValueError,
+            match=r"Does not appear to be a ASDF file.",
+        ),
+        open_asdf(path),
+    ):
         pass
 
 

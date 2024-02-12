@@ -7,6 +7,7 @@ used here to allow for the same behavior without requiring
 the block manager to have a reference to the `AsdfFile`
 (that references the block manager).
 """
+
 import os
 import urllib
 

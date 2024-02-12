@@ -2,6 +2,7 @@
 Implementation of the asdf.info(...) function.  This is just a thin wrapper
 around _display module code.
 """
+
 import pathlib
 from contextlib import contextmanager
 

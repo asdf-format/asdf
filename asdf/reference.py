@@ -4,7 +4,6 @@ standard <http://tools.ietf.org/html/draft-pbryan-zyp-json-ref-03>`__
 and `JSON Pointer standard <http://tools.ietf.org/html/rfc6901>`__.
 """
 
-
 import warnings
 import weakref
 from collections.abc import Sequence

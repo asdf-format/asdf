@@ -2,6 +2,7 @@
 Support for plugins that provide access to resources such
 as schemas.
 """
+
 import pkgutil
 from collections.abc import Mapping
 

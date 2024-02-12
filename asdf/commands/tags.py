@@ -2,7 +2,6 @@
 Implementation of command for displaying available tags in asdf
 """
 
-
 import sys
 
 from asdf import AsdfFile
