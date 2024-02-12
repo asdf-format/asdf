@@ -50,6 +50,11 @@ The ASDF Standard is at v1.6.0
 - Only show ``str`` representation during ``info`` and ``search``
   if it contains a single line (and does not fail)  [#1748]
 
+- Add options to control saving the base array when saving array views
+  controlled via ``AsdfConfig.default_array_save_base``,
+  ``AsdfFile.set_array_save_base`` and
+  ``SerializationContext.set_array_save_base`` [#1753]
+
 3.0.1 (2023-10-30)
 ------------------
 
