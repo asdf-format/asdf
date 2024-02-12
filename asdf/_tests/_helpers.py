@@ -1,3 +1,4 @@
+import collections.abc
 import io
 import os
 import warnings
@@ -115,12 +116,14 @@ def assert_tree_match(old_tree, new_tree, ctx=None, funcname="assert_equal", ign
             else:
                 getattr(old_type, funcname)(old, new)
 
-        elif isinstance(old, dict) and isinstance(new, dict):
+        elif isinstance(old, collections.abc.MutableMapping) and isinstance(new, collections.abc.MutableMapping):
             assert {x for x in old if x not in ignore_keys} == {x for x in new if x not in ignore_keys}
             for key in old:
                 if key not in ignore_keys:
                     recurse(old[key], new[key])
-        elif isinstance(old, (list, tuple)) and isinstance(new, (list, tuple)):
+        elif isinstance(old, (collections.abc.MutableSequence, tuple)) and isinstance(
+            new, (collections.abc.MutableSequence, tuple)
+        ):
             assert len(old) == len(new)
             for a, b in zip(old, new):
                 recurse(a, b)

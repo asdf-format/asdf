@@ -7,7 +7,7 @@ import inspect
 import warnings
 from types import GeneratorType
 
-from . import tagged, yamlutil
+from . import tagged
 from .exceptions import AsdfConversionWarning, AsdfLazyReferenceError
 from .extension._serialization_context import BlockAccess
 
@@ -117,6 +117,8 @@ class AsdfNode:
             else:
                 converter = extension_manager.get_converter_for_tag(tag)
                 if inspect.isgeneratorfunction(converter._delegate.from_yaml_tree):
+                    from . import yamlutil
+
                     obj = yamlutil.tagged_tree_to_custom_tree(value, af)
                 else:
                     data = _to_lazy_node(value.data, self._af_ref)
@@ -161,12 +163,6 @@ class AsdfListNode(AsdfNode, collections.UserList):
         AsdfNode.__init__(self, data, af_ref)
         collections.UserList.__init__(self, data)
 
-    @property
-    def __class__(self):
-        # this is necessary to allow this class to pass
-        # an isinstance(list) check without inheriting from list.
-        return list
-
     def __copy__(self):
         return AsdfListNode(self.data.copy(), self._af_ref)
 
@@ -197,12 +193,6 @@ class AsdfDictNode(AsdfNode, collections.UserDict):
         AsdfNode.__init__(self, data, af_ref)
         collections.UserDict.__init__(self, data)
 
-    @property
-    def __class__(self):
-        # this is necessary to allow this class to pass
-        # an isinstance(dict) check without inheriting from dict.
-        return dict
-
     def __copy__(self):
         return AsdfDictNode(self.data.copy(), self._af_ref)
 
@@ -227,10 +217,6 @@ class AsdfOrderedDictNode(AsdfDictNode):
         if data is None:
             data = collections.OrderedDict()
         AsdfDictNode.__init__(self, data, af_ref)
-
-    @property
-    def __class__(self):
-        return collections.OrderedDict
 
     def __copy__(self):
         return AsdfOrderedDictNode(self.data.copy(), self._af_ref)

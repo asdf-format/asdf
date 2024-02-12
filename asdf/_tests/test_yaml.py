@@ -1,3 +1,4 @@
+import collections.abc
 import io
 from collections import OrderedDict, namedtuple
 from typing import NamedTuple
@@ -23,14 +24,14 @@ def test_ordered_dict(tmp_path, with_lazy_tree):
         "unordered_dict": {"first": "foo", "second": "bar", "third": "baz"},
     }
 
-    def check_asdf(asdf):
-        tree = asdf.tree
+    def check_asdf(af):
+        tree = af.tree
 
-        assert isinstance(tree["ordered_dict"], OrderedDict)
+        assert isinstance(tree["ordered_dict"], (asdf.lazy_nodes.AsdfOrderedDictNode, OrderedDict))
         assert list(tree["ordered_dict"].keys()) == ["first", "second", "third"]
 
-        assert not isinstance(tree["unordered_dict"], OrderedDict)
-        assert isinstance(tree["unordered_dict"], dict)
+        assert not isinstance(tree["unordered_dict"], (asdf.lazy_nodes.AsdfOrderedDictNode, OrderedDict))
+        assert isinstance(tree["unordered_dict"], collections.abc.MutableMapping)
 
     def check_raw_yaml(content):
         assert b"OrderedDict" not in content
@@ -46,9 +47,9 @@ def test_unicode_write(tmp_path):
 
     tree = {"ɐʇɐp‾ǝpoɔıun": 42, "ascii_only": "this is ascii"}  # noqa: RUF001
 
-    def check_asdf(asdf):
-        assert "ɐʇɐp‾ǝpoɔıun" in asdf.tree  # noqa: RUF001
-        assert isinstance(asdf.tree["ascii_only"], str)
+    def check_asdf(af):
+        assert "ɐʇɐp‾ǝpoɔıun" in af.tree  # noqa: RUF001
+        assert isinstance(af.tree["ascii_only"], str)
 
     def check_raw_yaml(content):
         # Ensure that unicode is written out as UTF-8 without escape
@@ -78,8 +79,8 @@ def test_arbitrary_python_object():
 
 
 def run_tuple_test(tree, tmp_path):
-    def check_asdf(asdf):
-        assert isinstance(asdf.tree["val"], list)
+    def check_asdf(af):
+        assert isinstance(af.tree["val"], collections.abc.MutableSequence)
 
     def check_raw_yaml(content):
         assert b"tuple" not in content
@@ -140,8 +141,8 @@ def test_named_tuple_collections_recursive(tmp_path):
 
     tree = {"val": nt(1, 2, np.ones(3))}
 
-    def check_asdf(asdf):
-        assert (asdf.tree["val"][2] == np.ones(3)).all()
+    def check_asdf(af):
+        assert (af.tree["val"][2] == np.ones(3)).all()
 
     init_options = {"ignore_implicit_conversion": True}
     helpers.assert_roundtrip_tree(tree, tmp_path, asdf_check_func=check_asdf, init_options=init_options)
@@ -155,8 +156,8 @@ def test_named_tuple_typing_recursive(tmp_path):
 
     tree = {"val": NT(1, 2, np.ones(3))}
 
-    def check_asdf(asdf):
-        assert (asdf.tree["val"][2] == np.ones(3)).all()
+    def check_asdf(af):
+        assert (af.tree["val"][2] == np.ones(3)).all()
 
     init_options = {"ignore_implicit_conversion": True}
     helpers.assert_roundtrip_tree(tree, tmp_path, asdf_check_func=check_asdf, init_options=init_options)
@@ -190,9 +191,9 @@ def test_python_tuple_key(tmp_path):
 def test_tags_removed_after_load(tmp_path):
     tree = {"foo": ["bar", (1, 2, None)]}
 
-    def check_asdf(asdf):
-        for node in treeutil.iter_tree(asdf.tree):
-            if node != asdf.tree:
+    def check_asdf(af):
+        for node in treeutil.iter_tree(af.tree):
+            if node != af.tree:
                 assert not isinstance(node, tagged.Tagged)
 
     helpers.assert_roundtrip_tree(tree, tmp_path, asdf_check_func=check_asdf)

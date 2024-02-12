@@ -1,3 +1,4 @@
+import collections.abc
 import warnings
 from collections import OrderedDict
 from types import GeneratorType
@@ -5,7 +6,7 @@ from types import GeneratorType
 import numpy as np
 import yaml
 
-from . import config, schema, tagged, treeutil, util
+from . import config, lazy_nodes, schema, tagged, treeutil, util
 from .constants import STSCI_SCHEMA_TAG_BASE, YAML_TAG_PREFIX
 from .exceptions import AsdfConversionWarning
 from .extension._serialization_context import BlockAccess
@@ -114,6 +115,14 @@ AsdfDumper.add_representer(tagged.TaggedList, represent_sequence)
 AsdfDumper.add_representer(tagged.TaggedDict, represent_mapping)
 AsdfDumper.add_representer(tagged.TaggedString, represent_scalar)
 AsdfDumper.add_representer(OrderedDict, represent_ordereddict)
+
+AsdfDumper.add_representer(
+    lazy_nodes.AsdfListNode, lambda dumper, data: super(AsdfDumper, dumper).represent_sequence(None, data, None)
+)
+AsdfDumper.add_representer(
+    lazy_nodes.AsdfDictNode, lambda dumper, data: super(AsdfDumper, dumper).represent_mapping(None, data, None)
+)
+AsdfDumper.add_representer(lazy_nodes.AsdfOrderedDictNode, represent_ordereddict)
 
 # ----------------------------------------------------------------------
 # Handle numpy scalars
@@ -249,9 +258,9 @@ def custom_tree_to_tagged_tree(tree, ctx, _serialization_context=None):
         else:
             generator = None
 
-        if isinstance(node, dict):
+        if isinstance(node, collections.abc.MutableMapping):
             tagged_node = tagged.TaggedDict(node, tag)
-        elif isinstance(node, list):
+        elif isinstance(node, collections.abc.MutableSequence):
             tagged_node = tagged.TaggedList(node, tag)
         elif isinstance(node, str):
             tagged_node = tagged.TaggedString(node)

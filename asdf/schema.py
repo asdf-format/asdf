@@ -1,3 +1,4 @@
+import collections.abc
 import copy
 import datetime
 import json
@@ -243,7 +244,8 @@ def _create_validator(validators=YAML_VALIDATORS, visit_repeat_nodes=False):
 
     type_checker = mvalidators.Draft4Validator.TYPE_CHECKER.redefine_many(
         {
-            "array": lambda checker, instance: isinstance(instance, (list, tuple)),
+            "array": lambda checker, instance: isinstance(instance, (collections.abc.MutableSequence, tuple)),
+            "object": lambda checker, instance: isinstance(instance, collections.abc.MutableMapping),
             "integer": lambda checker, instance: not isinstance(instance, bool) and isinstance(instance, Integral),
             "string": lambda checker, instance: isinstance(instance, (str, np.str_)),
         },

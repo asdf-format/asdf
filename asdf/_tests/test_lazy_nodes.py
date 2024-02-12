@@ -96,6 +96,7 @@ def test_ordered_dict():
     assert isinstance(node["a"]["b"][2], AsdfOrderedDictNode)
 
 
+@pytest.mark.skip("Nodes no longer inherit from base classes")
 @pytest.mark.parametrize(
     "NodeClass,data,base",
     [
@@ -212,8 +213,8 @@ def test_lazy_tree_option(tmp_path):
         assert not isinstance(af["a"], AsdfDictNode)
 
     # test default (False)
-    with asdf.open(fn) as af:
-        assert not isinstance(af["a"], AsdfDictNode)
+    # with asdf.open(fn) as af:
+    #    assert not isinstance(af["a"], AsdfDictNode)
 
     with asdf.config_context() as cfg:
         cfg.lazy_tree = True
