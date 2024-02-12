@@ -88,8 +88,9 @@ def test_asdf_util_is_primitive_deprecation():
 
 def test_AsdfFile_tree_assignment_validation_deprecation():
     af = asdf.AsdfFile()
-    with pytest.warns(AsdfDeprecationWarning, match="Validation on tree assignment is deprecated"), pytest.raises(
-        ValidationError
+    with (
+        pytest.warns(AsdfDeprecationWarning, match="Validation on tree assignment is deprecated"),
+        pytest.raises(ValidationError),
     ):
         af.tree = {"history": 42}
 
@@ -97,9 +98,10 @@ def test_AsdfFile_tree_assignment_validation_deprecation():
 def test_AsdfFile_resolve_references_validation_deprecation():
     af = asdf.AsdfFile()
     af._tree["history"] = 42
-    with pytest.warns(
-        AsdfDeprecationWarning, match="Validation during resolve_references is deprecated"
-    ), pytest.raises(ValidationError):
+    with (
+        pytest.warns(AsdfDeprecationWarning, match="Validation during resolve_references is deprecated"),
+        pytest.raises(ValidationError),
+    ):
         af.resolve_references()
 
 
@@ -110,7 +112,8 @@ def test_AsdfFile_resolve_references_kwargs_deprecation():
 
 
 def test_AsdfFile_init_validation_deprecation():
-    with pytest.warns(AsdfDeprecationWarning, match="Validation during AsdfFile.__init__ is deprecated"), pytest.raises(
-        ValidationError
+    with (
+        pytest.warns(AsdfDeprecationWarning, match="Validation during AsdfFile.__init__ is deprecated"),
+        pytest.raises(ValidationError),
     ):
         asdf.AsdfFile({"history": 42})

@@ -43,13 +43,13 @@ repos:
       exclude: "asdf/(extern||_jsonschema)/.*"
 
 - repo: https://github.com/astral-sh/ruff-pre-commit
-  rev: 'v0.1.4'
+  rev: 'v0.2.1'
   hooks:
     - id: ruff
       args: ["--fix"]
 
 - repo: https://github.com/psf/black
-  rev: 23.10.1
+  rev: 24.1.1
   hooks:
     - id: black
 
@@ -59,6 +59,6 @@ repos:
     - id: blacken-docs
 
 - repo: https://github.com/abravalheri/validate-pyproject
-  rev: "v0.15"
+  rev: "v0.16"
   hooks:
     - id: validate-pyproject

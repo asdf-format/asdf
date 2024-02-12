@@ -3,7 +3,6 @@ Support for plugins that extend asdf to serialize
 additional custom types.
 """
 
-
 from ._compressor import Compressor
 from ._converter import Converter, ConverterProxy
 from ._extension import Extension, ExtensionProxy

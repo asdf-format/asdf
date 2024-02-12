@@ -2,7 +2,6 @@
 Contains commands for dealing with exploded and imploded forms.
 """
 
-
 import os
 
 import asdf

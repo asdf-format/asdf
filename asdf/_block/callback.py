@@ -14,6 +14,7 @@ argument to cache data, access the block header and other
 operations that we generally do not want to expose to
 extension code.
 """
+
 import weakref
 
 

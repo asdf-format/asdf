@@ -1,6 +1,7 @@
 """
 Integration tests for the new plugin APIs.
 """
+
 import pytest
 
 import asdf

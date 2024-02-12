@@ -640,8 +640,11 @@ arr: !core/ndarray-1.0.0
     """
     buff = helpers.yaml_to_asdf(content)
 
-    with pytest.raises(ValidationError, match=r".* is not valid under any of the given schemas"), asdf.open(
-        buff,
+    with (
+        pytest.raises(ValidationError, match=r".* is not valid under any of the given schemas"),
+        asdf.open(
+            buff,
+        ),
     ):
         pass
 
@@ -655,8 +658,11 @@ obj: !<tag:nowhere.org:custom/ndim-1.0.0>
     """
     buff = helpers.yaml_to_asdf(content)
 
-    with pytest.raises(ValidationError, match=r"Wrong number of dimensions:.*"), asdf.open(
-        buff,
+    with (
+        pytest.raises(ValidationError, match=r"Wrong number of dimensions:.*"),
+        asdf.open(
+            buff,
+        ),
     ):
         pass
 
@@ -708,8 +714,11 @@ obj: !<tag:nowhere.org:custom/ndim-1.0.0>
     """
     buff = helpers.yaml_to_asdf(content)
 
-    with pytest.raises(ValidationError, match=r"Wrong number of dimensions:.*"), asdf.open(
-        buff,
+    with (
+        pytest.raises(ValidationError, match=r"Wrong number of dimensions:.*"),
+        asdf.open(
+            buff,
+        ),
     ):
         pass
 
@@ -735,8 +744,11 @@ obj: !<tag:nowhere.org:custom/datatype-1.0.0>
     """
     buff = helpers.yaml_to_asdf(content)
 
-    with pytest.raises(ValidationError, match=r"Can not safely cast from .* to .*"), asdf.open(
-        buff,
+    with (
+        pytest.raises(ValidationError, match=r"Can not safely cast from .* to .*"),
+        asdf.open(
+            buff,
+        ),
     ):
         pass
 
@@ -759,8 +771,11 @@ obj: !<tag:nowhere.org:custom/datatype-1.0.0>
     """
     buff = helpers.yaml_to_asdf(content)
 
-    with pytest.raises(ValidationError, match=r"Expected datatype .*, got .*"), asdf.open(
-        buff,
+    with (
+        pytest.raises(ValidationError, match=r"Expected datatype .*, got .*"),
+        asdf.open(
+            buff,
+        ),
     ):
         pass
 
@@ -776,8 +791,11 @@ obj: !<tag:nowhere.org:custom/datatype-1.0.0>
     """
     buff = helpers.yaml_to_asdf(content)
 
-    with pytest.raises(ValidationError, match=r"Expected scalar datatype .*, got .*"), asdf.open(
-        buff,
+    with (
+        pytest.raises(ValidationError, match=r"Expected scalar datatype .*, got .*"),
+        asdf.open(
+            buff,
+        ),
     ):
         pass
 
@@ -811,8 +829,11 @@ obj: !<tag:nowhere.org:custom/datatype-1.0.0>
     """
     buff = helpers.yaml_to_asdf(content)
 
-    with pytest.raises(ValidationError, match=r"Can not safely cast to expected datatype.*"), asdf.open(
-        buff,
+    with (
+        pytest.raises(ValidationError, match=r"Can not safely cast to expected datatype.*"),
+        asdf.open(
+            buff,
+        ),
     ):
         pass
 
@@ -830,8 +851,11 @@ obj: !<tag:nowhere.org:custom/datatype-1.0.0>
     """
     buff = helpers.yaml_to_asdf(content)
 
-    with pytest.raises(ValidationError, match=r"Mismatch in number of columns:.*"), asdf.open(
-        buff,
+    with (
+        pytest.raises(ValidationError, match=r"Mismatch in number of columns:.*"),
+        asdf.open(
+            buff,
+        ),
     ):
         pass
 
@@ -842,8 +866,11 @@ obj: !<tag:nowhere.org:custom/datatype-1.0.0>
     """
     buff = helpers.yaml_to_asdf(content)
 
-    with pytest.raises(ValidationError, match=r"Expected structured datatype.*"), asdf.open(
-        buff,
+    with (
+        pytest.raises(ValidationError, match=r"Expected structured datatype.*"),
+        asdf.open(
+            buff,
+        ),
     ):
         pass
 
@@ -859,8 +886,11 @@ obj: !<tag:nowhere.org:custom/datatype-1.0.0>
     """
     buff = helpers.yaml_to_asdf(content)
 
-    with pytest.raises(ValidationError, match=r"Expected datatype .*, got .*"), asdf.open(
-        buff,
+    with (
+        pytest.raises(ValidationError, match=r"Expected datatype .*, got .*"),
+        asdf.open(
+            buff,
+        ),
     ):
         pass
 

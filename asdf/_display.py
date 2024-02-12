@@ -7,6 +7,7 @@ by the converter mechanism has a __asdf_traverse__() method, then it will
 call that method expecting a dict or list to be returned. The method can
 return what it thinks is suitable for display.
 """
+
 import numpy as np
 
 from ._node_info import create_tree

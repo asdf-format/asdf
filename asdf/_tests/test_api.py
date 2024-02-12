@@ -136,9 +136,12 @@ def test_update_exceptions(tmp_path):
     ff = asdf.AsdfFile(tree)
     ff.write_to(path)
 
-    with asdf.open(path, mode="r", copy_arrays=True) as ff, pytest.raises(
-        IOError,
-        match=r"Can not update, since associated file is read-only.*",
+    with (
+        asdf.open(path, mode="r", copy_arrays=True) as ff,
+        pytest.raises(
+            IOError,
+            match=r"Can not update, since associated file is read-only.*",
+        ),
     ):
         ff.update()
 

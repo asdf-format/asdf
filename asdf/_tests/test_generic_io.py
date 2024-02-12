@@ -146,9 +146,12 @@ def test_open_not_binary_fail(tmp_path, mode):
         fd.write("\n\n\n")
 
     file_mode = mode if mode != "rw" else "r+"
-    with open(path, file_mode) as fd, pytest.raises(
-        ValueError,
-        match=r"File-like object must be opened in binary mode.",
+    with (
+        open(path, file_mode) as fd,
+        pytest.raises(
+            ValueError,
+            match=r"File-like object must be opened in binary mode.",
+        ),
     ):
         generic_io.get_file(fd, mode=mode)
 
@@ -358,10 +361,14 @@ def test_unicode_open(tmp_path, small_tree):
 
     ff.write_to(path)
 
-    with open(path, encoding="utf-8") as fd, pytest.raises(
-        ValueError,
-        match=r"File-like object must be opened in binary mode.",
-    ), asdf.open(fd):
+    with (
+        open(path, encoding="utf-8") as fd,
+        pytest.raises(
+            ValueError,
+            match=r"File-like object must be opened in binary mode.",
+        ),
+        asdf.open(fd),
+    ):
         pass
 
 
@@ -376,9 +383,12 @@ def test_invalid_obj(tmp_path):
         generic_io.get_file(42)
 
     path = os.path.join(str(tmp_path), "test.asdf")
-    with generic_io.get_file(path, "w") as fd, pytest.raises(
-        ValueError,
-        match=r"File is opened as 'w', but 'r' was requested",
+    with (
+        generic_io.get_file(path, "w") as fd,
+        pytest.raises(
+            ValueError,
+            match=r"File is opened as 'w', but 'r' was requested",
+        ),
     ):
         generic_io.get_file(fd, "r")
 

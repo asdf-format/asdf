@@ -153,10 +153,13 @@ history:
     buff = helpers.yaml_to_asdf(yaml)
     with asdf.config_context() as cfg:
         cfg.add_extension(ExtensionProxy(FooExtension(), package_name, installed_package_version))
-        with pytest.warns(
-            AsdfWarning,
-            match=f"older package \\({package_name}=={installed_package_version}\\)",
-        ), asdf.open(buff):
+        with (
+            pytest.warns(
+                AsdfWarning,
+                match=f"older package \\({package_name}=={installed_package_version}\\)",
+            ),
+            asdf.open(buff),
+        ):
             pass
 
         buff.seek(0)
@@ -180,18 +183,24 @@ history:
     """
 
     buff = helpers.yaml_to_asdf(yaml)
-    with pytest.raises(
-        RuntimeError,
-        match=r"File was created with extension class .*, which is not currently installed",
-    ), asdf.open(buff, strict_extension_check=True):
+    with (
+        pytest.raises(
+            RuntimeError,
+            match=r"File was created with extension class .*, which is not currently installed",
+        ),
+        asdf.open(buff, strict_extension_check=True),
+    ):
         pass
 
     # Make sure to test for incompatibility with ignore_missing_extensions
     buff.seek(0)
-    with pytest.raises(
-        ValueError,
-        match=r"'strict_extension_check' and 'ignore_missing_extensions' are incompatible options",
-    ), asdf.open(buff, strict_extension_check=True, ignore_missing_extensions=True):
+    with (
+        pytest.raises(
+            ValueError,
+            match=r"'strict_extension_check' and 'ignore_missing_extensions' are incompatible options",
+        ),
+        asdf.open(buff, strict_extension_check=True, ignore_missing_extensions=True),
+    ):
         pass
 
 
@@ -225,9 +234,12 @@ def test_metadata_with_custom_extension(tmp_path):
         with asdf.open(file_path) as af:
             assert len(af["history"]["extensions"]) == 2
 
-    with pytest.warns(AsdfWarning, match=r"was created with extension"), asdf.open(
-        file_path,
-        ignore_unrecognized_tag=True,
+    with (
+        pytest.warns(AsdfWarning, match=r"was created with extension"),
+        asdf.open(
+            file_path,
+            ignore_unrecognized_tag=True,
+        ),
     ):
         pass
 

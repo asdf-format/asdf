@@ -378,10 +378,13 @@ def diff(filenames, minimal, iostream=sys.stdout, ignore=None):
     ignore_expressions = [] if ignore is None else [jmespath.compile(e) for e in ignore]
 
     try:
-        with asdf.open(filenames[0], _force_raw_types=True) as asdf0, asdf.open(
-            filenames[1],
-            _force_raw_types=True,
-        ) as asdf1:
+        with (
+            asdf.open(filenames[0], _force_raw_types=True) as asdf0,
+            asdf.open(
+                filenames[1],
+                _force_raw_types=True,
+            ) as asdf1,
+        ):
             ignore_ids = set()
             for expression in ignore_expressions:
                 for tree in [asdf0.tree, asdf1.tree]:

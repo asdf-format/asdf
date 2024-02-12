@@ -194,9 +194,10 @@ def test_make_reference(tmp_path):
 
         ff.write_to(os.path.join(str(tmp_path), "source.asdf"))
 
-    with pytest.warns(AsdfDeprecationWarning, match="find_references during open"), asdf.open(
-        os.path.join(str(tmp_path), "source.asdf")
-    ) as ff:
+    with (
+        pytest.warns(AsdfDeprecationWarning, match="find_references during open"),
+        asdf.open(os.path.join(str(tmp_path), "source.asdf")) as ff,
+    ):
         # this can be updated to add a find_references call when the deprecated automatic
         # find_references on open is removed
         assert ff.tree["ref"]._uri == "external.asdf#f~0o~0o~1/a"
