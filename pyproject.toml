@@ -163,6 +163,9 @@ exclude_lines = [
 [tool.ruff]
 target-version = "py38"
 line-length = 120
+extend-exclude = ["asdf/_extern/*", "asdf/_jsonschema/*", "docs/*"]
+
+[tool.ruff.lint]
 select = [
     # minimal set to match pre-ruff behavior
     "E", # pycodestyle
@@ -176,7 +179,6 @@ extend-ignore = [
     "S310", # URL open for permitted schemes
     "RUF012",  # mutable-class-default (typing related)
 ]
-extend-exclude = ["asdf/_extern/*", "asdf/_jsonschema/*", "docs/*"]
 
 [tool.ruff.per-file-ignores]
 "test_*.py" = ["S101"]
