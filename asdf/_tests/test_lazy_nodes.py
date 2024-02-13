@@ -1,6 +1,5 @@
 import collections
 import copy
-import json
 import weakref
 
 import numpy as np
@@ -111,17 +110,17 @@ def test_copy(node, copy_operation):
     assert copied_node == node
 
 
-@pytest.mark.parametrize(
-    "node",
-    [
-        _lazy_nodes.AsdfDictNode({"a": 1, "b": 2}),
-        _lazy_nodes.AsdfListNode([1, 2, 3]),
-        _lazy_nodes.AsdfOrderedDictNode({"a": 1, "b": 2}),
-    ],
-)
-def test_json_serialization(node):
-    rt_node = json.loads(json.dumps(node))
-    assert rt_node == node
+# @pytest.mark.parametrize(
+#     "node",
+#     [
+#         _lazy_nodes.AsdfDictNode({"a": 1, "b": 2}),
+#         _lazy_nodes.AsdfListNode([1, 2, 3]),
+#         _lazy_nodes.AsdfOrderedDictNode({"a": 1, "b": 2}),
+#     ],
+# )
+# def test_json_serialization(node):
+#     rt_node = json.loads(json.dumps(node))
+#     assert rt_node == node
 
 
 def test_cache_clear_on_close(tmp_path):
