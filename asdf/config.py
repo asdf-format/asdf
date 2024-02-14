@@ -405,7 +405,7 @@ class AsdfConfig:
     @default_array_save_base.setter
     def default_array_save_base(self, value):
         if not isinstance(value, bool):
-            msg = "all_array_save_base must be a bool"
+            msg = "default_array_save_base must be a bool"
             raise ValueError(msg)
         self._default_array_save_base = value
 

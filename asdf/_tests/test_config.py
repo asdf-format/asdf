@@ -342,3 +342,10 @@ def test_get_set_default_array_save_base(value):
     with asdf.config_context() as config:
         config.default_array_save_base = value
         assert config.default_array_save_base == value
+
+
+@pytest.mark.parametrize("value", [1, None])
+def test_invalid_set_default_array_save_base(value):
+    with asdf.config_context() as config:
+        with pytest.raises(ValueError, match="default_array_save_base must be a bool"):
+            config.default_array_save_base = value
