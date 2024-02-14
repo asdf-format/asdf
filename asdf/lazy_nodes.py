@@ -2,6 +2,7 @@
 Objects that act like dict, list, OrderedDict but allow
 lazy conversion of tagged ASDF tree nodes to custom objects.
 """
+
 import collections
 import inspect
 import warnings
@@ -11,7 +12,7 @@ from . import tagged, yamlutil
 from .exceptions import AsdfConversionWarning, AsdfLazyReferenceError
 from .extension._serialization_context import BlockAccess
 
-__all__ = ["AsdfNode", "AsdfDictNode", "AsdfListNode", "AsdfOrderedDictNode"]
+__all__ = ["AsdfDictNode", "AsdfListNode", "AsdfOrderedDictNode"]
 
 
 def _resolve_af_ref(af_ref):
@@ -26,7 +27,7 @@ def _resolve_af_ref(af_ref):
 
 def _to_lazy_node(node, af_ref):
     """
-    Convert an object to a AsdfNode subclass.
+    Convert an object to a _AsdfNode subclass.
     If the object does not have a corresponding subclass
     it will be returned unchanged.
     """
@@ -39,7 +40,7 @@ def _to_lazy_node(node, af_ref):
     return node
 
 
-class AsdfNode:
+class _AsdfNode:
     """
     The "lazy node" base class that handles object
     conversion and wrapping and contains a weak reference
@@ -63,12 +64,16 @@ class AsdfNode:
         Convert ``value`` to either:
 
             - a custom object if ``value`` is `asdf.tagged.Tagged`
-            - an `asdf.lazy_nodes.AsdfNode` subclass if ``value``
-              is a ``list``, ``dict``, ``OrderedDict``
+            - an ``asdf.lazy_nodes.AsdfListNode` if ``value`` is
+              a ``list``
+            - an ``asdf.lazy_nodes.AsdfDictNode` if ``value`` is
+              a ``dict``
+            - an ``asdf.lazy_nodes.AsdfOrderedDictNode` if ``value`` is
+              a ``OrderedDict``
             - otherwise return ``value`` unmodified
 
         After conversion the result (``obj``) will be stored in this
-        `asdf.lazy_nodes.AsdfNode` using the provided key and cached
+        `asdf.lazy_nodes._AsdfNode` using the provided key and cached
         in the corresponding `asdf.AsdfFile` instance (so other
         references to ``value`` in the tree will return the same
         ``obj``).
@@ -77,7 +82,7 @@ class AsdfNode:
         ----------
         value :
             The object to convert from a Tagged to custom object
-            or wrap with an AsdfNode or return unmodified.
+            or wrap with an _AsdfNode or return unmodified.
 
         key :
             The key under which the converted/wrapped object will
@@ -91,7 +96,7 @@ class AsdfNode:
             or wrapping is required).
         """
         # if the value has already been wrapped, return it
-        if isinstance(value, AsdfNode):
+        if isinstance(value, _AsdfNode):
             return value
         if not isinstance(value, tagged.Tagged) and type(value) not in _base_type_to_node_map:
             return value
@@ -139,7 +144,7 @@ class AsdfNode:
                     sctx.assign_blocks()
                     sctx._mark_extension_used(converter.extension)
         else:
-            # for non-tagged objects, wrap in an AsdfNode
+            # for non-tagged objects, wrap in an _AsdfNode
             node_type = _base_type_to_node_map[type(value)]
             obj = node_type(value, self._af_ref)
         # cache the converted/wrapped obj with the AsdfFile so other
@@ -150,15 +155,21 @@ class AsdfNode:
         return obj
 
 
-class AsdfListNode(AsdfNode, collections.UserList):
+class AsdfListNode(_AsdfNode, collections.UserList):
     """
-    An `AsdfNode` subclass that acts like a ``list``.
+    An class that acts like a ``list``. The items in this ``list``
+    will start out as tagged nodes which will only be converted to
+    custom objects the first time they are indexed (the custom object
+    will then be cached for later reuse).
+
+    If sliced, this will return a new instance of `AsdfListNode` for
+    the sliced portion of the list.
     """
 
     def __init__(self, data=None, af_ref=None):
         if data is None:
             data = []
-        AsdfNode.__init__(self, data, af_ref)
+        _AsdfNode.__init__(self, data, af_ref)
         collections.UserList.__init__(self, data)
 
     @property
@@ -186,15 +197,19 @@ class AsdfListNode(AsdfNode, collections.UserList):
         return self._convert_and_cache(value, key)
 
 
-class AsdfDictNode(AsdfNode, collections.UserDict):
+class AsdfDictNode(_AsdfNode, collections.UserDict):
     """
-    An `AsdfNode` subclass that acts like a ``dict``.
+    An class that acts like a ``dict``. The values for this
+    ``dict`` will start out as tagged nodes which will only
+    be converted to custom objects the first time the corresponding
+    key is used (the custom object will then be cached for later
+    reuse).
     """
 
     def __init__(self, data=None, af_ref=None):
         if data is None:
             data = {}
-        AsdfNode.__init__(self, data, af_ref)
+        _AsdfNode.__init__(self, data, af_ref)
         collections.UserDict.__init__(self, data)
 
     @property
@@ -220,7 +235,11 @@ class AsdfDictNode(AsdfNode, collections.UserDict):
 
 class AsdfOrderedDictNode(AsdfDictNode):
     """
-    An `AsdfNode` subclass that acts like a ``collections.OrderedDict``.
+    An class that acts like a ``collections.OrderedDict``. The values
+    for this ``OrderedDict`` will start out as tagged nodes which will only
+    be converted to custom objects the first time the corresponding
+    key is used (the custom object will then be cached for later
+    reuse).
     """
 
     def __init__(self, data=None, af_ref=None):
