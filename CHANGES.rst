@@ -37,6 +37,11 @@ The ASDF Standard is at v1.6.0
 - Eliminate the use of the legacy ``tmpdir`` fixture in favor of
   the new ``tmp_path`` fixture for temporary directory creation. [#1759]
 
+- Remove conversion of warnings to errors in asdf pytest plugin. This
+  prevented other warning filters (like those provided with ``-W``)
+  from working. If you want these warnings to produce errors you can
+  now add your own warning filter [#1757]
+
 3.0.1 (2023-10-30)
 ------------------
 
