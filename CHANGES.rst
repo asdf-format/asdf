@@ -24,6 +24,10 @@
   resolve to public classes (even if the class is implemented
   in a private module). [#1654]
 
+- Allow use of a starting wildcard in the ``asdf_schema_root`` setting
+  for the asdf pytest plugin to allow schemas to be collected during
+  ``--pyargs`` test runs [#1756]
+
 
 3.2.0 (2024-04-05)
 ------------------
