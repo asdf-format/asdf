@@ -157,3 +157,23 @@ def test_get_set_array_compression(block_access):
     assert af.get_array_compression_kwargs(arr) == kwargs
     assert context.get_array_compression(arr) == compression
     assert context.get_array_compression_kwargs(arr) == kwargs
+
+
+def test_get_set_array_save_base():
+    af = asdf.AsdfFile()
+    context = af._create_serialization_context()
+    arr = np.zeros(3)
+    cfg = asdf.get_config()
+    save_base = cfg.default_array_save_base
+    assert af.get_array_save_base(arr) == save_base
+    assert context.get_array_save_base(arr) == save_base
+
+    save_base = not save_base
+    context.set_array_save_base(arr, save_base)
+    assert af.get_array_save_base(arr) == save_base
+    assert context.get_array_save_base(arr) == save_base
+
+    save_base = not save_base
+    af.set_array_save_base(arr, save_base)
+    assert af.get_array_save_base(arr) == save_base
+    assert context.get_array_save_base(arr) == save_base
