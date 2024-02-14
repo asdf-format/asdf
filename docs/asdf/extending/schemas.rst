@@ -276,6 +276,10 @@ package directory **when it is installed**. If this is different from the path
 in the source directory, then both paths can be used to facilitate in-place
 testing (see `asdf`'s own ``pyproject.toml`` for an example of this).
 
+The ``asdf_schema_root`` may also start with a "wildcard" (``*``) which will cause
+the plugin to match any path that contains the ``asdf_schema_root`` setting (without
+the wildcard).
+
 .. note::
 
    Older versions of `asdf` (prior to 2.4.0) required the plugin to be registered
