@@ -287,6 +287,7 @@ def test_open_pathlib_path(tmp_path):
 @pytest.mark.parametrize(
     ("installed", "extension", "warns"),
     [
+        (None, "2.0.0", True),
         ("1.2.3", "2.0.0", True),
         ("1.2.3", "2.0.dev10842", True),
         ("2.0.0", "2.0.0", False),
@@ -301,7 +302,8 @@ def test_extension_version_check(installed, extension, warns):
     proxy = ExtensionProxy(FooExtension(), package_name="foo", package_version=installed)
 
     with config_context() as config:
-        config.add_extension(proxy)
+        if installed is not None:
+            config.add_extension(proxy)
         af = asdf.AsdfFile()
 
     af._fname = "test.asdf"
@@ -331,6 +333,7 @@ def test_extension_version_check(installed, extension, warns):
 @pytest.mark.parametrize(
     ("installed", "extension", "warns"),
     [
+        (None, "2.0.0", True),
         ("1.2.3", "2.0.0", True),
         ("1.2.3", "2.0.dev10842", True),
         ("2.0.0", "2.0.0", False),
@@ -348,7 +351,8 @@ def test_check_extension_manifest_software(installed, extension, warns):
 
     with config_context() as config:
         config.add_extension(proxy)
-        config.add_resource_mapping(mapping)
+        if installed is not None:
+            config.add_resource_mapping(mapping)
         af = asdf.AsdfFile()
 
         af._fname = "test.asdf"
