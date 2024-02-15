@@ -19,6 +19,7 @@ from .config import config_context, get_config
 from .exceptions import (
     AsdfConversionWarning,
     AsdfDeprecationWarning,
+    AsdfPackageVersionWarning,
     AsdfWarning,
     DelimiterNotFoundError,
     ValidationError,
@@ -351,7 +352,7 @@ class AsdfFile:
                 if strict:
                     raise RuntimeError(msg)
 
-                warnings.warn(msg, AsdfWarning)
+                warnings.warn(msg, AsdfPackageVersionWarning)
 
             elif extension.software:
                 # Local extensions may not have a real version.  If the package name changed,
@@ -367,7 +368,7 @@ class AsdfFile:
                     if strict:
                         raise RuntimeError(msg)
 
-                    warnings.warn(msg, AsdfWarning)
+                    warnings.warn(msg, AsdfPackageVersionWarning)
 
             # check version of manifest providing package (if one was recorded)
             if "manifest_software" in extension:
@@ -393,7 +394,7 @@ class AsdfFile:
                 if msg:
                     if strict:
                         raise RuntimeError(msg)
-                    warnings.warn(msg, AsdfWarning)
+                    warnings.warn(msg, AsdfPackageVersionWarning)
 
     def _process_plugin_extensions(self):
         """

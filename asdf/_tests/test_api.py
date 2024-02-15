@@ -12,7 +12,7 @@ from numpy.testing import assert_array_equal
 
 import asdf
 from asdf import config_context, get_config, treeutil, versioning
-from asdf.exceptions import AsdfDeprecationWarning, AsdfWarning, ValidationError
+from asdf.exceptions import AsdfDeprecationWarning, AsdfPackageVersionWarning, ValidationError
 from asdf.extension import ExtensionProxy
 from asdf.resource import ResourceMappingProxy
 
@@ -318,7 +318,7 @@ def test_extension_version_check(installed, extension, warns):
     }
 
     if warns:
-        with pytest.warns(AsdfWarning, match=r"File 'test.asdf' was created with"):
+        with pytest.warns(AsdfPackageVersionWarning, match=r"File 'test.asdf' was created with"):
             af._check_extensions(tree)
 
         with pytest.raises(RuntimeError, match=r"^File 'test.asdf' was created with"):
@@ -366,7 +366,7 @@ def test_check_extension_manifest_software(installed, extension, warns):
         }
 
         if warns:
-            with pytest.warns(AsdfWarning, match=r"File 'test.asdf' was created with"):
+            with pytest.warns(AsdfPackageVersionWarning, match=r"File 'test.asdf' was created with"):
                 af._check_extensions(tree)
 
             with pytest.raises(RuntimeError, match=r"^File 'test.asdf' was created with"):
