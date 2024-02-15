@@ -374,6 +374,32 @@ class AsdfFile:
 
                     warnings.warn(msg, AsdfWarning)
 
+            # check version of manifest providing package (if one was recorded)
+            if "manifest_software" in extension:
+                package_name = extension["manifest_software"]["name"]
+                package_version = Version(extension["manifest_software"]["version"])
+                package_description = f"{package_name}=={package_version}"
+                installed_version = None
+                for mapping in get_config().resource_manager._resource_mappings:
+                    if mapping.package_name == package_name:
+                        installed_version = Version(mapping.package_version)
+                        break
+                msg = None
+                if installed_version is None:
+                    msg = (
+                        f"File {filename}was created with package {package_description}, "
+                        "which is currently not installed"
+                    )
+                elif installed_version < package_version:
+                    msg = (
+                        f"File {filename}was created with package {package_description}, "
+                        f"but older package({package_name}=={installed_version}) is installed."
+                    )
+                if msg:
+                    if strict:
+                        raise RuntimeError(msg)
+                    warnings.warn(msg, AsdfWarning)
+
     def _process_plugin_extensions(self):
         """
         Select installed extensions that are compatible with this
