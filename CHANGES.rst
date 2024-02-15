@@ -34,6 +34,9 @@ The ASDF Standard is at v1.6.0
 - Require pytest 7+ and update asdf pytest plugin to be compatible
   with the current development version of pytest (8.1) [#1731]
 
+- When using a custom schema for validation, also validate using the
+  schema associated with the tag for a ``Tagged`` object [#1737]
+
 3.0.1 (2023-10-30)
 ------------------
 
