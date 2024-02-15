@@ -48,3 +48,9 @@ class AsdfProvisionalAPIWarning(AsdfWarning, FutureWarning):
     are likely to be added in a future ASDF version. However, Use of
     provisional features is highly discouraged for production code.
     """
+
+
+class AsdfPackageVersionWarning(AsdfWarning):
+    """
+    A warning indicating a package version mismatch
+    """
