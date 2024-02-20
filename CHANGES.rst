@@ -34,6 +34,9 @@ The ASDF Standard is at v1.6.0
 - Require pytest 7+ and update asdf pytest plugin to be compatible
   with the current development version of pytest (8.1) [#1731]
 
+- Eliminate the use of the legacy ``tmpdir`` fixture in favor of
+  the new ``tmp_path`` fixture for temporary directory creation. [#1759]
+
 3.0.1 (2023-10-30)
 ------------------
 

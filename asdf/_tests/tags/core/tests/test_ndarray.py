@@ -152,7 +152,7 @@ def test_sharing():
         assert tree["skipping"][0] == 42
 
 
-def test_byteorder(tmpdir):
+def test_byteorder(tmp_path):
     tree = {
         "bigendian": np.arange(0, 10, dtype=">f8"),
         "little": np.arange(0, 10, dtype="<f8"),
@@ -171,7 +171,7 @@ def test_byteorder(tmpdir):
             assert my_tree["little"].dtype.byteorder == "<"
 
 
-def test_all_dtypes(tmpdir):
+def test_all_dtypes(tmp_path):
     tree = {}
     for byteorder in (">", "<"):
         for dtype in ndarray._datatype_names.values():
@@ -210,7 +210,7 @@ def test_dont_load_data():
             assert callable(block._data)
 
 
-def test_table_inline(tmpdir):
+def test_table_inline(tmp_path):
     table = np.array(
         [(0, 1, (2, 3)), (4, 5, (6, 7))],
         dtype=[("MINE", np.int8), ("", np.float64), ("arr", ">i4", (2,))],
@@ -240,7 +240,7 @@ def test_table_inline(tmpdir):
             }
 
 
-def test_array_inline_threshold_recursive(tmpdir):
+def test_array_inline_threshold_recursive(tmp_path):
     """
     Test that setting the inline threshold works for objects
     that contain (and when serialized produce a ndarray)
@@ -280,7 +280,7 @@ def test_array_inline_threshold_recursive(tmpdir):
         # using == which will fail
         # this test appears to be designed to test the inline threshold so we can
         # just look at the number of blocks
-        fn = str(tmpdir / "test.asdf")
+        fn = str(tmp_path / "test.asdf")
         af = asdf.AsdfFile(tree)
         af.write_to(fn)
         with asdf.open(fn) as af:
@@ -301,7 +301,7 @@ x0: !core/ndarray-1.0.0
         f.write_to(io.BytesIO())
 
 
-def test_table(tmpdir):
+def test_table(tmp_path):
     table = np.array([(0, 1, (2, 3)), (4, 5, (6, 7))], dtype=[("MINE", np.int8), ("", "<f8"), ("arr", ">i4", (2,))])
 
     tree = {"table_data": table}
@@ -324,7 +324,7 @@ def test_table(tmpdir):
         }
 
 
-def test_table_nested_fields(tmpdir):
+def test_table_nested_fields(tmp_path):
     table = np.array(
         [(0, (1, 2)), (4, (5, 6)), (7, (8, 9))],
         dtype=[("A", "<i8"), ("B", [("C", "<i8"), ("D", "<i8")])],
@@ -385,7 +385,7 @@ def test_inline_bare():
         assert_array_equal(ff.tree["arr"], [[1, 2, 3, 4], [5, 6, 7, 8]])
 
 
-def test_mask_roundtrip(tmpdir):
+def test_mask_roundtrip(tmp_path):
     x = np.arange(0, 10, dtype=float)
     m = ma.array(x, mask=x > 5)
     tree = {"masked_array": m, "unmasked_array": x}
@@ -399,7 +399,7 @@ def test_mask_roundtrip(tmpdir):
         assert len(af._blocks.blocks) == 2
 
 
-def test_len_roundtrip(tmpdir):
+def test_len_roundtrip(tmp_path):
     sequence = np.arange(0, 10, dtype=int)
     tree = {"sequence": sequence}
 
@@ -432,7 +432,7 @@ arr: !core/ndarray-1.0.0
         assert_array_equal(ff.tree["arr"].mask, [[False, False, False, True], [False, False, False, False]])
 
 
-def test_string(tmpdir):
+def test_string(tmp_path):
     tree = {
         "ascii": np.array([b"foo", b"bar", b"baz"]),
         "unicode": np.array(["სამეცნიერო", "данные", "வடிவம்"]),
@@ -443,7 +443,7 @@ def test_string(tmpdir):
             assert_array_equal(tree[k], af[k])
 
 
-def test_string_table(tmpdir):
+def test_string_table(tmp_path):
     tree = {"table": np.array([(b"foo", "სამეცნიერო", "42", "53.0")])}
 
     with roundtrip(tree) as af:
@@ -501,7 +501,7 @@ def test_simple_table():
     ff.write_to(io.BytesIO())
 
 
-def test_unicode_to_list(tmpdir):
+def test_unicode_to_list(tmp_path):
     arr = np.array(["", "𐀠"], dtype="<U")
     tree = {"unicode": arr}
 
@@ -516,8 +516,8 @@ def test_unicode_to_list(tmpdir):
         ff.write_to(io.BytesIO(), all_array_storage="inline")
 
 
-def test_inline_masked_array(tmpdir):
-    testfile = os.path.join(str(tmpdir), "masked.asdf")
+def test_inline_masked_array(tmp_path):
+    testfile = os.path.join(str(tmp_path), "masked.asdf")
 
     tree = {"test": ma.array([1, 2, 3], mask=[0, 1, 0])}
 
@@ -533,10 +533,10 @@ def test_inline_masked_array(tmpdir):
         assert b"null" in fd.read()
 
 
-def test_masked_array_stay_open_bug(tmpdir):
+def test_masked_array_stay_open_bug(tmp_path):
     psutil = pytest.importorskip("psutil")
 
-    tmppath = os.path.join(str(tmpdir), "masked.asdf")
+    tmppath = os.path.join(str(tmp_path), "masked.asdf")
 
     tree = {"test": np.ma.array([1, 2, 3], mask=[False, True, False])}
 
@@ -553,7 +553,7 @@ def test_masked_array_stay_open_bug(tmpdir):
     assert len(p.open_files()) <= len(orig_open)
 
 
-def test_memmap_stay_open_bug(tmpdir):
+def test_memmap_stay_open_bug(tmp_path):
     """
     Regression test for issue #1239
     memmapped arrays only closed at garbage collection when asdf.open given an open file
@@ -566,7 +566,7 @@ def test_memmap_stay_open_bug(tmpdir):
     """
     psutil = pytest.importorskip("psutil")
 
-    tmppath = os.path.join(str(tmpdir), "arr.asdf")
+    tmppath = os.path.join(str(tmp_path), "arr.asdf")
 
     tree = {"test": np.array([1, 2, 3])}
 
@@ -583,8 +583,8 @@ def test_memmap_stay_open_bug(tmpdir):
     assert len(p.open_files()) <= len(orig_open)
 
 
-def test_masked_array_repr(tmpdir):
-    tmppath = os.path.join(str(tmpdir), "masked.asdf")
+def test_masked_array_repr(tmp_path):
+    tmppath = os.path.join(str(tmp_path), "masked.asdf")
 
     tree = {"array": np.arange(10), "masked": np.ma.array([1, 2, 3], mask=[False, True, False])}
 
@@ -594,8 +594,8 @@ def test_masked_array_repr(tmpdir):
         assert "masked array" in repr(ff.tree["masked"])
 
 
-def test_operations_on_ndarray_proxies(tmpdir):
-    tmppath = os.path.join(str(tmpdir), "test.asdf")
+def test_operations_on_ndarray_proxies(tmp_path):
+    tmppath = os.path.join(str(tmp_path), "test.asdf")
 
     tree = {"array": np.arange(10)}
 
@@ -616,7 +616,7 @@ def test_operations_on_ndarray_proxies(tmpdir):
         assert_array_equal(ff.tree["array"], x)
 
 
-def test_mask_datatype(tmpdir):
+def test_mask_datatype(tmp_path):
     content = """
 arr: !core/ndarray-1.0.0
     data: [1, 2, 3]
@@ -630,7 +630,7 @@ arr: !core/ndarray-1.0.0
         pass
 
 
-def test_invalid_mask_datatype(tmpdir):
+def test_invalid_mask_datatype(tmp_path):
     content = """
 arr: !core/ndarray-1.0.0
     data: [1, 2, 3]
@@ -650,7 +650,7 @@ arr: !core/ndarray-1.0.0
 
 
 @with_custom_extension()
-def test_ndim_validation(tmpdir):
+def test_ndim_validation(tmp_path):
     content = """
 obj: !<tag:nowhere.org:custom/ndim-1.0.0>
     a: !core/ndarray-1.0.0
@@ -724,7 +724,7 @@ obj: !<tag:nowhere.org:custom/ndim-1.0.0>
 
 
 @with_custom_extension()
-def test_datatype_validation(tmpdir):
+def test_datatype_validation(tmp_path):
     content = """
 obj: !<tag:nowhere.org:custom/datatype-1.0.0>
     a: !core/ndarray-1.0.0
@@ -801,7 +801,7 @@ obj: !<tag:nowhere.org:custom/datatype-1.0.0>
 
 
 @with_custom_extension()
-def test_structured_datatype_validation(tmpdir):
+def test_structured_datatype_validation(tmp_path):
     content = """
 obj: !<tag:nowhere.org:custom/datatype-1.0.0>
     c: !core/ndarray-1.0.0
@@ -930,14 +930,14 @@ arr: !core/ndarray-1.0.0
         pass
 
 
-def test_broadcasted_array(tmpdir):
+def test_broadcasted_array(tmp_path):
     attrs = np.broadcast_arrays(np.array([10, 20]), np.array(10), np.array(10))
     tree = {"one": attrs[1]}  # , 'two': attrs[1], 'three': attrs[2]}
     with roundtrip(tree) as af:
         assert_array_equal(tree["one"], af["one"])
 
 
-def test_broadcasted_offset_array(tmpdir):
+def test_broadcasted_offset_array(tmp_path):
     base = np.arange(10)
     offset = base[5:]
     broadcasted = np.broadcast_to(offset, (4, 5))
@@ -946,7 +946,7 @@ def test_broadcasted_offset_array(tmpdir):
         assert_array_equal(tree["broadcasted"], af["broadcasted"])
 
 
-def test_non_contiguous_base_array(tmpdir):
+def test_non_contiguous_base_array(tmp_path):
     base = np.arange(60).reshape(5, 4, 3).transpose(2, 0, 1) * 1
     contiguous = base.transpose(1, 2, 0)
     tree = {"contiguous": contiguous}
@@ -954,7 +954,7 @@ def test_non_contiguous_base_array(tmpdir):
         assert_array_equal(tree["contiguous"], af["contiguous"])
 
 
-def test_fortran_order(tmpdir):
+def test_fortran_order(tmp_path):
     array = np.array([[11, 12, 13], [21, 22, 23]], order="F", dtype=np.int64)
     tree = {"data": array}
 
@@ -967,8 +967,8 @@ def test_fortran_order(tmpdir):
         assert tree["data"]["strides"] == [8, 16]
 
 
-def test_memmap_write(tmpdir):
-    tmpfile = str(tmpdir.join("data.asdf"))
+def test_memmap_write(tmp_path):
+    tmpfile = str(tmp_path / "data.asdf")
     tree = {"data": np.zeros(100)}
 
     with asdf.AsdfFile(tree) as af:
@@ -988,8 +988,8 @@ def test_memmap_write(tmpdir):
         assert af["data"][0] == 42
 
 
-def test_readonly(tmpdir):
-    tmpfile = str(tmpdir.join("data.asdf"))
+def test_readonly(tmp_path):
+    tmpfile = str(tmp_path / "data.asdf")
     tree = {"data": np.ndarray(100)}
 
     with asdf.AsdfFile(tree) as af:
@@ -1019,8 +1019,8 @@ def test_readonly(tmpdir):
         af["data"][0] = 42
 
 
-def test_readonly_inline(tmpdir):
-    tmpfile = str(tmpdir.join("data.asdf"))
+def test_readonly_inline(tmp_path):
+    tmpfile = str(tmp_path / "data.asdf")
     tree = {"data": np.ndarray(100)}
 
     with asdf.AsdfFile(tree) as af:
@@ -1035,8 +1035,8 @@ def test_readonly_inline(tmpdir):
 # Confirm that NDArrayType's internal array is regenerated
 # following an update.
 @pytest.mark.parametrize("pad_blocks", [True, False])
-def test_block_data_change(pad_blocks, tmpdir):
-    tmpfile = str(tmpdir.join("data.asdf"))
+def test_block_data_change(pad_blocks, tmp_path):
+    tmpfile = str(tmp_path / "data.asdf")
     tree = {"data": np.zeros(10, dtype="uint8")}
     with asdf.AsdfFile(tree) as af:
         af.write_to(tmpfile, pad_blocks=pad_blocks)

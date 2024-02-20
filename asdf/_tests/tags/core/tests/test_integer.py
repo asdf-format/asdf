@@ -22,18 +22,18 @@ random.seed(0)
         random.getrandbits(200),
     ],
 )
-def test_integer_value(tmpdir, value, sign):
+def test_integer_value(tmp_path, value, sign):
     if sign == "-":
         value = -value
 
     integer = IntegerType(value)
     tree = {"integer": integer}
-    helpers.assert_roundtrip_tree(tree, tmpdir)
+    helpers.assert_roundtrip_tree(tree, tmp_path)
 
 
 @pytest.mark.parametrize("inline", [False, True])
-def test_integer_storage(tmpdir, inline):
-    tmpfile = str(tmpdir.join("integer.asdf"))
+def test_integer_storage(tmp_path, inline):
+    tmpfile = str(tmp_path / "integer.asdf")
 
     kwargs = {}
     if inline:
