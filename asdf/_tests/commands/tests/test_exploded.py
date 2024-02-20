@@ -8,7 +8,7 @@ from asdf._tests._helpers import assert_tree_match, get_file_sizes
 from asdf.commands import main
 
 
-def test_explode_then_implode(tmpdir):
+def test_explode_then_implode(tmp_path):
     x = np.arange(0, 10, dtype=float)
 
     tree = {
@@ -18,7 +18,7 @@ def test_explode_then_implode(tmpdir):
         "not_shared": np.arange(10, 0, -1, dtype=np.uint8),
     }
 
-    path = os.path.join(str(tmpdir), "original.asdf")
+    path = os.path.join(str(tmp_path), "original.asdf")
     ff = AsdfFile(tree)
     # Since we're testing with small arrays, force all arrays to be stored
     # in internal blocks rather than letting some of them be automatically put
@@ -31,7 +31,7 @@ def test_explode_then_implode(tmpdir):
 
     assert result == 0
 
-    files = get_file_sizes(str(tmpdir))
+    files = get_file_sizes(str(tmp_path))
 
     assert "original.asdf" in files
     assert "original_exploded.asdf" in files
@@ -41,16 +41,16 @@ def test_explode_then_implode(tmpdir):
 
     assert files["original.asdf"] > files["original_exploded.asdf"]
 
-    path = os.path.join(str(tmpdir), "original_exploded.asdf")
+    path = os.path.join(str(tmp_path), "original_exploded.asdf")
     result = main.main_from_args(["implode", path])
 
     assert result == 0
 
-    with asdf.open(str(tmpdir.join("original_exploded_all.asdf"))) as af:
+    with asdf.open(str(tmp_path / "original_exploded_all.asdf")) as af:
         assert_tree_match(af.tree, tree)
         assert len(af._blocks.blocks) == 2
 
 
-def test_file_not_found(tmpdir):
-    path = os.path.join(str(tmpdir), "original.asdf")
+def test_file_not_found(tmp_path):
+    path = os.path.join(str(tmp_path), "original.asdf")
     assert main.main_from_args(["explode", path]) == 2

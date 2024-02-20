@@ -9,7 +9,7 @@ from asdf._tests._helpers import assert_tree_match, get_file_sizes
 from asdf.commands import main
 
 
-def _test_defragment(tmpdir, codec):
+def _test_defragment(tmp_path, codec):
     x = np.arange(0, 1000, dtype=float)
 
     tree = {
@@ -19,8 +19,8 @@ def _test_defragment(tmpdir, codec):
         "not_shared": np.arange(100, 0, -1, dtype=np.uint8),
     }
 
-    path = os.path.join(str(tmpdir), "original.asdf")
-    out_path = os.path.join(str(tmpdir), "original.defragment.asdf")
+    path = os.path.join(str(tmp_path), "original.asdf")
+    out_path = os.path.join(str(tmp_path), "original.defragment.asdf")
     ff = AsdfFile(tree)
     ff.write_to(path)
     with asdf.open(path) as af:
@@ -30,26 +30,26 @@ def _test_defragment(tmpdir, codec):
 
     assert result == 0
 
-    files = get_file_sizes(str(tmpdir))
+    files = get_file_sizes(str(tmp_path))
 
     assert "original.asdf" in files
     assert "original.defragment.asdf" in files
 
     assert files["original.defragment.asdf"] < files["original.asdf"]
 
-    with asdf.open(os.path.join(str(tmpdir), "original.defragment.asdf")) as ff:
+    with asdf.open(os.path.join(str(tmp_path), "original.defragment.asdf")) as ff:
         assert_tree_match(ff.tree, tree)
         assert len(ff._blocks.blocks) == 2
 
 
-def test_defragment_zlib(tmpdir):
-    _test_defragment(tmpdir, "zlib")
+def test_defragment_zlib(tmp_path):
+    _test_defragment(tmp_path, "zlib")
 
 
-def test_defragment_bzp2(tmpdir):
-    _test_defragment(tmpdir, "bzp2")
+def test_defragment_bzp2(tmp_path):
+    _test_defragment(tmp_path, "bzp2")
 
 
-def test_defragment_lz4(tmpdir):
+def test_defragment_lz4(tmp_path):
     pytest.importorskip("lz4")
-    _test_defragment(tmpdir, "lz4")
+    _test_defragment(tmp_path, "lz4")

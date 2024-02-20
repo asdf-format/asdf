@@ -299,7 +299,7 @@ def pytest_collect_file(file_path, parent):
     skip_tests = _parse_test_list(parent.config.getini("asdf_schema_skip_tests"))
     xfail_tests = _parse_test_list(parent.config.getini("asdf_schema_xfail_tests"))
 
-    schema_roots = [os.path.join(str(parent.config.rootdir), os.path.normpath(root)) for root in schema_roots]
+    schema_roots = [os.path.join(str(parent.config.rootpath), os.path.normpath(root)) for root in schema_roots]
 
     if file_path.suffix != ".yaml":
         return None

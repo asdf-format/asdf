@@ -8,7 +8,7 @@ from asdf._tests._helpers import assert_tree_match, get_file_sizes
 from asdf.commands import main
 
 
-def test_to_yaml(tmpdir):
+def test_to_yaml(tmp_path):
     x = np.arange(0, 10, dtype=float)
 
     tree = {
@@ -18,7 +18,7 @@ def test_to_yaml(tmpdir):
         "not_shared": np.arange(10, 0, -1, dtype=np.uint8),
     }
 
-    path = os.path.join(str(tmpdir), "original.asdf")
+    path = os.path.join(str(tmp_path), "original.asdf")
     ff = AsdfFile(tree)
     ff.write_to(path)
     with asdf.open(path) as ff2:
@@ -28,11 +28,11 @@ def test_to_yaml(tmpdir):
 
     assert result == 0
 
-    files = get_file_sizes(str(tmpdir))
+    files = get_file_sizes(str(tmp_path))
 
     assert "original.asdf" in files
     assert "original.yaml" in files
 
-    with asdf.open(os.path.join(str(tmpdir), "original.yaml")) as ff:
+    with asdf.open(os.path.join(str(tmp_path), "original.yaml")) as ff:
         assert_tree_match(ff.tree, tree)
         assert len(list(ff._blocks.blocks)) == 0
