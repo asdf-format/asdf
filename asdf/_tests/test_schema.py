@@ -842,8 +842,8 @@ def test_schema_resolved_via_entry_points():
     extension_manager = asdf.extension.get_cached_extension_manager(get_config().extensions)
     schema_uris = extension_manager.get_tag_definition(tag).schema_uris
     assert len(schema_uris) > 0
-    s = schema.load_schema(schema_uris[0], resolve_references=True)
-    assert tag in repr(s)
+    s = schema.load_schema(schema_uris[0])
+    assert s["id"] == schema_uris[0]
 
 
 @pytest.mark.parametrize("num", [constants.MAX_NUMBER + 1, constants.MIN_NUMBER - 1])
