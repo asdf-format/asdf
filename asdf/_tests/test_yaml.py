@@ -337,7 +337,8 @@ def test_ndarray_subclass_conversion(tmp_path):
 )
 def test_invalid_omap(payload):
     test_yaml = f"""od: !!omap
-{payload}"""
+{payload}
+"""
 
     # Check that fully qualified explicit tags work
     buff = yaml_to_asdf(test_yaml)
