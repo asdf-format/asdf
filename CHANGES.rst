@@ -1,4 +1,4 @@
-3.1.0 (unreleased)
+3.1.0 (2024-02-27)
 ------------------
 
 The ASDF Standard is at v1.6.0
@@ -41,7 +41,6 @@ The ASDF Standard is at v1.6.0
   prevented other warning filters (like those provided with ``-W``)
   from working. If you want these warnings to produce errors you can
   now add your own warning filter [#1757]
-
 
 - Only show ``str`` representation during ``info`` and ``search``
   if it contains a single line (and does not fail)  [#1748]
