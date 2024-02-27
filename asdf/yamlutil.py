@@ -175,7 +175,7 @@ class AsdfLoader(_yaml_base_loader):
         yield omap
         if not isinstance(node, yaml.SequenceNode):
             msg = "while constructing an ordered map"
-            raise yaml.ConstructorError(
+            raise yaml.constructor.ConstructorError(
                 msg,
                 node.start_mark,
                 f"expected a sequence, but found {node.id}",
@@ -184,7 +184,7 @@ class AsdfLoader(_yaml_base_loader):
         for subnode in node.value:
             if not isinstance(subnode, yaml.MappingNode):
                 msg = "while constructing an ordered map"
-                raise yaml.ConstructorError(
+                raise yaml.constructor.ConstructorError(
                     msg,
                     node.start_mark,
                     f"expected a mapping of length 1, but found {subnode.id}",
@@ -192,10 +192,10 @@ class AsdfLoader(_yaml_base_loader):
                 )
             if len(subnode.value) != 1:
                 msg = "while constructing an ordered map"
-                raise yaml.ConstructorError(
+                raise yaml.constructor.ConstructorError(
                     msg,
                     node.start_mark,
-                    f"expected a single mapping item, but found {len(subnode.value): %d} items",
+                    f"expected a single mapping item, but found {len(subnode.value)} items",
                     subnode.start_mark,
                 )
             key_node, value_node = subnode.value[0]

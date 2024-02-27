@@ -309,3 +309,27 @@ def test_ndarray_subclass_conversion(tmp_path):
         cfg.convert_unknown_ndarray_subclasses = False
         with pytest.raises(yaml.representer.RepresenterError, match=r".*cannot represent.*"):
             af.write_to(fn)
+
+
+@pytest.mark.parametrize(
+    "payload",
+    [
+        "  1: a",  # not a sequence
+        "- !!omap\n  - 1",  # sequence item, not a mapping
+        "- !!omap\n  1: a\n  2: a",  # sequence item, not a one element mapping
+    ],
+)
+def test_invalid_omap(payload):
+    test_yaml = f"""#ASDF {asdf.versioning.default_version}
+%YAML 1.1
+--- !<tag:stsci.edu:asdf/core/asdf-1.1.0>
+od: !!omap
+{payload}
+..."""
+
+    # Check that fully qualified explicit tags work
+    buff = helpers.yaml_to_asdf(test_yaml, yaml_headers=False)
+
+    with pytest.raises(yaml.constructor.ConstructorError):
+        with asdf.open(buff) as ff:
+            ff["od"]
