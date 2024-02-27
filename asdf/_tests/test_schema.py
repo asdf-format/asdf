@@ -479,8 +479,11 @@ custom: !<{tag_uri}>
         foo
         """
         buff = yaml_to_asdf(yaml)
-        with pytest.raises(ValidationError, match=r".* is not of type .*"), asdf.open(
-            buff,
+        with (
+            pytest.raises(ValidationError, match=r".* is not of type .*"),
+            asdf.open(
+                buff,
+            ),
         ):
             pass
 
