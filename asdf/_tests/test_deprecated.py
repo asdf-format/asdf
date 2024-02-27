@@ -82,7 +82,6 @@ def test_find_references_during_open_deprecation(tmp_path):
             pass
 
 
-<<<<<<< HEAD
 def test_asdf_util_is_primitive_deprecation():
     with pytest.warns(AsdfDeprecationWarning, match="asdf.util.is_primitive is deprecated"):
         asdf.util.is_primitive(1)
