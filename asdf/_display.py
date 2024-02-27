@@ -257,7 +257,17 @@ class _TreeRenderer:
             return f"({rendered_type}): shape={info.node.shape}, dtype={info.node.dtype.name}"
 
         if not info.children and self._show_values:
-            return f"({rendered_type}): {info.node}"
+            try:
+                s = f"{info.node}"
+            except Exception:
+                # if __str__ fails, don't fail info, instead use an empty string
+                s = ""
+            # if __str__ returns multiple lines also use an empty string
+            if len(s.splitlines()) > 1:
+                s = ""
+            # if s is empty use the non-_show_values format below
+            if s:
+                return f"({rendered_type}): {s}"
 
         return f"({rendered_type})"
 
