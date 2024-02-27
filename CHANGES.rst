@@ -42,10 +42,6 @@ The ASDF Standard is at v1.6.0
   from working. If you want these warnings to produce errors you can
   now add your own warning filter [#1757]
 
-- For ``info`` and ``search`` show ``str`` representation of childless
-  (leaf) nodes if ``show_values`` is enabled  [#1687]
-
-- Deprecate ``asdf.util.is_primitive`` [#1687]
 
 - Only show ``str`` representation during ``info`` and ``search``
   if it contains a single line (and does not fail)  [#1748]
@@ -57,6 +53,10 @@ The ASDF Standard is at v1.6.0
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 - Fix bug in ``asdftool diff`` for arrays within a list [#1672]
+- For ``info`` and ``search`` show ``str`` representation of childless
+  (leaf) nodes if ``show_values`` is enabled  [#1687]
+- Deprecate ``asdf.util.is_primitive`` [#1687]
+
 
 3.0.0 (2023-10-16)
 ------------------
