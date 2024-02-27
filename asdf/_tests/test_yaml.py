@@ -198,7 +198,11 @@ def test_implicit_conversion_warning():
 
     tree = {"val": nt(1, 2, np.ones(3))}
 
-    with pytest.warns(AsdfWarning, match=r"Failed to serialize instance"), asdf.AsdfFile(tree):
+    with (
+        pytest.warns(AsdfWarning, match=r"Failed to serialize instance"),
+        pytest.warns(AsdfDeprecationWarning, match=r"implicit conversion is deprecated"),
+        asdf.AsdfFile(tree),
+    ):
         pass
 
     with multi_warn(AsdfDeprecationWarning, ["ignore_implicit_conversion", "implicit conversion is deprecated"]):
