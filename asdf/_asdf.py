@@ -238,7 +238,9 @@ class AsdfFile:
         ----------
         value : str or asdf.versioning.AsdfVersion
         """
-        self._version = versioning.AsdfVersion(validate_version(value))
+        if not isinstance(value, versioning.AsdfVersion):
+            value = versioning.AsdfVersion(value)
+        self._version = validate_version(value)
         # The new version may not be compatible with the previous
         # set of extensions, so we need to check them again:
         self._user_extensions = self._process_user_extensions(self._user_extensions)

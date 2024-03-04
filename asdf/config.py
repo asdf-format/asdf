@@ -237,7 +237,7 @@ class AsdfConfig:
         ----------
         value : str
         """
-        self._default_version = validate_version(value)
+        self._default_version = str(validate_version(value))
 
     @property
     def io_block_size(self):

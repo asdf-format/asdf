@@ -336,4 +336,4 @@ def create(asdf_file, block_access=BlockAccess.NONE):
     block_access : BlockAccess, optional
         Defaults to BlockAccess.NONE
     """
-    return block_access.value(asdf_file.version_string, asdf_file.extension_manager, asdf_file.uri, asdf_file._blocks)
+    return block_access.value(asdf_file.version, asdf_file.extension_manager, asdf_file.uri, asdf_file._blocks)
