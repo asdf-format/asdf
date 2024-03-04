@@ -47,7 +47,6 @@ tests = [
   "lz4>=0.10",
   "psutil",
   "pytest>=7",
-  "pytest-doctestplus",
   "pytest-remotedata",
 ]
 [project.urls]
@@ -101,18 +100,15 @@ force-exclude = '''
 [tool.pytest.ini_options]
 testpaths = ['asdf', 'docs']
 minversion = 4.6
-norecursedirs = ['build', 'docs/_build', 'docs/sphinxext']
-doctest_plus = 'enabled'
 remote_data_strict = true
 filterwarnings = [
     'error',
     'ignore:numpy.ndarray size changed:RuntimeWarning',
 ]
-# Configuration for pytest-doctestplus
-text_file_format = 'rst'
 addopts = [
+    '--doctest-modules',
+    '--doctest-glob=*.rst',
     '--color=yes',
-    '--doctest-rst',
     '-rsxfE',
     '-p no:legacypath',
 ]

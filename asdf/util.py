@@ -471,7 +471,7 @@ class _InheritDocstrings(type):
         ...     def wiggle(self):
         ...         pass
         >>> B.wiggle.__doc__
-        u'Wiggle the thingamajig'
+        'Wiggle the thingamajig'
     """
 
     def __init__(cls, name, bases, dct):
