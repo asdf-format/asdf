@@ -49,7 +49,7 @@ numeric value and corresponding unit:
       required: [value, unit]
     ...
 
-This is similar to the quantity schema, found :ref:`here <asdf-standard:unit-schema>`, of the ASDF Standard, but
+This is similar to the quantity schema, found :ref:`here <asdf-standard:stsci.edu/asdf/unit/quantity-1.1.0>`, of the ASDF Standard, but
 has been updated to reflect current recommendations regarding schemas.
 Let's walk through this schema line by line.
 
@@ -303,4 +303,4 @@ See also:
 
 - `Understanding JSON Schema <https://json-schema.org/understanding-json-schema/>`_
 
-- :ref:`Unit Schemas <asdf-standard:unit-schema>`
+- :ref:`Unit Schemas <asdf-standard:stsci.edu/asdf/unit/quantity-1.1.0>`
