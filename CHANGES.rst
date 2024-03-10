@@ -1,3 +1,9 @@
+3.2.0 (unreleased)
+------------------
+
+- Removed unused ``asdf-unit-schemas`` dependency [#1767]
+
+
 3.1.0 (2024-02-27)
 ------------------
 
