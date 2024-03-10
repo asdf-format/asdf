@@ -1,3 +1,8 @@
+3.2.0 (unreleased)
+------------------
+
+- Fix ``numpy.ma.MaskedArray`` saving for numpy 2.x [#1769]
+
 3.1.0 (2024-02-27)
 ------------------
 
