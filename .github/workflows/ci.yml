@@ -70,7 +70,6 @@ jobs:
       envs: |
         - linux: asdf-standard
         - linux: asdf-transform-schemas
-        - linux: asdf-unit-schemas
 
   test:
     needs: [core]
