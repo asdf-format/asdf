@@ -10,6 +10,7 @@ class NDArrayConverter(Converter):
     ]
     types = [
         np.ndarray,  # we use the type here so the extension can find the sub-classes
+        "numpy.ma.MaskedArray",  # in numpy 2.0
         "numpy.ma.core.MaskedArray",
         "asdf.tags.core.ndarray.NDArrayType",
         "asdf.tags.core.stream.Stream",
