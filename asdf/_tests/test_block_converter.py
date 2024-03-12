@@ -125,8 +125,10 @@ def test_block_data_callback_converter(tmp_path):
     # id(arr) would change every time
     a = BlockDataCallback(lambda: np.zeros(3, dtype="uint8"))
 
-    b = helpers.roundtrip_object(a)
-    assert_array_equal(a.data, b.data)
+    tfn = tmp_path / "tmp.asdf"
+    asdf.AsdfFile({"obj": a}).write_to(tfn)
+    with asdf.open(tfn) as af:
+        assert_array_equal(a.data, af["obj"].data)
 
     # make a tree without the BlockData instance to avoid
     # the initial validate which will trigger block allocation

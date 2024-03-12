@@ -32,3 +32,5 @@ to create their own custom ASDF types and extensions.
     :no-inheritance-diagram:
 
 .. automodapi:: asdf.testing.helpers
+
+.. automodapi:: asdf.lazy_nodes

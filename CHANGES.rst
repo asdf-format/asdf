@@ -50,6 +50,10 @@ The ASDF Standard is at v1.6.0
 - Only show ``str`` representation during ``info`` and ``search``
   if it contains a single line (and does not fail)  [#1748]
 
+- Add ``lazy_tree`` option to ``asdf.open`` and ``asdf.config``
+  to allow lazy deserialization of ASDF tagged tree nodes to
+  custom objects. [#1733]
+
 3.0.1 (2023-10-30)
 ------------------
 
