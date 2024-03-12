@@ -26,12 +26,12 @@ characters up to a ``/``, or ``**``, which matches any sequence of characters.
 The `~asdf.util.uri_match` method can be used to test URI patterns.
 
 `Converter.types` - a list of Python types or fully-qualified Python type names handled
-by the converter.  Note that a string name must reflect the actual location of the
-class's implementation and not just a module where it is imported for convenience.
-For example, if class ``Foo`` is implemented in ``example_package.foo.Foo`` but
-imported as ``example_package.Foo`` for convenience, it is the former name that
-must be used.  The `~asdf.util.get_class_name` method will return the name that
-`asdf` expects.
+by the converter. For strings, the private or public path can be used. For example,
+if class ``Foo`` is implemented in ``example_package.foo.Foo`` but imported
+as ``example_package.Foo`` for convenience either ``example_package.foo.Foo``
+or ``example_package.Foo`` can be used. As most libraries do not consider moving
+where a class is implemented it is preferred to use the "public" location
+where the class is imported (in this example ``example_package.Foo``).
 
 The string type name is recommended over a type object for performance reasons,
 see :ref:`extending_converters_performance`.
