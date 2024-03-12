@@ -33,6 +33,14 @@ be issued on a failed validation during the following methods:
 
 Providing ``kwargs`` to ``AsdfFile.resolve_references`` does nothing and is deprecated.
 
+The ``ignore_implicit_conversion`` argument for ``AsdfFile`` and
+``treeutil.walk_and_modify`` is deprecated. "implicit conversion" is also
+deprecated. This referred to the behavior where certain types (namedtuple)
+were silently (or with a warning depending on the ``ignore_implicit_conversion``
+setting) converted to a list when added to an asdf tree. As these types
+(namedtuple) can be supported by a ``Converter`` this "implicit conversion"
+will be removed.
+
 Version 3.0
 ===========
 
