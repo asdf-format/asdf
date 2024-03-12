@@ -6,7 +6,7 @@ import pytest
 from numpy.testing import assert_array_equal
 
 import asdf
-from asdf import reference, util
+from asdf import reference
 from asdf.exceptions import AsdfDeprecationWarning
 from asdf.tags.core import ndarray
 
@@ -79,7 +79,7 @@ def test_external_reference(tmp_path):
 
         assert_array_equal(ff.tree["internal"], exttree["cool_stuff"]["a"])
 
-    with asdf.AsdfFile({}, uri=util.filepath_to_url(os.path.join(str(tmp_path), "main.asdf"))) as ff:
+    with asdf.AsdfFile({}, uri=(tmp_path / "main.asdf").as_uri()) as ff:
         # avoid passing tree to AsdfFile to avoid the deprecation warning, this can be updated
         # when automatic find_references on AsdfFile.__init__ is removed
         ff.tree = tree
@@ -143,7 +143,7 @@ def test_external_reference_invalid(tmp_path):
 
     # avoid passing tree to AsdfFile to avoid the deprecation warning, this can be updated
     # when automatic find_references on AsdfFile.__init__ is removed
-    ff = asdf.AsdfFile({}, uri=util.filepath_to_url(os.path.join(str(tmp_path), "main.asdf")))
+    ff = asdf.AsdfFile({}, uri=(tmp_path / "main.asdf").as_uri())
     ff.tree = tree
     ff.find_references()
     with pytest.raises(IOError, match=r"No such file or directory: .*"):
@@ -160,7 +160,7 @@ def test_external_reference_invalid_fragment(tmp_path):
 
     # avoid passing tree to AsdfFile to avoid the deprecation warning, this can be updated
     # when automatic find_references on AsdfFile.__init__ is removed
-    with asdf.AsdfFile({}, uri=util.filepath_to_url(os.path.join(str(tmp_path), "main.asdf"))) as ff:
+    with asdf.AsdfFile({}, uri=(tmp_path / "main.asdf").as_uri()) as ff:
         ff.tree = tree
         ff.find_references()
         with pytest.raises(ValueError, match=r"Unresolvable reference: .*"):
@@ -170,7 +170,7 @@ def test_external_reference_invalid_fragment(tmp_path):
 
     # avoid passing tree to AsdfFile to avoid the deprecation warning, this can be updated
     # when automatic find_references on AsdfFile.__init__ is removed
-    with asdf.AsdfFile({}, uri=util.filepath_to_url(os.path.join(str(tmp_path), "main.asdf"))) as ff:
+    with asdf.AsdfFile({}, uri=(tmp_path / "main.asdf").as_uri()) as ff:
         ff.tree = tree
         ff.find_references()
         with pytest.raises(ValueError, match=r"Unresolvable reference: .*"):
@@ -204,7 +204,7 @@ def test_make_reference(tmp_path):
 
 
 def test_internal_reference(tmp_path):
-    testfile = os.path.join(str(tmp_path), "test.asdf")
+    testfile = tmp_path / "test.asdf"
 
     tree = {"foo": 2, "bar": {"$ref": "#"}}
 
@@ -216,7 +216,7 @@ def test_internal_reference(tmp_path):
     assert ff.tree["bar"]["foo"] == 2
 
     tree = {"foo": 2}
-    ff = asdf.AsdfFile(tree, uri=util.filepath_to_url(os.path.abspath(testfile)))
+    ff = asdf.AsdfFile(tree, uri=testfile.as_uri())
     ff.tree["bar"] = ff.make_reference([])
     buff = io.BytesIO()
     ff.write_to(buff)
