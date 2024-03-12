@@ -80,7 +80,7 @@ def test_valid_nan_complex(valid):
         pass
 
 
-def test_roundtrip():
+def test_roundtrip(tmp_path):
     values = {
         "a": 0 + 0j,
         "b": 1 + 1j,
@@ -88,8 +88,10 @@ def test_roundtrip():
         "d": -1 - 1j,
     }
 
-    result = helpers.roundtrip_object(values)
-
-    assert len(values) == len(result)
-    for key, value in values.items():
-        assert result[key] == value
+    fn = tmp_path / "test.asdf"
+    asdf.AsdfFile({"values": values}).write_to(fn)
+    with asdf.open(fn) as af:
+        result = af["values"]
+        assert len(values) == len(result)
+        for key, value in values.items():
+            assert result[key] == value
