@@ -3,6 +3,10 @@
 
 - Fix ``numpy.ma.MaskedArray`` saving for numpy 2.x [#1769]
 
+- Deprecate ``asdf.testing.helpers.format_tag`` [#1774]
+
+- Deprecate ``asdf.versioning.AsdfSpec`` [#1774]
+
 3.1.0 (2024-02-27)
 ------------------
 
