@@ -1,5 +1,8 @@
 from itertools import combinations
 
+import pytest
+
+from asdf.exceptions import AsdfDeprecationWarning
 from asdf.versioning import (
     AsdfSpec,
     AsdfVersion,
@@ -171,7 +174,8 @@ def test_version_and_tuple_inequality():
 
 
 def test_spec_version_match():
-    spec = AsdfSpec(">=1.1.0")
+    with pytest.warns(AsdfDeprecationWarning, match="AsdfSpec is deprecated"):
+        spec = AsdfSpec(">=1.1.0")
 
     assert spec.match(AsdfVersion("1.1.0"))
     assert spec.match(AsdfVersion("1.2.0"))
@@ -180,7 +184,8 @@ def test_spec_version_match():
 
 
 def test_spec_version_select():
-    spec = AsdfSpec(">=1.1.0")
+    with pytest.warns(AsdfDeprecationWarning, match="AsdfSpec is deprecated"):
+        spec = AsdfSpec(">=1.1.0")
 
     versions = [AsdfVersion(x) for x in ["1.0.0", "1.0.9", "1.1.0", "1.2.0"]]
     assert spec.select(versions) == "1.2.0"
@@ -189,7 +194,8 @@ def test_spec_version_select():
 
 
 def test_spec_version_filter():
-    spec = AsdfSpec(">=1.1.0")
+    with pytest.warns(AsdfDeprecationWarning, match="AsdfSpec is deprecated"):
+        spec = AsdfSpec(">=1.1.0")
 
     versions = [AsdfVersion(x) for x in ["1.0.0", "1.0.9", "1.1.0", "1.2.0"]]
     for x, y in zip(spec.filter(versions), ["1.1.0", "1.2.0"]):
@@ -197,7 +203,8 @@ def test_spec_version_filter():
 
 
 def test_spec_string_match():
-    spec = AsdfSpec(">=1.1.0")
+    with pytest.warns(AsdfDeprecationWarning, match="AsdfSpec is deprecated"):
+        spec = AsdfSpec(">=1.1.0")
 
     assert spec.match("1.1.0")
     assert spec.match("1.2.0")
@@ -206,7 +213,8 @@ def test_spec_string_match():
 
 
 def test_spec_string_select():
-    spec = AsdfSpec(">=1.1.0")
+    with pytest.warns(AsdfDeprecationWarning, match="AsdfSpec is deprecated"):
+        spec = AsdfSpec(">=1.1.0")
 
     versions = ["1.0.0", "1.0.9", "1.1.0", "1.2.0"]
     assert spec.select(versions) == "1.2.0"
@@ -215,7 +223,8 @@ def test_spec_string_select():
 
 
 def test_spec_string_filter():
-    spec = AsdfSpec(">=1.1.0")
+    with pytest.warns(AsdfDeprecationWarning, match="AsdfSpec is deprecated"):
+        spec = AsdfSpec(">=1.1.0")
 
     versions = ["1.0.0", "1.0.9", "1.1.0", "1.2.0"]
     for x, y in zip(spec.filter(versions), ["1.1.0", "1.2.0"]):
@@ -223,7 +232,8 @@ def test_spec_string_filter():
 
 
 def test_spec_tuple_match():
-    spec = AsdfSpec(">=1.1.0")
+    with pytest.warns(AsdfDeprecationWarning, match="AsdfSpec is deprecated"):
+        spec = AsdfSpec(">=1.1.0")
 
     assert spec.match((1, 1, 0))
     assert spec.match((1, 2, 0))
@@ -232,7 +242,8 @@ def test_spec_tuple_match():
 
 
 def test_spec_tuple_select():
-    spec = AsdfSpec(">=1.1.0")
+    with pytest.warns(AsdfDeprecationWarning, match="AsdfSpec is deprecated"):
+        spec = AsdfSpec(">=1.1.0")
 
     versions = [(1, 0, 0), (1, 0, 9), (1, 1, 0), (1, 2, 0)]
     assert spec.select(versions) == "1.2.0"
@@ -241,7 +252,8 @@ def test_spec_tuple_select():
 
 
 def test_spec_tuple_filter():
-    spec = AsdfSpec(">=1.1.0")
+    with pytest.warns(AsdfDeprecationWarning, match="AsdfSpec is deprecated"):
+        spec = AsdfSpec(">=1.1.0")
 
     versions = [(1, 0, 0), (1, 0, 9), (1, 1, 0), (1, 2, 0)]
     for x, y in zip(spec.filter(versions), ["1.1.0", "1.2.0"]):
@@ -250,7 +262,8 @@ def test_spec_tuple_filter():
 
 def test_spec_equal():
     """Make sure that equality means match"""
-    spec = AsdfSpec(">=1.2.0")
+    with pytest.warns(AsdfDeprecationWarning, match="AsdfSpec is deprecated"):
+        spec = AsdfSpec(">=1.2.0")
     version0 = AsdfVersion("1.1.0")
     version1 = AsdfVersion("1.3.0")
 
