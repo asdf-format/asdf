@@ -2,9 +2,11 @@
 Helpers for writing unit tests of ASDF support.
 """
 
+import warnings
 from io import BytesIO
 
 import asdf
+from asdf.exceptions import AsdfDeprecationWarning
 from asdf.versioning import AsdfSpec
 
 
@@ -12,6 +14,8 @@ def format_tag(organization, standard, version, tag_name):
     """
     Format a YAML tag.
     """
+    warnings.warn("format_tag is deprecated", AsdfDeprecationWarning)
+
     tag = f"tag:{organization}:{standard}/{tag_name}"
 
     if version is None:

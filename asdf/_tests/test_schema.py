@@ -837,7 +837,7 @@ def test_self_reference_resolution(test_data_path):
 
 def test_schema_resolved_via_entry_points():
     """Test that entry points mappings to core schema works"""
-    tag = format_tag("stsci.edu", "asdf", "1.0.0", "fits/fits")
+    tag = "tag:stsci.edu:asdf/fits/fits-1.0.0"
     extension_manager = asdf.extension.get_cached_extension_manager(get_config().extensions)
     schema_uris = extension_manager.get_tag_definition(tag).schema_uris
     assert len(schema_uris) > 0
