@@ -223,12 +223,19 @@ contingent on the available versions of such software packages.
 In general, forward compatibility with newer versions of the ASDF Standard and
 ASDF file format is not supported by the software.
 
-When creating new ASDF files, it is possible to control the version of the file
-format that is used. This can be specified by passing the ``version`` argument to
+When creating new ASDF files, it is possible to control the version of the ASDF
+standard that is used. This can be specified by passing the ``version`` argument to
 either the `AsdfFile` constructor when the file object is created, or to the
-`AsdfFile.write_to` method when it is written. By default, the latest version
-of the file format will be used. Note that this option has no effect on the
-versions of tags from custom extensions.
+`AsdfFile.write_to` method when it is written. By default, the latest stable
+version of the ASDF standard will be used.
+
+.. warning::
+   Take care when providing ``version`` to `AsdfFile.write_to` to select a version
+   that is stable. Writing files with a ``development`` (unstable) version may
+   produce files that will become unreadable as that version evolves. The default
+   version will always be stable and is often the best choice unless you are trying
+   to write out a file that is readable by older software (where you will want to
+   use an older, stable version).
 
 External References
 ===================
