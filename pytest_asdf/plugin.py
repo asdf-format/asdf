@@ -276,6 +276,9 @@ def _parse_test_list(content):
 
 
 def pytest_collect_file(file_path, parent):
+    if file_path.suffix != ".yaml":
+        return None
+
     if not (parent.config.getini("asdf_schema_tests_enabled") or parent.config.getoption("asdf_tests")):
         return None
 
@@ -292,32 +295,40 @@ def pytest_collect_file(file_path, parent):
     skip_tests = _parse_test_list(parent.config.getini("asdf_schema_skip_tests"))
     xfail_tests = _parse_test_list(parent.config.getini("asdf_schema_xfail_tests"))
 
-    schema_roots = [os.path.join(str(parent.config.rootpath), os.path.normpath(root)) for root in schema_roots]
-
-    if file_path.suffix != ".yaml":
+    if file_path.stem in skip_names:
         return None
 
+    resolved_schema_roots = []
     for root in schema_roots:
-        if str(file_path).startswith(root) and file_path.stem not in skip_names:
-            posix_path = pathlib.Path(file_path).as_posix()
-            schema_skip_tests = []
-            for suffix, names in skip_tests.items():
-                if posix_path.endswith(suffix):
-                    schema_skip_tests.extend(names)
-            schema_xfail_tests = []
-            for suffix, names in xfail_tests.items():
-                if posix_path.endswith(suffix):
-                    schema_xfail_tests.extend(names)
+        if not root.startswith("*"):
+            root = os.path.join(str(parent.config.rootpath), os.path.normpath(root))
+        resolved_schema_roots.append(root)
 
-            return AsdfSchemaFile.from_parent(
-                parent,
-                fspath=file_path,
-                skip_examples=(file_path.stem in skip_examples),
-                validate_default=validate_default,
-                ignore_unrecognized_tag=ignore_unrecognized_tag,
-                ignore_version_mismatch=ignore_version_mismatch,
-                skip_tests=schema_skip_tests,
-                xfail_tests=schema_xfail_tests,
-            )
+    for root in resolved_schema_roots:
+        if root.startswith("*"):
+            if root.strip("*") not in str(file_path):
+                continue
+        elif not str(file_path).startswith(root):
+            continue
+        posix_path = pathlib.Path(file_path).as_posix()
+        schema_skip_tests = []
+        for suffix, names in skip_tests.items():
+            if posix_path.endswith(suffix):
+                schema_skip_tests.extend(names)
+        schema_xfail_tests = []
+        for suffix, names in xfail_tests.items():
+            if posix_path.endswith(suffix):
+                schema_xfail_tests.extend(names)
+
+        return AsdfSchemaFile.from_parent(
+            parent,
+            fspath=file_path,
+            skip_examples=(file_path.stem in skip_examples),
+            validate_default=validate_default,
+            ignore_unrecognized_tag=ignore_unrecognized_tag,
+            ignore_version_mismatch=ignore_version_mismatch,
+            skip_tests=schema_skip_tests,
+            xfail_tests=schema_xfail_tests,
+        )
 
     return None

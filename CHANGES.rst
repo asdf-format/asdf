@@ -50,6 +50,10 @@ The ASDF Standard is at v1.6.0
 - Only show ``str`` representation during ``info`` and ``search``
   if it contains a single line (and does not fail)  [#1748]
 
+- Allow use of a starting wildcard in the ``asdf_schema_root`` setting
+  for the asdf pytest plugin to allow schemas to be collected during
+  ``--pyargs`` test runs [#1756]
+
 3.0.1 (2023-10-30)
 ------------------
 
