@@ -6,9 +6,7 @@ import socketserver
 import tempfile
 import threading
 
-from asdf._extern.RangeHTTPServer import RangeHTTPRequestHandler
-
-__all__ = ["HTTPServer", "RangeHTTPServer"]
+__all__ = ["HTTPServer"]
 
 
 def run_server(tmp_path, handler_class, stop_event, queue):  # pragma: no cover
@@ -62,7 +60,3 @@ class HTTPServer:
         self.stop_event.set()
         self.thread.join()
         shutil.rmtree(self.tmpdir)
-
-
-class RangeHTTPServer(HTTPServer):
-    handler_class = RangeHTTPRequestHandler

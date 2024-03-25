@@ -2,8 +2,7 @@ import pytest
 
 import asdf
 from asdf.exceptions import AsdfConversionWarning
-
-from . import _helpers as helpers
+from asdf.testing import helpers
 
 
 def test_undefined_tag():
@@ -46,5 +45,5 @@ undefined_data:
 
     # Make sure no warning occurs if explicitly ignored
     buff.seek(0)
-    with helpers.assert_no_warnings():
-        afile = asdf.open(buff, ignore_unrecognized_tag=True)
+    # as warnings get turned into errors, nothing to do here
+    afile = asdf.open(buff, ignore_unrecognized_tag=True)
