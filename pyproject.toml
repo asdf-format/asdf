@@ -19,7 +19,7 @@ dynamic = [
   'version',
 ]
 dependencies = [
-  "asdf-standard>=1.0.1",
+  "asdf-standard>=1.1.0",
   "asdf-transform-schemas>=0.3",
   "asdf-unit-schemas>=0.1",
   "importlib-metadata>=4.11.4",

@@ -16,6 +16,7 @@ _datatype_names = {
     "uint16": "u2",
     "uint32": "u4",
     "uint64": "u8",
+    "float16": "f2",
     "float32": "f4",
     "float64": "f8",
     "complex64": "c8",
