@@ -9,6 +9,7 @@ import yaml
 import asdf
 from asdf import tagged, treeutil, yamlutil
 from asdf.exceptions import AsdfConversionWarning, AsdfWarning
+from asdf.testing.helpers import yaml_to_asdf
 
 from . import _helpers as helpers
 
@@ -199,14 +200,15 @@ def test_tags_removed_after_load(tmp_path):
 
 
 def test_explicit_tags():
-    yaml = f"""#ASDF {asdf.versioning.default_version}
+    yaml = b"""#ASDF 1.0.0
+#ASDF_STANDARD 1.5.0
 %YAML 1.1
 --- !<tag:stsci.edu:asdf/core/asdf-1.1.0>
 foo: !<tag:stsci.edu:asdf/core/ndarray-1.0.0> [1, 2, 3]
 ..."""
 
     # Check that fully qualified explicit tags work
-    buff = helpers.yaml_to_asdf(yaml, yaml_headers=False)
+    buff = io.BytesIO(yaml)
 
     with asdf.open(buff) as ff:
         assert all(ff.tree["foo"] == [1, 2, 3])
@@ -320,15 +322,11 @@ def test_ndarray_subclass_conversion(tmp_path):
     ],
 )
 def test_invalid_omap(payload):
-    test_yaml = f"""#ASDF {asdf.versioning.default_version}
-%YAML 1.1
---- !<tag:stsci.edu:asdf/core/asdf-1.1.0>
-od: !!omap
-{payload}
-..."""
+    test_yaml = f"""od: !!omap
+{payload}"""
 
     # Check that fully qualified explicit tags work
-    buff = helpers.yaml_to_asdf(test_yaml, yaml_headers=False)
+    buff = yaml_to_asdf(test_yaml)
 
     with pytest.raises(yaml.constructor.ConstructorError):
         with asdf.open(buff) as ff:

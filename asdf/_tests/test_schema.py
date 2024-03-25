@@ -12,6 +12,7 @@ from asdf import config_context, constants, get_config, schema, tagged, util, ya
 from asdf._tests import _helpers as helpers
 from asdf.exceptions import AsdfConversionWarning, AsdfDeprecationWarning, AsdfWarning, ValidationError
 from asdf.extension import TagDefinition
+from asdf.testing.helpers import yaml_to_asdf
 
 
 @contextlib.contextmanager
@@ -93,7 +94,7 @@ not_tagged:
     """
     with asdf.config_context() as cfg:
         cfg.add_extension(ScalarExtension())
-        buff = helpers.yaml_to_asdf(yaml)
+        buff = yaml_to_asdf(yaml)
         with asdf.open(buff) as ff:
             assert isinstance(ff.tree["tagged"], Scalar)
             assert not isinstance(ff.tree["not_tagged"], Scalar)
@@ -450,7 +451,7 @@ default: 42
 custom: !<{tag_uri}>
   foo
     """
-    buff = helpers.yaml_to_asdf(yaml)
+    buff = yaml_to_asdf(yaml)
     # This should cause a warning but not an error because without explicitly
     # providing an extension, our custom type will not be recognized and will
     # simply be converted to a raw type.
@@ -477,7 +478,7 @@ custom: !<{tag_uri}>
       custom: !<{tag_uri}>
         foo
         """
-        buff = helpers.yaml_to_asdf(yaml)
+        buff = yaml_to_asdf(yaml)
         with (
             pytest.raises(ValidationError, match=r".* is not of type .*"),
             asdf.open(
@@ -632,7 +633,7 @@ custom: !<http://nowhere.org/tags/custom/default-1.0.0>
   j:
     l: 362
         """
-        buff = helpers.yaml_to_asdf(yaml)
+        buff = yaml_to_asdf(yaml)
         with asdf.open(buff) as ff:
             assert "a" in ff.tree["custom"]
             assert ff.tree["custom"]["a"] == 42
@@ -744,7 +745,7 @@ one_of: !<{tag_uri}>
         cfg.add_extension(OneOfExtension())
         cfg.add_resource_mapping({schema_uri: tag_schema})
 
-        buff = helpers.yaml_to_asdf(yaml)
+        buff = yaml_to_asdf(yaml)
         with asdf.open(buff) as ff:
             assert ff["one_of"].value == "foo"
 
@@ -759,7 +760,7 @@ custom: !<tag:nowhere.org:custom/tag_reference-1.0.0>
     """
 
     with tag_reference_extension():
-        buff = helpers.yaml_to_asdf(yaml)
+        buff = yaml_to_asdf(yaml)
         with asdf.open(buff) as ff:
             custom = ff.tree["custom"]
             assert custom.name == "Something"
@@ -820,7 +821,7 @@ custom: !<tag:nowhere.org:custom/foreign_tag_reference-1.0.0>
         cfg.add_resource_mapping({schema_uri: tag_schema})
         cfg.add_extension(ForeignTagReferenceExtension())
 
-        buff = helpers.yaml_to_asdf(yaml)
+        buff = yaml_to_asdf(yaml)
         with asdf.open(buff) as ff:
             a = ff.tree["custom"].a
             assert a.name == "Something"
@@ -891,14 +892,14 @@ def test_max_min_literals_write(num, ttype, tmp_path):
 def test_read_large_literal(value):
     yaml = f"integer: {value}"
 
-    buff = helpers.yaml_to_asdf(yaml)
+    buff = yaml_to_asdf(yaml)
 
     with pytest.warns(AsdfWarning, match=r"Invalid integer literal value"), asdf.open(buff) as af:
         assert af["integer"] == value
 
     yaml = f"{value}: foo"
 
-    buff = helpers.yaml_to_asdf(yaml)
+    buff = yaml_to_asdf(yaml)
 
     with pytest.warns(AsdfWarning, match=r"Invalid integer literal value"), asdf.open(buff) as af:
         assert af[value] == "foo"

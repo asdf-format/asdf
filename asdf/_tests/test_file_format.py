@@ -175,7 +175,7 @@ def test_invalid_version(tmp_path):
 foo : bar
 ..."""
     buff = io.BytesIO(content)
-    with pytest.raises(ValueError, match=r"ASDF Standard version .* is not supported by asdf==.*"), asdf.open(buff):
+    with pytest.raises(ValueError, match=r"Unsupported ASDF file format version*"), asdf.open(buff):
         pass
 
 

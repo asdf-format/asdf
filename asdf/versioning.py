@@ -33,7 +33,7 @@ def join_tag_version(name, version):
 _version_map = {}
 
 
-def get_version_map(version):
+def _get_version_map(version):
     version_map = _version_map.get(version)
 
     if version_map is None:
@@ -174,3 +174,10 @@ RESTRICTED_KEYS_MIN_VERSION = AsdfVersion("1.6.0")
 # This library never removed defaults for ASDF Standard versions
 # later than 1.5.0, so filling them isn't necessary.
 FILL_DEFAULTS_MAX_VERSION = AsdfVersion("1.5.0")
+
+# ASDF currently only defined a single file format version
+_FILE_FORMAT_VERSION = AsdfVersion("1.0.0")
+
+# ASDF currently only supports a single yaml version
+# use a tuple as that is what yaml expects
+_YAML_VERSION = (1, 1)

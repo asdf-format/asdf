@@ -14,8 +14,9 @@ import asdf
 from asdf import config_context, get_config, treeutil, versioning
 from asdf.exceptions import AsdfDeprecationWarning, AsdfWarning, ValidationError
 from asdf.extension import ExtensionProxy
+from asdf.testing.helpers import yaml_to_asdf
 
-from ._helpers import assert_no_warnings, assert_roundtrip_tree, assert_tree_match, yaml_to_asdf
+from ._helpers import assert_no_warnings, assert_roundtrip_tree, assert_tree_match
 
 RNG = np.random.default_rng(97)
 
@@ -121,11 +122,11 @@ def test_default_version():
     """
     See https://github.com/asdf-format/asdf/issues/364
     """
-
-    version_map = versioning.get_version_map(versioning.default_version)
-
     ff = asdf.AsdfFile()
-    assert ff.file_format_version == version_map["FILE_FORMAT"]
+    assert ff.file_format_version == versioning._FILE_FORMAT_VERSION
+
+    # make sure these are different AsdfVersion instances
+    assert ff.file_format_version is not versioning._FILE_FORMAT_VERSION
 
 
 def test_update_exceptions(tmp_path):

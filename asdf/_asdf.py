@@ -143,6 +143,9 @@ class AsdfFile:
         """
         self._fname = ""
 
+        # make a new AsdfVersion instance here so files don't share the same instance
+        self._file_format_version = versioning.AsdfVersion(versioning._FILE_FORMAT_VERSION)
+
         # Don't use the version setter here; it tries to access
         # the extensions, which haven't been assigned yet.
         if version is None:
@@ -166,8 +169,6 @@ class AsdfFile:
         # Set of (string, string) tuples representing tag version mismatches
         # that we've already warned about for this file.
         self._warned_tag_pairs = set()
-
-        self._file_format_version = None
 
         # Context of a call to treeutil.walk_and_modify, needed in the AsdfFile
         # in case walk_and_modify is re-entered by extension code (via
@@ -258,7 +259,11 @@ class AsdfFile:
 
     @property
     def version_map(self):
-        return versioning.get_version_map(self.version_string)
+        warnings.warn(
+            "AsdfFile.version_map is deprecated. Please use the extension_manager",
+            AsdfDeprecationWarning,
+        )
+        return versioning._get_version_map(self.version_string)
 
     @property
     def extensions(self):
@@ -470,9 +475,6 @@ class AsdfFile:
 
     @property
     def file_format_version(self):
-        if self._file_format_version is None:
-            return versioning.AsdfVersion(self.version_map["FILE_FORMAT"])
-
         return self._file_format_version
 
     def close(self):
@@ -748,6 +750,10 @@ class AsdfFile:
             msg = f"Unparsable version in ASDF file: {parts[1]}"
             raise ValueError(msg) from err
 
+        if version != versioning._FILE_FORMAT_VERSION:
+            msg = f"Unsupported ASDF file format version {version}"
+            raise ValueError(msg)
+
         return version
 
     @classmethod
@@ -823,13 +829,15 @@ class AsdfFile:
                 msg = "Does not appear to be a ASDF file."
                 raise ValueError(msg) from e
             self._file_format_version = cls._parse_header_line(header_line)
-            self.version = self._file_format_version
 
             self._comments = cls._read_comment_section(fd)
 
             version = cls._find_asdf_version_in_comments(self._comments)
             if version is not None:
                 self.version = version
+            else:
+                # If no ASDF_STANDARD comment is found...
+                self.version = versioning.AsdfVersion("1.0.0")
 
             # Now that version is set for good, we can add any additional
             # extensions, which may have narrow ASDF Standard version
@@ -931,7 +939,7 @@ class AsdfFile:
     def _write_tree(self, tree, fd, pad_blocks):
         fd.write(constants.ASDF_MAGIC)
         fd.write(b" ")
-        fd.write(self.version_map["FILE_FORMAT"].encode("ascii"))
+        fd.write(f"{self.file_format_version}".encode("ascii"))
         fd.write(b"\n")
 
         fd.write(b"#")

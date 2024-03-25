@@ -117,3 +117,9 @@ def test_AsdfFile_init_validation_deprecation():
         pytest.raises(ValidationError),
     ):
         asdf.AsdfFile({"history": 42})
+
+
+def test_asdffile_version_map_deprecation():
+    af = asdf.AsdfFile()
+    with pytest.warns(AsdfDeprecationWarning, match="AsdfFile.version_map is deprecated"):
+        af.version_map

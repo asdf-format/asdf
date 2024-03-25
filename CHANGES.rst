@@ -50,6 +50,8 @@ The ASDF Standard is at v1.6.0
 - Only show ``str`` representation during ``info`` and ``search``
   if it contains a single line (and does not fail)  [#1748]
 
+- Deprecate ``AsdfFile.version_map`` [#1745]
+
 3.0.1 (2023-10-30)
 ------------------
 

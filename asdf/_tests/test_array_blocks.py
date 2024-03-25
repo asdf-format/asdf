@@ -749,14 +749,13 @@ def test_invalid_block_index_offset(block_index_index):
     block_index_start = block_index_header_start + len(constants.INDEX_HEADER)
     block_index = yaml.load(bs[block_index_start:], yaml.SafeLoader)
     block_index[block_index_index] -= 4
-    yaml_version = tuple(int(x) for x in ff.version_map["YAML_VERSION"].split("."))
     buff.seek(block_index_start)
     yaml.dump(
         block_index,
         stream=buff,
         explicit_start=True,
         explicit_end=True,
-        version=yaml_version,
+        version=asdf.versioning._YAML_VERSION,
         allow_unicode=True,
         encoding="utf-8",
     )

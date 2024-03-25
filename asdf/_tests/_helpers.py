@@ -20,21 +20,11 @@ except ImportError:
     CartesianDifferential = None
 
 import numpy as np
-import yaml
 
 import asdf
-from asdf import generic_io, versioning
 from asdf._asdf import AsdfFile, _get_asdf_library_info
-from asdf.constants import YAML_TAG_PREFIX
 from asdf.exceptions import AsdfConversionWarning
 from asdf.tags.core import AsdfObject
-from asdf.versioning import (
-    AsdfVersion,
-    asdf_standard_development_version,
-    get_version_map,
-    split_tag_version,
-    supported_versions,
-)
 
 from .httpserver import RangeHTTPServer
 
@@ -48,7 +38,6 @@ __all__ = [
     "get_test_data_path",
     "assert_tree_match",
     "assert_roundtrip_tree",
-    "yaml_to_asdf",
     "get_file_sizes",
     "display_warnings",
 ]
@@ -286,57 +275,6 @@ def _assert_roundtrip_tree(
             asdf_check_func(ff)
 
 
-def yaml_to_asdf(yaml_content, yaml_headers=True, standard_version=None):
-    """
-    Given a string of YAML content, adds the extra pre-
-    and post-amble to make it an ASDF file.
-
-    Parameters
-    ----------
-    yaml_content : string
-
-    yaml_headers : bool, optional
-        When True (default) add the standard ASDF YAML headers.
-
-    Returns
-    -------
-    buff : io.BytesIO()
-        A file-like object containing the ASDF-like content.
-    """
-    if isinstance(yaml_content, str):
-        yaml_content = yaml_content.encode("utf-8")
-
-    buff = io.BytesIO()
-
-    if standard_version is None:
-        standard_version = versioning.default_version
-
-    standard_version = AsdfVersion(standard_version)
-
-    vm = get_version_map(standard_version)
-    file_format_version = vm["FILE_FORMAT"]
-    yaml_version = vm["YAML_VERSION"]
-    tree_version = vm["tags"]["tag:stsci.edu:asdf/core/asdf"]
-
-    if yaml_headers:
-        buff.write(
-            f"""#ASDF {file_format_version}
-#ASDF_STANDARD {standard_version}
-%YAML {yaml_version}
-%TAG ! tag:stsci.edu:asdf/
---- !core/asdf-{tree_version}
-""".encode(
-                "ascii",
-            ),
-        )
-    buff.write(yaml_content)
-    if yaml_headers:
-        buff.write(b"\n...\n")
-
-    buff.seek(0)
-    return buff
-
-
 def get_file_sizes(dirname):
     """
     Get the file sizes in a directory.
@@ -408,62 +346,3 @@ def assert_no_warnings(warning_class=None):
         assert not any(isinstance(w.message, warning_class) for w in recorded_warnings), display_warnings(
             recorded_warnings,
         )
-
-
-def _assert_extension_type_correctness(extension, extension_type, resolver):
-    __tracebackhide__ = True
-
-    if extension_type.yaml_tag is not None and extension_type.yaml_tag.startswith(YAML_TAG_PREFIX):
-        return
-
-    if extension_type == asdf.Stream:
-        # Stream is a special case.  It was implemented as a subclass of NDArrayType,
-        # but shares a tag with that class, so it isn't really a distinct type.
-        return
-
-    assert extension_type.name is not None, f"{extension_type.__name__} must set the 'name' class attribute"
-
-    # Currently ExtensionType sets a default version of 1.0.0,
-    # but we want to encourage an explicit version on the subclass.
-    assert "version" in extension_type.__dict__, f"{extension_type.__name__} must set the 'version' class attribute"
-
-    # check the default version
-    types_to_check = [extension_type]
-
-    # Adding or updating a schema/type version might involve updating multiple
-    # packages. This can result in types without schema and schema without types
-    # for the development version of the asdf-standard. To account for this,
-    # don't include versioned siblings of types with versions that are not
-    # in one of the asdf-standard versions in supported_versions (excluding the
-    # current development version).
-    asdf_standard_versions = supported_versions.copy()
-    if asdf_standard_development_version in asdf_standard_versions:
-        asdf_standard_versions.remove(asdf_standard_development_version)
-    for sibling in extension_type.versioned_siblings:
-        tag_base, version = split_tag_version(sibling.yaml_tag)
-        for asdf_standard_version in asdf_standard_versions:
-            vm = get_version_map(asdf_standard_version)
-            if tag_base in vm["tags"] and AsdfVersion(vm["tags"][tag_base]) == version:
-                types_to_check.append(sibling)
-                break
-
-    for check_type in types_to_check:
-        schema_location = resolver(check_type.yaml_tag)
-
-        assert schema_location is not None, (
-            f"{extension_type.__name__} supports tag, {check_type.yaml_tag}, "
-            "but tag does not resolve.  Check the tag_mapping and uri_mapping "
-            f"properties on the related extension ({extension_type.__name__})."
-        )
-
-        if schema_location not in asdf.get_config().resource_manager:
-            try:
-                with generic_io.get_file(schema_location) as f:
-                    yaml.safe_load(f.read())
-            except Exception as err:
-                msg = (
-                    f"{extension_type.__name__} supports tag, {check_type.yaml_tag}, "
-                    f"which resolves to schema at {schema_location}, but "
-                    "schema cannot be read."
-                )
-                raise AssertionError(msg) from err
