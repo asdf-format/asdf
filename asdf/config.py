@@ -24,6 +24,7 @@ DEFAULT_ARRAY_INLINE_THRESHOLD = None
 DEFAULT_ALL_ARRAY_STORAGE = None
 DEFAULT_ALL_ARRAY_COMPRESSION = "input"
 DEFAULT_ALL_ARRAY_COMPRESSION_KWARGS = None
+DEFAULT_DEFAULT_ARRAY_SAVE_BASE = True
 DEFAULT_CONVERT_UNKNOWN_NDARRAY_SUBCLASSES = True
 
 
@@ -46,6 +47,7 @@ class AsdfConfig:
         self._all_array_storage = DEFAULT_ALL_ARRAY_STORAGE
         self._all_array_compression = DEFAULT_ALL_ARRAY_COMPRESSION
         self._all_array_compression_kwargs = DEFAULT_ALL_ARRAY_COMPRESSION_KWARGS
+        self._default_array_save_base = DEFAULT_DEFAULT_ARRAY_SAVE_BASE
         self._convert_unknown_ndarray_subclasses = DEFAULT_CONVERT_UNKNOWN_NDARRAY_SUBCLASSES
 
         self._lock = threading.RLock()
@@ -392,6 +394,22 @@ class AsdfConfig:
         self._all_array_compression_kwargs = value
 
     @property
+    def default_array_save_base(self):
+        """
+        Option to control if when saving arrays the base array should be
+        saved (so views of the same array will refer to offsets/strides of the
+        same block).
+        """
+        return self._default_array_save_base
+
+    @default_array_save_base.setter
+    def default_array_save_base(self, value):
+        if not isinstance(value, bool):
+            msg = "default_array_save_base must be a bool"
+            raise ValueError(msg)
+        self._default_array_save_base = value
+
+    @property
     def validate_on_read(self):
         """
         Get configuration that controls schema validation of
@@ -447,6 +465,7 @@ class AsdfConfig:
             f"  all_array_storage: {self.all_array_storage}\n"
             f"  all_array_compression: {self.all_array_compression}\n"
             f"  all_array_compression_kwargs: {self.all_array_compression_kwargs}\n"
+            f"  default_array_save_base: {self.default_array_save_base}\n"
             f"  convert_unknown_ndarray_subclasses: {self.convert_unknown_ndarray_subclasses}\n"
             f"  default_version: {self.default_version}\n"
             f"  io_block_size: {self.io_block_size}\n"
