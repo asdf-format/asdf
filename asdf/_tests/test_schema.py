@@ -610,7 +610,7 @@ custom: !<http://nowhere.org/tags/custom/default-1.0.0>
   j:
     l: 362
         """
-        buff = yaml_to_asdf(yaml, standard_version="1.5.0")
+        buff = yaml_to_asdf(yaml, version="1.5.0")
         with asdf.open(buff) as ff:
             assert "a" in ff.tree["custom"]
             assert ff.tree["custom"]["a"] == 42
