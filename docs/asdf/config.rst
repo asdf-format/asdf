@@ -40,7 +40,7 @@ the currently active config:
       all_array_compression: input
       all_array_compression_kwargs: None
       convert_unknown_ndarray_subclasses: True
-      default_version: 1.5.0
+      default_version: 1.6.0
       io_block_size: -1
       legacy_fill_schema_defaults: True
       validate_on_read: True
@@ -64,7 +64,7 @@ This allows for short-lived configuration changes that do not impact other code:
       all_array_compression: input
       all_array_compression_kwargs: None
       convert_unknown_ndarray_subclasses: True
-      default_version: 1.5.0
+      default_version: 1.6.0
       io_block_size: -1
       legacy_fill_schema_defaults: True
       validate_on_read: False
@@ -76,7 +76,7 @@ This allows for short-lived configuration changes that do not impact other code:
       all_array_compression: input
       all_array_compression_kwargs: None
       convert_unknown_ndarray_subclasses: True
-      default_version: 1.5.0
+      default_version: 1.6.0
       io_block_size: -1
       legacy_fill_schema_defaults: True
       validate_on_read: True

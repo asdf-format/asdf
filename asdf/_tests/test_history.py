@@ -108,7 +108,7 @@ def test_extension_metadata(tmp_path):
     with asdf.open(file_path) as af:
         assert len(af.tree["history"]["extensions"]) == 1
         metadata = af.tree["history"]["extensions"][0]
-        assert metadata.extension_uri == "asdf://asdf-format.org/core/extensions/core-1.5.0"
+        assert metadata.extension_uri == "asdf://asdf-format.org/core/extensions/core-1.6.0"
         assert metadata.extension_class == "asdf.extension._manifest.ManifestExtension"
         assert metadata.software["name"] == "asdf"
         assert metadata.software["version"] == asdf.__version__

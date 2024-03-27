@@ -53,7 +53,7 @@ properties:
   name:
     type: string
   things:
-    $ref: "http://stsci.edu/schemas/asdf/core/ndarray-1.0.0"
+    $ref: "http://stsci.edu/schemas/asdf/core/ndarray-1.1.0"
 required: [name, things]
 ...
     """
@@ -119,14 +119,14 @@ def test_load_schema(tmp_path):
     schema_def = """
 %YAML 1.1
 ---
-$schema: "http://stsci.edu/schemas/asdf/asdf-schema-1.0.0"
+$schema: "http://stsci.edu/schemas/asdf/asdf-schema-1.1.0"
 id: "http://stsci.edu/schemas/asdf/nugatory/nugatory-1.0.0"
 tag: "tag:stsci.edu:asdf/nugatory/nugatory-1.0.0"
 
 type: object
 properties:
   foobar:
-      $ref: "../core/ndarray-1.0.0"
+      $ref: "../core/ndarray-1.1.0"
 
 required: [foobar]
 ...
@@ -142,14 +142,14 @@ def test_load_schema_with_full_tag(tmp_path):
     schema_def = """
 %YAML 1.1
 ---
-$schema: "http://stsci.edu/schemas/asdf/asdf-schema-1.0.0"
+$schema: "http://stsci.edu/schemas/asdf/asdf-schema-1.1.0"
 id: "http://stsci.edu/schemas/asdf/nugatory/nugatory-1.0.0"
 tag: "tag:stsci.edu:asdf/nugatory/nugatory-1.0.0"
 
 type: object
 properties:
   foobar:
-      $ref: "tag:stsci.edu:asdf/core/ndarray-1.0.0"
+      $ref: "tag:stsci.edu:asdf/core/ndarray-1.1.0"
 
 required: [foobar]
 ...
@@ -167,14 +167,14 @@ def test_load_schema_with_file_url(tmp_path):
 %YAML 1.1
 %TAG !asdf! tag:stsci.edu:asdf/
 ---
-$schema: "http://stsci.edu/schemas/asdf/asdf-schema-1.0.0"
+$schema: "http://stsci.edu/schemas/asdf/asdf-schema-1.1.0"
 id: "http://stsci.edu/schemas/asdf/nugatory/nugatory-1.0.0"
 tag: "tag:stsci.edu:asdf/nugatory/nugatory-1.0.0"
 
 type: object
 properties:
   foobar:
-      $ref: "http://stsci.edu/schemas/asdf/core/ndarray-1.0.0"
+      $ref: "http://stsci.edu/schemas/asdf/core/ndarray-1.1.0"
 
 required: [foobar]
 ...
@@ -189,7 +189,7 @@ required: [foobar]
 def test_load_schema_with_asdf_uri_scheme():
     subschema_content = """%YAML 1.1
 ---
-$schema: http://stsci.edu/schemas/asdf/asdf-schema-1.0.0
+$schema: http://stsci.edu/schemas/asdf/asdf-schema-1.1.0
 id: asdf://somewhere.org/schemas/bar
 
 bar:
@@ -198,7 +198,7 @@ bar:
 """
     content = """%YAML 1.1
 ---
-$schema: http://stsci.edu/schemas/asdf/asdf-schema-1.0.0
+$schema: http://stsci.edu/schemas/asdf/asdf-schema-1.1.0
 id: asdf://somewhere.org/schemas/foo
 
 definitions:
@@ -236,7 +236,7 @@ def test_load_schema_with_stsci_id():
     """
     subschema_content = """%YAML 1.1
 ---
-$schema: http://stsci.edu/schemas/asdf/asdf-schema-1.0.0
+$schema: http://stsci.edu/schemas/asdf/asdf-schema-1.1.0
 id: http://stsci.edu/schemas/bar
 
 bar:
@@ -245,7 +245,7 @@ bar:
 """
     content = """%YAML 1.1
 ---
-$schema: http://stsci.edu/schemas/asdf/asdf-schema-1.0.0
+$schema: http://stsci.edu/schemas/asdf/asdf-schema-1.1.0
 id: http://stsci.edu/schemas/foo
 
 definitions:
@@ -403,7 +403,7 @@ def test_property_order():
     ff = asdf.AsdfFile(tree)
     ff.write_to(buff)
 
-    ndarray_schema = schema.load_schema("http://stsci.edu/schemas/asdf/core/ndarray-1.0.0")
+    ndarray_schema = schema.load_schema("http://stsci.edu/schemas/asdf/core/ndarray-1.1.0")
     property_order = ndarray_schema["anyOf"][1]["propertyOrder"]
 
     last_index = 0
@@ -473,7 +473,7 @@ custom: !<{tag_uri}>
         # Make sure tags get validated inside of other tags that know
         # nothing about them.
         yaml = f"""
-    array: !core/ndarray-1.0.0
+    array: !core/ndarray-1.1.0
       data: [0, 1, 2]
       custom: !<{tag_uri}>
         foo
@@ -536,7 +536,7 @@ def test_check_complex_default():
 
     schema.check_schema(s)
 
-    s["properties"]["a"]["tag"] = "tag:stsci.edu/asdf/core/ndarray-1.0.0"
+    s["properties"]["a"]["tag"] = "tag:stsci.edu/asdf/core/ndarray-1.1.0"
     with pytest.raises(ValidationError, match=r"mismatched tags, wanted .*, got .*"):
         schema.check_schema(s)
 
@@ -623,6 +623,8 @@ properties:
         extension_uri = "http://nowhere.org/extensions/custom/default-1.0.0"
 
     with config_context() as cfg:
+        # later versions do not fill defaults
+        cfg.default_version = "1.5.0"
         cfg.add_extension(DefaultExtension())
         cfg.add_resource_mapping({schema_uri: tag_schema})
         yaml = """
@@ -633,7 +635,7 @@ custom: !<http://nowhere.org/tags/custom/default-1.0.0>
   j:
     l: 362
         """
-        buff = yaml_to_asdf(yaml)
+        buff = yaml_to_asdf(yaml, version="1.5.0")
         with asdf.open(buff) as ff:
             assert "a" in ff.tree["custom"]
             assert ff.tree["custom"]["a"] == 42
@@ -755,7 +757,7 @@ def test_tag_reference_validation():
 custom: !<tag:nowhere.org:custom/tag_reference-1.0.0>
   name:
     "Something"
-  things: !core/ndarray-1.0.0
+  things: !core/ndarray-1.1.0
     data: [1, 2, 3]
     """
 
@@ -812,7 +814,7 @@ custom: !<tag:nowhere.org:custom/foreign_tag_reference-1.0.0>
   a: !<tag:nowhere.org:custom/tag_reference-1.0.0>
     name:
       "Something"
-    things: !core/ndarray-1.0.0
+    things: !core/ndarray-1.1.0
       data: [1, 2, 3]
     """
 
@@ -1244,7 +1246,7 @@ def test_validator_visit_repeat_nodes():
 def test_tag_validator():
     content = """%YAML 1.1
 ---
-$schema: http://stsci.edu/schemas/asdf/asdf-schema-1.0.0
+$schema: http://stsci.edu/schemas/asdf/asdf-schema-1.1.0
 id: asdf://somewhere.org/schemas/foo
 tag: asdf://somewhere.org/tags/foo
 ...
@@ -1260,7 +1262,7 @@ tag: asdf://somewhere.org/tags/foo
 
     content = """%YAML 1.1
 ---
-$schema: http://stsci.edu/schemas/asdf/asdf-schema-1.0.0
+$schema: http://stsci.edu/schemas/asdf/asdf-schema-1.1.0
 id: asdf://somewhere.org/schemas/bar
 tag: asdf://somewhere.org/tags/bar-*
 ...
