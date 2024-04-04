@@ -108,6 +108,7 @@ def test_open_stream(tmp_path):
         assert af["foo"] == "bar"
 
 
+@pytest.mark.xfail(reason="atomic write is disabled")
 def test_atomic_write(tmp_path, small_tree):
     tmpfile = str(tmp_path / "test.asdf")
 
