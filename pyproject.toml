@@ -20,8 +20,7 @@ dynamic = [
 ]
 dependencies = [
   "asdf-standard>=1.1.0",
-  "asdf-transform-schemas>=0.3",
-  "asdf-unit-schemas>=0.1",
+  "asdf-transform-schemas>=0.3",  # required for asdf-1.0.0 schema
   "importlib-metadata>=4.11.4",
   "jmespath>=0.6.2",
   "numpy>=1.22",
