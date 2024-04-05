@@ -1,4 +1,4 @@
-3.2.0 (unreleased)
+3.2.0 (2024-04-05)
 ------------------
 
 - Deprecate ``AsdfFile.version_map`` [#1745]
