@@ -7,6 +7,8 @@
 
 - Deprecate ``asdf.versioning.AsdfSpec`` [#1774]
 
+- Deprecate ``asdf.util.filepath_to_url`` use ``pathlib.Path.to_uri`` [#1735]
+
 
 3.2.0 (2024-04-05)
 ------------------

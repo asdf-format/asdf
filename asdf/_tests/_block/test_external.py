@@ -11,7 +11,7 @@ def test_cache(tmp_path):
     asdf.AsdfFile({"data": arr}).write_to(efn)
 
     cache = external.ExternalBlockCache()
-    base_uri = asdf.util.filepath_to_url(f"{tmp_path}/")
+    base_uri = f"{tmp_path.as_uri()}/"
     data = cache.load(base_uri, "test.asdf")
     np.testing.assert_array_equal(data, arr)
     assert cache.load(base_uri, "test.asdf") is data

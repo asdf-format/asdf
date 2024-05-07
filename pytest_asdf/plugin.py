@@ -210,7 +210,7 @@ class AsdfSchemaExampleItem(pytest.Item):
         return result
 
     def runtest(self):
-        from asdf import AsdfFile, _block, generic_io, util
+        from asdf import AsdfFile, _block, generic_io
         from asdf.testing import helpers
 
         # Make sure that the examples in the schema files (and thus the
@@ -218,7 +218,7 @@ class AsdfSchemaExampleItem(pytest.Item):
         buff = helpers.yaml_to_asdf("example: " + self.example.example.strip(), version=self.example.version)
 
         ff = AsdfFile(
-            uri=util.filepath_to_url(os.path.abspath(self.filename)),
+            uri=pathlib.Path(self.filename).expanduser().absolute().as_uri(),
             ignore_unrecognized_tag=self.ignore_unrecognized_tag,
             ignore_version_mismatch=self.ignore_version_mismatch,
         )
@@ -227,7 +227,7 @@ class AsdfSchemaExampleItem(pytest.Item):
         ff2 = AsdfFile({"data": np.empty((1024 * 1024 * 8), dtype=np.uint8)})
 
         ff._external_asdf_by_uri[
-            util.filepath_to_url(os.path.abspath(os.path.join(os.path.dirname(self.filename), "external.asdf")))
+            (pathlib.Path(self.filename).expanduser().absolute().parent / "external.asdf").as_uri()
         ] = ff2
 
         wb = _block.writer.WriteBlock(np.zeros(1024 * 1024 * 8, dtype=np.uint8))
