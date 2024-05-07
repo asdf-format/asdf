@@ -218,7 +218,7 @@ class AsdfSchemaExampleItem(pytest.Item):
         buff = helpers.yaml_to_asdf("example: " + self.example.example.strip(), version=self.example.version)
 
         ff = AsdfFile(
-            uri=pathlib.Path(self.filename).absolute().as_uri(),
+            uri=pathlib.Path(self.filename).expanduser().absolute().as_uri(),
             ignore_unrecognized_tag=self.ignore_unrecognized_tag,
             ignore_version_mismatch=self.ignore_version_mismatch,
         )
@@ -226,7 +226,9 @@ class AsdfSchemaExampleItem(pytest.Item):
         # Fake an external file
         ff2 = AsdfFile({"data": np.empty((1024 * 1024 * 8), dtype=np.uint8)})
 
-        ff._external_asdf_by_uri[(pathlib.Path(self.filename).absolute().parent / "external.asdf").as_uri()] = ff2
+        ff._external_asdf_by_uri[
+            (pathlib.Path(self.filename).expanduser().absolute().parent / "external.asdf").as_uri()
+        ] = ff2
 
         wb = _block.writer.WriteBlock(np.zeros(1024 * 1024 * 8, dtype=np.uint8))
         with generic_io.get_file(buff, mode="rw") as f:
