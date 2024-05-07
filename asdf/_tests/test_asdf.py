@@ -5,7 +5,7 @@ import pytest
 from asdf import config_context
 from asdf._asdf import AsdfFile, open_asdf
 from asdf._entry_points import get_extensions
-from asdf._tests._helpers import assert_no_warnings, assert_tree_match
+from asdf._tests._helpers import assert_tree_match
 from asdf.exceptions import AsdfDeprecationWarning, AsdfWarning
 from asdf.extension import ExtensionProxy
 from asdf.testing.helpers import yaml_to_asdf
@@ -17,8 +17,7 @@ def test_no_warnings_get_extensions():
     Smoke test for changes to the `importlib.metadata` entry points API.
     """
 
-    with assert_no_warnings():
-        get_extensions()
+    get_extensions()
 
 
 class TestExtension:
@@ -139,8 +138,7 @@ def test_asdf_file_version_requirement():
     )
 
     # No warnings if the requirement is fulfilled:
-    with assert_no_warnings():
-        AsdfFile(version="1.5.0", extensions=[extension_with_requirement])
+    AsdfFile(version="1.5.0", extensions=[extension_with_requirement])
 
     # Version doesn't match the requirement, so we should see a warning
     # and the extension should not be enabled:
@@ -160,8 +158,7 @@ def test_asdf_file_version_requirement():
     # a warning:
     with config_context() as config:
         config.add_extension(extension_with_requirement)
-        with assert_no_warnings():
-            af = AsdfFile(version="1.4.0")
+        af = AsdfFile(version="1.4.0")
 
         # ... unless the user explicitly requested the invalid extension:
         with pytest.warns(AsdfWarning, match=r"does not support ASDF Standard 1.4.0"):
@@ -215,12 +212,9 @@ def test_reading_extension_metadata():
         config.add_extension(extension_with_legacy_class_names)
 
         # Test missing history:
-        content = """
-foo: bar
-        """
+        content = "foo: bar"
         buff = yaml_to_asdf(content)
-        with assert_no_warnings():
-            open_asdf(buff)
+        open_asdf(buff)
 
         # Test the old history format:
         content = """
@@ -232,8 +226,7 @@ history:
 foo: bar
         """
         buff = yaml_to_asdf(content, version="1.0.0")
-        with assert_no_warnings():
-            open_asdf(buff)
+        open_asdf(buff)
 
         # Test matching by URI:
         content = """
@@ -244,8 +237,7 @@ history:
       extension_class: some.unrecognized.extension.class.Name
         """
         buff = yaml_to_asdf(content)
-        with assert_no_warnings():
-            open_asdf(buff)
+        open_asdf(buff)
 
         # Test matching by legacy class name:
         content = """
@@ -255,8 +247,7 @@ history:
       extension_class: some.legacy.class.Name
         """
         buff = yaml_to_asdf(content)
-        with assert_no_warnings():
-            open_asdf(buff)
+        open_asdf(buff)
 
         # Warn when the URI is missing, even if there's
         # a class name match:
@@ -309,8 +300,7 @@ history:
         version: 0.1.2
         """
         buff = yaml_to_asdf(content)
-        with assert_no_warnings():
-            open_asdf(buff)
+        open_asdf(buff)
 
         # Shouldn't receive a warning when the package
         # name changes, even if the version is later:
@@ -325,8 +315,7 @@ history:
         version: 9.4.5
         """
         buff = yaml_to_asdf(content)
-        with assert_no_warnings():
-            open_asdf(buff)
+        open_asdf(buff)
 
 
 def test_bad_input(tmp_path):

@@ -45,4 +45,5 @@ undefined_data:
 
     # Make sure no warning occurs if explicitly ignored
     buff.seek(0)
+    # as warnings get turned into errors, nothing to do here
     afile = asdf.open(buff, ignore_unrecognized_tag=True)
