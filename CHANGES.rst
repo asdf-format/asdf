@@ -3,6 +3,11 @@
 
 - Fix ``__asdf_traverse__`` for non-tagged objects [#1739]
 
+- Deprecate ``asdf.testing.helpers.format_tag`` [#1774]
+
+- Deprecate ``asdf.versioning.AsdfSpec`` [#1774]
+
+
 3.2.0 (2024-04-05)
 ------------------
 

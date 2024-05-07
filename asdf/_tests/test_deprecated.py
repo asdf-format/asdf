@@ -5,6 +5,7 @@ import numpy as np
 import pytest
 
 import asdf
+import asdf.testing.helpers
 from asdf.exceptions import AsdfDeprecationWarning, ValidationError
 
 
@@ -123,3 +124,8 @@ def test_asdffile_version_map_deprecation():
     af = asdf.AsdfFile()
     with pytest.warns(AsdfDeprecationWarning, match="AsdfFile.version_map is deprecated"):
         af.version_map
+
+
+def test_format_tag_deprecation():
+    with pytest.warns(AsdfDeprecationWarning, match="format_tag is deprecated"):
+        asdf.testing.helpers.format_tag("stsci.edu", "asdf", "1.0.0", "fits/fits")

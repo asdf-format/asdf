@@ -3,10 +3,13 @@ This module deals with things that change between different versions
 of the ASDF spec.
 """
 
+import warnings
 from functools import total_ordering
 
 import yaml
 from semantic_version import SimpleSpec, Version
+
+from .exceptions import AsdfDeprecationWarning
 
 _yaml_base_loader = yaml.CSafeLoader if getattr(yaml, "__with_libyaml__", None) else yaml.SafeLoader
 
@@ -112,7 +115,12 @@ class AsdfVersion(AsdfVersionMixin, Version):
 
 
 class AsdfSpec(SimpleSpec):
+    """
+    Deprecated.
+    """
+
     def __init__(self, *args, **kwargs):
+        warnings.warn("AsdfSpec is deprecated.", AsdfDeprecationWarning)
         super().__init__(*args, **kwargs)
 
     def match(self, version):
