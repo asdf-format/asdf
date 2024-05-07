@@ -287,7 +287,9 @@ class NodeSchemaInfo:
                                 info.set_schema_from_node(node, extension_manager)
                             except KeyError:
                                 # if _tag is not a valid tag, no schema will be found
-                                # and a KeyError will be raised
+                                # and a KeyError will be raised. We don't raise the KeyError
+                                # (or another exception) here as the node (object) might
+                                # be using _tag for a non-ASDF purpose.
                                 pass
 
                     else:
