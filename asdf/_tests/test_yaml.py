@@ -219,7 +219,7 @@ foo: !<tag:stsci.edu:asdf/core/ndarray-1.0.0> [1, 2, 3]
 ..."""
 
     # Check that fully qualified explicit tags work
-    buff = io.BytesIO(yaml.encode("ascii"))
+    buff = io.BytesIO(yaml)
 
     with asdf.open(buff) as ff:
         assert all(ff.tree["foo"] == [1, 2, 3])
