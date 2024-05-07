@@ -10,7 +10,7 @@ import asdf
 from asdf import config_context, constants, get_config, schema, tagged, util, yamlutil
 from asdf.exceptions import AsdfConversionWarning, AsdfDeprecationWarning, AsdfWarning, ValidationError
 from asdf.extension import TagDefinition
-from asdf.testing.helpers import format_tag, yaml_to_asdf
+from asdf.testing.helpers import yaml_to_asdf
 
 
 @contextlib.contextmanager
