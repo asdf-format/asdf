@@ -12,8 +12,9 @@ from numpy.testing import assert_array_equal
 
 import asdf
 from asdf import config_context, get_config, treeutil, versioning
-from asdf.exceptions import AsdfDeprecationWarning, AsdfWarning, ValidationError
+from asdf.exceptions import AsdfDeprecationWarning, AsdfPackageVersionWarning, ValidationError
 from asdf.extension import ExtensionProxy
+from asdf.resource import ResourceMappingProxy
 from asdf.testing.helpers import roundtrip_object, yaml_to_asdf
 
 from ._helpers import assert_tree_match
@@ -284,6 +285,7 @@ def test_open_pathlib_path(tmp_path):
 @pytest.mark.parametrize(
     ("installed", "extension", "warns"),
     [
+        (None, "2.0.0", True),
         ("1.2.3", "2.0.0", True),
         ("1.2.3", "2.0.dev10842", True),
         ("2.0.0", "2.0.0", False),
@@ -298,7 +300,8 @@ def test_extension_version_check(installed, extension, warns):
     proxy = ExtensionProxy(FooExtension(), package_name="foo", package_version=installed)
 
     with config_context() as config:
-        config.add_extension(proxy)
+        if installed is not None:
+            config.add_extension(proxy)
         af = asdf.AsdfFile()
 
     af._fname = "test.asdf"
@@ -315,7 +318,7 @@ def test_extension_version_check(installed, extension, warns):
     }
 
     if warns:
-        with pytest.warns(AsdfWarning, match=r"File 'test.asdf' was created with"):
+        with pytest.warns(AsdfPackageVersionWarning, match=r"File 'test.asdf' was created with"):
             af._check_extensions(tree)
 
         with pytest.raises(RuntimeError, match=r"^File 'test.asdf' was created with"):
@@ -323,6 +326,56 @@ def test_extension_version_check(installed, extension, warns):
 
     else:
         af._check_extensions(tree)
+
+
+@pytest.mark.parametrize(
+    ("installed", "extension", "warns"),
+    [
+        (None, "2.0.0", True),
+        ("1.2.3", "2.0.0", True),
+        ("1.2.3", "2.0.dev10842", True),
+        ("2.0.0", "2.0.0", False),
+        ("2.0.1", "2.0.0", False),
+        ("2.0.1", "2.0.dev12345", False),
+    ],
+)
+def test_check_extension_manifest_software(installed, extension, warns):
+    class FooExtension:
+        extension_uri = "asdf://somewhere.org/extensions/foo-1.0.0"
+
+    proxy = ExtensionProxy(FooExtension(), package_name="foo", package_version="1.0.0")
+
+    mapping = ResourceMappingProxy({}, package_name="bar", package_version=installed)
+
+    with config_context() as config:
+        config.add_extension(proxy)
+        if installed is not None:
+            config.add_resource_mapping(mapping)
+        af = asdf.AsdfFile()
+
+        af._fname = "test.asdf"
+
+        tree = {
+            "history": {
+                "extensions": [
+                    asdf.tags.core.ExtensionMetadata(
+                        extension_uri=FooExtension.extension_uri,
+                        software=asdf.tags.core.Software(name="foo", version="1.0.0"),
+                        manifest_software=asdf.tags.core.Software(name="bar", version=extension),
+                    ),
+                ],
+            },
+        }
+
+        if warns:
+            with pytest.warns(AsdfPackageVersionWarning, match=r"File 'test.asdf' was created with"):
+                af._check_extensions(tree)
+
+            with pytest.raises(RuntimeError, match=r"^File 'test.asdf' was created with"):
+                af._check_extensions(tree, strict=True)
+
+        else:
+            af._check_extensions(tree)
 
 
 def test_extension_check_no_warning_on_builtin():

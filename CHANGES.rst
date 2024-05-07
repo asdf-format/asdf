@@ -9,6 +9,10 @@
 
 - Deprecate ``asdf.util.filepath_to_url`` use ``pathlib.Path.to_uri`` [#1735]
 
+- Record package providing manifest for extensions used to write
+  a file and ``AsdfPackageVersionWarning`` when installed extension/manifest
+  package does not match that used to write the file [#1758]
+
 
 3.2.0 (2024-04-05)
 ------------------

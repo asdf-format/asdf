@@ -19,6 +19,7 @@ from .config import config_context, get_config
 from .exceptions import (
     AsdfConversionWarning,
     AsdfDeprecationWarning,
+    AsdfPackageVersionWarning,
     AsdfWarning,
     DelimiterNotFoundError,
     ValidationError,
@@ -356,7 +357,7 @@ class AsdfFile:
                 if strict:
                     raise RuntimeError(msg)
 
-                warnings.warn(msg, AsdfWarning)
+                warnings.warn(msg, AsdfPackageVersionWarning)
 
             elif extension.software:
                 # Local extensions may not have a real version.  If the package name changed,
@@ -372,7 +373,33 @@ class AsdfFile:
                     if strict:
                         raise RuntimeError(msg)
 
-                    warnings.warn(msg, AsdfWarning)
+                    warnings.warn(msg, AsdfPackageVersionWarning)
+
+            # check version of manifest providing package (if one was recorded)
+            if "manifest_software" in extension:
+                package_name = extension["manifest_software"]["name"]
+                package_version = Version(extension["manifest_software"]["version"])
+                package_description = f"{package_name}=={package_version}"
+                installed_version = None
+                for mapping in get_config().resource_manager._resource_mappings:
+                    if mapping.package_name == package_name:
+                        installed_version = Version(mapping.package_version)
+                        break
+                msg = None
+                if installed_version is None:
+                    msg = (
+                        f"File {filename}was created with package {package_description}, "
+                        "which is currently not installed"
+                    )
+                elif installed_version < package_version:
+                    msg = (
+                        f"File {filename}was created with package {package_description}, "
+                        f"but older package({package_name}=={installed_version}) is installed."
+                    )
+                if msg:
+                    if strict:
+                        raise RuntimeError(msg)
+                    warnings.warn(msg, AsdfPackageVersionWarning)
 
     def _process_plugin_extensions(self):
         """
@@ -460,6 +487,15 @@ class AsdfFile:
                 ext_meta["extension_uri"] = extension.extension_uri
             if extension.compressors:
                 ext_meta["supported_compression"] = [comp.label.decode("ascii") for comp in extension.compressors]
+            manifest = getattr(extension._delegate, "_manifest", None)
+            if manifest is not None:
+                # check if this extension was built from a manifest is a different package
+                resource_mapping = get_config().resource_manager._mappings_by_uri.get(manifest["id"])
+                if resource_mapping.package_name != extension.package_name:
+                    ext_meta["manifest_software"] = Software(
+                        name=resource_mapping.package_name,
+                        version=resource_mapping.package_version,
+                    )
 
             for i, entry in enumerate(tree["history"]["extensions"]):
                 # Update metadata about this extension if it already exists
