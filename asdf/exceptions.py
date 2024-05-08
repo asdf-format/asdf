@@ -3,6 +3,8 @@ from asdf._jsonschema import ValidationError
 __all__ = [
     "AsdfConversionWarning",
     "AsdfDeprecationWarning",
+    "AsdfManifestURIMismatchWarning",
+    "AsdfPackageVersionWarning",
     "AsdfProvisionalAPIWarning",
     "AsdfWarning",
     "DelimiterNotFoundError",
@@ -53,4 +55,11 @@ class AsdfProvisionalAPIWarning(AsdfWarning, FutureWarning):
 class AsdfPackageVersionWarning(AsdfWarning):
     """
     A warning indicating a package version mismatch
+    """
+
+
+class AsdfManifestURIMismatchWarning(AsdfWarning):
+    """
+    A warning indicaing that an extension registered with a manifest
+    contains a id that does not match the uri of the manifest.
     """

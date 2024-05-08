@@ -5,7 +5,7 @@ from packaging.specifiers import SpecifierSet
 from yaml.representer import RepresenterError
 
 from asdf import AsdfFile, config_context
-from asdf.exceptions import AsdfWarning, ValidationError
+from asdf.exceptions import AsdfManifestURIMismatchWarning, AsdfWarning, ValidationError
 from asdf.extension import (
     Compressor,
     Converter,
@@ -941,3 +941,44 @@ def test_reference_cycle():
 
         read_f1 = roundtrip_object(f1)
         assert read_f1.inverse.inverse is read_f1
+
+
+def test_manifest_uri_id_mismatch_warning(tmp_path):
+    with config_context() as config:
+        # make an extension with a manifest (where id doesn't match the registered uri)
+        full_manifest = """%YAML 1.1
+---
+id: asdf://somewhere.org/manifests/foo
+extension_uri: asdf://somewhere.org/extensions/foo
+tags:
+  - asdf://somewhere.org/tags/bar
+...
+"""
+        config.add_resource_mapping({"asdf://somewhere.org/extensions/foo": full_manifest})
+
+        class Foo:
+            pass
+
+        class FooConverter:
+            tags = ["asdf://somewhere.org/tags/bar"]
+            types = [Foo]
+
+            def to_yaml_tree(self, *args):
+                return {}
+
+            def from_yaml_tree(self, *args):
+                return Foo()
+
+        extension = ManifestExtension.from_uri(
+            "asdf://somewhere.org/extensions/foo",
+            converters=[FooConverter()],
+        )
+
+        # use the extension to write out a file
+        config.add_extension(extension)
+
+        af = AsdfFile()
+        af["foo"] = Foo()
+        fn = tmp_path / "foo.asdf"
+        with pytest.warns(AsdfManifestURIMismatchWarning):
+            af.write_to(fn)
