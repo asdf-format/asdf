@@ -13,6 +13,9 @@
   a file and ``AsdfPackageVersionWarning`` when installed extension/manifest
   package does not match that used to write the file [#1758]
 
+- Fix bug where a dictionary containing a key ``id`` caused
+  any contained references to fail to resolve [#1716]
+
 
 3.2.0 (2024-04-05)
 ------------------
