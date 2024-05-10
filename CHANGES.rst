@@ -20,6 +20,9 @@
   extension was created from a manifest registered with a uri that
   does not match the id in the manifest [#1785]
 
+- When using a custom schema for validation, also validate using the
+  schema associated with the tag for a ``Tagged`` object [#1737]
+
 
 3.2.0 (2024-04-05)
 ------------------
