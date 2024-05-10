@@ -14,7 +14,7 @@ from asdf.exceptions import AsdfConversionWarning, AsdfDeprecationWarning, AsdfW
 from asdf.testing.helpers import yaml_to_asdf
 
 
-def _roundtrip(obj):
+def _roundtrip(obj, init_kwargs=None):
     """
     Parameters
     ----------
@@ -31,8 +31,12 @@ def _roundtrip(obj):
     read_tree : object
         object read back from ASDF file
     """
+
+    init_kwargs = init_kwargs or {}
     buff = io.BytesIO()
-    asdf.AsdfFile({"obj": obj}).write_to(buff)
+    af = asdf.AsdfFile(**init_kwargs)
+    af["obj"] = obj
+    af.write_to(buff)
     buff.seek(0)
 
     open_kwargs = {
@@ -104,11 +108,12 @@ def test_arbitrary_python_object():
         ff.write_to(buff)
 
 
-def run_tuple_test(input_tree):
-    content, tree = _roundtrip(input_tree)
+def run_tuple_test(input_tree, **kwargs):
+    content, tree = _roundtrip(input_tree, **kwargs)
 
     assert b"tuple" not in content
     assert isinstance(tree["val"], list)
+    return content, tree
 
 
 def test_python_tuple():
@@ -120,8 +125,7 @@ def test_python_tuple():
 
     input_tree = {"val": (1, 2, 3)}
 
-    with pytest.warns(AsdfDeprecationWarning, match="ignore_implicit_conversion"):
-        run_tuple_test(input_tree)
+    run_tuple_test(input_tree)
 
 
 @contextlib.contextmanager
@@ -149,7 +153,7 @@ def test_named_tuple_collections():
     input_tree = {"val": nt(1, 2, 3)}
 
     with multi_warn(AsdfDeprecationWarning, ["ignore_implicit_conversion", "implicit conversion is deprecated"]):
-        run_tuple_test(input_tree)
+        run_tuple_test(input_tree, init_kwargs={"ignore_implicit_conversion": True})
 
 
 def test_named_tuple_typing():
@@ -162,10 +166,10 @@ def test_named_tuple_typing():
         two: int
         three: int
 
-    tree = {"val": NT(1, 2, 3)}
+    input_tree = {"val": NT(1, 2, 3)}
 
     with multi_warn(AsdfDeprecationWarning, ["ignore_implicit_conversion", "implicit conversion is deprecated"]):
-        run_tuple_test(tree)
+        run_tuple_test(input_tree, init_kwargs={"ignore_implicit_conversion": True})
 
 
 def test_named_tuple_collections_recursive():
@@ -173,9 +177,8 @@ def test_named_tuple_collections_recursive():
 
     input_tree = {"val": nt(1, 2, np.ones(3))}
 
-    #init_options = {"ignore_implicit_conversion": True}
     with multi_warn(AsdfDeprecationWarning, ["ignore_implicit_conversion", "implicit conversion is deprecated"]):
-        _, tree = _roundtrip(input_tree)
+        _, tree = run_tuple_test(input_tree, init_kwargs={"ignore_implicit_conversion": True})
     assert (tree["val"][2] == np.ones(3)).all()
 
 
@@ -187,9 +190,8 @@ def test_named_tuple_typing_recursive(tmp_path):
 
     input_tree = {"val": NT(1, 2, np.ones(3))}
 
-    init_options = {"ignore_implicit_conversion": True}
     with multi_warn(AsdfDeprecationWarning, ["ignore_implicit_conversion", "implicit conversion is deprecated"]):
-        _, tree = _roundtrip(input_tree)
+        _, tree = run_tuple_test(input_tree, init_kwargs={"ignore_implicit_conversion": True})
     assert (tree["val"][2] == np.ones(3)).all()
 
 
