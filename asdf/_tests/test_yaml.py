@@ -48,7 +48,7 @@ def _roundtrip(obj, init_kwargs=None):
         return buff.getvalue(), af["obj"]
 
 
-def test_ordered_dict(with_lazy_tree):
+def test_ordered_dict():
     """
     Test that we can write out and read in ordered dicts.
     """
