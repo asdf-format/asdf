@@ -19,6 +19,7 @@ from .config import config_context, get_config
 from .exceptions import (
     AsdfConversionWarning,
     AsdfDeprecationWarning,
+    AsdfManifestURIMismatchWarning,
     AsdfPackageVersionWarning,
     AsdfWarning,
     DelimiterNotFoundError,
@@ -491,7 +492,15 @@ class AsdfFile:
             if manifest is not None:
                 # check if this extension was built from a manifest is a different package
                 resource_mapping = get_config().resource_manager._mappings_by_uri.get(manifest["id"])
-                if resource_mapping.package_name != extension.package_name:
+                # if an extension was registered with a manifest uri that does not match the id the
+                # resource_mapping lookup will fail (resource_mapping will be None)
+                if resource_mapping is None:
+                    warnings.warn(
+                        f"Extension ({extension.extension_uri}) uses a manifest with a uri that "
+                        "does not match it's id. Please open an issue with the extension maintainer",
+                        AsdfManifestURIMismatchWarning,
+                    )
+                elif resource_mapping.package_name != extension.package_name:
                     ext_meta["manifest_software"] = Software(
                         name=resource_mapping.package_name,
                         version=resource_mapping.package_version,
