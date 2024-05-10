@@ -24,6 +24,11 @@
   resolve to public classes (even if the class is implemented
   in a private module). [#1654]
 
+- Add options to control saving the base array when saving array views
+  controlled via ``AsdfConfig.default_array_save_base``,
+  ``AsdfFile.set_array_save_base`` and
+  ``SerializationContext.set_array_save_base`` [#1753]
+
 
 3.2.0 (2024-04-05)
 ------------------

@@ -39,6 +39,7 @@ the currently active config:
       all_array_storage: None
       all_array_compression: input
       all_array_compression_kwargs: None
+      default_array_save_base: True
       convert_unknown_ndarray_subclasses: True
       default_version: 1.5.0
       io_block_size: -1
@@ -63,6 +64,7 @@ This allows for short-lived configuration changes that do not impact other code:
       all_array_storage: None
       all_array_compression: input
       all_array_compression_kwargs: None
+      default_array_save_base: True
       convert_unknown_ndarray_subclasses: True
       default_version: 1.5.0
       io_block_size: -1
@@ -75,6 +77,7 @@ This allows for short-lived configuration changes that do not impact other code:
       all_array_storage: None
       all_array_compression: input
       all_array_compression_kwargs: None
+      default_array_save_base: True
       convert_unknown_ndarray_subclasses: True
       default_version: 1.5.0
       io_block_size: -1
@@ -136,6 +139,16 @@ within an ASDF file. If ``None`` diffeerent keyword arguments
 can be set for each array. See ``AsdfFile.set_array_compression`` for more details.
 
 Defaults to ``None``.
+
+.. _default_array_save_base:
+
+default_array_save_base
+-----------------------
+
+Controls the default behavior asdf will follow when saving an array view.
+If ``True`` (the default) the base array for the view will be saved in an ASDF
+binary block. If ``False`` the data corresponding to the view will be saved in
+an ASDF binary block.
 
 .. _convert_unknown_ndarray_subclasses:
 

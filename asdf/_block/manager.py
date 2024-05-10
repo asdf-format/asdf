@@ -496,6 +496,14 @@ class Manager:
     def get_output_compressions(self):
         return self.options.get_output_compressions()
 
+    def _set_array_save_base(self, data, save_base):
+        options = self.options.get_options(data)
+        options.save_base = save_base
+        self.options.set_options(data, options)
+
+    def _get_array_save_base(self, data):
+        return self.options.get_options(data).save_base
+
     @contextlib.contextmanager
     def options_context(self):
         """

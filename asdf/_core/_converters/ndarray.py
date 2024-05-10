@@ -40,22 +40,6 @@ class NDArrayConverter(Converter):
                 result["strides"] = data._strides
             return result
 
-        # The ndarray-1.0.0 schema does not permit 0 valued strides.
-        # Perhaps we'll want to allow this someday, to efficiently
-        # represent an array of all the same value.
-        if any(stride == 0 for stride in data.strides):
-            data = np.ascontiguousarray(data)
-
-        # The view computations that follow assume that the base array
-        # is contiguous.  If not, we need to make a copy to avoid
-        # writing a nonsense view.
-        base = util.get_array_base(data)
-        if not base.flags.forc:
-            data = np.ascontiguousarray(data)
-            base = util.get_array_base(data)
-
-        shape = data.shape
-
         # sort out block writing options
         if isinstance(obj, NDArrayType) and isinstance(obj._source, str):
             # this is an external block, if we have no other settings, keep it as external
@@ -65,8 +49,30 @@ class NDArrayConverter(Converter):
         else:
             options = ctx._blocks.options.get_options(data)
 
-        # possibly override options based on config settings
+        # The ndarray-1.0.0 schema does not permit 0 valued strides.
+        # Perhaps we'll want to allow this someday, to efficiently
+        # represent an array of all the same value.
+        if any(stride == 0 for stride in data.strides):
+            data = np.ascontiguousarray(data)
+
+        # Use the base array if that option is set or if the option
+        # is unset and the AsdfConfig default is set
         cfg = config.get_config()
+        if options.save_base or (options.save_base is None and cfg.default_array_save_base):
+            base = util.get_array_base(data)
+        else:
+            base = data
+
+        # The view computations that follow assume that the base array
+        # is contiguous.  If not, we need to make a copy to avoid
+        # writing a nonsense view.
+        if not base.flags.forc:
+            data = np.ascontiguousarray(data)
+            base = util.get_array_base(data)
+
+        shape = data.shape
+
+        # possibly override options based on config settings
         if cfg.all_array_storage is not None:
             options.storage_type = cfg.all_array_storage
         if cfg.all_array_compression != "input":
