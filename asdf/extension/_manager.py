@@ -1,9 +1,46 @@
+import sys
 from functools import lru_cache
 
 from asdf.tagged import Tagged
 from asdf.util import get_class_name, uri_match
 
 from ._extension import ExtensionProxy
+
+
+def _resolve_type(path):
+    """
+    Convert a class path (like the string "asdf.AsdfFile") to a
+    class (``asdf.AsdfFile``) only if the module implementing the
+    class has already been imported.
+
+    Parameters
+    ----------
+
+    path : str
+        Path/name of class (for example, "asdf.AsdfFile")
+
+    Returns
+    -------
+
+    typ : class or None
+        The class (if it's already been imported) or None
+    """
+    if "." not in path:
+        # check if this path is a module
+        if path in sys.modules:
+            return sys.modules[path]
+        return None
+    # this type is part of a module
+    module_name, type_name = path.rsplit(".", maxsplit=1)
+    # if the module is not imported, don't index it
+    if module_name not in sys.modules:
+        return None
+    module = sys.modules[module_name]
+    if not hasattr(module, type_name):
+        # the imported module does not have this class, perhaps
+        # it is dynamically created so do not index it yet
+        return None
+    return getattr(module, type_name)
 
 
 class ExtensionManager:
@@ -23,9 +60,37 @@ class ExtensionManager:
 
         self._tag_defs_by_tag = {}
         self._converters_by_tag = {}
-        # This dict has both str and type keys:
-        self._converters_by_type = {}
 
+        # To optimize performance converters can be registered using either:
+        # - the class/type they convert
+        # - the name/path (string) of the class/type they convert
+        # This allows the registration to continue without importing
+        # every module for every extension (which would be needed to turn
+        # the class paths into proper classes). Using class paths can be
+        # complicated by packages that have private implementations of
+        # classes that are exposed at a different 'public' location.
+        # These private classes may change between minor versions
+        # and would break converters that are registered using the private
+        # class path. However, often libraries do not modify the module
+        # of the 'public' class (so inspecting the class path returns
+        # the private class path). One example of this in asdf is
+        # Converter (exposed as ``asdf.extension.Converter`` but with
+        # a class path of ``asdf.extension._converter.Converter``).
+        # To allow converters to be registered with the public location
+        # we will need to attempt to import the public class path
+        # and then register the private class path after the class is
+        # imported. We don't want to do this unnecessarily and since
+        # class instances do not contain the public class path
+        # we adopt a strategy of checking class paths and only
+        # registering those that have already been imported. Thiss
+        # is ok because asdf will only use the converter type
+        # when attempting to serialize an object in memory (so the
+        # public class path will already be imported at the time
+        # the converter is needed).
+
+        # first we store the converters in the order they are discovered
+        # the key here can either be a class path (str) or class (type)
+        converters_by_type = {}
         validators = set()
 
         for extension in self._extensions:
@@ -37,16 +102,26 @@ class ExtensionManager:
                     if tag not in self._converters_by_tag:
                         self._converters_by_tag[tag] = converter
                 for typ in converter.types:
-                    if isinstance(typ, str):
-                        if typ not in self._converters_by_type:
-                            self._converters_by_type[typ] = converter
-                    else:
-                        type_class_name = get_class_name(typ, instance=False)
-                        if typ not in self._converters_by_type and type_class_name not in self._converters_by_type:
-                            self._converters_by_type[typ] = converter
-                            self._converters_by_type[type_class_name] = converter
+                    if typ not in converters_by_type:
+                        converters_by_type[typ] = converter
 
             validators.update(extension.validators)
+
+        self._converters_by_class_path = {}
+        self._converters_by_type = {}
+
+        for type_or_path, converter in converters_by_type.items():
+            if isinstance(type_or_path, str):
+                path = type_or_path
+                typ = _resolve_type(path)
+                if typ is None:
+                    if path not in self._converters_by_class_path:
+                        self._converters_by_class_path[path] = converter
+                        continue
+            else:
+                typ = type_or_path
+            if typ not in self._converters_by_type:
+                self._converters_by_type[typ] = converter
 
         self._validator_manager = _get_cached_validator_manager(tuple(validators))
 
@@ -90,7 +165,10 @@ class ExtensionManager:
         -------
         bool
         """
-        return typ in self._converters_by_type or get_class_name(typ, instance=False) in self._converters_by_type
+        if typ in self._converters_by_type:
+            return True
+        self._index_converters()
+        return typ in self._converters_by_type
 
     def handles_tag_definition(self, tag):
         """
@@ -172,18 +250,32 @@ class ExtensionManager:
         KeyError
             Unrecognized type.
         """
+        if typ not in self._converters_by_type:
+            self._index_converters()
         try:
             return self._converters_by_type[typ]
         except KeyError:
-            class_name = get_class_name(typ, instance=False)
-            try:
-                return self._converters_by_type[class_name]
-            except KeyError:
-                msg = (
-                    f"No support available for Python type '{get_class_name(typ, instance=False)}'.  "
-                    "You may need to install or enable an extension."
-                )
-                raise KeyError(msg) from None
+            msg = (
+                f"No support available for Python type '{get_class_name(typ, instance=False)}'.  "
+                "You may need to install or enable an extension."
+            )
+            raise KeyError(msg) from None
+
+    def _index_converters(self):
+        """
+        Search _converters_by_class_path for paths (strings) that
+        refer to classes that are currently imported. For imported
+        classes, add them to _converters_by_class (if the class
+        doesn't already have a converter).
+        """
+        # search class paths to find ones that are imported
+        for class_path in list(self._converters_by_class_path):
+            typ = _resolve_type(class_path)
+            if typ is None:
+                continue
+            if typ not in self._converters_by_type:
+                self._converters_by_type[typ] = self._converters_by_class_path[class_path]
+            del self._converters_by_class_path[class_path]
 
     @property
     def validator_manager(self):
