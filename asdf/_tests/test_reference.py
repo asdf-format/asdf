@@ -225,7 +225,7 @@ def test_internal_reference(tmp_path):
     assert b"{$ref: ''}" in buff.getvalue()
 
 
-def test_implicit_internal_reference(tmp_path):
+def test_implicit_internal_reference(tmp_path, with_lazy_tree):
     target = {"foo": "bar"}
     nested_in_dict = {"target": target}
     nested_in_list = [target]

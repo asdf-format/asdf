@@ -1,5 +1,6 @@
 import collections
 import copy
+import gc
 import weakref
 
 import numpy as np
@@ -252,3 +253,42 @@ def test_lazy_node_treeutil_support():
     asdf.treeutil.walk_and_modify(tree, callback)
 
     assert seen_ints == set([1, 2, 3, 4])
+
+
+@pytest.fixture()
+def cache_test_tree_path(tmp_path):
+    my_array = np.arange(3, dtype="uint8")
+    my_list = [my_array, my_array]
+    tree = {"a": my_list, "b": my_list}
+    af = asdf.AsdfFile(tree)
+    fn = tmp_path / "test.asdf"
+    af.write_to(fn)
+    return fn
+
+
+def test_cache_resolves_ref(cache_test_tree_path):
+    with asdf.open(cache_test_tree_path, lazy_tree=True) as af:
+        # since 'a' and 'b' were the same list when the file was saved
+        # they should be the same list on read
+        assert af["a"] is af["b"]
+        # same for the arrays in the list
+        assert af["a"][0] is af["a"][1]
+
+
+def test_cache_frees_deleted_object(cache_test_tree_path):
+    with asdf.open(cache_test_tree_path, lazy_tree=True) as af:
+        # load 1 of the 2 lists
+        l0 = af["a"]
+        # grab a weakref to the list (to not hold onto the list)
+        lref = weakref.ref(l0)
+        # now delete all references to the list (including the one in the tree)
+        del l0, af.tree["a"]
+        # trigger garbage collection
+        gc.collect()
+        # check that the weakref fails to resolve (so the list was freed)
+        assert lref() is None
+        # and we can no longer access 'a'
+        with pytest.raises(KeyError, match="'a'"):
+            af["a"]
+        # but can get 'b'
+        assert af["b"][0] is af["b"][1]

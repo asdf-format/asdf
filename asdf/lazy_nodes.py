@@ -6,6 +6,7 @@ lazy conversion of tagged ASDF tree nodes to custom objects.
 import collections
 import inspect
 import warnings
+import weakref
 from types import GeneratorType
 
 from . import tagged, yamlutil
@@ -13,6 +14,80 @@ from .exceptions import AsdfConversionWarning, AsdfLazyReferenceError
 from .extension._serialization_context import BlockAccess
 
 __all__ = ["AsdfDictNode", "AsdfListNode", "AsdfOrderedDictNode"]
+
+
+class _TaggedObjectCacheItem:
+    """
+    A tagged node and a (weakref) to the converted custom object
+    """
+
+    def __init__(self, tagged_node, custom_object):
+        self.tagged_node = tagged_node
+        self._custom_object_ref = weakref.ref(custom_object)
+
+    @property
+    def custom_object(self):
+        return self._custom_object_ref()
+
+
+class _TaggedObjectCache:
+    """
+    A cache of tagged nodes and their corresponding custom objects.
+
+    This is critical for trees that contain references/pointers to the
+    same object at multiple locations in the tree.
+
+    Only weakrefs are key to the custom objects to allow large items
+    deleted from the tree to be garbage collected. This means that an
+    item added to the cache may later fail to retrieve (if the weakref-ed
+    custom object was deleted).
+    """
+
+    def __init__(self):
+        # start with a clear cache
+        self.clear()
+
+    def clear(self):
+        self._cache = {}
+
+    def retrieve(self, tagged_node):
+        """
+        Check the cache for a previously converted object.
+
+        Parameters
+        ----------
+        tagged_node : Tagged
+            The tagged representation of the custom object
+
+        Returns
+        -------
+        custom_object : None or the converted object
+            The custom object previously converted from the tagged_node or
+            ``None`` if the object hasn't been converted (or was previously
+            deleted from the tree).
+        """
+        key = id(tagged_node)
+        if key not in self._cache:
+            return None
+        item = self._cache[key]
+        custom_object = item.custom_object
+        if custom_object is None:
+            del self._cache[key]
+        return custom_object
+
+    def store(self, tagged_node, custom_object):
+        """
+        Store a converted custom object in the cache.
+
+        Parameters
+        ----------
+        tagged_node : Tagged
+            The tagged representation of the custom object
+
+        custom_object : converted object
+            The custom object (a weakref to this object will be kept in the cache).
+        """
+        self._cache[id(tagged_node)] = _TaggedObjectCacheItem(tagged_node, custom_object)
 
 
 def _resolve_af_ref(af_ref):
@@ -101,11 +176,9 @@ class _AsdfNode:
         if not isinstance(value, tagged.Tagged) and type(value) not in _base_type_to_node_map:
             return value
         af = _resolve_af_ref(self._af_ref)
-        value_id = id(value)
         # if the obj that will be returned from this value
         # is already cached, use the cached obj
-        if value_id in af._tagged_object_cache:
-            obj = af._tagged_object_cache[value_id][1]
+        if (obj := af._tagged_object_cache.retrieve(value)) is not None:
             self[key] = obj
             return obj
         # for Tagged instances, convert them to their custom obj
@@ -152,7 +225,7 @@ class _AsdfNode:
         # cache the converted/wrapped obj with the AsdfFile so other
         # references to the same Tagged value will result in the
         # same obj
-        af._tagged_object_cache[value_id] = (value, obj)
+        af._tagged_object_cache.store(value, obj)
         self[key] = obj
         return obj
 

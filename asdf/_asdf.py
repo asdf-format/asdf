@@ -174,7 +174,9 @@ class AsdfFile:
         # custom_tree_to_tagged_tree or tagged_tree_to_custom_tree).
         self._tree_modification_context = treeutil._TreeModificationContext()
 
-        self._tagged_object_cache = {}
+        # A cache of tagged objects and their converted custom objects used when
+        # a file is read with "lazy_tree=True". Used by lazy_nodes.
+        self._tagged_object_cache = lazy_nodes._TaggedObjectCache()
 
         self._fd = None
         self._closed = False
@@ -534,7 +536,7 @@ class AsdfFile:
             # as we're closing the file, also empty out the
             # tree so that references to array data can be released
             self._tree = AsdfObject()
-            self._tagged_object_cache = {}
+            self._tagged_object_cache.clear()
         for external in self._external_asdf_by_uri.values():
             external.close()
         self._external_asdf_by_uri.clear()
