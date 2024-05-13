@@ -66,12 +66,12 @@ def iter_tree(top):
         if tree_id in seen:
             return
 
-        if isinstance(tree, (list, tuple)):
+        if isinstance(tree, (list, tuple, lazy_nodes.AsdfListNode)):
             seen.add(tree_id)
             for val in tree:
                 yield from recurse(val)
             seen.remove(tree_id)
-        elif isinstance(tree, dict):
+        elif isinstance(tree, (dict, lazy_nodes.AsdfDictNode)):
             seen.add(tree_id)
             for val in tree.values():
                 yield from recurse(val)
@@ -376,11 +376,11 @@ def walk_and_modify(top, callback, ignore_implicit_conversion=NotSet, postorder=
         return result
 
     def _handle_children(node, json_id):
-        if isinstance(node, dict):
+        if isinstance(node, (dict, lazy_nodes.AsdfDictNode)):
             result = _handle_mapping(node, json_id)
         elif isinstance(node, tuple):
             result = _handle_immutable_sequence(node, json_id)
-        elif isinstance(node, list):
+        elif isinstance(node, (list, lazy_nodes.AsdfListNode)):
             result = _handle_mutable_sequence(node, json_id)
         else:
             result = node
@@ -403,7 +403,7 @@ def walk_and_modify(top, callback, ignore_implicit_conversion=NotSet, postorder=
             # URIs.  Ignore an id that is not a string, since it may
             # be an object defining an id property and not an id
             # itself (this is common in metaschemas).
-            if isinstance(node, dict) and "id" in node and isinstance(node["id"], str):
+            if isinstance(node, (dict, lazy_nodes.AsdfDictNode)) and "id" in node and isinstance(node["id"], str):
                 json_id = node["id"]
 
             if postorder:
@@ -450,10 +450,10 @@ def get_children(node):
         node has no children (either it is an empty container, or is
         a non-container type)
     """
-    if isinstance(node, dict):
+    if isinstance(node, (dict, lazy_nodes.AsdfDictNode)):
         return list(node.items())
 
-    if isinstance(node, (list, tuple)):
+    if isinstance(node, (list, tuple, lazy_nodes.AsdfListNode)):
         return list(enumerate(node))
 
     return []
@@ -474,4 +474,4 @@ def is_container(node):
     bool
         True if node is a container, False otherwise
     """
-    return isinstance(node, (dict, list, tuple))
+    return isinstance(node, (dict, list, tuple, lazy_nodes.AsdfDictNode, lazy_nodes.AsdfListNode))

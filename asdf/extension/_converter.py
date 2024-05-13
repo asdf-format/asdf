@@ -208,6 +208,17 @@ class ConverterProxy(Converter):
                 raise TypeError(msg)
 
     @property
+    def lazy(self):
+        """
+        Boolean indicating if this Converter supports "lazy" node objects
+
+        Returns
+        -------
+        bool
+        """
+        return getattr(self._delegate, "lazy", False)
+
+    @property
     def tags(self):
         """
         Get the list of tag URIs that this converter is capable of

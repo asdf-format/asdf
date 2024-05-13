@@ -1,6 +1,5 @@
 import collections
 import copy
-import json
 import weakref
 
 import numpy as np
@@ -99,8 +98,8 @@ def test_ordered_dict():
 @pytest.mark.parametrize(
     "NodeClass,data,base",
     [
-        (AsdfDictNode, {"a": 1}, dict),
-        (AsdfListNode, [1, 2], list),
+        (AsdfDictNode, {"a": 1}, collections.abc.Mapping),
+        (AsdfListNode, [1, 2], collections.abc.Sequence),
         (AsdfOrderedDictNode, {"a": 1}, collections.OrderedDict),
     ],
 )
@@ -152,19 +151,6 @@ def test_node_equality(NodeClass, data):
     assert node == data
     data.pop(1)
     assert node != data
-
-
-@pytest.mark.parametrize(
-    "node",
-    [
-        AsdfDictNode({"a": 1, "b": 2}),
-        AsdfListNode([1, 2, 3]),
-        AsdfOrderedDictNode({"a": 1, "b": 2}),
-    ],
-)
-def test_json_serialization(node):
-    with pytest.raises(TypeError, match="is not JSON serializable"):
-        json.dumps(node)
 
 
 def test_cache_clear_on_close(tmp_path):

@@ -121,7 +121,9 @@ class _AsdfNode:
                 obj = _to_lazy_node(value, self._af_ref)
             else:
                 converter = extension_manager.get_converter_for_tag(tag)
-                if inspect.isgeneratorfunction(converter._delegate.from_yaml_tree):
+                if not getattr(converter, "lazy", False) or inspect.isgeneratorfunction(
+                    converter._delegate.from_yaml_tree
+                ):
                     obj = yamlutil.tagged_tree_to_custom_tree(value, af)
                 else:
                     data = _to_lazy_node(value.data, self._af_ref)
