@@ -20,6 +20,9 @@ __all__ = [
 ]
 
 
+# AsdfObject inherits both collections.UserDict and dict to allow it
+# to pass an isinstance(..., dict) check and to allow it to be "lazy"
+# loaded when "lazy_tree=True".
 class AsdfObject(collections.UserDict, dict):
     pass
 
