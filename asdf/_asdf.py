@@ -17,7 +17,6 @@ from ._block.manager import Manager as BlockManager
 from ._helpers import validate_version
 from .config import config_context, get_config
 from .exceptions import (
-    AsdfConversionWarning,
     AsdfDeprecationWarning,
     AsdfManifestURIMismatchWarning,
     AsdfPackageVersionWarning,
@@ -168,10 +167,6 @@ class AsdfFile:
         self._ignore_version_mismatch = ignore_version_mismatch
         self._ignore_unrecognized_tag = ignore_unrecognized_tag
         self._ignore_implicit_conversion = ignore_implicit_conversion
-
-        # Set of (string, string) tuples representing tag version mismatches
-        # that we've already warned about for this file.
-        self._warned_tag_pairs = set()
 
         # Context of a call to treeutil.walk_and_modify, needed in the AsdfFile
         # in case walk_and_modify is re-entered by extension code (via
@@ -1591,20 +1586,6 @@ class AsdfFile:
         """
         result = AsdfSearchResult(["root"], self.tree)
         return result.search(key=key, type_=type_, value=value, filter_=filter_)
-
-    # This function is called from within TypeIndex when deserializing
-    # the tree for this file.  It is kept here so that we can keep
-    # state on the AsdfFile and prevent a flood of warnings for the
-    # same tag.
-    def _warn_tag_mismatch(self, tag, best_tag):
-        if not self._ignore_version_mismatch and (tag, best_tag) not in self._warned_tag_pairs:
-            message = (
-                f"No explicit ExtensionType support provided for tag '{tag}'. "
-                f"The ExtensionType subclass for tag '{best_tag}' will be used instead. "
-                "This fallback behavior will be removed in asdf 3.0."
-            )
-            warnings.warn(message, AsdfConversionWarning)
-            self._warned_tag_pairs.add((tag, best_tag))
 
     # This function is called from within yamlutil methods to create
     # a context when one isn't explicitly passed in.
