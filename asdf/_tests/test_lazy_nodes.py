@@ -292,3 +292,15 @@ def test_cache_frees_deleted_object(cache_test_tree_path):
             af["a"]
         # but can get 'b'
         assert af["b"][0] is af["b"][1]
+
+
+def test_cache_non_weakref():
+    """
+    Test that an object that cannot weak reference can be cached
+    """
+    tagged_node = {}
+    obj = complex(1, 1)
+    cache_item = asdf.lazy_nodes._TaggedObjectCacheItem(tagged_node, obj)
+    del obj
+    gc.collect()
+    assert cache_item.custom_object == complex(1, 1)

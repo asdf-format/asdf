@@ -23,7 +23,11 @@ class _TaggedObjectCacheItem:
 
     def __init__(self, tagged_node, custom_object):
         self.tagged_node = tagged_node
-        self._custom_object_ref = weakref.ref(custom_object)
+        try:
+            self._custom_object_ref = weakref.ref(custom_object)
+        except TypeError:
+            # if a weakref is not possible, store the object
+            self._custom_object_ref = lambda obj=custom_object: obj
 
     @property
     def custom_object(self):
