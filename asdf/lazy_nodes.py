@@ -172,12 +172,6 @@ class AsdfListNode(_AsdfNode, collections.UserList):
         _AsdfNode.__init__(self, data, af_ref)
         collections.UserList.__init__(self, data)
 
-    @property
-    def __class__(self):
-        # this is necessary to allow this class to pass
-        # an isinstance(list) check without inheriting from list.
-        return list
-
     def __copy__(self):
         return AsdfListNode(self.data.copy(), self._af_ref)
 
@@ -212,12 +206,6 @@ class AsdfDictNode(_AsdfNode, collections.UserDict):
         _AsdfNode.__init__(self, data, af_ref)
         collections.UserDict.__init__(self, data)
 
-    @property
-    def __class__(self):
-        # this is necessary to allow this class to pass
-        # an isinstance(dict) check without inheriting from dict.
-        return dict
-
     def __copy__(self):
         return AsdfDictNode(self.data.copy(), self._af_ref)
 
@@ -233,7 +221,7 @@ class AsdfDictNode(_AsdfNode, collections.UserDict):
         return self._convert_and_cache(super().__getitem__(key), key)
 
 
-class AsdfOrderedDictNode(AsdfDictNode):
+class AsdfOrderedDictNode(AsdfDictNode, collections.OrderedDict):
     """
     An class that acts like a ``collections.OrderedDict``. The values
     for this ``OrderedDict`` will start out as tagged nodes which will only
@@ -246,10 +234,6 @@ class AsdfOrderedDictNode(AsdfDictNode):
         if data is None:
             data = collections.OrderedDict()
         AsdfDictNode.__init__(self, data, af_ref)
-
-    @property
-    def __class__(self):
-        return collections.OrderedDict
 
     def __copy__(self):
         return AsdfOrderedDictNode(self.data.copy(), self._af_ref)

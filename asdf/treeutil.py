@@ -6,7 +6,7 @@ import types
 import warnings
 from contextlib import contextmanager
 
-from . import _lazy_nodes, tagged
+from . import lazy_nodes, tagged
 from .exceptions import AsdfDeprecationWarning, AsdfWarning
 from .util import NotSet
 
