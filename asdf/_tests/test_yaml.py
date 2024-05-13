@@ -1,4 +1,6 @@
+import contextlib
 import io
+import re
 from collections import OrderedDict, namedtuple
 from typing import NamedTuple
 
@@ -8,11 +10,11 @@ import yaml
 
 import asdf
 from asdf import tagged, treeutil, yamlutil
-from asdf.exceptions import AsdfConversionWarning, AsdfWarning
+from asdf.exceptions import AsdfConversionWarning, AsdfDeprecationWarning, AsdfWarning
 from asdf.testing.helpers import yaml_to_asdf
 
 
-def _roundtrip(obj):
+def _roundtrip(obj, init_kwargs=None):
     """
     Parameters
     ----------
@@ -29,8 +31,12 @@ def _roundtrip(obj):
     read_tree : object
         object read back from ASDF file
     """
+
+    init_kwargs = init_kwargs or {}
     buff = io.BytesIO()
-    asdf.AsdfFile({"obj": obj}).write_to(buff)
+    af = asdf.AsdfFile(**init_kwargs)
+    af["obj"] = obj
+    af.write_to(buff)
     buff.seek(0)
 
     open_kwargs = {
@@ -102,11 +108,12 @@ def test_arbitrary_python_object():
         ff.write_to(buff)
 
 
-def run_tuple_test(input_tree):
-    content, tree = _roundtrip(input_tree)
+def run_tuple_test(input_tree, **kwargs):
+    content, tree = _roundtrip(input_tree, **kwargs)
 
     assert b"tuple" not in content
     assert isinstance(tree["val"], list)
+    return content, tree
 
 
 def test_python_tuple():
@@ -121,6 +128,21 @@ def test_python_tuple():
     run_tuple_test(input_tree)
 
 
+@contextlib.contextmanager
+def multi_warn(category, matches):
+    with pytest.warns(category) as record:
+        yield
+
+    for match in matches:
+        found = False
+        for r in record:
+            msg = str(r.message)
+            if re.match(match, msg):
+                found = True
+                break
+        assert found, f"Did not raise {category} with message matching {match}"
+
+
 def test_named_tuple_collections():
     """
     Ensure that we are able to serialize a collections.namedtuple.
@@ -130,8 +152,8 @@ def test_named_tuple_collections():
 
     input_tree = {"val": nt(1, 2, 3)}
 
-    with pytest.warns(AsdfWarning, match="converting to list"):
-        run_tuple_test(input_tree)
+    with multi_warn(AsdfDeprecationWarning, ["ignore_implicit_conversion", "implicit conversion is deprecated"]):
+        run_tuple_test(input_tree, init_kwargs={"ignore_implicit_conversion": True})
 
 
 def test_named_tuple_typing():
@@ -144,10 +166,10 @@ def test_named_tuple_typing():
         two: int
         three: int
 
-    tree = {"val": NT(1, 2, 3)}
+    input_tree = {"val": NT(1, 2, 3)}
 
-    with pytest.warns(AsdfWarning, match="converting to list"):
-        run_tuple_test(tree)
+    with multi_warn(AsdfDeprecationWarning, ["ignore_implicit_conversion", "implicit conversion is deprecated"]):
+        run_tuple_test(input_tree, init_kwargs={"ignore_implicit_conversion": True})
 
 
 def test_named_tuple_collections_recursive():
@@ -155,8 +177,8 @@ def test_named_tuple_collections_recursive():
 
     input_tree = {"val": nt(1, 2, np.ones(3))}
 
-    with pytest.warns(AsdfWarning, match="converting to list"):
-        _, tree = _roundtrip(input_tree)
+    with multi_warn(AsdfDeprecationWarning, ["ignore_implicit_conversion", "implicit conversion is deprecated"]):
+        _, tree = run_tuple_test(input_tree, init_kwargs={"ignore_implicit_conversion": True})
     assert (tree["val"][2] == np.ones(3)).all()
 
 
@@ -168,8 +190,8 @@ def test_named_tuple_typing_recursive(tmp_path):
 
     input_tree = {"val": NT(1, 2, np.ones(3))}
 
-    with pytest.warns(AsdfWarning, match="converting to list"):
-        _, tree = _roundtrip(input_tree)
+    with multi_warn(AsdfDeprecationWarning, ["ignore_implicit_conversion", "implicit conversion is deprecated"]):
+        _, tree = run_tuple_test(input_tree, init_kwargs={"ignore_implicit_conversion": True})
     assert (tree["val"][2] == np.ones(3)).all()
 
 
@@ -178,11 +200,16 @@ def test_implicit_conversion_warning():
 
     tree = {"val": nt(1, 2, np.ones(3))}
 
-    with pytest.warns(AsdfWarning, match=r"Failed to serialize instance"), asdf.AsdfFile(tree):
+    with (
+        pytest.warns(AsdfWarning, match=r"Failed to serialize instance"),
+        pytest.warns(AsdfDeprecationWarning, match=r"implicit conversion is deprecated"),
+        asdf.AsdfFile(tree),
+    ):
         pass
 
-    with asdf.AsdfFile(tree, ignore_implicit_conversion=True):
-        pass
+    with multi_warn(AsdfDeprecationWarning, ["ignore_implicit_conversion", "implicit conversion is deprecated"]):
+        with asdf.AsdfFile(tree, ignore_implicit_conversion=True):
+            pass
 
 
 @pytest.mark.xfail(reason="pyyaml has a bug and does not support tuple keys")
