@@ -34,6 +34,11 @@ class Converter(abc.ABC):
     and return a str, the selected tag (should be one of tags) or
     `None` which will trigger the result of ``to_yaml_tree`` to be
     used to look up the next converter for this object.
+
+    The ``lazy`` attribute is optional. If ``True`` asdf will
+    pass "lazy" objects to the converter. If ``False`` (or not
+    defined) asdf will convert all child objects before calling
+    `from_yaml_tree`.
     """
 
     @classmethod
