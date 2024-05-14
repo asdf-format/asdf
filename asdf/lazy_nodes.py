@@ -7,7 +7,6 @@ import collections
 import inspect
 import warnings
 import weakref
-from types import GeneratorType
 
 from . import tagged, yamlutil
 from .exceptions import AsdfConversionWarning, AsdfLazyReferenceError
@@ -206,19 +205,6 @@ class _AsdfNode:
                     data = _to_lazy_node(value.data, self._af_ref)
                     sctx = af._create_serialization_context(BlockAccess.READ)
                     obj = converter.from_yaml_tree(data, tag, sctx)
-
-                    if isinstance(obj, GeneratorType):
-                        # We can't quite do this for every instance (hence the
-                        # isgeneratorfunction check above). However it appears
-                        # to work for most instances (it was only failing for
-                        # the FractionWithInverse test which is covered by the
-                        # above code). The code here should only be hit if the
-                        # Converter.from_yaml_tree calls another function which
-                        # is a generator.
-                        generator = obj
-                        obj = next(generator)
-                        for _ in generator:
-                            pass
                     sctx.assign_object(obj)
                     sctx.assign_blocks()
                     sctx._mark_extension_used(converter.extension)

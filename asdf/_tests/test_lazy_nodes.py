@@ -166,6 +166,7 @@ def test_cache_clear_on_close(tmp_path):
         # to resolve after the with exits
         ref = weakref.ref(af["a"])
 
+    gc.collect()
     assert ref() is None
 
 
@@ -304,3 +305,101 @@ def test_cache_non_weakref():
     del obj
     gc.collect()
     assert cache_item.custom_object == complex(1, 1)
+
+
+@pytest.fixture(params=[True, False, None], ids=["lazy", "not-lazy", "undefined"])
+def lazy_test_class(request):
+    class Foo:
+        def __init__(self, data):
+            self.data = data
+
+    tag_uri = "asdf://somewhere.org/tags/foo-1.0.0"
+
+    class FooConverter:
+        tags = [tag_uri]
+        types = [Foo]
+
+        def to_yaml_tree(self, obj, tag, ctx):
+            return obj.data
+
+        def from_yaml_tree(self, node, tag, ctx):
+            return Foo(node)
+
+    lazy = request.param
+    if lazy is not None:
+        FooConverter.lazy = lazy
+    # also set lazy on the class to pass it to the test
+    Foo.lazy = lazy
+
+    class FooExtension:
+        extension_uri = "asdf://somewhere.org/extensions/minimum-1.0.0"
+        converters = [FooConverter()]
+        tags = [tag_uri]
+
+    with asdf.config_context() as cfg:
+        cfg.add_extension(FooExtension())
+        yield Foo
+
+
+def test_lazy_converter(tmp_path, lazy_test_class):
+    obj = lazy_test_class({"a": 1})
+
+    fn = tmp_path / "test.asdf"
+
+    af = asdf.AsdfFile({"obj": obj})
+    af.write_to(fn)
+
+    with asdf.open(fn, lazy_tree=True) as af:
+        if lazy_test_class.lazy is None or not lazy_test_class.lazy:
+            target_class = dict
+        else:
+            target_class = AsdfDictNode
+        assert isinstance(af["obj"].data, target_class)
+
+
+@pytest.fixture()
+def lazy_generator_class(request):
+
+    class Foo:
+        def __init__(self, data=None):
+            self.data = data or {}
+
+    tag_uri = "asdf://somewhere.org/tags/foo-1.0.0"
+
+    class FooConverter:
+        tags = [tag_uri]
+        types = [Foo]
+        lazy = True
+
+        def to_yaml_tree(self, obj, tag, ctx):
+            return obj.data
+
+        def from_yaml_tree(self, node, tag, ctx):
+            obj = Foo()
+            yield obj
+            obj.data = node
+
+    class FooExtension:
+        extension_uri = "asdf://somewhere.org/extensions/minimum-1.0.0"
+        converters = [FooConverter()]
+        tags = [tag_uri]
+
+    with asdf.config_context() as cfg:
+        cfg.add_extension(FooExtension())
+        yield Foo
+
+
+def test_lazy_generator_converter(tmp_path, lazy_generator_class):
+    """
+    Test that a converter that returns a generator is not lazy
+    (even if it's marked as lazy).
+    """
+    obj = lazy_generator_class({"a": 1})
+
+    fn = tmp_path / "test.asdf"
+
+    af = asdf.AsdfFile({"obj": obj})
+    af.write_to(fn)
+
+    with asdf.open(fn, lazy_tree=True) as af:
+        assert isinstance(af["obj"].data, dict)

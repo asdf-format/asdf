@@ -9,7 +9,6 @@ class AsdfObjectConverter(Converter):
         "tag:stsci.edu:asdf/core/asdf-1.1.0",
     ]
     types = ["asdf.tags.core.AsdfObject"]
-    lazy = True
 
     def to_yaml_tree(self, obj, tag, ctx):
         return dict(obj)
