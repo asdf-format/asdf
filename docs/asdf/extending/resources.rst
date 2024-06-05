@@ -205,7 +205,7 @@ that identifies the method as an ``asdf.resource_mappings`` entry point:
 
     .. code-block:: ini
 
-        [options.entry-points]
+        [options.entry_points]
         asdf.resource_mappings =
             asdf_foo_schemas = asdf_foo_schemas.integration:get_resource_mappings
 
