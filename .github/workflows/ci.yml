@@ -94,6 +94,7 @@ jobs:
         - linux: py310-devdeps-parallel
         - linux: py311-devdeps-parallel
         - linux: py312-devdeps-parallel
+        - linux: py313-devdeps-parallel
         # separate pytest so a failure here doesn't cause the whole suite to fail
         - linux: py311-pytestdev-parallel
 
