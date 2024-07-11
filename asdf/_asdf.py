@@ -1687,7 +1687,9 @@ def open_asdf(
         when the file is loaded. Instead, objects will be "lazily" converted
         only when they are accessed. Note that the tree will not contain dict
         and list instances for containers and instead return instances of classes
-        defined in `asdf.lazy_nodes`.
+        defined in `asdf.lazy_nodes`. Since objects are converted when they
+        are accessed, traversing the tree (like is done during `AsdfFile.info`
+        and `AsdfFile.search`) will result in nodes being converted.
 
     custom_schema : str, optional
         Path to a custom schema file that will be used for a secondary
