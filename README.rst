@@ -250,7 +250,7 @@ the ``memmap`` option of `open` when reading:
 
 .. code:: python
 
-    af = asdf.open("example.asdf", memmap=False)
+    af = asdf.open("example.asdf", memmap=True)
 
 .. _end-read-file-text:
 
