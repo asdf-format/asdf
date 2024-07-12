@@ -1,4 +1,9 @@
-3.3.0 (unreleased)
+3.4.0 (unreleased)
+------------------
+
+-
+
+3.3.0 (2024-07-12)
 ------------------
 
 - Fix ``__asdf_traverse__`` for non-tagged objects [#1739]
