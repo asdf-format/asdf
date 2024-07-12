@@ -55,6 +55,7 @@
   to allow lazy deserialization of ASDF tagged tree nodes to
   custom objects. [#1733]
 
+- deprecate ``copy_arrays`` in favor of ``memmap``, and set ``memmap=False`` by default [#1797]
 
 3.2.0 (2024-04-05)
 ------------------
