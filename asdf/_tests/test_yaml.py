@@ -41,7 +41,7 @@ def _roundtrip(obj, init_kwargs=None):
 
     open_kwargs = {
         "lazy_load": False,
-        "copy_arrays": True,
+        "memmap": False,
     }
 
     with asdf.open(buff, **open_kwargs) as af:

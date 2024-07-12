@@ -136,7 +136,7 @@ def test_update_exceptions(tmp_path):
     ff.write_to(path)
 
     with (
-        asdf.open(path, mode="r", copy_arrays=True) as ff,
+        asdf.open(path, mode="r", memmap=False) as ff,
         pytest.raises(
             IOError,
             match=r"Can not update, since associated file is read-only.*",
@@ -500,7 +500,7 @@ def test_array_access_after_file_close(tmp_path):
 
     # With memory mapping disabled and copying arrays enabled,
     # the array data should still persist in memory after close:
-    with asdf.open(path, lazy_load=False, copy_arrays=True) as af:
+    with asdf.open(path, lazy_load=False, memmap=False) as af:
         tree = af.tree
     assert_array_equal(tree["data"], data)
 
