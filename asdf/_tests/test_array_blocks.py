@@ -109,8 +109,8 @@ def test_pad_blocks(tmp_path):
 
 
 @pytest.mark.parametrize("lazy_load", [True, False])
-@pytest.mark.parametrize("copy_arrays", [True, False])
-def test_update_expand_tree(tmp_path, lazy_load, copy_arrays):
+@pytest.mark.parametrize("memmap", [True, False])
+def test_update_expand_tree(tmp_path, lazy_load, memmap):
     tmp_path = str(tmp_path)
     testpath = os.path.join(tmp_path, "test.asdf")
 
@@ -122,7 +122,7 @@ def test_update_expand_tree(tmp_path, lazy_load, copy_arrays):
     ff = asdf.AsdfFile(tree)
     ff.set_array_storage(tree["arrays"][2], "inline")
     ff.write_to(testpath, pad_blocks=True)
-    with asdf.open(testpath, lazy_load=lazy_load, copy_arrays=copy_arrays, mode="rw") as ff:
+    with asdf.open(testpath, lazy_load=lazy_load, memmap=memmap, mode="rw") as ff:
         assert len(list(ff._blocks.blocks)) == 2
         assert_array_equal(ff.tree["arrays"][0], my_array)
         ff.tree["extra"] = [0] * 6000
@@ -137,7 +137,7 @@ def test_update_expand_tree(tmp_path, lazy_load, copy_arrays):
     ff = asdf.AsdfFile(tree)
     ff.set_array_storage(tree["arrays"][2], "inline")
     ff.write_to(os.path.join(tmp_path, "test2.asdf"), pad_blocks=True)
-    with asdf.open(os.path.join(tmp_path, "test2.asdf"), lazy_load=lazy_load, copy_arrays=copy_arrays, mode="rw") as ff:
+    with asdf.open(os.path.join(tmp_path, "test2.asdf"), lazy_load=lazy_load, memmap=memmap, mode="rw") as ff:
         ff.tree["extra"] = [0] * 2
         ff.update()
 
@@ -148,8 +148,8 @@ def test_update_expand_tree(tmp_path, lazy_load, copy_arrays):
 
 
 @pytest.mark.parametrize("lazy_load", [True, False])
-@pytest.mark.parametrize("copy_arrays", [True, False])
-def test_update_all_external(tmp_path, lazy_load, copy_arrays):
+@pytest.mark.parametrize("memmap", [True, False])
+def test_update_all_external(tmp_path, lazy_load, memmap):
     fn = tmp_path / "test.asdf"
 
     my_array = np.arange(64) * 1
@@ -162,7 +162,7 @@ def test_update_all_external(tmp_path, lazy_load, copy_arrays):
     with asdf.config.config_context() as cfg:
         cfg.array_inline_threshold = 10
         cfg.all_array_storage = "external"
-        with asdf.open(fn, lazy_load=lazy_load, copy_arrays=copy_arrays, mode="rw") as af:
+        with asdf.open(fn, lazy_load=lazy_load, memmap=memmap, mode="rw") as af:
             af.update()
 
     assert "test0000.asdf" in os.listdir(tmp_path)
@@ -170,8 +170,8 @@ def test_update_all_external(tmp_path, lazy_load, copy_arrays):
 
 
 @pytest.mark.parametrize("lazy_load", [True, False])
-@pytest.mark.parametrize("copy_arrays", [True, False])
-def test_update_some_external(tmp_path, lazy_load, copy_arrays):
+@pytest.mark.parametrize("memmap", [True, False])
+def test_update_some_external(tmp_path, lazy_load, memmap):
     fn = tmp_path / "test.asdf"
 
     my_array = np.arange(64) * 1
@@ -181,7 +181,7 @@ def test_update_some_external(tmp_path, lazy_load, copy_arrays):
     af = asdf.AsdfFile(tree)
     af.write_to(fn)
 
-    with asdf.open(fn, lazy_load=lazy_load, copy_arrays=copy_arrays, mode="rw") as af:
+    with asdf.open(fn, lazy_load=lazy_load, memmap=memmap, mode="rw") as af:
         af.set_array_storage(af["arrays"][0], "external")
         af.update()
 
@@ -194,8 +194,8 @@ def _get_update_tree():
 
 
 @pytest.mark.parametrize("lazy_load", [True, False])
-@pytest.mark.parametrize("copy_arrays", [True, False])
-def test_update_delete_first_array(tmp_path, lazy_load, copy_arrays):
+@pytest.mark.parametrize("memmap", [True, False])
+def test_update_delete_first_array(tmp_path, lazy_load, memmap):
     tmp_path = str(tmp_path)
     path = os.path.join(tmp_path, "test.asdf")
 
@@ -207,7 +207,7 @@ def test_update_delete_first_array(tmp_path, lazy_load, copy_arrays):
 
     original_size = os.stat(path).st_size
 
-    with asdf.open(os.path.join(tmp_path, "test.asdf"), lazy_load=lazy_load, copy_arrays=copy_arrays, mode="rw") as ff:
+    with asdf.open(os.path.join(tmp_path, "test.asdf"), lazy_load=lazy_load, memmap=memmap, mode="rw") as ff:
         del ff.tree["arrays"][0]
         ff.update()
 
@@ -219,8 +219,8 @@ def test_update_delete_first_array(tmp_path, lazy_load, copy_arrays):
 
 
 @pytest.mark.parametrize("lazy_load", [True, False])
-@pytest.mark.parametrize("copy_arrays", [True, False])
-def test_update_delete_last_array(tmp_path, lazy_load, copy_arrays):
+@pytest.mark.parametrize("memmap", [True, False])
+def test_update_delete_last_array(tmp_path, lazy_load, memmap):
     tmp_path = str(tmp_path)
     path = os.path.join(tmp_path, "test.asdf")
 
@@ -232,7 +232,7 @@ def test_update_delete_last_array(tmp_path, lazy_load, copy_arrays):
 
     original_size = os.stat(path).st_size
 
-    with asdf.open(os.path.join(tmp_path, "test.asdf"), lazy_load=lazy_load, copy_arrays=copy_arrays, mode="rw") as ff:
+    with asdf.open(os.path.join(tmp_path, "test.asdf"), lazy_load=lazy_load, memmap=memmap, mode="rw") as ff:
         del ff.tree["arrays"][-1]
         ff.update()
 
@@ -244,8 +244,8 @@ def test_update_delete_last_array(tmp_path, lazy_load, copy_arrays):
 
 
 @pytest.mark.parametrize("lazy_load", [True, False])
-@pytest.mark.parametrize("copy_arrays", [True, False])
-def test_update_delete_middle_array(tmp_path, lazy_load, copy_arrays):
+@pytest.mark.parametrize("memmap", [True, False])
+def test_update_delete_middle_array(tmp_path, lazy_load, memmap):
     tmp_path = str(tmp_path)
     path = os.path.join(tmp_path, "test.asdf")
 
@@ -257,7 +257,7 @@ def test_update_delete_middle_array(tmp_path, lazy_load, copy_arrays):
 
     original_size = os.stat(path).st_size
 
-    with asdf.open(os.path.join(tmp_path, "test.asdf"), lazy_load=lazy_load, copy_arrays=copy_arrays, mode="rw") as ff:
+    with asdf.open(os.path.join(tmp_path, "test.asdf"), lazy_load=lazy_load, memmap=memmap, mode="rw") as ff:
         del ff.tree["arrays"][1]
         ff.update()
         assert len(ff._blocks.blocks) == 2
@@ -271,8 +271,8 @@ def test_update_delete_middle_array(tmp_path, lazy_load, copy_arrays):
 
 
 @pytest.mark.parametrize("lazy_load", [True, False])
-@pytest.mark.parametrize("copy_arrays", [True, False])
-def test_update_replace_first_array(tmp_path, lazy_load, copy_arrays):
+@pytest.mark.parametrize("memmap", [True, False])
+def test_update_replace_first_array(tmp_path, lazy_load, memmap):
     tmp_path = str(tmp_path)
     path = os.path.join(tmp_path, "test.asdf")
 
@@ -284,7 +284,7 @@ def test_update_replace_first_array(tmp_path, lazy_load, copy_arrays):
 
     original_size = os.stat(path).st_size
 
-    with asdf.open(os.path.join(tmp_path, "test.asdf"), lazy_load=lazy_load, copy_arrays=copy_arrays, mode="rw") as ff:
+    with asdf.open(os.path.join(tmp_path, "test.asdf"), lazy_load=lazy_load, memmap=memmap, mode="rw") as ff:
         ff.tree["arrays"][0] = np.arange(32)
         ff.update()
 
@@ -297,8 +297,8 @@ def test_update_replace_first_array(tmp_path, lazy_load, copy_arrays):
 
 
 @pytest.mark.parametrize("lazy_load", [True, False])
-@pytest.mark.parametrize("copy_arrays", [True, False])
-def test_update_replace_last_array(tmp_path, lazy_load, copy_arrays):
+@pytest.mark.parametrize("memmap", [True, False])
+def test_update_replace_last_array(tmp_path, lazy_load, memmap):
     tmp_path = str(tmp_path)
     path = os.path.join(tmp_path, "test.asdf")
 
@@ -310,7 +310,7 @@ def test_update_replace_last_array(tmp_path, lazy_load, copy_arrays):
 
     original_size = os.stat(path).st_size
 
-    with asdf.open(os.path.join(tmp_path, "test.asdf"), lazy_load=lazy_load, copy_arrays=copy_arrays, mode="rw") as ff:
+    with asdf.open(os.path.join(tmp_path, "test.asdf"), lazy_load=lazy_load, memmap=memmap, mode="rw") as ff:
         ff.tree["arrays"][2] = np.arange(32)
         ff.update()
 
@@ -323,8 +323,8 @@ def test_update_replace_last_array(tmp_path, lazy_load, copy_arrays):
 
 
 @pytest.mark.parametrize("lazy_load", [True, False])
-@pytest.mark.parametrize("copy_arrays", [True, False])
-def test_update_replace_middle_array(tmp_path, lazy_load, copy_arrays):
+@pytest.mark.parametrize("memmap", [True, False])
+def test_update_replace_middle_array(tmp_path, lazy_load, memmap):
     tmp_path = str(tmp_path)
     path = os.path.join(tmp_path, "test.asdf")
 
@@ -336,7 +336,7 @@ def test_update_replace_middle_array(tmp_path, lazy_load, copy_arrays):
 
     original_size = os.stat(path).st_size
 
-    with asdf.open(os.path.join(tmp_path, "test.asdf"), lazy_load=lazy_load, copy_arrays=copy_arrays, mode="rw") as ff:
+    with asdf.open(os.path.join(tmp_path, "test.asdf"), lazy_load=lazy_load, memmap=memmap, mode="rw") as ff:
         ff.tree["arrays"][1] = np.arange(32)
         ff.update()
 
@@ -349,8 +349,8 @@ def test_update_replace_middle_array(tmp_path, lazy_load, copy_arrays):
 
 
 @pytest.mark.parametrize("lazy_load", [True, False])
-@pytest.mark.parametrize("copy_arrays", [True, False])
-def test_update_add_array(tmp_path, lazy_load, copy_arrays):
+@pytest.mark.parametrize("memmap", [True, False])
+def test_update_add_array(tmp_path, lazy_load, memmap):
     tmp_path = str(tmp_path)
     path = os.path.join(tmp_path, "test.asdf")
 
@@ -360,7 +360,7 @@ def test_update_add_array(tmp_path, lazy_load, copy_arrays):
     ff = asdf.AsdfFile(tree)
     ff.write_to(path, pad_blocks=True)
 
-    with asdf.open(os.path.join(tmp_path, "test.asdf"), lazy_load=lazy_load, copy_arrays=copy_arrays, mode="rw") as ff:
+    with asdf.open(os.path.join(tmp_path, "test.asdf"), lazy_load=lazy_load, memmap=memmap, mode="rw") as ff:
         ff.tree["arrays"].append(np.arange(32))
         ff.update()
 
@@ -372,8 +372,8 @@ def test_update_add_array(tmp_path, lazy_load, copy_arrays):
 
 
 @pytest.mark.parametrize("lazy_load", [True, False])
-@pytest.mark.parametrize("copy_arrays", [True, False])
-def test_update_add_array_at_end(tmp_path, lazy_load, copy_arrays):
+@pytest.mark.parametrize("memmap", [True, False])
+def test_update_add_array_at_end(tmp_path, lazy_load, memmap):
     tmp_path = str(tmp_path)
     path = os.path.join(tmp_path, "test.asdf")
 
@@ -385,7 +385,7 @@ def test_update_add_array_at_end(tmp_path, lazy_load, copy_arrays):
 
     original_size = os.stat(path).st_size
 
-    with asdf.open(os.path.join(tmp_path, "test.asdf"), lazy_load=lazy_load, copy_arrays=copy_arrays, mode="rw") as ff:
+    with asdf.open(os.path.join(tmp_path, "test.asdf"), lazy_load=lazy_load, memmap=memmap, mode="rw") as ff:
         ff.tree["arrays"].append(np.arange(65536, dtype="<i8"))
         ff.update()
         assert len(ff._blocks.blocks) == 4
@@ -400,8 +400,8 @@ def test_update_add_array_at_end(tmp_path, lazy_load, copy_arrays):
 
 
 @pytest.mark.parametrize("lazy_load", [True, False])
-@pytest.mark.parametrize("copy_arrays", [True, False])
-def test_update_replace_all_arrays(tmp_path, lazy_load, copy_arrays):
+@pytest.mark.parametrize("memmap", [True, False])
+def test_update_replace_all_arrays(tmp_path, lazy_load, memmap):
     tmp_path = str(tmp_path)
     testpath = os.path.join(tmp_path, "test.asdf")
 
@@ -414,7 +414,7 @@ def test_update_replace_all_arrays(tmp_path, lazy_load, copy_arrays):
     ff = asdf.AsdfFile(tree)
     ff.write_to(testpath, pad_blocks=True)
 
-    with asdf.open(os.path.join(tmp_path, "test.asdf"), lazy_load=lazy_load, copy_arrays=copy_arrays, mode="rw") as ff:
+    with asdf.open(os.path.join(tmp_path, "test.asdf"), lazy_load=lazy_load, memmap=memmap, mode="rw") as ff:
         assert_array_equal(ff.tree["my_array"], np.ones((64, 64)) * 1)
         ff.tree["my_array"] = np.ones((64, 64)) * 2
         ff.update()
@@ -424,8 +424,8 @@ def test_update_replace_all_arrays(tmp_path, lazy_load, copy_arrays):
 
 
 @pytest.mark.parametrize("lazy_load", [True, False])
-@pytest.mark.parametrize("copy_arrays", [True, False])
-def test_update_array_in_place(tmp_path, lazy_load, copy_arrays):
+@pytest.mark.parametrize("memmap", [True, False])
+def test_update_array_in_place(tmp_path, lazy_load, memmap):
     tmp_path = str(tmp_path)
     testpath = os.path.join(tmp_path, "test.asdf")
 
@@ -438,7 +438,7 @@ def test_update_array_in_place(tmp_path, lazy_load, copy_arrays):
     ff = asdf.AsdfFile(tree)
     ff.write_to(testpath, pad_blocks=True)
 
-    with asdf.open(testpath, lazy_load=lazy_load, copy_arrays=copy_arrays, mode="rw") as ff:
+    with asdf.open(testpath, lazy_load=lazy_load, memmap=memmap, mode="rw") as ff:
         array = np.asarray(ff.tree["my_array"])
         array *= 2
         ff.update()
@@ -448,8 +448,8 @@ def test_update_array_in_place(tmp_path, lazy_load, copy_arrays):
 
 
 @pytest.mark.parametrize("lazy_load", [True, False])
-@pytest.mark.parametrize("copy_arrays", [True, False])
-def test_update_compressed_blocks(tmp_path, lazy_load, copy_arrays):
+@pytest.mark.parametrize("memmap", [True, False])
+def test_update_compressed_blocks(tmp_path, lazy_load, memmap):
     """
     This test was originally constructed to test an issue where
     a failed update left a corrupt file. The issue that resulted in
@@ -473,7 +473,7 @@ def test_update_compressed_blocks(tmp_path, lazy_load, copy_arrays):
         af.set_array_compression(af[i], "zlib")
     af.write_to(fn)
 
-    with asdf.open(fn, lazy_load=lazy_load, copy_arrays=copy_arrays, mode="rw") as af:
+    with asdf.open(fn, lazy_load=lazy_load, memmap=memmap, mode="rw") as af:
         # now make the data are difficult to compress
         for i in range(n_arrays):
             assert np.all(af[i] == i)
@@ -547,8 +547,8 @@ def test_checksum(tmp_path):
 
 
 @pytest.mark.parametrize("lazy_load", [True, False])
-@pytest.mark.parametrize("copy_arrays", [True, False])
-def test_checksum_update(tmp_path, lazy_load, copy_arrays):
+@pytest.mark.parametrize("memmap", [True, False])
+def test_checksum_update(tmp_path, lazy_load, memmap):
     tmp_path = str(tmp_path)
     path = os.path.join(tmp_path, "test.asdf")
 
@@ -558,7 +558,7 @@ def test_checksum_update(tmp_path, lazy_load, copy_arrays):
     ff = asdf.AsdfFile(tree)
     ff.write_to(path)
 
-    with asdf.open(path, lazy_load=lazy_load, copy_arrays=copy_arrays, mode="rw") as ff:
+    with asdf.open(path, lazy_load=lazy_load, memmap=memmap, mode="rw") as ff:
         ff.tree["my_array"][7, 7] = 0.0
         # update() should update the checksum, even if the data itself
         # is memmapped and isn't expressly re-written.
@@ -811,15 +811,9 @@ def filename_with_array(tmp_path_factory):
 @pytest.mark.parametrize(
     "open_kwargs,should_memmap",
     [
-        ({}, True),
-        ({"copy_arrays": True}, False),
-        ({"copy_arrays": False}, True),
+        ({}, False),
         ({"memmap": True}, True),
         ({"memmap": False}, False),
-        ({"copy_arrays": True, "memmap": True}, True),
-        ({"copy_arrays": False, "memmap": True}, True),
-        ({"copy_arrays": True, "memmap": False}, False),
-        ({"copy_arrays": False, "memmap": False}, False),
     ],
 )
 def test_open_no_memmap(filename_with_array, open_kwargs, should_memmap):
@@ -827,8 +821,7 @@ def test_open_no_memmap(filename_with_array, open_kwargs, should_memmap):
     Test that asdf.open does not (or does) return memmaps for arrays
     depending on a number of arguments including:
         default (no kwargs)
-        copy_arrays
-        memmap (overwrites copy_arrays)
+        memmap
     """
     with asdf.open(filename_with_array, lazy_load=False, **open_kwargs) as af:
         array = af.tree["array"]
@@ -926,8 +919,8 @@ def test_write_to_update_storage_options(tmp_path, all_array_storage, all_array_
 
 
 @pytest.mark.parametrize("lazy_load", [True, False])
-@pytest.mark.parametrize("copy_arrays", [True, False])
-def test_remove_blocks(tmp_path, lazy_load, copy_arrays):
+@pytest.mark.parametrize("memmap", [True, False])
+def test_remove_blocks(tmp_path, lazy_load, memmap):
     fn1 = tmp_path / "test.asdf"
     fn2 = tmp_path / "test2.asdf"
 
@@ -938,12 +931,12 @@ def test_remove_blocks(tmp_path, lazy_load, copy_arrays):
         af = asdf.AsdfFile(tree)
         af.write_to(fn1)
 
-        with asdf.open(fn1, lazy_load=lazy_load, copy_arrays=copy_arrays, mode="rw") as af:
+        with asdf.open(fn1, lazy_load=lazy_load, memmap=memmap, mode="rw") as af:
             assert len(af._blocks.blocks) == 2
             af[key] = None
             af.write_to(fn2)
 
-        with asdf.open(fn1, lazy_load=lazy_load, copy_arrays=copy_arrays, mode="rw") as af:
+        with asdf.open(fn1, lazy_load=lazy_load, memmap=memmap, mode="rw") as af:
             assert len(af._blocks.blocks) == 2
             af[key] = None
             af.update()
@@ -968,7 +961,7 @@ def test_open_memmap_from_closed_file(tmp_path):
     af = asdf.AsdfFile(tree)
     af.write_to(fn)
 
-    with asdf.open(fn, lazy_load=True, copy_arrays=False) as af:
+    with asdf.open(fn, lazy_load=True, memmap=False) as af:
         # load the base so we can test if accessing the view after the
         # file is closed will trigger an error
         af["base"][:]
@@ -996,7 +989,7 @@ def test_views_save_base(tmp_path, default_array_save_base, save_base):
             af.set_array_save_base(af["v"], save_base)
         af.write_to(fn)
 
-    with asdf.open(fn, copy_arrays=True) as af:
+    with asdf.open(fn, memmap=True) as af:
         base = af["v"].base
         if save_base or (save_base is None and default_array_save_base):
             assert len(base) == 100

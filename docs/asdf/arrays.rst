@@ -273,10 +273,10 @@ different compression algorithm when writing the file out again.
 Memory mapping
 --------------
 
-By default, all internal array data is memory mapped using `numpy.memmap`. This
-allows for the efficient use of memory even when reading files with very large
-arrays. The use of memory mapping means that the following usage pattern is not
-permitted:
+Internal array data can be memory mapped using `numpy.memmap`, by setting
+``memmap=True`` in either the `AsdfFile` constructor or `asdf.open`. This allows
+for the efficient use of memory even when reading files with very large arrays.
+The use of memory mapping means that the following usage pattern is not permitted:
 
 .. code::
 
@@ -290,8 +290,3 @@ permitted:
 Specifically, if an ASDF file has been opened using a ``with`` context, it is not
 possible to access the file contents outside of the scope of that context,
 because any memory mapped arrays will no longer be available.
-
-It may sometimes be useful to copy array data into memory instead of using
-memory maps. This can be controlled by passing the ``copy_arrays`` parameter to
-either the `AsdfFile` constructor or `asdf.open`. By default,
-``copy_arrays=False``.
