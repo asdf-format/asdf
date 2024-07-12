@@ -34,6 +34,11 @@ class Converter(abc.ABC):
     and return a str, the selected tag (should be one of tags) or
     `None` which will trigger the result of ``to_yaml_tree`` to be
     used to look up the next converter for this object.
+
+    The ``lazy`` attribute is optional. If ``True`` asdf will
+    pass "lazy" objects to the converter. If ``False`` (or not
+    defined) asdf will convert all child objects before calling
+    `from_yaml_tree`.
     """
 
     @classmethod
@@ -117,7 +122,10 @@ class Converter(abc.ABC):
 
         For container types received by this method (dict or list),
         the children of the container will have already been converted
-        by prior calls to from_yaml_tree implementations.
+        by prior calls to from_yaml_tree implementations unless
+        ``lazy_tree`` was set to ``True`` for `asdf.open`. With a lazy
+        tree the container types will be `asdf.lazy_nodes` (which act
+        like dict or list but convert child objects when accessed).
 
         Note on circular references: trees that reference themselves
         among their descendants must be handled with care.  Most
@@ -203,6 +211,17 @@ class ConverterProxy(Converter):
             else:
                 msg = "Converter property 'types' must contain str or type values"
                 raise TypeError(msg)
+
+    @property
+    def lazy(self):
+        """
+        Boolean indicating if this Converter supports "lazy" node objects
+
+        Returns
+        -------
+        bool
+        """
+        return getattr(self._delegate, "lazy", False)
 
     @property
     def tags(self):

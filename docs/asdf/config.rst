@@ -45,6 +45,7 @@ the currently active config:
       io_block_size: -1
       legacy_fill_schema_defaults: True
       validate_on_read: True
+      lazy_tree: False
     >
 
 The latter method, `~asdf.config_context`, returns a context manager that
@@ -70,6 +71,7 @@ This allows for short-lived configuration changes that do not impact other code:
       io_block_size: -1
       legacy_fill_schema_defaults: True
       validate_on_read: False
+      lazy_tree: False
     >
     >>> asdf.get_config()
     <AsdfConfig
@@ -83,6 +85,7 @@ This allows for short-lived configuration changes that do not impact other code:
       io_block_size: -1
       legacy_fill_schema_defaults: True
       validate_on_read: True
+      lazy_tree: False
     >
 
 Special note to library maintainers

@@ -1,3 +1,5 @@
+import collections
+
 from .constant import Constant
 from .external_reference import ExternalArrayReference
 from .integer import IntegerType
@@ -18,7 +20,10 @@ __all__ = [
 ]
 
 
-class AsdfObject(dict):
+# AsdfObject inherits both collections.UserDict and dict to allow it
+# to pass an isinstance(..., dict) check and to allow it to be "lazy"
+# loaded when "lazy_tree=True".
+class AsdfObject(collections.UserDict, dict):
     pass
 
 

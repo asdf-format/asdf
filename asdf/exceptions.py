@@ -3,6 +3,7 @@ from asdf._jsonschema import ValidationError
 __all__ = [
     "AsdfConversionWarning",
     "AsdfDeprecationWarning",
+    "AsdfLazyReferenceError",
     "AsdfManifestURIMismatchWarning",
     "AsdfPackageVersionWarning",
     "AsdfProvisionalAPIWarning",
@@ -62,4 +63,13 @@ class AsdfManifestURIMismatchWarning(AsdfWarning):
     """
     A warning indicaing that an extension registered with a manifest
     contains a id that does not match the uri of the manifest.
+    """
+
+
+class AsdfLazyReferenceError(ReferenceError):
+    """
+    Indicates that the lazy tree node failed to resolve a reference
+    to an AsdfFile instance. This likely means the AsdfFile was garbage
+    collected and you may need to update your code to keep the AsdfFile
+    in memory (by keeping a reference).
     """

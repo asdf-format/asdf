@@ -5,6 +5,7 @@ import os
 import pathlib
 import time
 import warnings
+import weakref
 
 from packaging.version import Version
 
@@ -12,7 +13,7 @@ from . import _compression as mcompression
 from . import _display as display
 from . import _node_info as node_info
 from . import _version as version
-from . import constants, generic_io, reference, schema, treeutil, util, versioning, yamlutil
+from . import constants, generic_io, lazy_nodes, reference, schema, treeutil, util, versioning, yamlutil
 from ._block.manager import Manager as BlockManager
 from ._helpers import validate_version
 from .config import config_context, get_config
@@ -172,6 +173,10 @@ class AsdfFile:
         # in case walk_and_modify is re-entered by extension code (via
         # custom_tree_to_tagged_tree or tagged_tree_to_custom_tree).
         self._tree_modification_context = treeutil._TreeModificationContext()
+
+        # A cache of tagged objects and their converted custom objects used when
+        # a file is read with "lazy_tree=True". Used by lazy_nodes.
+        self._tagged_object_cache = lazy_nodes._TaggedObjectCache()
 
         self._fd = None
         self._closed = False
@@ -531,6 +536,7 @@ class AsdfFile:
             # as we're closing the file, also empty out the
             # tree so that references to array data can be released
             self._tree = AsdfObject()
+            self._tagged_object_cache.clear()
         for external in self._external_asdf_by_uri.values():
             external.close()
         self._external_asdf_by_uri.clear()
@@ -878,6 +884,7 @@ class AsdfFile:
         fd,
         validate_checksums=False,
         extensions=None,
+        lazy_tree=NotSet,
         _get_yaml_content=False,
         _force_raw_types=False,
         strict_extension_check=False,
@@ -889,7 +896,7 @@ class AsdfFile:
             msg = "'strict_extension_check' and 'ignore_missing_extensions' are incompatible options"
             raise ValueError(msg)
 
-        with config_context():
+        with config_context() as cfg:
             # validate_checksums (unlike memmap and lazy_load) is provided
             # here instead of in __init__
             self._blocks._validate_checksums = validate_checksums
@@ -970,7 +977,14 @@ class AsdfFile:
                     self.close()
                     raise
 
-            tree = yamlutil.tagged_tree_to_custom_tree(tree, self, _force_raw_types)
+            if lazy_tree is NotSet:
+                lazy_tree = cfg.lazy_tree
+            if lazy_tree and not _force_raw_types:
+                obj = AsdfObject()
+                obj.data = lazy_nodes.AsdfDictNode(tree, weakref.ref(self))
+                tree = obj
+            else:
+                tree = yamlutil.tagged_tree_to_custom_tree(tree, self, _force_raw_types)
 
             if not (ignore_missing_extensions or _force_raw_types):
                 self._check_extensions(tree, strict=strict_extension_check)
@@ -988,6 +1002,7 @@ class AsdfFile:
         mode="r",
         validate_checksums=False,
         extensions=None,
+        lazy_tree=NotSet,
         _get_yaml_content=False,
         _force_raw_types=False,
         strict_extension_check=False,
@@ -1002,6 +1017,7 @@ class AsdfFile:
                 generic_file,
                 validate_checksums=validate_checksums,
                 extensions=extensions,
+                lazy_tree=lazy_tree,
                 _get_yaml_content=_get_yaml_content,
                 _force_raw_types=_force_raw_types,
                 strict_extension_check=strict_extension_check,
@@ -1604,6 +1620,7 @@ def open_asdf(
     _force_raw_types=False,
     copy_arrays=False,
     memmap=NotSet,
+    lazy_tree=NotSet,
     lazy_load=True,
     custom_schema=None,
     strict_extension_check=False,
@@ -1665,6 +1682,15 @@ def open_asdf(
         Note: even if ``lazy_load`` is `False`, ``memmap`` is still taken
         into account.
 
+    lazy_tree : bool, optional
+        When `True` the ASDF tree will not be converted to custom objects
+        when the file is loaded. Instead, objects will be "lazily" converted
+        only when they are accessed. Note that the tree will not contain dict
+        and list instances for containers and instead return instances of classes
+        defined in `asdf.lazy_nodes`. Since objects are converted when they
+        are accessed, traversing the tree (like is done during `AsdfFile.info`
+        and `AsdfFile.search`) will result in nodes being converted.
+
     custom_schema : str, optional
         Path to a custom schema file that will be used for a secondary
         validation pass. This can be used to ensure that particular ASDF
@@ -1718,6 +1744,7 @@ def open_asdf(
         mode=mode,
         validate_checksums=validate_checksums,
         extensions=extensions,
+        lazy_tree=lazy_tree,
         _get_yaml_content=_get_yaml_content,
         _force_raw_types=_force_raw_types,
         strict_extension_check=strict_extension_check,

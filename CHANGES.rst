@@ -31,6 +31,10 @@
 
 - Deprecate ``ignore_implicit_conversion`` and "implicit conversion" [#1724]
 
+- Add ``lazy_tree`` option to ``asdf.open`` and ``asdf.config``
+  to allow lazy deserialization of ASDF tagged tree nodes to
+  custom objects. [#1733]
+
 
 3.2.0 (2024-04-05)
 ------------------

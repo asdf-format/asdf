@@ -5,7 +5,7 @@ from asdf.exceptions import AsdfConversionWarning
 from asdf.testing.helpers import yaml_to_asdf
 
 
-def test_undefined_tag():
+def test_undefined_tag(with_lazy_tree):
     # This tests makes sure that ASDF still returns meaningful structured data
     # even when it encounters a schema tag that it does not specifically
     # implement as an extension
@@ -26,6 +26,7 @@ undefined_data:
     with pytest.warns(Warning) as warning:
         afile = asdf.open(buff)
         missing = afile.tree["undefined_data"]
+        missing[3]
 
     assert missing[0] == 5
     assert missing[1] == {"message": "there is no tag"}
@@ -37,11 +38,12 @@ undefined_data:
     # filter out only AsdfConversionWarning
     warning = [w for w in warning if w.category == AsdfConversionWarning]
     assert len(warning) == 2
-    for i, tag in enumerate(["also_undefined-1.3.0", "undefined_tag-1.0.0"]):
-        assert (
-            str(warning[i].message)
-            == f"tag:nowhere.org:custom/{tag} is not recognized, converting to raw Python data structure"
-        )
+    messages = {str(w.message) for w in warning}
+    match = {
+        f"tag:nowhere.org:custom/{tag} is not recognized, converting to raw Python data structure"
+        for tag in ("undefined_tag-1.0.0", "also_undefined-1.3.0")
+    }
+    assert messages == match
 
     # Make sure no warning occurs if explicitly ignored
     buff.seek(0)

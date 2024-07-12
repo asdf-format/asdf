@@ -8,7 +8,6 @@ class IntegerConverter(Converter):
         "tag:stsci.edu:asdf/core/integer-1.0.0",
         "tag:stsci.edu:asdf/core/integer-1.1.0",
     ]
-
     types = ["asdf.tags.core.integer.IntegerType"]
 
     def to_yaml_tree(self, obj, tag, ctx):
