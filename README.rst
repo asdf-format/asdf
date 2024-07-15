@@ -244,7 +244,7 @@ Array data remains unloaded until it is explicitly accessed:
     >>> np.equal(af["powers"]["squares"], expected).all()
     True
 
-By default, uncompressed data blocks are not memory mapped for efficient
+By default, uncompressed data blocks are memory mapped for efficient
 access. Memory mapping can be disabled by using the ``memmap``
 option of `open` when reading:
 
