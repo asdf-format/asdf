@@ -180,7 +180,10 @@ class AsdfFile:
         self._external_asdf_by_uri = {}
         # if memmap is set, it overrides copy_arrays
         if copy_arrays is not NotSet:
-            warnings.warn("copy_arrays is deprecated; use memmap instead", AsdfDeprecationWarning)
+            warnings.warn(
+                "copy_arrays is deprecated; use memmap instead. Note that memmap will default to False in asdf 4.0.",
+                AsdfWarning,
+            )
             if memmap is NotSet:
                 memmap = not copy_arrays
         elif memmap is NotSet:
