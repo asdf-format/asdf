@@ -75,7 +75,8 @@ class AsdfFile:
         ignore_version_mismatch=True,
         ignore_unrecognized_tag=False,
         ignore_implicit_conversion=NotSet,
-        memmap=False,
+        memmap=NotSet,
+        copy_arrays=NotSet,
         lazy_load=True,
         custom_schema=None,
     ):
@@ -117,6 +118,13 @@ class AsdfFile:
 
         memmap : bool, optional
             When `True`, when reading files, attempt to memmap underlying data
+            arrays when possible. When set, this argument will override
+            ``copy_arrays``. The default will change to ``False`` in an upcoming
+            ASDF version.
+
+        copy_arrays : bool, optional
+            Deprecated; use ``memmap`` instead.
+            When `False`, when reading files, attempt to memmap underlying data
             arrays when possible.
 
         lazy_load : bool, optional
@@ -170,6 +178,13 @@ class AsdfFile:
         self._fd = None
         self._closed = False
         self._external_asdf_by_uri = {}
+        # if memmap is set, it overrides copy_arrays
+        if copy_arrays is not NotSet:
+            warnings.warn("copy_arrays is deprecated; use memmap instead", AsdfDeprecationWarning)
+            if memmap is NotSet:
+                memmap = not copy_arrays
+        elif memmap is NotSet:
+            memmap = True
         self._blocks = BlockManager(uri=uri, lazy_load=lazy_load, memmap=memmap)
         # this message is passed into find_references to only warn if
         # a reference was found

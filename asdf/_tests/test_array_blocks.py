@@ -811,9 +811,15 @@ def filename_with_array(tmp_path_factory):
 @pytest.mark.parametrize(
     "open_kwargs,should_memmap",
     [
-        ({}, False),
+        ({}, True),
         ({"memmap": True}, True),
         ({"memmap": False}, False),
+        ({"copy_arrays": True}, False),
+        ({"copy_arrays": False}, True),
+        ({"memmap": True, "copy_arrays": True}, True),
+        ({"memmap": True, "copy_arrays": False}, True),
+        ({"memmap": False, "copy_arrays": True}, False),
+        ({"memmap": False, "copy_arrays": False}, False),
     ],
 )
 def test_open_no_memmap(filename_with_array, open_kwargs, should_memmap):
@@ -821,6 +827,8 @@ def test_open_no_memmap(filename_with_array, open_kwargs, should_memmap):
     Test that asdf.open does not (or does) return memmaps for arrays
     depending on a number of arguments including:
         default (no kwargs)
+        copy_arrays
+        memmap (overwrites copy_arrays)
         memmap
     """
     with asdf.open(filename_with_array, lazy_load=False, **open_kwargs) as af:
