@@ -146,3 +146,15 @@ def test_AsdfFile_ignore_implicit_conversion_deprecation(value):
 def test_walk_and_modify_ignore_implicit_conversion_deprecation(value):
     with pytest.warns(AsdfDeprecationWarning, match="ignore_implicit_conversion is deprecated"):
         asdf.treeutil.walk_and_modify({}, lambda obj: obj, ignore_implicit_conversion=value)
+
+
+@pytest.mark.parametrize("memmap", [True, False, asdf._asdf.NotSet])
+def test_copy_arrays_deprecation(memmap, tmp_path):
+    fn = tmp_path / "test.asdf"
+    af = asdf.AsdfFile()
+    af["a"] = 1
+    af["b"] = {"$ref": "#"}
+    af.write_to(fn)
+    with pytest.warns(AsdfDeprecationWarning, match="copy_arrays is deprecated; use memmap instead"):
+        with asdf.open(fn, memmap=memmap, copy_arrays=True) as af:
+            pass
