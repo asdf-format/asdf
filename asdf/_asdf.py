@@ -75,8 +75,8 @@ class AsdfFile:
         ignore_version_mismatch=True,
         ignore_unrecognized_tag=False,
         ignore_implicit_conversion=NotSet,
-        memmap=NotSet,
         copy_arrays=NotSet,
+        memmap=NotSet,
         lazy_load=True,
         custom_schema=None,
     ):
@@ -116,16 +116,16 @@ class AsdfFile:
             case for this is currently ``namedtuple``, which cannot be serialized
             as-is.
 
+        copy_arrays : bool, optional
+            Deprecated; use ``memmap`` instead.
+            When `False`, when reading files, attempt to memmap underlying data
+            arrays when possible.
+
         memmap : bool, optional
             When `True`, when reading files, attempt to memmap underlying data
             arrays when possible. When set, this argument will override
             ``copy_arrays``. The default will change to ``False`` in an upcoming
             ASDF version.
-
-        copy_arrays : bool, optional
-            Deprecated; use ``memmap`` instead.
-            When `False`, when reading files, attempt to memmap underlying data
-            arrays when possible.
 
         lazy_load : bool, optional
             When `True` and the underlying file handle is seekable, data
@@ -1619,8 +1619,8 @@ def open_asdf(
     ignore_version_mismatch=True,
     ignore_unrecognized_tag=False,
     _force_raw_types=False,
-    memmap=True,
     copy_arrays=NotSet,
+    memmap=True,
     lazy_tree=NotSet,
     lazy_load=True,
     custom_schema=None,
@@ -1661,16 +1661,16 @@ def open_asdf(
         When `True`, do not raise warnings for unrecognized tags. Set to
         `False` by default.
 
+    copy_arrays : bool, optional
+        Deprecated; use ``memmap`` instead.
+        When `False`, when reading files, attempt to memmap underlying data
+        arrays when possible.
+
     memmap : bool, optional
         When `True`, when reading files, attempt to memmap underlying data
         arrays when possible. When set, this argument will override
         ``copy_arrays``. The default will change to ``False`` in an upcoming
         ASDF version.
-
-    copy_arrays : bool, optional
-        Deprecated; use ``memmap`` instead.
-        When `False`, when reading files, attempt to memmap underlying data
-        arrays when possible.
 
     lazy_load : bool, optional
         When `True` and the underlying file handle is seekable, data
