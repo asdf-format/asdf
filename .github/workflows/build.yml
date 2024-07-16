@@ -12,6 +12,6 @@ jobs:
     with:
       upload_to_pypi: ${{ (github.event_name == 'release') && (github.event.action == 'released') }}
       test_extras: tests
-      test_command: python -c "from asdf import open, AsdfFile, info, config_context, get_config, ValidationError, IntegerType, Stream, ExternalArrayReference"; pytest --pyargs asdf
+      test_command: pytest --pyargs asdf
     secrets:
       pypi_token: ${{ secrets.PYPI_PASSWORD_ASDF_MAINTAINER }}
