@@ -816,12 +816,13 @@ def filename_with_array(tmp_path_factory):
         ({"memmap": False}, False),
         ({"copy_arrays": True}, False),
         ({"copy_arrays": False}, True),
-        ({"memmap": True, "copy_arrays": True}, True),
-        ({"memmap": True, "copy_arrays": False}, True),
-        ({"memmap": False, "copy_arrays": True}, False),
-        ({"memmap": False, "copy_arrays": False}, False),
+        ({"copy_arrays": True, "memmap": True}, True),
+        ({"copy_arrays": False, "memmap": True}, True),
+        ({"copy_arrays": True, "memmap": False}, False),
+        ({"copy_arrays": False, "memmap": False}, False),
     ],
 )
+@pytest.mark.filterwarnings("ignore:copy_arrays is deprecated")
 def test_open_no_memmap(filename_with_array, open_kwargs, should_memmap):
     """
     Test that asdf.open does not (or does) return memmaps for arrays

@@ -1623,7 +1623,7 @@ def open_asdf(
     ignore_unrecognized_tag=False,
     _force_raw_types=False,
     copy_arrays=NotSet,
-    memmap=True,
+    memmap=NotSet,
     lazy_tree=NotSet,
     lazy_load=True,
     custom_schema=None,
