@@ -1734,6 +1734,7 @@ def open_asdf(
     instance = AsdfFile(
         ignore_version_mismatch=ignore_version_mismatch,
         ignore_unrecognized_tag=ignore_unrecognized_tag,
+        copy_arrays=copy_arrays,
         memmap=memmap,
         lazy_load=lazy_load,
         custom_schema=custom_schema,
