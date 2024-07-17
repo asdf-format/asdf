@@ -45,7 +45,7 @@ tests = [
   "fsspec[http]>=2022.8.2",
   "lz4>=0.10",
   "psutil",
-  "pytest>=7",
+  "pytest>=8",
   "pytest-remotedata",
 ]
 [project.urls]
