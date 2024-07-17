@@ -125,7 +125,7 @@ class AsdfFile:
             When `True`, when reading files, attempt to memmap underlying data
             arrays when possible. When set, this argument will override
             ``copy_arrays``. The default will change to ``False`` in an upcoming
-            ASDF version.
+            ASDF version. At the moment the default is ``True``.
 
         lazy_load : bool, optional
             When `True` and the underlying file handle is seekable, data
@@ -1673,7 +1673,7 @@ def open_asdf(
         When `True`, when reading files, attempt to memmap underlying data
         arrays when possible. When set, this argument will override
         ``copy_arrays``. The default will change to ``False`` in an upcoming
-        ASDF version.
+        ASDF version. At the moment the default is ``True``.
 
     lazy_load : bool, optional
         When `True` and the underlying file handle is seekable, data
