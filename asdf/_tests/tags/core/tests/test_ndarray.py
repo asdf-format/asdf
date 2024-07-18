@@ -11,6 +11,7 @@ from numpy import ma
 from numpy.testing import assert_array_equal
 
 import asdf
+from asdf._tests._helpers import assert_tree_match
 from asdf.exceptions import ValidationError
 from asdf.extension import Converter, Extension, TagDefinition
 from asdf.tags.core import ndarray
@@ -378,17 +379,23 @@ def test_inline_bare():
         assert_array_equal(ff.tree["arr"], [[1, 2, 3, 4], [5, 6, 7, 8]])
 
 
-def test_mask_roundtrip(tmp_path):
-    x = np.arange(0, 10, dtype=float)
-    m = ma.array(x, mask=x > 5)
-    tree = {"masked_array": m, "unmasked_array": x}
+@pytest.mark.parametrize(
+    "mask",
+    [
+        [[False, False, True], [False, True, False], [False, False, False]],
+        True,
+        False,
+    ],
+)
+def test_mask_roundtrip(mask, tmp_path):
+    array = np.array([[1, 0, 0], [0, 1, 0], [0, 0, 0]])
+    tree = {
+        "unmasked": array,
+        "masked": np.ma.array(array, mask=mask),
+    }
 
     with roundtrip(tree) as af:
-        tree = af.tree
-
-        m = tree["masked_array"]
-
-        assert np.all(m.mask[6:])
+        assert_tree_match(tree, af.tree)
         assert len(af._blocks.blocks) == 2
 
 
