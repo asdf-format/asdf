@@ -189,7 +189,7 @@ The `open` function also works as a context handler:
     The ``copy_arrays`` argument of `asdf.open()` and `AsdfFile` is deprecated,
     and will be removed in ASDF 4.0. It is replaced by ``memmap``, which
     is the opposite of ``copy_arrays`` (``memmap == not copy_arrays``).
-    In ASDF 4.0, ``memmap`` will default to ``False``, which means arrays 
+    In ASDF 4.0, ``memmap`` will default to ``False``, which means arrays
     will no longer be memory-mapped by default.
 
 To get a quick overview of the data stored in the file, use the top-level
