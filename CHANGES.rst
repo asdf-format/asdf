@@ -1,3 +1,7 @@
+4.0.0 (unreleased)
+
+- remove ``copy_arrays`` [#1800]
+
 3.4.0 (unreleased)
 ------------------
 
@@ -40,6 +44,7 @@
   to allow lazy deserialization of ASDF tagged tree nodes to
   custom objects. [#1733]
 
+- Deprecate ``copy_arrays`` in favor of ``memmap`` [#1797]
 
 3.2.0 (2024-04-05)
 ------------------
