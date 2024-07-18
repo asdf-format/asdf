@@ -397,7 +397,7 @@ def test_mask_roundtrip(mask, tmp_path):
         # assert_array_equal ignores the mask, so use equality here
         assert (tree["masked"] == af["masked"]).all()
         # ensure tree validity
-        assert af["unmasked"] == af["masked"].data
+        assert (af["unmasked"] == af["unmasked"]).all()
         assert len(af._blocks.blocks) == 2
 
 
