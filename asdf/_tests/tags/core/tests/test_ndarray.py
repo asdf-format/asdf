@@ -378,17 +378,27 @@ def test_inline_bare():
         assert_array_equal(ff.tree["arr"], [[1, 2, 3, 4], [5, 6, 7, 8]])
 
 
-def test_mask_roundtrip(tmp_path):
-    x = np.arange(0, 10, dtype=float)
-    m = ma.array(x, mask=x > 5)
-    tree = {"masked_array": m, "unmasked_array": x}
+@pytest.mark.parametrize(
+    "mask",
+    [
+        [[False, False, True], [False, True, False], [False, False, False]],
+        True,
+        False,
+    ],
+)
+def test_mask_roundtrip(mask, tmp_path):
+    array = np.array([[1, 0, 0], [0, 1, 0], [0, 0, 0]])
+    tree = {
+        "unmasked": array,
+        "masked": np.ma.array(array, mask=mask),
+    }
 
     with roundtrip(tree) as af:
-        tree = af.tree
-
-        m = tree["masked_array"]
-
-        assert np.all(m.mask[6:])
+        # assert_array_equal ignores the mask, so use equality here
+        assert (tree["masked"].data == af["masked"].data).all()
+        assert (tree["masked"].mask == af["masked"].mask).all()
+        # ensure tree validity
+        assert (af["unmasked"] == af["masked"].data).all()
         assert len(af._blocks.blocks) == 2
 
 
@@ -520,7 +530,8 @@ def test_inline_masked_array(tmp_path):
 
     with asdf.open(testfile) as f2:
         assert len(list(f2._blocks.blocks)) == 0
-        assert_array_equal(f.tree["test"], f2.tree["test"])
+        # assert_array_equal ignores the mask, so use equality here
+        assert (f.tree["test"] == f2.tree["test"]).all()
 
     with open(testfile, "rb") as fd:
         assert b"null" in fd.read()

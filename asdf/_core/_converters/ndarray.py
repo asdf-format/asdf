@@ -125,7 +125,7 @@ class NDArrayConverter(Converter):
             if strides is not None:
                 result["strides"] = list(strides)
 
-        if isinstance(data, ma.MaskedArray) and np.any(data.mask):
+        if isinstance(data, ma.MaskedArray):
             if options.storage_type == "inline":
                 ctx._blocks._set_array_storage(data.mask, "inline")
 
