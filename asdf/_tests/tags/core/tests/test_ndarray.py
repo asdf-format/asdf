@@ -11,7 +11,6 @@ from numpy import ma
 from numpy.testing import assert_array_equal
 
 import asdf
-from asdf._tests._helpers import assert_tree_match
 from asdf.exceptions import ValidationError
 from asdf.extension import Converter, Extension, TagDefinition
 from asdf.tags.core import ndarray
@@ -395,7 +394,10 @@ def test_mask_roundtrip(mask, tmp_path):
     }
 
     with roundtrip(tree) as af:
-        assert_tree_match(tree, af.tree)
+        # assert_array_equal ignores the mask, so use equality here
+        assert (tree["masked"] == af["masked"]).all()
+        # ensure tree validity
+        assert af["unmasked"] == af["masked"].data
         assert len(af._blocks.blocks) == 2
 
 
@@ -527,7 +529,8 @@ def test_inline_masked_array(tmp_path):
 
     with asdf.open(testfile) as f2:
         assert len(list(f2._blocks.blocks)) == 0
-        assert_array_equal(f.tree["test"], f2.tree["test"])
+        # assert_array_equal ignores the mask, so use equality here
+        assert (f.tree["test"] == f2.tree["test"]).all()
 
     with open(testfile, "rb") as fd:
         assert b"null" in fd.read()
