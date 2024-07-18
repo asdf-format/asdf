@@ -1,7 +1,7 @@
 3.4.0 (unreleased)
 ------------------
 
--
+- Fix issue where roundtripping a masked array with no masked values removes the mask [#1803]
 
 3.3.0 (2024-07-12)
 ------------------
