@@ -10,7 +10,7 @@ import yaml
 
 import asdf
 from asdf import tagged, treeutil, yamlutil
-from asdf.exceptions import AsdfConversionWarning, AsdfDeprecationWarning, AsdfWarning
+from asdf.exceptions import AsdfConversionWarning, AsdfDeprecationWarning, AsdfSerializationError, AsdfWarning
 from asdf.testing.helpers import yaml_to_asdf
 
 
@@ -104,7 +104,7 @@ def test_arbitrary_python_object():
 
     buff = io.BytesIO()
     ff = asdf.AsdfFile(tree)
-    with pytest.raises(yaml.YAMLError, match=r"\('cannot represent an object', .*\)"):
+    with pytest.raises(AsdfSerializationError, match=r".*is not serializable by asdf.*"):
         ff.write_to(buff)
 
 
@@ -350,7 +350,7 @@ def test_ndarray_subclass_conversion(tmp_path):
 
     with asdf.config.config_context() as cfg:
         cfg.convert_unknown_ndarray_subclasses = False
-        with pytest.raises(yaml.representer.RepresenterError, match=r".*cannot represent.*"):
+        with pytest.raises(AsdfSerializationError, match=r".*is not serializable by asdf.*"):
             af.write_to(fn)
 
 

@@ -7,7 +7,7 @@ import yaml
 
 from . import config, schema, tagged, treeutil, util
 from .constants import STSCI_SCHEMA_TAG_BASE, YAML_TAG_PREFIX
-from .exceptions import AsdfConversionWarning
+from .exceptions import AsdfConversionWarning, AsdfSerializationError
 from .extension._serialization_context import BlockAccess
 from .tags.core import AsdfObject
 from .versioning import _YAML_VERSION, _yaml_base_loader
@@ -403,14 +403,26 @@ def dump_tree(tree, fd, ctx, tree_finalizer=None, _serialization_context=None):
                 if key not in tags:
                     tags[key] = val
 
-    yaml.dump_all(
-        [tree],
-        stream=fd,
-        Dumper=AsdfDumper,
-        explicit_start=True,
-        explicit_end=True,
-        version=_YAML_VERSION,
-        allow_unicode=True,
-        encoding="utf-8",
-        tags=tags,
-    )
+    try:
+        yaml.dump_all(
+            [tree],
+            stream=fd,
+            Dumper=AsdfDumper,
+            explicit_start=True,
+            explicit_end=True,
+            version=_YAML_VERSION,
+            allow_unicode=True,
+            encoding="utf-8",
+            tags=tags,
+        )
+    except yaml.representer.RepresenterError as err:
+        if len(err.args) < 2:
+            raise err
+        # inspect the exception arguments to determine what object failed
+        obj = err.args[1]
+        msg = (
+            f"Object of type[{type(obj)}] is not serializable by asdf. "
+            "Please convert the object to a supported type or implement "
+            "a Converter for this type to allow the tree to be serialized."
+        )
+        raise AsdfSerializationError(msg, obj) from err
