@@ -46,6 +46,12 @@ man_pages = [("index", project.lower(), project + " Documentation", [author], 1)
 
 nitpicky = True
 
+# ignore a few pyyaml docs links since they don't appear to support intersphinx
+nitpick_ignore = [
+    ("py:class", "yaml.representer.RepresenterError"),
+    ("py:class", "yaml.error.YAMLError"),
+]
+
 # Add intersphinx mappings
 intersphinx_mapping["semantic_version"] = ("https://python-semanticversion.readthedocs.io/en/latest/", None)
 intersphinx_mapping["jsonschema"] = ("https://python-jsonschema.readthedocs.io/en/stable/", None)
