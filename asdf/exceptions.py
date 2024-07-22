@@ -9,6 +9,7 @@ __all__ = [
     "AsdfManifestURIMismatchWarning",
     "AsdfPackageVersionWarning",
     "AsdfProvisionalAPIWarning",
+    "AsdfSerializationError",
     "AsdfWarning",
     "DelimiterNotFoundError",
     "ValidationError",
