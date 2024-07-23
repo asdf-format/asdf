@@ -3,6 +3,12 @@
 
 - Fix issue where roundtripping a masked array with no masked values removes the mask [#1803]
 
+- Use a custom exception ``AsdfSerializationError`` to indicate when an object in the
+  tree fails to be serialized by asdf (and by yaml). This exception currently inherits
+  from ``yaml.representer.RepresenterError`` to provide backwards compatibility. However
+  this inheritance may be dropped in a future asdf version. Please migrate to the new
+  ``AsdfSerializationError``. [#1809]
+
 3.3.0 (2024-07-12)
 ------------------
 

@@ -1,3 +1,5 @@
+from yaml.representer import RepresenterError
+
 from asdf._jsonschema import ValidationError
 
 __all__ = [
@@ -7,6 +9,7 @@ __all__ = [
     "AsdfManifestURIMismatchWarning",
     "AsdfPackageVersionWarning",
     "AsdfProvisionalAPIWarning",
+    "AsdfSerializationError",
     "AsdfWarning",
     "DelimiterNotFoundError",
     "ValidationError",
@@ -72,4 +75,12 @@ class AsdfLazyReferenceError(ReferenceError):
     to an AsdfFile instance. This likely means the AsdfFile was garbage
     collected and you may need to update your code to keep the AsdfFile
     in memory (by keeping a reference).
+    """
+
+
+class AsdfSerializationError(RepresenterError):
+    """
+    An object failed serialization by asdf and by yaml. This likely indicates
+    that the object does not have a supporting asdf Converter and needs to
+    be manually converted to a supported type.
     """

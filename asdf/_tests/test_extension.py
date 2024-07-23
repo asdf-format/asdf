@@ -3,11 +3,10 @@ import sys
 
 import pytest
 from packaging.specifiers import SpecifierSet
-from yaml.representer import RepresenterError
 
 import asdf
 from asdf import AsdfFile, config_context
-from asdf.exceptions import AsdfManifestURIMismatchWarning, AsdfWarning, ValidationError
+from asdf.exceptions import AsdfManifestURIMismatchWarning, AsdfSerializationError, AsdfWarning, ValidationError
 from asdf.extension import (
     Compressor,
     Converter,
@@ -578,7 +577,7 @@ def test_converter_subclass_with_no_supported_tags():
     tree = {"obj": Foo()}
     with config_context() as cfg:
         cfg.add_extension(FooExtension())
-        with pytest.raises(RepresenterError, match=r"cannot represent an object"):
+        with pytest.raises(AsdfSerializationError, match=r"is not serializable by asdf"):
             roundtrip_object(tree)
 
 
