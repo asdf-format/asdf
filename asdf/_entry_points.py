@@ -1,15 +1,20 @@
+import sys
 import warnings
+
+from .exceptions import AsdfWarning
+from .extension import ExtensionProxy
+from .resource import ResourceMappingProxy
 
 # The standard library importlib.metadata returns duplicate entrypoints
 # for all python versions up to and including 3.11
 # https://github.com/python/importlib_metadata/issues/410#issuecomment-1304258228
 # see PR https://github.com/asdf-format/asdf/pull/1260
 # see issue https://github.com/asdf-format/asdf/issues/1254
-from importlib_metadata import entry_points
+if sys.version_info >= (3, 12):
+    from importlib.metadata import entry_points
+else:
+    from importlib_metadata import entry_points
 
-from .exceptions import AsdfWarning
-from .extension import ExtensionProxy
-from .resource import ResourceMappingProxy
 
 RESOURCE_MAPPINGS_GROUP = "asdf.resource_mappings"
 EXTENSIONS_GROUP = "asdf.extensions"

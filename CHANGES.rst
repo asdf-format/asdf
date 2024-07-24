@@ -9,6 +9,8 @@
   this inheritance may be dropped in a future asdf version. Please migrate to the new
   ``AsdfSerializationError``. [#1809]
 
+- Drop ``importlib_metadata`` as a dependency on Python 3.12 and newer [#1810]
+
 3.3.0 (2024-07-12)
 ------------------
 

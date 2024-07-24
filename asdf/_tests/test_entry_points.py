@@ -1,9 +1,5 @@
-# The standard library importlib.metadata returns duplicate entrypoints
-# for all python versions up to and including 3.11
-# https://github.com/python/importlib_metadata/issues/410#issuecomment-1304258228
-# see PR https://github.com/asdf-format/asdf/pull/1260
-# see issue https://github.com/asdf-format/asdf/issues/1254
-import importlib_metadata as metadata
+import sys
+
 import pytest
 
 from asdf import _entry_points
@@ -11,6 +7,16 @@ from asdf._version import version as asdf_package_version
 from asdf.exceptions import AsdfWarning
 from asdf.extension import ExtensionProxy
 from asdf.resource import ResourceMappingProxy
+
+# The standard library importlib.metadata returns duplicate entrypoints
+# for all python versions up to and including 3.11
+# https://github.com/python/importlib_metadata/issues/410#issuecomment-1304258228
+# see PR https://github.com/asdf-format/asdf/pull/1260
+# see issue https://github.com/asdf-format/asdf/issues/1254
+if sys.version_info >= (3, 12):
+    import importlib.metadata as metadata
+else:
+    import importlib_metadata as metadata
 
 
 @pytest.fixture()
