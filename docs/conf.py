@@ -6,13 +6,18 @@ if sys.version_info < (3, 11):
 else:
     import tomllib
 
+from sphinx_asdf.conf import *  # noqa: F403
+
 # The standard library importlib.metadata returns duplicate entrypoints
 # for all python versions up to and including 3.11
 # https://github.com/python/importlib_metadata/issues/410#issuecomment-1304258228
 # see PR https://github.com/asdf-format/asdf/pull/1260
 # see issue https://github.com/asdf-format/asdf/issues/1254
-from importlib_metadata import distribution
-from sphinx_asdf.conf import *  # noqa: F403
+if sys.version_info >= (3, 12):
+    from importlib.metadata import distribution
+else:
+    from importlib_metadata import distribution
+
 
 # Get configuration information from `pyproject.toml`
 with open(Path(__file__).parent.parent / "pyproject.toml", "rb") as configuration_file:
