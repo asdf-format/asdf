@@ -980,16 +980,16 @@ def test_memmap_write(tmp_path):
         # Make sure we're actually writing to an internal array for this test
         af.write_to(tmpfile, all_array_storage="internal")
 
-    with asdf.open(tmpfile, mode="rw", copy_arrays=False) as af:
+    with asdf.open(tmpfile, mode="rw", memmap=True) as af:
         data = af["data"]
         assert data.flags.writeable is True
         data[0] = 42
         assert data[0] == 42
 
-    with asdf.open(tmpfile, mode="rw", copy_arrays=False) as af:
+    with asdf.open(tmpfile, mode="rw", memmap=True) as af:
         assert af["data"][0] == 42
 
-    with asdf.open(tmpfile, mode="r", copy_arrays=False) as af:
+    with asdf.open(tmpfile, mode="r", memmap=True) as af:
         assert af["data"][0] == 42
 
 
@@ -1008,7 +1008,7 @@ def test_readonly(tmp_path):
             af["data"][0] = 41
 
     # Forcing memmap, the array should still be readonly
-    with asdf.open(tmpfile, copy_arrays=False) as af:
+    with asdf.open(tmpfile, memmap=True) as af:
         assert af["data"].flags.writeable is False
         with pytest.raises(ValueError, match=r"assignment destination is read-only"):
             af["data"][0] = 41
@@ -1019,7 +1019,7 @@ def test_readonly(tmp_path):
         af["data"][0] = 40
 
     # Copying the arrays makes it safe to write to the underlying array
-    with asdf.open(tmpfile, mode="r", copy_arrays=True) as af:
+    with asdf.open(tmpfile, mode="r", memmap=False) as af:
         assert af["data"].flags.writeable is True
         af["data"][0] = 42
 

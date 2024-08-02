@@ -16,7 +16,7 @@ def test_asdffile_tree_cleared_on_close(tmp_path):
     fn = tmp_path / "test.asdf"
     asdf.AsdfFile({"a": np.arange(1000), "b": np.arange(42)}).write_to(fn)
 
-    with asdf.open(fn, copy_arrays=True, lazy_load=False) as af:
+    with asdf.open(fn, memmap=False, lazy_load=False) as af:
         array_weakref = weakref.ref(af["a"])
         array_ref = af["b"]
 
