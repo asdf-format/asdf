@@ -176,7 +176,7 @@ class SchemaError(_Error):
     _word_for_instance_in_error_message = "schema"
 
 
-@attr.s(hash=True)
+@attr.s(unsafe_hash=True)
 class RefResolutionError(Exception):
     """
     A ref could not be resolved.
