@@ -11,6 +11,8 @@
 
 - Drop ``importlib_metadata`` as a dependency on Python 3.12 and newer [#1810]
 
+- Bumped minimal requirement on ``attrs`` from ``20.1.0`` to ``22.2.0`` [#1815]
+
 3.3.0 (2024-07-12)
 ------------------
 

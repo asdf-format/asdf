@@ -35,7 +35,7 @@ def _find_suite():
     return root
 
 
-@attr.s(hash=True)
+@attr.s(unsafe_hash=True)
 class Suite:
 
     _root = attr.ib(default=attr.Factory(_find_suite))
@@ -62,7 +62,7 @@ class Suite:
         )
 
 
-@attr.s(hash=True)
+@attr.s(unsafe_hash=True)
 class Version:
 
     _path = attr.ib()
@@ -139,7 +139,7 @@ class Version:
             )
 
 
-@attr.s(hash=True, repr=False)
+@attr.s(unsafe_hash=True, repr=False)
 class _Test:
 
     version = attr.ib()
