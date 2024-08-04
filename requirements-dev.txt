@@ -1,6 +1,7 @@
 git+https://github.com/asdf-format/asdf-standard
 git+https://github.com/asdf-format/asdf-transform-schemas
 git+https://github.com/yaml/pyyaml.git
+git+https://github.com/python-attrs/attrs
 
 numpy>=0.0.dev0
 # although we don't use scipy, we include it here so that any dependency

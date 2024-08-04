@@ -12,6 +12,12 @@ on:
     tags:
       - '*'
   pull_request:
+    # We also want this workflow triggered if the `jsonschema` label is
+    # added or present when PR is updated
+    types:
+      - synchronize
+      - labeled
+
 
 # Only cancel in-progress jobs or runs for the current workflow
 #   This cancels the already triggered workflows for a specific PR without canceling
