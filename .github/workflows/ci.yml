@@ -83,10 +83,10 @@ jobs:
     with:
       submodules: false
       # Any env name which does not start with `pyXY` will use this Python version.
-      default_python: '3.9'
+      default_python: '3.11'
       envs: |
-        - macos: py39-parallel
-        - windows: py39-parallel
+        - macos: py311-parallel
+        - windows: py311-parallel
 
   dev:
     needs: [core]
@@ -94,9 +94,8 @@ jobs:
     with:
       submodules: false
       # Any env name which does not start with `pyXY` will use this Python version.
-      default_python: '3.9'
+      default_python: '3.11'
       envs: |
-        - linux: py39-devdeps-parallel
         - linux: py310-devdeps-parallel
         - linux: py311-devdeps-parallel
         - linux: py312-devdeps-parallel
@@ -120,6 +119,6 @@ jobs:
     with:
       submodules: false
       # Any env name which does not start with `pyXY` will use this Python version.
-      default_python: '3.9'
+      default_python: '3.11'
       envs: |
         - linux: compatibility
