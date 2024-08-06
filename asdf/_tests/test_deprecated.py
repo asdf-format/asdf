@@ -6,7 +6,7 @@ import pytest
 
 import asdf
 import asdf.testing.helpers
-from asdf.exceptions import AsdfDeprecationWarning, ValidationError
+from asdf.exceptions import AsdfDeprecationWarning, AsdfWarning, ValidationError
 
 
 def test_asdf_stream_deprecation():
@@ -146,3 +146,15 @@ def test_AsdfFile_ignore_implicit_conversion_deprecation(value):
 def test_walk_and_modify_ignore_implicit_conversion_deprecation(value):
     with pytest.warns(AsdfDeprecationWarning, match="ignore_implicit_conversion is deprecated"):
         asdf.treeutil.walk_and_modify({}, lambda obj: obj, ignore_implicit_conversion=value)
+
+
+@pytest.mark.parametrize("copy_arrays", [True, False])
+@pytest.mark.parametrize("memmap", [True, False, asdf._asdf.NotSet])
+def test_copy_arrays_deprecation(copy_arrays, memmap, tmp_path):
+    fn = tmp_path / "test.asdf"
+    af = asdf.AsdfFile()
+    af["a"] = 1
+    af.write_to(fn)
+    with pytest.warns(AsdfWarning, match="copy_arrays is deprecated; use memmap instead"):
+        with asdf.open(fn, copy_arrays=copy_arrays, memmap=memmap) as af:
+            pass
