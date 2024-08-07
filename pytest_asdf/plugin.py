@@ -44,7 +44,8 @@ def pytest_addoption(parser):
     parser.addini(
         "asdf_schema_ignore_version_mismatch",
         "Set to true to disable warnings when missing explicit support for a tag",
-        type="bool",
+        type="string",
+        default="",
     )
     parser.addoption("--asdf-tests", action="store_true", help="Enable ASDF schema tests")
 
@@ -282,13 +283,11 @@ def pytest_collect_file(file_path, parent):
     validate_default = parent.config.getini("asdf_schema_validate_default")
     ignore_unrecognized_tag = parent.config.getini("asdf_schema_ignore_unrecognized_tag")
     ignore_version_mismatch = parent.config.getini("asdf_schema_ignore_version_mismatch")
-    if ignore_version_mismatch in (True, False):
+    if ignore_version_mismatch != "":
         from asdf.exceptions import AsdfDeprecationWarning
 
-        # pytest will return an empty list for getini on a bool with no default
-        # since we have a True or False here warn the user that this setting is deprecated
         warnings.warn(
-            "asdf_schema_ignore_version_mismatch is deprecated " "and has done nothing since asdf 3.0.0",
+            "asdf_schema_ignore_version_mismatch is deprecated and has done nothing since asdf 3.0.0",
             AsdfDeprecationWarning,
         )
 
