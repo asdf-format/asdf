@@ -7,10 +7,6 @@ ASDF - Advanced Scientific Data Format
     :target: https://github.com/asdf-format/asdf/actions
     :alt: CI Status
 
-.. image:: https://github.com/asdf-format/asdf/workflows/s390x/badge.svg
-    :target: https://github.com/asdf-format/asdf/actions
-    :alt: s390x Status
-
 .. image:: https://github.com/asdf-format/asdf/workflows/Downstream/badge.svg
     :target: https://github.com/asdf-format/asdf/actions
     :alt: Downstream CI Status
