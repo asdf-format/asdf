@@ -77,6 +77,7 @@ def test_history_entry(tmp_path):
 def test_subclass_metadata():
     subclass_metadata = SubclassMetadata(name="SomeCoolSubclass")
 
-    result = helpers.roundtrip_object(subclass_metadata)
+    # support for this was dropped in 1.6.0
+    result = helpers.roundtrip_object(subclass_metadata, version="1.5.0")
 
     assert result == subclass_metadata
