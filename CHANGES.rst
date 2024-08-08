@@ -1,7 +1,8 @@
 3.5.0 (unreleased)
 ------------------
 
--
+- Deprecate ``ignore_version_mismatch``. This option has done nothing since
+  asdf 3.0.0 and will be removed in an upcoming asdf version [#1819]
 
 3.4.0 (2024-08-04)
 ------------------

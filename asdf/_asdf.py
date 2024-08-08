@@ -72,7 +72,7 @@ class AsdfFile:
         uri=None,
         extensions=None,
         version=None,
-        ignore_version_mismatch=True,
+        ignore_version_mismatch=NotSet,
         ignore_unrecognized_tag=False,
         ignore_implicit_conversion=NotSet,
         copy_arrays=False,
@@ -102,6 +102,7 @@ class AsdfFile:
             configured default version.  See `asdf.config.AsdfConfig.default_version`.
 
         ignore_version_mismatch : bool, optional
+            Deprecated and unused. This setting does nothing since asdf 3.0.0
             When `True`, do not raise warnings for mismatched schema versions.
             Set to `True` by default.
 
@@ -165,7 +166,12 @@ class AsdfFile:
         else:
             self._custom_schema = None
 
-        self._ignore_version_mismatch = ignore_version_mismatch
+        if ignore_version_mismatch is not NotSet:
+            warnings.warn(
+                "ignore_version_mismatch is deprecated and has done nothing since asdf 3.0.0",
+                AsdfDeprecationWarning,
+            )
+
         self._ignore_unrecognized_tag = ignore_unrecognized_tag
         self._ignore_implicit_conversion = ignore_implicit_conversion
 
@@ -1615,7 +1621,7 @@ def open_asdf(
     mode=None,
     validate_checksums=False,
     extensions=None,
-    ignore_version_mismatch=True,
+    ignore_version_mismatch=NotSet,
     ignore_unrecognized_tag=False,
     _force_raw_types=False,
     copy_arrays=False,
@@ -1653,6 +1659,7 @@ def open_asdf(
         May be an `asdf.extension.Extension` or a `list` of extensions.
 
     ignore_version_mismatch : bool, optional
+        Deprecated and unused. This setting does nothing since asdf 3.0.0
         When `True`, do not raise warnings for mismatched schema versions.
         Set to `True` by default.
 
