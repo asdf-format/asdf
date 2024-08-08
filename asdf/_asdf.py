@@ -165,7 +165,7 @@ class AsdfFile:
 
         if ignore_version_mismatch is not NotSet:
             warnings.warn(
-                "ignore_version_mismatch is deprecated and has done " "nothing since asdf 3.0.0",
+                "ignore_version_mismatch is deprecated and has done nothing since asdf 3.0.0",
                 AsdfDeprecationWarning,
             )
 
