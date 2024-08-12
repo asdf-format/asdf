@@ -20,7 +20,7 @@ def test_update_with_memmapped_data_can_make_view_data_invalid(tmp_path):
     af = asdf.AsdfFile({"a": a, "b": b})
     af.write_to(fn)
 
-    with asdf.open(fn, mode="rw", copy_arrays=False) as af:
+    with asdf.open(fn, mode="rw", memmap=True) as af:
         va = af["a"][:3]
         np.testing.assert_array_equal(a, af["a"])
         np.testing.assert_array_equal(b, af["b"])

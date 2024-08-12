@@ -15,7 +15,7 @@ def test_memmap_view_access_after_close(tmp_path):
     fn = tmp_path / "test.asdf"
     asdf.AsdfFile({"a": a}).write_to(fn)
 
-    with asdf.open(fn, copy_arrays=False) as af:
+    with asdf.open(fn, memmap=True) as af:
         v = af["a"][:5]
 
     assert np.all(v == 1)

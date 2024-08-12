@@ -292,6 +292,5 @@ possible to access the file contents outside of the scope of that context,
 because any memory mapped arrays will no longer be available.
 
 It may sometimes be useful to copy array data into memory instead of using
-memory maps. This can be controlled by passing the ``copy_arrays`` parameter to
-either the `AsdfFile` constructor or `asdf.open`. By default,
-``copy_arrays=False``.
+memory maps. This can be controlled by passing ``memmap=False`` to either
+the `AsdfFile` constructor or `asdf.open`. By default, ``memmap=True``.

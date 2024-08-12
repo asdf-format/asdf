@@ -185,6 +185,13 @@ The `open` function also works as a context handler:
     with asdf.open("example.asdf") as af:
         ...
 
+.. warning::
+    The ``copy_arrays`` argument of `asdf.open()` and `AsdfFile` is deprecated,
+    and will be removed in ASDF 4.0. It is replaced by ``memmap``, which
+    is the opposite of ``copy_arrays`` (``memmap == not copy_arrays``).
+    In ASDF 4.0, ``memmap`` will default to ``False``, which means arrays
+    will no longer be memory-mapped by default.
+
 To get a quick overview of the data stored in the file, use the top-level
 `AsdfFile.info()` method:
 
@@ -245,12 +252,12 @@ Array data remains unloaded until it is explicitly accessed:
     True
 
 By default, uncompressed data blocks are memory mapped for efficient
-access. Memory mapping can be disabled by using the ``copy_arrays``
+access. Memory mapping can be disabled by using the ``memmap``
 option of `open` when reading:
 
 .. code:: python
 
-    af = asdf.open("example.asdf", copy_arrays=True)
+    af = asdf.open("example.asdf", memmap=False)
 
 .. _end-read-file-text:
 

@@ -75,7 +75,7 @@ class AsdfFile:
         ignore_version_mismatch=True,
         ignore_unrecognized_tag=False,
         ignore_implicit_conversion=NotSet,
-        copy_arrays=False,
+        copy_arrays=NotSet,
         memmap=NotSet,
         lazy_load=True,
         custom_schema=None,
@@ -117,16 +117,15 @@ class AsdfFile:
             as-is.
 
         copy_arrays : bool, optional
+            Deprecated; use ``memmap`` instead.
             When `False`, when reading files, attempt to memmap underlying data
             arrays when possible.
 
         memmap : bool, optional
             When `True`, when reading files, attempt to memmap underlying data
             arrays when possible. When set, this argument will override
-            ``copy_arrays``.  When not set, the ``copy_arrays`` will determine
-            if arrays are memory mapped or copied. ``copy_arrays`` will be
-            deprecated and the default will change in an upcoming asdf version
-            which by default will not memory map arrays.
+            ``copy_arrays``. The default will change to ``False`` in an upcoming
+            ASDF version. At the moment the default is ``True``.
 
         lazy_load : bool, optional
             When `True` and the underlying file handle is seekable, data
@@ -135,8 +134,6 @@ class AsdfFile:
             open during the lifetime of the tree. Setting to False causes
             all data arrays to be loaded up front, which means that they
             can be accessed even after the underlying file is closed.
-            Note: even if ``lazy_load`` is `False`, ``copy_arrays`` is still taken
-            into account.
 
         custom_schema : str, optional
             Path to a custom schema file that will be used for a secondary
@@ -182,9 +179,16 @@ class AsdfFile:
         self._closed = False
         self._external_asdf_by_uri = {}
         # if memmap is set, it overrides copy_arrays
-        if memmap is not NotSet:
-            copy_arrays = not memmap
-        self._blocks = BlockManager(uri=uri, lazy_load=lazy_load, memmap=not copy_arrays)
+        if copy_arrays is not NotSet:
+            warnings.warn(
+                "copy_arrays is deprecated; use memmap instead. Note that memmap will default to False in asdf 4.0.",
+                AsdfWarning,
+            )
+            if memmap is NotSet:
+                memmap = not copy_arrays
+        elif memmap is NotSet:
+            memmap = True
+        self._blocks = BlockManager(uri=uri, lazy_load=lazy_load, memmap=memmap)
         # this message is passed into find_references to only warn if
         # a reference was found
         find_ref_warning_msg = (
@@ -1618,7 +1622,7 @@ def open_asdf(
     ignore_version_mismatch=True,
     ignore_unrecognized_tag=False,
     _force_raw_types=False,
-    copy_arrays=False,
+    copy_arrays=NotSet,
     memmap=NotSet,
     lazy_tree=NotSet,
     lazy_load=True,
@@ -1661,16 +1665,15 @@ def open_asdf(
         `False` by default.
 
     copy_arrays : bool, optional
+        Deprecated; use ``memmap`` instead.
         When `False`, when reading files, attempt to memmap underlying data
         arrays when possible.
 
     memmap : bool, optional
         When `True`, when reading files, attempt to memmap underlying data
         arrays when possible. When set, this argument will override
-        ``copy_arrays``.  When not set, the ``copy_arrays`` will determine
-        if arrays are memory mapped or copied. ``copy_arrays`` will be
-        deprecated and the default will change in an upcoming asdf version
-        which by default will not memory map arrays.
+        ``copy_arrays``. The default will change to ``False`` in an upcoming
+        ASDF version. At the moment the default is ``True``.
 
     lazy_load : bool, optional
         When `True` and the underlying file handle is seekable, data
