@@ -1,7 +1,7 @@
 3.5.0 (unreleased)
 ------------------
 
--
+- handle junk bytes after tree (before or after blocks) [#1822]
 
 3.4.0 (2024-08-04)
 ------------------
