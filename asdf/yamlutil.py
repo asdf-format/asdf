@@ -137,6 +137,29 @@ AsdfDumper.add_representer(np.str_, represent_numpy_str)
 AsdfDumper.add_representer(np.bytes_, AsdfDumper.represent_binary)
 
 
+class _IgnoreCustomTagsLoader(_yaml_base_loader):
+    """
+    A specialized YAML loader that ignores tags unknown to the
+    base (safe) loader. This is used by `asdf.util.load_yaml`
+    to read the ASDF tree as "basic" objects, ignoring the
+    custom tags.
+    """
+
+    def construct_undefined(self, node):
+        if isinstance(node, yaml.MappingNode):
+            return self.construct_mapping(node)
+        elif isinstance(node, yaml.SequenceNode):
+            return self.construct_sequence(node)
+        elif isinstance(node, yaml.ScalarNode):
+            return self.construct_scalar(node)
+        return super().construct_undefined(node)
+
+
+# pyyaml will invoke the constructor associated with None when a node's
+# tag is not explicitly handled by another constructor.
+_IgnoreCustomTagsLoader.add_constructor(None, _IgnoreCustomTagsLoader.construct_undefined)
+
+
 class AsdfLoader(_yaml_base_loader):
     """
     A specialized YAML loader that can construct "tagged basic Python

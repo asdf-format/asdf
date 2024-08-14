@@ -145,3 +145,17 @@ def test_load_yaml(tmp_path, input_type, tagged):
         assert isinstance(tree["a"], asdf.tagged.TaggedDict)
     else:
         assert not isinstance(tree["a"], asdf.tagged.TaggedDict)
+
+
+@pytest.mark.parametrize("tagged", [True, False])
+def test_load_yaml_recursion(tmp_path, tagged):
+    fn = tmp_path / "test.asdf"
+    tree = {}
+    tree["d"] = {}
+    tree["d"]["d"] = tree["d"]
+    tree["l"] = []
+    tree["l"].append(tree["l"])
+    asdf.AsdfFile(tree).write_to(fn)
+    tree = util.load_yaml(fn, tagged=tagged)
+    assert tree["d"]["d"] is tree["d"]
+    assert tree["l"][0] is tree["l"]
