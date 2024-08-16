@@ -193,3 +193,15 @@ skip="*.pdf,*.asdf,.tox,asdf/_extern,asdf/_jsonschema,build,./tags,.git,docs/_bu
 ignore-words-list="""
 fo,afile,
 """
+
+[tool.towncrier]
+filename = "CHANGES.rst"
+directory = "changes"
+package = "asdf"
+title_format = "{version} ({project_date})"
+
+[tool.changelog-bot.towncrier_changelog]
+enabled = true
+verify_pr_number = true
+changelog_skip_label = "no-changelog-entry-needed"
+changelog_noop_label = "skip-changelog-checks"
