@@ -26,5 +26,5 @@ jobs:
           fetch-depth: 0
       - run: pip install .
       - run: pip install towncrier
-      - run: towncrier build
-      - run: grep -P '\[[^\]]*#${{ github.event.number }}[,\]]' CHANGES.rst
+      - run: towncrier check
+      - run: towncrier build --draft | grep -P '\[[^\]]*#${{ github.event.number }}[,\]]'
