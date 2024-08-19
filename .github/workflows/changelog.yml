@@ -27,4 +27,4 @@ jobs:
       - run: pip install .
       - run: pip install towncrier
       - run: towncrier check
-      - run: towncrier build --draft | grep -P '\[[^\]]*#${{ github.event.number }}[,\]]'
+      - run: towncrier build --draft | grep -P '[\(\[][^\)\]]*#${{ github.event.number }}[,\)\]]'

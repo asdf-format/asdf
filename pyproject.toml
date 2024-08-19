@@ -200,3 +200,5 @@ directory = "changes"
 package = "asdf"
 title_format = "{version} ({project_date})"
 ignore = [".gitkeep"]
+wrap = true
+issue_format = "`#{issue} <https://github.com/asdf-format/asdf/pull/{issue}>`_"
