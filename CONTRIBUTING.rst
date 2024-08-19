@@ -53,3 +53,13 @@ to the maintainers, who are glad to assist you.
     a maintainer, you can comment ``@meeseeksdev backport to <branch>`` on a pull
     request to manually trigger a backport. Moreover, when merging a "backport"
     pull request, please use the "Rebase and merge" option.
+
+.. note::
+    When making a public change, add a news fragment to ``changes/`` with the
+    filename ``<PR#>.<changetype>.rst``. The change types are as follows:
+
+    - ``feature``: new feature
+    - ``bugfix``: bug fix
+    - ``doc``: documentation change
+    - ``removal``: deprecation or removal of public API
+    - ``misc``: not of interest to users

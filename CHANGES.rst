@@ -1,10 +1,5 @@
-3.5.0 (unreleased)
-------------------
-
--
-
 3.4.0 (2024-08-04)
-------------------
+==================
 
 - Fix issue where roundtripping a masked array with no masked values removes the mask [#1803]
 
@@ -19,7 +14,7 @@
 - Bumped minimal requirement on ``attrs`` from ``20.1.0`` to ``22.2.0`` [#1815]
 
 3.3.0 (2024-07-12)
-------------------
+==================
 
 - Fix ``__asdf_traverse__`` for non-tagged objects [#1739]
 
@@ -58,7 +53,7 @@
 - Deprecate ``copy_arrays`` in favor of ``memmap`` [#1797]
 
 3.2.0 (2024-04-05)
-------------------
+==================
 
 - Deprecate ``AsdfFile.version_map`` [#1745]
 
@@ -70,7 +65,7 @@
 
 
 3.1.0 (2024-02-27)
-------------------
+==================
 
 The ASDF Standard is at v1.6.0
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
@@ -118,7 +113,7 @@ The ASDF Standard is at v1.6.0
 
 
 3.0.1 (2023-10-30)
-------------------
+==================
 
 The ASDF Standard is at v1.6.0
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
@@ -130,7 +125,7 @@ The ASDF Standard is at v1.6.0
 
 
 3.0.0 (2023-10-16)
-------------------
+==================
 
 The ASDF Standard is at v1.6.0
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
@@ -162,7 +157,7 @@ The ASDF Standard is at v1.6.0
   for ``asdftool diff`` comparisons [#1652]
 
 2.15.2 (2023-09-29)
--------------------
+==================-
 
 The ASDF Standard is at v1.6.0
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
@@ -170,7 +165,7 @@ The ASDF Standard is at v1.6.0
 - Add support for python 3.12 [#1641]
 
 2.15.1 (2023-08-07)
--------------------
+==================-
 
 The ASDF Standard is at v1.6.0
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
@@ -183,7 +178,7 @@ The ASDF Standard is at v1.6.0
 - Drop jsonschema as a dependency [#1614]
 
 2.15.0 (2023-03-28)
--------------------
+==================-
 
 The ASDF Standard is at v1.6.0
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
@@ -222,7 +217,7 @@ The ASDF Standard is at v1.6.0
 - rename master branch to main [#1479]
 
 2.14.4 (2022-03-17)
--------------------
+==================-
 
 The ASDF Standard is at v1.6.0
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
@@ -230,7 +225,7 @@ The ASDF Standard is at v1.6.0
 - require jsonschema<4.18 [#1487]
 
 2.14.3 (2022-12-15)
--------------------
+==================-
 
 The ASDF Standard is at v1.6.0
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
@@ -240,7 +235,7 @@ The ASDF Standard is at v1.6.0
 - Bump asdf-transform-schemas version [#1278]
 
 2.14.2 (2022-12-05)
--------------------
+==================-
 
 The ASDF Standard is at v1.6.0
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
@@ -248,7 +243,7 @@ The ASDF Standard is at v1.6.0
 - Fix issue #1256, where ``enum`` could not be used on tagged objects. [#1257]
 
 2.14.1 (2022-11-23)
--------------------
+==================-
 
 The ASDF Standard is at v1.6.0
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
@@ -257,7 +252,7 @@ The ASDF Standard is at v1.6.0
 - Add ndarray-1.1.0 and integer-1.1.0 support [#1250]
 
 2.14.0 (2022-11-22)
--------------------
+==================-
 
 The ASDF Standard is at v1.6.0
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
@@ -279,7 +274,7 @@ The ASDF Standard is at v1.6.0
 - Fix issue #1232 where array data was duplicated during resaving of a fits file [#1234]
 
 2.13.0 (2022-08-19)
--------------------
+==================-
 
 The ASDF Standard is at v1.6.0
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
@@ -288,7 +283,7 @@ The ASDF Standard is at v1.6.0
   method. [#1167]
 
 2.12.1 (2022-08-17)
--------------------
+==================-
 
 The ASDF Standard is at v1.6.0
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
@@ -299,7 +294,7 @@ The ASDF Standard is at v1.6.0
 - Pin ``jsonschema`` to below ``4.10.0``. [#1171]
 
 2.12.0 (2022-06-06)
--------------------
+==================-
 
 The ASDF Standard is at v1.6.0
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
@@ -309,12 +304,12 @@ The ASDF Standard is at v1.6.0
 - Add ability to set asdf-standard version for schema example items. [#1143]
 
 2.11.2 (2022-08-17)
--------------------
+==================-
 
 - Backport ``jsonschema`` pin to strictly less than 4.10.1. [#1175]
 
 2.11.1 (2022-04-15)
--------------------
+==================-
 
 The ASDF Standard is at v1.6.0
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
@@ -322,7 +317,7 @@ The ASDF Standard is at v1.6.0
 - Update minimum astropy version to 5.0.4. [#1133]
 
 2.11.0 (2022-03-15)
--------------------
+==================-
 
 The ASDF Standard is at v1.6.0
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
@@ -330,7 +325,7 @@ The ASDF Standard is at v1.6.0
 - Update minimum jsonschema version to 4.0.1. [#1105]
 
 2.10.1 (2022-03-02)
--------------------
+==================-
 
 The ASDF Standard is at v1.6.0
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
@@ -340,7 +335,7 @@ The ASDF Standard is at v1.6.0
 - Fix small bug with handling multiple schema uris per tag. [#1095]
 
 2.10.0 (2022-02-17)
--------------------
+==================-
 
 The ASDF Standard is at v1.6.0
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
@@ -348,7 +343,7 @@ The ASDF Standard is at v1.6.0
 - Replace asdf-standard submodule with pypi package. [#1079]
 
 2.9.2 (2022-02-07)
-------------------
+==================
 
 The ASDF Standard is at v1.6.0
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
@@ -358,7 +353,7 @@ The ASDF Standard is at v1.6.0
 - Fix bug in pytest plugin when schemas are not in a directory named "schemas". [#1076]
 
 2.9.1 (2022-02-03)
-------------------
+==================
 
 The ASDF Standard is at v1.6.0
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
@@ -366,7 +361,7 @@ The ASDF Standard is at v1.6.0
 - Fix typo in testing module ``__init__.py`` name. [#1071]
 
 2.9.0 (2022-02-02)
-------------------
+==================
 
 The ASDF Standard is at v1.6.0
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
@@ -394,7 +389,7 @@ The ASDF Standard is at v1.6.0
   helpers previously available in ``asdf.tests.helpers``. [#1067]
 
 2.8.3 (2021-12-13)
-------------------
+==================
 
 The ASDF Standard is at v1.6.0
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
@@ -402,7 +397,7 @@ The ASDF Standard is at v1.6.0
 - Fix more use of 'python' where 'python3' is intended. [#1033]
 
 2.8.2 (2021-12-06)
-------------------
+==================
 
 The ASDF Standard is at v1.6.0
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
@@ -420,13 +415,13 @@ The ASDF Standard is at v1.6.0
   instances. [#1031]
 
 2.8.1 (2021-06-09)
-------------------
+==================
 
 - Fix bug in block manager when a new block is added to an existing
   file without a block index. [#1000]
 
 2.8.0 (2021-05-12)
-------------------
+==================
 
 The ASDF Standard is at v1.6.0
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
@@ -506,7 +501,7 @@ The ASDF Standard is at v1.6.0
 - Update asdf-standard to 1.6.0 tag. [#993]
 
 2.7.5 (2021-06-09)
-------------------
+==================
 
 The ASDF Standard is at v1.5.0
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
@@ -518,7 +513,7 @@ The ASDF Standard is at v1.5.0
   file without a block index. [#1000]
 
 2.7.4 (2021-04-30)
-------------------
+==================
 
 The ASDF Standard is at v1.5.0
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
@@ -534,7 +529,7 @@ The ASDF Standard is at v1.5.0
 - Prevent astropy warnings in tests when opening known bad files. [#977]
 
 2.7.3 (2021-02-25)
-------------------
+==================
 
 The ASDF Standard is at v1.5.0
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
@@ -546,7 +541,7 @@ The ASDF Standard is at v1.5.0
   FITS arrays. [#930]
 
 2.7.2 (2021-01-15)
-------------------
+==================
 
 The ASDF Standard is at v1.5.0
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
@@ -556,7 +551,7 @@ The ASDF Standard is at v1.5.0
 - Fix bug when decompressing arrays with numpy 1.20.  [#901, #909]
 
 2.7.1 (2020-08-18)
-------------------
+==================
 
 The ASDF Standard is at v1.5.0
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
@@ -565,7 +560,7 @@ The ASDF Standard is at v1.5.0
   ``AsdfFile`` is closed. [#869]
 
 2.7.0 (2020-07-23)
-------------------
+==================
 
 The ASDF Standard is at v1.5.0
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
@@ -628,7 +623,7 @@ The ASDF Standard is at v1.5.0
   properties. [#832]
 
 2.6.0 (2020-04-22)
-------------------
+==================
 
 The ASDF Standard is at v1.5.0
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
@@ -664,7 +659,7 @@ The ASDF Standard is at v1.5.0
   to handle internal references and reference cycles. [#781]
 
 2.5.2 (2020-02-28)
-------------------
+==================
 
 The ASDF Standard is at v1.4.0
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
@@ -684,7 +679,7 @@ The ASDF Standard is at v1.4.0
 - Simplify example in README.rst [#763]
 
 2.5.1 (2020-01-07)
-------------------
+==================
 
 The ASDF Standard is at v1.4.0
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
@@ -693,7 +688,7 @@ The ASDF Standard is at v1.4.0
   an installed asdf package. [#732]
 
 2.5.0 (2019-12-23)
-------------------
+==================
 
 The ASDF Standard is at v1.4.0
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
@@ -710,7 +705,7 @@ The ASDF Standard is at v1.4.0
 - Fix bug causing segfault after update of a memory-mapped file. [#716]
 
 2.4.2 (2019-08-29)
-------------------
+==================
 
 The ASDF Standard is at v1.3.0
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
@@ -719,7 +714,7 @@ The ASDF Standard is at v1.3.0
   around a Deprecation warning. [#700]
 
 2.4.1 (2019-08-27)
-------------------
+==================
 
 The ASDF Standard is at v1.3.0
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
@@ -741,7 +736,7 @@ The ASDF Standard is at v1.3.0
   property. [#673]
 
 2.3.3 (2019-04-02)
-------------------
+==================
 
 The ASDF Standard is at v1.3.0
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
@@ -759,7 +754,7 @@ The ASDF Standard is at v1.3.0
 - Allow use of ``pathlib.Path`` objects for ``custom_schema`` option. [#663]
 
 2.3.2 (2019-02-19)
-------------------
+==================
 
 The ASDF Standard is at v1.3.0
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
@@ -768,7 +763,7 @@ The ASDF Standard is at v1.3.0
   found in file. [#641]
 
 2.3.1 (2018-12-20)
-------------------
+==================
 
 The ASDF Standard is at v1.3.0
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
@@ -785,7 +780,7 @@ The ASDF Standard is at v1.3.0
   visible. [#633]
 
 2.3.0 (2018-11-28)
-------------------
+==================
 
 The ASDF Standard is at v1.3.0
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
@@ -807,13 +802,13 @@ The ASDF Standard is at v1.3.0
 - Update ASDF Standard submodule to version 1.3.0.
 
 2.2.1 (2018-11-15)
-------------------
+==================
 
 - Fix an issue with the README that caused sporadic installation failures and
   also prevented the long description from being rendered on pypi. [#607]
 
 2.2.0 (2018-11-14)
-------------------
+==================
 
 - Add new parameter ``lazy_load`` to ``AsdfFile.open``. It is ``True`` by
   default and preserves the default behavior. ``False`` detaches the
@@ -833,14 +828,14 @@ The ASDF Standard is at v1.3.0
   handle is readonly. [#579]
 
 2.1.2 (2018-11-13)
-------------------
+==================
 
 - Make sure that all types corresponding to core tags are added to the type
   index before any others. This fixes a bug that was related to the way that
   subclass tags were overwritten by external extensions. [#598]
 
 2.1.1 (2018-11-01)
-------------------
+==================
 
 - Make sure extension metadata is written even when constructing the ASDF tree
   on-the-fly. [#549]
@@ -859,7 +854,7 @@ The ASDF Standard is at v1.3.0
   is converted to basic Python data structures. [#571]
 
 2.1.0 (2018-09-25)
-------------------
+==================
 
 - Add API function for retrieving history entries. [#501]
 
@@ -875,7 +870,7 @@ The ASDF Standard is at v1.3.0
 - Add top-level ``keys`` method to ``AsdfFile`` to access tree keys. [#545]
 
 2.0.3 (2018-09-06)
-------------------
+==================
 
 - Update asdf-standard to reflect more stringent (and, consequently, more
   correct) requirements on the formatting of complex numbers. [#526]
@@ -886,7 +881,7 @@ The ASDF Standard is at v1.3.0
   [#539]
 
 2.0.2 (2018-07-27)
-------------------
+==================
 
 - Allow serialization of broadcasted ``numpy`` arrays. [#507]
 
@@ -900,12 +895,12 @@ The ASDF Standard is at v1.3.0
   schema file. [#522]
 
 2.0.1 (2018-05-08)
-------------------
+==================
 
 - Allow test suite to run even when package is not installed. [#502]
 
 2.0.0 (2018-04-19)
-------------------
+==================
 
 - Astropy-specific tags have moved to Astropy core package. [#359]
 
@@ -964,14 +959,14 @@ The ASDF Standard is at v1.3.0
   ``fits``. Bump top-level ASDF schema version to v1.1.0. [#444]
 
 1.3.3 (2018-03-01)
-------------------
+==================
 
 - Update test infrastructure to rely on new Astropy v3.0 plugins. [#461]
 
 - Disable use of 2to3. This was causing test failures on Debian builds. [#463]
 
 1.3.2 (2018-02-22)
-------------------
+==================
 
 - Updates to allow this version of ASDF to be compatible with Astropy v3.0.
   [#450]
@@ -980,7 +975,7 @@ The ASDF Standard is at v1.3.0
   testing infrastructure. [#458]
 
 1.3.1 (2017-11-02)
-------------------
+==================
 
 - Relax requirement on ``semantic_version`` version to 2.3.1. [#361]
 
@@ -992,7 +987,7 @@ The ASDF Standard is at v1.3.0
   [#371]
 
 1.3.0 (2017-10-24)
-------------------
+==================
 
 - Fixed a bug in reading data from an "http:" url. [#231]
 
@@ -1063,13 +1058,13 @@ The ASDF Standard is at v1.3.0
   ``__setitem__``. [#352]
 
 1.2.1 (2016-11-07)
-------------------
+==================
 
 - Make asdf conditionally dependent on the version of astropy to allow
   running it with older versions of astropy. [#228]
 
 1.2.0 (2016-10-04)
-------------------
+==================
 
 - Added Tabular model. [#214]
 
@@ -1080,18 +1075,18 @@ The ASDF Standard is at v1.3.0
 - Fixed version error message [#224]
 
 1.0.5 (2016-06-28)
-------------------
+==================
 
 - Fixed a memory leak when reading wcs that grew memory to over 10 Gb. [#200]
 
 1.0.4 (2016-05-25)
-------------------
+==================
 
 - Added wrapper class for astropy.core.Time, TaggedTime. [#198]
 
 
 1.0.2 (2016-02-29)
-------------------
+==================
 
 - Renamed package to ASDF. [#190]
 
@@ -1099,7 +1094,7 @@ The ASDF Standard is at v1.3.0
 
 
 1.0.1 (2016-01-08)
-------------------
+==================
 
 - Fixed installation from the source tarball on Python 3. [#187]
 
@@ -1111,6 +1106,6 @@ The ASDF Standard is at v1.3.0
 
 
 1.0.0 (2015-09-18)
-------------------
+==================
 
 - Initial release.
