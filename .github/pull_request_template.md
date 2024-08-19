@@ -29,6 +29,6 @@ If this PR fixes an issue, please add closing keywords (eg 'fixes #XXX')
 
 - [ ] pre-commit checks ran successfully
 - [ ] tests ran successfully
-- [ ] for a public change, a changelog entry was added
-- [ ] for a public change, documentation was updated
+- [ ] for a public change, added news fragment (`changes/<PR#>.<changetype>.rst`)
+- [ ] for a public change, updated documentation
 - [ ] for any new features, unit tests were added
