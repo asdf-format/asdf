@@ -202,3 +202,9 @@ title_format = "{version} ({project_date})"
 ignore = [".gitkeep"]
 wrap = true
 issue_format = "`#{issue} <https://github.com/asdf-format/asdf/pull/{issue}>`_"
+
+[tool.towncrier.fragment.feature]
+[tool.towncrier.fragment.bugfix]
+[tool.towncrier.fragment.doc]
+[tool.towncrier.fragment.removal]
+[tool.towncrier.fragment.general]

@@ -35,7 +35,7 @@ If this PR fixes an issue, please add closing keywords (eg 'fixes #XXX')
     - ``changes/<PR#>.bugfix.rst``: bug fix
     - ``changes/<PR#>.doc.rst``: documentation change
     - ``changes/<PR#>.removal.rst``: deprecation or removal of public API
-    - ``changes/<PR#>.misc.rst``: not of interest to users; use an empty file
+    - ``changes/<PR#>.general.rst``: infrastructure or miscellaneous change
   </details>
 - [ ] for a public change, updated documentation
 - [ ] for any new features, unit tests were added
