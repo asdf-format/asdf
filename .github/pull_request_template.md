@@ -29,7 +29,7 @@ If this PR fixes an issue, please add closing keywords (eg 'fixes #XXX')
 
 - [ ] pre-commit checks ran successfully
 - [ ] tests ran successfully
-- [ ] for a public change, added <details><summary>news fragment (`changes/<PR#>.<changetype>.rst`)</summary>
+- [ ] for a public change, added a [towncrier](https://towncrier.readthedocs.io/en/stable/) <details><summary>news fragment (`changes/<PR#>.<changetype>.rst`)</summary>
 
     - ``changes/<PR#>.feature.rst``: new feature
     - ``changes/<PR#>.bugfix.rst``: bug fix
