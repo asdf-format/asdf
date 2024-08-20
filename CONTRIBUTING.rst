@@ -62,4 +62,4 @@ to the maintainers, who are glad to assist you.
     - ``bugfix``: bug fix
     - ``doc``: documentation change
     - ``removal``: deprecation or removal of public API
-    - ``misc``: not of interest to users
+    - ``general``: infrastructure or miscellaneous change

@@ -29,6 +29,13 @@ If this PR fixes an issue, please add closing keywords (eg 'fixes #XXX')
 
 - [ ] pre-commit checks ran successfully
 - [ ] tests ran successfully
-- [ ] for a public change, added news fragment (`changes/<PR#>.<changetype>.rst`)
+- [ ] for a public change, added a [towncrier news fragment](https://towncrier.readthedocs.io/en/stable/tutorial.html#creating-news-fragments) <details><summary>`changes/<PR#>.<changetype>.rst`</summary>
+
+    - ``changes/<PR#>.feature.rst``: new feature
+    - ``changes/<PR#>.bugfix.rst``: bug fix
+    - ``changes/<PR#>.doc.rst``: documentation change
+    - ``changes/<PR#>.removal.rst``: deprecation or removal of public API
+    - ``changes/<PR#>.general.rst``: infrastructure or miscellaneous change
+  </details>
 - [ ] for a public change, updated documentation
 - [ ] for any new features, unit tests were added
