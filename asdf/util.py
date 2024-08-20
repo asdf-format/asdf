@@ -86,12 +86,12 @@ def load_yaml(init, tagged=False):
     """
 
     from .generic_io import get_file
-    from .yamlutil import AsdfLoader
+    from .yamlutil import AsdfLoader, _IgnoreCustomTagsLoader
 
     if tagged:
         loader = AsdfLoader
     else:
-        loader = yaml.CBaseLoader if getattr(yaml, "__with_libyaml__", None) else yaml.BaseLoader
+        loader = _IgnoreCustomTagsLoader
 
     with get_file(init, "r") as gf:
         reader = gf.reader_until(
