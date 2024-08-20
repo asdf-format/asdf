@@ -158,3 +158,9 @@ def test_copy_arrays_deprecation(copy_arrays, memmap, tmp_path):
     with pytest.warns(AsdfWarning, match="copy_arrays is deprecated; use memmap instead"):
         with asdf.open(fn, copy_arrays=copy_arrays, memmap=memmap) as af:
             pass
+
+
+@pytest.mark.parametrize("value", [True, False])
+def test_ignore_version_mismatch_deprecation(value):
+    with pytest.warns(AsdfDeprecationWarning, match="ignore_version_mismatch is deprecated"):
+        asdf.AsdfFile({}, ignore_version_mismatch=value)
