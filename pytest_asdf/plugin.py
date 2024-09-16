@@ -34,7 +34,6 @@ import pathlib
 import warnings
 from dataclasses import dataclass
 
-import numpy as np
 import pytest
 import yaml
 
@@ -249,7 +248,7 @@ class AsdfSchemaExampleItem(pytest.Item):
         return result
 
     def runtest(self):
-        from asdf import AsdfFile, _block, generic_io
+        from asdf import AsdfFile
         from asdf.testing import helpers
 
         # Make sure that the examples in the schema files (and thus the
@@ -261,18 +260,18 @@ class AsdfSchemaExampleItem(pytest.Item):
             ignore_unrecognized_tag=self.ignore_unrecognized_tag,
         )
 
-        # Fake an external file
-        ff2 = AsdfFile({"data": np.empty((1024 * 1024 * 8), dtype=np.uint8)})
+        # # Fake an external file
+        # ff2 = AsdfFile({"data": np.empty((1024 * 1024 * 8), dtype=np.uint8)})
 
-        ff._external_asdf_by_uri[
-            (pathlib.Path(self.filename).expanduser().absolute().parent / "external.asdf").as_uri()
-        ] = ff2
+        # ff._external_asdf_by_uri[
+        #     (pathlib.Path(self.filename).expanduser().absolute().parent / "external.asdf").as_uri()
+        # ] = ff2
 
-        wb = _block.writer.WriteBlock(np.zeros(1024 * 1024 * 8, dtype=np.uint8))
-        with generic_io.get_file(buff, mode="rw") as f:
-            f.seek(0, 2)
-            _block.writer.write_blocks(f, [wb, wb], streamed_block=wb)
-            f.seek(0)
+        # wb = _block.writer.WriteBlock(np.zeros(1024 * 1024 * 8, dtype=np.uint8))
+        # with generic_io.get_file(buff, mode="rw") as f:
+        #     f.seek(0, 2)
+        #     _block.writer.write_blocks(f, [wb, wb], streamed_block=wb)
+        #     f.seek(0)
 
         try:
             ff._open_impl(ff, buff, mode="rw")
