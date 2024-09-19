@@ -1,4 +1,5 @@
 import copy
+import gc
 
 from asdf._block.key import Key
 
@@ -41,6 +42,7 @@ def test_is_valid():
     bk = Key(f)
     assert bk._is_valid()
     del f
+    gc.collect(2)
     assert not bk._is_valid()
 
 
@@ -48,6 +50,7 @@ def test_same_class():
     f = Foo()
     bk = Key(f)
     del f
+    gc.collect(2)
     f2 = Foo()
     assert not bk._is_valid()
     assert not bk._matches_object(f2)
@@ -92,6 +95,7 @@ def test_deleted_object_not_equal():
     k1 = Key(f, key_value)
     k2 = Key(f, key_value)
     del f
+    gc.collect(2)
     assert k1 != k2
 
 
@@ -113,4 +117,5 @@ def test_copy_deleted_object_not_equal():
     k1 = Key(f)
     k2 = copy.copy(k1)
     del f
+    gc.collect(2)
     assert k1 != k2

@@ -1,3 +1,5 @@
+import gc
+
 import pytest
 
 from asdf._block.callback import DataCallback
@@ -35,6 +37,7 @@ def test_weakref():
     blks = ReadBlocks([Data("a"), Data("b")])
     cb = DataCallback(0, blks)
     del blks
+    gc.collect(2)
 
     with pytest.raises(OSError, match="Attempt to read block data from missing block"):
         cb()

@@ -181,6 +181,7 @@ def test_access_after_del(tmp_path):
         d = af["a"]
 
     del af
+    gc.collect(2)
 
     with pytest.raises(asdf.exceptions.AsdfLazyReferenceError, match="Failed to resolve"):
         d["b"]
@@ -215,10 +216,14 @@ def test_lazy_tree_option(tmp_path):
 def test_resolve_af_ref():
     with pytest.raises(asdf.exceptions.AsdfLazyReferenceError, match="Failed to resolve"):
         _resolve_af_ref(None)
+
     af = asdf.AsdfFile()
     af_ref = weakref.ref(af)
     assert _resolve_af_ref(af_ref) is af
+
     del af
+    gc.collect(2)
+
     with pytest.raises(asdf.exceptions.AsdfLazyReferenceError, match="Failed to resolve"):
         _resolve_af_ref(af_ref)
 
@@ -285,7 +290,7 @@ def test_cache_frees_deleted_object(cache_test_tree_path):
         # now delete all references to the list (including the one in the tree)
         del l0, af.tree["a"]
         # trigger garbage collection
-        gc.collect()
+        gc.collect(2)
         # check that the weakref fails to resolve (so the list was freed)
         assert lref() is None
         # and we can no longer access 'a'
@@ -303,7 +308,7 @@ def test_cache_non_weakref():
     obj = complex(1, 1)
     cache_item = asdf.lazy_nodes._TaggedObjectCacheItem(tagged_node, obj)
     del obj
-    gc.collect()
+    gc.collect(2)
     assert cache_item.custom_object == complex(1, 1)
 
 
