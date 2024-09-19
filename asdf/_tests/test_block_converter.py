@@ -1,4 +1,5 @@
 import contextlib
+import gc
 
 import numpy as np
 from numpy.testing import assert_array_equal
@@ -290,6 +291,7 @@ def test_shared_block_obj_removal(tmp_path):
     with asdf.open(fn, mode="rw") as af:
         af["b"] = None
         del b
+        gc.collect(2)
         af.update()
     with asdf.open(fn) as af:
         np.testing.assert_array_equal(af["a"].data, arr1)

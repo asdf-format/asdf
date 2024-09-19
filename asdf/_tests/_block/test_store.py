@@ -1,3 +1,4 @@
+import gc
 from unittest.mock import patch
 
 import pytest
@@ -108,6 +109,7 @@ def test_get_memory_reused():
     s.assign_object(f, v)
     fid = id(f)
     del f
+    gc.collect(2)
     f2 = Foo()
 
     def mock_id(obj):
@@ -126,6 +128,7 @@ def test_set_memory_reused():
     s.assign_object(f, v)
     fid = id(f)
     del f
+    gc.collect(2)
     f2 = Foo()
 
     def mock_id(obj):
@@ -146,6 +149,7 @@ def test_cleanup():
     s.assign_object(s, 42)
     s.assign_object(k, 26)
     del f
+    gc.collect(2)
     s._cleanup()
     assert s.lookup_by_object(k, None) is None
 
@@ -172,3 +176,4 @@ def test_keys_for_value():
             returned_objects.add(obj)
         assert objs == returned_objects
         del returned_objects, objs
+        gc.collect(2)

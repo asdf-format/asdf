@@ -1,3 +1,5 @@
+import gc
+
 import numpy as np
 import pytest
 
@@ -14,6 +16,7 @@ def test_set_streamed_block_via_options():
     with pytest.raises(ValueError, match=r"Can not add second streaming block"):
         options.set_options(arr2, Options("streamed"))
     del arr1
+    gc.collect(2)
     options.set_options(arr2, Options("streamed"))
 
 
