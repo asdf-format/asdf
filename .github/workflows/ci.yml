@@ -43,6 +43,9 @@ jobs:
       default_python: '3.10'
       envs: |
         - linux: coverage
+          name: Python 3.13 coverage
+          python-version: 3.13-dev
+        - linux: coverage
           name: Python 3.12 coverage
           python-version: 3.12
         - linux: coverage
