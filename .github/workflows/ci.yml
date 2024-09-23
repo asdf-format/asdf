@@ -134,4 +134,4 @@ jobs:
       default_python: '3.12'
       envs: |
         - linux: profile
-          artifact-path: .profiles/*
+          artifact-path: profiles/*

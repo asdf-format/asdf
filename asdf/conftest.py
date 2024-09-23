@@ -17,7 +17,7 @@ try:
 
     @pytest.fixture(autouse=True)
     def auto_profile(request):
-        PROFILE_ROOT = TESTS_ROOT / ".profiles"
+        PROFILE_ROOT = TESTS_ROOT / "profiles"
         # Turn profiling on
         profiler = Profiler()
         profiler.start()
