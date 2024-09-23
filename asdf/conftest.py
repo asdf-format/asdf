@@ -1,4 +1,5 @@
 import os
+import urllib
 from pathlib import Path
 
 import pytest
@@ -25,7 +26,8 @@ try:
 
         profiler.stop()
         PROFILE_ROOT.mkdir(exist_ok=True)
-        results_file = PROFILE_ROOT / f"{request.node.name}.html"
+        fn = urllib.parse.quote(request.node.name)
+        results_file = PROFILE_ROOT / f"{fn}.html"
         profiler.write_html(results_file)
 
 except ImportError:
