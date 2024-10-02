@@ -1,1 +1,0 @@
-fix changelog checker to remove brackets

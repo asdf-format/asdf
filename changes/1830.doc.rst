@@ -1,1 +1,0 @@
-Change asdf standard changelog entries to notes to ease transition to towncrier
