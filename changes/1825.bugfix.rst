@@ -1,1 +1,0 @@
-Allow ``asdf.util.load_yaml`` to handle recursive objects

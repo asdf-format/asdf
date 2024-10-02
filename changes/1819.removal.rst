@@ -1,2 +1,0 @@
-Deprecate ``ignore_version_mismatch``. This option has done nothing since
-asdf 3.0.0 and will be removed in an upcoming asdf version

@@ -1,3 +1,37 @@
+3.5.0 (2024-10-02)
+==================
+
+Bugfix
+------
+
+- Allow ``asdf.util.load_yaml`` to handle recursive objects (`#1825
+  <https://github.com/asdf-format/asdf/pull/1825>`_)
+
+
+Doc
+---
+
+- added issue links to changelog entries (`#1827
+  <https://github.com/asdf-format/asdf/pull/1827>`_)
+- Change asdf standard changelog entries to notes to ease transition to
+  towncrier (`#1830 <https://github.com/asdf-format/asdf/pull/1830>`_)
+
+
+General
+-------
+
+- fix changelog checker to remove brackets (`#1828
+  <https://github.com/asdf-format/asdf/pull/1828>`_)
+
+
+Removal
+-------
+
+- Deprecate ``ignore_version_mismatch``. This option has done nothing since
+  asdf 3.0.0 and will be removed in an upcoming asdf version (`#1819
+  <https://github.com/asdf-format/asdf/pull/1819>`_)
+
+
 3.4.0 (2024-08-04)
 ==================
 
