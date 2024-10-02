@@ -43,7 +43,7 @@ def test_tagged_list_base():
 
     assert isinstance(value.base, list)
     assert not isinstance(value.base, TaggedList)
-    assert value.base.__class__ == list
+    assert value.base.__class__ is list
 
 
 def test_tagged_dict_deepcopy():
@@ -83,7 +83,7 @@ def test_tagged_dict_base():
 
     assert isinstance(value.base, dict)
     assert not isinstance(value.base, TaggedDict)
-    assert value.base.__class__ == dict
+    assert value.base.__class__ is dict
 
 
 def test_tagged_string_deepcopy():
@@ -116,7 +116,7 @@ def test_tagged_string_base():
 
     assert isinstance(value.base, str)
     assert not isinstance(value.base, TaggedString)
-    assert value.base.__class__ == str
+    assert value.base.__class__ is str
 
 
 ASDF_UNIT_TAG = "stsci.edu:asdf/unit/unit-1.0.0"
