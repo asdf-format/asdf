@@ -4,7 +4,3 @@ git+https://github.com/yaml/pyyaml.git
 git+https://github.com/python-attrs/attrs
 
 numpy>=0.0.dev0
-# although we don't use scipy, we include it here so that any dependency
-# that uses it during these tests will use the development version
-# which is more likely to work with the above development version of numpy
-scipy>=0.0.dev0
