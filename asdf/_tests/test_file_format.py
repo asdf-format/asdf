@@ -22,7 +22,6 @@ baz: 42
         pass
 
     buff.seek(0)
-    fd = generic_io.InputStream(buff, "r")
     with pytest.raises(ValueError, match=r"End of YAML marker not found"), asdf.open(buff):
         pass
 

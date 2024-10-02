@@ -119,7 +119,7 @@ def test_node_inheritance(NodeClass, data, base):
 )
 def test_node_empty_init(NodeClass, base):
     node = NodeClass()
-    assert type(node.tagged) == base
+    assert type(node.tagged) is base
 
 
 @pytest.mark.parametrize(
