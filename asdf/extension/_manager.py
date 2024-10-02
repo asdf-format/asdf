@@ -82,7 +82,7 @@ class ExtensionManager:
         # imported. We don't want to do this unnecessarily and since
         # class instances do not contain the public class path
         # we adopt a strategy of checking class paths and only
-        # registering those that have already been imported. Thiss
+        # registering those that have already been imported. This
         # is ok because asdf will only use the converter type
         # when attempting to serialize an object in memory (so the
         # public class path will already be imported at the time
