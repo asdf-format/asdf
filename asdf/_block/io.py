@@ -105,7 +105,7 @@ def read_block_header(fd, offset=None):
     return validate_block_header(header)
 
 
-def read_block_data(fd, header, offset=None, memmap=False):
+def read_block_data(fd, header, offset=None, memmap=False, out=None):
     """
     Read (or memory map) data for an ASDF block.
 
@@ -126,6 +126,9 @@ def read_block_data(fd, header, offset=None, memmap=False):
         A compressed block will never be memmapped and if the file ``fd``
         does not support memmapping the data will not be memmapped (and
         no error will be raised).
+
+    out : ndarray, optional
+        Destination array for read block data.
 
     Returns
     -------
@@ -148,13 +151,14 @@ def read_block_data(fd, header, offset=None, memmap=False):
     compression = mcompression.validate(header["compression"])
     if compression:
         # compressed data will not be memmapped
-        data = mcompression.decompress(fd, used_size, header["data_size"], compression)
+        data = mcompression.decompress(fd, used_size, header["data_size"], compression, out=out)
         fd.fast_forward(header["allocated_size"] - header["used_size"])
     else:
         if memmap and fd.can_memmap():
             data = fd.memmap_array(offset, used_size)
             ff_bytes = header["allocated_size"]
         else:
+            # TODO update to read into out
             data = fd.read_into_array(used_size)
             ff_bytes = header["allocated_size"] - header["used_size"]
         if (header["flags"] & constants.BLOCK_FLAG_STREAMED) and fd.seekable():
@@ -164,7 +168,7 @@ def read_block_data(fd, header, offset=None, memmap=False):
     return data
 
 
-def read_block(fd, offset=None, memmap=False, lazy_load=False):
+def read_block(fd, offset=None, memmap=False, lazy_load=False, out=None):
     """
     Read a block (header and data) from an ASDF file.
 
@@ -186,6 +190,9 @@ def read_block(fd, offset=None, memmap=False, lazy_load=False):
     lazy_load : bool, optional, default False
         Return a callable that when called will read the block data. This
         option is ignored for a non-seekable file.
+
+    out : ndarray, optional
+        Destination array for read block data.
 
     Returns
     -------
@@ -216,13 +223,15 @@ def read_block(fd, offset=None, memmap=False, lazy_load=False):
         # setup a callback to later load the data
         fd_ref = weakref.ref(fd)
 
-        def callback():
+        def callback(out=None):
+            # out here can be different since this callback might be called
+            # at a later point
             fd = fd_ref()
             if fd is None or fd.is_closed():
                 msg = "ASDF file has already been closed. Can not get the data."
                 raise OSError(msg)
             position = fd.tell()
-            data = read_block_data(fd, header, offset=data_offset, memmap=memmap)
+            data = read_block_data(fd, header, offset=data_offset, memmap=memmap, out=out)
             fd.seek(position)
             return data
 
@@ -232,7 +241,7 @@ def read_block(fd, offset=None, memmap=False, lazy_load=False):
         else:
             fd.fast_forward(header["allocated_size"])
     else:
-        data = read_block_data(fd, header, offset=None, memmap=memmap)
+        data = read_block_data(fd, header, offset=None, memmap=memmap, out=out)
     return offset, header, data_offset, data
 
 
