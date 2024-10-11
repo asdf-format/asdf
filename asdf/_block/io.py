@@ -158,8 +158,7 @@ def read_block_data(fd, header, offset=None, memmap=False, out=None):
             data = fd.memmap_array(offset, used_size)
             ff_bytes = header["allocated_size"]
         else:
-            # TODO update to read into out
-            data = fd.read_into_array(used_size)
+            data = fd.read_into_array(used_size, out=out)
             ff_bytes = header["allocated_size"] - header["used_size"]
         if (header["flags"] & constants.BLOCK_FLAG_STREAMED) and fd.seekable():
             fd.seek(0, os.SEEK_END)
