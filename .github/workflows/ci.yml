@@ -32,7 +32,12 @@ jobs:
     runs-on: ubuntu-latest
     steps:
     - uses: actions/checkout@v4
-    - uses: actions/setup-python@v5
+    - uses: astral-sh/setup-uv@f3bcaebff5eace81a1c062af9f9011aae482ca9d # v3.1.7
+      with:
+        version: "0.4.22"
+        enable-cache: true
+        cache-dependency-glob: "pyproject.toml"
+    - run: uv python install 3
     - uses: pre-commit/action@v3.0.1
   core:
     needs: [pre-commit]

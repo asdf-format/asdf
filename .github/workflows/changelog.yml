@@ -18,13 +18,16 @@ jobs:
     if: ${{ !contains(github.event.pull_request.labels.*.name, 'no-changelog-entry-needed') }}
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/setup-python@v5
-        with:
-          python-version: 3
       - uses: actions/checkout@v4
         with:
           fetch-depth: 0
-      - run: pip install .
-      - run: pip install towncrier
+      - uses: astral-sh/setup-uv@f3bcaebff5eace81a1c062af9f9011aae482ca9d # v3.1.7
+        with:
+          version: "0.4.22"
+          enable-cache: true
+          cache-dependency-glob: "pyproject.toml"
+      - run: uv python install 3
+      - run: uv pip install .
+      - run: uv pip install towncrier
       - run: towncrier check
       - run: towncrier build --draft | grep -P '#${{ github.event.number }}'
