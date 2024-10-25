@@ -132,7 +132,7 @@ def atomic_open(filename, mode='w'):
     """
     if mode in ('r', 'rb', 'r+', 'rb+', 'a', 'ab'):
         raise TypeError('Read or append modes don\'t work with atomic_open')
-    f = tempfile.NamedTemporaryFile(mode, prefix='.___atomic_write',
+    f = tempfile.NamedTemporaryFile(mode, prefix='.asdf_tmp',
                                     dir=os.path.dirname(filename),
                                     delete=False)
     return _AtomicWFile(f, f.name, filename)
