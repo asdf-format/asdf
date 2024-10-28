@@ -80,8 +80,6 @@ def test_external_reference(tmp_path):
         assert_array_equal(ff.tree["internal"], exttree["cool_stuff"]["a"])
 
     with asdf.AsdfFile({}, uri=(tmp_path / "main.asdf").as_uri()) as ff:
-        # avoid passing tree to AsdfFile to avoid the deprecation warning, this can be updated
-        # when automatic find_references on AsdfFile.__init__ is removed
         ff.tree = tree
         ff.find_references()
         do_asserts(ff)
@@ -89,14 +87,12 @@ def test_external_reference(tmp_path):
         internal_path = os.path.join(str(tmp_path), "main.asdf")
         ff.write_to(internal_path)
 
-    with pytest.warns(AsdfDeprecationWarning, match="find_references during open"), asdf.open(internal_path) as ff:
-        # this can be updated to add a find_references call when the deprecated automatic
-        # find_references on open is removed
+    with asdf.open(internal_path) as ff:
+        ff.find_references()
         do_asserts(ff)
 
-    with pytest.warns(AsdfDeprecationWarning, match="find_references during open"), asdf.open(internal_path) as ff:
-        # this can be updated to add a find_references call when the deprecated automatic
-        # find_references on open is removed
+    with asdf.open(internal_path) as ff:
+        ff.find_references()
         assert len(ff._external_asdf_by_uri) == 0
         ff.resolve_references()
         assert len(ff._external_asdf_by_uri) == 2
@@ -124,16 +120,12 @@ def test_external_reference(tmp_path):
 def test_external_reference_invalid(tmp_path):
     tree = {"foo": {"$ref": "fail.asdf"}}
 
-    # avoid passing tree to AsdfFile to avoid the deprecation warning, this can be updated
-    # when automatic find_references on AsdfFile.__init__ is removed
     ff = asdf.AsdfFile()
     ff.tree = tree
     ff.find_references()
     with pytest.raises(ValueError, match=r"Resolved to relative URL"):
         ff.resolve_references()
 
-    # avoid passing tree to AsdfFile to avoid the deprecation warning, this can be updated
-    # when automatic find_references on AsdfFile.__init__ is removed
     ff = asdf.AsdfFile({}, uri="http://httpstat.us/404")
     ff.tree = tree
     ff.find_references()
@@ -141,8 +133,6 @@ def test_external_reference_invalid(tmp_path):
     with pytest.raises(IOError, match=msg):
         ff.resolve_references()
 
-    # avoid passing tree to AsdfFile to avoid the deprecation warning, this can be updated
-    # when automatic find_references on AsdfFile.__init__ is removed
     ff = asdf.AsdfFile({}, uri=(tmp_path / "main.asdf").as_uri())
     ff.tree = tree
     ff.find_references()
@@ -158,8 +148,6 @@ def test_external_reference_invalid_fragment(tmp_path):
 
     tree = {"foo": {"$ref": "external.asdf#/list_of_stuff/a"}}
 
-    # avoid passing tree to AsdfFile to avoid the deprecation warning, this can be updated
-    # when automatic find_references on AsdfFile.__init__ is removed
     with asdf.AsdfFile({}, uri=(tmp_path / "main.asdf").as_uri()) as ff:
         ff.tree = tree
         ff.find_references()
@@ -168,8 +156,6 @@ def test_external_reference_invalid_fragment(tmp_path):
 
     tree = {"foo": {"$ref": "external.asdf#/list_of_stuff/3"}}
 
-    # avoid passing tree to AsdfFile to avoid the deprecation warning, this can be updated
-    # when automatic find_references on AsdfFile.__init__ is removed
     with asdf.AsdfFile({}, uri=(tmp_path / "main.asdf").as_uri()) as ff:
         ff.tree = tree
         ff.find_references()
@@ -194,12 +180,8 @@ def test_make_reference(tmp_path):
 
         ff.write_to(os.path.join(str(tmp_path), "source.asdf"))
 
-    with (
-        pytest.warns(AsdfDeprecationWarning, match="find_references during open"),
-        asdf.open(os.path.join(str(tmp_path), "source.asdf")) as ff,
-    ):
-        # this can be updated to add a find_references call when the deprecated automatic
-        # find_references on open is removed
+    with (asdf.open(os.path.join(str(tmp_path), "source.asdf")) as ff,):
+        ff.find_references()
         assert ff.tree["ref"]._uri == "external.asdf#f~0o~0o~1/a"
 
 

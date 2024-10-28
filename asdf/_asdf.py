@@ -892,9 +892,6 @@ class AsdfFile:
                 # to select the correct tag for us.
                 tree = yamlutil.custom_tree_to_tagged_tree(AsdfObject(), self)
 
-            find_ref_warning_msg = "find_references during open is deprecated. call AsdfFile.find_references after open"
-            tree = reference.find_references(tree, self, _warning_msg=find_ref_warning_msg)
-
             if self.version <= versioning.FILL_DEFAULTS_MAX_VERSION and get_config().legacy_fill_schema_defaults:
                 schema.fill_defaults(tree, self, reading=True)
 
