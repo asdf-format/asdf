@@ -96,16 +96,6 @@ def test_AsdfFile_tree_assignment_validation_deprecation():
         af.tree = {"history": 42}
 
 
-def test_AsdfFile_resolve_references_validation_deprecation():
-    af = asdf.AsdfFile()
-    af._tree["history"] = 42
-    with (
-        pytest.warns(AsdfDeprecationWarning, match="Validation during resolve_references is deprecated"),
-        pytest.raises(ValidationError),
-    ):
-        af.resolve_references()
-
-
 @pytest.mark.parametrize("value", [True, False])
 def test_AsdfFile_ignore_implicit_conversion_deprecation(value):
     with pytest.warns(AsdfDeprecationWarning, match="ignore_implicit_conversion is deprecated"):
