@@ -33,34 +33,6 @@ def join_tag_version(name, version):
     return f"{name}-{version}"
 
 
-_version_map = {}
-
-
-def _get_version_map(version):
-    version_map = _version_map.get(version)
-
-    if version_map is None:
-        from .config import get_config
-
-        uri = f"http://stsci.edu/schemas/asdf/version_map-{version}"
-        # The following call to yaml.load is safe because we're
-        # using a loader that inherits from pyyaml's SafeLoader.
-        version_map = yaml.load(get_config().resource_manager[uri], Loader=_yaml_base_loader)  # noqa: S506
-
-        # Separate the core tags from the rest of the standard for convenience
-        version_map["core"] = {}
-        version_map["standard"] = {}
-        for tag_name, tag_version in version_map["tags"].items():
-            if tag_name.startswith("tag:stsci.edu:asdf/core"):
-                version_map["core"][tag_name] = tag_version
-            else:
-                version_map["standard"][tag_name] = tag_version
-
-        _version_map[version] = version_map
-
-    return version_map
-
-
 @total_ordering
 class AsdfVersionMixin:
     """This mix-in is required in order to impose the total ordering that we

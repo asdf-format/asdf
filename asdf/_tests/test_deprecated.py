@@ -120,12 +120,6 @@ def test_AsdfFile_init_validation_deprecation():
         asdf.AsdfFile({"history": 42})
 
 
-def test_asdffile_version_map_deprecation():
-    af = asdf.AsdfFile()
-    with pytest.warns(AsdfDeprecationWarning, match="AsdfFile.version_map is deprecated"):
-        af.version_map
-
-
 @pytest.mark.parametrize("value", [True, False])
 def test_AsdfFile_ignore_implicit_conversion_deprecation(value):
     with pytest.warns(AsdfDeprecationWarning, match="ignore_implicit_conversion is deprecated"):

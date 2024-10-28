@@ -241,14 +241,6 @@ class AsdfFile:
         return str(self._version)
 
     @property
-    def version_map(self):
-        warnings.warn(
-            "AsdfFile.version_map is deprecated. Please use the extension_manager",
-            AsdfDeprecationWarning,
-        )
-        return versioning._get_version_map(self.version_string)
-
-    @property
     def extensions(self):
         """
         Get the list of user extensions that are enabled for
