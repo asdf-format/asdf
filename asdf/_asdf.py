@@ -589,16 +589,7 @@ class AsdfFile:
 
     @tree.setter
     def tree(self, tree):
-        asdf_object = AsdfObject(tree)
-        # Only perform custom validation if the tree is not empty
-        try:
-            self._validate(asdf_object, custom=bool(tree))
-        except ValidationError:
-            warnings.warn(
-                "Validation on tree assignment is deprecated. Please use AsdfFile.validate", AsdfDeprecationWarning
-            )
-            raise
-        self._tree = asdf_object
+        self._tree = AsdfObject(tree)
 
     def keys(self):
         return self.tree.keys()

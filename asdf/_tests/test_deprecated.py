@@ -87,15 +87,6 @@ def test_asdf_util_is_primitive_deprecation():
         asdf.util.is_primitive(1)
 
 
-def test_AsdfFile_tree_assignment_validation_deprecation():
-    af = asdf.AsdfFile()
-    with (
-        pytest.warns(AsdfDeprecationWarning, match="Validation on tree assignment is deprecated"),
-        pytest.raises(ValidationError),
-    ):
-        af.tree = {"history": 42}
-
-
 @pytest.mark.parametrize("value", [True, False])
 def test_AsdfFile_ignore_implicit_conversion_deprecation(value):
     with pytest.warns(AsdfDeprecationWarning, match="ignore_implicit_conversion is deprecated"):
