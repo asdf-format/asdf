@@ -18,7 +18,7 @@ def info(node_or_path, max_rows=DEFAULT_MAX_ROWS, max_cols=DEFAULT_MAX_COLS, sho
 
     Parameters
     ----------
-    node_or_path : str, pathlib.Path, asdf.asdf.AsdfFile, or any ASDF tree node
+    node_or_path : str, pathlib.Path, asdf.AsdfFile, or any ASDF tree node
         The tree or sub-tree to render.  Strings and Path objects
         will first be passed to asdf.open(...).
 

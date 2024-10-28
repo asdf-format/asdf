@@ -14,13 +14,6 @@ def test_asdf_stream_deprecation():
         import asdf.stream  # noqa: F401
 
 
-def test_asdf_asdf_deprecation():
-    with pytest.warns(AsdfDeprecationWarning, match="asdf.asdf is deprecated"):
-        if "asdf.asdf" in sys.modules:
-            del sys.modules["asdf.asdf"]
-        import asdf.asdf  # noqa: F401
-
-
 def test_find_references_during_init_deprecation():
     tree = {"a": 1, "b": {"$ref": "#"}}
     with pytest.warns(AsdfDeprecationWarning, match="find_references during AsdfFile.__init__"):
