@@ -112,14 +112,6 @@ def test_AsdfFile_resolve_references_kwargs_deprecation():
         af.resolve_references(foo=42)
 
 
-def test_AsdfFile_init_validation_deprecation():
-    with (
-        pytest.warns(AsdfDeprecationWarning, match="Validation during AsdfFile.__init__ is deprecated"),
-        pytest.raises(ValidationError),
-    ):
-        asdf.AsdfFile({"history": 42})
-
-
 @pytest.mark.parametrize("value", [True, False])
 def test_AsdfFile_ignore_implicit_conversion_deprecation(value):
     with pytest.warns(AsdfDeprecationWarning, match="ignore_implicit_conversion is deprecated"):
