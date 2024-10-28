@@ -1,17 +1,8 @@
-import sys
-
 import pytest
 
 import asdf
 import asdf.testing.helpers
 from asdf.exceptions import AsdfDeprecationWarning, ValidationError
-
-
-def test_asdf_stream_deprecation():
-    with pytest.warns(AsdfDeprecationWarning, match="asdf.stream is deprecated"):
-        if "asdf.stream" in sys.modules:
-            del sys.modules["asdf.stream"]
-        import asdf.stream  # noqa: F401
 
 
 def test_find_references_during_init_deprecation():
