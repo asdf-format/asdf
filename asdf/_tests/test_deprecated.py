@@ -106,12 +106,6 @@ def test_AsdfFile_resolve_references_validation_deprecation():
         af.resolve_references()
 
 
-def test_AsdfFile_resolve_references_kwargs_deprecation():
-    af = asdf.AsdfFile()
-    with pytest.warns(AsdfDeprecationWarning, match="Passing kwargs to resolve_references is deprecated"):
-        af.resolve_references(foo=42)
-
-
 @pytest.mark.parametrize("value", [True, False])
 def test_AsdfFile_ignore_implicit_conversion_deprecation(value):
     with pytest.warns(AsdfDeprecationWarning, match="ignore_implicit_conversion is deprecated"):

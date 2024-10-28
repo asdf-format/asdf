@@ -1303,15 +1303,13 @@ class AsdfFile:
         # Set directly to self._tree, since it doesn't need to be re-validated.
         self._tree = reference.find_references(self._tree, self, _warning_msg=_warning_msg)
 
-    def resolve_references(self, **kwargs):
+    def resolve_references(self):
         """
         Finds all external "JSON References" in the tree, loads the
         external content, and places it directly in the tree.  Saving
         a ASDF file after this operation means it will have no
         external references, and will be completely self-contained.
         """
-        if len(kwargs):
-            warnings.warn("Passing kwargs to resolve_references is deprecated and does nothing", AsdfDeprecationWarning)
         self._tree = reference.resolve_references(self._tree, self)
         try:
             self.validate()
