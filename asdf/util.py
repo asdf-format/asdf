@@ -9,7 +9,6 @@ import types
 import warnings
 from functools import lru_cache
 from importlib import metadata
-from urllib.request import pathname2url
 
 import numpy as np
 import yaml
@@ -49,7 +48,6 @@ __all__ = [
     "human_list",
     "get_array_base",
     "get_base_uri",
-    "filepath_to_url",
     "iter_subclasses",
     "calculate_padding",
     "resolve_name",
@@ -154,15 +152,6 @@ def get_base_uri(uri):
     """
     parts = _patched_urllib_parse.urlparse(uri)
     return _patched_urllib_parse.urlunparse([*list(parts[:5]), ""])
-
-
-def filepath_to_url(path):
-    """
-    For a given local file path, return a file:// url.
-    """
-    msg = "asdf.util.filepath_to_url is deprecated. Please use pathlib.Path.as_uri"
-    warnings.warn(msg, exceptions.AsdfDeprecationWarning)
-    return _patched_urllib_parse.urljoin("file:", pathname2url(path))
 
 
 def _iter_subclasses(cls):

@@ -131,11 +131,6 @@ def test_format_tag_deprecation():
         asdf.testing.helpers.format_tag("stsci.edu", "asdf", "1.0.0", "fits/fits")
 
 
-def test_asdf_util_filepath_to_url_deprecation(tmp_path):
-    with pytest.warns(AsdfDeprecationWarning, match="asdf.util.filepath_to_url is deprecated"):
-        asdf.util.filepath_to_url(str(tmp_path))
-
-
 @pytest.mark.parametrize("value", [True, False])
 def test_AsdfFile_ignore_implicit_conversion_deprecation(value):
     with pytest.warns(AsdfDeprecationWarning, match="ignore_implicit_conversion is deprecated"):
