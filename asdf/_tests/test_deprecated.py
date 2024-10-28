@@ -42,11 +42,6 @@ def test_asdf_util_resolve_name_deprecation():
         asdf.util.resolve_name("asdf.AsdfFile")
 
 
-def test_asdf_util_minversion_deprecation():
-    with pytest.warns(AsdfDeprecationWarning, match="asdf.util.minversion is deprecated"):
-        asdf.util.minversion("yaml", "3.1")
-
-
 def test_asdf_asdf_deprecation():
     with pytest.warns(AsdfDeprecationWarning, match="asdf.asdf is deprecated"):
         if "asdf.asdf" in sys.modules:

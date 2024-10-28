@@ -5,14 +5,11 @@ import math
 import re
 import struct
 import sys
-import types
 import warnings
 from functools import lru_cache
-from importlib import metadata
 
 import numpy as np
 import yaml
-from packaging.version import Version
 
 from . import constants, exceptions
 
@@ -22,9 +19,9 @@ from . import constants, exceptions
 # see PR https://github.com/asdf-format/asdf/pull/1260
 # see issue https://github.com/asdf-format/asdf/issues/1254
 if sys.version_info >= (3, 12):
-    from importlib.metadata import packages_distributions
+    pass
 else:
-    from importlib_metadata import packages_distributions
+    pass
 
 
 # We're importing our own copy of urllib.parse because
@@ -373,65 +370,6 @@ def get_class_name(obj, instance=True):
     """
     typ = type(obj) if instance else obj
     return f"{typ.__module__}.{typ.__qualname__}"
-
-
-def minversion(module, version, inclusive=True):
-    """
-    Returns `True` if the specified Python module satisfies a minimum version
-    requirement, and `False` if not.
-
-    Copied from astropy.utils.misc.minversion to avoid dependency on astropy.
-
-    Parameters
-    ----------
-
-    module : module or `str`
-        An imported module of which to check the version, or the name of
-        that module (in which case an import of that module is attempted--
-        if this fails `False` is returned).
-
-    version : `str`
-        The version as a string that this module must have at a minimum (e.g.
-        ``'0.12'``).
-
-    inclusive : `bool`
-        The specified version meets the requirement inclusively (i.e. ``>=``)
-        as opposed to strictly greater than (default: `True`).
-    """
-
-    warnings.warn("asdf.util.minversion is deprecated, see astropy.utils.minversion", exceptions.AsdfDeprecationWarning)
-
-    if isinstance(module, types.ModuleType):
-        module_name = module.__name__
-        module_version = getattr(module, "__version__", None)
-    elif isinstance(module, str):
-        module_name = module
-        module_version = None
-        try:
-            with warnings.catch_warnings():
-                warnings.filterwarnings("ignore", "asdf.util.resolve_name", exceptions.AsdfDeprecationWarning)
-                module = resolve_name(module_name)
-        except ImportError:
-            return False
-    else:
-        msg = f"module argument must be an actual imported module, or the import name of the module; got {module!r}"
-        raise ValueError(msg)
-
-    if module_version is None:
-        try:
-            module_version = metadata.version(module_name)
-        except metadata.PackageNotFoundError:
-            # Maybe the distribution name is different from package name.
-            # Calling packages_distributions is costly so we do it only
-            # if necessary, as only a few packages don't have the same
-            # distribution name.
-            dist_names = packages_distributions()
-            module_version = metadata.version(dist_names[module_name][0])
-
-    if inclusive:
-        return Version(module_version) >= Version(version)
-
-    return Version(module_version) > Version(version)
 
 
 class _InheritDocstrings(type):
