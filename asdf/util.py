@@ -48,7 +48,6 @@ __all__ = [
     "human_list",
     "get_array_base",
     "get_base_uri",
-    "iter_subclasses",
     "calculate_padding",
     "resolve_name",
     "NotSet",
@@ -160,14 +159,6 @@ def _iter_subclasses(cls):
     for x in cls.__subclasses__():
         yield x
         yield from _iter_subclasses(x)
-
-
-def iter_subclasses(cls):
-    """
-    Returns all subclasses of a class.
-    """
-    warnings.warn("asdf.util.iter_subclasses is deprecated", exceptions.AsdfDeprecationWarning)
-    yield from _iter_subclasses(cls)
 
 
 def calculate_padding(content_size, pad_blocks, block_size):
