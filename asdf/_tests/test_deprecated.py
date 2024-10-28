@@ -126,11 +126,6 @@ def test_asdffile_version_map_deprecation():
         af.version_map
 
 
-def test_format_tag_deprecation():
-    with pytest.warns(AsdfDeprecationWarning, match="format_tag is deprecated"):
-        asdf.testing.helpers.format_tag("stsci.edu", "asdf", "1.0.0", "fits/fits")
-
-
 @pytest.mark.parametrize("value", [True, False])
 def test_AsdfFile_ignore_implicit_conversion_deprecation(value):
     with pytest.warns(AsdfDeprecationWarning, match="ignore_implicit_conversion is deprecated"):
