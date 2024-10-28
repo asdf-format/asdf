@@ -46,7 +46,6 @@ __all__ = [
     "get_array_base",
     "get_base_uri",
     "calculate_padding",
-    "resolve_name",
     "NotSet",
     "uri_match",
     "get_class_name",
@@ -287,72 +286,6 @@ class HashableDict(dict):
 
     def __hash__(self):
         return hash(frozenset(self.items()))
-
-
-def resolve_name(name):
-    """Resolve a name like ``module.object`` to an object and return it.
-
-    This ends up working like ``from module import object`` but is easier
-    to deal with than the `__import__` builtin and supports digging into
-    submodules.
-
-    Parameters
-    ----------
-
-    name : `str`
-        A dotted path to a Python object--that is, the name of a function,
-        class, or other object in a module with the full path to that module,
-        including parent modules, separated by dots.  Also known as the fully
-        qualified name of the object.
-
-    Examples
-    --------
-
-    >>> resolve_name('asdf.util.resolve_name')  # doctest: +SKIP
-    <function resolve_name at 0x...>
-
-    Raises
-    ------
-    `ImportError`
-        If the module or named object is not found.
-    """
-
-    warnings.warn(
-        "asdf.util.resolve_name is deprecated, see astropy.utils.resolve_name", exceptions.AsdfDeprecationWarning
-    )
-
-    # Note: On python 2 these must be str objects and not unicode
-    parts = [str(part) for part in name.split(".")]
-
-    if len(parts) == 1:
-        # No dots in the name--just a straight up module import
-        cursor = 1
-        attr_name = ""  # Must not be unicode on Python 2
-    else:
-        cursor = len(parts) - 1
-        attr_name = parts[-1]
-
-    module_name = parts[:cursor]
-
-    while cursor > 0:
-        try:
-            ret = __import__(str(".".join(module_name)), fromlist=[attr_name])
-            break
-        except ImportError:
-            if cursor == 0:
-                raise
-            cursor -= 1
-            module_name = parts[:cursor]
-            attr_name = parts[cursor]
-            ret = ""
-
-    for part in parts[cursor:]:
-        try:
-            ret = getattr(ret, part)
-        except AttributeError as err:
-            raise ImportError(name) from err
-
-    return ret
 
 
 def get_class_name(obj, instance=True):
