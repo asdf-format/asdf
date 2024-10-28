@@ -3,18 +3,15 @@ This module deals with things that change between different versions
 of the ASDF spec.
 """
 
-import warnings
 from functools import total_ordering
 
 import yaml
 from semantic_version import SimpleSpec, Version
 
-from .exceptions import AsdfDeprecationWarning
-
 _yaml_base_loader = yaml.CSafeLoader if getattr(yaml, "__with_libyaml__", None) else yaml.SafeLoader
 
 
-__all__ = ["AsdfVersion", "AsdfSpec", "AsdfVersionMixin", "split_tag_version", "join_tag_version"]
+__all__ = ["AsdfVersion", "AsdfVersionMixin", "split_tag_version", "join_tag_version"]
 
 
 def split_tag_version(tag):
@@ -84,43 +81,6 @@ class AsdfVersion(AsdfVersionMixin, Version):
         if isinstance(version, (tuple, list)):
             version = ".".join([str(x) for x in version])
         super().__init__(version)
-
-
-class AsdfSpec(SimpleSpec):
-    """
-    Deprecated.
-    """
-
-    def __init__(self, *args, **kwargs):
-        warnings.warn("AsdfSpec is deprecated.", AsdfDeprecationWarning)
-        super().__init__(*args, **kwargs)
-
-    def match(self, version):
-        if isinstance(version, (str, tuple, list)):
-            version = AsdfVersion(version)
-        return super().match(version)
-
-    def __iterate_versions(self, versions):
-        for v in versions:
-            yield AsdfVersion(v) if isinstance(v, (str, tuple, list)) else v
-
-    def select(self, versions):
-        return super().select(self.__iterate_versions(versions))
-
-    def filter(self, versions):
-        return super().filter(self.__iterate_versions(versions))
-
-    def __eq__(self, other):
-        """Equality between Spec and Version, string, or tuple, means match"""
-        if isinstance(other, SimpleSpec):
-            return super().__eq__(other)
-        return self.match(other)
-
-    def __ne__(self, other):
-        return not self.__eq__(other)
-
-    def __hash__(self):
-        return super().__hash__()
 
 
 supported_versions = [
