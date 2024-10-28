@@ -1,0 +1,1 @@
+Switch default ASDF standard to 1.6.0.
