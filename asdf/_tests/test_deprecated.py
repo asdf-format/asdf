@@ -31,11 +31,6 @@ def test_asdf_asdf_SerializationContext_import_deprecation():
             from asdf.asdf import SerializationContext  # noqa: F401
 
 
-def test_asdf_util_human_list_deprecation():
-    with pytest.warns(AsdfDeprecationWarning, match="asdf.util.human_list is deprecated"):
-        asdf.util.human_list("a")
-
-
 def test_asdf_asdf_deprecation():
     with pytest.warns(AsdfDeprecationWarning, match="asdf.asdf is deprecated"):
         if "asdf.asdf" in sys.modules:

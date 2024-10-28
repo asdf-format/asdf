@@ -5,13 +5,12 @@ import math
 import re
 import struct
 import sys
-import warnings
 from functools import lru_cache
 
 import numpy as np
 import yaml
 
-from . import constants, exceptions
+from . import constants
 
 # The standard library importlib.metadata returns duplicate entrypoints
 # for all python versions up to and including 3.11
@@ -42,7 +41,6 @@ _patched_urllib_parse.uses_netloc.append("asdf")
 
 __all__ = [
     "load_yaml",
-    "human_list",
     "get_array_base",
     "get_base_uri",
     "calculate_padding",
@@ -96,35 +94,6 @@ def load_yaml(init, tagged=False):
         # using only loaders that don't create custom python objects
         content = yaml.load(reader, Loader=loader)  # noqa: S506
     return content
-
-
-def human_list(line, separator="and"):
-    """
-    Formats a list for human readability.
-
-    Parameters
-    ----------
-    l : sequence
-        A sequence of strings
-
-    separator : string, optional
-        The word to use between the last two entries.  Default:
-        ``"and"``.
-
-    Returns
-    -------
-    formatted_list : string
-
-    Examples
-    --------
-    >>> human_list(["vanilla", "strawberry", "chocolate"], "or")  # doctest: +SKIP
-    'vanilla, strawberry or chocolate'
-    """
-    warnings.warn("asdf.util.human_list is deprecated", exceptions.AsdfDeprecationWarning)
-    if len(line) == 1:
-        return line[0]
-
-    return ", ".join(line[:-1]) + " " + separator + " " + line[-1]
 
 
 def get_array_base(arr):
