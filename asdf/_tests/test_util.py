@@ -10,16 +10,6 @@ from asdf import generic_io, util
 from asdf.exceptions import AsdfDeprecationWarning
 
 
-def test_is_primitive():
-    with warnings.catch_warnings():
-        warnings.filterwarnings("ignore", "asdf.util.is_primitive is deprecated", AsdfDeprecationWarning)
-        for value in [None, "foo", 1, 1.39, 1 + 1j, True]:
-            assert util.is_primitive(value) is True
-
-        for value in [[], (), {}, set()]:
-            assert util.is_primitive(value) is False
-
-
 def test_not_set():
     assert util.NotSet is not None
 

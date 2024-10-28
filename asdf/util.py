@@ -52,7 +52,6 @@ __all__ = [
     "calculate_padding",
     "resolve_name",
     "NotSet",
-    "is_primitive",
     "uri_match",
     "get_class_name",
     "get_file_type",
@@ -495,24 +494,6 @@ Special value indicating that a parameter is not set.  Distinct
 from None, which may for example be a value of interest in a search.
 """
 NotSet = _NotSetType()
-
-
-def is_primitive(value):
-    """
-    Determine if a value is an instance of a "primitive" type.
-
-    Parameters
-    ----------
-    value : object
-        the value to test
-
-    Returns
-    -------
-    bool
-        True if the value is primitive, False otherwise
-    """
-    warnings.warn("asdf.util.is_primitive is deprecated", exceptions.AsdfDeprecationWarning)
-    return isinstance(value, (bool, int, float, complex, str)) or value is None
 
 
 def uri_match(pattern, uri):
