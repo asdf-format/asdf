@@ -6,7 +6,7 @@ from packaging.specifiers import SpecifierSet
 
 import asdf
 from asdf import AsdfFile, config_context
-from asdf.exceptions import AsdfManifestURIMismatchWarning, AsdfSerializationError, AsdfWarning, ValidationError
+from asdf.exceptions import AsdfManifestURIMismatchWarning, AsdfSerializationError, ValidationError
 from asdf.extension import (
     Compressor,
     Converter,
@@ -892,10 +892,8 @@ def test_warning_or_error_for_default_select_tag(is_subclass, indirect):
         "asdf://somewhere.org/tags/foo-2.0.0",
     ]
     extension = FullExtension(converters=[FooConverter()], tags=tags)
-    ctx_type = pytest.warns if is_subclass else pytest.raises
-    exception_class = AsdfWarning if is_subclass else RuntimeError
     with config_context() as config:
-        with ctx_type(exception_class, match="Converter handles multiple tags"):
+        with pytest.raises(RuntimeError, match="Converter handles multiple tags"):
             config.add_extension(extension)
 
 
