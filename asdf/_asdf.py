@@ -18,7 +18,6 @@ from ._block.manager import Manager as BlockManager
 from ._helpers import validate_version
 from .config import config_context, get_config
 from .exceptions import (
-    AsdfDeprecationWarning,
     AsdfManifestURIMismatchWarning,
     AsdfPackageVersionWarning,
     AsdfWarning,
@@ -29,21 +28,6 @@ from .extension import Extension, ExtensionProxy, _serialization_context, get_ca
 from .search import AsdfSearchResult
 from .tags.core import AsdfObject, ExtensionMetadata, HistoryEntry, Software
 from .util import NotSet
-
-
-def __getattr__(name):
-    if name == "SerializationContext":
-        warnings.warn(
-            "importing SerializationContext from asdf.asdf is deprecated. "
-            "Please import SerializationContext from asdf.extension",
-            AsdfDeprecationWarning,
-        )
-        from .extension._serialization_context import SerializationContext
-
-        return SerializationContext
-
-    msg = f"module {__name__!r} has no attribute {name!r}"
-    raise AttributeError(msg)
 
 
 def _get_asdf_library_info():
