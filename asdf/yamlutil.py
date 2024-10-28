@@ -318,7 +318,6 @@ def custom_tree_to_tagged_tree(tree, ctx, _serialization_context=None):
     return treeutil.walk_and_modify(
         tree,
         _walker,
-        ignore_implicit_conversion=ctx._ignore_implicit_conversion,
         # Walk the tree in preorder, so that extensions can return
         # container nodes with unserialized children.
         postorder=False,
@@ -362,7 +361,6 @@ def tagged_tree_to_custom_tree(tree, ctx, force_raw_types=False, _serialization_
     return treeutil.walk_and_modify(
         tree,
         _walker,
-        ignore_implicit_conversion=ctx._ignore_implicit_conversion,
         # Walk the tree in postorder, so that extensions receive
         # container nodes with children already deserialized.
         postorder=True,

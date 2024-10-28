@@ -23,12 +23,6 @@ def test_find_references_during_open_deprecation(tmp_path):
 
 
 @pytest.mark.parametrize("value", [True, False])
-def test_AsdfFile_ignore_implicit_conversion_deprecation(value):
-    with pytest.warns(AsdfDeprecationWarning, match="ignore_implicit_conversion is deprecated"):
-        asdf.AsdfFile({"a": 1}, ignore_implicit_conversion=value)
-
-
-@pytest.mark.parametrize("value", [True, False])
 def test_walk_and_modify_ignore_implicit_conversion_deprecation(value):
     with pytest.warns(AsdfDeprecationWarning, match="ignore_implicit_conversion is deprecated"):
         asdf.treeutil.walk_and_modify({}, lambda obj: obj, ignore_implicit_conversion=value)

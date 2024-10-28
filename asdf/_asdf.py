@@ -57,7 +57,6 @@ class AsdfFile:
         extensions=None,
         version=None,
         ignore_unrecognized_tag=False,
-        ignore_implicit_conversion=NotSet,
         memmap=True,
         lazy_load=True,
         custom_schema=None,
@@ -86,13 +85,6 @@ class AsdfFile:
         ignore_unrecognized_tag : bool, optional
             When `True`, do not raise warnings for unrecognized tags. Set to
             `False` by default.
-
-        ignore_implicit_conversion : bool
-            DEPRECATED
-            When `True`, do not raise warnings when types in the tree are
-            implicitly converted into a serializable object. The motivating
-            case for this is currently ``namedtuple``, which cannot be serialized
-            as-is.
 
         memmap : bool, optional
             When `True`, when reading files, attempt to memmap underlying data
@@ -134,7 +126,6 @@ class AsdfFile:
             self._custom_schema = None
 
         self._ignore_unrecognized_tag = ignore_unrecognized_tag
-        self._ignore_implicit_conversion = ignore_implicit_conversion
 
         # Context of a call to treeutil.walk_and_modify, needed in the AsdfFile
         # in case walk_and_modify is re-entered by extension code (via
