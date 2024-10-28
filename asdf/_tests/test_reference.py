@@ -7,7 +7,6 @@ from numpy.testing import assert_array_equal
 
 import asdf
 from asdf import reference
-from asdf.exceptions import AsdfDeprecationWarning
 from asdf.tags.core import ndarray
 
 from ._helpers import assert_tree_match
@@ -190,8 +189,7 @@ def test_internal_reference(tmp_path):
 
     tree = {"foo": 2, "bar": {"$ref": "#"}}
 
-    with pytest.warns(AsdfDeprecationWarning, match="find_references during AsdfFile.__init__"):
-        ff = asdf.AsdfFile(tree)
+    ff = asdf.AsdfFile(tree)
     ff.find_references()
     assert isinstance(ff.tree["bar"], reference.Reference)
     ff.resolve_references()

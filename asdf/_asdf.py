@@ -140,12 +140,6 @@ class AsdfFile:
         self._closed = False
         self._external_asdf_by_uri = {}
         self._blocks = BlockManager(uri=uri, lazy_load=lazy_load, memmap=memmap)
-        # this message is passed into find_references to only warn if
-        # a reference was found
-        find_ref_warning_msg = (
-            "find_references during AsdfFile.__init__ is deprecated. "
-            "call AsdfFile.find_references after AsdfFile.__init__"
-        )
         if tree is None:
             # Bypassing the tree property here, to avoid validating
             # an empty tree.
@@ -159,11 +153,12 @@ class AsdfFile:
             self._blocks._uri = tree.uri
             # Set directly to self._tree (bypassing property), since
             # we can assume the other AsdfFile is already valid.
-            self._tree = tree.tree
-            self.find_references(_warning_msg=find_ref_warning_msg)
+            # Call "walk_and_modify" here to use it's logic for
+            # creating a "copy" of the other tree. This mimics what was previously
+            # a call to find_references (which we longer do in AsdfFile.__init__)
+            self._tree = treeutil.walk_and_modify(tree.tree, lambda o: o)
         else:
             self._tree = AsdfObject(tree)
-            self.find_references(_warning_msg=find_ref_warning_msg)
 
         self._comments = []
 
@@ -1258,13 +1253,13 @@ class AsdfFile:
                 if version is not None:
                     self.version = previous_version
 
-    def find_references(self, _warning_msg=False):
+    def find_references(self):
         """
         Finds all external "JSON References" in the tree and converts
         them to ``reference.Reference`` objects.
         """
         # Set directly to self._tree, since it doesn't need to be re-validated.
-        self._tree = reference.find_references(self._tree, self, _warning_msg=_warning_msg)
+        self._tree = reference.find_references(self._tree, self)
 
     def resolve_references(self):
         """
