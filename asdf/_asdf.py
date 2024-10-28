@@ -72,7 +72,6 @@ class AsdfFile:
         uri=None,
         extensions=None,
         version=None,
-        ignore_version_mismatch=NotSet,
         ignore_unrecognized_tag=False,
         ignore_implicit_conversion=NotSet,
         memmap=True,
@@ -99,11 +98,6 @@ class AsdfFile:
         version : str, optional
             The ASDF Standard version.  If not provided, defaults to the
             configured default version.  See `asdf.config.AsdfConfig.default_version`.
-
-        ignore_version_mismatch : bool, optional
-            Deprecated and unused. This setting does nothing since asdf 3.0.0
-            When `True`, do not raise warnings for mismatched schema versions.
-            Set to `True` by default.
 
         ignore_unrecognized_tag : bool, optional
             When `True`, do not raise warnings for unrecognized tags. Set to
@@ -154,12 +148,6 @@ class AsdfFile:
             self._custom_schema = schema._load_schema_cached(custom_schema, None, True)
         else:
             self._custom_schema = None
-
-        if ignore_version_mismatch is not NotSet:
-            warnings.warn(
-                "ignore_version_mismatch is deprecated and has done nothing since asdf 3.0.0",
-                AsdfDeprecationWarning,
-            )
 
         self._ignore_unrecognized_tag = ignore_unrecognized_tag
         self._ignore_implicit_conversion = ignore_implicit_conversion
@@ -1607,7 +1595,6 @@ def open_asdf(
     mode=None,
     validate_checksums=False,
     extensions=None,
-    ignore_version_mismatch=NotSet,
     ignore_unrecognized_tag=False,
     _force_raw_types=False,
     memmap=True,
@@ -1642,11 +1629,6 @@ def open_asdf(
     extensions : object, optional
         Additional extensions to use when reading and writing the file.
         May be an `asdf.extension.Extension` or a `list` of extensions.
-
-    ignore_version_mismatch : bool, optional
-        Deprecated and unused. This setting does nothing since asdf 3.0.0
-        When `True`, do not raise warnings for mismatched schema versions.
-        Set to `True` by default.
 
     ignore_unrecognized_tag : bool, optional
         When `True`, do not raise warnings for unrecognized tags. Set to
@@ -1713,7 +1695,6 @@ def open_asdf(
             mode = "r"
 
     instance = AsdfFile(
-        ignore_version_mismatch=ignore_version_mismatch,
         ignore_unrecognized_tag=ignore_unrecognized_tag,
         memmap=memmap,
         lazy_load=lazy_load,
