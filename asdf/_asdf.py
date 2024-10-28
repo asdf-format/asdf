@@ -1303,22 +1303,6 @@ class AsdfFile:
         """
         self._tree = reference.resolve_references(self._tree, self)
 
-    def resolve_and_inline(self):
-        """
-        Resolves all external references and inlines all data.  This
-        produces something that, when saved, is a 100% valid YAML
-        file.
-        """
-        warnings.warn(
-            "resolve_and_inline is deprecated. "
-            "Use AsdfFile.resolve_references and all_array_storage=inline "
-            "during AsdfFile.write_to",
-            AsdfDeprecationWarning,
-        )
-        self.resolve_references()
-        for b in self._blocks.blocks:
-            self.set_array_storage(b.data, "inline")
-
     def fill_defaults(self):
         """
         Fill in any values that are missing in the tree using default
