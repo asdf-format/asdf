@@ -16,7 +16,7 @@ It is highly recommended that you run some of these tests locally by:
 This will increase the chances your PR will pass the required CI tests.
 -->
 
-# Description
+## Description
 
 <!--
 Please describe what this PR accomplishes.
@@ -25,17 +25,20 @@ If this PR adds a new feature please include tests and documentation.
 If this PR fixes an issue, please add closing keywords (eg 'fixes #XXX')
 -->
 
-# Checklist:
+## Tasks
 
-- [ ] pre-commit checks ran successfully
-- [ ] tests ran successfully
-- [ ] for a public change, added a [towncrier news fragment](https://towncrier.readthedocs.io/en/stable/tutorial.html#creating-news-fragments) <details><summary>`changes/<PR#>.<changetype>.rst`</summary>
+- [ ] [run `pre-commit` on your machine](https://pre-commit.com/#quick-start)
+- [ ] run `pytest` on your machine
+- [ ] Does this PR add new features and / or change user-facing code / API? (if not, label with `no-changelog-entry-needed`)
+    - [ ] write news fragment(s) in `changes/`: `echo "changed something" > changes/<PR#>.<changetype>.rst` (see below for change types)
+    - [ ] update relevant docstrings and / or `docs/` page
+    - [ ] for any new features, add unit tests
 
-    - ``changes/<PR#>.feature.rst``: new feature
-    - ``changes/<PR#>.bugfix.rst``: bug fix
-    - ``changes/<PR#>.doc.rst``: documentation change
-    - ``changes/<PR#>.removal.rst``: deprecation or removal of public API
-    - ``changes/<PR#>.general.rst``: infrastructure or miscellaneous change
-  </details>
-- [ ] for a public change, updated documentation
-- [ ] for any new features, unit tests were added
+<details><summary>news fragment change types...</summary>
+
+- ``changes/<PR#>.feature.rst``: new feature
+- ``changes/<PR#>.bugfix.rst``: bug fix
+- ``changes/<PR#>.doc.rst``: documentation change
+- ``changes/<PR#>.removal.rst``: deprecation or removal of public API
+- ``changes/<PR#>.general.rst``: infrastructure or miscellaneous change
+</details>
