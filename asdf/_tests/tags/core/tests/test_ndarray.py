@@ -976,7 +976,7 @@ def test_memmap_write(tmp_path):
     tmpfile = str(tmp_path / "data.asdf")
     tree = {"data": np.zeros(100)}
 
-    with asdf.AsdfFile(tree) as af:
+    with asdf.AsdfFile(tree, memmap=False) as af:
         # Make sure we're actually writing to an internal array for this test
         af.write_to(tmpfile, all_array_storage="internal")
 
@@ -1002,7 +1002,7 @@ def test_readonly(tmp_path):
         af.write_to(tmpfile, all_array_storage="internal")
 
     # Opening in read mode (the default) should mean array is readonly
-    with asdf.open(tmpfile) as af:
+    with asdf.open(tmpfile, memmap=True) as af:
         assert af["data"].flags.writeable is False
         with pytest.raises(ValueError, match=r"assignment destination is read-only"):
             af["data"][0] = 41
@@ -1046,7 +1046,7 @@ def test_block_data_change(pad_blocks, tmp_path):
     with asdf.AsdfFile(tree) as af:
         af.write_to(tmpfile, pad_blocks=pad_blocks)
 
-    with asdf.open(tmpfile, mode="rw") as af:
+    with asdf.open(tmpfile, mode="rw", memmap=True) as af:
         assert np.all(af.tree["data"] == 0)
         array_before = af.tree["data"].__array__()
         af.tree["data"][:5] = 1

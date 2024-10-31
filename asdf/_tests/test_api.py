@@ -60,7 +60,7 @@ def test_open_readonly(tmp_path):
     os.chmod(tmpfile, 0o440)
     assert os.access(tmpfile, os.W_OK) is False
 
-    with asdf.open(tmpfile) as af:
+    with asdf.open(tmpfile, memmap=True) as af:
         assert af["baz"].flags.writeable is False
 
     with pytest.raises(PermissionError, match=r".* Permission denied: .*"), asdf.open(tmpfile, mode="rw"):
