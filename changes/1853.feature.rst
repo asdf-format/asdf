@@ -1,0 +1,1 @@
+Raise RuntimeError if a Convert subclass supports multiple tags but doesn't implement select_tag.
