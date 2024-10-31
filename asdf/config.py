@@ -6,10 +6,12 @@ options.
 import collections
 import copy
 import threading
+import warnings
 from contextlib import contextmanager
 
 from . import _entry_points, util, versioning
 from ._helpers import validate_version
+from .exceptions import AsdfDeprecationWarning
 from .extension import ExtensionProxy
 from .resource import ResourceManager, ResourceMappingProxy
 
@@ -25,7 +27,7 @@ DEFAULT_ALL_ARRAY_STORAGE = None
 DEFAULT_ALL_ARRAY_COMPRESSION = "input"
 DEFAULT_ALL_ARRAY_COMPRESSION_KWARGS = None
 DEFAULT_DEFAULT_ARRAY_SAVE_BASE = True
-DEFAULT_CONVERT_UNKNOWN_NDARRAY_SUBCLASSES = True
+DEFAULT_CONVERT_UNKNOWN_NDARRAY_SUBCLASSES = False
 DEFAULT_LAZY_TREE = False
 
 
@@ -458,6 +460,13 @@ class AsdfConfig:
 
     @convert_unknown_ndarray_subclasses.setter
     def convert_unknown_ndarray_subclasses(self, value):
+        if value:
+            msg = (
+                "Enabling convert_unknown_ndarray_subclasses is deprecated. "
+                "Please add a Converter or install an extension that supports "
+                "the ndarray subclass you'd like to converter"
+            )
+            warnings.warn(msg, AsdfDeprecationWarning)
         self._convert_unknown_ndarray_subclasses = value
 
     @property

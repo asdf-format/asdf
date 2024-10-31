@@ -40,7 +40,7 @@ the currently active config:
       all_array_compression: input
       all_array_compression_kwargs: None
       default_array_save_base: True
-      convert_unknown_ndarray_subclasses: True
+      convert_unknown_ndarray_subclasses: False
       default_version: 1.5.0
       io_block_size: -1
       legacy_fill_schema_defaults: True
@@ -66,7 +66,7 @@ This allows for short-lived configuration changes that do not impact other code:
       all_array_compression: input
       all_array_compression_kwargs: None
       default_array_save_base: True
-      convert_unknown_ndarray_subclasses: True
+      convert_unknown_ndarray_subclasses: False
       default_version: 1.5.0
       io_block_size: -1
       legacy_fill_schema_defaults: True
@@ -80,7 +80,7 @@ This allows for short-lived configuration changes that do not impact other code:
       all_array_compression: input
       all_array_compression_kwargs: None
       default_array_save_base: True
-      convert_unknown_ndarray_subclasses: True
+      convert_unknown_ndarray_subclasses: False
       default_version: 1.5.0
       io_block_size: -1
       legacy_fill_schema_defaults: True
@@ -172,11 +172,11 @@ in asdf (for subclasses in existing asdf dependencies).
 
 With this setting enabled, asdf will continue to convert instances
 of subclasses of ndarray but will issue a warning when an instance is
-converted. In a future version of asdf this default will change
-to ``False``, a deprecation warning will be issued and finally
-the conversion of instances of subclasses will be removed.
+converted. This currently defaults to ``False`` and issues
+a deprecation warning if enabled. In a future version of asdf
+this setting will be removed.
 
-Defaults to ``True``.
+Defaults to ``False``.
 
 default_version
 ---------------
