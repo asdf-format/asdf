@@ -1,0 +1,1 @@
+Switch default convert_unknown_ndarray_subclasses to False and issue deprecation warning if it is enabled.
