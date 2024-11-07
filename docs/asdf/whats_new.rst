@@ -21,6 +21,8 @@ Hi! Asdf 4.0.0 is a new major version including:
 Removed API
 -----------
 
+- The ``copy_arrays`` argument for ``asdf.open`` and ``AsdfFile`` has been removed
+  and replaced by ``memmap`` (``memmap == not copy_arrays``).
 - ``ignore_version_mismatch`` has had no effect since asdf 3.0.0 and was removed.
 - the `asdf.util` submodule had several unused functions removed:
   - ``filepath_to_url``, see ``pathlib.Path.as_uri`` as an alternative
