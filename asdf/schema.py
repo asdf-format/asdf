@@ -406,8 +406,6 @@ def load_schema(url, resolver=None, resolve_references=False):
         If ``True``, resolve all ``$ref`` references.
 
     """
-    # TODO deprecate resolver?
-
     # We want to cache the work that went into constructing the schema, but returning
     # the same object is treacherous, because users who mutate the result will not
     # expect that they're changing the schema everywhere.
@@ -527,7 +525,6 @@ def get_validator(
     -------
     validator : jsonschema.Validator
     """
-    # TODO deprecate url_mapping
     if ctx is None:
         from ._asdf import AsdfFile
 
