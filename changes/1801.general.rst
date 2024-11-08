@@ -1,1 +1,1 @@
-set ``memmap=False`` by default
+Set ``memmap=False`` to default for ``asdf.open`` and ``AsdfFile.__init__``.
