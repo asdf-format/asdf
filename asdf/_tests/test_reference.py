@@ -78,9 +78,7 @@ def test_external_reference(tmp_path):
 
         assert_array_equal(ff.tree["internal"], exttree["cool_stuff"]["a"])
 
-    with asdf.AsdfFile({}, uri=(tmp_path / "main.asdf").as_uri(), memmap=True) as ff:
-        # avoid passing tree to AsdfFile to avoid the deprecation warning, this can be updated
-        # when automatic find_references on AsdfFile.__init__ is removed
+    with asdf.AsdfFile({}, uri=(tmp_path / "main.asdf").as_uri()) as ff:
         ff.tree = tree
         ff.find_references()
         do_asserts(ff)
