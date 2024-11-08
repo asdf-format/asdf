@@ -9,7 +9,7 @@ import yaml
 
 import asdf
 from asdf import tagged, treeutil, yamlutil
-from asdf.exceptions import AsdfConversionWarning, AsdfSerializationError
+from asdf.exceptions import AsdfConversionWarning, AsdfDeprecationWarning, AsdfSerializationError
 from asdf.testing.helpers import yaml_to_asdf
 
 
@@ -270,12 +270,13 @@ def test_ndarray_subclass_conversion(tmp_path):
     fn = tmp_path / "test.asdf"
     af = asdf.AsdfFile()
     af["a"] = MyNDArray([1, 2, 3])
-    with pytest.warns(AsdfConversionWarning, match=r"A ndarray subclass .*"):
+    with pytest.raises(AsdfSerializationError, match=r".*is not serializable by asdf.*"):
         af.write_to(fn)
 
     with asdf.config.config_context() as cfg:
-        cfg.convert_unknown_ndarray_subclasses = False
-        with pytest.raises(AsdfSerializationError, match=r".*is not serializable by asdf.*"):
+        with pytest.warns(AsdfDeprecationWarning, match=r"convert_unknown_ndarray_subclasses"):
+            cfg.convert_unknown_ndarray_subclasses = True
+        with pytest.warns(AsdfConversionWarning, match=r"A ndarray subclass .*"):
             af.write_to(fn)
 
 
