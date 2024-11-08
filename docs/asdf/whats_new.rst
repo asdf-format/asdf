@@ -46,6 +46,13 @@ Removed API
 New Defaults
 ------------
 
+File I/O
+^^^^^^^^
+
+- calls to ``asdf.open()`` and ``AsdfFile()`` do NOT memory-map the
+  underlying arrays by default; the relevant parameter defaults to
+  ``memmap=False``
+
 .. _whats_new_4.0.0_validation:
 
 Validation
