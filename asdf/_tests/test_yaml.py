@@ -9,7 +9,7 @@ import yaml
 
 import asdf
 from asdf import tagged, treeutil, yamlutil
-from asdf.exceptions import AsdfConversionWarning, AsdfSerializationError
+from asdf.exceptions import AsdfConversionWarning, AsdfDeprecationWarning, AsdfSerializationError
 from asdf.testing.helpers import yaml_to_asdf
 
 
