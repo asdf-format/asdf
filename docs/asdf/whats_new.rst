@@ -46,7 +46,7 @@ Removed API
 New Defaults
 ------------
 
-.. _whats_new_4.0.0_memmap
+.. _whats_new_4.0.0_memmap:
 
 Memory mapping disabled by default
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
