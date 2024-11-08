@@ -57,7 +57,6 @@ class AsdfFile:
         extensions=None,
         version=None,
         ignore_unrecognized_tag=False,
-        ignore_implicit_conversion=NotSet,
         memmap=False,
         lazy_load=True,
         custom_schema=None,
