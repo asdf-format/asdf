@@ -46,12 +46,12 @@ Removed API
 New Defaults
 ------------
 
-File I/O
-^^^^^^^^
+.. _whats_new_4.0.0_memmap
 
-- calls to ``asdf.open()`` and ``AsdfFile()`` do NOT memory-map the
-  underlying arrays by default; the relevant parameter defaults to
-  ``memmap=False``
+Memory mapping disabled by default
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+Calls to ``asdf.open() and ``AsdfFile()`` will now default to ``memmap=False``, disabling memory mapping of arrays by default.
 
 .. _whats_new_4.0.0_validation:
 
