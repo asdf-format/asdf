@@ -464,7 +464,7 @@ class AsdfConfig:
             msg = (
                 "Enabling convert_unknown_ndarray_subclasses is deprecated. "
                 "Please add a Converter or install an extension that supports "
-                "the ndarray subclass you'd like to converter"
+                "the ndarray subclass you'd like to convert"
             )
             warnings.warn(msg, AsdfDeprecationWarning)
         self._convert_unknown_ndarray_subclasses = value
