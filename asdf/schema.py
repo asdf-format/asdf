@@ -16,7 +16,7 @@ from asdf._jsonschema.exceptions import RefResolutionError, ValidationError
 
 from . import constants, generic_io, reference, tagged, treeutil, util, versioning, yamlutil
 from .config import get_config
-from .exceptions import AsdfDeprecationWarning, AsdfWarning
+from .exceptions import AsdfWarning
 from .util import _patched_urllib_parse
 
 YAML_SCHEMA_METASCHEMA_ID = "http://stsci.edu/schemas/yaml-schema/draft-01"
@@ -49,14 +49,8 @@ def _type_to_tag(type_):
     return None
 
 
-def _tag_to_uri(input_str):
-    if not input_str.startswith(constants.STSCI_SCHEMA_TAG_BASE):
-        return input_str
-    warnings.warn(
-        "Resolving by tag is deprecated. Use uris instead of tags",
-        AsdfDeprecationWarning,
-    )
-    return f"http://stsci.edu/schemas/asdf{input_str[len(constants.STSCI_SCHEMA_TAG_BASE):]}"
+def _default_resolver(uri):
+    return uri
 
 
 def validate_tag(validator, tag_pattern, instance, schema):
@@ -239,7 +233,7 @@ class _ValidationContext:
 
 @lru_cache
 def _create_validator(validators=YAML_VALIDATORS, visit_repeat_nodes=False):
-    meta_schema = _load_schema_cached(YAML_SCHEMA_METASCHEMA_ID, _tag_to_uri, False)
+    meta_schema = _load_schema_cached(YAML_SCHEMA_METASCHEMA_ID, None, False)
 
     type_checker = mvalidators.Draft4Validator.TYPE_CHECKER.redefine_many(
         {
@@ -339,9 +333,6 @@ def _load_schema(url):
 
 
 def _make_schema_loader(resolver):
-    if resolver is None:
-        resolver = _tag_to_uri
-
     def load_schema(url):
         # Check if this is a URI provided by the new
         # Mapping API:
@@ -415,9 +406,6 @@ def load_schema(url, resolver=None, resolve_references=False):
         If ``True``, resolve all ``$ref`` references.
 
     """
-    if resolver is None:
-        resolver = _tag_to_uri
-
     # We want to cache the work that went into constructing the schema, but returning
     # the same object is treacherous, because users who mutate the result will not
     # expect that they're changing the schema everywhere.
@@ -465,7 +453,7 @@ def _safe_resolve(resolver, json_id, uri):
 @lru_cache
 def _load_schema_cached(url, resolver, resolve_references):
     if resolver is None:
-        resolver = _tag_to_uri
+        resolver = _default_resolver
     loader = _make_schema_loader(resolver)
     schema, url = loader(url)
 
@@ -735,9 +723,9 @@ def check_schema(schema, validate_default=True):
         applicable_validators = methodcaller("items")
 
     meta_schema_id = schema.get("$schema", YAML_SCHEMA_METASCHEMA_ID)
-    meta_schema = _load_schema_cached(meta_schema_id, _tag_to_uri, False)
+    meta_schema = _load_schema_cached(meta_schema_id, None, False)
 
-    resolver = _make_jsonschema_refresolver(_tag_to_uri)
+    resolver = _make_jsonschema_refresolver(_default_resolver)
 
     cls = mvalidators.create(
         meta_schema=meta_schema,

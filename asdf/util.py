@@ -5,17 +5,12 @@ import math
 import re
 import struct
 import sys
-import types
-import warnings
 from functools import lru_cache
-from importlib import metadata
-from urllib.request import pathname2url
 
 import numpy as np
 import yaml
-from packaging.version import Version
 
-from . import constants, exceptions
+from . import constants
 
 # The standard library importlib.metadata returns duplicate entrypoints
 # for all python versions up to and including 3.11
@@ -23,9 +18,9 @@ from . import constants, exceptions
 # see PR https://github.com/asdf-format/asdf/pull/1260
 # see issue https://github.com/asdf-format/asdf/issues/1254
 if sys.version_info >= (3, 12):
-    from importlib.metadata import packages_distributions
+    pass
 else:
-    from importlib_metadata import packages_distributions
+    pass
 
 
 # We're importing our own copy of urllib.parse because
@@ -46,15 +41,10 @@ _patched_urllib_parse.uses_netloc.append("asdf")
 
 __all__ = [
     "load_yaml",
-    "human_list",
     "get_array_base",
     "get_base_uri",
-    "filepath_to_url",
-    "iter_subclasses",
     "calculate_padding",
-    "resolve_name",
     "NotSet",
-    "is_primitive",
     "uri_match",
     "get_class_name",
     "get_file_type",
@@ -106,35 +96,6 @@ def load_yaml(init, tagged=False):
     return content
 
 
-def human_list(line, separator="and"):
-    """
-    Formats a list for human readability.
-
-    Parameters
-    ----------
-    l : sequence
-        A sequence of strings
-
-    separator : string, optional
-        The word to use between the last two entries.  Default:
-        ``"and"``.
-
-    Returns
-    -------
-    formatted_list : string
-
-    Examples
-    --------
-    >>> human_list(["vanilla", "strawberry", "chocolate"], "or")  # doctest: +SKIP
-    'vanilla, strawberry or chocolate'
-    """
-    warnings.warn("asdf.util.human_list is deprecated", exceptions.AsdfDeprecationWarning)
-    if len(line) == 1:
-        return line[0]
-
-    return ", ".join(line[:-1]) + " " + separator + " " + line[-1]
-
-
 def get_array_base(arr):
     """
     For a given Numpy array, finds the base array that "owns" the
@@ -156,15 +117,6 @@ def get_base_uri(uri):
     return _patched_urllib_parse.urlunparse([*list(parts[:5]), ""])
 
 
-def filepath_to_url(path):
-    """
-    For a given local file path, return a file:// url.
-    """
-    msg = "asdf.util.filepath_to_url is deprecated. Please use pathlib.Path.as_uri"
-    warnings.warn(msg, exceptions.AsdfDeprecationWarning)
-    return _patched_urllib_parse.urljoin("file:", pathname2url(path))
-
-
 def _iter_subclasses(cls):
     """
     Returns all subclasses of a class.
@@ -172,14 +124,6 @@ def _iter_subclasses(cls):
     for x in cls.__subclasses__():
         yield x
         yield from _iter_subclasses(x)
-
-
-def iter_subclasses(cls):
-    """
-    Returns all subclasses of a class.
-    """
-    warnings.warn("asdf.util.iter_subclasses is deprecated", exceptions.AsdfDeprecationWarning)
-    yield from _iter_subclasses(cls)
 
 
 def calculate_padding(content_size, pad_blocks, block_size):
@@ -313,72 +257,6 @@ class HashableDict(dict):
         return hash(frozenset(self.items()))
 
 
-def resolve_name(name):
-    """Resolve a name like ``module.object`` to an object and return it.
-
-    This ends up working like ``from module import object`` but is easier
-    to deal with than the `__import__` builtin and supports digging into
-    submodules.
-
-    Parameters
-    ----------
-
-    name : `str`
-        A dotted path to a Python object--that is, the name of a function,
-        class, or other object in a module with the full path to that module,
-        including parent modules, separated by dots.  Also known as the fully
-        qualified name of the object.
-
-    Examples
-    --------
-
-    >>> resolve_name('asdf.util.resolve_name')  # doctest: +SKIP
-    <function resolve_name at 0x...>
-
-    Raises
-    ------
-    `ImportError`
-        If the module or named object is not found.
-    """
-
-    warnings.warn(
-        "asdf.util.resolve_name is deprecated, see astropy.utils.resolve_name", exceptions.AsdfDeprecationWarning
-    )
-
-    # Note: On python 2 these must be str objects and not unicode
-    parts = [str(part) for part in name.split(".")]
-
-    if len(parts) == 1:
-        # No dots in the name--just a straight up module import
-        cursor = 1
-        attr_name = ""  # Must not be unicode on Python 2
-    else:
-        cursor = len(parts) - 1
-        attr_name = parts[-1]
-
-    module_name = parts[:cursor]
-
-    while cursor > 0:
-        try:
-            ret = __import__(str(".".join(module_name)), fromlist=[attr_name])
-            break
-        except ImportError:
-            if cursor == 0:
-                raise
-            cursor -= 1
-            module_name = parts[:cursor]
-            attr_name = parts[cursor]
-            ret = ""
-
-    for part in parts[cursor:]:
-        try:
-            ret = getattr(ret, part)
-        except AttributeError as err:
-            raise ImportError(name) from err
-
-    return ret
-
-
 def get_class_name(obj, instance=True):
     """
     Given a class or instance of a class, returns a string representing the
@@ -394,65 +272,6 @@ def get_class_name(obj, instance=True):
     """
     typ = type(obj) if instance else obj
     return f"{typ.__module__}.{typ.__qualname__}"
-
-
-def minversion(module, version, inclusive=True):
-    """
-    Returns `True` if the specified Python module satisfies a minimum version
-    requirement, and `False` if not.
-
-    Copied from astropy.utils.misc.minversion to avoid dependency on astropy.
-
-    Parameters
-    ----------
-
-    module : module or `str`
-        An imported module of which to check the version, or the name of
-        that module (in which case an import of that module is attempted--
-        if this fails `False` is returned).
-
-    version : `str`
-        The version as a string that this module must have at a minimum (e.g.
-        ``'0.12'``).
-
-    inclusive : `bool`
-        The specified version meets the requirement inclusively (i.e. ``>=``)
-        as opposed to strictly greater than (default: `True`).
-    """
-
-    warnings.warn("asdf.util.minversion is deprecated, see astropy.utils.minversion", exceptions.AsdfDeprecationWarning)
-
-    if isinstance(module, types.ModuleType):
-        module_name = module.__name__
-        module_version = getattr(module, "__version__", None)
-    elif isinstance(module, str):
-        module_name = module
-        module_version = None
-        try:
-            with warnings.catch_warnings():
-                warnings.filterwarnings("ignore", "asdf.util.resolve_name", exceptions.AsdfDeprecationWarning)
-                module = resolve_name(module_name)
-        except ImportError:
-            return False
-    else:
-        msg = f"module argument must be an actual imported module, or the import name of the module; got {module!r}"
-        raise ValueError(msg)
-
-    if module_version is None:
-        try:
-            module_version = metadata.version(module_name)
-        except metadata.PackageNotFoundError:
-            # Maybe the distribution name is different from package name.
-            # Calling packages_distributions is costly so we do it only
-            # if necessary, as only a few packages don't have the same
-            # distribution name.
-            dist_names = packages_distributions()
-            module_version = metadata.version(dist_names[module_name][0])
-
-    if inclusive:
-        return Version(module_version) >= Version(version)
-
-    return Version(module_version) > Version(version)
 
 
 class _InheritDocstrings(type):
@@ -506,24 +325,6 @@ Special value indicating that a parameter is not set.  Distinct
 from None, which may for example be a value of interest in a search.
 """
 NotSet = _NotSetType()
-
-
-def is_primitive(value):
-    """
-    Determine if a value is an instance of a "primitive" type.
-
-    Parameters
-    ----------
-    value : object
-        the value to test
-
-    Returns
-    -------
-    bool
-        True if the value is primitive, False otherwise
-    """
-    warnings.warn("asdf.util.is_primitive is deprecated", exceptions.AsdfDeprecationWarning)
-    return isinstance(value, (bool, int, float, complex, str)) or value is None
 
 
 def uri_match(pattern, uri):

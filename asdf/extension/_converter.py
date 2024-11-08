@@ -26,7 +26,7 @@ class Converter(abc.ABC):
         tags : list of str
             List of active tags to choose from.  Guaranteed to match
             one of the tag patterns listed in the 'tags' property.
-        ctx : asdf.asdf.SerializationContext
+        ctx : asdf.extension.SerializationContext
             Context of the current serialization request.
 
     and return a str, the selected tag (should be one of tags) or

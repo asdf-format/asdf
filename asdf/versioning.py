@@ -3,18 +3,15 @@ This module deals with things that change between different versions
 of the ASDF spec.
 """
 
-import warnings
 from functools import total_ordering
 
 import yaml
 from semantic_version import SimpleSpec, Version
 
-from .exceptions import AsdfDeprecationWarning
-
 _yaml_base_loader = yaml.CSafeLoader if getattr(yaml, "__with_libyaml__", None) else yaml.SafeLoader
 
 
-__all__ = ["AsdfVersion", "AsdfSpec", "AsdfVersionMixin", "split_tag_version", "join_tag_version"]
+__all__ = ["AsdfVersion", "AsdfVersionMixin", "split_tag_version", "join_tag_version"]
 
 
 def split_tag_version(tag):
@@ -31,34 +28,6 @@ def join_tag_version(name, version):
     Join the root and version of a tag back together.
     """
     return f"{name}-{version}"
-
-
-_version_map = {}
-
-
-def _get_version_map(version):
-    version_map = _version_map.get(version)
-
-    if version_map is None:
-        from .config import get_config
-
-        uri = f"http://stsci.edu/schemas/asdf/version_map-{version}"
-        # The following call to yaml.load is safe because we're
-        # using a loader that inherits from pyyaml's SafeLoader.
-        version_map = yaml.load(get_config().resource_manager[uri], Loader=_yaml_base_loader)  # noqa: S506
-
-        # Separate the core tags from the rest of the standard for convenience
-        version_map["core"] = {}
-        version_map["standard"] = {}
-        for tag_name, tag_version in version_map["tags"].items():
-            if tag_name.startswith("tag:stsci.edu:asdf/core"):
-                version_map["core"][tag_name] = tag_version
-            else:
-                version_map["standard"][tag_name] = tag_version
-
-        _version_map[version] = version_map
-
-    return version_map
 
 
 @total_ordering
@@ -112,43 +81,6 @@ class AsdfVersion(AsdfVersionMixin, Version):
         if isinstance(version, (tuple, list)):
             version = ".".join([str(x) for x in version])
         super().__init__(version)
-
-
-class AsdfSpec(SimpleSpec):
-    """
-    Deprecated.
-    """
-
-    def __init__(self, *args, **kwargs):
-        warnings.warn("AsdfSpec is deprecated.", AsdfDeprecationWarning)
-        super().__init__(*args, **kwargs)
-
-    def match(self, version):
-        if isinstance(version, (str, tuple, list)):
-            version = AsdfVersion(version)
-        return super().match(version)
-
-    def __iterate_versions(self, versions):
-        for v in versions:
-            yield AsdfVersion(v) if isinstance(v, (str, tuple, list)) else v
-
-    def select(self, versions):
-        return super().select(self.__iterate_versions(versions))
-
-    def filter(self, versions):
-        return super().filter(self.__iterate_versions(versions))
-
-    def __eq__(self, other):
-        """Equality between Spec and Version, string, or tuple, means match"""
-        if isinstance(other, SimpleSpec):
-            return super().__eq__(other)
-        return self.match(other)
-
-    def __ne__(self, other):
-        return not self.__eq__(other)
-
-    def __hash__(self):
-        return super().__hash__()
 
 
 supported_versions = [

@@ -6,7 +6,93 @@
 What's New
 **********
 
-.. _whats_new_3.0.0:
+.. _whats_new_4.0.0:
+
+4.0.0
+=====
+
+Hi! Asdf 4.0.0 is a new major version including:
+
+- :ref:`removal of deprecated API <whats_new_4.0.0_removed>`
+- :ref:`changes to a few key defaults <whats_new_4.0.0_defaults>`
+
+.. _whats_new_4.0.0_removed:
+
+Removed API
+-----------
+
+- The ``copy_arrays`` argument for ``asdf.open`` and ``AsdfFile`` has been removed
+  and replaced by ``memmap`` (``memmap == not copy_arrays``).
+- ``ignore_version_mismatch`` has had no effect since asdf 3.0.0 and was removed.
+- the `asdf.util` submodule had several unused functions removed:
+  - ``filepath_to_url``, see ``pathlib.Path.as_uri`` as an alternative
+  - ``is_primitive``, use ``isinstance``
+  - ``iter_subclasses``, use ``object.__subclasses__``
+  - ``minversion``, see ``astropy.utils.minversion``
+  - ``resolve_name``, see ``astropy.utils.resolve_name``
+  - ``human_list``, use ``pprint`` or your own string formatting
+- ``versioning.AsdfSpec``, see `asdf.versioning.AsdfVersion` comparisons
+- ``asdf.testing.helpers.format_tag``, use your own string formatting
+- ``AsdfFile.version_map``, could have been removed with the legacy extension API
+- ``AsdfFile.resolve_and_inline``, use `AsdfFile.resolve_references` and ``all_array_storage=="inline"``
+- ``asdf.asdf``, the public items in this submodule are all in the top level `asdf` module
+- ``asdf.asdf.SerializationContext``, available at `asdf.extension.SerializationContext`
+- ``asdf.stream``, see `asdf.tags.core.Stream`
+- ``ignore_implicit_conversion`` has been removed (see :ref:`whats_new_4.0.0_implicit_conversion` below)
+- providing a tag uri within a schema ``$ref`` will no longer resolve to the schema uri associated with that tag
+
+.. _whats_new_4.0.0_defaults:
+
+New Defaults
+------------
+
+.. _whats_new_4.0.0_validation:
+
+Validation
+^^^^^^^^^^
+
+Several operations no longer automatically trigger tree validation.
+These changes were made to limit the number of times a tree is validated
+to allow incremental construction of trees and to improve performance.
+
+- providing a tree to ``AsdfFile.__init__`` no longer triggers validation
+- calling `AsdfFile.resolve_references` no longer triggers validation
+- assigning a new tree to `AsdfFile.tree` no longer triggers validation
+
+.. note::
+
+   Validation can be triggered with `AsdfFile.validate` and will
+   occur when writing to a file (or reading if ``AsdfConfig.validate_on_read``
+   is enabled).
+
+.. _whats_new_4.0.0_find_references:
+
+Find References
+^^^^^^^^^^^^^^^
+
+Similar to :ref:`whats_new_4.0.0_validation` several operations no longer
+automatically trigger `AsdfFile.find_references`:
+
+- `asdf.open` does not trigger `AsdfFile.find_references`
+- providing a tree (or `AsdfFile`) to ``AsdfFile.__init__`` no longer triggers `AsdfFile.find_references`
+
+.. note::
+
+   `AsdfFile.find_references` is only for JSON pointer references
+   which are most useful for external references. YAML anchors and
+   aliases are automatically resolved.
+
+.. _whats_new_4.0.0_implicit_conversion:
+
+Implicit Conversion
+^^^^^^^^^^^^^^^^^^^
+
+In older asdf versions ``namedtuple`` instances were automatically
+converted to lists when written to a file. When read back in the
+``namedtuple`` was not reconstructed and instead these objects were
+returned as lists. With asdf 4.0.0 this "implicit conversion" is
+no longer performed which allows extensions to implement converters
+for ``namedtuple`` instances.
 
 3.0.0
 =====
@@ -28,7 +114,7 @@ The following deprecated features are removed in asdf 3.0.0:
 
 Please see the links above or the :ref:`deprecations` for more details.
 
-.. _whats_new_3.0.0__ew_features:
+.. _whats_new_3.0.0__new_features:
 
 New features
 ------------

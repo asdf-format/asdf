@@ -99,7 +99,6 @@ def test_empty_file():
         assert len(ff._blocks.blocks) == 0
 
 
-@pytest.mark.filterwarnings("ignore::asdf.exceptions.AsdfDeprecationWarning")
 def test_not_asdf_file():
     buff = io.BytesIO(b"SIMPLE")
     buff.seek(0)

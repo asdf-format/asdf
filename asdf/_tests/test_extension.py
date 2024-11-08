@@ -1,3 +1,4 @@
+import collections
 import fractions
 import sys
 
@@ -1047,3 +1048,33 @@ def test_extension_converter_by_class_path():
 
         converter = extension_manager.get_converter_for_type(mailbox.Mailbox)
         assert isinstance(converter.delegate, MailboxConverter)
+
+
+def test_named_tuple_extension():
+    Point = collections.namedtuple("Point", ["x", "y"])
+
+    class PointConverter:
+        tags = ["asdf://example.com/tags/point-1.0.0"]
+        types = [Point]
+
+        def to_yaml_tree(self, obj, tag, ctx):
+            return list(obj)
+
+        def from_yaml_tree(self, node, tag, ctx):
+            return Point(*node)
+
+    class PointExtension:
+        tags = PointConverter.tags
+        converters = [PointConverter()]
+        extension_uri = "asdf://example.com/extensions/point-1.0.0"
+
+    pt = Point(1, 2)
+
+    # without the extension we can't serialize this
+    with pytest.raises(AsdfSerializationError, match="is not serializable by asdf"):
+        roundtrip_object(pt)
+
+    with config_context() as cfg:
+        cfg.add_extension(PointExtension())
+        rpt = roundtrip_object(pt)
+        assert isinstance(rpt, Point)

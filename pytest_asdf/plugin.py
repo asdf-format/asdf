@@ -1,7 +1,6 @@
 import io
 import os
 import pathlib
-import warnings
 from dataclasses import dataclass
 
 import numpy as np
@@ -40,12 +39,6 @@ def pytest_addoption(parser):
         "Set to true to disable warnings when tag serializers are missing",
         type="bool",
         default=False,
-    )
-    parser.addini(
-        "asdf_schema_ignore_version_mismatch",
-        "Set to true to disable warnings when missing explicit support for a tag",
-        type="string",
-        default="",
     )
     parser.addoption("--asdf-tests", action="store_true", help="Enable ASDF schema tests")
 
@@ -282,14 +275,6 @@ def pytest_collect_file(file_path, parent):
     skip_examples = parent.config.getini("asdf_schema_skip_examples")
     validate_default = parent.config.getini("asdf_schema_validate_default")
     ignore_unrecognized_tag = parent.config.getini("asdf_schema_ignore_unrecognized_tag")
-    ignore_version_mismatch = parent.config.getini("asdf_schema_ignore_version_mismatch")
-    if ignore_version_mismatch != "":
-        from asdf.exceptions import AsdfDeprecationWarning
-
-        warnings.warn(
-            "asdf_schema_ignore_version_mismatch is deprecated and has done nothing since asdf 3.0.0",
-            AsdfDeprecationWarning,
-        )
 
     skip_tests = _parse_test_list(parent.config.getini("asdf_schema_skip_tests"))
     xfail_tests = _parse_test_list(parent.config.getini("asdf_schema_xfail_tests"))

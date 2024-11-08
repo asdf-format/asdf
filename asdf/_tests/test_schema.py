@@ -8,7 +8,7 @@ from numpy.testing import assert_array_equal
 
 import asdf
 from asdf import config_context, constants, get_config, schema, tagged, util, yamlutil
-from asdf.exceptions import AsdfConversionWarning, AsdfDeprecationWarning, AsdfWarning, ValidationError
+from asdf.exceptions import AsdfConversionWarning, AsdfWarning, ValidationError
 from asdf.extension import TagDefinition
 from asdf.testing.helpers import yaml_to_asdf
 
@@ -133,30 +133,6 @@ required: [foobar]
     schema_path.write_bytes(schema_def.encode())
 
     schema_tree = schema.load_schema(str(schema_path), resolve_references=True)
-    schema.check_schema(schema_tree)
-
-
-def test_load_schema_with_full_tag(tmp_path):
-    schema_def = """
-%YAML 1.1
----
-$schema: "http://stsci.edu/schemas/asdf/asdf-schema-1.0.0"
-id: "http://stsci.edu/schemas/asdf/nugatory/nugatory-1.0.0"
-tag: "tag:stsci.edu:asdf/nugatory/nugatory-1.0.0"
-
-type: object
-properties:
-  foobar:
-      $ref: "tag:stsci.edu:asdf/core/ndarray-1.0.0"
-
-required: [foobar]
-...
-    """
-    schema_path = tmp_path / "nugatory.yaml"
-    schema_path.write_bytes(schema_def.encode())
-
-    with pytest.warns(AsdfDeprecationWarning, match="Resolving by tag is deprecated"):
-        schema_tree = schema.load_schema(str(schema_path), resolve_references=True)
     schema.check_schema(schema_tree)
 
 

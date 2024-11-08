@@ -1,0 +1,1 @@
+Remove deprecated API. See docs for full details.

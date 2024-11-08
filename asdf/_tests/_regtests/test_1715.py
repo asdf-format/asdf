@@ -1,5 +1,3 @@
-import pytest
-
 import asdf
 
 
@@ -22,7 +20,6 @@ def test_id_in_tree_breaks_ref(tmp_path):
     af["myref"] = {"$ref": "external.asdf#/thing"}
     af.write_to(main_fn)
 
-    with pytest.warns(asdf.exceptions.AsdfDeprecationWarning, match="find_references"):
-        with asdf.open(main_fn) as af:
-            af.resolve_references()
-            assert af["myref"] == 42
+    with asdf.open(main_fn) as af:
+        af.resolve_references()
+        assert af["myref"] == 42

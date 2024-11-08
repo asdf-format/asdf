@@ -18,7 +18,6 @@ from ._block.manager import Manager as BlockManager
 from ._helpers import validate_version
 from .config import config_context, get_config
 from .exceptions import (
-    AsdfDeprecationWarning,
     AsdfManifestURIMismatchWarning,
     AsdfPackageVersionWarning,
     AsdfWarning,
@@ -29,21 +28,6 @@ from .extension import Extension, ExtensionProxy, _serialization_context, get_ca
 from .search import AsdfSearchResult
 from .tags.core import AsdfObject, ExtensionMetadata, HistoryEntry, Software
 from .util import NotSet
-
-
-def __getattr__(name):
-    if name == "SerializationContext":
-        warnings.warn(
-            "importing SerializationContext from asdf.asdf is deprecated. "
-            "Please import SerializationContext from asdf.extension",
-            AsdfDeprecationWarning,
-        )
-        from .extension._serialization_context import SerializationContext
-
-        return SerializationContext
-
-    msg = f"module {__name__!r} has no attribute {name!r}"
-    raise AttributeError(msg)
 
 
 def _get_asdf_library_info():
@@ -72,9 +56,7 @@ class AsdfFile:
         uri=None,
         extensions=None,
         version=None,
-        ignore_version_mismatch=NotSet,
         ignore_unrecognized_tag=False,
-        ignore_implicit_conversion=NotSet,
         memmap=True,
         lazy_load=True,
         custom_schema=None,
@@ -100,21 +82,9 @@ class AsdfFile:
             The ASDF Standard version.  If not provided, defaults to the
             configured default version.  See `asdf.config.AsdfConfig.default_version`.
 
-        ignore_version_mismatch : bool, optional
-            Deprecated and unused. This setting does nothing since asdf 3.0.0
-            When `True`, do not raise warnings for mismatched schema versions.
-            Set to `True` by default.
-
         ignore_unrecognized_tag : bool, optional
             When `True`, do not raise warnings for unrecognized tags. Set to
             `False` by default.
-
-        ignore_implicit_conversion : bool
-            DEPRECATED
-            When `True`, do not raise warnings when types in the tree are
-            implicitly converted into a serializable object. The motivating
-            case for this is currently ``namedtuple``, which cannot be serialized
-            as-is.
 
         memmap : bool, optional
             When `True`, when reading files, attempt to memmap underlying data
@@ -155,14 +125,7 @@ class AsdfFile:
         else:
             self._custom_schema = None
 
-        if ignore_version_mismatch is not NotSet:
-            warnings.warn(
-                "ignore_version_mismatch is deprecated and has done nothing since asdf 3.0.0",
-                AsdfDeprecationWarning,
-            )
-
         self._ignore_unrecognized_tag = ignore_unrecognized_tag
-        self._ignore_implicit_conversion = ignore_implicit_conversion
 
         # Context of a call to treeutil.walk_and_modify, needed in the AsdfFile
         # in case walk_and_modify is re-entered by extension code (via
@@ -177,12 +140,6 @@ class AsdfFile:
         self._closed = False
         self._external_asdf_by_uri = {}
         self._blocks = BlockManager(uri=uri, lazy_load=lazy_load, memmap=memmap)
-        # this message is passed into find_references to only warn if
-        # a reference was found
-        find_ref_warning_msg = (
-            "find_references during AsdfFile.__init__ is deprecated. "
-            "call AsdfFile.find_references after AsdfFile.__init__"
-        )
         if tree is None:
             # Bypassing the tree property here, to avoid validating
             # an empty tree.
@@ -196,21 +153,12 @@ class AsdfFile:
             self._blocks._uri = tree.uri
             # Set directly to self._tree (bypassing property), since
             # we can assume the other AsdfFile is already valid.
-            self._tree = tree.tree
-            self.find_references(_warning_msg=find_ref_warning_msg)
+            # Call "walk_and_modify" here to use it's logic for
+            # creating a "copy" of the other tree. This mimics what was previously
+            # a call to find_references (which we longer do in AsdfFile.__init__)
+            self._tree = treeutil.walk_and_modify(tree.tree, lambda o: o)
         else:
             self._tree = AsdfObject(tree)
-            try:
-                self.validate()
-            except ValidationError:
-                warnings.warn(
-                    "Validation during AsdfFile.__init__ is deprecated. "
-                    "Please use AsdfFile.validate to validate the tree",
-                    AsdfDeprecationWarning,
-                )
-                raise
-
-            self.find_references(_warning_msg=find_ref_warning_msg)
 
         self._comments = []
 
@@ -251,14 +199,6 @@ class AsdfFile:
         str
         """
         return str(self._version)
-
-    @property
-    def version_map(self):
-        warnings.warn(
-            "AsdfFile.version_map is deprecated. Please use the extension_manager",
-            AsdfDeprecationWarning,
-        )
-        return versioning._get_version_map(self.version_string)
 
     @property
     def extensions(self):
@@ -619,16 +559,7 @@ class AsdfFile:
 
     @tree.setter
     def tree(self, tree):
-        asdf_object = AsdfObject(tree)
-        # Only perform custom validation if the tree is not empty
-        try:
-            self._validate(asdf_object, custom=bool(tree))
-        except ValidationError:
-            warnings.warn(
-                "Validation on tree assignment is deprecated. Please use AsdfFile.validate", AsdfDeprecationWarning
-            )
-            raise
-        self._tree = asdf_object
+        self._tree = AsdfObject(tree)
 
     def keys(self):
         return self.tree.keys()
@@ -955,9 +886,6 @@ class AsdfFile:
                 # ASDF Standard version.  We're using custom_tree_to_tagged_tree
                 # to select the correct tag for us.
                 tree = yamlutil.custom_tree_to_tagged_tree(AsdfObject(), self)
-
-            find_ref_warning_msg = "find_references during open is deprecated. call AsdfFile.find_references after open"
-            tree = reference.find_references(tree, self, _warning_msg=find_ref_warning_msg)
 
             if self.version <= versioning.FILL_DEFAULTS_MAX_VERSION and get_config().legacy_fill_schema_defaults:
                 schema.fill_defaults(tree, self, reading=True)
@@ -1325,49 +1253,22 @@ class AsdfFile:
                 if version is not None:
                     self.version = previous_version
 
-    def find_references(self, _warning_msg=False):
+    def find_references(self):
         """
         Finds all external "JSON References" in the tree and converts
         them to ``reference.Reference`` objects.
         """
         # Set directly to self._tree, since it doesn't need to be re-validated.
-        self._tree = reference.find_references(self._tree, self, _warning_msg=_warning_msg)
+        self._tree = reference.find_references(self._tree, self)
 
-    def resolve_references(self, **kwargs):
+    def resolve_references(self):
         """
         Finds all external "JSON References" in the tree, loads the
         external content, and places it directly in the tree.  Saving
         a ASDF file after this operation means it will have no
         external references, and will be completely self-contained.
         """
-        if len(kwargs):
-            warnings.warn("Passing kwargs to resolve_references is deprecated and does nothing", AsdfDeprecationWarning)
         self._tree = reference.resolve_references(self._tree, self)
-        try:
-            self.validate()
-        except ValidationError:
-            warnings.warn(
-                "Validation during resolve_references is deprecated. "
-                "Please use AsdfFile.validate after resolve_references to validate the resolved tree",
-                AsdfDeprecationWarning,
-            )
-            raise
-
-    def resolve_and_inline(self):
-        """
-        Resolves all external references and inlines all data.  This
-        produces something that, when saved, is a 100% valid YAML
-        file.
-        """
-        warnings.warn(
-            "resolve_and_inline is deprecated. "
-            "Use AsdfFile.resolve_references and all_array_storage=inline "
-            "during AsdfFile.write_to",
-            AsdfDeprecationWarning,
-        )
-        self.resolve_references()
-        for b in self._blocks.blocks:
-            self.set_array_storage(b.data, "inline")
 
     def fill_defaults(self):
         """
@@ -1607,7 +1508,6 @@ def open_asdf(
     mode=None,
     validate_checksums=False,
     extensions=None,
-    ignore_version_mismatch=NotSet,
     ignore_unrecognized_tag=False,
     _force_raw_types=False,
     memmap=True,
@@ -1642,11 +1542,6 @@ def open_asdf(
     extensions : object, optional
         Additional extensions to use when reading and writing the file.
         May be an `asdf.extension.Extension` or a `list` of extensions.
-
-    ignore_version_mismatch : bool, optional
-        Deprecated and unused. This setting does nothing since asdf 3.0.0
-        When `True`, do not raise warnings for mismatched schema versions.
-        Set to `True` by default.
 
     ignore_unrecognized_tag : bool, optional
         When `True`, do not raise warnings for unrecognized tags. Set to
@@ -1713,7 +1608,6 @@ def open_asdf(
             mode = "r"
 
     instance = AsdfFile(
-        ignore_version_mismatch=ignore_version_mismatch,
         ignore_unrecognized_tag=ignore_unrecognized_tag,
         memmap=memmap,
         lazy_load=lazy_load,

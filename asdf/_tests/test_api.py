@@ -4,7 +4,6 @@ import io
 import os
 import pathlib
 import sys
-import warnings
 
 import numpy as np
 import pytest
@@ -12,7 +11,7 @@ from numpy.testing import assert_array_equal
 
 import asdf
 from asdf import config_context, get_config, treeutil, versioning
-from asdf.exceptions import AsdfDeprecationWarning, AsdfPackageVersionWarning, ValidationError
+from asdf.exceptions import AsdfPackageVersionWarning, ValidationError
 from asdf.extension import ExtensionProxy
 from asdf.resource import ResourceMappingProxy
 from asdf.testing.helpers import roundtrip_object, yaml_to_asdf
@@ -261,9 +260,8 @@ def test_context_handler_resolve_and_inline(tmp_path):
     ff.write_to(str(tempname))
 
     with asdf.open(tempname) as newf:
-        with warnings.catch_warnings():
-            warnings.filterwarnings("ignore", "resolve_and_inline is deprecated", AsdfDeprecationWarning)
-            newf.resolve_and_inline()
+        newf.resolve_references()
+        newf.set_array_storage(newf["random"], "inline")
 
     with pytest.raises(OSError, match=r"Cannot access data from closed ASDF file"):
         newf.tree["random"][0]
