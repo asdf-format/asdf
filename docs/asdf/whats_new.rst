@@ -119,6 +119,22 @@ returned as lists. With asdf 4.0.0 this "implicit conversion" is
 no longer performed which allows extensions to implement converters
 for ``namedtuple`` instances.
 
+.. _whats_new_4.0.0_unknown_ndarray_subclasses:
+
+Unknown NDArray Subclasses
+^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+In asdf 3.0.0 a config attribute was added
+`asdf.config.AsdfConfig.convert_unknown_ndarray_subclasses` that
+was enabled by default (to retain the behavior of the removed legacy
+extension that handled ndarrays).
+
+In asdf 4.0.0 this setting is disabled by default and issues a deprecation
+warning when enabled. In an upcoming version of asdf this setting will
+be removed.
+
+See :ref:`convert_unknown_ndarray_subclasses` for more details.
+
 3.0.0
 =====
 
