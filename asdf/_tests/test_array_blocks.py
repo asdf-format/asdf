@@ -811,9 +811,11 @@ def filename_with_array(tmp_path_factory):
 @pytest.mark.parametrize(
     "open_kwargs,should_memmap",
     [
-        ({}, True),
-        ({"memmap": True}, True),
-        ({"memmap": False}, False),
+        ({}, False),
+        ({"lazy_load": True, "memmap": True}, True),
+        ({"lazy_load": False, "memmap": True}, True),
+        ({"lazy_load": True, "memmap": False}, False),
+        ({"lazy_load": False, "memmap": False}, False),
     ],
 )
 def test_open_no_memmap(filename_with_array, open_kwargs, should_memmap):
@@ -823,7 +825,7 @@ def test_open_no_memmap(filename_with_array, open_kwargs, should_memmap):
         default (no kwargs)
         memmap
     """
-    with asdf.open(filename_with_array, lazy_load=False, **open_kwargs) as af:
+    with asdf.open(filename_with_array, **open_kwargs) as af:
         array = af.tree["array"]
         if should_memmap:
             assert isinstance(array.base, np.memmap)

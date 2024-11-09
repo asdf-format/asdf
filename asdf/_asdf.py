@@ -57,7 +57,7 @@ class AsdfFile:
         extensions=None,
         version=None,
         ignore_unrecognized_tag=False,
-        memmap=True,
+        memmap=False,
         lazy_load=True,
         custom_schema=None,
     ):
@@ -88,7 +88,7 @@ class AsdfFile:
 
         memmap : bool, optional
             When `True`, when reading files, attempt to memmap underlying data
-            arrays when possible. Defaults to ``True``.
+            arrays when possible. Defaults to ``False``.
 
         lazy_load : bool, optional
             When `True` and the underlying file handle is seekable, data
@@ -1510,7 +1510,7 @@ def open_asdf(
     extensions=None,
     ignore_unrecognized_tag=False,
     _force_raw_types=False,
-    memmap=True,
+    memmap=False,
     lazy_tree=NotSet,
     lazy_load=True,
     custom_schema=None,
@@ -1549,7 +1549,7 @@ def open_asdf(
 
     memmap : bool, optional
         When `True`, when reading files, attempt to memmap underlying data
-        arrays when possible. Defaults to ``True``.
+        arrays when possible. Defaults to ``False``.
 
     lazy_load : bool, optional
         When `True` and the underlying file handle is seekable, data
