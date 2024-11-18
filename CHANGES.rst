@@ -1,3 +1,35 @@
+4.0.0 (2024-11-18)
+==================
+
+Feature
+-------
+
+- Switch default ASDF standard to 1.6.0. (`#1744
+  <https://github.com/asdf-format/asdf/pull/1744>`_)
+- Raise RuntimeError if a Convert subclass supports multiple tags but doesn't
+  implement select_tag. (`#1853
+  <https://github.com/asdf-format/asdf/pull/1853>`_)
+
+
+General
+-------
+
+- Set ``memmap=False`` to default for ``asdf.open`` and ``AsdfFile.__init__``.
+  (`#1801 <https://github.com/asdf-format/asdf/pull/1801>`_)
+
+
+Removal
+-------
+
+- remove ``copy_arrays`` (replaced by ``memmap``) (`#1800
+  <https://github.com/asdf-format/asdf/pull/1800>`_)
+- Remove deprecated API. See docs for full details. (`#1852
+  <https://github.com/asdf-format/asdf/pull/1852>`_)
+- Switch default convert_unknown_ndarray_subclasses to False and issue
+  deprecation warning if it is enabled. (`#1858
+  <https://github.com/asdf-format/asdf/pull/1858>`_)
+
+
 3.5.0 (2024-10-02)
 ==================
 
