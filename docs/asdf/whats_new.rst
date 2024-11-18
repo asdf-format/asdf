@@ -53,6 +53,24 @@ Memory mapping disabled by default
 
 Calls to ``asdf.open() and ``AsdfFile()`` will now default to ``memmap=False``, disabling memory mapping of arrays by default.
 
+.. _whats_new_4.0.0_standard:
+
+ASDF standard version
+^^^^^^^^^^^^^^^^^^^^^
+
+By default asdf 4.0.0 will write files that use the 1.6.0 version of the
+ASDF standard. This change should be transparent and all files
+that use the older standards are readable. If you wish to write files
+using the 1.5.0 (or older) ASDF standard you can provide a version
+to `AsdfFile.write_to` or change `asdf.config.AsdfConfig.default_version`.
+
+In addition to new schemas and tags ASDF standard 1.6.0 comes with
+a few other changes (scheduled for this version).
+
+- Opening files will no longer trigger `AsdfFile.fill_defaults`.
+- Mapping keys are restricted to str, int, bool
+  See :external+asdf-standard:ref:`yaml_subset`
+
 .. _whats_new_4.0.0_validation:
 
 Validation
