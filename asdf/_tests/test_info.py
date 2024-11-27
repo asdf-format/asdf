@@ -168,8 +168,8 @@ properties:
     description: Some silly description
     type: integer
     archive_catalog:
-        datatype: int
-        destination: [ScienceCommon.silly]
+      datatype: int
+      destination: [ScienceCommon.silly]
   clown:
     title: clown name
     description: clown description
@@ -231,14 +231,14 @@ properties:
     title: Attribute1 Title
     type: string
     archive_catalog:
-        datatype: str
-        destination: [ScienceCommon.attribute1]
+      datatype: str
+      destination: [ScienceCommon.attribute1]
   attribute2:
     title: Attribute2 Title
     type: string
     archive_catalog:
-        datatype: str
-        destination: [ScienceCommon.attribute2]
+      datatype: str
+      destination: [ScienceCommon.attribute2]
 ...
 """
 
@@ -251,19 +251,29 @@ id: "asdf://somewhere.org/asdf/schemas/drink-1.0.0"
 type: object
 title: object with info support 3 title
 description: object description
+allOf:
+    - $ref: drink_ref-1.0.0
+...
+"""
+    drink_ref_schema = """
+%YAML 1.1
+---
+$schema: "asdf://stsci.edu/schemas/asdf/asdf-schema-1.1.0"
+id: "asdf://somewhere.org/asdf/schemas/drink_ref-1.0.0"
 properties:
   attributeOne:
     title: AttributeOne Title
     description: AttributeOne description
     type: string
     archive_catalog:
-        datatype: str
-        destination: [ScienceCommon.attributeOne]
+      datatype: str
+      destination: [ScienceCommon.attributeOne]
   attributeTwo:
-    title: AttributeTwo Title
-    description: AttributeTwo description
-    type: string
-    archive_catalog:
+    allOf:
+    - title: AttributeTwo Title
+      description: AttributeTwo description
+      type: string
+      archive_catalog:
         datatype: str
         destination: [ScienceCommon.attributeTwo]
 ...
@@ -278,6 +288,9 @@ properties:
     spath = tmp_path / "schemas" / "drink-1.0.0.yaml"
     with open(spath, "w") as fschema:
         fschema.write(drink_schema)
+    spath = tmp_path / "schemas" / "drink_ref-1.0.0.yaml"
+    with open(spath, "w") as fschema:
+        fschema.write(drink_ref_schema)
     os.mkdir(tmp_path / "manifests")
     mpath = str(tmp_path / "manifests" / "foo_manifest-1.0.yaml")
     with open(mpath, "w") as fmanifest:

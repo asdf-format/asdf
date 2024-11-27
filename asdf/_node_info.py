@@ -1,6 +1,7 @@
 import re
 from collections import namedtuple
 
+from .exceptions import AsdfSchemaResolutionError
 from .schema import load_schema
 from .treeutil import get_children
 
@@ -18,6 +19,82 @@ def _filter_tree(info, filters):
     info.children = filtered_children
 
     return len(info.children) > 0 or all(f(info.node, info.identifier) for f in filters)
+
+
+def _get_matching_schema_property(schema, key):
+    if "properties" in schema:
+        props = schema["properties"]
+        if key in props:
+            return props[key]
+        if "patternProperties" in props:
+            patterns = props["patternProperties"]
+            for regex in patterns:
+                if re.search(regex, key):
+                    return patterns[regex]
+    return None
+
+
+def _get_subschema_for_property(schema, key):
+    # This does NOT handle $ref the expectation is that the schema
+    # is loaded with resolve_references=True
+    applicable = []
+
+    # first check properties and patternProperties
+    subschema = _get_matching_schema_property(schema, key)
+    if subschema is not None:
+        applicable.append(subschema)
+
+    # next handle schema combiners
+    if "not" in schema:
+        # since we're only concerned here with if the schema applies
+        # it doesn't matter if the schema is nested in a not
+        subschema = _get_subschema_for_property(schema["not"], key)
+        if subschema is not None:
+            applicable.append(subschema)
+
+    for combiner in ("allOf", "oneOf", "anyOf"):
+        for combined_schema in schema.get(combiner, []):
+            subschema = _get_subschema_for_property(combined_schema, key)
+            if subschema is not None:
+                applicable.append(subschema)
+
+    if not applicable:
+        return None
+
+    if len(applicable) > 1:
+        msg = (
+            f"schema info could not be determined for {key} since "
+            f"{len(applicable)} possibly applicable schemas were found."
+        )
+        raise AsdfSchemaResolutionError(msg)
+
+    return applicable[0]
+
+
+def _get_schema_key(schema, key):
+    applicable = []
+    if key in schema:
+        applicable.append(schema[key])
+    if "not" in schema:
+        possible = _get_schema_key(schema["not"], key)
+        if possible is not None:
+            applicable.append(possible)
+    for combiner in ("allOf", "oneOf", "anyOf"):
+        for combined_schema in schema.get(combiner, []):
+            possible = _get_schema_key(combined_schema, key)
+            if possible is not None:
+                applicable.append(possible)
+    if not applicable:
+        return None
+
+    if len(applicable) > 1:
+        msg = (
+            f"schema info could not be determined for {key} since "
+            f"{len(applicable)} possibly applicable schemas were found."
+        )
+        raise AsdfSchemaResolutionError(msg)
+
+    return applicable[0]
 
 
 def create_tree(key, node, identifier="root", filters=None, refresh_extension_manager=False):
@@ -214,22 +291,12 @@ class NodeSchemaInfo:
 
     @property
     def info(self):
-        if self.schema is not None:
-            return self.schema.get(self.key, None)
-
-        return None
+        if self.schema is None:
+            return None
+        return _get_schema_key(self.schema, self.key)
 
     def get_schema_for_property(self, identifier):
-        subschema = self.schema.get("properties", {}).get(identifier, None)
-        if subschema is not None:
-            return subschema
-
-        subschema = self.schema.get("properties", {}).get("patternProperties", None)
-        if subschema:
-            for key in subschema:
-                if re.search(key, identifier):
-                    return subschema[key]
-        return {}
+        return _get_subschema_for_property(self.schema, identifier) or {}
 
     def set_schema_for_property(self, parent, identifier):
         """Extract a subschema from the parent for the identified property"""
@@ -241,7 +308,7 @@ class NodeSchemaInfo:
 
         tag_def = extension_manager.get_tag_definition(node._tag)
         schema_uri = tag_def.schema_uris[0]
-        schema = load_schema(schema_uri)
+        schema = load_schema(schema_uri, resolve_references=True)
 
         self.schema = schema
 

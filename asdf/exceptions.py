@@ -84,3 +84,9 @@ class AsdfSerializationError(RepresenterError):
     that the object does not have a supporting asdf Converter and needs to
     be manually converted to a supported type.
     """
+
+
+class AsdfSchemaResolutionError(ValueError):
+    """
+    An attempt to lookup schema for an attribute failed.
+    """
