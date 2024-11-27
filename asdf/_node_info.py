@@ -1,7 +1,7 @@
 import re
 from collections import namedtuple
 
-from .exceptions import AsdfSchemaResolutionError
+from .exceptions import AsdfInfoResolutionError
 from .schema import load_schema
 from .treeutil import get_children
 
@@ -66,7 +66,7 @@ def _get_subschema_for_property(schema, key):
             f"schema info could not be determined for {key} since "
             f"{len(applicable)} possibly applicable schemas were found."
         )
-        raise AsdfSchemaResolutionError(msg)
+        raise AsdfInfoResolutionError(msg)
 
     return applicable[0]
 
@@ -92,7 +92,7 @@ def _get_schema_key(schema, key):
             f"schema info could not be determined for {key} since "
             f"{len(applicable)} possibly applicable schemas were found."
         )
-        raise AsdfSchemaResolutionError(msg)
+        raise AsdfInfoResolutionError(msg)
 
     return applicable[0]
 

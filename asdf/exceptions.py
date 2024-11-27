@@ -86,7 +86,7 @@ class AsdfSerializationError(RepresenterError):
     """
 
 
-class AsdfSchemaResolutionError(ValueError):
+class AsdfInfoResolutionError(ValueError):
     """
     An attempt to lookup schema for an attribute failed.
     """
