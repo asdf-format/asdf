@@ -4,8 +4,10 @@ import re
 import tempfile
 
 import numpy as np
+import pytest
 
 import asdf
+from asdf.exceptions import AsdfInfoResolutionError
 from asdf.extension import ExtensionManager, ExtensionProxy, ManifestExtension
 from asdf.resource import DirectoryResourceMapping
 
@@ -715,3 +717,33 @@ def test_info_str(capsys):
     assert "(NewlineStr)\n" in captured.out
     assert "(CarriageReturnStr)\n" in captured.out
     assert "(NiceStr): nice\n" in captured.out
+
+
+@pytest.mark.parametrize(
+    "schema, expected",
+    [
+        ({"title": "foo"}, "foo"),
+        ({"allOf": [{"title": "foo"}]}, "foo"),
+        ({"oneOf": [{"title": "foo"}]}, "foo"),
+        ({"anyOf": [{"title": "foo"}]}, "foo"),
+        ({"not": {"title": "foo"}}, None),
+    ],
+)
+def test_node_info(schema, expected):
+    ni = asdf._node_info.NodeSchemaInfo.from_root_node("title", "root", {}, schema)
+    assert ni.info == expected
+
+
+@pytest.mark.parametrize(
+    "schema",
+    [
+        {"allOf": [{"title": "foo"}, {"title": "bar"}]},
+        {"oneOf": [{"title": "foo"}, {"title": "bar"}]},
+        {"anyOf": [{"title": "foo"}, {"title": "bar"}]},
+        {"allOf": [{"title": "foo"}, {"title": "bar"}]},
+    ],
+)
+def test_node_info_failure(schema):
+    ni = asdf._node_info.NodeSchemaInfo.from_root_node("title", "root", {}, schema)
+    with pytest.raises(AsdfInfoResolutionError):
+        ni.info
