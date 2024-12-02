@@ -722,6 +722,65 @@ def test_info_str(capsys):
 @pytest.mark.parametrize(
     "schema, expected",
     [
+        ({"properties": {"foo": {"type": "object"}}}, {"type": "object"}),
+        ({"allOf": [{"properties": {"foo": {"type": "object"}}}]}, {"type": "object"}),
+        ({"oneOf": [{"properties": {"foo": {"type": "object"}}}]}, {"type": "object"}),
+        ({"anyOf": [{"properties": {"foo": {"type": "object"}}}]}, {"type": "object"}),
+    ],
+)
+def test_node_property(schema, expected):
+    ni = asdf._node_info.NodeSchemaInfo.from_root_node("title", "root", {}, schema)
+    assert ni.get_schema_for_property("foo") == expected
+
+
+@pytest.mark.parametrize(
+    "schema, msg",
+    [
+        ({"not": {"properties": {"foo": {"type": "object"}}}}, "nested under a 'not'"),
+        (
+            {"properties": {"foo": {"type": "object"}}, "allOf": [{"properties": {"foo": {"type": "object"}}}]},
+            "2 possibly applicable schemas",
+        ),
+        (
+            {"properties": {"foo": {"type": "object"}}, "anyOf": [{"properties": {"foo": {"type": "object"}}}]},
+            "2 possibly applicable schemas",
+        ),
+        (
+            {"properties": {"foo": {"type": "object"}}, "oneOf": [{"properties": {"foo": {"type": "object"}}}]},
+            "2 possibly applicable schemas",
+        ),
+        (
+            {
+                "allOf": [{"properties": {"foo": {"type": "object"}}}],
+                "anyOf": [{"properties": {"foo": {"type": "object"}}}],
+            },
+            "2 possibly applicable schemas",
+        ),
+        (
+            {
+                "anyOf": [{"properties": {"foo": {"type": "object"}}}],
+                "oneOf": [{"properties": {"foo": {"type": "object"}}}],
+            },
+            "2 possibly applicable schemas",
+        ),
+        (
+            {
+                "oneOf": [{"properties": {"foo": {"type": "object"}}}],
+                "allOf": [{"properties": {"foo": {"type": "object"}}}],
+            },
+            "2 possibly applicable schemas",
+        ),
+    ],
+)
+def test_node_property_error(schema, msg):
+    ni = asdf._node_info.NodeSchemaInfo.from_root_node("title", "root", {}, schema)
+    with pytest.raises(AsdfInfoResolutionError, match=msg):
+        ni.get_schema_for_property("foo")
+
+
+@pytest.mark.parametrize(
+    "schema, expected",
+    [
         ({"title": "foo"}, "foo"),
         ({"allOf": [{"title": "foo"}]}, "foo"),
         ({"oneOf": [{"title": "foo"}]}, "foo"),
@@ -745,5 +804,5 @@ def test_node_info(schema, expected):
 )
 def test_node_info_failure(schema):
     ni = asdf._node_info.NodeSchemaInfo.from_root_node("title", "root", {}, schema)
-    with pytest.raises(AsdfInfoResolutionError):
+    with pytest.raises(AsdfInfoResolutionError, match="2 possibly applicable schemas"):
         ni.info

@@ -46,11 +46,12 @@ def _get_subschema_for_property(schema, key):
 
     # next handle schema combiners
     if "not" in schema:
-        # Since we're only concerned here with if the schema applies
-        # it doesn't matter if the schema is nested in a not
         subschema = _get_subschema_for_property(schema["not"], key)
         if subschema is not None:
-            applicable.append(subschema)
+            # We can't resolve a valid subschema under a "not" since
+            # we'd have to know how to invert a schema
+            msg = f"schema info could not be determined for {key} since " f"it is nested under a 'not'."
+            raise AsdfInfoResolutionError(msg)
 
     for combiner in ("allOf", "oneOf", "anyOf"):
         for combined_schema in schema.get(combiner, []):
