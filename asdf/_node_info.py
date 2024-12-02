@@ -46,7 +46,7 @@ def _get_subschema_for_property(schema, key):
 
     # next handle schema combiners
     if "not" in schema:
-        # since we're only concerned here with if the schema applies
+        # Since we're only concerned here with if the schema applies
         # it doesn't matter if the schema is nested in a not
         subschema = _get_subschema_for_property(schema["not"], key)
         if subschema is not None:
@@ -75,10 +75,8 @@ def _get_schema_key(schema, key):
     applicable = []
     if key in schema:
         applicable.append(schema[key])
-    if "not" in schema:
-        possible = _get_schema_key(schema["not"], key)
-        if possible is not None:
-            applicable.append(possible)
+    # Here we don't consider any subschema under "not" to avoid
+    # false positives for keys like "type" etc.
     for combiner in ("allOf", "oneOf", "anyOf"):
         for combined_schema in schema.get(combiner, []):
             possible = _get_schema_key(combined_schema, key)
