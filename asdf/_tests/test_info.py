@@ -7,7 +7,6 @@ import numpy as np
 import pytest
 
 import asdf
-from asdf.exceptions import AsdfInfoResolutionError
 from asdf.extension import ExtensionManager, ExtensionProxy, ManifestExtension
 from asdf.resource import DirectoryResourceMapping
 
@@ -734,48 +733,29 @@ def test_node_property(schema, expected):
 
 
 @pytest.mark.parametrize(
-    "schema, msg",
+    "schema",
     [
-        ({"not": {"properties": {"foo": {"type": "object"}}}}, "nested under a 'not'"),
-        (
-            {"properties": {"foo": {"type": "object"}}, "allOf": [{"properties": {"foo": {"type": "object"}}}]},
-            "2 possibly applicable schemas",
-        ),
-        (
-            {"properties": {"foo": {"type": "object"}}, "anyOf": [{"properties": {"foo": {"type": "object"}}}]},
-            "2 possibly applicable schemas",
-        ),
-        (
-            {"properties": {"foo": {"type": "object"}}, "oneOf": [{"properties": {"foo": {"type": "object"}}}]},
-            "2 possibly applicable schemas",
-        ),
-        (
-            {
-                "allOf": [{"properties": {"foo": {"type": "object"}}}],
-                "anyOf": [{"properties": {"foo": {"type": "object"}}}],
-            },
-            "2 possibly applicable schemas",
-        ),
-        (
-            {
-                "anyOf": [{"properties": {"foo": {"type": "object"}}}],
-                "oneOf": [{"properties": {"foo": {"type": "object"}}}],
-            },
-            "2 possibly applicable schemas",
-        ),
-        (
-            {
-                "oneOf": [{"properties": {"foo": {"type": "object"}}}],
-                "allOf": [{"properties": {"foo": {"type": "object"}}}],
-            },
-            "2 possibly applicable schemas",
-        ),
+        {"not": {"properties": {"foo": {"type": "object"}}}},
+        {"properties": {"foo": {"type": "object"}}, "allOf": [{"properties": {"foo": {"type": "object"}}}]},
+        {"properties": {"foo": {"type": "object"}}, "anyOf": [{"properties": {"foo": {"type": "object"}}}]},
+        {"properties": {"foo": {"type": "object"}}, "oneOf": [{"properties": {"foo": {"type": "object"}}}]},
+        {
+            "allOf": [{"properties": {"foo": {"type": "object"}}}],
+            "anyOf": [{"properties": {"foo": {"type": "object"}}}],
+        },
+        {
+            "anyOf": [{"properties": {"foo": {"type": "object"}}}],
+            "oneOf": [{"properties": {"foo": {"type": "object"}}}],
+        },
+        {
+            "oneOf": [{"properties": {"foo": {"type": "object"}}}],
+            "allOf": [{"properties": {"foo": {"type": "object"}}}],
+        },
     ],
 )
-def test_node_property_error(schema, msg):
+def test_node_property_error(schema):
     ni = asdf._node_info.NodeSchemaInfo.from_root_node("title", "root", {}, schema)
-    with pytest.raises(AsdfInfoResolutionError, match=msg):
-        ni.get_schema_for_property("foo")
+    assert ni.get_schema_for_property("foo") == {}
 
 
 @pytest.mark.parametrize(
@@ -786,23 +766,12 @@ def test_node_property_error(schema, msg):
         ({"oneOf": [{"title": "foo"}]}, "foo"),
         ({"anyOf": [{"title": "foo"}]}, "foo"),
         ({"not": {"title": "foo"}}, None),
+        ({"allOf": [{"title": "foo"}, {"title": "bar"}]}, None),
+        ({"oneOf": [{"title": "foo"}, {"title": "bar"}]}, None),
+        ({"anyOf": [{"title": "foo"}, {"title": "bar"}]}, None),
+        ({"allOf": [{"title": "foo"}, {"title": "bar"}]}, None),
     ],
 )
 def test_node_info(schema, expected):
     ni = asdf._node_info.NodeSchemaInfo.from_root_node("title", "root", {}, schema)
     assert ni.info == expected
-
-
-@pytest.mark.parametrize(
-    "schema",
-    [
-        {"allOf": [{"title": "foo"}, {"title": "bar"}]},
-        {"oneOf": [{"title": "foo"}, {"title": "bar"}]},
-        {"anyOf": [{"title": "foo"}, {"title": "bar"}]},
-        {"allOf": [{"title": "foo"}, {"title": "bar"}]},
-    ],
-)
-def test_node_info_failure(schema):
-    ni = asdf._node_info.NodeSchemaInfo.from_root_node("title", "root", {}, schema)
-    with pytest.raises(AsdfInfoResolutionError, match="2 possibly applicable schemas"):
-        ni.info
