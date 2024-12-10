@@ -1,1 +1,1 @@
-Improve ``schema_info`` handling of schemas with combiners (allOf, anyOf, etc). Raise AsdfInfoResolutionError for ambiguous info.
+Improve ``schema_info`` handling of schemas with combiners (allOf, anyOf, etc).

@@ -1,7 +1,6 @@
 import re
 from collections import namedtuple
 
-from .exceptions import AsdfInfoResolutionError
 from .schema import load_schema
 from .treeutil import get_children
 
@@ -50,8 +49,7 @@ def _get_subschema_for_property(schema, key):
         if subschema is not None:
             # We can't resolve a valid subschema under a "not" since
             # we'd have to know how to invert a schema
-            msg = f"schema info could not be determined for {key} since " f"it is nested under a 'not'."
-            raise AsdfInfoResolutionError(msg)
+            return None
 
     for combiner in ("allOf", "oneOf", "anyOf"):
         for combined_schema in schema.get(combiner, []):
@@ -59,17 +57,10 @@ def _get_subschema_for_property(schema, key):
             if subschema is not None:
                 applicable.append(subschema)
 
-    if not applicable:
-        return None
-
-    if len(applicable) > 1:
-        msg = (
-            f"schema info could not be determined for {key} since "
-            f"{len(applicable)} possibly applicable schemas were found."
-        )
-        raise AsdfInfoResolutionError(msg)
-
-    return applicable[0]
+    # only return the subschema if we found exactly 1 applicable
+    if len(applicable) == 1:
+        return applicable[0]
+    return None
 
 
 def _get_schema_key(schema, key):
@@ -83,17 +74,11 @@ def _get_schema_key(schema, key):
             possible = _get_schema_key(combined_schema, key)
             if possible is not None:
                 applicable.append(possible)
-    if not applicable:
-        return None
 
-    if len(applicable) > 1:
-        msg = (
-            f"schema info could not be determined for {key} since "
-            f"{len(applicable)} possibly applicable schemas were found."
-        )
-        raise AsdfInfoResolutionError(msg)
-
-    return applicable[0]
+    # only return the property if we found exactly 1 applicable
+    if len(applicable) == 1:
+        return applicable[0]
+    return None
 
 
 def create_tree(key, node, identifier="root", filters=None, refresh_extension_manager=False):
