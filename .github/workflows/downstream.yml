@@ -29,7 +29,7 @@ jobs:
     with:
       submodules: false
       # Any env name which does not start with `pyXY` will use this Python version.
-      default_python: '3.10'
+      default_python: '3.12'
       envs: |
         - linux: asdf-wcs-schemas
         - linux: asdf-coordinates-schemas
@@ -42,7 +42,7 @@ jobs:
     with:
       submodules: false
       # Any env name which does not start with `pyXY` will use this Python version.
-      default_python: '3.10'
+      default_python: '3.12'
       envs: |
         - linux: asdf-astropy
         - linux: specutils
@@ -53,7 +53,7 @@ jobs:
     with:
       submodules: false
       # Any env name which does not start with `pyXY` will use this Python version.
-      default_python: '3.10'
+      default_python: '3.12'
       envs: |
         - linux: astrocut
         - linux: gwcs
@@ -68,7 +68,7 @@ jobs:
     with:
       submodules: false
       # Any env name which does not start with `pyXY` will use this Python version.
-      default_python: '3.10'
+      default_python: '3.12'
       envs: |
         - linux: weldx
         - linux: sunpy
