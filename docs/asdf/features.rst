@@ -555,10 +555,10 @@ also search by type, value, or any combination thereof:
 .. code:: pycon
 
    >>> af.search("foo")  # Find nodes with key containing the string 'foo' # doctest: +SKIP
-   >>> af.search(type=int)  # Find nodes that are instances of int # doctest: +SKIP
+   >>> af.search(type_=int)  # Find nodes that are instances of int # doctest: +SKIP
    >>> af.search(value=10)  # Find nodes whose value is equal to 10 # doctest: +SKIP
    >>> af.search(
-   ...     "foo", type=int, value=10
+   ...     "foo", type_=int, value=10
    ... )  # Find the intersection of the above # doctest: +SKIP
 
 Chaining searches
@@ -571,8 +571,8 @@ to see intermediate results before deciding how to further narrow the search.
 .. code:: pycon
 
     >>> af.search()  # See an overview of the entire ASDF tree # doctest: +SKIP
-    >>> af.search().search(type="NDArrayType")  # Find only ndarrays # doctest: +SKIP
-    >>> af.search().search(type="NDArrayType").search(
+    >>> af.search().search(type_="NDArrayType")  # Find only ndarrays # doctest: +SKIP
+    >>> af.search().search(type_="NDArrayType").search(
     ...     "err"
     ... )  # Only ndarrays with 'err' in the key # doctest: +SKIP
 
@@ -586,7 +586,7 @@ a child node of the current tree root:
 
     >>> af.search()["data"]  # Restrict search to the 'data' child # doctest: +SKIP
     >>> af.search()["data"].search(
-    ...     type=int
+    ...     type_=int
     ... )  # Find integer descendants of 'data' # doctest: +SKIP
 
 Regular expression searches
@@ -607,15 +607,15 @@ the regular expression is matched:
 
    >>> af.search("^7$")  # Returns all nodes with key '7' or index 7 # doctest: +SKIP
 
-When the ``type`` argument is a string, the search compares against the fully-qualified
+When the ``type_`` argument is a string, the search compares against the fully-qualified
 class name of each node:
 
 .. code:: pycon
 
     >>> af.search(
-    ...     type="asdf.tags.core.Software"
+    ...     type_="asdf.tags.core.Software"
     ... )  # Find instances of ASDF's Software type # doctest: +SKIP
-    >>> af.search(type="^asdf\.")  # Find all ASDF objects # doctest: +SKIP
+    >>> af.search(type_="^asdf\.")  # Find all ASDF objects # doctest: +SKIP
 
 When the ``value`` argument is a string, the search compares against the string
 representation of each node's value.
@@ -629,15 +629,15 @@ representation of each node's value.
 Arbitrary search criteria
 -------------------------
 
-If ``key``, ``type``, and ``value`` aren't sufficient, we can also provide a callback
-function to search by arbitrary criteria.  The ``filter`` parameter accepts
+If ``key``, ``type_``, and ``value`` aren't sufficient, we can also provide a callback
+function to search by arbitrary criteria.  The ``filter_`` parameter accepts
 a callable that receives the node under consideration, and returns ``True``
 to keep it or ``False`` to reject it from the search results.  For example,
 to search for NDArrayType with a particular shape:
 
 .. code:: pycon
 
-    >>> af.search(type="NDArrayType", filter=lambda n: n.shape[0] == 1024)  # doctest: +SKIP
+    >>> af.search(type_="NDArrayType", filter_=lambda n: n.shape[0] == 1024)  # doctest: +SKIP
 
 Formatting search results
 -------------------------
@@ -650,14 +650,14 @@ change those values, we call `AsdfSearchResult.format`:
 
 .. code:: pycon
 
-    >>> af.search(type=float)  # Displays limited rows # doctest: +SKIP
-    >>> af.search(type=float).format(max_rows=None)  # Show all matching rows # doctest: +SKIP
+    >>> af.search(type_=float)  # Displays limited rows # doctest: +SKIP
+    >>> af.search(type_=float).format(max_rows=None)  # Show all matching rows # doctest: +SKIP
 
 Like `AsdfSearchResult.search`, calls to format may be chained:
 
 .. code:: pycon
 
-    >>> af.search("time").format(max_rows=10).search(type=str).format(
+    >>> af.search("time").format(max_rows=10).search(type_=str).format(
     ...     max_rows=None
     ... )  # doctest: +SKIP
 
