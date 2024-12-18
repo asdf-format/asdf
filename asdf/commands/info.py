@@ -2,7 +2,7 @@
 Commands for displaying summaries of ASDF trees
 """
 
-from asdf import _convenience as convenience
+import asdf
 
 from .main import Command
 
@@ -36,4 +36,5 @@ class Info(Command):
 
 
 def info(filename, max_rows, max_cols, show_values):
-    convenience.info(filename, max_rows=max_rows, max_cols=max_cols, show_values=show_values)
+    with asdf.open(filename) as af:
+        af.info(max_rows, max_cols, show_values)
