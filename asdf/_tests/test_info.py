@@ -4,6 +4,7 @@ import re
 import tempfile
 
 import numpy as np
+import pytest
 
 import asdf
 from asdf.extension import ExtensionManager, ExtensionProxy, ManifestExtension
@@ -168,8 +169,8 @@ properties:
     description: Some silly description
     type: integer
     archive_catalog:
-        datatype: int
-        destination: [ScienceCommon.silly]
+      datatype: int
+      destination: [ScienceCommon.silly]
   clown:
     title: clown name
     description: clown description
@@ -231,14 +232,14 @@ properties:
     title: Attribute1 Title
     type: string
     archive_catalog:
-        datatype: str
-        destination: [ScienceCommon.attribute1]
+      datatype: str
+      destination: [ScienceCommon.attribute1]
   attribute2:
     title: Attribute2 Title
     type: string
     archive_catalog:
-        datatype: str
-        destination: [ScienceCommon.attribute2]
+      datatype: str
+      destination: [ScienceCommon.attribute2]
 ...
 """
 
@@ -251,19 +252,29 @@ id: "asdf://somewhere.org/asdf/schemas/drink-1.0.0"
 type: object
 title: object with info support 3 title
 description: object description
+allOf:
+    - $ref: drink_ref-1.0.0
+...
+"""
+    drink_ref_schema = """
+%YAML 1.1
+---
+$schema: "asdf://stsci.edu/schemas/asdf/asdf-schema-1.1.0"
+id: "asdf://somewhere.org/asdf/schemas/drink_ref-1.0.0"
 properties:
   attributeOne:
     title: AttributeOne Title
     description: AttributeOne description
     type: string
     archive_catalog:
-        datatype: str
-        destination: [ScienceCommon.attributeOne]
+      datatype: str
+      destination: [ScienceCommon.attributeOne]
   attributeTwo:
-    title: AttributeTwo Title
-    description: AttributeTwo description
-    type: string
-    archive_catalog:
+    allOf:
+    - title: AttributeTwo Title
+      description: AttributeTwo description
+      type: string
+      archive_catalog:
         datatype: str
         destination: [ScienceCommon.attributeTwo]
 ...
@@ -278,6 +289,9 @@ properties:
     spath = tmp_path / "schemas" / "drink-1.0.0.yaml"
     with open(spath, "w") as fschema:
         fschema.write(drink_schema)
+    spath = tmp_path / "schemas" / "drink_ref-1.0.0.yaml"
+    with open(spath, "w") as fschema:
+        fschema.write(drink_ref_schema)
     os.mkdir(tmp_path / "manifests")
     mpath = str(tmp_path / "manifests" / "foo_manifest-1.0.yaml")
     with open(mpath, "w") as fmanifest:
@@ -702,3 +716,62 @@ def test_info_str(capsys):
     assert "(NewlineStr)\n" in captured.out
     assert "(CarriageReturnStr)\n" in captured.out
     assert "(NiceStr): nice\n" in captured.out
+
+
+@pytest.mark.parametrize(
+    "schema, expected",
+    [
+        ({"properties": {"foo": {"type": "object"}}}, {"type": "object"}),
+        ({"allOf": [{"properties": {"foo": {"type": "object"}}}]}, {"type": "object"}),
+        ({"oneOf": [{"properties": {"foo": {"type": "object"}}}]}, {"type": "object"}),
+        ({"anyOf": [{"properties": {"foo": {"type": "object"}}}]}, {"type": "object"}),
+    ],
+)
+def test_node_property(schema, expected):
+    ni = asdf._node_info.NodeSchemaInfo.from_root_node("title", "root", {}, schema)
+    assert ni.get_schema_for_property("foo") == expected
+
+
+@pytest.mark.parametrize(
+    "schema",
+    [
+        {"not": {"properties": {"foo": {"type": "object"}}}},
+        {"properties": {"foo": {"type": "object"}}, "allOf": [{"properties": {"foo": {"type": "object"}}}]},
+        {"properties": {"foo": {"type": "object"}}, "anyOf": [{"properties": {"foo": {"type": "object"}}}]},
+        {"properties": {"foo": {"type": "object"}}, "oneOf": [{"properties": {"foo": {"type": "object"}}}]},
+        {
+            "allOf": [{"properties": {"foo": {"type": "object"}}}],
+            "anyOf": [{"properties": {"foo": {"type": "object"}}}],
+        },
+        {
+            "anyOf": [{"properties": {"foo": {"type": "object"}}}],
+            "oneOf": [{"properties": {"foo": {"type": "object"}}}],
+        },
+        {
+            "oneOf": [{"properties": {"foo": {"type": "object"}}}],
+            "allOf": [{"properties": {"foo": {"type": "object"}}}],
+        },
+    ],
+)
+def test_node_property_error(schema):
+    ni = asdf._node_info.NodeSchemaInfo.from_root_node("title", "root", {}, schema)
+    assert ni.get_schema_for_property("foo") == {}
+
+
+@pytest.mark.parametrize(
+    "schema, expected",
+    [
+        ({"title": "foo"}, "foo"),
+        ({"allOf": [{"title": "foo"}]}, "foo"),
+        ({"oneOf": [{"title": "foo"}]}, "foo"),
+        ({"anyOf": [{"title": "foo"}]}, "foo"),
+        ({"not": {"title": "foo"}}, None),
+        ({"allOf": [{"title": "foo"}, {"title": "bar"}]}, None),
+        ({"oneOf": [{"title": "foo"}, {"title": "bar"}]}, None),
+        ({"anyOf": [{"title": "foo"}, {"title": "bar"}]}, None),
+        ({"allOf": [{"title": "foo"}, {"title": "bar"}]}, None),
+    ],
+)
+def test_node_info(schema, expected):
+    ni = asdf._node_info.NodeSchemaInfo.from_root_node("title", "root", {}, schema)
+    assert ni.info == expected
