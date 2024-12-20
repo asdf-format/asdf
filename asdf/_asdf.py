@@ -1412,6 +1412,7 @@ class AsdfFile:
             self.tree,
             preserve_list=preserve_list,
             refresh_extension_manager=refresh_extension_manager,
+            extension_manager=self.extension_manager,
         )
 
     def info(
@@ -1452,6 +1453,7 @@ class AsdfFile:
             show_values=show_values,
             identifier="root",
             refresh_extension_manager=refresh_extension_manager,
+            extension_manager=self.extension_manager,
         )
         print("\n".join(lines))
 

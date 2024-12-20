@@ -138,7 +138,7 @@ def _get_schema_key(schema, key):
     return None
 
 
-def create_tree(key, node, identifier="root", filters=None, refresh_extension_manager=False):
+def create_tree(key, node, identifier="root", filters=None, refresh_extension_manager=False, extension_manager=None):
     """
     Create a `NodeSchemaInfo` tree which can be filtered from a base node.
 
@@ -164,6 +164,7 @@ def create_tree(key, node, identifier="root", filters=None, refresh_extension_ma
         identifier,
         node,
         refresh_extension_manager=refresh_extension_manager,
+        extension_manager=extension_manager,
     )
 
     if len(filters) > 0 and not _filter_tree(schema_info, filters):
@@ -180,6 +181,7 @@ def collect_schema_info(
     filters=None,
     preserve_list=True,
     refresh_extension_manager=False,
+    extension_manager=None,
 ):
     """
     Collect from the underlying schemas any of the info stored under key, relative to the path
@@ -209,6 +211,7 @@ def collect_schema_info(
         identifier=identifier,
         filters=[] if filters is None else filters,
         refresh_extension_manager=refresh_extension_manager,
+        extension_manager=extension_manager,
     )
 
     info = schema_info.collect_info(preserve_list=preserve_list)
@@ -299,7 +302,7 @@ class NodeSchemaInfo:
         The portion of the underlying schema corresponding to the node.
     """
 
-    def __init__(self, key, parent, identifier, node, depth, recursive=False, visible=True):
+    def __init__(self, key, parent, identifier, node, depth, recursive=False, visible=True, extension_manager=None):
         self.key = key
         self.parent = parent
         self.identifier = identifier
@@ -309,6 +312,7 @@ class NodeSchemaInfo:
         self.visible = visible
         self.children = []
         self.schema = None
+        self.extension_manager = extension_manager or _get_extension_manager()
 
     @classmethod
     def traversable(cls, node):
@@ -354,13 +358,15 @@ class NodeSchemaInfo:
         self.schema = schema
 
     @classmethod
-    def from_root_node(cls, key, root_identifier, root_node, schema=None, refresh_extension_manager=False):
+    def from_root_node(
+        cls, key, root_identifier, root_node, schema=None, refresh_extension_manager=False, extension_manager=None
+    ):
         """
         Build a NodeSchemaInfo tree from the given ASDF root node.
         Intentionally processes the tree in breadth-first order so that recursively
         referenced nodes are displayed at their shallowest reference point.
         """
-        extension_manager = _get_extension_manager(refresh_extension_manager)
+        extension_manager = extension_manager or _get_extension_manager(refresh_extension_manager)
 
         current_nodes = [(None, root_identifier, root_node)]
         seen = set()
@@ -371,11 +377,21 @@ class NodeSchemaInfo:
 
             for parent, identifier, node in current_nodes:
                 if (isinstance(node, (dict, tuple)) or cls.traversable(node)) and id(node) in seen:
-                    info = NodeSchemaInfo(key, parent, identifier, node, current_depth, recursive=True)
+                    info = NodeSchemaInfo(
+                        key,
+                        parent,
+                        identifier,
+                        node,
+                        current_depth,
+                        recursive=True,
+                        extension_manager=extension_manager,
+                    )
                     parent.children.append(info)
 
                 else:
-                    info = NodeSchemaInfo(key, parent, identifier, node, current_depth)
+                    info = NodeSchemaInfo(
+                        key, parent, identifier, node, current_depth, extension_manager=extension_manager
+                    )
 
                     if root_info is None:
                         root_info = info
