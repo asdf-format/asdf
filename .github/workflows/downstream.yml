@@ -70,7 +70,6 @@ jobs:
       # Any env name which does not start with `pyXY` will use this Python version.
       default_python: '3.12'
       envs: |
-        - linux: weldx
         - linux: sunpy
         - linux: dkist
         - linux: abacusutils
