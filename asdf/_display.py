@@ -28,8 +28,6 @@ DEFAULT_MAX_ROWS = 24
 DEFAULT_MAX_COLS = 120
 DEFAULT_SHOW_VALUES = True
 
-EXTENSION_MANAGER = None
-
 
 def render_tree(
     node,
