@@ -8,7 +8,7 @@ import re
 import typing
 
 from ._display import DEFAULT_MAX_COLS, DEFAULT_MAX_ROWS, DEFAULT_SHOW_VALUES, format_faint, format_italic, render_tree
-from ._node_info import NodeSchemaInfo, collect_schema_info
+from ._node_info import collect_schema_info
 from .treeutil import get_children, is_container
 from .util import NotSet
 
@@ -353,8 +353,8 @@ class AsdfSearchResult:
         )
 
     def __getitem__(self, key):
-        if isinstance(self._node, (dict, list, tuple)) or NodeSchemaInfo.traversable(self._node):
-            child = self._node.__asdf_traverse__()[key] if NodeSchemaInfo.traversable(self._node) else self._node[key]
+        if isinstance(self._node, (dict, list, tuple)) or hasattr(self._node, "__asdf_traverse__"):
+            child = self._node.__asdf_traverse__()[key] if hasattr(self._node, "__asdf_traverse__") else self._node[key]
         else:
             msg = "This node cannot be indexed"
             raise TypeError(msg)
@@ -381,9 +381,9 @@ def _walk_tree_breadth_first(root_identifiers, root_node, callback):
         next_nodes = []
 
         for identifiers, parent, node in current_nodes:
-            if (isinstance(node, (dict, list, tuple)) or NodeSchemaInfo.traversable(node)) and id(node) in seen:
+            if (isinstance(node, (dict, list, tuple)) or hasattr(node, "__asdf_traverse__")) and id(node) in seen:
                 continue
-            tnode = node.__asdf_traverse__() if NodeSchemaInfo.traversable(node) else node
+            tnode = node.__asdf_traverse__() if hasattr(node, "__asdf_traverse__") else node
             children = get_children(tnode)
             callback(identifiers, parent, node, [c for _, c in children])
             next_nodes.extend([([*identifiers, i], node, c) for i, c in children])
