@@ -238,6 +238,11 @@ def _get_extension_manager(refresh_extension_manager):
     return af.extension_manager
 
 
+def _traversable(node, extension_manager):
+    # TODO use extension_manager
+    return hasattr(node, "__asdf_traverse__")
+
+
 _SchemaInfo = namedtuple("SchemaInfo", ["info", "value"])
 
 
@@ -376,7 +381,7 @@ class NodeSchemaInfo:
             next_nodes = []
 
             for parent, identifier, node in current_nodes:
-                if (isinstance(node, (dict, tuple)) or cls.traversable(node)) and id(node) in seen:
+                if (isinstance(node, (dict, tuple)) or _traversable(node, extension_manager)) and id(node) in seen:
                     info = NodeSchemaInfo(
                         key,
                         parent,
@@ -397,14 +402,14 @@ class NodeSchemaInfo:
                         root_info = info
 
                     if parent is not None:
-                        if parent.schema is not None and not cls.traversable(node):
+                        if parent.schema is not None and not _traversable(node, extension_manager):
                             info.set_schema_for_property(parent, identifier)
 
                         parent.children.append(info)
 
                     seen.add(id(node))
 
-                    if cls.traversable(node):
+                    if _traversable(node, extension_manager):
                         t_node = node.__asdf_traverse__()
                         if hasattr(node, "_tag") and isinstance(node._tag, str):
                             try:
