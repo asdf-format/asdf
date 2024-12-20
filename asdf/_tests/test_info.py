@@ -1,3 +1,4 @@
+import contextlib
 import os
 import pathlib
 import re
@@ -7,7 +8,7 @@ import numpy as np
 import pytest
 
 import asdf
-from asdf.extension import ExtensionManager, ExtensionProxy, ManifestExtension
+from asdf.extension import ExtensionProxy, ManifestExtension
 from asdf.resource import DirectoryResourceMapping
 
 
@@ -131,6 +132,7 @@ class ObjectWithInfoSupport3:
         }
 
 
+@contextlib.contextmanager
 def manifest_extension(tmp_path):
     foo_manifest = """%YAML 1.1
 ---
@@ -296,13 +298,6 @@ properties:
     mpath = str(tmp_path / "manifests" / "foo_manifest-1.0.yaml")
     with open(mpath, "w") as fmanifest:
         fmanifest.write(foo_manifest)
-    config = asdf.get_config()
-    config.add_resource_mapping(
-        DirectoryResourceMapping(str(tmp_path / "manifests"), "asdf://somewhere.org/asdf/manifests/"),
-    )
-    config.add_resource_mapping(
-        DirectoryResourceMapping(str(tmp_path / "schemas"), "asdf://somewhere.org/asdf/schemas/"),
-    )
 
     class FooConverter:
         tags = ["asdf://somewhere.org/asdf/tags/foo-1.0.0"]
@@ -357,13 +352,20 @@ properties:
     converter2 = BarConverter()
     converter3 = DrinkConverter()
 
-    extension = ManifestExtension.from_uri(
-        "asdf://somewhere.org/asdf/manifests/foo_manifest-1.0",
-        converters=[converter1, converter2, converter3],
-    )
-    config = asdf.get_config()
-    proxy = ExtensionProxy(extension)
-    config.add_extension(proxy)
+    with asdf.config_context() as config:
+        config.add_resource_mapping(
+            DirectoryResourceMapping(str(tmp_path / "manifests"), "asdf://somewhere.org/asdf/manifests/"),
+        )
+        config.add_resource_mapping(
+            DirectoryResourceMapping(str(tmp_path / "schemas"), "asdf://somewhere.org/asdf/schemas/"),
+        )
+        extension = ManifestExtension.from_uri(
+            "asdf://somewhere.org/asdf/manifests/foo_manifest-1.0",
+            converters=[converter1, converter2, converter3],
+        )
+        proxy = ExtensionProxy(extension)
+        config.add_extension(proxy)
+        yield config
 
 
 def create_tree():
@@ -386,14 +388,126 @@ def create_tree():
 
 
 def test_schema_info_support(tmp_path):
-    manifest_extension(tmp_path)
-    config = asdf.get_config()
-    af = asdf.AsdfFile()
-    af._extension_manager = ExtensionManager(config.extensions)
-    af.tree = create_tree()
+    with manifest_extension(tmp_path):
+        af = asdf.AsdfFile()
+        af.tree = create_tree()
 
-    assert af.schema_info("title", refresh_extension_manager=True) == {
-        "list_of_stuff": [
+        assert af.schema_info("title") == {
+            "list_of_stuff": [
+                {
+                    "attributeOne": {
+                        "title": ("AttributeOne Title", "v1"),
+                    },
+                    "attributeTwo": {
+                        "title": ("AttributeTwo Title", "v2"),
+                    },
+                    "title": ("object with info support 3 title", af.tree["list_of_stuff"][0]),
+                },
+                {
+                    "attributeOne": {
+                        "title": ("AttributeOne Title", "x1"),
+                    },
+                    "attributeTwo": {
+                        "title": ("AttributeTwo Title", "x2"),
+                    },
+                    "title": ("object with info support 3 title", af.tree["list_of_stuff"][1]),
+                },
+            ],
+            "object": {
+                "I_example": {"title": ("integer pattern property", 1)},
+                "S_example": {"title": ("string pattern property", "beep")},
+                "allof_attribute": {"title": ("allOf example attribute", "good")},
+                "anyof_attribute": {
+                    "attribute1": {
+                        "title": ("Attribute1 Title", "VAL1"),
+                    },
+                    "attribute2": {
+                        "title": ("Attribute2 Title", "VAL2"),
+                    },
+                    "title": ("object with info support 2 title", af.tree["object"].anyof),
+                },
+                "clown": {"title": ("clown name", "Bozo")},
+                "oneof_attribute": {"title": ("oneOf example attribute", 20)},
+                "the_meaning_of_life_the_universe_and_everything": {"title": ("Some silly title", 42)},
+                "title": ("object with info support title", af.tree["object"]),
+            },
+        }
+
+        assert af.schema_info("archive_catalog") == {
+            "list_of_stuff": [
+                {
+                    "attributeOne": {
+                        "archive_catalog": ({"datatype": "str", "destination": ["ScienceCommon.attributeOne"]}, "v1"),
+                    },
+                    "attributeTwo": {
+                        "archive_catalog": ({"datatype": "str", "destination": ["ScienceCommon.attributeTwo"]}, "v2"),
+                    },
+                },
+                {
+                    "attributeOne": {
+                        "archive_catalog": ({"datatype": "str", "destination": ["ScienceCommon.attributeOne"]}, "x1"),
+                    },
+                    "attributeTwo": {
+                        "archive_catalog": ({"datatype": "str", "destination": ["ScienceCommon.attributeTwo"]}, "x2"),
+                    },
+                },
+            ],
+            "object": {
+                "anyof_attribute": {
+                    "attribute1": {
+                        "archive_catalog": ({"datatype": "str", "destination": ["ScienceCommon.attribute1"]}, "VAL1"),
+                    },
+                    "attribute2": {
+                        "archive_catalog": ({"datatype": "str", "destination": ["ScienceCommon.attribute2"]}, "VAL2"),
+                    },
+                },
+                "clown": {
+                    "archive_catalog": ({"datatype": "str", "destination": ["ScienceCommon.clown"]}, "Bozo"),
+                },
+                "the_meaning_of_life_the_universe_and_everything": {
+                    "archive_catalog": ({"datatype": "int", "destination": ["ScienceCommon.silly"]}, 42),
+                },
+            },
+        }
+
+        assert af.schema_info("archive_catalog", preserve_list=False) == {
+            "list_of_stuff": {
+                0: {
+                    "attributeOne": {
+                        "archive_catalog": ({"datatype": "str", "destination": ["ScienceCommon.attributeOne"]}, "v1"),
+                    },
+                    "attributeTwo": {
+                        "archive_catalog": ({"datatype": "str", "destination": ["ScienceCommon.attributeTwo"]}, "v2"),
+                    },
+                },
+                1: {
+                    "attributeOne": {
+                        "archive_catalog": ({"datatype": "str", "destination": ["ScienceCommon.attributeOne"]}, "x1"),
+                    },
+                    "attributeTwo": {
+                        "archive_catalog": ({"datatype": "str", "destination": ["ScienceCommon.attributeTwo"]}, "x2"),
+                    },
+                },
+            },
+            "object": {
+                "anyof_attribute": {
+                    "attribute1": {
+                        "archive_catalog": ({"datatype": "str", "destination": ["ScienceCommon.attribute1"]}, "VAL1"),
+                    },
+                    "attribute2": {
+                        "archive_catalog": ({"datatype": "str", "destination": ["ScienceCommon.attribute2"]}, "VAL2"),
+                    },
+                },
+                "clown": {
+                    "archive_catalog": ({"datatype": "str", "destination": ["ScienceCommon.clown"]}, "Bozo"),
+                },
+                "the_meaning_of_life_the_universe_and_everything": {
+                    "archive_catalog": ({"datatype": "int", "destination": ["ScienceCommon.silly"]}, 42),
+                },
+            },
+        }
+
+        assert af.schema_info("title", "list_of_stuff") == [
             {
                 "attributeOne": {
                     "title": ("AttributeOne Title", "v1"),
@@ -412,8 +526,9 @@ def test_schema_info_support(tmp_path):
                 },
                 "title": ("object with info support 3 title", af.tree["list_of_stuff"][1]),
             },
-        ],
-        "object": {
+        ]
+
+        assert af.schema_info("title", "object") == {
             "I_example": {"title": ("integer pattern property", 1)},
             "S_example": {"title": ("string pattern property", "beep")},
             "allof_attribute": {"title": ("allOf example attribute", "good")},
@@ -430,109 +545,9 @@ def test_schema_info_support(tmp_path):
             "oneof_attribute": {"title": ("oneOf example attribute", 20)},
             "the_meaning_of_life_the_universe_and_everything": {"title": ("Some silly title", 42)},
             "title": ("object with info support title", af.tree["object"]),
-        },
-    }
+        }
 
-    assert af.schema_info("archive_catalog", refresh_extension_manager=True) == {
-        "list_of_stuff": [
-            {
-                "attributeOne": {
-                    "archive_catalog": ({"datatype": "str", "destination": ["ScienceCommon.attributeOne"]}, "v1"),
-                },
-                "attributeTwo": {
-                    "archive_catalog": ({"datatype": "str", "destination": ["ScienceCommon.attributeTwo"]}, "v2"),
-                },
-            },
-            {
-                "attributeOne": {
-                    "archive_catalog": ({"datatype": "str", "destination": ["ScienceCommon.attributeOne"]}, "x1"),
-                },
-                "attributeTwo": {
-                    "archive_catalog": ({"datatype": "str", "destination": ["ScienceCommon.attributeTwo"]}, "x2"),
-                },
-            },
-        ],
-        "object": {
-            "anyof_attribute": {
-                "attribute1": {
-                    "archive_catalog": ({"datatype": "str", "destination": ["ScienceCommon.attribute1"]}, "VAL1"),
-                },
-                "attribute2": {
-                    "archive_catalog": ({"datatype": "str", "destination": ["ScienceCommon.attribute2"]}, "VAL2"),
-                },
-            },
-            "clown": {
-                "archive_catalog": ({"datatype": "str", "destination": ["ScienceCommon.clown"]}, "Bozo"),
-            },
-            "the_meaning_of_life_the_universe_and_everything": {
-                "archive_catalog": ({"datatype": "int", "destination": ["ScienceCommon.silly"]}, 42),
-            },
-        },
-    }
-
-    assert af.schema_info("archive_catalog", preserve_list=False, refresh_extension_manager=True) == {
-        "list_of_stuff": {
-            0: {
-                "attributeOne": {
-                    "archive_catalog": ({"datatype": "str", "destination": ["ScienceCommon.attributeOne"]}, "v1"),
-                },
-                "attributeTwo": {
-                    "archive_catalog": ({"datatype": "str", "destination": ["ScienceCommon.attributeTwo"]}, "v2"),
-                },
-            },
-            1: {
-                "attributeOne": {
-                    "archive_catalog": ({"datatype": "str", "destination": ["ScienceCommon.attributeOne"]}, "x1"),
-                },
-                "attributeTwo": {
-                    "archive_catalog": ({"datatype": "str", "destination": ["ScienceCommon.attributeTwo"]}, "x2"),
-                },
-            },
-        },
-        "object": {
-            "anyof_attribute": {
-                "attribute1": {
-                    "archive_catalog": ({"datatype": "str", "destination": ["ScienceCommon.attribute1"]}, "VAL1"),
-                },
-                "attribute2": {
-                    "archive_catalog": ({"datatype": "str", "destination": ["ScienceCommon.attribute2"]}, "VAL2"),
-                },
-            },
-            "clown": {
-                "archive_catalog": ({"datatype": "str", "destination": ["ScienceCommon.clown"]}, "Bozo"),
-            },
-            "the_meaning_of_life_the_universe_and_everything": {
-                "archive_catalog": ({"datatype": "int", "destination": ["ScienceCommon.silly"]}, 42),
-            },
-        },
-    }
-
-    assert af.schema_info("title", "list_of_stuff", refresh_extension_manager=True) == [
-        {
-            "attributeOne": {
-                "title": ("AttributeOne Title", "v1"),
-            },
-            "attributeTwo": {
-                "title": ("AttributeTwo Title", "v2"),
-            },
-            "title": ("object with info support 3 title", af.tree["list_of_stuff"][0]),
-        },
-        {
-            "attributeOne": {
-                "title": ("AttributeOne Title", "x1"),
-            },
-            "attributeTwo": {
-                "title": ("AttributeTwo Title", "x2"),
-            },
-            "title": ("object with info support 3 title", af.tree["list_of_stuff"][1]),
-        },
-    ]
-
-    assert af.schema_info("title", "object", refresh_extension_manager=True) == {
-        "I_example": {"title": ("integer pattern property", 1)},
-        "S_example": {"title": ("string pattern property", "beep")},
-        "allof_attribute": {"title": ("allOf example attribute", "good")},
-        "anyof_attribute": {
+        assert af.schema_info("title", "object.anyof_attribute") == {
             "attribute1": {
                 "title": ("Attribute1 Title", "VAL1"),
             },
@@ -540,101 +555,81 @@ def test_schema_info_support(tmp_path):
                 "title": ("Attribute2 Title", "VAL2"),
             },
             "title": ("object with info support 2 title", af.tree["object"].anyof),
-        },
-        "clown": {"title": ("clown name", "Bozo")},
-        "oneof_attribute": {"title": ("oneOf example attribute", 20)},
-        "the_meaning_of_life_the_universe_and_everything": {"title": ("Some silly title", 42)},
-        "title": ("object with info support title", af.tree["object"]),
-    }
+        }
 
-    assert af.schema_info("title", "object.anyof_attribute", refresh_extension_manager=True) == {
-        "attribute1": {
-            "title": ("Attribute1 Title", "VAL1"),
-        },
-        "attribute2": {
+        assert af.schema_info("title", "object.anyof_attribute.attribute2") == {
             "title": ("Attribute2 Title", "VAL2"),
-        },
-        "title": ("object with info support 2 title", af.tree["object"].anyof),
-    }
+        }
 
-    assert af.schema_info("title", "object.anyof_attribute.attribute2", refresh_extension_manager=True) == {
-        "title": ("Attribute2 Title", "VAL2"),
-    }
+        # Test printing the schema_info
+        assert af.schema_info("title", "object.anyof_attribute.attribute2").__repr__() == "{'title': Attribute2 Title}"
 
-    # Test printing the schema_info
-    assert (
-        af.schema_info("title", "object.anyof_attribute.attribute2", refresh_extension_manager=True).__repr__()
-        == "{'title': Attribute2 Title}"
-    )
+        assert af.schema_info("title", "object.anyof_attribute.attribute2.foo") is None
 
-    assert af.schema_info("title", "object.anyof_attribute.attribute2.foo", refresh_extension_manager=True) is None
+        assert af.schema_info() == {
+            "list_of_stuff": [
+                {
+                    "attributeOne": {"description": ("AttributeOne description", "v1")},
+                    "attributeTwo": {"description": ("AttributeTwo description", "v2")},
+                    "description": ("object description", af.tree["list_of_stuff"][0]),
+                },
+                {
+                    "attributeOne": {"description": ("AttributeOne description", "x1")},
+                    "attributeTwo": {"description": ("AttributeTwo description", "x2")},
+                    "description": ("object description", af.tree["list_of_stuff"][1]),
+                },
+            ],
+            "object": {
+                "allof_attribute": {
+                    "description": ("allOf description", "good"),
+                },
+                "clown": {
+                    "description": ("clown description", "Bozo"),
+                },
+                "description": ("object with info support description", af.tree["object"]),
+                "oneof_attribute": {
+                    "description": ("oneOf description", 20),
+                },
+                "the_meaning_of_life_the_universe_and_everything": {
+                    "description": ("Some silly description", 42),
+                },
+            },
+        }
 
-    assert af.schema_info(refresh_extension_manager=True) == {
-        "list_of_stuff": [
-            {
-                "attributeOne": {"description": ("AttributeOne description", "v1")},
-                "attributeTwo": {"description": ("AttributeTwo description", "v2")},
-                "description": ("object description", af.tree["list_of_stuff"][0]),
+        # Test using a search result
+        search = af.search("clown")
+        assert af.schema_info("description", search) == {
+            "object": {
+                "clown": {
+                    "description": ("clown description", "Bozo"),
+                },
+                "description": ("object with info support description", af.tree["object"]),
             },
-            {
-                "attributeOne": {"description": ("AttributeOne description", "x1")},
-                "attributeTwo": {"description": ("AttributeTwo description", "x2")},
-                "description": ("object description", af.tree["list_of_stuff"][1]),
-            },
-        ],
-        "object": {
-            "allof_attribute": {
-                "description": ("allOf description", "good"),
-            },
-            "clown": {
-                "description": ("clown description", "Bozo"),
-            },
-            "description": ("object with info support description", af.tree["object"]),
-            "oneof_attribute": {
-                "description": ("oneOf description", 20),
-            },
-            "the_meaning_of_life_the_universe_and_everything": {
-                "description": ("Some silly description", 42),
-            },
-        },
-    }
-
-    # Test using a search result
-    search = af.search("clown")
-    assert af.schema_info("description", search, refresh_extension_manager=True) == {
-        "object": {
-            "clown": {
-                "description": ("clown description", "Bozo"),
-            },
-            "description": ("object with info support description", af.tree["object"]),
-        },
-    }
+        }
 
 
 def test_info_object_support(capsys, tmp_path):
-    manifest_extension(tmp_path)
-    config = asdf.get_config()
-    af = asdf.AsdfFile()
-    af._extension_manager = ExtensionManager(config.extensions)
-    af.tree = create_tree()
-    af.info(refresh_extension_manager=True)
+    with manifest_extension(tmp_path):
+        af = asdf.AsdfFile()
+        af.tree = create_tree()
+        af.info()
 
-    captured = capsys.readouterr()
+        captured = capsys.readouterr()
 
-    assert "the_meaning_of_life_the_universe_and_everything" in captured.out
-    assert "clown" in captured.out
-    assert "42" in captured.out
-    assert "Bozo" in captured.out
-    assert "clown name" in captured.out
-    assert "silly" in captured.out
-    assert "info support 2" in captured.out
-    assert "Attribute2 Title" in captured.out
-    assert "allOf example attribute" in captured.out
-    assert "oneOf example attribute" in captured.out
-    assert "string pattern property" in captured.out
-    assert "integer pattern property" in captured.out
-    assert "AttributeOne" in captured.out
-    assert "AttributeTwo" in captured.out
+        assert "the_meaning_of_life_the_universe_and_everything" in captured.out
+        assert "clown" in captured.out
+        assert "42" in captured.out
+        assert "Bozo" in captured.out
+        assert "clown name" in captured.out
+        assert "silly" in captured.out
+        assert "info support 2" in captured.out
+        assert "Attribute2 Title" in captured.out
+        assert "allOf example attribute" in captured.out
+        assert "oneOf example attribute" in captured.out
+        assert "string pattern property" in captured.out
+        assert "integer pattern property" in captured.out
+        assert "AttributeOne" in captured.out
+        assert "AttributeTwo" in captured.out
 
 
 class RecursiveObjectWithInfoSupport:
@@ -653,25 +648,23 @@ class RecursiveObjectWithInfoSupport:
 
 def test_recursive_info_object_support(capsys, tmp_path):
     tempdir = pathlib.Path(tempfile.mkdtemp())
-    manifest_extension(tempdir)
-    config = asdf.get_config()
-    af = asdf.AsdfFile()
-    af._extension_manager = ExtensionManager(config.extensions)
+    with manifest_extension(tempdir):
+        af = asdf.AsdfFile()
 
-    recursive_obj = RecursiveObjectWithInfoSupport()
-    recursive_obj.recursive = recursive_obj
-    tree = {"random": 3.14159, "rtest": recursive_obj}
-    af = asdf.AsdfFile()
-    # we need to do this to avoid validation against the
-    # manifest (generated in manifest_extension) which is
-    # now supported with the default asdf standard 1.6.0
-    # I'm not sure why the manifest has this restriction
-    # and prior to switching to the default 1.6.0 was ignored
-    # which allowed this test to pass.
-    af._tree = tree
-    af.info(refresh_extension_manager=True)
-    captured = capsys.readouterr()
-    assert "recursive reference" in captured.out
+        recursive_obj = RecursiveObjectWithInfoSupport()
+        recursive_obj.recursive = recursive_obj
+        tree = {"random": 3.14159, "rtest": recursive_obj}
+        af = asdf.AsdfFile()
+        # we need to do this to avoid validation against the
+        # manifest (generated in manifest_extension) which is
+        # now supported with the default asdf standard 1.6.0
+        # I'm not sure why the manifest has this restriction
+        # and prior to switching to the default 1.6.0 was ignored
+        # which allowed this test to pass.
+        af._tree = tree
+        af.info()
+        captured = capsys.readouterr()
+        assert "recursive reference" in captured.out
 
 
 def test_search():
@@ -775,3 +768,40 @@ def test_node_property_error(schema):
 def test_node_info(schema, expected):
     ni = asdf._node_info.NodeSchemaInfo.from_root_node("title", "root", {}, schema)
     assert ni.info == expected
+
+
+def test_info_with_custom_extension(capsys):
+    MY_TAG_URI = "asdf://somewhere.org/tags/foo-1.0.0"
+    MY_SCHEMA_URI = "asdf://somewhere.org/tags/foo-1.0.0"
+
+    schema_bytes = f"""%YAML 1.1
+---
+$schema: "http://stsci.edu/schemas/yaml-schema/draft-01"
+id: {MY_SCHEMA_URI}
+title: sentinel""".encode(
+        "ascii"
+    )
+
+    class MyExtension:
+        extension_uri = "asdf://somewhere.org/extensions/foo-1.0.0"
+        tags = [
+            asdf.extension.TagDefinition(
+                MY_TAG_URI,
+                schema_uris=[MY_SCHEMA_URI],
+            )
+        ]
+
+    class Thing:
+        _tag = MY_TAG_URI
+
+        def __asdf_traverse__(self):
+            return []
+
+    with asdf.config_context() as cfg:
+        cfg.add_resource_mapping({MY_SCHEMA_URI: schema_bytes})
+        ext = MyExtension()
+        af = asdf.AsdfFile({"t": Thing()}, extensions=[ext])
+        af.info(max_cols=None)
+
+    captured = capsys.readouterr()
+    assert "sentinel" in captured.out

@@ -39,6 +39,7 @@ def render_tree(
     filters=None,
     identifier="root",
     refresh_extension_manager=False,
+    extension_manager=None,
 ):
     """
     Render a tree as text with indents showing depth.
@@ -49,6 +50,7 @@ def render_tree(
         identifier=identifier,
         filters=[] if filters is None else filters,
         refresh_extension_manager=refresh_extension_manager,
+        extension_manager=extension_manager,
     )
     if info is None:
         return []
