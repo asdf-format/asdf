@@ -9,27 +9,6 @@ import jmespath
 import numpy as np
 from numpy import array_equal
 
-try:
-    # Provides cross-platform color support
-    import colorama
-
-    colorama.init()
-    RED = colorama.Fore.RED
-    GREEN = colorama.Fore.GREEN
-    RESET = colorama.Style.RESET_ALL
-except ImportError:
-    from sys import platform
-
-    # These platforms should support ansi color codes
-    if platform.startswith("linux") or platform.startswith("darwin"):
-        RED = "\x1b[31m"
-        GREEN = "\x1b[32m"
-        RESET = "\x1b[0m"
-    else:
-        RED = ""
-        GREEN = ""
-        RESET = ""
-
 import asdf
 from asdf.extension._serialization_context import BlockAccess
 from asdf.tagged import Tagged
@@ -39,11 +18,7 @@ from .main import Command
 __all__ = ["diff"]
 
 
-RESET_NEWLINE = RESET + "\n"
 NDARRAY_TAG = "core/ndarray"
-LIST_MARKER = "-"
-THIS_MARKER = GREEN + "> "
-THAT_MARKER = RED + "< "
 
 
 class Diff(Command):  # pragma: no cover
@@ -163,23 +138,37 @@ class DiffContext:
         else:
             self.ignore_ids = ignore_ids
 
+        if hasattr(sys.stdout, "isatty") and sys.stdout.isatty():
+            RED = "\x1b[31m"
+            GREEN = "\x1b[32m"
+            RESET = "\x1b[0m"
+        else:
+            RED = ""
+            GREEN = ""
+            RESET = ""
+
+        self.RESET_NEWLINE = RESET + "\n"
+        self.LIST_MARKER = "-"
+        self.THIS_MARKER = GREEN + "> "
+        self.THAT_MARKER = RED + "< "
+
 
 def print_tree_context(diff_ctx, node_list, other, use_marker, last_was_list):
     """Print context information indicating location in ASDF tree."""
     prefix = ""
-    marker = THAT_MARKER if other else THIS_MARKER
+    marker = diff_ctx.THAT_MARKER if other else diff_ctx.THIS_MARKER
     for node in diff_ctx.print_tree.get_print_list(node_list):
         if node is not None:
-            node_ = LIST_MARKER if isinstance(node, ArrayNode) else node + ":"
+            node_ = diff_ctx.LIST_MARKER if isinstance(node, ArrayNode) else node + ":"
             # All of this logic is just to make the display of arrays prettier
             if use_marker:
                 line_prefix = " " if last_was_list else marker + prefix[2:]
-                line_suffix = "" if node_ == LIST_MARKER else RESET_NEWLINE
+                line_suffix = "" if node_ == diff_ctx.LIST_MARKER else diff_ctx.RESET_NEWLINE
             else:
                 line_prefix = prefix
-                line_suffix = RESET_NEWLINE
+                line_suffix = diff_ctx.RESET_NEWLINE
             diff_ctx.iostream.write(line_prefix + node_ + line_suffix)
-            last_was_list = node_ == LIST_MARKER
+            last_was_list = node_ == diff_ctx.LIST_MARKER
         prefix += "  "
     diff_ctx.print_tree[node_list] = True
     return last_was_list
@@ -216,9 +205,9 @@ def print_in_tree(diff_ctx, node_list, thing, other, use_marker=False, last_was_
     # Print difference between leaf objects (no need to recurse further)
     else:
         use_marker = not last_was_list or ignore_lwl
-        marker = THAT_MARKER if other else THIS_MARKER
+        marker = diff_ctx.THAT_MARKER if other else diff_ctx.THIS_MARKER
         prefix = marker + "  " * len(node_list) if use_marker else " "
-        diff_ctx.iostream.write(prefix + str(thing) + RESET_NEWLINE)
+        diff_ctx.iostream.write(prefix + str(thing) + diff_ctx.RESET_NEWLINE)
         last_was_list = False
     return last_was_list
 
