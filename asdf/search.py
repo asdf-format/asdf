@@ -7,7 +7,7 @@ import inspect
 import re
 import typing
 
-from ._display import DEFAULT_MAX_COLS, DEFAULT_MAX_ROWS, DEFAULT_SHOW_VALUES, format_faint, format_italic, render_tree
+from ._display import DEFAULT_MAX_COLS, DEFAULT_MAX_ROWS, DEFAULT_SHOW_VALUES, render_tree
 from ._node_info import collect_schema_info
 from .treeutil import get_children, is_container
 from .util import NotSet
@@ -322,7 +322,7 @@ class AsdfSearchResult:
         )
 
         if len(lines) == 0:
-            return format_faint(format_italic("No results found."))
+            return "No results found."
 
         return "\n".join(lines)
 
