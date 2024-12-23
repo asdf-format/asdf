@@ -8,6 +8,8 @@ call that method expecting a dict or list to be returned. The method can
 return what it thinks is suitable for display.
 """
 
+import sys
+
 import numpy as np
 
 from ._node_info import create_tree
@@ -95,6 +97,30 @@ class _TreeRenderer:
         self._max_rows = max_rows
         self._max_cols = max_cols
         self._show_values = show_values
+        self._isatty = hasattr(sys.stdout, "isatty") and sys.stdout.isatty()
+
+    def format_bold(self, value):
+        """
+        Wrap the input value in the ANSI escape sequence for increased intensity.
+        """
+        return self._format_code(value, 1)
+
+    def format_faint(self, value):
+        """
+        Wrap the input value in the ANSI escape sequence for decreased intensity.
+        """
+        return self._format_code(value, 2)
+
+    def format_italic(self, value):
+        """
+        Wrap the input value in the ANSI escape sequence for italic.
+        """
+        return self._format_code(value, 3)
+
+    def _format_code(self, value, code):
+        if not self._isattry:
+            return f"{value}"
+        return f"\x1B[{code}m{value}\x1B[0m"
 
     def render(self, info):
         self._mark_visible(info)
