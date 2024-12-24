@@ -805,3 +805,16 @@ title: sentinel""".encode(
 
     captured = capsys.readouterr()
     assert "sentinel" in captured.out
+
+
+def test_info_no_infinite_loop(capsys):
+    """
+    Providing a recursive list used to cause an
+    infinite loop. Test this is not the case.
+    """
+    af = asdf.AsdfFile()
+    af["l"] = []
+    af["l"].append(af["l"])
+    af.info()
+    captured = capsys.readouterr()
+    assert "recursive" in captured.out

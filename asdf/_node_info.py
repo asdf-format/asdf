@@ -2,7 +2,7 @@ import re
 from collections import namedtuple
 
 from .schema import load_schema
-from .treeutil import get_children
+from .treeutil import get_children, is_container
 
 
 def _filter_tree(info, filters):
@@ -381,7 +381,7 @@ class NodeSchemaInfo:
             next_nodes = []
 
             for parent, identifier, node in current_nodes:
-                if (isinstance(node, (dict, tuple)) or _traversable(node, extension_manager)) and id(node) in seen:
+                if (is_container(node) or _traversable(node, extension_manager)) and id(node) in seen:
                     info = NodeSchemaInfo(
                         key,
                         parent,
