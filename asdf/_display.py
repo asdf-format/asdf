@@ -10,10 +10,7 @@ return what it thinks is suitable for display.
 
 import sys
 
-import numpy as np
-
 from ._node_info import create_tree
-from .tags.core.ndarray import NDArrayType
 
 __all__ = [
     "DEFAULT_MAX_ROWS",
@@ -250,9 +247,6 @@ class _TreeRenderer:
 
     def _render_node_value(self, info):
         rendered_type = type(info.node).__name__
-
-        if isinstance(info.node, (NDArrayType, np.ndarray)):
-            return f"({rendered_type}): shape={info.node.shape}, dtype={info.node.dtype.name}"
 
         if not info.children and self._show_values:
             try:
