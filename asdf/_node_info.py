@@ -319,15 +319,6 @@ class NodeSchemaInfo:
         self.schema = None
         self.extension_manager = extension_manager or _get_extension_manager()
 
-    @classmethod
-    def traversable(cls, node):
-        """
-        This method determines if the node is an instance of a class that
-        supports introspection by the info machinery. This determined by
-        the presence of a __asdf_traverse__ method.
-        """
-        return hasattr(node, "__asdf_traverse__")
-
     @property
     def visible_children(self):
         return [c for c in self.children if c.visible]
