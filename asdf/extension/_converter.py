@@ -37,6 +37,11 @@ class Converter(abc.ABC):
     pass "lazy" objects to the converter. If ``False`` (or not
     defined) asdf will convert all child objects before calling
     `from_yaml_tree`.
+
+    The ``to_info`` method is optional. If implemented it must
+    accept 1 parameter ``obj` which is a tree node/custom
+    object and return a container (list, tuple, dict) containing
+    information about that object to display during ``AsdfFile.info``.
     """
 
     @classmethod
