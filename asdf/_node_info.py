@@ -398,15 +398,27 @@ class NodeSchemaInfo:
                         key, parent, identifier, node, current_depth, extension_manager=extension_manager
                     )
 
+                    # If this is the first node keep a reference so we can return it.
                     if root_info is None:
                         root_info = info
 
                     if parent is not None:
+                        # Why check that __asdf_traverse__ doesn't exist here?
+                        # If the parent has a schema and the identifier is in
+                        # the schema we have a valid subschema for this node.
+                        # Why does it matter if it does or doesn't support
+                        # __asdf_traverse__ (as that only determines the
+                        # children).
                         if parent.schema is not None and not traversable:
+                            # descend within the schema of the parent
                             info.set_schema_for_property(parent, identifier)
 
+                        # track that this node is a child of the parent
                         parent.children.append(info)
 
+                    # Track which nodes have been seen to avoid an infinite
+                    # loop and to find recursive references
+                    # This is tree wide but should be per-branch.
                     seen.add(id(node))
 
                     # if the node has __asdf_traverse__ and a _tag attribute
@@ -422,12 +434,7 @@ class NodeSchemaInfo:
                                 # be using _tag for a non-ASDF purpose.
                                 pass
 
-                    if parent is None:
-                        # isn't schema always None? since this is within a parent is None
-                        # check it will only work on the root level node which won't
-                        # have a schema...
-                        info.schema = schema
-
+                    # add children to queue
                     for child_identifier, child_node in get_children(t_node):
                         next_nodes.append((info, child_identifier, child_node))
 
