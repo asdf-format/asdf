@@ -240,15 +240,11 @@ def _get_extension_manager(refresh_extension_manager):
 
 def _make_traversable(node, extension_manager):
     if hasattr(node, "__asdf_traverse__"):
-        return node.__asdf_traverse__(), True
+        return node.__asdf_traverse__(), True, False
     node_type = type(node)
     if not extension_manager.handles_type(node_type):
-        return node, False
-    return node, False
-    # TODO use extension_manager
-    # converter = extension_manager.get_converter_for_type(node_type)
-    # what do we want to do here?
-    # converter.to_info(node)
+        return node, False, False
+    return extension_manager.get_converter_for_type(node_type).to_info(node), False, True
 
 
 _SchemaInfo = namedtuple("SchemaInfo", ["info", "value"])
@@ -380,7 +376,10 @@ class NodeSchemaInfo:
             next_nodes = []
 
             for parent, identifier, node in current_nodes:
-                t_node, traversable = _make_traversable(node, extension_manager)
+                # node is the item in the tree
+                # We might sometimes not want to use that node directly
+                # but instead using a different node for traversal.
+                t_node, traversable, from_converter = _make_traversable(node, extension_manager)
                 if (is_container(node) or traversable) and id(node) in seen:
                     info = NodeSchemaInfo(
                         key,

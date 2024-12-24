@@ -292,6 +292,27 @@ class ConverterProxy(Converter):
         """
         return self._delegate.from_yaml_tree(node, tag, ctx)
 
+    def to_info(self, obj):
+        """
+        Convert an object to a container with items further
+        defining information about this node. This method
+        is used for "info" and not used for serialization.
+
+        Parameters
+        ----------
+        obj : object
+            Instance of a custom type to get "info" for.
+
+        Returns
+        -------
+        object
+            Must be a container (list, tuple, dict) with
+            items providing "info" about ``obj``.
+        """
+        if not hasattr(self._delegate, "to_info"):
+            return obj
+        return self._delegate.to_info(obj)
+
     @property
     def delegate(self):
         """

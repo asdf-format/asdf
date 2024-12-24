@@ -190,3 +190,6 @@ class NDArrayConverter(Converter):
 
         msg = "Invalid ndarray description."
         raise TypeError(msg)
+
+    def to_info(self, obj):
+        return {"shape": obj.shape, "dtype": obj.dtype}
