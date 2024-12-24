@@ -238,9 +238,17 @@ def _get_extension_manager(refresh_extension_manager):
     return af.extension_manager
 
 
-def _traversable(node, extension_manager):
+def _make_traversable(node, extension_manager):
+    if hasattr(node, "__asdf_traverse__"):
+        return node.__asdf_traverse__(), True
+    node_type = type(node)
+    if not extension_manager.handles_type(node_type):
+        return node, False
+    return node, False
     # TODO use extension_manager
-    return hasattr(node, "__asdf_traverse__")
+    # converter = extension_manager.get_converter_for_type(node_type)
+    # what do we want to do here?
+    # converter.to_info(node)
 
 
 _SchemaInfo = namedtuple("SchemaInfo", ["info", "value"])
@@ -372,7 +380,8 @@ class NodeSchemaInfo:
             next_nodes = []
 
             for parent, identifier, node in current_nodes:
-                if (is_container(node) or _traversable(node, extension_manager)) and id(node) in seen:
+                t_node, traversable = _make_traversable(node, extension_manager)
+                if (is_container(node) or traversable) and id(node) in seen:
                     info = NodeSchemaInfo(
                         key,
                         parent,
@@ -393,15 +402,16 @@ class NodeSchemaInfo:
                         root_info = info
 
                     if parent is not None:
-                        if parent.schema is not None and not _traversable(node, extension_manager):
+                        if parent.schema is not None and not traversable:
                             info.set_schema_for_property(parent, identifier)
 
                         parent.children.append(info)
 
                     seen.add(id(node))
 
-                    if _traversable(node, extension_manager):
-                        t_node = node.__asdf_traverse__()
+                    # if the node has __asdf_traverse__ and a _tag attribute
+                    # that is a valid tag, load it's schema
+                    if traversable:
                         if hasattr(node, "_tag") and isinstance(node._tag, str):
                             try:
                                 info.set_schema_from_node(node, extension_manager)
@@ -412,10 +422,10 @@ class NodeSchemaInfo:
                                 # be using _tag for a non-ASDF purpose.
                                 pass
 
-                    else:
-                        t_node = node
-
                     if parent is None:
+                        # isn't schema always None? since this is within a parent is None
+                        # check it will only work on the root level node which won't
+                        # have a schema...
                         info.schema = schema
 
                     for child_identifier, child_node in get_children(t_node):
