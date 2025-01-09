@@ -401,14 +401,11 @@ class NodeSchemaInfo:
                     if root_info is None:
                         root_info = info
 
+                    if parent is None:
+                        info.schema = schema
+
                     if parent is not None:
-                        # Why check that __asdf_traverse__ doesn't exist here?
-                        # If the parent has a schema and the identifier is in
-                        # the schema we have a valid subschema for this node.
-                        # Why does it matter if it does or doesn't support
-                        # __asdf_traverse__ (as that only determines the
-                        # children).
-                        if parent.schema is not None and not traversable:
+                        if parent.schema is not None:
                             # descend within the schema of the parent
                             info.set_schema_for_property(parent, identifier)
 
@@ -432,9 +429,6 @@ class NodeSchemaInfo:
                                 # (or another exception) here as the node (object) might
                                 # be using _tag for a non-ASDF purpose.
                                 pass
-
-                    if parent is None:
-                        info.schema = schema
 
                     # add children to queue
                     for child_identifier, child_node in get_children(t_node):
