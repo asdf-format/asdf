@@ -433,6 +433,9 @@ class NodeSchemaInfo:
                                 # be using _tag for a non-ASDF purpose.
                                 pass
 
+                    if parent is None:
+                        info.schema = schema
+
                     # add children to queue
                     for child_identifier, child_node in get_children(t_node):
                         next_nodes.append((info, child_identifier, child_node))
