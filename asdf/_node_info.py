@@ -20,6 +20,124 @@ def _filter_tree(info, filters):
     return len(info.children) > 0 or all(f(info.node, info.identifier) for f in filters)
 
 
+def _get_matching_schema_property(schema, property_name):
+    """
+    Extract a property subschema for a given property_name.
+    This function does not descend into the schema (beyond
+    looking for a "properties" key) and does not support
+    schema combiners.
+
+    Parameters
+    ----------
+    schema : dict
+        A dictionary containing a JSONSCHEMA
+    property_name : str
+        The name of the property to extract
+
+    Returns
+    -------
+    dict or None
+        The property subschema at the provided name or
+        ``None`` if the property doesn't exist.
+    """
+    if "properties" in schema:
+        props = schema["properties"]
+        if property_name in props:
+            return props[property_name]
+        if "patternProperties" in props:
+            patterns = props["patternProperties"]
+            for regex in patterns:
+                if re.search(regex, property_name):
+                    return patterns[regex]
+    return None
+
+
+def _get_subschema_for_property(schema, property_name):
+    """
+    Extract a property subschema for a given property_name.
+    This function will attempt to consider schema combiners
+    and will return None on an ambiguous result.
+
+    Parameters
+    ----------
+    schema : dict
+        A dictionary containing a JSONSCHEMA
+    property_name : str
+        The name of the property to extract
+
+    Returns
+    -------
+    dict or None
+        The property subschema at the provided name or
+        ``None`` if the property doesn't exist or is
+        ambiguous (has more than one subschema or is nested in a not).
+    """
+    # This does NOT handle $ref the expectation is that the schema
+    # is loaded with resolve_references=True
+    applicable = []
+
+    # first check properties and patternProperties
+    subschema = _get_matching_schema_property(schema, property_name)
+    if subschema is not None:
+        applicable.append(subschema)
+
+    # next handle schema combiners
+    if "not" in schema:
+        subschema = _get_subschema_for_property(schema["not"], property_name)
+        if subschema is not None:
+            # We can't resolve a valid subschema under a "not" since
+            # we'd have to know how to invert a schema
+            return None
+
+    for combiner in ("allOf", "oneOf", "anyOf"):
+        for combined_schema in schema.get(combiner, []):
+            subschema = _get_subschema_for_property(combined_schema, property_name)
+            if subschema is not None:
+                applicable.append(subschema)
+
+    # only return the subschema if we found exactly 1 applicable
+    if len(applicable) == 1:
+        return applicable[0]
+    return None
+
+
+def _get_schema_key(schema, key):
+    """
+    Extract a subschema at a given key.
+    This function will attempt to consider schema combiners
+    (allOf, oneOf, anyOf) and will return None on an
+    ambiguous result (where more than 1 match is found).
+
+    Parameters
+    ----------
+    schema : dict
+        A dictionary containing a JSONSCHEMA
+    key : str
+        The key under which the subschema is stored
+
+    Returns
+    -------
+    dict or None
+        The subschema at the provided key or
+        ``None`` if the key doesn't exist or is ambiguous.
+    """
+    applicable = []
+    if key in schema:
+        applicable.append(schema[key])
+    # Here we don't consider any subschema under "not" to avoid
+    # false positives for keys like "type" etc.
+    for combiner in ("allOf", "oneOf", "anyOf"):
+        for combined_schema in schema.get(combiner, []):
+            possible = _get_schema_key(combined_schema, key)
+            if possible is not None:
+                applicable.append(possible)
+
+    # only return the property if we found exactly 1 applicable
+    if len(applicable) == 1:
+        return applicable[0]
+    return None
+
+
 def create_tree(key, node, identifier="root", filters=None, refresh_extension_manager=False):
     """
     Create a `NodeSchemaInfo` tree which can be filtered from a base node.
@@ -214,22 +332,12 @@ class NodeSchemaInfo:
 
     @property
     def info(self):
-        if self.schema is not None:
-            return self.schema.get(self.key, None)
-
-        return None
+        if self.schema is None:
+            return None
+        return _get_schema_key(self.schema, self.key)
 
     def get_schema_for_property(self, identifier):
-        subschema = self.schema.get("properties", {}).get(identifier, None)
-        if subschema is not None:
-            return subschema
-
-        subschema = self.schema.get("properties", {}).get("patternProperties", None)
-        if subschema:
-            for key in subschema:
-                if re.search(key, identifier):
-                    return subschema[key]
-        return {}
+        return _get_subschema_for_property(self.schema, identifier) or {}
 
     def set_schema_for_property(self, parent, identifier):
         """Extract a subschema from the parent for the identified property"""
@@ -241,7 +349,7 @@ class NodeSchemaInfo:
 
         tag_def = extension_manager.get_tag_definition(node._tag)
         schema_uri = tag_def.schema_uris[0]
-        schema = load_schema(schema_uri)
+        schema = load_schema(schema_uri, resolve_references=True)
 
         self.schema = schema
 

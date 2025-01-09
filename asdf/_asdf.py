@@ -1378,6 +1378,10 @@ class AsdfFile:
         """
         Get a nested dictionary of the schema information for a given key, relative to the path.
 
+        This method will only return unambiguous info. If a property is subject to multiple
+        subschemas or contains ambiguous entries (multiple titles) no result will be returned
+        for that property.
+
         Parameters
         ----------
         key : str
