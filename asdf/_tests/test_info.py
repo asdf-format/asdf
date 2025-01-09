@@ -778,7 +778,15 @@ def test_info_with_custom_extension(capsys):
 ---
 $schema: "http://stsci.edu/schemas/yaml-schema/draft-01"
 id: {MY_SCHEMA_URI}
-title: sentinel""".encode(
+title: top_title
+properties:
+    foo:
+        title: foo_title
+        type: object
+        properties:
+            bar:
+                title: bar_title
+""".encode(
         "ascii"
     )
 
@@ -791,11 +799,15 @@ title: sentinel""".encode(
             )
         ]
 
+    class FooThing:
+        def __asdf_traverse__(self):
+            return {"bar": 1}
+
     class Thing:
         _tag = MY_TAG_URI
 
         def __asdf_traverse__(self):
-            return []
+            return {"foo": FooThing()}
 
     with asdf.config_context() as cfg:
         cfg.add_resource_mapping({MY_SCHEMA_URI: schema_bytes})
@@ -804,7 +816,9 @@ title: sentinel""".encode(
         af.info(max_cols=None)
 
     captured = capsys.readouterr()
-    assert "sentinel" in captured.out
+    assert "top_title" in captured.out
+    assert "foo_title" in captured.out
+    assert "bar_title" in captured.out
 
 
 def test_info_no_infinite_loop(capsys):
