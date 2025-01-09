@@ -20,32 +20,70 @@ def _filter_tree(info, filters):
     return len(info.children) > 0 or all(f(info.node, info.identifier) for f in filters)
 
 
-def _get_matching_schema_property(schema, key):
+def _get_matching_schema_property(schema, property_name):
+    """
+    Extract a property subschema for a given property_name.
+    This function does not descend into the schema (beyond
+    looking for a "properties" key) and does not support
+    schema combiners.
+
+    Parameters
+    ----------
+    schema : dict
+        A dictionary containing a JSONSCHEMA
+    property_name : str
+        The name of the property to extract
+
+    Returns
+    -------
+    dict or None
+        The property subschema at the provided name or
+        ``None`` if the property doesn't exist.
+    """
     if "properties" in schema:
         props = schema["properties"]
-        if key in props:
-            return props[key]
+        if property_name in props:
+            return props[property_name]
         if "patternProperties" in props:
             patterns = props["patternProperties"]
             for regex in patterns:
-                if re.search(regex, key):
+                if re.search(regex, property_name):
                     return patterns[regex]
     return None
 
 
-def _get_subschema_for_property(schema, key):
+def _get_subschema_for_property(schema, property_name):
+    """
+    Extract a property subschema for a given property_name.
+    This function will attempt to consider schema combiners
+    and will return None on an ambiguous result.
+
+    Parameters
+    ----------
+    schema : dict
+        A dictionary containing a JSONSCHEMA
+    property_name : str
+        The name of the property to extract
+
+    Returns
+    -------
+    dict or None
+        The property subschema at the provided name or
+        ``None`` if the property doesn't exist or is
+        ambiguous (has more than one subschema or is nested in a not).
+    """
     # This does NOT handle $ref the expectation is that the schema
     # is loaded with resolve_references=True
     applicable = []
 
     # first check properties and patternProperties
-    subschema = _get_matching_schema_property(schema, key)
+    subschema = _get_matching_schema_property(schema, property_name)
     if subschema is not None:
         applicable.append(subschema)
 
     # next handle schema combiners
     if "not" in schema:
-        subschema = _get_subschema_for_property(schema["not"], key)
+        subschema = _get_subschema_for_property(schema["not"], property_name)
         if subschema is not None:
             # We can't resolve a valid subschema under a "not" since
             # we'd have to know how to invert a schema
@@ -53,7 +91,7 @@ def _get_subschema_for_property(schema, key):
 
     for combiner in ("allOf", "oneOf", "anyOf"):
         for combined_schema in schema.get(combiner, []):
-            subschema = _get_subschema_for_property(combined_schema, key)
+            subschema = _get_subschema_for_property(combined_schema, property_name)
             if subschema is not None:
                 applicable.append(subschema)
 
@@ -64,6 +102,25 @@ def _get_subschema_for_property(schema, key):
 
 
 def _get_schema_key(schema, key):
+    """
+    Extract a subschema at a given key.
+    This function will attempt to consider schema combiners
+    (allOf, oneOf, anyOf) and will return None on an
+    ambiguous result (where more than 1 match is found).
+
+    Parameters
+    ----------
+    schema : dict
+        A dictionary containing a JSONSCHEMA
+    key : str
+        The key under which the subschema is stored
+
+    Returns
+    -------
+    dict or None
+        The subschema at the provided key or
+        ``None`` if the key doesn't exist or is ambiguous.
+    """
     applicable = []
     if key in schema:
         applicable.append(schema[key])
