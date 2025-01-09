@@ -1,8 +1,18 @@
 import io
+import sys
 
 import pytest
 
 from asdf.commands import diff, main
+
+
+@pytest.fixture(autouse=True)
+def force_isatty(monkeypatch):
+    def _isatty():
+        return True
+
+    monkeypatch.setattr(sys.stdout, "isatty", _isatty)
+    yield
 
 
 def _assert_diffs_equal(test_data_path, filenames, result_file, minimal=False, ignore=None):

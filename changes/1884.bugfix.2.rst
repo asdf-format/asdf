@@ -1,0 +1,1 @@
+Don't infinitely loop on recursive lists during info/search/schema_info.

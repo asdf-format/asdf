@@ -228,6 +228,12 @@ of the object. That method should accept no arguments and return either a
 dict of attributes and their values, or a list if the object itself is
 list-like.
 
+Similarly a `Converter` can implement a method ``to_info`` which converts
+an instance of one of the supported types to a dict, tuple or list of
+items to show during ``info`` and ``search``. This can be useful when
+the supported type cannot be easily updated to add an ``__asdf_traverse__``
+method.
+
 .. _extending_extensions_installing:
 
 Installing an extension

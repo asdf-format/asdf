@@ -1,0 +1,1 @@
+Only use ANSI format codes when supported by stdout.
