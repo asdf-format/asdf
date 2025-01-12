@@ -63,7 +63,7 @@ pytest11 = {asdf_schema_tester = 'pytest_asdf.plugin'}
 build-backend = 'setuptools.build_meta'
 requires = [
   "setuptools>=60",
-  "setuptools_scm[toml]>=3.4",
+  "setuptools_scm[toml]>=8",
   "wheel",
 ]
 
