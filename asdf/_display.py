@@ -8,27 +8,21 @@ call that method expecting a dict or list to be returned. The method can
 return what it thinks is suitable for display.
 """
 
-import numpy as np
+import sys
 
 from ._node_info import create_tree
-from .tags.core.ndarray import NDArrayType
 
 __all__ = [
     "DEFAULT_MAX_ROWS",
     "DEFAULT_MAX_COLS",
     "DEFAULT_SHOW_VALUES",
     "render_tree",
-    "format_bold",
-    "format_faint",
-    "format_italic",
 ]
 
 
 DEFAULT_MAX_ROWS = 24
 DEFAULT_MAX_COLS = 120
 DEFAULT_SHOW_VALUES = True
-
-EXTENSION_MANAGER = None
 
 
 def render_tree(
@@ -39,6 +33,7 @@ def render_tree(
     filters=None,
     identifier="root",
     refresh_extension_manager=False,
+    extension_manager=None,
 ):
     """
     Render a tree as text with indents showing depth.
@@ -49,6 +44,7 @@ def render_tree(
         identifier=identifier,
         filters=[] if filters is None else filters,
         refresh_extension_manager=refresh_extension_manager,
+        extension_manager=extension_manager,
     )
     if info is None:
         return []
@@ -61,31 +57,6 @@ def render_tree(
     return renderer.render(info)
 
 
-def format_bold(value):
-    """
-    Wrap the input value in the ANSI escape sequence for increased intensity.
-    """
-    return _format_code(value, 1)
-
-
-def format_faint(value):
-    """
-    Wrap the input value in the ANSI escape sequence for decreased intensity.
-    """
-    return _format_code(value, 2)
-
-
-def format_italic(value):
-    """
-    Wrap the input value in the ANSI escape sequence for italic.
-    """
-    return _format_code(value, 3)
-
-
-def _format_code(value, code):
-    return f"\x1B[{code}m{value}\x1B[0m"
-
-
 class _TreeRenderer:
     """
     Render a _NodeInfo tree with indent showing depth.
@@ -95,6 +66,30 @@ class _TreeRenderer:
         self._max_rows = max_rows
         self._max_cols = max_cols
         self._show_values = show_values
+        self._isatty = hasattr(sys.stdout, "isatty") and sys.stdout.isatty()
+
+    def format_bold(self, value):
+        """
+        Wrap the input value in the ANSI escape sequence for increased intensity.
+        """
+        return self._format_code(value, 1)
+
+    def format_faint(self, value):
+        """
+        Wrap the input value in the ANSI escape sequence for decreased intensity.
+        """
+        return self._format_code(value, 2)
+
+    def format_italic(self, value):
+        """
+        Wrap the input value in the ANSI escape sequence for italic.
+        """
+        return self._format_code(value, 3)
+
+    def _format_code(self, value, code):
+        if not self._isatty:
+            return f"{value}"
+        return f"\x1B[{code}m{value}\x1B[0m"
 
     def render(self, info):
         self._mark_visible(info)
@@ -102,7 +97,7 @@ class _TreeRenderer:
         lines, elided = self._render(info, set(), True)
 
         if elided:
-            lines.append(format_faint(format_italic("Some nodes not shown.")))
+            lines.append(self.format_faint(self.format_italic("Some nodes not shown.")))
 
         return lines
 
@@ -220,7 +215,7 @@ class _TreeRenderer:
         if num_visible_children > 0 and num_visible_children != len(info.children):
             hidden_count = len(info.children) - num_visible_children
             prefix = self._make_prefix(info.depth + 1, active_depths, True)
-            message = format_faint(format_italic(str(hidden_count) + " not shown"))
+            message = self.format_faint(self.format_italic(str(hidden_count) + " not shown"))
             lines.append(f"{prefix}{message}")
 
         return lines, elided
@@ -230,31 +225,28 @@ class _TreeRenderer:
         value = self._render_node_value(info)
 
         line = (
-            f"{prefix}[{format_bold(info.identifier)}] {value}"
+            f"{prefix}[{self.format_bold(info.identifier)}] {value}"
             if isinstance(info.parent_node, (list, tuple))
-            else f"{prefix}{format_bold(info.identifier)} {value}"
+            else f"{prefix}{self.format_bold(info.identifier)} {value}"
         )
 
         if info.info is not None:
-            line = line + format_faint(format_italic(" # " + info.info))
+            line = line + self.format_faint(self.format_italic(" # " + info.info))
         visible_children = info.visible_children
         if len(visible_children) == 0 and len(info.children) > 0:
-            line = line + format_italic(" ...")
+            line = line + self.format_italic(" ...")
 
         if info.recursive:
-            line = line + " " + format_faint(format_italic("(recursive reference)"))
+            line = line + " " + self.format_faint(self.format_italic("(recursive reference)"))
 
         if self._max_cols is not None and len(line) > self._max_cols:
             message = " (truncated)"
-            line = line[0 : (self._max_cols - len(message))] + format_faint(format_italic(message))
+            line = line[0 : (self._max_cols - len(message))] + self.format_faint(self.format_italic(message))
 
         return line
 
     def _render_node_value(self, info):
         rendered_type = type(info.node).__name__
-
-        if isinstance(info.node, (NDArrayType, np.ndarray)):
-            return f"({rendered_type}): shape={info.node.shape}, dtype={info.node.dtype.name}"
 
         if not info.children and self._show_values:
             try:
@@ -287,4 +279,4 @@ class _TreeRenderer:
 
         prefix = prefix + "└─" if is_tail else prefix + "├─"
 
-        return format_faint(prefix)
+        return self.format_faint(prefix)

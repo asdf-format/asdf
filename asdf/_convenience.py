@@ -7,7 +7,7 @@ import pathlib
 from contextlib import contextmanager
 
 from ._asdf import AsdfFile, open_asdf
-from ._display import DEFAULT_MAX_COLS, DEFAULT_MAX_ROWS, DEFAULT_SHOW_VALUES, render_tree
+from ._display import DEFAULT_MAX_COLS, DEFAULT_MAX_ROWS, DEFAULT_SHOW_VALUES
 
 __all__ = ["info"]
 
@@ -41,18 +41,17 @@ def info(node_or_path, max_rows=DEFAULT_MAX_ROWS, max_cols=DEFAULT_MAX_COLS, sho
         the rendered tree.
     """
     with _manage_node(node_or_path) as node:
-        lines = render_tree(node, max_rows=max_rows, max_cols=max_cols, show_values=show_values, identifier="root")
-        print("\n".join(lines))
+        node.info(max_rows=max_rows, max_cols=max_cols, show_values=show_values)
 
 
 @contextmanager
 def _manage_node(node_or_path):
     if isinstance(node_or_path, (str, pathlib.Path)):
         with open_asdf(node_or_path) as af:
-            yield af.tree
+            yield af
 
     elif isinstance(node_or_path, AsdfFile):
-        yield node_or_path.tree
+        yield node_or_path
 
     else:
-        yield node_or_path
+        yield AsdfFile(node_or_path)

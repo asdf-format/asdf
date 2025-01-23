@@ -37,6 +37,11 @@ class Converter(abc.ABC):
     pass "lazy" objects to the converter. If ``False`` (or not
     defined) asdf will convert all child objects before calling
     `from_yaml_tree`.
+
+    The ``to_info`` method is optional. If implemented it must
+    accept 1 parameter ``obj` which is a tree node/custom
+    object and return a container (list, tuple, dict) containing
+    information about that object to display during ``AsdfFile.info``.
     """
 
     @classmethod
@@ -291,6 +296,27 @@ class ConverterProxy(Converter):
         object
         """
         return self._delegate.from_yaml_tree(node, tag, ctx)
+
+    def to_info(self, obj):
+        """
+        Convert an object to a container with items further
+        defining information about this node. This method
+        is used for "info" and not used for serialization.
+
+        Parameters
+        ----------
+        obj : object
+            Instance of a custom type to get "info" for.
+
+        Returns
+        -------
+        object
+            Must be a container (list, tuple, dict) with
+            items providing "info" about ``obj``.
+        """
+        if not hasattr(self._delegate, "to_info"):
+            return obj
+        return self._delegate.to_info(obj)
 
     @property
     def delegate(self):

@@ -2,7 +2,7 @@ import re
 from collections import namedtuple
 
 from .schema import load_schema
-from .treeutil import get_children
+from .treeutil import get_children, is_container
 
 
 def _filter_tree(info, filters):
@@ -138,7 +138,7 @@ def _get_schema_key(schema, key):
     return None
 
 
-def create_tree(key, node, identifier="root", filters=None, refresh_extension_manager=False):
+def create_tree(key, node, identifier="root", filters=None, refresh_extension_manager=False, extension_manager=None):
     """
     Create a `NodeSchemaInfo` tree which can be filtered from a base node.
 
@@ -164,6 +164,7 @@ def create_tree(key, node, identifier="root", filters=None, refresh_extension_ma
         identifier,
         node,
         refresh_extension_manager=refresh_extension_manager,
+        extension_manager=extension_manager,
     )
 
     if len(filters) > 0 and not _filter_tree(schema_info, filters):
@@ -180,6 +181,7 @@ def collect_schema_info(
     filters=None,
     preserve_list=True,
     refresh_extension_manager=False,
+    extension_manager=None,
 ):
     """
     Collect from the underlying schemas any of the info stored under key, relative to the path
@@ -209,6 +211,7 @@ def collect_schema_info(
         identifier=identifier,
         filters=[] if filters is None else filters,
         refresh_extension_manager=refresh_extension_manager,
+        extension_manager=extension_manager,
     )
 
     info = schema_info.collect_info(preserve_list=preserve_list)
@@ -233,6 +236,15 @@ def _get_extension_manager(refresh_extension_manager):
         af._extension_manager = ExtensionManager(config.extensions)
 
     return af.extension_manager
+
+
+def _make_traversable(node, extension_manager):
+    if hasattr(node, "__asdf_traverse__"):
+        return node.__asdf_traverse__(), True, False
+    node_type = type(node)
+    if not extension_manager.handles_type(node_type):
+        return node, False, False
+    return extension_manager.get_converter_for_type(node_type).to_info(node), False, True
 
 
 _SchemaInfo = namedtuple("SchemaInfo", ["info", "value"])
@@ -299,7 +311,7 @@ class NodeSchemaInfo:
         The portion of the underlying schema corresponding to the node.
     """
 
-    def __init__(self, key, parent, identifier, node, depth, recursive=False, visible=True):
+    def __init__(self, key, parent, identifier, node, depth, recursive=False, visible=True, extension_manager=None):
         self.key = key
         self.parent = parent
         self.identifier = identifier
@@ -309,15 +321,7 @@ class NodeSchemaInfo:
         self.visible = visible
         self.children = []
         self.schema = None
-
-    @classmethod
-    def traversable(cls, node):
-        """
-        This method determines if the node is an instance of a class that
-        supports introspection by the info machinery. This determined by
-        the presence of a __asdf_traverse__ method.
-        """
-        return hasattr(node, "__asdf_traverse__")
+        self.extension_manager = extension_manager or _get_extension_manager()
 
     @property
     def visible_children(self):
@@ -354,13 +358,15 @@ class NodeSchemaInfo:
         self.schema = schema
 
     @classmethod
-    def from_root_node(cls, key, root_identifier, root_node, schema=None, refresh_extension_manager=False):
+    def from_root_node(
+        cls, key, root_identifier, root_node, schema=None, refresh_extension_manager=False, extension_manager=None
+    ):
         """
         Build a NodeSchemaInfo tree from the given ASDF root node.
         Intentionally processes the tree in breadth-first order so that recursively
         referenced nodes are displayed at their shallowest reference point.
         """
-        extension_manager = _get_extension_manager(refresh_extension_manager)
+        extension_manager = extension_manager or _get_extension_manager(refresh_extension_manager)
 
         current_nodes = [(None, root_identifier, root_node)]
         seen = set()
@@ -370,26 +376,50 @@ class NodeSchemaInfo:
             next_nodes = []
 
             for parent, identifier, node in current_nodes:
-                if (isinstance(node, (dict, tuple)) or cls.traversable(node)) and id(node) in seen:
-                    info = NodeSchemaInfo(key, parent, identifier, node, current_depth, recursive=True)
+                # node is the item in the tree
+                # We might sometimes not want to use that node directly
+                # but instead using a different node for traversal.
+                t_node, traversable, from_converter = _make_traversable(node, extension_manager)
+                if (is_container(node) or traversable) and id(node) in seen:
+                    info = NodeSchemaInfo(
+                        key,
+                        parent,
+                        identifier,
+                        node,
+                        current_depth,
+                        recursive=True,
+                        extension_manager=extension_manager,
+                    )
                     parent.children.append(info)
 
                 else:
-                    info = NodeSchemaInfo(key, parent, identifier, node, current_depth)
+                    info = NodeSchemaInfo(
+                        key, parent, identifier, node, current_depth, extension_manager=extension_manager
+                    )
 
+                    # If this is the first node keep a reference so we can return it.
                     if root_info is None:
                         root_info = info
 
+                    if parent is None:
+                        info.schema = schema
+
                     if parent is not None:
-                        if parent.schema is not None and not cls.traversable(node):
+                        if parent.schema is not None:
+                            # descend within the schema of the parent
                             info.set_schema_for_property(parent, identifier)
 
+                        # track that this node is a child of the parent
                         parent.children.append(info)
 
+                    # Track which nodes have been seen to avoid an infinite
+                    # loop and to find recursive references
+                    # This is tree wide but should be per-branch.
                     seen.add(id(node))
 
-                    if cls.traversable(node):
-                        t_node = node.__asdf_traverse__()
+                    # if the node has __asdf_traverse__ and a _tag attribute
+                    # that is a valid tag, load it's schema
+                    if traversable:
                         if hasattr(node, "_tag") and isinstance(node._tag, str):
                             try:
                                 info.set_schema_from_node(node, extension_manager)
@@ -400,12 +430,7 @@ class NodeSchemaInfo:
                                 # be using _tag for a non-ASDF purpose.
                                 pass
 
-                    else:
-                        t_node = node
-
-                    if parent is None:
-                        info.schema = schema
-
+                    # add children to queue
                     for child_identifier, child_node in get_children(t_node):
                         next_nodes.append((info, child_identifier, child_node))
 
