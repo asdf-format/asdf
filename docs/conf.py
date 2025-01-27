@@ -35,7 +35,7 @@ release = distribution(configuration["name"]).version
 version = ".".join(release.split(".")[:2])
 
 # -- Options for HTML output ---------------------------------------------------
-html_title = f"{project} v{release}"
+html_title = f"{project} v{version}"
 
 # Output file base name for HTML help builder.
 htmlhelp_basename = project + "doc"
@@ -76,9 +76,9 @@ subprojects = {
     "asdf-wcs-schemas": ("https://www.asdf-format.org/projects/asdf-wcs-schemas/en/latest/", None),
 }
 
-intersphinx_mapping.update(subprojects)  # noqa
+intersphinx_mapping.update(subprojects)  # noqa: F405
 
-extensions += ["sphinx_inline_tabs", "sphinx.ext.intersphinx", "sphinx.ext.extlinks"] # noqa
+extensions += ["sphinx_inline_tabs", "sphinx.ext.intersphinx", "sphinx.ext.extlinks"]  # noqa: F405
 
 html_theme = "furo"
 html_static_path = ["_static"]
@@ -130,6 +130,7 @@ graphviz_dot_args = [
 latex_documents = [("index", project + ".tex", project + " Documentation", author, "manual")]
 
 latex_logo = "_static/images/logo-light-mode.png"
+
 
 def setup(app):
     app.add_css_file("css/globalnav.css")
