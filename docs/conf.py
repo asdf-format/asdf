@@ -28,7 +28,7 @@ configuration = conf["project"]
 # -- Project information ------------------------------------------------------
 project = configuration["name"]
 author = f"{configuration['authors'][0]['name']} <{configuration['authors'][0]['email']}>"
-copyright = f"{datetime.datetime.now().year}, {configuration['authors'][0]['name']}"
+copyright = f"{datetime.datetime.now().year}, {author}"
 
 release = distribution(configuration["name"]).version
 # for example take major/minor
@@ -63,4 +63,73 @@ intersphinx_mapping["jsonschema"] = ("https://python-jsonschema.readthedocs.io/e
 intersphinx_mapping["stdatamodels"] = ("https://stdatamodels.readthedocs.io/en/latest/", None)
 intersphinx_mapping["pytest"] = ("https://docs.pytest.org/en/latest/", None)
 
-extensions += ["sphinx_inline_tabs"]
+# Docs are hosted as a "subproject" under the main project's domain: https://www.asdf-format.org/projects
+# This requires including links to main project (asdf-website) and the other asdf subprojects
+# See https://docs.readthedocs.io/en/stable/guides/intersphinx.html#using-intersphinx
+subprojects = {
+    # main project
+    "asdf-website": ("https://www.asdf-format.org/en/latest", None),
+    # other subprojects
+    "asdf-standard": ("https://www.asdf-format.org/projects/asdf-standard/en/latest/", None),
+    "asdf-coordinates-schemas": ("https://www.asdf-format.org/projects/asdf-coordinates-schemas/en/latest/", None),
+    "asdf-transform-schemas": ("https://www.asdf-format.org/projects/asdf-transform-schemas/en/latest/", None),
+    "asdf-wcs-schemas": ("https://www.asdf-format.org/projects/asdf-wcs-schemas/en/latest/", None),
+}
+
+intersphinx_mapping.update(subprojects)  # noqa
+
+extensions += ["sphinx_inline_tabs", "sphinx.ext.intersphinx", "sphinx.ext.extlinks"] # noqa
+
+html_theme = "furo"
+html_static_path = ["_static"]
+# Override default settings from sphinx_asdf / sphinx_astropy (incompatible with furo)
+html_sidebars = {}
+# The name of an image file (within the static path) to use as favicon of the
+# docs.  This file should be a Windows icon file (.ico) being 16x16 or 32x32
+# pixels large.
+html_favicon = "_static/images/favicon.ico"
+html_logo = ""
+
+globalnavlinks = {
+    "Projects": "https://www.asdf-format.org",
+    "Tutorials": "https://www.asdf-format.org/en/latest/tutorials/index.html",
+    "Community": "https://www.asdf-format.org/en/latest/community/index.html",
+    "Installation": "https://www.asdf-format.org/en/latest/applications/index.html",
+}
+
+topbanner = ""
+for text, link in globalnavlinks.items():
+    topbanner += f"<a href={link}>{text}</a>"
+
+html_theme_options = {
+    "light_logo": "images/logo-light-mode.png",
+    "dark_logo": "images/logo-dark-mode.png",
+    "announcement": topbanner,
+}
+
+pygments_style = "monokai"
+# NB Dark style pygments is furo-specific at this time
+pygments_dark_style = "monokai"
+# Render inheritance diagrams in SVG
+graphviz_output_format = "svg"
+
+graphviz_dot_args = [
+    "-Nfontsize=10",
+    "-Nfontname=Helvetica Neue, Helvetica, Arial, sans-serif",
+    "-Efontsize=10",
+    "-Efontname=Helvetica Neue, Helvetica, Arial, sans-serif",
+    "-Gbgcolor=white",
+    "-Gfontsize=10",
+    "-Gfontname=Helvetica Neue, Helvetica, Arial, sans-serif",
+]
+
+# -- Options for LaTeX output --------------------------------------------------
+
+# Grouping the document tree into LaTeX files. List of tuples
+# (source start file, target name, title, author, documentclass [howto/manual]).
+latex_documents = [("index", project + ".tex", project + " Documentation", author, "manual")]
+
+latex_logo = "_static/images/logo-light-mode.png"
+
+def setup(app):
+    app.add_css_file("css/globalnav.css")
