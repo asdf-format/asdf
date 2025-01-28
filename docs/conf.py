@@ -35,7 +35,7 @@ release = distribution(configuration["name"]).version
 version = ".".join(release.split(".")[:2])
 
 # -- Options for HTML output ---------------------------------------------------
-html_title = f"{project} v{version}"
+html_title = f"{project} v{release}"
 
 # Output file base name for HTML help builder.
 htmlhelp_basename = project + "doc"
@@ -91,10 +91,9 @@ html_favicon = "_static/images/favicon.ico"
 html_logo = ""
 
 globalnavlinks = {
-    "Projects": "https://www.asdf-format.org",
+    "ASDF Projects": "https://www.asdf-format.org",
     "Tutorials": "https://www.asdf-format.org/en/latest/tutorials/index.html",
     "Community": "https://www.asdf-format.org/en/latest/community/index.html",
-    "Installation": "https://www.asdf-format.org/en/latest/applications/index.html",
 }
 
 topbanner = ""
