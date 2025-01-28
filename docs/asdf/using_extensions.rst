@@ -1,7 +1,12 @@
 .. currentmodule:: asdf
 
+****************
+Using Extensions
+****************
+
+
 The built-in extension
-----------------------
+======================
 
 The ability to serialize the following types is provided by `asdf`'s built-in
 extension:
@@ -21,7 +26,7 @@ its implementation. However, it is useful to be aware that the built-in
 extension is always in effect when reading and writing ASDF files.
 
 Custom types
-------------
+============
 
 For the purposes of this documentation, a "custom type" is any data type that
 can not be serialized by the built-in extension.
@@ -43,7 +48,7 @@ The version number will increase whenever a schema (and therefore the converter
 implementation) changes.
 
 Extensions
-----------
+==========
 
 In order for the converters and schemas to be used by `asdf`, they must be
 packaged into an **extension** class. In general, the details of extensions are
@@ -58,7 +63,7 @@ always used). There are two ways to use custom extensions, which are detailed
 below in :ref:`other_packages` and :ref:`explicit_extensions`.
 
 Writing custom types to files
-*****************************
+-----------------------------
 
 `asdf` is not capable of serializing any custom type unless an extension is
 provided that defines how to serialize that type. Attempting to do so will
@@ -68,7 +73,7 @@ for custom types and extensions, see :ref:`extending_extensions`.
 .. _reading_custom_types:
 
 Reading files with custom types
-*******************************
+-------------------------------
 
 The `asdf` software is capable of reading files that contain custom data types
 even if the extension that was used to create the file is not present. However,
@@ -93,7 +98,7 @@ that are required for instantiating custom types when reading ASDF files.
 .. _custom_type_versions:
 
 Custom types, extensions, and versioning
-----------------------------------------
+========================================
 
 Tags and schemas that follow best practices are versioned. This allows changes
 to tags and schemas to be recorded, and it allows `asdf` to define behavior with
@@ -108,7 +113,7 @@ Since ASDF is designed to be an archival file format, extension authors are
 encouraged to maintain backwards compatibility with all older tag versions.
 
 Reading files
-*************
+-------------
 
 When `asdf` encounters a tagged object in a file, it will compare the URI of
 the tag in the file with the list of tags handled by available converters.
@@ -121,7 +126,7 @@ found by the library will be used.  Users may disable a converter by removing
 its extension with the `~asdf.config.AsdfConfig.remove_extension` method.
 
 Writing files
-*************
+-------------
 
 When writing a object to a file, `asdf` compares the object's type to the list
 of types handled by available converters.  The first matching converter will
@@ -135,7 +140,7 @@ its extension with the `~asdf.config.AsdfConfig.remove_extension` method.
 .. _other_packages:
 
 Extensions from other packages
-------------------------------
+==============================
 
 Some external packages may define extensions that allow `asdf` to recognize some
 or all of the types that are defined by that package. Such packages may install
@@ -163,7 +168,7 @@ other extensions from other packages, depending on what is installed.
 .. _explicit_extensions:
 
 Explicit use of extensions
---------------------------
+==========================
 
 Sometimes no packaged extensions are provided for the types you wish to
 serialize. In this case, it is necessary to explicitly install any necessary
@@ -207,7 +212,7 @@ To read the file (in a new session) we again need to install the extension first
 .. _extension_checking:
 
 Extension checking
-------------------
+==================
 
 When writing ASDF files using this software, metadata about the extensions that
 were used to create the file will be added to the file itself.  This includes
