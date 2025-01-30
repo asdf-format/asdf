@@ -67,7 +67,7 @@ API Documentation
 .. toctree::
   :maxdepth: 1
 
-  asdf/user_api
+  asdf/user_api/index
   asdf/developer_api
 
 Developer Overview
