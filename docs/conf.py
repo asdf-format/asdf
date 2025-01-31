@@ -32,10 +32,10 @@ copyright = f"{datetime.datetime.now().year}, {author}"
 
 release = distribution(configuration["name"]).version
 # for example take major/minor
-version = ".".join(release.split(".")[:3])
+version = ".".join(release.split(".")[:2])
 
 # -- Options for HTML output ---------------------------------------------------
-html_title = f"{project} v{version}"
+html_title = f"{project} v{release}"
 
 # Output file base name for HTML help builder.
 htmlhelp_basename = project + "doc"
