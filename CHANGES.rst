@@ -1,3 +1,39 @@
+4.1.0 (2025-01-31)
+==================
+
+Bugfix
+------
+
+- Improve ``schema_info`` handling of schemas with combiners (allOf, anyOf,
+  etc). (`#1875 <https://github.com/asdf-format/asdf/pull/1875>`_)
+- While walking schema for info/search/schema_info walk into nodes with
+  __asdf_traverse__
+  if the parent node has a schema. (`#1884
+  <https://github.com/asdf-format/asdf/pull/1884>`_)
+- Don't infinitely loop on recursive lists during info/search/schema_info.
+  (`#1884 <https://github.com/asdf-format/asdf/pull/1884>`_)
+- Use extension_manager of associated AsdfFile in info/search/schema_info.
+  (`#1884 <https://github.com/asdf-format/asdf/pull/1884>`_)
+- Only use ANSI format codes when supported by stdout. (`#1884
+  <https://github.com/asdf-format/asdf/pull/1884>`_)
+
+
+Doc
+---
+
+- Fix typos in search documentation. (`#1880
+  <https://github.com/asdf-format/asdf/pull/1880>`_)
+- updates docs theme to be consistent with asdf subprojects (`#1897
+  <https://github.com/asdf-format/asdf/pull/1897>`_)
+
+
+Feature
+-------
+
+- Add ``Converter.to_info`` to allow customizing ``info`` output. (`#1884
+  <https://github.com/asdf-format/asdf/pull/1884>`_)
+
+
 4.0.0 (2024-11-19)
 ==================
 

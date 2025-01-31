@@ -1,1 +1,0 @@
-Add ``Converter.to_info`` to allow customizing ``info`` output.

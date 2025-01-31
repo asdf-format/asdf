@@ -1,1 +1,0 @@
-Improve ``schema_info`` handling of schemas with combiners (allOf, anyOf, etc).
