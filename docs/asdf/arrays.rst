@@ -1,7 +1,12 @@
 .. currentmodule:: asdf
 
+**********
+Array Data
+**********
+
+
 Saving arrays
--------------
+=============
 
 Beyond the basic data types of dictionaries, lists, strings and numbers, the
 most important thing ASDF can save is arrays.  It's as simple as putting a
@@ -29,8 +34,9 @@ the array, but the actual array content is in a binary block.
 
 .. asdf:: test.asdf
 
+
 Sharing of data
----------------
+===============
 
 Arrays that are views on the same data automatically share the same
 data in the file.  In this example an array and a subview on that same
@@ -60,7 +66,7 @@ a specific array.
 .. asdf:: test.asdf
 
 Saving inline arrays
---------------------
+====================
 
 For small arrays, you may not care about the efficiency of a binary
 representation and just want to save the array contents directly in the YAML
@@ -104,7 +110,7 @@ see :ref:`config_options_array_inline_threshold`.
 .. _exploded:
 
 Saving external arrays
-----------------------
+======================
 
 ASDF files may also be saved in "exploded form", which creates multiple files
 corresponding to the following data items:
@@ -152,7 +158,7 @@ To save a block in an external file, set its block type to
 .. asdf:: test0000.asdf
 
 Streaming array data
---------------------
+====================
 
 In certain scenarios, you may want to stream data to disk, rather than
 writing an entire array of data at once.  For example, it may not be
@@ -224,7 +230,7 @@ to numpy arrays stored in ASDF:
                 fd.write(array.tobytes())
 
 Compression
------------
+===========
 
 Individual blocks in an ASDF file may be compressed.
 
@@ -271,7 +277,7 @@ different compression algorithm when writing the file out again.
     af.write_to('different.asdf', all_array_compression='lz4')
 
 Memory mapping
---------------
+==============
 
 By default, all internal array data is memory mapped using `numpy.memmap`. This
 allows for the efficient use of memory even when reading files with very large

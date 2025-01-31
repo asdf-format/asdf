@@ -1,8 +1,8 @@
-.. _user_api:
+************
+asdf Package
+************
 
-********
-User API
-********
+.. currentmodule:: asdf
 
 .. automodapi:: asdf
     :include-all-objects:
@@ -10,7 +10,3 @@ User API
     :no-inheritance-diagram:
     :skip: ValidationError
     :skip: Stream
-
-.. automodapi:: asdf.search
-
-.. automodapi:: asdf.config

@@ -40,6 +40,7 @@ docs = [
   "graphviz",
   "sphinx-inline-tabs",
   'tomli; python_version < "3.11"',
+  "furo",
 ]
 tests = [
   "fsspec[http]>=2022.8.2",
@@ -49,7 +50,7 @@ tests = [
   "pytest-remotedata",
 ]
 [project.urls]
-'documentation' = 'https://asdf.readthedocs.io/en/stable'
+'documentation' = 'https://asdf.readthedocs.io/en/stable/'
 'repository' = 'https://github.com/asdf-format/asdf'
 'tracker' = 'https://github.com/asdf-format/asdf/issues'
 [project.entry-points]
