@@ -1,1 +1,0 @@
-Use extension_manager of associated AsdfFile in info/search/schema_info.

@@ -1,2 +1,0 @@
-While walking schema for info/search/schema_info walk into nodes with __asdf_traverse__
-if the parent node has a schema.
