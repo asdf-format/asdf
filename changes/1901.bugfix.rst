@@ -1,0 +1,1 @@
+Allow extra keywords in structured datatype validation.
