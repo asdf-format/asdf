@@ -812,6 +812,7 @@ obj: !<tag:nowhere.org:custom/datatype-1.0.0>
        data: [[1, 'a'], [2, 'b'], [3, 'c']]
        datatype:
          - name: a
+           description: a description
            datatype: int8
          - name: b
            datatype: ['ascii', 8]
@@ -829,6 +830,7 @@ obj: !<tag:nowhere.org:custom/datatype-1.0.0>
          - name: a
            datatype: int64
          - name: b
+           title: a title
            datatype: ['ascii', 8]
     """
     buff = helpers.yaml_to_asdf(content)
