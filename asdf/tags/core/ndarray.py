@@ -528,12 +528,14 @@ def validate_datatype(validator, datatype, instance, schema):
             in_datatype, _ = numpy_dtype_to_asdf_datatype(array.dtype)
         else:
             msg = "Not an array"
-            raise ValidationError(msg)
+            yield ValidationError(msg)
+            return
     elif isinstance(instance, (np.ndarray, NDArrayType)):
         in_datatype, _ = numpy_dtype_to_asdf_datatype(instance.dtype)
     else:
         msg = "Not an array"
-        raise ValidationError(msg)
+        yield ValidationError(msg)
+        return
 
     # We are only concerned with some fields from the datatype
     # object in the schema so if the schema datatype is structured
@@ -547,6 +549,7 @@ def validate_datatype(validator, datatype, instance, schema):
 
     if schema.get("exact_datatype", False):
         yield ValidationError(f"Expected datatype '{datatype}', got '{in_datatype}'")
+        return
 
     np_datatype = asdf_datatype_to_numpy_dtype(datatype)
     np_in_datatype = asdf_datatype_to_numpy_dtype(in_datatype)
@@ -554,16 +557,20 @@ def validate_datatype(validator, datatype, instance, schema):
     if not np_datatype.fields:
         if np_in_datatype.fields:
             yield ValidationError(f"Expected scalar datatype '{datatype}', got '{in_datatype}'")
+            return
 
         if not np.can_cast(np_in_datatype, np_datatype, "safe"):
             yield ValidationError(f"Can not safely cast from '{in_datatype}' to '{datatype}' ")
+            return
 
     else:
         if not np_in_datatype.fields:
             yield ValidationError(f"Expected structured datatype '{datatype}', got '{in_datatype}'")
+            return
 
         if len(np_in_datatype.fields) != len(np_datatype.fields):
             yield ValidationError(f"Mismatch in number of columns: Expected {len(datatype)}, got {len(in_datatype)}")
+            return
 
         for i in range(len(np_datatype.fields)):
             in_type = np_in_datatype[i]
@@ -574,3 +581,4 @@ def validate_datatype(validator, datatype, instance, schema):
                     f"Expected {numpy_dtype_to_asdf_datatype(out_type)[0]}, "
                     f"got {numpy_dtype_to_asdf_datatype(in_type)[0]}",
                 )
+                return
