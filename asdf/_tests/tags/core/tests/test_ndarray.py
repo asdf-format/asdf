@@ -99,7 +99,11 @@ properties:
         datatype: int16
       - name: b
         datatype: ['ascii', 16]
-    exact_datatype: true""",
+    exact_datatype: true
+  e:
+    anyOf:
+      - type: "null"
+      - datatype: int16""",
                 "http://nowhere.org/schemas/custom/ndim-1.0.0": """%YAML 1.1
 ---
 $schema: "http://stsci.edu/schemas/asdf/asdf-schema-1.1.0"
@@ -801,6 +805,15 @@ obj: !<tag:nowhere.org:custom/datatype-1.0.0>
             buff,
         ),
     ):
+        pass
+
+    content = """
+obj: !<tag:nowhere.org:custom/datatype-1.0.0>
+    e: null
+    """
+    buff = helpers.yaml_to_asdf(content)
+
+    with asdf.open(buff):
         pass
 
 
