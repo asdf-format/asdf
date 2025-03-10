@@ -1,10 +1,10 @@
-from contextlib import nullcontext
 import io
 import os
 import re
 import stat
 import sys
 import urllib.request as urllib_request
+from contextlib import nullcontext
 
 import numpy as np
 import pytest
@@ -267,7 +267,9 @@ def warn_no_fsspec(request):
     else:
         module = pytest.importorskip("fsspec")
         sys.modules["fsspec"] = None
-        yield pytest.warns(AsdfDeprecationWarning, match=r"Opening http urls without fsspec is deprecated. Please install fsspec")
+        yield pytest.warns(
+            AsdfDeprecationWarning, match=r"Opening http urls without fsspec is deprecated. Please install fsspec"
+        )
         sys.modules["fsspec"] = module
 
 

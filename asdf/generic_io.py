@@ -1142,7 +1142,7 @@ def get_file(init, mode="r", uri=None, close=False):
         # this is not a local file, import fsspec (if available)
         try:
             import fsspec
-        except ImportError as err:
+        except ImportError:
             fsspec = None
 
         if fsspec:
