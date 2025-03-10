@@ -14,6 +14,7 @@ import pathlib
 import re
 import sys
 import tempfile
+import warnings
 from os import SEEK_CUR, SEEK_END, SEEK_SET
 from urllib.request import url2pathname, urlopen
 
@@ -21,7 +22,7 @@ import numpy as np
 
 from . import util
 from ._extern import atomicfile
-from .exceptions import DelimiterNotFoundError
+from .exceptions import AsdfDeprecationWarning, DelimiterNotFoundError
 from .util import _patched_urllib_parse
 
 __all__ = ["get_file", "get_uri", "resolve_uri", "relative_uri"]
@@ -1138,27 +1139,29 @@ def get_file(init, mode="r", uri=None, close=False):
 
             return RealFile(fd, mode, close=True, uri=uri)
 
-        # this is not a local file, allow fsspec to handle it
+        # this is not a local file, import fsspec (if available)
         try:
             import fsspec
         except ImportError as err:
-            # TODO
-            raise ImportError("ain't got none fsspec") from err
+            fsspec = None
 
-        fd = fsspec.open(init, realmode)
-        try:
-            fd = fd.__enter__()
-        except NotImplementedError:
-            # TODO say something about why
-            msg = "HTTP connections can not be opened for writing"
-            raise ValueError(msg)
-        return get_file(fd, uri=uri or init, close=True)
+        if fsspec:
+            fd = fsspec.open(init, realmode)
+            try:
+                fd = fd.__enter__()
+            except NotImplementedError as err:
+                msg = f"Unable to open {init} with mode {mode}"
+                raise ValueError(msg) from err
+            return get_file(fd, uri=uri or init, close=True)
 
+        # finally, allow the legacy http code to handle this (with a warning)
         if parsed.scheme in ["http", "https"]:
             if "w" in mode:
                 msg = "HTTP connections can not be opened for writing"
                 raise ValueError(msg)
 
+            msg = "Opening http urls without fsspec is deprecated. Please install fsspec[http]"
+            warnings.warn(msg, AsdfDeprecationWarning)
             return _http_to_temp(init, mode, uri=uri)
 
     if isinstance(init, io.BytesIO):

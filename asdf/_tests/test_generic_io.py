@@ -1,3 +1,4 @@
+from contextlib import nullcontext
 import io
 import os
 import re
@@ -11,6 +12,7 @@ import pytest
 import asdf
 from asdf import exceptions, generic_io
 from asdf.config import config_context
+from asdf.exceptions import AsdfDeprecationWarning
 
 from . import _helpers as helpers
 from . import create_large_tree, create_small_tree
@@ -258,8 +260,19 @@ def test_urlopen(tree, httpserver):
         assert not isinstance(ff._blocks.blocks[0].cached_data, np.memmap)
 
 
+@pytest.fixture(params=[True, False])
+def warn_no_fsspec(request):
+    if request.param:
+        yield nullcontext()
+    else:
+        module = pytest.importorskip("fsspec")
+        sys.modules["fsspec"] = None
+        yield pytest.warns(AsdfDeprecationWarning, match=r"Opening http urls without fsspec is deprecated. Please install fsspec")
+        sys.modules["fsspec"] = module
+
+
 @pytest.mark.remote_data()
-def test_http_connection(tree, httpserver):
+def test_http_connection(tree, httpserver, warn_no_fsspec):
     path = os.path.join(httpserver.tmpdir, "test.asdf")
 
     def get_write_fd():
@@ -274,9 +287,10 @@ def test_http_connection(tree, httpserver):
         fd.read(0)
         return fd
 
-    with _roundtrip(tree, get_write_fd, get_read_fd) as ff:
-        assert len(ff._blocks.blocks) == 2
-        assert (ff.tree["science_data"] == tree["science_data"]).all()
+    with warn_no_fsspec:
+        with _roundtrip(tree, get_write_fd, get_read_fd) as ff:
+            assert len(ff._blocks.blocks) == 2
+            assert (ff.tree["science_data"] == tree["science_data"]).all()
 
 
 def test_exploded_filesystem(tree, tmp_path):
@@ -313,7 +327,7 @@ def test_exploded_filesystem_fail(tree, tmp_path):
 
 
 @pytest.mark.remote_data()
-def test_exploded_http(tree, httpserver):
+def test_exploded_http(tree, httpserver, warn_no_fsspec):
     path = os.path.join(httpserver.tmpdir, "test.asdf")
 
     def get_write_fd():
@@ -322,8 +336,9 @@ def test_exploded_http(tree, httpserver):
     def get_read_fd():
         return generic_io.get_file(httpserver.url + "test.asdf")
 
-    with _roundtrip(tree, get_write_fd, get_read_fd, write_options={"all_array_storage": "external"}) as ff:
-        assert len(list(ff._blocks.blocks)) == 0
+    with warn_no_fsspec:
+        with _roundtrip(tree, get_write_fd, get_read_fd, write_options={"all_array_storage": "external"}) as ff:
+            assert len(list(ff._blocks.blocks)) == 0
 
 
 def test_exploded_stream_write(small_tree):
@@ -392,8 +407,10 @@ def test_invalid_obj(tmp_path):
     ):
         generic_io.get_file(fd, "r")
 
-    with pytest.raises(ValueError, match=r"HTTP connections can not be opened for writing"):
-        generic_io.get_file("http://www.google.com", "w")
+    url = "http://www.google.com"
+    mode = "w"
+    with pytest.raises(ValueError, match=f"Unable to open {url} with mode {mode}"):
+        generic_io.get_file(url, mode)
 
     with pytest.raises(TypeError, match=r"io.StringIO objects are not supported.  Use io.BytesIO instead."):
         generic_io.get_file(io.StringIO())
