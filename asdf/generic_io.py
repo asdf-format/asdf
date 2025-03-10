@@ -402,7 +402,8 @@ class GenericFile(metaclass=util._InheritDocstrings):
         """
         if self._close:
             self._fd.close()
-            self._fix_permissions()
+            if hasattr(self, "_fix_permissions"):
+                self._fix_permissions()
 
     def truncate(self, size=None):
         """
@@ -1104,16 +1105,10 @@ def get_file(init, mode="r", uri=None, close=False):
 
     if isinstance(init, (str, pathlib.Path)):
         parsed = _patched_urllib_parse.urlparse(str(init))
-        if parsed.scheme in ["http", "https"]:
-            if "w" in mode:
-                msg = "HTTP connections can not be opened for writing"
-                raise ValueError(msg)
 
-            return _http_to_temp(init, mode, uri=uri)
+        realmode = "r+b" if mode == "rw" else mode + "b"
 
         if parsed.scheme in _local_file_schemes:
-            realmode = "r+b" if mode == "rw" else mode + "b"
-
             # if paths have an extra leading '/' urlparse will
             # parse them even though they violate rfc8089. This will
             # lead to errors or writing files to unexpected locations
@@ -1142,6 +1137,29 @@ def get_file(init, mode="r", uri=None, close=False):
                 raise e
 
             return RealFile(fd, mode, close=True, uri=uri)
+
+        # this is not a local file, allow fsspec to handle it
+        try:
+            import fsspec
+        except ImportError as err:
+            # TODO
+            raise ImportError("ain't got none fsspec") from err
+
+        fd = fsspec.open(init, realmode)
+        try:
+            fd = fd.__enter__()
+        except NotImplementedError:
+            # TODO say something about why
+            msg = "HTTP connections can not be opened for writing"
+            raise ValueError(msg)
+        return get_file(fd, uri=uri or init, close=True)
+
+        if parsed.scheme in ["http", "https"]:
+            if "w" in mode:
+                msg = "HTTP connections can not be opened for writing"
+                raise ValueError(msg)
+
+            return _http_to_temp(init, mode, uri=uri)
 
     if isinstance(init, io.BytesIO):
         return MemoryIO(init, mode, uri=uri)
