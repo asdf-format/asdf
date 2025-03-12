@@ -33,7 +33,18 @@ dependencies = [
 ]
 [project.optional-dependencies]
 all = [
+  "asdf[lz4]",
+  "asdf[http]",
+  "asdf[s3]",
+]
+lz4 = [
   "lz4>=0.10",
+]
+http = [
+  "fsspec[http]>=2022.8.2",
+]
+s3 = [
+  "fsspec[s3]>=2022.8.2",
 ]
 docs = [
   "sphinx-asdf>=0.2.2",
@@ -43,11 +54,13 @@ docs = [
   "furo",
 ]
 tests = [
-  "fsspec[http]>=2022.8.2",
-  "lz4>=0.10",
+  "asdf[all]",
   "psutil",
   "pytest>=8",
   "pytest-remotedata",
+]
+test = [
+  "asdf[tests]",
 ]
 [project.urls]
 'documentation' = 'https://asdf.readthedocs.io/en/stable/'
