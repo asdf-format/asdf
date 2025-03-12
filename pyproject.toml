@@ -55,6 +55,8 @@ docs = [
 ]
 tests = [
   "asdf[all]",
+  "boto3",
+  "moto[server]",
   "psutil",
   "pytest>=8",
   "pytest-remotedata",
