@@ -137,15 +137,12 @@ def test_load_yaml_recursion_with_tags(tagged):
 %YAML 1.1
 %TAG ! tag:stsci.edu:asdf/
 --- !core/asdf-1.1.0
-o: &id001 !transform/remap_axes-1.4.0
-  inputs: [x0, x1]
-  inverse: !transform/remap_axes-1.4.0
-    inputs: [x0, x1, x2]
+o: &id001 !some/tag-1.0.0
+  inverse: !some/tag-1.0.0
     inverse: *id001
-    mapping: [2, 1]
-    outputs: [x0, x1]
-  mapping: [0, 1, 0]
-  outputs: [x0, x1, x2]
+l: &id002 !some/tag-1.0.0
+  - *id002
 ..."""
     tree = util.load_yaml(io.BytesIO(contents), tagged=tagged)
     assert tree["o"] is tree["o"]["inverse"]["inverse"]
+    assert tree["l"] is tree["l"][0]
