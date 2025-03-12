@@ -128,3 +128,24 @@ def test_load_yaml_recursion(tmp_path, tagged):
     tree = util.load_yaml(fn, tagged=tagged)
     assert tree["d"]["d"] is tree["d"]
     assert tree["l"][0] is tree["l"]
+
+
+@pytest.mark.parametrize("tagged", [True, False])
+def test_load_yaml_recursion_with_tags(tagged):
+    contents = b"""#ASDF 1.0.0
+#ASDF_STANDARD 1.6.0
+%YAML 1.1
+%TAG ! tag:stsci.edu:asdf/
+--- !core/asdf-1.1.0
+o: &id001 !transform/remap_axes-1.4.0
+  inputs: [x0, x1]
+  inverse: !transform/remap_axes-1.4.0
+    inputs: [x0, x1, x2]
+    inverse: *id001
+    mapping: [2, 1]
+    outputs: [x0, x1]
+  mapping: [0, 1, 0]
+  outputs: [x0, x1, x2]
+..."""
+    tree = util.load_yaml(io.BytesIO(contents), tagged=tagged)
+    assert tree["o"] is tree["o"]["inverse"]["inverse"]

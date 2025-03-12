@@ -147,9 +147,9 @@ class _IgnoreCustomTagsLoader(_yaml_base_loader):
 
     def construct_undefined(self, node):
         if isinstance(node, yaml.MappingNode):
-            return self.construct_mapping(node)
+            return self.construct_yaml_map(node)
         elif isinstance(node, yaml.SequenceNode):
-            return self.construct_sequence(node)
+            return self.construct_yaml_seq(node)
         elif isinstance(node, yaml.ScalarNode):
             return self.construct_scalar(node)
         return super().construct_undefined(node)
