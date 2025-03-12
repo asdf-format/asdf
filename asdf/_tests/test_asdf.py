@@ -342,7 +342,7 @@ def test_unclosed_file(tmp_path):
         pass
 
 
-def test_fsspec(tmp_path):
+def test_fsspec(tmp_path, s3):
     """
     Issue #1146 reported errors when opening a fsspec 'file'
     This is a regression test for the fix in PR #1226
@@ -360,7 +360,7 @@ def test_fsspec(tmp_path):
 
 
 @pytest.mark.remote_data()
-def test_fsspec_http(httpserver):
+def test_fsspec_http(httpserver, s3):
     """
     Issue #1146 reported errors when opening a fsspec url (using the http
     filesystem)

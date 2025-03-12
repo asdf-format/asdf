@@ -261,7 +261,7 @@ def test_urlopen(tree, httpserver):
 
 
 @pytest.fixture(params=[True, False])
-def warn_no_fsspec(request):
+def warn_no_fsspec(request, s3):
     if request.param:
         yield nullcontext()
     else:
