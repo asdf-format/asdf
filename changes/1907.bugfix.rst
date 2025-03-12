@@ -1,0 +1,1 @@
+Support recursive tagged nodes in load_yaml.
