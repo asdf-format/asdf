@@ -8,13 +8,20 @@ pytestmark = pytest.mark.filterwarnings(r"ignore:datetime\.datetime\.utcnow\(\) 
 
 
 @pytest.fixture(scope="module")
-def bucket_url():
+def bucket_url(tmp_path_factory):
+
     IP = "127.0.0.1"
     PORT = 3000
     ENDPOINT_URL = f"http://{IP}:{PORT}"
 
     with pytest.MonkeyPatch.context() as mp:
+        tmp_path = tmp_path_factory.mktemp("aws")
+        mock_credentials_path = tmp_path / "mock_aws_credentials"
+        with open(mock_credentials_path, "w") as f:
+            f.write("[foo]\naws_access_key_id = mock\naws_secret_access_key = mock")
+
         mp.setenv("FSSPEC_S3_ENDPOINT_URL", ENDPOINT_URL)
+        mp.setenv("AWS_SHARED_CREDENTIALS_FILE", str(mock_credentials_path))
         mp.setenv("AWS_ACCESS_KEY_ID", "testing")
         mp.setenv("AWS_SECRET_ACCESS_KEY", "testing")
         mp.setenv("AWS_SECURITY_TOKEN", "testing")
