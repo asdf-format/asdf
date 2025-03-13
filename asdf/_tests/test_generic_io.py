@@ -23,6 +23,26 @@ def tree(request):
     return request.param()
 
 
+@pytest.fixture(params=[True, False])
+def has_fsspec(request, monkeypatch):
+    if request.param:
+        yield True
+    else:
+        pytest.importorskip("fsspec")
+        monkeypatch.setitem(sys.modules, "fsspec", None)
+        yield False
+
+
+@pytest.fixture()
+def warn_no_fsspec(has_fsspec):
+    if has_fsspec:
+        yield nullcontext()
+    else:
+        yield pytest.warns(
+            AsdfDeprecationWarning, match=r"Opening http urls without fsspec is deprecated. Please install fsspec"
+        )
+
+
 def _roundtrip(tree, get_write_fd, get_read_fd, write_options=None, read_options=None):
     write_options = {} if write_options is None else write_options
     read_options = {} if read_options is None else read_options
@@ -260,19 +280,6 @@ def test_urlopen(tree, httpserver):
         assert not isinstance(ff._blocks.blocks[0].cached_data, np.memmap)
 
 
-@pytest.fixture(params=[True, False])
-def warn_no_fsspec(request):
-    if request.param:
-        yield nullcontext()
-    else:
-        module = pytest.importorskip("fsspec")
-        sys.modules["fsspec"] = None
-        yield pytest.warns(
-            AsdfDeprecationWarning, match=r"Opening http urls without fsspec is deprecated. Please install fsspec"
-        )
-        sys.modules["fsspec"] = module
-
-
 @pytest.mark.remote_data()
 def test_http_connection(tree, httpserver, warn_no_fsspec):
     path = os.path.join(httpserver.tmpdir, "test.asdf")
@@ -395,7 +402,7 @@ def test_open_stdout():
         pass
 
 
-def test_invalid_obj(tmp_path):
+def test_invalid_obj(tmp_path, has_fsspec):
     with pytest.raises(ValueError, match=r"Can't handle .* as a file for mode 'r'"):
         generic_io.get_file(42)
 
@@ -411,7 +418,11 @@ def test_invalid_obj(tmp_path):
 
     url = "http://www.google.com"
     mode = "w"
-    with pytest.raises(ValueError, match=f"Unable to open {url} with mode {mode}"):
+    if has_fsspec:
+        raises_ctx = pytest.raises(ValueError, match=f"Unable to open {url} with mode {mode}")
+    else:
+        raises_ctx = pytest.raises(ValueError, match=r"HTTP connections can not be opened for writing")
+    with raises_ctx:
         generic_io.get_file(url, mode)
 
     with pytest.raises(TypeError, match=r"io.StringIO objects are not supported.  Use io.BytesIO instead."):
