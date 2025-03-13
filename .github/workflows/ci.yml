@@ -126,7 +126,7 @@ jobs:
       envs: |
         - linux: compatibility
 
-  s3:
+  mocks3:
     needs: [core]
     uses: OpenAstronomy/github-actions-workflows/.github/workflows/tox.yml@v1
     with:
@@ -134,4 +134,4 @@ jobs:
       # Any env name which does not start with `pyXY` will use this Python version.
       default_python: '3.11'
       envs: |
-        - linux: s3
+        - linux: mocks3
