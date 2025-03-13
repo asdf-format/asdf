@@ -35,16 +35,12 @@ dependencies = [
 all = [
   "asdf[lz4]",
   "asdf[http]",
-  "asdf[s3]",
 ]
 lz4 = [
   "lz4>=0.10",
 ]
 http = [
   "fsspec[http]>=2022.8.2",
-]
-s3 = [
-  "fsspec[s3]>=2022.8.2",
 ]
 docs = [
   "sphinx-asdf>=0.2.2",
@@ -55,9 +51,6 @@ docs = [
 ]
 tests = [
   "asdf[all]",
-  "boto3",
-  "s3fs",
-  "moto[server]",
   "psutil",
   "pytest>=8",
   "pytest-remotedata",
@@ -200,7 +193,7 @@ extend-ignore = [
 [tool.ruff.lint.per-file-ignores]
 "test_*.py" = ["S101"]
 "asdf/_tests/_helpers.py" = ["S101"]
-"compatibility_tests/common.py" = ["S101"]
+"integration_tests/compatibility/common.py" = ["S101"]
 
 [tool.flynt]
 exclude = ["asdf/_extern/*", "asdf/_jsonschema/*"]
