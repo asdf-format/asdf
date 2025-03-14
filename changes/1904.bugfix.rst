@@ -1,0 +1,1 @@
+yield instead of raise ValidationError in validate_datatype to allow use in schema combiners
