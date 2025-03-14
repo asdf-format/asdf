@@ -33,7 +33,14 @@ dependencies = [
 ]
 [project.optional-dependencies]
 all = [
+  "asdf[lz4]",
+  "asdf[http]",
+]
+lz4 = [
   "lz4>=0.10",
+]
+http = [
+  "fsspec[http]>=2022.8.2",
 ]
 docs = [
   "sphinx-asdf>=0.2.2",
@@ -43,11 +50,13 @@ docs = [
   "furo",
 ]
 tests = [
-  "fsspec[http]>=2022.8.2",
-  "lz4>=0.10",
+  "asdf[all]",
   "psutil",
   "pytest>=8",
   "pytest-remotedata",
+]
+test = [
+  "asdf[tests]",
 ]
 [project.urls]
 'documentation' = 'https://asdf.readthedocs.io/en/stable/'
@@ -184,7 +193,7 @@ extend-ignore = [
 [tool.ruff.lint.per-file-ignores]
 "test_*.py" = ["S101"]
 "asdf/_tests/_helpers.py" = ["S101"]
-"compatibility_tests/common.py" = ["S101"]
+"integration_tests/compatibility/common.py" = ["S101"]
 
 [tool.flynt]
 exclude = ["asdf/_extern/*", "asdf/_jsonschema/*"]

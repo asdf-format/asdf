@@ -1,0 +1,1 @@
+Deprecate opening http uris unless fsspec is installed.
