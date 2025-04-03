@@ -7,6 +7,8 @@ from numpy import ma
 from asdf import util
 from asdf._jsonschema import ValidationError
 
+_STRUCTURED_DATATYPE_KEYS = {"name", "datatype", "byteorder", "shape"}
+
 _datatype_names = {
     "int8": "i1",
     "int16": "i2",
@@ -532,6 +534,13 @@ def validate_datatype(validator, datatype, instance, schema):
     else:
         msg = "Not an array"
         raise ValidationError(msg)
+
+    # We are only concerned with some fields from the datatype
+    # object in the schema so if the schema datatype is structured
+    # copy the datatype and drop the irrelevant fields
+    # name datatype byteorder shape
+    if isinstance(datatype, list) and len(datatype) and isinstance(datatype[0], dict):
+        datatype = [{k: v for k, v in subitem.items() if k in _STRUCTURED_DATATYPE_KEYS} for subitem in datatype]
 
     if datatype == in_datatype:
         return
