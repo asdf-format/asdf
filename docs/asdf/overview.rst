@@ -83,6 +83,8 @@ of the block which contains the binary data.
     :start-after: _begin-compress-file:
     :end-before: _end-compress-file:
 
+.. _overview_reading:
+
 Reading Files
 =============
 

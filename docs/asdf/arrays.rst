@@ -34,6 +34,8 @@ the array, but the actual array content is in a binary block.
 
 .. asdf:: array.asdf
 
+See :ref:`overview_reading` for a description of how to open this file.
+
 
 Sharing of data
 ===============
