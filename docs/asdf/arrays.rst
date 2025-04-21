@@ -304,3 +304,8 @@ context.
 
 Attempting to access memory mapped array data after the corresponding
 file has been closed will result in an error.
+
+.. warning::
+
+   If a file is opened with memory mapping and write access
+   any changes to the array data will change the corresponding file.
