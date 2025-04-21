@@ -191,8 +191,8 @@ io_block_size
 -------------
 
 The buffer size used when reading and writing to the filesystem.  Users may wish
-to adjust this value to improve I/O performance.  Set to -1 to use the preferred
-block size for each file, as reported by st_blksize.
+to adjust this value to improve I/O performance.  Set to -1 to use the system
+provided default block size for each file.
 
 Defaults to -1.
 
