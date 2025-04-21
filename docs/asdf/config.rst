@@ -9,8 +9,8 @@ global configuration options.  Currently available options are limited, but we e
 to eventually move many of the ``AsdfFile.__init__`` and ``AsdfFile.write_to``
 keyword arguments to `AsdfConfig`.
 
-AsdfConfig and you
-==================
+Using AsdfConfig
+================
 
 The `AsdfConfig` class provides properties that can be adjusted to change the
 behavior of the `asdf` library for all files.  For example, to disable schema validation
