@@ -54,7 +54,7 @@ Additionally, the Converter interface includes a method that must be implemented
 when some logic is required to select the tag to assign to a ``to_yaml_tree`` result:
 
 `Converter.select_tag<Converter>` - an optional method that accepts a complex Python object and a list
-candidate tags and returns the tag that should be used to serialize the object.
+of candidate tags and returns the tag that should be used to serialize the object.
 
 `Converter.lazy<Converter>` - a boolean attribute indicating if this converter accepts "lazy" objects
 (those defined in `asdf.lazy_nodes`). This is mostly useful for container-like classes
@@ -151,7 +151,7 @@ the converter's list of tags and implement a `select_tag<Converter>` method:
 
 .. code-block:: python
 
-    RETANGLE_TAG = "asdf://example.com/shapes/tags/rectangle-1.0.0"
+    RECTANGLE_TAG = "asdf://example.com/shapes/tags/rectangle-1.0.0"
     SQUARE_TAG = "asdf://example.com/shapes/tags/square-1.0.0"
 
 
@@ -261,7 +261,7 @@ inverse:
 
 .. code-block:: python
 
-    # in the example_project.fractions module
+    # in the example_project.objects module
     class FractionWithInverse(fractions.Fraction):
         def __init__(self, *args, **kwargs):
             self._inverse = None
@@ -293,20 +293,20 @@ when we define our ``from_yaml_tree`` method in a naive way:
 
     class FractionWithInverseConverter(Converter):
         tags = ["asdf://example.com/fractions/tags/fraction-1.0.0"]
-        types = ["example_project.fractions.FractionWithInverse"]
+        types = ["example_project.objects.FractionWithInverse"]
 
         def to_yaml_tree(self, obj, tag, ctx):
             return {
-                "numerator": obj.width,
-                "denominator": obj.height,
+                "numerator": obj.numerator,
+                "denominator": obj.denominator,
                 "inverse": obj.inverse,
             }
 
         def from_yaml_tree(self, node, tag, ctx):
-            from example_project.fractions import FractionWithInverse
+            from example_project.objects import FractionWithInverse
 
-            obj = FractionWithInverse(tree["numerator"], tree["denominator"])
-            obj.inverse = tree["inverse"]
+            obj = FractionWithInverse(node["numerator"], node["denominator"])
+            obj.inverse = node["inverse"]
             return obj
 
 After adding this Converter to an Extension and installing it, the fraction
@@ -334,7 +334,7 @@ at the time that we retrieved it.  We can handle this situation by making our
 .. code-block:: python
 
         def from_yaml_tree(self, node, tag, ctx):
-            from example_project.fractions import FractionWithInverse
+            from example_project.objects import FractionWithInverse
 
             obj = FractionWithInverse(tree["numerator"], tree["denominator"])
             yield obj
@@ -351,7 +351,7 @@ With this modification we can successfully deserialize our ASDF file:
 .. code-block:: python
 
     with asdf.open("with_inverse.asdf") as af:
-        reconstituted_f1 = ff["fraction"]
+        reconstituted_f1 = af["fraction"]
 
     assert reconstituted_f1.inverse.inverse is reconstituted_f1
 
