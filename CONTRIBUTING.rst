@@ -8,8 +8,8 @@ haven't used GitHub before, please feel free to contact the package maintainers.
 
 .. note::
     The ASDF Standard itself also has a repository on github. Suggestions for
-    improvements to the ASDF Standard can be reported `here
-    <https://github.com/asdf-format/asdf-standard>`_.
+    improvements to the ASDF Standard can be reported to the `ASDF Standard
+    repository <https://github.com/asdf-format/asdf-standard>`_.
 
 Feedback, Feature Requests, and Bug Reports
 -------------------------------------------
