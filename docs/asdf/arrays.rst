@@ -199,6 +199,10 @@ binary data.
 
 .. asdf:: stream.asdf
 
+When reading a file with a streamed block the streamed block will
+be treated as a normal non-streamed block. It may be useful to enable
+:ref:`memory_mapping` if the corresponding block is too large to hold in memory.
+
 A case where streaming may be useful is when converting large data sets from a
 different format into ASDF. In these cases it would be impractical to hold all
 of the data in memory as an intermediate step. Consider the following example
@@ -277,6 +281,8 @@ different compression algorithm when writing the file out again.
 
     # Or specify the (possibly different) algorithm to use when writing out
     af.write_to('different.asdf', all_array_compression='lz4')
+
+.. _memory_mapping:
 
 Memory mapping
 ==============
