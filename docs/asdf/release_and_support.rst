@@ -36,4 +36,4 @@ Dependency Support Policy
 =========================
 
 As a scientific Python library, we follow
-`SPEC 0<https://scientific-python.org/specs/spec-0000/>`_.
+`SPEC 0 <https://scientific-python.org/specs/spec-0000/>`_.
