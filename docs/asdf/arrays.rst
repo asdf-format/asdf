@@ -289,18 +289,18 @@ Memory mapping
 
 When enabled, array data can be memory mapped using `numpy.memmap`. This
 allows for the efficient use of memory even when reading files with very large
-arrays. The use of memory mapping means that the following usage pattern is not
-permitted:
+arrays. When memory mapping is enabled array data access must occur while
+the corresponding file is open. This is most easily done using a ``with``
+context.
 
 .. code::
 
     import asdf
 
     with asdf.open('my_data.asdf', memmap=True) as af:
-        ...
+        # array data can be accessed since the with above
+        # will keep my_data.asdf open
+        print(af["my_array"][0])
 
-    af.tree
-
-Specifically, if an ASDF file has been opened using a ``with`` context, it is not
-possible to access the file contents outside of the scope of that context,
-because any memory mapped arrays will no longer be available.
+Attempting to access memory mapped array data after the corresponding
+file has been closed will result in an error.
