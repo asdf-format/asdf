@@ -22,7 +22,7 @@ the array, but the actual array content is in a binary block.
 
    tree = {'my_array': np.random.rand(8, 8)}
    ff = AsdfFile(tree)
-   ff.write_to("test.asdf")
+   ff.write_to("array.asdf")
 
 .. note::
 
@@ -32,7 +32,7 @@ the array, but the actual array content is in a binary block.
    page.
 
 
-.. asdf:: test.asdf
+.. asdf:: array.asdf
 
 
 Sharing of data
@@ -55,7 +55,7 @@ data being saved.
        'subset':   subset
    }
    ff = AsdfFile(tree)
-   ff.write_to("test.asdf")
+   ff.write_to("array_with_subset.asdf")
 
 For circumstances where this is undesirable (such as saving
 a small view of a large array) this can be disabled by setting
@@ -63,7 +63,7 @@ a small view of a large array) this can be disabled by setting
 or `asdf.AsdfFile.set_array_save_base` to control the behavior for
 a specific array.
 
-.. asdf:: test.asdf
+.. asdf:: array_with_subset.asdf
 
 Saving inline arrays
 ====================
@@ -91,9 +91,9 @@ storage type of the associated data. The allowed values are ``internal``,
    tree = {'my_array': my_array}
    ff = AsdfFile(tree)
    ff.set_array_storage(my_array, 'inline')
-   ff.write_to("test.asdf")
+   ff.write_to("inline_array.asdf")
 
-.. asdf:: test.asdf
+.. asdf:: inline_array.asdf
 
 Alternatively, it is possible to use the ``all_array_storage`` parameter of
 `AsdfFile.write_to` and `AsdfFile.update` to control the storage
@@ -102,7 +102,7 @@ format of all arrays in the file.
 .. code::
 
     # This controls the output format of all arrays in the file
-    ff.write_to("test.asdf", all_array_storage='inline')
+    ff.write_to("all_inline.asdf", all_array_storage='inline')
 
 For automatic management of the array storage type based on number of elements,
 see :ref:`config_options_array_inline_threshold`.
@@ -148,14 +148,14 @@ To save a block in an external file, set its block type to
 
    # On an individual block basis:
    ff.set_array_storage(my_array, 'external')
-   ff.write_to("test.asdf")
+   ff.write_to("external.asdf")
 
    # Or for every block:
-   ff.write_to("test.asdf", all_array_storage='external')
+   ff.write_to("external.asdf", all_array_storage='external')
 
-.. asdf:: test.asdf
+.. asdf:: external.asdf
 
-.. asdf:: test0000.asdf
+.. asdf:: external0000.asdf
 
 Streaming array data
 ====================
@@ -187,7 +187,7 @@ binary data.
    }
 
    ff = AsdfFile(tree)
-   with open('test.asdf', 'wb') as fd:
+   with open('stream.asdf', 'wb') as fd:
        ff.write_to(fd)
        # Write 100 rows of data, one row at a time.  ``write``
        # expects the raw binary bytes, not an array, so we use
@@ -195,7 +195,7 @@ binary data.
        for i in range(100):
            fd.write(np.array([i] * 128, np.float64).tobytes())
 
-.. asdf:: test.asdf
+.. asdf:: stream.asdf
 
 A case where streaming may be useful is when converting large data sets from a
 different format into ASDF. In these cases it would be impractical to hold all
