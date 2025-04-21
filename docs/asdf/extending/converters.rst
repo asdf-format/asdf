@@ -14,6 +14,8 @@ Converter provides the software support for a tag and is responsible
 for both converting from parsed YAML to more complex Python objects
 and vice versa.
 
+.. _converter_interface:
+
 The Converter interface
 =======================
 
@@ -261,7 +263,9 @@ inverse:
 
 .. code-block:: python
 
-    # in the example_project.objects module
+    import fractions
+
+
     class FractionWithInverse(fractions.Fraction):
         def __init__(self, *args, **kwargs):
             self._inverse = None
@@ -291,9 +295,12 @@ when we define our ``from_yaml_tree`` method in a naive way:
 
 .. code-block:: python
 
-    class FractionWithInverseConverter(Converter):
+    import asdf
+
+
+    class FractionWithInverseConverter(asdf.extension.Converter):
         tags = ["asdf://example.com/fractions/tags/fraction-1.0.0"]
-        types = ["example_project.objects.FractionWithInverse"]
+        types = [FractionWithInverse]
 
         def to_yaml_tree(self, obj, tag, ctx):
             return {
@@ -303,16 +310,28 @@ when we define our ``from_yaml_tree`` method in a naive way:
             }
 
         def from_yaml_tree(self, node, tag, ctx):
-            from example_project.objects import FractionWithInverse
-
             obj = FractionWithInverse(node["numerator"], node["denominator"])
             obj.inverse = node["inverse"]
             return obj
+
+.. warning::
+
+   The type ``FractionsWithInverse`` and not a string was used above to
+   keep this example simple. See the note about `Converter.types` as strings
+   in the :ref:`converter_interface` section above.
 
 After adding this Converter to an Extension and installing it, the fraction
 will serialize correctly:
 
 .. code-block:: python
+
+    class FractionsExtension(asdf.extension.Extension):
+        extension_uri = "asdf://example.com/fractions/extensions/fractions-1.0.0"
+        converters = [FractionWithInverseConverter()]
+        tags = ["asdf://example.com/fractions/tags/fraction-1.0.0"]
+
+
+    asdf.get_config().add_extension(FractionsExtension())
 
     with asdf.AsdfFile({"fraction": f1}) as af:
         af.write_to("with_inverse.asdf")
@@ -334,11 +353,9 @@ at the time that we retrieved it.  We can handle this situation by making our
 .. code-block:: python
 
         def from_yaml_tree(self, node, tag, ctx):
-            from example_project.objects import FractionWithInverse
-
-            obj = FractionWithInverse(tree["numerator"], tree["denominator"])
+            obj = FractionWithInverse(node["numerator"], node["denominator"])
             yield obj
-            obj.inverse = tree["inverse"]
+            obj.inverse = node["inverse"]
 
 The generator version of ``from_yaml_tree`` yields the partially constructed
 ``FractionWithInverse`` object before setting its inverse property.  This allows
