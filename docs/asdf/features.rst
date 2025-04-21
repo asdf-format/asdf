@@ -39,7 +39,7 @@ and reading trees, see :ref:`overview`.
    to Python's :class:`tuple`. Following the behavior of
    pyyaml, asdf writes tuples as YAML sequences, which when loaded
    are converted to lists. If round-tripping of tuples is important
-   to your application see the :ref:`extending` to write a custom extension
+   to your application see :ref:`extending` to write a custom extension
    to save and load tuples.
 
 One of the key features of `asdf` is its ability to serialize :mod:`numpy`
@@ -461,15 +461,15 @@ number of displayed lines.  If ``max_rows`` is a tuple, then each member
 limits lines per node at the depth corresponding to its tuple index.
 For example, to show all top-level nodes and 5 of each's children:
 
-If the attribute is described in a schema, the info functionality
-will see if it has an associated title and if it does, display it
-as a comment on the same line. This provides a way for users to
-see more information about the the attribute in a similar way that
-FITS header comments are used.
-
 .. code:: pycon
 
     >>> asdf.info("file.asdf", max_rows=(None, 5))  # doctest: +SKIP
+
+If the attribute is described in a schema, the info functionality
+will see if it has an associated title and if it does, display it
+as a comment on the same line. This provides a way for users to
+see more information about the attribute, similar to the way
+FITS header comments are used.
 
 The `AsdfFile.info` method behaves similarly to `asdf.info`, rendering
 the tree of the associated `AsdfFile`.
@@ -674,7 +674,7 @@ one may wish to examine:
 * The ``title`` of a value to get a short description of it.
 * The ``description`` of a value to get the longer description of it.
 
-In other cases, it maybe useful to store general descriptive information such as
+In other cases, it may be useful to store general descriptive information such as
 specific archival information about a given value in the file so that an archive
 can easily ingest the file into the archive, such as what is done with the ``archive_catalog``
 information in the `rad schemas <https://github.com/spacetelescope/rad>`_ for the
@@ -687,8 +687,8 @@ method returns a nested tree of dictionaries which contains tuples consisting of
 the information from the schema requested together with the value stored in the
 ASDF file itself.
 
-One needs to provide a ``key``, which corresponds the to the keyword the information
-is stored under inside the schema, by default this is ``description``. One can also
+One needs to provide a ``key``, which corresponds to the keyword the information
+is stored under inside the schema; by default this is ``description``. One can also
 provide a ``path`` in the form of a dot-separated string of the keys in the
 ASDF file that lead to the value(s) of interest. For example:
 
@@ -708,6 +708,6 @@ Or one can provide a ``path`` as an `asdf.search.AsdfSearchResult` object:
 
 
 .. note::
-    The there is also the `asdf.search.AsdfSearchResult.schema_info` method,
-    which can be directly called on an `asdf.search.AsdfSearchResult` object.
-    instead of having to pass the search through `AsdfFile.schema_info`.
+    There is also the `asdf.search.AsdfSearchResult.schema_info` method,
+    which can be directly called on an `asdf.search.AsdfSearchResult` object,
+    instead of passing the search through `AsdfFile.schema_info`.
