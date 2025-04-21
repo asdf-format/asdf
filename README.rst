@@ -246,13 +246,12 @@ Array data remains unloaded until it is explicitly accessed:
     >>> np.equal(af["powers"]["squares"], expected).all()
     True
 
-By default, uncompressed data blocks are memory mapped for efficient
-access. Memory mapping can be disabled by using the ``memmap``
-option of `open` when reading:
+Memory mapping can be enabled by providing ``memmap=True``
+to `open`:
 
 .. code:: python
 
-    af = asdf.open("example.asdf", memmap=False)
+    af = asdf.open("example.asdf", memmap=True)
 
 .. _end-read-file-text:
 
