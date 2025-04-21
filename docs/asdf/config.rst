@@ -148,10 +148,14 @@ Defaults to ``None``.
 default_array_save_base
 -----------------------
 
-Controls the default behavior asdf will follow when saving an array view.
-If ``True`` (the default) the base array for the view will be saved in an ASDF
-binary block. If ``False`` the data corresponding to the view will be saved in
-an ASDF binary block.
+If ``True`` (the default) when an array is saved, the bytes for the
+"base" array that owns the memory will be stored as an ASDF block
+(see `asdf.util.get_array_base`). This means that saving a small
+"view" of a large array will result in the entire large array being
+saved to the file.
+
+If ``False`` bytes for different arrays (even if they are views of the
+same memory) will be stored in different ASDF blocks.
 
 .. _convert_unknown_ndarray_subclasses:
 
