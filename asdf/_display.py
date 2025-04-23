@@ -13,8 +13,8 @@ import sys
 from ._node_info import create_tree
 
 __all__ = [
-    "DEFAULT_MAX_ROWS",
     "DEFAULT_MAX_COLS",
+    "DEFAULT_MAX_ROWS",
     "DEFAULT_SHOW_VALUES",
     "render_tree",
 ]
@@ -89,7 +89,7 @@ class _TreeRenderer:
     def _format_code(self, value, code):
         if not self._isatty:
             return f"{value}"
-        return f"\x1B[{code}m{value}\x1B[0m"
+        return f"\x1b[{code}m{value}\x1b[0m"
 
     def render(self, info):
         self._mark_visible(info)

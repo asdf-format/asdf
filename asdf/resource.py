@@ -11,10 +11,10 @@ from asdf_standard import DirectoryResourceMapping as _DirectoryResourceMapping
 from .util import get_class_name
 
 __all__ = [
-    "ResourceMappingProxy",
     "DirectoryResourceMapping",
-    "ResourceManager",
     "JsonschemaResourceMapping",
+    "ResourceManager",
+    "ResourceMappingProxy",
 ]
 
 

@@ -40,15 +40,15 @@ _patched_urllib_parse.uses_netloc.append("asdf")
 
 
 __all__ = [
-    "load_yaml",
+    "FileType",
+    "NotSet",
+    "calculate_padding",
     "get_array_base",
     "get_base_uri",
-    "calculate_padding",
-    "NotSet",
-    "uri_match",
     "get_class_name",
     "get_file_type",
-    "FileType",
+    "load_yaml",
+    "uri_match",
 ]
 
 

@@ -264,11 +264,8 @@ class AsdfFile:
         for extension in tree["history"]["extensions"]:
             installed = None
             for ext in self._user_extensions + self._plugin_extensions:
-                if (
-                    extension.extension_uri is not None
-                    and extension.extension_uri == ext.extension_uri
-                    or extension.extension_uri is None
-                    and extension.extension_class in ext.legacy_class_names
+                if (extension.extension_uri is not None and extension.extension_uri == ext.extension_uri) or (
+                    extension.extension_uri is None and extension.extension_class in ext.legacy_class_names
                 ):
                     installed = ext
                     break
@@ -442,10 +439,8 @@ class AsdfFile:
             for i, entry in enumerate(tree["history"]["extensions"]):
                 # Update metadata about this extension if it already exists
                 if (
-                    entry.extension_uri is not None
-                    and entry.extension_uri == extension.extension_uri
-                    or entry.extension_class in extension.legacy_class_names
-                ):
+                    entry.extension_uri is not None and entry.extension_uri == extension.extension_uri
+                ) or entry.extension_class in extension.legacy_class_names:
                     tree["history"]["extensions"][i] = ext_meta
                     break
             else:
