@@ -2,7 +2,7 @@ import warnings
 import weakref
 
 from asdf import constants
-from asdf.exceptions import AsdfBlockIndexWarning, AsdfWarning
+from asdf.exceptions import AsdfBlockIndexWarning, AsdfWarning, DelimiterNotFoundError
 
 from . import io as bio
 from .exceptions import BlockIndexError
@@ -122,29 +122,44 @@ def _read_blocks_serially(fd, memmap=False, lazy_load=False, validate_checksums=
     For parameter and return value descriptions see `read_blocks`.
     """
     blocks = []
-    buff = b""
     magic_len = len(constants.BLOCK_MAGIC)
-    first_magic = constants.BLOCK_MAGIC[0]
 
     if not after_magic:
         # seek until the first magic is found
-        # since the first magic has not been found
-        # check for padding
-        while True:
-            buff += fd.read(magic_len - len(buff))
-            if len(buff) != magic_len:
-                # ran out of bytes
-                return blocks
-            if buff == constants.BLOCK_MAGIC:
-                # we found the block magic
-                buff = b""
-                after_magic = True
-                break
-            # strip first byte
-            buff = buff[1:]
-            # if the first magic byte is not in the buffer clear it
-            if first_magic not in buff:
-                buff = b""
+        try:
+            fd.seek_until(b"(" + constants.BLOCK_MAGIC + b")", magic_len)
+        except DelimiterNotFoundError:
+            return blocks
+        after_magic = True
+
+    buff = constants.BLOCK_MAGIC
+    while buff == constants.BLOCK_MAGIC:
+        # read the block
+        offset, header, data_offset, data = bio.read_block(fd, memmap=memmap, lazy_load=lazy_load)
+        blocks.append(
+            ReadBlock(
+                offset, fd, memmap, lazy_load, validate_checksums, header=header, data_offset=data_offset, data=data
+            )
+        )
+        if blocks[-1].header["flags"] & constants.BLOCK_FLAG_STREAMED:
+            # a file can only have 1 streamed block and it must be at the end so we
+            # can stop looking for more blocks
+            return blocks
+
+        # check for the next block
+        buff = fd.read(magic_len)
+
+    # check remaining bytes
+    if buff == constants.INDEX_HEADER[: len(buff)]:
+        # remaining bytes are the start of the block index
+        return blocks
+    if buff == b"\0" * len(buff):
+        # remaining bytes are null
+        return blocks
+    msg = f"Read invalid bytes {buff!r} after blocks, your file might be corrupt"
+    warnings.warn(msg, AsdfWarning)
+    return blocks
+
     while True:
         # the expectation is that this will begin PRIOR to the block magic
         # read 4 bytes
