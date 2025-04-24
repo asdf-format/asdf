@@ -124,6 +124,27 @@ def _read_blocks_serially(fd, memmap=False, lazy_load=False, validate_checksums=
     blocks = []
     buff = b""
     magic_len = len(constants.BLOCK_MAGIC)
+    first_magic = constants.BLOCK_MAGIC[0]
+
+    if not after_magic:
+        # seek until the first magic is found
+        # since the first magic has not been found
+        # check for padding
+        while True:
+            buff += fd.read(magic_len - len(buff))
+            if len(buff) != magic_len:
+                # ran out of bytes
+                return blocks
+            if buff == constants.BLOCK_MAGIC:
+                # we found the block magic
+                buff = b""
+                after_magic = True
+                break
+            # strip first byte
+            buff = buff[1:]
+            # if the first magic byte is not in the buffer clear it
+            if first_magic not in buff:
+                buff = b""
     while True:
         # the expectation is that this will begin PRIOR to the block magic
         # read 4 bytes
@@ -164,12 +185,12 @@ def _read_blocks_serially(fd, memmap=False, lazy_load=False, validate_checksums=
             buff = b""
             after_magic = False
         else:
-            if len(blocks) or buff[0] != 0:
-                # if this is not the first block or we haven't found any
-                # blocks and the first byte is non-zero
+            if len(blocks):
+                # padding between blocks is not allowed
                 msg = f"Invalid bytes while reading blocks {buff}"
                 raise OSError(msg)
-            # this is the first block, allow empty bytes before block
+
+            # this is the first block, allow padding before the block
             buff = buff.strip(b"\0")
     return blocks
 
