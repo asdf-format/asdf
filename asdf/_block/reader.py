@@ -160,55 +160,6 @@ def _read_blocks_serially(fd, memmap=False, lazy_load=False, validate_checksums=
     warnings.warn(msg, AsdfWarning)
     return blocks
 
-    while True:
-        # the expectation is that this will begin PRIOR to the block magic
-        # read 4 bytes
-        if not after_magic:
-            buff += fd.read(magic_len - len(buff))
-            if len(buff) == 0:
-                # we are done, there are no more blocks and no index
-                break
-            elif len(buff) < magic_len:
-                # we have less than magic_len bytes, this is likely an error
-                # in the input file/bytes
-                if all([b == 0 for b in buff]):
-                    # if these are all 0, assume this was a 'truncated' file
-                    # so don't issue a warning
-                    break
-                # if these are non-0 bytes issue a warning that the file
-                # is likely corrupt
-                msg = f"Read invalid bytes {buff!r} after blocks, your file might be corrupt"
-                warnings.warn(msg, AsdfWarning)
-                break
-
-        if buff == constants.INDEX_HEADER[:magic_len]:
-            # we hit the block index, which is not useful here
-            break
-
-        if after_magic or buff == constants.BLOCK_MAGIC:
-            # this is another block
-            offset, header, data_offset, data = bio.read_block(fd, memmap=memmap, lazy_load=lazy_load)
-            blocks.append(
-                ReadBlock(
-                    offset, fd, memmap, lazy_load, validate_checksums, header=header, data_offset=data_offset, data=data
-                )
-            )
-            if blocks[-1].header["flags"] & constants.BLOCK_FLAG_STREAMED:
-                # a file can only have 1 streamed block and it must be at the end so we
-                # can stop looking for more blocks
-                break
-            buff = b""
-            after_magic = False
-        else:
-            if len(blocks):
-                # padding between blocks is not allowed
-                msg = f"Invalid bytes while reading blocks {buff}"
-                raise OSError(msg)
-
-            # this is the first block, allow padding before the block
-            buff = buff.strip(b"\0")
-    return blocks
-
 
 def read_blocks(fd, memmap=False, lazy_load=False, validate_checksums=False, after_magic=False):
     """
