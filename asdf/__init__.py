@@ -5,15 +5,15 @@ Data Format (ASDF) files
 
 __all__ = [
     "AsdfFile",
-    "Stream",
-    "open",
-    "IntegerType",
     "ExternalArrayReference",
-    "info",
-    "__version__",
+    "IntegerType",
+    "Stream",
     "ValidationError",
-    "get_config",
+    "__version__",
     "config_context",
+    "get_config",
+    "info",
+    "open",
 ]
 
 

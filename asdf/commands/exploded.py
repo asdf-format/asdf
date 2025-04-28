@@ -9,7 +9,7 @@ from asdf import AsdfFile
 
 from .main import Command
 
-__all__ = ["implode", "explode"]
+__all__ = ["explode", "implode"]
 
 
 class Implode(Command):

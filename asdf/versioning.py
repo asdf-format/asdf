@@ -11,7 +11,7 @@ from semantic_version import SimpleSpec, Version
 _yaml_base_loader = yaml.CSafeLoader if getattr(yaml, "__with_libyaml__", None) else yaml.SafeLoader
 
 
-__all__ = ["AsdfVersion", "AsdfVersionMixin", "split_tag_version", "join_tag_version"]
+__all__ = ["AsdfVersion", "AsdfVersionMixin", "join_tag_version", "split_tag_version"]
 
 
 def split_tag_version(tag):

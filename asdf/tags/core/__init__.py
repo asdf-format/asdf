@@ -9,14 +9,14 @@ from .stream import Stream
 __all__ = [
     "AsdfObject",
     "Constant",
-    "Software",
-    "HistoryEntry",
     "ExtensionMetadata",
-    "SubclassMetadata",
-    "NDArrayType",
-    "IntegerType",
     "ExternalArrayReference",
+    "HistoryEntry",
+    "IntegerType",
+    "NDArrayType",
+    "Software",
     "Stream",
+    "SubclassMetadata",
 ]
 
 

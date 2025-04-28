@@ -13,7 +13,7 @@ import numpy as np
 from . import generic_io, treeutil, util
 from .util import _patched_urllib_parse
 
-__all__ = ["resolve_fragment", "Reference", "find_references", "resolve_references", "make_reference"]
+__all__ = ["Reference", "find_references", "make_reference", "resolve_fragment", "resolve_references"]
 
 
 def resolve_fragment(tree, pointer):

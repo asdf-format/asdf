@@ -25,7 +25,7 @@ from ._extern import atomicfile
 from .exceptions import AsdfDeprecationWarning, DelimiterNotFoundError
 from .util import _patched_urllib_parse
 
-__all__ = ["get_file", "get_uri", "resolve_uri", "relative_uri"]
+__all__ = ["get_file", "get_uri", "relative_uri", "resolve_uri"]
 
 
 _FILE_PERMISSIONS_DEFAULT_UMASK = 0o22

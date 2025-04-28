@@ -7,4 +7,4 @@ from .info import info
 from .tags import list_tags
 from .to_yaml import to_yaml
 
-__all__ = ["implode", "explode", "to_yaml", "defragment", "diff", "list_tags", "find_extensions", "info", "edit"]
+__all__ = ["defragment", "diff", "edit", "explode", "find_extensions", "implode", "info", "list_tags", "to_yaml"]

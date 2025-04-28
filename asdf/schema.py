@@ -21,7 +21,7 @@ from .util import _patched_urllib_parse
 
 YAML_SCHEMA_METASCHEMA_ID = "http://stsci.edu/schemas/yaml-schema/draft-01"
 
-__all__ = ["validate", "fill_defaults", "remove_defaults", "check_schema", "load_schema"]
+__all__ = ["check_schema", "fill_defaults", "load_schema", "remove_defaults", "validate"]
 
 PYTHON_TYPE_TO_YAML_TAG = {
     None: "null",

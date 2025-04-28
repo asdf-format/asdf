@@ -15,7 +15,7 @@ from .exceptions import AsdfDeprecationWarning
 from .extension import ExtensionProxy
 from .resource import ResourceManager, ResourceMappingProxy
 
-__all__ = ["AsdfConfig", "get_config", "config_context"]
+__all__ = ["AsdfConfig", "config_context", "get_config"]
 
 
 DEFAULT_VALIDATE_ON_READ = True

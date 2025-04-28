@@ -7,7 +7,7 @@ from contextlib import contextmanager
 
 from . import lazy_nodes, tagged
 
-__all__ = ["walk", "iter_tree", "walk_and_modify", "get_children", "is_container", "PendingValue", "RemoveNode"]
+__all__ = ["PendingValue", "RemoveNode", "get_children", "is_container", "iter_tree", "walk", "walk_and_modify"]
 
 
 def walk(top, callback):
