@@ -2,7 +2,7 @@ import warnings
 import weakref
 
 from asdf import constants
-from asdf.exceptions import AsdfBlockIndexWarning, AsdfWarning
+from asdf.exceptions import AsdfBlockIndexWarning, AsdfWarning, DelimiterNotFoundError
 
 from . import io as bio
 from .exceptions import BlockIndexError
@@ -122,55 +122,42 @@ def _read_blocks_serially(fd, memmap=False, lazy_load=False, validate_checksums=
     For parameter and return value descriptions see `read_blocks`.
     """
     blocks = []
-    buff = b""
     magic_len = len(constants.BLOCK_MAGIC)
-    while True:
-        # the expectation is that this will begin PRIOR to the block magic
-        # read 4 bytes
-        if not after_magic:
-            buff += fd.read(magic_len - len(buff))
-            if len(buff) == 0:
-                # we are done, there are no more blocks and no index
-                break
-            elif len(buff) < magic_len:
-                # we have less than magic_len bytes, this is likely an error
-                # in the input file/bytes
-                if all([b == 0 for b in buff]):
-                    # if these are all 0, assume this was a 'truncated' file
-                    # so don't issue a warning
-                    break
-                # if these are non-0 bytes issue a warning that the file
-                # is likely corrupt
-                msg = f"Read invalid bytes {buff!r} after blocks, your file might be corrupt"
-                warnings.warn(msg, AsdfWarning)
-                break
 
-        if buff == constants.INDEX_HEADER[:magic_len]:
-            # we hit the block index, which is not useful here
-            break
+    if not after_magic:
+        # seek until the first magic is found
+        try:
+            fd.seek_until(b"(" + constants.BLOCK_MAGIC + b")", magic_len)
+        except DelimiterNotFoundError:
+            return blocks
+        after_magic = True
 
-        if after_magic or buff == constants.BLOCK_MAGIC:
-            # this is another block
-            offset, header, data_offset, data = bio.read_block(fd, memmap=memmap, lazy_load=lazy_load)
-            blocks.append(
-                ReadBlock(
-                    offset, fd, memmap, lazy_load, validate_checksums, header=header, data_offset=data_offset, data=data
-                )
+    buff = constants.BLOCK_MAGIC
+    while buff == constants.BLOCK_MAGIC:
+        # read the block
+        offset, header, data_offset, data = bio.read_block(fd, memmap=memmap, lazy_load=lazy_load)
+        blocks.append(
+            ReadBlock(
+                offset, fd, memmap, lazy_load, validate_checksums, header=header, data_offset=data_offset, data=data
             )
-            if blocks[-1].header["flags"] & constants.BLOCK_FLAG_STREAMED:
-                # a file can only have 1 streamed block and it must be at the end so we
-                # can stop looking for more blocks
-                break
-            buff = b""
-            after_magic = False
-        else:
-            if len(blocks) or buff[0] != 0:
-                # if this is not the first block or we haven't found any
-                # blocks and the first byte is non-zero
-                msg = f"Invalid bytes while reading blocks {buff}"
-                raise OSError(msg)
-            # this is the first block, allow empty bytes before block
-            buff = buff.strip(b"\0")
+        )
+        if blocks[-1].header["flags"] & constants.BLOCK_FLAG_STREAMED:
+            # a file can only have 1 streamed block and it must be at the end so we
+            # can stop looking for more blocks
+            return blocks
+
+        # check for the next block
+        buff = fd.read(magic_len)
+
+    # check remaining bytes
+    if buff == constants.INDEX_HEADER[: len(buff)]:
+        # remaining bytes are the start of the block index
+        return blocks
+    if buff == b"\0" * len(buff):
+        # remaining bytes are null
+        return blocks
+    msg = f"Read invalid bytes {buff!r} after blocks, your file might be corrupt"
+    warnings.warn(msg, AsdfWarning)
     return blocks
 
 

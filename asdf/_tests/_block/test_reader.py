@@ -78,9 +78,18 @@ def test_read(tmp_path, lazy_load, memmap, with_index, validate_checksums, paddi
         assert r[0].cached_data is r[0].cached_data
 
 
-def test_read_invalid_padding():
-    with gen_blocks(padding=1, padding_byte=b"\1") as (fd, check):
-        with pytest.raises(OSError, match="Invalid bytes.*"):
+@pytest.mark.parametrize("padding", (1, 4, 7))
+@pytest.mark.parametrize("padding_byte", (b"\1", b"\0", b" ", b"\xd3", b"B", b"L", b"K", b"\xd3BL"))
+def test_read_valid_padding(padding, padding_byte):
+    """Test that reader allows padding bytes before the first block"""
+    with gen_blocks(padding=padding, padding_byte=padding_byte) as (fd, check):
+        check(read_blocks(fd))
+
+
+@pytest.mark.parametrize("padding_byte", (b"\xd3BLK", b" \xd3BLK"))
+def test_read_invalid_padding(padding_byte):
+    with gen_blocks(padding=1, padding_byte=padding_byte) as (fd, check):
+        with pytest.raises(ValueError, match="buffer is smaller than requested size"):
             check(read_blocks(fd))
 
 
