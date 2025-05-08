@@ -8,7 +8,7 @@ import inspect
 import warnings
 import weakref
 
-from . import tagged, yamlutil
+from . import tagged, treeutil, yamlutil
 from .exceptions import AsdfConversionWarning, AsdfLazyReferenceError
 from .extension._serialization_context import BlockAccess
 
@@ -136,6 +136,9 @@ class _AsdfNode:
         Return the tagged tree backing this node
         """
         return self.data
+
+    def __deepcopy__(self, memo):
+        return treeutil.walk_and_modify(self, lambda n: n)
 
     def _convert_and_cache(self, value, key):
         """
