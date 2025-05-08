@@ -36,23 +36,28 @@ with one tag and schema:
         schema_uri: asdf://example.com/example-project/schemas/foo-1.0.0
     ...
 
-.. code-block:: yaml
-    :lineno-start: 3
-
-    id: asdf://example.com/example-project/manifests/example-1.0.0
 
 The ``id`` property contains the URI that uniquely identifies our manifest.  This
 URI is how we'll refer to the manifest document's content when using the `asdf`
 library.
 
 .. code-block:: yaml
-    :lineno-start: 4
+    :lineno-start: 3
 
-    extension_uri: asdf://example.com/example-project/extensions/example-1.0.0
+    id: asdf://example.com/example-project/manifests/example-1.0.0
+
 
 The ``extension_uri`` property contains the URI of the extension that the manifest
 describes.  This is the URI written to ASDF file metadata to document that an
 extension was used when writing the file.
+
+.. code-block:: yaml
+    :lineno-start: 4
+
+    extension_uri: asdf://example.com/example-project/extensions/example-1.0.0
+
+
+``title`` and ``description`` are optional documentation properties.
 
 .. code-block:: yaml
     :lineno-start: 5
@@ -60,14 +65,6 @@ extension was used when writing the file.
     title: Example extension 1.0.0
     description: Tags for example objects.
 
-``title`` and ``description`` are optional documentation properties.
-
-.. code-block:: yaml
-    :lineno-start: 7
-
-    asdf_standard_requirement:
-        gte: 1.3.0
-        lt: 1.5.0
 
 The optional ``asdf_standard_requirement`` property describes the
 ASDF Standard versions that are compatible with this extension.  The
@@ -76,11 +73,12 @@ versions to greater-than-or-equal 1.3.0 and less-than 1.5.0, respectively.
 ``gt`` and ``lte`` properties are also available.
 
 .. code-block:: yaml
-    :lineno-start: 10
+    :lineno-start: 7
 
-    tags:
-      - tag_uri: asdf://example.com/example-project/tags/foo-1.0.0
-        schema_uri: asdf://example.com/example-project/schemas/foo-1.0.0
+    asdf_standard_requirement:
+        gte: 1.3.0
+        lt: 1.5.0
+
 
 The ``tags`` property contains a list of objects, each representing a new
 tag that the extension brings to ASDF.  The ``tag_uri`` property contains
@@ -88,6 +86,14 @@ the tag itself, while the (optional, but recommended) ``schema_uri``
 property contains the URI of a schema that can be used to validate objects
 with that tag.  Tag objects may also include ``title`` and ``description``
 documentation properties.
+
+.. code-block:: yaml
+    :lineno-start: 10
+
+    tags:
+      - tag_uri: asdf://example.com/example-project/tags/foo-1.0.0
+        schema_uri: asdf://example.com/example-project/schemas/foo-1.0.0
+
 
 Validating a manifest
 =====================

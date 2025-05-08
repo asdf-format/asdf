@@ -46,15 +46,12 @@ information on the ASDF Standard itself can be found
 
 The ASDF format has the following features:
 
-* A hierarchical, human-readable metadata format (implemented using `YAML
-  <http://yaml.org>`__)
-* Numerical arrays are stored as binary data blocks which can be memory
-  mapped. Data blocks can optionally be compressed.
-* The structure of the data can be automatically validated using schemas
-  (implemented using `JSON Schema <http://json-schema.org>`__)
-* Native Python data types (numerical types, strings, dicts, lists) are
-  serialized automatically
-* ASDF can be extended to serialize custom data types
+* Hierarchical and human-readable metadata in `YAML <http://yaml.org>`__ format
+* Efficient binary array storage with support for memory mapping
+  and flexible compression.
+* Content validation using schemas (using `JSON Schema <http://json-schema.org>`__)
+* Native and transparent support for most basic Python data types,
+  with an extension API to add support for any custom Python object.
 
 .. _end-summary-text:
 
@@ -248,13 +245,12 @@ Array data remains unloaded until it is explicitly accessed:
     >>> np.equal(af["powers"]["squares"], expected).all()
     True
 
-By default, uncompressed data blocks are memory mapped for efficient
-access. Memory mapping can be disabled by using the ``memmap``
-option of `open` when reading:
+Memory mapping can be enabled by providing ``memmap=True``
+to `open`:
 
 .. code:: python
 
-    af = asdf.open("example.asdf", memmap=False)
+    af = asdf.open("example.asdf", memmap=True)
 
 .. _end-read-file-text:
 

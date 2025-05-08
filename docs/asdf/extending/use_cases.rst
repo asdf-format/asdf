@@ -127,21 +127,21 @@ called an extension manifest that defines the extension in a language-independen
    we're including in our extension.  See :ref:`extending_manifests` for information
    on the manifest format.
 
-5. Make the schema and manifest installable as `asdf` library resources.  See
+6. Make the schema and manifest installable as `asdf` library resources.  See
    :ref:`extending_resources` for an overview of resources in `asdf` and
    :ref:`extending_resources_entry_points` for information on installing resources
    via an entry point.
 
-6. Implement a `~asdf.extension.Converter` class that converts the type to
+7. Implement a `~asdf.extension.Converter` class that converts the type to
    YAML-serializable objects and back again.  See :ref:`extending_converters`
    for a discussion of the Converter interface.  Refer to the schema to ensure
    that the Converter is writing YAML objects correctly.
 
-7. Use `asdf.extension.ManifestExtension.from_uri` to populate an extension with the Converter
+8. Use `asdf.extension.ManifestExtension.from_uri` to populate an extension with the Converter
    and information from the manifest document.  See :ref:`extending_extensions_manifest` for
    instructions on using ManifestExtension.
 
-8. Install the extension via an entry point.  See :ref:`extending_extensions_installing_entry_points`.
+9. Install the extension via an entry point.  See :ref:`extending_extensions_installing_entry_points`.
 
 That's it!  Python users should experience the same convenience, but now the manifest
 document is available as a reference for developers who wish to implement support
@@ -156,15 +156,15 @@ that in an extension.
 
 1. Select a 4-byte compression code that will signify the compression algorithm.
 
-1. Implement a `~asdf.extension.Compressor` class that associates the 4-byte code with
+2. Implement a `~asdf.extension.Compressor` class that associates the 4-byte code with
    compression and decompression methods.  See :ref:`extending_compressors` for a discussion
    of the Compressor interface.
 
-2. Implement an `~asdf.extension.Extension` class which is the vehicle
+3. Implement an `~asdf.extension.Extension` class which is the vehicle
    for plugging our compressor into the `asdf` library.  See :ref:`extending_extensions`
    for a discussion of the Extension interface.
 
-3. Install the extension via one of the two available methods.  See
+4. Install the extension via one of the two available methods.  See
    :ref:`extending_extensions_installing` for instructions.
 
 Now the compression algorithm will be available for both reading and writing ASDF files.

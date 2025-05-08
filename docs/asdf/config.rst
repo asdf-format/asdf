@@ -6,11 +6,11 @@ Configuration
 
 Version 2.8 of this library introduced a new mechanism, `AsdfConfig`, for setting
 global configuration options.  Currently available options are limited, but we expect
-to eventually move many of the ``AsdfFile.__init__`` and ``AsdfFile.write_to``
+to eventually move many of the `asdf.AsdfFile` and `asdf.AsdfFile.write_to`
 keyword arguments to `AsdfConfig`.
 
-AsdfConfig and you
-==================
+Using AsdfConfig
+================
 
 The `AsdfConfig` class provides properties that can be adjusted to change the
 behavior of the `asdf` library for all files.  For example, to disable schema validation
@@ -121,7 +121,7 @@ Use this storage type for all arrays within an ASDF file. Must be one of
 - ``None``
 
 If ``None`` a different storage type can be used for each array.
-See ``AsdfFile.set_array_storage`` for more details.
+See `asdf.AsdfFile.set_array_storage` for more details.
 
 Defaults to ``None``.
 
@@ -130,7 +130,7 @@ all_array_compression
 
 Use this compression type for all arrays within an ASDF file.
 If ``"input"`` a different compression type can be used for each
-array. See ``AsdfFile.set_array_compression`` for more details.
+array. See `asdf.AsdfFile.set_array_compression` for more details.
 
 Defaults to ``"input"``.
 
@@ -139,7 +139,7 @@ all_array_compression_kwargs
 
 Use these additional compression keyword arguments for all arrays
 within an ASDF file. If ``None`` diffeerent keyword arguments
-can be set for each array. See ``AsdfFile.set_array_compression`` for more details.
+can be set for each array. See `asdf.AsdfFile.set_array_compression` for more details.
 
 Defaults to ``None``.
 
@@ -148,10 +148,14 @@ Defaults to ``None``.
 default_array_save_base
 -----------------------
 
-Controls the default behavior asdf will follow when saving an array view.
-If ``True`` (the default) the base array for the view will be saved in an ASDF
-binary block. If ``False`` the data corresponding to the view will be saved in
-an ASDF binary block.
+If ``True`` (the default) when an array is saved, the bytes for the
+"base" array that owns the memory will be stored as an ASDF block
+(see `asdf.util.get_array_base`). This means that saving a small
+"view" of a large array will result in the entire large array being
+saved to the file.
+
+If ``False`` bytes for different arrays (even if they are views of the
+same memory) will be stored in different ASDF blocks.
 
 .. _convert_unknown_ndarray_subclasses:
 
@@ -182,7 +186,7 @@ default_version
 ---------------
 
 The default ASDF Standard version used for new files.  This can be overridden
-on an individual file basis (using the version argument to ``AsdfFile.__init__``)
+on an individual file basis (using the version argument to `asdf.AsdfFile`)
 or set here to change the default for all new files created in the current session.
 
 Defaults to the latest stable ASDF Standard version.
@@ -191,8 +195,8 @@ io_block_size
 -------------
 
 The buffer size used when reading and writing to the filesystem.  Users may wish
-to adjust this value to improve I/O performance.  Set to -1 to use the preferred
-block size for each file, as reported by st_blksize.
+to adjust this value to improve I/O performance.  Set to -1 to use the system
+provided default block size for each file.
 
 Defaults to -1.
 
