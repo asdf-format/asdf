@@ -46,8 +46,7 @@ information on the ASDF Standard itself can be found
 
 The ASDF format has the following features:
 
-* Human-readable, hierarchical, human-readable metadata (using
-  `YAML <http://yaml.org>`__)
+* Hierarchical and human-readable metadata in `YAML <http://yaml.org>`__ format
 * Efficient binary array storage with support for memory mapping
   and flexible compression.
 * Content validation using schemas (using `JSON Schema <http://json-schema.org>`__)
