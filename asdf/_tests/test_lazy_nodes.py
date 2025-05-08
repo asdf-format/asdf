@@ -123,17 +123,20 @@ def test_node_empty_init(NodeClass, base):
 
 
 @pytest.mark.parametrize(
-    "node",
+    "node,base_type",
     [
-        AsdfDictNode({"a": 1, "b": 2}),
-        AsdfListNode([1, 2, 3]),
-        AsdfOrderedDictNode({"a": 1, "b": 2}),
+        (AsdfDictNode({"a": 1, "b": 2}), dict),
+        (AsdfListNode([1, 2, 3]), list),
+        (AsdfOrderedDictNode({"a": 1, "b": 2}), collections.OrderedDict),
     ],
 )
 @pytest.mark.parametrize("copy_operation", [copy.copy, copy.deepcopy])
-def test_copy(node, copy_operation):
+def test_copy(node, base_type, copy_operation):
     copied_node = copy_operation(node)
-    assert isinstance(copied_node, type(node))
+    if copy_operation is copy.copy:
+        assert type(copied_node) is type(node)
+    else:
+        assert type(copied_node) is base_type
     assert copied_node == node
 
 
@@ -408,3 +411,26 @@ def test_lazy_generator_converter(tmp_path, lazy_generator_class):
 
     with asdf.open(fn, lazy_tree=True) as af:
         assert isinstance(af["obj"].data, dict)
+
+
+def test_lazy_copy(tmp_path):
+    """
+    Test that copying an AsdfFile instance with a lazy
+    tree doesn't result in the copy retaining references
+    to the instance.
+    """
+    fn = tmp_path / "test.asdf"
+    obj = asdf.tags.core.IntegerType(1)
+    tree = {"a": {"b": obj}}
+    # make a recursive structure
+    tree["a"]["c"] = tree["a"]
+
+    asdf.AsdfFile(tree).write_to(fn)
+
+    with asdf.open(fn, lazy_tree=True) as af:
+        af2 = af.copy()
+
+    del af
+    gc.collect(2)
+    assert af2["a"]["b"] == obj
+    assert af2["a"]["c"]["b"] is af2["a"]["b"]
