@@ -50,8 +50,8 @@ The ASDF format has the following features:
 * Efficient binary array storage with support for memory mapping
   and flexible compression.
 * Content validation using schemas (using `JSON Schema <http://json-schema.org>`__)
-* Native support for most basic Python data types.
-* An extension API to add support for any custom object.
+* Native and transparent support for most basic Python data types, 
+  with an extension API to add support for any custom Python object.
 
 .. _end-summary-text:
 
