@@ -34,7 +34,7 @@ def calculate_block_checksum(data):
         data = data.ravel(order="K")
     # The following line is safe because we're only using
     # the MD5 as a checksum.
-    m = hashlib.new("md5")  # noqa: S324
+    m = hashlib.new("md5", usedforsecurity=False)
     m.update(data)
     return m.digest()
 
