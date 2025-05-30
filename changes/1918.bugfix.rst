@@ -1,1 +1,0 @@
-Allow non-null bytes before the first byte.

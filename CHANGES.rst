@@ -1,3 +1,44 @@
+4.2.0 (2025-05-30)
+==================
+
+Bugfix
+------
+
+- Allow extra keywords in structured datatype validation. (`#1901
+  <https://github.com/asdf-format/asdf/pull/1901>`_)
+- yield instead of raise ValidationError in validate_datatype to allow use in
+  schema combiners (`#1904 <https://github.com/asdf-format/asdf/pull/1904>`_)
+- Support recursive tagged nodes in load_yaml. (`#1907
+  <https://github.com/asdf-format/asdf/pull/1907>`_)
+- Allow non-null bytes before the first byte. (`#1918
+  <https://github.com/asdf-format/asdf/pull/1918>`_)
+- Fix deepcopy of lazy tree. (`#1922
+  <https://github.com/asdf-format/asdf/pull/1922>`_)
+
+
+Doc
+---
+
+- Improve documentation based on review feedback. (`#1913
+  <https://github.com/asdf-format/asdf/pull/1913>`_)
+
+
+Feature
+-------
+
+- Optionally use fsspec for urls (like those for s3 resources) provided to
+  asdf.open. (`#1906 <https://github.com/asdf-format/asdf/pull/1906>`_)
+- Load block index with CSafeLoader if available. (`#1920
+  <https://github.com/asdf-format/asdf/pull/1920>`_)
+
+
+Removal
+-------
+
+- Deprecate opening http uris unless fsspec is installed. (`#1906
+  <https://github.com/asdf-format/asdf/pull/1906>`_)
+
+
 4.1.0 (2025-01-31)
 ==================
 

@@ -1,1 +1,0 @@
-Load block index with CSafeLoader if available.

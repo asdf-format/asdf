@@ -1,1 +1,0 @@
-Optionally use fsspec for urls (like those for s3 resources) provided to asdf.open.
