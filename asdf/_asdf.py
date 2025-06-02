@@ -557,6 +557,9 @@ class AsdfFile:
         self._tree = AsdfObject(tree)
 
     def keys(self):
+        """
+        Return view of top-level keys in the tree.
+        """
         return self.tree.keys()
 
     def __getitem__(self, key):
