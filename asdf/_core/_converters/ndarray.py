@@ -143,6 +143,8 @@ class NDArrayConverter(Converter):
         if isinstance(node, list):
             instance = NDArrayType(node, None, None, None, None, None, None)
             ctx._blocks._set_array_storage(instance, "inline")
+            if not ctx._blocks._lazy_load:
+                return instance._make_array()
             return instance
 
         if isinstance(node, dict):
@@ -185,7 +187,7 @@ class NDArrayConverter(Converter):
                 ctx._blocks._set_array_storage(instance, "inline")
 
             if not ctx._blocks._lazy_load:
-                instance._make_array()
+                return instance._make_array()
             return instance
 
         msg = "Invalid ndarray description."
