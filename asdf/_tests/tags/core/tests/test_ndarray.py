@@ -1105,3 +1105,19 @@ def test_shape_does_not_load_array(tmp_path):
         assert af["arr"]._array is None
         assert af["arr"].shape == (100,)
         assert af["arr"]._array is None
+
+
+@pytest.mark.parametrize(
+    "lazy_load, array_class",
+    (
+        (True, ndarray.NDArrayType),
+        (False, np.ndarray),
+    ),
+)
+@pytest.mark.parametrize("lazy_tree", [True, False])
+def test_lazy_load_array_class(tmp_path, lazy_load, lazy_tree, array_class):
+    file_path = tmp_path / "test.asdf"
+    asdf.AsdfFile({"arr": np.arange(100)}).write_to(file_path)
+
+    with asdf.open(file_path, lazy_load=lazy_load, lazy_tree=lazy_tree) as af:
+        assert type(af["arr"]) is array_class
