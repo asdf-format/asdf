@@ -15,12 +15,6 @@ from asdf.config import config_context
 from asdf.exceptions import AsdfDeprecationWarning
 
 from . import _helpers as helpers
-from . import create_large_tree, create_small_tree
-
-
-@pytest.fixture(params=[create_small_tree, create_large_tree])
-def tree(request):
-    return request.param()
 
 
 @pytest.fixture(params=[True, False])
