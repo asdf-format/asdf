@@ -1,162 +1,160 @@
+from contextlib import nullcontext
+
 import pytest
 
 import asdf
 from asdf.exceptions import ValidationError
 
-
-def test_custom_validation_bad(tmp_path, test_data_path):
-    custom_schema_path = test_data_path / "custom_schema.yaml"
-    asdf_file = str(tmp_path / "out.asdf")
-
-    # This tree does not conform to the custom schema
-    tree = {"stuff": 42, "other_stuff": "hello"}
-
-    # Creating file without custom schema should pass
-    with asdf.AsdfFile(tree) as ff:
-        ff.write_to(asdf_file)
-
-    # Creating file using custom schema should fail
-    af = asdf.AsdfFile(custom_schema=custom_schema_path)
-    af._tree = asdf.tags.core.AsdfObject(tree)
-    with pytest.raises(ValidationError, match=r".* is a required property"):
-        af.validate()
-        pass
-
-    # Opening file without custom schema should pass
-    with asdf.open(asdf_file):
-        pass
-
-    # Opening file with custom schema should fail
-    with (
-        pytest.raises(ValidationError, match=r".* is a required property"),
-        asdf.open(
-            asdf_file,
-            custom_schema=custom_schema_path,
-        ),
-    ):
-        pass
-
-
-def test_custom_validation_good(tmp_path, test_data_path):
-    custom_schema_path = test_data_path / "custom_schema.yaml"
-    asdf_file = str(tmp_path / "out.asdf")
-
-    # This tree conforms to the custom schema
-    tree = {"foo": {"x": 42, "y": 10}, "bar": {"a": "hello", "b": "banjo"}}
-
-    with asdf.AsdfFile(tree, custom_schema=custom_schema_path) as ff:
-        ff.write_to(asdf_file)
-
-    with asdf.open(asdf_file, custom_schema=custom_schema_path):
-        pass
+# test cases with:
+# - custom schema path
+# - tree
+# - expected error (or None)
+TEST_CASES = [
+    (
+        "custom_schema.yaml",
+        {"stuff": 42, "other_stuff": "hello"},
+        ".* is a required property",
+    ),
+    (
+        "custom_schema.yaml",
+        {"foo": {"x": 42, "y": 10}, "bar": {"a": "hello", "b": "banjo"}},
+        None,
+    ),
+    (
+        "custom_schema_definitions.yaml",
+        {"forb": {"biz": "hello", "baz": "world"}},
+        ".* is a required property",
+    ),
+    (
+        "custom_schema_definitions.yaml",
+        {"thing": {"biz": "hello", "baz": "world"}},
+        None,
+    ),
+    (
+        "custom_schema_external_ref.yaml",
+        {"foo": asdf.tags.core.Software(name="Microsoft Windows", version="95")},
+        None,
+    ),
+    (
+        "custom_schema_external_ref.yaml",
+        {"foo": False},
+        "False is not valid under any of the given schemas",
+    ),
+]
 
 
-def test_custom_validation_pathlib(tmp_path, test_data_path):
+@pytest.fixture(params=[lambda x: x, str])
+def as_pathlib(request):
     """
-    Make sure custom schema paths can be pathlib.Path objects
-
-    See https://github.com/asdf-format/asdf/issues/653 for discussion.
+    Fixture to test both pathlib.Path and str.
     """
-    custom_schema_path = test_data_path / "custom_schema.yaml"
-    asdf_file = str(tmp_path / "out.asdf")
+    return request.param
 
-    # This tree conforms to the custom schema
-    tree = {"foo": {"x": 42, "y": 10}, "bar": {"a": "hello", "b": "banjo"}}
 
-    with asdf.AsdfFile(tree, custom_schema=custom_schema_path) as ff:
-        ff.write_to(asdf_file)
+@pytest.fixture
+def schema_name(request, test_data_path, as_pathlib):
+    """
+    Fixture to convert the provided schema name to a path.
+    """
+    return as_pathlib(test_data_path / request.param)
 
-    with asdf.open(asdf_file, custom_schema=custom_schema_path):
+
+@pytest.mark.xfail(reason="bug where schema is ignored")
+@pytest.mark.parametrize(
+    "schema_name, tree, expected_error",
+    TEST_CASES,
+    indirect=["schema_name"],
+)
+def test_custom_validation_write_to(tmp_path, schema_name, tree, expected_error):
+    asdf_file = tmp_path / "out.asdf"
+
+    ctx = pytest.raises(ValidationError, match=expected_error) if expected_error else nullcontext()
+    with ctx:
+        asdf.AsdfFile(tree, custom_schema=schema_name).write_to(asdf_file)
+
+
+@pytest.mark.parametrize(
+    "schema_name, tree, expected_error",
+    TEST_CASES,
+    indirect=["schema_name"],
+)
+def test_custom_validation_open(tmp_path, schema_name, tree, expected_error):
+    asdf_file = tmp_path / "out.asdf"
+
+    asdf.AsdfFile(tree).write_to(asdf_file)
+    ctx = pytest.raises(ValidationError, match=expected_error) if expected_error else nullcontext()
+
+    with ctx, asdf.open(asdf_file, custom_schema=schema_name):
         pass
 
 
-def test_custom_validation_with_definitions_good(tmp_path, test_data_path):
-    custom_schema_path = test_data_path / "custom_schema_definitions.yaml"
-    asdf_file = str(tmp_path / "out.asdf")
+@pytest.mark.parametrize(
+    "schema_name, tree, expected_error",
+    TEST_CASES,
+    indirect=["schema_name"],
+)
+def test_custom_validation_validate(schema_name, tree, expected_error):
 
-    # This tree conforms to the custom schema
-    tree = {"thing": {"biz": "hello", "baz": "world"}}
+    ctx = pytest.raises(ValidationError, match=expected_error) if expected_error else nullcontext()
 
-    with asdf.AsdfFile(tree, custom_schema=custom_schema_path) as ff:
-        ff.write_to(asdf_file)
-
-    with asdf.open(asdf_file, custom_schema=custom_schema_path):
-        pass
-
-
-def test_custom_validation_with_definitions_bad(tmp_path, test_data_path):
-    custom_schema_path = test_data_path / "custom_schema_definitions.yaml"
-    asdf_file = str(tmp_path / "out.asdf")
-
-    # This tree does NOT conform to the custom schema
-    tree = {"forb": {"biz": "hello", "baz": "world"}}
-
-    # Creating file without custom schema should pass
-    with asdf.AsdfFile(tree) as ff:
-        ff.write_to(asdf_file)
-
-    # Creating file with custom schema should fail
-    af = asdf.AsdfFile(custom_schema=custom_schema_path)
-    af._tree = asdf.tags.core.AsdfObject(tree)
-    with pytest.raises(ValidationError, match=r".* is a required property"):
-        af.validate()
-
-    # Opening file without custom schema should pass
-    with asdf.open(asdf_file):
-        pass
-
-    # Opening file with custom schema should fail
-    with (
-        pytest.raises(ValidationError, match=r".* is a required property"),
-        asdf.open(
-            asdf_file,
-            custom_schema=custom_schema_path,
-        ),
-    ):
-        pass
+    with ctx:
+        asdf.AsdfFile(tree, custom_schema=schema_name).validate()
 
 
-def test_custom_validation_with_external_ref_good(tmp_path, test_data_path):
-    custom_schema_path = test_data_path / "custom_schema_external_ref.yaml"
-    asdf_file = str(tmp_path / "out.asdf")
+@pytest.mark.xfail(reason="bug where schema is ignored")
+@pytest.mark.parametrize(
+    "schema_name, tree, expected_error",
+    TEST_CASES,
+    indirect=["schema_name"],
+)
+def test_custom_validation_dumps(schema_name, tree, expected_error):
 
-    # This tree conforms to the custom schema
-    tree = {"foo": asdf.tags.core.Software(name="Microsoft Windows", version="95")}
+    ctx = pytest.raises(ValidationError, match=expected_error) if expected_error else nullcontext()
 
-    with asdf.AsdfFile(tree, custom_schema=custom_schema_path) as ff:
-        ff.write_to(asdf_file)
-
-    with asdf.open(asdf_file, custom_schema=custom_schema_path):
-        pass
+    with ctx:
+        asdf.dumps(tree, custom_schema=schema_name)
 
 
-def test_custom_validation_with_external_ref_bad(tmp_path, test_data_path):
-    custom_schema_path = test_data_path / "custom_schema_external_ref.yaml"
-    asdf_file = str(tmp_path / "out.asdf")
+@pytest.mark.parametrize(
+    "schema_name, tree, expected_error",
+    TEST_CASES,
+    indirect=["schema_name"],
+)
+def test_custom_validation_loads(schema_name, tree, expected_error):
 
-    # This tree does not conform to the custom schema
-    tree = {"foo": False}
+    contents = asdf.dumps(tree)
 
-    # Creating file without custom schema should pass
-    with asdf.AsdfFile(tree) as ff:
-        ff.write_to(asdf_file)
+    ctx = pytest.raises(ValidationError, match=expected_error) if expected_error else nullcontext()
 
-    # Creating file with custom schema should fail
-    af = asdf.AsdfFile(custom_schema=custom_schema_path)
-    af["foo"] = False
-    with pytest.raises(ValidationError, match=r"False is not valid under any of the given schemas"):
-        af.validate()
+    with ctx:
+        asdf.loads(contents, custom_schema=schema_name)
 
-    # Opening file without custom schema should pass
-    with asdf.open(asdf_file):
-        pass
 
-    # Opening file with custom schema should fail
-    with (
-        pytest.raises(ValidationError, match=r"False is not valid under any of the given schemas"),
-        asdf.open(
-            asdf_file,
-            custom_schema=custom_schema_path,
-        ),
-    ):
-        pass
+@pytest.mark.xfail(reason="bug where schema is ignored")
+@pytest.mark.parametrize(
+    "schema_name, tree, expected_error",
+    TEST_CASES,
+    indirect=["schema_name"],
+)
+def test_custom_validation_dump(tmp_path, schema_name, tree, expected_error):
+    asdf_file = tmp_path / "out.asdf"
+
+    ctx = pytest.raises(ValidationError, match=expected_error) if expected_error else nullcontext()
+
+    with ctx:
+        asdf.dump(tree, asdf_file, custom_schema=schema_name)
+
+
+@pytest.mark.parametrize(
+    "schema_name, tree, expected_error",
+    TEST_CASES,
+    indirect=["schema_name"],
+)
+def test_custom_validation_load(tmp_path, schema_name, tree, expected_error):
+    asdf_file = tmp_path / "out.asdf"
+
+    asdf.AsdfFile(tree).write_to(asdf_file)
+    ctx = pytest.raises(ValidationError, match=expected_error) if expected_error else nullcontext()
+
+    with ctx:
+        asdf.load(asdf_file, custom_schema=schema_name)
