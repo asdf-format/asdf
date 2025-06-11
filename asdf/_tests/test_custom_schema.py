@@ -59,7 +59,6 @@ def schema_name(request, test_data_path, as_pathlib):
     return as_pathlib(test_data_path / request.param)
 
 
-@pytest.mark.xfail(reason="bug where schema is ignored")
 @pytest.mark.parametrize(
     "schema_name, tree, expected_error",
     TEST_CASES,
@@ -101,7 +100,6 @@ def test_custom_validation_validate(schema_name, tree, expected_error):
         asdf.AsdfFile(tree, custom_schema=schema_name).validate()
 
 
-@pytest.mark.xfail(reason="bug where schema is ignored")
 @pytest.mark.parametrize(
     "schema_name, tree, expected_error",
     TEST_CASES,
@@ -130,7 +128,6 @@ def test_custom_validation_loads(schema_name, tree, expected_error):
         asdf.loads(contents, custom_schema=schema_name)
 
 
-@pytest.mark.xfail(reason="bug where schema is ignored")
 @pytest.mark.parametrize(
     "schema_name, tree, expected_error",
     TEST_CASES,
