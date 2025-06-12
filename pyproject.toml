@@ -108,6 +108,7 @@ remote_data_strict = true
 filterwarnings = [
     'error',  # also set in _tests/conftest to work with pyargs
     'ignore:numpy.ndarray size changed:RuntimeWarning',
+    "ignore:'asyncio.get_event_loop_policy' is deprecated and slated for removal in Python 3.16:DeprecationWarning",
 ]
 addopts = [
     '--doctest-modules',
