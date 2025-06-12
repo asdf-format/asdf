@@ -1,4 +1,5 @@
 import os
+import warnings
 
 import pytest
 
@@ -9,6 +10,10 @@ collect_ignore = ["asdf.py", "stream.py"]
 
 
 def pytest_collection_modifyitems(items):
+    # first check if warnings are already turned into errors
+    for wf in warnings.filters:
+        if wf == ("error", None, Warning, None, 0):
+            return
     # Turn warnings into errors for all tests, this is needed
     # as running tests through pyargs will not use settings
     # defined in pyproject.toml
