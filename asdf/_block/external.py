@@ -31,6 +31,11 @@ class ExternalBlockCache:
         key = util.get_base_uri(uri)
         if key not in self._cache:
             resolved_uri = generic_io.resolve_uri(base_uri, uri)
+            # if the uri only has a trailing "#" fragment, strip it
+            # this deals with python 3.14 changes where in prior versions
+            # urljoin removed this type of fragment
+            if resolved_uri.endswith("#"):
+                resolved_uri = resolved_uri[:-1]
             if resolved_uri == "" or resolved_uri == base_uri:
                 return UseInternal
 
