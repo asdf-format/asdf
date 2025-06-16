@@ -99,14 +99,15 @@ jobs:
       # Any env name which does not start with `pyXY` will use this Python version.
       default_python: '3.11'
       envs: |
-        - linux: py310-devdeps-parallel
-        - linux: py311-devdeps-parallel
-        - linux: py312-devdeps-parallel
-        - linux: py313-devdeps-parallel
-        - linux: py314-devdeps-parallel
+        - linux: py310-coverage-devdeps-parallel
+        - linux: py311-coverage-devdeps-parallel
+        - linux: py312-coverage-devdeps-parallel
+        - linux: py313-coverage-devdeps-parallel
+        - linux: py314-coverage-devdeps-parallel
           python-version: '3.14-dev'
         # separate pytest so a failure here doesn't cause the whole suite to fail
-        - linux: py311-pytestdev-parallel
+        - linux: py311-coverage-pytestdev-parallel
+      coverage: codecov
 
   oldest:
     needs: [core]
