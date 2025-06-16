@@ -36,7 +36,7 @@ jobs:
     - uses: pre-commit/action@v3.0.1
   core:
     needs: [pre-commit]
-    uses: OpenAstronomy/github-actions-workflows/.github/workflows/tox.yml@v1
+    uses: OpenAstronomy/github-actions-workflows/.github/workflows/tox.yml@v2
     with:
       submodules: false
       # Any env name which does not start with `pyXY` will use this Python version.
@@ -60,7 +60,7 @@ jobs:
       coverage: codecov
 
   jsonschema:
-    uses: OpenAstronomy/github-actions-workflows/.github/workflows/tox.yml@v1
+    uses: OpenAstronomy/github-actions-workflows/.github/workflows/tox.yml@v2
     if: (github.repository == 'asdf-format/asdf' && (github.event_name == 'schedule' || github.event_name == 'push' || github.event_name == 'workflow_dispatch' || contains(github.event.pull_request.labels.*.name, 'jsonschema')))
     with:
       submodules: false
@@ -71,7 +71,7 @@ jobs:
 
   asdf-schemas:
     needs: [core]
-    uses: OpenAstronomy/github-actions-workflows/.github/workflows/tox.yml@v1
+    uses: OpenAstronomy/github-actions-workflows/.github/workflows/tox.yml@v2
     with:
       submodules: false
       # Any env name which does not start with `pyXY` will use this Python version.
@@ -82,7 +82,7 @@ jobs:
 
   test:
     needs: [core]
-    uses: OpenAstronomy/github-actions-workflows/.github/workflows/tox.yml@v1
+    uses: OpenAstronomy/github-actions-workflows/.github/workflows/tox.yml@v2
     with:
       submodules: false
       # Any env name which does not start with `pyXY` will use this Python version.
@@ -93,7 +93,7 @@ jobs:
 
   dev:
     needs: [core]
-    uses: OpenAstronomy/github-actions-workflows/.github/workflows/tox.yml@v1
+    uses: OpenAstronomy/github-actions-workflows/.github/workflows/tox.yml@v2
     with:
       submodules: false
       # Any env name which does not start with `pyXY` will use this Python version.
@@ -108,7 +108,7 @@ jobs:
 
   oldest:
     needs: [core]
-    uses: OpenAstronomy/github-actions-workflows/.github/workflows/tox.yml@v1
+    uses: OpenAstronomy/github-actions-workflows/.github/workflows/tox.yml@v2
     with:
       submodules: false
       # Any env name which does not start with `pyXY` will use this Python version.
@@ -118,7 +118,7 @@ jobs:
 
   compatibility:
     needs: [core]
-    uses: OpenAstronomy/github-actions-workflows/.github/workflows/tox.yml@v1
+    uses: OpenAstronomy/github-actions-workflows/.github/workflows/tox.yml@v2
     with:
       submodules: false
       # Any env name which does not start with `pyXY` will use this Python version.
@@ -128,7 +128,7 @@ jobs:
 
   mocks3:
     needs: [core]
-    uses: OpenAstronomy/github-actions-workflows/.github/workflows/tox.yml@v1
+    uses: OpenAstronomy/github-actions-workflows/.github/workflows/tox.yml@v2
     with:
       submodules: false
       # Any env name which does not start with `pyXY` will use this Python version.
