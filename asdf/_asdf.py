@@ -575,16 +575,13 @@ class AsdfFile:
         """
         return self._comments
 
-    def _validate(self, tree, custom=True, reading=False):
+    def _validate(self, tree, reading=False):
         with self._blocks.options_context():
             # If we're validating on read then the tree
             # is already guaranteed to be in tagged form.
             tagged_tree = tree if reading else yamlutil.custom_tree_to_tagged_tree(tree, self)
 
             schema.validate(tagged_tree, self, reading=reading)
-            # Perform secondary validation pass if requested
-            if custom and self._custom_schema:
-                schema.validate(tagged_tree, self, self._custom_schema, reading=reading)
 
     def validate(self):
         """
