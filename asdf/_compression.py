@@ -235,7 +235,7 @@ def to_compression_header(compression):
     return compression
 
 
-def decompress(fd, used_size, data_size, compression, config=None):
+def decompress(fd, used_size, data_size, compression, config=None, out=None):
     """
     Decompress binary data in a file
 
@@ -257,12 +257,16 @@ def decompress(fd, used_size, data_size, compression, config=None):
         Any kwarg parameters to pass to the underlying decompression
         function
 
+    out : numpy.array, optional
+        Array in which to store decompressed data
+
     Returns
     -------
     array : numpy.array
          A flat uint8 containing the decompressed data.
     """
-    buffer = np.empty((data_size,), np.uint8)
+    if out is None:
+        out = np.empty((data_size,), np.uint8)
 
     compression = validate(compression)
     decoder = _get_compressor(compression)
@@ -270,13 +274,13 @@ def decompress(fd, used_size, data_size, compression, config=None):
         config = {}
 
     blocks = fd.read_blocks(used_size)  # data is a generator
-    len_decoded = decoder.decompress(blocks, out=buffer.data, **config)
+    len_decoded = decoder.decompress(blocks, out=out.data, **config)
 
     if len_decoded != data_size:
         msg = "Decompressed data wrong size"
         raise ValueError(msg)
 
-    return buffer
+    return out
 
 
 def compress(fd, data, compression, config=None):
