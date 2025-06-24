@@ -1369,7 +1369,7 @@ class AsdfFile:
 
         return []
 
-    def schema_info(self, key="description", path=None, preserve_list=True, refresh_extension_manager=False):
+    def schema_info(self, key="description", path=None, preserve_list=True, refresh_extension_manager=NotSet):
         """
         Get a nested dictionary of the schema information for a given key, relative to the path.
 
@@ -1393,6 +1393,8 @@ class AsdfFile:
             key.  This is useful if you want to make sure that the schema
             data for a given key is up to date.
         """
+        if refresh_extension_manager is not NotSet:
+            warnings.warn("refresh_extension_manager is deprecated", DeprecationWarning)
 
         if isinstance(path, AsdfSearchResult):
             return path.schema_info(
@@ -1415,7 +1417,7 @@ class AsdfFile:
         max_rows=display.DEFAULT_MAX_ROWS,
         max_cols=display.DEFAULT_MAX_COLS,
         show_values=display.DEFAULT_SHOW_VALUES,
-        refresh_extension_manager=False,
+        refresh_extension_manager=NotSet,
     ):
         """
         Print a rendering of this file's tree to stdout.
@@ -1440,6 +1442,8 @@ class AsdfFile:
             Set to False to disable display of primitive values in
             the rendered tree.
         """
+        if refresh_extension_manager is not NotSet:
+            warnings.warn("refresh_extension_manager is deprecated", DeprecationWarning)
 
         lines = display.render_tree(
             self.tree,
