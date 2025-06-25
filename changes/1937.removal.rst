@@ -1,0 +1,1 @@
+Deprecate use of ``ndim``, ``max_ndim`` and ``datatype`` validators for non-ndarray objects. Please define a custom validator if this is needed for a non-ndarray object.
