@@ -509,7 +509,7 @@ def validate_ndim(validator, ndim, instance, schema):
 def validate_max_ndim(validator, max_ndim, instance, schema):
     in_ndim = _get_ndim(instance)
 
-    if in_ndim > max_ndim:
+    if in_ndim is None or in_ndim > max_ndim:
         yield ValidationError(
             f"Wrong number of dimensions: Expected max of {max_ndim}, got {in_ndim}",
             instance=repr(instance),
