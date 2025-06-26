@@ -3,8 +3,8 @@ import pytest
 
 import asdf
 from asdf import AsdfFile
+from asdf._commands import main
 from asdf._tests._helpers import assert_tree_match
-from asdf.commands import main
 
 
 def _test_defragment(tmp_path, codec):
