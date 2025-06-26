@@ -9,7 +9,7 @@ from numpy.testing import assert_array_equal
 import asdf
 from asdf import constants
 from asdf._block import io as bio
-from asdf.commands import main
+from asdf._commands import main
 
 RNG = np.random.default_rng(42)
 

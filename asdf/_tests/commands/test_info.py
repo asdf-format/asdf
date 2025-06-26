@@ -1,6 +1,6 @@
 import pytest
 
-from asdf.commands import main
+from asdf._commands import main
 
 
 # The test file we're using here contains objects whose schemas
