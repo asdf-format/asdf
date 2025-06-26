@@ -479,3 +479,28 @@ tag when writing the file.
 For more details on the behavior of schema and tag versioning from a user
 perspective, see :ref:`version_and_compat`, and also
 :ref:`custom_type_versions`.
+
+Versioning during development
+-----------------------------
+
+As described above every schema change can trigger tag, manifest and
+extension version changes. This is critically important as it allows
+asdf to open old files. However the above considerations largely apply
+only to released versions of schemas and manifests. During development
+of a package it is likely that several schemas will be changed and it
+is not necessary to increase the manifest version for each of these updates.
+Let's say we have a package ``libfoo`` that is currently released as version 1.2.3
+and has a manifest ``manifest/foo-1.0.0`` listing tags ``tag/bar-1.0.0``
+and ``tag/bam-1.0.0``. We make a change to ``schema/bar-1.0.0`` increasing
+it's version to ``schema/bar-1.1.0`` (which triggers a new manifest
+``manifest/foo-1.1.0``). However importantly we don't yet release these
+changes. If we make a second change, this time creating ``schema/bam-1.1.0``
+it's likely that no increase in manifest version is required (as no users
+of ``libfoo`` have yet had the opportunity to create files with
+``manifest/foo-1.1.0``). ``schema/bam-1.1.0`` can be added to
+``manifest/foo-1.1.0`` and it's not until the next version of ``libfoo`` is
+released do we need to have schema updates trigger manifest version increases.
+
+This is general guidance. If it is likely that users are creating files
+with a development version of ``libfoo`` then it may be worth increasing the
+manifest version for every schema change.
