@@ -2,8 +2,8 @@ import numpy as np
 
 import asdf
 from asdf import AsdfFile
+from asdf._commands import main
 from asdf._tests._helpers import assert_tree_match
-from asdf.commands import main
 
 
 def test_explode_then_implode(tmp_path):

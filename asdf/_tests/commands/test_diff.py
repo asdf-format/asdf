@@ -3,7 +3,7 @@ import sys
 
 import pytest
 
-from asdf.commands import diff, main
+from asdf._commands import diff, main
 
 
 @pytest.fixture(autouse=True)
