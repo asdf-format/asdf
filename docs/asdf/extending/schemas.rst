@@ -42,10 +42,10 @@ numeric value and corresponding unit:
         description: A vector of one or more values
         anyOf:
           - type: number
-          - tag: tag:stsci.edu:asdf/core/ndarray-1.0.0
+          - tag: tag:stsci.edu:asdf/core/ndarray-1.*
       unit:
         description: The unit corresponding to the values
-        tag: tag:stsci.edu:asdf/unit/unit-1.0.0
+        tag: tag:stsci.edu:asdf/unit/unit-1.*
       required: [value, unit]
     ...
 
@@ -158,12 +158,16 @@ succeeds if the entity assigned to ``value`` is a numeric literal.
 .. code-block:: yaml
     :lineno-start: 17
 
-        - tag: tag:stsci.edu:asdf/core/ndarray-1.0.0
+        - tag: tag:stsci.edu:asdf/core/ndarray-1.*
 
 The second subschema contains a ``tag`` validator, which makes an
 assertion regarding the YAML tag URI of the object assigned to ``value``.
-In this subschema we're requiring the tag of an ndarray-1.0.0 object,
-which is how n-dimensional arrays are represented in an ASDF tree.
+In this subschema we're requiring a ndarray-1.* tag
+which is how n-dimensional arrays are represented in an ASDF tree. The
+``*`` is a wildcard allowing this ``tag`` validator to succeed for any
+minor or bugfix version of ndarray that has a major version of ``1``.
+This means a ndarray-1.0.0 tag will succeed as will ndarray-1.1.0 but
+not ndarray-2.0.0.
 
 The net effect of the ``anyOf`` combiner and its two subschemas is:
 validate successfully if the ``value`` object is either a numeric
@@ -174,10 +178,10 @@ literal or an n-dimensional array.
 
       unit:
         description: The unit corresponding to the values
-        tag: tag:stsci.edu:asdf/unit/unit-1.0.0
+        tag: tag:stsci.edu:asdf/unit/unit-1.*
 
 The ``unit`` property has another bit of documentation and a
-``tag`` validator that requires it to be a unit-1.0.0 object.
+``tag`` validator that requires it to be any unit-1.* tagged object.
 
 .. code-block:: yaml
     :lineno-start: 21
@@ -195,6 +199,47 @@ is to succeed.
     ...
 
 Finally, the YAML document end indicator indicates the end of the schema.
+
+Composing schemas with references and tags
+==========================================
+
+For checking complex and/or structures it can often be useful to reference
+other schemas. In the above example the ``tag`` keyword was used to check
+that ``value`` has the ``ndarray`` tag (and consequently is validated against
+the ``ndarray`` schema). This is often the most useful way of referencing
+other schemas for a few reasons:
+
+- The wildcard allows flexible matching allowing minor and bugfix versions
+  of the referenced schema to be released without requiring an update
+  of the referring schema.
+- Since the ``tag`` validator only checks the tag of the object the
+  schema associated with the tag is not reused during validation
+  of the referring schema (more on this below). In other words use of
+  ``tag`` avoids a duplicate validation of the tagged object.
+
+In some cases schema authors may chose to using an even more flexible
+wildcard allowing major version changes (for example ``ndarray-*``).
+This is not recommended as a major version change of a tag signifies
+a breaking change and increases the likelihood the tagged object will
+no longer behave like the old version.
+
+``tag`` does have a few downsides:
+
+- It is a custom validator added by asdf and not part of JSON Schema. If
+  the schemas are to be processed by non-asdf tools this might pose a challenge.
+- It requires the tagged object have a particular tag (more on this below).
+
+An alternative that doesn't have these downsides is to reference another
+schema using a ``$ref``. This is a standard feature of JSON Schema and doesn't
+consider the tag of the object. However ``$ref`` has a few downsides:
+
+- When a tagged object is checked with a ``$ref`` the object will be validated
+  against the referenced schema twice. Once due to the tag triggering
+  validation against the corresponding schema and a second time due to the
+  ``$ref``.
+- ``$ref`` does not support wildcards and must refer to a specific (down to
+  the bugfix) version of a schema. This means that any update to the
+  referenced schema will require an update to the referring schema.
 
 Checking schema syntax
 ======================
