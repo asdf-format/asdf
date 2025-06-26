@@ -240,8 +240,10 @@ Compression
 
 Individual blocks in an ASDF file may be compressed.
 
-You can easily `zlib <http://www.zlib.net/>`__ or `bzip2
-<http://www.bzip.org>`__ compress all blocks:
+`zlib <http://www.zlib.net/>`__ and `bzip2 <http://www.bzip.org>`__
+are included in every asdf install. Passing one of these 4 character
+codes as ``all_array_compression`` to `asdf.AsdfFile.write_to` will
+compress all blocks with the corresponding algorithm.:
 
 .. runcode::
 
@@ -262,6 +264,22 @@ You can easily `zlib <http://www.zlib.net/>`__ or `bzip2
 The `lz4 <https://en.wikipedia.org/wiki/LZ_4>`__ compression algorithm is also
 supported, but requires the optional
 `lz4 <https://python-lz4.readthedocs.io/>`__ package in order to work.
+
+Similarly, `asdf.config` can be used to configure compression of all
+blocks by setting `asdf.config.AsdfConfig.all_array_compression`.
+
+`asdf.AsdfFile.set_array_compression` can be used to set the compression
+for a specific block. Similarly `asdf.AsdfFile.get_array_compression` can
+be used to get the compression for a specific block.
+
+.. code::
+
+   import asdf
+   import numpy as np
+
+   af = asdf.AsdfFile({"arr": np.arange(42)})
+   af.set_array_compression(af["arr"], "lz4")
+   assert af.get_array_compression(af["arr"]) == "lz4"
 
 When reading a file with compressed blocks, the blocks will be automatically
 decompressed when accessed. If a file with compressed blocks is read and then
