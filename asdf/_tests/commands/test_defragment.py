@@ -24,7 +24,8 @@ def _test_defragment(tmp_path, codec):
     with asdf.open(path) as af:
         assert len(af._blocks.blocks) == 2
 
-    result = main.main_from_args(["defragment", str(path), "-o", str(out_path), "-c", codec])
+    with pytest.warns(UserWarning, match="defragment is deprecated"):
+        result = main.main_from_args(["defragment", str(path), "-o", str(out_path), "-c", codec])
 
     assert result == 0
 
