@@ -272,7 +272,7 @@ blocks by setting `asdf.config.AsdfConfig.all_array_compression`.
 for a specific block. Similarly `asdf.AsdfFile.get_array_compression` can
 be used to get the compression for a specific block.
 
-.. code::
+.. code:: python
 
    import asdf
    import numpy as np
