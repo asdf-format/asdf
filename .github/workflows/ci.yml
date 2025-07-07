@@ -42,7 +42,10 @@ jobs:
       # Any env name which does not start with `pyXY` will use this Python version.
       default_python: '3.10'
       envs: |
-        - linux: coverage
+        - linux: jit
+          name: Python 3.13 with JIT
+          python-version: 3.13
+        - linux: py313
           name: Python 3.13 coverage
           python-version: 3.13
         - linux: coverage
