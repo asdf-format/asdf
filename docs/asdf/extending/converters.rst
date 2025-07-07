@@ -191,7 +191,7 @@ Tag wildcards to support multiple versions
 ==========================================
 
 As noted above `Converter.tags` can contain wildcard patterns
-("asdf://example.com/shapes/tags/rectangle-1.*" to match all 1.x.x versions
+(``asdf://example.com/shapes/tags/rectangle-1.*`` to match all ``1.x.x`` versions
 of the rectangle tag). When a wildcard is used the specific tag
 versions should be defined in the manifest (or extension) that uses
 the `Converter`. If a `Converter` with a tag wildcard is provided to an
