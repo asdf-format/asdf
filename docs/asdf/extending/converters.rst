@@ -186,6 +186,23 @@ the converter's list of tags and implement a `select_tag<Converter>` method:
             else:
                 return Rectangle(node["width"], node["height"])
 
+
+Tag wildcards to support multiple versions
+==========================================
+
+As noted above `Converter.tags` can contain wildcard patterns
+(``asdf://example.com/shapes/tags/rectangle-1.*`` to match all ``1.x.x`` versions
+of the rectangle tag). When a wildcard is used the specific tag
+versions should be defined in the manifest (or extension) that uses
+the `Converter`. If a `Converter` with a tag wildcard is provided to an
+extension with a manifest that contains no tags that match the pattern
+the `Converter` will be ignored. No errors or warnings will be produced
+when this extension is registered with asdf (as this can be a useful pattern).
+However attempts to use the `Converter` can produce errors during
+reading and writing (if it's expected that the `Converter` is used).
+Developers are encouraged to write unit tests that check reading and
+writing with any custom `Converter` instances.
+
 .. _extending_converters_deferral:
 
 Deferring to another converter

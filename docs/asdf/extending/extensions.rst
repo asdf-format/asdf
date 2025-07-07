@@ -312,6 +312,11 @@ Next, in the package's ``pyproject.toml``, define a ``[project.entry-points]`` s
 After installing the package, the extension should be automatically available in any
 new Python session.
 
+It is important to consider the order of extensions registered via the entry point as
+asdf will prefer using extensions earlier in the list. Put another way, when multiple
+versions of an extension are registered the newer versions should be earlier in the list
+of extensions.
+
 Entry point performance considerations
 --------------------------------------
 
@@ -436,9 +441,8 @@ indicated by a new major version.
 
 Since ASDF is intended to be an archival file format, authors of tags and
 schemas should work to ensure that ASDF files created with older extensions can
-continue to be processed. This means that every time a schema version is increased
-(with the possible exception of patch updates), a **new** schema file should be
-created.
+continue to be processed. This means that every time a schema version is increased,
+a **new** schema file should be created.
 
 For example, if we currently have a schema for ``xyz-1.0.0``, and we wish to
 make changes and bump the version to ``xyz-1.1.0``, we should leave the
@@ -446,6 +450,57 @@ original schema intact. A **new** schema file should be created for
 ``xyz-1.1.0``, which can exist in parallel with the old file. The version of
 the corresponding tag type should be bumped to ``1.1.0``.
 
+To expand on this example let's assume the ``xyz-1.0.0`` schema was linked
+to tag ``tag/xyz-1.0.0``. The new ``xyz-1.1.0`` schema would often require:
+
+- a new ``tag/xyz-1.1.0``
+- an update to the corresponding `Converter` to support the new (and old)
+  tags. This might not be needed if the `Converter` uses a tag wildcard
+  that matches both tag versions and they can be treated the same way.
+- a **new** manifest that lists the new tag and schema. Since manifests
+  are also versioned this update would trigger a new manifest version. The
+  same as with schemas the old manifest should be kept unmodified and a
+  **new** manifest made with the new tag and schema.
+- a new `Extension` using the new manifest. The new `Extension` should
+  occur earlier in the list of registered extensions than the old version.
+
+After this update is made, asdf will be able to open files with both the
+old and new tags and write out files with the new tag. To expand on this,
+when a file with an old tag is opened, asdf will look for an extension
+that supports that tag. The new extension will be checked first (since
+it occurs earlier in the list) but since the new manifest does not contain
+the old tag the new extension will be skipped. Next the old extension
+will be checked, support for the tag will be confirmed and the converted
+included in that old extension will be used to handle the tag. On write,
+asdf will again check the list of extensions. Except this time asdf
+will see that the new extension supports the type and select the new
+tag when writing the file.
+
 For more details on the behavior of schema and tag versioning from a user
 perspective, see :ref:`version_and_compat`, and also
 :ref:`custom_type_versions`.
+
+Versioning during development
+-----------------------------
+
+As described above every schema change can trigger tag, manifest and
+extension version changes. This is critically important as it allows
+asdf to open old files. However the above considerations largely apply
+only to released versions of schemas and manifests. During development
+of a package it is likely that several schemas will be changed and it
+is not necessary to increase the manifest version for each of these updates.
+Let's say we have a package ``libfoo`` that is currently released as version 1.2.3
+and has a manifest ``manifest/foo-1.0.0`` listing tags ``tag/bar-1.0.0``
+and ``tag/bam-1.0.0``. We make a change to ``schema/bar-1.0.0`` increasing
+it's version to ``schema/bar-1.1.0`` (which triggers a new manifest
+``manifest/foo-1.1.0``). However importantly we don't yet release these
+changes. If we make a second change, this time creating ``schema/bam-1.1.0``
+it's likely that no increase in manifest version is required (as no users
+of ``libfoo`` have yet had the opportunity to create files with
+``manifest/foo-1.1.0``). ``schema/bam-1.1.0`` can be added to
+``manifest/foo-1.1.0`` and it's not until the next version of ``libfoo`` is
+released do we need to have schema updates trigger manifest version increases.
+
+This is general guidance. If it is likely that users are creating files
+with a development version of ``libfoo`` then it may be worth increasing the
+manifest version for every schema change.

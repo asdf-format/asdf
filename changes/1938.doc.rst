@@ -1,0 +1,1 @@
+Expand extension documentation to cover tag vs ref, converter tag wildcards, versioning and user documentation to cover get/set_array_compression.
