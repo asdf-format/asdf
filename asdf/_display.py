@@ -11,6 +11,7 @@ return what it thinks is suitable for display.
 import sys
 
 from ._node_info import create_tree
+from .util import NotSet
 
 __all__ = [
     "DEFAULT_MAX_COLS",
@@ -32,7 +33,7 @@ def render_tree(
     show_values=DEFAULT_SHOW_VALUES,
     filters=None,
     identifier="root",
-    refresh_extension_manager=False,
+    refresh_extension_manager=NotSet,
     extension_manager=None,
 ):
     """

@@ -3,6 +3,7 @@ from collections import namedtuple
 
 from .schema import load_schema
 from .treeutil import get_children, is_container
+from .util import NotSet
 
 
 def _filter_tree(info, filters):
@@ -138,7 +139,7 @@ def _get_schema_key(schema, key):
     return None
 
 
-def create_tree(key, node, identifier="root", filters=None, refresh_extension_manager=False, extension_manager=None):
+def create_tree(key, node, identifier="root", filters=None, refresh_extension_manager=NotSet, extension_manager=None):
     """
     Create a `NodeSchemaInfo` tree which can be filtered from a base node.
 
@@ -153,6 +154,7 @@ def create_tree(key, node, identifier="root", filters=None, refresh_extension_ma
     preserve_list : bool
         If True, then lists are preserved. Otherwise, they are turned into dicts.
     refresh_extension_manager : bool
+        DEPRECATED
         If `True`, refresh the extension manager before looking up the
         key.  This is useful if you want to make sure that the schema
         data for a given key is up to date.
@@ -180,7 +182,7 @@ def collect_schema_info(
     identifier="root",
     filters=None,
     preserve_list=True,
-    refresh_extension_manager=False,
+    refresh_extension_manager=NotSet,
     extension_manager=None,
 ):
     """
@@ -200,6 +202,7 @@ def collect_schema_info(
     preserve_list : bool
         If True, then lists are preserved. Otherwise, they are turned into dicts.
     refresh_extension_manager : bool
+        DEPRECATED
         If `True`, refresh the extension manager before looking up the
         key.  This is useful if you want to make sure that the schema
         data for a given key is up to date.
@@ -229,6 +232,9 @@ def collect_schema_info(
 def _get_extension_manager(refresh_extension_manager):
     from ._asdf import AsdfFile, get_config
     from .extension import ExtensionManager
+
+    if refresh_extension_manager is NotSet:
+        refresh_extension_manager = False
 
     af = AsdfFile()
     if refresh_extension_manager:
@@ -359,7 +365,7 @@ class NodeSchemaInfo:
 
     @classmethod
     def from_root_node(
-        cls, key, root_identifier, root_node, schema=None, refresh_extension_manager=False, extension_manager=None
+        cls, key, root_identifier, root_node, schema=None, refresh_extension_manager=NotSet, extension_manager=None
     ):
         """
         Build a NodeSchemaInfo tree from the given ASDF root node.

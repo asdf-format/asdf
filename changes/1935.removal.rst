@@ -1,0 +1,1 @@
+Deprecate ``refresh_extension_manager`` argument to ``info``, ``schema_info`` and ``SearchResult.schema_info``.
