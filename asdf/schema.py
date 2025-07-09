@@ -624,7 +624,8 @@ def validate(instance, ctx=None, schema=None, validators=None, reading=False, *a
 
     schema : schema, optional
         Explicit schema to use.  If not provided, the schema to use
-        is determined by the tag on instance (or subinstance).
+        is determined by the tag on instance (or subinstance) and
+        any custom schema provided to ``ctx``.
 
     validators : dict, optional
         A dictionary mapping properties to validators to use (instead
@@ -640,6 +641,8 @@ def validate(instance, ctx=None, schema=None, validators=None, reading=False, *a
 
         ctx = AsdfFile()
 
+    if schema is None and ctx._custom_schema:
+        schema = ctx._custom_schema
     validator = get_validator({} if schema is None else schema, ctx, validators, None, *args, **kwargs)
     validator.validate(instance)
 
