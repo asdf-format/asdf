@@ -518,6 +518,7 @@ def get_validator(
         of the built-in ones and ones provided by extension types).
 
     url_mapping : callable, optional
+        DEPRECATED
         A callable that takes one string argument and returns a string
         to convert remote URLs into local ones.
 
@@ -532,6 +533,9 @@ def get_validator(
     -------
     validator : jsonschema.Validator
     """
+    if url_mapping is not None:
+        warnings.warn("url_mapping is deprecated, arbitrary mapping of uris is no longer supported", DeprecationWarning)
+
     if ctx is None:
         from ._asdf import AsdfFile
 
