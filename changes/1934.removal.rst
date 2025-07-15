@@ -1,1 +1,0 @@
-Deprecate ``resolver`` argument to ``asdf.schema.load_schema``. Arbitrary mapping of uris is no longer supported. Instead register all uris with resources using the resource manager.
