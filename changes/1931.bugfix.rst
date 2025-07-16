@@ -1,1 +1,0 @@
-Fix issue where custom schema provided to ``AsdfFile`` was ignored on ``write_to``.

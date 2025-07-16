@@ -1,3 +1,49 @@
+4.3.0 (2025-07-16)
+==================
+
+Bugfix
+------
+
+- When ``lazy_load=False`` use ``ndarray`` instances for arrays (instead of
+  ``NDArrayType``). (`#1929 <https://github.com/asdf-format/asdf/pull/1929>`_)
+- Fix issue where custom schema provided to ``AsdfFile`` was ignored on
+  ``write_to``. (`#1931 <https://github.com/asdf-format/asdf/pull/1931>`_)
+
+
+Doc
+---
+
+- Expand extension documentation to cover tag vs ref, converter tag wildcards,
+  versioning and user documentation to cover get/set_array_compression. (`#1938
+  <https://github.com/asdf-format/asdf/pull/1938>`_)
+
+
+Feature
+-------
+
+- Add ``dump`` ``load`` ``dumps`` and ``loads`` functions. (`#1930
+  <https://github.com/asdf-format/asdf/pull/1930>`_)
+
+
+Removal
+-------
+
+- Deprecate ``resolver`` argument to ``asdf.schema.load_schema``. Arbitrary
+  mapping of uris is no longer supported. Instead register all uris with
+  resources using the resource manager. (`#1934
+  <https://github.com/asdf-format/asdf/pull/1934>`_)
+- Deprecate ``refresh_extension_manager`` argument to ``info``, ``schema_info``
+  and ``SearchResult.schema_info``. (`#1935
+  <https://github.com/asdf-format/asdf/pull/1935>`_)
+- Deprecate ``url_mapping`` argument to ``get_validator``. Arbitrary mapping of
+  urls is no longer supported. (`#1936
+  <https://github.com/asdf-format/asdf/pull/1936>`_)
+- Deprecate use of ``ndim``, ``max_ndim`` and ``datatype`` validators for
+  non-ndarray objects. Please define a custom validator if this is needed for a
+  non-ndarray object. (`#1937
+  <https://github.com/asdf-format/asdf/pull/1937>`_)
+
+
 4.2.0 (2025-05-30)
 ==================
 

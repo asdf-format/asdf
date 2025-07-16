@@ -1,1 +1,0 @@
-Deprecate ``url_mapping`` argument to ``get_validator``. Arbitrary mapping of urls is no longer supported.
