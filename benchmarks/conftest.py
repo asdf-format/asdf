@@ -11,6 +11,7 @@ LARGE_SET = string.ascii_lowercase[:26]
 
 DATA_GENS = ["no_data", "small_data", "large_data"]
 TREE_GENS = ["small_tree", "flat_tree", "deep_tree", "large_tree"]
+ALL_TREES = list(itertools.product(DATA_GENS, TREE_GENS))
 
 
 def no_data(i):
@@ -50,7 +51,7 @@ def large_tree(data_gen):
     return tree
 
 
-@pytest.fixture(params=itertools.product(DATA_GENS, TREE_GENS))
+@pytest.fixture(params=ALL_TREES, ids=["-".join(t) for t in ALL_TREES])
 def tree(request):
     data_gen_name, tree_gen_name = request.param
     # some gymnastics to work around pytest not allowing
