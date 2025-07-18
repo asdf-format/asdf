@@ -27,6 +27,7 @@ concurrency:
 
 jobs:
   codspeed:
+    if: (github.repository == 'asdf-format/asdf' && (github.event_name == 'schedule' || github.event_name == 'push' || github.event_name == 'workflow_dispatch' || contains(github.event.pull_request.labels.*.name, 'Benchmarks')))
     name: Run benchmarks
     runs-on: ubuntu-latest
     steps:
