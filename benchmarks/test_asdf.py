@@ -20,6 +20,7 @@ def test_open(tree_bytes, benchmark):
     # open doesn't seek to start of file so make a new BytesIO each time
     def asdf_open():
         asdf.open(io.BytesIO(tree_bytes))
+
     benchmark(asdf_open)
 
 
