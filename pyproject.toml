@@ -112,6 +112,7 @@ remote_data_strict = true
 filterwarnings = [
     'error',  # also set in _tests/conftest to work with pyargs
     'ignore:numpy.ndarray size changed:RuntimeWarning',
+    'ignore:Benchmarks are automatically disabled because xdist plugin is active.Benchmarks cannot be performed reliably in a parallelized environment.',
 ]
 addopts = [
     '--doctest-modules',
