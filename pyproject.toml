@@ -114,7 +114,6 @@ filterwarnings = [
     'ignore:numpy.ndarray size changed:RuntimeWarning',
 ]
 addopts = [
-    '--benchmark-disable',
     '--doctest-modules',
     '--doctest-glob=*.rst',
     '--color=yes',
