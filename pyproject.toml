@@ -53,6 +53,10 @@ tests = [
 test = [
   "asdf[tests]",
 ]
+benchmark = [
+  "asdf[tests]",
+  "pytest-benchmark",
+]
 [project.urls]
 'documentation' = 'https://asdf.readthedocs.io/en/stable/'
 'repository' = 'https://github.com/asdf-format/asdf'
@@ -110,6 +114,7 @@ filterwarnings = [
     'ignore:numpy.ndarray size changed:RuntimeWarning',
 ]
 addopts = [
+    '--benchmark-disable',
     '--doctest-modules',
     '--doctest-glob=*.rst',
     '--color=yes',
