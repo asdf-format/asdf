@@ -1,4 +1,3 @@
-import io
 import itertools
 import string
 
@@ -7,12 +6,11 @@ import pytest
 
 import asdf
 
-
 SMALL_SET = string.ascii_lowercase[:3]
 LARGE_SET = string.ascii_lowercase[:26]
 
 DATA_GENS = ["no_data", "small_data", "large_data"]
-TREE_GENS = ["small_tree",  "flat_tree", "deep_tree", "large_tree"]
+TREE_GENS = ["small_tree", "flat_tree", "deep_tree", "large_tree"]
 
 
 def no_data(i):
