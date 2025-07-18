@@ -1,0 +1,43 @@
+name: Benchmarks
+
+on:
+  workflow_dispatch:
+  schedule:
+    - cron: '0 6 * * 1'  # Every Monday at 6am UTC
+  push:
+    branches:
+      - main
+      - stable
+      - '*.x'
+    tags:
+      - '*'
+  pull_request:
+    types:
+      - synchronize
+      - labeled
+
+
+# Only cancel in-progress jobs or runs for the current workflow
+#   This cancels the already triggered workflows for a specific PR without canceling
+#   other instances of this workflow (other PRs, scheduled triggers, etc) when something
+#   within that PR re-triggers this CI
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  codspeed:
+    name: Run benchmarks
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Setup Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.13"
+      - name: Install dependencies
+        run: pip install pytest-codspeed .[benchmark]
+      - uses: CodSpeedHQ/action@v3
+        with:
+          run: pytest benchmarks/ --codspeed --benchmark-enable
+          token: ${{ secrets.CODSPEED_TOKEN }}
