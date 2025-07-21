@@ -20,6 +20,8 @@ useful operations:
 
   - ``info``: Print a rendering of an ASDF tree.
 
+  - ``search``: Search an ASDF file.
+
   - ``extensions``: Show information about installed extensions (see
     :ref:`other_packages`).
 

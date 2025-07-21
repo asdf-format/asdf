@@ -3,9 +3,8 @@ import pytest
 from asdf._commands import main
 
 
-# The test file we're using here contains objects whose schemas
-# have been dropped from the ASDF Standard.  We should select
-# a new file once the locations of schemas are more stable.
+# The test file contains a number of tags that aren't part of the standard.
+# This is useful for these tests as we want to handle this case gracefully.
 @pytest.mark.filterwarnings("ignore::asdf.exceptions.AsdfConversionWarning")
 def test_info_command(capsys, test_data_path):
     file_path = test_data_path / "frames0.asdf"
