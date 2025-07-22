@@ -167,7 +167,7 @@ def print_tree_context(diff_ctx, node_list, other, use_marker, last_was_list):
     marker = diff_ctx.THAT_MARKER if other else diff_ctx.THIS_MARKER
     for node in diff_ctx.print_tree.get_print_list(node_list):
         if node is not None:
-            node_ = diff_ctx.LIST_MARKER if isinstance(node, ArrayNode) else node + ":"
+            node_ = diff_ctx.LIST_MARKER if isinstance(node, ArrayNode) else str(node) + ":"
             # All of this logic is just to make the display of arrays prettier
             if use_marker:
                 line_prefix = " " if last_was_list else marker + prefix[2:]

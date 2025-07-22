@@ -109,3 +109,16 @@ def test_recursive_diff(tmp_path):
     asdf.dump(t1, fn1)
 
     assert main.main_from_args(["diff", str(fn0), str(fn1)]) == 0
+
+
+def test_int_key_diff(tmp_path):
+    fn0 = tmp_path / "a.asdf"
+    fn1 = tmp_path / "b.asdf"
+
+    t0 = {1: "a"}
+    t1 = {2: "b"}
+
+    asdf.dump(t0, fn0)
+    asdf.dump(t1, fn1)
+
+    assert main.main_from_args(["diff", str(fn0), str(fn1)]) == 0
