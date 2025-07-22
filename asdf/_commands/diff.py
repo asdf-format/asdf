@@ -127,6 +127,7 @@ class DiffContext:
     """Class that contains context data of the diff to be computed"""
 
     def __init__(self, asdf0, asdf1, iostream, minimal=False, ignore_ids=None):
+        self._seen_id_tuples = set()
         self.asdf0 = asdf0
         self.asdf1 = asdf1
         self.iostream = iostream
@@ -152,6 +153,13 @@ class DiffContext:
         self.THIS_MARKER = GREEN + "> "
         self.THAT_MARKER = RED + "< "
 
+    def should_visit(self, item0, item1):
+        key = (id(item0), id(item1))
+        if key in self._seen_id_tuples:
+            return False
+        self._seen_id_tuples.add(key)
+        return True
+
 
 def print_tree_context(diff_ctx, node_list, other, use_marker, last_was_list):
     """Print context information indicating location in ASDF tree."""
@@ -174,9 +182,24 @@ def print_tree_context(diff_ctx, node_list, other, use_marker, last_was_list):
     return last_was_list
 
 
-def print_in_tree(diff_ctx, node_list, thing, other, use_marker=False, last_was_list=False, ignore_lwl=False):
+def print_in_tree(
+    diff_ctx, node_list, thing, other, use_marker=False, last_was_list=False, ignore_lwl=False, seen=None
+):
     """Recursively print tree context and diff information about object."""
     last_was_list = print_tree_context(diff_ctx, node_list, other, use_marker, last_was_list)
+
+    if seen is None:
+        seen = set()
+    seen_key = id(thing)
+    if seen_key in seen:
+        use_marker = not last_was_list or ignore_lwl
+        marker = diff_ctx.THAT_MARKER if other else diff_ctx.THIS_MARKER
+        prefix = marker + "  " * len(node_list) if use_marker else " "
+        diff_ctx.iostream.write(prefix + "(recursive item)" + diff_ctx.RESET_NEWLINE)
+        last_was_list = False
+        return
+    seen.add(seen_key)
+
     # If tree element is list, recursively print list contents
     if isinstance(thing, list):
         for i, subthing in enumerate(thing):
@@ -189,6 +212,7 @@ def print_in_tree(diff_ctx, node_list, thing, other, use_marker=False, last_was_
                 use_marker=True,
                 last_was_list=last_was_list,
                 ignore_lwl=ignore_lwl,
+                seen=seen,
             )
     # If tree element is dictionary, recursively print dictionary contents
     elif isinstance(thing, dict):
@@ -201,6 +225,7 @@ def print_in_tree(diff_ctx, node_list, thing, other, use_marker=False, last_was_
                 use_marker=True,
                 last_was_list=last_was_list,
                 ignore_lwl=ignore_lwl,
+                seen=seen,
             )
     # Print difference between leaf objects (no need to recurse further)
     else:
@@ -327,6 +352,9 @@ def compare_dicts(diff_ctx, dict0, dict1, keys, ignores=None):
 
 def compare_trees(diff_ctx, tree0, tree1, keys=None):
     """Recursively traverses two ASDF tree and compares them"""
+    if not diff_ctx.should_visit(tree0, tree1):
+        return
+
     keys = [] if keys is None else keys
 
     if id(tree0) in diff_ctx.ignore_ids and id(tree1) in diff_ctx.ignore_ids:
