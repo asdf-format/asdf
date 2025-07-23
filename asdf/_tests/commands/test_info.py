@@ -21,3 +21,18 @@ def test_info_command(capsys, test_data_path):
     assert "frames" in captured.out
     new_len = len(captured.out.split("\n"))
     assert new_len < original_len
+
+
+@pytest.mark.parametrize("hide_blocks", (True, False))
+def test_hide_blocks(capsys, test_data_path, hide_blocks):
+    file_path = test_data_path / "ndarray0.asdf"
+
+    args = ["info", str(file_path)]
+    if hide_blocks:
+        args.append("--hide-blocks")
+    assert main.main_from_args(args) == 0
+    captured = capsys.readouterr()
+    if hide_blocks:
+        assert "Block 0:" not in captured.out
+    else:
+        assert "Block 0:" in captured.out
