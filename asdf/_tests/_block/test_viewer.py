@@ -45,7 +45,8 @@ def test_header_read_only(asdf_file):
 
 @pytest.mark.parametrize("attr", ("offset", "data_offset", "loaded"))
 def test_attr_read_only(asdf_file, attr):
-    with pytest.raises(AttributeError, match="can't set attribute"):
+    # message varies by python version
+    with pytest.raises(AttributeError, match="(can't set attribute|object has no setter)"):
         setattr(asdf_file.blocks[0], attr, 42)
 
 
