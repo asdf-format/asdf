@@ -2,6 +2,8 @@
 Defragment command.
 """
 
+import warnings
+
 import asdf
 from asdf import AsdfFile
 
@@ -64,6 +66,10 @@ def defragment(input_, output=None, resolve_references=False, compress=None):
     compress : str, optional
         Compression to use.
     """
+    warnings.warn(
+        "defragment is deprecated. Use implode instead",
+        UserWarning,
+    )
     with asdf.open(input_) as ff:
         ff2 = AsdfFile(ff)
         if resolve_references:

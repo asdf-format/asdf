@@ -1,6 +1,6 @@
 import pytest
 
-from asdf.commands import find_extensions
+from asdf._commands import find_extensions
 from asdf.versioning import supported_versions
 
 
