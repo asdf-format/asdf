@@ -15,6 +15,7 @@ from . import _node_info as node_info
 from . import _version as version
 from . import constants, generic_io, lazy_nodes, reference, schema, treeutil, util, versioning, yamlutil
 from ._block.manager import Manager as BlockManager
+from ._block.viewer import BlockViewer
 from ._helpers import validate_version
 from .config import config_context, get_config
 from .exceptions import (
@@ -140,6 +141,7 @@ class AsdfFile:
         self._closed = False
         self._external_asdf_by_uri = {}
         self._blocks = BlockManager(uri=uri, lazy_load=lazy_load, memmap=memmap)
+        self.blocks = BlockViewer(self._blocks)
         if tree is None:
             # Bypassing the tree property here, to avoid validating
             # an empty tree.
@@ -1415,6 +1417,7 @@ class AsdfFile:
         max_cols=display.DEFAULT_MAX_COLS,
         show_values=display.DEFAULT_SHOW_VALUES,
         refresh_extension_manager=NotSet,
+        show_blocks=True,
     ):
         """
         Print a rendering of this file's tree to stdout.
@@ -1438,6 +1441,11 @@ class AsdfFile:
         show_values : bool, optional
             Set to False to disable display of primitive values in
             the rendered tree.
+
+        show_blocks : bool, optional
+            Display block information after the tree. If max_rows
+            does not allow displaying the block information it will
+            not be shown.
         """
         if refresh_extension_manager is not NotSet:
             warnings.warn("refresh_extension_manager is deprecated", DeprecationWarning)
@@ -1451,6 +1459,13 @@ class AsdfFile:
             refresh_extension_manager=refresh_extension_manager,
             extension_manager=self.extension_manager,
         )
+        if show_blocks:
+            if isinstance(max_rows, tuple) and max_rows:
+                n = max_rows[0]
+            else:
+                n = max_rows
+            if n is None or len(lines) + len(self.blocks) <= n:
+                lines.extend(self.blocks._info())
         print("\n".join(lines))
 
     def search(self, key=NotSet, type_=NotSet, value=NotSet, filter_=None):
