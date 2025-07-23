@@ -78,8 +78,11 @@ def test_loaded(tmp_path):
 def test_info(asdf_file, capsys):
     asdf_file.blocks.info()
     lines = capsys.readouterr().out.splitlines()
-    assert "Block 0: 8192 bytes, 336 used" in lines[0]
-    assert "Block 1: 8192 bytes, 878 used, bzp2 compression" in lines[1]
+    # use private API to confirm public
+    h = asdf_file._blocks.blocks[0].header
+    assert f"Block 0: {h['allocated_size']} bytes, {h['used_size']} used" in lines[0]
+    h = asdf_file._blocks.blocks[1].header
+    assert f"Block 1: {h['allocated_size']} bytes, {h['used_size']} used, bzp2 compression" in lines[1]
     assert "Block 2: Stream" in lines[2]
 
 
