@@ -5,25 +5,43 @@ from types import MappingProxyType
 
 from asdf.constants import BLOCK_FLAG_STREAMED
 
+__all__ = ["BlockView", "BlockViewer"]
+
 
 class BlockView:
+    """
+    A read-only view of an ASDF block.
+    """
+
     def __init__(self, read_block):
         self._read_block = read_block
 
     @property
     def header(self):
+        """
+        MappingProxy: A read-only mapping of ASDF block header contents.
+        """
         return MappingProxyType(self._read_block.header)
 
     @property
     def offset(self):
+        """
+        int: The offset (in bytes) of the ASDF block from the start of the file.
+        """
         return self._read_block.offset
 
     @property
     def data_offset(self):
+        """
+        int: The offset (in bytes) of the ASDF block data from the start of the file.
+        """
         return self._read_block.data_offset
 
     @property
     def loaded(self):
+        """
+        bool: True if the ASDF block data has been loaded (and cached).
+        """
         return self._read_block._cached_data is not None
 
     def load(self, out=None):
@@ -44,6 +62,10 @@ class BlockView:
 
 
 class BlockViewer(Sequence):
+    """
+    A read-only sequence of `BlockView` objects.
+    """
+
     def __init__(self, manager):
         self._manager = manager
 
@@ -78,4 +100,7 @@ class BlockViewer(Sequence):
         return lines
 
     def info(self):
+        """
+        Print a rendering of these blocks to stdout.
+        """
         print("\n".join(self._info()))

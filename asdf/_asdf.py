@@ -15,8 +15,8 @@ from . import _node_info as node_info
 from . import _version as version
 from . import constants, generic_io, lazy_nodes, reference, schema, treeutil, util, versioning, yamlutil
 from ._block.manager import Manager as BlockManager
-from ._block.viewer import BlockViewer
 from ._helpers import validate_version
+from .blocks import BlockViewer
 from .config import config_context, get_config
 from .exceptions import (
     AsdfManifestURIMismatchWarning,
@@ -141,7 +141,7 @@ class AsdfFile:
         self._closed = False
         self._external_asdf_by_uri = {}
         self._blocks = BlockManager(uri=uri, lazy_load=lazy_load, memmap=memmap)
-        self.blocks = BlockViewer(self._blocks)
+        self._blocks_view = BlockViewer(self._blocks)
         if tree is None:
             # Bypassing the tree property here, to avoid validating
             # an empty tree.
@@ -546,8 +546,6 @@ class AsdfFile:
     def tree(self):
         """
         Get/set the tree of data in the ASDF file.
-
-        When set, the tree will be validated against the ASDF schema.
         """
         if self._closed:
             msg = "Cannot access data from closed ASDF file"
@@ -557,6 +555,13 @@ class AsdfFile:
     @tree.setter
     def tree(self, tree):
         self._tree = AsdfObject(tree)
+
+    @property
+    def blocks(self):
+        """
+        A `asdf.blocks.BlockViewer` with read-only access to ASDF blocks loaded from the ASDF file.
+        """
+        return self._blocks_view
 
     def keys(self):
         return self.tree.keys()
