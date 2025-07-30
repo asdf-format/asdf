@@ -12,7 +12,13 @@ from ._display import DEFAULT_MAX_COLS, DEFAULT_MAX_ROWS, DEFAULT_SHOW_VALUES
 __all__ = ["info"]
 
 
-def info(node_or_path, max_rows=DEFAULT_MAX_ROWS, max_cols=DEFAULT_MAX_COLS, show_values=DEFAULT_SHOW_VALUES):
+def info(
+    node_or_path,
+    max_rows=DEFAULT_MAX_ROWS,
+    max_cols=DEFAULT_MAX_COLS,
+    show_values=DEFAULT_SHOW_VALUES,
+    show_blocks=True,
+):
     """
     Print a rendering of an ASDF tree or sub-tree to stdout.
 
@@ -39,9 +45,14 @@ def info(node_or_path, max_rows=DEFAULT_MAX_ROWS, max_cols=DEFAULT_MAX_COLS, sho
     show_values : bool, optional
         Set to False to disable display of primitive values in
         the rendered tree.
+
+    show_blocks : bool, optional
+        Display block information after the tree. If max_rows
+        does not allow displaying the block information it will
+        not be shown.
     """
     with _manage_node(node_or_path) as node:
-        node.info(max_rows=max_rows, max_cols=max_cols, show_values=show_values)
+        node.info(max_rows=max_rows, max_cols=max_cols, show_values=show_values, show_blocks=show_blocks)
 
 
 @contextmanager
