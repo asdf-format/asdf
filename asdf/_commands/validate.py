@@ -14,8 +14,8 @@ class Validate(Command):
     def setup_arguments(cls, subparsers):
         parser = subparsers.add_parser(
             "validate",
-            help="Validate an ASDF file.",
-            description="...",
+            help="Validates an ASDF file.",
+            description="validates \n - against all tagged schemas (and optionally a custom schema) \n - blocks with stored checksums (can be disabled)",
         )
 
         parser.add_argument("filename", help="ASDF file to validate")
