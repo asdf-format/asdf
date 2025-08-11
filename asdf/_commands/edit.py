@@ -82,7 +82,7 @@ def read_yaml(fd):
     # of an exploded ASDF file, include a YAML header, so we'll just
     # let this raise an error if the end marker can't be found.
     # Revisit this if someone starts producing files without a
-    # YAML section, which the standard permits but is not possible
+    # YAML section, which the specification permits but is not possible
     # with current software.
     reader = fd.reader_until(
         constants.YAML_END_MARKER_REGEX,
@@ -326,7 +326,7 @@ def edit(path):
 
 def parse_asdf_version(content):
     """
-    Extract the ASDF Standard version from YAML content.
+    Extract the ASDF core schemas version from YAML content.
 
     Parameters
     ----------
@@ -335,7 +335,7 @@ def parse_asdf_version(content):
     Returns
     -------
     asdf.versioning.AsdfVersion
-        ASDF Standard version
+        ASDF core schemas version
     """
     comments = _io.read_comment_section(generic_io.get_file(io.BytesIO(content)))
     return _io.find_asdf_version_in_comments(comments)
