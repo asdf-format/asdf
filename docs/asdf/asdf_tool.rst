@@ -30,6 +30,6 @@ useful operations:
   - ``to_yaml``: Inline all of the data in an ASDF file so that it is
     pure YAML.
 
-  - ``validate``: Validate an ASDF file.
+  - ``validate``: Validate an ASDF file's blocks and schema.
 
 Run ``asdftool --help`` for more information.
