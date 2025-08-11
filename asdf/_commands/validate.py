@@ -25,10 +25,10 @@ class Validate(Command):
             help="path or URI of custom schema",
         )
         parser.add_argument(
-            "--skip_checksums",
+            "--skip-block-validation",
             default=False,
             action="store_true",
-            help="Skip block checksum validation.",
+            help="Do not compare blocks against stored checksums.",
         )
         parser.set_defaults(func=cls.run)
 
