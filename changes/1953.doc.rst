@@ -1,0 +1,1 @@
+Update references to "ASDF standard" to refer to either the specification or core schemas to follow the new terminology used in the ASDF specification.
