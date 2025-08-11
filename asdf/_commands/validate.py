@@ -18,7 +18,7 @@ class Validate(Command):
             description="validates \n - against all tagged schemas (and optionally a custom schema) \n - blocks with stored checksums (can be disabled)",
         )
 
-        parser.add_argument("filename", help="ASDF file to validate")
+        parser.add_argument("filename", help="path to ASDF file")
         parser.add_argument(
             "--custom_schema",
             type=str,
