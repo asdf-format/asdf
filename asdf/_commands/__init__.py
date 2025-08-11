@@ -7,6 +7,7 @@ from .info import info
 from .search import search
 from .tags import list_tags
 from .to_yaml import to_yaml
+from .validate import validate
 
 __all__ = [
     "defragment",
@@ -19,4 +20,5 @@ __all__ = [
     "list_tags",
     "search",
     "to_yaml",
+    "validate",
 ]
