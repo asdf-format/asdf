@@ -590,7 +590,7 @@ def _validate_large_literals(instance, reading):
 def _validate_mapping_keys(instance, reading):
     """
     Validate that mappings do not contain illegal key types
-    (as of ASDF Standard 1.6.0, only str, int, and bool are
+    (as of ASDF core schemas 1.6.0, only str, int, and bool are
     permitted).
     """
     if not isinstance(instance, Mapping):

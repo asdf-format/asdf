@@ -30,7 +30,7 @@ def dump(
         A file-like object to write the ASDF data to.
 
     version : str, optional
-        Version of the ASDF Standard to use.  If not specified, the default
+        Version of the ASDF core schemas to use.  If not specified, the default
         version will be used.
 
     extensions : object, optional
@@ -53,7 +53,7 @@ def dump(
         Path to a custom schema file that will be used for a secondary
         validation pass. This can be used to ensure that particular ASDF
         files follow custom conventions beyond those enforced by the
-        standard.
+        specification.
     """
     AsdfFile(tree, custom_schema=custom_schema, extensions=extensions).write_to(
         fp,
@@ -85,7 +85,7 @@ def dumps(
         The tree to dump.
 
     version : str, optional
-        Version of the ASDF Standard to use.  If not specified, the default
+        Version of the ASDF core schemas to use.  If not specified, the default
         version will be used.
 
     extensions : object, optional
@@ -108,7 +108,7 @@ def dumps(
         Path to a custom schema file that will be used for a secondary
         validation pass. This can be used to ensure that particular ASDF
         files follow custom conventions beyond those enforced by the
-        standard.
+        specification.
 
     Returns
     -------
@@ -156,7 +156,7 @@ def load(fp, *, uri=None, validate_checksums=False, extensions=None, custom_sche
         Path to a custom schema file that will be used for a secondary
         validation pass. This can be used to ensure that particular ASDF
         files follow custom conventions beyond those enforced by the
-        standard.
+        specification.
 
     Returns
     -------
@@ -202,7 +202,7 @@ def loads(asdf_string, *, uri=None, validate_checksums=False, extensions=None, c
         Path to a custom schema file that will be used for a secondary
         validation pass. This can be used to ensure that particular ASDF
         files follow custom conventions beyond those enforced by the
-        standard.
+        specification.
 
     Returns
     -------

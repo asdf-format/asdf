@@ -81,7 +81,7 @@ Resources
 See also
 ========
 
-- The :ref:`Advanced Scientific Data Format (ASDF) standard
+- The :ref:`Advanced Scientific Data Format (ASDF) specification
   <asdf-standard:asdf-standard>`.
 
 - `asdf` Python package distribution on `pypi <https://pypi.org/project/asdf/>`_

@@ -5,7 +5,7 @@ class IntegerType:
     """
     Enables the storage of arbitrarily large integer values
 
-    The ASDF Standard mandates that integer literals in the tree can be no
+    The ASDF specification mandates that integer literals in the tree can be no
     larger than 64 bits. Use of this class enables the storage of arbitrarily
     large integer values.
 

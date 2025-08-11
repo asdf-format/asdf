@@ -21,7 +21,7 @@ Internally, this submodule is broken up into:
 
 
 The low-level ``io`` functions are responsible for reading and writing
-bytes compatible with the block format defined in the ASDF standard.
+bytes compatible with the block format defined in the ASDF specification.
 These should be compatible with as wide a variety of file formats as possible
 including files that are:
     - seekable and non-seekable

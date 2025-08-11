@@ -67,8 +67,8 @@ extension was used when writing the file.
 
 
 The optional ``asdf_standard_requirement`` property describes the
-ASDF Standard versions that are compatible with this extension.  The
-``gte`` and ``lt`` properties are used here to restrict ASDF Standard
+ASDF core schema versions that are compatible with this extension.  The
+``gte`` and ``lt`` properties are used here to restrict ASDF core schemas
 versions to greater-than-or-equal 1.3.0 and less-than 1.5.0, respectively.
 ``gt`` and ``lte`` properties are also available.
 

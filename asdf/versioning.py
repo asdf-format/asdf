@@ -96,22 +96,22 @@ supported_versions = [
 
 default_version = AsdfVersion("1.6.0")
 
-# This is the ASDF Standard version that is currently in development
+# This is the ASDF core schemas version that is currently in development
 # it is possible that breaking changes will be made to this version.
 asdf_standard_development_version = AsdfVersion("1.7.0")
 
 
-# This is the ASDF Standard version at which the format of the history
+# This is the ASDF core schemas version at which the format of the history
 # field changed to include extension metadata.
 NEW_HISTORY_FORMAT_MIN_VERSION = AsdfVersion("1.2.0")
 
 
-# This is the ASDF Standard version at which we begin restricting
+# This is the ASDF core schemas version at which we begin restricting
 # mapping keys to string, integer, and boolean only.
 RESTRICTED_KEYS_MIN_VERSION = AsdfVersion("1.6.0")
 
 
-# This library never removed defaults for ASDF Standard versions
+# This library never removed defaults for ASDF core schemas versions
 # later than 1.5.0, so filling them isn't necessary.
 FILL_DEFAULTS_MAX_VERSION = AsdfVersion("1.5.0")
 
