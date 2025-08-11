@@ -766,26 +766,16 @@ class AsdfFile:
             padding = util.calculate_padding(fd.tell(), pad_blocks, fd.block_size)
             fd.fast_forward(padding)
 
-    def _pre_write(self, fd):
-        pass
-
-    def _post_write(self, fd):
-        pass
-
     def _serial_write(self, fd, pad_blocks, include_block_index):
         with self._blocks.write_context(fd):
-            self._pre_write(fd)
-            try:
-                # prep a tree for a writing
-                tree = copy.copy(self._tree)
-                tree["asdf_library"] = _io.get_asdf_library_info()
-                if "history" in self._tree:
-                    tree["history"] = copy.deepcopy(self._tree["history"])
+            # prep a tree for a writing
+            tree = copy.copy(self._tree)
+            tree["asdf_library"] = _io.get_asdf_library_info()
+            if "history" in self._tree:
+                tree["history"] = copy.deepcopy(self._tree["history"])
 
-                self._write_tree(tree, fd, pad_blocks)
-                self._blocks.write(pad_blocks, include_block_index)
-            finally:
-                self._post_write(fd)
+            self._write_tree(tree, fd, pad_blocks)
+            self._blocks.write(pad_blocks, include_block_index)
 
     def update(
         self,
@@ -899,35 +889,30 @@ class AsdfFile:
                 rewrite()
                 return
 
-            self._pre_write(fd)
-            try:
-                self._tree["asdf_library"] = _io.get_asdf_library_info()
+            self._tree["asdf_library"] = _io.get_asdf_library_info()
 
-                # prepare block manager for writing
-                with self._blocks.write_context(self._fd, copy_options=False):
-                    # write out tree to temporary buffer
-                    tree_fd = generic_io.get_file(io.BytesIO(), mode="rw")
-                    self._write_tree(self._tree, tree_fd, False)
-                    new_tree_size = tree_fd.tell()
+            # prepare block manager for writing
+            with self._blocks.write_context(self._fd, copy_options=False):
+                # write out tree to temporary buffer
+                tree_fd = generic_io.get_file(io.BytesIO(), mode="rw")
+                self._write_tree(self._tree, tree_fd, False)
+                new_tree_size = tree_fd.tell()
 
-                    # update blocks
-                    self._blocks.update(new_tree_size, pad_blocks, include_block_index)
-                    end_of_file = self._fd.tell()
+                # update blocks
+                self._blocks.update(new_tree_size, pad_blocks, include_block_index)
+                end_of_file = self._fd.tell()
 
-                # now write the tree
-                self._fd.seek(0)
-                tree_fd.seek(0)
-                self._fd.write(tree_fd.read())
-                self._fd.flush()
+            # now write the tree
+            self._fd.seek(0)
+            tree_fd.seek(0)
+            self._fd.write(tree_fd.read())
+            self._fd.flush()
 
-                # close memmap to trigger arrays to reload themselves
-                self._fd.seek(end_of_file)
-                self._fd.truncate()
-                if self._fd.can_memmap():
-                    self._fd.close_memmap()
-
-            finally:
-                self._post_write(fd)
+            # close memmap to trigger arrays to reload themselves
+            self._fd.seek(end_of_file)
+            self._fd.truncate()
+            if self._fd.can_memmap():
+                self._fd.close_memmap()
 
     def write_to(
         self,
