@@ -36,7 +36,7 @@ class Validate(Command):
 
     @classmethod
     def run(cls, args):
-        validate(args.filename, args.custom_schema, args.skip_checksums)
+        validate(args.filename, args.custom_schema, args.skip_block_validation)
 
 
 def validate(filename, custom_schema, skip_checksums):
