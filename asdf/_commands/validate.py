@@ -20,9 +20,9 @@ class Validate(Command):
 
         parser.add_argument("filename", help="path to ASDF file")
         parser.add_argument(
-            "--custom_schema",
+            "--custom-schema",
             type=str,
-            help="URI or filename for custom schema to use during validation.",
+            help="path or URI of custom schema",
         )
         parser.add_argument(
             "--skip_checksums",
