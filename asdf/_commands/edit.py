@@ -15,7 +15,7 @@ import tempfile
 
 import yaml
 
-from asdf import constants, generic_io, schema, util
+from asdf import _io, constants, generic_io, schema, util
 from asdf._asdf import AsdfFile
 from asdf._block import io as bio
 from asdf._block.exceptions import BlockIndexError
@@ -337,8 +337,8 @@ def parse_asdf_version(content):
     asdf.versioning.AsdfVersion
         ASDF Standard version
     """
-    comments = AsdfFile._read_comment_section(generic_io.get_file(io.BytesIO(content)))
-    return AsdfFile._find_asdf_version_in_comments(comments)
+    comments = _io.read_comment_section(generic_io.get_file(io.BytesIO(content)))
+    return _io.find_asdf_version_in_comments(comments)
 
 
 def parse_yaml_version(content):

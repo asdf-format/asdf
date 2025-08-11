@@ -11,9 +11,9 @@ from packaging.version import Version
 
 from . import _compression as mcompression
 from . import _display as display
+from . import _io, constants, generic_io, lazy_nodes, reference, schema, treeutil, util, versioning, yamlutil
 from . import _node_info as node_info
 from . import _version as version
-from . import constants, generic_io, lazy_nodes, reference, schema, treeutil, util, versioning, yamlutil
 from ._block.manager import Manager as BlockManager
 from ._helpers import validate_version
 from .config import config_context, get_config
@@ -731,67 +731,6 @@ class AsdfFile:
         """
         return self._blocks._get_array_save_base(arr)
 
-    @classmethod
-    def _parse_header_line(cls, line):
-        """
-        Parses the header line in a ASDF file to obtain the ASDF version.
-        """
-        parts = line.split()
-        if len(parts) != 2 or parts[0] != constants.ASDF_MAGIC:
-            msg = "Does not appear to be a ASDF file."
-            raise ValueError(msg)
-
-        try:
-            version = versioning.AsdfVersion(parts[1].decode("ascii"))
-        except ValueError as err:
-            msg = f"Unparsable version in ASDF file: {parts[1]}"
-            raise ValueError(msg) from err
-
-        if version != versioning._FILE_FORMAT_VERSION:
-            msg = f"Unsupported ASDF file format version {version}"
-            raise ValueError(msg)
-
-        return version
-
-    @classmethod
-    def _read_comment_section(cls, fd):
-        """
-        Reads the comment section, between the header line and the
-        Tree or first block.
-        """
-        content = fd.read_until(
-            b"(%YAML)|(" + constants.BLOCK_MAGIC + b")",
-            5,
-            "start of content",
-            include=False,
-            exception=False,
-        )
-
-        comments = []
-
-        lines = content.splitlines()
-        for line in lines:
-            if not line.startswith(b"#"):
-                msg = "Invalid content between header and tree"
-                raise ValueError(msg)
-            comments.append(line[1:].strip())
-
-        return comments
-
-    @classmethod
-    def _find_asdf_version_in_comments(cls, comments):
-        for comment in comments:
-            parts = comment.split()
-            if len(parts) == 2 and parts[0] == constants.ASDF_STANDARD_COMMENT:
-                try:
-                    version = versioning.AsdfVersion(parts[1].decode("ascii"))
-                except ValueError:
-                    pass
-                else:
-                    return version
-
-        return None
-
     def _write_tree(self, tree, fd, pad_blocks):
         fd.write(constants.ASDF_MAGIC)
         fd.write(b" ")
@@ -1491,11 +1430,11 @@ def open_asdf(
                 msg = "Does not appear to be a ASDF file."
                 raise ValueError(msg) from e
 
-            instance._file_format_version = AsdfFile._parse_header_line(header_line)
+            instance._file_format_version = _io.parse_header_line(header_line)
 
-            instance._comments = AsdfFile._read_comment_section(generic_file)
+            instance._comments = _io.read_comment_section(generic_file)
 
-            version = AsdfFile._find_asdf_version_in_comments(instance._comments)
+            version = _io.find_asdf_version_in_comments(instance._comments)
             if version is not None:
                 instance.version = version
             else:
