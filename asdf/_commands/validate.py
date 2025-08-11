@@ -15,7 +15,10 @@ class Validate(Command):
         parser = subparsers.add_parser(
             "validate",
             help="Validates an ASDF file.",
-            description="validates \n - against all tagged schemas (and optionally a custom schema) \n - blocks with stored checksums (can be disabled)",
+            description=(
+                "Validates tree against all tagged schemas (and optionally a custom schema) "
+                "and blocks with stored checksums."
+            ),
         )
 
         parser.add_argument("filename", help="path to ASDF file")
@@ -39,14 +42,17 @@ class Validate(Command):
         validate(args.filename, args.custom_schema, args.skip_block_validation)
 
 
-def validate(filename, custom_schema, skip_checksums):
+def validate(filename, custom_schema, skip_block_validation):
     # if we are skipping checksums we can lazy load, otherwise don't
     with asdf.open(
-        filename, custom_schema=custom_schema, validate_checksums=not skip_checksums, lazy_load=skip_checksums
+        filename,
+        custom_schema=custom_schema,
+        validate_checksums=not skip_block_validation,
+        lazy_load=skip_block_validation,
     ) as af:  # noqa: F841
         msg = f"{filename} is valid"
         if custom_schema:
             msg += f", conforms to {custom_schema}"
-        if not skip_checksums:
-            msg += ", and block checksums match"
+        if not skip_block_validation:
+            msg += ", and block checksums match contents"
         print(msg)

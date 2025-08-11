@@ -72,7 +72,7 @@ def test_invalid(invalid_file_path):
 
 def test_custom_schema(valid_file_path, custom_schema_path):
     with pytest.raises(asdf.ValidationError):
-        main.main_from_args(["validate", str(valid_file_path), "--custom_schema", str(custom_schema_path)])
+        main.main_from_args(["validate", str(valid_file_path), "--custom-schema", str(custom_schema_path)])
 
 
 def test_block_checksum(bad_blocks_file_path):
@@ -80,5 +80,5 @@ def test_block_checksum(bad_blocks_file_path):
         main.main_from_args(["validate", str(bad_blocks_file_path)])
 
 
-def test_skip_checksums(bad_blocks_file_path):
-    assert main.main_from_args(["validate", str(bad_blocks_file_path), "--skip_checksums"]) == 0
+def test_skip_block_validation(bad_blocks_file_path):
+    assert main.main_from_args(["validate", str(bad_blocks_file_path), "--skip-block-validation"]) == 0
