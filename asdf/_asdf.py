@@ -13,7 +13,6 @@ from . import _compression as mcompression
 from . import _display as display
 from . import _io, constants, generic_io, lazy_nodes, reference, schema, treeutil, util, versioning, yamlutil
 from . import _node_info as node_info
-from . import _version as version
 from ._block.manager import Manager as BlockManager
 from ._helpers import validate_version
 from .config import config_context, get_config
@@ -28,21 +27,6 @@ from .extension import Extension, ExtensionProxy, _serialization_context, get_ca
 from .search import AsdfSearchResult
 from .tags.core import AsdfObject, ExtensionMetadata, HistoryEntry, Software
 from .util import NotSet
-
-
-def _get_asdf_library_info():
-    """
-    Get information about asdf to include in the asdf_library entry
-    in the Tree.
-    """
-    return Software(
-        {
-            "name": "asdf",
-            "version": version.version,
-            "homepage": "http://github.com/asdf-format/asdf",
-            "author": "The ASDF Developers",
-        },
-    )
 
 
 class AsdfFile:
@@ -794,7 +778,7 @@ class AsdfFile:
             try:
                 # prep a tree for a writing
                 tree = copy.copy(self._tree)
-                tree["asdf_library"] = _get_asdf_library_info()
+                tree["asdf_library"] = _io.get_asdf_library_info()
                 if "history" in self._tree:
                     tree["history"] = copy.deepcopy(self._tree["history"])
 
@@ -917,7 +901,7 @@ class AsdfFile:
 
             self._pre_write(fd)
             try:
-                self._tree["asdf_library"] = _get_asdf_library_info()
+                self._tree["asdf_library"] = _io.get_asdf_library_info()
 
                 # prepare block manager for writing
                 with self._blocks.write_context(self._fd, copy_options=False):

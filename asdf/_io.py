@@ -2,7 +2,23 @@
 Low-level input/output routines for AsdfFile instances
 """
 
-from . import constants, versioning
+from . import _version, constants, versioning
+from .tags.core import Software
+
+
+def get_asdf_library_info():
+    """
+    Get information about asdf to include in the asdf_library entry
+    in the Tree.
+    """
+    return Software(
+        {
+            "name": "asdf",
+            "version": _version.version,
+            "homepage": "http://github.com/asdf-format/asdf",
+            "author": "The ASDF Developers",
+        },
+    )
 
 
 def parse_header_line(line):
