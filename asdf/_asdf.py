@@ -1359,12 +1359,12 @@ def open_asdf(
     if lazy_tree is NotSet:
         lazy_tree = get_config().lazy_tree
 
-    # TODO pass in extensions?
     instance = AsdfFile(
         ignore_unrecognized_tag=ignore_unrecognized_tag,
         memmap=memmap,
         lazy_load=lazy_load,
         custom_schema=custom_schema,
+        extensions=extensions,
     )
 
     with _io.maybe_close(fd, mode, uri) as generic_file:
@@ -1381,10 +1381,6 @@ def open_asdf(
         instance._comments = comments
 
         instance.version = _io.find_asdf_version_in_comments(comments, versioning.AsdfVersion("1.0.0"))
-
-        # TODO pass in extensions above?
-        if extensions:
-            instance.extensions = extensions
 
         if tree is None:
             # TODO ugh
