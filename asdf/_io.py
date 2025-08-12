@@ -2,7 +2,13 @@
 Low-level input/output routines for AsdfFile instances
 """
 
-from . import _version, constants, versioning
+import contextlib
+import io
+import pathlib
+
+from . import _version, constants, generic_io, versioning, yamlutil
+from ._block.manager import Manager as BlockManager
+from .exceptions import DelimiterNotFoundError
 from .tags.core import Software
 
 
@@ -43,6 +49,16 @@ def parse_header_line(line):
     return version
 
 
+def read_header_line(gf):
+    try:
+        header_line = gf.read_until(b"\r?\n", 2, "newline", include=True)
+    except DelimiterNotFoundError as e:
+        msg = "Does not appear to be a ASDF file."
+        raise ValueError(msg) from e
+
+    return parse_header_line(header_line)
+
+
 def read_comment_section(fd):
     """
     Reads the comment section, between the header line and the
@@ -68,7 +84,7 @@ def read_comment_section(fd):
     return comments
 
 
-def find_asdf_version_in_comments(comments):
+def find_asdf_version_in_comments(comments, default=None):
     for comment in comments:
         parts = comment.split()
         if len(parts) == 2 and parts[0] == constants.ASDF_STANDARD_COMMENT:
@@ -79,4 +95,61 @@ def find_asdf_version_in_comments(comments):
             else:
                 return version
 
-    return None
+    return default
+
+
+@contextlib.contextmanager
+def maybe_close(fd, mode=None, uri=None):
+    if mode not in [None, "r", "rw"]:
+        msg = f"Unrecognized asdf mode '{mode}'. Must be either 'r' or 'rw'"
+        raise ValueError(msg)
+
+    if isinstance(fd, (str, pathlib.Path)):
+        mode = mode or "r"
+        generic_file = generic_io.get_file(fd, mode=mode, uri=uri)
+        try:
+            yield generic_file
+        except Exception as e:
+            generic_file.close()
+            raise e
+    elif isinstance(fd, generic_io.GenericFile):
+        yield fd
+    else:
+        if mode is None:
+            # infer from fd
+            if isinstance(fd, io.IOBase):
+                mode = "rw" if fd.writable() else "r"
+            else:
+                mode = "r"
+        yield generic_io.get_file(fd, mode=mode, uri=uri)
+
+
+def read_tree_and_blocks(gf, lazy_load, memmap, validate_checksums):
+    token = gf.read(4)
+    tree = None
+    blocks = BlockManager(uri=gf.uri, lazy_load=lazy_load, memmap=memmap, validate_checksums=validate_checksums)
+    if token == b"%YAM":
+        reader = gf.reader_until(
+            constants.YAML_END_MARKER_REGEX,
+            7,
+            "End of YAML marker",
+            include=True,
+            initial_content=token,
+        )
+        tree = yamlutil.load_tree(reader)
+        blocks.read(gf, after_magic=False)
+    elif token == constants.BLOCK_MAGIC:
+        blocks.read(gf, after_magic=True)
+    elif token != b"":
+        msg = "ASDF file appears to contain garbage after header."
+        raise OSError(msg)
+
+    return tree, blocks
+
+
+def open_asdf(fd, uri=None, mode=None, lazy_load=True, memmap=False, validate_checksums=False):
+    with maybe_close(fd, mode, uri) as generic_file:
+        file_format_version = read_header_line(generic_file)
+        comments = read_comment_section(generic_file)
+        tree, blocks = read_tree_and_blocks(generic_file, lazy_load, memmap, validate_checksums)
+        return file_format_version, comments, tree, blocks

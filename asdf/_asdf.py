@@ -2,7 +2,6 @@ import copy
 import datetime
 import io
 import os
-import pathlib
 import time
 import warnings
 import weakref
@@ -20,8 +19,6 @@ from .exceptions import (
     AsdfManifestURIMismatchWarning,
     AsdfPackageVersionWarning,
     AsdfWarning,
-    DelimiterNotFoundError,
-    ValidationError,
 )
 from .extension import Extension, ExtensionProxy, _serialization_context, get_cached_extension_manager
 from .search import AsdfSearchResult
@@ -1278,7 +1275,6 @@ def open_asdf(
     custom_schema=None,
     strict_extension_check=False,
     ignore_missing_extensions=False,
-    _get_yaml_content=False,
 ):
     """
     Open an existing ASDF file.
@@ -1356,19 +1352,14 @@ def open_asdf(
         The new AsdfFile object.
     """
 
-    if mode is not None and mode not in ["r", "rw"]:
-        msg = f"Unrecognized asdf mode '{mode}'. Must be either 'r' or 'rw'"
+    if strict_extension_check and ignore_missing_extensions:
+        msg = "'strict_extension_check' and 'ignore_missing_extensions' are incompatible options"
         raise ValueError(msg)
 
-    if mode is None:
-        if isinstance(fd, io.IOBase):
-            mode = "rw" if fd.writable() else "r"
-        elif isinstance(fd, generic_io.GenericFile):
-            mode = fd.mode
-        else:
-            # This is the safest assumption for the default fallback
-            mode = "r"
+    if lazy_tree is NotSet:
+        lazy_tree = get_config().lazy_tree
 
+    # TODO pass in extensions?
     instance = AsdfFile(
         ignore_unrecognized_tag=ignore_unrecognized_tag,
         memmap=memmap,
@@ -1376,109 +1367,53 @@ def open_asdf(
         custom_schema=custom_schema,
     )
 
-    close_on_fail = isinstance(fd, (str, pathlib.Path))
-    generic_file = generic_io.get_file(fd, mode=mode, uri=uri)
-    try:
-        if strict_extension_check and ignore_missing_extensions:
-            msg = "'strict_extension_check' and 'ignore_missing_extensions' are incompatible options"
-            raise ValueError(msg)
+    with _io.maybe_close(fd, mode, uri) as generic_file:
+        file_format_version, comments, tree, blocks = _io.open_asdf(
+            generic_file, uri, mode, lazy_load, memmap, validate_checksums
+        )
 
-        with config_context() as cfg:
-            # validate_checksums (unlike memmap and lazy_load) is provided
-            # here instead of in __init__
-            instance._blocks._validate_checksums = validate_checksums
-            instance._mode = generic_file.mode
-            instance._fd = generic_file
-            if instance._fd._uri:
-                instance._blocks._uri = instance._fd._uri
-            # The filename is currently only used for tracing warning information
-            instance._fname = instance._fd._uri if instance._fd._uri else ""
-            try:
-                header_line = generic_file.read_until(b"\r?\n", 2, "newline", include=True)
-            except DelimiterNotFoundError as e:
-                msg = "Does not appear to be a ASDF file."
-                raise ValueError(msg) from e
+        instance._blocks = blocks
 
-            instance._file_format_version = _io.parse_header_line(header_line)
+        instance._mode = generic_file.mode
+        instance._fd = generic_file
+        instance._fname = instance._fd._uri if instance._fd._uri else ""
+        instance._file_format_version = file_format_version
+        instance._comments = comments
 
-            instance._comments = _io.read_comment_section(generic_file)
+        instance.version = _io.find_asdf_version_in_comments(comments, versioning.AsdfVersion("1.0.0"))
 
-            version = _io.find_asdf_version_in_comments(instance._comments)
-            if version is not None:
-                instance.version = version
-            else:
-                # If no ASDF_STANDARD comment is found...
-                instance.version = versioning.AsdfVersion("1.0.0")
+        # TODO pass in extensions above?
+        if extensions:
+            instance.extensions = extensions
 
-            # Now that version is set for good, we can add any additional
-            # extensions, which may have narrow ASDF Standard version
-            # requirements.
-            if extensions:
-                instance.extensions = extensions
+        if tree is None:
+            # TODO ugh
+            # At this point the tree should be tagged, but we want it to be
+            # tagged with the core/asdf version appropriate to this file's
+            # ASDF Standard version.  We're using custom_tree_to_tagged_tree
+            # to select the correct tag for us.
+            tree = yamlutil.custom_tree_to_tagged_tree(AsdfObject(), instance)
 
-            yaml_token = generic_file.read(4)
-            tree = None
-            if yaml_token == b"%YAM":
-                reader = generic_file.reader_until(
-                    constants.YAML_END_MARKER_REGEX,
-                    7,
-                    "End of YAML marker",
-                    include=True,
-                    initial_content=yaml_token,
-                )
+        # possibly fill defaults
+        if instance.version <= versioning.FILL_DEFAULTS_MAX_VERSION and get_config().legacy_fill_schema_defaults:
+            schema.fill_defaults(tree, instance, reading=True)
 
-                # For testing: just return the raw YAML content
-                if _get_yaml_content:
-                    yaml_content = reader.read()
-                    generic_file.close()
-                    return yaml_content
+        # validate
+        if get_config().validate_on_read:
+            instance._validate(tree, reading=True)
 
-                # We parse the YAML content into basic data structures
-                # now, but we don't do anything special with it until
-                # after the blocks have been read
-                tree = yamlutil.load_tree(reader)
-                instance._blocks.read(generic_file)
-            elif yaml_token == constants.BLOCK_MAGIC:
-                # this file has only blocks and we're already read the first block magic
-                instance._blocks.read(generic_file, after_magic=True)
-            elif yaml_token != b"":
-                msg = "ASDF file appears to contain garbage after header."
-                raise OSError(msg)
+        # lazy tree?
+        if lazy_tree and not _force_raw_types:
+            obj = AsdfObject()
+            obj.data = lazy_nodes.AsdfDictNode(tree, weakref.ref(instance))
+            tree = obj
+        else:
+            tree = yamlutil.tagged_tree_to_custom_tree(tree, instance, _force_raw_types)
 
-            if tree is None:
-                # At this point the tree should be tagged, but we want it to be
-                # tagged with the core/asdf version appropriate to this file's
-                # ASDF Standard version.  We're using custom_tree_to_tagged_tree
-                # to select the correct tag for us.
-                tree = yamlutil.custom_tree_to_tagged_tree(AsdfObject(), instance)
+        # check extensions
+        if not (ignore_missing_extensions or _force_raw_types):
+            instance._check_extensions(tree, strict=strict_extension_check)
 
-            if instance.version <= versioning.FILL_DEFAULTS_MAX_VERSION and get_config().legacy_fill_schema_defaults:
-                schema.fill_defaults(tree, instance, reading=True)
+        instance._tree = tree
 
-            if get_config().validate_on_read:
-                try:
-                    instance._validate(tree, reading=True)
-                except ValidationError:
-                    instance.close()
-                    raise
-
-            if lazy_tree is NotSet:
-                lazy_tree = cfg.lazy_tree
-            if lazy_tree and not _force_raw_types:
-                obj = AsdfObject()
-                obj.data = lazy_nodes.AsdfDictNode(tree, weakref.ref(instance))
-                tree = obj
-            else:
-                tree = yamlutil.tagged_tree_to_custom_tree(tree, instance, _force_raw_types)
-
-            if not (ignore_missing_extensions or _force_raw_types):
-                instance._check_extensions(tree, strict=strict_extension_check)
-
-            instance._tree = tree
-
-            return instance
-
-    except Exception:
-        if close_on_fail:
-            generic_file.close()
-        raise
+    return instance

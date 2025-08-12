@@ -330,6 +330,7 @@ def tagged_tree_to_custom_tree(tree, ctx, force_raw_types=False, _serialization_
     Convert a tree containing only basic data types, annotated with
     tags, to a tree containing custom data types.
     """
+    # TODO deprecate force_raw_types
     if _serialization_context is None:
         _serialization_context = ctx._create_serialization_context(BlockAccess.READ)
 
