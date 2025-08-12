@@ -1373,7 +1373,6 @@ def open_asdf(
         )
 
         instance._blocks = blocks
-
         instance._mode = generic_file.mode
         instance._fd = generic_file
         instance._fname = instance._fd._uri if instance._fd._uri else ""
@@ -1383,7 +1382,6 @@ def open_asdf(
         instance.version = _io.find_asdf_version_in_comments(comments, versioning.AsdfVersion("1.0.0"))
 
         if tree is None:
-            # TODO ugh
             # At this point the tree should be tagged, but we want it to be
             # tagged with the core/asdf version appropriate to this file's
             # ASDF Standard version.  We're using custom_tree_to_tagged_tree
