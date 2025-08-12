@@ -1,4 +1,3 @@
-import io
 import os
 import pathlib
 from dataclasses import dataclass
@@ -199,43 +198,26 @@ class AsdfSchemaExampleItem(pytest.Item):
         return result
 
     def runtest(self):
-        from asdf import AsdfFile, _block, generic_io
+        import asdf
+        from asdf import _block, generic_io
         from asdf.testing import helpers
 
         # Make sure that the examples in the schema files (and thus the
         # ASDF standard document) are valid.
         buff = helpers.yaml_to_asdf("example: " + self.example.example.strip(), version=self.example.version)
 
-        ff = AsdfFile(
-            uri=pathlib.Path(self.filename).expanduser().absolute().as_uri(),
-            ignore_unrecognized_tag=self.ignore_unrecognized_tag,
-        )
-
-        # Fake an external file
-        ff2 = AsdfFile({"data": np.empty((1024 * 1024 * 8), dtype=np.uint8)})
-
-        ff._external_asdf_by_uri[
-            (pathlib.Path(self.filename).expanduser().absolute().parent / "external.asdf").as_uri()
-        ] = ff2
-
+        # add a few blocks
+        # make a block and write it out to the above generated buffer/example
         wb = _block.writer.WriteBlock(np.zeros(1024 * 1024 * 8, dtype=np.uint8))
         with generic_io.get_file(buff, mode="rw") as f:
             f.seek(0, 2)
             _block.writer.write_blocks(f, [wb, wb], streamed_block=wb)
             f.seek(0)
 
-        try:
-            ff._open_impl(ff, buff, mode="rw")
-        except Exception:
-            print(f"Example: {self.example.description}\n From file: {self.filename}")
-            raise
+        af = asdf.loads(buff.getvalue())
 
-        # Just test we can write it out.  A roundtrip test
-        # wouldn't always yield the correct result, so those have
-        # to be covered by "real" unit tests.
         if b"external.asdf" not in buff.getvalue():
-            buff = io.BytesIO()
-            ff.write_to(buff)
+            asdf.dumps(af)
 
     def reportinfo(self):
         return self.fspath, 0, ""
