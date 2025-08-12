@@ -2,7 +2,6 @@ import os
 import pathlib
 from dataclasses import dataclass
 
-import numpy as np
 import pytest
 import yaml
 
@@ -199,25 +198,13 @@ class AsdfSchemaExampleItem(pytest.Item):
 
     def runtest(self):
         import asdf
-        from asdf import _block, generic_io
-        from asdf.testing import helpers
+        from asdf.testing.helpers import yaml_to_asdf
 
-        # Make sure that the examples in the schema files (and thus the
-        # ASDF standard document) are valid.
-        buff = helpers.yaml_to_asdf("example: " + self.example.example.strip(), version=self.example.version)
-
-        # add a few blocks
-        # make a block and write it out to the above generated buffer/example
-        wb = _block.writer.WriteBlock(np.zeros(1024 * 1024 * 8, dtype=np.uint8))
-        with generic_io.get_file(buff, mode="rw") as f:
-            f.seek(0, 2)
-            _block.writer.write_blocks(f, [wb, wb], streamed_block=wb)
-            f.seek(0)
-
-        af = asdf.loads(buff.getvalue())
-
-        if b"external.asdf" not in buff.getvalue():
-            asdf.dumps(af)
+        # check the example is valid
+        buff = yaml_to_asdf("example: " + self.example.example.strip(), version=self.example.version)
+        tagged_tree = asdf.util.load_yaml(buff, tagged=True)
+        instance = asdf.AsdfFile(version=self.example.version)
+        asdf.schema.validate(tagged_tree, instance, reading=True)
 
     def reportinfo(self):
         return self.fspath, 0, ""
