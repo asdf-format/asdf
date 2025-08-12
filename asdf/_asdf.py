@@ -85,8 +85,6 @@ class AsdfFile:
             files follow custom conventions beyond those enforced by the
             standard.
         """
-        self._fname = ""
-
         # make a new AsdfVersion instance here so files don't share the same instance
         self._file_format_version = versioning.AsdfVersion(versioning._FILE_FORMAT_VERSION)
 
@@ -251,7 +249,7 @@ class AsdfFile:
                     installed = ext
                     break
 
-            filename = f"'{self._fname}' " if self._fname else ""
+            filename = f"'{self._fd._uri}'" if (self._fd is not None and self._fd._uri) else ""
             if extension.extension_uri is not None:
                 extension_description = f"URI '{extension.extension_uri}'"
             else:
@@ -1375,7 +1373,6 @@ def open_asdf(
         instance._blocks = blocks
         instance._mode = generic_file.mode
         instance._fd = generic_file
-        instance._fname = instance._fd._uri if instance._fd._uri else ""
         instance._file_format_version = file_format_version
         instance._comments = comments
 

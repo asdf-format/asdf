@@ -302,8 +302,6 @@ def test_extension_version_check(installed, extension, warns):
             config.add_extension(proxy)
         af = asdf.AsdfFile()
 
-    af._fname = "test.asdf"
-
     tree = {
         "history": {
             "extensions": [
@@ -316,10 +314,10 @@ def test_extension_version_check(installed, extension, warns):
     }
 
     if warns:
-        with pytest.warns(AsdfPackageVersionWarning, match=r"File 'test.asdf' was created with"):
+        with pytest.warns(AsdfPackageVersionWarning, match=r"File was created with"):
             af._check_extensions(tree)
 
-        with pytest.raises(RuntimeError, match=r"^File 'test.asdf' was created with"):
+        with pytest.raises(RuntimeError, match=r"^File was created with"):
             af._check_extensions(tree, strict=True)
 
     else:
@@ -351,8 +349,6 @@ def test_check_extension_manifest_software(installed, extension, warns):
             config.add_resource_mapping(mapping)
         af = asdf.AsdfFile()
 
-        af._fname = "test.asdf"
-
         tree = {
             "history": {
                 "extensions": [
@@ -366,10 +362,10 @@ def test_check_extension_manifest_software(installed, extension, warns):
         }
 
         if warns:
-            with pytest.warns(AsdfPackageVersionWarning, match=r"File 'test.asdf' was created with"):
+            with pytest.warns(AsdfPackageVersionWarning, match=r"File was created with"):
                 af._check_extensions(tree)
 
-            with pytest.raises(RuntimeError, match=r"^File 'test.asdf' was created with"):
+            with pytest.raises(RuntimeError, match=r"^File was created with"):
                 af._check_extensions(tree, strict=True)
 
         else:
