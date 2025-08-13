@@ -107,6 +107,8 @@ class AsdfSchemaFile(pytest.File):
 
         for node in treeutil.iter_tree(schema_tree):
             if isinstance(node, dict) and "examples" in node and isinstance(node["examples"], list):
+                if node is not schema_tree:
+                    raise Exception("!")
                 yield from node["examples"]
 
 
