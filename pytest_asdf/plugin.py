@@ -1,14 +1,20 @@
+import importlib
+import io
 import os
 import pathlib
+import warnings
 from dataclasses import dataclass
 
 import pytest
 import yaml
 
 # Avoid all imports of asdf at this level in order to avoid circular imports
+HAS_NEW_PLUGIN = importlib.util.find_spec("pytest_asdf_plugin") is not None
 
 
 def pytest_addoption(parser):
+    if HAS_NEW_PLUGIN:
+        return
     parser.addini("asdf_schema_root", "Root path indicating where schemas are stored")
     parser.addini("asdf_schema_skip_names", "Base names of files to skip in schema tests")
     parser.addini(
@@ -200,6 +206,9 @@ class AsdfSchemaExampleItem(pytest.Item):
         import asdf
         from asdf.testing.helpers import yaml_to_asdf
 
+        # warn inside test
+        warnings.warn("pytest_asdf is deprecated, install pytest_asdf_plugin instead", DeprecationWarning)
+
         # check the example is valid
         buff = yaml_to_asdf("example: " + self.example.example.strip(), version=self.example.version)
         tagged_tree = asdf.util.load_yaml(buff, tagged=True)
@@ -233,6 +242,8 @@ def _parse_test_list(content):
 
 
 def pytest_collect_file(file_path, parent):
+    if HAS_NEW_PLUGIN:
+        return None
     if not (parent.config.getini("asdf_schema_tests_enabled") or parent.config.getoption("asdf_tests")):
         return None
 
