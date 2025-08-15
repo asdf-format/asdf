@@ -1,9 +1,7 @@
-import io
 import os
 import pathlib
 from dataclasses import dataclass
 
-import numpy as np
 import pytest
 import yaml
 
@@ -199,43 +197,14 @@ class AsdfSchemaExampleItem(pytest.Item):
         return result
 
     def runtest(self):
-        from asdf import AsdfFile, _block, generic_io
-        from asdf.testing import helpers
+        import asdf
+        from asdf.testing.helpers import yaml_to_asdf
 
-        # Make sure that the examples in the schema files (and thus the
-        # ASDF standard document) are valid.
-        buff = helpers.yaml_to_asdf("example: " + self.example.example.strip(), version=self.example.version)
-
-        ff = AsdfFile(
-            uri=pathlib.Path(self.filename).expanduser().absolute().as_uri(),
-            ignore_unrecognized_tag=self.ignore_unrecognized_tag,
-        )
-
-        # Fake an external file
-        ff2 = AsdfFile({"data": np.empty((1024 * 1024 * 8), dtype=np.uint8)})
-
-        ff._external_asdf_by_uri[
-            (pathlib.Path(self.filename).expanduser().absolute().parent / "external.asdf").as_uri()
-        ] = ff2
-
-        wb = _block.writer.WriteBlock(np.zeros(1024 * 1024 * 8, dtype=np.uint8))
-        with generic_io.get_file(buff, mode="rw") as f:
-            f.seek(0, 2)
-            _block.writer.write_blocks(f, [wb, wb], streamed_block=wb)
-            f.seek(0)
-
-        try:
-            ff._open_impl(ff, buff, mode="rw")
-        except Exception:
-            print(f"Example: {self.example.description}\n From file: {self.filename}")
-            raise
-
-        # Just test we can write it out.  A roundtrip test
-        # wouldn't always yield the correct result, so those have
-        # to be covered by "real" unit tests.
-        if b"external.asdf" not in buff.getvalue():
-            buff = io.BytesIO()
-            ff.write_to(buff)
+        # check the example is valid
+        buff = yaml_to_asdf("example: " + self.example.example.strip(), version=self.example.version)
+        tagged_tree = asdf.util.load_yaml(buff, tagged=True)
+        instance = asdf.AsdfFile(version=self.example.version)
+        asdf.schema.validate(tagged_tree, instance, reading=True)
 
     def reportinfo(self):
         return self.fspath, 0, ""

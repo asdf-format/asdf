@@ -1,0 +1,1 @@
+Fix pytest-asdf example testing to validate example without requiring round tripping.
