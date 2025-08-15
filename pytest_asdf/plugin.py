@@ -1,8 +1,6 @@
 import importlib
-import io
 import os
 import pathlib
-import warnings
 from dataclasses import dataclass
 
 import pytest
@@ -206,8 +204,8 @@ class AsdfSchemaExampleItem(pytest.Item):
         import asdf
         from asdf.testing.helpers import yaml_to_asdf
 
-        # warn inside test
-        warnings.warn("pytest_asdf is deprecated, install pytest_asdf_plugin instead", DeprecationWarning)
+        # warn inside test, we don't do this yet to allow time for downstream packages to adopt pytest-asdf-plugin
+        # warnings.warn("pytest_asdf is deprecated, install pytest_asdf_plugin instead", DeprecationWarning)
 
         # check the example is valid
         buff = yaml_to_asdf("example: " + self.example.example.strip(), version=self.example.version)
