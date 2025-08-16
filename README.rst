@@ -40,8 +40,8 @@ ASDF - Advanced Scientific Data Format
 
 The **A**\ dvanced **S**\ cientific **D**\ ata **F**\ ormat (ASDF) is a
 next-generation interchange format for scientific data. This package
-contains the Python implementation of the ASDF Standard. More
-information on the ASDF Standard itself can be found
+contains the Python implementation of the ASDF specification. More
+information on the ASDF file format including the specification can be found
 `here <https://asdf-standard.readthedocs.io>`__.
 
 The ASDF format has the following features:
@@ -355,7 +355,7 @@ Documentation
 More detailed documentation on this software package can be found
 `here <https://asdf.readthedocs.io>`__.
 
-More information on the ASDF Standard itself can be found
+More information on the ASDF file format itself can be found
 `here <https://asdf-standard.readthedocs.io>`__.
 
 There are two mailing lists for ASDF:

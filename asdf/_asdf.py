@@ -60,7 +60,7 @@ class AsdfFile:
             May be an `asdf.extension.Extension` or a `list` of extensions.
 
         version : str, optional
-            The ASDF Standard version.  If not provided, defaults to the
+            The ASDF core schemas version.  If not provided, defaults to the
             configured default version.  See `asdf.config.AsdfConfig.default_version`.
 
         ignore_unrecognized_tag : bool, optional
@@ -83,7 +83,7 @@ class AsdfFile:
             Path to a custom schema file that will be used for a secondary
             validation pass. This can be used to ensure that particular ASDF
             files follow custom conventions beyond those enforced by the
-            standard.
+            specification.
         """
         # make a new AsdfVersion instance here so files don't share the same instance
         self._file_format_version = versioning.AsdfVersion(versioning._FILE_FORMAT_VERSION)
@@ -144,7 +144,7 @@ class AsdfFile:
     @property
     def version(self):
         """
-        Get this AsdfFile's ASDF Standard version.
+        Get this AsdfFile's ASDF core schemas version.
 
         Returns
         -------
@@ -155,7 +155,7 @@ class AsdfFile:
     @version.setter
     def version(self, value):
         """
-        Set this AsdfFile's ASDF Standard version.
+        Set this AsdfFile's ASDF core schemas version.
 
         Parameters
         ----------
@@ -171,7 +171,7 @@ class AsdfFile:
     @property
     def version_string(self):
         """
-        Get this AsdfFile's ASDF Standard version as a string.
+        Get this AsdfFile's ASDF core schemas version as a string.
 
         Returns
         -------
@@ -314,7 +314,7 @@ class AsdfFile:
     def _process_plugin_extensions(self):
         """
         Select installed extensions that are compatible with this
-        file's ASDF Standard version.
+        file's ASDF core schemas version.
 
         Returns
         -------
@@ -830,7 +830,7 @@ class AsdfFile:
             if the file has a streamed block.
 
         version : str, optional
-            Update the ASDF Standard version of this AsdfFile before
+            Update the ASDF core schemas version of this AsdfFile before
             writing.
         """
 
@@ -978,7 +978,7 @@ class AsdfFile:
             if the file has a streamed block.
 
         version : str, optional
-            Update the ASDF Standard version of this AsdfFile before
+            Update the ASDF core schemas version of this AsdfFile before
             writing.
         """
         with config_context() as config:
@@ -1330,7 +1330,7 @@ def open_asdf(
         Path to a custom schema file that will be used for a secondary
         validation pass. This can be used to ensure that particular ASDF
         files follow custom conventions beyond those enforced by the
-        standard.
+        specification.
 
     strict_extension_check : bool, optional
         When `True`, if the given ASDF file contains metadata about the
