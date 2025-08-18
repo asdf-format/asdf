@@ -1,1 +1,0 @@
-Fix asdftool diff failures for recursive structures and int keys.
