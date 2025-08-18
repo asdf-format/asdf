@@ -1,3 +1,31 @@
+4.4.0 (2025-08-18)
+==================
+
+Bugfix
+------
+
+- Fix asdftool diff failures for recursive structures and int keys. (`#1939
+  <https://github.com/asdf-format/asdf/pull/1939>`_)
+- Fix pytest-asdf example testing to validate example without requiring round
+  tripping. (`#1955 <https://github.com/asdf-format/asdf/pull/1955>`_)
+
+
+Feature
+-------
+
+- Add asdftool search command. (`#1939
+  <https://github.com/asdf-format/asdf/pull/1939>`_)
+- Add ``asdftool validate`` to validate ASDF files. (`#1952
+  <https://github.com/asdf-format/asdf/pull/1952>`_)
+
+
+Removal
+-------
+
+- Deprecate asdftool defragment. Use implode instead. (`#1939
+  <https://github.com/asdf-format/asdf/pull/1939>`_)
+
+
 4.3.0 (2025-07-16)
 ==================
 

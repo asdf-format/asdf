@@ -1,1 +1,0 @@
-Deprecate asdftool defragment. Use implode instead.
