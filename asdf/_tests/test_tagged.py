@@ -3,7 +3,7 @@ from copy import copy, deepcopy
 import pytest
 
 import asdf
-from asdf.tagged import TaggedDict, TaggedList, TaggedString
+from asdf.tagged import Tagged, TaggedDict, TaggedList, TaggedString, get_tag
 
 
 def test_tagged_list_deepcopy():
@@ -180,3 +180,44 @@ def test_check_invalid_str_enum():
 
         with pytest.raises(asdf.ValidationError, match=r"'foo' is not one of \['m', 'kg'\]"):
             asdf.schema.validate({"unit": unit}, schema=schema)
+
+
+def _make_tagged_string(contents, tag):
+    obj = TaggedString(contents)
+    obj._tag = tag
+    return obj
+
+
+def _make_custom_tagged(tag):
+    class CustomTagged(Tagged):
+        pass
+
+    obj = CustomTagged()
+    obj._tag = tag
+    return obj
+
+
+def _make_custom_non_tagged(tag):
+    class CustomNonTagged:
+        pass
+
+    obj = CustomNonTagged()
+    obj._tag = tag
+    return obj
+
+
+@pytest.mark.parametrize(
+    "obj, expected",
+    (
+        (TaggedList([0, 1, 2], "tag:nowhere.org:custom/foo-1.0.0"), "tag:nowhere.org:custom/foo-1.0.0"),
+        (TaggedDict({"a": 1}, "tag:nowhere.org:custom/foo-1.0.0"), "tag:nowhere.org:custom/foo-1.0.0"),
+        (_make_tagged_string("a", "tag:nowhere.org:custom/foo-1.0.0"), "tag:nowhere.org:custom/foo-1.0.0"),
+        (_make_custom_tagged("tag:nowhere.org:custom/foo-1.0.0"), "tag:nowhere.org:custom/foo-1.0.0"),
+        (_make_custom_non_tagged("tag:nowhere.org:custom/foo-1.0.0"), None),
+    ),
+)
+def test_get_tag(obj, expected):
+    """
+    Test that get_tag returns the tag only for Tagged objects
+    """
+    assert get_tag(obj) == expected
