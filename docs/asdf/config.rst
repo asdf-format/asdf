@@ -185,11 +185,11 @@ Defaults to ``False``.
 default_version
 ---------------
 
-The default ASDF Standard version used for new files.  This can be overridden
+The default ASDF core schemas version used for new files.  This can be overridden
 on an individual file basis (using the version argument to `asdf.AsdfFile`)
 or set here to change the default for all new files created in the current session.
 
-Defaults to the latest stable ASDF Standard version.
+Defaults to the latest stable ASDF core schemas version.
 
 io_block_size
 -------------
@@ -204,13 +204,13 @@ legacy_fill_schema_defaults
 ---------------------------
 
 Flag that controls filling default values from schemas for older versions of
-the ASDF Standard.  This library used to remove nodes from the tree whose
+ASDF.  This library used to remove nodes from the tree whose
 values matched the default property in the schema.  That behavior was changed
 in `asdf` 2.8, but in order to read files produced by older versions of the library,
-default values must still be filled from the schema for ASDF Standard <= 1.5.0.
+default values must still be filled from the schema for ASDF core schemas <= 1.5.0.
 
 Set to False to disable filling default values from the schema for these
-older ASDF Standard versions.  The flag has no effect for ASDF Standard >= 1.6.0.
+older ASDF core schema versions.  The flag has no effect for ASDF core schemas >= 1.6.0.
 
 Defaults to True.
 

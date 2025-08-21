@@ -180,7 +180,7 @@ ASDF Standard version requirement
 ---------------------------------
 
 Some extensions may only work with specific version(s) of the ASDF
-Standard -- for example, the schema associated with one of an extension's
+core schemas -- for example, the schema associated with one of an extension's
 tags may reference specific versions of ASDF core tags.  This requirement
 can be expressed as a PEP 440 version specifier in an Extension's
 ``asdf_standard_requirement`` property:
@@ -194,7 +194,7 @@ can be expressed as a PEP 440 version specifier in an Extension's
         extension_uri = "asdf://example.com/example-project/extensions/foo-1.0.0"
         asdf_standard_requirement = ">= 1.2.0, < 1.5.0"
 
-Now the extension will only be used with ASDF Standard 1.3.0 and 1.4.0 files.
+Now the extension will only be used with ASDF core schemas 1.3.0 and 1.4.0 files.
 
 Legacy class names
 ------------------

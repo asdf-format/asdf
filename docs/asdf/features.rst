@@ -23,7 +23,7 @@ and reading trees, see :ref:`overview`.
 
 .. note::
 
-   The ASDF Standard imposes a maximum size of 64-bit signed integers literals in
+   The ASDF specification imposes a maximum size of 64-bit signed integers literals in
    the tree (see :ref:`asdf-standard:literal_integers` for details and justification).
    Attempting to store a larger value as a YAML literal will result in a validation
    error.
@@ -35,7 +35,7 @@ and reading trees, see :ref:`overview`.
 
 .. note::
 
-   The ASDF standard does not have an immutable sequence type that maps directly
+   The ASDF specification does not have an immutable sequence type that maps directly
    to Python's :class:`tuple`. Following the behavior of
    pyyaml, asdf writes tuples as YAML sequences, which when loaded
    are converted to lists. If round-tripping of tuples is important
@@ -101,7 +101,7 @@ Schema validation
 =================
 
 Schema validation is used to determine whether an ASDF file is well formed. All
-ASDF files must conform to the schemas defined by the :ref:`ASDF Standard
+ASDF files must conform to the schemas defined by the :ref:`ASDF specification
 <asdf-standard:asdf-standard>`. Schema validation can be run using `AsdfFile.validate`
 and occurs when reading ASDF files (using `asdf.open`) and writing them out
 (using `AsdfFile.write_to` or `AsdfFile.update`).
@@ -119,7 +119,7 @@ extension.
 Custom schemas
 --------------
 
-Every ASDF file is validated against the ASDF Standard, and also against any
+Every ASDF file is validated against the ASDF core schemas, and also against any
 schemas provided by custom extensions. However, it is sometimes useful for
 particular applications to impose additional restrictions when deciding whether
 a given file is valid or not.
@@ -201,12 +201,12 @@ Versioning and Compatibility
 There are several different versions to keep in mind when discussing ASDF:
 
 * The software package version
-* The ASDF Standard version
+* The ASDF core schemas version
 * The ASDF file format version
 * Individual tag, schema, and extension versions
 
 Each ASDF file contains information about the various versions that were used
-to create the file. The most important of these are the ASDF Standard version
+to create the file. The most important of these are the ASDF core schemas version
 and the ASDF file format version. A particular version of the ASDF software
 package will explicitly provide support for specific combinations of these
 versions.
@@ -216,19 +216,19 @@ deserializing data types that are stored in ASDF files. A detailed discussion
 of these versions from a user perspective can be found in :ref:`custom_type_versions`.
 
 Since ASDF is designed to serve as an archival format, this library is careful
-to maintain backwards compatibility with older versions of the ASDF Standard, ASDF
+to maintain backwards compatibility with older versions of the ASDF core schemas, ASDF
 file format, and core tags.  However, since deserializing custom tags
 requires other software packages, backwards compatibility is often
 contingent on the available versions of such software packages.
 
-In general, forward compatibility with newer versions of the ASDF Standard and
+In general, forward compatibility with newer versions of the ASDF core schemas and
 ASDF file format is not supported by the software.
 
 When creating new ASDF files, it is possible to control the version of the ASDF
-standard that is used. This can be specified by passing the ``version`` argument to
+core schemas that is used. This can be specified by passing the ``version`` argument to
 either the `AsdfFile` constructor when the file object is created, or to the
 `AsdfFile.write_to` method when it is written. By default, the latest stable
-version of the ASDF standard will be used.
+version of the ASDF core schemas will be used.
 
 .. warning::
    Take care when providing ``version`` to `AsdfFile.write_to` to select a version

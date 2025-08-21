@@ -224,7 +224,7 @@ class AsdfConfig:
     @property
     def default_version(self):
         """
-        Get the default ASDF Standard version used for
+        Get the default ASDF core schemas version used for
         new files.
 
         Returns
@@ -236,7 +236,7 @@ class AsdfConfig:
     @default_version.setter
     def default_version(self, value):
         """
-        Set the default ASDF Standard version used for
+        Set the default ASDF core schemas version used for
         new files.
 
         Parameters
@@ -277,10 +277,10 @@ class AsdfConfig:
     def legacy_fill_schema_defaults(self):
         """
         Get the configuration that controls filling defaults
-        from schemas for older ASDF Standard versions.  If
+        from schemas for older ASDF core schemas versions.  If
         `True`, missing default values will be filled from the
-        schema when reading files from ASDF Standard <= 1.5.0.
-        Later versions of the standard do not support removing
+        schema when reading files from ASDF core schemas <= 1.5.0.
+        Later versions of the core schemas do not support removing
         or filling schema defaults.
 
         Returns
@@ -293,7 +293,7 @@ class AsdfConfig:
     def legacy_fill_schema_defaults(self, value):
         """
         Set the flag that controls filling defaults from
-        schemas for older ASDF Standard versions.
+        schemas for older ASDF core schemas versions.
 
         Parameters
         ----------

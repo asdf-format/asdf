@@ -166,7 +166,7 @@ In certain scenarios, you may want to stream data to disk, rather than
 writing an entire array of data at once.  For example, it may not be
 possible to fit the entire array in memory, or you may want to save
 data from a device as it comes in to prevent data loss.  The ASDF
-Standard allows exactly one streaming block per file where the size of
+specification allows exactly one streaming block per file where the size of
 the block isn't included in the block header, but instead is
 implicitly determined to include all of the remaining contents of the
 file.  By definition, it must be the last block in the file.
