@@ -6,7 +6,7 @@ import asdf
 
 from .main import Command
 
-__all__ = ["info"]
+__all__ = []
 
 
 class Info(Command):
@@ -29,6 +29,9 @@ class Info(Command):
         parser.add_argument(
             "--max-cols", type=int, help="Maximum length of line. If not provided lines will have no length limit."
         )
+        parser.add_argument(
+            "--hide-blocks", action="store_true", default=False, help="Skip printing information about the ASDF blocks"
+        )
 
         parser.add_argument(
             "--show-values",
@@ -45,9 +48,8 @@ class Info(Command):
 
     @classmethod
     def run(cls, args):
-        info(args.filename, args.max_rows, args.max_cols, args.show_values)
+        info(args.filename, args.max_rows, args.max_cols, args.show_values, args.hide_blocks)
 
 
-def info(filename, max_rows, max_cols, show_values):
-    with asdf.open(filename) as af:
-        af.info(max_rows, max_cols, show_values)
+def info(filename, max_rows, max_cols, show_values, hide_blocks):
+    asdf.info(filename, max_rows=max_rows, max_cols=max_cols, show_values=show_values, show_blocks=not hide_blocks)
