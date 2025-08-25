@@ -1,6 +1,7 @@
 import importlib
 import os
 import pathlib
+import warnings
 from dataclasses import dataclass
 
 import pytest
@@ -128,6 +129,9 @@ class AsdfSchemaItem(pytest.Item):
     def runtest(self):
         from asdf import schema
 
+        # warn inside test, we don't do this yet to allow time for downstream packages to adopt pytest-asdf-plugin
+        warnings.warn("pytest_asdf is deprecated, install pytest_asdf_plugin instead", DeprecationWarning)
+
         # Make sure that each schema itself is valid.
         schema_tree = schema.load_schema(
             self.schema_path,
@@ -205,7 +209,7 @@ class AsdfSchemaExampleItem(pytest.Item):
         from asdf.testing.helpers import yaml_to_asdf
 
         # warn inside test, we don't do this yet to allow time for downstream packages to adopt pytest-asdf-plugin
-        # warnings.warn("pytest_asdf is deprecated, install pytest_asdf_plugin instead", DeprecationWarning)
+        warnings.warn("pytest_asdf is deprecated, install pytest_asdf_plugin instead", DeprecationWarning)
 
         # check the example is valid
         buff = yaml_to_asdf("example: " + self.example.example.strip(), version=self.example.version)
