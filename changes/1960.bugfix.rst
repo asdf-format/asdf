@@ -1,0 +1,1 @@
+Fix bug in identification of tagged objects during schema validation and using ``get_tag``.

@@ -148,4 +148,6 @@ def get_tag(instance):
     """
     Get the tag associated with the instance, if there is one.
     """
+    if not isinstance(instance, Tagged):
+        return None
     return getattr(instance, "_tag", None)
