@@ -45,6 +45,7 @@ MANIFEST_URIS = [
     "asdf://asdf-format.org/core/manifests/core-1.4.0",
     "asdf://asdf-format.org/core/manifests/core-1.5.0",
     "asdf://asdf-format.org/core/manifests/core-1.6.0",
+    "asdf://asdf-format.org/core/manifests/core-1.7.0",
 ]
 
 
