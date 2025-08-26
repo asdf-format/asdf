@@ -91,6 +91,7 @@ supported_versions = [
     AsdfVersion("1.4.0"),
     AsdfVersion("1.5.0"),
     AsdfVersion("1.6.0"),
+    AsdfVersion("1.7.0"),
 ]
 
 
