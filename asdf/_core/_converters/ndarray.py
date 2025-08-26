@@ -7,6 +7,7 @@ class NDArrayConverter(Converter):
     tags = [
         "tag:stsci.edu:asdf/core/ndarray-1.0.0",
         "tag:stsci.edu:asdf/core/ndarray-1.1.0",
+        "tag:stsci.edu:asdf/core/ndarray-1.2.0",
     ]
     types = [
         np.ndarray,  # we use the type here so the extension can find the sub-classes
