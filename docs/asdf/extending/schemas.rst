@@ -70,7 +70,7 @@ indicates that we're following version 1.1 of the YAML spec.  The
 
 The ``$schema`` property contains the URI of the schema that validates
 this document.  Since our document is itself a schema, the URI refers to
-a *metaschema*.  ASDF comes with three built-in metaschemas:
+a *metaschema*.  ASDF comes with two built-in metaschemas:
 
 - ``http://json-schema.org/draft-04/schema`` - The JSON Schema Draft 4 metaschema.
   Includes basic validators and combiners.
@@ -79,9 +79,8 @@ a *metaschema*.  ASDF comes with three built-in metaschemas:
   Includes everything in JSON Schema Draft 4, plus additional YAML-specific
   validators including ``tag`` and ``propertyOrder``.
 
-- ``http://stsci.edu/schemas/asdf/asdf-schema-1.0.0`` - The ASDF Schema metaschema.
-  Includes everything in YAML Schema, plus additional ASDF-specific validators
-  that check ndarray properties.
+Using any other metaschema is not recommended as these are generally poorly
+supported by jsonschema validators.
 
 Our schema makes use of the ``tag`` validator, so we're specifying the YAML Schema
 URI here.
