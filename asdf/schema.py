@@ -78,6 +78,7 @@ def validate_propertyOrder(validator, order, instance, schema):
     library's extensible validation system is the easiest way to get
     this property assigned.
     """
+    raise Exception("propertyOrder")
     if not validator.is_type(instance, "object"):
         return
 
@@ -96,6 +97,7 @@ def validate_flowStyle(validator, flow_style, instance, schema):
     but using the `jsonschema` library's extensible validation system
     is the easiest way to get this property assigned.
     """
+    raise Exception("flowStyle")
     if not (validator.is_type(instance, "object") or validator.is_type(instance, "array")):
         return
 
@@ -110,6 +112,7 @@ def validate_style(validator, style, instance, schema):
     library's extensible validation system is the easiest way to get
     this property assigned.
     """
+    raise Exception("style")
     if not validator.is_type(instance, "string"):
         return
 
