@@ -22,7 +22,7 @@ undefined_data:
         - !core/ndarray-1.1.0 [[7],[8],[9],[10]]
         - !core/complex-1.0.0 3.14j
 """
-    buff = yaml_to_asdf(yaml)
+    buff = yaml_to_asdf(yaml, version="1.6.0")
     with pytest.warns(Warning) as warning:
         afile = asdf.open(buff)
         missing = afile.tree["undefined_data"]

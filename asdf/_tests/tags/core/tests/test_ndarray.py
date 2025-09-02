@@ -17,6 +17,14 @@ from asdf.tags.core import ndarray
 from asdf.testing import helpers
 
 
+@pytest.fixture
+def ndarray_tag():
+    af = asdf.AsdfFile()
+    cvt = af.extension_manager.get_converter_for_type(np.ndarray)
+    full_tag = cvt.select_tag(np.zeros(0), af)
+    return full_tag.removeprefix("tag:stsci.edu:asdf/")
+
+
 # These custom types and the custom extension are here purely for the purpose
 # of testing NDArray objects and making sure that they can be validated as part
 # of a nested hierarchy, and not just top-level objects.
@@ -156,7 +164,7 @@ def test_sharing():
         assert tree["skipping"][0] == 42
 
 
-def test_byteorder(tmp_path):
+def test_byteorder():
     tree = {
         "bigendian": np.arange(0, 10, dtype=">f8"),
         "little": np.arange(0, 10, dtype="<f8"),
@@ -207,7 +215,7 @@ def test_dont_load_data():
             assert callable(block._data)
 
 
-def test_table_inline(tmp_path):
+def test_table_inline():
     table = np.array(
         [(0, 1, (2, 3)), (4, 5, (6, 7))],
         dtype=[("MINE", np.int8), ("", np.float64), ("arr", ">i4", (2,))],
@@ -284,9 +292,9 @@ def test_array_inline_threshold_recursive(tmp_path):
             assert len(list(af._blocks.blocks)) == 0
 
 
-def test_copy_inline():
-    yaml = """
-x0: !core/ndarray-1.1.0
+def test_copy_inline(ndarray_tag):
+    yaml = f"""
+x0: !{ndarray_tag}
   data: [-1.0, 1.0]
     """
 
@@ -298,7 +306,7 @@ x0: !core/ndarray-1.1.0
         f.write_to(io.BytesIO())
 
 
-def test_table(tmp_path):
+def test_table():
     table = np.array([(0, 1, (2, 3)), (4, 5, (6, 7))], dtype=[("MINE", np.int8), ("", "<f8"), ("arr", ">i4", (2,))])
 
     tree = {"table_data": table}
@@ -321,7 +329,7 @@ def test_table(tmp_path):
         }
 
 
-def test_table_nested_fields(tmp_path):
+def test_table_nested_fields():
     table = np.array(
         [(0, (1, 2)), (4, (5, 6)), (7, (8, 9))],
         dtype=[("A", "<i8"), ("B", [("C", "<i8"), ("D", "<i8")])],
@@ -374,8 +382,8 @@ def test_inline():
     assert b"[0.0, 1.0, 2.0, 3.0, 4.0, 5.0, 6.0, 7.0, 8.0, 9.0]" in buff.getvalue()
 
 
-def test_inline_bare():
-    content = "arr: !core/ndarray-1.1.0 [[1, 2, 3, 4], [5, 6, 7, 8]]"
+def test_inline_bare(ndarray_tag):
+    content = f"arr: !{ndarray_tag} [[1, 2, 3, 4], [5, 6, 7, 8]]"
     buff = helpers.yaml_to_asdf(content)
 
     with asdf.open(buff) as ff:
@@ -390,7 +398,7 @@ def test_inline_bare():
         False,
     ],
 )
-def test_mask_roundtrip(mask, tmp_path):
+def test_mask_roundtrip(mask):
     array = np.array([[1, 0, 0], [0, 1, 0], [0, 0, 0]])
     tree = {
         "unmasked": array,
@@ -406,7 +414,7 @@ def test_mask_roundtrip(mask, tmp_path):
         assert len(af._blocks.blocks) == 2
 
 
-def test_len_roundtrip(tmp_path):
+def test_len_roundtrip():
     sequence = np.arange(0, 10, dtype=int)
     tree = {"sequence": sequence}
 
@@ -415,9 +423,9 @@ def test_len_roundtrip(tmp_path):
         assert len(s) == 10
 
 
-def test_mask_arbitrary():
-    content = """
-arr: !core/ndarray-1.1.0
+def test_mask_arbitrary(ndarray_tag):
+    content = f"""
+arr: !{ndarray_tag}
   data: [[1, 2, 3, 1234], [5, 6, 7, 8]]
   mask: 1234
     """
@@ -427,9 +435,9 @@ arr: !core/ndarray-1.1.0
         assert_array_equal(ff.tree["arr"].mask, [[False, False, False, True], [False, False, False, False]])
 
 
-def test_mask_nan():
-    content = """
-arr: !core/ndarray-1.1.0
+def test_mask_nan(ndarray_tag):
+    content = f"""
+arr: !{ndarray_tag}
   data: [[1, 2, 3, .NaN], [5, 6, 7, 8]]
   mask: .NaN
     """
@@ -439,7 +447,7 @@ arr: !core/ndarray-1.1.0
         assert_array_equal(ff.tree["arr"].mask, [[False, False, False, True], [False, False, False, False]])
 
 
-def test_string(tmp_path):
+def test_string():
     tree = {
         "ascii": np.array([b"foo", b"bar", b"baz"]),
         "unicode": np.array(["სამეცნიერო", "данные", "வடிவம்"]),
@@ -450,7 +458,7 @@ def test_string(tmp_path):
             assert_array_equal(tree[k], af[k])
 
 
-def test_string_table(tmp_path):
+def test_string_table():
     tree = {"table": np.array([(b"foo", "სამეცნიერო", "42", "53.0")])}
 
     with roundtrip(tree) as af:
@@ -458,17 +466,17 @@ def test_string_table(tmp_path):
             assert_array_equal(tree[k], af[k])
 
 
-def test_inline_string():
-    content = "arr: !core/ndarray-1.1.0 ['a', 'b', 'c']"
+def test_inline_string(ndarray_tag):
+    content = f"arr: !{ndarray_tag} ['a', 'b', 'c']"
     buff = helpers.yaml_to_asdf(content)
 
     with asdf.open(buff) as ff:
         assert_array_equal(ff.tree["arr"]._make_array(), ["a", "b", "c"])
 
 
-def test_inline_structured():
-    content = """
-arr: !core/ndarray-1.1.0
+def test_inline_structured(ndarray_tag):
+    content = f"""
+arr: !{ndarray_tag}
     datatype: [['ascii', 4], uint16, uint16, ['ascii', 4]]
     data: [[M110, 110, 205, And],
            [ M31,  31, 224, And],
@@ -508,7 +516,7 @@ def test_simple_table():
     ff.write_to(io.BytesIO())
 
 
-def test_unicode_to_list(tmp_path):
+def test_unicode_to_list():
     arr = np.array(["", "𐀠"], dtype="<U")
     tree = {"unicode": arr}
 
@@ -624,12 +632,12 @@ def test_operations_on_ndarray_proxies(tmp_path):
         assert_array_equal(ff.tree["array"], x)
 
 
-def test_mask_datatype(tmp_path):
-    content = """
-arr: !core/ndarray-1.1.0
+def test_mask_datatype(ndarray_tag):
+    content = f"""
+arr: !{ndarray_tag}
     data: [1, 2, 3]
     dtype: int32
-    mask: !core/ndarray-1.1.0
+    mask: !{ndarray_tag}
         data: [true, true, false]
     """
     buff = helpers.yaml_to_asdf(content)
@@ -638,12 +646,12 @@ arr: !core/ndarray-1.1.0
         pass
 
 
-def test_invalid_mask_datatype(tmp_path):
-    content = """
-arr: !core/ndarray-1.1.0
+def test_invalid_mask_datatype(ndarray_tag):
+    content = f"""
+arr: !{ndarray_tag}
     data: [1, 2, 3]
     dtype: int32
-    mask: !core/ndarray-1.1.0
+    mask: !{ndarray_tag}
         data: ['a', 'b', 'c']
     """
     buff = helpers.yaml_to_asdf(content)
@@ -658,10 +666,10 @@ arr: !core/ndarray-1.1.0
 
 
 @with_custom_extension()
-def test_ndim_validation(tmp_path):
-    content = """
+def test_ndim_validation(ndarray_tag):
+    content = f"""
 obj: !<tag:nowhere.org:custom/ndim-1.0.0>
-    a: !core/ndarray-1.1.0
+    a: !{ndarray_tag}
        data: [1, 2, 3]
     """
     buff = helpers.yaml_to_asdf(content)
@@ -674,9 +682,9 @@ obj: !<tag:nowhere.org:custom/ndim-1.0.0>
     ):
         pass
 
-    content = """
+    content = f"""
 obj: !<tag:nowhere.org:custom/ndim-1.0.0>
-    a: !core/ndarray-1.1.0
+    a: !{ndarray_tag}
        data: [[1, 2, 3]]
     """
     buff = helpers.yaml_to_asdf(content)
@@ -684,9 +692,9 @@ obj: !<tag:nowhere.org:custom/ndim-1.0.0>
     with asdf.open(buff):
         pass
 
-    content = """
+    content = f"""
 obj: !<tag:nowhere.org:custom/ndim-1.0.0>
-    a: !core/ndarray-1.1.0
+    a: !{ndarray_tag}
        shape: [1, 3]
        data: [[1, 2, 3]]
     """
@@ -695,9 +703,9 @@ obj: !<tag:nowhere.org:custom/ndim-1.0.0>
     with asdf.open(buff):
         pass
 
-    content = """
+    content = f"""
 obj: !<tag:nowhere.org:custom/ndim-1.0.0>
-    b: !core/ndarray-1.1.0
+    b: !{ndarray_tag}
        data: [1, 2, 3]
     """
     buff = helpers.yaml_to_asdf(content)
@@ -705,9 +713,9 @@ obj: !<tag:nowhere.org:custom/ndim-1.0.0>
     with asdf.open(buff):
         pass
 
-    content = """
+    content = f"""
 obj: !<tag:nowhere.org:custom/ndim-1.0.0>
-    b: !core/ndarray-1.1.0
+    b: !{ndarray_tag}
        data: [[1, 2, 3]]
     """
     buff = helpers.yaml_to_asdf(content)
@@ -715,9 +723,9 @@ obj: !<tag:nowhere.org:custom/ndim-1.0.0>
     with asdf.open(buff):
         pass
 
-    content = """
+    content = f"""
 obj: !<tag:nowhere.org:custom/ndim-1.0.0>
-    b: !core/ndarray-1.1.0
+    b: !{ndarray_tag}
        data: [[[1, 2, 3]]]
     """
     buff = helpers.yaml_to_asdf(content)
@@ -732,10 +740,10 @@ obj: !<tag:nowhere.org:custom/ndim-1.0.0>
 
 
 @with_custom_extension()
-def test_datatype_validation(tmp_path):
-    content = """
+def test_datatype_validation(ndarray_tag):
+    content = f"""
 obj: !<tag:nowhere.org:custom/datatype-1.0.0>
-    a: !core/ndarray-1.1.0
+    a: !{ndarray_tag}
        data: [1, 2, 3]
        datatype: float32
     """
@@ -744,9 +752,9 @@ obj: !<tag:nowhere.org:custom/datatype-1.0.0>
     with asdf.open(buff):
         pass
 
-    content = """
+    content = f"""
 obj: !<tag:nowhere.org:custom/datatype-1.0.0>
-    a: !core/ndarray-1.1.0
+    a: !{ndarray_tag}
        data: [1, 2, 3]
        datatype: float64
     """
@@ -760,9 +768,9 @@ obj: !<tag:nowhere.org:custom/datatype-1.0.0>
     ):
         pass
 
-    content = """
+    content = f"""
 obj: !<tag:nowhere.org:custom/datatype-1.0.0>
-    a: !core/ndarray-1.1.0
+    a: !{ndarray_tag}
        data: [1, 2, 3]
        datatype: int16
     """
@@ -771,9 +779,9 @@ obj: !<tag:nowhere.org:custom/datatype-1.0.0>
     with asdf.open(buff):
         pass
 
-    content = """
+    content = f"""
 obj: !<tag:nowhere.org:custom/datatype-1.0.0>
-    b: !core/ndarray-1.1.0
+    b: !{ndarray_tag}
        data: [1, 2, 3]
        datatype: int16
     """
@@ -787,9 +795,9 @@ obj: !<tag:nowhere.org:custom/datatype-1.0.0>
     ):
         pass
 
-    content = """
+    content = f"""
 obj: !<tag:nowhere.org:custom/datatype-1.0.0>
-    a: !core/ndarray-1.1.0
+    a: !{ndarray_tag}
        data: [[1, 'a'], [2, 'b'], [3, 'c']]
        datatype:
          - name: a
@@ -818,10 +826,10 @@ obj: !<tag:nowhere.org:custom/datatype-1.0.0>
 
 
 @with_custom_extension()
-def test_structured_datatype_validation(tmp_path):
-    content = """
+def test_structured_datatype_validation(ndarray_tag):
+    content = f"""
 obj: !<tag:nowhere.org:custom/datatype-1.0.0>
-    c: !core/ndarray-1.1.0
+    c: !{ndarray_tag}
        data: [[1, 'a'], [2, 'b'], [3, 'c']]
        datatype:
          - name: a
@@ -835,9 +843,9 @@ obj: !<tag:nowhere.org:custom/datatype-1.0.0>
     with asdf.open(buff):
         pass
 
-    content = """
+    content = f"""
 obj: !<tag:nowhere.org:custom/datatype-1.0.0>
-    c: !core/ndarray-1.1.0
+    c: !{ndarray_tag}
        data: [[1, 'a'], [2, 'b'], [3, 'c']]
        datatype:
          - name: a
@@ -856,9 +864,9 @@ obj: !<tag:nowhere.org:custom/datatype-1.0.0>
     ):
         pass
 
-    content = """
+    content = f"""
 obj: !<tag:nowhere.org:custom/datatype-1.0.0>
-    c: !core/ndarray-1.1.0
+    c: !{ndarray_tag}
        data: [[1, 'a', 0], [2, 'b', 1], [3, 'c', 2]]
        datatype:
          - name: a
@@ -878,9 +886,9 @@ obj: !<tag:nowhere.org:custom/datatype-1.0.0>
     ):
         pass
 
-    content = """
+    content = f"""
 obj: !<tag:nowhere.org:custom/datatype-1.0.0>
-    c: !core/ndarray-1.1.0
+    c: !{ndarray_tag}
        data: [1, 2, 3]
     """
     buff = helpers.yaml_to_asdf(content)
@@ -893,9 +901,9 @@ obj: !<tag:nowhere.org:custom/datatype-1.0.0>
     ):
         pass
 
-    content = """
+    content = f"""
 obj: !<tag:nowhere.org:custom/datatype-1.0.0>
-    d: !core/ndarray-1.1.0
+    d: !{ndarray_tag}
        data: [[1, 'a'], [2, 'b'], [3, 'c']]
        datatype:
          - name: a
@@ -913,9 +921,9 @@ obj: !<tag:nowhere.org:custom/datatype-1.0.0>
     ):
         pass
 
-    content = """
+    content = f"""
 obj: !<tag:nowhere.org:custom/datatype-1.0.0>
-    d: !core/ndarray-1.1.0
+    d: !{ndarray_tag}
        data: [[1, 'a'], [2, 'b'], [3, 'c']]
        datatype:
          - name: a
@@ -937,9 +945,9 @@ def test_string_inline():
         assert isinstance(entry, str)
 
 
-def test_inline_shape_mismatch():
-    content = """
-arr: !core/ndarray-1.1.0
+def test_inline_shape_mismatch(ndarray_tag):
+    content = f"""
+arr: !{ndarray_tag}
   data: [1, 2, 3]
   shape: [2]
     """
@@ -950,14 +958,14 @@ arr: !core/ndarray-1.1.0
             af["arr"]
 
 
-def test_broadcasted_array(tmp_path):
+def test_broadcasted_array():
     attrs = np.broadcast_arrays(np.array([10, 20]), np.array(10), np.array(10))
     tree = {"one": attrs[1]}  # , 'two': attrs[1], 'three': attrs[2]}
     with roundtrip(tree) as af:
         assert_array_equal(tree["one"], af["one"])
 
 
-def test_broadcasted_offset_array(tmp_path):
+def test_broadcasted_offset_array():
     base = np.arange(10)
     offset = base[5:]
     broadcasted = np.broadcast_to(offset, (4, 5))
@@ -966,7 +974,7 @@ def test_broadcasted_offset_array(tmp_path):
         assert_array_equal(tree["broadcasted"], af["broadcasted"])
 
 
-def test_non_contiguous_base_array(tmp_path):
+def test_non_contiguous_base_array():
     base = np.arange(60).reshape(5, 4, 3).transpose(2, 0, 1) * 1
     contiguous = base.transpose(1, 2, 0)
     tree = {"contiguous": contiguous}
@@ -974,7 +982,7 @@ def test_non_contiguous_base_array(tmp_path):
         assert_array_equal(tree["contiguous"], af["contiguous"])
 
 
-def test_fortran_order(tmp_path):
+def test_fortran_order():
     array = np.array([[11, 12, 13], [21, 22, 23]], order="F", dtype=np.int64)
     tree = {"data": array}
 
