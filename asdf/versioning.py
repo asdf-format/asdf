@@ -8,6 +8,14 @@ from functools import total_ordering
 import yaml
 from semantic_version import SimpleSpec, Version
 
+try:
+    from asdf_standard._versioning import get_supported_core_schema_versions
+except ImportError:
+
+    def get_supported_core_schema_versions():
+        return ("1.0.0", "1.1.0", "1.2.0", "1.3.0", "1.4.0", "1.5.0", "1.6.0")
+
+
 _yaml_base_loader = yaml.CSafeLoader if getattr(yaml, "__with_libyaml__", None) else yaml.SafeLoader
 
 
@@ -83,23 +91,9 @@ class AsdfVersion(AsdfVersionMixin, Version):
         super().__init__(version)
 
 
-supported_versions = [
-    AsdfVersion("1.0.0"),
-    AsdfVersion("1.1.0"),
-    AsdfVersion("1.2.0"),
-    AsdfVersion("1.3.0"),
-    AsdfVersion("1.4.0"),
-    AsdfVersion("1.5.0"),
-    AsdfVersion("1.6.0"),
-    AsdfVersion("1.7.0"),
-]
+supported_versions = tuple(AsdfVersion(version) for version in get_supported_core_schema_versions())
 
-
-default_version = AsdfVersion("1.6.0")
-
-# This is the ASDF core schemas version that is currently in development
-# it is possible that breaking changes will be made to this version.
-asdf_standard_development_version = AsdfVersion("1.7.0")
+default_version = supported_versions[-1]
 
 
 # This is the ASDF core schemas version at which the format of the history
