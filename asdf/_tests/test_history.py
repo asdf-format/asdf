@@ -102,7 +102,7 @@ def test_get_history_entries(tmp_path):
 def test_extension_metadata(tmp_path):
     file_path = tmp_path / "extension.asdf"
 
-    ff = asdf.AsdfFile()
+    ff = asdf.AsdfFile(version="1.6.0")
     ff.write_to(file_path)
 
     with asdf.open(file_path) as af:
