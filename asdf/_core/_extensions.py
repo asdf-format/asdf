@@ -1,4 +1,5 @@
 from asdf.extension import ManifestExtension
+from asdf.versioning import get_supported_core_schema_versions
 
 from ._converters.complex import ComplexConverter
 from ._converters.constant import ConstantConverter
@@ -38,16 +39,8 @@ VALIDATORS = [
 
 
 MANIFEST_URIS = [
-    "asdf://asdf-format.org/core/manifests/core-1.0.0",
-    "asdf://asdf-format.org/core/manifests/core-1.1.0",
-    "asdf://asdf-format.org/core/manifests/core-1.2.0",
-    "asdf://asdf-format.org/core/manifests/core-1.3.0",
-    "asdf://asdf-format.org/core/manifests/core-1.4.0",
-    "asdf://asdf-format.org/core/manifests/core-1.5.0",
-    "asdf://asdf-format.org/core/manifests/core-1.6.0",
-    "asdf://asdf-format.org/core/manifests/core-1.7.0",
+    f"asdf://asdf-format.org/core/manifests/core-{version}" for version in get_supported_core_schema_versions()
 ]
-
 
 EXTENSIONS = [
     ManifestExtension.from_uri(
