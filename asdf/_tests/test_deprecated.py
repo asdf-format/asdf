@@ -36,8 +36,3 @@ properties:
     with pytest.warns(DeprecationWarning, match=f"Use of the {schema_property} validator with non-ndarray tag"):
         with pytest.raises(asdf.exceptions.ValidationError):
             af.validate()
-
-
-def test_url_mapping_deprecation():
-    with pytest.warns(DeprecationWarning, match="url_mapping is deprecated"):
-        asdf.schema.get_validator(url_mapping=lambda s: s)
