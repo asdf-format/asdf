@@ -6,7 +6,6 @@ import builtins
 import inspect
 import re
 import typing
-import warnings
 
 from ._display import DEFAULT_MAX_COLS, DEFAULT_MAX_ROWS, DEFAULT_SHOW_VALUES, render_tree
 from ._node_info import collect_schema_info
@@ -327,7 +326,7 @@ class AsdfSearchResult:
 
         return "\n".join(lines)
 
-    def schema_info(self, key="description", preserve_list=True, refresh_extension_manager=NotSet):
+    def schema_info(self, key="description", preserve_list=True):
         """
         Get a nested dictionary of the schema information for a given key, relative to this search result.
 
@@ -338,22 +337,13 @@ class AsdfSearchResult:
             Default: "description"
         preserve_list : bool
             If True, then lists are preserved. Otherwise, they are turned into dicts.
-        refresh_extension_manager : bool
-            DEPRECATED
-            If `True`, refresh the extension manager before looking up the
-            key.  This is useful if you want to make sure that the schema
-            data for a given key is up to date.
         """
-        if refresh_extension_manager is not NotSet:
-            warnings.warn("refresh_extension_manager is deprecated", DeprecationWarning)
-
         return collect_schema_info(
             key,
             None,
             self._node,
             filters=self._filters,
             preserve_list=preserve_list,
-            refresh_extension_manager=refresh_extension_manager,
         )
 
     def __getitem__(self, key):
