@@ -49,10 +49,6 @@ def _type_to_tag(type_):
     return None
 
 
-def _default_resolver(uri):
-    return uri
-
-
 def validate_tag(validator, tag_pattern, instance, schema):
     """
     Implements the tag validation directive, which checks the
@@ -233,7 +229,7 @@ class _ValidationContext:
 
 @lru_cache
 def _create_validator(validators=YAML_VALIDATORS, visit_repeat_nodes=False):
-    meta_schema = _load_schema_cached(YAML_SCHEMA_METASCHEMA_ID, None, False)
+    meta_schema = _load_schema_cached(YAML_SCHEMA_METASCHEMA_ID, False)
 
     type_checker = mvalidators.Draft4Validator.TYPE_CHECKER.redefine_many(
         {
@@ -317,6 +313,9 @@ def _create_validator(validators=YAML_VALIDATORS, visit_repeat_nodes=False):
 
 @lru_cache
 def _load_schema(url):
+    # handle case where the provided url is a non-str (Path)
+    url = str(url)
+
     if url.startswith("http://") or url.startswith("https://") or url.startswith("asdf://"):
         msg = f"Unable to fetch schema from non-file URL: {url}"
         raise FileNotFoundError(msg)
@@ -332,20 +331,11 @@ def _load_schema(url):
     return result, fd.uri
 
 
-def _make_schema_loader(resolver):
-    if resolver is None:
-        resolver = _default_resolver
-
+def _make_schema_loader():
     def load_schema(url):
         # Check if this is a URI provided by the new
         # Mapping API:
         resource_manager = get_config().resource_manager
-
-        if url not in resource_manager:
-            # Allow the resolvers to do their thing, in case they know
-            # how to turn this string into a URI that the resource manager
-            # recognizes.
-            url = resolver(str(url))
 
         if url in resource_manager:
             content = resource_manager[url]
@@ -365,7 +355,7 @@ def _make_schema_loader(resolver):
 
 def _make_jsonschema_refresolver():
     handlers = {}
-    schema_loader = _make_schema_loader(None)
+    schema_loader = _make_schema_loader()
 
     def get_schema(url):
         return schema_loader(url)[0]
@@ -390,7 +380,7 @@ def _make_jsonschema_refresolver():
     )
 
 
-def load_schema(url, resolver=None, resolve_references=False):
+def load_schema(url, resolve_references=False):
     """
     Load a schema from the given URL.
 
@@ -399,27 +389,17 @@ def load_schema(url, resolver=None, resolve_references=False):
     url : str
         The path to the schema
 
-    resolver : callable, optional
-        DEPRECATED arbitrary mapping of uris is no longer supported
-        Please register all required resources with the resource manager.
-        A callback function used to map URIs to other URIs.  The
-        callable must take a string and return a string or `None`.
-        This is useful, for example, when a remote resource has a
-        mirror on the local filesystem that you wish to use.
-
     resolve_references : bool, optional
         If ``True``, resolve all ``$ref`` references.
 
     """
-    if resolver is not None:
-        warnings.warn("resolver is deprecated, arbitrary mapping of uris is no longer supported", DeprecationWarning)
     # We want to cache the work that went into constructing the schema, but returning
     # the same object is treacherous, because users who mutate the result will not
     # expect that they're changing the schema everywhere.
-    return copy.deepcopy(_load_schema_cached(url, resolver, resolve_references))
+    return copy.deepcopy(_load_schema_cached(url, resolve_references))
 
 
-def _safe_resolve(resolver, json_id, uri):
+def _safe_resolve(json_id, uri):
     """
     This function handles the tricky task of resolving a schema URI
     in the presence of both new and legacy extensions.
@@ -433,35 +413,22 @@ def _safe_resolve(resolver, json_id, uri):
     generic_io.resolve_uri, but not with the resolver object, otherwise we risk
     mangling URIs that share a prefix with a resolver mapping.
     """
-    if resolver is None:
-        resolver = _default_resolver
     # We can't use urllib.parse here because tag: URIs don't
     # parse correctly.
     parts = uri.split("#")
     base = parts[0]
     fragment = parts[1] if len(parts) > 1 else ""
 
-    # The generic_io.resolve_uri method cannot operate on tag: URIs.
-    # New-style extensions don't support $ref with a tag URI target anyway,
-    # so it's safe to feed this through the resolver right away.
-    if base.startswith("tag:"):
-        base = resolver(base)
-
     # Resolve relative URIs (e.g., #foo/bar, ../foo/bar) against
     # the current schema id.
     base = generic_io.resolve_uri(json_id, base)
-
-    # Use the resolver object only if the URI does not belong to one
-    # of the new-style extensions.
-    if base not in get_config().resource_manager:
-        base = resolver(base)
 
     return base, fragment
 
 
 @lru_cache
-def _load_schema_cached(url, resolver, resolve_references):
-    loader = _make_schema_loader(resolver)
+def _load_schema_cached(url, resolve_references):
+    loader = _make_schema_loader()
     schema, url = loader(url)
 
     if resolve_references:
@@ -471,13 +438,13 @@ def _load_schema_cached(url, resolver, resolve_references):
                 json_id = url
 
             if isinstance(node, dict) and "$ref" in node:
-                suburl_base, suburl_fragment = _safe_resolve(resolver, json_id, node["$ref"])
+                suburl_base, suburl_fragment = _safe_resolve(json_id, node["$ref"])
 
                 if suburl_base == url or suburl_base == schema.get("id"):
                     # This is a local ref, which we'll resolve in both cases.
                     subschema = schema
                 else:
-                    subschema = load_schema(suburl_base, resolver, True)
+                    subschema = load_schema(suburl_base, True)
 
                 return reference.resolve_fragment(subschema, suburl_fragment)
 
@@ -728,7 +695,7 @@ def check_schema(schema, validate_default=True):
         applicable_validators = methodcaller("items")
 
     meta_schema_id = schema.get("$schema", YAML_SCHEMA_METASCHEMA_ID)
-    meta_schema = _load_schema_cached(meta_schema_id, None, False)
+    meta_schema = _load_schema_cached(meta_schema_id, False)
 
     resolver = _make_jsonschema_refresolver()
 
