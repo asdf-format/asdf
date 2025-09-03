@@ -5,7 +5,7 @@ from types import GeneratorType
 import numpy as np
 import yaml
 
-from . import config, schema, tagged, treeutil, util
+from . import schema, tagged, treeutil, util
 from .constants import STSCI_SCHEMA_TAG_BASE, YAML_TAG_PREFIX
 from .exceptions import AsdfConversionWarning, AsdfSerializationError
 from .extension._serialization_context import BlockAccess
@@ -289,8 +289,6 @@ def custom_tree_to_tagged_tree(tree, ctx, _serialization_context=None):
         if generator is not None:
             yield from generator
 
-    cfg = config.get_config()
-    convert_ndarray_subclasses = cfg.convert_unknown_ndarray_subclasses
     converters_cache = {}
 
     def _walker(obj):
@@ -299,16 +297,6 @@ def custom_tree_to_tagged_tree(tree, ctx, _serialization_context=None):
             return converters_cache[typ](obj)
         if extension_manager.handles_type(typ):
             converter = extension_manager.get_converter_for_type(typ)
-            converters_cache[typ] = lambda obj, _converter=converter: _convert_obj(obj, _converter)
-            return _convert_obj(obj, converter)
-        if convert_ndarray_subclasses and isinstance(obj, np.ndarray):
-            warnings.warn(
-                f"A ndarray subclass ({type(obj)}) was converted as a ndarray. "
-                "This behavior will be removed from a future version of ASDF. "
-                "See https://asdf.readthedocs.io/en/latest/asdf/config.html#convert-unknown-ndarray-subclasses",
-                AsdfConversionWarning,
-            )
-            converter = extension_manager.get_converter_for_type(np.ndarray)
             converters_cache[typ] = lambda obj, _converter=converter: _convert_obj(obj, _converter)
             return _convert_obj(obj, converter)
 
