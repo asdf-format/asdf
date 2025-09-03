@@ -363,9 +363,9 @@ def _make_schema_loader(resolver):
     return load_schema
 
 
-def _make_jsonschema_refresolver(url_mapping):
+def _make_jsonschema_refresolver():
     handlers = {}
-    schema_loader = _make_schema_loader(url_mapping)
+    schema_loader = _make_schema_loader(None)
 
     def get_schema(url):
         return schema_loader(url)[0]
@@ -492,7 +492,6 @@ def get_validator(
     schema=None,
     ctx=None,
     validators=None,
-    url_mapping=None,
     *args,
     _visit_repeat_nodes=False,
     _serialization_context=None,
@@ -517,11 +516,6 @@ def get_validator(
         A dictionary mapping properties to validators to use (instead
         of the built-in ones and ones provided by extension types).
 
-    url_mapping : callable, optional
-        DEPRECATED
-        A callable that takes one string argument and returns a string
-        to convert remote URLs into local ones.
-
     _visit_repeat_nodes : bool, optional
         Force the validator to visit nodes that it has already
         seen.  This flag is a temporary hack to support a specific
@@ -533,9 +527,6 @@ def get_validator(
     -------
     validator : jsonschema.Validator
     """
-    if url_mapping is not None:
-        warnings.warn("url_mapping is deprecated, arbitrary mapping of uris is no longer supported", DeprecationWarning)
-
     if ctx is None:
         from ._asdf import AsdfFile
 
@@ -548,7 +539,7 @@ def get_validator(
         validators = util.HashableDict(YAML_VALIDATORS.copy())
         validators.update(ctx._extension_manager.validator_manager.get_jsonschema_validators())
 
-    kwargs["resolver"] = _make_jsonschema_refresolver(url_mapping)
+    kwargs["resolver"] = _make_jsonschema_refresolver()
 
     # We don't just call validators.validate() directly here, because
     # that validates the schema itself, wasting a lot of time (at the
@@ -647,7 +638,7 @@ def validate(instance, ctx=None, schema=None, validators=None, reading=False, *a
 
     if schema is None and ctx._custom_schema:
         schema = ctx._custom_schema
-    validator = get_validator({} if schema is None else schema, ctx, validators, None, *args, **kwargs)
+    validator = get_validator({} if schema is None else schema, ctx, validators, *args, **kwargs)
     validator.validate(instance)
 
     additional_validators = [_validate_large_literals]
@@ -739,7 +730,7 @@ def check_schema(schema, validate_default=True):
     meta_schema_id = schema.get("$schema", YAML_SCHEMA_METASCHEMA_ID)
     meta_schema = _load_schema_cached(meta_schema_id, None, False)
 
-    resolver = _make_jsonschema_refresolver(_default_resolver)
+    resolver = _make_jsonschema_refresolver()
 
     cls = mvalidators.create(
         meta_schema=meta_schema,
