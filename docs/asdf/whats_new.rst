@@ -125,7 +125,7 @@ Unknown NDArray Subclasses
 ^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 In asdf 3.0.0 a config attribute was added
-`asdf.config.AsdfConfig.convert_unknown_ndarray_subclasses` that
+``asdf.config.AsdfConfig.convert_unknown_ndarray_subclasses`` that
 was enabled by default (to retain the behavior of the removed legacy
 extension that handled ndarrays).
 
@@ -133,7 +133,7 @@ In asdf 4.0.0 this setting is disabled by default and issues a deprecation
 warning when enabled. In an upcoming version of asdf this setting will
 be removed.
 
-See :ref:`convert_unknown_ndarray_subclasses` for more details.
+See ``convert_unknown_ndarray_subclasses`` for more details.
 
 3.0.0
 =====
