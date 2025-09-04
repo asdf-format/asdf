@@ -1,3 +1,30 @@
+4.5.0 (2025-09-04)
+==================
+
+Bugfix
+------
+
+- Fix bug in identification of tagged objects during schema validation and
+  using ``get_tag``. (`#1960 <https://github.com/asdf-format/asdf/pull/1960>`_)
+
+
+Doc
+---
+
+- Update references to "ASDF standard" to refer to either the specification or
+  core schemas to follow the new terminology used in the ASDF specification.
+  (`#1953 <https://github.com/asdf-format/asdf/pull/1953>`_)
+- Update metaschemas description discouraging custom metaschemas. (`#1964
+  <https://github.com/asdf-format/asdf/pull/1964>`_)
+
+
+Removal
+-------
+
+- Deprecate the bundled pytest plugin, please install pytest-asdf-plugin to run
+  schema tests. (`#1959 <https://github.com/asdf-format/asdf/pull/1959>`_)
+
+
 4.4.0 (2025-08-18)
 ==================
 

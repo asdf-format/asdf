@@ -1,1 +1,0 @@
-Deprecate the bundled pytest plugin, please install pytest-asdf-plugin to run schema tests.
