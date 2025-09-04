@@ -100,7 +100,7 @@ class AsdfFile:
         self._extension_manager = None
 
         if custom_schema is not None:
-            self._custom_schema = schema._load_schema_cached(custom_schema, None, True)
+            self._custom_schema = schema._load_schema_cached(custom_schema, True)
         else:
             self._custom_schema = None
 
@@ -1121,7 +1121,7 @@ class AsdfFile:
 
         return []
 
-    def schema_info(self, key="description", path=None, preserve_list=True, refresh_extension_manager=NotSet):
+    def schema_info(self, key="description", path=None, preserve_list=True):
         """
         Get a nested dictionary of the schema information for a given key, relative to the path.
 
@@ -1140,19 +1140,11 @@ class AsdfFile:
             Default = None (full dictionary).
         preserve_list : bool
             If True, then lists are preserved. Otherwise, they are turned into dicts.
-        refresh_extension_manager : bool
-            If `True`, refresh the extension manager before looking up the
-            key.  This is useful if you want to make sure that the schema
-            data for a given key is up to date.
         """
-        if refresh_extension_manager is not NotSet:
-            warnings.warn("refresh_extension_manager is deprecated", DeprecationWarning)
-
         if isinstance(path, AsdfSearchResult):
             return path.schema_info(
                 key,
                 preserve_list=preserve_list,
-                refresh_extension_manager=refresh_extension_manager,
             )
 
         return node_info.collect_schema_info(
@@ -1160,7 +1152,6 @@ class AsdfFile:
             path,
             self.tree,
             preserve_list=preserve_list,
-            refresh_extension_manager=refresh_extension_manager,
             extension_manager=self.extension_manager,
         )
 
@@ -1169,7 +1160,6 @@ class AsdfFile:
         max_rows=display.DEFAULT_MAX_ROWS,
         max_cols=display.DEFAULT_MAX_COLS,
         show_values=display.DEFAULT_SHOW_VALUES,
-        refresh_extension_manager=NotSet,
     ):
         """
         Print a rendering of this file's tree to stdout.
@@ -1194,16 +1184,12 @@ class AsdfFile:
             Set to False to disable display of primitive values in
             the rendered tree.
         """
-        if refresh_extension_manager is not NotSet:
-            warnings.warn("refresh_extension_manager is deprecated", DeprecationWarning)
-
         lines = display.render_tree(
             self.tree,
             max_rows=max_rows,
             max_cols=max_cols,
             show_values=show_values,
             identifier="root",
-            refresh_extension_manager=refresh_extension_manager,
             extension_manager=self.extension_manager,
         )
         print("\n".join(lines))

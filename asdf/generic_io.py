@@ -13,16 +13,14 @@ import os
 import pathlib
 import re
 import sys
-import tempfile
-import warnings
 from os import SEEK_CUR, SEEK_END, SEEK_SET
-from urllib.request import url2pathname, urlopen
+from urllib.request import url2pathname
 
 import numpy as np
 
 from . import util
 from ._extern import atomicfile
-from .exceptions import AsdfDeprecationWarning, DelimiterNotFoundError
+from .exceptions import DelimiterNotFoundError
 from .util import _patched_urllib_parse
 
 __all__ = ["get_file", "get_uri", "relative_uri", "resolve_uri"]
@@ -971,54 +969,6 @@ class OutputStream(GenericFile):
         self.clear(size)
 
 
-def _http_to_temp(init, mode, uri=None):
-    """
-    Stream the content of an http or https URL to a temporary file.
-
-    Parameters
-    ----------
-    init : str
-        HTTP or HTTPS URL.
-    mode : str
-        ASDF file mode.  The temporary file will always be opened
-        in w+b mode, but the resulting GenericFile will report itself
-        writable based on this value.
-    uri : str, optional
-        URI against which relative paths within the file are
-        resolved.  If None, the init value will be used.
-
-    Returns
-    -------
-    RealFile
-        Temporary file.
-    """
-    from asdf import get_config
-
-    fd = tempfile.NamedTemporaryFile("w+b")
-
-    block_size = get_config().io_block_size
-    if block_size == -1:
-        try:
-            block_size = os.fstat(fd.fileno()).st_blksize
-        except Exception:
-            block_size = io.DEFAULT_BUFFER_SIZE
-
-    try:
-        # This method is only called with http and https schemes:
-        with urlopen(init) as response:  # nosec
-            chunk = response.read(block_size)
-            while len(chunk) > 0:
-                fd.write(chunk)
-                chunk = response.read(block_size)
-        fd.seek(0)
-
-    except Exception:
-        fd.close()
-        raise
-
-    return RealFile(fd, mode, close=True, uri=uri or init)
-
-
 def get_uri(file_obj):
     """
     Returns the uri of the given file object
@@ -1153,16 +1103,6 @@ def get_file(init, mode="r", uri=None, close=False):
                 msg = f"Unable to open {init} with mode {mode}"
                 raise ValueError(msg) from err
             return get_file(fd, uri=uri or init, close=True)
-
-        # finally, allow the legacy http code to handle this (with a warning)
-        if parsed.scheme in ["http", "https"]:
-            if "w" in mode:
-                msg = "HTTP connections can not be opened for writing"
-                raise ValueError(msg)
-
-            msg = "Opening http urls without fsspec is deprecated. Please install fsspec[http]"
-            warnings.warn(msg, AsdfDeprecationWarning)
-            return _http_to_temp(init, mode, uri=uri)
 
     if isinstance(init, io.BytesIO):
         return MemoryIO(init, mode, uri=uri)
