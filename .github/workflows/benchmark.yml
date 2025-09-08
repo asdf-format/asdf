@@ -41,4 +41,5 @@ jobs:
       - uses: CodSpeedHQ/action@v4
         with:
           run: pytest benchmarks/ --codspeed --codspeed-mode instrumentation
+          mode: instrumentation
           token: ${{ secrets.CODSPEED_TOKEN }}
