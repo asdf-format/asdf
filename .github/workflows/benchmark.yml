@@ -40,5 +40,5 @@ jobs:
         run: pip install pytest-codspeed .[benchmark]
       - uses: CodSpeedHQ/action@v4
         with:
-          run: pytest benchmarks/ --codspeed
+          run: pytest benchmarks/ --codspeed --codspeed-mode instrumentation
           token: ${{ secrets.CODSPEED_TOKEN }}
