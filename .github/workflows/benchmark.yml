@@ -38,7 +38,7 @@ jobs:
           python-version: "3.13"
       - name: Install dependencies
         run: pip install pytest-codspeed .[benchmark]
-      - uses: CodSpeedHQ/action@v3
+      - uses: CodSpeedHQ/action@v4
         with:
           run: pytest benchmarks/ --codspeed
           token: ${{ secrets.CODSPEED_TOKEN }}
