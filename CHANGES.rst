@@ -1,3 +1,20 @@
+5.0.0 (2025-09-10)
+==================
+
+Removal
+-------
+
+- Remove deprecated refresh_extension_manager argument to
+  ``AsdfFile.schema_info`` and ``AsdfFile.info``.
+  Remove deprecated url_mapping argument to ``get_validator``.
+  Remove deprecated resolver argument to ``load_schema``.
+  Remove deprecated ``AsdfConfig.convert_unknown_ndarray_subclasses``.
+  Remove deprecated application of ndarray specific validators to non-ndarrays.
+  Remove deprecated opening of "http://" uris (unless fsspec is installed).
+  Remove deprecated pytest_asdf plugin. (`#1970
+  <https://github.com/asdf-format/asdf/pull/1970>`_)
+
+
 4.5.0 (2025-09-04)
 ==================
 
