@@ -40,7 +40,6 @@ the currently active config:
       all_array_compression: input
       all_array_compression_kwargs: None
       default_array_save_base: True
-      convert_unknown_ndarray_subclasses: False
       default_version: 1.6.0
       io_block_size: -1
       legacy_fill_schema_defaults: True
@@ -66,7 +65,6 @@ This allows for short-lived configuration changes that do not impact other code:
       all_array_compression: input
       all_array_compression_kwargs: None
       default_array_save_base: True
-      convert_unknown_ndarray_subclasses: False
       default_version: 1.6.0
       io_block_size: -1
       legacy_fill_schema_defaults: True
@@ -80,7 +78,6 @@ This allows for short-lived configuration changes that do not impact other code:
       all_array_compression: input
       all_array_compression_kwargs: None
       default_array_save_base: True
-      convert_unknown_ndarray_subclasses: False
       default_version: 1.6.0
       io_block_size: -1
       legacy_fill_schema_defaults: True
@@ -156,31 +153,6 @@ saved to the file.
 
 If ``False`` bytes for different arrays (even if they are views of the
 same memory) will be stored in different ASDF blocks.
-
-.. _convert_unknown_ndarray_subclasses:
-
-convert_unknown_ndarray_subclasses
-----------------------------------
-
-Convert otherwise unhandled instances of subclasses of ndarray into
-ndarrays prior to serialization.
-
-Previous extension code allowed AsdfTypes to convert instances of subclasses
-of supported types. Internally, the handling of ndarrays has been moved
-from an AsdfType to a Converter which does not support converting
-instances of subclasses unless they are explicitly listed. This means
-that code that previously relied on asdf converting instances of subclasses
-of ndarray into an ndarray will need to be updated to define a Converter
-for the ndarray subclass or to request that support be added directly
-in asdf (for subclasses in existing asdf dependencies).
-
-With this setting enabled, asdf will continue to convert instances
-of subclasses of ndarray but will issue a warning when an instance is
-converted. This currently defaults to ``False`` and issues
-a deprecation warning if enabled. In a future version of asdf
-this setting will be removed.
-
-Defaults to ``False``.
 
 default_version
 ---------------

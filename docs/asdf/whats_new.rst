@@ -6,6 +6,29 @@
 What's New
 **********
 
+.. _whats_new_5.0.0:
+
+5.0.0
+=====
+
+Asdf 5.0.0 removes some deprecated API.
+
+Removed API
+-----------
+
+- The ``refresh_extension_manager`` argument is no longer supported for
+  `AsdfFile.schema_info` and `AsdfFile.info`. There should be no need
+  for forced refreshing.
+- The ``url_mapping`` argument to ``asdf.schema.get_validator`` was removed.
+  This was a leftover from the legacy extension API and is no longer needed.
+- The ``resolver`` argument to `asdf.schema.load_schema` was removed.
+  This was a leftover from the legacy extension API and is no longer needed.
+- ``AsdfConfig.convert_unknown_ndarray_subclasses`` is removed. Please
+  implement a `asdf.extension.Converter` for any subclasses..
+- Opening of "http://" and "https://" uris now requires fsspec to be installed.
+- The bundled ``pytest_asdf`` plugin was removed. Please install
+  ``pytest-asdf-plugin`` for a replacement.
+
 .. _whats_new_4.0.0:
 
 4.0.0
@@ -125,7 +148,7 @@ Unknown NDArray Subclasses
 ^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 In asdf 3.0.0 a config attribute was added
-`asdf.config.AsdfConfig.convert_unknown_ndarray_subclasses` that
+``asdf.config.AsdfConfig.convert_unknown_ndarray_subclasses`` that
 was enabled by default (to retain the behavior of the removed legacy
 extension that handled ndarrays).
 
@@ -133,7 +156,7 @@ In asdf 4.0.0 this setting is disabled by default and issues a deprecation
 warning when enabled. In an upcoming version of asdf this setting will
 be removed.
 
-See :ref:`convert_unknown_ndarray_subclasses` for more details.
+See ``convert_unknown_ndarray_subclasses`` for more details.
 
 3.0.0
 =====
