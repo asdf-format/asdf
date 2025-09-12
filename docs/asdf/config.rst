@@ -33,14 +33,14 @@ the currently active config:
 .. code-block:: pycon
 
     >>> import asdf
-    >>> asdf.get_config()
+    >>> asdf.get_config()  # doctest: +ELLIPSIS
     <AsdfConfig
       array_inline_threshold: None
       all_array_storage: None
       all_array_compression: input
       all_array_compression_kwargs: None
       default_array_save_base: True
-      default_version: 1.6.0
+      default_version: ...
       io_block_size: -1
       legacy_fill_schema_defaults: True
       validate_on_read: True
@@ -55,7 +55,7 @@ This allows for short-lived configuration changes that do not impact other code:
 .. code-block:: pycon
 
     >>> import asdf
-    >>> with asdf.config_context() as config:
+    >>> with asdf.config_context() as config:  # doctest: +ELLIPSIS
     ...     config.validate_on_read = False
     ...     asdf.get_config()
     ...
@@ -65,20 +65,20 @@ This allows for short-lived configuration changes that do not impact other code:
       all_array_compression: input
       all_array_compression_kwargs: None
       default_array_save_base: True
-      default_version: 1.6.0
+      default_version: ...
       io_block_size: -1
       legacy_fill_schema_defaults: True
       validate_on_read: False
       lazy_tree: False
     >
-    >>> asdf.get_config()
+    >>> asdf.get_config()  # doctest: +ELLIPSIS
     <AsdfConfig
       array_inline_threshold: None
       all_array_storage: None
       all_array_compression: input
       all_array_compression_kwargs: None
       default_array_save_base: True
-      default_version: 1.6.0
+      default_version: ...
       io_block_size: -1
       legacy_fill_schema_defaults: True
       validate_on_read: True

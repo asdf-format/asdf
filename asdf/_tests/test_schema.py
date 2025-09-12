@@ -737,7 +737,7 @@ custom: !<tag:nowhere.org:custom/tag_reference-1.0.0>
     """
 
     with tag_reference_extension():
-        buff = yaml_to_asdf(yaml)
+        buff = yaml_to_asdf(yaml, version="1.6.0")
         with asdf.open(buff) as ff:
             custom = ff.tree["custom"]
             assert custom.name == "Something"
@@ -798,7 +798,7 @@ custom: !<tag:nowhere.org:custom/foreign_tag_reference-1.0.0>
         cfg.add_resource_mapping({schema_uri: tag_schema})
         cfg.add_extension(ForeignTagReferenceExtension())
 
-        buff = yaml_to_asdf(yaml)
+        buff = yaml_to_asdf(yaml, version="1.6.0")
         with asdf.open(buff) as ff:
             a = ff.tree["custom"].a
             assert a.name == "Something"

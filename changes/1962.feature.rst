@@ -1,0 +1,2 @@
+Add support for registering development versions of core extensions if the ASDF_DEV_CORE_SCHEMAS environment variable is set.
+Writing files with development extensions is discouraged as schema changes may make these files unreable in the future.

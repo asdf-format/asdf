@@ -2,7 +2,6 @@ from itertools import combinations
 
 from asdf.versioning import (
     AsdfVersion,
-    asdf_standard_development_version,
     default_version,
     supported_versions,
 )
@@ -10,10 +9,6 @@ from asdf.versioning import (
 
 def test_default_in_supported_versions():
     assert default_version in supported_versions
-
-
-def test_development_is_not_default():
-    assert default_version != asdf_standard_development_version
 
 
 def test_version_constructor():
