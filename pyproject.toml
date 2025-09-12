@@ -14,8 +14,7 @@ dynamic = [
   'version',
 ]
 dependencies = [
-  # "asdf-standard>=1.1.0",
-  "asdf-standard @ git+https://github.com/braingram/asdf-standard.git@standard_1p7p0",
+  "asdf-standard>=1.1.0",
   "asdf-transform-schemas>=0.3",  # required for asdf-1.0.0 schema
   "importlib-metadata>=4.11.4 ; python_version<='3.11'",
   "jmespath>=0.6.2",
