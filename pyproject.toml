@@ -189,7 +189,6 @@ extend-ignore = [
     "RUF005",  # prefer concatenate over add for collections
     "RUF012",  # mutable-class-default (typing related)
     "RUF043",  # ambiguous raise
-    "RUF059",  # unused unpacked variable
 ]
 
 [tool.ruff.lint.per-file-ignores]

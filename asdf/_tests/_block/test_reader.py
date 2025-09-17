@@ -168,7 +168,7 @@ def test_invalid_block_in_index_with_valid_magic(tmp_path):
 
 def test_closed_file(tmp_path):
     fn = tmp_path / "test.bin"
-    with gen_blocks(fn=fn, with_index=True) as (fd, check):
+    with gen_blocks(fn=fn, with_index=True) as (fd, _):
         blocks = read_blocks(fd, lazy_load=True)
         blk = blocks[1]
     with pytest.raises(OSError, match="Attempt to load block from closed file"):
