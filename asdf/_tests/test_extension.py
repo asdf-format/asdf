@@ -1037,7 +1037,7 @@ def test_extension_converter_by_class_path():
         assert "mailbox" not in sys.modules
 
         # as the module hasn't been loaded, the converter shouldn't be found
-        with pytest.raises(KeyError, match="No support available for Python type 'mailbox.Mailbox'"):
+        with pytest.raises(KeyError, match=r"No support available for Python type 'mailbox\.Mailbox'"):
             extension_manager.get_converter_for_type(typ)
 
         # make sure inspecting the type didn't import the module

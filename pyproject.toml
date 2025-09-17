@@ -188,7 +188,6 @@ extend-ignore = [
     "S310", # URL open for permitted schemes
     "RUF005",  # prefer concatenate over add for collections
     "RUF012",  # mutable-class-default (typing related)
-    "RUF043",  # ambiguous raise
 ]
 
 [tool.ruff.lint.per-file-ignores]

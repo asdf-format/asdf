@@ -68,27 +68,27 @@ def test_default_compression():
 
 @pytest.mark.parametrize("invalid_storage", invalid_storage_types)
 def test_invalid_storage_type_init(invalid_storage):
-    with pytest.raises(ValueError, match="array_storage must be one of.*"):
+    with pytest.raises(ValueError, match=r"array_storage must be one of.*"):
         Options(invalid_storage)
 
 
 @pytest.mark.parametrize("invalid_storage", invalid_storage_types)
 def test_invalid_storage_attr(invalid_storage):
     o = Options("internal")
-    with pytest.raises(ValueError, match="array_storage must be one of.*"):
+    with pytest.raises(ValueError, match=r"array_storage must be one of.*"):
         o.storage_type = invalid_storage
 
 
 @pytest.mark.parametrize("invalid_compression", invalid_compression_types)
 def test_invalid_compression_attr(invalid_compression):
     o = Options("internal")
-    with pytest.raises(ValueError, match="Invalid compression.*"):
+    with pytest.raises(ValueError, match=r"Invalid compression.*"):
         o.compression = invalid_compression
 
 
 @pytest.mark.parametrize("invalid_compression", invalid_compression_types)
 def test_invalid_compression_init(invalid_compression):
-    with pytest.raises(ValueError, match="Invalid compression.*"):
+    with pytest.raises(ValueError, match=r"Invalid compression.*"):
         Options("internal", invalid_compression)
 
 

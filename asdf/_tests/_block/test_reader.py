@@ -140,7 +140,7 @@ def test_invalid_block_index(tmp_path, invalid_block_index):
             with pytest.warns(AsdfBlockIndexWarning, match="Failed to read block index"):
                 check(read_blocks(fd, lazy_load=True))
         else:
-            with pytest.raises(ValueError, match="Header size.*"):
+            with pytest.raises(ValueError, match=r"Header size.*"):
                 check(read_blocks(fd, lazy_load=True))
 
 
@@ -190,7 +190,7 @@ def test_bad_checksum(validate_checksums):
 
     with generic_io.get_file(buff, mode="r") as fd:
         if validate_checksums:
-            with pytest.raises(ValueError, match=".* does not match given checksum"):
+            with pytest.raises(ValueError, match=r".* does not match given checksum"):
                 read_blocks(fd, lazy_load=False, validate_checksums=validate_checksums)[0].data
         else:
             read_blocks(fd, lazy_load=False, validate_checksums=validate_checksums)[0].data
