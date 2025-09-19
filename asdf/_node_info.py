@@ -361,7 +361,7 @@ class NodeSchemaInfo:
                 # node is the item in the tree
                 # We might sometimes not want to use that node directly
                 # but instead using a different node for traversal.
-                t_node, traversable, from_converter = _make_traversable(node, extension_manager)
+                t_node, traversable, _ = _make_traversable(node, extension_manager)
                 if (is_container(node) or traversable) and id(node) in seen:
                     info = NodeSchemaInfo(
                         key,

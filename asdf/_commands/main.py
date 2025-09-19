@@ -50,7 +50,7 @@ def make_argparser():
 
 
 def main_from_args(args):
-    parser, subparsers = make_argparser()
+    parser, _ = make_argparser()
 
     args = parser.parse_args(args)
 

@@ -67,7 +67,7 @@ def implode(input_, output=None, resolve_references=False):
         If `True` resolve all external references before saving.
     """
     if output is None:
-        base, ext = os.path.splitext(input_)
+        base, _ = os.path.splitext(input_)
         output = base + "_all" + ".asdf"
     with asdf.open(input_) as ff:
         ff2 = AsdfFile(ff)
@@ -121,7 +121,7 @@ def explode(input_, output=None):
         The output file.
     """
     if output is None:
-        base, ext = os.path.splitext(input_)
+        base, _ = os.path.splitext(input_)
         output = base + "_exploded" + ".asdf"
     with asdf.open(input_) as ff:
         ff.write_to(output, all_array_storage="external")

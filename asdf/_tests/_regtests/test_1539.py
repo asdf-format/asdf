@@ -17,6 +17,6 @@ def test_invalid_seek_and_read_from_closed_memoryio():
     b.seek(0)
     f = asdf.generic_io.get_file(b)
     f.close()
-    with pytest.raises(IOError, match="I/O operation on closed file."):
+    with pytest.raises(IOError, match=r"I/O operation on closed file\."):
         f.read_into_array(10)
     assert b.tell() == 0

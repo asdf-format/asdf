@@ -169,7 +169,7 @@ def test_write_oversized_block():
     data = np.ones(30, dtype="uint8")
     raw_fd = io.BytesIO()
     fd = generic_io.get_file(raw_fd, mode="rw")
-    with pytest.raises(RuntimeError, match="Block used size.*"):
+    with pytest.raises(RuntimeError, match=r"Block used size.*"):
         bio.write_block(fd, data, allocated_size=0)
     assert fd.tell() == 0
 
@@ -190,7 +190,7 @@ def test_fd_not_seekable():
 
     np.testing.assert_array_equal(d, data)
 
-    with pytest.raises(ValueError, match="write_block received offset.*"):
+    with pytest.raises(ValueError, match=r"write_block received offset.*"):
         bio.write_block(fd, data, offset=0)
 
 
@@ -223,14 +223,14 @@ def test_read_from_closed(tmp_path):
         bio.write_block(fd, data, stream=True)
     with generic_io.get_file(fn, mode="rw") as fd:
         _, _, _, callback = bio.read_block(fd, offset=0, lazy_load=True)
-    with pytest.raises(OSError, match="ASDF file has already been closed. Can not get the data."):
+    with pytest.raises(OSError, match=r"ASDF file has already been closed\. Can not get the data\."):
         callback()
 
 
 @pytest.mark.parametrize("data", [np.ones(10, dtype="f4"), np.ones((3, 3), dtype="uint8")])
 def test_invalid_data(data):
     fd = generic_io.get_file(io.BytesIO(), mode="rw")
-    with pytest.raises(ValueError, match="Data must be of.*"):
+    with pytest.raises(ValueError, match=r"Data must be of.*"):
         bio.write_block(fd, data, stream=True)
 
 
@@ -337,7 +337,7 @@ def test_read_block_index_no_header(tmp_path):
     generate_block_index_file(fn, values=values, offset=0)
     with generic_io.get_file(fn, "r") as fd:
         fd.seek(len(constants.INDEX_HEADER))
-        with pytest.raises(BlockIndexError, match="Failed to read block index.*"):
+        with pytest.raises(BlockIndexError, match=r"Failed to read block index.*"):
             assert bio.read_block_index(fd) == values
 
 

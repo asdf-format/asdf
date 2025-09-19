@@ -170,7 +170,7 @@ exclude_lines = [
 ]
 
 [tool.ruff]
-target-version = "py38"
+target-version = "py39"
 line-length = 120
 extend-exclude = ["asdf/_extern/*", "asdf/_jsonschema/*", "docs/*"]
 
@@ -186,6 +186,7 @@ select = [
 ]
 extend-ignore = [
     "S310", # URL open for permitted schemes
+    "RUF005",  # prefer concatenate over add for collections
     "RUF012",  # mutable-class-default (typing related)
 ]
 
