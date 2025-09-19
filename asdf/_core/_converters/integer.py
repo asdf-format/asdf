@@ -7,6 +7,7 @@ class IntegerConverter(Converter):
     tags = [
         "tag:stsci.edu:asdf/core/integer-1.0.0",
         "tag:stsci.edu:asdf/core/integer-1.1.0",
+        "tag:stsci.edu:asdf/core/integer-1.2.0",
     ]
     types = ["asdf.tags.core.integer.IntegerType"]
 
