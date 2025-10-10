@@ -3,7 +3,7 @@ name = "asdf"
 description = "Python implementation of the ASDF Standard"
 readme = 'README.rst'
 license-files = ['LICENSE']
-authors = [{ name = 'The ASDF Developers', email = 'help@stsci.edu' }]
+authors = [{ name = 'The ASDF Developers' }]
 requires-python = '>=3.9'
 classifiers = [
   'Development Status :: 5 - Production/Stable',
