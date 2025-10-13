@@ -442,15 +442,14 @@ def _load_schema_cached(url, resolve_references):
 
                 if suburl_base == url or suburl_base == schema.get("id"):
                     # This is a local ref, which we'll resolve in both cases.
-                    subschema = schema
+                    return reference.resolve_fragment(schema, suburl_fragment)
                 else:
                     subschema = load_schema(suburl_base, True)
-
-                return reference.resolve_fragment(subschema, suburl_fragment)
+                    return reference.resolve_fragment(subschema, suburl_fragment)
 
             return node
 
-        schema = treeutil.walk_and_modify(schema, resolve_refs)
+        schema = treeutil.walk_and_modify(schema, resolve_refs, in_place=True)
 
     return schema
 

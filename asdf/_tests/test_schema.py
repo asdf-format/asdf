@@ -132,7 +132,7 @@ required: [foobar]
     schema_path = tmp_path / "nugatory.yaml"
     schema_path.write_bytes(schema_def.encode())
 
-    schema_tree = schema.load_schema(str(schema_path), resolve_references=True)
+    schema_tree = schema.load_schema(str(schema_path))
     schema.check_schema(schema_tree)
 
 
@@ -156,7 +156,7 @@ required: [foobar]
     schema_path = tmp_path / "nugatory.yaml"
     schema_path.write_bytes(schema_def.encode())
 
-    schema_tree = schema.load_schema(str(schema_path), resolve_references=True)
+    schema_tree = schema.load_schema(str(schema_path))
     schema.check_schema(schema_tree)
 
 
@@ -812,6 +812,11 @@ def test_self_reference_resolution(test_data_path):
     )
     assert "$ref" not in repr(s)
     assert s["anyOf"][1] == s["anyOf"][0]
+
+
+def test_resolve_references():
+    s = schema.load_schema("http://stsci.edu/schemas/asdf/core/ndarray-1.0.0", resolve_references=True)
+    assert "$ref" not in repr(s)
 
 
 def test_schema_resolved_via_entry_points():

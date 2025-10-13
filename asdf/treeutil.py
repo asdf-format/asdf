@@ -219,7 +219,7 @@ class _RemoveNode:
 RemoveNode = _RemoveNode()
 
 
-def walk_and_modify(top, callback, postorder=True, _context=None):
+def walk_and_modify(top, callback, postorder=True, _context=None, in_place=False):
     """Modify a tree by walking it with a callback function.  It also has
     the effect of doing a deep copy.
 
@@ -279,14 +279,17 @@ def walk_and_modify(top, callback, postorder=True, _context=None):
         return _handle_generator(result)
 
     def _handle_mapping(node, json_id):
-        if isinstance(node, lazy_nodes.AsdfOrderedDictNode):
-            result = collections.OrderedDict()
-        elif isinstance(node, lazy_nodes.AsdfDictNode):
-            result = {}
+        if in_place:
+            result = node
         else:
-            result = node.__class__()
-        if isinstance(node, tagged.Tagged):
-            result._tag = node._tag
+            if isinstance(node, lazy_nodes.AsdfOrderedDictNode):
+                result = collections.OrderedDict()
+            elif isinstance(node, lazy_nodes.AsdfDictNode):
+                result = {}
+            else:
+                result = node.__class__()
+            if isinstance(node, tagged.Tagged):
+                result._tag = node._tag
 
         pending_items = {}
         for key, value in node.items():
@@ -300,6 +303,7 @@ def walk_and_modify(top, callback, postorder=True, _context=None):
 
             elif (val := _recurse(value, json_id)) is not RemoveNode:
                 result[key] = val
+            # TODO handle RemoveNode
 
         yield result
 
@@ -307,6 +311,7 @@ def walk_and_modify(top, callback, postorder=True, _context=None):
             # Now that we've yielded, the pending children should
             # be available.
             for key, value in pending_items.items():
+                # TODO handle RemoveNode
                 if (val := _recurse(value, json_id)) is not RemoveNode:
                     result[key] = val
                 else:
@@ -315,12 +320,23 @@ def walk_and_modify(top, callback, postorder=True, _context=None):
                     del result[key]
 
     def _handle_mutable_sequence(node, json_id):
-        if isinstance(node, lazy_nodes.AsdfListNode):
-            result = []
+        if in_place:
+            result = node
+
+            def setter(i, v):
+                result[i] = v
+
         else:
-            result = node.__class__()
-        if isinstance(node, tagged.Tagged):
-            result._tag = node._tag
+
+            def setter(i, v):
+                result.append(v)
+
+            if isinstance(node, lazy_nodes.AsdfListNode):
+                result = []
+            else:
+                result = node.__class__()
+            if isinstance(node, tagged.Tagged):
+                result._tag = node._tag
 
         pending_items = {}
         for i, value in enumerate(node):
@@ -330,9 +346,11 @@ def walk_and_modify(top, callback, postorder=True, _context=None):
                 # PendingValue instance for now, and note that we'll
                 # need to fill in the real value later.
                 pending_items[i] = value
-                result.append(PendingValue)
+                setter(i, PendingValue)
+                # result.append(PendingValue)
             else:
-                result.append(_recurse(value, json_id))
+                setter(i, _recurse(value, json_id))
+                # result.append(_recurse(value, json_id))
 
         yield result
 
@@ -346,6 +364,9 @@ def walk_and_modify(top, callback, postorder=True, _context=None):
         # to construct (well, maybe possible in a C extension, but
         # we're not going to worry about that), so we don't need
         # to yield here.
+        if in_place:
+            # TODO better error
+            raise Exception("fail")
         contents = [_recurse(value, json_id) for value in node]
 
         result = node.__class__(contents)
