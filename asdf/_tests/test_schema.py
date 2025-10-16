@@ -132,7 +132,7 @@ required: [foobar]
     schema_path = tmp_path / "nugatory.yaml"
     schema_path.write_bytes(schema_def.encode())
 
-    schema_tree = schema.load_schema(str(schema_path))
+    schema_tree = schema.load_schema(str(schema_path), resolve_references=True)
     schema.check_schema(schema_tree)
 
 
@@ -156,7 +156,7 @@ required: [foobar]
     schema_path = tmp_path / "nugatory.yaml"
     schema_path.write_bytes(schema_def.encode())
 
-    schema_tree = schema.load_schema(str(schema_path))
+    schema_tree = schema.load_schema(str(schema_path), resolve_references=True)
     schema.check_schema(schema_tree)
 
 
@@ -815,7 +815,9 @@ def test_self_reference_resolution(test_data_path):
 
 
 def test_resolve_references():
-    s = schema.load_schema("http://stsci.edu/schemas/asdf/core/ndarray-1.0.0", resolve_references=True)
+    s = schema.load_schema(
+        "http://stsci.edu/schemas/asdf/core/ndarray-1.0.0", resolve_references=True, allow_recursion=True
+    )
     assert "$ref" not in repr(s)
 
 
