@@ -1,3 +1,4 @@
+import contextlib
 import copy
 import getpass
 import io
@@ -280,6 +281,7 @@ def test_open_pathlib_path(tmp_path):
         assert (af["data"] == tree["data"]).all()
 
 
+@pytest.mark.parametrize("strict", [True, False])
 @pytest.mark.parametrize(
     ("installed", "extension", "warns"),
     [
@@ -291,37 +293,41 @@ def test_open_pathlib_path(tmp_path):
         ("2.0.1", "2.0.dev12345", False),
     ],
 )
-def test_extension_version_check(installed, extension, warns):
+def test_extension_version_check(installed, extension, warns, strict, with_lazy_tree, tmp_path):
     class FooExtension:
         extension_uri = "asdf://somewhere.org/extensions/foo-1.0.0"
 
     proxy = ExtensionProxy(FooExtension(), package_name="foo", package_version=installed)
 
+    test_filename = tmp_path / "test.asdf"
+
+    asdf.dump(
+        {
+            "history": {
+                "extensions": [
+                    asdf.tags.core.ExtensionMetadata(
+                        extension_class="something",
+                        extension_uri=FooExtension.extension_uri,
+                        software=asdf.tags.core.Software(name="foo", version=extension),
+                    ),
+                ],
+            },
+        },
+        test_filename,
+    )
+    if warns:
+        if strict:
+            ctx = pytest.raises(RuntimeError, match=r"was created with extension")
+        else:
+            ctx = pytest.warns(AsdfPackageVersionWarning, match=r"was created with extension")
+    else:
+        ctx = contextlib.nullcontext()
+
     with config_context() as config:
         if installed is not None:
             config.add_extension(proxy)
-        af = asdf.AsdfFile()
-
-    tree = {
-        "history": {
-            "extensions": [
-                asdf.tags.core.ExtensionMetadata(
-                    extension_uri=FooExtension.extension_uri,
-                    software=asdf.tags.core.Software(name="foo", version=extension),
-                ),
-            ],
-        },
-    }
-
-    if warns:
-        with pytest.warns(AsdfPackageVersionWarning, match=r"File was created with"):
-            af._check_extensions(tree)
-
-        with pytest.raises(RuntimeError, match=r"^File was created with"):
-            af._check_extensions(tree, strict=True)
-
-    else:
-        af._check_extensions(tree)
+        with ctx, asdf.open(test_filename, strict_extension_check=strict):
+            pass
 
 
 @pytest.mark.parametrize(

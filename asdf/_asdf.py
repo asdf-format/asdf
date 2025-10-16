@@ -237,7 +237,11 @@ class AsdfFile:
         strict : bool, optional
             Set to `True` to convert warnings to exceptions.
         """
-        if "history" not in tree or not isinstance(tree["history"], dict) or "extensions" not in tree["history"]:
+        if (
+            "history" not in tree
+            or not isinstance(tree["history"], (dict, lazy_nodes.AsdfDictNode))
+            or "extensions" not in tree["history"]
+        ):
             return
 
         for extension in tree["history"]["extensions"]:
