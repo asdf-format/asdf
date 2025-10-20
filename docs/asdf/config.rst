@@ -198,6 +198,20 @@ improve performance.
 
 Defaults to True.
 
+lazy_tree
+---------
+
+Flag to control if the tree is "lazy". See the ``lazy_tree`` argument to
+`asdf.open` for more details.
+
+warn_on_failed_conversion
+-------------------------
+
+Flag to control if any errors raised during conversion of a tagged object to
+a custom object are caught and turned into warnings. It may be helpful to
+enable this option when opening old files with tags that are no longer supported
+in the current environment.
+
 Additional AsdfConfig features
 ==============================
 
