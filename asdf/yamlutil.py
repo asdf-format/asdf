@@ -6,6 +6,7 @@ import numpy as np
 import yaml
 
 from . import schema, tagged, treeutil, util
+from .config import get_config
 from .constants import STSCI_SCHEMA_TAG_BASE, YAML_TAG_PREFIX
 from .exceptions import AsdfConversionWarning, AsdfSerializationError
 from .extension._serialization_context import BlockAccess
@@ -322,6 +323,7 @@ def tagged_tree_to_custom_tree(tree, ctx, force_raw_types=False, _serialization_
         _serialization_context = ctx._create_serialization_context(BlockAccess.READ)
 
     extension_manager = _serialization_context.extension_manager
+    cfg = get_config()
 
     def _walker(node):
         if force_raw_types:
@@ -333,7 +335,15 @@ def tagged_tree_to_custom_tree(tree, ctx, force_raw_types=False, _serialization_
 
         if extension_manager.handles_tag(tag):
             converter = extension_manager.get_converter_for_tag(tag)
-            obj = converter.from_yaml_tree(node.data, tag, _serialization_context)
+            try:
+                obj = converter.from_yaml_tree(node.data, tag, _serialization_context)
+            except Exception as err:
+                if cfg.warn_on_failed_conversion:
+                    # TODO improve warning message
+                    warnings.warn(f"Failed conversion: {err}", UserWarning)
+                    obj = node
+                else:
+                    raise
             _serialization_context.assign_object(obj)
             _serialization_context.assign_blocks()
             _serialization_context._mark_extension_used(converter.extension)

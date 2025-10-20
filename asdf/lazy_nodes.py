@@ -9,6 +9,7 @@ import warnings
 import weakref
 
 from . import tagged, treeutil, yamlutil
+from .config import get_config
 from .exceptions import AsdfConversionWarning, AsdfLazyReferenceError
 from .extension._serialization_context import BlockAccess
 
@@ -207,7 +208,15 @@ class _AsdfNode:
                 else:
                     data = _to_lazy_node(value.data, self._af_ref)
                     sctx = af._create_serialization_context(BlockAccess.READ)
-                    obj = converter.from_yaml_tree(data, tag, sctx)
+                    try:
+                        obj = converter.from_yaml_tree(data, tag, sctx)
+                    except Exception as err:
+                        if get_config().warn_on_failed_conversion:
+                            # TODO improve warning message
+                            warnings.warn(f"Failed conversion: {err}", UserWarning)
+                            obj = data
+                        else:
+                            raise
                     sctx.assign_object(obj)
                     sctx.assign_blocks()
                     sctx._mark_extension_used(converter.extension)
