@@ -110,7 +110,11 @@ def _to_lazy_node(node, af_ref):
     If the object does not have a corresponding subclass
     it will be returned unchanged.
     """
-    if isinstance(node, list):
+    if isinstance(node, tagged.TaggedList):
+        return tagged.TaggedList(data=_to_lazy_node(node.data, af_ref), tag=node._tag)
+    elif isinstance(node, tagged.TaggedDict):
+        return tagged.TaggedDict(data=_to_lazy_node(node.data, af_ref), tag=node._tag)
+    elif isinstance(node, list):
         return AsdfListNode(node, af_ref)
     elif isinstance(node, collections.OrderedDict):
         return AsdfOrderedDictNode(node, af_ref)
@@ -180,6 +184,8 @@ class _AsdfNode:
         # if the value has already been wrapped, return it
         if isinstance(value, _AsdfNode):
             return value
+        if isinstance(value, (tagged.TaggedDict, tagged.TaggedList)) and isinstance(value.data, _AsdfNode):
+            return value
         if not isinstance(value, tagged.Tagged) and type(value) not in _base_type_to_node_map:
             return value
         af = _resolve_af_ref(self._af_ref)
@@ -214,7 +220,7 @@ class _AsdfNode:
                         if get_config().warn_on_failed_conversion:
                             # TODO improve warning message
                             warnings.warn(f"Failed conversion: {err}", UserWarning)
-                            obj = data
+                            obj = _to_lazy_node(value, self._af_ref)
                         else:
                             raise
                     sctx.assign_object(obj)
