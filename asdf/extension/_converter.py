@@ -299,9 +299,15 @@ class ConverterProxy(Converter):
         try:
             return self._delegate.from_yaml_tree(node, tag, ctx)
         except Exception as err:
-            # TODO warn, etc
-            warnings.warn(f"Failed conversion: {err}", UserWarning)
-            return node
+            # TODO fix need for local import
+            from asdf.config import get_config
+
+            if get_config().warn_on_failed_conversion:
+                # TODO import warning, etc
+                warnings.warn(f"Failed conversion: {err}", UserWarning)
+            else:
+                raise err
+        return node
 
     def to_info(self, obj):
         """
