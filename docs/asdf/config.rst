@@ -45,6 +45,7 @@ the currently active config:
       legacy_fill_schema_defaults: True
       validate_on_read: True
       lazy_tree: False
+      warn_on_failed_conversion: False
     >
 
 The latter method, `~asdf.config_context`, returns a context manager that
@@ -70,6 +71,7 @@ This allows for short-lived configuration changes that do not impact other code:
       legacy_fill_schema_defaults: True
       validate_on_read: False
       lazy_tree: False
+      warn_on_failed_conversion: False
     >
     >>> asdf.get_config()  # doctest: +ELLIPSIS
     <AsdfConfig
@@ -83,6 +85,7 @@ This allows for short-lived configuration changes that do not impact other code:
       legacy_fill_schema_defaults: True
       validate_on_read: True
       lazy_tree: False
+      warn_on_failed_conversion: False
     >
 
 Special note to library maintainers
