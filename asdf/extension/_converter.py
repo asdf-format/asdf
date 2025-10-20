@@ -4,7 +4,6 @@ types.  Will eventually replace the `asdf.types` module.
 """
 
 import abc
-import warnings
 
 from asdf.util import get_class_name, uri_match
 
@@ -296,18 +295,7 @@ class ConverterProxy(Converter):
         -------
         object
         """
-        try:
-            return self._delegate.from_yaml_tree(node, tag, ctx)
-        except Exception as err:
-            # TODO fix need for local import
-            from asdf.config import get_config
-
-            if get_config().warn_on_failed_conversion:
-                # TODO import warning, etc
-                warnings.warn(f"Failed conversion: {err}", UserWarning)
-            else:
-                raise err
-        return node
+        return self._delegate.from_yaml_tree(node, tag, ctx)
 
     def to_info(self, obj):
         """
