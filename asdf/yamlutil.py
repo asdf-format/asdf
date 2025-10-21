@@ -339,8 +339,7 @@ def tagged_tree_to_custom_tree(tree, ctx, force_raw_types=False, _serialization_
                 obj = converter.from_yaml_tree(node.data, tag, _serialization_context)
             except Exception as err:
                 if cfg.warn_on_failed_conversion:
-                    # TODO improve warning message
-                    warnings.warn(f"Failed conversion: {err}", UserWarning)
+                    warnings.warn(f"A node failed to convert with: {err}", AsdfConversionWarning)
                     obj = node
                 else:
                     raise

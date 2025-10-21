@@ -67,7 +67,7 @@ def test_failed_conversion_warns(foobar_extension):
     asdf_str = asdf.dumps(tree)
     with asdf.config_context() as cfg:
         cfg.warn_on_failed_conversion = True
-        with pytest.warns(UserWarning, match="No bar"):
+        with pytest.warns(asdf.exceptions.AsdfConversionWarning, match="No bar"):
             read_obj = asdf.loads(asdf_str)
         foo = read_obj["foo"]
         assert isinstance(foo, Foo)
@@ -87,7 +87,7 @@ def test_lazy_failed_conversion_warns(foobar_extension, tmp_path):
         with asdf.open(test_path) as af:
             foo = af["foo"]
             assert isinstance(foo, Foo)
-            with pytest.warns(UserWarning, match="No bar"):
+            with pytest.warns(asdf.exceptions.AsdfConversionWarning, match="No bar"):
                 bar = af["foo"].data["bar"]
             assert isinstance(bar, asdf.tagged.TaggedDict)
             assert bar._tag == bar_tag_uri
