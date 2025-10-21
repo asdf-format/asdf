@@ -218,8 +218,7 @@ class _AsdfNode:
                         obj = converter.from_yaml_tree(data, tag, sctx)
                     except Exception as err:
                         if get_config().warn_on_failed_conversion:
-                            # TODO improve warning message
-                            warnings.warn(f"Failed conversion: {err}", UserWarning)
+                            warnings.warn(f"A node failed to convert with: {err}", AsdfConversionWarning)
                             obj = _to_lazy_node(value, self._af_ref)
                         else:
                             raise
