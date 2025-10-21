@@ -346,6 +346,17 @@ def tagged_tree_to_custom_tree(tree, ctx, force_raw_types=False, _serialization_
             _serialization_context.assign_object(obj)
             _serialization_context.assign_blocks()
             _serialization_context._mark_extension_used(converter.extension)
+
+            if isinstance(obj, GeneratorType) and cfg.warn_on_failed_conversion:
+                # wrap the generator to catch any errors
+                def wrapped_generator(generator, node):
+                    try:
+                        yield from generator
+                    except Exception as err:
+                        warnings.warn(f"A node failed to convert with: {err}", AsdfConversionWarning)
+                        yield node
+
+                return wrapped_generator(obj, node)
             return obj
 
         if not ctx._ignore_unrecognized_tag:
