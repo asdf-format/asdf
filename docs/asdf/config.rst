@@ -45,6 +45,7 @@ the currently active config:
       legacy_fill_schema_defaults: True
       validate_on_read: True
       lazy_tree: False
+      warn_on_failed_conversion: False
     >
 
 The latter method, `~asdf.config_context`, returns a context manager that
@@ -70,6 +71,7 @@ This allows for short-lived configuration changes that do not impact other code:
       legacy_fill_schema_defaults: True
       validate_on_read: False
       lazy_tree: False
+      warn_on_failed_conversion: False
     >
     >>> asdf.get_config()  # doctest: +ELLIPSIS
     <AsdfConfig
@@ -83,6 +85,7 @@ This allows for short-lived configuration changes that do not impact other code:
       legacy_fill_schema_defaults: True
       validate_on_read: True
       lazy_tree: False
+      warn_on_failed_conversion: False
     >
 
 Special note to library maintainers
@@ -194,6 +197,20 @@ who trust the source of their files may wish to disable validation on read to
 improve performance.
 
 Defaults to True.
+
+lazy_tree
+---------
+
+Flag to control if the tree is "lazy". See the ``lazy_tree`` argument to
+`asdf.open` for more details.
+
+warn_on_failed_conversion
+-------------------------
+
+Flag to control if any errors raised during conversion of a tagged object to
+a custom object are caught and turned into warnings. It may be helpful to
+enable this option when opening old files with tags that are no longer supported
+in the current environment.
 
 Additional AsdfConfig features
 ==============================
