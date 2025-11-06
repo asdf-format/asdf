@@ -669,7 +669,7 @@ class GenericFile(metaclass=util._InheritDocstrings):
         msg = f"memmapping is not implemented for {self.__class__.__name__}"
         raise NotImplementedError(msg)
 
-    def read_into_array(self, size):
+    def read_into_array(self, size, out=None):
         """
         Read a chunk of the file into a uint8 array.
 
@@ -683,7 +683,10 @@ class GenericFile(metaclass=util._InheritDocstrings):
         array : np.memmap
         """
         buff = self.read(size)
-        return np.frombuffer(buff, np.uint8, size, 0)
+        if out is None:
+            return np.frombuffer(buff, np.uint8, size, 0)
+        out[:] = np.frombuffer(buff, np.uint8, size, 0)
+        return out
 
 
 class GenericWrapper:
@@ -794,7 +797,13 @@ class RealFile(RandomAccessFile):
         if hasattr(self, "_mmap"):
             self._mmap.flush()
 
-    def read_into_array(self, size):
+    def read_into_array(self, size, out=None):
+        if out is not None:
+            read_size = self._fd.readinto(out.data)
+            if read_size != size:
+                # TODO better message here
+                raise OSError("Read inconsistency")
+            return out
         return np.fromfile(self._fd, dtype=np.uint8, count=size)
 
     def _fix_permissions(self):
@@ -853,13 +862,17 @@ class MemoryIO(RandomAccessFile):
     def __init__(self, fd, mode, uri=None):
         super().__init__(fd, mode, uri=uri)
 
-    def read_into_array(self, size):
+    def read_into_array(self, size, out=None):
         buf = self._fd.getvalue()
         offset = self._fd.tell()
+        # TODO improve this
         result = np.frombuffer(buf, np.uint8, size, offset)
-        # Copy the buffer so the original memory can be released.
-        result = result.copy()
         self.seek(size, SEEK_CUR)
+        if out is not None:
+            out[:] = result
+        else:
+            # Copy the buffer so the original memory can be released.
+            result = result.copy()
         return result
 
 
@@ -937,7 +950,8 @@ class InputStream(GenericFile):
             msg = "Read past end of file"
             raise OSError(msg)
 
-    def read_into_array(self, size):
+    def read_into_array(self, size, out=None):
+        # TODO support out... what becomes an InputStream?
         try:
             # See if Numpy can handle this as a real file first...
             return np.fromfile(self._fd, np.uint8, size)
