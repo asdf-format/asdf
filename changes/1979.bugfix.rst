@@ -1,1 +1,0 @@
-Fix but preventing extension checking when opening a file with lazy_tree enabled.

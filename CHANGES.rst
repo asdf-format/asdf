@@ -1,3 +1,28 @@
+5.1.0 (2025-11-06)
+==================
+
+Bugfix
+------
+
+- Fix but preventing extension checking when opening a file with lazy_tree
+  enabled. (`#1979 <https://github.com/asdf-format/asdf/pull/1979>`_)
+
+
+Feature
+-------
+
+- Add support for registering unstable/development versions of core extensions
+  if the ASDF_UNSTABLE_CORE_SCHEMAS environment variable is set.
+  Writing files with unstable/development extensions is discouraged as schema
+  changes may make these files unreable in the future. (`#1962
+  <https://github.com/asdf-format/asdf/pull/1962>`_)
+- Add ``warn_on_failed_conversion`` to ``AsdfConfig``.
+  Enabling this option will convert any exceptions raised during conversion to
+  warnings.
+  This can be helpful when opening old files with unsupported tags. (`#1983
+  <https://github.com/asdf-format/asdf/pull/1983>`_)
+
+
 5.0.0 (2025-09-10)
 ==================
 
