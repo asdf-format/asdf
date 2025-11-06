@@ -26,6 +26,7 @@ DEFAULT_ALL_ARRAY_COMPRESSION = "input"
 DEFAULT_ALL_ARRAY_COMPRESSION_KWARGS = None
 DEFAULT_DEFAULT_ARRAY_SAVE_BASE = True
 DEFAULT_LAZY_TREE = False
+DEFAULT_WARN_ON_FAILED_CONVERSION = False
 
 
 class AsdfConfig:
@@ -49,6 +50,7 @@ class AsdfConfig:
         self._all_array_compression_kwargs = DEFAULT_ALL_ARRAY_COMPRESSION_KWARGS
         self._default_array_save_base = DEFAULT_DEFAULT_ARRAY_SAVE_BASE
         self._lazy_tree = DEFAULT_LAZY_TREE
+        self._warn_on_failed_conversion = DEFAULT_WARN_ON_FAILED_CONVERSION
 
         self._lock = threading.RLock()
 
@@ -452,6 +454,25 @@ class AsdfConfig:
     def lazy_tree(self, value):
         self._lazy_tree = value
 
+    @property
+    def warn_on_failed_conversion(self):
+        """
+        Get configuration that controls if errors during
+        conversion are converted to warnings.
+
+        Enabling this can be helpful when opening old
+        files that contain tags that are no longer supported.
+
+        Returns
+        -------
+        bool
+        """
+        return self._warn_on_failed_conversion
+
+    @warn_on_failed_conversion.setter
+    def warn_on_failed_conversion(self, value):
+        self._warn_on_failed_conversion = value
+
     def __repr__(self):
         return (
             "<AsdfConfig\n"
@@ -465,6 +486,7 @@ class AsdfConfig:
             f"  legacy_fill_schema_defaults: {self.legacy_fill_schema_defaults}\n"
             f"  validate_on_read: {self.validate_on_read}\n"
             f"  lazy_tree: {self.lazy_tree}\n"
+            f"  warn_on_failed_conversion: {self.warn_on_failed_conversion}\n"
             ">"
         )
 

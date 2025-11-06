@@ -9,6 +9,7 @@ import warnings
 import weakref
 
 from . import tagged, treeutil, yamlutil
+from .config import get_config
 from .exceptions import AsdfConversionWarning, AsdfLazyReferenceError
 from .extension._serialization_context import BlockAccess
 
@@ -109,7 +110,11 @@ def _to_lazy_node(node, af_ref):
     If the object does not have a corresponding subclass
     it will be returned unchanged.
     """
-    if isinstance(node, list):
+    if isinstance(node, tagged.TaggedList):
+        return tagged.TaggedList(data=_to_lazy_node(node.data, af_ref), tag=node._tag)
+    elif isinstance(node, tagged.TaggedDict):
+        return tagged.TaggedDict(data=_to_lazy_node(node.data, af_ref), tag=node._tag)
+    elif isinstance(node, list):
         return AsdfListNode(node, af_ref)
     elif isinstance(node, collections.OrderedDict):
         return AsdfOrderedDictNode(node, af_ref)
@@ -179,6 +184,8 @@ class _AsdfNode:
         # if the value has already been wrapped, return it
         if isinstance(value, _AsdfNode):
             return value
+        if isinstance(value, (tagged.TaggedDict, tagged.TaggedList)) and isinstance(value.data, _AsdfNode):
+            return value
         if not isinstance(value, tagged.Tagged) and type(value) not in _base_type_to_node_map:
             return value
         af = _resolve_af_ref(self._af_ref)
@@ -207,7 +214,14 @@ class _AsdfNode:
                 else:
                     data = _to_lazy_node(value.data, self._af_ref)
                     sctx = af._create_serialization_context(BlockAccess.READ)
-                    obj = converter.from_yaml_tree(data, tag, sctx)
+                    try:
+                        obj = converter.from_yaml_tree(data, tag, sctx)
+                    except Exception as err:
+                        if get_config().warn_on_failed_conversion:
+                            warnings.warn(f"A node failed to convert with: {err}", AsdfConversionWarning)
+                            obj = _to_lazy_node(value, self._af_ref)
+                        else:
+                            raise
                     sctx.assign_object(obj)
                     sctx.assign_blocks()
                     sctx._mark_extension_used(converter.extension)

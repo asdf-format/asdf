@@ -96,4 +96,4 @@ def test_data_path():
 def with_lazy_tree(request):
     with config.config_context() as cfg:
         cfg.lazy_tree = request.param
-        yield
+        yield cfg.lazy_tree

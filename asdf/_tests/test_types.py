@@ -11,14 +11,15 @@ def test_undefined_tag(with_lazy_tree):
     # implement as an extension
     from numpy import array
 
-    yaml = """
+    undefined_tag = "tag:nowhere.org:custom/also_undefined-1.3.0"
+    yaml = f"""
 undefined_data:
   !<tag:nowhere.org:custom/undefined_tag-1.0.0>
     - 5
-    - {'message': 'there is no tag'}
+    - 'message': 'there is no tag'
     - !core/ndarray-1.1.0
       [[1, 2, 3], [4, 5, 6]]
-    - !<tag:nowhere.org:custom/also_undefined-1.3.0>
+    - !<{undefined_tag}>
         - !core/ndarray-1.1.0 [[7],[8],[9],[10]]
         - !core/complex-1.0.0 3.14j
 """
@@ -30,6 +31,10 @@ undefined_data:
 
     assert missing[0] == 5
     assert missing[1] == {"message": "there is no tag"}
+    assert isinstance(missing[3], asdf.tagged.TaggedList)
+    assert missing[3]._tag == undefined_tag
+    if with_lazy_tree:
+        assert isinstance(missing[3].data, asdf.lazy_nodes.AsdfListNode)
     assert (missing[2] == array([[1, 2, 3], [4, 5, 6]])).all()
     assert (missing[3][0] == array([[7], [8], [9], [10]])).all()
     assert missing[3][1] == 3.14j
