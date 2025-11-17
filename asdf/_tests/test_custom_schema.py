@@ -60,27 +60,27 @@ def schema_name(request, test_data_path, as_pathlib):
 
 
 @pytest.mark.parametrize(
-    "schema_name, tree, expected_error",
+    "schema_name, test_tree, expected_error",
     TEST_CASES,
     indirect=["schema_name"],
 )
-def test_custom_validation_write_to(tmp_path, schema_name, tree, expected_error):
+def test_custom_validation_write_to(tmp_path, schema_name, test_tree, expected_error):
     asdf_file = tmp_path / "out.asdf"
 
     ctx = pytest.raises(ValidationError, match=expected_error) if expected_error else nullcontext()
     with ctx:
-        asdf.AsdfFile(tree, custom_schema=schema_name).write_to(asdf_file)
+        asdf.AsdfFile(test_tree, custom_schema=schema_name).write_to(asdf_file)
 
 
 @pytest.mark.parametrize(
-    "schema_name, tree, expected_error",
+    "schema_name, test_tree, expected_error",
     TEST_CASES,
     indirect=["schema_name"],
 )
-def test_custom_validation_open(tmp_path, schema_name, tree, expected_error):
+def test_custom_validation_open(tmp_path, schema_name, test_tree, expected_error):
     asdf_file = tmp_path / "out.asdf"
 
-    asdf.AsdfFile(tree).write_to(asdf_file)
+    asdf.AsdfFile(test_tree).write_to(asdf_file)
     ctx = pytest.raises(ValidationError, match=expected_error) if expected_error else nullcontext()
 
     with ctx, asdf.open(asdf_file, custom_schema=schema_name):
@@ -88,39 +88,39 @@ def test_custom_validation_open(tmp_path, schema_name, tree, expected_error):
 
 
 @pytest.mark.parametrize(
-    "schema_name, tree, expected_error",
+    "schema_name, test_tree, expected_error",
     TEST_CASES,
     indirect=["schema_name"],
 )
-def test_custom_validation_validate(schema_name, tree, expected_error):
+def test_custom_validation_validate(schema_name, test_tree, expected_error):
 
     ctx = pytest.raises(ValidationError, match=expected_error) if expected_error else nullcontext()
 
     with ctx:
-        asdf.AsdfFile(tree, custom_schema=schema_name).validate()
+        asdf.AsdfFile(test_tree, custom_schema=schema_name).validate()
 
 
 @pytest.mark.parametrize(
-    "schema_name, tree, expected_error",
+    "schema_name, test_tree, expected_error",
     TEST_CASES,
     indirect=["schema_name"],
 )
-def test_custom_validation_dumps(schema_name, tree, expected_error):
+def test_custom_validation_dumps(schema_name, test_tree, expected_error):
 
     ctx = pytest.raises(ValidationError, match=expected_error) if expected_error else nullcontext()
 
     with ctx:
-        asdf.dumps(tree, custom_schema=schema_name)
+        asdf.dumps(test_tree, custom_schema=schema_name)
 
 
 @pytest.mark.parametrize(
-    "schema_name, tree, expected_error",
+    "schema_name, test_tree, expected_error",
     TEST_CASES,
     indirect=["schema_name"],
 )
-def test_custom_validation_loads(schema_name, tree, expected_error):
+def test_custom_validation_loads(schema_name, test_tree, expected_error):
 
-    contents = asdf.dumps(tree)
+    contents = asdf.dumps(test_tree)
 
     ctx = pytest.raises(ValidationError, match=expected_error) if expected_error else nullcontext()
 
@@ -129,28 +129,28 @@ def test_custom_validation_loads(schema_name, tree, expected_error):
 
 
 @pytest.mark.parametrize(
-    "schema_name, tree, expected_error",
+    "schema_name, test_tree, expected_error",
     TEST_CASES,
     indirect=["schema_name"],
 )
-def test_custom_validation_dump(tmp_path, schema_name, tree, expected_error):
+def test_custom_validation_dump(tmp_path, schema_name, test_tree, expected_error):
     asdf_file = tmp_path / "out.asdf"
 
     ctx = pytest.raises(ValidationError, match=expected_error) if expected_error else nullcontext()
 
     with ctx:
-        asdf.dump(tree, asdf_file, custom_schema=schema_name)
+        asdf.dump(test_tree, asdf_file, custom_schema=schema_name)
 
 
 @pytest.mark.parametrize(
-    "schema_name, tree, expected_error",
+    "schema_name, test_tree, expected_error",
     TEST_CASES,
     indirect=["schema_name"],
 )
-def test_custom_validation_load(tmp_path, schema_name, tree, expected_error):
+def test_custom_validation_load(tmp_path, schema_name, test_tree, expected_error):
     asdf_file = tmp_path / "out.asdf"
 
-    asdf.AsdfFile(tree).write_to(asdf_file)
+    asdf.AsdfFile(test_tree).write_to(asdf_file)
     ctx = pytest.raises(ValidationError, match=expected_error) if expected_error else nullcontext()
 
     with ctx:
