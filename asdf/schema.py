@@ -380,7 +380,7 @@ def _make_jsonschema_refresolver():
     )
 
 
-def load_schema(url, resolve_references=False):
+def load_schema(url, resolve_references=False, allow_recursion=False):
     """
     Load a schema from the given URL.
 
@@ -390,13 +390,18 @@ def load_schema(url, resolve_references=False):
         The path to the schema
 
     resolve_references : bool, optional
-        If ``True``, resolve all ``$ref`` references.
+        If ``True``, resolve ``$ref`` references. Note that local
+        references will only be resolved 1 level deep to prevent
+        returning recursive schemas (see allow_recursion).
 
+    allow_recursion : bool, options
+        If ``True``, resolve all local references possibly producing
+        a recursive schema.
     """
     # We want to cache the work that went into constructing the schema, but returning
     # the same object is treacherous, because users who mutate the result will not
     # expect that they're changing the schema everywhere.
-    return copy.deepcopy(_load_schema_cached(url, resolve_references))
+    return copy.deepcopy(_load_schema_cached(url, resolve_references, allow_recursion))
 
 
 def _safe_resolve(json_id, uri):
@@ -427,7 +432,7 @@ def _safe_resolve(json_id, uri):
 
 
 @lru_cache
-def _load_schema_cached(url, resolve_references):
+def _load_schema_cached(url, resolve_references, allow_recursion=False):
     loader = _make_schema_loader()
     schema, url = loader(url)
 
@@ -442,15 +447,14 @@ def _load_schema_cached(url, resolve_references):
 
                 if suburl_base == url or suburl_base == schema.get("id"):
                     # This is a local ref, which we'll resolve in both cases.
-                    subschema = schema
+                    return reference.resolve_fragment(schema, suburl_fragment)
                 else:
                     subschema = load_schema(suburl_base, True)
-
-                return reference.resolve_fragment(subschema, suburl_fragment)
+                    return reference.resolve_fragment(subschema, suburl_fragment)
 
             return node
 
-        schema = treeutil.walk_and_modify(schema, resolve_refs)
+        schema = treeutil.walk_and_modify(schema, resolve_refs, in_place=allow_recursion)
 
     return schema
 
