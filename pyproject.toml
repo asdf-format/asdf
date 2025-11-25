@@ -4,7 +4,7 @@ description = "Python implementation of the ASDF Standard"
 readme = 'README.rst'
 license-files = ['LICENSE']
 authors = [{ name = 'The ASDF Developers' }]
-requires-python = '>=3.9'
+requires-python = '>=3.10'
 classifiers = [
   'Development Status :: 5 - Production/Stable',
   'Programming Language :: Python',
@@ -170,7 +170,7 @@ exclude_lines = [
 ]
 
 [tool.ruff]
-target-version = "py39"
+target-version = "py310"
 line-length = 120
 extend-exclude = ["asdf/_extern/*", "asdf/_jsonschema/*", "docs/*"]
 
