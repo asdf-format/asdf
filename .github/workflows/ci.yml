@@ -54,9 +54,6 @@ jobs:
         - linux: coverage
           name: Python 3.10 coverage
           python-version: 3.10
-        - linux: coverage
-          name: Python 3.9 coverage
-          python-version: 3.9
       coverage: codecov
 
   jsonschema:
@@ -115,9 +112,9 @@ jobs:
     with:
       submodules: false
       # Any env name which does not start with `pyXY` will use this Python version.
-      default_python: '3.9'
+      default_python: '3.10'
       envs: |
-        - linux: py39-oldestdeps-parallel
+        - linux: py310-oldestdeps-parallel
 
   compatibility:
     needs: [core]
