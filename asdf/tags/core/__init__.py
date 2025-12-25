@@ -1,4 +1,5 @@
 import collections
+import functools
 
 from .constant import Constant
 from .external_reference import ExternalArrayReference
@@ -24,7 +25,9 @@ __all__ = [
 # to pass an isinstance(..., dict) check and to allow it to be "lazy"
 # loaded when "lazy_tree=True".
 class AsdfObject(collections.UserDict, dict):
-    pass
+    @functools.wraps(collections.UserDict.keys)
+    def keys(self):
+        return self.data.keys()
 
 
 class Software(dict):
