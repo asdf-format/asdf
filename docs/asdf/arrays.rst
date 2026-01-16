@@ -224,16 +224,16 @@ to numpy arrays stored in ASDF:
     >>> ff = AsdfFile(tree)
     >>> # open the output file handle
     >>> with open('new_file.asdf', 'wb') as fd:
-    >>>     ff.write_to(fd)
-    >>>     # open the CSV file to be converted
-    >>>     with open('large_file.csv', 'r') as cfd:
-    >>>         # read each line of the CSV file
-    >>>         reader = csv.reader(cfd)
-    >>>         for row in reader:
-    >>>             # convert each row to a numpy array
-    >>>             array = np.array([int(x) for x in row], np.int64)
-    >>>             # write the array to the output file handle
-    >>>             fd.write(array.tobytes())
+    ...     ff.write_to(fd)
+    ...     # open the CSV file to be converted
+    ...     with open('large_file.csv', 'r') as cfd:
+    ...         # read each line of the CSV file
+    ...         reader = csv.reader(cfd)
+    ...         for row in reader:
+    ...             # convert each row to a numpy array
+    ...             array = np.array([int(x) for x in row], np.int64)
+    ...             # write the array to the output file handle
+    ...             fd.write(array.tobytes())
 
 Compression
 ===========
