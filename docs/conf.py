@@ -99,11 +99,6 @@ extensions = [
     "sphinx.ext.viewcode",
     "sphinxcontrib.jquery",
     "numpydoc",
-    "pytest_doctestplus.sphinx.doctestplus",
-    #'sphinx_astropy.ext.changelog_links',
-    #'sphinx_astropy.ext.generate_config',
-    #'sphinx_astropy.ext.intersphinx_toggle',
-    #'sphinx_astropy.ext.missing_static',
     "sphinx_automodapi.automodapi",
     "sphinx_automodapi.smart_resolver",
 ]
