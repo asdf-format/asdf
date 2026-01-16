@@ -209,31 +209,31 @@ of the data in memory as an intermediate step. Consider the following example
 that streams a large CSV file containing rows of integer data and converts it
 to numpy arrays stored in ASDF:
 
-.. doctest-skip::
+.. code::
 
-    >>> import csv
-    >>> import numpy as np
-    >>> from asdf import AsdfFile
-    >>> from asdf.tags.core import Stream
+    import csv
+    import numpy as np
+    from asdf import AsdfFile
+    from asdf.tags.core import Stream
 
-    >>> tree = {
-    ...     # We happen to know in advance that each row in the CSV has 100 ints
-    ...     'data': Stream([100], np.int64)
-    ... }
+    tree = {
+        # We happen to know in advance that each row in the CSV has 100 ints
+        'data': Stream([100], np.int64)
+    }
 
-    >>> ff = AsdfFile(tree)
-    >>> # open the output file handle
-    >>> with open('new_file.asdf', 'wb') as fd:
-    ...     ff.write_to(fd)
-    ...     # open the CSV file to be converted
-    ...     with open('large_file.csv', 'r') as cfd:
-    ...         # read each line of the CSV file
-    ...         reader = csv.reader(cfd)
-    ...         for row in reader:
-    ...             # convert each row to a numpy array
-    ...             array = np.array([int(x) for x in row], np.int64)
-    ...             # write the array to the output file handle
-    ...             fd.write(array.tobytes())
+    ff = AsdfFile(tree)
+    # open the output file handle
+    with open('new_file.asdf', 'wb') as fd:
+        ff.write_to(fd)
+        # open the CSV file to be converted
+        with open('large_file.csv', 'r') as cfd:
+            # read each line of the CSV file
+            reader = csv.reader(cfd)
+            for row in reader:
+                # convert each row to a numpy array
+                array = np.array([int(x) for x in row], np.int64)
+                # write the array to the output file handle
+                fd.write(array.tobytes())
 
 Compression
 ===========
