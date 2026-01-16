@@ -58,7 +58,7 @@ nitpick_ignore = [
 
 # Add intersphinx mappings
 intersphinx_mapping = {
-    #"jsonschema": ("https://python-jsonschema.readthedocs.io/en/stable/", None),
+    # "jsonschema": ("https://python-jsonschema.readthedocs.io/en/stable/", None),
     "numpy": ("https://numpy.org/doc/stable/", None),
     "pypa-packaging": ("https://packaging.python.org/en/latest/", None),
     "pytest": ("https://docs.pytest.org/en/latest/", None),
@@ -89,37 +89,37 @@ extensions = [
     "sphinx.ext.intersphinx",
     "sphinx.ext.extlinks",
     "sphinx_asdf",
-    'sphinx.ext.autodoc',
-    'sphinx.ext.coverage',
-    'sphinx.ext.inheritance_diagram',
-    'sphinx.ext.intersphinx',
-    'sphinx.ext.mathjax',
-    'sphinx.ext.todo',
-    'sphinx.ext.viewcode',
-    'sphinxcontrib.jquery',
-    'numpydoc',
-    'pytest_doctestplus.sphinx.doctestplus',
+    "sphinx.ext.autodoc",
+    "sphinx.ext.coverage",
+    "sphinx.ext.inheritance_diagram",
+    "sphinx.ext.intersphinx",
+    "sphinx.ext.mathjax",
+    "sphinx.ext.todo",
+    "sphinx.ext.viewcode",
+    "sphinxcontrib.jquery",
+    "numpydoc",
+    "pytest_doctestplus.sphinx.doctestplus",
     #'sphinx_astropy.ext.changelog_links',
     #'sphinx_astropy.ext.generate_config',
     #'sphinx_astropy.ext.intersphinx_toggle',
     #'sphinx_astropy.ext.missing_static',
-    'sphinx_automodapi.automodapi',
-    'sphinx_automodapi.smart_resolver',
+    "sphinx_automodapi.automodapi",
+    "sphinx_automodapi.smart_resolver",
 ]
 
 # List of patterns, relative to source directory, that match files and
 # directories to ignore when looking for source files.
-exclude_patterns = ['_build']
+exclude_patterns = ["_build"]
 
 # The suffix of source filenames.
-source_suffix = '.rst'
+source_suffix = ".rst"
 
 # The master toctree document.
-master_doc = 'index'
+master_doc = "index"
 
 # The reST default role (used for this markup: `text`) to use for all
 # documents. Set to the "smart" one.
-default_role = 'obj'
+default_role = "obj"
 
 # Don't show summaries of the members in each class along with the
 # class' docstring
@@ -127,7 +127,7 @@ numpydoc_show_class_members = False
 
 autosummary_generate = True
 
-automodapi_toctreedirnm = 'api'
+automodapi_toctreedirnm = "api"
 
 # Class documentation should contain *both* the class docstring and
 # the __init__ docstring
@@ -141,7 +141,7 @@ html_sidebars = {}
 # pixels large.
 html_favicon = "_static/images/favicon.ico"
 html_logo = ""
-html_last_updated_fmt = '%d %b %Y'
+html_last_updated_fmt = "%d %b %Y"
 
 globalnavlinks = {
     "ASDF Projects": "https://www.asdf-format.org",
