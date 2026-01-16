@@ -38,7 +38,8 @@ http = [
   "fsspec[http]>=2022.8.2",
 ]
 docs = [
-  "sphinx-asdf>=0.2.2",
+  #"sphinx-asdf>=0.2.2",
+  "sphinx-asdf @ git+https://github.com/braingram/sphinx-asdf@remove_theme",
   "graphviz",
   "sphinx-inline-tabs",
   'tomli; python_version < "3.11"',

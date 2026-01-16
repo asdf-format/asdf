@@ -7,8 +7,6 @@ if sys.version_info < (3, 11):
 else:
     import tomllib
 
-from sphinx_asdf.conf import *  # noqa: F403
-
 # The standard library importlib.metadata returns duplicate entrypoints
 # for all python versions up to and including 3.11
 # https://github.com/python/importlib_metadata/issues/410#issuecomment-1304258228
@@ -59,10 +57,16 @@ nitpick_ignore = [
 ]
 
 # Add intersphinx mappings
-intersphinx_mapping["semantic_version"] = ("https://python-semanticversion.readthedocs.io/en/latest/", None)
-intersphinx_mapping["jsonschema"] = ("https://python-jsonschema.readthedocs.io/en/stable/", None)
-intersphinx_mapping["stdatamodels"] = ("https://stdatamodels.readthedocs.io/en/latest/", None)
-intersphinx_mapping["pytest"] = ("https://docs.pytest.org/en/latest/", None)
+intersphinx_mapping = {
+    #"jsonschema": ("https://python-jsonschema.readthedocs.io/en/stable/", None),
+    "numpy": ("https://numpy.org/doc/stable/", None),
+    "pypa-packaging": ("https://packaging.python.org/en/latest/", None),
+    "pytest": ("https://docs.pytest.org/en/latest/", None),
+    "python": ("https://docs.python.org/3/", None),
+    "semantic_version": ("https://python-semanticversion.readthedocs.io/en/latest/", None),
+    "stdatamodels": ("https://stdatamodels.readthedocs.io/en/latest/", None),
+}
+
 
 # Docs are hosted as a "subproject" under the main project's domain: https://www.asdf-format.org/projects
 # This requires including links to main project (asdf-website) and the other asdf subprojects
@@ -77,19 +81,67 @@ subprojects = {
     "asdf-wcs-schemas": ("https://www.asdf-format.org/projects/asdf-wcs-schemas/en/latest/", None),
 }
 
-intersphinx_mapping.update(subprojects)  # noqa: F405
 
-extensions += ["sphinx_inline_tabs", "sphinx.ext.intersphinx", "sphinx.ext.extlinks"]  # noqa: F405
+intersphinx_mapping.update(subprojects)
+
+extensions = [
+    "sphinx_inline_tabs",
+    "sphinx.ext.intersphinx",
+    "sphinx.ext.extlinks",
+    "sphinx_asdf",
+    'sphinx.ext.autodoc',
+    'sphinx.ext.coverage',
+    'sphinx.ext.inheritance_diagram',
+    'sphinx.ext.intersphinx',
+    'sphinx.ext.mathjax',
+    'sphinx.ext.todo',
+    'sphinx.ext.viewcode',
+    'sphinxcontrib.jquery',
+    'numpydoc',
+    'pytest_doctestplus.sphinx.doctestplus',
+    #'sphinx_astropy.ext.changelog_links',
+    #'sphinx_astropy.ext.generate_config',
+    #'sphinx_astropy.ext.intersphinx_toggle',
+    #'sphinx_astropy.ext.missing_static',
+    'sphinx_automodapi.automodapi',
+    'sphinx_automodapi.smart_resolver',
+]
+
+# List of patterns, relative to source directory, that match files and
+# directories to ignore when looking for source files.
+exclude_patterns = ['_build']
+
+# The suffix of source filenames.
+source_suffix = '.rst'
+
+# The master toctree document.
+master_doc = 'index'
+
+# The reST default role (used for this markup: `text`) to use for all
+# documents. Set to the "smart" one.
+default_role = 'obj'
+
+# Don't show summaries of the members in each class along with the
+# class' docstring
+numpydoc_show_class_members = False
+
+autosummary_generate = True
+
+automodapi_toctreedirnm = 'api'
+
+# Class documentation should contain *both* the class docstring and
+# the __init__ docstring
+autoclass_content = "both"
 
 html_theme = "furo"
 html_static_path = ["_static"]
-# Override default settings from sphinx_asdf / sphinx_astropy (incompatible with furo)
 html_sidebars = {}
 # The name of an image file (within the static path) to use as favicon of the
 # docs.  This file should be a Windows icon file (.ico) being 16x16 or 32x32
 # pixels large.
 html_favicon = "_static/images/favicon.ico"
 html_logo = ""
+html_last_updated_fmt = '%d %b %Y'
 
 globalnavlinks = {
     "ASDF Projects": "https://www.asdf-format.org",

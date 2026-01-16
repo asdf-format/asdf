@@ -575,7 +575,7 @@ def validate(instance, ctx=None, schema=None, validators=None, reading=False, *a
     tag on the instance.
 
     The additional ``*args`` and ``**kwargs`` are passed along to
-    `~jsonschema.protocols.Validator.validate`.
+    the validator.
 
     Parameters
     ----------
