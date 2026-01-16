@@ -217,9 +217,9 @@ to numpy arrays stored in ASDF:
     >>> from asdf.tags.core import Stream
 
     >>> tree = {
-    >>>     # We happen to know in advance that each row in the CSV has 100 ints
-    >>>     'data': Stream([100], np.int64)
-    >>> }
+    ...     # We happen to know in advance that each row in the CSV has 100 ints
+    ...     'data': Stream([100], np.int64)
+    ... }
 
     >>> ff = AsdfFile(tree)
     >>> # open the output file handle

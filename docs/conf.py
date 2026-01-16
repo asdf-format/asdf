@@ -85,6 +85,7 @@ subprojects = {
 intersphinx_mapping.update(subprojects)
 
 extensions = [
+    # TODO clean these up, do we need them all?
     "sphinx_inline_tabs",
     "sphinx.ext.intersphinx",
     "sphinx.ext.extlinks",
