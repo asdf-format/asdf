@@ -58,7 +58,6 @@ nitpick_ignore = [
 
 # Add intersphinx mappings
 intersphinx_mapping = {
-    # "jsonschema": ("https://python-jsonschema.readthedocs.io/en/stable/", None),
     "numpy": ("https://numpy.org/doc/stable/", None),
     "pypa-packaging": ("https://packaging.python.org/en/latest/", None),
     "pytest": ("https://docs.pytest.org/en/latest/", None),
