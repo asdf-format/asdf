@@ -209,7 +209,7 @@ of the data in memory as an intermediate step. Consider the following example
 that streams a large CSV file containing rows of integer data and converts it
 to numpy arrays stored in ASDF:
 
-.. doctest-skip::
+.. code::
 
     import csv
     import numpy as np
