@@ -1089,3 +1089,7 @@ tag: asdf://somewhere.org/tags/bar-*
         schema.validate(instance, schema=schema_tree)
         with pytest.raises(ValidationError, match=r"mismatched tags, wanted .*, got .*"):
             schema.validate(tagged.TaggedDict(tag="asdf://somewhere.org/tags/foo-1.0"), schema=schema_tree)
+
+
+def test_fail_under_combiner():
+    pass

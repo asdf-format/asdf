@@ -206,6 +206,9 @@ class _ValidationContext:
         """
         self._seen.add(self._make_seen_key(instance, schema))
 
+    def remove(self, instance, schema):
+        self._seen.remove(self._make_seen_key(instance, schema))
+
     def seen(self, instance, schema):
         """
         Return True if an instance has already been
@@ -301,7 +304,14 @@ def _create_validator(validators=YAML_VALIDATORS, visit_repeat_nodes=False):
                         for val in instance:
                             yield from self.iter_errors(val)
                 else:
-                    yield from original_iter_errors(self, instance)
+                    for error in original_iter_errors(self, instance):
+                        yield error
+                        # since this validation failed, remove the "seen" mark
+                        # since it's ok for validation to fail under some schema combiners
+                        # but we want to re-evaluate (and fail) when not under one
+                        # of those combiners
+                        if self._context.seen(instance, self.schema):
+                            self._context.remove(instance, self.schema)
 
         cls.iter_errors = iter_errors
 
