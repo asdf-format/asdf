@@ -303,7 +303,8 @@ def _create_validator(validators=YAML_VALIDATORS, visit_repeat_nodes=False):
                     for schema_uri in schema_uris:
                         try:
                             with self.resolver.resolving(schema_uri) as resolved:
-                                yield from self.descend(instance, resolved)
+                                if resolved != self.schema:
+                                    yield from self.descend(instance, resolved)
                         except RefResolutionError:
                             warnings.warn(f"Unable to locate schema file for '{tag}': '{schema_uri}'", AsdfWarning)
 
