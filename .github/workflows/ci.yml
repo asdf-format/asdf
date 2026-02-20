@@ -130,6 +130,7 @@ jobs:
     needs: [core]
     uses: OpenAstronomy/github-actions-workflows/.github/workflows/tox.yml@v2
     with:
+      toxdeps: '--uploaded-prior-to=2026-02-18T00:00:00Z'
       submodules: false
       # Any env name which does not start with `pyXY` will use this Python version.
       default_python: '3.11'
