@@ -149,7 +149,7 @@ def env_path(asdf_version, tmp_path_factory):
         "pip",
         "install",
         f"asdf=={asdf_version}",
-        "pkg_resources",
+        "setuptools<82.0.0",
         capture_output=True,
     ), f"Failed to install asdf version {asdf_version}"
 
