@@ -206,6 +206,9 @@ class _ValidationContext:
         """
         self._seen.add(self._make_seen_key(instance, schema))
 
+    def remove(self, instance, schema):
+        self._seen.remove(self._make_seen_key(instance, schema))
+
     def seen(self, instance, schema):
         """
         Return True if an instance has already been
@@ -257,6 +260,17 @@ def _create_validator(validators=YAML_VALIDATORS, visit_repeat_nodes=False):
 
         cls.__init__ = init
 
+    def _patch_evolve(cls):
+        original_evolve = cls.evolve
+
+        def evolve(self, **changes):
+            validator = original_evolve(self, **changes)
+            validator.ctx = self.ctx
+            validator.serialization_context = self.serialization_context
+            return validator
+
+        cls.evolve = evolve
+
     def _patch_iter_errors(cls):
         original_iter_errors = cls.iter_errors
 
@@ -279,20 +293,31 @@ def _create_validator(validators=YAML_VALIDATORS, visit_repeat_nodes=False):
                 if (isinstance(instance, dict) and "$ref" in instance) or isinstance(instance, reference.Reference):
                     return
 
-                if not self.schema:
-                    tag = tagged.get_tag(instance)
-                    if tag is not None and self.serialization_context.extension_manager.handles_tag_definition(tag):
-                        tag_def = self.serialization_context.extension_manager.get_tag_definition(tag)
-                        schema_uris = tag_def.schema_uris
+                tag = tagged.get_tag(instance)
 
-                        # Must validate against all schema_uris
-                        for schema_uri in schema_uris:
-                            try:
-                                with self.resolver.resolving(schema_uri) as resolved:
+                if tag is not None and self.serialization_context.extension_manager.handles_tag_definition(tag):
+                    tag_def = self.serialization_context.extension_manager.get_tag_definition(tag)
+                    schema_uris = tag_def.schema_uris
+
+                    # Must validate against all schema_uris
+                    for schema_uri in schema_uris:
+                        try:
+                            with self.resolver.resolving(schema_uri) as resolved:
+                                if resolved != self.schema:
                                     yield from self.descend(instance, resolved)
-                            except RefResolutionError:
-                                warnings.warn(f"Unable to locate schema file for '{tag}': '{schema_uri}'", AsdfWarning)
+                        except RefResolutionError:
+                            warnings.warn(f"Unable to locate schema file for '{tag}': '{schema_uri}'", AsdfWarning)
 
+                if self.schema:
+                    for error in original_iter_errors(self, instance):
+                        # since this validation failed, remove the "seen" mark
+                        # since it's ok for validation to fail under some schema combiners
+                        # but we want to re-evaluate (and fail) when not under one
+                        # of those combiners
+                        if self._context.seen(instance, self.schema):
+                            self._context.remove(instance, self.schema)
+                        yield error
+                else:
                     if isinstance(instance, dict):
                         for val in instance.values():
                             yield from self.iter_errors(val)
@@ -300,13 +325,12 @@ def _create_validator(validators=YAML_VALIDATORS, visit_repeat_nodes=False):
                     elif isinstance(instance, list):
                         for val in instance:
                             yield from self.iter_errors(val)
-                else:
-                    yield from original_iter_errors(self, instance)
 
         cls.iter_errors = iter_errors
 
     _patch_init(ASDFvalidator)
     _patch_iter_errors(ASDFvalidator)
+    _patch_evolve(ASDFvalidator)
 
     return ASDFvalidator
 

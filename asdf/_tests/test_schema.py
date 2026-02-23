@@ -1089,3 +1089,42 @@ tag: asdf://somewhere.org/tags/bar-*
         schema.validate(instance, schema=schema_tree)
         with pytest.raises(ValidationError, match=r"mismatched tags, wanted .*, got .*"):
             schema.validate(tagged.TaggedDict(tag="asdf://somewhere.org/tags/foo-1.0"), schema=schema_tree)
+
+
+def test_fail_under_combiner():
+    """
+    Test that a failed validation under a schema combiner that allows failures
+    (oneOf, etc) does not result in an incorrect passing of validation
+    which used to be the case due to a bug in how repeat nodes
+    were handled.
+
+    See: https://github.com/asdf-format/asdf/issues/2000
+    """
+    yaml_str = b"""#ASDF 1.0.0
+#ASDF_STANDARD 1.6.0
+%YAML 1.1
+%TAG ! tag:stsci.edu:asdf/
+--- !core/asdf-1.1.0
+obj: !core/complex-1.0.0 foo
+..."""
+
+    schema_id = "http://example.com/failing-1.0.0"
+    schema_str = f"""%YAML 1.1
+---
+$schema: "http://stsci.edu/schemas/yaml-schema/draft-01"
+id: {schema_id}
+properties:
+  obj:
+    oneOf:
+      - $ref: "http://stsci.edu/schemas/asdf/core/complex-1.0.0"
+      - true
+..."""
+
+    with asdf.config_context() as cfg:
+        cfg.add_resource_mapping({schema_id: schema_str})
+        bio = io.BytesIO(yaml_str)
+        with pytest.raises(ValidationError, match=r"'foo' does not match"):
+            # using lazy_tree here to that the invalid complex is not
+            # deserialized (but is still validated)
+            with asdf.open(bio, custom_schema=schema_id, lazy_tree=True):
+                pass
