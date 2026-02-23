@@ -142,11 +142,14 @@ def env_path(asdf_version, tmp_path_factory):
 
     assert subprocess.run(["virtualenv", str(path)]).returncode == 0  # noqa: S603,S607
 
+    # we include pkg_resources here since newer versions of setuptools
+    # don't provide it and older versions of asdf need it
     assert env_run(
         path,
         "pip",
         "install",
         f"asdf=={asdf_version}",
+        "setuptools<82.0.0",
         capture_output=True,
     ), f"Failed to install asdf version {asdf_version}"
 
