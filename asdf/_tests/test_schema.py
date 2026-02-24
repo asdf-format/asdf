@@ -814,6 +814,13 @@ def test_self_reference_resolution(test_data_path):
     assert s["anyOf"][1] == s["anyOf"][0]
 
 
+def test_resolve_references():
+    s = schema.load_schema(
+        "http://stsci.edu/schemas/asdf/core/ndarray-1.0.0", resolve_references=True, allow_recursion=True
+    )
+    assert "$ref" not in repr(s)
+
+
 def test_schema_resolved_via_entry_points():
     """Test that entry points mappings to core schema works"""
     tag = "tag:stsci.edu:asdf/fits/fits-1.0.0"
