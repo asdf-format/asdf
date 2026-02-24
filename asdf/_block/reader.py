@@ -33,24 +33,37 @@ class ReadBlock:
     def loaded(self):
         return self._data is not None
 
-    def load(self):
+    def load(self, out=None):
         """
         Load the block data (if it is not already loaded).
+
+        Parameters
+        ----------
+        out : ndarray, optional
+            Destination array for read block data.
 
         Raises
         ------
         OSError
             If attempting to load from a closed file.
         """
-        if self.loaded:
+        if self.loaded and out is None:
             return
+        if out is not None:
+            # FIXME document this
+            lazy_load = False
+            memmap = False
+        else:
+            lazy_load = self.lazy_load
+            memmap = self.memmap
         fd = self._fd()
         if fd is None or fd.is_closed():
             msg = "Attempt to load block from closed file"
             raise OSError(msg)
         position = fd.tell()
+        # FIXME this re-reads the header every time
         _, self._header, self.data_offset, self._data = bio.read_block(
-            fd, offset=self.offset, memmap=self.memmap, lazy_load=self.lazy_load
+            fd, offset=self.offset, memmap=memmap, lazy_load=lazy_load, out=out
         )
         fd.seek(position)
 
