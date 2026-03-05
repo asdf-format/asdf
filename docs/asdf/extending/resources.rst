@@ -128,7 +128,7 @@ and parse one of the schemas:
 
     from asdf.schema import load_schema
 
-    uri = "asdf://example.com/example-project/schemas/nested/bar-2.3.4.yaml"
+    uri = "asdf://example.com/example-project/schemas/nested/bar-2.3.4"
     schema = load_schema(uri)
     assert schema["id"] == uri
 
@@ -216,7 +216,7 @@ in a new session without any additional setup:
 
     from asdf.schema import load_schema
 
-    uri = "asdf://example.com/example-project/schemas/nested/bar-2.3.4.yaml"
+    uri = "asdf://example.com/example-project/schemas/nested/bar-2.3.4"
     schema = load_schema(uri)
     assert schema["id"] == uri
 
