@@ -2,12 +2,10 @@ import json
 import os
 import subprocess
 import urllib.request
-from contextlib import contextmanager
 from itertools import groupby
 from pathlib import Path
 
 import pytest
-import pytest_remotedata
 from common import assert_file_correct, generate_file
 from packaging.version import Version
 
@@ -42,22 +40,6 @@ NDARRAY_1_1_0_ASDF_VERSION = Version("2.14.0")
 NDARRAY_1_1_0_STANDARD_VERSION = AsdfVersion("1.6.0")
 
 
-@contextmanager
-def internet_temporarily_enabled(verbose=False):
-    """
-    Context manager that temporarily enables pytest_remotedata
-    internet.
-    """
-    initially_disabled = pytest_remotedata.disable_internet.INTERNET_OFF
-
-    pytest_remotedata.disable_internet.turn_on_internet(verbose=verbose)
-    try:
-        yield
-    finally:
-        if initially_disabled:
-            pytest_remotedata.disable_internet.turn_off_internet(verbose=verbose)
-
-
 def fetch_package_versions(package_name):
     """
     Request a package's available versions from pypi.org metadata.
@@ -84,10 +66,7 @@ def fetch_latest_patch_versions(package_name):
     return [max(group) for _, group in groupby(versions, key=key_fn)]
 
 
-# Enable internet here, otherwise pytest_remotedata will complain
-# (and @pytest.mark.remote_data doesn't work on non-test methods).
-with internet_temporarily_enabled():
-    PATCH_VERSIONS = sorted(fetch_latest_patch_versions("asdf"))
+PATCH_VERSIONS = sorted(fetch_latest_patch_versions("asdf"))
 
 
 def env_run(env_path, command, *args, **kwargs):
@@ -170,7 +149,6 @@ def _pushd_tmp_path(tmp_path):
     os.chdir(original_cwd)
 
 
-@pytest.mark.remote_data()
 def test_file_compatibility(asdf_version, env_path, tmp_path):
     # Sanity check to ensure we're not accidentally comparing
     # the current code to itself.

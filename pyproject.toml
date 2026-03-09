@@ -47,7 +47,6 @@ tests = [
   "asdf[all]",
   "psutil",
   "pytest>=8",
-  "pytest-remotedata",
 ]
 test = [
   "asdf[tests]",
@@ -106,7 +105,6 @@ force-exclude = '''
 [tool.pytest.ini_options]
 testpaths = ['asdf', 'docs']
 minversion = 4.6
-remote_data_strict = true
 filterwarnings = [
     'error',  # also set in _tests/conftest to work with pyargs
     'ignore:numpy.ndarray size changed:RuntimeWarning',
