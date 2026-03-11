@@ -2,6 +2,7 @@ import copy
 import datetime
 import json
 import warnings
+import weakref
 from collections import OrderedDict
 from collections.abc import Mapping
 from functools import lru_cache
@@ -268,13 +269,17 @@ def _create_validator(validators=YAML_VALIDATORS, visit_repeat_nodes=False):
             if "schema" not in changes or len(changes) > 1:
                 raise NotImplementedError("only evolving the schema is supported")
             schema_key = id(changes["schema"])
-            if schema_key in self.evolved_validators:
-                return self.evolved_validators[schema_key]
+            if hasattr(self, "parent"):
+                parent = self.parent()
+            else:
+                parent = self
+            if schema_key in parent.evolved_validators:
+                return parent.evolved_validators[schema_key]
             validator = original_evolve(self, **changes)
             validator.ctx = self.ctx
-            validator.evolved_validators = self.evolved_validators
+            validator.parent = weakref.ref(self)
             validator.serialization_context = self.serialization_context
-            self.evolved_validators[schema_key] = validator
+            parent.evolved_validators[schema_key] = validator
             return validator
 
         cls.evolve = evolve
