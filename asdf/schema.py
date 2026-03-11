@@ -255,6 +255,8 @@ def _create_validator(validators=YAML_VALIDATORS, visit_repeat_nodes=False):
 
         def init(self, *args, **kwargs):
             self.ctx = kwargs.pop("ctx", None)
+            # cache evolved validators to avoid evolving more than one
+            # validator for the same schema
             self.evolved_validators = kwargs.pop("evolved_validators", {})
             self.serialization_context = kwargs.pop("serialization_context", None)
 
@@ -268,16 +270,25 @@ def _create_validator(validators=YAML_VALIDATORS, visit_repeat_nodes=False):
         def evolve(self, **changes):
             if "schema" not in changes or len(changes) > 1:
                 raise NotImplementedError("only evolving the schema is supported")
+
+            # evolved validators are cached by the schema id
             schema_key = id(changes["schema"])
+
+            # check if this is an already evolved validator
             if hasattr(self, "parent"):
+                # if so, resolve the weakref to the parent
                 parent = self.parent()
             else:
                 parent = self
+
+            # check for a cached evolved validator
             if schema_key in parent.evolved_validators:
                 return parent.evolved_validators[schema_key]
+
+            # evolve a new validator
             validator = original_evolve(self, **changes)
             validator.ctx = self.ctx
-            validator.parent = weakref.ref(self)
+            validator.parent = weakref.ref(parent)
             validator.serialization_context = self.serialization_context
             parent.evolved_validators[schema_key] = validator
             return validator
