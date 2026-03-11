@@ -254,6 +254,7 @@ def _create_validator(validators=YAML_VALIDATORS, visit_repeat_nodes=False):
 
         def init(self, *args, **kwargs):
             self.ctx = kwargs.pop("ctx", None)
+            self.evolved_validators = kwargs.pop("evolved_validators", {})
             self.serialization_context = kwargs.pop("serialization_context", None)
 
             original_init(self, *args, **kwargs)
@@ -264,9 +265,16 @@ def _create_validator(validators=YAML_VALIDATORS, visit_repeat_nodes=False):
         original_evolve = cls.evolve
 
         def evolve(self, **changes):
+            if "schema" not in changes or len(changes) > 1:
+                raise NotImplementedError("only evolving the schema is supported")
+            schema_key = id(changes["schema"])
+            if schema_key in self.evolved_validators:
+                return self.evolved_validators[schema_key]
             validator = original_evolve(self, **changes)
             validator.ctx = self.ctx
+            validator.evolved_validators = self.evolved_validators
             validator.serialization_context = self.serialization_context
+            self.evolved_validators[schema_key] = validator
             return validator
 
         cls.evolve = evolve
